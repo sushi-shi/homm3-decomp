@@ -3505,6 +3505,22 @@ int TSingleSelectionWindow::GetFileSpecNbr()
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:3475
+// Residual (87.0700%, polish-45 - first full evidence pass on this row):
+// pure OVER-inline, two sites, both one level deeper than retail.
+//   * `pHeaders->clear()` lowers to `copy(end(),end(),begin())` + `_Destroy`
+//     + `_Last = _S`.  Retail CALLS `vector<GameSelectionHeadersStruct>::
+//     _Destroy(_S,_Last)` (retail's reference at call slot 8); this compile
+//     expands that loop in line, which is the whole 40-vs-37 block and
+//     24-vs-22 conditional-branch gap.
+//   * `temp`'s destructor: retail CALLS `~NewSMapHeader`, this compile
+//     expands it into two `basic_string::_Tidy` calls plus `~CMapHeaderData`
+//     - the two base-only calls at +0x2e3 and +0x2f4.
+// Everything else pairs 22/22 (the six "different" rows are the delinker's
+// ICF twins under another instantiation's name; the ratchet runs at
+// function_reloc_diffs=none and ignores them).  Per docs/vc6/inliner.md the
+// over-inline direction means this caller presents a LARGER front-end cb or
+// fewer candidate sites than retail's, so the levers are caller mass and site
+// count - not a `clear()`/`erase()` spelling and not a pragma.
 VA(0x00582B40, 0x345)  // anchor-global dir ternary m_flag66/64/65 over "random_maps"(0x6836ac)/"maps"(0x6772d0)/"games"(0x677d70) + _chdir - the directory-scan opener; order-map GetHeaders..MakeHeroFilter onto 0x582b40..0x583890 (GetFileSpecNbr excluded by arity below), size 0.36x dc 0x916, dc 0x137da8
 void TSingleSelectionWindow::GetHeaders(
     std::vector<GameSelectionHeadersStruct>* pHeaders)

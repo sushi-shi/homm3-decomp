@@ -220,6 +220,17 @@ static std::string get_estimated_damage(const army* currentArmy,
 // E:\gamedcs\drawing.cpp:178. Dreamcast preserves the complete source
 // decision tree; retail confirms the Complete creature ids, corpse-row
 // lookup, spell restrictions, Orb of Inhibition test and every message row.
+// Residual (92.3889%, polish-45): 13 of 14 calls, 54/54 branches and 90-vs-92
+// blocks.  The one target-only reference is a `sprintf`: retail emits BOTH
+// arms of the ARCHANGEL `numTroops == 1` message (texts 706 and 707) as
+// complete calls, while C2 here cross-jumps them from the shared `call
+// sprintf` backwards and leaves a single call site with only the format-string
+// push duplicated.  The `goto no_error` exits are the other half - retail
+// parks that `return false` block at CFG index 11, right after the bodies
+// loop, where this compile parks it at 67.  Both are C2 block-layout
+// decisions; the source statements, the if/else arms (the ternary spelling
+// was measured at 65.85/68.38 by polish-43) and the direct-GetArmyName
+// spelling above are already retail's.
 VA(0x004922f0, 0x54C)  // retail body + DC source shape, dc 0x8354c
 bool combatManager::show_creature_spell_error(
     char* buffer, const army* currentArmy)

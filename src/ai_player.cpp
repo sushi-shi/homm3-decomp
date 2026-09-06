@@ -793,6 +793,16 @@ static inline void assign_formatted_ai_message(
 #pragma inline_depth()
 }
 
+// Residual (84.5868%, polish-45): the B1 whole-body role swap and nothing
+// else.  Blocks (100/100), branches (55/55) and the report-level call view
+// all AGREE; `vc6 diagnose` reads "callee-saved role swap, schedule aligned:
+// edx->eax x24, eax->edx x19".  The transposed pair is `this` against the
+// gpGame load - retail takes `mov edx,ecx` / `mov ecx,[gpGame]`, this compile
+// takes `mov eax,ecx` / `mov edx,[gpGame]` - and docs/vc6/regalloc.md section
+// 5 records that when one side of the pair is a parameter or `this` the alias
+// is copy-propagated and NO statement-local spelling reaches it.  This is the
+// C1 handle-state class; do not spend builds on operand or naming variants
+// here.
 VA(0x00429110, 0x6AC)  // linkorder, dc 0x2ea20
 void type_AI_player::make_gift(long player_id)
 {
@@ -1259,6 +1269,26 @@ long type_AI_player::get_total_value(long basic_value, int* cost)
     return basic_value * 1000 / total_cost;
 }
 
+// Residual (85.8333%, polish-45 - first full evidence pass on this row):
+// blocks (31/31), branches (17/17) and the report-level call view AGREE, so
+// the whole 63 B is induction-variable HOMING.  The loop needs four
+// call-crossing values - &supply[resource], trade_qty, this+0x40 (the shared
+// base for reserved_funds/resource_supply/resource_demand) and
+// &player->resources[resource] - plus the constant `cost - supply` byte
+// difference.  Retail parks only TWO in registers (ESI = supply, EDX =
+// this+0x40, which is live only on the else path and therefore never crosses
+// push_back) and keeps player->resources in memory at [ebp+0x14] and the
+// constant at [ebp-0x8]; that leaves EDI free, so retail loads
+// `cost[resource]` into EDI for the `> 0` test and divides with `idiv edi`.
+// This compile keeps player->resources in EDX and this+0x40 in EDI, so the
+// `> 0` test has to use EAX, EAX is then needed for the dividend, and the
+// divisor is re-read as the memory operand `idiv [ecx+esi]` (plus the extra
+// `mov ecx,[ebp+0x14]` that costs the byte delta).  Dreamcast agrees with the
+// source as written: dc 0x30334 loads cost[resource] twice (bp 1398 and the
+// `cmp/pl` at 0x303a8) and reuses the SECOND load as the __divls divisor, so
+// a single hoisted `int resource_cost` above the statement would contradict
+// it.  Per docs/vc6/regalloc.md 5 this is first-fit fed a different pseudo
+// processing order - the C1 handle-state class.
 // E:\gamedcs\ai_player.cpp:1383
 VA(0x0042a2b0, 0x1BF)  // retail link order + arity, dc 0x30334
 bool type_AI_player::check_trade_supply(const int* cost, long number,
@@ -4460,6 +4490,15 @@ static void check_holy_grail(
     }
 }
 
+// Residual (96.3651%, polish-45): ONE target-only reference and nothing
+// structural - retail keeps a second `vector::size()` CALL inside the
+// `destinations->push_back(destination)` grow path (retail fn+0x3fd, where
+// this compile has only the one at +0x407 and inlines the other).  Same /Ob2
+// sequential-budget family as ai.cpp's find_attack_hexes, which loses its
+// 65 B to exactly the same `size()` decision one level down inside insert:
+// the direction is OVER-inline, so the admissible levers are caller mass or
+// candidate-site count, not a spelling of push_back (`insert(end(), x)` by
+// hand is byte-flat there).  Blocks 80 vs 81, branches 54/54.
 VA(0x0042edd0, 0x79b)  // anchor-callee + arity, dc 0x33038
 long find_all_destinations(hero* current_hero, searchArray* search_array,
                            std::vector<HeroDestination>* destinations,
