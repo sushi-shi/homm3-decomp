@@ -424,7 +424,12 @@ std::istream& operator>>(std::istream& is, TObjectType& objectType)
 // per-row stream's virtual base (guarded by the construction flag at
 // [ebp-0x14]), its strstreambuf and the stream itself.
 //
-// Residual (69.25%): an /Ob2 SWAP inside the resize temporary's inline
+// BOUNDARY CORRECTION 2026-09-06: that 0x514ff3 handler was its own carve
+// row (17 B), so our emitted body carried it while retail's target symbol
+// stopped at 0x273. Absorbed into the parent (627 -> 644 = 0x284, the
+// LoadFontData precedent): 69.2500 -> 73.3263 with no source change.
+//
+// Residual (73.33%): an /Ob2 SWAP inside the resize temporary's inline
 // TObjectType constructor. Retail CALLS `bitset<48>::bitset(unsigned
 // long)` at 0x5154a0 and EXPANDS `operator~` (the copy plus a flip call);
 // we do the exact opposite, so the argument constructor's 32-bit set loop
@@ -433,7 +438,7 @@ std::istream& operator>>(std::istream& is, TObjectType& objectType)
 // empty inline one is byte-flat, measured. The doctrinal lever for the
 // over-inline half is caller-shrink, and this body has nothing to lift:
 // its statements are all accounted for by the EH state transcript.
-VA(0x00514d80, 0x273)  // anchor-callee ResourceManager::GetText + anchor-bracket NewfullMapFn_00505DA0; retail-only
+VA(0x00514d80, 0x284)  // anchor-callee ResourceManager::GetText + anchor-bracket NewfullMapFn_00505DA0; retail-only
 void TObjectTypeTable::load(char* filename)
 {
     TTextResource* text = ResourceManager::GetText(filename);
