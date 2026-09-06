@@ -56,13 +56,18 @@ VA_COMPGEN(0x005bc250, 0x21, SCALAR_DELETING_DTOR, textWidget)
 // parameter is read nowhere in the body - retail carries it dead, exactly as
 // the header's declarator does.
 //
-// Residual (99.8609%): ONE instruction, and it is inside the inlined
+// Residual (99.9130%): ONE instruction, and it is inside the inlined
 // `basic_string::assign(const char*)`, not in this body. Retail terminates
 // the copy with `mov byte ptr [ecx+eax], 0` - SIB base `_Ptr`, index `_Len` -
 // where this compile emits the same store with the two registers exchanged
 // (`[eax+ecx]`). All 16 blocks, 9 branches, 7 calls and 9 relocations agree
 // exactly; the operand roles are chosen inside a vendored Dinkumware header
 // this TU may not respell.
+//
+// The three trailing member stores WERE reachable, +0.05: retail emits them
+// backColor -> 0x48, justify -> 0x4c, color -> 0x44, and VC6 rotates the
+// emitted run one place left against source order, so the source has to be
+// written `Color; BackColor; Justify;` to land retail's order.
 VA(0x005bc280, 0x12D)  // anchor-vtable 0x642db0 + ret 0x2c, dc 0x164c80
 textWidget::textWidget(int x, int y, int w, int h, const char* text,
                        const char* fontName, font::TColor color, int id,
@@ -74,9 +79,9 @@ textWidget::textWidget(int x, int y, int w, int h, const char* text,
     Font = ResourceManager::GetFont(fontName);
     if (text)
         Text = text;
+    Color = color;
     BackColor = backColor;
     Justify = justify;
-    Color = color;
 }
 
 VA(0x005bc3b0, 0x8A)  // anchor-global, dc 0x164d24
