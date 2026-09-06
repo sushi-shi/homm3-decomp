@@ -484,3 +484,40 @@ level)` for the plane offset leaves `CreateRiver` at 39.066925%, below its
 39.6178% peak. Its MAX/history remain intact for later caller-specific work.
 `RepairWaterZoneBorders`'s separate bounds-aggregate finding is recorded in
 [regalloc.md](regalloc.md#6g-a-bounds-aggregate-preserves-the-retail-stack-frame).
+
+## A guarded do loop can preserve a forward exhaustion exit
+
+The first land search in `RepairWaterZoneBorders` (0x53fcb0) has two exits:
+finding a usable tile and exhausting the row. A conventional `for` or
+`while (x < limit)` emits a backward `jl` followed by a forward `jmp` at
+the exhaustion check. Retail instead uses a forward `jge` at 0x53fe49
+and a backward `jmp` at 0x53fe4b, with the same preceding increment,
+comparison, and coordinate store.
+
+An entry guard followed by this form preserves that routing:
+
+```cpp
+x = first;
+if (x < limit) {
+    do {
+        if (usable(x)) {
+            found = 1;
+            break;
+        }
+        ++x;
+        if (x >= limit)
+            break;
+    } while (1);
+}
+```
+
+The real candidate retains the map accessor and full eligibility predicate;
+`usable` above only abbreviates the example. This recovered the two branch
+destinations without changing the 0x84 frame or local homes, raising the
+function from 96.921875% to 97.04883%. All CFG edges now agree; clamp and
+map-view register differences remain. The RMG source has no DC counterpart,
+so the spelling is supported by retail and the VC6 control, not a line table.
+
+An explicit top exit inside `for (;;)` was byte-neutral. A top-tested
+`while (1)` also changed the surrounding loop arrangement and induction
+(89.92383%), so that control does not invalidate the guarded bottom exit.

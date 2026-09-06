@@ -607,6 +607,24 @@ not establish an out-of-line boundary. Verify the actual caller expansion
 before moving a body or changing a declaration. Restoring this shared helper
 alone does not settle the callers' remaining STL and map-accessor decisions.
 
+### An exact accessor can hide a different nested call
+
+The by-value `type_random_map::GetMapItem` at 0x5378e0 retains the same
+39 raw bytes whether it computes the index directly or delegates to the
+three-scalar overload. The delegation leaves `RepairWaterZoneBorders`
+unchanged, but changes `CreateGroundConnection`'s first clear from expanded
+`copy`/`_Destroy` calls to a retained range erase, as in retail
+(76.75134% to 77.31306%).
+
+The same change moves `CreateRiver` from 39.066925% to 33.67439%: final
+map cleanup calls the vector deleting destructor where retail directly
+invokes the array iterator, and a trailing vector `_Destroy` is retained.
+These named sites show why an exact standalone body does not settle the
+source call boundary. The candidate keeps one indexing formula through
+delegation; its original source spelling remains provisional because the
+DC corpus has no RMG compiland. Caller-specific residuals and prior peaks
+remain recorded rather than being hidden by an inline directive.
+
 ## 7. Using it
 
 ```sh
