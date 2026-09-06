@@ -12,7 +12,7 @@ adventuremapwindow	??0TAdventureMapWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x1
 adventuremapwindow	??1TAdventureMapWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x2b10	edbb40617def
 adventuremapwindow	??_GTAdventureMapWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x2ae0	-
 adventuremapwindow	?Activate@CGameChatEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x22b0	5582f5bcc3f3
-adventuremapwindow	?CheckAdvCheatCode@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	90.5910	90.5910	90.5910	0x2450	ec4fd0a665ee
+adventuremapwindow	?CheckAdvCheatCode@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	91.3705	91.3705	91.3705	0x2450	ec4fd0a665ee
 adventuremapwindow	?ClearBottomView@TAdventureMapWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x3ee0	c44f40d9b96c
 adventuremapwindow	?Close@TAdventureMapWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x14d0	463fe91487af
 adventuremapwindow	?DoHeroKnob@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x3220	5b941b78c07c
@@ -340,7 +340,7 @@ ai_player	?dump_extra_creature@type_AI_creature_swapper@@IAEXXZ	100.0000	100.000
 ai_player	?end_turn@type_AI_player@@QAEXXZ	89.5263	89.5263	89.5263	0x28dd0	ab298c573724
 ai_player	?erase@?$vector@Utype_creature_source@@V?$allocator@Utype_creature_source@@@std@@@std@@QAEPAUtype_creature_source@@PAU3@0@Z	100.0000	100.0000	100.0000	0x34680	-
 ai_player	?fill_prohibited_array@@YIXPAVplayerData@@PAE@Z	99.9678	99.9678	99.9678	0x29d50	8a7176a95b20
-ai_player	?find_all_destinations@@YIJPAVhero@@PAVsearchArray@@PAV?$vector@UHeroDestination@@V?$allocator@UHeroDestination@@@std@@@std@@JEEE@Z	96.3587	96.3651	96.3651	0x2edd0	21c214e64e5b
+ai_player	?find_all_destinations@@YIJPAVhero@@PAVsearchArray@@PAV?$vector@UHeroDestination@@V?$allocator@UHeroDestination@@@std@@@std@@JEEE@Z	96.3651	96.3651	96.3651	0x2edd0	21c214e64e5b
 ai_player	?find_magus_hut_value@@YIJJE@Z	100.0000	100.0000	100.0000	0x29910	faf0f24d53b0
 ai_player	?get_alignments@type_AI_creature_swapper@@IAEXXZ	100.0000	100.0000	100.0000	0x2c060	8b7810c4ce17
 ai_player	?get_attack_bonus@type_AI_player@@SIMF@Z	100.0000	100.0000	100.0000	0x28710	5e81e3b6c7f4
@@ -993,7 +993,7 @@ combatwindow	??0TCombatWindow@@QAE@E@Z	100.0000	100.0000	100.0000	0x721d0	ee1a7a
 combatwindow	??1CCombatChatEdit@@UAE@XZ	100.0000	100.0000	100.0000	0x72890	-
 combatwindow	??1TCombatWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x72900	1612a364775a
 combatwindow	??_GTCombatWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x728a0	-
-combatwindow	?CheckCombatCheatCode@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	89.4690	90.2966	90.2966	0x72010	120dfa714ed7
+combatwindow	?CheckCombatCheatCode@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	90.2966	90.2966	90.2966	0x72010	120dfa714ed7
 combatwindow	?ClearCombatMessages@TCombatWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x72bf0	8a01a58981b1
 combatwindow	?Close@TCombatWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x728d0	f559bddd20d7
 combatwindow	?DrawChatText@TCombatWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x73290	7e04ea887932
@@ -1702,7 +1702,7 @@ events	?insert@?$vector@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@
 events	?insert@?$vector@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@QAEXPAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@IABV32@@Z	100.0000	100.0000	100.0000	0xaf550	-
 events	?monsters_fight@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa6c60	78a989ac8619
 events	?monsters_flee@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa6df0	01f0de47937e
-events	?monsters_give_reward@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	88.5614	88.6140	88.6140	0xa6b30	8cad8c72ebc4
+events	?monsters_give_reward@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	88.6140	88.6140	88.6140	0xa6b30	8cad8c72ebc4
 events	?monsters_join@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	100.0000	100.0000	100.0000	0xa7000	7e70d5875f7d
 # monsters_sell_out ACCEPTED 100.0000 -> 99.9517 (2026-08-20, spells lane).
 # THE TRADE: armygrp.h's ESpellId gained two UNGATED enumerators -
@@ -1928,7 +1928,7 @@ game	?LoadSignPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb
 game	?MakeTerrainVisible@game@@QAEXHG@Z	100.0000	100.0000	100.0000	0xca240	8dee9faf58a3
 game	?MineTypesOwned@game@@QAEHHH@Z	100.0000	100.0000	100.0000	0xbae70	7cef522cb00d
 game	?NewMap@game@@QAEEPBD0PAHH@Z	99.4000	99.4000	99.4000	0xc0520	7759a62b2368
-game	?NewMap@game@@QAEXPAVTAbstractFile@@PAHPAVNewMapCampaignContext@@H@Z	99.5041	100.0000	100.0000	0xbfe70	d45f6040108c
+game	?NewMap@game@@QAEXPAVTAbstractFile@@PAHPAVNewMapCampaignContext@@H@Z	100.0000	100.0000	100.0000	0xbfe70	d45f6040108c
 game	?NextHero@playerData@@QAEHXZ	100.0000	100.0000	100.0000	0xbaa40	bbee40b3fef4
 game	?NextPlayer@game@@QAEXXZ	81.3343	83.3584	83.3584	0xc6fe0	4b3560fe742d
 game	?NextTown@playerData@@QAEHXZ	100.0000	100.0000	100.0000	0xbab40	26cceeec0c05
@@ -2087,7 +2087,7 @@ game	?readLossCondition@NewSMapHeader@@QAEHDPAVTAbstractFile@@@Z	100.0000	100.00
 game	?readMapPlayerSlot@TPlayerSlotAttributes@CMapHeaderData@@QAEXPAVTAbstractFile@@H@Z	67.5422	95.6972	95.7136	0xc3ef0	a9efea296499
 game	?readMapString@@YIHPAVTAbstractFile@@PAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0xc6010	7815671d6fac
 game	?readVictoryCondition@NewSMapHeader@@QAEHDPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xc3200	f5ad2d4aece2
-game	?read_map_hero_setups@game@@QAEXPAVTAbstractFile@@H@Z	86.0274	86.0884	86.0884	0xc2ce0	3362f2af4fd6
+game	?read_map_hero_setups@game@@QAEXPAVTAbstractFile@@H@Z	86.0884	86.0884	86.0884	0xc2ce0	3362f2af4fd6
 game	?record_monster_identifier@game@@QAEXHUtype_point@@@Z	100.0000	100.0000	100.0000	0xced40	1822bee44386
 game	?replace_recruit@game@@QAEXHJ@Z	100.0000	100.0000	100.0000	0xc86a0	ad6f6e851794
 game	?resize@?$vector@UTBlackMarket@@V?$allocator@UTBlackMarket@@@std@@@std@@QAEXIABUTBlackMarket@@@Z	100.0000	100.0000	100.0000	0xcf0f0	-
@@ -2227,11 +2227,11 @@ hero	?HasArtifact@hero@@QAEEH@Z	100.0000	100.0000	100.0000	0xd91b0	067a1a16b5ba
 hero	?HeroFn_004D8B30@hero@@QAEXPBVHeroExtra@@@Z	97.5831	97.5831	97.5831	0xd8b30	2e987af32563
 hero	?HeroFn_004D8F70@hero@@QAEPBDXZ	100.0000	100.0000	100.0000	0xd8f70	f16151048304
 hero	?HeroFn_004D8FB0@hero@@QAEPBDXZ	100.0000	100.0000	100.0000	0xd8fb0	ad49751e155d
-hero	?HeroFn_004D9B30@hero@@QAEHH@Z	99.1667	100.0000	100.0000	0xd9b30	1e241468bce9
+hero	?HeroFn_004D9B30@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0xd9b30	1e241468bce9
 hero	?HeroFn_004D9CC0@hero@@QAEHH@Z	94.1749	94.1749	94.1749	0xd9cc0	e180f7618fd6
 hero	?HeroFn_004DBE80@hero@@QAEEH@Z	100.0000	100.0000	100.0000	0xdbe80	05665369f0f0
-hero	?HeroFn_004DBF30@hero@@QAEEHJ@Z	96.7404	99.8846	99.8846	0xdbf30	9dfddd75f7a9
-hero	?HeroFn_004DC070@hero@@QAEXJ@Z	97.4468	100.0000	100.0000	0xdc070	b1654916cefe
+hero	?HeroFn_004DBF30@hero@@QAEEHJ@Z	99.8846	99.8846	99.8846	0xdbf30	9dfddd75f7a9
+hero	?HeroFn_004DC070@hero@@QAEXJ@Z	100.0000	100.0000	100.0000	0xdc070	b1654916cefe
 hero	?HeroFn_004DC100@hero@@QAEXJ@Z	87.2712	87.2712	87.2712	0xdc100	7d53252e3eeb
 hero	?HeroFn_004E2550@hero@@QAEEJJ@Z	92.9185	92.9185	92.9185	0xe2550	d0f8facd424f
 hero	?HeroFn_004E2840@hero@@QAEEJJ@Z	78.8633	78.8633	78.8633	0xe2840	3a443a1401ce
@@ -2267,7 +2267,7 @@ hero	?belongs_to_human@hero@@QAEEXZ	100.0000	100.0000	100.0000	0xd9050	c82def4ab
 hero	?can_land@hero@@QAEEXZ	100.0000	100.0000	100.0000	0xe5ce0	44fc64896a65
 hero	?can_summon_boat@hero@@QBEEXZ	86.9922	86.9922	86.9922	0xe5550	a88a4dd4bf0c
 hero	?end@?$vector@HV?$allocator@H@std@@@std@@QAEPAHXZ	100.0000	100.0000	100.0000	0xe64f0	f7848287d42d
-hero	?equip_artifact@hero@@QAEEPBUtype_artifact@@J@Z	92.4359	93.2051	93.2051	0xe2a00	0e8b85ba9499
+hero	?equip_artifact@hero@@QAEEPBUtype_artifact@@J@Z	93.2051	93.2051	93.2051	0xe2a00	0e8b85ba9499
 hero	?find_summonable_boat@hero@@QBEPAVboat@@XZ	100.0000	100.0000	100.0000	0xe54a0	57e6281da4a8
 hero	?get_backpack_error@hero@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TArtifact@@@Z	100.0000	100.0000	100.0000	0xe2ed0	242bc80f9530
 hero	?get_combat_speed_bonus@hero@@QAEJXZ	100.0000	100.0000	100.0000	0xe5aa0	084f850b4598
@@ -2465,7 +2465,7 @@ kb	?extended_dialog@@YIXPBDAAV?$vector@Utype_dialog_resource@@V?$allocator@Utype
 kb	?get_base_map_score@game@@QAEFXZ	100.0000	100.0000	100.0000	0xf3e30	08a36f004890
 kb	?get_map_score@game@@QAEFXZ	100.0000	100.0000	100.0000	0xf3eb0	cd6028d198ab
 kb	?get_quickview_size@@YIXPBDPAH1@Z	100.0000	100.0000	100.0000	0xf62a0	c57fea7e1252
-kb	?handle_click@type_normal_dialog_frame@@UAEEEE@Z	99.9475	99.9475	99.9475	0xf0b20	7355af0f0d7b
+kb	?handle_click@type_normal_dialog_frame@@UAEEEE@Z	99.9761	99.9761	99.9761	0xf0b20	7355af0f0d7b
 kb	?oldmain@@YIHXZ	77.2965	77.2965	77.2965	0xee3e0	5c1108f3cbf0
 kb	?set@type_dialog_icon@@QAEXW4EGameResource@@J@Z	99.1667	99.1667	99.1667	0xf4eb0	06cb359cd3d3
 kbwin	?AppAbout@@YGHPAUHWND__@@IIJ@Z	100.0000	100.0000	100.0000	0xf8140	b6d6a9ba7939
@@ -2892,11 +2892,11 @@ philai	?AI_value_of_event@@YIJPBVhero@@Utype_point@@AAJ@Z	97.7399	97.7399	97.739
 philai	?AI_visit_black_market@@YIXPAVhero@@PAUTBlackMarket@@@Z	100.0000	100.0000	100.0000	0x1243f0	4e37b54da6ec
 philai	?AI_visit_hill_fort@@YIXPAVhero@@@Z	100.0000	100.0000	100.0000	0x127bb0	3a473e466bcf
 philai	?AI_visit_university@@YIXPAVhero@@PAUtype_university@@@Z	100.0000	100.0000	100.0000	0x124ed0	bdd1bfaa3829
-philai	?AI_visit_war_factory@@YIXPAVhero@@@Z	99.8723	100.0000	100.0000	0x124fc0	f67fd8a02352
+philai	?AI_visit_war_factory@@YIXPAVhero@@@Z	100.0000	100.0000	100.0000	0x124fc0	f67fd8a02352
 philai	?CheckDoMain@@YIXHH@Z	100.0000	100.0000	100.0000	0x1242d0	fdfd12285243
 philai	?DetermineHeroToMove@@YIPAVhero@@HPAE@Z	100.0000	100.0000	100.0000	0x126a90	bf7ec490ae35
 philai	?DoAI@philAI@@QAEXH@Z	90.2537	90.2537	90.2537	0x125e80	1c6936292572
-philai	?GetTurnAIVars@philAI@@QAEXH@Z	96.5957	97.8723	97.8723	0x127960	478682a95693
+philai	?GetTurnAIVars@philAI@@QAEXH@Z	97.8723	97.8723	97.8723	0x127960	478682a95693
 philai	?LuckIncreaseValue@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0x127d80	8a4eb278b3d4
 philai	?MoraleIncreaseValue@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0x127cf0	2b16a4ff44e6
 philai	?MoveHero@@YIXPAVhero@@PAJEPAE@Z	86.3549	86.6362	86.6362	0x1261f0	7fc9dfc37367
@@ -2922,12 +2922,12 @@ philai	?ValueOfStables@@YIHPBVhero@@PAJ@Z	100.0000	100.0000	100.0000	0x12aac0	39
 philai	?ValueOfTreasure@@YIHPBVhero@@@Z	100.0000	100.0000	100.0000	0x12b4e0	d8afc6eae5e6
 philai	?ValueOfTree@@YIHPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x12b5a0	73d329d3dde8
 philai	?_Unguarded_insert@std@@YIXPAUtype_creature_value@@U2@U?$greater@Utype_creature_value@@@1@@Z	100.0000	100.0000	100.0000	0x12bd50	-
-philai	?buy_artifacts@@YIXPAVhero@@PAW4TArtifact@@J@Z	97.0093	98.1308	98.1308	0x124400	449e7c61275e
-philai	?buy_siege_engine@@YIXPAVhero@@PAVtown@@W4type_building_id@@W4TArtifact@@@Z	98.7234	100.0000	100.0000	0x125ca0	4df179ba0465
-philai	?buy_special_building@@YIXPAVhero@@PAVtown@@@Z	99.2405	100.0000	100.0000	0x1259e0	7e579e56a42a
+philai	?buy_artifacts@@YIXPAVhero@@PAW4TArtifact@@J@Z	98.1308	98.1308	98.1308	0x124400	449e7c61275e
+philai	?buy_siege_engine@@YIXPAVhero@@PAVtown@@W4type_building_id@@W4TArtifact@@@Z	100.0000	100.0000	100.0000	0x125ca0	4df179ba0465
+philai	?buy_special_building@@YIXPAVhero@@PAVtown@@@Z	100.0000	100.0000	100.0000	0x1259e0	7e579e56a42a
 philai	?consider_garrisoning@@YIXPAVhero@@PAVtown@@@Z	100.0000	100.0000	100.0000	0x125200	cf8bb24776d5
 philai	?get_artifact_purchase_price@@YIJW4TArtifact@@JPAW4EGameResource@@@Z	100.0000	100.0000	100.0000	0x124550	367ebb372732
-philai	?get_artifact_purchase_value@@YIJW4TArtifact@@JPAJ@Z	97.0732	100.0000	100.0000	0x129750	c1301b4b1284
+philai	?get_artifact_purchase_value@@YIJW4TArtifact@@JPAJ@Z	100.0000	100.0000	100.0000	0x129750	c1301b4b1284
 philai	?get_best_spell_value@type_spellvalue@@QBEJJ@Z	100.0000	100.0000	100.0000	0x1275b0	582c835debc4
 philai	?get_damage_spell_value@type_spellvalue@@IBEJHHJJ@Z	100.0000	100.0000	100.0000	0x1270e0	2a4bbfb780ef
 philai	?get_enchantment_value@type_spellvalue@@IBEJHHJ@Z	100.0000	100.0000	100.0000	0x127290	f6e9f9a4334f
@@ -2945,11 +2945,11 @@ philai	?value_of_experience@@YIMPBVhero@@ABVarmyGroup@@@Z	100.0000	100.0000	100.
 philai	?value_of_learning@@YIJPBVhero@@H@Z	100.0000	100.0000	100.0000	0x1298d0	960d0b7d5c71
 philai	?value_of_monsters@@YIJPBVhero@@PAVNewmapCell@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x12a140	2cff9ac32748
 philai	?value_of_move_source@@YIHPBVhero@@JFPAJ@Z	100.0000	100.0000	100.0000	0x12a1e0	6b73fb80fa3b
-philai	?value_of_obelisk@@YIHPAVNewmapCell@@J@Z	99.9394	100.0000	100.0000	0x12a2b0	e7e914c61166
+philai	?value_of_obelisk@@YIHPAVNewmapCell@@J@Z	100.0000	100.0000	100.0000	0x12a2b0	e7e914c61166
 philai	?value_of_pyramid@@YIJPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x12a410	abcea3974388
 philai	?value_of_recruiting@@YIJPBVhero@@W4TCreatureType@@F@Z	100.0000	100.0000	100.0000	0x12a710	13dc310c5a82
 philai	?value_of_reinforcing@@YIJPAVhero@@PAVtown@@F@Z	100.0000	100.0000	100.0000	0x12b090	6c6aa1411e60
-philai	?value_of_town@@YIJPBVhero@@HHHF@Z	99.9907	100.0000	100.0000	0x12ab80	00901d758bbf
+philai	?value_of_town@@YIJPBVhero@@HHHF@Z	100.0000	100.0000	100.0000	0x12ab80	00901d758bbf
 philai	?value_of_town_buildings@@YIJPBVhero@@PAVtown@@@Z	100.0000	100.0000	100.0000	0x12b1e0	1f92295ce51c
 philai	?value_of_university@@YIJPBVhero@@PAUtype_university@@E@Z	100.0000	100.0000	100.0000	0x125bf0	25e0bf827259
 philai	?value_of_wagon@@YIHPAVNewmapCell@@J@Z	100.0000	100.0000	100.0000	0x12b710	8a067665ec97
@@ -2998,7 +2998,7 @@ recruit	??_GTRecruitQuickWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1516b0	-
 recruit	??_GTRecruitWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x14faf0	-
 recruit	?Close@recruitUnit@@UAEXXZ	100.0000	100.0000	100.0000	0x1502d0	435a89448e5f
 recruit	?GetMonsterCost@@YIXHPAH@Z	100.0000	100.0000	100.0000	0x14e7c0	7fcbe3225452
-recruit	?Main@recruitUnit@@UAEHAAVmessage@@@Z	98.9264	99.1111	99.1111	0x150940	c9a89ce92cdb
+recruit	?Main@recruitUnit@@UAEHAAVmessage@@@Z	99.0924	99.1111	99.1111	0x150940	c9a89ce92cdb
 recruit	?Open@recruitUnit@@UAEHH@Z	100.0000	100.0000	100.0000	0x14fea0	fbf1f2d3e9b0
 recruit	?QuickViewRecruit@@YIXPAVtown@@H@Z	100.0000	100.0000	100.0000	0x151750	0dd46fe87715
 recruit	?QuickViewRecruit@@YIXW4TCreatureType@@PAF@Z	100.0000	100.0000	100.0000	0x151780	b3de8a88f724
@@ -3400,7 +3400,7 @@ seerhut	?DoProposalDialog@type_monster_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	
 seerhut	?DoProposalDialog@type_resource_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x171840	8daaed82c0be
 seerhut	?DoProposalDialog@type_skill_quest@@UAEXPAVhero@@@Z	75.4324	75.4324	75.4324	0x16dad0	edd70be3a3af
 seerhut	?DoSeerEvent@TSeerHut@@QAEXPAVhero@@_N@Z	44.4753	46.3642	46.3642	0x173670	bfd3fcd81424
-seerhut	?GetAIValue@type_artifact_quest@@UAEHH@Z	96.4706	100.0000	100.0000	0x16f5a0	e8c4868db654
+seerhut	?GetAIValue@type_artifact_quest@@UAEHH@Z	100.0000	100.0000	100.0000	0x16f5a0	e8c4868db654
 seerhut	?GetAIValue@type_creature_quest@@UAEHH@Z	100.0000	100.0000	100.0000	0x170480	386e7f03466e
 seerhut	?GetAIValue@type_resource_quest@@UAEHH@Z	100.0000	100.0000	100.0000	0x171560	d5ac193e3376
 seerhut	?GetProgressDialogText@type_quest@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16d310	81eb553cb8ee
@@ -4206,7 +4206,7 @@ townmgr	?WindowHandler@type_garrison_base_window@@UAEHPAVmessage@@@Z	95.6600	95.
 townmgr	?do_monster_join_dialog@@YIXPAVhero@@PAVarmyGroup@@H@Z	100.0000	100.0000	100.0000	0x1d12b0	b54f6385538a
 townmgr	?do_monster_join_dialog@@YIXPAVhero@@W4TCreatureType@@H@Z	100.0000	100.0000	100.0000	0x1d11d0	d3d149b9cb41
 townmgr	?handle_hall_click@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d30d0	53880ef97e99
-townmgr	?handle_mage_guild_click@townManager@@QAEXXZ	99.4619	100.0000	100.0000	0x1ce560	513f994e28d5
+townmgr	?handle_mage_guild_click@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1ce560	513f994e28d5
 townmgr	?select_army@townManager@@QAEXPAVstrip@@HE@Z	100.0000	100.0000	100.0000	0x1c8080	980832ecc04b
 townmgr	?set_bonus_display@TTownScreenWindow@@QAEXPAVtown@@@Z	87.9325	87.9325	87.9325	0x1c5b40	3ff7515649fe
 townmgr	?set_prerequisite_text@TBuyBuildWindow@@QAEXPBVtown@@H@Z	87.4164	87.4164	87.4164	0x1d5be0	69a89320c10d
@@ -4247,7 +4247,7 @@ tradpost	?Update@TGiveResourceWindow@@QAEX_N@Z	100.0000	100.0000	100.0000	0x1eaf
 tradpost	?Update@TSellArtifactWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x1ebe80	2fe65c7df753
 tradpost	?Update@TSellCreatureWindow@@QAEX_N@Z	98.7522	98.7947	98.7947	0x1ec550	e0206066a5da
 tradpost	?Update@TTradeResourceWindow@@QAEXE@Z	86.8746	86.8746	86.8746	0x1ea6e0	a7ddc7d694a9
-tradpost	?WindowHandler@TBuyArtifactWindow@@UAEHPAVmessage@@@Z	96.4352	100.0000	100.0000	0x1ed9e0	5812db4b289c
+tradpost	?WindowHandler@TBuyArtifactWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ed9e0	5812db4b289c
 tradpost	?WindowHandler@TGiveResourceWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ed550	fdf359440ed8
 tradpost	?WindowHandler@TSellArtifactWindow@@UAEHPAVmessage@@@Z	90.6792	90.6792	90.6792	0x1edf60	f74afb3f3241
 tradpost	?WindowHandler@TSellCreatureWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ee890	c3e633945d2d
