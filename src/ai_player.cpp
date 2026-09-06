@@ -1790,6 +1790,8 @@ unsigned char type_AI_player::purchase_building(
         if (!CanBuy(best_town, best_building))
             return 0;
     } else {
+        // MAX 97.8283 was measured with `i != 7` - an unnamed domain compare
+        // that fails the cleanliness floor (docs/vc6/behavior-catalog.md D24).
         for (short i = 0; i < 7; ++i) {
             if (reserved_funds[i] + cost[i] > player->resources[i])
                 return 0;

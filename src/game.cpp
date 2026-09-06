@@ -10657,6 +10657,9 @@ void game::ProcessRandomObjects()
 VA(0x004ca040, 0x1F1)  // linkorder, dc 0xb5cdc
 void game::CreateTownHeroes(int* startingHeroIds)
 {
+    // MAX 99.6203 is NOT reachable as written: it was measured with this
+    // loop spelled `i != 8`, an unnamed domain compare that fails the
+    // cleanliness floor (docs/vc6/behavior-catalog.md D24).
     for (int i = 0; i < 8; i++) {
         if (!mapHeader.playerSlotAttributes[i].GenerateHero)
             continue;

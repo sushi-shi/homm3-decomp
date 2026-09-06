@@ -390,7 +390,7 @@ ai_player	?mark_town@type_garrison_purchaser@@UAEXPAVtown@@@Z	100.0000	100.0000	
 ai_player	?mark_town@type_town_threat_checker@@UAEXPAVtown@@@Z	100.0000	100.0000	100.0000	0x28570	eb3a011f3f6a
 ai_player	?mark_towns@type_town_threat_checker@@IAEXPAVhero@@PAVsearchArray@@@Z	100.0000	100.0000	100.0000	0x282b0	f5dc6aa6bf9c
 ai_player	?net_value_of_location@@YIHPAVhero@@PAUHeroDestination@@PAJPAUpathCell@@PAVsearchArray@@@Z	85.3476	85.3476	85.3476	0x2f980	947d4d9a38bc
-ai_player	?purchase_building@type_AI_player@@QAEEPAE@Z	97.4212	97.4212	97.4212	0x2ae00	3576dcf729f7
+ai_player	?purchase_building@type_AI_player@@QAEEPAE@Z	97.4212	97.8283	97.8283	0x2ae00	49a5bbaa13d4
 ai_player	?remove_negative_artifacts@@YIJPAVhero@@@Z	100.0000	100.0000	100.0000	0x33bb0	cd5326788ef9
 ai_player	?reset_magus_hut_value@type_AI_player@@QAEXXZ	100.0000	100.0000	100.0000	0x29ab0	5f044f8af5ba
 ai_player	?set@type_AI_creature_purchaser@@QAEXPAVtown@@@Z	100.0000	100.0000	100.0000	0x2d1b0	cfdd87fdaab7
@@ -1738,7 +1738,7 @@ events	?insert@?$vector@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@
 events	?insert@?$vector@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@QAEXPAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@IABV32@@Z	100.0000	100.0000	100.0000	0xaf550	-
 events	?monsters_fight@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa6c60	78a989ac8619
 events	?monsters_flee@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa6df0	01f0de47937e
-events	?monsters_give_reward@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	88.6140	88.6140	88.6140	0xa6b30	8cad8c72ebc4
+events	?monsters_give_reward@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	88.6140	89.0965	89.0965	0xa6b30	0abb0fe235f2
 events	?monsters_join@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	100.0000	100.0000	100.0000	0xa7000	7e70d5875f7d
 # monsters_sell_out ACCEPTED 100.0000 -> 99.9517 (2026-08-20, spells lane).
 # THE TRADE: armygrp.h's ESpellId gained two UNGATED enumerators -
@@ -1907,7 +1907,7 @@ game	?ComputeDailyGold@game@@QAEHHE@Z	100.0000	100.0000	100.0000	0xc7930	3578060
 game	?ComputeUALoc@@YIXH@Z	100.0000	100.0000	100.0000	0xbaed0	4da0f60ffe00
 game	?ConvertObject@game@@QAEXPAVNewmapCell@@@Z	97.5098	97.5098	97.5098	0xc9990	ebc6f1dabc11
 game	?CreateBoat@game@@QAEHHHHHEC@Z	100.0000	100.0000	100.0000	0xbb250	458ff729bb12
-game	?CreateTownHeroes@game@@QAEXPAH@Z	98.6076	98.6076	98.6076	0xca040	e931c3e1b0d8
+game	?CreateTownHeroes@game@@QAEXPAH@Z	98.6076	99.6203	99.6203	0xca040	58f487cdeb92
 game	?DoNewTurn@game@@QAEXXZ	100.0000	100.0000	100.0000	0xcc7d0	740a91ca527b
 game	?ExperienceValueOfStack@game@@QAEHPBVarmyGroup@@PBVhero@@@Z	100.0000	100.0000	100.0000	0xca3b0	2d173d314e6c
 game	?FindHero@playerData@@QAEHH@Z	100.0000	100.0000	100.0000	0xba9e0	cfe01eee2f86
@@ -3025,7 +3025,7 @@ puzzlewindow	?AI_attempt_puzzle_guess@@YI?AUtype_point@@J@Z	97.1621	97.1621	97.1
 puzzlewindow	?UpdatePuzzle@TPuzzleWindow@@QAEHH@Z	100.0000	100.0000	100.0000	0x12c6c0	34a059e6b8d9
 puzzlewindow	?WindowHandler@TPuzzleWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x12c640	86e9c14d488e
 puzzlewindow	?mark_puzzle@Bitmap816@@QAEXPAEJJ@Z	100.0000	100.0000	100.0000	0x12c8b0	6e09b505ce58
-puzzlewindow	?match_puzzle@@YI?AUtype_point@@JPAY0BB@Utype_AI_puzzle_tile@@@Z	92.4089	92.4089	92.4089	0x12cf10	bc65f8bdb7ba
+puzzlewindow	?match_puzzle@@YI?AUtype_point@@JPAY0BB@Utype_AI_puzzle_tile@@@Z	92.4089	92.4725	92.4725	0x12cf10	3d5f926eb008
 puzzlewindow	?test@?$bitset@$0DA@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0x1067e0	-
 questlogwindow	??0TQuestLogWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x12d8c0	b23447582f0c
 questlogwindow	??1TQuestLogWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x12e1e0	7ad7c6e06db8
@@ -3452,7 +3452,7 @@ seerhut	?DoProgressDialog@type_defeat_hero_quest@@UAEXXZ	100.0000	100.0000	100.0
 seerhut	?DoProgressDialog@type_experience_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x16d550	922a72ab8c37
 seerhut	?DoProgressDialog@type_monster_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x16eca0	862c5c64cbd3
 seerhut	?DoProgressDialog@type_resource_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x171ae0	c8bfdece7406
-seerhut	?DoProgressDialog@type_skill_quest@@UAEXXZ	75.8427	75.8427	75.8427	0x16dd60	f42056b3b171
+seerhut	?DoProgressDialog@type_skill_quest@@UAEXXZ	75.8427	76.5169	76.5169	0x16dd60	dabbf2c0a407
 seerhut	?DoProposalDialog@type_artifact_quest@@UAEXPAVhero@@@Z	92.0556	92.0556	92.0556	0x16f8a0	615538e46793
 seerhut	?DoProposalDialog@type_be_hero_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x171f20	ab43f3eb1f8d
 seerhut	?DoProposalDialog@type_belong_to_player_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x172510	eb13ba1a88b0
@@ -3665,7 +3665,7 @@ singleselectionwindow	?DrawBasicMapInfo@TSingleSelectionWindow@@QAEXXZ	100.0000	
 # landed in the same TU with this function's own source byte-identical.
 # Its register-homing residual note is in-source; reaching 100 there is
 # also the documented recovery for the CEnterNameEdit pair.
-singleselectionwindow	?DrawHeroAdvancedOption@TSingleSelectionWindow@@QAEXHEH@Z	91.2854	91.2854	91.2854	0x18d510	83f6536ecdf3
+singleselectionwindow	?DrawHeroAdvancedOption@TSingleSelectionWindow@@QAEXHEH@Z	91.4350	91.4350	91.4350	0x18d510	b3a260d54c2d
 singleselectionwindow	?ExitDialog@TSingleSelectionWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x187bc0	30a0ba0eb038
 singleselectionwindow	?Finish@CNewPlayerUpdateProc@@UAEXXZ	87.0155	89.5855	89.5855	0x1795a0	a10ac565f1b2
 singleselectionwindow	?Finish@t_map_list_update@@UAEXXZ	100.0000	100.0000	100.0000	0x178930	ea9b5caf124a

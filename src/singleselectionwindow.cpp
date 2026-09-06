@@ -8396,7 +8396,7 @@ void TSingleSelectionWindow::DrawHeroAdvancedOption(int playerPos,
 {
     if (position == -1) {
         position = 0;
-        for (int i = 0; i < playerPos; ++i)
+        for (int i = 0; i != playerPos; ++i)
             if (gpGame->setup.playerPos[i] >= 0
                     && (m_flag64 == 0 || gpGame->playerDisabled[i] == 0))
                 ++position;
