@@ -4190,6 +4190,17 @@ static void readQuestGuardArm(NewfullMap* map, TAbstractFile* infile,
 // arm's quest pointer all read `[ebp+0x10]` in retail and `[ebp-N]` here.
 // That is the remaining B4 knob; why-reg's model does not reach a parameter
 // slot from a body spelling.
+// 2026-09-06, polish lane 49 (lever B census), MEASURED NEGATIVE: the
+// operand histogram shows retail splitting the byte scratch in two - the
+// header x/y/z reads home at [ebp+0xb] (6 refs, 3 lea) and the switch arms
+// at [ebp+0x13] (22 refs, 11 lea) - where our single `value` serves all 16
+// sites from [ebp+0x8].  Spelling the second `char entry;` DOES move our
+// header scratch onto retail's [ebp+0xb] exactly, but CL homes `entry` at
+// [ebp-0x4] and grows the frame 0x2c -> 0x30: 97.4369 -> 97.3034, both with
+// the declaration before the switch and beside `value`.  Retail reaches
+// [ebp+0x13] by packing a dword, a short and the char into the ONE dead
+// `mapVersion` home (frame 0x28); that packing is the same B4 knob named
+// above and is not reachable from a declaration.
 // 2026-09-06, polish lane 36: the family `int count` local that closed
 // readResourceData and readScholarData is BYTE-FLAT here (97.4369 either
 // way), and so is it on readMapLayer (95.4717) and on NewfullMap::Save

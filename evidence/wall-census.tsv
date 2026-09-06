@@ -246,7 +246,6 @@ not diagnosed	69	91.8147	91.8147	847	spells	?ViewSpells@combatManager@@QAEHXZ	di
 not diagnosed	58	91.8870	91.8870	721	mapcell	?Save@NewfullMap@@QAEHPAVTAbstractFile@@HE@Z	diagnose	-
 not diagnosed	73	91.9303	91.9303	907	events	?DoEventShipyard@advManager@@QAEXPAVNewmapCell@@Utype_point@@E@Z	diagnose	-
 not diagnosed	70	91.9430	91.9430	873	hillfortwindow	?HillFortWindowHandler@@YIHAAVmessage@@@Z	diagnose	-
-not diagnosed	94	91.9528	91.9528	1168	ai_player	?initialize_artifact_effects@@YIXXZ	diagnose	-
 not diagnosed	132	91.9548	91.9548	1646	ai_combat	?initialize_creatures@type_AI_combat_data@@QAEXNPBVhero@@@Z	diagnose	-
 not diagnosed	66	91.9961	91.9961	821	singleselectionwindow	?_Sort_0@std@@YIXPAUGameSelectionHeadersStruct@@0UTSortMapsBySize@@0@Z	diagnose	-
 not diagnosed	22	92.0000	92.0000	275	soundmgr	?WaitEndSampleThread@@YAXPAX@Z	diagnose	-
@@ -330,7 +329,6 @@ not diagnosed	41	94.5399	94.5399	758	ai	?mark_multiheaded_enemy@combatManager@@Q
 not diagnosed	18	94.5833	94.5833	324	event_record	?replay@type_record_move_hero@@UAEXE@Z	diagnose	-
 not diagnosed	43	94.5840	94.5840	796	wingraph	?DDSetFullScreenStatus@@YIEH@Z	diagnose	-
 not diagnosed	64	94.6104	94.6104	1180	tradpost	?DoMarket@@YIXXZ	diagnose	-
-not diagnosed	77	94.6792	94.6792	1453	advmgr	?ProcessSearch@advManager@@QAEHHHH@Z	diagnose	-
 not diagnosed	11	94.7260	94.7260	205	game	?GetRandomArtifactId@game@@QAE?AW4TArtifact@@H@Z	diagnose	-
 not diagnosed	159	94.7322	94.7322	3019	overview	?ProcessIconSelect@game@@QAEHHE@Z	diagnose	-
 not diagnosed	28	94.7553	94.7553	541	university_window	?purchase_click@type_university_window@@KIHAAVmessage@@@Z	diagnose	-
@@ -352,6 +350,7 @@ not diagnosed	44	95.0862	95.0862	898	ai_combat	?get_enchantment_value@type_AI_co
 not diagnosed	5	95.1191	95.1191	95	kb	?GetNextHumanPlayer@@YIHH@Z	diagnose	-
 not diagnosed	111	95.1207	91.0830	2266	townmgr	?BuyBuild@townManager@@QAEHHHH@Z	diagnose	-
 not diagnosed	97	95.1600	95.1600	1996	mapcell	?readTownData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	diagnose	-
+not diagnosed	57	95.1622	95.1622	1168	ai_player	?initialize_artifact_effects@@YIXXZ	diagnose	-
 not diagnosed	76	95.2727	95.2727	1613	hillfortwindow	?Recalculate@THillFortWindow@@QAEXE@Z	diagnose	-
 not diagnosed	25	95.2761	95.2761	531	singleselectionwindow	?_Unguarded_partition@std@@YIPAUGameSelectionHeadersStruct@@PAU2@0U2@UTSortMapsBySize@@@Z	diagnose	-
 not diagnosed	13	95.2778	95.2778	281	ai_tactical	?set_melee_enemies@type_AI_spellcaster@@QAEXXZ	diagnose	-
@@ -388,6 +387,7 @@ not diagnosed	17	95.9811	95.9811	424	army	??0army@@QAE@XZ	diagnose	-
 not diagnosed	32	96.0616	96.0616	811	ai_tactical	?get_fortune_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	diagnose	-
 not diagnosed	4	96.0714	96.0714	110	customcampaign	?GetIconDefName@TCampaignStartCrossoverOption@@UBEPBDPAXH@Z	diagnose	-
 not diagnosed	38	96.1467	96.1467	975	advmgr	?ProcessWaitingHover@advManager@@QAEHHH@Z	diagnose	-
+not diagnosed	56	96.1549	96.1549	1453	advmgr	?ProcessSearch@advManager@@QAEHHHH@Z	diagnose	-
 not diagnosed	32	96.1913	96.1913	842	spells	?ChainLightning@combatManager@@QAEXHHH@Z	diagnose	-
 not diagnosed	22	96.2635	96.2635	596	mapcell	?upgrade_cell_extra_info@@YIXPAVNewmapCell@@H@Z	diagnose	-
 not diagnosed	95	96.2963	96.2927	2568	cmbtmgr	?PowEffect@combatManager@@QAEXHH@Z	diagnose	-

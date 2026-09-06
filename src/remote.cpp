@@ -832,6 +832,8 @@ bool CDPlayHeroes::TransmitRemoteDataDPID(CNetMsg* pMsg,
 // shared epilogue but leaves the rotated loop's own fall-through `xor al,al`
 // tail behind - still 3 returns, still 88.8489. The surplus return is a
 // CONSEQUENCE of the rotation, not an independent merge to spell.
+// Polish 49 adds the third loop form to that list: `int retries = 0;
+// while (retries <= 5) { ...; ++retries; }` is byte-identical at 88.8550.
 VA(0x005533d0, 0x1AB)  // anchor-strings + virtual-slots + dc-order-map
 bool CDPlayHeroes::SendIt(CNetMsg* pMsg, unsigned long dpidTo,
                           bool guaranteed)
