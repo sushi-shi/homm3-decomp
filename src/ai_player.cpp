@@ -5593,7 +5593,7 @@ long value_of_hiring(town* current_town, hero* candidate,
     short player_id = current_town->owner;
     playerData* player = &gpGame->players[current_town->owner];
     armyGroup hero_army = candidate->army;
-    armyGroup town_army = current_town->get_army();
+    armyGroup town_army = static_cast<const town*>(current_town)->get_army();
     type_AI_creature_purchaser purchaser(player_id, current_town);
 
     candidate->turnExperienceToRVRatio = 0;
