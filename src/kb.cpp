@@ -1260,15 +1260,15 @@ int oldmain()
                 // INLINE BOUNDARY: oldmain -> KbFn_004EE1B0. Retail emits
                 // the call at oldmain+0x416 to the separate 0x4ee1b0 body;
                 // the two preceding VideoPlay calls and the introrim.pcx
-                // argument fix the site. Negative control: with this gate
-                // removed, VC6 flattened all ten of the helper's calls into
-                // oldmain and emitted no 0x4ee1b0 candidate function.
-#pragma inline_depth(0)
+                // argument fix the site. The old negative control (gate
+                // removed -> VC6 flattened all ten of the helper's calls
+                // into oldmain and emitted no 0x4ee1b0 candidate) no longer
+                // reproduces: the site is byte-flat without a pin, so the
+                // pin came out (2026-09-06, polish lane 50).
                 KbFn_004EE1B0(
                     30,
                     DATA_COMPGEN(0x0067f718, oldMainIntroFrame,
                                  "introrim.pcx"));
-#pragma inline_depth()
             }
         }
 
@@ -1746,13 +1746,14 @@ static int DoNewGame()
         case TGameTypeWindow::MULTIPLAYER_ID:
             // INLINE BOUNDARY: DoNewGame -> DoMultiPlayerWindow and
             // DoSinglePlayerWindow. Dreamcast kb.cpp:1896/1898 and retail
-            // oldmain+0x933/+0x940 retain both calls. Negative control:
-            // ordinary depth expands both modal objects into oldmain.
-#pragma inline_depth(0)
+            // oldmain+0x933/+0x940 retain both calls. The pin that held this
+            // is now a LOSS: removing it is oldmain 77.56300 -> 77.74638,
+            // and with the CAMPAIGN_ID load pin out too the pair is 78.01930
+            // (2026-09-06, polish lane 50, full 32-subset enumeration over
+            // the five candidate pins in this body).
             if (DoMultiPlayerWindow()
                             && DoSinglePlayerWindow())
                 exitNewGame = 1;
-#pragma inline_depth()
             break;
 
         case TGameTypeWindow::TUTORIAL_ID: {
@@ -2085,12 +2086,15 @@ static int DoLoadGame()
 
         case TGameTypeWindow::CAMPAIGN_ID:
             // Same proven PickLoadGame boundary, retail oldmain+0xc54.
-#pragma inline_depth(0)
+            // Unpinned: removing this one alone is oldmain 77.56300 ->
+            // 77.93137 and it combines with DoNewGame's for 78.01930. The
+            // SINGLE_ID, MULTIPLAYER_ID and TUTORIAL_ID siblings below stay
+            // pinned - every subset that also drops one of those is worse
+            // (2026-09-06, polish lane 50).
             if (PickLoadGame()) {
                 gbUnk69774c = 1;
                 exitLoadGame = 1;
             }
-#pragma inline_depth()
             break;
 
         case TGameTypeWindow::MULTIPLAYER_ID:
@@ -2244,7 +2248,9 @@ static TDialogBox* gpNormalDialogWindow;
 // type (a coin toss between the two choices of the choose dialogs), then
 // the standard OK-widget message. Expanded into both of the handler's
 // exits in retail, so it has no body of its own.
-static int ExitNormalDialog(message* msg)
+// DC records message& and a zero-remainder first arm at kb.cpp:2345/2346;
+// retail expands the same branch order into NormalDialogHandler (+0x164).
+static int ExitNormalDialog(message& msg)
 {
     switch (giNormalDialogMBType) {
     case NORMAL_DIALOG_DEFAULT:
@@ -2256,18 +2262,18 @@ static int ExitNormalDialog(message* msg)
         break;
     case NORMAL_DIALOG_CHOOSE:
     case NORMAL_DIALOG_CHOOSE_OPTIONAL:
-        if (rand() % 2)
-            gpWindowManager->dialogReturn = DIALOG_RETURN_CHOICE_2;
-        else
+        if (rand() % 2 == 0)
             gpWindowManager->dialogReturn = DIALOG_RETURN_CHOICE_1;
+        else
+            gpWindowManager->dialogReturn = DIALOG_RETURN_CHOICE_2;
         break;
     default:
         gpWindowManager->dialogReturn = DIALOG_RETURN_CANCEL;
         break;
     }
-    msg->id = MESSAGE_WIDGET;
-    msg->codeY = 10;
-    msg->codeX = 10;
+    msg.id = MESSAGE_WIDGET;
+    msg.codeY = 10;
+    msg.codeX = 10;
     return MESSAGE_DISPATCH_FORWARD;
 }
 
@@ -2283,12 +2289,14 @@ static int ExitNormalDialog(message* msg)
 // source (turn-timer and network arms); retail expands ExitNormalDialog
 // into each.
 //
-// Residual (71.36%): retail SINKS both expansions past the function's
-// returns and gives the network arm its own EventWindowHandler tail; ours
-// keeps the first expansion inline behind a jump. Measured and rejected:
-// the early-return form `if (elapsed >= 15000) return Exit...;` in both
-// arms (71.03), the same plus an explicit `return EventWindowHandler`
-// after the inner store (71.03), and that return alone (56.56).
+// Exact: DC kb.cpp:2377/2403 call ElapsedSince again for the remaining
+// timeout (the SH4 jsr reuses the target register loaded for 2375/2401).
+// Complete independently snapshots giNormalDialogStart before each Get.
+// Keep `15000 - ElapsedSince(start)` at both sites: flattening to
+// `start - Get() + 15000` reads start after Get and gives 71.3624%, also
+// changing the placement of both ExitNormalDialog expansions and the
+// EventWindowHandler returns. The helper calls alone reach 99.58%; restoring
+// ExitNormalDialog's zero-first random-choice arm closes the last branch.
 VA(0x004f08d0, 0x20C)  // anchor-callee + dialog-global shape, dc 0xe1ccc
 int NormalDialogHandler(message& msg)
 {
@@ -2296,9 +2304,9 @@ int NormalDialogHandler(message& msg)
         gpAdvManager->advWindow->animate_bottom_view(1);
     if (!gDialogDeadline697784 && gTurnDuration69d630.IsExpired()) {
         if (GameTime::ElapsedSince(giNormalDialogStart) < 15000)
-            gDialogDeadline697784 = giNormalDialogStart - GameTime::Get() + 15000;
+            gDialogDeadline697784 = 15000 - GameTime::ElapsedSince(giNormalDialogStart);
         else
-            return ExitNormalDialog(&msg);
+            return ExitNormalDialog(msg);
     }
     if (gNetworkActive69954c && !gDialogDeadline697784) {
         unsigned char msgReceived = 0;
@@ -2309,9 +2317,9 @@ int NormalDialogHandler(message& msg)
                 if (msgReceived && handler->GetAbortPopupMsg()) {
                     if (GameTime::ElapsedSince(giNormalDialogStart) < 15000)
                         gDialogDeadline697784 =
-                            giNormalDialogStart - GameTime::Get() + 15000;
+                            15000 - GameTime::ElapsedSince(giNormalDialogStart);
                     else
-                        return ExitNormalDialog(&msg);
+                        return ExitNormalDialog(msg);
                 }
             }
         }
@@ -2699,6 +2707,22 @@ inline void SendPlayerLost()
 // 256-byte sNames local, switch/source order, helper boundaries and all ten
 // RoE-era message families. Retail corroborates those facts and adds the two
 // Complete-only victory kinds plus three campaign-specific artifact texts.
+// Residual (94.9521%, polish-45 - first full evidence pass on this row):
+// the source order and every statement are already retail's; what differs is
+// where C2 PARKS the cross-jumped tail that all ten standard victory arms
+// share (`if (!remoteCheck) SendPlayerWon(); NormalDialog(gText,1,-1,...);
+// break;`).  Both sides merge the same set and both emit exactly two
+// (TransmitRemoteData, NormalDialog) pairs; retail keeps the ARTIFACT arm's
+// copy in place at fn+0x123/+0x150 and lets the later arms jump back to it,
+// while this compile keeps a late arm's copy at +0x108b/+0x10b8 and makes the
+// artifact arm jump forward.  That single displacement is the 2 base-only /
+// 2 target-only call rows, and it drags the artifact block group with it:
+// retail falls straight from `campaignText = (*gpGeneralText)[714]` into the
+// inline strcpy and places `other_campaign_artifacts` after the whole tail,
+// where this compile emits `jmp` over the campaign chain to reach the strcpy.
+// 55 of 57 calls, 123/123 branches and 237/237 blocks otherwise agree.  This
+// is the merged-block representative class townmgr's TTavernWindow::
+// SetRolloverText documents; no source spelling was found that moves it.
 VA(0x004f15e0, 0x1348)  // linkorder + anchor-string/callee, dc 0xe29a8
 bool DisplayVCWinLoss(VictoryConditionStruct& VictoryCondition,
                       int& bGameWon, int& bGameLost, bool remoteCheck)

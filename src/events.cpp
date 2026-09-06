@@ -3092,7 +3092,7 @@ bool advManager::GiveBlackBoxReward(const char* text, hero* current_hero, Newmap
 
     armyGroup creatures = BlackBox->Creatures;
     unsigned char joinFailed = 0;
-    for (int p = 0; p < 7; p++) {
+    for (unsigned int p = 0; p < 7; p++) {
         int type = creatures.armies[p];
         int count = creatures.numTroops[p];
         if (type == CREATURE_NONE)
@@ -4016,6 +4016,9 @@ void advManager::do_event_hero(hero* current_hero, NewmapCell* cell,
 // headers; we copy EDX into EBX first, so the max spills to [ebp-0x1c] and
 // ESI carries the zero instead.  Every instruction pairs; only the register
 // and the one extra frame slot differ.
+// MEASURED NEGATIVE (polish 49): swapping the _cpp_max operand order so the
+// second hero's skill is read first - retail's `mov al,[edx+0xdb]` lands
+// before the register saves - costs 92.1640 -> 92.1508.
 VA(0x004a2940, 0x85C)  // anchor-callee from do_event_hero + full retail semantics, dc 0x93464
 static void exchange_spells(hero* first_hero, hero* second_hero)
 {
@@ -4046,7 +4049,14 @@ static void exchange_spells(hero* first_hero, hero* second_hero)
                 && akSpellTraits[spell].level <= second_spell_level) {
                 second_hero->AddSpell(spell);
                 if (gpCurrentPlayer->IsLocalHuman())
-                    spells_taught.push_back(spell);
+            // DEPTH LADDER (docs/vc6/inliner.md 6b): this ONE append is
+            // `insert(end(), x)`; the other four in this body stay
+            // push_back.  92.1640 -> 94.7989, and a greedy second round over
+            // the remaining four finds nothing.  Site #1 measures the same
+            // 94.7989, #2 93.05 and #3 93.33; the `.append` -> `+=` rung on
+            // the thirteen text stores is a flat 93.2791 at every site, so
+            // this append is the one the budget turns on.
+            spells_taught.insert(spells_taught.end(), spell);
             }
 
             if (second_hero->is_in_spellbook(spell)
@@ -5897,18 +5907,24 @@ int IsBaseCreature(TCreatureType type);
 
 // E:\gamedcs\events.cpp:3579. Pays out the artifact and resource reward from
 // the customized wandering-monster record selected by the cell.
-// [2026-08-27] Residual (88.61%): retail pushes the -1 dialog args as
-// immediates and counts the resource loop DOWN (dec/jne), where our CL
-// materializes -1 into EDI and counts up; current_hero binds the other
-// register. Register-homing/loop-form wall on a 298 B leaf.
-// Residual (88.61%): a -1-pooling register cascade. Retail compares
-// reward->Artifact against an IMMEDIATE -1 and pushes immediate -1
-// dialog arguments, loading current_hero from [ebp+8] only after that
-// gate (and reloading it per GiveResource iteration); our CL pools -1
-// into edi at the first compare, which frees it to cache current_hero
-// in ebx, which in turn denies the resource loop retail's ebx=7
-// down-counter and denies human_player its callee-saved bl home.
-// The two-arg type_artifact ctor (seerhut precedent) measured
+// EXACT 2026-09-06 (88.6140 -> 100.0000), and the two residual notes this
+// replaces had the causation backwards.  They read the register cascade as
+// the cause - "our CL pools -1 into edi at the first compare, which frees it
+// to cache current_hero in ebx, which in turn denies the resource loop
+// retail's ebx=7 down-counter" - and called it a register-homing wall on a
+// 298 B leaf.  It was the LOOP SPELLING all along, and the cascade was its
+// consequence: retail's tail is `inc edi / add esi,4 / dec ebx / jne`, i.e.
+// THREE separate induction variables - a resource index, a `const int*`
+// walking ResQty, and a down-counter - where an indexed `for (int i = 0;
+// i < 7; ++i)` over `reward->ResQty[i]` gives VC6 one induction variable and
+// a compare against 7.  Written with all three explicit, ebx takes the
+// counter, esi the pointer and edi the index, current_hero goes back to a
+// per-iteration reload out of [ebp+8], human_player keeps its callee-saved
+// byte home, and every one of the 17 blocks, 9 branches and the single
+// return matches.  polish-41's countdown-walk rule ("pays only when the
+// bound is a VARIABLE; with a constant bound VC6 already emits it") does NOT
+// hold here: the bound is the constant 7 and the explicit walk is still what
+// retail wrote.  The two-arg type_artifact ctor (seerhut precedent) measured
 // byte-flat and is kept as the cleaner spelling. 2026-08-27.
 VA(0x004a6b30, 0x12A)  // dc-bracket forced, ret 0xc=p4, dc 0x96994
 void advManager::monsters_give_reward(hero* current_hero, NewmapCell* cell,
@@ -5934,14 +5950,20 @@ void advManager::monsters_give_reward(hero* current_hero, NewmapCell* cell,
         }
     }
 
-    for (int i = 0; i < 7; ++i) {
-        if (reward->ResQty[i]) {
+    int resource = 0;
+    const int* qty = reward->ResQty;
+    int remaining = 7;
+    do {
+        if (*qty) {
             if (human_player)
-                NormalDialog(emptyRolloverText, 1, -1, -1, i,
-                             reward->ResQty[i], -1, 0, -1, 0, -1, 0);
-            current_hero->GiveResource(i, reward->ResQty[i]);
+                NormalDialog(emptyRolloverText, 1, -1, -1, resource,
+                             *qty, -1, 0, -1, 0, -1, 0);
+            current_hero->GiveResource(resource, *qty);
         }
-    }
+        ++resource;
+        ++qty;
+        --remaining;
+    } while (remaining);
 }
 
 // E:\gamedcs\events.cpp:3627.  The wandering stack is fought. The combat

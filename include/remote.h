@@ -56,11 +56,14 @@ public:
 
     unsigned char IsInPopup() { return m_inPopup; }
     void SetInPopup(unsigned char b) { m_inPopup = b; }
-    // Both are out-of-line retail bodies, not header inlines: 0x555150 and
-    // 0x557910. Copy takes the other handler's popup byte directly but its
-    // abort message THROUGH the vtable - `call [edx+8]`, slot 2 - which is
-    // the second independent proof of the slot numbering above.
-    void Copy(CNetMsgHandler* pOther);
+    // Dreamcast remote.h:632-635 retains the IsInPopup call before the
+    // virtual abort-message read. Retail expands the first accessor and
+    // calls vtable slot 2; it also retains Copy's own body at 0x555150.
+    void Copy(CNetMsgHandler* pOther)
+    {
+        m_inPopup = pOther->IsInPopup();
+        m_pAbortPopupMsg = pOther->GetAbortPopupMsg();
+    }
     void SetAbortPopupMsg(CNetMsg* pNetMsg);
 
     // A pure virtual may still have an out-of-line definition. Retail's

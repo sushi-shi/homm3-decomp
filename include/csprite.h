@@ -92,11 +92,15 @@ public:
     // USE re-expands the guard (the else arm constant-folds to a
     // literal 0 divisor, `xor ecx,ecx; idiv ecx`), which a cached
     // frame-count local cannot reproduce.
+    // DC 0x1f1fc calls IsValidSeq; its true/false values join at 0x1f220
+    // before a single return. Keep that helper and conditional expression.
+    // An if/return spelling spills the third boat-row divisor into a
+    // parameter home; this expression closes both VWDrawHeroPart twins.
+    // The preceding DC SpriteDataReload guard belongs to its removed cache
+    // fields; Complete's frame walkers have no corresponding reload arm.
     int GetNumFrames(int seq) const
     {
-        if (seq < numSequences && validSeqMask[seq] != 0)
-            return s[seq]->numFrames;
-        return 0;
+        return IsValidSeq(seq) ? s[seq]->numFrames : 0;
     }
 
     // E:\gamedcs\CSprite.h:294
@@ -226,11 +230,13 @@ public:
     void DrawAdvObj(int framenum, int sx, int sy, int sw, int sh,
                     unsigned short* dst, int dx, int dy, int dw, int dh,
                     int dpitch, unsigned char hflip);
+    // DC CSprite.h:355 calls all four Bitmap16Bit accessors before the
+    // raw-map overload. Preserve those nested boundaries in retail callers.
     void DrawAdvObj(int framenum, int sx, int sy, int sw, int sh,
                     Bitmap16Bit* dst, int dx, int dy, unsigned char hflip)
     {
-        DrawAdvObj(framenum, sx, sy, sw, sh, dst->map, dx, dy, dst->Width,
-                   dst->Height, dst->Pitch, hflip);
+        DrawAdvObj(framenum, sx, sy, sw, sh, dst->GetMap(0, 0), dx, dy,
+                   dst->GetWidth(), dst->GetHeight(), dst->GetPitch(), hflip);
     }
     void DrawAdvObjWithFlag(int framenum, int sx, int sy, int sw, int sh,
                             unsigned short* dst, int dx, int dy, int dw,
@@ -247,12 +253,14 @@ public:
     void DrawTile(int framenum, int sx, int sy, int sw, int sh,
                   unsigned short* dst, int dx, int dy, int dw, int dh,
                   int dpitch, unsigned char hflip, unsigned char vflip);
+    // DC CSprite.h:393 forwards through the same four bitmap accessors.
     void DrawTile(int framenum, int sx, int sy, int sw, int sh,
                   Bitmap16Bit* dst, int dx, int dy, unsigned char hflip,
                   unsigned char vflip)
     {
-        DrawTile(framenum, sx, sy, sw, sh, dst->map, dx, dy, dst->Width,
-                 dst->Height, dst->Pitch, hflip, vflip);
+        DrawTile(framenum, sx, sy, sw, sh, dst->GetMap(0, 0), dx, dy,
+                 dst->GetWidth(), dst->GetHeight(), dst->GetPitch(),
+                 hflip, vflip);
     }
     void DrawTileShadow(int framenum, int sx, int sy, int sw, int sh,
                         unsigned short* dst, int dx, int dy, int dw, int dh,

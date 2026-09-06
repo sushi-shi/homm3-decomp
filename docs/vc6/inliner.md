@@ -394,6 +394,51 @@ always counts `call` + tail `jmp`.
     this repair path when it can prove that the under-inline outer callee calls
     the over-inline inner callee.
 
+14. **A tail-site probe does not identify a missing tail statement
+    (2026-09-06).** `VWDrawGround` (`0x5fa1e0`) expanded its last clipped
+    scaler where retail calls it. A temporary free candidate after the scale
+    call could flip that decision, but Dreamcast supplied no tail statement.
+    The natural correction came from two existing source relationships:
+
+    - `CSprite::DrawTile`'s bitmap overload calls `GetMap`, `GetWidth`,
+      `GetHeight`, and `GetPitch` (DC `CSprite.h:393`). Restoring those
+      flattened accessors selects retail's clipped-scaler calls and raises
+      57.8477% to 96.8937%, with one extra `GetMap` call remaining.
+    - DC `viewwrld.cpp:1194-1258` puts the border arm before the normal-tile
+      `else` arm. The reconstruction inverted them and returned early.
+      Restoring the source order removes that final extra call: **100%**,
+      64/64 exact blocks and six matching calls, with the original inline
+      declarations retained.
+
+    The probe isolated sensitivity to the site's allowance. It did not prove
+    where the missing source fact belonged: earlier helper costs and branch
+    order were sufficient. These measurements preserve one canonical scaler
+    and bitmap accessor implementation; no synthetic tail operation remains.
+
+15. **A flattened nested helper can make a natural outer expansion seem
+    impossible (2026-09-06).** `HandleLowLevelMsg` (`0x552db0`) was capped at
+    50.5525% behind a synthetic `RemoteCleanupInline` force-inline wrapper.
+    Removing the wrapper while retaining its flattened chat loop leaves
+    `RemoteCleanup` out of line and scores 32.7626%. Dreamcast provides the
+    missing nested boundary: `RemoteCleanup` calls `CChatManager::ClearChat`
+    at `remote.cpp:1412`. Restoring that ordinary call makes the ordinary
+    outer cleanup expand and selects both retail deque `_Buyback` calls:
+    **99.9543%**, all 26 blocks exact. No switch reordering or caller carrier
+    is required. The standalone cleanup and ClearChat remain exact.
+
+    The remaining ten differences are stack/frame operands. Passing
+    `&CPingResponseMsg(...)` directly into the send call, instead of naming
+    a local, restores retail's separate `[ebp-0x38]` response slot and
+    `0x138` frame: **100%**. Dreamcast line 310 passes the constructor's result
+    directly to `TransmitRemoteDataDPID`; only the chat buffer has a recorded
+    local name. This is a VC6-accepted temporary-address expression, with
+    lifetime through the call. The named-local control remains 99.9543%.
+
+    All callers now use one ordinary `RemoteCleanup` definition.
+    `LobbyLaunchConnect` and `HandlePlayerDead` retain their current exact
+    bodies; `HandleMPlayerLaunch` falls to 84.5139% while its 100% MAX remains
+    banked. That collateral does not justify restoring the synthetic wrapper.
+
 ## 6. What the model does not cover
 
 * **The veto (`0x94964`)**: post-substitution re-walk, limit
@@ -512,6 +557,25 @@ Two riders:
   is worth -0.19 (94.32 pinned against 94.51 unpinned), so it came out and the
   tree's pin count fell 354 -> 353.
 
+### The checked bitset accessor can recover another boundary
+
+`GiveCrossoverArtifacts` (`0x487900`, Complete-only) reaches 99.41% from
+94.50% by replacing the non-const subscript with `bitset::at`. In the pinned
+Dinkumware header, `at` checks the index before constructing the reference
+proxy; converting that proxy to bool checks it again through `test`. VC6
+merges the range tests into retail's single branch while retaining the
+`basic_string(const char*, allocator&)` constructor in the throw path.
+The subscript control expands that constructor to `_Tidy` plus `assign`.
+The checked spelling also restores EDI as the shared zero across the
+artifact and recipient loops. Neither spelling changes the library's
+out-of-range exception semantics.
+
+Thus the accessor ladder also includes `at`; the earlier observation that
+subscript leaves no deeper spelling should not be generalized to other
+callers. Measure the actual overload and call site. This function still
+has separate artifact stack homes and the wrong first vector insertion
+boundary, so the remaining 0.59 points are not an established allocator wall.
+
 ### Constructed return values and local return objects differ after inlining
 
 `SelectTerrainTransition` (retail `0x005b3e80`, 1,887 bytes) reaches 100%
@@ -590,7 +654,195 @@ inside the packed-bit helper reaches 83.29%, while the unsigned-long `(0)`
 constructor is the 80.95% control. The reader remains unfinished; these gains
 do not establish that every remaining call boundary is correct. In particular,
 its prerequisite append still expands the single-element insert that retail
-retains, leaving `0x48bf00` paired with the wrong emitted overload.
+retains. The explicit `VECTOR_INSERT_SINGLE` claim now leaves `0x48bf00`
+unpaired until that body emits, preserving its historical MAX without borrowing
+the count overload's identity.
+
+### Canonical video cleanup helpers (2026-09-06)
+
+`VideoClose` (`0x5975f0`) reaches 100% from 95.9231 when its copied resume and
+Smacker teardown are replaced by ordinary calls to `VideoResume` and
+`SmackManager::CloseSmacker`. `VideoResume` in turn calls `VideoSoundOnOff`.
+The retained retail helpers and `ShowVideo`'s different expansions expose the
+chain; Dreamcast's four-byte video stubs prove declarations and order only.
+
+The earlier loop-spelling and cached-count probes could not recover the missing
+top test in the flattened body. Restoring the helper chain does, with no inline
+keyword or pragma. Its callers remain a separate checkpoint: `ShowVideo` now
+auto-inlines the ordinary close at all three sites, but still expands nested
+helpers that retail calls. Restoring the other teardown callers is byte-flat;
+call-site count alone does not explain that remaining decision.
+
+### Campaign hero lookup and the packed-point accessor (2026-09-06)
+
+`PlaceCrossoverHeroes` (`0x487290`) improves from 67.9283% to 98.0287% by
+recovering its reverse-loop tests and two helper boundaries. Retail uses each
+reverse loop's pre-decrement count as the condition, matching `for (i = size(); i--;)`.
+That change alone reaches 74.5681%.
+
+The all-pool search snapshots its hero-ID argument after the preceding erase,
+keeps the current pool across the search, and retains both vector `size()`
+calls. An ordinary `SCampaign::FindCrossoverHero(int)` reproduces that pattern
+and reaches 87.2742%; the name remains provisional because this Complete-only
+caller has no Dreamcast counterpart. Flattening the same loops with a cached
+ID and pool reference reaches 75.0108% and expands both nested size calls.
+
+Using the existing `cell(type_point)` overload instead of exposing its three
+fields then reaches 98.0287%, restoring the retained `cell(int,int,int)` call
+and the final vector-destructor calls. All 71 block flow shapes, 40 branches,
+and three returns agree. This is further evidence that a small wrapper can
+change later cleanup decisions as well as its own nested call. The remaining
+stack/register differences are recorded beside the source function.
+
+### Shared town-selection helpers in a new caller (2026-09-06)
+
+`SetNewPlayerSlot` (`0x58e700`) had copied the bodies of `GetDisplayTown` and
+`UpdateTown`. Restoring only the first call raises 68.8219% to 71.87% but
+leaves `HasMultipleTowns` called and `CheckFaces` expanded. Restoring both
+calls reaches 98.8866%, with retail's repeated `HasRandomAlignment` test,
+expanded `HasMultipleTowns`, and retained `CheckFaces` call. The only remaining
+instruction-sequence difference is a two-instruction loop-tail detour.
+
+Dreamcast retains both helpers and their nested calls even though the older
+`SetNewPlayerSlot` has a different ABI and much smaller body. The Complete
+caller's own bytes establish where those shared helpers belong. No new
+helper, pragma, or artificial branch is needed. NB11 enum `TTownType` also
+supplies `eTownNeutral = -1`, which lets the reset use the existing enum ABI.
+
+### Aggregate membership changes earlier STL inlining (2026-09-06)
+
+`playerData::operator=` (`0x58f750`) reaches 100% from 70.2441% after
+restoring its `AI ai` member. Dreamcast NB11 type `0x3591` supplies the
+six-member, 120-byte record; Complete copies 30 dwords from `+0xf0` and
+skips the preceding four-byte alignment pad. `playerData::Init` independently
+clears that same record. The old flattened members generated separate copy
+loops and copied the alignment pad as data.
+
+This also restores both retained `_Construct<type_point>` calls inside the
+earlier `shipyards` assignment, without changing that vector or its source
+operations. All 51 blocks and 25 branches agree. Retail folds the nine-byte
+construction helper onto `_Construct<widget*>`. Before diagnosing an STL
+inline boundary inside a compiler-generated special member, recover its
+complete member structure, including nested POD records and implicit padding.
+
+### Time-helper argument evaluation and exit placement (2026-09-06)
+
+`NormalDialogHandler` (`0x4f08d0`) reaches 99.58% from 71.3624% by
+restoring both `15000 - GameTime::ElapsedSince(giNormalDialogStart)` calls.
+Dreamcast kb.cpp:2377/2403 reuse the preceding ElapsedSince target register;
+Complete snapshots the argument before `GameTime::Get`. Flattening this to
+`giNormalDialogStart - GameTime::Get() + 15000` moves that load after Get.
+The helper restoration also moves both ExitNormalDialog expansions and
+restores the three return sites. Earlier early-return rewrites targeted a
+symptom of the lost source call and could not recover that layout.
+
+Restoring the helper's zero-first random-choice arm, visible in Dreamcast
+kb.cpp:2345/2346 and retail, closes the remaining branch to 100%. All 31
+blocks, 17 branches and 15 calls agree. No inline pragma or extra return
+statement is required.
+
+### Folded failure guard and implicit message cleanup (2026-09-06)
+
+`TSingleSelectionWindow::BeginNewGame` (`0x58c570`) reaches 100% from
+74.9022% by restoring two source facts. Dreamcast singleselectionwindow.cpp:
+7871/7872 records `if (!SendPlayerPositions(0)) return false;`, even though
+that helper returns true at line 6986. VC6 removes the runtime test, but
+retaining the source guard and its cleanup path restores the earlier header
+construction: `NewSMapHeader` stays a call and its assignment expands through
+base assignment, two string assigns, and the bitset copy. The guard alone
+reaches 94.0226%, with the original 17 blocks and nine branches unchanged.
+
+The remaining difference comes from a written empty message destructor.
+Dreamcast attributes `~CNewMapHeaderInfoMsg` to line 7886, the caller's closing
+line; retail's standalone body and caller cleanups lack a derived-vptr store.
+Removing the explicit declaration/definition and retaining the existing claim
+as `IMPLICIT_DTOR` closes both the caller and the destructor (`0x58a300`,
+97.0588% to 100%). Cleanup now retains the map destructor and expands only the
+normal-exit vector teardown, exactly as retail does.
+
+Negative controls are the original omitted guard and written destructor:
+74.9022% together, 94.0226% with only the guard restored. Restoring the named
+`CLaunchingGameMsg` and `iReturn` header-send local alone is byte-flat. There
+is no inline pragma or invented assertion. A failure branch proven in the
+older source must survive reconstruction even when constant-return inlining
+makes it disappear from retail instructions.
+
+### A fully expanded helper still determines register lifetimes (2026-09-06)
+
+`combatManager::CalculateGainedExperience` (`0x46a350`) reaches 100% from
+75.0110% by restoring the ordinary cpp helper `ExperienceValueOfStack(1-side)`.
+Dreamcast cmbtmgr.cpp:4949 records that call; the helper at lines 2738..2752
+owns the casualty loop, both `army::Is` calls and the defeated-hero bonus.
+The caller adjusts retreat/surrender and town experience, applies Learning,
+and assigns the result after the conditional at line 4963.
+
+The flattened version had the same retail call multiset and branch flow,
+but spilled the accumulated experience instead of `this` and the loop
+counter. Type/order sweeps had left it at 75.0110% and misclassified the
+residual as an allocator tie-break. Restoring the helper and field-accessor
+boundaries reproduces all 17 blocks without an inline keyword or pragma.
+A matching call multiset does not prove the source helper structure is
+complete: a helper expanded on both sides can still delimit register lifetimes.
+
+## A callee defined LATER in the TU still inlines
+
+Measured 2026-09-06 (polish lane 44), pinned SP3 CL under Wine, on the real
+tree. A pasted helper body is **never forced by definition order**: `/Ob2`
+expands a callee whose *definition* stands below the call site, as long as a
+declaration precedes it. C1 hands C2 the whole TU's IL before C2 chooses, so
+the "define it above the caller" folklore does not apply to this back end.
+
+The clean control is `binkmanager.cpp`. `NextBinkFrame` (`0x44daa0`,
+`binkmanager.cpp:214`) carried the thirteen statements of `CloseBinkVideo`
+(`0x44dcc0`, defined at `binkmanager.cpp:285`, seventy lines BELOW it)
+written out longhand. Replacing them with the call is byte-flat -- 92.9245
+before and after -- and `sema diff --calls` still shows the two
+`_BinkPause`/`_BinkClose` pairs standing inline at `+0x173..+0x192`, i.e.
+VC6 reached down the file, took the body, and emitted retail's expansion.
+The only prerequisite was the declaration already in `binkmanager.h:124`.
+
+So the helper-boundary rule in CLAUDE.md is enforceable everywhere, and
+"the definition comes later" is not a reason to keep a longhand copy.
+
+### The census, and where the caller_cb lever actually bites
+
+The tree-wide sweep for claimed helper bodies copied into callers (short
+claimed bodies, normalised modulo identifier renames, matched against every
+window of every other body) found six live sites. Every one is byte-flat
+once restored:
+
+| caller | helper | score, before = after |
+|---|---|---|
+| `advManager::Open` `0x406fd0` | `ForceNewHover` | 97.9312 |
+| `advManager::DoAdvCommand` `0x407b80` | `ForceNewHover` | 94.3953 |
+| `advManager::ProcessKeyPress` `0x408c40` | `ForceNewHover` | 97.6091 |
+| `advManager::SetHeroContext` `0x417b20` | `DeactivateCurrHero` | 99.2746 |
+| `NextBinkFrame` `0x44daa0` | `CloseBinkVideo` | 92.9245 |
+| `VideoClose` `0x5975f0` | `CloseSmacker` | 95.9231 |
+
+Retail expands the helper at all six; the call is the source fact and the
+bytes do not care. The sixth row carries the census's only positive retail
+proof, and it is worth the pattern: `ShowVideo` (`0x598af0`) expands
+`VideoClose` three times, and its THIRD expansion at `+0x284` runs
+`VideoSoundOnOff / service_sounds / CALL CloseSmacker / CALL CloseBinkVideo`.
+A call to `CloseSmacker` standing *inside* an expansion of `VideoClose` can
+only come from a `CloseSmacker()` call in `VideoClose`'s own source -- a
+longhand copy there would have been expanded with everything else. **When a
+suspected paste has a caller that retail expands, read that caller's call
+stream: a helper call surviving inside the expansion proves the boundary.**
+Its cost is `ShowVideo` 48.6988 -> 41.0154, TU collateral kept under the
+"preserve proven helpers through score dips" rule; `VideoClose` itself is
+flat and MAX is unmoved. That flatness is itself the model's prediction and
+sharpens the polish-42 result (`CampaignHeaderStruct::Load`, +4.44 for the
+same edit). The budget is `clamp(2 x caller_cb, 1000, 35000)`, so moving
+mass out of `caller_cb` can only change an expansion decision while
+`caller_cb` sits inside `[500, 17500]`. Below it the 1000 floor absorbs the
+change; above it the 35000 ceiling does. `game::NextPlayer` (`0x4c6fe0`, 142
+statements) is the ceiling control: restoring its pasted
+`game::CancelComputerScreen` body is byte-flat at 81.3343, because that
+caller is saturated. Do not expect a pasted-helper restoration to pay on a
+very large or a very small caller -- take it for the source fact, and look
+for the mid-band callers when hunting score.
 
 ## Ordinary definitions later in the same TU can inline
 

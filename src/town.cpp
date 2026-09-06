@@ -1051,7 +1051,10 @@ void town::destroy_extra_capitol()
         // boundaries.  The former null-relative cursor bias merely forced
         // retail's induction representation; it was not source evidence.
         for (int slot = 0; slot < town_count; ++slot) {
-            char town_id = player->townIds[slot];
+            // BOUND BY `const char&`: retail re-reads the slot rather
+            // than keeping a copy live across GetTown/IsCapitol.
+            // 96.4595 -> 100.0000 on that one word.
+            const char& town_id = player->townIds[slot];
             if (town_id != id) {
                 town* other_town = gpGame->GetTown(town_id);
                 if (other_town->IsCapitol()) {
@@ -1390,6 +1393,18 @@ long town::get_legion_bonus(long dwelling)
     }
     return bonus;
 }
+
+// Residual (81.73%): retail duplicates the `bonus /= 2` tail into all THREE
+// inner paths and its no-bit path opens with a DEAD `xor eax,eax` (the sunk
+// `bonus = 0` initialiser) before `mov eax,edi`; we share one tail between
+// the citadel and no-bit paths and keep `bonus` coalesced onto growth's EDI
+// (`add edi,edi` where retail has `mov eax,edi / add eax,edi`).
+// MEASURED (polish 49): the three-armed form with an explicit
+// `else bonus = growth;` and both arms written as expressions of `growth`
+// reproduces retail's `lea eax,[edi+edi]`-class castle arm but merges the
+// other two even harder - 81.7262 -> 81.0714. Respelling ONLY the citadel
+// arm as `growth / 2 + growth` is byte-flat. The tail duplication is a
+// register/layout decision, not a statement shape.
 
 // E:\gamedcs\town.cpp:1639
 // RETAIL-ONLY row first: 0x005bf900 (`ret 4`) sits between the two DC
@@ -2181,7 +2196,11 @@ __int64 town::get_buildable_mask() const
     __int64 mask = 0;
     __int64 activeMask = active;
     char townType = type;
-    char castleGriffinException = gpGame->field_1f69d;
+    // BOUND BY `const char&`: retail re-reads the global flag inside the
+    // loop instead of hoisting a copy.  89.5893 -> 99.8839.  Measured on top
+    // of it and rejected: the same binding on `activeMask` costs 19.7
+    // (99.8839 -> 80.2321).
+    const char& castleGriffinException = gpGame->field_1f69d;
     for (int building = 0; building < MAX_BUILDING_TYPE; building++) {
         __int64 requirements = gHierarchyMask[townType][building];
         if (castleGriffinException && building == DWELLING_2_ID

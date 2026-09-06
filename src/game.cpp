@@ -186,7 +186,12 @@ std::pair<const int, type_map_hero_info>::~pair() {}
 // Must precede the first real map use: VC6 fixes nested inline decisions when
 // it first instantiates this template member. Retail's retained copy calls
 // both _Lockit members rather than expanding them.
-#pragma inline_depth(0)
+// The seven `std::_Lockit` scopes in this template block, and the anchor
+// call below, used to carry statement `#pragma inline_depth(0)` pins. They
+// are dead since this TU moved to /MT: yvals.h gives _Lockit out-of-line
+// ctor/dtor under _MT, so the calls the pins were forcing are the only
+// bodies that exist. Removing all eight is byte-flat across the whole unit
+// (2026-09-06, polish lane 50, measured one at a time and jointly).
 template<>
 THeroSetupMapMinComdatAnchor::NodePtr
 std::map<int, type_map_hero_info>::_Imp::_Min(
@@ -197,7 +202,6 @@ std::map<int, type_map_hero_info>::_Imp::_Min(
         node = node->_Left;
     return node;
 }
-#pragma inline_depth()
 
 template<>
 __forceinline THeroSetupMapMinComdatAnchor::NodePtr
@@ -205,14 +209,10 @@ std::map<int, type_map_hero_info>::_Imp::_Max(
     THeroSetupMapMinComdatAnchor::NodePtr node)
 {
     {
-#pragma inline_depth(0)
         std::_Lockit lock;
-#pragma inline_depth()
         while (node->_Right != _Nil)
             node = node->_Right;
-#pragma inline_depth(0)
     }
-#pragma inline_depth()
     return node;
 }
 
@@ -220,9 +220,7 @@ template<>
 void std::map<int, type_map_hero_info>::_Imp::const_iterator::_Dec()
 {
     {
-#pragma inline_depth(0)
         std::_Lockit lock;
-#pragma inline_depth()
         if (_Color(_Ptr) == _Red
                 && _Parent(_Parent(_Ptr)) == _Ptr)
             _Ptr = _Right(_Ptr);
@@ -234,9 +232,7 @@ void std::map<int, type_map_hero_info>::_Imp::const_iterator::_Dec()
                 _Ptr = parent;
             _Ptr = parent;
         }
-#pragma inline_depth(0)
     }
-#pragma inline_depth()
 }
 
 template<>
@@ -247,9 +243,7 @@ std::map<int, type_map_hero_info>::_Imp::insert(const value_type& value)
     _Nodeptr parent = _Head;
     bool insertLeft = true;
     {
-#pragma inline_depth(0)
         std::_Lockit lock;
-#pragma inline_depth()
         while (node != _Nil) {
             parent = node;
             insertLeft = key_compare(
@@ -257,9 +251,7 @@ std::map<int, type_map_hero_info>::_Imp::insert(const value_type& value)
                 _Key(node));
             node = insertLeft ? _Left(node) : _Right(node);
         }
-#pragma inline_depth(0)
     }
-#pragma inline_depth()
     if (_Multi)
         return _Pairib(_Insert(node, parent, value), true);
     iterator position = iterator(parent);
@@ -280,11 +272,12 @@ void THeroSetupMapMinComdatAnchor::retain_min()
 {
     // Retail CMapHeaderData::Save retains the protected _Tree::_Min COMDAT
     // after the surrounding iterator work exhausts VC6's inline budget.
-    // Preserve the real helper and pin only this call: measured negative
-    // controls reject flattening, a member pointer, or volatile mass.
-#pragma inline_depth(0)
+    // Preserve the real helper: measured negative controls reject
+    // flattening, a member pointer, or volatile mass. This call used to
+    // carry an `inline_depth(0)` pin as well; it is byte-flat now that
+    // _Min's own body holds an out-of-line /MT _Lockit pair, so the pin
+    // went (2026-09-06, polish lane 50).
     _Min(_Nil);
-#pragma inline_depth()
 }
 
 void THeroSetupMapMinComdatAnchor::retain_insert(const Value& value)
@@ -1132,8 +1125,8 @@ void game::calculate_production()
     int playerId;
     for (playerId = 0; playerId < 8; ++playerId) {
         if (!playerDisabled[playerId])
-            memset(players[playerId].turnProductionResource, 0,
-                   sizeof(players[playerId].turnProductionResource));
+            memset(players[playerId].ai.turnProductionResource, 0,
+                   sizeof(players[playerId].ai.turnProductionResource));
     }
 
     unsigned int mineId;
@@ -1141,7 +1134,7 @@ void game::calculate_production()
         mine* currentMine = &mines[mineId];
         if (currentMine->playerOwner >= 0 && currentMine->type < GOLD) {
             players[currentMine->playerOwner]
-                .turnProductionResource[currentMine->type] +=
+                .ai.turnProductionResource[currentMine->type] +=
                     mine_production[currentMine->type];
         }
     }
@@ -1159,7 +1152,7 @@ void game::calculate_production()
             continue;
 
         playerData* currentPlayer = &players[currentTown->owner];
-        long* production = currentPlayer->turnProductionResource;
+        long* production = currentPlayer->ai.turnProductionResource;
         if (currentTown->HasBuilding(MARKETPLACE_SILO_ID, 0)) {
             int* siloIncome = currentTown->get_silo_income();
             for (int i = 0; i < NUM_RESOURCES; ++i)
@@ -1188,7 +1181,7 @@ void game::calculate_production()
         if (playerDisabled[playerId])
             continue;
         playerData* currentPlayer = &players[playerId];
-        long* production = currentPlayer->turnProductionResource;
+        long* production = currentPlayer->ai.turnProductionResource;
         int cornucopias = currentPlayer->NumOfGivenArtifact(
             PRODUCTION_ARTIFACT_CORNUCOPIA) * 5;
         production[SULFUR] += cornucopias + currentPlayer->NumOfGivenArtifact(
@@ -1217,13 +1210,13 @@ void game::calculate_production()
         int resource = ability.skill;
         if (ability.type == eHeroAbilityResource
             && resource >= WOOD && resource <= GEMS) {
-            ++players[currentHero->owner].turnProductionResource[resource];
+            ++players[currentHero->owner].ai.turnProductionResource[resource];
         }
     }
 
     for (playerId = 0; playerId < 8; ++playerId) {
         if (field_1f63e == 1 && crystalDragonIncome[playerId])
-            players[playerId].turnProductionResource[CRYSTAL] += 3;
+            players[playerId].ai.turnProductionResource[CRYSTAL] += 3;
     }
 
     if (setup.difficulty > 2) {
@@ -1234,7 +1227,7 @@ void game::calculate_production()
                 humanId = 0;
             if (players[humanId].isHuman || playerDisabled[playerId])
                 continue;
-            long* production = currentPlayer->turnProductionResource;
+            long* production = currentPlayer->ai.turnProductionResource;
             production[WOOD] += get_day_bonus(
                 WOOD, production[WOOD] * 7 / 4, field_1f63e);
             production[ORE] += get_day_bonus(
@@ -1252,8 +1245,8 @@ void game::calculate_production()
             continue;
         double handicap = production_handicap[setup.handicap[playerId]];
         for (int resource = WOOD; resource < GOLD; ++resource) {
-            long original = players[playerId].turnProductionResource[resource];
-            players[playerId].turnProductionResource[resource] =
+            long original = players[playerId].ai.turnProductionResource[resource];
+            players[playerId].ai.turnProductionResource[resource] =
                 original - original * handicap;
         }
     }
@@ -1677,7 +1670,7 @@ void playerData::Init()
     recruits[0] = -1;
     recruits[1] = -1;
     personality = 0;
-    memset(ai_pad_ec + 4, 0, 0x78);
+    memset(&ai, 0, sizeof(ai));
     for (int heroIndex = 0; heroIndex < 8; heroIndex++)
         heroes[heroIndex] = -1;
     memset(townIds, 0xff, sizeof(townIds));
@@ -5115,7 +5108,7 @@ void game::ValidateVictoryLossConditions(unsigned char check_map_locations)
         int numHumanTeams = 0;
         int owner;
         int townTeam;
-        for (int teamCheck = 0; teamCheck < 8; ++teamCheck) {
+        for (unsigned int teamCheck = 0; teamCheck < 8; ++teamCheck) {
             if (validate_is_human_team(this, teamCheck))
                 ++numHumanTeams;
         }
@@ -5887,6 +5880,36 @@ static __forceinline void randomize_witch_hut(NewmapCell* cell)
 // a statement pin: retail CALLS ExtraInfoUnion::SetWagon(EGameResource,
 // short) at randomize_wagon's first store and ExtraInfoUnion::set_pyramid
 // at randomize_pyramid's, and this CL expands both.
+// 2026-09-06, polish lane 48. READ predict-inline's census HERE BEFORE
+// trusting it: most of its reported divergence is COMDAT NAME FOLDING, not
+// an inline decision. VC6 emits one body for every POD-pointer vector and
+// one for every bitset whose _Nw agrees, so `~type_creature_bank` x5 +
+// `~vector<long>` x1 IS retail's `~vector<widget*>` x6; `bitset<5>::
+// operator[]` x3 + `bitset<28>::operator[]` x3 IS retail's `bitset<145>::
+// operator[]` x6; `vector<type_point>::insert` x4 + `vector<long>::insert`
+// x1 IS retail's `vector<widget*>::insert` x5; and the two one-argument
+// inserts pair off likewise. All four net to zero.
+// The REAL frontier deltas, after that reduction, are four: (1) four bitset
+// constructor sites where retail expands the ctor and calls `_Tidy`
+// (bitset<5> x3, bitset<28> x1) while the depth-0 pins here emit a ctor
+// call instead - the same midpoint LoadMap's note describes, and the same
+// candidate fix; (2) two `reference::operator bool` sites where retail
+// expands the conversion and calls `test`; (3) SetWagon(EGameResource,
+// short) and set_pyramid, both already recorded above; (4) the RELIC arm.
+// GetRandomArtifactId's 17-vs-18 call census IS that RELIC arm and NOT a
+// missing statement - verified by disassembly: retail's jump table at
+// +0x14a dispatches BLACK_BOX's five arms, keeps ANY (`push 0xe`, +0x155)
+// and RELIC (`push 0x10`, +0x165) as its own hot pair and cross-jumps
+// TREASURE/MINOR/MAJOR away, then runs the seven-call BLACK_MARKET record
+// (+0x175..+0x1cf) into vector<TBlackMarket>::insert - nine calls there
+// against our eight, with the other nine sites in each object agreeing
+// exactly. Do not go looking for an eighteenth source call site.
+// Pin census, each removal measured alone against 87.0102: the five
+// creature-bank block-scope pins are NOT interchangeable - four cost
+// -0.6891 apiece but the FIRST (the CREATURE_BANK case) is BYTE-FLAT
+// across the whole TU and has been removed. The rest of this body's
+// roster costs -100 (x2, two helper rows stop existing as separate
+// symbols), -10.85, -5.13, -1.01 and -0.88.
 VA(0x004c0cc0, 0x1668)  // NewMap caller + dc order, dc 0xac910
 void game::RandomizeEvents()
 {
@@ -5992,9 +6015,7 @@ void game::RandomizeEvents()
                             &bank,
                             creature_bank_type_from_int(tempCell->objectIndex));
                         creatureBanks.push_back(bank);
-#pragma inline_depth(0)
                     }
-#pragma inline_depth()
                     break;
 
                 case CREATURE_GENERATOR_1:
@@ -6520,6 +6541,62 @@ static inline void read_map_player_name(char* destination,
 // line, which is a depth-2 A9 decision. Measured and rejected: a statement
 // pin on that read (-0.80, it takes the whole expansion out of line);
 // spelling it `serializedSkillCopy.test(skill)` (70.70 -> 20.20).
+// 2026-09-06, polish lane 48. Three of this body's fifteen inline-depth pins
+// were doing no work: the pins around the two bitset<144> constructions and
+// the bitset<129> one are the sites where retail ALSO calls the constructor
+// (retail's 0x4c2550/0x4c2563 keep the unclaimed ctor row), so /Ob2 declines
+// them on cost with or without the pin. Removing all three is 75.47679 ->
+// 75.48383 and byte-flat on every other row in the TU; each one alone gives
+// the same 75.48383, so they do not interact.
+// 2026-09-06, polish lane 50 re-measured all twelve survivors one at a time
+// from this state (lane 48's list was taken in the fifteen-pin state and
+// does not hold here). Removal costs, in source order: 72.75387, 73.60338,
+// 73.95499, 78.10126, 75.90999, 78.28552, 74.47539, 76.50070, 73.96484,
+// 75.32068, 75.46273 and byte-flat. Four of the twelve were POSITIVE, not
+// load-bearing; the two that this lane took are described below.
+// The artifact merge loop's SHAPE is recovered but not bankable. Retail
+// walks artifactDisabled with a pointer and an `!=` end compare, which VC6
+// only emits with a zero-trip guard (`cmp esi,eax / je` at retail+0x197,
+// end recomputed at the back edge from the spilled `this`), where an index
+// loop keeps `cmp esi,0x90 / jl` and no guard - our own std::copy at +0x4ae
+// is the control for that idiom. Writing it as a pointer loop reproduces
+// retail's block skeleton and takes the branch census from 62-vs-63 to an
+// exact 63-vs-63, but objdiff falls 75.48 -> 74.14 (74.18 with the store
+// left as `artifactDisabled[artifact]`, which is retail's separate second
+// induction pointer). The dip is register collateral: retail spends all
+// three callee-saved registers on the loop and homes `this`, where this CL
+// keeps `this` in EBX. Re-take the pointer spelling if the frontier below
+// ever frees that register.
+// The frontier itself is the wall, and it is reciprocal: predict-inline
+// reports 7 under-inlines against 8 over-inlines, and every one is the same
+// decision - retail expands the OUTER operation and calls the inner helper
+// (~basic_string -> _Tidy, bitset ctor -> _Tidy, _Tree::operator++ -> _Inc,
+// reference::operator bool -> test, resize's second size()), where this CL
+// calls the outer. Depth 0 suppresses both layers, so no pin reaches it.
+// THE LEAD SHIPPED, AND IT NEEDED NO RETUNE (2026-09-06, polish lane 50).
+// The `std::bitset<70> serializedSpells(0)` construction was pinned depth 0,
+// but retail's reloc stream at that site is
+// `?_Tidy@?$bitset@$0EG@@std@@AAEXK@Z` where ours was
+// `??0?$bitset@$0EG@@std@@QAE@K@Z` - retail EXPANDS the constructor and
+// CALLS _Tidy. Lane 48 read that as a 0 -> 1 retune, withheld it for a
+// policy ruling, and recorded "removing either pin outright is 73.95 /
+// 74.16, i.e. WORSE than depth 0". THAT CONTROL WAS WRONG: 73.95 and 74.16
+// are two OTHER pins' removal costs in this body (the 129-bit serialize
+// loop and the 28-bit one). Plain removal of this single pin measures
+// 75.48383 -> 78.28552 - the identical number the depth-1 respelling gives,
+// because the construct nests only one level here, so default depth 8 and
+// depth 1 select the same expansion. The pin therefore just came out under
+// the ordinary removal rule; no retune and no ruling were needed.
+// Corroboration is structural, not a score wobble: the block skeleton goes
+// 106-vs-105 with one missing block to an exact 105-vs-105 with none, and
+// exact blocks go 11 -> 47.
+// The other three positive pins are NOT compatible with it. Alone they are
+// worth 78.10126 (the 129-bit copy loop), 75.90999 (the merge-loop read)
+// and 76.50070 (`serializedSkills`), but a full 32-subset enumeration over
+// the five candidates shows every pair or larger set containing them scores
+// below 78.28552, and the copy-loop + skills pair actually FALLS to
+// 75.31927. Only the bitset<70> pin and the byte-flat `rumours.resize` pin
+// came out; the other three stay pinned at depth 0.
 VA(0x004c2450, 0x88E)  // sole NewMap caller + full stream/callee sequence
 bool game::LoadMap(TAbstractFile* mapFile)
 {
@@ -6547,13 +6624,9 @@ bool game::LoadMap(TAbstractFile* mapFile)
     }
 
     if (mapHeader.version != MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-#pragma inline_depth(0)
         std::bitset<144> disabledArtifacts(0);
-#pragma inline_depth()
         if (mapHeader.version != MAP_FORMAT_ARMAGEDDONS_BLADE) {
-#pragma inline_depth(0)
             std::bitset<144> serializedArtifacts(0);
-#pragma inline_depth()
             unsigned char artifactBits[18];
             mapFile->Read(artifactBits, sizeof(artifactBits));
             for (unsigned int artifactBit = 0;
@@ -6575,9 +6648,7 @@ bool game::LoadMap(TAbstractFile* mapFile)
 #pragma inline_depth()
             }
 
-#pragma inline_depth(0)
             std::bitset<129> serializedArtifacts(0);
-#pragma inline_depth()
             unsigned char artifactBits[17];
             mapFile->Read(artifactBits, sizeof(artifactBits));
             for (unsigned int legacyBit = 0; legacyBit < 129; ++legacyBit) {
@@ -6607,9 +6678,7 @@ bool game::LoadMap(TAbstractFile* mapFile)
 
     if (mapHeader.version != MAP_FORMAT_RESTORATION_OF_ERATHIA
         && mapHeader.version != MAP_FORMAT_ARMAGEDDONS_BLADE) {
-#pragma inline_depth(0)
         std::bitset<70> serializedSpells(0);
-#pragma inline_depth()
         unsigned char spellBits[9];
         mapFile->Read(spellBits, sizeof(spellBits));
         for (unsigned int spellBit = 0; spellBit < hero::NUM_SPELLS;
@@ -6623,7 +6692,7 @@ bool game::LoadMap(TAbstractFile* mapFile)
         }
 
         const std::bitset<70> serializedSpellCopy = serializedSpells;
-        for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+        for (unsigned int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
             if (serializedSpellCopy[spell]) {
                 for (artifact = 0; artifact < 144; ++artifact) {
                     if (akArtifactTraits[artifact].givesSpells) {
@@ -6672,8 +6741,12 @@ bool game::LoadMap(TAbstractFile* mapFile)
         < sizeof(rumourCount)) {
         return false;
     }
-    rumours.resize(rumourCount);
-    for (TRumour* rumour = rumours.begin(); rumour != rumours.end();
+    // The rumour list NAMED AS A REFERENCE: retail reads its _First/_Last
+    // through the vector's own address rather than folding the member offset
+    // off gpGame.  75.9944 -> 76.5443.
+    std::vector<TRumour>& r_rumours = rumours;
+    r_rumours.resize(rumourCount);
+    for (TRumour* rumour = r_rumours.begin(); rumour != r_rumours.end();
          ++rumour) {
         std::string throwAway;
         if (readMapString(mapFile, &throwAway) < 0
@@ -6704,15 +6777,18 @@ bool game::LoadMap(TAbstractFile* mapFile)
                         sizeof(setupRecord->Name));
                 setupRecord->Name[sizeof(setupRecord->Name) - 1] = 0;
             }
-#pragma inline_depth(0)
             ++it;
-#pragma inline_depth()
         }
         read_map_hero_setups(mapFile, mapHeader.version);
     }
 
     for (int pool = 0; pool < 8; ++pool) {
-        lithPools[pool].erase(lithPools[pool].begin(), lithPools[pool].end());
+            // DEPTH LADDER: this ONE pool reset is `clear()`; the other
+            // five stay the longhand range erase polish 29 banked.  Retail
+            // CALLS the range-erase COMDAT at all six and clear()'s own
+            // wrapper takes the /Ob2 site here, so 75.4768 -> 75.9944; a
+            // greedy second round over the other five finds nothing.
+            lithPools[pool].clear();
         lithExitPools[pool].erase(lithExitPools[pool].begin(), lithExitPools[pool].end());
     }
     whirlpools.erase(whirlpools.begin(), whirlpools.end());
@@ -9265,12 +9341,7 @@ void game::NextPlayer()
 
         if (gpCurrentPlayer->IsLocalHuman()
             || (gNetworkActive69954c && gpCurrentPlayer->IsHuman())) {
-            gCompleteDrawEnabled = 1;
-            gpAdvManager->UpdateRadar(1, 1, 0, 0, 0);
-            gpAdvManager->advWindow->GetWidget(8)->enable(1);
-            gpAdvManager->advWindow->GetWidget(7)->enable(1);
-            gpAdvManager->advWindow->GetWidget(6)->enable(1);
-            gpAdvManager->advWindow->GetWidget(12)->enable(1);
+            CancelComputerScreen();
         }
     }
 
@@ -9581,7 +9652,7 @@ void game::PerDay()
     calculate_production();
     for (i = 0; i < 8; ++i) {
         if (!playerDisabled[i]) {
-            long* production = players[i].turnProductionResource;
+            long* production = players[i].ai.turnProductionResource;
             long* playerResources = players[i].resources;
             for (int j = 0; j < NUM_RESOURCES; ++j)
                 playerResources[j] += production[j];
@@ -10663,6 +10734,9 @@ void game::ProcessRandomObjects()
 VA(0x004ca040, 0x1F1)  // linkorder, dc 0xb5cdc
 void game::CreateTownHeroes(int* startingHeroIds)
 {
+    // MAX 99.6203 is NOT reachable as written: it was measured with this
+    // loop spelled `i != 8`, an unnamed domain compare that fails the
+    // cleanliness floor (docs/vc6/behavior-catalog.md D24).
     for (int i = 0; i < 8; i++) {
         if (!mapHeader.playerSlotAttributes[i].GenerateHero)
             continue;
@@ -10847,6 +10921,13 @@ void game::SetupAdjacentMons()
 }
 
 // E:\gamedcs\game.cpp:9636
+// NextPlayer's local-human arm calls this. Retail expands it there (its
+// UpdateRadar at +0x810 and the four GetWidget/enable pairs behind it) and
+// the restoration from the longhand copy is byte-flat, 81.3343 - NextPlayer
+// is 142 statements, so its /Ob2 budget is already pinned at the 35000
+// ceiling and the caller_cb this frees changes no decision. See
+// docs/vc6/inliner.md, "a callee defined LATER in the TU still inlines":
+// the definition is 1700 lines below the call site and VC6 still takes it.
 VA(0x004ca530, 0x80)  // dc 0xb62f8 + UpdateRadar/widget call graph
 void game::CancelComputerScreen()
 {

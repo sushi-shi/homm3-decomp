@@ -3993,9 +3993,13 @@ type_garrison_base_window::type_garrison_base_window(hero* inHero,
 
     button* okButton = new button(399, 314, 64, 30, OK_BUTTON_ID,
                                   "iOK6432.def", 0, 1, 1, 28, 2);
-    // push_back spelled out: the extra top-level candidate site is what
-    // keeps retail's out-of-line/inline split at the widget run above.
-    okButton->hotKeyCodes.insert(okButton->hotKeyCodes.end(), 1);
+    // Plain `push_back`, NOT the spelled-out `insert(end(), 1)`.  The
+    // longhand form was measured and banked at an earlier inline structure;
+    // at this one the DEPTH LADDER runs the other way and the deeper
+    // push_back spelling is worth 93.8825 -> 100.0000 (docs/vc6/inliner.md
+    // 6b - the rung's sign is per-site, and a site's sign moves when
+    // anything upstream in the body does).
+    okButton->hotKeyCodes.push_back(1);
     Widgets.push_back(okButton);
 
     for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
@@ -6136,9 +6140,7 @@ building_popup:
                     static_cast<TTownScreenWindow*>(TownWindow);
                 DoTownKnob(win, 1);
                 win->UpdateTownLocators();
-#pragma inline_depth(0)
                 RedrawTownScreen();
-#pragma inline_depth()
                 break;
             }
             case TTownScreenWindow::DIVIDE_ID: {
@@ -9914,6 +9916,9 @@ void townManager::SetupWell(TCastleWindow* wellWin)
 // hoist (9i vs our 8i). why-reg's model call (2026-08-27) stands for
 // the permutation.
 // E:\gamedcs\townmgr.cpp:9296
+// LOOP-COUNTER SIGNEDNESS (docs/vc6/behavior-catalog.md D23): three of the
+// six zero-initialised counters here are `unsigned int`.  94.0399 -> 95.5153,
+// greedily; the other three fall back.
 VA(0x005dda10, 0x145F)  // order-map(SetupWell 0x5dd390 .. GetCategoryStats 0x5dee70) + anchor-callee(GetNumThievesGuilds/GetLocalPlayerGamePos) + arity(ret 4), dc 0x180204
 void TThievesGuildWindow::SetupThievesGuild(int iThievesGuilds)
 {
@@ -10009,7 +10014,7 @@ void TThievesGuildWindow::SetupThievesGuild(int iThievesGuilds)
     }
 
     int player_index = 0;
-    for (int column = 0; column < 8; column++) {
+    for (unsigned int column = 0; column < 8; column++) {
         int who = player_index;
         while (who < 8 && gpGame->playerDisabled[who])
             who++;
@@ -10038,7 +10043,11 @@ void TThievesGuildWindow::SetupThievesGuild(int iThievesGuilds)
             }
             if (bestHero) {
                 heroWidgetMap[HERO_P0 + column] = bestHero->id;
-                Widgets.push_back(new bitmapBorder(
+                // DEPTH LADDER: this ONE append is `insert(end(), x)`;
+                // the other eight in this body stay push_back.  93.3762 ->
+                // 94.0399 (site #0 is 93.6631, #2..#4 are 93.90 each) and a
+                // greedy second round finds nothing.
+                Widgets.insert(Widgets.end(), new bitmapBorder(
                     66 * column + 0x104, 0x168, 0x30, 0x20,
                     column + HERO_P0,
                     akHeroTraits[bestHero->portrait].smallPortraitName,
@@ -10098,10 +10107,10 @@ void TThievesGuildWindow::SetupThievesGuild(int iThievesGuilds)
                     if (iThievesGuilds >= 4) {
                         int bestCreature = -1;
                         long bestValue = 0;
-                        for (int n = 0; n < gpGame->players[who].numTowns; n++) {
+                        for (unsigned int n = 0; n < gpGame->players[who].numTowns; n++) {
                             int id = gpGame->players[who].townIds[n];
                             const town* t = gpGame->GetTown(id);
-                            for (int slot = 0; slot < TOWN_DWELLING_COUNT; slot++) {
+                            for (unsigned int slot = 0; slot < TOWN_DWELLING_COUNT; slot++) {
                                 if (t->get_army().armies[slot] != -1
                                     && t->get_army().numTroops[slot] > 0
                                     && akCreatureTypeTraits[t->get_army().armies[slot]]

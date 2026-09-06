@@ -1048,13 +1048,8 @@ public:
         // bitfield triple type_point already carries. Dreamcast names the
         // member CastleLoc at its own +0x0c; retail's eight extra bytes
         // above shift it and everything after it by 8.
-        //
-        // Sliced out of the pad behind a gate, not outright: type_point
-        // has a user-declared default constructor, so naming it here
-        // makes TPlayerSlotAttributes non-POD for every game.h includer.
-        // Doing that unguarded measured recruitUnit::Update 90.84 ->
-        // 88.24 while changing no offset, so the slice is scoped to the
-        // one TU that reads the field. Both arms are 12 bytes at +0x0c.
+        // CastleLoc keeps type_point's empty default constructor; the
+        // slot constructor leaves the coordinate bits untouched in retail.
         // Complete split these two main-town fields out of the opaque PC
         // extension.  The player-slot reader writes the presence flag at
         // +0x0c and the signed town type at +0x10 before unpacking the
@@ -1087,14 +1082,22 @@ public:
         // references with the string at +0x00. It is claimed there now.)
         std::vector<type_map_hero_identity> field_34;
 
+        // DC game.h:236-245 places these assignments after CastleLoc's
+        // constructor. Complete's 0x45a950 also constructs field_34 before
+        // the scalar stores and leaves hasMainTown/mainTownType untouched.
         TPlayerSlotAttributes()
-          : CanBeHuman(0), CanBeComputer(0), AIStrategy(-1),
-            legalAlignments(0), HasRandomAlignment(0), GenerateHero(0),
-            hasMainTown(0), mainTownType(-1),
-            hasRandomHero(0), nonRandomHeroId(-1),
-            nonRandomHeroCustomPortrait(-1), field_30(0)
         {
+            CanBeHuman = 0;
+            CanBeComputer = 0;
+            AIStrategy = -1;
+            legalAlignments = 0;
+            HasRandomAlignment = 0;
+            GenerateHero = 0;
+            hasRandomHero = 0;
+            nonRandomHeroId = -1;
+            nonRandomHeroCustomPortrait = -1;
             nonRandomHeroCustomName[0] = 0;
+            field_30 = 0;
         }
 
         // Retail extracts this PC-only reader from NewSMapHeader::Read and
@@ -1165,22 +1168,16 @@ public:
     // retail expands this exact member teardown into ~SavedGameHeader.
     // Copy assignment is compiler-generated. BackupGameHeaders proves its
     // member walk directly: base assignment, both strings, then the bitset.
-    // game.h:311 in the Dreamcast line table.  The selection-window TU is
-    // the retail caller too.  DC names two std::string::operator= calls.
-    // Keep those source operations: depth 1 retains the DC-proven helper
-    // layer instead of flattening four STL bodies into UpdateGameVars.
-    // Retail expands three operators through assign() and expands the last
-    // one level further; that remaining VC6 state difference is not license
-    // to replace the two positive operator= facts with direct assign calls.
+    // DC game.h:312 copies the older POD base with memcpy; Complete calls
+    // CMapHeaderData's memberwise assignment because its base owns containers.
+    // DC lines 314/315 preserve the two string operator= boundaries. Retail
+    // expands them to different depths at different callers; retain the source
+    // operations without forcing a shared inline-depth setting.
     void AssignData(CMapHeaderData* pData, char* sName, char* sDesc)
     {
-#pragma inline_depth(0)
         static_cast<CMapHeaderData&>(*this) = *pData;
-#pragma inline_depth()
-#pragma inline_depth(1)
         mapName = sName;
         mapDescription = sDesc;
-#pragma inline_depth()
     }
     int Save(TAbstractFile* outfile);
     // Complete's scenario reader consumes the abstract stream and the
@@ -1426,6 +1423,9 @@ public:
     // Retail 0x486440 is the 325-byte counterpart of the DC 328-byte
     // CustomCampaign.cpp row and is called on gpGame->campaign here.
     void DoPreLoadCustomization();
+    // Provisional name; PlaceCrossoverHeroes retains this lookup's nested
+    // vector::size calls while expanding the ordinary member itself.
+    hero* FindCrossoverHero(int heroId);
     void Save(TAbstractFile* outfile);
     // Retail-only load surface at 0x48a310; SavedGameHeader::Load passes the
     // stream and save version and the callee reads both.
@@ -1644,6 +1644,23 @@ public:
 };
 SIZE(generator, 0x5c);
 
+#pragma pack(push, 8)
+// Dreamcast NB11 type 0x3591, AI: six members, 0x78 bytes. Complete
+// playerData::operator= (0x58f750) copies this entire subobject with
+// rep movsd (30 dwords) from +0xf0, after the separate +0xe8 bitset.
+// playerData::Init independently clears the same +0xf0..+0x168 range.
+struct AI {
+    float gameAttentionValue[3];
+    float turnAttentionValue[3];
+    long turnProductionResource[7];
+    double resource_value[7];
+    int average_resource_value;
+    float turnValueOfAvgArtifact;
+};
+SIZE(AI, 0x78);
+
+#pragma pack(pop)
+
 // playerData head: NextHero returns -1 when the player has no mobile
 // hero (HasMobileHero is its bool wrapper). sizeof is 360, byte-proven
 // by the gpGame->players index arithmetic every town.obj gate emits
@@ -1684,6 +1701,7 @@ SIZE(generator, 0x5c);
 // own; a pack(1) band over +0x38..+0x3f is all the packing this record
 // needs. Measured layout-neutral with an offsetof probe (2026-09-06).
 #pragma pack(push, 8)
+
 class playerData {
 public:
     // The width of the `heroes` row below, and the cap the game enforces
@@ -1780,37 +1798,16 @@ public:
     unsigned char isLocal;              // +0xe1
     unsigned char isHuman;              // +0xe2
     int quickCombat;                    // +0xe4
-    // +0xe8. DC type `AI`, 128 B here (0x168 - 0xe8). Only the first
-    // dword is retail-proven by both playerData constructors. Retail
-    // get_total_value additionally proves the seven-dword production
-    // row at +0x108: it pairs each entry with resources[i] while
-    // deciding whether a resource trade is needed. The 0x20-byte lead
-    // is the VC6-width form of the DC AI record's first two containers.
-    // hero.obj's and game.obj's NARROW VIEW of the same four bytes.
-    // game.obj earns the view from its own side: playerData::save
-    // reads the word with the same `[base + 4*(_P>>5)]` form behind
-    // the same bitset<12>::_Xran bounds check, playerData::load builds
-    // a local bitset and assigns it, and playerData::playerData stores
-    // +0xe8 AFTER the shipyards vector triple - member-construction
-    // order, i.e. that store IS the implicit bitset constructor and
-    // the constructor body is empty.
-    // Retail's
-    // hero::HeroFn_004DC100 (0x4dc100) walks this dword as a
-    // std::bitset<12> - one bit per combination artifact, "this player
-    // has already been offered / has assembled it" - and emits both the
-    // Dinkumware `12 <= _P` bounds check against bitset<12>::_Xran and
-    // the `[base + 4*(_P>>5)]` word addressing inline. Same offset, same
-    // width; every other translation unit keeps the ordinal name and its
-    // preprocessed text is unchanged.
-    std::bitset<12> assembledCombinations;      // +0xe8
-    char ai_pad_ec[0x1c];
-    long turnProductionResource[7];  // +0x108
-    // +0x128 / +0x160. calculate_demand writes each computed resource
-    // value to the AI record as a double, then rounds a running sum of
-    // the first six entries and stores one tenth of it at +0x160.
-    double resourceValue[7];            // +0x128
-    int averageResourceValue;
-    float turnValueOfAvgArtifact;
+    // Complete adds the combination-artifact bitset before the older AI
+    // member. Constructors and load/save prove bitset<12> at +0xe8;
+    // hero::HeroFn_004DC100 uses its Dinkumware bounds check and word index.
+    // +0xec..+0xef is implicit alignment padding: retail assignment skips
+    // it, then copies the complete AI member, including its internal pad.
+    std::bitset<12> assembledCombinations;  // +0xe8
+    // AI's production row lands at +0x108, resource values at +0x128,
+    // average at +0x160, and artifact value at +0x164, matching the retail
+    // get_total_value/calculate_demand accesses independently.
+    AI ai;                                // +0xf0
 
     playerData();
     ~playerData();

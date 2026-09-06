@@ -390,12 +390,29 @@ cleanly, and the split says which tool to point at them:
   (`is_computer_action` 6 vs 10, `iconWidget::Main` 17 vs 16,
   `border::Main` 8 vs 7, `CHotspotWidget::Main` 5 vs 4, `GetMobility` 3 vs
   2, `ProcessMapSelect` 13 vs 12, `GetSoundId` 73 vs 71, …). This is the
-  **tail-merge generation family**: our SP3 cross-jumper merges epilogues
-  retail's generation left duplicated, and the merged copy then SINKS,
+  **tail-merge family** (it was called the "tail-merge GENERATION family"
+  until 2026-09-06 - see below): our SP3 cross-jumper merges epilogues
+  retail's object left duplicated, and the merged copy then SINKS,
   which is what turns a short backward `jcc` in retail into a long forward
   one here. Every row in this group already carries a residual note with
   three to five rejected exit shapes. `why-branch` reports D6 on them and
   finds no catalog mutation. **Do not spend a lane on this group.**
+
+  **The name was wrong and the generation is now excluded (2026-09-06).**
+  Track R A/B'd this whole roster against VC6 RTM in both passes - the
+  back end alone (C2 12.00.8168) and then the front end too (C1XX
+  12.00.8168 + C2 12.00.8168, `genab run --gen rtm-fe`, all 146 units).
+  `border::Main` 31+26, `CHotspotWidget::Main` 29+22, `hero::GetMobility`
+  210+14, `ProcessMapSelect` 150+57, `GetSoundId` 440+8, `CheckEndGame`
+  169+2, `handle_artifact_click` 22+6, `OnTCP` 52+6,
+  `HighScoreWindowHandler` 126+28, `CombatOptionsWindowHandler` 156+22,
+  `DisplayVCWinLoss` 110+64, `TTavernWindow::SetRolloverText` 65+0,
+  `advManager::MoveHero` 678+150, `iconWidget::Main` 46+30,
+  `is_computer_action` 44+50, plus `ValidAttack` 70+59, `AppWndProc` 29+0,
+  `VideoClose` 2+20 - **identical scores and identical bytes on both
+  sides, `sp3_vs_rtm == 0` for every one**. Retail's duplicated epilogues
+  are not an older compiler's output; they are a cross-jumper decision our
+  model does not reproduce (docs/vc6/rtm-generation.md §6).
 - **branch-count delta (19 of 56)** — the terminator differs because one
   side has WHOLE BLOCKS the other lacks, and reading `--calls` positionally
   always names an /Ob2 site, never a statement. Retail expands
@@ -521,3 +538,21 @@ so the spelling is supported by retail and the VC6 control, not a line table.
 An explicit top exit inside `for (;;)` was byte-neutral. A top-tested
 `while (1)` also changed the surrounding loop arrangement and induction
 (89.92383%), so that control does not invalidate the guarded bottom exit.
+
+## A folded search flag can determine fallback placement
+
+`TraceZoneBoundary` (0x53c390) searches a cyclic edge list before choosing
+between a rectangle fallback and the ordinary boundary walk. A return inside
+the search sinks the rectangle after the ordinary walk. A `bool found = false`
+with a success assignment and break, followed by `if (!found)` after the
+`do/while`, reproduces retail's backward search branch and rectangle
+fall-through. VC6 removes the flag's stores and test entirely. With identical
+point-copy expressions, this changes 60.27% to 86.10%; the remaining mismatch
+is mostly inside later vector allocation paths. A direct goto was byte-flat
+in the earlier control, and nesting the success body falls to 29.83%.
+
+Retail proves the branch topology, while the flag is a reconstruction
+hypothesis that produces it naturally. An absent flag in optimized assembly
+does not rule out a source flag. Test the complete search and post-search
+control relationship before attributing fallback placement to a compiler
+generation or an unavoidable layout decision.

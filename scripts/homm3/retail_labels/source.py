@@ -414,7 +414,8 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "VECTOR_DTOR", "VECTOR_SIZE",
                  "VECTOR_CAPACITY",
                  "VECTOR_CONSTRUCTOR_ITERATOR",
-                 "VECTOR_RESIZE", "VECTOR_INSERT", "VECTOR_ERASE",
+                 "VECTOR_RESIZE", "VECTOR_INSERT", "VECTOR_INSERT_SINGLE",
+                 "VECTOR_INSERT_COUNT", "VECTOR_ERASE",
                  "VECTOR_DESTROY", "VECTOR_UCOPY", "VECTOR_UFILL",
                  "VECTOR_COPY_ASSIGN", "VECTOR_COPY_CTOR",
                  "BITSET_TIDY", "BITSET_CTOR",
@@ -1918,6 +1919,74 @@ def _ctor_kind_pairing(candidates: list[dict], mangled_group: list,
     return out
 
 
+VECTOR_INSERT_SIGNATURE_KINDS = ("vector_insert_single", "vector_insert_count")
+
+
+def _vector_insert_signature(declaration: str) -> str | None:
+    """Identify VC6 vector's single-element or count overload after demangling.
+
+    The iterator-range overload is also void and takes three arguments, so
+    arity alone is insufficient. Nested template commas are not parameters.
+    Unrecognised signatures must not fall back to a positional name join.
+    """
+    prefix, separator, arguments = declaration.rpartition("::insert(")
+    result, convention, owner = prefix.partition(" __thiscall ")
+    if not (separator and convention and owner.startswith("std::vector<")
+            and arguments.endswith(")")):
+        return None
+    arguments = arguments[:-1]
+    params, depth, start = [], 0, 0
+    for i, char in enumerate(arguments):
+        if char in "<([":
+            depth += 1
+        elif char in ">)]":
+            depth -= 1
+        elif char == "," and depth == 0:
+            params.append(arguments[start:i].strip())
+            start = i + 1
+    params.append(arguments[start:].strip())
+    if depth or not params[0].endswith("*") or not params[-1].endswith("&"):
+        return None
+    if len(params) == 2 and result.endswith("*"):
+        return "vector_insert_single"
+    if (len(params) == 3 and params[1] == "unsigned int"
+            and result == "public: void"):
+        return "vector_insert_count"
+    return None
+
+
+def _bind_vector_insert_signatures(candidates: list[dict],
+                                   mangled_group: list) -> tuple[list, list]:
+    """Bind explicit overload claims; return only the untyped remainder.
+
+    A missing or ambiguous requested overload stays unjoined, even when one
+    other symbol has the claim's size. Reserve its signature before offering
+    the remaining names to legacy VECTOR_INSERT's weaker pairing oracles.
+    """
+    from homm3.core import undname
+
+    requested = {
+        kind: [r for r in candidates if f"${kind}$" in r["name"]]
+        for kind in VECTOR_INSERT_SIGNATURE_KINDS}
+    requested = {kind: rows for kind, rows in requested.items() if rows}
+    if not requested:
+        return candidates, mangled_group
+    signatures = {
+        name: _vector_insert_signature(declaration)
+        for name, declaration in undname.demangle(
+            n for n, _ in mangled_group if n.startswith("?insert@?$vector@")
+        ).items()}
+    for kind, rows in requested.items():
+        names = [n for n, _ in mangled_group if signatures.get(n) == kind]
+        if len(rows) == 1 and len(names) == 1:
+            rows[0]["joined"] = names[0]
+            rows[0]["channel"] = "src-VA+base"
+    return (
+        [r for r in candidates
+         if not any(f"${kind}$" in r["name"] for kind in requested)],
+        [(n, c) for n, c in mangled_group if signatures.get(n) not in requested])
+
+
 def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
     """The base-obj name-authority join, in place: a compiled unit's public
     symbols carry the TRUE MSVC spellings; uniquely-joined claims adopt
@@ -2010,7 +2079,8 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             owner = row["name"].rsplit("$", 1)[1].lower()
             claim_keys.setdefault(f"{owner}@vector_resize", []).append(row)
             continue
-        if "$vector_insert$" in row["name"]:
+        if any(f"${kind}$" in row["name"] for kind in (
+                "vector_insert", *VECTOR_INSERT_SIGNATURE_KINDS)):
             owner = row["name"].rsplit("$", 1)[1].lower()
             claim_keys.setdefault(f"{owner}@vector_insert", []).append(row)
             continue
@@ -2220,6 +2290,11 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
         candidates = claim_keys.get(key)
         if not candidates:
             continue  # unimplemented group: leave labeled
+        if key.endswith("@vector_insert"):
+            candidates, mangled_group = _bind_vector_insert_signatures(
+                candidates, mangled_group)
+            if not candidates or not mangled_group:
+                continue
         # The element-named members bind FIRST and leave the group: an
         # owner that names its instantiation cannot be mis-paired, and
         # taking both sides out keeps the weaker oracles below honest

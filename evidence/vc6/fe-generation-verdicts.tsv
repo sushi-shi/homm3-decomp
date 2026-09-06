@@ -1,0 +1,112 @@
+# generator: python3 -m homm3.vc6.genab run --gen rtm-fe --all-units
+# date: 2026-09-06
+# ANALYSIS OUTPUT, NOT RETAIL EVIDENCE - regenerate, never hand-edit
+# sp3-c1xx: 12.00.8472 sha256 28c355499c2f8090910624734faff31fe719a69a8aac7dd44b2ce64addf96ee2 size 1196083 (pinned toolchain)
+# sp3-c2: 12.00.8447 sha256 a0cc45f83fd0ed009aa4f43df5598105a1049ad9675de0b1089be7cce7d3c153 size 737329 (pinned toolchain)
+# rtm-fe-c1xx: 12.00.8168.0 sha256 4095e9e8de5ac4b13dbfe310abb8de711475b1a92c5f94375919947937f3237e size 1183795 (staged ../orig/vc6-rtm/C1XX.DLL)
+# rtm-fe-c2: 12.00.8168.0 sha256 45187b0b6288240f73272a7c61e6329c50048a76e57db3bb87b6f0229e09e27d size 737329 (staged ../orig/vc6-rtm/C2.DLL)
+# generation: rtm-fe swaps C1XX.DLL, C2.DLL; every other pass is the pinned SP3 pressing
+# metric: align = _align.distance (unpaired register-visible masked slots), flow = _flow.distance (branch-shape); verdict grades at align+flow==0 - REGISTER-VISIBLE+BRANCH-SHAPE, weaker than byte-exact (absolute addresses masked)
+# retail_producer: delinked = build/objdiff/target/<unit>.c.obj (same disassembler both sides); capstone = image producer (cross-producer skew inflates distances)
+# gen_attrib (rtm-fe only): back-end-only = this function's bytes are the same under the C2-only overlay, so the RTM FRONT end contributed nothing to its delta; front-end-contributes = C1XX 8168 changed it
+# --all-units sweep: only functions whose two sides differ are listed; a unit absent here compiled byte-identically under both generations
+fn	unit	rva	size	sp3_align	sp3_flow	rtm_align	rtm_flow	sp3_vs_rtm	gen_attrib	retail_producer	verdict	note
+??0CAdvPopup@@QAE@HHHHI@Z	advmgr	0x1b040	0x9a	2	0	2	0	0	back-end-only	delinked	neither	RTM output identical to SP3 - not a generation wall
+??0logic_error@std@@QAE@ABV01@@Z	advmgr	0x44e0	0x159	78	0	78	0	0	back-end-only	capstone	neither	RTM output identical to SP3 - not a generation wall
+??0out_of_range@std@@QAE@ABV01@@Z	advmgr	0x4700	0x157	72	0	72	0	0	back-end-only	capstone	neither	RTM output identical to SP3 - not a generation wall
+??1CAdvPopup@@UAE@XZ	advmgr	0x1b120	0x67	2	0	2	0	0	back-end-only	delinked	neither	RTM output identical to SP3 - not a generation wall
+?DoAdventureOptions@advManager@@QAEXXZ	advmgr	0x1ab00	0xf8	16	0	16	0	0	back-end-only	delinked	neither	RTM output identical to SP3 - not a generation wall
+?DoSystemOptions@advManager@@QAEEXZ	advmgr	0x1ac00	0x1ac	18	0	18	0	0	back-end-only	delinked	neither	RTM output identical to SP3 - not a generation wall
+?GetSoundId@advManager@@QAE?AW4e_looping_sound_id@@HHH@Z	advmgr	0x18620	0x5e4	440	8	440	8	0	back-end-only	delinked	neither	RTM output identical to SP3 - not a generation wall
+?HeroQuickView@advManager@@QAEXHHHE@Z	advmgr	0x16590	0x210	2	0	2	0	0	back-end-only	delinked	neither	RTM output identical to SP3 - not a generation wall
+?LoadRemote@advManager@@QAEXE@Z	advmgr	0x1a100	0xd9	4	0	4	0	0	back-end-only	delinked	neither	RTM output identical to SP3 - not a generation wall
+?MonsterQuickView@advManager@@QAEXPBVNewmapCell@@HH@Z	advmgr	0x17150	0x2c9	2	0	2	0	0	back-end-only	delinked	neither	RTM output identical to SP3 - not a generation wall
+?MoreTreesNear@advManager@@QAEHUtype_point@@@Z	advmgr	0x1adb0	0x25f	35	0	35	0	0	back-end-only	delinked	neither	RTM output identical to SP3 - not a generation wall
+?OverrideBottomView@advManager@@QAEXW4EBottomViewType@1@H@Z	advmgr	0x15d60	0x78	15	0	15	0	0	back-end-only	delinked	neither	RTM output identical to SP3 - not a generation wall
+?QuickInfo@advManager@@QAEXHHH@Z	advmgr	0x137c0	0x25a0	436	388	507	309	482	back-end-only	delinked	neither	RTM closer (816 vs 824)
+?SaveGame@@YIEE@Z	advmgr	0x18160	0x270	2	0	2	0	0	back-end-only	delinked	neither	RTM output identical to SP3 - not a generation wall
+?ScreenScroll@advManager@@QAEXHH@Z	advmgr	0x195c0	0x258	47	0	47	0	0	back-end-only	delinked	neither	RTM output identical to SP3 - not a generation wall
+?TownQuickView@advManager@@QAEXHHHE@Z	advmgr	0x167a0	0x7db	140	0	140	0	0	back-end-only	delinked	neither	RTM output identical to SP3 - not a generation wall
+?UpdBottomView@advManager@@QAEXEEE@Z	advmgr	0x15de0	0x140	16	0	16	0	0	back-end-only	delinked	neither	RTM output identical to SP3 - not a generation wall
+?UpdBottomViewEnemyTurn@advManager@@QAEEE@Z	advmgr	0x15f20	0x87	2	0	2	0	0	back-end-only	delinked	neither	RTM output identical to SP3 - not a generation wall
+?UpdBottomViewHero@advManager@@QAEEE@Z	advmgr	0x16450	0x9a	2	0	2	0	0	back-end-only	delinked	neither	RTM output identical to SP3 - not a generation wall
+?UpdBottomViewKingdom@advManager@@QAEEE@Z	advmgr	0x163a0	0xa6	2	0	2	0	0	back-end-only	delinked	neither	RTM output identical to SP3 - not a generation wall
+?UpdBottomViewMessage@advManager@@QAEEE@Z	advmgr	0x162f0	0xa1	2	0	2	0	0	back-end-only	delinked	neither	RTM output identical to SP3 - not a generation wall
+?UpdBottomViewNewTurn@advManager@@QAEEE@Z	advmgr	0x15fb0	0xb0	2	0	2	0	0	back-end-only	delinked	neither	RTM output identical to SP3 - not a generation wall
+?UpdBottomViewResMsg@advManager@@QAEEE@Z	advmgr	0x16160	0xaf	2	0	2	0	0	back-end-only	delinked	neither	RTM output identical to SP3 - not a generation wall
+?UpdBottomViewTown@advManager@@QAEEE@Z	advmgr	0x164f0	0x9a	2	0	2	0	0	back-end-only	delinked	neither	RTM output identical to SP3 - not a generation wall
+?ViewPuzzle@advManager@@QAEXXZ	advmgr	0x1a7f0	0x307	69	0	69	0	0	back-end-only	delinked	neither	RTM output identical to SP3 - not a generation wall
+?_Copy@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEXI@Z	advmgr	0x4bd0	0x59	87	27	87	27	0	back-end-only	capstone	neither	RTM output identical to SP3 - not a generation wall
+?_Doraise@logic_error@std@@MBEXXZ	advmgr	0x4640	0x1d	2	0	2	0	0	back-end-only	capstone	neither	RTM output identical to SP3 - not a generation wall
+?_Doraise@out_of_range@std@@MBEXXZ	advmgr	0x46e0	0x1d	2	0	2	0	0	back-end-only	capstone	neither	RTM output identical to SP3 - not a generation wall
+?_Xran@?$bitset@$0DA@@std@@ABEXXZ	advmgr	0x1b410	0xcb	2	0	2	0	0	back-end-only	delinked	neither	RTM output identical to SP3 - not a generation wall
+?garrison_quick_view@advManager@@QAEXHHH@Z	advmgr	0x16f80	0x1cd	8	8	8	8	0	back-end-only	delinked	neither	RTM output identical to SP3 - not a generation wall
+?AI_get_value_of_artifact@@YIJUtype_artifact@@PBVhero@@EE@Z	ai_player	0x336c0	0x320	132	1	132	3	4	back-end-only	delinked	neither	RTM farther (135 vs 133)
+?InitializeArtifactTraitsTable@@YIEXZ	artifact	0x4cd50	0x5e8	289	38	291	41	17	back-end-only	delinked	neither	RTM farther (332 vs 327)
+?InitializeCampaignMapTraitsTable@@YIEXZ	campaignmap	0x5dee0	0x310	4	0	8	4	8	back-end-only	delinked	neither	RTM farther (12 vs 4)
+?InitializeCampaignMusicTable@@YIEXZ	campaignmusic	0x5e250	0x160	6	0	10	4	8	back-end-only	delinked	neither	RTM farther (14 vs 6)
+?InitializeCreatureTypeTraits@@YIXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	creaturetype	0x7b480	0x322	18	0	18	0	0	front-end-contributes	delinked	neither	RTM output identical to SP3 - not a generation wall
+??0?$codecvt@DDH@std@@QAE@I@Z	customcampaign	0x8eb60	0x67	2	0	2	0	0	back-end-only	delinked	neither	RTM output identical to SP3 - not a generation wall
+??1?$basic_filebuf@DU?$char_traits@D@std@@@std@@UAE@XZ	customcampaign	0x8bd50	0x14f	2	0	2	0	0	back-end-only	delinked	neither	RTM output identical to SP3 - not a generation wall
+?_Addfac@std@@YI?AVlocale@1@V21@PAV?$codecvt@DDH@1@@Z	customcampaign	0x8e8c0	0x102	2	0	2	0	0	back-end-only	delinked	neither	RTM output identical to SP3 - not a generation wall
+?_Construct@std@@YIXPAV?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@1@ABV21@@Z	customcampaign	0x5fdc0	0x9c	40	0	40	0	0	back-end-only	capstone	neither	RTM output identical to SP3 - not a generation wall
+?_Construct@std@@YIXPAV?$vector@Vhero@@V?$allocator@Vhero@@@std@@@1@ABV21@@Z	customcampaign	0x5fce0	0xd1	36	0	36	0	0	back-end-only	capstone	neither	RTM output identical to SP3 - not a generation wall
+?_Construct@std@@YIXPAVhero@@ABV2@@Z	customcampaign	0x603a0	0x355	2	0	2	0	0	back-end-only	delinked	neither	RTM output identical to SP3 - not a generation wall
+?_Copy@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEXI@Z	customcampaign	0x4bd0	0x59	87	27	87	27	0	back-end-only	capstone	neither	RTM output identical to SP3 - not a generation wall
+?_Doraise@bad_cast@std@@MBEXXZ	customcampaign	0x53c80	0x1d	2	0	2	0	0	back-end-only	capstone	neither	RTM output identical to SP3 - not a generation wall
+?_Erase@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@IAEXPAU_Node@12@@Z	customcampaign	0x5c8b0	0xad	63	10	63	10	0	back-end-only	capstone	neither	RTM output identical to SP3 - not a generation wall
+?_Inc@const_iterator@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@QAEXXZ	customcampaign	0x5d370	0xa3	28	0	28	0	0	back-end-only	capstone	neither	RTM output identical to SP3 - not a generation wall
+?_Initcvt@?$basic_filebuf@DU?$char_traits@D@std@@@std@@IAEXXZ	customcampaign	0x8d5a0	0x22e	2	0	2	0	0	back-end-only	delinked	neither	RTM output identical to SP3 - not a generation wall
+?_Insertion_sort_1@std@@YIXPAVhero@@0UCrossoverHeroStronger@@0@Z	customcampaign	0x0	0x0					0	back-end-only		neither	no retail body
+?_Median@std@@YI?AVhero@@V2@00UCrossoverHeroStronger@@@Z	customcampaign	0x8fa40	0x1d7	2	0	2	0	0	back-end-only	delinked	neither	RTM output identical to SP3 - not a generation wall
+?_Save@?$_Tidyfac@V?$codecvt@DDH@std@@@std@@SAPAV?$codecvt@DDH@2@PAV32@@Z	customcampaign	0x8ec60	0x7b	2	0	2	0	0	back-end-only	delinked	neither	RTM output identical to SP3 - not a generation wall
+?_Sort@std@@YIXPAVhero@@0UCrossoverHeroStronger@@0@Z	customcampaign	0x8f7e0	0x159	2	0	2	0	0	back-end-only	delinked	neither	RTM output identical to SP3 - not a generation wall
+?_Sort_0@std@@YIXPAVhero@@0UCrossoverHeroStronger@@0@Z	customcampaign	0x8f2b0	0x333	2	0	2	0	0	back-end-only	delinked	neither	RTM output identical to SP3 - not a generation wall
+?_Tidy@?$_Tidyfac@V?$codecvt@DDH@std@@@std@@SAXXZ	customcampaign	0x8ed50	0x92	2	0	2	0	0	back-end-only	delinked	neither	RTM output identical to SP3 - not a generation wall
+?_Unguarded_insert@std@@YIXPAVhero@@V2@UCrossoverHeroStronger@@@Z	customcampaign	0x8f940	0xf4	2	0	2	0	0	back-end-only	delinked	neither	RTM output identical to SP3 - not a generation wall
+?_Unguarded_partition@std@@YIPAVhero@@PAV2@0V2@UCrossoverHeroStronger@@@Z	customcampaign	0x8fc20	0x195	2	0	2	0	0	back-end-only	delinked	neither	RTM output identical to SP3 - not a generation wall
+?_Xran@?$bitset@$07@std@@ABEXXZ	customcampaign	0x8da70	0xcb	2	0	2	0	0	back-end-only	delinked	neither	RTM output identical to SP3 - not a generation wall
+?_Xran@?$bitset@$0IB@@std@@ABEXXZ	customcampaign	0x8edf0	0xcb	34	0	34	0	0	back-end-only	capstone	neither	RTM output identical to SP3 - not a generation wall
+?_Xran@?$bitset@$0JA@@std@@ABEXXZ	customcampaign	0x346d0	0xcb	34	0	34	0	0	back-end-only	capstone	neither	RTM output identical to SP3 - not a generation wall
+?_Xran@?$bitset@$0JB@@std@@ABEXXZ	customcampaign	0x8d9a0	0xcb	2	0	2	0	0	back-end-only	delinked	neither	RTM output identical to SP3 - not a generation wall
+?_Xran@?$bitset@$0JM@@std@@ABEXXZ	customcampaign	0xd2090	0xcb	34	0	34	0	0	back-end-only	capstone	neither	RTM output identical to SP3 - not a generation wall
+?erase@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@QAE?AViterator@12@V312@0@Z	customcampaign	0x5c070	0x12b	53	0	53	0	0	back-end-only	capstone	neither	RTM output identical to SP3 - not a generation wall
+?erase@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@QAE?AViterator@12@V312@@Z	customcampaign	0x5c200	0x53e	414	29	414	29	0	back-end-only	capstone	neither	RTM output identical to SP3 - not a generation wall
+??0?$codecvt@DDH@std@@QAE@I@Z	forcefeedback	0x8eb60	0x67	24	0	24	0	0	back-end-only	capstone	neither	RTM output identical to SP3 - not a generation wall
+??Hstd@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@0@ABV10@PBD@Z	forcefeedback	0xb7ec0	0x114	38	0	38	0	0	back-end-only	capstone	neither	RTM output identical to SP3 - not a generation wall
+?_Addfac@std@@YI?AVlocale@1@V21@PAV?$codecvt@DDH@1@@Z	forcefeedback	0x8e8c0	0x102	46	0	46	0	0	back-end-only	capstone	neither	RTM output identical to SP3 - not a generation wall
+?_Copy@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEXI@Z	forcefeedback	0x4bd0	0x59	87	27	87	27	0	back-end-only	capstone	neither	RTM output identical to SP3 - not a generation wall
+?_Dec@const_iterator@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@U_Kfn@?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@3@U?$less@PAVCImmEnclosure@@@3@V?$allocator@UtagRECT@@@3@@std@@QAEXXZ	forcefeedback	0xb7db0	0xb3	2	0	2	0	0	back-end-only	delinked	neither	RTM output identical to SP3 - not a generation wall
+?_Doraise@bad_cast@std@@MBEXXZ	forcefeedback	0x53c80	0x1d	2	0	2	0	0	back-end-only	capstone	neither	RTM output identical to SP3 - not a generation wall
+?_Erase@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@U_Kfn@?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@3@U?$less@PAVCImmEnclosure@@@3@V?$allocator@UtagRECT@@@3@@std@@IAEXPAU_Node@12@@Z	forcefeedback	0xb79d0	0x7e	22	0	22	0	0	back-end-only	capstone	neither	RTM output identical to SP3 - not a generation wall
+?_Inc@const_iterator@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@U_Kfn@?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@3@U?$less@PAVCImmEnclosure@@@3@V?$allocator@UtagRECT@@@3@@std@@QAEXXZ	forcefeedback	0xb7330	0xa3	28	0	28	0	0	back-end-only	capstone	neither	RTM output identical to SP3 - not a generation wall
+?_Initcvt@?$basic_filebuf@DU?$char_traits@D@std@@@std@@IAEXXZ	forcefeedback	0x8d5a0	0x22e	68	0	68	0	0	back-end-only	capstone	neither	RTM output identical to SP3 - not a generation wall
+?_Insert@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@U_Kfn@?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@3@U?$less@PAVCImmEnclosure@@@3@V?$allocator@UtagRECT@@@3@@std@@IAE?AViterator@12@PAU_Node@12@0ABU?$pair@QAVCImmEnclosure@@UtagRECT@@@2@@Z	forcefeedback	0xb7a50	0x2f9	2	0	2	0	0	back-end-only	delinked	neither	RTM output identical to SP3 - not a generation wall
+?_Save@?$_Tidyfac@V?$codecvt@DDH@std@@@std@@SAPAV?$codecvt@DDH@2@PAV32@@Z	forcefeedback	0x8ec60	0x7b	30	0	30	0	0	back-end-only	capstone	neither	RTM output identical to SP3 - not a generation wall
+?_Tidy@?$_Tidyfac@V?$codecvt@DDH@std@@@std@@SAXXZ	forcefeedback	0x8ed50	0x92	28	0	28	0	0	back-end-only	capstone	neither	RTM output identical to SP3 - not a generation wall
+?erase@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@U_Kfn@?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@3@U?$less@PAVCImmEnclosure@@@3@V?$allocator@UtagRECT@@@3@@std@@QAE?AViterator@12@V312@0@Z	forcefeedback	0xb7200	0x121	50	0	50	0	0	back-end-only	capstone	neither	RTM output identical to SP3 - not a generation wall
+?erase@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@U_Kfn@?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@3@U?$less@PAVCImmEnclosure@@@3@V?$allocator@UtagRECT@@@3@@std@@QAE?AViterator@12@V312@@Z	forcefeedback	0xb74a0	0x50f	314	0	314	0	0	back-end-only	capstone	neither	RTM output identical to SP3 - not a generation wall
+?LoadMap@game@@QAE_NPAVTAbstractFile@@@Z	game	0xc2450	0x88e	851	114	851	116	12	back-end-only	delinked	neither	RTM farther (967 vs 965)
+?HeroFn_004E2550@hero@@QAEEJJ@Z	hero	0xe2550	0x2ec	65	7	69	11	8	back-end-only	delinked	neither	RTM farther (80 vs 72)
+?equip_artifact@hero@@QAEEPBUtype_artifact@@J@Z	hero	0xe2a00	0x1c7	16	7	23	12	14	back-end-only	delinked	neither	RTM farther (35 vs 23)
+?remove_artifact@hero@@QAEXJ@Z	hero	0xe2bd0	0x174	35	0	41	5	15	back-end-only	delinked	neither	RTM farther (46 vs 35)
+?update_slot@THeroScreenWindow@@QAEXJ@Z	hero	0xdaf90	0x23a	110	10	112	12	4	back-end-only	delinked	neither	RTM farther (124 vs 120)
+?update_spell_list@hero@@QAEXXZ	hero	0xd95d0	0x212	99	8	107	13	15	back-end-only	delinked	neither	RTM farther (120 vs 107)
+?InitializeHeroClassTraitsTable@@YIEXZ	herodefs	0xe6920	0x1e2	10	0	10	0	0	back-end-only	delinked	neither	RTM output identical to SP3 - not a generation wall
+?InitializeHeroTraitsTable@@YIEXZ	herodefs	0xe67a0	0x176	10	0	10	0	0	back-end-only	delinked	neither	RTM output identical to SP3 - not a generation wall
+?InitializeSSkillTraitsTable@@YIEXZ	herodefs	0xe6b10	0x1c8	14	0	14	0	0	back-end-only	delinked	neither	RTM output identical to SP3 - not a generation wall
+?SetMenus@@YIXPAUHMENU__@@H@Z	kbwin	0xf8220	0xb2	6	0	8	2	4	back-end-only	delinked	neither	RTM farther (10 vs 6)
+?GenerateHeightMap@NewfullMap@@QAEXPBVCObject@@QAY05C@Z	mapcell	0x105060	0x1cd	0	0	2	2	4	back-end-only	delinked	SP3-matches	RTM diverges by 4 where SP3 is exact
+?InitializeAdventureObjectNames@@YIXXZ	objnames	0x1b500	0x28b	48	0	42	14	28	back-end-only	delinked	neither	RTM farther (56 vs 48)
+?DoRollover@TOverviewWindow@@AAEXH@Z	overview	0x120e30	0xb2c	207	0	252	83	136	back-end-only	delinked	neither	RTM farther (335 vs 207)
+?BuildRoadCostMap@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	rmg	0x147880	0x7b1	787	131	787	131	0	front-end-contributes	delinked	neither	RTM output identical to SP3 - not a generation wall
+?ConnectZones@type_random_map_generator@@QAEXXZ	rmg	0x143240	0x797	353	0	353	0	0	front-end-contributes	delinked	neither	RTM output identical to SP3 - not a generation wall
+?CreateRiver@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	rmg	0x148df0	0x99f	989	84	989	84	0	front-end-contributes	delinked	neither	RTM output identical to SP3 - not a generation wall
+?CreateSubterraneanGate@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	rmg	0x142080	0x8aa	884	81	884	81	0	front-end-contributes	delinked	neither	RTM output identical to SP3 - not a generation wall
+?SelectTerrainTransition@@YIHPBHPAUTRmgTerrainFlip@@@Z	rmg_terrain	0x1b3e80	0x75f	44	0	64	20	40	back-end-only	delinked	neither	RTM farther (84 vs 44)
+?OnWidgetDeselect@TSingleSelectionWindow@@QAEHPAVmessage@@PAEE@Z	singleselectionwindow	0x1865b0	0x13ea	313	176	315	176	2	back-end-only	delinked	neither	RTM farther (491 vs 489)
+?UpdateSlot@swapManager@@QAEXHW4TArtifactSlot@@@Z	swapmgr	0x1aef00	0x24c	0	0	2	2	4	back-end-only	delinked	SP3-matches	RTM diverges by 4 where SP3 is exact
+?InitializeHelpText@@YIEXZ	text	0x1b98b0	0x405	92	0	138	46	92	back-end-only	delinked	neither	RTM farther (184 vs 92)
+?GiveSpells@town@@QAEXPAVhero@@@Z	town	0x1be030	0x1d3	2	0	4	5	7	back-end-only	delinked	neither	RTM farther (9 vs 2)
+?initialize_spells@town@@QAEXPBVTownExtra@@@Z	town	0x1be600	0x32a	2	0	4	2	4	back-end-only	delinked	neither	RTM farther (6 vs 2)
+?SetWinText@@YIXPAVheroWindow@@H@Z	window	0x1ffa30	0xc1	4	0	6	2	4	back-end-only	delinked	neither	RTM farther (8 vs 4)

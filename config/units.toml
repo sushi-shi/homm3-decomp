@@ -75,7 +75,8 @@ game_o2_ml_gr_windows = [
 #   gzinflatebuf     define removed + /MT: byte-flat tree-wide (0 moved).
 #   game             define removed + /MT: byte-flat tree-wide (0 moved).
 # The last two are kept because the flag is the retail fact and the local
-# define is a scaffold; rmg / rmg_terrain are left on the define (owned).
+# define is a scaffold. rmg / rmg_terrain also use /MT with the local
+# define removed (2026-09-06); CreateRiver and PaintTransitions are byte-flat.
 # The three that had neither joined here, each measured on its own build
 # with the whole tree's per-row scores diffed before and after:
 #   singleselectionwindow (6 sites) - CMapHeaderData(const&) 0x590810
@@ -808,7 +809,7 @@ flags = "game_o2_ml_gr_windows"
 [[unit]]
 unit = "rmg"
 source = "src/rmg.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "rmg_support"
@@ -818,7 +819,7 @@ flags = "game_o2_ml_gr_windows"
 [[unit]]
 unit = "rmg_terrain"
 source = "src/rmg_terrain.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "objnames"

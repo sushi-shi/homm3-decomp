@@ -88,153 +88,6 @@ inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
     return (_X < _Y ? _Y : _X);
 }
 
-// E:\gamedcs\viewwrld.cpp:166
-// The inner loop reads its source pixel THROUGH A NAMED POINTER that it
-// dereferences twice; it does not subscript into a `color` local. Retail
-// proves it in both halves of this boundary - the out-of-line body at
-// 0x5f9d90 and every expansion - by materialising the address
-// (`lea eax,[ecx+eax*2]; mov ax,[eax]`) where a subscript folds straight
-// into the load (`mov cx,[edi+2*ecx]`). Two uses are what forces it: a
-// one-use pointer local folds back to the subscript, and testing the
-// subscript twice instead loses the CSE and scores worse. Measured
-// 2026-09-05 across all six scaled renderers - Road 94.5979 -> 99.5374,
-// River 95.4910 -> 98.5412, Underlay 38.8566 -> 42.1275, Shroud 91.0938 ->
-// 92.8835, AdvObj 94.8383 -> 96.4955, AdvObjShadow 82.7004 -> 83.9809; only
-// Ground moved down (55.6351 -> 55.2155, four bytes, still expanding the
-// clip helper at its last site).
-// Complete expands this source helper into every scaled renderer and emits no
-// retained body. Dreamcast preserves the boundary, the two width locals and
-// the nested clipped loops; retail independently confirms all four screen
-// bounds and the transparent-pixel test in each expansion.
-// MEASURED, 2026-09-05, and it is a per-CALL-SITE inline split we cannot
-// currently spell. Retail emits a REAL out-of-line body for this helper at
-// 0x5f73b0's neighbour 0x5f9d90 (carve row, 316 B; the Dreamcast's own copy
-// is 328 B at dc 0x1968d0) and CALLS it from exactly three of the six view-
-// world layers - VWDrawShroud (call at 0x1f9d7c), VWDrawUnderlay (0x1fa1d2)
-// and VWDrawGround (0x1fa5f1) - while expanding it into VWDrawAdvObj,
-// VWDrawRiver and VWDrawRoad. The three that call it are the three whose
-// pre-inline bodies carry the most candidate call sites, which is the /Ob2
-// `budget / sites-remaining` quotient falling below this callee's cost.
-// Dropping `inline` here flips ALL SIX to a call:
-//   Underlay 38.86 -> 95.67, Ground 55.64 -> 92.47, but
-//   River 95.49 -> 58.09, Road 94.60 -> 59.75, AdvObj 94.84 -> 83.71.
-// Byte-weighted that trade is worth about +200 B and it puts three banked
-// rows under their MAX, so the `inline` stays.
-// RE-MEASURED 2026-09-05 at the current baselines, and it BOUNDS the
-// residual precisely: dropping `inline` takes Underlay 42.1275 -> 99.9583
-// and Ground 55.2155 -> 96.8886 (better than the numbers above, which were
-// taken before the pointer-local CSE landed), against River 98.5412 ->
-// 58.6207, Road 99.5374 -> 57.0968, AdvObj 96.4955 -> 83.7963,
-// AdvObjShadow 83.9809 -> 67.5063 and Shroud flat. Byte-weighted that is
-// -412 B and it drops four banked rows under their MAX, so it still stays.
-// What it proves is worth more than the trade: with retail's inline
-// decision in place VWDrawUnderlay is 99.96% - its whole 784 B body is
-// already byte-correct and the ONLY thing left in it is this one /Ob2
-// decision. Two candidate-adding respellings of the object walk were
-// measured on Underlay and both LOSE (dropping the redundant
-// `objects.size() > 0` guard 42.1275 -> 40.2597 - it is not byte-free
-// after all; `!objects.empty()` for the same guard 42.1275 -> 41.8933),
-// which agrees with the placement rule: a site BEFORE the scale call
-// cannot move the divisor at it. The missing candidate is still one
-// statement at or after the final scale call.
-// QUANTIFIED, 2026-09-05, with the /Ob2 site-count instrument
-// (docs/vc6/inliner.md 5.9): the deficit on the two callers that still
-// over-inline is EXACTLY ONE CANDIDATE SITE, and it sits AT OR AFTER their
-// final VWScaleToScreenBuffer call. One free candidate appended after
-// VWDrawUnderlay's `if (drewSomething) VWScaleToScreenBuffer(...)` raises
-// `sites-remaining` from 1 to 2, halves the nested budget and flips the
-// decision outright: 38.8566 -> 95.6693, with no other row moving.
-// VWDrawGround is the same shape one site later - its first scale site
-// already divides by >=5 and calls the helper on BOTH sides; only its last
-// site, at divisor 1, diverges. So the residual is a real missing statement
-// at the tail of those two bodies, not a helper spelling: neither the
-// Dreamcast line table nor retail's own tail (the call at 0x5f9d90 is the
-// last instruction before the epilogue) shows one, so it is a Complete-era
-// statement with no DC row, and the free site is an INSTRUMENT ONLY.
-// Measured and rejected as the cb lever: the Dreamcast clip helper carries
-// two more clamps than this body - `else if (screenX > 600) screenX = 600;`
-// and `else if (screenY > 552) screenY = 552;` at dc lines 192/193 and
-// 197/198, proved by the `mov.w 600,r5` / `mov.w 552,r6` arms - but VC6
-// EMITS them rather than folding them against the entry guards, and they
-// cost River 95.49 -> 95.03, Road 94.60 -> 94.06, AdvObj 94.84 -> 94.23 and
-// Underlay 38.86 -> 38.50. Complete dropped them; RoE had them.
-inline void VWClipScaleToScreenBuffer(int destX, int destY)
-{
-    if (destX + giViewWorldScale < 8)
-        return;
-    if (destX >= 600)
-        return;
-    if (destY + giViewWorldScale < 8)
-        return;
-    if (destY >= 552)
-        return;
-
-    int Mwidth = memoryBuffer->GetWidth();
-    int Swidth = gpWindowManager->screenBitmap->GetWidth();
-
-    int screenX = destX;
-    int screenY = destY;
-    if (screenX < 8)
-        screenX = 8;
-    if (screenY < 8)
-        screenY = 8;
-
-    unsigned short* screenBufferLineStart =
-        gpWindowManager->screenBitmap->GetMap(screenX, screenY);
-    unsigned short* sourceBufferLineStart = memoryBuffer->GetMap(0, 0);
-
-    for (int y = 0; y < giViewWorldScale; ++y) {
-        if (destY + y < 8 || destY + y >= 552)
-            continue;
-
-        unsigned short* screenBuffer = screenBufferLineStart;
-        for (int x = 0; x < giViewWorldScale; ++x) {
-            if (destX + x >= 8 && destX + x < 600) {
-                unsigned short* sourcePixel =
-                    sourceBufferLineStart + scaleLine[x];
-                if (*sourcePixel)
-                    *screenBuffer = *sourcePixel;
-                ++screenBuffer;
-            }
-        }
-        sourceBufferLineStart =
-            memoryBuffer->GetMap(0, 0) + Mwidth * scaleLine[y];
-        screenBufferLineStart += Swidth;
-    }
-}
-
-// E:\gamedcs\viewwrld.cpp:226
-// This is the caller-facing half of the same source boundary. Retail expands
-// it into VWDrawAdvObj, including the nested clipped helper above; keeping the
-// real helpers visible lets VC6 make that decision without a synthetic gate.
-inline void VWScaleToScreenBuffer(int destX, int destY)
-{
-    if (destX < 8 || destX + giViewWorldScale >= 600
-        || destY < 8 || destY + giViewWorldScale >= 552) {
-        VWClipScaleToScreenBuffer(destX, destY);
-        return;
-    }
-
-    int Mwidth = memoryBuffer->GetWidth();
-    int Swidth = gpWindowManager->screenBitmap->GetWidth();
-    unsigned short* screenBufferLineStart =
-        gpWindowManager->screenBitmap->GetMap(destX, destY);
-    unsigned short* sourceBufferLineStart = memoryBuffer->GetMap(0, 0);
-
-    for (int y = 0; y < giViewWorldScale; ++y) {
-        unsigned short* screenBuffer = screenBufferLineStart;
-        for (int x = 0; x < giViewWorldScale; ++x) {
-            unsigned short* sourcePixel = sourceBufferLineStart + scaleLine[x];
-            if (*sourcePixel)
-                *screenBuffer = *sourcePixel;
-            ++screenBuffer;
-        }
-        sourceBufferLineStart =
-            memoryBuffer->GetMap(0, 0) + Mwidth * scaleLine[y];
-        screenBufferLineStart += Swidth;
-    }
-}
-
 // E:\gamedcs\viewwrld.cpp:100
 // The magic-number float-to-int conversion. Retail emits NO body for it:
 // the Dreamcast row is `static`, TViewWorldWindow::init's scale-table loop
@@ -327,6 +180,132 @@ void VWDrawSprite(CSprite* srcIcon, NewmapCell* thisCell, int frame, int x, int 
                   gpWindowManager->screenBitmap, x, y, false, true);
 }
 
+// E:\gamedcs\viewwrld.cpp:166
+// The inner loop reads its source pixel THROUGH A NAMED POINTER that it
+// dereferences twice; it does not subscript into a `color` local. Retail
+// proves it in both halves of this boundary - the out-of-line body at
+// 0x5f9d90 and every expansion - by materialising the address
+// (`lea eax,[ecx+eax*2]; mov ax,[eax]`) where a subscript folds straight
+// into the load (`mov cx,[edi+2*ecx]`). Two uses are what forces it: a
+// one-use pointer local folds back to the subscript, and testing the
+// subscript twice instead loses the CSE and scores worse. Measured
+// 2026-09-05 across all six scaled renderers - Road 94.5979 -> 99.5374,
+// River 95.4910 -> 98.5412, Underlay 38.8566 -> 42.1275, Shroud 91.0938 ->
+// 92.8835, AdvObj 94.8383 -> 96.4955, AdvObjShadow 82.7004 -> 83.9809; only
+// Ground moved down (55.6351 -> 55.2155, four bytes, still expanding the
+// clip helper at its last site).
+// Retail retains the clipped helper at 0x5f9d90 (316 B; DC 0x1968d0,
+// 328 B). Shroud, Underlay and Ground call it; AdvObj, River and Road
+// expand it. The enclosing VWScaleToScreenBuffer expands into the callers.
+//
+// Inline-boundary controls measured 2026-09-05: removing this inline
+// keyword takes Underlay 42.1275 -> 99.9583 and Ground 55.2155 -> 96.8886,
+// while River 98.5412 -> 58.6207, Road 99.5374 -> 57.0968,
+// AdvObj 96.4955 -> 83.7963, Shadow 83.9809 -> 67.5063 and Shroud is flat.
+// These isolate a per-caller boundary difference. Neither those current
+// dips nor a near-exact Underlay establish the original declaration.
+// Keep the source boundary while recovering the natural compiler state;
+// earlier MAX checkpoints remain valid through collateral score changes.
+//
+// A temporary free candidate after Underlay's final scale call changed
+// sites-remaining from 1 to 2 and the older score 38.8566 -> 95.6693.
+// Ground's last scale site showed the same sensitivity; its earlier site
+// already calls the clipped helper. This probe demonstrates a budget
+// threshold, not a missing Complete statement: neither retail's tail nor
+// the DC line table supplies evidence for such a statement. Do not retain
+// the synthetic candidate. See docs/vc6/inliner.md for the instrument.
+// Other controls: removing objects.size() > 0 scored 40.2597 versus
+// 42.1275; spelling it !objects.empty() scored 41.8933.
+//
+// DC lines 192/193 and 197/198 also clamp screenX > 600 and screenY > 552.
+// The earlier probe emitted additional VC6 checks absent from retail,
+// rather than folding them against the entry guards: River 95.49 -> 95.03,
+// Road 94.60 -> 94.06, AdvObj 94.84 -> 94.23, Underlay 38.86 -> 38.50.
+// That spelling remains a negative control, not proof that Complete
+// removed the source checks.
+//
+// 2026-09-06: the direct GetMap address expression from DC Bitmap16.h
+// raises Underlay 42.1275 -> 43.1116, Ground -> 57.8477 and Shroud ->
+// 97.9205 while this retained body stays exact. Pairing each coordinate's
+// entry limits, as grouped by DC lines 170/171 and 174/175, leaves those
+// scores unchanged. Restoring DrawTile's bitmap accessor calls later raises
+// Ground to 96.8937; restoring its DC border-first/else order closes 100%.
+// These real source relationships recover the boundary with no tail carrier.
+// Underlay remains unfinished: the restored GetNumFrames/DrawAdvObj helper
+// calls leave CUR 38.5458 with six GetMap calls, while MAX 43.1116 is banked.
+inline void VWClipScaleToScreenBuffer(int destX, int destY)
+{
+    if (destX + giViewWorldScale < 8 || destX >= 600)
+        return;
+    if (destY + giViewWorldScale < 8 || destY >= 552)
+        return;
+
+    int Mwidth = memoryBuffer->GetWidth();
+    int Swidth = gpWindowManager->screenBitmap->GetWidth();
+
+    int screenX = destX;
+    int screenY = destY;
+    if (screenX < 8)
+        screenX = 8;
+    if (screenY < 8)
+        screenY = 8;
+
+    unsigned short* screenBufferLineStart =
+        gpWindowManager->screenBitmap->GetMap(screenX, screenY);
+    unsigned short* sourceBufferLineStart = memoryBuffer->GetMap(0, 0);
+
+    for (int y = 0; y < giViewWorldScale; ++y) {
+        if (destY + y < 8 || destY + y >= 552)
+            continue;
+
+        unsigned short* screenBuffer = screenBufferLineStart;
+        for (int x = 0; x < giViewWorldScale; ++x) {
+            if (destX + x >= 8 && destX + x < 600) {
+                unsigned short* sourcePixel =
+                    sourceBufferLineStart + scaleLine[x];
+                if (*sourcePixel)
+                    *screenBuffer = *sourcePixel;
+                ++screenBuffer;
+            }
+        }
+        sourceBufferLineStart =
+            memoryBuffer->GetMap(0, 0) + Mwidth * scaleLine[y];
+        screenBufferLineStart += Swidth;
+    }
+}
+
+// E:\gamedcs\viewwrld.cpp:226
+// This is the caller-facing half of the same source boundary. Retail expands
+// it into VWDrawAdvObj, including the nested clipped helper above; keeping the
+// real helpers visible lets VC6 make that decision without a synthetic gate.
+inline void VWScaleToScreenBuffer(int destX, int destY)
+{
+    if (destX < 8 || destX + giViewWorldScale >= 600
+        || destY < 8 || destY + giViewWorldScale >= 552) {
+        VWClipScaleToScreenBuffer(destX, destY);
+        return;
+    }
+
+    int Mwidth = memoryBuffer->GetWidth();
+    int Swidth = gpWindowManager->screenBitmap->GetWidth();
+    unsigned short* screenBufferLineStart =
+        gpWindowManager->screenBitmap->GetMap(destX, destY);
+    unsigned short* sourceBufferLineStart = memoryBuffer->GetMap(0, 0);
+
+    for (int y = 0; y < giViewWorldScale; ++y) {
+        unsigned short* screenBuffer = screenBufferLineStart;
+        for (int x = 0; x < giViewWorldScale; ++x) {
+            unsigned short* sourcePixel = sourceBufferLineStart + scaleLine[x];
+            if (*sourcePixel)
+                *screenBuffer = *sourcePixel;
+            ++screenBuffer;
+        }
+        sourceBufferLineStart =
+            memoryBuffer->GetMap(0, 0) + Mwidth * scaleLine[y];
+        screenBufferLineStart += Swidth;
+    }
+}
+
 // E:\gamedcs\viewwrld.cpp:265
 // advManager::DrawHeroPart's view-world twin. Same five sprite rows in the
 // same order - the three boat rows behind the ON_BOAT flag, the flag and
@@ -335,19 +314,14 @@ void VWDrawSprite(CSprite* srcIcon, NewmapCell* thisCell, int frame, int x, int 
 // not the full-size renderer's: the cell lookup is a bare GetCell (no
 // invalid-point arm), and the else arm carries NO owner range guard.
 //
-// Residual (98.2385%, both twins to the digit): the SAME nine-byte spill
-// advmgr's DrawHeroPart/DrawHeroPartShadow carry at 98.1840 - at the third
-// sprite row our CL lands the inlined GetNumFrames divisor in a recycled
-// parameter home (`mov [ebp+N],ecx` / `mov [ebp+N],0`) where retail keeps it
-// in ECX (`xor ecx,ecx`). 27 of 28 blocks exact, 13/13 branches, identical
-// call multiset. The four bodies are a free in-compile A/B for that wall, and
-// two source levers for it are now measured and REJECTED (2026-09-06, on
-// VWDrawHeroPart): naming the sprite (`CSprite* boatIcon =
-// boatIcons[currBoat->type];`) so the receiver and the GetNumFrames divisor
-// share one pointer costs 0.09 (98.2385 -> 98.1467), and hoisting the two
-// repeated coordinate expressions into `heroX`/`heroY` locals ahead of the
-// boat test - five identical sites - collapses the body to 75.1244.  The
-// parameter homes must stay recyclable.
+// Exact 2026-09-06, both twins: CSprite::GetNumFrames now returns the
+// IsValidSeq conditional expression evidenced by DC CSprite.h:293. This
+// removes the third boat-row divisor spill and closes 98.2385 -> 100% in
+// both functions, plus the two full-size adventure-map counterparts.
+// Restoring IsValidSeq alone with two if/return arms leaves the spill.
+// Earlier controls: naming boatIcons[currBoat->type] costs 98.2385 ->
+// 98.1467; hoisting heroX/heroY coordinates costs 75.1244. Keep the proven
+// caller shape and the header expression; see docs/vc6/regalloc.md 6f.
 VA(0x005f7500, 0x3F7)  // exhaustive dc-order-map inside the VWDrawAdvObj bracket, dc 0x19308c
 void advManager::VWDrawHeroPart(int part, TDrawParts& heroParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
 {
@@ -1160,6 +1134,11 @@ void advManager::VWDrawUnderlay(int srcX, int srcY, int z, int destX, int destY)
 // guard because the intervening calls cost VC6 its knowledge of the two
 // map-dimension globals - the parameters themselves stay in registers, so
 // only the two `< gMap*` halves survive into the emitted test.
+// Exact 2026-09-06: DC CSprite.h:393's four bitmap accessor calls inside
+// DrawTile restore the clipped-scaler calls (57.8477 -> 96.8937). DC
+// viewwrld.cpp:1194-1258 puts the border arm first and the normal tile in
+// else; that order removes the last GetMap call and closes all 64 blocks.
+// The inverted in-bounds-first/early-return spelling is the 96.8937 control.
 VA(0x005fa1e0, 0x41F)  // exhaustive dc-order-map (the row before the ctor) + VWCompleteDraw call order (1st layer), dc 0x194fb0
 void advManager::VWDrawGround(int srcX, int srcY, int z, int destX, int destY)
 {
@@ -1176,8 +1155,42 @@ void advManager::VWDrawGround(int srcX, int srcY, int z, int destX, int destY)
     int baseX = destX * giViewWorldScale + iVWCenterOffsetW;
     int baseY = destY * giViewWorldScale + iVWCenterOffsetH;
 
-    if (srcX >= 0 && srcY >= 0 && srcX < MAP_WIDTH
-        && srcY < MAP_HEIGHT) {
+    if (srcX < 0 || srcY < 0 || srcX >= MAP_WIDTH
+        || srcY >= MAP_HEIGHT) {
+        int frame = -1;
+        if (srcX == -1) {
+            if (srcY == -1)
+                frame = 16;
+            else if (srcY == MAP_HEIGHT)
+                frame = 19;
+            else if (srcY >= 0 && srcY < MAP_HEIGHT)
+                frame = 32 + (srcY & 3);
+        } else if (srcX == MAP_WIDTH) {
+            if (srcY == -1)
+                frame = 17;
+            else if (srcY == MAP_HEIGHT)
+                frame = 18;
+            else if (srcY >= 0 && srcY < MAP_HEIGHT)
+                frame = 24 + (srcY & 3);
+        } else if (srcY == -1) {
+            if (srcX >= 0 && srcX < MAP_WIDTH)
+                frame = 20 + (srcX & 3);
+        } else if (srcY == MAP_HEIGHT) {
+            if (srcX >= 0 && srcX < MAP_HEIGHT)
+                frame = 28 + (srcX & 3);
+        }
+
+        if (frame == -1)
+            frame = (srcX + 16) % 4 + 4 * ((srcY + 16) % 4);
+
+        memset(memoryBuffer->GetMap(0, 0), 0,
+               memoryBuffer->GetHeight() * memoryBuffer->GetPitch());
+
+        borderTileset->DrawTile(
+            frame, 0, 0, 32, 32, memoryBuffer, 0, 0, false, false);
+
+        VWScaleToScreenBuffer(baseX, baseY + 8);
+    } else {
         memset(memoryBuffer->GetMap(0, 0), 0,
                memoryBuffer->GetHeight() * memoryBuffer->GetPitch());
 
@@ -1187,42 +1200,7 @@ void advManager::VWDrawGround(int srcX, int srcY, int z, int destX, int destY)
             (thisCell->flags_00_11 >> 1) & 1);
 
         VWScaleToScreenBuffer(baseX, baseY + 8);
-        return;
     }
-
-    int frame = -1;
-    if (srcX == -1) {
-        if (srcY == -1)
-            frame = 16;
-        else if (srcY == MAP_HEIGHT)
-            frame = 19;
-        else if (srcY >= 0 && srcY < MAP_HEIGHT)
-            frame = 32 + (srcY & 3);
-    } else if (srcX == MAP_WIDTH) {
-        if (srcY == -1)
-            frame = 17;
-        else if (srcY == MAP_HEIGHT)
-            frame = 18;
-        else if (srcY >= 0 && srcY < MAP_HEIGHT)
-            frame = 24 + (srcY & 3);
-    } else if (srcY == -1) {
-        if (srcX >= 0 && srcX < MAP_WIDTH)
-            frame = 20 + (srcX & 3);
-    } else if (srcY == MAP_HEIGHT) {
-        if (srcX >= 0 && srcX < MAP_HEIGHT)
-            frame = 28 + (srcX & 3);
-    }
-
-    if (frame == -1)
-        frame = (srcX + 16) % 4 + 4 * ((srcY + 16) % 4);
-
-    memset(memoryBuffer->GetMap(0, 0), 0,
-           memoryBuffer->GetHeight() * memoryBuffer->GetPitch());
-
-    borderTileset->DrawTile(
-        frame, 0, 0, 32, 32, memoryBuffer, 0, 0, false, false);
-
-    VWScaleToScreenBuffer(baseX, baseY + 8);
 }
 
 // E:\gamedcs\viewwrld.cpp:1307
@@ -1386,7 +1364,17 @@ TViewWorldWindow::TViewWorldWindow()
 #pragma inline_depth()
     Widgets.push_back(SurfaceButton);
 
-    Widgets.push_back(new bitmapBorder(
+    // DEPTH LADDER (docs/vc6/inliner.md 6b): this ONE append is spelled
+    // `insert(end(), x)`; the other forty-four in this constructor stay
+    // `push_back`.  Retail CALLS `vector<widget*>::insert` here and expands
+    // it everywhere else, and the shallower spelling at this site alone is
+    // worth 96.4425 -> 97.0623.  Titrated per site, all 45 measured singly:
+    // every other site is a LOSS (the plateau is 96.2923, the worst 90.9541
+    // at the surface-button append), the next best is the `ok` append at
+    // 96.5179, and #43 PLUS `ok` together fall back to 96.4869 - so the rung
+    // is worth exactly one site here.
+    std::vector<widget*>& widgets = Widgets;
+    widgets.insert(widgets.end(), new bitmapBorder(
         725, 537, 68, 34, -1, "box66x32.pcx", 0x800));
     button* ok = new button(
         726, 538, 66, 32, 0x7802, "iOkay32.def", 0, 1, 0, 1, 2);
