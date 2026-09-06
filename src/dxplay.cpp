@@ -1286,6 +1286,12 @@ CDPlayConnection* CDPlayLobby::CreateIPXConnection(char* sName, CDPlayConnection
     return pConn;
 }
 
+// The IPX sibling gained one more bounded spelling 2026-09-06: collapsing the
+// two `::operator delete(pAddress)` statements into one by writing
+// `CDPlayConnection* pConn = 0; if (m_hRes >= 0) pConn = new ...;` scores
+// 70.8318 against 99.6605, so the two-statement form VC6 cross-jumps is
+// right and the surplus `mov byte ptr [ebp-4],0` before the merged delete is
+// the state normalisation of that cross-jump, not a missing statement.
 // Residual (99.4%): the extent tree uniquely selects elements[10], making the
 // 0xf4 frame exact.  One EH-state store remains; the sibling's 25-candidate
 // allocation, delete, declaration, scope, and return tree was byte-flat.

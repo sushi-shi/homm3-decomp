@@ -430,6 +430,16 @@ void TSpellbookWindow::GotoPage(int page)
     // confirms the wall: retail keeps two comparator calls while this sort
     // lowering keeps none. The guided induction-type controls are also closed
     // (long is byte-flat; short worsens the branch distance 52 -> 54).
+    // NAMED 2026-09-06: the one-sided call is `TSpellbookEntry::operator<`,
+    // which retail CALLS twice inside the sort while we never reference it -
+    // because retail expands `_Unguarded_insert` one level deeper and leaves
+    // the comparator out of line, where we CALL `_Unguarded_insert` and its
+    // comparator goes with it.  So the direction is UNDER-inline (grow the
+    // caller), not over-inline, which is why `auto_inline(off)` on the
+    // comparator is byte-flat: our compile is not inlining it in the first
+    // place.  The four missing blocks and two missing branches are that one
+    // expansion.  operator< already has a plain out-of-class definition, so
+    // the `inline`-keyword lever is spent.
     if (page < 0)
         return;
 
