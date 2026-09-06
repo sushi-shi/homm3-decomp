@@ -2880,7 +2880,7 @@ objecttype	?use_facet@std@@YAABV?$ctype@D@1@ABVlocale@1@PBV21@_N@Z	100.0000	100.
 objecttype	?use_facet@std@@YAABV?$numpunct@D@1@ABVlocale@1@PBV21@_N@Z	100.0000	100.0000	100.0000	0x11ab90	-
 objnames	??1TTextResourceGuard@@QAE@XZ	100.0000	100.0000	100.0000	0x1bd90	e6a9bcd817a7
 objnames	?InitializeAdventureObjectNames@@YIXXZ	100.0000	100.0000	100.0000	0x1b500	8e77da136c72
-overview	??0TOverviewWindow@@QAE@XZ	82.7097	82.7097	82.7097	0x11fa40	a342166b8705
+overview	??0TOverviewWindow@@QAE@XZ	90.2053	90.2053	90.2053	0x11fa40	823624e6b5c3
 overview	??1TOverviewWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x120d90	048fab1d8faa
 overview	??_GTOverviewWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x120d60	-
 overview	?DoFlaggableButtons@TOverviewWindow@@AAEXH@Z	100.0000	100.0000	100.0000	0x11e7f0	37a25d45af3d
@@ -3453,7 +3453,7 @@ seerhut	?DoProgressDialog@type_experience_quest@@UAEXXZ	100.0000	100.0000	100.00
 seerhut	?DoProgressDialog@type_monster_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x16eca0	862c5c64cbd3
 seerhut	?DoProgressDialog@type_resource_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x171ae0	c8bfdece7406
 seerhut	?DoProgressDialog@type_skill_quest@@UAEXXZ	75.8427	75.8427	75.8427	0x16dd60	f42056b3b171
-seerhut	?DoProposalDialog@type_artifact_quest@@UAEXPAVhero@@@Z	89.1000	89.1000	89.1000	0x16f8a0	98595e76527b
+seerhut	?DoProposalDialog@type_artifact_quest@@UAEXPAVhero@@@Z	92.0556	92.0556	92.0556	0x16f8a0	615538e46793
 seerhut	?DoProposalDialog@type_be_hero_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x171f20	ab43f3eb1f8d
 seerhut	?DoProposalDialog@type_belong_to_player_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x172510	eb13ba1a88b0
 seerhut	?DoProposalDialog@type_creature_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x170880	6b8db6d46335
@@ -3615,7 +3615,7 @@ singleselectionwindow	??0GameSelectionHeadersStruct@@QAE@XZ	73.1483	79.3242	79.3
 singleselectionwindow	??0NewSMapHeader@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x18fa60	-
 singleselectionwindow	??0SCampaign@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x18fc10	-
 singleselectionwindow	??0SavedGameHeader@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x193f50	-
-singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	95.7079	95.7079	95.7079	0x179960	e92668059d44
+singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	95.8142	95.8142	95.8142	0x179960	93bc3c0c1956
 singleselectionwindow	??0lobby_message@@QAE@XZ	100.0000	100.0000	100.0000	0x189190	2b1be8208221
 singleselectionwindow	??0t_map_list_update@@QAE@K@Z	100.0000	100.0000	100.0000	0x189240	173781ee6a81
 singleselectionwindow	??1?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x18ea70	-
@@ -4406,7 +4406,7 @@ viewarmywindow	?create_shots_widget@TViewArmyWindow@@QAEXPBUTCreatureTypeTraits@
 viewarmywindow	?create_speed_widget@TViewArmyWindow@@QAEXHH@Z	100.0000	100.0000	100.0000	0x1f62f0	16f6e6987461
 viewarmywindow	?create_spell_influence_widgets@TViewArmyWindow@@QAEXPBVarmy@@@Z	86.6570	86.6570	86.6570	0x1f65b0	ead1359e6949
 viewarmywindow	?create_upgrade_widget@TViewArmyWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1f6ae0	7268df34c10c
-viewwrld	??0TViewWorldWindow@@QAE@XZ	96.4425	96.4425	96.4425	0x1fa600	2de53e85ff09
+viewwrld	??0TViewWorldWindow@@QAE@XZ	97.0623	97.0623	97.0623	0x1fa600	64cf9d81c769
 viewwrld	??1TViewWorldWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1fbd60	dbcb66a53979
 viewwrld	??_GTViewWorldWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1fbd30	-
 viewwrld	?VWClipScaleToScreenBuffer@@YIXHH@Z	100.0000	100.0000	100.0000	0x1f9d90	b50f216125e8

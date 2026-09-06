@@ -1324,7 +1324,10 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
 
     bitmapBorder* w = new bitmapBorder(
         396, 6, 370, 585, 100, "GSelPop1.pcx", 0x800);
-    Widgets.push_back(w);
+    // DEPTH LADDER: this ONE append is `insert(end(), w)`; all 24 others in
+    // this constructor stay `push_back`.  95.7079 -> 95.8142; every other site
+    // measured singly is flat or a loss, and the next best (#18) is 95.7325.
+    Widgets.insert(Widgets.end(), w);
     w->image->Draw(0, 0, w->image->GetWidth(), w->image->GetHeight(),
         gpWindowManager->screenBitmap, w->x + x, w->y + y, 0);
 
