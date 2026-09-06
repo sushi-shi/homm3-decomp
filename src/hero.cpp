@@ -1792,16 +1792,14 @@ std::bitset<70> mark_spells(int artifactId)
         mark_spells_of_level(result, kFifthLevelSpell);
         break;
     case ARTIFACT_ARMAGEDDONS_BLADE:
-        result.set(SPELL_ARMAGEDDON, true);
+        result[SPELL_ARMAGEDDON] = true;
         break;
     case ARTIFACT_SEA_CAPTAINS_HAT:
-#pragma inline_depth(0)
-        result.set(SPELL_SUMMON_BOAT, true);
-#pragma inline_depth()
-        result.set(kSpellScuttleBoat, true);
+        result[SPELL_SUMMON_BOAT] = true;
+        result[kSpellScuttleBoat] = true;
         break;
     case ARTIFACT_TITANS_THUNDER:
-        result.set(SPELL_TITANS_LIGHTNING_BOLT, true);
+        result[SPELL_TITANS_LIGHTNING_BOLT] = true;
         break;
     }
     if (artifactId != ARTIFACT_TITANS_THUNDER)
