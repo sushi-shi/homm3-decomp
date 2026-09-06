@@ -25,6 +25,7 @@
 #include "objnames.h"
 #include "resourcemanager.h"
 #include "rmg.h"
+#include "rmg_terrain.h"
 #include "textresource.h"
 #include "town.h"
 
@@ -1582,6 +1583,134 @@ void type_random_map_generator::BuildZoneBoundaries(
         }
     }
     JoinExtraZones(originalZones, &diagram);
+}
+
+// The inlined search at 0x53fe7a returns an element pointer and its caller
+// then tests that pointer, even on the found arm. Preserve that ordinary
+// helper boundary rather than reducing the search to a boolean.
+TRmgZoneConnection* TRmgTownSlot::FindConnection(int destinationZone)
+{
+    for (unsigned int i = 0; i < connections.size(); ++i) {
+        if (connections[i].destination->zoneIndex == destinationZone)
+            return &connections[i];
+    }
+    return 0;
+}
+
+// Convert water beside usable land when its zone has no template connection
+// to the marked neighbour. The inner square becomes border terrain and the
+// outer empty square loses gate eligibility. Painting is deferred per level.
+// All role names are provisional: this Complete-only pass has no DC body.
+// Residual (96.6543%): stack homes, the first search's inverted loop branch,
+// clamp scheduling, and the plane-view constructor/painting-loop registers.
+// The shared outer coordinate must be assigned from each queued position:
+// retail writes that value's z back into the outer level slot at 0x5401e6.
+// Controls: scalar versus TPoint corner bounds, positive match versus early
+// continue, and int versus terrain-enum vector values are byte-neutral.
+// The three-scalar and by-value GetMapItem overloads also expand identically.
+// Keeping the scalar locals before the vectors and writing plane-view fields
+// in the constructor body improves the initial 95.83594% reconstruction.
+VA(0x0053FCB0, 0x5EC) // anchor-callee 0x544a31; thiscall, ret 0; retail-only
+void type_random_map_generator::RepairWaterZoneBorders()
+{
+    TRmgMapPosition position;
+    TRmgMapPosition nearby;
+    TTerrainType terrain;
+    TTerrainType lastTerrain;
+    TPoint first, end;
+    unsigned char found;
+    int zoneIndex, destinationZone;
+    TRmgZone* zone;
+    TRmgMapItem* current = map.mapItems;
+    std::vector<TRmgMapPosition> positions;
+    std::vector<TTerrainType> terrains;
+    for (position.z = 0; position.z < map.numberLevels; ++position.z) {
+        for (position.y = 0; position.y < map.mapHeight; ++position.y) {
+            for (position.x = 0; position.x < map.mapWidth; ++position.x, ++current) {
+                zoneIndex = current->zoneState.zone;
+                if (zoneIndex < 0 || current->tile.landType != eTerrainWater)
+                    continue;
+                destinationZone = current->zoneState.connectionEligibility;
+                if (destinationZone < 0)
+                    continue;
+
+                found = 0;
+                first = TPoint(
+                    max(position.x - 1, 0), max(position.y - 1, 0));
+                end = TPoint(
+                    min(position.x + 2, map.mapWidth),
+                    min(position.y + 2, map.mapHeight));
+                nearby.z = position.z;
+                zone = zones[zoneIndex];
+                for (nearby.y = first.y; nearby.y < end.y && !found; ++nearby.y) {
+                    for (nearby.x = first.x; nearby.x < end.x; ++nearby.x) {
+                        TRmgMapItem* item = map.GetMapItem(nearby);
+                        if (item->tile.landType == eTerrainWater
+                            || item->tile.landType == eTerrainRock
+                            || item->HasBorderObject()
+                            || !item->tileData.roadPassable)
+                            continue;
+                        found = 1;
+                        terrain = item->tile.landType;
+                        break;
+                    }
+                }
+                if (!found || zone->slot->FindConnection(destinationZone))
+                    continue;
+
+                first = TPoint(
+                    max(position.x - 1, 0), max(position.y - 1, 0));
+                end = TPoint(
+                    min(position.x + 2, map.mapWidth),
+                    min(position.y + 2, map.mapHeight));
+                for (nearby.y = first.y; nearby.y < end.y; ++nearby.y) {
+                    for (nearby.x = first.x; nearby.x < end.x; ++nearby.x) {
+                        TRmgMapItem* item = map.GetMapItem(nearby);
+                        if (!item->connection.present) {
+                            item->tileData.subterraneanGate = 0;
+                            item->tileData.borderObject = 1;
+                        }
+                        if (item->tile.landType == eTerrainWater) {
+                            positions.push_back(nearby);
+                            terrains.push_back(terrain);
+                        }
+                    }
+                }
+
+                first = TPoint(
+                    max(position.x - 2, 0), max(position.y - 2, 0));
+                end = TPoint(
+                    min(position.x + 3, map.mapWidth),
+                    min(position.y + 3, map.mapHeight));
+                for (nearby.y = first.y; nearby.y < end.y; ++nearby.y) {
+                    for (nearby.x = first.x; nearby.x < end.x; ++nearby.x) {
+                        TRmgMapItem* item = map.GetMapItem(nearby);
+                        if (static_cast<int>(item->objects.size()) <= 0
+                            && !item->connection.present)
+                            item->tileData.subterraneanGate = 0;
+                    }
+                }
+            }
+            if (progress)
+                progress->Advance(20);
+        }
+        if (positions.size()) {
+            lastTerrain = terrains[0];
+            type_random_map levelMap(map, position.z);
+            TRmgTerrainBrush brush(&levelMap, lastTerrain, 4);
+            for (unsigned int i = 0; i < positions.size(); ++i) {
+                terrain = terrains[i];
+                if (terrain != lastTerrain) {
+                    brush.ChangeTerrain(terrain, 4);
+                    lastTerrain = terrain;
+                }
+                position = positions[i];
+                brush.PaintRectangle(position.x, position.y, 1, 1);
+            }
+            terrains.clear();
+            positions.clear();
+        }
+    }
 }
 
 // Provisional arithmetic boundary for the Complete-only position value.

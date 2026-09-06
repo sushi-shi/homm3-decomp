@@ -8,6 +8,7 @@
 #include <yvals.h>
 #undef _MT
 #include "rmg_terrain.h"
+#include "exceptions.h"
 #include "tiles.h"
 
 DATA(0x00642BD8) extern TRmgTerrainRule* gRmgTerrainRules[];
@@ -241,6 +242,21 @@ int __fastcall SelectTerrainTransition(
     return 0;
 }
 
+// Residual (23.3305%): retail calls both set _Init helpers, whereas the
+// second expands here; the packed-vector insert has the opposite decision.
+// Explicit versus default resize fill values are byte-neutral. The retained
+// brush constructor calls this ordinary body at 0x5b7297.
+VA(0x005B45F0, 0x26D) // anchor-callee 0x5b7297; retail-only
+TRmgTerrainPainter::TRmgTerrainPainter(
+    TRmgMapAdapterInterface* newAdapter, int terrain, int strength)
+    : adapter(newAdapter), paintTerrain(terrain), transitionStrength(strength)
+{
+    TRmgGridPoint size = adapter->GetSize();
+    width = size.x;
+    height = size.y;
+    packedCells.resize(width * height, TRmgPackedTerrainCell());
+}
+
 VA(0x005B48D0, 0x8D)  // repeated caller identity in 0x5b3dd0..0x5b76f0
 TRmgPackedTerrainCell* TRmgTerrainPainter::GetPackedCell(
     const TRmgGridPoint& point)
@@ -267,15 +283,17 @@ unsigned char TRmgTerrainPainter::IsVerticalGap(const TRmgGridPoint& point)
 // The repeated four-check expansion in RepairTerrainPoint and the painter
 // worklist decides whether a neighbour itself needs repair. The boundary
 // and role are inferred from retail; there is no Dreamcast counterpart.
-// Both the compound-return and early-guard forms expand in the caller.
-// The latter still folds three rule-lookup GetPackedCell sites that retail
-// retains; changing this guard alone does not recover the nested budget.
+// Return the separation helper's existing 0/1 result directly after the
+// guards. Booleanizing it through &&, != 0, or a final conditional 1/0
+// instead changes the two destructors' cmp al,bl into test al,al. This one
+// comparison was their final raw-byte difference (549 and 521 bytes).
 unsigned char TRmgTerrainPainter::NeedsTerrainRepair(const TRmgGridPoint& point)
 {
     if (IsHorizontalGap(point) || IsVerticalGap(point))
         return 1;
-    return !gRmgTerrainRules[GetTerrain(point)]->allowsSeparatedNeighbours
-        && HasSeparatedNeighbours(point);
+    if (gRmgTerrainRules[GetTerrain(point)]->allowsSeparatedNeighbours)
+        return 0;
+    return HasSeparatedNeighbours(point);
 }
 
 // Repair a one-cell terrain gap, then merge all but the largest remaining
@@ -640,6 +658,71 @@ int TRmgTerrainPainter::GetTransitionStrength(
     return 0;  // @stub
 }
 #endif
+
+// The same primary/secondary worklist appears in the brush's terrain change
+// and destructor. Preserve one ordinary completion helper and the canonical
+// set erase(key); its distance walk expands only at the change site.
+void TRmgTerrainPainter::Finish()
+{
+    do {
+        while (primaryPoints.size()) {
+            TRmgGridPoint point = *primaryPoints.begin();
+            RepairTerrainPoint(point);
+        }
+        while (secondaryPoints.size()) {
+            TRmgGridPoint point = *secondaryPoints.begin();
+            secondaryPoints.erase(point);
+            if (NeedsTerrainRepair(point))
+                PaintPoint(point);
+        }
+    } while (primaryPoints.size());
+    PaintTransitions();
+}
+
+void TRmgTerrainPainter::ChangeTerrain(int terrain, int strength)
+{
+    Finish();
+    paintTerrain = terrain;
+    transitionStrength = strength;
+}
+
+VA(0x005B7250, 0x9A) // anchor-callee 0x54017e; allocation and throw RTTI
+TRmgTerrainBrush::TRmgTerrainBrush(
+    TRmgMapAdapterInterface* map, int terrain, int strength)
+    : painter(new TRmgTerrainPainter(map, terrain, strength))
+{
+    if (!painter.get())
+        throw TAllocationFailure();
+}
+
+VA(0x005B72F0, 0x225) // anchor-callee 0x540207; auto_ptr ownership cleanup
+TRmgTerrainBrush::~TRmgTerrainBrush()
+{
+}
+
+// Residual (81.33093%): erase(key)'s distance helper expands to the iterator
+// increment call; retail instead retains 0x5b8cd0 and its count local.
+// The remaining named repair/painter call sequence agrees, including the
+// final GetPackedCell expansion with a retained InitializePackedCell call.
+VA(0x005B7520, 0x16A) // anchor-callee 0x5401c3; retail-only
+void TRmgTerrainBrush::ChangeTerrain(int terrain, int strength)
+{
+    painter->ChangeTerrain(terrain, strength);
+}
+
+VA(0x005B7690, 0x1F) // anchor-callee 0x5401e9; four unsigned rectangle args
+void TRmgTerrainBrush::PaintRectangle(
+    unsigned int x, unsigned int y,
+    unsigned int rectangleWidth, unsigned int rectangleHeight)
+{
+    painter->PaintRectangle(x, y, rectangleWidth, rectangleHeight);
+}
+
+VA(0x005B76F0, 0x209) // anchor-callee 0x5b76d9; retained painter destructor
+TRmgTerrainPainter::~TRmgTerrainPainter()
+{
+    Finish();
+}
 
 // The four late point constructions in RepairTerrainPoint pass x and y by
 // reference. The retained two-store body is 24 bytes including ret 8.

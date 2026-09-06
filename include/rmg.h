@@ -324,6 +324,8 @@ struct TRmgTownSlot {
     unsigned char allowedMonsters[10]; // +0x95
     TRmgTreasureRange treasure[3];     // +0xa0
     std::vector<TRmgZoneConnection> connections; // +0xc4
+
+    TRmgZoneConnection* FindConnection(int destinationZone);
 };
 SIZE(TRmgTownSlot, 0xd4);
 
@@ -614,6 +616,13 @@ struct TRmgMapItem {
         return tileData.subterraneanGate;
     }
 
+    // RepairWaterZoneBorders tests this flag after truncating it to a byte
+    // at 0x53fe30, then tests roadPassable directly as a dword bit.
+    unsigned char HasBorderObject() const
+    {
+        return tileData.borderObject;
+    }
+
     // CreateRiver's reset pass copies a by-value predecessor before a
     // constant 32000 cost write, motivating this ordinary reset helper.
     // Its role name is provisional; Dreamcast has no RMG compiland.  A
@@ -626,12 +635,22 @@ struct TRmgMapItem {
     }
 };
 
-class TRmgMapInterface {
+// The map view vtable at 0x6409cc has the same six painting operations as
+// the river adapter. The pure base at 0x6409e8 confirms that both implement
+// this interface; the former destructor-only map base was incomplete.
+class TRmgMapAdapterInterface {
 public:
-    virtual ~TRmgMapInterface() {}
+    virtual ~TRmgMapAdapterInterface() {}
+    virtual void SetTile(
+        const TRmgGridPoint& point, const TRmgTerrainTile& tile) = 0;
+    virtual void SetOverlay(const TRmgGridPoint& point, int value) = 0;
+    virtual TRmgGridPoint GetSize() = 0;
+    virtual TRmgTerrainTile GetTile(const TRmgGridPoint& point) = 0;
+    virtual int GetLand(const TRmgGridPoint& point) = 0;
+    virtual int GetOverlay(const TRmgGridPoint& point) = 0;
 };
 
-class type_random_map : public TRmgMapInterface {
+class type_random_map : public TRmgMapAdapterInterface {
 public:
     unsigned char ownsMapItems;           // +0x04
     char pad0005[3];
@@ -640,15 +659,16 @@ public:
     int mapHeight;                        // +0x10
     int numberLevels;                     // +0x14
 
+    // The plane-view construction at 0x54013e writes its vptr before the
+    // data members. Body assignments preserve that ordering; initializing
+    // every field in the initializer list instead puts the vptr last.
     inline type_random_map(type_random_map& source, int level)
-        : ownsMapItems(0),
-          mapItems(
-              source.mapItems
-              + level * source.mapWidth * source.mapHeight),
-          mapWidth(source.mapWidth),
-          mapHeight(source.mapHeight),
-          numberLevels(1)
     {
+        mapWidth = source.mapWidth;
+        mapHeight = source.mapHeight;
+        numberLevels = 1;
+        mapItems = source.mapItems + level * mapHeight * mapWidth;
+        ownsMapItems = 0;
     }
 
     virtual ~type_random_map()
@@ -656,6 +676,14 @@ public:
         if (ownsMapItems)
             delete[] mapItems;
     }
+
+    virtual void SetTile(
+        const TRmgGridPoint& point, const TRmgTerrainTile& tile);
+    virtual void SetOverlay(const TRmgGridPoint& point, int value);
+    virtual TRmgGridPoint GetSize();
+    virtual TRmgTerrainTile GetTile(const TRmgGridPoint& point);
+    virtual int GetLand(const TRmgGridPoint& point);
+    virtual int GetOverlay(const TRmgGridPoint& point);
 
     TRmgMapItem* GetMapItem(int x, int y);
     inline TRmgMapItem* GetMapItem(int x, int y, int z)
@@ -674,18 +702,6 @@ public:
 // and map-view construction remains expanded at the call site.  Keeping the
 // class definitions shared but the retained bodies in rmg_support.cpp
 // reproduces that ordinary translation-unit visibility boundary.
-class TRmgMapAdapterInterface {
-public:
-    virtual ~TRmgMapAdapterInterface() {}
-    virtual void SetTile(
-        const TRmgGridPoint& point, const TRmgTerrainTile& tile) = 0;
-    virtual void SetOverlay(const TRmgGridPoint& point, int value) = 0;
-    virtual TRmgGridPoint GetSize() = 0;
-    virtual TRmgTerrainTile GetTile(const TRmgGridPoint& point) = 0;
-    virtual int GetLand(const TRmgGridPoint& point) = 0;
-    virtual int GetOverlay(const TRmgGridPoint& point) = 0;
-};
-
 class TRmgMapAdapter : public TRmgMapAdapterInterface {
 public:
     type_random_map* map;
@@ -907,6 +923,7 @@ public:
         TRmgZoneConnection* connection,
         int prototypeIndex);
     void ConnectZones();
+    void RepairWaterZoneBorders();
     // Complete-only roles proved by the predecessor walk at 0x5408e0 and
     // the surrounding connection-cell updates at 0x540fc0.
     void OpenConnectionPath(TRmgMapPosition position, unsigned char narrow);
@@ -936,7 +953,6 @@ SIZE(TRmgObjectPlacementRule, 0x4c);
 SIZE(TRmgObjectPropertiesRef, 0xe8);
 SIZE(type_object, 0x1c);
 SIZE(TRmgMapItem, 0x30);
-SIZE(TRmgMapInterface, 0x04);
 SIZE(type_random_map, 0x18);
 SIZE(TRmgMapAdapterInterface, 0x04);
 SIZE(TRmgMapAdapter, 0x08);

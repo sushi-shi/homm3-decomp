@@ -3,6 +3,7 @@
 #define HOMM3_RMG_TERRAIN_H
 
 #include <set>
+#include <memory>
 #include <vector>
 #include "rmg.h"
 
@@ -124,6 +125,12 @@ public:
         int newTransitionStrength);
     ~TRmgTerrainPainter();
 
+    void Finish();
+    void ChangeTerrain(int terrain, int strength);
+    void PaintRectangle(
+        unsigned int x, unsigned int y,
+        unsigned int rectangleWidth, unsigned int rectangleHeight);
+
     void InitializePackedCell(const TRmgGridPoint& point, unsigned int index);
     TRmgPackedTerrainCell* GetPackedCell(const TRmgGridPoint& point);
     // Retail repeatedly expands this field accessor while retaining the
@@ -153,10 +160,25 @@ public:
     int GetTransitionStrength(const TRmgGridPoint& point, int terrain);
 };
 
+// Provisional facade name. The ctor at 0x5b7250 initializes the exact VC6
+// auto_ptr ownership byte/pointer pair; 0x5b72f0 conditionally deletes it.
+class TRmgTerrainBrush {
+public:
+    std::auto_ptr<TRmgTerrainPainter> painter;
+
+    TRmgTerrainBrush(TRmgMapAdapterInterface* map, int terrain, int strength);
+    ~TRmgTerrainBrush();
+    void ChangeTerrain(int terrain, int strength);
+    void PaintRectangle(
+        unsigned int x, unsigned int y,
+        unsigned int rectangleWidth, unsigned int rectangleHeight);
+};
+
 SIZE(TRmgTerrainTile, 0x0c);
 SIZE(TRmgTerrainFlip, 0x02);
 SIZE(TRmgPackedTerrainCell, 0x02);
 SIZE(TRmgTerrainRule, 0x08);
 SIZE(TRmgTerrainPainter, 0x44);
+SIZE(TRmgTerrainBrush, 0x08);
 
 #endif  // HOMM3_RMG_TERRAIN_H

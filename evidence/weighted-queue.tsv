@@ -2,7 +2,6 @@
 # Sorted by increasing current score, then decreasing unmatched bytes.
 # Unscored rows rank at zero; MAX/history never hide current residuals.
 va	size	current	maximum	historical	remaining_bytes	unit	function	state
-0x0053fcb0	1516		0.0	0.0	1516.0	seg_0013	game_144920_sub02_13fcb0	unscored
 0x005b4b20	1483		0.0	0.0	1483.0	seg_001b	game_1b4960_sub00_1b4b20	unscored
 0x00541ad0	1456		0.0	0.0	1456.0	seg_0014	game_143240_sub01_141ad0	unscored
 0x0053dad0	1407		0.0	0.0	1407.0	seg_0013	game_13e050_sub02_13dad0	unscored
@@ -58,7 +57,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x005446a0	638		0.0	0.0	638.0	seg_0014	game_149930_sub06_1446a0	unscored
 0x005b6fd0	625		0.0	0.0	625.0	rmg_terrain	TRmgTerrainPainter_GetTransitionStrength	unscored
 0x00548290	622		0.0	0.0	622.0	seg_0014	game_149930_sub12_148290	unscored
-0x005b45f0	621		0.0	0.0	621.0	seg_001b	game_1b7250_sub00_1b45f0	unscored
 0x00534520	615		0.0	0.0	615.0	seg_0013	game_134520	unscored
 0x00540d60	598		0.0	0.0	598.0	seg_0014	game_141140_sub01_140d60	unscored
 0x005466e0	595		0.0	0.0	595.0	seg_0014	game_147360_sub01_1466e0	unscored
@@ -71,14 +69,12 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x0054abf0	565		0.0	0.0	565.0	seg_0014	game_14bf60_sub02_14abf0	unscored
 0x0053b970	562		0.0	0.0	562.0	seg_0013	game_13bcb0_sub03_13b970	unscored
 0x0054c970	559		0.0	0.0	559.0	seg_0014	game_137ff0_sub02_14c970	unscored
-0x005b72f0	549		0.0	0.0	549.0	seg_001b	game_13e6a0_sub05_1b72f0	unscored
 0x00548a40	546		0.0	0.0	546.0	seg_0014	game_148c70_sub00_148a40	unscored
 0x0054c3f0	540		0.0	0.0	540.0	seg_0014	game_28580_sub04_14c3f0	unscored
 0x005fd390	540		0.0	0.0	540.0	seg_001f	game_1fd010_sub02_1fd390	unscored
 0x005318b0	530		0.0	0.0	530.0	seg_0013	game_131cf0_sub01_1318b0	unscored
 0x0053cd30	530		0.0	0.0	530.0	seg_0013	game_13d1c0_sub00_13cd30	unscored
 0x00516c10	522		0.0	0.0	522.0	seg_0011	game_114610_sub04_116c10	unscored
-0x005b76f0	521		0.0	0.0	521.0	seg_001b	game_1b76d0_sub00_1b76f0	unscored
 0x00532520	517		0.0	0.0	517.0	seg_0013	game_132520	unscored
 0x00537df0	512		0.0	0.0	512.0	seg_0013	game_137dc0_sub00_137df0	unscored
 0x004fa080	507		0.0	0.0	507.0	seg_000f	game_fa3c0_sub00_fa080	unscored
@@ -122,7 +118,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x005fdb40	366		0.0	0.0	366.0	seg_001f	game_13e050_sub06_1fdb40	unscored
 0x00541960	364		0.0	0.0	364.0	seg_0014	game_141ad0_sub03_141960	unscored
 0x005332f0	362		0.0	0.0	362.0	seg_0013	game_1332f0	unscored
-0x005b7520	362		0.0	0.0	362.0	seg_001b	game_13fcb0_sub00_1b7520	unscored
 0x004fa3c0	342		0.0	0.0	342.0	seg_000f	game_fa280_sub00_fa3c0	unscored
 0x005b7cd0	342		0.0	0.0	342.0	seg_001b	game_1b4b20_sub06_1b7cd0	unscored
 0x00531310	331		0.0	0.0	331.0	seg_0013	game_149930_sub00_131310	unscored
@@ -176,7 +171,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00530fb0	160		0.0	0.0	160.0	seg_0013	game_136070_sub00_130fb0	unscored
 0x00533460	160		0.0	0.0	160.0	seg_0013	game_133460	unscored
 0x00534af0	158		0.0	0.0	158.0	seg_0013	game_134af0	unscored
-0x005b7250	154		0.0	0.0	154.0	seg_001b	game_allocation_failure_1b7250	unscored
 0x00603810	154		0.0	0.0	154.0	seg_0020	game_203e00_sub00_203810	unscored
 0x00532ab0	150		0.0	0.0	150.0	seg_0013	game_13bcb0_sub01_132ab0	unscored
 0x00439d40	148		100.0	100.0	148.0	ai_tactical	?get_antimagic_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	unscored
@@ -339,7 +333,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x005fdd20	32		0.0	0.0	32.0	seg_001f	game_1fdb40_sub03_1fdd20	unscored
 0x005fdd40	32		0.0	0.0	32.0	seg_001f	game_1fdb40_sub04_1fdd40	unscored
 0x006039a0	32		0.0	0.0	32.0	seg_0020	game_203b20_sub00_2039a0	unscored
-0x005b7690	31		0.0	0.0	31.0	seg_001b	game_13e6a0_sub06_1b7690	unscored
 0x005fdcb0	30		0.0	0.0	30.0	seg_001f	game_1fdb40_sub00_1fdcb0	unscored
 0x005fdcd0	29		0.0	0.0	29.0	seg_001f	game_1fdb40_sub01_1fdcd0	unscored
 0x00530e20	28		0.0	0.0	28.0	seg_0013	game_176f00_sub01_130e20	unscored
@@ -392,11 +385,12 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x005bc690	1		0.0	0.0	1.0	seg_001b	border_vslot04	unscored
 0x00421000	629	17.861385	95.7822	95.7822	516.65188835	ai	?choose_resurrect_action@combatManager@@QAEEPBVarmy@@PAJPAUtype_AI_combat_parameters@@@Z	non-exact
 0x00438910	251	22.22353	100.0	100.0	195.2189397	ai_tactical	?get_defense_skill_value@type_AI_spellcaster@@QAEJPBVarmy@@JJ@Z	non-exact
+0x005b45f0	621	23.330544	23.3305	23.3305	476.11732176000004	rmg_terrain	??0TRmgTerrainPainter@@QAE@PAVTRmgMapAdapterInterface@@HH@Z	non-exact
 0x004e59a0	248	32.623375	100.0	100.0	167.09402999999998	hero	?Fly@hero@@QAEXH@Z	non-exact
 0x00489e20	1104	33.50518	34.6269	34.6269	734.1028128	customcampaign	?PruneCrossoverHeroes@SCampaign@@QAEXPAX@Z	non-exact
 0x0048bf00	429	34.74074	34.7407	34.7407	279.96222539999997	customcampaign	?insert@?$vector@EV?$allocator@E@std@@@std@@QAEXPAEIABE@Z	non-exact
 0x00574a90	586	35.38249	35.3825	35.3825	378.6586086	seerhut	?load@TSeerHut@@QAEXPAVTAbstractFile@@H@Z	non-exact
-0x00548df0	2463	39.61776	39.6178	39.6178	1487.2145712000001	rmg	?CreateRiver@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	non-exact
+0x00548df0	2463	38.57014	39.6178	39.6178	1513.0174518	rmg	?CreateRiver@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	non-exact
 0x005578d0	48	41.875	41.875	41.875	27.900000000000002	remote	??1CNetMsgHandler@@UAE@XZ	non-exact
 0x0056ce50	286	41.927082	41.9271	41.9271	166.08854548000002	seerhut	?LoadFromMap@type_quest@@UAEXPAVTAbstractFile@@@Z	non-exact
 0x00506080	468	41.945454	41.9455	41.9455	271.69527528	mapcell	??0CObjectType@@QAE@PAUTObjectType@@@Z	non-exact
@@ -483,6 +477,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x005c0d20	317	81.18519	89.6018	89.6018	59.64294769999998	town	?can_build@town@@QBEEF@Z	non-exact
 0x0058a440	830	81.30488	81.3049	81.3049	155.16949599999998	singleselectionwindow	?OnGameHeaderInfoInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	non-exact
 0x0044e2b0	313	81.309525	81.3095	81.3095	58.501186750000016	bitmap16	?Draw@Bitmap16Bit@@QBEXHHHHPAGHHHHH_N@Z	non-exact
+0x005b7520	362	81.33093	81.3309	81.3309	67.58203340000003	rmg_terrain	?ChangeTerrain@TRmgTerrainBrush@@QAEXHH@Z	non-exact
 0x004c6fe0	2375	81.334335	83.3584	83.3584	443.3095437500002	game	?NextPlayer@game@@QAEXXZ	non-exact
 0x00474bf0	392	81.36957	81.3696	81.3696	73.03128560000003	command	?is_computer_action@combatManager@@QAEEPBVarmy@@@Z	non-exact
 0x004cde40	224	81.410255	81.4103	81.4103	41.64102879999998	game	?get_underground_gate_exit@game@@QAE?AUtype_point@@PBVNewmapCell@@@Z	non-exact
@@ -493,7 +488,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x004daf90	570	81.7	81.7	81.7	104.30999999999996	hero	?update_slot@THeroScreenWindow@@QAEXJ@Z	non-exact
 0x005bf810	226	81.72619	81.7262	81.7262	41.2988106	town	?get_legion_bonus@town@@QAEJJ@Z	non-exact
 0x004e4990	1014	81.76774	81.7677	81.7677	184.8751164	hero	?GetMobility@hero@@QAEHE@Z	non-exact
-0x005b5440	1576	81.81113	81.8111	81.8111	286.65659119999987	rmg_terrain	?RepairTerrainPoint@TRmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	non-exact
+0x005b5440	1576	81.84317	81.8432	81.8432	286.15164080000005	rmg_terrain	?RepairTerrainPoint@TRmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	non-exact
 0x0042e0b0	2926	81.88646	81.8865	81.8865	530.0021804000002	ai_player	?AI_choose_destination@@YIHPAVhero@@JAAUHeroDestination@@AAJEE@Z	non-exact
 0x004cafd0	3348	82.21976	82.2198	82.2198	595.2824352000001	game	?TransmitSaveGame@game@@QAEHHHEE@Z	non-exact
 0x005a6c70	1029	82.34042	82.3404	82.3404	181.7170782000001	spells	?MirrorImage@combatManager@@QAEXHH@Z	non-exact
@@ -855,6 +850,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00553df0	228	96.6265	96.6265	96.6265	7.691580000000016	remote	?KillOldChat@CChatManager@@QAEXXZ	non-exact
 0x00553840	283	96.63265	96.6326	96.6326	9.529600500000006	remote	?AddChat@@YAXPAVCChatManager@@PBDZZ	non-exact
 0x00416f80	461	96.64286	96.6429	96.6429	15.476415400000013	advmgr	?garrison_quick_view@advManager@@QAEXHHH@Z	non-exact
+0x0053fcb0	1516	96.6543	96.6543	96.6543	50.72081199999994	rmg	?RepairWaterZoneBorders@type_random_map_generator@@QAEXXZ	non-exact
 0x00551460	254	96.67088	96.6709	96.6709	8.45596480000002	recruit	??0recruitUnit@@QAE@PAVhero@@W4TCreatureType@@PAF121212@Z	non-exact
 0x004d97f0	416	96.72	96.72	96.72	13.644800000000021	hero	?UpdateArmies@hero@@QAEXXZ	non-exact
 0x005d1ef0	1548	96.76796	100.0	100.0	50.031979200000045	townmgr	??0TShipWindow@@QAE@H@Z	non-exact
