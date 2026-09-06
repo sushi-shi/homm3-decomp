@@ -6468,12 +6468,12 @@ int CHostWaitDlg::handle_message(message& msg)
 // CHostWaitDlg vtable 0x241cf8 slot 0. E:\gamedcs\singleselectionwindow.cpp:465
 VA_COMPGEN(0x00589200, 0x21, SCALAR_DELETING_DTOR, CHostWaitDlg)  // dc 0x147828
 
-// ~CHostWaitDlg adds no destructible members, so OPT:ICF folds it to a 5-byte
-// jmp into the CAnimatedDlg base dtor. E:\gamedcs\singleselectionwindow.cpp:465
-VA(0x00589230, 0x5)  // dc 0x147860
-CHostWaitDlg::~CHostWaitDlg()
-{
-}
+// DC places both destructor bodies at singleselectionwindow.cpp:465,
+// after handle_message: the implicit destructor at the class boundary calls
+// only ~CAnimatedDlg (dc 0x147860 -> 0x11d250). Retail is that same call
+// lowered to a five-byte tail jump. An explicit empty destructor instead
+// installs CHostWaitDlg's vfptr before jumping, an extra six bytes.
+VA_COMPGEN(0x00589230, 0x5, IMPLICIT_DTOR, CHostWaitDlg)  // dc 0x147860
 
 // Complete's retail-only map-list specialization. The empty derived body is
 // significant: VC6 expands CNewPlayerUpdateProc's member construction and

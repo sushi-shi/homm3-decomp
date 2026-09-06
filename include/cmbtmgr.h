@@ -39,13 +39,6 @@ public:
     virtual ~CCombatOwnedObject();
 };
 
-// One side's Eagle Eye bookkeeping. Its sole retail-proven member is the
-// 16-byte Dinkumware set walked by LearnSpellFromEagleEye.
-struct TCombatEagleEyeSide {
-    std::set<SpellID> spells;
-};
-SIZE(TCombatEagleEyeSide, 0x10);
-
 // Per-projectile launch offsets and frame-angle boundaries. Retail indexes
 // the table at 0x67ff24 with an 84-byte stride: three signed coordinate
 // pairs followed by eighteen float boundaries.
@@ -831,7 +824,7 @@ public:
     // Per-side spells observed during combat and eligible for Eagle Eye.
     // LearnSpellFromEagleEye proves two adjacent 16-byte Dinkumware sets:
     // `(side + 0x546) << 4` addresses the selected set at +0x5460.
-    TCombatEagleEyeSide eagleEyeData[2]; // +0x545c; set roots at +0x5460
+    std::set<SpellID> eagleEyeData[2]; // +0x545c; set roots at +0x5460
     // Per-stack "this stack has already been affected" marks, indexed
     // [combatSide][army slot]. THREE independent readings agree on the
     // shape, which is why it is sliced in place from the old pad_547c[0x28]

@@ -174,6 +174,9 @@ public:
         // Retail 0x487e10: flags this scenario's hero placeholders in
         // SCampaign::PruneCrossoverHeroes' per-hero-id table (provisional).
         void MarkCrossoverHeroes(unsigned char* wanted);
+        // Prune's repeated inflated_size guard suggests an inlined scenario
+        // query in retail; the role name is provisional.
+        int GetMaxCrossoverHeroes() const;
     };
 
     struct CampaignHeaderStruct {

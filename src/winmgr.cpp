@@ -17,73 +17,6 @@
 // Open answers a failed screen-bitmap allocation with MemError.
 #include "kb.h"
 
-// E:\gamedcs\winmgr.cpp:66. The four unclaimed rows ahead of
-// ConvertToHover are the DC roster's ctor / Open / Close / Main run in
-// order (84->56, 282->276, 98->70, 70->54 SH4->x86); Close and Main are
-// reconstructed below.
-//
-// RETAIL_LOCATED(0x00602170, 0x38): the constructor, LOCATED and
-// reconstructed but NOT claimed. The body below is semantically complete
-// - `homm3 vc6 diagnose` reports flow-distance 0 with register-distance
-// 8 - but it will not close, and objdiff scores the pair 0.0 rather than
-// the ~85% the instruction stream deserves, so claiming it would bank a
-// zero row.
-//
-// The 0.0 is EXPLAINED (2026-08-14) and it is NOT a pairing failure:
-// objdiff pairs the two symbols and diffs them, and the diff is sane in
-// shape (4 EQUAL head rows, 3 ARG_MISMATCH, 1 REPLACE, 2 EQUAL tail
-// rows, plus a ten-row INSERT/DELETE pair). The zero falls out of the
-// scorer's normalisation. objdiff charges a byte penalty per non-equal
-// row against a budget of the symbol's own size:
-//     match_percent = max(0, 1 - penalty / size)
-// calibrated on armygrp's ?Merge@armyGroup@@QAEEPAV1@@Z (510 B, penalty
-// 57 DELETE + 22 REPLACE + a partial charge over 189 ARG_MISMATCH bytes
-// = 104.4, which is exactly its reported 79.536%). Here the nine
-// `mov dword ptr [esi+disp], eax` stores are interchangeable under
-// objdiff's instruction hashing, so ONE instruction crossing the run -
-// the vptr store - diffs as a ten-row delete plus a ten-row insert
-// rather than as a move: 32 deleted + 3 replaced + 33 inserted bytes =
-// 68 against a 56-byte budget, past 100% penalty, so it clamps.
-// Dropping one member store from the body (a probe, reverted)
-// re-aligned the run and moved the score to 1.65%, not to anything
-// sane - the same effect.
-//
-// CONSEQUENCE for this tree: the artefact only bites SHORT functions -
-// the penalty has to exceed the whole symbol size - that differ solely
-// by an instruction moved across a run of near-identical instructions.
-// It costs nothing in the ledger, since the ratchet tracks MAX and a
-// real improvement still raises it, but such a row reads as worthless
-// when it is not. Never read a 0.0 on a name-paired row as "unpaired".
-//
-// Two residual deltas, both the same cause: retail sinks the
-// compiler's vptr store past every member store (ours emits it second)
-// and materialises the shared -1 in ECX up front (`or ecx,-1`) where our
-// allocator recycles EAX after the zero run. `homm3 vc6 why-reg --model`
-// returns CAPPED: the transposed value is `this`/a parameter, i.e.
-// front-end handle state (C1), not a statement-level knob. Six body
-// orderings, a `dialogReturn = lastHover = -1` chain, a four-way pointer
-// chain and a full member-initialiser list were all measured - the
-// mem-init list is strictly worse (16 diff lines vs 10), every other
-// spelling is identical.
-#if 0  // @carcass
-
-heroWindowManager::heroWindowManager()
-{
-    status = 0;
-    activeWindow = 0;
-    lastActive = 0;
-    tailWindow = 0;
-    headWindow = 0;
-    screenBitmap = 0;
-    colorCyclingOn = 0;
-    field_4C = 0;
-    isWaitingForFadeIn = 0;
-    lastHover = -1;
-    dialogReturn = -1;
-}
-
-#endif  // @carcass
-
 #if 0  // @carcass
 
 // E:\gamedcs\winmgr.cpp:101
@@ -104,32 +37,15 @@ DATA(0x006aac98) extern int gUnnamed6aac98;
 DATA(0x006aac9c) extern int gUnnamed6aac9c;
 DATA(0x006aaca0) extern unsigned short* gUnnamed6aaca0;
 
-// E:\gamedcs\winmgr.cpp - the manager's own constructor, the row immediately
-// before Open in both the carve and the Dreamcast roster (ctor/Open/Close/
-// Main). Identified outright by its two anchors: it calls ??0baseManager
-// (0x44d530) as its base and stores heroWindowManager's own vtable 0x643d4c,
-// and every field it writes is a member this header already models.
-//
-// Residual (84.09%): the nine zero stores, the base call and both -1 stores
-// are byte-exact and in retail's order. What is left is one SCHEDULE: retail
-// materialises -1 into ECX beside the `xor eax,eax` and sinks the vfptr store
-// to just above the two -1 writes, where this compile emits the vfptr
-// immediately after the base constructor and re-uses EAX for -1 at the end.
-// MEASURED AND REJECTED at the same plateau: the two -1 writes as a chained
-// `dialogReturn = lastHover = -1` (byte-flat); the -1 pair hoisted above the
-// zero run (the store order then follows the source and diverges further).
-//
-// The row BANKS 0.0000 and that number is a tooling artifact, not the body:
-// objdiff reports no fuzzy percent for it at all - a base-only symbol - even
-// though both the normalized base and the normalized delinked target carry
-// `??0heroWindowManager@@QAE@XZ` as an external at offset 0 of their `.text`,
-// and `homm3 sema diff` compares the two sides happily (1 block, 1 call and
-// 2 relocations all agreeing). It is the FIRST symbol of the delinked target
-// object; every other winmgr row pairs. Recorded rather than worked around.
-// A REVERT CONTROL was run for the two neighbouring dips: with this whole
-// claim and body removed, re-delinked and rebuilt, DoDialog still measures
-// 79.2842 and DoDialogDraw 91.5408 against their banked 100 - both are this
-// round's delink generation, not this constructor.
+// E:\gamedcs\winmgr.cpp:66-89; DC winmgr.obj:0x19a7ec.
+// Exact with the DC statement order: lastHover at line 84, dialogReturn
+// at 85, then isWaitingForFadeIn at 86. Keeping the byte clear last makes
+// VC6 retain zero in EAX, materialize -1 in ECX, and sink the derived
+// vfptr store below the zero stores, exactly as retail does.
+// Negative control: clearing isWaitingForFadeIn before the two -1 stores
+// reuses EAX for -1 and moves the vfptr store up. Objdiff pairs that body
+// but scores 0: the moved store misaligns the repeated zero-store run,
+// exceeding its 56-byte penalty budget. No pairing workaround is needed.
 VA(0x00602170, 0x38)  // anchor-vtable 0x643d4c + anchor-callee ??0baseManager, dc order-map
 heroWindowManager::heroWindowManager()
 {
@@ -141,9 +57,9 @@ heroWindowManager::heroWindowManager()
     screenBitmap = 0;
     colorCyclingOn = 0;
     field_4C = 0;
-    isWaitingForFadeIn = 0;
     lastHover = -1;
     dialogReturn = -1;
+    isWaitingForFadeIn = 0;
 }
 
 // E:\gamedcs\winmgr.cpp:101 - slot 0, and the DC line program supplies the

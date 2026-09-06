@@ -466,6 +466,17 @@ struct TRmgMapItem {
     TRmgGroundTile tile;                  // +0x24
     TRmgGroundTileData tileData;          // +0x28
     TRmgConnectionDecoration connection;  // +0x2c
+
+    // CreateRiver's reset pass copies a by-value predecessor before a
+    // constant 32000 cost write, motivating this ordinary reset helper.
+    // Its role name is provisional; Dreamcast has no RMG compiland.  A
+    // generic cost parameter instead lowers the constant write as XOR,
+    // whereas retail retains the constant AND/OR form.
+    void ResetMovement(TRmgMapPosition previous)
+    {
+        movement.cost = 32000;
+        previousTile = previous;
+    }
 };
 
 class TRmgMapInterface {

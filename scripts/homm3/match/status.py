@@ -64,6 +64,11 @@ class MatchRow:
     rva: int | None = None
     src_hash: str | None = None
 
+    @property
+    def best(self) -> float:
+        """Best banked score, including peaks recovered from older history."""
+        return max(self.max, self.hist)
+
 
 def load_report() -> dict:
     executable = shutil.which("objdiff-cli")
@@ -201,10 +206,11 @@ def source_hashes() -> dict[tuple[str, str], str]:
     return hashes
 
 
-def load_baseline() -> dict[tuple[str, str], MatchRow]:
+def load_baseline(path: Path | None = None) -> dict[tuple[str, str], MatchRow]:
+    path = path or BASELINE
     rows = {}
-    if BASELINE.is_file():
-        for line in BASELINE.read_text().splitlines():
+    if path.is_file():
+        for line in path.read_text().splitlines():
             if not line or line.startswith("#"):
                 continue
             cols = line.split("\t")
@@ -224,7 +230,7 @@ def load_baseline() -> dict[tuple[str, str], MatchRow]:
                     float(maximum), float(historical),
                     None if rva == "-" else int(rva, 0), src_hash)
             else:
-                common.die(f"malformed {BASELINE.name} row: {line!r}")
+                common.die(f"malformed {path.name} row: {line!r}")
     return rows
 
 
@@ -533,8 +539,7 @@ def _md_table(rows, align):
 
 def write_readme(report: dict) -> None:
     """Splice the per-module score table between the README sentinels
-    (gruntz shape: Module | Units | Functions exact | Fuzzy | Fuzzy Max;
-    Fuzzy Max weighs each function's best-ever from the baseline)."""
+    with current and best-ever function/byte scores from the baseline."""
     from homm3.build.configure import load_manifest
     _build, _profiles, units = load_manifest()
     unit_module = {u["unit"]: module_of(u["source"]) for u in units}
@@ -545,16 +550,17 @@ def write_readme(report: dict) -> None:
         name = unit.get("name", "?")
         module = unit_module.get(name, name)
         agg = per_module.setdefault(
-            module, {"units": 0, "fns": 0, "exact": 0, "wsum": 0.0,
+            module, {"units": 0, "fns": 0, "exact": 0, "exact_max": 0, "wsum": 0.0,
                      "wmax": 0.0, "code": 0})
         agg["units"] += 1
         for fn in (unit.get("functions", []) or []):
             size = int(fn.get("size") or 0)
             fuzzy = float(fn.get("fuzzy_match_percent") or 0.0)
             row = maxima.get((name, fn.get("name", "?")))
-            best = max(fuzzy, row.max if row else 0.0)
+            best = max(fuzzy, row.best if row else 0.0)
             agg["fns"] += 1
             agg["exact"] += fuzzy >= 100.0 - 1e-6
+            agg["exact_max"] += best >= 100.0 - 1e-6
             agg["wsum"] += fuzzy * size
             agg["wmax"] += best * size
             agg["code"] += size
@@ -567,20 +573,25 @@ def write_readme(report: dict) -> None:
     zlib_fns = tally.get("zlib", (0, 0))[0]
     covered = sum(a["fns"] for a in per_module.values())
     matched = sum(a["exact"] for a in per_module.values())
+    matched_max = sum(a["exact_max"] for a in per_module.values())
     denominator = target_fns + zlib_fns
     unmatched = denominator - covered
 
-    rows = [["Module", "Units", "Functions exact", "Fuzzy", "Fuzzy Max"]]
+    rows = [["Module", "Units", "Functions exact", "Function exact MAX",
+             "Fuzzy", "Fuzzy Max"]]
     for module in sorted(per_module, key=lambda m: -per_module[m]["fns"]):
         a = per_module[module]
         pct = 100.0 * a["exact"] / a["fns"] if a["fns"] else 0.0
+        pct_max = 100.0 * a["exact_max"] / a["fns"] if a["fns"] else 0.0
         fuzzy = a["wsum"] / a["code"] if a["code"] else 0.0
         fmax = a["wmax"] / a["code"] if a["code"] else 0.0
         rows.append([f"`{module}`", str(a["units"]),
                      f"{a['exact']} / {a['fns']} ({pct:.1f}%)",
+                     f"{a['exact_max']} / {a['fns']} ({pct_max:.1f}%)",
                      f"{fuzzy:.2f}%", f"{fmax:.2f}%"])
     if unmatched:
         rows.append(["`(unmatched)`", "—",
+                     f"0 / {unmatched:,} (0.0%)",
                      f"0 / {unmatched:,} (0.0%)", "0.0%", "0.0%"])
 
     # the one-number scale: fuzzy-weighted matched bytes over ALL
@@ -593,14 +604,17 @@ def write_readme(report: dict) -> None:
                if unfiltered_bytes else 0.0)
 
     pct = 100.0 * matched / denominator if denominator else 0.0
+    pct_max = 100.0 * matched_max / denominator if denominator else 0.0
     block = [RM_START, "",
              f"**Executable matched: {exe_pct:.2f}%** — fuzzy-weighted "
              f"bytes over all {unfiltered_bytes:,} unfiltered bytes.",
              "",
              f"**Match score** — {matched:,} / {denominator:,} functions "
              f"exact ({pct:.1f}%) across the full engine "
-             f"({covered} in linked units).", ""]
-    block += _md_table(rows, "lrrrr")
+             f"({covered} in linked units).", "",
+             f"**Function exact MAX** — {matched_max:,} / {denominator:,} "
+             f"functions ({pct_max:.1f}%) have reached 100%.", ""]
+    block += _md_table(rows, "lrrrrr")
 
     excluded = [["Category", "Functions", "Code (B)", "Why excluded"]]
     labels = {"eh-funclet": "`EH unwind funclets`",

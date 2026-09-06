@@ -112,7 +112,6 @@ public:
         m_pMsg = 0;
         m_forWho = 0;
     }
-    virtual ~CHostWaitDlg();
     virtual int handle_message(message& msg);  // slot 3
 
     // DC Wait takes the dpid alone; retail's two expansions differ only
