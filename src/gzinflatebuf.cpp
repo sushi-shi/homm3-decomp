@@ -93,10 +93,33 @@ int TGzInflateBuf::get_byte()
 //    an 87.78 baseline) and +1.28 after it: a rejected knob is only
 //    rejected for the inline structure it was measured in.
 //
-// Residual (91.60%): 61 vs 61 blocks with 54 exact, and TWO branches short.
-// Retail carries a SECOND `--stream.next_in; ++stream.avail_in; throw
-// false;` block, sunk and reloading `this` from [ebp-x], where our source
-// has one; it also loads gz_magic[0] into EBX ahead of the first compare
+// The header walk is TWO NESTED try blocks, and retail's EH data says so:
+// the FuncInfo at 0x62c8f8 carries nTryBlocks=2 - an inner [4..4] whose
+// HandlerType names 0x4d6288 and an outer [3..5] naming 0x4d62a2, both
+// with the `._N` (bool) type descriptor. 0x4d6288 is
+// `--stream.next_in; ++stream.avail_in; throw;` off `this` reloaded from
+// [ebp-0x18]; 0x4d62a2 is `ok = 0` returning the continuation address
+// fn+0x262. So the "SECOND pushback block, sunk and reloading this" an
+// earlier note here chased as a duplicated source statement is the INNER
+// CATCH, and the state stores bracket it exactly: state 3 at fn+0xea
+// covers only the first byte's EOF test, state 4 at fn+0x191 opens right
+// before the gz_magic[0] compare, and state 2 at fn+0x26d closes both.
+// That is zlib check_header's pushback rule reproduced arm for arm - the
+// `if (len != 0)` pushback is the inner catch, the `if (c != EOF)` one is
+// written inline in the gz_magic[1] arm, so a second-byte mismatch pushes
+// back TWICE and a first-byte mismatch once. Writing the nested try:
+// 91.5985 -> 92.6749.
+//
+// Residual (92.67%): 61 vs 61 blocks with 55 exact, and TWO branches
+// short. The EH transcript is now 17 state stores against retail's 14 -
+// three surplus, one whole `throw TDataError()` group (its string
+// temporary, its exception object, and the return to state 2). Retail
+// expands read_byte's EOF throw at exactly three sites and CALLS
+// read_byte at the rest; we expand it at four, which is also what the
+// call diff shows (retail calls get_byte at +47b where we have the
+// string constructor, and we call _Tidy at +45a where retail does not).
+// That is an inliner dose, not an EH fact.
+// Retail also loads gz_magic[0] into EBX ahead of the first compare
 // where we read it as a memory operand, and CALLS basic_string::_Tidy on
 // the TDataError path where we expand it. Measured and rejected for the
 // second pushback: the same statement in the gz_magic[0] arm (85.22), in
@@ -135,15 +158,21 @@ TGzInflateBuf::TGzInflateBuf(std::streambuf* newSource)
         int magic = get_byte();
         if (magic == -1)
             throw false;
-        if (magic != gz_magic[0])
-            throw false;
-        magic = get_byte();
-        if (magic == -1)
-            throw false;
-        if (magic != gz_magic[1]) {
+        try {
+            if (magic != gz_magic[0])
+                throw false;
+            magic = get_byte();
+            if (magic == -1)
+                throw false;
+            if (magic != gz_magic[1]) {
+                --stream.next_in;
+                ++stream.avail_in;
+                throw false;
+            }
+        } catch (bool) {
             --stream.next_in;
             ++stream.avail_in;
-            throw false;
+            throw;
         }
     } catch (bool) {
         ok = 0;
