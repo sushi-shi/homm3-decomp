@@ -213,6 +213,14 @@ CHAR_STREAM_MEMBERS = (
     # made on the member offset each `do_` reads (_Gr at +8, _Nf at +0x10,
     # _Nt at +0x14, straight out of VC6's own <xlocnum>) and on the vtable
     # slot each public wrapper calls through (slots 3/4/5 of vtbl_245728).
+    # do_decimal_point and do_thousands_sep are slots 1 and 2 of the same
+    # vtbl_245728 - `mov al,[ecx+0xc] / ret` and `mov al,[ecx+0xd] / ret`,
+    # the `_E _Dp, _Ks` pair <xlocnum> declares right after `char *_Gr`.
+    # Without their own arms the generic template tail reduces them to
+    # `std_numpunct_do_decimal_point` / `std_numpunct_do_thousands_sep`,
+    # spellings no VA_COMPGEN owner can produce.
+    ("?do_decimal_point@?$numpunct@D", None, "numpunct_do_decimal_point"),
+    ("?do_thousands_sep@?$numpunct@D", None, "numpunct_do_thousands_sep"),
     ("?do_grouping@?$numpunct@D", None, "numpunct_do_grouping"),
     ("?do_falsename@?$numpunct@D", None, "numpunct_do_falsename"),
     ("?do_truename@?$numpunct@D", None, "numpunct_do_truename"),

@@ -1655,6 +1655,17 @@ VA_COMPGEN(0x00453d90, 0x3B, IOS_BASE_GETLOC, char)
 // (0.857 each way, 0.786 crossed).
 VA_COMPGEN(0x00454a10, 0x1C, CLASS_CTOR, bad_cast)
 
+// COMDAT pairing: numpunct<char>'s two virtual CHARACTER accessors, slots 1
+// and 2 of the same vtbl_245728 whose slots 3/4/5 are claimed below. The
+// bodies are `mov al,[ecx+0xc] / ret` and `mov al,[ecx+0xd] / ret`, four
+// bytes each and byte-identical to this object's own COMDATs; +0xc and +0xd
+// are the `_E _Dp, _Ks` pair <xlocnum> declares right after `char *_Gr` at
+// +8, so the vtable slot order and the member offsets agree in both
+// directions. They needed a key of their own - see
+// retail_labels/test_numpunct_char_keys.py.
+VA_COMPGEN(0x00455930, 0x4, NUMPUNCT_DO_DECIMAL_POINT, char)
+VA_COMPGEN(0x00455940, 0x4, NUMPUNCT_DO_THOUSANDS_SEP, char)
+
 // COMDAT pairing: numpunct<char>'s three virtual string accessors. All three
 // bodies are byte-identical apart from the member they read, and the layout
 // in VC6's own <xlocnum> - `char *_Gr; _E _Dp, _Ks, *_Nf, *_Nt;` after the

@@ -5566,7 +5566,13 @@ VA_COMPGEN(0x0046a870, 0x50F, TREE_ERASE_ITERATOR, int_set)
 // 0x46adc1 and frees each node through `operator delete`.
 VA_COMPGEN(0x0046ad80, 0x7E, TREE_ERASE, int_set)
 
-// const_iterator::_Inc is the family's fifth member and sits at 0x46ae00,
-// named outright by the runtime map. NOT CLAIMED: the function-universe
-// classifier bands that row as runtime code, and a claim on it fails the
-// CLASS-overlap gate. Left to whoever re-bands the runtime split.
+// const_iterator::_Inc is the family's fifth member. RE-BANDED 2026-09-06:
+// the runtime map's own row for it read "Exact 163-byte Dinkumware
+// set<int>::const_iterator increment COMDAT; LearnSpellFromEagleEye's base
+// object supplies the authoritative public" - that is this compiland, and
+// the map's header says such rows "get properly mapped as matching
+// proceeds". This object's own `?_Inc@const_iterator@?$_Tree@HH...` COMDAT
+// is byte-identical to the retail row and it sits between two claims of
+// this same family, so the row is game code and the runtime-map entry has
+// been retired.
+VA_COMPGEN(0x0046ae00, 0xA3, TREE_CONST_ITERATOR_INC, int_set)
