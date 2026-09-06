@@ -4633,6 +4633,7 @@ void TSingleSelectionWindow::UpdateAllyEnemyFlags(unsigned char update)
 VA(0x00585500, 0x889)  // anchor-callee CSaveGameEdit::OnKeyPress calls it (-1, 1) behind the currentMap!=-1 guard; body owns the 'NEWGAME.gm1'+'Arrogance.h3m' defaults (the mode scratch buffers), size 1.09x dc 0x7d2, dc 0x13bc60
 void TSingleSelectionWindow::SetCurrentMap(int map, unsigned char bUpdate)
 {
+    int i;
     if (map >= static_cast<int>(GetMapCount()))
         return;
     message msg;
@@ -4702,7 +4703,7 @@ void TSingleSelectionWindow::SetCurrentMap(int map, unsigned char bUpdate)
                    pCurrentHeader->setup.filename);
         }
         UpdateGameVars();
-        for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
+        for (i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
             m_players.humanPlayers[i].heroIndex = -1;
             m_players.humanPlayers[i].townIndex = -1;
             m_players.computerPlayers[i].heroIndex = -1;
@@ -4772,7 +4773,7 @@ void TSingleSelectionWindow::SetCurrentMap(int map, unsigned char bUpdate)
         deselect.window = 0;
         deselect.codeX = 6;
         deselect.extra = 0x10;
-        for (int i = 107; i <= 111; ++i) {
+        for (i = 107; i <= 111; ++i) {
             deselect.codeY = i;
             GetWidget(i)->Main(&deselect);
         }
@@ -4800,7 +4801,7 @@ void TSingleSelectionWindow::SetCurrentMap(int map, unsigned char bUpdate)
         Update();
     }
     if (m_flag64) {
-        for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
+        for (i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
             CNetPlayerHandlerPlayer* player =
                 m_players.GetPlayerInPos(i);
             if (!player)
