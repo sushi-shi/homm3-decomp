@@ -2,7 +2,6 @@
 # Admitted compiled bodies, sorted by increasing MAX/history, then decreasing retail size.
 # Banked-exact functions stay excluded despite current-score dips.
 va	size	current	maximum	historical	remaining_bytes	unit	function	state
-0x00489e20	1104	33.818653	35.3057	35.3057	714.2250720000001	customcampaign	?PruneCrossoverHeroes@SCampaign@@QAEXPAX@Z	admitted
 0x00574a90	586	35.38249	35.3825	35.3825	378.65855	seerhut	?load@TSeerHut@@QAEXPAVTAbstractFile@@H@Z	admitted
 0x0056ce50	286	10.5	41.9271	41.9271	166.08849400000003	seerhut	?LoadFromMap@type_quest@@UAEXPAVTAbstractFile@@@Z	admitted
 0x005f9ed0	784	38.54582	43.1116	43.1116	446.00505599999997	viewwrld	?VWDrawUnderlay@advManager@@QAEXHHHHH@Z	admitted
@@ -13,6 +12,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00506080	468	61.07879	62.3455	62.3455	176.22306	mapcell	??0CObjectType@@QAE@PAUTObjectType@@@Z	admitted
 0x00526d40	915	64.31193	64.3119	64.3119	326.546115	philai	??0type_spellvalue@@QAE@PBVhero@@@Z	admitted
 0x00583580	780	34.04054	67.9099	67.9099	250.30278000000007	singleselectionwindow	?UpdateGameVars@TSingleSelectionWindow@@QAEXXZ	admitted
+0x00489e20	1104	71.06736	71.0674	71.0674	319.41590399999995	customcampaign	?PruneCrossoverHeroes@SCampaign@@QAEXPAX@Z	admitted
 0x005b5a70	2215	42.021492	74.7623	74.7623	559.0150550000002	rmg_terrain	?PaintTransitions@TRmgTerrainPainter@@QAEXXZ	admitted
 0x0056fbc0	230	75.23529	75.2353	75.2353	56.958810000000014	seerhut	?DoProgressDialog@type_artifact_quest@@UAEXXZ	admitted
 0x00431800	962	75.383835	75.3838	75.3838	236.8078440000001	ai_player	?consider_hiring@@YI_NJPAVhero@@@Z	admitted

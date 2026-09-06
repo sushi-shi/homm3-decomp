@@ -225,6 +225,8 @@ public:
         // data; count the scenarios that carry map data.
         void FreeData();
         int GetNumMaps() const;
+        // Prune's header-owned marking pass; name provisional without a DC row.
+        void markRequiredHeroes(unsigned char* wanted);
     };
 
     // Dreamcast's LF_FIELDLIST preserves this complete nested enum.  The
