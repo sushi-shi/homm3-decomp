@@ -1233,21 +1233,40 @@ void game::RehomeCampaignHeroSetup(int heroId)
 // on gpGame->campaign as soon as the new map carries a campaign context.
 // Both passes walk the carry-over pools in reverse - the first retires every
 // carried hero from the map's roster, the second re-homes its setup record.
+// EXACT 2026-09-06, polish lane 38 (68.9328 -> 100.0000), two levers, and
+// both generalise across this file:
+//  * THE REVERSE WALK IS A POST-DECREMENT `while (i--)`, NOT `i = size()-1;
+//    i >= 0`. Retail's loop head is `mov ecx,eax / dec eax / test ecx,ecx /
+//    je <exit>` - the test is on the PRE-decrement value, which is exactly
+//    what `while (i--)` emits and what no `>= 0` form can: written the old
+//    way VC6 tests the POST-decrement index with `jl`, and the diagnose
+//    signal reads `jl->je` on four branches at once. Worth 68.93 -> 83.21
+//    here on its own. (`for (unsigned i = size(); i > 0; --i)` over `[i-1]`
+//    is NOT the same thing and measures 54.51.)
+//  * THE INNER VECTOR IS A NAMED REFERENCE. Retail addresses the inner pool
+//    through one hoisted `&carryOverHeroes[iPool]` (`mov ecx,edi / add
+//    ecx,esi` before the loop, then `mov esi,[ecx+4]` each iteration) where
+//    two subscripts of the outer vector make VC6 rebuild the base from
+//    `[this+0x40]` inside the inner loop. 83.21 -> 100.0000.
 VA(0x00486440, 0x145)  // anchor-caller(game::NewMap +0x7bc), dc 0x7d22c
 void SCampaign::DoPreLoadCustomization()
 {
-    int iPool;
-    for (iPool = carryOverHeroes.size() - 1; iPool >= 0; --iPool)
-        for (int iHero = carryOverHeroes[iPool].size() - 1; iHero >= 0;
-             --iHero)
-            gpGame->heroAvailability[carryOverHeroes[iPool][iHero].id] =
+    int iPool = carryOverHeroes.size();
+    while (iPool--) {
+        std::vector<hero>& pool = carryOverHeroes[iPool];
+        int iHero = pool.size();
+        while (iHero--)
+            gpGame->heroAvailability[pool[iHero].id] =
                 hero::HERO_AVAILABILITY_TAVERN_POOL;
+    }
 
-    for (iPool = carryOverHeroes.size() - 1; iPool >= 0; --iPool)
-        for (int iHero = carryOverHeroes[iPool].size() - 1; iHero >= 0;
-             --iHero)
-            gpGame->RehomeCampaignHeroSetup(
-                carryOverHeroes[iPool][iHero].id);
+    iPool = carryOverHeroes.size();
+    while (iPool--) {
+        std::vector<hero>& pool = carryOverHeroes[iPool];
+        int iHero = pool.size();
+        while (iHero--)
+            gpGame->RehomeCampaignHeroSetup(pool[iHero].id);
+    }
 }
 
 // Complete-only campaign carry-over expansion. Dreamcast's campaign path has
@@ -1535,6 +1554,18 @@ bool HeroPlaceholderStronger::operator()(const HeroPlaceholderData& left,
 // left. Anything the loss condition pins to a specific cell, and the
 // player's first hero if it still has none, falls back to the placeholder
 // path in PlaceStartingHero above.
+// 2026-09-06, polish lane 38 (67.9283 -> 75.7079): the same two levers as
+// DoPreLoadCustomization above - `while (i--)` for all three reverse walks
+// (`carried`, `iPool`, `iHero`; retail's tell is at fn+0x40cb/+0x4118) and
+// the named `pool` reference for the inner carry-over vector.
+// Residual (75.7079%): the STL inline structure, not the loops. Retail
+// CALLS `vector<hero>::insert(iterator, const T&)` - the 528-byte
+// `__h3cg$customcampaign$vector_insert$hero_8ce50` COMDAT, still a 0.00 row
+// because our compile expands that member and calls only the three-argument
+// fill overload - and its two `heroes.erase` sites reach `std::copy`'s CONST
+// overload (`PBV2`) where ours reach the non-const one (`PAV2`). Both are
+// per-site /Ob2 decisions on a Dinkumware member; no statement in this body
+// reaches them without a pin.
 VA(0x00487290, 0x664)  // anchor-caller(game::NewMap +0x7ce), retail-only
 void TCampaignBrief::ScenarioStruct::PlaceCrossoverHeroes()
 {
@@ -1564,22 +1595,21 @@ void TCampaignBrief::ScenarioStruct::PlaceCrossoverHeroes()
         if (placeholder->heroId == -1)
             continue;
 
-        int carried;
-        for (carried = heroes.size() - 1; carried >= 0; --carried) {
+        int carried = heroes.size();
+        while (carried--) {
             if (heroes[carried].id == placeholder->heroId)
                 break;
         }
         if (carried >= 0)
             heroes.erase(heroes.begin() + carried);
 
-        for (int iPool = campaign->carryOverHeroes.size() - 1; iPool >= 0;
-             --iPool) {
-            for (int iHero = campaign->carryOverHeroes[iPool].size() - 1;
-                 iHero >= 0; --iHero) {
-                if (campaign->carryOverHeroes[iPool][iHero].id
-                    == placeholder->heroId) {
-                    hero* carriedHero =
-                        &campaign->carryOverHeroes[iPool][iHero];
+        int iPool = campaign->carryOverHeroes.size();
+        while (iPool--) {
+            std::vector<hero>& pool = campaign->carryOverHeroes[iPool];
+            int iHero = pool.size();
+            while (iHero--) {
+                if (pool[iHero].id == placeholder->heroId) {
+                    hero* carriedHero = &pool[iHero];
                     if (carriedHero)
                         InitializeCrossoverHero(placeholder, carriedHero);
                     goto nextPlaceholder;
@@ -2595,6 +2625,10 @@ const int CAMPAIGN_MAP_ORDINAL_07 = 7;
 // `_Destroy<type_artifact>` on the second temp where our compile elides it
 // entirely, and calls the 2-argument insert wrapper at the hero loop where
 // we reach the 3-argument one.
+// 2026-09-06, polish lane 38 (78.6801 -> 85.5843): the excluded-hero scan is
+// a post-decrement `while (pool--)` / `while (which--)` pair over a named
+// `pooled` reference, the same shape DoPreLoadCustomization proves; retail's
+// tell sits at fn+0xaad (`mov eax,edx / dec edx / test eax,eax`).
 VA(0x00489820, 0x600)  // anchor-caller(oldmain end-of-campaign arm), retail-only
 void SCampaign::CompleteCurrentMap(void* campaignHeader)
 {
@@ -2625,16 +2659,16 @@ void SCampaign::CompleteCurrentMap(void* campaignHeader)
 
     for (unsigned int excluded = 0; excluded < field_6c.size(); ++excluded) {
         int heroId = field_6c[excluded];
-        for (int pool = carryOverHeroes.size() - 1; pool >= 0; --pool) {
-            int which;
-            for (which = carryOverHeroes[pool].size() - 1; which >= 0;
-                 --which) {
-                if (carryOverHeroes[pool][which].id == heroId)
+        int pool = carryOverHeroes.size();
+        while (pool--) {
+            std::vector<hero>& pooled = carryOverHeroes[pool];
+            int which = pooled.size();
+            while (which--) {
+                if (pooled[which].id == heroId)
                     break;
             }
             if (which >= 0) {
-                carryOverHeroes[pool].erase(carryOverHeroes[pool].begin()
-                                            + which);
+                pooled.erase(pooled.begin() + which);
                 break;
             }
         }
@@ -2719,6 +2753,18 @@ void SCampaign::CompleteCurrentMap(void* campaignHeader)
 // all pair. The known lever is a statement-scoped inline_depth(0) on the
 // size()/MarkCrossoverHeroes/sort/assign sites; this lane may not add pins,
 // so the reconstruction is banked as it stands.
+// 2026-09-06, polish lane 38 (12.3264 -> 20.3627): all four reverse walks
+// rewritten as post-decrement `while (i--)` loops on the retail tell (five
+// `mov/dec/test` triples at fn+0x9c8, +0xac7, +0xaf9, +0x1e0, +0x672).
+// Residual (20.3627%): the Dinkumware inline structure. Retail CALLS
+// `vector<hero>::insert(iterator, const T&)` (the 528 B compgen COMDAT this
+// unit still scores 0.00 on) and `vector<hero>::operator=` for the closing
+// `pooled = kept;`, and it CALLS `_Sort_0` at BOTH std::sort sites where our
+// second one expands into `_Insertion_sort_1`/`_Sort`/`_Unguarded_insert`.
+// Every one of those is an /Ob2 per-site decision inside a library template:
+// unreachable from this body without a statement pin, and the caller-shrink
+// alternative needs a helper no roster names (this function is Complete-only,
+// so the Dreamcast has none).
 VA(0x00489e20, 0x450)  // anchor-caller(CompleteCurrentMap +0x5e8), retail-only
 void SCampaign::PruneCrossoverHeroes(void* campaignHeader)
 {
@@ -2733,11 +2779,13 @@ void SCampaign::PruneCrossoverHeroes(void* campaignHeader)
             header->scenarios[iMap]->MarkCrossoverHeroes(wanted);
     }
 
-    for (int pool = carryOverHeroes.size() - 1; pool >= 0; --pool) {
+    int pool = carryOverHeroes.size();
+    while (pool--) {
         std::vector<hero>& pooled = carryOverHeroes[pool];
         std::vector<hero> kept;
 
-        for (int which = pooled.size() - 1; which >= 0; --which) {
+        int which = pooled.size();
+        while (which--) {
             if (wanted[pooled[which].id]) {
                 kept.insert(kept.end(), pooled[which]);
                 pooled.erase(pooled.begin() + which);
@@ -2757,14 +2805,15 @@ void SCampaign::PruneCrossoverHeroes(void* campaignHeader)
                     if (scenario->options->_vslot2() == 0)
                         best = scenario->heroes_status[
                             scenario->options->GetPlayerPosition(-1)];
-                    else
-                        for (int option = scenario->options->_vslot2() - 1;
-                             option >= 0; --option)
+                    else {
+                        int option = scenario->options->_vslot2();
+                        while (option--)
                             best = std::_cpp_max(
                                 best,
                                 scenario->heroes_status[
                                     scenario->options->GetPlayerPosition(
                                         option)]);
+                    }
                 }
                 keepCount = std::_cpp_max(keepCount, best);
             }
@@ -2779,7 +2828,8 @@ void SCampaign::PruneCrossoverHeroes(void* campaignHeader)
             pooled.erase(pooled.begin());
         }
 
-        for (int rest = pooled.size() - 1; rest >= 0; --rest) {
+        int rest = pooled.size();
+        while (rest--) {
             std::vector<type_artifact>& pooledArtifacts = field_4c[pool];
             int slot;
             for (slot = 0; slot < CROSSOVER_EQUIPPED_ARTIFACT_SLOTS; ++slot) {
