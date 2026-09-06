@@ -3840,6 +3840,25 @@ TSingleSelectionWindow::~TSingleSelectionWindow();
 // dtor is empty. novtable (see the class) is what keeps the vptr
 // unstored, exactly as retail's bytes have it.
 // E:\gamedcs\singleselectionwindow.cpp:1553
+// UNREACHABLE, PROVEN 2026-09-06 - this row banks 0 and no source shape
+// that keeps the rest of the class exact can emit it. A whole-image scan of
+// the absolute operand finds ZERO references to 0x583ec0: neither concrete
+// vtable holds it (0x641d38 t_map_list_update and 0x641d44
+// CNewPlayerUpdateProc are three slots each - Go, Tick, Finish - and
+// 0x641d50 is already the next class's table), and no call site reaches it,
+// so retail kept a dead COMDAT (which is also why /OPT:REF cannot have been
+// on). Three VC6 probes at the unit's own flags settle what would emit it:
+//   * novtable + non-virtual ~Task + `delete basePtr`: emits `??1Task` only.
+//     This is our current state and it is what makes 0x583ef0 exact.
+//   * novtable + VIRTUAL ~Task: emits `??_GProc`/`??_7Proc` - the DERIVED
+//     class's wrapper, never `??_GTask` - and widens both concrete vtables
+//     to four slots, which retail's three refute.
+//   * non-virtual ~Task with novtable REMOVED: still no `??_G` at all, and
+//     `??1Task` gains a leading `mov dword ptr [esi], offset ??_7Task` that
+//     retail's 0x583ef0 does not have, so it would trade an exact row for
+//     nothing.
+// A `??_G<C>` needs C's own vtable to be emitted, and an abstract novtable
+// interface never emits one. Leave the claim; do not spend a lane on it.
 VA_COMPGEN(0x00583EC0, 0x21, SCALAR_DELETING_DTOR, CNewPlayerUpdateTask)  // wrapper calls the task dtor below; DC concrete-proc wrapper at 0x1489f0
 #pragma auto_inline(off)
 VA(0x00583ef0, 0x26)  // anchor-callee direct dtor call in WindowHandler's delete site + in ??_G-shaped 0x583ec0 + Man::PlayerDropped 0x589480, dc 0x148a28
