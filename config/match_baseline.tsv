@@ -1265,7 +1265,7 @@ customcampaign	?IsBuildingBonus@TCampaignBuildingBonus@@UBE_NXZ	100.0000	100.000
 customcampaign	?IsBuildingBonus@TCampaignStartBonusOption@@UBE_NH@Z	100.0000	100.0000	100.0000	0x85430	bcddb4b1212f
 customcampaign	?IsBuildingBonus@TCampaignStartCrossoverOption@@UBE_NH@Z	100.0000	100.0000	100.0000	0x85a30	40cf16111627
 customcampaign	?Load@CampaignHeaderStruct@TCampaignBrief@@QAE_NXZ	53.9715	53.9715	80.9474	0x88880	7d10123c8040
-customcampaign	?Load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	59.0405	59.0405	79.2531	0x8a310	6c018aec4b3c
+customcampaign	?Load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	60.5021	60.5021	79.2531	0x8a310	a630b316472e
 customcampaign	?LoadMapHeader@ScenarioStruct@TCampaignBrief@@QAEXPAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@PAVNewSMapHeader@@H@Z	100.0000	100.0000	100.0000	0x87d30	3ede48bd4a11
 customcampaign	?LoadScenario@CampaignHeaderStruct@TCampaignBrief@@QAE_NHPAVNewSMapHeader@@@Z	100.0000	100.0000	100.0000	0x88810	40cf52fbb7ea
 customcampaign	?MarkCrossoverHeroes@ScenarioStruct@TCampaignBrief@@QAEXPAE@Z	100.0000	100.0000	100.0000	0x87e10	6ceadd79996e

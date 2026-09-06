@@ -2953,7 +2953,7 @@ static short ReadCampaignWord(TAbstractFile* infile)
 // loops. There is no Dreamcast procedure: that port does not use this PC save
 // format, so retail x86 is the sole code and ABI verdict here.
 //
-// Residual (59.04%): 133 blocks against retail's 89 and 15 target-only STL
+// Residual (60.5021%): 133 blocks against retail's 89 and 15 target-only STL
 // calls, and it is ALL /Ob2 budget in one direction - we expand, retail
 // calls. Read positionally: in the >=28 arm retail CALLS
 // `vector<T>::size()` at the LEADING site of every one of the five resizes
@@ -2965,6 +2965,27 @@ static short ReadCampaignWord(TAbstractFile* infile)
 // retail reaches `??_H` for the 16-element LegacyCampaignHero array and the
 // by-length `basic_string::assign`, we expand a per-element ctor loop and
 // `_Grow`.
+//
+// 2026-09-06 (polish lane 44), what the retail bytes SETTLE about the
+// pre-v28 arm's source, against the four hypotheses the mass hunt carried:
+//   * NOT a block move. The scalar header is thirteen individual moves at
+//     0x48a366..0x48a3a8 (VC6 folds three adjacent bytes into one dword load
+//     and uses al/ah), and the promotion body copies field by field with the
+//     record's dead ranges SKIPPED: 0x1a/0x1e/0x1f/0x2c/0x30/0x3b/0x4d/0x51,
+//     then 0x8b, 0x8c, and only then three `rep movsd` runs of 56/28/28 for
+//     army, skillLevel and skillOrder. A `memcpy`/struct copy of the whole
+//     record cannot produce that, and the 0x31..0x3a, 0x3d..0x4c and
+//     0x53..0x8a gaps prove the source names the members. Both "read it as
+//     one POD block" hypotheses are REFUTED, not merely unmeasured.
+//   * The stats copy is a real byte loop (0x48a7e4, `mov al`/`mov byte`,
+//     `cmp esi,4`), not a memcpy - our spelling is already retail's.
+//   * `??_H` and the by-length `assign` are BUDGET symptoms, not spellings:
+//     retail calls both at a smaller budget and our source already asks for
+//     both. `??_H` is reached through the out-of-line LegacyCampaignHero
+//     constructor exactly as intended; what differs is that our /Ob2 then
+//     expands the thunk's four-instruction loop.
+// So the mass construct is NOT in the promotion body's shape. What the same
+// pass DID find is below.
 // DOSE, measured 2026-09-06 (throwaway probes, none shipped - the tree
 // forbids the file-static caller-shrink device that produced them): moving
 // roughly the pre-v28 arm's scalar header (13 lines) plus its two
@@ -2977,15 +2998,46 @@ static short ReadCampaignWord(TAbstractFile* infile)
 // budget-shaped and its size is known; what is missing is the construct that
 // carries that mass in retail's own source, which is NOT a helper split -
 // no Dreamcast procedure exists for this body to name one from.
-// Tried and REJECTED: the <36 tail zeroing spelled
-// `std::fill(campaignCompleted + 14, campaignCompleted + 21, 0)` instead of
-// the constant-count memset. It is byte-EXACT locally - VC6 expands the
-// char* overload's `memset(_F, _X, _L - _F)` with the count unfolded, giving
-// retail's `cmp edi,ecx / je / sub / shr 2 / rep stosd / and 3 / rep stosb`
-// at 0x48a9ab..0x48a9c5 against our individual stores - but it costs 0.70
-// at this budget (59.0405 -> 58.3444) because the extra mass buys another
-// over-inline downstream. At the +20 dose above it is worth +2.44 instead.
-// Re-try it the moment the real mass construct lands.
+//
+// THE HOLE IS STATEMENT-COUNT SENSITIVE AT ~1.5 POINTS PER STATEMENT, and
+// polish 44 collected one statement of it: retail RE-READS
+// `saved.carryOverHeroCounts[pool]` in the promotion loop's condition
+// (`movsx edx, byte ptr [ebp+ecx-0x4e9]` at 0x48a827, inside the back edge)
+// and again for the resize argument at 0x48a734, so the bound is NOT
+// hoisted into a local. Dropping our `int heroCount` and spelling both uses
+// as `saved.carryOverHeroCounts[pool]` is worth 59.0415 -> 60.5021. That is
+// the polish-41 variable-bound rung, and the return on ONE statement says
+// the remaining ~60-statement dose is the same kind of thing, not one
+// construct.
+//
+// THREE RETAIL-PROVEN RUNGS ARE WITHHELD, all blocked on the same budget,
+// and all three got CHEAPER as the budget closed - measure them again after
+// every mass step, they flip together:
+//   1. the <36 tail zeroing as
+//      `std::fill(campaignCompleted + 14, campaignCompleted + 21, 0)`
+//      instead of the constant-count memset. Byte-EXACT locally: VC6 expands
+//      the char* overload's `memset(_F, _X, _L - _F)` with the count
+//      unfolded, giving retail's `cmp edi,ecx / je / sub / shr 2 /
+//      rep stosd / and 3 / rep stosb` at 0x48a9ab..0x48a9c5 against our
+//      individual stores. Cost -0.70 at 59.0405, -0.41 at 60.5021, and
+//      +2.44 at the +20 dose.
+//   2. `campaignFilename = saved.campaignFilename;` instead of the explicit
+//      `.assign(ptr, strlen(ptr))`. This is the section-6b depth ladder run
+//      BACKWARDS - operator=(const char*) -> assign(const char*) ->
+//      assign(ptr, len) puts the leaf one level deeper, and VC6 then CALLS
+//      `?assign@...@QAEAAV12@PBDI@Z` exactly where retail does (0x48a698),
+//      with the same inline `repne scasb` strlen in front of it. Cost -0.75
+//      at 59.0415, -0.31 at 60.5021.
+//   3. `days` and `score` read into a block-scoped temporary and then
+//      assigned, instead of `infile->Read(&mapScores[i].days, ...)` straight
+//      into the member. Retail reads both into stack temps and copies
+//      ([ebp-0x38] at 0x48a939, [ebp-0x30] at 0x48a952) - the shape a
+//      dword-returning reader beside ReadCampaignByte/Word would give, which
+//      this lane may not add. Cost -0.23 at 60.5021.
+// The 4-byte frame surplus (our 0x6b80 against retail's 0x6b7c) is the
+// `int artifactId` the memcpy-into-enum idiom needs, because TArtifact is an
+// enum and the tree's cast floor is zero; retail stores the sign-extended
+// word straight into the member at 0x48ac6b. Not source-addressable here.
 VA(0x0048a310, 0xB1E)  // SavedGameHeader::Load caller + member/helper graph
 void SCampaign::Load(TAbstractFile* infile, int saveVersion)
 {
@@ -2993,19 +3045,20 @@ void SCampaign::Load(TAbstractFile* infile, int saveVersion)
     carryOverHeroes.clear();
 
     if (saveVersion < 28) {
-        // The out-of-line LegacyCampaignHero constructor below makes VC6
-        // construct this 16-element array through the retail 0x4013d0
-        // vector-constructor iterator.  Leaving the constructor implicit in
-        // the header is the negative control: its call-per-element loop is
-        // expanded directly into SCampaign::Load.
+        // The out-of-line LegacyCampaignHero constructor below is what puts
+        // the 16-element array through the retail 0x4013d0 vector-constructor
+        // iterator at all; leaving the constructor implicit in the header is
+        // the negative control.  Retail CALLS `??_H` here (0x48a34d) and we
+        // still expand the thunk's own four-instruction loop - that last step
+        // is the /Ob2 budget, not this declaration.
         LegacyCampaignSave saved;
         infile->Read(&saved, sizeof(saved));
 
         currentMap = saved.currentMap;
         isCheater = saved.isCheater;
-        briefingChoice = saved.briefingChoice;
-        numMapRegions = -1;
         currentCampaign = saved.currentCampaign;
+        numMapRegions = -1;
+        briefingChoice = saved.briefingChoice;
         crossoverArrayIndex = 0;
         secretActive = false;
         campaignFilename.assign(
@@ -3033,10 +3086,10 @@ void SCampaign::Load(TAbstractFile* infile, int saveVersion)
         field_4c.resize(2);
 
         for (int pool = 0; pool < 2; ++pool) {
-            int heroCount = saved.carryOverHeroCounts[pool];
-            carryOverHeroes[pool].resize(heroCount);
+            carryOverHeroes[pool].resize(saved.carryOverHeroCounts[pool]);
 
-            for (int whichHero = 0; whichHero < heroCount; ++whichHero) {
+            for (int whichHero = 0;
+                 whichHero < saved.carryOverHeroCounts[pool]; ++whichHero) {
                 const LegacyCampaignHero& oldHero =
                     saved.carryOverHeroes[pool][whichHero];
                 hero& newHero = carryOverHeroes[pool][whichHero];
@@ -3135,12 +3188,10 @@ void SCampaign::Load(TAbstractFile* infile, int saveVersion)
         field_4c[pool].resize(artifactCount);
         for (int whichArtifact = 0; whichArtifact < artifactCount;
              ++whichArtifact) {
-            short value = ReadCampaignWord(infile);
-            int artifactId = value;
+            int artifactId = ReadCampaignWord(infile);
             memcpy(&field_4c[pool][whichArtifact].artifactId, &artifactId,
                    sizeof(artifactId));
-            value = ReadCampaignWord(infile);
-            field_4c[pool][whichArtifact].extra = value;
+            field_4c[pool][whichArtifact].extra = ReadCampaignWord(infile);
         }
     }
 
