@@ -264,6 +264,14 @@ TRmgPackedTerrainCell* rmgTerrainPainter::getPackedCell(
     return &m_packedCells[index];
 }
 
+// Retail proves the shared accessor and its expanded uses, but supplies no
+// source inline qualifier. Its ordinary TU definition preserves paintPoint's
+// 99.5570% checkpoint and both exact painter/brush destructors.
+int rmgTerrainPainter::getTerrain(const TRmgGridPoint& point)
+{
+    return getPackedCell(point)->GetTerrain();
+}
+
 // The base-frame paths in PaintPoint and PaintTransitions first compute
 // strength, then load the selected rule's virtual receiver. Keep that shared
 // evaluation boundary and the captured terrain index across the first call.
@@ -354,6 +362,30 @@ unsigned char rmgTerrainPainter::isPaintTerrain(const TRmgGridPoint& point)
 // in needsTerrainRepair changes the exact destructors' byte-result tests
 // (95.0543% here); adjacent guards and cache multiplication operand reversal
 // and a native-bool terrain predicate are neutral at the current checkpoint.
+//
+// Further controls at 99.5570%: coupled native-bool repair/separation returns,
+// a byte result local, signed index/dimensions, named width, stepwise indexing,
+// a width accessor, a cache-reference return, consistent configured-terrain
+// accessors, early loop continues, negated iterator equality, and direct frame
+// selection in the tile constructor leave the caller score unchanged. Grouping
+// dimensions into a point also leaves this caller unchanged. Tile copy
+// initialization adds two entry instructions (98.3183%); an owned flip value
+// or explicit assignment-based grid copy constructor gives 98.5986%.
+//
+// The other direction-table caller at 0x4f9f00 retains a 22-byte point
+// copy/conversion at 0x4fa520 and 33-byte compound addition at 0x4fa540. These
+// prove operation boundaries there, not the classes' names or signedness.
+// Applying signed-direction conversion before same-type grid addition here
+// gives 98.0759%; signed translation followed by grid conversion gives
+// 98.5986%. Both change the direction load schedule and keep the wrong erase
+// overload. Preserve the current mixed-type arithmetic pending stronger proof.
+//
+// The retained three-argument _Distance body matches all 43 retail bytes at
+// 0x5b8c70, including its _Inc call. A current-source scratch C2 rejection of
+// only the inner wrapper expansion gives retail's 1483-byte length, but also
+// changes earlier translation/backedge registers and leaves both commuted
+// products. Thus the inline decision and storage deltas remain coupled;
+// the diagnostic object is excluded from matching and the normal shim restored.
 VA(0x005B4B20, 0x5CB) // anchor-callee 0x5b4960, 0x5b5440; thiscall, ret 4
 void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
 {

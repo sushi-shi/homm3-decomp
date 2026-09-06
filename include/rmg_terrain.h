@@ -147,12 +147,9 @@ public:
     TRmgPackedTerrainCell* getPackedCell(const TRmgGridPoint& point);
     // Retail repeatedly expands this field accessor while retaining the
     // nested GetPackedCell call. Keeping the source helper is therefore
-    // required even though it has no separately emitted body.
+    // required even though it has no separately located retail body.
     // Prior provisional role: GetTerrain
-    inline int getTerrain(const TRmgGridPoint& point)
-    {
-        return getPackedCell(point)->GetTerrain();
-    }
+    int getTerrain(const TRmgGridPoint& point);
     // Prior provisional role: PaintTransitions
     void paintTransitions();
     // Prior provisional role: SelectBaseFrame
