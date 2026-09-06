@@ -43,6 +43,14 @@ class DemangledResolveTest(unittest.TestCase):
             self.assertEqual(self.db.resolve("?GetTeam@game@@QBEHH@Z"), 0x1000)
         self.assertIn("['game::GetTeam' -> ?GetTeam@game@@QBEHH@Z]", out.getvalue())
 
+    def test_unit_scope_disambiguates_without_splitting_cpp_scope(self):
+        with contextlib.redirect_stdout(io.StringIO()):
+            for selector in ("widget:Open", "widget:Widget::Open", "widget:0x401200"):
+                self.assertEqual(self.db.resolve_fn(selector)[2], 0x1200)
+        for selector in ("widget:Other::Open", "unknown:Open", "dc:0x1200"):
+            with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+                self.db.resolve_fn(selector)
+
     def test_ambiguous_bare_name_lists_candidates_instead_of_guessing(self):
         with contextlib.redirect_stderr(io.StringIO()) as err:
             with self.assertRaises(SystemExit) as stop:

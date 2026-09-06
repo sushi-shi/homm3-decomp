@@ -159,6 +159,7 @@
         ninja
         llvm
         llvmPackages.clang-unwrapped
+        clang-tools
         ripgrep
         file
         xxd
@@ -174,6 +175,7 @@
         export PYTHONPATH="$HOMM3_DIR/scripts''${PYTHONPATH:+:$PYTHONPATH}"
         ${ghidraEnvHook}
         ${objdiffShimHook}
+        python3 -m homm3.build.compilation_database
       '';
     in {
       packages.${system} = {

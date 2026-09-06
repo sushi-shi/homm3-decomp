@@ -6,6 +6,12 @@ Run with ``python3 -m homm3.vc6.test_queue``.
 from __future__ import annotations
 
 import unittest
+import contextlib
+import io
+from pathlib import Path
+import tempfile
+from types import SimpleNamespace
+from unittest.mock import patch
 
 from homm3.vc6 import queue
 
@@ -15,6 +21,20 @@ def _report(*functions):
 
 
 class BankedMaxRouting(unittest.TestCase):
+
+    def test_display_limit_keeps_complete_generated_admission_census(self):
+        rows = [{"state": "unmapped", "size": n, "rva": n, "relation": "unmapped",
+                 "owner": "unit", "candidates": "", "label": f"fn{n}", "action": "inspect"}
+                for n in (30, 20, 10)]
+        with tempfile.TemporaryDirectory() as tmp, patch.object(queue._common, "REPO", Path(tmp)), \
+                patch.object(queue, "_admission_rows", return_value=rows):
+            for limit, shown in ((1, 1), (2, 2), (0, 3)):
+                with contextlib.redirect_stdout(io.StringIO()) as out:
+                    queue.run(SimpleNamespace(unit=None, polish=False, limit=limit))
+                self.assertEqual(out.getvalue().count(" B  0x"), shown)
+                census = (Path(tmp) / "evidence/admission-queue.tsv").read_text()
+                self.assertIn("fn10", census)
+                self.assertIn("fn30", census)
 
     def test_banked_exact_current_dip_is_not_actionable(self):
         # NEGATIVE CONTROL: this is the defect that reopened a source-correct

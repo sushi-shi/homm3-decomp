@@ -60,8 +60,14 @@ class InventedFlagsTest(unittest.TestCase):
             self.assertTrue(getattr(parse(["diff", "f", flag]), attr))
             self.assertTrue(parse(["diff", "f", flag, "--verbose"]).verbose)
 
+    def test_summary_why_bytes_json_and_batch_combine(self):
+        args = _build_parser().parse_args(
+            ["diff", "0x4b6910", "GetTeam", "--summary", "--why-bytes", "--json"])
+        self.assertTrue(args.summary and args.why_bytes and args.json)
+        self.assertEqual(args.target, ["0x4b6910", "GetTeam"])
+
     def test_new_diff_views_are_mutually_exclusive(self):
-        for pair in (["--calls", "--relocs"], ["--summary", "--why-bytes"],
+        for pair in (["--calls", "--relocs"],
                      ["--why-bytes", "--source"], ["--blocks", "--calls"]):
             with contextlib.redirect_stderr(io.StringIO()):
                 with self.assertRaises(SystemExit):

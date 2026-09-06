@@ -274,6 +274,42 @@ def build_view(row: dict[str, str], dump: Symbols, data: bytes) -> dict[str, Any
     }
 
 
+def slice_view(view: dict[str, Any], spec: str) -> dict[str, Any]:
+    """Clip a listing, retaining original CFG labels and external edges."""
+    import copy
+    from homm3.sema._asm import parse_local_range
+    try:
+        lo, hi = parse_local_range(spec)
+        size = view["function"]["dc_size"]
+        lo, hi = lo or 0, size if hi is None else hi
+        if not 0 <= lo < hi <= size:
+            raise ValueError(f"range must lie within the 0x{size:x}-byte function")
+        if lo % 2 or hi % 2:
+            raise ValueError("SH4 instruction offsets must be even")
+    except ValueError as exc:
+        raise AsmError(f"invalid --range {spec!r}: {exc}") from exc
+    result = copy.deepcopy(view)
+    origin = view["function"]["dc_offset"]
+    start, end = origin + lo, origin + hi
+    result["range"] = {"start": lo, "end": hi, "end_exclusive": True}
+    result["block_labels"] = {str(block["start"]): f"B{i}"
+                              for i, block in enumerate(view["blocks"])}
+    rows = []
+    for block in result["blocks"]:
+        block["instructions"] = [ins for ins in block["instructions"]
+                                 if start <= ins["address"] < end]
+        if block["instructions"]:
+            rows.append(block)
+    if not rows:
+        raise AsmError("range contains no decoded instructions")
+    result["blocks"] = rows
+    result["breakpoints"] = [bp for bp in result["breakpoints"]
+                              if start <= bp["address"] < end]
+    result["lexical_scopes"] = [s for s in result["lexical_scopes"]
+                                if s["start"] < end and s["end"] > start]
+    return result
+
+
 def control_events(view: dict[str, Any], data: bytes) -> dict[int, dict[str, Any]]:
     """Return calls/conditional branches at CFG-confirmed instruction RVAs.
 
@@ -330,6 +366,8 @@ def render(view: dict[str, Any], data: bytes, symbols: dict[int, str],
     fn = view["function"]
     block_rows = view["blocks"]
     label_of = {block["start"]: f"B{index}" for index, block in enumerate(block_rows)}
+    if "block_labels" in view:
+        label_of = {int(addr): label for addr, label in view["block_labels"].items()}
     bp_at: dict[int, list[dict[str, Any]]] = {}
     for bp in view["breakpoints"]:
         bp_at.setdefault(bp["address"], []).append(bp)
@@ -342,6 +380,10 @@ def render(view: dict[str, Any], data: bytes, symbols: dict[int, str],
     print("; DREAMCAST REFERENCE — ANALYSIS OUTPUT, NOT RETAIL EVIDENCE", file=out)
     print(f"; {fn['name']}  {fn['module']}  dc {fn['dc_offset']:#x}  "
           f"{fn['dc_size']} B SH4", file=out)
+    if "range" in view:
+        span = view["range"]
+        print(f"; function-local range +0x{span['start']:x}:+0x{span['end']:x} "
+              "(end exclusive; CFG edges may leave this view)", file=out)
     print(f"; {len(view['breakpoints'])} CodeView breakpoint(s), "
           f"{len(view['lexical_scopes'])} lexical scope(s), "
           f"{len(block_rows)} inferred CFG block(s)", file=out)
@@ -385,7 +427,7 @@ def render(view: dict[str, Any], data: bytes, symbols: dict[int, str],
                 notes.append(symbols.get(target, f"= {target:#x}"))
             elif mnemonic == "jsr":
                 register = operands.lstrip("@").strip()
-                target = register_targets.get(register)
+                target = raw.get("call_target_va", register_targets.get(register))
                 if target is not None:
                     notes.append("call " + symbols.get(target, f"{target:#x}"))
             elif mnemonic == "bsr":

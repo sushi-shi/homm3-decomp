@@ -12,9 +12,9 @@ Subcommands
         receive for a command line. --verify checks against the shim log.
   il-diff <srcA> <srcB> [--flags ...] [--fn NAME]      (phase 1)
         Compile both, diff the C1XX->C2 IL at record granularity.
-  predict-inline <src> --fn CALLER [--against UNIT:FN]  (phase 3)
+  predict-inline SELECTOR [--against SELECTOR]        (phase 3)
         Per-call-site expand/call decisions with the budget trajectory.
-  why-reg <src> --fn F --against UNIT:FN                (phase 0 v1)
+  why-reg SELECTOR                                   (phase 0 v1)
         Which known knob moves a divergent register binding toward retail.
   oracle <subsystem> [--probe NAME | --all]
         Ground-truth runner: compile a probe with the real compiler, read
@@ -33,6 +33,19 @@ import argparse
 import sys
 
 from homm3.vc6 import _common
+
+
+def _solver_arguments(parser):
+    parser.add_argument("src", nargs="?", metavar="SELECTOR|SOURCE",
+                        help="retail VA/RVA, symbol, Class::method, bare name, "
+                             "or UNIT:SELECTOR; alternatively SOURCE or TU --fn SELECTOR")
+    parser.add_argument("--fn", metavar="SELECTOR",
+                        help="function selector when supplying a source file")
+    reference = parser.add_mutually_exclusive_group()
+    reference.add_argument("--against", metavar="SELECTOR",
+                           help="override the inferred retail reference")
+    reference.add_argument("--against-src", metavar="FILE",
+                           help="compile a reference source instead of using retail")
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -60,21 +73,13 @@ def _build_parser() -> argparse.ArgumentParser:
 
     pp = ss.add_parser("predict-inline", help="inline-structure divergence "
                        "(which callees retail inlines vs we do)")
-    pp.add_argument("src")
-    pp.add_argument("--fn", required=True)
-    pp.add_argument("--against", metavar="UNIT:FN")
-    pp.add_argument("--against-src", dest="against_src", metavar="FILE")
+    _solver_arguments(pp)
     pp.add_argument("--json", action="store_true")
+    pp.add_argument("--no-build", action="store_true",
+                    help="use the last built manifest object without a source/header refresh")
 
     pw = ss.add_parser("why-reg", help="which knob fixes a register binding")
-    pw.add_argument("src")
-    pw.add_argument("--fn", required=True)
-    ref = pw.add_mutually_exclusive_group(required=True)
-    ref.add_argument("--against", metavar="UNIT:FN",
-                     help="retail reference function (via sema)")
-    ref.add_argument("--against-src", metavar="FILE",
-                     help="compile this TU and use its --fn as the reference "
-                          "(hermetic self-test / demo)")
+    _solver_arguments(pw)
     pw.add_argument("--model", action="store_true",
                     help="v2: RE'd-allocator model path (predicts the ONE "
                          "creation-order edit) instead of the guided sweep")
@@ -86,13 +91,7 @@ def _build_parser() -> argparse.ArgumentParser:
 
     pb = ss.add_parser("why-branch", help="which control-flow spelling "
                        "reproduces retail's jumps")
-    pb.add_argument("src")
-    pb.add_argument("--fn", required=True)
-    bref = pb.add_mutually_exclusive_group(required=True)
-    bref.add_argument("--against", metavar="UNIT:FN",
-                      help="retail reference function (via sema)")
-    bref.add_argument("--against-src", metavar="FILE",
-                      help="compile this TU and use its --fn as the reference")
+    _solver_arguments(pb)
     pb.add_argument("--json", action="store_true")
 
     po = ss.add_parser("oracle", help="real-compiler ground-truth runner")
@@ -110,7 +109,8 @@ def _build_parser() -> argparse.ArgumentParser:
 
     pd = ss.add_parser("diagnose", help="classify a residual + route to the "
                        "right solver (register / control-flow / inliner)")
-    pd.add_argument("target", help="UNIT:FN or a mangled function name")
+    pd.add_argument("target", help="retail VA/RVA, symbol, Class::method, "
+                                  "bare name, or UNIT:SELECTOR")
     pd.add_argument("--run", action="store_true",
                     help="also run the routed solver(s) and show the edit")
     pd.add_argument("--json", action="store_true")
@@ -128,6 +128,8 @@ def _build_parser() -> argparse.ArgumentParser:
                     help="deferred campaign: diagnose admitted non-exact "
                          "functions and rank by effective MAX")
     pq.add_argument("--quiet", action="store_true")
+    pq.add_argument("--limit", type=int, default=20, metavar="N",
+                    help="maximum ranked functions to display (default 20; 0 = all)")
 
     pc = ss.add_parser("check", help="the model gates (with negative controls)")
     for g in ("argv", "il", "inline", "reg", "locator"):
@@ -154,30 +156,23 @@ _TOOLS = {
 }
 
 
+def _dispatch(argv):
+    args = _build_parser().parse_args(argv)
+    if args.cmd == "ab":
+        from homm3.vc6 import genab
+        return genab.main(args.ab_args)
+    mod_name, fn_name = _TOOLS[args.cmd]
+    mod = __import__(f"homm3.vc6.{mod_name}", fromlist=[fn_name])
+    return getattr(mod, fn_name)(args) or 0
+
+
 def main(argv=None) -> int:
-    argv = list(sys.argv[1:] if argv is None else argv)
+    from homm3.core.usage import run_logged
     import shlex
+    argv = list(sys.argv[1:] if argv is None else argv)
     cmd = shlex.join(["homm3", "vc6", *argv])
-    rc = 0
-    try:
-        args = _build_parser().parse_args(argv)
-        if args.cmd == "ab":  # genab has its own argv-style CLI
-            from homm3.vc6 import genab
-            rc = genab.main(args.ab_args)
-            _common.log_invocation(rc, cmd)
-            return rc
-        mod_name, fn_name = _TOOLS[args.cmd]
-        try:
-            mod = __import__(f"homm3.vc6.{mod_name}", fromlist=[fn_name])
-        except ImportError as e:
-            _common.die(f"'{args.cmd}' not yet implemented ({e})")
-        rc = getattr(mod, fn_name)(args) or 0
-    except SystemExit as e:
-        rc = e.code if isinstance(e.code, int) else (0 if e.code is None else 1)
-        _common.log_invocation(rc, cmd)
-        raise
-    _common.log_invocation(rc, cmd)
-    return rc
+    return run_logged(_dispatch, argv,
+                      lambda rc, **meta: _common.log_invocation(rc, cmd, **meta))
 
 
 if __name__ == "__main__":
