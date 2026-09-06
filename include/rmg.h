@@ -421,6 +421,7 @@ TPoint ClipRmgBoundaryPoint(
 
 enum ERmgConnectionConstants {
     RMG_SHIPYARD_WATER_OFFSET_COUNT = 4,
+    RMG_WATER_NONE = 0,
     RMG_WATER_ISLANDS = 2
 };
 
@@ -701,9 +702,21 @@ struct TRmgZone {
     TRmgZoneBounds bounds;           // +0x20
     TRmgMapPosition position;        // +0x30: main town
     unsigned char active;            // +0x3c
-    char opaque003d[0x3b7];
+    char opaque003d[7];
+    int counts0044[232];             // +0x44: zeroed by the zone constructor
+    // 0x53d9ae/0x53da0d load signed words; 0x53dc98 initializes 32000.
+    std::vector<short> connectionDistances; // +0x3e4: signed graph distances
     std::vector<TPoint> boundary;    // +0x3f4: clipped polygon vertices
     std::vector<TPoint> entrances;   // +0x404
+
+    // The candidate-placement filter consumes returned coordinate values;
+    // its retained connection predicate compares center distance and size.
+    // These names are provisional; the Dreamcast build has no RMG module.
+    TRmgZone(TRmgTownSlot* slot);
+    ~TRmgZone();
+    TRmgMapPosition GetLevelPosition() const;
+    void SetLevelPosition(TRmgMapPosition position);
+    unsigned char CanConnect(const TRmgZone* other) const;
 };
 
 // Partial Voronoi topology recovered from TraceZoneBoundary and its caller
@@ -717,6 +730,22 @@ struct TRmgBoundaryVertex {
     char opaque0014[8];
     TPoint position;                  // +0x1c
 };
+
+// The retained subdivision constructor and destructor own a root edge and
+// a vector of allocated edges. The coordinator inserts zone sites, computes
+// dual vertices, then looks up an edge for each site. All names are provisional.
+class TRmgVoronoi {
+public:
+    TRmgBoundaryVertex* root;                 // +0x00
+    std::vector<TRmgBoundaryVertex*> edges;  // +0x04
+
+    TRmgVoronoi();
+    ~TRmgVoronoi();
+    void AddSite(TPoint point, TRmgZone* zone);
+    TRmgBoundaryVertex* Locate(TPoint point);
+    void BuildVertices();
+};
+SIZE(TRmgVoronoi, 0x14);
 
 // The RMG progress sink is used through its third vtable slot by the zone
 // connection coordinator.  No concrete implementation is owned by rmg.cpp.
@@ -793,6 +822,13 @@ public:
     }
 
     void InitializeObjectGenerators();
+    unsigned char CanPlaceZone(TRmgZone* zone);
+    void BuildZoneBoundaries(TRmgTemplate* mapTemplate, int level);
+    void FillZoneArea(TRmgZone* zone, TRmgBoundaryVertex* first);
+    void JoinExtraZones(int originalZones, TRmgVoronoi* diagram);
+    int CountPlacedZoneConnections(TRmgZone* zone) const;
+    void FilterZonePositions(
+        TRmgZone* zone, std::vector<TRmgMapPosition>& candidates, int mapSize);
     void DrawIrregularZoneBoundary(
         TPoint from, TPoint to, int zoneIndex, int level, int roughness);
     void DrawStraightZoneBoundary(

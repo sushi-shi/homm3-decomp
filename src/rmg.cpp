@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <bitset>
 #include <ctype.h>
+#include <math.h>
 #include <set>
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,8 +20,10 @@
 #include "artifact.h"
 #include "armygrp.h"
 #include "bitset_iterator.h"
+#include "homm3_minmax.h"
 #include "rmg.h"
 #include "textresource.h"
+#include "town.h"
 
 typedef std::set<TPoint> TRmgPointSet;
 
@@ -56,6 +59,22 @@ static const int gLandRiverDeltaIndex[4] = {2, 0, 3, 1};
 
 DATA(0x006409B0)
 static const int gSnowRiverDeltaIndex[4] = {7, 5, 4, 6};
+
+// Thirty-two radial directions used by the placement and boundary passes.
+DATA(0x00682500)
+double gRmgDirectionCosines[32] = {
+    1.0, 0.9807, 0.9239, 0.8315, 0.7071, 0.5556, 0.3827, 0.1951,
+    0.0, -0.1951, -0.3827, -0.5556, -0.7071, -0.8315, -0.9239, -0.9807,
+    -1.0, -0.9807, -0.9239, -0.8315, -0.7071, -0.5556, -0.3827, -0.1951,
+    0.0, 0.1951, 0.3827, 0.5556, 0.7071, 0.8315, 0.9239, 0.9807
+};
+DATA(0x00682600)
+double gRmgDirectionSines[32] = {
+    0.0, 0.1951, 0.3827, 0.5556, 0.7071, 0.8315, 0.9239, 0.9807,
+    1.0, 0.9807, 0.9239, 0.8315, 0.7071, 0.5556, 0.3827, 0.1951,
+    0.0, -0.1951, -0.3827, -0.5556, -0.7071, -0.8315, -0.9239, -0.9807,
+    -1.0, -0.9807, -0.9239, -0.8315, -0.7071, -0.5556, -0.3827, -0.1951
+};
 
 // Four six-entry tables drive Complete's guarded-zone connection strength.
 // Their contents are retail data owned elsewhere; these address claims give
@@ -275,6 +294,96 @@ static void set_available_rmg_heroes(
         ++heroFlag;
         ++heroIndex;
     }
+}
+
+// The boundary coordinator constructs both a temporary zone and owned
+// water zones through this same retained body. The final three members are
+// vectors; 0x53d9ae/0x53da0d prove signed-short connection distances.
+// Exact: 207/207 raw bytes, including rand. Assigning slot in the body
+// preserves vector construction first; retaining the parameter avoids
+// reloading slot across rand. The shared town-selection exit is required:
+// a result initialized to -1 and assigned before break adds a stack home
+// (91.47%), while a post-loop selectedTown == 9 test adds a comparison.
+VA(0x005329E0, 0xCF) // anchor-callee 0x53e149/0x53e45c; thiscall, ret 4
+TRmgZone::TRmgZone(TRmgTownSlot* newSlot)
+{
+    slot = newSlot;
+    int available = 0;
+    for (int town = 0; town < 9; ++town) {
+        if (newSlot->allowedTowns[town])
+            ++available;
+    }
+    int selectedTown;
+    if (available) {
+        int selected = rand() % available;
+        for (selectedTown = 0; selectedTown < 9; ++selectedTown) {
+            if (newSlot->allowedTowns[selectedTown] && --selected < 0)
+                goto townSelected;
+        }
+    }
+    selectedTown = -1;
+townSelected:
+    alignment = selectedTown;
+    boundaryRoughness = newSlot->size;
+    bounds.minimumX = 32000;
+    bounds.maximumX = -32000;
+    bounds.minimumY = 32000;
+    bounds.maximumY = -32000;
+    active = 0;
+    memset(counts0044, 0, sizeof(counts0044));
+}
+
+// Three trivial member vectors account for all 118 retained destructor
+// bytes, including the three independently resolved operator-delete calls.
+VA(0x00532B50, 0x76)
+TRmgZone::~TRmgZone()
+{
+}
+
+// Both the level-occupancy pass and the bounds pass in FilterZonePositions
+// copy the whole coordinate before selecting a component. That retained
+// value-copy shape motivates this ordinary accessor; no DC name is known.
+TRmgMapPosition TRmgZone::GetLevelPosition() const
+{
+    return levelPosition;
+}
+
+// Candidate placement loads all three coordinates before writing the zone,
+// consistent with passing the coordinate value through an ordinary setter.
+void TRmgZone::SetLevelPosition(TRmgMapPosition position)
+{
+    levelPosition = position;
+}
+
+// FilterZonePositions calls this predicate at 0x53b4b7 and 0x53b5ae.
+// The two center coordinates, template sizes and map-level comparison prove
+// its role independently of the provisional name. Return value is in al.
+// Residual: otherSize and combinedSize exchange ECX/EBX (96.38%).
+// A separate branch-local minimum reproduces the value-select sequence;
+// min(otherSize, thisSize) and _cpp_min force addressable operands instead
+// (84.74/87.06%). A conditional minimum, clamping thisSize in place, or
+// extending minimumSize outside the level branch loses that sequence.
+// Swapping size initialization order, reading fields again in the minimum,
+// reversing the sum operands and giving the sum a branch-local lifetime
+// do not settle the remaining register assignment.
+VA(0x00532BD0, 0xA8) // anchor-callee 0x53b4b7/0x53b5ae; thiscall, ret 4
+unsigned char TRmgZone::CanConnect(const TRmgZone* other) const
+{
+    int dx = levelPosition.x - other->levelPosition.x;
+    int dy = levelPosition.y - other->levelPosition.y;
+    int distance = static_cast<int>(sqrt(static_cast<double>(dx * dx + dy * dy)));
+    int otherSize = other->slot->size;
+    int thisSize = slot->size;
+    int combinedSize = thisSize + otherSize;
+    if (other->levelPosition.z != levelPosition.z) {
+        if (combinedSize < distance)
+            return 0;
+        int minimumSize = thisSize;
+        if (otherSize < minimumSize)
+            minimumSize = otherSize;
+        return combinedSize - distance > minimumSize / 2;
+    }
+    return 11 * combinedSize >= 10 * distance;
 }
 
 // The generator destructor calls this body at 0x537e84, then frees the
@@ -679,6 +788,151 @@ void type_random_map_generator::InitializeObjectGenerators()
     objectGenerators.push_back(new type_witch_hut_def());
 }
 
+// Candidate generators and the boundary coordinator call this predicate.
+// Player zones placed underground require an underground town alignment;
+// same-level zones with different template IDs must keep 80% of the sum of
+// their nominal radii. The whole-position copies are retained retail evidence.
+// Residual: the subtraction/square temporaries exchange registers (98.04%).
+// Keeping the input slot before its position restores the first source group;
+// naming dy before dx restores the trailing sqrt/size sequence. A constructed
+// TPoint delta is 95.36% and changes that sequence; independent initial
+// field reads were 90.05%. No DC counterpart establishes the math boundary.
+VA(0x0053AD60, 0x113) // anchor-callee 0x53e2ea/0x53af04; thiscall, ret 4
+unsigned char type_random_map_generator::CanPlaceZone(TRmgZone* zone)
+{
+    TRmgTownSlot* slot = zone->slot;
+    TRmgMapPosition position = zone->GetLevelPosition();
+    int size = slot->size;
+    if ((slot->kind == RMG_TEMPLATE_HUMAN ||
+         slot->kind == RMG_TEMPLATE_COMPUTER) &&
+        position.z == 1 && zone->alignment != TOWN_INFERNO &&
+        zone->alignment != TOWN_NECROPOLIS && zone->alignment != TOWN_DUNGEON)
+        return 0;
+    int zoneIndex = slot->zoneIndex;
+    for (int other = 0; other < zones.size(); ++other) {
+        TRmgZone* otherZone = zones[other];
+        if (otherZone->GetLevelPosition().z != position.z ||
+            otherZone->slot->zoneIndex == zoneIndex)
+            continue;
+        TRmgMapPosition otherPosition = otherZone->GetLevelPosition();
+        int dy = otherPosition.y - position.y;
+        int dx = otherPosition.x - position.x;
+        int distance = static_cast<int>(sqrt(static_cast<double>(dx * dx + dy * dy)));
+        if (10 * distance < 8 * (otherZone->slot->size + size))
+            return 0;
+    }
+    return 1;
+}
+
+// Both connection-count passes in FilterZonePositions retain the same
+// vector-size and CanConnect calls. Keep the shared operation as one
+// ordinary helper; its source name/boundary remain retail hypotheses.
+// Including the by-value position/setter in this helper is byte-neutral,
+// as is naming a reference to the current connection. Neither restores
+// the two vector::size calls over-inlined in the first counting pass.
+// A temporary depth-0 pin on that loop condition restores those two calls
+// but expands the first zone-pointer vector::size instead (94.56%); the
+// ordinary unpinned source is the negative control. Early-continue for an
+// unplaced destination is also byte-neutral. No diagnostic pin is retained.
+int type_random_map_generator::CountPlacedZoneConnections(TRmgZone* zone) const
+{
+    int result = 0;
+    TRmgTownSlot* slot = zone->slot;
+    for (int connection = 0; connection < slot->connections.size(); ++connection) {
+        int destination = slot->connections[connection].destination->zoneIndex;
+        if (destination < zones.size() && zones[destination]->CanConnect(zone))
+            ++result;
+    }
+    return result;
+}
+
+// Called by the zone-position selector at 0x53bb38 with a generated zone,
+// its vector of 12-byte candidate coordinates and the requested map size.
+// Prefer unused levels, then maximum connections, then the smallest square
+// enclosing the existing zones plus this candidate. Complete-only code;
+// the role and call ABI are retail-proven; source names remain provisional.
+// The ordinary by-value position setter preserves three loads before the
+// stores (91.50 -> 94.35%); direct field assignment interleaves them. The
+// bounds comparison and initialization order reach 94.45%. Retail retains
+// all four connection-vector size calls; our first pass expands two.
+// Preserve the ordinary helper and STL interfaces while resolving that
+// frontier; later bounds differences are scheduling and SIB operand order.
+VA(0x0053B2F0, 0x678) // anchor-callee 0x53bb38; thiscall, ret 0xc
+void type_random_map_generator::FilterZonePositions(
+    TRmgZone* zone, std::vector<TRmgMapPosition>& candidates, int mapSize)
+{
+    int bestConnections = 0;
+    if (map.numberLevels > 1) {
+        unsigned char occupiedLevels[2] = {0, 0};
+        for (int other = 0; other < zones.size(); ++other) {
+            if (zones[other] != zone)
+                occupiedLevels[zones[other]->GetLevelPosition().z] = 1;
+        }
+        if (!occupiedLevels[0] || !occupiedLevels[1]) {
+            int candidate = candidates.size();
+            while (candidate--) {
+                if (!occupiedLevels[candidates[candidate].z])
+                    break;
+            }
+            if (candidate > 0) {
+                candidate = candidates.size();
+                while (candidate--) {
+                    if (occupiedLevels[candidates[candidate].z])
+                        candidates.erase(candidates.begin() + candidate);
+                }
+            }
+        }
+    }
+
+    for (int candidate = 0; candidate < candidates.size(); ++candidate) {
+        zone->SetLevelPosition(candidates[candidate]);
+        int connections = CountPlacedZoneConnections(zone);
+        if (connections > bestConnections)
+            bestConnections = connections;
+    }
+    for (candidate = candidates.size() - 1; candidate >= 0; --candidate) {
+        zone->SetLevelPosition(candidates[candidate]);
+        if (CountPlacedZoneConnections(zone) < bestConnections)
+            candidates.erase(candidates.begin() + candidate);
+    }
+
+    int bestSize = 32000;
+    int minimumY = 0;
+    int minimumX = 0;
+    int maximumY = 0;
+    int maximumX = 0;
+    for (int other = 0; other < zones.size(); ++other) {
+        if (zones[other] != zone) {
+            TRmgMapPosition position = zones[other]->GetLevelPosition();
+            int size = zones[other]->slot->size;
+            minimumY = min(minimumY, position.y - size);
+            minimumX = min(minimumX, position.x - size);
+            maximumY = max(maximumY, position.y + size + 1);
+            maximumX = max(maximumX, position.x + size + 1);
+        }
+    }
+    int size = zone->slot->size;
+    for (candidate = 0; candidate < candidates.size(); ++candidate) {
+        int candidateMinimumY = min(minimumY, candidates[candidate].y - size);
+        int candidateMinimumX = min(minimumX, candidates[candidate].x - size);
+        int candidateMaximumY = max(maximumY, candidates[candidate].y + size + 1);
+        int candidateMaximumX = max(maximumX, candidates[candidate].x + size + 1);
+        int candidateSize = max(mapSize, candidateMaximumY - candidateMinimumY);
+        candidateSize = max(candidateSize, candidateMaximumX - candidateMinimumX);
+        bestSize = min(bestSize, candidateSize);
+    }
+    for (candidate = candidates.size() - 1; candidate >= 0; --candidate) {
+        int candidateMinimumY = min(minimumY, candidates[candidate].y - size);
+        int candidateMinimumX = min(minimumX, candidates[candidate].x - size);
+        int candidateMaximumY = max(maximumY, candidates[candidate].y + size + 1);
+        int candidateMaximumX = max(maximumX, candidates[candidate].x + size + 1);
+        int candidateSize = max(mapSize, candidateMaximumY - candidateMinimumY);
+        candidateSize = max(candidateSize, candidateMaximumX - candidateMinimumX);
+        if (bestSize < candidateSize)
+            candidates.erase(candidates.begin() + candidate);
+    }
+}
+
 // Retail keeps a vector of pending endpoints. Splitting pushes the old
 // endpoint followed by the perturbed midpoint; completed unit edges mark
 // the clamped starting cell and advance the current point.
@@ -952,6 +1206,123 @@ TPoint ClipRmgBoundaryPoint(
             return point;
     }
     return clipped;
+}
+
+// The map-generation driver calls this once per level with its selected
+// template. Sites for existing zones seed a subdivision; radial sites add
+// water zones on the surface and unowned boundaries underground. Cleanup
+// proves one subdivision lifetime and a nested temporary slot/zone pair.
+// Retail-only source reconstruction: the original class/method names are
+// unavailable in Dreamcast. The retained callees establish their interfaces.
+// The selected zone stays live across radial inserts (83.26 -> 92.89%);
+// repeatedly indexing zones loses that evidence. Explicit coordinate copies
+// before the radial multiplications reproduce retail scheduling (96.32%).
+// A single boolean TraceZoneBoundary argument preserves its ECX-valued
+// true/false arms; separate literal calls use push-immediate instead.
+// Remaining: the temporary zone's boundary vector destructor is retained
+// where retail expands it, plus two width/height floating operand stores.
+// Splitting the maximum-coordinate guards into nested ifs is byte-neutral.
+VA(0x0053E050, 0x64D) // anchor-callee 0x549af9; thiscall, ret 8
+void type_random_map_generator::BuildZoneBoundaries(
+    TRmgTemplate* mapTemplate, int level)
+{
+    TRmgVoronoi diagram;
+    for (int zone = 0; zone < zones.size(); ++zone) {
+        if (zones[zone]->GetLevelPosition().z == level) {
+            TRmgMapPosition position = zones[zone]->GetLevelPosition();
+            diagram.AddSite(TPoint(position.x, position.y), zones[zone]);
+        }
+    }
+    int originalZones = zones.size();
+    if (level == 1 || waterContent != RMG_WATER_NONE) {
+        TRmgTownSlot testSlot;
+        testSlot.zoneIndex = -1;
+        testSlot.kind = RMG_TEMPLATE_JUNCTION;
+        testSlot.size = 0;
+        TRmgZone testZone(&testSlot);
+        TRmgZone* addedZone = 0;
+        for (int zone = 0; zone < originalZones; ++zone) {
+            TRmgZone* current = zones[zone];
+            if (current->GetLevelPosition().z != level)
+                continue;
+            int radius = current->boundaryRoughness;
+            testSlot.size = radius;
+            TRmgMapPosition position = current->GetLevelPosition();
+            for (int direction = 0; direction < 32; direction += 4) {
+                TRmgMapPosition horizontalCenter = current->GetLevelPosition();
+                double dx = radius * gRmgDirectionCosines[direction];
+                position.x = static_cast<int>(horizontalCenter.x + dx * 2);
+                TRmgMapPosition verticalCenter = current->GetLevelPosition();
+                double dy = radius * gRmgDirectionSines[direction];
+                position.y = static_cast<int>(verticalCenter.y + dy * 2);
+                if (position.x < 0 && position.x < dx)
+                    continue;
+                if (position.x >= map.mapWidth) {
+                    if (position.x >= map.mapWidth + dx)
+                        continue;
+                }
+                if (position.y < 0 && position.y < dy)
+                    continue;
+                if (position.y >= map.mapHeight) {
+                    if (position.y >= map.mapHeight + dy)
+                        continue;
+                }
+                testZone.SetLevelPosition(position);
+                if (!CanPlaceZone(&testZone))
+                    continue;
+                if (position.z == 0) {
+                    TRmgTownSlot* slot = new TRmgTownSlot;
+                    slot->zoneIndex = mapTemplate->zones.size();
+                    slot->size = radius;
+                    memset(slot->allowedMonsters, 0, sizeof(slot->allowedMonsters));
+                    memset(slot->allowedTerrain, 0, sizeof(slot->allowedTerrain));
+                    memset(slot->parameters004c, 0, sizeof(slot->parameters004c));
+                    memset(slot->parameters0068, 0, sizeof(slot->parameters0068));
+                    slot->parameters0020[0] = 0;
+                    slot->parameters0020[1] = 0;
+                    slot->parameters0020[2] = 0;
+                    slot->parameters0020[3] = 0;
+                    slot->parameters0020[4] = 0;
+                    slot->parameters0020[5] = 0;
+                    slot->parameters0020[6] = 0;
+                    slot->parameters0020[7] = 0;
+                    slot->monsterStrength = 0;
+                    slot->playerIndex = -1;
+                    memset(slot->treasure, 0, sizeof(slot->treasure));
+                    slot->treasure[0].density = 5;
+                    slot->treasure[0].maximum = 1000;
+                    slot->treasure[0].minimum = 100;
+                    slot->treasure[1].density = 1;
+                    slot->treasure[1].maximum = 6000;
+                    slot->treasure[1].minimum = 2000;
+                    slot->kind = RMG_TEMPLATE_JUNCTION;
+                    addedZone = new TRmgZone(slot);
+                    addedZone->terrain = eTerrainWater;
+                    addedZone->SetLevelPosition(position);
+                    mapTemplate->zones.push_back(slot);
+                    zones.push_back(addedZone);
+                }
+                diagram.AddSite(TPoint(position.x, position.y), addedZone);
+            }
+        }
+    }
+    diagram.BuildVertices();
+    for (zone = 0; zone < zones.size(); ++zone) {
+        if (zones[zone]->GetLevelPosition().z == level) {
+            TRmgMapPosition position = zones[zone]->GetLevelPosition();
+            TRmgBoundaryVertex* first = diagram.Locate(TPoint(position.x, position.y));
+            TraceZoneBoundary(first,
+                zone < originalZones && (waterContent != RMG_WATER_ISLANDS || level == 1));
+        }
+    }
+    for (zone = 0; zone < zones.size(); ++zone) {
+        TRmgZone* current = zones[zone];
+        if (current->GetLevelPosition().z == level) {
+            TRmgMapPosition position = current->GetLevelPosition();
+            FillZoneArea(current, diagram.Locate(TPoint(position.x, position.y)));
+        }
+    }
+    JoinExtraZones(originalZones, &diagram);
 }
 
 // Complete-only subterranean connection pass.  The caller walks paired
@@ -1375,9 +1746,17 @@ VA_COMPGEN(0x00404200, 0x209, VECTOR_INSERT, Int)
 VA_COMPGEN(0x00422F50, 0x1B1, VECTOR_INSERT, Int)
 VA_COMPGEN(0x004347A0, 0x32E, VECTOR_INSERT, TRmgMapPosition)
 
+// FilterZonePositions retains this size calculation four times. Retail
+// divides the template connection pointer span by its proven 0x1c stride.
+VA_COMPGEN(0x0054C1B0, 0x23, VECTOR_SIZE, TRmgZoneConnection)
+
 // DrawIrregularZoneBoundary retains this single-element erase. Its
 // eight-byte copy loop and ret 4 agree in all 61 raw retail bytes.
 VA_COMPGEN(0x0054CD70, 0x3D, VECTOR_ERASE, TPoint)
+
+// FilterZonePositions erases 12-byte positions through this forward copy;
+// the retained body copies three dwords and returns the end pointer.
+VA_COMPGEN(0x0054D9E0, 0x39, STD_COPY, TRmgMapPosition)
 
 // BuildRoadCostMap and CreateRiver both materialize a separate by-value
 // position immediately before this identical descending binary search.  The
