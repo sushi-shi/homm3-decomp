@@ -8954,7 +8954,7 @@ void game::ViewArmy(armyGroup& group, int iarmy, const hero* this_hero,
         window->DoModal();
         switch (gpWindowManager->dialogReturn) {
         case TViewArmyWindow::UPGRADE_ID: {
-            int cost[NUM_RESOURCES];
+            long cost[NUM_RESOURCES];
             get_upgrade_cost(creature, upgrade, numTroops, cost);
             for (int resource = 0; resource < NUM_RESOURCES; resource++)
                 gpCurrentPlayer->resources[resource] -= cost[resource];

@@ -2028,7 +2028,7 @@ game	?TransmitSaveGame@game@@QAEHHHEE@Z	82.2198	82.2198	82.2198	0xcafd0	62a5e361
 game	?TurnOffAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6fd0	fe47952c0464
 game	?TurnOnAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6f80	0d6fe6e9e2a0
 game	?ValidateVictoryLossConditions@game@@QAEXE@Z	89.6148	89.6148	89.6148	0xbf780	51847b4f5a1d
-game	?ViewArmy@game@@QAEXAAVarmyGroup@@HPBVhero@@PBVtown@@HHEE@Z	83.8710	96.9556	96.9556	0xc6c50	019c611c565c
+game	?ViewArmy@game@@QAEXAAVarmyGroup@@HPBVhero@@PBVtown@@HHEE@Z	83.8710	96.9556	96.9556	0xc6c50	495262d8376a
 game	?WaitForPlayer@game@@QAEXPADH@Z	100.0000	100.0000	100.0000	0xca840	14726064d168
 game	?_Construct@std@@YIXPAUTRumour@game@@ABU23@@Z	100.0000	100.0000	100.0000	0xd3a10	-
 game	?_Construct@std@@YIXPAUtype_creature_bank@@ABU2@@Z	100.0000	100.0000	100.0000	0xd3d30	-
@@ -2378,7 +2378,7 @@ hillfortwindow	??_GTHillFortWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xe7de0
 hillfortwindow	?DoModal@THillFortWindow@@QAEXXZ	100.0000	100.0000	100.0000	0xe7e90	180090c5146c
 hillfortwindow	?HandleClick@THillFortWindow@@QAEXAAVmessage@@@Z	100.0000	100.0000	100.0000	0xe8690	0c547b104a07
 hillfortwindow	?HillFortWindowHandler@@YIHAAVmessage@@@Z	91.9430	91.9430	91.9430	0xe8850	3c4e89e39c35
-hillfortwindow	?Recalculate@THillFortWindow@@QAEXE@Z	84.0331	84.0331	84.0331	0xe7eb0	9326a88dbbd4
+hillfortwindow	?Recalculate@THillFortWindow@@QAEXE@Z	95.2727	95.2727	95.2727	0xe7eb0	0f073219058c
 hillfortwindow	?UpgradeSlot@THillFortWindow@@QAEXHE@Z	100.0000	100.0000	100.0000	0xe8500	d06109ee5b11
 hiscore	??0CHighScoreEdit@@QAE@HHHHHPBD0W4TColor@font@@I0HHHHHH@Z	100.0000	100.0000	100.0000	0xe96a0	38be17c21ba6
 hiscore	??0THighScoreWindow@@QAE@XZ	90.7049	90.7049	90.7049	0xe9880	8e610035180e
@@ -2967,7 +2967,7 @@ philai	?AI_set_hero_bonuses@@YIXPAVhero@@@Z	100.0000	100.0000	100.0000	0x127760	
 philai	?AI_value_of_event@@YIJPBVhero@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x12bd10	38434512bbfc
 philai	?AI_value_of_event@@YIJPBVhero@@Utype_point@@AAJ@Z	97.7399	97.7399	97.7399	0x128040	5454c7121644
 philai	?AI_visit_black_market@@YIXPAVhero@@PAUTBlackMarket@@@Z	100.0000	100.0000	100.0000	0x1243f0	4e37b54da6ec
-philai	?AI_visit_hill_fort@@YIXPAVhero@@@Z	100.0000	100.0000	100.0000	0x127bb0	3a473e466bcf
+philai	?AI_visit_hill_fort@@YIXPAVhero@@@Z	100.0000	100.0000	100.0000	0x127bb0	4cf02eb55bbe
 philai	?AI_visit_university@@YIXPAVhero@@PAUtype_university@@@Z	100.0000	100.0000	100.0000	0x124ed0	bdd1bfaa3829
 philai	?AI_visit_war_factory@@YIXPAVhero@@@Z	100.0000	100.0000	100.0000	0x124fc0	f67fd8a02352
 philai	?CheckDoMain@@YIXHH@Z	100.0000	100.0000	100.0000	0x1242d0	fdfd12285243
@@ -3127,7 +3127,7 @@ recruit	?Update@recruitUnit@@QAEXEJ@Z	94.1574	96.5558	96.5558	0x1503a0	d97bc6880
 # no such helper) - a caller-shrink dose steering the /Ob2 budget, i.e. an inverse
 # numerator carrier. Reverted; max/hist reset to the last genuine value 93.6325.
 recruit	?add_creature_widgets@TRecruitWindow@@QAEXJJJW4TCreatureType@@J@Z	93.6325	93.6325	100.0000	0x14fb90	8b238d4d93cf
-recruit	?get_upgrade_cost@@YIXW4TCreatureType@@0JPAH@Z	100.0000	100.0000	100.0000	0x14e750	6382968d0edb
+recruit	?get_upgrade_cost@@YIXW4TCreatureType@@0JPAJ@Z	100.0000	100.0000	100.0000	0x14e750	097f86e6d337
 recruit	?insert@?$vector@PAVwidget@@V?$allocator@PAVwidget@@@std@@@std@@QAEXPAPAVwidget@@IABQAV3@@Z	100.0000	100.0000	100.0000	0x14d120	-
 recruit	?siege_artifact_to_creature@@YI?AW4TCreatureType@@W4TArtifact@@@Z	100.0000	100.0000	100.0000	0x150360	5ee79bb53ec7
 remote	??0CAnimatedDlg@@QAE@XZ	100.0000	100.0000	100.0000	0x154a50	9e5901052fee
@@ -4405,12 +4405,12 @@ victorylossconditions	?IsGrailTarget@VictoryConditionStruct@@QAEEPAVtown@@@Z	100
 victorylossconditions	?IsTownCaptureTarget@VictoryConditionStruct@@QAE_NPAVtown@@@Z	100.0000	100.0000	100.0000	0x1f2260	80d10b6fff3a
 victorylossconditions	?applies_to_player@VictoryConditionStruct@@QBEHJ@Z	100.0000	100.0000	100.0000	0x1f15a0	b656309f32f7
 viewarmywindow	??0TViewArmyWindow@@QAE@HHHE@Z	100.0000	100.0000	100.0000	0x1f4210	0710d2e02e92
-viewarmywindow	??0TViewArmyWindow@@QAE@PAVarmyGroup@@HPBVhero@@PBVtown@@HHHEEE@Z	90.4657	90.4657	90.4657	0x1f3b50	0b0996b17387
+viewarmywindow	??0TViewArmyWindow@@QAE@PAVarmyGroup@@HPBVhero@@PBVtown@@HHHEEE@Z	90.4657	90.4657	90.4657	0x1f3b50	27bf7597724d
 viewarmywindow	??0TViewArmyWindow@@QAE@PBVarmy@@HHE@Z	90.1633	90.8074	90.8074	0x1f3360	be00393d0380
 viewarmywindow	??1TViewArmyWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1f45e0	1ffa03988396
 viewarmywindow	??_GTViewArmyWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1f3b20	-
 viewarmywindow	?DoModal@TViewArmyWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1f47f0	55d754aa4559
-viewarmywindow	?WindowHandler@TViewArmyWindow@@UAEHPAVmessage@@@Z	99.1520	99.1520	99.1520	0x1f4850	66c9aac92fe0
+viewarmywindow	?WindowHandler@TViewArmyWindow@@UAEHPAVmessage@@@Z	99.1520	99.1520	99.1520	0x1f4850	2c9a39ac5f6b
 viewarmywindow	?_Split@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEXXZ	100.0000	100.0000	100.0000	0x4ce0	-
 viewarmywindow	?assign@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@ABV12@II@Z	100.0000	100.0000	100.0000	0x4860	-
 viewarmywindow	?convertID2HelpID@TViewArmyWindow@@QBEHH@Z	100.0000	100.0000	100.0000	0x1f46c0	b4f7672d6128
