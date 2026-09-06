@@ -703,6 +703,30 @@ commutative parity flipped by bodying SIBLING functions
 - status: cross-family evidence for C1's mechanism (different compiler)
 - probe: none (MSVC 4.2 is outside this pinned toolchain)
 
+### C10. A byte local's SIGNEDNESS decides whether it gets the recycled
+### parameter home - and the DC type record is the oracle
+`NewfullMap::readSpellScrollData` sat at 96.0056 with 26/26 blocks, 12/12
+branches, 8/8 calls and every reloc agreeing; the whole gap was one frame-home
+swap (retail `char_buffer` at the recycled `[ebp+0xb]` and `padding[3]` at
+`[ebp-0x10]`, ours reversed) plus its single consequence - a byte sitting in a
+whole dword slot lets VC6 read it `mov eax,[slot] / and eax,0xff` and then FOLD
+`x ^= (x ^ b) & 0xff` into `and dl,0 / xor`, one instruction shorter than
+retail's byte load plus literal xor/and/xor. Declaring the local `char`
+instead of `unsigned char` - the Dreamcast type record says `T_RCHAR(0070)` -
+closed the row to 100.0000 on that one word. Declaration ORDER does not reach
+it: all six orders of the three locals, with `padding` hoisted to function
+scope, are byte-flat.
+BOUND, measured the same day: this is a PER-BODY lever, not a family rule.
+`readResourceData` declares the same local `unsigned char` and is exact either
+way. And a mechanical scan of the top 260 sub-100 rows at their banked MAX -
+matching every DC `T_RCHAR`/`T_UCHAR`/`T_SHORT`/`T_USHORT` local against a
+same-named declaration in our body - found ZERO further mismatches, so the
+lever is exhausted for same-named locals and only survives where our body
+renames the DC's.
+- evidence: `src/mapcell.cpp` readSpellScrollData note; scan `build/p36-sign.py`
+- status: byte-proven, one closure
+- probe: none yet (a c*-family oracle case would need a two-Read body)
+
 ### C9. Measurement hygiene the corpus depends on (model-training caveats)
 objdiff fuzzy gives partial credit for a differing displacement (a 97%
 function can have every local mis-slotted); masked diffs hide immediates (the

@@ -2976,6 +2976,16 @@ int NewfullMap::readSignData(TAbstractFile* infile, CObject* signObject)
 // regresses to 90.0370.  There is no pragma depth that means "inline the
 // parent, call only its child" at this site, so the canonical constructor is
 // retained.
+// 2026-09-06, polish lane 36 (97.0513 -> 97.1225), the DC LOCAL-SCOPE SWEEP:
+// the Dreamcast block names ONE `char_buffer` (T_UCHAR, sp+0x12) for the three
+// flag bytes this body read into `hasCustomRecord`, `neverFlees` and
+// `noGrowth`; sharing the one local is worth the 0.07 above.  Its `disposition`
+// (T_RCHAR) is this body's `grade` and its `short_buffer` is `quantity`, both
+// already the right signedness.  Still open in that block: the DC also names a
+// single `int_buffer` where this body has `identifier`, `rawIdentifier`,
+// `quantityRead` and `artifact`, and a single `ListSize` for `customIndex` -
+// untried, and the `rawIdentifier` split above is banked at +0.58 so a collapse
+// must beat that.
 VA(0x005013b0, 0x3DC)  // order-map: calls Random 0x50b230 + readString 0x4c6010 + vector<MonsterData> grow 0x506d70; called by readObject; EH-bearing, dc 0xf0390
 int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
 {
@@ -3032,12 +3042,12 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
     monsterObject->extraInfo = (monsterObject->extraInfo & 0xfffe0fff)
         | ((armySize & 0x1f) << 12);
 
-    unsigned char hasCustomRecord;
-    if (infile->Read(&hasCustomRecord, sizeof(hasCustomRecord))
-        < sizeof(hasCustomRecord))
+    unsigned char char_buffer;
+    if (infile->Read(&char_buffer, sizeof(char_buffer))
+        < sizeof(char_buffer))
         return -1;
 
-    if (hasCustomRecord) {
+    if (char_buffer) {
         // The Artifact = ARTIFACT_NONE store is MonsterData's constructor.
         MonsterData tempMonster;
         readMapString(infile, &tempMonster.Message);
@@ -3075,20 +3085,18 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
         }
     }
 
-    unsigned char neverFlees;
-    if (infile->Read(&neverFlees, sizeof(neverFlees)) < sizeof(neverFlees))
+    if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
         return -1;
     monsterObject->extraInfo = (monsterObject->extraInfo & 0xfffdffff)
-        | ((neverFlees & 1) << 17);
+        | ((char_buffer & 1) << 17);
 
-    unsigned char noGrowth;
-    if (infile->Read(&noGrowth, sizeof(noGrowth)) < sizeof(noGrowth))
+    if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
         return -1;
     // The mask retail computes clears bits 27..30 alongside bit 18, so this
     // write lands on more than the one flag; transcribed as the object does
     // it rather than narrowed to the single bit.
     monsterObject->extraInfo = (monsterObject->extraInfo & 0x87fbffff)
-        | ((noGrowth & 1) << 18);
+        | ((char_buffer & 1) << 18);
 
     unsigned char padding[2];
     if (infile->Read(padding, sizeof(padding)) < sizeof(padding))
