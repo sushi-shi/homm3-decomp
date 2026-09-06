@@ -513,10 +513,18 @@ VA_COMPGEN(0x00515f50, 0x106, CLASS_CTOR, ctype)
 VA_COMPGEN(0x00516130, 0x21, SCALAR_DELETING_DTOR, ctype)
 VA_COMPGEN(0x00516160, 0x24, IMPLICIT_DTOR, ctype)
 
-// COMDAT pairing: locale::facet's scalar deleting destructor, agreement
-// 1.000 - the body writes vtbl_2402cc into the object before the delete,
-// which is the base-facet vtable, not any derived facet's.
-VA_COMPGEN(0x00516560, 0x23, SCALAR_DELETING_DTOR, facet)
+// CORRECTED 2026-09-06. This row was claimed as locale::facet's scalar
+// deleting destructor on the strength of its 1.000 body agreement, but the
+// body is generic - every `??_G` of a class with no members to destroy has
+// these fifteen instructions - and the ONE discriminating operand says
+// otherwise. It writes vtbl_2402cc, and 0x6402cc is a TWO-slot vtable whose
+// second entry is `_purecall`: an abstract class with a virtual destructor
+// and one pure virtual, which is exactly TObjectTypeFilter above (whose own
+// `??1` at 0x514530 writes the same vtable and is EXACT). locale::facet has
+// no pure virtual at all - its vtable 0x645700 is ONE slot wide - so the
+// real `??_Gfacet` is the copy bottomviewsubwindow.obj keeps at 0x454740,
+// and `??1facet` is 0x51a110 below.
+VA_COMPGEN(0x00516560, 0x23, SCALAR_DELETING_DTOR, TObjectTypeFilter)
 
 // COMDAT pairing: strstreambuf(const char*, int), agreement 0.957.
 VA_COMPGEN(0x005165f0, 0xE7, CLASS_CTOR, strstreambuf)
@@ -693,6 +701,12 @@ VA_COMPGEN(0x00519d70, 0x393, NUM_GET_DO_GET, char)
 // COMDAT pairing: num_get<char>::_Getifld, agreement 0.968 - the integer
 // field scanner the five integral do_get arms share.
 VA_COMPGEN(0x0051a1f0, 0x534, NUM_GET_GETIFLD, char)
+
+// COMDAT pairing: locale::facet's destructor - `mov [ecx], vtbl_245700 /
+// ret`, and 0x645700 is the one-slot vtable whose single entry is the
+// `??_Gfacet` bottomviewsubwindow.obj keeps at 0x454740. The two objects
+// win one COMDAT of the class each, which is why neither is here twice.
+VA_COMPGEN(0x0051a110, 0x7, IMPLICIT_DTOR, facet)
 
 // COMDAT pairing: istreambuf_iterator<char>'s operator*, _Inc and _Peek,
 // agreements 1.000, 1.000 and 1.000.

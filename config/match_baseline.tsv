@@ -769,6 +769,7 @@ bottomviewsubwindow	??_GTBottomViewNewTurn@@UAEPAXI@Z	100.0000	100.0000	100.0000
 bottomviewsubwindow	??_GTBottomViewResourceMessage@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x51770	-
 bottomviewsubwindow	??_GTBottomViewTown@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x52ad0	-
 bottomviewsubwindow	??_Gbad_cast@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x53ca0	-
+bottomviewsubwindow	??_Gfacet@locale@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x54740	-
 bottomviewsubwindow	??_Gios_base@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x515d0	-
 bottomviewsubwindow	??_Gostrstream@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x51720	-
 bottomviewsubwindow	??_Gstrstreambuf@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x516f0	-
@@ -2815,6 +2816,7 @@ objecttype	??1?$basic_istream@DU?$char_traits@D@std@@@std@@UAE@XZ	100.0000	100.0
 objecttype	??1?$ctype@D@std@@UAE@XZ	100.0000	100.0000	100.0000	0x116160	-
 objecttype	??1TObjectImageNameTable@@QAE@XZ	100.0000	100.0000	100.0000	0x114130	-
 objecttype	??1TObjectTypeFilter@@UAE@XZ	100.0000	100.0000	100.0000	0x114530	fe9cfddce43c
+objecttype	??1facet@locale@std@@UAE@XZ	100.0000	100.0000	100.0000	0x11a110	-
 objecttype	??1logic_error@std@@UAE@XZ	100.0000	100.0000	100.0000	0x4690	-
 objecttype	??5?$basic_istream@DU?$char_traits@D@std@@@std@@QAEAAV01@AAH@Z	100.0000	100.0000	100.0000	0x115270	-
 objecttype	??5@YIAAV?$basic_istream@DU?$char_traits@D@std@@@std@@AAV01@AAUTObjectType@@@Z	76.6378	76.6378	76.6378	0x114b80	5b651aebcf85
@@ -2828,7 +2830,7 @@ objecttype	??_G?$basic_istream@DU?$char_traits@D@std@@@std@@UAEPAXI@Z	100.0000	1
 objecttype	??_G?$ctype@D@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x116130	-
 objecttype	??_GTAnyTerrainObjectFilter@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1144c0	-
 objecttype	??_GTNativeTerrainObjectFilter@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1142c0	-
-objecttype	??_Gfacet@locale@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x116560	-
+objecttype	??_GTObjectTypeFilter@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x116560	-
 objecttype	??_Gistrstream@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x116720	-
 objecttype	??_Glogic_error@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x4660	-
 objecttype	?Accepts@TAnyTerrainObjectFilter@@UBEHPBUTObjectType@@@Z	100.0000	100.0000	100.0000	0x114220	3cbf37b18670
