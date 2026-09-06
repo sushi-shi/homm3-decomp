@@ -491,6 +491,16 @@ So do not sweep a forwarder; sweep an accessor that does work. And measure -
 the sign is per-site, never per-lever (`push_back` -> `insert` LOSES on five
 of the eleven rows it was tried on, up to -9.7).
 
+**AND THE LADDER RE-OPENS CLOSED ROWS.** Twenty rows whose residual notes had
+been closed against every lever that existed before this one were re-measured
+with it, one measurement each. Three moved, two materially:
+`game::LoadMap` **70.6990 -> 75.4768** on the six `clear()` calls in its pool
+reset, and `TCampaignBrief::TCampaignBrief` **85.7661 -> 86.6820** on five
+`push_back`s (`TCampaignBrief::CompleteCurrentMap` gained 0.16 and was left
+alone as noise). Neither row's standing note was wrong - both predate the
+lever. This is the "a local-maximum verdict expires when a new lever lands"
+rule paying out, and it is cheap: the sweep is mechanical.
+
 Two riders:
 
 * `TSingleSelectionWindow::OnBeginGame` shows the ladder has a floor. It is

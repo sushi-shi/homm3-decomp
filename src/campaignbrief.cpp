@@ -490,7 +490,7 @@ TCampaignBrief::TCampaignBrief(unsigned char newCampaign,
         preview.game_setup = gpGame->setup;
         for (int i = 0;
              i < static_cast<int>(campaign->scenarios.size()); ++i) {
-            scenarios.push_back(preview);
+            scenarios.insert(scenarios.end(), preview);
         }
     } else {
         NewSMapHeader mapHeader;
@@ -507,7 +507,7 @@ TCampaignBrief::TCampaignBrief(unsigned char newCampaign,
             }
             static_cast<NewSMapHeader&>(preview) = gpGame->mapHeader;
             preview.game_setup = gpGame->setup;
-            scenarios.push_back(preview);
+            scenarios.insert(scenarios.end(), preview);
         }
     }
 
@@ -628,7 +628,7 @@ TCampaignBrief::TCampaignBrief(unsigned char newCampaign,
         481, 278, 277, 108,
         DATA_COMPGEN(0x0065f2f8, campaignBriefSmallFont, "smalfont.fnt"),
         font::WHITE, slider::BLUE);
-    Widgets.push_back(scroller);
+    Widgets.insert(Widgets.end(), scroller);
 
     Widgets.push_back(new iconWidget(
         735, 26, 29, 23, WHICHMAP_ID,
@@ -668,7 +668,7 @@ TCampaignBrief::TCampaignBrief(unsigned char newCampaign,
         // ordinary depth and depth 1 both produce 73.58% / 216 blocks; pinning
         // only this site leaves 202 blocks / 80.97%, versus 185 in retail.
 #pragma inline_depth(0)
-        Widgets.push_back(w);
+        Widgets.insert(Widgets.end(), w);
 #pragma inline_depth()
 
         w = new iconWidget(
@@ -684,7 +684,7 @@ TCampaignBrief::TCampaignBrief(unsigned char newCampaign,
         // 81.38%; both controls together give the current 187-block / 85.72%
         // checkpoint while the natural source-state threshold is recovered.
 #pragma inline_depth(0)
-        Widgets.push_back(w);
+        Widgets.insert(Widgets.end(), w);
 #pragma inline_depth()
     }
 
