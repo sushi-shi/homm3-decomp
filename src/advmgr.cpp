@@ -5421,10 +5421,10 @@ void advManager::DrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                 AdvFullMapObjectsView* mapObjects =
                     static_cast<AdvFullMapObjectsView*>(
                         static_cast<void*>(fullMap));
-                CObjectType* objType = &mapObjects->objectTypes[
-                    mapObjects->objects[objCell->objectIndex].typeIndex];
-                CSprite* sprite = mapObjects->sprites[
-                    mapObjects->objects[objCell->objectIndex].typeIndex];
+                CObject* Obj = &mapObjects->objects[objCell->objectIndex];
+                CObjectType* objType =
+                    &mapObjects->objectTypes[Obj->typeIndex];
+                CSprite* sprite = mapObjects->sprites[Obj->typeIndex];
                 // THE OFFSETS ARE RE-DERIVED PER DRAW ARM, not hoisted
                 // (86.3772 -> 87.5901, 2026-08-19). Retail recomputes
                 // `movsx ecx,dl / sar ecx,4` and then `shl dl,4 / movsx /
