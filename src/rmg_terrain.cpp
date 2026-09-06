@@ -296,19 +296,27 @@ void TRmgTerrainPainter::SetTile(
 // the other rules recheck every matching neighbour. The rectangle painter
 // calls this body at 0x5b4a2d; RepairTerrainPoint and Finish share it.
 // Names are provisional: this Complete-only code has no Dreamcast body.
-// Residual (95.3146%): GetPackedCell expands at the first eight-neighbour
-// terrain read (retail 0x5b4e55) and the final rule test (0x5b509e). The
-// inner primary-set erase also expands the three-argument distance wrapper
-// to its four-argument overload (0x5b4f7f). The frame is 0x54 versus 0x50;
-// the retained pre-translation x copy at 0x5b4e3f is still missing.
+// Residual (97.0506%): GetPackedCell expands at the first eight-neighbour
+// terrain read (retail 0x5b4e55). The inner primary-set erase also expands
+// the three-argument distance wrapper to its four-argument overload
+// (0x5b4f7f). The frame is 0x54 versus 0x50; the retained pre-translation
+// x copy at 0x5b4e3f is still missing. Constructing the translation's initial
+// value from its coordinates restores the final GetPackedCell call at
+// 0x5b509e; implicit whole-point copying leaves 95.3146% and expands it.
 // Flattening SetTile leaves 78.4213%; flattening frame selection leaves
 // 90.9367% with the named frame, or 92.2405% with direct tile.frame assignment
 // but the wrong entry load schedule. Reusing one nearby point across all
 // branches gives 91.1519% after both shared helpers are present.
-// An explicit grid copy constructor introduces a retained copy call absent
-// from retail (91.8861%). Free by-value grid translation changes the direction
-// loop registers and still loses the original-x copy (91.2242%). Neither
-// control establishes a replacement for the current translation interface.
+// An explicit grid copy constructor retains a copy call absent from retail
+// (91.8861%). Value offset arguments and direct sum construction change the
+// direction-loop loads; copy assignment of the origin leaves 93.5063%.
+// Tile-only scopes, separate nearby assignment, early loop guards, named
+// terrain/index/coordinate values, and a free translation with reference
+// operands do not improve the constructor-based result. A tile constructor
+// changes later call boundaries (85.7667%); a by-value SetTile argument adds
+// an extra entry copy (95.7884%). A nested packed-cell writer is retained
+// where retail expands the field stores (81.9566%). The recovered neighbour
+// queue body below leaves this caller unchanged. No inline controls are used.
 VA(0x005B4B20, 0x5CB) // anchor-callee 0x5b4960, 0x5b5440; thiscall, ret 4
 void TRmgTerrainPainter::PaintPoint(const TRmgGridPoint& point)
 {
@@ -382,14 +390,62 @@ void TRmgTerrainPainter::PaintPoint(const TRmgGridPoint& point)
         QueueOtherTerrainNeighbours(point);
 }
 
-#if 0 // @carcass - retained boundary called by PaintPoint
-// Cardinal neighbours of other terrain enter the secondary repair set.
-// Diagonals enter only when their rule forbids separated neighbours.
+// The first differing vertical neighbour and first differing horizontal
+// neighbour enter the secondary set. The four diagonals additionally require
+// a terrain rule that forbids separated neighbours. North/south and west/east
+// are alternative arms: retail 0x5b5159 and 0x5b521f skip the opposite arm.
+// The cardinal probes construct a fresh point for insertion; the diagonal
+// probes retain their point and terrain value for the rule test and insertion.
+// Residual (63.6299%): the first three insert-result pair constructors
+// expand here but retail retains 0x51b150. The northwest and northeast
+// GetPackedCell reads over-inline; the final southeast InitializePackedCell
+// remains a call where retail expands the adapter read and cache fill.
 VA(0x005B50F0, 0x34E) // anchor-callee 0x5b4c72, 0x5b50dd; thiscall, ret 4
 void TRmgTerrainPainter::QueueOtherTerrainNeighbours(const TRmgGridPoint& point)
 {
-} // @stub
-#endif
+    if (point.y > 0
+        && GetTerrain(TRmgGridPoint(point.x, point.y - 1)) != paintTerrain) {
+        secondaryPoints.insert(TRmgGridPoint(point.x, point.y - 1));
+    } else if (point.y < height - 1
+        && GetTerrain(TRmgGridPoint(point.x, point.y + 1)) != paintTerrain) {
+        secondaryPoints.insert(TRmgGridPoint(point.x, point.y + 1));
+    }
+    if (point.x > 0
+        && GetTerrain(TRmgGridPoint(point.x - 1, point.y)) != paintTerrain) {
+        secondaryPoints.insert(TRmgGridPoint(point.x - 1, point.y));
+    } else if (point.x < width - 1
+        && GetTerrain(TRmgGridPoint(point.x + 1, point.y)) != paintTerrain) {
+        secondaryPoints.insert(TRmgGridPoint(point.x + 1, point.y));
+    }
+    if (point.x > 0 && point.y > 0) {
+        TRmgGridPoint nearby(point.x - 1, point.y - 1);
+        int terrain = GetTerrain(nearby);
+        if (terrain != paintTerrain
+            && !gRmgTerrainRules[terrain]->allowsSeparatedNeighbours)
+            secondaryPoints.insert(nearby);
+    }
+    if (point.x < width - 1 && point.y > 0) {
+        TRmgGridPoint nearby(point.x + 1, point.y - 1);
+        int terrain = GetTerrain(nearby);
+        if (terrain != paintTerrain
+            && !gRmgTerrainRules[terrain]->allowsSeparatedNeighbours)
+            secondaryPoints.insert(nearby);
+    }
+    if (point.x > 0 && point.y < height - 1) {
+        TRmgGridPoint nearby(point.x - 1, point.y + 1);
+        int terrain = GetTerrain(nearby);
+        if (terrain != paintTerrain
+            && !gRmgTerrainRules[terrain]->allowsSeparatedNeighbours)
+            secondaryPoints.insert(nearby);
+    }
+    if (point.x < width - 1 && point.y < height - 1) {
+        TRmgGridPoint nearby(point.x + 1, point.y + 1);
+        int terrain = GetTerrain(nearby);
+        if (terrain != paintTerrain
+            && !gRmgTerrainRules[terrain]->allowsSeparatedNeighbours)
+            secondaryPoints.insert(nearby);
+    }
+}
 
 // Own-terrain checks share the predicates used with the selected paint
 // terrain. Retail retains the nested predicate in the former and expands

@@ -426,7 +426,10 @@ struct TRmgGridPoint {
     }
     TRmgGridPoint operator+(const TPoint& offset) const
     {
-        TRmgGridPoint result = *this;
+        // Use the retained coordinate constructor for the translated value.
+        // In PaintPoint this preserves the final GetPackedCell call at
+        // 0x5b509e; implicit whole-point copying expands it instead.
+        TRmgGridPoint result(x, y);
         return result += offset;
     }
 };

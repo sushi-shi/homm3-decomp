@@ -899,6 +899,27 @@ function. No inline keyword, pragma, or unused operation is added. Recovering
 one common operation can expose another missing boundary in a different
 caller; preserve the stronger interface while checking that collateral.
 
+### Coordinate construction affects later nested calls
+
+The grid translation used by `PaintPoint` can initialize its working value
+with the retained two-reference coordinate constructor before applying the
+offset. This leaves the arithmetic expansion unchanged but restores the final
+`GetPackedCell` call at retail 0x5b509e, raising the caller from 95.3146% to
+97.0506%. The first neighbour read still expands `GetPackedCell`, and the
+inner set erase still expands the three-argument distance wrapper. Its frame
+and original-x temporary remain different. This supports the constructor
+boundary, without establishing original local names or a free/member addition
+interface: a free addition taking both operands by reference is byte-neutral.
+
+Named coordinate values, named cache indices, tighter tile scopes, separate
+nearby assignment, and early-continue loop guards are also byte-neutral. An
+explicit grid copy constructor instead introduces a retained call absent from
+retail. Giving the shared tile writer a value argument adds an entry copy;
+adding an aggregate packed-cell writer retains that method where retail has
+field stores. Neither is evidence for replacing the existing writer interface.
+Recovering the retained neighbour-queue body is neutral for `PaintPoint`, so
+its former declaration-only state does not explain these remaining decisions.
+
 ## 7. Using it
 
 ```sh

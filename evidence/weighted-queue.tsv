@@ -26,7 +26,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x0054b8c0	901		0.0	0.0	901.0	seg_0014	game_1338e0_sub01_14b8c0	unscored
 0x00549930	891		0.0	0.0	891.0	seg_0014	game_14bf60_sub01_149930	unscored
 0x0053ae80	874		0.0	0.0	874.0	seg_0013	game_13b970_sub00_13ae80	unscored
-0x005b50f0	846		0.0	0.0	846.0	rmg_terrain	TRmgTerrainPainter_QueueOtherTerrainNeighbours	unscored
 0x005fd790	840		0.0	0.0	840.0	seg_001f	game_13e050_sub05_1fd790	unscored
 0x0053bcb0	827		0.0	0.0	827.0	seg_0013	game_149930_sub02_13bcb0	unscored
 0x0053e6a0	823		0.0	0.0	823.0	seg_0013	game_149930_sub04_13e6a0	unscored
@@ -395,6 +394,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x004bcda0	3778	60.554672	92.4127	92.4127	1490.2444918400001	game	?Load@game@@QAEHPAVTAbstractFile@@@Z	non-exact
 0x00506080	468	61.07879	62.3455	62.3455	182.15126280000004	mapcell	??0CObjectType@@QAE@PAUTObjectType@@@Z	non-exact
 0x005a7080	666	62.495193	93.4375	93.4375	249.78201461999998	spells	?SummonElemental@combatManager@@QAEXHW4TCreatureType@@HH@Z	non-exact
+0x005b50f0	846	63.629852	63.6299	63.6299	307.69145208000003	rmg_terrain	?QueueOtherTerrainNeighbours@TRmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	non-exact
 0x00526d40	915	64.31193	64.3119	64.3119	326.54584049999994	philai	??0type_spellvalue@@QAE@PBVhero@@@Z	non-exact
 0x00437a00	1786	66.42922	100.0	100.0	599.5741308	ai_tactical	??0army@@QAE@ABV0@@Z	non-exact
 0x0048a310	2846	66.44606	66.4461	79.2531	954.9451323999998	customcampaign	?Load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	non-exact
@@ -762,7 +762,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x004e7eb0	1613	95.27273	95.2727	95.2727	76.25086510000008	hillfortwindow	?Recalculate@THillFortWindow@@QAEXE@Z	non-exact
 0x00595420	531	95.27612	95.2761	95.2761	25.083802799999955	singleselectionwindow	?_Unguarded_partition@std@@YIPAUGameSelectionHeadersStruct@@PAU2@0U2@UTSortMapsBySize@@@Z	non-exact
 0x0043bf20	281	95.27778	95.2778	95.2778	13.269438199999966	ai_tactical	?set_melee_enemies@type_AI_spellcaster@@QAEXXZ	non-exact
-0x005b4b20	1483	95.314644	95.3146	95.3146	69.48382947999994	rmg_terrain	?PaintPoint@TRmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	non-exact
 0x00481900	449	95.319145	95.3191	95.3191	21.01703894999998	cursor	?CheckAdjacentMon@advManager@@QAEXPAH@Z	non-exact
 0x004ff6b0	1333	95.360535	95.3605	95.3605	61.84406844999997	mapcell	?readBlackBox@NewfullMap@@QAEHPAVTAbstractFile@@PAVBlackBoxData@@H@Z	non-exact
 0x004ed650	1256	95.38012	95.3801	95.3801	58.02569279999998	kb	?EarlySetup@@YIHXZ	non-exact
@@ -829,6 +828,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00418620	1508	96.90312	96.9031	96.9031	46.700950400000025	advmgr	?GetSoundId@advManager@@QAE?AW4e_looping_sound_id@@HHH@Z	non-exact
 0x00403c40	120	96.95122	100.0	100.0	3.6585359999999945	adventuremapwindow	?SetElevationToggleImage@TAdventureMapWindow@@QAEEH@Z	non-exact
 0x0040b150	8860	96.95354	96.9535	96.9535	269.9163559999996	advmgr	?SetRolloverText@advManager@@QAEXPAVNewmapCell@@HH@Z	non-exact
+0x005b4b20	1483	97.05064	97.0506	97.0506	43.739008800000015	rmg_terrain	?PaintPoint@TRmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	non-exact
 0x00589fa0	729	97.06278	97.0628	97.0628	21.41233379999997	singleselectionwindow	?OnNewPlayerMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	non-exact
 0x00557af0	520	97.093025	97.093	97.093	15.116270000000004	remote	?CheckForWarning@CTurnDuration@@QAEXXZ	non-exact
 0x0043aca0	686	97.09956	97.0996	97.0996	19.89701840000003	ai_tactical	?consider_resurrect@type_AI_spellcaster@@QAEXPAUtype_spell_choice@@@Z	non-exact
