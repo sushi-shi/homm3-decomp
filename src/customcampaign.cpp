@@ -3061,12 +3061,13 @@ static short ReadCampaignWord(TAbstractFile* infile)
 //      `?assign@...@QAEAAV12@PBDI@Z` exactly where retail does (0x48a698),
 //      with the same inline `repne scasb` strlen in front of it. Cost -0.75
 //      at 59.0415, -0.31 at 60.5021.
-//   3. `days` and `score` read into a block-scoped temporary and then
-//      assigned, instead of `infile->Read(&mapScores[i].days, ...)` straight
-//      into the member. Retail reads both into stack temps and copies
-//      ([ebp-0x38] at 0x48a939, [ebp-0x30] at 0x48a952) - the shape a
-//      dword-returning reader beside ReadCampaignByte/Word would give, which
-//      this lane may not add. Cost -0.23 at 60.5021.
+//   3. LANDED 2026-09-06 at 62.2807 (polish lane 46): `days` and `score`
+//      read into a block-scoped temporary and then assigned, instead of
+//      `infile->Read(&scenario.days, ...)` straight into the member. Retail
+//      reads both into stack temps and copies ([ebp-0x38] at 0x48a939,
+//      [ebp-0x30] at 0x48a952). Cost -0.23 at 60.5021, +2.05 at 62.2807 -
+//      the first of the four to flip, and it flipped the moment the
+//      `scenario` reference put the loop on retail's addressing.
 // The 4-byte frame surplus (our 0x6b80 against retail's 0x6b7c) is the
 // `int artifactId` the memcpy-into-enum idiom needs, because TArtifact is an
 // enum and the tree's cast floor is zero; retail stores the sign-extended
@@ -3197,8 +3198,12 @@ void SCampaign::Load(TAbstractFile* infile, int saveVersion)
     for (int i = 0; i < count; ++i) {
         CampaignScenarioInfo& scenario = mapScores[i];
         scenario.completed = ReadCampaignByte(infile) != 0;
-        infile->Read(&scenario.days, sizeof(scenario.days));
-        infile->Read(&scenario.score, sizeof(scenario.score));
+        int days;
+        infile->Read(&days, sizeof(days));
+        scenario.days = days;
+        int score;
+        infile->Read(&score, sizeof(score));
+        scenario.score = score;
 
         scenario.complete_order =
             static_cast<signed char>(ReadCampaignByte(infile));
