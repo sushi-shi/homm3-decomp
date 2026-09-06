@@ -2716,6 +2716,10 @@ void type_random_map_generator::resetMovementCosts()
 // The terrain painter's default-then-assigned grid lifetime does not transfer
 // to the river's start/drawing arguments: separate controls grow the frame to
 // 0xc0, and applying both reaches 86.41% with a non-retail 0xc4 frame.
+// Boolean snow/ownership fields and moving the buffer store into the view's
+// initializer are byte-flat, as is consuming the predecessor assignment result.
+// A grid point built directly from the predecessor instead repeats coordinate
+// loads before lookup (84.75%); it does not recover the retail painting loop.
 VA(0x00548DF0, 0x99F)  // water-wheel caller + river-delta object; retail-only
 void type_random_map_generator::createRiver(TRmgMapPosition source)
 {

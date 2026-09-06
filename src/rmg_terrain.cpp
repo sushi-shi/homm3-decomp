@@ -250,6 +250,9 @@ int __fastcall SelectTerrainTransition(
 // operands and zero-initializing the local size are byte-neutral. Value/reference
 // dimension queries and a shorter size scope are also flat. The retained brush
 // constructor calls this ordinary body at 0x5b7297.
+// Signed dimension fields, reversed dimension stores, a named area product,
+// and moving the packed-cell flag initialization into its ctor body are flat.
+// Copy-initializing the empty size temporary retains the wrong size call (92.04%).
 VA(0x005B45F0, 0x26D) // anchor-callee 0x5b7297; retail-only
 TRmgTerrainPainter::TRmgTerrainPainter(
     TRmgMapInterface* newAdapter, int terrain, int strength)
