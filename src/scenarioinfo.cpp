@@ -206,8 +206,8 @@ CScenarioInfoDlg::CScenarioInfoDlg()
             continue;
 
         hero* startingHero = gpGame->GetHero(gpGame->setup.startingHero[i]);
-        CScenarioPlayerInfoWidget* row =
-            new CScenarioPlayerInfoWidget(TownPix);
+        CScenarioPlayerInfoWidget* row = new CScenarioPlayerInfoWidget(
+            TownPix, i + SCENARIO_INFO_PLAYER_ROW_FIRST_ID);
         row->panel = Panels[i];
         row->flag = Flags[i];
         row->townType = gpGame->setup.alignment[i];
@@ -230,6 +230,14 @@ CScenarioInfoDlg::CScenarioInfoDlg()
         Widgets.push_back(new CHotspotWidget(325, y, 48, 32, 378 + i));
     }
 
+    // 2026-09-06: the row constructor's `id = 390 + i` store is byte-proven
+    // (retail 0x5680ec `mov word ptr [edi+0x10], dx` after `add edx,0x186`,
+    // inside the new-expression's succeeded arm) and ProcessRightSelect
+    // fetches the row straight back through GetWidget(390 + playerPosition).
+    // Adding it reproduces that four-instruction block exactly and moves the
+    // frame 0xa5c -> 0xa60 toward retail's 0xa78, at a 96.3650 -> 96.2262
+    // scheduling knock-on further down; the store is retail evidence, so it
+    // stays and the banked MAX records the earlier peak.
     // Residual (96.36%): retail forms all three of these addresses from ONE
     // gpGame load at the mapName statement - `lea edi,[eax+0x1f86c]` (this
     // reference), `lea edx,[eax+0x1f89c]` (victoryCondition) and
@@ -491,14 +499,130 @@ void CScenarioInfoDlg::SetDifficultyHiLite()
     BroadcastMessage(&msg);
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
 // E:\gamedcs\scenarioinfo.cpp:538
-DC_ONLY(0x12ac28, 0x368)
+// The last body of scenarioinfo.obj: the carve's 0x1699c0 row is followed
+// only by the two cinit initializers 0x169ce0/0x169d00, and it sits directly
+// after UpdateAllyEnemyFlags exactly as the Dreamcast roster orders them
+// (dc 0x12ab20 -> 0x12ac28). Its three dialog classes are the three whose
+// destructors DC attributes to THIS compiland at scenarioinfo.cpp:657.
+// The 26-entry jump table at 0x569ca0 (byte selector at 0x569cb4) fixes the
+// whole id domain: 362..369 hero, 370..377 town, 378..385 bonus, 386
+// unhandled, 387 team.
+VA(0x005699C0, 0x320)  // linkorder tail + CHeroDlg/CTownDlg/CBonusDlg/CTeamAlignmentDlg construction, dc 0x12ac28
 unsigned char CScenarioInfoDlg::ProcessRightSelect(int id)
 {
-    // @stub
+    switch (id) {
+    case SCENARIO_INFO_TEAM_ID: {
+        CTeamAlignmentDlg dlg(0);
+        dlg.CreateWin();
+        dlg.DoModal(0);
+        return 1;
+    }
+
+    case SCENARIO_INFO_TOWN_FIRST_ID:
+    case SCENARIO_INFO_TOWN_FIRST_ID + 1:
+    case SCENARIO_INFO_TOWN_FIRST_ID + 2:
+    case SCENARIO_INFO_TOWN_FIRST_ID + 3:
+    case SCENARIO_INFO_TOWN_FIRST_ID + 4:
+    case SCENARIO_INFO_TOWN_FIRST_ID + 5:
+    case SCENARIO_INFO_TOWN_FIRST_ID + 6:
+    case SCENARIO_INFO_TOWN_FIRST_ID + 7: {
+        int townType =
+            gpGame->setup.alignment[id - SCENARIO_INFO_TOWN_FIRST_ID];
+        if (townType != -1) {
+            CTownDlg dlg(0);
+            dlg.CreateWin(
+                TownPix, townType * 2 + 2,
+                static_cast<TTownType>(townType) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
+            dlg.DoModal(0);
+        }
+        return 1;
+    }
+
+    case SCENARIO_INFO_HERO_FIRST_ID:
+    case SCENARIO_INFO_HERO_FIRST_ID + 1:
+    case SCENARIO_INFO_HERO_FIRST_ID + 2:
+    case SCENARIO_INFO_HERO_FIRST_ID + 3:
+    case SCENARIO_INFO_HERO_FIRST_ID + 4:
+    case SCENARIO_INFO_HERO_FIRST_ID + 5:
+    case SCENARIO_INFO_HERO_FIRST_ID + 6:
+    case SCENARIO_INFO_HERO_FIRST_ID + 7: {
+        int playerPosition = id - SCENARIO_INFO_HERO_FIRST_ID;
+        int heroId = gpGame->setup.startingHero[playerPosition];
+        if (heroId != -1) {
+            CScenarioPlayerInfoWidget* row =
+                static_cast<CScenarioPlayerInfoWidget*>(GetWidget(
+                    playerPosition + SCENARIO_INFO_PLAYER_ROW_FIRST_ID));
+            hero* startingHero = gpGame->GetHero(heroId);
+            CHeroDlg dlg(0);
+            dlg.CreateWin(row->heroPortrait, startingHero->name,
+                          heroSpecificAbility, heroId,
+                          startingHero->GetSpecificAbilityTextShort(),
+                          startingHero->HeroFn_004D8F70());
+            dlg.DoModal(0);
+        }
+        return 1;
+    }
+
+    case SCENARIO_INFO_BONUS_FIRST_ID:
+    case SCENARIO_INFO_BONUS_FIRST_ID + 1:
+    case SCENARIO_INFO_BONUS_FIRST_ID + 2:
+    case SCENARIO_INFO_BONUS_FIRST_ID + 3:
+    case SCENARIO_INFO_BONUS_FIRST_ID + 4:
+    case SCENARIO_INFO_BONUS_FIRST_ID + 5:
+    case SCENARIO_INFO_BONUS_FIRST_ID + 6:
+    case SCENARIO_INFO_BONUS_FIRST_ID + 7: {
+        int playerPosition = id - SCENARIO_INFO_BONUS_FIRST_ID;
+        CBonusDlg dlg(0);
+        int frame = 9;
+        const char* title =
+            DATA_COMPGEN(0x00691210, adventureRolloverEmptyText, "");
+        const char* botTitle =
+            DATA_COMPGEN(0x00691210, adventureRolloverEmptyText, "");
+        const char* description =
+            DATA_COMPGEN(0x00691210, adventureRolloverEmptyText, "");
+
+        switch (gpGame->setup.startingBonus[playerPosition]) {
+        case NEW_MAP_BONUS_ARTIFACT:
+            frame = 9;
+            title = gpGeneralText->GetText(84);
+            description = gpGeneralText->GetText(91);
+            break;
+        case NEW_MAP_BONUS_GOLD:
+            frame = 8;
+            botTitle = gpGeneralText->GetText(88);
+            title = gpGeneralText->GetText(85);
+            description = gpGeneralText->GetText(93);
+            break;
+        case NEW_MAP_BONUS_RESOURCE:
+            // Conflux shares Inferno's icon frame exactly as it shares
+            // Inferno's text row in GetStartingResourceName (0x576e00).
+            frame = TOWN_INFERNO;
+            if (gpGame->setup.alignment[playerPosition] != TOWN_CONFLUX)
+                frame = gpGame->setup.alignment[playerPosition];
+            title = gpGeneralText->GetText(86);
+            botTitle = GetStartingResourceName(
+                gpGame->setup.alignment[playerPosition]);
+            description = GetStartingResourceDescription(
+                gpGame->setup.alignment[playerPosition]);
+            break;
+        case NEW_MAP_BONUS_RANDOM:
+            frame = 10;
+            title = gpGeneralText->GetText(87);
+            description = gpGeneralText->GetText(95);
+            break;
+        }
+
+        dlg.CreateWin(title, bonusSprite, frame, botTitle, description);
+        dlg.DoModal(0);
+        return 1;
+    }
+    }
+
+    return CHeroWindowEx::ProcessRightSelect(id);
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\scenarioinfo.cpp:657
 DC_ONLY(0x12b038, 0x18)
