@@ -159,7 +159,7 @@ advmgr	?UpdBottomViewTown@advManager@@QAEEE@Z	100.0000	100.0000	100.0000	0x164f0
 advmgr	?UpdateRadar@advManager@@QAEXEEEEE@Z	100.0000	100.0000	100.0000	0x13790	e31ae2610a4b
 advmgr	?UpdateRadar@advManager@@QAEXUtype_point@@EEEEE@Z	91.2477	91.2477	91.2477	0x12c40	73f68856deb9
 advmgr	?UpdateScreen@advManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0xf270	d8787382a606
-advmgr	?ViewPuzzle@advManager@@QAEXXZ	85.6339	85.6339	85.6339	0x1a7f0	3ab1ccdbe138
+advmgr	?ViewPuzzle@advManager@@QAEXXZ	85.6339	85.6339	85.6339	0x1a7f0	bfd52967246e
 advmgr	?WindowHandler@CAdvPopup@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1b1c0	9bc2420b5496
 advmgr	?_Xran@?$bitset@$0DA@@std@@ABEXXZ	100.0000	100.0000	100.0000	0x1b410	-
 advmgr	?append@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@ABV12@II@Z	100.0000	100.0000	100.0000	0x1b250	-
