@@ -1591,20 +1591,48 @@ void type_random_map_generator::BuildRoadCostMap(TRmgMapPosition position)
 // final test on the preceding tile and can skip painting a found river.
 // The saved position is reused at +0x53e before the mouth temporarily replaces
 // nextPosition; the delta-direction scan explicitly stops at four directions.
-// Residual: the seed inserts, worklist erases and bitset range failure still
-// choose different inline depths.  Retain these source/CFG corrections through
-// score dips.  A combined cost/predecessor setter and by-value position
-// assignment do not reproduce the reset's constant-cost and copy sequence.
+// The neighbour scan compares a strength-reduced direction-table address
+// with signed JL at +0x491: its source induction variable is the integer
+// direction (0, 2, 4, 6), not a pointer. The pointer loop lowers this to JB
+// and scores 40.29%; restoring the signed index reaches 65.44%. Keeping the
+// canonical coordinate addition also preserves the returned temporary;
+// spelling its component sums directly scores 64.38%.
+// Indexed landPage access keeps _Xran out of line and removes the extra
+// 0x24-byte exception frame (68.45%); direct test() leaves it expanded.
+// The three seed predecessors copy one explicit invalid position, retaining
+// its z home across the first two inserts as retail does (71.86%). Keeping
+// the invalid x/y/z writes directly on each tile instead leaves 68.45%.
+// Scope the initial reset position separately from the worklist position:
+// its out-of-line constructor receives its address. Ending that lifetime
+// lets VC6 remove the relaxation setter's redundant predecessor snapshot,
+// preserve the queue insertion's distinct next-position copy, and recover
+// retail's 0xbc-byte frame (71.47%, with 71.86% banked). A separate but
+// unscoped reset position leaves a 0xc8-byte frame and scores 71.31%.
+// Residual: some seed inserts, worklist erases and vector destruction still
+// expand beyond retail. Direct erase() calls expand even further (61.45%
+// before the seed-copy correction). An explicit predecessor copy and const
+// by-value parameter are byte-flat. A const-ref
+// setter changes the shared road helper's proved by-value boundary and is
+// rejected; a combined reset/cost setter and by-value position assignment
+// also fail the reset's constant-cost and copy sequence.
 VA(0x00548DF0, 0x99F)  // water-wheel caller + river-delta object; retail-only
 void type_random_map_generator::CreateRiver(TRmgMapPosition source)
 {
-    TRmgMapPosition position(-1, -1, -1);
-    TRmgMapItem* mapItem = map.GetMapItem(0, 0);
-    int mapItemCount = map.mapWidth * map.mapHeight * map.numberLevels;
-    while (mapItemCount--) {
-        mapItem->ResetMovement(position);
-        ++mapItem;
+    {
+        TRmgMapPosition resetPosition(-1, -1, -1);
+        TRmgMapItem* mapItem = map.GetMapItem(0, 0);
+        int mapItemCount = map.mapWidth * map.mapHeight * map.numberLevels;
+        while (mapItemCount--) {
+            mapItem->ResetMovement(resetPosition);
+            ++mapItem;
+        }
     }
+
+    TRmgMapItem* mapItem;
+    TRmgMapPosition emptyPosition;
+    emptyPosition.x = -1;
+    emptyPosition.y = -1;
+    emptyPosition.z = -1;
 
     std::vector<TRmgMapPosition> openPositions;
     std::vector<int> openCosts;
@@ -1613,9 +1641,7 @@ void type_random_map_generator::CreateRiver(TRmgMapPosition source)
     openCosts.push_back(0);
     mapItem = map.GetMapItem(source);
     mapItem->movement.cost = 0;
-    mapItem->previousTile.x = -1;
-    mapItem->previousTile.y = -1;
-    mapItem->previousTile.z = -1;
+    mapItem->previousTile = emptyPosition;
 
     unsigned char sourceIsSnow;
     int riverType;
@@ -1632,19 +1658,16 @@ void type_random_map_generator::CreateRiver(TRmgMapPosition source)
     openCosts.push_back(0);
     mapItem = map.GetMapItem(source);
     mapItem->movement.cost = 0;
-    mapItem->previousTile.x = -1;
-    mapItem->previousTile.y = -1;
-    mapItem->previousTile.z = -1;
+    mapItem->previousTile = emptyPosition;
 
     ++source.x;
     openPositions.push_back(source);
     openCosts.push_back(0);
     mapItem = map.GetMapItem(source);
     mapItem->movement.cost = 0;
-    mapItem->previousTile.x = -1;
-    mapItem->previousTile.y = -1;
-    mapItem->previousTile.z = -1;
+    mapItem->previousTile = emptyPosition;
 
+    TRmgMapPosition position;
     TRmgMapPosition nextPosition;
     int direction;
 
@@ -1655,14 +1678,8 @@ void type_random_map_generator::CreateRiver(TRmgMapPosition source)
 
         mapItem = map.GetMapItem(position);
         int positionCost = mapItem->movement.cost;
-        direction = 0;
-        TPoint* directionOffset = gRmgDirections;
-        for (; directionOffset < gRmgDirections + 8;
-             directionOffset += 2, direction += 2) {
-            nextPosition = TRmgMapPosition(
-                position.x + directionOffset->x,
-                position.y + directionOffset->y,
-                position.z);
+        for (direction = 0; direction < 8; direction += 2) {
+            nextPosition = position + gRmgDirections[direction];
 
             if (nextPosition.x < 0 || nextPosition.x >= map.mapWidth
                 || nextPosition.y < 0 || nextPosition.y >= map.mapHeight)
@@ -1732,7 +1749,7 @@ void type_random_map_generator::CreateRiver(TRmgMapPosition source)
              ++prototypeIndex) {
             TRmgObjectPropertiesRef* properties =
                 objectPrototypes[TERRAIN_RIVER_DELTA][prototypeIndex];
-            if (properties->prototype->landPage.test(landType)
+            if (properties->prototype->landPage[landType]
                 && deltaIndex-- == 0)
                 break;
         }
@@ -1749,10 +1766,7 @@ void type_random_map_generator::CreateRiver(TRmgMapPosition source)
                 nextPosition.y + deltaOffsets[direction].y,
                 nextPosition.z));
 
-        nextPosition = TRmgMapPosition(
-            nextPosition.x + gRmgDirections[direction * 2].x,
-            nextPosition.y + gRmgDirections[direction * 2].y,
-            nextPosition.z);
+        nextPosition = nextPosition + gRmgDirections[direction * 2];
         riverPainter.DrawTo(TPoint(nextPosition.x, nextPosition.y));
         mapItem = map.GetMapItem(nextPosition);
         mapItem->tileData.riverTarget = 1;

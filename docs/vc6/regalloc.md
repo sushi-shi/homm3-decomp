@@ -643,3 +643,23 @@ input and saving a copy reached 80.07%, while reusing the second input was
 63.97%. Retail reuses dead parameter storage without requiring the source
 to mutate that parameter. Recover the arithmetic operators and their
 argument lifetimes before replacing a separate working value with an input.
+
+
+### Separate object lifetimes can eliminate a by-value parameter copy
+
+In `CreateRiver` (0x548df0), reusing the initial reset position for the
+worklist position retains an extra predecessor snapshot and a 0xc8-byte
+frame (71.86%). Giving the reset pass its own block and declaring a separate
+worklist position later removes that snapshot and recovers retail's
+0xbc-byte frame (71.47%). The queue insertion's distinct next-position copy
+remains. Merely renaming the reset position without ending its scope leaves
+the larger frame (71.31%).
+
+The reset position's constructor is out of line and receives its address;
+the later worklist position is populated by an inline copy. These controls
+establish a useful lifetime hypothesis, not a recovered Dreamcast scope or
+a proven internal optimizer mechanism. Changing the predecessor helper to
+const-reference also removes the snapshot, but the neighboring road caller
+independently preserves a by-value copy. Keep that shared interface and
+investigate caller lifetimes before inferring argument conventions from
+one optimized expansion. The higher score remains banked in MAX/history.
