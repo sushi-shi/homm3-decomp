@@ -1628,7 +1628,10 @@ void OverviewSliderCallback(int state, heroWindow* parent_window)
 // Measured and rejected 2026-09-06: spelling all six appends
 // `insert(field_60.end(), record)` instead of `push_back(record)` scores
 // 80.9765 against 82.7097 and leaves the block count at 268 - the library
-// level is not what selects the expansion.  The lever the doctrine names for
+// level is not what selects the expansion.  Re-measured on the WHOLE body
+// (polish 31): all FORTY-TWO appends in this constructor spelled
+// `insert(end(), x)` is 79.1932, worse again, so the ladder is exhausted
+// here in both doses.  The lever the doctrine names for
 // an OVER-inline this size is caller-shrink, but the six item-record search
 // loops are identical enough to fold into one helper and the Dreamcast
 // overview.obj roster names no such function (its own ctor is a different,

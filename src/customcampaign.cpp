@@ -2591,6 +2591,12 @@ const int CAMPAIGN_MAP_ORDINAL_07 = 7;
 // `_Destroy<type_artifact>` on the second temp where our compile elides it
 // entirely, and calls the 2-argument insert wrapper at the hero loop where
 // we reach the 3-argument one.
+// LADDER, measured 2026-09-06 and NOT shipped: all nine appends spelled
+// `insert(end(), x)` instead of `push_back(x)` is worth 78.6801 -> 78.8448,
+// 0.16 of a point (about 2.5 B of a 1536 B body) for nine rewritten call
+// sites - noise, and the same size lane 29 declined on its own
+// CompleteCurrentMap twin.  The reverse rung on PruneCrossoverHeroes below
+// LOSES 1.98.
 VA(0x00489820, 0x600)  // anchor-caller(oldmain end-of-campaign arm), retail-only
 void SCampaign::CompleteCurrentMap(void* campaignHeader)
 {
