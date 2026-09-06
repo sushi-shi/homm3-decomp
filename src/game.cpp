@@ -625,7 +625,7 @@ unsigned char InitImmMouse(void* hInst, void* hwnd)
         DATA(0x00696d78)
         static TImmMouseRuntime immMouse(hInst, hwnd);
         return 1;
-    } catch (...) {
+    } catch (TImmMouseRuntime::t_initialize_failure) {
         return 0;
     }
 }
@@ -3215,7 +3215,7 @@ int SavedGameHeader::Load(TAbstractFile* infile)
             infile = new TGzFile(openedName.c_str(), "rb");
             ownedInput = std::auto_ptr<TAbstractFile>(infile);
         }
-        catch (...) {
+        catch (TGzFile::TOpenFailure) {
             return -1;
         }
         _chdir("..");
@@ -4817,7 +4817,7 @@ int game::LoadGame(const char* filename, int bIsOrigData, int bIsQuickLoad)
 
         Load(&infile);
         return 1;
-    } catch (...) {
+    } catch (TGzFile::TOpenFailure) {
         return 0;
     }
 }
@@ -5405,7 +5405,7 @@ unsigned char game::NewMap(const char* mapPath, const char* mapName,
             gText, DATA_COMPGEN(0x00677d6c, newMapGzReadMode, "rb"));
         NewMap(&mapFile, playerHeroFaces, NULL, gameVersion);
         return 1;
-    } catch (...) {
+    } catch (TGzFile::TOpenFailure) {
         return 0;
     }
 }
@@ -8247,7 +8247,7 @@ int NewSMapHeader::Get(const char* path, const char* filename,
         int result = Read(&infile, campaignMap);
         if (result < 0)
             return -1;
-    } catch (...) {
+    } catch (TGzFile::TOpenFailure) {
         return -1;
     }
     return 0;

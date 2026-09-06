@@ -1829,7 +1829,7 @@ font	?get_string_width@font@@QAEJPBD@Z	100.0000	100.0000	100.0000	0xb57d0	de731f
 font	?longest_word_length@font@@QAEHPBD@Z	100.0000	100.0000	100.0000	0xb5a10	96ee18f513ef
 forcefeedback	??0?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@std@@QAE@ABU?$less@PAVCImmEnclosure@@@1@ABV?$allocator@UtagRECT@@@1@@Z	100.0000	100.0000	100.0000	0xb6f60	-
 forcefeedback	??0TImmMouseEffect@@QAE@PBUtagRECT@@JKKEE@Z	100.0000	100.0000	100.0000	0xb6dc0	dcae6b21237c
-forcefeedback	??0TImmMouseRuntime@@QAE@PAX0@Z	100.0000	100.0000	100.0000	0xb6260	09debf802951
+forcefeedback	??0TImmMouseRuntime@@QAE@PAX0@Z	100.0000	100.0000	100.0000	0xb6260	ced77668d999
 forcefeedback	??0t_create_failure@t_enclosure@force_feedback@@QAE@ABV012@@Z	100.0000	100.0000	100.0000	0xb6c60	-
 forcefeedback	??0t_enclosure@force_feedback@@QAE@PBUtagRECT@@JKKEE@Z	100.0000	100.0000	100.0000	0xb6a50	037c8a3ed058
 forcefeedback	??0t_initialize_failure@TImmMouseRuntime@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0xb6730	-
@@ -1921,7 +1921,7 @@ game	?ExperienceValueOfStack@game@@QAEHPBVarmyGroup@@PBVhero@@@Z	100.0000	100.00
 game	?FindHero@playerData@@QAEHH@Z	100.0000	100.0000	100.0000	0xba9e0	cfe01eee2f86
 game	?FindTown@playerData@@QAEHH@Z	100.0000	100.0000	100.0000	0xbaa10	7d9d253aecd5
 game	?GameFn_004CEF10@game@@QAE?AUtype_point@@H@Z	100.0000	100.0000	100.0000	0xcef10	c4f58caae395
-game	?Get@NewSMapHeader@@QAEHPBD0H@Z	100.0000	100.0000	100.0000	0xc5e00	a8b490cdece6
+game	?Get@NewSMapHeader@@QAEHPBD0H@Z	100.0000	100.0000	100.0000	0xc5e00	b4ee746e2a60
 game	?GetBoatsBuilt@game@@QAEHXZ	100.0000	100.0000	100.0000	0xccdd0	6f4c0478b4bc
 game	?GetGamePosFromDPID@game@@QAEHK@Z	100.0000	100.0000	100.0000	0xcec20	d6a22c84e878
 game	?GetGeneratorId@game@@QAEHHHH@Z	100.0000	100.0000	100.0000	0xbb900	a390ef2026bb
@@ -1949,7 +1949,7 @@ game	?HasMobileHero@playerData@@QAE_NXZ	100.0000	100.0000	100.0000	0xbab90	6c50e
 game	?HeroExtraFn_004B8450@HeroExtra@@QAEXH@Z	100.0000	100.0000	100.0000	0xb8450	87fd3bc1f064
 game	?ImmMouseWindowMoved@@YIXXZ	100.0000	100.0000	100.0000	0xb6950	c35ebc321280
 game	?Init@playerData@@QAEXXZ	100.0000	100.0000	100.0000	0xb9e20	6dd90c6055e4
-game	?InitImmMouse@@YIEPAX0@Z	100.0000	100.0000	100.0000	0xb6890	ed8007106de9
+game	?InitImmMouse@@YIEPAX0@Z	100.0000	100.0000	100.0000	0xb6890	6c81ba3914ae
 game	?InitRandomArtifacts@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc0aa0	a2655d384f88
 game	?Initialize@generator@@QAEXJ@Z	100.0000	100.0000	100.0000	0xb8860	1ee700bca0e7
 game	?InitializeRandomTavernText@@YIEXZ	100.0000	100.0000	100.0000	0xb8410	6a1df78c4bc2
@@ -1961,10 +1961,10 @@ game	?IsLocalHuman@game@@QBE_NH@Z	100.0000	100.0000	100.0000	0xce970	cc0ecd614d9
 game	?IsLocalHuman@playerData@@QBE_NXZ	100.0000	100.0000	100.0000	0xbad80	4683cab7027a
 game	?IsMultiplayer@game@@QBE_NXZ	100.0000	100.0000	100.0000	0xcec90	bf9d3de21a93
 game	?Load@NewSMapHeader@@QAEHPAVTAbstractFile@@H@Z	92.6763	92.6763	92.6763	0xc5630	dfd4024bf24f
-game	?Load@SavedGameHeader@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbc750	99bb7010e0dc
+game	?Load@SavedGameHeader@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbc750	5014fd8c3b66
 game	?Load@game@@QAEHPAVTAbstractFile@@@Z	60.5547	92.4127	92.4127	0xbcda0	76f5d7575936
 game	?LoadBoatPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9a00	451516806b09
-game	?LoadGame@game@@QAEHPBDHH@Z	100.0000	100.0000	100.0000	0xbf330	fc53c93a80bc
+game	?LoadGame@game@@QAEHPBDHH@Z	100.0000	100.0000	100.0000	0xbf330	c7302de7147c
 game	?LoadGarrisonPool@game@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xb96f0	e574c834f8c2
 game	?LoadHeroId@@YIHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xba210	a3d376c1431f
 game	?LoadMap@game@@QAE_NPAVTAbstractFile@@@Z	75.4768	75.4768	75.4768	0xc2450	e5e04330c34f
@@ -1973,7 +1973,7 @@ game	?LoadRumours@game@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbb
 game	?LoadSignPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9070	f739107b463c
 game	?MakeTerrainVisible@game@@QAEXHG@Z	100.0000	100.0000	100.0000	0xca240	8dee9faf58a3
 game	?MineTypesOwned@game@@QAEHHH@Z	100.0000	100.0000	100.0000	0xbae70	7cef522cb00d
-game	?NewMap@game@@QAEEPBD0PAHH@Z	99.4000	99.4000	99.4000	0xc0520	7759a62b2368
+game	?NewMap@game@@QAEEPBD0PAHH@Z	99.4000	99.4000	99.4000	0xc0520	9da57f706c66
 game	?NewMap@game@@QAEXPAVTAbstractFile@@PAHPAVNewMapCampaignContext@@H@Z	100.0000	100.0000	100.0000	0xbfe70	d45f6040108c
 game	?NextHero@playerData@@QAEHXZ	100.0000	100.0000	100.0000	0xbaa40	bbee40b3fef4
 game	?NextPlayer@game@@QAEXXZ	81.3343	83.3584	83.3584	0xc6fe0	4b3560fe742d
@@ -2188,7 +2188,7 @@ gzinflatebuf	??0TAllocationFailure@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x1b9
 gzinflatebuf	??0TAllocationFailure@@QAE@XZ	100.0000	100.0000	100.0000	0xd6b80	92689dd90756
 gzinflatebuf	??0TDataError@TGzInflateBuf@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0xd6690	-
 gzinflatebuf	??0TDataError@TGzInflateBuf@@QAE@XZ	100.0000	100.0000	100.0000	0xd65e0	ef530792f879
-gzinflatebuf	??0TGzInflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@@Z	91.5985	91.5985	91.5985	0xd6050	9b37d907d923
+gzinflatebuf	??0TGzInflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@@Z	92.6749	92.6749	92.6749	0xd6050	0c2bddb70c8b
 gzinflatebuf	??0TRuntimeError@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x1b7b0	-
 gzinflatebuf	??0runtime_error@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z	100.0000	100.0000	100.0000	0x1ba90	-
 gzinflatebuf	??1TGzInflateBuf@@UAE@XZ	100.0000	100.0000	100.0000	0xd6820	cc97722e33a5
@@ -2282,7 +2282,7 @@ hero	?HeroFn_004DBF30@hero@@QAEEHJ@Z	100.0000	100.0000	100.0000	0xdbf30	e39217e2
 hero	?HeroFn_004DC070@hero@@QAEXJ@Z	100.0000	100.0000	100.0000	0xdc070	b1654916cefe
 hero	?HeroFn_004DC100@hero@@QAEXJ@Z	87.2712	87.2712	87.2712	0xdc100	7d53252e3eeb
 hero	?HeroFn_004E2550@hero@@QAEEJJ@Z	92.9185	92.9185	92.9185	0xe2550	d0f8facd424f
-hero	?HeroFn_004E2840@hero@@QAEEJJ@Z	78.8633	78.8633	78.8633	0xe2840	3a443a1401ce
+hero	?HeroFn_004E2840@hero@@QAEEJJ@Z	94.5203	94.5203	94.5203	0xe2840	46bc2ba40770
 hero	?HeroFn_004E4EC0@hero@@QAE?AW4TAdventureObjectType@@XZ	100.0000	100.0000	100.0000	0xe4ec0	5705c9ac3fa4
 hero	?HeroFn_004E5DE0@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe5de0	ec2f952e9a8e
 hero	?HeroFn_004E6120@hero@@QBEXHPAUTCreatureTypeTraits@@@Z	100.0000	100.0000	100.0000	0xe6120	0ad9c16ec449
@@ -2886,7 +2886,7 @@ objecttype	?insert@?$vector@UTImageInfo@TObjectType@@V?$allocator@UTImageInfo@TO
 objecttype	?insert@?$vector@UTObjectType@@V?$allocator@UTObjectType@@@std@@@std@@QAEXPAUTObjectType@@IABU3@@Z	100.0000	100.0000	100.0000	0x1167a0	-
 objecttype	?ipfx@?$basic_istream@DU?$char_traits@D@std@@@std@@QAE_N_N@Z	100.0000	100.0000	100.0000	0x115ca0	-
 objecttype	?is@?$ctype@D@std@@QBE_NFD@Z	100.0000	100.0000	100.0000	0x119500	-
-objecttype	?load@TObjectTypeTable@@QAEXPAD@Z	69.2500	69.2500	69.2500	0x114d80	fcfee94502e4
+objecttype	?load@TObjectTypeTable@@QAEXPAD@Z	73.3263	73.3263	73.3263	0x114d80	fcfee94502e4
 objecttype	?replace@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@IIPBDI@Z	100.0000	100.0000	100.0000	0x115a80	-
 objecttype	?rfind@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QBEIPBDII@Z	100.0000	100.0000	100.0000	0x115c20	-
 objecttype	?sbumpc@?$basic_streambuf@DU?$char_traits@D@std@@@std@@QAEHXZ	100.0000	100.0000	100.0000	0x117b10	-
