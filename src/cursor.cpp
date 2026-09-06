@@ -410,6 +410,20 @@ void advManager::animate_move(hero* curr, int direction, int xInc, int yInc)
     gUnnamed6968e8 = 0;
 }
 
+// Residual (89.8315%, polish-45): calls now pair 81/81 with ONE target-only
+// reference left - retail emits a SECOND full `return handle_stop_on_trigger`
+// copy (its own epilogue and `ret 0x1c`) for the HERO arm at retail fn+0x84d
+// while C2 here cross-jumps all four switch arms onto the single shared copy.
+// Retail's HERO arm reaches the tail on two paths (`!IsFlying(0)` and
+// `can_land()`); it merges ONE of them with the shared copy and keeps the
+// other, which is a C2 cross-jumping decision, not a source shape - the
+// instructions of blocks B79..B82 are byte-identical on both sides.
+// The frame is otherwise a slot permutation: retail homes returnCell at
+// [ebp-0xc] and the normalDirTable row pointer at [ebp-0x10] where this
+// compile swaps the two, and `iOrigY`/`iOrigX` are stored in the opposite
+// order inside the same two slots.  Measured and byte-flat (2026-09-06):
+// giving `oldBoat` the Dreamcast procedure scope it has at dc sp+0x34
+// (retained above - it is positive DC evidence and costs nothing).
 // E:\gamedcs\cursor.cpp:570
 VA(0x004805e0, 0x131C)  // ret 0x1c + caller arg order/call set, dc 0x7aa54
 NewmapCell* advManager::MoveHero(int direction, unsigned char standEnd, type_point* trigger_point, int* bNoMove, unsigned char bComputerMove, int* bFoughtBattle, unsigned char bIsRemoteMove)
@@ -424,6 +438,7 @@ NewmapCell* advManager::MoveHero(int direction, unsigned char standEnd, type_poi
     int curMoveCost;
     int yInc;
     int iOrigY;
+    boat* oldBoat;
 
     if (gpCurrentPlayer->IsLocalHuman())
         SetNoDialogMenus(0);
@@ -490,7 +505,7 @@ NewmapCell* advManager::MoveHero(int direction, unsigned char standEnd, type_poi
     curr->facing = direction;
 
     if ((curr->flags & 0x40000) && destCell->type == ANCHOR_POINT) {
-        boat* oldBoat = gpGame->GetHeroBoat(curr->id, 1);
+        oldBoat = gpGame->GetHeroBoat(curr->id, 1);
         GetCell(curr->get_location());
 
         if (gNetworkActive69954c && bIsRemoteMove) {
