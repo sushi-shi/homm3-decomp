@@ -49,7 +49,7 @@ TRmgRiverPainter::TRmgRiverPainter(
 // double, then truncates sqrt's result. The name is provisional; this
 // Complete geometry helper has no Dreamcast counterpart.
 VA(0x005FCEB0, 0x39) // anchor-callee 0x53c0d1; thiscall; retail-only
-int TPoint::Length() const
+int TRmgVector::Length() const
 {
     return static_cast<int>(sqrt(static_cast<double>(x * x + y * y)));
 }

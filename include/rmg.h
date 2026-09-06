@@ -351,6 +351,22 @@ void ReadRmgTemplateZones(
 // Retained fastcall helper at 0x545e00, also expanded by zone connections.
 int GetRmgGuardValue(int value, int strength);
 
+// Voronoi's circumcenter arithmetic separates displacement vectors from
+// positions: vector+vector is a member call, point+vector and point-point
+// are free calls. All carry two signed dwords; names remain provisional.
+struct TRmgVector {
+    int x;
+    int y;
+
+    TRmgVector() {}
+    TRmgVector(int newX, int newY) : x(newX), y(newY) {}
+
+    int Length() const;
+    TRmgVector operator+(TRmgVector other) const;
+    TRmgVector operator*(int scale) const;
+    TRmgVector operator/(int divisor) const;
+};
+
 // Retail's common direction table contains eight consecutive two-dword
 // offsets.  Its cinit at 0x530da0 proves the user-provided constructor while
 // the absence of an atexit registration proves that destruction is trivial.
@@ -362,23 +378,7 @@ struct TPoint {
     TPoint() {}
     TPoint(int newX, int newY) : x(newX), y(newY) {}
 
-    int Length() const;
-
-    // Provisional source surface for the paired component arithmetic in
-    // the retail clipping and midpoint-displacement bodies.
-    TPoint operator-(const TPoint& other) const
-    {
-        return TPoint(x - other.x, y - other.y);
-    }
-    TPoint operator*(int scale) const
-    {
-        return TPoint(x * scale, y * scale);
-    }
-    TPoint operator/(int divisor) const
-    {
-        return TPoint(x / divisor, y / divisor);
-    }
-    TPoint& operator+=(const TPoint& offset)
+    TPoint& operator+=(const TRmgVector& offset)
     {
         x += offset.x;
         y += offset.y;
@@ -398,6 +398,13 @@ struct TPoint {
         return y < other.y || (y == other.y && x < other.x);
     }
 };
+
+// The retained 0x5fdd20/0x5fdd40 bodies pass both eight-byte operands on
+// the stack and return a pair through ECX. BuildVertices uses subtraction
+// to form a displacement and addition to translate the origin point.
+// These are free operations; the vector sum above is a member operation.
+TPoint operator+(TPoint point, TRmgVector offset);
+TRmgVector operator-(TPoint left, TPoint right);
 
 // The map-painting grid uses unsigned coordinates: the terrain set's lower
 // bound at 0x5b8a40 compares y, then x, with jb/jae. Its retained constructor
