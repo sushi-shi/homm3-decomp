@@ -3021,6 +3021,15 @@ static short ReadCampaignWord(TAbstractFile* infile)
 // never writing a second count. Dropping our second
 // `count = ReadCampaignByte(infile);` is 60.5021 -> 61.3492.
 //
+// The pre-v28 arm binds the same reference, and its proof is EVALUATION
+// ORDER rather than aliasing: retail computes `&carryOverHeroes[pool]`
+// (0x48a3ff `mov ebx,[ebx+0x40]` + `lea edi,[ebx+eax]`, homed at
+// [ebp-0x30]) BEFORE constructing resize's `hero()` temporary at 0x48a411,
+// while `carryOverHeroes[pool].resize(n)` builds the temporary first.  With
+// `std::vector<hero>& heroPool` the whole pool-loop preheader becomes
+// retail's instruction sequence and its frame slots ([ebp-0x40],
+// [ebp-0x4dc], [ebp-0x4e9]) line up.  65.5871 -> 65.7852.
+//
 // The same pass recovered retail's ELEMENT REFERENCES in the >=28 arm, and
 // their proof is a load the compiler could not have hoisted on its own:
 // retail computes `&field_4c[pool]` at 0x48b6ba (`mov edi,[ebx+0x50]` +
@@ -3122,13 +3131,14 @@ void SCampaign::Load(TAbstractFile* infile, int saveVersion)
         field_4c.resize(2);
 
         for (int pool = 0; pool < 2; ++pool) {
-            carryOverHeroes[pool].resize(saved.carryOverHeroCounts[pool]);
+            std::vector<hero>& heroPool = carryOverHeroes[pool];
+            heroPool.resize(saved.carryOverHeroCounts[pool]);
 
             for (int whichHero = 0;
                  whichHero < saved.carryOverHeroCounts[pool]; ++whichHero) {
                 const LegacyCampaignHero& oldHero =
                     saved.carryOverHeroes[pool][whichHero];
-                hero& newHero = carryOverHeroes[pool][whichHero];
+                hero& newHero = heroPool[whichHero];
 
                 newHero.id = oldHero.id;
                 newHero.owner = oldHero.owner;
