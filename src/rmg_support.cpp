@@ -38,7 +38,7 @@ VA(0x0055EE50, 0x76)  // CreateRiver sole caller; retail-only RMG helper
 TRmgRiverPainter::TRmgRiverPainter(
     TRmgMapAdapterInterface* newAdapter,
     int newRiverType,
-    const TPoint& newStart)
+    const TRmgGridPoint& newStart)
     : TRmgLinePainter(newAdapter),
       TRmgLineWalker(this, newRiverType, newStart)
 {
@@ -49,7 +49,16 @@ TRmgRiverPainter::TRmgRiverPainter(
 // double, then truncates sqrt's result. The name is provisional; this
 // Complete geometry helper has no Dreamcast counterpart.
 VA(0x005FCEB0, 0x39) // anchor-callee 0x53c0d1; thiscall; retail-only
-int TPoint::Length() const
+int TRmgVector::Length() const
 {
     return static_cast<int>(sqrt(static_cast<double>(x * x + y * y)));
+}
+
+// The subdivision owns every allocated half-edge and its pointer vector.
+// Its retained destructor proves the +0x04 vector and trivial edge cleanup.
+VA(0x005FD330, 0x58) // anchor-callee 0x53e685; thiscall, ret 0
+TRmgVoronoi::~TRmgVoronoi()
+{
+    for (int edge = 0; edge < edges.size(); ++edge)
+        delete edges[edge];
 }

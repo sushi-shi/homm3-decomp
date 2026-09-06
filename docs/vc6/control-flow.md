@@ -41,6 +41,49 @@ Streams clip at the first impossible mnemonic ((bad)/jecxz/loop* — inline
 jump-table bytes); a clipped profile is flagged `partial` and diagnosed as
 covering a prefix.
 
+## Body equality does not establish return width or branch destinations
+
+The RMG gap predicates at `0x5b6320` and `0x5b6430` produce the same complete
+263/262-byte bodies with either `int` or `unsigned char` return declarations.
+Their retail callers test `al`; an `int` declaration instead makes those
+callers test `eax`. Verify callers before treating an exact retained body as
+proof of its return type.
+
+Likewise, `HasSeparatedNeighbours` (`0x5b6810`) can agree in every line of
+address-masked assembly while differing in three short-branch operands. Both
+versions contain two identical false-return epilogues, but three candidate
+branches select `+0x64` where retail selects `+0x44`. Its 99.7458% checkpoint
+is still partial. Use symbolic branch targets or resolved raw bytes to check
+this distinction; equal instruction and return counts do not settle it.
+
+## A byte-returning accessor can preserve bitfield extraction
+
+`ScoreObjectPlacement` (`0x536bc0`) tests bit 27 with `shr edx,27` followed
+by `test dl,1`, while a later condition on bit 25 tests the containing dword
+directly. Reading the unsigned one-bit field in the first condition folds
+to `test dword ptr [item+0x28],0x08000000` in the candidate. Returning that
+field through an ordinary `unsigned char` member accessor preserves the
+shift and byte test after expansion (84.2027% to 84.6788%).
+
+This supports a narrow accessor boundary as a source hypothesis. It does
+not establish the original method name or prove that every shifted flag
+test came from a helper. Keep the canonical bitfield and verify the caller;
+do not replace the record with a raw-word alias to force the extraction.
+
+## Reused scalar variables can retain addressable homes across phases
+
+The RMG placement-rule reader (`0x536560`) passes object type, subtype and
+terrain locals by reference to vector insertions, then reuses their same
+three stack homes in a later prototype-binding pass. Declaring new locals
+for that pass lets VC6 strength-reduce the object-type stride and keep the
+terrain/subtype values in registers. Reusing the parsing variables restores
+the retail address calculations and loads/stores (89.9878% to 97.5804%).
+
+This is a lifetime hypothesis supported by both the earlier address-taking
+and the later home reuse. Merely seeing two values share a stack offset is
+insufficient: unrelated locals can also share a slot. Keep the actual source
+operations and references; do not add dummy address escapes or volatile.
+
 ## Diagnosis taxonomy (D-classes → branch signatures)
 
 Emitted by `_flow.diagnose`; catalog IDs are
@@ -435,6 +478,66 @@ register for a common store. A positive row-validation scope then raised
 the reader to 96.9468%; its remaining deltas lie in vector insertion and
 cleanup. These are retail/VC6 controls, with no DC RMG source counterpart.
 
+## Returning a byte predicate directly can preserve its caller's comparison
+
+`TRmgTerrainPainter::NeedsTerrainRepair` ends by consulting
+`HasSeparatedNeighbours`, whose retained body returns only 0 or 1. Returning
+that byte result directly after the other guards makes both painter cleanup
+expansions use retail's `cmp al,bl`, with BL already zero. Returning it through
+`&&`, explicitly comparing it with zero, or writing a final conditional 1/0
+return instead produces `test al,al`. Changing the wrapper's return type to
+native bool alone is neutral. The direct byte return closes all 549 bytes of
+the brush destructor (0x5b72f0) and all 521 bytes of the painter destructor
+(0x5b76f0), with their calls and branch destinations independently resolved.
+
+These expressions agree because the retained nested predicate has a proven
+0/1 range. This control does not justify removing normalization from an
+arbitrary byte-valued function. The helper boundaries remain ordinary and
+shared; no inline directive is involved.
+
+The same checkpoint corrected the plane-view map's shared painting interface
+and constructor statement order. Using the canonical `GetMapItem(0, 0,
+level)` for the plane offset leaves `CreateRiver` at 39.066925%, below its
+39.6178% peak. Its MAX/history remain intact for later caller-specific work.
+`RepairWaterZoneBorders`'s separate bounds-aggregate finding is recorded in
+[regalloc.md](regalloc.md#6g-a-bounds-aggregate-preserves-the-retail-stack-frame).
+
+## A guarded do loop can preserve a forward exhaustion exit
+
+The first land search in `RepairWaterZoneBorders` (0x53fcb0) has two exits:
+finding a usable tile and exhausting the row. A conventional `for` or
+`while (x < limit)` emits a backward `jl` followed by a forward `jmp` at
+the exhaustion check. Retail instead uses a forward `jge` at 0x53fe49
+and a backward `jmp` at 0x53fe4b, with the same preceding increment,
+comparison, and coordinate store.
+
+An entry guard followed by this form preserves that routing:
+
+```cpp
+x = first;
+if (x < limit) {
+    do {
+        if (usable(x)) {
+            found = 1;
+            break;
+        }
+        ++x;
+        if (x >= limit)
+            break;
+    } while (1);
+}
+```
+
+The real candidate retains the map accessor and full eligibility predicate;
+`usable` above only abbreviates the example. This recovered the two branch
+destinations without changing the 0x84 frame or local homes, raising the
+function from 96.921875% to 97.04883%. All CFG edges now agree; clamp and
+map-view register differences remain. The RMG source has no DC counterpart,
+so the spelling is supported by retail and the VC6 control, not a line table.
+
+An explicit top exit inside `for (;;)` was byte-neutral. A top-tested
+`while (1)` also changed the surrounding loop arrangement and induction
+(89.92383%), so that control does not invalidate the guarded bottom exit.
 
 ## A folded search flag can determine fallback placement
 

@@ -138,6 +138,18 @@ OPERATOR_EQUAL_RE = re.compile(
     r"([~\w:]+(?:<[^<>()]*>)?)::operator\s*==\s*\(")
 OPERATOR_NOT_EQUAL_RE = re.compile(
     r"([~\w:]+(?:<[^<>()]*>)?)::operator\s*!=\s*\(")
+# Keep arithmetic identities distinct from the return type and from each
+# other. Only simple member/namespace owners are admitted here; template
+# owners still require the IR channel or a dedicated template key.
+ARITHMETIC_OPERATOR_RE = re.compile(
+    r"(?<![\w:])(?:(?P<owner>[A-Za-z_]\w*(?:::[A-Za-z_]\w*)*)::)?"
+    r"operator\s*(?P<token>[+*/-])\s*\(")
+ARITHMETIC_OPERATOR_NAMES = {
+    "+": "plus", "-": "minus", "*": "multiply", "/": "divide",
+}
+ARITHMETIC_OPERATOR_CODES = {
+    "H": "plus", "G": "minus", "D": "multiply", "K": "divide",
+}
 # MSVC special members render with backticks: Cls::`scalar deleting
 # destructor'(...), `default constructor closure'(...)
 SPECIAL_RE = re.compile(r"([\w:]+)::`([^'`]+)'\s*\(")
@@ -746,12 +758,18 @@ def scan_file(path, functions: set[int],
             sm = SPECIAL_RE.search(follower)
             om = OPERATOR_EQUAL_RE.search(follower)
             nom = OPERATOR_NOT_EQUAL_RE.search(follower)
+            arithmetic = ARITHMETIC_OPERATOR_RE.search(follower)
             if sm:
                 raw = f"{sm.group(1)}__{sm.group(2)}"
             elif om:
                 raw = f"{om.group(1)}::operator_equal"
             elif nom:
                 raw = f"{nom.group(1)}::operator_not_equal"
+            elif arithmetic:
+                owner = arithmetic.group("owner")
+                operation = ARITHMETIC_OPERATOR_NAMES[arithmetic.group("token")]
+                raw = f"{owner}::" if owner else ""
+                raw += f"operator_{operation}"
             else:
                 # full C++ declarator parsing is a tar pit (templates,
                 # most operators, MSVC spellings); everything before the
@@ -1027,8 +1045,9 @@ def _demangle_key(mangled: str):
     class_class@dtor so an overloaded-ctor group never absorbs its
     dtor. Assignment (??4) keys to the declarator scanner's stable
     `Class_Class_operator` spelling. Equality (??8) keys to the bounded
-    `Class_operator_equal` / `Class_operator_not_equal` spellings; other
-    special operators return None."""
+    `Class_operator_equal` / `Class_operator_not_equal` spellings. The four
+    arithmetic operators keep their operation and simple qualified owner;
+    other special operators return None."""
     tree_value = re.search(
         r"\?\$_Tree@H(?:V|U)\?\$pair@\$\$CBH(?:V|U)([A-Za-z_]\w*)@",
         mangled)
@@ -1435,6 +1454,12 @@ def _demangle_key(mangled: str):
     if mangled.startswith("??9"):
         cls = mangled[3:].split("@@", 1)[0].split("@")[0]
         return f"{cls}_operator_not_equal".lower() if cls else None
+    arithmetic = re.match(
+        r"^\?\?([DGHK])((?:[A-Za-z_]\w*@)*)@[A-Z]", mangled)
+    if arithmetic:
+        owner = "_".join(reversed(arithmetic.group(2).strip("@").split("@")))
+        operation = ARITHMETIC_OPERATOR_CODES[arithmetic.group(1)]
+        return f"{owner + '_' if owner else ''}operator_{operation}".lower()
     m = GLOBAL_TEMPLATE_MEMBER_RE.match(mangled)
     if m:
         # member of a global class template: template_member. Global owners
