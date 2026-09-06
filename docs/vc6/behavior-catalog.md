@@ -1065,6 +1065,36 @@ Two bounds, as everywhere in this family:
   y`, and `game::LoadMap` has one candidate of each sign that reach the same
   76.7482, so read the compare, do not assume a preferred type.
 
+### D24. `i < N` against `i != N` — REAL, AND BLOCKED BY THE CLEANLINESS FLOOR
+The companion to D23 and the same shape of lever: for a zero-based counter
+that only increments, `i != N` and `i < N` are semantically identical while N
+is a non-negative count, but they are not the same object - `!=` gives `jne`
+on the back edge where `<` gives `jb`/`jl`, and that changes what the
+allocator does with the induction and the bound.  Swept over all 435
+single-line `for (T i = 0; i < N; ++i)` sites inside sub-100 rows whose body
+never assigns the counter (`build/p31-ne.py`).  Seven of 435 beat their row's
+banked MAX; none compounds (the greedy second round adds nothing anywhere).
+
+| row | before -> after | shippable? |
+| --- | --- | --- |
+| `game::CreateTownHeroes` | 98.6076 -> 99.6203 | NO |
+| `type_AI_player::purchase_building` | 97.4212 -> 97.8283 | NO |
+| `advManager::monsters_give_reward` | 88.6140 -> 89.0965 | NO |
+| `type_skill_quest::DoProgressDialog` | 75.8427 -> 76.5169 | NO |
+| `match_puzzle` | 92.4089 -> 92.4725 | NO |
+| `TSingleSelectionWindow::DrawHeroAdvancedOption` | 91.2854 -> **91.4350** | yes |
+
+**Only the last one is admissible.** `i != <integer literal>` is an UNNAMED
+DOMAIN COMPARE, and that cleanliness floor is a fatal gate at zero: shipping
+the five literal-bound flips takes it 0 -> 5 and `homm3 build` exits 1.  The
+sixth compares against a named parameter (`i != playerPos`) and is clean.
+So the lever is only reachable where the loop bound already has a name -
+which is a small minority of the corpus - and the five numbers above are
+banked MAXes that NO admissible spelling reaches.  A later lane that sees
+those rows sitting under their MAX should read this entry, not re-derive it:
+the only way to collect them is to give each bound a named constant first,
+and that is a header change to be priced on its own.
+
 ### D22. Excluded classes (never claim / never model as code)
 cinit-pattern rows (guard byte `0x6abaa0` / atexit / ~95 B ten-iteration
 initializers), STL COMDAT tails, compiler-generated scalar-deleting dtors

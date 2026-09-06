@@ -5941,6 +5941,8 @@ void advManager::monsters_give_reward(hero* current_hero, NewmapCell* cell,
         }
     }
 
+    // MAX 89.0965 was measured with `i != 7` - an unnamed domain compare
+    // that fails the cleanliness floor (docs/vc6/behavior-catalog.md D24).
     for (int i = 0; i < 7; ++i) {
         if (reward->ResQty[i]) {
             if (human_player)

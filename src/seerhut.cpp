@@ -820,6 +820,8 @@ void type_skill_quest::DoProgressDialog()
     const std::string& text = GetProgressDialogText();
     const char* textPointer = text.c_str();
     std::vector<type_dialog_resource> dialogResources;
+    // MAX 76.5169 was measured with `i != 4` - an unnamed domain compare
+    // that fails the cleanliness floor (docs/vc6/behavior-catalog.md D24).
     for (int i = 0; i < 4; ++i) {
         if (required_skills[i] > 0) {
             type_dialog_resource resource;
