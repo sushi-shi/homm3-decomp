@@ -1091,6 +1091,14 @@ static __forceinline long sum_player_dwellings(int player_id)
 // `game + player_index` in playerDisabled. Naming that load or its game
 // pointer and reversing the subscript were byte-flat; this is a post-RA
 // address-encoding distinction, not missing game behavior.
+// 2026-09-06 (docs/vc6/regalloc.md 6b, the B18 corpus): the class IS source-
+// reachable when both operands are locals whose birth order can move - that
+// closed philai value_of_enemy_town - but not here. The pair is (a freshly
+// loaded global pointer, an unscaled counter) at its first occurrence in the
+// function, where our CL always encodes base=pointer. Declaring
+// `game* current_game = gpGame;` ahead of `player_index` (the shape the
+// lever predicts) keeps base=pointer and costs 1.66 points plus a frame
+// dword: 99.9678 -> 98.31.
 VA(0x00429d50, 0x3F9)  // DC identity/caller + retail body; dc 0x2f694
 void fill_prohibited_array(playerData* player, unsigned char* prohibited)
 {

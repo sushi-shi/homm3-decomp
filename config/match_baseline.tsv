@@ -2990,7 +2990,7 @@ philai	?get_value_of_well@@YIJPBVhero@@G@Z	100.0000	100.0000	100.0000	0x12a510	3
 philai	?move_hero@@YIXPAVhero@@EAAE@Z	100.0000	100.0000	100.0000	0x1267b0	9fce1d44ceff
 philai	?value_of_bank@@YIJPBVhero@@PAVNewmapCell@@@Z	92.2043	100.0000	100.0000	0x129920	5dcd21c686e3
 philai	?value_of_custom_item@@YIJPBVhero@@PAVNewmapCell@@J@Z	100.0000	100.0000	100.0000	0x129890	f545ae1973de
-philai	?value_of_enemy_town@@YIJPBVhero@@PBVtown@@FPAVNewmapCell@@@Z	99.9561	99.9561	99.9561	0x129cb0	a2a5e60ecbe0
+philai	?value_of_enemy_town@@YIJPBVhero@@PBVtown@@FPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x129cb0	4c70b4041765
 philai	?value_of_experience@@YIMPBVhero@@ABVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x127710	cc651cb1a895
 philai	?value_of_learning@@YIJPBVhero@@H@Z	100.0000	100.0000	100.0000	0x1298d0	960d0b7d5c71
 philai	?value_of_monsters@@YIJPBVhero@@PAVNewmapCell@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x12a140	2cff9ac32748

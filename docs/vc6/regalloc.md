@@ -216,15 +216,77 @@ SIB byte:
 | `seerhuttext ?LoadSeerHutTextColumn` (99.9621) | inlined `basic_string::_Eos` terminator | `[eax+ecx]` | `[ecx+eax]` |
 | `philai ?value_of_enemy_town` (99.9561) | `return combat_value + town_value;` | `lea [ebx+ecx]` | `lea [ecx+ebx]` |
 
-Two facts worth banking. First, it is NOT the source operand order: swapping
-the addends of `value_of_enemy_town`'s `return` is byte-flat to the digit
-(VC6 canonicalises `+` before the encoder sees it), so no `a+b` -> `b+a`
-edit reaches it. Second, it is not even self-consistent WITHIN one function:
-`fill_prohibited_array` emits `[ecx+edi+0x1f636]` at the `playerDisabled`
-subscript and `[esi+ecx+0x20b0e]` eight instructions later, and retail uses
-the index-as-base form at BOTH. Every other instruction in those five bodies
-pairs. Treat a lone SIB transposition as terminal and stop; the five rows
-above are the class's whole current cost and none of them is reachable.
+Two facts were banked here on the day the table was taken. First, it is NOT
+the source operand order: swapping the addends of `value_of_enemy_town`'s
+`return` is byte-flat to the digit (VC6 canonicalises `+` before the encoder
+sees it), so no `a+b` -> `b+a` edit reaches it. That still holds. Second, the
+row read "none of them is reachable" - **and that is now refuted**; see 6b.
+
+### 6b. B18 is compiler STATE, not an encoder tie-break - 2026-09-06 (polish 30)
+
+An empirical rule search was run over the exact corpus: every scale-1
+two-register SIB memory operand in the 100.0000 rows of
+`build/objdiff/normalized/base` (those bytes ARE retail's), **2,123 sites in
+833 functions**, each labelled with what the emitted stream says about its two
+registers (defining instruction and its class, last mention, live-in-ness,
+displacement, `lea` vs `mov`). No local rule fits:
+
+| candidate rule | accuracy on the 2,123-site corpus |
+|---|---|
+| base = lower x86 register number | 50.1% |
+| base = most recently *mentioned* register | 61.4% |
+| base = later-defined (block-local defs; 32% of sites have both live-in) | 43.7% overall, 65.5% of the 566 both-defined sites |
+| def-class ranking, best possible (per-class-pair majority ORACLE) | 65.1% |
+
+So the choice is not a function of the operands' local properties. Three
+sub-rules ARE clean, though, and they are worth knowing:
+
+* a `shl`/`imul`/`lea`-computed operand ALWAYS takes the base slot against a
+  freshly loaded global pointer (103/103) or against an `[ebp-N]` local load
+  (17/17); an `inc`/`add`-computed one always beats a global load (13/13);
+* a register still live from function entry (`this`, or a parameter register
+  never rewritten) is the INDEX at 58 of 68 sites (85%);
+* both orders occur for the same shape in one function: the exact row
+  `cmbtmgr::CombatIsOver` emits `[ecx+edi+0x132b2]` and `[edi+ecx+0x132b0]`
+  in two adjacent, structurally identical statements - in retail AND in our
+  compile, identically.
+
+That last one is the key: the order is per-SITE STATE, and state is what
+source moves. Two levers are now measured, each with a minimal probe pair
+compiled by the pinned SP3 CL at the game profile (`build/p30/sibprobe*.cpp`):
+
+1. **int + int: base = the local whose FIRST ASSIGNMENT is later in source
+   order.** Minimal pair: `int x=f(a); int y=h(b); v(); return x+y;` emits
+   `lea eax,[esi+edi]`; moving a `int y = 0;` above `int x=f(a)` emits
+   `lea eax,[edi+esi]` - one SIB byte, every other byte identical, and the
+   `= 0` store itself is dead-code-eliminated. A bare `int y;` declaration
+   does NOT do it (the pseudo is born at the first assignment, not the
+   declaration), and the LAST assignment does not either.
+   **Applied: `philai value_of_enemy_town` 99.9561 -> 100.0000** by hoisting
+   `long town_value = 0;` above the `combat_value` initialiser.
+2. **pointer + index: the FIRST addressing mode built over a given (pointer,
+   index) register pair in a function encodes base=pointer; a SECOND one over
+   the same pair encodes base=index.** Probe `z1`/`z2` mirror CombatIsOver:
+   swapping the two statements swaps which array gets which encoding.
+
+Byte-flat for this class, all measured this lane: source addend order;
+`*(p+i)`, `&p[i]`, `i[p]`; naming the pointer, the index or the whole address
+in a local; declaring that local before or after the counter; a local copy of
+`this`; `unsigned`/`short`/`char` index; do-while vs for vs goto loop form; a
+dead duplicate read of the same member.
+
+What this leaves: the four rows whose pair is (entry-live `this` or a global
+pointer, UNSCALED int) at the FIRST occurrence of that pair in the function.
+Our CL encodes base=pointer there and retail encodes base=int, and no
+spelling reaches it because the levers above need either a second occurrence
+of the pair or two locals whose birth order can move - `this` is born before
+everything and cannot be made later. `hero::get_primary_skill_total`
+(16 spellings measured this lane, all 99.5833), `diff CDiffFile::Apply`
+(3 swaps), `ai_player::fill_prohibited_array` (naming the game pointer ahead
+of the counter costs 1.66 and a frame dword), `seerhuttext
+LoadSeerHutTextColumn` (the pair is inside a Dinkumware `<string>` inline we
+may not edit). Those four are terminal for now; a lone SIB transposition on
+an int-int pair is NOT.
 
 Honest accuracy statement: the model predicts the pinned compiler's
 callee-saved assignment from creation order in 5/5 standalone probes,

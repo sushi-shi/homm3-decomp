@@ -7890,10 +7890,19 @@ long hero::modify_spell_damage(SpellID spell, int damage,
 // 99.5833: `*(stats + skill)`, a `const signed char* skills = stats;` hoist,
 // and an explicit `this->stats[skill]` in hero.h's GetPrimarySkill. So the
 // SIB base/index choice is unreachable from the accessor as well as from the
-// caller. Four other rows in the tree carry the identical single-swap
-// residual (ai_player::fill_prohibited_array 99.9678, seerhuttext
-// LoadSeerHutTextColumn 99.9621, philai value_of_enemy_town 99.9561,
-// diff CDiffFile::Apply 99.6429 with three swaps).
+// caller. philai value_of_enemy_town, which carried the same residual, is now
+// EXACT - see docs/vc6/regalloc.md 6b: for a two-LOCAL sum the base slot goes
+// to the local born later, so hoisting the other one's first assignment flips
+// the byte. That lever cannot reach THIS row: one operand is `this`, born at
+// entry, and the pair's first (and only) occurrence in the function always
+// encodes base=pointer. Sixteen further spellings measured 99.5833 in an
+// exact standalone replica of this body (build/p30/sibprobe9/10/12.cpp): all
+// six declaration permutations of total/skill/remaining, `unsigned`/`short`
+// skill, increment-before-call, `GetPrimarySkill(skill++)`, a plain `for`,
+// naming the call result, a `short` accumulator, all four accessor spellings
+// and a dead duplicate read. Three rows still carry this residual
+// (ai_player::fill_prohibited_array 99.9678, seerhuttext
+// LoadSeerHutTextColumn 99.9621, diff CDiffFile::Apply 99.6429, 3 swaps).
 VA(0x004e5960, 0x38)  // linkorder, dc 0xd544c
 short hero::get_primary_skill_total()
 {
