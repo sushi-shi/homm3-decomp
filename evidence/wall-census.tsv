@@ -11,10 +11,8 @@ not diagnosed	446	43.1116	38.5458	784	viewwrld	?VWDrawUnderlay@advManager@@QAEXH
 not diagnosed	549	46.3642	42.5710	1024	seerhut	?DoSeerEvent@TSeerHut@@QAEXPAVhero@@_N@Z	diagnose	-
 not diagnosed	462	48.6988	45.8147	901	smackmgr	?ShowVideo@@YIXHHHHHHHH@Z	diagnose	-
 not diagnosed	168	49.7043	25.6261	335	seerhut	?Load@type_quest@@UAEXPAVTAbstractFile@@H@Z	diagnose	-
-not diagnosed	776	57.8331	56.5644	1840	rmg	?TraceZoneBoundary@type_random_map_generator@@QAEXPAUTRmgBoundaryVertex@@E@Z	diagnose	-
 not diagnosed	328	58.5099	58.5099	791	objecttype	?setImageName@TObjectType@@QAEAAU1@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	diagnose	-
-not diagnosed	176	62.3455	58.5455	468	mapcell	??0CObjectType@@QAE@PAUTObjectType@@@Z	diagnose	-
-not diagnosed	220	64.1812	64.1087	614	rmg	?ClipRmgBoundaryPoint@@YI?AUTPoint@@ABUTRmgZoneBounds@@U1@1@Z	diagnose	-
+not diagnosed	176	62.3455	61.0788	468	mapcell	??0CObjectType@@QAE@PAUTObjectType@@@Z	diagnose	-
 not diagnosed	327	64.3119	64.3119	915	philai	??0type_spellvalue@@QAE@PBVhero@@@Z	diagnose	-
 not diagnosed	250	67.9099	34.0405	780	singleselectionwindow	?UpdateGameVars@TSingleSelectionWindow@@QAEXXZ	diagnose	-
 not diagnosed	559	74.7623	74.7623	2215	rmg_terrain	?PaintTransitions@TRmgTerrainPainter@@QAEXXZ	diagnose	-
@@ -119,6 +117,7 @@ not diagnosed	196	86.6362	86.3549	1466	philai	?MoveHero@@YIXPAVhero@@PAJEPAE@Z	d
 not diagnosed	92	86.6570	86.6570	693	viewarmywindow	?create_spell_influence_widgets@TViewArmyWindow@@QAEXPBVarmy@@@Z	diagnose	-
 not diagnosed	117	86.6723	86.6723	880	singleselectionwindow	?Tick@CNewPlayerUpdateProc@@UAEXXZ	diagnose	-
 not diagnosed	60	86.6781	86.6781	452	ai_tactical	?should_attack_now@type_AI_spellcaster@@QAEEPBVarmy@@@Z	diagnose	-
+not diagnosed	245	86.6846	86.6846	1840	rmg	?TraceZoneBoundary@type_random_map_generator@@QAEXPAUTRmgBoundaryVertex@@E@Z	diagnose	-
 not diagnosed	114	86.7845	86.7845	863	sacrifice_window	?all_artifacts@type_sacrifice_window@@CIHAAVmessage@@@Z	diagnose	-
 not diagnosed	152	86.8085	86.8085	1152	seerhut	?read@TSeerHut@@QAEXPAVTAbstractFile@@@Z	diagnose	-
 not diagnosed	36	86.8125	86.8125	271	campaignbrief	?UpdateAllyEnemyFlags@TCampaignBrief@@QAEXXZ	diagnose	-

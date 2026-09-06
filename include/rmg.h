@@ -364,6 +364,10 @@ struct TPoint {
 
     // Provisional source surface for the paired component arithmetic in
     // the retail clipping and midpoint-displacement bodies.
+    TPoint operator+(TPoint other) const
+    {
+        return TPoint(x + other.x, y + other.y);
+    }
     TPoint operator-(const TPoint& other) const
     {
         return TPoint(x - other.x, y - other.y);

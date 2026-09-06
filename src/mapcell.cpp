@@ -5951,9 +5951,15 @@ void NewfullMap::NewfullMapFn_00505F20(CObject* object, int objectType,
 //   inner-4 [i]  + mask_34 .set                         43.3576
 //   inner-4 .set + mask_34 [i]                          34.6000
 // so the five writes only pay TOGETHER, and flipping the reads costs 25.6.
-// The remaining hole is retail's two `test` CALLS; there is no spelling
-// shallower than `.test(i)` for a bit read, so that half needs caller mass,
-// not a respelling (the same floor OnBeginGame hit).
+// Retail retains two `test` calls. Repeating _getBitPos at all accessors
+// falls to 31.22%; separate input/output indices are byte-flat at 58.55%.
+// Explicit bool read values are 58.57%, const recommended-mask access is
+// 44.32%, and at() reads add checks (37.03%). None recovers those two calls.
+// Both retail grid backedges use jb; paired unsigned indices recover that
+// shape at 61.08% in this header state. The DC _getBitPos helper likewise
+// takes unsigned x/y (MapCell.h:565). A fixed-grid do/while is only 57.67%.
+// The prior 62.35% remains banked; these controls do not settle the missing
+// per-site compiler state.
 //
 // The image name, sizes, four masks, recommended-terrain mask, type, subtype
 // and underlay flag cross here. hasTrigger, triggerCell, slotCategory and
@@ -5965,7 +5971,7 @@ CObjectType::CObjectType(TObjectType* source)
     width = source->GetWidth();
     height = source->GetHeight();
 
-    for (int y = 0; y < 6; y++) {
+    for (unsigned y = 0; y < 6; y++) {
         for (unsigned x = 0; x < 8; x++) {
             unsigned pos = _getBitPos(x, y);
             drawCells[pos] = source->imageInfo.drawMask.test(pos);

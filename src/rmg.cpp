@@ -796,15 +796,22 @@ void type_random_map_generator::DrawStraightZoneBoundary(
 // and a vertex returned by the Voronoi lookup at 0x5fd6b0. The body clips
 // each edge, marks the owning zone's map cells, and records the polygon at
 // zone+0x3f4. All names are provisional; Dreamcast has no RMG compiland.
-// Residual: VC6 sinks the rectangle fallback to the end; retail emits it
-// after the initial edge search. An explicit search goto is byte-flat;
-// a do/while plus a separate success jump adds a branch. Bounds constructors
-// or chained stores enlarge the frame from retail's 0x90 to 0x94. Retail
-// copies each fallback corner to a temporary before insertion: direct
-// lvalue arguments peaked at 57.83% but omit those copies; explicit copies
-// retain them at 57.14%. Member-wise construction changes nested vector
-// inlining again (55.61%). Preserve the copied-point evidence and diagnose
-// the remaining insert expansions by site, allowing for cross-type ICF.
+// The found flag folds away, but its do/while plus post-search fallback
+// recovers retail's backward jne, rectangle fall-through, and later success
+// block. Returning from inside the search sinks the rectangle to the end:
+// with the same copied points that control is 60.27%, versus 86.10% here.
+// All seven appends copy a point. Reconstructing the main-loop copies from
+// x/y instead costs 56.56% in the old search; a named copy is byte-identical
+// to TPoint(from). Direct single/count insert calls bypass the push_back
+// chain and measured 43.07%/8.56%; nesting the success body measured 29.83%.
+// Retail stores height, zero y/x, then width. Its min also spills separate
+// inputs only when the neighbour exists, keeping the result unaliased.
+// These two corrections reach 86.68%. Moving the owning-zone read inside
+// the neighbour arm loses that lifetime (79.98%); a bounds ctor is 80.77%.
+// Residual: 90 vs 93 blocks, 37 calls on both sides. The search topology now
+// agrees; two vector allocation paths still choose different _Ucopy/_Ufill/
+// _Destroy expansions, followed by local-slot and register differences.
+// Account for cross-type ICF before treating a template name as a new call.
 VA(0x0053C390, 0x730) // caller 0x53e5f4/0x53e602, ret 8; retail-only
 void type_random_map_generator::TraceZoneBoundary(
     TRmgBoundaryVertex* first, unsigned char irregular)
@@ -813,37 +820,43 @@ void type_random_map_generator::TraceZoneBoundary(
     TRmgZone* zone = vertex->zone;
     int zoneIndex = zone->slot->zoneIndex;
     TRmgMapPosition zonePosition = zone->levelPosition;
-    TRmgZoneBounds bounds = {0, 0, map.mapWidth, map.mapHeight};
+    TRmgZoneBounds bounds;
+    bounds.maximumY = map.mapHeight;
+    bounds.minimumX = bounds.minimumY = 0;
+    bounds.maximumX = map.mapWidth;
     TRmgBoundaryVertex* next;
     TPoint originalFrom;
     TPoint originalTo;
     TPoint from;
     TPoint to;
 
-    for (;;) {
+    bool found = false;
+    do {
         next = vertex->next;
         originalFrom = vertex->position;
         originalTo = next->position;
         from = ClipRmgBoundaryPoint(bounds, vertex->position, next->position);
         to = ClipRmgBoundaryPoint(bounds, originalTo, originalFrom);
-        if (bounds.Contains(from) && from != to)
+        if (bounds.Contains(from) && from != to) {
+            found = true;
             break;
-        vertex = next;
-        if (vertex == first) {
-            TPoint upperLeft(bounds.minimumX, bounds.minimumY);
-            TPoint upperRight(bounds.maximumX - 1, bounds.minimumY);
-            TPoint lowerLeft(bounds.minimumX, bounds.maximumY - 1);
-            TPoint lowerRight(bounds.maximumX - 1, bounds.maximumY - 1);
-            DrawStraightZoneBoundary(lowerRight, upperRight, zoneIndex, zonePosition.z);
-            DrawStraightZoneBoundary(upperRight, upperLeft, zoneIndex, zonePosition.z);
-            DrawStraightZoneBoundary(upperLeft, lowerLeft, zoneIndex, zonePosition.z);
-            DrawStraightZoneBoundary(lowerLeft, lowerRight, zoneIndex, zonePosition.z);
-            zone->boundary.push_back(TPoint(lowerRight));
-            zone->boundary.push_back(TPoint(upperRight));
-            zone->boundary.push_back(TPoint(upperLeft));
-            zone->boundary.push_back(TPoint(lowerLeft));
-            return;
         }
+        vertex = next;
+    } while (vertex != first);
+    if (!found) {
+        TPoint upperLeft(bounds.minimumX, bounds.minimumY);
+        TPoint upperRight(bounds.maximumX - 1, bounds.minimumY);
+        TPoint lowerLeft(bounds.minimumX, bounds.maximumY - 1);
+        TPoint lowerRight(bounds.maximumX - 1, bounds.maximumY - 1);
+        DrawStraightZoneBoundary(lowerRight, upperRight, zoneIndex, zonePosition.z);
+        DrawStraightZoneBoundary(upperRight, upperLeft, zoneIndex, zonePosition.z);
+        DrawStraightZoneBoundary(upperLeft, lowerLeft, zoneIndex, zonePosition.z);
+        DrawStraightZoneBoundary(lowerLeft, lowerRight, zoneIndex, zonePosition.z);
+        zone->boundary.push_back(TPoint(lowerRight));
+        zone->boundary.push_back(TPoint(upperRight));
+        zone->boundary.push_back(TPoint(upperLeft));
+        zone->boundary.push_back(TPoint(lowerLeft));
+        return;
     }
 
     first = vertex;
@@ -854,13 +867,14 @@ void type_random_map_generator::TraceZoneBoundary(
         originalTo = next->position;
         from = ClipRmgBoundaryPoint(bounds, vertex->position, next->position);
         to = ClipRmgBoundaryPoint(bounds, originalTo, originalFrom);
-        zone->boundary.push_back(TPoint(from.x, from.y));
+        zone->boundary.push_back(TPoint(from));
 
         if (!neighbour || neighbour->slot->zoneIndex > zoneIndex) {
             int roughness = zone->boundaryRoughness;
             if (neighbour) {
+                int ownRoughness = roughness;
                 int neighbourRoughness = neighbour->boundaryRoughness;
-                roughness = std::_cpp_min(roughness, neighbourRoughness);
+                roughness = std::_cpp_min(ownRoughness, neighbourRoughness);
             }
             if (irregular)
                 DrawIrregularZoneBoundary(from, to, zoneIndex, zonePosition.z, roughness);
@@ -889,24 +903,31 @@ void type_random_map_generator::TraceZoneBoundary(
                 else
                     corner = TPoint(bounds.minimumX, bounds.maximumY - 1);
                 DrawStraightZoneBoundary(from, corner, zoneIndex, zonePosition.z);
-                zone->boundary.push_back(TPoint(from.x, from.y));
+                zone->boundary.push_back(TPoint(from));
                 from = corner;
             }
             DrawStraightZoneBoundary(from, to, zoneIndex, zonePosition.z);
-            zone->boundary.push_back(TPoint(from.x, from.y));
+            zone->boundary.push_back(TPoint(from));
         }
     } while (vertex != first);
 }
 
-// Each outside coordinate is advanced along the original segment. Retail
-// multiplies both components before dividing; retaining those intermediate
-// points preserves its signed integer arithmetic, including truncation.
-// The arithmetic operators are a source hypothesis supported by the paired
-// intermediate stores, not recovered Dreamcast declarations. Scalar named
-// numerator/step points peak at 63.41%; operators reach 64.18%. Both still
-// have a 0x24 frame against retail's 0x1c. Moving the clipped copy across
-// the early return changes only the local-lifetime plateau; it does not
-// recover retail's EBX/EDI clipped coordinates and ESI/ECX delta registers.
+// Exact: preserve the original point, and update a separate clipped point
+// through value-returning addition. Compound += gives 64.11% and a 0x24
+// frame; the sum gives 98.04%, retail's 0x1c frame and all 40 flow blocks.
+// The added operator declaration alone is byte-flat: this is the arithmetic
+// boundary, not a header-population change. Mutating the input argument and
+// saving an original copy is 80.07%; reusing toward is 63.97%, so retail's
+// later stores into an argument slot do not prove source-argument mutation.
+// Keep the distance inside each scaling expression (99.11%). operator+
+// takes its eight-byte right operand by value; a const reference leaves
+// the final maximum-Y multiply in the wrong registers. Passing by value
+// closes all bytes. Changing operator- to by value is independently flat.
+// Scale operand order, a scalar-left overload, member-wise scale result,
+// named numerators/bounds, const delta/distance and upper-bound regrouping
+// were flat at 99.11%; none substitutes for the addition parameter fact.
+// All arithmetic stays integer: multiply both components before division
+// and retain the original point for every rejected-intersection return.
 VA(0x0053CAC0, 0x266) // caller 0x53c407; hidden result ecx, bounds edx; retail-only
 TPoint ClipRmgBoundaryPoint(
     const TRmgZoneBounds& bounds, TPoint point, TPoint toward)
@@ -917,32 +938,28 @@ TPoint ClipRmgBoundaryPoint(
     TPoint delta = toward - point;
     TPoint clipped = point;
     if (clipped.x < bounds.minimumX && delta.x) {
-        int distance = bounds.minimumX - clipped.x;
-        clipped += delta * distance / delta.x;
+        clipped = clipped + delta * (bounds.minimumX - clipped.x) / delta.x;
         if (point.y >= bounds.minimumY && clipped.y < bounds.minimumY)
             return point;
         if (point.y < bounds.maximumY && clipped.y >= bounds.maximumY)
             return point;
     }
     if (clipped.y < bounds.minimumY && delta.y) {
-        int distance = bounds.minimumY - clipped.y;
-        clipped += delta * distance / delta.y;
+        clipped = clipped + delta * (bounds.minimumY - clipped.y) / delta.y;
         if (point.x >= bounds.minimumX && clipped.x < bounds.minimumX)
             return point;
         if (point.x < bounds.maximumX && clipped.x >= bounds.maximumX)
             return point;
     }
     if (clipped.x >= bounds.maximumX && delta.x) {
-        int distance = bounds.maximumX - clipped.x - 1;
-        clipped += delta * distance / delta.x;
+        clipped = clipped + delta * (bounds.maximumX - clipped.x - 1) / delta.x;
         if (point.y >= bounds.minimumY && clipped.y < bounds.minimumY)
             return point;
         if (point.y < bounds.maximumY && clipped.y >= bounds.maximumY)
             return point;
     }
     if (clipped.y >= bounds.maximumY && delta.y) {
-        int distance = bounds.maximumY - clipped.y - 1;
-        clipped += delta * distance / delta.y;
+        clipped = clipped + delta * (bounds.maximumY - clipped.y - 1) / delta.y;
         if (point.x >= bounds.minimumX && clipped.x < bounds.minimumX)
             return point;
         if (point.x < bounds.maximumX && clipped.x >= bounds.maximumX)

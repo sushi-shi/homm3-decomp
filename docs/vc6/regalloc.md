@@ -618,3 +618,28 @@ Follow-ups: land the assignment-order probes as
 `b*` oracle cases + catalog rows (B1 gains its first standalone probe);
 wire a `--model` flag into `homm3 vc6 why-reg`'s argparse; chase the
 processing-order source in p2symtab.c (the C1 mechanism's last mile).
+
+
+### Value-returning point addition and its argument lifetime
+
+`ClipRmgBoundaryPoint` (0x53cac0, 614 bytes) reproduces retail's integer
+clipping arithmetic with a preserved original point and a separate working
+point. `clipped += delta * distance / divisor` gives 64.11% and a 0x24-byte
+frame. Recovering `TPoint::operator+` and assigning the returned value gives
+98.04%, the retail 0x1c-byte frame, and all 40 control-flow blocks. Keeping
+`+=` with that same new header is byte-flat at 64.11%; an unused declaration
+is not responsible for the improvement.
+
+Putting each distance expression directly inside the product reaches
+99.11%. The final maximum-Y multiply then identifies the addition argument:
+`operator+(TPoint)` reaches 100%, while `operator+(const TPoint&)` leaves the
+remaining register/scheduling difference. The subtraction operator's
+argument convention is independently flat, so it retains its existing
+const-reference declaration. Scalar operand reversal, named numerator or
+bound values, and a member-wise scaling result are also flat at 99.11%.
+
+The earlier argument-slot reading was insufficient: mutating the first
+input and saving a copy reached 80.07%, while reusing the second input was
+63.97%. Retail reuses dead parameter storage without requiring the source
+to mutate that parameter. Recover the arithmetic operators and their
+argument lifetimes before replacing a separate working value with an input.
