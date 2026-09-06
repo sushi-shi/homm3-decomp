@@ -73,7 +73,7 @@ struct TRmgPackedTerrainCell {
 class TRmgTerrainRule {
 public:
     unsigned char blendsWithOtherTerrain; // +0x04
-    unsigned char opaque0005;              // +0x05
+    unsigned char allowsSeparatedNeighbours; // +0x05
     char pad0006[2];
 
     virtual ~TRmgTerrainRule() {}
@@ -90,6 +90,13 @@ public:
 
 extern TRmgTerrainRule* gRmgTerrainRules[];
 
+// RepairTerrainPoint ranks up to four disjoint runs in an eight-cell ring.
+struct TRmgTerrainGap {
+    unsigned int weight;
+    unsigned int start;
+    unsigned int length;
+};
+
 enum TRmgTerrainTransitionCase {
     RMG_TERRAIN_FIRST_DIAGONAL_LOW = 2,
     RMG_TERRAIN_SECOND_DIAGONAL_LOW = 5,
@@ -102,14 +109,14 @@ enum TRmgTerrainTransitionCase {
 // point sets followed by the packed-cell vector.
 class TRmgTerrainPainter {
 public:
-    TRmgMapAdapterInterface* adapter;               // +0x00
-    int parameterA;                                 // +0x04
+    TRmgMapAdapterInterface* adapter;                // +0x00
+    int paintTerrain;                               // +0x04
     int transitionStrength;                         // +0x08
     unsigned int width;                             // +0x0c
     unsigned int height;                            // +0x10
-    std::set<TPoint> primaryPoints;                  // +0x14
-    std::set<TPoint> secondaryPoints;                // +0x24
-    std::vector<TRmgPackedTerrainCell> packedCells;  // +0x34
+    std::set<TRmgGridPoint> primaryPoints;            // +0x14
+    std::set<TRmgGridPoint> secondaryPoints;          // +0x24
+    std::vector<TRmgPackedTerrainCell> packedCells;   // +0x34
 
     TRmgTerrainPainter(
         TRmgMapAdapterInterface* newAdapter,
@@ -117,23 +124,33 @@ public:
         int newTransitionStrength);
     ~TRmgTerrainPainter();
 
-    void InitializePackedCell(const TPoint& point, unsigned int index);
-    TRmgPackedTerrainCell* GetPackedCell(const TPoint& point);
+    void InitializePackedCell(const TRmgGridPoint& point, unsigned int index);
+    TRmgPackedTerrainCell* GetPackedCell(const TRmgGridPoint& point);
     // Retail repeatedly expands this field accessor while retaining the
     // nested GetPackedCell call. Keeping the source helper is therefore
     // required even though it has no separately emitted body.
-    inline int GetTerrain(const TPoint& point)
+    inline int GetTerrain(const TRmgGridPoint& point)
     {
         return GetPackedCell(point)->GetTerrain();
     }
     void PaintTransitions();
+    void PaintPoint(const TRmgGridPoint& point);
+    void RepairTerrainPoint(const TRmgGridPoint& point);
+    unsigned char IsHorizontalGap(const TRmgGridPoint& point, int terrain);
+    unsigned char IsVerticalGap(const TRmgGridPoint& point, int terrain);
+    unsigned char IsHorizontalGap(const TRmgGridPoint& point);
+    unsigned char IsVerticalGap(const TRmgGridPoint& point);
+    unsigned char NeedsTerrainRepair(const TRmgGridPoint& point);
+    unsigned char HasSeparatedNeighbours(const TRmgGridPoint& point);
+    void BuildMatchingNeighbourMask(
+        const TRmgGridPoint& point, unsigned char* matches);
 
-    void BuildNeighbourKinds(const TPoint& point, int* neighbours);
+    void BuildNeighbourKinds(const TRmgGridPoint& point, int* neighbours);
     unsigned char CheckFirstDiagonal(
-        const TPoint& point, const TRmgTerrainFlip& flip);
+        const TRmgGridPoint& point, const TRmgTerrainFlip& flip);
     unsigned char CheckSecondDiagonal(
-        const TPoint& point, const TRmgTerrainFlip& flip);
-    int GetTransitionStrength(const TPoint& point, int terrain);
+        const TRmgGridPoint& point, const TRmgTerrainFlip& flip);
+    int GetTransitionStrength(const TRmgGridPoint& point, int terrain);
 };
 
 SIZE(TRmgTerrainTile, 0x0c);

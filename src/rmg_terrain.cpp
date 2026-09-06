@@ -8,6 +8,9 @@
 #include <yvals.h>
 #undef _MT
 #include "rmg_terrain.h"
+#include "tiles.h"
+
+DATA(0x00642BD8) extern TRmgTerrainRule* gRmgTerrainRules[];
 
 // Provisional role spelling. The fastcall ABI and two-byte output are fixed
 // by the call at 0x5b5f4e. All selector names are provisional retail roles.
@@ -35,7 +38,7 @@ static TRmgTerrainFlip MakeTerrainFlip(unsigned char x, unsigned char y)
 
 VA(0x005B3DD0, 0x6F)  // called and expanded in the retail terrain cluster
 void TRmgTerrainPainter::InitializePackedCell(
-    const TPoint& point, unsigned int index)
+    const TRmgGridPoint& point, unsigned int index)
 {
     TRmgTerrainTile tile = adapter->GetTile(point);
     TRmgPackedTerrainCell& packed = packedCells[index];
@@ -240,7 +243,7 @@ int __fastcall SelectTerrainTransition(
 
 VA(0x005B48D0, 0x8D)  // repeated caller identity in 0x5b3dd0..0x5b76f0
 TRmgPackedTerrainCell* TRmgTerrainPainter::GetPackedCell(
-    const TPoint& point)
+    const TRmgGridPoint& point)
 {
     unsigned int index = point.y * width + point.x;
     if (!packedCells[index].initialized)
@@ -248,24 +251,147 @@ TRmgPackedTerrainCell* TRmgTerrainPainter::GetPackedCell(
     return &packedCells[index];
 }
 
+// Own-terrain checks share the predicates used with the selected paint
+// terrain. Retail retains the nested predicate in the former and expands
+// the latter at the four adjacent-row/column probes.
+unsigned char TRmgTerrainPainter::IsHorizontalGap(const TRmgGridPoint& point)
+{
+    return IsHorizontalGap(point, GetTerrain(point));
+}
+
+unsigned char TRmgTerrainPainter::IsVerticalGap(const TRmgGridPoint& point)
+{
+    return IsVerticalGap(point, GetTerrain(point));
+}
+
+// The repeated four-check expansion in RepairTerrainPoint and the painter
+// worklist decides whether a neighbour itself needs repair. The boundary
+// and role are inferred from retail; there is no Dreamcast counterpart.
+// Both the compound-return and early-guard forms expand in the caller.
+// The latter still folds three rule-lookup GetPackedCell sites that retail
+// retains; changing this guard alone does not recover the nested budget.
+unsigned char TRmgTerrainPainter::NeedsTerrainRepair(const TRmgGridPoint& point)
+{
+    if (IsHorizontalGap(point) || IsVerticalGap(point))
+        return 1;
+    return !gRmgTerrainRules[GetTerrain(point)]->allowsSeparatedNeighbours
+        && HasSeparatedNeighbours(point);
+}
+
+// Repair a one-cell terrain gap, then merge all but the largest remaining
+// gap in the neighbour ring. Cardinal directions have weight two and
+// diagonals weight one. The worklist at 0x5b72f0 passes its first primary
+// point to this method; PaintPoint consumes the resulting repairs.
+// Remaining: some nested GetPackedCell and point-constructor calls still
+// over-inline. Retail also retains the copied x component at +0x5bb while
+// our point-addition return folds it away. Keep the canonical arithmetic
+// and predicates; no inline-depth pin is used to hide those differences.
+VA(0x005B5440, 0x628) // anchor-callee 0x5b7358; thiscall, ret 4; retail-only
+void TRmgTerrainPainter::RepairTerrainPoint(const TRmgGridPoint& point)
+{
+    if (IsVerticalGap(point)) {
+        PaintPoint(
+            !NeedsTerrainRepair(TRmgGridPoint(point.x, point.y - 1))
+                && (NeedsTerrainRepair(TRmgGridPoint(point.x, point.y + 1))
+                    || (IsHorizontalGap(
+                            TRmgGridPoint(point.x, point.y - 1), paintTerrain)
+                        && !IsHorizontalGap(
+                            TRmgGridPoint(point.x, point.y + 1), paintTerrain)))
+            ? TRmgGridPoint(point.x, point.y + 1)
+            : TRmgGridPoint(point.x, point.y - 1));
+    }
+    if (IsHorizontalGap(point)) {
+        PaintPoint(
+            !NeedsTerrainRepair(TRmgGridPoint(point.x - 1, point.y))
+                && (NeedsTerrainRepair(TRmgGridPoint(point.x + 1, point.y))
+                    || (IsVerticalGap(
+                            TRmgGridPoint(point.x - 1, point.y), paintTerrain)
+                        && !IsVerticalGap(
+                            TRmgGridPoint(point.x + 1, point.y), paintTerrain)))
+            ? TRmgGridPoint(point.x + 1, point.y)
+            : TRmgGridPoint(point.x - 1, point.y));
+    }
+
+    if (!gRmgTerrainRules[paintTerrain]->allowsSeparatedNeighbours
+        && HasSeparatedNeighbours(point)) {
+        unsigned char matches[TILE_DIR_COUNT];
+        BuildMatchingNeighbourMask(point, matches);
+        TRmgTerrainGap gaps[TILE_DIR_COUNT / 2];
+        unsigned int gapCount = 0;
+        unsigned int first = 0;
+        while (!matches[first])
+            ++first;
+
+        unsigned int direction = first;
+        while ((direction = (direction + 1) % TILE_DIR_COUNT) != first) {
+            if (!matches[direction]) {
+                unsigned int currentGap = gapCount++;
+                gaps[currentGap].weight = 0;
+                gaps[currentGap].start = direction;
+                gaps[currentGap].length = 0;
+                do {
+                    unsigned char diagonal = direction & 1;
+                    gaps[currentGap].weight += diagonal ? 1 : 2;
+                    ++gaps[currentGap].length;
+                    direction = (direction + 1) % TILE_DIR_COUNT;
+                    if (direction == first)
+                        // Retail +0x52d leaves both loops directly. A
+                        // compound do condition followed by another test
+                        // duplicates this comparison and rotates the exit.
+                        goto gapsBuilt;
+                } while (!matches[direction]);
+            }
+        }
+
+    gapsBuilt:
+        unsigned char neighbourExists[TILE_DIR_COUNT];
+        BuildTileNeighbourMask(
+            width, height, point.x, point.y, neighbourExists);
+        do {
+            unsigned int smallest = 0;
+            unsigned int smallestWeight = gaps[0].weight;
+            for (unsigned int gap = 1; gap < gapCount; ++gap) {
+                if (gaps[gap].weight < smallestWeight) {
+                    smallest = gap;
+                    smallestWeight = gaps[gap].weight;
+                }
+            }
+            unsigned int end =
+                (gaps[smallest].start + gaps[smallest].length) % TILE_DIR_COUNT;
+            for (direction = gaps[smallest].start; direction != end;
+                 direction = (direction + 1) % TILE_DIR_COUNT) {
+                if (neighbourExists[direction])
+                    PaintPoint(point + gTileDirections[direction]);
+            }
+            --gapCount;
+            for (gap = smallest; gap < gapCount; ++gap)
+                gaps[gap] = gaps[gap + 1];
+        } while (gapCount > 1);
+    }
+}
+
+// The unsigned grid/ref-argument correction is independently proved by the
+// set comparator and the retained grid constructor. It changes the nested
+// accessor expansion here (74.76 -> 42.02%); retain the proven type and its
+// historical peak while recovering this caller's original helper surface.
 VA(0x005B5A70, 0x8A7)  // caller cluster reaches Complete RMG; retail-only
 void TRmgTerrainPainter::PaintTransitions()
 {
     std::vector<unsigned char> edgeCounts(width * height);
-    TPoint point;
+    TRmgGridPoint point;
 
     for (point.y = 0; point.y < height - 1; ++point.y) {
-        int terrain = GetTerrain(TPoint(0, point.y));
+        int terrain = GetTerrain(TRmgGridPoint(0, point.y));
 
-        if (GetTerrain(TPoint(1, point.y)) != terrain) {
+        if (GetTerrain(TRmgGridPoint(1, point.y)) != terrain) {
             ++edgeCounts[point.y * width];
             ++edgeCounts[point.y * width + 1];
         }
-        if (GetTerrain(TPoint(1, point.y + 1)) != terrain) {
+        if (GetTerrain(TRmgGridPoint(1, point.y + 1)) != terrain) {
             ++edgeCounts[point.y * width];
             ++edgeCounts[(point.y + 1) * width + 1];
         }
-        if (GetTerrain(TPoint(0, point.y + 1)) != terrain) {
+        if (GetTerrain(TRmgGridPoint(0, point.y + 1)) != terrain) {
             ++edgeCounts[point.y * width];
             ++edgeCounts[(point.y + 1) * width];
         }
@@ -273,30 +399,30 @@ void TRmgTerrainPainter::PaintTransitions()
         for (point.x = 1; point.x < width - 1; ++point.x) {
             terrain = GetTerrain(point);
 
-            if (GetTerrain(TPoint(point.x + 1, point.y)) != terrain) {
+            if (GetTerrain(TRmgGridPoint(point.x + 1, point.y)) != terrain) {
                 ++edgeCounts[point.y * width + point.x];
                 ++edgeCounts[point.y * width + point.x + 1];
             }
-            if (GetTerrain(TPoint(point.x + 1, point.y + 1)) != terrain) {
+            if (GetTerrain(TRmgGridPoint(point.x + 1, point.y + 1)) != terrain) {
                 ++edgeCounts[point.y * width + point.x];
                 ++edgeCounts[(point.y + 1) * width + point.x + 1];
             }
-            if (GetTerrain(TPoint(point.x, point.y + 1)) != terrain) {
+            if (GetTerrain(TRmgGridPoint(point.x, point.y + 1)) != terrain) {
                 ++edgeCounts[point.y * width + point.x];
                 ++edgeCounts[(point.y + 1) * width + point.x];
             }
-            if (GetTerrain(TPoint(point.x - 1, point.y + 1)) != terrain) {
+            if (GetTerrain(TRmgGridPoint(point.x - 1, point.y + 1)) != terrain) {
                 ++edgeCounts[point.y * width + point.x];
                 ++edgeCounts[(point.y + 1) * width + point.x - 1];
             }
         }
 
         terrain = GetTerrain(point);
-        if (GetTerrain(TPoint(point.x, point.y + 1)) != terrain) {
+        if (GetTerrain(TRmgGridPoint(point.x, point.y + 1)) != terrain) {
             ++edgeCounts[point.y * width + point.x];
             ++edgeCounts[(point.y + 1) * width + point.x];
         }
-        if (GetTerrain(TPoint(point.x - 1, point.y + 1)) != terrain) {
+        if (GetTerrain(TRmgGridPoint(point.x - 1, point.y + 1)) != terrain) {
             ++edgeCounts[point.y * width + point.x];
             ++edgeCounts[(point.y + 1) * width + point.x - 1];
         }
@@ -304,7 +430,7 @@ void TRmgTerrainPainter::PaintTransitions()
 
     for (point.x = 0; point.x < width - 1; ++point.x) {
         int terrain = GetTerrain(point);
-        if (GetTerrain(TPoint(point.x + 1, point.y)) != terrain) {
+        if (GetTerrain(TRmgGridPoint(point.x + 1, point.y)) != terrain) {
             ++edgeCounts[point.y * width + point.x];
             ++edgeCounts[point.y * width + point.x + 1];
         }
@@ -390,31 +516,131 @@ void TRmgTerrainPainter::PaintTransitions()
     }
 }
 
+// These ordinary gap predicates are both retained and expanded within
+// RepairTerrainPoint. Their unsigned edge checks corroborate the grid type.
+// The retained 263/262-byte bodies do not distinguish int from byte return;
+// the callers' test al,al proves that only the byte result is consumed.
+// Both bodies and the reference-taking grid constructor pass a raw-byte
+// audit after resolving their real retail relocation destinations.
+VA(0x005B6320, 0x107) // anchor-callee 0x5b569f; retail-only
+unsigned char TRmgTerrainPainter::IsHorizontalGap(
+    const TRmgGridPoint& point, int terrain)
+{
+    return point.x > 0 && point.x < width - 1
+        && GetTerrain(TRmgGridPoint(point.x - 1, point.y)) != terrain
+        && GetTerrain(TRmgGridPoint(point.x + 1, point.y)) != terrain;
+}
+
+VA(0x005B6430, 0x106) // anchor-callee 0x5b545f; retail-only
+unsigned char TRmgTerrainPainter::IsVerticalGap(
+    const TRmgGridPoint& point, int terrain)
+{
+    return point.y > 0 && point.y < height - 1
+        && GetTerrain(TRmgGridPoint(point.x, point.y - 1)) != terrain
+        && GetTerrain(TRmgGridPoint(point.x, point.y + 1)) != terrain;
+}
+
+// Cardinal neighbours use coordinates clamped to the map edge. A diagonal
+// contributes only when at least one adjoining cardinal cell also matches.
+// Remaining nested-inline decisions: retail retains GetPackedCell for the
+// center and all four cardinals; this spelling already expands it for east.
+// At southeast retail also expands InitializePackedCell through adapter
+// slot +0x10, whereas this candidate retains InitializePackedCell.
+VA(0x005B6540, 0x2CA) // anchor-callee 0x5b58f8, 0x5b681e; retail-only
+void TRmgTerrainPainter::BuildMatchingNeighbourMask(
+    const TRmgGridPoint& point, unsigned char* matches)
+{
+    int terrain = GetTerrain(point);
+    unsigned int north = point.y > 0 ? point.y - 1 : point.y;
+    unsigned int south = point.y < height - 1 ? point.y + 1 : point.y;
+    unsigned int west = point.x > 0 ? point.x - 1 : point.x;
+    unsigned int east = point.x < width - 1 ? point.x + 1 : point.x;
+
+    matches[TILE_DIR_NORTH] = GetTerrain(TRmgGridPoint(point.x, north)) == terrain;
+    matches[TILE_DIR_SOUTH] = GetTerrain(TRmgGridPoint(point.x, south)) == terrain;
+    matches[TILE_DIR_WEST] = GetTerrain(TRmgGridPoint(west, point.y)) == terrain;
+    matches[TILE_DIR_EAST] = GetTerrain(TRmgGridPoint(east, point.y)) == terrain;
+    matches[TILE_DIR_NORTHWEST] =
+        (matches[TILE_DIR_NORTH] || matches[TILE_DIR_WEST])
+        && GetTerrain(TRmgGridPoint(west, north)) == terrain;
+    matches[TILE_DIR_NORTHEAST] =
+        (matches[TILE_DIR_NORTH] || matches[TILE_DIR_EAST])
+        && GetTerrain(TRmgGridPoint(east, north)) == terrain;
+    matches[TILE_DIR_SOUTHWEST] =
+        (matches[TILE_DIR_SOUTH] || matches[TILE_DIR_WEST])
+        && GetTerrain(TRmgGridPoint(west, south)) == terrain;
+    matches[TILE_DIR_SOUTHEAST] =
+        (matches[TILE_DIR_SOUTH] || matches[TILE_DIR_EAST])
+        && GetTerrain(TRmgGridPoint(east, south)) == terrain;
+}
+
+// The final top-tested loop reuses the preceding scan's known zero entry.
+// A do/infinite-for form duplicates its increment and false epilogue
+// (85.17%); putting the increment in the mask test leaves an extra test
+// (91.27%). The current body has the correct 132 bytes/instructions except
+// three short-branch displacements: +0x20/+0x52/+0x72 choose the false
+// epilogue at +0x64 instead of retail's +0x44 (99.7458%). Native bool with
+// true/false literals produces the same three differences. Address-masked
+// asm alone hides this; the resolved raw-byte comparison does not.
+VA(0x005B6810, 0x84) // anchor-callee 0x5b58e4; retail-only
+unsigned char TRmgTerrainPainter::HasSeparatedNeighbours(const TRmgGridPoint& point)
+{
+    unsigned char matches[TILE_DIR_COUNT];
+    BuildMatchingNeighbourMask(point, matches);
+    unsigned int first = 0;
+    while (matches[first]) {
+        first = (first + 1) % TILE_DIR_COUNT;
+        if (first == 0)
+            return 0;
+    }
+    unsigned int direction = first;
+    do {
+        direction = (direction + 1) % TILE_DIR_COUNT;
+        if (direction == first)
+            return 0;
+    } while (!matches[direction]);
+    do {
+        direction = (direction + 1) % TILE_DIR_COUNT;
+        if (direction == first)
+            return 0;
+    } while (matches[direction]);
+    while (!matches[direction]) {
+        direction = (direction + 1) % TILE_DIR_COUNT;
+        if (direction == first)
+            return 0;
+    }
+    return 1;
+}
+
 #if 0  // @carcass - direct retained callees of PaintTransitions
 VA(0x005B68A0, 0x2FF)  // thiscall at 0x5b5f45; retail-only
 void TRmgTerrainPainter::BuildNeighbourKinds(
-    const TPoint& point, int* neighbours)
+    const TRmgGridPoint& point, int* neighbours)
 {
 }  // @stub
 
 VA(0x005B6BA0, 0x24C)  // transition 2/8 tests; retail-only
 unsigned char TRmgTerrainPainter::CheckFirstDiagonal(
-    const TPoint& point, const TRmgTerrainFlip& flip)
+    const TRmgGridPoint& point, const TRmgTerrainFlip& flip)
 {
     return 0;  // @stub
 }
 
 VA(0x005B6E00, 0x1B3)  // transition 5/11 tests; retail-only
 unsigned char TRmgTerrainPainter::CheckSecondDiagonal(
-    const TPoint& point, const TRmgTerrainFlip& flip)
+    const TRmgGridPoint& point, const TRmgTerrainFlip& flip)
 {
     return 0;  // @stub
 }
 
 VA(0x005B6FD0, 0x271)  // base-frame selection call; retail-only
 int TRmgTerrainPainter::GetTransitionStrength(
-    const TPoint& point, int terrain)
+    const TRmgGridPoint& point, int terrain)
 {
     return 0;  // @stub
 }
 #endif
+
+// The four late point constructions in RepairTerrainPoint pass x and y by
+// reference. The retained two-store body is 24 bytes including ret 8.
+VA_COMPGEN(0x005B76B0, 0x18, CLASS_CTOR, TRmgGridPoint)

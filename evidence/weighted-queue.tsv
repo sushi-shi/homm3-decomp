@@ -2,7 +2,6 @@
 # Sorted by increasing current score, then decreasing unmatched bytes.
 # Unscored rows rank at zero; MAX/history never hide current residuals.
 va	size	current	maximum	historical	remaining_bytes	unit	function	state
-0x005b5440	1576		0.0	0.0	1576.0	seg_001b	game_1b72f0_sub00_1b5440	unscored
 0x00536bc0	1524		0.0	0.0	1524.0	seg_0013	game_1373a0_sub00_136bc0	unscored
 0x00536560	1522		0.0	0.0	1522.0	seg_0013	game_rand_trn_txt_136560	unscored
 0x0053fcb0	1516		0.0	0.0	1516.0	seg_0013	game_144920_sub02_13fcb0	unscored
@@ -49,7 +48,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x0054d5c0	740		0.0	0.0	740.0	seg_0014	game_13e9e0_sub01_14d5c0	unscored
 0x00603b20	722		0.0	0.0	722.0	seg_0020	game_4eef0_sub02_203b20	unscored
 0x0043cb20	719		0.0	0.0	719.0	seg_0003	game_37a00_sub00_3cb20	unscored
-0x005b6540	714		0.0	0.0	714.0	seg_001b	game_1b5440_sub00_1b6540	unscored
 0x0053f1a0	710		0.0	0.0	710.0	seg_0013	game_13f470_sub01_13f1a0	unscored
 0x0054ae30	709		0.0	0.0	709.0	seg_0014	game_14abf0_sub02_14ae30	unscored
 0x005469b0	692		0.0	0.0	692.0	seg_0014	game_1470d0_sub00_1469b0	unscored
@@ -142,8 +140,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00531bd0	287		0.0	0.0	287.0	seg_0013	game_143e20_sub01_131bd0	unscored
 0x004fa2b0	272		0.0	0.0	272.0	seg_000f	game_148040_sub00_fa2b0	unscored
 0x00439c30	271		95.4886	95.4886	271.0	ai_tactical	?get_cure_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	unscored
-0x005b6320	263		0.0	0.0	263.0	seg_001b	game_1b4b20_sub03_1b6320	unscored
-0x005b6430	262		0.0	0.0	262.0	seg_001b	game_1b4b20_sub04_1b6430	unscored
 0x00532890	260		0.0	0.0	260.0	seg_0013	game_14abf0_sub00_132890	unscored
 0x0054dd80	260		0.0	0.0	260.0	seg_0014	game_14c730_sub05_14dd80	unscored
 0x00531ad0	256		0.0	0.0	256.0	seg_0013	game_143e20_sub00_131ad0	unscored
@@ -195,7 +191,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00404c50	136		0.0	0.0	136.0	seg_0000	game_4bd0_sub00_4c50	unscored
 0x00534380	133		0.0	0.0	133.0	seg_0013	game_134380	unscored
 0x00534490	132		0.0	0.0	132.0	seg_0013	game_134490	unscored
-0x005b6810	132		0.0	0.0	132.0	seg_001b	game_1b4b20_sub05_1b6810	unscored
 0x00604720	132		0.0	0.0	132.0	seg_0020	game_203b20_sub02_204720	unscored
 0x005310b0	131		0.0	0.0	131.0	seg_0013	game_130f80_sub00_1310b0	unscored
 0x00534410	127		0.0	0.0	127.0	seg_0013	game_134410	unscored
@@ -356,7 +351,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x005361e0	24		0.0	0.0	24.0	seg_0013	game_136070_sub01_1361e0	unscored
 0x00536ba0	24		0.0	0.0	24.0	seg_0013	game_cdf20_sub06_136ba0	unscored
 0x0055ecf0	24		0.0	0.0	24.0	seg_0015	game_15a800_sub09_15ecf0	unscored
-0x005b76b0	24		0.0	0.0	24.0	seg_001b	game_1b5440_sub01_1b76b0	unscored
 0x0044d3e0	23		0.0	0.0	23.0	artifact	__h3cg$artifact$bitset_tidy$Bitset19	unscored
 0x0055f330	23		0.0	0.0	23.0	seg_0015	game_15f330	unscored
 0x005b85a0	23		0.0	0.0	23.0	seg_001b	game_1b4b20_sub09_1b85a0	unscored
@@ -412,6 +406,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x005578d0	48	41.875	41.875	41.875	27.900000000000002	remote	??1CNetMsgHandler@@UAE@XZ	non-exact
 0x0056ce50	286	41.927082	41.9271	41.9271	166.08854548000002	seerhut	?LoadFromMap@type_quest@@UAEXPAVTAbstractFile@@@Z	non-exact
 0x00506080	468	41.945454	41.9455	41.9455	271.69527528	mapcell	??0CObjectType@@QAE@PAUTObjectType@@@Z	non-exact
+0x005b5a70	2215	42.021492	74.7623	74.7623	1284.2239522	rmg_terrain	?PaintTransitions@TRmgTerrainPainter@@QAEXXZ	non-exact
 0x005f9ed0	784	42.12749	42.1275	42.1275	453.7204784	viewwrld	?VWDrawUnderlay@advManager@@QAEXHHHHH@Z	non-exact
 0x00573670	1024	44.475307	46.3642	46.3642	568.57285632	seerhut	?DoSeerEvent@TSeerHut@@QAEXPAVhero@@_N@Z	non-exact
 0x00514610	791	47.770752	47.7708	47.7708	413.13335168	objecttype	?setImageName@TObjectType@@QAEAAU1@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	non-exact
@@ -446,7 +441,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00514d80	644	73.32632	82.2717	82.2717	171.7784992	objecttype	?load@TObjectTypeTable@@QAEXPAD@Z	non-exact
 0x004ec460	111	73.333336	100.0	100.0	29.599997039999995	inputmgr	??0inputManager@@QAE@XZ	non-exact
 0x004dd2d0	5182	74.21898	75.4051	75.4051	1335.9724564	hero	?WindowHandler@THeroScreenWindow@@UAEHPAVmessage@@@Z	non-exact
-0x005b5a70	2215	74.76233	74.7623	74.7623	559.0143904999998	rmg_terrain	?PaintTransitions@TRmgTerrainPainter@@QAEXXZ	non-exact
 0x0058c570	999	74.90225	74.9022	74.9022	250.72652250000007	singleselectionwindow	?BeginNewGame@TSingleSelectionWindow@@QAEEXZ	non-exact
 0x0046a350	268	75.01099	75.011	75.011	66.97054679999997	cmbtmgr	?CalculateGainedExperience@combatManager@@QAEXHPAH@Z	non-exact
 0x0056fbc0	230	75.23529	75.2353	75.2353	56.95883299999998	seerhut	?DoProgressDialog@type_artifact_quest@@UAEXXZ	non-exact
@@ -462,6 +456,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00514b80	503	76.63784	76.6378	76.6378	117.51166479999999	objecttype	??5@YIAAV?$basic_istream@DU?$char_traits@D@std@@@std@@AAV01@AAUTObjectType@@@Z	non-exact
 0x00541140	1594	76.75134	76.7513	76.7513	370.5836404	rmg	?CreateGroundConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@PAV?$vector@PAUTRmgMapItem@@V?$allocator@PAUTRmgMapItem@@@std@@@std@@PAV?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@5@@Z	non-exact
 0x004be3f0	2725	76.92083	96.4044	96.4044	628.9073825000002	game	?Save@game@@QAEHPAVTAbstractFile@@@Z	non-exact
+0x005b6540	714	77.26087	77.2609	77.2609	162.35738820000006	rmg_terrain	?BuildMatchingNeighbourMask@TRmgTerrainPainter@@QAEXABUTRmgGridPoint@@PAE@Z	non-exact
 0x005141b0	110	77.391304	77.3913	77.3913	24.869565599999994	objecttype	?Accepts@TNativeTerrainObjectFilter@@UBEHPBUTObjectType@@@Z	non-exact
 0x004022e0	359	77.48718	77.4872	77.4872	80.8210238	adventuremapwindow	?SendChat@CAdventurMapChatEdit@@UAEXPBDH@Z	non-exact
 0x004ee3e0	7172	77.563	77.563	77.563	1609.1816399999998	kb	?oldmain@@YIHXZ	non-exact
@@ -504,6 +499,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x004daf90	570	81.7	81.7	81.7	104.30999999999996	hero	?update_slot@THeroScreenWindow@@QAEXJ@Z	non-exact
 0x005bf810	226	81.72619	81.7262	81.7262	41.2988106	town	?get_legion_bonus@town@@QAEJJ@Z	non-exact
 0x004e4990	1014	81.76774	81.7677	81.7677	184.8751164	hero	?GetMobility@hero@@QAEHE@Z	non-exact
+0x005b5440	1576	81.81113	81.8111	81.8111	286.65659119999987	rmg_terrain	?RepairTerrainPoint@TRmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	non-exact
 0x0042e0b0	2926	81.88646	81.8865	81.8865	530.0021804000002	ai_player	?AI_choose_destination@@YIHPAVhero@@JAAUHeroDestination@@AAJEE@Z	non-exact
 0x004cafd0	3348	82.21976	82.2198	82.2198	595.2824352000001	game	?TransmitSaveGame@game@@QAEHHHEE@Z	non-exact
 0x005a6c70	1029	82.34042	82.3404	82.3404	181.7170782000001	spells	?MirrorImage@combatManager@@QAEXHH@Z	non-exact
@@ -1031,7 +1027,8 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00490f60	197	99.64286	99.6429	99.6429	0.7035658000000005	diff	?Apply@CDiffFile@@QAEPAXPAEH@Z	non-exact
 0x00465330	1270	99.64975	99.6497	99.6497	4.448175000000095	cmbtmgr	?SetNextArmy@combatManager@@QAEXHH@Z	non-exact
 0x005c9be0	11504	99.66054	99.6605	99.6605	39.05147840000029	townmgr	??0THallWindow@@QAE@H@Z	non-exact
-0x0055ee50	118	99.70731	99.7073	99.7073	0.34537419999999464	rmg_support	??0TRmgRiverPainter@@QAE@PAVTRmgMapAdapterInterface@@HABUTPoint@@@Z	non-exact
+0x0055ee50	118	99.70731	99.7073	99.7073	0.34537419999999464	rmg_support	??0TRmgRiverPainter@@QAE@PAVTRmgMapAdapterInterface@@HABUTRmgGridPoint@@@Z	non-exact
+0x005b6810	132	99.745766	99.7458	99.7458	0.33558887999999687	rmg_terrain	?HasSeparatedNeighbours@TRmgTerrainPainter@@QAEEABUTRmgGridPoint@@@Z	non-exact
 0x004c06f0	377	99.746376	99.7464	99.7464	0.9561624799999877	game	?randomize_university@game@@QAEXPAVNewmapCell@@@Z	non-exact
 0x004c3890	996	99.8359	99.8359	99.8359	1.6344360000000036	game	?loadVictoryCondition@NewSMapHeader@@QAEHDPAVTAbstractFile@@H@Z	non-exact
 0x005bd2f0	1026	99.837006	99.837	99.837	1.6723184399999393	town	?save@town@@QAEHPAVTAbstractFile@@@Z	non-exact
