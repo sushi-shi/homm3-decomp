@@ -276,6 +276,13 @@ struct TObjectType {
     const std::basic_string<char, std::char_traits<char>,
                             std::allocator<char> >& GetImageName();
 
+    // CObjectType's conversion loads each dimension as a dword before
+    // narrowing it to char. Direct field access folds those into byte
+    // loads in VC6; ordinary integer accessors retain the observed boundary.
+    // Their role names are provisional: this editor type is Complete-only.
+    int GetWidth() const { return imageInfo.objectSize.x; }
+    int GetHeight() const { return imageInfo.objectSize.y; }
+
     // Retail 0x514610 and 0x514a60, both in the same Complete-only
     // compiland and both returning *this - the per-row `>>` at 0x514b80
     // chains them off each other's result. setImageName resolves the
@@ -335,8 +342,9 @@ public:
     // which saveObjectType then confirms one Write at a time.
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >
         ImageName;
-    signed char width;
-    signed char height;
+    // Dreamcast field list 0x309c records Width/Height as T_RCHAR.
+    char width;
+    char height;
     // +0x12..+0x13 is alignment before the first bitset.  Keep it implicit:
     // retail's generated assignment skips these bytes.
     std::bitset<48> drawCells;
