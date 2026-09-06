@@ -133,7 +133,7 @@ unsigned char initialize_creature_bank_traits()
         int levelsLeft = 4;
         do {
             level->guards.Initialize();
-            for (int slot = 0; slot < 5 && guardTypes[slot] != -1; ++slot)
+            for (unsigned int slot = 0; slot < 5 && guardTypes[slot] != -1; ++slot)
                 level->guards.armies[slot] = guardTypes[slot];
             level->reward_creature = creature_type_from_int(
                 creature_bank_reward_creature[bank]);

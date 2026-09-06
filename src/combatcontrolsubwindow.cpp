@@ -715,7 +715,13 @@ TCombatCreatureSubWindow::TCombatCreatureSubWindow(
     if (view_level == 1) {
         backgroundWidget = new bitmapBorder(
             0, 0, 78, 288, 0x898, "CCrPop.pcx", 0x800);
-        Widgets.push_back(backgroundWidget);
+        // DEPTH LADDER + the named-vector reference (docs/vc6/inliner.md 6b):
+        // this ONE append of the nineteen is `insert(end(), x)` through a
+        // named reference.  99.1290 -> 99.2793 for the rung, 99.2844 with the
+        // reference; every other site is byte-flat and a greedy second round
+        // finds nothing.
+        std::vector<widget*>& widgets = Widgets;
+        widgets.insert(widgets.end(), backgroundWidget);
         creatureIcon = new iconWidget(
             10, 6, 58, 64, 0x899, "TwCrPort.def", 0, 0, 0, 0,
             iconWidget::ICON_STYLE_PLAIN);

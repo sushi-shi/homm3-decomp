@@ -555,6 +555,8 @@ type_point match_puzzle(long player, type_AI_puzzle_tile (*puzzle_map)[17])
     int min_y = 17;
     int max_y = 0;
 
+    // MAX 92.4725 was measured with `x != 19` - an unnamed domain compare
+    // that fails the cleanliness floor (docs/vc6/behavior-catalog.md D24).
     for (int x = 0; x < 19; ++x) {
         for (int y = 0; y < 17; ++y) {
             if (puzzle_map[x][y].visible) {

@@ -270,7 +270,11 @@ void Bitmap16Bit::Draw(int srcX, int srcY, int srcWidth, int srcHeight,
         if (flipped) {
             for (int row = 0; row < srcHeight; ++row) {
                 for (int col = 0; col < w; ++col) {
-                    unsigned short pixel = source.pixels[col];
+                    // BOUND BY `const unsigned short&`: retail loads the
+                    // source pixel twice - once for the key compare and once
+                    // for the store - rather than keeping it in a register.
+                    // 81.3095 -> 83.5794.
+                    const unsigned short& pixel = source.pixels[col];
                     if (pixel != static_cast<unsigned short>(flipped))
                         target.pixels[col] = pixel;
                 }
