@@ -8797,6 +8797,22 @@ void advManager::CheckLoadSample(e_looping_sound_id id_num)
 // return on retail's side (71 vs our 72) - a C2 tail-merge choice with no
 // source lever, since the duplicate blocks are duplicate BY VALUE and no
 // spelling can make two `return LOOPING_SOUND_23;` differ.
+// Residual (96.90%): every branch and every return now agrees (16/16, 71/71)
+// and 74 of the 91 blocks are byte-exact; what is left is ARM LAYOUT inside
+// the object-type dispatch, which is a jump-table switch and therefore a
+// source-order question, not a spelling one.
+// 2026-09-06, polish lane 35: the GARRISON and CREATURE_GENERATOR_4 arms are
+// two-value probes whose miss returns LOOPING_SOUND_INVALID. Written as
+// `return LOOPING_SOUND_INVALID;` VC6 sees a two-constant select and folds
+// the second compare branchlessly - `dec ax / neg ax / sbb eax,eax /
+// and al,-0x1a / add eax,0x19` - at BOTH sites, costing two branches and
+// adding two returns. Retail branches: `cmp cx,1 / jne <shared tail>`, and
+// its `or eax,-1 / pop ebp / ret 0xc` block at +0x451 carries SIX jump
+// predecessors. Inverting the guard polarity is byte-flat (94.5074, measured)
+// because the fold does not care which way the compare runs; making the miss
+// a `goto` to the function's own trailing INVALID return is what breaks it,
+// because a jump is not a value-producing arm. 94.5074 -> 96.9031, and our
+// shared block now carries the same six predecessors retail has.
 VA(0x00418620, 0x5E4)  // anchor-global, dc 0x1b5a8
 e_looping_sound_id advManager::GetSoundId(int x, int y, int z)
 {
@@ -8841,7 +8857,7 @@ e_looping_sound_id advManager::GetSoundId(int x, int y, int z)
                 return LOOPING_SOUND_41;
             if (thisCell->objectIndex == GET_SOUND_GARRISON_1)
                 return LOOPING_SOUND_25;
-            return LOOPING_SOUND_INVALID;
+            goto invalid;
         case WINDMILL:
             return LOOPING_SOUND_66;
         case WHIRLPOOL:
@@ -8954,7 +8970,7 @@ e_looping_sound_id advManager::GetSoundId(int x, int y, int z)
                 return LOOPING_SOUND_43;
             if (thisCell->objectIndex == GET_SOUND_GENERATOR4_1)
                 return LOOPING_SOUND_12;
-            return LOOPING_SOUND_INVALID;
+            goto invalid;
         case DEFENSE_TOWER:
         case HILL_FORT:
         case WAR_SCHOOL:
@@ -9000,6 +9016,7 @@ e_looping_sound_id advManager::GetSoundId(int x, int y, int z)
     case TERRAIN_VOLCANO:
         return LOOPING_SOUND_45;
     }
+invalid:
     return LOOPING_SOUND_INVALID;
 }
 
