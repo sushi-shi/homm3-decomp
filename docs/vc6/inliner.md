@@ -992,6 +992,33 @@ function sections byte-identical. Full build and raw checks preserve the cache
 reader/initializer, gap predicates, coordinate constructor/comparator, both
 worklist destructors, and the exact 1,516-byte water-border repair.
 
+### Recheck storage after changing a later inline decision
+
+At the 99.5570% terrain-painter source, the retained three-argument `_Distance`
+body reproduces all 43 retail bytes at 0x5b8c70, including the resolved iterator
+increment call. The caller still expands that wrapper into the four-argument
+version. Its identity is therefore independently established; report-level
+relocation agreement does not settle the caller's overload.
+
+A new scratch compiler control rejects only that eligible depth-three wrapper,
+charging its original 41 units before the rejection. The source already retains
+the first cache call, so the old two-site control must not be reused unchanged.
+This diagnostic reaches retail's 1,483-byte function length and restores the
+three-argument call. It also changes the earlier direction pointer from EDX to
+EBX, changes the point-translation schedule, and changes the loop backedge's
+registers. Both cache multiplications still load y before width. Correcting a
+later inline decision can therefore change earlier storage; a near-exact
+translation sequence is not an invariant across that decision. The diagnostic
+object never enters objdiff or the checkpoint, and the normal shim is restored.
+
+The ordinary TU definition of `getTerrain` preserves the 99.5570% caller and
+both exact worklist destructors. Moving the body adds its ordinary candidate
+section; all existing C++ function sections compared with the banked trace
+retain identical code bytes. Retail proves the shared accessor role but not
+an explicit source `inline` qualifier. Neutral source-form controls and
+the point/flip-construction failures are recorded beside `paintPoint`, rather
+than inferred to be compiler limitations.
+
 ## 7. Using it
 
 ```sh
