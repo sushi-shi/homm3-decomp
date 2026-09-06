@@ -364,7 +364,8 @@ unsigned char rmgTerrainPainter::isPaintTerrain(const TRmgGridPoint& point)
 // and a native-bool terrain predicate are neutral at the current checkpoint.
 //
 // Further controls at 99.5570%: coupled native-bool repair/separation returns,
-// a byte result local, signed index/dimensions, named width, stepwise indexing,
+// a byte result local, shared gap-return block, signed index/dimensions,
+// named width, stepwise indexing,
 // a width accessor, a cache-reference return, consistent configured-terrain
 // accessors, early loop continues, negated iterator equality, and direct frame
 // selection in the tile constructor leave the caller score unchanged. Grouping
@@ -831,37 +832,42 @@ void rmgTerrainPainter::buildMatchingNeighbourMask(
 // The final top-tested loop reuses the preceding scan's known zero entry.
 // A do/infinite-for form duplicates its increment and false epilogue
 // (85.17%); putting the increment in the mask test leaves an extra test
-// (91.27%). The current body has the correct 132 bytes/instructions except
-// three short-branch displacements: +0x20/+0x52/+0x72 choose the false
-// epilogue at +0x64 instead of retail's +0x44 (99.7458%). Native bool with
-// true/false literals produces the same three differences. Address-masked
-// asm alone hides this; the resolved raw-byte comparison does not.
+// (91.27%). Separate false returns leave three short branches at
+// +0x20/+0x52/+0x72 choosing the +0x64 epilogue instead of retail's +0x44
+// (99.7458%); native bool is neutral. Sharing the return in the first
+// empty-run scan reproduces all 132 raw bytes, including those destinations.
+// Declare direction before the initial scan so its failure can legally
+// enter the shared return without bypassing an initialized declaration.
+// VC6 still duplicates a false epilogue at +0x64 for the later loop exit.
 VA(0x005B6810, 0x84) // anchor-callee 0x5b58e4; retail-only
 unsigned char rmgTerrainPainter::hasSeparatedNeighbours(const TRmgGridPoint& point)
 {
     unsigned char matches[TILE_DIR_COUNT];
     buildMatchingNeighbourMask(point, matches);
     unsigned int first = 0;
+    unsigned int direction;
     while (matches[first]) {
         first = (first + 1) % TILE_DIR_COUNT;
         if (first == 0)
-            return 0;
+            goto noSeparation;
     }
-    unsigned int direction = first;
+    direction = first;
     do {
         direction = (direction + 1) % TILE_DIR_COUNT;
-        if (direction == first)
+        if (direction == first) {
+noSeparation:
             return 0;
+        }
     } while (!matches[direction]);
     do {
         direction = (direction + 1) % TILE_DIR_COUNT;
         if (direction == first)
-            return 0;
+            goto noSeparation;
     } while (matches[direction]);
     while (!matches[direction]) {
         direction = (direction + 1) % TILE_DIR_COUNT;
         if (direction == first)
-            return 0;
+            goto noSeparation;
     }
     return 1;
 }
