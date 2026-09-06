@@ -3248,6 +3248,11 @@ std::string TSeerHut::SeerHutFn_005743E0(int player)
 // SetDefaultText directly where we dispatch through vtable slot 14. Both
 // are the /Ob2 verdict on that one member constructor, and the levers for
 // it are a statement pin and a caller-shrink split, neither open here.
+// The DEPTH LADDER (docs/vc6/inliner.md 6b) buys 0.20 of that decision back:
+// the artifact append spelled `insert(end(), a)` rather than `push_back(a)`
+// is 83.1965 -> 83.3955.  It does not reach the EH frame; the sibling
+// TSeerHut::load 0x574a90 LOSES 2.51 on the identical rung (27.41 -> 24.90),
+// so the rung is per-site here as everywhere.
 VA(0x00574610, 0x480)  // anchor-caller readObject SEER arm; bracket seerhut..singleselectionpopups
 void TSeerHut::read(TAbstractFile* infile)
 {
@@ -3261,7 +3266,8 @@ void TSeerHut::read(TAbstractFile* infile)
             type_artifact_quest* artifactQuest = new type_artifact_quest(1);
             TArtifact artifact =
                 static_cast<TArtifact>(char_buffer); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
-            artifactQuest->artifacts.push_back(artifact);
+            artifactQuest->artifacts.insert(
+                artifactQuest->artifacts.end(), artifact);
             artifactQuest->field_38 = textRow;
             gpGame->artifactDisabled[artifact] = 1;
             artifactQuest->SetDefaultText();
