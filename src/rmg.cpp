@@ -268,6 +268,9 @@ static void set_available_rmg_heroes(
 
 // Vtable 0x6409cc slot 3 returns the map's two unsigned dimensions.
 // The hidden result pointer and two stores fix the coordinate return ABI.
+// The proven grid copy constructor moves the width load before the result
+// pointer load (97.56%, with 100% banked). Named constructed and assigned
+// results keep that scheduling difference and leave createRiver unchanged.
 VA(0x00532240, 0x15) // anchor-vtable 0x6409cc+0x0c; retail-only
 TRmgGridPoint type_random_map::GetSize()
 {
@@ -2699,6 +2702,15 @@ void type_random_map_generator::resetMovementCosts()
 // removes two CFG blocks; named bitset references/results also fail to restore
 // the retained range-check pointer. None is evidence for replacing the
 // current interface or hiding the early vector cleanup mismatch.
+// Paired seed-append helpers retain neither early _Destroy call (84.07%
+// with a value cost, 83.87% with a reference cost; unused-helper control flat).
+// A map/level view overload also misses the painting construction order
+// (80.32%); naming the plane buffer first loses the exact reset homes.
+// Tail-local positions and named grid temporaries remove the z snapshot in
+// some forms but still change the painting stores. Scalar tail lookup reaches
+// 86.24% and restores the final shared cleanup, while incorrectly merging
+// the early return into it and growing the painting loop to 24 instructions
+// versus retail's 21. This is not proof of replacing the position overload.
 VA(0x00548DF0, 0x99F)  // water-wheel caller + river-delta object; retail-only
 void type_random_map_generator::createRiver(TRmgMapPosition source)
 {
