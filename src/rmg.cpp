@@ -36,6 +36,8 @@ namespace {
 
 // The cinit at 0x530da0 writes these eight clockwise neighbours.  The river
 // search advances by two entries, selecting only the four cardinal offsets.
+// The current TPoint constructor reproduces all 127 initializer bytes after
+// resolving the 16 table references, including repeated constant loads.
 DATA(0x0069CDC0)
 TPoint g_rmgDirections[8] = {
     TPoint(1, 0),

@@ -240,16 +240,23 @@ int __fastcall SelectTerrainTransition(
 }
 
 // The grid copy constructor restores both retained set _Init calls and the
-// expanded packed-vector insert (23.33% -> 91.22%). Residual: the final
-// shrink path retains vector erase after size; retail expands that boundary.
-// Explicit versus default resize fill values are byte-neutral. The retained
-// brush constructor calls this ordinary body at 0x5b7297.
+// expanded packed-vector insert (23.33% -> 91.22%). Assign the virtual result
+// into an existing local: this also expands the final size query, while erase
+// remains a call, and recovers all 29 CFG blocks (97.92%). Direct construction
+// and reference binding retain that size call. A grid member instead of the
+// separate dimensions changes the constructor's earlier call boundaries.
+// Residual: dimension stores and the area multiply in the first block.
+// A named fill value changes those stores (96.33%); reversing the product
+// operands and zero-initializing the local size are byte-neutral. Value/reference
+// dimension queries and a shorter size scope are also flat. The retained brush
+// constructor calls this ordinary body at 0x5b7297.
 VA(0x005B45F0, 0x26D) // anchor-callee 0x5b7297; retail-only
 TRmgTerrainPainter::TRmgTerrainPainter(
     TRmgMapInterface* newAdapter, int terrain, int strength)
     : adapter(newAdapter), paintTerrain(terrain), transitionStrength(strength)
 {
-    TRmgGridPoint size = adapter->GetSize();
+    TRmgGridPoint size;
+    size = adapter->GetSize();
     width = size.x;
     height = size.y;
     packedCells.resize(width * height, TRmgPackedTerrainCell());

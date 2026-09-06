@@ -228,7 +228,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x0040a5d0	1542	91.10057	91.1006	91.1006	137.22874800000002	advmgr	?ProcessMapSelect@advManager@@QAEXPBVmessage@@PAUtype_point@@PAPAVNewmapCell@@@Z	admitted
 0x005a61f0	355	91.10169	91.1017	91.1017	31.588965000000012	spells	?GetNextChainLightningTarget@combatManager@@QAEJPBVarmy@@J@Z	admitted
 0x004590c0	4889	91.18802	91.188	91.188	430.81867999999986	campaignbrief	??0TCampaignBrief@@QAE@EE@Z	admitted
-0x005b45f0	621	91.221756	91.2218	91.2218	54.512622000000015	rmg_terrain	??0TRmgTerrainPainter@@QAE@PAVTRmgMapInterface@@HH@Z	admitted
 0x00412c40	2881	91.2477	91.2477	91.2477	252.15376300000005	advmgr	?UpdateRadar@advManager@@QAEXUtype_point@@EEEEE@Z	admitted
 0x00451220	915	91.297295	91.2973	91.2973	79.62970499999997	bottomviewsubwindow	??0TBottomViewResourceMessage@@QAE@PAVheroWindow@@HHPBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	admitted
 0x0058d510	2624	91.43498	91.435	91.435	224.74560000000002	singleselectionwindow	?DrawHeroAdvancedOption@TSingleSelectionWindow@@QAEXHEH@Z	admitted
@@ -476,6 +475,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x0042ae00	1816	97.42124	97.8283	97.8283	39.43807199999998	ai_player	?purchase_building@type_AI_player@@QAEEPAE@Z	admitted
 0x00527960	320	97.87234	97.8723	97.8723	6.808639999999997	philai	?GetTurnAIVars@philAI@@QAEXH@Z	admitted
 0x005f9940	1098	97.920456	97.9205	97.9205	22.83291000000001	viewwrld	?VWDrawShroud@advManager@@QAEXHHHHH@Z	admitted
+0x005b45f0	621	97.9205	97.9205	97.9205	12.913695000000004	rmg_terrain	??0TRmgTerrainPainter@@QAE@PAVTRmgMapInterface@@HH@Z	admitted
 0x00406fd0	2006	97.93116	97.9312	97.9312	41.500127999999854	advmgr	?Open@advManager@@UAEHH@Z	admitted
 0x0056ab40	1292	97.934944	97.9349	97.9349	26.681091999999968	search	?enter_trigger@searchArray@@QAEEPBVhero@@PAUpathCell@@JW4type_search_type@@@Z	admitted
 0x00551350	257	97.975	97.975	97.975	5.204250000000026	recruit	??0recruitUnit@@QAE@PAVarmyGroup@@EW4TCreatureType@@PAF121212@Z	admitted
