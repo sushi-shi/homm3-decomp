@@ -31,7 +31,6 @@ double AI_value_of_morale(long morale, long change);
 double AI_value_of_luck(long luck, long change);
 long AI_get_value_of_artifact(type_artifact artifact, const hero* owner,
                               unsigned char equipped, unsigned char exact);
-long AI_get_value_of_artifact(const type_artifact& artifact, long player_id);
 long AI_get_artifact_player_value(const type_artifact& artifact,
                                   long player_id);
 long AI_get_equip_value(type_artifact artifact, const hero* our_hero,
@@ -1170,7 +1169,7 @@ long get_artifact_purchase_value(
 
     type_artifact artifact(artifact_id, -1);
     long value = static_cast<long>(
-        static_cast<double>(AI_get_value_of_artifact(
+        static_cast<double>(AI_get_artifact_player_value(
             artifact, gNetLocalGamePos))
         - static_cast<double>(price)
             * gpCurrentPlayer->resourceValue[resource]);
@@ -4172,7 +4171,7 @@ int value_of_obelisk(NewmapCell* cell, long player_id)
 
     type_artifact grail_artifact(ARTIFACT_HOLY_GRAIL, -1);
     // field_4e3e8 is the DC-named numObelisks (see its game.h note).
-    return AI_get_value_of_artifact(grail_artifact, player_id)
+    return AI_get_artifact_player_value(grail_artifact, player_id)
         / gpGame->field_4e3e8;
 }
 
