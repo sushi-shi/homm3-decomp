@@ -1749,6 +1749,14 @@ VA_COMPGEN(0x00454230, 0x28, STREAMBUF_SEEKPOS, char)
 // named vtable holds 0x454050 at slot 1, 0x454060 at slot 3, 0x454260 at
 // slot 10 and 0x454270 at slot 12, which fixes the four with a duplicate
 // body shape; 0x454070 is slot 4 of the same table.
+// COMDAT pairing: locale::facet's scalar deleting destructor, agreement
+// 1.000 - and the vtable operand is what fixes the class rather than the
+// body, which every memberless `??_G` shares. It writes vtbl_245700, a
+// ONE-slot vtable holding this very row, which is what a class with a
+// virtual destructor and no other virtual looks like; the matching
+// `??1facet` is objecttype.obj's copy at 0x51a110.
+VA_COMPGEN(0x00454740, 0x23, SCALAR_DELETING_DTOR, facet)
+
 VA_COMPGEN(0x00454050, 0x6, STREAMBUF_OVERFLOW, char)
 VA_COMPGEN(0x00454060, 0x3, STREAMBUF_SHOWMANYC, char)
 VA_COMPGEN(0x00454070, 0x4, STREAMBUF_UNDERFLOW, char)
