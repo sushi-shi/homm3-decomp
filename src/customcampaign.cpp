@@ -3010,34 +3010,84 @@ static short ReadCampaignWord(TAbstractFile* infile)
 // the remaining ~60-statement dose is the same kind of thing, not one
 // construct.
 //
+// 2026-09-06 (polish lane 46), the RE-READ/FOLD pass over the >=28 arm found
+// one statement that is a source BUG as well as caller mass: retail reads the
+// pool count ONCE and resizes BOTH pools with it. Between the
+// `carryOverHeroes` resize's teardown (0x48b436 `_Destroy`, 0x48b43f
+// `operator delete`) and the `field_4c` resize's leading `size()` (0x48b462)
+// there is no virtual `Read` at all - the second resize reuses edi. Retail
+// SCampaign::Save at 0x48ae90 confirms the format from the other side: it
+// writes `carryOverHeroes.size()` and then goes straight into the pool loop,
+// never writing a second count. Dropping our second
+// `count = ReadCampaignByte(infile);` is 60.5021 -> 61.3492.
+//
+// The pre-v28 arm binds the same reference, and its proof is EVALUATION
+// ORDER rather than aliasing: retail computes `&carryOverHeroes[pool]`
+// (0x48a3ff `mov ebx,[ebx+0x40]` + `lea edi,[ebx+eax]`, homed at
+// [ebp-0x30]) BEFORE constructing resize's `hero()` temporary at 0x48a411,
+// while `carryOverHeroes[pool].resize(n)` builds the temporary first.  With
+// `std::vector<hero>& heroPool` the whole pool-loop preheader becomes
+// retail's instruction sequence and its frame slots ([ebp-0x40],
+// [ebp-0x4dc], [ebp-0x4e9]) line up.  65.5871 -> 65.7852.
+//
+// The same pass recovered retail's ELEMENT REFERENCES in the >=28 arm, and
+// their proof is a load the compiler could not have hoisted on its own:
+// retail computes `&field_4c[pool]` at 0x48b6ba (`mov edi,[ebx+0x50]` +
+// `add edi,edx`) BEFORE the virtual `Read` at 0x48b6cc that fetches the
+// artifact count, and computes `mapScores._First` at 0x48b416 before the
+// first `Read` of each scenario iteration.  A virtual call can store to
+// `this`, so VC6 may only sink those loads past it when the source itself
+// evaluated the subscript first - i.e. the source binds a reference at the
+// top of the block.  With `std::vector<type_artifact>& artifactPool` the
+// artifact loop becomes retail's bytes exactly (`movsx ecx,word[ebp+0xa]` /
+// `mov edx,[edi+4]` / `mov [edx+8*eax],ecx` against our former three-
+// instruction re-derivation from `this`), byte-flat at 61.3492; adding
+// `CampaignScenarioInfo& scenario` for the mapScores loop is
+// 61.3492 -> 62.2807.
+//
+// The sibling `std::vector<hero>& heroPool = carryOverHeroes[pool];` is
+// proved the same way - retail computes `&carryOverHeroes[pool]` at
+// 0x48b5e5..0x48b5ef before the hero-count `Read` at 0x48b5fa - and it was
+// the budget's, not the spelling's: cost -1.08 at 61.3492, -0.10 at
+// 62.2807, +0.61 at 64.9752.  ALL FOUR withheld rungs flipped positive
+// inside this lane once the element references landed, which retires the
+// "they flip together" note: the budget hole is now shallow enough that
+// each retail-proven spelling pays on its own.
+//
 // THREE RETAIL-PROVEN RUNGS ARE WITHHELD, all blocked on the same budget,
 // and all three got CHEAPER as the budget closed - measure them again after
 // every mass step, they flip together:
-//   1. the <36 tail zeroing as
-//      `std::fill(campaignCompleted + 14, campaignCompleted + 21, 0)`
-//      instead of the constant-count memset. Byte-EXACT locally: VC6 expands
+//   1. LANDED 2026-09-06 at 64.6979 (polish lane 46): the <36 tail zeroing
+//      as `std::fill(campaignCompleted + 14, campaignCompleted + 21, 0)`
+//      instead of the constant-count memset. Byte-EXACT: VC6 expands
 //      the char* overload's `memset(_F, _X, _L - _F)` with the count
 //      unfolded, giving retail's `cmp edi,ecx / je / sub / shr 2 /
 //      rep stosd / and 3 / rep stosb` at 0x48a9ab..0x48a9c5 against our
-//      individual stores. Cost -0.70 at 59.0405, -0.41 at 60.5021, and
-//      +2.44 at the +20 dose.
-//   2. `campaignFilename = saved.campaignFilename;` instead of the explicit
+//      individual stores. Cost -0.70 at 59.0405, -0.41 at 60.5021,
+//      +2.44 at the +20 dose, +0.28 at 64.6979.
+//   2. LANDED 2026-09-06 at 64.3277 (polish lane 46):
+//      `campaignFilename = saved.campaignFilename;` instead of the explicit
 //      `.assign(ptr, strlen(ptr))`. This is the section-6b depth ladder run
 //      BACKWARDS - operator=(const char*) -> assign(const char*) ->
 //      assign(ptr, len) puts the leaf one level deeper, and VC6 then CALLS
 //      `?assign@...@QAEAAV12@PBDI@Z` exactly where retail does (0x48a698),
 //      with the same inline `repne scasb` strlen in front of it. Cost -0.75
-//      at 59.0415, -0.31 at 60.5021.
-//   3. `days` and `score` read into a block-scoped temporary and then
-//      assigned, instead of `infile->Read(&mapScores[i].days, ...)` straight
-//      into the member. Retail reads both into stack temps and copies
-//      ([ebp-0x38] at 0x48a939, [ebp-0x30] at 0x48a952) - the shape a
-//      dword-returning reader beside ReadCampaignByte/Word would give, which
-//      this lane may not add. Cost -0.23 at 60.5021.
-// The 4-byte frame surplus (our 0x6b80 against retail's 0x6b7c) is the
-// `int artifactId` the memcpy-into-enum idiom needs, because TArtifact is an
-// enum and the tree's cast floor is zero; retail stores the sign-extended
-// word straight into the member at 0x48ac6b. Not source-addressable here.
+//      at 59.0415, -0.31 at 60.5021, +0.37 at 64.3277.
+//   3. LANDED 2026-09-06 at 62.2807 (polish lane 46): `days` and `score`
+//      read into a block-scoped temporary and then assigned, instead of
+//      `infile->Read(&scenario.days, ...)` straight into the member. Retail
+//      reads both into stack temps and copies ([ebp-0x38] at 0x48a939,
+//      [ebp-0x30] at 0x48a952). Cost -0.23 at 60.5021, +2.05 at 62.2807 -
+//      the first of the four to flip, and it flipped the moment the
+//      `scenario` reference put the loop on retail's addressing.
+// The frame surplus is GONE: the `days`/`score` temporaries take the slots
+// the `int artifactId` carrier used to add, so the candidate now allocates
+// retail's 0x6b7c and every named slot lines up ([ebp-0x40] for `this`,
+// [ebp-0x4b09] for the legacy hero array, [ebp-0x6b88] for the record,
+// [ebp-0x4e9] for the carry-over counts).  `int artifactId` plus its memcpy
+// stays: TArtifact is an enum and the board ratchets enum casts at zero, so
+// retail's `movsx ecx,word ptr [ebp+0xa]` straight into the member at
+// 0x48ac6b has no cast-free spelling here.
 VA(0x0048a310, 0xB1E)  // SavedGameHeader::Load caller + member/helper graph
 void SCampaign::Load(TAbstractFile* infile, int saveVersion)
 {
@@ -3061,8 +3111,7 @@ void SCampaign::Load(TAbstractFile* infile, int saveVersion)
         briefingChoice = saved.briefingChoice;
         crossoverArrayIndex = 0;
         secretActive = false;
-        campaignFilename.assign(
-            saved.campaignFilename, strlen(saved.campaignFilename));
+        campaignFilename = saved.campaignFilename;
 
         memset(campaignCompleted, 0, sizeof(campaignCompleted));
         memcpy(campaignCompleted, saved.campaignCompleted,
@@ -3086,13 +3135,14 @@ void SCampaign::Load(TAbstractFile* infile, int saveVersion)
         field_4c.resize(2);
 
         for (int pool = 0; pool < 2; ++pool) {
-            carryOverHeroes[pool].resize(saved.carryOverHeroCounts[pool]);
+            std::vector<hero>& heroPool = carryOverHeroes[pool];
+            heroPool.resize(saved.carryOverHeroCounts[pool]);
 
             for (int whichHero = 0;
                  whichHero < saved.carryOverHeroCounts[pool]; ++whichHero) {
                 const LegacyCampaignHero& oldHero =
                     saved.carryOverHeroes[pool][whichHero];
-                hero& newHero = carryOverHeroes[pool][whichHero];
+                hero& newHero = heroPool[whichHero];
 
                 newHero.id = oldHero.id;
                 newHero.owner = oldHero.owner;
@@ -3155,43 +3205,49 @@ void SCampaign::Load(TAbstractFile* infile, int saveVersion)
         infile->Read(campaignCompleted, sizeof(campaignCompleted));
     } else {
         infile->Read(campaignCompleted, 14);
-        memset(campaignCompleted + 14, 0,
-               sizeof(campaignCompleted) - 14);
+        std::fill(campaignCompleted + 14,
+                  campaignCompleted + sizeof(campaignCompleted), 0);
     }
 
     unsigned char count = ReadCampaignByte(infile);
     mapScores.resize(count);
     for (int i = 0; i < count; ++i) {
-        mapScores[i].completed = ReadCampaignByte(infile) != 0;
-        infile->Read(&mapScores[i].days, sizeof(mapScores[i].days));
-        infile->Read(&mapScores[i].score, sizeof(mapScores[i].score));
+        CampaignScenarioInfo& scenario = mapScores[i];
+        scenario.completed = ReadCampaignByte(infile) != 0;
+        int days;
+        infile->Read(&days, sizeof(days));
+        scenario.days = days;
+        int score;
+        infile->Read(&score, sizeof(score));
+        scenario.score = score;
 
-        mapScores[i].complete_order =
+        scenario.complete_order =
             static_cast<signed char>(ReadCampaignByte(infile));
-        mapScores[i].index =
+        scenario.index =
             static_cast<signed char>(ReadCampaignByte(infile));
     }
 
     count = ReadCampaignByte(infile);
     carryOverHeroes.resize(count);
-    count = ReadCampaignByte(infile);
     field_4c.resize(count);
 
     for (int pool = 0; pool < count; ++pool) {
+        std::vector<hero>& heroPool = carryOverHeroes[pool];
         unsigned char heroCount = ReadCampaignByte(infile);
-        carryOverHeroes[pool].resize(heroCount);
+        heroPool.resize(heroCount);
         for (int whichHero = 0; whichHero < heroCount; ++whichHero)
-            carryOverHeroes[pool][whichHero].load(infile, saveVersion);
+            heroPool[whichHero].load(infile, saveVersion);
 
+        std::vector<type_artifact>& artifactPool = field_4c[pool];
         unsigned short artifactCount =
             static_cast<unsigned short>(ReadCampaignWord(infile));
-        field_4c[pool].resize(artifactCount);
+        artifactPool.resize(artifactCount);
         for (int whichArtifact = 0; whichArtifact < artifactCount;
              ++whichArtifact) {
             int artifactId = ReadCampaignWord(infile);
-            memcpy(&field_4c[pool][whichArtifact].artifactId, &artifactId,
+            memcpy(&artifactPool[whichArtifact].artifactId, &artifactId,
                    sizeof(artifactId));
-            field_4c[pool][whichArtifact].extra = ReadCampaignWord(infile);
+            artifactPool[whichArtifact].extra = ReadCampaignWord(infile);
         }
     }
 
