@@ -688,7 +688,7 @@ void type_AI_player::end_turn()
 
     unsigned char prohibited_creatures[145];
     fill_prohibited_array(&gpGame->players[team], prohibited_creatures);
-    while (purchase_buildings(prohibited_creatures)) {
+    while (purchase_building(prohibited_creatures)) {
     }
     hire_heroes();
     calculate_demand();
