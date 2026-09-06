@@ -3192,16 +3192,16 @@ long type_AI_spellcaster::get_berserk_value(const army* enemy, type_enchant_data
 // that the seed marked reachable is run through get_traitor_value,
 // keeping the best.
 // RE-MEASURED 2026-09-06 in the current inline structure, and the earlier
-// verdict stands to the digit: the `>> 26` test spelled with the same byte
-// truncation the `>> 21` site uses - retail's `shr ecx,0x1a / test cl,0x1` -
-// scores 90.9036 both as a named `unsigned char slow_flags` and as an inline
-// `static_cast<unsigned char>(...) & 1`, against 96.3546 for the folded
-// `test ecx,0x4000000` kept here.  The truncation is locally RIGHT and the
-// cost is downstream: with it, `enemy_row` lands in ECX and the whole
-// `lea esi,[eax+8*ecx+0x54cc]` row-pointer allocation retail keeps in ESI
-// moves with it, which is the 5.45 points.  Two sites in one body wanting
-// opposite spellings of the same shift is the recorded state, not an
-// oversight.
+// verdict is settled and the function is EXACT since 2026-09-06.  The
+// earlier note had the causality backwards: the byte-truncated `>> 26`
+// test (retail's `shr ecx,0x1a / test cl,0x1`) is not what pushed
+// `enemy_row` out of ESI - the INDEXED census loop was.  Retail counts the
+// enemy row down and walks the pointer (`mov ecx,eax / dec eax /
+// test ecx,ecx / jle` at fn+0xf0, latch `add esi,0x548 / dec eax / jne`),
+// which is `count-- > 0` with the bump in the `for` increment.  With that
+// loop the row pointer stays in ESI, and the truncation - which the
+// neighbouring `>> 21` site already used - then lands the last three
+// bytes.  Both spellings of the same shift agree after all.
 VA(0x0043a500, 0x16E)  // linkorder, dc 0x40ac0
 long type_AI_spellcaster::get_hypnotize_value(const army* enemy, type_enchant_data caster)
 {
@@ -3222,22 +3222,22 @@ long type_AI_spellcaster::get_hypnotize_value(const army* enemy, type_enchant_da
     long best = 0;
     const army* enemy_row = gpCombatManager->armies[enemy_side];
     long turns = _cpp_min(akHypnotizeTurns[caster.mastery], params.odds);
-    if ((static_cast<unsigned>(enemy->sMonInfo.attributes) >> 26) & 1)
+    unsigned char slow_flags = static_cast<unsigned char>(static_cast<unsigned>(enemy->sMonInfo.attributes) >> 26);
+    if (slow_flags & 1)
         turns--;
     if (turns == 0)
         return 0;
     gpSearchArray->SeedCombatPosition(enemy, side, enemy->sMonInfo.speed * turns, 0, -1);
     long count = gpCombatManager->numArmies[enemy_side];
-    for (long i = 0; i < count; i++) {
-        const army* enemy_army = &enemy_row[i];
-        if (enemy_army == enemy)
+    for (; count-- > 0; enemy_row++) {
+        if (enemy_row == enemy)
             continue;
-        unsigned char other_flags = static_cast<unsigned char>(static_cast<unsigned>(enemy_army->sMonInfo.attributes) >> 21);
+        unsigned char other_flags = static_cast<unsigned char>(static_cast<unsigned>(enemy_row->sMonInfo.attributes) >> 21);
         if (other_flags & 1)
             continue;
-        if (!gpCombatManager->cells[enemy_army->gridIndex].field_4a)
+        if (!gpCombatManager->cells[enemy_row->gridIndex].field_4a)
             continue;
-        best = _cpp_max(get_traitor_value(enemy, enemy_army), best);
+        best = _cpp_max(get_traitor_value(enemy, enemy_row), best);
     }
     return best;
 }
