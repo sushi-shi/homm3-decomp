@@ -255,13 +255,13 @@ hero* GetCampaignBonusHero(int heroSelector, int whichPlayer)
 VA(0x00484230, 0x46)  // anchor-vtable (0x63daa0+0x10), retail-only
 std::string TCampaignSpellBonus::GetText() const
 {
-    return format_string(gpGeneralText->Text[708], akSpellTraits[m_spell].name);
+    return format_string(gpGeneralText->Text[716], akSpellTraits[m_spell].name);
 }
 
 VA(0x00484280, 0x46)  // anchor-vtable (0x63da20+0x10), retail-only
 std::string TCampaignSpellScrollBonus::GetText() const
 {
-    return format_string(gpGeneralText->Text[709], akSpellTraits[m_spell].name);
+    return format_string(gpGeneralText->Text[717], akSpellTraits[m_spell].name);
 }
 
 VA(0x004842d0, 0x3B)  // anchor-vtable (0x63da20+0x14), retail-only
@@ -436,7 +436,7 @@ void TCampaignBuildingBonus::Apply(int whichPlayer) const
 VA(0x004847a0, 0x3C)  // anchor-callee (GetBuildingName 0x4610e0), retail-only
 std::string TCampaignBuildingBonus::GetText() const
 {
-    const char* format = gpGeneralText->Text[708];
+    const char* format = gpGeneralText->Text[716];
     return format_string(format, GetBuildingName(m_town, m_building));
 }
 
@@ -456,7 +456,7 @@ const char* TCampaignArtifactBonus::GetIconDefName() const
 VA(0x00484820, 0x40)  // anchor-vtable (0x63da40+0x10), retail-only
 std::string TCampaignArtifactBonus::GetText() const
 {
-    return format_string(gpGeneralText->Text[708],
+    return format_string(gpGeneralText->Text[716],
                          akArtifactTraits[m_artifact].name);
 }
 
@@ -2093,7 +2093,22 @@ int TCampaignBrief::CampaignHeaderStruct::GetNumMaps() const
 // size/capacity/_Ucopy/_Destroy calls). The two documented levers for this
 // class are a statement pin and a caller-shrink helper split, and both are
 // closed here: this lane adds no inline_depth pins, and the Dreamcast
-// roster names no helper to split out of a Complete-only body. The frame
+// roster names no helper to split out of a Complete-only body.
+// DOSE, measured 2026-09-06 (throwaway probes, none shipped): the hole IS
+// budget-shaped and small. Taking 5 lines (the clear+FreeData head), 5 more
+// (the scenario-record loop) and 13 more (the per-scenario map-header block)
+// out of `caller_cb` carries 49.5351 -> 80.9541, at which point BOTH
+// clusters named above pair - ??0CMapHeaderData is CALLED and the
+// placeholder vector's operator= is CALLED - and the skeleton closes from
+// 78-vs-49 blocks to 50-vs-49 with one missing block. Intermediate doses:
+// map-header loop alone 70.25/70.77/71.11 by boundary, head alone 55.93,
+// head+loop-body 76.23/77.88/79.10/80.60 by boundary. Overshoot is real -
+// adding the file-open block to the largest dose drops it to 55.59 - and at
+// the peak the residual has FLIPPED SIGN: the two basic_string and the
+// bitset<300> subobject constructors and ~NewSMapHeader all become CALLS
+// where retail expands them. So ~31 points here are reachable through
+// caller mass alone, and what is wanted is the real construct that carries
+// it. The frame
 // is 12 bytes over retail's 0x528 for the same reason - our fpos temporary
 // pair and the memory-homed running offset are pushed apart by the
 // expansions above, where retail keeps the offset in ESI throughout.
@@ -2244,7 +2259,15 @@ void TCampaignBrief::CampaignHeaderStruct::GetAvailableScenarios(
 // 21 target-shifted blocks is that one displacement. Tried and rejected
 // 2026-09-06: inverting the two arms so the !scroll_delay case leads
 // (82.36) and flattening both arms onto `redraw &&` conditions (83.88,
-// byte-flat). It is a C2 block-placement choice, not the condition order.
+// byte-flat); nesting the scroll test inside an `if (!scroll_delay)` with
+// `--scroll_delay` in the else (82.36, i.e. the same loss as the inversion -
+// it is the arm ORDER that costs, not the nesting); and, decisively, a
+// `goto scroll_one_row` out of the else-if with `++scroll_y; goto
+// resume_subtitle;` parked at the foot of the strip block, which is EXACTLY
+// retail's `jmp 0x4892fa` / block-at-0x4892a1 shape and is BYTE-FLAT to the
+// digit (83.8848) - C2 folds the goto straight back into the inline
+// position. So the sink is not reachable from the source at all: it is a C2
+// block-placement choice, not the condition order and not a goto.
 VA(0x00488fb0, 0x528)  // PlayScenarioPrologue callee + music-cell reader, retail-only
 void TCampaignBrief::MapTextStruct::Play()
 {
@@ -2542,6 +2565,15 @@ const int CAMPAIGN_MAP_ORDINAL_07 = 7;
 // *GetHero(...))` measures 78.6801 to the digit, so only the six 1-count
 // appends carry the decision.
 //
+// PRICED 2026-09-06 - do not spend a lane on the /Ob2 side of this row. An
+// `if (0)` mass titration over N = 1,2,4,8,16,32,64 inert statements is flat
+// at 78.6801 to the digit through N=16, peaks at 79.2549 (N=32) and falls to
+// 76.5288 (N=64); in the other direction, lifting the exclusion loop out of
+// `caller_cb` costs 11.4 (67.32) and lifting the complete_order loop costs
+// 2.5 (76.20, at 95-vs-95 blocks and 22 exact). So the whole reachable
+// budget spread here is under 0.6 points and the residual below is the
+// entire remaining story.
+//
 // Residual (78.68%): retail holds the literal zero in EDI across the whole
 // body (`xor edi,edi` at fn+0x27, before the completed test) and spends it
 // on complete_order's store, the index compare and the size() null tests;
@@ -2815,6 +2847,40 @@ static short ReadCampaignWord(TAbstractFile* infile)
 // construction, and every source/destination displacement in the promotion
 // loops. There is no Dreamcast procedure: that port does not use this PC save
 // format, so retail x86 is the sole code and ABI verdict here.
+//
+// Residual (59.04%): 133 blocks against retail's 89 and 15 target-only STL
+// calls, and it is ALL /Ob2 budget in one direction - we expand, retail
+// calls. Read positionally: in the >=28 arm retail CALLS
+// `vector<T>::size()` at the LEADING site of every one of the five resizes
+// (0x48aa49, and the same shape at each) and calls `field_6c.resize`
+// outright at the tail (delinked `vector<type_point>::resize`, ICF-folded
+// with the 4-byte element), while we expand the first size() into its
+// `0x66666667` magic divide at each and expand the whole tail resize into
+// four blocks. In the pre-v28 arm the direction is the same one step down:
+// retail reaches `??_H` for the 16-element LegacyCampaignHero array and the
+// by-length `basic_string::assign`, we expand a per-element ctor loop and
+// `_Grow`.
+// DOSE, measured 2026-09-06 (throwaway probes, none shipped - the tree
+// forbids the file-static caller-shrink device that produced them): moving
+// roughly the pre-v28 arm's scalar header (13 lines) plus its two
+// hero-promotion loops (47 lines) out of `caller_cb` is worth
+// 59.0405 -> 79.2549, and the >=28 arm then takes retail's exact
+// size/insert/size/erase shape at all five resize sites with the tail
+// resize called. Smaller and larger doses both fall away sharply: the whole
+// pre-v28 arm 68.89, from the mapScores loop 64.65, from the resize(2) pair
+// 66.10, the pool loops alone 73.98, pools+scores-loop 75.20. So the hole is
+// budget-shaped and its size is known; what is missing is the construct that
+// carries that mass in retail's own source, which is NOT a helper split -
+// no Dreamcast procedure exists for this body to name one from.
+// Tried and REJECTED: the <36 tail zeroing spelled
+// `std::fill(campaignCompleted + 14, campaignCompleted + 21, 0)` instead of
+// the constant-count memset. It is byte-EXACT locally - VC6 expands the
+// char* overload's `memset(_F, _X, _L - _F)` with the count unfolded, giving
+// retail's `cmp edi,ecx / je / sub / shr 2 / rep stosd / and 3 / rep stosb`
+// at 0x48a9ab..0x48a9c5 against our individual stores - but it costs 0.70
+// at this budget (59.0405 -> 58.3444) because the extra mass buys another
+// over-inline downstream. At the +20 dose above it is worth +2.44 instead.
+// Re-try it the moment the real mass construct lands.
 VA(0x0048a310, 0xB1E)  // SavedGameHeader::Load caller + member/helper graph
 void SCampaign::Load(TAbstractFile* infile, int saveVersion)
 {
@@ -3352,6 +3418,21 @@ VA_COMPGEN(0x0048bea0, 0x58, STREAMBUF_INIT, char)
 // carry-over hero vector.
 VA_COMPGEN(0x0048ce20, 0x23, VECTOR_CAPACITY, hero)
 VA_COMPGEN(0x0048d410, 0x26, VECTOR_DESTROY, hero)
+
+// COMDAT pairing: the SINGLE-element arm of vector<hero>::insert, the last
+// unclaimed callee of SCampaign::CompleteCurrentMap (retail calls it at
+// 0x48a3de, at the first of that body's seven crossover appends, and expands
+// it at the other six). The overload is settled by the frame, not by
+// similarity: `ret 8` against the count arm's `ret 0xc` at 0x48d060, and the
+// tail recomputes `_First + _O * 0x492` into EAX - the ITERATOR return that
+// only `insert(iterator, const _Ty&)` has. Its whole callee set is the
+// vector<hero> family already claimed here: _Construct<hero> 0x4603a0,
+// _Ucopy 0x48d440, _Destroy 0x48d410, size 0x48b470, plus operator new and
+// operator delete for the grow arm. The count arm is inlined into it with
+// _M folded to 1, which is why the capacity test reads `cmp edx, 1`.
+// Our own compile expands both levels at all seven sites, so this row has no
+// base twin yet and pairs by size against the count arm rather than zipping.
+VA_COMPGEN(0x0048ce50, 0x210, VECTOR_INSERT, hero)
 
 // COMDAT pairing: basic_filebuf<char>::_Init(FILE*, _Initfl), agreement
 // 0.973 - the census had already named it `exe_filebuf_open` off the same

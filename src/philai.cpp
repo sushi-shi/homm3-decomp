@@ -1351,6 +1351,25 @@ static double gAIWaterMapFraction = 1.0;
 //    must keep BattleTactics' arm distinct at the same time.
 //  - A named `long defense_value = army_value * 7;` in the Defense arm is
 //    byte-flat to the digit - VC6 folds it straight back.
+// MEASURED 2026-09-06, and this CLOSES the arm-level search. Grouping
+// Leadership+Luck at the LEADERSHIP position makes the `ret` census EXACT -
+// 48 branches and 44 rets on both sides, retail's own numbers - and costs
+// 2.06 (78.1958 -> 76.1400), because with the census right C2 then merges
+// Offense into Defense, which is the merge retail does not make. Every way
+// of separating those two arms FROM INSIDE THEM was then tried against the
+// grouped variant and every one is BYTE-FLAT to the digit, all four landing
+// on exactly 76.1400: a named `long scaled = army_value * 7;` in the Defense
+// arm, the same in the Offense arm, a `7L` literal, and `7 * army_value`
+// operand order (which is also byte-flat at 78.1958 ungrouped). Swapping the
+// two arms' source order costs 0.02 in both variants (78.1799 / 76.1220),
+// and decomposing one arm as `army_value / 100 * 7 + (army_value % 100) * 7
+// / 100` overshoots to 45 rets and 74.6100.
+// So the separation is NOT arm-addressable: retail's two copies differ only
+// in a scratch register and in where `mov eax,0x51eb851f` schedules, and
+// every source expression that computes `army_value * 7 / 100` lowers to the
+// same bytes - which is precisely why C2's cross-jumper merges them. The
+// knob is the pseudo-creation count UPSTREAM of the two arms, and it is not
+// reachable from either arm's own spelling. 78.1958 stays the max.
 VA(0x00524690, 0x684)  // anchor-callee, dc 0x1135ac
 long get_skill_value(const hero* our_hero, TSecondarySkill skill,
                      unsigned char complex_choice)

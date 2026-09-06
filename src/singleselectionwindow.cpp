@@ -2721,6 +2721,15 @@ void TSingleSelectionWindow::SetupFilterOptions()
 // singleselectionwindow.h:165 records for the two other CUpdatePlayerPosMsg
 // sites. The frame is 8 B short for exactly this reason: retail's two extra
 // dword temps hold the char* operands live across its expanded operator=.
+// DOSE for (3), measured 2026-09-06 (throwaway probes, none shipped): six
+// lines - the four-store seat-reset loop - out of `caller_cb` restores BOTH
+// constructor calls, 71.5355 -> 81.2220, at which point the call streams
+// agree at report level with zero one-sided sites on either side and the
+// skeleton closes from 40-vs-36 blocks to 35-vs-36. Six more (the host
+// widget block) add 0.51 (81.7278). Overshoot again is real: the eight-seat
+// header loop instead of the reset loop gives 77.15, both together 69.43,
+// and the player-count block 72.88. So (3) is worth ~10 points and the dose
+// is small - what is wanted is the real construct that carries it.
 // Tried and rejected: field_18A0[4] + field_18A0[2] operand order
 // (byte-flat). Fixed here: the version ternary is `== CONTEXT_1 ? 21 : 14`
 // (retail's `and al,-7 / add eax,0x15`), not the other way round.
