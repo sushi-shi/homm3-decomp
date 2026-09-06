@@ -871,7 +871,7 @@ campaignbrief	?GetCampaignName@CampaignHeaderStruct@TCampaignBrief@@QBE?AV?$basi
 campaignbrief	?GetRegionDescription@ScenarioStruct@TCampaignBrief@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x5bad0	897d4cbbc50e
 campaignbrief	?Select@TCampaignBrief@@QAEXH@Z	92.1064	92.1064	92.1064	0x57990	8ffef7c0b1fa
 campaignbrief	?UpdateAllyEnemyFlags@TCampaignBrief@@QAEXXZ	86.8125	86.8125	86.8125	0x58010	0a990c5eb338
-campaignbrief	?UpdateBonusIcons@TCampaignBrief@@QAEXXZ	95.3700	95.3700	95.3700	0x58d40	288e1c1bcbaf
+campaignbrief	?UpdateBonusIcons@TCampaignBrief@@QAEXXZ	95.4405	95.4405	95.4405	0x58d40	cab9cb50a70b
 campaignbrief	?UpdateDifficultyButtons@TCampaignBrief@@QAEXXZ	100.0000	100.0000	100.0000	0x59010	a54768111cfd
 campaignbrief	?_Buynode@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@IAEPAU_Node@12@PAU312@W4_Redbl@12@@Z	100.0000	100.0000	100.0000	0x5dea0	-
 campaignbrief	?_Construct@std@@YIXPAU?$pair@$$CBHUtype_map_hero_info@@@1@ABU21@@Z	100.0000	100.0000	100.0000	0x5d590	-
