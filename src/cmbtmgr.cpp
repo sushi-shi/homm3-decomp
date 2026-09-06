@@ -1377,16 +1377,15 @@ int combatManager::CheckApplyBadMorale(int group, int index)
 // the selected stack's turn and, outside quick combat, plays the complete
 // message/effect/sample sequence.
 //
-// Residual (91.10%): all 19 branches and five returns agree, as do the
-// semantic instruction sequence and 525-byte span. Retail keeps `selected`
-// in EDI, the Azure total in EDX and the loop count in EAX (with an EBX
-// zero-test copy); this VC6 invocation keeps them in EBX, EDI and EDX and
-// addresses the stack through EAX. Four grounded source shapes were tested:
-// a direct hypnotized-side if/else with signed `<`, the complement-first
-// spelling with `!=`, an initialized actual-side spelling, and the explicit
-// actual-side if/else below. The last is best and reproduces retail's side
-// branch skeleton; the remaining allocation/strength-reduction choice is
-// not source-addressable without semantic distortion.
+// EXACT since 2026-09-06. The last residual was the Azure census loop:
+// retail walks a stack POINTER and counts the opposing army total DOWN
+// (`mov ebx,eax / dec eax / test ebx,ebx / je` at fn+0x2a9, then
+// `add ecx,0x548 / dec eax / jne`), which is `while (count--)` with the
+// pointer bump in the `for` increment.  The old indexed
+// `for (i = 0; i != numArmies[..]; ++i)` forced the EBX/EDI/EDX
+// allocation the earlier note blamed; the countdown frees it and the
+// empty-side exit merges with the `!azureDragons` return, exactly as
+// retail's single `je 0x261a` does.  91.0961 -> 100.
 VA(0x00464d40, 0x20D)  // NextArmy sole caller + Fear.wav/body, retail-only
 unsigned char combatManager::Unnamed464d40(army* selected)
 {
@@ -1403,8 +1402,8 @@ unsigned char combatManager::Unnamed464d40(army* selected)
     int opposingSide = 1 - actualSide;
 
     int azureDragons = 0;
-    for (int i = 0; i != numArmies[opposingSide]; ++i) {
-        army* stack = &armies[opposingSide][i];
+    army* stack = armies[opposingSide];
+    for (int count = numArmies[opposingSide]; count--; stack++) {
         if (stack->creatureType == CREATURE_AZURE_DRAGON)
             azureDragons += stack->numTroops;
     }
