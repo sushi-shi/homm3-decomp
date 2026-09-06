@@ -949,33 +949,43 @@ void SmackManager::SetPixelFormat(unsigned long red_mask,
 // on the stack and `ret 0x18`, exactly VideoOpen's eight-argument forward.
 // The Smacker volume scale (3640 * "Sound Volume") and the 0xfe000 track
 // mask are transcribed from the two SmackVolumePan sites.
-// Residual (41.0154%, banked MAX 48.6988): the three VideoClose() sites
-// only. Retail EXPANDS all three and does it three different ways, and the
-// full retail call stream now reads cleanly against the sequential-budget
-// model in docs/vc6/inliner.md section 2:
+// Residual (39.3082%, banked MAX 48.6988): the three VideoClose() sites
+// only. Retail EXPANDS all three and does it three different ways, and with
+// the two pasted bodies restored (VideoClose calls VideoResume, VideoResume
+// calls VideoSoundOnOff) every callee in retail's stream is now nameable:
 //   site 1 (+0x044): CALL VideoResume, service_sounds, CloseSmacker
 //                    EXPANDED (two SmackClose), CALL CloseBinkVideo
 //   site 2 (+0x0cb): the same shape again
-//   site 3 (+0x284): VideoResume EXPANDED (its VideoSoundOnOff is visible),
-//                    service_sounds, CALL CloseSmacker, CALL CloseBinkVideo
+//   site 3 (+0x284): VideoResume EXPANDED and CALLING VideoSoundOnOff
+//                    (0x598d74), service_sounds, CALL CloseSmacker,
+//                    CALL CloseBinkVideo
 // That is budget/sites-remaining working down the list: at the first two
 // sites the quotient is small, so the big VideoResume starves and the small
 // CloseSmacker fits; at the last site the whole remaining budget lands on
 // one call, VideoResume fits, and the nested CloseSmacker then starves.
-// The 2026-09-06 CloseSmacker restoration in VideoClose (proven by that
-// site-3 call - see the note on CloseSmacker below) costs 48.6988 -> 41.0154
-// HERE and is kept anyway: the helper boundary is the source fact and the
-// dip is TU collateral, MAX unmoved. It also moves the residual in the right
-// direction structurally - VideoClose now EXPANDS at all three sites as
-// retail does, where before we CALLED it at all three. What is left is one
-// decision, VideoResume, over-expanding at sites 1 and 2.
+// Our CL expands VideoResume at all three, so the whole row is that one
+// depth-2 decision (predict-inline: VideoResume base x0 / retail x2,
+// CloseSmacker base x0 / retail x1, VideoSoundOnOff base x0 / retail x1).
+//
+// NEGATIVE CONTROL, 2026-09-06 (polish lane 46): ShowVideo's OWN mass is
+// NOT the lever. Deleting the audio-track SmackVolumePan and the seven-
+// argument SmackToBuffer from this body - two whole statements, one of them
+// the largest call in the function - leaves every inline decision bit-
+// identical (the same three over-inline rows, the same 10-vs-12 call
+// counts). So `budget = 2*cb(ShowVideo)` is clamped here and caller-shrink
+// cannot reach the depth-2 quotient; the separation retail has is a
+// property of the callee side or of the per-site inline_depth byte, and the
+// pin that would reproduce it is not admissible.
 // Tried and rejected: `inline void VideoClose()` (the documented /Ob2 lever
 // for a large out-of-class definition) DOES make it expand, but expands
 // VideoResume with it at every site - 75 blocks, ShowVideo 41.02 and
 // VideoClose's own row to 0.00; writing the close sequence longhand at all
 // three sites is worse still (59 blocks, 16.07) for the same reason - the
-// bigger caller buys VideoResume an expansion retail does not make. The
-// separation retail has needs a per-site pin, which this lane may not add.
+// bigger caller buys VideoResume an expansion retail does not make.  The
+// 2026-09-06 CloseSmacker and VideoResume restorations in VideoClose cost
+// 48.6988 -> 41.0154 -> 39.3082 HERE and are kept: both helper boundaries
+// are retail-proven source facts (VideoClose is 95.9184 -> 100 on the
+// second), the dip is TU collateral, and MAX is unmoved.
 VA(0x00598af0, 0x385)  // anchor-caller(VideoPlay/VideoOpen) + anchor-callee(OpenSmackerTrack), retail-only
 void ShowVideo(int id, int x, int y, int w, int h, int loop, int autoDraw,
                int advance)
