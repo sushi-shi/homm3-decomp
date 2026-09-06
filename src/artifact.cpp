@@ -4,6 +4,7 @@
 // the adjacent bitset bodies are Dinkumware COMDATs, not source claims.
 #include <va.h>
 #include <bitset>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -47,6 +48,110 @@ DATA(0x00694bf8)
 static TArtifactSlotTraits aArtifactSlotTraits[19];
 
 } // namespace
+
+// The two table builders. They are retail rows of their own - file statics
+// with no name of their own in the image, kept OUT of this file's unnamed
+// namespace because VC6 mangles that one with the absolute source path -
+// and the variadic signature is what fixes them: `count` gets a memory home
+// because `va_start` takes its
+// address, which is why retail writes the decremented counter back to
+// `[ebp+0xc]` every iteration and never strength-reduces the walk. The bit
+// default-constructed local is the inline `_Tidy` (one zero store for the
+// 19-bit width, the five-word downward fill for the 144-bit one).
+//
+// Residual (22.16% / 32.15%): every block, branch and store of the ordinary
+// path agrees; the whole gap is ONE inline decision. Retail EXPANDS
+// `bitset<N>::_Xran`'s throw - the literal's `basic_string`, the
+// `out_of_range` constructor and two `__CxxThrowException` sites, ~164 of
+// its 267 bytes - and so carries an EH frame; we call `_Xran` and carry
+// none. Neither of the depth rungs moves it (`mask[i] = true` and
+// `mask.set(i)` are byte-identical here, as is a `goto` loop). Tried and
+// rejected, one compile each: an explicit `if (slot >= 19) throw
+// std::out_of_range(...)` guard ahead of `set` (0.00 - two range checks
+// and two throw paths); the same guard with hero.cpp's union word view in
+// place of `set` (3.91). Both are worse than leaving the call, so the
+// honest spelling stands.
+VA(0x0044c720, 0x10B)  // anchor-callee the aArtifactSlotMasks cinit's 14 calls, retail-only file static
+static std::bitset<19> MakeArtifactSlotMask(unsigned count, ...)
+{
+    std::bitset<19> mask;
+    va_list slots;
+    va_start(slots, count);
+    while (count > 0) {
+        mask.set(va_arg(slots, int));
+        --count;
+    }
+    va_end(slots);
+    return mask;
+}
+
+VA(0x0044c830, 0x122)  // anchor-callee the aCombinationArtifacts cinit's 12 calls, retail-only file static
+static std::bitset<144> MakeArtifactComponentMask(unsigned count, ...)
+{
+    std::bitset<144> mask;
+    va_list components;
+    va_start(components, count);
+    while (count > 0) {
+        mask.set(va_arg(components, int));
+        --count;
+    }
+    va_end(components);
+    return mask;
+}
+
+// The twelve Shadow of Death combination artifacts, ids 129..140, each with
+// the component set the assembled artifact consumes. Read straight out of
+// the cinit at 0x44c960: the 24-byte record is built in a stack temporary
+// (the id dword plus the builder's five-word result) and copied to
+// 0x6938d8 + 24*i by a six-dword `rep movsd`, which is the record's own
+// two-argument constructor inlined plus its implicit copy.
+DATA(0x006938d8)
+const TCombinationArtifact aCombinationArtifacts[12] = {
+    TCombinationArtifact(0x81,
+        MakeArtifactComponentMask(6, 0x24, 0x21, 0x23, 0x1f, 0x20, 0x22)),
+    TCombinationArtifact(0x82, MakeArtifactComponentMask(3, 0x36, 0x37, 0x38)),
+    TCombinationArtifact(0x83, MakeArtifactComponentMask(3, 0x5f, 0x60, 0x5e)),
+    TCombinationArtifact(0x84,
+        MakeArtifactComponentMask(4, 0x14, 0x08, 0x1a, 0x0e)),
+    TCombinationArtifact(0x85,
+        MakeArtifactComponentMask(5, 0x76, 0x77, 0x78, 0x79, 0x7a)),
+    TCombinationArtifact(0x86,
+        MakeArtifactComponentMask(9, 0x2c, 0x2b, 0x2a, 0x26, 0x27,
+                                  0x25, 0x2d, 0x29, 0x28)),
+    TCombinationArtifact(0x87,
+        MakeArtifactComponentMask(4, 0x18, 0x0c, 0x1e, 0x12)),
+    TCombinationArtifact(0x88, MakeArtifactComponentMask(2, 0x7b, 0x47)),
+    TCombinationArtifact(0x89, MakeArtifactComponentMask(3, 0x3c, 0x3d, 0x3e)),
+    TCombinationArtifact(0x8a, MakeArtifactComponentMask(3, 0x49, 0x4a, 0x4b)),
+    TCombinationArtifact(0x8b, MakeArtifactComponentMask(3, 0x4c, 0x4e, 0x4d)),
+    TCombinationArtifact(0x8c,
+        MakeArtifactComponentMask(4, 0x6f, 0x6d, 0x6e, 0x71)),
+};
+
+// The fifteen allowable-slot classes InitializeArtifactTraitsTable searches
+// linearly, read out of the cinit at 0x44cc00. Class 0 is the empty set and
+// is the one entry retail builds with the plain default constructor, which
+// is why `bitset<19>::_Tidy` survives out of line at 0x44d3e0; the two
+// multi-slot classes are the ring pair (6, 7) and the misc/backpack group
+// (9, 10, 11, 12, 18).
+DATA(0x00693898)
+const std::bitset<19> aArtifactSlotMasks[15] = {
+    std::bitset<19>(),
+    MakeArtifactSlotMask(1, 0),
+    MakeArtifactSlotMask(1, 1),
+    MakeArtifactSlotMask(1, 2),
+    MakeArtifactSlotMask(1, 3),
+    MakeArtifactSlotMask(1, 4),
+    MakeArtifactSlotMask(1, 5),
+    MakeArtifactSlotMask(2, 6, 7),
+    MakeArtifactSlotMask(1, 8),
+    MakeArtifactSlotMask(5, 9, 10, 11, 12, 18),
+    MakeArtifactSlotMask(1, 13),
+    MakeArtifactSlotMask(1, 14),
+    MakeArtifactSlotMask(1, 15),
+    MakeArtifactSlotMask(1, 16),
+    MakeArtifactSlotMask(1, 17),
+};
 
 DATA(0x00660b64)
 const TArtifactSlotTraits* akArtifactSlotTraits = aArtifactSlotTraits;
@@ -530,4 +635,10 @@ unsigned std::_Base_bitset<18,unsigned long>::_S_whichbit(unsigned __pos)
 // COMDAT pairing: bitset<19>::_Xran - `cmp <reg>, 0x13` guards the call at
 // 0x4d380 and at hero's HeroFn_004E2550, and artifact.obj is the only object
 // that emits `?_Xran@?$bitset@$0BD@@`. The nineteen artifact slots.
+// COMDAT pairing: bitset<19>'s default `_Tidy`, the one out-of-line copy in
+// this object. Its sole caller is the aArtifactSlotMasks cinit's class-0
+// entry (`push 0 / lea ecx,[ebp-4] / call`); every other default
+// construction in the unit is inlined.
+VA_COMPGEN(0x0044d3e0, 0x17, BITSET_TIDY, Bitset19)
+
 VA_COMPGEN(0x0044d400, 0xCB, BITSET_XRAN, Bitset19)
