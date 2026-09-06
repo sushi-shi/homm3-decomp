@@ -1895,12 +1895,23 @@ int NewfullMap::readArtifactData(TAbstractFile* infile, CObject* artifactObject)
 // char_buffer / count / padding with padding hoisted to function scope, and
 // count-before-char_buffer with padding left at its use - all byte-flat, so
 // declaration order is not what picks the recycled home here.
+// 2026-09-06, SAME DAY, 96.0056 -> 100.0000 EXACT: it is the SIGNEDNESS.
+// The Dreamcast type record for this local is T_RCHAR(0070) - PLAIN char -
+// and declaring it `char char_buffer;` instead of `unsigned char` closes the
+// row outright.  That single word moves BOTH residuals the paragraph above
+// bounds: char_buffer takes retail's recycled [ebp+0xb] and padding[3] takes
+// [ebp-0x10], and with the byte no longer in a whole dword slot VC6 stops
+// folding `extraInfo ^= (extraInfo ^ char_buffer) & 0xff` into `and dl,0`
+// and emits retail's byte load plus literal xor/and/xor.  Also measured on
+// the way: a second, separate buffer for the spell-id read 96.0279, and
+// `char padding[3]` byte-flat.  readResourceData keeps `unsigned char`
+// there and is exact either way, so the lever is per-body, not per-family.
 VA(0x004ff2f0, 0x1D8)  // order-map: sibling of 0xff120, calls readTreasureData 0x4fee50; called by readObject; EH-bearing, dc 0xee2e0
 int NewfullMap::readSpellScrollData(TAbstractFile* infile, CObject* scrollObject)
 {
     int ListSize = customTreasure.size();
 
-    unsigned char char_buffer;
+    char char_buffer;
     int count;
     scrollObject->extraInfo = 0;
     count = infile->Read(&char_buffer, 1);
