@@ -126,6 +126,33 @@ Consequences the corpus already knew as separate facts:
   reload take the normal walk. This is the mechanism BEHIND B15's "VC6
   homes char locals far more eagerly than ints".
 
+**"Creation order" means the FIRST ASSIGNMENT, not the declaration**
+(measured three ways, 2026-09-06, polish 30). A bare `long i;` moved to the
+top of a block is byte-inert; `long i = 0;` moved there re-orders the walk.
+That single fact settles three things at once and is the cheapest lever in
+this file to try:
+
+* `AICheckRetreat`'s town census - `long i = 0;` declared beside `count`, so
+  the index pseudo is born ahead of `numTowns`, hands EBX to the index and
+  spills the bound with a reload at the back edge, which is retail's
+  allocation: **95.3960 -> 95.7676**. The control (`long i;` hoisted, `i = 0`
+  left in the `for` head) is byte-flat at 95.3960, and it is exactly what an
+  older note had recorded as "initialising the index before the numTowns
+  guard - byte-flat", i.e. the note had measured the declaration;
+* the same order decides the SIB base/index slot for a two-local sum (6b);
+* it runs the other way too - `should_attack_now` wants its index born FIRST
+  and loses 1.10 when it is born after `current`/`count`.
+
+**And naming the ELEMENT of a subscript that feeds a call re-homes the
+pair.** `type_monster_data& monster = monsters[i];` at the head of a loop
+body gives the strength-reduced 72-byte offset the callee-saved register and
+spills the index - retail's allocation - worth **+5.62** on
+`type_AI_combat_data::get_enchantment_value` (across four inlined copies) and
++1.55 on `cast_spell`. The pointer spelling is byte-identical, so what
+matters is that the ADDRESS is named, not its type. It is per-site: the same
+naming over a subscript that feeds only field compares (`choose_melee`'s
+opening scan, `cast_spell`'s familiar scan) is byte-flat.
+
 ## 4. Measured probe base (2026-08-10, pinned SP3 CL, game profile)
 
 Scratch TUs (extern `source`/`sink` calls keep values live across calls):
