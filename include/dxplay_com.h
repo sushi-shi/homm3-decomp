@@ -48,18 +48,13 @@ public:
     unsigned long m_dataSize; // +0x14
 };
 
-// DirectPlay HRESULTs the wrapper bodies branch on. The two-call Get* pattern
-// probes with a null buffer and expects DPERR_BUFFERTOOSMALL before allocating.
-enum EDPlayResult {
-    DPERR_BUFFERTOOSMALL = 0x8877001e,
-    DPERR_NOMESSAGES = 0x887700be
-};
-
-// The remaining DirectPlay HRESULT macros used by CDPlay::GetErrorDesc.
+// DirectPlay HRESULT macros used by the wrappers and CDPlay::GetErrorDesc.
 // Keep these as preprocessor constants, as they are in the VC6 DPLAY.H:
 // importing that header would collide with the hand-modelled DP6 structs
 // above, while an enum would add compiler-visible declarators to this TU.
 #define HOMM3_MAKE_DPLAY_ERROR(code) (static_cast<long>(0x88770000UL + (code)))
+#define DPERR_BUFFERTOOSMALL HOMM3_MAKE_DPLAY_ERROR(30)
+#define DPERR_NOMESSAGES HOMM3_MAKE_DPLAY_ERROR(190)
 #define DPERR_ALREADYINITIALIZED HOMM3_MAKE_DPLAY_ERROR(5)
 #define DPERR_ACCESSDENIED HOMM3_MAKE_DPLAY_ERROR(10)
 #define DPERR_ACTIVEPLAYERS HOMM3_MAKE_DPLAY_ERROR(20)

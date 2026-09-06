@@ -351,46 +351,34 @@ unsigned char type_quest::has_expired() const
 }
 
 
-// Slot 11's BASE body, the run every leaf chains to after its own payload.
-// The savegame form carries three fields the h3m form below does not: the
-// two-valued selector at +0x04, the text-table row at +0x38, and the
-// deadline. The three scalar reads keep their own nested scopes for the
-// reason recorded above type_experience_quest::Save - retail colours each
-// dead scratch over the incoming argument slot, and the flag lands in that
-// slot's padding byte at [ebp+0x0b].
-// The three string reads BIND THE BY-VALUE RETURN BY `const&` at FUNCTION
-// scope. Written as a plain `member = ReadLengthPrefixedString(file)` each
-// temporary dies at the end of its own full expression and VC6 expands
-// `~basic_string` down to the refcount test and `operator delete`; bound by
-// const reference the three temporaries live to the epilogue and retail's
-// out-of-line `_Tidy` calls come back. 25.6259 -> 49.7043 here and
-// 10.4998 -> 41.9271 on LoadFromMap, with blocks 32 -> 16 against retail's
-// 11 and branches 18 -> 9 against 6. Measured and rejected: the same
-// bindings BLOCK-scoped one statement each (21.97 / 6.64) - the lifetime
-// must reach the epilogue.
+// Slot 11's base body is the savegame counterpart of LoadFromMap: flag,
+// text-table row, deadline, then the same three length-prefixed strings.
+// Both bodies belong to Complete's replacement quest hierarchy; no Dreamcast
+// type_quest procedure supplies a source dossier.
 //
-// Residual (49.7% / 41.9%): ONE /Ob2 decision, three times over in each
-// body. Both sides call ReadLengthPrefixedString and both CALL
-// basic_string::assign(const basic_string&, size_type, size_type) - the
-// two objects agree instruction for instruction up to there - but retail
-// then CALLS basic_string::_Tidy on the dying temporary where ours expands
-// it, which is the whole 32-blocks-against-11 difference. hero::load's own
-// residual note records the same pair matching in a 1695-byte caller, so
-// this is the /Ob2 budget floor at a small caller and not a source fact;
-// the lever is a per-site pin, which this lane may not add.
-// E:\gamedcs\seerhut.cpp
-// MEASURED AND REJECTED (polish 29), all five against the 49.7043 baseline:
-// the three temporaries written as plain `proposalText = ReadLengthPrefixed-
-// String(file);` (25.63), each `const std::string&` binding wrapped in its
-// own block (21.97), `int row` read one byte wide so it shares the parameter
-// home with `extra` (48.83), the three reads folded into one block (49.60),
-// and `extra` hoisted to function scope (49.60). The 20-byte frame surplus is
-// real and unexplained by any of them: retail packs `extra` back into the
-// [ebp+8] parameter home that `flag`/`row` already used (we give it its own
-// -0x10) and reuses ONE string-temp slot for the first two strings while
-// keeping a second for the third, so its 0x20 frame holds two temps against
-// our three at 0x34. Retail's EH states run 0 / -1 / 1 / -1 / 2 - each
-// temporary destroyed before the next is built - where ours run 0 / 1 / 2.
+// Retail's EH states are 0 / -1 / 1 / -1 / 2: each returned string dies
+// before the next read. The first two temporaries share [ebp-0x1c] and the
+// third uses [ebp-0x2c]. Binding all three by const reference at function
+// scope raises MAX to 49.7043% / 41.9271%, but keeps three objects alive
+// together and contradicts those cleanups. Those peaks remain history; the
+// expression lifetimes restore the two-slot layout and cleanup ordering.
+//
+// Two inline boundaries remain: retail calls the FIRST temporary's _Tidy
+// and expands the other two, while retaining all three string assign calls.
+// The candidate expands that first cleanup and the final assign. The old
+// note claiming three retail _Tidy calls was wrong. Negative controls on
+// LoadFromMap: assign(ReadLengthPrefixedString(file)) and a value-returning
+// scalar reader are byte-flat to plain assignment (10.50%); separate
+// block-local string values give 6.64%, like block-local const references.
+// None recovers the missing boundaries, and a longer lifetime is not a fix.
+//
+// The short-lived form also recycles the incoming argument slot for the
+// row and deadline. Its byte-typed row lowers to retail's dword load and
+// mask; explicitly reading one byte into an int and masking is byte-flat,
+// so that instruction choice does not prove the source buffer was an int.
+// Earlier controls on the reference-bound Load were that dword row (48.83%),
+// one shared scalar block (49.60%), and hoisting extra (49.60%), against the
+// 49.7043% peak. Those results do not justify retaining the wrong lifetimes.
 VA(0x0056cd00, 0x14F)  // anchor-vtable 0x64174c slot 11 + the chain from all eight leaf Loads, retail-only
 void type_quest::Load(TAbstractFile* file, int version)
 {
@@ -409,12 +397,9 @@ void type_quest::Load(TAbstractFile* file, int version)
         file->Read(&extra, sizeof(extra));
         field_3c = extra;
     }
-    const std::string& proposal = ReadLengthPrefixedString(file);
-    proposalText = proposal;
-    const std::string& progress = ReadLengthPrefixedString(file);
-    progressText = progress;
-    const std::string& completion = ReadLengthPrefixedString(file);
-    completionText = completion;
+    proposalText = ReadLengthPrefixedString(file);
+    progressText = ReadLengthPrefixedString(file);
+    completionText = ReadLengthPrefixedString(file);
 }
 
 // Slot 12's base body: the h3m form. Same three strings, but only the
@@ -429,12 +414,9 @@ void type_quest::LoadFromMap(TAbstractFile* file)
         file->Read(&extra, sizeof(extra));
         field_3c = extra;
     }
-    const std::string& proposal = ReadLengthPrefixedString(file);
-    proposalText = proposal;
-    const std::string& progress = ReadLengthPrefixedString(file);
-    progressText = progress;
-    const std::string& completion = ReadLengthPrefixedString(file);
-    completionText = completion;
+    proposalText = ReadLengthPrefixedString(file);
+    progressText = ReadLengthPrefixedString(file);
+    completionText = ReadLengthPrefixedString(file);
 }
 
 
@@ -2691,17 +2673,9 @@ int TSeerHut::getValue(hero* currentHero)
     if (!(visitedPlayers & (1 << currentHero->owner)))
         return _cpp_max(value, 20);
 
-    if (quest) {
-        bool expired = false;
-        if (quest->field_3c >= 0) {
-            short days = (gpGame->field_1f642 * 4
-                + gpGame->field_1f640 - 5) * 7 + gpGame->field_1f63e;
-            expired = quest->field_3c < days;
-        }
-
-        if (!expired && quest->is_satisfied(currentHero))
-            return value - quest->GetAIValue(currentHero->owner);
-    }
+    if (quest && !quest->has_expired()
+        && quest->is_satisfied(currentHero))
+        return value - quest->GetAIValue(currentHero->owner);
 
     return 0;
 }
@@ -2713,53 +2687,41 @@ int TSeerHut::getValue(hero* currentHero)
 // reward application. A hut with no quest records the visit and shows one of
 // three randomized empty-hut lines to a human player.
 //
-// Residual (44.4753%, banked MAX 46.3642%): the first helper restoration left
-// acceptance/payment/reward in this caller and reached the MAX, but
-// Dreamcast's DoCompletionDialog dossier positively places that accepted tail
-// inside the helper. The retained source restores that ownership and returns
-// through the helper on the human arm; retain that evidence-backed ownership.
-// dc_source_shape now ratchets it. VC6 still leaves both EH-bearing helpers as
-// calls in this otherwise frameless caller: 26 candidate blocks against
-// retail's 59, with 33 target-only helper blocks. Moving their definitions
-// before this body, `inline`, and `__forceinline` before/after visibility were
-// byte-flat. Re-measured 2026-09-01: statement-scoped rand/format_string pins,
-// a sole-caller auto_inline fence on GetRewardExtra, the completion line-gap
-// invariant, and tightly scoped names for both real string temporaries are
-// byte-flat as well. An `if (0)` probe
-// with two dead std::string declarations made both helpers expand and measured
-// 95.1173% (13 calls on each side), but it was only an inliner instrument and
-// was removed. At that peak the sole residual was the completion temporary's
-// cleanup: candidate `_Tidy` x4/delete x0 against retail `_Tidy` x3/delete x1.
-// Keep the helper ownership and remeasure after coherent surrounding source
-// changes compiler state; do not add a synthetic carrier here. A 2026-09-01
-// probe replaced the AI arm with a call to the exact TSeerHut::getValue body
-// and marked that helper inline. It restored 26 caller blocks but suppressed
-// the retail-proven standalone function (100% -> absent) and lowered this row
-// to 42.5710%. Dreamcast DoSeerEvent calls neither getValue nor an equivalent
-// helper, so that inference was reverted rather than made fatal.
-// 2026-09-05 titration (not shipped): eight dead plain statements are
-// byte-flat at 44.48, ONE dead `std::string` takes the row to 83.56 with
-// both helpers expanded - the enabler is the caller's own EH frame, not
-// the /Ob2 budget. Defining both helpers `inline` before this body is
-// byte-flat. Retail's unwind map numbers DoEmptyDialog's two objects 0/1
-// and the completion temporary 2 (ours, once framed, numbers the
-// completion temporary 0), so its front end registered the no-quest
-// arm's objects first; retail's frame holds nothing beyond the three
-// helper temporaries ([-0x20] shared by both arms, [-0x30]). No
-// Dreamcast-proven construct supplies the frame from this caller.
+// Retail's null-quest branch (+0x24) and expired-deadline branch (+0x66)
+// both reach +0x2c7: record the visit, then show DoEmptyDialog to a human.
+// An expired quest must not return before that path. The empty arm comes
+// first in DC seerhut.cpp:151-154 and owns retail unwind states 0/1;
+// the completion temporary is state 2. FuncInfo 0x654048 has maxState 3,
+// unwind map 0x654068 and NO try blocks: no catch scope is missing.
+//
+// The Complete AI arm duplicates the admitted getValue method's reward,
+// visit-mask, expiry and satisfaction logic. Keep one ordinary helper.
+// A call to its old flattened-expiry body stayed out of line (27.17%).
+// Restoring the existing has_expired boundary inside it makes VC6 expand
+// getValue naturally (42.5710%) while its standalone body stays 100%.
+// The old inline-keyword probe removed that standalone body; it is not
+// needed. Both has_expired and getValue remain ordinary TU definitions.
+//
+// Remaining frontier: DoEmptyDialog and DoCompletionDialog stay out of
+// line in this frameless caller (26 versus 59 blocks). Dreamcast's
+// DoCompletionDialog owns acceptance, payment and reward; keep that source
+// ownership. Banked MAX 46.3642 predates the ownership correction.
+// Historical controls: helper definitions moved before the caller,
+// inline/forceinline declarations, scoped rand/format_string depth pins,
+// a GetRewardExtra auto-inline fence, the completion line-gap invariant,
+// and named string temporaries did not remove the frontier. Eight dead
+// plain statements were flat; one dead std::string enabled both helpers
+// (83.56%), and a two-string diagnostic reached 95.1173 with four _Tidy
+// calls against retail's three plus delete. These were instruments only;
+// no dead objects, synthetic carrier or inline fence belongs in this body.
 VA(0x00573670, 0x400)  // code plus two retail switch tables in the admitted row
 void TSeerHut::DoSeerEvent(hero* current_hero, bool human_player)
 {
-    if (quest) {
-        bool expired = false;
-        if (quest->field_3c >= 0) {
-            expired = quest->field_3c < static_cast<short>(
-                (gpGame->field_1f642 * 4 + gpGame->field_1f640 - 5) * 7
-                + gpGame->field_1f63e);
-        }
-        if (expired)
-            return;
-
+    if (!quest || quest->has_expired()) {
+        visitedPlayers |= 1 << gNetLocalGamePos;
+        if (human_player)
+            DoEmptyDialog();
+    } else {
         if (human_player) {
             if (!(visitedPlayers
                   & (1 << static_cast<unsigned char>(gNetLocalGamePos))))
@@ -2777,26 +2739,7 @@ void TSeerHut::DoSeerEvent(hero* current_hero, bool human_player)
             return;
         }
 
-        int value = reward.getValue(current_hero);
-        if (!(visitedPlayers & (1 << current_hero->owner))) {
-            value = _cpp_max(value, 20);
-        } else {
-            if (!quest)
-                return;
-            expired = false;
-            if (quest->field_3c >= 0) {
-                expired = quest->field_3c < static_cast<short>(
-                    (gpGame->field_1f642 * 4
-                     + gpGame->field_1f640 - 5) * 7
-                    + gpGame->field_1f63e);
-            }
-            if (expired)
-                return;
-            if (!quest->is_satisfied(current_hero))
-                return;
-            value -= quest->GetAIValue(current_hero->owner);
-        }
-        if (value <= 0)
+        if (getValue(current_hero) <= 0)
             return;
 
         quest->TakePayment(current_hero);
@@ -2804,10 +2747,6 @@ void TSeerHut::DoSeerEvent(hero* current_hero, bool human_player)
         quest = 0;
         return;
     }
-
-    visitedPlayers |= 1 << gNetLocalGamePos;
-    if (human_player)
-        DoEmptyDialog();
 }
 
 // Dreamcast preserves this private helper at dc 0x12d158 and places it after
@@ -2931,7 +2870,7 @@ int TSeerReward::getValue(const hero* currentHero)
         playerData* player = const_cast<hero*>(currentHero)->get_player();
         quantity = value.resource.quantity;
         return static_cast<int>(
-            quantity * player->resourceValue[value.resource.resourceType]);
+            quantity * player->ai.resource_value[value.resource.resourceType]);
     }
 
     case eRewardPrimarySkill:

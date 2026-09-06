@@ -6,6 +6,7 @@
 #define HOMM3_SMACKMGR_H
 
 namespace SmackManager {
+void CloseSmacker();                                     // 0x599050
 void SetPixelFormat(unsigned long redMask, unsigned long greenMask,
                     unsigned long blueMask);             // 0x598a40
 }
@@ -131,7 +132,7 @@ enum EVideoPixelFormat {
 // Live prototypes (all 14 retail bodies reconstructed 2026-08-07).
 // VideoOpen's DC stub is a plain void(); the retail body takes eight
 // args and forwards them to ShowVideo / the bink opener.
-void VideoSoundOnOff();        // 0x5971b0
+void VideoSoundOnOff(int on);  // 0x5971b0; Complete carries an unused flag
 void VideoRealignBuffers();    // 0x5971f0
 int VideoPlay(int id, int x, int y, int w, int h);   // 0x5972d0
 void VideoOpen(int id, int x, int y, int w, int h, int a6, int a7, int a8);  // 0x597570

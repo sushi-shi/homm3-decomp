@@ -18,6 +18,8 @@
 // corroborates 0..7 (Conflux is Complete-era, absent from the AB-age
 // DC roster).
 enum TTownType {
+    // Dreamcast NB11 type 0x1ab5: the unassigned/neutral town sentinel.
+    eTownNeutral = -1,
     TOWN_CASTLE = 0x0,
     TOWN_RAMPART = 0x1,
     TOWN_TOWER = 0x2,

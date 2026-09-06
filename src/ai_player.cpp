@@ -449,17 +449,17 @@ void type_garrison_purchaser::mark_town(town* our_town)
                           1, has_angelic_alliance);
 }
 
-// E:\gamedcs\ai_player.h:299
+// The original header owns the constructor; retain its selected retail
+// COMDAT claim here without a second source definition.
+#if 0  // @carcass
 VA(0x004286b0, 0x21)  // DC signature/layout + retail stores; dc 0x37e08
 type_creature_source::type_creature_source(TCreatureType new_type,
                                            short* new_amount,
                                            bool _is_free)
 {
-    type = new_type;
-    ptr = new_amount;
-    is_free = _is_free;
-    number = *new_amount;
+    // @stub
 }
+#endif
 
 // The purchaser destructor remains implicit in C++. Its live vector member
 // already makes VC6 emit ??1type_AI_creature_purchaser; this row only binds
@@ -511,7 +511,7 @@ void type_AI_player::calculate_demand()
     int supply_resource;
     for (supply_resource = 0; supply_resource < 7; supply_resource++)
         resource_supply[supply_resource] = player->resources[supply_resource]
-            + 2 * player->turnProductionResource[supply_resource];
+            + 2 * player->ai.turnProductionResource[supply_resource];
 
     int building_town_index;
     for (building_town_index = 0; building_town_index < player->numTowns;
@@ -619,7 +619,7 @@ void type_AI_player::calculate_demand()
         }
         total_value *= get_market_value(value_resource.id);
         resource_value[value_resource.index] = total_value;
-        player->resourceValue[value_resource.index] = total_value;
+        player->ai.resource_value[value_resource.index] = total_value;
     }
 
     long average_value = 0;
@@ -627,7 +627,7 @@ void type_AI_player::calculate_demand()
     for (average_resource = 0; average_resource < 6; average_resource++)
         average_value = static_cast<long>(average_value
             + resource_value[average_resource]);
-    player->averageResourceValue = average_value / 5;
+    player->ai.average_resource_value = average_value / 5;
     // /Ob2 NUMERATOR device (2026-08-20), findpath find_queue_slot's class -
     // a codegen instrument, NOT a claim about retail's source. The budget is
     // `clamp(2 * caller_cb, 1000, 35000)` and nested expansions get
@@ -676,7 +676,7 @@ void type_AI_player::end_turn()
     gpGame->calculate_production();
 
     for (int resource = 0; resource < 7; resource++) {
-        reserved_funds[resource] -= player->turnProductionResource[resource];
+        reserved_funds[resource] -= player->ai.turnProductionResource[resource];
         if (reserved_funds[resource] < 0)
             reserved_funds[resource] = 0;
     }
@@ -1112,7 +1112,7 @@ void fill_prohibited_array(playerData* player, unsigned char* prohibited)
 
     for (int resource = 0; resource < 7; ++resource)
         income[resource] =
-            player->turnProductionResource[resource] * 7;
+            player->ai.turnProductionResource[resource] * 7;
 
     for (i = 0; i < player->numTowns; ++i) {
         town* current_town = gpGame->GetTown(player->townIds[i]);
@@ -1230,7 +1230,7 @@ long type_AI_player::get_total_value(long basic_value, int* cost)
     unsigned char trade_needed = 0;
     for (int i = 0; i < 7; i++) {
         if (cost[i] > player->resources[i]
-            && player->turnProductionResource[i] == 0)
+            && player->ai.turnProductionResource[i] == 0)
             trade_needed = 1;
     }
 
@@ -1355,7 +1355,7 @@ bool type_AI_player::can_trade_resources(const int* cost, int* supply,
     long markets = 0;
     unsigned char can_build_market = 0;
     if (supply[0] >= 0
-        && gpGame->players[team].turnProductionResource[0] > 0)
+        && gpGame->players[team].ai.turnProductionResource[0] > 0)
         can_build_market = 1;
 
     for (int town_index = 0; town_index < gpGame->players[team].numTowns;
@@ -1448,7 +1448,7 @@ bool type_AI_player::build_markets(int* supply)
 {
     playerData* player = &gpGame->players[team];
     bool built = false;
-    if (supply[0] < 0 || player->turnProductionResource[0] <= 0)
+    if (supply[0] < 0 || player->ai.turnProductionResource[0] <= 0)
         return false;
     for (int town_index = 0; town_index < player->numTowns; ++town_index) {
         town* current_town = gpGame->GetTown(player->townIds[town_index]);
@@ -1600,9 +1600,9 @@ static long value_of_building(town* current_town, type_building_id building,
                 if (gpGame->field_1f63e == AI_DAY_OF_WEEK_SUNDAY)
                     return static_cast<long>(
                         player->resources[GOLD]
-                        * player->resourceValue[GOLD] / 10.0);
+                        * player->ai.resource_value[GOLD] / 10.0);
             } else if (building == SPECIAL_BUILDING_ID) {
-                return 2 * player->averageResourceValue;
+                return 2 * player->ai.average_resource_value;
             }
             break;
         case TOWN_TOWER:
@@ -1941,16 +1941,16 @@ long value_of_hall(town* current_town, type_building_id building)
     switch (building) {
     case HALL_VILLAGE_ID:
         return static_cast<long>(
-            player->resourceValue[GOLD] * 3500.0 + value);
+            player->ai.resource_value[GOLD] * 3500.0 + value);
     case HALL_TOWN_ID:
         return static_cast<long>(
-            player->resourceValue[GOLD] * 3500.0 + value);
+            player->ai.resource_value[GOLD] * 3500.0 + value);
     case HALL_CITY_ID:
         return static_cast<long>(
-            player->resourceValue[GOLD] * 7000.0 + value);
+            player->ai.resource_value[GOLD] * 7000.0 + value);
     case HALL_CAPITOL_ID:
         return static_cast<long>(
-            player->resourceValue[GOLD] * 14000.0 + value);
+            player->ai.resource_value[GOLD] * 14000.0 + value);
     default:
         return value;
     }
@@ -2038,93 +2038,87 @@ void type_AI_player::buy_creatures(hero* current_hero, town* current_town)
                           &static_cast<const town*>(current_town)->get_army()),
                       garrison_hero, alliance);
 
-    long* funds = player->resources;
     purchaser.set_subtract_mode(0);
     purchaser.do_purchase(&current_hero->army,
                           current_hero->GetMorale(0, 0, 1),
                           const_cast<armyGroup*>(
                               &static_cast<const town*>(current_town)
                                    ->get_army()),
-                          funds, 1, alliance);
+                          player->resources, 1, alliance);
 
-    // SOURCE-SHAPE ACCEPTED DOWN 2026-08-30: 73.6571 -> 72.3890 (hist keeps
-    // the 74.2046 peak). The lexical inline-depth pin inside do_swap keeps
-    // AI_consolidate_army as the retail call in this nested copy while both
-    // standalone helpers remain exact. That removes the five invented loop
-    // branches: compiled CFG 48 -> 42 (retail 42), branches 27 -> 22 (retail
-    // 22), with one return on both sides. A call-site inline_depth(1) control
-    // was byte-flat; the pragma must travel with the nested helper statement.
-    //
-    // Earlier accepted-down context (2026-08-27): 74.2046 -> 73.6571.
-    // The peak relied on a FAT game::is_human_ally model with GetTeam folded
-    // inside; the real 0x42b9e0 retail body is the simple guarded scan (now
-    // claimed and 100.0000), so this call site spells GetTeam as a ternary
-    // and the inline copy prices 0.55 lower. Byte-proven trade:
-    // +69 B exact vs -6 fuzzy-weighted bytes here.
-    // Residual note: retail's inlined TownAlreadyBuiltOn (dc 0x3803c)
-    // materialises the byte in BL before testing; a named local AND a
-    // single-call-site static both fold back to the direct cmp (74.20 /
-    // 74.18 - measured 2026-08-27).
-    if (!gpGame->towns[current_town->id].field_02) {
-        if (gpGame->setup.difficulty
-            || gpGame->is_human_ally(
-                   gNetLocalGamePos >= 0
-                       ? gpGame->mapHeader.teamInfo[gNetLocalGamePos]
-                       : gNetLocalGamePos)) {
-            long best_value = 0;
-            union {
-                int index;
-                type_building_id id;
-            } building, best_building;
-            __int64 buildable = current_town->get_buildable_mask();
-            int morale = current_hero->GetMorale(0, 0, 1);
-            for (building.index = DWELLING_0_ID;
-                 building.index <= DWELLING_6_ID; building.index++) {
-                if (buildable & bitNumber[building.index]) {
-                    TCreatureType creature = gTownDwellingCreatures[
-                        current_town->type * TOWN_DWELLING_SLOTS
-                        + building.index - DWELLING_0_ID];
-                    const TCreatureTypeTraits& traits =
-                        akCreatureTypeTraits[creature];
-                    int* cost = current_town->get_build_cost_array(building.id);
-                    long supply[7];
-                    unsigned char affordable = 1;
-                    for (int resource = 0; resource < 7; ++resource) {
-                        supply[resource] = funds[resource] - cost[resource];
-                        if (supply[resource] < 0)
-                            affordable = 0;
-                    }
-                    if (affordable) {
-                        short growth = traits.growthRate;
-                        purchaser.set(creature, &growth, 0);
-                        long value = purchaser.get_purchase_value(
-                            &current_hero->army, morale,
-                            &static_cast<const town*>(current_town)
-                                 ->get_army(),
-                            supply, alliance);
-                        if (value > best_value) {
-                            best_value = value;
-                            best_building.index = building.index;
-                        }
-                    }
-                }
+    // DC ai_player.cpp:1869/1873 has two early exits; 1893 records short
+    // morale, and amount/funds/traits belong to function scope. Retail
+    // retains the player pointer, but no separate resources-pointer local:
+    // spelling player->resources directly restores EBX for garrison_hero,
+    // the TownAlreadyBuiltOn byte test, and the 42-block control flow.
+    // Function-scoped amount recovers the exact 0x94 frame and stack homes.
+    // Measured 2026-09-06: CUR 72.22 -> 76.57 (early exits), 76.84 (GetTeam),
+    // 97.95 (funds array), 98.18 (amount scope). The recovered two-argument
+    // set helper reaches 97.77; the three-argument control is archived.
+    // Residual: the single-candidate set expansion retains insert(pos,n,x)
+    // where retail calls insert(pos,x), plus mask-loop register scheduling.
+    // TownAlreadyBuiltOn, short morale, the other recorded local scopes,
+    // and the constructor's header/initializer form are byte-flat controls.
+    if (gpGame->TownAlreadyBuiltOn(current_town->id))
+        return;
+    if (!gpGame->setup.difficulty
+        && !gpGame->is_human_ally(
+               gpGame->GetTeam(gNetLocalGamePos)))
+        return;
+    short amount;
+    const TCreatureTypeTraits* traits;
+    TCreatureType creature;
+    long funds[7];
+    long best_value = 0;
+    union {
+        int index;
+        type_building_id id;
+    } building, best_building;
+    __int64 build_mask = current_town->get_buildable_mask();
+    short morale = current_hero->GetMorale(0, 0, 1);
+    for (building.index = DWELLING_0_ID;
+         building.index <= DWELLING_6_ID; building.index++) {
+        if (build_mask & bitNumber[building.index]) {
+            creature = gTownDwellingCreatures[
+                current_town->type * TOWN_DWELLING_SLOTS
+                + building.index - DWELLING_0_ID];
+            traits = &akCreatureTypeTraits[creature];
+            int* cost = current_town->get_build_cost_array(building.id);
+            unsigned char affordable = 1;
+            for (int resource = 0; resource < 7; ++resource) {
+                funds[resource] = player->resources[resource] - cost[resource];
+                if (funds[resource] < 0)
+                    affordable = 0;
             }
-            if (best_value > 0) {
-                int* cost =
-                    current_town->get_build_cost_array(best_building.id);
-                current_town->BuildBuilding(best_building.index, 1, 1);
-                for (int resource = 0; resource < 7; ++resource)
-                    funds[resource] -= cost[resource];
-                purchaser.set(current_town);
-                purchaser.do_purchase(&current_hero->army, morale,
-                                      const_cast<armyGroup*>(
-                                          &static_cast<const town*>(
-                                               current_town)->get_army()),
-                                      funds, 1, alliance);
+            if (affordable) {
+                amount = traits->growthRate;
+                purchaser.set(creature, &amount);
+                long value = purchaser.get_purchase_value(
+                    &current_hero->army, morale,
+                    &static_cast<const town*>(current_town)
+                         ->get_army(),
+                    funds, alliance);
+                if (value > best_value) {
+                    best_value = value;
+                    best_building.index = building.index;
+                }
             }
         }
     }
+    if (best_value > 0) {
+        int* cost =
+            current_town->get_build_cost_array(best_building.id);
+        current_town->BuildBuilding(best_building.index, 1, 1);
+        for (int resource = 0; resource < 7; ++resource)
+            player->resources[resource] -= cost[resource];
+        purchaser.set(current_town);
+        purchaser.do_purchase(&current_hero->army, morale,
+                              const_cast<armyGroup*>(
+                                  &static_cast<const town*>(
+                                       current_town)->get_army()),
+                              player->resources, 1, alliance);
     }
+}
 
 VA(0x0042beb0, 0x187)  // retail callee set + arity, dc 0x31398
 void type_AI_player::buy_mage_guild(hero* current_hero, town* current_town)
@@ -2993,15 +2987,11 @@ inline void type_AI_creature_swapper::do_swap(hero* current_hero,
     adjacent_army = source_army;
     morale = current_hero->GetMorale(0, 0, 1);
     improvement = calculate_improvement(current_hero, second_hero);
-    // Spelled as the plain call: the standalone body auto-inlines it, while
-    // buy_creatures' inline copy of do_swap leaves it out of line - exactly
-    // retail's two shapes. The lexical pin is deliberately here rather than
-    // at buy_creatures' call site (that control was byte-flat): it permits
-    // this first-level inline in the standalone body and refuses only the
-    // second-level copy. The forceinline impl would weld it inline in both.
-#pragma inline_depth(1)
+    // The ordinary call expands in standalone do_swap and remains a call
+    // inside buy_creatures, as retail requires. After restoring that caller's
+    // early exits and local lifetimes, the old inline_depth(1) pin is byte-flat
+    // (2026-09-06); removing it preserves the exact standalone body.
     AI_consolidate_army(army);
-#pragma inline_depth()
     dump_extra_creature();
     do {
     } while (do_best_swap(adjacent_army->GetNumArmies() > 1) > 0);
@@ -3392,14 +3382,15 @@ void type_AI_creature_purchaser::set(town* current_town)
 // The single-candidate overload (dc 0x31ffc, ai_player.cpp:2524). No retail
 // out-of-line body exists - set(town) ends at 0x42d418 and the next carve row
 // is 0x42d420 - so every retail caller expands it (buy_creatures 0x42bx: the
-// erase(begin,end) + one insert(end, source) pair). Unclaimed by design.
+// erase(begin,end) + one insert(end, source) pair). DC has two parameters
+// and passes literal false to type_creature_source at line 2526; the former
+// third parameter had no evidence and its sole caller always passed zero.
 void type_AI_creature_purchaser::set(TCreatureType new_type,
-                                     short* new_amount,
-                                     unsigned char new_is_free)
+                                     short* new_amount)
 {
     creatures.clear();
     creatures.push_back(
-        type_creature_source(new_type, new_amount, new_is_free));
+        type_creature_source(new_type, new_amount, false));
 }
 
 // DC proves the method, signature, and the add_creatures/value_of_adding_army
@@ -3514,7 +3505,10 @@ long type_AI_creature_purchaser::do_best_purchase(
 // auto-inline pin preserves retail's calls to this now-smaller routine:
 // without it mark_town falls from exact to zero, buy_creatures from 73.66%
 // to 53.78%, and value_of_hiring from 99.95% to 79.22%. The helper itself
-// and all three callers retain their prior scores with the pin.
+// and all three callers retain their prior scores with the pin. Rechecked
+// after the buy_creatures source recovery (2026-09-06): removing it expands
+// the purchase loop, lowering that caller 97.77 -> 52.44 and mark_town
+// 100 -> 0 while this standalone body stays exact. This pin remains debt.
 VA(0x0042d690, 0xE1)  // mark_town caller + DC method/callgraph; dc 0x32288
 #pragma auto_inline(off)
 void type_AI_creature_purchaser::do_purchase(
@@ -5524,14 +5518,14 @@ bool consider_hiring(long player_id, hero* candidate)
             for (int resource = 0; resource < 7; ++resource)
                 total = static_cast<long>(
                     traits.cost[resource]
-                    * player->resourceValue[resource] * troops + total);
+                    * player->ai.resource_value[resource] * troops + total);
         }
     }
 
     searchArray search_array;
     long threshold = static_cast<long>(
         static_cast<double>(player->numHeroes)
-        * player->resourceValue[GOLD] * gHeroGoldCost);
+        * player->ai.resource_value[GOLD] * gHeroGoldCost);
     if (threshold > total
         && player->resources[GOLD] < player->numHeroes * gHeroGoldCost)
         return 0;

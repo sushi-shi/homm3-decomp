@@ -14,39 +14,6 @@
 
 #include "advmgr_objects.h"
 
-// The registry map's value_type. Retail CALLS its two-argument constructor
-// from setImageName (0x517c30, 319 B) where our /Ob2 compile expands it,
-// and an implicit instantiation gives VC6 nothing to emit; specializing the
-// pair - the technique game.h already uses for `pair<const int,
-// type_map_hero_info>`'s implicit destructor - reproduces Dinkumware's
-// layout and constructor set exactly while moving that one member to an
-// out-of-line definition in objecttype.cpp. This header reaches only
-// objecttype.cpp, so the specialization is confined to the one TU that
-// instantiates the map.
-#if defined(_MSC_VER) && !defined(__clang__)
-namespace std {
-template<>
-struct pair<const basic_string<char, char_traits<char>, allocator<char> >,
-            int> {
-    typedef const basic_string<char, char_traits<char>,
-                               allocator<char> > first_type;
-    typedef int second_type;
-
-    pair() : first(basic_string<char, char_traits<char>, allocator<char> >()),
-             second(int()) {}
-    pair(const basic_string<char, char_traits<char>, allocator<char> >&
-             firstValue,
-         const int& secondValue);
-    template<class U, class V>
-    pair(const pair<U, V>& value)
-        : first(value.first), second(value.second) {}
-
-    const basic_string<char, char_traits<char>, allocator<char> > first;
-    int second;
-};
-}
-#endif
-
 // Retail publishes this class's whole layout at the .bss object 0x69cb80
 // that both accessors address:
 //   +0x00  a 16-byte Dinkumware _Tree - allocator byte, comparator byte,
@@ -69,6 +36,24 @@ public:
 
     TNameIndex nameIndex;
     std::vector<TNameIndex::iterator> rows;
+
+    // Provisional name and boundary inferred from retail setImageName:
+    // its first rows.size() expands, but this insertion path calls size,
+    // the pair constructor and row insert. Flattening this lookup into
+    // the caller expands the pair constructor and scores 47.77 vs 54.77.
+    int GetIndex(const std::string& name)
+    {
+        TNameIndex::iterator found = nameIndex.find(name);
+        if (found == nameIndex.end()) {
+            // Retail copies both returned fields, including the unused
+            // bool into a stack home. Extracting .first directly drops it.
+            std::pair<TNameIndex::iterator, bool> inserted = nameIndex.insert(
+                TNameIndex::value_type(name, rows.size()));
+            found = inserted.first;
+            rows.insert(rows.end(), found);
+        }
+        return found->second;
+    }
 };
 
 // The registry is a function-local static of an INLINE ACCESSOR, not of

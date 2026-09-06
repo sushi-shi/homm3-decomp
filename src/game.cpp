@@ -1132,8 +1132,8 @@ void game::calculate_production()
     int playerId;
     for (playerId = 0; playerId < 8; ++playerId) {
         if (!playerDisabled[playerId])
-            memset(players[playerId].turnProductionResource, 0,
-                   sizeof(players[playerId].turnProductionResource));
+            memset(players[playerId].ai.turnProductionResource, 0,
+                   sizeof(players[playerId].ai.turnProductionResource));
     }
 
     unsigned int mineId;
@@ -1141,7 +1141,7 @@ void game::calculate_production()
         mine* currentMine = &mines[mineId];
         if (currentMine->playerOwner >= 0 && currentMine->type < GOLD) {
             players[currentMine->playerOwner]
-                .turnProductionResource[currentMine->type] +=
+                .ai.turnProductionResource[currentMine->type] +=
                     mine_production[currentMine->type];
         }
     }
@@ -1159,7 +1159,7 @@ void game::calculate_production()
             continue;
 
         playerData* currentPlayer = &players[currentTown->owner];
-        long* production = currentPlayer->turnProductionResource;
+        long* production = currentPlayer->ai.turnProductionResource;
         if (currentTown->HasBuilding(MARKETPLACE_SILO_ID, 0)) {
             int* siloIncome = currentTown->get_silo_income();
             for (int i = 0; i < NUM_RESOURCES; ++i)
@@ -1188,7 +1188,7 @@ void game::calculate_production()
         if (playerDisabled[playerId])
             continue;
         playerData* currentPlayer = &players[playerId];
-        long* production = currentPlayer->turnProductionResource;
+        long* production = currentPlayer->ai.turnProductionResource;
         int cornucopias = currentPlayer->NumOfGivenArtifact(
             PRODUCTION_ARTIFACT_CORNUCOPIA) * 5;
         production[SULFUR] += cornucopias + currentPlayer->NumOfGivenArtifact(
@@ -1217,13 +1217,13 @@ void game::calculate_production()
         int resource = ability.skill;
         if (ability.type == eHeroAbilityResource
             && resource >= WOOD && resource <= GEMS) {
-            ++players[currentHero->owner].turnProductionResource[resource];
+            ++players[currentHero->owner].ai.turnProductionResource[resource];
         }
     }
 
     for (playerId = 0; playerId < 8; ++playerId) {
         if (field_1f63e == 1 && crystalDragonIncome[playerId])
-            players[playerId].turnProductionResource[CRYSTAL] += 3;
+            players[playerId].ai.turnProductionResource[CRYSTAL] += 3;
     }
 
     if (setup.difficulty > 2) {
@@ -1234,7 +1234,7 @@ void game::calculate_production()
                 humanId = 0;
             if (players[humanId].isHuman || playerDisabled[playerId])
                 continue;
-            long* production = currentPlayer->turnProductionResource;
+            long* production = currentPlayer->ai.turnProductionResource;
             production[WOOD] += get_day_bonus(
                 WOOD, production[WOOD] * 7 / 4, field_1f63e);
             production[ORE] += get_day_bonus(
@@ -1252,8 +1252,8 @@ void game::calculate_production()
             continue;
         double handicap = production_handicap[setup.handicap[playerId]];
         for (int resource = WOOD; resource < GOLD; ++resource) {
-            long original = players[playerId].turnProductionResource[resource];
-            players[playerId].turnProductionResource[resource] =
+            long original = players[playerId].ai.turnProductionResource[resource];
+            players[playerId].ai.turnProductionResource[resource] =
                 original - original * handicap;
         }
     }
@@ -1677,7 +1677,7 @@ void playerData::Init()
     recruits[0] = -1;
     recruits[1] = -1;
     personality = 0;
-    memset(ai_pad_ec + 4, 0, 0x78);
+    memset(&ai, 0, sizeof(ai));
     for (int heroIndex = 0; heroIndex < 8; heroIndex++)
         heroes[heroIndex] = -1;
     memset(townIds, 0xff, sizeof(townIds));
@@ -9581,7 +9581,7 @@ void game::PerDay()
     calculate_production();
     for (i = 0; i < 8; ++i) {
         if (!playerDisabled[i]) {
-            long* production = players[i].turnProductionResource;
+            long* production = players[i].ai.turnProductionResource;
             long* playerResources = players[i].resources;
             for (int j = 0; j < NUM_RESOURCES; ++j)
                 playerResources[j] += production[j];

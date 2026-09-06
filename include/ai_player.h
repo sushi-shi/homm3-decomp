@@ -96,8 +96,14 @@ struct type_creature_source {
     short number;
     unsigned char is_free;
 
+    // ai_player.h:299 initializes these three fields; line 300 copies
+    // the pointed-to amount. The decorated DC public retains bool (_N).
     type_creature_source(TCreatureType new_type, short* new_amount,
-                         bool _is_free);
+                         bool _is_free)
+        : type(new_type), ptr(new_amount), is_free(_is_free)
+    {
+        number = *new_amount;
+    }
 };
 SIZE(type_creature_source, 12);
 
@@ -158,8 +164,7 @@ public:
     // DC 0x31ffc (ai_player.cpp:2524): the single-candidate overload.
     // No retail out-of-line body (set(town) ends 0x42d418, next row
     // 0x42d420); every caller inlines its clear + one push_back.
-    void set(TCreatureType new_type, short* new_amount,
-             unsigned char new_is_free);
+    void set(TCreatureType new_type, short* new_amount);
     void do_purchase(armyGroup* new_army, short new_morale,
                      armyGroup* new_adjacent_army, long* new_funds,
                      unsigned char allow_trade,
@@ -180,6 +185,8 @@ void AI_arrange_army(armyGroup* current_army);
 
 // Dreamcast records this exact 12-byte sort key; retail calculate_reserve
 // copies it three dwords at a time and compares the value at +4.
+// The DC decorated comparison publics encode bool (_N), despite their
+// unsigned-byte debug storage records (ai_creature_value.h:29/35).
 struct type_creature_value {
     TCreatureType type;
     long value;

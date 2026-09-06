@@ -793,6 +793,15 @@ loop-invariant `xor ebx,ebx` sits inside the header.
   stores and the call, while the equivalent `while(1)` form stays single-copy:
   direct standalone proof the goto spelling is not the unrotated one)
 
+`CDPlay::FlushReceiveQueue` (`0x4976b0`) independently closes to 100%
+from a current 71.2697% / banked 72.9438% with the same loop-form lever
+(2026-09-06). Dreamcast proves the constructor, zeroed buffer size, Receive,
+AllocSize, and the two-part bottom predicate. `do { ... } while (retry || ok)`
+peels the first receive; `while (1) { ...; if (!retry && !ok) break; }` retains
+one body. All 19 blocks, 10 branches and five calls match retail. Both forms
+preserve the same helper calls; no caller-side duplication of AllocSize's
+size guard or inline suppression is required.
+
 ### D3. LICM legality forces a duplicated guard, then jump-threading removes ours — `VideoClose`, 95.9%
 Retail has THREE test sites, we have two: the entry guard before the hoisted
 `mov esi,[__imp__BinkPause]` (the duplicated guard making LICM legal), a real

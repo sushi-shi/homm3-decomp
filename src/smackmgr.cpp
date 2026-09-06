@@ -144,8 +144,11 @@ DATA(0x0069e5a4) int SoundCountCD;
 DATA(0x0069e5ac) int SoundCountCampaign;
 
 // E:\gamedcs\smackmgr.cpp:75
+// Complete's retained call in ShowVideo's third close loads ECX=1 at
+// 0x598d6f before calling 0x5971b0. The body ignores that integer argument;
+// Dreamcast's no-argument four-byte stub cannot describe this later ABI.
 VA(0x005971b0, 0x3B)  // anchor-global, dc 0x14ac30
-void VideoSoundOnOff()
+void VideoSoundOnOff(int on)
 {
     if (gSmackVideo || gSmackVideo2)
         gpSoundManager->service_sounds();
@@ -294,15 +297,7 @@ int VideoPlay(int id, int x, int y, int w, int h)
                     VideoDrawRects();
             }
 stop_playback:
-            if (gSmackVideo)
-                SmackClose(gSmackVideo);
-            if (gSmackVideo2)
-                SmackClose(gSmackVideo2);
-            gSmackVideo2 = 0;
-            gSmackVideo = 0;
-            gSmackPaused = 0;
-            gSmackFrameReady = 0;
-            gSmackDirty = 0;
+            SmackManager::CloseSmacker();
             if (aborted && gVideoDescriptors[id].fadeOnAbort)
                 gpWindowManager->FadeScreen(1, 4, 0);
             else
@@ -334,68 +329,25 @@ void VideoOpen(int id, int x, int y, int w, int h, int a6, int a7, int a8)
 }
 
 // E:\gamedcs\smackmgr.cpp:156
-// Residual (95.9%): the drain loop keeps one extra 4-byte top test in
-// retail (cmp eax,ebx; je) whose incoming edges are all known-nonzero;
-// our CL jump-threads it away, so the fast back edge lands on the dec
-// and the bottom test becomes a memory cmp. The local mirror n (which
-// buys the cached-eax test forms, 95.8% -> 95.9%) is byte-proven by
-// the dec/store/reload shape.
-// Sharper structural reading (2026-08-08): retail has THREE test sites
-// and we have two. Retail's are (a) the entry `cmp eax,ebx; je done`
-// BEFORE the hoisted `mov esi,[__imp__BinkPause]` - the duplicated loop
-// guard VC6 emits to make the LICM hoist legal, (b) a real TOP test at
-// +0x17 that the post-store `jne` targets, and (c) the reload edge,
-// which is the end-of-body back edge tail-duplicated THROUGH (b) into
-// `cmp eax,ebx; jne <body>`. So retail's loop is top-tested and
-// unrotated while ours is rotated; every spelling collapses (a) and (b)
-// into one. Tried and rejected (all producing identical objects):
-// while+if, if+do-while, while+continue, the literal goto-loop
-// transcription, and (2026-08-08) that transcription wrapped in the
-// explicit outer `if (n != 0)` that would supply site (a) - VC6 threads
-// the top test away regardless of how the source spells the edges.
-// Confirmed 2026-08-08 with the branch counter: base 13, target 14, and
-// the missing site is (b). The `while (1) { if (n == 0) break; ... }`
-// form that unrotated VideoPlay's loop does NOT help here (88.3%, and
-// it costs a site rather than adding one) - the edge our CL threads is
-// the `if (n != 0) continue` back edge, whose value it has just proved
-// nonzero from `dec eax`, and neither `continue`, an explicit `goto
-// top_of_drain`, nor dropping the local mirror for the bare global
-// (95.85%) stops the propagation. NOT source-addressable.
+// Retail's 225-byte body closes exactly with the canonical helper chain:
+// drain through VideoResume, service sound, CloseSmacker, then CloseBinkVideo.
+// Keep those ordinary source calls even where VC6 expands them. VideoResume
+// itself calls VideoSoundOnOff; the retained retail helpers and ShowVideo's
+// three different expansions independently expose these boundaries.
+// Dreamcast keeps only a four-byte stub here, so it proves the declaration
+// and source order, not the Complete body.
+//
+// Negative control: the former hand-expanded resume/close bodies capped this
+// row at 95.9231. Loop-spelling, cached-count, goto and guard permutations
+// could not recover the extra top test; restoring the calls does. No inline
+// keyword or per-site pragma is needed for this standalone exact body.
 VA(0x005975f0, 0xE1)  // anchor-global, dc 0x14ac40
 void VideoClose()
 {
-    int n;
-
-    n = gVideoPauseCount;
-    while (n != 0) {
-        n--;
-        gVideoPauseCount = n;
-        if (n == 0) {
-            if (gSmackVideo || gSmackVideo2)
-                gSmackPaused = 0;
-            if (gBinkVideo) {
-                gBinkPaused = 0;
-                BinkPause(gBinkVideo, 0);
-            }
-            if (gBinkVideo2) {
-                gBinkPaused = 0;
-                BinkPause(gBinkVideo2, 0);
-            }
-            if (gSmackVideo || gSmackVideo2 || gBinkVideo || gBinkVideo2)
-                gpSoundManager->service_sounds();
-            n = gVideoPauseCount;
-        }
-    }
+    while (gVideoPauseCount != 0)
+        VideoResume();
     gpSoundManager->service_sounds();
-    if (gSmackVideo)
-        SmackClose(gSmackVideo);
-    if (gSmackVideo2)
-        SmackClose(gSmackVideo2);
-    gSmackVideo2 = 0;
-    gSmackVideo = 0;
-    gSmackPaused = 0;
-    gSmackFrameReady = 0;
-    gSmackDirty = 0;
+    SmackManager::CloseSmacker();
     CloseBinkVideo();
 }
 
@@ -447,10 +399,7 @@ void VideoPause()
         gBinkPaused = 1;
         BinkPause(gBinkVideo2, 1);
     }
-    if (gSmackVideo || gSmackVideo2)
-        gpSoundManager->service_sounds();
-    else if (gBinkVideo || gBinkVideo2)
-        gpSoundManager->service_sounds();
+    VideoSoundOnOff(0);
 }
 
 // E:\gamedcs\smackmgr.cpp:238
@@ -471,10 +420,7 @@ void VideoResume()
         gBinkPaused = 0;
         BinkPause(gBinkVideo2, 0);
     }
-    if (gSmackVideo || gSmackVideo2)
-        gpSoundManager->service_sounds();
-    else if (gBinkVideo || gBinkVideo2)
-        gpSoundManager->service_sounds();
+    VideoSoundOnOff(1);
 }
 
 // E:\gamedcs\smackmgr.cpp:265
@@ -625,15 +571,7 @@ void VideoDrawRects()
 VA(0x00597c70, 0x84)  // anchor-global, dc 0x14ac64
 void VideoShutDown()
 {
-    if (gSmackVideo)
-        SmackClose(gSmackVideo);
-    if (gSmackVideo2)
-        SmackClose(gSmackVideo2);
-    gSmackVideo2 = 0;
-    gSmackVideo = 0;
-    gSmackPaused = 0;
-    gSmackFrameReady = 0;
-    gSmackDirty = 0;
+    SmackManager::CloseSmacker();
     CloseBinkVideo();
     if (gVideoFile3)
         CloseHandle(gVideoFile3);
@@ -982,18 +920,22 @@ void SmackManager::SetPixelFormat(unsigned long red_mask,
 // on the stack and `ret 0x18`, exactly VideoOpen's eight-argument forward.
 // The Smacker volume scale (3640 * "Sound Volume") and the 0xfe000 track
 // mask are transcribed from the two SmackVolumePan sites.
-// Residual (48.7%): the three VideoClose() sites only. Retail EXPANDS all
-// three (base 17 blocks against retail's 42) and does it three different
-// ways - the first two keep VideoResume out of line, the third expands it
-// and CALLS CloseSmacker instead. Every other call pairs: OpenSmackerTrack
-// twice, SmackUseMMX, both SmackVolumePans, all three SmackToBuffers.
-// Tried and rejected: `inline void VideoClose()` (the documented /Ob2 lever
-// for a large out-of-class definition) DOES make it expand, but expands
-// VideoResume with it at every site - 75 blocks, ShowVideo 41.02 and
-// VideoClose's own row to 0.00; writing the close sequence longhand at all
-// three sites is worse still (59 blocks, 16.07) for the same reason - the
-// bigger caller buys VideoResume an expansion retail does not make. The
-// separation retail has needs a per-site pin, which this lane may not add.
+// Restoring VideoClose -> VideoResume / CloseSmacker and VideoResume ->
+// VideoSoundOnOff makes ordinary VideoClose auto-inline at all three sites,
+// while its standalone body reaches 100%. The remaining nested decisions
+// over-expand: retail retains VideoResume at the first two sites and
+// CloseSmacker at the last, whereas our current caller expands all of them.
+// The sound-track mask and video-open mode are captured before either
+// OpenSmackerTrack call (retail keeps them in ESI and [ebp-8]). Its descriptor
+// index is narrowed to one byte. Recomputing those globals after opening the
+// audio track lost those lifetimes; restoring them raises CUR 39.3089 to
+// 45.81 and matches the entry through +0x3c. MAX 48.6988 remains banked.
+// Restoring the other CloseSmacker callers (VideoPlay, VideoShutDown) and
+// VideoPause's VideoSoundOnOff call is byte-flat: call-site count alone does
+// not recover the remaining 80-vs-42-block nested inline decisions.
+// Negative controls from the old flattened helper state: adding inline to
+// VideoClose expanded all nested resume bodies (41.02%, standalone lost);
+// pasting the closes into ShowVideo scored 16.07. Those are not source fixes.
 VA(0x00598af0, 0x385)  // anchor-caller(VideoPlay/VideoOpen) + anchor-callee(OpenSmackerTrack), retail-only
 void ShowVideo(int id, int x, int y, int w, int h, int loop, int autoDraw,
                int advance)
@@ -1007,6 +949,11 @@ void ShowVideo(int id, int x, int y, int w, int h, int loop, int autoDraw,
     VideoClose();
     SmackUseMMX(1);
 
+    unsigned long trackMask = gVideoSoundReady ? SMACK_TRACK_MASK : 0;
+    unsigned long videoMode =
+        gVideoDescriptors[static_cast<unsigned char>(gVideoDescriptorIndex)].field_b
+            ? SMACKOPEN_AUDIO_ONLY : 0;
+
     gSmackVideoId = id;
     gSmackPaused = 0;
     gSmackVideo2 = 0;
@@ -1016,7 +963,7 @@ void ShowVideo(int id, int x, int y, int w, int h, int loop, int autoDraw,
 
     if (gVideoDescriptors[id].smkAudioStem != "") {
         gSmackVideo2 = OpenSmackerTrack(gVideoDescriptors[id].smkAudioStem,
-            gVideoSoundReady ? SMACK_TRACK_MASK : 0, SMACKOPEN_AUDIO_ONLY);
+            trackMask, SMACKOPEN_AUDIO_ONLY);
         if (!gSmackVideo2) {
             VideoClose();
             return;
@@ -1030,8 +977,7 @@ void ShowVideo(int id, int x, int y, int w, int h, int loop, int autoDraw,
     }
 
     gSmackVideo = OpenSmackerTrack(gVideoDescriptors[id].smkStem,
-        gVideoSoundReady ? SMACK_TRACK_MASK : 0,
-        gVideoDescriptors[gVideoDescriptorIndex].field_b ? SMACKOPEN_AUDIO_ONLY : 0);
+        trackMask, videoMode);
     if (!gSmackVideo) {
         VideoClose();
         return;

@@ -4,9 +4,6 @@
 // ownership, field layout, helper boundaries, and call/expansion decisions in
 // this unit therefore come directly from the retail x86 cluster.
 #include <va.h>
-#define _MT
-#include <yvals.h>
-#undef _MT
 #include "rmg_terrain.h"
 
 // Provisional role spelling. The fastcall ABI and two-byte output are fixed
@@ -46,6 +43,17 @@ TRmgPackedTerrainCell* TRmgTerrainPainter::GetPackedCell(
     return &packedCells[index];
 }
 
+// Residual (74.7623%): the first twelve terrain reads retain GetPackedCell
+// in retail; this candidate retains seven and expands five only as far as
+// InitializePackedCell. The last-row pair and final full-tile reads have the
+// correct boundaries. Both cache helpers' standalone bodies remain exact.
+// Retail also evaluates GetTransitionStrength before loading the rule's
+// virtual receiver (as in neighboring 0x5b4960); spelling two strength locals
+// reproduces that order but changes earlier inlining and falls to 41.51%.
+// Rejected controls: GetTerrain via GetTile adds eleven calls (75.28%);
+// reversed dimension product, explicit vector fill, postfix edge increments,
+// function-scope terrain, transition initializer, and earlier tile declaration
+// are byte-flat. These do not establish the missing source/helper state.
 VA(0x005B5A70, 0x8A7)  // caller cluster reaches Complete RMG; retail-only
 void TRmgTerrainPainter::PaintTransitions()
 {

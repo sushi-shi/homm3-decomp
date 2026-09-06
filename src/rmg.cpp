@@ -4,9 +4,6 @@
 // reaches this library from TSingleSelectionWindow::GenerateRandomMap, and
 // the tree node layout proves an eight-byte TPoint value ordered by y, then x.
 #include <va.h>
-#define _MT
-#include <yvals.h>
-#undef _MT
 #include <algorithm>
 #include <bitset>
 #include <set>
@@ -975,20 +972,24 @@ static void InsertRmgWorkItem(
 // one-way/two-way monoliths and underground gates, then eight-neighbour road
 // relaxation.  The Dreamcast build has no RMG compiland, so the original
 // method spelling is unavailable and the role name remains provisional.
-// Residual: retail calls the outer two-argument position insert at the initial
-// and three transport sites, and calls both one-iterator erases; our incomplete
-// caller expands those layers.  The final neighbour inserts already choose the
-// retail overload depth.  Preserve the evidenced APIs and recover natural
-// caller/helper state rather than pinning inline depth.
+// Worklist push_back/pop_back restore the outer container boundaries and
+// raise 67.8599% to 73.7139%; flattening them into insert/erase was the
+// negative control. The shared by-value predecessor setter raises that to
+// 75.6686% and restores the separate coordinate snapshot before the cost
+// store. Its spelling remains provisional without Dreamcast source.
+// Residual: the seed inserts and popped-element erases still expand deeper
+// than retail. Both monolith position inserts now retain the two-argument
+// boundary; the underground-gate site still expands it. The final neighbour
+// inserts already select the retail count-insert calls. Keep the canonical
+// helpers while recovering the remaining source/optimizer state.
 VA(0x00547880, 0x7B1)  // roadTargets caller + monolith vectors; retail-only
 void type_random_map_generator::BuildRoadCostMap(TRmgMapPosition position)
 {
     std::vector<TRmgMapPosition> openPositions;
     std::vector<int> openCosts;
-    int zeroCost = 0;
 
-    openPositions.insert(openPositions.end(), position);
-    openCosts.insert(openCosts.end(), zeroCost);
+    openPositions.push_back(position);
+    openCosts.push_back(0);
 
     TRmgMapItem* mapItem = map.GetMapItem(position);
     mapItem->movement.cost = 0;
@@ -998,8 +999,8 @@ void type_random_map_generator::BuildRoadCostMap(TRmgMapPosition position)
 
     while (openPositions.size()) {
         position = openPositions.back();
-        openCosts.erase(openCosts.end() - 1);
-        openPositions.erase(openPositions.end() - 1);
+        openCosts.pop_back();
+        openPositions.pop_back();
 
         mapItem = map.GetMapItem(position);
         int positionCost = mapItem->movement.cost;
@@ -1030,8 +1031,7 @@ void type_random_map_generator::BuildRoadCostMap(TRmgMapPosition position)
                     if (nextMapItem->movement.cost <= nextCost)
                         continue;
 
-                    nextMapItem->movement.cost = nextCost;
-                    nextMapItem->previousTile = position;
+                    nextMapItem->SetMovementCost(nextCost, position);
                     InsertRmgWorkItem(
                         openPositions, openCosts, nextPosition, nextCost);
                 }
@@ -1051,8 +1051,7 @@ void type_random_map_generator::BuildRoadCostMap(TRmgMapPosition position)
                     if (nextMapItem->movement.cost <= nextCost)
                         continue;
 
-                    nextMapItem->movement.cost = nextCost;
-                    nextMapItem->previousTile = position;
+                    nextMapItem->SetMovementCost(nextCost, position);
                     InsertRmgWorkItem(
                         openPositions, openCosts, nextPosition, nextCost);
                 }
@@ -1067,8 +1066,7 @@ void type_random_map_generator::BuildRoadCostMap(TRmgMapPosition position)
                 TRmgMapItem* nextMapItem = map.GetMapItem(nextPosition);
                 int nextCost = positionCost + 1;
                 if (nextMapItem->movement.cost > nextCost) {
-                    nextMapItem->movement.cost = nextCost;
-                    nextMapItem->previousTile = position;
+                    nextMapItem->SetMovementCost(nextCost, position);
                     InsertRmgWorkItem(
                         openPositions, openCosts,
                         nextPosition, nextCost);
@@ -1119,8 +1117,7 @@ void type_random_map_generator::BuildRoadCostMap(TRmgMapPosition position)
             if (nextMapItem->movement.cost <= nextCost)
                 continue;
 
-            nextMapItem->movement.cost = nextCost;
-            nextMapItem->previousTile = position;
+            nextMapItem->SetMovementCost(nextCost, position);
             InsertRmgWorkItem(
                 openPositions, openCosts, nextPosition, nextCost);
         }
@@ -1234,8 +1231,7 @@ void type_random_map_generator::CreateRiver(TRmgMapPosition source)
                 & (1 << oppositeDirection))
                 continue;
 
-            mapItem->movement.cost = nextCost;
-            mapItem->previousTile = position;
+            mapItem->SetMovementCost(nextCost, position);
             InsertRmgWorkItem(
                 openPositions, openCosts, nextPosition, nextCost);
 

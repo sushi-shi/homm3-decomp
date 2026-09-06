@@ -694,7 +694,7 @@ build build/objdiff/base/sacrifice_window.obj: cl src/sacrifice_window.cpp $
 build sacrifice_window: phony build/objdiff/base/sacrifice_window.obj
 build build/objdiff/base/rmg.obj: cl src/rmg.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /MT /Gr /GX /D_WINDOWS
   unit = rmg
 build rmg: phony build/objdiff/base/rmg.obj
 build build/objdiff/base/rmg_support.obj: cl src/rmg_support.cpp | $
@@ -704,7 +704,7 @@ build build/objdiff/base/rmg_support.obj: cl src/rmg_support.cpp | $
 build rmg_support: phony build/objdiff/base/rmg_support.obj
 build build/objdiff/base/rmg_terrain.obj: cl src/rmg_terrain.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /MT /Gr /GX /D_WINDOWS
   unit = rmg_terrain
 build rmg_terrain: phony build/objdiff/base/rmg_terrain.obj
 build build/objdiff/base/objnames.obj: cl src/objnames.cpp | $

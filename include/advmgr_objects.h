@@ -239,6 +239,12 @@ struct TObjectType {
         int y;
     };
     struct TImageInfo {
+        // Provisional overload: setImageName initializes the point before
+        // either bitset constructor. TObjectType's default construction
+        // leaves that point uninitialized, requiring a distinct size path.
+        TImageInfo() {}
+        explicit TImageInfo(const TPoint& size) : objectSize(size) {}
+
         TPoint objectSize;
         std::bitset<48> drawMask;
         std::bitset<48> shadowMask;
@@ -303,8 +309,9 @@ SIZE(TObjectType, 0x4c);
 // loads before either store. No compiland in the tree defines it yet.
 extern const TObjectType::TPoint gNoTriggerCell;
 
-// Defined here, and INLINE, because retail expands the whole sequence at
-// load()'s resize temporary rather than calling a constructor.
+// Shared header definition for the resize default value. Retail expands
+// this constructor, which does not establish an explicit inline keyword:
+// an ordinary definition in objecttype.cpp was byte-flat (2026-09-06).
 inline TObjectType::TObjectType()
     : imageNumber(0),
       passableMask(~std::bitset<48>(0)),
