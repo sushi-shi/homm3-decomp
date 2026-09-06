@@ -865,6 +865,23 @@ TCombatCreatureSubWindow::~TCombatCreatureSubWindow()
 // instead of the reference (byte-flat), naming the shooting attack in a
 // local (byte-flat), landing _cpp_max's result in a third local
 // (byte-flat), and an explicit `if (shootAttack > attack)` (76.77).
+// 2026-09-06, polish lane 36, the DC LOCAL-SCOPE SWEEP: it CONFIRMS this
+// source and rules the birth-order lever out.  The Dreamcast block names
+// exactly THREE locals - `defense` (int, sp+0x14), `normal_traits`
+// (CodeView 0x1a9c = L-VALUE REFERENCE to the traits row, sp+0x10) and
+// `buffer` - so the reference form, the named `defense` and the absence of
+// a homed `attack` are all source-authentic and already spelled here; the
+// DC statement order is 704 SetIconFrame, 709 traits+can_shoot, 712 attack,
+// 713 defense, 715 the shooting max, which is this body exactly.  The
+// remaining swap is therefore a C2 allocation choice over an identical
+// source: retail emits `lea ecx,[eax+4*edx] / mov [ebp-4],ecx` for the
+// traits row and `mov ebx,eax` for the first attack, and recycles the DEAD
+// `owner` home [ebp+0xc] for the can_shoot byte, where we hold the traits
+// row in EBX, home the attack at [ebp+0xc] and recycle [ebp+8].
+// Measured and rejected against 90.3734 (birth-order sweep): `traits`
+// declared between attack and defense 86.1411; after can_shoot and before
+// attack 87.5934; `defense` computed before `attack` 85.9959; `traits`
+// after the whole attack/defense block 86.1826.
 VA(0x0046dc30, 0x2C2)  // roster order + "%d(%d)" pair + the three spell icons, dc 0x66648
 void TCombatCreatureSubWindow::Update(const army* info, const hero* owner)
 {

@@ -1878,6 +1878,19 @@ void TSellCreatureWindow::SetWidgetDisabled(short id)
 // else arm. Generated AST/flow/register searches found no source-backed
 // improvement; word decl-order swap measured byte-flat (2026-08-27). The
 // why-reg volatile proposal is intentionally rejected as a compiler hack.
+// 2026-09-06, polish lane 36, the DC LOCAL-SCOPE SWEEP - MEASURED AND
+// REJECTED, and the sweep's own signal is a false positive here.  The DC
+// block's three "Temp" locals (iTempMaxUnitsToTrade sp+0x34,
+// bTempLeftDenominated sp+0x30, iTempTradeRatio sp+0x20) are DECLARED AND
+// NEVER READ in the Dreamcast body - no instruction touches those slots -
+// so there is nothing for x86 to keep.  What the DC block DOES prove is the
+// word-ternary placement, and it loses: :1008..:1015 set only the two
+// quantities in the if/else and BOTH `(qty > 1) ? text[161] : text[162]`
+// lookups run after it at :1026 (wordLeft, into the temp at sp+0x2c) and
+// :1026 again (wordRight, sp+0x28).  Hoisting both ternaries out of the
+// arms exactly that way scores 85.8420 against 86.8746; adding the DC's
+// in-arm assignment order (qtyRight before qtyLeft in the true arm,
+// qtyLeft before qtyRight in the false arm) on top scores 84.3290.
 VA(0x005ea6e0, 0x862)  // ordermap clean run + arity ret 4, dc 0x188fa4
 void TTradeResourceWindow::Update(unsigned char bUpdate)
 {

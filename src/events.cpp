@@ -8096,6 +8096,13 @@ void do_monster_join_dialog(hero* inHero, TCreatureType type, int amount);
 // call structure, both insert-overload families, the expanded ", "
 // append and the seed CSE all match; tried and rejected: a named seed
 // local (byte-flat), the model's best/leader store swap (+0).
+// 2026-09-06, polish lane 36, the DC LOCAL-SCOPE SWEEP - measured and
+// rejected.  The DC block names `artifact` (0x4d49) at FUNCTION scope,
+// between `resource` and `reward_text`, where this body declares
+// `type_artifact art;` inside the artifact-giving loop.  Hoisting it out of
+// the loop - the shape that took type_record_shroud::load 84 -> 100 - costs
+// 91.5889 -> 90.9513 here: retail re-runs the defaulting ctor per iteration.
+// Every other name in that block is a rename this body already carries.
 VA(0x004abdc0, 0x6D0)  // anchor-callee ExtraInfoUnion::get_creature_bank, ret 0x14=p6, dc 0x9a898
 int advManager::CreatureBankEvent(hero* who, NewmapCell* cell, const char* cText, type_point point, unsigned char human_player)
 {
