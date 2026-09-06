@@ -327,6 +327,16 @@ void rmgTerrainPainter::setTile(
 // home (97.0036%); a by-value terrain-accessor point adds copies (72.9584%).
 // Shared terrain comparison, const translation result, direct temporary
 // return, and a validity accessor leave the two call-boundary deltas intact.
+// A scratch C2 counterfactual rejects just the first cache expansion and
+// the inner distance wrapper, preserving their original budget charges.
+// Its full named call sequence matches retail, but the 0x54 frame and missing
+// original-x store remain: those storage deltas need independent recovery.
+// No counterfactual object enters the matching build. A call-site depth-one
+// pragma is byte-neutral; pinning a direct cache call changes later decisions
+// (91.4213%) and is not an isolated control. A signed-direction conversion
+// gives 95.7902%; free value-origin addition with a named return gives 92.3924%.
+// An assignment-based grid copy constructor, explicit grid assignment, and
+// declaring the loop index before its mask leave 97.0506% unchanged.
 VA(0x005B4B20, 0x5CB) // anchor-callee 0x5b4960, 0x5b5440; thiscall, ret 4
 void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
 {
