@@ -865,6 +865,49 @@ recovering a helper affects later calls even though that helper itself
 emits no call. It does not justify arbitrary extraction to adjust the
 inliner budget.
 
+### Live budget inputs from the unchanged compiler body
+
+`homm3 vc6 predict-inline <selector> --trace` records C2's selected caller
+and each reached inline-budget test. The optional shim hooks use RVAs
+`0x1994f` (root entry) and `0x19f8c` (site budget test), verifying all eight
+replaced bytes first. At entry ECX points to a body whose first word is the
+symbol; symbol `+0x18` is its decorated name and `+0x28` its IL handle.
+At the site EDI is the callee symbol; original ESP `+0x34`, `+0x48` and
+`+0x30` hold depth, budget and remaining candidates respectively. The hooks
+preserve GPRs, EFLAGS, x87 and Win32 last-error state.
+
+These records follow argument-count, depth and force-inline checks but
+precede the budget/running-size checks and substitution veto. A recorded
+`budget_allows` means only that the size test permits expansion. Confirm
+the final boundary in the emitted assembly.
+
+Both back ends replay the **same four captured C1 IL streams**. Full COFF
+objects must agree outside the timestamp, and the selected function's
+code bytes must also reproduce its current build object. Independent C1
+runs are unsuitable for this oracle: the same RMG source path produced
+different anonymous-namespace identifiers and BSS ordering/alignment,
+despite identical initialized sections. Masking those differences would
+weaken the gate; sharing the captured input avoids them.
+
+For the 81.2445% CreateRiver candidate, C2 reports caller `cb=1530`, initial
+budget 3060 and 128 reached tests. Each early vector destructor has
+`cb=94`; its nested `_Destroy` has `cb=49` and receives 68 or 65, so both
+empty bodies expand away. Retail retains these two calls. Later,
+`type_random_map` cleanup gives the deleting helper (`cb=97`) 91 units on
+the failed-prototype path and 251 on final exit, explaining its retained
+and expanded copies. Those later boundaries already agree with retail;
+changing the caller's total cost alone can disturb them. Use the measured
+distribution to test evidenced source boundaries, not to justify dummy
+call sites or compiler-budget overrides.
+
+The native negative control drops `-Gy` through the shim, requires this
+captured-IL identity gate to reject it, then restores and verifies the
+clean trace:
+
+```sh
+HOMM3_TEST_VC6_TRACE=1 python3 -m unittest homm3.vc6.test_inline_trace
+```
+
 ## 7. Using it
 
 ```sh
@@ -880,8 +923,8 @@ python3 -m homm3.vc6.inline_model --predict --spec sites.json
 python3 -m homm3.vc6.inline_model --measure-cb harness.cpp \
     --fn callee --caller caller25 --sites 25
 
-# the diagnoser (v1) is unchanged:
-homm3 vc6 predict-inline src.cpp --fn F --against UNIT:FN
+# diagnose calls and capture the actual C2 budget inputs:
+homm3 vc6 predict-inline 0x548df0 --trace
 ```
 
 The Ghidra evidence regenerates with

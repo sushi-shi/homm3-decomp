@@ -81,6 +81,8 @@ def _build_parser() -> argparse.ArgumentParser:
                        "(which callees retail inlines vs we do)")
     _solver_arguments(pp)
     pp.add_argument("--json", action="store_true")
+    pp.add_argument("--trace", action="store_true",
+                    help="capture live C2 inline budgets with a byte-identity gate")
     pp.add_argument("--no-build", action="store_true",
                     help="use the last built manifest object without a source/header refresh")
 

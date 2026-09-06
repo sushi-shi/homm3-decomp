@@ -1649,6 +1649,13 @@ void type_random_map_generator::ResetMovementCosts()
 // empty destructor adds cleanup states absent from retail; using a trivial
 // TPoint for the delta table removes retail's atexit call. Neither resolves
 // the ordered static initialization, so keep the existing type boundary.
+// Map-view body assignments/accessors, explicit final return and a shared
+// zero-cost seed initializer do not restore early cleanup. A separate
+// painting scope changes the frame to 0xac; explicit position copy members
+// change it to 0xb0/0xc8 and lose retail CFG blocks. These are not substitutes
+// for the missing natural boundary. Live C2 tracing measures caller cb=1530:
+// the early empty _Destroy helpers cost 49 but receive 68/65. Later map
+// cleanups already retain/expand correctly at budgets 91/251 for cost 97.
 // Direct erase() calls expand even further (61.45% before the seed-copy
 // correction). An explicit predecessor copy and const by-value parameter
 // are byte-flat. A const-ref setter changes the shared road helper's proved by-value boundary and is

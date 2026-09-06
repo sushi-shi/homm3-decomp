@@ -158,29 +158,29 @@ python3 -m homm3.vc6.shim.build negative   # prove the gate can fail
 python3 -m homm3.vc6.shim.build clean      # remove overlay + scratch
 ```
 
-## 4. Phase 3 extension path (not in v1)
+## 4. Optional inline-budget tracing
 
-The shim already executes inside the compiler process at pass time, after
-`C2_real.dll` is mapped and before/after every `InvokeCompilerPass`. The
-planned extension keeps the byte-identity gate as the standing inertness
-fence and adds, between the log and the forward:
+`homm3 vc6 predict-inline <selector> --trace` enables two observation hooks
+inside the copied `C2_real.dll`. They use its loaded module base plus
+verified RVAs, preserving registers, flags, x87 and last-error state. The
+default shim invocation installs no hooks.
 
-- read C2 globals by `LoadLibraryA("C2_real.dll") + RVA` (the DLL prefers
-  base 0x10700000 and carries a `.reloc` section, so use the returned
-  HMODULE as the base, never the preferred base) - first target: the
-  `/Ob2` inliner budget trajectory around each pass;
-- optionally install IAT or hot-patch hooks inside `C2_real.dll` for
-  per-decision tracing.
-
-Any such build must keep a hook-free configuration that still passes the
-gate, and every instrumented conclusion needs a gate-green control run of
-the same source. v1 deliberately contains no hooks.
+Every trace runs the original and instrumented back ends against the same
+four captured front-end streams, requires complete object identity outside
+the timestamp, and checks that the selected function's code bytes match
+the build being diagnosed. Sharing captured IL is necessary for real TUs:
+independent C1 runs can vary anonymous-namespace names and BSS layout.
+The trace logs budget-test inputs, not final expansion verdicts. See
+[inliner.md](inliner.md#live-budget-inputs-from-the-unchanged-compiler-body)
+for hook offsets, interpretation and the native negative control.
 
 ## 5. Files
 
 | Path | Role |
 |---|---|
 | `scripts/homm3/vc6/shim/passthru.c` | the shim DLL source (C89, CRT-free) |
+| `scripts/homm3/vc6/shim/inline_trace.h` | optional C2 observation hooks |
+| `scripts/homm3/vc6/inline_trace.py` | captured-IL replay, identity gate and trace parser |
 | `scripts/homm3/vc6/shim/passthru.def` | the two decorated exports |
 | `scripts/homm3/vc6/shim/sample_tu.cpp` | frozen gate input - do not edit |
 | `scripts/homm3/vc6/shim/build.py` | overlay builder + gates (CLI above) |

@@ -302,6 +302,23 @@ def run_predict(args) -> int:
     base_text, base_sym = reg_model._fn_text(
         base_obj, args.fn, getattr(args, "_fn_ordinal", 0))
     args.fn = base_sym
+    trace = None
+    if getattr(args, "trace", False):
+        from homm3.vc6 import inline_trace
+        if unit:
+            flags = _unit.flags_for_unit(unit)
+            trace_source = (src if manifest_src and manifest_src.resolve() == src
+                            else base_obj.with_suffix(".cpp"))
+        else:
+            flags = ["/c", *reg_model.GAME_FLAGS, "/FAs"]
+            include_dir = reg_model._wine_dir(src.parent)
+            if include_dir:
+                flags.append(f"/I{include_dir}")
+            trace_source = src
+        try:
+            trace = inline_trace.capture(trace_source, flags, base_sym, base_obj)
+        except ValueError as exc:
+            _common.die(str(exc))
     ref_text, ref_label = reg_model._reference_side(args)
 
     base_calls, ref_calls = _called(base_text), _called(ref_text)
@@ -350,11 +367,17 @@ def run_predict(args) -> int:
             "nested_frontiers": [
                 {"outer": outer, "inner": inner, "sites": sites}
                 for outer, inner, sites in nested],
+            **({"trace": trace} if trace is not None else {}),
             "rc": rc}, indent=2))
         return rc
 
     print(f"[predict-inline] {args.fn} ({base_sym})")
     print(f"[reference] {ref_label}")
+    if trace is not None:
+        caller = trace["caller"]
+        print(f"[trace] caller cb {caller['cb']}, initial budget {caller['initial_budget']}; "
+              f"{len(trace['sites'])} recorded budget tests; identical C2 object")
+        print(f"[trace] {trace['directory']}/trace.json")
     print(f"[calls] base emits {sum(base_calls.values())} out-of-line call(s); "
           f"retail {sum(ref_calls.values())}")
     if unresolved:
