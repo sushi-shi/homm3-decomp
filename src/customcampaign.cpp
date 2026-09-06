@@ -2166,7 +2166,21 @@ int TCampaignBrief::CampaignHeaderStruct::GetNumMaps() const
 // pair and the memory-homed running offset are pushed apart by the
 // expansions above, where retail keeps the offset in ESI throughout.
 //
-// 2026-09-06, first-divergence anchor (measured, nothing shipped). The
+// 2026-09-06, CLOSED IN PART (49.5351 -> 53.9715) by restoring the
+// ScenarioStruct::LoadMapHeader call this body had pasted in longhand. The
+// helper is claimed at 0x487d30 and stays exact; its four statements were
+// spelled out here verbatim (`pubseekoff`, the TGzInflateBuf/TStreamBufFile
+// pair, `mapHeader.Read`), which is precisely the "per-scenario map-header
+// block (13 lines)" the dose study below had to remove by hand to reach its
+// peak. Retail still EXPANDS the helper at this site - both TGzInflateBuf
+// ctor/dtor pairs remain in the caller on both sides - so this is the
+// docs/vc6/inliner.md "a missing helper can alter an earlier expansion"
+// effect exactly: C1 sizes the caller BEFORE expansion, so writing the call
+// lowers caller_cb, lowers the /Ob2 budget, and stops the over-expansion
+// downstream. The call census goes from 11 target-only calls to ZERO: every
+// callee retail has, we now have, and the whole remainder is 20 base-only
+// sites where we still expand what retail calls.
+// 2026-09-06, first-divergence anchor (measured before that fix). The
 // budget hole does not start somewhere in the middle of this body - it
 // starts at SITE 0 and never lets up. Walking the head instruction for
 // instruction, retail CALLS and we EXPAND, in source order and without a
@@ -2274,11 +2288,7 @@ bool TCampaignBrief::CampaignHeaderStruct::Load()
         scenario->offset = mapOffset;
         if (scenario->inflated_size > 0) {
             mapOffset += scenario->inflated_size;
-            stream->pubseekoff(scenario->offset, std::ios::beg,
-                               std::ios::in);
-            TGzInflateBuf inflateBuf(stream);
-            TStreamBufFile file(&inflateBuf);
-            mapHeader.Read(&file, iScenario2);
+            scenario->LoadMapHeader(stream, &mapHeader, iScenario2);
             scenario->options->_vslot11(&mapHeader);
             scenario->hero_placeholders = mapHeader.placeholders;
             for (int iSlot = 0; iSlot < 8; ++iSlot)
