@@ -5107,7 +5107,7 @@ void game::ValidateVictoryLossConditions(unsigned char check_map_locations)
         int numHumanTeams = 0;
         int owner;
         int townTeam;
-        for (int teamCheck = 0; teamCheck < 8; ++teamCheck) {
+        for (unsigned int teamCheck = 0; teamCheck < 8; ++teamCheck) {
             if (validate_is_human_team(this, teamCheck))
                 ++numHumanTeams;
         }
@@ -6615,7 +6615,7 @@ bool game::LoadMap(TAbstractFile* mapFile)
         }
 
         const std::bitset<70> serializedSpellCopy = serializedSpells;
-        for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+        for (unsigned int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
             if (serializedSpellCopy[spell]) {
                 for (artifact = 0; artifact < 144; ++artifact) {
                     if (akArtifactTraits[artifact].givesSpells) {

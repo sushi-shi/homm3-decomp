@@ -9908,6 +9908,9 @@ void townManager::SetupWell(TCastleWindow* wellWin)
 // hoist (9i vs our 8i). why-reg's model call (2026-08-27) stands for
 // the permutation.
 // E:\gamedcs\townmgr.cpp:9296
+// LOOP-COUNTER SIGNEDNESS (docs/vc6/behavior-catalog.md D23): three of the
+// six zero-initialised counters here are `unsigned int`.  94.0399 -> 95.5153,
+// greedily; the other three fall back.
 VA(0x005dda10, 0x145F)  // order-map(SetupWell 0x5dd390 .. GetCategoryStats 0x5dee70) + anchor-callee(GetNumThievesGuilds/GetLocalPlayerGamePos) + arity(ret 4), dc 0x180204
 void TThievesGuildWindow::SetupThievesGuild(int iThievesGuilds)
 {
@@ -10003,7 +10006,7 @@ void TThievesGuildWindow::SetupThievesGuild(int iThievesGuilds)
     }
 
     int player_index = 0;
-    for (int column = 0; column < 8; column++) {
+    for (unsigned int column = 0; column < 8; column++) {
         int who = player_index;
         while (who < 8 && gpGame->playerDisabled[who])
             who++;
@@ -10096,10 +10099,10 @@ void TThievesGuildWindow::SetupThievesGuild(int iThievesGuilds)
                     if (iThievesGuilds >= 4) {
                         int bestCreature = -1;
                         long bestValue = 0;
-                        for (int n = 0; n < gpGame->players[who].numTowns; n++) {
+                        for (unsigned int n = 0; n < gpGame->players[who].numTowns; n++) {
                             int id = gpGame->players[who].townIds[n];
                             const town* t = gpGame->GetTown(id);
-                            for (int slot = 0; slot < TOWN_DWELLING_COUNT; slot++) {
+                            for (unsigned int slot = 0; slot < TOWN_DWELLING_COUNT; slot++) {
                                 if (t->get_army().armies[slot] != -1
                                     && t->get_army().numTroops[slot] > 0
                                     && akCreatureTypeTraits[t->get_army().armies[slot]]

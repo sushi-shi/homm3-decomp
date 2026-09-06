@@ -3736,6 +3736,8 @@ void TSingleSelectionWindow::UpdateGameVars()
 // block-scope classB is byte-flat; the family is the documented
 // register-homing residual class.
 // E:\gamedcs\singleselectionwindow.cpp:3927
+// LOOP-COUNTER SIGNEDNESS (docs/vc6/behavior-catalog.md D23): the 156-hero
+// scan counter is `unsigned int`.  87.5476 -> 88.9857.
 VA(0x00583890, 0x2B0)  // anchor-callee UpdateTown calls it no-arg right after the town commit - the DC call edge; size 1.2x dc 0x23e, dc 0x139498
 void TSingleSelectionWindow::MakeHeroFilter()
 {
@@ -3809,7 +3811,7 @@ void TSingleSelectionWindow::MakeHeroFilter()
             break;
         }
         p->availableHeroesCount = 0;
-        for (int h = 0; h < 156; ++h) {
+        for (unsigned int h = 0; h < 156; ++h) {
             if (gpGame->heroAvailability[h] != -1)
                 continue;
             if (akHeroTraits[h].heroClass != classA
