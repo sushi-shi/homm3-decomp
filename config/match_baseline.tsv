@@ -4380,7 +4380,7 @@ viewarmywindow	??0TViewArmyWindow@@QAE@PBVarmy@@HHE@Z	90.1633	90.8074	90.8074	0x
 viewarmywindow	??1TViewArmyWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1f45e0	1ffa03988396
 viewarmywindow	??_GTViewArmyWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1f3b20	-
 viewarmywindow	?DoModal@TViewArmyWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1f47f0	55d754aa4559
-viewarmywindow	?WindowHandler@TViewArmyWindow@@UAEHPAVmessage@@@Z	92.5744	92.5744	92.5744	0x1f4850	0fb446d5f96b
+viewarmywindow	?WindowHandler@TViewArmyWindow@@UAEHPAVmessage@@@Z	99.1520	99.1520	99.1520	0x1f4850	66c9aac92fe0
 viewarmywindow	?_Split@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEXXZ	100.0000	100.0000	100.0000	0x4ce0	-
 viewarmywindow	?assign@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@ABV12@II@Z	100.0000	100.0000	100.0000	0x4860	-
 viewarmywindow	?convertID2HelpID@TViewArmyWindow@@QBEHH@Z	100.0000	100.0000	100.0000	0x1f46c0	b4f7672d6128
