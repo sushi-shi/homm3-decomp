@@ -5105,6 +5105,14 @@ static unsigned char attempt_teleport(hero* current_hero,
 // flattening GetTown or NewfullMap::cell removes retained retail calls and the
 // sixth point constructor. Preserve these positive source facts across the
 // remaining VC6 tail-merging/register-allocation wall.
+// LOCALISED 2026-09-06: the structural half of the residual is one
+// cross-jump.  Retail gives the puzzle-guess early return its OWN inline
+// vector teardown - `_Destroy` + `operator delete` + epilogue at
+// 0x42fee0+0x11c..0x14f, reached by the ProcessSearch arm's `jmp` and the
+// movePoints=0 arm's fall-through - so it carries THREE `ret 8`s against our
+// two; we cross-jump both arms into the can-stop return's tail instead.
+// That is the merged-return class (both predecessors are jumps) and the
+// duplicate cannot be spelled, because the block IS a destructor.
 VA(0x0042fee0, 0x6b8)  // anchor-caller move_hero + order bracket, dc 0x34b08
 void AI_AttemptMove(hero* current_hero, HeroDestination& best_point,
                     long& best_raw_value, unsigned char explore_mode)
