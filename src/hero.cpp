@@ -7881,6 +7881,14 @@ long hero::modify_spell_damage(SpellID spell, int damage,
 // ECX as the index; this compile encodes ECX as the base and ESI as the
 // index. Direct indexing, reversed indexing and pointer-arithmetic spellings
 // are byte-identical. The earlier single-index `for` form scored 75.5833%.
+// 2026-09-06, the HEADER side of the same subscript, all three byte-flat at
+// 99.5833: `*(stats + skill)`, a `const signed char* skills = stats;` hoist,
+// and an explicit `this->stats[skill]` in hero.h's GetPrimarySkill. So the
+// SIB base/index choice is unreachable from the accessor as well as from the
+// caller. Four other rows in the tree carry the identical single-swap
+// residual (ai_player::fill_prohibited_array 99.9678, seerhuttext
+// LoadSeerHutTextColumn 99.9621, philai value_of_enemy_town 99.9561,
+// diff CDiffFile::Apply 99.6429 with three swaps).
 VA(0x004e5960, 0x38)  // linkorder, dc 0xd544c
 short hero::get_primary_skill_total()
 {
