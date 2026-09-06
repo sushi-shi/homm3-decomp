@@ -278,12 +278,11 @@ unsigned char initialize_creature_bank_traits();
 unsigned char InitializeCreatureGeneratorNames();
 unsigned char InitializeCreatureTypeTraitsTable();
 void InitializeAdventureObjectNames();
-unsigned char InitializeBuildingCostsTables();
 unsigned char InitializeExtraInfoText();
 unsigned char InitializeHeroSpecificAbilitiesTable();
 unsigned char InitializeCampaignMusicTable();
 int InterpretCommandLine();
-unsigned char InitializeAdventureEventText();
+bool InitializeAdventureEventText();
 unsigned char InitializeSpellTraitsTable();
 unsigned char InitializeHeroTraitsTable();
 unsigned char InitializeHeroClassTraitsTable();
@@ -294,8 +293,8 @@ unsigned char InitializeVCDescriptions();
 unsigned char InitializeLCDescriptions();
 unsigned char InitializeTurnDurationText();
 unsigned char InitializeCreatureAnimationTraitsTable();
-unsigned char InitializeArtifactEventText();
-unsigned char InitializeRandomSignText();
+bool InitializeArtifactEventText();
+bool InitializeRandomSignText();
 unsigned char InitializeCampaignMapTraitsTable();
 void AI_initialize();
 void ReadPrefs();
@@ -375,7 +374,7 @@ static unsigned char LoadGameData()
         return 0;
     if (!InitializeSSkillTraitsTable())
         return 0;
-    if (!InitializeBuildingCostsTables())
+    if (!town::InitializeBuildingCostsTables())
         return 0;
     if (!InitializeVCDescriptions())
         return 0;

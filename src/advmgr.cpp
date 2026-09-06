@@ -869,7 +869,7 @@ int advManager::Open(int newPriority)
         sprintf(gText,
                 DATA_COMPGEN(0x006602a0, heroSampleFormat, "horse%02d.wav"),
                 horse);
-        heroSamples[horse] = LoadSampleResource(gText);
+        heroSamples[horse] = ResourceManager::GetSample(gText);
     }
 
     if (!gpCurrentPlayer->IsLocalHuman()) {
@@ -9076,7 +9076,7 @@ void advManager::InsertSound(int x, int y, int z, int soundPriority,
     if (id_num > LOOPING_SOUND_INVALID && id_num < LOOPING_SOUND_COUNT
         && !loopedSample[id_num]) {
         TrimLoopingSounds(4);
-        loopedSample[id_num] = LoadSampleResource(
+        loopedSample[id_num] = ResourceManager::GetSample(
             gLoopingSoundNames[id_num]);
     }
 
@@ -10233,7 +10233,7 @@ unsigned char advManager::DoSystemOptions()
             heroSamples[i]->Dispose();
         for (i = 0; i <= 10; i++) {
             sprintf(gText, "horse%02d.wav", i);
-            heroSamples[i] = LoadSampleResource(gText);
+            heroSamples[i] = ResourceManager::GetSample(gText);
         }
     }
 
