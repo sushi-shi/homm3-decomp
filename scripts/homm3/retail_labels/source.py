@@ -138,17 +138,19 @@ OPERATOR_EQUAL_RE = re.compile(
     r"([~\w:]+(?:<[^<>()]*>)?)::operator\s*==\s*\(")
 OPERATOR_NOT_EQUAL_RE = re.compile(
     r"([~\w:]+(?:<[^<>()]*>)?)::operator\s*!=\s*\(")
-# Keep arithmetic identities distinct from the return type and from each
+# Keep value-operator identities distinct from the return type and from each
 # other. Only simple member/namespace owners are admitted here; template
 # owners still require the IR channel or a dedicated template key.
-ARITHMETIC_OPERATOR_RE = re.compile(
+VALUE_OPERATOR_RE = re.compile(
     r"(?<![\w:])(?:(?P<owner>[A-Za-z_]\w*(?:::[A-Za-z_]\w*)*)::)?"
-    r"operator\s*(?P<token>[+*/-])\s*\(")
-ARITHMETIC_OPERATOR_NAMES = {
+    r"operator\s*(?P<token>[+*/<-])\s*\(")
+VALUE_OPERATOR_NAMES = {
     "+": "plus", "-": "minus", "*": "multiply", "/": "divide",
+    "<": "less",
 }
-ARITHMETIC_OPERATOR_CODES = {
+VALUE_OPERATOR_CODES = {
     "H": "plus", "G": "minus", "D": "multiply", "K": "divide",
+    "M": "less",
 }
 # MSVC special members render with backticks: Cls::`scalar deleting
 # destructor'(...), `default constructor closure'(...)
@@ -758,16 +760,16 @@ def scan_file(path, functions: set[int],
             sm = SPECIAL_RE.search(follower)
             om = OPERATOR_EQUAL_RE.search(follower)
             nom = OPERATOR_NOT_EQUAL_RE.search(follower)
-            arithmetic = ARITHMETIC_OPERATOR_RE.search(follower)
+            value_operator = VALUE_OPERATOR_RE.search(follower)
             if sm:
                 raw = f"{sm.group(1)}__{sm.group(2)}"
             elif om:
                 raw = f"{om.group(1)}::operator_equal"
             elif nom:
                 raw = f"{nom.group(1)}::operator_not_equal"
-            elif arithmetic:
-                owner = arithmetic.group("owner")
-                operation = ARITHMETIC_OPERATOR_NAMES[arithmetic.group("token")]
+            elif value_operator:
+                owner = value_operator.group("owner")
+                operation = VALUE_OPERATOR_NAMES[value_operator.group("token")]
                 raw = f"{owner}::" if owner else ""
                 raw += f"operator_{operation}"
             else:
@@ -1454,11 +1456,11 @@ def _demangle_key(mangled: str):
     if mangled.startswith("??9"):
         cls = mangled[3:].split("@@", 1)[0].split("@")[0]
         return f"{cls}_operator_not_equal".lower() if cls else None
-    arithmetic = re.match(
-        r"^\?\?([DGHK])((?:[A-Za-z_]\w*@)*)@[A-Z]", mangled)
-    if arithmetic:
-        owner = "_".join(reversed(arithmetic.group(2).strip("@").split("@")))
-        operation = ARITHMETIC_OPERATOR_CODES[arithmetic.group(1)]
+    value_operator = re.match(
+        r"^\?\?([DGHKM])((?:[A-Za-z_]\w*@)*)@[A-Z]", mangled)
+    if value_operator:
+        owner = "_".join(reversed(value_operator.group(2).strip("@").split("@")))
+        operation = VALUE_OPERATOR_CODES[value_operator.group(1)]
         return f"{owner + '_' if owner else ''}operator_{operation}".lower()
     m = GLOBAL_TEMPLATE_MEMBER_RE.match(mangled)
     if m:

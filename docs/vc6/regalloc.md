@@ -728,6 +728,20 @@ declaration, inline control, or unused operation is needed. This is a measured
 source/value-lifetime model for a retail-only function, not proof of the
 original local names or lexical scope.
 
+### 6l. A retained comparison distinguishes free and member interfaces
+
+The grid-set lookup in `PaintPoint` calls 0x5b8ca0 with the two point addresses
+in ECX and EDX, without stack arguments. The 32-byte callee compares unsigned
+y, then x, and returns with plain `ret`. That boundary contradicts the former
+`TRmgGridPoint` member comparison, which passes its right reference on the
+stack. An ordinary free `bool operator<(const TRmgGridPoint&, const
+TRmgGridPoint&)` reproduces all 32 raw bytes without relocations.
+
+The source-label scanner now joins this bounded `operator<` spelling to its
+VC6 `??M` public, alongside the arithmetic operators. Equal-size join tests
+keep the operators distinct and reject `<=`, `<<`, and template-owner forms;
+the 130-test label suite passes. The source declaration remains the name owner.
+
 ## 7. Files
 
 | path | role |

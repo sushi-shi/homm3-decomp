@@ -877,6 +877,28 @@ delegation; its original source spelling remains provisional because the
 DC corpus has no RMG compiland. Caller-specific residuals and prior peaks
 remain recorded rather than being hidden by an inline directive.
 
+### Repeated tile operations expose shared helper boundaries
+
+`PaintPoint` (0x5b4b20) and both update paths in `PaintTransitions` (0x5b5a70)
+write the adapter, then refresh the packed cache with validity first and four
+field setters. An ordinary shared `SetTile(point, tile)` preserves that
+operation and raises `PaintPoint` from 78.4213% to 92.2405%. Flattening the
+body into its callers changes later set and gap-predicate expansions.
+
+The same callers compute transition strength before loading the base-frame
+rule's virtual receiver. A shared `SelectBaseFrame(point, terrain, oldFrame)`
+captures the terrain index across that call and preserves this evaluation
+order. With a named frame result and scoped neighbour points, `PaintPoint`
+reaches 95.3146%. `PaintTransitions`, which initially fell to 38.6271% when
+the tile writer was recovered, returns to 74.7320% with its proven unsigned
+grid interface intact; its 74.7623% historical peak remains banked.
+
+These are retail-derived boundaries with provisional names and no Dreamcast
+counterpart. The remaining `PaintPoint` expansions are documented beside the
+function. No inline keyword, pragma, or unused operation is added. Recovering
+one common operation can expose another missing boundary in a different
+caller; preserve the stronger interface while checking that collateral.
+
 ## 7. Using it
 
 ```sh

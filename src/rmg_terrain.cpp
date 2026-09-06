@@ -264,6 +264,133 @@ TRmgPackedTerrainCell* TRmgTerrainPainter::GetPackedCell(
     return &packedCells[index];
 }
 
+// The base-frame paths in PaintPoint and PaintTransitions first compute
+// strength, then load the selected rule's virtual receiver. Keep that shared
+// evaluation boundary and the captured terrain index across the first call.
+// The helper's role and signature are inferred from retail expansions.
+int TRmgTerrainPainter::SelectBaseFrame(
+    const TRmgGridPoint& point, int terrain, int oldFrame)
+{
+    int strength = GetTransitionStrength(point, terrain);
+    return gRmgTerrainRules[terrain]->SelectBaseFrame(strength, oldFrame);
+}
+
+// PaintPoint and both transition updates repeat this adapter/cache write.
+// Preserve the shared operation, including validity before the four values;
+// cache initialization from an adapter read has a different store order.
+// This ordinary helper is inferred from retail expansions, with no DC name.
+void TRmgTerrainPainter::SetTile(
+    const TRmgGridPoint& point, const TRmgTerrainTile& tile)
+{
+    adapter->SetTile(point, tile);
+    TRmgPackedTerrainCell& packed = packedCells[point.y * width + point.x];
+    packed.SetInitialized();
+    packed.SetTerrain(tile.terrain);
+    packed.SetFrame(tile.frame);
+    packed.SetFlipX(tile.flipX);
+    packed.SetFlipY(tile.flipY);
+}
+
+// Paint a base tile, refresh its cache, then reconcile the two repair sets.
+// Terrain rules that permit separated neighbours only release cardinal gaps;
+// the other rules recheck every matching neighbour. The rectangle painter
+// calls this body at 0x5b4a2d; RepairTerrainPoint and Finish share it.
+// Names are provisional: this Complete-only code has no Dreamcast body.
+// Residual (95.3146%): GetPackedCell expands at the first eight-neighbour
+// terrain read (retail 0x5b4e55) and the final rule test (0x5b509e). The
+// inner primary-set erase also expands the three-argument distance wrapper
+// to its four-argument overload (0x5b4f7f). The frame is 0x54 versus 0x50;
+// the retained pre-translation x copy at 0x5b4e3f is still missing.
+// Flattening SetTile leaves 78.4213%; flattening frame selection leaves
+// 90.9367% with the named frame, or 92.2405% with direct tile.frame assignment
+// but the wrong entry load schedule. Reusing one nearby point across all
+// branches gives 91.1519% after both shared helpers are present.
+// An explicit grid copy constructor introduces a retained copy call absent
+// from retail (91.8861%). Free by-value grid translation changes the direction
+// loop registers and still loses the original-x copy (91.2242%). Neither
+// control establishes a replacement for the current translation interface.
+VA(0x005B4B20, 0x5CB) // anchor-callee 0x5b4960, 0x5b5440; thiscall, ret 4
+void TRmgTerrainPainter::PaintPoint(const TRmgGridPoint& point)
+{
+    int frame = SelectBaseFrame(point, paintTerrain, -1);
+    TRmgTerrainTile tile;
+    tile.terrain = paintTerrain;
+    tile.frame = frame;
+    tile.flipX = 0;
+    tile.flipY = 0;
+    SetTile(point, tile);
+
+    if (secondaryPoints.find(point) != secondaryPoints.end())
+        secondaryPoints.erase(point);
+
+    if (gRmgTerrainRules[paintTerrain]->allowsSeparatedNeighbours) {
+        if (point.y > 0) {
+            TRmgGridPoint nearby(point.x, point.y - 1);
+            if (primaryPoints.find(nearby) != primaryPoints.end()
+                && !IsHorizontalGap(nearby)) {
+                primaryPoints.erase(nearby);
+                QueueOtherTerrainNeighbours(nearby);
+            }
+        }
+        if (point.y < height - 1) {
+            TRmgGridPoint nearby(point.x, point.y + 1);
+            if (primaryPoints.find(nearby) != primaryPoints.end()
+                && !IsHorizontalGap(nearby)) {
+                primaryPoints.erase(nearby);
+                QueueOtherTerrainNeighbours(nearby);
+            }
+        }
+        if (point.x > 0) {
+            TRmgGridPoint nearby(point.x - 1, point.y);
+            if (primaryPoints.find(nearby) != primaryPoints.end()
+                && !IsVerticalGap(nearby)) {
+                primaryPoints.erase(nearby);
+                QueueOtherTerrainNeighbours(nearby);
+            }
+        }
+        if (point.x < width - 1) {
+            TRmgGridPoint nearby(point.x + 1, point.y);
+            if (primaryPoints.find(nearby) != primaryPoints.end()
+                && !IsVerticalGap(nearby)) {
+                primaryPoints.erase(nearby);
+                QueueOtherTerrainNeighbours(nearby);
+            }
+        }
+    } else {
+        unsigned char neighbourExists[TILE_DIR_COUNT];
+        BuildTileNeighbourMask(
+            width, height, point.x, point.y, neighbourExists);
+        for (unsigned int direction = 0; direction < TILE_DIR_COUNT; ++direction) {
+            if (neighbourExists[direction]) {
+                TRmgGridPoint nearby = point + gTileDirections[direction];
+                if (GetTerrain(nearby) == paintTerrain) {
+                    if (primaryPoints.find(nearby) != primaryPoints.end()) {
+                        if (!NeedsTerrainRepair(nearby)) {
+                            primaryPoints.erase(nearby);
+                            QueueOtherTerrainNeighbours(nearby);
+                        }
+                    } else if (NeedsTerrainRepair(nearby)) {
+                        primaryPoints.insert(nearby);
+                    }
+                }
+            }
+        }
+    }
+    if (NeedsTerrainRepair(point))
+        primaryPoints.insert(point);
+    else
+        QueueOtherTerrainNeighbours(point);
+}
+
+#if 0 // @carcass - retained boundary called by PaintPoint
+// Cardinal neighbours of other terrain enter the secondary repair set.
+// Diagonals enter only when their rule forbids separated neighbours.
+VA(0x005B50F0, 0x34E) // anchor-callee 0x5b4c72, 0x5b50dd; thiscall, ret 4
+void TRmgTerrainPainter::QueueOtherTerrainNeighbours(const TRmgGridPoint& point)
+{
+} // @stub
+#endif
+
 // Own-terrain checks share the predicates used with the selected paint
 // terrain. Retail retains the nested predicate in the former and expands
 // the latter at the four adjacent-row/column probes.
@@ -387,8 +514,9 @@ void TRmgTerrainPainter::RepairTerrainPoint(const TRmgGridPoint& point)
 
 // The unsigned grid/ref-argument correction is independently proved by the
 // set comparator and the retained grid constructor. It changes the nested
-// accessor expansion here (74.76 -> 42.02%); retain the proven type and its
-// historical peak while recovering this caller's original helper surface.
+// accessor expansion here (74.76 -> 42.02%). Shared SetTile initially lowers
+// that to 38.6271%; shared strength-then-base-frame selection restores
+// 74.7320% with the unsigned type intact. MAX/history retain 74.7623%.
 // Before the unsigned-grid correction (74.7623%), the candidate retained
 // seven of retail's first twelve GetPackedCell calls and expanded five only
 // as far as InitializePackedCell. Both cache helpers remain exact.
@@ -494,10 +622,7 @@ void TRmgTerrainPainter::PaintTransitions()
                         ->SelectTransitionFrame(
                             transition, flip, flip, tile.frame);
                 } else {
-                    newFrame = gRmgTerrainRules[tile.terrain]
-                        ->SelectBaseFrame(
-                            GetTransitionStrength(point, tile.terrain),
-                            tile.frame);
+                    newFrame = SelectBaseFrame(point, tile.terrain, tile.frame);
                 }
 
                 if (tile.frame != newFrame || tile.flipX != flip.flipX
@@ -505,36 +630,17 @@ void TRmgTerrainPainter::PaintTransitions()
                     tile.flipX = flip.flipX;
                     tile.flipY = flip.flipY;
                     tile.frame = newFrame;
-                    adapter->SetTile(point, tile);
-
-                    TRmgPackedTerrainCell& updatedPacked =
-                        packedCells[point.y * width + point.x];
-                    updatedPacked.SetInitialized();
-                    updatedPacked.SetTerrain(tile.terrain);
-                    updatedPacked.SetFrame(tile.frame);
-                    updatedPacked.SetFlipX(tile.flipX);
-                    updatedPacked.SetFlipY(tile.flipY);
+                    SetTile(point, tile);
                 }
             } else {
                 TRmgTerrainTile tile = GetPackedCell(point)->GetTile();
 
-                int newFrame = gRmgTerrainRules[tile.terrain]
-                    ->SelectBaseFrame(
-                        GetTransitionStrength(point, tile.terrain),
-                        tile.frame);
+                int newFrame = SelectBaseFrame(point, tile.terrain, tile.frame);
                 if (tile.frame != newFrame || tile.flipX || tile.flipY) {
                     tile.frame = newFrame;
                     tile.flipX = 0;
                     tile.flipY = 0;
-                    adapter->SetTile(point, tile);
-
-                    TRmgPackedTerrainCell& updatedPacked =
-                        packedCells[point.y * width + point.x];
-                    updatedPacked.SetInitialized();
-                    updatedPacked.SetTerrain(tile.terrain);
-                    updatedPacked.SetFrame(tile.frame);
-                    updatedPacked.SetFlipX(tile.flipX);
-                    updatedPacked.SetFlipY(tile.flipY);
+                    SetTile(point, tile);
                 }
             }
         }
@@ -734,3 +840,11 @@ TRmgTerrainPainter::~TRmgTerrainPainter()
 // The four late point constructions in RepairTerrainPoint pass x and y by
 // reference. The retained two-store body is 24 bytes including ret 8.
 VA_COMPGEN(0x005B76B0, 0x18, CLASS_CTOR, TRmgGridPoint)
+
+// The set lookup at 0x5b4e96 retains this free comparison. Its unsigned
+// y-then-x ordering also appears in the tree's expanded comparisons.
+VA(0x005B8CA0, 0x20) // anchor-callee 0x5b4e96; fastcall, two point references
+bool operator<(const TRmgGridPoint& left, const TRmgGridPoint& right)
+{
+    return left.y < right.y || (left.y == right.y && left.x < right.x);
+}

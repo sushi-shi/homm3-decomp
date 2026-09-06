@@ -418,10 +418,6 @@ struct TRmgGridPoint {
     TRmgGridPoint(const unsigned int& newX, const unsigned int& newY)
         : x(newX), y(newY) {}
 
-    bool operator<(const TRmgGridPoint& other) const
-    {
-        return y < other.y || (y == other.y && x < other.x);
-    }
     TRmgGridPoint& operator+=(const TPoint& offset)
     {
         x += offset.x;
@@ -434,6 +430,10 @@ struct TRmgGridPoint {
         return result += offset;
     }
 };
+
+// The retained comparison at 0x5b8ca0 receives both point addresses in
+// ECX/EDX and returns without popping arguments: a free fastcall boundary.
+bool operator<(const TRmgGridPoint& left, const TRmgGridPoint& right);
 
 struct TRmgZoneBounds {
     int minimumX;

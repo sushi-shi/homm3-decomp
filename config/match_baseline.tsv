@@ -3378,7 +3378,7 @@ rmg	?ReadRmgTemplateZones@@YIXPBVTSpreadsheetResource@@PAUTRmgTemplate@@HHHHH@Z	
 rmg	?RepairWaterZoneBorders@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0x13fcb0	c64fcf51edec
 rmg	?ScoreObjectPlacement@type_random_map_generator@@QAEHPAUTRmgObjectPropertiesRef@@UTRmgMapPosition@@@Z	84.6788	84.6788	84.6788	0x136bc0	71757ed0f533
 rmg	?TraceZoneBoundary@type_random_map_generator@@QAEXPAUTRmgBoundaryVertex@@E@Z	86.6846	86.6846	86.6846	0x13c390	f17fdbb0268c
-rmg	?WriteMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	94.1017	95.7066	95.7066	0x149cb0	12d6f5f28f76
+rmg	?WriteMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	94.0939	95.7066	95.7066	0x149cb0	12d6f5f28f76
 rmg	?_Inc@const_iterator@?$_Tree@UTPoint@@U1@U_Kfn@?$set@UTPoint@@U?$less@UTPoint@@@std@@V?$allocator@UTPoint@@@3@@std@@U?$less@UTPoint@@@4@V?$allocator@UTPoint@@@4@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x1b8bc0	-
 rmg	?assign_rmg_teams@@YIXHHHPBEPAD@Z	100.0000	100.0000	100.0000	0x14ab40	a44a9dbf9227
 rmg	?copy@std@@YIPAUTRmgMapPosition@@PAU2@00@Z	100.0000	100.0000	100.0000	0x14d9e0	-
@@ -3400,6 +3400,7 @@ rmg_terrain	??0TRmgTerrainBrush@@QAE@PAVTRmgMapAdapterInterface@@HH@Z	100.0000	1
 rmg_terrain	??0TRmgTerrainPainter@@QAE@PAVTRmgMapAdapterInterface@@HH@Z	23.3305	23.3305	23.3305	0x1b45f0	5854f55fd7d6
 rmg_terrain	??1TRmgTerrainBrush@@QAE@XZ	100.0000	100.0000	100.0000	0x1b72f0	53c27631ac05
 rmg_terrain	??1TRmgTerrainPainter@@QAE@XZ	100.0000	100.0000	100.0000	0x1b76f0	8a955052d853
+rmg_terrain	??M@YI_NABUTRmgGridPoint@@0@Z	100.0000	100.0000	100.0000	0x1b8ca0	29691e2e527d
 rmg_terrain	?BuildMatchingNeighbourMask@TRmgTerrainPainter@@QAEXABUTRmgGridPoint@@PAE@Z	77.2609	77.2609	77.2609	0x1b6540	3269299eeb99
 rmg_terrain	?ChangeTerrain@TRmgTerrainBrush@@QAEXHH@Z	81.3309	81.3309	81.3309	0x1b7520	a285212dffe5
 rmg_terrain	?GetPackedCell@TRmgTerrainPainter@@QAEPAUTRmgPackedTerrainCell@@ABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x1b48d0	f3cb86ad7122
@@ -3407,14 +3408,16 @@ rmg_terrain	?HasSeparatedNeighbours@TRmgTerrainPainter@@QAEEABUTRmgGridPoint@@@Z
 rmg_terrain	?InitializePackedCell@TRmgTerrainPainter@@QAEXABUTRmgGridPoint@@I@Z	100.0000	100.0000	100.0000	0x1b3dd0	8f186c8cec7b
 rmg_terrain	?IsHorizontalGap@TRmgTerrainPainter@@QAEEABUTRmgGridPoint@@H@Z	100.0000	100.0000	100.0000	0x1b6320	a3b45dfaf6bd
 rmg_terrain	?IsVerticalGap@TRmgTerrainPainter@@QAEEABUTRmgGridPoint@@H@Z	100.0000	100.0000	100.0000	0x1b6430	fab6344e4247
+rmg_terrain	?PaintPoint@TRmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	95.3146	95.3146	95.3146	0x1b4b20	057a137022bb
 rmg_terrain	?PaintRectangle@TRmgTerrainBrush@@QAEXIIII@Z	100.0000	100.0000	100.0000	0x1b7690	62ff40781ed9
-rmg_terrain	?PaintTransitions@TRmgTerrainPainter@@QAEXXZ	42.0215	74.7623	74.7623	0x1b5a70	5cb5b6bcdd0c
+rmg_terrain	?PaintTransitions@TRmgTerrainPainter@@QAEXXZ	74.7320	74.7623	74.7623	0x1b5a70	42384e977d86
 rmg_terrain	?RepairTerrainPoint@TRmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	81.8432	81.8432	81.8432	0x1b5440	ad0fb387e86a
 rmg_terrain	?SelectTerrainTransition@@YIHPBHPAUTRmgTerrainFlip@@@Z	100.0000	100.0000	100.0000	0x1b3e80	fbecc87d36e2
 rmg_terrain	TRmgTerrainPainter_BuildNeighbourKinds	0.0000	0.0000	0.0000	0x1b68a0	c85e81f8641d
 rmg_terrain	TRmgTerrainPainter_CheckFirstDiagonal	0.0000	0.0000	0.0000	0x1b6ba0	1cf4caf873e1
 rmg_terrain	TRmgTerrainPainter_CheckSecondDiagonal	0.0000	0.0000	0.0000	0x1b6e00	402f5218bea0
 rmg_terrain	TRmgTerrainPainter_GetTransitionStrength	0.0000	0.0000	0.0000	0x1b6fd0	d7df9f5ceb90
+rmg_terrain	TRmgTerrainPainter_QueueOtherTerrainNeighbours	0.0000	0.0000	0.0000	0x1b50f0	e49599156cc0
 sacrifice_window	??0type_sacrifice_window@@QAE@PAVhero@@H@Z	100.0000	100.0000	100.0000	0x15fdd0	e3c4b7caa364
 sacrifice_window	??0type_skeleton_window@@QAE@PAVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x1654f0	14453a1a8081
 sacrifice_window	??1type_sacrifice_window@@UAE@XZ	100.0000	100.0000	100.0000	0x1623a0	2862ff7bfb2e
