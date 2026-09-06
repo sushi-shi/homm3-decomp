@@ -150,6 +150,7 @@ void TCustomCampaignWindow::LoadCampaignList()
 {
     char currentDirectory[100];
     _finddata_t fileInfo;
+    TCampaignBrief::CampaignHeaderStruct* header;
 
     _getcwd(currentDirectory, sizeof(currentDirectory));
     _chdir(DATA_COMPGEN(0x006755ac, mapsDirectory, "Maps"));
@@ -162,8 +163,7 @@ void TCustomCampaignWindow::LoadCampaignList()
         return;
 
     do {
-        TCampaignBrief::CampaignHeaderStruct* header =
-            new TCampaignBrief::CampaignHeaderStruct(fileInfo.name);
+        header = new TCampaignBrief::CampaignHeaderStruct(fileInfo.name);
         _getcwd(currentDirectory, sizeof(currentDirectory));
         if (!header->Load()) {
             delete header;

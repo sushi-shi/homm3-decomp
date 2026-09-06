@@ -1358,7 +1358,7 @@ customcampaignwindow	?CustomCampaignBackHandler@@YIHAAVmessage@@@Z	100.0000	100.
 customcampaignwindow	?CustomCampaignBeginHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x83880	37a3d8102452
 customcampaignwindow	?CustomCampaignSliderHandler@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x838f0	878dbd5e7a6f
 customcampaignwindow	?GetFileName@CampaignHeaderStruct@TCampaignBrief@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x83740	bc044c821a04
-customcampaignwindow	?LoadCampaignList@TCustomCampaignWindow@@QAEXXZ	99.9196	99.9196	99.9196	0x82fd0	ab7c083c300b
+customcampaignwindow	?LoadCampaignList@TCustomCampaignWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x82fd0	1d0f78418833
 customcampaignwindow	?OnWidgetDeselect@TCustomCampaignWindow@@UAEHHPAE@Z	100.0000	100.0000	100.0000	0x835c0	ae4a7a376808
 customcampaignwindow	?UpdateList@TCustomCampaignWindow@@QAEXXZ	93.8038	93.8038	93.8038	0x83330	218c31badbdb
 customcampaignwindow	?_Insertion_sort_1@std@@YIXPAPAUCampaignHeaderStruct@TCampaignBrief@@0VCampaignHeaderPointerLess@@0@Z	100.0000	100.0000	100.0000	0x83aa0	-
@@ -2248,7 +2248,7 @@ hero	?HeroFn_004D8FB0@hero@@QAEPBDXZ	100.0000	100.0000	100.0000	0xd8fb0	ad49751e
 hero	?HeroFn_004D9B30@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0xd9b30	1e241468bce9
 hero	?HeroFn_004D9CC0@hero@@QAEHH@Z	94.1749	94.1749	94.1749	0xd9cc0	e180f7618fd6
 hero	?HeroFn_004DBE80@hero@@QAEEH@Z	100.0000	100.0000	100.0000	0xdbe80	05665369f0f0
-hero	?HeroFn_004DBF30@hero@@QAEEHJ@Z	99.8846	99.8846	99.8846	0xdbf30	9dfddd75f7a9
+hero	?HeroFn_004DBF30@hero@@QAEEHJ@Z	100.0000	100.0000	100.0000	0xdbf30	e39217e2605c
 hero	?HeroFn_004DC070@hero@@QAEXJ@Z	100.0000	100.0000	100.0000	0xdc070	b1654916cefe
 hero	?HeroFn_004DC100@hero@@QAEXJ@Z	87.2712	87.2712	87.2712	0xdc100	7d53252e3eeb
 hero	?HeroFn_004E2550@hero@@QAEEJJ@Z	92.9185	92.9185	92.9185	0xe2550	d0f8facd424f

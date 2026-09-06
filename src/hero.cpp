@@ -3416,15 +3416,20 @@ unsigned char hero::HeroFn_004DBE80(int combination)
 //   * the `[edx]` re-read before the reset is real: the `_Xran` call on
 //     the test path is what stops VC6 reusing the value it just tested.
 //
-// Residual (99.9%): ONE frame slot. Every instruction agrees; retail's
+// EXACT 2026-09-06. The last residual was ONE frame slot: retail's
 // `sub esp,0x1c` packs the 20-byte mask copy at [ebp-0x1c] and lets the
-// `combination * 24` address temp live in `combined.extra`'s own
-// [ebp-4] - the two never overlap - while our CL spends a separate slot
-// and runs `sub esp,0x20`. Tried and rejected, one compile each:
-// dropping the loop's `artifactId` local (99.88, byte-flat); declaring
-// `combined` FIRST and filling its two fields at the end, which is the
-// declaration order that WOULD produce retail's layout but pays for the
-// default constructor's two -1 stores (93.35); and binding
+// `combination * 24` address temp live in the assembled artifact's own
+// [ebp-4], while a NAMED `type_artifact combined` local gets a slot of
+// its own out of the named-local area and runs `sub esp,0x20`.  The
+// object retail passes to equip_artifact is an unnamed TEMPORARY, whose
+// storage VC6 draws from the same compiler-temp pool as the address
+// computation - so the two overlap exactly as retail's frame shows.
+// Address-of-a-temporary is the MSVC extension (C4238) retail's source
+// relied on.  Previously tried and rejected, one compile each: dropping
+// the loop's `artifactId` local (99.88, byte-flat); declaring `combined`
+// FIRST and filling its two fields at the end (93.35 - it pays for the
+// default constructor's two -1 stores); constructing the named local
+// with the real ctor at the TOP of the body (72.50); and binding
 // `gCombinationArtifacts[combination]` to a const reference (83.38).
 VA(0x004dbf30, 0x133)  // retail-only, hero member, ret 8
 unsigned char hero::HeroFn_004DBF30(int combination, long slot)
@@ -3448,9 +3453,9 @@ unsigned char hero::HeroFn_004DBF30(int combination, long slot)
         remove_artifact(i);
     }
 
-    type_artifact combined(gCombinationArtifacts[combination].artifactId,
-                           -1);
-    return equip_artifact(&combined, -1);
+    return equip_artifact(
+        &type_artifact(gCombinationArtifacts[combination].artifactId, -1),
+        -1);
 }
 
 VA(0x004dc070, 0x87)  // retail-only, hero member, ret 4
