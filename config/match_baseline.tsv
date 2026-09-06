@@ -4162,6 +4162,7 @@ townmgr	?DoTavern@@YIEXZ	96.4800	96.4800	96.4800	0x1d7ec0	666807fcc0b3
 townmgr	?DoTownGate@townManager@@QAEXXZ	98.6070	98.6070	98.6070	0x1d8480	f9769a874b36
 townmgr	?DoTownTavern@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d82b0	27fc0e96e0d5
 townmgr	?DoUniversity@townManager@@QAEXXZ	93.6951	93.6951	93.6951	0x1d2da0	6dbc6ed769a9
+townmgr	?Draw@townObject@@QAEXHE@Z	95.5464	95.5464	95.5464	0x1c2ff0	add940ed3edd
 townmgr	?GetBuildingInfo@@YIPADPBVtown@@HEE@Z	100.0000	100.0000	100.0000	0x1d2a40	7588bd9606e8
 townmgr	?GetCategoryStats@@YIXHPAJPAC@Z	100.0000	100.0000	100.0000	0x1dee70	7abd5d7a8cb1
 townmgr	?GetText@TTextResource@@QBEPBDH@Z	100.0000	100.0000	100.0000	0x1cc8d0	20ece2b574c7
