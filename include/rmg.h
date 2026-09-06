@@ -14,6 +14,7 @@ struct TRmgTownSlot;
 struct TRmgZone;
 struct TRmgTerrainTile;
 struct TPoint;
+struct TObjectType;
 
 // Complete's random-map object factories share this five-dword prefix.  The
 // constructor at 0x534160 writes the four fields, while vtable 0x640b64 proves
@@ -513,43 +514,54 @@ struct TRmgConnectionDecoration {
     unsigned unknown05 : 27;
 };
 
-struct TRmgObjectProperties {
-    int defNumber;                       // +0x00
-    unsigned char passable[8];           // +0x04
-    unsigned char enterable[8];          // +0x0c
-    unsigned land;                       // +0x14
-    std::bitset<10> landPage;            // +0x18
-    int type;                            // +0x1c
-    int subtype;                         // +0x20
-    int page;                            // +0x24
-    unsigned char flat;                  // +0x28
-    unsigned char hasEntrance;           // +0x29
-    char pad002a[2];
-    int enterX;                          // +0x2c
-    int enterY;                          // +0x30
-    int width;                           // +0x34
-    int height;                          // +0x38
-    unsigned char colors[8];             // +0x3c
-    unsigned char shadows[8];            // +0x44
+// The rand_trn.txt reader appends 0x4c-byte rows. ScoreObjectPlacement
+// consumes the ten terrain values and the two vectors indexed by rule id.
+// These are Complete-only role names; no Dreamcast RMG records survive.
+struct TRmgObjectPlacementRule {
+    int index;                         // +0x00
+    int terrainScores[10];             // +0x04
+    std::vector<int> adjacentScores;    // +0x2c
+    std::vector<int> blockedScores;     // +0x3c
 };
 
+enum ERmgObjectPlacementMark {
+    RMG_PLACEMENT_ADJACENT = 1,
+    RMG_PLACEMENT_OVERLAP = 2,
+    RMG_PLACEMENT_BLOCKED = 4
+};
+
+enum ERmgObjectPlacementScore {
+    RMG_PLACEMENT_INVALID = -5000,
+    RMG_PLACEMENT_MINIMUM_TERRAIN_SCORE = -1000,
+    RMG_PLACEMENT_NO_TERRAIN_PREFERENCE = -1
+};
+
+// The prototype is the existing objects.txt TObjectType, whose 0x4c layout
+// and masks are independently recovered in the object-type compiland.
+// 0x532c80 owns the outline vector; 0x532e40 lazily fills the 8x6 priorities.
 struct TRmgObjectPropertiesRef {
-    TRmgObjectProperties* prototype;      // +0x00
+    TObjectType* prototype;              // +0x00
     int unknown04;
     unsigned refCount;                   // +0x08
     int prototypeIndex;
-    char opaque0010[0xd8];
+    TRmgObjectPlacementRule* placementRule; // +0x10
+    std::vector<TPoint> outline;         // +0x14
+    int overlapPriorities[8][6];         // +0x24
+    unsigned char prioritiesInitialized; // +0xe4
+    char pad00e5[3];
+
+    void BuildOverlapPriorities();
 };
 
 class type_object {
 public:
     TRmgObjectPropertiesRef* properties; // +0x04
     TRmgMapPosition position;             // +0x08
-    unsigned char unknown14;
-    unsigned char unknown15;
-    unsigned char unknown16;
-    unsigned char unknown17;
-    unsigned char unknown18;
+    unsigned char candidateCovers;
+    unsigned char candidateBehind;
+    unsigned char adjacentToCandidate;
+    unsigned char overlapsCandidate;
+    unsigned char blockedByCandidate;
     char pad0019[3];
 
     inline type_object(TRmgObjectPropertiesRef* newProperties)
@@ -559,11 +571,23 @@ public:
         position.x = -1;
         position.y = -1;
         position.z = -1;
-        unknown14 = 0;
-        unknown15 = 0;
-        unknown16 = 0;
-        unknown17 = 0;
-        unknown18 = 0;
+        ClearPlacementMarks();
+    }
+
+    // The constructor and placement scorer share this five-byte reset.
+    // The method name is provisional; retail preserves the store order.
+    void ClearPlacementMarks()
+    {
+        candidateCovers = 0;
+        candidateBehind = 0;
+        adjacentToCandidate = 0;
+        overlapsCandidate = 0;
+        blockedByCandidate = 0;
+    }
+
+    unsigned char IsPlacementTouched() const
+    {
+        return adjacentToCandidate || blockedByCandidate || overlapsCandidate;
     }
 
     virtual ~type_object();
@@ -580,6 +604,15 @@ struct TRmgMapItem {
     TRmgGroundTile tile;                  // +0x24
     TRmgGroundTileData tileData;          // +0x28
     TRmgConnectionDecoration connection;  // +0x2c
+
+    // ScoreObjectPlacement reads bit 27 with shr/test dl, whereas its
+    // direct roadPassable condition tests the containing dword. The
+    // provisional byte accessor reproduces that truncation; a direct
+    // bitfield condition instead folds to test dword ptr [item+0x28],imm.
+    unsigned char HasSubterraneanGate() const
+    {
+        return tileData.subterraneanGate;
+    }
 
     // CreateRiver's reset pass copies a by-value predecessor before a
     // constant 32000 cost write, motivating this ordinary reset helper.
@@ -798,9 +831,9 @@ public:
     int randomSeed;                                  // +0x004
     int mapVersion;                                  // +0x008
     type_random_map map;                             // +0x00c
-    std::vector<TRmgObjectProperties> objectsTxt;    // +0x024
+    std::vector<TObjectType> objectsTxt;             // +0x024
     std::vector<TRmgObjectPropertiesRef*> objectPrototypes[232]; // +0x034
-    std::vector<void*> unknownPointers;              // +0xeb4
+    std::vector<TRmgObjectPlacementRule> placementRules; // +0xeb4
     std::vector<type_object*> positions;             // +0xec4
     TRmgProgress* progress;                          // +0xed4
     unsigned char fixedHumanPlayers[8];              // +0x0ed8
@@ -844,6 +877,8 @@ public:
     }
 
     void InitializeObjectGenerators();
+    int ScoreObjectPlacement(
+        TRmgObjectPropertiesRef* properties, TRmgMapPosition position);
     unsigned char CanPlaceZone(TRmgZone* zone);
     void BuildZoneBoundaries(TRmgTemplate* mapTemplate, int level);
     void FillZoneArea(TRmgZone* zone, TRmgBoundaryVertex* first);
@@ -896,7 +931,7 @@ SIZE(TRmgZoneCellState, 0x04);
 SIZE(TRmgGroundTile, 0x04);
 SIZE(TRmgGroundTileData, 0x04);
 SIZE(TRmgConnectionDecoration, 0x04);
-SIZE(TRmgObjectProperties, 0x4c);
+SIZE(TRmgObjectPlacementRule, 0x4c);
 SIZE(TRmgObjectPropertiesRef, 0xe8);
 SIZE(type_object, 0x1c);
 SIZE(TRmgMapItem, 0x30);

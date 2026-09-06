@@ -17,6 +17,7 @@
 #include <string.h>
 #include <string>
 #include "abstractfile.h"
+#include "advmgr_objects.h"
 #include "artifact.h"
 #include "armygrp.h"
 #include "bitset_iterator.h"
@@ -386,6 +387,47 @@ unsigned char TRmgZone::CanConnect(const TRmgZone* other) const
     return 11 * combinedSize >= 10 * distance;
 }
 
+// Cached ordering for two object images that overlap the same map square.
+// Underlays have priority zero; other columns inherit or advance priority
+// according to the passable mask. Only cells in the draw mask are written.
+// Exact: all 414 resolved retail bytes, including the four _Xran calls.
+// A height-tested inner for-loop with priority updated before drawing gave
+// 43.93%; retail draws once, increments/tests y, then updates priority for
+// the next cell. Writing unsigned x > 0 rather than x preserves the jbe
+// at the previous-column guard (99.58% with the boolean spelling).
+VA(0x00532E40, 0x19E) // anchor-callee 0x536ee9/0x53700b; retail-only
+void TRmgObjectPropertiesRef::BuildOverlapPriorities()
+{
+    if (prioritiesInitialized)
+        return;
+    prioritiesInitialized = 1;
+    for (unsigned int x = 0; x < prototype->GetWidth(); ++x) {
+        int priority = !prototype->isUnderlay;
+        unsigned int y = 0;
+        for (;;) {
+            if (prototype->imageInfo.drawMask.test(CObjectType::_getBitPos(x, y)))
+                overlapPriorities[x][y] = priority;
+            if (++y >= prototype->GetHeight())
+                break;
+            if (!prototype->isUnderlay) {
+                if (prototype->passableMask.test(CObjectType::_getBitPos(x, y))) {
+                    if (x > 0 && !prototype->passableMask.test(
+                            CObjectType::_getBitPos(x - 1, y)))
+                        priority = overlapPriorities[x - 1][y];
+                    else
+                        ++priority;
+                } else {
+                    if (prototype->passableMask.test(
+                            CObjectType::_getBitPos(x, y - 1)))
+                        priority = 1;
+                    else
+                        ++priority;
+                }
+            }
+        }
+    }
+}
+
 // The generator destructor calls this body at 0x537e84, then frees the
 // template. It deletes every owned slot, destroys zones, and finally name;
 // the member offsets agree with the rmg.txt coordinator and zone reader.
@@ -460,6 +502,150 @@ type_spell_scroll_def::type_spell_scroll_def(int newSpellLevel, int newValue)
     : type_treasure_def(0x5d, 0, newValue, 30)
 {
     spellLevel = newSpellLevel;
+}
+
+// Rank a footprint against terrain and already placed objects. The caller
+// at 0x5375ff keeps only positive scores in its weighted candidate pool.
+// This method temporarily marks affected objects and clears all five marks
+// before returning. Names describe retail roles; there is no DC counterpart.
+// Residual (84.68%): retail retains bitset<48>::test at 0x536ca3/0x536cc1
+// and bitset<10>::test at 0x536d06; these subscript/conversion expansions
+// still inline test and retain _Xran. Direct .test calls also expand the
+// exception construction (70.55%). Provisional footprint wrappers reached
+// 83.96% but did not recover those calls, so they were removed.
+// A temporary inline_depth(0) diagnostic on just those three .test calls
+// reached 91.29% before the clamp/accessor corrections; all pins are removed.
+// That probe matched the opening draw/passability call sequence and left
+// the gate extraction, clamp operands, neighbor-loop lowering and local
+// homes divergent. Canonical min/max with (coordinate, bound) gives retail's
+// compare polarity; the byte gate accessor gives its shr/test-byte form.
+// The remaining neighbor loop is strength-reduced to pointers here while
+// retail recomputes its array address. Do not infer source assertions from
+// its redundant lea. The insert callee's widget* name is an ICF alias of
+// this pointer-vector instantiation, not another inlining difference.
+VA(0x00536BC0, 0x5F4) // anchor-callee 0x5375ff; thiscall, ret 0x10; retail-only
+int type_random_map_generator::ScoreObjectPlacement(
+    TRmgObjectPropertiesRef* properties, TRmgMapPosition position)
+{
+    TObjectType* prototype = properties->prototype;
+    std::vector<type_object*> affected;
+    unsigned char terrainSeen[10];
+    memset(terrainSeen, 0, sizeof(terrainSeen));
+    unsigned int marks[10][8];
+    memset(marks, 0, sizeof(marks));
+    for (unsigned int row = 0; row < prototype->GetHeight(); ++row) {
+        int y = position.y - row;
+        if (y < 0 || y >= map.mapHeight)
+            continue;
+        for (unsigned int column = 0; column < prototype->GetWidth(); ++column) {
+            int x = position.x - column;
+            if (x < 0 || x >= map.mapWidth)
+                continue;
+            if (!prototype->imageInfo.drawMask[
+                    CObjectType::_getBitPos(column, row)])
+                continue;
+            marks[column + 1][row + 1] |= RMG_PLACEMENT_OVERLAP;
+            if (!prototype->passableMask[CObjectType::_getBitPos(column, row)]) {
+                marks[column + 1][row + 1] |= RMG_PLACEMENT_BLOCKED;
+                TRmgMapItem* item = map.GetMapItem(x, y, position.z);
+                if (!prototype->terrainMask[item->tile.landType])
+                    return RMG_PLACEMENT_INVALID;
+                if (item->HasSubterraneanGate())
+                    return RMG_PLACEMENT_INVALID;
+
+                // Retail 0x536d34 overwrites the complete mark with one
+                // before marking the surrounding area; retain that store.
+                marks[column + 1][row + 1] = RMG_PLACEMENT_ADJACENT;
+                terrainSeen[item->tile.landType] = 1;
+                int firstRow = position.y - min(y + 1, map.mapHeight) + 1;
+                int lastRow = position.y - max(y - 2, 0) + 1;
+                int firstColumn = position.x - min(x + 1, map.mapWidth) + 1;
+                int lastColumn = position.x - max(x - 2, 0) + 1;
+                for (int nearColumn = firstColumn; nearColumn < lastColumn;
+                     ++nearColumn) {
+                    for (int nearRow = firstRow; nearRow < lastRow; ++nearRow)
+                        marks[nearColumn][nearRow] |= RMG_PLACEMENT_ADJACENT;
+                }
+            }
+        }
+    }
+
+    TRmgObjectPlacementRule* rule = properties->placementRule;
+    int score = 0;
+    unsigned char hasPositiveTerrain = 0;
+    for (int terrain = 0; terrain < 10; ++terrain) {
+        if (terrainSeen[terrain]) {
+            score += rule->terrainScores[terrain];
+            if (rule->terrainScores[terrain] > 0)
+                hasPositiveTerrain = 1;
+        }
+    }
+    if (score < RMG_PLACEMENT_MINIMUM_TERRAIN_SCORE)
+        return score;
+    if (!hasPositiveTerrain)
+        return RMG_PLACEMENT_NO_TERRAIN_PREFERENCE;
+
+    properties->BuildOverlapPriorities();
+    for (row = 0; row < prototype->GetHeight() + 2; ++row) {
+        int y = position.y + 1 - row;
+        if (y < 0 || y >= map.mapHeight)
+            continue;
+        for (unsigned int column = 0; column < prototype->GetWidth() + 2;
+             ++column) {
+            int x = position.x + 1 - column;
+            if (x < 0 || x >= map.mapWidth)
+                continue;
+            unsigned int mark = marks[column][row];
+            if (!mark)
+                continue;
+            TRmgMapItem* item = map.GetMapItem(x, y, position.z);
+            if (item->tileData.roadPassable && item->tile.landType != eTerrainRock)
+                continue;
+            int priority;
+            if (mark & RMG_PLACEMENT_OVERLAP)
+                priority = properties->overlapPriorities[column - 1][row - 1];
+            for (int index = 0; index < static_cast<int>(item->objects.size());
+                 ++index) {
+                type_object* object = item->objects[index];
+                unsigned char wasTouched = object->IsPlacementTouched();
+                if (mark & RMG_PLACEMENT_OVERLAP) {
+                    object->properties->BuildOverlapPriorities();
+                    if (object->properties->overlapPriorities
+                            [object->position.x - x][object->position.y - y]
+                        <= priority)
+                        object->candidateCovers = 1;
+                    else
+                        object->candidateBehind = 1;
+                    object->overlapsCandidate = 1;
+                }
+                if (mark & RMG_PLACEMENT_ADJACENT)
+                    object->adjacentToCandidate = 1;
+                if (mark & RMG_PLACEMENT_BLOCKED)
+                    object->blockedByCandidate = 1;
+                if (!wasTouched && object->IsPlacementTouched())
+                    affected.push_back(object);
+                if (object->candidateBehind && object->candidateCovers)
+                    break;
+            }
+        }
+    }
+
+    for (unsigned int index = 0; index < affected.size(); ++index) {
+        type_object* object = affected[index];
+        if (object->blockedByCandidate) {
+            if (!object->properties->placementRule)
+                score = RMG_PLACEMENT_INVALID;
+            else
+                score += rule->blockedScores[object->properties->placementRule->index];
+        } else if (object->adjacentToCandidate) {
+            if (object->properties->placementRule)
+                score += rule->adjacentScores[object->properties->placementRule->index];
+        }
+        if (object->candidateBehind && object->candidateCovers)
+            score = RMG_PLACEMENT_INVALID;
+        object->ClearPlacementMarks();
+    }
+    return score;
 }
 
 // Complete emits this ordinary by-value accessor once, then lets VC6 choose
@@ -1492,7 +1678,7 @@ unsigned char type_random_map_generator::CreateSubterraneanGate(
 
     int gateIndex = rand() % objectPrototypes[103].size();
     TRmgObjectPropertiesRef* gateProperties = objectPrototypes[103][gateIndex];
-    TRmgObjectProperties* gatePrototype = gateProperties->prototype;
+    TObjectType* gatePrototype = gateProperties->prototype;
 
     std::vector<TRmgMapPosition> candidates;
     int bestScore = 0;
@@ -1540,8 +1726,8 @@ unsigned char type_random_map_generator::CreateSubterraneanGate(
     otherPosition.y = position.y;
     AddObject(new type_object(gateProperties), otherPosition);
 
-    position.x -= gatePrototype->enterX;
-    position.y -= gatePrototype->enterY;
+    position.x -= gatePrototype->triggerCell.x;
+    position.y -= gatePrototype->triggerCell.y;
     otherPosition = destination->levelPosition;
     otherPosition.x = position.x;
     otherPosition.y = position.y;
@@ -1784,7 +1970,7 @@ void type_random_map_generator::ConnectZones()
         int objectIndex = 0;
         while (objectIndex < positions.size()) {
             type_object* object = positions[objectIndex];
-            if (object->properties->prototype->type == SHIPYARD) {
+            if (object->properties->prototype->objectType == SHIPYARD) {
                 position = object->position;
                 if (map.GetMapItem(position)->zoneState.zone == zoneIndex) {
                     TRmgMapPosition shipyardPosition = position;
@@ -1966,8 +2152,8 @@ void type_random_map_generator::BuildRoadCostMap(TRmgMapPosition position)
 
         if (roadEntrance) {
             type_object* object = mapItem->objects[0];
-            TRmgObjectProperties* properties = object->properties->prototype;
-            int objectType = properties->type;
+            TObjectType* properties = object->properties->prototype;
+            int objectType = properties->objectType;
             if (!gAdventureObjectLandBlocked[objectType][1]
                 && !gAdventureObjectLandBlocked[objectType][2])
                 direction = 5;
@@ -2056,7 +2242,7 @@ void type_random_map_generator::BuildRoadCostMap(TRmgMapPosition position)
                 nextMapItem->tileData.roadEntrance;
             if (nextRoadEntrance) {
                 int objectType =
-                    nextMapItem->objects[0]->properties->prototype->type;
+                    nextMapItem->objects[0]->properties->prototype->objectType;
                 const unsigned char* traits =
                     gAdventureObjectLandBlocked[objectType];
                 if (traits[0] && !traits[2])
@@ -2237,7 +2423,7 @@ void type_random_map_generator::CreateRiver(TRmgMapPosition source)
              ++prototypeIndex) {
             TRmgObjectPropertiesRef* properties =
                 objectPrototypes[TERRAIN_RIVER_DELTA][prototypeIndex];
-            if (properties->prototype->landPage.test(landType)
+            if (properties->prototype->recommendedTerrainMask.test(landType)
                 && deltaIndex-- == 0)
                 break;
         }
