@@ -1614,8 +1614,8 @@ void TCampaignBrief::ScenarioStruct::PlaceCrossoverHeroes()
 {
     SCampaign* campaign = &gpGame->campaign;
     int choice = campaign->briefingChoice;
-    int player = options->GetPlayerPosition(choice);
-    int slot = options->_vslot5(this, choice);
+    int player = options->GetPlayer(choice);
+    int slot = options->_slot5(this, choice);
     campaign->mapScores[campaign->currentMap].index = slot;
 
     std::vector<hero> heroes;
@@ -1718,8 +1718,8 @@ void TCampaignBrief::ScenarioStruct::GiveCrossoverArtifacts()
 {
     SCampaign* campaign = &gpGame->campaign;
     int choice = campaign->briefingChoice;
-    int player = options->GetPlayerPosition(choice);
-    int slot = options->_vslot5(this, choice);
+    int player = options->GetPlayer(choice);
+    int slot = options->_slot5(this, choice);
     if (slot >= 0) {
         std::vector<hero>& heroes = campaign->carryOverHeroes[slot];
         type_artifact artifact;
@@ -1764,7 +1764,7 @@ void TCampaignBrief::ScenarioStruct::GiveCrossoverArtifacts()
         }
     }
 
-    options->_vslot10(this);
+    options->Apply(this);
 }
 
 // Complete-only. Seeks the campaign stream to this scenario's map data
@@ -1814,11 +1814,9 @@ void TCampaignBrief::ScenarioStruct::MarkCrossoverHeroes(unsigned char* wanted)
 // abstract 0x63d958), and the function ends by handing the stream to
 // whichever one it built through its own slot 9.
 //
-// The `void*` hop on `options` is not a modelling claim: campaignbrief.h
-// carries a SECOND model of the same retail class (ScenarioStartOptions,
-// same thirteen slots, non-const declarators) which the campaign-brief
-// window's reconstructions already use, and the two must stay compatible
-// until one of them is retired. The cast is compile-time only.
+// Both the reader and campaign-brief window use the implemented
+// TCampaignStartOption hierarchy. Its retained bodies prove the const query
+// signatures and all thirteen vtable slots; no second interface is needed.
 //
 // Retail's legacy-bit copy compares both a bitset pointer and an offset at
 // +0x444 before dereferencing source/destination proxies. This is the shared
@@ -1919,27 +1917,26 @@ void TCampaignBrief::ScenarioStruct::Read(TAbstractFile* infile,
 
     unsigned char optionType;
     infile->Read(&optionType, sizeof(unsigned char));
-    void* record;
+    TCampaignStartOption* record;
     switch (optionType) {
     case CAMPAIGN_START_OPTION_BONUS:
         record = new TCampaignStartBonusOption;
-        options = static_cast<ScenarioStartOptions*>(record);
+        options = record;
         break;
     case CAMPAIGN_START_OPTION_CROSSOVER:
         record = new TCampaignStartCrossoverOption;
-        options = static_cast<ScenarioStartOptions*>(record);
+        options = record;
         break;
     case CAMPAIGN_START_OPTION_HERO:
         record = new TCampaignStartHeroOption;
-        options = static_cast<ScenarioStartOptions*>(record);
+        options = record;
         break;
     default:
         options = 0;
         break;
     }
     if (options)
-        static_cast<TCampaignStartOption*>(static_cast<void*>(options))
-            ->Read(infile);
+        options->Read(infile);
 }
 
 #if 0  // Dreamcast-only carcass; retained as evidence, not emitted for retail.
@@ -2011,14 +2008,14 @@ VA(0x004884c0, 0x103)  // CampaignHeaderStruct::StartScenario sole caller
 void TCampaignBrief::ScenarioStruct::StartScenario(
     std::streambuf* stream, int option)
 {
-    int position = options->GetPlayerPosition(option);
+    int position = options->GetPlayer(option);
     gpGame->players[position].isHuman = 1;
     gpGame->players[position].isLocal = 1;
 
     int playerHeroFaces[8];
     for (int i = 0; i < 8; i++)
         playerHeroFaces[i] = -1;
-    playerHeroFaces[position] = options->GetStartingHero(option);
+    playerHeroFaces[position] = options->_slot7(option);
     gpGame->SetupFirstPlayer();
 
     stream->pubseekoff(offset, std::ios::beg, std::ios::in);
@@ -2282,7 +2279,7 @@ bool TCampaignBrief::CampaignHeaderStruct::Load()
         if (scenario->inflated_size > 0) {
             mapOffset += scenario->inflated_size;
             scenario->LoadMapHeader(stream, &mapHeader, iScenario2);
-            scenario->options->_vslot11(&mapHeader);
+            scenario->options->SetTown(&mapHeader);
             scenario->hero_placeholders = mapHeader.placeholders;
             for (int iSlot = 0; iSlot < 8; ++iSlot)
                 scenario->heroes_status[iSlot] =
@@ -2840,7 +2837,7 @@ void TCampaignBrief::CampaignHeaderStruct::markRequiredHeroes(unsigned char* wan
 // reaches 99.9223%. Role and name remain provisional (Complete-only).
 bool TCampaignBrief::ScenarioStruct::usesCrossoverPool(int pool)
 {
-    return inflated_size > 0 && options->_vslot12(this, pool);
+    return inflated_size > 0 && options->_slot12(this, pool);
 }
 
 // Retail PruneCrossoverHeroes repeats the scenario's inflated_size check
@@ -2851,17 +2848,19 @@ bool TCampaignBrief::ScenarioStruct::usesCrossoverPool(int pool)
 // restoring the boundary raises it to 34.6269 without a new retail claim.
 // With the other recovered queries at 99.9223%, the remaining differences
 // are vptr register choices at Prune +0x1d0/+0x1df/+0x1ec. An early empty
-// return adds two CFG blocks (97.5337%); scoped while and negated-zero
-// spellings are byte-neutral.
+// return adds two CFG blocks (97.5337%); scoped while, negated-zero, and
+// named count/default-player results are byte-neutral. So are moving this
+// ordinary definition beside MarkCrossoverHeroes or after Prune, and
+// replacing the duplicate options interface with TCampaignStartOption.
 int TCampaignBrief::ScenarioStruct::getMaxCrossoverHeroes() const
 {
     int best = 0;
     if (inflated_size > 0) {
-        if (options->_vslot2() == 0)
-            best = heroes_status[options->GetPlayerPosition(-1)];
+        if (options->GetCount() == 0)
+            best = heroes_status[options->GetPlayer(-1)];
         else
-            for (int option = options->_vslot2(); option--;)
-                best = max(best, heroes_status[options->GetPlayerPosition(option)]);
+            for (int option = options->GetCount(); option--;)
+                best = max(best, heroes_status[options->GetPlayer(option)]);
     }
     return best;
 }
