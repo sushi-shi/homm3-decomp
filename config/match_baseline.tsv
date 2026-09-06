@@ -248,7 +248,7 @@ ai_combat	?cast_chain_lightning@type_AI_combat_data@@QBEXAAUtype_spell_choice@@A
 ai_combat	?cast_damage_spell@type_AI_combat_data@@QBEXAAUtype_spell_choice@@AAV1@@Z	100.0000	100.0000	100.0000	0x25260	fcc17a109889
 ai_combat	?cast_enchantment@type_AI_combat_data@@QAEXAAUtype_spell_choice@@AAV1@@Z	100.0000	100.0000	100.0000	0x25b10	1307289d3bf9
 ai_combat	?cast_enchantment@type_AI_combat_data@@QAEXAAUtype_spell_choice@@PBVhero@@E@Z	100.0000	100.0000	100.0000	0x258a0	9a70f9657497
-ai_combat	?cast_spell@type_AI_combat_data@@QAEXAAV1@W4type_speed_catagory@@@Z	87.0391	87.0391	87.0391	0x25bd0	7c9f14e60685
+ai_combat	?cast_spell@type_AI_combat_data@@QAEXAAV1@W4type_speed_catagory@@@Z	88.5898	88.5898	88.5898	0x25bd0	dbf157bb6b6a
 ai_combat	?check_wall_archery_penalty@type_AI_combat_data@@QAEXPBVtown@@@Z	100.0000	100.0000	100.0000	0x24790	4bdc012844e3
 ai_combat	?choose_melee@type_AI_combat_data@@QBE_NABV1@W4type_speed_catagory@@@Z	90.9329	90.9329	90.9329	0x267c0	bf01991f9565
 ai_combat	?create_skeletons@@YIXPBVhero@@PBVarmyGroup@@PAV2@@Z	100.0000	100.0000	100.0000	0x26df0	2b760f8ab813
@@ -257,7 +257,7 @@ ai_combat	?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z	94.7945	94.7945	94.
 ai_combat	?get_area_value@type_AI_combat_data@@QBEXAAUtype_spell_choice@@ABV1@JJ@Z	100.0000	100.0000	100.0000	0x24bf0	586b6ce8707b
 ai_combat	?get_attack@type_AI_combat_data@@QBEJW4type_speed_catagory@@E@Z	100.0000	100.0000	100.0000	0x26390	58292c256686
 ai_combat	?get_damage_spell_value@type_AI_combat_data@@QBEXAAUtype_spell_choice@@ABV1@@Z	100.0000	100.0000	100.0000	0x24d20	85227d46d234
-ai_combat	?get_enchantment_value@type_AI_combat_data@@QAEXAAUtype_spell_choice@@AAV1@@Z	89.4646	89.4646	89.4646	0x25510	519b489d98c2
+ai_combat	?get_enchantment_value@type_AI_combat_data@@QAEXAAUtype_spell_choice@@AAV1@@Z	95.0862	95.0862	95.0862	0x25510	519b489d98c2
 ai_combat	?get_enchantment_value@type_monster_data@@QBEJAAUtype_spell_choice@@PBVhero@@1@Z	100.0000	100.0000	100.0000	0x23c80	d7654d407628
 ai_combat	?get_fastest_speed@type_AI_combat_data@@QBEJXZ	100.0000	100.0000	100.0000	0x24960	d202c91c177f
 ai_combat	?get_final_melee_value@type_AI_combat_data@@QBEJXZ	100.0000	100.0000	100.0000	0x26450	0ae6628d7a2f
