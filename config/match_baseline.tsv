@@ -2202,7 +2202,7 @@ hero	?GetFirstAidFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe4920	603cfcfd
 hero	?GetHeroSpellBonus@hero@@QBEHHHH@Z	100.0000	100.0000	100.0000	0xe5ff0	bd2daff987ce
 hero	?GetHighestSchool@hero@@QBE?AW4TSpellSchool@@W42@@Z	98.3750	100.0000	100.0000	0xe51c0	d10ccf354dd7
 hero	?GetIntelligenceFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe48b0	9efce4b15c63
-hero	?GetLuck@hero@@QAEHPBV1@EE@Z	87.7439	87.7439	87.7439	0xe36c0	ef1e156eff97
+hero	?GetLuck@hero@@QAEHPBV1@EE@Z	88.0650	88.0650	88.0650	0xe36c0	4d9333ef6170
 hero	?GetMagicResistanceFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe46e0	163ade5b9d86
 hero	?GetManaCost@hero@@QAEHHPBVarmyGroup@@H@Z	100.0000	100.0000	100.0000	0xe5240	044d097e8a7e
 hero	?GetManaFrame@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe5380	af9972008a52
@@ -2295,8 +2295,14 @@ hero	?get_description@type_artifact@@QBE?AV?$basic_string@DU?$char_traits@D@std@
 hero	?get_equipped_artifacts@hero@@QAEJE@Z	100.0000	100.0000	100.0000	0xd9070	205dbd14ffb5
 hero	?get_hit_point_bonus@hero@@QAEJH@Z	100.0000	100.0000	100.0000	0xe5b80	8cfe04f01f29
 hero	?get_last_backpack_index@hero@@QAEJXZ	100.0000	100.0000	100.0000	0xdbd90	065ef23bf246
-hero	?get_luck_description@hero@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	93.7128	93.7128	93.7128	0xdcac0	230ec2731db9
-hero	?get_morale_description@hero@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	91.6489	91.6489	91.6489	0xdc320	0ada1e67f2c9
+# 2026-09-06 hand-lowered 95.4461 -> 93.7128 (hist too): polish lane 26 banked this
+# peak from a build that carried six #pragma inline_depth(0) pins it then
+# removed - no pin-free spelling reaches it; the pin recipe is in the note.
+hero	?get_luck_description@hero@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	93.7128	93.7128	95.4461	0xdcac0	ac00fc126b97
+# 2026-09-06 hand-lowered 93.9111 -> 91.6489 (hist too): polish lane 26 banked this
+# peak from a build that carried six #pragma inline_depth(0) pins it then
+# removed - no pin-free spelling reaches it; the pin recipe is in the note.
+hero	?get_morale_description@hero@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	91.6489	91.6489	93.9111	0xdc320	d3f4353b6068
 hero	?get_number_in_backpack@hero@@QAEJE@Z	100.0000	100.0000	100.0000	0xd90c0	cc2c389c0bf0
 hero	?get_obscured_town@type_obscuring_object@@QAEPAVtown@@XZ	100.0000	100.0000	100.0000	0xd7490	420693e9765c
 hero	?get_player@hero@@QAEPAVplayerData@@XZ	100.0000	100.0000	100.0000	0xe56b0	6383eee42ae2
