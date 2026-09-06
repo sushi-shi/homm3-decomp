@@ -1955,7 +1955,7 @@ game	?IsMultiplayer@game@@QBE_NXZ	100.0000	100.0000	100.0000	0xcec90	bf9d3de21a9
 game	?Load@NewSMapHeader@@QAEHPAVTAbstractFile@@H@Z	92.6763	92.6763	92.6763	0xc5630	dfd4024bf24f
 game	?Load@SavedGameHeader@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbc750	99bb7010e0dc
 game	?Load@game@@QAEHPAVTAbstractFile@@@Z	60.5547	92.4127	92.4127	0xbcda0	76f5d7575936
-game	?LoadBoatPool@game@@QAEHPAVTAbstractFile@@@Z	99.6447	99.6447	99.6447	0xb9a00	6dff534ebbf5
+game	?LoadBoatPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9a00	451516806b09
 game	?LoadGame@game@@QAEHPBDHH@Z	100.0000	100.0000	100.0000	0xbf330	fc53c93a80bc
 game	?LoadGarrisonPool@game@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xb96f0	e574c834f8c2
 game	?LoadHeroId@@YIHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xba210	a3d376c1431f
