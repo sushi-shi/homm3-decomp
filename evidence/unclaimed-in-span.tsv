@@ -2,5 +2,4 @@
 # Functions inside an EXISTING unit's inferred link-order
 # span that no match_baseline row claims.
 unit	functions	bytes
-kb	4	114
 textwdgt	2	4
