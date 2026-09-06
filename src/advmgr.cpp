@@ -313,8 +313,8 @@ CNetMsg* CAdvMgrNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
             gpAdvManager->UpdBottomView(1, 1, 1);
         }
         if (gpCurrentPlayer->IsHuman()) {
-            RemoteFn_00553AA0(gUnnamed69d7b0, gpGeneralText->GetText(352),
-                              gpCurrentPlayer->cName);
+            SystemMsg(&chatMan, gpGeneralText->GetText(352),
+                      gpCurrentPlayer->cName);
             gUnnamed69d810 = gNetLocalGamePos;
         }
         break;
@@ -326,7 +326,7 @@ CNetMsg* CAdvMgrNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
             m_pAbortPopupMsg = pNetMsg;
             return 0;
         }
-        RemoteFn_00556430(pMsg->m_gamePos);
+        HandlePlayerDrop(pMsg->m_gamePos);
         break;
     }
     case RS_PLAYER_DROP_UPDATE: {
@@ -445,8 +445,8 @@ CNetMsg* CAdvMgrNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
         break;
     }
     case RS_PLAYER_ACTIVE:
-        RemoteFn_00553AA0(
-            gUnnamed69d7b0, gpGeneralText->GetText(40),
+        SystemMsg(
+            &chatMan, gpGeneralText->GetText(40),
             gpGame->GetPlayerName(gpGame->GetLocalPlayerGamePos()));
         break;
     case RS_GIFT:
@@ -869,7 +869,7 @@ int advManager::Open(int newPriority)
         sprintf(gText,
                 DATA_COMPGEN(0x006602a0, heroSampleFormat, "horse%02d.wav"),
                 horse);
-        heroSamples[horse] = LoadSampleResource(gText);
+        heroSamples[horse] = ResourceManager::GetSample(gText);
     }
 
     if (!gpCurrentPlayer->IsLocalHuman()) {
@@ -918,7 +918,16 @@ int advManager::Open(int newPriority)
     if (iMPNetProtocol == MP_HOTSEAT) {
         gUnnamed6993dc = 1;
         gCompleteDrawEnabled = gpCurrentPlayer->IsLocalHuman();
-        char text[172];
+        // 2026-09-06, polish lane 35: this buffer is 256 bytes, not the
+        // 172 that used to sit here. The frame-delta sweep read it straight
+        // off the prologue - retail's `sub esp,0x11c` against our 0xc8 with
+        // an IDENTICAL homed-slot set (-4/-0xc/-0x10/-0x14/-0x18/-0x28) and
+        // the same `reversed` scratch at -0x28 - so the whole 84-byte gap
+        // sits between -0x28 and the bottom of the frame, which is this
+        // sprintf destination alone (retail leas [ebp-0x128] into it at
+        // +0x90c and +0x921). 172 -> 256 makes the frame retail's exactly
+        // and pays 97.9257 -> 97.9312.
+        char text[256];
         sprintf(text, gpGeneralText->GetText(14), gpCurrentPlayer->GetName());
         gpWindowManager->isWaitingForFadeIn = 0;
         gpGame->WaitForPlayer(text, gNetLocalGamePos);
@@ -8797,6 +8806,22 @@ void advManager::CheckLoadSample(e_looping_sound_id id_num)
 // return on retail's side (71 vs our 72) - a C2 tail-merge choice with no
 // source lever, since the duplicate blocks are duplicate BY VALUE and no
 // spelling can make two `return LOOPING_SOUND_23;` differ.
+// Residual (96.90%): every branch and every return now agrees (16/16, 71/71)
+// and 74 of the 91 blocks are byte-exact; what is left is ARM LAYOUT inside
+// the object-type dispatch, which is a jump-table switch and therefore a
+// source-order question, not a spelling one.
+// 2026-09-06, polish lane 35: the GARRISON and CREATURE_GENERATOR_4 arms are
+// two-value probes whose miss returns LOOPING_SOUND_INVALID. Written as
+// `return LOOPING_SOUND_INVALID;` VC6 sees a two-constant select and folds
+// the second compare branchlessly - `dec ax / neg ax / sbb eax,eax /
+// and al,-0x1a / add eax,0x19` - at BOTH sites, costing two branches and
+// adding two returns. Retail branches: `cmp cx,1 / jne <shared tail>`, and
+// its `or eax,-1 / pop ebp / ret 0xc` block at +0x451 carries SIX jump
+// predecessors. Inverting the guard polarity is byte-flat (94.5074, measured)
+// because the fold does not care which way the compare runs; making the miss
+// a `goto` to the function's own trailing INVALID return is what breaks it,
+// because a jump is not a value-producing arm. 94.5074 -> 96.9031, and our
+// shared block now carries the same six predecessors retail has.
 VA(0x00418620, 0x5E4)  // anchor-global, dc 0x1b5a8
 e_looping_sound_id advManager::GetSoundId(int x, int y, int z)
 {
@@ -8841,7 +8866,7 @@ e_looping_sound_id advManager::GetSoundId(int x, int y, int z)
                 return LOOPING_SOUND_41;
             if (thisCell->objectIndex == GET_SOUND_GARRISON_1)
                 return LOOPING_SOUND_25;
-            return LOOPING_SOUND_INVALID;
+            goto invalid;
         case WINDMILL:
             return LOOPING_SOUND_66;
         case WHIRLPOOL:
@@ -8954,7 +8979,7 @@ e_looping_sound_id advManager::GetSoundId(int x, int y, int z)
                 return LOOPING_SOUND_43;
             if (thisCell->objectIndex == GET_SOUND_GENERATOR4_1)
                 return LOOPING_SOUND_12;
-            return LOOPING_SOUND_INVALID;
+            goto invalid;
         case DEFENSE_TOWER:
         case HILL_FORT:
         case WAR_SCHOOL:
@@ -9000,6 +9025,7 @@ e_looping_sound_id advManager::GetSoundId(int x, int y, int z)
     case TERRAIN_VOLCANO:
         return LOOPING_SOUND_45;
     }
+invalid:
     return LOOPING_SOUND_INVALID;
 }
 
@@ -9059,7 +9085,7 @@ void advManager::InsertSound(int x, int y, int z, int soundPriority,
     if (id_num > LOOPING_SOUND_INVALID && id_num < LOOPING_SOUND_COUNT
         && !loopedSample[id_num]) {
         TrimLoopingSounds(4);
-        loopedSample[id_num] = LoadSampleResource(
+        loopedSample[id_num] = ResourceManager::GetSample(
             gLoopingSoundNames[id_num]);
     }
 
@@ -9709,7 +9735,7 @@ void advManager::StartLocalPlayerTurn()
             }
         }
 
-        GameFn_004CA530(gpGame);
+        gpGame->CancelComputerScreen();
         gbThisNetGotAdventureControl = 1;
         gpSoundManager->field_84 = 0;
 
@@ -9729,7 +9755,7 @@ void advManager::StartLocalPlayerTurn()
         gpSoundManager->field_84 = 0;
         gUnnamed699544 = GameTime::Get();
     }
-    GameFn_004CC7D0(gpGame);
+    gpGame->DoNewTurn();
 
     advWindow->UpdateHeroLocators(-1, 1, 1);
     advWindow->UpdateTownLocators(-1, 1, 1);
@@ -10216,7 +10242,7 @@ unsigned char advManager::DoSystemOptions()
             heroSamples[i]->Dispose();
         for (i = 0; i <= 10; i++) {
             sprintf(gText, "horse%02d.wav", i);
-            heroSamples[i] = LoadSampleResource(gText);
+            heroSamples[i] = ResourceManager::GetSample(gText);
         }
     }
 

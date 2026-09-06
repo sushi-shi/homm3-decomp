@@ -371,13 +371,13 @@ SIZE(CHourGlass, 1);
 // The dispatcher's out-of-TU surface in the remote band. Named declarations
 // are retail/DC-correlated claims; RemoteFn entries stay address-ordinal.
 //   0x555910  DestroyMsg, the recycler every dispatch path ends in
-//   0x553aa0  sprintf-and-queue of a status chat line (cdecl varargs)
-//   0x556430  player-drop handling      0x5565e0  player-drop update
+//   0x553aa0  SystemMsg, the status chat line (cdecl varargs)
+//   0x556430  HandlePlayerDrop          0x5565e0  player-drop update
 //   0x556780  player-dead sweep         0x556940  player-won
 //   0x5569a0  player-lost               0x5569f0  session-lost/normal-win
 void DestroyMsg(CNetMsg* pNetMsg);
-char* RemoteFn_00553AA0(char* dst, const char* format, ...);
-void RemoteFn_00556430(int gamePos);
+void __cdecl SystemMsg(CChatManager* manager, const char* format, ...);
+void HandlePlayerDrop(unsigned long dpid);
 void OnPlayerDropUpdateMsg(unsigned long dpid);
 void HandlePlayerDead(int deadGuy, unsigned char showMsg);
 void HandlePlayerWon(CNetMsg* pNetMsg);
@@ -392,10 +392,6 @@ void ReceiveChat(char* cChat, int fromWho);
 // both remote wait-dialog dispatchers use the same public boundary.
 void HandlePlayerDrop(unsigned long dpid);
 
-// Retail .bss 0x69d7b0, the status-line scratch RemoteFn_00553AA0 fills
-// for the turn-update and player-active banners. Ordinal name; the
-// remote band owns it.
-extern char gUnnamed69d7b0[];
 
 int TransmitRemoteData(CNetMsg* pMsg, int toWho,
                        bool compressMsg, bool guaranteed);
@@ -443,13 +439,13 @@ extern int gUnnamed6994e4;
 // The dispatcher's duplicated prototype surface; see the admitted names and
 // retained retail-only ordinals above.
 //   0x555910  DestroyMsg, the recycler every dispatch path ends in
-//   0x553aa0  sprintf-and-queue of a status chat line (cdecl varargs)
-//   0x556430  player-drop handling      0x5565e0  player-drop update
+//   0x553aa0  SystemMsg, the status chat line (cdecl varargs)
+//   0x556430  HandlePlayerDrop          0x5565e0  player-drop update
 //   0x556780  player-dead sweep         0x556940  player-won
 //   0x5569a0  player-lost               0x5569f0  session-lost/normal-win
 void DestroyMsg(CNetMsg* pNetMsg);
-char* RemoteFn_00553AA0(char* dst, const char* format, ...);
-void RemoteFn_00556430(int gamePos);
+void __cdecl SystemMsg(CChatManager* manager, const char* format, ...);
+void HandlePlayerDrop(unsigned long dpid);
 void OnPlayerDropUpdateMsg(unsigned long dpid);
 void HandlePlayerDead(int deadGuy, unsigned char showMsg);
 void HandlePlayerWon(CNetMsg* pNetMsg);
@@ -460,10 +456,6 @@ void HandleNormalWinMsg(CNetMsg* pNetMsg);
 // dispatcher hands it the chat text in place and the sender's slot.
 void ReceiveChat(char* cChat, int fromWho);
 
-// Retail .bss 0x69d7b0, the status-line scratch RemoteFn_00553AA0 fills
-// for the turn-update and player-active banners. Ordinal name; the
-// remote band owns it.
-extern char gUnnamed69d7b0[];
 
 int TransmitRemoteData(CNetMsg* pMsg, int toWho, bool compressMsg, bool guaranteed);
 // CODEVIEW(E:\gamedcs\remote.cpp:1454, dc 0x11cf94) void PollRemote();

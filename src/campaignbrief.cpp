@@ -350,6 +350,23 @@ void TCampaignBrief::AddBonusIcons()
 // scenario centres its frames, every shown frame carries either the
 // bitmap or the sprite form of the bonus with its help text, and the
 // frames past the count are hidden.
+//
+// Residual (95.44%): 34 blocks against retail's 34, all 16 branches and the
+// single return agree, 32 blocks byte-exact. 2026-09-06, polish lane 35: the
+// status send_message was a TERNARY ARGUMENT over two commands one apart in
+// value, and VC6 folds such a pair branchlessly (`xor ecx,ecx / cmp edi,[..] /
+// setne cl / add ecx,K`) where retail branches and cross-jumps the shared call
+// (`jne / push SET / jmp / push CLEAR / call`). Writing it as an if/else over
+// two send_message calls recovers retail's shape - 31 blocks -> 34, three
+// flow-kind divergences -> none, 95.3700 -> 95.4400. What is left is one
+// register transposition in the `campaign->scenarios[selected_scenario]`
+// chain (retail `[ecx + 4*eax]`, ours `[eax + 4*ecx]`) plus retail loading
+// briefingChoice into EAX before the compare where we compare against memory.
+// Measured and rejected: naming the choice in an `int choice` local inside the
+// loop (byte-flat, 95.4400); naming the receiver widget (91.90, and it costs
+// the whole block agreement); both together (91.90); and swapping the
+// `scenario` / `int i` declaration order (byte-flat) - the SIB flip is not
+// reachable from this loop's index scope because the third loop consumes `i`.
 VA(0x00458d40, 0x297)  // Select callee, dc-order-map after AddBonusIcons, dc 0x58c00
 void TCampaignBrief::UpdateBonusIcons()
 {
@@ -370,10 +387,11 @@ void TCampaignBrief::UpdateBonusIcons()
 
     for (i = 0; i < scenario->options->_vslot2(); i++) {
         start_bonus_borders[i]->show();
-        start_bonus_borders[i]->send_message(
-            i == gpGame->campaign.briefingChoice ? widget::WIDGET_SET_STATUS
-                                                 : widget::WIDGET_CLEAR_STATUS,
-            4);
+        if (i == gpGame->campaign.briefingChoice)
+            start_bonus_borders[i]->send_message(widget::WIDGET_SET_STATUS, 4);
+        else
+            start_bonus_borders[i]->send_message(widget::WIDGET_CLEAR_STATUS,
+                                                 4);
         const char* name = scenario->options->_vslot3(&gpGame->campaign, i);
         if (scenario->options->_vslot1(i)) {
             bitmap_bonus_images[i]->show();
