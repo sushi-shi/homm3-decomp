@@ -11361,6 +11361,26 @@ void game::ProcessOnMapHeroes()
 //    retail places the `Stop(); if (inGame) RestoreScreen();` block at
 //    fn+0x94f and jumps to the epilogue at fn+0x1105, where our C2 sinks the
 //    same source statements to fn+0xc16.
+// 2026-09-06, polish lane 41 - the 8-byte frame surplus is a SPILL cascade,
+// not a missing or surplus local, and the slot census now names both dwords:
+//  * `iFileSize` has its own home at [ebp-0x6c], BELOW the
+//    CGameTransmitInitMsg temporary, where retail packs it into [ebp-0x38]
+//    ABOVE that temporary (retail `mov [ebp-0x38],esi` at fn+0x2d1 against
+//    our `mov [ebp-0x6c],esi` at fn+0x2dd).  Moving `int iFileSize;` up to
+//    procedure scope beside pGameTransmitMainMsg, with the FileSize() call
+//    left as a plain assignment where it is, is BYTE-FLAT - VC6 colours this
+//    slot by live range, not by declaration position, so the DC frame order
+//    is not reachable from the declaration list.
+//  * The other dword is the CDiffMaker arm: retail keeps ONE of the two
+//    File::GetLength results in EBX across the new/Read/CDiffMaker sequence
+//    (`mov ebx,eax / push ebx`, later `push ebx / mov ebx,[ebp-..] / push
+//    ebx`), where we spill BOTH (`push eax / mov [ebp-..],eax`, later two
+//    reloads).  Retail also keeps `isDiff` in BL (`xor bl,bl` in the entry
+//    block) where we home it as the byte [ebp-0x15]; that byte and the EBX
+//    spill are the same pressure fact.
+// So the frame is a CONSEQUENCE: retail has one more callee-saved register
+// free through the diff arm than this build does.  Do not hunt for a surplus
+// local or reorder declarations - measure the diff arm's register pressure.
 VA(0x004cafd0, 0xD14)  // retail body + typed catch + continuation/tables
 int game::TransmitSaveGame(int iToWho, int thisPlayerDead,
                            unsigned char inGame, unsigned char makeOrig)
