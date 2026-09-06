@@ -21,6 +21,17 @@ struct TRmgTerrainTile {
 struct TRmgTerrainFlip {
     unsigned char flipX;
     unsigned char flipY;
+
+    TRmgTerrainFlip() {}
+    TRmgTerrainFlip(unsigned char x, unsigned char y) : flipX(x), flipY(y) {}
+};
+
+// BuildNeighbourKinds (0x5b68a0) returns zero for no edge, one when both
+// terrain rules permit blending, and two for the remaining terrain changes.
+enum TRmgTerrainNeighbourKind {
+    RMG_NEIGHBOUR_NO_EDGE = 0,
+    RMG_NEIGHBOUR_BLEND_EDGE = 1,
+    RMG_NEIGHBOUR_HARD_EDGE = 2
 };
 
 // The cache word is decoded identically throughout the 0x5b3dd0..0x5b76f0
