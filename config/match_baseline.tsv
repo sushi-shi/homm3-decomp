@@ -2323,7 +2323,7 @@ hillfortwindow	??_GTHillFortWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xe7de0
 hillfortwindow	?DoModal@THillFortWindow@@QAEXXZ	100.0000	100.0000	100.0000	0xe7e90	180090c5146c
 hillfortwindow	?HandleClick@THillFortWindow@@QAEXAAVmessage@@@Z	100.0000	100.0000	100.0000	0xe8690	0c547b104a07
 hillfortwindow	?HillFortWindowHandler@@YIHAAVmessage@@@Z	91.9430	91.9430	91.9430	0xe8850	3c4e89e39c35
-hillfortwindow	?Recalculate@THillFortWindow@@QAEXE@Z	83.9545	83.9545	83.9545	0xe7eb0	744588aa83f1
+hillfortwindow	?Recalculate@THillFortWindow@@QAEXE@Z	84.0331	84.0331	84.0331	0xe7eb0	9326a88dbbd4
 hillfortwindow	?UpgradeSlot@THillFortWindow@@QAEXHE@Z	100.0000	100.0000	100.0000	0xe8500	d06109ee5b11
 hiscore	??0CHighScoreEdit@@QAE@HHHHHPBD0W4TColor@font@@I0HHHHHH@Z	100.0000	100.0000	100.0000	0xe96a0	38be17c21ba6
 hiscore	??0THighScoreWindow@@QAE@XZ	90.7049	90.7049	90.7049	0xe9880	8e610035180e

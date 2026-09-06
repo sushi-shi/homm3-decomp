@@ -330,6 +330,24 @@ inline bool CanAfford(const long* cost, const long* playerRes)
 // cross-jump decisions run in OPPOSITE directions in one body. Also open:
 // retail's slot induction pointer sits at &slot[i]+0x44, ours at +0x40, which
 // is what shifts every `[ebx +/- N]` displacement by four.
+// Residual (84.0329%), 2026-09-06.  Structure is now exact: 62/62 blocks
+// with 47 of them byte-identical (it was 3), 34/34 branches and no missing
+// block; the one remaining one-sided call is the if-arm's own
+// SET_ICON_NAME BroadcastMessage, whose two-instruction tail
+// (`mov ecx,esi / call`) our cross-jumper merges into the else arm's last
+// call site where retail keeps both.  What is left is TWO INDUCTION-ANCHOR BIASES that shift
+// a displacement on every touched instruction and nothing else:
+//   * the widget id lives at [ebp-8] as 0xcd (CREATURE_PORTRAIT_1_ID) where
+//     retail parks 0xd4 (CREATURE_NUM_1_ID), so every codeY is +7 off;
+//   * the slot cursor is `esi+0x8c` (anchored on `s.type`, record +0x40)
+//     where retail uses `esi+0x90` (anchored on `s.count`, record +0x44),
+//     so every `[ebx+N]` is 4 off.
+// Both are C2 anchor choices over the SAME effective addresses.  Measured
+// and rejected against 84.0329: spelling every codeY with its absolute
+// enum name (CREATURE_NUM_1_ID + i, GOLD_COST_1_ID + i, ...) and dropping
+// `id` - 83.9081; keeping `msg.codeY = id - 7;` for the portrait rather than
+// `CREATURE_PORTRAIT_1_ID + i` - 83.9081; moving `msg.codeX` after
+// `msg.extraText` in the SET_ICON_NAME statement - byte-flat.
 VA(0x004e7eb0, 0x64D)  // source/call order + DoModal/handler call sites, dc 0xd6bf8
 void THillFortWindow::Recalculate(unsigned char DrawDimmedButtons)
 {
@@ -349,8 +367,13 @@ void THillFortWindow::Recalculate(unsigned char DrawDimmedButtons)
     unsigned char bNoneUpgradable = 1;
     memset(totalCost, 0, sizeof totalCost);
 
-    for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
-        int id = CREATURE_NUM_1_ID + i;
+    // Retail carries `id` itself as the loop's induction variable and
+    // recovers `i` for the test (`inc edi / mov [ebp-8],edi /
+    // add edi,-0xd4 / cmp edi,7 / jl`); computing `id` from `i` inside the
+    // body instead leaves `i` memory-homed and every widget id rebuilt with
+    // its own `lea`, which cost 44 of the 62 blocks.
+    int id = CREATURE_NUM_1_ID;
+    for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++, id++) {
         TUpgradeSlot& s = slot[i];
         s.szGoldCost[0] = 0;
         s.szResourceCost[0] = 0;
@@ -396,7 +419,7 @@ void THillFortWindow::Recalculate(unsigned char DrawDimmedButtons)
         if (s.type != CREATURE_NONE && s.count > 0) {
             msg.id = MESSAGE_WIDGET;
             msg.codeX = widget::WIDGET_SET_ICON_FRAME;
-            msg.codeY = id - 7;
+            msg.codeY = CREATURE_PORTRAIT_1_ID + i;
             msg.extra = s.type + 2;
             BroadcastMessage(&msg);
 
@@ -454,7 +477,7 @@ void THillFortWindow::Recalculate(unsigned char DrawDimmedButtons)
         } else {
             msg.id = MESSAGE_WIDGET;
             msg.codeX = widget::WIDGET_CLEAR_STATUS;
-            msg.codeY = id - 7;
+            msg.codeY = CREATURE_PORTRAIT_1_ID + i;
             msg.extra = widget::WIDGET_CLEAR_STATUS;
             BroadcastMessage(&msg);
 
