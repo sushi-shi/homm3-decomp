@@ -2256,10 +2256,10 @@ static int ExitNormalDialog(message* msg)
         break;
     case NORMAL_DIALOG_CHOOSE:
     case NORMAL_DIALOG_CHOOSE_OPTIONAL:
-        if (rand() % 2)
-            gpWindowManager->dialogReturn = DIALOG_RETURN_CHOICE_2;
-        else
+        if (rand() % 2 == 0)
             gpWindowManager->dialogReturn = DIALOG_RETURN_CHOICE_1;
+        else
+            gpWindowManager->dialogReturn = DIALOG_RETURN_CHOICE_2;
         break;
     default:
         gpWindowManager->dialogReturn = DIALOG_RETURN_CANCEL;
@@ -2283,12 +2283,20 @@ static int ExitNormalDialog(message* msg)
 // source (turn-timer and network arms); retail expands ExitNormalDialog
 // into each.
 //
-// Residual (71.36%): retail SINKS both expansions past the function's
-// returns and gives the network arm its own EventWindowHandler tail; ours
-// keeps the first expansion inline behind a jump. Measured and rejected:
-// the early-return form `if (elapsed >= 15000) return Exit...;` in both
-// arms (71.03), the same plus an explicit `return EventWindowHandler`
-// after the inner store (71.03), and that return alone (56.56).
+// EXACT 2026-09-06 (polish 49, lever A census), two source facts, and the
+// old "retail SINKS both expansions past the returns" reading was wrong -
+// nothing was sunk, the arming expression was simply spelled backwards:
+//   * retail loads giNormalDialogStart into ESI BEFORE the GameTime::Get
+//     call and finishes with `sub esi,eax / add esi,0x3a98` (0x4f0929).
+//     A global cannot survive a call, so the read is an ARGUMENT: the
+//     statement is `15000 - GameTime::ElapsedSince(giNormalDialogStart)`,
+//     whose inlined argument is evaluated ahead of the body's Get(), not
+//     the algebraically equal `start - Get() + 15000`, which reads the
+//     global after the call. Worth 71.36 -> 99.58 on its own.
+//   * ExitNormalDialog's coin toss tests `rand() % 2 == 0` and puts
+//     CHOICE_1 in the THEN arm: retail's `jne` reaches 0x780a and falls
+//     through to 0x7809, the mirror of our `if (rand() % 2)` order.
+//     99.58 -> 100.
 VA(0x004f08d0, 0x20C)  // anchor-callee + dialog-global shape, dc 0xe1ccc
 int NormalDialogHandler(message& msg)
 {
@@ -2296,7 +2304,8 @@ int NormalDialogHandler(message& msg)
         gpAdvManager->advWindow->animate_bottom_view(1);
     if (!gDialogDeadline697784 && gTurnDuration69d630.IsExpired()) {
         if (GameTime::ElapsedSince(giNormalDialogStart) < 15000)
-            gDialogDeadline697784 = giNormalDialogStart - GameTime::Get() + 15000;
+            gDialogDeadline697784 =
+                15000 - GameTime::ElapsedSince(giNormalDialogStart);
         else
             return ExitNormalDialog(&msg);
     }
@@ -2308,8 +2317,8 @@ int NormalDialogHandler(message& msg)
                 handler->CheckHandleNet(1, &msgReceived);
                 if (msgReceived && handler->GetAbortPopupMsg()) {
                     if (GameTime::ElapsedSince(giNormalDialogStart) < 15000)
-                        gDialogDeadline697784 =
-                            giNormalDialogStart - GameTime::Get() + 15000;
+                        gDialogDeadline697784 = 15000
+                            - GameTime::ElapsedSince(giNormalDialogStart);
                     else
                         return ExitNormalDialog(&msg);
                 }
