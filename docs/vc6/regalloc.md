@@ -378,7 +378,48 @@ Three bounds, all measured:
 Keeping the forwarder and passing a CONSTANT count is not a substitute
 (81.66): the constant then has to be materialised for a call that stays.
 
-### 6c. Open lead: the tree-wide `_Ufill` / `_Destroy` surplus (2026-09-06)
+### 6c. REFUTED: the `_Ufill` / `_Destroy` surplus is a delink NAMING artifact
+(2026-09-06, polish 32)
+
+The lead below is wrong, and the defect is in its instrument. It counted
+`?<member>@?$vector@` call-site NAMES in the delinked target - but the target
+does not spell an ICF-folded vector leaf that way. `vector<widget*>::_Destroy`
+and `vector<type_artifact>::_Destroy` are both `ret` for a POD element, so
+/OPT:ICF folds them onto ONE body and the delinker labels that body with
+whichever symbol it picked: `__h3cg$customcampaign$vector_destroy$type_artifact`
+for `_Destroy`, `game_1510_sub07_8d940` for `_Ufill`, and the
+`vector<army*>` / `vector<int>` instantiations for `size` / `push_back` /
+`begin` / `end`. A member-name census attributes NONE of those to the member,
+so retail's calls vanish from its column and every row reads as a surplus.
+
+Resolved per row on the three largest carriers the lead named:
+
+| row | `_Destroy` | `_Ufill` | `size` | `_Ucopy` |
+|---|---|---|---|---|
+| `TSingleSelectionWindow` ctor (11,619 B, 95.71) | 4 = 4 | 6 = 6 | 13 = 13 | - |
+| `type_garrison_base_window` (7,456 B, 93.88) | 7 vs **8** | 14 vs **16** | 26 vs **33** | 28 vs **32** |
+| `TSystemOptionsWindow` ctor (6,268 B, 96.34) | 4 vs **5** | **8** vs 7 | **13** vs 7 | **16** vs 15 |
+
+The largest carrier is EXACTLY EQUAL on every leaf (its `push_back` 6=6,
+`begin` 1=1 and `end` 2=2 too) - the lead was empty there. On the garrison
+ctor the SIGN IS INVERTED: retail calls MORE of every leaf, i.e. we
+over-expand and the direction is caller-shrink, not the ladder. Only
+`TSystemOptionsWindow` keeps a one-sided surplus and it is on `size`, not on
+`_Ufill`/`_Destroy`.
+
+**Use a NAME-INDEPENDENT instrument instead** (`build/p32/calltotal.py`):
+count `call` INSTRUCTIONS per function on both sides. Over the tree that
+gives 133 at-MAX sub-100 rows whose total differs at all, 80 of them with
+retail calling MORE (we over-expand -> shrink the caller) and 53 the other
+way; every row not in that list has an identical call census whatever the
+relocation names say, so its residual is spelling, registers or scheduling
+and no inliner knob applies. The same trap sinks any per-callee census:
+`GetLuck`'s `_cpp_clamp base x1 vs retail x0` is
+`THeroScreenWindow_scalar_deleting_destructor` on the other side, and
+`SetupAndLoadObstacles`'s `TObstacleVector::Destroy` is the same
+`__h3cg$...vector_destroy$type_artifact` fold. Check the TOTAL first.
+
+### 6c-old. Superseded lead: the tree-wide `_Ufill` / `_Destroy` surplus
 
 An element-agnostic reloc census over every sub-100 row (base object against
 the delinked body, counting `?<member>@?$vector@` call sites across ALL
