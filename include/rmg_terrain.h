@@ -11,12 +11,17 @@
 // two dwords are the terrain and frame fields; the low two bytes of the last
 // dword are the independent sprite flips. The names in this file describe
 // proven roles because the Dreamcast build has no RMG compiland.
-struct TRmgTerrainTile {
-    int terrain;
-    int frame;
-    unsigned char flipX;
-    unsigned char flipY;
-    char pad000a[2];
+// Prior provisional class role: TRmgTerrainTile.
+struct rmgTerrainTile {
+    int m_terrain; // prior role: terrain
+    int m_frame; // prior role: frame
+    unsigned char m_flipX; // prior role: flipX
+    unsigned char m_flipY; // prior role: flipY
+    char m_padding[2]; // prior role: pad000a
+
+    rmgTerrainTile() {}
+    rmgTerrainTile(int newTerrain, int newFrame)
+        : m_terrain(newTerrain), m_frame(newFrame), m_flipX(0), m_flipY(0) {}
 };
 
 struct TRmgTerrainFlip {
@@ -52,13 +57,13 @@ struct TRmgPackedTerrainCell {
     inline int GetFrame() const { return frame; }
     inline unsigned char GetFlipX() const { return flipX; }
     inline unsigned char GetFlipY() const { return flipY; }
-    inline TRmgTerrainTile GetTile() const
+    inline rmgTerrainTile GetTile() const
     {
-        TRmgTerrainTile tile;
-        tile.terrain = GetTerrain();
-        tile.frame = GetFrame();
-        tile.flipX = GetFlipX();
-        tile.flipY = GetFlipY();
+        rmgTerrainTile tile;
+        tile.m_terrain = GetTerrain();
+        tile.m_frame = GetFrame();
+        tile.m_flipX = GetFlipX();
+        tile.m_flipY = GetFlipY();
         return tile;
     }
     inline void SetInitialized() { initialized = 1; }
@@ -153,7 +158,10 @@ public:
     // Prior provisional role: SelectBaseFrame
     int selectBaseFrame(const TRmgGridPoint& point, int terrain, int oldFrame);
     // Prior provisional role: SetTile
-    void setTile(const TRmgGridPoint& point, const TRmgTerrainTile& tile);
+    void setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile);
+    int getPaintTerrain() const;
+    unsigned char isPaintTerrain(const TRmgGridPoint& point);
+
     // Prior provisional role: PaintPoint
     void paintPoint(const TRmgGridPoint& point);
     // Prior provisional role: QueueOtherTerrainNeighbours
@@ -202,7 +210,7 @@ public:
         unsigned int rectangleWidth, unsigned int rectangleHeight);
 };
 
-SIZE(TRmgTerrainTile, 0x0c);
+SIZE(rmgTerrainTile, 0x0c);
 SIZE(TRmgTerrainFlip, 0x02);
 SIZE(TRmgPackedTerrainCell, 0x02);
 SIZE(TRmgTerrainRule, 0x08);

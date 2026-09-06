@@ -925,7 +925,8 @@ its former declaration-only state does not explain these remaining decisions.
 The gated [C2 shim trace](shim.md#4-gated-inline-budget-observations) reads
 actual candidate costs and budgets from the configured terrain compile.
 For `rmgTerrainPainter::paintPoint` (prior role `TRmgTerrainPainter::PaintPoint`,
-retail 0x5b4b20), the front-end caller estimate is 933 and the initial budget
+retail 0x5b4b20) at the earlier 97.0506% checkpoint, the front-end caller
+estimate is 933 and the initial budget
 is 1,866. At the first eight-neighbour terrain comparison, `getPackedCell`
 has cost 90 and budget 106 at depth 2. At the inner set erase, the three-argument
 `_Distance` has cost 41 and budget 45 at depth 3; its four-argument child
@@ -959,6 +960,37 @@ A lexical `inline_depth(1)` at the outer terrain read is byte-neutral because
 the nested call retains its own lexical allowance. Flattening just this read
 and pinning its cache call changes the caller's budget and later calls, so it
 is not an equivalent control. Both source pragma probes were removed.
+
+### Recover the tile constructor and terrain predicate together
+
+`paintPoint` now constructs a base tile from terrain/frame and tests matching
+terrain through an ordinary `isPaintTerrain(point)` helper. That helper calls
+both `getTerrain(point)` and `getPaintTerrain()`. Each operation has a meaningful
+value; no dummy call, assertion, or inline control is present. Names and the
+interface remain retail-derived hypotheses, since this TU has no DC counterpart.
+
+The individual controls explain why a lower intermediate score did not reject
+these boundaries. Before the point-copy recovery, the two-accessor predicate
+alone restored the first cache call but freed enough budget to expand the final
+one (96.6293%). The tile constructor alone prevented the inner tree find from
+expanding (85.7667%). Together they retain both desired cache calls and expand
+the tree find (98.2893%). The constructor's two-argument zero-flip form, explicit
+default flip arguments, and the existing flip-value factory leave the score unchanged.
+
+After recovering point-copy initialization and the base tile's lifetime, the
+full checkpoint is 99.5570%. The gated trace now reads caller cost 920, initial
+budget 1,840, and base-tile constructor cost 52. The first cache read gets 48
+units at depth 3, so the cost-90 `getPackedCell` stays out of line. The two
+interior rule reads get 122 and 109 and expand it; the final rule read gets 77
+and retains it. The inner distance wrapper still receives 47 for cost 41 and
+expands, leaving only 6 for its cost-45 fourth-argument child. Its unwanted
+expansion is still a real residual, despite report-level relocation agreement.
+
+The trace object matches all 56,600 reference bytes outside the COFF timestamp.
+Renaming the recovered terrain-tile type and its fields leaves all 74 named
+function sections byte-identical. Full build and raw checks preserve the cache
+reader/initializer, gap predicates, coordinate constructor/comparator, both
+worklist destructors, and the exact 1,516-byte water-border repair.
 
 ## 7. Using it
 

@@ -742,6 +742,41 @@ VC6 `??M` public, alongside the arithmetic operators. Equal-size join tests
 keep the operators distinct and reject `<=`, `<<`, and template-owner forms;
 the 130-test label suite passes. The source declaration remains the name owner.
 
+### 6m. Copy initialization, named return, and the base tile's lifetime
+
+The grid translation in `rmgTerrainPainter::paintPoint` (0x5b4b20) needs three
+separate source facts. First, construct its working point through a copied
+coordinate value:
+
+```cpp
+TRmgGridPoint result = TRmgGridPoint(x, y);
+result += offset;
+return result;
+```
+
+Direct initialization of `result` removes retail's original-x store at
+0x5b4e3f. Copy initialization restores the EBP-0x14 store and lifts the caller
+from 98.2893% to 98.5805%. Returning `result += offset` still uses the wrong
+direction register and schedules the two additions differently. Applying the
+compound operation separately and returning the named result reproduces the
+entire translation sequence at 0x5b4e38..0x5b4e5a (99.5389%). Direct initialization
+of the caller's nearby point instead of copy initialization is neutral.
+
+The remaining frame excess is a different lifetime. A scope around the named
+frame selection, base-tile construction, and `setTile` call ends the tile's
+lifetime before the worklist updates. This reduces the frame from 0x58 to
+retail's 0x50 without disturbing the original-x store (99.5570%). The earlier
+tile-scope probe with flat field assignments was neutral; that observation did
+not transfer to the reconstructed constructor and point-copy state.
+
+The current 48-block CFG has matching branch destinations. Two commuted cache
+multiplications and the distance-wrapper expansion remain. Coordinate-constructor
+body assignments, multiplication operand reversal, and adjacent repair guards
+are neutral; rewriting repair selection as nested conditional values changes
+the exact destructors' byte-result tests and was reverted. The grid constructor
+and free comparator remain raw-exact at 24 and 32 bytes, and the shared return
+change also improves `repairTerrainPoint` from 81.8432% to 82.8347%.
+
 ## 7. Files
 
 | path | role |
