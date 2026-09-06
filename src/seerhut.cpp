@@ -303,13 +303,16 @@ inline const T& _cpp_max(T left, T right)
     return left < right ? right : left;
 }
 
-// seerhut.obj's list formatter, 0x56c960.  It joins a vector with the
-// localized final separator and returns the result through the usual hidden
-// std::string return buffer (ECX), with the vector reference in EDX under
-// this compiland's /Gr profile.  Unclaimed - declared so the three container
-// quest requirement builders can name the shared operation.
-std::string join_quest_requirements(
-    const std::vector<std::string>& requirements);
+// seerhuttext.obj's list formatter, 0x56c960 (JoinTextList, exact there).  It
+// joins a vector with the localized final separator and returns the result
+// through the usual hidden std::string return buffer (ECX), with the vector
+// reference in EDX under this compiland's /Gr profile.  Declared here rather
+// than through seerhuttext.h for the include-set reason format_string and
+// NormalDialog below carry.  The reloc census (2026-09-06) is what settled
+// the identity: retail's call at every one of the nine quest requirement
+// builders below targets 0x56c960, where this tree used to name an
+// undefined `JoinTextList`.
+std::string JoinTextList(const std::vector<std::string>& items);
 
 // kb.obj's centred message box, 0x4f6570 - kb.h declares it, but the ten
 // quest dialog bodies below are this compiland's only consumers of that
@@ -821,11 +824,24 @@ void type_skill_quest::DoProposalDialog(hero* current_hero)
 // Slot 5 presents one primary-skill picture for every positive requirement.
 // The picture class advances from 0x1f with the skill index, while the
 // qualifier packs the displayed value below a high-word one.
-// Residual (75.8427%): semantics and all twelve CFG blocks agree, but retail
+// THE PICTURE LOOP IS A POINTER WALK WITH ITS OWN DOWN-COUNTER (75.8427 ->
+// 76.2136, 2026-09-06).  Retail's tail is `inc esi / dec ebx / jne` with
+// `mov ebx,4` ahead of it and the picture id strength-reduced into
+// `mov edi,0x1f / sub edi,esi / lea edx,[edi+esi]`; an indexed
+// `for (int i = 0; i < 4; ++i)` gives VC6 TWO reductions (0xdf-this and
+// 0xc0-this) and rebuilds the bound as `lea eax,[ecx+esi] / cmp eax,4 / jl`,
+// with no counter at all.  Spelled with the three explicit induction
+// variables the reductions collapse to retail's one and the down-counter
+// appears.  Measured and rejected: the two-variable form that derives the
+// picture id from `skill - required_skills` (65.37) - VC6 needs the id as its
+// own variable to produce the `0x1f - esi` invariant.
+// Residual (76.2136%): semantics and all twelve CFG blocks agree, but retail
 // keeps the GetProgressDialogText return object alive while taking c_str()
 // directly from the returned EAX; this CL invocation reloads the same string
 // slot before the vector loop and consequently chooses a different register
-// schedule. Tried and rejected: a named string alone, a bare c_str pointer
+// schedule.  The counter is the visible cost of that: retail spends EBX on it
+// while ours pools the constant 0 there (`cmp al,bl` against retail's
+// `test al,al`) and spills `remaining` to [ebp-0x14]. Tried and rejected: a named string alone, a bare c_str pointer
 // (destroys the temporary before the loop), a named string plus saved pointer,
 // and the lifetime-extending const reference below. VC6's accepted non-const
 // temporary-reference extension is byte-identical to the const form, so it
@@ -839,15 +855,21 @@ void type_skill_quest::DoProgressDialog()
     const std::string& text = GetProgressDialogText();
     const char* textPointer = text.c_str();
     std::vector<type_dialog_resource> dialogResources;
-    for (int i = 0; i < 4; ++i) {
-        if (required_skills[i] > 0) {
+    const signed char* skill = required_skills;
+    int picture = 0x1f;
+    int remaining = 4;
+    do {
+        if (*skill > 0) {
             type_dialog_resource resource;
-            resource.resource = 0x1f + i;
+            resource.resource = picture;
             resource.qualifier = 0x10000
-                | static_cast<unsigned short>(required_skills[i]);
+                | static_cast<unsigned short>(*skill);
             dialogResources.push_back(resource);
         }
-    }
+        ++skill;
+        ++picture;
+        --remaining;
+    } while (remaining);
     extended_dialog(textPointer, dialogResources, -1, -1, 0);
 }
 
@@ -921,7 +943,7 @@ std::string type_skill_quest::skill_requirement_text(
                 gPrimarySkillNames[i], required_skills[i]));
         }
     }
-    return join_quest_requirements(requirements);
+    return JoinTextList(requirements);
 }
 // E:\gamedcs\seerhut.cpp
 // Residual (96.53%): the CFG is exact (13 branches and two returns on both
@@ -1410,7 +1432,7 @@ std::string type_artifact_quest::GetRequirementText()
     std::vector<std::string> requirements;
     for (unsigned i = 0; i < artifacts.size(); ++i)
         requirements.push_back(akArtifactTraits[artifacts[i]].name);
-    return join_quest_requirements(requirements);
+    return JoinTextList(requirements);
 }
 // The three CONTAINER leaves take their vararg from slot 6 - a real
 // virtual call on `this`, which is what the `call dword ptr [eax+0x18]`
@@ -1484,7 +1506,7 @@ void type_artifact_quest::DoProposalDialog(hero* current_hero)
         std::string textFormat = texts[QUEST_TEXT_PROGRESS];
         std::string text = format_string(
             textFormat.c_str(),
-            join_quest_requirements(requirements).c_str());
+            JoinTextList(requirements).c_str());
         textPointer = text.c_str();
         std::vector<type_dialog_resource> dialogResources;
         type_dialog_resource resource;
@@ -1676,7 +1698,7 @@ std::string type_creature_quest::GetRequirementText()
             counts[i], GetArmyName(types[i], counts[i]));
         requirements.push_back(requirement);
     }
-    return join_quest_requirements(requirements);
+    return JoinTextList(requirements);
 }
 // E:\gamedcs\seerhut.cpp
 VA(0x00570690, 0xCF)  // anchor-vtable 0x6418b4 slot 7 + the shared text-table shape, retail-only
@@ -1754,7 +1776,7 @@ void type_creature_quest::DoProposalDialog(hero* current_hero)
         std::string textFormat = texts[QUEST_TEXT_PROGRESS];
         text = format_string(
             textFormat.c_str(),
-            join_quest_requirements(requirements).c_str());
+            JoinTextList(requirements).c_str());
     } else {
         text = progressText;
     }
@@ -1806,9 +1828,9 @@ void type_creature_quest::DoProgressDialog()
                 textFormat += get_time_limit_text();
             text = format_string(
                 textFormat.c_str(),
-                join_quest_requirements(requirements).c_str());
+                JoinTextList(requirements).c_str());
         } else {
-            text = GetProposalDialogText();
+            text = GetProgressDialogText();
         }
         extended_dialog(text.c_str(), dialogResources, -1, -1, 0);
     }
@@ -1980,7 +2002,7 @@ std::string type_resource_quest::GetRequirementText()
             requirements.push_back(requirement);
         }
     }
-    return join_quest_requirements(requirements);
+    return JoinTextList(requirements);
 }
 // E:\gamedcs\seerhut.cpp
 VA(0x005716e0, 0xCF)  // anchor-vtable 0x6418f0 slot 7 + the shared text-table shape, retail-only
@@ -2059,7 +2081,7 @@ void type_resource_quest::DoProposalDialog(hero* current_hero)
         std::string textFormat = texts[QUEST_TEXT_PROGRESS];
         text = format_string(
             textFormat.c_str(),
-            join_quest_requirements(requirements).c_str());
+            JoinTextList(requirements).c_str());
     } else {
         text = progressText;
     }
@@ -2157,7 +2179,7 @@ void type_resource_quest::SetDefaultText()
             requirements.push_back(requirement);
         }
     }
-    requirement = join_quest_requirements(requirements);
+    requirement = JoinTextList(requirements);
     if (proposalText.length() == 0)
         proposalText = format_string(texts[QUEST_TEXT_PROPOSAL].c_str(),
                               requirement.c_str());
