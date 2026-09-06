@@ -3099,6 +3099,13 @@ void type_cell_adjuster::type_cell_adjuster()
 // Residual (93.21%): Dinkumware append inlining. Tried and rejected:
 // spelling the single-space appends as char appends (`+= ' '`) rather than
 // append(" ") - measured 61.45.
+//
+// THE PREFIX ASSIGNS, IT DOES NOT APPEND (byte-flat, 2026-09-06, reloc
+// census). Retail's call at fn+0x8a is basic_string::assign(const char*,
+// size_type) where ours was append(const char*, size_type); the inlined
+// strlen ahead of it and both pushes are identical, so only the relocation
+// target differed. `result` is empty there, so the two are behaviourally the
+// same; with the assign spelling this row's call sequence AGREES 23/23.
 VA(0x0040abe0, 0x37D)
 std::string get_army_help_text(const armyGroup* source,
                               unsigned char show_full_list)
@@ -3112,7 +3119,7 @@ std::string get_army_help_text(const armyGroup* source,
     }
 
     std::string result;
-    result.append(gpGeneralText->GetText(GENERAL_TEXT_ARMY_HELP_PREFIX));
+    result = gpGeneralText->GetText(GENERAL_TEXT_ARMY_HELP_PREFIX);
     result.append(" ");
     if (show_full_list) {
         for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
