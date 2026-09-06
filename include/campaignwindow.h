@@ -89,6 +89,13 @@ public:
     // widget vector, i.e. 77 pointers.
     enum { NWIDGETS = 77 };
 
+    // Every preview still is 200x116, in OpenPreview's VideoOpen call and
+    // again in the bitmapBorder16 it builds for the same row.
+    enum EPreviewSize {
+        PREVIEW_WIDTH = 200,
+        PREVIEW_HEIGHT = 116
+    };
+
     // The pages of campaigns the dialog selects between, and the
     // constructor's second argument. Its switch is the proof of the
     // split: page 0 seeds firstCampaign 0 and gates rows 0..6, page 1
