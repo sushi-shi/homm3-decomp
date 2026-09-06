@@ -2433,6 +2433,8 @@ kb	??1TNormalDialogInfo@@QAE@XZ	100.0000	100.0000	100.0000	0xf6410	-
 kb	??1advManager@@QAE@XZ	100.0000	100.0000	100.0000	0xf39f0	-
 kb	??1combatManager@@QAE@XZ	93.5106	93.5106	93.5106	0xf3940	-
 kb	??1type_dialog_icon@@QAE@XZ	100.0000	100.0000	100.0000	0xf64c0	-
+kb	??1type_normal_dialog_frame@@UAE@XZ	100.0000	100.0000	100.0000	0xf0b10	26cfcf30aa13
+kb	??_Gtype_normal_dialog_frame@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xf0ae0	-
 kb	?CalculateNormalDialogSize@@YIXPAUTNormalDialogInfo@@@Z	92.1688	92.1688	92.1688	0xf5d80	1ee3ea8092d1
 kb	?CheckEndGame@@YIXH@Z	90.6191	90.6191	90.6191	0xf2ce0	a9ae3c65720d
 kb	?CleanUpMenus@@YIXXZ	100.0000	100.0000	100.0000	0xf4b50	5ad85acac0be
@@ -2445,6 +2447,7 @@ kb	?DoMultiPlayerWindow@@YIHXZ	100.0000	100.0000	100.0000	0xf0590	732e54afec3c
 kb	?DoNormalDialog@@YIXUTNormalDialogInfo@@@Z	99.8554	99.8554	99.8554	0xf6990	b381947e06f8
 kb	?DoSinglePlayerWindow@@YIHXZ	99.1549	99.1549	99.1549	0xf0490	e1a6fe4ef5bb
 kb	?Draw@Bitmap16Bit@@QBEXHHHHPAV1@HH_N@Z	100.0000	100.0000	100.0000	0xf0010	5a60c84144f4
+kb	?Draw@CSprite@@QAEXHHHHHHPAVBitmap16Bit@@HHEE@Z	100.0000	100.0000	100.0000	0xf0050	eec7edf8835a
 kb	?DrawProgressCount@@YIXXZ	100.0000	100.0000	100.0000	0xed230	a745829ef928
 kb	?EarlySetup@@YIHXZ	94.2515	94.2515	94.2515	0xed650	2283a578b78f
 kb	?EventWindowHandler@@YIHPAVmessage@@@Z	82.0787	82.0787	82.0787	0xf0fc0	3d44369f32b5
@@ -2474,6 +2477,7 @@ kb	?ShowLuckInfo@game@@QAEXPAVhero@@H@Z	100.0000	100.0000	100.0000	0xf3540	19d81
 kb	?ShowMoraleInfo@game@@QAEXPAVhero@@H@Z	100.0000	100.0000	100.0000	0xf32a0	effb636d6a78
 kb	?ShowProgressBar@@YIXXZ	100.0000	100.0000	100.0000	0xed350	f5a9fccf0270
 kb	?ShutDown@@YIXPBD@Z	100.0000	100.0000	100.0000	0xf3690	7882bdc1e193
+kb	?TrueFalseDialogHandler@@YIHPAVmessage@@@Z	100.0000	100.0000	100.0000	0xf1190	dd104fce7636
 kb	?UnloadProgressBar@@YIXXZ	100.0000	100.0000	100.0000	0xed450	515a13a44eda
 kb	?WaitHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0xf7620	5f15859cbc9f
 kb	?extended_dialog@@YIXPBDAAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@std@@JJJ@Z	92.7911	92.7911	92.7911	0xf7690	094ca28af910

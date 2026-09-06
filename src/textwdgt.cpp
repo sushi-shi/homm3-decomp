@@ -328,6 +328,17 @@ void* bitmapBackedTextWidget::`scalar deleting destructor'(unsigned __flags)
 
 #endif  // @carcass
 
+// TWO /OPT:ICF FOLDS SIT IN THIS COMPILAND'S SPAN, AND NEITHER IS CLAIMABLE
+// (read out 2026-09-06). 0x5bc690 is ONE byte, a bare `ret`, and 0x5bc7e0 is
+// THREE, a bare `ret 8`; the carve rows are 1 and 3 bytes exactly. Both are
+// the image-wide representatives every empty function of their arity was
+// folded onto - 0x5bc7e0 alone is slot 3 of eight vtables the reloc census
+// names (border, coloredBorderFrame, button, textButton, type_func_button and
+// three unnamed ones) plus slot 2 of a ninth, and 0x5bc690 is reached by
+// executive::ShutDownSystem. No single source function owns either row, so
+// they stay recorded here rather than claimed; the kb.cpp EarlySetup note
+// already names 0x5bc690 the same way for InitLogFile.
+
 // bitmapBackedTextWidget::`scalar deleting destructor' (0x5bc6a0, 33 B,
 // dc 0x16537c, slot 0 of vtable 0x642de8). The earlier note here recorded
 // the measurement that the Draw override alone emits no vtable and no ??_G:

@@ -794,12 +794,7 @@ void type_normal_dialog_frame::type_normal_dialog_frame(long _x, long _y, long _
 
 // E:\gamedcs\kb.cpp:2549 - promoted to a live claim (see below).
 
-// E:\gamedcs\kb.cpp:2630
-DC_ONLY(0xe225c, 0x10)
-int TrueFalseDialogHandler(message* msg)
-{
-    // @stub
-}
+// E:\gamedcs\kb.cpp:2630 - promoted to a live claim (see below).
 
 // E:\gamedcs\kb.cpp:2636 - promoted to a live claim (see below).
 
@@ -1846,14 +1841,22 @@ void Bitmap16Bit::Draw(int srcX, int srcY, int srcWidth, int srcHeight,
     // @stub
 }
 
+VA(0x004f0050, 0x47)  // COMDAT owner (kb.obj emits ?Draw@CSprite@@QAEXHHHHHHPAVBitmap16Bit@@HHEE@Z), body in csprite.h
+void CSprite::Draw(int seqnum, int framenum, int sx, int sy, int sw, int sh,
+                   Bitmap16Bit* dst, int dx, int dy, unsigned char hflip,
+                   unsigned char tblit)
+{
+    // @stub
+}
+
 #endif  // @carcass
 
-// UNCLAIMED IN SPAN, and the lead is a missing CALL SITE rather than a
-// missing claim: 0x4f0050 (71 B) is CSprite::Draw's own Bitmap16Bit
-// forwarding overload (csprite.h:139) - it loads map/Width/Height/Pitch
-// off the destination and tail-calls 0x47bcf0 with eleven arguments,
-// `ret 0x2c`. Retail's kb.obj emits that COMDAT and ours does not, so
-// some kb.cpp body still to be reconstructed calls it.
+// CORRECTION 2026-09-06: the note that used to stand here read "Retail's
+// kb.obj emits that COMDAT and ours does not, so some kb.cpp body still to be
+// reconstructed calls it". It outlived its cause - this object now emits
+// ?Draw@CSprite@@QAEXHHHHHHPAVBitmap16Bit@@HHEE@Z, byte-identical to retail's
+// 0x4f0050 through the eleven-argument tail call and the `ret 0x2c`, so the
+// claim above pairs it with no call site to hunt.
 
 // E:\gamedcs\kb.cpp:1962. Dreamcast proves the helper boundary and nested
 // TCampaignWindow/TCampaignBrief lifetimes. Complete adds the campaign-set
@@ -2313,6 +2316,18 @@ int NormalDialogHandler(message& msg)
     return EventWindowHandler(&msg);
 }
 
+// E:\gamedcs\kb.cpp:2445, both promoted from DC_ONLY on body evidence.
+// 0x4f0ae0 is vtable 0x63fe1c slot 0 - the compiler-generated scalar
+// deleting destructor - and 0x4f0b10 is the destructor it calls. The
+// destructor is FIVE BYTES, a bare `jmp border::~border` (0x44ff50): with an
+// empty body and no members of its own the derived vptr store is
+// unobservable, so VC6 drops it and the whole of ~coloredBorderFrame with
+// it, and what is left tail-jumps into the one base destructor that does
+// have a body.
+VA_COMPGEN(0x004f0ae0, 0x21, SCALAR_DELETING_DTOR, type_normal_dialog_frame)
+
+VA_COMPGEN(0x004f0b10, 0x5, IMPLICIT_DTOR, type_normal_dialog_frame)
+
 // E:\gamedcs\kb.cpp:2549
 // Every message the normal dialog's own widgets do not consume ends here.
 // An armed deadline that has run out answers DIALOG_RETURN_TIMEOUT for the
@@ -2504,6 +2519,17 @@ forward_answer:
     msg->codeX = 10;
     gDialogDeadline697784 = 0;
     return MESSAGE_DISPATCH_FORWARD;
+}
+
+// E:\gamedcs\kb.cpp:2630, promoted from DC_ONLY on body evidence. FIVE BYTES
+// - a bare `jmp EventWindowHandler` - which is what a one-line forwarder with
+// an identical signature compiles to. It sits in EventWindowHandler's own
+// band (0x4f0fc0 + 0x1c3 rounds up to 0x4f1190) and its one caller is
+// TQuestLogWindow::WindowHandler, whose reconstruction already names it.
+VA(0x004f1190, 0x5)  // anchor-caller (TQuestLogWindow::WindowHandler) + tail-jump target, dc 0xe225c
+int TrueFalseDialogHandler(message* msg)
+{
+    return EventWindowHandler(msg);
 }
 
 // E:\gamedcs\kb.cpp:2636. Promoted from DC_ONLY on body evidence: one
@@ -3824,19 +3850,7 @@ playerData* playerData::operator=(const playerData* __that)
     // @stub
 }
 
-// E:\gamedcs\kb.cpp:2445
-DC_ONLY(0xe73e0, 0x34)
-void* type_normal_dialog_frame::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\kb.cpp:2445
-DC_ONLY(0xe7414, 0x18)
-void type_normal_dialog_frame::~type_normal_dialog_frame()
-{
-    // @stub
-}
+// E:\gamedcs\kb.cpp:2445 - both promoted to live claims (see below).
 
 // E:\gamedcs\kb.cpp:5466
 DC_ONLY(0xe742c, 0x34)
