@@ -3000,10 +3000,11 @@ puzzlewindow	?test@?$bitset@$0DA@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0x106
 questlogwindow	??0TQuestLogWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x12d8c0	b23447582f0c
 questlogwindow	??1TQuestLogWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x12e1e0	7ad7c6e06db8
 questlogwindow	??_GTQuestLogWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x12e1b0	-
-questlogwindow	?DoQuestLog@@YIXH@Z	96.5463	96.5463	96.5463	0x12e430	d4a683024e74
+questlogwindow	?DoQuestLog@@YIXH@Z	84.9444	96.5463	96.5463	0x12e430	d4a683024e74
 questlogwindow	?QuestSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x12e170	1e61b800ad71
 questlogwindow	?UpdateQuestLocator@TQuestLogWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x12e270	27dea5832804
 questlogwindow	?WindowHandler@TQuestLogWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x12e410	0fd21b85c6e8
+questlogwindow	?quest_text_row@type_quest@@QAEPBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x12e6b0	32ce11802590
 quickherowindow	??0TQuickHeroWindow@@QAE@PAVhero@@W4TViewLevel@0@@Z	92.5668	92.5668	92.5668	0x12ead0	cf7573892452
 quickherowindow	??1TQuickHeroWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x12f3d0	1548de5efd87
 quickherowindow	??_GTQuickHeroWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x12f3a0	-
@@ -3892,6 +3893,7 @@ spellbookwindow	??_GTSpellbookWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x19c
 spellbookwindow	?Close@TSpellbookWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x19c990	2a459745f56a
 spellbookwindow	?GotoPage@TSpellbookWindow@@QAEXH@Z	88.8745	88.8745	88.8745	0x19c9a0	0b9c47a4ff93
 spellbookwindow	?Open@TSpellbookWindow@@UAEHHE@Z	100.0000	100.0000	100.0000	0x19c970	67001e2f7fe4
+spellbookwindow	?Reset@TSpellbookWindow@@SIXXZ	100.0000	100.0000	100.0000	0x19ba80	4fee86f4bd5f
 spellbookwindow	?WindowHandler@TSpellbookWindow@@UAEHPAVmessage@@@Z	99.9011	99.9011	99.9011	0x19d040	afd2f6cd1887
 spellbookwindow	?_Insertion_sort_1@std@@YIXPAVTSpellbookEntry@TSpellbookWindow@@00@Z	100.0000	100.0000	100.0000	0x19def0	-
 spellbookwindow	?_Sort@std@@YIXPAVTSpellbookEntry@TSpellbookWindow@@00@Z	100.0000	100.0000	100.0000	0x19dc90	-
@@ -4320,6 +4322,7 @@ u2dvers	??1TFileVersionInfo@@QAE@XZ	100.0000	100.0000	100.0000	0x1eedf0	0305b619
 u2dvers	?GetVersionInfo@TFileVersionInfo@@QAEEPBDPAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0x1eee00	7de0fd5e6d2f
 uncompr	@uncompress@16	100.0000	100.0000	100.0000	0x206be0	-
 university_window	??0type_university_window@@QAE@PAVhero@@PBUtype_university@@E@Z	88.1533	88.1533	88.1533	0x1ef500	23dd66e27d5d
+university_window	??_Gtype_university_skill_button@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1ef460	-
 university_window	??_Gtype_university_window@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1f0760	-
 university_window	?DoModal@type_university_window@@UAEHE@Z	100.0000	100.0000	100.0000	0x1f0a20	5c5d65c58c4e
 university_window	?ExitDialog@type_university_window@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1f1180	fd96ecac9df9

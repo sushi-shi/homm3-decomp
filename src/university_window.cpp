@@ -344,6 +344,17 @@ void type_university_window::set_selection_mode()
 // update_skill_button (0x5f0790).
 VA_COMPGEN(0x005f0760, 0x21, SCALAR_DELETING_DTOR, type_university_window)
 
+// The skill button's own slot 0, and the row the linker placed just BEFORE
+// this compiland's regular text (university_window.obj's carved span starts
+// at 0x5ef490; this COMDAT is at 0x5ef460). Identified by its callee, not by
+// its size: retail's body is the same canonical destructor-then-conditional-
+// delete wrapper and the destructor it calls is 0x5654b0, which is the
+// five-byte implicit destructor sacrifice_window's type_transformer_slot
+// claim already owns - /OPT:ICF folds every `jmp ~widget` in the image onto
+// that one representative, so the CLASS is fixed by which compiland emits a
+// 33-byte `??_G` here, and only university_window.obj does.
+VA_COMPGEN(0x005ef460, 0x21, SCALAR_DELETING_DTOR, type_university_skill_button)
+
 // E:\gamedcs\university_window.cpp:285. The unclaimed-in-span row between
 // the constructor (ends 0x5f0752) and DoModal (0x5f0a20), and the
 // Dreamcast's own next row in the same gap. The body names itself: it
