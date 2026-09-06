@@ -186,7 +186,7 @@ advspells	?TeleportTo@advManager@@QAEXPAVhero@@Utype_point@@PBDEEE@Z	100.0000	10
 advspells	?TownGate@advManager@@QAEXH@Z	99.0386	99.0386	99.0386	0x1d360	702cdb9eab97
 ai	??1type_spellvalue@@QAE@XZ	100.0000	100.0000	100.0000	0x20cf0	-
 ai	??Rfunc_moves_before@@QBE_NPBVarmy@@0@Z	100.0000	100.0000	100.0000	0x235c0	-
-ai	?AICheckRetreat@combatManager@@QAEEXZ	95.3960	95.3960	95.3960	0x1e570	06a15f1e7b08
+ai	?AICheckRetreat@combatManager@@QAEEXZ	95.7719	95.7719	95.7719	0x1e570	4869ef7aa78f
 ai	?ChooseBallistaTarget@combatManager@@QAEHHHH@Z	99.8919	99.8919	99.8919	0x1e190	ad1f6c4871ac
 ai	?DoCompAI@combatManager@@QAEXH@Z	98.4697	98.4697	98.4697	0x221f0	2e3e65e4a47b
 ai	?DoSpellAI@combatManager@@QAEEXZ	100.0000	100.0000	100.0000	0x22da0	e6d0af37140e
