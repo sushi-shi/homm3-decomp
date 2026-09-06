@@ -178,6 +178,23 @@
 # the same omission the 0x53dd0 correction above records. 167+6+3+21 = 197
 # and 0x1400+197 = 0x14c5, where eleven bytes of alignment run to
 # TAdventureMapWindow::Close at 0x14d0. Row count 11957 -> 11955.
+# MISSING CARVE ROWS 2026-09-06: the five type_func_button callbacks the
+# campaign-set window's constructor (0x56ec0) address-takes were owned by no
+# row at all - the 546-byte hole between 0x5727e and 0x574a0. Each is the
+# same two-armed body (`cmp [ecx+4],0xe` right-click help, `cmp [ecx+4],0xd`
+# left-release reply) ending on its own `ret`, and each is followed by 0x90
+# alignment padding to the next 16-byte boundary: 0x57280/0x572f0/0x57360/
+# 0x573d0 are 100 bytes with 12 bytes of padding each, and 0x57440 is 96
+# bytes ending EXACTLY on 0x574a0, the next carved entry. 4*100 + 96 = 496
+# and 496 + 4*12 + 2 leading alignment bytes = 546, which closes the hole to
+# the byte. Row count 11955 -> 11960.
+# MISSING CARVE ROW 2026-09-06: 0x5e3b0, the static-destructor wrapper the
+# campaign-music loader registers with atexit at 0x5e2e2, was owned by no row.
+# It is the byte-for-byte twin of campaignmap.obj's 0x5e1f0 (already carved at
+# 22 B): `mov al,[0x694e20] / test / je / mov eax,[0x694e24] / push / call
+# operator delete / pop / ret` - 22 bytes ending at 0x5e3c6, then ten 0x90
+# bytes of alignment to 0x5e3d0, exactly the ten 0x5e1f0 carries.
+# Row count 11960 -> 11961.
 rva	size
 0x1000	89
 0x1060	96
@@ -1170,6 +1187,11 @@ rva	size
 0x56ec0	823
 0x57200	33
 0x57230	78
+0x57280	100
+0x572f0	100
+0x57360	100
+0x573d0	100
+0x57440	96
 0x574a0	44
 0x574d0	196
 0x575a0	32
@@ -1242,6 +1264,7 @@ rva	size
 0x5e210	32
 0x5e230	32
 0x5e250	352
+0x5e3b0	22
 0x5e3d0	32
 0x5e3f0	89
 0x5e450	96

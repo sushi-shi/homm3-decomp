@@ -71,6 +71,18 @@ class TResourceDisplay;
 class TPalette16;
 extern TPalette16* gSystemPalette;  // retail .bss 0x6aacb0
 
+// The "Town Outlines" preference cell (retail .bss 0x698784). misc.obj's
+// registry pair binds it to szPrefTownOutlines at 0x63ff9c - the reader
+// at 0x50b2b6 and the writer at 0x50b53c both name it, and two checkbox
+// bindings take its address - which is what fixes both the role and the
+// int width. townObject::Draw is the only consumer outside misc.obj, so
+// the declaration sits HERE rather than beside gbShowSubtitles (0x698780)
+// in prefs.h: townmgr.obj does not include that header, and pulling it in
+// for one dword would widen this compiland by the whole 29-member
+// preference block. Definition and DATA claim stay with misc.obj, whose
+// carved span does not reach 0x698784.
+extern int gbTownOutlines;  // retail .bss 0x698784
+
 // One drawable object of the town panorama - a building, its outline
 // and its hotspot - forty-four slots of them on the manager at +0x5c.
 // The Dreamcast fieldlist names the members and retail confirms every
@@ -82,6 +94,17 @@ extern TPalette16* gSystemPalette;  // retail .bss 0x6aacb0
 // manager runs is inlined, which is why no vptr store exists.
 class townObject {
 public:
+    // Draw's two hard-coded animation bands, both on the Dungeon's
+    // EXTRA_0 sprite: the mage-guild-5 variant cycles frames 10..19 and
+    // the plain one 0..9, so 10 is the lit band's first frame and 20 the
+    // index it wraps at. Retail spells all three as literals and no
+    // roster attests a name - these are role names for the two bounds
+    // that are not 0.
+    enum EGuildFrameBand {
+        GUILD_LIT_FIRST_FRAME = 10,
+        GUILD_LIT_FRAME_END = 20
+    };
+
     int numFrames;          // +0x00
     int currFrame;          // +0x04
     int x;                  // +0x08
@@ -108,9 +131,9 @@ public:
     // - the four members it tears down need border.h, csprite.h and
     // bitmap816.h complete, and none of them may enter this header.
     ~townObject();
-    // Retail 0x5c2ff0 (dc 0x16a2b0), not reconstructed. Declared for
-    // CycleOutline, whose two expansions of the town-redraw block are
-    // the arity evidence: thiscall plus two pushed 1s.
+    // Retail 0x5c2ff0 (dc 0x16a2b0), reconstructed in townmgr.cpp.
+    // CycleOutline's two expansions of the town-redraw block are the
+    // arity evidence: thiscall plus two pushed 1s.
     void Draw(int incFrame, unsigned char drawHotspots);
 };
 SIZE(townObject, 0x30);
