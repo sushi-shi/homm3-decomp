@@ -75,7 +75,7 @@ from pathlib import Path
 from typing import Any, Iterable, TextIO
 
 from homm3.analysis import dc_asm, dc_lines, dc_srclines, debug_shape
-from homm3.core import common, undname
+from homm3.core import common, inputs, undname
 
 
 FUNCTIONS = common.EVIDENCE_DIR / "dreamcast/functions.csv"
@@ -86,9 +86,6 @@ RETAIL_NAMES = common.HOMM3_DIR / "build/gen/symbol_names.csv"
 LOG = common.HOMM3_DIR / "build/homm3_dreamcast.log"
 MAX_RENDERED_MATCHES = 8
 
-DC_EXE_SHA256 = \
-    "cdbc7e75bd7d057171fa12b728aaaee01c1db133fff350b034950dd21dd07736"
-DC_EXE_SIZE = 8425752
 AUTHORITY = "Dreamcast RoE/WinCE reference; analysis output, not retail evidence"
 GAP_CAUTION = (
     "A missing line-program row can be a blank, comment, declaration, brace, "
@@ -460,20 +457,6 @@ class Corpus:
         return boundary, self.source_definitions[key][boundary]
 
 
-def _gate_dc_exe(path: Path) -> bytes:
-    if not path.is_file():
-        raise DreamcastError(f"Dreamcast executable not found: {path}")
-    size = path.stat().st_size
-    if size != DC_EXE_SIZE:
-        raise DreamcastError(
-            f"{path}: size {size} != pinned Dreamcast size {DC_EXE_SIZE}")
-    digest = common.sha256_of(path)
-    if digest != DC_EXE_SHA256:
-        raise DreamcastError(
-            f"{path}: sha256 {digest} != pinned Dreamcast {DC_EXE_SHA256}")
-    return path.read_bytes()
-
-
 def _top_level_scopes(name: str) -> list[str]:
     parts: list[str] = []
     depth = start = index = 0
@@ -530,21 +513,19 @@ def _retail_bridges(corpus: Corpus, key: tuple[str, int]) -> list[dict[str, Any]
 
 
 def build_dossier(corpus: Corpus, row: dict[str, str]) -> DreamcastDossier:
-    if not dc_lines.DUMP.is_file():
-        raise DreamcastError(f"Dreamcast CodeView dump not found: {dc_lines.DUMP}")
     off, cb = _integer(row["offset"]), _integer(row["cb"])
     key = corpus.key(row)
-    dump = dc_lines._dump_lines()
+    dump = dc_lines.load_symbols()
     proc = dc_lines.find_proc(dump, off)
     if proc is None:
         raise DreamcastError(f"dc {off:#x}: no S_GPROC32/S_LPROC32 record")
     proc_name, proc_cb, _raw_locals, blocks = proc
     if proc_cb != cb or proc_name != row["name"]:
         raise DreamcastError(
-            f"dc {off:#x}: CSV/dump disagreement ({row['name']} {cb} B vs "
+            f"dc {off:#x}: CSV/NB11 disagreement ({row['name']} {cb} B vs "
             f"{proc_name} {proc_cb} B)")
 
-    data = _gate_dc_exe(dc_lines.EXE)
+    data = inputs.read_dreamcast_exe()
     symbols = dc_lines.symbol_map(dump)
     statements = dc_lines.line_table(dump, off, cb)
     line_shape = _source_line_shape(
@@ -1363,11 +1344,8 @@ def main(argv: list[str] | None = None) -> int:
                     render_dossier(dossier)
         elif args.command == "asm":
             rows = _matches(corpus, args.selector)
-            if not dc_lines.DUMP.is_file():
-                raise DreamcastError(
-                    f"Dreamcast CodeView dump not found: {dc_lines.DUMP}")
-            dump = dc_lines._dump_lines()
-            data = _gate_dc_exe(dc_lines.EXE)
+            dump = dc_lines.load_symbols()
+            data = inputs.read_dreamcast_exe()
             views = []
             for row in rows:
                 try:
@@ -1491,7 +1469,7 @@ def main(argv: list[str] | None = None) -> int:
     except NoMatch as exc:
         print(f"[homm3 dreamcast] no match: {exc}", file=sys.stderr)
         rc = 1
-    except DreamcastError as exc:
+    except (DreamcastError, inputs.InputError) as exc:
         print(f"[homm3 dreamcast] ERROR: {exc}", file=sys.stderr)
         rc = 2
     except SystemExit as exc:

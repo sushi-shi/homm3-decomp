@@ -48,7 +48,7 @@ comments carry as `dc 0x…` and `evidence/dc-xref-graph.tsv` as
 | want | from `dc` offset |
 |---|---|
 | the next line's start (statement size) | the following entry, or the S_GPROC32 `Cb` |
-| the **raw file offset** in `../orig/dreamcast/H3.EXE` | **`+ 0x400`** |
+| the **raw file offset** in `build/orig/dreamcast/H3.EXE` | **`+ 0x400`** |
 | the **linear VA** the literal pools hold | **`+ 0x11000`** |
 
 **Address-base correction, 2026-08-14.** The first draft of this table said

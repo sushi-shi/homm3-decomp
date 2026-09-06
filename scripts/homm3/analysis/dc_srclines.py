@@ -7,7 +7,7 @@ statements?". Guessing at it from a dead-store titration confuses
 byte-inert MASS with statement count and invents phantom deficits
 (THallWindow's "50-90 missing statements", 2026-08-14).
 
-The dump's `*** SRCLINES ***` section answers it directly. Per module it
+The executable's NB11 source-line tables answer it directly. Per module it
 lists, per contributing source FILE, a table of `line addr` pairs. Slice
 those by a proc's own extent `[offset, offset + cb)` and you have the DC
 build's source-line inventory for that body: how many DISTINCT lines of
@@ -86,17 +86,12 @@ import re
 import sys
 from collections import OrderedDict, defaultdict
 
-from homm3.core import common
+from homm3.core import common, inputs
 
-DUMP = common.HOMM3_DIR.parent / "homm3-symbols/HoMM3-Dreamcast-Dump/dump.txt"
 FUNCTIONS = common.EVIDENCE_DIR / "dreamcast/functions.csv"
 VARIABLES = common.EVIDENCE_DIR / "dreamcast/variables.csv"
 SRC_DIR = common.HOMM3_DIR / "src"
 
-MODULE_RE = re.compile(r"\*\*\* Module .*[\\/]([^\\/]+\.obj) at ")
-FILE_RE = re.compile(r"^\s+(\S+), \d{4}:([0-9A-F]{8})-([0-9A-F]{8}), "
-                     r"line/addr pairs = (\d+)")
-PAIR_RE = re.compile(r"(\d+)\s+([0-9A-F]{8})")
 # `VA(0x005dda10, 0x145F)  // <evidence>, dc 0x17f54c`. Evidence may also
 # mention a Dreamcast byte size earlier on the same line; greedily consume the
 # comment so the final explicit `dc 0x...` identity wins.
@@ -110,28 +105,7 @@ def _load_srclines() -> dict[str, list[tuple[str, int, int]]]:
     """module.obj -> [(file, line, addr)], parsed once."""
     if _srclines:
         return _srclines
-    text = DUMP.read_text(errors="replace")
-    lo = text.index("*** SRCLINES ***")
-    hi = text.index("*** SEGMENT MAP", lo)
-    module = None
-    cur_file = None
-    rows: list[tuple[str, int, int]] = []
-    for line in text[lo:hi].splitlines():
-        m = MODULE_RE.search(line)
-        if m:
-            module = m.group(1)
-            cur_file = None
-            rows = _srclines.setdefault(module, [])
-            continue
-        if module is None:
-            continue
-        m = FILE_RE.match(line)
-        if m:
-            cur_file = m.group(1)
-            continue
-        if cur_file and re.match(r"^\s+\d+ [0-9A-F]{8}", line):
-            for number, addr in PAIR_RE.findall(line):
-                rows.append((cur_file, int(number), int(addr, 16)))
+    _srclines.update(inputs.dreamcast_symbols().source_lines)
     return _srclines
 
 
@@ -228,8 +202,6 @@ def main(argv=None) -> int:
                     help="also print the proc's CodeView locals")
     args = ap.parse_args(argv)
 
-    if not DUMP.exists():
-        common.die(f"Dreamcast dump not found: {DUMP}")
     if not FUNCTIONS.exists():
         common.die(f"{FUNCTIONS} missing - run homm3.analysis.dc_extract")
 

@@ -126,6 +126,7 @@ def write_ninja(profiles: dict[str, list[str]], units: list[dict]) -> None:
                 },
             )
             objects.append(obj)
+            writer.build(unit["unit"], "phony", inputs=[obj])
 
         writer.build("objects", "phony", inputs=objects)
         writer.build("all", "phony", inputs=objects)

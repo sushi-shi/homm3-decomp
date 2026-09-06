@@ -6,8 +6,10 @@ Compiling and linking need the toolchain shell: `nix develop .#build`.
 
 Subcommands
 -----------
-  init [--force] [--no-smoke]
+  init [--exe PATH] [--dreamcast-exe PATH] [--force] [--no-smoke]
         One-time local setup so a fresh checkout goes straight to `homm3 build`:
+        verify and stage HOMM3_EXE and HOMM3_DREAMCAST_EXE (CLI paths override
+        the environment); read Dreamcast debug symbols from its executable;
         the git-ignored build dirs; build.ninja + objdiff.json (configure); the
         VC6 SP3 toolchain (unpacked from build/homm3-toolchain-vc6-sp3.tar.xz if
         absent); the Wine prefix; and a smoke compile through the real cc_wrap
@@ -18,13 +20,15 @@ Subcommands
         config/units.toml (homm3.build.configure; ninja also re-runs it as a
         generator rule).
 
-  build [--fast] [-- <ninja args>]
-        The loop tail (homm3.build.build): configure -> ninja (base objs via
-        the pinned `wine cl`) -> normalize comparison copies -> objdiff
+  build [--fast] [TU ...] [-- <ninja args>]
+        The final checkpoint (homm3.build.build): configure -> ninja (base objs via
+        the pinned `wine cl`) -> delink and normalize comparison copies -> objdiff
         report -> overall %% line -> checkpoint-ledger refresh + observational
-        dip report + fatal evidence/source gates + README score block + a
-        warning when the synth-PDB inputs are newer than the PDB.
-        --fast stops after the %% line (the inner matching loop).
+        dip report + fatal evidence/source gates + README score block.
+        Normally use `homm3 build --fast TU` for the inner matching loop:
+        compile the selected manifest unit, keep existing retail targets,
+        and stop after the %% line.
+        Run a full `homm3 build` for the final checkpoint.
 
   labels [--unit U ...|--all]
         Source-claim extraction (homm3.retail_labels.source): the lexical
@@ -39,8 +43,7 @@ Subcommands
         build/gen/compgen_claims.tsv.
 
   delink
-        The delink half (homm3.build.delink, explicit - build never
-        RE-delinks; a fresh tree bootstraps the first one):
+        Refresh retail targets directly (also part of full `homm3 build`):
         labels -> model -> synth PDB -> data manifests -> vostok ->
         per-unit target objs -> normalize -> objdiff.json.
 
@@ -74,8 +77,8 @@ Subcommands
         `homm3 init && homm3 build` rebuilds from scratch. Touches nothing
         under src/, config/, vendor/, or docs/. build/ is wholly disposable:
         the toolchain tarball re-downloads from the pinned GitHub release
-        (homm3.init.toolchain) and everything else regenerates. NOTE: the next
-        `homm3 init` is a heavier run (download + wine prefix).
+        (homm3.init.toolchain). Supply the executable paths again after cleaning.
+        NOTE: the next `homm3 init` is a heavier run (download + wine prefix).
 """
 from __future__ import annotations
 
@@ -104,6 +107,15 @@ def run_module(module: str, *args: str) -> int:
 
 
 def cmd_init(args) -> int:
+    from homm3.core import inputs, nb11
+    try:
+        retail = inputs.stage_executable(inputs.RETAIL, args.exe)
+        dreamcast = inputs.stage_executable(inputs.DREAMCAST, args.dreamcast_exe)
+        nb11.parse(inputs.read_verified(inputs.DREAMCAST, dreamcast))
+    except inputs.InputError as exc:
+        log(f"ERROR: {exc}")
+        return 1
+    log(f"inputs verified: {retail}, {dreamcast} (with embedded debug symbols)")
     for d in ("build/gen", "build/objdiff/base", "build/exe", "build/smoke"):
         (ROOT / d).mkdir(parents=True, exist_ok=True)
     if run_module("homm3.build.configure"):
@@ -215,7 +227,11 @@ def main(argv: list[str] | None = None) -> int:
         formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="command")
 
-    p = sub.add_parser("init", help="one-time local setup (toolchain, prefix, dirs)")
+    p = sub.add_parser("init", help="one-time local setup (executables, symbols, toolchain)")
+    p.add_argument("--exe", metavar="PATH",
+                   help="retail HEROES3.EXE (otherwise HOMM3_EXE or staged copy)")
+    p.add_argument("--dreamcast-exe", metavar="PATH",
+                   help="Dreamcast H3.EXE (otherwise HOMM3_DREAMCAST_EXE or staged copy)")
     p.add_argument("--force", action="store_true", help="re-init the wine prefix")
     p.add_argument("--no-smoke", action="store_true", help="skip the smoke compile")
     p.set_defaults(fn=cmd_init)
@@ -224,10 +240,11 @@ def main(argv: list[str] | None = None) -> int:
     p.set_defaults(fn=cmd_configure)
 
     p = sub.add_parser(
-        "build", help="configure + ninja + report + evidence/source gates")
+        "build", help="compile + delink + report + evidence/source gates")
     p.add_argument("--fast", action="store_true",
-                   help="inner loop: stop after the objdiff %% line")
-    p.add_argument("ninja_args", nargs=argparse.REMAINDER)
+                   help="inner loop: normally supply a TU; stop after the objdiff %% line")
+    p.add_argument("ninja_args", nargs=argparse.REMAINDER,
+                   help="manifest TU names or Ninja targets/arguments")
     p.set_defaults(fn=cmd_build)
 
     p = sub.add_parser("labels", help="source macros -> per-TU claim "
