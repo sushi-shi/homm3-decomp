@@ -14,6 +14,7 @@ from __future__ import annotations
 import bisect
 import csv
 import json
+import re
 import struct
 
 from homm3.core import common
@@ -28,7 +29,7 @@ REPORT = common.HOMM3_DIR / "build/objdiff/report.json"
 class SymbolDb:
     """Name/unit/size lookups over symbol_names.csv, ownership size-bounded."""
 
-    def __init__(self, extent_of=None):
+    def __init__(self, extent_of=None, *, unit=None):
         if not SYMCSV.is_file():
             die(f"{SYMCSV.relative_to(common.HOMM3_DIR)} missing - run "
                 "`homm3 delink` (or `homm3 labels --all && homm3 model`)")
@@ -40,6 +41,8 @@ class SymbolDb:
         with SYMCSV.open() as fh:
             rows = (line for line in fh if not line.startswith("#"))
             for r in csv.DictReader(rows):
+                if unit is not None and r.get("unit") != unit:
+                    continue
                 try:
                     rva = int(r["rva"], 16)
                     size = int(r.get("size") or "0", 16)
@@ -149,6 +152,14 @@ class SymbolDb:
         """(name, unit, rva, size, ordinal) for a FUNCTION target; an
         address inside a body snaps to its owner with a note. The ordinal
         distinguishes duplicate public names within one unit's object."""
+        prefix = re.match(r"^([^:]+):(?!:)(.+)$", arg)
+        if prefix:
+            unit, selector = prefix.groups()
+            if unit == "dc" or unit.endswith(".obj"):
+                die("Dreamcast offsets are not retail selectors")
+            if not any(row[1] == unit for row in self.funcs.values()):
+                die(f"unknown retail unit {unit!r}")
+            return SymbolDb(extent_of=self._extent_of, unit=unit).resolve_fn(selector)
         rva = self.resolve(arg)
         if rva not in self.funcs:
             owner = self.owner(rva)

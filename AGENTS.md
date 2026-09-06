@@ -76,7 +76,7 @@ its retained retail body and each caller's call/expansion decision separately:
   in the original TU and source order. Do not paste its body into the caller or
   add a false `inline` keyword.
 
-Diagnose with `homm3 vc6 predict-inline src/<unit>.cpp --fn <selector>` and inspect
+Diagnose with `homm3 vc6 predict-inline <selector>` and inspect
 the named call sequence, not aggregate call counts. Recover natural compiler state
 through declarations, body visibility, source order, local lifetimes, meaningful
 release-elided operations, and TU/PCH state. Do not manufacture alternate

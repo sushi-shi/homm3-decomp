@@ -727,11 +727,11 @@ def _compgen_renames(coff: CoffObject, claims: tuple[CompgenClaim, ...],
     volatile = {index: symbol for index, symbol in defined_functions.items()
                 if VOLATILE_E_FUNCTION.fullmatch(symbol.name)}
     extents = {}
-    for index, symbol in volatile.items():
+    for index, symbol in defined_functions.items():
         extents[index] = extent(symbol)
     outgoing = defaultdict(set)
     for relocation in coff.relocations:
-        for index, symbol in volatile.items():
+        for index, symbol in defined_functions.items():
             start, end = extents[index]
             if relocation.section == symbol.section and start <= relocation.site < end:
                 outgoing[index].add(relocation.symbol_index)
@@ -762,6 +762,37 @@ def _compgen_renames(coff: CoffObject, claims: tuple[CompgenClaim, ...],
         return (owner_present(names, owner) and
                 any(name.startswith(prefix) for name in names))
 
+    def registered_by_owner(index, owner):
+        # A function-local static's destructor may use only other globals.
+        # Its initializer still takes the owner's address, and registers
+        # the exact callback: push OFFSET callback; call _atexit. A mere
+        # graph edge (or calling the callback) is not registration proof.
+        for parent, symbol in defined_functions.items():
+            names = target_names(parent)
+            if not owner_present(names, owner) or "_atexit" not in names:
+                continue
+            start, end = extents[parent]
+            section = coff.sections[symbol.section - 1]
+            body = coff.section_bytes(section)
+            relocs = {r.site: r for r in coff.relocations
+                      if r.section == symbol.section and start <= r.site < end}
+            callbacks = set()
+            for site, ref in relocs.items():
+                call = relocs.get(site + 5)
+                if (ref.typ == DIR32 and ref.symbol_index in volatile
+                        and site > start and site + 9 <= end
+                        and body[site - 1] == 0x68 and body[site + 4] == 0xe8
+                        and body[site:site + 4] == b"\0" * 4
+                        and call is not None and call.typ == 0x14
+                        and coff.symbols[call.symbol_index].name == "_atexit"):
+                    callbacks.add(ref.symbol_index)
+            owners = {coff.symbols[t].name for t in outgoing[parent]
+                      if coff.symbols[t].name.startswith("_?")
+                      and not coff.symbols[t].name.startswith("_?$S")}
+            if callbacks == {index} and len(owners) == 1:
+                return True
+        return False
+
     def is_static_ctor(index, owner):
         names = target_names(index)
         if (owner_present(names, owner) and
@@ -787,8 +818,10 @@ def _compgen_renames(coff: CoffObject, claims: tuple[CompgenClaim, ...],
         # independent semantic edges: the owned datum and operator delete
         # (scalar or vector). Requiring both keeps this distinct from an
         # arbitrary `$E<n>` that merely touches the same global.
-        return (owner_present(names, owner) and
-                any(name.startswith(("??3@", "??_V@")) for name in names))
+        teardown = any(name.startswith(("??1", "__imp_??1", "??3@", "??_V@"))
+                       for name in names)
+        return ((teardown and owner_present(names, owner))
+                or registered_by_owner(index, owner))
 
     def is_atexit(index, owner):
         return ("_atexit" in target_names(index) and

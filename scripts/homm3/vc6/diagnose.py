@@ -19,22 +19,23 @@ from __future__ import annotations
 import json
 
 from homm3.sema import _asm
-from homm3.vc6 import _common, _eh, _unit, inline_model, report
+from homm3.vc6 import _common, _eh, _selection, _unit, inline_model, report
 
 
 def _resolve(target: str):
-    """(unit, fn, source_path) from UNIT:FN or a bare mangled name."""
-    if ":" in target:
-        unit, fn = target.split(":", 1)
+    """(unit, fn, source_path) from the shared retail selector forms."""
+    unit, fn = _selection.split(target)
+    if unit and not fn.lower().startswith("0x"):
         src = _unit.source_for_unit(unit)
-        return unit, fn, src
-    # bare name: resolve the owning unit via the carve roster
-    try:
-        from homm3.sema.context import get_context
-        _n, unit, *_ = get_context().symbols.resolve_fn(target)
-    except Exception:
-        unit = None
-    return unit, target, (_unit.source_for_unit(unit) if unit else None)
+        if src is None:
+            _common.die(f"unknown manifest unit {unit!r}")
+        obj = _asm.TARGET / f"{unit}.c.obj"
+        if obj.is_file():
+            return unit, _selection.object_symbol(obj, fn), src
+    selected = _selection.retail(target)
+    # Keep the address so the report can retain duplicate-symbol ordinals.
+    return (selected.unit, f"0x{selected.rva:x}",
+            _unit.source_for_unit(selected.unit))
 
 
 def _inline_divergence(unit: str, fn: str, ordinal: int = 0):

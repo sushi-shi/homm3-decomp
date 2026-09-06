@@ -80,6 +80,10 @@ paths need not remain configured. Re-running `homm3 init` verifies and reuses an
 setup. `homm3 clean` removes all of `build/`, including the staged copies; supply both
 paths again when initializing after a clean.
 
+Clangd works with the existing Neovim/CoC setup; hover and SDK definition lookup
+have been verified. `compile_commands.json` refreshes automatically on shell entry,
+configure, and build.
+
 ## License
 
 Project-authored reconstruction source and tooling are dedicated to the public

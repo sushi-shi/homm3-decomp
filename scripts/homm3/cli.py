@@ -52,7 +52,7 @@ Subcommands
         cur/max/hist; `update` regenerates config/match_baseline.tsv; `check`
         reports functions below their high-water checkpoint without gating.
 
-  sema <xref|diff|disasm|rva|strings> ...
+  sema <xref|diff|disasm|rva|strings|data|candidates|compare> ...
         Read-only navigation over the retail image (homm3.sema): caller
         trees + exact data refs (xref --to = every referencing site),
         base-vs-target diffs (skeleton by default; --summary = every
@@ -126,6 +126,8 @@ def cmd_init(args) -> int:
     if args.no_smoke:
         toolchain_args.append("--no-smoke")
     if run_module("homm3.init.toolchain", *toolchain_args):
+        return 1
+    if run_module("homm3.build.compilation_database"):
         return 1
     log("init complete. Next: `homm3 build` (inside `nix develop .#build`).")
     return 0
