@@ -430,9 +430,9 @@ static unsigned char initialize_move_constants()
         gLandMovement[i] = atoi(resource->GetRow(i + 2)[1]);
 
     int* sea_movement = gSeaMovement;
-    for (i = 2; i < 2 + kNumMasteries; ++i, ++sea_movement) {
+    for (int row = 2; row < 2 + kNumMasteries; ++row, ++sea_movement) {
         const TSpreadsheetResource::TStringVector& values =
-            resource->GetRow(i);
+            resource->GetRow(row);
         *sea_movement = atoi(values[3]);
     }
 
@@ -453,14 +453,17 @@ static unsigned char initialize_move_constants()
 // the sheet, and then contains initialize_move_constants in full. That is
 // exactly the DC-proven return-helper boundary after VC6 /Ob2 inlining.
 //
-// Residual (99.9485%): all 19 CFG blocks, nine branches, five returns and
-// every instruction agree. One SIB byte in the inlined sea-row GetRow names
-// the same effective address as `[edi+edx]` rather than retail's `[edx+edi]`.
-// `why-reg --model` reports identical EDI/ESI/EBX first definitions and only
-// four unpaired visible slots, placing this past the allocator's minimum
-// slice. Measured negative controls: coupling the destination to `i - 2`
-// scores 98.5309%; carrying an independent destination index scores 95.52%;
-// a scoped row reference and the direct expression both retain 99.9485%.
+// CLOSED 2026-09-06 (99.9485 -> 100.0000). The last byte was one SIB in the
+// inlined sea-row GetRow, `[edi+edx]` against retail's `[edx+edi]`, with all
+// 19 CFG blocks, nine branches, five returns and every instruction already
+// agreeing. It is C1 handle state, not the allocator: giving the sea loop its
+// OWN block-scoped index (`for (int row = 2; ...)`) instead of reusing the
+// function-scope `int i` flips the base/index and changes nothing else.
+// Measured negative controls, all against the 99.9485 plateau: coupling the
+// destination to `i - 2` scores 98.5309; an independent destination index
+// 95.52; hoisting `int* sea_movement` above `int i` 94.4485; moving
+// `++sea_movement` out of the for-increment into the body, a scoped row
+// reference and the direct expression are all byte-flat.
 VA(0x004d7240, 0x223)  // exhaustive link-order bracket + two table literals, dc 0xca984
 unsigned char initialize_ballistics_table()
 {

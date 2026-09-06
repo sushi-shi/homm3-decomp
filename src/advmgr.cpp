@@ -10063,7 +10063,12 @@ void advManager::ViewPuzzle()
         gUnnamed6989f4 = 1;
         CompleteDraw(centre.x, centre.y, centre.z, 0, 0);
         gUnnamed6989f4 = 0;
-        arrowTileset->DrawAdvObjWithFlag(
+        // DrawTile (0x47bf50), NOT DrawAdvObjWithFlag (0x47be10): the
+        // delinked target resolves this relocation to the tile entry, and
+        // the two are separate claimed bodies, so it is not an ICF fold.
+        // Byte-flat (a call relocation's name is not scored) but it stops
+        // the call census reporting a phantom divergence here.
+        arrowTileset->DrawTile(
             0, 0, 0, 32, 32, gpWindowManager->screenBitmap->map,
             (grailX - centre.x) * 32 + (32 - arrowTileset->Width) / 2,
             (grailY - centre.y) * 32 + (32 - arrowTileset->Height) / 2,
