@@ -298,6 +298,31 @@ compile instead of a sweep. Encoder-level tie-breaks (B17 length
 feedback, B18 SIB operand order) are not allocator decisions and are
 out of scope.
 
+### 6c. Open lead: the tree-wide `_Ufill` / `_Destroy` surplus (2026-09-06)
+
+An element-agnostic reloc census over every sub-100 row (base object against
+the delinked body, counting `?<member>@?$vector@` call sites across ALL
+instantiations, so /OPT:ICF's cross-element folding cannot skew it) finds one
+shape repeated far more than any other:
+
+* **`_Destroy`: ours > retail in 71 rows** (the reverse in 6);
+* **`_Ufill`: ours > retail in 32 rows** (never the reverse on a large row).
+
+We CALL both leaves inside the `vector::insert` expansions we keep; retail
+EXPANDS them - and `_Destroy` over a POD pointer element collapses to nothing
+at all, so every one of those calls is pure surplus. The largest carriers are
+`TSingleSelectionWindow::TSingleSelectionWindow` (11,619 B, 95.71, 6+4),
+`type_garrison_base_window` (7,456 B, 93.88, 14+7) and
+`TSystemOptionsWindow` (6,268 B, 96.34, 8+4).
+
+The depth ladder's shallower spelling is NOT the lever: rewriting all 49
+`Widgets.push_back(x)` in the garrison ctor as
+`Widgets.insert(Widgets.end(), x)` costs **10.3 points** (93.8825 -> 83.54,
+40 target-only calls). Note that retail also calls `size` and `_Ucopy` MORE
+often than we do at the same sites (33/32 against 26/28), so this is not a
+single budget knob in either direction - it is a different split of which
+leaves the kept expansions inline. Left open with the census recorded.
+
 ## 7. Files
 
 | path | role |
