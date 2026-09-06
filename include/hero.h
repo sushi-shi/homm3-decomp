@@ -151,10 +151,21 @@ struct type_artifact {
         artifactId = ARTIFACT_SPELL_SCROLL;
         extra = spell;
     }
+    // The two-argument form stores artifactId FIRST and extra second, like
+    // both single-argument constructors above.  Spelled with `extra` in a
+    // member-initialiser list instead (VC6 runs it in DECLARATION order, so
+    // the memcpy body statement then landed second) the two stores emerge
+    // reversed: kb's handle_click showed retail's `mov [ebp-0x14],eax` /
+    // `mov [ebp-0x10],edx` against our `edx` first.  Restoring the source
+    // order took handle_click 99.9475 -> 99.9761 and returned TEN rows that
+    // had silently drifted below their banked MAX (philai buy_siege_engine,
+    // buy_special_building, get_artifact_purchase_value, value_of_obelisk,
+    // value_of_town, AI_visit_war_factory; hero HeroFn_004D9B30,
+    // HeroFn_004DC070; game NewMap) to 100.0000, +12 exact tree-wide.
     type_artifact(int id, int extraValue)
-        : extra(extraValue)
     {
         memcpy(&artifactId, &id, sizeof artifactId);
+        extra = extraValue;
     }
 
 // townmgr.cpp's blacksmith right-click text (0x5d1aa0) calls this on a

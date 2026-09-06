@@ -200,6 +200,32 @@ Validation (2026-08-10, against the delinked retail objects):
 | get_disease_value, reopened (flag un-named) | 10 | model-ranked B14 edit = the historical lever -> **0, register-visible EXACT** | 1 |
 | hermetic probe pair (decl order swapped) | 17 | correctly declines (schedules differ - not the B1 slice); v1 sweep run as control finds the swap -> 0 | 0 |
 
+### 6a. B18 (SIB operand order) - a measured tree census, 2026-09-06
+
+The B18 encoder tie-break above is declared out of scope, and this is what
+it costs. A first-divergence sweep over every sub-100 row found FIVE rows
+whose entire remaining residual is one `[base+index]` pair with the two
+registers exchanged - same mnemonic, same operands, same displacement, one
+SIB byte:
+
+| row | site | ours | retail |
+|---|---|---|---|
+| `singleselectionwindow ?SetCurrentMap` (99.9874) | `gpGame->setup.handicap[i]` | `[eax+ecx+0x1f6a8]` | `[ecx+eax+0x1f6a8]` |
+| `swapmgr ?SetRolloverText` (99.9787) | `gPrimarySkillNames` row | `[edx+eax+0xc9]` | `[eax+edx+0xc9]` |
+| `ai_player ?fill_prohibited_array` (99.9678) | `gpGame->playerDisabled[player_index]` | `[ecx+edi+0x1f636]` | `[edi+ecx+0x1f636]` |
+| `seerhuttext ?LoadSeerHutTextColumn` (99.9621) | inlined `basic_string::_Eos` terminator | `[eax+ecx]` | `[ecx+eax]` |
+| `philai ?value_of_enemy_town` (99.9561) | `return combat_value + town_value;` | `lea [ebx+ecx]` | `lea [ecx+ebx]` |
+
+Two facts worth banking. First, it is NOT the source operand order: swapping
+the addends of `value_of_enemy_town`'s `return` is byte-flat to the digit
+(VC6 canonicalises `+` before the encoder sees it), so no `a+b` -> `b+a`
+edit reaches it. Second, it is not even self-consistent WITHIN one function:
+`fill_prohibited_array` emits `[ecx+edi+0x1f636]` at the `playerDisabled`
+subscript and `[esi+ecx+0x20b0e]` eight instructions later, and retail uses
+the index-as-base form at BOTH. Every other instruction in those five bodies
+pairs. Treat a lone SIB transposition as terminal and stop; the five rows
+above are the class's whole current cost and none of them is reachable.
+
 Honest accuracy statement: the model predicts the pinned compiler's
 callee-saved assignment from creation order in 5/5 standalone probes,
 and predicts RETAIL's binding from the definition tables in 2/2 real B1
