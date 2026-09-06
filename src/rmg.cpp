@@ -2713,6 +2713,9 @@ void type_random_map_generator::resetMovementCosts()
 // 86.24% and restores the final shared cleanup, while incorrectly merging
 // the early return into it and growing the painting loop to 24 instructions
 // versus retail's 21. This is not proof of replacing the position overload.
+// The terrain painter's default-then-assigned grid lifetime does not transfer
+// to the river's start/drawing arguments: separate controls grow the frame to
+// 0xc0, and applying both reaches 86.41% with a non-retail 0xc4 frame.
 VA(0x00548DF0, 0x99F)  // water-wheel caller + river-delta object; retail-only
 void type_random_map_generator::createRiver(TRmgMapPosition source)
 {
