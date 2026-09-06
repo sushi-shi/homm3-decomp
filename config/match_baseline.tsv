@@ -4539,7 +4539,7 @@ winmgr	?DoQuickView@heroWindowManager@@QAEXPAVheroWindow@@@Z	100.0000	100.0000	1
 winmgr	?FadeFromBlack@heroWindowManager@@QAEXH@Z	88.1358	88.1358	88.1358	0x2032e0	a4243310e752
 winmgr	?FadeScreen@heroWindowManager@@QAEXHHE@Z	100.0000	100.0000	100.0000	0x202c50	3d9cefc7099b
 winmgr	?FadeToBlack@heroWindowManager@@QAEXHE@Z	88.5116	88.5116	88.5116	0x2030e0	844f2a377353
-winmgr	?FizzleForwardX@heroWindowManager@@QAEXHHHHH@Z	75.3882	75.3882	75.3882	0x202dc0	7a3cbee73989
+winmgr	?FizzleForwardX@heroWindowManager@@QAEXHHHHH@Z	84.1098	84.1098	84.1098	0x202dc0	5e5077d321fc
 winmgr	?Main@heroWindowManager@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x202320	8f6459671348
 winmgr	?Open@heroWindowManager@@UAEHH@Z	100.0000	100.0000	100.0000	0x2021b0	2b594bafe16e
 winmgr	?ReleaseFizzleSource@heroWindowManager@@QAEXXZ	100.0000	100.0000	100.0000	0x2030c0	ef7d54f3f76c
