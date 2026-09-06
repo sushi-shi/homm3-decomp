@@ -17,14 +17,8 @@ Use `homm3 build --fast <TU>` (for example, `homm3 build --fast cursor`) for the
 inner loop. Normally supply the active TU so shared-header edits rebuild only
 that TU during iteration. Run `homm3 build` for the final checkpoint: it rebuilds
 affected TUs, refreshes retail targets through delinking, and runs the gates.
-`homm3 link` is an optional layout/unresolved-symbol study; its EXE is not runnable.
 
 ## Matching loop
-
-Use `homm3 vc6 queue` first: functions without a diffable compiled body, largest
-retail size first. Do not polish admitted functions until that queue is empty.
-Then use `homm3 vc6 queue --polish`, ordered by ascending banked MAX and excluding
-banked-exact functions even when their current score has dipped.
 
 For every non-exact game function with a Dreamcast counterpart, run this evidence
 pass **before speculative C++ rewrites**:
