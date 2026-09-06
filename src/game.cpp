@@ -6520,6 +6520,35 @@ static inline void read_map_player_name(char* destination,
 // line, which is a depth-2 A9 decision. Measured and rejected: a statement
 // pin on that read (-0.80, it takes the whole expansion out of line);
 // spelling it `serializedSkillCopy.test(skill)` (70.70 -> 20.20).
+// 2026-09-06, polish lane 48. Three of this body's fifteen inline-depth pins
+// were doing no work: the pins around the two bitset<144> constructions and
+// the bitset<129> one are the sites where retail ALSO calls the constructor
+// (retail's 0x4c2550/0x4c2563 keep the unclaimed ctor row), so /Ob2 declines
+// them on cost with or without the pin. Removing all three is 75.47679 ->
+// 75.48383 and byte-flat on every other row in the TU; each one alone gives
+// the same 75.48383, so they do not interact. The remaining twelve pins are
+// load-bearing: removing them individually measures 65.90 (`++it`), 68.99,
+// 72.69 (the merge-loop read), 72.76, 73.95, 74.16, 74.39, 74.48, 75.31,
+// 75.45, 75.45 and 25.95 (the spell-copy loop).
+// The artifact merge loop's SHAPE is recovered but not bankable. Retail
+// walks artifactDisabled with a pointer and an `!=` end compare, which VC6
+// only emits with a zero-trip guard (`cmp esi,eax / je` at retail+0x197,
+// end recomputed at the back edge from the spilled `this`), where an index
+// loop keeps `cmp esi,0x90 / jl` and no guard - our own std::copy at +0x4ae
+// is the control for that idiom. Writing it as a pointer loop reproduces
+// retail's block skeleton and takes the branch census from 62-vs-63 to an
+// exact 63-vs-63, but objdiff falls 75.48 -> 74.14 (74.18 with the store
+// left as `artifactDisabled[artifact]`, which is retail's separate second
+// induction pointer). The dip is register collateral: retail spends all
+// three callee-saved registers on the loop and homes `this`, where this CL
+// keeps `this` in EBX. Re-take the pointer spelling if the frontier below
+// ever frees that register.
+// The frontier itself is the wall, and it is reciprocal: predict-inline
+// reports 7 under-inlines against 8 over-inlines, and every one is the same
+// decision - retail expands the OUTER operation and calls the inner helper
+// (~basic_string -> _Tidy, bitset ctor -> _Tidy, _Tree::operator++ -> _Inc,
+// reference::operator bool -> test, resize's second size()), where this CL
+// calls the outer. Depth 0 suppresses both layers, so no pin reaches it.
 VA(0x004c2450, 0x88E)  // sole NewMap caller + full stream/callee sequence
 bool game::LoadMap(TAbstractFile* mapFile)
 {
@@ -6547,13 +6576,9 @@ bool game::LoadMap(TAbstractFile* mapFile)
     }
 
     if (mapHeader.version != MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-#pragma inline_depth(0)
         std::bitset<144> disabledArtifacts(0);
-#pragma inline_depth()
         if (mapHeader.version != MAP_FORMAT_ARMAGEDDONS_BLADE) {
-#pragma inline_depth(0)
             std::bitset<144> serializedArtifacts(0);
-#pragma inline_depth()
             unsigned char artifactBits[18];
             mapFile->Read(artifactBits, sizeof(artifactBits));
             for (unsigned int artifactBit = 0;
@@ -6575,9 +6600,7 @@ bool game::LoadMap(TAbstractFile* mapFile)
 #pragma inline_depth()
             }
 
-#pragma inline_depth(0)
             std::bitset<129> serializedArtifacts(0);
-#pragma inline_depth()
             unsigned char artifactBits[17];
             mapFile->Read(artifactBits, sizeof(artifactBits));
             for (unsigned int legacyBit = 0; legacyBit < 129; ++legacyBit) {
