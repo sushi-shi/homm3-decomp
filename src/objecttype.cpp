@@ -457,6 +457,23 @@ std::istream& operator>>(std::istream& is, TObjectType& objectType)
 // `bitset<48>::bitset()` across the closure also knocks
 // `CEnterNameEdit::OnKillFocus` off 100.0000 (99.8710) - a header edit that
 // costs an exact row. The honest residual is unchanged: one /Ob2 swap.
+//
+// 2026-09-06, polish lane 41: `homm3 vc6 predict-inline 0x00514d80` puts
+// numbers on that swap and rules out the caller-shrink lever for good.
+// It reports the call streams as 22 (base) vs 23 (retail) with three
+// count-paired names, and splits the residual into
+//   UNDER-inline: `bitset<48>::set(unsigned,bool)` base x1 vs retail x0
+//                 (A8/A9 - our budget ran out INSIDE the expanded ctor)
+//   OVER-inline : `bitset<48>::flip()` base x0 vs retail x1, `_Tidy` 2 vs 3
+// i.e. we spend the budget expanding `bitset<48>::bitset(unsigned long)`
+// and then cannot afford its inner `set`, while retail spends it on
+// `operator~` (copy + a flip CALL) and pays for the ctor with a call.
+// Both sides therefore have the SAME budget and differ only in which of
+// the two nested call sites the C2 inliner reaches first - a walk-order
+// fact, not a declaration, visibility or source-order one.  Nothing in
+// this body is liftable (the EH transcript accounts for every statement)
+// and the initialiser spelling sweep above is exhausted, so the shipped
+// `~std::bitset<48>(0)` stands.  Do not re-run the spelling sweep.
 VA(0x00514d80, 0x284)  // anchor-callee ResourceManager::GetText + anchor-bracket NewfullMapFn_00505DA0; retail-only
 void TObjectTypeTable::load(char* filename)
 {
