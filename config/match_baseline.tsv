@@ -1967,7 +1967,7 @@ game	?LoadBoatPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb
 game	?LoadGame@game@@QAEHPBDHH@Z	100.0000	100.0000	100.0000	0xbf330	c7302de7147c
 game	?LoadGarrisonPool@game@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xb96f0	e574c834f8c2
 game	?LoadHeroId@@YIHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xba210	a3d376c1431f
-game	?LoadMap@game@@QAE_NPAVTAbstractFile@@@Z	75.4768	75.4768	75.4768	0xc2450	e5e04330c34f
+game	?LoadMap@game@@QAE_NPAVTAbstractFile@@@Z	75.4838	75.4838	75.4838	0xc2450	ad3bb0cce06b
 game	?LoadMinePool@game@@QAEHPAVTAbstractFile@@H@Z	98.8718	100.0000	100.0000	0xb9340	2a102f6e81b3
 game	?LoadRumours@game@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbbe40	793f39b40d8e
 game	?LoadSignPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9070	f739107b463c
@@ -1985,7 +1985,7 @@ game	?PerWeek@game@@QAEXXZ	98.8948	99.8370	99.8370	0xc8780	cc054208a8f0
 game	?ProcessOnMapHeroes@game@@QAEXXZ	100.0000	100.0000	100.0000	0xcae10	ffdda8517461
 game	?ProcessOnMapTowns@game@@QAEXXZ	80.3907	80.3907	80.3907	0xcaa70	d7541bd90579
 game	?ProcessRandomObjects@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc9dd0	fff516680851
-game	?RandomizeEvents@game@@QAEXXZ	87.0102	87.0102	87.0102	0xc0cc0	71c0ec9f1e14
+game	?RandomizeEvents@game@@QAEXXZ	87.0102	87.0102	87.0102	0xc0cc0	9686fc680a84
 game	?RandomizeHolyGrail@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc0870	0e4c8e3b29a6
 game	?Read@NewSMapHeader@@QAEHPAVTAbstractFile@@H@Z	91.5614	91.5614	91.5614	0xc4390	832db94cb2ff
 game	?ReadHeroId@@YIHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xba1c0	391772931dc6
