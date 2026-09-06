@@ -3468,7 +3468,17 @@ type_skeleton_window::type_skeleton_window(armyGroup* new_army)
         gpGame->GetLocalPlayerGamePos());
     Widgets.push_back(background);
 
-    Widgets.push_back(new textWidget(
+    // TWO levers on this ONE append, and it is the whole residual.
+    // (1) DEPTH LADDER (docs/vc6/inliner.md 6b): spelled `insert(end(), x)`
+    //     where the other eight appends in this constructor stay push_back.
+    //     98.3508 -> 99.9936; #0 is the runner-up at 99.7743, all nine
+    //     together are 63.73, and a greedy second round finds nothing.
+    // (2) The vector NAMED AS A REFERENCE, so `end()` reads `_Last` through
+    //     the vector's own address (retail `mov eax,[esi+8]`) instead of
+    //     folding the member offset off `this` (`mov eax,[edi+0x38]`).  That
+    //     single instruction was the last divergence: 99.9936 -> 100.0000.
+    std::vector<widget*>& widgets = Widgets;
+    widgets.insert(widgets.end(), new textWidget(
         25, 21, 257, 18,
         gpGeneralText->GetText(
             SACRIFICE_GENERAL_TEXT_TRANSFORMER_SOURCE_TITLE),

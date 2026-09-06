@@ -1534,9 +1534,13 @@ void game::SetVisibility(int startX, int startY, int z, int whichPlayer,
         // game::record_* bodies expand it, so the site is pinned - with
         // end() hoisted OUT of the pinned statement, because retail keeps
         // that one inline (`mov eax,[ecx+8]`).
-        type_event_record** at = eventRecords.end();
+        // The record list NAMED AS A REFERENCE: 85.6452 -> 86.7235.  The same
+        // change on `changes` in this body is flat, and on the sibling
+        // ResetVisibility 0x49d3d0 it does not beat MAX.
+        std::vector<type_event_record*>& r_eventRecords = eventRecords;
+        type_event_record** at = r_eventRecords.end();
 #pragma inline_depth(0)
-        eventRecords.insert(at, 1, record);
+        r_eventRecords.insert(at, 1, record);
 #pragma inline_depth()
     } else {
         delete record;
