@@ -86,7 +86,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00547880	1969	83.71533	83.7153	83.7153	320.6457429999999	rmg	?BuildRoadCostMap@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	admitted
 0x00488fb0	1320	83.884796	83.8848	83.8848	212.72063999999995	customcampaign	?Play@MapTextStruct@TCampaignBrief@@QAEXXZ	admitted
 0x00491140	447	83.924416	83.9477	83.9477	71.75378099999999	diff	?MakeDiff@CDiffMaker@@QAEPAVCDiffFile@@AAK@Z	admitted
-0x00548df0	2463	83.94981	84.0026	84.0026	394.0159619999999	rmg	?CreateRiver@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	admitted
 0x0055a250	753	84.10887	84.1089	84.1089	119.65998299999994	resourcemanager	?Open@ResourceManager@@YI_N_N0PAH@Z	admitted
 0x00602dc0	759	84.1098	84.1098	84.1098	120.60661799999991	winmgr	?FizzleForwardX@heroWindowManager@@QAEXHHHHH@Z	admitted
 0x00491050	237	84.166664	84.1667	84.1667	37.524920999999985	diff	?FindNextSame@CDiffMaker@@IAE_NHHAAH0@Z	admitted
@@ -109,6 +108,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x0042a2b0	447	85.833336	85.8333	85.8333	63.325149000000046	ai_player	?check_trade_supply@type_AI_player@@QAE_NPBHJPAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	admitted
 0x00432640	151	85.8871	85.8871	85.8871	21.310478999999994	ai_player	?get_value@type_necromancy_artifact@@UBEJPBVhero@@EE@Z	admitted
 0x0042fee0	1720	85.922806	85.9228	85.9228	242.12784000000002	ai_player	?AI_AttemptMove@@YIXPAVhero@@AAUHeroDestination@@AAJE@Z	admitted
+0x00548df0	2463	85.95753	85.9575	85.9575	345.8667750000001	rmg	?CreateRiver@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	admitted
 0x005be930	816	85.977066	85.9771	85.9771	114.42686400000004	town	?create_building@town@@QAE?AW4type_building_id@@W42@@Z	admitted
 0x00485530	608	85.98387	85.9839	85.9839	85.21788799999999	customcampaign	?GetText@TCampaignStartCrossoverOption@@UBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAXH@Z	admitted
 0x004c2ce0	936	86.08842	86.0884	86.0884	130.212576	game	?read_map_hero_setups@game@@QAEXPAVTAbstractFile@@H@Z	admitted

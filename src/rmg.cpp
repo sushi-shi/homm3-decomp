@@ -2586,14 +2586,24 @@ void type_random_map_generator::BuildRoadCostMap(TRmgMapPosition position)
 // insert calls, both popped-element erase calls, and the range erase in
 // CreateRiver (75.23%, versus 71.47% with the pass flattened there).
 // Dreamcast has no RMG compiland; the role name/linkage remain provisional.
-// Named dimensions, scalar getters and TPoint size queries do not recover
-// retail's height temporary: they either stay flat or spill the map-item
-// pointer instead. Do not infer dimension accessors from their fuzzy score.
+// Unsigned width/height values passed through the recovered grid constructor
+// restore all 90 raw bytes at CreateRiver +0x42..+0x9c: the height temporary,
+// volume calculation and by-value predecessor copy. Scalar products/getters
+// and signed TPoint size queries lose those homes. Direct grid construction
+// from the signed fields instead spills width; naming height before width
+// also reverses the retail dimension loads. The loop retains its 0xbc frame.
+// CreateRiver reaches 85.96%; early vector _Destroy calls still over-expand.
+// Its final empty-vector cleanup now has separate returns where retail shares
+// the final delete epilogue. Preserve the exact reset sequence through that
+// remaining caller cleanup work.
 void type_random_map_generator::ResetMovementCosts()
 {
     TRmgMapPosition resetPosition(-1, -1, -1);
     TRmgMapItem* mapItem = map.GetMapItem(0, 0);
-    int mapItemCount = map.mapWidth * map.mapHeight * map.numberLevels;
+    unsigned width = map.mapWidth;
+    unsigned height = map.mapHeight;
+    TRmgGridPoint mapSize(width, height);
+    int mapItemCount = mapSize.x * mapSize.y * map.numberLevels;
     while (mapItemCount--) {
         mapItem->ResetMovement(resetPosition);
         ++mapItem;
@@ -2666,6 +2676,12 @@ void type_random_map_generator::ResetMovementCosts()
 // map-view ownership write to the end does not recover the constructor.
 // The real virtual GetSize slot (0x532240) returns the two-dimensional size;
 // using it here retains a virtual call absent from retail's reset sequence.
+// With the grid reset recovered, reference dimensions on the map-view ctor
+// do not settle the painter entry: signed refs score 81.50% and lose the exact
+// water-border caller; unsigned refs preserve that caller but score 85.73%
+// without restoring the missing load order. The value signature stays.
+// A copy-and-increment translation body also loses the matching loop flow
+// (76.72%); keep the returned coordinate construction.
 // Direct erase() calls expand even further (61.45% before the seed-copy
 // correction). An explicit predecessor copy and const by-value parameter
 // are byte-flat. A const-ref setter changes the shared road helper's proved by-value boundary and is
