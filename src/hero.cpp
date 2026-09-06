@@ -3695,6 +3695,28 @@ std::string hero::get_morale_description() const
         morale++;
     }
     if (flags & 0x200000) {
+        // Residual (91.65%) - MEASURED, BLOCKED BY THE PIN FLOOR
+        // (polish 26).  Retail CALLS append(const char*,size_type) at THIS
+        // rung too (0x4dc71b `repne scasb` + call, a 0x20-byte arm against
+        // our 0x73-byte expansion); the fn-level census is retail 18
+        // PBDI-append calls + 3 _Grow/_Xlen/_Eos expansions against our 17
+        // + 4, and this is the surplus expansion.  Spelling it
+        // `const char* t = gMoraleTexts[19]; result.append(t, strlen(t));`
+        // under a statement `inline_depth(0)` moves the first divergence
+        // from +0x408 to +0x551 and aligns two of the three _Grow sites
+        // exactly - but the freed budget then over-inlines the Grail and
+        // negative-modifier `+=` sites below, so the pin only pays PAIRED
+        // with pins on those two spelled as
+        // `result.append(format_string(...), 0, std::string::npos)`:
+        // 91.65 -> 89.97 (this rung alone) -> 93.21 (+ both `+=` pins)
+        // -> 93.91 (+ the two tail sites respelled as append).  All three
+        // pins are needed together; the same three call-site spellings
+        // WITHOUT the pins score 76.26.  Not shippable while the
+        // cleanliness ratchet holds inline-depth pins at 355 falling-only.
+        // Also rejected: a named `std::string grailText` local for the
+        // Grail temp gives a PERFECT skeleton (109/110 blocks, 0 missing,
+        // 88 exact) and only 92.16 - the extra frame slot costs the tail's
+        // register allocation.
         result += gMoraleTexts[19];
         morale -= 3;
     }
@@ -3854,6 +3876,18 @@ std::string hero::get_luck_description() const
     }
 
     if (skillLevel[eSecSkillLuck] == eMasteryBasic) {
+        // Residual (93.71%) - MEASURED, BLOCKED BY THE PIN FLOOR
+        // (polish 26).  Identical to the morale twin: retail's PBDI-append
+        // census is 12 calls + 3 expansions against our 11 + 4, and the
+        // surplus expansion sits at THIS rung and at the [13] siren rung
+        // above - pinning either alone just moves the flip to the other.
+        // Pinning BOTH (`const char* t = gLuckTexts[n];
+        // result.append(t, strlen(t));` under `inline_depth(0)`) reaches
+        // 92.15, and adding the negative-modifier arm respelled as
+        // `result.append(format_string(...), 0, std::string::npos)` under
+        // the same pin reaches 95.45 (+1.74 over the banked max).
+        // Three new pins; not shippable while the ratchet holds pins at
+        // 355 falling-only.
         result += gLuckTexts[15];
         luck++;
     }
@@ -6694,7 +6728,14 @@ int hero::GetLuck(const hero* otherHero, unsigned char on_cursed_ground,
             return 0;
     }
 
-    int luck = kLuckBonuses[skillLevel[eSecSkillLuck]];
+    // `long`, not `int`, and it is byte-proven: `_cpp_clamp` takes
+    // `const int&`, so a `long` lvalue needs a CONVERSION and therefore a
+    // third temporary.  Retail materialises three (-3 at [ebp+8], 3 at
+    // [ebp+0xc] and the value at [ebp+0x10]) where an `int` binds the
+    // variable's own home directly and only needs two; the `int` spelling
+    // also left two dead `mov [ebp+0xc], eax` write-backs of `luck` that
+    // retail does not have.  87.7439 -> 88.0662.
+    long luck = kLuckBonuses[skillLevel[eSecSkillLuck]];
     if (skillLevel[eSecSkillLuck] > 0) {
         const THeroSpecificAbility& ability = akHeroSpecificAbilities[id];
         if (ability.type == eHeroAbilitySecondarySkill &&
@@ -6711,6 +6752,22 @@ int hero::GetLuck(const hero* otherHero, unsigned char on_cursed_ground,
     if (IsWieldingArtifact(0x2f))
         luck++;
     if (IsWieldingArtifact(0x30))
+        // Residual (88.07%) after the `long luck` fix: the WHOLE remaining
+        // delta is THIS rung's /Ob2 decision.  Retail expands
+        // IsWieldingArtifact at five rungs (the two 0x55 hourglass tests,
+        // 0x6c, 0x2d, 0x2e, 0x2f - readable as the 19-slot
+        // `cmp dword ptr [reg], <id>` scan loops at 0x4dc2f4/0x4dc339/
+        // 0x4dc41e/0x4dc45b/0x4dc499) and CALLS it here at 0x4dc4d2, a
+        // 0x10-byte arm against our 0x3d-byte sixth expansion; that
+        // expansion is our whole 44-byte size surplus (788 vs retail's 744)
+        // and the 42-vs-39 conditional-branch delta `vc6 diagnose` reports.
+        // The callee is byte-exact (IsWieldingArtifact is 100.0000), the
+        // candidate-site set is identical, and `predict-inline` is BLIND to
+        // it: an expanded rung still emits one IsWieldingArtifact call for
+        // its combination-artifact recursion, so both multisets read 9 = 9
+        // and the tool reports "inline structure matches".  Count the scan
+        // loops, not the calls.  No pin-free lever known; a statement pin
+        // here would be the sixth new pin and the ratchet holds at 355.
         luck++;
 
     if (owner >= 0) {
