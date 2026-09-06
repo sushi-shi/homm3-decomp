@@ -1999,7 +1999,7 @@ void TTradeResourceWindow::Update(unsigned char bUpdate)
         BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, MARKET_TITLE_ID, 0x1006);
     }
 
-    for (int side = 0; side < 2; ++side) {
+    for (unsigned int side = 0; side < 2; ++side) {
         if (gSelectedArtifact != -1 && gLeftResource != -1 &&
             gSelectedArtifact != gLeftResource) {
             if (side == 0) {

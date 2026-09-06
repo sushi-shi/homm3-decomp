@@ -436,27 +436,19 @@ void TSpellbookWindow::Close(unsigned char update)
 VA(0x0059c9a0, 0x691)  // anchor-callee: called by WindowHandler; immediately follows Close 0x59c990; ret 4 = page arg; spleva.def; dc 0x14c904
 void TSpellbookWindow::GotoPage(int page)
 {
-    // 88.8745%: retail's filtering, ordering, widget flow, calls and final
-    // state agree.  The residual is one VC6 /Ob2 budget decision: spell-ID
-    // locals reproduce retail's display-loop stack homes, but leave STL's
-    // _Unguarded_insert out of line.  The pointer-only spelling expands that
-    // helper and gives the exact 68-block CFG, but drops to 86.2235%; named,
-    // iterator and reference spellings all converge on this higher maximum.
-    // Interpreting DC's `entry` record as a by-value Complete local falls to
-    // 81.6941%, and auto_inline(off) on operator< is byte-flat. predict-inline
-    // confirms the wall: retail keeps two comparator calls while this sort
-    // lowering keeps none. The guided induction-type controls are also closed
-    // (long is byte-flat; short worsens the branch distance 52 -> 54).
-    // NAMED 2026-09-06: the one-sided call is `TSpellbookEntry::operator<`,
-    // which retail CALLS twice inside the sort while we never reference it -
-    // because retail expands `_Unguarded_insert` one level deeper and leaves
-    // the comparator out of line, where we CALL `_Unguarded_insert` and its
-    // comparator goes with it.  So the direction is UNDER-inline (grow the
-    // caller), not over-inline, which is why `auto_inline(off)` on the
-    // comparator is byte-flat: our compile is not inlining it in the first
-    // place.  The four missing blocks and two missing branches are that one
-    // expansion.  operator< already has a plain out-of-class definition, so
-    // the `inline`-keyword lever is spent.
+    // EXACT.  The whole residual was one /Ob2 budget level: retail expands
+    // `_Unguarded_insert` one level deeper than we did and leaves
+    // `TSpellbookEntry::operator<` out of line (two comparator CALLS inside
+    // the sort), while our compile CALLED `_Unguarded_insert` and took the
+    // comparator inline with it - an UNDER-inline the earlier note had
+    // diagnosed correctly and had no lever for.  The DEPTH LADDER
+    // (docs/vc6/inliner.md 6b) is that lever: spelling the append
+    // `insert(end(), x)` instead of `push_back(x)` puts `insert`'s own mass
+    // on the site, and 88.8745 -> 100.0000 with no pragma.
+    // Previously measured and still rejected at the shallower spelling:
+    // pointer-only 86.2235, DC's by-value `entry` local 81.6941,
+    // auto_inline(off) on operator< byte-flat, `long` induction byte-flat,
+    // `short` induction worse (branch distance 52 -> 54).
     if (page < 0)
         return;
 
@@ -474,7 +466,8 @@ void TSpellbookWindow::GotoPage(int page)
                 school = highest_school;
             int mastery = const_cast<hero*>(Hero)->get_spell_level(
                 spell, OnMagicPlains);
-            spells.push_back(TSpellbookEntry(spell, school, mastery));
+            spells.insert(spells.end(),
+                          TSpellbookEntry(spell, school, mastery));
         }
     }
 

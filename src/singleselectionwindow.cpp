@@ -1347,7 +1347,10 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
 
     bitmapBorder* w = new bitmapBorder(
         396, 6, 370, 585, 100, "GSelPop1.pcx", 0x800);
-    Widgets.push_back(w);
+    // DEPTH LADDER: this ONE append is `insert(end(), w)`; all 24 others in
+    // this constructor stay `push_back`.  95.7079 -> 95.8142; every other site
+    // measured singly is flat or a loss, and the next best (#18) is 95.7325.
+    Widgets.insert(Widgets.end(), w);
     w->image->Draw(0, 0, w->image->GetWidth(), w->image->GetHeight(),
         gpWindowManager->screenBitmap, w->x + x, w->y + y, 0);
 
@@ -3772,6 +3775,8 @@ void TSingleSelectionWindow::UpdateGameVars()
 // block-scope classB is byte-flat; the family is the documented
 // register-homing residual class.
 // E:\gamedcs\singleselectionwindow.cpp:3927
+// LOOP-COUNTER SIGNEDNESS (docs/vc6/behavior-catalog.md D23): the 156-hero
+// scan counter is `unsigned int`.  87.5476 -> 88.9857.
 VA(0x00583890, 0x2B0)  // anchor-callee UpdateTown calls it no-arg right after the town commit - the DC call edge; size 1.2x dc 0x23e, dc 0x139498
 void TSingleSelectionWindow::MakeHeroFilter()
 {
@@ -3845,7 +3850,7 @@ void TSingleSelectionWindow::MakeHeroFilter()
             break;
         }
         p->availableHeroesCount = 0;
-        for (int h = 0; h < 156; ++h) {
+        for (unsigned int h = 0; h < 156; ++h) {
             if (gpGame->heroAvailability[h] != -1)
                 continue;
             if (akHeroTraits[h].heroClass != classA
@@ -8462,7 +8467,7 @@ void TSingleSelectionWindow::DrawHeroAdvancedOption(int playerPos,
 {
     if (position == -1) {
         position = 0;
-        for (int i = 0; i < playerPos; ++i)
+        for (int i = 0; i != playerPos; ++i)
             if (gpGame->setup.playerPos[i] >= 0
                     && (m_flag64 == 0 || gpGame->playerDisabled[i] == 0))
                 ++position;

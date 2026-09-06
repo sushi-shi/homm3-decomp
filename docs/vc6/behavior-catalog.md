@@ -1074,6 +1074,77 @@ name).
   or ambiguous anchors, unknown generated names, and different field addresses
   visible.
 
+### D23. The loop-counter signedness sweep (polish 31, 2026-09-06)
+Flipping a zero-initialised `for` counter between `int` and `unsigned int` is
+a per-site source lever worth up to 1.5 points, and it is CHEAP TO SWEEP: one
+compile per candidate, no semantics change while the bound is a non-negative
+count.  The mechanism is the one D-catalog already records from the other
+side - the compare's signedness survives VC6's strength reduction of an index
+walk into pointer form, and it decides `jl` against `jb`, which register the
+induction lands in, and whether the bound is re-read.  Swept over all 498
+`for (<type> x = 0; ...)` sites inside sub-100 rows (`build/p31-loop.py`):
+29 sites beat their row's banked MAX, and a greedy second round over the
+winners' own rows compounds several of them.
+
+| row | lines flipped | before -> after |
+| --- | --- | --- |
+| `TCampaignBrief::TCampaignBrief` | 4 of 9 | 89.0593 -> **91.1880** |
+| `TThievesGuildWindow::SetupThievesGuild` | 3 of 6 | 94.0399 -> **95.5153** |
+| `combatManager::CastSpell` | 2 of 27 | 92.7816 -> **93.3658** (63 B) |
+| `TSingleSelectionWindow::MakeHeroFilter` | 1 | 87.5476 -> 88.9857 |
+| `THillFortWindow::Recalculate` | 1 of 4 | 84.0331 -> 84.6405 |
+| `type_AI_player::can_trade_resources` | 1 | 84.4350 -> 85.0282 |
+| `game::ValidateVictoryLossConditions` | 1 | 89.6148 -> 90.0315 |
+| `SCampaign::PruneCrossoverHeroes` | 1 | 12.3264 -> 13.1269 |
+| `game::LoadMap` | 1 of 9 | 76.5443 -> 76.7482 |
+| `CObjectType::CObjectType` | 1 (unsigned -> int) | 62.0970 -> 62.3455 |
+| `type_skill_quest::DoProposalDialog` | 1 | 80.8108 -> 81.0631 |
+| `HighScoreWindowHandler` | 1 | 78.3889 -> 78.5926 |
+| `GiveBlackBoxReward` | 1 | 79.6642 -> 79.8259 |
+| `initialize_creature_bank_traits` | 1 | 89.4313 -> 89.4550 |
+| `TTradeResourceWindow::Update` | 1 | 86.8746 -> 86.8941 |
+
+Two bounds, as everywhere in this family:
+* **The sign is per site, and the sites are NOT independent.** CastSpell has
+  27 candidates and six of them beat MAX alone; only two of the six survive
+  the greedy round (93.2531 at line 1081, then +0.08 at 1427, and every other
+  addition falls back).  TCampaignBrief needed FOUR together (90.06 / 90.14 /
+  90.98 / 91.19 as they accumulate) - the single-site measurement understates
+  it by two points.
+* **It runs in both directions.** `CObjectType`'s win is `unsigned y` -> `int
+  y`, and `game::LoadMap` has one candidate of each sign that reach the same
+  76.7482, so read the compare, do not assume a preferred type.
+
+### D24. `i < N` against `i != N` — REAL, AND BLOCKED BY THE CLEANLINESS FLOOR
+The companion to D23 and the same shape of lever: for a zero-based counter
+that only increments, `i != N` and `i < N` are semantically identical while N
+is a non-negative count, but they are not the same object - `!=` gives `jne`
+on the back edge where `<` gives `jb`/`jl`, and that changes what the
+allocator does with the induction and the bound.  Swept over all 435
+single-line `for (T i = 0; i < N; ++i)` sites inside sub-100 rows whose body
+never assigns the counter (`build/p31-ne.py`).  Seven of 435 beat their row's
+banked MAX; none compounds (the greedy second round adds nothing anywhere).
+
+| row | before -> after | shippable? |
+| --- | --- | --- |
+| `game::CreateTownHeroes` | 98.6076 -> 99.6203 | NO |
+| `type_AI_player::purchase_building` | 97.4212 -> 97.8283 | NO |
+| `advManager::monsters_give_reward` | 88.6140 -> 89.0965 | NO |
+| `type_skill_quest::DoProgressDialog` | 75.8427 -> 76.5169 | NO |
+| `match_puzzle` | 92.4089 -> 92.4725 | NO |
+| `TSingleSelectionWindow::DrawHeroAdvancedOption` | 91.2854 -> **91.4350** | yes |
+
+**Only the last one is admissible.** `i != <integer literal>` is an UNNAMED
+DOMAIN COMPARE, and that cleanliness floor is a fatal gate at zero: shipping
+the five literal-bound flips takes it 0 -> 5 and `homm3 build` exits 1.  The
+sixth compares against a named parameter (`i != playerPos`) and is clean.
+So the lever is only reachable where the loop bound already has a name -
+which is a small minority of the corpus - and the five numbers above are
+banked MAXes that NO admissible spelling reaches.  A later lane that sees
+those rows sitting under their MAX should read this entry, not re-derive it:
+the only way to collect them is to give each bound a named constant first,
+and that is a header change to be priced on its own.
+
 ### D22. Excluded classes (never claim / never model as code)
 cinit-pattern rows (guard byte `0x6abaa0` / atexit / ~95 B ten-iteration
 initializers), STL COMDAT tails, compiler-generated scalar-deleting dtors

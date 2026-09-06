@@ -6595,7 +6595,10 @@ unsigned char hero::GiveArtifact(const type_artifact* artifact,
                             HeroFn_004DBF30(targetCombo, -1);
                         }
                     }
-                    player.assembledCombinations.set(targetCombo);
+            // DEPTH LADDER: this ONE bitset write is spelled `[i] = true`
+            // rather than `set(i)`; the other two in this body stay `set`.
+            // 75.1012 -> 76.3360, and a greedy second round finds nothing.
+            player.assembledCombinations[targetCombo] = true;
                 }
             }
         }

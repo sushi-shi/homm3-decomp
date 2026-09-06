@@ -758,7 +758,10 @@ void type_skill_quest::DoProposalDialog(hero* current_hero)
     signed char missing[4];
     for (int i = 0; i < 4; ++i) {
         int have = current_hero->GetPrimarySkill(i);
-        int required = required_skills[i];
+        // BOUND BY `const int&`: retail re-reads the requirement at both
+        // the compare and the store rather than keeping a copy live.
+        // 75.4324 -> 80.8108.
+        const int& required = required_skills[i];
         missing[i] = required > have ? required : 0;
     }
 
@@ -770,7 +773,7 @@ void type_skill_quest::DoProposalDialog(hero* current_hero)
         std::vector<type_dialog_resource> dialogResources;
 #pragma inline_depth()
         type_dialog_resource resource;
-        for (int i = 0; i < 4; ++i) {
+        for (unsigned int i = 0; i < 4; ++i) {
             if (missing[i] > 0) {
                 resource.resource = 0x1f + i;
                 resource.qualifier = 0x10000
@@ -855,6 +858,10 @@ void type_skill_quest::DoProgressDialog()
     const std::string& text = GetProgressDialogText();
     const char* textPointer = text.c_str();
     std::vector<type_dialog_resource> dialogResources;
+    // MAX 76.5169 was measured with the indexed loop written `i != 4` - an
+    // unnamed domain compare that fails the cleanliness floor
+    // (docs/vc6/behavior-catalog.md D24); the pointer walk below is the
+    // best admissible form (76.2135).
     const signed char* skill = required_skills;
     int picture = 0x1f;
     int remaining = 4;
@@ -1529,7 +1536,12 @@ void type_artifact_quest::DoProposalDialog(hero* current_hero)
         for (unsigned i = 0; i < missingArtifacts.size(); ++i) {
             resource.resource = 8;
             resource.qualifier = missingArtifacts[i];
-            dialogResources.push_back(resource);
+            // DEPTH LADDER (docs/vc6/inliner.md 6b): this append alone is
+            // spelled `insert(end(), x)`; the two in the sibling arm above
+            // stay `push_back`.  89.1000 -> 92.0556.  Per-site: the two
+            // sibling sites give 91.6667 each, all three together 85.7667,
+            // and a greedy second round over the survivors finds nothing.
+            dialogResources.insert(dialogResources.end(), resource);
         }
         extended_dialog(textPointer, dialogResources, -1, -1, 0);
     }
