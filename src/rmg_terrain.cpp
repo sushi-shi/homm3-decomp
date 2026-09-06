@@ -304,6 +304,9 @@ void rmgTerrainPainter::setTile(
 // flattening the configured-terrain read into the predicate expands that
 // cache call. Keep these ordinary helpers and the base-tile constructor;
 // their combined expansions recover the first and final cache boundaries.
+// The explicit guard returns below also preserve retail's inner distance
+// wrapper. Flattening them to return the comparison drops the predicate's
+// measured cost from 47 to 38 and over-expands that later library call.
 int rmgTerrainPainter::getPaintTerrain() const
 {
     return m_paintTerrain;
@@ -311,7 +314,9 @@ int rmgTerrainPainter::getPaintTerrain() const
 
 unsigned char rmgTerrainPainter::isPaintTerrain(const TRmgGridPoint& point)
 {
-    return getTerrain(point) == getPaintTerrain();
+    if (getTerrain(point) == getPaintTerrain())
+        return 1;
+    return 0;
 }
 
 // Paint a base tile, refresh its cache, then reconcile the two repair sets.
@@ -319,18 +324,25 @@ unsigned char rmgTerrainPainter::isPaintTerrain(const TRmgGridPoint& point)
 // the other rules recheck every matching neighbour. The rectangle painter
 // calls this body at 0x5b4a2d; RepairTerrainPoint and Finish share it.
 // Names are provisional: this Complete-only code has no Dreamcast body.
-// Residual (99.5570%): the inner erase expands the three-argument _Distance
-// into its four-argument overload (retail 0x5b4f7f keeps the wrapper). Two
-// expanded cache reads load y before multiplying by width, while retail
-// loads width before multiplying by y. The original-x store and translation
-// schedule now match; the scoped base tile restores the 0x50-byte frame.
-// Constructor + isPaintTerrain/getPaintTerrain leaves 98.2893% with direct
-// coordinate initialization. Copy initialization restores the original-x
-// store (98.5805%); returning the named result fixes translation registers
-// (99.5389%); ending frame/tile lifetime before the worklists fixes the frame.
-// Separate nearby declaration/assignment or direct initialization is neutral.
-// The base-tile constructor's explicit zero flips, default flip arguments,
-// and existing flip-value factory give the same measured paintPoint score.
+// Residual (99.9204%): only eight raw bytes differ. The expanded cache
+// products at 0x5b4f06/0x5b4fee load y and multiply by width; retail loads
+// width and multiplies by y. All 61 named relocations, branch destinations,
+// the 1483-byte length, 0x50-byte frame, and point translation are exact.
+// The guard-return isPaintTerrain costs 47 rather than the comparison-return
+// form's 38, crossing VC6's free-expansion cutoff of 40. This restores the
+// inner three-argument _Distance call. With that boundary recovered, return
+// the compound grid-addition result: a separate named return leaves 99.0163%
+// with the wrong direction/translation registers. Reversing the compound
+// field additions instead retains an unwanted helper (97.4864%).
+//
+// With the earlier comparison-return predicate, constructor + both accessors
+// left 98.2893% under direct coordinate initialization. Copy initialization
+// restored the original-x store (98.5805%); a named return then fixed the
+// translation registers (99.5389%); ending the frame/tile lifetime before
+// the worklists fixed the frame (99.5570%). The named-return observation
+// does not transfer to the recovered guard-return predicate. Separate nearby
+// declaration/assignment or direct initialization was neutral. Explicit zero
+// flips, default flip arguments, and the flip factory had the same score.
 //
 // Negative controls before the point-copy recovery: plain terrain comparison
 // and tile-field assignments leave 97.0506%, over-inlining the first cache
@@ -387,6 +399,10 @@ unsigned char rmgTerrainPainter::isPaintTerrain(const TRmgGridPoint& point)
 // changes earlier translation/backedge registers and leaves both commuted
 // products. Thus the inline decision and storage deltas remain coupled;
 // the diagnostic object is excluded from matching and the normal shim restored.
+// At 99.9204%, product/addition commutation, coordinate locals, const nearby
+// points, logically const queries with a mutable cache, and a linear-index
+// helper with value/reference width arguments leave the same eight-byte
+// caller residual. Unsigned long grid coordinates were neutral at 99.5570%.
 VA(0x005B4B20, 0x5CB) // anchor-callee 0x5b4960, 0x5b5440; thiscall, ret 4
 void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
 {

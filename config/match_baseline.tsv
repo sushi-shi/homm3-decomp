@@ -3410,7 +3410,7 @@ rmg_terrain	?hasSeparatedNeighbours@rmgTerrainPainter@@QAEEABUTRmgGridPoint@@@Z	
 rmg_terrain	?initializePackedCell@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@I@Z	100.0000	100.0000	100.0000	0x1b3dd0	b83b59b96e4c
 rmg_terrain	?isHorizontalGap@rmgTerrainPainter@@QAEEABUTRmgGridPoint@@H@Z	100.0000	100.0000	100.0000	0x1b6320	c1bd3eac1b88
 rmg_terrain	?isVerticalGap@rmgTerrainPainter@@QAEEABUTRmgGridPoint@@H@Z	100.0000	100.0000	100.0000	0x1b6430	cfb4f6d8ba27
-rmg_terrain	?paintPoint@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	99.5570	99.5570	99.5570	0x1b4b20	5210f574a185
+rmg_terrain	?paintPoint@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	99.9204	99.9204	99.9204	0x1b4b20	5210f574a185
 rmg_terrain	?paintTransitions@rmgTerrainPainter@@QAEXXZ	74.7320	74.7623	74.7623	0x1b5a70	71a20109e507
 rmg_terrain	?queueOtherTerrainNeighbours@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	63.6299	63.6299	63.6299	0x1b50f0	2d2fb5bb6ec3
 rmg_terrain	?repairTerrainPoint@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	82.8347	82.8347	82.8347	0x1b5440	f1d0c66db8be

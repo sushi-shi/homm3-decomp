@@ -973,7 +973,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x005ba6e0	495	99.44444	99.4444	99.4444	2.750021999999997	textscroller	?SetText@type_text_scroller@@QAEXPBD@Z	non-exact
 0x004fc1a0	494	99.47369	99.4737	99.4737	2.5999713999999825	mapcell	?Read@TTimedEvent@@QAEHPAVTAbstractFile@@H@Z	non-exact
 0x005f95b0	907	99.53737	99.5374	99.5374	4.196054100000075	viewwrld	?VWDrawRoad@advManager@@QAEXHHHHH@Z	non-exact
-0x005b4b20	1483	99.55696	99.557	99.557	6.570283199999919	rmg_terrain	?paintPoint@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	non-exact
 0x00570b80	725	99.5679	99.5679	99.5679	3.132725000000014	seerhut	?DoProgressDialog@type_creature_quest@@UAEXXZ	non-exact
 0x004e5960	56	99.583336	99.5833	99.5833	0.23333183999999996	hero	?get_primary_skill_total@hero@@QAEFXZ	non-exact
 0x00588330	1122	99.61981	99.6198	99.6198	4.265731800000028	singleselectionwindow	?UpdatePlayerPositions@TSingleSelectionWindow@@QAEXE@Z	non-exact
@@ -997,6 +996,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x005af990	593	99.898476	99.8985	99.8985	0.6020373199999839	swapmgr	?handle_backpack_click@swapManager@@QAEXJJE@Z	non-exact
 0x0059d040	2976	99.901085	99.9011	99.9011	2.943710400000313	spellbookwindow	?WindowHandler@TSpellbookWindow@@UAEHPAVmessage@@@Z	non-exact
 0x005bc280	301	99.91304	99.913	99.913	0.2617496000000078	textwdgt	??0textWidget@@QAE@HHHHPBD0W4TColor@font@@HIHH@Z	non-exact
+0x005b4b20	1483	99.92043	99.9204	99.9204	1.1800231000000976	rmg_terrain	?paintPoint@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	non-exact
 0x005be030	467	99.92157	99.9216	99.9216	0.36626809999998133	town	?GiveSpells@town@@QAEXPAVhero@@@Z	non-exact
 0x0055b470	721	99.92727	99.9273	99.9273	0.5243833000000702	resourcemanager	?GetPalette24@ResourceManager@@YIPAVTPalette24@@PBD@Z	non-exact
 0x0047e820	1856	99.93084	99.9308	99.9308	1.2836096000000268	cspriteframe	?DrawTileShadow@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@EE@Z	non-exact

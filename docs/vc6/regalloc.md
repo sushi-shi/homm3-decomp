@@ -744,9 +744,9 @@ the 130-test label suite passes. The source declaration remains the name owner.
 
 ### 6m. Copy initialization, named return, and the base tile's lifetime
 
-The grid translation in `rmgTerrainPainter::paintPoint` (0x5b4b20) needs three
-separate source facts. First, construct its working point through a copied
-coordinate value:
+The grid translation in `rmgTerrainPainter::paintPoint` (0x5b4b20) exposed
+three distinct source-form effects with the comparison-return terrain predicate.
+First, construct its working point through a copied coordinate value:
 
 ```cpp
 TRmgGridPoint result = TRmgGridPoint(x, y);
@@ -776,6 +776,16 @@ are neutral; rewriting repair selection as nested conditional values changes
 the exact destructors' byte-result tests and was reverted. The grid constructor
 and free comparator remain raw-exact at 24 and 32 bytes, and the shared return
 change also improves `repairTerrainPoint` from 81.8432% to 82.8347%.
+
+The later guard-return predicate changes this return-form result. It restores
+the retail distance-wrapper call but leaves the named point return at 99.0163%.
+Returning `result += offset` instead restores the complete translation and
+backedge, reaching 99.9204%. Its ordinary compiler output has retail's 1,483-byte
+length, 0x50-byte frame, and all 61 resolved relocations. Only eight bytes in
+the two commuted cache products remain. Reversing the field additions instead
+retains an unwanted helper and gives 97.4864%. A source-form observation must
+be rechecked after a later inline decision changes; the earlier named-return
+result was not a permanent requirement of the point class.
 
 ## 7. Files
 
