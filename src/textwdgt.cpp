@@ -48,6 +48,37 @@ void textWidget::textWidget(int textWidgetX, int textWidgetY, int textWidgetWidt
 // operator delete tail.
 VA_COMPGEN(0x005bc250, 0x21, SCALAR_DELETING_DTOR, textWidget)
 
+// E:\gamedcs\textwdgt.cpp:62 - the twelve-argument constructor the whole
+// image builds its labels with. `ret 0x2c` is eleven stack dwords, which is
+// exactly this declarator; the base call is
+// `??0widget@@QAE@FFFFFF@Z(x, y, w, h, id, 8)` with the style argument a
+// LITERAL 8, and the vtable store names 0x642db0. The trailing `style`
+// parameter is read nowhere in the body - retail carries it dead, exactly as
+// the header's declarator does.
+//
+// Residual (99.8609%): ONE instruction, and it is inside the inlined
+// `basic_string::assign(const char*)`, not in this body. Retail terminates
+// the copy with `mov byte ptr [ecx+eax], 0` - SIB base `_Ptr`, index `_Len` -
+// where this compile emits the same store with the two registers exchanged
+// (`[eax+ecx]`). All 16 blocks, 9 branches, 7 calls and 9 relocations agree
+// exactly; the operand roles are chosen inside a vendored Dinkumware header
+// this TU may not respell.
+VA(0x005bc280, 0x12D)  // anchor-vtable 0x642db0 + ret 0x2c, dc 0x164c80
+textWidget::textWidget(int x, int y, int w, int h, const char* text,
+                       const char* fontName, font::TColor color, int id,
+                       unsigned justify, int backColor, int style)
+    : widget(static_cast<short>(x), static_cast<short>(y),
+             static_cast<short>(w), static_cast<short>(h),
+             static_cast<short>(id), 8)
+{
+    Font = ResourceManager::GetFont(fontName);
+    if (text)
+        Text = text;
+    BackColor = backColor;
+    Justify = justify;
+    Color = color;
+}
+
 VA(0x005bc3b0, 0x8A)  // anchor-global, dc 0x164d24
 textWidget::~textWidget()
 {
