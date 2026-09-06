@@ -392,6 +392,20 @@ VA_COMPGEN(0x005165f0, 0xE7, CLASS_CTOR, strstreambuf)
 // similarity argument is needed.
 VA_COMPGEN(0x00516720, 0x30, SCALAR_DELETING_DTOR, istrstream)
 
+// COMDAT pairing: istrstream's `vbase destructor' closure, the sibling of
+// the scalar deleting destructor above and byte-identical to this object's
+// own `??_Distrstream` COMDAT - `lea esi,[ecx+0x58]` onto the virtual
+// basic_ios subobject, then the CRT's ??1istrstream and the basic_ios<char>
+// destructor at 0x453f40. The 20-byte extent matches ostrstream's already
+// claimed twin in bottomviewsubwindow (0x451750, also 0x14). Declaration
+// only, in MSVC's own backtick spelling - there is no source body.
+#if 0  // @carcass: compiler-generated closure, claim only
+
+VA(0x00516750, 0x14)
+void istrstream::`vbase destructor'();
+
+#endif  // @carcass
+
 // COMDAT pairing: bitset<48>::flip(), agreement 1.000 - the trigger-mask
 // member TObjectType::setTriggerMask flips, and 48 is the only bitset width
 // whose flip this object emits.
