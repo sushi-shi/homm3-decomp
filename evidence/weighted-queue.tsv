@@ -932,7 +932,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x004782d0	1461	98.28297	98.283	98.283	25.085808299999957	command	?GetControl@combatManager@@QAEXXZ	non-exact
 0x004c0b60	352	98.34513	98.3451	98.3451	5.82514239999999	game	?match_underground_gates@game@@QAEXXZ	non-exact
 0x005654f0	2620	98.3508	98.3508	98.3508	43.209039999999874	sacrifice_window	??0type_skeleton_window@@QAE@PAVarmyGroup@@@Z	non-exact
-0x0053fcb0	1516	98.353516	98.3965	98.3965	24.960697440000054	rmg	?RepairWaterZoneBorders@type_random_map_generator@@QAEXXZ	non-exact
 0x0056b050	999	98.356705	98.3567	98.3567	16.416517050000003	search	?check_town_portal@searchArray@@QAEXPBVhero@@PBUpathCell@@J@Z	non-exact
 0x004e51c0	115	98.375	100.0	100.0	1.8687499999999986	hero	?GetHighestSchool@hero@@QBE?AW4TSpellSchool@@W42@@Z	non-exact
 0x004f00a0	1006	98.390976	98.391	98.391	16.186781440000033	kb	?DoCampaignWindow@@YIEXZ	non-exact

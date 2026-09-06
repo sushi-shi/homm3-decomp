@@ -1616,9 +1616,10 @@ TRmgZoneConnection* TRmgTownSlot::FindConnection(int destinationZone)
 // to the marked neighbour. The inner square becomes border terrain and the
 // outer empty square loses gate eligibility. Painting is deferred per level.
 // All role names are provisional: this Complete-only pass has no DC body.
-// Residual (98.3535%, MAX 98.3965%): zero CSE/row scheduling in the second
-// clamp group (0x53fee8), its map-index multiply operand, and the final
-// maximum-X clamp's EAX/ECX schedule (0x540030).
+// Exact: 1516 bytes. Each clamp group keeps the original row, then names
+// height and width immediately before their upper clamps. Flattening those
+// dimension values reintroduces zero CSE/row scheduling at 0x53fee8 and the
+// final maximum-X EAX/ECX schedule at 0x540030 (98.3965%).
 // The guarded do loop keeps the exhaustion exit forward (0x53fe49) and
 // jumps back to the item lookup (0x53fe4b). A for/while condition instead
 // uses a backward jl plus a forward jmp with the same operation sequence.
@@ -1651,9 +1652,13 @@ TRmgZoneConnection* TRmgTownSlot::FindConnection(int destinationZone)
 // that interface: the old helper's 0.043-point gain is not declaration proof.
 // Applying free subtraction or negative-vector translation to these lower
 // corners changes the outer induction to x-1 rather than retail's x+2.
-// Direct component construction and in-place translation keep x+2 (98.3535%)
-// but leave the second map-index operand order open. Reusing the lower value
-// or radius across scans changes outer-loop registers. Reusing only the
+// Direct component construction and in-place translation keep x+2 (98.3535%).
+// Naming the row through the upper clamps restores the second map-index
+// operand order (98.3965%) with the retained point/vector APIs intact.
+// Updating row in place changes already matching upper-Y loads (97.4473%);
+// naming column before row loses that map-index order (98.3535%). Item
+// references are byte-neutral. Reusing the lower value or radius across
+// scans changes outer-loop registers. Reusing only the
 // variable, or assigning it after default construction, was byte-neutral.
 // Two TPoint members or by-value corner setters make bounds lose the 0x84
 // frame. Named clamped corners add homes. Deferred upper-field stores do not
@@ -1689,12 +1694,15 @@ void type_random_map_generator::RepairWaterZoneBorders()
                 unsigned char found = 0;
                 TRmgZoneBounds bounds;
                 {
-                    TPoint lower(position.x - 1, position.y - 1);
+                    int row = position.y;
+                    TPoint lower(position.x - 1, row - 1);
                     bounds.minimumY = max(lower.y, 0);
                     bounds.minimumX = max(lower.x, 0);
+                    int height = map.mapHeight;
+                    bounds.maximumY = min(row + 2, height);
+                    int width = map.mapWidth;
+                    bounds.maximumX = min(position.x + 2, width);
                 }
-                bounds.maximumY = min(position.y + 2, map.mapHeight);
-                bounds.maximumX = min(position.x + 2, map.mapWidth);
                 nearby.z = position.z;
                 TRmgZone* zone = zones[zoneIndex];
                 for (nearby.y = bounds.minimumY;
@@ -1721,12 +1729,15 @@ void type_random_map_generator::RepairWaterZoneBorders()
                     continue;
 
                 {
-                    TPoint lower(position.x - 1, position.y - 1);
+                    int row = position.y;
+                    TPoint lower(position.x - 1, row - 1);
                     bounds.minimumY = max(lower.y, 0);
                     bounds.minimumX = max(lower.x, 0);
+                    int height = map.mapHeight;
+                    bounds.maximumY = min(row + 2, height);
+                    int width = map.mapWidth;
+                    bounds.maximumX = min(position.x + 2, width);
                 }
-                bounds.maximumY = min(position.y + 2, map.mapHeight);
-                bounds.maximumX = min(position.x + 2, map.mapWidth);
                 for (nearby.y = bounds.minimumY; nearby.y < bounds.maximumY; ++nearby.y) {
                     for (nearby.x = bounds.minimumX; nearby.x < bounds.maximumX; ++nearby.x) {
                         TRmgMapItem* item = map.GetMapItem(nearby);
@@ -1742,12 +1753,15 @@ void type_random_map_generator::RepairWaterZoneBorders()
                 }
 
                 {
-                    TPoint lower(position.x - 2, position.y - 2);
+                    int row = position.y;
+                    TPoint lower(position.x - 2, row - 2);
                     bounds.minimumY = max(lower.y, 0);
                     bounds.minimumX = max(lower.x, 0);
+                    int height = map.mapHeight;
+                    bounds.maximumY = min(row + 3, height);
+                    int width = map.mapWidth;
+                    bounds.maximumX = min(position.x + 3, width);
                 }
-                bounds.maximumY = min(position.y + 3, map.mapHeight);
-                bounds.maximumX = min(position.x + 3, map.mapWidth);
                 for (nearby.y = bounds.minimumY; nearby.y < bounds.maximumY; ++nearby.y) {
                     for (nearby.x = bounds.minimumX; nearby.x < bounds.maximumX; ++nearby.x) {
                         TRmgMapItem* item = map.GetMapItem(nearby);
