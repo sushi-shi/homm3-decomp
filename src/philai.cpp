@@ -592,9 +592,10 @@ inline int ValueOfMapArtifact(const hero* current_hero, NewmapCell* cell)
     if (info->IsCustomized()) {
         // Both Dreamcast ValueOfMapArtifact and Complete's expanded
         // ARTIFACT arm retain this source helper as a real call boundary.
-#pragma inline_depth(0)
+        // The `inline_depth(0)` pin that used to enforce it is byte-flat and
+        // came out, with seven of AI_value_of_event's own arm pins
+        // (2026-09-06, polish lane 50 - the whole-TU per-pin sweep).
         return value_of_custom_item(current_hero, cell, value);
-#pragma inline_depth()
     }
 
     if (info->IsDefendedArtifact()) {
@@ -3571,9 +3572,7 @@ long AI_value_of_event(const hero* current_hero, type_point point,
             const_cast<hero*>(current_hero)->LuckIncreaseValue(1);
 #pragma inline_depth()
     case MINE:
-#pragma inline_depth(0)
         return ValueOfMine(current_hero, cell);
-#pragma inline_depth()
     case MONSTER:
 #pragma inline_depth(0)
         return value_of_monsters(current_hero, cell, point);
@@ -3601,10 +3600,8 @@ long AI_value_of_event(const hero* current_hero, type_point point,
         return value_of_obelisk(cell, current_hero->owner);
 #pragma inline_depth()
     case OBSERVATORY:
-#pragma inline_depth(0)
         return
             AI_value_of_observatory(point, current_hero->owner, 20);
-#pragma inline_depth()
     case POWER_SCHOOL:
 #pragma inline_depth(0)
         return ValueOfPowerSchool(current_hero, cell);
@@ -3614,9 +3611,7 @@ long AI_value_of_event(const hero* current_hero, type_point point,
         return ValueOfPrison(cell, player);
 #pragma inline_depth()
     case PYRAMID:
-#pragma inline_depth(0)
         return value_of_pyramid(current_hero, cell);
-#pragma inline_depth()
     case RALLY_FLAG:
         if (move_cost > current_hero->movePoints)
             return 0;
@@ -3669,9 +3664,7 @@ long AI_value_of_event(const hero* current_hero, type_point point,
         return ValueOfSirens(current_hero);
 #pragma inline_depth()
     case SPELL_SCROLL:
-#pragma inline_depth(0)
         return ValueOfScroll(current_hero, cell);
-#pragma inline_depth()
     case STABLES:
 #pragma inline_depth(0)
         return ValueOfStables(current_hero, &move_cost);
@@ -3688,11 +3681,9 @@ long AI_value_of_event(const hero* current_hero, type_point point,
             const_cast<hero*>(current_hero)->MoraleIncreaseValue(2);
 #pragma inline_depth()
     case TOWN:
-#pragma inline_depth(0)
         return value_of_town(
             current_hero, point.x, point.y, point.z,
             static_cast<short>(move_cost));
-#pragma inline_depth()
     case TRAINING_GROUNDS: {
         const ExtraInfoUnion* info = static_cast<const ExtraInfoUnion*>(
             static_cast<const void*>(cell));
@@ -3703,13 +3694,9 @@ long AI_value_of_event(const hero* current_hero, type_point point,
             current_hero->turnExperienceToRVRatio * 1000.0f);
     }
     case TREASURE_CHEST:
-#pragma inline_depth(0)
         return ValueOfTreasure(current_hero);
-#pragma inline_depth()
     case TREE_OF_KNOWLEDGE:
-#pragma inline_depth(0)
         return ValueOfTree(current_hero, cell);
-#pragma inline_depth()
     case UNIVERSITY: {
         ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
             static_cast<void*>(cell));
