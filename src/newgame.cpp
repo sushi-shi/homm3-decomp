@@ -60,10 +60,10 @@ inline unsigned char town::IsCastle() const
     // Town.h:337 proves its three HasBuilding tests. Retail expands the fort
     // test but calls HasBuilding for citadel/castle. Depth 2 over-inlines to
     // one call (80.7987%); depth 1 leaves all three calls (87.4340%).
-#pragma inline_depth(0)
+    // The depth-0 pin that stood here is byte-flat - this unit is at 100%
+    // with or without it - so it came out (2026-09-06, polish lane 50).
     return HasBuilding(CASTLE_CITADEL_ID, 0)
         || HasBuilding(CASTLE_CASTLE_ID, 0);
-#pragma inline_depth()
 }
 
 // The three map formats InitNewGame accepts, in the order retail tests them.
