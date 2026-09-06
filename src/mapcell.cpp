@@ -5800,7 +5800,7 @@ CObjectType::CObjectType(TObjectType* source)
     width = static_cast<signed char>(source->imageInfo.objectSize.x);
     height = static_cast<signed char>(source->imageInfo.objectSize.y);
 
-    for (unsigned y = 0; y < 6; y++) {
+    for (int y = 0; y < 6; y++) {
         for (unsigned x = 0; x < 8; x++) {
             unsigned pos = _getBitPos(x, y);
             drawCells[pos] = source->imageInfo.drawMask.test(pos);

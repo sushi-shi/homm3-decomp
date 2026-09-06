@@ -748,7 +748,7 @@ void type_skill_quest::DoProposalDialog(hero* current_hero)
         std::vector<type_dialog_resource> dialogResources;
 #pragma inline_depth()
         type_dialog_resource resource;
-        for (int i = 0; i < 4; ++i) {
+        for (unsigned int i = 0; i < 4; ++i) {
             if (missing[i] > 0) {
                 resource.resource = 0x1f + i;
                 resource.qualifier = 0x10000

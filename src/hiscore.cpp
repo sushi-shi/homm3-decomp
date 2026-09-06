@@ -726,7 +726,7 @@ int HighScoreWindowHandler(message& msg)
             return MESSAGE_DISPATCH_CONSUME;
 
         gpHighScoreWindow->lLastServe = now;
-        for (int iFrame = 0; iFrame < 11; ++iFrame) {
+        for (unsigned int iFrame = 0; iFrame < 11; ++iFrame) {
             ++gpHighScoreWindow
                   ->CreatureFrames[gpHighScoreWindow->bIsStandard][iFrame];
             if (gpHighScoreWindow

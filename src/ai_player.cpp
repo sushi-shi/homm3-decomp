@@ -1347,7 +1347,7 @@ bool type_AI_player::can_trade_resources(const int* cost, int* supply,
         && gpGame->players[team].turnProductionResource[0] > 0)
         can_build_market = 1;
 
-    for (int town_index = 0; town_index < gpGame->players[team].numTowns;
+    for (unsigned int town_index = 0; town_index < gpGame->players[team].numTowns;
          ++town_index) {
         town* current_town = gpGame->GetTown(
             gpGame->players[team].townIds[town_index]);

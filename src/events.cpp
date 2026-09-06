@@ -3092,7 +3092,7 @@ bool advManager::GiveBlackBoxReward(const char* text, hero* current_hero, Newmap
 
     armyGroup creatures = BlackBox->Creatures;
     unsigned char joinFailed = 0;
-    for (int p = 0; p < 7; p++) {
+    for (unsigned int p = 0; p < 7; p++) {
         int type = creatures.armies[p];
         int count = creatures.numTroops[p];
         if (type == CREATURE_NONE)

@@ -2756,7 +2756,7 @@ void SCampaign::PruneCrossoverHeroes(void* campaignHeader)
         }
 
         int keepCount = 0;
-        for (int iScenario = 0;
+        for (unsigned int iScenario = 0;
              iScenario < static_cast<int>(header->scenarios.size());
              ++iScenario) {
             TCampaignBrief::ScenarioStruct* scenario =

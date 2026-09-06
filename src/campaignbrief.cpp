@@ -441,6 +441,10 @@ void TCampaignBrief::UpdateDifficultyButtons()
 // The rung's sign is per-site: flipping the five back to `push_back` is
 // -0.92, so the shallower level is the one this body's /Ob2 budget wants at
 // all seventeen.
+// LOOP-COUNTER SIGNEDNESS (docs/vc6/behavior-catalog.md D23): four of this
+// body's nine zero-initialised `for` counters are `unsigned int`, not `int`.
+// They only pay TOGETHER - 89.0593 / 90.0586 / 90.1377 / 90.9771 / 91.1880 as
+// they accumulate - and the fifth through ninth all fall back.
 VA(0x004590c0, 0x1319)  // anchor-caller/callee/string/vtable, dc 0x594b8
 TCampaignBrief::TCampaignBrief(unsigned char newCampaign,
                                unsigned char viewFromGame)
@@ -501,7 +505,7 @@ TCampaignBrief::TCampaignBrief(unsigned char newCampaign,
         CampaignScenarioPreview preview;
         static_cast<NewSMapHeader&>(preview) = gpGame->mapHeader;
         preview.game_setup = gpGame->setup;
-        for (int i = 0;
+        for (unsigned int i = 0;
              i < static_cast<int>(campaign->scenarios.size()); ++i) {
             scenarios.insert(scenarios.end(), preview);
         }
@@ -618,7 +622,7 @@ TCampaignBrief::TCampaignBrief(unsigned char newCampaign,
     if (gCampaignBriefViewFromGame) {
         selected_scenario = gpGame->campaign.currentMap;
     } else {
-        for (int selectedIndex = 0;
+        for (unsigned int selectedIndex = 0;
              selectedIndex < static_cast<int>(scenarios.size());
              ++selectedIndex) {
             if (scenarios[selectedIndex].available) {
@@ -666,7 +670,7 @@ TCampaignBrief::TCampaignBrief(unsigned char newCampaign,
                     DATA_COMPGEN(0x0065f2f8, campaignBriefSmallFont, "smalfont.fnt"),
                     font::WHITE, 100, 6, 0, 8));
 
-    for (int flagIndex = 0; flagIndex < 8; ++flagIndex) {
+    for (unsigned int flagIndex = 0; flagIndex < 8; ++flagIndex) {
         w = new iconWidget(
             526 + flagIndex * 15, 406, 15, 20,
             ALLY_FLAG1_ID + flagIndex,
@@ -719,7 +723,7 @@ TCampaignBrief::TCampaignBrief(unsigned char newCampaign,
     campaign->StartMusic();
 
     if (viewFromGame) {
-        for (int buttonIndex = 0; buttonIndex < 3; ++buttonIndex) {
+        for (unsigned int buttonIndex = 0; buttonIndex < 3; ++buttonIndex) {
             w = GetWidget(232 + buttonIndex);
             if (w) {
                 w->send_message(

@@ -459,7 +459,7 @@ void THillFortWindow::Recalculate(unsigned char DrawDimmedButtons)
             if (!CanUpgradeCreature(creature_type_from_int(s.type))) {
                 s.state = UPGRADE_STATE_NONE;
             } else {
-                for (int r = 0; r < armyGroup::ARMY_GROUP_SLOT_COUNT;
+                for (unsigned int r = 0; r < armyGroup::ARMY_GROUP_SLOT_COUNT;
                      r++) {
                     if (s.cost[r] > gpCurrentPlayer->resources[r]) {
                         s.state = UPGRADE_STATE_TOO_EXPENSIVE;
