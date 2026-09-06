@@ -8160,7 +8160,7 @@ int NewSMapHeader::Load(TAbstractFile* infile, int saveVersion)
             teamInfo[i] = i;
     }
 
-    heroPlayerSetups.clear();
+    heroPlayerSetups.erase(heroPlayerSetups.begin(), heroPlayerSetups.end());
     if (saveVersion < SAVE_VERSION_CUSTOM_HERO_SETUPS)
         return 0;
 
