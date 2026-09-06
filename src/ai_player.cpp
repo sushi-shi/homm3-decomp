@@ -9312,9 +9312,16 @@ VA_COMPGEN(0x00434650, 0x26, VECTOR_DTOR, pathCell)
 // highest operand-level agreement in the whole sweep (0.904).
 VA_COMPGEN(0x00434680, 0x4D, VECTOR_ERASE, type_creature_source)
 
-// COMDAT pairing: vector<HeroDestination>::_Ucopy, agreement 0.941; the
-// type_creature_source and pathCell arms score 0.806 and 0.523 at operand level.
-VA_COMPGEN(0x00434ba0, 0x43, VECTOR_UCOPY, HeroDestination)
+// COMDAT pairing: vector<type_creature_source>::_Ucopy. The mnemonic sweep
+// that first landed here read HeroDestination (agreement 0.941 against
+// type_creature_source's 0.806), and the ELEMENT STRIDE overrules it: this
+// body walks with `add ecx,0xc / add eax,0xc` and copies exactly three
+// dwords, so its element is 12 bytes. SIZE(type_creature_source, 12) is that
+// element; HeroDestination is 16 (find_all_destinations walks it with
+// `add edi,0x10`), and its own 16-byte _Ucopy is the body /OPT:ICF folded
+// onto game.obj's byte-identical vector<type_university>::_Ucopy at
+// 0x434c70 - four dwords, `add ecx,0x10` - which is claimed there and exact.
+VA_COMPGEN(0x00434ba0, 0x43, VECTOR_UCOPY, type_creature_source)
 
 // COMDAT pairing: vector<pathCell>::_Ucopy, agreement 0.952; the
 // type_creature_source arm scores 0.531 at operand level.

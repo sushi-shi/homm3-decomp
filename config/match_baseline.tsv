@@ -310,8 +310,8 @@ ai_player	?_Median@std@@YI?AUtype_creature_value@@U2@00U?$greater@Utype_creature
 ai_player	?_Sort@std@@YIXPAJ00@Z	100.0000	100.0000	100.0000	0x35070	-
 ai_player	?_Sort@std@@YIXPAUtype_creature_value@@00@Z	100.0000	100.0000	100.0000	0x34e80	-
 ai_player	?_Sort@std@@YIXPAUtype_creature_value@@0U?$greater@Utype_creature_value@@@1@0@Z	100.0000	100.0000	100.0000	0x34ce0	-
-ai_player	?_Ucopy@?$vector@UHeroDestination@@V?$allocator@UHeroDestination@@@std@@@std@@IAEPAUHeroDestination@@PBU3@0PAU3@@Z	93.3750	93.3750	93.3750	0x34ba0	-
 ai_player	?_Ucopy@?$vector@UpathCell@@V?$allocator@UpathCell@@@std@@@std@@IAEPAUpathCell@@PBU3@0PAU3@@Z	100.0000	100.0000	100.0000	0x34bf0	-
+ai_player	?_Ucopy@?$vector@Utype_creature_source@@V?$allocator@Utype_creature_source@@@std@@@std@@IAEPAUtype_creature_source@@PBU3@0PAU3@@Z	100.0000	100.0000	100.0000	0x34ba0	-
 ai_player	?_Unguarded_insert@std@@YIXPAJJ@Z	100.0000	100.0000	100.0000	0x35140	-
 ai_player	?_Unguarded_insert@std@@YIXPAUtype_creature_value@@U2@@Z	100.0000	100.0000	100.0000	0x35020	-
 ai_player	?_Unguarded_partition@std@@YIPAUtype_creature_value@@PAU2@0U2@U?$greater@Utype_creature_value@@@1@@Z	100.0000	100.0000	100.0000	0x35290	-
