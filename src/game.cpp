@@ -186,7 +186,12 @@ std::pair<const int, type_map_hero_info>::~pair() {}
 // Must precede the first real map use: VC6 fixes nested inline decisions when
 // it first instantiates this template member. Retail's retained copy calls
 // both _Lockit members rather than expanding them.
-#pragma inline_depth(0)
+// The seven `std::_Lockit` scopes in this template block, and the anchor
+// call below, used to carry statement `#pragma inline_depth(0)` pins. They
+// are dead since this TU moved to /MT: yvals.h gives _Lockit out-of-line
+// ctor/dtor under _MT, so the calls the pins were forcing are the only
+// bodies that exist. Removing all eight is byte-flat across the whole unit
+// (2026-09-06, polish lane 50, measured one at a time and jointly).
 template<>
 THeroSetupMapMinComdatAnchor::NodePtr
 std::map<int, type_map_hero_info>::_Imp::_Min(
@@ -197,7 +202,6 @@ std::map<int, type_map_hero_info>::_Imp::_Min(
         node = node->_Left;
     return node;
 }
-#pragma inline_depth()
 
 template<>
 __forceinline THeroSetupMapMinComdatAnchor::NodePtr
@@ -205,14 +209,10 @@ std::map<int, type_map_hero_info>::_Imp::_Max(
     THeroSetupMapMinComdatAnchor::NodePtr node)
 {
     {
-#pragma inline_depth(0)
         std::_Lockit lock;
-#pragma inline_depth()
         while (node->_Right != _Nil)
             node = node->_Right;
-#pragma inline_depth(0)
     }
-#pragma inline_depth()
     return node;
 }
 
@@ -220,9 +220,7 @@ template<>
 void std::map<int, type_map_hero_info>::_Imp::const_iterator::_Dec()
 {
     {
-#pragma inline_depth(0)
         std::_Lockit lock;
-#pragma inline_depth()
         if (_Color(_Ptr) == _Red
                 && _Parent(_Parent(_Ptr)) == _Ptr)
             _Ptr = _Right(_Ptr);
@@ -234,9 +232,7 @@ void std::map<int, type_map_hero_info>::_Imp::const_iterator::_Dec()
                 _Ptr = parent;
             _Ptr = parent;
         }
-#pragma inline_depth(0)
     }
-#pragma inline_depth()
 }
 
 template<>
@@ -247,9 +243,7 @@ std::map<int, type_map_hero_info>::_Imp::insert(const value_type& value)
     _Nodeptr parent = _Head;
     bool insertLeft = true;
     {
-#pragma inline_depth(0)
         std::_Lockit lock;
-#pragma inline_depth()
         while (node != _Nil) {
             parent = node;
             insertLeft = key_compare(
@@ -257,9 +251,7 @@ std::map<int, type_map_hero_info>::_Imp::insert(const value_type& value)
                 _Key(node));
             node = insertLeft ? _Left(node) : _Right(node);
         }
-#pragma inline_depth(0)
     }
-#pragma inline_depth()
     if (_Multi)
         return _Pairib(_Insert(node, parent, value), true);
     iterator position = iterator(parent);
@@ -280,11 +272,12 @@ void THeroSetupMapMinComdatAnchor::retain_min()
 {
     // Retail CMapHeaderData::Save retains the protected _Tree::_Min COMDAT
     // after the surrounding iterator work exhausts VC6's inline budget.
-    // Preserve the real helper and pin only this call: measured negative
-    // controls reject flattening, a member pointer, or volatile mass.
-#pragma inline_depth(0)
+    // Preserve the real helper: measured negative controls reject
+    // flattening, a member pointer, or volatile mass. This call used to
+    // carry an `inline_depth(0)` pin as well; it is byte-flat now that
+    // _Min's own body holds an out-of-line /MT _Lockit pair, so the pin
+    // went (2026-09-06, polish lane 50).
     _Min(_Nil);
-#pragma inline_depth()
 }
 
 void THeroSetupMapMinComdatAnchor::retain_insert(const Value& value)
@@ -6554,10 +6547,13 @@ static inline void read_map_player_name(char* destination,
 // (retail's 0x4c2550/0x4c2563 keep the unclaimed ctor row), so /Ob2 declines
 // them on cost with or without the pin. Removing all three is 75.47679 ->
 // 75.48383 and byte-flat on every other row in the TU; each one alone gives
-// the same 75.48383, so they do not interact. The remaining twelve pins are
-// load-bearing: removing them individually measures 65.90 (`++it`), 68.99,
-// 72.69 (the merge-loop read), 72.76, 73.95, 74.16, 74.39, 74.48, 75.31,
-// 75.45, 75.45 and 25.95 (the spell-copy loop).
+// the same 75.48383, so they do not interact.
+// 2026-09-06, polish lane 50 re-measured all twelve survivors one at a time
+// from this state (lane 48's list was taken in the fifteen-pin state and
+// does not hold here). Removal costs, in source order: 72.75387, 73.60338,
+// 73.95499, 78.10126, 75.90999, 78.28552, 74.47539, 76.50070, 73.96484,
+// 75.32068, 75.46273 and byte-flat. Four of the twelve were POSITIVE, not
+// load-bearing; the two that this lane took are described below.
 // The artifact merge loop's SHAPE is recovered but not bankable. Retail
 // walks artifactDisabled with a pointer and an `!=` end compare, which VC6
 // only emits with a zero-trip guard (`cmp esi,eax / je` at retail+0x197,
@@ -6577,25 +6573,30 @@ static inline void read_map_player_name(char* destination,
 // (~basic_string -> _Tidy, bitset ctor -> _Tidy, _Tree::operator++ -> _Inc,
 // reference::operator bool -> test, resize's second size()), where this CL
 // calls the outer. Depth 0 suppresses both layers, so no pin reaches it.
-// THE LEAD THIS LANE COULD NOT SHIP, measured and reproducible. The
-// `std::bitset<70> serializedSpells(0)` pin below is spelled depth 0, but
-// retail's reloc stream at that site is `?_Tidy@?$bitset@$0EG@@std@@AAEXK@Z`
-// where ours is `??0?$bitset@$0EG@@std@@QAE@K@Z` - retail EXPANDS the
-// constructor and CALLS _Tidy, which is depth 1, not depth 0. Respelling
-// that one pin `#pragma inline_depth(1)` measures 75.48383 -> 78.28552 with
-// ZERO collateral anywhere in the TU, and the corroboration is structural,
-// not a score wobble: the block skeleton goes 106-vs-105 with one missing
-// block to an exact 105-vs-105 with none, and exact blocks go 11 -> 47.
-// Doses: bitset<70> alone 78.28552, bitset<28> alone (`serializedSkills`)
-// 76.50, BOTH together 77.75 - they do not add, only the first is wanted.
-// Removing either pin outright is 73.95 / 74.16, i.e. WORSE than depth 0,
-// which is the point: retail sits at the one-level midpoint that neither
-// depth 0 nor no-pin reaches. NOT APPLIED HERE because CLAUDE.md says
-// existing inline-depth pins may only be REMOVED and 0 -> 1 is a retune.
-// The identical device already exists three times in this TU for the same
-// construct (NewSMapHeader::Read's depth-1 pins at `mapName.erase()`, its
-// bitset<MAP_HEADER_LEGACY_HERO_COUNT> and its bitset<8>), so what this
-// needs is a policy ruling, not more evidence.
+// THE LEAD SHIPPED, AND IT NEEDED NO RETUNE (2026-09-06, polish lane 50).
+// The `std::bitset<70> serializedSpells(0)` construction was pinned depth 0,
+// but retail's reloc stream at that site is
+// `?_Tidy@?$bitset@$0EG@@std@@AAEXK@Z` where ours was
+// `??0?$bitset@$0EG@@std@@QAE@K@Z` - retail EXPANDS the constructor and
+// CALLS _Tidy. Lane 48 read that as a 0 -> 1 retune, withheld it for a
+// policy ruling, and recorded "removing either pin outright is 73.95 /
+// 74.16, i.e. WORSE than depth 0". THAT CONTROL WAS WRONG: 73.95 and 74.16
+// are two OTHER pins' removal costs in this body (the 129-bit serialize
+// loop and the 28-bit one). Plain removal of this single pin measures
+// 75.48383 -> 78.28552 - the identical number the depth-1 respelling gives,
+// because the construct nests only one level here, so default depth 8 and
+// depth 1 select the same expansion. The pin therefore just came out under
+// the ordinary removal rule; no retune and no ruling were needed.
+// Corroboration is structural, not a score wobble: the block skeleton goes
+// 106-vs-105 with one missing block to an exact 105-vs-105 with none, and
+// exact blocks go 11 -> 47.
+// The other three positive pins are NOT compatible with it. Alone they are
+// worth 78.10126 (the 129-bit copy loop), 75.90999 (the merge-loop read)
+// and 76.50070 (`serializedSkills`), but a full 32-subset enumeration over
+// the five candidates shows every pair or larger set containing them scores
+// below 78.28552, and the copy-loop + skills pair actually FALLS to
+// 75.31927. Only the bitset<70> pin and the byte-flat `rumours.resize` pin
+// came out; the other three stay pinned at depth 0.
 VA(0x004c2450, 0x88E)  // sole NewMap caller + full stream/callee sequence
 bool game::LoadMap(TAbstractFile* mapFile)
 {
@@ -6677,9 +6678,7 @@ bool game::LoadMap(TAbstractFile* mapFile)
 
     if (mapHeader.version != MAP_FORMAT_RESTORATION_OF_ERATHIA
         && mapHeader.version != MAP_FORMAT_ARMAGEDDONS_BLADE) {
-#pragma inline_depth(0)
         std::bitset<70> serializedSpells(0);
-#pragma inline_depth()
         unsigned char spellBits[9];
         mapFile->Read(spellBits, sizeof(spellBits));
         for (unsigned int spellBit = 0; spellBit < hero::NUM_SPELLS;
@@ -6774,9 +6773,7 @@ bool game::LoadMap(TAbstractFile* mapFile)
                         sizeof(setupRecord->Name));
                 setupRecord->Name[sizeof(setupRecord->Name) - 1] = 0;
             }
-#pragma inline_depth(0)
             ++it;
-#pragma inline_depth()
         }
         read_map_hero_setups(mapFile, mapHeader.version);
     }
