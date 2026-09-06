@@ -814,6 +814,10 @@ void combatManager::Unnamed59FDE0(int x, int y, army* target)
 // One real lead not yet spelled: at +0x2379 retail reads
 // `[ebx + 4*ecx + 0x54bc]` - one ELEMENT of the array - where we take
 // `lea eax,[ebx+0x54bc]` and walk it as a pointer.
+// LOOP-COUNTER SIGNEDNESS (docs/vc6/behavior-catalog.md D23): two of this
+// body's TWENTY-SEVEN zero-initialised counters are `unsigned int` (the
+// affected-hex walk and the wall-segment walk).  92.7816 -> 93.3658.  Six
+// beat MAX on their own; only these two survive together.
 VA(0x0059fe30, 0x2A4F)  // retail largest-unadmitted row, dc 0x14f7dc
 void combatManager::CastSpell(SpellID spellId, int targetIndex,
                               int bIsMonsterSpell,
@@ -1093,7 +1097,7 @@ landmine_done:
         const int damage = ComputeSpellDamage(SPELL_FIRE_WALL, monster_power,
                                               mastery, 0, 0, 0, 0);
         const int n_hexes = (mastery >= eMasteryAdvanced) + 2;
-        for (int i = 0; i < n_hexes; ++i) {
+        for (unsigned int i = 0; i < n_hexes; ++i) {
             SpellEffect(traits->m_effect, targetIndex, 100, 1);
 
             TObstacle new_wall;
@@ -1439,7 +1443,7 @@ landmine_done:
                     }
                 }
                 {
-                    for (int side = 0; side < 2; ++side) {
+                    for (unsigned int side = 0; side < 2; ++side) {
                         for (int index = 0; index < numArmies[side]; ++index) {
                             if (effected[side][index])
                                 armies[side][index].sMonInfo.attributes &= ~0x20000000;

@@ -5115,7 +5115,7 @@ void game::ValidateVictoryLossConditions(unsigned char check_map_locations)
         int numHumanTeams = 0;
         int owner;
         int townTeam;
-        for (int teamCheck = 0; teamCheck < 8; ++teamCheck) {
+        for (unsigned int teamCheck = 0; teamCheck < 8; ++teamCheck) {
             if (validate_is_human_team(this, teamCheck))
                 ++numHumanTeams;
         }
@@ -6693,7 +6693,7 @@ bool game::LoadMap(TAbstractFile* mapFile)
         }
 
         const std::bitset<70> serializedSpellCopy = serializedSpells;
-        for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+        for (unsigned int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
             if (serializedSpellCopy[spell]) {
                 for (artifact = 0; artifact < 144; ++artifact) {
                     if (akArtifactTraits[artifact].givesSpells) {
@@ -6742,8 +6742,12 @@ bool game::LoadMap(TAbstractFile* mapFile)
         < sizeof(rumourCount)) {
         return false;
     }
-    rumours.resize(rumourCount);
-    for (TRumour* rumour = rumours.begin(); rumour != rumours.end();
+    // The rumour list NAMED AS A REFERENCE: retail reads its _First/_Last
+    // through the vector's own address rather than folding the member offset
+    // off gpGame.  75.9944 -> 76.5443.
+    std::vector<TRumour>& r_rumours = rumours;
+    r_rumours.resize(rumourCount);
+    for (TRumour* rumour = r_rumours.begin(); rumour != r_rumours.end();
          ++rumour) {
         std::string throwAway;
         if (readMapString(mapFile, &throwAway) < 0
@@ -6782,7 +6786,12 @@ bool game::LoadMap(TAbstractFile* mapFile)
     }
 
     for (int pool = 0; pool < 8; ++pool) {
-        lithPools[pool].erase(lithPools[pool].begin(), lithPools[pool].end());
+            // DEPTH LADDER: this ONE pool reset is `clear()`; the other
+            // five stay the longhand range erase polish 29 banked.  Retail
+            // CALLS the range-erase COMDAT at all six and clear()'s own
+            // wrapper takes the /Ob2 site here, so 75.4768 -> 75.9944; a
+            // greedy second round over the other five finds nothing.
+            lithPools[pool].clear();
         lithExitPools[pool].erase(lithExitPools[pool].begin(), lithExitPools[pool].end());
     }
     whirlpools.erase(whirlpools.begin(), whirlpools.end());
@@ -10728,6 +10737,9 @@ void game::ProcessRandomObjects()
 VA(0x004ca040, 0x1F1)  // linkorder, dc 0xb5cdc
 void game::CreateTownHeroes(int* startingHeroIds)
 {
+    // MAX 99.6203 is NOT reachable as written: it was measured with this
+    // loop spelled `i != 8`, an unnamed domain compare that fails the
+    // cleanliness floor (docs/vc6/behavior-catalog.md D24).
     for (int i = 0; i < 8; i++) {
         if (!mapHeader.playerSlotAttributes[i].GenerateHero)
             continue;

@@ -2227,7 +2227,11 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
         return -1;
     count = value;
     if (count == 0) {
-        thisBox->Spells.clear();
+        // DEPTH LADDER (docs/vc6/inliner.md 6b): this third list's empty arm
+        // is the LONGHAND range erase; the two above it stay `clear()`.
+        // 93.0057 -> 95.3605, and a greedy second round over the other two
+        // finds nothing - the rung is per-site here as everywhere.
+        thisBox->Spells.erase(thisBox->Spells.begin(), thisBox->Spells.end());
     } else {
         thisBox->Spells.resize(count);
         for (i = 0; i < count; ++i) {
@@ -5920,32 +5924,25 @@ void NewfullMap::NewfullMapFn_00505F20(CObject* object, int objectType,
 // NewfullMapFn_00505DA0 calls once per row of objects.txt, whose address
 // advmgr_objects.h already records against this class.
 //
-// Dreamcast proves the class fields and _getBitPos(x, y) = 47 - y * 8 - x;
-// its two named constructors are default/copy overloads. This conversion is
-// Complete-only. Retail's first two test results pass through byte-sized
-// temporary homes before set(), as in Dinkumware's bit-reference assignment.
-// Keep the proxy operation on both sides and calculate each operand's index
-// through the class helper; retail retains distinct source/destination values.
+// The four 48-cell masks are transposed cell by cell through the class's own
+// _getBitPos(x, y) = 47 - y * 8 - x.
 //
-// Residual (41.95%): 21 candidate blocks versus 14 retail. The last 48-cell
-// set and the terrain set still expand here, while retail retains all five;
-// retail also expands two source tests that the current caller keeps out of
-// line. Negative controls: direct set/test with a shared index gives 39.16%;
-// recalculating those direct-call indices gives 0%; proxy assignment with one
-// shared index gives 36.50%. The earlier read-only operator[] substitution
-// gave 12.95%. Do not flatten the recovered reference assignments to chase
-// these inliner choices. Plain-char dimensions and implicit narrowing are
-// byte-flat but retain the types recorded in Dreamcast's field list 0x309c.
-// The ordinary integer dimension getters restore retail's dword loads before
-// its byte stores, raising 40.92% to 41.95%; direct field access narrows the
-// loads themselves. A const source view reproduces the two-called/two-expanded
-// test split (40.72%) but still expands the final stores. Coordinate-reading
-// getter hypotheses also leave those stores expanded and fail to separate the
-// two indices, so they remain out. A destination-only local (28.72%) and an
-// explicit descending destination counter (40.87%) do not close the caller;
-// the latter does reproduce separate index registers. Reassociating the source
-// index as 47-(y*8+x) is byte-flat. These are remaining source-state questions,
-// not permission for an inline pin or a synthetic release assertion.
+// Residual (62.10%): the bitset members, and only them. Retail CALLS
+// bitset<48>::test at two of the four reads and expands the range check at
+// the other two; our /Ob2 budget expands more of them, which is the block
+// surplus and the surplus out_of_range throw path.
+// The DEPTH LADDER (docs/vc6/inliner.md 6b) moved this row 39.16 -> 62.10:
+// the five WRITES spelled `bits[i] = v` rather than `bits.set(i, v)`.
+// Titrated, all measured at the same delink generation:
+//   writes .set  + reads .test  (the old spelling)      39.1636
+//   writes [i]   + reads .test  (SHIPPED)               62.0970
+//   writes [i]   + reads [i]                            36.4970
+//   inner-4 [i]  + mask_34 .set                         43.3576
+//   inner-4 .set + mask_34 [i]                          34.6000
+// so the five writes only pay TOGETHER, and flipping the reads costs 25.6.
+// The remaining hole is retail's two `test` CALLS; there is no spelling
+// shallower than `.test(i)` for a bit read, so that half needs caller mass,
+// not a respelling (the same floor OnBeginGame hit).
 //
 // The image name, sizes, four masks, recommended-terrain mask, type, subtype
 // and underlay flag cross here. hasTrigger, triggerCell, slotCategory and
@@ -5957,16 +5954,13 @@ CObjectType::CObjectType(TObjectType* source)
     width = source->GetWidth();
     height = source->GetHeight();
 
-    for (unsigned y = 0; y < 6; y++) {
+    for (int y = 0; y < 6; y++) {
         for (unsigned x = 0; x < 8; x++) {
-            drawCells[_getBitPos(x, y)] =
-                source->imageInfo.drawMask[_getBitPos(x, y)];
-            passableCells[_getBitPos(x, y)] =
-                source->passableMask[_getBitPos(x, y)];
-            shadowCells[_getBitPos(x, y)] =
-                source->imageInfo.shadowMask[_getBitPos(x, y)];
-            triggerCells[_getBitPos(x, y)] =
-                source->triggerMask[_getBitPos(x, y)];
+            unsigned pos = _getBitPos(x, y);
+            drawCells[pos] = source->imageInfo.drawMask.test(pos);
+            passableCells[pos] = source->passableMask.test(pos);
+            shadowCells[pos] = source->imageInfo.shadowMask.test(pos);
+            triggerCells[pos] = source->triggerMask.test(pos);
         }
     }
 

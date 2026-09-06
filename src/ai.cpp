@@ -2479,7 +2479,14 @@ unsigned char combatManager::choose_melee_target(const army* current_army, unsig
 {
     long enemy_attacks[COMBAT_GRID_CELLS];
 
-    long side = estimate->side;
+    // BOUND BY `const long&`, not copied: retail re-reads `estimate->side`
+    // across the opaque mark_* calls rather than keeping a cached copy live,
+    // which is worth 89.6892 -> 91.6697.  Writing `estimate->side` out at all
+    // twelve uses and dropping the local reproduces the same reloads and
+    // scores 91.6502, so the named binding is the better spelling of the same
+    // fact.  The same change at the sibling declarations (line 1955,
+    // AICheckRetreat's caller) LOSES 13.6, so it is per-body.
+    const long& side = estimate->side;
     const army* best_enemy = 0;
     long best_value = 0;
     long best_troops = 0;

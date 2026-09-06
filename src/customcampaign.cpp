@@ -2673,6 +2673,12 @@ const int CAMPAIGN_MAP_ORDINAL_07 = 7;
 // a post-decrement `while (pool--)` / `while (which--)` pair over a named
 // `pooled` reference, the same shape DoPreLoadCustomization proves; retail's
 // tell sits at fn+0xaad (`mov eax,edx / dec edx / test eax,eax`).
+// LADDER, measured 2026-09-06 and NOT shipped: all nine appends spelled
+// `insert(end(), x)` instead of `push_back(x)` is worth 78.6801 -> 78.8448,
+// 0.16 of a point (about 2.5 B of a 1536 B body) for nine rewritten call
+// sites - noise, and the same size lane 29 declined on its own
+// CompleteCurrentMap twin.  The reverse rung on PruneCrossoverHeroes below
+// LOSES 1.98.
 VA(0x00489820, 0x600)  // anchor-caller(oldmain end-of-campaign arm), retail-only
 void SCampaign::CompleteCurrentMap(void* campaignHeader)
 {
@@ -2688,6 +2694,15 @@ void SCampaign::CompleteCurrentMap(void* campaignHeader)
 
     if (scenario.index < 0) {
         scenario.index = carryOverHeroes.size();
+        // LADDER, measured 2026-09-06 and REVERTED: this append spelled
+        // `insert(carryOverHeroes.end(), ...)` is worth 78.6801 -> 80.2280
+        // (+24 B), but the direct spelling lets VC6 expand
+        // `vector<vector<hero>>::insert` in full and FIVE named COMDATs stop
+        // being emitted - insert (528 B), _Ucopy, _Ufill, std::fill and
+        // std::copy_backward, all four banked EXACT - for a net loss of four
+        // exact rows and 0.08 tree fuzzy.  When a rung would delete the last
+        // out-of-line instantiation of a template in the TU, price the
+        // COMDATs it takes with it, not just the row.
         carryOverHeroes.push_back(std::vector<hero>());
         field_4c.push_back(std::vector<type_artifact>());
     }
@@ -2850,7 +2865,7 @@ void SCampaign::PruneCrossoverHeroes(void* campaignHeader)
         }
 
         int keepCount = 0;
-        for (int iScenario = 0;
+        for (unsigned int iScenario = 0;
              iScenario < static_cast<int>(header->scenarios.size());
              ++iScenario) {
             TCampaignBrief::ScenarioStruct* scenario =
@@ -3091,7 +3106,10 @@ static short ReadCampaignWord(TAbstractFile* infile)
 VA(0x0048a310, 0xB1E)  // SavedGameHeader::Load caller + member/helper graph
 void SCampaign::Load(TAbstractFile* infile, int saveVersion)
 {
-    mapScores.clear();
+    // The scenario-score list NAMED AS A REFERENCE across all nine uses:
+    // 59.0405 -> 59.2573.
+    std::vector<MapScore>& r_mapScores = mapScores;
+    r_mapScores.clear();
     carryOverHeroes.clear();
 
     if (saveVersion < 28) {
@@ -3117,9 +3135,9 @@ void SCampaign::Load(TAbstractFile* infile, int saveVersion)
         memcpy(campaignCompleted, saved.campaignCompleted,
                sizeof(saved.campaignCompleted));
 
-        mapScores.resize(saved.numScenarios);
+        r_mapScores.resize(saved.numScenarios);
         for (int i = 0; i < saved.numScenarios; ++i) {
-            CampaignScenarioInfo& scenario = mapScores[i];
+            CampaignScenarioInfo& scenario = r_mapScores[i];
             // Retail +0x191 preserves this source order. Together with the
             // bool legacy field, the loop now has the exact instruction and
             // memory-access structure; only earlier live-register choices
@@ -3210,7 +3228,7 @@ void SCampaign::Load(TAbstractFile* infile, int saveVersion)
     }
 
     unsigned char count = ReadCampaignByte(infile);
-    mapScores.resize(count);
+    r_mapScores.resize(count);
     for (int i = 0; i < count; ++i) {
         CampaignScenarioInfo& scenario = mapScores[i];
         scenario.completed = ReadCampaignByte(infile) != 0;
