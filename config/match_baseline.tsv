@@ -328,7 +328,7 @@ ai_player	?buy_mage_guild@type_AI_player@@QAEXPAVhero@@PAVtown@@@Z	100.0000	100.
 ai_player	?calculate_demand@type_AI_player@@QAEXXZ	97.4340	97.4340	97.4340	0x28740	8844819eee6a
 ai_player	?calculate_reserve@type_AI_player@@QAEXXZ	91.2557	96.4566	96.4566	0x29ad0	ae0f0286b0dd
 ai_player	?can_take_town@@YIEPBVhero@@PBVtown@@@Z	100.0000	100.0000	100.0000	0x28410	6e41459530a0
-ai_player	?can_trade_resources@type_AI_player@@QAE_NPBHPAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	81.0339	81.3465	81.3465	0x2a580	1552eb71c950
+ai_player	?can_trade_resources@type_AI_player@@QAE_NPBHPAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	84.4350	84.4350	84.4350	0x2a580	17669f7f3f2f
 ai_player	?check_move_spell@@YIEPAVhero@@AAV?$vector@UpathCell@@V?$allocator@UpathCell@@@std@@@std@@JHE@Z	100.0000	100.0000	100.0000	0x309a0	9420dcf94e8d
 ai_player	?check_towns@type_town_threat_checker@@QAEXXZ	100.0000	100.0000	100.0000	0x280e0	e4abb799b70e
 ai_player	?check_trade_supply@type_AI_player@@QAE_NPBHJPAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	85.8333	85.8333	85.8333	0x2a2b0	6ebd26d802e8
@@ -666,7 +666,7 @@ bitmap16	?Colorize@Bitmap16Bit@@QAEXHHHHG@Z	92.0385	92.0385	92.0385	0x4e780	8833
 bitmap16	?Colorize@Bitmap16Bit@@QAEXHHHHMM@Z	98.8301	98.8301	98.8301	0x4e940	72475ee11deb
 bitmap16	?Darken@Bitmap16Bit@@QAEXHHHH@Z	100.0000	100.0000	100.0000	0x4e5f0	e4fb764cccb1
 bitmap16	?Darken@Bitmap16Bit@@QAEXHHHHPAVBitmap816@@HH@Z	100.0000	100.0000	100.0000	0x4e6a0	fed5b38bb10e
-bitmap16	?Draw@Bitmap16Bit@@QBEXHHHHPAGHHHHH_N@Z	81.3095	81.3095	81.3095	0x4e2b0	d3b3eaba0af0
+bitmap16	?Draw@Bitmap16Bit@@QBEXHHHHPAGHHHHH_N@Z	83.5794	83.5794	83.5794	0x4e2b0	0be2694ce85e
 bitmap16	?FillRect@Bitmap16Bit@@QAEXHHHHG@Z	100.0000	100.0000	100.0000	0x4e4c0	6ce8f1903417
 bitmap16	?FrameRect@Bitmap16Bit@@QAEXHHHHG@Z	100.0000	100.0000	100.0000	0x4e540	dd67b0dc9a43
 bitmap16	?GetSize@Bitmap16Bit@@UBEIXZ	100.0000	100.0000	100.0000	0x4e240	d3be9f706bf7
@@ -4137,12 +4137,12 @@ town	?can_ever_build@town@@QBEEH@Z	100.0000	100.0000	100.0000	0x1c0e60	cd9cc3e35
 town	?change_generator_bonus@town@@QAEXW4TCreatureType@@J@Z	100.0000	100.0000	100.0000	0x1bfe50	6932bc2b2227
 town	?check_shipyard_square@@YIEPAVtown@@JJ@Z	100.0000	100.0000	100.0000	0x1c0c90	0761ca2cc7d5
 town	?create_building@town@@QAE?AW4type_building_id@@W42@@Z	85.9771	85.9771	85.9771	0x1be930	c38da2ca19e9
-town	?destroy_extra_capitol@town@@QAEXXZ	87.2072	96.4595	96.4595	0x1bec60	8954d1554036
+town	?destroy_extra_capitol@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1bec60	17763f912c2c
 town	?get_army@town@@QBEABVarmyGroup@@XZ	100.0000	100.0000	100.0000	0x1c1460	4f64165d1f49
 town	?get_build_cost@town@@QBEFW4type_building_id@@PAH1@Z	81.4912	81.4912	81.4912	0x1c1180	7c453cdeb39a
 town	?get_build_cost@town@@QBEXW4type_building_id@@PAH@Z	100.0000	100.0000	100.0000	0x1c10f0	b43a2e32d1bc
 town	?get_build_cost_array@town@@QBEPAHW4type_building_id@@@Z	100.0000	100.0000	100.0000	0x1c1080	4883aeacb46f
-town	?get_buildable_mask@town@@QBE_JXZ	89.5893	89.5893	89.5893	0x1c0f20	ff01c65f6999
+town	?get_buildable_mask@town@@QBE_JXZ	99.8839	99.8839	99.8839	0x1c0f20	027ba9ea0807
 town	?get_castle_growth_bonus@town@@QBEJW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x1bf570	1833831c2888
 town	?get_gold_income@town@@QBEFE@Z	100.0000	100.0000	100.0000	0x1bf600	ac15fda00c26
 town	?get_growth_rate@town@@QAEFF@Z	100.0000	100.0000	100.0000	0x1bfb60	17dd60168350

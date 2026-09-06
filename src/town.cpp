@@ -1051,7 +1051,10 @@ void town::destroy_extra_capitol()
         // boundaries.  The former null-relative cursor bias merely forced
         // retail's induction representation; it was not source evidence.
         for (int slot = 0; slot < town_count; ++slot) {
-            char town_id = player->townIds[slot];
+            // BOUND BY `const char&`: retail re-reads the slot rather
+            // than keeping a copy live across GetTown/IsCapitol.
+            // 96.4595 -> 100.0000 on that one word.
+            const char& town_id = player->townIds[slot];
             if (town_id != id) {
                 town* other_town = gpGame->GetTown(town_id);
                 if (other_town->IsCapitol()) {
@@ -2175,7 +2178,11 @@ __int64 town::get_buildable_mask() const
     __int64 mask = 0;
     __int64 activeMask = active;
     char townType = type;
-    char castleGriffinException = gpGame->field_1f69d;
+    // BOUND BY `const char&`: retail re-reads the global flag inside the
+    // loop instead of hoisting a copy.  89.5893 -> 99.8839.  Measured on top
+    // of it and rejected: the same binding on `activeMask` costs 19.7
+    // (99.8839 -> 80.2321).
+    const char& castleGriffinException = gpGame->field_1f69d;
     for (int building = 0; building < MAX_BUILDING_TYPE; building++) {
         __int64 requirements = gHierarchyMask[townType][building];
         if (castleGriffinException && building == DWELLING_2_ID
