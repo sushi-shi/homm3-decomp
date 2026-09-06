@@ -5846,6 +5846,14 @@ void advManager::DrawAdvObjShadow(int srcX, int srcY, int z, int destX, int dest
         // A semantics-preserving unnamed-yOffset spelling is byte-flat too;
         // why-reg's apparent -75 automatic mutation used the already-shifted
         // byte for y and was therefore not a valid candidate.
+        // [polish-45] Negative control for the draw arms, do not retry:
+        // promoting the THREE arms' own `drawY`/`drawX` to `int` (so the
+        // shift is the 32-bit `movsx ecx,dl / sar ecx,4` retail uses in the
+        // gbInViewWorld arm instead of this compile's byte shift homed at
+        // [ebp+0x13]) costs 85.2335 -> 83.4349.  Retail is NOT consistent
+        // across the arms - the later two already lower here exactly as
+        // retail does with the `signed char` spelling - so the divergence is
+        // per-arm codegen, not the declared type.
         signed char yOffset = offsets >> 4;
         offsets <<= 4;
         signed char xOffset = offsets >> 4;
