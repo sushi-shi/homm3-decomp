@@ -567,12 +567,12 @@ changed the outer induction from retail's x+2 to x-1. An unused addition
 member was neutral. Those were useful controls, but the const-reference
 member declaration was still a hypothesis.
 
-The retained Voronoi arithmetic below supersedes that declaration. Keep its
-free operations and two-value ABI even though the water-border caller then
-has a lower current score: direct lower-corner construction retains the
-retail x+2 induction at 98.3535%, versus the old model's 98.3965% MAX.
-The remaining map-index operand difference is open. The prior peak remains
-in MAX/history; it is not evidence for restoring the disproved interface.
+The retained Voronoi arithmetic below supersedes that declaration. Direct
+lower-corner construction initially retained the retail x+2 induction at
+98.3535%, below the old model's 98.3965% MAX. Naming the original row and
+keeping it through the upper clamps then restored the map-index operand
+order at 98.3965%, with the free operations and two-value ABI intact.
+The temporary dip was not evidence for restoring the disproved interface.
 
 Shared lower/radius values, by contrast, alter outer-loop registers. Merely
 reusing a lower variable or assigning it after default construction is
@@ -606,6 +606,28 @@ remain visible in the arithmetic TU, without inline controls. The clipping
 body imported from master's c447c5f3 remains 614/614 bytes exact, as do the
 irregular and straight boundary bodies. Thus exact expanded callers alone
 did not settle the former member/free or point/vector models.
+
+### 6k. Named dimension values settle the clamp allocation
+
+`RepairWaterZoneBorders` reached 100% by naming `height = map.mapHeight`
+immediately before `min(row + upper, height)` and `width = map.mapWidth`
+immediately before `min(position.x + upper, width)` in all three bounds
+groups. The original row remains a separate value through each group.
+These single-use locals preserve the retail dimension loads and change VC6's
+allocation of the surrounding clamp operands. The second group's two zeros
+are materialized independently, and the last maximum-X comparison uses the
+retail EAX/ECX roles and store order. All 90 CFG blocks agree; the function
+retains its 0x84 frame and all observed local homes.
+Resolving the 18 relocations reproduces all 1,516 raw function bytes. The
+registration handler and five-state unwind table also agree after placement.
+
+Flattening the dimension locals restores both residual regions at 98.3965%.
+Updating the row in place instead changes already matching upper-Y loads
+(97.4473%); naming column before row loses the recovered map-index operand
+order (98.3535%). Using map-item references is byte-neutral. No helper
+declaration, inline control, or unused operation is needed. This is a measured
+source/value-lifetime model for a retail-only function, not proof of the
+original local names or lexical scope.
 
 ## 7. Files
 
