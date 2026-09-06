@@ -4065,7 +4065,7 @@ town	?can_ever_build@town@@QBEEH@Z	100.0000	100.0000	100.0000	0x1c0e60	cd9cc3e35
 town	?change_generator_bonus@town@@QAEXW4TCreatureType@@J@Z	100.0000	100.0000	100.0000	0x1bfe50	6932bc2b2227
 town	?check_shipyard_square@@YIEPAVtown@@JJ@Z	100.0000	100.0000	100.0000	0x1c0c90	0761ca2cc7d5
 town	?create_building@town@@QAE?AW4type_building_id@@W42@@Z	85.9771	85.9771	85.9771	0x1be930	c38da2ca19e9
-town	?destroy_extra_capitol@town@@QAEXXZ	85.4054	96.4595	96.4595	0x1bec60	b1a9343c84a9
+town	?destroy_extra_capitol@town@@QAEXXZ	87.2072	96.4595	96.4595	0x1bec60	8954d1554036
 town	?get_army@town@@QBEABVarmyGroup@@XZ	100.0000	100.0000	100.0000	0x1c1460	4f64165d1f49
 town	?get_build_cost@town@@QBEFW4type_building_id@@PAH1@Z	81.4912	81.4912	81.4912	0x1c1180	7c453cdeb39a
 town	?get_build_cost@town@@QBEXW4type_building_id@@PAH@Z	100.0000	100.0000	100.0000	0x1c10f0	b43a2e32d1bc
