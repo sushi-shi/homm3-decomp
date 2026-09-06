@@ -1668,6 +1668,8 @@ void type_random_map_generator::ResetMovementCosts()
 // A three-dimensional size query leaves an extra GetSize call; output
 // references spill the map pointer instead of retail's height. Moving the
 // map-view ownership write to the end does not recover the constructor.
+// The real virtual GetSize slot (0x532240) returns the two-dimensional size;
+// using it here retains a virtual call absent from retail's reset sequence.
 // Direct erase() calls expand even further (61.45% before the seed-copy
 // correction). An explicit predecessor copy and const by-value parameter
 // are byte-flat. A const-ref setter changes the shared road helper's proved by-value boundary and is
