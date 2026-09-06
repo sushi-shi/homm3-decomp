@@ -5322,6 +5322,16 @@ void hero::UpdateStats()
         gpHeroScreenWindow->BroadcastMessage(&msg);
     }
 
+    // Residual (86.0859%): retail fuses the two reference-returning
+    // templates into ONE selection chain - `cmp v,-3 / jge / &(-3)` then
+    // `cmp v,3 / &3 / &v` with a single `mov eax,[eax]` - because it
+    // jump-threads through the max's constant arm; we materialise the max's
+    // result (`mov eax,[eax]` then a re-store into a fresh temp) and compare
+    // that, which costs one load, one store and the whole slot assignment
+    // ([ebp-0xc]=v, -0x8=3 in retail against our -0x8=v, -0xc=3).  Tried and
+    // rejected, each measured against 86.0859: naming the GetLuck/GetMorale
+    // results in locals first - byte-flat 86.0859; `_cpp_min(3,
+    // _cpp_max(-3, v))` - 82.7716; `_cpp_max(-3, _cpp_min(3, v))` - 77.2727.
     int luckFrame = _cpp_min(_cpp_max(GetLuck(0, 0, 1), -3), 3) + 3;
     msg.codeX = widget::WIDGET_SET_ICON_FRAME;
     msg.codeY = 0x75;
