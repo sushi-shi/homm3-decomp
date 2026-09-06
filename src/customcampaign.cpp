@@ -3080,10 +3080,14 @@ static short ReadCampaignWord(TAbstractFile* infile)
 //      [ebp-0x30] at 0x48a952). Cost -0.23 at 60.5021, +2.05 at 62.2807 -
 //      the first of the four to flip, and it flipped the moment the
 //      `scenario` reference put the loop on retail's addressing.
-// The 4-byte frame surplus (our 0x6b80 against retail's 0x6b7c) is the
-// `int artifactId` the memcpy-into-enum idiom needs, because TArtifact is an
-// enum and the tree's cast floor is zero; retail stores the sign-extended
-// word straight into the member at 0x48ac6b. Not source-addressable here.
+// The frame surplus is GONE: the `days`/`score` temporaries take the slots
+// the `int artifactId` carrier used to add, so the candidate now allocates
+// retail's 0x6b7c and every named slot lines up ([ebp-0x40] for `this`,
+// [ebp-0x4b09] for the legacy hero array, [ebp-0x6b88] for the record,
+// [ebp-0x4e9] for the carry-over counts).  `int artifactId` plus its memcpy
+// stays: TArtifact is an enum and the board ratchets enum casts at zero, so
+// retail's `movsx ecx,word ptr [ebp+0xa]` straight into the member at
+// 0x48ac6b has no cast-free spelling here.
 VA(0x0048a310, 0xB1E)  // SavedGameHeader::Load caller + member/helper graph
 void SCampaign::Load(TAbstractFile* infile, int saveVersion)
 {
