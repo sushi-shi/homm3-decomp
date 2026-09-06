@@ -3183,6 +3183,11 @@ CNetMsg::CNetMsg(eRS_Messages subType, unsigned long size)
 // 79.1102). The remaining epilogue difference is downstream of the same
 // register story: retail's EBX holds -1 and is dead by the compares, so
 // its three pops sit AHEAD of them and are shared between both arms.
+// 2026-09-06, polish lane 38, the DC LOCAL-SCOPE SWEEP, and it is a NEGATIVE:
+// the Dreamcast block names exactly ONE local here, `bShowedEndMessage`
+// (T_UCHAR, sp+0x33) - this body's `gameOver` - and NO `localPos`, so the DC
+// source calls `GetLocalPlayerGamePos()` at each of its three uses. Spelling
+// it that way costs 79.1102 -> 72.6985; the cached `int localPos` stands.
 VA(0x004f2960, 0x37E)  // decorated identity (kb.h) + anchor-caller (CheckEndGame), dc 0xe3558
 unsigned char DisplayLCWinLoss(LossConditionStruct* lossCondition,
                                int* bGameWon, int* bGameLost,
