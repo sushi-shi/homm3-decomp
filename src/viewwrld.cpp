@@ -1601,6 +1601,16 @@ void advManager::ViewWorld(int iWhatToDraw, int level)
 // Byte-flat and rejected: a `while` loop with the increment as the last
 // body statement, `++i` in the header, and landing the ftol result in a
 // named `long` before the table store.
+// Residual (98.8939%): the frame, 0x14 against retail's 0x10, and it is
+// purely the order the ftol expansion's two locals are allocated in. Retail
+// puts the 8-byte `bits` union at the TOP of the frame ([ebp-8], naturally
+// aligned) with iSkipLevel at [ebp-0xc] and the magic float at [ebp-0x10];
+// ours allocates the caller's named local first ([ebp-8]), the magic at
+// [ebp-0xc] and the qword at [ebp-0x14], leaving [ebp-4] dead. MEASURED AND
+// REJECTED 2026-09-06: folding the divisor into the loop expression so it is
+// a CSE rather than a named local (92.54); hoisting the iSkipLevel
+// declaration into the top block and assigning later (98.89, byte-flat);
+// naming the ftol argument as a `double scaled` inside the loop (98.90).
 VA(0x005fc240, 0x274)  // anchor-caller ViewWorld, anchor-callee UpdateRadar, dc 0x195d30
 void TViewWorldWindow::init(type_point new_center, unsigned char updateFlag)
 {

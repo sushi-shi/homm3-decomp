@@ -46,6 +46,12 @@ unsigned char* CDiffFile::GetData()
 // as well: `int diffOffset`, a hoisted `GetData()` pointer local, a named
 // `diffCursor` for the header cast, and an extra unused local. The SIB
 // base/index choice is not source-reachable here.
+// 2026-09-06, two more spellings for the same three SIB bytes, both
+// byte-flat at 99.6429: writing the addition offset-first
+// (`diffOffset + GetData()`, which VC6 canonicalises exactly like `&`) and
+// `&GetData()[diffOffset]`.  A tree-wide census puts 42 rows in this class,
+// this one alone with SIB swaps as its ONLY residual; the other 41 carry it
+// alongside larger deltas.
 // The 68.96% plateau was structural, not register coloring: retail advances
 // diffOffset PAST the header before the payload memcpy and re-derives the source
 // as GetData() + diffOffset, which is what keeps diffOffset in a register and

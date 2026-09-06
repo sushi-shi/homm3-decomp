@@ -407,8 +407,14 @@ unsigned char combatManager::AICheckRetreat()
                             threshold = 0.22f;
                         else if (combat_value > 5000)
                             threshold = 0.21f;
+                        // The third arm is an INCREMENT, not a literal:
+                        // retail stores 0x3e4ccccc where `threshold = 0.2f`
+                        // gives 0x3e4ccccd.  VC6 constant-propagates the
+                        // 0.16f initialiser and folds `0.16f + 0.04f` in
+                        // SINGLE precision, which lands one ulp below the
+                        // correctly-rounded decimal.  95.3935 -> 95.3960.
                         else if (combat_value > 0)
-                            threshold = 0.2f;
+                            threshold += 0.04f;
                         threshold -= (4 - gpGame->setup.difficulty) * 0.015;
                         float experience_bonus =
                             heroes[currentSide]->experience / 200000;

@@ -24,6 +24,16 @@
 #include "dxplay.h"
 #include "dxplay_com.h"
 
+// VC6's <new> declares `operator delete` WITHOUT an exception specification,
+// so under /GX every explicit `::operator delete` becomes a throw point and
+// the EH state variable has to be normalised across it
+// (`mov dword ptr [ebp-4], -1`).  Retail emits no such store before the
+// trailing `::operator delete(pAddress)` of the four Create*Connection
+// bodies - its operator delete was visible as nothrow, exactly as
+// ai_combat.h already records for AI_quick_combat/AI_auto_combat.  The
+// retail target is the 11-byte free thunk at 0x60ab30, which cannot throw.
+__declspec(nothrow) void __cdecl operator delete(void* _P);
+
 // File-scope DirectPlay enumeration trampolines (defined at the tail of this TU),
 // forward-declared so the Enum* wrappers above them can take their addresses.
 int __stdcall EnumAddressCallback(const GUID*, unsigned long, const void*, void*);

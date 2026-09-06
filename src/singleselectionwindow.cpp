@@ -2374,17 +2374,25 @@ void TSingleSelectionWindow::UpdateFilterWidgets()
         WidgetSetStatus(0x11d, 0x10);
     for (i = 0x11f; i <= 0x127; ++i)
         WidgetClearStatus(i, 0x10);
-    // Residual (95.52%): the `== -1` guard is tested TWICE in retail - after
-    // `cmp eax,-1 / jne` sets lo/hi it emits a SECOND bare `jne` on the still
-    // live flags at 0x57ef70+0xae6 before the 0x127 / +0x11e arms - so the
-    // lo/hi assignment and the widget arm are two separate ifs, not one
-    // if/else. 95.0755 -> 95.5228, branches 32/32. What is left is the
-    // _cpp_min pair: retail COPIES both operands to stack slots
-    // (`mov [ebp-0xc],eax` for field_18A0[3] and a self-store of hi onto
-    // [ebp-0x4]) and then selects between the two addresses, where we bind
-    // the member lvalue with `lea eax,[esi+0x18ac]` and never copy.
-    // MEASURED AND REJECTED, both byte-flat at 95.5228: static_cast<int> on
-    // both _cpp_min operands, and landing the result in a named `int` local.
+    // EXACT 2026-09-06.  Two facts closed the last 4.5 points, both read
+    // straight off the emitted temporaries:
+    //   * each filter field is read ONCE into a local - retail's
+    //     `mov eax,[esi+0x18ac] / cmp eax,-1` reuses that same EAX as the
+    //     _cpp_min operand copy, so the `== -1` guard and the min share one
+    //     load (+0.19 for field 3, +2.00 for field 4, +0.72 for field 5);
+    //   * the min's TWO operand copies (`mov [ebp-0xc],eax` plus a
+    //     self-store of the running limit onto its own slot) are what VC6
+    //     emits when BOTH const-ref arguments need a conversion - an `int`
+    //     lvalue pair binds directly and copies nothing.  The explicit
+    //     `long` template argument is that conversion; it takes this row to
+    //     100.0000.
+    // The `== -1` guard is tested TWICE in retail - after `cmp eax,-1 / jne`
+    // sets lo/hi it emits a SECOND bare `jne` on the still live flags before
+    // the 0x127 / +0x11e arms - so the lo/hi assignment and the widget arm
+    // are two separate ifs, not one if/else (95.0755 -> 95.5228).
+    // MEASURED AND REJECTED, byte-flat at 95.5228: static_cast<int> on both
+    // _cpp_min operands, and landing the result in a named `int` local;
+    // `short lo/hi` does not compile (C2782, ambiguous _Ty).
     int lo = field_18A0[2];
     int hi = field_18A0[2];
     if (field_18A0[2] == -1) {
@@ -2401,10 +2409,11 @@ void TSingleSelectionWindow::UpdateFilterWidgets()
         WidgetClearStatus(i, 0x1000);
     for (; i <= 0x130; ++i)
         WidgetSetStatus(i, 0x1000);
-    if (field_18A0[3] == -1)
+    int lastFilter = field_18A0[3];
+    if (lastFilter == -1)
         WidgetSetStatus(0x131, 0x10);
     else
-        WidgetSetStatus(std::_cpp_min(hi, field_18A0[3]) + 0x129,
+        WidgetSetStatus(std::_cpp_min<long>(hi, lastFilter) + 0x129,
                         0x10);
     for (i = 0x133; i <= 0x13b; ++i)
         WidgetClearStatus(i, 0x10);
@@ -2412,8 +2421,9 @@ void TSingleSelectionWindow::UpdateFilterWidgets()
         WidgetClearStatus(i, 0x1000);
     for (; i <= 0x13a; ++i)
         WidgetSetStatus(i, 0x1000);
-    int n = std::_cpp_min(8 - lo, field_18A0[4]);
-    if (field_18A0[4] == -1) {
+    int aiFilter = field_18A0[4];
+    int n = std::_cpp_min(8 - lo, aiFilter);
+    if (aiFilter == -1) {
         n = 8 - lo;
         WidgetSetStatus(0x13b, 0x10);
     } else {
@@ -2425,10 +2435,11 @@ void TSingleSelectionWindow::UpdateFilterWidgets()
         WidgetClearStatus(i, 0x1000);
     for (; i <= 0x143; ++i)
         WidgetSetStatus(i, 0x1000);
-    if (field_18A0[5] == -1)
+    int humanFilter = field_18A0[5];
+    if (humanFilter == -1)
         WidgetSetStatus(0x144, 0x10);
     else
-        WidgetSetStatus(std::_cpp_min(n, field_18A0[5]) + 0x13d, 0x10);
+        WidgetSetStatus(std::_cpp_min<long>(n, humanFilter) + 0x13d, 0x10);
     for (i = 0x146; i <= 0x149; ++i)
         WidgetClearStatus(i, 0x10);
     if (field_18A0[6] == SCENARIO_FILTER_CATEGORY_ANY)
@@ -4999,7 +5010,8 @@ unsigned char TSingleSelectionWindow::GenerateRandomMap(const char* name)
         path += name;
 
         result = request.Generate(path.c_str(), &progress);
-        progress.done = std::_cpp_min(progress.done + 1, progress.steps);
+        progress.done = std::_cpp_min<long>(progress.done + 1,
+                                            progress.steps);
         progress.LoadProgFn_00577180();
     }
 
@@ -9741,6 +9753,14 @@ void* CAutoArray<int>::`scalar deleting destructor'(unsigned __flags)
 // 0x7c-stride walk masking against gGameContextFeatures is GetPlayerCount,
 // reconstructed above.
 
+// NOT CLAIMED, and recorded so no later lane re-derives it: 0x58eb50 (15 B)
+// is this compiland's `char_traits<char>::assign` on content - a unique
+// 15-byte match at mnemonic agreement 1.000, against a 20 B `_Eos` as the
+// only other candidate - but the declarator form is the only claim form the
+// join has for it (no compgen kind builds the flat char_traits key), and
+// campaignbrief already owns that lexical name at 0x45dc90. The label
+// authority refuses a duplicate proven name across two retail rows, so this
+// row needs a char_traits kind before it can be claimed.
 #if 0  // @carcass: Dinkumware instantiations emitted by this compiland
 
 VA(0x0058fe80, 0x66)  // COMDAT pairing (unique 102 B in this obj)
@@ -10084,13 +10104,37 @@ VA_COMPGEN(0x00595e10, 0x204, STD_UNGUARDED_PARTITION,
 //             calls `_Construct<vector<hero>>` at 0x45fce0 and 0x594220
 //             calls `_Construct<vector<type_artifact>>` at 0x45fdc0.
 //
-// Not claimable, and recorded so no later lane re-derives it: 0x58f160
-// (787 B) is `std::copy<GameSelectionHeadersStruct*>`, but this compiland
-// emits TWO instantiations of it - the const-source `PBU2@0PAU2@` and the
-// mutable-source `PAU2@00@` - each 772 B and byte-identical, which is why
-// /OPT:ICF folded them onto retail's single row. One claim against a
-// two-member group of equal length is ambiguous in both directions and
-// every oracle in the join refuses it, correctly.
+// 0x58f160 (787 B) is `std::copy<GameSelectionHeadersStruct*>`, and this
+// compiland emits TWO instantiations of it - the const-source `PBU2@0PAU2@`
+// and the mutable-source `PAU2@00@` - each 772 B and byte-identical, which is
+// why /OPT:ICF folded them onto retail's single row. An earlier lane recorded
+// that as UNCLAIMABLE because every join oracle refused a one-claim /
+// two-name group; `_icf_group_pairing` is the oracle that reaches exactly
+// this shape and it landed after that note was written, so the claim is made
+// below and the note corrected here rather than left to mislead a later lane.
+
+// COMDAT pairing, 2026-09-06: every row below is a unique content match
+// against one of this compiland's own unpaired COMDATs, found by sweeping
+// the unclaimed retail rows of the singleselectionwindow..slider gap against
+// singleselectionwindow.obj's emitted template instantiations (capstone
+// mnemonic agreement 1.000 at equal length in each case).
+//
+//   0x58eae0  14 B  bitset<4>::flip()          - the only 4-bit bitset here
+//   0x58eaf0  21 B  bitset<4>::_Tidy(unsigned long)
+//   0x58eb60  75 B  _Tree<int,type_map_hero_info>::find
+//   0x58f0f0  23 B  _Tree<...>::lower_bound
+//   0x58f110  73 B  _Tree<...>::_Lbound
+//
+// The two bitset rows are the LAST two of the four-bit instantiation the
+// campaign-selection filter carries; the three tree rows complete the
+// map<int,type_map_hero_info> surface whose _Init / _Copy / _Erase /
+// operator= halves this file already claims.
+VA_COMPGEN(0x0058eae0, 0xE, BITSET_FLIP, Bitset4)
+VA_COMPGEN(0x0058eaf0, 0x15, BITSET_TIDY, Bitset4)
+VA_COMPGEN(0x0058eb60, 0x4B, TREE_FIND, type_map_hero_info)
+VA_COMPGEN(0x0058f0f0, 0x17, TREE_LOWER_BOUND, type_map_hero_info)
+VA_COMPGEN(0x0058f110, 0x49, TREE_LBOUND, type_map_hero_info)
+VA_COMPGEN(0x0058f160, 0x313, STD_COPY, GameSelectionHeadersStruct)
 
 VA_COMPGEN(0x0058eb10, 0x36, TREE_COPY_ASSIGN, type_map_hero_info)
 VA_COMPGEN(0x0058fa60, 0x1AA, IMPLICIT_COPY_CTOR, NewSMapHeader)

@@ -162,18 +162,6 @@ CBonusDlg::CBonusDlg(unsigned char newGameMode)
 {
 }
 
-CBonusDlg::~CBonusDlg()
-{
-}
-
-CHeroDlg::~CHeroDlg()
-{
-}
-
-CTownDlg::~CTownDlg()
-{
-}
-
 // E:\gamedcs\singleselectionpopups.h:45 - slot 3 of every dialog vtable. A
 // right-click (RIGHT_BUTTON_UP) or a network abort-popup ends the dialog with
 // WIDGET_END_DIALOG in both codeX/codeY; everything else falls through to the
@@ -701,7 +689,7 @@ void CBitmapWidget::zBufferDraw()
 // short bottom title, 689..692 with default 94 for the description block.
 
 VA(0x00576e00, 0x80)  // anchor-bracket (between 0x576930 and 0x576f00) + sole caller 0x5699c0's CBonusDlg botTitle argument, retail-only
-const char* GetStartingResourceName(TTownType town)
+const char* GetStartingResourceName(int town)
 {
     switch (town) {
     case TOWN_RAMPART:
@@ -719,7 +707,7 @@ const char* GetStartingResourceName(TTownType town)
 }
 
 VA(0x00576e80, 0x80)  // anchor-bracket + sole caller 0x5699c0's CBonusDlg description argument, retail-only
-const char* GetStartingResourceDescription(TTownType town)
+const char* GetStartingResourceDescription(int town)
 {
     switch (town) {
     case TOWN_RAMPART:
