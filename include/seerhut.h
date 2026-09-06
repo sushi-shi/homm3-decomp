@@ -198,8 +198,11 @@ public:
     // TQuestGuard::read does, and its one caller discards the result.
     void read(TAbstractFile* infile);
     // 0x574a90, `ret 8` - the savegame reader, called by NewfullMap::Load on
-    // every element of the list it has just resized.
-    int load(TAbstractFile* infile, int saveVersion);
+    // every element of the list it has just resized. VOID, corrected
+    // 2026-09-06 when the body came in: none of retail's four exits sets a
+    // return register (the >= 28 path leaves the last Read's result in EAX
+    // only because nothing after it touches EAX), exactly as read does.
+    void load(TAbstractFile* infile, int saveVersion);
 
     // The TQuestGuard pair's twin, and it splits CROSSWISE: 0x5741b0 and
     // 0x5743e0 are 556 B each and differ only in the separator relocation,
