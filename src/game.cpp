@@ -1138,7 +1138,12 @@ void game::calculate_production()
         }
     }
 
-    unsigned char crystalDragonIncome[8] = {0};
+    // Retail zeroes this eight-byte table with TWO dword stores, which is
+    // VC6's inline `memset(p, 0, 8)`.  `= {0}` lowers to the 1/4/2/1
+    // byte/dword/word/byte run instead and costs 0.65; the fully enumerated
+    // `= {0,0,0,0,0,0,0,0}` is worse again (91.26).
+    unsigned char crystalDragonIncome[8];
+    memset(crystalDragonIncome, 0, sizeof(crystalDragonIncome));
     unsigned int townId;
     for (townId = 0; townId < towns.size(); ++townId) {
         town* currentTown = &towns[townId];
