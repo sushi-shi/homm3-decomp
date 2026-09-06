@@ -20,13 +20,15 @@ Subcommands
         config/units.toml (homm3.build.configure; ninja also re-runs it as a
         generator rule).
 
-  build [--fast] [-- <ninja args>]
-        The loop tail (homm3.build.build): configure -> ninja (base objs via
-        the pinned `wine cl`) -> normalize comparison copies -> objdiff
+  build [--fast] [TU ...] [-- <ninja args>]
+        The final checkpoint (homm3.build.build): configure -> ninja (base objs via
+        the pinned `wine cl`) -> delink and normalize comparison copies -> objdiff
         report -> overall %% line -> checkpoint-ledger refresh + observational
-        dip report + fatal evidence/source gates + README score block + a
-        warning when the synth-PDB inputs are newer than the PDB.
-        --fast stops after the %% line (the inner matching loop).
+        dip report + fatal evidence/source gates + README score block.
+        Normally use `homm3 build --fast TU` for the inner matching loop:
+        compile the selected manifest unit, keep existing retail targets,
+        and stop after the %% line.
+        Run a full `homm3 build` for the final checkpoint.
 
   labels [--unit U ...|--all]
         Source-claim extraction (homm3.retail_labels.source): the lexical
@@ -41,8 +43,7 @@ Subcommands
         build/gen/compgen_claims.tsv.
 
   delink
-        The delink half (homm3.build.delink, explicit - build never
-        RE-delinks; a fresh tree bootstraps the first one):
+        Refresh retail targets directly (also part of full `homm3 build`):
         labels -> model -> synth PDB -> data manifests -> vostok ->
         per-unit target objs -> normalize -> objdiff.json.
 
@@ -239,10 +240,11 @@ def main(argv: list[str] | None = None) -> int:
     p.set_defaults(fn=cmd_configure)
 
     p = sub.add_parser(
-        "build", help="configure + ninja + report + evidence/source gates")
+        "build", help="compile + delink + report + evidence/source gates")
     p.add_argument("--fast", action="store_true",
-                   help="inner loop: stop after the objdiff %% line")
-    p.add_argument("ninja_args", nargs=argparse.REMAINDER)
+                   help="inner loop: normally supply a TU; stop after the objdiff %% line")
+    p.add_argument("ninja_args", nargs=argparse.REMAINDER,
+                   help="manifest TU names or Ninja targets/arguments")
     p.set_defaults(fn=cmd_build)
 
     p = sub.add_parser("labels", help="source macros -> per-TU claim "

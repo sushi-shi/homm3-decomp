@@ -13,10 +13,10 @@ Recover C++ that reproduces Heroes III Complete's retail MSVC 6.0 object code.
 The verdict is VC6 SP3 under Wine; clang/clangd is editor tooling only. Use the
 per-TU compiler profiles in `config/units.toml`.
 
-`ninja` or `homm3 build --fast` serves the inner loop; run full `homm3 build` for
-the final checkpoint. Build bootstraps delinking when no targets exist, but never
-refreshes existing targets automatically. After changing a claim or decorated
-signature, run **`homm3 build` → `homm3 delink` → `homm3 build`**.
+Use `homm3 build --fast <TU>` (for example, `homm3 build --fast cursor`) for the
+inner loop. Normally supply the active TU so shared-header edits rebuild only
+that TU during iteration. Run `homm3 build` for the final checkpoint: it rebuilds
+affected TUs, refreshes retail targets through delinking, and runs the gates.
 `homm3 link` is an optional layout/unresolved-symbol study; its EXE is not runnable.
 
 ## Matching loop

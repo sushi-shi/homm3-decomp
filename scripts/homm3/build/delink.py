@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """homm3.build.delink - the delink half of the loop (P2.3).
 
-Explicit invocation only, never part of `homm3 build` (the homm2 rule):
+Run by full `homm3 build`, or directly with `homm3 delink`:
 
     labels (extraction -> claim fragments) -> model (the one join
         -> build/gen/symbol_names.csv) -> synth_pdb -> data_manifest
