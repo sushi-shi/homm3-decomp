@@ -2,7 +2,6 @@
 # Sorted by increasing current score, then decreasing unmatched bytes.
 # Unscored rows rank at zero; MAX/history never hide current residuals.
 va	size	current	maximum	historical	remaining_bytes	unit	function	state
-0x00541140	1594		0.0	0.0	1594.0	seg_0014	game_143240_sub00_141140	unscored
 0x005b5440	1576		0.0	0.0	1576.0	seg_001b	game_1b72f0_sub00_1b5440	unscored
 0x00536bc0	1524		0.0	0.0	1524.0	seg_0013	game_1373a0_sub00_136bc0	unscored
 0x00536560	1522		0.0	0.0	1522.0	seg_0013	game_rand_trn_txt_136560	unscored
@@ -230,7 +229,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00506820	96		100.0	100.0	96.0	mapcell	__h3cg$mapcell$bitset_set$bitset10	unscored
 0x00532260	96		0.0	0.0	96.0	seg_0013	game_132260	unscored
 0x0054d000	94		0.0	0.0	94.0	seg_0014	game_143e20_sub03_14d000	unscored
-0x00545e00	91		0.0	0.0	91.0	seg_0014	game_145990_sub02_145e00	unscored
 0x0055ebd0	90		0.0	0.0	90.0	seg_0015	game_15d0f0_sub01_15ebd0	unscored
 0x005b7f60	89		0.0	0.0	89.0	seg_001b	game_1b4b20_sub07_1b7f60	unscored
 0x005b8a40	89		0.0	0.0	89.0	seg_001b	game_1b7f60_sub00_1b8a40	unscored
@@ -462,8 +460,8 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x005f2a40	968	75.86364	75.8636	75.8636	233.6399648	victorylossconditions	?CheckForDefeatedHeroLoss@LossConditionStruct@@QAEEPBVhero@@@Z	non-exact
 0x005113f0	611	75.99515	75.9951	75.9951	146.6696335	multiplayerwindow	?OnTCP@TMultiPlayerWindow@@QAEEXZ	non-exact
 0x00514b80	503	76.63784	76.6378	76.6378	117.51166479999999	objecttype	??5@YIAAV?$basic_istream@DU?$char_traits@D@std@@@std@@AAV01@AAUTObjectType@@@Z	non-exact
+0x00541140	1594	76.75134	76.7513	76.7513	370.5836404	rmg	?CreateGroundConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@PAV?$vector@PAUTRmgMapItem@@V?$allocator@PAUTRmgMapItem@@@std@@@std@@PAV?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@5@@Z	non-exact
 0x004be3f0	2725	76.92083	96.4044	96.4044	628.9073825000002	game	?Save@game@@QAEHPAVTAbstractFile@@@Z	non-exact
-0x00542080	2218	76.94386	76.9439	76.9439	511.3851852000001	rmg	?CreateSubterraneanGate@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	non-exact
 0x005141b0	110	77.391304	77.3913	77.3913	24.869565599999994	objecttype	?Accepts@TNativeTerrainObjectFilter@@UBEHPBUTObjectType@@@Z	non-exact
 0x004022e0	359	77.48718	77.4872	77.4872	80.8210238	adventuremapwindow	?SendChat@CAdventurMapChatEdit@@UAEXPBDH@Z	non-exact
 0x004ee3e0	7172	77.563	77.563	77.563	1609.1816399999998	kb	?oldmain@@YIHXZ	non-exact
@@ -476,6 +474,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00466010	579	79.15183	79.1518	79.1518	120.7109043	cmbtmgr	?place_obstacle@combatManager@@QAEEH@Z	non-exact
 0x00578e00	607	79.25824	79.3242	79.3242	125.90248319999999	singleselectionwindow	??0GameSelectionHeadersStruct@@QAE@XZ	non-exact
 0x00602520	640	79.28421	100.0	100.0	132.581056	winmgr	?DoDialog@heroWindowManager@@QAEHPAVheroWindow@@P6IHAAVmessage@@@ZH@Z	non-exact
+0x00542080	2218	79.429504	79.4295	79.4295	456.2536012800001	rmg	?CreateSubterraneanGate@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	non-exact
 0x004224e0	692	79.65844	79.6584	79.6584	140.76359520000003	ai	?simulate_melee_attack@combatManager@@QAEXPAVarmy@@J0JJ@Z	non-exact
 0x0049fa90	4203	79.66424	79.6642	79.6642	854.7119927999996	events	?GiveBlackBoxReward@advManager@@QAE_NPBDPAVhero@@PAVNewmapCell@@Utype_point@@_NPAVBlackBoxData@@@Z	non-exact
 0x005554e0	201	79.75	90.9167	90.9167	40.7025	remote	??1CWaitForReadyPlayersDlg@@UAE@XZ	non-exact
@@ -695,6 +694,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x0059e900	847	91.81468	91.8147	91.8147	69.32966040000007	spells	?ViewSpells@combatManager@@QAEHXZ	non-exact
 0x004fdf40	721	91.886986	91.887	91.887	58.49483094000005	mapcell	?Save@NewfullMap@@QAEHPAVTAbstractFile@@HE@Z	non-exact
 0x0049e2e0	907	91.93031	91.9303	91.9303	73.19208829999997	events	?DoEventShipyard@advManager@@QAEXPAVNewmapCell@@Utype_point@@E@Z	non-exact
+0x00543240	1943	91.9306	93.3833	93.3833	156.7884420000001	rmg	?ConnectZones@type_random_map_generator@@QAEXXZ	non-exact
 0x004e8850	873	91.942955	91.943	91.943	70.33800285000007	hillfortwindow	?HillFortWindowHandler@@YIHAAVmessage@@@Z	non-exact
 0x00434100	1168	91.952805	91.9528	91.9528	93.99123760000008	ai_player	?initialize_artifact_effects@@YIXXZ	non-exact
 0x00424120	1646	91.9548	91.9548	91.9548	132.42399199999994	ai_combat	?initialize_creatures@type_AI_combat_data@@QAEXNPBVhero@@@Z	non-exact
@@ -745,7 +745,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00416060	247	93.333336	93.3333	93.3333	16.46666008	advmgr	?BVResMsg@advManager@@QAEXPBDHH@Z	non-exact
 0x004726b0	305	93.348625	93.3486	93.3486	20.286693750000012	combatwindow	?SendChat@CCombatChatEdit@@UAEXPBDH@Z	non-exact
 0x005dda10	5215	93.37617	93.3762	93.3762	345.43273449999987	townmgr	?SetupThievesGuild@TThievesGuildWindow@@QAEXH@Z	non-exact
-0x00543240	1943	93.38328	93.3833	93.3833	128.56286959999997	rmg	?ConnectZones@type_random_map_generator@@QAEXXZ	non-exact
 0x004fdbc0	881	93.40367	93.4037	93.4037	58.11366729999995	mapcell	?Load@NewfullMap@@QAEHPAVTAbstractFile@@HEH@Z	non-exact
 0x005af590	1015	93.416145	93.4161	93.4161	66.82612825000005	swapmgr	?handle_artifact_click@swapManager@@QAEXJJE@Z	non-exact
 0x004f3940	169	93.510635	93.5106	93.5106	10.967026850000003	kb	??1combatManager@@QAE@XZ	non-exact
@@ -822,8 +821,8 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00463c60	1084	95.682655	95.7196	95.7196	46.800019800000065	cmbtmgr	?InitNonVisualVars@combatManager@@QAEXXZ	non-exact
 0x005d05f0	795	95.68559	95.6856	95.6856	34.29955949999993	townmgr	?SetCommandAndText@type_garrison_base_window@@QAEXPAVmessage@@@Z	non-exact
 0x0055b060	887	95.69202	95.692	95.692	38.2117826	resourcemanager	?LoadPalette@ResourceManager@@YIPAVTPalette16@@PBD@Z	non-exact
+0x00549cb0	3728	95.698746	95.7066	95.7066	160.35074911999996	rmg	?WriteMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	non-exact
 0x004ea810	756	95.70397	95.704	95.704	32.477986800000046	iconwdgt	?Main@iconWidget@@UAEHPAVmessage@@@Z	non-exact
-0x00549cb0	3728	95.70657	95.7066	95.7066	160.05907039999994	rmg	?WriteMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	non-exact
 0x00579960	11619	95.70793	95.7079	95.7079	498.6956132999991	singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	non-exact
 0x00592f10	694	95.726776	95.7268	95.7268	29.656174559999982	singleselectionwindow	?_Unguarded_insert@std@@YIXPAUGameSelectionHeadersStruct@@U2@UTSortMapsBySize@@@Z	non-exact
 0x00523a70	168	95.7377	100.0	100.0	7.160663999999994	path	?ValidPath@army@@QAEEHE@Z	non-exact

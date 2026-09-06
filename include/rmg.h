@@ -269,10 +269,6 @@ struct TRmgMapPosition {
     TRmgMapPosition() {}
     TRmgMapPosition(int newX, int newY, int newZ);
 
-    // ConnectZones constructs the translated coordinate as a returned
-    // temporary before consuming it.  This inline source operation restores
-    // retail's 0x98-byte frame and temporary lifetime; the RMG compiland is
-    // absent from Dreamcast, so the operator spelling remains provisional.
     TRmgMapPosition operator+(const TPoint& offset) const;
 };
 
@@ -349,6 +345,9 @@ void ReadRmgTemplateZones(
     int firstRow, int endRow, int humanPlayers, int computerPlayers,
     int mapVersion);
 
+// Retained fastcall helper at 0x545e00, also expanded by zone connections.
+int GetRmgGuardValue(int value, int strength);
+
 // Retail's common direction table contains eight consecutive two-dword
 // offsets.  Its cinit at 0x530da0 proves the user-provided constructor while
 // the absence of an atexit registration proves that destruction is trivial.
@@ -396,12 +395,6 @@ struct TPoint {
         return y < other.y || (y == other.y && x < other.x);
     }
 };
-
-inline TRmgMapPosition TRmgMapPosition::operator+(
-    const TPoint& offset) const
-{
-    return TRmgMapPosition(x + offset.x, y + offset.y, z);
-}
 
 struct TRmgZoneBounds {
     int minimumX;
@@ -849,6 +842,10 @@ public:
         TRmgZoneConnection* connection,
         int prototypeIndex);
     void ConnectZones();
+    // Complete-only roles proved by the predecessor walk at 0x5408e0 and
+    // the surrounding connection-cell updates at 0x540fc0.
+    void OpenConnectionPath(TRmgMapPosition position, unsigned char narrow);
+    void MarkBorderObjectArea(TRmgMapPosition position, int direction);
     int PlaceBorderObject(
         TRmgMapPosition position, int count, TRmgZone* zone);
     type_object* CreateGuard(int value, TRmgZone* zone);
