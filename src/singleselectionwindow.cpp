@@ -1237,6 +1237,29 @@ CUpdatePlayerPosMsg::CUpdatePlayerPosMsg(
 // in the preheader: retail keeps rowY itself in EBX (`mov ebx,0x85`, then
 // `sub edx,y / sub edx,3`) where this compiler reassociates the -3 into
 // the induction (`mov ebx,0x82`).
+// THE FRAME, 2026-09-06.  Same size as retail (`sub esp,0x314`) and the same
+// 25 ebp-relative slots but for TWO facts, both of them array PACKING:
+//   * ours homes an extra array at [ebp-0x2c4].  Retail has exactly three -
+//     the inlined GetModuleFileNameA path buffer at [ebp-0x320] (0x15f B),
+//     `flagName` at [ebp-0x1c0] (256 B) and a 100-byte buffer at [ebp-0xc0] -
+//     and it uses that LAST one for BOTH the `adopb2%c.def` sprintf inside
+//     the flag loop and the `adop%cpnl.pcx` sprintf 200 lines later, i.e.
+//     retail's temp_str and tempName share storage while ours do not, and
+//     retail's module-path buffer does NOT share with flagName while ours
+//     does.  Two probes: `char temp_str[100]` repacks into a different
+//     layout entirely (slots 0xc0/0x124/0x228/0x284) and is byte-flat,
+//     95.7079 -> 95.7071; bracing the tempName loop into a sibling scope
+//     GROWS the frame (0x324) and costs 95.7079 -> 94.9511.  Both rejected.
+//   * `this` spills to [ebp-0x1c] where retail spills it to [ebp-0x20] and
+//     puts the widget* temporary at -0x1c - the pair is swapped, which is
+//     the function's FIRST divergent byte (+0x33) and costs a displacement
+//     on roughly 25 instructions.  Retail therefore homes one more 4-byte
+//     entity above the this-spill than we do; it is not in the slot SET, so
+//     it shares a slot with something already there.
+// One real missing instruction, in the flag-loop button: retail computes the
+// y as `mov edx,ebx / sub edx,[ecx+0x1c] / sub edx,3` where we fold the -3
+// into the induction variable (our ebx is rowY-3, retail's is rowY).
+//
 // Measured byte-flat: `int i` function- vs block-scoped for every loop;
 // a ternary-of-two-news for the 128 textButton (85.98, rejected); the
 // adopb2 arm order (either order 87.27 at that stage; DC order kept).
