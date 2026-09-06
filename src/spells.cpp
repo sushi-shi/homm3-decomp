@@ -286,13 +286,28 @@ int combatManager::ViewSpells()
         }
     }
 
+    // Residual (91.8147%): retail duplicates the `return -1` epilogue at
+    // the first two guards (9 rets against our 7, and its tests are `jne
+    // <continue>` with the return as the FALL-THROUGH) where our CL
+    // cross-jumps both into the shared exit.  The spellbook window is a
+    // BLOCK-SCOPED NAMED LOCAL, not a temporary: retail calls
+    // `heroWindow::DoModal` DIRECTLY (0x19e9f7) where a temporary receiver
+    // makes our CL dispatch through the vtable slot at [eax+0x18].
+    // Measured 2026-09-06: temporary receiver 90.1364; named local at
+    // FUNCTION scope 41.5105 (the destructor moves to the function exit);
+    // named local in its own block 91.8147.
+    //
     // The last two arguments are byte-proven from retail's push order and
     // read the other way round from the declarator's names: the CONTEXT is
     // the literal eContextCombat and it is `magicTerrain` that receives the
     // combat's spell-restriction code.
-    TSpellbookWindow(heroes[currentSide], armyGroups[1 - currentSide],
-                     TSpellbookWindow::eContextCombat, field_53c0)
-        .DoModal(0);
+    {
+        TSpellbookWindow spellbook(heroes[currentSide],
+                                   armyGroups[1 - currentSide],
+                                   TSpellbookWindow::eContextCombat,
+                                   field_53c0);
+        spellbook.DoModal(0);
+    }
 
     if (gpWindowManager->dialogReturn == DIALOG_RETURN_CANCEL)
         return -1;
