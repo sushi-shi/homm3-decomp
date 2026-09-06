@@ -71,6 +71,30 @@ static TArtifactSlotTraits aArtifactSlotTraits[19];
 // and two throw paths); the same guard with hero.cpp's union word view in
 // place of `set` (3.91). Both are worse than leaving the call, so the
 // honest spelling stands.
+//
+// RE-MEASURED 2026-09-06, five more compiles, and the direction is now
+// bounded from both ends. hero.cpp's HeroFn_004E2840 lever - spell
+// Dinkumware's accessor body explicitly so the caller owns the /GX frame
+// the throw needs - reproduces its recorded 3.91/3.35 here EXACTLY, and
+// the emitted object says why it cannot work in this body: our written
+// `throw` is a COLD block C2 sinks past the epilogue, where retail's is
+// the fall-through of `cmp ecx,0x13 / jb <set>` because it arrived as an
+// EXPANSION of `_Xran` inside the loop; and the shallower source also
+// pulls `basic_string::assign(const char*, unsigned)` in one level, which
+// retail leaves a CALL (our _Grow + rep movsd against retail's one call).
+// So the explicit throw is not the same construct at either end.
+// The depth ladder is exhausted, and both directions of it are inert or
+// worse: `mask[i] = true` and `mask.set(i, true)` are byte-identical to
+// `mask.set(i)` here (22.16 / 32.15 to the digit - readTownData's +12.31
+// for `[i]=v` does NOT reproduce), and `mask.at(i) = true` emits TWO
+// `_Xran` calls (22.81 / 33.23 - the extra bytes, not a structural gain).
+// The `goto` loop is byte-flat AGAIN in this inline structure, so the
+// rotation is downstream of the call, not a source fact.
+// What remains is the caller-size half of the /Ob2 rule, and this body has
+// no honest mass to add: retail's own frame holds nothing but the bitset
+// and the throw's own temporaries, so retail's EH frame is a CONSEQUENCE
+// of the expansion rather than an independent cause a spelling can supply.
+// Both rows stay at their banked MAX.
 VA(0x0044c720, 0x10B)  // anchor-callee the aArtifactSlotMasks cinit's 14 calls, retail-only file static
 static std::bitset<19> MakeArtifactSlotMask(unsigned count, ...)
 {
