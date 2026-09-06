@@ -4016,6 +4016,9 @@ void advManager::do_event_hero(hero* current_hero, NewmapCell* cell,
 // headers; we copy EDX into EBX first, so the max spills to [ebp-0x1c] and
 // ESI carries the zero instead.  Every instruction pairs; only the register
 // and the one extra frame slot differ.
+// MEASURED NEGATIVE (polish 49): swapping the _cpp_max operand order so the
+// second hero's skill is read first - retail's `mov al,[edx+0xdb]` lands
+// before the register saves - costs 92.1640 -> 92.1508.
 VA(0x004a2940, 0x85C)  // anchor-callee from do_event_hero + full retail semantics, dc 0x93464
 static void exchange_spells(hero* first_hero, hero* second_hero)
 {

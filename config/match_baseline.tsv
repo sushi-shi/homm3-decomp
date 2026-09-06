@@ -127,7 +127,7 @@ advmgr	?ProcessHover@advManager@@QAEHHH@Z	91.6263	91.6263	91.6263	0xe360	16cc0b4
 advmgr	?ProcessKeyPress@advManager@@QAEHPBVmessage@@PAEPAUtype_point@@PAPAVNewmapCell@@@Z	97.6091	97.6091	97.6091	0x8c40	18b0e637c781
 advmgr	?ProcessMapSelect@advManager@@QAEXPBVmessage@@PAUtype_point@@PAPAVNewmapCell@@@Z	91.1006	91.1006	91.1006	0xa5d0	3d3b17f3fece
 advmgr	?ProcessRadarSelect@advManager@@QAEXPBVmessage@@@Z	100.0000	100.0000	100.0000	0xa0c0	5c36b56e1c0a
-advmgr	?ProcessSearch@advManager@@QAEHHHH@Z	94.6792	94.6792	94.6792	0xec90	438a0713d228
+advmgr	?ProcessSearch@advManager@@QAEHHHH@Z	96.1549	96.1549	96.1549	0xec90	9d7097e57238
 advmgr	?ProcessSelect@advManager@@QAEHPBVmessage@@PAUtype_point@@PAPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x97e0	61b96265198a
 advmgr	?ProcessWaitingHover@advManager@@QAEHHH@Z	96.1467	96.1467	96.1467	0xdeb0	20e951caf93a
 advmgr	?QuickInfo@advManager@@QAEXHHH@Z	95.9234	95.9234	95.9234	0x137c0	527855ad442e
@@ -381,7 +381,7 @@ ai_player	?get_value@type_statue_of_legion_artifact@@UBEJPBVhero@@EE@Z	100.0000	
 ai_player	?get_value@type_tome_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x32c20	7e1b792d8414
 ai_player	?get_value@type_undead_king_cloak_artifact@@UBEJPBVhero@@EE@Z	96.7778	96.7778	96.7778	0x333a0	7217c8f21064
 ai_player	?hire_heroes@type_AI_player@@QAE_NXZ	100.0000	100.0000	100.0000	0x31360	090ada3d6566
-ai_player	?initialize_artifact_effects@@YIXXZ	91.9528	91.9528	91.9528	0x34100	a14bb0e20585
+ai_player	?initialize_artifact_effects@@YIXXZ	95.1622	95.1622	95.1622	0x34100	fe864a36de1b
 ai_player	?is_human_ally@game@@QBE_NH@Z	100.0000	100.0000	100.0000	0x2b9e0	df633736fa56
 ai_player	?make_gift@type_AI_player@@QAEXJ@Z	84.5868	84.5868	84.5868	0x29110	069248bd0ee9
 ai_player	?mark_danger_zones@@YIXPBVhero@@PAJ@Z	100.0000	100.0000	100.0000	0x2de50	6e7aeeb6b9c3
@@ -2507,7 +2507,7 @@ kb	?KbFn_004EE1B0@@YIXHPBD@Z	100.0000	100.0000	100.0000	0xee1b0	2e4b9f393da5
 kb	?LostGame@@YIXXZ	100.0000	100.0000	100.0000	0xee2b0	e28e4114a854
 kb	?MemError@@YIXXZ	100.0000	100.0000	100.0000	0xf42c0	a3a21a3be5c1
 kb	?NormalDialog@@YIXPBDHHHHHHHHHHH@Z	93.6191	93.6191	93.6191	0xf6570	718a7464f694
-kb	?NormalDialogHandler@@YIHAAVmessage@@@Z	71.3624	71.3624	71.3624	0xf08d0	472344c07fd2
+kb	?NormalDialogHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0xf08d0	ac3d7d95e79d
 kb	?NormalDialogTimeOut@@YIXPBDHHHHHHHHHHH@Z	100.0000	100.0000	100.0000	0xf6530	8724fb21051e
 kb	?PickLoadGame@@YIHXZ	100.0000	100.0000	100.0000	0xf0610	4b51a872ab91
 kb	?PlayerDead@@YIXH@Z	100.0000	100.0000	100.0000	0xf11a0	8940f058d666
@@ -3800,7 +3800,7 @@ singleselectionwindow	?SortMaps@TSingleSelectionWindow@@QAEXHEE@Z	91.6682	91.668
 singleselectionwindow	?StartMouseThread@@YIXXZ	100.0000	100.0000	100.0000	0x177790	4941c8e8d87e
 singleselectionwindow	?StopMouseThread@@YIXXZ	100.0000	100.0000	100.0000	0x177810	2bb8c86d7f9f
 singleselectionwindow	?Tick@CNewPlayerUpdateProc@@UAEXXZ	86.6723	86.6723	86.6723	0x178a90	a8a74d80f3a5
-singleselectionwindow	?Tick@t_map_list_update@@UAEXXZ	71.8957	71.8957	71.8957	0x177de0	0d88797c000d
+singleselectionwindow	?Tick@t_map_list_update@@UAEXXZ	73.2454	73.2454	73.2454	0x177de0	9108c94e6268
 singleselectionwindow	?TurnChatOff@TSingleSelectionWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x18cbf0	7bb80272c616
 singleselectionwindow	?TurnChatOn@TSingleSelectionWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x18ca80	74f17b63054b
 singleselectionwindow	?TurnOffAdvancedOptions@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x181b20	7a8be1f21bd1
@@ -3969,7 +3969,7 @@ spells	?AddBolt@combatManager@@QAEXPAUSBolt@@HHHHHHHHHHHH@Z	100.0000	100.0000	10
 spells	?AreaEffect@combatManager@@QAEXJHJJ@Z	99.8565	99.8565	99.8565	0x1a4970	89c796832376
 spells	?Armageddon@combatManager@@QAEXHH@Z	93.9013	93.9013	93.9013	0x1a4bc0	4c4fd8883f34
 spells	?CastSpell@combatManager@@QAEXHHHHHJ@Z	93.3658	93.3658	93.3658	0x19fe30	06722a767ab2
-spells	?ChainLightning@combatManager@@QAEXHHH@Z	96.1913	96.1913	96.1913	0x1a6360	ebf901f1d173
+spells	?ChainLightning@combatManager@@QAEXHHH@Z	96.1913	96.1913	96.1913	0x1a6360	7de80f86c681
 spells	?ClearEffects@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1a66b0	59ebec44e08d
 spells	?ComputeSpellDamage@combatManager@@QAEJHJJPAVhero@@0PBVarmy@@E@Z	100.0000	100.0000	100.0000	0x1a7890	210d41023a64
 spells	?DoBolt@combatManager@@QAEXHHHHHHHHHHHHHHHHH@Z	100.0000	100.0000	100.0000	0x1a5c20	1e0f337eab08
