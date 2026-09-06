@@ -849,3 +849,8 @@ flags = "game_o2_mt_gr_windows"
 unit = "netmsg"
 source = "src/netmsg.cpp"
 flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "campaign"
+source = "src/campaign.cpp"
+flags = "game_o2_ml_gr_windows"

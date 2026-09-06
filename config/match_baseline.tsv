@@ -806,6 +806,16 @@ button	?Main@type_func_button@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x5
 button	?Select@button@@QAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x56860	e3d8dbd2bff8
 button	?SetPlayerPaletteColors@button@@QAEXH@Z	100.0000	100.0000	100.0000	0x569e0	dc6ad15ff688
 button	?_vslot12@button@@UAEXH@Z	100.0000	100.0000	100.0000	0x56a10	fa786de27cd0
+campaign	??0TCampaignSetWindow@@QAE@XZ	99.9458	99.9458	99.9458	0x56ec0	723cf51bd1da
+campaign	??1TCampaignSetWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x57230	5076b0540a6e
+campaign	??_GTCampaignSetWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x57200	-
+campaign	?CampaignSetArmHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x572f0	a63378a4c3e9
+campaign	?CampaignSetCusHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x57360	15b919310e20
+campaign	?CampaignSetExitHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x573d0	3769954e815c
+campaign	?CampaignSetRoeHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x57440	4cbeb94e3ea9
+campaign	?CampaignSetSodHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x57280	2b2c00753f5d
+campaign	?DoModal@TCampaignSetWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x574a0	3914d3e9ea8d
+campaign	?handle_message@TCampaignSetWindow@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x574d0	ca3c21a039d3
 campaignbrief	??0?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@std@@QAE@ABU?$less@H@1@ABV?$allocator@Utype_map_hero_info@@@1@@Z	100.0000	100.0000	100.0000	0x5bf70	-
 campaignbrief	??0?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x5dcb0	-
 campaignbrief	??0CMapHeaderData@@QAE@XZ	100.0000	100.0000	100.0000	0x5a990	-
