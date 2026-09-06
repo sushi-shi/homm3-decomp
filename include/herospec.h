@@ -135,7 +135,13 @@ struct THeroSpecificAbility {
     // only "the 17-byte retail getter returns +0x1c" is proof, so the
     // name here is role-derived.
     const char* shortText;      // +0x1c
-    char pad_20[0x4];
+    // +0x20, the MIDDLE of the three consecutive herospec.txt columns
+    // InitializeHeroSpecificAbilitiesTable (0x4d71a0) copies into every row -
+    // it writes +0x1c, +0x20 and +0x24 from cells 0, 1 and 2 of the row's
+    // spreadsheet line. Nothing in the admitted surface reads it, so the name
+    // is role-derived from its position between the short label and the long
+    // description; the pad it replaces was the same four bytes.
+    const char* mediumText;     // +0x20
     // +0x24, the LONG description the note above predicted. Landed
     // 2026-08-20 by the consumer it names: THeroScreenWindow::
     // WindowHandler's specialty arm strcpy's exactly this displacement
@@ -149,6 +155,16 @@ SIZE(THeroSpecificAbility, 40);
 // InitializeHeroSpecificAbilitiesTable, dc 0xca728, which retail did
 // not keep as a standalone body); extern only, no DATA claim - the
 // gpWindowManager pattern.
-extern const THeroSpecificAbility (&akHeroSpecificAbilities)[128];
+// EXTENT CORRECTED 2026-09-06, 128 -> 156. The DC decoration quoted at the
+// top of this note (`Y0IA@` = 0x80) is the DREAMCAST bound; retail Complete's
+// is 156, which is exactly its hero count (RoE's 128 plus Armageddon's Blade's
+// 12 plus Shadow of Death's 16). Byte-proven twice over by
+// InitializeHeroSpecificAbilitiesTable: its fill loop writes rows 0..155 at
+// `0x678420 + 0x1c + 40*i` and stops on the address 0x679c80 - which is the
+// storage cell of this very reference, i.e. the array ends exactly where the
+// reference begins (0x679c80 - 0x678420 = 6240 = 156 * 40) - and its own
+// entry guard demands at least 158 spreadsheet rows, the two header lines
+// plus those 156.
+extern const THeroSpecificAbility (&akHeroSpecificAbilities)[156];
 
 #endif  /* HOMM3_HEROSPEC_H */

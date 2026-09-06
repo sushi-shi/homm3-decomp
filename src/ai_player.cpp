@@ -9273,6 +9273,25 @@ void std::__pop_heap_aux(long* __first, long* __last, long* __formal)
 // COMDAT pairing: vector<type_creature_source>::size, agreement 1.000.
 VA_COMPGEN(0x00434600, 0x20, VECTOR_SIZE, type_creature_source)
 
+// COMDAT pairing: vector<pathCell>::size, EXACT - 35 bytes, byte-identical to
+// the COMDAT this object already emits (the `0x88888889 / sar 4` magic is the
+// signed divide by pathCell's 30-byte stride, and the leading
+// `_First == 0 -> return _First` arm is Dinkumware's own null answer).
+// build_path here and searchArray::PushPoint in findpath.obj are the two call
+// sites; /OPT:ICF kept one copy and it landed in this object's band.
+VA_COMPGEN(0x00434620, 0x23, VECTOR_SIZE, pathCell)
+
+// COMDAT pairing: vector<pathCell>::~vector, EXACT - 38 bytes, again
+// byte-identical to this object's own COMDAT and the same shape
+// combatcontrolsubwindow.obj's 0x46a650 carries for vector<widget*>. It has
+// NO null guard because VC6's _Tidy emits none for a POD element: the
+// `operator delete` is reached unconditionally and the three-pointer triple
+// is then zeroed. Retail address-takes it at 0x432461, where a cinit hands it
+// to __vector_constructor_iterator together with the default constructor
+// 0x4324b0 - the pair that builds and tears down a 144-element
+// `vector<pathCell>` array at .bss 0x692e18.
+VA_COMPGEN(0x00434650, 0x26, VECTOR_DTOR, pathCell)
+
 // COMDAT pairing: vector<type_creature_source>::erase, agreement 0.959 and the
 // highest operand-level agreement in the whole sweep (0.904).
 VA_COMPGEN(0x00434680, 0x4D, VECTOR_ERASE, type_creature_source)

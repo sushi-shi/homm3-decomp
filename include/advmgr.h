@@ -540,14 +540,18 @@ DATA(0x006989c8) extern int gUnnamed6989c8;
 // Paired with gUnnamed6989c8 by every non-local adventure command gate.
 // The role is byte-proven; no surviving symbol attests a semantic name.
 DATA(0x0069ccd4) extern int gUnnamed69ccd4;
-DATA(0x0069127c) extern const char* const gGlobalInfoFlagNames[];
+// Written at startup by InitializeExtraInfoText (28 rows of
+// xtrainfo.txt), so the ELEMENT is not const.
+DATA(0x0069127c) extern const char* gGlobalInfoFlagNames[];
 DATA(0x006a7520) extern const char* const gBorderColorNames[];
 // Role-derived retail tables used by SetRolloverText. The generator-name
 // semantics are corroborated by the DC public roster; the x86 bases and
 // owner-color consumer role are fixed directly by the retail switch blocks.
 DATA(0x006a5898) extern const char* const gObjectOwnerColorNames[8];
-DATA(0x006914fc) extern const char* const gCreatureGenerator1RolloverNames[];
-DATA(0x00691354) extern const char* const gCreatureGenerator4RolloverNames[];
+// Both written at startup by InitializeCreatureGeneratorNames (80 rows of
+// crgen1.txt and 2 of crgen4.txt), so the ELEMENT is not const.
+DATA(0x006914fc) extern const char* gCreatureGenerator1RolloverNames[];
+DATA(0x00691354) extern const char* gCreatureGenerator4RolloverNames[];
 // InitializeMineNames copies the eight lines of minename.txt here. The mine
 // help-text helper indexes 0..6 by mine type and uses row 7 for an abandoned
 // mine, independently fixing both the extent and the table's consumer role.
