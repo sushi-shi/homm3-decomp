@@ -1729,6 +1729,32 @@ VA_COMPGEN(0x00453d70, 0x18, IMPLICIT_DTOR, locale)
 VA_COMPGEN(0x00454200, 0x28, STREAMBUF_SEEKOFF, char)
 VA_COMPGEN(0x00454230, 0x28, STREAMBUF_SEEKPOS, char)
 
+// COMDAT pairing: the five remaining DEFAULTED virtuals of the same stream
+// base, all agreement 1.000 against this object's own COMDATs. They are not
+// reached by any rel32 call either - like `uflow` above they exist only as
+// vtable slots - so the pairing is made on the SLOT INDEX and the emission
+// run together. <streambuf> declares the virtuals overflow, pbackfail,
+// showmanyc, underflow, uflow, xsgetn, xsputn, seekoff, seekpos, setbuf,
+// sync, imbue, and this object's kept copies come out in exactly that order:
+//   0x454050 overflow(1)   0x454060 showmanyc(3)  0x454070 underflow(4)
+//   0x454080 uflow(5)      0x4540b0 xsgetn(6)     0x454150 xsputn(7)
+//   0x454200 seekoff(8)    0x454230 seekpos(9)    0x454260 setbuf(10)
+//   0x454270 imbue(12)
+// pbackfail(2) and sync(11) are the two the linker took from another
+// object, which is why the run has gaps at those slots and no others. The
+// bodies confirm each index independently: `or eax,-1 / ret 4` is the
+// one-argument eof return, `xor eax,eax / ret` the nil-ary zero,
+// `or eax,-1 / ret` the nil-ary eof, `mov eax,ecx / ret 8` the two-argument
+// return-this, and `ret 4` the one-argument do-nothing. TGzInflateBuf's own
+// named vtable holds 0x454050 at slot 1, 0x454060 at slot 3, 0x454260 at
+// slot 10 and 0x454270 at slot 12, which fixes the four with a duplicate
+// body shape; 0x454070 is slot 4 of the same table.
+VA_COMPGEN(0x00454050, 0x6, STREAMBUF_OVERFLOW, char)
+VA_COMPGEN(0x00454060, 0x3, STREAMBUF_SHOWMANYC, char)
+VA_COMPGEN(0x00454070, 0x4, STREAMBUF_UNDERFLOW, char)
+VA_COMPGEN(0x00454260, 0x5, STREAMBUF_SETBUF, char)
+VA_COMPGEN(0x00454270, 0x3, STREAMBUF_IMBUE, char)
+
 // COMDAT pairing: basic_ostream<char>'s scalar deleting destructor,
 // agreement 0.944 - its 15-byte ??1 twin is already claimed at 0x453a20.
 VA_COMPGEN(0x00454280, 0x32, SCALAR_DELETING_DTOR, basic_ostream)

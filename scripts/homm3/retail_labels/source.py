@@ -256,6 +256,18 @@ CHAR_STREAM_MEMBERS = (
     ("?opfx@?$basic_ostream@D", None, "ostream_opfx"),
     ("??Hstd@@YA?AV?$basic_string@D", None, "basic_string_concat"),
     ("?uflow@?$basic_streambuf@D", None, "streambuf_uflow"),
+    # The five remaining DEFAULTED virtuals of the stream base, all kept by
+    # bottomviewsubwindow.obj alongside `uflow`, `seekoff` and `seekpos`
+    # above. Their prefixes must be spelled out even though `?overflow@` and
+    # `?underflow@` already have basic_stringbuf arms: those key on
+    # `?$basic_stringbuf@D` and would leave the BASE class's copies at the
+    # generic template tail as `std_basic_streambuf_overflow` - a spelling no
+    # VA_COMPGEN owner can produce.
+    ("?overflow@?$basic_streambuf@D", None, "streambuf_overflow"),
+    ("?showmanyc@?$basic_streambuf@D", None, "streambuf_showmanyc"),
+    ("?underflow@?$basic_streambuf@D", None, "streambuf_underflow"),
+    ("?setbuf@?$basic_streambuf@D", None, "streambuf_setbuf"),
+    ("?imbue@?$basic_streambuf@D", None, "streambuf_imbue"),
     ("?setg@?$basic_streambuf@D", None, "streambuf_setg"),
     ("??4?$ostreambuf_iterator@D", None,
      "ostreambuf_iterator_assign"),
