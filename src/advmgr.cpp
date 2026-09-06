@@ -170,22 +170,58 @@ static inline const char* GetArmyName(int type, int count)
     return "";
 }
 
-// E:\gamedcs\advmgr.cpp:336
-#if 0  // @carcass
-DC_ONLY(0x5714, 0xB6)
+// The three text resources this compiland keeps alive for the rollover
+// tables below. Every reference to all three in the whole image is one of
+// the four stores in the two readers that follow (config/retail-reloc-
+// evidence.tsv), so they are source-private here under the same rule
+// kb.cpp's oldmain cells use. Names are role inventions.
+DATA(0x00691350) static TTextResource* gpCreatureGenerator1Text;
+DATA(0x0069163c) static TTextResource* gpCreatureGenerator4Text;
+DATA(0x00691368) static TTextResource* gpExtraInfoText;
+
+// E:\gamedcs\advmgr.cpp:336, promoted from DC_ONLY on body evidence: the
+// crgen1.txt/crgen4.txt filenames, the two table bases advmgr.h already
+// declares, and the EarlySetup call edge kb.cpp's own list names. The two
+// extents come off the loop bounds - 0x140 bytes over four-byte elements is
+// eighty rollover names, and 8 is two - and each loop's base is folded one
+// element low (0x6914f8 and 0x691350), which is what puts the arrays at
+// 0x6914fc and 0x691354 exactly where the header has them.
+VA(0x00405d20, 0x60)  // anchor-string crgen1.txt/crgen4.txt + anchor-caller EarlySetup, dc 0x5714
 unsigned char InitializeCreatureGeneratorNames()
 {
-    // @stub
+    gpCreatureGenerator1Text = ResourceManager::GetText(
+        DATA_COMPGEN(0x00660278, creatureGenerator1TextName, "crgen1.txt"));
+    if (gpCreatureGenerator1Text == 0)
+        return 0;
+    int i;
+    for (i = 0; i < 80; i++)
+        gCreatureGenerator1RolloverNames[i] =
+            gpCreatureGenerator1Text->Text[i];
+
+    gpCreatureGenerator4Text = ResourceManager::GetText(
+        DATA_COMPGEN(0x0066026c, creatureGenerator4TextName, "crgen4.txt"));
+    if (gpCreatureGenerator4Text == 0)
+        return 0;
+    for (i = 0; i < 2; i++)
+        gCreatureGenerator4RolloverNames[i] =
+            gpCreatureGenerator4Text->Text[i];
+    return 1;
 }
 
-// E:\gamedcs\advmgr.cpp:368
-DC_ONLY(0x57cc, 0x62)
+// E:\gamedcs\advmgr.cpp:368, promoted on the same evidence: xtrainfo.txt and
+// the 0x70-byte loop bound, i.e. twenty-eight rows into the table advmgr.h
+// declares at 0x69127c.
+VA(0x00405d80, 0x30)  // anchor-string xtrainfo.txt + anchor-caller EarlySetup, dc 0x57cc
 unsigned char InitializeExtraInfoText()
 {
-    // @stub
+    gpExtraInfoText = ResourceManager::GetText(
+        DATA_COMPGEN(0x00660284, extraInfoTextName, "xtrainfo.txt"));
+    if (gpExtraInfoText == 0)
+        return 0;
+    for (int i = 0; i < 28; i++)
+        gGlobalInfoFlagNames[i] = gpExtraInfoText->Text[i];
+    return 1;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\advmgr.cpp:392
 // The shared cell dword is passed unchanged to advManager's full black-box
