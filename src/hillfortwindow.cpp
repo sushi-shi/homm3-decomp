@@ -350,6 +350,40 @@ inline bool CanAfford(const long* cost, const long* playerRes)
 // `msg.extraText` in the SET_ICON_NAME statement - byte-flat; and carrying
 // `totalID` the same way in the totals loop below - 83.4988, so the lever is
 // specific to the loop whose derived id feeds six different widget bands.
+//
+// 2026-09-06, polish lane 36 (84.0331 -> 95.2727), the DC LOCAL-SCOPE SWEEP.
+// The Dreamcast procedure block declares SEVEN per-iteration id variables at
+// hillfortwindow.cpp:271..277, one statement each, computed unconditionally
+// BEFORE the `s.type != CREATURE_NONE && s.count > 0` gate at :279 - six of
+// them named in the CodeView local list (num_id sp+0x18, res_icon_id sp+0x14,
+// button_id sp+0x1c, res_cost_id sp+0x20, gold_icon_id sp+0x24, gold_cost_id
+// sp+0x28) and the seventh, the portrait id, register-allocated into r4 and
+// consumed at :284.  The SH4 constants close the identification exactly:
+// :271 K1, :272 K1+7, :273 K1+14 with K1 = CREATURE_PORTRAIT_1_ID = 205, then
+// :274 K2 = GOLD_COST_1_ID, :275 K2+7 = RES_ICON_1_ID, :276 K3 =
+// RES_COST_1_ID, :277 K3+21 = UPGRADE_BUTTON_1_ID.  Writing all seven and
+// DROPPING the carried `id` took the row 84.0331 -> 94.0227 in one edit (54
+// exact blocks, then 59 after the delink refresh); VC6 still CSEs them back
+// onto retail's single [ebp-8] home and re-derives `+0xe` from it, which is
+// why the earlier note's "reintroducing all six BESIDE the current i/reference
+// scores 79.60" measured something else - that probe kept `id`.
+// The state verdict is the DC's `CanAfford` call, not the hand-written loop:
+// :332 `if (!IsBaseCreature(...)) state = 0;` / :337 `else if (CanAfford(
+// s.cost, gpCurPlayer->resources)) state = 1;` / :345 `else state = 2;`,
+// worth a further 94.0227 -> 95.2727 and it retires the `goto have_state`.
+// That call needs `TUpgradeSlot::cost` to be `long[7]` - the DC CanAfford
+// takes `const long*` - so the whole `get_upgrade_cost` out-parameter family
+// (recruit.h/.cpp plus the four caller-local `cost` arrays in viewarmywindow,
+// game and philai) widened with it; that retype is byte-flat tree-wide, only
+// the mangled name moves (PAH -> PAJ).
+// The DC line table orders the entry clears szCount, szGoldCost,
+// szResourceCost, resourceIndex; that order is byte-flat against the previous
+// one, so the older note's "byte-proven" claim for the other order is only a
+// statement that both compile the same.
+// Residual (95.2727%): three size-only blocks and the SAME single anchor bias
+// the note above names - retail's slot cursor is `esi+0x90` (&slot[0].count),
+// ours `esi+0x8c` (&slot[0].type), shifting every `[ebx-N]` by four.  The
+// widget-id half of that bias is now GONE (both sides home 0xd4 at [ebp-8]).
 VA(0x004e7eb0, 0x64D)  // source/call order + DoModal/handler call sites, dc 0xd6bf8
 void THillFortWindow::Recalculate(unsigned char DrawDimmedButtons)
 {
@@ -374,13 +408,12 @@ void THillFortWindow::Recalculate(unsigned char DrawDimmedButtons)
     // add edi,-0xd4 / cmp edi,7 / jl`); computing `id` from `i` inside the
     // body instead leaves `i` memory-homed and every widget id rebuilt with
     // its own `lea`, which cost 44 of the 62 blocks.
-    int id = CREATURE_NUM_1_ID;
-    for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++, id++) {
+    for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
         TUpgradeSlot& s = slot[i];
+        s.szCount[0] = 0;
         s.szGoldCost[0] = 0;
         s.szResourceCost[0] = 0;
         s.resourceIndex = -1;
-        s.szCount[0] = 0;
         s.type = pHero->army.armies[i];
         s.count = pHero->army.numTroops[i];
         s.level = akCreatureTypeTraits[s.type].level;
@@ -418,92 +451,93 @@ void THillFortWindow::Recalculate(unsigned char DrawDimmedButtons)
             strcpy(s.szGoldCost, gpGeneralText->GetText(346));
         }
 
+        int portrait_id = CREATURE_PORTRAIT_1_ID + i;
+        int num_id = CREATURE_NUM_1_ID + i;
+        int gold_icon_id = GOLD_ICON_1_ID + i;
+        int gold_cost_id = GOLD_COST_1_ID + i;
+        int res_icon_id = RES_ICON_1_ID + i;
+        int res_cost_id = RES_COST_1_ID + i;
+        int button_id = UPGRADE_BUTTON_1_ID + i;
+
         if (s.type != CREATURE_NONE && s.count > 0) {
             msg.id = MESSAGE_WIDGET;
             msg.codeX = widget::WIDGET_SET_ICON_FRAME;
-            msg.codeY = CREATURE_PORTRAIT_1_ID + i;
+            msg.codeY = portrait_id;
             msg.extra = s.type + 2;
             BroadcastMessage(&msg);
 
             msg.id = MESSAGE_WIDGET;
             msg.codeX = widget::WIDGET_SET_TEXT;
-            msg.codeY = id;
+            msg.codeY = num_id;
             msg.extraText = s.szCount;
             BroadcastMessage(&msg);
 
             msg.id = MESSAGE_WIDGET;
             msg.codeX = widget::WIDGET_SET_TEXT;
-            msg.codeY = id + 14;
+            msg.codeY = gold_cost_id;
             msg.extraText = s.szGoldCost;
             BroadcastMessage(&msg);
 
             msg.id = MESSAGE_WIDGET;
             if (s.resourceIndex == -1) {
                 msg.codeX = widget::WIDGET_CLEAR_STATUS;
-                msg.codeY = id + 21;
+                msg.codeY = res_icon_id;
                 msg.extra = widget::WIDGET_CLEAR_STATUS;
                 BroadcastMessage(&msg);
             } else {
                 msg.codeX = widget::WIDGET_SET_ICON_FRAME;
-                msg.codeY = id + 21;
+                msg.codeY = res_icon_id;
                 msg.extra = s.resourceIndex;
                 BroadcastMessage(&msg);
 
                 msg.id = MESSAGE_WIDGET;
                 msg.codeX = widget::WIDGET_SET_TEXT;
-                msg.codeY = id + 28;
+                msg.codeY = res_cost_id;
                 msg.extraText = s.szResourceCost;
                 BroadcastMessage(&msg);
             }
 
             if (!CanUpgradeCreature(creature_type_from_int(s.type))) {
                 s.state = UPGRADE_STATE_NONE;
-            } else {
-                for (int r = 0; r < armyGroup::ARMY_GROUP_SLOT_COUNT;
-                     r++) {
-                    if (s.cost[r] > gpCurrentPlayer->resources[r]) {
-                        s.state = UPGRADE_STATE_TOO_EXPENSIVE;
-                        goto have_state;
-                    }
-                }
+            } else if (CanAfford(s.cost, gpCurrentPlayer->resources)) {
                 s.state = UPGRADE_STATE_AFFORDABLE;
-            have_state:
-                ;
+            } else {
+                s.state = UPGRADE_STATE_TOO_EXPENSIVE;
             }
 
             msg.id = MESSAGE_WIDGET;
             msg.codeX = widget::WIDGET_SET_ICON_NAME;
-            msg.codeY = id + 0x31;
+            msg.codeY = button_id;
             msg.extraText = aszUpgradeIcons[s.state];
             BroadcastMessage(&msg);
         } else {
             msg.id = MESSAGE_WIDGET;
             msg.codeX = widget::WIDGET_CLEAR_STATUS;
-            msg.codeY = CREATURE_PORTRAIT_1_ID + i;
+            msg.codeY = portrait_id;
             msg.extra = widget::WIDGET_CLEAR_STATUS;
             BroadcastMessage(&msg);
 
             msg.id = MESSAGE_WIDGET;
             msg.codeX = widget::WIDGET_CLEAR_STATUS;
-            msg.codeY = id;
+            msg.codeY = num_id;
             msg.extra = widget::WIDGET_CLEAR_STATUS;
             BroadcastMessage(&msg);
 
             msg.id = MESSAGE_WIDGET;
             msg.codeX = widget::WIDGET_CLEAR_STATUS;
-            msg.codeY = id + 7;
+            msg.codeY = gold_icon_id;
             msg.extra = widget::WIDGET_CLEAR_STATUS;
             BroadcastMessage(&msg);
 
             msg.id = MESSAGE_WIDGET;
             msg.codeX = widget::WIDGET_CLEAR_STATUS;
-            msg.codeY = id + 21;
+            msg.codeY = res_icon_id;
             msg.extra = widget::WIDGET_CLEAR_STATUS;
             BroadcastMessage(&msg);
 
             msg.id = MESSAGE_WIDGET;
             msg.codeX = widget::WIDGET_SET_STATUS;
-            msg.codeY = id + 0x31;
+            msg.codeY = button_id;
             msg.extra = DrawDimmedButtons ? widget::WIDGET_DIMMED
                                           : widget::WIDGET_DIMMED_NODRAW;
             BroadcastMessage(&msg);
