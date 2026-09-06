@@ -1881,22 +1881,38 @@ int NewfullMap::readArtifactData(TAbstractFile* infile, CObject* artifactObject)
 // permutation that follows from it - the same class DrawAdvObj plateaus on,
 // and no source knob reaches it.  readArtifactData gets the param slot for
 // free because its single Read leaves `infile` dead immediately.
+// 2026-09-06, polish lane 36 (93.3240 -> 96.0056): the family `int count`
+// local for each Read result (see readResourceData below, which the same edit
+// took to EXACT).  Residual (96.01%): 26/26 blocks, 12/12 branches, 8/8 calls
+// and every reloc agree; what is left is ONE frame-home swap and its single
+// consequence.  Retail parks `char_buffer` in the recycled parameter home's
+// high byte [ebp+0xb] and `padding[3]` in [ebp-0x10]; we have them the other
+// way round, and because our char_buffer then sits in a whole dword slot VC6
+// reads it with `mov eax,[ebp-0x10] / and eax,0xff` and folds
+// `extraInfo ^= (extraInfo ^ char_buffer) & 0xff` into `and dl,0 / xor` - one
+// instruction shorter than retail's byte load plus literal xor/and/xor.
+// Measured and rejected against 96.0056: all six declaration orders of
+// char_buffer / count / padding with padding hoisted to function scope, and
+// count-before-char_buffer with padding left at its use - all byte-flat, so
+// declaration order is not what picks the recycled home here.
 VA(0x004ff2f0, 0x1D8)  // order-map: sibling of 0xff120, calls readTreasureData 0x4fee50; called by readObject; EH-bearing, dc 0xee2e0
 int NewfullMap::readSpellScrollData(TAbstractFile* infile, CObject* scrollObject)
 {
-    int treasureIndex = customTreasure.size();
+    int ListSize = customTreasure.size();
 
     unsigned char char_buffer;
+    int count;
     scrollObject->extraInfo = 0;
-    if (static_cast<unsigned>(infile->Read(&char_buffer, 1)) < 1)
+    count = infile->Read(&char_buffer, 1);
+    if (static_cast<unsigned>(count) < 1)
         return -1;
 
     if (char_buffer) {
         TreasureData tempTreasure;
         if (readTreasureData(infile, &tempTreasure) == 0) {
-            if (treasureIndex < 4000) {
+            if (ListSize < 4000) {
                 customTreasure.push_back(tempTreasure);
-                scrollObject->extraInfo = ((treasureIndex | 0xfffff000) << 19)
+                scrollObject->extraInfo = ((ListSize | 0xfffff000) << 19)
                     | (scrollObject->extraInfo & 0x7ffff);
             }
         } else {
@@ -1908,12 +1924,14 @@ int NewfullMap::readSpellScrollData(TAbstractFile* infile, CObject* scrollObject
     // record preceded it: the spell id into the low byte of extraInfo,
     // then three bytes of padding whose short count is the only failure
     // this tail reports.
-    if (static_cast<unsigned>(infile->Read(&char_buffer, 1)) < 1)
+    count = infile->Read(&char_buffer, 1);
+    if (static_cast<unsigned>(count) < 1)
         return -1;
     scrollObject->extraInfo ^= (scrollObject->extraInfo ^ char_buffer) & 0xff;
 
     unsigned char padding[3];
-    if (static_cast<unsigned>(infile->Read(padding, 3)) < 3)
+    count = infile->Read(padding, 3);
+    if (static_cast<unsigned>(count) < 3)
         return -1;
     return 0;
 }
@@ -1967,22 +1985,34 @@ int NewfullMap::readSpellScrollData(TAbstractFile* infile, CObject* scrollObject
 // pointer used for all four reads, a customTreasure reference, and both as
 // explicit pointers together are byte-flat at 76.9111%. C1 folds every alias
 // before allocation, so none reaches the EDI/EBX ownership decision.
+// 2026-09-06, polish lane 36 (76.9111 -> 100.0000 EXACT), the DC LOCAL-SCOPE
+// SWEEP.  EVERY reader in this family names an `int count` that holds each
+// Read's return value; only readBlackBox/loadBlackBox/readTownData/readHeroData
+// already had one.  Landing the result in that named local instead of writing
+// the call inside the compare closed this row outright, and with it both the
+// homing pair the note above bounds - `char_buffer` moved to retail's own
+// [ebp+0xb] and the TreasureData first byte to [ebp+0xf] - and the EDI/EBX
+// ownership decision.  The DC also names the size local `ListSize` and the
+// payload dword `int_buffer`; both renamed here to keep the family legible.
+// The sibling readSpellScrollData took the same edit 93.3240 -> 96.0056.
 VA(0x004ff4d0, 0x1DA)  // order-map: sibling of 0xff120, calls readTreasureData 0x4fee50; called by readObject; EH-bearing, dc 0xee410
 int NewfullMap::readResourceData(TAbstractFile* infile, CObject* resourceObject)
 {
-    int treasureIndex = customTreasure.size();
+    int ListSize = customTreasure.size();
 
     unsigned char char_buffer;
+    int count;
     resourceObject->extraInfo = 0;
-    if (static_cast<unsigned>(infile->Read(&char_buffer, 1)) < 1)
+    count = infile->Read(&char_buffer, 1);
+    if (static_cast<unsigned>(count) < 1)
         return -1;
 
     if (char_buffer) {
         TreasureData tempTreasure;
         if (readTreasureData(infile, &tempTreasure) == 0) {
-            if (treasureIndex < 4000) {
+            if (ListSize < 4000) {
                 customTreasure.push_back(tempTreasure);
-                resourceObject->extraInfo = ((treasureIndex | 0xfffff000) << 19)
+                resourceObject->extraInfo = ((ListSize | 0xfffff000) << 19)
                     | (resourceObject->extraInfo & 0x7ffff);
             }
         } else {
@@ -1990,13 +2020,15 @@ int NewfullMap::readResourceData(TAbstractFile* infile, CObject* resourceObject)
         }
     }
 
-    int amount;
-    if (static_cast<unsigned>(infile->Read(&amount, 4)) < 4)
+    int int_buffer;
+    count = infile->Read(&int_buffer, 4);
+    if (static_cast<unsigned>(count) < 4)
         return -1;
-    resourceObject->extraInfo ^= (resourceObject->extraInfo ^ amount) & 0x7ffff;
+    resourceObject->extraInfo ^= (resourceObject->extraInfo ^ int_buffer) & 0x7ffff;
 
     unsigned char padding[4];
-    if (static_cast<unsigned>(infile->Read(padding, 4)) < 4)
+    count = infile->Read(padding, 4);
+    if (static_cast<unsigned>(count) < 4)
         return -1;
     return 0;
 }
@@ -2640,34 +2672,49 @@ int NewfullMap::readSeerData(void* infile, CObject* seerObject)
 // so the split is past the B1 minimum slice; the B6 decl-order knob the
 // diagnoser proposes was measured - hoisting the padding buffer's
 // declaration to the top - and moved nothing (95.6955 either way).
+//
+// 2026-09-06, polish lane 36 (95.6955 -> 100.0000 EXACT), the DC LOCAL-SCOPE
+// SWEEP, and it settles the note above: the register that "retail keeps live"
+// was never `infile` alone.  The Dreamcast block names FIVE locals here -
+// padding, count, scholar_info, is_random, char_buffer - and `scholar_info`
+// is a POINTER (CodeView 0x44d8 -> LF_POINTER to the record), i.e. the record
+// is addressed ONCE through a named local and every lane write goes through
+// it.  Naming it, plus the family `int count` for the three Read results,
+// closes the row: the pointer occupies the register retail rematerializes and
+// the switch normalization falls back to the immediate form on its own.
 VA(0x00500b30, 0x2AE)  // order-map: calls Random 0x50b230 (DC parallel), only read-slot row between readEventData and readMineData; readSeerData has no retail row (quest-guard rewrite); EH-bearing, dc 0xefbb8
 int NewfullMap::readScholarData(TAbstractFile* infile, CObject* scholarObject)
 {
+    ScholarInfo* scholar_info = &scholarObject->scholar_info;
+
     signed char value;
-    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+    int count;
+    count = infile->Read(&value, sizeof(value));
+    if (count < sizeof(value))
         return -1;
 
     unsigned char isRandom = 0;
     if (value == -1) {
-        scholarObject->scholar_info.award = Random(0, 2);
+        scholar_info->award = Random(0, 2);
         isRandom = 1;
     } else {
-        scholarObject->scholar_info.award = value;
+        scholar_info->award = value;
     }
 
-    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+    count = infile->Read(&value, sizeof(value));
+    if (count < sizeof(value))
         return -1;
 
-    scholarObject->scholar_info.primary = 3;
-    scholarObject->scholar_info.secondary = -1;
-    scholarObject->scholar_info.spell = -1;
+    scholar_info->primary = 3;
+    scholar_info->secondary = -1;
+    scholar_info->spell = -1;
 
-    switch (scholarObject->scholar_info.award) {
+    switch (scholar_info->award) {
     case const_scholar_primary_skill:
         if (isRandom)
-            scholarObject->scholar_info.primary = Random(0, 3);
+            scholar_info->primary = Random(0, 3);
         else
-            scholarObject->scholar_info.primary = value;
+            scholar_info->primary = value;
         break;
 
     case const_scholar_secondary_skill:
@@ -2677,10 +2724,10 @@ int NewfullMap::readScholarData(TAbstractFile* infile, CObject* scholarObject)
                 if (!gpGame->field_4e658[skill])
                     candidates.push_back(skill);
             }
-            scholarObject->scholar_info.secondary =
+            scholar_info->secondary =
                 candidates[Random(0, candidates.size() - 1)];
         } else {
-            scholarObject->scholar_info.secondary = value;
+            scholar_info->secondary = value;
         }
         break;
 
@@ -2692,16 +2739,17 @@ int NewfullMap::readScholarData(TAbstractFile* infile, CObject* scholarObject)
                     && !gpGame->spellDisabled[spell])
                     candidates.push_back(spell);
             }
-            scholarObject->scholar_info.spell =
+            scholar_info->spell =
                 candidates[Random(0, candidates.size() - 1)];
         } else {
-            scholarObject->scholar_info.spell = value;
+            scholar_info->spell = value;
         }
         break;
     }
 
     unsigned char padding[6];
-    return infile->Read(padding, sizeof(padding)) < sizeof(padding) ? -1 : 0;
+    count = infile->Read(padding, sizeof(padding));
+    return count < sizeof(padding) ? -1 : 0;
 }
 
 #if 0  // @carcass -- located/reconstruction-pending bodies
