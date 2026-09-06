@@ -3412,6 +3412,20 @@ static void set_windmill_help_text(
 // missing branch is reachable and its price is higher than the branch, which
 // puts the OBELISK quarter of the deficit with the other three (the
 // QUEST_GUARD temporary's inlined _Tidy) in the budget class.
+// 2026-09-06, polish lane 36, the DC LOCAL-SCOPE SWEEP (93.9598 -> 94.0915):
+// the block names `thisHut` (CodeView 0x2664, sp+0x38) for the SEER arm's
+// SeerHutList row, so the row is addressed once through a named reference
+// instead of subscripted inside the rollover call.  Measured and rejected on
+// top of that: naming the LIGHTHOUSE arm's twice-read
+// `gpGame->mines[extraInfo].playerOwner` in the `owner` local the DC also
+// carries (sp+0x3c) - 93.8845, retail re-reads it; and moving the
+// `type_cell_adjuster` declaration up to the DC's slot order (between
+// tempText and playerbit) - 93.4910.  The DC's `cTemp` buffers x4 and its
+// `abandoned`/`guarded` pair do not transfer: Complete writes the global
+// gText here, and the mine arm is the separate AdvmgrFn_0040D670 body the DC
+// had inlined.  Its `player`/`iThisPlayer` are this body's `thisPlayer`/
+// `player` with the names swapped, and `this_generator`/`type` are
+// `mapGenerator`/`generatorType`.
 VA(0x0040b150, 0x229C)  // anchor-global, dc 0xc13c
 void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
 {
@@ -3696,9 +3710,8 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
         strcpy(gText, gResourceNames[cell->objectIndex]);
         break;
     case SEER: {
-        strcpy(gText,
-            fullMap->SeerHutList[cell->extraInfo]
-                .SeerHutFn_005741B0(player).c_str());
+        TSeerHut& thisHut = fullMap->SeerHutList[cell->extraInfo];
+        strcpy(gText, thisHut.SeerHutFn_005741B0(player).c_str());
         break;
     }
     case SHRINE1:
