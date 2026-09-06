@@ -844,7 +844,7 @@ void TCampaignStartBonusOption::Read(TAbstractFile* file)
         file->Read(&value, sizeof(unsigned char));
         count = value;
     }
-    for (int i = 0; i != count; ++i) {
+    while (count--) {
         unsigned char type;
         file->Read(&type, sizeof(unsigned char));
         TCampaignBonus* bonus;
@@ -1018,7 +1018,7 @@ void TCampaignStartCrossoverOption::Read(TAbstractFile* file)
         file->Read(&value, sizeof(unsigned char));
         count = value;
     }
-    for (int i = 0; i != count; ++i) {
+    while (count--) {
         TCampaignCrossoverChoice choice;
         {
             signed char player;
@@ -1095,6 +1095,16 @@ int TCampaignStartHeroOption::GetPlayer(int which) const
     return m_choices[which].player;
 }
 
+// 2026-09-06, polish lane 38: the read loop is `while (count--)`, not
+// `for (i = 0; i != count; ++i)` - retail's `mov X,count / dec count /
+// test X,X / je` tests the PRE-decrement value, and the index is never used
+// in the body, which is the source-side tell for the whole family. That took
+// the two sibling readers below to EXACT and this one 92.6089 -> 93.9951.
+// Residual (93.9951%): retail loads `file` into EBX in the prologue
+// (`mov ebx,[ebp+8]` at fn+0x7) where we keep the receiver elsewhere; 16/16
+// branches and the call multiset agree, and the 20 flow-kind blocks are that
+// one binding. This body differs from its two siblings only by the
+// `m_choices.erase(begin, end)` ahead of the loop.
 VA(0x00485b60, 0x1FB)  // anchor-vtable (0x63db0c+0x24), retail-only
 void TCampaignStartHeroOption::Read(TAbstractFile* file)
 {
@@ -1105,7 +1115,7 @@ void TCampaignStartHeroOption::Read(TAbstractFile* file)
         count = value;
     }
     m_choices.erase(m_choices.begin(), m_choices.end());
-    for (int i = 0; i != count; ++i) {
+    while (count--) {
         TCampaignHeroChoice choice;
         {
             signed char player;
