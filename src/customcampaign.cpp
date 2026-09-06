@@ -3054,13 +3054,14 @@ static short ReadCampaignWord(TAbstractFile* infile)
 //      rep stosd / and 3 / rep stosb` at 0x48a9ab..0x48a9c5 against our
 //      individual stores. Cost -0.70 at 59.0405, -0.41 at 60.5021, and
 //      +2.44 at the +20 dose.
-//   2. `campaignFilename = saved.campaignFilename;` instead of the explicit
+//   2. LANDED 2026-09-06 at 64.3277 (polish lane 46):
+//      `campaignFilename = saved.campaignFilename;` instead of the explicit
 //      `.assign(ptr, strlen(ptr))`. This is the section-6b depth ladder run
 //      BACKWARDS - operator=(const char*) -> assign(const char*) ->
 //      assign(ptr, len) puts the leaf one level deeper, and VC6 then CALLS
 //      `?assign@...@QAEAAV12@PBDI@Z` exactly where retail does (0x48a698),
 //      with the same inline `repne scasb` strlen in front of it. Cost -0.75
-//      at 59.0415, -0.31 at 60.5021.
+//      at 59.0415, -0.31 at 60.5021, +0.37 at 64.3277.
 //   3. LANDED 2026-09-06 at 62.2807 (polish lane 46): `days` and `score`
 //      read into a block-scoped temporary and then assigned, instead of
 //      `infile->Read(&scenario.days, ...)` straight into the member. Retail
@@ -3095,8 +3096,7 @@ void SCampaign::Load(TAbstractFile* infile, int saveVersion)
         briefingChoice = saved.briefingChoice;
         crossoverArrayIndex = 0;
         secretActive = false;
-        campaignFilename.assign(
-            saved.campaignFilename, strlen(saved.campaignFilename));
+        campaignFilename = saved.campaignFilename;
 
         memset(campaignCompleted, 0, sizeof(campaignCompleted));
         memcpy(campaignCompleted, saved.campaignCompleted,
