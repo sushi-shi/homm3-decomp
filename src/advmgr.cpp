@@ -918,7 +918,16 @@ int advManager::Open(int newPriority)
     if (iMPNetProtocol == MP_HOTSEAT) {
         gUnnamed6993dc = 1;
         gCompleteDrawEnabled = gpCurrentPlayer->IsLocalHuman();
-        char text[172];
+        // 2026-09-06, polish lane 35: this buffer is 256 bytes, not the
+        // 172 that used to sit here. The frame-delta sweep read it straight
+        // off the prologue - retail's `sub esp,0x11c` against our 0xc8 with
+        // an IDENTICAL homed-slot set (-4/-0xc/-0x10/-0x14/-0x18/-0x28) and
+        // the same `reversed` scratch at -0x28 - so the whole 84-byte gap
+        // sits between -0x28 and the bottom of the frame, which is this
+        // sprintf destination alone (retail leas [ebp-0x128] into it at
+        // +0x90c and +0x921). 172 -> 256 makes the frame retail's exactly
+        // and pays 97.9257 -> 97.9312.
+        char text[256];
         sprintf(text, gpGeneralText->GetText(14), gpCurrentPlayer->GetName());
         gpWindowManager->isWaitingForFadeIn = 0;
         gpGame->WaitForPlayer(text, gNetLocalGamePos);
