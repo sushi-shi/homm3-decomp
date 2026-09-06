@@ -1967,7 +1967,7 @@ game	?LoadBoatPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb
 game	?LoadGame@game@@QAEHPBDHH@Z	100.0000	100.0000	100.0000	0xbf330	c7302de7147c
 game	?LoadGarrisonPool@game@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xb96f0	e574c834f8c2
 game	?LoadHeroId@@YIHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xba210	a3d376c1431f
-game	?LoadMap@game@@QAE_NPAVTAbstractFile@@@Z	78.2855	78.2855	78.2855	0xc2450	5b82c03d01cf
+game	?LoadMap@game@@QAE_NPAVTAbstractFile@@@Z	74.4768	78.2855	78.2855	0xc2450	c1c5a3f220df
 game	?LoadMinePool@game@@QAEHPAVTAbstractFile@@H@Z	98.8718	100.0000	100.0000	0xb9340	2a102f6e81b3
 game	?LoadRumours@game@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbbe40	793f39b40d8e
 game	?LoadSignPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9070	f739107b463c
@@ -2525,7 +2525,7 @@ kb	?get_base_map_score@game@@QAEFXZ	100.0000	100.0000	100.0000	0xf3e30	08a36f004
 kb	?get_map_score@game@@QAEFXZ	100.0000	100.0000	100.0000	0xf3eb0	cd6028d198ab
 kb	?get_quickview_size@@YIXPBDPAH1@Z	100.0000	100.0000	100.0000	0xf62a0	c57fea7e1252
 kb	?handle_click@type_normal_dialog_frame@@UAEEEE@Z	99.9761	99.9761	99.9761	0xf0b20	7355af0f0d7b
-kb	?oldmain@@YIHXZ	78.7882	78.7882	78.7882	0xee3e0	5c1108f3cbf0
+kb	?oldmain@@YIHXZ	78.9421	78.9421	78.9421	0xee3e0	e6a189b95b2e
 kb	?set@type_dialog_icon@@QAEXW4EGameResource@@J@Z	99.1667	99.1667	99.1667	0xf4eb0	06cb359cd3d3
 kbwin	?AppAbout@@YGHPAUHWND__@@IIJ@Z	100.0000	100.0000	100.0000	0xf8140	b6d6a9ba7939
 kbwin	?AppCommand@@YIJPAUHWND__@@IIJ@Z	100.0000	100.0000	100.0000	0xf8060	ab51fe2b9295
@@ -2965,7 +2965,7 @@ philai	?AI_resource_cost@@YIHJPBH@Z	100.0000	100.0000	100.0000	0x126cc0	8cea72fd
 philai	?AI_resource_cost@@YIHPBVplayerData@@PBH@Z	100.0000	100.0000	100.0000	0x126c70	0c059083c765
 philai	?AI_set_hero_bonuses@@YIXPAVhero@@@Z	100.0000	100.0000	100.0000	0x127760	b01636d968c0
 philai	?AI_value_of_event@@YIJPBVhero@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x12bd10	38434512bbfc
-philai	?AI_value_of_event@@YIJPBVhero@@Utype_point@@AAJ@Z	97.7399	97.7399	97.7399	0x128040	97c274b82d73
+philai	?AI_value_of_event@@YIJPBVhero@@Utype_point@@AAJ@Z	97.7399	97.7399	97.7399	0x128040	43c7437b598d
 philai	?AI_visit_black_market@@YIXPAVhero@@PAUTBlackMarket@@@Z	100.0000	100.0000	100.0000	0x1243f0	4e37b54da6ec
 philai	?AI_visit_hill_fort@@YIXPAVhero@@@Z	100.0000	100.0000	100.0000	0x127bb0	4cf02eb55bbe
 philai	?AI_visit_university@@YIXPAVhero@@PAUtype_university@@@Z	100.0000	100.0000	100.0000	0x124ed0	bdd1bfaa3829
@@ -3488,7 +3488,7 @@ seerhut	?DoProposalDialog@type_defeat_hero_quest@@UAEXPAVhero@@@Z	100.0000	100.0
 seerhut	?DoProposalDialog@type_experience_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x16d4b0	f15a501e3b80
 seerhut	?DoProposalDialog@type_monster_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x16ec00	75b80eb26ca1
 seerhut	?DoProposalDialog@type_resource_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x171840	7ff03694331f
-seerhut	?DoProposalDialog@type_skill_quest@@UAEXPAVhero@@@Z	81.0631	81.0631	81.0631	0x16dad0	d0cd549fb73b
+seerhut	?DoProposalDialog@type_skill_quest@@UAEXPAVhero@@@Z	83.2252	83.2252	83.2252	0x16dad0	a1e0901e1704
 seerhut	?DoSeerEvent@TSeerHut@@QAEXPAVhero@@_N@Z	42.5710	46.3642	46.3642	0x173670	fd83ce70c563
 seerhut	?GetAIValue@type_artifact_quest@@UAEHH@Z	100.0000	100.0000	100.0000	0x16f5a0	e8c4868db654
 seerhut	?GetAIValue@type_creature_quest@@UAEHH@Z	100.0000	100.0000	100.0000	0x170480	386e7f03466e
