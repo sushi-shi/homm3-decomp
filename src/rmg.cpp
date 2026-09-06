@@ -22,6 +22,8 @@
 #include "armygrp.h"
 #include "bitset_iterator.h"
 #include "homm3_minmax.h"
+#include "objnames.h"
+#include "resourcemanager.h"
 #include "rmg.h"
 #include "textresource.h"
 #include "town.h"
@@ -127,41 +129,6 @@ static bool IsRmgTemplateFieldSet(const char* value)
 
 } // namespace
 
-namespace std {
-
-// WriteMapHeader's ordered retail call stream is the boundary oracle for the
-// TU-local Dinkumware definitions below. Temporary inline pins plus the MAX
-// ratchets those calls.  Negative control: removing both string constructor
-// definitions regresses WriteMapHeader from 95.70% to 94.10%, grows its frame
-// from 0x32c to 0x334, and adds three target-only calls.
-template <>
-inline basic_string<char, char_traits<char>, allocator<char> >::basic_string(
-    const std::allocator<char>& value)
-    : allocator(value)
-{
-    // WriteMapHeader -> basic_string::_Tidy: retail retains this call.
-#pragma inline_depth(0)
-    _Tidy();
-#pragma inline_depth()
-}
-
-template <>
-inline basic_string<char, char_traits<char>, allocator<char> >::basic_string(
-    const char* source,
-    const std::allocator<char>& value)
-    : allocator(value)
-{
-    // WriteMapHeader -> basic_string::_Tidy: retail retains this call.
-#pragma inline_depth(0)
-    _Tidy();
-#pragma inline_depth()
-    // WriteMapHeader -> basic_string::assign: retail retains this call.
-#pragma inline_depth(0)
-    assign(source, strlen(source));
-#pragma inline_depth()
-}
-
-} // namespace std
 
 template <>
 inline bool std::bitset<156>::test(size_t position) const
@@ -502,6 +469,112 @@ type_spell_scroll_def::type_spell_scroll_def(int newSpellLevel, int newValue)
     : type_treasure_def(0x5d, 0, newValue, 30)
 {
     spellLevel = newSpellLevel;
+}
+
+// rand_trn.txt supplies one rule per nonempty row starting at row three.
+// The two 232x10 vector grids group rules and subtypes by remapped object
+// type and preferred terrain. The final reverse scan gives later rows
+// precedence for the same subtype. Names are provisional; RMG is absent
+// from the Dreamcast build. Retail fixes the record stride at 0x4c.
+// Residual (97.58%): push_back still expands the two-argument rule-vector
+// insert that retail calls at 0x536701, and bitset<10>::_Xran expands its
+// string constructor where retail calls 0x48b370 at 0x536b26. The int/pointer
+// vector destructor, size, erase and pointer-insert name differences are
+// ICF aliases. The emitted int-vector allocator constructor is 0x5157d0.
+// Source controls: initialize row before the vectors, increment it before
+// rule destruction, and pass an explicit zero to both resize calls (84.89%
+// versus 83.93%). A post-decrement reverse scan gives retail's old-count
+// tests (89.99%); a signed size()-1 / >=0 loop does not. Reusing objectType,
+// subtype and terrain across parsing/binding preserves their escaped homes
+// and restores the binding pass (97.58%). Separate locals strength-reduce
+// the type stride and lose the terrain/subtype homes.
+// An index-taking rule constructor moves the completed-construction EH
+// state past the id assignment (97.31%); retain default-then-assign. Direct
+// insert(end(),rule) still expands its two-argument overload and costs
+// additional scheduling differences (95.87%). Signed/unsigned prototype
+// indices and combined/nested reverse-loop conditions are byte-neutral.
+// Temporary depth 1 at push_back and depth 2 at test, intended to stop the
+// named nested callees, are byte-neutral at 97.58%; both were removed.
+// Removing the old TU-local string constructor specializations and their
+// three pins is also neutral here. Canonical library constructors remain;
+// WriteMapHeader's 95.71% MAX is preserved with that collateral measured.
+VA(0x00536560, 0x5F2) // anchor-string rand_trn.txt; thiscall, ret 0; retail-only
+void type_random_map_generator::ReadObjectPlacementRules()
+{
+    TSpreadsheetResource* sheet = ResourceManager::GetSpreadsheet(
+        DATA_COMPGEN(0x006827F4, rmgPlacementRulesFilename, "rand_trn.txt"));
+    int row = 3;
+    std::vector<int> objectTypes;
+    std::vector<int> terrains;
+    std::vector<int> subtypes;
+    int objectType;
+    int subtype;
+    int terrain;
+    for (; row < sheet->GetNumberOfRows();) {
+        const TSpreadsheetResource::TStringVector& values = sheet->GetRow(row);
+        if (values[0][0] == ' ' || values[0][0] == 0)
+            break;
+        TRmgObjectPlacementRule rule;
+        rule.index = row - 3;
+        objectType = atoi(values[3]);
+        subtype = atoi(values[4]);
+        terrain = atoi(values[6]);
+        objectTypes.push_back(objectType);
+        terrains.push_back(terrain);
+        subtypes.push_back(subtype);
+        for (terrain = 0; terrain <= eTerrainWater; ++terrain)
+            rule.terrainScores[terrain] = atoi(values[terrain + 7]);
+        for (; terrain < 10; ++terrain)
+            rule.terrainScores[terrain] = RMG_PLACEMENT_INVALID;
+        placementRules.push_back(rule);
+        ++row;
+    }
+    int ruleCount = placementRules.size();
+    for (row = 3; row < ruleCount + 3; ++row) {
+        const TSpreadsheetResource::TStringVector& values = sheet->GetRow(row);
+        TRmgObjectPlacementRule& rule = placementRules[row - 3];
+        rule.adjacentScores.resize(ruleCount, 0);
+        for (int index = 0; index < ruleCount; ++index)
+            rule.adjacentScores[index] = atoi(values[index + 16]);
+        rule.blockedScores.resize(ruleCount, 0);
+        for (index = 0; index < ruleCount; ++index)
+            rule.blockedScores[index] = atoi(values[index + ruleCount + 16]);
+    }
+    sheet->Dispose();
+
+    std::vector<TRmgObjectPlacementRule*> rulesByType[ADVENTURE_OBJECT_TRAIT_COUNT][10];
+    std::vector<int> subtypesByType[ADVENTURE_OBJECT_TRAIT_COUNT][10];
+    for (int index = 0; index < ruleCount; ++index) {
+        TRmgObjectPlacementRule* rule = &placementRules[index];
+        rulesByType[objectTypes[index]][terrains[index]].push_back(rule);
+        subtypesByType[objectTypes[index]][terrains[index]].push_back(subtypes[index]);
+    }
+    for (objectType = 0; objectType < ADVENTURE_OBJECT_TRAIT_COUNT; ++objectType) {
+        for (int index = 0; index < objectPrototypes[objectType].size();
+             ++index) {
+            TRmgObjectPropertiesRef* properties = objectPrototypes[objectType][index];
+            TObjectType* prototype = properties->prototype;
+            properties->placementRule = 0;
+            for (terrain = 0; terrain < eTerrainRock; ++terrain) {
+                if (prototype->recommendedTerrainMask.test(terrain))
+                    break;
+            }
+            properties->preferredTerrain = terrain;
+            if (terrain != eTerrainRock) {
+                subtype = prototype->subtype;
+                int mappedType;
+                // Same canonical byte table used by readObjectType: the
+                // dword at +8 remaps aliases to their objnames.txt row.
+                memcpy(&mappedType, &gAdventureObjectLandBlocked[objectType][8],
+                       sizeof(mappedType));
+                int match = rulesByType[mappedType][terrain].size();
+                while (match-- && subtypesByType[mappedType][terrain][match] != subtype)
+                    ;
+                if (match >= 0)
+                    properties->placementRule = rulesByType[mappedType][terrain][match];
+            }
+        }
+    }
 }
 
 // Rank a footprint against terrain and already placed objects. The caller
@@ -2071,6 +2144,12 @@ VA_COMPGEN(0x00404200, 0x209, VECTOR_INSERT, Int)
 VA_COMPGEN(0x00422F50, 0x1B1, VECTOR_INSERT, Int)
 VA_COMPGEN(0x004347A0, 0x32E, VECTOR_INSERT, TRmgMapPosition)
 
+// ReadObjectPlacementRules retains the allocator-taking int-vector ctor;
+// its two local vector grids also take the default-constructor closure's
+// address. Resolved retail bodies are 27/27 and 24/24 bytes respectively.
+VA_COMPGEN(0x005157D0, 0x1B, CLASS_CTOR, vector)
+VA_COMPGEN(0x00536BA0, 0x18, DEFAULT_CTOR_CLOSURE, vector)
+
 // FilterZonePositions retains this size calculation four times. Retail
 // divides the template connection pointer span by its proven 0x1c stride.
 VA_COMPGEN(0x0054C1B0, 0x23, VECTOR_SIZE, TRmgZoneConnection)
@@ -2078,6 +2157,10 @@ VA_COMPGEN(0x0054C1B0, 0x23, VECTOR_SIZE, TRmgZoneConnection)
 // DrawIrregularZoneBoundary retains this single-element erase. Its
 // eight-byte copy loop and ret 4 agree in all 61 raw retail bytes.
 VA_COMPGEN(0x0054CD70, 0x3D, VECTOR_ERASE, TPoint)
+
+// The reader's two resize shrink arms retain this int-vector erase.
+// All 51 raw bytes agree; no calls or data relocations remain unresolved.
+VA_COMPGEN(0x0054CDB0, 0x33, VECTOR_ERASE, Int)
 
 // FilterZonePositions erases 12-byte positions through this forward copy;
 // the retained body copies three dwords and returns the end pointer.
@@ -2467,7 +2550,10 @@ void type_random_map_generator::CreateRiver(TRmgMapPosition source)
 // has no RMG compiland, so the method spelling remains provisional while its
 // class offsets and serialization order are retail-byte facts.
 //
-// Residual (95.71%, 2026-09-03): all 164 CFG blocks and all 87 branches align;
+// Current 94.10% after removing the TU-local string constructor
+// specializations and their three inline pins. Their removal is byte-neutral
+// in ReadObjectPlacementRules; the canonical library definitions stay in use.
+// Historical peak (95.71%): all 164 CFG blocks and all 87 branches align;
 // 152 blocks also have exact emitted sizes.  The remaining twelve are local
 // lowering differences.  Retail's frame is 0x318 versus 0x310 here and its
 // legacy-artifact copy preserves one extra two-word end iterator.  Directly
