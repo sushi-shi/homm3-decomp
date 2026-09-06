@@ -1873,7 +1873,7 @@ void hero::update_spell_list()
                     unsigned char* dst = available_spells;
                     unsigned int spell = 0;
                     while (dst != available_spells + NUM_SPELLS) {
-                        *dst = granted.test(spell) || *dst;
+                        *dst = *dst || granted.test(spell);
                         ++dst;
                         ++spell;
                     }
@@ -1889,7 +1889,7 @@ void hero::update_spell_list()
                             unsigned char* dst = available_spells;
                             unsigned int spell = 0;
                             while (dst != available_spells + NUM_SPELLS) {
-                                *dst = granted.test(spell) || *dst;
+                                *dst = *dst || granted.test(spell);
                                 ++dst;
                                 ++spell;
                             }
@@ -2669,6 +2669,21 @@ void hero::CheckLevel()
 // `(id == ...) == true`.  VC6 folds every one back to the direct `jne`, so
 // the `sete cl / test cl,cl / je` triple is not reachable from the operand
 // side of this comparison.
+// Polish lane 37 found the construct that DOES emit the triple under this
+// exact toolchain, by scanning every base object for `set(n)e r8` followed
+// by `test r8,r8`: 148 sites, and the clean witness is
+// victorylossconditions.cpp's `same_team` - a PLAIN `static bool` free
+// function DEFINED IN THE .CPP with no `inline` keyword, whose body is one
+// comparison. /Ob2 auto-inlining (not `inline` expansion) is what leaves the
+// return value materialized, which is why every header `inline` predicate
+// measured above came back byte-flat: the two expansions run through
+// different paths in C1XX. The same gate is byte-for-byte identical in
+// hero::CheckLevel (0x4da720) and townmgr.cpp:3745, so one admissible
+// spelling would pay three times. It is NOT admissible here: the Dreamcast
+// hero.obj roster names only get_skill_award, handle_artifact_click,
+// handle_backpack_click and initialize_move_constants as hero.cpp statics,
+// so a fourth file-static predicate would be invented source. Recorded as a
+// lead, not a fix.
 VA(0x004dad00, 0x283)  // anchor-caller + arity, dc 0xccf78
 TSecondarySkill get_skill_award(const hero* current_hero, TSkillMastery min_level, TSkillMastery max_level, TSecondarySkill excluded)
 {
