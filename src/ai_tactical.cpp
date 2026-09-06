@@ -3191,6 +3191,17 @@ long type_AI_spellcaster::get_berserk_value(const army* enemy, type_enchant_data
 // turns as the spell lasts, and every OTHER stack on the enemy side
 // that the seed marked reachable is run through get_traitor_value,
 // keeping the best.
+// RE-MEASURED 2026-09-06 in the current inline structure, and the earlier
+// verdict stands to the digit: the `>> 26` test spelled with the same byte
+// truncation the `>> 21` site uses - retail's `shr ecx,0x1a / test cl,0x1` -
+// scores 90.9036 both as a named `unsigned char slow_flags` and as an inline
+// `static_cast<unsigned char>(...) & 1`, against 96.3546 for the folded
+// `test ecx,0x4000000` kept here.  The truncation is locally RIGHT and the
+// cost is downstream: with it, `enemy_row` lands in ECX and the whole
+// `lea esi,[eax+8*ecx+0x54cc]` row-pointer allocation retail keeps in ESI
+// moves with it, which is the 5.45 points.  Two sites in one body wanting
+// opposite spellings of the same shift is the recorded state, not an
+// oversight.
 VA(0x0043a500, 0x16E)  // linkorder, dc 0x40ac0
 long type_AI_spellcaster::get_hypnotize_value(const army* enemy, type_enchant_data caster)
 {
