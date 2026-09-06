@@ -7,6 +7,26 @@
 # date: 2026-08-04
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 # 11943 functions; size INCLUDES jump tables
+# BOUNDARY CORRECTION 2026-09-06 (b): the EH try-block census over the
+# image's FuncInfo records (every `_s_FuncInfo` with nTryBlocks > 0, its
+# TryBlockMap and the HandlerType addressOfHandler each names) leaves
+# exactly five catch funclets sitting OUTSIDE the row that pushed their
+# handler. Two belong to claimed rows and are absorbed here, same defect
+# and same proof as the LoadFontData correction below - no prologue, the
+# parent's EBP frame, and a `__CxxThrowException@8` rethrow that never
+# returns:
+#   0x0e2840 hero::HeroFn_004E2840  412 -> 437 (0x1b5), absorbing the
+#     0x0e29dc funclet (25 B: `equip_artifact(&displaced, slot)` off
+#     [ebp-0x1c]/[ebp-0x14] then `push 0/push 0/call __CxxThrowException`);
+#     eleven 0x90 nops to equip_artifact's own 0x0e2a00 prologue.
+#   0x114d80 TObjectTypeTable::load 627 -> 644 (0x284), absorbing the
+#     0x114ff3 funclet (17 B: virtual Dispose through [ebp+8] then the
+#     same rethrow); twelve nops to 0x115010.
+# The three remaining out-of-row funclets are the continuation-returning
+# kind (`mov eax,<continuation>; ret`) on rows nothing claims yet and are
+# left alone: 0x004c29 under basic_string::_Copy at 0x4bd0, 0x14c0fe under
+# 0x14c090, and 0x212600 whose parent the handler-stub walk cannot resolve.
+# 11949 rows since.
 # BOUNDARY CORRECTION 2026-09-06: objecttype.obj's four EH-bearing
 # Dinkumware extraction operators are ONE function each, not the two or
 # three rows the carve carried. Every one has the same shape and every
@@ -2873,8 +2893,7 @@ rva	size
 0xe23a0	39
 0xe23d0	374
 0xe2550	748
-0xe2840	412
-0xe29dc	25
+0xe2840	437
 0xe2a00	455
 0xe2bd0	372
 0xe2d50	126
@@ -3530,8 +3549,7 @@ rva	size
 0x114960	173
 0x114a60	285
 0x114b80	503
-0x114d80	627
-0x114ff3	17
+0x114d80	644
 0x115010	408
 0x1151b0	170
 0x115260	15

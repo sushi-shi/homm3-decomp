@@ -1999,7 +1999,7 @@ void TTradeResourceWindow::Update(unsigned char bUpdate)
         BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, MARKET_TITLE_ID, 0x1006);
     }
 
-    for (int side = 0; side < 2; ++side) {
+    for (unsigned int side = 0; side < 2; ++side) {
         if (gSelectedArtifact != -1 && gLeftResource != -1 &&
             gSelectedArtifact != gLeftResource) {
             if (side == 0) {
@@ -2072,16 +2072,33 @@ void TTradeResourceWindow::Update(unsigned char bUpdate)
                         float ratio = static_cast<float>(gMarketValues[i])
                             / (static_cast<float>(gMarketValues[gSelectedArtifact])
                                * fTradingPostEfficency[gMarketCount]);
+                        // The two `sprintf(gText, "%d", n)` arms are ONE
+                        // source statement, reached from the n == 1 fall-
+                        // through and from the sub-unity ftol arm.  Written
+                        // as two separate statements (the shape this
+                        // replaces) VC6 folds n to the literal 1 in the
+                        // equal arm before C2 tail-merges them, so the merge
+                        // lands one instruction late - our `push 1` at
+                        // fn+0x795 with the ftol arm jumping to fn+0x797,
+                        // against retail's single `push eax` at fn+0x7d8
+                        // that the `je` and the ftol fall-through share.
+                        // One statement blocks the fold and reproduces
+                        // retail's block order (1/%d arm, ftol arm, shared
+                        // %d arm): 86.8746 -> 88.4300, call view DIFFERS ->
+                        // AGREE at 54/54 (2026-09-06, reloc census).
+                        long n;
                         if (ratio >= 1.0f) {
-                            long n = static_cast<long>(ratio + 0.5);
-                            if (n != 1)
+                            n = static_cast<long>(ratio + 0.5);
+                            if (n != 1) {
                                 sprintf(gText, DATA_COMPGEN(0x0068c5dc, inverseRatioFormat, "1/%d"), n);
-                            else
-                                sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"), n);
+                                goto ratioDone;
+                            }
                         } else {
-                            long n = static_cast<long>(1.0f / ratio + 0.5);
-                            sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"), n);
+                            n = static_cast<long>(1.0f / ratio + 0.5);
                         }
+                        sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"), n);
+                    ratioDone:
+                        ;
                     }
                 } else {
                     sprintf(gText, emptyRolloverText);

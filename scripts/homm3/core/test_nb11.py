@@ -16,7 +16,7 @@ def _symbol(kind, body=b""):
     return struct.pack("<HH", len(body) + 2, kind) + body
 
 
-def fixture(*, bad_record=False, bad_lines=False) -> bytes:
+def fixture(*, bad_record=False, bad_lines=False, global_types=None) -> bytes:
     proc = _symbol(0x100b, struct.pack("<8IHB", 0, 0, 0, 32, 0, 32,
                                     0x1000, 0x100, 1, 0) + _name("Function"))
     block = _symbol(0x0207, struct.pack("<4IH", 4, 0, 8, 0x108, 1) + _name(""))
@@ -42,8 +42,11 @@ def fixture(*, bad_record=False, bad_lines=False) -> bytes:
 
     stream = bytearray(b"NB11" + b"\0" * 4)
     entries = []
-    for kind, index, data in [(0x120, 1, module), (0x125, 1, symbols),
-                              (0x127, 1, header + file + lines), (0x12a, 65535, public)]:
+    sections = [(0x120, 1, module), (0x125, 1, symbols),
+                (0x127, 1, header + file + lines), (0x12a, 65535, public)]
+    if global_types is not None:
+        sections.append((0x12b, 65535, global_types))
+    for kind, index, data in sections:
         entries.append(struct.pack("<HHII", kind, index, len(stream), len(data)))
         stream += data
     struct.pack_into("<I", stream, 4, len(stream))
@@ -65,6 +68,43 @@ def fixture(*, bad_record=False, bad_lines=False) -> bytes:
 
 
 class NB11Test(unittest.TestCase):
+    def test_global_type_offsets_are_relative_to_the_record_area(self):
+        modifier = _symbol(0x1001, struct.pack("<IH", 0x74, 1))
+        pointer = _symbol(0x1002, struct.pack("<II", 0x1000, 10))
+        types = struct.pack("<4I", 2, 2, 0, len(modifier)) + modifier + pointer
+        symbols = nb11.parse(fixture(global_types=types))
+        self.assertEqual(symbols.type_records, {0x1000: modifier, 0x1001: pointer})
+        with self.assertRaisesRegex(nb11.NB11Error, "truncated"):
+            nb11.parse(fixture(global_types=types[:-1]))
+
+    def test_variables_keep_type_argument_boundary_and_coincident_scope_parents(self):
+        proc = _symbol(0x100b, struct.pack("<8IHB", 0, 0, 0, 32, 4, 28,
+                                         0x1000, 0x100, 1, 0) + _name("Overloaded"))
+        param = _symbol(0x100d, struct.pack("<IIH", 4, 0x74, 25) + _name("value"))
+        endarg = _symbol(0xa)
+        outer_offset = 4 + len(proc + param + endarg)
+        inner_offset = outer_offset + 24
+        outer = _symbol(0x207, struct.pack("<4IH", 4, inner_offset + 24 + 20 + 4,
+                                          8, 0x108, 1) + _name(""))
+        inner = _symbol(0x207, struct.pack("<4IH", outer_offset, inner_offset + 24 + 20,
+                                          8, 0x108, 1) + _name(""))
+        # Align the synthetic records like sstAlignSym, where an empty block is 24 B.
+        outer = struct.pack("<H", 22) + outer[2:] + b"\0"
+        inner = struct.pack("<H", 22) + inner[2:] + b"\0"
+        local = _symbol(0x100d, struct.pack("<IIH", 0xfffffffc, 0x75, 24) + _name("value"))
+        body = bytearray(proc + param + endarg + outer + inner + local + _symbol(6) + _symbol(6))
+        struct.pack_into("<I", body, 8, 4 + len(body))
+        body += _symbol(6)
+        symbols = nb11.Symbols()
+        nb11._symbols(nb11._View(struct.pack("<I", 2) + body), 4, symbols, {1: 0x11000}, "unit.obj")
+        result = symbols.procedures[0x100]
+        self.assertEqual((result.type_index, result.debug_start, result.debug_end), (0x1000, 4, 28))
+        self.assertEqual([(v.name, v.kind, v.type_index) for v in result.variables],
+                         [("value", "param", 0x74), ("value", "local", 0x75)])
+        self.assertEqual(result.variables[1].scope, inner_offset)
+        self.assertEqual(result.variables[1].storage, "fp-0x4")
+        self.assertEqual(result.lexical_scopes[1].parent, outer_offset)
+
     def test_embedded_procedures_nested_scopes_names_and_duplicate_lines(self):
         symbols = nb11.parse(fixture())
         proc = symbols.procedures[0x100]

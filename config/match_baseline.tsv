@@ -77,11 +77,11 @@ advmgr	?DeactivateCurrHero@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x175a
 advmgr	?DeactivateCurrTown@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x17570	65cf91ab93a3
 advmgr	?DemobilizeCurrHero@advManager@@QAEXEE@Z	100.0000	100.0000	100.0000	0x17680	0e81b70808b2
 advmgr	?DisableButtons@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1a2e0	d6a15e176a45
-advmgr	?DoAdvCommand@advManager@@QAEPAVNewmapCell@@PAUtype_point@@@Z	94.3953	94.3953	94.3953	0x7b80	32436604fe85
+advmgr	?DoAdvCommand@advManager@@QAEPAVNewmapCell@@PAUtype_point@@@Z	94.3953	94.3953	94.3953	0x7b80	258a571e082f
 advmgr	?DoAdventureOptions@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1ab00	7e482f83bb0c
 advmgr	?DoSystemOptions@advManager@@QAEEXZ	100.0000	100.0000	100.0000	0x1ac00	0c2dfd994c0d
-advmgr	?DrawAdvObj@advManager@@QAEXHHHHH@Z	87.9441	87.9441	87.9441	0x10c00	c26caf1d0826
-advmgr	?DrawAdvObjShadow@advManager@@QAEXHHHHH@Z	85.2335	85.2335	85.2335	0x11590	0fc90effafac
+advmgr	?DrawAdvObj@advManager@@QAEXHHHHH@Z	87.9441	87.9441	87.9441	0x10c00	2b4e6eaa9d59
+advmgr	?DrawAdvObjShadow@advManager@@QAEXHHHHH@Z	85.2335	85.2335	85.2335	0x11590	a82206c7e2ca
 advmgr	?DrawAdventureMapGems@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0xf2f0	9d3fdf2e2504
 advmgr	?DrawArrow@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x120b0	26e7ce6af6e8
 advmgr	?DrawArrowShadow@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x11f50	555da37301d0
@@ -119,18 +119,18 @@ advmgr	?MapExtraPosAndAdjacentsSet@@YIHHHHE@Z	100.0000	100.0000	100.0000	0x1a750
 advmgr	?MobilizeCurrHero@advManager@@QAEXHEE@Z	100.0000	100.0000	100.0000	0x175e0	c62e97fe2615
 advmgr	?MonsterQuickView@advManager@@QAEXPBVNewmapCell@@HH@Z	100.0000	100.0000	100.0000	0x17150	524a4a09d472
 advmgr	?MoreTreesNear@advManager@@QAEHUtype_point@@@Z	100.0000	100.0000	100.0000	0x1adb0	f79b495487dd
-advmgr	?Open@advManager@@UAEHH@Z	97.9312	97.9312	97.9312	0x6fd0	acc921497144
+advmgr	?Open@advManager@@UAEHH@Z	97.9312	97.9312	97.9312	0x6fd0	36e23b533065
 advmgr	?OverrideBottomView@advManager@@QAEXW4EBottomViewType@1@H@Z	100.0000	100.0000	100.0000	0x15d60	98751fa2643c
 advmgr	?PopupPlayerTurnInfo@@YIXXZ	100.0000	100.0000	100.0000	0x19c80	98baf175609e
 advmgr	?ProcessDeSelect@advManager@@QAEHPBVmessage@@PAEPAUtype_point@@PAPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x9a70	ea04b60e2e3c
 advmgr	?ProcessHover@advManager@@QAEHHH@Z	91.6263	91.6263	91.6263	0xe360	16cc0b40843a
-advmgr	?ProcessKeyPress@advManager@@QAEHPBVmessage@@PAEPAUtype_point@@PAPAVNewmapCell@@@Z	97.6091	97.6091	97.6091	0x8c40	b6aba7b9a3a7
+advmgr	?ProcessKeyPress@advManager@@QAEHPBVmessage@@PAEPAUtype_point@@PAPAVNewmapCell@@@Z	97.6091	97.6091	97.6091	0x8c40	18b0e637c781
 advmgr	?ProcessMapSelect@advManager@@QAEXPBVmessage@@PAUtype_point@@PAPAVNewmapCell@@@Z	91.1006	91.1006	91.1006	0xa5d0	3d3b17f3fece
 advmgr	?ProcessRadarSelect@advManager@@QAEXPBVmessage@@@Z	100.0000	100.0000	100.0000	0xa0c0	5c36b56e1c0a
 advmgr	?ProcessSearch@advManager@@QAEHHHH@Z	94.6792	94.6792	94.6792	0xec90	438a0713d228
 advmgr	?ProcessSelect@advManager@@QAEHPBVmessage@@PAUtype_point@@PAPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x97e0	61b96265198a
 advmgr	?ProcessWaitingHover@advManager@@QAEHHH@Z	96.1467	96.1467	96.1467	0xdeb0	20e951caf93a
-advmgr	?QuickInfo@advManager@@QAEXHHH@Z	95.0826	95.0826	95.0826	0x137c0	b85e7f843cc1
+advmgr	?QuickInfo@advManager@@QAEXHHH@Z	95.9234	95.9234	95.9234	0x137c0	527855ad442e
 advmgr	?RedrawAdvScreen@advManager@@QAEXEE@Z	100.0000	100.0000	100.0000	0x17420	0617381048e0
 advmgr	?Reseed@advManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0xec80	d2e859e634b8
 advmgr	?SaveGame@@YIEE@Z	100.0000	100.0000	100.0000	0x18160	82f9544efca0
@@ -138,9 +138,9 @@ advmgr	?ScanForHeroOrBoat@advManager@@QAE_NHHHGAAY05UTDrawParts@@@Z	100.0000	100
 advmgr	?ScreenScroll@advManager@@QAEXHH@Z	97.8177	97.8177	97.8177	0x195c0	50a3937e522c
 advmgr	?SeedTo@advManager@@QAEXUtype_point@@@Z	100.0000	100.0000	100.0000	0x194a0	4e87ce523fb9
 advmgr	?SetEnvironmentOrigin@advManager@@QAEXUtype_point@@H@Z	75.4080	75.4080	75.4080	0x183d0	31adb9c926f0
-advmgr	?SetHeroContext@advManager@@QAEXHHEE@Z	99.2746	99.2746	99.2746	0x17b20	67bd9ddfde14
+advmgr	?SetHeroContext@advManager@@QAEXHHEE@Z	99.2746	99.2746	99.2746	0x17b20	a76eac8cc445
 advmgr	?SetInitialMapOrigin@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19990	d4815376fb68
-advmgr	?SetRolloverText@advManager@@QAEXPAVNewmapCell@@HH@Z	94.0915	94.0915	94.0915	0xb150	8195a0c987cf
+advmgr	?SetRolloverText@advManager@@QAEXPAVNewmapCell@@HH@Z	96.9535	96.9535	96.9535	0xb150	2d434de13d35
 advmgr	?SetShrineHelpText@@YIXPADPAVhero@@PAVNewmapCell@@W4GlobalInfoFlags@@PBD4@Z	100.0000	100.0000	100.0000	0xd8d0	186a1bc7eb31
 advmgr	?SetTownContext@advManager@@QAEXHEE@Z	93.8054	93.8054	93.8054	0x17830	0678260132cc
 advmgr	?SetTreeHelpText@@YIXPADPAVhero@@PAVNewmapCell@@PBD3@Z	100.0000	100.0000	100.0000	0xdb00	8821e50e48f1
@@ -166,7 +166,7 @@ advmgr	?append@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEA
 advmgr	?append@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@PBDI@Z	100.0000	100.0000	100.0000	0x1b340	-
 advmgr	?cell@NewfullMap@@QAEPAVNewmapCell@@HHH@Z	100.0000	100.0000	100.0000	0x8770	d9676b83e713
 advmgr	?garrison_quick_view@advManager@@QAEXHHH@Z	96.6429	96.6429	96.6429	0x16f80	5bed873653fa
-advmgr	?get_army_help_text@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBVarmyGroup@@E@Z	93.2089	93.2089	93.2089	0xabe0	3d25d131b4cf
+advmgr	?get_army_help_text@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBVarmyGroup@@E@Z	93.2089	93.2089	93.2089	0xabe0	a67a5ce5a353
 advmgr	?get_black_box@ExtraInfoUnion@@QBEPAVBlackBoxData@@XZ	100.0000	100.0000	100.0000	0x5de0	53092f238b2b
 advmgr	?get_creature_bank@ExtraInfoUnion@@QBEAAUtype_creature_bank@@XZ	100.0000	100.0000	100.0000	0x5df0	62cda218786a
 advmgr	?get_creature_bank_help_text@@YIXPADPAVNewmapCell@@W4type_creature_bank_type@@JPBDE@Z	90.0750	90.0750	90.0750	0xd3f0	7246880f4696
@@ -203,7 +203,7 @@ ai	?choose_creature_spell@combatManager@@QAEEPBVarmy@@PAJPAUtype_AI_combat_param
 ai	?choose_cyclops_action@combatManager@@QAEEJJPAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x1eea0	fc94ca3ae01d
 ai	?choose_defense_hex@combatManager@@QAEEPBVarmy@@0PAJ1PAVsearchArray@@@Z	99.0992	99.0992	99.0992	0x205d0	6a12ed69ada4
 ai	?choose_melee_action@combatManager@@QAEJPBVarmy@@EEJ@Z	100.0000	100.0000	100.0000	0x21f80	dfa5fb3cc335
-ai	?choose_melee_target@combatManager@@QAEEPBVarmy@@EPAJPAUtype_AI_combat_parameters@@@Z	89.6892	89.6892	89.6892	0x21680	4fd6c83ca64b
+ai	?choose_melee_target@combatManager@@QAEEPBVarmy@@EPAJPAUtype_AI_combat_parameters@@@Z	91.6697	91.6697	91.6697	0x21680	023e5f0f11e6
 ai	?choose_resurrect_action@combatManager@@QAEEPBVarmy@@PAJPAUtype_AI_combat_parameters@@@Z	17.8614	95.7822	95.7822	0x21000	2ab8c2cddb45
 ai	?choose_shooter_action@combatManager@@QAEXPBVarmy@@EJ@Z	100.0000	100.0000	100.0000	0x1f060	22994db66524
 ai	?choose_shooter_target@combatManager@@QAEJPBVarmy@@PAUtype_AI_combat_parameters@@PAJ@Z	100.0000	100.0000	100.0000	0x1eb80	2b9dba5e9708
@@ -231,7 +231,7 @@ ai	?should_stay_in_castle@combatManager@@QAEEPAUtype_AI_combat_parameters@@@Z	10
 ai	?simulate_actions@combatManager@@QAEJAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@JJ@Z	100.0000	100.0000	100.0000	0x22880	f193b982f3b8
 ai	?simulate_combat@combatManager@@QAEXJE@Z	100.0000	100.0000	100.0000	0x22a40	3f1d89871860
 ai	?simulate_melee_attack@combatManager@@QAEXPAVarmy@@0J@Z	100.0000	100.0000	100.0000	0x227a0	4c0b58102b37
-ai	?simulate_melee_attack@combatManager@@QAEXPAVarmy@@J0JJ@Z	77.5103	77.5103	77.5103	0x224e0	474479da9abd
+ai	?simulate_melee_attack@combatManager@@QAEXPAVarmy@@J0JJ@Z	79.6584	79.6584	79.6584	0x224e0	9aaa203c3a11
 ai	?size@?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x23110	-
 ai_combat	??0type_AI_combat_data@@QAE@PBVhero@@PBVarmyGroup@@N0PBVtown@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x23ee0	7a3cf1c93721
 ai_combat	??0type_monster_vector@@QAE@ABU0@@Z	100.0000	100.0000	100.0000	0x276c0	aaea26c81479
@@ -328,7 +328,7 @@ ai_player	?buy_mage_guild@type_AI_player@@QAEXPAVhero@@PAVtown@@@Z	100.0000	100.
 ai_player	?calculate_demand@type_AI_player@@QAEXXZ	97.4340	97.4340	97.4340	0x28740	f0f93e30a43e
 ai_player	?calculate_reserve@type_AI_player@@QAEXXZ	91.2557	96.4566	96.4566	0x29ad0	ae0f0286b0dd
 ai_player	?can_take_town@@YIEPBVhero@@PBVtown@@@Z	100.0000	100.0000	100.0000	0x28410	6e41459530a0
-ai_player	?can_trade_resources@type_AI_player@@QAE_NPBHPAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	81.0339	81.3465	81.3465	0x2a580	7bea21a59d7e
+ai_player	?can_trade_resources@type_AI_player@@QAE_NPBHPAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	85.0282	85.0282	85.0282	0x2a580	06c8579c5cd1
 ai_player	?check_move_spell@@YIEPAVhero@@AAV?$vector@UpathCell@@V?$allocator@UpathCell@@@std@@@std@@JHE@Z	100.0000	100.0000	100.0000	0x309a0	9420dcf94e8d
 ai_player	?check_towns@type_town_threat_checker@@QAEXXZ	100.0000	100.0000	100.0000	0x280e0	e4abb799b70e
 ai_player	?check_trade_supply@type_AI_player@@QAE_NPBHJPAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	85.8333	85.8333	85.8333	0x2a2b0	6ebd26d802e8
@@ -383,14 +383,14 @@ ai_player	?get_value@type_undead_king_cloak_artifact@@UBEJPBVhero@@EE@Z	96.7778	
 ai_player	?hire_heroes@type_AI_player@@QAE_NXZ	100.0000	100.0000	100.0000	0x31360	090ada3d6566
 ai_player	?initialize_artifact_effects@@YIXXZ	91.9528	91.9528	91.9528	0x34100	a14bb0e20585
 ai_player	?is_human_ally@game@@QBE_NH@Z	100.0000	100.0000	100.0000	0x2b9e0	df633736fa56
-ai_player	?make_gift@type_AI_player@@QAEXJ@Z	84.5868	84.5868	84.5868	0x29110	9e66faf2a9da
+ai_player	?make_gift@type_AI_player@@QAEXJ@Z	84.5868	84.5868	84.5868	0x29110	069248bd0ee9
 ai_player	?mark_danger_zones@@YIXPBVhero@@PAJ@Z	100.0000	100.0000	100.0000	0x2de50	6e7aeeb6b9c3
 ai_player	?mark_destinations@@YIJPAVhero@@JPAVsearchArray@@PAGW4type_search_type@@@Z	91.6997	91.6997	91.6997	0x2f570	b5910f80563f
 ai_player	?mark_town@type_garrison_purchaser@@UAEXPAVtown@@@Z	100.0000	100.0000	100.0000	0x28580	be0e69fceedb
 ai_player	?mark_town@type_town_threat_checker@@UAEXPAVtown@@@Z	100.0000	100.0000	100.0000	0x28570	eb3a011f3f6a
 ai_player	?mark_towns@type_town_threat_checker@@IAEXPAVhero@@PAVsearchArray@@@Z	100.0000	100.0000	100.0000	0x282b0	f5dc6aa6bf9c
 ai_player	?net_value_of_location@@YIHPAVhero@@PAUHeroDestination@@PAJPAUpathCell@@PAVsearchArray@@@Z	85.3476	85.3476	85.3476	0x2f980	947d4d9a38bc
-ai_player	?purchase_building@type_AI_player@@QAEEPAE@Z	97.4212	97.4212	97.4212	0x2ae00	3576dcf729f7
+ai_player	?purchase_building@type_AI_player@@QAEEPAE@Z	97.4212	97.8283	97.8283	0x2ae00	49a5bbaa13d4
 ai_player	?remove_negative_artifacts@@YIJPAVhero@@@Z	100.0000	100.0000	100.0000	0x33bb0	cd5326788ef9
 ai_player	?reset_magus_hut_value@type_AI_player@@QAEXXZ	100.0000	100.0000	100.0000	0x29ab0	5f044f8af5ba
 ai_player	?set@type_AI_creature_purchaser@@QAEXPAVtown@@@Z	100.0000	100.0000	100.0000	0x2d1b0	cfdd87fdaab7
@@ -471,7 +471,7 @@ ai_tactical	?get_fortune_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_d
 ai_tactical	?get_frenzy_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	98.9849	98.9849	98.9849	0x375d0	f5bae1d962fd
 ai_tactical	?get_haste_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x396b0	a2979dd86426
 ai_tactical	?get_hex_attack_value@type_AI_attack_hex_chooser@@IAEJJAAJ@Z	84.3750	84.3750	84.3750	0x36180	757de713dbc9
-ai_tactical	?get_hypnotize_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	96.3475	96.3475	96.3475	0x3a500	ec6315646f2b
+ai_tactical	?get_hypnotize_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x3a500	78527ac32283
 ai_tactical	?get_mass_damage_effect@type_AI_spellcaster@@QAEJJJ@Z	100.0000	100.0000	100.0000	0x36fb0	bff7fea5864c
 ai_tactical	?get_mastery_value@type_enchant_data@@QAEJXZ	100.0000	100.0000	100.0000	0x36930	b7f5c4b684ed
 ai_tactical	?get_mirth_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38170	2a903ee53bb4
@@ -570,7 +570,7 @@ army	?get_attack_direction@army@@QBEJJPBV1@J@Z	100.0000	100.0000	100.0000	0x4584
 army	?get_attack_modifier@army@@QBEJPBV1@E@Z	100.0000	100.0000	100.0000	0x42550	c4fe8ce69fcd
 army	?get_average_damage@army@@QBEJPBV1@EJEJ@Z	100.0000	100.0000	100.0000	0x42780	661aea781819
 army	?get_average_damage@army@@QBENXZ	100.0000	100.0000	100.0000	0x426f0	fc441b73233a
-army	?get_berserk_targets@army@@QBEXAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	92.5170	92.5170	92.5170	0x45490	64e77021b597
+army	?get_berserk_targets@army@@QBEXAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	94.1648	94.1648	94.1648	0x45490	073982c03f75
 army	?get_controller@army@@QBEPAVhero@@XZ	100.0000	100.0000	100.0000	0x42690	9c660b71c78e
 army	?get_controlling_side@army@@QBEHXZ	100.0000	100.0000	100.0000	0x40140	ceab6b46b98c
 army	?get_defense_modifier@army@@QBEJXZ	100.0000	100.0000	100.0000	0x42660	f00838b6b3a4
@@ -633,7 +633,10 @@ armygrp	?get_AI_value@armyGroup@@QBEJXZ	100.0000	100.0000	100.0000	0x4ac80	e325a
 armygrp	?get_creature_total@armyGroup@@QBEHW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x4adc0	ede6bf56607c
 armygrp	?get_creature_total@armyGroup@@QBEHXZ	100.0000	100.0000	100.0000	0x4ada0	7323d834002a
 armygrp	?get_luck_description@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@H@Z	92.3623	92.3623	92.3623	0x4c1c0	76c95250a4b1
-armygrp	?get_morale_description@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@HE@Z	93.0566	93.0566	93.0566	0x4b960	1e5154b2d578
+armygrp	?get_morale_description@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@HE@Z	93.0566	93.0566	93.0566	0x4b960	6e3742527492
+# Retail-ordered switch bodies, the creature-record cursor, the direct
+# spell-table field_c access, and the byte-proven attrs 0x400 gate raised
+# this from 53.1589 to 88.5071 (2026-08-09).
 armygrp	?get_spell_work_chance@@YIMHW4TCreatureType@@PBVhero@@1@Z	88.5071	88.5071	88.5071	0x4a4d0	334c38c64430
 armygrp	?load@armyGroup@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x4aa40	eec6e44b0a6c
 armygrp	?merge_armies@armyGroup@@QAEXPAV1@@Z	100.0000	100.0000	100.0000	0x4b820	1f41de9dc0cb
@@ -651,7 +654,7 @@ basemgr	??0baseManager@@QAE@XZ	100.0000	100.0000	100.0000	0x4d530	687e8eebaf66
 binkmanager	?CloseBinkVideo@@YIXXZ	100.0000	100.0000	100.0000	0x4dcc0	32dc15ed5944
 binkmanager	?DrawCurrentBinkFrame@@YIXXZ	100.0000	100.0000	100.0000	0x4d9e0	92a06eb257a8
 binkmanager	?GetBinkFilePtr@BinkManager@@SIPAUBINK@@PBDH@Z	100.0000	100.0000	100.0000	0x4d5a0	0e005e7fe490
-binkmanager	?NextBinkFrame@@YIXXZ	92.9245	92.9245	92.9245	0x4daa0	c4c2a3ae4ebf
+binkmanager	?NextBinkFrame@@YIXXZ	92.9245	92.9245	92.9245	0x4daa0	95da29c9b6a9
 binkmanager	?OpenBinkVideo@@YIXHHHHHHH@Z	100.0000	100.0000	100.0000	0x4d830	c660a4857444
 binkmanager	?PlayBinkVideo@@YIHHHHHH@Z	88.1802	88.1802	88.1802	0x4dd20	440e3dfd8006
 binkmanager	?RestartBink@BinkManager@@SIXXZ	100.0000	100.0000	100.0000	0x4da50	20d03e6309f1
@@ -663,7 +666,7 @@ bitmap16	?Colorize@Bitmap16Bit@@QAEXHHHHG@Z	92.0385	92.0385	92.0385	0x4e780	8833
 bitmap16	?Colorize@Bitmap16Bit@@QAEXHHHHMM@Z	98.8301	98.8301	98.8301	0x4e940	72475ee11deb
 bitmap16	?Darken@Bitmap16Bit@@QAEXHHHH@Z	100.0000	100.0000	100.0000	0x4e5f0	e4fb764cccb1
 bitmap16	?Darken@Bitmap16Bit@@QAEXHHHHPAVBitmap816@@HH@Z	100.0000	100.0000	100.0000	0x4e6a0	fed5b38bb10e
-bitmap16	?Draw@Bitmap16Bit@@QBEXHHHHPAGHHHHH_N@Z	81.3095	81.3095	81.3095	0x4e2b0	d3b3eaba0af0
+bitmap16	?Draw@Bitmap16Bit@@QBEXHHHHPAGHHHHH_N@Z	83.5794	83.5794	83.5794	0x4e2b0	0be2694ce85e
 bitmap16	?FillRect@Bitmap16Bit@@QAEXHHHHG@Z	100.0000	100.0000	100.0000	0x4e4c0	6ce8f1903417
 bitmap16	?FrameRect@Bitmap16Bit@@QAEXHHHHG@Z	100.0000	100.0000	100.0000	0x4e540	dd67b0dc9a43
 bitmap16	?GetSize@Bitmap16Bit@@UBEIXZ	100.0000	100.0000	100.0000	0x4e240	d3be9f706bf7
@@ -842,7 +845,7 @@ campaignbrief	??0CMapHeaderData@@QAE@XZ	100.0000	100.0000	100.0000	0x5a990	-
 campaignbrief	??0LossConditionStruct@@QAE@XZ	100.0000	100.0000	100.0000	0x5bac0	-
 campaignbrief	??0NewSMapHeader@@QAE@XZ	99.8438	99.8438	99.8438	0x5a7a0	-
 campaignbrief	??0SGameSetupOptions@@QAE@XZ	100.0000	100.0000	100.0000	0x5ac20	-
-campaignbrief	??0TCampaignBrief@@QAE@EE@Z	86.6820	86.6820	86.6820	0x590c0	59e04350b83f
+campaignbrief	??0TCampaignBrief@@QAE@EE@Z	91.1880	91.1880	91.1880	0x590c0	ea7bac5df4b5
 campaignbrief	??0TPlayerSlotAttributes@CMapHeaderData@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x5da70	-
 campaignbrief	??0TPlayerSlotAttributes@CMapHeaderData@@QAE@XZ	100.0000	100.0000	100.0000	0x5a950	-
 campaignbrief	??1?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x5b140	-
@@ -962,7 +965,7 @@ cmbtmgr	?ShootMissile@combatManager@@QAEXHHHHPBMPBVCSprite@@@Z	93.9760	93.9760	9
 cmbtmgr	?ShotIsNotOptimal@combatManager@@QAEEPBVarmy@@0@Z	100.0000	100.0000	100.0000	0x67600	8d5426ecff0c
 cmbtmgr	?ShotIsThroughWall@combatManager@@QAEEPBVarmy@@HH@Z	100.0000	100.0000	100.0000	0x67510	6990585b75f2
 cmbtmgr	?StopCombatSounds@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x639e0	313b62a81581
-cmbtmgr	?Unnamed464d40@combatManager@@QAEEPAVarmy@@@Z	91.0961	91.0961	91.0961	0x64d40	3dc15d7e32c2
+cmbtmgr	?Unnamed464d40@combatManager@@QAEEPAVarmy@@@Z	100.0000	100.0000	100.0000	0x64d40	9c542ce6bb5f
 cmbtmgr	?Unnamed464f50@combatManager@@QAEEPBVarmy@@0@Z	100.0000	100.0000	100.0000	0x64f50	47f69f0febd2
 cmbtmgr	?Unnamed465f20@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x65f20	ace82f00ae9d
 cmbtmgr	?Unnamed4693a0@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x693a0	16343c38abc0
@@ -987,7 +990,7 @@ cmbtmgr	?place_obstacle@combatManager@@QAEEH@Z	79.1518	79.1518	79.1518	0x66010	0
 cmbtmgr	?should_lower_door@combatManager@@QBEEPAVarmy@@J@Z	100.0000	100.0000	100.0000	0x67130	a9827a27d80a
 cmbtmgr	?size@TObstacleVector@combatManager@@QBEHXZ	100.0000	100.0000	100.0000	0x117750	-
 combatcontrolsubwindow	??0TCombatControlSubWindow@@QAE@PAVheroWindow@@@Z	96.3990	96.3990	96.3990	0x6bc30	f312aa2a2178
-combatcontrolsubwindow	??0TCombatCreatureSubWindow@@QAE@HHHHPAVheroWindow@@H@Z	99.1290	99.1290	99.1290	0x6ceb0	fbd81e8e493c
+combatcontrolsubwindow	??0TCombatCreatureSubWindow@@QAE@HHHHPAVheroWindow@@H@Z	99.2844	99.2844	99.2844	0x6ceb0	524b4645e3ad
 combatcontrolsubwindow	??0TCombatHeroSubWindow@@QAE@HHHHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x6c370	93f4ef6d504d
 combatcontrolsubwindow	??0TCombatPlacementSubWindow@@QAE@PAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x6c050	0097dad3e440
 combatcontrolsubwindow	??0type_combat_sub_window@@QAE@PAVheroWindow@@PBD@Z	100.0000	100.0000	100.0000	0x6b610	8190049eb6b8
@@ -1057,6 +1060,22 @@ command	?CheckSetMouseDirection@combatManager@@QAEEHHH@Z	97.6434	97.6434	97.6434
 command	?CheckWin@combatManager@@QAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x762f0	72c1b11c15ed
 command	?DoCommand@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x76bd0	0229304b4d03
 command	?DoVictory@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x77470	8b06082a790b
+# GetCommand ACCEPTED 92.5714 -> 92.5357 again (2026-08-27, command lane).
+# THE TRADE: cmbtmgr.h gained the three member declarators the class was
+# missing for spells.obj's last three bodies - ShowMassSpell (0x5a67c0),
+# SummonElemental (0x5a7080) and Earthquake (0x5a7c80). Without them the
+# definitions do not compile at all: VC6 reports a member function never
+# declared in its class as C2673 "global functions do not have 'this'
+# pointers" plus a cascade of C2065 on every this-relative member.
+# WHAT IT BOUGHT: 2.9 KB of spells.obj, and with it the unit's last
+# unreconstructed bodies. WHAT IT COST: this row alone, and it is the
+# documented include-set class at its documented value - the exact
+# 0.0357 a single cmbtmgr.h declarator has cost GetCommand four times
+# before (see cmbtmgr.h's own notes at its simulate_combat and
+# numSpellCasts declarations). Admitting automate_catapult and
+# automate_first_aid_tent re-exposes the same include-set/codegen class;
+# GetCommand's 62 branches and 20 returns still agree exactly. hist stays
+# at 92.5714.
 command	?GetCommand@combatManager@@QAEHH@Z	92.5357	92.5714	92.5714	0x76490	2428ad3c2637
 command	?GetControl@combatManager@@QAEXXZ	98.2830	98.2830	98.2830	0x782d0	64563999aa5f
 command	?HandleCombatPlayerDrop@combatManager@@QAEEKPAVmessage@@@Z	100.0000	100.0000	100.0000	0x7a500	93137abf7711
@@ -1092,7 +1111,7 @@ compress	@compress2@20	100.0000	100.0000	100.0000	0x206b40	-
 crc32	@crc32@12	100.0000	100.0000	100.0000	0x205af0	-
 creature_bank	??0type_creature_bank_traits@@QAE@XZ	100.0000	100.0000	100.0000	0x7aad0	2dbea7ccab6e
 creature_bank	?initialize_creature_bank@@YIXPAUtype_creature_bank@@W4type_creature_bank_type@@@Z	98.1075	98.1075	98.1075	0x7ad90	5d91c0f11b1d
-creature_bank	?initialize_creature_bank_traits@@YIEXZ	88.8910	89.4313	89.4313	0x7ab30	936d754ee98a
+creature_bank	?initialize_creature_bank_traits@@YIEXZ	89.4550	89.4550	89.4550	0x7ab30	b4f4194ca028
 creaturetype	?InitializeCreatureTypeTraits@@YIXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	100.0000	100.0000	100.0000	0x7b480	78a734f5e740
 creaturetype	?InitializeCreatureTypeTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0x7b290	d4b5050cb084
 creaturetype	?IsBaseCreature@@YIHW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x7b120	d197cebfb413
@@ -1146,7 +1165,7 @@ cursor	?DrawCursor@advManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0x7f860	f9cff
 cursor	?DrawCursorAlpha@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x7fc80	3dccef930f57
 cursor	?DrawCursorShadow@advManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0x7fb40	9acd5c4e4435
 cursor	?GetMoveShowIt@advManager@@QAEHPAVhero@@H@Z	100.0000	100.0000	100.0000	0x80000	bc03c3596322
-cursor	?MoveHero@advManager@@QAEPAVNewmapCell@@HEPAUtype_point@@PAHE1E@Z	89.5139	89.5139	89.5139	0x805e0	be5ec31a3375
+cursor	?MoveHero@advManager@@QAEPAVNewmapCell@@HEPAUtype_point@@PAHE1E@Z	89.8315	89.8315	89.8315	0x805e0	1ee8f1852ca4
 cursor	?OnHideHero@advManager@@QAEXPAVCMapChange@@@Z	100.0000	100.0000	100.0000	0x81fd0	04ab79a0f668
 cursor	?OnMoveHero@advManager@@QAEXPAVCMapChange@@@Z	100.0000	100.0000	100.0000	0x81ed0	831cc6211424
 cursor	?ProcessMapChangeNew@advManager@@QAEXPAVCMapChange@@@Z	100.0000	100.0000	100.0000	0x82010	1916421b762d
@@ -1200,7 +1219,7 @@ customcampaign	?Apply@TCampaignSpellScrollBonus@@UBEXH@Z	100.0000	100.0000	100.0
 customcampaign	?Apply@TCampaignStartBonusOption@@UAEXPAX@Z	97.7895	97.7895	97.7895	0x85380	37e151c00a7e
 customcampaign	?ApplyBriefingChoice@SCampaign@@QAEXH@Z	100.0000	100.0000	100.0000	0x8b2e0	a359310356da
 customcampaign	?CampaignComplete@SCampaign@@QAEEXZ	100.0000	100.0000	100.0000	0x897d0	f23d701094f5
-customcampaign	?CompleteCurrentMap@SCampaign@@QAEXPAX@Z	78.6801	78.6801	78.6801	0x89820	72e1d946cf42
+customcampaign	?CompleteCurrentMap@SCampaign@@QAEXPAX@Z	85.5843	85.5843	85.5843	0x89820	66f6a36e64eb
 customcampaign	?DoPreLoadCustomization@SCampaign@@QAEXXZ	100.0000	100.0000	100.0000	0x86440	cff594179cd0
 customcampaign	?FreeData@CampaignHeaderStruct@TCampaignBrief@@QAEXXZ	100.0000	100.0000	100.0000	0x887e0	9dfe11ce2969
 customcampaign	?GetAvailableScenarios@CampaignHeaderStruct@TCampaignBrief@@QBEXPAE@Z	100.0000	100.0000	100.0000	0x88f00	54417e832b4c
@@ -1245,8 +1264,8 @@ customcampaign	?IsBuildingBonus@TCampaignBonus@@UBE_NXZ	100.0000	100.0000	100.00
 customcampaign	?IsBuildingBonus@TCampaignBuildingBonus@@UBE_NXZ	100.0000	100.0000	100.0000	0x84620	8a8ba9549996
 customcampaign	?IsBuildingBonus@TCampaignStartBonusOption@@UBE_NH@Z	100.0000	100.0000	100.0000	0x85430	bcddb4b1212f
 customcampaign	?IsBuildingBonus@TCampaignStartCrossoverOption@@UBE_NH@Z	100.0000	100.0000	100.0000	0x85a30	40cf16111627
-customcampaign	?Load@CampaignHeaderStruct@TCampaignBrief@@QAE_NXZ	49.5351	49.5351	80.9474	0x88880	0604e159da45
-customcampaign	?Load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	59.0405	59.0405	79.2531	0x8a310	6c018aec4b3c
+customcampaign	?Load@CampaignHeaderStruct@TCampaignBrief@@QAE_NXZ	53.9715	53.9715	80.9474	0x88880	7d10123c8040
+customcampaign	?Load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	66.4461	66.4461	79.2531	0x8a310	0f6396eb00b6
 customcampaign	?LoadMapHeader@ScenarioStruct@TCampaignBrief@@QAEXPAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@PAVNewSMapHeader@@H@Z	100.0000	100.0000	100.0000	0x87d30	3ede48bd4a11
 customcampaign	?LoadScenario@CampaignHeaderStruct@TCampaignBrief@@QAE_NHPAVNewSMapHeader@@@Z	100.0000	100.0000	100.0000	0x88810	40cf52fbb7ea
 customcampaign	?MarkCrossoverHeroes@ScenarioStruct@TCampaignBrief@@QAEXPAE@Z	100.0000	100.0000	100.0000	0x87e10	6ceadd79996e
@@ -1255,7 +1274,7 @@ customcampaign	?PlaceStartingHero@ScenarioStruct@TCampaignBrief@@QAEXPAUHeroPlac
 customcampaign	?Play@MapTextStruct@TCampaignBrief@@QAEXXZ	83.8848	83.8848	83.8848	0x88fb0	050e401b33b9
 customcampaign	?PlayScenarioEpilogue@SCampaign@@QAEXPAX@Z	100.0000	100.0000	100.0000	0x8a2a0	44199f541435
 customcampaign	?PlayScenarioPrologue@SCampaign@@QAEXPAX@Z	100.0000	100.0000	100.0000	0x8a270	f20101db493f
-customcampaign	?PruneCrossoverHeroes@SCampaign@@QAEXPAX@Z	33.9741	34.6269	34.6269	0x89e20	21d376d77e67
+customcampaign	?PruneCrossoverHeroes@SCampaign@@QAEXPAX@Z	33.8187	35.3057	35.3057	0x89e20	7aa993b9f758
 customcampaign	?Read@ScenarioStruct@TCampaignBrief@@QAEXPAVTAbstractFile@@HH@Z	83.2900	83.2900	83.2900	0x87e40	3b0022124a56
 customcampaign	?Read@TCampaignArtifactBonus@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x848a0	12ae38c37e2c
 customcampaign	?Read@TCampaignBuildingBonus@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x845f0	23b205dc12fa
@@ -1264,9 +1283,9 @@ customcampaign	?Read@TCampaignPrimarySkillBonus@@UAEXPAVTAbstractFile@@@Z	100.00
 customcampaign	?Read@TCampaignResourceBonus@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x84f00	d89ed19c0b1c
 customcampaign	?Read@TCampaignSecondarySkillBonus@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x84cf0	fe4123cef04b
 customcampaign	?Read@TCampaignSpellBonus@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x84050	62ab037aba16
-customcampaign	?Read@TCampaignStartBonusOption@@UAEXPAVTAbstractFile@@@Z	95.6897	95.6897	95.6897	0x85190	68792b901cfd
-customcampaign	?Read@TCampaignStartCrossoverOption@@UAEXPAVTAbstractFile@@@Z	93.6869	93.6869	93.6869	0x857b0	5d27db6c6607
-customcampaign	?Read@TCampaignStartHeroOption@@UAEXPAVTAbstractFile@@@Z	92.6089	92.6089	92.6089	0x85b60	85057ce158f6
+customcampaign	?Read@TCampaignStartBonusOption@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x85190	0040de761c51
+customcampaign	?Read@TCampaignStartCrossoverOption@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x857b0	65ff2757bc1a
+customcampaign	?Read@TCampaignStartHeroOption@@UAEXPAVTAbstractFile@@@Z	93.9951	93.9951	93.9951	0x85b60	b0c472599037
 customcampaign	?Read@TStreamBufFile@@UAEHPAXH@Z	100.0000	100.0000	100.0000	0x83f10	d4a8f9e13d4a
 customcampaign	?ReadLengthPrefixedString@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAVTAbstractFile@@@Z	81.6506	81.6506	81.6506	0x85d90	20e8cfd1014a
 customcampaign	?RehomeCampaignHeroSetup@game@@QAEXH@Z	98.4901	98.4901	98.4901	0x86110	ed9d2f18df98
@@ -1281,6 +1300,7 @@ customcampaign	?Write@TStreamBufFile@@UAEHPBXH@Z	100.0000	100.0000	100.0000	0x83
 customcampaign	?_Addfac@std@@YI?AVlocale@1@V21@PAV?$codecvt@DDH@1@@Z	100.0000	100.0000	100.0000	0x8e8c0	-
 customcampaign	?_Construct@std@@YIXPAUTCampaignCrossoverChoice@@ABU2@@Z	100.0000	100.0000	100.0000	0x8e9e0	-
 customcampaign	?_Construct@std@@YIXPAVhero@@ABV2@@Z	100.0000	100.0000	100.0000	0x603a0	-
+customcampaign	?_Destroy@?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@IAEXPAUtype_artifact@@0@Z	100.0000	100.0000	100.0000	0x4140	-
 customcampaign	?_Destroy@?$vector@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@V?$allocator@V?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@@2@@std@@IAEXPAV?$vector@Vhero@@V?$allocator@Vhero@@@std@@@2@0@Z	100.0000	100.0000	100.0000	0x8c5b0	-
 customcampaign	?_Destroy@?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@IAEXPAVhero@@0@Z	100.0000	100.0000	100.0000	0x8d410	-
 customcampaign	?_Init@?$basic_filebuf@DU?$char_traits@D@std@@@std@@IAEXPAU_iobuf@@W4_Initfl@12@@Z	100.0000	100.0000	100.0000	0x8d4b0	-
@@ -1351,7 +1371,6 @@ customcampaign	?size@?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@QBEIXZ	100.
 customcampaign	?sync@?$basic_filebuf@DU?$char_traits@D@std@@@std@@MAEHXZ	100.0000	100.0000	100.0000	0x8bd00	-
 customcampaign	?uflow@?$basic_filebuf@DU?$char_traits@D@std@@@std@@MAEHXZ	100.0000	100.0000	100.0000	0x8b8b0	-
 customcampaign	?underflow@?$basic_filebuf@DU?$char_traits@D@std@@@std@@MAEHXZ	100.0000	100.0000	100.0000	0x8b880	-
-customcampaign	__h3cg$customcampaign$vector_destroy$type_artifact	0.0000	100.0000	100.0000	0x4140	-
 customcampaign	__h3cg$customcampaign$vector_insert_single$unsigned_char	0.0000	34.7407	34.7407	0x8bf00	-
 customcampaignwindow	??0TCustomCampaignWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x827b0	893291fd4aaf
 customcampaignwindow	??1TCustomCampaignWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x82f10	4e3abaca1d97
@@ -1530,7 +1549,7 @@ event_record	??_Gtype_event_record@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x9a5b0
 event_record	??_Gtype_record_move_hero@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x9a620	-
 event_record	??_Gtype_record_shroud@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x9bbd0	-
 event_record	?ResetVisibility@game@@QAEXHHHHH@Z	87.9349	87.9349	87.9349	0x9d3d0	b91492052fa8
-event_record	?SetVisibility@game@@QAEXHHHHHE@Z	88.1751	88.1751	88.1751	0x9d160	34e09c3e1b36
+event_record	?SetVisibility@game@@QAEXHHHHHE@Z	90.1797	90.1797	90.1797	0x9d160	02ccc31c7e2c
 event_record	?clear_event_records@game@@QAEXD@Z	100.0000	100.0000	100.0000	0x9d6c0	330281a46ec4
 event_record	?clear_event_records@game@@QAEXXZ	100.0000	100.0000	100.0000	0x9d630	30315cd97a10
 event_record	?create@type_record_claim_mine@@SIPAVtype_event_record@@XZ	100.0000	100.0000	100.0000	0x9aa40	cd7ab567d111
@@ -1616,6 +1635,13 @@ events	?CombatMonsterEvent@advManager@@QAEHPAVhero@@HPAHPAVNewmapCell@@Utype_poi
 events	?CreatureBankEvent@advManager@@QAEHPAVhero@@PAVNewmapCell@@PBDUtype_point@@E@Z	91.5889	91.5889	91.5889	0xabdc0	78cd8a3852d8
 events	?DispatchEvent@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	99.3727	99.9881	99.9911	0xa84f0	a0448e6479a2
 events	?DoAIEvent@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@@Z	100.0000	100.0000	100.0000	0xacca0	242969f00949
+# DoCombat max ACCEPTED 99.0481 -> 98.5741 (2026-08-27, townmgr lane):
+# the 99.0481 peak was minted by THIS lane's own earlier delink
+# generation ("2 max raised" at the set_bonus_display integration) and
+# the next generation - ~30 new townmgr VA/DATA claims renaming the
+# synth PDB - returned the row to master's own 98.5741 to the digit
+# with events.cpp untouched. Cross-generation noise, the
+# recruit::Update revert-control precedent; hist keeps 99.1139.
 events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	98.5379	99.0481	99.1139	0xad470	907f85ec7c05
 events	?DoCustomArtifact@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	98.2381	99.1492	99.1492	0x9f070	4d12ed56362a
 events	?DoCustomResource@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa4780	51e134850e4b
@@ -1678,7 +1704,7 @@ events	?FizzleCenter@advManager@@QAEXH@Z	100.0000	100.0000	100.0000	0xacbb0	17fb
 events	?GeneratorEvent@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@@Z	100.0000	100.0000	100.0000	0xaba50	19cc0a2e875d
 events	?GetTeam@game@@QBEHH@Z	100.0000	100.0000	100.0000	0xa5960	1e03dc6c5ca7
 events	?GiveArtifact@advManager@@QAEXPAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0x9e8f0	b8c689d1f585
-events	?GiveBlackBoxReward@advManager@@QAE_NPBDPAVhero@@PAVNewmapCell@@Utype_point@@_NPAVBlackBoxData@@@Z	79.6642	79.6642	79.6642	0x9fa90	303505a5e660
+events	?GiveBlackBoxReward@advManager@@QAE_NPBDPAVhero@@PAVNewmapCell@@Utype_point@@_NPAVBlackBoxData@@@Z	79.8259	79.8259	79.8259	0x9fa90	23b50df85e54
 events	?HandleMapEvent@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa0ed0	d92259adbe3f
 events	?HeroLoses@advManager@@QAEXPAVhero@@H@Z	100.0000	100.0000	100.0000	0xac930	3935e245f31e
 events	?HeroSwap@advManager@@QAEXPAVhero@@0@Z	100.0000	100.0000	100.0000	0xaadf0	786815f853fc
@@ -1708,7 +1734,7 @@ events	?do_event_water_wheel@advManager@@QAEXPAVhero@@PATExtraInfoUnion@@_N@Z	10
 events	?do_event_watering_hole@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0000	100.0000	0xa7ea0	5075bf685718
 events	?do_event_windmill@advManager@@QAEXPAVhero@@PATExtraInfoUnion@@_N@Z	100.0000	100.0000	100.0000	0xa7fc0	21af7ca21e47
 events	?do_event_witch_hut@advManager@@QAEXPAVhero@@PATExtraInfoUnion@@_N@Z	100.0000	100.0000	100.0000	0xa8080	123c3e0e0bbd
-events	?exchange_spells@@YIXPAVhero@@0@Z	92.1640	92.1640	92.1640	0xa2940	630254774e4e
+events	?exchange_spells@@YIXPAVhero@@0@Z	94.7989	94.7989	94.7989	0xa2940	b0443d8810ff
 events	?fill@std@@YIXPAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@0ABV21@@Z	100.0000	100.0000	100.0000	0xaf870	-
 events	?get_black_box@advManager@@QBEPAVBlackBoxData@@PBTExtraInfoUnion@@@Z	100.0000	100.0000	100.0000	0xa0c20	00f2381511fe
 events	?get_force_modifier@advManager@@SIHM@Z	100.0000	100.0000	100.0000	0xa76c0	4b57cf6e2c70
@@ -1719,8 +1745,31 @@ events	?insert@?$vector@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@
 events	?insert@?$vector@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@QAEXPAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@IABV32@@Z	100.0000	100.0000	100.0000	0xaf550	-
 events	?monsters_fight@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa6c60	78a989ac8619
 events	?monsters_flee@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa6df0	01f0de47937e
-events	?monsters_give_reward@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	88.6140	88.6140	88.6140	0xa6b30	8cad8c72ebc4
+events	?monsters_give_reward@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0000	100.0000	0xa6b30	da91802164a5
 events	?monsters_join@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	100.0000	100.0000	100.0000	0xa7000	7e70d5875f7d
+# monsters_sell_out ACCEPTED 100.0000 -> 99.9517 (2026-08-20, spells lane).
+# THE TRADE: armygrp.h's ESpellId gained two UNGATED enumerators -
+# SPELL_TELEPORT 0x3f (un-gated out of HOMM3_SPELL_TELEPORT_DECL) and
+# SPELL_REMOVE_OBSTACLE 0x40 (new) - so that spells.obj's message
+# bodies can spell their 53- and 37-entry jump tables as
+# `case <enumerator>:` rather than magic numbers. WHAT IT BOUGHT:
+# ~4.4 KB of spells.obj that could not be written at all without those
+# labels, since the magic-case-label AND .cpp-local-enum cleanliness
+# floors are both 0. WHAT IT COST: this row and initialize_game_data,
+# both the documented include-set class - no semantic change reaches
+# either TU and events.cpp does not include armygrp.h at all.
+# The delta here is one addressing-mode choice, 3 bytes of 6216.
+# `max` and `hist` both keep 100.0000, so this is a re-measure owed to
+# a later lane, not lost work. Do NOT hunt a local spelling: see the
+# initialize_game_data block further down for the sweep that
+# established the class is non-monotonic and not source-nameable.
+# monsters_sell_out max ACCEPTED 100.0000 -> 99.9517 AGAIN (2026-08-27,
+# townmgr lane): the identical value the spells lane accepted 2026-08-20
+# (block above) and this row's own checked-in cur - the one-declarator
+# include-set step from townmgr.h's byte-proven bonus_creatures member
+# (push 0xb4 in townManager::Open), layout-required and not gateable
+# per-TU. hist keeps 100.0000; the saturation law says a later
+# declarator can carry it back.
 events	?monsters_sell_out@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	100.0000	100.0000	100.0000	0xa7250	f7b1ec4933f6
 events	?read@CCombatInitMsg@@UAEEPAVTAbstractFile@@@Z	98.1880	98.1880	98.1880	0xad1f0	98638ed1cdad
 events	?show_rewards@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@2@J@Z	100.0000	100.0000	100.0000	0xa0b00	9287544ef4a4
@@ -1739,7 +1788,7 @@ findpath	??1searchArray@@QAE@XZ	100.0000	100.0000	100.0000	0xb13e0	62c3039992a2
 findpath	?CalcTerrainCost@@YIHPBVNewmapCell@@HHJJJJJE@Z	100.0000	100.0000	100.0000	0xb1740	c1ac09d9aed8
 findpath	?Clear@searchArray@@QAEXJJJ@Z	100.0000	100.0000	100.0000	0xb1530	7639b0a8b387
 findpath	?Close@searchArray@@QAEXXZ	100.0000	100.0000	100.0000	0xb1500	089bb45888a1
-findpath	?FindCombatPath@searchArray@@QAEEPBVarmy@@JJEJJ@Z	87.6468	87.6468	87.6468	0xb3400	9c98fae86cbb
+findpath	?FindCombatPath@searchArray@@QAEEPBVarmy@@JJEJJ@Z	87.9780	87.9780	87.9780	0xb3400	79ae3cbbcb0a
 findpath	?GetTerrainCost@@YIHPAVhero@@Utype_point@@HH@Z	100.0000	100.0000	100.0000	0xb18c0	9365931b7150
 findpath	?Init@searchArray@@QAEXXZ	100.0000	100.0000	100.0000	0xb1460	3ca1a85ca5e4
 findpath	?MinimumTerrainCost@@YIHPBVNewmapCell@@HJJJE@Z	100.0000	100.0000	100.0000	0xb1880	b240130b71a1
@@ -1780,7 +1829,7 @@ font	?get_string_width@font@@QAEJPBD@Z	100.0000	100.0000	100.0000	0xb57d0	de731f
 font	?longest_word_length@font@@QAEHPBD@Z	100.0000	100.0000	100.0000	0xb5a10	96ee18f513ef
 forcefeedback	??0?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@std@@QAE@ABU?$less@PAVCImmEnclosure@@@1@ABV?$allocator@UtagRECT@@@1@@Z	100.0000	100.0000	100.0000	0xb6f60	-
 forcefeedback	??0TImmMouseEffect@@QAE@PBUtagRECT@@JKKEE@Z	100.0000	100.0000	100.0000	0xb6dc0	dcae6b21237c
-forcefeedback	??0TImmMouseRuntime@@QAE@PAX0@Z	100.0000	100.0000	100.0000	0xb6260	09debf802951
+forcefeedback	??0TImmMouseRuntime@@QAE@PAX0@Z	100.0000	100.0000	100.0000	0xb6260	ced77668d999
 forcefeedback	??0t_create_failure@t_enclosure@force_feedback@@QAE@ABV012@@Z	100.0000	100.0000	100.0000	0xb6c60	-
 forcefeedback	??0t_enclosure@force_feedback@@QAE@PBUtagRECT@@JKKEE@Z	100.0000	100.0000	100.0000	0xb6a50	037c8a3ed058
 forcefeedback	??0t_initialize_failure@TImmMouseRuntime@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0xb6730	-
@@ -1866,13 +1915,13 @@ game	?ComputeDailyGold@game@@QAEHHE@Z	100.0000	100.0000	100.0000	0xc7930	3578060
 game	?ComputeUALoc@@YIXH@Z	100.0000	100.0000	100.0000	0xbaed0	4da0f60ffe00
 game	?ConvertObject@game@@QAEXPAVNewmapCell@@@Z	97.5098	97.5098	97.5098	0xc9990	ebc6f1dabc11
 game	?CreateBoat@game@@QAEHHHHHEC@Z	100.0000	100.0000	100.0000	0xbb250	458ff729bb12
-game	?CreateTownHeroes@game@@QAEXPAH@Z	98.6076	98.6076	98.6076	0xca040	e931c3e1b0d8
+game	?CreateTownHeroes@game@@QAEXPAH@Z	98.6076	99.6203	99.6203	0xca040	58f487cdeb92
 game	?DoNewTurn@game@@QAEXXZ	100.0000	100.0000	100.0000	0xcc7d0	740a91ca527b
 game	?ExperienceValueOfStack@game@@QAEHPBVarmyGroup@@PBVhero@@@Z	100.0000	100.0000	100.0000	0xca3b0	2d173d314e6c
 game	?FindHero@playerData@@QAEHH@Z	100.0000	100.0000	100.0000	0xba9e0	cfe01eee2f86
 game	?FindTown@playerData@@QAEHH@Z	100.0000	100.0000	100.0000	0xbaa10	7d9d253aecd5
 game	?GameFn_004CEF10@game@@QAE?AUtype_point@@H@Z	100.0000	100.0000	100.0000	0xcef10	c4f58caae395
-game	?Get@NewSMapHeader@@QAEHPBD0H@Z	100.0000	100.0000	100.0000	0xc5e00	a8b490cdece6
+game	?Get@NewSMapHeader@@QAEHPBD0H@Z	100.0000	100.0000	100.0000	0xc5e00	b4ee746e2a60
 game	?GetBoatsBuilt@game@@QAEHXZ	100.0000	100.0000	100.0000	0xccdd0	6f4c0478b4bc
 game	?GetGamePosFromDPID@game@@QAEHK@Z	100.0000	100.0000	100.0000	0xcec20	d6a22c84e878
 game	?GetGeneratorId@game@@QAEHHHH@Z	100.0000	100.0000	100.0000	0xbb900	a390ef2026bb
@@ -1900,7 +1949,7 @@ game	?HasMobileHero@playerData@@QAE_NXZ	100.0000	100.0000	100.0000	0xbab90	6c50e
 game	?HeroExtraFn_004B8450@HeroExtra@@QAEXH@Z	100.0000	100.0000	100.0000	0xb8450	87fd3bc1f064
 game	?ImmMouseWindowMoved@@YIXXZ	100.0000	100.0000	100.0000	0xb6950	c35ebc321280
 game	?Init@playerData@@QAEXXZ	100.0000	100.0000	100.0000	0xb9e20	d54a3ea04f04
-game	?InitImmMouse@@YIEPAX0@Z	100.0000	100.0000	100.0000	0xb6890	ed8007106de9
+game	?InitImmMouse@@YIEPAX0@Z	100.0000	100.0000	100.0000	0xb6890	6c81ba3914ae
 game	?InitRandomArtifacts@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc0aa0	a2655d384f88
 game	?Initialize@generator@@QAEXJ@Z	100.0000	100.0000	100.0000	0xb8860	1ee700bca0e7
 game	?InitializeRandomTavernText@@YIEXZ	100.0000	100.0000	100.0000	0xb8410	6a1df78c4bc2
@@ -1912,22 +1961,22 @@ game	?IsLocalHuman@game@@QBE_NH@Z	100.0000	100.0000	100.0000	0xce970	cc0ecd614d9
 game	?IsLocalHuman@playerData@@QBE_NXZ	100.0000	100.0000	100.0000	0xbad80	4683cab7027a
 game	?IsMultiplayer@game@@QBE_NXZ	100.0000	100.0000	100.0000	0xcec90	bf9d3de21a93
 game	?Load@NewSMapHeader@@QAEHPAVTAbstractFile@@H@Z	92.6763	92.6763	92.6763	0xc5630	dfd4024bf24f
-game	?Load@SavedGameHeader@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbc750	99bb7010e0dc
+game	?Load@SavedGameHeader@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbc750	5014fd8c3b66
 game	?Load@game@@QAEHPAVTAbstractFile@@@Z	60.5547	92.4127	92.4127	0xbcda0	76f5d7575936
 game	?LoadBoatPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9a00	451516806b09
-game	?LoadGame@game@@QAEHPBDHH@Z	100.0000	100.0000	100.0000	0xbf330	fc53c93a80bc
+game	?LoadGame@game@@QAEHPBDHH@Z	100.0000	100.0000	100.0000	0xbf330	c7302de7147c
 game	?LoadGarrisonPool@game@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xb96f0	e574c834f8c2
 game	?LoadHeroId@@YIHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xba210	a3d376c1431f
-game	?LoadMap@game@@QAE_NPAVTAbstractFile@@@Z	75.4768	75.4768	75.4768	0xc2450	e5e04330c34f
+game	?LoadMap@game@@QAE_NPAVTAbstractFile@@@Z	73.9564	76.7482	76.7482	0xc2450	293cfe5be34c
 game	?LoadMinePool@game@@QAEHPAVTAbstractFile@@H@Z	98.8718	100.0000	100.0000	0xb9340	2a102f6e81b3
 game	?LoadRumours@game@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbbe40	793f39b40d8e
 game	?LoadSignPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9070	f739107b463c
 game	?MakeTerrainVisible@game@@QAEXHG@Z	100.0000	100.0000	100.0000	0xca240	8dee9faf58a3
 game	?MineTypesOwned@game@@QAEHHH@Z	100.0000	100.0000	100.0000	0xbae70	7cef522cb00d
-game	?NewMap@game@@QAEEPBD0PAHH@Z	99.4000	99.4000	99.4000	0xc0520	7759a62b2368
+game	?NewMap@game@@QAEEPBD0PAHH@Z	99.4000	99.4000	99.4000	0xc0520	9da57f706c66
 game	?NewMap@game@@QAEXPAVTAbstractFile@@PAHPAVNewMapCampaignContext@@H@Z	100.0000	100.0000	100.0000	0xbfe70	d45f6040108c
 game	?NextHero@playerData@@QAEHXZ	100.0000	100.0000	100.0000	0xbaa40	bbee40b3fef4
-game	?NextPlayer@game@@QAEXXZ	81.3343	83.3584	83.3584	0xc6fe0	4b3560fe742d
+game	?NextPlayer@game@@QAEXXZ	81.3343	83.3584	83.3584	0xc6fe0	edd116b87a53
 game	?NextTown@playerData@@QAEHXZ	100.0000	100.0000	100.0000	0xbab40	26cceeec0c05
 game	?NumOfGivenArtifact@playerData@@QAEHH@Z	100.0000	100.0000	100.0000	0xbabd0	844a551634f3
 game	?PerDay@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc7fe0	6be697fb9da0
@@ -1936,7 +1985,7 @@ game	?PerWeek@game@@QAEXXZ	98.8948	99.8370	99.8370	0xc8780	cc054208a8f0
 game	?ProcessOnMapHeroes@game@@QAEXXZ	100.0000	100.0000	100.0000	0xcae10	ffdda8517461
 game	?ProcessOnMapTowns@game@@QAEXXZ	80.3907	80.3907	80.3907	0xcaa70	d7541bd90579
 game	?ProcessRandomObjects@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc9dd0	fff516680851
-game	?RandomizeEvents@game@@QAEXXZ	87.0102	87.0102	87.0102	0xc0cc0	71c0ec9f1e14
+game	?RandomizeEvents@game@@QAEXXZ	87.0102	87.0102	87.0102	0xc0cc0	9686fc680a84
 game	?RandomizeHolyGrail@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc0870	0e4c8e3b29a6
 game	?Read@NewSMapHeader@@QAEHPAVTAbstractFile@@H@Z	91.5614	91.5614	91.5614	0xc4390	832db94cb2ff
 game	?ReadHeroId@@YIHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xba1c0	391772931dc6
@@ -1956,6 +2005,13 @@ game	?SaveRumours@game@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbb
 game	?SaveSignPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9270	84395a935475
 game	?SetCannedRumour@game@@QAEXXZ	100.0000	100.0000	100.0000	0xccf20	6ba13dd2529d
 game	?SetMapRumour@game@@QAEXXZ	100.0000	100.0000	100.0000	0xccfb0	39f48ddb95be
+# game: 32 flat/mangled rows deleted 2026-08-08, all superseded by
+# promoted source names in the same change. Two are renames rather
+# than plain promotions: ?HasMobileHero@playerData@@QAEEXZ ->
+# ...QAE_NXZ (the DC mangling proves a `bool` return, and retail's
+# byte-only materialisation agrees), and playerData_SetName ->
+# ?AssignNetInfo@playerData@@QAEXPAVCNetPlayerInfo@@@Z (the claim at
+# 0x4ba130 was misattributed; the body reads a CNetPlayerInfo).
 game	?SetMapSize@game@@QAEXHH@Z	100.0000	100.0000	100.0000	0xccef0	02901c25640e
 game	?SetRandomHeroArmies@game@@QAEXHHE@Z	100.0000	100.0000	100.0000	0xc9730	9913e1452eb3
 game	?SetSpecialRumour@game@@QAEXXZ	100.0000	100.0000	100.0000	0xcd170	305bcc2901a7
@@ -1971,7 +2027,7 @@ game	?StartAITheme@@YIXXZ	100.0000	100.0000	100.0000	0xc6f40	45c7f5426a57
 game	?TransmitSaveGame@game@@QAEHHHEE@Z	82.2198	82.2198	82.2198	0xcafd0	62a5e3610978
 game	?TurnOffAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6fd0	fe47952c0464
 game	?TurnOnAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6f80	0d6fe6e9e2a0
-game	?ValidateVictoryLossConditions@game@@QAEXE@Z	89.6148	89.6148	89.6148	0xbf780	51847b4f5a1d
+game	?ValidateVictoryLossConditions@game@@QAEXE@Z	90.0315	90.0315	90.0315	0xbf780	2bed9d548148
 game	?ViewArmy@game@@QAEXAAVarmyGroup@@HPBVhero@@PBVtown@@HHEE@Z	83.8710	96.9556	96.9556	0xc6c50	495262d8376a
 game	?WaitForPlayer@game@@QAEXPADH@Z	100.0000	100.0000	100.0000	0xca840	14726064d168
 game	?_Construct@std@@YIXPAUTRumour@game@@ABU23@@Z	100.0000	100.0000	100.0000	0xd3a10	-
@@ -2017,6 +2073,10 @@ game	?_Xran@?$bitset@$0IA@@std@@ABEXXZ	100.0000	100.0000	100.0000	0xd5000	-
 game	?_Xran@?$bitset@$0IB@@std@@ABEXXZ	100.0000	100.0000	100.0000	0x8edf0	-
 game	?_Xran@?$bitset@$0JM@@std@@ABEXXZ	100.0000	100.0000	100.0000	0xd2090	-
 game	?_Xran@?$bitset@$0M@@std@@ABEXXZ	100.0000	100.0000	100.0000	0xd4eb0	-
+# EXACT 2026-08-30. The former 98.9923 deliberate lower was source-false:
+# Dreamcast proves CMCHideHero constructs its CMapChange base before the
+# separate heroId statement. Restoring that order closes this row; the sibling
+# SwapHeroes dip remains history rather than a waiver for reversing the fact.
 game	?add_garrison_hero@playerData@@QAEEPAVtown@@@Z	100.0000	100.0000	100.0000	0xb9fc0	2e056133f228
 game	?any@?$bitset@$0BM@@std@@QBE_NXZ	100.0000	100.0000	100.0000	0xd1810	-
 game	?apply_map_header_availability@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc4e30	e86fa3f1591d
@@ -2128,7 +2188,7 @@ gzinflatebuf	??0TAllocationFailure@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x1b9
 gzinflatebuf	??0TAllocationFailure@@QAE@XZ	100.0000	100.0000	100.0000	0xd6b80	92689dd90756
 gzinflatebuf	??0TDataError@TGzInflateBuf@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0xd6690	-
 gzinflatebuf	??0TDataError@TGzInflateBuf@@QAE@XZ	100.0000	100.0000	100.0000	0xd65e0	ef530792f879
-gzinflatebuf	??0TGzInflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@@Z	91.5985	91.5985	91.5985	0xd6050	9b37d907d923
+gzinflatebuf	??0TGzInflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@@Z	92.6749	92.6749	92.6749	0xd6050	0c2bddb70c8b
 gzinflatebuf	??0TRuntimeError@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x1b7b0	-
 gzinflatebuf	??0runtime_error@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z	100.0000	100.0000	100.0000	0x1ba90	-
 gzinflatebuf	??1TGzInflateBuf@@UAE@XZ	100.0000	100.0000	100.0000	0xd6820	cc97722e33a5
@@ -2192,7 +2252,22 @@ hero	?GetStandSequence@boat@@QAE?AW4hero_seqid@@XZ	100.0000	100.0000	100.0000	0x
 hero	?GetStandSequence@hero@@QAE?AW4hero_seqid@@XZ	100.0000	100.0000	100.0000	0xd9110	d90cd8f6ce22
 hero	?GetSurrenderCostFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe4580	f60327402b64
 hero	?GetVisibility@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe4070	95a689b2be07
-hero	?GiveArtifact@hero@@QAEEPBUtype_artifact@@EE@Z	68.9069	75.1012	75.1012	0xe3070	67ddcbc18a6b
+# DELIBERATE LOWER 2026-08-20, integration of lane/cmbtmgr4. This row
+# fell 57.88 -> 57.79 at the MERGE, not in either lane: cmbtmgr4 and the
+# hero lanes each measured clean in isolation and the 0.09 appears only
+# in combination. Investigated before accepting: cmbtmgr4 added ~60
+# declarators and 20 pad slices, but every one is behind a gate hero.cpp
+# does NOT define (checked macro by macro), and no ungated line landed in
+# any header hero.cpp includes. The delta is real codegen, not reloc
+# naming. Cause not isolated; 0.09 on a body that is itself an incomplete
+# reconstruction at 58% is below the resolution worth a lane's time.
+# CAUSE IDENTIFIED LATER, 2026-08-20: almost certainly the same
+# delink-generation effect proven on recruit::Update below - new
+# claims in another TU change the synth PDB, so vostok delinks THIS
+# unit's reference differently and the comparison moves with our
+# object unchanged. The header audit above found nothing because
+# there was nothing in the headers to find.
+hero	?GiveArtifact@hero@@QAEEPBUtype_artifact@@EE@Z	76.3360	76.3360	76.3360	0xe3070	ffc957bc4e5d
 hero	?GiveExperience@hero@@QAEHHHE@Z	100.0000	100.0000	100.0000	0xe33b0	f855005f641d
 hero	?GiveResource@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xe3600	934aedcd34c8
 hero	?GiveSS@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0xe22d0	8cb3163ef67c
@@ -2207,7 +2282,7 @@ hero	?HeroFn_004DBF30@hero@@QAEEHJ@Z	100.0000	100.0000	100.0000	0xdbf30	e39217e2
 hero	?HeroFn_004DC070@hero@@QAEXJ@Z	100.0000	100.0000	100.0000	0xdc070	b1654916cefe
 hero	?HeroFn_004DC100@hero@@QAEXJ@Z	87.2712	87.2712	87.2712	0xdc100	7d53252e3eeb
 hero	?HeroFn_004E2550@hero@@QAEEJJ@Z	92.9185	92.9185	92.9185	0xe2550	d0f8facd424f
-hero	?HeroFn_004E2840@hero@@QAEEJJ@Z	78.8633	78.8633	78.8633	0xe2840	3a443a1401ce
+hero	?HeroFn_004E2840@hero@@QAEEJJ@Z	94.5203	94.5203	94.5203	0xe2840	46bc2ba40770
 hero	?HeroFn_004E4EC0@hero@@QAE?AW4TAdventureObjectType@@XZ	100.0000	100.0000	100.0000	0xe4ec0	5705c9ac3fa4
 hero	?HeroFn_004E5DE0@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe5de0	ec2f952e9a8e
 hero	?HeroFn_004E6120@hero@@QBEXHPAUTCreatureTypeTraits@@@Z	100.0000	100.0000	100.0000	0xe6120	0ad9c16ec449
@@ -2250,7 +2325,13 @@ hero	?get_description@type_artifact@@QBE?AV?$basic_string@DU?$char_traits@D@std@
 hero	?get_equipped_artifacts@hero@@QAEJE@Z	100.0000	100.0000	100.0000	0xd9070	205dbd14ffb5
 hero	?get_hit_point_bonus@hero@@QAEJH@Z	100.0000	100.0000	100.0000	0xe5b80	8cfe04f01f29
 hero	?get_last_backpack_index@hero@@QAEJXZ	100.0000	100.0000	100.0000	0xdbd90	065ef23bf246
+# 2026-09-06 hand-lowered 95.4461 -> 93.7128 (hist too): polish lane 26 banked this
+# peak from a build that carried six #pragma inline_depth(0) pins it then
+# removed - no pin-free spelling reaches it; the pin recipe is in the note.
 hero	?get_luck_description@hero@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	93.7128	93.7128	95.4461	0xdcac0	ac00fc126b97
+# 2026-09-06 hand-lowered 93.9111 -> 91.6489 (hist too): polish lane 26 banked this
+# peak from a build that carried six #pragma inline_depth(0) pins it then
+# removed - no pin-free spelling reaches it; the pin recipe is in the note.
 hero	?get_morale_description@hero@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	91.6489	91.6489	93.9111	0xdc320	d3f4353b6068
 hero	?get_number_in_backpack@hero@@QAEJE@Z	100.0000	100.0000	100.0000	0xd90c0	cc2c389c0bf0
 hero	?get_obscured_town@type_obscuring_object@@QAEPAVtown@@XZ	100.0000	100.0000	100.0000	0xd7490	420693e9765c
@@ -2310,7 +2391,7 @@ hiscore	??_GTHighScoreWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xe9d90	-
 hiscore	?AddScoreToHighScore@highScoreManager@@QAEHHHHHPBD@Z	100.0000	100.0000	100.0000	0xe91d0	8b5c7f54d4bc
 hiscore	?GetMonType@highScoreManager@@SIHHH@Z	100.0000	100.0000	100.0000	0xe9830	9d3cf7054fbc
 hiscore	?GetRolloverWidget@CHSInputDlg@@UAEPAVtextWidget@@XZ	100.0000	100.0000	100.0000	0xe97f0	0ab312814b61
-hiscore	?HighScoreWindowHandler@@YIHAAVmessage@@@Z	78.3889	78.3889	78.3889	0xea1d0	be7a88d275c1
+hiscore	?HighScoreWindowHandler@@YIHAAVmessage@@@Z	78.5926	78.5926	78.5926	0xea1d0	44ec44c943c4
 hiscore	?OnKeyPress@CHighScoreEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0xe9710	7354e9b8b2d2
 hiscore	?OnWidgetDeselect@CHSInputDlg@@UAEHHPAE@Z	100.0000	100.0000	100.0000	0xe9790	14a9b70c186d
 hiscore	?Open@highScoreManager@@UAEHH@Z	100.0000	100.0000	100.0000	0xe90a0	c22b6bd8ce22
@@ -2351,6 +2432,27 @@ infutil	@inflate_flush@12	100.0000	100.0000	100.0000	0x20a620	-
 initialize	?add_to_included_mask@@YIXPBHPA_J@Z	100.0000	100.0000	100.0000	0xebb10	165bd660e56b
 initialize	?create_included_mask@@YIXPBHPA_J@Z	93.8667	93.8667	93.8667	0xebb70	a56745005b34
 initialize	?create_requirement_masks@@YIXPBHPA_J1@Z	100.0000	100.0000	100.0000	0xebc50	7803a63f6f95
+# initialize_game_data ACCEPTED 100.0000 -> 96.0880 AGAIN (2026-08-20,
+# spells lane), the seventh recorded movement of this row and the
+# fourth time it has landed on exactly 96.0880. THE TRADE, in full:
+# armygrp.h's ESpellId gained two UNGATED enumerators, SPELL_TELEPORT
+# 0x3f (un-gated out of a view) and SPELL_REMOVE_OBSTACLE 0x40 (new),
+# and armygrp.h is inside initialize.cpp's include closure through
+# town.h. What that bought is ~4.4 KB of spells.obj message bodies -
+# SpellTargetMessage 0x5a8690, ShowSpellMessage 0x5a8950 - whose whole
+# shape is a jump table over named spell ids; without the enumerators
+# they cannot be written at all, because `case 0x40:` is floored at 0
+# and a .cpp-local enum is floored at 0 too. The two enumerators are
+# byte-proven by those same tables (0x40 is the top entry of the
+# 53-wide table and gets its own strcpy arm).
+# The measurement was taken ALONE, with the two enumerators the only
+# change in the tree, and it moved exactly two rows: this one and
+# events' monsters_sell_out (100.0000 -> 99.9517, block above).
+# `max` and `hist` both keep 100.0000. This costs a re-measure, not a
+# result. It is also the SECOND datum for the step-function reading of
+# this class: two enumerators moved the row by the same amount one
+# enumerator did on 2026-08-08, which is what a population threshold
+# looks like and not what a per-declarator penalty looks like.
 initialize	?initialize_game_data@@YIXXZ	100.0000	100.0000	100.0000	0xeb730	9bb04f467e4b
 inputmgr	??0inputManager@@QAE@XZ	73.3333	100.0000	100.0000	0xec460	ce1b8a0744aa
 inputmgr	?AsciiConvert@inputManager@@QAEXPAVmessage@@@Z	100.0000	100.0000	100.0000	0xec6f0	b21c053d2257
@@ -2455,7 +2557,7 @@ mainmenu	??1TMainMenu@@UAE@XZ	100.0000	100.0000	100.0000	0xfb660	8cb9205dc179
 mainmenu	??_GTMainMenu@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xfb630	-
 mainmenu	?DoModal@TMainMenu@@QAEXXZ	100.0000	100.0000	100.0000	0xfb6e0	2c725647dbbc
 mainmenu	?MainMenuHandler@@YIHAAVmessage@@@Z	93.1746	93.1746	93.1746	0xfb710	dfd062d78034
-mapcell	??0CObjectType@@QAE@PAUTObjectType@@@Z	41.9455	41.9455	41.9455	0x106080	419bedee1d80
+mapcell	??0CObjectType@@QAE@PAUTObjectType@@@Z	58.5455	62.3455	62.3455	0x106080	27fd005d8d88
 mapcell	??0NewfullMap@@QAE@XZ	100.0000	100.0000	100.0000	0xfd060	fb0f6ae54745
 mapcell	??0NewmapCell@@QAE@XZ	100.0000	100.0000	100.0000	0xfd650	36b54decc94c
 mapcell	??1?$vector@VBlackBoxData@@V?$allocator@VBlackBoxData@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x106350	-
@@ -2481,7 +2583,7 @@ mapcell	?FindTrigger@CObject@@QBEXAAH0@Z	100.0000	100.0000	100.0000	0xfec30	8bf5
 mapcell	?GenerateHeightMap@NewfullMap@@QAEXPBVCObject@@QAY05C@Z	100.0000	100.0000	100.0000	0x105060	263bca9fdbb3
 mapcell	?HasTriggerableEvent@NewmapCell@@QAE?BEXZ	100.0000	100.0000	100.0000	0xfcdc0	c469cb530486
 mapcell	?Init@NewfullMap@@QAEXHE@Z	100.0000	100.0000	100.0000	0xfd4f0	0e3efc8b6f3e
-mapcell	?Load@NewfullMap@@QAEHPAVTAbstractFile@@HEH@Z	92.2018	92.2018	92.2018	0xfdbc0	ec12d9b5b459
+mapcell	?Load@NewfullMap@@QAEHPAVTAbstractFile@@HEH@Z	93.4037	93.4037	93.4037	0xfdbc0	865c591aa62c
 mapcell	?Load@TTimedEvent@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xfc6a0	c3c11baeb8d4
 mapcell	?LoadShipyards@NewfullMap@@QAEXXZ	100.0000	100.0000	100.0000	0x100de0	f2eafd7f6a58
 mapcell	?NewfullMapFn_004FD950@NewfullMap@@QAEXPAVTAbstractFile@@H@Z	90.4916	90.4916	90.4916	0xfd950	02bb8ab5cf4d
@@ -2565,7 +2667,7 @@ mapcell	?loadTownEventList@NewfullMap@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.00
 mapcell	?loadTreasureList@NewfullMap@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xfef60	b680bb3364dd
 mapcell	?readAbandonedMineData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0x101130	f5a83d826cc5
 mapcell	?readArtifactData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0xff120	52fca6459f9f
-mapcell	?readBlackBox@NewfullMap@@QAEHPAVTAbstractFile@@PAVBlackBoxData@@H@Z	93.0057	93.0057	93.0057	0xff6b0	1aa478b4e7a3
+mapcell	?readBlackBox@NewfullMap@@QAEHPAVTAbstractFile@@PAVBlackBoxData@@H@Z	95.3605	95.3605	95.3605	0xff6b0	8b8b6b82b5d7
 mapcell	?readBlackBoxData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	100.0000	100.0000	100.0000	0xffbf0	7f872d87af8f
 mapcell	?readEventData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	100.0000	100.0000	100.0000	0x1008b0	ff00b03757d2
 mapcell	?readGarrisonData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	100.0000	100.0000	100.0000	0x102a00	b931a498b11e
@@ -2594,11 +2696,11 @@ mapcell	?saveObjectType@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObjectType@@@Z	100
 mapcell	?saveTimedEventList@NewfullMap@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xfc390	65a48988b5b0
 mapcell	?saveTownEventList@NewfullMap@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xfc770	177dee6ff4fb
 mapcell	?saveTreasureData@NewfullMap@@QAEHPAVTAbstractFile@@PAVTreasureData@@@Z	100.0000	100.0000	100.0000	0xfef10	fb3da4f97c74
+mapcell	?set@?$bitset@$09@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0x106820	-
 mapcell	?size@?$vector@VCObjectType@@V?$allocator@VCObjectType@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x1062a0	-
 mapcell	?size@?$vector@VTQuestGuard@@V?$allocator@VTQuestGuard@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x1066e0	-
 mapcell	?size@?$vector@VTSeerHut@@V?$allocator@VTSeerHut@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x1066b0	-
 mapcell	?upgrade_cell_extra_info@@YIXPAVNewmapCell@@H@Z	96.2635	96.2635	96.2635	0xfe6c0	473d89ead6d9
-mapcell	__h3cg$mapcell$bitset_set$bitset10	0.0000	100.0000	100.0000	0x106820	-
 mapcell	__h3cg$mapcell$static_dtor$InvalidPlacementList	100.0000	100.0000	100.0000	0x104290	-
 misc	??0TPickANumber@@QAE@HH@Z	100.0000	100.0000	100.0000	0x10c6e0	e37bb858f579
 misc	?CheckConfigFile@@YIXXZ	99.1018	99.1018	99.1018	0x10b260	2ec283805f6b
@@ -2783,7 +2885,7 @@ objecttype	?insert@?$_Tree@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D
 objecttype	?insert@?$vector@UTObjectType@@V?$allocator@UTObjectType@@@std@@@std@@QAEXPAUTObjectType@@IABU3@@Z	100.0000	100.0000	100.0000	0x1167a0	-
 objecttype	?ipfx@?$basic_istream@DU?$char_traits@D@std@@@std@@QAE_N_N@Z	100.0000	100.0000	100.0000	0x115ca0	-
 objecttype	?is@?$ctype@D@std@@QBE_NFD@Z	100.0000	100.0000	100.0000	0x119500	-
-objecttype	?load@TObjectTypeTable@@QAEXPAD@Z	69.2500	69.2500	69.2500	0x114d80	fcfee94502e4
+objecttype	?load@TObjectTypeTable@@QAEXPAD@Z	73.3263	82.2717	82.2717	0x114d80	fcfee94502e4
 objecttype	?replace@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@IIPBDI@Z	100.0000	100.0000	100.0000	0x115a80	-
 objecttype	?rfind@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QBEIPBDII@Z	100.0000	100.0000	100.0000	0x115c20	-
 objecttype	?sbumpc@?$basic_streambuf@DU?$char_traits@D@std@@@std@@QAEHXZ	100.0000	100.0000	100.0000	0x117b10	-
@@ -2796,7 +2898,7 @@ objecttype	?use_facet@std@@YAABV?$numpunct@D@1@ABVlocale@1@PBV21@_N@Z	100.0000	1
 objecttype	__h3cg$objecttype$vector_insert_count$TImageInfo	0.0000	100.0000	100.0000	0x6aeb0	-
 objnames	??1TTextResourceGuard@@QAE@XZ	100.0000	100.0000	100.0000	0x1bd90	e6a9bcd817a7
 objnames	?InitializeAdventureObjectNames@@YIXXZ	100.0000	100.0000	100.0000	0x1b500	8e77da136c72
-overview	??0TOverviewWindow@@QAE@XZ	82.7097	82.7097	82.7097	0x11fa40	a342166b8705
+overview	??0TOverviewWindow@@QAE@XZ	90.4407	90.4407	90.4407	0x11fa40	b9597097399b
 overview	??1TOverviewWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x120d90	048fab1d8faa
 overview	??_GTOverviewWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x120d60	-
 overview	?DoFlaggableButtons@TOverviewWindow@@AAEXH@Z	100.0000	100.0000	100.0000	0x11e7f0	37a25d45af3d
@@ -2941,7 +3043,7 @@ puzzlewindow	?AI_attempt_puzzle_guess@@YI?AUtype_point@@J@Z	97.1621	97.1621	97.1
 puzzlewindow	?UpdatePuzzle@TPuzzleWindow@@QAEHH@Z	100.0000	100.0000	100.0000	0x12c6c0	34a059e6b8d9
 puzzlewindow	?WindowHandler@TPuzzleWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x12c640	86e9c14d488e
 puzzlewindow	?mark_puzzle@Bitmap816@@QAEXPAEJJ@Z	100.0000	100.0000	100.0000	0x12c8b0	6e09b505ce58
-puzzlewindow	?match_puzzle@@YI?AUtype_point@@JPAY0BB@Utype_AI_puzzle_tile@@@Z	92.4089	92.4089	92.4089	0x12cf10	bc65f8bdb7ba
+puzzlewindow	?match_puzzle@@YI?AUtype_point@@JPAY0BB@Utype_AI_puzzle_tile@@@Z	92.4089	92.4725	92.4725	0x12cf10	3d5f926eb008
 puzzlewindow	?test@?$bitset@$0DA@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0x1067e0	-
 questlogwindow	??0TQuestLogWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x12d8c0	b23447582f0c
 questlogwindow	??1TQuestLogWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x12e1e0	7ad7c6e06db8
@@ -2951,7 +3053,7 @@ questlogwindow	?QuestSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100
 questlogwindow	?UpdateQuestLocator@TQuestLogWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x12e270	27dea5832804
 questlogwindow	?WindowHandler@TQuestLogWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x12e410	0fd21b85c6e8
 questlogwindow	?quest_text_row@type_quest@@QAEPBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x12e6b0	32ce11802590
-quickherowindow	??0TQuickHeroWindow@@QAE@PAVhero@@W4TViewLevel@0@@Z	92.5668	92.5668	92.5668	0x12ead0	cf7573892452
+quickherowindow	??0TQuickHeroWindow@@QAE@PAVhero@@W4TViewLevel@0@@Z	94.0777	94.0777	94.0777	0x12ead0	7911576f4e36
 quickherowindow	??1TQuickHeroWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x12f3d0	1548de5efd87
 quickherowindow	??_GTQuickHeroWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x12f3a0	-
 quickinfowindow	??0TQuickCreatureWindow@@QAE@W4TViewLevel@0@W4TCreatureType@@HW4TDisposition@0@H@Z	100.0000	100.0000	100.0000	0x12f8c0	d4641c42c5be
@@ -2979,7 +3081,51 @@ recruit	?Open@recruitUnit@@UAEHH@Z	100.0000	100.0000	100.0000	0x14fea0	fbf1f2d3e
 recruit	?QuickViewRecruit@@YIXPAVtown@@H@Z	100.0000	100.0000	100.0000	0x151750	0dd46fe87715
 recruit	?QuickViewRecruit@@YIXW4TCreatureType@@PAF@Z	100.0000	100.0000	100.0000	0x151780	b3de8a88f724
 recruit	?RecruitSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x14e800	ba0a26c9df12
+# DELIBERATE LOWER 2026-08-20, integration of lane/mapcell4, and the
+# cause is PROVEN rather than guessed: recruit.cpp and every header it
+# sees are byte-identical to the pre-merge tree, yet this row moved
+# 90.8376 -> 88.2360. The REFERENCE moved, not our object. Reverting
+# only mapcell.cpp's two new VA claims and re-delinking returns it to
+# exactly 90.83756; restoring them returns it to 88.23604.
+#
+# MECHANISM: new claims rename symbols in the synth PDB, vostok
+# delinks every unit against that PDB, so recruit.c.obj - the TARGET
+# half of the comparison - changes when an unrelated TU gains claims.
+# A recorded max is therefore only comparable WITHIN a delink
+# generation, and the newer, more-claimed reference is the more
+# accurate one. 88.24 is the honest number against today's target;
+# 90.84 was measured against a coarser one.
+# recruitUnit::Update ACCEPTED 90.8376 -> 88.2360 (2026-08-20, game/command
+# lane). NOT A CODE CHANGE - recruit.cpp and its ENTIRE include closure are
+# byte-identical across the two measurements, and the closure provably does
+# not contain cmbtmgr.h, combatresultswindow.h or command.h (the only headers
+# this lane touched besides hero.h). It is the delink generation the match
+# skill documents: naming combatManager::DoVictory (0x477470) adds symbols to
+# the synth PDB, vostok re-delinks EVERY unit against it, and recruit.obj's
+# TARGET half moves. PROVEN BY A REVERT CONTROL, not by argument: stashing
+# only this lane's src/command.cpp + headers and re-delinking returns the row
+# to exactly 90.8376, and restoring them returns it to exactly 88.2360 - the
+# same two numbers, on the same row, as the precedent in the skill.
+# The bisect ALSO cleared the obvious suspect: hero.h gained a
+# SetPrimarySkill inline in this lane, and deleting that alone leaves the row
+# at 88.2360. Per doctrine the more-claimed reference is the more accurate
+# one, so the lower number is the honest one; hist keeps 90.8376.
+# RE-ACCEPTED 2026-08-20 (lane/army-recon2): the same 90.8376 <->
+# 88.2360 flip fired again when army.cpp's session landed new claims
+# and reconstructions (cast_spell exact among them) - the delink
+# generation moved, recruit.cpp and its headers untouched by the
+# regression commit. Same mechanism as above; hist keeps the peak.
+# RESOLVED 2026-08-30: that generation-sensitive plateau was not source
+# closure. Restoring raw-NB11's message constructor and maxGold local plus
+# the nested GetArmyName and UpdateCost -> GetMonsterCost source boundaries
+# first raised the source checkpoint to 94.1574. A later dependent rebuild and
+# fresh normalization, with recruit.cpp unchanged, measured 96.5558; the merged
+# rebuild returned current to 94.1574 while max/history retain that transient.
 recruit	?Update@recruitUnit@@QAEXEJ@Z	94.1574	96.5558	96.5558	0x1503a0	d97bc68809dd
+# 2026-09-05 DELIBERATE LOWER: add_creature_widgets reached 100.0000 only through a
+# `creature_background` file-static the Dreamcast roster does not name (recruit.obj has
+# no such helper) - a caller-shrink dose steering the /Ob2 budget, i.e. an inverse
+# numerator carrier. Reverted; max/hist reset to the last genuine value 93.6325.
 recruit	?add_creature_widgets@TRecruitWindow@@QAEXJJJW4TCreatureType@@J@Z	93.6325	93.6325	100.0000	0x14fb90	8b238d4d93cf
 recruit	?get_upgrade_cost@@YIXW4TCreatureType@@0JPAJ@Z	100.0000	100.0000	100.0000	0x14e750	097f86e6d337
 recruit	?insert@?$vector@PAVwidget@@V?$allocator@PAVwidget@@@std@@@std@@QAEXPAPAVwidget@@IABQAV3@@Z	100.0000	100.0000	100.0000	0x14d120	-
@@ -3199,15 +3345,23 @@ rmg	??0type_shrine_def@@QAE@HH@Z	100.0000	100.0000	100.0000	0x1349d0	1621d989a61
 rmg	??0type_spell_scroll_def@@QAE@HH@Z	100.0000	100.0000	100.0000	0x134ea0	bd98d234413a
 rmg	??0type_treasure_def@@QAE@HHHH@Z	100.0000	100.0000	100.0000	0x134160	fdf13f3fe2e6
 rmg	??0type_witch_hut_def@@QAE@XZ	100.0000	100.0000	100.0000	0x134a60	248d29ba8ae4
+rmg	??1TRmgTemplate@@QAE@XZ	100.0000	100.0000	100.0000	0x132fe0	91c7b86448a1
 rmg	?BuildRoadCostMap@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	75.6686	75.6686	75.6686	0x147880	a77d1b634931
-rmg	?ConnectZones@type_random_map_generator@@QAEXXZ	93.3549	93.3549	93.3549	0x143240	8d5f38bf5378
+rmg	?ClipRmgBoundaryPoint@@YI?AUTPoint@@ABUTRmgZoneBounds@@U1@1@Z	64.1087	64.1812	64.1812	0x13cac0	b3925063f1b0
+rmg	?ConnectZones@type_random_map_generator@@QAEXXZ	93.3833	93.3833	93.3833	0x143240	8d5f38bf5378
 rmg	?CreateRiver@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	39.5071	39.6178	39.6178	0x148df0	71eb4f296ebf
 rmg	?CreateSubterraneanGate@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	76.9439	76.9439	76.9439	0x142080	38a429be544f
+rmg	?DrawIrregularZoneBoundary@type_random_map_generator@@QAEXUTPoint@@0HHH@Z	100.0000	100.0000	100.0000	0x13bff0	2d2874683a8c
+rmg	?DrawStraightZoneBoundary@type_random_map_generator@@QAEXUTPoint@@0HH@Z	100.0000	100.0000	100.0000	0x13c220	37631f283728
+rmg	?FindZone@TRmgTemplate@@QAEPAUTRmgTownSlot@@H@Z	100.0000	100.0000	100.0000	0x1330a0	870a37b40020
 rmg	?GetMapItem@type_random_map@@QAEPAUTRmgMapItem@@UTRmgMapPosition@@@Z	100.0000	100.0000	100.0000	0x1378e0	5df55a259e35
 rmg	?InitializeObjectGenerators@type_random_map_generator@@QAEXXZ	97.4646	97.4676	97.4676	0x138b10	55bc899a64f7
-rmg	?WriteMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	95.7066	95.7066	95.7066	0x149cb0	12d6f5f28f76
+rmg	?ReadRmgTemplateZones@@YIXPBVTSpreadsheetResource@@PAUTRmgTemplate@@HHHHH@Z	100.0000	100.0000	100.0000	0x138480	309459fe2ecc
+rmg	?TraceZoneBoundary@type_random_map_generator@@QAEXPAUTRmgBoundaryVertex@@E@Z	56.5644	57.8331	57.8331	0x13c390	781b5fa33373
+rmg	?WriteMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	95.6987	95.7066	95.7066	0x149cb0	12d6f5f28f76
 rmg	?_Inc@const_iterator@?$_Tree@UTPoint@@U1@U_Kfn@?$set@UTPoint@@U?$less@UTPoint@@@std@@V?$allocator@UTPoint@@@3@@std@@U?$less@UTPoint@@@4@V?$allocator@UTPoint@@@4@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x1b8bc0	-
 rmg	?assign_rmg_teams@@YIXHHHPBEPAD@Z	100.0000	100.0000	100.0000	0x14ab40	a44a9dbf9227
+rmg	?erase@?$vector@UTPoint@@V?$allocator@UTPoint@@@std@@@std@@QAEPAUTPoint@@PAU3@@Z	100.0000	100.0000	100.0000	0x14cd70	-
 rmg	?insert@?$vector@HV?$allocator@H@std@@@std@@QAEPAHPAHABH@Z	100.0000	100.0000	100.0000	0x22f50	-
 rmg	?insert@?$vector@HV?$allocator@H@std@@@std@@QAEXPAHIABH@Z	100.0000	100.0000	100.0000	0x4200	-
 rmg	?insert@?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@std@@QAEXPAUTRmgMapPosition@@IABU3@@Z	100.0000	100.0000	100.0000	0x347a0	-
@@ -3216,16 +3370,17 @@ rmg_support	??0TRmgMapPosition@@QAE@HHH@Z	100.0000	100.0000	100.0000	0x1355c0	76
 rmg_support	??0TRmgRiverPainter@@QAE@PAVTRmgMapAdapterInterface@@HABUTPoint@@@Z	99.7073	99.7073	99.7073	0x15ee50	8389dfff6b8b
 rmg_support	??1TRmgRiverPainter@@UAE@XZ	100.0000	100.0000	100.0000	0x15eda0	60a4b1f5e76b
 rmg_support	?GetMapItem@type_random_map@@QAEPAUTRmgMapItem@@HH@Z	100.0000	100.0000	100.0000	0x146990	890199bad0d2
+rmg_support	?Length@TPoint@@QBEHXZ	100.0000	100.0000	100.0000	0x1fceb0	59e695e82987
 rmg_terrain	?GetPackedCell@TRmgTerrainPainter@@QAEPAUTRmgPackedTerrainCell@@ABUTPoint@@@Z	100.0000	100.0000	100.0000	0x1b48d0	80cfdea71a03
 rmg_terrain	?InitializePackedCell@TRmgTerrainPainter@@QAEXABUTPoint@@I@Z	100.0000	100.0000	100.0000	0x1b3dd0	1530cd6d2434
 rmg_terrain	?PaintTransitions@TRmgTerrainPainter@@QAEXXZ	74.7623	74.7623	74.7623	0x1b5a70	094364ec1316
-rmg_terrain	SelectTerrainTransition	0.0000	0.0000	0.0000	0x1b3e80	520848ff4875
+rmg_terrain	?SelectTerrainTransition@@YIHPBHPAUTRmgTerrainFlip@@@Z	100.0000	100.0000	100.0000	0x1b3e80	fbecc87d36e2
 rmg_terrain	TRmgTerrainPainter_BuildNeighbourKinds	0.0000	0.0000	0.0000	0x1b68a0	322097c1bc8f
 rmg_terrain	TRmgTerrainPainter_CheckFirstDiagonal	0.0000	0.0000	0.0000	0x1b6ba0	bef473f08649
 rmg_terrain	TRmgTerrainPainter_CheckSecondDiagonal	0.0000	0.0000	0.0000	0x1b6e00	c0697b82984a
 rmg_terrain	TRmgTerrainPainter_GetTransitionStrength	0.0000	0.0000	0.0000	0x1b6fd0	84a34fd69689
 sacrifice_window	??0type_sacrifice_window@@QAE@PAVhero@@H@Z	100.0000	100.0000	100.0000	0x15fdd0	e3c4b7caa364
-sacrifice_window	??0type_skeleton_window@@QAE@PAVarmyGroup@@@Z	98.3508	98.3508	98.3508	0x1654f0	7b3203c0fe49
+sacrifice_window	??0type_skeleton_window@@QAE@PAVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x1654f0	14453a1a8081
 sacrifice_window	??1type_sacrifice_window@@UAE@XZ	100.0000	100.0000	100.0000	0x1623a0	2862ff7bfb2e
 sacrifice_window	??1type_skeleton_window@@UAE@XZ	100.0000	100.0000	100.0000	0x165f60	811f4279de4c
 sacrifice_window	??1type_transformer_slot@@UAE@XZ	100.0000	100.0000	100.0000	0x1654b0	-
@@ -3283,7 +3438,7 @@ sample	??0sample@@QAE@PBDPBXJJJJ@Z	100.0000	100.0000	100.0000	0x166da0	27f3c7545
 sample	??1sample@@UAE@XZ	100.0000	100.0000	100.0000	0x166e60	456fa32a79bd
 sample	??_Gsample@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x166e30	-
 sample	?GetSize@sample@@UBEIXZ	100.0000	100.0000	100.0000	0x166e90	b35cdff407a5
-scenarioinfo	??0CScenarioInfoDlg@@QAE@XZ	96.2334	96.3650	96.3650	0x167290	c0d3b7f96ea2
+scenarioinfo	??0CScenarioInfoDlg@@QAE@XZ	96.5654	96.5654	96.5654	0x167290	0b9b5b503484
 scenarioinfo	??1CScenarioInfoDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x169800	201d072d5b3d
 scenarioinfo	??1CScenarioPlayerInfoWidget@@UAE@XZ	100.0000	100.0000	100.0000	0x169770	cddf9610d751
 scenarioinfo	??_GCScenarioInfoDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1697d0	-
@@ -3319,21 +3474,21 @@ seerhut	?DoEvent@TQuestGuard@@QAEXPAVhero@@_NPAVNewmapCell@@Utype_point@@@Z	100.
 seerhut	?DoProgressDialog@type_artifact_quest@@UAEXXZ	75.2353	75.2353	75.2353	0x16fbc0	14487706208a
 seerhut	?DoProgressDialog@type_be_hero_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x171fc0	e0ed3f345851
 seerhut	?DoProgressDialog@type_belong_to_player_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x1725b0	80c2e4808bd9
-seerhut	?DoProgressDialog@type_creature_quest@@UAEXXZ	99.5679	99.5679	99.5679	0x170b80	39d37be44b2a
+seerhut	?DoProgressDialog@type_creature_quest@@UAEXXZ	99.5679	99.5679	99.5679	0x170b80	317559c75271
 seerhut	?DoProgressDialog@type_defeat_hero_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x16e4b0	cb3a219f1e0d
 seerhut	?DoProgressDialog@type_experience_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x16d550	922a72ab8c37
 seerhut	?DoProgressDialog@type_monster_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x16eca0	862c5c64cbd3
 seerhut	?DoProgressDialog@type_resource_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x171ae0	c8bfdece7406
-seerhut	?DoProgressDialog@type_skill_quest@@UAEXXZ	75.8427	75.8427	75.8427	0x16dd60	f42056b3b171
-seerhut	?DoProposalDialog@type_artifact_quest@@UAEXPAVhero@@@Z	89.1000	89.1000	89.1000	0x16f8a0	98595e76527b
+seerhut	?DoProgressDialog@type_skill_quest@@UAEXXZ	76.2135	76.5169	76.5169	0x16dd60	ee20a9a962e9
+seerhut	?DoProposalDialog@type_artifact_quest@@UAEXPAVhero@@@Z	92.0556	92.0556	92.0556	0x16f8a0	d6e421bc7e40
 seerhut	?DoProposalDialog@type_be_hero_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x171f20	ab43f3eb1f8d
 seerhut	?DoProposalDialog@type_belong_to_player_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x172510	eb13ba1a88b0
-seerhut	?DoProposalDialog@type_creature_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x170880	6b8db6d46335
+seerhut	?DoProposalDialog@type_creature_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x170880	20a4e1185eed
 seerhut	?DoProposalDialog@type_defeat_hero_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x16e410	be666828b201
 seerhut	?DoProposalDialog@type_experience_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x16d4b0	f15a501e3b80
 seerhut	?DoProposalDialog@type_monster_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x16ec00	75b80eb26ca1
-seerhut	?DoProposalDialog@type_resource_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x171840	8daaed82c0be
-seerhut	?DoProposalDialog@type_skill_quest@@UAEXPAVhero@@@Z	75.4324	75.4324	75.4324	0x16dad0	edd70be3a3af
+seerhut	?DoProposalDialog@type_resource_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x171840	7ff03694331f
+seerhut	?DoProposalDialog@type_skill_quest@@UAEXPAVhero@@@Z	81.0631	81.0631	81.0631	0x16dad0	d0cd549fb73b
 seerhut	?DoSeerEvent@TSeerHut@@QAEXPAVhero@@_N@Z	42.5710	46.3642	46.3642	0x173670	fd83ce70c563
 seerhut	?GetAIValue@type_artifact_quest@@UAEHH@Z	100.0000	100.0000	100.0000	0x16f5a0	e8c4868db654
 seerhut	?GetAIValue@type_creature_quest@@UAEHH@Z	100.0000	100.0000	100.0000	0x170480	386e7f03466e
@@ -3349,14 +3504,14 @@ seerhut	?GetQuestDescription@type_experience_quest@@UAE?AV?$basic_string@DU?$cha
 seerhut	?GetQuestDescription@type_monster_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16eb30	fafc6b80618b
 seerhut	?GetQuestDescription@type_resource_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x1716e0	b84052d7840b
 seerhut	?GetQuestDescription@type_skill_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16d990	032bce1163f3
-seerhut	?GetRequirementText@type_artifact_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16f5f0	1460125f96ba
+seerhut	?GetRequirementText@type_artifact_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16f5f0	995215d067ed
 seerhut	?GetRequirementText@type_be_hero_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x172060	95db87493348
 seerhut	?GetRequirementText@type_belong_to_player_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x172650	5789a04499ef
-seerhut	?GetRequirementText@type_creature_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x1704e0	c407bb026800
+seerhut	?GetRequirementText@type_creature_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x1704e0	cfb762946bf3
 seerhut	?GetRequirementText@type_defeat_hero_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16e240	4c52a9d61b1d
 seerhut	?GetRequirementText@type_experience_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16d3e0	29633815314c
 seerhut	?GetRequirementText@type_monster_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16ea30	8d56085e9b6b
-seerhut	?GetRequirementText@type_resource_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x171580	daaefd328200
+seerhut	?GetRequirementText@type_resource_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x171580	4c44ae7f41dd
 seerhut	?GetRequirementText@type_skill_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16d960	2be2428a25d2
 seerhut	?GetRewardExtra@TSeerReward@@QAEHPBVhero@@@Z	100.0000	100.0000	100.0000	0x173f10	24384e4d337c
 seerhut	?Load@type_artifact_quest@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x16fcb0	39af110fb00b
@@ -3399,7 +3554,7 @@ seerhut	?SetDefaultText@type_creature_quest@@UAEXXZ	100.0000	100.0000	100.0000	0
 seerhut	?SetDefaultText@type_defeat_hero_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x16e6f0	06461e5f3612
 seerhut	?SetDefaultText@type_experience_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x16d720	ba63f07b4646
 seerhut	?SetDefaultText@type_monster_quest@@UAEXXZ	93.0020	98.3426	98.3426	0x16ef20	6a3fd9d24df6
-seerhut	?SetDefaultText@type_resource_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x171cc0	0b35a94b034a
+seerhut	?SetDefaultText@type_resource_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x171cc0	e81292b143ca
 seerhut	?SetDefaultText@type_skill_quest@@UAEXXZ	96.5299	96.5299	96.5299	0x16e0d0	c384cd65f3dd
 seerhut	?TakePayment@type_artifact_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x16f860	7781cac6567d
 seerhut	?TakePayment@type_creature_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x1707c0	7b65fd4a9b5f
@@ -3431,7 +3586,7 @@ seerhut	?read@TQuestGuard@@QAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0
 seerhut	?read@TSeerHut@@QAEXPAVTAbstractFile@@@Z	86.8085	86.8085	86.8085	0x174610	9483e5636edd
 seerhut	?save@TQuestGuard@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x173520	4af04b37a0b0
 seerhut	?save@TSeerHut@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x173fd0	3f53613a2426
-seerhut	?skill_requirement_text@type_skill_quest@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAY03$$CBC@Z	100.0000	100.0000	100.0000	0x16dfa0	2de5fc7e8020
+seerhut	?skill_requirement_text@type_skill_quest@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAY03$$CBC@Z	100.0000	100.0000	100.0000	0x16dfa0	1096d66d2931
 seerhuttext	??0TSeerHutQuestText@@QAE@XZ	100.0000	100.0000	100.0000	0x16bed0	-
 seerhuttext	??0TSeerHutTextColumn@@QAE@XZ	100.0000	100.0000	100.0000	0x16bde0	-
 seerhuttext	??1TSeerHutQuestText@@QAE@XZ	100.0000	100.0000	100.0000	0x16bf30	-
@@ -3488,7 +3643,7 @@ singleselectionwindow	??0GameSelectionHeadersStruct@@QAE@XZ	79.2582	79.3242	79.3
 singleselectionwindow	??0NewSMapHeader@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x18fa60	-
 singleselectionwindow	??0SCampaign@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x18fc10	-
 singleselectionwindow	??0SavedGameHeader@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x193f50	-
-singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	95.6611	95.7079	95.7079	0x179960	e92668059d44
+singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	95.7448	95.8142	95.8142	0x179960	93bc3c0c1956
 singleselectionwindow	??0lobby_message@@QAE@XZ	100.0000	100.0000	100.0000	0x189190	2b1be8208221
 singleselectionwindow	??0t_map_list_update@@QAE@K@Z	100.0000	100.0000	100.0000	0x189240	173781ee6a81
 singleselectionwindow	??1?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x18ea70	-
@@ -3532,7 +3687,13 @@ singleselectionwindow	?DisplayChat@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0
 singleselectionwindow	?DoModal@TSingleSelectionWindow@@UAEHE@Z	100.0000	100.0000	100.0000	0x184bf0	a7f4cf150e2a
 singleselectionwindow	?Draw@CChatWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x17ca90	dba5fe00a3d9
 singleselectionwindow	?DrawBasicMapInfo@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1840f0	e31592d19511
-singleselectionwindow	?DrawHeroAdvancedOption@TSingleSelectionWindow@@QAEXHEH@Z	91.2854	91.2854	91.2854	0x18d510	83f6536ecdf3
+# 2026-08-27 hand-lowered 90.5627 -> 89.7825 (hist keeps 90.5627): TU
+# optimizer-state coupling, not a source change - the row moved when the
+# round-2 stub lifts (TurnOff pair, the five advanced-option accessors)
+# landed in the same TU with this function's own source byte-identical.
+# Its register-homing residual note is in-source; reaching 100 there is
+# also the documented recovery for the CEnterNameEdit pair.
+singleselectionwindow	?DrawHeroAdvancedOption@TSingleSelectionWindow@@QAEXHEH@Z	91.4350	91.4350	91.4350	0x18d510	b3a260d54c2d
 singleselectionwindow	?ExitDialog@TSingleSelectionWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x187bc0	30a0ba0eb038
 singleselectionwindow	?Finish@CNewPlayerUpdateProc@@UAEXXZ	87.0155	89.5855	89.5855	0x1795a0	a10ac565f1b2
 singleselectionwindow	?Finish@t_map_list_update@@UAEXXZ	100.0000	100.0000	100.0000	0x178930	ea9b5caf124a
@@ -3566,7 +3727,7 @@ singleselectionwindow	?InitializeVCDescriptions@@YIEXZ	100.0000	100.0000	100.000
 singleselectionwindow	?IsFaceTaken@CNetPlayerHandler@@QAEEHH@Z	100.0000	100.0000	100.0000	0x177d10	2bc3c3eeed3b
 singleselectionwindow	?IsHost@TSingleSelectionWindow@@QAEEXZ	100.0000	100.0000	100.0000	0x18adf0	e487f50b96a0
 singleselectionwindow	?IsVersionCompatible@TSingleSelectionWindow@@QAEEPBD@Z	100.0000	100.0000	100.0000	0x189d30	34afc25d8233
-singleselectionwindow	?MakeHeroFilter@TSingleSelectionWindow@@QAEXXZ	87.5476	87.5476	87.5476	0x183890	571970ca66ca
+singleselectionwindow	?MakeHeroFilter@TSingleSelectionWindow@@QAEXXZ	88.9857	88.9857	88.9857	0x183890	361e0e3da08b
 singleselectionwindow	?NewPlayer@CNewPlayerUpdateMan@@QAEXK@Z	100.0000	100.0000	100.0000	0x18a280	58894ede70c1
 singleselectionwindow	?OnBadVersionMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18df50	65c8466f6086
 singleselectionwindow	?OnBeginGame@TSingleSelectionWindow@@QAEEXZ	77.2669	78.7597	78.7597	0x18bce0	e0fdbb934541
@@ -3575,8 +3736,27 @@ singleselectionwindow	?OnGameHeaderInfoInitMsg@TSingleSelectionWindow@@QAEEPAVCN
 singleselectionwindow	?OnGameHeaderInfoInitMsgEx@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18a780	846acb6f2ce7
 singleselectionwindow	?OnGameHeaderInfoMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18aa40	f24d7c980efb
 singleselectionwindow	?OnGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x189b20	61f7b1dce734
+# 2026-08-27 (round 3) hand-lowered 100.0000 -> 99.8868 (hist keeps
+# 100.0000): the same documented TU-state flap as OnKillFocus below -
+# this interim's full build had re-banked the transient peak, and the
+# SetCurrentMap/OnSetAsHostMsg bodies landing in the TU dropped the
+# pair again with both sources byte-identical. Recovery rides with
+# DrawHeroAdvancedOption reaching 100.
 singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0	0e5de8f038ec
 singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	9177fbb0fa83
+# 2026-08-27 hand-lowered 100.0000 -> 99.8710 (hist keeps 100.0000): the
+# documented TU-state flap (master accepted this pair down at 99.89/99.87
+# when DrawHeroAdvancedOption fell off 100). The chat-pair commit 12d947e2
+# transiently restored the peak; the TurnOff-pair commit dropped it again
+# with OnKillFocus's own source byte-identical - the residual is one
+# scheduler flap (a mov esi,[ebp-x] order swap) inside the inlined
+# OnEnter. Recovery rides with DrawHeroAdvancedOption reaching 100.
+# 2026-08-27 (later): hand-lowered a second time after an interim full
+# build re-banked the transient peak; the flap recurred with each body
+# landing in the TU. Twin OnKeyPress sits AT 100 in the same build.
+# 2026-08-27 (round 3): the interim full build re-banked the transient
+# peak a third time; re-lowered with the round's bodies landed. Same
+# scheduler flap, same recovery path.
 singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0	66eb0a0e15c8
 singleselectionwindow	?OnMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2193	90.2193	90.2193	0x189710	3ad2be3935a3
 singleselectionwindow	?OnNameClick@TSingleSelectionWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x18b620	ef174e28edf8
@@ -3770,7 +3950,7 @@ spellbookwindow	??1TSpellbookWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x19c8f0	
 spellbookwindow	??MTSpellbookEntry@TSpellbookWindow@@QBE_NABV01@@Z	100.0000	100.0000	100.0000	0x19dbe0	298d7c180680
 spellbookwindow	??_GTSpellbookWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x19c8c0	-
 spellbookwindow	?Close@TSpellbookWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x19c990	2a459745f56a
-spellbookwindow	?GotoPage@TSpellbookWindow@@QAEXH@Z	88.8745	88.8745	88.8745	0x19c9a0	841ef4c9ab8e
+spellbookwindow	?GotoPage@TSpellbookWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x19c9a0	6c451b62a029
 spellbookwindow	?Open@TSpellbookWindow@@UAEHHE@Z	100.0000	100.0000	100.0000	0x19c970	67001e2f7fe4
 spellbookwindow	?Reset@TSpellbookWindow@@SIXXZ	100.0000	100.0000	100.0000	0x19ba80	4fee86f4bd5f
 spellbookwindow	?WindowHandler@TSpellbookWindow@@UAEHPAVmessage@@@Z	99.9011	99.9011	99.9011	0x19d040	afd2f6cd1887
@@ -3788,7 +3968,7 @@ spells	?AbleToSummonElemental@combatManager@@QAEEHJ@Z	100.0000	100.0000	100.0000
 spells	?AddBolt@combatManager@@QAEXPAUSBolt@@HHHHHHHHHHHH@Z	100.0000	100.0000	100.0000	0x1a5a90	298ffa58efa4
 spells	?AreaEffect@combatManager@@QAEXJHJJ@Z	99.8565	99.8565	99.8565	0x1a4970	89c796832376
 spells	?Armageddon@combatManager@@QAEXHH@Z	93.9013	93.9013	93.9013	0x1a4bc0	4c4fd8883f34
-spells	?CastSpell@combatManager@@QAEXHHHHHJ@Z	92.7793	92.7816	92.7816	0x19fe30	003e28edddf6
+spells	?CastSpell@combatManager@@QAEXHHHHHJ@Z	93.3658	93.3658	93.3658	0x19fe30	06722a767ab2
 spells	?ChainLightning@combatManager@@QAEXHHH@Z	96.1913	96.1913	96.1913	0x1a6360	ebf901f1d173
 spells	?ClearEffects@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1a66b0	59ebec44e08d
 spells	?ComputeSpellDamage@combatManager@@QAEJHJJPAVhero@@0PBVarmy@@E@Z	100.0000	100.0000	100.0000	0x1a7890	210d41023a64
@@ -3971,6 +4151,11 @@ town	?HasGarrison@town@@QAEHXZ	100.0000	100.0000	100.0000	0x1bdfe0	b68a22cffb22
 town	?InitializeBuildingCostsTables@town@@SIEXZ	91.0465	91.0465	91.0465	0x1c14c0	0b254fcfae4c
 town	?PlaceInMap@town@@QAEXHJE@Z	100.0000	100.0000	100.0000	0x1c13b0	33edc304cfae
 town	?SetSummoningGenerator@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1bd750	22e2a632987d
+# DELIBERATE SOURCE-SHAPE LOWER 2026-08-30. This row's 100.0000 historical
+# peak used a member-first CMCHideHero spelling contradicted by the dependent
+# Dreamcast constructor. The coherent base-first source is 97.7744 here and
+# exact in add_garrison_hero; raw NB11 also fixes CNetMsg/CMapChange/CMCHideHero
+# parameter types and names. Keep max/history and do not flatten the helper.
 town	?SwapHeroes@town@@QAEXXZ	97.7744	100.0000	100.0000	0x1be450	8f680b9e440b
 town	?TownFn_005BF900@town@@QAEJJ@Z	100.0000	100.0000	100.0000	0x1bf900	e0aefa4a9f1f
 town	?UpgradedDwellingID@town@@SIHH@Z	100.0000	100.0000	100.0000	0x1c14a0	dbf03795acbd
@@ -3981,12 +4166,12 @@ town	?can_ever_build@town@@QBEEH@Z	100.0000	100.0000	100.0000	0x1c0e60	cd9cc3e35
 town	?change_generator_bonus@town@@QAEXW4TCreatureType@@J@Z	100.0000	100.0000	100.0000	0x1bfe50	6932bc2b2227
 town	?check_shipyard_square@@YIEPAVtown@@JJ@Z	100.0000	100.0000	100.0000	0x1c0c90	0761ca2cc7d5
 town	?create_building@town@@QAE?AW4type_building_id@@W42@@Z	85.9771	85.9771	85.9771	0x1be930	c38da2ca19e9
-town	?destroy_extra_capitol@town@@QAEXXZ	87.2072	96.4595	96.4595	0x1bec60	8954d1554036
+town	?destroy_extra_capitol@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1bec60	17763f912c2c
 town	?get_army@town@@QBEABVarmyGroup@@XZ	100.0000	100.0000	100.0000	0x1c1460	4f64165d1f49
 town	?get_build_cost@town@@QBEFW4type_building_id@@PAH1@Z	81.4912	81.4912	81.4912	0x1c1180	7c453cdeb39a
 town	?get_build_cost@town@@QBEXW4type_building_id@@PAH@Z	100.0000	100.0000	100.0000	0x1c10f0	b43a2e32d1bc
 town	?get_build_cost_array@town@@QBEPAHW4type_building_id@@@Z	100.0000	100.0000	100.0000	0x1c1080	4883aeacb46f
-town	?get_buildable_mask@town@@QBE_JXZ	89.5893	89.5893	89.5893	0x1c0f20	ff01c65f6999
+town	?get_buildable_mask@town@@QBE_JXZ	99.8839	99.8839	99.8839	0x1c0f20	027ba9ea0807
 town	?get_castle_growth_bonus@town@@QBEJW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x1bf570	1833831c2888
 town	?get_gold_income@town@@QBEFE@Z	100.0000	100.0000	100.0000	0x1bf600	ac15fda00c26
 town	?get_growth_rate@town@@QAEFF@Z	100.0000	100.0000	100.0000	0x1bfb60	17dd60168350
@@ -4007,6 +4192,10 @@ town	?load@town@@QAEHPAVTAbstractFile@@H@Z	98.0017	98.0017	98.0017	0x1bcd60	c2a3
 town	?remove_garrison_hero@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1be390	1cd0c5fe4f8a
 town	?save@town@@QAEHPAVTAbstractFile@@@Z	99.8370	99.8370	99.8370	0x1bd2f0	e520c939a9fd
 town	?set@?$bitset@$0DA@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0x106780	-
+# 2026-08-24: both carrier-free peaks are recovered by the real source call
+# Dreamcast records at each tail: vector::clear(), not the former manual
+# erase(begin(), end()). Building is honestly exact; creature's 99.0596 is
+# its one-schedule residual, now also spelling the DC-attested GetArmyName.
 town	?show_building_rewards@@YIXPBVtown@@PAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x1c0220	4b14797adca3
 town	?show_creature_rewards@@YIXPBVtown@@PAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@std@@@Z	99.0596	99.0596	99.0596	0x1c0400	845f989e91a6
 town	?update_shipyard@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1bf210	343d37d72f90
@@ -4030,7 +4219,7 @@ townmgr	??0TThievesGuildWindow@@QAE@H@Z	100.0000	100.0000	100.0000	0x1c8190	daa8
 townmgr	??0TTownScreenWindow@@QAE@XZ	98.9497	98.9497	98.9497	0x1c34d0	32be2baca2ef
 townmgr	??0townManager@@QAE@XZ	99.0800	100.0000	100.0000	0x1c3310	38297efef9f6
 townmgr	??0townObject@@QAE@HHPBD@Z	100.0000	100.0000	100.0000	0x1c2ea0	caca6f80ac64
-townmgr	??0type_garrison_base_window@@QAE@PAVhero@@HPAVarmyGroup@@@Z	93.8825	98.2932	98.2932	0x1ce830	6bdd282efa14
+townmgr	??0type_garrison_base_window@@QAE@PAVhero@@HPAVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x1ce830	828979a64378
 townmgr	??0type_monster_join_window@@QAE@PAVhero@@PAVarmyGroup@@E@Z	93.8770	93.8770	93.8770	0x1d0b40	b0aee7ca0785
 townmgr	??0type_university@@QAE@XZ	100.0000	100.0000	100.0000	0x1d2d80	576222ab9cc6
 townmgr	??1TBlacksmithWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1d1a30	ec6d338751ee
@@ -4099,7 +4288,7 @@ townmgr	?SetRolloverText@TTavernWindow@@QAEXH@Z	81.4136	81.4136	81.4136	0x1d7920
 townmgr	?SetRolloverText@TThievesGuildWindow@@QAEXH@Z	94.1758	94.1758	94.1758	0x1c9710	0a961efcf30d
 townmgr	?SetupExtraStuff@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1c33f0	c43032f622bc
 townmgr	?SetupMage@townManager@@QAEXPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1d6ef0	afcd68211831
-townmgr	?SetupThievesGuild@TThievesGuildWindow@@QAEXH@Z	93.3762	93.3762	93.3762	0x1dda10	79aadf9d6391
+townmgr	?SetupThievesGuild@TThievesGuildWindow@@QAEXH@Z	95.5153	95.5153	95.5153	0x1dda10	068bf6f90473
 townmgr	?SetupTown@townManager@@QAEXE@Z	98.1050	98.1050	98.1050	0x1c6870	f9008c697e79
 townmgr	?SetupWell@townManager@@QAEXPAVTCastleWindow@@@Z	98.5801	98.5801	98.5801	0x1dd390	b88c92e68bc5
 townmgr	?SortStats@@YIXPAJPAC@Z	100.0000	100.0000	100.0000	0x1df160	e24a3b5e17da
@@ -4159,7 +4348,7 @@ tradpost	?Update@TBuyArtifactWindow@@QAEXE@Z	88.6580	88.8247	88.8247	0x1eb6a0	67
 tradpost	?Update@TGiveResourceWindow@@QAEX_N@Z	100.0000	100.0000	100.0000	0x1eaf50	2482219c9723
 tradpost	?Update@TSellArtifactWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x1ebe80	2fe65c7df753
 tradpost	?Update@TSellCreatureWindow@@QAEX_N@Z	98.7522	98.7947	98.7947	0x1ec550	e0206066a5da
-tradpost	?Update@TTradeResourceWindow@@QAEXE@Z	86.8746	86.8746	86.8746	0x1ea6e0	a7ddc7d694a9
+tradpost	?Update@TTradeResourceWindow@@QAEXE@Z	88.5391	88.5391	88.5391	0x1ea6e0	248751f766fb
 tradpost	?WindowHandler@TBuyArtifactWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ed9e0	5812db4b289c
 tradpost	?WindowHandler@TGiveResourceWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ed550	fdf359440ed8
 tradpost	?WindowHandler@TSellArtifactWindow@@UAEHPAVmessage@@@Z	90.6792	90.6792	90.6792	0x1edf60	f74afb3f3241
@@ -4225,12 +4414,12 @@ victorylossconditions	?IsGrailTarget@VictoryConditionStruct@@QAEEPAVtown@@@Z	100
 victorylossconditions	?IsTownCaptureTarget@VictoryConditionStruct@@QAE_NPAVtown@@@Z	100.0000	100.0000	100.0000	0x1f2260	80d10b6fff3a
 victorylossconditions	?applies_to_player@VictoryConditionStruct@@QBEHJ@Z	100.0000	100.0000	100.0000	0x1f15a0	b656309f32f7
 viewarmywindow	??0TViewArmyWindow@@QAE@HHHE@Z	100.0000	100.0000	100.0000	0x1f4210	0710d2e02e92
-viewarmywindow	??0TViewArmyWindow@@QAE@PAVarmyGroup@@HPBVhero@@PBVtown@@HHHEEE@Z	90.4657	90.4657	90.4657	0x1f3b50	27bf7597724d
+viewarmywindow	??0TViewArmyWindow@@QAE@PAVarmyGroup@@HPBVhero@@PBVtown@@HHHEEE@Z	90.9521	90.9521	90.9521	0x1f3b50	96d41a96e833
 viewarmywindow	??0TViewArmyWindow@@QAE@PBVarmy@@HHE@Z	90.1633	90.8074	90.8074	0x1f3360	be00393d0380
 viewarmywindow	??1TViewArmyWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1f45e0	1ffa03988396
 viewarmywindow	??_GTViewArmyWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1f3b20	-
 viewarmywindow	?DoModal@TViewArmyWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1f47f0	55d754aa4559
-viewarmywindow	?WindowHandler@TViewArmyWindow@@UAEHPAVmessage@@@Z	99.1520	99.1520	99.1520	0x1f4850	2c9a39ac5f6b
+viewarmywindow	?WindowHandler@TViewArmyWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1f4850	c458cdb18a69
 viewarmywindow	?_Split@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEXXZ	100.0000	100.0000	100.0000	0x4ce0	-
 viewarmywindow	?assign@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@ABV12@II@Z	100.0000	100.0000	100.0000	0x4860	-
 viewarmywindow	?convertID2HelpID@TViewArmyWindow@@QBEHH@Z	100.0000	100.0000	100.0000	0x1f46c0	b4f7672d6128
@@ -4246,7 +4435,7 @@ viewarmywindow	?create_shots_widget@TViewArmyWindow@@QAEXPBUTCreatureTypeTraits@
 viewarmywindow	?create_speed_widget@TViewArmyWindow@@QAEXHH@Z	100.0000	100.0000	100.0000	0x1f62f0	16f6e6987461
 viewarmywindow	?create_spell_influence_widgets@TViewArmyWindow@@QAEXPBVarmy@@@Z	86.6570	86.6570	86.6570	0x1f65b0	ead1359e6949
 viewarmywindow	?create_upgrade_widget@TViewArmyWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1f6ae0	7268df34c10c
-viewwrld	??0TViewWorldWindow@@QAE@XZ	96.4425	96.4425	96.4425	0x1fa600	2de53e85ff09
+viewwrld	??0TViewWorldWindow@@QAE@XZ	97.1358	97.1358	97.1358	0x1fa600	843292004870
 viewwrld	??1TViewWorldWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1fbd60	dbcb66a53979
 viewwrld	??_GTViewWorldWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1fbd30	-
 viewwrld	?VWClipScaleToScreenBuffer@@YIXHH@Z	100.0000	100.0000	100.0000	0x1f9d90	47667b2d384e
@@ -4368,3 +4557,102 @@ winmgr	?SaveFizzleSourceX@heroWindowManager@@QAEXHHHH@Z	100.0000	100.0000	100.00
 winmgr	?UpdateScreen@heroWindowManager@@QAEXHHHH@Z	100.0000	100.0000	100.0000	0x202bd0	c785d0cd6be6
 zutil	@zcalloc@12	100.0000	100.0000	100.0000	0x206c70	-
 zutil	@zcfree@8	100.0000	100.0000	100.0000	0x206c90	-
+# DELIBERATE LOWER 2026-08-20, integrating lane/town-vlc across the view
+# audit. hist holds 99.3021 and recovering it is ordinary work.
+#
+# CAUSE: town::get_army()'s NON-const overload was declared to return
+# `armyGroup*` in one view and used as a reference in another - town.cpp
+# wrote `get_army()->armies[slot]` while townmgr.cpp wrote
+# `&townToView->get_army()`. Both compiled, because neither TU ever saw the
+# other's declaration. With the gates gone both are visible at once and the
+# contradiction is forced. The DC mangled name settles it:
+# ?get_army@town@@QAAAAVarmyGroup@@XZ - `QAAAAV` is a REFERENCE return, where
+# a pointer would be `QAAPAV`; the pointer spelling came from the dump's C
+# prototype printer. town.cpp's four call sites were converted to `.`, which
+# is what moved this row.
+#
+# This is the clearest instance of what the audit was for: a per-TU view let
+# two incompatible models of one function coexist indefinitely.
+# GetCommand was hand-lowered 92.5714 -> 92.5357 (2026-08-14) for army.h's
+# first batch of byte-proven field slices, and RECOVERED to 92.5714 later
+# the same day when a SECOND batch of slices (bloodlustRounds /
+# precisionRounds, slayerRounds, bloodlustAmount / precisionAmount,
+# slayerLevel, frenzyFactor) landed on the same header. Nothing in
+# command.cpp changed in either direction. Recorded because it is a clean
+# demonstration of the include-set-sensitivity class being NON-MONOTONIC
+# in the way the initialize_game_data notes describe: the whole delta in
+# the lowered state was TWO instructions swapping order (`mov ecx,
+# [ebp-4]` trading places with the `mov eax, [ebp+8]` in front of it,
+# twice), inside a region that matches retail in NEITHER state, and it
+# came back on its own as the header kept growing. Removing any ONE of
+# the four slice groups did not restore it while it was down, and adding
+# further evidenced slices (+0x28c, +0xd8) in either combination did not
+# either - only the later batch, as a whole, did.
+# LOWERED AGAIN 2026-08-20 to the same 92.5357, on the view-gate policy
+# rather than on a measurement. The lane/army-recon work added three
+# things to army.h - `#include <deque>` for the SpellInfluenceQueue
+# member, the army::Cure declarator and the army::compute_attacker_bonus
+# declarator - and each was FIRST put behind an existing army.cpp-only
+# view precisely to hold this row at 92.5714. That gating is exactly
+# what the view-gate audit is unwinding, so all three were un-gated and
+# this row was lowered instead. hist stays 92.5714, and the row has
+# recovered from this exact value once before, on its own, as the header
+# kept growing.
+# THE BLAST RADIUS IS THE MEASUREMENT WORTH KEEPING: making <deque>
+# unconditional in a header that reaches most of the tree moved NOTHING
+# but this one row - not one of the other 1881 functions changed, in
+# either direction. A whole standard container's worth of type
+# definitions therefore costs the same as the single bare member
+# declaration that has fired this canary three times, which is what a
+# step function on the closure's declarator population predicts and what
+# a per-declarator penalty model does not.
+# GetCommand ACCEPTED 92.5714 -> 92.5357 AGAIN (2026-08-20, spells lane),
+# the same two-instruction swap, in the same never-matching region, for
+# the same reason. THE CHANGE: the ESpellId roster in armygrp.h was
+# FLATTENED - six view gates retired (LAND_MINE, the WALL pair,
+# SACRIFICE, SLOW, COUNTERSTRIKE, the nine-row enchantment tail) plus
+# artifact.h's two auto-cast combination ids - so that spells.obj's
+# message bodies can name every case label they need. Nothing in
+# command.cpp moved.
+# WHAT THE FLATTENING COST, measured as one change over all 131 units:
+# this row and nothing else. It also GAINED one exact function
+# elsewhere (1495 -> 1496), which is the class being non-monotonic in
+# the other direction. `max` and `hist` keep 92.5714.
+# Compile-required fallout of the same change, recorded here because it
+# is the only place the two meet: army.h's EArmySpellRowId and
+# viewarmywindow.cpp's `const int SPELL_BIND` were duplicate copies of
+# four ESpellId names that only ever compiled because their gates never
+# opened together. Both retired; same names, same values, byte-inert.
+# THE can_shoot ROW ABOVE WAS TRADED AWAY at the lane/army-6
+# integration and RECOVERED 2026-08-15; the trade is CLOSED. History so
+# it is not re-opened: lane/townmgr-14 banked
+# ?can_shoot@army@@QBEEPBV1@@Z at 83.2927 as a plain out-of-line
+# member, lane/army-6 needed the `inline` keyword for
+# get_AI_target_time (0x448bd0) to reach 100, and with the keyword VC6
+# emitted no out-of-line body, so the merge kept the caller and lost
+# the row.
+# The two were never in tension. VC6 emits an `inline` function's
+# out-of-line copy exactly when the TU holds a use it DECLINES to
+# expand, and retail's army.obj holds one: the two rejected sites in
+# spell_is_valid_on_target (0x447a80, @0x447c0e and @0x447cb9), a body
+# this tree has not reconstructed. A `#pragma inline_depth(0)` scaffold
+# on the un-carcassed, deliberately UNCLAIMED get_total_combat_value
+# stands in for them until it lands. Full matrix in army.cpp above
+# can_shoot; the key negative is that with NO keyword the body is not
+# an inline candidate anywhere (can_shoot 92.0000 / get_AI_target_time
+# 27.8667 / get_berserk_targets 0.0000) - C1XX's body-save cliff, not
+# the /Ob2 budget. can_shoot 92.0000 and get_AI_target_time 100.0000
+# now hold together.
+# DELIBERATE LOWER 2026-08-20, lane/cmbtmgr3. The LootDeadHero row below
+# is held at 0 on purpose and its hist 33.3711 is NOT a target to chase.
+# That 33.37 was banked by a DIAGNOSTIC build that deleted the two vector
+# appends from the body - i.e. by shipping a semantic defect - and it
+# scores only because deleting them stops this object emitting the
+# std::vector<type_artifact> template COMDATs. objdiff refuses to diff
+# LootDeadHero once those COMDATs are present (report.json carries the
+# entry with no fuzzy_match_percent at all), so the COMPLETE body cannot
+# be measured yet. Ruled out as causes: symbol-name mismatch (base and
+# target strings are byte-identical raw and normalized), name length (a
+# 180-char template name scores 100 in textresource), the mnemonic set,
+# and pointer-vs-reference in the signature. Restore the appends, not
+# the number: when the diff tool learns this case the row banks itself.

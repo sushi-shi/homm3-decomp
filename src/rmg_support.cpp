@@ -5,6 +5,7 @@
 // this companion translation unit reproduces the natural body-visibility
 // boundary without source-false inline controls.
 #include <va.h>
+#include <math.h>
 #include "rmg.h"
 
 // Retail retains this tiny value constructor throughout the RMG pathfinding
@@ -41,4 +42,14 @@ TRmgRiverPainter::TRmgRiverPainter(
     : TRmgLinePainter(newAdapter),
       TRmgLineWalker(this, newRiverType, newStart)
 {
+}
+
+// Called on the perpendicular edge vector by DrawIrregularZoneBoundary.
+// Retail squares the integer components before converting their sum to
+// double, then truncates sqrt's result. The name is provisional; this
+// Complete geometry helper has no Dreamcast counterpart.
+VA(0x005FCEB0, 0x39) // anchor-callee 0x53c0d1; thiscall; retail-only
+int TPoint::Length() const
+{
+    return static_cast<int>(sqrt(static_cast<double>(x * x + y * y)));
 }

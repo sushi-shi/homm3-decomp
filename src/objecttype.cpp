@@ -398,7 +398,9 @@ std::istream& operator>>(std::istream& is, TObjectType& objectType)
 // per-row stream's virtual base (guarded by the construction flag at
 // [ebp-0x14]), its strstreambuf and the stream itself.
 //
-// Residual (69.25%): inside the resize value's TObjectType constructor,
+// Retail catch handler 0x514ff3 belongs to this function: the admitted
+// extent is 644 bytes (0x284), including its 17-byte tail.
+// Residual (73.33% after boundary correction): inside the resize value's TObjectType constructor,
 // retail calls bitset<48>(unsigned long) at 0x5154a0 and expands operator~
 // into its copy plus flip call. The candidate expands the value constructor
 // and calls operator~. It also retains TImageInfo's default constructor and
@@ -411,7 +413,11 @@ std::istream& operator>>(std::istream& is, TObjectType& objectType)
 // do not explain the remaining nested decisions in this build. The exact
 // unsigned-long overload is confirmed from the retail 97-byte callee; a
 // zero-argument bitset constructor would erase a real source boundary.
-VA(0x00514d80, 0x273)  // anchor-callee ResourceManager::GetText + anchor-bracket NewfullMapFn_00505DA0; retail-only
+// Main-branch controls also measured .flip(), .set(), and default-ctor
+// variants of the bitset initializer. The default constructor can score
+// higher but erases the unsigned-long constructor that retail calls; keep
+// that boundary. The apparent gain is not evidence for the default overload.
+VA(0x00514d80, 0x284)  // anchor-callee ResourceManager::GetText + anchor-bracket NewfullMapFn_00505DA0; retail-only
 void TObjectTypeTable::load(char* filename)
 {
     TTextResource* text = ResourceManager::GetText(filename);

@@ -72,6 +72,7 @@ DATA(0x006839b8) extern char gArchiveDriveLetter;
 void ShowVideo(int id, int x, int y, int w, int h, int a6, int a7, int a8);
 namespace SmackManager {
 void NextSmackerFrame();
+void CloseSmacker();
 }
 
 
@@ -178,7 +179,7 @@ void VideoSoundOnOff(int on)
 // explicit parentheses around the int sum in either term order,
 // `gBinkX << 1`, and `(unsigned char*)(screenBitmap->map + gBinkX) +
 // Pitch*gBinkY` (the unsigned-short-index form that supplies the
-// scale as pointer arithmetic). CL-generation-capped.
+// scale as pointer arithmetic). C2-reassociation-capped.
 // RANKED 2026-08-14: 88.9254 is 5 REAL rows of 67 and 0 artefact, and they are
 // exactly the scheduling of the `2 * gBinkX` term - retail loads gBinkX into
 // ESI before `screenBitmap`, folds it with `lea edx,[edx+2*esi]` and adds
@@ -186,7 +187,17 @@ void VideoSoundOnOff(int on)
 // folds the scaled term after. Nine more spellings measured, all byte-flat at
 // 88.9254: all four term orders of the three-way sum, a named `unsigned char*`
 // base local, a named int offset local, `gBinkX * 2` and `gBinkX + gBinkX`.
-// C2 reassociates every one of them identically. Confirms CL-generation-capped.
+// C2 reassociates every one of them identically.
+//
+// NOT A GENERATION ARTIFACT (2026-09-06, Track R closed on both passes).
+// `genab run --gen rtm-fe` compiles this unit through C1XX 12.00.8168 +
+// C2 12.00.8168 and this function comes back BYTE-IDENTICAL to the SP3
+// build (6+0 both sides, sp3_vs_rtm 0), as does VideoClose (2+20 both
+// sides). The whole smackmgr object is byte-identical under the RTM
+// generation. "CL-generation-capped" is the wrong wording for the cap:
+// the measured fact is C2's reassociation choice, invariant under
+// 8168/8447 in BOTH the front and back end (docs/vc6/rtm-generation.md
+// §6). Do not re-open this as vintage.
 VA(0x005971f0, 0xD9)  // anchor-global, dc 0x14ac34
 void VideoRealignBuffers()
 {
@@ -403,6 +414,13 @@ void VideoPause()
 }
 
 // E:\gamedcs\smackmgr.cpp:238
+// The sound tail is VideoSoundOnOff, not a copy of it: ShowVideo's THIRD
+// VideoClose expansion (0x598af0 +0x284) expands this body and reaches
+// `call ?VideoSoundOnOff@@YIXXZ` at 0x598d74, one level inside the
+// expansion, which a longhand `if (smk) sounds(); else if (bink) sounds();`
+// here could not produce.  Byte-flat at 100 in this body (VideoSoundOnOff's
+// cb is under the 0x28 free-inline threshold, so /Ob2 folds it straight
+// back), and it is the boundary ShowVideo's residual is measured against.
 VA(0x00597850, 0xAB)  // anchor-global, dc 0x14ac50
 void VideoResume()
 {
@@ -1092,10 +1110,18 @@ void NextSmackerFrame()
         VideoDrawRects();
 }
 
-// E:\gamedcs\smackmgr.cpp:1074. VideoClose expands this body verbatim
-// ahead of CloseBinkVideo, which proves both the close order and the
-// five-store teardown; retail keeps the out-of-line copy for
-// remote.obj's ~CGameTransferSmack.
+// E:\gamedcs\smackmgr.cpp:1074. VideoClose expands this body ahead of
+// CloseBinkVideo, which proves both the close order and the five-store
+// teardown; retail keeps the out-of-line copy for remote.obj's
+// ~CGameTransferSmack.
+// The expansion is the COMPILER's, not the source's, and retail says so
+// outright: ShowVideo's third VideoClose expansion (0x598af0 +0x284) runs
+// `VideoSoundOnOff / service_sounds / CALL CloseSmacker / CALL
+// CloseBinkVideo` - a call to this body standing inside an expansion of
+// VideoClose, which no longhand copy in VideoClose could ever emit. So
+// VideoClose CALLS CloseSmacker, beside the CloseBinkVideo call it already
+// made. The forward declaration joins the block smackmgr.cpp already keeps
+// for bodies whose first in-TU call site precedes them.
 VA(0x00599050, 0x43)  // anchor-caller(~CGameTransferSmack) + inlined-in VideoClose, dc 0x14ae00
 void CloseSmacker()
 {

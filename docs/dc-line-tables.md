@@ -178,6 +178,82 @@ SH4 structure is never compared with candidate VC6 `/Z7` structure. Candidate
 `/Z7` lines serve only as labels on the candidate side of the independent x86
 candidate-vs-retail diff.
 
+### Generated source structure
+
+`homm3 dreamcast structure` materializes the reference as a Vostok-style C++
+tree, with more detailed scope, type, and inline annotations:
+
+```sh
+homm3 dreamcast structure
+homm3 dreamcast structure --module cursor --module adventuremapwindow \
+  --output /tmp/dc-structure
+homm3 dreamcast structure --module cursor --asm --output /tmp/dc-cursor
+```
+
+The default, git-ignored output is `evidence/dreamcast/structure/`. Open its
+`README.md` for links to the per-compiland C++ and JSON files. Repeating the
+command replaces the previous selection in that output directory. Files owned
+by the previous generated manifest are refreshed or removed; unrelated files
+are retained. Extraction finishes before the generated files are replaced.
+Use a separate output directory for a filtered selection you want to keep
+alongside the full tree.
+
+The exporter uses the existing procedure roster for selection and checks each
+identity and extent against the verified executable. Signatures, argument
+names, locals, types, and lexical ownership come directly from NB11 procedure
+and type records; overloaded functions do not share a name-based local list.
+No cvdump installation, external PDB, or retired bootstrap tool is needed.
+The implicit `this` and hidden `__$ReturnUdt` return storage remain in the debug
+inventory and are excluded from the source parameter list. Missing parameter
+names are left unnamed. For the 22 procedures whose function type index is
+`T_NOTYPE`, known parameter declarations are retained and the unavailable return
+type/calling convention is explicitly labelled.
+
+Each function carries:
+
+* its original file/line, DC extent, linkage, type index, procedure record,
+  prologue/body boundaries and flags;
+* decoded parameter and local declarations, storage locations and owning scopes;
+* a nested `S_BLOCK32` tree using **recorded parent links**, including coincident
+  and zero-length scopes, plus exact begin/end events in the body listing;
+* every line/address row, including repeated addresses and zero-emission rows,
+  qualified source gaps, and the attributed call sequence;
+* inline source groups, candidate helper signatures/addresses and containing
+  lexical scopes; fragments from nested helpers retain their own source files;
+* inferred SH4 basic blocks with predecessors, successors and control sites.
+  `--asm` adds decoded instructions to both output formats.
+
+For example, the generated `sources/cursor.cpp` preserves `OnMoveHero`'s
+`game::GetHero` expansion, `type_obscuring_object::get_location` fragments,
+the nested `type_point` constructor source rows, and the retained
+`type_point::operator!=` call. These annotations do not invent an `inline`
+keyword or assert an exact inline call stack: NB11 has no explicit inline-site
+records, and the helper name join uses nearby definition boundaries. Multiple
+overload/template candidates remain visible.
+
+`types.h` and `types.json` expose named type variants, class sizes, bases,
+members and offsets, bitfields, access, method signatures, virtual slot offsets,
+enums, pointer/reference qualifiers, arrays, function pointers, calling
+conventions and `this` adjustments. `types.json` retains every type record in
+decoded form, while `symbols.json` contains module globals, static data,
+typedefs, constants and compiler records. The global catalogues remain complete
+even in a filtered module export.
+
+Three LF_CLASS records in the pinned executable (`0x1cde`, `0x1ed7`, `0x4dba`)
+have truncated names after their large numeric size leaves. The independently
+recorded `S_UDT` names recover `game`, `combatManager`, and the second `game`
+variant by exact type index, recorded prefix and declared name length. The
+output labels this recovery. Other unavailable facts retain their type/record
+IDs rather than receiving invented names.
+
+The C++ files are browsing stubs, not compilable bodies. All DC coordinates are
+`.text` offsets and all ranges are end-exclusive. Scope ownership is not an
+optimized variable live range. Line spans may include frame code or literal
+pools; source gaps do not identify particular missing statements. Inline clues
+are positive/probable evidence, and absence of a clue says nothing about whether
+a helper was inlined. Neither the C++ output nor the `homm3.dreamcast-structure.v1`
+JSON schema is an x86 matching target or an automated source-shape comparator.
+
 ### Vostok-style empty source-line gaps
 
 NB11 preserves the same clue Vostok's PDB carcass uses. The first line-program

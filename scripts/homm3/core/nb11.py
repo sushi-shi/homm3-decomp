@@ -9,7 +9,8 @@ This reader supplies navigation facts; the existing corpus retains decoded types
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from functools import lru_cache
+from bisect import bisect_left
+from functools import cached_property, lru_cache
 import struct
 
 from homm3.core.inputs import InputError
@@ -37,11 +38,40 @@ class _View:
 
 
 @dataclass
+class Variable:
+    name: str
+    type_index: int
+    kind: str
+    storage: str | None
+    scope: int | None
+    record_offset: int
+
+
+@dataclass
+class Scope:
+    record_offset: int
+    parent: int
+    end_record: int
+    address: int
+    size: int
+    name: str
+
+
+@dataclass
 class Procedure:
     name: str
     size: int
     locals: list[tuple[str, int, str]] = field(default_factory=list)
     scopes: list[tuple[int, int]] = field(default_factory=list)
+    module: str = ""
+    type_index: int = 0
+    record_offset: int = 0
+    debug_start: int = 0
+    debug_end: int = 0
+    flags: int = 0
+    variables: list[Variable] = field(default_factory=list)
+    lexical_scopes: list[Scope] = field(default_factory=list)
+    endarg: bool = False
 
 
 @dataclass
@@ -49,12 +79,19 @@ class Symbols:
     procedures: dict[int, Procedure] = field(default_factory=dict)
     names: dict[int, str] = field(default_factory=dict)
     source_lines: dict[str, list[tuple[str, int, int]]] = field(default_factory=dict)
+    type_records: dict[int, bytes] = field(default_factory=dict)
+    module_info: dict[str, list[dict]] = field(default_factory=dict)
+
+    @cached_property
+    def _lines(self):
+        rows = sorted((addr, line, source)
+                      for lines in self.source_lines.values()
+                      for source, line, addr in lines)
+        return [row[0] for row in rows], rows
 
     def line_table(self, offset: int, size: int) -> list[tuple[int, int, str]]:
-        return sorted((addr, line, source)
-                      for rows in self.source_lines.values()
-                      for source, line, addr in rows
-                      if offset <= addr < offset + size)
+        addresses, rows = self._lines
+        return rows[bisect_left(addresses, offset):bisect_left(addresses, offset + size)]
 
 
 def _stream(data: bytes) -> tuple[_View, dict[int, int]]:
@@ -121,9 +158,12 @@ def _records(view: _View, start: int):
         offset += size + 2
 
 
-def _symbols(view: _View, start: int, result: Symbols, bases: dict[int, int]) -> None:
+def _symbols(view: _View, start: int, result: Symbols, bases: dict[int, int],
+             module: str = "") -> None:
     current = None
     procedure_end = None
+    scope_stack: list[Scope] = []
+    after_arguments = False
     for offset, kind, record in _records(view, start):
         if kind in (0x100a, 0x100b):  # S_LPROC32_ST / S_GPROC32_ST
             end, = record.unpack("<I", 8)
@@ -131,27 +171,94 @@ def _symbols(view: _View, start: int, result: Symbols, bases: dict[int, int]) ->
             address, segment = record.unpack("<IH", 32)
             name = record.string(39).strip()
             current = Procedure(name, size)
+            current.module = module
+            current.record_offset = offset
+            current.debug_start, current.debug_end, current.type_index = record.unpack("<III", 20)
+            current.flags, = record.unpack("<B", 38)
             procedure_end = end
+            scope_stack = []
+            after_arguments = False
             if segment == 1:
                 result.procedures.setdefault(address, current)
                 result.names.setdefault(bases[segment] + address, name)
         elif kind == 0x0006 and offset == procedure_end:  # S_END of the procedure
             current = None
             procedure_end = None
+            scope_stack = []
+        elif kind == 0x0006 and scope_stack:
+            scope_stack.pop()
+        elif kind == 0x000a and current is not None:  # S_ENDARG
+            after_arguments = True
+            current.endarg = True
         elif kind == 0x0207 and current is not None:  # S_BLOCK32_ST
             size, address, segment = record.unpack("<IIH", 12)
             if segment == 1:
                 current.scopes.append((address, size))
+                parent, end = record.unpack("<II", 4)
+                scope = Scope(offset, parent, end, address, size, record.string(22))
+                current.lexical_scopes.append(scope)
+                scope_stack.append(scope)
         elif kind == 0x100d and current is not None:  # S_REGREL32_ST
-            address, _typ, register = record.unpack("<IIH", 4)
+            address, typ, register = record.unpack("<IIH", 4)
             # CV_SH3_IntR0..IntR15 are 10..25, also used for SH4 locals.
             reg = f"r{register - 10}" if 10 <= register <= 25 else f"reg{register}"
             reg = {24: "fp", 25: "sp"}.get(register, reg)
             current.locals.append((reg, address, record.string(14)))
+            signed = address if address < 0x80000000 else address - 0x100000000
+            current.variables.append(Variable(
+                record.string(14), typ, "local" if after_arguments else "param",
+                f"{reg}{signed:+#x}",
+                scope_stack[-1].record_offset if scope_stack else None, offset))
+        elif kind in (0x1002, 0x1003):  # S_CONSTANT_ST / S_UDT_ST
+            typ, = record.unpack("<I", 4)
+            item = {"kind": "constant" if kind == 0x1002 else "typedef",
+                    "type_index": typ, "record_offset": offset}
+            if kind == 0x1002:
+                value, end = numeric(record, 8)
+                item.update(value=value, name=record.string(end))
+            else:
+                item["name"] = record.string(8)
+            item["procedure"] = current.record_offset if current else None
+            item["scope"] = scope_stack[-1].record_offset if scope_stack else None
+            result.module_info.setdefault(module, []).append(item)
+        elif kind in (0x0001, 0x1013):  # S_COMPILE / S_COMPILE2_ST
+            item = {"kind": "compiler", "record_kind": kind}
+            if kind == 1:
+                machine, = record.unpack("<B", 4)
+                item.update(machine=machine, flags=int.from_bytes(record.part(5, 3), "little"),
+                            version=record.string(8))
+            else:
+                flags, machine, *versions = record.unpack("<IH6H", 4)
+                item.update(machine=machine, flags=flags, version=record.string(22),
+                            frontend=versions[:3], backend=versions[3:])
+            result.module_info.setdefault(module, []).append(item)
         elif kind in (0x1007, 0x1008, 0x1009):  # data / public, length-prefixed names
             address, segment = record.unpack("<IH", 8)
             if segment in bases:
                 result.names.setdefault(bases[segment] + address, record.string(14))
+            if kind != 0x1009:
+                typ, = record.unpack("<I", 4)
+                result.module_info.setdefault(module, []).append({
+                    "kind": "global" if kind == 0x1008 else "static",
+                    "name": record.string(14), "type_index": typ,
+                    "segment": segment, "offset": address,
+                    "procedure": current.record_offset if current else None,
+                    "scope": scope_stack[-1].record_offset if scope_stack else None,
+                })
+
+
+def numeric(view: _View, offset: int) -> tuple[int | float, int]:
+    """CodeView numeric leaf plus the offset of the next field."""
+    leaf, = view.unpack("<H", offset)
+    if leaf < 0x8000:
+        return leaf, offset + 2
+    formats = {0x8000: "b", 0x8001: "h", 0x8002: "H", 0x8003: "i",
+               0x8004: "I", 0x8005: "f", 0x8006: "d", 0x8009: "q", 0x800a: "Q"}
+    fmt = formats.get(leaf)
+    if fmt is None:
+        raise NB11Error(f"unsupported numeric leaf {leaf:#x}")
+    value, = view.unpack("<" + fmt, offset + 2)
+    return value, offset + 2 + struct.calcsize(fmt)
 
 
 def _source_lines(view: _View) -> list[tuple[str, int, int]]:
@@ -192,7 +299,7 @@ def parse(data: bytes) -> Symbols:
             signature, = view.unpack("<I")
             if signature != 2:
                 raise NB11Error("expected C11 aligned symbols in the NB11 stream")
-            _symbols(view, 4, result, bases)
+            _symbols(view, 4, result, bases, modules.get(module, ""))
         elif kind in (0x129, 0x12a, 0x134):  # global/static symbols and publics
             _symbol_hash, _address_hash, size = view.unpack("<HHI")
             _symbols(_View(view.part(16, size)), 0, result, bases)
@@ -200,6 +307,16 @@ def parse(data: bytes) -> Symbols:
             if module not in modules:
                 raise NB11Error(f"source lines refer to missing module {module}")
             result.source_lines.setdefault(modules[module], []).extend(_source_lines(view))
+        elif kind == 0x12b:  # sstGlobalTypes (C11, 32-bit type indices)
+            flags, count = view.unpack("<II")
+            if flags != 2:
+                raise NB11Error(f"unsupported global type flags {flags:#x}")
+            base = 8 + count * 4
+            for index, offset in enumerate(view.unpack(f"<{count}I", 8)):
+                length, = view.unpack("<H", base + offset)
+                if length < 2:
+                    raise NB11Error("invalid global type record length")
+                result.type_records[0x1000 + index] = view.part(base + offset, length + 2)
     if not result.procedures or not result.source_lines:
         raise NB11Error("NB11 stream has no procedures or source lines")
     return result

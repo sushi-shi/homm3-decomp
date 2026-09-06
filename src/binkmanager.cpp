@@ -249,19 +249,7 @@ void NextBinkFrame()
             }
         } else {
             _BinkGetSummary(video, &BinkSummary);
-            if (gBinkVideo) {
-                _BinkPause(gBinkVideo, 1);
-                _BinkClose(gBinkVideo);
-            }
-            if (gBinkVideo2) {
-                _BinkPause(gBinkVideo2, 1);
-                _BinkClose(gBinkVideo2);
-            }
-            gBinkVideo2 = 0;
-            gBinkVideo = 0;
-            gBinkPaused = 0;
-            gBinkFrameReady = 0;
-            gBinkDirty = 0;
+            CloseBinkVideo();
             if (gVideoDescriptors[gBinkVideoId].fadeOnAbort)
                 gpWindowManager->FadeScreen(1, 4, 0);
             else
@@ -281,6 +269,10 @@ notReady:
 
 // E:\gamedcs\binkmanager.cpp:345 (dc 0x50a94) - the free-function spelling
 // smackmgr.cpp's VideoClose already calls.
+// NextBinkFrame's abort arm calls it too. Retail expands it there (the two
+// _BinkPause/_BinkClose pairs stand at +0x173..+0x192) and the restoration
+// from the longhand copy is byte-flat, 92.9245 - the declaration at
+// binkmanager.h:124 is all VC6 needs to reach a body 70 lines further down.
 VA(0x0044dcc0, 0x60)  // dc-order-map + caller (smackmgr VideoClose), dc 0x50a94
 void CloseBinkVideo()
 {
