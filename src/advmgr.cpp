@@ -885,13 +885,7 @@ int advManager::Open(int newPriority)
     ShowProgressBar();
     gpWindowManager->FadeScreen(1, 4, 1);
 
-    if (gpCurrentPlayer->IsLocalHuman()) {
-        int mouseX;
-        int mouseY;
-        gpMouseManager->MouseCoords(&mouseX, &mouseY);
-        lastHoverX = -1;
-        ProcessHover(mouseX, mouseY);
-    }
+    ForceNewHover();
     if (!gpCurrentPlayer->IsLocalHuman())
         gpGame->ShowComputerScreen();
 
@@ -1472,13 +1466,7 @@ NewmapCell* advManager::DoAdvCommand(type_point* trigger_point)
             seedingValid = 0;
         }
 
-        if (gpCurrentPlayer->IsLocalHuman()) {
-            int hoverX;
-            int hoverY;
-            gpMouseManager->MouseCoords(&hoverX, &hoverY);
-            lastHoverX = -1;
-            ProcessHover(hoverX, hoverY);
-        }
+        ForceNewHover();
         gpMouseManager->ShowPointer(1);
         gpSoundManager->SwitchAmbientMusic(gTerrainMusicIds[field_58]);
 
@@ -2235,13 +2223,7 @@ int advManager::ProcessKeyPress(const message* msg, unsigned char* exitFlag, typ
             }
             seedingValid = 0;
 
-            if (gpCurrentPlayer->IsLocalHuman()) {
-                int hoverX;
-                int hoverY;
-                gpMouseManager->MouseCoords(&hoverX, &hoverY);
-                lastHoverX = -1;
-                ProcessHover(hoverX, hoverY);
-            }
+            ForceNewHover();
             UpdBottomView(1, 1, 1);
 
             if (gpCurrentPlayer->IsLocalHuman()
@@ -8303,6 +8285,8 @@ void advManager::DeactivateCurrTown(unsigned char waitingPlayer)
 }
 
 // E:\gamedcs\advmgr.cpp:9396
+// SetHeroContext calls this; retail expands it there (DemobilizeCurrHero at
+// +0x8c is the call it keeps) and the restoration is byte-flat, 99.2746.
 VA(0x004175a0, 0x3A)  // anchor-global, dc 0x1a3f0
 void advManager::DeactivateCurrHero(unsigned char waitingPlayer)
 {
@@ -8531,12 +8515,7 @@ void advManager::SetHeroContext(int heroId, int bInMove, unsigned char waitingPl
         }
     }
 
-    DemobilizeCurrHero(waitingPlayer, 0);
-
-    if (waitingPlayer)
-        gpGame->GetLocalPlayer()->currHeroId = -1;
-    else
-        gpCurrentPlayer->currHeroId = -1;
+    DeactivateCurrHero(waitingPlayer);
 
     playerData* player = gpCurrentPlayer;
     if (waitingPlayer)
@@ -9523,6 +9502,12 @@ void advManager::SeedTo(type_point target)
 }
 
 // E:\gamedcs\advmgr.cpp:10609
+// Open (+0x1a2), DoAdvCommand and ProcessKeyPress call this; retail EXPANDS
+// it at all three (MouseCoords/ProcessHover appear inline at each site) but
+// the call is the source fact, and restoring it from the longhand copy is
+// byte-flat at every one: 97.9312 / 94.3953 / 97.6091, unchanged. VC6 finds
+// the body from advmgr.cpp:892 although the definition is 8600 lines below
+// it - see docs/vc6/inliner.md section "callee defined later in the TU".
 VA(0x00419570, 0x49)  // anchor-global, dc 0x1c750
 void advManager::ForceNewHover()
 {

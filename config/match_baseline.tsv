@@ -77,7 +77,7 @@ advmgr	?DeactivateCurrHero@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x175a
 advmgr	?DeactivateCurrTown@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x17570	65cf91ab93a3
 advmgr	?DemobilizeCurrHero@advManager@@QAEXEE@Z	100.0000	100.0000	100.0000	0x17680	0e81b70808b2
 advmgr	?DisableButtons@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1a2e0	d6a15e176a45
-advmgr	?DoAdvCommand@advManager@@QAEPAVNewmapCell@@PAUtype_point@@@Z	94.3953	94.3953	94.3953	0x7b80	32436604fe85
+advmgr	?DoAdvCommand@advManager@@QAEPAVNewmapCell@@PAUtype_point@@@Z	94.3953	94.3953	94.3953	0x7b80	258a571e082f
 advmgr	?DoAdventureOptions@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1ab00	7e482f83bb0c
 advmgr	?DoSystemOptions@advManager@@QAEEXZ	100.0000	100.0000	100.0000	0x1ac00	0c2dfd994c0d
 advmgr	?DrawAdvObj@advManager@@QAEXHHHHH@Z	87.9441	87.9441	87.9441	0x10c00	2b4e6eaa9d59
@@ -119,12 +119,12 @@ advmgr	?MapExtraPosAndAdjacentsSet@@YIHHHHE@Z	100.0000	100.0000	100.0000	0x1a750
 advmgr	?MobilizeCurrHero@advManager@@QAEXHEE@Z	100.0000	100.0000	100.0000	0x175e0	c62e97fe2615
 advmgr	?MonsterQuickView@advManager@@QAEXPBVNewmapCell@@HH@Z	100.0000	100.0000	100.0000	0x17150	524a4a09d472
 advmgr	?MoreTreesNear@advManager@@QAEHUtype_point@@@Z	100.0000	100.0000	100.0000	0x1adb0	f79b495487dd
-advmgr	?Open@advManager@@UAEHH@Z	97.9312	97.9312	97.9312	0x6fd0	acc921497144
+advmgr	?Open@advManager@@UAEHH@Z	97.9312	97.9312	97.9312	0x6fd0	36e23b533065
 advmgr	?OverrideBottomView@advManager@@QAEXW4EBottomViewType@1@H@Z	100.0000	100.0000	100.0000	0x15d60	98751fa2643c
 advmgr	?PopupPlayerTurnInfo@@YIXXZ	100.0000	100.0000	100.0000	0x19c80	98baf175609e
 advmgr	?ProcessDeSelect@advManager@@QAEHPBVmessage@@PAEPAUtype_point@@PAPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x9a70	ea04b60e2e3c
 advmgr	?ProcessHover@advManager@@QAEHHH@Z	91.6263	91.6263	91.6263	0xe360	16cc0b40843a
-advmgr	?ProcessKeyPress@advManager@@QAEHPBVmessage@@PAEPAUtype_point@@PAPAVNewmapCell@@@Z	97.6091	97.6091	97.6091	0x8c40	b6aba7b9a3a7
+advmgr	?ProcessKeyPress@advManager@@QAEHPBVmessage@@PAEPAUtype_point@@PAPAVNewmapCell@@@Z	97.6091	97.6091	97.6091	0x8c40	18b0e637c781
 advmgr	?ProcessMapSelect@advManager@@QAEXPBVmessage@@PAUtype_point@@PAPAVNewmapCell@@@Z	91.1006	91.1006	91.1006	0xa5d0	3d3b17f3fece
 advmgr	?ProcessRadarSelect@advManager@@QAEXPBVmessage@@@Z	100.0000	100.0000	100.0000	0xa0c0	5c36b56e1c0a
 advmgr	?ProcessSearch@advManager@@QAEHHHH@Z	94.6792	94.6792	94.6792	0xec90	438a0713d228
@@ -138,7 +138,7 @@ advmgr	?ScanForHeroOrBoat@advManager@@QAE_NHHHGAAY05UTDrawParts@@@Z	100.0000	100
 advmgr	?ScreenScroll@advManager@@QAEXHH@Z	97.8177	97.8177	97.8177	0x195c0	50a3937e522c
 advmgr	?SeedTo@advManager@@QAEXUtype_point@@@Z	100.0000	100.0000	100.0000	0x194a0	4e87ce523fb9
 advmgr	?SetEnvironmentOrigin@advManager@@QAEXUtype_point@@H@Z	75.4080	75.4080	75.4080	0x183d0	31adb9c926f0
-advmgr	?SetHeroContext@advManager@@QAEXHHEE@Z	99.2746	99.2746	99.2746	0x17b20	67bd9ddfde14
+advmgr	?SetHeroContext@advManager@@QAEXHHEE@Z	99.2746	99.2746	99.2746	0x17b20	a76eac8cc445
 advmgr	?SetInitialMapOrigin@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19990	d4815376fb68
 advmgr	?SetRolloverText@advManager@@QAEXPAVNewmapCell@@HH@Z	96.9535	96.9535	96.9535	0xb150	2d434de13d35
 advmgr	?SetShrineHelpText@@YIXPADPAVhero@@PAVNewmapCell@@W4GlobalInfoFlags@@PBD4@Z	100.0000	100.0000	100.0000	0xd8d0	186a1bc7eb31
@@ -654,7 +654,7 @@ basemgr	??0baseManager@@QAE@XZ	100.0000	100.0000	100.0000	0x4d530	687e8eebaf66
 binkmanager	?CloseBinkVideo@@YIXXZ	100.0000	100.0000	100.0000	0x4dcc0	32dc15ed5944
 binkmanager	?DrawCurrentBinkFrame@@YIXXZ	100.0000	100.0000	100.0000	0x4d9e0	92a06eb257a8
 binkmanager	?GetBinkFilePtr@BinkManager@@SIPAUBINK@@PBDH@Z	100.0000	100.0000	100.0000	0x4d5a0	0e005e7fe490
-binkmanager	?NextBinkFrame@@YIXXZ	92.9245	92.9245	92.9245	0x4daa0	c4c2a3ae4ebf
+binkmanager	?NextBinkFrame@@YIXXZ	92.9245	92.9245	92.9245	0x4daa0	95da29c9b6a9
 binkmanager	?OpenBinkVideo@@YIXHHHHHHH@Z	100.0000	100.0000	100.0000	0x4d830	c660a4857444
 binkmanager	?PlayBinkVideo@@YIHHHHHH@Z	88.1802	88.1802	88.1802	0x4dd20	440e3dfd8006
 binkmanager	?RestartBink@BinkManager@@SIXXZ	100.0000	100.0000	100.0000	0x4da50	20d03e6309f1
@@ -1976,7 +1976,7 @@ game	?MineTypesOwned@game@@QAEHHH@Z	100.0000	100.0000	100.0000	0xbae70	7cef522cb
 game	?NewMap@game@@QAEEPBD0PAHH@Z	99.4000	99.4000	99.4000	0xc0520	9da57f706c66
 game	?NewMap@game@@QAEXPAVTAbstractFile@@PAHPAVNewMapCampaignContext@@H@Z	100.0000	100.0000	100.0000	0xbfe70	d45f6040108c
 game	?NextHero@playerData@@QAEHXZ	100.0000	100.0000	100.0000	0xbaa40	bbee40b3fef4
-game	?NextPlayer@game@@QAEXXZ	81.3343	83.3584	83.3584	0xc6fe0	4b3560fe742d
+game	?NextPlayer@game@@QAEXXZ	81.3343	83.3584	83.3584	0xc6fe0	edd116b87a53
 game	?NextTown@playerData@@QAEHXZ	100.0000	100.0000	100.0000	0xbab40	26cceeec0c05
 game	?NumOfGivenArtifact@playerData@@QAEHH@Z	100.0000	100.0000	100.0000	0xbabd0	844a551634f3
 game	?PerDay@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc7fe0	cd941bf0bd89
@@ -3890,8 +3890,8 @@ smackmgr	?LoadSoundHeaders@@YIEXZ	100.0000	100.0000	100.0000	0x1984a0	cf225054ae
 smackmgr	?NextSmackerFrame@SmackManager@@YIXXZ	90.7265	90.7265	90.7265	0x198eb0	991431e60c1b
 smackmgr	?OpenSmackerTrack@@YIPAUSmack@@PBDKK@Z	100.0000	100.0000	100.0000	0x198790	6d95dcba7cff
 smackmgr	?SetPixelFormat@SmackManager@@YIXKKK@Z	100.0000	100.0000	100.0000	0x198a40	69d2b1564ad6
-smackmgr	?ShowVideo@@YIXHHHHHHHH@Z	48.6988	48.6988	48.6988	0x198af0	63873bf9e4eb
-smackmgr	?VideoClose@@YIXXZ	95.9231	95.9231	95.9231	0x1975f0	ca01a06f3f34
+smackmgr	?ShowVideo@@YIXHHHHHHHH@Z	41.0154	48.6988	48.6988	0x198af0	63873bf9e4eb
+smackmgr	?VideoClose@@YIXXZ	95.9231	95.9231	95.9231	0x1975f0	0e0a17198bba
 smackmgr	?VideoDrawCurrentFrame@@YIXXZ	100.0000	100.0000	100.0000	0x197740	64f4bb33e498
 smackmgr	?VideoDrawRects@@YIXXZ	89.6347	89.6347	89.6347	0x1979d0	7798c771e248
 smackmgr	?VideoNeedsUpdate@@YIEXZ	100.0000	100.0000	100.0000	0x197930	2c80eb804eed
