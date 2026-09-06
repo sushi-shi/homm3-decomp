@@ -1675,6 +1675,12 @@ static const int kRewardDialogBatch = 8;
 // illegal for the faction, or dock-impossible, builds the survivors
 // (flushing a dialog every eight), then applies the seven generator
 // bonuses to whichever dwelling tier is active, upgraded first.
+// 2026-09-06, polish lane 38, the DC LOCAL-SCOPE SWEEP, also a NEGATIVE: the
+// Dreamcast block names TWO T_QUAD masks (`exclude_mask` = this body's `mask`,
+// `reward_mask` = `grantable`) and no third, so `eventBuildings` reads as a
+// cache of `thisEvent->BuildBuildings` that retail reloads. Re-reading the
+// member in the translation loop instead costs 90.8986 -> 89.1573; the cached
+// __int64 stands.
 VA(0x005bfeb0, 0x369)  // anchor-callgraph + arity (ret 4), dc 0x167c3c
 void town::give_event_reward(const TTownEvent* thisEvent)
 {
