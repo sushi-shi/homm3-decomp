@@ -1265,7 +1265,7 @@ customcampaign	?IsBuildingBonus@TCampaignBuildingBonus@@UBE_NXZ	100.0000	100.000
 customcampaign	?IsBuildingBonus@TCampaignStartBonusOption@@UBE_NH@Z	100.0000	100.0000	100.0000	0x85430	bcddb4b1212f
 customcampaign	?IsBuildingBonus@TCampaignStartCrossoverOption@@UBE_NH@Z	100.0000	100.0000	100.0000	0x85a30	40cf16111627
 customcampaign	?Load@CampaignHeaderStruct@TCampaignBrief@@QAE_NXZ	53.9715	53.9715	80.9474	0x88880	7d10123c8040
-customcampaign	?Load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	60.5021	60.5021	79.2531	0x8a310	a630b316472e
+customcampaign	?Load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	65.7915	65.7915	79.2531	0x8a310	6b4ae27611b4
 customcampaign	?LoadMapHeader@ScenarioStruct@TCampaignBrief@@QAEXPAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@PAVNewSMapHeader@@H@Z	100.0000	100.0000	100.0000	0x87d30	3ede48bd4a11
 customcampaign	?LoadScenario@CampaignHeaderStruct@TCampaignBrief@@QAE_NHPAVNewSMapHeader@@@Z	100.0000	100.0000	100.0000	0x88810	40cf52fbb7ea
 customcampaign	?MarkCrossoverHeroes@ScenarioStruct@TCampaignBrief@@QAEXPAE@Z	100.0000	100.0000	100.0000	0x87e10	6ceadd79996e
@@ -3899,8 +3899,8 @@ smackmgr	?LoadSoundHeaders@@YIEXZ	100.0000	100.0000	100.0000	0x1984a0	cf225054ae
 smackmgr	?NextSmackerFrame@SmackManager@@YIXXZ	90.7265	90.7265	90.7265	0x198eb0	991431e60c1b
 smackmgr	?OpenSmackerTrack@@YIPAUSmack@@PBDKK@Z	100.0000	100.0000	100.0000	0x198790	6d95dcba7cff
 smackmgr	?SetPixelFormat@SmackManager@@YIXKKK@Z	100.0000	100.0000	100.0000	0x198a40	69d2b1564ad6
-smackmgr	?ShowVideo@@YIXHHHHHHHH@Z	41.0154	48.6988	48.6988	0x198af0	63873bf9e4eb
-smackmgr	?VideoClose@@YIXXZ	95.9231	95.9231	95.9231	0x1975f0	0e0a17198bba
+smackmgr	?ShowVideo@@YIXHHHHHHHH@Z	39.3089	48.6988	48.6988	0x198af0	63873bf9e4eb
+smackmgr	?VideoClose@@YIXXZ	100.0000	100.0000	100.0000	0x1975f0	0d6330d856a1
 smackmgr	?VideoDrawCurrentFrame@@YIXXZ	100.0000	100.0000	100.0000	0x197740	64f4bb33e498
 smackmgr	?VideoDrawRects@@YIXXZ	89.6347	89.6347	89.6347	0x1979d0	7798c771e248
 smackmgr	?VideoNeedsUpdate@@YIEXZ	100.0000	100.0000	100.0000	0x197930	2c80eb804eed
@@ -3911,7 +3911,7 @@ smackmgr	?VideoPlay@@YIHHHHHH@Z	87.1912	87.1912	87.1912	0x1972d0	55d1d339e9bd
 smackmgr	?VideoPlaying@@YIEXZ	100.0000	100.0000	100.0000	0x197990	49cb7ed9fb9f
 smackmgr	?VideoRealignBuffers@@YIXXZ	88.9254	88.9254	88.9254	0x1971f0	14cd11411f7f
 smackmgr	?VideoRestart@@YIXXZ	100.0000	100.0000	100.0000	0x197900	b9317f2d483b
-smackmgr	?VideoResume@@YIXXZ	100.0000	100.0000	100.0000	0x197850	219da5b0d0a1
+smackmgr	?VideoResume@@YIXXZ	100.0000	100.0000	100.0000	0x197850	4610fd89594d
 smackmgr	?VideoShutDown@@YIXXZ	100.0000	100.0000	100.0000	0x197c70	5b5b45640a91
 smackmgr	?VideoSoundOnOff@@YIXXZ	100.0000	100.0000	100.0000	0x1971b0	535c7885a628
 smackmgr	?append@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@ID@Z	100.0000	100.0000	100.0000	0xb5f40	-
