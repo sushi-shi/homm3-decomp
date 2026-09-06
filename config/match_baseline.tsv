@@ -186,7 +186,7 @@ advspells	?TeleportTo@advManager@@QAEXPAVhero@@Utype_point@@PBDEEE@Z	100.0000	10
 advspells	?TownGate@advManager@@QAEXH@Z	99.0386	99.0386	99.0386	0x1d360	702cdb9eab97
 ai	??1type_spellvalue@@QAE@XZ	100.0000	100.0000	100.0000	0x20cf0	-
 ai	??Rfunc_moves_before@@QBE_NPBVarmy@@0@Z	100.0000	100.0000	100.0000	0x235c0	-
-ai	?AICheckRetreat@combatManager@@QAEEXZ	95.3935	95.3935	95.3935	0x1e570	4caee54d8e3f
+ai	?AICheckRetreat@combatManager@@QAEEXZ	95.3960	95.3960	95.3960	0x1e570	06a15f1e7b08
 ai	?ChooseBallistaTarget@combatManager@@QAEHHHH@Z	99.8919	99.8919	99.8919	0x1e190	ad1f6c4871ac
 ai	?DoCompAI@combatManager@@QAEXH@Z	98.4697	98.4697	98.4697	0x221f0	2e3e65e4a47b
 ai	?DoSpellAI@combatManager@@QAEEXZ	100.0000	100.0000	100.0000	0x22da0	e6d0af37140e
@@ -2220,7 +2220,7 @@ hero	?GetLuck@hero@@QAEHPBV1@EE@Z	88.0650	88.0650	88.0650	0xe36c0	4d9333ef6170
 hero	?GetMagicResistanceFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe46e0	163ade5b9d86
 hero	?GetManaCost@hero@@QAEHHPBVarmyGroup@@H@Z	100.0000	100.0000	100.0000	0xe5240	044d097e8a7e
 hero	?GetManaFrame@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe5380	af9972008a52
-hero	?GetMobility@hero@@QAEHE@Z	81.7645	81.7645	81.7645	0xe4990	1d1c4e55b23d
+hero	?GetMobility@hero@@QAEHE@Z	81.7677	81.7677	81.7677	0xe4990	25786c563000
 hero	?GetMobility@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe4d90	ee5e8693fc29
 hero	?GetMobilityFrame@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe5330	ee580ae5ae23
 hero	?GetMorale@hero@@QAEHPBV1@EE@Z	94.7974	94.7974	94.7974	0xe39b0	81feb666460b

@@ -8659,6 +8659,10 @@ DATA(0x0063a64c) static const int akSoundVolumes[8] = { 32, 28, 20, 10,
 // `mov dword ptr [ebp-0x1c], 4` where we keep the strength-reduced count
 // in EBX, so retail has one more call-crossing pseudo than we do at that
 // point and spills the count; every later divergence is that one binding.
+// 2026-09-06: naming the sentinel (`int idlePriority = 0x7f;` hoisted above
+// the loop, stored through the local) does NOT reproduce retail's
+// `mov ebx,0x7f` - VC6 constant-propagates it straight back to the
+// immediate store. Byte-flat at 75.4080.
 VA(0x004183d0, 0x245)  // anchor-global, dc 0x1b164
 void advManager::SetEnvironmentOrigin(type_point point, int reset)
 {
