@@ -3614,6 +3614,19 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
     }
     SET_VISITED_ROLLOVER(FAERIE_RING, FaerieRingInfo,
         currentHero->flags & 0x2000);
+    // The mask here is ONE constant against retail's four.  Retail's arm
+    // (+0x807) ends `mov ecx,eax / mov edx,eax / and ecx,0x20000000 /
+    // and edx,0x10000000 / add ecx,edx / mov edx,eax / and edx,0x8000000 /
+    // and eax,0x20 / add ecx,edx / add ecx,eax` - four separately masked
+    // terms summed left to right, exactly the shape that made TEMPLE and
+    // IDOL_OF_FORTUNE exact one arm each.  Spelling those four here
+    // REPRODUCES that instruction sequence byte for byte and still loses:
+    // the sum leaves the result in ECX one instruction later than the single
+    // mask does, the arm stops tail-merging with BORDER_TENT's copy of the
+    // visited/unvisited selector, and it grows 0xbb -> 0x108 against retail's
+    // 0xd6 - 96.9535 -> 96.8953 (2026-09-06).  Retail merges the whole tail
+    // (`jmp +0x21e`, into BORDER_TENT's `mov [ebp+0x10],ecx`); until that
+    // cross-jump is recovered the one-constant mask is the closer object.
     case FOUNTAIN_OF_FORTUNE:
         strcpy(gText, gAdventureObjectNames[FOUNTAIN_OF_FORTUNE]);
         if (cell->is_trigger) {
@@ -3623,10 +3636,8 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
                 strcat(gText, tempText);
             }
             if (currentHero) {
-                APPEND_VISIT_TEXT((currentHero->flags & 0x20000000UL)
-                    + (currentHero->flags & 0x10000000UL)
-                    + (currentHero->flags & 0x8000000UL)
-                    + (currentHero->flags & 0x20UL));
+                APPEND_VISIT_TEXT(currentHero->flags
+                    & (0x38000000UL | 0x20UL));
             }
         }
         break;
@@ -7170,7 +7181,12 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
 // and shares only the strcat tail, and it stores the tested flag into `z`
 // first rather than testing the field in place.
 // THAT IS SPECIFIC TO THIS MACRO - the ARENA and BUOY cases below keep their
-// ternaries, and the bytes say so (2026-08-21). Retail reaches BUOY's tail
+// ternaries, and the bytes say so (2026-08-21).  RE-MEASURED 2026-09-06 after
+// the frame closed (see QuickInfo's own note) - the verdict does not move:
+// both together 95.9234 -> 93.5268, BUOY alone 95.8398.  Retail's ARENA does
+// emit two complete sprintf calls at +0x3f8/+0x427 and BUOY does jump into
+// them, so the two-sprintf READING is right and only the merge is ours to
+// lose; the ternary keeps the cheaper object until the cross-jump is found. Retail reaches BUOY's tail
 // with `mov ecx,[hero+0x105] / and ecx,4 / mov [ebp+0x10],ecx / jmp <shared>`,
 // i.e. it stores the flag and JUMPS to one shared visited/unvisited selector
 // that it also uses for ARENA; our compile expands the same ternary inline at
