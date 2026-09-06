@@ -115,7 +115,8 @@ def _real_errors(proc: subprocess.CompletedProcess) -> list[str]:
 # ---------------------------------------------------------------------------
 
 def capture(src: Path, flags: list[str], workdir: Path,
-            shadow: dict[str, str] | None = None) -> dict[str, Path]:
+            shadow: dict[str, str] | None = None,
+            include: str | None = None) -> dict[str, Path]:
     """One front-end run of *src*; returns {stream suffix: path}.
 
     The TU is copied to <workdir>/tu<suffix> and compiled with cwd=workdir so
@@ -123,6 +124,12 @@ def capture(src: Path, flags: list[str], workdir: Path,
     for every capture.  *shadow* files (name -> text) are written beside the
     copy; the includer-directory-first quoted-include rule makes them win
     over same-named headers anywhere else - the killer's town.h lever.
+
+    *include* overrides the derived INCLUDE path list.  Resolved header
+    paths embed verbatim in the gl stream, so a comparison that varies the
+    toolchain DIRECTORY (homm3.vc6.genab's generation overlays) must pin one
+    spelling for both sides or it measures the path length, not the front
+    end - measured 2026-09-06: 103 msvc headers x the directory-name delta.
     """
     src = src.resolve()
     if not src.is_file():
@@ -137,7 +144,7 @@ def capture(src: Path, flags: list[str], workdir: Path,
 
     prefix = cc_wrap.winepath_w(workdir) + "\\il"
     proc = _wine_cl([*flags, f"/d1il{prefix}", "/Foil_never.obj", tu.name],
-                    workdir, _include_env(src))
+                    workdir, include or _include_env(src))
     errs = _real_errors(proc)
     if errs:
         _common.die(f"front end failed on {src.name}:\n  " + "\n  ".join(errs[:6]))

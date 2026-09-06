@@ -630,6 +630,18 @@ struct TRmgMapItem {
         return tileData.borderObject;
     }
 
+    // Retail road/river relaxation copies the predecessor to a separate
+    // parameter home before storing cost and coordinates. The by-value
+    // boundary is inferred from those repeated x86 copies; the name is
+    // provisional because Dreamcast contains no RMG compiland. Keeping
+    // the scalar cost write and struct assignment directly in each caller
+    // loses that snapshot (BuildRoadCostMap 73.7139% versus 75.6686%).
+    void SetMovementCost(int cost, TRmgMapPosition previous)
+    {
+        movement.cost = cost;
+        previousTile = previous;
+    }
+
     // CreateRiver's reset pass copies a by-value predecessor before a
     // constant 32000 cost write, motivating this ordinary reset helper.
     // Its role name is provisional; Dreamcast has no RMG compiland.  A

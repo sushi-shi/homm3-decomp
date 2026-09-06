@@ -86,102 +86,101 @@ void advManager::StopCursor(unsigned char standEnd)
 // animated flag frame is the same `(animFrame + cursorFrameCount) % 8` the
 // alpha twin uses (retail's signed and/jns/dec/or/inc modulo idiom).
 //
-// Residual (80.32%): register homing, the same one DrawCursorShadow carries.
-// All 14 blocks, 8 branches and 7 calls agree; retail binds EBX to CellX and
-// HOMES refY in the recycled CellX parameter slot, re-reading it at each of
-// the seven argument sites, while our compile binds EBX to refY and re-reads
-// CellX. `why-reg --model` reports the first definitions AGREEING (esi/ebx/edi
-// in the same slots) and puts the divergence past the B1 minimum slice.
-// Measured and rejected: refY assigned before refX (80.31), dropping refY and
-// writing `CellY * 32` at all seven sites (78.96), and hoisting
-// `curr->GetHflip()` into the `hflip` byte local the Dreamcast roster names
-// (71.73 - retail recomputes `cmp [hero+0x47],4 / seta` at every call).
+// Exact: DC cursor.cpp:118 stores refY after adding the screen-origin
+// offset, just as :207 does in DrawCursorShadow. Complete uses 232 for
+// that offset; clipping still uses CellY*32. Restoring this meaning, the
+// original early guards and GetCurrHero closes 80.3240% to 100% without
+// changing the bitmap wrappers. The raw-Y model made EBX hold refY where
+// retail retains CellX, which looked like an isolated allocator problem.
+// Earlier raw-Y controls (Y assigned first, or no Y local) gave 80.31/78.96.
+// Caching GetHflip once gave 71.73%; Complete independently recomputes it
+// at every draw, so the older Dreamcast hflip local is not imposed here.
 VA(0x0047f860, 0x2D9)  // draw call set + ret 8, dc 0x79b0c
 void advManager::DrawCursor(int CellX, int CellY)
 {
-    if (gCompleteDrawEnabled) {
-        if (!bSpecialHideCursor) {
-            int refX = (CellX + 8) * 32;
-            int refY = CellY * 32;
+    if (!gCompleteDrawEnabled)
+        return;
+    if (bSpecialHideCursor)
+        return;
 
-            hero* curr = gpGame->GetHero(gpCurrentPlayer->currHeroId);
-            if (curr) {
-                if (curr->flags & 0x40000) {
-                    boat* currBoat = gpGame->GetHeroBoat(curr->id, 1);
+    int refX = (CellX + 8) * 32;
+    int refY = CellY * 32 + 232;
 
-                    if (!GetCell(curr->get_location())->IsBeachBorder) {
-                        boatFrothIcons[currBoat->type]->DrawHero(
-                            cursorSequence, cursorFrameCount,
-                            CellX * 32, refY, 32, 32,
-                            gpWindowManager->screenBitmap,
-                            refX, refY + 232, curr->GetHflip());
-                    }
-                    boatFlagIcons[currBoat->type][currBoat->playerOwner]
-                        ->DrawHero(
-                            cursorSequence,
-                            (animFrame + cursorFrameCount) % 8,
-                            CellX * 32, refY, 32, 32,
-                            gpWindowManager->screenBitmap,
-                            refX, refY + 232, curr->GetHflip());
-                    boatIcons[currBoat->type]->DrawHero(
-                        cursorSequence, cursorFrameCount,
-                        CellX * 32, refY, 32, 32,
-                        gpWindowManager->screenBitmap,
-                        refX, refY + 232, curr->GetHflip());
-                } else {
-                    flagIcons[curr->owner]->DrawHero(
-                        cursorSequence, (animFrame + cursorFrameCount) % 8,
-                        CellX * 32, refY, 32, 32,
-                        gpWindowManager->screenBitmap,
-                        refX, refY + 232, curr->GetHflip());
-                    cursorIcons[curr->heroClass]->DrawHero(
-                        cursorSequence, cursorFrameCount,
-                        CellX * 32, refY, 32, 32,
-                        gpWindowManager->screenBitmap,
-                        refX, refY + 232, curr->GetHflip());
-                }
+    hero* curr = gpGame->GetCurrHero();
+    if (curr) {
+        if (curr->flags & 0x40000) {
+            boat* currBoat = gpGame->GetHeroBoat(curr->id, 1);
+
+            if (!GetCell(curr->get_location())->IsBeachBorder) {
+                boatFrothIcons[currBoat->type]->DrawHero(
+                    cursorSequence, cursorFrameCount,
+                    CellX * 32, CellY * 32, 32, 32,
+                    gpWindowManager->screenBitmap,
+                    refX, refY, curr->GetHflip());
             }
+            boatFlagIcons[currBoat->type][currBoat->playerOwner]
+                ->DrawHero(
+                    cursorSequence,
+                    (animFrame + cursorFrameCount) % 8,
+                    CellX * 32, CellY * 32, 32, 32,
+                    gpWindowManager->screenBitmap,
+                    refX, refY, curr->GetHflip());
+            boatIcons[currBoat->type]->DrawHero(
+                cursorSequence, cursorFrameCount,
+                CellX * 32, CellY * 32, 32, 32,
+                gpWindowManager->screenBitmap,
+                refX, refY, curr->GetHflip());
+        } else {
+            flagIcons[curr->owner]->DrawHero(
+                cursorSequence, (animFrame + cursorFrameCount) % 8,
+                CellX * 32, CellY * 32, 32, 32,
+                gpWindowManager->screenBitmap,
+                refX, refY, curr->GetHflip());
+            cursorIcons[curr->heroClass]->DrawHero(
+                cursorSequence, cursorFrameCount,
+                CellX * 32, CellY * 32, 32, 32,
+                gpWindowManager->screenBitmap,
+                refX, refY, curr->GetHflip());
         }
     }
 }
 
-// E:\gamedcs\cursor.cpp:199. The shadow pass of the same cursor the two
-// neighbours draw: one CSprite::DrawHeroShadow per hero, through the
-// Bitmap16Bit header wrapper that Complete expands into the raw
-// map/Width/Height/Pitch call.
-// Residual (72.5446%): the two ref locals swap homes.  Retail puts refY in
-// the dead parameter home and refX in the frame's one negative slot; our CL
-// does the reverse, and the whole 31-row delta is that one choice rippling
-// through the two DrawHeroShadow argument builds.  The frames are equal
-// (one dword each), so nothing is missing.  MEASURED AND REJECTED
-// 2026-09-06: declaring refX before refY 69.3750; declaring refX after the
-// `hero* curr` load 52.6875.  Retail computes refY first and refX second,
-// which is what this source already says.
+// E:\gamedcs\cursor.cpp:199. One shadow draw through the original
+// Bitmap16Bit wrapper per hero. DC explicitly records both early guards,
+// GetCurrHero and the bitmap accessors; those boundaries remain intact.
+// Exact: refX and refY are destination SCREEN coordinates, declared in
+// that order. The DC refY store at cursor.cpp:207 already includes its
+// UI offset; Complete uses 232. Keep CellY*32 as the clipping argument.
+// Modelling refY as only CellY*32 and adding 232 at each call gives
+// 72.5446%, with the locals in opposite homes. Restoring its screen meaning
+// gives 97.13%; restoring refX before refY closes the frame and both calls.
+// GetCurrHero and the early guards are independently byte-flat corrections.
 VA(0x0047fb40, 0x140)  // shadow draw call set + ret 8, dc 0x79ea8
 void advManager::DrawCursorShadow(int CellX, int CellY)
 {
-    if (gCompleteDrawEnabled) {
-        if (!bSpecialHideCursor) {
-            int refY = CellY * 32;
-            int refX = (CellX + 8) * 32;
+    if (!gCompleteDrawEnabled)
+        return;
+    if (bSpecialHideCursor)
+        return;
 
-            hero* curr = gpGame->GetHero(gpCurrentPlayer->currHeroId);
-            if (curr) {
-                if (curr->flags & 0x40000) {
-                    boat* currBoat = gpGame->GetHeroBoat(curr->id, 1);
-                    boatIcons[currBoat->type]->DrawHeroShadow(
-                        cursorSequence, cursorFrameCount,
-                        CellX * 32, refY, 32, 32,
-                        gpWindowManager->screenBitmap,
-                        refX, refY + 232, curr->GetHflip());
-                } else {
-                    cursorIcons[curr->heroClass]->DrawHeroShadow(
-                        cursorSequence, cursorFrameCount,
-                        CellX * 32, refY, 32, 32,
-                        gpWindowManager->screenBitmap,
-                        refX, refY + 232, curr->GetHflip());
-                }
-            }
+    int refX = (CellX + 8) * 32;
+    int refY = CellY * 32 + 232;
+
+    hero* curr = gpGame->GetCurrHero();
+    if (curr) {
+        if (curr->flags & 0x40000) {
+            boat* currBoat = gpGame->GetHeroBoat(curr->id, 1);
+            boatIcons[currBoat->type]->DrawHeroShadow(
+                cursorSequence, cursorFrameCount,
+                CellX * 32, CellY * 32, 32, 32,
+                gpWindowManager->screenBitmap,
+                refX, refY, curr->GetHflip());
+        } else {
+            cursorIcons[curr->heroClass]->DrawHeroShadow(
+                cursorSequence, cursorFrameCount,
+                CellX * 32, CellY * 32, 32, 32,
+                gpWindowManager->screenBitmap,
+                refX, refY, curr->GetHflip());
         }
     }
 }
@@ -410,6 +409,20 @@ void advManager::animate_move(hero* curr, int direction, int xInc, int yInc)
     gUnnamed6968e8 = 0;
 }
 
+// Residual (89.8315%, polish-45): calls now pair 81/81 with ONE target-only
+// reference left - retail emits a SECOND full `return handle_stop_on_trigger`
+// copy (its own epilogue and `ret 0x1c`) for the HERO arm at retail fn+0x84d
+// while C2 here cross-jumps all four switch arms onto the single shared copy.
+// Retail's HERO arm reaches the tail on two paths (`!IsFlying(0)` and
+// `can_land()`); it merges ONE of them with the shared copy and keeps the
+// other, which is a C2 cross-jumping decision, not a source shape - the
+// instructions of blocks B79..B82 are byte-identical on both sides.
+// The frame is otherwise a slot permutation: retail homes returnCell at
+// [ebp-0xc] and the normalDirTable row pointer at [ebp-0x10] where this
+// compile swaps the two, and `iOrigY`/`iOrigX` are stored in the opposite
+// order inside the same two slots.  Measured and byte-flat (2026-09-06):
+// giving `oldBoat` the Dreamcast procedure scope it has at dc sp+0x34
+// (retained above - it is positive DC evidence and costs nothing).
 // E:\gamedcs\cursor.cpp:570
 VA(0x004805e0, 0x131C)  // ret 0x1c + caller arg order/call set, dc 0x7aa54
 NewmapCell* advManager::MoveHero(int direction, unsigned char standEnd, type_point* trigger_point, int* bNoMove, unsigned char bComputerMove, int* bFoughtBattle, unsigned char bIsRemoteMove)
@@ -424,6 +437,7 @@ NewmapCell* advManager::MoveHero(int direction, unsigned char standEnd, type_poi
     int curMoveCost;
     int yInc;
     int iOrigY;
+    boat* oldBoat;
 
     if (gpCurrentPlayer->IsLocalHuman())
         SetNoDialogMenus(0);
@@ -490,7 +504,7 @@ NewmapCell* advManager::MoveHero(int direction, unsigned char standEnd, type_poi
     curr->facing = direction;
 
     if ((curr->flags & 0x40000) && destCell->type == ANCHOR_POINT) {
-        boat* oldBoat = gpGame->GetHeroBoat(curr->id, 1);
+        oldBoat = gpGame->GetHeroBoat(curr->id, 1);
         GetCell(curr->get_location());
 
         if (gNetworkActive69954c && bIsRemoteMove) {
@@ -598,9 +612,6 @@ NewmapCell* advManager::MoveHero(int direction, unsigned char standEnd, type_poi
     CMCMoveHero msg(curr->id, direction, standEnd, curr->get_location());
     SendMapChange(&msg);
 
-    if (bIsRemoteMove && !gbFollowPlayerMode)
-        curr->restore_cell();
-
     if (!became_boat)
         gpGame->record_move(curr, direction, *trigger_point);
 
@@ -623,6 +634,17 @@ NewmapCell* advManager::MoveHero(int direction, unsigned char standEnd, type_poi
         DemobilizeCurrHero(0, 1);
         return 0;
     }
+
+    // Retail sequences this AFTER the network early-return block, not
+    // before record_move as Dreamcast does (dc 0x7b5a2 precedes
+    // record_move at 0x7b5c2): retail's `mov al,[gbFollowPlayerMode] /
+    // test al,al / jne / call restore_cell` sits between
+    // DemobilizeCurrHero's `ret 0x1c` and the animate_move argument
+    // build. Moving it here pairs the last stray call (base-only
+    // restore_cell at +0xa06 against retail's +0xb81) and raises
+    // 89.5139 -> 89.8315.
+    if (bIsRemoteMove && !gbFollowPlayerMode)
+        curr->restore_cell();
 
     animate_move(curr, direction, xInc, yInc);
 

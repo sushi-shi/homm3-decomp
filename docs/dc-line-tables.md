@@ -29,6 +29,15 @@ they are byte-neutral, so this table is the natural partner of the
 site-count probe: **the probe measures how many sites are missing, the line
 table says which statement carries them.**
 
+Debug storage types can be less specific than the source signature. At
+`ai_player.obj:dc:0x3803c`, TownAlreadyBuiltOn's function record displays an
+unsigned-byte return, while the decorated public `?TownAlreadyBuiltOn@game@@QBA_NH@Z`
+encodes `bool`. The type_creature_source constructor at `dc:0x37e08` similarly
+records its final parameter as type `0x0020`, but its decorated public ends
+in `PAF_N@Z`. Preserve `bool` in these source declarations; an unsigned-byte
+debug inventory alone does not prove that the original source used
+`unsigned char`.
+
 ## Reading it
 
 The dump is `../homm3-symbols/HoMM3-Dreamcast-Dump/dump.txt`.

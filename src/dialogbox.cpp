@@ -171,9 +171,7 @@ unsigned char CTextDialog::Setup(const char* cText, font* pFont)
     y = winY;
     width = winWidth;
     height = winHeight;
-#pragma inline_depth(0)
     TDialogBox::Setup(winX, winY, winWidth, winHeight);
-#pragma inline_depth()
 
     pTextWidget = new textWidget(
         20, 40, winWidth - 40, winHeight - 40,
@@ -203,6 +201,18 @@ void CTextDialog::CalcDimensions(const char* cText, font* pFont,
 }
 
 // E:\gamedcs\dialogbox.cpp:200
+// NOT a helper the message handlers share.  The same five statements appear
+// at the tail of four free `*Handler(message&)` functions - CampaignBrief,
+// GameTypeWindow, CombatResultsWindow and HiScore - and that is a repeated
+// source idiom, not a paste of this body: checked 2026-09-06 (polish lane
+// 46) and REFUTED on the ABI.  This is `?ExitDialog@CTextDialog@@QAEHAAV
+// message@@@Z`, a thiscall member of a class the handlers have no instance
+// of (`CTextDialog : TDialogBox`, while `TCampaignBrief` and
+// `TGameTypeWindow` are both `heroWindow`), and retail's inventory has no
+// free `?ExitDialog@@YI...` row for them to reach - every other ExitDialog
+// is a member of some window class too, and all seven take `message*`
+// rather than the `message&` the handlers hold.  So there is no callable
+// spelling to restore, and GameTypeWindowHandler (100) is right as written.
 VA(0x00490b20, 0x2C)  // anchor-global, dc 0x81f98
 int CTextDialog::ExitDialog(message& msg)
 {

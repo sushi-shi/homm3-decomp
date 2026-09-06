@@ -223,7 +223,11 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel view_level)
                 else
                     quantity_text << count / 1000 << "k" << std::ends;
 
-                Widgets.push_back(new textWidget(
+                // DEPTH LADDER: this ONE append is `insert(end(), x)` -
+                // the other nine in this constructor stay push_back.
+                // 92.5668 -> 94.0777; #9 is the runner-up at 93.8869 and a
+                // greedy second round finds nothing.
+                Widgets.insert(Widgets.end(), new textWidget(
                     coordinates[0], coordinates[1] + 34, 32, 11,
                     quantity_text.str(), "tiny.fnt", font::WHITE,
                     widget_id++, 1, 0, 8));

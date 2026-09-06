@@ -891,10 +891,8 @@ Bitmap816* ResourceManager::GetBitmap816(const char* name)
             static_cast<const char*>(result->Name), result);
 #pragma inline_depth()
         TCacheValue cacheValue(sourceValue, true);
-#pragma inline_depth(0)
         TCacheInsertResult cacheInsert =
             gResourceCache.insert_wrapper(cacheValue);
-#pragma inline_depth()
         ++sourceValue.second->ReferenceCount;
         return result;
     }

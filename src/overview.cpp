@@ -1634,10 +1634,18 @@ void OverviewSliderCallback(int state, heroWindow* parent_window)
 // expanding insert spends the budget, and the later `_Construct` sites are
 // then starved out of line.  27 blocks / 6 sites is one insert expansion
 // each, so the whole structural deficit is that decision.
-// Measured and rejected 2026-09-06: spelling all six appends
-// `insert(field_60.end(), record)` instead of `push_back(record)` scores
-// 80.9765 against 82.7097 and leaves the block count at 268 - the library
-// level is not what selects the expansion.  The lever the doctrine names for
+// THE LADDER IS PER-SITE HERE, AND THAT IS THE WHOLE FIX (polish 31,
+// 2026-09-06).  Every BULK dose of `insert(end(), x)` loses - all six
+// item-record appends 80.9765, all forty-two appends in the body 79.1932,
+// both against 82.7097 - which is what the 2026-09-06 note above concluded
+// from.  Titrating all 42 sites ONE AT A TIME instead: forty are flat or
+// worse and exactly two pay, the shipyard 'W' record append (+6.89) and the
+// per-player flag label `Widgets.push_back(field_70.back())` (+0.60 on top),
+// 82.7097 -> 89.6021 -> 90.2053.  A third greedy round over the remaining
+// forty markers finds nothing, so this pair is the peak.  Read the earlier
+// paragraph's census with that in mind: retail calls `insert` at all six
+// item-record sites, but only ONE of them is the site whose budget decides
+// the rest.  The lever the doctrine names for
 // an OVER-inline this size is caller-shrink, but the six item-record search
 // loops are identical enough to fold into one helper and the Dreamcast
 // overview.obj roster names no such function (its own ctor is a different,
@@ -1684,7 +1692,7 @@ TOverviewWindow::TOverviewWindow()
             739, i * 57 + 81, 50, 16, emptyRolloverText,
             "smalfont.fnt", font::PRIMARY, -1,
             font::RIGHT_JUSTIFIED, 0, 8));
-        Widgets.push_back(field_70.back());
+        Widgets.insert(Widgets.end(), field_70.back());
     }
 
     // SEVEN resource icons, not six (found 2026-09-05 by the tree-wide
@@ -1880,7 +1888,16 @@ TOverviewWindow::TOverviewWindow()
         if (item < 0) {
             item = field_60.size();
             overview_item_record record = { 'W', 0 };
-            field_60.push_back(record);
+            // See the constructor's ladder note: this append and the flag-label
+        // one are the only two of the 42 whose `insert(end(), x)` spelling
+        // pays (+6.89 here).  NAMING THE VECTOR on top of it is another
+        // +0.24 (90.2053 -> 90.4407): retail reads `_Last` through the
+        // vector's own address instead of folding the member offset off
+        // `this`, and it is one of the two frame dwords this body is short.
+        // The same reference on the flag-label append LOSES 0.60, and both
+        // together 0.61 - per-site, like everything else about this lever.
+        std::vector<overview_item_record>& items = field_60;
+        items.insert(items.end(), record);
         }
         ++field_60[item].field_04;
     }

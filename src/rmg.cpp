@@ -4,9 +4,6 @@
 // reaches this library from TSingleSelectionWindow::GenerateRandomMap, and
 // the tree node layout proves an eight-byte TPoint value ordered by y, then x.
 #include <va.h>
-#define _MT
-#include <yvals.h>
-#undef _MT
 #include <algorithm>
 #include <bitset>
 #include <ctype.h>
@@ -1325,15 +1322,22 @@ void type_random_map_generator::DrawStraightZoneBoundary(
 // and a vertex returned by the Voronoi lookup at 0x5fd6b0. The body clips
 // each edge, marks the owning zone's map cells, and records the polygon at
 // zone+0x3f4. All names are provisional; Dreamcast has no RMG compiland.
-// Residual: VC6 sinks the rectangle fallback to the end; retail emits it
-// after the initial edge search. An explicit search goto is byte-flat;
-// a do/while plus a separate success jump adds a branch. Bounds constructors
-// or chained stores enlarge the frame from retail's 0x90 to 0x94. Retail
-// copies each fallback corner to a temporary before insertion: direct
-// lvalue arguments peaked at 57.83% but omit those copies; explicit copies
-// retain them at 57.14%. Member-wise construction changes nested vector
-// inlining again (55.61%). Preserve the copied-point evidence and diagnose
-// the remaining insert expansions by site, allowing for cross-type ICF.
+// The found flag folds away, but its do/while plus post-search fallback
+// recovers retail's backward jne, rectangle fall-through, and later success
+// block. Returning from inside the search sinks the rectangle to the end:
+// with the same copied points that control is 60.27%, versus 86.10% here.
+// All seven appends copy a point. Reconstructing the main-loop copies from
+// x/y instead costs 56.56% in the old search; a named copy is byte-identical
+// to TPoint(from). Direct single/count insert calls bypass the push_back
+// chain and measured 43.07%/8.56%; nesting the success body measured 29.83%.
+// Retail stores height, zero y/x, then width. Its min also spills separate
+// inputs only when the neighbour exists, keeping the result unaliased.
+// These two corrections reach 86.68%. Moving the owning-zone read inside
+// the neighbour arm loses that lifetime (79.98%); a bounds ctor is 80.77%.
+// Residual: 90 vs 93 blocks, 37 calls on both sides. The search topology now
+// agrees; two vector allocation paths still choose different _Ucopy/_Ufill/
+// _Destroy expansions, followed by local-slot and register differences.
+// Account for cross-type ICF before treating a template name as a new call.
 VA(0x0053C390, 0x730) // caller 0x53e5f4/0x53e602, ret 8; retail-only
 void type_random_map_generator::TraceZoneBoundary(
     TRmgBoundaryVertex* first, unsigned char irregular)
@@ -1342,37 +1346,43 @@ void type_random_map_generator::TraceZoneBoundary(
     TRmgZone* zone = vertex->zone;
     int zoneIndex = zone->slot->zoneIndex;
     TRmgMapPosition zonePosition = zone->levelPosition;
-    TRmgZoneBounds bounds = {0, 0, map.mapWidth, map.mapHeight};
+    TRmgZoneBounds bounds;
+    bounds.maximumY = map.mapHeight;
+    bounds.minimumX = bounds.minimumY = 0;
+    bounds.maximumX = map.mapWidth;
     TRmgBoundaryVertex* next;
     TPoint originalFrom;
     TPoint originalTo;
     TPoint from;
     TPoint to;
 
-    for (;;) {
+    bool found = false;
+    do {
         next = vertex->next;
         originalFrom = vertex->position;
         originalTo = next->position;
         from = ClipRmgBoundaryPoint(bounds, vertex->position, next->position);
         to = ClipRmgBoundaryPoint(bounds, originalTo, originalFrom);
-        if (bounds.Contains(from) && from != to)
+        if (bounds.Contains(from) && from != to) {
+            found = true;
             break;
-        vertex = next;
-        if (vertex == first) {
-            TPoint upperLeft(bounds.minimumX, bounds.minimumY);
-            TPoint upperRight(bounds.maximumX - 1, bounds.minimumY);
-            TPoint lowerLeft(bounds.minimumX, bounds.maximumY - 1);
-            TPoint lowerRight(bounds.maximumX - 1, bounds.maximumY - 1);
-            DrawStraightZoneBoundary(lowerRight, upperRight, zoneIndex, zonePosition.z);
-            DrawStraightZoneBoundary(upperRight, upperLeft, zoneIndex, zonePosition.z);
-            DrawStraightZoneBoundary(upperLeft, lowerLeft, zoneIndex, zonePosition.z);
-            DrawStraightZoneBoundary(lowerLeft, lowerRight, zoneIndex, zonePosition.z);
-            zone->boundary.push_back(TPoint(lowerRight));
-            zone->boundary.push_back(TPoint(upperRight));
-            zone->boundary.push_back(TPoint(upperLeft));
-            zone->boundary.push_back(TPoint(lowerLeft));
-            return;
         }
+        vertex = next;
+    } while (vertex != first);
+    if (!found) {
+        TPoint upperLeft(bounds.minimumX, bounds.minimumY);
+        TPoint upperRight(bounds.maximumX - 1, bounds.minimumY);
+        TPoint lowerLeft(bounds.minimumX, bounds.maximumY - 1);
+        TPoint lowerRight(bounds.maximumX - 1, bounds.maximumY - 1);
+        DrawStraightZoneBoundary(lowerRight, upperRight, zoneIndex, zonePosition.z);
+        DrawStraightZoneBoundary(upperRight, upperLeft, zoneIndex, zonePosition.z);
+        DrawStraightZoneBoundary(upperLeft, lowerLeft, zoneIndex, zonePosition.z);
+        DrawStraightZoneBoundary(lowerLeft, lowerRight, zoneIndex, zonePosition.z);
+        zone->boundary.push_back(TPoint(lowerRight));
+        zone->boundary.push_back(TPoint(upperRight));
+        zone->boundary.push_back(TPoint(upperLeft));
+        zone->boundary.push_back(TPoint(lowerLeft));
+        return;
     }
 
     first = vertex;
@@ -1383,13 +1393,14 @@ void type_random_map_generator::TraceZoneBoundary(
         originalTo = next->position;
         from = ClipRmgBoundaryPoint(bounds, vertex->position, next->position);
         to = ClipRmgBoundaryPoint(bounds, originalTo, originalFrom);
-        zone->boundary.push_back(TPoint(from.x, from.y));
+        zone->boundary.push_back(TPoint(from));
 
         if (!neighbour || neighbour->slot->zoneIndex > zoneIndex) {
             int roughness = zone->boundaryRoughness;
             if (neighbour) {
+                int ownRoughness = roughness;
                 int neighbourRoughness = neighbour->boundaryRoughness;
-                roughness = std::_cpp_min(roughness, neighbourRoughness);
+                roughness = std::_cpp_min(ownRoughness, neighbourRoughness);
             }
             if (irregular)
                 DrawIrregularZoneBoundary(from, to, zoneIndex, zonePosition.z, roughness);
@@ -1418,11 +1429,11 @@ void type_random_map_generator::TraceZoneBoundary(
                 else
                     corner = TPoint(bounds.minimumX, bounds.maximumY - 1);
                 DrawStraightZoneBoundary(from, corner, zoneIndex, zonePosition.z);
-                zone->boundary.push_back(TPoint(from.x, from.y));
+                zone->boundary.push_back(TPoint(from));
                 from = corner;
             }
             DrawStraightZoneBoundary(from, to, zoneIndex, zonePosition.z);
-            zone->boundary.push_back(TPoint(from.x, from.y));
+            zone->boundary.push_back(TPoint(from));
         }
     } while (vertex != first);
 }
@@ -2413,20 +2424,26 @@ static void InsertRmgWorkItem(
 // one-way/two-way monoliths and underground gates, then eight-neighbour road
 // relaxation.  The Dreamcast build has no RMG compiland, so the original
 // method spelling is unavailable and the role name remains provisional.
-// Residual: retail calls the outer two-argument position insert at the initial
-// and three transport sites, and calls both one-iterator erases; our incomplete
-// caller expands those layers.  The final neighbour inserts already choose the
-// retail overload depth.  Preserve the evidenced APIs and recover natural
-// caller/helper state rather than pinning inline depth.
+// Worklist push_back/pop_back restore the outer container boundaries and
+// raise 67.8599% to 73.7139%; flattening them into insert/erase was the
+// negative control. The shared by-value predecessor setter raises that to
+// 75.6686% and restores the separate coordinate snapshot before the cost
+// store. Its spelling remains provisional without Dreamcast source.
+// The integrated candidate, with the canonical TObjectType interface and
+// nested map accessor, measures 75.2818%; MAX/history retain 75.6686%.
+// Residual: the seed inserts and popped-element erases still expand deeper
+// than retail. Both monolith position inserts now retain the two-argument
+// boundary; the underground-gate site still expands it. The final neighbour
+// inserts already select the retail count-insert calls. Keep the canonical
+// helpers while recovering the remaining source/optimizer state.
 VA(0x00547880, 0x7B1)  // roadTargets caller + monolith vectors; retail-only
 void type_random_map_generator::BuildRoadCostMap(TRmgMapPosition position)
 {
     std::vector<TRmgMapPosition> openPositions;
     std::vector<int> openCosts;
-    int zeroCost = 0;
 
-    openPositions.insert(openPositions.end(), position);
-    openCosts.insert(openCosts.end(), zeroCost);
+    openPositions.push_back(position);
+    openCosts.push_back(0);
 
     TRmgMapItem* mapItem = map.GetMapItem(position);
     mapItem->movement.cost = 0;
@@ -2436,8 +2453,8 @@ void type_random_map_generator::BuildRoadCostMap(TRmgMapPosition position)
 
     while (openPositions.size()) {
         position = openPositions.back();
-        openCosts.erase(openCosts.end() - 1);
-        openPositions.erase(openPositions.end() - 1);
+        openCosts.pop_back();
+        openPositions.pop_back();
 
         mapItem = map.GetMapItem(position);
         int positionCost = mapItem->movement.cost;
@@ -2468,8 +2485,7 @@ void type_random_map_generator::BuildRoadCostMap(TRmgMapPosition position)
                     if (nextMapItem->movement.cost <= nextCost)
                         continue;
 
-                    nextMapItem->movement.cost = nextCost;
-                    nextMapItem->previousTile = position;
+                    nextMapItem->SetMovementCost(nextCost, position);
                     InsertRmgWorkItem(
                         openPositions, openCosts, nextPosition, nextCost);
                 }
@@ -2489,8 +2505,7 @@ void type_random_map_generator::BuildRoadCostMap(TRmgMapPosition position)
                     if (nextMapItem->movement.cost <= nextCost)
                         continue;
 
-                    nextMapItem->movement.cost = nextCost;
-                    nextMapItem->previousTile = position;
+                    nextMapItem->SetMovementCost(nextCost, position);
                     InsertRmgWorkItem(
                         openPositions, openCosts, nextPosition, nextCost);
                 }
@@ -2505,8 +2520,7 @@ void type_random_map_generator::BuildRoadCostMap(TRmgMapPosition position)
                 TRmgMapItem* nextMapItem = map.GetMapItem(nextPosition);
                 int nextCost = positionCost + 1;
                 if (nextMapItem->movement.cost > nextCost) {
-                    nextMapItem->movement.cost = nextCost;
-                    nextMapItem->previousTile = position;
+                    nextMapItem->SetMovementCost(nextCost, position);
                     InsertRmgWorkItem(
                         openPositions, openCosts,
                         nextPosition, nextCost);
@@ -2557,8 +2571,7 @@ void type_random_map_generator::BuildRoadCostMap(TRmgMapPosition position)
             if (nextMapItem->movement.cost <= nextCost)
                 continue;
 
-            nextMapItem->movement.cost = nextCost;
-            nextMapItem->previousTile = position;
+            nextMapItem->SetMovementCost(nextCost, position);
             InsertRmgWorkItem(
                 openPositions, openCosts, nextPosition, nextCost);
         }
@@ -2677,8 +2690,7 @@ void type_random_map_generator::CreateRiver(TRmgMapPosition source)
                 & (1 << oppositeDirection))
                 continue;
 
-            mapItem->movement.cost = nextCost;
-            mapItem->previousTile = position;
+            mapItem->SetMovementCost(nextCost, position);
             InsertRmgWorkItem(
                 openPositions, openCosts, nextPosition, nextCost);
 

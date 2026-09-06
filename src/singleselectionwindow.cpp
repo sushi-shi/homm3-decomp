@@ -875,63 +875,51 @@ inline void CNewPlayerUpdateProc::RequestConfirmation()
 }
 
 // Stream up to five header rows per throttle window at the joining
-// player; when the list is exhausted, drain any queued re-requests and
-// ask for confirmation.
+// player. Complete adds this TransferHeaders override; the Dreamcast base
+// Tick (0x148130, singleselectionwindow.cpp:1283..1337) supplies the elapsed
+// helper, one initial count guard, bounded loop and request/confirmation
+// boundaries. Retail independently confirms that shape here: +0x155 loops
+// back to +0x5e (past the initial guard), and the exhausted-list arm at
+// +0x1c6 skips BOTH HandleRequests and RequestConfirmation when empty.
 //
-// Residual (71.8957, up from 62.4785): restoring the DC-owned base helper
-// boundaries and explicit CMapFileNameMsg inputs fixed the message and
-// confirmation lowering without flattening either helper. Candidate and
-// retail now have 10 branches and 3 returns; two symbolic branch targets
-// still differ around the derived loop's exhaustion/teardown placement.
-// E:\gamedcs\singleselectionwindow.cpp:1282
-// Residual (71.8957%): identical instruction for instruction; two branches
-// land on a different block. Retail's back edge re-enters INSIDE the loop,
-// past the header-count guard - i.e. its first `m_nextHeader >= size()` test
-// runs once, as a pre-loop guard, and only the bottom copy is in the loop.
-// MEASURED and rejected three ways: the guard lifted above a `for` with the
-// tail written inline (48.64), lifted above the same `for` keeping the goto
-// tail layout (48.64), and lifted above a `do { } while (++k < 5)` (43.78).
-// All three reproduce retail's TOPOLOGY and lose 23-28 points to block
-// LAYOUT, so the shape below is a local maximum: keep the guard as the
-// loop's first statement and let the two branch targets differ.
+// Residual (89.8712%): all 21 blocks, 10 branches and three returns agree.
+// The message constructor still schedules its row/FILETIME arguments
+// differently: frame 0xa0 vs retail 0xa4, saved alignment pointer vs saved
+// FILETIME high word. Both request-count tests use TEST -8 where retail
+// uses SAR 3. The flattened elapsed expression and wrong per-iteration
+// count guard banked 71.8957%; restoring only ElapsedSince gives 73.25%.
+// The coherent base-like if/for/else shape, including conditional final
+// confirmation, reaches this peak. Extending the message scope through the
+// loop, moving the counter outside the if, and restoring the DC constructor's
+// mutable char* parameter are all byte-flat. Earlier loop-layout failures
+// were measured before these helper and exhausted-list corrections.
 VA(0x00577DE0, 0x228)  // anchor-vtable vtbl 0x641d38 slot1 - the slot WindowHandler's inlined Man::Tick dispatches; Complete-only override shaped from the Dreamcast base Tick at 0x148130
 void t_map_list_update::Tick()
 {
-    if (static_cast<int>(GameTime::Get() - m_lastSendTime) < 75)
+    if (GameTime::ElapsedSince(m_lastSendTime) < 75)
         return;
-    for (int k = 0; k < 5; ++k) {
-        if (m_nextHeader
-                >= gUnnamed69fbe8->TransferHeaders.size())
-            goto drain_and_confirm;
-        {
+
+    if (m_nextHeader < gUnnamed69fbe8->TransferHeaders.size()) {
+        for (int k = 0; k < 5; ++k) {
             CMapFileNameMsg msg(
                 1, m_nextHeader,
                 gUnnamed69fbe8->TransferHeaders[m_nextHeader].setup.filename,
                 gUnnamed69fbe8->TransferHeaders[m_nextHeader].setup.alignment,
                 gUnnamed69fbe8->TransferHeaders[m_nextHeader].fileTime);
             TransmitRemoteDataDPID(&msg, m_dpid, true, false);
+            ++m_nextHeader;
+            if (static_cast<int>(m_requests.size()) != 0)
+                HandleRequests();
+            if (m_nextHeader >= gUnnamed69fbe8->TransferHeaders.size()) {
+                RequestConfirmation();
+                break;
+            }
         }
-        ++m_nextHeader;
-        if (static_cast<int>(m_requests.size()) != 0)
-            HandleRequests();
-        if (m_nextHeader
-                >= gUnnamed69fbe8->TransferHeaders.size())
-            goto confirm;
-    }
-    m_lastSendTime = GameTime::Get();
-    return;
-
-confirm:
-    {
-        RequestConfirmation();
-        m_lastSendTime = GameTime::Get();
-        return;
-    }
-
-drain_and_confirm:
-    if (static_cast<int>(m_requests.size()) != 0)
+    } else if (static_cast<int>(m_requests.size()) != 0) {
         HandleRequests();
-    RequestConfirmation();
+        RequestConfirmation();
+    }
+
     m_lastSendTime = GameTime::Get();
 }
 
@@ -1347,7 +1335,10 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
 
     bitmapBorder* w = new bitmapBorder(
         396, 6, 370, 585, 100, "GSelPop1.pcx", 0x800);
-    Widgets.push_back(w);
+    // DEPTH LADDER: this ONE append is `insert(end(), w)`; all 24 others in
+    // this constructor stay `push_back`.  95.7079 -> 95.8142; every other site
+    // measured singly is flat or a loss, and the next best (#18) is 95.7325.
+    Widgets.insert(Widgets.end(), w);
     w->image->Draw(0, 0, w->image->GetWidth(), w->image->GetHeight(),
         gpWindowManager->screenBitmap, w->x + x, w->y + y, 0);
 
@@ -2743,12 +2734,14 @@ void TSingleSelectionWindow::SetupFilterOptions()
 // header's strings; we expand the first (it becomes an inline _Tidy). (2)
 // Inside AssignData retail expands operator=(const char*) at both sites -
 // one down to assign(), one a level further to _Grow - while game.h's
-// load-bearing inline_depth(1) leaves us calling operator= outright.
+// former inline_depth(1) left us calling operator= outright.
 // MEASURED 2026-09-05 by deleting that pragma and re-diffing three of its
 // callers in one compile: this row 71.5355 -> 81.0800, OnBeginGame 78.7597
 // -> 77.2700, UpdateGameVars 67.9099 -> 38.0800. So the pragma is NOT inert
 // (contra "only N=0 bites"), it is worth +9.5 here and -29.8 there, and the
-// split wants a per-call-site knob rather than a per-callee one. (3) The
+// split requires the original per-site compiler state. Both AssignData pins
+// were removed on 2026-09-06; this row now scores 81.0847%, with its 81.7345%
+// historical peak preserved. (3) The
 // SendPlayerPositions expansion: retail CALLS ??0CNetPlayerHandlerPlayer
 // for m_netPlayer[8] and only ??0CNetPlayerInfo for m_compPlayer[8], while
 // our budget expands both loops in full - the same per-site split
@@ -3505,6 +3498,22 @@ int TSingleSelectionWindow::GetFileSpecNbr()
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:3475
+// Residual (87.0700%, polish-45 - first full evidence pass on this row):
+// pure OVER-inline, two sites, both one level deeper than retail.
+//   * `pHeaders->clear()` lowers to `copy(end(),end(),begin())` + `_Destroy`
+//     + `_Last = _S`.  Retail CALLS `vector<GameSelectionHeadersStruct>::
+//     _Destroy(_S,_Last)` (retail's reference at call slot 8); this compile
+//     expands that loop in line, which is the whole 40-vs-37 block and
+//     24-vs-22 conditional-branch gap.
+//   * `temp`'s destructor: retail CALLS `~NewSMapHeader`, this compile
+//     expands it into two `basic_string::_Tidy` calls plus `~CMapHeaderData`
+//     - the two base-only calls at +0x2e3 and +0x2f4.
+// Everything else pairs 22/22 (the six "different" rows are the delinker's
+// ICF twins under another instantiation's name; the ratchet runs at
+// function_reloc_diffs=none and ignores them).  Per docs/vc6/inliner.md the
+// over-inline direction means this caller presents a LARGER front-end cb or
+// fewer candidate sites than retail's, so the levers are caller mass and site
+// count - not a `clear()`/`erase()` spelling and not a pragma.
 VA(0x00582B40, 0x345)  // anchor-global dir ternary m_flag66/64/65 over "random_maps"(0x6836ac)/"maps"(0x6772d0)/"games"(0x677d70) + _chdir - the directory-scan opener; order-map GetHeaders..MakeHeroFilter onto 0x582b40..0x583890 (GetFileSpecNbr excluded by arity below), size 0.36x dc 0x916, dc 0x137da8
 void TSingleSelectionWindow::GetHeaders(
     std::vector<GameSelectionHeadersStruct>* pHeaders)
@@ -3671,16 +3680,22 @@ int TSingleSelectionWindow::GetHeader(char* dir, char* cFilename, GameSelectionH
     return gameFileProblem;
 }
 
-// Residual (67.91, 2026-09-05): the inliner mix under AssignData. Retail
-// expands operator=(const char*) -> assign(ptr) (inline strlen) and CALLS
-// assign(ptr, len) at the local arm's two sites and the main arm's title,
-// then expands assign(ptr, len) itself (_Grow/_Eos) at the last site - a
-// budget split. game.h's inline_depth(1) inside AssignData is LOAD-BEARING
-// here (removing it, or raising it to 3, expands all four sites fully:
-// 35.30); no depth reproduces retail's partial expansion. Retail also
-// keeps one materialised `&m_localHeader` (eax) as the base of every band
-// in the local arm where ours folds each offset from `this`; a
-// `GameSelectionHeadersStruct&` reference to the member measured 67.02.
+// Retail preserves the selected description through AssignData and SetText,
+// then reloads currentMap and SelectionHeaders at 0x583833/0x583839 for the
+// saved-player flags. A reference retained across SetText keeps the old row
+// instead; the final block must resolve its own selection. Repeating every
+// indexed read earlier also discards the description's proved lifetime and
+// is not retained (55.0450% with the old pins; 49.0856% without them).
+//
+// The 67.9099% MAX was banked with two inline-depth pins inside AssignData.
+// Those pins suppressed all four string operators, while retail expands
+// three down to assign(ptr,len) and the final site through _Grow/_Eos.
+// Both pins are removed. Current 34.0405% preserves the header transfers and
+// corrected final reload; one base assignment and one string assignment now
+// expand too far. A qualified base operator= is byte-flat. The explicit local
+// header pointer follows retail's materialized base across the copy bands
+// (34.0405% versus 34.1577% with direct member expressions); no guessed
+// assertion or synthetic helper is used to steer these remaining boundaries.
 // E:\gamedcs\singleselectionwindow.cpp:3871
 VA(0x00583580, 0x30C)  // anchor-global copies the selected header's planes into gpGame (+0x1f6a0 header band, +0x4df18 setup band) off the SelectionHeaders row - the DC UpdateGameVars body shape; size 0.76x dc 0x408, dc 0x139090
 void TSingleSelectionWindow::UpdateGameVars()
@@ -3692,16 +3707,17 @@ void TSingleSelectionWindow::UpdateGameVars()
     // duplicates the complete transfer here and returns before the original
     // currentMap path rather than sharing a lowered tail.
     if (field_37F) {
-        gpGame->setup = m_localHeader.setup;
-        memcpy(gpGame->heroAvailability, m_localHeader.heroAvailability,
-               sizeof(m_localHeader.heroAvailability));
-        gpGame->mapHeader.AssignData(&m_localHeader.header,
-                                     m_localHeader.title,
-                                     m_localHeader.description);
+        GameSelectionHeadersStruct* localHeader = &m_localHeader;
+        gpGame->setup = localHeader->setup;
+        memcpy(gpGame->heroAvailability, localHeader->heroAvailability,
+               sizeof(localHeader->heroAvailability));
+        gpGame->mapHeader.AssignData(&localHeader->header,
+                                     localHeader->title,
+                                     localHeader->description);
         gpGame->setup.turnDuration = static_cast<signed char>(durationIndex);
         gpGame->setup.difficulty = static_cast<signed char>(lastDiff);
         static_cast<CScrollTextWidget*>(field_196c)
-            ->SetText(m_localHeader.description);
+            ->SetText(localHeader->description);
         return;
     }
 
@@ -3733,10 +3749,13 @@ void TSingleSelectionWindow::UpdateGameVars()
         gpGame->setup.turnDuration = 10;
 
     if (m_flag64) {
-        memcpy(gpGame->playerDisabled, selected.saved.deadPlayer,
-               sizeof(selected.saved.deadPlayer));
-        memcpy(g_wasHuman, selected.saved.humanPlayer,
-               sizeof(selected.saved.humanPlayer));
+        // SetText can run widget code; retail resolves this row afterwards.
+        GameSelectionHeadersStruct& savedSelection =
+            SelectionHeaders[currentMap];
+        memcpy(gpGame->playerDisabled, savedSelection.saved.deadPlayer,
+               sizeof(savedSelection.saved.deadPlayer));
+        memcpy(g_wasHuman, savedSelection.saved.humanPlayer,
+               sizeof(savedSelection.saved.humanPlayer));
     }
 }
 
@@ -3756,6 +3775,8 @@ void TSingleSelectionWindow::UpdateGameVars()
 // block-scope classB is byte-flat; the family is the documented
 // register-homing residual class.
 // E:\gamedcs\singleselectionwindow.cpp:3927
+// LOOP-COUNTER SIGNEDNESS (docs/vc6/behavior-catalog.md D23): the 156-hero
+// scan counter is `unsigned int`.  87.5476 -> 88.9857.
 VA(0x00583890, 0x2B0)  // anchor-callee UpdateTown calls it no-arg right after the town commit - the DC call edge; size 1.2x dc 0x23e, dc 0x139498
 void TSingleSelectionWindow::MakeHeroFilter()
 {
@@ -3829,7 +3850,7 @@ void TSingleSelectionWindow::MakeHeroFilter()
             break;
         }
         p->availableHeroesCount = 0;
-        for (int h = 0; h < 156; ++h) {
+        for (unsigned int h = 0; h < 156; ++h) {
             if (gpGame->heroAvailability[h] != -1)
                 continue;
             if (akHeroTraits[h].heroClass != classA
@@ -6157,9 +6178,7 @@ unsigned char TSingleSelectionWindow::HandleNetMsg(CNetMsg* pNetMsg, unsigned ch
         OnUpdatePlayerPosMsg(pNetMsg);
         break;
     case RS_NEW_SETUP_INFO:
-#pragma inline_depth(0)
         OnNewSetupInfoMsg(pNetMsg);
-#pragma inline_depth()
         break;
     case RS_NEW_PLAYER:
         OnNewPlayerMsg(pNetMsg);
@@ -6234,9 +6253,7 @@ unsigned char TSingleSelectionWindow::HandleNetMsg(CNetMsg* pNetMsg, unsigned ch
             PlayerDropMsg(&chatMan, gpGeneralText->GetText(527),
                           p->sName);
         UpdateNameLists();
-#pragma inline_depth(0)
         DisplayChat();
-#pragma inline_depth()
         DrawWindow(0, 0xffff0001, 0xffff);
         Update();
         break;
@@ -6374,9 +6391,7 @@ unsigned char TSingleSelectionWindow::HandleNetMsg(CNetMsg* pNetMsg, unsigned ch
                                  "%s: %s"),
                     p->sName,
                     static_cast<CChatMsg*>(pNetMsg)->m_text);
-#pragma inline_depth(0)
             DisplayChat();
-#pragma inline_depth()
         }
         break;
     }
@@ -7154,15 +7169,11 @@ void CNewPlayerUpdateMan::NewPlayer(unsigned long dpid)
     }
 }
 
-// Dreamcast keeps the empty source destructor as a one-call
-// NewSMapHeader teardown (dc 0x149654). Complete's VC6 expands that member
-// destructor through its strings, campaign and slot-attribute array, exactly
-// producing the 319-byte retail body at this boundary.
-// E:\gamedcs\singleselectionwindow.cpp:7886
-VA(0x0058A300, 0x13F)  // anchor-member +0x18 NewSMapHeader teardown; exact DC destructor boundary, dc 0x149654
-CNewMapHeaderInfoMsg::~CNewMapHeaderInfoMsg()
-{
-}
+// Compiler-generated member teardown. Dreamcast attributes this destructor
+// to singleselectionwindow.cpp:7886, the end of BeginNewGame, rather than a
+// destructor definition. Retail 0x58a300 has no derived-vptr store; a written
+// empty destructor adds that store here and to both BeginNewGame cleanups.
+VA_COMPGEN(0x0058A300, 0x13F, IMPLICIT_DTOR, CNewMapHeaderInfoMsg)
 
 // The transfer opener: version-gate the sender (the short EX form
 // carries none - "1.0" stands in), build the never-sent CBadVersionMsg
@@ -7725,7 +7736,8 @@ void TSingleSelectionWindow::SendPlayerFaces()
 // expand the whole _Xran throw path (basic_string ctor + out_of_range ctor
 // + _CxxThrowException, ~50 B) inline, which also costs the EBX/EDX
 // binding around the bit test and two extra epilogues. The knob is
-// game.h's AssignData, which the campaign pins. Fixed here: naming
+// game.h's AssignData. Its two pins were removed on 2026-09-06: this row
+// now scores 77.2669%, with its 78.7597% MAX preserved. Fixed here: naming
 // `GameSelectionHeadersStruct* pHeader = &m_localHeader;` (+0.55 - retail
 // spills `this` at entry and repurposes the callee-saved register for the
 // row) and adopting SetupScenarioOptions' proven
@@ -7933,44 +7945,22 @@ unsigned char TSingleSelectionWindow::BeginSavedGame()
 // map and the whole save image go out to the other machines before the last
 // progress tick.
 //
-// MEASURED AND REJECTED (polish 29), and the pair is instructive because
-// each half is right and only together do they pay: hand-expanding the
-// member walk in the message constructor (`static_cast<CMapHeaderData&>
-// (m_header) = *pMapHeader;` plus the two string and the bitset member
-// assignments) makes the tail of the call stream agree EXACTLY with
-// retail - `??4CMapHeaderData`, `assign(str, 0, npos)` twice, the bitset
-// copied inline - and still scores 70.30 against 74.90, because the
-// constructor half is still inverted and the added mass just shifts every
-// offset. Taking `NewSMapHeader::NewSMapHeader()` out of line (declared in
-// game.h, defined in campaignbrief.cpp) closes that half too and the row
-// reaches 81.87 - but the ctor is inline in retail's OTHER callers, and
-// the tree pays 3634 -> 3631 exact / 95.49 -> 95.35 fuzzy for it:
-// ??0game 87.85 -> 76.45, ??0SavedGameHeader 98.88 -> 48.35,
-// ??0CGameHeaderInfoMsg 98.80 -> 17.97, RebuildFilteredPlayerSetup
-// 71.54 -> 40.37, and ??0CMapHeaderData / ??0VictoryConditionStruct /
-// ??0LossConditionStruct / bitset<156>::_Tidy each 100 -> 0 (they are
-// COMDATs only the inline constructor pulls in). So the split is a
-// per-site /Ob2 decision, and reaching it needs the pin this lane may not
-// add.
-//
-// Residual (74.90%): branches and block count agree exactly; the whole gap
-// is the CNewMapHeaderInfoMsg construction. Retail CALLS NewSMapHeader's
-// default constructor and EXPANDS its operator= (base assign call, two
-// string assigns, the bitset copied inline); we do the mirror image -
-// expand the constructor (CMapHeaderData ctor + two string ctors + bitset
-// ctor + the body's zero run) and CALL operator=. That is the same
-// sequential /Ob2 budget split OnBeginGame and RebuildFilteredPlayerSetup
-// show, and it costs a knock-on register binding: retail keeps `this` in
-// EBX and re-materialises the zero three times, while our long-lived CSE'd
-// zero takes EBX and spills `this`. Tried and rejected: `int iReturn` for
-// the TransmitSaveGame result, which the DC local list names (74.65 against
-// 74.90 without it - CodeView locals are a lower bound), and dropping
-// `inline` from the message constructor (byte-flat; one call site, so /Ob2
-// expands it either way). Fixed here: the DC-named `pPlayer` row pointer in
-// the seat loop is worth +4.22 and makes the branch view clean.
+// Exact after restoring Dreamcast's SendPlayerPositions failure guard
+// (lines 7871/7872) and the compiler-generated CNewMapHeaderInfoMsg destructor.
+// SendPlayerPositions returns true at line 6986; VC6 removes the guard's
+// branch but still uses its source cleanup path when choosing expansions.
+// Without the guard, the old explicit destructor state scores 74.9022%;
+// restoring the guard alone reaches 94.0226%, with retail's called header
+// constructor and expanded assignment. Removing the written empty destructor
+// then closes both this caller and the standalone teardown to 100%.
+// CLaunchingGameMsg is the recorded launch type (7834). The DC iReturn local
+// holds the header-send result (7868), not TransmitSaveGame's later result;
+// restoring these two facts alone is byte-flat. Earlier attempts to move the
+// header constructor out of line globally changed its other callers' correct
+// boundaries; the guard recovers this caller's decision with one shared body.
 // E:\gamedcs\singleselectionwindow.cpp:7822
 VA(0x0058C570, 0x3E7)  // OnBeginGame new arm, dc 0x1429e8
-unsigned char TSingleSelectionWindow::BeginNewGame()
+bool TSingleSelectionWindow::BeginNewGame()
 {
     int gameVersionClass;
     if (field_1898 == SINGLE_SELECTION_CONTEXT_2
@@ -7985,7 +7975,7 @@ unsigned char TSingleSelectionWindow::BeginNewGame()
     IncProgressBar(1);
 
     if (bVideoPaused) {
-        CNetMsg msg(RS_LAUNCHING_GAME, sizeof(CNetMsg));
+        CLaunchingGameMsg msg;
         TransmitRemoteDataDPID(&msg, 0, false, true);
     }
 
@@ -8006,8 +7996,9 @@ unsigned char TSingleSelectionWindow::BeginNewGame()
 
     if (bVideoPaused) {
         CNewMapHeaderInfoMsg mapHeaderMsg(&gpGame->mapHeader);
-        mapHeaderMsg.RemoteFn_00512D40(0, 0, 1);
-        SendPlayerPositions(0);
+        int iReturn = mapHeaderMsg.RemoteFn_00512D40(0, 0, 1);
+        if (!SendPlayerPositions(0))
+            return 0;
         gUnnamed69d810 = gNetLocalGamePos;
         if (!gpGame->TransmitSaveGame(0x7f, 0, 0, 1) && !gUnnamed69d80d)
             return 0;
@@ -8140,7 +8131,7 @@ void TSingleSelectionWindow::UpdateTown(
 {
     CNetPlayerHandlerPlayer* p = m_players.GetPlayerInPos(pos);
     if (!p)
-        p = &m_players.computerPlayers[pos];
+        p = m_players.GetCompPlayerInPos(pos);
     if (p) {
         p->townIndex = town;
         p->heroIndex = -1;
@@ -8446,7 +8437,7 @@ void TSingleSelectionWindow::DrawHeroAdvancedOption(int playerPos,
 {
     if (position == -1) {
         position = 0;
-        for (int i = 0; i < playerPos; ++i)
+        for (int i = 0; i != playerPos; ++i)
             if (gpGame->setup.playerPos[i] >= 0
                     && (m_flag64 == 0 || gpGame->playerDisabled[i] == 0))
                 ++position;
@@ -9582,20 +9573,23 @@ VA_COMPGEN(0x0057d130, 0x21, SCALAR_DELETING_DTOR, TSingleSelectionWindow)  // d
 // eight map slots and clears every seat still holding the ninth (Conflux)
 // alignment. The inner GetPlayerInPos scan is expanded THREE times, once
 // per use, each with its computer-bank fallback.
-// Residual (63.07%): pure OVER-INLINE, and this lane cannot spend the
-// lever. Retail inlines GetPlayerCount into this body (writing the call is
-// worth 57.56 -> 62.61 over hand-expanding it) but then keeps the bitset<4>
-// members that GetPlayerCount reaches OUT of line - its ctor, flip,
-// operator&= and BOTH `test` sites - and keeps CheckFaces out of line as
-// well; our compile expands all six. That is the statement-pin family, and
-// the cleanliness floor holds inline-depth pins at 357 falling-only, so the
-// only admissible route is caller-shrink into helpers the Dreamcast roster
-// does not name. Reading the legal-alignment mask zero-extended is worth
-// +0.46 and is a byte fact - retail emits `xor ecx,ecx / mov cx,[esi+8]`
-// where the signed member gives `movsx`. Measured and byte-flat: folding
-// the two `required` ternaries into their test() arguments, and spelling
-// the alignment gate as `!A && (A || count <= 1)` to reproduce retail's
-// DUPLICATED HasRandomAlignment test (VC6 folds the redundancy away).
+// 2026-09-06: GetDisplayTown(pos) and UpdateTown(pos, eTownNeutral, 0)
+// restore the shared source boundaries (68.8219 -> 98.89). Dreamcast names
+// both helpers: GetDisplayTown at 8166 includes HasMultipleTowns; UpdateTown
+// at 7997 calls GetCompPlayerInPos, MakeHeroFilter, CheckFaces and the row
+// redraw. Complete +0x236 repeats the HasRandomAlignment test because the
+// GetDisplayTown -> HasMultipleTowns boundary survives optimization. The
+// reset at +0x278 is UpdateTown expanded with CheckFaces still called.
+// Flattening both helpers was 68.8219; restoring only GetDisplayTown is
+// 71.87 and retains HasMultipleTowns while expanding CheckFaces. Both real
+// source calls are needed to recover retail's natural nested decisions.
+// Residual (98.89%): the instruction sequence before +0x2cc agrees aside
+// from branch displacements and folded symbols. After UpdateTown the
+// candidate emits `mov ebx,esi; jmp` instead of joining retail's common
+// `mov ebx,[ebp-4]` loop tail. Nested seat guards vs continues and a positive
+// level-change scope vs the early return are byte-flat controls. Restoring
+// UpdateTown's GetCompPlayerInPos call is also byte-flat, including its
+// independently exact retained body.
 VA(0x0058e700, 0x2F9)  // header-declared identity + anchor-callee AddNewPlayer/TurnOffAdvancedOptions, retail-only
 void TSingleSelectionWindow::SetNewPlayerSlot(CNetPlayerInfo* pPlayer)
 {
@@ -9634,42 +9628,15 @@ void TSingleSelectionWindow::SetNewPlayerSlot(CNetPlayerInfo* pPlayer)
         return;
 
     { for (int pos = 0; pos < CNetPlayerHandler::MAX_PLAYERS; pos++) {
-            if (gpGame->setup.playerPos[pos] < 0)
-                continue;
-            CNetPlayerHandlerPlayer* player = m_players.GetPlayerInPos(pos);
-            if (!player)
-                player = m_players.GetCompPlayerInPos(pos);
-            if (!player)
-                continue;
-
-            const CMapHeaderData::TPlayerSlotAttributes& attributes =
-                gpGame->mapHeader.playerSlotAttributes[pos];
-            CNetPlayerHandlerPlayer* owner = m_players.GetPlayerInPos(pos);
-            if (!owner)
-                owner = m_players.GetCompPlayerInPos(pos);
-
-            int town;
-            if (!attributes.HasRandomAlignment
-                && get_alignment_count(static_cast<unsigned short>(
-                       attributes.legalAlignments)) <= 1)
-                town = pick_alignment(
-                    static_cast<unsigned short>(attributes.legalAlignments), 1);
-            else
-                town = owner->townIndex;
-            if (town != TOWN_CONFLUX)
-                continue;
-
-            player->townIndex = -1;
-            CNetPlayerHandlerPlayer* reset = m_players.GetPlayerInPos(pos);
-            if (!reset)
-                reset = m_players.GetCompPlayerInPos(pos);
-            if (!reset)
-                continue;
-            reset->townIndex = -1;
-            reset->heroIndex = -1;
-            MakeHeroFilter();
-            CheckFaces();
-            DrawHeroAdvancedOption(pos, 1, -1);
+            if (gpGame->setup.playerPos[pos] >= 0) {
+                CNetPlayerHandlerPlayer* player = m_players.GetPlayerInPos(pos);
+                if (!player)
+                    player = m_players.GetCompPlayerInPos(pos);
+                if (player && GetDisplayTown(pos) == TOWN_CONFLUX) {
+                    player->townIndex = eTownNeutral;
+                    UpdateTown(pos, eTownNeutral, 0);
+                }
+            }
         }
     }
 }
@@ -10045,6 +10012,12 @@ VA_COMPGEN(0x0058ff80, 0x31, IMPLICIT_COPY_CTOR, _Tree)
 // the row it calls per player after the header and campaign assignments.
 // (Slot 8 differs only by ICF: our vector<int>::operator= folded onto
 // retail's vector<TArtifact>::operator=.)
+// Exact after restoring the Dreamcast AI member (NB11 type 0x3591) at
+// Complete +0xf0: retail copies 30 dwords with rep movsd and skips the
+// preceding +0xec alignment pad. Flattening AI into arrays/scalars and a
+// byte pad gives 70.2441%, also expanding both shipyard _Construct calls.
+// The retained _Construct<type_point> calls fold onto retail's nine-byte
+// _Construct<widget*> at 0x404dc0: null guard plus one dword copy.
 VA_COMPGEN(0x0058f750, 0x30A, IMPLICIT_COPY_ASSIGN, playerData)
 
 // std::copy_backward<GameSelectionHeadersStruct*>: the element-only row the

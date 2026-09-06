@@ -578,57 +578,32 @@ void CChatManager::PlayerEnterMsg(const char* cChatMsg)
 // SendIt tail survives; RemoteCleanup arrives as the ClearChat fill loop
 // over twenty 0x88-byte CChatStr records and the DirectPlay teardown.
 //
-// Residual (50.55%): ONE over-inlined site. Retail CALLS
-// deque<CNetMsg*>::_Buyback at BOTH arms of the inlined push_back (0x552f42
-// and 0x552f73); we expand the second, dragging _Getmap, _Growmap, four
-// const_iterator constructors and a second operator new inline - 280 base
-// bytes against retail's 24.
-//
-// The cause is this tree's own RemoteCleanupInline scaffold, not a spelling.
-// VC6 charges an /Ob2 call site the CALLEE's front-end size, and a
-// __forceinline expansion is charged nothing, so the RemoteCleanup site here
-// consumes budget retail's plain `RemoteCleanup()` consumed - leaving the
-// LAST site in source order, HandlePlayerDrop, with a divisor of 1 and more
-// budget than retail had. Everything measured, all against the 50.5525
-// baseline:
-//   - caller-cb carriers are INERT in both directions: `if (0)` doses of
-//     1/3/6/12/30 statements are byte-flat to the digit, and so are 2..40 on
-//     top of every case order below. The knob is the sequential spend ORDER,
-//     not clamp(2*caller_cb, ...).
-//   - `#pragma inline_depth(1..5)` on the HandlePlayerDrop statement is
-//     byte-flat (only N=0 bites, again); N=0 gives 65.67 but turns
-//     HandlePlayerDrop into a call retail expands, so it is refused.
-//   - switch ARM ORDER is the live lever, because it moves how many sites
-//     remain after HandlePlayerDrop. With PING/PING_REPLY/DESTROY (the
-//     Dreamcast line order, 309/316/324, which is what stands here) the
-//     divisor is 1 and we over-inline: 50.55. Every order that leaves sites
-//     after the drop arm lands on the far side and UNDER-inlines push_back
-//     itself: DESTROY-first 72.36, PING/DESTROY/REPLY 72.81,
-//     REPLY/DESTROY/PING 79.00. No order sits on retail's decision, so the
-//     spread straddles it and none of them is the answer - REFUSED as a
-//     source change, since the DC line table fixes the order and 79.00 would
-//     only bank a compensation for the scaffold.
-//   - giving RemoteCleanup() the real body instead of the forwarder (so the
-//     site is charged) makes VC6 stop expanding it here entirely: 32.76.
-//     Making RemoteCleanupInline a plain `static` costs RemoteCleanup itself
-//     100.0 -> 0.74 and three more rows with it.
-// The honest fix is whatever lets a plain `RemoteCleanup()` both emit and
-// expand; until then this row is capped by the scaffold.
-//
-// The frame is 0x18 short (0x120 against retail's 0x138): retail gives the
-// RS_PING arm's CPingResponseMsg its own slot at [ebp-0x38] where our VC6
-// shares the CPlayerDropMsg's at [ebp-0x18]. A 280-byte function-scope
-// buffer reproduces 0x138 and [ebp-0x138] exactly and is worth +0.02, which
-// is not enough to invent the size on.
+// EXACT (2026-09-06). Two recovered source boundaries close the old 50.55%
+// residual without changing the Dreamcast switch order:
+// - RemoteCleanup calls the ordinary CChatManager::ClearChat (DC line 1412),
+//   rather than flattening it into a synthetic force-inline forwarding helper.
+//   The plain cleanup with the flattened loop under-inlines here (32.7626%);
+//   restoring ClearChat selects both retail _Buyback calls and all 26 blocks
+//   (99.9543%). RemoteCleanup and ClearChat themselves remain exact.
+// - The ping response is a full-expression temporary passed directly to the
+//   send call. DC line 310 passes the constructor result straight through;
+//   its debug inventory names only the separate char sTemp[256] local.
+//   Retail places the response at [ebp-0x38], below cleanup's 0x20-byte local,
+//   with the chat buffer at [ebp-0x138]. A named response local shares the
+//   drop message's [ebp-0x18] slot and reduces the frame to 0x120: those ten
+//   stack/frame operands are the entire 99.9543% residual. The temporary
+//   restores all ten. Taking its address is accepted by the retail VC6
+//   dialect; the object lives through TransmitRemoteDataDPID's full expression.
 VA(0x00552db0, 0x28F)  // anchor-caller(PollRemote 0x552b60) + anchor-callee(SendIt/AddChat/ShutDown) + dc-order-map, dc 0x11bc88
 unsigned char CDPlayHeroes::HandleLowLevelMsg(CNetMsg* pNetMsg)
 {
     switch (pNetMsg->subType) {
     case RS_PING:
         {
-            CPingResponseMsg sTemp(
-                static_cast<CPingMsg*>(pNetMsg)->m_pingTime, RS_PING_REPLY);
-            TransmitRemoteDataDPID(&sTemp, pNetMsg->field_04, false, false);
+            TransmitRemoteDataDPID(
+                &CPingResponseMsg(
+                    static_cast<CPingMsg*>(pNetMsg)->m_pingTime, RS_PING_REPLY),
+                pNetMsg->field_04, false, false);
         }
         break;
 
@@ -857,6 +832,8 @@ bool CDPlayHeroes::TransmitRemoteDataDPID(CNetMsg* pMsg,
 // shared epilogue but leaves the rotated loop's own fall-through `xor al,al`
 // tail behind - still 3 returns, still 88.8489. The surplus return is a
 // CONSEQUENCE of the rotation, not an independent merge to spell.
+// Polish 49 adds the third loop form to that list: `int retries = 0;
+// while (retries <= 5) { ...; ++retries; }` is byte-identical at 88.8550.
 VA(0x005533d0, 0x1AB)  // anchor-strings + virtual-slots + dc-order-map
 bool CDPlayHeroes::SendIt(CNetMsg* pMsg, unsigned long dpidTo,
                           bool guaranteed)
@@ -950,15 +927,14 @@ void CDPlayHeroes::SetNetMsgHandler(CNetMsgHandler* pNetMsgHandler)
 {
     CNetMsgHandler* pOld = m_pNetMsgHandler;
     m_pNetMsgHandler = pNetMsgHandler;
-    // Dreamcast remote.cpp:788-790 carries two nested lexical scopes: the
-    // old-handler test owns the outer scope and the installed-handler test
-    // owns the Copy scope.  The standalone x86 body lowers identically to a
-    // compound &&. Keep the source fact even though the measured Complete
-    // inline sites currently lower identically and the destructor's separate
-    // register-homing residual remains.
+    // Dreamcast remote.cpp:788-790 carries two nested scopes and reloads
+    // the installed member for the inner test and Copy receiver. Keep those
+    // member reads after the store: substituting pNetMsgHandler is exact in
+    // this standalone body but loses retail's pOld stack home in the base
+    // destructor (100% -> 41.875%) and its deleting wrapper (100% -> 78.125%).
     if (pOld) {
-        if (pNetMsgHandler) {
-            pNetMsgHandler->Copy(pOld);
+        if (m_pNetMsgHandler) {
+            m_pNetMsgHandler->Copy(pOld);
         }
     }
 }
@@ -1644,19 +1620,20 @@ unsigned char InitRemote(eNetGameType iMPType, const char* sUserName)
     return 1;
 }
 
-// Keep the body in one force-inlined helper. Retail emits the public function
-// below and also expands the same source body into HandleMPlayerLaunch; VC6
-// otherwise chooses only one of those outcomes once this TU grows past its
-// original inlining budget.
-static __forceinline void RemoteCleanupInline()
+// E:\gamedcs\remote.cpp:1411. Dreamcast calls the ordinary RemoteCleanup
+// from HandleLowLevelMsg, HandleMPlayerLaunch, LobbyLaunchConnect and
+// HandlePlayerDead; retain one canonical definition for all four callers.
+// Retail emits this body and independently expands it at those sites.
+// DC remote.cpp:1412 calls ClearChat. Keeping that call restores the exact
+// HandleLowLevelMsg expansion and leaves this function, ClearChat,
+// LobbyLaunchConnect and HandlePlayerDead exact. HandleMPlayerLaunch's current
+// score drops to 84.5139% with the canonical call; its 100% MAX remains banked.
+VA(0x005544b0, 0xAA)  // hd-crossbuild + dc-order-map
+void RemoteCleanup()
 {
     GameMode = 0;
     iMPNetProtocol = MP_SINGLE;
-    chatMan.msgCount = 0;
-    chatMan.changed = 1;
-
-    for (int i = 0; i < 20; ++i)
-        chatMan.msgArray[i].killTime = 0;
+    chatMan.ClearChat();
 
     if (gNetworkActive69954c) {
         if (pDPlay) {
@@ -1676,16 +1653,6 @@ static __forceinline void RemoteCleanupInline()
             gsThisNetPlayerInfo = playerInfo;
         }
     }
-}
-
-// E:\gamedcs\remote.cpp:1411
-// HD 0x5548a0 maps bijectively to this retail row. The twenty 0x88-byte
-// records are CChatManager::CChatStr entries; the store at +0x80 clears each
-// killTime before DirectPlay releases the local player and closes the session.
-VA(0x005544b0, 0xAA)  // hd-crossbuild + dc-order-map
-void RemoteCleanup()
-{
-    RemoteCleanupInline();
 }
 
 // E:\gamedcs\remote.cpp:1438
@@ -2076,7 +2043,7 @@ int CWaitForReadyPlayersDlg::OnPlayerDrop(CNetMsg* pNetMsg, message& msg)
 // modal at all. Constructor, AllPlayersReady, Wait and the complete
 // destructor chain are all expanded into this retail body by /Ob2.
 //
-// Residual (84.472046%): Dreamcast's condition/return scope is restored and
+// Residual (90.6522%): Dreamcast's condition/return scope is restored and
 // retail's single final CAnimatedDlg cleanup is now reproduced.  The remaining
 // structural delta is the ready-path CNetMsgHandler base cleanup: retail calls
 // the base destructor, while this compile expands its unhook body and gains two
@@ -2096,16 +2063,15 @@ void WaitForReadyToPlayMsg()
     dlg.Wait();
 }
 
-// E:\gamedcs\remote.h:632 - CNetMsgHandler::Copy. The popup byte comes off
-// the other handler's field directly; the abort message comes back through
-// its vtable slot 2.
-// E:\gamedcs\remote.h:632
+// E:\gamedcs\remote.h:632 - the canonical body lives with its accessors
+// in remote.h. Dreamcast calls IsInPopup before the virtual abort-message
+// getter; retail expands the first accessor and retains vtable slot 2.
+#if 0  // @carcass: claim-only, header-origin Copy body
 VA(0x00555150, 0x1C)  // anchor-vtable (slot 2 call of 0x640f14), dc 0x11f7e0
 void CNetMsgHandler::Copy(CNetMsgHandler* pOther)
 {
-    m_inPopup = pOther->m_inPopup;
-    m_pAbortPopupMsg = pOther->GetAbortPopupMsg();
 }
+#endif
 
 // E:\gamedcs\remote.h:658 and :659 - CNetMsgHandlerPause's two overrides,
 // slots 1 and 3 of vtable 0x640f04. Five bytes each: while a modal dialog
@@ -2443,7 +2409,7 @@ unsigned char HandleMPlayerLaunch()
         if (!connected) {
             NormalDialog(gpGeneralText->GetText(468), 1,
                          -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-            RemoteCleanupInline();
+            RemoteCleanup();
             return 0;
         }
     }
@@ -2477,7 +2443,7 @@ unsigned char LobbyLaunchConnect()
     if (gbMPlayer) {
         if (HandleMPlayerLaunch())
             return 1;
-        RemoteCleanupInline();
+        RemoteCleanup();
         return 0;
     }
 
@@ -2755,7 +2721,7 @@ void HandlePlayerDead(int deadGuy, unsigned char showMsg)
     gpGame->playerDisabled[deadGuy] = 1;
 
     if (deadGuy == gLocalGamePos) {
-        RemoteCleanupInline();
+        RemoteCleanup();
 
         if (showMsg) {
             strcpy(gText, gpGeneralText->GetText(96));
@@ -3853,8 +3819,8 @@ CNetMsgHandler::CNetMsgHandler()
     m_pAbortPopupMsg = 0;
 }
 
-// E:\gamedcs\remote.cpp:2834 - CNetMsgHandler::`scalar deleting destructor',
-// slot 0 of vtable 0x640f14. It is 0x45 rather than the usual 0x21 because
+// Complete's CNetMsgHandler::`scalar deleting destructor', slot 0 of
+// vtable 0x640f14. It is 0x45 rather than the usual 0x21 because
 // the destructor below is small and NOT EH-bearing, so /Ob2 inlines it here
 // while still emitting it out of line.
 VA_COMPGEN(0x00557810, 0x45, SCALAR_DELETING_DTOR, CNetMsgHandler)
@@ -3896,45 +3862,22 @@ CNetMsg* CNetMsgHandler::CheckHandleNet(unsigned char inPopup,
     return HandleNetMsg(pNetMsg);
 }
 
-// E:\gamedcs\remote.cpp:2834 - the destructor unhooks itself from the
-// network singleton, with both accessors inlined out of this same TU. No EH
-// frame, which is why the ??_G above inlines this whole body rather than
-// calling it, and why 0x557810 is 0x45 instead of 0x21.
+// Complete's virtual base destructor unhooks itself from the network
+// singleton, with both accessors expanded from this TU. There is no base-
+// destructor procedure in the Dreamcast corpus: the old dc:0x201f4 note was
+// inside IsInPopup (0x201e8..0x201f8), not a four-byte destructor.
 //
-// Residual (41.9%): the REGISTER-HOMING family, and one artefact does all
-// three rows here. Retail homes SetNetMsgHandler's `pOld` into the frame's
-// single local slot - `mov ecx,edx` then `mov [ebp-4],ecx`, a dword that is
-// written and never read - and keeps the EBP frame that home requires,
-// where our CL dead-stores it away and comes out frameless. The same two
-// instructions are the whole delta in ??_G (78.1%) and, beside one
-// eax/edx choice inside the inlined Copy, in ~CNetMsgHandlerPause (91.1%).
-// Tried and rejected: naming the fetched handler into a local in this body
-// (VC6 deletes it too); spelling SetNetMsgHandler's own `pOld` as a nested
-// GetNetMsgHandler() call, so the expansion is two levels deep; an
-// early-return `if (pDPlay == 0) return;`; and, re-measured 2026-08-22,
-// `pOld` constness, split declaration/assignment, and an alias to the member
-// slot. All produce byte-identical output in this body, ??_G, the derived
-// destructor, and the still-exact out-of-line setter.
-// Restoring SetNetMsgHandler's two Dreamcast S_BLOCK32 scopes (nested pOld
-// and pNetMsgHandler tests) is source-correct and remains ratcheted, but is a
-// measured negative control for this residual too: the three inlined rows do
-// not move. Nesting this destructor's own two tests is likewise identical.
+// Exact after restoring SetNetMsgHandler's installed-member reads. Retail's
+// `mov ecx,edx; mov [ebp-4],ecx` homes the old handler and retains an EBP
+// frame without EH. Reusing the setter argument instead removes that home
+// and frame (41.875%); the deleting wrapper falls to 78.125% too. The source
+// boundary matters even though the standalone setter is exact either way.
 //
-// Re-audited 2026-09-01 after this family reached the top of `vc6 queue`.
-// The retail/source structure pass is 4/4 flow-identical blocks and
-// predict-inline reports identical empty call multisets. why-reg finds no
-// applicable legal mutation: retail alone homes the inlined setter's dead
-// `pOld` in [ebp-4] and therefore retains EBP. A volatile `pOld` is the
-// negative control: it does create the frame/store, but also reloads the
-// slot, grows this destructor past retail, expands the derived destructor's
-// EH frame, and destroys the exact 48-byte out-of-line setter. The remaining
-// delta is not permission to invent a carrier or flatten the real helper.
-//
-// The rows are kept rather than withdrawn: without an out-of-line body here
-// ~CNetMsgHandlerPause cannot inline it at all - retail's 0x557ee0 shows
-// the 0x640f14 vptr store and the unhook block sitting inside it - and the
-// four exact CNetMsgHandlerPause rows depend on this class being modelled.
-VA(0x005578d0, 0x30)  // anchor-vtable (slot 0 chain of 0x640f14), dc 0x201f4
+// Other measured negatives: a local for GetNetMsgHandler's result, an early
+// null return, nested destructor tests, pOld constness, split assignment,
+// a member-slot alias, and a nested getter call are byte-flat. Volatile
+// creates extra reloads and breaks the setter; no carrier or pin is needed.
+VA(0x005578d0, 0x30)  // anchor-vtable: slot 0 chain of 0x640f14; Complete-only
 CNetMsgHandler::~CNetMsgHandler()
 {
     if (pDPlay && pDPlay->GetNetMsgHandler() == this)
@@ -4238,12 +4181,12 @@ VA_COMPGEN(0x00558500, 0x142, DEQUE_BUYBACK, CNetMsg)
 // E:\gamedcs\remote.cpp:3105 - put the parked handler back, then run the
 // base destructor. Both vptr stores are visible: 0x640f04 on entry, then
 // 0x640f14 before ~CNetMsgHandler's own body, which /Ob2 inlines here.
-// WALL 2026-09-01 (91.1111%): all 8 retail blocks and edges agree. Dreamcast
-// independently fixes the guarded SetNetMsgHandler(saved) statement and its
-// order; the residual is the same dead `pOld` home as the base destructor
-// plus one EAX/EDX choice inside the inlined Copy. why-reg finds no legal
-// mutation, while the volatile negative control above perturbs both the
-// positive DC shape and the already-exact setter.
+// Exact with both recovered helper boundaries: the setter's member reads
+// retain pOld's home (91.1111% -> 99.7778%), and Copy's IsInPopup call gives
+// the virtual abort-message call its retail EAX register (-> 100%). Flattening
+// that accessor to the field restores the two-instruction EDX mismatch while
+// Copy's standalone body stays exact. Dreamcast remote.h:633 names the call;
+// moving Copy back to its header is byte-flat in all three destructors.
 // E:\gamedcs\remote.cpp:3105
 VA(0x00557ee0, 0x91)  // anchor-vtable 0x640f04, dc 0x11f498
 CNetMsgHandlerPause::~CNetMsgHandlerPause()

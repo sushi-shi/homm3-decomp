@@ -1162,17 +1162,18 @@ void hero::initialize(short index)
         stat++;
     } while (--statCount);
 
+    // Both GiveSS calls here, and the third in SetSS, used to carry
+    // statement `inline_depth(0)` pins that held retail's out-of-line
+    // decision. All three are byte-flat now - /Ob2 declines GiveSS on cost
+    // at every one of these sites without help (2026-09-06, polish lane 50,
+    // measured one at a time and jointly).
     if (akHeroTraits[index].firstSkill != eSecSkillNone) {
-#pragma inline_depth(0)
         GiveSS(akHeroTraits[index].firstSkill,
                akHeroTraits[index].firstSkillLevel);
-#pragma inline_depth()
     }
     if (akHeroTraits[index].secondSkill != eSecSkillNone) {
-#pragma inline_depth(0)
         GiveSS(akHeroTraits[index].secondSkill,
                akHeroTraits[index].secondSkillLevel);
-#pragma inline_depth()
     }
     if (akHeroTraits[index].startsWithSpellbook)
         equipped[17].artifactId = artifact_from_int(ARTIFACT_SPELLBOOK);
@@ -2901,16 +2902,16 @@ void THeroScreenWindow::update_slot(long slot)
         }
     }
 
-    // Pinned at inline depth zero, the hero::initialize/GiveSS
-    // precedent: HeroFn_004E2840 has exactly one call site in this
-    // compiland so far, and /Ob2 expands a single-call-site EXTERN
-    // regardless of size - which retail does not do here (it CALLS
-    // 0x4e2840). The pin comes out when a second retail caller lands.
-#pragma inline_depth(0)
+    // This call used to be pinned at inline depth zero on the
+    // hero::initialize/GiveSS precedent: HeroFn_004E2840 then had exactly
+    // one call site in this compiland, and /Ob2 expands a single-call-site
+    // EXTERN regardless of size, which retail does not do here (it CALLS
+    // 0x4e2840). The note said the pin comes out when a second retail
+    // caller lands; handle_artifact_click is that caller, and both pins are
+    // byte-flat now (2026-09-06, polish lane 50).
     if (gHeroScreenDraggedArtifact.artifactId != ARTIFACT_NONE
         && gpCurrentHero->HeroFn_004E2840(
                gHeroScreenDraggedArtifact.artifactId, slot)) {
-#pragma inline_depth()
         update_artifact_slot(slot + 0x15, artifact);
         update_artifact_slot(slot + 2, 0x90);
     } else {
@@ -4017,16 +4018,16 @@ static void handle_artifact_click(long code, unsigned char right_mouse)
     if (gHeroScreenDraggedArtifact.artifactId != ARTIFACT_NONE) {
         if (right_mouse)
             return;
-        // Pinned per SITE, not per function: `predict-inline` reports
+        // Was pinned per SITE, not per function: `predict-inline` reported
         // HeroFn_004E2840 base x0 vs retail x1 inside WindowHandler, i.e.
-        // retail CALLS 0x4e2840 here where our CL expands it (this helper
+        // retail CALLS 0x4e2840 here where our CL expanded it (this helper
         // is itself a single-call-site static that /Ob2 folds into
-        // WindowHandler, so the budget reaches through). The sibling site
-        // in update_slot already carries the same pin.
-#pragma inline_depth(0)
+        // WindowHandler, so the budget reaches through). With two call
+        // sites in the compiland the expansion no longer happens, and this
+        // pin and update_slot's sibling are both byte-flat, so both went
+        // (2026-09-06, polish lane 50).
         if (!gpCurrentHero->HeroFn_004E2840(
                 gHeroScreenDraggedArtifact.artifactId, slot))
-#pragma inline_depth()
             return;
         if (record.artifactId != ARTIFACT_NONE) {
             gpCurrentHero->remove_artifact(slot);
@@ -4363,10 +4364,20 @@ static void show_hero_skills(int code, unsigned char right_mouse)
 // reports the RTM 8168 back end BYTE-IDENTICAL to SP3 (1089+327 on both
 // sides, sp3_vs_rtm 0; evidence/vc6/c2-generation-verdicts.tsv). If the
 // merge-set flip is generational at all, it is the FRONT END: retail's
-// Rich header carries 26 RTM-stamped C++ objects, hero.obj is a
-// candidate, and rtm-generation.md Â§4 already names the C1XX+C2 overlay
-// as the one unexplored generation lever - staged, hash-recorded, NOT
-// admitted; running it is a separate decision, not a lane action.
+// Rich header carries 26 RTM-stamped C++ objects and hero.obj was a
+// candidate.
+//
+// THE FRONT END IS NOW RULED OUT TOO (2026-09-06). `genab run --gen rtm-fe`
+// swaps C1XX 12.00.8168 in beside the RTM back end and sweeps all 146
+// units: this function's bytes are IDENTICAL on both sides (it is absent
+// from evidence/vc6/fe-generation-verdicts.tsv, which lists every function
+// that differs at all), and hero.obj's five functions that DO differ
+// (HeroFn_004E2550, equip_artifact, remove_artifact,
+// THeroScreenWindow::update_slot, update_spell_list) are all back-end-only
+// jb/jl loop-guard twins that move AWAY from retail. The captured IL is
+// byte-identical between the two front ends apart from its own two-byte
+// version word (rtm-generation.md §6), so there is no front-end lever
+// here. The merge-set flip is a model gap, not a vintage.
 //
 // THE FOURTH UpdateArmies CALL IS NOW EXPLAINED (2026-08-20), and this
 // corrects the earlier "nothing missing" diagnosis. In the selected-army
@@ -5775,11 +5786,11 @@ void THeroScreenWindow::SetupHeroView()
 // skill count at +0x101, and all three are `ret 8`.
 #endif  // @carcass
 
-// Exact after pinning only the GiveSS call at inline depth zero. Retail calls
-// all four in-TU GiveSS sites out of line even though the reconstructed body
-// is small enough for this VC6 /Ob2 compile to inline here; the localized pin
-// preserves retail's decision without changing GiveSS (it remains exact) or
-// suppressing unrelated inlining in the TU. Tried and rejected: two call sites;
+// Retail calls all four in-TU GiveSS sites out of line. This one carried a
+// statement `inline_depth(0)` pin to hold that; the pin is byte-flat now and
+// came out with initialize's two (2026-09-06, polish lane 50) - SetSS stays
+// exact and GiveSS stays exact and out of line without it.
+// Tried and rejected: two call sites;
 // `else if` chain vs early returns (identical bytes either way);
 // respelling GiveSS around a `signed char* pLevel = &skillLevel[i]`
 // local to buy inline cost - retail's own `lea edx,[esi+ecx+0xc9]`
@@ -5794,9 +5805,7 @@ void hero::SetSS(int iWhichSS, int iLevelToSet)
         return;
     }
     if (skillLevel[iWhichSS] == 0) {
-#pragma inline_depth(0)
         GiveSS(iWhichSS, iLevelToSet);
-#pragma inline_depth()
         return;
     }
     skillLevel[iWhichSS] = iLevelToSet;
@@ -6585,7 +6594,10 @@ unsigned char hero::GiveArtifact(const type_artifact* artifact,
                             HeroFn_004DBF30(targetCombo, -1);
                         }
                     }
-                    player.assembledCombinations.set(targetCombo);
+            // DEPTH LADDER: this ONE bitset write is spelled `[i] = true`
+            // rather than `set(i)`; the other two in this body stay `set`.
+            // 75.1012 -> 76.3360, and a greedy second round finds nothing.
+            player.assembledCombinations[targetCombo] = true;
                 }
             }
         }
@@ -7621,17 +7633,17 @@ int hero::GetManaCost(int iWhichSpell, const armyGroup* enemy,
 
 // The Dreamcast header's const overload is the source body folded through
 // hero::Fly. It remains distinct from Complete's emitted non-const overload
-// above, and the call pin preserves retail Fly's get_spell_level boundary.
+// above. The get_spell_level call carried an `inline_depth(0)` pin to hold
+// retail Fly's boundary; it is byte-flat and came out (2026-09-06, polish
+// lane 50).
 inline int hero::GetManaCost(int iWhichSpell, const armyGroup* enemy,
                              int magic_terrain) const
 {
     if (iWhichSpell == SPELL_TITANS_LIGHTNING_BOLT)
         return 0;
-#pragma inline_depth(0)
     int cost = akSpellTraits[iWhichSpell].mana_cost[
         const_cast<hero*>(this)->get_spell_level(
             iWhichSpell, magic_terrain)];
-#pragma inline_depth()
     if (enemy) {
         if (enemy->IsMember(CREATURE_PEGASUS)
             || enemy->IsMember(CREATURE_SILVER_PEGASUS))

@@ -303,13 +303,16 @@ inline const T& _cpp_max(T left, T right)
     return left < right ? right : left;
 }
 
-// seerhut.obj's list formatter, 0x56c960.  It joins a vector with the
-// localized final separator and returns the result through the usual hidden
-// std::string return buffer (ECX), with the vector reference in EDX under
-// this compiland's /Gr profile.  Unclaimed - declared so the three container
-// quest requirement builders can name the shared operation.
-std::string join_quest_requirements(
-    const std::vector<std::string>& requirements);
+// seerhuttext.obj's list formatter, 0x56c960 (JoinTextList, exact there).  It
+// joins a vector with the localized final separator and returns the result
+// through the usual hidden std::string return buffer (ECX), with the vector
+// reference in EDX under this compiland's /Gr profile.  Declared here rather
+// than through seerhuttext.h for the include-set reason format_string and
+// NormalDialog below carry.  The reloc census (2026-09-06) is what settled
+// the identity: retail's call at every one of the nine quest requirement
+// builders below targets 0x56c960, where this tree used to name an
+// undefined `JoinTextList`.
+std::string JoinTextList(const std::vector<std::string>& items);
 
 // kb.obj's centred message box, 0x4f6570 - kb.h declares it, but the ten
 // quest dialog bodies below are this compiland's only consumers of that
@@ -351,46 +354,34 @@ unsigned char type_quest::has_expired() const
 }
 
 
-// Slot 11's BASE body, the run every leaf chains to after its own payload.
-// The savegame form carries three fields the h3m form below does not: the
-// two-valued selector at +0x04, the text-table row at +0x38, and the
-// deadline. The three scalar reads keep their own nested scopes for the
-// reason recorded above type_experience_quest::Save - retail colours each
-// dead scratch over the incoming argument slot, and the flag lands in that
-// slot's padding byte at [ebp+0x0b].
-// The three string reads BIND THE BY-VALUE RETURN BY `const&` at FUNCTION
-// scope. Written as a plain `member = ReadLengthPrefixedString(file)` each
-// temporary dies at the end of its own full expression and VC6 expands
-// `~basic_string` down to the refcount test and `operator delete`; bound by
-// const reference the three temporaries live to the epilogue and retail's
-// out-of-line `_Tidy` calls come back. 25.6259 -> 49.7043 here and
-// 10.4998 -> 41.9271 on LoadFromMap, with blocks 32 -> 16 against retail's
-// 11 and branches 18 -> 9 against 6. Measured and rejected: the same
-// bindings BLOCK-scoped one statement each (21.97 / 6.64) - the lifetime
-// must reach the epilogue.
+// Slot 11's base body is the savegame counterpart of LoadFromMap: flag,
+// text-table row, deadline, then the same three length-prefixed strings.
+// Both bodies belong to Complete's replacement quest hierarchy; no Dreamcast
+// type_quest procedure supplies a source dossier.
 //
-// Residual (49.7% / 41.9%): ONE /Ob2 decision, three times over in each
-// body. Both sides call ReadLengthPrefixedString and both CALL
-// basic_string::assign(const basic_string&, size_type, size_type) - the
-// two objects agree instruction for instruction up to there - but retail
-// then CALLS basic_string::_Tidy on the dying temporary where ours expands
-// it, which is the whole 32-blocks-against-11 difference. hero::load's own
-// residual note records the same pair matching in a 1695-byte caller, so
-// this is the /Ob2 budget floor at a small caller and not a source fact;
-// the lever is a per-site pin, which this lane may not add.
-// E:\gamedcs\seerhut.cpp
-// MEASURED AND REJECTED (polish 29), all five against the 49.7043 baseline:
-// the three temporaries written as plain `proposalText = ReadLengthPrefixed-
-// String(file);` (25.63), each `const std::string&` binding wrapped in its
-// own block (21.97), `int row` read one byte wide so it shares the parameter
-// home with `extra` (48.83), the three reads folded into one block (49.60),
-// and `extra` hoisted to function scope (49.60). The 20-byte frame surplus is
-// real and unexplained by any of them: retail packs `extra` back into the
-// [ebp+8] parameter home that `flag`/`row` already used (we give it its own
-// -0x10) and reuses ONE string-temp slot for the first two strings while
-// keeping a second for the third, so its 0x20 frame holds two temps against
-// our three at 0x34. Retail's EH states run 0 / -1 / 1 / -1 / 2 - each
-// temporary destroyed before the next is built - where ours run 0 / 1 / 2.
+// Retail's EH states are 0 / -1 / 1 / -1 / 2: each returned string dies
+// before the next read. The first two temporaries share [ebp-0x1c] and the
+// third uses [ebp-0x2c]. Binding all three by const reference at function
+// scope raises MAX to 49.7043% / 41.9271%, but keeps three objects alive
+// together and contradicts those cleanups. Those peaks remain history; the
+// expression lifetimes restore the two-slot layout and cleanup ordering.
+//
+// Two inline boundaries remain: retail calls the FIRST temporary's _Tidy
+// and expands the other two, while retaining all three string assign calls.
+// The candidate expands that first cleanup and the final assign. The old
+// note claiming three retail _Tidy calls was wrong. Negative controls on
+// LoadFromMap: assign(ReadLengthPrefixedString(file)) and a value-returning
+// scalar reader are byte-flat to plain assignment (10.50%); separate
+// block-local string values give 6.64%, like block-local const references.
+// None recovers the missing boundaries, and a longer lifetime is not a fix.
+//
+// The short-lived form also recycles the incoming argument slot for the
+// row and deadline. Its byte-typed row lowers to retail's dword load and
+// mask; explicitly reading one byte into an int and masking is byte-flat,
+// so that instruction choice does not prove the source buffer was an int.
+// Earlier controls on the reference-bound Load were that dword row (48.83%),
+// one shared scalar block (49.60%), and hoisting extra (49.60%), against the
+// 49.7043% peak. Those results do not justify retaining the wrong lifetimes.
 VA(0x0056cd00, 0x14F)  // anchor-vtable 0x64174c slot 11 + the chain from all eight leaf Loads, retail-only
 void type_quest::Load(TAbstractFile* file, int version)
 {
@@ -409,12 +400,9 @@ void type_quest::Load(TAbstractFile* file, int version)
         file->Read(&extra, sizeof(extra));
         field_3c = extra;
     }
-    const std::string& proposal = ReadLengthPrefixedString(file);
-    proposalText = proposal;
-    const std::string& progress = ReadLengthPrefixedString(file);
-    progressText = progress;
-    const std::string& completion = ReadLengthPrefixedString(file);
-    completionText = completion;
+    proposalText = ReadLengthPrefixedString(file);
+    progressText = ReadLengthPrefixedString(file);
+    completionText = ReadLengthPrefixedString(file);
 }
 
 // Slot 12's base body: the h3m form. Same three strings, but only the
@@ -438,6 +426,11 @@ void type_quest::Load(TAbstractFile* file, int version)
 // take the direct-assignment form WITH the pins and not the current spelling.
 // Also measured and rejected: block-scoping each `const std::string&` binding
 // so the temporaries die per statement WITHOUT changing the binding, 6.6354.
+// 2026-09-06: the section-6b `operator=` -> `assign` rung, applied to all
+// three assignments in BOTH this body and type_quest::Load, is byte-flat to
+// the digit (41.9271 / 49.7043 unchanged). VC6's `operator=(const string&)`
+// is the pure forwarder the doc warns about here, so the ladder has no rung
+// to give at these sites; the `_Tidy` decision is untouched by it.
 VA(0x0056ce50, 0x11E)  // anchor-vtable 0x64174c slot 12 + the chain from all eight leaf LoadFromMaps, retail-only
 void type_quest::LoadFromMap(TAbstractFile* file)
 {
@@ -446,12 +439,9 @@ void type_quest::LoadFromMap(TAbstractFile* file)
         file->Read(&extra, sizeof(extra));
         field_3c = extra;
     }
-    const std::string& proposal = ReadLengthPrefixedString(file);
-    proposalText = proposal;
-    const std::string& progress = ReadLengthPrefixedString(file);
-    progressText = progress;
-    const std::string& completion = ReadLengthPrefixedString(file);
-    completionText = completion;
+    proposalText = ReadLengthPrefixedString(file);
+    progressText = ReadLengthPrefixedString(file);
+    completionText = ReadLengthPrefixedString(file);
 }
 
 
@@ -750,7 +740,10 @@ void type_skill_quest::DoProposalDialog(hero* current_hero)
     signed char missing[4];
     for (int i = 0; i < 4; ++i) {
         int have = current_hero->GetPrimarySkill(i);
-        int required = required_skills[i];
+        // BOUND BY `const int&`: retail re-reads the requirement at both
+        // the compare and the store rather than keeping a copy live.
+        // 75.4324 -> 80.8108.
+        const int& required = required_skills[i];
         missing[i] = required > have ? required : 0;
     }
 
@@ -762,7 +755,7 @@ void type_skill_quest::DoProposalDialog(hero* current_hero)
         std::vector<type_dialog_resource> dialogResources;
 #pragma inline_depth()
         type_dialog_resource resource;
-        for (int i = 0; i < 4; ++i) {
+        for (unsigned int i = 0; i < 4; ++i) {
             if (missing[i] > 0) {
                 resource.resource = 0x1f + i;
                 resource.qualifier = 0x10000
@@ -785,9 +778,11 @@ void type_skill_quest::DoProposalDialog(hero* current_hero)
         const std::string* texts = quest_texts();
         std::string text = format_string(
             texts[QUEST_TEXT_PROGRESS].c_str(), requirementPointer);
-#pragma inline_depth(0)
+        // Unpinned 2026-09-06 (polish lane 50): the `inline_depth(0)` pin
+        // that stood on this append is worth -1.39640 -
+        // DoProposalDialog 75.43243 -> 76.82883, a new MAX - and nothing
+        // else in the TU moves. Its four siblings in this body stay.
         text += get_time_limit_text();
-#pragma inline_depth()
         const char* textPointer = text.c_str();
 #pragma inline_depth(0)
         {
@@ -816,11 +811,24 @@ void type_skill_quest::DoProposalDialog(hero* current_hero)
 // Slot 5 presents one primary-skill picture for every positive requirement.
 // The picture class advances from 0x1f with the skill index, while the
 // qualifier packs the displayed value below a high-word one.
-// Residual (75.8427%): semantics and all twelve CFG blocks agree, but retail
+// THE PICTURE LOOP IS A POINTER WALK WITH ITS OWN DOWN-COUNTER (75.8427 ->
+// 76.2136, 2026-09-06).  Retail's tail is `inc esi / dec ebx / jne` with
+// `mov ebx,4` ahead of it and the picture id strength-reduced into
+// `mov edi,0x1f / sub edi,esi / lea edx,[edi+esi]`; an indexed
+// `for (int i = 0; i < 4; ++i)` gives VC6 TWO reductions (0xdf-this and
+// 0xc0-this) and rebuilds the bound as `lea eax,[ecx+esi] / cmp eax,4 / jl`,
+// with no counter at all.  Spelled with the three explicit induction
+// variables the reductions collapse to retail's one and the down-counter
+// appears.  Measured and rejected: the two-variable form that derives the
+// picture id from `skill - required_skills` (65.37) - VC6 needs the id as its
+// own variable to produce the `0x1f - esi` invariant.
+// Residual (76.2136%): semantics and all twelve CFG blocks agree, but retail
 // keeps the GetProgressDialogText return object alive while taking c_str()
 // directly from the returned EAX; this CL invocation reloads the same string
 // slot before the vector loop and consequently chooses a different register
-// schedule. Tried and rejected: a named string alone, a bare c_str pointer
+// schedule.  The counter is the visible cost of that: retail spends EBX on it
+// while ours pools the constant 0 there (`cmp al,bl` against retail's
+// `test al,al`) and spills `remaining` to [ebp-0x14]. Tried and rejected: a named string alone, a bare c_str pointer
 // (destroys the temporary before the loop), a named string plus saved pointer,
 // and the lifetime-extending const reference below. VC6's accepted non-const
 // temporary-reference extension is byte-identical to the const form, so it
@@ -834,15 +842,25 @@ void type_skill_quest::DoProgressDialog()
     const std::string& text = GetProgressDialogText();
     const char* textPointer = text.c_str();
     std::vector<type_dialog_resource> dialogResources;
-    for (int i = 0; i < 4; ++i) {
-        if (required_skills[i] > 0) {
+    // MAX 76.5169 was measured with the indexed loop written `i != 4` - an
+    // unnamed domain compare that fails the cleanliness floor
+    // (docs/vc6/behavior-catalog.md D24); the pointer walk below is the
+    // best admissible form (76.2135).
+    const signed char* skill = required_skills;
+    int picture = 0x1f;
+    int remaining = 4;
+    do {
+        if (*skill > 0) {
             type_dialog_resource resource;
-            resource.resource = 0x1f + i;
+            resource.resource = picture;
             resource.qualifier = 0x10000
-                | static_cast<unsigned short>(required_skills[i]);
+                | static_cast<unsigned short>(*skill);
             dialogResources.push_back(resource);
         }
-    }
+        ++skill;
+        ++picture;
+        --remaining;
+    } while (remaining);
     extended_dialog(textPointer, dialogResources, -1, -1, 0);
 }
 
@@ -916,7 +934,7 @@ std::string type_skill_quest::skill_requirement_text(
                 gPrimarySkillNames[i], required_skills[i]));
         }
     }
-    return join_quest_requirements(requirements);
+    return JoinTextList(requirements);
 }
 // E:\gamedcs\seerhut.cpp
 // Residual (96.53%): the CFG is exact (13 branches and two returns on both
@@ -1405,7 +1423,7 @@ std::string type_artifact_quest::GetRequirementText()
     std::vector<std::string> requirements;
     for (unsigned i = 0; i < artifacts.size(); ++i)
         requirements.push_back(akArtifactTraits[artifacts[i]].name);
-    return join_quest_requirements(requirements);
+    return JoinTextList(requirements);
 }
 // The three CONTAINER leaves take their vararg from slot 6 - a real
 // virtual call on `this`, which is what the `call dword ptr [eax+0x18]`
@@ -1479,7 +1497,7 @@ void type_artifact_quest::DoProposalDialog(hero* current_hero)
         std::string textFormat = texts[QUEST_TEXT_PROGRESS];
         std::string text = format_string(
             textFormat.c_str(),
-            join_quest_requirements(requirements).c_str());
+            JoinTextList(requirements).c_str());
         textPointer = text.c_str();
         std::vector<type_dialog_resource> dialogResources;
         type_dialog_resource resource;
@@ -1502,7 +1520,12 @@ void type_artifact_quest::DoProposalDialog(hero* current_hero)
         for (unsigned i = 0; i < missingArtifacts.size(); ++i) {
             resource.resource = 8;
             resource.qualifier = missingArtifacts[i];
-            dialogResources.push_back(resource);
+            // DEPTH LADDER (docs/vc6/inliner.md 6b): this append alone is
+            // spelled `insert(end(), x)`; the two in the sibling arm above
+            // stay `push_back`.  89.1000 -> 92.0556.  Per-site: the two
+            // sibling sites give 91.6667 each, all three together 85.7667,
+            // and a greedy second round over the survivors finds nothing.
+            dialogResources.insert(dialogResources.end(), resource);
         }
         extended_dialog(textPointer, dialogResources, -1, -1, 0);
     }
@@ -1671,7 +1694,7 @@ std::string type_creature_quest::GetRequirementText()
             counts[i], GetArmyName(types[i], counts[i]));
         requirements.push_back(requirement);
     }
-    return join_quest_requirements(requirements);
+    return JoinTextList(requirements);
 }
 // E:\gamedcs\seerhut.cpp
 VA(0x00570690, 0xCF)  // anchor-vtable 0x6418b4 slot 7 + the shared text-table shape, retail-only
@@ -1749,7 +1772,7 @@ void type_creature_quest::DoProposalDialog(hero* current_hero)
         std::string textFormat = texts[QUEST_TEXT_PROGRESS];
         text = format_string(
             textFormat.c_str(),
-            join_quest_requirements(requirements).c_str());
+            JoinTextList(requirements).c_str());
     } else {
         text = progressText;
     }
@@ -1801,9 +1824,9 @@ void type_creature_quest::DoProgressDialog()
                 textFormat += get_time_limit_text();
             text = format_string(
                 textFormat.c_str(),
-                join_quest_requirements(requirements).c_str());
+                JoinTextList(requirements).c_str());
         } else {
-            text = GetProposalDialogText();
+            text = GetProgressDialogText();
         }
         extended_dialog(text.c_str(), dialogResources, -1, -1, 0);
     }
@@ -1975,7 +1998,7 @@ std::string type_resource_quest::GetRequirementText()
             requirements.push_back(requirement);
         }
     }
-    return join_quest_requirements(requirements);
+    return JoinTextList(requirements);
 }
 // E:\gamedcs\seerhut.cpp
 VA(0x005716e0, 0xCF)  // anchor-vtable 0x6418f0 slot 7 + the shared text-table shape, retail-only
@@ -2054,7 +2077,7 @@ void type_resource_quest::DoProposalDialog(hero* current_hero)
         std::string textFormat = texts[QUEST_TEXT_PROGRESS];
         text = format_string(
             textFormat.c_str(),
-            join_quest_requirements(requirements).c_str());
+            JoinTextList(requirements).c_str());
     } else {
         text = progressText;
     }
@@ -2152,7 +2175,7 @@ void type_resource_quest::SetDefaultText()
             requirements.push_back(requirement);
         }
     }
-    requirement = join_quest_requirements(requirements);
+    requirement = JoinTextList(requirements);
     if (proposalText.length() == 0)
         proposalText = format_string(texts[QUEST_TEXT_PROPOSAL].c_str(),
                               requirement.c_str());
@@ -2708,17 +2731,9 @@ int TSeerHut::getValue(hero* currentHero)
     if (!(visitedPlayers & (1 << currentHero->owner)))
         return _cpp_max(value, 20);
 
-    if (quest) {
-        bool expired = false;
-        if (quest->field_3c >= 0) {
-            short days = (gpGame->field_1f642 * 4
-                + gpGame->field_1f640 - 5) * 7 + gpGame->field_1f63e;
-            expired = quest->field_3c < days;
-        }
-
-        if (!expired && quest->is_satisfied(currentHero))
-            return value - quest->GetAIValue(currentHero->owner);
-    }
+    if (quest && !quest->has_expired()
+        && quest->is_satisfied(currentHero))
+        return value - quest->GetAIValue(currentHero->owner);
 
     return 0;
 }
@@ -2730,53 +2745,44 @@ int TSeerHut::getValue(hero* currentHero)
 // reward application. A hut with no quest records the visit and shows one of
 // three randomized empty-hut lines to a human player.
 //
-// Residual (44.4753%, banked MAX 46.3642%): the first helper restoration left
-// acceptance/payment/reward in this caller and reached the MAX, but
-// Dreamcast's DoCompletionDialog dossier positively places that accepted tail
-// inside the helper. The retained source restores that ownership and returns
-// through the helper on the human arm; retain that evidence-backed ownership.
-// dc_source_shape now ratchets it. VC6 still leaves both EH-bearing helpers as
-// calls in this otherwise frameless caller: 26 candidate blocks against
-// retail's 59, with 33 target-only helper blocks. Moving their definitions
-// before this body, `inline`, and `__forceinline` before/after visibility were
-// byte-flat. Re-measured 2026-09-01: statement-scoped rand/format_string pins,
-// a sole-caller auto_inline fence on GetRewardExtra, the completion line-gap
-// invariant, and tightly scoped names for both real string temporaries are
-// byte-flat as well. An `if (0)` probe
-// with two dead std::string declarations made both helpers expand and measured
-// 95.1173% (13 calls on each side), but it was only an inliner instrument and
-// was removed. At that peak the sole residual was the completion temporary's
-// cleanup: candidate `_Tidy` x4/delete x0 against retail `_Tidy` x3/delete x1.
-// Keep the helper ownership and remeasure after coherent surrounding source
-// changes compiler state; do not add a synthetic carrier here. A 2026-09-01
-// probe replaced the AI arm with a call to the exact TSeerHut::getValue body
-// and marked that helper inline. It restored 26 caller blocks but suppressed
-// the retail-proven standalone function (100% -> absent) and lowered this row
-// to 42.5710%. Dreamcast DoSeerEvent calls neither getValue nor an equivalent
-// helper, so that inference was reverted rather than made fatal.
-// 2026-09-05 titration (not shipped): eight dead plain statements are
-// byte-flat at 44.48, ONE dead `std::string` takes the row to 83.56 with
-// both helpers expanded - the enabler is the caller's own EH frame, not
-// the /Ob2 budget. Defining both helpers `inline` before this body is
-// byte-flat. Retail's unwind map numbers DoEmptyDialog's two objects 0/1
-// and the completion temporary 2 (ours, once framed, numbers the
-// completion temporary 0), so its front end registered the no-quest
-// arm's objects first; retail's frame holds nothing beyond the three
-// helper temporaries ([-0x20] shared by both arms, [-0x30]). No
-// Dreamcast-proven construct supplies the frame from this caller.
+// Retail's null-quest branch (+0x24) and expired-deadline branch (+0x66)
+// both reach +0x2c7: record the visit, then show DoEmptyDialog to a human.
+// An expired quest must not return before that path. The empty arm comes
+// first in DC seerhut.cpp:151-154 and owns retail unwind states 0/1;
+// the completion temporary is state 2. FuncInfo 0x654048 has maxState 3,
+// unwind map 0x654068 and NO try blocks: no catch scope is missing.
+//
+// The Complete AI arm duplicates the admitted getValue method's reward,
+// visit-mask, expiry and satisfaction logic. Keep one ordinary helper.
+// A call to its old flattened-expiry body stayed out of line (27.17%).
+// Restoring the existing has_expired boundary inside it makes VC6 expand
+// getValue naturally (42.5710%) while its standalone body stays 100%.
+// The old inline-keyword probe removed that standalone body; it is not
+// needed. Both has_expired and getValue remain ordinary TU definitions.
+//
+// Remaining frontier: DoEmptyDialog and DoCompletionDialog stay out of
+// line in this frameless caller (26 versus 59 blocks). Dreamcast's
+// DoCompletionDialog owns acceptance, payment and reward; keep that source
+// ownership. Banked MAX 46.3642 predates the ownership correction.
+// Historical controls: helper definitions moved before the caller,
+// inline/forceinline declarations, scoped rand/format_string depth pins,
+// a GetRewardExtra auto-inline fence, the completion line-gap invariant,
+// and named string temporaries did not remove the frontier. Eight dead
+// plain statements were flat; one dead std::string enabled both helpers
+// (83.56%), and a two-string diagnostic reached 95.1173 with four _Tidy
+// calls against retail's three plus delete. These were instruments only;
+// no dead objects, synthetic carrier or inline fence belongs in this body.
+// Main-branch controls additionally found dropping inline from GetRewardType
+// byte-flat. Its unframed early-no-quest variant measured 36.4529%; that
+// control does not settle source order after the helper expansions return.
 VA(0x00573670, 0x400)  // code plus two retail switch tables in the admitted row
 void TSeerHut::DoSeerEvent(hero* current_hero, bool human_player)
 {
-    if (quest) {
-        bool expired = false;
-        if (quest->field_3c >= 0) {
-            expired = quest->field_3c < static_cast<short>(
-                (gpGame->field_1f642 * 4 + gpGame->field_1f640 - 5) * 7
-                + gpGame->field_1f63e);
-        }
-        if (expired)
-            return;
-
+    if (!quest || quest->has_expired()) {
+        visitedPlayers |= 1 << gNetLocalGamePos;
+        if (human_player)
+            DoEmptyDialog();
+    } else {
         if (human_player) {
             if (!(visitedPlayers
                   & (1 << static_cast<unsigned char>(gNetLocalGamePos))))
@@ -2794,26 +2800,7 @@ void TSeerHut::DoSeerEvent(hero* current_hero, bool human_player)
             return;
         }
 
-        int value = reward.getValue(current_hero);
-        if (!(visitedPlayers & (1 << current_hero->owner))) {
-            value = _cpp_max(value, 20);
-        } else {
-            if (!quest)
-                return;
-            expired = false;
-            if (quest->field_3c >= 0) {
-                expired = quest->field_3c < static_cast<short>(
-                    (gpGame->field_1f642 * 4
-                     + gpGame->field_1f640 - 5) * 7
-                    + gpGame->field_1f63e);
-            }
-            if (expired)
-                return;
-            if (!quest->is_satisfied(current_hero))
-                return;
-            value -= quest->GetAIValue(current_hero->owner);
-        }
-        if (value <= 0)
+        if (getValue(current_hero) <= 0)
             return;
 
         quest->TakePayment(current_hero);
@@ -2821,10 +2808,6 @@ void TSeerHut::DoSeerEvent(hero* current_hero, bool human_player)
         quest = 0;
         return;
     }
-
-    visitedPlayers |= 1 << gNetLocalGamePos;
-    if (human_player)
-        DoEmptyDialog();
 }
 
 // Dreamcast preserves this private helper at dc 0x12d158 and places it after
@@ -2948,7 +2931,7 @@ int TSeerReward::getValue(const hero* currentHero)
         playerData* player = const_cast<hero*>(currentHero)->get_player();
         quantity = value.resource.quantity;
         return static_cast<int>(
-            quantity * player->resourceValue[value.resource.resourceType]);
+            quantity * player->ai.resource_value[value.resource.resourceType]);
     }
 
     case eRewardPrimarySkill:
@@ -3440,6 +3423,60 @@ void TSeerHut::read(TAbstractFile* infile)
 // removes an extra constructor-argument copy and raises MAX to 35.3825%.
 // Retail reads through [ebp+8], then keeps the masked row at [ebp-0x1c]; a
 // single address-taken textRow used for both roles was the 30.4931% control.
+// 2026-09-06: the section-6b `push_back(x)` -> `insert(end(), x)` rung on the
+// shared three-argument constructor LOSES at both of its call sites - this
+// row 35.3825 -> 30.7962 and TSeerHut::read (0x574610) 86.8092 -> 86.7912 -
+// so the constructor keeps `push_back`. That rung is now measured here; do
+// not re-sweep it. (It is also the WRONG DIRECTION: push_back -> insert
+// removes a level, and this row needs the leaf pushed one level further OUT,
+// not in.)
+// 2026-09-06 (polish lane 44), the residual LOCATED to one decision, and two
+// standing hypotheses closed:
+//   * The boundary is `vector<TArtifact>::insert(iterator, const T&)`.
+//     Retail CALLS it (delinked as `vector<int>::insert`, ICF-folded on the
+//     4-byte element, at +0x182); we expand it, and that single decision is
+//     the whole 26-blocks/15-branches against retail's 10/5 - it drags in
+//     ELEVEN base-only calls that retail does not make at all: `size`,
+//     `_Ucopy` x3, `_Ufill` x2, `_Destroy`, operator new, operator delete.
+//     Everything else agrees: both sides expand the type_artifact_quest
+//     constructor (SetDefaultText stands at +0x2cb on both), and the four
+//     `_Tidy` / 0x5157d0 rows are ICF label noise, not divergence.
+//   * NOT a pasted helper. The tree-wide census (claimed short bodies matched
+//     modulo identifier renames against every statement window in src/ and
+//     include/) reports nothing in seerhut.obj; its one hit here,
+//     type_quest::LoadFromMap inside type_quest::Load, is the two sibling
+//     vtable slots 11 and 12 sharing their trailing three-string run, which
+//     no call could express.
+//   * NOT a missing early statement. `sema diff --source` walks the <28 arm
+//     with every read group `==` from `infile->Read(&int_buffer, ...)` through
+//     the sixth byte; the first `!!` after the prologue is the textBuffer slot
+//     alone.
+// 2026-09-06 (polish lane 46), the NEGATIVE CONTROL the located residual
+// was missing, read off the DECISION rather than the score (so the missing
+// code the old probe measured does not confuse it): deleting the ENTIRE
+// >=28 arm - every Read, the `create_quest` call site and all four member
+// stores - leaves `insert` expanded exactly as before.  predict-inline
+// still reports `?insert@?$vector@HV?$allocator@H@std@@@std@@QAEPAHPAHABH
+// @Z` base x0 / retail x1; the only row that moves is `create_quest`, which
+// joins it because the site is gone.  So caller-shrink does not reach this
+// site: `budget = 2*cb(TSeerHut::load)` is clamped here, and the decision
+// belongs to the depth-3 quotient `budget/(n-k)` handed down through the
+// type_artifact_quest constructor and push_back's own two sites.  Retail's
+// argument binding is not the difference either - its inlined constructor
+// homes the by-value `artifact` at [ebp-0x18] for `push_back(const T&)` to
+// take the address of, then RE-READS that home for the
+// `gpGame->artifactDisabled[artifact]` store at 0x574be1, which is what our
+// spelling already emits.  Same wall class as smackmgr ShowVideo's.
+//
+// The 8-byte frame surplus (our `sub esp,0x1c` against retail's 0x14) is
+// downstream of that same expansion, not a source fact: retail packs the
+// reused `value` byte at [ebp+0xb] and `textBuffer` at [ebp+8] - both inside
+// the PARAMETER HOME, free because infile and saveVersion die into esi/ebx in
+// the prologue - and keeps `this` in edi, where our register pressure spills
+// it to [ebp-0x24]. Shrinking the caller cannot be measured directly here:
+// the >=28 arm is too large a share of the row's bytes for its removal to be
+// read as a budget signal (gutting it measures 20.03, which is the missing
+// code, not the budget).
 //
 // The savegame reader and the exact mirror of save (0x573fd0): NewfullMap
 // ::Load calls it on every element of the SeerHutList it has just resized,

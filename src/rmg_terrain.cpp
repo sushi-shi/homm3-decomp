@@ -4,14 +4,11 @@
 // ownership, field layout, helper boundaries, and call/expansion decisions in
 // this unit therefore come directly from the retail x86 cluster.
 #include <va.h>
-#define _MT
-#include <yvals.h>
-#undef _MT
 #include "rmg_terrain.h"
 #include "exceptions.h"
 #include "tiles.h"
 
-DATA(0x00642BD8) extern TRmgTerrainRule* gRmgTerrainRules[];
+DATA(0x00642BD8) extern TRmgTerrainRule* const gRmgTerrainRules[];
 
 // Provisional role spelling. The fastcall ABI and two-byte output are fixed
 // by the call at 0x5b5f4e. All selector names are provisional retail roles.
@@ -392,6 +389,16 @@ void TRmgTerrainPainter::RepairTerrainPoint(const TRmgGridPoint& point)
 // set comparator and the retained grid constructor. It changes the nested
 // accessor expansion here (74.76 -> 42.02%); retain the proven type and its
 // historical peak while recovering this caller's original helper surface.
+// Before the unsigned-grid correction (74.7623%), the candidate retained
+// seven of retail's first twelve GetPackedCell calls and expanded five only
+// as far as InitializePackedCell. Both cache helpers remain exact.
+// Retail also evaluates GetTransitionStrength before loading the rule's
+// virtual receiver (as in neighboring 0x5b4960); spelling two strength locals
+// reproduced that order but changed earlier inlining (41.51%). Earlier
+// rejected controls: GetTerrain via GetTile adds eleven calls (75.28%);
+// reversed dimension product, explicit vector fill, postfix edge increments,
+// function-scope terrain, transition initializer, and earlier tile declaration
+// are byte-flat. These do not establish the missing source/helper state.
 VA(0x005B5A70, 0x8A7)  // caller cluster reaches Complete RMG; retail-only
 void TRmgTerrainPainter::PaintTransitions()
 {

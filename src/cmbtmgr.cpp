@@ -2054,14 +2054,25 @@ float combatManager::ComputeDamageModifier(int attack, int defense)
     // @stub
 }
 
-// E:\gamedcs\cmbtmgr.cpp:2738
+#endif  // @carcass
+
+// Dreamcast cmbtmgr.cpp:2738..2752. Complete expands this ordinary helper
+// into CalculateGainedExperience. The helper owns the stack loop, both
+// army::Is calls (line 2745), and the defeated-hero bonus (2749/2750).
 DC_ONLY(0x60220, 0xF8)
 int combatManager::ExperienceValueOfStack(int whichGroup)
 {
-    // @stub
+    int total = 0;
+    for (int slot = 0; slot < 20; ++slot) {
+        const army& a = armies[whichGroup][slot];
+        if (a.creatureType != -1 && !a.Is(1u << 22) && !a.Is(1u << 6))
+            total += (a.origNumTroops - a.numTroops)
+                * akCreatureTypeTraits[a.creatureType].hitPoints;
+    }
+    if (heroes[whichGroup])
+        total += 500;
+    return total;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:2756
 VA(0x00465fe0, 0x29)  // anchor-global, dc 0x60318
@@ -4624,9 +4635,7 @@ static int loot_equipped_slot(hero* winner, hero* dead, int slot,
         return 0;
     dead->remove_artifact(slot);
     std::vector<type_artifact>::iterator where = loot->end();
-#pragma inline_depth(0)
     loot->insert(where, 1, artifact);
-#pragma inline_depth()
     return 1;
 }
 
@@ -4672,72 +4681,27 @@ void combatManager::LootDeadHero(int side,
 }
 
 // E:\gamedcs\cmbtmgr.cpp:4948
-// The award is priced in CREATURES DESTROYED, not damage: the walk
-// takes origNumTroops - numTroops on every LOSING-side stack and
-// multiplies it by that creature's table hitPoints. `armies` is walked
-// as a strength-reduced pointer parked on creatureId (+0x84), which is
-// why the three surviving fields read as -0x50 / -0x38 / -0x24 off it.
-// The two creatureId gates are IsWinner's byte-local idiom again -
-// bit 22 and bit 6, each shifted into a byte before the test - and
-// they are separate `unsigned char` locals for the same reason: one
-// shared dword expression would make our CL work in EAX where retail
-// works in CL.
-// The tail's float round-trip is /Op single precision: the factor
-// comes back in st(0), the total is pushed with fild and spilled
-// through a DWORD slot before the fmul, so the product is computed at
-// float width and not double.
-// Residual (75.0%): register-homing family, and ONLY that - all 17
-// blocks are flow-identical and 10 are byte-identical, including the
-// whole loop core and the fild/fstp/fmul round trip. Retail carries
-// `total` in EBX and WRITES THROUGH to [ebp-4] after each of the three
-// +-500 adjustments, spilling the loop counter and `this` instead; our
-// CL spills `total` to [ebp-4] outright and keeps the counter and
-// `this` in registers. That one choice is the entire delta: it turns
-// retail's `add ebx,imm / mov [ebp-4],ebx` pairs into single
-// read-modify-writes and drops the three callee-saved pops from both
-// tails. Tried and rejected: an explicit pointer walk instead of
-// `armies[other_side][slot]` (fixes B0's size and gains a block but
-// costs fuzzy overall, 73.90%); `if (heroes[side] == 0) { ...; return; }`
-// instead of the if/else (inverts B14 and swaps both tails).
-// Re-swept 2026-08-08 against the whole day's lever set: `total`
-// declared before other_side, `int` instead of `long` (either order),
-// a `long` loop index, and a pointer cursor over the row - the first
-// four are byte-identical at 75.01 and the cursor is worse (73.90,
-// already recorded above). Nothing in the source picks which of
-// `total` and `this` gets the register; it is the same first-callee-
-// saved tie-break as ai_tactical's get_hex_attack_value.
+// Exact after restoring ExperienceValueOfStack(1 - side), including its
+// two army::Is calls and defeated-hero bonus, and keeping the final output
+// assignment outside the Learning-bonus conditional (DC line 4963).
+// The ordinary cpp helper expands completely in retail and in this build.
+// Flattening its loop and manually spelling the bit tests scored 75.0110%:
+// the candidate spilled total and kept this/counter in registers, while
+// retail does the reverse. The source helper restores all 17 blocks and
+// both return paths without an inline pin or register-directed temporary.
 VA(0x0046a350, 0x10C)  // anchor-global, dc 0x6388c
 void combatManager::CalculateGainedExperience(int side, int* experience_gained)
 {
-    int other_side = 1 - side;
-    long total = 0;
-    for (int slot = 0; slot < 20; slot++) {
-        const army& a = armies[other_side][slot];
-        if (a.creatureType == -1)
-            continue;
-        unsigned char high = static_cast<unsigned char>(
-            static_cast<unsigned>(a.sMonInfo.attributes) >> 22);
-        if (high & 1)
-            continue;
-        unsigned char flags = static_cast<unsigned char>(
-            static_cast<unsigned>(a.sMonInfo.attributes) >> 6);
-        if (flags & 1)
-            continue;
-        total += (a.origNumTroops - a.numTroops)
-                 * akCreatureTypeTraits[a.creatureType].hitPoints;
-    }
-    if (heroes[other_side])
-        total += 500;
+    int total = ExperienceValueOfStack(1 - side);
     if (gCombatFlag6985a3 || gCombatFlag697744)
         total -= 500;
     if (defendingTown && side == 0)
         total += 500;
     if (heroes[side])
-        *experience_gained = static_cast<long>(
+        total = static_cast<int>(
             heroes[side]->GetExperienceBonusFactor()
             * static_cast<float>(total));
-    else
-        *experience_gained = total;
+    *experience_gained = total;
 }
 
 // Retail-only cross-TU helper.  Every caller hands it an army stack; the

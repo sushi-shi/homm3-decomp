@@ -24,17 +24,10 @@
 // reference. `ret 8` and the int at +0x10 are what separate it from
 // type_map_hero_identity's copy constructor, which takes ONE reference and
 // carries its int at +0.
+// The toolchain's original pair template closes this body at 100%. With the
+// nested registry lookup its call also survives in setImageName, making
+// the former source specialization and out-of-line shim unnecessary.
 VA_COMPGEN(0x00517c30, 0x13F, PAIR_CTOR, string_int_pair)
-#if defined(_MSC_VER) && !defined(__clang__)
-std::pair<const std::basic_string<char, std::char_traits<char>,
-                                  std::allocator<char> >, int>::pair(
-    const std::basic_string<char, std::char_traits<char>,
-                            std::allocator<char> >& firstValue,
-    const int& secondValue)
-    : first(firstValue), second(secondValue)
-{
-}
-#endif
 
 // The registry's implicit default constructor, emitted as its own COMDAT:
 // the _Tree constructor (shared-nil refcount at 0x69cba0, nil node at
@@ -177,46 +170,36 @@ TObjectTypeFilter* const gObjectTypeFilters[OBJECT_TYPE_FILTER_COUNT] = {
 // The tail RE-READS the cache's _First between every member of the copy,
 // because `this` may alias the vector's storage - that is the plain
 // assignment, not a hoisting failure.
-// The registry row append is `rows.insert(rows.end(), found)` and the .msk
-// cache append is `imageCache.push_back(newRecord)` - the two spellings are
-// NOT interchangeable and they interact: rows-insert + cache-push_back is
-// 42.6324, both push_back 33.8620 (the state this replaces), both insert
-// 34.1581, and rows-push_back + cache-insert 29.9091. VC6 prices an /Ob2
-// site at the callee's own front-end size, so `insert(end(), x)` charges
-// vector::insert at the site while `push_back(x)` charges a free wrapper
-// and prices the nested insert at budget/sites-remaining; which of the two
-// reproduces retail depends on how much budget the site has left.
-// RE-MEASURED 2026-09-06: that ranking has EXPIRED. At the current delink
-// generation cache-push_back and cache-insert are byte-identical (47.7708
-// to the digit, and 47.7708 is also the banked MAX), so the four-way sweep
-// above no longer separates them. Do not re-derive a lever from it.
+// GetIndex is a provisional Complete-only source boundary. Retail expands
+// the first rows.size(), then calls size, pair construction (0x517c30)
+// and row insert inside the lookup's insertion arm. Encapsulating that
+// arm with its lookup reproduces those decisions and raises 47.7708 to
+// 54.7708; flattening it back into this caller is the negative control.
+// The registry constructor also remains called. There is no Dreamcast
+// counterpart proving this helper's name or declaration.
 //
-// IDENTIFIED 2026-09-06, NOT YET CLAIMABLE: the row retail calls at
-// fn+0x150, 0x516c10 (522 B), is `vector<TImageInfo>::insert(iterator,
-// const TImageInfo&)` - the TWO-argument, iterator-returning overload, with
-// the three-argument `insert(iterator, size_type, const T&)` expanded inside
-// it (`ret 8`, the 0x2aaaaaab /24 reciprocal, `add [ebx+8],0x18`). The
-// 24-byte element is TImageInfo itself, which the call site proves: the
-// record at [ebp-0x6c] is two zeroed dwords followed by two
-// `bitset<48>::_Tidy` calls, and the row cursor right after is
-// `lea edx,[ebx+2*ebx] / lea ebx,[eax+8*edx]`. The three-argument overload
-// is already claimed at 0x46aeb0. This one is not claimable yet for the
-// same reason as `basic_string::resize` below: VC6 inlines the two-argument
-// wrapper at both `push_back` and `insert(end(), x)` spellings and emits no
-// COMDAT for it, so there is no base symbol for a VA_COMPGEN to pair.
+// Retail's cache append at fn+0x150 calls 0x516c10 (522 B), the TWO-argument
+// vector<TImageInfo>::insert(iterator, const TImageInfo&) with the
+// three-argument overload expanded inside: ret 8, /24 reciprocal
+// 0x2aaaaaab, and add [ebx+8],0x18. The nested registry lookup also makes
+// that two-argument insert emit naturally here. Its address remains
+// unclaimed; the three-argument overload is already claimed at 0x46aeb0.
+// The two zeroed dwords and two bitset<48>::_Tidy calls establish the
+// 24-byte TImageInfo temporary; the row cursor uses oldCount * 24.
 //
-// Residual (42.63%): three /Ob2 over-inlines and nothing else. Retail
-// CALLS the registry's own constructor, the pair constructor at 0x517c30
-// and basic_string::append at 0x41b340; we expand all three, and append's
-// expanded _Xlen throw path is exactly the 16 frame bytes (0x70 vs 0x60)
-// and the two extra EH states the transcript reports (base [0,-1,1,-1,
-// 2,-1,3] against retail's [0,-1,1,-1]). Caller mass is NOT the lever
-// here: an `if (0)` titration reads 33.47 / 34.47 / 34.47 / 34.47 /
-// 30.52 / 30.52 for N = 0,1,2,3,5,8 - flat then down, a 1.0-point ceiling.
-// The one remaining structural difference is the guard bytes: retail
-// tests 0x69cb64 and 0x6aba7d with mask 1 each, because the registry's
-// static lives in the inline accessor GetImageName shares (see its own
-// note); with both statics in this body VC6 packs them into one byte.
+// Naming GetIndex's pair<iterator,bool> result recovers retail's otherwise
+// dead bool copy; together with the size-initializing TImageInfo constructor
+// this raises MAX to 58.5099. The size initializer must precede both bitset
+// constructors. Negative controls: TImageInfo() leaves its point undefined
+// under VC6 (54.79 is therefore invalid); an aggregate initializer is
+// rejected as C2552; two body assignments occur after the bitset calls.
+//
+// Remaining: the imageCache constructor and both bitset::set calls still
+// expand, unlike retail; 29 vs 22 blocks.
+// Historical append-spelling rankings expired: before GetIndex, cache
+// push_back and insert(end(), x) were byte-identical at 47.7708. Earlier
+// dead-statement probes (removed) were flat then worse; synthetic caller
+// mass did not recover the missing boundaries.
 VA(0x00514610, 0x317)  // anchor-callee 0x514b80 per-row `>>`; anchor-global 0x6aba80 .msk cache; retail-only
 TObjectType& TObjectType::setImageName(
     const std::basic_string<char, std::char_traits<char>,
@@ -225,22 +208,13 @@ TObjectType& TObjectType::setImageName(
     TObjectImageNameTable& imageNames = GetObjectImageNames();
 
     unsigned int oldCount = imageNames.rows.size();
-    TObjectImageNameTable::TNameIndex::iterator found =
-        imageNames.nameIndex.find(name);
-    if (found == imageNames.nameIndex.end()) {
-        found = imageNames.nameIndex.insert(
-            TObjectImageNameTable::TNameIndex::value_type(
-                name, imageNames.rows.size())).first;
-        imageNames.rows.insert(imageNames.rows.end(), found);
-    }
-    imageNumber = found->second;
+    imageNumber = imageNames.GetIndex(name);
 
     static std::vector<TImageInfo> imageCache;
 
     if (imageNumber == oldCount) {
-        TImageInfo newRecord;
-        newRecord.objectSize.x = 0;
-        newRecord.objectSize.y = 0;
+        TPoint emptySize = { 0, 0 };
+        TImageInfo newRecord(emptySize);
         imageCache.push_back(newRecord);
         TImageInfo* record = &imageCache[oldCount];
 
@@ -424,56 +398,25 @@ std::istream& operator>>(std::istream& is, TObjectType& objectType)
 // per-row stream's virtual base (guarded by the construction flag at
 // [ebp-0x14]), its strstreambuf and the stream itself.
 //
-// BOUNDARY CORRECTION 2026-09-06: that 0x514ff3 handler was its own carve
-// row (17 B), so our emitted body carried it while retail's target symbol
-// stopped at 0x273. Absorbed into the parent (627 -> 644 = 0x284, the
-// LoadFontData precedent): 69.2500 -> 73.3263 with no source change.
-//
-// Residual (73.33%): an /Ob2 SWAP inside the resize temporary's inline
-// TObjectType constructor. Retail CALLS `bitset<48>::bitset(unsigned
-// long)` at 0x5154a0 and EXPANDS `operator~` (the copy plus a flip call);
-// we do the exact opposite, so the argument constructor's 32-bit set loop
-// arrives as eleven extra blocks. Retail also expands TImageInfo's
-// implicit default constructor where we call it - giving an explicit
-// empty inline one is byte-flat, measured. The doctrinal lever for the
-// over-inline half is caller-shrink, and this body has nothing to lift:
-// its statements are all accounted for by the EH state transcript.
-// 2026-09-06, polish lane 38, and it CONFIRMS the note above against the
-// bytes: the unclaimed retail callee at 0x5154a0 really is
-// `bitset<48>::bitset(unsigned long)` - `_Tidy`'s two-dword clear followed
-// by the `while (_X) { if (_X & 1) set(_P); ... }` loop with its own
-// `_Xran` guard - so the source initialiser IS `~std::bitset<48>(0)` and
-// retail CALLS that constructor. A four-spelling sweep of
-// `TObjectType::passableMask`'s initialiser scores, against 69.2500:
-//   ~std::bitset<48>(0)              69.2500   (shipped; retail's own call)
-//   std::bitset<48>(0).flip()        70.2011
-//   std::bitset<48>(0).set()         68.2120
-//   std::bitset<48>().set()          72.7772
-//   std::bitset<48>().flip()         77.3315
-//   ~std::bitset<48>()               82.2717
-// The last one is NOT shipped even though it is worth +13.02 here: the
-// default constructor has no set-loop, so its 13 points come from DELETING
-// the very construct retail's call proves is there, and instantiating
-// `bitset<48>::bitset()` across the closure also knocks
-// `CEnterNameEdit::OnKillFocus` off 100.0000 (99.8710) - a header edit that
-// costs an exact row. The honest residual is unchanged: one /Ob2 swap.
-//
-// 2026-09-06, polish lane 41: `homm3 vc6 predict-inline 0x00514d80` puts
-// numbers on that swap and rules out the caller-shrink lever for good.
-// It reports the call streams as 22 (base) vs 23 (retail) with three
-// count-paired names, and splits the residual into
-//   UNDER-inline: `bitset<48>::set(unsigned,bool)` base x1 vs retail x0
-//                 (A8/A9 - our budget ran out INSIDE the expanded ctor)
-//   OVER-inline : `bitset<48>::flip()` base x0 vs retail x1, `_Tidy` 2 vs 3
-// i.e. we spend the budget expanding `bitset<48>::bitset(unsigned long)`
-// and then cannot afford its inner `set`, while retail spends it on
-// `operator~` (copy + a flip CALL) and pays for the ctor with a call.
-// Both sides therefore have the SAME budget and differ only in which of
-// the two nested call sites the C2 inliner reaches first - a walk-order
-// fact, not a declaration, visibility or source-order one.  Nothing in
-// this body is liftable (the EH transcript accounts for every statement)
-// and the initialiser spelling sweep above is exhausted, so the shipped
-// `~std::bitset<48>(0)` stands.  Do not re-run the spelling sweep.
+// Retail catch handler 0x514ff3 belongs to this function: the admitted
+// extent is 644 bytes (0x284), including its 17-byte tail.
+// Residual (73.33% after boundary correction): inside the resize value's TObjectType constructor,
+// retail calls bitset<48>(unsigned long) at 0x5154a0 and expands operator~
+// into its copy plus flip call. The candidate expands the value constructor
+// and calls operator~. It also retains TImageInfo's default constructor and
+// expands one vector::size query that retail calls. The throw/catch and
+// stream-construction EH states already agree.
+// 2026-09-06 controls are byte-flat: implicit resize default, explicit
+// TObjectType() second argument, and a named defaultObject; moving the
+// ordinary TObjectType constructor into this TU is also byte-flat. The
+// default value's expression/lifetime and constructor definition placement
+// do not explain the remaining nested decisions in this build. The exact
+// unsigned-long overload is confirmed from the retail 97-byte callee; a
+// zero-argument bitset constructor would erase a real source boundary.
+// Main-branch controls also measured .flip(), .set(), and default-ctor
+// variants of the bitset initializer. The default constructor can score
+// higher but erases the unsigned-long constructor that retail calls; keep
+// that boundary. The apparent gain is not evidence for the default overload.
 VA(0x00514d80, 0x284)  // anchor-callee ResourceManager::GetText + anchor-bracket NewfullMapFn_00505DA0; retail-only
 void TObjectTypeTable::load(char* filename)
 {
@@ -877,7 +820,10 @@ VA_COMPGEN(0x004046e0, 0x1D, EXCEPTION_DORAISE, out_of_range)
 // const&), agreement 1.000 at an exactly equal 740-byte extent. TImageInfo
 // is this header's nested type and no other object instantiates the vector,
 // which is why the sizes agree to the byte.
-VA_COMPGEN(0x0046aeb0, 0x2E4, VECTOR_INSERT, TImageInfo)
+// GetIndex leaves only the two-argument overload emitted. The explicit
+// count claim stays unpaired then: that other body's ret 8 cannot name
+// this retail ret-12 body or inherit its exact-match identity.
+VA_COMPGEN(0x0046aeb0, 0x2E4, VECTOR_INSERT_COUNT, TImageInfo)
 
 // COMDAT pairing: basic_istream<char>'s destructor, agreement 0.750 on a
 // 15-byte body - the virtual-base vtable fixup, and 1:1 in this object.

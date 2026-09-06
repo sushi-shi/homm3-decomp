@@ -474,7 +474,106 @@ often than we do at the same sites (33/32 against 26/28), so this is not a
 single budget knob in either direction - it is a different split of which
 leaves the kept expansions inline. Left open with the census recorded.
 
-### 6e. A named endpoint pointer changes address formation
+### 6e. A dead stack home can expose a missing member read or accessor
+
+The `CNetMsgHandler` destructor family was classified as an inaccessible
+register-homing residual: retail writes an old handler pointer to `[ebp-4]`
+and never reads it, while the candidate removes that store and its entire
+frame. The source-level cause is now measured in the real `remote` TU:
+
+1. `CDPlayHeroes::SetNetMsgHandler` saves `pOld`, installs the new pointer,
+   then tests **the installed member** and calls `m_pNetMsgHandler->Copy(pOld)`.
+   Dreamcast's `remote.cpp:788-789` reloads that member after the store.
+   Reusing the incoming parameter for the test and receiver produces an exact
+   standalone setter, but changes its inline copies. Restoring the member
+   reads closes the base destructor **41.875% -> 100%** and its scalar deleting
+   wrapper **78.125% -> 100%**; the setter remains exact. The pause-handler
+   destructor improves **91.1111% -> 99.7778%**.
+2. `Copy` calls `IsInPopup()` before the virtual abort-message getter;
+   Dreamcast retains that call at `remote.h:633`. Flattening it to the field
+   leaves the standalone Copy exact but uses EDX for the later virtual call
+   inside the pause destructor. Restoring the accessor changes those two
+   instructions to retail's EAX and closes the destructor to **100%**.
+   Restoring Copy's header definition preserves these matches.
+
+These controls distinguish source relationships that standalone helper bytes,
+identical caller CFGs, and identical surviving call lists cannot distinguish.
+The restored member reads reproduce the dead home naturally; no volatile,
+release-VERIFY carrier, or inline pragma is needed. The result establishes the
+source lever, not which internal C2 pass preserves the store. Before treating
+an allocation residual as unreachable, inspect the helper's member-versus-
+parameter reads and the accessor calls that were flattened during reconstruction.
+
+### 6f. An inline helper's return expression can remove a caller spill
+
+The third boat sprite in four hero-part renderers spilled the `GetNumFrames`
+divisor into a recycled parameter home. Their CFGs and surviving call lists
+already agreed with retail, and the allocator model reported no binding
+divergence. Naming the sprite, divisor, coordinates, or remainder did not
+recover retail's ECX divide.
+
+Dreamcast's `CSprite.h:293` calls `IsValidSeq` at `0x1f1fc` and joins the frame
+count and zero values before returning. The reconstruction had flattened the
+predicate and used an `if` with two returns. Restoring the predicate call
+alone leaves the spill; expressing the result as
+`return IsValidSeq(seq) ? s[seq]->numFrames : 0;` removes it in all four
+callers without changing their bodies:
+
+| Caller | Retail VA | MAX before | MAX after |
+|---|---|---:|---:|
+| `DrawHeroPart` | `0x40fe30` | 98.1667% | 100% |
+| `DrawHeroPartShadow` | `0x4102c0` | 98.1840% | 100% |
+| `VWDrawHeroPart` | `0x5f7500` | 98.2385% | 100% |
+| `VWDrawHeroPartShadow` | `0x5f7900` | 98.2385% | 100% |
+
+Measured 2026-09-06 in the real `advmgr` and `viewwrld` TUs, followed by a full
+build and MAX/history audit. This establishes a source-expression lever;
+the exact internal scheduling or coalescing pass remains unproven. An
+unchanged call list does not establish that the inlined helper's expression
+shape is correct.
+
+### 6g. Recover a coordinate local's meaning before its stack home
+
+`DrawCursorShadow` (`0x47fb40`) reached 100% from 72.5446% after restoring
+`refY` as a destination screen coordinate: `CellY * 32 + 232`, with
+`CellY * 32` retained as the separate clipping argument. Dreamcast's
+cursor.cpp:207 stores the offset-inclusive local; its UI offsets are
+170/168, while Complete's x86 establishes 256/232. `refX` precedes `refY`
+in the recorded statement sequence. Restoring screen meaning alone reaches
+97.13%; restoring their order closes the last frame/home differences.
+
+The former raw-Y local (`refY = CellY * 32`, adding 232 separately at both
+calls) put the locals in opposite homes despite an equal-sized frame and
+matching control flow. Reversing those raw-Y declarations did not help;
+that control tested the wrong meaning. The original early guards and
+`GetCurrHero` call are independently byte-flat source corrections.
+
+The same correction closes `DrawCursor` (`0x47f860`) from 80.3240% to
+100%, eliminating the apparent CellX/refY register-homing conflict across
+its five sprite draws. Its shadow and alpha siblings remain exact. These
+results establish a source-expression and local-lifetime lever, without
+claiming which internal C2 pass causes the changed homes.
+
+### 6h. A resources-pointer alias can displace an unrelated hero local
+
+`type_AI_player::buy_creatures` (`0x42ba60`) kept a `long*` alias for the
+player's resources alongside a separate temporary funds array. Dreamcast
+records the local `long funds[7]`. Restoring that array and spelling the
+persistent supply as `player->resources` raises the caller from 76.84% to
+97.95%, after restoring its two early exits and `GetTeam` call. The garrison
+hero moves from a stack spill into retail's EBX; the guarded GetHero path,
+TownAlreadyBuiltOn byte test, and human-ally loop also recover their retail
+registers and control flow without editing those helpers.
+
+Dreamcast records `amount` at function scope. Moving it out of the inner
+conditional recovers retail's 0x94 frame and the purchaser/amount homes,
+reaching 98.18% in the archived three-argument-set control. Recovering the
+actual two-argument `set` interface leaves 97.77%; its first vector insertion
+still expands one level too far. The old inline_depth(1) pin around
+`AI_consolidate_army` is now byte-flat and has been removed: standalone
+`do_swap` remains exact and its nested copy retains the retail call.
+
+### 6i. A named endpoint pointer changes address formation
 
 `type_random_map_generator::DrawStraightZoneBoundary` (0x53c220) reaches
 all 362 raw retail bytes with a named `TRmgMapItem* lastItem` followed by
@@ -490,7 +589,7 @@ pointer before attributing a final SIB/address mismatch to global compiler
 state. The negative control and step-initialization controls are recorded
 beside the function.
 
-### 6f. A temporary point's scope controls arithmetic register roles
+### 6j. A temporary point's scope controls arithmetic register roles
 
 `DrawIrregularZoneBoundary` (0x53bff0) matched 98.0198% with a named
 `delta = to - from` that lived through displacement calculation. Keeping
@@ -642,3 +741,28 @@ Follow-ups: land the assignment-order probes as
 `b*` oracle cases + catalog rows (B1 gains its first standalone probe);
 wire a `--model` flag into `homm3 vc6 why-reg`'s argparse; chase the
 processing-order source in p2symtab.c (the C1 mechanism's last mile).
+
+
+### Value-returning point addition and its argument lifetime
+
+`ClipRmgBoundaryPoint` (0x53cac0, 614 bytes) reproduces retail's integer
+clipping arithmetic with a preserved original point and a separate working
+point. `clipped += delta * distance / divisor` gives 64.11% and a 0x24-byte
+frame. Recovering `TPoint::operator+` and assigning the returned value gives
+98.04%, the retail 0x1c-byte frame, and all 40 control-flow blocks. Keeping
+`+=` with that same new header is byte-flat at 64.11%; an unused declaration
+is not responsible for the improvement.
+
+Putting each distance expression directly inside the product reaches
+99.11%. The final maximum-Y multiply then identifies the addition argument:
+`operator+(TPoint)` reaches 100%, while `operator+(const TPoint&)` leaves the
+remaining register/scheduling difference. The subtraction operator's
+argument convention is independently flat, so it retains its existing
+const-reference declaration. Scalar operand reversal, named numerator or
+bound values, and a member-wise scaling result are also flat at 99.11%.
+
+The earlier argument-slot reading was insufficient: mutating the first
+input and saving a copy reached 80.07%, while reusing the second input was
+63.97%. Retail reuses dead parameter storage without requiring the source
+to mutate that parameter. Recover the arithmetic operators and their
+argument lifetimes before replacing a separate working value with an input.

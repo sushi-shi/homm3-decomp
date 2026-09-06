@@ -457,8 +457,9 @@ void heroWindow::MoveWindow(int deltaX, int deltaY)
 //   * NOT the include-set-sensitivity class either - a 0..8 dummy
 //     struct sweep over this TU left the score at 92.8767 flat.
 // Filed as the register-allocation tie-break between two symmetric
-// enregistered parameters, resolved the other way by the CL generation
-// that built this object. Also tried and rejected (2026-08-08, the
+// enregistered parameters, resolved the other way in retail's object.
+// (It is NOT the CL generation: see the cross-TU note below.) Also tried
+// and rejected (2026-08-08, the
 // earlier 13 spellings): old*-vs-member operands in the -1 defaults
 // and in the clamps (all 92.88), the declarations moved below the
 // defaults (82.55) or below the clamps (72.85), split between them
@@ -478,8 +479,15 @@ void heroWindow::MoveWindow(int deltaX, int deltaY)
 // NextRandomSiegeEngineFrame (retail homes `this`, we do not). In
 // every case retail hands the LOWER register to the value used FIRST
 // and ours hands it to the second. Four TUs, six functions, no source
-// handle in any of them: this belongs with the merged-return /
-// stale-CL-generation open question, not with per-function spelling.
+// handle in any of them.
+//
+// THE GENERATION IS RULED OUT FOR THE WHOLE SIGNATURE (2026-09-06).
+// Track R's front-end A/B (C1XX 12.00.8168 + C2 12.00.8168, all 146
+// units) reports sp3_vs_rtm 0 on every member of it: CenterWindow 79+0,
+// button::Main 245+48, TPickANumber 0+0 (exact), NextRandomFrame 130+0,
+// NextRandomSiegeEngineFrame 33+0 - identical bytes under both
+// generations, in both passes. The register swap is a model gap in the
+// allocator, not a vintage (docs/vc6/rtm-generation.md §6).
 // The v2 allocator model was rerun 2026-08-11 after restoring CodeView's
 // exact four local names. The names are byte-neutral. Its best proposal,
 // aliasing centerX into a new earliest-created local, reduces the register

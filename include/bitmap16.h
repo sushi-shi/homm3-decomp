@@ -64,19 +64,22 @@ public:
     int GetWidth() const { return Width; }
     int GetHeight() const { return Height; }
     int GetPitch() const { return Pitch; }
+    // Dreamcast Bitmap16.h:151/157 returns the address in one expression:
+    // map plus y byte-pitches, then x pixels. Keep that expression intact;
+    // a union scratch is exact standalone but changes nested expansions.
+    // Direct reinterpret-cast control is byte-identical in Underlay, Ground
+    // and the clipped scaler; the void casts do not cause the inline gap.
     unsigned short* GetMap(int x, int y)
     {
-        Bitmap16MapPointer result;
-        result.pixels = map;
-        result.bytes += y * Pitch + x * sizeof(unsigned short);
-        return result.pixels;
+        return static_cast<unsigned short*>(static_cast<void*>(
+            static_cast<unsigned char*>(static_cast<void*>(map))
+            + y * Pitch)) + x;
     }
     const unsigned short* GetMap(int x, int y) const
     {
-        Bitmap16ConstMapPointer result;
-        result.pixels = map;
-        result.bytes += y * Pitch + x * sizeof(unsigned short);
-        return result.pixels;
+        return static_cast<const unsigned short*>(static_cast<const void*>(
+            static_cast<const unsigned char*>(static_cast<const void*>(map))
+            + y * Pitch)) + x;
     }
     // DC bitmap16.cpp:262. wingraph's mode-change path (0x601bfe) is the
     // caller and hands it `mask == 0x7e0 ? 6 : 5`, which is what the DC

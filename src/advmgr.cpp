@@ -885,13 +885,7 @@ int advManager::Open(int newPriority)
     ShowProgressBar();
     gpWindowManager->FadeScreen(1, 4, 1);
 
-    if (gpCurrentPlayer->IsLocalHuman()) {
-        int mouseX;
-        int mouseY;
-        gpMouseManager->MouseCoords(&mouseX, &mouseY);
-        lastHoverX = -1;
-        ProcessHover(mouseX, mouseY);
-    }
+    ForceNewHover();
     if (!gpCurrentPlayer->IsLocalHuman())
         gpGame->ShowComputerScreen();
 
@@ -1472,13 +1466,7 @@ NewmapCell* advManager::DoAdvCommand(type_point* trigger_point)
             seedingValid = 0;
         }
 
-        if (gpCurrentPlayer->IsLocalHuman()) {
-            int hoverX;
-            int hoverY;
-            gpMouseManager->MouseCoords(&hoverX, &hoverY);
-            lastHoverX = -1;
-            ProcessHover(hoverX, hoverY);
-        }
+        ForceNewHover();
         gpMouseManager->ShowPointer(1);
         gpSoundManager->SwitchAmbientMusic(gTerrainMusicIds[field_58]);
 
@@ -2235,13 +2223,7 @@ int advManager::ProcessKeyPress(const message* msg, unsigned char* exitFlag, typ
             }
             seedingValid = 0;
 
-            if (gpCurrentPlayer->IsLocalHuman()) {
-                int hoverX;
-                int hoverY;
-                gpMouseManager->MouseCoords(&hoverX, &hoverY);
-                lastHoverX = -1;
-                ProcessHover(hoverX, hoverY);
-            }
+            ForceNewHover();
             UpdBottomView(1, 1, 1);
 
             if (gpCurrentPlayer->IsLocalHuman()
@@ -3099,6 +3081,13 @@ void type_cell_adjuster::type_cell_adjuster()
 // Residual (93.21%): Dinkumware append inlining. Tried and rejected:
 // spelling the single-space appends as char appends (`+= ' '`) rather than
 // append(" ") - measured 61.45.
+//
+// THE PREFIX ASSIGNS, IT DOES NOT APPEND (byte-flat, 2026-09-06, reloc
+// census). Retail's call at fn+0x8a is basic_string::assign(const char*,
+// size_type) where ours was append(const char*, size_type); the inlined
+// strlen ahead of it and both pushes are identical, so only the relocation
+// target differed. `result` is empty there, so the two are behaviourally the
+// same; with the assign spelling this row's call sequence AGREES 23/23.
 VA(0x0040abe0, 0x37D)
 std::string get_army_help_text(const armyGroup* source,
                               unsigned char show_full_list)
@@ -3112,7 +3101,7 @@ std::string get_army_help_text(const armyGroup* source,
     }
 
     std::string result;
-    result.append(gpGeneralText->GetText(GENERAL_TEXT_ARMY_HELP_PREFIX));
+    result = gpGeneralText->GetText(GENERAL_TEXT_ARMY_HELP_PREFIX);
     result.append(" ");
     if (show_full_list) {
         for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
@@ -4668,6 +4657,13 @@ void advManager::Reseed(int targetX, int targetY)
 // permutation is not source-reachable, capped after one compile. The
 // frame stays 0x38 vs 0x30: our two records do not share slots with the
 // description string temp the way retail packs them.
+//
+// 94.68 -> 96.15 (polish 49, lever A census): the CheckDimNextHeroBut tail
+// is the SAME longhand shape DoAdvCommand already carries. Retail loads
+// gpAdvManager into ESI at 0x40f1e0, ahead of BOTH IsLocalHuman and
+// HasMobileHero, and reads [esi+0x44] in each arm; two source reads of the
+// global cannot survive two calls, so the manager is hoisted into a local
+// here exactly as at advmgr.cpp:2235.
 VA(0x0040ec90, 0x5AD)  // anchor-callee, dc 0xfd84
 int advManager::ProcessSearch(int x, int y, int z)
 {
@@ -4804,12 +4800,14 @@ int advManager::ProcessSearch(int x, int y, int z)
         && !gpGame->heroes[gpCurrentPlayer->currHeroId].IsMobile()) {
         ShowRoute(1, 0, 0);
         gpAdvManager->advWindow->UpdateHeroLocators(-1, 1, 1);
+
+        advManager* dimTarget = gpAdvManager;
         if (gpCurrentPlayer->IsLocalHuman()
             && gpCurrentPlayer->HasMobileHero())
-            gpAdvManager->advWindow->WidgetClearStatus(
+            dimTarget->advWindow->WidgetClearStatus(
                 11, widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
         else
-            gpAdvManager->advWindow->WidgetSetStatus(
+            dimTarget->advWindow->WidgetSetStatus(
                 11, widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
     }
 
@@ -4818,6 +4816,31 @@ int advManager::ProcessSearch(int x, int y, int z)
 }
 
 // E:\gamedcs\advmgr.cpp:4983
+// The `auto_inline(off)` pin below is COUPLED to three longhand copies of
+// this body - ProcessRadarSelect's two (0x40a0c0, at advmgr.cpp:2373 and
+// :2420 on the DC line table) and HideRoute's one (0x419300, :10553).
+// Retail EXPANDS the body at exactly those three sites and CALLS it at the
+// eight others, and the pin can only say "call everywhere", so the three
+// expansions have to be written out.  Dreamcast names the calls and their
+// arguments outright - `mov #0,r5 / mov #0,r6 / jsr @?UpdateScreen@
+// advManager@@QAAXHH@Z` at dc 0xa406, 0xa86a and 0x1c536 - so
+// `UpdateScreen(0, 0);` is the source, not the paste.
+//
+// MEASURED 2026-09-06 (polish lane 46), the honest restoration - all three
+// pastes replaced by `UpdateScreen(0, 0);` AND this pin removed:
+//   * the three target rows all HOLD at 100: ProcessRadarSelect, HideRoute
+//     and UpdateScreen itself.  Our /Ob2 picks retail's expansion at every
+//     one of them with no pin at all.
+//   * the collateral is four of the eight CALL sites, which then expand
+//     where retail calls: ProcessDeSelect 100 -> 85.26, ProcessKeyPress
+//     97.61 -> 87.90, DoAdvCommand 94.40 -> 85.11, and ShowRoute
+//     83.02 -> 52.52 (it expands HideRoute, so the new UpdateScreen call
+//     lands one level deeper).  Unit 96.16 -> 94.80, one exact row lost.
+// So the pin is load-bearing for those four and the paste is load-bearing
+// for these three; neither half can go alone.  The retail state is a
+// per-site decision inside one TU, and the four regressed callers are the
+// real target: each is over-inlining a callee retail calls, exactly the
+// residual class ShowVideo's note describes.  Withheld, not refuted.
 VA(0x0040f270, 0x7D)  // anchor-global, dc 0x10520
 #pragma auto_inline(off)
 void advManager::UpdateScreen(int bAllowIntermediateMouse, int bForceDraw)
@@ -5173,38 +5196,21 @@ static inline NewmapCell* DrawGroundCell(advManager* manager, type_point point)
 }
 
 // E:\gamedcs\advmgr.cpp:5688
-// Residual (98.1667%): all 16 branches and both returns agree - `vc6 diagnose`
-// reads flow-distance 0, register-distance 15, and why-reg --model finds NO
-// register-binding divergence in its slice, i.e. this is scheduling, not
-// allocation. LOCALISED 2026-08-21 to a single instruction at the THIRD boat
-// call (boatIcons), nine bytes, and the first two calls are byte-identical:
+// Exact 2026-09-06: CSprite::GetNumFrames uses the DC-proven IsValidSeq
+// call and a single conditional return expression. Its former two-return
+// spelling evicted the third boat-row divisor from ECX into a parameter
+// home (98.1667%); the expression removes that spill without changing this
+// body. DrawHeroPartShadow and both view-world twins close with it.
+// Restoring IsValidSeq alone leaves the spill. Earlier byte-flat controls:
+// currHero/frame-count release invariants, a discarded GetNumFrames value,
+// and naming the divisor; naming the remainder scored 98.1571%.
 //
-//   retail  ... cmp bl,4 / mov ebx,[eax+0x40] / seta dl
-//               mov byte ptr [ebp+0x18], dl / cdq / idiv ecx / mov ecx, esi
-//   ours    ... cmp bl,4 / MOV ECX, ESI / mov ebx,[eax+0x40] / seta dl
-//               mov byte ptr [ebp+8], dl / cdq / idiv dword ptr [ebp+0x18]
-//
-// Our CL slots the GetStandSequence receiver setup (`mov ecx,esi`) into the
-// scheduling gap BEFORE the divide, which evicts the frame count from ECX and
-// forces the whole `xor ecx,ecx` / `idiv ecx` pair into memory - three extra
-// stores plus the wider idiv. Retail issues the same move one instruction
-// later. Sites one and two prove our source shape is right; only this site's
-// schedule differs. Dreamcast lists exactly currHero, currBoat, HeroCellY and
-// HeroCellX as locals. Byte-flat probes: a release VERIFY-shaped currHero
-// invariant, a discarded GetNumFrames value, a `GetNumFrames(...) > 0`
-// invariant, and naming the divisor; naming the remainder regresses to
-// 98.1571%.
-//
-// The 2026-09-01 Dreamcast source-shape pass restored all three positive
-// header boundaries visible in this body: game::GetHero, the inherited
-// get_location, and hero::GetHflip. They are byte-flat at 98.1667%, as an
-// exact inline lowering should be. DC also names advManager::GetCell at the
-// location lookup, but Complete directly contradicts that older semantic:
-// retail calls NewfullMap::cell(0, 0, 0) for an invalid point, whereas the
-// admitted GetCell returns cellData. Retaining the DC call measured 93.18%;
-// DrawHeroCell preserves Complete's proven invalid arm. why-reg --model still
-// reports 15 slots and no binding divergence after the source-shape repair,
-// confirming the same third-call scheduling wall.
+// Preserve the earlier game::GetHero, get_location and GetHflip boundaries.
+// DrawHeroCell keeps Complete's invalid-point arm: retail calls
+// NewfullMap::cell(0, 0, 0), while the older DC GetCell returns cellData.
+// Substituting that older GetCell semantic scored 93.18%. The register
+// model's lack of binding divergence did not establish correct helper
+// expression shape; see docs/vc6/regalloc.md 6f.
 VA(0x0040fe30, 0x484)  // linkorder, dc 0x11424
 void advManager::DrawHeroPart(int part, TDrawParts& heroParts, int baseX,
                               int baseY, int tilex, int tiley, int tilew,
@@ -5268,17 +5274,10 @@ void advManager::DrawHeroPart(int part, TDrawParts& heroParts, int baseX,
 }
 
 // E:\gamedcs\advmgr.cpp:5773
-// Residual (98.1840%): all 18 branches and both returns agree, with exactly
-// the same nine-byte third-boat-call divisor spill as DrawHeroPart above -
-// see that body for the instruction-level localisation. The Dreamcast
-// four-local roster and the VERIFY/accessor/named-local probes are identical,
-// so this is the shared scheduling residual (flow-distance 0, why-reg --model
-// reports no binding divergence) rather than an independently source-nameable
-// shadow-path difference. The same 2026-09-01 helper restoration is byte-flat
-// here at 98.1840%; the rejected DC GetCell revision measures 93.24%, and the
-// post-repair allocator model again reports 15 slots with no binding
-// divergence. The twins are a free in-compile A/B: any candidate spelling
-// should be tried in ONE of them first, since a real fix must move both.
+// Exact 2026-09-06, 98.1840 -> 100% with GetNumFrames' conditional
+// expression, as in DrawHeroPart above. Both view-world twins close too.
+// The older DC GetCell invalid-point behavior remains a separate negative
+// control (93.24%); retain Complete's DrawHeroCell behavior.
 VA(0x004102c0, 0x494)  // anchor-callee, dc 0x11958
 void advManager::DrawHeroPartShadow(int part, TDrawParts& heroParts,
                                     int baseX, int baseY, int tilex,
@@ -5839,6 +5838,14 @@ void advManager::DrawAdvObjShadow(int srcX, int srcY, int z, int destX, int dest
         // A semantics-preserving unnamed-yOffset spelling is byte-flat too;
         // why-reg's apparent -75 automatic mutation used the already-shifted
         // byte for y and was therefore not a valid candidate.
+        // [polish-45] Negative control for the draw arms, do not retry:
+        // promoting the THREE arms' own `drawY`/`drawX` to `int` (so the
+        // shift is the 32-bit `movsx ecx,dl / sar ecx,4` retail uses in the
+        // gbInViewWorld arm instead of this compile's byte shift homed at
+        // [ebp+0x13]) costs 85.2335 -> 83.4349.  Retail is NOT consistent
+        // across the arms - the later two already lower here exactly as
+        // retail does with the `signed char` spelling - so the divergence is
+        // per-arm codegen, not the declared type.
         signed char yOffset = offsets >> 4;
         offsets <<= 4;
         signed char xOffset = offsets >> 4;
@@ -8097,12 +8104,12 @@ void advManager::TownQuickView(int townId, int x, int y,
         gpGame->calculate_production();
         first = 1;
         for (int inc = 0; inc < 7; inc++) {
-            if (ownerPlayer->turnProductionResource[inc] > 0) {
+            if (ownerPlayer->ai.turnProductionResource[inc] > 0) {
                 if (!first)
                     text += ", ";
                 first = 0;
                 text += format_string(
-                    "%i %s", ownerPlayer->turnProductionResource[inc],
+                    "%i %s", ownerPlayer->ai.turnProductionResource[inc],
                     gResourceNames[inc]);
             }
         }
@@ -8303,6 +8310,8 @@ void advManager::DeactivateCurrTown(unsigned char waitingPlayer)
 }
 
 // E:\gamedcs\advmgr.cpp:9396
+// SetHeroContext calls this; retail expands it there (DemobilizeCurrHero at
+// +0x8c is the call it keeps) and the restoration is byte-flat, 99.2746.
 VA(0x004175a0, 0x3A)  // anchor-global, dc 0x1a3f0
 void advManager::DeactivateCurrHero(unsigned char waitingPlayer)
 {
@@ -8531,12 +8540,7 @@ void advManager::SetHeroContext(int heroId, int bInMove, unsigned char waitingPl
         }
     }
 
-    DemobilizeCurrHero(waitingPlayer, 0);
-
-    if (waitingPlayer)
-        gpGame->GetLocalPlayer()->currHeroId = -1;
-    else
-        gpCurrentPlayer->currHeroId = -1;
+    DeactivateCurrHero(waitingPlayer);
 
     playerData* player = gpCurrentPlayer;
     if (waitingPlayer)
@@ -9523,6 +9527,12 @@ void advManager::SeedTo(type_point target)
 }
 
 // E:\gamedcs\advmgr.cpp:10609
+// Open (+0x1a2), DoAdvCommand and ProcessKeyPress call this; retail EXPANDS
+// it at all three (MouseCoords/ProcessHover appear inline at each site) but
+// the call is the source fact, and restoring it from the longhand copy is
+// byte-flat at every one: 97.9312 / 94.3953 / 97.6091, unchanged. VC6 finds
+// the body from advmgr.cpp:892 although the definition is 8600 lines below
+// it - see docs/vc6/inliner.md section "callee defined later in the TU".
 VA(0x00419570, 0x49)  // anchor-global, dc 0x1c750
 void advManager::ForceNewHover()
 {
