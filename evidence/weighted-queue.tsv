@@ -982,7 +982,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00465330	1270	99.64975	99.6497	99.6497	4.448175000000095	cmbtmgr	?SetNextArmy@combatManager@@QAEXHH@Z	non-exact
 0x005c9be0	11504	99.66054	99.6605	99.6605	39.05147840000029	townmgr	??0THallWindow@@QAE@H@Z	non-exact
 0x0055ee50	118	99.70731	99.7073	99.7073	0.34537419999999464	rmg_support	??0TRmgRiverPainter@@QAE@PAVTRmgMapAdapterInterface@@HABUTRmgGridPoint@@@Z	non-exact
-0x005b6810	132	99.745766	99.7458	99.7458	0.33558887999999687	rmg_terrain	?hasSeparatedNeighbours@rmgTerrainPainter@@QAEEABUTRmgGridPoint@@@Z	non-exact
 0x004c06f0	377	99.746376	99.7464	99.7464	0.9561624799999877	game	?randomize_university@game@@QAEXPAVNewmapCell@@@Z	non-exact
 0x004c3890	996	99.8359	99.8359	99.8359	1.6344360000000036	game	?loadVictoryCondition@NewSMapHeader@@QAEHDPAVTAbstractFile@@H@Z	non-exact
 0x005bd2f0	1026	99.837006	99.837	99.837	1.6723184399999393	town	?save@town@@QAEHPAVTAbstractFile@@@Z	non-exact
