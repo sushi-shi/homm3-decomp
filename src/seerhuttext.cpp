@@ -114,7 +114,10 @@ unsigned char InitializeSeerHutText()
         const char* name = sheet->GetRow(row)[0];
         if (!name[0] || name[0] == ' ')
             continue;
-        gSeerHutNames.push_back(name);
+        // `insert(end(), name)` and not `push_back(name)`: push_back is one
+        // inline level shallower, and at this site that level is the whole
+        // difference between 79.8841 and EXACT.
+        gSeerHutNames.insert(gSeerHutNames.end(), name);
     }
 
     sheet->Dispose();

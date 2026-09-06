@@ -3815,7 +3815,7 @@ void TSingleSelectionWindow::MakeHeroFilter()
             std::map<int, type_map_hero_info>::iterator it =
                 gpGame->mapHeader.heroPlayerSetups.find(h);
             if (it != gpGame->mapHeader.heroPlayerSetups.end()) {
-                if (!it->second.field_14.test(i))
+                if (!it->second.field_14[i])
                     continue;
             }
             p->availableHeroes[p->availableHeroesCount] = h;
@@ -7677,6 +7677,13 @@ void TSingleSelectionWindow::SendPlayerFaces()
 // `static_cast<const std::bitset<4>&>(...)[class]` + `Text.begin()` dialog
 // idiom over `.test()` + `GetText()` (+0.52).
 // E:\gamedcs\singleselectionwindow.cpp:7698
+// MEASURED AND REJECTED (polish 29): the context-feature membership test
+// spelled without the const cast (byte-flat) and as `.test(gameVersionClass)`
+// (76.71 against 78.76). The remaining throw-path divergence is one inline
+// level short of retail - retail CALLS `bitset<4>::_Xran()` where we expand
+// it down to the string and out_of_range construction - and the same
+// GiveCrossoverArtifacts lever that bought one level here has no deeper
+// spelling to give.
 VA(0x0058BCE0, 0x5AF)  // begin-button caller and DC source shape, dc 0x142674
 unsigned char TSingleSelectionWindow::OnBeginGame()
 {
@@ -7870,6 +7877,26 @@ unsigned char TSingleSelectionWindow::BeginSavedGame()
 // own availability list. On a network game the fresh map header, the seat
 // map and the whole save image go out to the other machines before the last
 // progress tick.
+//
+// MEASURED AND REJECTED (polish 29), and the pair is instructive because
+// each half is right and only together do they pay: hand-expanding the
+// member walk in the message constructor (`static_cast<CMapHeaderData&>
+// (m_header) = *pMapHeader;` plus the two string and the bitset member
+// assignments) makes the tail of the call stream agree EXACTLY with
+// retail - `??4CMapHeaderData`, `assign(str, 0, npos)` twice, the bitset
+// copied inline - and still scores 70.30 against 74.90, because the
+// constructor half is still inverted and the added mass just shifts every
+// offset. Taking `NewSMapHeader::NewSMapHeader()` out of line (declared in
+// game.h, defined in campaignbrief.cpp) closes that half too and the row
+// reaches 81.87 - but the ctor is inline in retail's OTHER callers, and
+// the tree pays 3634 -> 3631 exact / 95.49 -> 95.35 fuzzy for it:
+// ??0game 87.85 -> 76.45, ??0SavedGameHeader 98.88 -> 48.35,
+// ??0CGameHeaderInfoMsg 98.80 -> 17.97, RebuildFilteredPlayerSetup
+// 71.54 -> 40.37, and ??0CMapHeaderData / ??0VictoryConditionStruct /
+// ??0LossConditionStruct / bitset<156>::_Tidy each 100 -> 0 (they are
+// COMDATs only the inline constructor pulls in). So the split is a
+// per-site /Ob2 decision, and reaching it needs the pin this lane may not
+// add.
 //
 // Residual (74.90%): branches and block count agree exactly; the whole gap
 // is the CNewMapHeaderInfoMsg construction. Retail CALLS NewSMapHeader's
@@ -9524,7 +9551,7 @@ void TSingleSelectionWindow::SetNewPlayerSlot(CNetPlayerInfo* pPlayer)
         int gameVersion = pCurrentHeader->saved.gameVersion;
         int required = gameVersion == GAME_VERSION_SOD
                        ? 2 : gameVersion == GAME_VERSION_AB;
-        if (!gGameContextFeatures[field_1898].test(required))
+        if (!gGameContextFeatures[field_1898][required])
             TurnOffAdvancedOptions();
         return;
     }
@@ -9533,7 +9560,7 @@ void TSingleSelectionWindow::SetNewPlayerSlot(CNetPlayerInfo* pPlayer)
         int mapVersion = gpGame->mapHeader.version;
         int required = mapVersion > MAP_FORMAT_ARMAGEDDONS_BLADE
                        ? 2 : mapVersion > MAP_FORMAT_RESTORATION_OF_ERATHIA;
-        if (!gGameContextFeatures[field_1898].test(required))
+        if (!gGameContextFeatures[field_1898][required])
             TurnOffAdvancedOptions();
     }
     if (!inAdvancedOptions)

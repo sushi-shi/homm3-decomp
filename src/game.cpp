@@ -6704,13 +6704,13 @@ bool game::LoadMap(TAbstractFile* mapFile)
     }
 
     for (int pool = 0; pool < 8; ++pool) {
-        lithPools[pool].clear();
-        lithExitPools[pool].clear();
+        lithPools[pool].erase(lithPools[pool].begin(), lithPools[pool].end());
+        lithExitPools[pool].erase(lithExitPools[pool].begin(), lithExitPools[pool].end());
     }
-    whirlpools.clear();
-    undergroundGateExits.clear();
-    undergroundGatePairs.clear();
-    monsterIdentifiers.clear();
+    whirlpools.erase(whirlpools.begin(), whirlpools.end());
+    undergroundGateExits.erase(undergroundGateExits.begin(), undergroundGateExits.end());
+    undergroundGatePairs.erase(undergroundGatePairs.begin(), undergroundGatePairs.end());
+    monsterIdentifiers.erase(monsterIdentifiers.begin(), monsterIdentifiers.end());
 
     return worldMap.Read(mapFile, mapHeader.Size, mapHeader.HasTwoLayers,
                          mapHeader.version) >= 0;
@@ -8168,7 +8168,7 @@ int NewSMapHeader::Load(TAbstractFile* infile, int saveVersion)
             teamInfo[i] = i;
     }
 
-    heroPlayerSetups.clear();
+    heroPlayerSetups.erase(heroPlayerSetups.begin(), heroPlayerSetups.end());
     if (saveVersion < SAVE_VERSION_CUSTOM_HERO_SETUPS)
         return 0;
 

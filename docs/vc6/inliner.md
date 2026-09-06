@@ -411,6 +411,107 @@ always counts `call` + tail `jmp`.
 * The `hidden-args` term of the arg-count check (`0x18d54` jump table) is
   assumed satisfied — the front end emits matching IL for legal calls.
 
+## 6b. The library-accessor DEPTH lever (measured 2026-09-06, polish 29)
+
+The `/Ob2` budget is spent per call site, so the SPELLING of a library
+accessor - which is to say how many inline levels stand between the caller's
+statement and the leaf the budget runs out on - is a source lever with no
+pragma involved. `std::bitset<N>` is the cleanest instance in this tree
+because Dinkumware layers it exactly:
+
+    operator[](size_t) const  ->  test(size_t)  ->  _Xran()  ->
+        out_of_range(const string&)  ->  basic_string(const char*, alloc)
+
+so writing `b[i]` instead of `b.test(i)` costs the leaf one level of budget
+and pushes whatever was marginal back OUT of line, which is where retail
+frequently has it. Swept over every `.test(` / `.set(` site whose owning row
+sits below 100 at its banked MAX (36 rows):
+
+| row | before -> after |
+| --- | --- |
+| `town::initialize_spells` | 97.7386 -> **100.0000** |
+| `NewfullMap::GenerateHeightMap` | 96.7484 -> **100.0000** |
+| `TSingleSelectionWindow::SetNewPlayerSlot` | 63.0729 -> 68.8219 |
+| `TCampaignBrief::ScenarioStruct::GiveCrossoverArtifacts` | 72.5726 -> 73.0000 |
+| `mark_spells` (`.set(i,v)` -> `[i] = v`) | 93.9578 -> 94.5148 |
+| `TSingleSelectionWindow::MakeHeroFilter` | 87.3429 -> 87.5476 |
+
+It is NOT a general improvement, and the losers are as informative as the
+winners: `armyGroup::get_morale_description` 93.06 -> 89.04,
+`NewSMapHeader::Save` 87.00 -> 80.36, `AI_attempt_puzzle_guess` 97.16 ->
+95.60, `town::GiveSpells` 99.92 -> 99.70, `hero::HeroFn_004DC100`
+87.27 -> 79.24 on the `.set` form, and eleven rows byte-flat. Read it as a
+per-site fact about which level retail's budget ran out on, and MEASURE both
+spellings; the flat rows are the ones where the leaf was never marginal.
+
+The same ladder runs through the sequence containers and `basic_string`, and
+two more rows moved on it:
+
+| row | change | before -> after |
+| --- | --- | --- |
+| `InitializeSeerHutText` | `push_back(x)` -> `insert(end(), x)` | 79.8841 -> **100.0000** |
+| `exchange_spells` | `s += x` -> `s.append(x)` (13 sites) | 88.6905 -> 92.1640 |
+
+And the widest one, `basic_string::operator=` -> `assign`, swept over all 37
+sub-100 rows that assign to a `std::string` local:
+
+| row | change | before -> after |
+| --- | --- | --- |
+| `TViewArmyWindow::WindowHandler` | `text = X` -> `text.assign(X)` (7 sites) | 92.5744 -> 99.1520 |
+
+One winner out of 37, three losers (`QuickInfo` 94.87 -> 94.55,
+`CreatureBankEvent` 91.59 -> 91.41, `TSpellbookWindow::WindowHandler`
+99.90 -> 98.81), three non-compiling and thirty byte-flat. The hit rate is
+low; the payoff when it lands is 6.6 points on a row 97 of whose 98 blocks
+were already exact, so sweep it, do not reason about it.
+
+`clear()` is the fourth mass-carrying forwarder (`clear()` is literally
+`erase(begin(), end())`, and the erase is the mass). Swept over 29 sub-100
+rows: `TCampaignStartHeroOption::Read` 88.9802 -> 92.6089 and
+`NewSMapHeader::Load` 92.5118 -> 92.6763; two byte-flat, one non-compiling,
+and TWENTY-FOUR losers, several catastrophic - `army::HeroFn_00445490`
+92.52 -> 14.41, `readMapObjects` 92.20 -> 27.51, `readBlackBox` 93.01 -> 66.11,
+`TTextScroller::SetText` 99.44 -> 73.40. This is the lowest hit rate of the
+four and the most dangerous; it is worth sweeping only because the sweep is
+mechanical and each row is measured on its own.
+
+**THE INTERMEDIATE LEVEL MUST CARRY MASS.** This is the bound, and it is what
+separates the levers above from the ones that do nothing. `bitset::test` holds
+a range check, `push_back` holds an `insert` call, `operator+=` holds an
+`append` call - each is a real basic block the budget can run out on. A
+one-line forwarder that only renames its argument is FREE, and adding or
+removing it is byte-flat at every site measured:
+
+* `.length()` -> `.size()` (`length()` is literally `return size();`) - twelve
+  rows swept, **all twelve byte-flat to the digit**.
+* `.resize(n)` -> `.resize(n, T())` (`resize(n)` is literally
+  `resize(n, T())`) - four rows swept, **all four byte-flat**.
+
+So do not sweep a forwarder; sweep an accessor that does work. And measure -
+the sign is per-site, never per-lever (`push_back` -> `insert` LOSES on five
+of the eleven rows it was tried on, up to -9.7).
+
+**AND THE LADDER RE-OPENS CLOSED ROWS.** Twenty rows whose residual notes had
+been closed against every lever that existed before this one were re-measured
+with it, one measurement each. Three moved, two materially:
+`game::LoadMap` **70.6990 -> 75.4768** on the six `clear()` calls in its pool
+reset, and `TCampaignBrief::TCampaignBrief` **85.7661 -> 86.6820** on five
+`push_back`s (`TCampaignBrief::CompleteCurrentMap` gained 0.16 and was left
+alone as noise). Neither row's standing note was wrong - both predate the
+lever. This is the "a local-maximum verdict expires when a new lever lands"
+rule paying out, and it is cheap: the sweep is mechanical.
+
+Two riders:
+
+* `TSingleSelectionWindow::OnBeginGame` shows the ladder has a floor. It is
+  already spelled `[...]` through a `const bitset<4>&` and retail is STILL one
+  level less inlined - it CALLS `bitset<4>::_Xran()` - and there is no deeper
+  legal spelling, so that one needs caller mass, not a respelling.
+* The lever can RETIRE a pin. `mark_spells` carried a statement
+  `#pragma inline_depth(0)` around one `.set`; with the subscript form the pin
+  is worth -0.19 (94.32 pinned against 94.51 unpinned), so it came out and the
+  tree's pin count fell 354 -> 353.
+
 ## 7. Using it
 
 ```sh
