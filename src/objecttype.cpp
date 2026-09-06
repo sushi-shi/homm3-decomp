@@ -624,6 +624,33 @@ VA_COMPGEN(0x004044e0, 0x159, CLASS_CTOR, logic_error)
 VA_COMPGEN(0x0041bc10, 0x1D, EXCEPTION_DORAISE, runtime_error)
 VA_COMPGEN(0x0041bc30, 0x159, CLASS_CTOR, runtime_error)
 
+// The rest of logic_error's own COMDAT group, plus out_of_range's _Doraise,
+// all four selected out of this object and all four sitting in the same
+// 0x404400..0x404700 run as the copy constructor above.
+//
+// The two _Doraise bodies are byte-identical apart from the CALLEE, which is
+// the same discriminator the runtime_error claim above rests on: 0x404640
+// copy-constructs through 0x4044e0 (logic_error's, claimed here) and 0x4046e0
+// through 0x404700 (out_of_range's, claimed in customcampaign.cpp), and each
+// then rethrows with its own _ThrowInfo. No similarity argument is involved
+// and none would work - bad_cast's, invalid_argument's and runtime_error's
+// bodies all agree 0.700 with both.
+//
+// 0x404690 is `??1logic_error`: it stores the class's own vtable 0x6455bc
+// (whose only other writers are the two logic_error constructors), releases
+// the reference-counted `what` string at +0x10, zeroes the three string
+// words and tail-calls ~exception. Our COMDAT is the same 75 bytes,
+// instruction for instruction. 0x404660 is the scalar deleting destructor
+// that wraps it.
+//
+// The throwing call site that pulls this whole group into the image's first
+// COMDAT band is bitset<10>::_Xran at 0x404410 (claimed in border.cpp) -
+// the only other __CxxThrowException site below 0x405000.
+VA_COMPGEN(0x00404640, 0x1D, EXCEPTION_DORAISE, logic_error)
+VA_COMPGEN(0x00404660, 0x21, SCALAR_DELETING_DTOR, logic_error)
+VA_COMPGEN(0x00404690, 0x4B, IMPLICIT_DTOR, logic_error)
+VA_COMPGEN(0x004046e0, 0x1D, EXCEPTION_DORAISE, out_of_range)
+
 // COMDAT pairing: vector<TObjectType::TImageInfo>::insert(ptr, count,
 // const&), agreement 1.000 at an exactly equal 740-byte extent. TImageInfo
 // is this header's nested type and no other object instantiates the vector,

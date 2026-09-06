@@ -42,6 +42,7 @@ adventuremapwindow	?UpdateTownLocators@TAdventureMapWindow@@QAEXHEE@Z	100.0000	1
 adventuremapwindow	?_Construct@std@@YIXPAPAVwidget@@ABQAV2@@Z	100.0000	100.0000	100.0000	0x4dc0	2b1b0a451baa
 adventuremapwindow	?_Eos@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEXI@Z	100.0000	100.0000	100.0000	0x4a70	dd5b64f75b83
 adventuremapwindow	?_Grow@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAE_NI_N@Z	100.0000	100.0000	100.0000	0x4a90	-
+adventuremapwindow	?_vslot8@TAdventureMapWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x40b0	b49336028535
 adventuremapwindow	?animate_bottom_view@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x2b90	cfa48a5aa0dc
 adventuremapwindow	?assign@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@PBDI@Z	100.0000	100.0000	100.0000	0x4150	-
 adventuremapwindow	?convertID2HelpID@TAdventureMapWindow@@QBEHH@Z	100.0000	100.0000	100.0000	0x2c50	0bc1aa59310c
@@ -1818,8 +1819,10 @@ forcefeedback	??_Gt_initialize_failure@TImmMouseRuntime@@UAEPAXI@Z	100.0000	100.
 forcefeedback	?PlayImmEffect@@YIEPBDH@Z	100.0000	100.0000	100.0000	0xb69f0	17ca19ae3751
 forcefeedback	?Start@TImmMouseEffect@@QAEEXZ	100.0000	100.0000	100.0000	0xb6f30	99684662ed29
 forcefeedback	?Stop@TImmMouseEffect@@QAEXXZ	100.0000	100.0000	100.0000	0xb6f50	ebcf155b3807
+forcefeedback	?_Construct@std@@YIXPAU?$pair@QAVCImmEnclosure@@UtagRECT@@@1@ABU21@@Z	100.0000	100.0000	100.0000	0xb7fe0	-
 forcefeedback	?_Dec@const_iterator@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@U_Kfn@?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@3@U?$less@PAVCImmEnclosure@@@3@V?$allocator@UtagRECT@@@3@@std@@QAEXXZ	100.0000	100.0000	100.0000	0xb7db0	-
 forcefeedback	?_Insert@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@U_Kfn@?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@3@U?$less@PAVCImmEnclosure@@@3@V?$allocator@UtagRECT@@@3@@std@@IAE?AViterator@12@PAU_Node@12@0ABU?$pair@QAVCImmEnclosure@@UtagRECT@@@2@@Z	100.0000	100.0000	100.0000	0xb7a50	-
+forcefeedback	?close@?$basic_filebuf@DU?$char_traits@D@std@@@std@@QAEPAV12@XZ	100.0000	100.0000	100.0000	0xb7400	-
 forcefeedback	?insert@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@U_Kfn@?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@3@U?$less@PAVCImmEnclosure@@@3@V?$allocator@UtagRECT@@@3@@std@@QAE?AU?$pair@Viterator@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@U_Kfn@?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@3@U?$less@PAVCImmEnclosure@@@3@V?$allocator@UtagRECT@@@3@@std@@_N@2@ABU?$pair@QAVCImmEnclosure@@UtagRECT@@@2@@Z	100.0000	100.0000	100.0000	0xb70e0	-
 game	??0?$bitset@$0BM@@std@@QAE@K@Z	100.0000	100.0000	100.0000	0xcf870	-
 game	??0CMCClaimGarrison@@QAE@HH@Z	100.0000	100.0000	100.0000	0xc23e0	335cb56766c1
@@ -2780,6 +2783,7 @@ objecttype	??0strstreambuf@std@@QAE@PBDH@Z	100.0000	100.0000	100.0000	0x1165f0	-
 objecttype	??1?$basic_istream@DU?$char_traits@D@std@@@std@@UAE@XZ	100.0000	100.0000	100.0000	0x115260	-
 objecttype	??1?$ctype@D@std@@UAE@XZ	100.0000	100.0000	100.0000	0x116160	-
 objecttype	??1TObjectImageNameTable@@QAE@XZ	100.0000	100.0000	100.0000	0x114130	-
+objecttype	??1logic_error@std@@UAE@XZ	100.0000	100.0000	100.0000	0x4690	-
 objecttype	??5?$basic_istream@DU?$char_traits@D@std@@@std@@QAEAAV01@AAH@Z	100.0000	100.0000	100.0000	0x115270	-
 objecttype	??5@YIAAV?$basic_istream@DU?$char_traits@D@std@@@std@@AAV01@AAUTObjectType@@@Z	76.6378	76.6378	76.6378	0x114b80	5b651aebcf85
 objecttype	??5@YIAAV?$basic_istream@DU?$char_traits@D@std@@@std@@AAV01@AAV?$bitset@$08@1@@Z	100.0000	100.0000	100.0000	0x1157f0	-
@@ -2791,10 +2795,13 @@ objecttype	??_G?$basic_istream@DU?$char_traits@D@std@@@std@@UAEPAXI@Z	100.0000	1
 objecttype	??_G?$ctype@D@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x116130	-
 objecttype	??_Gfacet@locale@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x116560	-
 objecttype	??_Gistrstream@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x116720	-
+objecttype	??_Glogic_error@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x4660	-
 objecttype	?GetImageName@TObjectType@@QAEABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x114960	adca89cffd94
 objecttype	?_Construct@std@@YIXPAU?$pair@$$CBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@1@ABU21@@Z	100.0000	100.0000	100.0000	0x11b6d0	-
 objecttype	?_Dec@const_iterator@?$_Tree@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$pair@$$CBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@2@U_Kfn@?$map@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@HU?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@2@@2@U?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@2@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x11b5d0	-
 objecttype	?_Doraise@invalid_argument@std@@MBEXXZ	100.0000	100.0000	100.0000	0x116f10	-
+objecttype	?_Doraise@logic_error@std@@MBEXXZ	100.0000	100.0000	100.0000	0x4640	-
+objecttype	?_Doraise@out_of_range@std@@MBEXXZ	100.0000	100.0000	100.0000	0x46e0	-
 objecttype	?_Doraise@runtime_error@std@@MBEXXZ	100.0000	100.0000	100.0000	0x1bc10	-
 objecttype	?_Erase@?$_Tree@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$pair@$$CBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@2@U_Kfn@?$map@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@HU?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@2@@2@U?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@2@@std@@IAEXPAU_Node@12@@Z	100.0000	100.0000	100.0000	0x1175d0	-
 objecttype	?_Getifld@?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@CAHPADAAV?$istreambuf_iterator@DU?$char_traits@D@std@@@2@1HABVlocale@2@@Z	100.0000	100.0000	100.0000	0x11a1f0	-
