@@ -208,6 +208,22 @@ VA_COMPGEN(0x004b7020, 0x13, IMPLICIT_DTOR, CImmEnclosure_auto_ptr)
 // is the same answer the length fallback would give.
 VA_COMPGEN(0x004b7040, 0x10, IMPLICIT_DTOR, char_auto_ptr)
 VA_COMPGEN(0x004b7050, 0x21, IMPLICIT_DTOR, CImmProject_auto_ptr)
+// COMDAT pairing: basic_filebuf<char>::close, the one <fstream> member of
+// this TU with no claim key until now. TImmMouseRuntime's constructor reads
+// H3Shad.ifr through an ifstream, and 0x4b7400 is the `close` that ends it:
+// `fclose` on the FILE* at +0x50, then basic_streambuf::_Init()'s six
+// self-referential pointer stores (+0xc->+4, +0x1c->+0x14, +0x20->+0x18,
+// +0x10->+8, +0x2c->+0x24, +0x30->+0x28) zeroed through, then the two
+// locale words from the shared _Stinit. Agreement 0.625 against this
+// object's own `?close@?$basic_filebuf@D...` COMDAT, which nothing else in
+// the unit resembles.
+VA_COMPGEN(0x004b7400, 0x9C, FILEBUF_CLOSE, char)
 VA_COMPGEN(0x004b70e0, 0x115, TREE_INSERT, CImmEnclosure)
 VA_COMPGEN(0x004b7a50, 0x2F9, TREE_NODE_INSERT, CImmEnclosure)
 VA_COMPGEN(0x004b7db0, 0xB3, TREE_CONST_ITERATOR_DEC, CImmEnclosure)
+// COMDAT pairing: std::_Construct for the map's 20-byte
+// pair<CImmEnclosure* const, tagRECT>. `_Tree::_Insert` (0x4b7a50) is its
+// only caller, the five-dword `rep movsd` fixes the element width, and the
+// leading null test is placement new's. This TU emits exactly one
+// `?_Construct@std@@...` COMDAT, so the pairing is unambiguous.
+VA_COMPGEN(0x004b7fe0, 0x14, STD_CONSTRUCT, CImmEnclosure_pair)

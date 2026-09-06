@@ -37,27 +37,6 @@ void AddHelp(THelpText* pHelpText, const char* rollover, const char* RightClick)
     // @stub
 }
 
-// E:\gamedcs\multiplayerwindow.cpp:527
-DC_ONLY(0xffac0, 0x2C)
-int CMPInputEdit::OnKeyPress(message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\multiplayerwindow.cpp:854
-DC_ONLY(0xffaec, 0x20)
-void CHotSeatEdit::OnKillFocus()
-{
-    // @stub
-}
-
-// E:\gamedcs\multiplayerwindow.cpp:860
-DC_ONLY(0xffb0c, 0x32)
-int CHotSeatEdit::OnKeyPress(message* msg)
-{
-    // @stub
-}
-
 // E:\gamedcs\multiplayerwindow.cpp:872
 DC_ONLY(0xffb40, 0x30)
 void DeleteTempSaveGame(const char* filename)
@@ -407,6 +386,117 @@ DATA(0x006a7788) char* gSearchAddressHelp;
 void SliderGames(int state, heroWindow* parent_window)
 {
     static_cast<TMultiPlayerWindow*>(parent_window)->currentIndex = state;
+}
+
+// The two CHotSeatDlg helpers the DC roster keeps out of line (GetPlayerCount
+// dc 0x102cf8, UpdateOK dc 0x102d4c). Retail emits neither: both appear only
+// as the shared tail of CHotSeatEdit's two overrides below, which is what
+// fixes their bodies - the eight-edit strlen census, the `> 1` predicate on
+// widget 519's enable, and the full-window redraw with retail's own
+// 0xffff0001 / 0xffff id window. Marked `inline` so the TU emits no COMDAT
+// for a function the image does not have.
+inline int CHotSeatDlg::GetPlayerCount()
+{
+    int players = 0;
+    for (int i = 0; i < 8; ++i) {
+        if (strlen(edit[i]->Text.c_str()))
+            ++players;
+    }
+    return players;
+}
+
+inline void CHotSeatDlg::UpdateOK()
+{
+    GetWidget(OKAY_ID)->enable(GetPlayerCount() > 1);
+    DrawWindow(1, 0xffff0001, 0xffff);
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:527 - promoted from DC_ONLY. Slot 15 of
+// CMPInputEdit's vtable 0x640130. CMPEdit::OnKeyPress (0x5107d0) one class
+// down, statement for statement, with one addition: EVERY exit first tells
+// the owning dialog to re-evaluate its OK button. That call is the slot-14
+// virtual `[edx+0x38]` on parentWindow, which is what proves CMPInputDlg's
+// UpdateOK is virtual and its table fifteen slots wide.
+// The result is materialised into ESI ahead of the shared tail at all three
+// exits, so it is ONE source variable and ONE trailing call; VC6 then
+// duplicates the tail into the three predecessors itself.
+VA(0x0050de50, 0x8F)  // anchor-vtable (slot 15 of 0x640130), dc 0xffac0
+int CMPInputEdit::OnKeyPress(message* msg)
+{
+    int handled;
+
+    if (!bHasFocus) {
+        handled = 0;
+    } else if ((HIWORD(GetKeyState(VK_SHIFT)) && msg->codeX == KEYCODE_TAB)
+               || msg->codeX == KEYCODE_KP_8) {
+        OnPrevEdit();
+        handled = 1;
+    } else if (msg->codeX == KEYCODE_TAB || msg->codeX == KEYCODE_ENTER
+               || msg->codeX == KEYCODE_KP_2) {
+        OnNextEdit();
+        handled = 1;
+    } else {
+        handled = textEntryWidget::OnKeyPress(msg);
+    }
+
+    static_cast<CMPInputDlg*>(parentWindow)->UpdateOK();
+    return handled;
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:854 - promoted from DC_ONLY. Slot 11 of
+// CHotSeatEdit's vtable 0x640210. The base handler first, then the dialog's
+// OK re-evaluation expanded in place (CHotSeatDlg::UpdateOK is NOT virtual -
+// 0x6401d8 has no slot 14 - so retail inlines it here and in the key handler
+// below).
+VA(0x0050dee0, 0x7F)  // anchor-vtable (slot 11 of 0x640210), dc 0xffaec
+void CHotSeatEdit::OnKillFocus()
+{
+    textEntryWidget::OnKillFocus();
+    static_cast<CHotSeatDlg*>(parentWindow)->UpdateOK();
+}
+
+// CHotSeatEdit's ring walk. No carve row of its own: /OPT:ICF folded both
+// onto CMPEdit's byte-identical 0x510850 / 0x510870, which is exactly why
+// retail's 0x640210 carries those two addresses for a class that does not
+// derive CMPEdit.
+void CHotSeatEdit::OnNextEdit()
+{
+    if (nextEdit && (nextEdit->status & widget::WIDGET_ACTIVE))
+        parentWindow->SetFocus(nextEdit->id);
+}
+
+void CHotSeatEdit::OnPrevEdit()
+{
+    if (prevEdit && (prevEdit->status & widget::WIDGET_ACTIVE))
+        parentWindow->SetFocus(prevEdit->id);
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:860 - promoted from DC_ONLY. Slot 15 of
+// vtable 0x640210: CMPInputEdit's handler above with the same trailing OK
+// re-evaluation, except that this dialog's UpdateOK is expanded rather than
+// called. Retail homes the result in the dead `msg` parameter slot, which is
+// what a block-scoped result assigned on every arm gets here.
+VA(0x0050df60, 0xEE)  // anchor-vtable (slot 15 of 0x640210), dc 0xffb0c
+int CHotSeatEdit::OnKeyPress(message* msg)
+{
+    int handled;
+
+    if (!bHasFocus) {
+        handled = 0;
+    } else if ((HIWORD(GetKeyState(VK_SHIFT)) && msg->codeX == KEYCODE_TAB)
+               || msg->codeX == KEYCODE_KP_8) {
+        OnPrevEdit();
+        handled = 1;
+    } else if (msg->codeX == KEYCODE_TAB || msg->codeX == KEYCODE_ENTER
+               || msg->codeX == KEYCODE_KP_2) {
+        OnNextEdit();
+        handled = 1;
+    } else {
+        handled = textEntryWidget::OnKeyPress(msg);
+    }
+
+    static_cast<CHotSeatDlg*>(parentWindow)->UpdateOK();
+    return handled;
 }
 
 // Residual (80.46%): every widget, its screen coordinates, def/pcx name,
@@ -1205,9 +1295,11 @@ CMPEdit::CMPEdit(int x, int y, int w, int h, int textSize, const char* text,
 
 // Slot 15 first rejects input while this edit lacks focus. The Win32 HIWORD
 // spelling accounts for retail's sign-extend/logical-shift sequence around
-// GetKeyState: Shift+Tab and keypad Up select the next link, while plain Tab,
-// Enter and keypad Down select the previous link. Every other key reaches the
-// text-entry base editor directly.
+// GetKeyState: Shift+Tab and keypad Up walk to the PREVIOUS link (vtable slot
+// 20), while plain Tab, Enter and keypad Down walk to the next one (slot 19).
+// The two names were swapped here until 0x640184's own slot order was read
+// off the image; the emitted call offsets 0x4c/0x50 are unchanged.
+// Every other key reaches the text-entry base editor directly.
 // E:\gamedcs\multiplayerwindow.cpp:279
 VA(0x005107d0, 0x73)  // dc 0x1020c4; focus/key dispatch + direct base fallback
 int CMPEdit::OnKeyPress(message* msg)
@@ -1217,13 +1309,13 @@ int CMPEdit::OnKeyPress(message* msg)
 
     if ((HIWORD(GetKeyState(VK_SHIFT)) && msg->codeX == KEYCODE_TAB)
         || msg->codeX == KEYCODE_KP_8) {
-        OnNextEdit();
+        OnPrevEdit();
         return 1;
     }
 
     if (msg->codeX == KEYCODE_TAB || msg->codeX == KEYCODE_ENTER
         || msg->codeX == KEYCODE_KP_2) {
-        OnPrevEdit();
+        OnNextEdit();
         return 1;
     }
 
@@ -1808,20 +1900,6 @@ int CHotSeatDlg::OnWidgetDeselect(int id, unsigned char* bExitFlag)
 // E:\gamedcs\multiplayerwindow.cpp:729
 DC_ONLY(0x102cc8, 0x30)
 void CHotSeatDlg::OnKillFocus(int id)
-{
-    // @stub
-}
-
-// E:\gamedcs\multiplayerwindow.cpp:737
-DC_ONLY(0x102cf8, 0x54)
-int CHotSeatDlg::GetPlayerCount()
-{
-    // @stub
-}
-
-// E:\gamedcs\multiplayerwindow.cpp:750
-DC_ONLY(0x102d4c, 0x3C)
-void CHotSeatDlg::UpdateOK()
 {
     // @stub
 }
