@@ -1547,10 +1547,10 @@ NewmapCell* advManager::DoAdvCommand(type_point* trigger_point)
     case ADV_COMMAND_SHIPYARD: {
         gpMouseManager->ShowPointer(0);
         gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
-        type_point dockPoint(radarOrigin.x + lastHoverX, radarOrigin.y + lastHoverY,
-                             radarOrigin.z);
         type_point mapPoint(radarOrigin.x + lastHoverX, radarOrigin.y + lastHoverY,
                             radarOrigin.z);
+        type_point dockPoint(radarOrigin.x + lastHoverX, radarOrigin.y + lastHoverY,
+                             radarOrigin.z);
         type_point cellPoint = mapPoint;
         unsigned char valid = cellPoint.is_valid();
         NewfullMap* map = fullMap;
