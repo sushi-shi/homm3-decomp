@@ -703,6 +703,56 @@ commutative parity flipped by bodying SIBLING functions
 - status: cross-family evidence for C1's mechanism (different compiler)
 - probe: none (MSVC 4.2 is outside this pinned toolchain)
 
+### C10. A byte local's SIGNEDNESS decides whether it gets the recycled
+### parameter home - and the DC type record is the oracle
+`NewfullMap::readSpellScrollData` sat at 96.0056 with 26/26 blocks, 12/12
+branches, 8/8 calls and every reloc agreeing; the whole gap was one frame-home
+swap (retail `char_buffer` at the recycled `[ebp+0xb]` and `padding[3]` at
+`[ebp-0x10]`, ours reversed) plus its single consequence - a byte sitting in a
+whole dword slot lets VC6 read it `mov eax,[slot] / and eax,0xff` and then FOLD
+`x ^= (x ^ b) & 0xff` into `and dl,0 / xor`, one instruction shorter than
+retail's byte load plus literal xor/and/xor. Declaring the local `char`
+instead of `unsigned char` - the Dreamcast type record says `T_RCHAR(0070)` -
+closed the row to 100.0000 on that one word. Declaration ORDER does not reach
+it: all six orders of the three locals, with `padding` hoisted to function
+scope, are byte-flat.
+BOUND, measured the same day: this is a PER-BODY lever, not a family rule.
+`readResourceData` declares the same local `unsigned char` and is exact either
+way. And a mechanical scan of the top 260 sub-100 rows at their banked MAX -
+matching every DC `T_RCHAR`/`T_UCHAR`/`T_SHORT`/`T_USHORT` local against a
+same-named declaration in our body - found ZERO further mismatches, so the
+lever is exhausted for same-named locals and only survives where our body
+renames the DC's.
+- evidence: `src/mapcell.cpp` readSpellScrollData note; scan `build/p36-sign.py`
+- status: byte-proven, one closure
+- probe: none yet (a c*-family oracle case would need a two-Read body)
+
+### C11. Reading the DC LOCAL-SCOPE SWEEP: only an absent CONSTRUCT pays
+The sweep (list every Dreamcast procedure-scope local, subtract the names our
+body already uses) has a high false-positive rate, and the difference between
+its hits is worth stating because it decides where to spend a measurement.
+Every closure it produced in polish lane 36 came from a name whose CONSTRUCT
+was absent, not merely its spelling: `Recalculate`'s seven per-iteration widget
+ids (+11.2), `FizzleForwardX`'s three per-row pointer walkers and nine channel
+locals (+8.7), `readScholarData`'s `scholar_info` POINTER (-> EXACT),
+`readResourceData`'s `count` (-> EXACT), `SetRolloverText`/`QuickInfo`'s
+`thisHut` and `DrawAdvObj`'s `Obj` (a container row addressed once instead of
+subscripted twice).
+The misses are all the other kind. A DC name our body carries under a
+different spelling (`player`/`iThisPlayer` swapped, `this_generator` =
+`mapGenerator`, `this_font` = `pFont`, `enemy_army_group` = `group`,
+`slotAtt` = `slot`, MirrorImage's four loop counters shifted one step across)
+is byte-inert by construction. Worse, a DC local can be DECLARED AND NEVER
+READ in the Dreamcast body itself - `TTradeResourceWindow::Update`'s three
+"Temp" locals and `THillFortWindow::Recalculate`'s `iBestHeroValue` group have
+no instruction touching their slots - so before spending a build, grep the DC
+disassembly for the slot. And a DC-proven SCOPE can lose: hoisting
+`CreatureBankEvent`'s `artifact` record to the DC's function scope - the exact
+shape that took `type_record_shroud::load` 84 -> 100 - costs 0.64 there.
+- evidence: this lane's residual notes across 14 bodies
+- status: methodology bound, measured
+- probe: none (not a compiler behavior)
+
 ### C9. Measurement hygiene the corpus depends on (model-training caveats)
 objdiff fuzzy gives partial credit for a differing displacement (a 97%
 function can have every local mis-slotted); masked diffs hide immediates (the
