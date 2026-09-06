@@ -402,7 +402,10 @@ int TransmitRemoteDataDPID(CNetMsg* pMsg, unsigned long dpidTo,
 // materialize the null second fastcall argument in EDX.
 CNetMsg* GetRemoteData(unsigned char removeFromQueue,
                        unsigned char* wasCompressed);
-int calc_crc_long(unsigned char* buffer, int len);
+// remote.cpp:95 defines it `unsigned long (const unsigned char*, unsigned)`
+// - the DC roster's `int (unsigned char*, int)` is the RoE spelling and does
+// not decorate to the symbol game.obj's TransmitSaveGame actually calls.
+unsigned long calc_crc_long(const unsigned char* buf, unsigned len);
 // DC remote.cpp:1411, dc 0x11ce68; retail ReceiveSaveGame keeps this
 // cleanup boundary out of line on both fatal in-game receive paths.
 // Retail .data 0x699510, remote.cpp's DATA claim. The kb.obj
