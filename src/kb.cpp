@@ -510,18 +510,34 @@ int EarlySetup()
     if (gCDDriveNumber) {
         int i;
 
-        for (i = 0; i < gVideoHeaderCount; i++)
-            if (!_strcmpi(gVideoHeader3[i].name,
-                          DATA_COMPGEN(0x0067f5ec, expansionTwoVideoName,
-                              "h3x2_rne1.smk")))
-                goto have_cd_version;
-        for (i = 0; i < gVideoHeaderCount; i++)
-            if (!_strcmpi(gVideoHeader3[i].name,
-                          DATA_COMPGEN(0x0067f5e0, expansionOneVideoName,
-                              "h3abab1.smk"))) {
-                gCDDriveNumber = 6;
-                goto have_cd_version;
-            }
+        // Retail scans both header tables with a GOTO loop: the count is
+        // re-read at the head (`cmp edi,[gVideoHeaderCount] / jge`) and the
+        // back edge is an unconditional `jmp`, with no rotation and no LICM
+        // hoist of the count - the shape a `for` cannot produce here.
+        i = 0;
+    check_expansion_two:
+        if (i >= gVideoHeaderCount)
+            goto scan_expansion_one;
+        if (!_strcmpi(gVideoHeader3[i].name,
+                      DATA_COMPGEN(0x0067f5ec, expansionTwoVideoName,
+                          "h3x2_rne1.smk")))
+            goto have_cd_version;
+        i++;
+        goto check_expansion_two;
+    scan_expansion_one:
+        i = 0;
+    check_expansion_one:
+        if (i >= gVideoHeaderCount)
+            goto no_expansion;
+        if (!_strcmpi(gVideoHeader3[i].name,
+                      DATA_COMPGEN(0x0067f5e0, expansionOneVideoName,
+                          "h3abab1.smk"))) {
+            gCDDriveNumber = 6;
+            goto have_cd_version;
+        }
+        i++;
+        goto check_expansion_one;
+    no_expansion:
         gCDDriveNumber = 5;
     }
 
