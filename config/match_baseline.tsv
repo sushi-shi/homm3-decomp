@@ -471,7 +471,7 @@ ai_tactical	?get_fortune_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_d
 ai_tactical	?get_frenzy_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	98.9849	98.9849	98.9849	0x375d0	f5bae1d962fd
 ai_tactical	?get_haste_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x396b0	a2979dd86426
 ai_tactical	?get_hex_attack_value@type_AI_attack_hex_chooser@@IAEJJAAJ@Z	84.3750	84.3750	84.3750	0x36180	757de713dbc9
-ai_tactical	?get_hypnotize_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	96.3475	96.3475	96.3475	0x3a500	ec6315646f2b
+ai_tactical	?get_hypnotize_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x3a500	78527ac32283
 ai_tactical	?get_mass_damage_effect@type_AI_spellcaster@@QAEJJJ@Z	100.0000	100.0000	100.0000	0x36fb0	bff7fea5864c
 ai_tactical	?get_mastery_value@type_enchant_data@@QAEJXZ	100.0000	100.0000	100.0000	0x36930	b7f5c4b684ed
 ai_tactical	?get_mirth_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38170	2a903ee53bb4
@@ -570,7 +570,7 @@ army	?get_attack_direction@army@@QBEJJPBV1@J@Z	100.0000	100.0000	100.0000	0x4584
 army	?get_attack_modifier@army@@QBEJPBV1@E@Z	100.0000	100.0000	100.0000	0x42550	c4fe8ce69fcd
 army	?get_average_damage@army@@QBEJPBV1@EJEJ@Z	100.0000	100.0000	100.0000	0x42780	661aea781819
 army	?get_average_damage@army@@QBENXZ	100.0000	100.0000	100.0000	0x426f0	fc441b73233a
-army	?get_berserk_targets@army@@QBEXAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	92.5170	92.5170	92.5170	0x45490	64e77021b597
+army	?get_berserk_targets@army@@QBEXAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	94.1648	94.1648	94.1648	0x45490	073982c03f75
 army	?get_controller@army@@QBEPAVhero@@XZ	100.0000	100.0000	100.0000	0x42690	9c660b71c78e
 army	?get_controlling_side@army@@QBEHXZ	100.0000	100.0000	100.0000	0x40140	ceab6b46b98c
 army	?get_defense_modifier@army@@QBEJXZ	100.0000	100.0000	100.0000	0x42660	f00838b6b3a4
@@ -965,7 +965,7 @@ cmbtmgr	?ShootMissile@combatManager@@QAEXHHHHPBMPBVCSprite@@@Z	93.9760	93.9760	9
 cmbtmgr	?ShotIsNotOptimal@combatManager@@QAEEPBVarmy@@0@Z	100.0000	100.0000	100.0000	0x67600	8d5426ecff0c
 cmbtmgr	?ShotIsThroughWall@combatManager@@QAEEPBVarmy@@HH@Z	100.0000	100.0000	100.0000	0x67510	6990585b75f2
 cmbtmgr	?StopCombatSounds@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x639e0	313b62a81581
-cmbtmgr	?Unnamed464d40@combatManager@@QAEEPAVarmy@@@Z	91.0961	91.0961	91.0961	0x64d40	3dc15d7e32c2
+cmbtmgr	?Unnamed464d40@combatManager@@QAEEPAVarmy@@@Z	100.0000	100.0000	100.0000	0x64d40	9c542ce6bb5f
 cmbtmgr	?Unnamed464f50@combatManager@@QAEEPBVarmy@@0@Z	100.0000	100.0000	100.0000	0x64f50	47f69f0febd2
 cmbtmgr	?Unnamed465f20@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x65f20	ace82f00ae9d
 cmbtmgr	?Unnamed4693a0@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x693a0	16343c38abc0
