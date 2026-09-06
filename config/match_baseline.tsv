@@ -1196,6 +1196,7 @@ customcampaign	??1TCampaignStartCrossoverOption@@UAE@XZ	100.0000	100.0000	100.00
 customcampaign	??1TCampaignStartHeroOption@@UAE@XZ	100.0000	100.0000	100.0000	0x88490	bae8220a1517
 customcampaign	??1TCampaignStartOption@@UAE@XZ	100.0000	100.0000	100.0000	0x84f40	f99c5ebd8015
 customcampaign	??4?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@QAEAAV01@ABV01@@Z	100.0000	100.0000	100.0000	0x5ff30	-
+customcampaign	??RCrossoverHeroStronger@@QBE_NAAVhero@@0@Z	100.0000	100.0000	100.0000	0x83f80	7244797eb802
 customcampaign	??_G?$basic_filebuf@DU?$char_traits@D@std@@@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x8bd20	-
 customcampaign	??_G?$codecvt@DDH@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x8ec30	-
 customcampaign	??_GScenarioStruct@TCampaignBrief@@QAEPAXI@Z	100.0000	100.0000	100.0000	0x88eb0	-
@@ -1367,7 +1368,6 @@ customcampaign	?size@?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@QBEIXZ	100.
 customcampaign	?sync@?$basic_filebuf@DU?$char_traits@D@std@@@std@@MAEHXZ	100.0000	100.0000	100.0000	0x8bd00	-
 customcampaign	?uflow@?$basic_filebuf@DU?$char_traits@D@std@@@std@@MAEHXZ	100.0000	100.0000	100.0000	0x8b8b0	-
 customcampaign	?underflow@?$basic_filebuf@DU?$char_traits@D@std@@@std@@MAEHXZ	100.0000	100.0000	100.0000	0x8b880	-
-customcampaign	CrossoverHeroStronger_operator	0.0000	90.2941	90.2941	0x83f80	7244797eb802
 customcampaign	__h3cg$customcampaign$std_copy_backward$hero	0.0000	100.0000	100.0000	0x8e880	-
 customcampaign	__h3cg$customcampaign$vector_destroy$type_artifact	0.0000	100.0000	100.0000	0x4140	-
 customcampaign	__h3cg$customcampaign$vector_insert$hero_8ce50	0.0000	0.0000	0.0000	0x8ce50	-

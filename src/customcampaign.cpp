@@ -151,7 +151,11 @@ int GetCrossoverHeroValue(hero* candidate)
     return skills + primary;
 }
 
-VA(0x00483f80, 0x9B)  // anchor-callee(std::sort<hero*> 0x48f2b0), retail-only
+// The claim for this body is the FUNCTOR_CALL pairing below, not a VA here:
+// a plain VA cannot name `operator()` - the scanner has no declarator to
+// mangle - so the row banked its flat carve name and 0.0000 with the
+// ratchet clean. ai.cpp's func_moves_before and singleselectionwindow's five
+// TSortMapsBy* predicates all use the compgen form for the same reason.
 bool CrossoverHeroStronger::operator()(hero& lhs, hero& rhs) const
 {
     int leftValue = GetCrossoverHeroValue(&lhs);
@@ -3282,6 +3286,16 @@ void TArtifactRequirement::set(TArtifact _artifact, char _guard_bit)
     // @stub
 }
 #endif
+
+// COMDAT pairing: CrossoverHeroStronger::operator()(hero&, hero&) const -
+// the sort predicate defined at the head of this file, agreement 1.000 over
+// its whole 155-byte extent and UNIQUE in this object. The row had been
+// claimed with a plain VA that could not name it: `operator()` gives the
+// source scanner no declarator to mangle, so it fell back to the carve's
+// `CrossoverHeroStronger_operator` and banked 0.0000 against a 90.2941 max
+// while the ratchet stayed clean. The two std::sort instantiations claimed
+// below take this functor by value and are its only callers.
+VA_COMPGEN(0x00483f80, 0x9B, FUNCTOR_CALL, CrossoverHeroStronger)
 
 // COMDAT pairing: std::_Sort<hero, CrossoverHeroStronger>, agreement 0.972.
 // The map hero placeholders' own sort, instantiated by
