@@ -303,13 +303,16 @@ inline const T& _cpp_max(T left, T right)
     return left < right ? right : left;
 }
 
-// seerhut.obj's list formatter, 0x56c960.  It joins a vector with the
-// localized final separator and returns the result through the usual hidden
-// std::string return buffer (ECX), with the vector reference in EDX under
-// this compiland's /Gr profile.  Unclaimed - declared so the three container
-// quest requirement builders can name the shared operation.
-std::string join_quest_requirements(
-    const std::vector<std::string>& requirements);
+// seerhuttext.obj's list formatter, 0x56c960 (JoinTextList, exact there).  It
+// joins a vector with the localized final separator and returns the result
+// through the usual hidden std::string return buffer (ECX), with the vector
+// reference in EDX under this compiland's /Gr profile.  Declared here rather
+// than through seerhuttext.h for the include-set reason format_string and
+// NormalDialog below carry.  The reloc census (2026-09-06) is what settled
+// the identity: retail's call at every one of the nine quest requirement
+// builders below targets 0x56c960, where this tree used to name an
+// undefined `JoinTextList`.
+std::string JoinTextList(const std::vector<std::string>& items);
 
 // kb.obj's centred message box, 0x4f6570 - kb.h declares it, but the ten
 // quest dialog bodies below are this compiland's only consumers of that
@@ -916,7 +919,7 @@ std::string type_skill_quest::skill_requirement_text(
                 gPrimarySkillNames[i], required_skills[i]));
         }
     }
-    return join_quest_requirements(requirements);
+    return JoinTextList(requirements);
 }
 // E:\gamedcs\seerhut.cpp
 // Residual (96.53%): the CFG is exact (13 branches and two returns on both
@@ -1405,7 +1408,7 @@ std::string type_artifact_quest::GetRequirementText()
     std::vector<std::string> requirements;
     for (unsigned i = 0; i < artifacts.size(); ++i)
         requirements.push_back(akArtifactTraits[artifacts[i]].name);
-    return join_quest_requirements(requirements);
+    return JoinTextList(requirements);
 }
 // The three CONTAINER leaves take their vararg from slot 6 - a real
 // virtual call on `this`, which is what the `call dword ptr [eax+0x18]`
@@ -1479,7 +1482,7 @@ void type_artifact_quest::DoProposalDialog(hero* current_hero)
         std::string textFormat = texts[QUEST_TEXT_PROGRESS];
         std::string text = format_string(
             textFormat.c_str(),
-            join_quest_requirements(requirements).c_str());
+            JoinTextList(requirements).c_str());
         textPointer = text.c_str();
         std::vector<type_dialog_resource> dialogResources;
         type_dialog_resource resource;
@@ -1671,7 +1674,7 @@ std::string type_creature_quest::GetRequirementText()
             counts[i], GetArmyName(types[i], counts[i]));
         requirements.push_back(requirement);
     }
-    return join_quest_requirements(requirements);
+    return JoinTextList(requirements);
 }
 // E:\gamedcs\seerhut.cpp
 VA(0x00570690, 0xCF)  // anchor-vtable 0x6418b4 slot 7 + the shared text-table shape, retail-only
@@ -1749,7 +1752,7 @@ void type_creature_quest::DoProposalDialog(hero* current_hero)
         std::string textFormat = texts[QUEST_TEXT_PROGRESS];
         text = format_string(
             textFormat.c_str(),
-            join_quest_requirements(requirements).c_str());
+            JoinTextList(requirements).c_str());
     } else {
         text = progressText;
     }
@@ -1801,9 +1804,9 @@ void type_creature_quest::DoProgressDialog()
                 textFormat += get_time_limit_text();
             text = format_string(
                 textFormat.c_str(),
-                join_quest_requirements(requirements).c_str());
+                JoinTextList(requirements).c_str());
         } else {
-            text = GetProposalDialogText();
+            text = GetProgressDialogText();
         }
         extended_dialog(text.c_str(), dialogResources, -1, -1, 0);
     }
@@ -1975,7 +1978,7 @@ std::string type_resource_quest::GetRequirementText()
             requirements.push_back(requirement);
         }
     }
-    return join_quest_requirements(requirements);
+    return JoinTextList(requirements);
 }
 // E:\gamedcs\seerhut.cpp
 VA(0x005716e0, 0xCF)  // anchor-vtable 0x6418f0 slot 7 + the shared text-table shape, retail-only
@@ -2054,7 +2057,7 @@ void type_resource_quest::DoProposalDialog(hero* current_hero)
         std::string textFormat = texts[QUEST_TEXT_PROGRESS];
         text = format_string(
             textFormat.c_str(),
-            join_quest_requirements(requirements).c_str());
+            JoinTextList(requirements).c_str());
     } else {
         text = progressText;
     }
@@ -2152,7 +2155,7 @@ void type_resource_quest::SetDefaultText()
             requirements.push_back(requirement);
         }
     }
-    requirement = join_quest_requirements(requirements);
+    requirement = JoinTextList(requirements);
     if (proposalText.length() == 0)
         proposalText = format_string(texts[QUEST_TEXT_PROPOSAL].c_str(),
                               requirement.c_str());
