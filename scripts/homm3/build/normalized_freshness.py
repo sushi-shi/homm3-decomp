@@ -30,7 +30,10 @@ STAMP_SUFFIX = ".stamp.json"
 # relocation at a literal site and requires one unambiguous aggregate anchor;
 # 12 removes paired candidate ``__except_list`` relocations that retail proves
 # are fixed-base literal-zero operands.
-STAMP_SCHEMA = 12
+# 13 admits an OWNER-FREE static destructor into the semantic `$E<n>`
+# canonicalization - an empty holder whose teardown names only other
+# compilands' globals and so relocates no datum of its own object.
+STAMP_SCHEMA = 13
 
 _HASH_CACHE: dict[str, tuple[tuple[int, int], str]] = {}
 

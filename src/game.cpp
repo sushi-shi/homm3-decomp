@@ -630,6 +630,14 @@ unsigned char InitImmMouse(void* hInst, void* hwnd)
     }
 }
 
+// The exit thunk _atexit receives from InitImmMouse above: retail expanded
+// the whole of `~TImmMouseRuntime` into it, so the 58 bytes are the two
+// singleton teardowns and nothing of the holder itself. The claim binds
+// through canonicalize_data_symbols' owner-free static-destructor arm -
+// nothing in the body relocates `immMouse`, because the unused `this` went
+// with the expansion (build/test_ownerless_static_dtor.py is its control).
+VA_COMPGEN(0x004b6910, 0x3A, STATIC_DTOR, immMouse)
+
 // ImmMouseWindowMoved: re-derives the client origin via
 // ClientToScreen and offsets every tracked effect rect (linked list
 // in the map whose _Head is at 0x696d64) by the delta; AppWndProc's WM_MOVE

@@ -154,6 +154,13 @@ class CompgenClaim:
 # These VA_COMPGEN kinds name ordinary, already-defined COFF symbols.  They
 # participate in the retail label join, but must not enter the anonymous
 # compiler-function canonicalizer below: there is nothing to rename.
+#: The relocation targets that make a volatile `$E<n>` function a
+#: TEARDOWN rather than an initializer: a destructor or an operator delete,
+#: either linked directly or through the import table.
+TEARDOWN_EDGE_PREFIXES = ("??1", "??3@", "??_V@", "??_G",
+                          "__imp_??1", "__imp_??3@", "__imp_??_V@")
+
+
 DIRECT_SYMBOL_COMPGEN_KINDS = frozenset({
     "SCALAR_DELETING_DTOR",
     "VECTOR_DELETING_DTOR",
@@ -234,6 +241,8 @@ DIRECT_SYMBOL_COMPGEN_KINDS = frozenset({
     "LOCALE_FACET_DECREF",
     "IOS_BASE_GETLOC",
     "NUM_PUT_DO_PUT",
+    "NUMPUNCT_DO_DECIMAL_POINT",
+    "NUMPUNCT_DO_THOUSANDS_SEP",
     "NUMPUNCT_DO_GROUPING",
     "NUMPUNCT_DO_FALSENAME",
     "NUMPUNCT_DO_TRUENAME",
@@ -724,6 +733,15 @@ def _compgen_renames(coff: CoffObject, claims: tuple[CompgenClaim, ...],
     def target_names(index):
         return {coff.symbols[target].name for target in outgoing[index]}
 
+    #: Symbol indices this object DEFINES in a non-executable section - its
+    #: own data. `is_ownerless_static_dtor` below uses them as the proof
+    #: that a teardown thunk has no owner of its own.
+    local_data = {
+        index for index, symbol in coff.symbols.items()
+        if 0 < symbol.section <= len(coff.sections)
+        and not (coff.sections[symbol.section - 1].characteristics
+                 & MEM_EXECUTE)}
+
     def owner_present(names, owner):
         return any(
             name == "_" + owner or
@@ -772,6 +790,37 @@ def _compgen_renames(coff: CoffObject, claims: tuple[CompgenClaim, ...],
                     is_special_member(target, owner, "??1")
                     for target in outgoing[index]))
 
+    def is_ownerless_static_dtor(index):
+        """An EMPTY holder's teardown names no member at all.
+
+        `TImmMouseRuntime` (game.obj, retail 0x4b6910) is the shape: the
+        holder is eight bytes of nothing and its destructor closes and
+        deletes two OTHER globals, so once VC6 expands it into the `$E<n>`
+        thunk the `mov ecx, <holder>` disappears with the unused `this` and
+        NO relocation reaches the owned datum. `owner_present` therefore
+        cannot see it, and the strict arms above report zero candidates.
+
+        This runs only as a SECOND PASS over claims the strict arms left
+        unbound (see below), so it can never take a candidate away from an
+        owner-present claim. It still demands a teardown edge - a
+        destructor or an operator delete, imported or not - and refuses
+        anything registering with `_atexit`, which is the ctor-side role.
+
+        The discriminator is the OBJECT'S OWN DATA. A static destructor's
+        owned datum is by construction defined in the same object, so a
+        thunk that relocates any locally-defined datum HAS an owner and
+        belongs to the strict arms however they spell it; game.obj's
+        `_$E80` is the counter-example, a vector teardown that pushes the
+        address of its own `TPickRandomTownName` array. An ownerless one
+        reaches only imports and other compilands' externs.
+        """
+        names = target_names(index)
+        if "_atexit" in names:
+            return False
+        if any(target in local_data for target in outgoing[index]):
+            return False
+        return any(name.startswith(TEARDOWN_EDGE_PREFIXES) for name in names)
+
     def has_role(index, claim):
         if claim.kind == "STATIC_CTOR":
             return is_static_ctor(index, claim.owner)
@@ -789,16 +838,30 @@ def _compgen_renames(coff: CoffObject, claims: tuple[CompgenClaim, ...],
         return False
 
     assigned = {}
+    deferred = []
     for claim in pending:
         candidates = [index for index in volatile
                       if index not in assigned and has_role(index, claim)]
         if len(candidates) != 1:
-            warnings.warn(
-                "%s has %d semantic compiler-function candidates; leaving "
-                "claim unbound" % (claim.name, len(candidates)),
-                RuntimeWarning, stacklevel=2)
+            deferred.append((claim, len(candidates)))
             continue
         assigned[candidates[0]] = claim
+    # Second pass: a STATIC_DTOR the owner-relocation arms could not see at
+    # all. Deferring it keeps the relaxed shape from competing with any
+    # claim the strict arms already bound.
+    for claim, strict_candidates in deferred:
+        if claim.kind == "STATIC_DTOR" and strict_candidates == 0:
+            candidates = [index for index in volatile
+                          if index not in assigned
+                          and is_ownerless_static_dtor(index)]
+            if len(candidates) == 1:
+                assigned[candidates[0]] = claim
+                continue
+            strict_candidates = len(candidates)
+        warnings.warn(
+            "%s has %d semantic compiler-function candidates; leaving "
+            "claim unbound" % (claim.name, strict_candidates),
+            RuntimeWarning, stacklevel=2)
 
     rows = []
     renames = {}
