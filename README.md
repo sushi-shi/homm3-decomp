@@ -12,22 +12,22 @@ the game, supply your own legally obtained retail `HEROES3.EXE` and Dreamcast `H
 
 <!-- match-score:start -->
 
-**Executable matched: 89.59%** — fuzzy-weighted bytes over all 1,998,615 unfiltered bytes.
+**Executable matched: 89.62%** — fuzzy-weighted bytes over all 1,998,778 unfiltered bytes.
 
-**Match score** — 3,634 / 4,764 functions exact (76.3%) across the full engine (4331 in linked units).
+**Match score** — 3,641 / 4,765 functions exact (76.4%) across the full engine (4341 in linked units).
 
 | Module        | Units |     Functions exact |   Fuzzy | Fuzzy Max |
 | :------------ | ----: | ------------------: | ------: | --------: |
-| `game`        |   131 | 3565 / 4262 (83.6%) |  95.42% |    95.94% |
+| `game`        |   131 | 3572 / 4272 (83.6%) |  95.40% |    95.92% |
 | `zlib-1.1.3`  |    14 |    69 / 69 (100.0%) | 100.00% |   100.00% |
-| `(unmatched)` |     — |      0 / 433 (0.0%) |    0.0% |      0.0% |
+| `(unmatched)` |     — |      0 / 424 (0.0%) |    0.0% |      0.0% |
 
 _Excluded from the % above — generated/library code, not independent reconstruction targets:_
 
 | Category              | Functions | Code (B) | Why excluded                                                       |
 | :-------------------- | --------: | -------: | :----------------------------------------------------------------- |
 | `EH unwind funclets`  |     5,126 |   53,176 | compiler EH unwind funclets; match with their parent function      |
-| `CRT/C++ runtime`     |       915 |  110,788 | CRT/C++ runtime, named not matched (config/retail-runtime-map.tsv) |
+| `CRT/C++ runtime`     |       914 |  110,625 | CRT/C++ runtime, named not matched (config/retail-runtime-map.tsv) |
 | `init/cleanup thunks` |     1,119 |   94,433 | .CRT$XCU dynamic-initializer bodies (compiler-generated)           |
 | `import thunks`       |        27 |      162 | FF 25 jumps through the IAT                                        |
 
