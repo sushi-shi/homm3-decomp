@@ -592,6 +592,66 @@ do not establish that every remaining call boundary is correct. In particular,
 its prerequisite append still expands the single-element insert that retail
 retains, leaving `0x48bf00` paired with the wrong emitted overload.
 
+## A callee defined LATER in the TU still inlines
+
+Measured 2026-09-06 (polish lane 44), pinned SP3 CL under Wine, on the real
+tree. A pasted helper body is **never forced by definition order**: `/Ob2`
+expands a callee whose *definition* stands below the call site, as long as a
+declaration precedes it. C1 hands C2 the whole TU's IL before C2 chooses, so
+the "define it above the caller" folklore does not apply to this back end.
+
+The clean control is `binkmanager.cpp`. `NextBinkFrame` (`0x44daa0`,
+`binkmanager.cpp:214`) carried the thirteen statements of `CloseBinkVideo`
+(`0x44dcc0`, defined at `binkmanager.cpp:285`, seventy lines BELOW it)
+written out longhand. Replacing them with the call is byte-flat -- 92.9245
+before and after -- and `sema diff --calls` still shows the two
+`_BinkPause`/`_BinkClose` pairs standing inline at `+0x173..+0x192`, i.e.
+VC6 reached down the file, took the body, and emitted retail's expansion.
+The only prerequisite was the declaration already in `binkmanager.h:124`.
+
+So the helper-boundary rule in CLAUDE.md is enforceable everywhere, and
+"the definition comes later" is not a reason to keep a longhand copy.
+
+### The census, and where the caller_cb lever actually bites
+
+The tree-wide sweep for claimed helper bodies copied into callers (short
+claimed bodies, normalised modulo identifier renames, matched against every
+window of every other body) found six live sites. Every one is byte-flat
+once restored:
+
+| caller | helper | score, before = after |
+|---|---|---|
+| `advManager::Open` `0x406fd0` | `ForceNewHover` | 97.9312 |
+| `advManager::DoAdvCommand` `0x407b80` | `ForceNewHover` | 94.3953 |
+| `advManager::ProcessKeyPress` `0x408c40` | `ForceNewHover` | 97.6091 |
+| `advManager::SetHeroContext` `0x417b20` | `DeactivateCurrHero` | 99.2746 |
+| `NextBinkFrame` `0x44daa0` | `CloseBinkVideo` | 92.9245 |
+| `VideoClose` `0x5975f0` | `CloseSmacker` | 95.9231 |
+
+Retail expands the helper at all six; the call is the source fact and the
+bytes do not care. The sixth row carries the census's only positive retail
+proof, and it is worth the pattern: `ShowVideo` (`0x598af0`) expands
+`VideoClose` three times, and its THIRD expansion at `+0x284` runs
+`VideoSoundOnOff / service_sounds / CALL CloseSmacker / CALL CloseBinkVideo`.
+A call to `CloseSmacker` standing *inside* an expansion of `VideoClose` can
+only come from a `CloseSmacker()` call in `VideoClose`'s own source -- a
+longhand copy there would have been expanded with everything else. **When a
+suspected paste has a caller that retail expands, read that caller's call
+stream: a helper call surviving inside the expansion proves the boundary.**
+Its cost is `ShowVideo` 48.6988 -> 41.0154, TU collateral kept under the
+"preserve proven helpers through score dips" rule; `VideoClose` itself is
+flat and MAX is unmoved. That flatness is itself the model's prediction and
+sharpens the polish-42 result (`CampaignHeaderStruct::Load`, +4.44 for the
+same edit). The budget is `clamp(2 x caller_cb, 1000, 35000)`, so moving
+mass out of `caller_cb` can only change an expansion decision while
+`caller_cb` sits inside `[500, 17500]`. Below it the 1000 floor absorbs the
+change; above it the 35000 ceiling does. `game::NextPlayer` (`0x4c6fe0`, 142
+statements) is the ceiling control: restoring its pasted
+`game::CancelComputerScreen` body is byte-flat at 81.3343, because that
+caller is saturated. Do not expect a pasted-helper restoration to pay on a
+very large or a very small caller -- take it for the source fact, and look
+for the mid-band callers when hunting score.
+
 ## 7. Using it
 
 ```sh

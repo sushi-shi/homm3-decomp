@@ -43,7 +43,14 @@ SIZE(LegacyCampaignHero, 0x462);
 
 struct LegacyCampaignSave {
     signed char currentMap;                   // +0x0000
-    signed char briefingChoice;               // +0x0001
+    // +0x0001 and +0x0576 are the CAMPAIGN ORDINAL and the BRIEFING CHOICE
+    // in that order, not the reverse: retail's pre-v28 arm sign-extends the
+    // byte at +0x0001 into SCampaign+0x04 (0x48a377/0x48a396) and loads the
+    // dword at +0x0576 into SCampaign+0x10 (0x48a38a/0x48a393), and
+    // SCampaign+0x04 is the subscript the same arm shifts by 5 to index
+    // scenarioDays/scenarioScores/legacyCampaignScenarioIndices at
+    // 0x48a465 - i.e. it is currentCampaign.
+    signed char currentCampaign;              // +0x0001
     unsigned char isCheater;                  // +0x0002
     char field_0003[2];
     int numScenarios;                         // +0x0005
@@ -55,7 +62,7 @@ struct LegacyCampaignSave {
     short scenarioScores[8][32];              // +0x036e
     unsigned char campaignCompleted[7];       // +0x056e
     char field_0575;
-    int currentCampaign;                      // +0x0576
+    int briefingChoice;                       // +0x0576
     char field_057a[0x1b05];
     LegacyCampaignHero carryOverHeroes[2][8]; // +0x207f
     signed char carryOverHeroCounts[2];       // +0x669f

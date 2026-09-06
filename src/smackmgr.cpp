@@ -72,6 +72,7 @@ DATA(0x006839b8) extern char gArchiveDriveLetter;
 void ShowVideo(int id, int x, int y, int w, int h, int a6, int a7, int a8);
 namespace SmackManager {
 void NextSmackerFrame();
+void CloseSmacker();
 }
 
 
@@ -387,15 +388,7 @@ void VideoClose()
         }
     }
     gpSoundManager->service_sounds();
-    if (gSmackVideo)
-        SmackClose(gSmackVideo);
-    if (gSmackVideo2)
-        SmackClose(gSmackVideo2);
-    gSmackVideo2 = 0;
-    gSmackVideo = 0;
-    gSmackPaused = 0;
-    gSmackFrameReady = 0;
-    gSmackDirty = 0;
+    SmackManager::CloseSmacker();
     CloseBinkVideo();
 }
 
@@ -982,11 +975,26 @@ void SmackManager::SetPixelFormat(unsigned long red_mask,
 // on the stack and `ret 0x18`, exactly VideoOpen's eight-argument forward.
 // The Smacker volume scale (3640 * "Sound Volume") and the 0xfe000 track
 // mask are transcribed from the two SmackVolumePan sites.
-// Residual (48.7%): the three VideoClose() sites only. Retail EXPANDS all
-// three (base 17 blocks against retail's 42) and does it three different
-// ways - the first two keep VideoResume out of line, the third expands it
-// and CALLS CloseSmacker instead. Every other call pairs: OpenSmackerTrack
-// twice, SmackUseMMX, both SmackVolumePans, all three SmackToBuffers.
+// Residual (41.0154%, banked MAX 48.6988): the three VideoClose() sites
+// only. Retail EXPANDS all three and does it three different ways, and the
+// full retail call stream now reads cleanly against the sequential-budget
+// model in docs/vc6/inliner.md section 2:
+//   site 1 (+0x044): CALL VideoResume, service_sounds, CloseSmacker
+//                    EXPANDED (two SmackClose), CALL CloseBinkVideo
+//   site 2 (+0x0cb): the same shape again
+//   site 3 (+0x284): VideoResume EXPANDED (its VideoSoundOnOff is visible),
+//                    service_sounds, CALL CloseSmacker, CALL CloseBinkVideo
+// That is budget/sites-remaining working down the list: at the first two
+// sites the quotient is small, so the big VideoResume starves and the small
+// CloseSmacker fits; at the last site the whole remaining budget lands on
+// one call, VideoResume fits, and the nested CloseSmacker then starves.
+// The 2026-09-06 CloseSmacker restoration in VideoClose (proven by that
+// site-3 call - see the note on CloseSmacker below) costs 48.6988 -> 41.0154
+// HERE and is kept anyway: the helper boundary is the source fact and the
+// dip is TU collateral, MAX unmoved. It also moves the residual in the right
+// direction structurally - VideoClose now EXPANDS at all three sites as
+// retail does, where before we CALLED it at all three. What is left is one
+// decision, VideoResume, over-expanding at sites 1 and 2.
 // Tried and rejected: `inline void VideoClose()` (the documented /Ob2 lever
 // for a large out-of-class definition) DOES make it expand, but expands
 // VideoResume with it at every site - 75 blocks, ShowVideo 41.02 and
@@ -1146,10 +1154,18 @@ void NextSmackerFrame()
         VideoDrawRects();
 }
 
-// E:\gamedcs\smackmgr.cpp:1074. VideoClose expands this body verbatim
-// ahead of CloseBinkVideo, which proves both the close order and the
-// five-store teardown; retail keeps the out-of-line copy for
-// remote.obj's ~CGameTransferSmack.
+// E:\gamedcs\smackmgr.cpp:1074. VideoClose expands this body ahead of
+// CloseBinkVideo, which proves both the close order and the five-store
+// teardown; retail keeps the out-of-line copy for remote.obj's
+// ~CGameTransferSmack.
+// The expansion is the COMPILER's, not the source's, and retail says so
+// outright: ShowVideo's third VideoClose expansion (0x598af0 +0x284) runs
+// `VideoSoundOnOff / service_sounds / CALL CloseSmacker / CALL
+// CloseBinkVideo` - a call to this body standing inside an expansion of
+// VideoClose, which no longhand copy in VideoClose could ever emit. So
+// VideoClose CALLS CloseSmacker, beside the CloseBinkVideo call it already
+// made. The forward declaration joins the block smackmgr.cpp already keeps
+// for bodies whose first in-TU call site precedes them.
 VA(0x00599050, 0x43)  // anchor-caller(~CGameTransferSmack) + inlined-in VideoClose, dc 0x14ae00
 void CloseSmacker()
 {

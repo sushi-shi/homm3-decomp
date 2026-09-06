@@ -3495,7 +3495,39 @@ void TSeerHut::read(TAbstractFile* infile)
 // shared three-argument constructor LOSES at both of its call sites - this
 // row 35.3825 -> 30.7962 and TSeerHut::read (0x574610) 86.8092 -> 86.7912 -
 // so the constructor keeps `push_back`. That rung is now measured here; do
-// not re-sweep it.
+// not re-sweep it. (It is also the WRONG DIRECTION: push_back -> insert
+// removes a level, and this row needs the leaf pushed one level further OUT,
+// not in.)
+// 2026-09-06 (polish lane 44), the residual LOCATED to one decision, and two
+// standing hypotheses closed:
+//   * The boundary is `vector<TArtifact>::insert(iterator, const T&)`.
+//     Retail CALLS it (delinked as `vector<int>::insert`, ICF-folded on the
+//     4-byte element, at +0x182); we expand it, and that single decision is
+//     the whole 26-blocks/15-branches against retail's 10/5 - it drags in
+//     ELEVEN base-only calls that retail does not make at all: `size`,
+//     `_Ucopy` x3, `_Ufill` x2, `_Destroy`, operator new, operator delete.
+//     Everything else agrees: both sides expand the type_artifact_quest
+//     constructor (SetDefaultText stands at +0x2cb on both), and the four
+//     `_Tidy` / 0x5157d0 rows are ICF label noise, not divergence.
+//   * NOT a pasted helper. The tree-wide census (claimed short bodies matched
+//     modulo identifier renames against every statement window in src/ and
+//     include/) reports nothing in seerhut.obj; its one hit here,
+//     type_quest::LoadFromMap inside type_quest::Load, is the two sibling
+//     vtable slots 11 and 12 sharing their trailing three-string run, which
+//     no call could express.
+//   * NOT a missing early statement. `sema diff --source` walks the <28 arm
+//     with every read group `==` from `infile->Read(&int_buffer, ...)` through
+//     the sixth byte; the first `!!` after the prologue is the textBuffer slot
+//     alone.
+// The 8-byte frame surplus (our `sub esp,0x1c` against retail's 0x14) is
+// downstream of that same expansion, not a source fact: retail packs the
+// reused `value` byte at [ebp+0xb] and `textBuffer` at [ebp+8] - both inside
+// the PARAMETER HOME, free because infile and saveVersion die into esi/ebx in
+// the prologue - and keeps `this` in edi, where our register pressure spills
+// it to [ebp-0x24]. Shrinking the caller cannot be measured directly here:
+// the >=28 arm is too large a share of the row's bytes for its removal to be
+// read as a budget signal (gutting it measures 20.03, which is the missing
+// code, not the budget).
 //
 // The savegame reader and the exact mirror of save (0x573fd0): NewfullMap
 // ::Load calls it on every element of the SeerHutList it has just resized,

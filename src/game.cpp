@@ -9265,12 +9265,7 @@ void game::NextPlayer()
 
         if (gpCurrentPlayer->IsLocalHuman()
             || (gNetworkActive69954c && gpCurrentPlayer->IsHuman())) {
-            gCompleteDrawEnabled = 1;
-            gpAdvManager->UpdateRadar(1, 1, 0, 0, 0);
-            gpAdvManager->advWindow->GetWidget(8)->enable(1);
-            gpAdvManager->advWindow->GetWidget(7)->enable(1);
-            gpAdvManager->advWindow->GetWidget(6)->enable(1);
-            gpAdvManager->advWindow->GetWidget(12)->enable(1);
+            CancelComputerScreen();
         }
     }
 
@@ -10847,6 +10842,13 @@ void game::SetupAdjacentMons()
 }
 
 // E:\gamedcs\game.cpp:9636
+// NextPlayer's local-human arm calls this. Retail expands it there (its
+// UpdateRadar at +0x810 and the four GetWidget/enable pairs behind it) and
+// the restoration from the longhand copy is byte-flat, 81.3343 - NextPlayer
+// is 142 statements, so its /Ob2 budget is already pinned at the 35000
+// ceiling and the caller_cb this frees changes no decision. See
+// docs/vc6/inliner.md, "a callee defined LATER in the TU still inlines":
+// the definition is 1700 lines below the call site and VC6 still takes it.
 VA(0x004ca530, 0x80)  // dc 0xb62f8 + UpdateRadar/widget call graph
 void game::CancelComputerScreen()
 {
