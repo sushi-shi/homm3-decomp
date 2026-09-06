@@ -1127,6 +1127,26 @@ Bitmap16Bit* ResourceManager::GetBitmap16(const char* name)
 // retail's exact 0x758-byte frame (the non-exclusive source used two slots and
 // a 0xa7c frame).
 //
+// The unwind map settles the LIFETIME question exactly (EH census
+// 2026-09-06). Retail's FuncInfo at 0x6528d0 has maxState 8, one try
+// block [0..3] with catchHigh 4, and its eight entries mirror the two
+// arms three for three: state 1 / 5 destroy the stream adapter
+// ([ebp-0x28] file arm, [ebp-0x1c] archive arm), 2 / 6 the TPalette24 at
+// [ebp-0x364], 3 / 7 `operator delete([ebp-0x20])` for the half-built
+// TPalette16, and states 0 and 4 carry NO action (the try entry and the
+// catch itself). Our transcript is [reg,-1,1,2,3,4,2,6,7,8,6] against
+// retail's [reg,1,2,3,1,5,6,7,5] - two surplus regions, and both are the
+// SAME one: the leading pathname temporary. Retail brackets it with NO
+// state store at all (`call operator+`, c_str INLINED to
+// `mov eax,[eax+4]` plus its empty-string branch, `call fopen`, then the
+// destructor inlined down to a CALLED `_Tidy(1)`), and writes its first
+// state only at fn+0x6b, after the `if (file)` test. We write state=esi
+// at +0x41 and state=-1 at +0x5a because the retained inline_depth(0)
+// leaves a real `call c_str` inside the temporary's lifetime. So the
+// missing shape is "expand c_str AND the temporary's destructor, but
+// call _Tidy" - which no placement of the existing pin reaches, and
+// which is why the whole tail of both arms is numbered one state high.
+//
 // The leading string temporary is the bounded residual shared with LoadFont
 // and GetPalette24. Retail inlines c_str and the parent destructor but calls
 // _Tidy(true); inline_depth(0), retained below, calls both parents, while no

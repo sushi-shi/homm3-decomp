@@ -21,6 +21,12 @@ Subcommands
         back the fact the model predicts.
   atlas --regen                                         (phase 2)
         Headless-Ghidra C2 TU/globals map -> evidence/vc6/.
+  tryblocks
+        Retail's CATCH-SCOPE census, read straight off the image's
+        `_s_FuncInfo` records: every function with nTryBlocks > 0, each try
+        block's [tryLow, tryHigh] state range, the type each arm catches
+        and the catch funclet addresses. A body where retail has a try and
+        we have none is a target, not an inliner wall.
   check [--argv|--il|--inline|--reg|--locator|--all]
         The gates (each ships a negative control).
 
@@ -135,6 +141,10 @@ def _build_parser() -> argparse.ArgumentParser:
     pq.add_argument("--limit", type=int, default=20, metavar="N",
                     help="maximum ranked functions to display (default 20; 0 = all)")
 
+    ss.add_parser("tryblocks", help="retail's catch-scope census: every "
+                  "FuncInfo with nTryBlocks > 0, its try extents, catch "
+                  "types and funclet addresses")
+
     pc = ss.add_parser("check", help="the model gates (with negative controls)")
     for g in ("argv", "il", "inline", "reg", "locator"):
         pc.add_argument(f"--{g}", action="store_true")
@@ -156,6 +166,7 @@ _TOOLS = {
     "atlas": ("atlas", "run"),
     "report": ("report", "run"),
     "queue": ("queue", "run"),
+    "tryblocks": ("tryblocks", "run"),
     "check": ("census", "run_check"),
 }
 
