@@ -86,6 +86,63 @@ inline TObjectImageNameTable& GetObjectImageNames()
 }
 
 
+// --- the object-type filter family -----------------------------------------
+//
+// Fifteen file-scope filter objects and the fifteen-entry table of pointers
+// to them at 0x640288, all retail-proven and all Complete-only (no Dreamcast
+// row covers any of it), so every NAME below is a role description. What the
+// bytes fix: three concrete classes over one abstract base with a virtual
+// destructor and one pure virtual predicate; the base vtable 0x6402cc holds
+// {scalar deleting dtor, _purecall}, and the three concrete vtables
+// (0x6402c4, 0x6402d4, 0x6402dc) hold {scalar deleting dtor, the predicate}.
+// The fifteen dynamic initializers at 0x514280..0x5145e0 give the source
+// order and every constructor argument: nine of the first class with the
+// terrain ids 0..8 (rock, 9, is absent), one of the second, and five of the
+// third with 1..5 - and the pointer table lists them in exactly that order.
+class TObjectTypeFilter {
+public:
+    virtual ~TObjectTypeFilter();
+    virtual int Accepts(const TObjectType* objectType) const = 0;
+};
+
+// Retail 0x5141b0. The terrain id lands at +4 and the predicate reads
+// TObjectType's slotCategory (+0x24) and recommendedTerrainMask (+0x18):
+// an unplaced object (category 0) whose recommended terrain set contains
+// this terrain and is SMALL - the `count() <= 3` arm, against the
+// any-terrain filter's `count() > 3` next door.
+class TNativeTerrainObjectFilter : public TObjectTypeFilter {
+public:
+    explicit TNativeTerrainObjectFilter(int terrain);
+    virtual int Accepts(const TObjectType* objectType) const;
+
+    int m_terrain;
+};
+
+// Retail 0x514220. No state - its constructor 0x5144b0 writes nothing but
+// the vptr - and the mirror of the filter above: an unplaced object whose
+// recommended terrain set is WIDE.
+class TAnyTerrainObjectFilter : public TObjectTypeFilter {
+public:
+    TAnyTerrainObjectFilter();
+    virtual int Accepts(const TObjectType* objectType) const;
+};
+
+// Retail 0x514260, the whole body a `sete` on one compare: the object's
+// slotCategory against the one this filter carries at +4.
+class TSlotCategoryObjectFilter : public TObjectTypeFilter {
+public:
+    explicit TSlotCategoryObjectFilter(int slotCategory);
+    virtual int Accepts(const TObjectType* objectType) const;
+
+    int m_slotCategory;
+};
+
+enum EObjectTypeFilterConstants {
+    OBJECT_TYPE_FILTER_COUNT = 15
+};
+
+extern TObjectTypeFilter* const gObjectTypeFilters[OBJECT_TYPE_FILTER_COUNT];
+
 // The per-row parser TObjectTypeTable::load runs over each objects.txt
 // line, retail 0x514b80. Free and therefore __fastcall under /Gr: the
 // stream arrives in ECX and the record in EDX, and it answers the stream
