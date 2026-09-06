@@ -945,7 +945,7 @@ cmbtmgr	?PlaceLargeObstacle@combatManager@@QAEHII@Z	100.0000	100.0000	100.0000	0
 cmbtmgr	?PlaceObstacle@combatManager@@QAEXPBUTObstacle@1@HHI@Z	100.0000	100.0000	100.0000	0x669b0	d41bb5cd8cc4
 cmbtmgr	?PowEffect@combatManager@@QAEXHH@Z	96.2963	96.2963	96.2963	0x68990	02f5d182240c
 cmbtmgr	?RaiseDoor@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x672e0	69c647dd5678
-cmbtmgr	?RaiseSkeletons@combatManager@@QAEXH@Z	93.2203	93.2203	93.2203	0x69f20	3a65a60c06a8
+cmbtmgr	?RaiseSkeletons@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x69f20	9e7c021e33c8
 cmbtmgr	?RemoveArmyFromGrid@combatManager@@QAEXABVarmy@@@Z	100.0000	100.0000	100.0000	0x68730	62af9d7bc87c
 cmbtmgr	?RemoveObstacle@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x66b30	101875d9e158
 cmbtmgr	?ResetHitByCreature@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x65fe0	037b24bc169a
