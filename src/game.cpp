@@ -630,6 +630,9 @@ unsigned char InitImmMouse(void* hInst, void* hwnd)
     }
 }
 
+// InitImmMouse registers this callback; teardown is expanded from the holder.
+VA_COMPGEN(0x004b6910, 0x3A, STATIC_DTOR, immMouse)  // anchor-callee, retail-only
+
 // ImmMouseWindowMoved: re-derives the client origin via
 // ClientToScreen and offsets every tracked effect rect (linked list
 // in the map whose _Head is at 0x696d64) by the delta; AppWndProc's WM_MOVE

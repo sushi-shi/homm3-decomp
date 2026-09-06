@@ -53,11 +53,11 @@ def _locator() -> tuple[bool, str]:
     import io
     import unittest
     from homm3.vc6 import test_inline_names, test_locator, test_queue, \
-        test_reg_mutations, test_report_resolution
+        test_reg_mutations, test_report_resolution, test_selection
     suite = unittest.TestSuite(
         unittest.defaultTestLoader.loadTestsFromModule(m)
         for m in (test_locator, test_inline_names, test_reg_mutations,
-                  test_report_resolution, test_queue))
+                  test_report_resolution, test_queue, test_selection))
     buf = io.StringIO()
     res = unittest.TextTestRunner(stream=buf, verbosity=0).run(suite)
     bad = res.failures + res.errors

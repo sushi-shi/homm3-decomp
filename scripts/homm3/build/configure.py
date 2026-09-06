@@ -109,6 +109,8 @@ def write_ninja(profiles: dict[str, list[str]], units: list[dict]) -> None:
             "configure",
             inputs=["config/units.toml"],
             implicit=["scripts/homm3/build/configure.py",
+                      "scripts/homm3/build/compilation_database.py",
+                      "scripts/homm3/core/clang.py",
                       "scripts/homm3/build/ninja_syntax.py"],
         )
 
@@ -178,7 +180,9 @@ def write_objdiff(build: dict, units: list[dict]) -> None:
 
 
 def main() -> None:
+    from homm3.build.compilation_database import refresh
     build, profiles, units = load_manifest()
+    refresh()
     write_ninja(profiles, units)
     write_objdiff(build, units)
     print("configure: %d VC6 units -> build.ninja + build/objdiff/objdiff.json" %

@@ -91,7 +91,8 @@ class InputsTest(unittest.TestCase):
                 self.assertEqual(cli.main(["init", "--exe", str(self.retail_source),
                                            "--dreamcast-exe", str(self.dc_source), "--no-smoke"]), 0)
             self.assertEqual([call.args for call in run.call_args_list], [
-                ("homm3.build.configure",), ("homm3.init.toolchain", "--no-smoke")])
+                ("homm3.build.configure",), ("homm3.init.toolchain", "--no-smoke"),
+                ("homm3.build.compilation_database",)])
             self.retail_source.unlink()
             self.dc_source.unlink()
             self.assertEqual(cli.main(["init", "--no-smoke"]), 0)

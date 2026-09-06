@@ -12,15 +12,15 @@ the game, supply your own legally obtained retail `HEROES3.EXE` and Dreamcast `H
 
 <!-- match-score:start -->
 
-**Executable matched: 89.59%** — fuzzy-weighted bytes over all 1,998,615 unfiltered bytes.
+**Executable matched: 89.60%** — fuzzy-weighted bytes over all 1,998,615 unfiltered bytes.
 
-**Match score** — 3,634 / 4,764 functions exact (76.3%) across the full engine (4331 in linked units).
+**Match score** — 3,635 / 4,764 functions exact (76.3%) across the full engine (4332 in linked units).
 
 | Module        | Units |     Functions exact |   Fuzzy | Fuzzy Max |
 | :------------ | ----: | ------------------: | ------: | --------: |
-| `game`        |   131 | 3565 / 4262 (83.6%) |  95.42% |    95.94% |
+| `game`        |   131 | 3566 / 4263 (83.7%) |  95.42% |    95.94% |
 | `zlib-1.1.3`  |    14 |    69 / 69 (100.0%) | 100.00% |   100.00% |
-| `(unmatched)` |     — |      0 / 433 (0.0%) |    0.0% |      0.0% |
+| `(unmatched)` |     — |      0 / 432 (0.0%) |    0.0% |      0.0% |
 
 _Excluded from the % above — generated/library code, not independent reconstruction targets:_
 
@@ -79,6 +79,10 @@ Subsequent commands use the staged executables and recheck their bytes; the orig
 paths need not remain configured. Re-running `homm3 init` verifies and reuses an existing
 setup. `homm3 clean` removes all of `build/`, including the staged copies; supply both
 paths again when initializing after a clean.
+
+Clangd works with the existing Neovim/CoC setup; hover and SDK definition lookup
+have been verified. `compile_commands.json` refreshes automatically on shell entry,
+configure, and build.
 
 ## License
 

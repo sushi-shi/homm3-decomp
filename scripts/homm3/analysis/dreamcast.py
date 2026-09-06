@@ -1229,6 +1229,10 @@ def _build_parser() -> argparse.ArgumentParser:
     asm.add_argument("--no-breakpoints", action="store_true",
                      help="suppress CodeView source-line labels")
     asm.add_argument("--json", action="store_true", help="machine-readable output")
+    asm.add_argument("--range", metavar="START:END",
+                     help="end-exclusive SH4 function-local offset range")
+    asm.add_argument("--inline-clues", action="store_true",
+                     help="append the function's positive inline evidence")
 
     find = sub.add_parser("find", help="search Dreamcast procedure names")
     find.add_argument("text", help="case-insensitive name substring")
@@ -1269,16 +1273,9 @@ def _build_parser() -> argparse.ArgumentParser:
     return ap
 
 
-def _log(rc: int, argv: list[str]) -> None:
-    try:
-        import datetime
-        now = datetime.datetime.now()
-        LOG.parent.mkdir(parents=True, exist_ok=True)
-        with LOG.open("a") as fh:
-            fh.write(f"[{now.date()}][{now.strftime('%H:%M:%S')}][{rc}]: "
-                     f"{shlex.join(['homm3', 'dreamcast', *argv])}\n")
-    except Exception:
-        pass
+def _log(rc: int, argv: list[str], **metadata) -> None:
+    from homm3.core import usage
+    usage.append(LOG, shlex.join(["homm3", "dreamcast", *argv]), rc, **metadata)
 
 
 def _matches(corpus: Corpus, selector: str) -> list[dict[str, str]]:
@@ -1321,7 +1318,7 @@ def _redirect(argv: list[str]) -> None:
         + (f" - you want `{hint}`" if hint else ""))
 
 
-def main(argv: list[str] | None = None) -> int:
+def _dispatch(argv: list[str]) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     parser = _build_parser()
     rc = 0
@@ -1349,7 +1346,17 @@ def main(argv: list[str] | None = None) -> int:
             views = []
             for row in rows:
                 try:
-                    views.append(dc_asm.build_view(row, dump, data))
+                    view = dc_asm.build_view(row, dump, data)
+                    if args.range:
+                        events = dc_asm.control_events(view, data)
+                        for block in view["blocks"]:
+                            for ins in block["instructions"]:
+                                ins.update(events.get(ins["address"], {}))
+                        view = dc_asm.slice_view(view, args.range)
+                    if args.inline_clues:
+                        view["inline_clues"] = _inline_clue_payload(corpus, row, detailed=True)
+                        view["inline_clues_scope"] = "whole function"
+                    views.append(view)
                 except dc_asm.AsmError as exc:
                     raise DreamcastError(str(exc)) from exc
             if args.json:
@@ -1365,6 +1372,15 @@ def main(argv: list[str] | None = None) -> int:
                                   blocks=args.blocks,
                                   breakpoints=not args.no_breakpoints,
                                   out=sys.stdout)
+                    if args.inline_clues:
+                        clue = view["inline_clues"]
+                        found = bool(clue["groups"])
+                        _render_inline_clues({
+                            "summary": {"functions": int(found), "shown": int(found),
+                                        "foreign_source_functions": int(clue["foreign_source_rows"] > 0),
+                                        "earlier_source_functions": int(clue["earlier_source_rows"] > 0)},
+                            "functions": [clue] if found else [],
+                        }, selected=True, out=sys.stdout)
         elif args.command == "find":
             rows = corpus.find(args.text, args.module)
             if args.limit < 0:
@@ -1472,12 +1488,13 @@ def main(argv: list[str] | None = None) -> int:
     except (DreamcastError, inputs.InputError) as exc:
         print(f"[homm3 dreamcast] ERROR: {exc}", file=sys.stderr)
         rc = 2
-    except SystemExit as exc:
-        rc = exc.code if isinstance(exc.code, int) else 2
-        _log(rc, argv)
-        raise
-    _log(rc, argv)
     return rc
+
+
+def main(argv: list[str] | None = None) -> int:
+    from homm3.core.usage import run_logged
+    argv = list(sys.argv[1:] if argv is None else argv)
+    return run_logged(_dispatch, argv, lambda rc, **meta: _log(rc, argv, **meta))
 
 
 if __name__ == "__main__":

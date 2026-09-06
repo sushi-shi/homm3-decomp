@@ -249,6 +249,24 @@ class InlineClueTest(unittest.TestCase):
         self.assertEqual(dreamcast._inline_clue_rows(corpus, caller, rows), [])
 
 class CfgTest(unittest.TestCase):
+    def test_ranges_preserve_block_identity_and_edges_outside_the_slice(self):
+        view = {"function": {"dc_offset": 0x100, "dc_size": 8},
+                "breakpoints": [], "lexical_scopes": [],
+                "blocks": [
+                    {"start": 0x100, "end": 0x104, "predecessors": [],
+                     "successors": [0x104], "instructions": [{"address": 0x100}, {"address": 0x102}]},
+                    {"start": 0x104, "end": 0x108, "predecessors": [0x100],
+                     "successors": [], "instructions": [{"address": 0x104}, {"address": 0x106}]},
+                ]}
+        sliced = dc_asm.slice_view(view, "+4:+6")
+        self.assertEqual(sliced["block_labels"][str(0x104)], "B1")
+        self.assertEqual(sliced["blocks"][0]["predecessors"], [0x100])
+        self.assertEqual(sliced["blocks"][0]["instructions"], [{"address": 0x104}])
+        self.assertEqual(len(view["blocks"][1]["instructions"]), 2)
+        for spec in ("+1:+3", "8:10", "4:4", "-2:4", ":", "0:9"):
+            with self.subTest(spec=spec), self.assertRaises(dc_asm.AsmError):
+                dc_asm.slice_view(view, spec)
+
     @staticmethod
     def _decoder(rows):
         def decode(address):
