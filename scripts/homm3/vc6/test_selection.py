@@ -58,7 +58,7 @@ class SelectionTest(unittest.TestCase):
         self.patch(_unit, "unit_for_source", side_effect=lambda path: next(
             (u for u, src in self.sources.items() if src == Path(path).resolve()), None))
         self.patch(_asm, "TARGET", self.root / "target")
-        self.patch(_asm, "_public_text_symbols", return_value={FN})
+        self.patch(_asm, "_function_text_symbols", return_value={FN})
         self.parser = _build_parser()
         self.out, self.err = io.StringIO(), io.StringIO()
         self.enterContext(contextlib.redirect_stdout(self.out))
@@ -285,7 +285,7 @@ class SelectionTest(unittest.TestCase):
             self.assertEqual(resolver(Path("probe.obj"), "game::GetTeam"), FN)
 
     def test_ambiguous_overloads_and_missing_decorated_symbols_are_refused(self):
-        self.patch(_asm, "_public_text_symbols", return_value={
+        self.patch(_asm, "_function_text_symbols", return_value={
             "?Open@Widget@@QAEXXZ", "?Open@Widget@@QAEXH@Z"})
         for fn in ("Widget::Open", "Open", "?Open@Widget@@QAEXD@Z"):
             with self.subTest(fn=fn), self.assertRaises(SystemExit):

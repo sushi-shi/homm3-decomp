@@ -1036,7 +1036,9 @@ public:
         // then the dword at +4 directly. A named pad here adds a word copy
         // retail does not have.
         int AIStrategy;
-        short legalAlignments;
+        // Complete's InitNewGame expansion zero-extends this nine-town
+        // mask (xor ebx,ebx; mov bx,[slot+8]), as do the lobby consumers.
+        unsigned short legalAlignments;
         unsigned char HasRandomAlignment;
         unsigned char GenerateHero;
         // +0x14. CreateTownHeroes (0x4ca040) walks the eight slots with a

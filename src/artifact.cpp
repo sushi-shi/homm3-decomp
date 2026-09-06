@@ -59,51 +59,35 @@ static TArtifactSlotTraits aArtifactSlotTraits[19];
 // default-constructed local is the inline `_Tidy` (one zero store for the
 // 19-bit width, the five-word downward fill for the 144-bit one).
 //
-// Residual (22.16% / 32.15%): every block, branch and store of the ordinary
-// path agrees; the whole gap is ONE inline decision. Retail EXPANDS
-// `bitset<N>::_Xran`'s throw - the literal's `basic_string`, the
-// `out_of_range` constructor and two `__CxxThrowException` sites, ~164 of
-// its 267 bytes - and so carries an EH frame; we call `_Xran` and carry
-// none. Neither of the depth rungs moves it (`mask[i] = true` and
-// `mask.set(i)` are byte-identical here, as is a `goto` loop). Tried and
-// rejected, one compile each: an explicit `if (slot >= 19) throw
-// std::out_of_range(...)` guard ahead of `set` (0.00 - two range checks
-// and two throw paths); the same guard with hero.cpp's union word view in
-// place of `set` (3.91). Both are worse than leaving the call, so the
-// honest spelling stands.
+// Retail FuncInfo 0x649538 / 0x6495a0 each has one catch-all handler
+// covering states 0..2. The handlers at 0x44c7e7 / 0x44c907 rethrow;
+// va_end is a no-op on Win32 but belongs on both exit paths. Restoring
+// that try/catch makes the bitset range throw expand into the loop.
+// Subscript assignment then retains basic_string::assign at the right
+// depth inside that throw. Both builders now match at 100%.
 //
-// RE-MEASURED 2026-09-06, five more compiles, and the direction is now
-// bounded from both ends. hero.cpp's HeroFn_004E2840 lever - spell
-// Dinkumware's accessor body explicitly so the caller owns the /GX frame
-// the throw needs - reproduces its recorded 3.91/3.35 here EXACTLY, and
-// the emitted object says why it cannot work in this body: our written
-// `throw` is a COLD block C2 sinks past the epilogue, where retail's is
-// the fall-through of `cmp ecx,0x13 / jb <set>` because it arrived as an
-// EXPANSION of `_Xran` inside the loop; and the shallower source also
-// pulls `basic_string::assign(const char*, unsigned)` in one level, which
-// retail leaves a CALL (our _Grow + rep movsd against retail's one call).
-// So the explicit throw is not the same construct at either end.
-// The depth ladder is exhausted, and both directions of it are inert or
-// worse: `mask[i] = true` and `mask.set(i, true)` are byte-identical to
-// `mask.set(i)` here (22.16 / 32.15 to the digit - readTownData's +12.31
-// for `[i]=v` does NOT reproduce), and `mask.at(i) = true` emits TWO
-// `_Xran` calls (22.81 / 33.23 - the extra bytes, not a structural gain).
-// The `goto` loop is byte-flat AGAIN in this inline structure, so the
-// rotation is downstream of the call, not a source fact.
-// What remains is the caller-size half of the /Ob2 rule, and this body has
-// no honest mass to add: retail's own frame holds nothing but the bitset
-// and the throw's own temporaries, so retail's EH frame is a CONSEQUENCE
-// of the expansion rather than an independent cause a spelling can supply.
-// Both rows stay at their banked MAX.
+// Negative controls: without the catch, both set(i) and [i] = true stay
+// at 22.16% / 32.15%; adding an explicit zero constructor or making the
+// slot builder a function template is byte-flat. With the catch restored,
+// set(i) reaches 67.91% for 19 bits but expands basic_string::assign too
+// far. Earlier explicit-throw and union-word-view probes duplicated the
+// bounds check or sank the throw after the epilogue. The old diagnosis
+// that the EH frame was solely an inliner consequence was wrong: the
+// retail try-block map independently proves the missing catch scope.
 VA(0x0044c720, 0x10B)  // anchor-callee the aArtifactSlotMasks cinit's 14 calls, retail-only file static
 static std::bitset<19> MakeArtifactSlotMask(unsigned count, ...)
 {
     std::bitset<19> mask;
     va_list slots;
     va_start(slots, count);
-    while (count > 0) {
-        mask.set(va_arg(slots, int));
-        --count;
+    try {
+        while (count > 0) {
+            mask[va_arg(slots, int)] = true;
+            --count;
+        }
+    } catch (...) {
+        va_end(slots);
+        throw;
     }
     va_end(slots);
     return mask;
@@ -115,9 +99,14 @@ static std::bitset<144> MakeArtifactComponentMask(unsigned count, ...)
     std::bitset<144> mask;
     va_list components;
     va_start(components, count);
-    while (count > 0) {
-        mask.set(va_arg(components, int));
-        --count;
+    try {
+        while (count > 0) {
+            mask[va_arg(components, int)] = true;
+            --count;
+        }
+    } catch (...) {
+        va_end(components);
+        throw;
     }
     va_end(components);
     return mask;

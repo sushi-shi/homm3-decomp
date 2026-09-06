@@ -62,21 +62,7 @@
 // by-value wrappers from type_dialog_icon::set. Retail expands them and
 // selects an operand address before loading the result, proving the nested
 // reference-returning VC6 helper rather than a plain ternary or Win32 macro.
-#ifdef min
-#undef min
-#endif
-#ifdef max
-#undef max
-#endif
-inline int min(int left, int right)
-{
-    return std::_cpp_min(left, right);
-}
-
-inline int max(int left, int right)
-{
-    return std::_cpp_max(left, right);
-}
+#include "homm3_minmax.h"
 
 // type_dialog_icon::set's two Dreamcast min calls and retail's equality exit
 // use the same text-column clamp.
