@@ -732,15 +732,19 @@ int type_random_map_generator::ScoreObjectPlacement(
 
 // Complete emits this ordinary by-value accessor once, then lets VC6 choose
 // its boundary independently at each RMG call site.  The standalone body's
-// `ret 0xc` proves that TRmgMapPosition is passed by value rather than by
-// reference; CreateSubterraneanGate retains its final two calls while
-// expanding the earlier ones.
+// The 12 argument bytes exclude a single position reference, but cannot
+// distinguish a position value from three scalar coordinates. The overload
+// identity is provisional. CreateSubterraneanGate retains its final two
+// calls while expanding the earlier ones.
+// Keep one coordinate-indexing formula in the scalar overload. Both this
+// delegation and its direct arithmetic control retain all 39 retail bytes.
+// The nested call changes other inlining decisions: CreateGroundConnection's
+// first clear retains range erase, while CreateRiver's final map destruction
+// calls its vector deleting destructor. Original delegation remains provisional.
 VA(0x005378E0, 0x27)
 TRmgMapItem* type_random_map::GetMapItem(TRmgMapPosition point)
 {
-    return mapItems
-        + (point.z * mapHeight + point.y) * mapWidth
-        + point.x;
+    return GetMapItem(point.x, point.y, point.z);
 }
 
 // The rmg.txt coordinator at 0x5381ad passes the spreadsheet in ecx,
@@ -1609,8 +1613,10 @@ TRmgZoneConnection* TRmgTownSlot::FindConnection(int destinationZone)
 // to the marked neighbour. The inner square becomes border terrain and the
 // outer empty square loses gate eligibility. Painting is deferred per level.
 // All role names are provisional: this Complete-only pass has no DC body.
-// Residual (96.9219%, MAX 97.0449%): the first search's inverted loop
-// branch, clamp scheduling, and map-view/painting-loop registers.
+// Residual (97.0488%): clamp scheduling and map-view/painting-loop registers.
+// The guarded do loop keeps the exhaustion exit forward (0x53fe49) and
+// jumps back to the item lookup (0x53fe4b). A for/while condition instead
+// uses a backward jl plus a forward jmp with the same operation sequence.
 // One four-int bounds aggregate preserves retail's contiguous -0x50..-0x44
 // rectangle, including the dead minimumY home. Together with the shared
 // terrain local, it restores the 0x84 frame and all observed local homes.
@@ -1623,6 +1629,11 @@ TRmgZoneConnection* TRmgTownSlot::FindConnection(int destinationZone)
 // Controls: bool/byte found flags, scalar/nearby declaration scopes, for/while
 // search, positive match/early continue, found/terrain assignment order,
 // and int/terrain-enum vectors were byte-neutral in isolated controls.
+// Additional neutral controls: explicit for-loop top exit, reference max,
+// temporary clamp centers, whole positive repair guard, a named connection
+// result, signed vector indices, a shared item pointer, and outer bounds scope.
+// Three distinct bounds objects instead grow the frame to 0xa4. Initializing
+// the second scan's y directly stores it before the remaining clamps (95.23%).
 // Moving current's initialization past the vectors changes the entry loads.
 // The three-scalar and by-value GetMapItem overloads expand identically.
 // Terrain-vector insert matches all 521 bytes at 0x54d120; the retail
@@ -1634,6 +1645,12 @@ TRmgZoneConnection* TRmgTownSlot::FindConnection(int destinationZone)
 // arguments, and creating the map before lastTerrain change the dimension
 // loads/stores or terrain lifetime away from retail. Swapping the dimension
 // assignments does not restore the height-first multiplication sequence.
+// Computing a plane pointer first matches painting registers, but keeps the
+// wrong multiply operand and dimension-store schedule (97.0039%). A three-arg
+// view constructor is equivalent with direct plane arithmetic; using GetMapItem
+// there reloads dimensions. Pointer/level store order alone is byte-neutral.
+// Two-coordinate and three-coordinate member copies add loads/stores or move
+// the vptr away from retail; neither establishes the original dimension type.
 VA(0x0053FCB0, 0x5EC) // anchor-callee 0x544a31; thiscall, ret 0; retail-only
 void type_random_map_generator::RepairWaterZoneBorders()
 {
@@ -1663,16 +1680,22 @@ void type_random_map_generator::RepairWaterZoneBorders()
                 TRmgZone* zone = zones[zoneIndex];
                 for (nearby.y = bounds.minimumY;
                      nearby.y < bounds.maximumY && !found; ++nearby.y) {
-                    for (nearby.x = bounds.minimumX; nearby.x < bounds.maximumX; ++nearby.x) {
-                        TRmgMapItem* item = map.GetMapItem(nearby);
-                        if (item->tile.landType == eTerrainWater
-                            || item->tile.landType == eTerrainRock
-                            || item->HasBorderObject()
-                            || !item->tileData.roadPassable)
-                            continue;
-                        terrain = item->tile.landType;
-                        found = 1;
-                        break;
+                    nearby.x = bounds.minimumX;
+                    if (nearby.x < bounds.maximumX) {
+                        do {
+                            TRmgMapItem* item = map.GetMapItem(nearby);
+                            if (item->tile.landType != eTerrainWater
+                                && item->tile.landType != eTerrainRock
+                                && !item->HasBorderObject()
+                                && item->tileData.roadPassable) {
+                                terrain = item->tile.landType;
+                                found = 1;
+                                break;
+                            }
+                            ++nearby.x;
+                            if (nearby.x >= bounds.maximumX)
+                                break;
+                        } while (1);
                     }
                 }
                 if (!found || zone->slot->FindConnection(destinationZone))
@@ -1746,8 +1769,10 @@ TRmgMapPosition TRmgMapPosition::operator+(const TPoint& offset) const
 // crossings, opens their predecessor paths, and records both zone entrances
 // before choosing border objects or a guard.  There is no Dreamcast RMG
 // counterpart; the helper names describe their retained retail bodies.
-// Residual (76.75134%): the first clear expands erase into copy/_Destroy;
-// the two final GetMapItem calls and the final vector destructor also expand.
+// Residual (77.31306%): the two final GetMapItem calls and the final vector
+// destructor expand. Delegating the by-value accessor to its scalar overload
+// restores the first clear's retained range erase; direct accessor arithmetic
+// expands that erase into copy/_Destroy (76.75134%).
 // Retail additionally preserves a 12-byte position temporary that this
 // candidate folds away.  These are unresolved source/lifetime boundaries.
 // Controls: direct range-erase expands further (71.29874%); positive eligibility
@@ -2512,9 +2537,13 @@ void type_random_map_generator::BuildRoadCostMap(TRmgMapPosition position)
 // The saved position is reused at +0x53e before the mouth temporarily replaces
 // nextPosition; the delta-direction scan explicitly stops at four directions.
 // Residual: the seed inserts, worklist erases and bitset range failure still
-// choose different inline depths.  Retain these source/CFG corrections through
-// score dips.  A combined cost/predecessor setter and by-value position
-// assignment do not reproduce the reset's constant-cost and copy sequence.
+// choose different inline depths. With GetMapItem delegating to its scalar
+// overload, final map cleanup calls the vector deleting destructor instead
+// of retail's direct array iterator, and the trailing vector _Destroy is
+// retained (33.67439%; direct accessor arithmetic gives 39.066925%). Retain
+// these source/CFG corrections through score dips. A combined cost/predecessor
+// setter and by-value position assignment do not reproduce the reset's
+// constant-cost and copy sequence.
 VA(0x00548DF0, 0x99F)  // water-wheel caller + river-delta object; retail-only
 void type_random_map_generator::CreateRiver(TRmgMapPosition source)
 {

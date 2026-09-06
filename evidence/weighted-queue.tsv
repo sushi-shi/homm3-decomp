@@ -387,9 +387,9 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x005b45f0	621	23.330544	23.3305	23.3305	476.11732176000004	rmg_terrain	??0TRmgTerrainPainter@@QAE@PAVTRmgMapAdapterInterface@@HH@Z	non-exact
 0x004e59a0	248	32.623375	100.0	100.0	167.09402999999998	hero	?Fly@hero@@QAEXH@Z	non-exact
 0x00489e20	1104	33.50518	34.6269	34.6269	734.1028128	customcampaign	?PruneCrossoverHeroes@SCampaign@@QAEXPAX@Z	non-exact
+0x00548df0	2463	33.67439	39.6178	39.6178	1633.5997742999998	rmg	?CreateRiver@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	non-exact
 0x0048bf00	429	34.74074	34.7407	34.7407	279.96222539999997	customcampaign	?insert@?$vector@EV?$allocator@E@std@@@std@@QAEXPAEIABE@Z	non-exact
 0x00574a90	586	35.38249	35.3825	35.3825	378.6586086	seerhut	?load@TSeerHut@@QAEXPAVTAbstractFile@@H@Z	non-exact
-0x00548df0	2463	39.066925	39.6178	39.6178	1500.7816372500001	rmg	?CreateRiver@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	non-exact
 0x005578d0	48	41.875	41.875	41.875	27.900000000000002	remote	??1CNetMsgHandler@@UAE@XZ	non-exact
 0x0056ce50	286	41.927082	41.9271	41.9271	166.08854548000002	seerhut	?LoadFromMap@type_quest@@UAEXPAVTAbstractFile@@@Z	non-exact
 0x00506080	468	41.945454	41.9455	41.9455	271.69527528	mapcell	??0CObjectType@@QAE@PAUTObjectType@@@Z	non-exact
@@ -411,8 +411,8 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00526d40	915	64.31193	64.3119	64.3119	326.54584049999994	philai	??0type_spellvalue@@QAE@PBVhero@@@Z	non-exact
 0x0045a950	63	65.92	65.92	65.92	21.470399999999998	campaignbrief	??0TPlayerSlotAttributes@CMapHeaderData@@QAE@XZ	non-exact
 0x00437a00	1786	66.42922	100.0	100.0	599.5741308	ai_tactical	??0army@@QAE@ABV0@@Z	non-exact
+0x00547880	1969	66.572266	67.8599	67.8599	658.1920824599999	rmg	?BuildRoadCostMap@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	non-exact
 0x004c3ef0	1176	67.558685	95.6972	95.7136	381.5098644	game	?readMapPlayerSlot@TPlayerSlotAttributes@CMapHeaderData@@QAEXPAVTAbstractFile@@H@Z	non-exact
-0x00547880	1969	67.859856	67.8599	67.8599	632.83943536	rmg	?BuildRoadCostMap@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	non-exact
 0x00583580	780	67.90991	67.9099	67.9099	250.30270200000004	singleselectionwindow	?UpdateGameVars@TSingleSelectionWindow@@QAEXXZ	non-exact
 0x00437800	501	68.49701	99.8503	99.8503	157.82997989999998	ai_tactical	?get_attack_skill_value@type_AI_spellcaster@@QAEJPBVarmy@@0JJ@Z	non-exact
 0x0058e700	761	68.82186	68.8219	68.8219	237.26564539999998	singleselectionwindow	?SetNewPlayerSlot@TSingleSelectionWindow@@QAEXPAVCNetPlayerInfo@@@Z	non-exact
@@ -441,9 +441,9 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x005f2a40	968	75.86364	75.8636	75.8636	233.6399648	victorylossconditions	?CheckForDefeatedHeroLoss@LossConditionStruct@@QAEEPBVhero@@@Z	non-exact
 0x005113f0	611	75.99515	75.9951	75.9951	146.6696335	multiplayerwindow	?OnTCP@TMultiPlayerWindow@@QAEEXZ	non-exact
 0x00514b80	503	76.63784	76.6378	76.6378	117.51166479999999	objecttype	??5@YIAAV?$basic_istream@DU?$char_traits@D@std@@@std@@AAV01@AAUTObjectType@@@Z	non-exact
-0x00541140	1594	76.75134	76.7513	76.7513	370.5836404	rmg	?CreateGroundConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@PAV?$vector@PAUTRmgMapItem@@V?$allocator@PAUTRmgMapItem@@@std@@@std@@PAV?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@5@@Z	non-exact
 0x004be3f0	2725	76.92083	96.4044	96.4044	628.9073825000002	game	?Save@game@@QAEHPAVTAbstractFile@@@Z	non-exact
 0x005b6540	714	77.26087	77.2609	77.2609	162.35738820000006	rmg_terrain	?BuildMatchingNeighbourMask@TRmgTerrainPainter@@QAEXABUTRmgGridPoint@@PAE@Z	non-exact
+0x00541140	1594	77.31306	77.3131	77.3131	361.6298236000002	rmg	?CreateGroundConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@PAV?$vector@PAUTRmgMapItem@@V?$allocator@PAUTRmgMapItem@@@std@@@std@@PAV?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@5@@Z	non-exact
 0x005141b0	110	77.391304	77.3913	77.3913	24.869565599999994	objecttype	?Accepts@TNativeTerrainObjectFilter@@UBEHPBUTObjectType@@@Z	non-exact
 0x004022e0	359	77.48718	77.4872	77.4872	80.8210238	adventuremapwindow	?SendChat@CAdventurMapChatEdit@@UAEXPBDH@Z	non-exact
 0x004ee3e0	7172	77.563	77.563	77.563	1609.1816399999998	kb	?oldmain@@YIHXZ	non-exact
@@ -751,7 +751,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00468220	1167	93.97596	93.976	93.976	70.30054679999996	cmbtmgr	?ShootMissile@combatManager@@QAEXHHHHPBMPBVCSprite@@@Z	non-exact
 0x00485b60	507	93.99505	93.9951	93.9951	30.445096499999988	customcampaign	?Read@TCampaignStartHeroOption@@UAEXPAVTAbstractFile@@@Z	non-exact
 0x004521f0	2260	94.00537	98.7476	98.7476	135.47863800000002	bottomviewsubwindow	??0TBottomViewTown@@QAE@PAVheroWindow@@@Z	non-exact
-0x00549cb0	3728	94.10172	95.7066	95.7066	219.8878784	rmg	?WriteMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	non-exact
+0x00549cb0	3728	94.093895	95.7066	95.7066	220.17959439999981	rmg	?WriteMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	non-exact
 0x005503a0	1428	94.157364	96.5558	96.5558	83.43284208000001	recruit	?Update@recruitUnit@@QAEXEJ@Z	non-exact
 0x00445490	571	94.16477	94.1648	94.1648	33.31916329999995	army	?get_berserk_targets@army@@QBEXAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	non-exact
 0x0050cd90	1904	94.16746	94.1675	94.1675	111.05156159999994	mousemgr	?Update@mouseManager@@QAEXE@Z	non-exact
@@ -860,9 +860,9 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x0043e140	2240	96.858696	96.8587	96.8587	70.36520960000001	army	?DrawToBuffer@army@@QAEXHHH@Z	non-exact
 0x00439270	651	96.86017	96.8602	96.8602	20.440293299999993	ai_tactical	?get_muck_and_mire_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	non-exact
 0x00418620	1508	96.90312	96.9031	96.9031	46.700950400000025	advmgr	?GetSoundId@advManager@@QAE?AW4e_looping_sound_id@@HHH@Z	non-exact
-0x0053fcb0	1516	96.921875	97.0449	97.0449	46.66437499999997	rmg	?RepairWaterZoneBorders@type_random_map_generator@@QAEXXZ	non-exact
 0x00403c40	120	96.95122	100.0	100.0	3.6585359999999945	adventuremapwindow	?SetElevationToggleImage@TAdventureMapWindow@@QAEEH@Z	non-exact
 0x0040b150	8860	96.95354	96.9535	96.9535	269.9163559999996	advmgr	?SetRolloverText@advManager@@QAEXPAVNewmapCell@@HH@Z	non-exact
+0x0053fcb0	1516	97.04883	97.0488	97.0488	44.73973720000004	rmg	?RepairWaterZoneBorders@type_random_map_generator@@QAEXXZ	non-exact
 0x0058a300	319	97.05882	97.0588	97.0588	9.382364199999996	singleselectionwindow	??1CNewMapHeaderInfoMsg@@QAE@XZ	non-exact
 0x00589fa0	729	97.06278	97.0628	97.0628	21.41233379999997	singleselectionwindow	?OnNewPlayerMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	non-exact
 0x00557af0	520	97.093025	97.093	97.093	15.116270000000004	remote	?CheckForWarning@CTurnDuration@@QAEXXZ	non-exact
