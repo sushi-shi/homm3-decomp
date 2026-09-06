@@ -3348,8 +3348,8 @@ rmg	??0type_witch_hut_def@@QAE@XZ	100.0000	100.0000	100.0000	0x134a60	248d29ba8a
 rmg	??1TRmgTemplate@@QAE@XZ	100.0000	100.0000	100.0000	0x132fe0	91c7b86448a1
 rmg	?BuildRoadCostMap@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	81.8701	81.8701	81.8701	0x147880	a77d1b634931
 rmg	?ClipRmgBoundaryPoint@@YI?AUTPoint@@ABUTRmgZoneBounds@@U1@1@Z	100.0000	100.0000	100.0000	0x13cac0	98cce6c5a487
-rmg	?ConnectZones@type_random_map_generator@@QAEXXZ	93.3833	93.3833	93.3833	0x143240	8d5f38bf5378
-rmg	?CreateRiver@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	81.2445	81.2445	81.2445	0x148df0	d121ac9f5ea6
+rmg	?ConnectZones@type_random_map_generator@@QAEXXZ	93.6151	93.6151	93.6151	0x143240	8d5f38bf5378
+rmg	?CreateRiver@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	84.0026	84.0026	84.0026	0x148df0	d121ac9f5ea6
 rmg	?CreateSubterraneanGate@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	76.9439	76.9439	76.9439	0x142080	38a429be544f
 rmg	?DrawIrregularZoneBoundary@type_random_map_generator@@QAEXUTPoint@@0HHH@Z	100.0000	100.0000	100.0000	0x13bff0	2d2874683a8c
 rmg	?DrawStraightZoneBoundary@type_random_map_generator@@QAEXUTPoint@@0HH@Z	100.0000	100.0000	100.0000	0x13c220	37631f283728

@@ -1001,6 +1001,14 @@ a register while leaving `msg` live in edx for the else arm's memory read;
 hoisting it above the `if` coalesces msg and codeX into one register and
 costs four instructions. `findpath::Clear` 95.85 → 96.88: the destination
 must be an assigned pointer local, not the two-return accessor call.
+`TRmgMapPosition::operator+(TPoint)` has a by-value operand: in CreateRiver,
+this keeps the current x coordinate in EBX for the first neighbour and
+restores the jump over the backedge reloads. The relaxation register flow
+then agrees too. CreateRiver rises 81.2445 → 84.0026 and ConnectZones rises
+93.3833 → 93.6151 with no collateral drops. The const-reference operand is
+the negative control. Separating phase-local indices or moving persistent
+position declarations before the vectors/reset is byte-flat; declaration
+order does not explain this instance.
 - status: explained-lever
 - probe: none (needs the surrounding two-arm consumer shape; not yet reduced)
 
