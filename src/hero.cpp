@@ -6706,6 +6706,22 @@ int hero::GetLuck(const hero* otherHero, unsigned char on_cursed_ground,
     if (IsWieldingArtifact(0x2f))
         luck++;
     if (IsWieldingArtifact(0x30))
+        // Residual (88.07%) after the `long luck` fix: the WHOLE remaining
+        // delta is THIS rung's /Ob2 decision.  Retail expands
+        // IsWieldingArtifact at five rungs (the two 0x55 hourglass tests,
+        // 0x6c, 0x2d, 0x2e, 0x2f - readable as the 19-slot
+        // `cmp dword ptr [reg], <id>` scan loops at 0x4dc2f4/0x4dc339/
+        // 0x4dc41e/0x4dc45b/0x4dc499) and CALLS it here at 0x4dc4d2, a
+        // 0x10-byte arm against our 0x3d-byte sixth expansion; that
+        // expansion is our whole 44-byte size surplus (788 vs retail's 744)
+        // and the 42-vs-39 conditional-branch delta `vc6 diagnose` reports.
+        // The callee is byte-exact (IsWieldingArtifact is 100.0000), the
+        // candidate-site set is identical, and `predict-inline` is BLIND to
+        // it: an expanded rung still emits one IsWieldingArtifact call for
+        // its combination-artifact recursion, so both multisets read 9 = 9
+        // and the tool reports "inline structure matches".  Count the scan
+        // loops, not the calls.  No pin-free lever known; a statement pin
+        // here would be the sixth new pin and the ratchet holds at 355.
         luck++;
 
     if (owner >= 0) {
