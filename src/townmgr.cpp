@@ -6140,9 +6140,7 @@ building_popup:
                     static_cast<TTownScreenWindow*>(TownWindow);
                 DoTownKnob(win, 1);
                 win->UpdateTownLocators();
-#pragma inline_depth(0)
                 RedrawTownScreen();
-#pragma inline_depth()
                 break;
             }
             case TTownScreenWindow::DIVIDE_ID: {

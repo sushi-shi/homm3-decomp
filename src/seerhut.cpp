@@ -778,9 +778,11 @@ void type_skill_quest::DoProposalDialog(hero* current_hero)
         const std::string* texts = quest_texts();
         std::string text = format_string(
             texts[QUEST_TEXT_PROGRESS].c_str(), requirementPointer);
-#pragma inline_depth(0)
+        // Unpinned 2026-09-06 (polish lane 50): the `inline_depth(0)` pin
+        // that stood on this append is worth -1.39640 -
+        // DoProposalDialog 75.43243 -> 76.82883, a new MAX - and nothing
+        // else in the TU moves. Its four siblings in this body stay.
         text += get_time_limit_text();
-#pragma inline_depth()
         const char* textPointer = text.c_str();
 #pragma inline_depth(0)
         {

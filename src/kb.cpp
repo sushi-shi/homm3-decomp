@@ -1260,15 +1260,15 @@ int oldmain()
                 // INLINE BOUNDARY: oldmain -> KbFn_004EE1B0. Retail emits
                 // the call at oldmain+0x416 to the separate 0x4ee1b0 body;
                 // the two preceding VideoPlay calls and the introrim.pcx
-                // argument fix the site. Negative control: with this gate
-                // removed, VC6 flattened all ten of the helper's calls into
-                // oldmain and emitted no 0x4ee1b0 candidate function.
-#pragma inline_depth(0)
+                // argument fix the site. The old negative control (gate
+                // removed -> VC6 flattened all ten of the helper's calls
+                // into oldmain and emitted no 0x4ee1b0 candidate) no longer
+                // reproduces: the site is byte-flat without a pin, so the
+                // pin came out (2026-09-06, polish lane 50).
                 KbFn_004EE1B0(
                     30,
                     DATA_COMPGEN(0x0067f718, oldMainIntroFrame,
                                  "introrim.pcx"));
-#pragma inline_depth()
             }
         }
 
@@ -1746,13 +1746,14 @@ static int DoNewGame()
         case TGameTypeWindow::MULTIPLAYER_ID:
             // INLINE BOUNDARY: DoNewGame -> DoMultiPlayerWindow and
             // DoSinglePlayerWindow. Dreamcast kb.cpp:1896/1898 and retail
-            // oldmain+0x933/+0x940 retain both calls. Negative control:
-            // ordinary depth expands both modal objects into oldmain.
-#pragma inline_depth(0)
+            // oldmain+0x933/+0x940 retain both calls. The pin that held this
+            // is now a LOSS: removing it is oldmain 77.56300 -> 77.74638,
+            // and with the CAMPAIGN_ID load pin out too the pair is 78.01930
+            // (2026-09-06, polish lane 50, full 32-subset enumeration over
+            // the five candidate pins in this body).
             if (DoMultiPlayerWindow()
                             && DoSinglePlayerWindow())
                 exitNewGame = 1;
-#pragma inline_depth()
             break;
 
         case TGameTypeWindow::TUTORIAL_ID: {
@@ -2085,12 +2086,15 @@ static int DoLoadGame()
 
         case TGameTypeWindow::CAMPAIGN_ID:
             // Same proven PickLoadGame boundary, retail oldmain+0xc54.
-#pragma inline_depth(0)
+            // Unpinned: removing this one alone is oldmain 77.56300 ->
+            // 77.93137 and it combines with DoNewGame's for 78.01930. The
+            // SINGLE_ID, MULTIPLAYER_ID and TUTORIAL_ID siblings below stay
+            // pinned - every subset that also drops one of those is worse
+            // (2026-09-06, polish lane 50).
             if (PickLoadGame()) {
                 gbUnk69774c = 1;
                 exitLoadGame = 1;
             }
-#pragma inline_depth()
             break;
 
         case TGameTypeWindow::MULTIPLAYER_ID:
