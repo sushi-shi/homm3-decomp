@@ -1614,6 +1614,25 @@ void OverviewSliderCallback(int state, heroWindow* parent_window)
 // vtable store, exact following destructor and address-taken slider callback
 // jointly fix this identity and extent.
 // E:\gamedcs\overview.cpp:2017
+// DIAGNOSED 2026-09-06, and it is NOT missing source mass: this compile
+// emits MORE than retail, not less - 268 blocks against 241, 127 branches
+// against 108, and ELEVEN base-only calls, every one of them the guts of
+// `vector<overview_item_record>::insert` (_Ufill, _Ucopy x2, _Destroy,
+// operator new/delete) plus five out-of-line `_Construct`.  Retail CALLS
+// insert at all six append sites (its first one pairs with ours at fn+0xfdc)
+// and INLINES `_Construct`; we do the exact inverse at five of the six,
+// which is one /Ob2 budget decision showing up in both directions at once -
+// expanding insert spends the budget, and the later `_Construct` sites are
+// then starved out of line.  27 blocks / 6 sites is one insert expansion
+// each, so the whole structural deficit is that decision.
+// Measured and rejected 2026-09-06: spelling all six appends
+// `insert(field_60.end(), record)` instead of `push_back(record)` scores
+// 80.9765 against 82.7097 and leaves the block count at 268 - the library
+// level is not what selects the expansion.  The lever the doctrine names for
+// an OVER-inline this size is caller-shrink, but the six item-record search
+// loops are identical enough to fold into one helper and the Dreamcast
+// overview.obj roster names no such function (its own ctor is a different,
+// 2692 B revision), so that helper would be invented source.
 VA(0x0051fa40, 0x1311)  // exhaustive ctor/callback/dtor identity, dc 0x1084f0
 TOverviewWindow::TOverviewWindow()
     : CAdvPopup(0, 0, 800, 600, 0)
@@ -2780,6 +2799,17 @@ int TOverviewWindow::WindowHandler(message* msg)
 // every DC-proven local, statement group and scope while banking the best VC6
 // lowering found.
 // E:\gamedcs\overview.cpp:1528
+// Residual (96.5741%): ONE surplus instruction and one encoder tie-break.
+// Retail restores `iSlotOff` into EBX at the FOOT of the row loop
+// (`mov ebx,[ebp-0xc]` immediately before `inc edi`), so the one reload
+// serves both the next iteration's `lea ebx,[ebx+edi+0x82]` and the three
+// post-loop uses; this compile reloads it at the loop HEAD instead and then
+// needs a second reload after the loop.  The remaining row is the B18 SIB
+// tie-break, `lea ebx,[ebx+edi+0x82]` against `lea ebx,[edi+ebx+0x82]`.
+// Measured and rejected 2026-09-06, byte-flat at 96.5741: writing the
+// widget id as `iSlotOff + i + 130` instead of `i + iSlotOff + 130` - VC6
+// canonicalises the addend order exactly as it does for `&`, so the SIB
+// order is not reachable from the source operand order.
 VA(0x00522470, 0x15E)  // body/arity identified, dc 0x107668
 void UpdateBackpack(int iSlot)
 {

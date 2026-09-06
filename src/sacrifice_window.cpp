@@ -2437,6 +2437,15 @@ long sacrifice_value(TCreatureType creature)
 // model divergence, and rejects all four guided source controls (named group
 // is flat; volatile available and both adjacent store swaps are worse), so
 // the remaining difference is a measured C1 stack-coloring tie.
+// Residual (99.9744%): with memory operands masked the two objects are
+// IDENTICAL - every block, branch, call and opcode agrees and the frames are
+// equal.  The only divergence is one slot: retail addresses the `result`
+// string at [ebp-0x40] where this compile puts it at [ebp-0x30], sixteen
+// bytes (one basic_string) apart, with `help_text` taking the other slot.
+// Measured and rejected 2026-09-06: declaring `std::string result` ABOVE
+// `long total_hits` in the same block, 93.8202 - it costs the `xor ebx,ebx`
+// at fn+0x20 and cascades.  The two block-scoped strings do not overlay on
+// either side, so the cycle is an allocation order, not a lifetime fact.
 VA(0x00562da0, 0x3a2)  // dc order/name/signature + retail field graph, dc 0x125e08
 void type_sacrifice_window::update_creature_offering(
     type_creature_offering* creature)
