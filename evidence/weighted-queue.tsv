@@ -344,7 +344,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x005b8a20	23		0.0	0.0	23.0	seg_001b	game_1b7520_sub00_1b8a20	unscored
 0x004b42b0	22		0.0	0.0	22.0	seg_000b	game_b1a70_sub01_b42b0	unscored
 0x004fa520	22		0.0	0.0	22.0	seg_000f	game_f9f00_sub02_fa520	unscored
-0x00532240	21		0.0	0.0	21.0	seg_0013	game_132240	unscored
 0x0054dd60	21		0.0	0.0	21.0	seg_0014	game_14c3f0_sub00_14dd60	unscored
 0x0048eb40	20		0.0	0.0	20.0	seg_0008	game_87e40_sub10_8eb40	unscored
 0x00515480	20		0.0	0.0	20.0	seg_0011	game_114b80_sub03_115480	unscored
@@ -390,7 +389,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00489e20	1104	33.50518	34.6269	34.6269	734.1028128	customcampaign	?PruneCrossoverHeroes@SCampaign@@QAEXPAX@Z	non-exact
 0x0048bf00	429	34.74074	34.7407	34.7407	279.96222539999997	customcampaign	?insert@?$vector@EV?$allocator@E@std@@@std@@QAEXPAEIABE@Z	non-exact
 0x00574a90	586	35.38249	35.3825	35.3825	378.6586086	seerhut	?load@TSeerHut@@QAEXPAVTAbstractFile@@H@Z	non-exact
-0x00548df0	2463	38.57014	39.6178	39.6178	1513.0174518	rmg	?CreateRiver@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	non-exact
+0x00548df0	2463	39.066925	39.6178	39.6178	1500.7816372500001	rmg	?CreateRiver@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	non-exact
 0x005578d0	48	41.875	41.875	41.875	27.900000000000002	remote	??1CNetMsgHandler@@UAE@XZ	non-exact
 0x0056ce50	286	41.927082	41.9271	41.9271	166.08854548000002	seerhut	?LoadFromMap@type_quest@@UAEXPAVTAbstractFile@@@Z	non-exact
 0x00506080	468	41.945454	41.9455	41.9455	271.69527528	mapcell	??0CObjectType@@QAE@PAUTObjectType@@@Z	non-exact
@@ -850,7 +849,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00553df0	228	96.6265	96.6265	96.6265	7.691580000000016	remote	?KillOldChat@CChatManager@@QAEXXZ	non-exact
 0x00553840	283	96.63265	96.6326	96.6326	9.529600500000006	remote	?AddChat@@YAXPAVCChatManager@@PBDZZ	non-exact
 0x00416f80	461	96.64286	96.6429	96.6429	15.476415400000013	advmgr	?garrison_quick_view@advManager@@QAEXHHH@Z	non-exact
-0x0053fcb0	1516	96.6543	96.6543	96.6543	50.72081199999994	rmg	?RepairWaterZoneBorders@type_random_map_generator@@QAEXXZ	non-exact
 0x00551460	254	96.67088	96.6709	96.6709	8.45596480000002	recruit	??0recruitUnit@@QAE@PAVhero@@W4TCreatureType@@PAF121212@Z	non-exact
 0x004d97f0	416	96.72	96.72	96.72	13.644800000000021	hero	?UpdateArmies@hero@@QAEXXZ	non-exact
 0x005d1ef0	1548	96.76796	100.0	100.0	50.031979200000045	townmgr	??0TShipWindow@@QAE@H@Z	non-exact
@@ -862,6 +860,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x0043e140	2240	96.858696	96.8587	96.8587	70.36520960000001	army	?DrawToBuffer@army@@QAEXHHH@Z	non-exact
 0x00439270	651	96.86017	96.8602	96.8602	20.440293299999993	ai_tactical	?get_muck_and_mire_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	non-exact
 0x00418620	1508	96.90312	96.9031	96.9031	46.700950400000025	advmgr	?GetSoundId@advManager@@QAE?AW4e_looping_sound_id@@HHH@Z	non-exact
+0x0053fcb0	1516	96.921875	97.0449	97.0449	46.66437499999997	rmg	?RepairWaterZoneBorders@type_random_map_generator@@QAEXXZ	non-exact
 0x00403c40	120	96.95122	100.0	100.0	3.6585359999999945	adventuremapwindow	?SetElevationToggleImage@TAdventureMapWindow@@QAEEH@Z	non-exact
 0x0040b150	8860	96.95354	96.9535	96.9535	269.9163559999996	advmgr	?SetRolloverText@advManager@@QAEXPAVNewmapCell@@HH@Z	non-exact
 0x0058a300	319	97.05882	97.0588	97.0588	9.382364199999996	singleselectionwindow	??1CNewMapHeaderInfoMsg@@QAE@XZ	non-exact

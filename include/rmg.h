@@ -660,14 +660,16 @@ public:
     int numberLevels;                     // +0x14
 
     // The plane-view construction at 0x54013e writes its vptr before the
-    // data members. Body assignments preserve that ordering; initializing
-    // every field in the initializer list instead puts the vptr last.
+    // data members. Body assignments allow the earlier vptr write; putting
+    // every field in the initializer list places it last. The width store
+    // still moves early in RepairWaterZoneBorders and remains a residual.
+    // Keep the plane offset in the canonical coordinate accessor.
     inline type_random_map(type_random_map& source, int level)
     {
         mapWidth = source.mapWidth;
         mapHeight = source.mapHeight;
         numberLevels = 1;
-        mapItems = source.mapItems + level * mapHeight * mapWidth;
+        mapItems = source.GetMapItem(0, 0, level);
         ownsMapItems = 0;
     }
 

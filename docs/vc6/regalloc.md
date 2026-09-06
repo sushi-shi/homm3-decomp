@@ -506,6 +506,28 @@ This is a measured lifetime hypothesis; without a DC counterpart it is
 not a recovered original lexical scope. A byte match also does not settle
 whether the midpoint calculation was itself a helper expansion.
 
+### 6g. A bounds aggregate preserves the retail stack frame
+
+`RepairWaterZoneBorders` (0x53fcb0) stores its four rectangular bounds in
+consecutive homes at EBP-0x50 through EBP-0x44. The minimum-y home is dead,
+but remains part of that four-integer area. Two `TPoint` corners and four
+independent scalars produce the same clamp instructions, yet VC6 folds their
+storage and allocates a 0x7c frame instead of retail's 0x84.
+
+Using the existing `TRmgZoneBounds` aggregate restores that area. Keeping
+one terrain local across searching and painting then reproduces every
+observed local home, including both vectors, the two coordinates, the brush,
+and the level map. Separate terrain locals score slightly higher (97.0449%
+versus 96.9219%) but shift the vector and current-pointer homes by four bytes.
+The candidate with the retail frame is retained; MAX/history bank the peak.
+
+This is a type/lifetime finding from raw stack operands, not proof of an
+original class name. Scalar declaration hoisting, scoping the nearby point
+to one cell, and changing the found flag to native bool were neutral controls.
+No padding local, lifetime-extending dummy operation, or inline directive
+is involved. The remaining instruction/branch differences are documented
+beside the function.
+
 ## 7. Files
 
 | path | role |

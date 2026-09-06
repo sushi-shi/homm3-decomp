@@ -479,6 +479,8 @@ arbitrary byte-valued function. The helper boundaries remain ordinary and
 shared; no inline directive is involved.
 
 The same checkpoint corrected the plane-view map's shared painting interface
-and constructor statement order. `RepairWaterZoneBorders` reached 96.6543%;
-the unchanged `CreateRiver` caller measured 38.57014%, below its 39.6178%
-peak. Its MAX/history remain intact for the later caller-specific work.
+and constructor statement order. Using the canonical `GetMapItem(0, 0,
+level)` for the plane offset leaves `CreateRiver` at 39.066925%, below its
+39.6178% peak. Its MAX/history remain intact for later caller-specific work.
+`RepairWaterZoneBorders`'s separate bounds-aggregate finding is recorded in
+[regalloc.md](regalloc.md#6g-a-bounds-aggregate-preserves-the-retail-stack-frame).
