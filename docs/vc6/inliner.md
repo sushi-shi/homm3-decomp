@@ -958,6 +958,23 @@ These are consequences of a shared value-copy boundary; no STL body or inline
 control changed. The map size accessor and terrain-brush destructor currently
 dip, with their 100% peaks retained. `createRiver` remains at 85.9575%.
 
+### Scalar read boundaries affect an earlier alternative branch
+
+`TSeerHut::load` (`0x574a90`) reaches 100% from 35.38% when its single-byte
+reads call an ordinary helper returning `unsigned char`. All reads keep their
+order and width, including the discarded legacy byte. Later helper calls in
+the modern-format branch change the budget available to the earlier legacy
+quest constructor. Its four allocator constructors and artifact insertion
+now remain out of line, matching retail; the frame shrinks from 0x1c to 0x14
+and all ten CFG blocks and three EH states agree.
+
+An unused helper leaves the flattened form byte-identical. Returning a masked
+integer reaches 99.9309%. Deleting the entire modern branch from the flattened
+form does not restore the boundaries: the quest constructor still has the
+1000-unit floor budget to itself. That control tests caller size, but does not
+rule out missing helper calls sharing the nested budget. The helper's original
+name is unknown; Dreamcast's older reader handles a different 24-byte POD.
+
 ## 7. Using it
 
 ```sh

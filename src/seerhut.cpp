@@ -3407,90 +3407,36 @@ void TSeerHut::read(TAbstractFile* infile)
     NameIndex = chosen;
 }
 
-// Shared single-artifact construction raises 27.4147 -> 30.4931% and restores
-// the fourth return (null allocation skips every setup side effect). Retail
-// directly calls SetDefaultText during construction. Its artifact argument is
-// captured before the base/member constructors, independently of the input
-// buffer subsequently passed by reference to vector::insert.
-// Residual: the four allocator-only string/vector constructors call the folded
-// 0x5157d0 body in retail; ours expand. push_back's two-argument insert also
-// expands one level too far: 26 blocks/15 branches versus retail's 10/5.
-// Candidate EH states 0,2 miss retail's state 1 before vector construction.
-// Negative controls: flat post-new setup was 27.4147%; removing the old
-// forceinline from the flags-only constructor was byte-flat here; omitting the
-// flags argument from the recovered overload was also byte-flat (30.4931%).
-// Keeping the byte-read temporary separate from the masked text-row value
-// removes an extra constructor-argument copy and raises MAX to 35.3825%.
-// Retail reads through [ebp+8], then keeps the masked row at [ebp-0x1c]; a
-// single address-taken textRow used for both roles was the 30.4931% control.
-// 2026-09-06: the section-6b `push_back(x)` -> `insert(end(), x)` rung on the
-// shared three-argument constructor LOSES at both of its call sites - this
-// row 35.3825 -> 30.7962 and TSeerHut::read (0x574610) 86.8092 -> 86.7912 -
-// so the constructor keeps `push_back`. That rung is now measured here; do
-// not re-sweep it. (It is also the WRONG DIRECTION: push_back -> insert
-// removes a level, and this row needs the leaf pushed one level further OUT,
-// not in.)
-// 2026-09-06 (polish lane 44), the residual LOCATED to one decision, and two
-// standing hypotheses closed:
-//   * The boundary is `vector<TArtifact>::insert(iterator, const T&)`.
-//     Retail CALLS it (delinked as `vector<int>::insert`, ICF-folded on the
-//     4-byte element, at +0x182); we expand it, and that single decision is
-//     the whole 26-blocks/15-branches against retail's 10/5 - it drags in
-//     ELEVEN base-only calls that retail does not make at all: `size`,
-//     `_Ucopy` x3, `_Ufill` x2, `_Destroy`, operator new, operator delete.
-//     Everything else agrees: both sides expand the type_artifact_quest
-//     constructor (SetDefaultText stands at +0x2cb on both), and the four
-//     `_Tidy` / 0x5157d0 rows are ICF label noise, not divergence.
-//   * NOT a pasted helper. The tree-wide census (claimed short bodies matched
-//     modulo identifier renames against every statement window in src/ and
-//     include/) reports nothing in seerhut.obj; its one hit here,
-//     type_quest::LoadFromMap inside type_quest::Load, is the two sibling
-//     vtable slots 11 and 12 sharing their trailing three-string run, which
-//     no call could express.
-//   * NOT a missing early statement. `sema diff --source` walks the <28 arm
-//     with every read group `==` from `infile->Read(&int_buffer, ...)` through
-//     the sixth byte; the first `!!` after the prologue is the textBuffer slot
-//     alone.
-// 2026-09-06 (polish lane 46), the NEGATIVE CONTROL the located residual
-// was missing, read off the DECISION rather than the score (so the missing
-// code the old probe measured does not confuse it): deleting the ENTIRE
-// >=28 arm - every Read, the `create_quest` call site and all four member
-// stores - leaves `insert` expanded exactly as before.  predict-inline
-// still reports `?insert@?$vector@HV?$allocator@H@std@@@std@@QAEPAHPAHABH
-// @Z` base x0 / retail x1; the only row that moves is `create_quest`, which
-// joins it because the site is gone.  So caller-shrink does not reach this
-// site: `budget = 2*cb(TSeerHut::load)` is clamped here, and the decision
-// belongs to the depth-3 quotient `budget/(n-k)` handed down through the
-// type_artifact_quest constructor and push_back's own two sites.  Retail's
-// argument binding is not the difference either - its inlined constructor
-// homes the by-value `artifact` at [ebp-0x18] for `push_back(const T&)` to
-// take the address of, then RE-READS that home for the
-// `gpGame->artifactDisabled[artifact]` store at 0x574be1, which is what our
-// spelling already emits.  Same wall class as smackmgr ShowVideo's.
+// Complete's byte-valued stream read. The name is provisional; load's
+// retail expansion proves the width and return-value lifetime. Keeping the
+// ordinary helper also supplies the real scalar call sites after the legacy
+// quest constructor, recovering its nested constructor/insert boundaries.
+static unsigned char readSeerByte(TAbstractFile* infile)
+{
+    unsigned char value;
+    infile->Read(&value, sizeof(value));
+    return value;
+}
+
+// NewfullMap::Load's savegame reader. The <=27 layout stores a dword
+// artifact id, the twelve-byte reward, and six bytes (the fourth is unused).
+// Complete reconstructs the legacy artifact quest only after those reads.
+// Dreamcast dc 0x12d8e4 instead reads its old 24-byte POD record wholesale;
+// its gzread wrapper does not describe Complete's replacement quest model.
 //
-// The 8-byte frame surplus (our `sub esp,0x1c` against retail's 0x14) is
-// downstream of that same expansion, not a source fact: retail packs the
-// reused `value` byte at [ebp+0xb] and `textBuffer` at [ebp+8] - both inside
-// the PARAMETER HOME, free because infile and saveVersion die into esi/ebx in
-// the prologue - and keeps `this` in edi, where our register pressure spills
-// it to [ebp-0x24]. Shrinking the caller cannot be measured directly here:
-// the >=28 arm is too large a share of the row's bytes for its removal to be
-// read as a budget signal (gutting it measures 20.03, which is the missing
-// code, not the budget).
-//
-// The savegame reader and the exact mirror of save (0x573fd0): NewfullMap
-// ::Load calls it on every element of the SeerHutList it has just resized,
-// with the file's saveVersion.  It is the last real body of seerhut.obj -
-// the carve's next row is the basic_string concat COMDAT below - and it sits
-// where the Dreamcast roster puts TSeerHut::load, one row past save
-// (dc 0x12d8c0 -> 0x12d8e4).
-//
-// The <= 27 arm reads the pre-"wide alignments" savegame layout: a dword
-// artifact id and the 12-byte reward record first, then six single bytes of
-// which the first is the quest-absent flag, the fourth is read and dropped,
-// and the fifth carries the quest's text row.  Only after the whole record
-// is consumed does it decide whether to rebuild the artifact quest, which is
-// the identical Restoration-of-Erathia construction read spells above.
+// The scalar reader boundary below reproduces all 586 bytes outside the
+// relocations, all ten CFG blocks, and EH states 0/1/2. Retail retains four
+// allocator constructors (ICF-folded at 0x5157d0) and the artifact insert.
+// The old note calling those constructors _Tidy label noise was wrong:
+// their 27-byte bodies take an allocator reference and agree byte-for-byte.
+// Flattened byte reads leave 35.3825%, a 0x1c rather than 0x14 frame, and
+// sixteen extra CFG blocks; an unused helper is byte-neutral. Returning a
+// masked int instead of unsigned char leaves 99.9309%. Deleting the modern
+// arm did not repair the flattened form: its only inline candidate remained
+// the quest constructor, with the 1000-unit floor budget to itself.
+// Keep the shared artifact constructor: post-new setup lost the allocation
+// failure guard and made SetDefaultText virtual (27.4147%). Direct vector
+// insert instead of push_back also expands the wrong boundary.
 VA(0x00574A90, 0x24A)  // bracket seerhut..singleselectionpopups; save mirror 0x573fd0, dc 0x12d8e4
 void TSeerHut::load(TAbstractFile* infile, int saveVersion)
 {
@@ -3498,53 +3444,26 @@ void TSeerHut::load(TAbstractFile* infile, int saveVersion)
         int int_buffer;
         infile->Read(&int_buffer, sizeof(int_buffer));
         infile->Read(&reward, sizeof(reward));
-
-        unsigned char value;
-        infile->Read(&value, sizeof(value));
-        unsigned char noQuest = value != 0;
-        infile->Read(&value, sizeof(value));
-        field_12 = value;
-        infile->Read(&value, sizeof(value));
-        visitedPlayers = value;
-        infile->Read(&value, sizeof(value));
-
-        int textRow;
-        {
-            int textBuffer;
-            infile->Read(&textBuffer, 1);
-            textRow = textBuffer & 0xff;
-        }
-
-        infile->Read(&value, sizeof(value));
-        NameIndex = value;
-
-        if (noQuest || int_buffer == -1) {
+        unsigned char noQuest = readSeerByte(infile) != 0;
+        field_12 = readSeerByte(infile);
+        visitedPlayers = readSeerByte(infile);
+        readSeerByte(infile);  // reserved legacy byte
+        int textRow = readSeerByte(infile);
+        NameIndex = readSeerByte(infile);
+        if (noQuest || int_buffer == -1)
             quest = 0;
-        } else {
+        else
             quest = new type_artifact_quest(
                 1, static_cast<TArtifact>(int_buffer), textRow); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
-        }
     } else {
-        int int_buffer;
-        infile->Read(&int_buffer, 1);
-        type_quest* newQuest = create_quest(int_buffer & 0xff, 1);
+        type_quest* newQuest = create_quest(readSeerByte(infile), 1);
         quest = newQuest;
         if (newQuest)
             newQuest->Load(infile, saveVersion);
-
         infile->Read(&reward, sizeof(reward));
-        {
-            unsigned char value;
-            infile->Read(&value, sizeof(value));
-            field_12 = value;
-            infile->Read(&value, sizeof(value));
-            visitedPlayers = value;
-        }
-        {
-            unsigned char value;
-            infile->Read(&value, sizeof(value));
-            NameIndex = value;
-        }
+        field_12 = readSeerByte(infile);
+        visitedPlayers = readSeerByte(infile);
+        NameIndex = readSeerByte(infile);
     }
 }
 

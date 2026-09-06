@@ -3613,7 +3613,7 @@ seerhut	?is_satisfied@type_monster_quest@@UAEEPAVhero@@@Z	100.0000	100.0000	100.
 seerhut	?is_satisfied@type_resource_quest@@UAEEPAVhero@@@Z	100.0000	100.0000	100.0000	0x1717b0	b1d398745dad
 seerhut	?is_satisfied@type_skill_quest@@UAEEPAVhero@@@Z	100.0000	100.0000	100.0000	0x16da70	a7c3b1c1dd0d
 seerhut	?load@TQuestGuard@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x173480	c678bdefc151
-seerhut	?load@TSeerHut@@QAEXPAVTAbstractFile@@H@Z	35.3825	35.3825	35.3825	0x174a90	f1bd7b2f3840
+seerhut	?load@TSeerHut@@QAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x174a90	2ff561579a36
 seerhut	?quest_type@type_be_hero_quest@@UAEHXZ	100.0000	100.0000	100.0000	0x1721f0	bd2f9df4da76
 seerhut	?quest_type@type_belong_to_player_quest@@UAEHXZ	100.0000	100.0000	100.0000	0x172810	f998e9e5cd55
 seerhut	?quest_type@type_defeat_hero_quest@@UAEHXZ	100.0000	100.0000	100.0000	0x16e3d0	b378bb94388f
