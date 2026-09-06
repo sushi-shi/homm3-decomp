@@ -325,6 +325,32 @@ compile instead of a sweep. Encoder-level tie-breaks (B17 length
 feedback, B18 SIB operand order) are not allocator decisions and are
 out of scope.
 
+### 6d. The one-line forwarder is a DEPTH level (2026-09-06, polish 30)
+
+`army::GetName()` is `return GetArmyName(creatureType, numTroops);`, so a
+statement written through it reaches the trait lookup one /Ob2 level deeper
+than a direct `GetArmyName(a->creatureType, a->numTroops)` call - and that one
+level is the whole difference between the leaf being CALLED and being expanded
+with its range guard, its 116-byte stride and its +0x14/+0x18 name pair
+inline. In `drawing.obj`: `show_creature_spell_error` **82.4044 -> 92.3889**
+on one pair of sites, `CombatMessage` **90.2999 -> 92.7545** on nine.
+
+Three bounds, all measured:
+
+* **all-or-nothing per body** - converting two of CombatMessage's nine sites
+  scores 86.42, BELOW the untouched baseline;
+* **coupled across a caller edge** - converting only `show_creature_spell_error`
+  costs `CombatMessage` 3.22 and gives it an EH frame retail has not got, so
+  the caller has to be converted in the same change;
+* **per body, not global** - the identical rewrite at `ModifySpellDamage`'s
+  four name sites costs 16.2 (88.49 -> 72.25), because retail CALLS the lookup
+  there. The screen that tells them apart is a census of
+  `?GetArmyName@@YIPBDHH@Z` call sites, base object against delinked target;
+  after the drawing fix no other sub-100 row in the tree disagrees.
+
+Keeping the forwarder and passing a CONSTANT count is not a substitute
+(81.66): the constant then has to be materialised for a call that stays.
+
 ### 6c. Open lead: the tree-wide `_Ufill` / `_Destroy` surplus (2026-09-06)
 
 An element-agnostic reloc census over every sub-100 row (base object against
