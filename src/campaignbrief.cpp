@@ -800,18 +800,18 @@ VA_COMPGEN(0x0045a7a0, 0x1A3, CLASS_CTOR, NewSMapHeader)
 // The nested slot record's own default constructor, between
 // NewSMapHeader's and CMapHeaderData's in retail's COMDAT order where the
 // DC roster puts it first (dc 0x5ac3c, 68 B against 63). Its destructor is
-// already claimed at 0x45ab80.
+// already claimed at 0x45ab80. EXACT after restoring body assignments:
+// the vector must construct before the scalar stores, while hasMainTown and
+// mainTownType remain untouched. Initializing those fields and moving the
+// stores into the member-init list was the full 65.92% residual.
 VA_COMPGEN(0x0045a950, 0x3F, CLASS_CTOR, TPlayerSlotAttributes)
 VA_COMPGEN(0x0045a990, 0x119, CLASS_CTOR, CMapHeaderData)
 VA_COMPGEN(0x0045aab0, 0xCC, IMPLICIT_DTOR, CMapHeaderData)
 // The owner token has to be the class the DEMANGLER produces from the
 // emitted symbol - `??1TPlayerSlotAttributes@CMapHeaderData@@QAE@XZ` keys as
 // `tplayerslotattributes_tplayerslotattributes@dtor`, with no enclosing-class
-// prefix - so the qualified spelling this row carried left it unpaired at
-// 0.0000. The slot record's DEFAULT CONSTRUCTOR at 0x45a950 stays unclaimed
-// for a related reason: our object emits both the default and the copy
-// constructor under one key while retail retained only the default, and the
-// model pairs a claim group only when the two counts agree.
+// prefix. Default construction, destruction, copy construction and copy
+// assignment each have their own admitted claim.
 VA_COMPGEN(0x0045ab80, 0x9B, IMPLICIT_DTOR, TPlayerSlotAttributes)
 VA_COMPGEN(0x0045ac20, 0xD2, CLASS_CTOR, SGameSetupOptions)
 

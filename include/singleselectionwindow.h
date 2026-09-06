@@ -633,7 +633,7 @@ public:
     unsigned char BeginSavedGame();
     // Retail 0x58c570, DC singleselectionwindow.cpp:7822. OnBeginGame's
     // other launch arm, likewise private to the owning TU.
-    unsigned char BeginNewGame();
+    bool BeginNewGame();
     // The disk header reader family around it, visible only to the
     // owning TU (the vectors gate): GetHeaders scans the picked
     // directory ("random_maps"/"games"/"maps" by mode) into the lists;
@@ -1017,7 +1017,7 @@ extern int gUnnamed697774;
 // CODEVIEW(E:\gamedcs\singleselectionwindow.cpp:7682, dc 0x1425f0) void TSingleSelectionWindow::SendPlayerFaces();
 // CODEVIEW(E:\gamedcs\singleselectionwindow.cpp:7698, dc 0x142674) unsigned char TSingleSelectionWindow::OnBeginGame();
 // CODEVIEW(E:\gamedcs\singleselectionwindow.cpp:7756, dc 0x142870) unsigned char TSingleSelectionWindow::BeginSavedGame();
-// CODEVIEW(E:\gamedcs\singleselectionwindow.cpp:7822, dc 0x1429e8) unsigned char TSingleSelectionWindow::BeginNewGame();
+// CODEVIEW(E:\gamedcs\singleselectionwindow.cpp:7822, dc 0x1429e8) bool TSingleSelectionWindow::BeginNewGame();
 // CODEVIEW(E:\gamedcs\singleselectionwindow.cpp:7889, dc 0x142c9c) unsigned char TSingleSelectionWindow::IsMultiPlayer();
 // CODEVIEW(E:\gamedcs\singleselectionwindow.cpp:7900, dc 0x142cc0) void TSingleSelectionWindow::UpdateNameLists();
 // CODEVIEW(E:\gamedcs\singleselectionwindow.cpp:7935, dc 0x142e3c) void TSingleSelectionWindow::TurnChatOn(unsigned char update);

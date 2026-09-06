@@ -2244,7 +2244,9 @@ static TDialogBox* gpNormalDialogWindow;
 // type (a coin toss between the two choices of the choose dialogs), then
 // the standard OK-widget message. Expanded into both of the handler's
 // exits in retail, so it has no body of its own.
-static int ExitNormalDialog(message* msg)
+// DC records message& and a zero-remainder first arm at kb.cpp:2345/2346;
+// retail expands the same branch order into NormalDialogHandler (+0x164).
+static int ExitNormalDialog(message& msg)
 {
     switch (giNormalDialogMBType) {
     case NORMAL_DIALOG_DEFAULT:
@@ -2256,18 +2258,18 @@ static int ExitNormalDialog(message* msg)
         break;
     case NORMAL_DIALOG_CHOOSE:
     case NORMAL_DIALOG_CHOOSE_OPTIONAL:
-        if (rand() % 2)
-            gpWindowManager->dialogReturn = DIALOG_RETURN_CHOICE_2;
-        else
+        if (rand() % 2 == 0)
             gpWindowManager->dialogReturn = DIALOG_RETURN_CHOICE_1;
+        else
+            gpWindowManager->dialogReturn = DIALOG_RETURN_CHOICE_2;
         break;
     default:
         gpWindowManager->dialogReturn = DIALOG_RETURN_CANCEL;
         break;
     }
-    msg->id = MESSAGE_WIDGET;
-    msg->codeY = 10;
-    msg->codeX = 10;
+    msg.id = MESSAGE_WIDGET;
+    msg.codeY = 10;
+    msg.codeX = 10;
     return MESSAGE_DISPATCH_FORWARD;
 }
 
@@ -2283,12 +2285,14 @@ static int ExitNormalDialog(message* msg)
 // source (turn-timer and network arms); retail expands ExitNormalDialog
 // into each.
 //
-// Residual (71.36%): retail SINKS both expansions past the function's
-// returns and gives the network arm its own EventWindowHandler tail; ours
-// keeps the first expansion inline behind a jump. Measured and rejected:
-// the early-return form `if (elapsed >= 15000) return Exit...;` in both
-// arms (71.03), the same plus an explicit `return EventWindowHandler`
-// after the inner store (71.03), and that return alone (56.56).
+// Exact: DC kb.cpp:2377/2403 call ElapsedSince again for the remaining
+// timeout (the SH4 jsr reuses the target register loaded for 2375/2401).
+// Complete independently snapshots giNormalDialogStart before each Get.
+// Keep `15000 - ElapsedSince(start)` at both sites: flattening to
+// `start - Get() + 15000` reads start after Get and gives 71.3624%, also
+// changing the placement of both ExitNormalDialog expansions and the
+// EventWindowHandler returns. The helper calls alone reach 99.58%; restoring
+// ExitNormalDialog's zero-first random-choice arm closes the last branch.
 VA(0x004f08d0, 0x20C)  // anchor-callee + dialog-global shape, dc 0xe1ccc
 int NormalDialogHandler(message& msg)
 {
@@ -2296,9 +2300,9 @@ int NormalDialogHandler(message& msg)
         gpAdvManager->advWindow->animate_bottom_view(1);
     if (!gDialogDeadline697784 && gTurnDuration69d630.IsExpired()) {
         if (GameTime::ElapsedSince(giNormalDialogStart) < 15000)
-            gDialogDeadline697784 = giNormalDialogStart - GameTime::Get() + 15000;
+            gDialogDeadline697784 = 15000 - GameTime::ElapsedSince(giNormalDialogStart);
         else
-            return ExitNormalDialog(&msg);
+            return ExitNormalDialog(msg);
     }
     if (gNetworkActive69954c && !gDialogDeadline697784) {
         unsigned char msgReceived = 0;
@@ -2309,9 +2313,9 @@ int NormalDialogHandler(message& msg)
                 if (msgReceived && handler->GetAbortPopupMsg()) {
                     if (GameTime::ElapsedSince(giNormalDialogStart) < 15000)
                         gDialogDeadline697784 =
-                            giNormalDialogStart - GameTime::Get() + 15000;
+                            15000 - GameTime::ElapsedSince(giNormalDialogStart);
                     else
-                        return ExitNormalDialog(&msg);
+                        return ExitNormalDialog(msg);
                 }
             }
         }

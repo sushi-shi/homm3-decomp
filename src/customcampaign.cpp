@@ -1251,25 +1251,32 @@ void game::RehomeCampaignHeroSetup(int heroId)
         newSetup.PortraitNumber = newHeroId;
 }
 
-// Complete-only, and the Dreamcast roster names it: game::NewMap calls this
-// on gpGame->campaign as soon as the new map carries a campaign context.
-// Both passes walk the carry-over pools in reverse - the first retires every
-// carried hero from the map's roster, the second re-homes its setup record.
+// game::NewMap calls this on gpGame->campaign when the map has a campaign
+// context. Dreamcast retains the same method name, but its older body edits
+// fixed campaign entries; Complete's two variable-pool passes are retail-only.
+// The first retires carried heroes from the roster, the second re-homes them.
+// 2026-09-06: exact from 68.9328 with unsigned `for (i = size(); i--;)`
+// counters and one pool reference per outer iteration. Retail keeps that
+// reference in ECX in pass one and ESI across RehomeCampaignHeroSetup in pass
+// two. The unsigned `i-- > 0` control with repeated outer-vector indexing
+// scores 81.57 and leaves different entry branches and reloads. The exact
+// form has retail's JE entry tests, JA backedges, and 0xc stack frame.
 VA(0x00486440, 0x145)  // anchor-caller(game::NewMap +0x7bc), dc 0x7d22c
 void SCampaign::DoPreLoadCustomization()
 {
-    int iPool;
-    for (iPool = carryOverHeroes.size() - 1; iPool >= 0; --iPool)
-        for (int iHero = carryOverHeroes[iPool].size() - 1; iHero >= 0;
-             --iHero)
-            gpGame->heroAvailability[carryOverHeroes[iPool][iHero].id] =
+    unsigned int iPool;
+    for (iPool = carryOverHeroes.size(); iPool--;) {
+        std::vector<hero>& pool = carryOverHeroes[iPool];
+        for (unsigned int iHero = pool.size(); iHero--;)
+            gpGame->heroAvailability[pool[iHero].id] =
                 hero::HERO_AVAILABILITY_TAVERN_POOL;
+    }
 
-    for (iPool = carryOverHeroes.size() - 1; iPool >= 0; --iPool)
-        for (int iHero = carryOverHeroes[iPool].size() - 1; iHero >= 0;
-             --iHero)
-            gpGame->RehomeCampaignHeroSetup(
-                carryOverHeroes[iPool][iHero].id);
+    for (iPool = carryOverHeroes.size(); iPool--;) {
+        std::vector<hero>& pool = carryOverHeroes[iPool];
+        for (unsigned int iHero = pool.size(); iHero--;)
+            gpGame->RehomeCampaignHeroSetup(pool[iHero].id);
+    }
 }
 
 // Complete-only campaign carry-over expansion. Dreamcast's campaign path has
@@ -1547,6 +1554,25 @@ bool HeroPlaceholderStronger::operator()(const HeroPlaceholderData& left,
         > static_cast<signed char>(right.powerRating);
 }
 
+// Retail-only lookup boundary, name provisional. PlaceCrossoverHeroes
+// +0x332 snapshots the requested hero ID after erase, +0x341 retains the
+// outer vector::size, and +0x35c retains the current pool's size. The pool
+// itself survives the inner search. A normal member call expands this body
+// with both nested size calls intact; flattening it in the caller (same
+// cached ID, pool reference and post-decrement loops) expands those calls
+// and scores 75.0108 rather than 87.2742 before the packed-point correction.
+hero* SCampaign::FindCrossoverHero(int heroId)
+{
+    for (int iPool = carryOverHeroes.size(); iPool--;) {
+        std::vector<hero>& pool = carryOverHeroes[iPool];
+        for (int iHero = pool.size(); iHero--;) {
+            if (pool[iHero].id == heroId)
+                return &pool[iHero];
+        }
+    }
+    return 0;
+}
+
 // Complete-only, and game::NewMap's second campaign callee (the first is
 // SCampaign::DoPreLoadCustomization). The scenario's chosen start option
 // names the crossover slot, that slot's hero pool is copied out of the
@@ -1557,6 +1583,22 @@ bool HeroPlaceholderStronger::operator()(const HeroPlaceholderData& left,
 // left. Anything the loss condition pins to a specific cell, and the
 // player's first hero if it still has none, falls back to the placeholder
 // path in PlaceStartingHero above.
+//
+// 2026-09-06: reverse searches use `for (i = size(); i--;)`, as retail's
+// tests consume the old count (67.93 -> 74.5681). FindCrossoverHero restores
+// the lookup boundary (+0x332..+0x3ad), and cell(lossHero) restores the
+// existing packed-point wrapper: +0x528 calls cell(int,int,int). Flattening
+// that wrapper to the three fields scores 87.2742; the canonical call
+// reaches 98.0287 with all 71 blocks and 40 branches aligned. No DC body
+// survives for this Complete-only caller; the cell wrapper is DC-proven.
+// Residual (98.03%): 0x48 vs retail's 0x4c frame, packed-coordinate/trigger
+// local sharing, and registers in the loss-condition tail. Both vector
+// destructors now expand on the two early returns and stay called on the
+// final exit, as retail requires. POD/STL folded names differ at six calls.
+// Moving triggerX/Y before the point construction keeps the wrong 0x48
+// frame (97.29); copy-initializing lossHero from a point value also keeps
+// that frame and adds coordinate-packing differences (96.68). Both probes
+// are rejected; neither recovers retail's separate trigger-output homes.
 VA(0x00487290, 0x664)  // anchor-caller(game::NewMap +0x7ce), retail-only
 void TCampaignBrief::ScenarioStruct::PlaceCrossoverHeroes()
 {
@@ -1587,29 +1629,16 @@ void TCampaignBrief::ScenarioStruct::PlaceCrossoverHeroes()
             continue;
 
         int carried;
-        for (carried = heroes.size() - 1; carried >= 0; --carried) {
+        for (carried = heroes.size(); carried--;) {
             if (heroes[carried].id == placeholder->heroId)
                 break;
         }
         if (carried >= 0)
             heroes.erase(heroes.begin() + carried);
 
-        for (int iPool = campaign->carryOverHeroes.size() - 1; iPool >= 0;
-             --iPool) {
-            for (int iHero = campaign->carryOverHeroes[iPool].size() - 1;
-                 iHero >= 0; --iHero) {
-                if (campaign->carryOverHeroes[iPool][iHero].id
-                    == placeholder->heroId) {
-                    hero* carriedHero =
-                        &campaign->carryOverHeroes[iPool][iHero];
-                    if (carriedHero)
-                        InitializeCrossoverHero(placeholder, carriedHero);
-                    goto nextPlaceholder;
-                }
-            }
-        }
-    nextPlaceholder:
-        ;
+        hero* carriedHero = campaign->FindCrossoverHero(placeholder->heroId);
+        if (carriedHero)
+            InitializeCrossoverHero(placeholder, carriedHero);
     }
 
     if (heroes.size() != 0) {
@@ -1630,8 +1659,7 @@ void TCampaignBrief::ScenarioStruct::PlaceCrossoverHeroes()
         type_point lossHero(gpGame->mapHeader.lossCondition.HeroX,
                             gpGame->mapHeader.lossCondition.HeroY,
                             gpGame->mapHeader.lossCondition.HeroZ);
-        NewmapCell* cell = gpGame->worldMap.cell(lossHero.x, lossHero.y,
-                                                 lossHero.z);
+        NewmapCell* cell = gpGame->worldMap.cell(lossHero);
         if (!cell->is_trigger || cell->type != HERO) {
             for (iPlaceholder = 0; iPlaceholder < placeholders.size();
                  ++iPlaceholder) {
@@ -1661,17 +1689,20 @@ void TCampaignBrief::ScenarioStruct::PlaceCrossoverHeroes()
 // to the option player's heroes in turn until one accepts it. The chosen
 // start option's own Apply runs last, on every path.
 //
-// Residual (73.00%): the bitset throw path. 2026-09-06: 72.57 -> 73.00 by
-// spelling the membership test as `crossover_artifacts[id]` rather than
-// `.test(id)` - one more inline level on the way to `_Xran`, which pushes
-// `out_of_range(const string&)` back out of line exactly as retail has it.
-// What is left is one level further still: retail CALLS
-// `basic_string(const char*, const allocator&)` where we expand it into
-// `_Tidy` + `assign(ptr, len)`. Measured and rejected: `SCampaign&` instead
-// of `SCampaign*` for the campaign alias (byte-flat), reading
-// `gpGame->campaign.briefingChoice` directly rather than through the alias
-// (72.27). The 4-byte frame surplus is our spill of that alias - retail
-// keeps it in ESI for the whole body and homes only `this`.
+// Retail snapshots the selected hero pool before allocating the artifact
+// vector, and snapshots the recipient player across GiveArtifact calls.
+// Restoring those lifetimes and per-loop artifact copies raises 73.00 to
+// 94.50. bitset::at then restores the retained string constructor in the
+// range-error path and EDI's shared zero, reaching 99.41 (2026-09-06).
+//
+// Residual: retail's first append retains single-element vector::insert;
+// ours expands it to the count overload. Retail shares one 8-byte stack
+// home between both inner copies; ours reserves two (frame 0x6c vs 0x64)
+// and places the later offered artifact and exception string differently.
+// Explicit insert(end(), value), const copies, per-loop default/assignment,
+// and a provisional by-value append helper are byte-flat controls. A shared
+// default-constructed inner artifact recovers the smaller frame but adds
+// retail-absent -1 stores and changes copy scheduling; it is not retained.
 VA(0x00487900, 0x2CD)  // anchor-caller(game::NewMap +0x5cb), retail-only
 void TCampaignBrief::ScenarioStruct::GiveCrossoverArtifacts()
 {
@@ -1680,26 +1711,27 @@ void TCampaignBrief::ScenarioStruct::GiveCrossoverArtifacts()
     int player = options->GetPlayerPosition(choice);
     int slot = options->_vslot5(this, choice);
     if (slot >= 0) {
+        std::vector<hero>& heroes = campaign->carryOverHeroes[slot];
         type_artifact artifact;
         std::vector<type_artifact> artifacts = campaign->field_4c[slot];
 
         for (unsigned int iHero = 0;
-             iHero < campaign->carryOverHeroes[slot].size(); ++iHero) {
-            hero& carried = campaign->carryOverHeroes[slot][iHero];
+             iHero < heroes.size(); ++iHero) {
+            hero& carried = heroes[iHero];
             if (gpGame->heroAvailability[carried.id]
                 != hero::HERO_AVAILABILITY_TAVERN_POOL)
                 continue;
             int iSlot;
             for (iSlot = 0; iSlot < CROSSOVER_EQUIPPED_ARTIFACT_SLOTS;
                  ++iSlot) {
-                type_artifact equipped = carried.equipped[iSlot];
-                if (equipped.artifactId != ARTIFACT_NONE)
-                    artifacts.push_back(equipped);
+                type_artifact heroArtifact = carried.equipped[iSlot];
+                if (heroArtifact.artifactId != ARTIFACT_NONE)
+                    artifacts.push_back(heroArtifact);
             }
             for (iSlot = 0; iSlot < HERO_BACKPACK_CAPACITY; ++iSlot) {
-                type_artifact carriedArtifact = carried.backpack[iSlot];
-                if (carriedArtifact.artifactId != ARTIFACT_NONE)
-                    artifacts.push_back(carriedArtifact);
+                type_artifact heroArtifact = carried.backpack[iSlot];
+                if (heroArtifact.artifactId != ARTIFACT_NONE)
+                    artifacts.push_back(heroArtifact);
             }
         }
 
@@ -1708,13 +1740,14 @@ void TCampaignBrief::ScenarioStruct::GiveCrossoverArtifacts()
             artifact = artifacts[iArtifact];
             if (artifact.artifactId == ARTIFACT_NONE)
                 continue;
-            if (!crossover_artifacts[artifact.artifactId])
+            if (!crossover_artifacts.at(artifact.artifactId))
                 continue;
+            playerData& recipient = gpGame->players[player];
             for (int iPlayerHero = 0;
-                 iPlayerHero < gpGame->players[player].numHeroes;
+                 iPlayerHero < recipient.numHeroes;
                  ++iPlayerHero) {
                 hero* target = gpGame->GetHero(
-                    gpGame->players[player].heroes[iPlayerHero]);
+                    recipient.heroes[iPlayerHero]);
                 if (target->GiveArtifact(&artifact, 0, 0))
                     break;
             }
@@ -2715,10 +2748,14 @@ int TCampaignBrief::ScenarioStruct::GetMaxCrossoverHeroes() const
 // leftovers surrender their artifacts to the pool's artifact list, and the
 // keep list replaces the pool. Role-based provisional name; no Dreamcast row
 // carries this identity.
-// Retail's reverse loops test the count BEFORE decrementing: the pool
-// and option loops use zero/nonzero, while hero selection and artifact
-// collection use unsigned > 0. Restoring those conditions raises 12.3264
-// to 22.4741; `size()-1; i>=0; --i` is the negative control, introducing
+// Retail's reverse loops test the count BEFORE decrementing. Pool and
+// option counters are signed; hero selection and artifact counters are
+// unsigned. All use `i--` as the condition. The initial `i-- > 0` spelling
+// on unsigned counters raised 12.3264 to 22.4741, but retained JBE entry
+// tests: DoPreLoadCustomization's exact control proves that JE entries and
+// JA backedges come from unsigned `i--`. Correcting both sites here raises
+// current 33.5052 to 33.97 while MAX remains 34.6269. The original
+// `size()-1; i>=0; --i` is the negative control, introducing
 // signed exit tests absent from retail. The remaining surplus includes
 // expanded size/MarkCrossoverHeroes, sort, insert and assignment helpers;
 // their source boundaries still need to reach retail's inline decisions.
@@ -2755,7 +2792,7 @@ void SCampaign::PruneCrossoverHeroes(void* campaignHeader)
         std::vector<hero>& pooled = carryOverHeroes[pool];
         std::vector<hero> kept;
 
-        for (unsigned int which = pooled.size(); which-- > 0;) {
+        for (unsigned int which = pooled.size(); which--;) {
             if (wanted[pooled[which].id]) {
                 kept.push_back(pooled[which]);
                 pooled.erase(pooled.begin() + which);
@@ -2783,7 +2820,7 @@ void SCampaign::PruneCrossoverHeroes(void* campaignHeader)
             pooled.erase(pooled.begin());
         }
 
-        for (unsigned int rest = pooled.size(); rest-- > 0;) {
+        for (unsigned int rest = pooled.size(); rest--;) {
             std::vector<type_artifact>& pooledArtifacts = field_4c[pool];
             hero& sourceHero = pooled[rest];
             type_artifact artifact;
@@ -3543,12 +3580,11 @@ VA_COMPGEN(0x0048e9e0, 0xB, STD_CONSTRUCT, TCampaignCrossoverChoice)
 // the single-element `insert` - while this object emits only the three-
 // argument fill `insert(iterator, size_type, const E&)` (`ret 0xc`), because
 // our CL expands the single-element forwarder into `push_back` at every call
-// site and retail keeps it out of line. Both overloads share the
-// `unsigned_char@vector_insert` join key, so with one claim and one symbol
-// the pairing is forced onto the wrong one. Making the two-argument insert
-// emit at all is an inline-shape fix in its caller, ScenarioStruct::Read -
-// a closed wall - so this row cannot move until that reopens.
-VA_COMPGEN(0x0048bf00, 0x1AD, VECTOR_INSERT, unsigned_char)
+// site and retail keeps it out of line. The explicit single-element claim
+// now stays unpaired instead of borrowing the emitted count overload's
+// name. Making the two-argument insert emit naturally is an inline-shape
+// fix in its caller, ScenarioStruct::Read; its prior MAX remains banked.
+VA_COMPGEN(0x0048bf00, 0x1AD, VECTOR_INSERT_SINGLE, unsigned_char)
 
 // --- the <fstream> facet block, claimed 2026-09-06 -------------------------
 //

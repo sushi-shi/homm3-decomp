@@ -539,7 +539,7 @@ int AI_resource_cost(const playerData* player, const int* resources)
 {
     int value = 0;
     for (int resource = 0; resource < NUM_RESOURCES; resource++)
-        value += resources[resource] * player->resourceValue[resource];
+        value += resources[resource] * player->ai.resource_value[resource];
     return value;
 }
 
@@ -551,7 +551,7 @@ int AI_resource_cost(long player_id, const int* resources)
     int value = 0;
     for (int resource = 0; resource < NUM_RESOURCES; resource++)
         value += resources[resource]
-            * gpGame->players[player_id].resourceValue[resource];
+            * gpGame->players[player_id].ai.resource_value[resource];
     return value;
 }
 
@@ -693,7 +693,7 @@ inline int ValueOfBlackBox(const hero* current_hero, NewmapCell* cell)
     value = static_cast<int>(
         static_cast<float>(value)
         + static_cast<float>(black_box->Artifacts.size())
-            * gpCurrentPlayer->turnValueOfAvgArtifact);
+            * gpCurrentPlayer->ai.turnValueOfAvgArtifact);
 
     if (const_cast<hero*>(current_hero)->IsWieldingArtifact(
             ARTIFACT_SPELLBOOK)) {
@@ -747,7 +747,7 @@ inline long value_of_bank(const hero* current_hero, NewmapCell* cell)
     // Pin that source-real nested boundary, not the surrounding appraisal.
 #pragma inline_depth(0)
     value = bank.artifacts.size()
-        * gpCurrentPlayer->turnValueOfAvgArtifact + value;
+        * gpCurrentPlayer->ai.turnValueOfAvgArtifact + value;
 #pragma inline_depth()
     return value;
 }
@@ -781,8 +781,8 @@ inline int ValueOfCampfire(playerData* player, NewmapCell* cell)
 {
     int size = cell->GetCampfireSize();
     return static_cast<int>(
-        size * 100 * player->resourceValue[GOLD]
-        + size * player->resourceValue[cell->GetCampfireResource()]);
+        size * 100 * player->ai.resource_value[GOLD]
+        + size * player->ai.resource_value[cell->GetCampfireResource()]);
 }
 
 // E:\\gamedcs\\philai.cpp:2194. The recovered helper rejects a Defense
@@ -983,7 +983,7 @@ __forceinline int ValueOfLeanTo(NewmapCell* cell, playerData* player)
         static_cast<const void*>(cell));
     if (player->LeanToFlags & (1UL << info->GetItemId()))
         return 0;
-    return 3 * player->averageResourceValue;
+    return 3 * player->ai.average_resource_value;
 }
 
 // E:\\gamedcs\\philai.cpp:2775. Dreamcast preserves this one-statement
@@ -1058,8 +1058,8 @@ __forceinline int ValueOfShrine(const hero* current_hero, NewmapCell* cell)
 inline int ValueOfFlotsam(playerData* player)
 {
     return static_cast<int>(
-        player->resourceValue[GOLD] * 175.0
-        + player->resourceValue[WOOD] * 5.0);
+        player->ai.resource_value[GOLD] * 175.0
+        + player->ai.resource_value[WOOD] * 5.0);
 }
 
 // E:\\gamedcs\\philai.cpp:2283. A visited Garden of Revelation is worth
@@ -1106,8 +1106,8 @@ inline int ValueOfSkeleton(const hero* current_hero, NewmapCell* cell)
     playerData* player = const_cast<hero*>(current_hero)->get_player();
     if (const_cast<hero*>(current_hero)->get_number_in_backpack(1)
             < HERO_BACKPACK_CAPACITY)
-        return static_cast<int>(player->turnValueOfAvgArtifact / 5.0f);
-    return static_cast<int>(player->resourceValue[GOLD] * 200.0);
+        return static_cast<int>(player->ai.turnValueOfAvgArtifact / 5.0f);
+    return static_cast<int>(player->ai.resource_value[GOLD] * 200.0);
 }
 
 // armyGroup deliberately models its mutable roster as int while
@@ -1172,7 +1172,7 @@ long get_artifact_purchase_value(
         static_cast<double>(AI_get_artifact_player_value(
             artifact, gNetLocalGamePos))
         - static_cast<double>(price)
-            * gpCurrentPlayer->resourceValue[resource]);
+            * gpCurrentPlayer->ai.resource_value[resource]);
     if (value < 0)
         value = 0;
     return value;
@@ -1248,14 +1248,14 @@ long get_artifact_purchase_price(TArtifact artifact, long market_count,
         / fArtifactPurchaseEfficency[market_count]);
     long best_price = price;
     long best_value = static_cast<long>(static_cast<double>(price)
-        * gpCurrentPlayer->resourceValue[GOLD]);
+        * gpCurrentPlayer->ai.resource_value[GOLD]);
 
     for (int i = WOOD; i < GOLD; i++) {
         EGameResource resource = game_resource_from_int(i);
         long amount = price * 2 / get_market_value(resource);
         if (amount <= gpCurrentPlayer->resources[i]) {
             long value = static_cast<long>(static_cast<double>(amount)
-                * gpCurrentPlayer->resourceValue[i]);
+                * gpCurrentPlayer->ai.resource_value[i]);
             if (value <= best_value) {
                 best_value = value;
                 best_price = amount;
@@ -1677,7 +1677,7 @@ void AI_visit_war_factory(hero* current_hero)
 // visit_war_factory; preserve that decision explicitly until understood.
 // CHECKPOINT (88.5062 -> 96.5185): Dreamcast lines 525-530 restore the typed
 // creature-cost row before the accumulator. Retail additionally proves a
-// cached resourceValue row. All blocks, branches and bytes through the funds
+// cached ai.resource_value row. All blocks, branches and bytes through the funds
 // test are exact; the residual is only the order of six loop-tail induction
 // updates after __ftol (same instruction multiset, registers and total size).
 // Swapping the resource_values / costs declarations is byte-flat; the tail's
@@ -1693,7 +1693,7 @@ static long value_of_war_factory(const hero* current_hero,
         long artifact_value = AI_get_value_of_artifact(
             type_artifact(engine), current_hero, false, true);
         TCreatureType creature = siege_artifact_to_creature(engine);
-        const double* resource_values = gpCurrentPlayer->resourceValue;
+        const double* resource_values = gpCurrentPlayer->ai.resource_value;
         const int* costs = akCreatureTypeTraits[creature].cost;
         long resource_cost = 0;
         for (int resource = 0; resource < 7; ++resource) {
@@ -2583,10 +2583,10 @@ hero* DetermineHeroToMove(int player_id, unsigned char* is_last_hero)
 // order and where VC6 can inline them. Their retained out-of-line copies are
 // emitted here in retail order, so the authoritative annotations belong on
 // these redeclarations rather than on the earlier definitions.
-VA(0x00526c70, 0x48)  // anchor: resourceValue walk at playerData+0x128, dc 0x10f22c
+VA(0x00526c70, 0x48)  // anchor: ai.resource_value walk at playerData+0x128, dc 0x10f22c
 int AI_resource_cost(const playerData* player, const int* resources);
 
-VA(0x00526cc0, 0x55)  // anchor: players-array resourceValue walk at game+0x20bf8, dc 0x10f2f8
+VA(0x00526cc0, 0x55)  // anchor: players-array ai.resource_value walk at game+0x20bf8, dc 0x10f2f8
 int AI_resource_cost(long player_id, const int* resources);
 
 // Retail-only 0x526d20 (no DC row): the computer-owner purchase shim
@@ -2602,8 +2602,8 @@ void Unnamed526d20(int playerId, int* costs, int flag)
 }
 
 // E:\gamedcs\philai.cpp:1339.  The spell-appraisal object's constructor; retail
-// inlines fill_creature_value_list / get_summoning_value / get_value_of_increase
-// into it (134 -> 915 B), so those DC methods have no separate retail body.
+// inlines fill_creature_value_list into it (134 -> 915 B). The summoning
+// and value-of-increase helpers expand into other callers.
 // Dreamcast fixes the negative artifact guard, four scalar assignments and
 // helper call. Complete additionally expands GetPrimarySkill/GetMaxMana and
 // therefore exposes the byte-proven 1..99 clamps before the helper body.
@@ -2612,7 +2612,13 @@ void Unnamed526d20(int playerId, int* costs, int flag)
 // short-path _Insertion_sort_1 and expands the long-path copy; VC6 makes the
 // opposite per-site choice (39 versus 37 blocks, one extra branch). Moving
 // the helper back to its DC lexical position and adding explicit `inline`
-// were byte-flat; why-reg's first definitions all agree.
+// were byte-flat; why-reg's first definitions all agree. A guarded early
+// return instead of the outer else is also byte-flat, as is restoring the
+// unsigned-char comparison results. The DC decorated publics encode bool
+// (ai_creature_value.h:29/35), so bool is retained despite byte storage
+// records. That type control leaves this constructor byte-flat.
+// The early-return probe is not retained: the scope rows do not distinguish
+// it from an else arm. The original sort helper and comparator stay canonical.
 VA(0x00526d40, 0x393)  // anchor-global, dc 0x10f37c
 type_spellvalue::type_spellvalue(const hero* new_hero)
 {
@@ -3050,7 +3056,7 @@ void philAI::GetTurnAIVars(int whichPlayer)
                 AI_get_artifact_player_value(artifact, whichPlayer);
         }
     }
-    gpCurrentPlayer->turnValueOfAvgArtifact =
+    gpCurrentPlayer->ai.turnValueOfAvgArtifact =
         static_cast<float>(static_cast<double>(total_artifact_value)
                            / static_cast<double>(artifact_count));
 
@@ -3402,7 +3408,7 @@ unsigned char AI_bribe_monsters(const hero* current_hero, NewmapCell* cell,
     armyGroup monster_army(type, amount);
     playerData* player = const_cast<hero*>(current_hero)->get_player();
     long bribe_worth = static_cast<long>(monster_army.get_AI_value()
-        - gold_cost * player->resourceValue[GOLD]);
+        - gold_cost * player->ai.resource_value[GOLD]);
     long fight_worth = AI_value_of_combat(current_hero, 0, monster_army, 0, cell);
     return bribe_worth > fight_worth;
 }
@@ -3422,7 +3428,7 @@ unsigned char AI_choose_resource_or_experience(const hero* current_hero,
         * current_hero->turnExperienceToRVRatio);
     playerData* player = const_cast<hero*>(current_hero)->get_player();
     long resource_value = static_cast<long>(
-        static_cast<double>(amount) * player->resourceValue[resource]);
+        static_cast<double>(amount) * player->ai.resource_value[resource]);
     return resource_value > experience_value;
 }
 
@@ -3586,8 +3592,8 @@ long AI_value_of_event(const hero* current_hero, type_point point,
         if (!info->GardenIsFull())
             return 0;
         return static_cast<long>(
-            (player->resourceValue[GOLD] * 500.0
-             + player->resourceValue[GEMS] * 5.0)
+            (player->ai.resource_value[GOLD] * 500.0
+             + player->ai.resource_value[GEMS] * 5.0)
             / 2.0);
     }
 
@@ -3746,7 +3752,7 @@ long AI_value_of_event(const hero* current_hero, type_point point,
         if (const_cast<hero*>(current_hero)
                 ->get_number_in_backpack(1) >= HERO_BACKPACK_CAPACITY)
             return 0;
-        return static_cast<int>(gpCurrentPlayer->turnValueOfAvgArtifact);
+        return static_cast<int>(gpCurrentPlayer->ai.turnValueOfAvgArtifact);
     case WATER_WHEEL: {
         const ExtraInfoUnion* info =
             static_cast<const ExtraInfoUnion*>(
@@ -3755,10 +3761,10 @@ long AI_value_of_event(const hero* current_hero, type_point point,
         if (info->PlayerKnowsCell(gNetLocalGamePos)) {
 #pragma inline_depth()
             return static_cast<long>(
-                info->get_wheel_gold() * player->resourceValue[GOLD]);
+                info->get_wheel_gold() * player->ai.resource_value[GOLD]);
         }
         return static_cast<long>(
-            player->resourceValue[GOLD] * 1000.0);
+            player->ai.resource_value[GOLD] * 1000.0);
     }
     case WATERING_HOLE:
 #pragma inline_depth(0)
@@ -3775,7 +3781,7 @@ long AI_value_of_event(const hero* current_hero, type_point point,
             if (info->get_windmill_amount() == 0)
                 return 0;
         }
-        return gpCurrentPlayer->averageResourceValue * 9 / 2;
+        return gpCurrentPlayer->ai.average_resource_value * 9 / 2;
     }
     case WITCH_HUT:
 #pragma inline_depth(0)
@@ -3845,7 +3851,7 @@ long value_of_war_factory(const hero* current_hero, long move_cost)
 // 0xc, three stack arguments) and AI_value_of_event's ARTIFACT arm calls
 // it at three sites - the three priced-artifact classes.  Extern for
 // emission while that arm is a stub.
-VA(0x00529810, 0x7c)  // anchor: players-array funds gates + resourceValue math, 3 ARTIFACT-arm sites, dc 0x110174
+VA(0x00529810, 0x7c)  // anchor: players-array funds gates + ai.resource_value math, 3 ARTIFACT-arm sites, dc 0x110174
 int NetValueOfArtifact(const hero* current_hero, int artifact_value,
     int gold_cost, int resource_cost, EGameResource resource_type)
 {
@@ -3855,9 +3861,9 @@ int NetValueOfArtifact(const hero* current_hero, int artifact_value,
         return 0;
     return static_cast<int>(
         static_cast<double>(artifact_value)
-        - static_cast<double>(gold_cost) * player->resourceValue[GOLD]
+        - static_cast<double>(gold_cost) * player->ai.resource_value[GOLD]
         - static_cast<double>(resource_cost)
-            * player->resourceValue[resource_type]);
+            * player->ai.resource_value[resource_type]);
 }
 
 // E:\gamedcs\philai.cpp:1867.  A map object carrying a custom artifact reward:
@@ -4001,7 +4007,7 @@ long value_of_enemy_town(const hero* current_hero, const town* enemy_town, short
     }
 
     town_value = static_cast<long>(
-        enemy_town->get_gold_income(0) * player->resourceValue[GOLD] * 3.0);
+        enemy_town->get_gold_income(0) * player->ai.resource_value[GOLD] * 3.0);
     if (enemy_town->HasBuilding(MARKETPLACE_SILO_ID, 0)) {
         int* silo_income = enemy_town->get_silo_income();
         town_value += 3 * AI_resource_cost(player, silo_income);
@@ -4066,7 +4072,7 @@ int ValueOfMagicSchool(const hero* current_hero, NewmapCell* cell)
     return static_cast<int>(
         max_ref<long>(current_hero->value_of_power,
                       current_hero->value_of_knowledge)
-        - player->resourceValue[GOLD] * 1000.0);
+        - player->ai.resource_value[GOLD] * 1000.0);
 }
 
 // E:\gamedcs\philai.cpp:2626.  A mine's worth: the guard fight (skipped
@@ -4099,7 +4105,7 @@ int ValueOfMine(const hero* current_hero, NewmapCell* cell)
     playerData* player = const_cast<hero*>(current_hero)->get_player();
     int income = static_cast<int>(
         static_cast<double>(gMineCharacteristics[mine_type])
-        * player->resourceValue[mine_type] * 2.0);
+        * player->ai.resource_value[mine_type] * 2.0);
     value += static_cast<int>(static_cast<float>(income)
         * (type_AI_player::get_attack_bonus(current_mine->playerOwner)
            + 1.0f));
@@ -4195,7 +4201,7 @@ int ValueOfPowerSchool(const hero* current_hero, NewmapCell* cell)
 //
 // Residual (81.82%): identical instruction multiset, register-homing
 // post-RA schedule transposition (why-reg register-distance 4, flow 0).
-// Retail computes resourceValue*2500 (fld/fmul) BEFORE spilling and
+// Retail computes ai.resource_value*2500 (fld/fmul) BEFORE spilling and
 // converting the get_AI_value() result, keeping it live in eax across the
 // fld/fmul; VC6 spills the call result first regardless of operand order
 // (both `army + gold` and `gold + army` canonicalise to the same object).
@@ -4206,7 +4212,7 @@ int ValueOfPrison(NewmapCell* cell, playerData* player)
         return 0;
     hero& prisoner = gpGame->heroes[cell->extraInfo];
     long army_value = prisoner.army.get_AI_value();
-    return static_cast<int>(player->resourceValue[GOLD] * 2500.0
+    return static_cast<int>(player->ai.resource_value[GOLD] * 2500.0
         + army_value);
 }
 
@@ -4366,7 +4372,7 @@ long ValueOfResource(const hero* current_hero, NewmapCell* cell, playerData* pla
     if (resource_type == GOLD)
         amount *= 100;
     return static_cast<long>(static_cast<double>(amount)
-            * player->resourceValue[resource_type]
+            * player->ai.resource_value[resource_type]
         + static_cast<double>(combat_value));
 }
 
@@ -4383,9 +4389,9 @@ int ValueOfSeaChest(const hero* current_hero, NewmapCell* cell)
     playerData* player = const_cast<hero*>(current_hero)->get_player();
     if (const_cast<hero*>(current_hero)->get_number_in_backpack(1)
             < HERO_BACKPACK_CAPACITY)
-        return static_cast<int>(player->turnValueOfAvgArtifact / 10.0f
-            + player->resourceValue[GOLD] * 1200.0);
-    return static_cast<int>(player->resourceValue[GOLD] * 1200.0);
+        return static_cast<int>(player->ai.turnValueOfAvgArtifact / 10.0f
+            + player->ai.resource_value[GOLD] * 1200.0);
+    return static_cast<int>(player->ai.resource_value[GOLD] * 1200.0);
 }
 
 #if 0  // @carcass -- philai body-evidence claims, retail RVA order (divergent from DC link order)
@@ -4704,14 +4710,14 @@ long value_of_town_buildings(const hero* current_hero, town* current_town)
 // Keeping `value` uninitialized until those two arms forces retail's stack
 // home; pre-initializing it and conditionally overwriting it is a false
 // register-coalesced plateau.
-VA(0x0052b4e0, 0xbf)  // anchor: three ratio/gold max pairs + turnValueOfAvgArtifact, TREASURE arm, dc 0x112f6c
+VA(0x0052b4e0, 0xbf)  // anchor: three ratio/gold max pairs + ai.turnValueOfAvgArtifact, TREASURE arm, dc 0x112f6c
 int ValueOfTreasure(const hero* current_hero)
 {
     playerData* player = const_cast<hero*>(current_hero)->get_player();
     int experience_part = static_cast<int>(
         current_hero->turnExperienceToRVRatio * 160.0f);
     int gold_part =
-        static_cast<int>(player->resourceValue[GOLD] * 320.0);
+        static_cast<int>(player->ai.resource_value[GOLD] * 320.0);
     int value;
     if (experience_part > gold_part)
         value = experience_part;
@@ -4719,7 +4725,7 @@ int ValueOfTreasure(const hero* current_hero)
         value = gold_part;
     experience_part = static_cast<int>(
         current_hero->turnExperienceToRVRatio * 320.0f);
-    gold_part = static_cast<int>(player->resourceValue[GOLD] * 480.0);
+    gold_part = static_cast<int>(player->ai.resource_value[GOLD] * 480.0);
     if (experience_part > gold_part)
         value += experience_part;
     else
@@ -4727,12 +4733,12 @@ int ValueOfTreasure(const hero* current_hero)
 
     experience_part = static_cast<int>(
         current_hero->turnExperienceToRVRatio * 465.0f);
-    gold_part = static_cast<int>(player->resourceValue[GOLD] * 620.0);
+    gold_part = static_cast<int>(player->ai.resource_value[GOLD] * 620.0);
     if (experience_part > gold_part)
         value += experience_part;
     else
         value += gold_part;
-    return static_cast<int>(player->turnValueOfAvgArtifact / 20.0f
+    return static_cast<int>(player->ai.turnValueOfAvgArtifact / 20.0f
         + static_cast<float>(value));
 }
 
@@ -4768,20 +4774,20 @@ int ValueOfTree(const hero* current_hero, NewmapCell* cell)
             if (gpCurrentPlayer->resources[GOLD] < 2000)
                 return 0;
             return static_cast<int>(level_value
-                - player->resourceValue[GOLD] * 2000.0);
+                - player->ai.resource_value[GOLD] * 2000.0);
         case TREE_PRICE_GEMS:
             if (gpCurrentPlayer->resources[GEMS] < 10)
                 return 0;
             return static_cast<int>(level_value
-                - player->resourceValue[GEMS] * 10.0);
+                - player->ai.resource_value[GEMS] * 10.0);
         default:
             return level_value;
         }
     }
 
     int expected_price = static_cast<int>(
-        (player->resourceValue[GOLD] * 2000.0
-         + player->resourceValue[GEMS] * 10.0) / 3.0);
+        (player->ai.resource_value[GOLD] * 2000.0
+         + player->ai.resource_value[GEMS] * 10.0) / 3.0);
     int price_cap = level_value * 2 / 3;
     if (expected_price > price_cap)
         expected_price = price_cap;
@@ -4792,15 +4798,15 @@ int ValueOfTree(const hero* current_hero, NewmapCell* cell)
 // knows it is empty; otherwise it is worth the average of its 2..5
 // random-resource fill plus half the average artifact.  Extern for
 // emission while the WAGON arm is a stub.
-VA(0x0052b710, 0x7e)  // anchor: PlayerKnowsCell + averageResourceValue*7/4 + WAGON arm, dc 0x113324
+VA(0x0052b710, 0x7e)  // anchor: PlayerKnowsCell + ai.average_resource_value*7/4 + WAGON arm, dc 0x113324
 int value_of_wagon(NewmapCell* cell, long player_id)
 {
     if (cell->PlayerKnowsCell(static_cast<short>(player_id)))
         return 0;
     int resource_part =
-        gpGame->players[player_id].averageResourceValue * 7 / 4;
+        gpGame->players[player_id].ai.average_resource_value * 7 / 4;
     return static_cast<int>(
-        gpCurrentPlayer->turnValueOfAvgArtifact * 2.0f / 5.0f
+        gpCurrentPlayer->ai.turnValueOfAvgArtifact * 2.0f / 5.0f
         + static_cast<float>(resource_part));
 }
 
@@ -4820,7 +4826,7 @@ int value_of_war_school(const hero* current_hero, NewmapCell* cell)
         static_cast<float>(
             hero::GetExperienceIncrement(current_hero->level))
         * current_hero->turnExperienceToRVRatio
-        - player->resourceValue[GOLD] * 1000.0);
+        - player->ai.resource_value[GOLD] * 1000.0);
 }
 
 // E:\gamedcs\philai.cpp:3424.  A Magic Spring's worth: nothing when

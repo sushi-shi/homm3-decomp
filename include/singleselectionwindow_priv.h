@@ -582,7 +582,6 @@ public:
 
     CNewMapHeaderInfoMsg() {}
     CNewMapHeaderInfoMsg(NewSMapHeader* pMapHeader);
-    ~CNewMapHeaderInfoMsg();
     virtual unsigned char read(TAbstractFile* infile);
     virtual unsigned char write(TAbstractFile* outfile) const;
 };
@@ -641,7 +640,8 @@ extern game* saveHeader;
 // The per-row header broadcast Tick streams (subtype 0x406, 0x84 B);
 // retail's inline expansion fixes every field offset. DC's ctor takes
 // (nbr, fileName, townType, fileTime); retail reads them all from the
-// header row plus the list-select flag.
+// header row plus the list-select flag. The filename parameter is char*
+// in DC procedure 0x147c78; preserving that mutability is byte-flat in both Ticks.
 class CMapFileNameMsg : public CNetMsg {
 public:
     unsigned char m_flag;         // +0x14
@@ -651,7 +651,7 @@ public:
     int m_townTypes[8];           // +0x5c
     FILETIME m_fileTime;          // +0x7c
 
-    CMapFileNameMsg(unsigned char flag, int number, const char* fileName,
+    CMapFileNameMsg(unsigned char flag, int number, char* fileName,
                     int* townTypes, FILETIME fileTime)
         : CNetMsg(RS_MAP_FILE_NAME, sizeof(CMapFileNameMsg))
     {

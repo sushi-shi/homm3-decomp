@@ -289,7 +289,7 @@ protected:
     char m_caps[0x28];                  // +0x04
     void* m_lpDP;                       // +0x2c
     GUID m_guid;                        // +0x30
-    int m_hRes;                         // +0x40
+    long m_hRes;                        // +0x40, DC long / SDK HRESULT
     CAutoArray<CDPlaySession>* m_pSessionArray;       // +0x44
     CAutoArray<CDPlayConnection>* m_pConnectionArray; // +0x48
     CAutoArray<CDPlayGroup>* m_pGroupArray;           // +0x4c

@@ -5134,38 +5134,21 @@ static inline NewmapCell* DrawGroundCell(advManager* manager, type_point point)
 }
 
 // E:\gamedcs\advmgr.cpp:5688
-// Residual (98.1667%): all 16 branches and both returns agree - `vc6 diagnose`
-// reads flow-distance 0, register-distance 15, and why-reg --model finds NO
-// register-binding divergence in its slice, i.e. this is scheduling, not
-// allocation. LOCALISED 2026-08-21 to a single instruction at the THIRD boat
-// call (boatIcons), nine bytes, and the first two calls are byte-identical:
+// Exact 2026-09-06: CSprite::GetNumFrames uses the DC-proven IsValidSeq
+// call and a single conditional return expression. Its former two-return
+// spelling evicted the third boat-row divisor from ECX into a parameter
+// home (98.1667%); the expression removes that spill without changing this
+// body. DrawHeroPartShadow and both view-world twins close with it.
+// Restoring IsValidSeq alone leaves the spill. Earlier byte-flat controls:
+// currHero/frame-count release invariants, a discarded GetNumFrames value,
+// and naming the divisor; naming the remainder scored 98.1571%.
 //
-//   retail  ... cmp bl,4 / mov ebx,[eax+0x40] / seta dl
-//               mov byte ptr [ebp+0x18], dl / cdq / idiv ecx / mov ecx, esi
-//   ours    ... cmp bl,4 / MOV ECX, ESI / mov ebx,[eax+0x40] / seta dl
-//               mov byte ptr [ebp+8], dl / cdq / idiv dword ptr [ebp+0x18]
-//
-// Our CL slots the GetStandSequence receiver setup (`mov ecx,esi`) into the
-// scheduling gap BEFORE the divide, which evicts the frame count from ECX and
-// forces the whole `xor ecx,ecx` / `idiv ecx` pair into memory - three extra
-// stores plus the wider idiv. Retail issues the same move one instruction
-// later. Sites one and two prove our source shape is right; only this site's
-// schedule differs. Dreamcast lists exactly currHero, currBoat, HeroCellY and
-// HeroCellX as locals. Byte-flat probes: a release VERIFY-shaped currHero
-// invariant, a discarded GetNumFrames value, a `GetNumFrames(...) > 0`
-// invariant, and naming the divisor; naming the remainder regresses to
-// 98.1571%.
-//
-// The 2026-09-01 Dreamcast source-shape pass restored all three positive
-// header boundaries visible in this body: game::GetHero, the inherited
-// get_location, and hero::GetHflip. They are byte-flat at 98.1667%, as an
-// exact inline lowering should be. DC also names advManager::GetCell at the
-// location lookup, but Complete directly contradicts that older semantic:
-// retail calls NewfullMap::cell(0, 0, 0) for an invalid point, whereas the
-// admitted GetCell returns cellData. Retaining the DC call measured 93.18%;
-// DrawHeroCell preserves Complete's proven invalid arm. why-reg --model still
-// reports 15 slots and no binding divergence after the source-shape repair,
-// confirming the same third-call scheduling wall.
+// Preserve the earlier game::GetHero, get_location and GetHflip boundaries.
+// DrawHeroCell keeps Complete's invalid-point arm: retail calls
+// NewfullMap::cell(0, 0, 0), while the older DC GetCell returns cellData.
+// Substituting that older GetCell semantic scored 93.18%. The register
+// model's lack of binding divergence did not establish correct helper
+// expression shape; see docs/vc6/regalloc.md 6f.
 VA(0x0040fe30, 0x484)  // linkorder, dc 0x11424
 void advManager::DrawHeroPart(int part, TDrawParts& heroParts, int baseX,
                               int baseY, int tilex, int tiley, int tilew,
@@ -5229,17 +5212,10 @@ void advManager::DrawHeroPart(int part, TDrawParts& heroParts, int baseX,
 }
 
 // E:\gamedcs\advmgr.cpp:5773
-// Residual (98.1840%): all 18 branches and both returns agree, with exactly
-// the same nine-byte third-boat-call divisor spill as DrawHeroPart above -
-// see that body for the instruction-level localisation. The Dreamcast
-// four-local roster and the VERIFY/accessor/named-local probes are identical,
-// so this is the shared scheduling residual (flow-distance 0, why-reg --model
-// reports no binding divergence) rather than an independently source-nameable
-// shadow-path difference. The same 2026-09-01 helper restoration is byte-flat
-// here at 98.1840%; the rejected DC GetCell revision measures 93.24%, and the
-// post-repair allocator model again reports 15 slots with no binding
-// divergence. The twins are a free in-compile A/B: any candidate spelling
-// should be tried in ONE of them first, since a real fix must move both.
+// Exact 2026-09-06, 98.1840 -> 100% with GetNumFrames' conditional
+// expression, as in DrawHeroPart above. Both view-world twins close too.
+// The older DC GetCell invalid-point behavior remains a separate negative
+// control (93.24%); retain Complete's DrawHeroCell behavior.
 VA(0x004102c0, 0x494)  // anchor-callee, dc 0x11958
 void advManager::DrawHeroPartShadow(int part, TDrawParts& heroParts,
                                     int baseX, int baseY, int tilex,
@@ -8040,12 +8016,12 @@ void advManager::TownQuickView(int townId, int x, int y,
         gpGame->calculate_production();
         first = 1;
         for (int inc = 0; inc < 7; inc++) {
-            if (ownerPlayer->turnProductionResource[inc] > 0) {
+            if (ownerPlayer->ai.turnProductionResource[inc] > 0) {
                 if (!first)
                     text += ", ";
                 first = 0;
                 text += format_string(
-                    "%i %s", ownerPlayer->turnProductionResource[inc],
+                    "%i %s", ownerPlayer->ai.turnProductionResource[inc],
                     gResourceNames[inc]);
             }
         }

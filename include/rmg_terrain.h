@@ -77,7 +77,8 @@ public:
         int oldFrame) = 0;
 };
 
-extern TRmgTerrainRule* gRmgTerrainRules[];
+// Retail 0x642bd8 is a pointer table in the read-only .rdata section.
+extern TRmgTerrainRule* const gRmgTerrainRules[];
 
 enum TRmgTerrainTransitionCase {
     RMG_TERRAIN_FIRST_DIAGONAL_LOW = 2,

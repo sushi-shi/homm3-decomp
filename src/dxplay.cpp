@@ -412,26 +412,16 @@ unsigned char CDPlay::Receive(unsigned long* pFromID, unsigned long* pToID, CDPl
     return ReceiveMsg(*pFromID, *pToID, pMsg);
 }
 
-// Coherent Dreamcast reconstruction (current 70.0899%, banked MAX 72.9438):
-// the dossier proves the CDPlayMsg constructor boundary, a separate zeroing
-// of buffSize, the direct interface Receive, the AllocSize helper call, and
-// the two-part bottom loop condition. Restoring the helper itself removes the
-// prior source-false outer size check; spelling its proven comparison as
-// `dSize < dataSize` reproduces retail's exact cmp/jb and raises the coherent
-// form from 66.0449 to 70.0899. The older MAX duplicated that condition in
-// the caller and is retained only as history.
-//
-// Residual wall: both sides have 19 blocks, but C2 specializes our first
-// Receive from the constructor-known null buffer (107 instructions and 11
-// branches) while retail keeps one unpeeled loop body (89 and 10). Retail
-// then homes this/msg data in EDI/ESI; ours uses ESI/EDI. `why-reg --model
-// --il-order` finds 96 register-visible slots and identical definition order,
-// classifies the EBX/ESI permutation as C1 front-end handle state, and its
-// from/to/buffSize declaration moves are all flat. Constructor initializer
-// versus the DC-proven assignment body, in-class versus out-of-class inline
-// placement, combined versus split buffSize initialization, and one
-// line-gap constructor-invariant carrier are byte-flat. `why-branch` confirms
-// the single extra conditional branch and finds no applicable D-class lever.
+// Exact: preserve the Dreamcast constructor, separate buffSize zeroing,
+// interface Receive, AllocSize call and two-part bottom condition. The
+// source loop form matters to VC6: while(1) with a bottom break emits one
+// receive body, matching all 19 blocks, 10 branches and five calls. The
+// equivalent do/while peels the first iteration (71.2697% in this tree).
+// The compiler's D2 loop-form control reproduces this distinction.
+// Branch regrouping as else-if, restoring m_hRes to DC's long type, and
+// restoring the SDK HRESULT macros are individually byte-flat; retain the
+// original types/macros. Earlier constructor-placement, declaration-order
+// and invariant-carrier probes did not address this loop-form difference.
 // E:\gamedcs\dxplay.cpp:574
 VA(0x004976b0, 0xDC)  // anchor-vtable CDPlay slot37 (FlushReceiveQueue), dc 0x8a744
 unsigned char CDPlay::FlushReceiveQueue()
@@ -441,14 +431,16 @@ unsigned char CDPlay::FlushReceiveQueue()
     unsigned long to;
     unsigned long buffSize;
     buffSize = 0;
-    do {
+    while (1) {
         m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->Receive(
             &from, &to, 1, msg.pData, &buffSize);
         if (m_hRes == DPERR_NOMESSAGES)
             return 1;
         if (m_hRes == DPERR_BUFFERTOOSMALL)
             msg.AllocSize(buffSize);
-    } while (m_hRes == DPERR_BUFFERTOOSMALL || m_hRes == 0);
+        if (m_hRes != DPERR_BUFFERTOOSMALL && m_hRes != 0)
+            break;
+    }
     if (m_hRes < 0)
         return 0;
     return 1;

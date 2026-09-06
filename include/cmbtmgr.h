@@ -1259,6 +1259,7 @@ public:
     // source boundary as the trivial header inline produced by that refactor.
     void TestRaiseDoor() { RaiseDoor(); }
     bool IsQuickCombat() const;
+    int ExperienceValueOfStack(int whichGroup);
     void CalculateGainedExperience(int side, int* experience_gained);
     // The winner's post-combat sweep of the loser's artifacts. The vector
     // is the REAL Dinkumware one: <vector> is already in this header's
