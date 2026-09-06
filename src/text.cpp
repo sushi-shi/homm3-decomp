@@ -1062,15 +1062,19 @@ unsigned char InitializeArrayText()
     for (j = 0; j < 4; j++, i++)
         cPersonality[j] = ArrayText->GetText(i);
     i++;
-    // The ONE nested run. Retail's inner body increments the running index
-    // BEFORE the read (`inc ecx / mov edi,[edi + ecx*4 - 4]`), i.e. the
-    // post-increment form the flat runs do not use - but spelling it
-    // `GetText(i++)` here costs 0.50 and three blocks, so the increment
-    // stays in the for-clause with the placement as the residual.
+    // The ONE nested run, and the one whose increment clause runs the other
+    // way round.  Retail's inner body increments the running index BEFORE
+    // forming the read address (`inc ecx / mov edi,[edi + ecx*4 - 4]`) and
+    // sinks the counter's `dec esi` above the load, which is what a comma
+    // clause written `i++, k++` emits; every flat run above and below is
+    // `j++, i++` and already exact, so the order is a source fact of this
+    // loop and not a global convention.  Measured: `i++, k++` 100.0000,
+    // `k++, i++` 98.0258, `GetText(++i)` with no clause increment 99.7357,
+    // `k++, ++i` 98.0258.
     for (j = 0; j < 9; j++) {
         int k;
 
-        for (k = 0; k < 3; k++, i++)
+        for (k = 0; k < 3; i++, k++)
             gArmySizeNames[j][k] = ArrayText->GetText(i);
     }
     i++;
