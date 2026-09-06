@@ -92,7 +92,7 @@ bracketed	540	0x14c3f0	bracketed	quicktownwindow..recruit	quicktownwindow,recrui
 bracketed	540	0x1fd390	bracketed	viewwrld..widget	viewwrld,widget	game_1fd010_sub02_1fd390	resolve the owner, then add its VA claim and body
 bracketed	530	0x1318b0	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_131cf0_sub01_1318b0	resolve the owner, then add its VA claim and body
 bracketed	530	0x13cd30	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_13d1c0_sub00_13cd30	resolve the owner, then add its VA claim and body
-bracketed	528	0x8ce50	bracketed	customcampaign..dialogbox	customcampaign,dc_input,dc_precompiledheaders,dialogbox	game_89820_sub03_8ce50	resolve the owner, then add its VA claim and body
+carcass	528	0x8ce50	bracketed	customcampaign	customcampaign	__h3cg$customcampaign$vector_insert$hero_8ce50	enable the existing VA claim and reconstruct its body
 bracketed	522	0x116c10	bracketed	newgame..overview	newgame,overview	game_114610_sub04_116c10	resolve the owner, then add its VA claim and body
 bracketed	521	0x1b76f0	bracketed	systemoptionswindow..text	systemoptionswindow,text	game_1b76d0_sub00_1b76f0	resolve the owner, then add its VA claim and body
 bracketed	517	0x132520	bracketed	quicktownwindow..recruit	quicktownwindow,recruit	game_132520	resolve the owner, then add its VA claim and body

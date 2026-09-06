@@ -21,10 +21,20 @@ DATA(0x006a6ca0) extern THelpText gSingleSelectionHelp[];
 // CodeView and retain the retail build's +8 base-class displacement.
 class CScenarioInfoDlg : public CAdvPopup {
 public:
+    // The hotspot bands the constructor lays over each player row and the
+    // row renderer's own widget id, all byte-proven by ProcessRightSelect's
+    // 26-entry jump table at 0x569ca0/0x569cb4 (base 362, 8+8+8 plus the
+    // single team plate at 387) and by the `id = 390 + i` store the row
+    // constructor emits at 0x5680ec.
     enum EWidgetIDs {
         SCENARIO_INFO_ALLY_FIRST_ID = 112,
         SCENARIO_INFO_ENEMY_FIRST_ID = 120,
-        SCENARIO_INFO_ACCEPT_ID = 188
+        SCENARIO_INFO_ACCEPT_ID = 188,
+        SCENARIO_INFO_HERO_FIRST_ID = 362,
+        SCENARIO_INFO_TOWN_FIRST_ID = 370,
+        SCENARIO_INFO_BONUS_FIRST_ID = 378,
+        SCENARIO_INFO_TEAM_ID = 387,
+        SCENARIO_INFO_PLAYER_ROW_FIRST_ID = 390
     };
 
     CSprite* VictoryIcon;              // +0x60
