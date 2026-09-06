@@ -61,10 +61,11 @@ Subcommands
         retail function, address dossiers, literal evidence. Every
         invocation logs one line to build/homm3_sema.log.
 
-  dreamcast <show|asm|find|gaps|inline-clues|stats> ...
-        Read-only source-shape navigation over the older WinCE/SH4 pressing:
+  dreamcast <show|asm|find|gaps|inline-clues|stats|structure> ...
+        Source-shape navigation over the older WinCE/SH4 pressing:
         joined CodeView names/signatures/locals/scopes, breakpoint-labelled SH4
-        assembly and CFG blocks, and explicitly qualified retail correlations.
+        assembly and CFG blocks, explicitly qualified retail correlations,
+        and generated C++/JSON reference trees (structure).
 
   link [<homm3.build.link args>] [-- <extra link flags>]
         OPT-IN candidate link (also `ninja candidate`): genuine VC6 link.exe
@@ -279,7 +280,7 @@ def main(argv: list[str] | None = None) -> int:
 
     p = sub.add_parser("dreamcast", add_help=False,
                        help="Dreamcast CodeView source-shape tools: "
-                       "show / asm / find / stats (read-only)")
+                       "show / asm / find / gaps / inline-clues / stats / structure")
     p.add_argument("dreamcast_args", nargs=argparse.REMAINDER)
     p.set_defaults(fn=cmd_dreamcast)
 

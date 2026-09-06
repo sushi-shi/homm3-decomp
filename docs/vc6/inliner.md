@@ -554,6 +554,44 @@ the ordered named call stream and the insertion expansion after restoring
 source control flow. This function has no Dreamcast counterpart; the source
 order is established by the VC6/retail controls, not a recovered line table.
 
+## A missing helper can alter an earlier expansion
+
+`game::InitNewGame` (`0x513320`) reached 100% by restoring the ordinary
+`pick_alignment` call named at Dreamcast `newgame.cpp:284` and correcting
+`TPlayerSlotAttributes::legalAlignments` to an unsigned word, as retail's
+zero extension requires.
+
+The helper call alone raises the current 18.7059% (prior MAX 26.5235%) to
+95.0853% and removes all 39 surplus CFG blocks from the preceding
+`NewSMapHeader` copy assignment. Its members now reach retail's nested
+inline boundaries without a pragma. C1's caller-size estimate is made
+before expansion: hand-flattening a later helper can change the initial
+budget for earlier calls. Inspect positive source helper evidence throughout
+the function, including after the first divergent statement.
+
+The signed mask is an independent negative control: with the real helper
+restored, it still chooses the wrong extension, registers, and temporary
+homes. The unsigned declaration closes all 70 blocks. Both corrections
+preserve one canonical helper and the normal compiler profile.
+
+`TCampaignBrief::ScenarioStruct::Read` (`0x487e40`) gives a second case.
+Retail's legacy-artifact loop compares both the source bitset pointer and its
+position before dereferencing proxies: the existing `bitset_iterator` range
+and `std::copy` restore this shape, raising 39.42% to 55.04%. The three packed
+planes then share a value-returning reader, suggested by their repeated
+temporary-to-member copies. Recovering that helper removes 17 surplus blocks
+and reaches 70.55%; its name remains provisional because this Complete code
+has no Dreamcast counterpart.
+
+The remaining scalar evidence matters independently. Retail puts the absent
+text-record cases first and retains each allocated record across the virtual
+file reads. Those corrections reach 73.36% and 80.95%. Default zero construction
+inside the packed-bit helper reaches 83.29%, while the unsigned-long `(0)`
+constructor is the 80.95% control. The reader remains unfinished; these gains
+do not establish that every remaining call boundary is correct. In particular,
+its prerequisite append still expands the single-element insert that retail
+retains, leaving `0x48bf00` paired with the wrong emitted overload.
+
 ## 7. Using it
 
 ```sh

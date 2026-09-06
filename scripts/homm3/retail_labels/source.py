@@ -1384,7 +1384,9 @@ def _demangle_key(mangled: str):
             r"([A-Za-z_]\w*)@", mangled)
         if vector_element:
             return f"{vector_element.group(1).lower()}@fctor"
-        cls = mangled[4:].split("@@", 1)[0].split("@")[0]
+        owner = mangled[4:]
+        cls = (owner[2:].split("@", 1)[0] if owner.startswith("?$") else
+               owner.split("@@", 1)[0].split("@")[0])
         return f"{cls.lower()}@fctor" if cls else None
     pair_const_int = re.match(
         r"^\?\?1\?\$pair@\$\$CBH(?:V|U)([A-Za-z_]\w*)@@@std@@", mangled)

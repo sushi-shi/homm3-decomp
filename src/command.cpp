@@ -1926,7 +1926,7 @@ void combatManager::DoCommand(int command)
 // may now learn, listed into one sentence and shown eight to a page with
 // the pickup jingle in front of each.
 //
-// The set is `eagleEyeData[winning_group].spells`, walked exactly as
+// The set is `eagleEyeData[winning_group]`, walked exactly as
 // LearnSpellFromEagleEye (0x469fe0) walks it - Dinkumware _Tree, node
 // value at +0xc, `end()` the tree's _Head at +4 on the record. Retail
 // keeps the ADDRESS of _Head live in a register and reloads its VALUE at
@@ -1962,8 +1962,8 @@ void combatManager::show_eagle_eye(int winning_group, int dialog_timeout)
     type_dialog_resource reward;
 
     std::set<SpellID>::iterator x =
-        eagleEyeData[winning_group].spells.begin();
-    while (x != eagleEyeData[winning_group].spells.end()) {
+        eagleEyeData[winning_group].begin();
+    while (x != eagleEyeData[winning_group].end()) {
         SpellID spell = *x;
         x++;
         reward.resource = VICTORY_DIALOG_SPELL_ROW;
@@ -1974,7 +1974,7 @@ void combatManager::show_eagle_eye(int winning_group, int dialog_timeout)
             msg = format_string(gpGeneralText->GetText(222), winner->name,
                                 akSpellTraits[spell].name);
         } else {
-            if (x == eagleEyeData[winning_group].spells.end()
+            if (x == eagleEyeData[winning_group].end()
                 || rewards.size() == VICTORY_DIALOG_PAGE_SIZE - 1)
                 msg += gpGeneralText->GetText(GENERAL_TEXT_LIST_AND);
             else
@@ -1983,7 +1983,7 @@ void combatManager::show_eagle_eye(int winning_group, int dialog_timeout)
         }
         rewards.push_back(reward);
         if (rewards.size() == VICTORY_DIALOG_PAGE_SIZE
-            || x == eagleEyeData[winning_group].spells.end()) {
+            || x == eagleEyeData[winning_group].end()) {
             msg += DATA_COMPGEN(0x006603ec, saveExtensionDot, ".");
             launch_sample(
                 format_string(DATA_COMPGEN(0x00670268, pickupSampleFormat,
@@ -2514,6 +2514,16 @@ void combatManager::TurnOffHighlighter(unsigned char drawIt)
 // and spelling the DC-attested IsActive call directly scores 84.86% because
 // it consumes an inline-budget slot and leaves a second string _Tidy call.
 // Keeping a named army-row base is the best measured natural spelling.
+// Countdown sweep 2026-09-06: retail computes ONE `&armies[currentSide][0]
+// .numTroops` (edi at fn+0x4b2, disp 0x5518 folded into the lea) and shares
+// it between this loop and the inlined get_surrender_cost walk, and homes
+// `heroes[currentSide]` at [ebp-0x20] from the enclosing guard; ours
+// recomputes both.  Two spellings measured against 94.4335: dropping the
+// named row base so both loops spell `&armies[currentSide][slot]` scores
+// 94.3892, and the countdown pointer walk
+// `army* p = armies[currentSide]; for (int slot = 20; slot--; p++)` is
+// BYTE-FLAT.  The wall is the cross-inline CSE of the row base, not the
+// loop form.
 VA(0x00477ee0, 0x3E5)  // exhaustive command order-map + call graph, dc 0x6ee60
 void combatManager::CheckGetAIMove()
 {

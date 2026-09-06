@@ -3317,6 +3317,14 @@ static void set_tomb_help_text(
     }
 }
 
+// The ternary is retail's own shape at BOTH callers: SetRolloverText's arm
+// (+0x1ca4, 0xb6 B) and QuickInfo's (+0x1f73, the same 0xb6) each hoist
+// `gpGeneralText->m_texts` OUT of the branch - `mov eax,[gpGeneralText] /
+// shl edx,2 / mov eax,[eax+0x20] / test dx,dx` - which only a common
+// subexpression across the two GetText arms produces.  The if/else spelling
+// duplicates the load into each arm: measured 2026-09-06 at WATER_WHEEL +0x44
+// against retail (SetRolloverText 96.0784, QuickInfo 95.0826) where the
+// ternary lands at +7 (96.8953 / 95.8819).
 static void set_water_wheel_help_text(
     char* buffer, NewmapCell* cell, const char* separator)
 {
@@ -3324,15 +3332,21 @@ static void set_water_wheel_help_text(
     if (cell->is_trigger && cell->PlayerKnowsCell(gNetLocalGamePos)) {
         strcat(buffer, separator);
         short gold = (cell->extraInfo & 0x1f) * 500;
-        if (gold == 0)
-            strcat(buffer,
-                   gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT));
-        else
-            strcat(buffer,
-                   gpGeneralText->GetText(GENERAL_TEXT_UNVISITED_OBJECT));
+        strcat(buffer,
+               gold == 0
+                   ? gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT)
+                   : gpGeneralText->GetText(GENERAL_TEXT_UNVISITED_OBJECT));
     }
 }
 
+// Retail's WINDMILL keeps TWO complete strcat expansions (+0x1e8a, 0xf4 B),
+// each loading gpGeneralText itself and into a DIFFERENT register (ecx then
+// eax), which reads as if/else rather than a ternary.  It is not: spelling
+// this arm if/else while WATER_WHEEL above stays a ternary costs three points
+// on each caller - SetRolloverText 96.8953 -> 93.8242, QuickInfo 95.8819 ->
+// 92.7502 (2026-09-06) - because the WAGON/WARRIOR_TOMB/WATER_WHEEL arms all
+// cross-jump INTO this arm's two blocks and the if/else form moves their entry
+// points.  The residual -30 B here is that merge depth, not the branch shape.
 static void set_windmill_help_text(
     char* buffer, NewmapCell* cell, const char* separator)
 {
@@ -3340,12 +3354,10 @@ static void set_windmill_help_text(
     if (cell->is_trigger && cell->PlayerKnowsCell(gNetLocalGamePos)) {
         strcat(buffer, separator);
         unsigned long amount = cell->extraInfo >> 13;
-        if ((amount & 0xf) == 0)
-            strcat(buffer,
-                   gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT));
-        else
-            strcat(buffer,
-                   gpGeneralText->GetText(GENERAL_TEXT_UNVISITED_OBJECT));
+        strcat(buffer,
+               (amount & 0xf) == 0
+                   ? gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT)
+                   : gpGeneralText->GetText(GENERAL_TEXT_UNVISITED_OBJECT));
     }
 }
 
@@ -3435,6 +3447,37 @@ static void set_windmill_help_text(
 // had inlined.  Its `player`/`iThisPlayer` are this body's `thisPlayer`/
 // `player` with the names swapped, and `this_generator`/`type` are
 // `mapGenerator`/`generatorType`.
+// 2026-09-06, polish lane 40 (94.0915 -> 96.9535).  THE ARM MAP.  Both
+// objects carry this switch's two tables inside the function - retail's
+// dword arm table at +0x20d8 and its 216-entry byte index table at +0x21c4,
+// ours as $L89522/$L89521 - and reading them settles the layout question
+// outright.  Sorting the 59 arm addresses recovers retail's SOURCE order of
+// the cases, and it is OURS, case for case: the four values sharing arm 0,
+// the BORDER_GATE/BORDER_GUARD pair, SEPULCHER and SHIPWRECK between
+// DERELICT_SHIP and DRAGON_CITY, QUEST_GUARD (215) after DRAGON_CITY,
+// HILL_FORT before HERO, the lot.  Retail's arm INDEX assignment is
+// ascending case value and so is ours.  So arm ORDER is not the debt and
+// never was; the debt is per-arm SIZE, and consecutive table entries give
+// each arm's length on both sides for free.  That reading is what this
+// lane's four wins came out of, and what is
+// left of the residual is now itemised rather than guessed: OBELISK -0x30
+// and SIREN -0x11 and STABLES -5 (one cross-jump knot: retail keeps
+// OBELISK's visited sprintf in the arm, we merge it into STABLES's copy),
+// FOUNTAIN_OF_FORTUNE -0x18 (see its own note), WINDMILL -30 with
+// WAGON/WARRIOR_TOMB/WATER_WHEEL +7/+6/+7 (one knot: those three cross-jump
+// into WINDMILL's two blocks and retail's entry points include the
+// gpGeneralText load), PYRAMID +0x11 (the same knot through
+// set_pyramid_help), MAGIC_SPRING and MYSTICAL_GARDEN -6 each (retail
+// stores the raw flag into `visited` and tests the second guard as a
+// one-bit field, `shr ebx,0xa / test bl,1`; VC6 folds our shift spelling
+// straight back to `test bh,4`), NOTHING +6 (retail keeps the
+// special-terrain strcpy inline and shares the empty-string one; we do the
+// reverse, and inverting the condition is already measured at 93.9109),
+// and three small ones.  Twenty-four of the 59 arms differed in length when
+// this lane opened; fifteen do now.  The sibling QuickInfo's table reads the
+// same way (57 arms, 17 differing) and shares five of those rows exactly -
+// PYRAMID, WAGON, WARRIOR_TOMB, WATER_WHEEL and WINDMILL are the same
+// inlined helpers, so a fix there is worth double.
 VA(0x0040b150, 0x229C)  // anchor-global, dc 0xc13c
 void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
 {
@@ -3538,7 +3581,7 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
         } bankType;
         bankType.value = cell->objectIndex;
         get_creature_bank_help_text(gText, cell,
-            bankType.type, player, separator, 0);
+            bankType.type, gUnnamed69778c, separator, 0);
         break;
     case CREATURE_GENERATOR_1: {
         generator* mapGenerator = &gpGame->generators[cell->extraInfo];
@@ -3580,19 +3623,19 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
         & (1UL << (cell->extraInfo & 0x1f)));
     case DERELICT_SHIP:
         get_creature_bank_help_text(gText, cell, CREATURE_BANK_DERELICT,
-            player, separator, 0);
+            gUnnamed69778c, separator, 0);
         break;
     case SEPULCHER:
         get_creature_bank_help_text(gText, cell, CREATURE_BANK_SEPULCHER,
-            player, separator, 0);
+            gUnnamed69778c, separator, 0);
         break;
     case SHIPWRECK:
         get_creature_bank_help_text(gText, cell, CREATURE_BANK_SHIPWRECK,
-            player, separator, 0);
+            gUnnamed69778c, separator, 0);
         break;
     case DRAGON_CITY:
         get_creature_bank_help_text(gText, cell, CREATURE_BANK_DRAGON,
-            player, separator, 0);
+            gUnnamed69778c, separator, 0);
         break;
     case QUEST_GUARD: {
         strcpy(gText,
@@ -3602,10 +3645,23 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
     }
     SET_VISITED_ROLLOVER(FAERIE_RING, FaerieRingInfo,
         currentHero->flags & 0x2000);
+    // The mask here is ONE constant against retail's four.  Retail's arm
+    // (+0x807) ends `mov ecx,eax / mov edx,eax / and ecx,0x20000000 /
+    // and edx,0x10000000 / add ecx,edx / mov edx,eax / and edx,0x8000000 /
+    // and eax,0x20 / add ecx,edx / add ecx,eax` - four separately masked
+    // terms summed left to right, exactly the shape that made TEMPLE and
+    // IDOL_OF_FORTUNE exact one arm each.  Spelling those four here
+    // REPRODUCES that instruction sequence byte for byte and still loses:
+    // the sum leaves the result in ECX one instruction later than the single
+    // mask does, the arm stops tail-merging with BORDER_TENT's copy of the
+    // visited/unvisited selector, and it grows 0xbb -> 0x108 against retail's
+    // 0xd6 - 96.9535 -> 96.8953 (2026-09-06).  Retail merges the whole tail
+    // (`jmp +0x21e`, into BORDER_TENT's `mov [ebp+0x10],ecx`); until that
+    // cross-jump is recovered the one-constant mask is the closer object.
     case FOUNTAIN_OF_FORTUNE:
         strcpy(gText, gAdventureObjectNames[FOUNTAIN_OF_FORTUNE]);
         if (cell->is_trigger) {
-            if (cell->PlayerKnowsCell(player)) {
+            if (cell->PlayerKnowsCell(gUnnamed69778c)) {
                 sprintf(tempText, visitedFormat,
                         gGlobalInfoFlagNames[FountainOfFortuneInfo]);
                 strcat(gText, tempText);
@@ -3636,7 +3692,8 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
         set_hero_help(gText, cell);
         break;
     SET_VISITED_ROLLOVER(IDOL_OF_FORTUNE, IdolOfFortuneInfo,
-        currentHero->flags & (0x02000000UL | 0x10UL));
+        (currentHero->flags & 0x02000000UL)
+        + (currentHero->flags & 0x10UL));
     case LEAN_TO:
         strcpy(gText, gAdventureObjectNames[LEAN_TO]);
         if (cell->is_trigger && currentHero) {
@@ -3665,7 +3722,7 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
     SET_VISITED_ROLLOVER(MAGIC_SPRING, MagicSpringInfo,
         (thisPlayer->MagicSpringFlags
          & (1UL << (cell->extraInfo & 0x1f)))
-        && !(cell->extraInfo & 0x40));
+        && !((cell->extraInfo >> 6) & 1));
     SET_VISITED_ROLLOVER(MAGIC_WELL, MagicWellInfo,
         currentHero->flags & 0x1);
     SET_VISITED_ROLLOVER(MERC_CAMP, MercCampInfo,
@@ -3695,7 +3752,7 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
             APPEND_VISIT_TEXT(
                 (thisPlayer->MysticalGardenFlags
                  & (1UL << (cell->extraInfo & 0x1f)))
-                && !(cell->extraInfo & 0x400));
+                && !((cell->extraInfo >> 10) & 1));
         }
         break;
     SET_VISITED_ROLLOVER(OASIS, OasisInfo,
@@ -3740,6 +3797,12 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
     // unconditionally. That reads like a bug and is NOT one to fix: retail
     // really does emit those two calls outside the guard here, and bracing
     // both arms was measured at 89.28 against the unbraced 89.82.
+    // RE-MEASURED 2026-09-06 on this lane's tree (the helpers routed, the
+    // globals corrected, the arm map read): the verdict holds, bracing both
+    // costs 96.9535 -> 96.6973.  It matters because the OBELISK arm's -0x30
+    // hangs off this selector - our OBELISK ends `mov [ebp+0x10],eax / jmp`
+    // straight into it, where retail keeps a `je` on the AND's own flags and
+    // its own copy of the visited sprintf.
     case SIREN:
         strcpy(gText, gAdventureObjectNames[SIREN]);
         if (cell->is_trigger && currentHero)
@@ -3751,7 +3814,8 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
             APPEND_VISIT_TEXT(currentHero->flags & 0x2);
         break;
     SET_VISITED_ROLLOVER(TEMPLE, TempleInfo,
-        currentHero->flags & (0x04000000UL | 0x100UL));
+        (currentHero->flags & 0x04000000UL)
+        + (currentHero->flags & 0x100UL));
     case TOWN:
         set_town_help(gText, cell);
         break;
@@ -3769,50 +3833,25 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
                 sprintf(tempText, visitedFormat,
                         gGlobalInfoFlagNames[UniversityInfo]);
                 strcat(gText, tempText);
-                APPEND_VISIT_TEXT(0);
             }
         }
         break;
     case WAGON:
-        strcpy(gText, gAdventureObjectNames[WAGON]);
-        if (cell->is_trigger) {
-            strcat(gText, separator);
-            strcat(gText, cell->PlayerKnowsCell(player)
-                ? gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT)
-                : gpGeneralText->GetText(GENERAL_TEXT_UNVISITED_OBJECT));
-        }
+        set_wagon_help_text(gText, cell, separator);
         break;
     SET_VISITED_ROLLOVER(WAR_SCHOOL, WarSchoolInfo,
         currentHero->WarSchoolFlags
         & (1UL << (cell->extraInfo & 0x1f)));
     case WARRIOR_TOMB:
-        strcpy(gText, gAdventureObjectNames[WARRIOR_TOMB]);
-        if (cell->is_trigger) {
-            strcat(gText, separator);
-            strcat(gText, cell->PlayerKnowsCell(player)
-                ? gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT)
-                : gpGeneralText->GetText(GENERAL_TEXT_UNVISITED_OBJECT));
-        }
+        set_tomb_help_text(gText, cell, separator);
         break;
     case WATER_WHEEL:
-        strcpy(gText, gAdventureObjectNames[WATER_WHEEL]);
-        if (cell->is_trigger && cell->PlayerKnowsCell(player)) {
-            strcat(gText, separator);
-            strcat(gText, (cell->extraInfo & 0x1f) == 0
-                ? gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT)
-                : gpGeneralText->GetText(GENERAL_TEXT_UNVISITED_OBJECT));
-        }
+        set_water_wheel_help_text(gText, cell, separator);
         break;
     SET_VISITED_ROLLOVER(WATERING_HOLE, WateringHoleInfo,
         currentHero->flags & 0x40);
     case WINDMILL:
-        strcpy(gText, gAdventureObjectNames[WINDMILL]);
-        if (cell->is_trigger && cell->PlayerKnowsCell(player)) {
-            strcat(gText, separator);
-            strcat(gText, ((cell->extraInfo >> 13) & 0xf) == 0
-                ? gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT)
-                : gpGeneralText->GetText(GENERAL_TEXT_UNVISITED_OBJECT));
-        }
+        set_windmill_help_text(gText, cell, separator);
         break;
     case WITCH_HUT:
         set_witch_hut_help_text(gText, currentHero, cell,
@@ -5393,6 +5432,12 @@ void advManager::DrawBoatPartShadow(int part, TDrawParts& boatParts,
 // (ObjCell = objCell, ObjType = objType, SprPtr = sprite).  The `this`
 // ESI/EDI permutation the note above describes is unchanged; this was the
 // last missing named local, not a fix for it.
+// 2026-09-06, polish lane 38, the DC TYPE-RECORD sweep: the block types both
+// of this loop nest's counters T_INT4 where they were written `unsigned`.
+// `numObj` is byte-flat as `int` and is taken (the sibling nests in this file
+// and in viewwrld already spell it that way); `row` as `int` COSTS 0.06
+// (87.9441 -> 87.8809, alone or together with numObj) because the layer
+// compare against the byte member goes signed, so it stays `unsigned`.
 VA(0x00410c00, 0x98E)  // anchor-callee, dc 0x12334
 void advManager::DrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 {
@@ -5439,7 +5484,7 @@ void advManager::DrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
         static_cast<void*>(thisCell));
     if (cellObjects->objects.size() > 0) {
         for (unsigned row = 0; row <= OBJECT_DRAW_LAYER_LAST; ++row) {
-            for (unsigned numObj = 0; numObj < cellObjects->objects.size();
+            for (int numObj = 0; numObj < cellObjects->objects.size();
                  ++numObj) {
                 AdvObjectCellView* objCell = &cellObjects->objects[numObj];
                 if (objCell->layer != row)
@@ -7070,10 +7115,15 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
     // our layout ABOVE the buffer becomes exactly retail's 132 bytes
     // ([ebp-0x2c4 .. ebp-0x241] here against retail's
     // [ebp-0x2bc .. ebp-0x239]).
-    // Byte-flat on the score - it moves `sub esp` from 0x2e0 to 0x2b8
-    // against retail's 0x2b0, and the 8 bytes still between them are two
-    // small locals VC6 homes on our side and keeps in registers on
-    // retail's, not another array.
+    // Byte-flat on the score - it moved `sub esp` from 0x2e0 to 0x2b8
+    // against retail's 0x2b0.  The last 8 bytes were NOT "two small locals
+    // retail keeps in registers" (2026-09-06): they were the `type_point
+    // point` copy below, which retail packs into the SAME twelve bytes as
+    // the type_cell_adjuster ([ebp-0x3c..-0x30]) because its scope closes
+    // before the adjuster's opens.  Giving that copy its own block closes
+    // the frame exactly - `sub esp,0x2b0`, and every one of the 22 ebp-
+    // relative slots in the body is now retail's slot, `point` at -0x38 and
+    // the get_quickview_size out-params at -0x40/-0x44 included.
     unsigned long testFlag;
     int width;
     int visited;
@@ -7104,13 +7154,15 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
         strcpy(gText, gpGeneralText->GetText(
             GENERAL_TEXT_QUICK_INFO_INVALID_POINT));
     } else {
-        type_point point = mapPoint;
-        if (!point.is_valid()) {
-            cell = fullMap->cell(0, 0, 0);
-        } else {
-            cell = &fullMap->cellData[
-                (point.z * fullMap->Size + point.y) * fullMap->Size
-                + point.x];
+        {
+            type_point point = mapPoint;
+            if (!point.is_valid()) {
+                cell = fullMap->cell(0, 0, 0);
+            } else {
+                cell = &fullMap->cellData[
+                    (point.z * fullMap->Size + point.y) * fullMap->Size
+                    + point.x];
+            }
         }
 
         if (!(GetMapExtra(mapPoint) & playerBit)) {
@@ -7172,7 +7224,12 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
 // and shares only the strcat tail, and it stores the tested flag into `z`
 // first rather than testing the field in place.
 // THAT IS SPECIFIC TO THIS MACRO - the ARENA and BUOY cases below keep their
-// ternaries, and the bytes say so (2026-08-21). Retail reaches BUOY's tail
+// ternaries, and the bytes say so (2026-08-21).  RE-MEASURED 2026-09-06 after
+// the frame closed (see QuickInfo's own note) - the verdict does not move:
+// both together 95.9234 -> 93.5268, BUOY alone 95.8398.  Retail's ARENA does
+// emit two complete sprintf calls at +0x3f8/+0x427 and BUOY does jump into
+// them, so the two-sprintf READING is right and only the merge is ours to
+// lose; the ternary keeps the cheaper object until the cross-jump is found. Retail reaches BUOY's tail
 // with `mov ecx,[hero+0x105] / and ecx,4 / mov [ebp+0x10],ecx / jmp <shared>`,
 // i.e. it stores the flag and JUMPS to one shared visited/unvisited selector
 // that it also uses for ARENA; our compile expands the same ternary inline at

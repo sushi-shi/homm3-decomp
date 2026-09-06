@@ -323,6 +323,36 @@ compiled by the pinned SP3 CL at the game profile (`build/p30/sibprobe*.cpp`):
    birth position of a temporary, neither of which touches the addressing
    expression itself.
 
+4. **The scope lever RUNS BOTH WAYS: several `for (int i = ...)` loops
+   sharing ONE function-scope index** (2026-09-06, polish 37). The polish-32
+   entry above gives a loop its OWN block-scoped index to turn base=pointer
+   into base=index; the mirror move turns base=index back into base=pointer.
+   `TSingleSelectionWindow::SetCurrentMap` read
+   `gpGame->setup.handicap[i]` as `[i + gpGame]` against retail's
+   `[gpGame + i]`, and it is the function's ONLY two-register SIB site, so
+   the "second occurrence of the pair" lever (2) cannot reach it. Declaring
+   one `int i;` at the top of the frame and writing the body's three
+   `for (int i = 0; ...)` loops as `for (i = 0; ...)` makes `i` born early
+   enough to become the INDEX and the freshly loaded global the BASE:
+   **99.9874 -> 100.0000**, every other byte identical, no other row in the
+   unit moved. Read together with (3), the rule is that the operand born
+   LATER takes the BASE slot, and a loop counter's birth position is moved
+   by hoisting or sinking its declaration's INITIALISER (a bare declaration
+   is still inert, per section 3).
+
+   Bounds measured the same lane, all byte-flat: on
+   `ai_player::fill_prohibited_array` (base `[gpGame + player_index]` vs
+   retail `[player_index + gpGame]`, and the FIRST occurrence of that
+   register pair 0x45 bytes earlier already AGREES on base=index in both)
+   neither hoisting `int player_index;` to function scope nor swapping it
+   with `players_left` moves the byte - that row's second occurrence of an
+   already-used pair is the flip our C2 makes and retail does not.
+   `game::save@playerData`'s frame-slot variant of the same question - x at
+   -0x8/-0xc against retail's -0xc/-0x8 - is inert under ALL 48
+   permutations of its six local declarations, which re-confirms section
+   3's "creation order means the first ASSIGNMENT, not the declaration" for
+   frame-slot colouring as well as for register binding.
+
 Byte-flat for this class, all measured this lane: source addend order;
 `*(p+i)`, `&p[i]`, `i[p]`; naming the pointer, the index or the whole address
 in a local; declaring that local before or after the counter; a local copy of

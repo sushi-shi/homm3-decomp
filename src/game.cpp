@@ -625,7 +625,7 @@ unsigned char InitImmMouse(void* hInst, void* hwnd)
         DATA(0x00696d78)
         static TImmMouseRuntime immMouse(hInst, hwnd);
         return 1;
-    } catch (...) {
+    } catch (TImmMouseRuntime::t_initialize_failure) {
         return 0;
     }
 }
@@ -3215,7 +3215,7 @@ int SavedGameHeader::Load(TAbstractFile* infile)
             infile = new TGzFile(openedName.c_str(), "rb");
             ownedInput = std::auto_ptr<TAbstractFile>(infile);
         }
-        catch (...) {
+        catch (TGzFile::TOpenFailure) {
             return -1;
         }
         _chdir("..");
@@ -4817,7 +4817,7 @@ int game::LoadGame(const char* filename, int bIsOrigData, int bIsQuickLoad)
 
         Load(&infile);
         return 1;
-    } catch (...) {
+    } catch (TGzFile::TOpenFailure) {
         return 0;
     }
 }
@@ -5405,7 +5405,7 @@ unsigned char game::NewMap(const char* mapPath, const char* mapName,
             gText, DATA_COMPGEN(0x00677d6c, newMapGzReadMode, "rb"));
         NewMap(&mapFile, playerHeroFaces, NULL, gameVersion);
         return 1;
-    } catch (...) {
+    } catch (TGzFile::TOpenFailure) {
         return 0;
     }
 }
@@ -8247,7 +8247,7 @@ int NewSMapHeader::Get(const char* path, const char* filename,
         int result = Read(&infile, campaignMap);
         if (result < 0)
             return -1;
-    } catch (...) {
+    } catch (TGzFile::TOpenFailure) {
         return -1;
     }
     return 0;
@@ -11339,6 +11339,48 @@ void game::ProcessOnMapHeroes()
 // including the 0x351-byte cFileName buffer at -0x3b8 against -0x3b0). So
 // the surplus is TWO separate 4-byte steps in the msg-temporary band, not
 // one 8-byte local - do not go looking for a single surplus dword.
+// 2026-09-06, polish lane 38, three findings and one fix, all measured:
+//  * FIXED: this body called `calc_crc_long` through remote.h's stale DC-only
+//    declaration `int (unsigned char*, int)`, which does not decorate to the
+//    symbol remote.cpp:95 defines (`unsigned long (const unsigned char*,
+//    unsigned)`), so the reloc pointed at a name nothing owns. The header now
+//    carries the real signature; byte-flat on every row (objdiff runs at
+//    function_reloc_diffs=none) but the `--calls` divergence row is gone.
+//  * The DC TYPE RECORD types `dataTimeOutStart` T_INT4 where this body says
+//    `unsigned long`: BYTE-FLAT, and `unsigned long` is kept because it is
+//    what `GameTime::Get`/`ElapsedSince` take.
+//  * The DC block names three locals this body has no counterpart for -
+//    `attempts` (sp+0xd8) BESIDE `retryCount`, `queueSize` (sp+0xcc) BESIDE
+//    `numMsgs`, and `pNetMsg` (sp+0x3c) BESIDE `pConfirmMsg` - so they are
+//    extra constructs, not renames. Their frame band (sp+0xcc..0xd8, next to
+//    `pMsg` at 0xd0) is the confirm loop's, and `numMsgs` here is incremented
+//    and never read, which is the shape of a DC pair where only one survived.
+//    Not reconstructed: nothing in the retail stream names a second queue
+//    counter, and the 122-vs-122 block / 63-vs-63 branch CFG says the missing
+//    mass is not a statement. The remaining `--calls` delta is a LAYOUT one:
+//    retail places the `Stop(); if (inGame) RestoreScreen();` block at
+//    fn+0x94f and jumps to the epilogue at fn+0x1105, where our C2 sinks the
+//    same source statements to fn+0xc16.
+// 2026-09-06, polish lane 41 - the 8-byte frame surplus is a SPILL cascade,
+// not a missing or surplus local, and the slot census now names both dwords:
+//  * `iFileSize` has its own home at [ebp-0x6c], BELOW the
+//    CGameTransmitInitMsg temporary, where retail packs it into [ebp-0x38]
+//    ABOVE that temporary (retail `mov [ebp-0x38],esi` at fn+0x2d1 against
+//    our `mov [ebp-0x6c],esi` at fn+0x2dd).  Moving `int iFileSize;` up to
+//    procedure scope beside pGameTransmitMainMsg, with the FileSize() call
+//    left as a plain assignment where it is, is BYTE-FLAT - VC6 colours this
+//    slot by live range, not by declaration position, so the DC frame order
+//    is not reachable from the declaration list.
+//  * The other dword is the CDiffMaker arm: retail keeps ONE of the two
+//    File::GetLength results in EBX across the new/Read/CDiffMaker sequence
+//    (`mov ebx,eax / push ebx`, later `push ebx / mov ebx,[ebp-..] / push
+//    ebx`), where we spill BOTH (`push eax / mov [ebp-..],eax`, later two
+//    reloads).  Retail also keeps `isDiff` in BL (`xor bl,bl` in the entry
+//    block) where we home it as the byte [ebp-0x15]; that byte and the EBX
+//    spill are the same pressure fact.
+// So the frame is a CONSEQUENCE: retail has one more callee-saved register
+// free through the diff arm than this build does.  Do not hunt for a surplus
+// local or reorder declarations - measure the diff arm's register pressure.
 VA(0x004cafd0, 0xD14)  // retail body + typed catch + continuation/tables
 int game::TransmitSaveGame(int iToWho, int thisPlayerDead,
                            unsigned char inGame, unsigned char makeOrig)

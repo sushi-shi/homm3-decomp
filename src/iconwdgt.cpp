@@ -580,6 +580,20 @@ void iconWidget::SetSprite(const char* new_sprite)
 // {creature_seqid sequence_id; int chance;} aggregate; restoring that exact
 // source type and the enum names is byte-identical and does not move this
 // register-allocation plateau.
+// Polish lane 37 localised the residual exactly and added two negative
+// controls. The delta is ONE loop-head placement: retail's three back edges
+// (the inlined GetNumFrames guard's three arms) all target the array
+// initializer's first constant, so retail RE-INITIALIZES sequenceList on
+// every reroll; our C2 hoists the whole 22-store initializer above the loop
+// and the back edges land on `mov edx,0x64` (the Random argument). Retail
+// therefore needs 5 and 1 alive in CALLEE-SAVED ebx/esi across the Random
+// call, which is what evicts `this` to [ebp-4] and makes the frame 0x5c
+// against our 0x58 - the frame delta is a CONSEQUENCE of the un-hoisted
+// initializer, not an independent missing local. Tried and rejected, each
+// BYTE-IDENTICAL to the digit (same object, 81.0449): rewriting the `for(;;)`
+// + `break` as a backward `goto reroll_sequence;` over a braced block (the
+// catalog's "VC6 does not LICM goto flow" lever does not reach an invariant
+// aggregate initializer), and dropping the `const` from sequenceList.
 VA(0x004eb060, 0x1EB)  // anchor-global, dc 0xd9d90
 void iconWidget::NextRandomFrame()
 {

@@ -910,7 +910,7 @@ void NewfullMap::NewfullMapFn_004FD950(
 // than leaving it, and starving readMapObjects' objectTypes.resize costs an
 // exact function elsewhere in the unit (1459 -> 1458) because loadMapObjects
 // shares that instantiation. Both were measured and reverted.
-static void resizeSeerHutList(NewfullMap* map, int count)
+static void resizeSeerHutList(NewfullMap* map, short count)
 {
     map->SeerHutList.resize(count);
 }
@@ -952,6 +952,24 @@ static void resizeSeerHutList(NewfullMap* map, int count)
 // reachable: move the resize into a function small enough to be starved of
 // budget and it stays a call, then let the single-call-site static inline
 // back. resizeSeerHutList above does that, 72.8624 -> 77.3789.
+//
+// 2026-09-06, polish lane 38, the DC TYPE-RECORD sweep: 92.2018 -> 93.4037
+// on ONE WORD - resizeSeerHutList's parameter is `short`, not `int`.  The
+// Dreamcast block types this body's `count` as T_INT4 and retail REFUTES
+// that (`movsx ecx, word ptr [ebp+0xa]` at fn+0x2a2 is a signed 16-bit
+// load), so the local stays `short`; what the DC record does buy is the
+// helper's own parameter.  Widened to `int` the conversion happens at the
+// CALL, so VC6 sign-extends BEFORE the TSeerHut temporary is constructed
+// and has to spill the result across the ctor (`movsx ecx,[ebp+0x12] / mov
+// [ebp+8],ecx / call ??0TSeerHut / mov edx,[ebp+8]`); narrowed to `short`
+// the conversion happens INSIDE the inlined callee, after the ctor, which
+// is retail's order exactly (`call ??0TSeerHut / movsx ecx,[ebp+0xa]`).
+// The loop index moves to retail's own [ebp+0x10] home with it.
+// Measured and rejected in the same pass: block-scoping the `count`
+// declaration + its Read + the resize call together, 93.3792.
+// The DC also names the seer-hut loop index `sprite_num` where this body
+// says `i`; the rename is byte-inert and is taken so the next lane's
+// name-matched scan sees it.
 //
 // 77.3789 -> 82.8043 (2026-08-20) ON ONE MORE PIN, and it is NOT the
 // mapObjectData half the old text expected. Retail CALLS
@@ -1069,15 +1087,15 @@ int NewfullMap::Load(TAbstractFile* infile, int size, unsigned char two_layers,
     // condition - twice, once at entry and once on the back edge - where our
     // CL expands it. The pin is lexical, so restoring the depth before the
     // body leaves the body's own decisions alone.
-    int i;
+    int sprite_num;
 #pragma inline_depth(0)
-    for (i = 0; i < SeerHutList.size(); ++i)
+    for (sprite_num = 0; sprite_num < SeerHutList.size(); ++sprite_num)
 #pragma inline_depth()
     {
-        SeerHutList[i].load(infile, saveVersion);
-        if (SeerHutList[i].quest)
+        SeerHutList[sprite_num].load(infile, saveVersion);
+        if (SeerHutList[sprite_num].quest)
             mapObjectData.push_back(static_cast<CMapObjectData*>(
-                static_cast<void*>(SeerHutList[i].quest)));
+                static_cast<void*>(SeerHutList[sprite_num].quest)));
     }
 
     if (saveVersion >= 25)
@@ -5853,45 +5871,58 @@ void NewfullMap::NewfullMapFn_00505F20(CObject* object, int objectType,
 // NewfullMapFn_00505DA0 calls once per row of objects.txt, whose address
 // advmgr_objects.h already records against this class.
 //
-// The four 48-cell masks are transposed cell by cell through the class's own
-// _getBitPos(x, y) = 47 - y * 8 - x. The stores are all `set(pos, value)`,
-// which retail keeps out of line.
+// Dreamcast proves the class fields and _getBitPos(x, y) = 47 - y * 8 - x;
+// its two named constructors are default/copy overloads. This conversion is
+// Complete-only. Retail's first two test results pass through byte-sized
+// temporary homes before set(), as in Dinkumware's bit-reference assignment.
+// Keep the proxy operation on both sides and calculate each operand's index
+// through the class helper; retail retains distinct source/destination values.
 //
-// Residual (39.16%): the bitset members, and only them. Retail CALLS
-// bitset<48>::test at two of the four reads and expands the range check at
-// the other two (its six branches are the three loop back edges plus those
-// two checks and the bitset<10> one); our /Ob2 budget expands more of them,
-// which is the whole 24-vs-14 block surplus and all five target-only calls.
-// The two calls that do pair - basic_string::_Tidy and bitset<10>::_Tidy -
-// and the GetImageName/assign pair are already right, as is the field
-// transcription. Measured: all four reads spelled `test()` is 39.16, retail's
-// own two-and-two split is 22.87, and all four as `operator[]` is 12.95, so
-// the spelling that reads closest to retail is NOT the one its budget
-// produces here - the lever is a statement pin this lane may not add.
+// Residual (41.95%): 21 candidate blocks versus 14 retail. The last 48-cell
+// set and the terrain set still expand here, while retail retains all five;
+// retail also expands two source tests that the current caller keeps out of
+// line. Negative controls: direct set/test with a shared index gives 39.16%;
+// recalculating those direct-call indices gives 0%; proxy assignment with one
+// shared index gives 36.50%. The earlier read-only operator[] substitution
+// gave 12.95%. Do not flatten the recovered reference assignments to chase
+// these inliner choices. Plain-char dimensions and implicit narrowing are
+// byte-flat but retain the types recorded in Dreamcast's field list 0x309c.
+// The ordinary integer dimension getters restore retail's dword loads before
+// its byte stores, raising 40.92% to 41.95%; direct field access narrows the
+// loads themselves. A const source view reproduces the two-called/two-expanded
+// test split (40.72%) but still expands the final stores. Coordinate-reading
+// getter hypotheses also leave those stores expanded and fail to separate the
+// two indices, so they remain out. A destination-only local (28.72%) and an
+// explicit descending destination counter (40.87%) do not close the caller;
+// the latter does reproduce separate index registers. Reassociating the source
+// index as 47-(y*8+x) is byte-flat. These are remaining source-state questions,
+// not permission for an inline pin or a synthetic release assertion.
 //
-// Only nine of the template's fields cross: the image name, the two sizes,
-// the four masks, the recommended-terrain mask, the type, the subtype and
-// the underlay flag. hasTrigger, triggerCell, slotCategory and terrainMask
-// are not copied here.
+// The image name, sizes, four masks, recommended-terrain mask, type, subtype
+// and underlay flag cross here. hasTrigger, triggerCell, slotCategory and
+// terrainMask stay with the editor template.
 VA(0x00506080, 0x1D4)  // sole caller NewfullMapFn_00505DA0 + advmgr_objects.h address, retail-only
 CObjectType::CObjectType(TObjectType* source)
 {
     ImageName = source->GetImageName();
-    width = static_cast<signed char>(source->imageInfo.objectSize.x);
-    height = static_cast<signed char>(source->imageInfo.objectSize.y);
+    width = source->GetWidth();
+    height = source->GetHeight();
 
     for (unsigned y = 0; y < 6; y++) {
         for (unsigned x = 0; x < 8; x++) {
-            unsigned pos = _getBitPos(x, y);
-            drawCells.set(pos, source->imageInfo.drawMask.test(pos));
-            passableCells.set(pos, source->passableMask.test(pos));
-            shadowCells.set(pos, source->imageInfo.shadowMask.test(pos));
-            triggerCells.set(pos, source->triggerMask.test(pos));
+            drawCells[_getBitPos(x, y)] =
+                source->imageInfo.drawMask[_getBitPos(x, y)];
+            passableCells[_getBitPos(x, y)] =
+                source->passableMask[_getBitPos(x, y)];
+            shadowCells[_getBitPos(x, y)] =
+                source->imageInfo.shadowMask[_getBitPos(x, y)];
+            triggerCells[_getBitPos(x, y)] =
+                source->triggerMask[_getBitPos(x, y)];
         }
     }
 
     for (int terrain = 0; terrain < 10; terrain++)
-        mask_34.set(terrain, source->recommendedTerrainMask[terrain]);
+        mask_34[terrain] = source->recommendedTerrainMask[terrain];
 
     objectType = source->objectType;
     extra = source->subtype;
