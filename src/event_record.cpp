@@ -1233,11 +1233,11 @@ unsigned char type_record_shroud::load(TAbstractFile* infile, int version)
     if (infile->Read(&count, sizeof(count)) != sizeof(count))
         return 0;
 
+    type_shroud_change change;
     changes.clear();
     changes.reserve(count);
 
     while (count--) {
-        type_shroud_change change;
         if (infile->Read(&change, sizeof(change)) != sizeof(change))
             return 0;
         changes.push_back(change);
@@ -1260,20 +1260,24 @@ unsigned char type_record_shroud::save(TAbstractFile* outfile)
         outfile->Write(&changes[i], sizeof(type_shroud_change));
     return 1;
 }
-#if 0  // @carcass
-
 // E:\gamedcs\event_record.cpp:978
 // NO RETAIL BODY: the carve leaves no row between save (0x49bdf0) and
-// replay (0x49be60), and the vtable accounts for both. Whatever the PC
-// revision spelled here, SetVisibility/ResetVisibility reach the change
-// list without an out-of-line helper.
-DC_ONLY(0x8ddec, 0x84)
-void type_record_shroud::add_change(int x, int y, int z, short old_value, short new_value)
+// replay (0x49be60), and the vtable accounts for both, so Complete
+// expanded this DC-named member into its two callers rather than
+// emitting it.  It is defined here at its DC source position so /Ob2 can
+// make that same decision - a defined-but-unclaimed symbol adds no
+// objdiff row of its own.
+void type_record_shroud::add_change(int x, int y, int z,
+                                    short old_value, short new_value)
 {
-    // @stub
+    type_shroud_change change;
+    change.x = x;
+    change.y = y;
+    change.z = z;
+    change.old_value = old_value;
+    change.new_value = new_value;
+    changes.push_back(change);
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\event_record.cpp:993
 // Slot 4 of the shroud vtable. The walk runs BACKWARDS over the change
@@ -1501,15 +1505,8 @@ void game::SetVisibility(int startX, int startY, int z, int whichPlayer,
                 unsigned short* extra = GetMapExtraPtr(x, y, z);
                 unsigned short old_value = *extra;
                 unsigned short new_value = old_value | visMask;
-                if (old_value != new_value) {
-                    type_record_shroud::type_shroud_change change;
-                    change.x = x;
-                    change.y = y;
-                    change.z = z;
-                    change.old_value = old_value;
-                    change.new_value = new_value;
-                    record->changes.push_back(change);
-                }
+                if (old_value != new_value)
+                    record->add_change(x, y, z, old_value, new_value);
                 *extra = new_value;
             }
         }
@@ -1560,15 +1557,8 @@ void game::ResetVisibility(int startX, int startY, int z, int whichPlayer,
                 unsigned short* extra = GetMapExtraPtr(x, y, z);
                 unsigned short old_value = *extra;
                 unsigned short new_value = old_value & keepMask;
-                if (old_value != new_value) {
-                    type_record_shroud::type_shroud_change change;
-                    change.x = x;
-                    change.y = y;
-                    change.z = z;
-                    change.old_value = old_value;
-                    change.new_value = new_value;
-                    record->changes.push_back(change);
-                }
+                if (old_value != new_value)
+                    record->add_change(x, y, z, old_value, new_value);
                 *extra = new_value;
             }
         }
