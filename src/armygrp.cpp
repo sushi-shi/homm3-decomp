@@ -1925,6 +1925,21 @@ static void apply_morale_magic_terrain(int magicTerrain, TCreatureType creature,
 // objdiff (function_reloc_diffs=none) does not score it. Same class and same
 // verdict as get_luck_description's hero arm below; recorded because the call
 // multiset is what `predict-inline` reads.
+// [polish-45] The 149 B is ONE frame decision, and it is shared with
+// get_luck_description below.  Retail's frame is 0x50 where this compile's is
+// 0x54: retail parks the `shl eax,2` creature-row OFFSET in the dead
+// parameter slot [ebp+0x24] and this compile spends a local at [ebp-0x14] on
+// it.  The empty-allocator scratch byte moves with it - retail reads it from
+// [ebp+0x13] (the `morale` slot's high byte), we read it from [ebp+0xf] (the
+// `creature` slot's), the identical 4-byte shift get_luck_description shows
+// at [ebp+0x13] vs [ebp+0xf].  The parameter OFFSETS themselves agree on both
+// sides (+0x8 is the return pointer, +0xc is `creature`, and B0/B1/B2's
+// instructions are byte-identical), so this is which parameter slot C2 judges
+// dead, not a different declarator: retail keeps `creature` in its home and
+// frees `morale`, we do the reverse.  The one base-only call is a
+// `basic_string::_Eos` at +0x780 in the tail.  The narrower-second-parameter
+// hypothesis recorded on get_luck_description is NOT supported by these
+// bytes - the slots line up, only the liveness verdict differs.
 VA(0x0044b960, 0x859)  // retail-body signature, dc 0x4f708
 std::string armyGroup::get_morale_description(
     TCreatureType creature, int morale, const hero* ownerHero,
