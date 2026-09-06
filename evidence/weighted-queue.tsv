@@ -318,7 +318,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x005c9710	543	94.17583	94.1758	94.1758	31.62540600000001	townmgr	?SetRolloverText@TThievesGuildWindow@@QAEXH@Z	admitted
 0x00511660	1638	94.189186	94.1892	94.1892	95.18090400000008	multiplayerwindow	?OnSearch@TMultiPlayerWindow@@QAEEXZ	admitted
 0x0043f2c0	1595	94.2017	94.2017	94.2017	92.48288500000001	army	?animate_missile@army@@AAEXPAV1@@Z	admitted
-0x00489e20	1104	94.26425	94.2643	94.2643	63.32212799999999	customcampaign	?PruneCrossoverHeroes@SCampaign@@QAEXPAX@Z	admitted
 0x00575290	377	94.27711	94.2771	94.2771	21.57533299999999	singleselectionpopups	?Main@CHotspotWidget@@UAEHPAVmessage@@@Z	admitted
 0x00407b80	3056	94.39535	94.3953	94.3953	171.27963199999988	advmgr	?DoAdvCommand@advManager@@QAEPAVNewmapCell@@PAUtype_point@@@Z	admitted
 0x005b3140	1566	94.39567	94.3957	94.3957	87.76333799999993	systemoptionswindow	?WindowHandler@TSystemOptionsWindow@@UAEHPAVmessage@@@Z	admitted
@@ -600,6 +599,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x0059d040	2976	99.901085	99.9011	99.9011	2.9432640000000525	spellbookwindow	?WindowHandler@TSpellbookWindow@@UAEHPAVmessage@@@Z	admitted
 0x005bc280	301	99.91304	99.913	99.913	0.26187000000001126	textwdgt	??0textWidget@@QAE@HHHHPBD0W4TColor@font@@HIHH@Z	admitted
 0x005be030	467	99.92157	99.9216	99.9216	0.36612800000000323	town	?GiveSpells@town@@QAEXPAVhero@@@Z	admitted
+0x00489e20	1104	99.92228	99.9223	99.9223	0.857807999999908	customcampaign	?PruneCrossoverHeroes@SCampaign@@QAEXPAX@Z	admitted
 0x0055b470	721	99.92727	99.9273	99.9273	0.5241669999999439	resourcemanager	?GetPalette24@ResourceManager@@YIPAVTPalette24@@PBD@Z	admitted
 0x0047e820	1856	99.93084	99.9308	99.9308	1.284351999999842	cspriteframe	?DrawTileShadow@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@EE@Z	admitted
 0x0047d930	1039	99.940445	99.9404	99.9404	0.6192440000000425	cspriteframe	?DrawAdvObjShadowImpl@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@E@Z	admitted

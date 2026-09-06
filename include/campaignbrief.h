@@ -176,7 +176,9 @@ public:
         void MarkCrossoverHeroes(unsigned char* wanted);
         // Prune's repeated inflated_size guard suggests an inlined scenario
         // query in retail; the role name is provisional.
-        int GetMaxCrossoverHeroes() const;
+        int getMaxCrossoverHeroes() const;
+        // Complete pool-eligibility predicate; retail expansion in Prune.
+        bool usesCrossoverPool(int pool);
     };
 
     struct CampaignHeaderStruct {
@@ -227,6 +229,8 @@ public:
         int GetNumMaps() const;
         // Prune's header-owned marking pass; name provisional without a DC row.
         void markRequiredHeroes(unsigned char* wanted);
+        // Total scenario slots, unlike the populated-map count GetNumMaps.
+        int getScenarioCount() const;
     };
 
     // Dreamcast's LF_FIELDLIST preserves this complete nested enum.  The

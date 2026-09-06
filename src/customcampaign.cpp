@@ -2808,6 +2808,15 @@ void hero::collectArtifacts(std::vector<type_artifact>& artifacts) const
     }
 }
 
+// Prune's signed scenario-count query is separate from GetNumMaps, which
+// counts only populated scenarios. The ordinary wrapper retains both retail
+// size calls at +0x172/+0x25d; flattening it expands those calls into Prune.
+// The name remains provisional; Complete has no Dreamcast counterpart.
+int TCampaignBrief::CampaignHeaderStruct::getScenarioCount() const
+{
+    return scenarios.size();
+}
+
 // Prune's first loop retains both scenario-vector size queries and each
 // ScenarioStruct::MarkCrossoverHeroes call. Keeping this header-owned phase
 // as an ordinary helper recovers that boundary; leaving the helper unused
@@ -2823,13 +2832,28 @@ void TCampaignBrief::CampaignHeaderStruct::markRequiredHeroes(unsigned char* wan
     }
 }
 
+// Prune asks whether this populated scenario uses a given crossover pool.
+// The virtual query's scenario argument is this receiver. Restoring the
+// ordinary predicate preserves its two retail guards and recovers the later
+// erase/dtor boundaries. An unused helper leaves 93.3860%; calling it reaches
+// 99.7643%, and letting collectArtifacts own its hero receiver's lifetime
+// reaches 99.9223%. Role and name remain provisional (Complete-only).
+bool TCampaignBrief::ScenarioStruct::usesCrossoverPool(int pool)
+{
+    return inflated_size > 0 && options->_vslot12(this, pool);
+}
+
 // Retail PruneCrossoverHeroes repeats the scenario's inflated_size check
 // at +0x1c1 after the outer guard at +0x1a1. Treat the inner count query as
 // a scenario helper (provisional name): it still expands fully into Prune,
 // while its own max locals retain the retail temporary homes. Flattening
 // this query into Prune leaves 19.3083% current (26.1010% prior MAX);
 // restoring the boundary raises it to 34.6269 without a new retail claim.
-int TCampaignBrief::ScenarioStruct::GetMaxCrossoverHeroes() const
+// With the other recovered queries at 99.9223%, the remaining differences
+// are vptr register choices at Prune +0x1d0/+0x1df/+0x1ec. An early empty
+// return adds two CFG blocks (97.5337%); scoped while and negated-zero
+// spellings are byte-neutral.
+int TCampaignBrief::ScenarioStruct::getMaxCrossoverHeroes() const
 {
     int best = 0;
     if (inflated_size > 0) {
@@ -2865,11 +2889,13 @@ int TCampaignBrief::ScenarioStruct::GetMaxCrossoverHeroes() const
 // direct std::_cpp_max instead takes addresses of the caller's variables.
 // Keep push_back: direct insert(end(), value) expands the wrong overload.
 // A helper for the entire limit phase loses four retail virtual calls and
-// changes the frame to 0xd0. A scalar header count query restores both
-// second-loop size calls, but the second erase then expands copy too far
-// (92.9715%). At 94.2643%, the residual is that count-query boundary and
-// final hero destruction: retail retains the deleting destructor while
-// this compile expands through the string's _Tidy call.
+// changes the frame to 0xd0. Keep the scalar header count and scenario pool
+// predicate queries separate. Together with front() for the strongest hero
+// and a direct collector receiver, these give all 62 retail CFG blocks,
+// every retained call boundary, and the 0x450-byte body (99.9223%).
+// Six non-relocation bytes remain: EAX/EDX choices for three virtual calls
+// in getMaxCrossoverHeroes. Keeping an extra sourceHero alias changes the
+// final deleting-destructor boundary again; the collector owns that lifetime.
 VA(0x00489e20, 0x450)  // anchor-caller(CompleteCurrentMap +0x5e8), retail-only
 void SCampaign::PruneCrossoverHeroes(void* campaignHeader)
 {
@@ -2894,13 +2920,12 @@ void SCampaign::PruneCrossoverHeroes(void* campaignHeader)
 
         int keepCount = 0;
         for (int iScenario = 0;
-             iScenario < static_cast<int>(header->scenarios.size());
+             iScenario < header->getScenarioCount();
              ++iScenario) {
             TCampaignBrief::ScenarioStruct* scenario =
                 header->scenarios[iScenario];
-            if (!mapScores[iScenario].completed && scenario->inflated_size > 0
-                && scenario->options->_vslot12(scenario, pool)) {
-                keepCount = max(keepCount, scenario->GetMaxCrossoverHeroes());
+            if (!mapScores[iScenario].completed && scenario->usesCrossoverPool(pool)) {
+                keepCount = max(keepCount, scenario->getMaxCrossoverHeroes());
             }
         }
 
@@ -2909,14 +2934,13 @@ void SCampaign::PruneCrossoverHeroes(void* campaignHeader)
         for (int taken = 0; taken < keepCount; ++taken) {
             if (pooled.size() == 0)
                 break;
-            kept.push_back(pooled[0]);
+            kept.push_back(pooled.front());
             pooled.erase(pooled.begin());
         }
 
         for (unsigned int rest = pooled.size(); rest--;) {
             std::vector<type_artifact>& pooledArtifacts = field_4c[pool];
-            hero& sourceHero = pooled[rest];
-            sourceHero.collectArtifacts(pooledArtifacts);
+            pooled[rest].collectArtifacts(pooledArtifacts);
         }
 
         std::sort(kept.begin(), kept.end(), CrossoverHeroStronger());
