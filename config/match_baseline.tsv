@@ -276,6 +276,7 @@ ai_player	??0type_AI_creature_purchaser@@QAE@JW4TCreatureType@@PAF_N@Z	100.0000	
 ai_player	??0type_AI_creature_swapper@@QAE@XZ	100.0000	100.0000	100.0000	0x2c040	c32a38677840
 ai_player	??0type_combat_artifact@@QAE@J@Z	100.0000	100.0000	100.0000	0x32540	89e4bda9601b
 ai_player	??0type_creature_source@@QAE@W4TCreatureType@@PAF_N@Z	100.0000	100.0000	100.0000	0x286b0	e3e215ab7af5
+ai_player	??1?$vector@UpathCell@@V?$allocator@UpathCell@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x34650	-
 ai_player	??1type_AI_creature_purchaser@@QAE@XZ	100.0000	100.0000	100.0000	0x286e0	-
 ai_player	??1type_artifact_effect@@UAE@XZ	100.0000	100.0000	100.0000	0x32500	7f4087e1c1ac
 ai_player	??8type_point@@QBE_NABU0@@Z	100.0000	100.0000	100.0000	0x2ec20	994e61fe3deb
@@ -390,6 +391,7 @@ ai_player	?purchase_building@type_AI_player@@QAEEPAE@Z	97.4212	97.4212	97.4212	0
 ai_player	?remove_negative_artifacts@@YIJPAVhero@@@Z	100.0000	100.0000	100.0000	0x33bb0	cd5326788ef9
 ai_player	?reset_magus_hut_value@type_AI_player@@QAEXXZ	100.0000	100.0000	100.0000	0x29ab0	5f044f8af5ba
 ai_player	?set@type_AI_creature_purchaser@@QAEXPAVtown@@@Z	100.0000	100.0000	100.0000	0x2d1b0	cfdd87fdaab7
+ai_player	?size@?$vector@UpathCell@@V?$allocator@UpathCell@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x34620	-
 ai_player	?size@?$vector@Utype_creature_source@@V?$allocator@Utype_creature_source@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x34600	-
 ai_player	?split_armies@@YIXPAVhero@@PBV1@PBVarmyGroup@@@Z	83.6191	83.6191	83.6191	0x2db20	38f9a0631ee1
 ai_player	?split_army@@YIJPAVarmyGroup@@FFF@Z	100.0000	100.0000	100.0000	0x2dd70	f6b42703e8d9
