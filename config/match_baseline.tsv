@@ -2277,8 +2277,14 @@ hero	?get_description@type_artifact@@QBE?AV?$basic_string@DU?$char_traits@D@std@
 hero	?get_equipped_artifacts@hero@@QAEJE@Z	100.0000	100.0000	100.0000	0xd9070	205dbd14ffb5
 hero	?get_hit_point_bonus@hero@@QAEJH@Z	100.0000	100.0000	100.0000	0xe5b80	8cfe04f01f29
 hero	?get_last_backpack_index@hero@@QAEJXZ	100.0000	100.0000	100.0000	0xdbd90	065ef23bf246
-hero	?get_luck_description@hero@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	93.7128	95.4461	95.4461	0xdcac0	ac00fc126b97
-hero	?get_morale_description@hero@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	91.6489	93.9111	93.9111	0xdc320	d3f4353b6068
+# 2026-09-06 hand-lowered 95.4461 -> 93.7128 (hist too): polish lane 26 banked this
+# peak from a build that carried six #pragma inline_depth(0) pins it then
+# removed - no pin-free spelling reaches it; the pin recipe is in the note.
+hero	?get_luck_description@hero@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	93.7128	93.7128	93.7128	0xdcac0	ac00fc126b97
+# 2026-09-06 hand-lowered 93.9111 -> 91.6489 (hist too): polish lane 26 banked this
+# peak from a build that carried six #pragma inline_depth(0) pins it then
+# removed - no pin-free spelling reaches it; the pin recipe is in the note.
+hero	?get_morale_description@hero@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	91.6489	91.6489	91.6489	0xdc320	d3f4353b6068
 hero	?get_number_in_backpack@hero@@QAEJE@Z	100.0000	100.0000	100.0000	0xd90c0	cc2c389c0bf0
 hero	?get_obscured_town@type_obscuring_object@@QAEPAVtown@@XZ	100.0000	100.0000	100.0000	0xd7490	420693e9765c
 hero	?get_player@hero@@QAEPAVplayerData@@XZ	100.0000	100.0000	100.0000	0xe56b0	6383eee42ae2
