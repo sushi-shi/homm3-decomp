@@ -104,6 +104,48 @@ DATA(0x006aac98) extern int gUnnamed6aac98;
 DATA(0x006aac9c) extern int gUnnamed6aac9c;
 DATA(0x006aaca0) extern unsigned short* gUnnamed6aaca0;
 
+// E:\gamedcs\winmgr.cpp - the manager's own constructor, the row immediately
+// before Open in both the carve and the Dreamcast roster (ctor/Open/Close/
+// Main). Identified outright by its two anchors: it calls ??0baseManager
+// (0x44d530) as its base and stores heroWindowManager's own vtable 0x643d4c,
+// and every field it writes is a member this header already models.
+//
+// Residual (84.09%): the nine zero stores, the base call and both -1 stores
+// are byte-exact and in retail's order. What is left is one SCHEDULE: retail
+// materialises -1 into ECX beside the `xor eax,eax` and sinks the vfptr store
+// to just above the two -1 writes, where this compile emits the vfptr
+// immediately after the base constructor and re-uses EAX for -1 at the end.
+// MEASURED AND REJECTED at the same plateau: the two -1 writes as a chained
+// `dialogReturn = lastHover = -1` (byte-flat); the -1 pair hoisted above the
+// zero run (the store order then follows the source and diverges further).
+//
+// The row BANKS 0.0000 and that number is a tooling artifact, not the body:
+// objdiff reports no fuzzy percent for it at all - a base-only symbol - even
+// though both the normalized base and the normalized delinked target carry
+// `??0heroWindowManager@@QAE@XZ` as an external at offset 0 of their `.text`,
+// and `homm3 sema diff` compares the two sides happily (1 block, 1 call and
+// 2 relocations all agreeing). It is the FIRST symbol of the delinked target
+// object; every other winmgr row pairs. Recorded rather than worked around.
+// A REVERT CONTROL was run for the two neighbouring dips: with this whole
+// claim and body removed, re-delinked and rebuilt, DoDialog still measures
+// 79.2842 and DoDialogDraw 91.5408 against their banked 100 - both are this
+// round's delink generation, not this constructor.
+VA(0x00602170, 0x38)  // anchor-vtable 0x643d4c + anchor-callee ??0baseManager, dc order-map
+heroWindowManager::heroWindowManager()
+{
+    status = 0;
+    activeWindow = 0;
+    lastActive = 0;
+    tailWindow = 0;
+    headWindow = 0;
+    screenBitmap = 0;
+    colorCyclingOn = 0;
+    field_4C = 0;
+    isWaitingForFadeIn = 0;
+    lastHover = -1;
+    dialogReturn = -1;
+}
+
 // E:\gamedcs\winmgr.cpp:101 - slot 0, and the DC line program supplies the
 // whole statement list: InitVideo at 104, the screen bitmap and its null
 // check at 108-110, reference at 112, FillRect at 113, the app blit at 115,
