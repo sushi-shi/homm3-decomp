@@ -7291,6 +7291,10 @@ static TCreatureType GetUpgradedCreature(TCreatureType type)
 // as `if (!sea_movement) goto land_movement` breaks that canonical family and
 // collapses to 5.6129%. An explicit backward join therefore cannot preserve
 // retail's placement with this front end.
+// The navigation-specialist bonus divides by TWENTY, not ten: retail's
+// `mov eax,0x66666667 / imul ecx / sar edx,3` at 0x4e4a1e is the signed
+// magic pair for /20 (shift 2 would be /10), and the shift is the only byte
+// that moved (81.7645 -> 81.7677).
 VA(0x004e4990, 0x3F6)  // corroborates, dc 0xd4b50
 int hero::GetMobility(unsigned char sea_movement)
 {
@@ -7303,7 +7307,7 @@ int hero::GetMobility(unsigned char sea_movement)
         if (skillLevel[eSecSkillNavigation] > 0 &&
             akHeroSpecificAbilities[id].type == eHeroAbilitySecondarySkill &&
             akHeroSpecificAbilities[id].skill == eSecSkillNavigation)
-            mobility += level * gSeaMovement[0] / 10;
+            mobility += level * gSeaMovement[0] / 20;
 
         if (owner != -1)
             mobility += gpGame->MineTypesOwned(owner, 100) *
