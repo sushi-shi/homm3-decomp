@@ -59,6 +59,30 @@ public:
     ~TImmMouseRuntime();
 };
 
+// DECODED, NOT LANDED (2026-09-06, claim lane 31). Retail's atexit thunk at
+// 0x4b6910 - the address InitImmMouse hands to _atexit, 58 B - is this
+// destructor EXPANDED, and it reads outright:
+//
+//     inline TImmMouseRuntime::~TImmMouseRuntime()
+//     {
+//         gImmProject->Close();
+//         delete gImmProject;
+//         delete gImmDevice;
+//     }
+//
+// It touches no member: the holder is the eight bytes at 0x696d78 and the
+// two singletons sit AFTER it at 0x696d84 and 0x696d80. `delete gImmProject`
+// is the non-virtual imported dtor plus operator delete; `delete gImmDevice`
+// is the virtual scalar deleting destructor (`push 1 / call [eax]`).
+// Defining it here compiles and is byte-inert tree-wide (0 rows moved), but
+// the CLAIM cannot bind: `VA_COMPGEN(0x004b6910, 0x3A, STATIC_DTOR,
+// immMouse)` is matched by canonicalize_data_symbols.is_static_dtor, which
+// requires the thunk to carry a relocation to the OWNED DATUM. This body
+// never names `immMouse`, so the matcher finds zero candidates and warns the
+// claim unbound. Landing the row needs that matcher to admit an
+// owner-free static destructor - which is a real shape, not an anomaly:
+// an empty holder whose teardown is entirely about globals.
+
 class TImmMouseEffect {
 public:
     TImmMouseEffect(const RECT* rect, long a, unsigned long b,

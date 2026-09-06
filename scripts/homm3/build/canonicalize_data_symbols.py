@@ -638,7 +638,25 @@ def _function_owner(ranges, section: int, offset: int) -> Symbol | None:
     return None
 
 
-def _compgen_renames(coff: CoffObject, claims: tuple[CompgenClaim, ...]):
+def unexpected_compgen_names(defined_names, accounted_names) -> list[str]:
+    """The `__h3cg$` function symbols in an object that NO claim accounts
+    for - the defect the caller raises on.
+
+    `accounted_names` is every compiler-function claim the unit has, not
+    just the anonymous ones this module renames. A DIRECT-symbol claim whose
+    base symbol the compile does not emit stays spelled `__h3cg$...` in the
+    delinked object, so checking only the rename set reports those as
+    unclaimed the moment a unit gains its first anonymous claim (measured
+    2026-09-06 on game.obj: SCampaign's implicit copy assign and the two
+    type_map_hero_identity rows).
+    """
+    return sorted(
+        name for name in defined_names
+        if name.startswith(COMPGEN_PREFIX) and name not in accounted_names)
+
+
+def _compgen_renames(coff: CoffObject, claims: tuple[CompgenClaim, ...],
+                     accounted: frozenset[str] = frozenset()):
     if not claims:
         return {}, ()
     claim_names = [claim.name for claim in claims]
@@ -653,9 +671,7 @@ def _compgen_renames(coff: CoffObject, claims: tuple[CompgenClaim, ...]):
     by_name = defaultdict(list)
     for symbol in defined_functions.values():
         by_name[symbol.name].append(symbol)
-    unexpected = sorted(
-        name for name in by_name
-        if name.startswith(COMPGEN_PREFIX) and name not in claim_name_set)
+    unexpected = unexpected_compgen_names(by_name, claim_name_set | accounted)
     if unexpected:
         raise ValueError("unclaimed semantic compiler functions: %s" %
                          ", ".join(unexpected))
@@ -1128,6 +1144,7 @@ def _assert_only_canonical_changes(
 def canonicalize_coff(payload: bytes,
                       compgen: tuple[CompgenClaim, ...] = (),
                       compgen_data: tuple[CompgenDataClaim, ...] = (),
+                      compgen_accounted: frozenset[str] = frozenset(),
                       ) -> CanonicalizedObject:
     """Return a normalized comparison copy and its readable rename records."""
     coff = CoffObject(payload)
@@ -1332,7 +1349,8 @@ def canonicalize_coff(payload: bytes,
         renames.update(compgen_data_rename)
         rows.extend(compgen_data_rows)
 
-    compgen_rename, compgen_rows = _compgen_renames(coff, compgen)
+    compgen_rename, compgen_rows = _compgen_renames(
+        coff, compgen, compgen_accounted)
     overlap = set(renames) & set(compgen_rename)
     if overlap:
         raise RuntimeError("data and compiler-function canonicalization overlap")
@@ -1417,6 +1435,26 @@ def load_compgen_claims(path: Path | None, unit: str | None):
             for row in rows
             if (row["unit"] == unit
                 and row["kind"] not in DIRECT_SYMBOL_COMPGEN_KINDS))
+
+
+def load_compgen_claim_names(path: Path | None, unit: str | None):
+    """Every compiler-function claim name a unit has, DIRECT kinds
+    included. `load_compgen_claims` deliberately returns only the anonymous
+    kinds - those are the ones this module renames - but the unclaimed-name
+    gate has to know about the others too: a direct-kind claim whose base
+    symbol the compile does not emit keeps the `__h3cg$` spelling in the
+    delinked object and would otherwise be reported as unclaimed.
+    """
+    if path is None or unit is None:
+        return frozenset()
+    if not path.exists():
+        raise FileNotFoundError(
+            "compiler-function manifest does not exist: %s" % path)
+    with path.open(newline="") as stream:
+        rows = csv.DictReader(
+            (line for line in stream if not line.startswith("#")),
+            delimiter="\t")
+        return frozenset(row["name"] for row in rows if row["unit"] == unit)
 
 
 def load_compgen_data_claims(path: Path | None, unit: str | None):
