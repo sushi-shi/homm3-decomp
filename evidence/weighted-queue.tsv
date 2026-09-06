@@ -2,7 +2,6 @@
 # Sorted by increasing current score, then decreasing unmatched bytes.
 # Unscored rows rank at zero; MAX/history never hide current residuals.
 va	size	current	maximum	historical	remaining_bytes	unit	function	state
-0x00536560	1522		0.0	0.0	1522.0	seg_0013	game_rand_trn_txt_136560	unscored
 0x0053fcb0	1516		0.0	0.0	1516.0	seg_0013	game_144920_sub02_13fcb0	unscored
 0x005b4b20	1483		0.0	0.0	1483.0	seg_001b	game_1b4960_sub00_1b4b20	unscored
 0x00541ad0	1456		0.0	0.0	1456.0	seg_0014	game_143240_sub01_141ad0	unscored
@@ -272,7 +271,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x006045e0	52		0.0	0.0	52.0	seg_0020	game_203e00_sub04_2045e0	unscored
 0x005095a0	51		0.0	0.0	51.0	seg_0010	game_fdbc0_sub10_1095a0	unscored
 0x00533a50	51		0.0	0.0	51.0	seg_0013	game_133a50	unscored
-0x0054cdb0	51		0.0	0.0	51.0	seg_0014	game_1fd60_sub02_14cdb0	unscored
 0x005329a0	50		0.0	0.0	50.0	seg_0013	game_22fb48_sub00_1329a0	unscored
 0x0054d9a0	49		0.0	0.0	49.0	seg_0014	game_13e9e0_sub03_14d9a0	unscored
 0x005b3aa0	49		0.0	0.0	49.0	seg_001b	game_1b3aa0	unscored
@@ -345,9 +343,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x005fdcb0	30		0.0	0.0	30.0	seg_001f	game_1fdb40_sub00_1fdcb0	unscored
 0x005fdcd0	29		0.0	0.0	29.0	seg_001f	game_1fdb40_sub01_1fdcd0	unscored
 0x00530e20	28		0.0	0.0	28.0	seg_0013	game_176f00_sub01_130e20	unscored
-0x005157d0	27		0.0	0.0	27.0	seg_0011	game_31bd0_sub00_1157d0	unscored
 0x005361e0	24		0.0	0.0	24.0	seg_0013	game_136070_sub01_1361e0	unscored
-0x00536ba0	24		0.0	0.0	24.0	seg_0013	game_cdf20_sub06_136ba0	unscored
 0x0055ecf0	24		0.0	0.0	24.0	seg_0015	game_15a800_sub09_15ecf0	unscored
 0x0044d3e0	23		0.0	0.0	23.0	artifact	__h3cg$artifact$bitset_tidy$Bitset19	unscored
 0x0055f330	23		0.0	0.0	23.0	seg_0015	game_15f330	unscored
@@ -761,6 +757,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00468220	1167	93.97596	93.976	93.976	70.30054679999996	cmbtmgr	?ShootMissile@combatManager@@QAEXHHHHPBMPBVCSprite@@@Z	non-exact
 0x00485b60	507	93.99505	93.9951	93.9951	30.445096499999988	customcampaign	?Read@TCampaignStartHeroOption@@UAEXPAVTAbstractFile@@@Z	non-exact
 0x004521f0	2260	94.00537	98.7476	98.7476	135.47863800000002	bottomviewsubwindow	??0TBottomViewTown@@QAE@PAVheroWindow@@@Z	non-exact
+0x00549cb0	3728	94.10172	95.7066	95.7066	219.8878784	rmg	?WriteMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	non-exact
 0x005503a0	1428	94.157364	96.5558	96.5558	83.43284208000001	recruit	?Update@recruitUnit@@QAEXEJ@Z	non-exact
 0x00445490	571	94.16477	94.1648	94.1648	33.31916329999995	army	?get_berserk_targets@army@@QBEXAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	non-exact
 0x0050cd90	1904	94.16746	94.1675	94.1675	111.05156159999994	mousemgr	?Update@mouseManager@@QAEXE@Z	non-exact
@@ -816,7 +813,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00463c60	1084	95.682655	95.7196	95.7196	46.800019800000065	cmbtmgr	?InitNonVisualVars@combatManager@@QAEXXZ	non-exact
 0x005d05f0	795	95.68559	95.6856	95.6856	34.29955949999993	townmgr	?SetCommandAndText@type_garrison_base_window@@QAEXPAVmessage@@@Z	non-exact
 0x0055b060	887	95.69202	95.692	95.692	38.2117826	resourcemanager	?LoadPalette@ResourceManager@@YIPAVTPalette16@@PBD@Z	non-exact
-0x00549cb0	3728	95.698746	95.7066	95.7066	160.35074911999996	rmg	?WriteMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	non-exact
 0x004ea810	756	95.70397	95.704	95.704	32.477986800000046	iconwdgt	?Main@iconWidget@@UAEHPAVmessage@@@Z	non-exact
 0x00579960	11619	95.70793	95.7079	95.7079	498.6956132999991	singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	non-exact
 0x00592f10	694	95.726776	95.7268	95.7268	29.656174559999982	singleselectionwindow	?_Unguarded_insert@std@@YIXPAUGameSelectionHeadersStruct@@U2@UTSortMapsBySize@@@Z	non-exact
@@ -897,6 +893,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x004c9990	1082	97.50976	97.5098	97.5098	26.94439679999999	game	?ConvertObject@game@@QAEXPAVNewmapCell@@@Z	non-exact
 0x00484910	629	97.539474	97.5395	97.5395	15.476708539999976	customcampaign	?GetText@TCampaignPrimarySkillBonus@@UBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	non-exact
 0x005865b0	5098	97.56457	97.5646	97.5646	124.15822139999969	singleselectionwindow	?OnWidgetDeselect@TSingleSelectionWindow@@QAEHPAVmessage@@PAEE@Z	non-exact
+0x00536560	1522	97.580444	97.5804	97.5804	36.82564232000001	rmg	?ReadObjectPlacementRules@type_random_map_generator@@QAEXXZ	non-exact
 0x004d8b30	1076	97.583084	97.5831	97.5831	26.006016160000023	hero	?HeroFn_004D8B30@hero@@QAEXPBVHeroExtra@@@Z	non-exact
 0x005ece80	343	97.59615	97.5961	97.5961	8.245205500000026	tradpost	?ComputeTradeRatios@TSellCreatureWindow@@QAEXHHPAH00@Z	non-exact
 0x00408c40	2973	97.609055	97.6091	97.6091	71.08279485	advmgr	?ProcessKeyPress@advManager@@QAEHPBVmessage@@PAEPAUtype_point@@PAPAVNewmapCell@@@Z	non-exact

@@ -541,7 +541,7 @@ enum ERmgObjectPlacementScore {
 // 0x532c80 owns the outline vector; 0x532e40 lazily fills the 8x6 priorities.
 struct TRmgObjectPropertiesRef {
     TObjectType* prototype;              // +0x00
-    int unknown04;
+    int preferredTerrain;               // +0x04, rand_trn.txt rule binding
     unsigned refCount;                   // +0x08
     int prototypeIndex;
     TRmgObjectPlacementRule* placementRule; // +0x10
@@ -877,6 +877,7 @@ public:
     }
 
     void InitializeObjectGenerators();
+    void ReadObjectPlacementRules();
     int ScoreObjectPlacement(
         TRmgObjectPropertiesRef* properties, TRmgMapPosition position);
     unsigned char CanPlaceZone(TRmgZone* zone);

@@ -70,6 +70,20 @@ not establish the original method name or prove that every shifted flag
 test came from a helper. Keep the canonical bitfield and verify the caller;
 do not replace the record with a raw-word alias to force the extraction.
 
+## Reused scalar variables can retain addressable homes across phases
+
+The RMG placement-rule reader (`0x536560`) passes object type, subtype and
+terrain locals by reference to vector insertions, then reuses their same
+three stack homes in a later prototype-binding pass. Declaring new locals
+for that pass lets VC6 strength-reduce the object-type stride and keep the
+terrain/subtype values in registers. Reusing the parsing variables restores
+the retail address calculations and loads/stores (89.9878% to 97.5804%).
+
+This is a lifetime hypothesis supported by both the earlier address-taking
+and the later home reuse. Merely seeing two values share a stack offset is
+insufficient: unrelated locals can also share a slot. Keep the actual source
+operations and references; do not add dummy address escapes or volatile.
+
 ## Diagnosis taxonomy (D-classes → branch signatures)
 
 Emitted by `_flow.diagnose`; catalog IDs are
