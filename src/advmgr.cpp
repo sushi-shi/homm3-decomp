@@ -313,8 +313,8 @@ CNetMsg* CAdvMgrNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
             gpAdvManager->UpdBottomView(1, 1, 1);
         }
         if (gpCurrentPlayer->IsHuman()) {
-            RemoteFn_00553AA0(gUnnamed69d7b0, gpGeneralText->GetText(352),
-                              gpCurrentPlayer->cName);
+            SystemMsg(&chatMan, gpGeneralText->GetText(352),
+                      gpCurrentPlayer->cName);
             gUnnamed69d810 = gNetLocalGamePos;
         }
         break;
@@ -326,7 +326,7 @@ CNetMsg* CAdvMgrNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
             m_pAbortPopupMsg = pNetMsg;
             return 0;
         }
-        RemoteFn_00556430(pMsg->m_gamePos);
+        HandlePlayerDrop(pMsg->m_gamePos);
         break;
     }
     case RS_PLAYER_DROP_UPDATE: {
@@ -445,8 +445,8 @@ CNetMsg* CAdvMgrNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
         break;
     }
     case RS_PLAYER_ACTIVE:
-        RemoteFn_00553AA0(
-            gUnnamed69d7b0, gpGeneralText->GetText(40),
+        SystemMsg(
+            &chatMan, gpGeneralText->GetText(40),
             gpGame->GetPlayerName(gpGame->GetLocalPlayerGamePos()));
         break;
     case RS_GIFT:
@@ -869,7 +869,7 @@ int advManager::Open(int newPriority)
         sprintf(gText,
                 DATA_COMPGEN(0x006602a0, heroSampleFormat, "horse%02d.wav"),
                 horse);
-        heroSamples[horse] = LoadSampleResource(gText);
+        heroSamples[horse] = ResourceManager::GetSample(gText);
     }
 
     if (!gpCurrentPlayer->IsLocalHuman()) {
@@ -918,7 +918,16 @@ int advManager::Open(int newPriority)
     if (iMPNetProtocol == MP_HOTSEAT) {
         gUnnamed6993dc = 1;
         gCompleteDrawEnabled = gpCurrentPlayer->IsLocalHuman();
-        char text[172];
+        // 2026-09-06, polish lane 35: this buffer is 256 bytes, not the
+        // 172 that used to sit here. The frame-delta sweep read it straight
+        // off the prologue - retail's `sub esp,0x11c` against our 0xc8 with
+        // an IDENTICAL homed-slot set (-4/-0xc/-0x10/-0x14/-0x18/-0x28) and
+        // the same `reversed` scratch at -0x28 - so the whole 84-byte gap
+        // sits between -0x28 and the bottom of the frame, which is this
+        // sprintf destination alone (retail leas [ebp-0x128] into it at
+        // +0x90c and +0x921). 172 -> 256 makes the frame retail's exactly
+        // and pays 97.9257 -> 97.9312.
+        char text[256];
         sprintf(text, gpGeneralText->GetText(14), gpCurrentPlayer->GetName());
         gpWindowManager->isWaitingForFadeIn = 0;
         gpGame->WaitForPlayer(text, gNetLocalGamePos);
@@ -3412,6 +3421,20 @@ static void set_windmill_help_text(
 // missing branch is reachable and its price is higher than the branch, which
 // puts the OBELISK quarter of the deficit with the other three (the
 // QUEST_GUARD temporary's inlined _Tidy) in the budget class.
+// 2026-09-06, polish lane 36, the DC LOCAL-SCOPE SWEEP (93.9598 -> 94.0915):
+// the block names `thisHut` (CodeView 0x2664, sp+0x38) for the SEER arm's
+// SeerHutList row, so the row is addressed once through a named reference
+// instead of subscripted inside the rollover call.  Measured and rejected on
+// top of that: naming the LIGHTHOUSE arm's twice-read
+// `gpGame->mines[extraInfo].playerOwner` in the `owner` local the DC also
+// carries (sp+0x3c) - 93.8845, retail re-reads it; and moving the
+// `type_cell_adjuster` declaration up to the DC's slot order (between
+// tempText and playerbit) - 93.4910.  The DC's `cTemp` buffers x4 and its
+// `abandoned`/`guarded` pair do not transfer: Complete writes the global
+// gText here, and the mine arm is the separate AdvmgrFn_0040D670 body the DC
+// had inlined.  Its `player`/`iThisPlayer` are this body's `thisPlayer`/
+// `player` with the names swapped, and `this_generator`/`type` are
+// `mapGenerator`/`generatorType`.
 VA(0x0040b150, 0x229C)  // anchor-global, dc 0xc13c
 void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
 {
@@ -3696,9 +3719,8 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
         strcpy(gText, gResourceNames[cell->objectIndex]);
         break;
     case SEER: {
-        strcpy(gText,
-            fullMap->SeerHutList[cell->extraInfo]
-                .SeerHutFn_005741B0(player).c_str());
+        TSeerHut& thisHut = fullMap->SeerHutList[cell->extraInfo];
+        strcpy(gText, thisHut.SeerHutFn_005741B0(player).c_str());
         break;
     }
     case SHRINE1:
@@ -4344,6 +4366,14 @@ static int MouseInScrollZone()
 // dwords it prices (0x10 against our 0x8) all go together.  That is an
 // OVER-inline of a template leaf with no admissible lever: a statement pin is
 // a falling-only floor and caller-shrink would need an invented static.
+// 2026-09-06, polish lane 36, the DC LOCAL-SCOPE SWEEP - measured and
+// rejected.  The Dreamcast block names TWO `cellExtra` locals
+// (ExtraInfoUnion, sp+0x44 and sp+0x40), i.e. the trigger cell's extraInfo
+// is read once into a named union per block and both the TOWN id and the
+// SHIPYARD owner come out of it, where this body calls
+// `get_trigger_cell()->get_map_extraInfo()` at all four sites.  One
+// `ExtraInfoUnion cellExtra;` per big block scores 91.6133 and one per ARM
+// scores the same, against 91.6263 - retail re-reads.
 VA(0x0040e360, 0x918)  // anchor-callee, dc 0xf3a8
 int advManager::ProcessHover(int mouseX, int mouseY)
 {
@@ -5353,6 +5383,16 @@ void advManager::DrawBoatPartShadow(int part, TDrawParts& boatParts,
 // it is not source-reachable. The one candidate the model still compiled
 // (swapping the baseX/baseY declarations) measured +8 distance, no
 // improvement. DrawAdvObjShadow below carries the identical wall.
+// 2026-09-06, polish lane 36 (87.5901 -> 87.9441), the DC LOCAL-SCOPE SWEEP,
+// and it PARTLY REFUTES the paragraph above: a source knob does move this
+// row.  The Dreamcast block names `Obj` (CodeView 0x30b6 = `CObject*`,
+// sp+0x9c) beside ObjCell/ObjType/SprPtr, i.e. the map's object row is
+// addressed ONCE through a named pointer and both `typeIndex` reads go
+// through it, where this body subscripted `mapObjects->objects[...]` twice.
+// The other three names in that group are renames this body already has
+// (ObjCell = objCell, ObjType = objType, SprPtr = sprite).  The `this`
+// ESI/EDI permutation the note above describes is unchanged; this was the
+// last missing named local, not a fix for it.
 VA(0x00410c00, 0x98E)  // anchor-callee, dc 0x12334
 void advManager::DrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 {
@@ -5408,10 +5448,10 @@ void advManager::DrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                 AdvFullMapObjectsView* mapObjects =
                     static_cast<AdvFullMapObjectsView*>(
                         static_cast<void*>(fullMap));
-                CObjectType* objType = &mapObjects->objectTypes[
-                    mapObjects->objects[objCell->objectIndex].typeIndex];
-                CSprite* sprite = mapObjects->sprites[
-                    mapObjects->objects[objCell->objectIndex].typeIndex];
+                CObject* Obj = &mapObjects->objects[objCell->objectIndex];
+                CObjectType* objType =
+                    &mapObjects->objectTypes[Obj->typeIndex];
+                CSprite* sprite = mapObjects->sprites[Obj->typeIndex];
                 // THE OFFSETS ARE RE-DERIVED PER DRAW ARM, not hoisted
                 // (86.3772 -> 87.5901, 2026-08-19). Retail recomputes
                 // `movsx ecx,dl / sar ecx,4` and then `shl dl,4 / movsx /
@@ -7007,6 +7047,17 @@ void advManager::UpdateRadar(unsigned char updateFlag, unsigned char bPartialUpd
 // VERIFY is bounded separately on the preceding 94.804726 shape: discarded
 // `cellDescription.empty()` and `cellDescription.size()` accessors are both
 // byte-flat. Neither enters the residual cross-jump or frame decision.
+// 2026-09-06, polish lane 36, the DC LOCAL-SCOPE SWEEP (94.8708 -> 95.0826):
+// the same `thisHut` the sibling SetRolloverText wanted - the DC block names
+// it (CodeView 0x2664) for the SEER arm's SeerHutList row, addressed once
+// through a named reference instead of subscripted inside the call.  The
+// declaration block above already stands in the DC's exact local order
+// (testFlag, width, visited, testCell, player, map_point, x, currHero, y,
+// iPlayer, tempText, playerBit, height, infolevel), which is why nothing
+// else in that list moves.  Measured and rejected on top: binding the
+// rollover's by-value string return in the DC's `result` local (0x1329 =
+// std::string, sp+0x9c), either by value or by const& - both 93.0753, so
+// retail consumes the temporary in place here.
 VA(0x004137c0, 0x25A0)  // linkorder, dc 0x15fdc
 void advManager::QuickInfo(int cellX, int cellY, int z)
 {
@@ -7449,11 +7500,12 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
             case RESOURCE:
                 strcpy(gText, gResourceNames[cell->objectIndex]);
                 break;
-            case SEER:
+            case SEER: {
+                TSeerHut& thisHut = fullMap->SeerHutList[cell->extraInfo];
                 strcpy(gText,
-                    fullMap->SeerHutList[cell->extraInfo]
-                        .SeerHutFn_005743E0(iPlayer).c_str());
+                       thisHut.SeerHutFn_005743E0(iPlayer).c_str());
                 break;
+            }
             case SHRINE1:
                 SetShrineHelpText(gText, currHero, cell, Shrine1Info,
                                   newLine, separator);
@@ -8667,6 +8719,14 @@ DATA(0x0063a64c) static const int akSoundVolumes[8] = { 32, 28, 20, 10,
 // the loop, stored through the local) does NOT reproduce retail's
 // `mov ebx,0x7f` - VC6 constant-propagates it straight back to the
 // immediate store. Byte-flat at 75.4080.
+// 2026-09-06, polish lane 36: the Dreamcast block names `const int
+// MAX_RANGE = 4;` as the function's FIRST statement (advmgr.cpp:9786, stored
+// to sp+0x18) and both its loops compare against that 4 - which is exactly
+// the `mov dword ptr [ebp-0x1c], 4` the note above calls the residual.
+// Measured and rejected against 75.4080: MAX_RANGE declared and used as the
+// ring loop's bound 75.3781; the same non-const 75.3781; declared but unused
+// byte-flat.  VC6 constant-propagates the initialiser in every form, so the
+// spilled 4 is not reachable from a source constant.
 VA(0x004183d0, 0x245)  // anchor-global, dc 0x1b164
 void advManager::SetEnvironmentOrigin(type_point point, int reset)
 {
@@ -8797,6 +8857,22 @@ void advManager::CheckLoadSample(e_looping_sound_id id_num)
 // return on retail's side (71 vs our 72) - a C2 tail-merge choice with no
 // source lever, since the duplicate blocks are duplicate BY VALUE and no
 // spelling can make two `return LOOPING_SOUND_23;` differ.
+// Residual (96.90%): every branch and every return now agrees (16/16, 71/71)
+// and 74 of the 91 blocks are byte-exact; what is left is ARM LAYOUT inside
+// the object-type dispatch, which is a jump-table switch and therefore a
+// source-order question, not a spelling one.
+// 2026-09-06, polish lane 35: the GARRISON and CREATURE_GENERATOR_4 arms are
+// two-value probes whose miss returns LOOPING_SOUND_INVALID. Written as
+// `return LOOPING_SOUND_INVALID;` VC6 sees a two-constant select and folds
+// the second compare branchlessly - `dec ax / neg ax / sbb eax,eax /
+// and al,-0x1a / add eax,0x19` - at BOTH sites, costing two branches and
+// adding two returns. Retail branches: `cmp cx,1 / jne <shared tail>`, and
+// its `or eax,-1 / pop ebp / ret 0xc` block at +0x451 carries SIX jump
+// predecessors. Inverting the guard polarity is byte-flat (94.5074, measured)
+// because the fold does not care which way the compare runs; making the miss
+// a `goto` to the function's own trailing INVALID return is what breaks it,
+// because a jump is not a value-producing arm. 94.5074 -> 96.9031, and our
+// shared block now carries the same six predecessors retail has.
 VA(0x00418620, 0x5E4)  // anchor-global, dc 0x1b5a8
 e_looping_sound_id advManager::GetSoundId(int x, int y, int z)
 {
@@ -8841,7 +8917,7 @@ e_looping_sound_id advManager::GetSoundId(int x, int y, int z)
                 return LOOPING_SOUND_41;
             if (thisCell->objectIndex == GET_SOUND_GARRISON_1)
                 return LOOPING_SOUND_25;
-            return LOOPING_SOUND_INVALID;
+            goto invalid;
         case WINDMILL:
             return LOOPING_SOUND_66;
         case WHIRLPOOL:
@@ -8954,7 +9030,7 @@ e_looping_sound_id advManager::GetSoundId(int x, int y, int z)
                 return LOOPING_SOUND_43;
             if (thisCell->objectIndex == GET_SOUND_GENERATOR4_1)
                 return LOOPING_SOUND_12;
-            return LOOPING_SOUND_INVALID;
+            goto invalid;
         case DEFENSE_TOWER:
         case HILL_FORT:
         case WAR_SCHOOL:
@@ -9000,6 +9076,7 @@ e_looping_sound_id advManager::GetSoundId(int x, int y, int z)
     case TERRAIN_VOLCANO:
         return LOOPING_SOUND_45;
     }
+invalid:
     return LOOPING_SOUND_INVALID;
 }
 
@@ -9059,7 +9136,7 @@ void advManager::InsertSound(int x, int y, int z, int soundPriority,
     if (id_num > LOOPING_SOUND_INVALID && id_num < LOOPING_SOUND_COUNT
         && !loopedSample[id_num]) {
         TrimLoopingSounds(4);
-        loopedSample[id_num] = LoadSampleResource(
+        loopedSample[id_num] = ResourceManager::GetSample(
             gLoopingSoundNames[id_num]);
     }
 
@@ -9709,7 +9786,7 @@ void advManager::StartLocalPlayerTurn()
             }
         }
 
-        GameFn_004CA530(gpGame);
+        gpGame->CancelComputerScreen();
         gbThisNetGotAdventureControl = 1;
         gpSoundManager->field_84 = 0;
 
@@ -9729,7 +9806,7 @@ void advManager::StartLocalPlayerTurn()
         gpSoundManager->field_84 = 0;
         gUnnamed699544 = GameTime::Get();
     }
-    GameFn_004CC7D0(gpGame);
+    gpGame->DoNewTurn();
 
     advWindow->UpdateHeroLocators(-1, 1, 1);
     advWindow->UpdateTownLocators(-1, 1, 1);
@@ -10216,7 +10293,7 @@ unsigned char advManager::DoSystemOptions()
             heroSamples[i]->Dispose();
         for (i = 0; i <= 10; i++) {
             sprintf(gText, "horse%02d.wav", i);
-            heroSamples[i] = LoadSampleResource(gText);
+            heroSamples[i] = ResourceManager::GetSample(gText);
         }
     }
 

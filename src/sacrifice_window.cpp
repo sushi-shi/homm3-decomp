@@ -2887,6 +2887,13 @@ int type_sacrifice_window::empty_backpack(message& msg)
 // E:\gamedcs\sacrifice_window.cpp:1365
 // The all-artifacts callback first offers each of the sixteen admissible doll
 // slots, then expands empty_backpack to fill whatever offering slots remain.
+// NOT A MEMBER-OFFSET BUG (checked 2026-09-06): the `[eax+0x2e4]` against
+// retail's `[eax+0x350]` that a census flagged here is the SWITCH INDEX
+// TABLE - `mov dl, byte ptr [eax + <fn>+0x350]` / `jmp [4*edx + <fn>+0x33c]`
+// - whose base is the function's own end.  Retail's body is 0x6c bytes
+// longer than ours by exactly the update_backpack expansion below, so the
+// two tables sit 0x6c apart.  No hero/type_sacrifice_window member is
+// involved.
 // Residual (86.78%): the first 37 semantic blocks agree. This compile expands
 // empty_backpack but keeps its nested update_backpack call, whereas retail
 // expands both. An ordinary inline hint is byte-flat; force-inlining either

@@ -79,7 +79,7 @@ DATA(0x006a7568) extern const char* gRecruitCancelRolloverText;
 // resource costs the positive difference of the two rows, scaled by
 // the recruit count.
 VA(0x0054e750, 0x64)  // anchor-global, dc 0x118adc
-void get_upgrade_cost(TCreatureType creature, TCreatureType upgrade, long amount, int* cost)
+void get_upgrade_cost(TCreatureType creature, TCreatureType upgrade, long amount, long* cost)
 {
     int* toCost = &gCreatureRecords[upgrade * CREATURE_RECORD_DWORDS + CREATURE_RECORD_COST_DWORD];
     int* fromCost = &gCreatureRecords[creature * CREATURE_RECORD_DWORDS + CREATURE_RECORD_COST_DWORD];

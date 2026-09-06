@@ -37,7 +37,7 @@ void GetMonsterCost(int monId, int* resCost);
 // three-arg CODEVIEW below is the older shape. TCreatureType comes
 // from armygrp.h, which recruit.cpp includes first.
 void get_upgrade_cost(enum TCreatureType creature, enum TCreatureType upgrade,
-    long amount, int* cost);
+    long amount, long* cost);
 void QuickViewRecruit(town* newTown, int newDwellingIndex);
 // Retail passes the four-byte enum in ECX (the town overload loads it with
 // `mov ecx, [gTownDwellingCreatures + index*4]`). Dreamcast's older roster

@@ -263,13 +263,12 @@ unsigned char InitializeRandomTavernText();
 unsigned char initialize_creature_bank_traits();
 unsigned char InitializeCreatureGeneratorNames();
 unsigned char InitializeCreatureTypeTraitsTable();
-void GameFn_0041B500();
-unsigned char InitializeBuildingCostsTables();
+void InitializeAdventureObjectNames();
 unsigned char InitializeExtraInfoText();
 unsigned char InitializeHeroSpecificAbilitiesTable();
-unsigned char CampaignMapFn_0045E250();
+unsigned char InitializeCampaignMusicTable();
 int InterpretCommandLine();
-unsigned char InitializeAdventureEventText();
+bool InitializeAdventureEventText();
 unsigned char InitializeSpellTraitsTable();
 unsigned char InitializeHeroTraitsTable();
 unsigned char InitializeHeroClassTraitsTable();
@@ -280,8 +279,8 @@ unsigned char InitializeVCDescriptions();
 unsigned char InitializeLCDescriptions();
 unsigned char InitializeTurnDurationText();
 unsigned char InitializeCreatureAnimationTraitsTable();
-unsigned char InitializeArtifactEventText();
-unsigned char InitializeRandomSignText();
+bool InitializeArtifactEventText();
+bool InitializeRandomSignText();
 unsigned char InitializeCampaignMapTraitsTable();
 void AI_initialize();
 void ReadPrefs();
@@ -348,7 +347,7 @@ static unsigned char LoadGameData()
         return 0;
     if (!InitializeCreatureTypeTraitsTable())
         return 0;
-    GameFn_0041B500();
+    InitializeAdventureObjectNames();
     if (!InitializeArtifactTraitsTable())
         return 0;
     if (!InitializeSpellTraitsTable())
@@ -361,7 +360,7 @@ static unsigned char LoadGameData()
         return 0;
     if (!InitializeSSkillTraitsTable())
         return 0;
-    if (!InitializeBuildingCostsTables())
+    if (!town::InitializeBuildingCostsTables())
         return 0;
     if (!InitializeVCDescriptions())
         return 0;
@@ -411,7 +410,7 @@ static unsigned char LoadGameData()
         return 0;
     if (!InitializeArrayText())
         return 0;
-    return CampaignMapFn_0045E250();
+    return InitializeCampaignMusicTable();
 }
 
 // E:\gamedcs\kb.cpp:3763. Source-static and single-call for the same reason
@@ -496,18 +495,34 @@ int EarlySetup()
     if (gCDDriveNumber) {
         int i;
 
-        for (i = 0; i < gVideoHeaderCount; i++)
-            if (!_strcmpi(gVideoHeader3[i].name,
-                          DATA_COMPGEN(0x0067f5ec, expansionTwoVideoName,
-                              "h3x2_rne1.smk")))
-                goto have_cd_version;
-        for (i = 0; i < gVideoHeaderCount; i++)
-            if (!_strcmpi(gVideoHeader3[i].name,
-                          DATA_COMPGEN(0x0067f5e0, expansionOneVideoName,
-                              "h3abab1.smk"))) {
-                gCDDriveNumber = 6;
-                goto have_cd_version;
-            }
+        // Retail scans both header tables with a GOTO loop: the count is
+        // re-read at the head (`cmp edi,[gVideoHeaderCount] / jge`) and the
+        // back edge is an unconditional `jmp`, with no rotation and no LICM
+        // hoist of the count - the shape a `for` cannot produce here.
+        i = 0;
+    check_expansion_two:
+        if (i >= gVideoHeaderCount)
+            goto scan_expansion_one;
+        if (!_strcmpi(gVideoHeader3[i].name,
+                      DATA_COMPGEN(0x0067f5ec, expansionTwoVideoName,
+                          "h3x2_rne1.smk")))
+            goto have_cd_version;
+        i++;
+        goto check_expansion_two;
+    scan_expansion_one:
+        i = 0;
+    check_expansion_one:
+        if (i >= gVideoHeaderCount)
+            goto no_expansion;
+        if (!_strcmpi(gVideoHeader3[i].name,
+                      DATA_COMPGEN(0x0067f5e0, expansionOneVideoName,
+                          "h3abab1.smk"))) {
+            gCDDriveNumber = 6;
+            goto have_cd_version;
+        }
+        i++;
+        goto check_expansion_one;
+    no_expansion:
         gCDDriveNumber = 5;
     }
 
