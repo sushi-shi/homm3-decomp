@@ -1474,6 +1474,16 @@ void game::record_teleport(hero* who, type_point destination)
 }
 
 // E:\gamedcs\event_record.cpp:1136
+// Residual (88.1751% / 87.9349%): the register-homing family.  Retail gives
+// `this` EDI and the inlined GetTeamMask scan ESI; our CL swaps them, and
+// every later row follows.  Frames differ by one dword (0x30 against
+// retail's 0x38).  MEASURED AND REJECTED 2026-09-06: the Dreamcast's own
+// `rect` local (tagRECT at sp+0x44, the four clamp results as one object)
+// does NOT survive into Complete - retail's four results sit at [ebp-0x38],
+// [ebp-0x30], [ebp-0x2c] and a parameter home, which no 16-byte contiguous
+// struct can produce - and spelling it costs 0.04 on both twins (85.6037 /
+// 84.7442).  Spelling the queue guard as the DC's `get_change_count()`
+// accessor instead of `changes.size()` is byte-flat.
 // The positive visibility sweep. The radius test is a REAL sqrt against
 // `range + 0.5` (the double at .rdata 0x63ac70), the clamps are the
 // reference-returning min/max templates above - which is what puts their
