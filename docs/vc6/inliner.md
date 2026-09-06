@@ -920,6 +920,25 @@ field stores. Neither is evidence for replacing the existing writer interface.
 Recovering the retained neighbour-queue body is neutral for `PaintPoint`, so
 its former declaration-only state does not explain these remaining decisions.
 
+### Measured budget comparisons in the terrain painter
+
+The gated [C2 shim trace](shim.md#4-gated-inline-budget-observations) reads
+actual candidate costs and budgets from the configured terrain compile.
+For `rmgTerrainPainter::paintPoint` (prior role `TRmgTerrainPainter::PaintPoint`,
+retail 0x5b4b20), the front-end caller estimate is 933 and the initial budget
+is 1,866. At the first eight-neighbour terrain comparison, `getPackedCell`
+has cost 90 and budget 106 at depth 2. At the inner set erase, the three-argument
+`_Distance` has cost 41 and budget 45 at depth 3; its four-argument child
+has cost 45 but only 4 budget units. Those readings explain the two observed
+unwanted expansions. The final rule read gives `getPackedCell` only 73 units
+and correctly retains the call.
+
+Both compiled objects agree outside the COFF timestamp. The painter's lowerCamelCase
+method/type names and `m_` field prefixes leave all 70 emitted code sections
+unchanged. Source-owned comments preserve the earlier provisional role names;
+retail labels and checkpoint rows are regenerated from the new declarations.
+The trace measures candidate compiler state, not missing retail source tokens.
+
 ## 7. Using it
 
 ```sh

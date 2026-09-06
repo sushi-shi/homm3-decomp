@@ -20,6 +20,8 @@ module makes that mechanism usable and PROVES it inert:
   negative  the gate's negative control: install the deliberately non-inert
             shim variant (drops every "-Gy" token), require the gate to go
             RED, then restore the clean shim and require it green again.
+  trace     instrument inline-budget comparisons for one configured TU,
+            require exact object identity, then restore the normal shim.
   clean     remove the overlay and gate scratch.
 
 rc: 0 = green, 1 = a gate answered NO, 2 = harness error (vc6 convention).
@@ -167,7 +169,7 @@ def build_overlay(force: bool = False) -> None:
                     "rebuild the overlay with `build --force`")
 
 
-def compile_shim(negative: bool = False) -> set[str]:
+def compile_shim(negative: bool = False, *, inlineTrace: bool = False) -> set[str]:
     """Compile passthru.c with the pinned VC6 into <overlay>/bin/C2.DLL."""
     real_cl = _toolchain.resolve("CL.EXE")
     real_link = _toolchain.resolve("LINK.EXE")
@@ -182,6 +184,8 @@ def compile_shim(negative: bool = False) -> set[str]:
     cc_args = ["/c", "/nologo", "/W3", "/O1"]
     if negative:
         cc_args.append("/DSHIM_NEGATIVE_CONTROL")
+    if inlineTrace:
+        cc_args.append("/DSHIM_INLINE_TRACE")
     cc_args += [f"/Fo{w(obj)}", w(SHIM_DIR / "passthru.c")]
     proc = _wine(real_cl, cc_args, work, {"INCLUDE": w(real_msvc / "include")})
     if not obj.is_file():
@@ -202,7 +206,7 @@ def compile_shim(negative: bool = False) -> set[str]:
         _common.die(f"shim exports {sorted(exports)} != "
                     f"expected {sorted(EXPECTED_EXPORTS)}")
     shutil.copy2(dll, OVERLAY_MSVC / "bin" / "C2.DLL")
-    variant = "NEGATIVE-CONTROL" if negative else "clean"
+    variant = "NEGATIVE-CONTROL" if negative else "inline-trace" if inlineTrace else "clean"
     print(f"[shim] {variant} shim installed as {OVERLAY_MSVC / 'bin' / 'C2.DLL'}"
           f" (exports: {', '.join(sorted(exports))})")
     return exports
@@ -385,6 +389,69 @@ def run_negative() -> int:
     return rc or (0 if identical else 1)
 
 
+def runInlineTrace(unit: str, function: str) -> int:
+    """Observe a real TU's C2 budget comparisons, fenced by byte equality.
+
+    The caller's exact manifest profile and source are used for both compiles.
+    A trace is usable only when its object equals the uninstrumented object
+    outside the four-byte timestamp. Later vetoes can still reject a candidate
+    that passes this comparison; the emitted code owns the final verdict.
+    """
+    from homm3.vc6 import _unit
+
+    source = _unit.source_for_unit(unit)
+    flags = _unit.flags_for_unit(unit)
+    if source is None or flags is None:
+        _common.die(f"unknown unit/profile {unit!r}")
+    if not function or len(function.encode("utf-8")) >= 256:
+        _common.die("--fn needs a nonempty function-name substring under 256 bytes")
+    _ensure_wine_env()
+    ensure_overlay()
+    output = GATE_DIR / "inline-trace" / unit
+    output.mkdir(parents=True, exist_ok=True)
+    reference = output / "reference.obj"
+    instrumented = output / "instrumented.obj"
+    observations = output / "comparisons.log"
+    verdict = output / "verdict.txt"
+    observations.write_text("")
+    verdict.write_text("UNVERIFIED: compilation/identity checks pending\n")
+    process = _cc_wrap(reference, source, flags)
+    if process.returncode or not reference.is_file():
+        _common.die(f"reference compile failed:\n{_tail(process)}")
+    try:
+        compile_shim(inlineTrace=True)
+        process = _cc_wrap(instrumented, source, flags, {
+            "MSVC_DIR": str(OVERLAY_MSVC),
+            "HOMM3_VC6_SHIM_LOG": cc_wrap.winepath_w(observations),
+            "HOMM3_VC6_INLINE_TRACE": function,
+        })
+        if process.returncode or not instrumented.is_file():
+            _common.die(f"instrumented compile failed:\n{_tail(process)}")
+        original = reference.read_bytes()
+        observed = instrumented.read_bytes()
+        differences = _masked_diff(original, observed)
+        if differences:
+            verdict.write_text(
+                f"FAIL: {len(differences)} object differences outside timestamp; "
+                f"first offsets {differences[:10]}\n")
+            print(f"[shim] inline trace INVALID: {verdict}")
+            return 1
+        rows = observations.read_text().splitlines()
+        if not any(row.startswith("main ") for row in rows):
+            verdict.write_text("FAIL: no matching function was observed\n")
+            _common.die(f"no function matching {function!r} reached the inliner")
+        message = (
+            f"PASS: {len(original)} object bytes equal outside TimeDateStamp; "
+            f"profile: {' '.join(flags)}\n"
+            "Observations are budget comparisons, not final inline decisions.\n")
+        verdict.write_text(message)
+        print(f"[shim] {message.strip()}")
+        print(f"[shim] comparisons: {observations}")
+        return 0
+    finally:
+        compile_shim(negative=False)
+
+
 def run_clean() -> int:
     for p in (OVERLAY, _common.REPO / "build/vc6/shim"):
         if p.exists():
@@ -410,6 +477,9 @@ def main(argv: list[str] | None = None) -> int:
     g.add_argument("--rebuild", action="store_true",
                    help="force-rebuild the overlay first")
     sub.add_parser("negative", help="negative control (must go red, then restore)")
+    trace = sub.add_parser("trace", help="observe inline budgets with an object-identity gate")
+    trace.add_argument("unit", help="unit in config/units.toml")
+    trace.add_argument("--fn", required=True, help="function-name substring")
     sub.add_parser("clean", help="remove overlay and gate scratch")
     args = ap.parse_args(argv)
 
@@ -422,6 +492,8 @@ def main(argv: list[str] | None = None) -> int:
         rc = run_gate(rebuild=args.rebuild)
     elif args.cmd == "negative":
         rc = run_negative()
+    elif args.cmd == "trace":
+        rc = runInlineTrace(args.unit, args.fn)
     else:
         rc = run_clean()
     import shlex

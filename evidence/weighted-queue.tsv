@@ -36,7 +36,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x004bdc70	777		100.0	100.0	777.0	game	__h3cg$game$implicit_copy_assign$SCampaign	unscored
 0x005405d0	772		0.0	0.0	772.0	seg_0014	game_142b00_sub00_1405d0	unscored
 0x0055e7e0	769		0.0	0.0	769.0	seg_0015	game_15dbc0_sub00_15e7e0	unscored
-0x005b68a0	767		0.0	0.0	767.0	rmg_terrain	TRmgTerrainPainter_BuildNeighbourKinds	unscored
+0x005b68a0	767		0.0	0.0	767.0	rmg_terrain	rmgTerrainPainter_buildNeighbourKinds	unscored
 0x005b8720	766		0.0	0.0	766.0	seg_001b	game_1b7cd0_sub00_1b8720	unscored
 0x005443a0	757		0.0	0.0	757.0	seg_0014	game_1446a0_sub00_1443a0	unscored
 0x00531ea0	742		0.0	0.0	742.0	seg_0013	game_135110_sub00_131ea0	unscored
@@ -54,13 +54,13 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x005470d0	646		0.0	0.0	646.0	seg_0014	game_147360_sub02_1470d0	unscored
 0x005439e0	643		0.0	0.0	643.0	seg_0014	game_149930_sub05_1439e0	unscored
 0x005446a0	638		0.0	0.0	638.0	seg_0014	game_149930_sub06_1446a0	unscored
-0x005b6fd0	625		0.0	0.0	625.0	rmg_terrain	TRmgTerrainPainter_GetTransitionStrength	unscored
+0x005b6fd0	625		0.0	0.0	625.0	rmg_terrain	rmgTerrainPainter_getTransitionStrength	unscored
 0x00548290	622		0.0	0.0	622.0	seg_0014	game_149930_sub12_148290	unscored
 0x00534520	615		0.0	0.0	615.0	seg_0013	game_134520	unscored
 0x00540d60	598		0.0	0.0	598.0	seg_0014	game_141140_sub01_140d60	unscored
 0x005466e0	595		0.0	0.0	595.0	seg_0014	game_147360_sub01_1466e0	unscored
 0x004f9cb0	590		0.0	0.0	590.0	seg_000f	game_f9f00_sub00_f9cb0	unscored
-0x005b6ba0	588		0.0	0.0	588.0	rmg_terrain	TRmgTerrainPainter_CheckFirstDiagonal	unscored
+0x005b6ba0	588		0.0	0.0	588.0	rmg_terrain	rmgTerrainPainter_checkFirstDiagonal	unscored
 0x00548040	580		0.0	0.0	580.0	seg_0014	game_148290_sub01_148040	unscored
 0x00535970	576		0.0	0.0	576.0	seg_0013	game_146520_sub00_135970	unscored
 0x00540b20	576		0.0	0.0	576.0	seg_0014	game_141140_sub00_140b20	unscored
@@ -94,7 +94,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x0053d1c0	441		0.0	0.0	441.0	seg_0013	game_13e6a0_sub03_13d1c0	unscored
 0x00546520	438		0.0	0.0	438.0	seg_0014	game_1466e0_sub02_146520	unscored
 0x004d2c90	435		0.0	0.0	435.0	seg_000d	game_bdc70_sub01_d2c90	unscored
-0x005b6e00	435		0.0	0.0	435.0	rmg_terrain	TRmgTerrainPainter_CheckSecondDiagonal	unscored
+0x005b6e00	435		0.0	0.0	435.0	rmg_terrain	rmgTerrainPainter_checkSecondDiagonal	unscored
 0x005b4960	434		0.0	0.0	434.0	seg_001b	game_1b7690_sub00_1b4960	unscored
 0x005fdd60	433		0.0	0.0	433.0	seg_001f	game_1fd010_sub03_1fdd60	unscored
 0x0048bf00	429		34.7407	34.7407	429.0	customcampaign	__h3cg$customcampaign$vector_insert_single$unsigned_char	unscored
@@ -378,7 +378,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x0056ce50	286	10.5	41.9271	41.9271	255.97	seerhut	?LoadFromMap@type_quest@@UAEXPAVTAbstractFile@@@Z	non-exact
 0x00421000	629	17.861385	95.7822	95.7822	516.65188835	ai	?choose_resurrect_action@combatManager@@QAEEPBVarmy@@PAJPAUtype_AI_combat_parameters@@@Z	non-exact
 0x00438910	251	22.22353	100.0	100.0	195.2189397	ai_tactical	?get_defense_skill_value@type_AI_spellcaster@@QAEJPBVarmy@@JJ@Z	non-exact
-0x005b45f0	621	23.330544	23.3305	23.3305	476.11732176000004	rmg_terrain	??0TRmgTerrainPainter@@QAE@PAVTRmgMapAdapterInterface@@HH@Z	non-exact
+0x005b45f0	621	23.330544	23.3305	23.3305	476.11732176000004	rmg_terrain	??0rmgTerrainPainter@@QAE@PAVTRmgMapAdapterInterface@@HH@Z	non-exact
 0x0056cd00	335	25.626087	49.7043	49.7043	249.15260855	seerhut	?Load@type_quest@@UAEXPAVTAbstractFile@@H@Z	non-exact
 0x004e59a0	248	32.623375	100.0	100.0	167.09402999999998	hero	?Fly@hero@@QAEXH@Z	non-exact
 0x00489e20	1104	33.818653	35.3057	35.3057	730.64207088	customcampaign	?PruneCrossoverHeroes@SCampaign@@QAEXPAX@Z	non-exact
@@ -394,7 +394,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x004bcda0	3778	60.554672	92.4127	92.4127	1490.2444918400001	game	?Load@game@@QAEHPAVTAbstractFile@@@Z	non-exact
 0x00506080	468	61.07879	62.3455	62.3455	182.15126280000004	mapcell	??0CObjectType@@QAE@PAUTObjectType@@@Z	non-exact
 0x005a7080	666	62.495193	93.4375	93.4375	249.78201461999998	spells	?SummonElemental@combatManager@@QAEXHW4TCreatureType@@HH@Z	non-exact
-0x005b50f0	846	63.629852	63.6299	63.6299	307.69145208000003	rmg_terrain	?QueueOtherTerrainNeighbours@TRmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	non-exact
+0x005b50f0	846	63.629852	63.6299	63.6299	307.69145208000003	rmg_terrain	?queueOtherTerrainNeighbours@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	non-exact
 0x00526d40	915	64.31193	64.3119	64.3119	326.54584049999994	philai	??0type_spellvalue@@QAE@PBVhero@@@Z	non-exact
 0x00437a00	1786	66.42922	100.0	100.0	599.5741308	ai_tactical	??0army@@QAE@ABV0@@Z	non-exact
 0x0048a310	2846	66.44606	66.4461	79.2531	954.9451323999998	customcampaign	?Load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	non-exact
@@ -404,7 +404,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x004ec460	111	73.333336	100.0	100.0	29.599997039999995	inputmgr	??0inputManager@@QAE@XZ	non-exact
 0x004dd2d0	5182	74.21898	75.4051	75.4051	1335.9724564	hero	?WindowHandler@THeroScreenWindow@@UAEHPAVmessage@@@Z	non-exact
 0x004c2450	2190	74.47679	78.2855	78.2855	558.9582990000001	game	?LoadMap@game@@QAE_NPAVTAbstractFile@@@Z	non-exact
-0x005b5a70	2215	74.73199	74.7623	74.7623	559.6864215000002	rmg_terrain	?PaintTransitions@TRmgTerrainPainter@@QAEXXZ	non-exact
+0x005b5a70	2215	74.73199	74.7623	74.7623	559.6864215000002	rmg_terrain	?paintTransitions@rmgTerrainPainter@@QAEXXZ	non-exact
 0x0056fbc0	230	75.23529	75.2353	75.2353	56.95883299999998	seerhut	?DoProgressDialog@type_artifact_quest@@UAEXXZ	non-exact
 0x00547880	1969	75.28175	75.6686	75.6686	486.70234249999993	rmg	?BuildRoadCostMap@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	non-exact
 0x00431800	962	75.383835	75.3838	75.3838	236.8075072999999	ai_player	?consider_hiring@@YI_NJPAVhero@@@Z	non-exact
@@ -416,7 +416,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x004e3070	825	76.33603	76.336	76.336	195.2277525	hero	?GiveArtifact@hero@@QAEEPBUtype_artifact@@EE@Z	non-exact
 0x00514b80	503	76.63784	76.6378	76.6378	117.51166479999999	objecttype	??5@YIAAV?$basic_istream@DU?$char_traits@D@std@@@std@@AAV01@AAUTObjectType@@@Z	non-exact
 0x004be3f0	2725	76.92083	96.4044	96.4044	628.9073825000002	game	?Save@game@@QAEHPAVTAbstractFile@@@Z	non-exact
-0x005b6540	714	77.26087	77.2609	77.2609	162.35738820000006	rmg_terrain	?BuildMatchingNeighbourMask@TRmgTerrainPainter@@QAEXABUTRmgGridPoint@@PAE@Z	non-exact
+0x005b6540	714	77.26087	77.2609	77.2609	162.35738820000006	rmg_terrain	?buildMatchingNeighbourMask@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@PAE@Z	non-exact
 0x0058bce0	1455	77.26694	78.7597	78.7597	330.7660229999999	singleselectionwindow	?OnBeginGame@TSingleSelectionWindow@@QAEEXZ	non-exact
 0x00541140	1594	77.31306	77.3131	77.3131	361.6298236000002	rmg	?CreateGroundConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@PAV?$vector@PAUTRmgMapItem@@V?$allocator@PAUTRmgMapItem@@@std@@@std@@PAV?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@5@@Z	non-exact
 0x005141b0	110	77.391304	77.3913	77.3913	24.869565599999994	objecttype	?Accepts@TNativeTerrainObjectFilter@@UBEHPBUTObjectType@@@Z	non-exact
@@ -457,7 +457,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x004daf90	570	81.7	81.7	81.7	104.30999999999996	hero	?update_slot@THeroScreenWindow@@QAEXJ@Z	non-exact
 0x005bf810	226	81.72619	81.7262	81.7262	41.2988106	town	?get_legion_bonus@town@@QAEJJ@Z	non-exact
 0x004e4990	1014	81.76774	81.7677	81.7677	184.8751164	hero	?GetMobility@hero@@QAEHE@Z	non-exact
-0x005b5440	1576	81.84317	81.8432	81.8432	286.15164080000005	rmg_terrain	?RepairTerrainPoint@TRmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	non-exact
+0x005b5440	1576	81.84317	81.8432	81.8432	286.15164080000005	rmg_terrain	?repairTerrainPoint@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	non-exact
 0x0042e0b0	2926	81.88646	81.8865	81.8865	530.0021804000002	ai_player	?AI_choose_destination@@YIHPAVhero@@JAAUHeroDestination@@AAJEE@Z	non-exact
 0x004cafd0	3348	82.21976	82.2198	82.2198	595.2824352000001	game	?TransmitSaveGame@game@@QAEHHHEE@Z	non-exact
 0x005a6c70	1029	82.34042	82.3404	82.3404	181.7170782000001	spells	?MirrorImage@combatManager@@QAEXHH@Z	non-exact
@@ -828,7 +828,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00418620	1508	96.90312	96.9031	96.9031	46.700950400000025	advmgr	?GetSoundId@advManager@@QAE?AW4e_looping_sound_id@@HHH@Z	non-exact
 0x00403c40	120	96.95122	100.0	100.0	3.6585359999999945	adventuremapwindow	?SetElevationToggleImage@TAdventureMapWindow@@QAEEH@Z	non-exact
 0x0040b150	8860	96.95354	96.9535	96.9535	269.9163559999996	advmgr	?SetRolloverText@advManager@@QAEXPAVNewmapCell@@HH@Z	non-exact
-0x005b4b20	1483	97.05064	97.0506	97.0506	43.739008800000015	rmg_terrain	?PaintPoint@TRmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	non-exact
+0x005b4b20	1483	97.05064	97.0506	97.0506	43.739008800000015	rmg_terrain	?paintPoint@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	non-exact
 0x00589fa0	729	97.06278	97.0628	97.0628	21.41233379999997	singleselectionwindow	?OnNewPlayerMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	non-exact
 0x00557af0	520	97.093025	97.093	97.093	15.116270000000004	remote	?CheckForWarning@CTurnDuration@@QAEXXZ	non-exact
 0x0043aca0	686	97.09956	97.0996	97.0996	19.89701840000003	ai_tactical	?consider_resurrect@type_AI_spellcaster@@QAEXPAUtype_spell_choice@@@Z	non-exact
@@ -982,7 +982,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00465330	1270	99.64975	99.6497	99.6497	4.448175000000095	cmbtmgr	?SetNextArmy@combatManager@@QAEXHH@Z	non-exact
 0x005c9be0	11504	99.66054	99.6605	99.6605	39.05147840000029	townmgr	??0THallWindow@@QAE@H@Z	non-exact
 0x0055ee50	118	99.70731	99.7073	99.7073	0.34537419999999464	rmg_support	??0TRmgRiverPainter@@QAE@PAVTRmgMapAdapterInterface@@HABUTRmgGridPoint@@@Z	non-exact
-0x005b6810	132	99.745766	99.7458	99.7458	0.33558887999999687	rmg_terrain	?HasSeparatedNeighbours@TRmgTerrainPainter@@QAEEABUTRmgGridPoint@@@Z	non-exact
+0x005b6810	132	99.745766	99.7458	99.7458	0.33558887999999687	rmg_terrain	?hasSeparatedNeighbours@rmgTerrainPainter@@QAEEABUTRmgGridPoint@@@Z	non-exact
 0x004c06f0	377	99.746376	99.7464	99.7464	0.9561624799999877	game	?randomize_university@game@@QAEXPAVNewmapCell@@@Z	non-exact
 0x004c3890	996	99.8359	99.8359	99.8359	1.6344360000000036	game	?loadVictoryCondition@NewSMapHeader@@QAEHDPAVTAbstractFile@@H@Z	non-exact
 0x005bd2f0	1026	99.837006	99.837	99.837	1.6723184399999393	town	?save@town@@QAEHPAVTAbstractFile@@@Z	non-exact
