@@ -856,7 +856,8 @@ inline void type_AI_combat_data::get_enchantment_value(type_spell_choice& choice
 {
     unsigned char mass = !SpellTargetsASingleArmy(choice.spell, choice.mastery);
     for (long i = get_total(); i-- > 0; ) {
-        long value = monsters[i].get_enchantment_value(choice, casting_hero, my_hero);
+        type_monster_data& monster = monsters[i];
+        long value = monster.get_enchantment_value(choice, casting_hero, my_hero);
         if (mass) {
             choice.value += value;
         } else if (choice.value < value) {
@@ -871,15 +872,17 @@ inline void type_AI_combat_data::get_enchantment_value(type_spell_choice& choice
 // table: retail emits eight cmp/je in the source order below
 // (0x42554f..0x425893). All eight are the anti-magic family - worth
 // nothing against a side that cannot cast at all.
-// Residual (89.5%): the FIRST inlined get_enchantment_value pass (the
-// one whose type_monster_data leaf /Ob2 also inlines) is byte-exact;
-// the other three - where the leaf stays a call - differ only in which
-// of the two loop values gets a register. Retail spills the index `i`
-// to the parameter slot and keeps the 72-byte offset in edi/esi; our
-// CL does the opposite and pays a loop-entry `jmp`/reload rotation for
-// it. Register-homing family. Tried and rejected: storing
-// choice.value before choice.target in the else-if (89.4%, and it
-// costs the first pass its exactness), and hoisting get_total().
+// Residual (95.09%): 2026-09-06 - the index/offset homing the older note
+// blamed on the allocator IS a source fact. Naming the element,
+// `type_monster_data& monster = monsters[i];` at the head of the inline
+// helper's loop, gives the 72-byte offset the register and spills the index
+// exactly as retail does: 89.4646 -> 95.0862 across all four inlined passes.
+// The pointer spelling (`type_monster_data* monster = &monsters[i]`) is
+// byte-identical to the reference one. What is left is a register renaming
+// plus `mov ecx,edi / add ecx,edx` where retail forms the same address with
+// one `lea ecx,[edi+eax]`. Still rejected: storing choice.value before
+// choice.target in the else-if (89.4%, and it costs the first pass its
+// exactness), and hoisting get_total().
 VA(0x00425510, 0x382)  // corroborates (hd-crossbuild + ida), dc 0x2ad58
 void type_AI_combat_data::get_enchantment_value(type_spell_choice& choice, type_AI_combat_data& defender)
 {
@@ -1066,7 +1069,8 @@ void type_AI_combat_data::cast_spell(
                 || choice.spell > SPELL_ANIMATE_DEAD)
                 break;
             for (long i = get_total(); i-- > 0; ) {
-                long value = monsters[i].get_resurrection_value(
+                type_monster_data& monster = monsters[i];
+                long value = monster.get_resurrection_value(
                     choice, my_hero);
                 if (value > choice.value) {
                     choice.value = value;

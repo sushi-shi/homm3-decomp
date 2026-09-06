@@ -3867,6 +3867,16 @@ void townManager::handle_mage_guild_click()
 // the Dreamcast roster's three-parameter declarator.
 
 // E:\gamedcs\townmgr.cpp:4806
+// 2026-09-06, the tree-wide `_Ufill`/`_Destroy` census (see the lead in
+// docs/vc6/regalloc.md 6b): element-agnostic call counts here are insert
+// 43/42, _Ucopy 28/32, size 26/33 and _Ufill 14/0, _Destroy 7/0 (ours/
+// retail), so retail EXPANDS both small leaves inside the insert
+// expansions it keeps - `_Destroy` over a POD pointer collapses to nothing -
+// while calling size and _Ucopy more often than we do. The depth ladder's
+// shallower spelling is NOT the lever: rewriting all 49 `Widgets.push_back(x)`
+// as `Widgets.insert(Widgets.end(), x)` costs 10.3 points (93.8825 ->
+// 83.54, 40 target-only calls). 71 rows tree-wide carry the same
+// _Destroy surplus and 32 the _Ufill one.
 VA(0x005ce830, 0x1D20)  // anchor-vtable 0x643818 + anchor-string garrison.pcx + arity, dc 0x171554
 type_garrison_base_window::type_garrison_base_window(hero* inHero,
                                                      int garrison_owner,

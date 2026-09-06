@@ -506,6 +506,9 @@ void* TCampaignWindow::`scalar deleting destructor'(unsigned __flags)
 }
 #endif
 
-// COMDAT pairing: vector<int>::operator=, agreement 0.956. Its element is a
-// BUILTIN, which VC6 spells as one letter with no class name to key on.
-VA_COMPGEN(0x004601f0, 0x1A4, VECTOR_COPY_ASSIGN, int)
+// COMDAT pairing: vector<type_artifact>::operator=. The mnemonic sweep first
+// read this as vector<int> (agreement 0.956), and the ELEMENT STRIDE overrules
+// it: retail sizes both operands with `sar 3` and walks the copy with
+// `add eax,0x8`, so the element is 8 bytes - TArtifact + int, which is
+// type_artifact. A builtin `int` element would divide by 4.
+VA_COMPGEN(0x004601f0, 0x1A4, VECTOR_COPY_ASSIGN, type_artifact)
