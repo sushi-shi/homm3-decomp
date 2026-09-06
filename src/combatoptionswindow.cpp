@@ -308,6 +308,13 @@ __forceinline void UpdateCombatOptions(unsigned char bFirstUpdate)
 
 // E:\gamedcs\combatoptionswindow.cpp:278
 //
+// NOT A MEMBER-OFFSET BUG (checked 2026-09-06): the `[ecx+0x6ac]` against
+// retail's `[ecx+0x704]` that a census flagged here is the SWITCH INDEX
+// TABLE - `mov dl, byte ptr [ecx + <fn>+0x704]` / `jmp [4*edx + <fn>+0x6c4]`
+// - based off the function's own end, which retail places 0x58 later than
+// ours because retail's body is that much longer.  No TCombatOptionsWindow
+// member is involved.
+//
 // Residual (83.4%): the tail-block class, in both directions. Retail parks
 // the translate-command and audio-unavailable arms at the tail and reaches
 // them with `je`, where our CL hoists each to its single goto site; and

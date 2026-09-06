@@ -835,6 +835,22 @@ TCombatCreatureSubWindow::~TCombatCreatureSubWindow()
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:688
+//
+// Residual (90.3734%): the register-homing family plus ONE inline level.
+// Retail homes the `traits` reference in its own frame dword (frame 0x58
+// against our 0x54) and keeps `attack` in EBX; our CL does the exact
+// reverse, and the icon-pointer/iSpell pair in the spell loop swaps with
+// it.  Measured and rejected 2026-09-06: `traits` as a pointer instead of
+// a reference (byte-flat, 90.3734); declaring `traits` after the
+// attack/defense block (81.2490); declaring it above the SetIconFrame call
+// (83.6514).  The remaining call row is the deque subscript's depth - we
+// call `const_iterator::_Add` where retail calls `iterator::operator+=`,
+// one /Ob2 level shallower, and this tree admits no statement pin.
+// The const receiver IS the Dreamcast's own overload
+// (??A?$deque@W4SpellID@@...QBAABW4SpellID@@I@Z at dc 0x66804), and with
+// the polarity and comma-increment fixes below in place the non-const
+// `const_cast` spelling is byte-identical (90.3734), so the const form is
+// kept as the source-authentic one.
 // The full-stat arm is the `view_level == 1` one: it prints base(adjusted)
 // pairs for attack and defense out of the creature's own traits row, the
 // damage span, the hit points, the clamped morale and luck icons, and the
@@ -853,7 +869,6 @@ VA(0x0046dc30, 0x2C2)  // roster order + "%d(%d)" pair + the three spell icons, 
 void TCombatCreatureSubWindow::Update(const army* info, const hero* owner)
 {
     char buffer[64];
-    army* mutableInfo = const_cast<army*>(info);
 
     backgroundWidget->SetPlayerPaletteColors(
         owner != 0 ? owner->owner : gpGame->GetLocalPlayerGamePos());
@@ -897,21 +912,20 @@ void TCombatCreatureSubWindow::Update(const army* info, const hero* owner)
 
     unsigned int iSpell = std::_cpp_max(
         0, static_cast<int>(info->SpellInfluenceQueue.size()) - 3);
-    for (int iIcon = 0; iIcon < 3; ++iIcon) {
+    for (int iIcon = 0; iIcon < 3; ++iIcon, ++iSpell) {
         int frame;
         if (iSpell < info->SpellInfluenceQueue.size()) {
-            frame = mutableInfo->SpellInfluenceQueue[iSpell] + 1;
+            frame = info->SpellInfluenceQueue[iSpell] + 1;
         } else {
             frame = 0;
         }
         spellIcons[iIcon]->SetIconFrame(frame);
-        ++iSpell;
     }
 
-    if (info->SpellInfluenceQueue.size() != 0)
-        spellText->SetText("");
-    else
+    if (info->SpellInfluenceQueue.size() == 0)
         spellText->SetText(gpGeneralText->GetText(675));
+    else
+        spellText->SetText("");
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:773
