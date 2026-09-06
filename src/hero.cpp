@@ -7296,6 +7296,19 @@ static TCreatureType GetUpgradedCreature(TCreatureType type)
 // as `if (!sea_movement) goto land_movement` breaks that canonical family and
 // collapses to 5.6129%. An explicit backward join therefore cannot preserve
 // retail's placement with this front end.
+// 2026-09-06, the sea half's ability test re-measured against the bytes.
+// Retail loads `.type` into ECX through the indexed form and LEAs the row
+// address separately (`mov ecx,[eax+8*edx] / lea eax,[eax+8*edx] / test
+// ecx,ecx`), where this compile forms one address and compares memory. Three
+// spellings: a `const THeroSpecificAbility& ability` hoisted beside
+// `mobility` costs 0.24 (81.53 - it lifts the row address above the
+// skillLevel guard, which retail keeps below it); the same reference nested
+// INSIDE an `if (skillLevel > 0)` block restores retail's placement and is
+// byte-flat at 81.7677; naming `int abilityType = ability.type` on top of
+// that is byte-flat too (VC6 folds the local straight back into the compare).
+// The remaining sea-half delta - `mobility` homed in the recycled [ebp+8]
+// parameter slot where retail keeps it in ESI all the way to the join - is
+// downstream of the join placement below, not an independent spelling.
 // The navigation-specialist bonus divides by TWENTY, not ten: retail's
 // `mov eax,0x66666667 / imul ecx / sar edx,3` at 0x4e4a1e is the signed
 // magic pair for /20 (shift 2 would be /10), and the shift is the only byte

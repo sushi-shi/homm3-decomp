@@ -3509,6 +3509,17 @@ VA_COMPGEN(0x0048e9e0, 0xB, STD_CONSTRUCT, TCampaignCrossoverChoice)
 // own _Ucopy/_Ufill/_Construct out of line (0x48db40 / 0x48db70 / 0x48e9d0)
 // where this CL expands all three into it, so the pairing is identity, not a
 // score.
+// 2026-09-06, an arity screen over every sub-100 row (base `ret N` multiset
+// against the delinked body's) says the OVERLOAD is wrong too, which is most
+// of the 34.74%: retail's body ends `ret 8` and takes (iterator, const E&) -
+// the single-element `insert` - while this object emits only the three-
+// argument fill `insert(iterator, size_type, const E&)` (`ret 0xc`), because
+// our CL expands the single-element forwarder into `push_back` at every call
+// site and retail keeps it out of line. Both overloads share the
+// `unsigned_char@vector_insert` join key, so with one claim and one symbol
+// the pairing is forced onto the wrong one. Making the two-argument insert
+// emit at all is an inline-shape fix in its caller, ScenarioStruct::Read -
+// a closed wall - so this row cannot move until that reopens.
 VA_COMPGEN(0x0048bf00, 0x1AD, VECTOR_INSERT, unsigned_char)
 
 // --- the <fstream> facet block, claimed 2026-09-06 -------------------------
