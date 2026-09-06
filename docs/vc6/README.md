@@ -60,19 +60,17 @@ model cannot rot.
 
 ## Residual-routing contract
 
-`homm3 vc6 queue` ranks actionable rows hardest-first by ascending effective
-MAX (`max(current score, banked MAX)`). A banked-exact function is excluded
-even when its current score has dipped; those collateral dips are reported
-separately and may only be reopened by an evidence/source-gate failure. The
-census still records recoverable bytes as wall-mass accounting, not as its
-priority key. It includes functions whose retail address is known but whose
-source body is still inactive or absent. Those
-unclaimed rows are reconstruction work, not solver failures. Before invoking
-disassembly, the router now requires one unique public text symbol shared by
-the compiled base object and the delinked target object. A retail/synth flat
-label with no compiled counterpart is recorded as `unclaimed (no source
-binding)` without printing an objdump error; a genuine diagnosis failure stays
-visible as an `unclassified` row with its reason.
+`homm3 vc6 queue` ranks existing compiled functions by ascending banked
+MAX/history, with retail size breaking ties. Current scores do not change the
+order, and functions that have reached 100% stay excluded through current-score
+dips. The census records recoverable bytes as remaining work. `--diagnose`
+adds solver routing; `--admission` explicitly lists functions without compiled
+bodies. Both modes write generated evidence.
+
+Before invoking disassembly, the router requires a unique emitted function
+shared by the compiled and delinked objects. File-static functions qualify;
+undefined symbols and local assembly labels do not. A missing comparison body
+remains an inspectable diagnosis failure.
 
 The shared-symbol preflight is asymmetric in the useful direction: exact
 mangled identities and uniquely resolved source basenames may enter the

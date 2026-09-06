@@ -851,7 +851,7 @@ void combatManager::CastSpell(SpellID spellId, int targetIndex,
             if (Random(1, 100)
                 <= static_cast<int>(other_hero->GetEagleEyeChance()
                                     * 100.0f))
-                eagleEyeData[other_side].spells.insert(spellId);
+                eagleEyeData[other_side].insert(spellId);
         }
 
         mana_cost = casting_hero->GetManaCost(spellId,

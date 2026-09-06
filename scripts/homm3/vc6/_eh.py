@@ -73,16 +73,18 @@ def _to_int(tok: str) -> int:
 
 def state_sequence(obj, fn: str) -> list | None:
     """The ordered EH state stores of *fn* in *obj* - an int per store, or
-    None for a register-sourced (opaque) one. Returns None outright when the
-    transcript cannot be read (missing object / symbol / no EH frame) or when
-    the slot is demonstrably an ordinary local. Never raises: side signal."""
+    None for a register-sourced (opaque) one. A readable body without an EH
+    frame returns an empty transcript; an unreadable body or an ambiguous
+    frame slot returns None. Never raises: side signal."""
     from homm3.vc6 import reg_model
     try:
         body = _asm.objdump(obj, reg_model._resolve_symbol(obj, fn), 0)
     except (Exception, SystemExit):
         return None
-    if not _EHPROLOG.search(body):
+    if not body.strip():
         return None
+    if not _EHPROLOG.search(body):
+        return []
     out = []
     for line in body.splitlines():
         m = _STATE.search(line)
@@ -114,9 +116,8 @@ def divergence(unit: str, fn: str):
         kind = "COUNT"
         if len(tgt) > len(base):
             note = (f"retail opens {len(tgt) - len(base)} cleanup region(s) "
-                    "this body does not - a statement whose temporary (or "
-                    "throwing call) we never wrote, or a callee retail could "
-                    "throw from that we fold away")
+                    "this body does not - inspect the unwind and try-block "
+                    "maps for a missing lifetime, throwing call, or catch scope")
         else:
             note = (f"this body opens {len(base) - len(tgt)} cleanup "
                     "region(s) retail does not - an extra lifetime, or a "

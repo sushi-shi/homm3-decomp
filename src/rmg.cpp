@@ -1133,27 +1133,36 @@ void type_random_map_generator::BuildRoadCostMap(TRmgMapPosition position)
 // and the predecessor chain is then painted back from the first river target.
 // The water-wheel caller at 0x549870 and object type 143 selected below prove
 // the river role; the method spelling remains provisional.
+// Retail reuses ESI for every in-bounds neighbour, then tests that same tile
+// at +0x4b7 after the worklist empties.  A separate nextMapItem leaves the
+// final test on the preceding tile and can skip painting a found river.
+// The saved position is reused at +0x53e before the mouth temporarily replaces
+// nextPosition; the delta-direction scan explicitly stops at four directions.
+// Residual: the seed inserts, worklist erases and bitset range failure still
+// choose different inline depths.  Retain these source/CFG corrections through
+// score dips.  A combined cost/predecessor setter and by-value position
+// assignment do not reproduce the reset's constant-cost and copy sequence.
 VA(0x00548DF0, 0x99F)  // water-wheel caller + river-delta object; retail-only
 void type_random_map_generator::CreateRiver(TRmgMapPosition source)
 {
-    TRmgMapPosition invalidPosition(-1, -1, -1);
+    TRmgMapPosition position(-1, -1, -1);
     TRmgMapItem* mapItem = map.GetMapItem(0, 0);
     int mapItemCount = map.mapWidth * map.mapHeight * map.numberLevels;
     while (mapItemCount--) {
-        mapItem->movement.cost = 32000;
-        mapItem->previousTile = invalidPosition;
+        mapItem->ResetMovement(position);
         ++mapItem;
     }
 
     std::vector<TRmgMapPosition> openPositions;
     std::vector<int> openCosts;
-    int zeroCost = 0;
 
     openPositions.push_back(source);
-    openCosts.push_back(zeroCost);
+    openCosts.push_back(0);
     mapItem = map.GetMapItem(source);
     mapItem->movement.cost = 0;
-    mapItem->previousTile = invalidPosition;
+    mapItem->previousTile.x = -1;
+    mapItem->previousTile.y = -1;
+    mapItem->previousTile.z = -1;
 
     unsigned char sourceIsSnow;
     int riverType;
@@ -1167,19 +1176,22 @@ void type_random_map_generator::CreateRiver(TRmgMapPosition source)
 
     --source.y;
     openPositions.push_back(source);
-    openCosts.push_back(zeroCost);
+    openCosts.push_back(0);
     mapItem = map.GetMapItem(source);
     mapItem->movement.cost = 0;
-    mapItem->previousTile = invalidPosition;
+    mapItem->previousTile.x = -1;
+    mapItem->previousTile.y = -1;
+    mapItem->previousTile.z = -1;
 
     ++source.x;
     openPositions.push_back(source);
-    openCosts.push_back(zeroCost);
+    openCosts.push_back(0);
     mapItem = map.GetMapItem(source);
     mapItem->movement.cost = 0;
-    mapItem->previousTile = invalidPosition;
+    mapItem->previousTile.x = -1;
+    mapItem->previousTile.y = -1;
+    mapItem->previousTile.z = -1;
 
-    TRmgMapPosition position;
     TRmgMapPosition nextPosition;
     int direction;
 
@@ -1203,31 +1215,31 @@ void type_random_map_generator::CreateRiver(TRmgMapPosition source)
                 || nextPosition.y < 0 || nextPosition.y >= map.mapHeight)
                 continue;
 
-            TRmgMapItem* nextMapItem = map.GetMapItem(nextPosition);
-            TTerrainType landType = nextMapItem->tile.landType;
+            mapItem = map.GetMapItem(nextPosition);
+            TTerrainType landType = mapItem->tile.landType;
             if (landType == eTerrainWater || landType == eTerrainRock
-                || nextMapItem->tileData.impassable
+                || mapItem->tileData.impassable
                 || (landType == eTerrainSnow) != sourceIsSnow)
                 continue;
 
             int nextCost = positionCost + (rand() & 31) + 1;
-            if (nextMapItem->tile.decorationType)
+            if (mapItem->tile.decorationType)
                 nextCost += 30;
 
-            if (nextCost >= nextMapItem->movement.cost)
+            if (nextCost >= mapItem->movement.cost)
                 continue;
 
             int oppositeDirection = ((direction - 4) >> 1) & 3;
-            if (nextMapItem->tileData.blockedDirections
+            if (mapItem->tileData.blockedDirections
                 & (1 << oppositeDirection))
                 continue;
 
-            nextMapItem->movement.cost = nextCost;
-            nextMapItem->previousTile = position;
+            mapItem->movement.cost = nextCost;
+            mapItem->previousTile = position;
             InsertRmgWorkItem(
                 openPositions, openCosts, nextPosition, nextCost);
 
-            if (nextMapItem->tileData.riverTarget) {
+            if (mapItem->tileData.riverTarget) {
                 openPositions.clear();
                 break;
             }
@@ -1238,17 +1250,19 @@ void type_random_map_generator::CreateRiver(TRmgMapPosition source)
         return;
 
     mapItem->tileData.riverTarget = 1;
+    position = nextPosition;
 
     type_random_map levelMap(map, nextPosition.z);
     TRmgMapAdapter mapAdapter(&levelMap);
-    TPoint riverPosition(nextPosition.x, nextPosition.y);
-    TRmgRiverPainter riverPainter(&mapAdapter, riverType, riverPosition);
+    TRmgRiverPainter riverPainter(
+        &mapAdapter, riverType, TPoint(nextPosition.x, nextPosition.y));
 
     unsigned blockedDirections = mapItem->tileData.blockedDirections;
     if (blockedDirections) {
-        direction = 0;
-        while (!(blockedDirections & (1 << direction)))
-            ++direction;
+        for (direction = 0; direction < 4; ++direction) {
+            if (blockedDirections & (1 << direction))
+                break;
+        }
 
         static TRmgRiverDeltaOffset deltaOffsets[4] = {
             TRmgRiverDeltaOffset(4, 1),
@@ -1283,28 +1297,23 @@ void type_random_map_generator::CreateRiver(TRmgMapPosition source)
                 nextPosition.y + deltaOffsets[direction].y,
                 nextPosition.z));
 
-        TRmgMapPosition riverMouth(
+        nextPosition = TRmgMapPosition(
             nextPosition.x + gRmgDirections[direction * 2].x,
             nextPosition.y + gRmgDirections[direction * 2].y,
             nextPosition.z);
-        TPoint riverMouthPoint(riverMouth.x, riverMouth.y);
-        riverPainter.DrawTo(riverMouthPoint);
-        mapItem = map.GetMapItem(riverMouth);
+        riverPainter.DrawTo(TPoint(nextPosition.x, nextPosition.y));
+        mapItem = map.GetMapItem(nextPosition);
         mapItem->tileData.riverTarget = 1;
 
-        riverPosition.x = nextPosition.x;
-        riverPosition.y = nextPosition.y;
-        riverPainter.DrawTo(riverPosition);
-        mapItem = map.GetMapItem(nextPosition);
+        riverPainter.DrawTo(TPoint(position.x, position.y));
+        mapItem = map.GetMapItem(position);
     }
 
     while (mapItem->movement.cost > 0) {
         position = mapItem->previousTile;
         mapItem = map.GetMapItem(position);
         mapItem->tileData.riverTarget = 1;
-        riverPosition.x = position.x;
-        riverPosition.y = position.y;
-        riverPainter.DrawTo(riverPosition);
+        riverPainter.DrawTo(TPoint(position.x, position.y));
     }
 }
 
