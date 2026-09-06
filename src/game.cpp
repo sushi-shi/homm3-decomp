@@ -7540,6 +7540,13 @@ void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
 // forcing those sites synthetically reached a higher calibration score but was
 // rejected because it did not describe retail source. A header access shim was
 // also rejected after it perturbed already-exact functions in this TU.
+// 2026-09-06, polish lane 36: the mapcell reader family's `int count` local
+// - which took readResourceData and readScholarData to EXACT - DOES NOT
+// generalise here.  Landing all ten `infile->Read` results in one function-
+// scope `count` and comparing that against the sizeof measures 91.5614 ->
+// 74.2348.  The DC block does name `count`, so retail's source very likely
+// has it; what this body cannot absorb is the change in the two placeholder
+// blocks' own block-scoped `count`, which the shared local subsumes.
 VA(0x004c4390, 0x92E)  // DC Read identity + LoadMap/Get callers + stream order
 int NewSMapHeader::Read(TAbstractFile* infile, int campaignMap)
 {
