@@ -306,6 +306,19 @@ void DoQuestLog(int player)
     delete gpQuestLogWindow;
 }
 
+// The row-selecting half of quest_texts(), declared in quest.h and emitted
+// out of line here. It is the row IMMEDIATELY past questlogwindow.obj's last
+// claimed body (the compiland's carved span ends at 0x52e6ae and this row
+// begins at 0x52e6b0), and its body is exactly the two-table select quest.h
+// already documents: `field_04 ? gQuestTextA[field_38] : gQuestTextB[field_38]`,
+// with the 52-string row stride showing up as the `field_38 * 13 << 6`
+// product retail duplicates into BOTH arms rather than sharing.
+VA(0x0052e6b0, 0x2E)  // linkorder tail of questlogwindow.obj + the 0x68320c/0x683210 table pair, retail-only
+const std::string* type_quest::quest_text_row()
+{
+    return field_04 ? gQuestTextA[field_38] : gQuestTextB[field_38];
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\questlogwindow.cpp:78

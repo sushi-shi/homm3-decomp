@@ -15,6 +15,14 @@ class CSprite;
 class Bitmap816;
 enum TTownType;
 
+// The starting-resource bonus text pair (retail 0x576e00 / 0x576e80).
+// Free __fastcall bodies of this compiland; scenarioinfo.obj's
+// CScenarioInfoDlg::ProcessRightSelect is their only caller, and it hands
+// them SGameSetupOptions::alignment[] - modelled `int` here - so the
+// parameter stays an ordinal.  Retail-only: no Dreamcast row fixes an ABI.
+const char* GetStartingResourceName(int town);
+const char* GetStartingResourceDescription(int town);
+
 // A bare rectangular click target. Retail's 0x575220 ctor calls
 // ??0widget@@QAE@XZ (the default base ctor) and writes x/y/width/height/id
 // straight into the widget base (DC's trailing `focus` byte is not a retail
@@ -89,10 +97,15 @@ public:
 // The four dialogs. Each ctor pushes 0x12 through TDialogBox, stores its own
 // vtable and the gameMode byte (the inlined CSingleSelPopup ctor). None adds
 // storage except CTeamAlignmentDlg (its team table below).
+// None of the three declares a destructor: scenarioinfo.obj's
+// ProcessRightSelect destroys all four dialogs with a direct
+// `call ??1TDialogBox` (0x48fe90), which is what the 5-byte IMPLICIT_DTOR
+// representative at 0x576530 inlines to.  An explicit empty body inserts a
+// vptr store and emits an out-of-line ??1C*Dlg the caller would have to call
+// instead - the same rule the CTeamAlignmentDlg claim already records.
 class CBonusDlg : public CSingleSelPopup {
 public:
     CBonusDlg(unsigned char newGameMode);       // retail 0x575410
-    virtual ~CBonusDlg();
     unsigned char CreateWin(const char* title, CSprite* sprite, int frame, const char* botTitle, const char* description);
     unsigned char CreateWin(const char* title, Bitmap816* pImage, const char* botTitle, const char* description);
 };
@@ -100,14 +113,12 @@ public:
 class CHeroDlg : public CSingleSelPopup {
 public:
     CHeroDlg(unsigned char newGameMode);        // retail 0x575a70
-    virtual ~CHeroDlg();
     unsigned char CreateWin(Bitmap816* heroPick, const char* heroName, CSprite* specialtyIcon, int frame, const char* specialtyName, const char* desc);
 };
 
 class CTownDlg : public CSingleSelPopup {
 public:
     CTownDlg(unsigned char newGameMode);        // retail 0x575e10
-    virtual ~CTownDlg();
     unsigned char CreateWin(CSprite* town, int frame, TTownType townType);
 };
 

@@ -27,7 +27,12 @@ public:
     Bitmap816* heroPortrait;          // +0x58, owned
     hero* startingHero;               // +0x5c
 
-    CScenarioPlayerInfoWidget(CSprite* town)
+    // Retail's inlined constructor ends with `mov word ptr [edi+0x10], dx`
+    // (0x5680ec) - the widget id, `390 + playerPosition`, which is exactly
+    // the row ProcessRightSelect fetches back with GetWidget to reach
+    // heroPortrait.  The store sits INSIDE the new-expression's
+    // allocation-succeeded arm, so it is the constructor's, not the caller's.
+    CScenarioPlayerInfoWidget(CSprite* town, int widgetId)
     {
         townSprite = town;
         townType = 0;
@@ -41,6 +46,7 @@ public:
         heroPortrait = 0;
         startingBonus = 4;
         startingHero = 0;
+        id = widgetId;
     }
 
     virtual ~CScenarioPlayerInfoWidget();

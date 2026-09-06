@@ -324,7 +324,6 @@ void extended_dialog(const char* text,
 
 VA_COMPGEN(0x0056cbe0, 0x21, SCALAR_DELETING_DTOR, type_quest)
 
-#pragma auto_inline(off)
 VA(0x0056cb80, 0x5F)  // sole callee of all nine factory arms
 type_quest::type_quest(unsigned char flags)
 {
@@ -332,7 +331,6 @@ type_quest::type_quest(unsigned char flags)
     field_38 = rand() % 3;
     field_3c = -1;
 }
-#pragma auto_inline(on)
 
 // The common virtual base destructor. Its three std::string members unwind
 // in reverse order.
@@ -3392,6 +3390,94 @@ void TSeerHut::read(TAbstractFile* infile)
         }
     }
     NameIndex = chosen;
+}
+
+// Residual (27.41%): the whole delta is one inline decision inside the
+// artifact-quest construction the <= 27 arm shares with read above. Retail
+// CALLS vector::insert(_Last, value) - the two-argument overload Dinkumware's
+// own push_back expands to - and our /Ob2 compile expands that overload as
+// well, so the three-argument fill insert's whole grow path (operator new,
+// _Ucopy x3, _Ufill, _Destroy, operator delete) lands inline: 28 blocks and
+// 16 branches against retail's 10 and 5, and the budget it consumes is also
+// what pushes vector::size() out of line three times. It is the "inline the
+// parent, call the child" family, unreachable from source while the container
+// is the vendored Dinkumware header this TU may not pin inside.
+// MEASURED AND REJECTED at the same plateau: `insert(end(), artifact)` spelled
+// longhand (24.90, and it is +0.21 on read - the two rank OPPOSITE ways, so
+// the source keeps one spelling); a named `std::vector<TArtifact>&` reference
+// to the member (byte-flat, 27.4147 to the digit).
+//
+// The savegame reader and the exact mirror of save (0x573fd0): NewfullMap
+// ::Load calls it on every element of the SeerHutList it has just resized,
+// with the file's saveVersion.  It is the last real body of seerhut.obj -
+// the carve's next row is the basic_string concat COMDAT below - and it sits
+// where the Dreamcast roster puts TSeerHut::load, one row past save
+// (dc 0x12d8c0 -> 0x12d8e4).
+//
+// The <= 27 arm reads the pre-"wide alignments" savegame layout: a dword
+// artifact id and the 12-byte reward record first, then six single bytes of
+// which the first is the quest-absent flag, the fourth is read and dropped,
+// and the fifth carries the quest's text row.  Only after the whole record
+// is consumed does it decide whether to rebuild the artifact quest, which is
+// the identical Restoration-of-Erathia construction read spells above.
+VA(0x00574A90, 0x24A)  // bracket seerhut..singleselectionpopups; save mirror 0x573fd0, dc 0x12d8e4
+void TSeerHut::load(TAbstractFile* infile, int saveVersion)
+{
+    if (saveVersion < 28) {
+        int int_buffer;
+        infile->Read(&int_buffer, sizeof(int_buffer));
+        infile->Read(&reward, sizeof(reward));
+
+        unsigned char value;
+        infile->Read(&value, sizeof(value));
+        unsigned char noQuest = value != 0;
+        infile->Read(&value, sizeof(value));
+        field_12 = value;
+        infile->Read(&value, sizeof(value));
+        visitedPlayers = value;
+        infile->Read(&value, sizeof(value));
+
+        int textRow;
+        infile->Read(&textRow, 1);
+        textRow &= 0xff;
+
+        infile->Read(&value, sizeof(value));
+        NameIndex = value;
+
+        if (noQuest || int_buffer == -1) {
+            quest = 0;
+        } else {
+            type_artifact_quest* artifactQuest = new type_artifact_quest(1);
+            TArtifact artifact =
+                static_cast<TArtifact>(int_buffer); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
+            artifactQuest->artifacts.push_back(artifact);
+            artifactQuest->field_38 = textRow;
+            gpGame->artifactDisabled[artifact] = 1;
+            artifactQuest->SetDefaultText();
+            quest = artifactQuest;
+        }
+    } else {
+        int int_buffer;
+        infile->Read(&int_buffer, 1);
+        type_quest* newQuest = create_quest(int_buffer & 0xff, 1);
+        quest = newQuest;
+        if (newQuest)
+            newQuest->Load(infile, saveVersion);
+
+        infile->Read(&reward, sizeof(reward));
+        {
+            unsigned char value;
+            infile->Read(&value, sizeof(value));
+            field_12 = value;
+            infile->Read(&value, sizeof(value));
+            visitedPlayers = value;
+        }
+        {
+            unsigned char value;
+            infile->Read(&value, sizeof(value));
+            NameIndex = value;
+        }
+    }
 }
 
 // COMDAT pairing: Hstd on the char instantiation, mnemonic agreement 1.000.
