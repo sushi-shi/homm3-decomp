@@ -820,30 +820,27 @@ DATA(0x0068c660) static int gLastViewArmyHoverID = -1;
 // spells whose effect has no turn count (Bind, Berserk, Disrupting Ray)
 // the strip gets a fixed descriptor instead of Duration.
 //
-// Residual (92.57%, from 74.41; 2026-09-05): the exits are the
-// Dreamcast's `bExitFlag` device, not gotos. The dossier names the
-// byte local (sp+0x33), zeroes it right before the qualifier test
-// (line 412), sets it in the UPGRADE and DISMISS arms' accept tests and
-// in the ACCEPT arm (511-520), and tests it ONCE after the three arms
-// (583): `if (bExitFlag) { msg->id = WIDGET; dialogReturn = codeY;
-// codeY = codeX = END_DIALOG; return 2; }` followed by the one
+// EXACT (2026-09-06), and the road there is worth keeping because three
+// separate levers each closed a different third of it.
+// (1) The exits are the Dreamcast's `bExitFlag` device, not gotos. The
+// dossier names the byte local (sp+0x33), zeroes it right before the
+// qualifier test (line 412), sets it in the UPGRADE and DISMISS arms'
+// accept tests and in the ACCEPT arm (511-520), and tests it ONCE after
+// the three arms (583): `if (bExitFlag) { msg->id = WIDGET; dialogReturn =
+// codeY; codeY = codeX = END_DIALOG; return 2; }` followed by the one
 // animation step behind `GameTime::IsPast(glTimers[..])` (588) and
-// `return 1`. That is the whole of the placement the earlier notes
-// fought with `check_accept:`/`accepted:`/`animate_tail:` labels and a
-// duplicated right-click animation copy: VC6 threads the constant flag
-// into a shared return-2 block, cross-jumps the dismiss arm into the
-// upgrade arm's NormalDialog+test tail by itself, and the IsPast form
-// is what puts the glTimers load ahead of the GameTime::Get call
-// (77.26 -> 92.57 on that one accessor). Same device as
-// townManager::Main and advManager::ProcessKeyPress.
-// Left (90 vs 98 blocks): the morale arm's `text += morale_help` is a
-// CALL to append(const string&,size_t,size_t) here where retail expands
-// it (_Xlen/_Grow/_Eos as calls) - the /Ob2 budget at that one site,
-// ~100 B, which is exactly our size deficit; retail's luck arm calls
-// the same append (game_167a0_sub00_1b250), so the two sites straddle
-// the sequential budget. Also the default arm's `text = help.rclick`
-// homes the pointer in a register where retail spills it, and the
-// gViewArmyHelp/gLuckTexts/gMoraleTexts reloc addend FORM (masked).
+// `return 1`. That is the whole of the placement the earlier notes fought
+// with `check_accept:`/`accepted:`/`animate_tail:` labels and a duplicated
+// right-click animation copy: VC6 threads the constant flag into a shared
+// return-2 block, cross-jumps the dismiss arm into the upgrade arm's
+// NormalDialog+test tail by itself, and the IsPast form is what puts the
+// glTimers load ahead of the GameTime::Get call. 77.26 -> 92.57 on that one
+// accessor. Same device as townManager::Main and advManager::ProcessKeyPress.
+// (2) THE DEPTH LADDER on the seven help-text stores (polish 29):
+// `text.assign(X)` rather than `text = X`, 92.5744 -> 99.1520. The note at
+// the help arm records what else was measured there.
+// (3) The rollover arm's `spell` BOUND BY `const int&`, 99.1520 -> 100.0000
+// - see the width sweep recorded at that declaration.
 // E:\gamedcs\viewarmywindow.cpp:404
 VA(0x005f4850, 0x7D7)  // direct caller + convertID2HelpID + help table, dc 0x191804
 int TViewArmyWindow::WindowHandler(message* msg)
@@ -965,7 +962,22 @@ int TViewArmyWindow::WindowHandler(message* msg)
                     if (hoverID >= AFFECTING_SPELLS_0_ID
                         && hoverID <= AFFECTING_SPELLS_2_ID
                         && Influence[hoverID - AFFECTING_SPELLS_0_ID] != -1) {
-                        int spell = Influence[hoverID - AFFECTING_SPELLS_0_ID];
+                        // BOUND BY `const int&`, not copied into an `int`.
+                        // That is the whole of this row's last residual:
+                        // retail materialises `mov eax,ecx` ahead of the
+                        // three-way compare chain, which a plain `int spell`
+                        // never emits (VC6 CSEs the guard's own load and
+                        // compares ECX directly, 99.1520).  Measured, all
+                        // against the same delink generation: `short` 99.7040,
+                        // `signed char`/`char` 99.8000, `int` from a
+                        // signed-char or short cast 99.9040, `const int&`
+                        // 100.0000; `unsigned short` 99.3840, `unsigned char`
+                        // 98.5600, `unsigned`/`long`/a named slot index
+                        // 99.1520, `>= 0` instead of `!= -1` 98.6160, and the
+                        // whole chain as a `switch` 90.8688 (so it is an
+                        // if-chain, as the compare order already said).
+                        const int& spell =
+                            Influence[hoverID - AFFECTING_SPELLS_0_ID];
                         if (spell == SPELL_BIND)
                             sprintf(gText,
                                     gpGeneralText->GetText(
