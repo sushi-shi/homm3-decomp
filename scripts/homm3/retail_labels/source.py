@@ -326,6 +326,11 @@ CHAR_STREAM_MEMBERS = (
     ("?seekpos@?$basic_filebuf@D", None, "filebuf_seekpos"),
     ("?setbuf@?$basic_filebuf@D", None, "filebuf_setbuf"),
     ("?sync@?$basic_filebuf@D", None, "filebuf_sync"),
+    # `close` rides the same rule and needs the key for the same reason the
+    # rest of the block does: the generic template tail reduces it to
+    # `std_basic_filebuf_close`, which no VA_COMPGEN owner can spell, and
+    # `basic_ifstream`/`basic_ofstream` carry a member of the same name.
+    ("?close@?$basic_filebuf@D", None, "filebuf_close"),
     ("?_Init@?$basic_filebuf@D", None, "filebuf_init"),
     ("?_Init@?$basic_streambuf@D", None, "streambuf_init"),
     ("?do_length@?$codecvt@DDH", None, "codecvt_do_length"),
@@ -1240,6 +1245,15 @@ def _demangle_key(mangled: str):
         mangled)
     if construct_pair:
         return f"{construct_pair.group(1).lower()}_pair@std_construct"
+    # ...and the same value_type over a map whose KEY is a POINTER, which
+    # mangles as `QAV<T>@@` rather than `$$CBH` and so cannot reach the arm
+    # above. Without it the whole spelling falls through to the generic tail
+    # as `std__construct`, which no VA_COMPGEN owner can produce.
+    construct_ptr_pair = re.match(
+        r"^\?_Construct@std@@YIXPAU\?\$pair@QA(?:V|U)([A-Za-z_]\w*)@",
+        mangled)
+    if construct_ptr_pair:
+        return f"{construct_ptr_pair.group(1).lower()}_pair@std_construct"
     #: `_Construct<vector<T>>` - the element is itself a template, which
     #: the identifier regex below cannot reach. Keyed `<t>_vector` like
     #: nested_vector_element above, so it reads with its siblings.

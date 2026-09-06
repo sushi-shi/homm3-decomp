@@ -2997,11 +2997,37 @@ char* std::__copy(char* __first, char* __last, char* __result, std::random_acces
 
 #endif  // @carcass
 
-// UNCLAIMED IN SPAN: 0x404690 (75 B) and events' 0x4ad0e0 (74 B) both
-// score high against ??1?$basic_string@D...@QAE@XZ (0.898 / 0.957), but
-// only ONE retail row can carry that name - the linker selects a single
-// copy of the COMDAT - and neither size is close to the 62 bytes our
-// compile emits. Left unclaimed rather than banked on a guess.
+// The third of the Complete-only heroWindow overrides the retail vtable
+// 0x63a5e4 names (Open at slot 1 and Close at slot 2 are reconstructed
+// above). It brackets the base implementation's effect the same way those
+// two bracket its lifetime: the +0x9c effect is read in BOTH arms and each
+// arm tests it for null, which VC6 then CSEs into the single load ahead of
+// the flag test that retail emits. Naming the pointer in a local instead is
+// worth 24 points the wrong way (75.60 against 100.0000): with the local,
+// the two callee-saved restores are cross-jumped ahead of the flag test
+// where retail leaves a full epilogue in each arm.
+// The METHOD NAME is still unattested (no DC or sibling row); the model's
+// placeholder heroWindow::_vslot8 name is used because the class declares
+// the override under it.
+VA(0x004040b0, 0x38)  // anchor-vtable (slot 8 of 0x63a5e4), retail-only
+void TAdventureMapWindow::_vslot8(unsigned char on)
+{
+    heroWindow::_vslot8(on);
+
+    if (on) {
+        if (immersion)
+            static_cast<TImmMouseEffect*>(immersion)->Stop();
+    } else {
+        if (immersion)
+            static_cast<TImmMouseEffect*>(immersion)->Start();
+    }
+}
+
+// UNCLAIMED IN SPAN, RESOLVED 2026-09-06 (claim lane 31): 0x404690 is NOT a
+// basic_string destructor - it stores logic_error's vtable 0x6455bc and
+// tail-calls ~exception, so it is `??1logic_error`, and it is claimed in
+// objecttype.cpp with the rest of that COMDAT group (0x404640 / 0x404660 /
+// 0x4046e0). events' 0x4ad0e0 is still open.
 
 // COMDAT pairing: basic_string<char>::_Eos, 20 B against this compiland's
 // single 20-byte COMDAT.
