@@ -70,6 +70,24 @@ VA_COMPGEN(0x00514060, 0xCA, CLASS_CTOR, TObjectImageNameTable)
 // vector::insert at the site while `push_back(x)` charges a free wrapper
 // and prices the nested insert at budget/sites-remaining; which of the two
 // reproduces retail depends on how much budget the site has left.
+// RE-MEASURED 2026-09-06: that ranking has EXPIRED. At the current delink
+// generation cache-push_back and cache-insert are byte-identical (47.7708
+// to the digit, and 47.7708 is also the banked MAX), so the four-way sweep
+// above no longer separates them. Do not re-derive a lever from it.
+//
+// IDENTIFIED 2026-09-06, NOT YET CLAIMABLE: the row retail calls at
+// fn+0x150, 0x516c10 (522 B), is `vector<TImageInfo>::insert(iterator,
+// const TImageInfo&)` - the TWO-argument, iterator-returning overload, with
+// the three-argument `insert(iterator, size_type, const T&)` expanded inside
+// it (`ret 8`, the 0x2aaaaaab /24 reciprocal, `add [ebx+8],0x18`). The
+// 24-byte element is TImageInfo itself, which the call site proves: the
+// record at [ebp-0x6c] is two zeroed dwords followed by two
+// `bitset<48>::_Tidy` calls, and the row cursor right after is
+// `lea edx,[ebx+2*ebx] / lea ebx,[eax+8*edx]`. The three-argument overload
+// is already claimed at 0x46aeb0. This one is not claimable yet for the
+// same reason as `basic_string::resize` below: VC6 inlines the two-argument
+// wrapper at both `push_back` and `insert(end(), x)` spellings and emits no
+// COMDAT for it, so there is no base symbol for a VA_COMPGEN to pair.
 //
 // Residual (42.63%): three /Ob2 over-inlines and nothing else. Retail
 // CALLS the registry's own constructor, the pair constructor at 0x517c30
@@ -472,6 +490,25 @@ VA_COMPGEN(0x0051b5d0, 0xB3, TREE_CONST_ITERATOR_DEC, string)
 // The same sweep, over the kinds the label join had no vocabulary for until
 // this change. Ordered by RVA; agreements are the masked-mnemonic difflib
 // ratio against the compiled COMDAT of the same content size.
+
+// IDENTIFIED 2026-09-06, NOT YET CLAIMABLE: retail 0x515010 (408 B) is
+// `basic_string<char>::resize(size_type)`, this object's own COMDAT copy.
+// The bytes are Dinkumware's one-argument overload with both arms expanded -
+// `_N <= _Len ? erase(_N) : append(_N - _Len, _E(0))`. The erase arm is the
+// no-op `_Xran` guard on `_Len < _P0` (retail's `cmp [ebx+8],esi / jae` over
+// `_Xran`), `_Split()` (the `_Ptr[-1]` refcount test, `_Tidy(1)`, the inline
+// strlen, `_Grow`, `memmove`) and `_Eos`; the append arm is `_Xlen()` behind
+// `npos - _Len <= _N`, the second `_Xlen` behind `_Grow`'s own `npos - 3`
+// test, and the `rep stosb` of `_Tr::assign(_Ptr + _Len, _N, _C)`. `ret 4`
+// and the `[ebx+8]` / `[ebx+4]` member reads fix the arity and the receiver.
+// It cannot be claimed yet: a VA_COMPGEN only pairs a COFF symbol VC6 has
+// already emitted, and no site in this file's reconstructed source calls
+// `resize`. The retail whole-image xref finds the only CALL in
+// `collate<char>::do_transform` (0x614260, outside this band), so every use
+// inside objecttype.obj was inlined and the emitted COMDAT is the leftover -
+// which means the call site is in a body of this TU still unwritten, not in
+// one already here. A future lane that adds it should also add
+// BASIC_STRING_RESIZE to DIRECT_SYMBOL_COMPGEN_KINDS.
 
 // COMDAT pairing: basic_streambuf<char>::sgetc, agreement 1.000.
 VA_COMPGEN(0x005157b0, 0x20, STREAMBUF_SGETC, char)
