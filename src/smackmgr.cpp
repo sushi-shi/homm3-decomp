@@ -335,58 +335,28 @@ void VideoOpen(int id, int x, int y, int w, int h, int a6, int a7, int a8)
 }
 
 // E:\gamedcs\smackmgr.cpp:156
-// Residual (95.9%): the drain loop keeps one extra 4-byte top test in
-// retail (cmp eax,ebx; je) whose incoming edges are all known-nonzero;
-// our CL jump-threads it away, so the fast back edge lands on the dec
-// and the bottom test becomes a memory cmp. The local mirror n (which
-// buys the cached-eax test forms, 95.8% -> 95.9%) is byte-proven by
-// the dec/store/reload shape.
-// Sharper structural reading (2026-08-08): retail has THREE test sites
-// and we have two. Retail's are (a) the entry `cmp eax,ebx; je done`
-// BEFORE the hoisted `mov esi,[__imp__BinkPause]` - the duplicated loop
-// guard VC6 emits to make the LICM hoist legal, (b) a real TOP test at
-// +0x17 that the post-store `jne` targets, and (c) the reload edge,
-// which is the end-of-body back edge tail-duplicated THROUGH (b) into
-// `cmp eax,ebx; jne <body>`. So retail's loop is top-tested and
-// unrotated while ours is rotated; every spelling collapses (a) and (b)
-// into one. Tried and rejected (all producing identical objects):
-// while+if, if+do-while, while+continue, the literal goto-loop
-// transcription, and (2026-08-08) that transcription wrapped in the
-// explicit outer `if (n != 0)` that would supply site (a) - VC6 threads
-// the top test away regardless of how the source spells the edges.
-// Confirmed 2026-08-08 with the branch counter: base 13, target 14, and
-// the missing site is (b). The `while (1) { if (n == 0) break; ... }`
-// form that unrotated VideoPlay's loop does NOT help here (88.3%, and
-// it costs a site rather than adding one) - the edge our CL threads is
-// the `if (n != 0) continue` back edge, whose value it has just proved
-// nonzero from `dec eax`, and neither `continue`, an explicit `goto
-// top_of_drain`, nor dropping the local mirror for the bare global
-// (95.85%) stops the propagation. NOT source-addressable.
+// SETTLED 2026-09-06 (polish lane 46): this body's drain loop was a PASTE
+// of VideoResume, and the paste is what cost the row.  Retail says so from
+// ShowVideo, whose first VideoClose expansion (0x598b3c) reads
+// `cmp [gVideoPauseCount],ebx / je / call ?VideoResume@@YIXXZ /
+// cmp [gVideoPauseCount],ebx / jne` - a CALL to VideoResume standing inside
+// an expansion of VideoClose, which no longhand copy here could ever emit.
+// So the source is `while (gVideoPauseCount != 0) VideoResume();`, and the
+// three test sites the old note called unreachable fall out of it for free:
+// (a) is the while's entry guard, (b) at +0x17 is VideoResume's own
+// `if (gVideoPauseCount == 0) return;` reached by the inlined return edge,
+// and (c) is the loop's re-read at +0x28a.  95.9184 -> 100.  The old
+// hand-tuned spelling (an `int n` mirror, the dec/store/reload shape, and
+// the four-way `||` guard that is really VC6 cross-jumping VideoResume's
+// two service_sounds arms) is retired with it, as are its rejected probes:
+// while+if, if+do-while, while+continue, the goto transcription, and the
+// explicit outer `if (n != 0)` - every one of them was trying to reach a
+// helper boundary by respelling the paste.
 VA(0x005975f0, 0xE1)  // anchor-global, dc 0x14ac40
 void VideoClose()
 {
-    int n;
-
-    n = gVideoPauseCount;
-    while (n != 0) {
-        n--;
-        gVideoPauseCount = n;
-        if (n == 0) {
-            if (gSmackVideo || gSmackVideo2)
-                gSmackPaused = 0;
-            if (gBinkVideo) {
-                gBinkPaused = 0;
-                BinkPause(gBinkVideo, 0);
-            }
-            if (gBinkVideo2) {
-                gBinkPaused = 0;
-                BinkPause(gBinkVideo2, 0);
-            }
-            if (gSmackVideo || gSmackVideo2 || gBinkVideo || gBinkVideo2)
-                gpSoundManager->service_sounds();
-            n = gVideoPauseCount;
-        }
-    }
+    while (gVideoPauseCount != 0)
+        VideoResume();
     gpSoundManager->service_sounds();
     SmackManager::CloseSmacker();
     CloseBinkVideo();
