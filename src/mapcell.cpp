@@ -4118,6 +4118,13 @@ static void readQuestGuardArm(NewfullMap* map, TAbstractFile* infile,
 // arm's quest pointer all read `[ebp+0x10]` in retail and `[ebp-N]` here.
 // That is the remaining B4 knob; why-reg's model does not reach a parameter
 // slot from a body spelling.
+// 2026-09-06, polish lane 36: the family `int count` local that closed
+// readResourceData and readScholarData is BYTE-FLAT here (97.4369 either
+// way), and so is it on readMapLayer (95.4717) and on NewfullMap::Save
+// (91.8870, where the DC's only local IS `count`).  The lever only bites
+// where the Read result feeds an UNSIGNED compare whose operand VC6 would
+// otherwise fold; a `< sizeof(...)` compare on a plain `char` read is
+// already in retail's shape.
 VA(0x00502e00, 0x832)  // order-map: dispatches to all read*Data rows (DC-isomorphic callee set) + CreateBoat 0x4bb250 (readBoatData inlined) + TQuestGuard::read (retail quest path); readHolyGrail/readShrine/readShipyard inlined, dc 0xf16c8
 int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
                            int mapVersion)

@@ -8667,6 +8667,14 @@ DATA(0x0063a64c) static const int akSoundVolumes[8] = { 32, 28, 20, 10,
 // the loop, stored through the local) does NOT reproduce retail's
 // `mov ebx,0x7f` - VC6 constant-propagates it straight back to the
 // immediate store. Byte-flat at 75.4080.
+// 2026-09-06, polish lane 36: the Dreamcast block names `const int
+// MAX_RANGE = 4;` as the function's FIRST statement (advmgr.cpp:9786, stored
+// to sp+0x18) and both its loops compare against that 4 - which is exactly
+// the `mov dword ptr [ebp-0x1c], 4` the note above calls the residual.
+// Measured and rejected against 75.4080: MAX_RANGE declared and used as the
+// ring loop's bound 75.3781; the same non-const 75.3781; declared but unused
+// byte-flat.  VC6 constant-propagates the initialiser in every form, so the
+// spilled 4 is not reachable from a source constant.
 VA(0x004183d0, 0x245)  // anchor-global, dc 0x1b164
 void advManager::SetEnvironmentOrigin(type_point point, int reset)
 {
