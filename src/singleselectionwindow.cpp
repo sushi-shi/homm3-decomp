@@ -8694,6 +8694,16 @@ void TSingleSelectionWindow::OnDeleteFile()
 VA_COMPGEN(0x0058e2e0, 0x21, SCALAR_DELETING_DTOR,
            CSingleSelectionNetMsgHandler)
 
+// COMDAT pairing: CRequestHeroFaceReplyMsg's two-argument constructor, the
+// out-of-line copy of the header inline. This one is settled by BYTES, not
+// by shape: the whole 49-byte extent is equal to this object's own COMDAT
+// to the digit, and the only place it could be confused - CScrollMsg's
+// identically shaped `(int, int)` constructor next door - differs in exactly
+// the message-id immediate (0x403 against this row's 0x40c,
+// RS_REQUEST_HERO_FACE_REPLY). The 0x1c size immediate is sizeof the class,
+// and the two arguments land at +0x14 and +0x18 as the class declares.
+VA_COMPGEN(0x0058e6c0, 0x31, CLASS_CTOR, CRequestHeroFaceReplyMsg)
+
 // E:\gamedcs\singleselectionwindow.cpp:8764
 VA(0x0058e310, 0x21)  // anchor-vtable CSingleSelectionNetMsgHandler vtbl 0x241ce8 slot1 (CheckHandleNet; cf CNetMsgHandler layout), dc 0x1451a0
 CNetMsg* CSingleSelectionNetMsgHandler::CheckHandleNet(unsigned char inPopup, unsigned char* msgReceived)
