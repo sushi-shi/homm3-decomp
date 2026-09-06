@@ -169,6 +169,17 @@ int town::load(TAbstractFile* infile, int saveVersion)
 // load above. It always writes the modern length-prefixed name, it packs
 // field_38/field_34/field_33 back into one byte, and it re-packs the
 // bitset<70> into 70 bytes of which only the first nine carry bits.
+// Residual (99.8370%): the frame, 0x48 against retail's 0x50, and it is one
+// recycled-home decision. Retail puts the BYTE `char_buffer` in the first
+// parameter's padding byte [ebp+0xb] and gives the name-length dword its own
+// slot at [ebp-8]; our CL puts the DWORD in the parameter home [ebp+8] and
+// gives the byte its own slot at [ebp-1], which costs the 8 bytes and shifts
+// spellBuf from [ebp-0x50] to [ebp-0x48]. Every other instruction agrees
+// (59 = 59 blocks, all exact). MEASURED AND REJECTED 2026-09-06, all
+// byte-flat at 99.8370: declaring nameLength FIRST in the local block,
+// hoisting the spell loop counter to function scope, and block-scoping
+// char_buffer around its whole run. VC6 hands the recycled home to the
+// widest local that fits, and no declaration form observed here changes it.
 VA(0x005bd2f0, 0x402)  // carcass promotion, dc 0x165988; anchor-callee armyGroup::save; caller game::Save's town pool
 int town::save(TAbstractFile* outfile)
 {
