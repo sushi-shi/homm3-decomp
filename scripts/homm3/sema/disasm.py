@@ -45,14 +45,16 @@ def run(args) -> None:
             "--candidate/--source")
 
     if args.base or args.source:
+        _asm.require_candidate(unit, name, rva)
         obj = _asm.BASE / f"{unit}.obj"
         if unit and not getattr(args, "no_build", False):
             note = _asm.refresh_unit(unit)
             if note:
                 print(note)
         if not obj.is_file():
-            die(f"{name} [{unit or 'no unit'}] has no compiled base object - "
-                "only manifest units (config/units.toml) compile")
+            die(f"candidate object missing for {name} [TU {unit}]: {obj}; "
+                f"run `homm3 build --fast {unit}` after an initial `homm3 build`. "
+                f"Retail is available with `homm3 sema disasm 0x{rva:x}`.")
         text = _asm.objdump(obj, name, ordinal)
         title = (f"[disasm BASE (compiled): {name}  "
                  f"build/objdiff/base/{unit}.obj]")
