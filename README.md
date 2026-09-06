@@ -7,8 +7,8 @@ relocations with the **MSVC 6.0 SP3** toolchain. Retail executable bytes and RVA
 authoritative. [objdiff](https://github.com/encounter/objdiff) is a useful comparison and
 navigation surface, not proof of correctness.
 
-This repository does **not** contain the original game's executable or resources. Supply a
-legally obtained `HEROES3.EXE` locally to initialize the matching workspace.
+This repository does **not** contain either game's executable or resources. To match
+the game, supply your own legally obtained retail `HEROES3.EXE` and Dreamcast `H3.EXE`.
 
 <!-- match-score:start -->
 
@@ -50,18 +50,35 @@ timestamp   8 September 2000, built by MSVC 6.0
 
 ## Quickstart
 
-Provide the retail exe via `HOMM3_EXE=/path/to/HEROES3.EXE` — it is
-sha256-verified against the pinned pressing and copied into `build/orig/`
-(a wrong file is refused, never silently used).
+From the repository root, supply both executable paths:
 
 ```sh
-nix develop .#build   # VC6 SP3 under wine + the tools
-homm3 init            # ONE-TIME: toolchain tarball (pinned release, SHA-256-verified),
-                      # wine prefix, smoke compile through the real cc_wrap path
-homm3 build           # configure + ninja: compile every manifest unit
-homm3 link            # OPT-IN candidate link (layout study; the EXE is not runnable)
-homm3 clean           # nuke build/ entirely; `homm3 init` restores it
+nix develop .#build
+HOMM3_EXE=/absolute/path/to/HEROES3.EXE \
+HOMM3_DREAMCAST_EXE=/absolute/path/to/H3.EXE \
+  homm3 init
+
+homm3 build           # compile, delink, compare, checkpoint, run gates
+homm3 link            # optional layout study; the EXE is not runnable
 ```
+
+You can also pass `--exe PATH` and `--dreamcast-exe PATH` to `homm3 init`;
+these override the environment variables.
+
+Initialization verifies both files' size and SHA-256, copies them into ignored
+`build/orig/HEROES3.EXE` and `build/orig/dreamcast/H3.EXE`, and reads the Dreamcast
+executable's embedded NB11 debug symbols. The Dreamcast input is pinned to
+**8,425,752 bytes**, SHA-256
+`cdbc7e75bd7d057171fa12b728aaaee01c1db133fff350b034950dd21dd07736`.
+
+`init` also configures the build, downloads and verifies the pinned VC6 SP3 toolchain
+if missing, initializes Wine, and smoke-compiles through the normal compiler wrapper.
+Toolchain downloads use authenticated `gh`.
+
+Subsequent commands use the staged executables and recheck their bytes; the original
+paths need not remain configured. Re-running `homm3 init` verifies and reuses an existing
+setup. `homm3 clean` removes all of `build/`, including the staged copies; supply both
+paths again when initializing after a clean.
 
 ## License
 

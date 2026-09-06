@@ -11,6 +11,7 @@ from dataclasses import asdict, dataclass, field
 from typing import Any, Callable, Iterable, TextIO
 
 from homm3.analysis import dc_lines
+from homm3.core.nb11 import Symbols
 
 
 class AsmError(ValueError):
@@ -236,7 +237,7 @@ def _scope_depth(address: int, scopes: list[tuple[int, int]]) -> int:
     return sum(start <= address < start + size for start, size in scopes)
 
 
-def build_view(row: dict[str, str], dump: list[str], data: bytes) -> dict[str, Any]:
+def build_view(row: dict[str, str], dump: Symbols, data: bytes) -> dict[str, Any]:
     start, size = int(row["offset"], 0), int(row["cb"], 0)
     end = start + size
     proc = dc_lines.find_proc(dump, start)

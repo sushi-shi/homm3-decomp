@@ -9,8 +9,8 @@ config `Release_with_debug` - an OPTIMIZED build with full symbols), i.e.
 ANOTHER PRESSING: names/types/layouts are reference evidence; addresses
 are DC .text offsets, never retail claims.
 
-Self-contained parser over ../homm3-symbols/HoMM3-Dreamcast-Dump/dump.txt
-(the carve-era Dump class is archived; this does not import it).
+Legacy corpus importer: pass an explicit cvdump text path with --dump PATH.
+Normal matching reads NB11 directly from the executable and does not use this importer.
 
 Outputs (evidence/dreamcast/):
   README.md        provenance, build-mode findings, inventory
@@ -28,14 +28,15 @@ Outputs (evidence/dreamcast/):
 """
 from __future__ import annotations
 
+import argparse
 import csv
+from pathlib import Path
 import re
 import sys
 from collections import defaultdict
 
 from homm3.core import common
 
-DUMP = common.HOMM3_DIR.parent / "homm3-symbols/HoMM3-Dreamcast-Dump/dump.txt"
 OUT = common.EVIDENCE_DIR / "dreamcast"
 
 PROC_RE = re.compile(r"S_([GL])PROC32: \[0001:([0-9A-F]{8})\], "
@@ -58,9 +59,12 @@ PAIRS_RE = re.compile(r"(\d+)\s+([0-9A-F]{8})")
 README = """\
 # Dreamcast CodeView corpus (RoE pressing - reference evidence)
 
-Extracted by `python3 -m homm3.analysis.dc_extract` from the cvdump text
-in `../homm3-symbols/HoMM3-Dreamcast-Dump/` (itself the NB11 stream
-embedded in the GD-ROM's `H3.EXE`, sha256 `cdbc7e75...`).
+Extracted from the NB11 symbols embedded in Dreamcast `H3.EXE` (SHA-256
+`cdbc7e75bd7d057171fa12b728aaaee01c1db133fff350b034950dd21dd07736`).
+The matching tools read the embedded records directly from the initialized executable.
+These CSVs retain the previously decoded type corpus.
+The legacy importer accepts explicit cvdump text via
+`python3 -m homm3.analysis.dc_extract --dump /absolute/path/to/dump.txt`.
 
 **Build**: WinCE SH (S_COMPILE says SH3, the linker says SH4), compiler
 `Microsoft 32-bit C/C++ Optimizing Compiler 12.17.8370` (the eMbedded
@@ -88,7 +92,10 @@ decompilation; retail claims still need the usual proof chain
 
 
 def main(argv=None) -> int:
-    text = DUMP.read_text(errors="replace")
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--dump", required=True, type=Path, help="explicit cvdump text input")
+    args = ap.parse_args(argv)
+    text = args.dump.read_text(errors="replace")
     sym_lo = text.index("*** SYMBOLS")
     sym_hi = text.index("*** Compacted")
     types_lo = text.index("*** GLOBAL TYPES")
