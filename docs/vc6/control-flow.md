@@ -334,3 +334,52 @@ constructors, 3 destructors), spread over 17 units — from
 So the routing answer for the unlocked population is: **do not point
 `why-reg` at them**. Point `predict-inline` at them, and treat the
 `textButton` guard as the one spelling lead the sweep turned up.
+
+## The FLOW bucket is two classes, and one of them is not a flow problem (2026-09-06)
+
+Polish lane 23's first-divergence classifier split 523 sub-100 rows by the
+KIND of the first divergent byte; 56 landed in FLOW ("same instructions,
+different block terminator"). Running `sema diff --summary` over all 56 and
+reading the **branch/ret counts** rather than the terminator splits them
+cleanly, and the split says which tool to point at them:
+
+- **ret-count delta (14 of 56)** — retail has MORE `ret`s than we do
+  (`is_computer_action` 6 vs 10, `iconWidget::Main` 17 vs 16,
+  `border::Main` 8 vs 7, `CHotspotWidget::Main` 5 vs 4, `GetMobility` 3 vs
+  2, `ProcessMapSelect` 13 vs 12, `GetSoundId` 73 vs 71, …). This is the
+  **tail-merge generation family**: our SP3 cross-jumper merges epilogues
+  retail's generation left duplicated, and the merged copy then SINKS,
+  which is what turns a short backward `jcc` in retail into a long forward
+  one here. Every row in this group already carries a residual note with
+  three to five rejected exit shapes. `why-branch` reports D6 on them and
+  finds no catalog mutation. **Do not spend a lane on this group.**
+- **branch-count delta (19 of 56)** — the terminator differs because one
+  side has WHOLE BLOCKS the other lacks, and reading `--calls` positionally
+  always names an /Ob2 site, never a statement. Retail expands
+  `GetArmyName` at `CombatMessage`'s FLY arm and calls it at the WALK arm
+  (5 branches); retail calls `basic_string::append` at four
+  `get_morale_description` rungs and expands three; retail leaves
+  `vector<long>::size()` out of line in `find_attack_hexes`' reallocate
+  path. **This group is `predict-inline`'s, not `why-branch`'s** — and
+  under the current cleanliness floor (inline-depth pins 355, falling
+  only) it is closed, because the only levers that move it are a statement
+  pin or a caller-size change.
+- **`clean` / `flips POLARITY` with both counts equal (23 of 56)** —
+  register-homing or block layout; `why-reg` territory.
+
+The corollary for the OPCODE bucket (37 rows) is the same shape. A scan of
+all 523 first divergences for the mnemonic pairs that name a TYPE
+(`jb`/`jl`, `ja`/`jg`, `movzx`/`movsx`, `sar`/`shr`, `div`/`idiv`,
+`mov`/`movzx`) returns exactly **one** hit tree-wide
+(`readMapLayer`, `mov` vs `movsx`). The OPCODE bucket is therefore NOT a
+signedness bucket; its members are `lea`-vs-`add` register permutations,
+`setcc`-vs-branch bool materialisation, and rep-stos-vs-loop expansions.
+
+**Where the type facts actually are: the const-reference ARGUMENT, not the
+compare.** `_cpp_clamp` is declared `const int&(const int&, const int&,
+const int&)`, so a `long` lvalue needs a conversion and therefore a THIRD
+stack temporary, while an `int` lvalue binds its own home and needs only
+two. Counting retail's temps at such a call site reads the local's declared
+type straight off the bytes: `hero::GetLuck`'s `luck` is `long`
+(87.7439 -> 88.0662, twelve bytes of tail recovered and two dead
+write-backs removed). Count the temps before assuming a plain `int`.
