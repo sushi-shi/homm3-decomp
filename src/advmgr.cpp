@@ -7020,6 +7020,17 @@ void advManager::UpdateRadar(unsigned char updateFlag, unsigned char bPartialUpd
 // VERIFY is bounded separately on the preceding 94.804726 shape: discarded
 // `cellDescription.empty()` and `cellDescription.size()` accessors are both
 // byte-flat. Neither enters the residual cross-jump or frame decision.
+// 2026-09-06, polish lane 36, the DC LOCAL-SCOPE SWEEP (94.8708 -> 95.0826):
+// the same `thisHut` the sibling SetRolloverText wanted - the DC block names
+// it (CodeView 0x2664) for the SEER arm's SeerHutList row, addressed once
+// through a named reference instead of subscripted inside the call.  The
+// declaration block above already stands in the DC's exact local order
+// (testFlag, width, visited, testCell, player, map_point, x, currHero, y,
+// iPlayer, tempText, playerBit, height, infolevel), which is why nothing
+// else in that list moves.  Measured and rejected on top: binding the
+// rollover's by-value string return in the DC's `result` local (0x1329 =
+// std::string, sp+0x9c), either by value or by const& - both 93.0753, so
+// retail consumes the temporary in place here.
 VA(0x004137c0, 0x25A0)  // linkorder, dc 0x15fdc
 void advManager::QuickInfo(int cellX, int cellY, int z)
 {
@@ -7462,11 +7473,12 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
             case RESOURCE:
                 strcpy(gText, gResourceNames[cell->objectIndex]);
                 break;
-            case SEER:
+            case SEER: {
+                TSeerHut& thisHut = fullMap->SeerHutList[cell->extraInfo];
                 strcpy(gText,
-                    fullMap->SeerHutList[cell->extraInfo]
-                        .SeerHutFn_005743E0(iPlayer).c_str());
+                       thisHut.SeerHutFn_005743E0(iPlayer).c_str());
                 break;
+            }
             case SHRINE1:
                 SetShrineHelpText(gText, currHero, cell, Shrine1Info,
                                   newLine, separator);
