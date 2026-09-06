@@ -2549,7 +2549,7 @@ mainmenu	??1TMainMenu@@UAE@XZ	100.0000	100.0000	100.0000	0xfb660	8cb9205dc179
 mainmenu	??_GTMainMenu@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xfb630	-
 mainmenu	?DoModal@TMainMenu@@QAEXXZ	100.0000	100.0000	100.0000	0xfb6e0	2c725647dbbc
 mainmenu	?MainMenuHandler@@YIHAAVmessage@@@Z	93.1746	93.1746	93.1746	0xfb710	dfd062d78034
-mapcell	??0CObjectType@@QAE@PAUTObjectType@@@Z	39.1636	39.1636	39.1636	0x106080	99893e87c66e
+mapcell	??0CObjectType@@QAE@PAUTObjectType@@@Z	62.0970	62.0970	62.0970	0x106080	aa6b755527ce
 mapcell	??0NewfullMap@@QAE@XZ	100.0000	100.0000	100.0000	0xfd060	fb0f6ae54745
 mapcell	??0NewmapCell@@QAE@XZ	100.0000	100.0000	100.0000	0xfd650	36b54decc94c
 mapcell	??1?$vector@VBlackBoxData@@V?$allocator@VBlackBoxData@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x106350	-
@@ -3556,7 +3556,7 @@ seerhut	?quest_type@type_belong_to_player_quest@@UAEHXZ	100.0000	100.0000	100.00
 seerhut	?quest_type@type_defeat_hero_quest@@UAEHXZ	100.0000	100.0000	100.0000	0x16e3d0	b378bb94388f
 seerhut	?quest_type@type_monster_quest@@UAEHXZ	100.0000	100.0000	100.0000	0x16ebc0	2132ee49efd9
 seerhut	?read@TQuestGuard@@QAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x1734e0	7601b0255349
-seerhut	?read@TSeerHut@@QAEXPAVTAbstractFile@@@Z	83.1965	83.1965	83.1965	0x174610	d09f4acd9708
+seerhut	?read@TSeerHut@@QAEXPAVTAbstractFile@@@Z	83.3955	83.3955	83.3955	0x174610	0e5e65ae57b0
 seerhut	?save@TQuestGuard@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x173520	4af04b37a0b0
 seerhut	?save@TSeerHut@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x173fd0	3f53613a2426
 seerhut	?skill_requirement_text@type_skill_quest@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAY03$$CBC@Z	100.0000	100.0000	100.0000	0x16dfa0	2de5fc7e8020
@@ -3922,7 +3922,7 @@ spellbookwindow	??1TSpellbookWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x19c8f0	
 spellbookwindow	??MTSpellbookEntry@TSpellbookWindow@@QBE_NABV01@@Z	100.0000	100.0000	100.0000	0x19dbe0	298d7c180680
 spellbookwindow	??_GTSpellbookWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x19c8c0	-
 spellbookwindow	?Close@TSpellbookWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x19c990	2a459745f56a
-spellbookwindow	?GotoPage@TSpellbookWindow@@QAEXH@Z	88.8745	88.8745	88.8745	0x19c9a0	841ef4c9ab8e
+spellbookwindow	?GotoPage@TSpellbookWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x19c9a0	6c451b62a029
 spellbookwindow	?Open@TSpellbookWindow@@UAEHHE@Z	100.0000	100.0000	100.0000	0x19c970	67001e2f7fe4
 spellbookwindow	?Reset@TSpellbookWindow@@SIXXZ	100.0000	100.0000	100.0000	0x19ba80	4fee86f4bd5f
 spellbookwindow	?WindowHandler@TSpellbookWindow@@UAEHPAVmessage@@@Z	99.9011	99.9011	99.9011	0x19d040	afd2f6cd1887

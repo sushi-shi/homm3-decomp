@@ -5766,20 +5766,24 @@ void NewfullMap::NewfullMapFn_00505F20(CObject* object, int objectType,
 // advmgr_objects.h already records against this class.
 //
 // The four 48-cell masks are transposed cell by cell through the class's own
-// _getBitPos(x, y) = 47 - y * 8 - x. The stores are all `set(pos, value)`,
-// which retail keeps out of line.
+// _getBitPos(x, y) = 47 - y * 8 - x.
 //
-// Residual (39.16%): the bitset members, and only them. Retail CALLS
+// Residual (62.10%): the bitset members, and only them. Retail CALLS
 // bitset<48>::test at two of the four reads and expands the range check at
-// the other two (its six branches are the three loop back edges plus those
-// two checks and the bitset<10> one); our /Ob2 budget expands more of them,
-// which is the whole 24-vs-14 block surplus and all five target-only calls.
-// The two calls that do pair - basic_string::_Tidy and bitset<10>::_Tidy -
-// and the GetImageName/assign pair are already right, as is the field
-// transcription. Measured: all four reads spelled `test()` is 39.16, retail's
-// own two-and-two split is 22.87, and all four as `operator[]` is 12.95, so
-// the spelling that reads closest to retail is NOT the one its budget
-// produces here - the lever is a statement pin this lane may not add.
+// the other two; our /Ob2 budget expands more of them, which is the block
+// surplus and the surplus out_of_range throw path.
+// The DEPTH LADDER (docs/vc6/inliner.md 6b) moved this row 39.16 -> 62.10:
+// the five WRITES spelled `bits[i] = v` rather than `bits.set(i, v)`.
+// Titrated, all measured at the same delink generation:
+//   writes .set  + reads .test  (the old spelling)      39.1636
+//   writes [i]   + reads .test  (SHIPPED)               62.0970
+//   writes [i]   + reads [i]                            36.4970
+//   inner-4 [i]  + mask_34 .set                         43.3576
+//   inner-4 .set + mask_34 [i]                          34.6000
+// so the five writes only pay TOGETHER, and flipping the reads costs 25.6.
+// The remaining hole is retail's two `test` CALLS; there is no spelling
+// shallower than `.test(i)` for a bit read, so that half needs caller mass,
+// not a respelling (the same floor OnBeginGame hit).
 //
 // Only nine of the template's fields cross: the image name, the two sizes,
 // the four masks, the recommended-terrain mask, the type, the subtype and
@@ -5795,15 +5799,15 @@ CObjectType::CObjectType(TObjectType* source)
     for (unsigned y = 0; y < 6; y++) {
         for (unsigned x = 0; x < 8; x++) {
             unsigned pos = _getBitPos(x, y);
-            drawCells.set(pos, source->imageInfo.drawMask.test(pos));
-            passableCells.set(pos, source->passableMask.test(pos));
-            shadowCells.set(pos, source->imageInfo.shadowMask.test(pos));
-            triggerCells.set(pos, source->triggerMask.test(pos));
+            drawCells[pos] = source->imageInfo.drawMask.test(pos);
+            passableCells[pos] = source->passableMask.test(pos);
+            shadowCells[pos] = source->imageInfo.shadowMask.test(pos);
+            triggerCells[pos] = source->triggerMask.test(pos);
         }
     }
 
     for (int terrain = 0; terrain < 10; terrain++)
-        mask_34.set(terrain, source->recommendedTerrainMask[terrain]);
+        mask_34[terrain] = source->recommendedTerrainMask[terrain];
 
     objectType = source->objectType;
     extra = source->subtype;
