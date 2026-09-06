@@ -126,6 +126,33 @@ Consequences the corpus already knew as separate facts:
   reload take the normal walk. This is the mechanism BEHIND B15's "VC6
   homes char locals far more eagerly than ints".
 
+**"Creation order" means the FIRST ASSIGNMENT, not the declaration**
+(measured three ways, 2026-09-06, polish 30). A bare `long i;` moved to the
+top of a block is byte-inert; `long i = 0;` moved there re-orders the walk.
+That single fact settles three things at once and is the cheapest lever in
+this file to try:
+
+* `AICheckRetreat`'s town census - `long i = 0;` declared beside `count`, so
+  the index pseudo is born ahead of `numTowns`, hands EBX to the index and
+  spills the bound with a reload at the back edge, which is retail's
+  allocation: **95.3960 -> 95.7676**. The control (`long i;` hoisted, `i = 0`
+  left in the `for` head) is byte-flat at 95.3960, and it is exactly what an
+  older note had recorded as "initialising the index before the numTowns
+  guard - byte-flat", i.e. the note had measured the declaration;
+* the same order decides the SIB base/index slot for a two-local sum (6b);
+* it runs the other way too - `should_attack_now` wants its index born FIRST
+  and loses 1.10 when it is born after `current`/`count`.
+
+**And naming the ELEMENT of a subscript that feeds a call re-homes the
+pair.** `type_monster_data& monster = monsters[i];` at the head of a loop
+body gives the strength-reduced 72-byte offset the callee-saved register and
+spills the index - retail's allocation - worth **+5.62** on
+`type_AI_combat_data::get_enchantment_value` (across four inlined copies) and
++1.55 on `cast_spell`. The pointer spelling is byte-identical, so what
+matters is that the ADDRESS is named, not its type. It is per-site: the same
+naming over a subscript that feeds only field compares (`choose_melee`'s
+opening scan, `cast_spell`'s familiar scan) is byte-flat.
+
 ## 4. Measured probe base (2026-08-10, pinned SP3 CL, game profile)
 
 Scratch TUs (extern `source`/`sink` calls keep values live across calls):
@@ -216,15 +243,104 @@ SIB byte:
 | `seerhuttext ?LoadSeerHutTextColumn` (99.9621) | inlined `basic_string::_Eos` terminator | `[eax+ecx]` | `[ecx+eax]` |
 | `philai ?value_of_enemy_town` (99.9561) | `return combat_value + town_value;` | `lea [ebx+ecx]` | `lea [ecx+ebx]` |
 
-Two facts worth banking. First, it is NOT the source operand order: swapping
-the addends of `value_of_enemy_town`'s `return` is byte-flat to the digit
-(VC6 canonicalises `+` before the encoder sees it), so no `a+b` -> `b+a`
-edit reaches it. Second, it is not even self-consistent WITHIN one function:
-`fill_prohibited_array` emits `[ecx+edi+0x1f636]` at the `playerDisabled`
-subscript and `[esi+ecx+0x20b0e]` eight instructions later, and retail uses
-the index-as-base form at BOTH. Every other instruction in those five bodies
-pairs. Treat a lone SIB transposition as terminal and stop; the five rows
-above are the class's whole current cost and none of them is reachable.
+Two facts were banked here on the day the table was taken. First, it is NOT
+the source operand order: swapping the addends of `value_of_enemy_town`'s
+`return` is byte-flat to the digit (VC6 canonicalises `+` before the encoder
+sees it), so no `a+b` -> `b+a` edit reaches it. That still holds. Second, the
+row read "none of them is reachable" - **and that is now refuted**; see 6b.
+
+### 6b. B18 is compiler STATE, not an encoder tie-break - 2026-09-06 (polish 30)
+
+An empirical rule search was run over the exact corpus: every scale-1
+two-register SIB memory operand in the 100.0000 rows of
+`build/objdiff/normalized/base` (those bytes ARE retail's), **2,123 sites in
+833 functions**, each labelled with what the emitted stream says about its two
+registers (defining instruction and its class, last mention, live-in-ness,
+displacement, `lea` vs `mov`). No local rule fits:
+
+| candidate rule | accuracy on the 2,123-site corpus |
+|---|---|
+| base = lower x86 register number | 50.1% |
+| base = most recently *mentioned* register | 61.4% |
+| base = later-defined (block-local defs; 32% of sites have both live-in) | 43.7% overall, 65.5% of the 566 both-defined sites |
+| def-class ranking, best possible (per-class-pair majority ORACLE) | 65.1% |
+
+So the choice is not a function of the operands' local properties. Three
+sub-rules ARE clean, though, and they are worth knowing:
+
+* a `shl`/`imul`/`lea`-computed operand ALWAYS takes the base slot against a
+  freshly loaded global pointer (103/103) or against an `[ebp-N]` local load
+  (17/17); an `inc`/`add`-computed one always beats a global load (13/13);
+* a register still live from function entry (`this`, or a parameter register
+  never rewritten) is the INDEX at 58 of 68 sites (85%);
+* both orders occur for the same shape in one function: the exact row
+  `cmbtmgr::CombatIsOver` emits `[ecx+edi+0x132b2]` and `[edi+ecx+0x132b0]`
+  in two adjacent, structurally identical statements - in retail AND in our
+  compile, identically.
+
+That last one is the key: the order is per-SITE STATE, and state is what
+source moves. Two levers are now measured, each with a minimal probe pair
+compiled by the pinned SP3 CL at the game profile (`build/p30/sibprobe*.cpp`):
+
+1. **int + int: base = the local whose FIRST ASSIGNMENT is later in source
+   order.** Minimal pair: `int x=f(a); int y=h(b); v(); return x+y;` emits
+   `lea eax,[esi+edi]`; moving a `int y = 0;` above `int x=f(a)` emits
+   `lea eax,[edi+esi]` - one SIB byte, every other byte identical, and the
+   `= 0` store itself is dead-code-eliminated. A bare `int y;` declaration
+   does NOT do it (the pseudo is born at the first assignment, not the
+   declaration), and the LAST assignment does not either.
+   **Applied: `philai value_of_enemy_town` 99.9561 -> 100.0000** by hoisting
+   `long town_value = 0;` above the `combat_value` initialiser.
+2. **pointer + index: the FIRST addressing mode built over a given (pointer,
+   index) register pair in a function encodes base=pointer; a SECOND one over
+   the same pair encodes base=index.** Probe `z1`/`z2` mirror CombatIsOver:
+   swapping the two statements swaps which array gets which encoding.
+
+3. **pointer + index: the birth position of an UNRELATED nearby local moves
+   it.** Two more levers, both measured 2026-09-06 (polish 32), both closing a
+   row whose SIB transposition was its ONLY divergence:
+   * **A named default-constructed local passed to a defaulted STL parameter
+     must be the DEFAULT ARGUMENT.** `game::LoadBoatPool` writes seven
+     `boats[x].field =` stores; with `boat defaultBoat; boats.resize(n,
+     defaultBoat);` ahead of the loop all seven encode base=offset against
+     retail's base=pointer (99.6447), and `boats.resize(n)` - Dinkumware's
+     `resize(size_type, _Ty _X = _Ty())` - makes all seven agree
+     (**100.0000**), with no other byte moving. Hoisting the same declaration
+     to the top of the frame instead costs 5.96 (93.6853), so it is the
+     temporary's BIRTH POSITION, not its existence. A hand-rolled probe of the
+     identical loop (`build/p32/sib1.cpp`) and the exact twin `SaveBoatPool`,
+     neither of which has such a local, both already emit retail's order.
+   * **A block-scoped loop index against a reused function-scope one.**
+     `initialize_ballistics_table`'s inlined sea-row `GetRow` addressed
+     `[edi+edx]` against retail's `[edx+edi]` (99.9485, the row's only byte).
+     Giving that loop its own `for (int row = 2; ...)` instead of reusing the
+     function-scope `int i` flips it: **100.0000**. Hoisting the loop's
+     destination pointer above `int i` costs 5.50 (94.4485); moving
+     `++sea_movement` out of the for-increment is byte-flat.
+
+   Both say the same thing: the pair's encoding is C1 handle/creation state,
+   and the cheapest source knobs on that state are a local's SCOPE and the
+   birth position of a temporary, neither of which touches the addressing
+   expression itself.
+
+Byte-flat for this class, all measured this lane: source addend order;
+`*(p+i)`, `&p[i]`, `i[p]`; naming the pointer, the index or the whole address
+in a local; declaring that local before or after the counter; a local copy of
+`this`; `unsigned`/`short`/`char` index; do-while vs for vs goto loop form; a
+dead duplicate read of the same member.
+
+What this leaves: the four rows whose pair is (entry-live `this` or a global
+pointer, UNSCALED int) at the FIRST occurrence of that pair in the function.
+Our CL encodes base=pointer there and retail encodes base=int, and no
+spelling reaches it because the levers above need either a second occurrence
+of the pair or two locals whose birth order can move - `this` is born before
+everything and cannot be made later. `hero::get_primary_skill_total`
+(16 spellings measured this lane, all 99.5833), `diff CDiffFile::Apply`
+(3 swaps), `ai_player::fill_prohibited_array` (naming the game pointer ahead
+of the counter costs 1.66 and a frame dword), `seerhuttext
+LoadSeerHutTextColumn` (the pair is inside a Dinkumware `<string>` inline we
+may not edit). Those four are terminal for now; a lone SIB transposition on
+an int-int pair is NOT.
 
 Honest accuracy statement: the model predicts the pinned compiler's
 callee-saved assignment from creation order in 5/5 standalone probes,
@@ -235,6 +351,98 @@ flip a parameter/`this` pairing by spelling - it now proves that in one
 compile instead of a sweep. Encoder-level tie-breaks (B17 length
 feedback, B18 SIB operand order) are not allocator decisions and are
 out of scope.
+
+### 6d. The one-line forwarder is a DEPTH level (2026-09-06, polish 30)
+
+`army::GetName()` is `return GetArmyName(creatureType, numTroops);`, so a
+statement written through it reaches the trait lookup one /Ob2 level deeper
+than a direct `GetArmyName(a->creatureType, a->numTroops)` call - and that one
+level is the whole difference between the leaf being CALLED and being expanded
+with its range guard, its 116-byte stride and its +0x14/+0x18 name pair
+inline. In `drawing.obj`: `show_creature_spell_error` **82.4044 -> 92.3889**
+on one pair of sites, `CombatMessage` **90.2999 -> 92.7545** on nine.
+
+Three bounds, all measured:
+
+* **all-or-nothing per body** - converting two of CombatMessage's nine sites
+  scores 86.42, BELOW the untouched baseline;
+* **coupled across a caller edge** - converting only `show_creature_spell_error`
+  costs `CombatMessage` 3.22 and gives it an EH frame retail has not got, so
+  the caller has to be converted in the same change;
+* **per body, not global** - the identical rewrite at `ModifySpellDamage`'s
+  four name sites costs 16.2 (88.49 -> 72.25), because retail CALLS the lookup
+  there. The screen that tells them apart is a census of
+  `?GetArmyName@@YIPBDHH@Z` call sites, base object against delinked target;
+  after the drawing fix no other sub-100 row in the tree disagrees.
+
+Keeping the forwarder and passing a CONSTANT count is not a substitute
+(81.66): the constant then has to be materialised for a call that stays.
+
+### 6c. REFUTED: the `_Ufill` / `_Destroy` surplus is a delink NAMING artifact
+(2026-09-06, polish 32)
+
+The lead below is wrong, and the defect is in its instrument. It counted
+`?<member>@?$vector@` call-site NAMES in the delinked target - but the target
+does not spell an ICF-folded vector leaf that way. `vector<widget*>::_Destroy`
+and `vector<type_artifact>::_Destroy` are both `ret` for a POD element, so
+/OPT:ICF folds them onto ONE body and the delinker labels that body with
+whichever symbol it picked: `__h3cg$customcampaign$vector_destroy$type_artifact`
+for `_Destroy`, `game_1510_sub07_8d940` for `_Ufill`, and the
+`vector<army*>` / `vector<int>` instantiations for `size` / `push_back` /
+`begin` / `end`. A member-name census attributes NONE of those to the member,
+so retail's calls vanish from its column and every row reads as a surplus.
+
+Resolved per row on the three largest carriers the lead named:
+
+| row | `_Destroy` | `_Ufill` | `size` | `_Ucopy` |
+|---|---|---|---|---|
+| `TSingleSelectionWindow` ctor (11,619 B, 95.71) | 4 = 4 | 6 = 6 | 13 = 13 | - |
+| `type_garrison_base_window` (7,456 B, 93.88) | 7 vs **8** | 14 vs **16** | 26 vs **33** | 28 vs **32** |
+| `TSystemOptionsWindow` ctor (6,268 B, 96.34) | 4 vs **5** | **8** vs 7 | **13** vs 7 | **16** vs 15 |
+
+The largest carrier is EXACTLY EQUAL on every leaf (its `push_back` 6=6,
+`begin` 1=1 and `end` 2=2 too) - the lead was empty there. On the garrison
+ctor the SIGN IS INVERTED: retail calls MORE of every leaf, i.e. we
+over-expand and the direction is caller-shrink, not the ladder. Only
+`TSystemOptionsWindow` keeps a one-sided surplus and it is on `size`, not on
+`_Ufill`/`_Destroy`.
+
+**Use a NAME-INDEPENDENT instrument instead** (`build/p32/calltotal.py`):
+count `call` INSTRUCTIONS per function on both sides. Over the tree that
+gives 133 at-MAX sub-100 rows whose total differs at all, 80 of them with
+retail calling MORE (we over-expand -> shrink the caller) and 53 the other
+way; every row not in that list has an identical call census whatever the
+relocation names say, so its residual is spelling, registers or scheduling
+and no inliner knob applies. The same trap sinks any per-callee census:
+`GetLuck`'s `_cpp_clamp base x1 vs retail x0` is
+`THeroScreenWindow_scalar_deleting_destructor` on the other side, and
+`SetupAndLoadObstacles`'s `TObstacleVector::Destroy` is the same
+`__h3cg$...vector_destroy$type_artifact` fold. Check the TOTAL first.
+
+### 6c-old. Superseded lead: the tree-wide `_Ufill` / `_Destroy` surplus
+
+An element-agnostic reloc census over every sub-100 row (base object against
+the delinked body, counting `?<member>@?$vector@` call sites across ALL
+instantiations, so /OPT:ICF's cross-element folding cannot skew it) finds one
+shape repeated far more than any other:
+
+* **`_Destroy`: ours > retail in 71 rows** (the reverse in 6);
+* **`_Ufill`: ours > retail in 32 rows** (never the reverse on a large row).
+
+We CALL both leaves inside the `vector::insert` expansions we keep; retail
+EXPANDS them - and `_Destroy` over a POD pointer element collapses to nothing
+at all, so every one of those calls is pure surplus. The largest carriers are
+`TSingleSelectionWindow::TSingleSelectionWindow` (11,619 B, 95.71, 6+4),
+`type_garrison_base_window` (7,456 B, 93.88, 14+7) and
+`TSystemOptionsWindow` (6,268 B, 96.34, 8+4).
+
+The depth ladder's shallower spelling is NOT the lever: rewriting all 49
+`Widgets.push_back(x)` in the garrison ctor as
+`Widgets.insert(Widgets.end(), x)` costs **10.3 points** (93.8825 -> 83.54,
+40 target-only calls). Note that retail also calls `size` and `_Ucopy` MORE
+often than we do at the same sites (33/32 against 26/28), so this is not a
+single budget knob in either direction - it is a different split of which
+leaves the kept expansions inline. Left open with the census recorded.
 
 ## 7. Files
 

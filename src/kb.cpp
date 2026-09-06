@@ -2172,7 +2172,9 @@ static int gUnnamed698a38;
 // BYTE with an immediate (`mov byte ptr [mem], 0`) while our compile
 // spends the already-zeroed EBX on it (`mov byte ptr [mem], bl`), one
 // byte shorter. Everything else - blocks, branches, calls and every
-// other store - is identical.
+// other store - is identical. Store position is not the handle:
+// measured 2026-09-06, `gbMPlayer = 0;` moved to the head of the run is
+// byte-flat at 99.6273 and moved to its foot is 99.5983.
 VA(0x004f0690, 0x238)  // anchor-caller (EarlySetup) + gcCommandLine walk, dc 0xe1990
 int InterpretCommandLine()
 {
@@ -2474,10 +2476,12 @@ int EventWindowHandler(message* msg)
         case DIALOG_RETURN_CHOICE_1:
             if (giNormalDialogMBType == NORMAL_DIALOG_CHOOSE_OPTIONAL
                 || giNormalDialogMBType == NORMAL_DIALOG_CHOOSE) {
-                gpNormalDialogWindow->GetWidget(DIALOG_RETURN_CHOICE_1)
-                    ->send_message(widget::WIDGET_SET_STATUS, 4);
-                gpNormalDialogWindow->GetWidget(DIALOG_RETURN_CHOICE_2)
-                    ->send_message(widget::WIDGET_CLEAR_STATUS, 4);
+                widget* first =
+                    gpNormalDialogWindow->GetWidget(DIALOG_RETURN_CHOICE_1);
+                first->send_message(widget::WIDGET_SET_STATUS, 4);
+                widget* second =
+                    gpNormalDialogWindow->GetWidget(DIALOG_RETURN_CHOICE_2);
+                second->send_message(widget::WIDGET_CLEAR_STATUS, 4);
                 gpNormalDialogWindow->GetWidget(DIALOG_RETURN_OK)->enable(1);
                 giNormalDialogSelection = DIALOG_RETURN_CHOICE_1;
                 gpNormalDialogWindow->DrawWindow(1, -65535, 65535);
@@ -2487,10 +2491,12 @@ int EventWindowHandler(message* msg)
         case DIALOG_RETURN_CHOICE_2:
             if (giNormalDialogMBType == NORMAL_DIALOG_CHOOSE_OPTIONAL
                 || giNormalDialogMBType == NORMAL_DIALOG_CHOOSE) {
-                gpNormalDialogWindow->GetWidget(DIALOG_RETURN_CHOICE_1)
-                    ->send_message(widget::WIDGET_CLEAR_STATUS, 4);
-                gpNormalDialogWindow->GetWidget(DIALOG_RETURN_CHOICE_2)
-                    ->send_message(widget::WIDGET_SET_STATUS, 4);
+                widget* first =
+                    gpNormalDialogWindow->GetWidget(DIALOG_RETURN_CHOICE_1);
+                first->send_message(widget::WIDGET_CLEAR_STATUS, 4);
+                widget* second =
+                    gpNormalDialogWindow->GetWidget(DIALOG_RETURN_CHOICE_2);
+                second->send_message(widget::WIDGET_SET_STATUS, 4);
                 gpNormalDialogWindow->GetWidget(DIALOG_RETURN_OK)->enable(1);
                 giNormalDialogSelection = DIALOG_RETURN_CHOICE_2;
                 gpNormalDialogWindow->DrawWindow(1, -65535, 65535);
@@ -3264,6 +3270,9 @@ void PlayerDead(int gamePos);
 // local short. Tried and rejected: promoting bStandardVictoryAllowed
 // and teamMask to function scope (byte-flat, and the frame does not
 // move).
+// Tried and rejected 2026-09-06 for (2): naming GetLocalPlayerGamePos's
+// result in an `int` local before the GetTeamMask call is byte-flat at
+// 90.6247 and does not move the frame.
 VA(0x004f2ce0, 0x5BA)  // decorated identity (kb.h) + dc-order-map, dc 0xe3780
 void CheckEndGame(int bForceWin)
 {

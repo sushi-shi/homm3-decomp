@@ -213,6 +213,14 @@ CHAR_STREAM_MEMBERS = (
     # made on the member offset each `do_` reads (_Gr at +8, _Nf at +0x10,
     # _Nt at +0x14, straight out of VC6's own <xlocnum>) and on the vtable
     # slot each public wrapper calls through (slots 3/4/5 of vtbl_245728).
+    # do_decimal_point and do_thousands_sep are slots 1 and 2 of the same
+    # vtbl_245728 - `mov al,[ecx+0xc] / ret` and `mov al,[ecx+0xd] / ret`,
+    # the `_E _Dp, _Ks` pair <xlocnum> declares right after `char *_Gr`.
+    # Without their own arms the generic template tail reduces them to
+    # `std_numpunct_do_decimal_point` / `std_numpunct_do_thousands_sep`,
+    # spellings no VA_COMPGEN owner can produce.
+    ("?do_decimal_point@?$numpunct@D", None, "numpunct_do_decimal_point"),
+    ("?do_thousands_sep@?$numpunct@D", None, "numpunct_do_thousands_sep"),
     ("?do_grouping@?$numpunct@D", None, "numpunct_do_grouping"),
     ("?do_falsename@?$numpunct@D", None, "numpunct_do_falsename"),
     ("?do_truename@?$numpunct@D", None, "numpunct_do_truename"),
@@ -248,6 +256,18 @@ CHAR_STREAM_MEMBERS = (
     ("?opfx@?$basic_ostream@D", None, "ostream_opfx"),
     ("??Hstd@@YA?AV?$basic_string@D", None, "basic_string_concat"),
     ("?uflow@?$basic_streambuf@D", None, "streambuf_uflow"),
+    # The five remaining DEFAULTED virtuals of the stream base, all kept by
+    # bottomviewsubwindow.obj alongside `uflow`, `seekoff` and `seekpos`
+    # above. Their prefixes must be spelled out even though `?overflow@` and
+    # `?underflow@` already have basic_stringbuf arms: those key on
+    # `?$basic_stringbuf@D` and would leave the BASE class's copies at the
+    # generic template tail as `std_basic_streambuf_overflow` - a spelling no
+    # VA_COMPGEN owner can produce.
+    ("?overflow@?$basic_streambuf@D", None, "streambuf_overflow"),
+    ("?showmanyc@?$basic_streambuf@D", None, "streambuf_showmanyc"),
+    ("?underflow@?$basic_streambuf@D", None, "streambuf_underflow"),
+    ("?setbuf@?$basic_streambuf@D", None, "streambuf_setbuf"),
+    ("?imbue@?$basic_streambuf@D", None, "streambuf_imbue"),
     ("?setg@?$basic_streambuf@D", None, "streambuf_setg"),
     ("??4?$ostreambuf_iterator@D", None,
      "ostreambuf_iterator_assign"),
@@ -396,6 +416,7 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "TREE_CONST_ITERATOR_DEC", "TREE_CONST_ITERATOR_INC",
                  "TREE_COPY", "TREE_COPY_NODE", "TREE_ERASE",
                  "TREE_BUYNODE", "TREE_INIT", "TREE_COPY_ASSIGN",
+                 "TREE_BEGIN",
                  "STRINGBUF_OVERFLOW", "STRINGBUF_INIT",
                  "DEQUE_FREEFRONT", "DEQUE_FREEBACK", "DEQUE_BUYBACK",
                  "BASIC_STRING_ASSIGN_PTR_SIZE",
@@ -1070,6 +1091,13 @@ def _demangle_key(mangled: str):
         if "IAEPAU_Node@" in mangled:
             return f"{tree_owner.lower()}@tree_copy_node"
         return f"{tree_owner.lower()}@tree_copy"
+    # `_Tree::begin()`, which returns `iterator(_Head->_Left)` through a
+    # hidden pointer and therefore IS a real COMDAT rather than an inlined
+    # load. Without its own arm it falls out on TEMPLATE_MEMBER_RE as
+    # `std__tree_begin` - a spelling no VA_COMPGEN owner can produce, and one
+    # every tree instantiation in the image would share.
+    if mangled.startswith("?begin@?$_Tree@") and tree_owner:
+        return f"{tree_owner.lower()}@tree_begin"
     if mangled.startswith("?_Buynode@?$_Tree@") and tree_owner:
         return f"{tree_owner.lower()}@tree_buynode"
     if mangled.startswith("?_Erase@?$_Tree@") and tree_owner:
@@ -2005,6 +2033,10 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
         if "$tree_min$" in row["name"]:
             owner = row["name"].rsplit("$", 1)[1].lower()
             claim_keys.setdefault(f"{owner}@tree_min", []).append(row)
+            continue
+        if "$tree_begin$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}@tree_begin", []).append(row)
             continue
         if "$tree_insert$" in row["name"]:
             owner = row["name"].rsplit("$", 1)[1].lower()

@@ -4083,7 +4083,7 @@ static void exchange_spells(hero* first_hero, hero* second_hero)
         3, 7 - static_cast<int>(spells_learned.size()));
 
     if (spells_learned.size()) {
-        msg += (*gpGeneralText)[141];
+        msg.append((*gpGeneralText)[141]);
         for (int i = 0; i < spells_learned.size(); i++) {
             if (i < learned_icon_count) {
                 spell_info.resource = RES_SPELL;
@@ -4092,21 +4092,21 @@ static void exchange_spells(hero* first_hero, hero* second_hero)
             }
             if (i > 0) {
                 if (i == spells_learned.size() - 1)
-                    msg += (*gpGeneralText)[142];
+                    msg.append((*gpGeneralText)[142]);
                 else
-                    msg += DATA_COMPGEN(0x0066032c, listSeparator, ", ");
+                    msg.append(DATA_COMPGEN(0x0066032c, listSeparator, ", "));
             }
-            msg += akSpellTraits[spells_learned[i]].name;
+            msg.append(akSpellTraits[spells_learned[i]].name);
         }
-        msg += format_string((*gpGeneralText)[143], second_hero->name);
+        msg.append(format_string((*gpGeneralText)[143], second_hero->name));
     }
 
     if (spells_taught.size()) {
         if (spells_learned.size()) {
-            msg += DATA_COMPGEN(0x00660db4, commaText, ",");
-            msg += (*gpGeneralText)[142];
+            msg.append(DATA_COMPGEN(0x00660db4, commaText, ","));
+            msg.append((*gpGeneralText)[142]);
         }
-        msg += (*gpGeneralText)[148];
+        msg.append((*gpGeneralText)[148]);
         for (int i = 0; i < spells_taught.size(); i++) {
             if (i < taught_icon_count) {
                 spell_info.resource = RES_SPELL;
@@ -4115,16 +4115,16 @@ static void exchange_spells(hero* first_hero, hero* second_hero)
             }
             if (i > 0) {
                 if (i == spells_taught.size() - 1)
-                    msg += (*gpGeneralText)[142];
+                    msg.append((*gpGeneralText)[142]);
                 else
-                    msg += DATA_COMPGEN(0x0066032c, listSeparator, ", ");
+                    msg.append(DATA_COMPGEN(0x0066032c, listSeparator, ", "));
             }
-            msg += akSpellTraits[spells_taught[i]].name;
+            msg.append(akSpellTraits[spells_taught[i]].name);
         }
-        msg += format_string((*gpGeneralText)[149], second_hero->name);
+        msg.append(format_string((*gpGeneralText)[149], second_hero->name));
     }
 
-    msg += DATA_COMPGEN(0x006603ec, saveExtensionDot, ".");
+    msg.append(DATA_COMPGEN(0x006603ec, saveExtensionDot, "."));
     extended_dialog(msg.c_str(), spells_exchanged, -1, -1, 0);
 }
 
@@ -5609,7 +5609,7 @@ void advManager::DoEventTrainingGrounds(hero* current_hero, NewmapCell* cell,
 
 // The AI arm of DoTreasureDialog reaches this philai helper before the
 // declaration accompanying its later tree-of-knowledge callers.
-unsigned char AI_choose_resource_or_experience(hero* current_hero,
+unsigned char AI_choose_resource_or_experience(const hero* current_hero,
                                                EGameResource resource,
                                                int cost, int value);
 
@@ -8176,8 +8176,10 @@ int advManager::CreatureBankEvent(hero* who, NewmapCell* cell, const char* cText
             result += reward_strings[i];
         }
 
-        std::string reward_text;
-        reward_text = format_string(
+        // The initialiser form, not default-construct-then-assign: retail
+        // builds the reward line directly into its destination (inlined
+        // `_Tidy`, called `assign`), which is worth 89.3406 -> 91.5867.
+        std::string reward_text = format_string(
             gpAdventureEventText->GetText(34),
             GetArmyName(leader_monster, creature_count), result.c_str());
         extended_dialog(reward_text.c_str(), resources, -1, -1, 0);
@@ -9283,6 +9285,15 @@ VA_COMPGEN(0x004af2c0, 0x6B, VECTOR_DTOR, string)
 // COMDAT pairing: vector<std::string>::_Ucopy (thiscall, three pointer
 // arguments, `ret 0xc`).
 VA_COMPGEN(0x004af800, 0x38, VECTOR_UCOPY, string)
+
+// COMDAT pairing: vector<type_dialog_resource>::size(). Byte-exact over the
+// whole 19-byte extent against this object's own COMDAT, and UNIQUE there -
+// the `sar eax,3` is the only type-dependent instruction, so any other
+// eight-byte element would collide, and events.obj emits no other. It also
+// sits exactly in the hole its neighbours leave (0x4af2c0 + 0x6b ends at
+// 0x4af32b, 0x4af350 opens the next), and the vector<type_dialog_resource>
+// `insert` already claimed at 0x54cba0 is one of its four retail callers.
+VA_COMPGEN(0x004af330, 0x13, VECTOR_SIZE, type_dialog_resource)
 
 // COMDAT pairing: vector<type_dialog_resource>::insert(iterator, const T&).
 // The element is 8 bytes and so is overview_item_record, and both TUs compile

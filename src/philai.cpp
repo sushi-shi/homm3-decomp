@@ -3970,14 +3970,15 @@ int ValueOfGenerator(const hero* current_hero, int x, int y, int z, NewmapCell* 
 // E:\gamedcs\philai.cpp:2306
 #endif  // @carcass
 
-// Residual (99.9561%): all 35 CFG blocks and every instruction agree except
-// the final commutative LEA's SIB spelling (`[ebx+ecx]` versus retail's
-// `[ecx+ebx]`). Raw NB11 places creature_cost, include_growth and creature as
-// procedure-scope S_REGREL32 records in that order; restoring those lifetimes
-// from the formerly nested spelling is byte-flat. Reversing the return
-// operands, splitting/reordering the optimized `town_value` declaration, and
-// both accumulate-then-return forms are also byte-flat under VC6 SP3, so no
-// semantic source change is retained.
+// EXACT since 2026-09-06. The last byte was the final LEA's SIB spelling
+// (ours `[ebx+ecx]`, retail `[ecx+ebx]`), and it is a source fact: for a
+// two-local sum VC6 puts the local whose FIRST ASSIGNMENT comes LATER in the
+// base slot, so retail's `combat_value` base proves `town_value` was born
+// first. `long town_value = 0;` ahead of the combat call is that birth; the
+// store is dead and VC6 deletes it, leaving one SIB byte changed. Reversing
+// the return operands and both accumulate-then-return forms stay byte-flat
+// (VC6 canonicalises `+` before the encoder). docs/vc6/regalloc.md 6b has
+// the corpus (2,123 sites) and the minimal probe pair.
 VA(0x00529cb0, 0x2d9)  // anchor-callee, dc 0x11105c
 long value_of_enemy_town(const hero* current_hero, const town* enemy_town, short move_cost, NewmapCell* cell)
 {
@@ -3990,6 +3991,7 @@ long value_of_enemy_town(const hero* current_hero, const town* enemy_town, short
     if (enemy_town->garrisonHeroId >= 0)
         defending_hero = gpGame->GetHero(enemy_town->garrisonHeroId);
 
+    long town_value = 0;
     long combat_value = AI_value_of_combat(
         current_hero, defending_hero, enemy_town->get_army(), enemy_town,
         cell);
@@ -3999,7 +4001,7 @@ long value_of_enemy_town(const hero* current_hero, const town* enemy_town, short
         combat_value = -2500000;
     }
 
-    long town_value = static_cast<long>(
+    town_value = static_cast<long>(
         enemy_town->get_gold_income(0) * player->resourceValue[GOLD] * 3.0);
     if (enemy_town->HasBuilding(MARKETPLACE_SILO_ID, 0)) {
         int* silo_income = enemy_town->get_silo_income();

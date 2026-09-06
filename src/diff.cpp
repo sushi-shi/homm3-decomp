@@ -52,6 +52,13 @@ unsigned char* CDiffFile::GetData()
 // `&GetData()[diffOffset]`.  A tree-wide census puts 42 rows in this class,
 // this one alone with SIB swaps as its ONLY residual; the other 41 carry it
 // alongside larger deltas.
+// 2026-09-06: the class is now understood (docs/vc6/regalloc.md 6b). A
+// two-LOCAL sum is reachable - the base slot goes to the local born later,
+// which closed philai value_of_enemy_town - but this site's pair is
+// (`this`, diffOffset). `this` is born at entry and cannot be made later,
+// and all three sites are the same register pair in separate blocks, so the
+// second-occurrence flip does not fire either. Terminal until a compiler-
+// generation probe explains retail's first-occurrence order.
 // The 68.96% plateau was structural, not register coloring: retail advances
 // diffOffset PAST the header before the payload memcpy and re-derives the source
 // as GetData() + diffOffset, which is what keeps diffOffset in a register and

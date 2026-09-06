@@ -271,10 +271,12 @@ bool combatManager::show_creature_spell_error(
     if (!currentArmy->sMonInfo.hasSpell) {
         if (currentArmy->numTroops == 1) {
             sprintf(buffer, (*gpGeneralText)[697],
-                    currentArmy->GetName());
+                    GetArmyName(currentArmy->creatureType,
+                                currentArmy->numTroops));
         } else {
             sprintf(buffer, (*gpGeneralText)[698],
-                    currentArmy->GetName());
+                    GetArmyName(currentArmy->creatureType,
+                                currentArmy->numTroops));
         }
         return true;
     }
@@ -355,8 +357,23 @@ no_error:
 
 // E:\gamedcs\drawing.cpp:326. The Complete body preserves every shared DC
 // statement group and expands get_creature_spell_message for its five added
-// caster types. One caller leaves GetArmyName out of line while the next
-// expands it; retaining GetName in source lets VC6 make that site decision.
+// caster types.
+// 2026-09-06: "retaining GetName in source lets VC6 make that site decision"
+// was wrong - the DEPTH decides it. `army::GetName()` forwards to
+// GetArmyName, so the statement reaches the trait lookup one level deeper
+// than a direct `GetArmyName(a->creatureType, a->numTroops)` call, and at
+// that depth /Ob2 always leaves the leaf out of line here. Written directly,
+// the range guard, the 116-byte stride and the +0x14/+0x18 name pair expand
+// exactly as retail has them: show_creature_spell_error 82.4044 -> 92.3889
+// on its first pair alone, and this body 90.2999 -> 91.2017 on its seven
+// sites, and 91.2017 -> 92.7524 once the `GetName(1)` and the
+// armies[][].GetName() site go direct too - the conversion is all-or-nothing
+// per body: two sites alone score 86.42, below the untouched baseline).
+// The sites that already pass a CONSTANT count are the ones this TU always
+// wrote directly. Byte-flat and not landed: the same rewrite at
+// show_creature_spell_error's four later sites, and `GetName(1)`/`GetName(0)`
+// with a constant count but the forwarder kept (81.66 - the constant has to
+// be materialised for the call that stays).
 VA(0x00492840, 0xB8E)  // retail CFG/calls + DC source shape, dc 0x838f0
 void combatManager::CombatMessage(int command)
 {
@@ -381,21 +398,21 @@ void combatManager::CombatMessage(int command)
         break;
 
     case COMBAT_COMMAND_WALK:
-        sprintf(gText, (*gpGeneralText)[295], currentArmy->GetName());
+        sprintf(gText, (*gpGeneralText)[295], GetArmyName(currentArmy->creatureType, currentArmy->numTroops));
         break;
 
     case COMBAT_COMMAND_FLY:
-        sprintf(gText, (*gpGeneralText)[296], currentArmy->GetName());
+        sprintf(gText, (*gpGeneralText)[296], GetArmyName(currentArmy->creatureType, currentArmy->numTroops));
         break;
 
     case COMBAT_COMMAND_ATTACK:
         distance = get_distance(currentArmy->gridIndex, field_132d8);
         if (gUnnamed698758.combatArmyInfoLevel) {
-            sprintf(gText, (*gpGeneralText)[37], targetArmy->GetName(),
+            sprintf(gText, (*gpGeneralText)[37], GetArmyName(targetArmy->creatureType, targetArmy->numTroops),
                     get_estimated_damage(currentArmy, targetArmy, 0,
                                          distance).c_str());
         } else {
-            sprintf(gText, (*gpGeneralText)[221], targetArmy->GetName());
+            sprintf(gText, (*gpGeneralText)[221], GetArmyName(targetArmy->creatureType, targetArmy->numTroops));
         }
         priority = 1;
         break;
@@ -409,13 +426,13 @@ void combatManager::CombatMessage(int command)
         long expectedDamage = AI_get_attack_damage(
             currentArmy, currentHits, targetArmy, 1, distance);
         if (!gUnnamed698758.combatArmyInfoLevel) {
-            sprintf(gText, (*gpGeneralText)[221], targetArmy->GetName());
+            sprintf(gText, (*gpGeneralText)[221], GetArmyName(targetArmy->creatureType, targetArmy->numTroops));
         } else if (currentArmy->sMonInfo.numShots == 1) {
-            sprintf(gText, (*gpGeneralText)[38], targetArmy->GetName(),
+            sprintf(gText, (*gpGeneralText)[38], GetArmyName(targetArmy->creatureType, targetArmy->numTroops),
                     get_estimated_damage(currentArmy, targetArmy, 1,
                                          distance).c_str());
         } else {
-            sprintf(gText, (*gpGeneralText)[41], targetArmy->GetName(),
+            sprintf(gText, (*gpGeneralText)[41], GetArmyName(targetArmy->creatureType, targetArmy->numTroops),
                     currentArmy->sMonInfo.numShots,
                     get_estimated_damage(currentArmy, targetArmy, 1,
                                          distance).c_str());
@@ -441,7 +458,7 @@ void combatManager::CombatMessage(int command)
             army* viewedArmy = cells[field_132d4].get_army();
             if (viewedArmy)
                 sprintf(gText, (*gpGeneralText)[298],
-                        viewedArmy->GetName(1));
+                        GetArmyName(viewedArmy->creatureType, 1));
             else
                 gText[0] = 0;
         }
@@ -467,8 +484,10 @@ void combatManager::CombatMessage(int command)
 
     case COMBAT_COMMAND_FIRST_AID:
         sprintf(gText, (*gpGeneralText)[420],
-                armies[currentArmy->side]
-                      [cells[field_132d4].armySlot].GetName());
+                GetArmyName(armies[currentArmy->side]
+                                  [cells[field_132d4].armySlot].creatureType,
+                            armies[currentArmy->side]
+                                  [cells[field_132d4].armySlot].numTroops));
         break;
 
     default:

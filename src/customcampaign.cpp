@@ -151,7 +151,11 @@ int GetCrossoverHeroValue(hero* candidate)
     return skills + primary;
 }
 
-VA(0x00483f80, 0x9B)  // anchor-callee(std::sort<hero*> 0x48f2b0), retail-only
+// The claim for this body is the FUNCTOR_CALL pairing below, not a VA here:
+// a plain VA cannot name `operator()` - the scanner has no declarator to
+// mangle - so the row banked its flat carve name and 0.0000 with the
+// ratchet clean. ai.cpp's func_moves_before and singleselectionwindow's five
+// TSortMapsBy* predicates all use the compgen form for the same reason.
 bool CrossoverHeroStronger::operator()(hero& lhs, hero& rhs) const
 {
     int leftValue = GetCrossoverHeroValue(&lhs);
@@ -1100,7 +1104,7 @@ void TCampaignStartHeroOption::Read(TAbstractFile* file)
         file->Read(&value, sizeof(signed char));
         count = value;
     }
-    m_choices.clear();
+    m_choices.erase(m_choices.begin(), m_choices.end());
     for (int i = 0; i != count; ++i) {
         TCampaignHeroChoice choice;
         {
@@ -1635,9 +1639,17 @@ void TCampaignBrief::ScenarioStruct::PlaceCrossoverHeroes()
 // to the option player's heroes in turn until one accepts it. The chosen
 // start option's own Apply runs last, on every path.
 //
-// Residual: retail keeps `crossover_artifacts.test`'s `_Xran` throw path
-// expanded here (the "invalid bitset<N> position" string is this row's own),
-// which is the same bitset boundary ScenarioStruct::Read carries.
+// Residual (73.00%): the bitset throw path. 2026-09-06: 72.57 -> 73.00 by
+// spelling the membership test as `crossover_artifacts[id]` rather than
+// `.test(id)` - one more inline level on the way to `_Xran`, which pushes
+// `out_of_range(const string&)` back out of line exactly as retail has it.
+// What is left is one level further still: retail CALLS
+// `basic_string(const char*, const allocator&)` where we expand it into
+// `_Tidy` + `assign(ptr, len)`. Measured and rejected: `SCampaign&` instead
+// of `SCampaign*` for the campaign alias (byte-flat), reading
+// `gpGame->campaign.briefingChoice` directly rather than through the alias
+// (72.27). The 4-byte frame surplus is our spill of that alias - retail
+// keeps it in ESI for the whole body and homes only `this`.
 VA(0x00487900, 0x2CD)  // anchor-caller(game::NewMap +0x5cb), retail-only
 void TCampaignBrief::ScenarioStruct::GiveCrossoverArtifacts()
 {
@@ -1674,7 +1686,7 @@ void TCampaignBrief::ScenarioStruct::GiveCrossoverArtifacts()
             artifact = artifacts[iArtifact];
             if (artifact.artifactId == ARTIFACT_NONE)
                 continue;
-            if (!crossover_artifacts.test(artifact.artifactId))
+            if (!crossover_artifacts[artifact.artifactId])
                 continue;
             for (int iPlayerHero = 0;
                  iPlayerHero < gpGame->players[player].numHeroes;
@@ -3283,6 +3295,16 @@ void TArtifactRequirement::set(TArtifact _artifact, char _guard_bit)
 }
 #endif
 
+// COMDAT pairing: CrossoverHeroStronger::operator()(hero&, hero&) const -
+// the sort predicate defined at the head of this file, agreement 1.000 over
+// its whole 155-byte extent and UNIQUE in this object. The row had been
+// claimed with a plain VA that could not name it: `operator()` gives the
+// source scanner no declarator to mangle, so it fell back to the carve's
+// `CrossoverHeroStronger_operator` and banked 0.0000 against a 90.2941 max
+// while the ratchet stayed clean. The two std::sort instantiations claimed
+// below take this functor by value and are its only callers.
+VA_COMPGEN(0x00483f80, 0x9B, FUNCTOR_CALL, CrossoverHeroStronger)
+
 // COMDAT pairing: std::_Sort<hero, CrossoverHeroStronger>, agreement 0.972.
 // The map hero placeholders' own sort, instantiated by
 // ScenarioStruct::PlaceCrossoverHeroes. Both bodies are byte-identical to
@@ -3509,6 +3531,17 @@ VA_COMPGEN(0x0048e9e0, 0xB, STD_CONSTRUCT, TCampaignCrossoverChoice)
 // own _Ucopy/_Ufill/_Construct out of line (0x48db40 / 0x48db70 / 0x48e9d0)
 // where this CL expands all three into it, so the pairing is identity, not a
 // score.
+// 2026-09-06, an arity screen over every sub-100 row (base `ret N` multiset
+// against the delinked body's) says the OVERLOAD is wrong too, which is most
+// of the 34.74%: retail's body ends `ret 8` and takes (iterator, const E&) -
+// the single-element `insert` - while this object emits only the three-
+// argument fill `insert(iterator, size_type, const E&)` (`ret 0xc`), because
+// our CL expands the single-element forwarder into `push_back` at every call
+// site and retail keeps it out of line. Both overloads share the
+// `unsigned_char@vector_insert` join key, so with one claim and one symbol
+// the pairing is forced onto the wrong one. Making the two-argument insert
+// emit at all is an inline-shape fix in its caller, ScenarioStruct::Read -
+// a closed wall - so this row cannot move until that reopens.
 VA_COMPGEN(0x0048bf00, 0x1AD, VECTOR_INSERT, unsigned_char)
 
 // --- the <fstream> facet block, claimed 2026-09-06 -------------------------

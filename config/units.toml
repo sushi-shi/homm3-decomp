@@ -859,3 +859,8 @@ flags = "game_o2_ml_gr_windows"
 unit = "campaignmusic"
 source = "src/campaignmusic.cpp"
 flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "tiles"
+source = "src/tiles.cpp"
+flags = "game_o2_ml_gr_windows"

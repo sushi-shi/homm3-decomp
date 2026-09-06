@@ -176,6 +176,14 @@ int CCombatChatEdit::OnKeyPress(message* msg)
 // network/local chat path; both modes then close the editor and restore the
 // combat control bar.
 // E:\gamedcs\combatwindow.cpp:171
+// Residual (93.35%): one over-inline - retail CALLS basic_string::_Eos out
+// of line inside the chatString construction where our CL expands it
+// (`mov ecx,[ebp-0x18] / mov [ebp-0x14],eax / mov byte [ecx+eax],0`).
+// Tried and rejected: `std::string chatString = sChat;` (byte-flat at
+// 93.35), default construction then `chatString = sChat` (77.57), and
+// default construction then `assign(sChat, strlen(sChat))` (77.57) - both
+// assign forms lose the whole construction shape, the opposite of what the
+// adventuremapwindow twin's note reports for ITS body.
 VA(0x004726b0, 0x131)  // vtable slot + SendChat/IsMultiplayer, dc 0x6a488
 void CCombatChatEdit::SendChat(const char* sChat, int toWho)
 {

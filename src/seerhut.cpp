@@ -379,6 +379,18 @@ unsigned char type_quest::has_expired() const
 // this is the /Ob2 budget floor at a small caller and not a source fact;
 // the lever is a per-site pin, which this lane may not add.
 // E:\gamedcs\seerhut.cpp
+// MEASURED AND REJECTED (polish 29), all five against the 49.7043 baseline:
+// the three temporaries written as plain `proposalText = ReadLengthPrefixed-
+// String(file);` (25.63), each `const std::string&` binding wrapped in its
+// own block (21.97), `int row` read one byte wide so it shares the parameter
+// home with `extra` (48.83), the three reads folded into one block (49.60),
+// and `extra` hoisted to function scope (49.60). The 20-byte frame surplus is
+// real and unexplained by any of them: retail packs `extra` back into the
+// [ebp+8] parameter home that `flag`/`row` already used (we give it its own
+// -0x10) and reuses ONE string-temp slot for the first two strings while
+// keeping a second for the third, so its 0x20 frame holds two temps against
+// our three at 0x34. Retail's EH states run 0 / -1 / 1 / -1 / 2 - each
+// temporary destroyed before the next is built - where ours run 0 / 1 / 2.
 VA(0x0056cd00, 0x14F)  // anchor-vtable 0x64174c slot 11 + the chain from all eight leaf Loads, retail-only
 void type_quest::Load(TAbstractFile* file, int version)
 {

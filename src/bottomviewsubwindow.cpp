@@ -1655,6 +1655,17 @@ VA_COMPGEN(0x00453d90, 0x3B, IOS_BASE_GETLOC, char)
 // (0.857 each way, 0.786 crossed).
 VA_COMPGEN(0x00454a10, 0x1C, CLASS_CTOR, bad_cast)
 
+// COMDAT pairing: numpunct<char>'s two virtual CHARACTER accessors, slots 1
+// and 2 of the same vtbl_245728 whose slots 3/4/5 are claimed below. The
+// bodies are `mov al,[ecx+0xc] / ret` and `mov al,[ecx+0xd] / ret`, four
+// bytes each and byte-identical to this object's own COMDATs; +0xc and +0xd
+// are the `_E _Dp, _Ks` pair <xlocnum> declares right after `char *_Gr` at
+// +8, so the vtable slot order and the member offsets agree in both
+// directions. They needed a key of their own - see
+// retail_labels/test_numpunct_char_keys.py.
+VA_COMPGEN(0x00455930, 0x4, NUMPUNCT_DO_DECIMAL_POINT, char)
+VA_COMPGEN(0x00455940, 0x4, NUMPUNCT_DO_THOUSANDS_SEP, char)
+
 // COMDAT pairing: numpunct<char>'s three virtual string accessors. All three
 // bodies are byte-identical apart from the member they read, and the layout
 // in VC6's own <xlocnum> - `char *_Gr; _E _Dp, _Ks, *_Nf, *_Nt;` after the
@@ -1717,6 +1728,40 @@ VA_COMPGEN(0x00453d70, 0x18, IMPLICIT_DTOR, locale)
 // already claimed in resourcemanager. Agreements 1.000 and 1.000.
 VA_COMPGEN(0x00454200, 0x28, STREAMBUF_SEEKOFF, char)
 VA_COMPGEN(0x00454230, 0x28, STREAMBUF_SEEKPOS, char)
+
+// COMDAT pairing: the five remaining DEFAULTED virtuals of the same stream
+// base, all agreement 1.000 against this object's own COMDATs. They are not
+// reached by any rel32 call either - like `uflow` above they exist only as
+// vtable slots - so the pairing is made on the SLOT INDEX and the emission
+// run together. <streambuf> declares the virtuals overflow, pbackfail,
+// showmanyc, underflow, uflow, xsgetn, xsputn, seekoff, seekpos, setbuf,
+// sync, imbue, and this object's kept copies come out in exactly that order:
+//   0x454050 overflow(1)   0x454060 showmanyc(3)  0x454070 underflow(4)
+//   0x454080 uflow(5)      0x4540b0 xsgetn(6)     0x454150 xsputn(7)
+//   0x454200 seekoff(8)    0x454230 seekpos(9)    0x454260 setbuf(10)
+//   0x454270 imbue(12)
+// pbackfail(2) and sync(11) are the two the linker took from another
+// object, which is why the run has gaps at those slots and no others. The
+// bodies confirm each index independently: `or eax,-1 / ret 4` is the
+// one-argument eof return, `xor eax,eax / ret` the nil-ary zero,
+// `or eax,-1 / ret` the nil-ary eof, `mov eax,ecx / ret 8` the two-argument
+// return-this, and `ret 4` the one-argument do-nothing. TGzInflateBuf's own
+// named vtable holds 0x454050 at slot 1, 0x454060 at slot 3, 0x454260 at
+// slot 10 and 0x454270 at slot 12, which fixes the four with a duplicate
+// body shape; 0x454070 is slot 4 of the same table.
+// COMDAT pairing: locale::facet's scalar deleting destructor, agreement
+// 1.000 - and the vtable operand is what fixes the class rather than the
+// body, which every memberless `??_G` shares. It writes vtbl_245700, a
+// ONE-slot vtable holding this very row, which is what a class with a
+// virtual destructor and no other virtual looks like; the matching
+// `??1facet` is objecttype.obj's copy at 0x51a110.
+VA_COMPGEN(0x00454740, 0x23, SCALAR_DELETING_DTOR, facet)
+
+VA_COMPGEN(0x00454050, 0x6, STREAMBUF_OVERFLOW, char)
+VA_COMPGEN(0x00454060, 0x3, STREAMBUF_SHOWMANYC, char)
+VA_COMPGEN(0x00454070, 0x4, STREAMBUF_UNDERFLOW, char)
+VA_COMPGEN(0x00454260, 0x5, STREAMBUF_SETBUF, char)
+VA_COMPGEN(0x00454270, 0x3, STREAMBUF_IMBUE, char)
 
 // COMDAT pairing: basic_ostream<char>'s scalar deleting destructor,
 // agreement 0.944 - its 15-byte ??1 twin is already claimed at 0x453a20.
