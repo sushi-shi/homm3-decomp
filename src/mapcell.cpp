@@ -2121,7 +2121,11 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
         return -1;
     count = value;
     if (count == 0) {
-        thisBox->Spells.clear();
+        // DEPTH LADDER (docs/vc6/inliner.md 6b): this third list's empty arm
+        // is the LONGHAND range erase; the two above it stay `clear()`.
+        // 93.0057 -> 95.3605, and a greedy second round over the other two
+        // finds nothing - the rung is per-site here as everywhere.
+        thisBox->Spells.erase(thisBox->Spells.begin(), thisBox->Spells.end());
     } else {
         thisBox->Spells.resize(count);
         for (i = 0; i < count; ++i) {

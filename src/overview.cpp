@@ -1881,8 +1881,14 @@ TOverviewWindow::TOverviewWindow()
             overview_item_record record = { 'W', 0 };
             // See the constructor's ladder note: this append and the flag-label
         // one are the only two of the 42 whose `insert(end(), x)` spelling
-        // pays (+6.89 here).
-        field_60.insert(field_60.end(), record);
+        // pays (+6.89 here).  NAMING THE VECTOR on top of it is another
+        // +0.24 (90.2053 -> 90.4407): retail reads `_Last` through the
+        // vector's own address instead of folding the member offset off
+        // `this`, and it is one of the two frame dwords this body is short.
+        // The same reference on the flag-label append LOSES 0.60, and both
+        // together 0.61 - per-site, like everything else about this lever.
+        std::vector<overview_item_record>& items = field_60;
+        items.insert(items.end(), record);
         }
         ++field_60[item].field_04;
     }

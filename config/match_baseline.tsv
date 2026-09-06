@@ -2659,7 +2659,7 @@ mapcell	?loadTownEventList@NewfullMap@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.00
 mapcell	?loadTreasureList@NewfullMap@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xfef60	b680bb3364dd
 mapcell	?readAbandonedMineData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0x101130	f5a83d826cc5
 mapcell	?readArtifactData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0xff120	52fca6459f9f
-mapcell	?readBlackBox@NewfullMap@@QAEHPAVTAbstractFile@@PAVBlackBoxData@@H@Z	93.0057	93.0057	93.0057	0xff6b0	1aa478b4e7a3
+mapcell	?readBlackBox@NewfullMap@@QAEHPAVTAbstractFile@@PAVBlackBoxData@@H@Z	95.3605	95.3605	95.3605	0xff6b0	8b8b6b82b5d7
 mapcell	?readBlackBoxData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	100.0000	100.0000	100.0000	0xffbf0	7f872d87af8f
 mapcell	?readEventData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	100.0000	100.0000	100.0000	0x1008b0	ff00b03757d2
 mapcell	?readGarrisonData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	100.0000	100.0000	100.0000	0x102a00	b931a498b11e
@@ -2880,7 +2880,7 @@ objecttype	?use_facet@std@@YAABV?$ctype@D@1@ABVlocale@1@PBV21@_N@Z	100.0000	100.
 objecttype	?use_facet@std@@YAABV?$numpunct@D@1@ABVlocale@1@PBV21@_N@Z	100.0000	100.0000	100.0000	0x11ab90	-
 objnames	??1TTextResourceGuard@@QAE@XZ	100.0000	100.0000	100.0000	0x1bd90	e6a9bcd817a7
 objnames	?InitializeAdventureObjectNames@@YIXXZ	100.0000	100.0000	100.0000	0x1b500	8e77da136c72
-overview	??0TOverviewWindow@@QAE@XZ	90.2053	90.2053	90.2053	0x11fa40	823624e6b5c3
+overview	??0TOverviewWindow@@QAE@XZ	90.4407	90.4407	90.4407	0x11fa40	b9597097399b
 overview	??1TOverviewWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x120d90	048fab1d8faa
 overview	??_GTOverviewWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x120d60	-
 overview	?DoFlaggableButtons@TOverviewWindow@@AAEXH@Z	100.0000	100.0000	100.0000	0x11e7f0	37a25d45af3d
@@ -3353,7 +3353,7 @@ rmg_terrain	TRmgTerrainPainter_CheckFirstDiagonal	0.0000	0.0000	0.0000	0x1b6ba0	
 rmg_terrain	TRmgTerrainPainter_CheckSecondDiagonal	0.0000	0.0000	0.0000	0x1b6e00	c0697b82984a
 rmg_terrain	TRmgTerrainPainter_GetTransitionStrength	0.0000	0.0000	0.0000	0x1b6fd0	84a34fd69689
 sacrifice_window	??0type_sacrifice_window@@QAE@PAVhero@@H@Z	100.0000	100.0000	100.0000	0x15fdd0	e3c4b7caa364
-sacrifice_window	??0type_skeleton_window@@QAE@PAVarmyGroup@@@Z	98.3508	98.3508	98.3508	0x1654f0	7b3203c0fe49
+sacrifice_window	??0type_skeleton_window@@QAE@PAVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x1654f0	14453a1a8081
 sacrifice_window	??1type_sacrifice_window@@UAE@XZ	100.0000	100.0000	100.0000	0x1623a0	2862ff7bfb2e
 sacrifice_window	??1type_skeleton_window@@UAE@XZ	100.0000	100.0000	100.0000	0x165f60	811f4279de4c
 sacrifice_window	??1type_transformer_slot@@UAE@XZ	100.0000	100.0000	100.0000	0x1654b0	-
@@ -4406,7 +4406,7 @@ viewarmywindow	?create_shots_widget@TViewArmyWindow@@QAEXPBUTCreatureTypeTraits@
 viewarmywindow	?create_speed_widget@TViewArmyWindow@@QAEXHH@Z	100.0000	100.0000	100.0000	0x1f62f0	16f6e6987461
 viewarmywindow	?create_spell_influence_widgets@TViewArmyWindow@@QAEXPBVarmy@@@Z	86.6570	86.6570	86.6570	0x1f65b0	ead1359e6949
 viewarmywindow	?create_upgrade_widget@TViewArmyWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1f6ae0	7268df34c10c
-viewwrld	??0TViewWorldWindow@@QAE@XZ	97.0623	97.0623	97.0623	0x1fa600	64cf9d81c769
+viewwrld	??0TViewWorldWindow@@QAE@XZ	97.1358	97.1358	97.1358	0x1fa600	843292004870
 viewwrld	??1TViewWorldWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1fbd60	dbcb66a53979
 viewwrld	??_GTViewWorldWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1fbd30	-
 viewwrld	?VWClipScaleToScreenBuffer@@YIXHH@Z	100.0000	100.0000	100.0000	0x1f9d90	b50f216125e8
