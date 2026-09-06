@@ -2172,7 +2172,9 @@ static int gUnnamed698a38;
 // BYTE with an immediate (`mov byte ptr [mem], 0`) while our compile
 // spends the already-zeroed EBX on it (`mov byte ptr [mem], bl`), one
 // byte shorter. Everything else - blocks, branches, calls and every
-// other store - is identical.
+// other store - is identical. Store position is not the handle:
+// measured 2026-09-06, `gbMPlayer = 0;` moved to the head of the run is
+// byte-flat at 99.6273 and moved to its foot is 99.5983.
 VA(0x004f0690, 0x238)  // anchor-caller (EarlySetup) + gcCommandLine walk, dc 0xe1990
 int InterpretCommandLine()
 {

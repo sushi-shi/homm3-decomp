@@ -2478,22 +2478,22 @@ public:
     //     move-order comparator. Its reconstructed body is byte-exact.
     unsigned char Unnamed464d40(army* selected);
     unsigned char Unnamed464f50(const army* incumbent, const army* candidate);
-    // One remaining address ordinal plus the named command rearm helper.
-    //   0x5a40d0 (155 B, spells.obj) answers a byte and gates every one
-    //     of the five artifact auto-casts: SetNextArmy asks it
-    //     (spell, 3, side, 1, 2) and only calls CastSpell when it is
-    //     non-zero. The 3 is the same expert-mastery literal CastSpell
-    //     itself takes as monster_skill one line later, so the second
-    //     parameter is a mastery and the third the casting side; the
-    //     trailing 1 and 2 are unattested. It is NOT SpellCastWorks
-    //     (0x5a3c80) or SpellCastWorkChance (0x5a8090) - both are
-    //     declared above with different arities.
-    //   0x4782d0 (1461 B, command.obj) is Dreamcast's named GetControl
-    //     method. SetNextArmy calls it immediately after clearing
-    //     lastMovedArmy, re-arming the command bar for the new stack.
-    // Declared, not claimed: both bodies are outside this lane.
-    unsigned char Unnamed5a40d0(SpellID spell, long mastery, long side,
-                                long arg4, long arg5);
+    // The named command rearm helper. 0x4782d0 (1461 B, command.obj) is
+    // Dreamcast's named GetControl method; SetNextArmy calls it immediately
+    // after clearing lastMovedArmy, re-arming the command bar for the new
+    // stack. Declared, not claimed: its body is outside this lane.
+    //
+    // RESOLVED 2026-09-06: the five artifact auto-casts' gate at 0x5a40d0
+    // was ALSO declared here as `Unnamed5a40d0(SpellID, long, long, long,
+    // long)` while spells.cpp:2811 claims that same RVA as
+    // HasValidSpellTarget(SpellID, long, long, unsigned char, long) - two
+    // contradictory declarations of one retail function, so every cmbtmgr
+    // call named ?Unnamed5a40d0@...@@QAEEHJJJJ@Z against retail's
+    // ?HasValidSpellTarget@...@@QAEEHJJEJ@Z. The (spell, 3, side, 1, 2)
+    // argument list this note recovered is exactly HasValidSpellTarget's
+    // (spellId, mastery, casting_side, first_target, creature_spell), and
+    // the retail push sequence at 0x465330+0x2c0c is byte-identical either
+    // way, so the duplicate is withdrawn in favour of the claimed name.
     void GetControl();
     // ResetCycleTimers (0x479f30, 139 B) takes one GameTime::Get(), stores
     // it to the two hero fidget clocks, then walks numArmies on both sides

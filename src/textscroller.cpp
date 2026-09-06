@@ -189,6 +189,10 @@ void type_text_scroller::Refresh(int firstLine)
 // (`text_lines.insert(text_lines.end(), std::string(""))`) is MEASURED AND
 // REJECTED 2026-09-06 at 97.0339 against 99.4361: it produces retail's callee
 // but loses the surrounding block.  push_back stays.
+// Retail builds the padding temp through basic_string's DEFAULT ctor
+// (`_Tidy(false)` with the byte copied off [ebp+0xb]) where we run
+// `assign("", 0)`; spelling the argument `std::string()` instead of
+// `std::string("")` is MEASURED AND REJECTED 2026-09-06 at 89.7838.
 VA(0x005BA6E0, 0x1EF)  // anchor-callee (font::FillLinesVector) + slider slots, retail-only
 void type_text_scroller::SetText(const char* text)
 {

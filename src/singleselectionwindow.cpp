@@ -5716,6 +5716,13 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
 // digit): scoping the counter into the `for` and deleting the function-scope
 // declaration, declaring `int i;` FIRST of all the locals, and rewriting the
 // loop as `i = 0; while (i < 15) { ...; ++i; }`.
+// The residual is retail's `xor edx,edx` ahead of the times[] clear - it
+// keeps `i` in its own register across the memset where we spend the
+// memset's zero on it. Pairing the counter with the memset the way
+// docs/vc6 records for the prologue-counter lever is WORSE, measured
+// 2026-09-06: `i = 0;` before the memset 98.9548 (with `for (; ...)` and
+// with a `while` alike), and moving the memset BELOW the sprintf loop
+// 89.1584.
 VA(0x005879A0, 0x219)
 std::string GetRandomMapName()
 {

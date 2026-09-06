@@ -125,7 +125,7 @@ advmgr	?PopupPlayerTurnInfo@@YIXXZ	100.0000	100.0000	100.0000	0x19c80	98baf17560
 advmgr	?ProcessDeSelect@advManager@@QAEHPBVmessage@@PAEPAUtype_point@@PAPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x9a70	ea04b60e2e3c
 advmgr	?ProcessHover@advManager@@QAEHHH@Z	91.6263	91.6263	91.6263	0xe360	16cc0b40843a
 advmgr	?ProcessKeyPress@advManager@@QAEHPBVmessage@@PAEPAUtype_point@@PAPAVNewmapCell@@@Z	97.6091	97.6091	97.6091	0x8c40	b6aba7b9a3a7
-advmgr	?ProcessMapSelect@advManager@@QAEXPBVmessage@@PAUtype_point@@PAPAVNewmapCell@@@Z	91.1006	91.1006	91.1006	0xa5d0	e94ec6649fc3
+advmgr	?ProcessMapSelect@advManager@@QAEXPBVmessage@@PAUtype_point@@PAPAVNewmapCell@@@Z	91.1006	91.1006	91.1006	0xa5d0	3d3b17f3fece
 advmgr	?ProcessRadarSelect@advManager@@QAEXPBVmessage@@@Z	100.0000	100.0000	100.0000	0xa0c0	5c36b56e1c0a
 advmgr	?ProcessSearch@advManager@@QAEHHHH@Z	94.6792	94.6792	94.6792	0xec90	438a0713d228
 advmgr	?ProcessSelect@advManager@@QAEHPBVmessage@@PAUtype_point@@PAPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x97e0	61b96265198a
@@ -955,7 +955,7 @@ cmbtmgr	?RaiseSkeletons@combatManager@@QAEXH@Z	93.2203	93.2203	93.2203	0x69f20	3
 cmbtmgr	?RemoveArmyFromGrid@combatManager@@QAEXABVarmy@@@Z	100.0000	100.0000	100.0000	0x68730	62af9d7bc87c
 cmbtmgr	?RemoveObstacle@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x66b30	101875d9e158
 cmbtmgr	?ResetHitByCreature@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x65fe0	037b24bc169a
-cmbtmgr	?SetNextArmy@combatManager@@QAEXHH@Z	99.6497	99.6497	99.6497	0x65330	eb3505fa04bd
+cmbtmgr	?SetNextArmy@combatManager@@QAEXHH@Z	99.6497	99.6497	99.6497	0x65330	19ec32df5ec1
 cmbtmgr	?SetupAdjacencyArray@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x640a0	1ec64dc6109f
 cmbtmgr	?SetupAndLoadObstacles@combatManager@@QAEXXZ	98.1402	98.1402	98.1402	0x66290	e1280d4cefce
 cmbtmgr	?SetupCombat@combatManager@@QAEXUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HHHE@Z	100.0000	100.0000	100.0000	0x639f0	9a212de8b1a4
