@@ -176,7 +176,7 @@ void VideoSoundOnOff()
 // explicit parentheses around the int sum in either term order,
 // `gBinkX << 1`, and `(unsigned char*)(screenBitmap->map + gBinkX) +
 // Pitch*gBinkY` (the unsigned-short-index form that supplies the
-// scale as pointer arithmetic). CL-generation-capped.
+// scale as pointer arithmetic). C2-reassociation-capped.
 // RANKED 2026-08-14: 88.9254 is 5 REAL rows of 67 and 0 artefact, and they are
 // exactly the scheduling of the `2 * gBinkX` term - retail loads gBinkX into
 // ESI before `screenBitmap`, folds it with `lea edx,[edx+2*esi]` and adds
@@ -184,7 +184,17 @@ void VideoSoundOnOff()
 // folds the scaled term after. Nine more spellings measured, all byte-flat at
 // 88.9254: all four term orders of the three-way sum, a named `unsigned char*`
 // base local, a named int offset local, `gBinkX * 2` and `gBinkX + gBinkX`.
-// C2 reassociates every one of them identically. Confirms CL-generation-capped.
+// C2 reassociates every one of them identically.
+//
+// NOT A GENERATION ARTIFACT (2026-09-06, Track R closed on both passes).
+// `genab run --gen rtm-fe` compiles this unit through C1XX 12.00.8168 +
+// C2 12.00.8168 and this function comes back BYTE-IDENTICAL to the SP3
+// build (6+0 both sides, sp3_vs_rtm 0), as does VideoClose (2+20 both
+// sides). The whole smackmgr object is byte-identical under the RTM
+// generation. "CL-generation-capped" is the wrong wording for the cap:
+// the measured fact is C2's reassociation choice, invariant under
+// 8168/8447 in BOTH the front and back end (docs/vc6/rtm-generation.md
+// §6). Do not re-open this as vintage.
 VA(0x005971f0, 0xD9)  // anchor-global, dc 0x14ac34
 void VideoRealignBuffers()
 {
