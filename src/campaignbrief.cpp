@@ -466,7 +466,12 @@ TCampaignBrief::TCampaignBrief(unsigned char newCampaign,
 
     zBuffer = new unsigned short[width * height];
     memset(zBuffer, 0, width * height * sizeof(*zBuffer));
-    Widgets.reserve(NWIDGETS);
+    // The widget vector NAMED AS A REFERENCE, so every append reads _Last
+    // through the vector's own address rather than folding the member offset
+    // off `this` (docs/vc6/inliner.md 6b's companion lever).  88.1039 ->
+    // 88.3754 across all 24 uses.
+    std::vector<widget*>& widgets = Widgets;
+    widgets.reserve(NWIDGETS);
 
     const char* campaignFilename =
         gpGame->campaign.GetCampaignFileName().c_str();
@@ -527,7 +532,7 @@ TCampaignBrief::TCampaignBrief(unsigned char newCampaign,
 
     const TCampaignMapTraits& mapTraits =
         akCampaignMapTraits[campaign->region_map];
-    Widgets.insert(Widgets.end(), new bitmapBorder16(
+    widgets.insert(widgets.end(), new bitmapBorder16(
                     0, 0, 800, 600, BACKGROUND_ID, mapTraits.m_imageName, 0x800));
 
     for (int regionIndex = 0;
@@ -538,18 +543,18 @@ TCampaignBrief::TCampaignBrief(unsigned char newCampaign,
         if (scenario->inflated_size > 0) {
             int color = scenario->region_color;
             if (gpGame->campaign.mapScores[regionIndex].completed) {
-                Widgets.insert(Widgets.end(), new bitmapBorder(
+                widgets.insert(widgets.end(), new bitmapBorder(
                                 region.m_offsetX, region.m_offsetY, 20, 20,
                                 MAP_CONQUERED_1_ID + regionIndex,
                                 region.m_conqueredImageName[color], 0x800));
                 scenarios[regionIndex].available = false;
             }
             if (scenarios[regionIndex].available) {
-                Widgets.insert(Widgets.end(), new bitmapBorder(
+                widgets.insert(widgets.end(), new bitmapBorder(
                                 region.m_offsetX, region.m_offsetY, 20, 20,
                                 MAP_ENABLED_1_ID + regionIndex,
                                 region.m_enabledImageName[color], 0x800));
-                Widgets.insert(Widgets.end(), new bitmapBorder(
+                widgets.insert(widgets.end(), new bitmapBorder(
                                 region.m_offsetX, region.m_offsetY, 20, 20,
                                 MAP_SELECTED_1_ID + regionIndex,
                                 region.m_selectedImageName[color], 0x800));
@@ -559,48 +564,48 @@ TCampaignBrief::TCampaignBrief(unsigned char newCampaign,
         }
     }
 
-    Widgets.insert(Widgets.end(), new bitmapBorder(
+    widgets.insert(widgets.end(), new bitmapBorder(
                     456, 6, 330, 585, BACKGROUND_ID,
                     DATA_COMPGEN(0x00660ea8, campaignBriefPanel, "campbrf.pcx"),
                     0x800));
 
     if (viewFromGame) {
-        Widgets.insert(Widgets.end(), new button(
+        widgets.insert(widgets.end(), new button(
                         476, 536, 146, 40, RESTART_ID,
                         DATA_COMPGEN(0x00660e9c, campaignBriefRestartButton,
                                      "CBRESTB.DEF"),
                         0, 1, 0, 19, 2));
-        Widgets.insert(Widgets.end(), new button(
+        widgets.insert(widgets.end(), new button(
                         705, 214, 64, 30, VIDEO_ID,
                         DATA_COMPGEN(0x00660e90, campaignBriefVideoButton,
                                      "CBVIDEB.DEF"),
                         0, 1, 0, 47, 2));
     } else {
-        Widgets.insert(Widgets.end(), new button(
+        widgets.insert(widgets.end(), new button(
                         476, 536, 146, 40, 0x7802,
                         DATA_COMPGEN(0x00660e84, campaignBriefBeginButton,
                                      "CBBEGIB.DEF"),
                         0, 1, 0, 28, 2));
-        Widgets.back()->enable(0);
+        widgets.back()->enable(0);
     }
-    Widgets.insert(Widgets.end(), new button(
+    widgets.insert(widgets.end(), new button(
                     624, 536, 146, 40, 0x7801,
                     DATA_COMPGEN(0x00660e78, campaignBriefCancelButton,
                                  "CBCANCB.DEF"),
                     0, 1, 0, 1, 2));
 
     if (campaign->GetCampaignName().length() > 0) {
-        Widgets.insert(Widgets.end(), new textWidget(
+        widgets.insert(widgets.end(), new textWidget(
                         481, 22, 246, 32, campaign->GetCampaignName().c_str(),
                         DATA_COMPGEN(0x00660b24, campaignBriefBigFont, "bigfont.fnt"),
                         static_cast<font::TColor>(8), CAMPAIGN_NAME_ID, 4, 0, 8));
     }
-    Widgets.insert(Widgets.end(), new textWidget(
+    widgets.insert(widgets.end(), new textWidget(
                     481, 63, 270, 108, (*gpGeneralText)[39],
                     DATA_COMPGEN(0x0065f2f8, campaignBriefSmallFont, "smalfont.fnt"),
                     static_cast<font::TColor>(2), CAMPAIGN_DESCRIPTION_ID, 0, 0, 8));
     if (campaign->GetCampaignDescription().length() > 0) {
-        Widgets.insert(Widgets.end(), new textWidget(
+        widgets.insert(widgets.end(), new textWidget(
                         481, 86, 277, 120,
                         campaign->GetCampaignDescription().c_str(),
                         DATA_COMPGEN(0x0065f2f8, campaignBriefSmallFont,
@@ -622,12 +627,12 @@ TCampaignBrief::TCampaignBrief(unsigned char newCampaign,
         }
     }
 
-    Widgets.insert(Widgets.end(), new textWidget(
+    widgets.insert(widgets.end(), new textWidget(
                     481, 213, viewFromGame ? 217 : 281, 32,
                     scenarios[selected_scenario].mapName.c_str(),
                     DATA_COMPGEN(0x00660b24, campaignBriefBigFont, "bigfont.fnt"),
                     static_cast<font::TColor>(8), MAP_NAME_ID, 4, 0, 8));
-    Widgets.insert(Widgets.end(), new textWidget(
+    widgets.insert(widgets.end(), new textWidget(
                     481, 253, 270, 108, (*gpGeneralText)[497],
                     DATA_COMPGEN(0x0065f2f8, campaignBriefSmallFont, "smalfont.fnt"),
                     static_cast<font::TColor>(2), CAMPAIGN_DESCRIPTION_ID, 0, 0, 8));
@@ -636,9 +641,9 @@ TCampaignBrief::TCampaignBrief(unsigned char newCampaign,
         481, 278, 277, 108,
         DATA_COMPGEN(0x0065f2f8, campaignBriefSmallFont, "smalfont.fnt"),
         font::WHITE, slider::BLUE);
-    Widgets.insert(Widgets.end(), scroller);
+    widgets.insert(widgets.end(), scroller);
 
-    Widgets.insert(Widgets.end(), new iconWidget(
+    widgets.insert(widgets.end(), new iconWidget(
                     735, 26, 29, 23, WHICHMAP_ID,
                     DATA_COMPGEN(0x00660e68, campaignBriefScenarioMapSize,
                                  "scnrmpsz.def"),
@@ -647,14 +652,14 @@ TCampaignBrief::TCampaignBrief(unsigned char newCampaign,
     sprintf(gText,
             DATA_COMPGEN(0x00660d28, campaignBriefLabelFormat, "%s:"),
             (*gpGeneralText)[391]);
-    Widgets.insert(Widgets.end(), new textWidget(
+    widgets.insert(widgets.end(), new textWidget(
                     480, 404, 44, 23, gText,
                     DATA_COMPGEN(0x0065f2f8, campaignBriefSmallFont, "smalfont.fnt"),
                     font::WHITE, 100, 6, 0, 8));
     sprintf(gText,
             DATA_COMPGEN(0x00660d28, campaignBriefLabelFormat, "%s:"),
             (*gpGeneralText)[392]);
-    Widgets.insert(Widgets.end(), new textWidget(
+    widgets.insert(widgets.end(), new textWidget(
                     612, 404, 58, 23, gText,
                     DATA_COMPGEN(0x0065f2f8, campaignBriefSmallFont, "smalfont.fnt"),
                     font::WHITE, 100, 6, 0, 8));
@@ -676,7 +681,7 @@ TCampaignBrief::TCampaignBrief(unsigned char newCampaign,
         // ordinary depth and depth 1 both produce 73.58% / 216 blocks; pinning
         // only this site leaves 202 blocks / 80.97%, versus 185 in retail.
 #pragma inline_depth(0)
-        Widgets.insert(Widgets.end(), w);
+        widgets.insert(widgets.end(), w);
 #pragma inline_depth()
 
         w = new iconWidget(
@@ -692,14 +697,14 @@ TCampaignBrief::TCampaignBrief(unsigned char newCampaign,
         // 81.38%; both controls together give the current 187-block / 85.72%
         // checkpoint while the natural source-state threshold is recovered.
 #pragma inline_depth(0)
-        Widgets.insert(Widgets.end(), w);
+        widgets.insert(widgets.end(), w);
 #pragma inline_depth()
     }
 
     AddBonusIcons();
 
-    for (std::vector<widget*>::iterator it = Widgets.begin();
-         it != Widgets.end(); ++it) {
+    for (std::vector<widget*>::iterator it = widgets.begin();
+         it != widgets.end(); ++it) {
         if (*it)
             AddWidget(*it, -1);
         else
