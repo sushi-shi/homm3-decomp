@@ -8651,6 +8651,17 @@ void game::ClaimGarrison(int garrisonId, int newPlayerOwner)
     // This later, smaller caller inlines the same constructor. Spell the
     // seven stores explicitly so the one out-of-line source definition above
     // does not change its already-banked schedule.
+    // Residual (84.4059%): retail issues subType / field_00 / size /
+    // garrisonId / playerPos INTO the gaps of the inlined type_point
+    // construction and sinks only the two zero stores behind it; we emit all
+    // seven together after the point.  Tried and rejected, each measured
+    // against 84.4059: hoisting the whole `change` block above the
+    // `type_point location` declaration - 63.9706 (the location block moves
+    // with it); reordering the seven stores into retail's EMISSION order
+    // (subType, field_00, size, garrisonId, playerPos, then the two zeros) -
+    // 81.0559.  The zeros are sunk on both sides because they share the
+    // `xor ecx,ecx` the packing code already needs, so their source position
+    // is not observable; what is left is scheduling, not statement order.
     CMCClaimGarrison change;
     change.field_04 = 0;
     change.field_10 = 0;

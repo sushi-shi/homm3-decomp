@@ -3992,6 +3992,30 @@ void advManager::do_event_hero(hero* current_hero, NewmapCell* cell,
 // inventory, scope order and all seven statement groups; retail proves the
 // Complete limits, both independent transfer guards, dialog rows and the
 // asymmetric seven-icon packing policy.
+// Residual (88.6858%), LOCALISED 2026-09-06.  Two facts, one fixed and one
+// not:
+//   (a) both `_cpp_min` calls take `magic_scholar_level + 1` as the LEFT
+//       argument - retail computes the wisdom term first (VC6 evaluates
+//       arguments right to left) and compares `cmp wisdom+2, msl+1` with
+//       `&(wisdom+2)` as the fall-through, the mirror of what the other
+//       operand order emits.  Swapping both: 88.4113 -> 88.6858.
+//   (b) the remaining structural deficit is ONE inline decision and the
+//       call streams name it exactly: at the LAST `msg += format_string(...)`
+//       (the taught block's trailer, base +6fa) retail EXPANDS
+//       basic_string::append(const basic_string&, size_t, size_t) - its
+//       _Xlen / _Grow / _Eos are retail-only calls #39..#41 - while we emit
+//       the out-of-line `append`.  Retail CALLS the same append at the
+//       learned block's trailer (#24), so this is the /Ob2 quotient at the
+//       final site, and it accounts for the whole 65-vs-60 branch deficit
+//       (an inlined append is four guards plus the throw).  UNDER-inline =
+//       grow the caller, i.e. real missing mass; nothing local to the
+//       statement reaches it and no pin may be added (falling-only floor).
+// The prologue register split is downstream of the same thing: retail loads
+// `second_hero->skillLevel` straight off the incoming EDX and lands the
+// _cpp_max result in ESI, leaving EDX as the zero for the two vector
+// headers; we copy EDX into EBX first, so the max spills to [ebp-0x1c] and
+// ESI carries the zero instead.  Every instruction pairs; only the register
+// and the one extra frame slot differ.
 VA(0x004a2940, 0x85C)  // anchor-callee from do_event_hero + full retail semantics, dc 0x93464
 static void exchange_spells(hero* first_hero, hero* second_hero)
 {
@@ -4009,11 +4033,11 @@ static void exchange_spells(hero* first_hero, hero* second_hero)
         && first_hero->IsWieldingArtifact(ARTIFACT_SPELLBOOK)
         && second_hero->IsWieldingArtifact(ARTIFACT_SPELLBOOK)) {
         const int first_spell_level = std::_cpp_min<int>(
-            first_hero->skillLevel[eSecSkillWisdom] + 2,
-            magic_scholar_level + 1);
+            magic_scholar_level + 1,
+            first_hero->skillLevel[eSecSkillWisdom] + 2);
         const int second_spell_level = std::_cpp_min<int>(
-            second_hero->skillLevel[eSecSkillWisdom] + 2,
-            magic_scholar_level + 1);
+            magic_scholar_level + 1,
+            second_hero->skillLevel[eSecSkillWisdom] + 2);
 
         SpellID spell;
         for (spell = 0; spell < hero::NUM_SPELLS; spell++) {

@@ -1691,7 +1691,7 @@ events	?do_event_water_wheel@advManager@@QAEXPAVhero@@PATExtraInfoUnion@@_N@Z	10
 events	?do_event_watering_hole@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0000	100.0000	0xa7ea0	5075bf685718
 events	?do_event_windmill@advManager@@QAEXPAVhero@@PATExtraInfoUnion@@_N@Z	100.0000	100.0000	100.0000	0xa7fc0	21af7ca21e47
 events	?do_event_witch_hut@advManager@@QAEXPAVhero@@PATExtraInfoUnion@@_N@Z	100.0000	100.0000	100.0000	0xa8080	123c3e0e0bbd
-events	?exchange_spells@@YIXPAVhero@@0@Z	88.4127	88.4127	88.4127	0xa2940	bd663e3fe4c5
+events	?exchange_spells@@YIXPAVhero@@0@Z	88.6905	88.6905	88.6905	0xa2940	adf80c1ca4ef
 events	?fill@std@@YIXPAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@0ABV21@@Z	100.0000	100.0000	100.0000	0xaf870	-
 events	?get_black_box@advManager@@QBEPAVBlackBoxData@@PBTExtraInfoUnion@@@Z	100.0000	100.0000	100.0000	0xa0c20	00f2381511fe
 events	?get_force_modifier@advManager@@SIHM@Z	100.0000	100.0000	100.0000	0xa76c0	4b57cf6e2c70
@@ -1859,7 +1859,7 @@ game	?AssignNetInfo@playerData@@QAEXPAVCNetPlayerInfo@@@Z	100.0000	100.0000	100.
 game	?CancelComputerScreen@game@@QAEXXZ	100.0000	100.0000	100.0000	0xca530	0f5d5b68269d
 game	?CheckForTimeEvent@game@@QAEXXZ	100.0000	100.0000	100.0000	0xcd910	88e54f6ddad5
 game	?CheckForTownEvent@game@@QAEXXZ	100.0000	100.0000	100.0000	0xcda10	e2b48df3dc47
-game	?ClaimGarrison@game@@QAEXHH@Z	84.4118	84.4118	84.4118	0xc6960	729f2a534f80
+game	?ClaimGarrison@game@@QAEXHH@Z	84.4118	84.4118	84.4118	0xc6960	d87c67b97b6b
 game	?ClaimGenerator@game@@QAEXHH@Z	100.0000	100.0000	100.0000	0xc67b0	fdb8284891f3
 game	?ClaimMine@game@@QAEXHHW4type_action_type@@@Z	100.0000	100.0000	100.0000	0xc66e0	f3d11f1a5ce0
 game	?ClaimShipyard@game@@QAEXUtype_point@@H@Z	98.6034	98.6034	98.6034	0xc6a30	1907da06d2ab
@@ -2253,7 +2253,7 @@ hero	?UpdateArmies@hero@@QAEXXZ	96.7200	96.7200	96.7200	0xd97f0	d866b2e7bc8e
 hero	?UpdateBackpack@@YIXXZ	100.0000	100.0000	100.0000	0xdb1f0	3155d526f320
 hero	?UpdateHeroLocator@THeroScreenWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0xe1600	2ccdbb152717
 hero	?UpdateHeroScreenStatusBar@THeroScreenWindow@@QAEXPAVmessage@@@Z	100.0000	100.0000	100.0000	0xdb660	27b146c350ba
-hero	?UpdateStats@hero@@QAEXXZ	86.0900	86.0900	86.0900	0xe16d0	581d4d9e449f
+hero	?UpdateStats@hero@@QAEXXZ	86.0900	86.0900	86.0900	0xe16d0	38e847ce6d34
 hero	?UpgradeCreatures@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xe2370	c3fd8e679097
 hero	?UseSpell@hero@@QAEXH@Z	100.0000	100.0000	100.0000	0xd92d0	5d64940cb6d2
 hero	?ViewArtifact@hero@@QAEXPBUtype_artifact@@H@Z	100.0000	100.0000	100.0000	0xd9a00	d4862c038d47
