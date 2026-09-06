@@ -939,6 +939,27 @@ unchanged. Source-owned comments preserve the earlier provisional role names;
 retail labels and checkpoint rows are regenerated from the new declarations.
 The trace measures candidate compiler state, not missing retail source tokens.
 
+A scratch counterfactual separates the two unwanted inline copies from the
+storage residual. At the existing `0x19f8c` hook, reject the first depth-two
+`getPackedCell` and the following three-argument `_Distance` by returning to
+the compiler's rejection path at `0x19a94`. Charge their original costs (90
+and 41) to the current budget before rejecting: their baseline child
+expansions are all free, so this preserves the later budget decisions.
+This is deliberately a modified-compiler experiment, outside the passive
+trace command and the matching build. Its normal-shim restoration is mandatory.
+
+The diagnostic reproduces all 56 named/virtual retail call sites in order,
+including the correct distance overload, yet still has a 0x54-byte frame
+(retail 0x50) and omits the original-x store at 0x5b4e3f. Thus neither storage
+delta can be attributed solely to those inline copies. The ordinary byte-checked
+`/Z7` object records the tile at EBP-0x54, the neighbour mask at EBP-0x38,
+and all five scoped nearby points at EBP-0x28; it omits the optimizer's
+unnamed temporaries, so those records do not identify the extra allocation.
+A lexical `inline_depth(1)` at the outer terrain read is byte-neutral because
+the nested call retains its own lexical allowance. Flattening just this read
+and pinning its cache call changes the caller's budget and later calls, so it
+is not an equivalent control. Both source pragma probes were removed.
+
 ## 7. Using it
 
 ```sh
