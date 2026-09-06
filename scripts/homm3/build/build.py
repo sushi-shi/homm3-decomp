@@ -1,21 +1,16 @@
 #!/usr/bin/env python3
 """homm3.build.build - the `homm3 build` command.
 
-    configure -> ninja (base objs) -> normalize comparison copies ->
-    configure (objdiff.json sees new normalized paths) -> objdiff report
+    configure -> ninja (base objs) -> delink (including normalization) -> objdiff report
     -> overall line -> [normal tier] checkpoint-ledger refresh + dip report
     (OBSERVATIONAL) + banked-rows check (FATAL when a previously
     banked RVA left the baseline entirely) + cleanliness board (FATAL
     when a ratcheted source metric rises above its committed floor -
-    C-style casts are banned at 0) + README score block + stale-delink
-    probe.
+    C-style casts are banned at 0) + README score block.
 
-`--fast` stops after the overall line and says what it skipped (the gruntz
-inner-loop tier). The build never RE-delinks (homm2 rule - an existing
-comparison target must not move silently under a matcher); a fresh tree
-with no targets at all bootstraps the first delink, and afterwards the
-probe only warns when the synth-PDB inputs are newer than the PDB - run
-`homm3 delink` explicitly.
+Full builds refresh retail targets before comparison and checkpointing.
+`--fast <TU>` keeps the existing targets, normalizes comparison copies, and
+stops after the report. Run a full build first to establish those targets.
 """
 from __future__ import annotations
 
@@ -25,28 +20,10 @@ import sys
 from homm3.core import common
 
 ROOT = common.HOMM3_DIR
-PDB = ROOT / "build/pdb/HEROES3.pdb"
 
 
 def _run(*command: str) -> int:
     return subprocess.run(list(command), cwd=ROOT).returncode
-
-
-def delink_inputs_stale() -> list[str]:
-    if not PDB.is_file():
-        return ["build/pdb/HEROES3.pdb missing"]
-    stamp = PDB.stat().st_mtime
-    stale = []
-    probes = (list((ROOT / "src").glob("*.c*"))
-              + [ROOT / "config/retail-zlib-map.tsv",
-                 ROOT / "config/retail-runtime-map.tsv",
-                 ROOT / "config/retail-functions.tsv",
-                 ROOT / "config/retail-relocs.tsv",
-                 ROOT / "config/retail-vtables.tsv"])
-    for path in probes:
-        if path.is_file() and path.stat().st_mtime > stamp:
-            stale.append(str(path.relative_to(ROOT)))
-    return stale
 
 
 def main(argv=None) -> int:
@@ -57,20 +34,20 @@ def main(argv=None) -> int:
     from homm3.build import configure, normalize_objs
     from homm3.match import status
 
+    if fast and not any((ROOT / "build/objdiff/target").glob("*.c.obj")):
+        print("[build] retail targets missing; run `homm3 build` before `--fast`",
+              file=sys.stderr)
+        return 1
+
     configure.main()
     if _run("ninja", *ninja_args):
         return 1
-    normalize_objs.main([])
-    configure.main()
-
-    # a fresh tree has no delinked targets: every unit would pair against
-    # dummy.obj and the ratchet would report 68 bogus MISSING regressions.
-    # Bootstrap the FIRST delink instead - the never-delink rule protects an
-    # EXISTING comparison target from moving silently; from nothing there is
-    # nothing to protect. Later builds only warn (the probe below).
-    if not any((ROOT / "build/objdiff/target").glob("*.c.obj")):
-        print("[build] no delinked targets yet - bootstrapping the first "
-              "delink")
+    if fast:
+        if normalize_objs.main([]):
+            return 1
+        configure.main()
+    else:
+        print("[build] refreshing retail targets")
         from homm3.build import delink
         if delink.main([]):
             return 1
@@ -80,8 +57,7 @@ def main(argv=None) -> int:
     print(f"[build] report: {status.REPORT.relative_to(ROOT)}")
 
     if fast:
-        print("[build] fast: checkpoint ledger + gates + README + delink "
-              "probe skipped - "
+        print("[build] fast: delink + checkpoint ledger + gates + README skipped - "
               "run `homm3 build` before committing")
         return 0
 
@@ -132,12 +108,6 @@ def main(argv=None) -> int:
     except Exception as exc:  # the score block must never fail a build
         print(f"[build] README block skipped: {exc}")
 
-    stale = delink_inputs_stale()
-    if stale:
-        print(f"[build] delink inputs changed since the last synth PDB "
-              f"({', '.join(stale[:4])}"
-              + (f", +{len(stale) - 4} more" if len(stale) > 4 else "")
-              + ") - run `homm3 delink`")
     return 0
 
 

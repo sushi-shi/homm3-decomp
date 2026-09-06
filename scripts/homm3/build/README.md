@@ -37,21 +37,27 @@ normalize_objs
                every transform reparses COFF and verifies unrelated sections,
                symbols and relocations
 
-delink       THE LOOP (explicit invocation only, never in `homm3 build`):
+delink       retail target refresh (included in full `homm3 build`):
              labels -> model -> synth_pdb -> data_manifest -> vostok
              -> build/delink/<unit>.c.obj -> copy units.toml scope to
              build/objdiff/target/ -> normalize both sides -> re-emit
              objdiff.json against the normalized copies
 build        the `homm3 build` command (homm3.build.build): configure ->
-             ninja -> normalize -> objdiff report -> overall line ->
+             ninja -> delink (including normalize) -> objdiff report -> overall line ->
              [normal tier] checkpoint-ledger refresh + observational dip
-             report + fatal evidence/source gates + README score block +
-             stale-delink warning. --fast stops after the %% line. The score
+             report + fatal evidence/source gates + README score block.
+             --fast keeps existing targets and stops after the %% line. The score
              ledger lives in homm3.match.status (config/match_baseline.tsv);
              a local percentage maximum is never a build gate.
 ```
 
 `homm3 delink` runs the loop; `homm3 status` prints the per-unit table.
+
+For iteration, normally use `homm3 build --fast <TU>` with a
+manifest unit name, such as `cursor`. Each name targets that unit's object, so
+shared-header edits do not compile every including TU on each iteration. Run
+full `homm3 build` to rebuild affected units, refresh retail targets, and run
+the final checkpoint.
 
 Dreamcast NB11 records are parsed into the compiler-neutral
 `homm3.debug-shape.v1` model in `homm3.analysis.debug_shape`. The model carries
@@ -67,5 +73,4 @@ pins are historical debt: the cleanliness board prevents their count from
 increasing and ratchets it down as natural source/compiler state replaces them.
 
 The annotation macros live in `include/va.h` (absolute VAs in source, rvas
-in every artifact). The delinker never runs inside `homm3 build`; explicit
-invocation only, homm2-style.
+in every artifact).

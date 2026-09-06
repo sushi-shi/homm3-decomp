@@ -58,7 +58,7 @@ HOMM3_EXE=/absolute/path/to/HEROES3.EXE \
 HOMM3_DREAMCAST_EXE=/absolute/path/to/H3.EXE \
   homm3 init
 
-homm3 build           # compile, compare, checkpoint, run gates
+homm3 build           # compile, delink, compare, checkpoint, run gates
 homm3 link            # optional layout study; the EXE is not runnable
 ```
 
