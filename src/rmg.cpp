@@ -265,6 +265,14 @@ static void set_available_rmg_heroes(
     }
 }
 
+// Vtable 0x6409cc slot 3 returns the map's two unsigned dimensions.
+// The hidden result pointer and two stores fix the coordinate return ABI.
+VA(0x00532240, 0x15) // anchor-vtable 0x6409cc+0x0c; retail-only
+TRmgGridPoint type_random_map::GetSize()
+{
+    return TRmgGridPoint(mapWidth, mapHeight);
+}
+
 // The boundary coordinator constructs both a temporary zone and owned
 // water zones through this same retained body. The final three members are
 // vectors; 0x53d9ae/0x53da0d prove signed-short connection distances.
@@ -1601,70 +1609,81 @@ TRmgZoneConnection* TRmgTownSlot::FindConnection(int destinationZone)
 // to the marked neighbour. The inner square becomes border terrain and the
 // outer empty square loses gate eligibility. Painting is deferred per level.
 // All role names are provisional: this Complete-only pass has no DC body.
-// Residual (96.6543%): stack homes, the first search's inverted loop branch,
-// clamp scheduling, and the plane-view constructor/painting-loop registers.
-// The shared outer coordinate must be assigned from each queued position:
-// retail writes that value's z back into the outer level slot at 0x5401e6.
-// Controls: scalar versus TPoint corner bounds, positive match versus early
-// continue, and int versus terrain-enum vector values are byte-neutral.
-// The three-scalar and by-value GetMapItem overloads also expand identically.
-// Keeping the scalar locals before the vectors and writing plane-view fields
-// in the constructor body improves the initial 95.83594% reconstruction.
+// Residual (96.9219%, MAX 97.0449%): the first search's inverted loop
+// branch, clamp scheduling, and map-view/painting-loop registers.
+// One four-int bounds aggregate preserves retail's contiguous -0x50..-0x44
+// rectangle, including the dead minimumY home. Together with the shared
+// terrain local, it restores the 0x84 frame and all observed local homes.
+// Two TPoint corners or four independent bounds scalars instead take 0x7c.
+// Splitting search/painting terrain lifetimes scores 97.0449%, but shifts
+// the vectors/current pointer four bytes; preserve the retail frame shape.
+// The outer coordinate must be assigned from each queued position: retail
+// writes that value's z into the outer level slot at 0x5401e6. Source clear
+// order is positions then terrains; VC6 schedules the terrain clear first.
+// Controls: bool/byte found flags, scalar/nearby declaration scopes, for/while
+// search, positive match/early continue, found/terrain assignment order,
+// and int/terrain-enum vectors were byte-neutral in isolated controls.
+// Moving current's initialization past the vectors changes the entry loads.
+// The three-scalar and by-value GetMapItem overloads expand identically.
+// Terrain-vector insert matches all 521 bytes at 0x54d120; the retail
+// widget-vector label there is a shared body, not a different operation.
+// GetSize() in the six clamps adds virtual calls absent from retail (76.64%).
+// TPoint's reference-argument constructor is neutral here, but is unproved
+// for the signed type and changes DrawIrregularZoneBoundary's arithmetic.
+// Map-view controls: a separate plane-size local, four scalar/pointer ctor
+// arguments, and creating the map before lastTerrain change the dimension
+// loads/stores or terrain lifetime away from retail. Swapping the dimension
+// assignments does not restore the height-first multiplication sequence.
 VA(0x0053FCB0, 0x5EC) // anchor-callee 0x544a31; thiscall, ret 0; retail-only
 void type_random_map_generator::RepairWaterZoneBorders()
 {
+    TRmgMapItem* current = map.mapItems;
+    TTerrainType terrain;
     TRmgMapPosition position;
     TRmgMapPosition nearby;
-    TTerrainType terrain;
-    TTerrainType lastTerrain;
-    TPoint first, end;
-    unsigned char found;
-    int zoneIndex, destinationZone;
-    TRmgZone* zone;
-    TRmgMapItem* current = map.mapItems;
     std::vector<TRmgMapPosition> positions;
     std::vector<TTerrainType> terrains;
     for (position.z = 0; position.z < map.numberLevels; ++position.z) {
         for (position.y = 0; position.y < map.mapHeight; ++position.y) {
             for (position.x = 0; position.x < map.mapWidth; ++position.x, ++current) {
-                zoneIndex = current->zoneState.zone;
+                int zoneIndex = current->zoneState.zone;
                 if (zoneIndex < 0 || current->tile.landType != eTerrainWater)
                     continue;
-                destinationZone = current->zoneState.connectionEligibility;
+                int destinationZone = current->zoneState.connectionEligibility;
                 if (destinationZone < 0)
                     continue;
 
-                found = 0;
-                first = TPoint(
-                    max(position.x - 1, 0), max(position.y - 1, 0));
-                end = TPoint(
-                    min(position.x + 2, map.mapWidth),
-                    min(position.y + 2, map.mapHeight));
+                unsigned char found = 0;
+                TRmgZoneBounds bounds;
+                bounds.minimumY = max(position.y - 1, 0);
+                bounds.minimumX = max(position.x - 1, 0);
+                bounds.maximumY = min(position.y + 2, map.mapHeight);
+                bounds.maximumX = min(position.x + 2, map.mapWidth);
                 nearby.z = position.z;
-                zone = zones[zoneIndex];
-                for (nearby.y = first.y; nearby.y < end.y && !found; ++nearby.y) {
-                    for (nearby.x = first.x; nearby.x < end.x; ++nearby.x) {
+                TRmgZone* zone = zones[zoneIndex];
+                for (nearby.y = bounds.minimumY;
+                     nearby.y < bounds.maximumY && !found; ++nearby.y) {
+                    for (nearby.x = bounds.minimumX; nearby.x < bounds.maximumX; ++nearby.x) {
                         TRmgMapItem* item = map.GetMapItem(nearby);
                         if (item->tile.landType == eTerrainWater
                             || item->tile.landType == eTerrainRock
                             || item->HasBorderObject()
                             || !item->tileData.roadPassable)
                             continue;
-                        found = 1;
                         terrain = item->tile.landType;
+                        found = 1;
                         break;
                     }
                 }
                 if (!found || zone->slot->FindConnection(destinationZone))
                     continue;
 
-                first = TPoint(
-                    max(position.x - 1, 0), max(position.y - 1, 0));
-                end = TPoint(
-                    min(position.x + 2, map.mapWidth),
-                    min(position.y + 2, map.mapHeight));
-                for (nearby.y = first.y; nearby.y < end.y; ++nearby.y) {
-                    for (nearby.x = first.x; nearby.x < end.x; ++nearby.x) {
+                bounds.minimumY = max(position.y - 1, 0);
+                bounds.minimumX = max(position.x - 1, 0);
+                bounds.maximumY = min(position.y + 2, map.mapHeight);
+                bounds.maximumX = min(position.x + 2, map.mapWidth);
+                for (nearby.y = bounds.minimumY; nearby.y < bounds.maximumY; ++nearby.y) {
+                    for (nearby.x = bounds.minimumX; nearby.x < bounds.maximumX; ++nearby.x) {
                         TRmgMapItem* item = map.GetMapItem(nearby);
                         if (!item->connection.present) {
                             item->tileData.subterraneanGate = 0;
@@ -1677,13 +1696,12 @@ void type_random_map_generator::RepairWaterZoneBorders()
                     }
                 }
 
-                first = TPoint(
-                    max(position.x - 2, 0), max(position.y - 2, 0));
-                end = TPoint(
-                    min(position.x + 3, map.mapWidth),
-                    min(position.y + 3, map.mapHeight));
-                for (nearby.y = first.y; nearby.y < end.y; ++nearby.y) {
-                    for (nearby.x = first.x; nearby.x < end.x; ++nearby.x) {
+                bounds.minimumY = max(position.y - 2, 0);
+                bounds.minimumX = max(position.x - 2, 0);
+                bounds.maximumY = min(position.y + 3, map.mapHeight);
+                bounds.maximumX = min(position.x + 3, map.mapWidth);
+                for (nearby.y = bounds.minimumY; nearby.y < bounds.maximumY; ++nearby.y) {
+                    for (nearby.x = bounds.minimumX; nearby.x < bounds.maximumX; ++nearby.x) {
                         TRmgMapItem* item = map.GetMapItem(nearby);
                         if (static_cast<int>(item->objects.size()) <= 0
                             && !item->connection.present)
@@ -1695,7 +1713,7 @@ void type_random_map_generator::RepairWaterZoneBorders()
                 progress->Advance(20);
         }
         if (positions.size()) {
-            lastTerrain = terrains[0];
+            TTerrainType lastTerrain = terrains[0];
             type_random_map levelMap(map, position.z);
             TRmgTerrainBrush brush(&levelMap, lastTerrain, 4);
             for (unsigned int i = 0; i < positions.size(); ++i) {
@@ -1707,8 +1725,8 @@ void type_random_map_generator::RepairWaterZoneBorders()
                 position = positions[i];
                 brush.PaintRectangle(position.x, position.y, 1, 1);
             }
-            terrains.clear();
             positions.clear();
+            terrains.clear();
         }
     }
 }
