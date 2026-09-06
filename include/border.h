@@ -106,6 +106,12 @@ public:
     virtual void zBufferDraw(unsigned short* zBuffer, int id);
     virtual void Draw();  // slot 4, retail 0x4507b0
     void Draw2();
+    // DC dc 0x54c6c. Retail has NO row for it: Main below is its only call
+    // site, /Ob2 expanded it there and /OPT:REF then dropped the orphaned
+    // COMDAT. Its inlined `return` is what gives Main retail's single
+    // `return 1` tail rather than a duplicated epilogue.
+    void SetImage(const char* bitmap_name);
+    virtual int Main(message* msg);  // slot 2, retail 0x450860
 };
 
 // The free palette painters (declared for button.cpp in button.h;
