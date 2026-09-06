@@ -2365,7 +2365,7 @@ hero	?set_hotkey@button@@QAEXH@Z	100.0000	100.0000	100.0000	0xe1370	-
 hero	?test@?$bitset@$0JA@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0x4d4d0	-
 hero	?update_all_slots@THeroScreenWindow@@QAEXXZ	100.0000	100.0000	100.0000	0xdb1d0	c6f501393cee
 hero	?update_slot@THeroScreenWindow@@QAEXJ@Z	81.7000	81.7000	81.7000	0xdaf90	06cf4a3977b1
-hero	?update_spell_list@hero@@QAEXXZ	80.9314	80.9314	80.9314	0xd95d0	14e3e31d35be
+hero	?update_spell_list@hero@@QAEXXZ	81.0400	81.0400	81.0400	0xd95d0	86486d074a25
 herodefs	?InitializeHeroClassTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0xe6920	9ee667038ad2
 herodefs	?InitializeHeroTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0xe67a0	99ccc2c936c9
 herodefs	?InitializeSSkillTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0xe6b10	661fd4caa9a6
@@ -3769,7 +3769,7 @@ singleselectionwindow	?ReceiveChat@TSingleSelectionWindow@@QAEXKPADE@Z	100.0000	
 singleselectionwindow	?SaveValid@@YIEPBD@Z	100.0000	100.0000	100.0000	0x177360	f85d34b44ef4
 singleselectionwindow	?SendChat@CSingleSelectionChatEdit@@UAEXPBDH@Z	100.0000	100.0000	100.0000	0x17cc00	af89320f7f09
 singleselectionwindow	?SendPlayerFaces@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x18bc70	69599a110cd2
-singleselectionwindow	?SetCurrentMap@TSingleSelectionWindow@@QAEXHE@Z	99.9874	99.9874	99.9874	0x185500	c2493d1178b5
+singleselectionwindow	?SetCurrentMap@TSingleSelectionWindow@@QAEXHE@Z	100.0000	100.0000	100.0000	0x185500	685addc7e9b0
 singleselectionwindow	?SetDifficultyHiLite@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x186060	bb24a651e754
 singleselectionwindow	?SetFilter@TSingleSelectionWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x185d90	2ecaed8a359d
 singleselectionwindow	?SetHumanSlot@TSingleSelectionWindow@@QAEXXZ	91.0411	91.0411	91.0411	0x184c40	724dcde598b6
