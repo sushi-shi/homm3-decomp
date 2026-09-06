@@ -2052,7 +2052,7 @@ game	?_Xran@?$bitset@$0M@@std@@ABEXXZ	100.0000	100.0000	100.0000	0xd4eb0	-
 game	?add_garrison_hero@playerData@@QAEEPAVtown@@@Z	100.0000	100.0000	100.0000	0xb9fc0	2e056133f228
 game	?any@?$bitset@$0BM@@std@@QBE_NXZ	100.0000	100.0000	100.0000	0xd1810	-
 game	?apply_map_header_availability@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc4e30	e86fa3f1591d
-game	?calculate_production@game@@QAEXXZ	94.4126	94.4126	94.4126	0xb8af0	5a49f0a38ec3
+game	?calculate_production@game@@QAEXXZ	95.0560	95.0560	95.0560	0xb8af0	35693b23f3cc
 game	?capacity@?$vector@Utype_university@@V?$allocator@Utype_university@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0xcfa40	-
 game	?copy_backward@std@@YIPAVtown@@PAV2@00@Z	100.0000	100.0000	100.0000	0xd32e0	-
 game	?count@?$bitset@$0BM@@std@@QBEIXZ	100.0000	100.0000	100.0000	0xcf8d0	-
@@ -2646,7 +2646,7 @@ mapcell	?readHeroData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	82.9570	
 mapcell	?readMapLayer@NewfullMap@@QAEHPAVTAbstractFile@@HH@Z	95.4717	95.4717	95.4717	0xfe220	ddea38fffe2c
 mapcell	?readMapObjects@NewfullMap@@QAEHPAVTAbstractFile@@H@Z	97.4012	97.4012	97.4012	0x104470	001ad5b45d12
 mapcell	?readMineData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0x101020	5069875b6158
-mapcell	?readMonsterData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	96.4729	96.4729	96.4729	0x1013b0	bf238ff67f42
+mapcell	?readMonsterData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	97.0513	97.0513	97.0513	0x1013b0	a29b7f4958a0
 mapcell	?readObject@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	97.4369	97.4369	97.4369	0x102e00	0867d341a475
 mapcell	?readObjectType@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObjectType@@@Z	100.0000	100.0000	100.0000	0x103780	f73736bdb1d3
 mapcell	?readResourceData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	76.9111	76.9111	76.9111	0xff4d0	23eb0df54b8e
