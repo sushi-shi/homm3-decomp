@@ -271,16 +271,24 @@ unsigned char combatManager::failed_siege()
 // pyramid alone is +24.22 and makes the branch census exact (54/54
 // branches, 4/4 rets).
 //
-// Residual (95.39%): the town census keeps `i` in a memory slot and
-// numTowns in EBX where retail does the reverse - retail's `xor ebx,ebx`
-// serves count, the flag AND the index, so the numTowns guard compares
-// against the zero REGISTER, and with EDI then holding the player record
-// retail must RELOAD gpGame for the players base where our EDI still
-// carries it from the victory-condition test. One allocation cascade,
-// four instructions. Tried and rejected, all byte-flat: initialising the
-// index before the numTowns guard, hoisting the index to the enclosing
-// block, dropping the braces around the loop, and dropping the named
-// numTowns so the bound is the compiler's own CSE of player->numTowns.
+// Residual (95.77%): retail's `xor ebx,ebx` serves count, the flag AND the
+// census index, and with EDI then holding the player record retail must
+// RELOAD gpGame for the players base where our EDI still carries it from the
+// victory-condition test.
+// 2026-09-06: the index/bound half of that cascade IS a source fact and it
+// is now spelled. `long i = 0;` declared with count and the flag - so the
+// index pseudo is BORN before `numTowns` - gives EBX to the index and spills
+// numTowns to [ebp-0x10] with a reload at the back edge, which is retail's
+// allocation exactly: 95.3960 -> 95.7676. The lever is the FIRST ASSIGNMENT,
+// not the declaration: `long i;` hoisted with an `i = 0` left in the `for`
+// head is byte-flat at 95.3960 (which is what the earlier note recorded as
+// "initialising the index before the numTowns guard" - it was measuring a
+// bare declaration). Same rule as docs/vc6/regalloc.md 6b's SIB birth order.
+// Order among the three inits is inert (count/i/flag and count/flag/i both
+// 95.7676). Still rejected: hoisting the index to the enclosing block,
+// dropping the braces around the loop, dropping the named numTowns, and
+// naming `heroes[currentSide]` in a `currentHero` local (95.5665 - it costs
+// the three guards their memory compares).
 // The two remaining singles are a `lea` scheduled one slot late in the
 // army scan and the fight-value walk's +0x4c bias emitted as a separate
 // `add` rather than folded into the base `lea`.
@@ -311,10 +319,11 @@ unsigned char combatManager::AICheckRetreat()
         long iSideFV = currentSide;
         long count = 0;
         unsigned char besieged_town_only = 0;
+        long i = 0;
         playerData* player = &gpGame->players[heroes[currentSide]->owner];
         long numTowns = player->numTowns;
         if (numTowns > 0) {
-            { for (long i = 0; i < numTowns; i++) {
+            { for (; i < numTowns; i++) {
                     town* current_town = gpGame->GetTown(player->townIds[i]);
                     if (current_town->HasBuilding(TAVERN_ID, 1)) {
                         count++;
