@@ -38,7 +38,7 @@ VA(0x0055EE50, 0x76)  // CreateRiver sole caller; retail-only RMG helper
 TRmgRiverPainter::TRmgRiverPainter(
     TRmgMapAdapterInterface* newAdapter,
     int newRiverType,
-    const TPoint& newStart)
+    const TRmgGridPoint& newStart)
     : TRmgLinePainter(newAdapter),
       TRmgLineWalker(this, newRiverType, newStart)
 {

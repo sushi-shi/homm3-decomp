@@ -41,6 +41,21 @@ Streams clip at the first impossible mnemonic ((bad)/jecxz/loop* — inline
 jump-table bytes); a clipped profile is flagged `partial` and diagnosed as
 covering a prefix.
 
+## Body equality does not establish return width or branch destinations
+
+The RMG gap predicates at `0x5b6320` and `0x5b6430` produce the same complete
+263/262-byte bodies with either `int` or `unsigned char` return declarations.
+Their retail callers test `al`; an `int` declaration instead makes those
+callers test `eax`. Verify callers before treating an exact retained body as
+proof of its return type.
+
+Likewise, `HasSeparatedNeighbours` (`0x5b6810`) can agree in every line of
+address-masked assembly while differing in three short-branch operands. Both
+versions contain two identical false-return epilogues, but three candidate
+branches select `+0x64` where retail selects `+0x44`. Its 99.7458% checkpoint
+is still partial. Use symbolic branch targets or resolved raw bytes to check
+this distinction; equal instruction and return counts do not settle it.
+
 ## Diagnosis taxonomy (D-classes → branch signatures)
 
 Emitted by `_flow.diagnose`; catalog IDs are

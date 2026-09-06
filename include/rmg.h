@@ -396,6 +396,35 @@ struct TPoint {
     }
 };
 
+// The map-painting grid uses unsigned coordinates: the terrain set's lower
+// bound at 0x5b8a40 compares y, then x, with jb/jae. Its retained constructor
+// at 0x5b76b0 reads both arguments through pointers. This role name is
+// provisional; the signed geometry TPoint is a separate recovered surface.
+struct TRmgGridPoint {
+    unsigned int x;
+    unsigned int y;
+
+    TRmgGridPoint() {}
+    TRmgGridPoint(const unsigned int& newX, const unsigned int& newY)
+        : x(newX), y(newY) {}
+
+    bool operator<(const TRmgGridPoint& other) const
+    {
+        return y < other.y || (y == other.y && x < other.x);
+    }
+    TRmgGridPoint& operator+=(const TPoint& offset)
+    {
+        x += offset.x;
+        y += offset.y;
+        return *this;
+    }
+    TRmgGridPoint operator+(const TPoint& offset) const
+    {
+        TRmgGridPoint result = *this;
+        return result += offset;
+    }
+};
+
 struct TRmgZoneBounds {
     int minimumX;
     int minimumY;
@@ -616,12 +645,12 @@ class TRmgMapAdapterInterface {
 public:
     virtual ~TRmgMapAdapterInterface() {}
     virtual void SetTile(
-        const TPoint& point, const TRmgTerrainTile& tile) = 0;
-    virtual void SetOverlay(const TPoint& point, int value) = 0;
-    virtual TPoint GetSize() = 0;
-    virtual TRmgTerrainTile GetTile(const TPoint& point) = 0;
-    virtual int GetLand(const TPoint& point) = 0;
-    virtual int GetOverlay(const TPoint& point) = 0;
+        const TRmgGridPoint& point, const TRmgTerrainTile& tile) = 0;
+    virtual void SetOverlay(const TRmgGridPoint& point, int value) = 0;
+    virtual TRmgGridPoint GetSize() = 0;
+    virtual TRmgTerrainTile GetTile(const TRmgGridPoint& point) = 0;
+    virtual int GetLand(const TRmgGridPoint& point) = 0;
+    virtual int GetOverlay(const TRmgGridPoint& point) = 0;
 };
 
 class TRmgMapAdapter : public TRmgMapAdapterInterface {
@@ -631,17 +660,17 @@ public:
     inline TRmgMapAdapter(type_random_map* newMap) : map(newMap) {}
 
     virtual void SetTile(
-        const TPoint& point, const TRmgTerrainTile& tile);
-    virtual void SetOverlay(const TPoint& point, int value);
-    virtual TPoint GetSize();
-    virtual TRmgTerrainTile GetTile(const TPoint& point);
-    virtual int GetLand(const TPoint& point);
-    virtual int GetOverlay(const TPoint& point);
+        const TRmgGridPoint& point, const TRmgTerrainTile& tile);
+    virtual void SetOverlay(const TRmgGridPoint& point, int value);
+    virtual TRmgGridPoint GetSize();
+    virtual TRmgTerrainTile GetTile(const TRmgGridPoint& point);
+    virtual int GetLand(const TRmgGridPoint& point);
+    virtual int GetOverlay(const TRmgGridPoint& point);
 };
 
 class TRmgLinePainter {
 public:
-    TPoint size;
+    TRmgGridPoint size;
     TRmgMapAdapterInterface* adapter;
 
     inline TRmgLinePainter(TRmgMapAdapterInterface* newAdapter)
@@ -653,22 +682,22 @@ public:
     virtual void* GetPattern(int value);
     virtual void PaintTile(int value, const TRmgMapPosition& tile);
     virtual void PaintOverlay(int value, const TRmgMapPosition& tile);
-    virtual int CanPaint(const TPoint& point);
+    virtual int CanPaint(const TRmgGridPoint& point);
     virtual void PaintNeighbour(int value, const TRmgMapPosition& tile);
-    virtual int PaintPoint(const TPoint& point);
+    virtual int PaintPoint(const TRmgGridPoint& point);
 };
 
 class TRmgLineWalker {
 public:
     TRmgLinePainter* painter;
     int riverType;
-    TPoint position;
+    TRmgGridPoint position;
 
     TRmgLineWalker(
         TRmgLinePainter* newPainter,
         int newRiverType,
-        const TPoint& start);
-    void DrawTo(const TPoint& destination);
+        const TRmgGridPoint& start);
+    void DrawTo(const TRmgGridPoint& destination);
 };
 
 class TRmgRiverPainter : public TRmgLinePainter, public TRmgLineWalker {
@@ -676,7 +705,7 @@ public:
     TRmgRiverPainter(
         TRmgMapAdapterInterface* newAdapter,
         int newRiverType,
-        const TPoint& start);
+        const TRmgGridPoint& start);
     virtual ~TRmgRiverPainter();
 };
 
@@ -860,6 +889,7 @@ public:
 
 SIZE(TRmgMapPosition, 0x0c);
 SIZE(TPoint, 0x08);
+SIZE(TRmgGridPoint, 0x08);
 SIZE(TRmgRiverDeltaOffset, 0x08);
 SIZE(TRmgMovementCost, 0x04);
 SIZE(TRmgZoneCellState, 0x04);

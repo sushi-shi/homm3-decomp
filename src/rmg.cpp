@@ -2212,7 +2212,7 @@ void type_random_map_generator::CreateRiver(TRmgMapPosition source)
     type_random_map levelMap(map, nextPosition.z);
     TRmgMapAdapter mapAdapter(&levelMap);
     TRmgRiverPainter riverPainter(
-        &mapAdapter, riverType, TPoint(nextPosition.x, nextPosition.y));
+        &mapAdapter, riverType, TRmgGridPoint(nextPosition.x, nextPosition.y));
 
     unsigned blockedDirections = mapItem->tileData.blockedDirections;
     if (blockedDirections) {
@@ -2258,11 +2258,11 @@ void type_random_map_generator::CreateRiver(TRmgMapPosition source)
             nextPosition.x + gRmgDirections[direction * 2].x,
             nextPosition.y + gRmgDirections[direction * 2].y,
             nextPosition.z);
-        riverPainter.DrawTo(TPoint(nextPosition.x, nextPosition.y));
+        riverPainter.DrawTo(TRmgGridPoint(nextPosition.x, nextPosition.y));
         mapItem = map.GetMapItem(nextPosition);
         mapItem->tileData.riverTarget = 1;
 
-        riverPainter.DrawTo(TPoint(position.x, position.y));
+        riverPainter.DrawTo(TRmgGridPoint(position.x, position.y));
         mapItem = map.GetMapItem(position);
     }
 
@@ -2270,7 +2270,7 @@ void type_random_map_generator::CreateRiver(TRmgMapPosition source)
         position = mapItem->previousTile;
         mapItem = map.GetMapItem(position);
         mapItem->tileData.riverTarget = 1;
-        riverPainter.DrawTo(TPoint(position.x, position.y));
+        riverPainter.DrawTo(TRmgGridPoint(position.x, position.y));
     }
 }
 
