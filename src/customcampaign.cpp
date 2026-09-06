@@ -3010,6 +3010,17 @@ static short ReadCampaignWord(TAbstractFile* infile)
 // the remaining ~60-statement dose is the same kind of thing, not one
 // construct.
 //
+// 2026-09-06 (polish lane 46), the RE-READ/FOLD pass over the >=28 arm found
+// one statement that is a source BUG as well as caller mass: retail reads the
+// pool count ONCE and resizes BOTH pools with it. Between the
+// `carryOverHeroes` resize's teardown (0x48b436 `_Destroy`, 0x48b43f
+// `operator delete`) and the `field_4c` resize's leading `size()` (0x48b462)
+// there is no virtual `Read` at all - the second resize reuses edi. Retail
+// SCampaign::Save at 0x48ae90 confirms the format from the other side: it
+// writes `carryOverHeroes.size()` and then goes straight into the pool loop,
+// never writing a second count. Dropping our second
+// `count = ReadCampaignByte(infile);` is 60.5021 -> 61.3492.
+//
 // THREE RETAIL-PROVEN RUNGS ARE WITHHELD, all blocked on the same budget,
 // and all three got CHEAPER as the budget closed - measure them again after
 // every mass step, they flip together:
@@ -3174,7 +3185,6 @@ void SCampaign::Load(TAbstractFile* infile, int saveVersion)
 
     count = ReadCampaignByte(infile);
     carryOverHeroes.resize(count);
-    count = ReadCampaignByte(infile);
     field_4c.resize(count);
 
     for (int pool = 0; pool < count; ++pool) {
