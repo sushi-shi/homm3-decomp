@@ -3397,7 +3397,7 @@ rmg_support	?GetMapItem@type_random_map@@QAEPAUTRmgMapItem@@HH@Z	100.0000	100.00
 rmg_support	?Length@TRmgVector@@QBEHXZ	100.0000	100.0000	100.0000	0x1fceb0	29d85e48b7d5
 rmg_terrain	??0TRmgGridPoint@@QAE@ABI0@Z	100.0000	100.0000	100.0000	0x1b76b0	-
 rmg_terrain	??0TRmgTerrainBrush@@QAE@PAVTRmgMapInterface@@HH@Z	100.0000	100.0000	100.0000	0x1b7250	f0470c0a84ab
-rmg_terrain	??0TRmgTerrainPainter@@QAE@PAVTRmgMapInterface@@HH@Z	91.2218	91.2218	91.2218	0x1b45f0	fba5733d3901
+rmg_terrain	??0TRmgTerrainPainter@@QAE@PAVTRmgMapInterface@@HH@Z	97.9205	97.9205	97.9205	0x1b45f0	a31d6e206af6
 rmg_terrain	??1TRmgTerrainBrush@@QAE@XZ	78.6021	100.0000	100.0000	0x1b72f0	53c27631ac05
 rmg_terrain	??1TRmgTerrainPainter@@QAE@XZ	100.0000	100.0000	100.0000	0x1b76f0	8a955052d853
 rmg_terrain	?BuildMatchingNeighbourMask@TRmgTerrainPainter@@QAEXABUTRmgGridPoint@@PAE@Z	77.2609	77.2609	77.2609	0x1b6540	3269299eeb99
