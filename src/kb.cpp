@@ -2699,6 +2699,22 @@ inline void SendPlayerLost()
 // 256-byte sNames local, switch/source order, helper boundaries and all ten
 // RoE-era message families. Retail corroborates those facts and adds the two
 // Complete-only victory kinds plus three campaign-specific artifact texts.
+// Residual (94.9521%, polish-45 - first full evidence pass on this row):
+// the source order and every statement are already retail's; what differs is
+// where C2 PARKS the cross-jumped tail that all ten standard victory arms
+// share (`if (!remoteCheck) SendPlayerWon(); NormalDialog(gText,1,-1,...);
+// break;`).  Both sides merge the same set and both emit exactly two
+// (TransmitRemoteData, NormalDialog) pairs; retail keeps the ARTIFACT arm's
+// copy in place at fn+0x123/+0x150 and lets the later arms jump back to it,
+// while this compile keeps a late arm's copy at +0x108b/+0x10b8 and makes the
+// artifact arm jump forward.  That single displacement is the 2 base-only /
+// 2 target-only call rows, and it drags the artifact block group with it:
+// retail falls straight from `campaignText = (*gpGeneralText)[714]` into the
+// inline strcpy and places `other_campaign_artifacts` after the whole tail,
+// where this compile emits `jmp` over the campaign chain to reach the strcpy.
+// 55 of 57 calls, 123/123 branches and 237/237 blocks otherwise agree.  This
+// is the merged-block representative class townmgr's TTavernWindow::
+// SetRolloverText documents; no source spelling was found that moves it.
 VA(0x004f15e0, 0x1348)  // linkorder + anchor-string/callee, dc 0xe29a8
 bool DisplayVCWinLoss(VictoryConditionStruct& VictoryCondition,
                       int& bGameWon, int& bGameLost, bool remoteCheck)
