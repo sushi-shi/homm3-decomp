@@ -1239,10 +1239,10 @@ void type_random_map_generator::DrawIrregularZoneBoundary(
         pending.pop_back();
         TPoint midpoint((from.x + to.x + 1) / 2, (from.y + to.y + 1) / 2);
         if (midpoint != from && midpoint != to) {
-            TPoint perpendicular;
+            TRmgVector perpendicular;
             {
-                TPoint delta = to - from;
-                perpendicular = TPoint(-delta.y, delta.x);
+                TRmgVector delta = to - from;
+                perpendicular = TRmgVector(-delta.y, delta.x);
             }
             int length = perpendicular.Length();
             if (length > 1) {
@@ -1427,15 +1427,22 @@ void type_random_map_generator::TraceZoneBoundary(
     } while (vertex != first);
 }
 
-// Each outside coordinate is advanced along the original segment. Retail
-// multiplies both components before dividing; retaining those intermediate
-// points preserves its signed integer arithmetic, including truncation.
-// The arithmetic operators are a source hypothesis supported by the paired
-// intermediate stores, not recovered Dreamcast declarations. Scalar named
-// numerator/step points peak at 63.41%; operators reach 64.18%. Both still
-// have a 0x24 frame against retail's 0x1c. Moving the clipped copy across
-// the early return changes only the local-lifetime plateau; it does not
-// recover retail's EBX/EDI clipped coordinates and ESI/ECX delta registers.
+// Exact: preserve the original point, and update a separate clipped point
+// through value-returning addition. Compound += gives 64.11% and a 0x24
+// frame; the sum gives 98.04%, retail's 0x1c frame and all 40 flow blocks.
+// The added operator declaration alone is byte-flat: this is the arithmetic
+// boundary, not a header-population change. Mutating the input argument and
+// saving an original copy is 80.07%; reusing toward is 63.97%, so retail's
+// later stores into an argument slot do not prove source-argument mutation.
+// Keep the distance inside each scaling expression (99.11%). operator+
+// in the earlier member model needed a value argument to close the last
+// multiply. The retained Voronoi bodies now prove free point/vector addition
+// and point subtraction with both operands by value; this caller stays exact.
+// Scale operand order, a scalar-left overload, member-wise scale result,
+// named numerators/bounds, const delta/distance and upper-bound regrouping
+// were flat at 99.11%; none substitutes for the addition parameter fact.
+// All arithmetic stays integer: multiply both components before division
+// and retain the original point for every rejected-intersection return.
 VA(0x0053CAC0, 0x266) // caller 0x53c407; hidden result ecx, bounds edx; retail-only
 TPoint ClipRmgBoundaryPoint(
     const TRmgZoneBounds& bounds, TPoint point, TPoint toward)
@@ -1443,35 +1450,31 @@ TPoint ClipRmgBoundaryPoint(
     if (bounds.Contains(point))
         return point;
 
-    TPoint delta = toward - point;
+    TRmgVector delta = toward - point;
     TPoint clipped = point;
     if (clipped.x < bounds.minimumX && delta.x) {
-        int distance = bounds.minimumX - clipped.x;
-        clipped += delta * distance / delta.x;
+        clipped = clipped + delta * (bounds.minimumX - clipped.x) / delta.x;
         if (point.y >= bounds.minimumY && clipped.y < bounds.minimumY)
             return point;
         if (point.y < bounds.maximumY && clipped.y >= bounds.maximumY)
             return point;
     }
     if (clipped.y < bounds.minimumY && delta.y) {
-        int distance = bounds.minimumY - clipped.y;
-        clipped += delta * distance / delta.y;
+        clipped = clipped + delta * (bounds.minimumY - clipped.y) / delta.y;
         if (point.x >= bounds.minimumX && clipped.x < bounds.minimumX)
             return point;
         if (point.x < bounds.maximumX && clipped.x >= bounds.maximumX)
             return point;
     }
     if (clipped.x >= bounds.maximumX && delta.x) {
-        int distance = bounds.maximumX - clipped.x - 1;
-        clipped += delta * distance / delta.x;
+        clipped = clipped + delta * (bounds.maximumX - clipped.x - 1) / delta.x;
         if (point.y >= bounds.minimumY && clipped.y < bounds.minimumY)
             return point;
         if (point.y < bounds.maximumY && clipped.y >= bounds.maximumY)
             return point;
     }
     if (clipped.y >= bounds.maximumY && delta.y) {
-        int distance = bounds.maximumY - clipped.y - 1;
-        clipped += delta * distance / delta.y;
+        clipped = clipped + delta * (bounds.maximumY - clipped.y - 1) / delta.y;
         if (point.x >= bounds.minimumX && clipped.x < bounds.minimumX)
             return point;
         if (point.x < bounds.maximumX && clipped.x >= bounds.maximumX)
@@ -1613,8 +1616,9 @@ TRmgZoneConnection* TRmgTownSlot::FindConnection(int destinationZone)
 // to the marked neighbour. The inner square becomes border terrain and the
 // outer empty square loses gate eligibility. Painting is deferred per level.
 // All role names are provisional: this Complete-only pass has no DC body.
-// Residual (98.3965%): zero CSE/row scheduling in the second clamp group
-// (0x53fee8), and the final maximum-X clamp's EAX/ECX schedule (0x540030).
+// Residual (98.3535%, MAX 98.3965%): zero CSE/row scheduling in the second
+// clamp group (0x53fee8), its map-index multiply operand, and the final
+// maximum-X clamp's EAX/ECX schedule (0x540030).
 // The guarded do loop keeps the exhaustion exit forward (0x53fe49) and
 // jumps back to the item lookup (0x53fe4b). A for/while condition instead
 // uses a backward jl plus a forward jmp with the same operation sequence.
@@ -1642,17 +1646,24 @@ TRmgZoneConnection* TRmgTownSlot::FindConnection(int destinationZone)
 // GetSize() in the six clamps adds virtual calls absent from retail (76.64%).
 // TPoint's reference-argument constructor is neutral here, but is unproved
 // for the signed type and changes DrawIrregularZoneBoundary's arithmetic.
-// Lower corners use the canonical subtraction operator. Flattening that
-// call into TPoint(x-radius,y-radius) loses the second scan's retail load
-// order. A by-value subtraction argument instead changes the outer induction
-// from x+2 to x-1.
+// The old member subtraction hypothesis reached 98.3965%, but the retained
+// 0x5fdd40 interface takes both points by value and returns a vector. Keep
+// that interface: the old helper's 0.043-point gain is not declaration proof.
+// Applying free subtraction or negative-vector translation to these lower
+// corners changes the outer induction to x-1 rather than retail's x+2.
+// Direct component construction and in-place translation keep x+2 (98.3535%)
+// but leave the second map-index operand order open. Reusing the lower value
+// or radius across scans changes outer-loop registers. Reusing only the
+// variable, or assigning it after default construction, was byte-neutral.
 // Two TPoint members or by-value corner setters make bounds lose the 0x84
 // frame. Named clamped corners add homes. Deferred upper-field stores do not
 // fix the schedule; naming maximumX alone also moves homes without fixing it.
 // Upper point addition changes the first upper-Y loads; constructing both
 // corners before clamping promotes the outer row into EBX. An origin-plus-
 // extent form keeps lower.y live rather than retail's original row value.
-// Shared center values and int/long field substitutions are byte-neutral.
+// Shared center values and int/long bounds/map fields are byte-neutral.
+// Long point fields are also neutral here, but change the irregular edge
+// arithmetic. A reused clamped corner still grows the frame to 0x88.
 // Buffer-first constructor arguments recover the map view and painting loop;
 // the rejected map/level pair, dimensions-first arguments, plane local, and
 // initializer-list controls are recorded beside the constructor in rmg.h.
@@ -1678,7 +1689,7 @@ void type_random_map_generator::RepairWaterZoneBorders()
                 unsigned char found = 0;
                 TRmgZoneBounds bounds;
                 {
-                    TPoint lower = TPoint(position.x, position.y) - TPoint(1, 1);
+                    TPoint lower(position.x - 1, position.y - 1);
                     bounds.minimumY = max(lower.y, 0);
                     bounds.minimumX = max(lower.x, 0);
                 }
@@ -1710,7 +1721,7 @@ void type_random_map_generator::RepairWaterZoneBorders()
                     continue;
 
                 {
-                    TPoint lower = TPoint(position.x, position.y) - TPoint(1, 1);
+                    TPoint lower(position.x - 1, position.y - 1);
                     bounds.minimumY = max(lower.y, 0);
                     bounds.minimumX = max(lower.x, 0);
                 }
@@ -1731,7 +1742,7 @@ void type_random_map_generator::RepairWaterZoneBorders()
                 }
 
                 {
-                    TPoint lower = TPoint(position.x, position.y) - TPoint(2, 2);
+                    TPoint lower(position.x - 2, position.y - 2);
                     bounds.minimumY = max(lower.y, 0);
                     bounds.minimumX = max(lower.x, 0);
                 }
@@ -3238,4 +3249,41 @@ VA_COMPGEN(0x005B8BC0, 0xA3, TREE_CONST_ITERATOR_INC, TPoint)
 void __fastcall EmitRmgPointSetIncrement(TRmgPointSet::const_iterator* it)
 {
     ++*it;
+}
+
+// BuildVertices at 0x5fdb40 distinguishes displacement arithmetic from point
+// translation. It calls these five bodies while forming the circumcenter:
+// origin + (edge + perpendicular * numerator / denominator) / 2.
+// All 160 raw bytes match, including the stack cleanup sizes. Names are
+// provisional; Dreamcast has no corresponding geometry/RMG source records.
+// Keep ordinary definitions visible to the RMG arithmetic callers; each
+// retained body and each caller's expansion decision are separate evidence.
+VA(0x005FDCB0, 0x1E) // caller 0x5fdc49; thiscall, hidden result + eight-byte operand
+TRmgVector TRmgVector::operator+(TRmgVector other) const
+{
+    return TRmgVector(x + other.x, y + other.y);
+}
+
+VA(0x005FDCD0, 0x1D) // caller 0x5fdc2f; thiscall, ret 8
+TRmgVector TRmgVector::operator*(int scale) const
+{
+    return TRmgVector(x * scale, y * scale);
+}
+
+VA(0x005FDCF0, 0x25) // callers 0x5fdc36/0x5fdc50; signed division, ret 8
+TRmgVector TRmgVector::operator/(int divisor) const
+{
+    return TRmgVector(x / divisor, y / divisor);
+}
+
+VA(0x005FDD20, 0x20) // caller 0x5fdc64; hidden result ECX, two 8-byte values
+TPoint operator+(TPoint point, TRmgVector offset)
+{
+    return TPoint(point.x + offset.x, point.y + offset.y);
+}
+
+VA(0x005FDD40, 0x20) // callers 0x5fdbd8/0x5fdbf5; hidden result ECX, ret 16
+TRmgVector operator-(TPoint left, TPoint right)
+{
+    return TRmgVector(left.x - right.x, left.y - right.y);
 }

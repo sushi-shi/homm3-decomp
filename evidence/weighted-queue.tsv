@@ -296,7 +296,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x005fdf20	38		0.0	0.0	38.0	seg_001f	game_1fd390_sub00_1fdf20	unscored
 0x0048ed20	37		0.0	0.0	37.0	seg_0008	game_87e40_sub12_8ed20	unscored
 0x0054df40	37		0.0	0.0	37.0	seg_0014	game_10a400_sub02_14df40	unscored
-0x005fdcf0	37		0.0	0.0	37.0	seg_001f	game_1fdb40_sub02_1fdcf0	unscored
 0x00603590	37		0.0	0.0	37.0	seg_0020	game_4eef0_sub00_203590	unscored
 0x0048db40	36		0.0	0.0	36.0	seg_0008	game_8bf00_sub00_8db40	unscored
 0x0048db70	36		0.0	0.0	36.0	seg_0008	game_8bf00_sub01_8db70	unscored
@@ -330,11 +329,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x005fdb10	33		0.0	0.0	33.0	seg_001f	game_1fd790_sub03_1fdb10	unscored
 0x005b76d0	32		0.0	0.0	32.0	seg_001b	game_2349db_sub00_1b76d0	unscored
 0x005b8ca0	32		0.0	0.0	32.0	seg_001b	game_1b4b20_sub12_1b8ca0	unscored
-0x005fdd20	32		0.0	0.0	32.0	seg_001f	game_1fdb40_sub03_1fdd20	unscored
-0x005fdd40	32		0.0	0.0	32.0	seg_001f	game_1fdb40_sub04_1fdd40	unscored
 0x006039a0	32		0.0	0.0	32.0	seg_0020	game_203b20_sub00_2039a0	unscored
-0x005fdcb0	30		0.0	0.0	30.0	seg_001f	game_1fdb40_sub00_1fdcb0	unscored
-0x005fdcd0	29		0.0	0.0	29.0	seg_001f	game_1fdb40_sub01_1fdcd0	unscored
 0x00530e20	28		0.0	0.0	28.0	seg_0013	game_176f00_sub01_130e20	unscored
 0x005361e0	24		0.0	0.0	24.0	seg_0013	game_136070_sub01_1361e0	unscored
 0x0055ecf0	24		0.0	0.0	24.0	seg_0015	game_15a800_sub09_15ecf0	unscored
@@ -407,7 +402,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x0048a310	2846	59.040455	59.0405	79.2531	1165.7086507	customcampaign	?Load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	non-exact
 0x004bcda0	3778	60.554672	92.4127	92.4127	1490.2444918400001	game	?Load@game@@QAEHPAVTAbstractFile@@@Z	non-exact
 0x005a7080	666	62.495193	93.4375	93.4375	249.78201461999998	spells	?SummonElemental@combatManager@@QAEXHW4TCreatureType@@HH@Z	non-exact
-0x0053cac0	614	64.108696	64.1812	64.1812	220.37260656	rmg	?ClipRmgBoundaryPoint@@YI?AUTPoint@@ABUTRmgZoneBounds@@U1@1@Z	non-exact
 0x00526d40	915	64.31193	64.3119	64.3119	326.54584049999994	philai	??0type_spellvalue@@QAE@PBVhero@@@Z	non-exact
 0x0045a950	63	65.92	65.92	65.92	21.470399999999998	campaignbrief	??0TPlayerSlotAttributes@CMapHeaderData@@QAE@XZ	non-exact
 0x00437a00	1786	66.42922	100.0	100.0	599.5741308	ai_tactical	??0army@@QAE@ABV0@@Z	non-exact
@@ -938,10 +932,10 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x004782d0	1461	98.28297	98.283	98.283	25.085808299999957	command	?GetControl@combatManager@@QAEXXZ	non-exact
 0x004c0b60	352	98.34513	98.3451	98.3451	5.82514239999999	game	?match_underground_gates@game@@QAEXXZ	non-exact
 0x005654f0	2620	98.3508	98.3508	98.3508	43.209039999999874	sacrifice_window	??0type_skeleton_window@@QAE@PAVarmyGroup@@@Z	non-exact
+0x0053fcb0	1516	98.353516	98.3965	98.3965	24.960697440000054	rmg	?RepairWaterZoneBorders@type_random_map_generator@@QAEXXZ	non-exact
 0x0056b050	999	98.356705	98.3567	98.3567	16.416517050000003	search	?check_town_portal@searchArray@@QAEXPBVhero@@PBUpathCell@@J@Z	non-exact
 0x004e51c0	115	98.375	100.0	100.0	1.8687499999999986	hero	?GetHighestSchool@hero@@QBE?AW4TSpellSchool@@W42@@Z	non-exact
 0x004f00a0	1006	98.390976	98.391	98.391	16.186781440000033	kb	?DoCampaignWindow@@YIEXZ	non-exact
-0x0053fcb0	1516	98.396484	98.3965	98.3965	24.309302559999907	rmg	?RepairWaterZoneBorders@type_random_map_generator@@QAEXXZ	non-exact
 0x0041cdf0	669	98.46512	98.4651	98.4651	10.268347200000035	advspells	?SkuttleBoat@advManager@@QAEXH@Z	non-exact
 0x004221f0	208	98.469696	98.4697	98.4697	3.1830323200000095	ai	?DoCompAI@combatManager@@QAEXH@Z	non-exact
 0x00486110	815	98.49012	98.4901	98.4901	12.305521999999973	customcampaign	?RehomeCampaignHeroSetup@game@@QAEXH@Z	non-exact

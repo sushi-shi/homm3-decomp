@@ -556,22 +556,56 @@ keeps body assignments and the caller keeps its canonical map accessor.
 This is a retail-driven model of an expanded constructor, with no DC RMG
 counterpart; the other view caller, `CreateRiver`, remains partial.
 
-### 6i. An expanded point subtraction affects a later lookup
+### 6i. A caller improvement does not prove a helper declaration
 
-Computing a lower corner through
-`TPoint(position.x, position.y) - TPoint(radius, radius)` before its two
-clamps restores the second scan's map-index load order in
-`RepairWaterZoneBorders`: load nearby.z into EAX, then multiply by map height.
-The first scan and the 0x84 frame remain intact (97.04883% to 97.0918%
-before the constructor recovery above).
+The former member-subtraction model made
+`TPoint(position.x, position.y) - TPoint(radius, radius)` restore the second
+scan's map-index operand order in `RepairWaterZoneBorders` (97.04883% to
+97.0918% before the buffer-first constructor recovery). Direct component
+construction lost that order; changing only the member's argument to a value
+changed the outer induction from retail's x+2 to x-1. An unused addition
+member was neutral. Those were useful controls, but the const-reference
+member declaration was still a hypothesis.
 
-Replacing the subtraction with a directly constructed
-`TPoint(position.x - radius, position.y - radius)` loses that order.
-Passing subtraction's argument by value also changes the outer induction
-from retail's x+2 to x-1; the candidate keeps the const-reference argument.
-An unused addition declaration is byte-neutral. These controls distinguish
-the called arithmetic helper from a bare local or header-population change;
-they do not establish an original class name or lexical spelling.
+The retained Voronoi arithmetic below supersedes that declaration. Keep its
+free operations and two-value ABI even though the water-border caller then
+has a lower current score: direct lower-corner construction retains the
+retail x+2 induction at 98.3535%, versus the old model's 98.3965% MAX.
+The remaining map-index operand difference is open. The prior peak remains
+in MAX/history; it is not evidence for restoring the disproved interface.
+
+Shared lower/radius values, by contrast, alter outer-loop registers. Merely
+reusing a lower variable or assigning it after default construction is
+neutral. Reusing one clamped point for both corners still grows the frame
+to 0x88. These controls distinguish value lifetime from variable scope.
+
+### 6j. Retained calls distinguish point translation from vector arithmetic
+
+`TRmgVoronoi::BuildVertices` at 0x5fdb40 forms a circumcenter from three
+site positions. Its retained helper sequence provides stronger interface
+evidence than the already exact, fully expanded arithmetic in the clipping
+and irregular-boundary callers:
+
+| Retail body | Operation model | ABI | Raw bytes |
+|---|---|---|---:|
+| 0x5fdcb0 | vector + vector | member, eight-byte right value, hidden result | 30/30 |
+| 0x5fdcd0 | vector * scalar | member, integer scale, hidden result | 29/29 |
+| 0x5fdcf0 | vector / scalar | member, signed integer division, hidden result | 37/37 |
+| 0x5fdd20 | point + vector | free, two eight-byte values, result in ECX | 32/32 |
+| 0x5fdd40 | point - point | free, two eight-byte values, result in ECX | 32/32 |
+
+The subtraction results feed displacement arithmetic; the last free addition
+translates the origin by the resulting vector. Distinguishing the position
+and displacement types accounts for both the member and free addition
+interfaces without competing overloads on a single type. `TPoint` and
+`TRmgVector` are role names, not recovered Dreamcast declarations.
+
+All 160 bytes agree without relocations. The length helper at 0x5fceb0
+belongs to the displacement type and remains exact. Ordinary definitions
+remain visible in the arithmetic TU, without inline controls. The clipping
+body imported from master's c447c5f3 remains 614/614 bytes exact, as do the
+irregular and straight boundary bodies. Thus exact expanded callers alone
+did not settle the former member/free or point/vector models.
 
 ## 7. Files
 
