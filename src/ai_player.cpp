@@ -785,12 +785,12 @@ void type_AI_player::end_turn()
 // third message site in the same body already spelled `message = ...`, which
 // lowers to that same assign, so all three agree now and the call view drops
 // to the two vector-insert ICF twins.
+// The wrapper's own `inline_depth(0)` pin came out with the reloc census
+// above: byte-flat once all three sites agree on assign (2026-09-06).
 static inline void assign_formatted_ai_message(
     std::string& message, const std::string& formatted)
 {
-#pragma inline_depth(0)
     message.assign(formatted, 0, std::string::npos);
-#pragma inline_depth()
 }
 
 // Residual (84.5868%, polish-45): the B1 whole-body role swap and nothing
@@ -5205,12 +5205,14 @@ void AI_AttemptMove(hero* current_hero, HeroDestination& best_point,
         gpAdvManager->MobilizeCurrHero(0, 0, 1);
         type_point point = current_hero->get_location();
         // Complete's can-stop arm retains NewfullMap::cell and constructs a
-        // fresh get_location temporary for DoAIEvent. Without this site gate
-        // VC6 expands cell and emits only five of retail's six point ctors.
-#pragma inline_depth(0)
+        // fresh get_location temporary for DoAIEvent. This site used to
+        // carry an `inline_depth(0)` pin because without it VC6 expanded
+        // cell and emitted only five of retail's six point ctors. That is no
+        // longer true: removing the pin is AI_AttemptMove 84.83158 ->
+        // 85.92281, a new MAX, with no other row moving (2026-09-06, polish
+        // lane 50 - the whole-TU per-pin sweep).
         NewmapCell* cell =
             gpGame->worldMap.cell(point.x, point.y, point.z);
-#pragma inline_depth()
         gpAdvManager->DoAIEvent(cell, current_hero,
                                 current_hero->get_location());
         return;
