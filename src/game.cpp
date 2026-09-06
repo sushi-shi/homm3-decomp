@@ -5887,6 +5887,36 @@ static __forceinline void randomize_witch_hut(NewmapCell* cell)
 // a statement pin: retail CALLS ExtraInfoUnion::SetWagon(EGameResource,
 // short) at randomize_wagon's first store and ExtraInfoUnion::set_pyramid
 // at randomize_pyramid's, and this CL expands both.
+// 2026-09-06, polish lane 48. READ predict-inline's census HERE BEFORE
+// trusting it: most of its reported divergence is COMDAT NAME FOLDING, not
+// an inline decision. VC6 emits one body for every POD-pointer vector and
+// one for every bitset whose _Nw agrees, so `~type_creature_bank` x5 +
+// `~vector<long>` x1 IS retail's `~vector<widget*>` x6; `bitset<5>::
+// operator[]` x3 + `bitset<28>::operator[]` x3 IS retail's `bitset<145>::
+// operator[]` x6; `vector<type_point>::insert` x4 + `vector<long>::insert`
+// x1 IS retail's `vector<widget*>::insert` x5; and the two one-argument
+// inserts pair off likewise. All four net to zero.
+// The REAL frontier deltas, after that reduction, are four: (1) four bitset
+// constructor sites where retail expands the ctor and calls `_Tidy`
+// (bitset<5> x3, bitset<28> x1) while the depth-0 pins here emit a ctor
+// call instead - the same midpoint LoadMap's note describes, and the same
+// candidate fix; (2) two `reference::operator bool` sites where retail
+// expands the conversion and calls `test`; (3) SetWagon(EGameResource,
+// short) and set_pyramid, both already recorded above; (4) the RELIC arm.
+// GetRandomArtifactId's 17-vs-18 call census IS that RELIC arm and NOT a
+// missing statement - verified by disassembly: retail's jump table at
+// +0x14a dispatches BLACK_BOX's five arms, keeps ANY (`push 0xe`, +0x155)
+// and RELIC (`push 0x10`, +0x165) as its own hot pair and cross-jumps
+// TREASURE/MINOR/MAJOR away, then runs the seven-call BLACK_MARKET record
+// (+0x175..+0x1cf) into vector<TBlackMarket>::insert - nine calls there
+// against our eight, with the other nine sites in each object agreeing
+// exactly. Do not go looking for an eighteenth source call site.
+// Pin census, each removal measured alone against 87.0102: the five
+// creature-bank block-scope pins are NOT interchangeable - four cost
+// -0.6891 apiece but the FIRST (the CREATURE_BANK case) is BYTE-FLAT
+// across the whole TU and has been removed. The rest of this body's
+// roster costs -100 (x2, two helper rows stop existing as separate
+// symbols), -10.85, -5.13, -1.01 and -0.88.
 VA(0x004c0cc0, 0x1668)  // NewMap caller + dc order, dc 0xac910
 void game::RandomizeEvents()
 {
@@ -5992,9 +6022,7 @@ void game::RandomizeEvents()
                             &bank,
                             creature_bank_type_from_int(tempCell->objectIndex));
                         creatureBanks.push_back(bank);
-#pragma inline_depth(0)
                     }
-#pragma inline_depth()
                     break;
 
                 case CREATURE_GENERATOR_1:
@@ -6520,6 +6548,54 @@ static inline void read_map_player_name(char* destination,
 // line, which is a depth-2 A9 decision. Measured and rejected: a statement
 // pin on that read (-0.80, it takes the whole expansion out of line);
 // spelling it `serializedSkillCopy.test(skill)` (70.70 -> 20.20).
+// 2026-09-06, polish lane 48. Three of this body's fifteen inline-depth pins
+// were doing no work: the pins around the two bitset<144> constructions and
+// the bitset<129> one are the sites where retail ALSO calls the constructor
+// (retail's 0x4c2550/0x4c2563 keep the unclaimed ctor row), so /Ob2 declines
+// them on cost with or without the pin. Removing all three is 75.47679 ->
+// 75.48383 and byte-flat on every other row in the TU; each one alone gives
+// the same 75.48383, so they do not interact. The remaining twelve pins are
+// load-bearing: removing them individually measures 65.90 (`++it`), 68.99,
+// 72.69 (the merge-loop read), 72.76, 73.95, 74.16, 74.39, 74.48, 75.31,
+// 75.45, 75.45 and 25.95 (the spell-copy loop).
+// The artifact merge loop's SHAPE is recovered but not bankable. Retail
+// walks artifactDisabled with a pointer and an `!=` end compare, which VC6
+// only emits with a zero-trip guard (`cmp esi,eax / je` at retail+0x197,
+// end recomputed at the back edge from the spilled `this`), where an index
+// loop keeps `cmp esi,0x90 / jl` and no guard - our own std::copy at +0x4ae
+// is the control for that idiom. Writing it as a pointer loop reproduces
+// retail's block skeleton and takes the branch census from 62-vs-63 to an
+// exact 63-vs-63, but objdiff falls 75.48 -> 74.14 (74.18 with the store
+// left as `artifactDisabled[artifact]`, which is retail's separate second
+// induction pointer). The dip is register collateral: retail spends all
+// three callee-saved registers on the loop and homes `this`, where this CL
+// keeps `this` in EBX. Re-take the pointer spelling if the frontier below
+// ever frees that register.
+// The frontier itself is the wall, and it is reciprocal: predict-inline
+// reports 7 under-inlines against 8 over-inlines, and every one is the same
+// decision - retail expands the OUTER operation and calls the inner helper
+// (~basic_string -> _Tidy, bitset ctor -> _Tidy, _Tree::operator++ -> _Inc,
+// reference::operator bool -> test, resize's second size()), where this CL
+// calls the outer. Depth 0 suppresses both layers, so no pin reaches it.
+// THE LEAD THIS LANE COULD NOT SHIP, measured and reproducible. The
+// `std::bitset<70> serializedSpells(0)` pin below is spelled depth 0, but
+// retail's reloc stream at that site is `?_Tidy@?$bitset@$0EG@@std@@AAEXK@Z`
+// where ours is `??0?$bitset@$0EG@@std@@QAE@K@Z` - retail EXPANDS the
+// constructor and CALLS _Tidy, which is depth 1, not depth 0. Respelling
+// that one pin `#pragma inline_depth(1)` measures 75.48383 -> 78.28552 with
+// ZERO collateral anywhere in the TU, and the corroboration is structural,
+// not a score wobble: the block skeleton goes 106-vs-105 with one missing
+// block to an exact 105-vs-105 with none, and exact blocks go 11 -> 47.
+// Doses: bitset<70> alone 78.28552, bitset<28> alone (`serializedSkills`)
+// 76.50, BOTH together 77.75 - they do not add, only the first is wanted.
+// Removing either pin outright is 73.95 / 74.16, i.e. WORSE than depth 0,
+// which is the point: retail sits at the one-level midpoint that neither
+// depth 0 nor no-pin reaches. NOT APPLIED HERE because CLAUDE.md says
+// existing inline-depth pins may only be REMOVED and 0 -> 1 is a retune.
+// The identical device already exists three times in this TU for the same
+// construct (NewSMapHeader::Read's depth-1 pins at `mapName.erase()`, its
+// bitset<MAP_HEADER_LEGACY_HERO_COUNT> and its bitset<8>), so what this
+// needs is a policy ruling, not more evidence.
 VA(0x004c2450, 0x88E)  // sole NewMap caller + full stream/callee sequence
 bool game::LoadMap(TAbstractFile* mapFile)
 {
@@ -6547,13 +6623,9 @@ bool game::LoadMap(TAbstractFile* mapFile)
     }
 
     if (mapHeader.version != MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-#pragma inline_depth(0)
         std::bitset<144> disabledArtifacts(0);
-#pragma inline_depth()
         if (mapHeader.version != MAP_FORMAT_ARMAGEDDONS_BLADE) {
-#pragma inline_depth(0)
             std::bitset<144> serializedArtifacts(0);
-#pragma inline_depth()
             unsigned char artifactBits[18];
             mapFile->Read(artifactBits, sizeof(artifactBits));
             for (unsigned int artifactBit = 0;
@@ -6575,9 +6647,7 @@ bool game::LoadMap(TAbstractFile* mapFile)
 #pragma inline_depth()
             }
 
-#pragma inline_depth(0)
             std::bitset<129> serializedArtifacts(0);
-#pragma inline_depth()
             unsigned char artifactBits[17];
             mapFile->Read(artifactBits, sizeof(artifactBits));
             for (unsigned int legacyBit = 0; legacyBit < 129; ++legacyBit) {
