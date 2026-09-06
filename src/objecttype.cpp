@@ -433,6 +433,25 @@ std::istream& operator>>(std::istream& is, TObjectType& objectType)
 // empty inline one is byte-flat, measured. The doctrinal lever for the
 // over-inline half is caller-shrink, and this body has nothing to lift:
 // its statements are all accounted for by the EH state transcript.
+// 2026-09-06, polish lane 38, and it CONFIRMS the note above against the
+// bytes: the unclaimed retail callee at 0x5154a0 really is
+// `bitset<48>::bitset(unsigned long)` - `_Tidy`'s two-dword clear followed
+// by the `while (_X) { if (_X & 1) set(_P); ... }` loop with its own
+// `_Xran` guard - so the source initialiser IS `~std::bitset<48>(0)` and
+// retail CALLS that constructor. A four-spelling sweep of
+// `TObjectType::passableMask`'s initialiser scores, against 69.2500:
+//   ~std::bitset<48>(0)              69.2500   (shipped; retail's own call)
+//   std::bitset<48>(0).flip()        70.2011
+//   std::bitset<48>(0).set()         68.2120
+//   std::bitset<48>().set()          72.7772
+//   std::bitset<48>().flip()         77.3315
+//   ~std::bitset<48>()               82.2717
+// The last one is NOT shipped even though it is worth +13.02 here: the
+// default constructor has no set-loop, so its 13 points come from DELETING
+// the very construct retail's call proves is there, and instantiating
+// `bitset<48>::bitset()` across the closure also knocks
+// `CEnterNameEdit::OnKillFocus` off 100.0000 (99.8710) - a header edit that
+// costs an exact row. The honest residual is unchanged: one /Ob2 swap.
 VA(0x00514d80, 0x273)  // anchor-callee ResourceManager::GetText + anchor-bracket NewfullMapFn_00505DA0; retail-only
 void TObjectTypeTable::load(char* filename)
 {

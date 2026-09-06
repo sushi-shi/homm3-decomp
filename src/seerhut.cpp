@@ -421,6 +421,23 @@ void type_quest::Load(TAbstractFile* file, int version)
 // deadline ahead of them - the selector and the table row are savegame-only,
 // which is the split quest.h records between the two loaders.
 // E:\gamedcs\seerhut.cpp
+// Residual (41.9271%), and 2026-09-06 (polish lane 38) LOCATES IT EXACTLY.
+// The three reads are `proposalText = ReadLengthPrefixedString(file);` with
+// no named binding at all: written that way the frame becomes retail's 0x20
+// (against 0x30 here), the three temporaries collapse onto retail's ONE slot
+// at [ebp-0x1c], and the emitted stream is identical to retail's through the
+// first `assign(const string&, 0, npos)` call - the `diagnose` EH census
+// predicts it ([0,-1,1,-1,2] against our [reg,1,2], i.e. a temporary born and
+// destroyed per statement rather than three alive at once).
+// It still measures 10.5000 and is NOT shipped, for one reason: at that
+// source depth VC6 expands `basic_string::_Tidy` at all three destruction
+// sites where retail CALLS it (retail expands `~basic_string` and keeps
+// `_Tidy` out of line), and three inline `_Tidy` bodies cost more than the
+// whole frame/slot correction buys. The lever is a per-site `inline_depth(0)`
+// on each assignment, which this lane may not add; whoever may add one should
+// take the direct-assignment form WITH the pins and not the current spelling.
+// Also measured and rejected: block-scoping each `const std::string&` binding
+// so the temporaries die per statement WITHOUT changing the binding, 6.6354.
 VA(0x0056ce50, 0x11E)  // anchor-vtable 0x64174c slot 12 + the chain from all eight leaf LoadFromMaps, retail-only
 void type_quest::LoadFromMap(TAbstractFile* file)
 {
