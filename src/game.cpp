@@ -11339,6 +11339,28 @@ void game::ProcessOnMapHeroes()
 // including the 0x351-byte cFileName buffer at -0x3b8 against -0x3b0). So
 // the surplus is TWO separate 4-byte steps in the msg-temporary band, not
 // one 8-byte local - do not go looking for a single surplus dword.
+// 2026-09-06, polish lane 38, three findings and one fix, all measured:
+//  * FIXED: this body called `calc_crc_long` through remote.h's stale DC-only
+//    declaration `int (unsigned char*, int)`, which does not decorate to the
+//    symbol remote.cpp:95 defines (`unsigned long (const unsigned char*,
+//    unsigned)`), so the reloc pointed at a name nothing owns. The header now
+//    carries the real signature; byte-flat on every row (objdiff runs at
+//    function_reloc_diffs=none) but the `--calls` divergence row is gone.
+//  * The DC TYPE RECORD types `dataTimeOutStart` T_INT4 where this body says
+//    `unsigned long`: BYTE-FLAT, and `unsigned long` is kept because it is
+//    what `GameTime::Get`/`ElapsedSince` take.
+//  * The DC block names three locals this body has no counterpart for -
+//    `attempts` (sp+0xd8) BESIDE `retryCount`, `queueSize` (sp+0xcc) BESIDE
+//    `numMsgs`, and `pNetMsg` (sp+0x3c) BESIDE `pConfirmMsg` - so they are
+//    extra constructs, not renames. Their frame band (sp+0xcc..0xd8, next to
+//    `pMsg` at 0xd0) is the confirm loop's, and `numMsgs` here is incremented
+//    and never read, which is the shape of a DC pair where only one survived.
+//    Not reconstructed: nothing in the retail stream names a second queue
+//    counter, and the 122-vs-122 block / 63-vs-63 branch CFG says the missing
+//    mass is not a statement. The remaining `--calls` delta is a LAYOUT one:
+//    retail places the `Stop(); if (inGame) RestoreScreen();` block at
+//    fn+0x94f and jumps to the epilogue at fn+0x1105, where our C2 sinks the
+//    same source statements to fn+0xc16.
 VA(0x004cafd0, 0xD14)  // retail body + typed catch + continuation/tables
 int game::TransmitSaveGame(int iToWho, int thisPlayerDead,
                            unsigned char inGame, unsigned char makeOrig)

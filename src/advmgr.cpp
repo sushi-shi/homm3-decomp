@@ -5393,6 +5393,12 @@ void advManager::DrawBoatPartShadow(int part, TDrawParts& boatParts,
 // (ObjCell = objCell, ObjType = objType, SprPtr = sprite).  The `this`
 // ESI/EDI permutation the note above describes is unchanged; this was the
 // last missing named local, not a fix for it.
+// 2026-09-06, polish lane 38, the DC TYPE-RECORD sweep: the block types both
+// of this loop nest's counters T_INT4 where they were written `unsigned`.
+// `numObj` is byte-flat as `int` and is taken (the sibling nests in this file
+// and in viewwrld already spell it that way); `row` as `int` COSTS 0.06
+// (87.9441 -> 87.8809, alone or together with numObj) because the layer
+// compare against the byte member goes signed, so it stays `unsigned`.
 VA(0x00410c00, 0x98E)  // anchor-callee, dc 0x12334
 void advManager::DrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 {
@@ -5439,7 +5445,7 @@ void advManager::DrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
         static_cast<void*>(thisCell));
     if (cellObjects->objects.size() > 0) {
         for (unsigned row = 0; row <= OBJECT_DRAW_LAYER_LAST; ++row) {
-            for (unsigned numObj = 0; numObj < cellObjects->objects.size();
+            for (int numObj = 0; numObj < cellObjects->objects.size();
                  ++numObj) {
                 AdvObjectCellView* objCell = &cellObjects->objects[numObj];
                 if (objCell->layer != row)
