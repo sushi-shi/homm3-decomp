@@ -417,6 +417,13 @@ void VideoPause()
 }
 
 // E:\gamedcs\smackmgr.cpp:238
+// The sound tail is VideoSoundOnOff, not a copy of it: ShowVideo's THIRD
+// VideoClose expansion (0x598af0 +0x284) expands this body and reaches
+// `call ?VideoSoundOnOff@@YIXXZ` at 0x598d74, one level inside the
+// expansion, which a longhand `if (smk) sounds(); else if (bink) sounds();`
+// here could not produce.  Byte-flat at 100 in this body (VideoSoundOnOff's
+// cb is under the 0x28 free-inline threshold, so /Ob2 folds it straight
+// back), and it is the boundary ShowVideo's residual is measured against.
 VA(0x00597850, 0xAB)  // anchor-global, dc 0x14ac50
 void VideoResume()
 {
@@ -434,10 +441,7 @@ void VideoResume()
         gBinkPaused = 0;
         BinkPause(gBinkVideo2, 0);
     }
-    if (gSmackVideo || gSmackVideo2)
-        gpSoundManager->service_sounds();
-    else if (gBinkVideo || gBinkVideo2)
-        gpSoundManager->service_sounds();
+    VideoSoundOnOff();
 }
 
 // E:\gamedcs\smackmgr.cpp:265
