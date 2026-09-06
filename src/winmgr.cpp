@@ -779,6 +779,20 @@ void heroWindowManager::SaveFizzleSourceX(int startX, int startY, int width,
 // where we keep `[ebp-0x40]` live.  Older sweep, still valid: all six
 // declaration orders of the three row pointers - 73.40 / 73.51 / 74.10 /
 // 74.22 / 75.38 / 75.39 - and reading `to` before `from` costs 2.9.
+// 2026-09-06, polish lane 38: the residual is now a pure register-homing
+// wall and the DC block adds nothing more.  Retail loads `width` into a
+// register at the guard (`mov ecx,[ebp+0x10] / cmp ecx,ebx`) and reuses that
+// register for the Bitmap16Bit ctor push, where our CL tests it in memory
+// (`cmp dword ptr [ebp+0x10],ecx`) and reloads it for the push; the shared
+// zero sits in EBX on retail and ECX here, born one step earlier.  Measured
+// against 84.1098: swapping the guard's operands (`height > 0 && width > 0`)
+// costs 0.98 (83.1333); nesting the two guards as separate ifs is BYTE-FLAT.
+// `homm3 vc6 why-reg` runs its whole 26-mutation catalog here (every decl
+// move, decl swap and un-naming in the blend loop) and NONE reduces the
+// 134-slot register distance - the best are +0, the rest +2..+287.  The one
+// DC name still absent is `DEFAULT_FADE_TIME` (a `const int` for the 33);
+// retail materialises it as the immediate 0x21, so it is constant-propagated
+// exactly like SetEnvironmentOrigin's MAX_RANGE and is not reachable.
 VA(0x00602dc0, 0x2F7)  // anchor-import + exhaustive tail order, dc 0x19b8fc
 void heroWindowManager::FizzleForwardX(int startX, int startY, int width,
                                        int height, int iFadeTime)
