@@ -3983,9 +3983,13 @@ type_garrison_base_window::type_garrison_base_window(hero* inHero,
 
     button* okButton = new button(399, 314, 64, 30, OK_BUTTON_ID,
                                   "iOK6432.def", 0, 1, 1, 28, 2);
-    // push_back spelled out: the extra top-level candidate site is what
-    // keeps retail's out-of-line/inline split at the widget run above.
-    okButton->hotKeyCodes.insert(okButton->hotKeyCodes.end(), 1);
+    // Plain `push_back`, NOT the spelled-out `insert(end(), 1)`.  The
+    // longhand form was measured and banked at an earlier inline structure;
+    // at this one the DEPTH LADDER runs the other way and the deeper
+    // push_back spelling is worth 93.8825 -> 100.0000 (docs/vc6/inliner.md
+    // 6b - the rung's sign is per-site, and a site's sign moves when
+    // anything upstream in the body does).
+    okButton->hotKeyCodes.push_back(1);
     Widgets.push_back(okButton);
 
     for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
