@@ -4426,12 +4426,18 @@ unsigned char combatManager::Unnamed469e50(
 // shared family lookup and converts the count at a two-for-three ratio; the
 // four RoE elementals have no promoted form. A second failure clears the
 // pending count, while either successful merge leaves the fields intact.
-// Residual (93.2203%): all twelve blocks, branches and non-conversion
-// instructions agree. Retail materializes each Add result as a byte truth
-// value (`test/setne/test`); this VC6 compile folds both to direct tests.
-// Separate bool/byte locals, explicit comparisons/casts, double negation,
-// a tiny inline adapter and a register hint were byte-inert, so the natural
-// implicit bool assignment is retained.
+// CLOSED 2026-09-06 (93.2203 -> 100.0000). Retail materializes each Add
+// result as a byte truth value (`test / setne al / test al,al`) where this
+// compile folded both into direct tests, and the lever is the FLAG'S LIVE
+// RANGE, not its type or its spelling: one `bool added` that survives the
+// promotion block and is tested ONCE after it forces VC6 to keep a real
+// byte, at both assignment sites. The earlier note listed separate
+// bool/byte locals, explicit comparisons/casts, double negation, a tiny
+// inline adapter and a register hint as byte-inert - all still true, and
+// this lane adds `unsigned char added` (92.8814), an explicit `!= 0` on
+// each assignment, two initializer-form bools and a function-scope
+// declaration (all byte-flat). Only the merged `if (!added) { ... }` moves
+// it, because only that makes the flag live across a call.
 VA(0x00469f20, 0xBA)  // anchor-callee, dc 0x6359c
 void combatManager::RaiseSkeletons(int side)
 {
@@ -4439,24 +4445,23 @@ void combatManager::RaiseSkeletons(int side)
         bool added;
         added = armyGroups[side]->Add(
             raisedCreatureType, raisedCreatureCount, -1);
-        if (added)
-            return;
+        if (!added) {
+            TCreatureType upgradedType = raisedCreatureType;
+            if (!gpGame->f_1f698
+                && (upgradedType == CREATURE_AIR_ELEMENTAL
+                    || upgradedType == CREATURE_EARTH_ELEMENTAL
+                    || upgradedType == CREATURE_FIRE_ELEMENTAL
+                    || upgradedType == CREATURE_WATER_ELEMENTAL)) {
+                upgradedType = CREATURE_NONE;
+            } else {
+                upgradedType = UpgradedCreatureType(upgradedType);
+            }
 
-        TCreatureType upgradedType = raisedCreatureType;
-        if (!gpGame->f_1f698
-            && (upgradedType == CREATURE_AIR_ELEMENTAL
-                || upgradedType == CREATURE_EARTH_ELEMENTAL
-                || upgradedType == CREATURE_FIRE_ELEMENTAL
-                || upgradedType == CREATURE_WATER_ELEMENTAL)) {
-            upgradedType = CREATURE_NONE;
-        } else {
-            upgradedType = UpgradedCreatureType(upgradedType);
+            raisedCreatureType = upgradedType;
+            raisedCreatureCount = (raisedCreatureCount * 2 + 2) / 3;
+            added = armyGroups[side]->Add(
+                raisedCreatureType, raisedCreatureCount, -1);
         }
-
-        raisedCreatureType = upgradedType;
-        raisedCreatureCount = (raisedCreatureCount * 2 + 2) / 3;
-        added = armyGroups[side]->Add(
-            raisedCreatureType, raisedCreatureCount, -1);
         if (added)
             return;
     }
