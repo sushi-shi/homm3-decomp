@@ -1211,7 +1211,7 @@ customcampaign	?Apply@TCampaignSpellScrollBonus@@UBEXH@Z	100.0000	100.0000	100.0
 customcampaign	?Apply@TCampaignStartBonusOption@@UAEXPAX@Z	97.7895	97.7895	97.7895	0x85380	37e151c00a7e
 customcampaign	?ApplyBriefingChoice@SCampaign@@QAEXH@Z	100.0000	100.0000	100.0000	0x8b2e0	a359310356da
 customcampaign	?CampaignComplete@SCampaign@@QAEEXZ	100.0000	100.0000	100.0000	0x897d0	f23d701094f5
-customcampaign	?CompleteCurrentMap@SCampaign@@QAEXPAX@Z	78.6801	78.6801	78.6801	0x89820	72e1d946cf42
+customcampaign	?CompleteCurrentMap@SCampaign@@QAEXPAX@Z	78.6801	80.2280	80.2280	0x89820	1f887019bca7
 customcampaign	?DoPreLoadCustomization@SCampaign@@QAEXXZ	68.9328	68.9328	68.9328	0x86440	2a23e3de34dd
 customcampaign	?FreeData@CampaignHeaderStruct@TCampaignBrief@@QAEXXZ	100.0000	100.0000	100.0000	0x887e0	9dfe11ce2969
 customcampaign	?GetAvailableScenarios@CampaignHeaderStruct@TCampaignBrief@@QBEXPAE@Z	100.0000	100.0000	100.0000	0x88f00	54417e832b4c
@@ -1727,7 +1727,7 @@ events	?do_event_water_wheel@advManager@@QAEXPAVhero@@PATExtraInfoUnion@@_N@Z	10
 events	?do_event_watering_hole@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0000	100.0000	0xa7ea0	5075bf685718
 events	?do_event_windmill@advManager@@QAEXPAVhero@@PATExtraInfoUnion@@_N@Z	100.0000	100.0000	100.0000	0xa7fc0	21af7ca21e47
 events	?do_event_witch_hut@advManager@@QAEXPAVhero@@PATExtraInfoUnion@@_N@Z	100.0000	100.0000	100.0000	0xa8080	123c3e0e0bbd
-events	?exchange_spells@@YIXPAVhero@@0@Z	92.1640	92.1640	92.1640	0xa2940	630254774e4e
+events	?exchange_spells@@YIXPAVhero@@0@Z	94.7989	94.7989	94.7989	0xa2940	b0443d8810ff
 events	?fill@std@@YIXPAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@0ABV21@@Z	100.0000	100.0000	100.0000	0xaf870	-
 events	?get_black_box@advManager@@QBEPAVBlackBoxData@@PBTExtraInfoUnion@@@Z	100.0000	100.0000	100.0000	0xa0c20	00f2381511fe
 events	?get_force_modifier@advManager@@SIHM@Z	100.0000	100.0000	100.0000	0xa76c0	4b57cf6e2c70
@@ -1959,7 +1959,7 @@ game	?LoadBoatPool@game@@QAEHPAVTAbstractFile@@@Z	99.6447	99.6447	99.6447	0xb9a0
 game	?LoadGame@game@@QAEHPBDHH@Z	100.0000	100.0000	100.0000	0xbf330	fc53c93a80bc
 game	?LoadGarrisonPool@game@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xb96f0	e574c834f8c2
 game	?LoadHeroId@@YIHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xba210	a3d376c1431f
-game	?LoadMap@game@@QAE_NPAVTAbstractFile@@@Z	75.4768	75.4768	75.4768	0xc2450	e5e04330c34f
+game	?LoadMap@game@@QAE_NPAVTAbstractFile@@@Z	75.9944	75.9944	75.9944	0xc2450	0fc9500a9aaf
 game	?LoadMinePool@game@@QAEHPAVTAbstractFile@@H@Z	98.8718	100.0000	100.0000	0xb9340	2a102f6e81b3
 game	?LoadRumours@game@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbbe40	793f39b40d8e
 game	?LoadSignPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9070	f739107b463c
@@ -2259,7 +2259,7 @@ hero	?GetVisibility@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe4070	95a689b2be07
 # unit's reference differently and the comparison moves with our
 # object unchanged. The header audit above found nothing because
 # there was nothing in the headers to find.
-hero	?GiveArtifact@hero@@QAEEPBUtype_artifact@@EE@Z	68.9069	75.1012	75.1012	0xe3070	67ddcbc18a6b
+hero	?GiveArtifact@hero@@QAEEPBUtype_artifact@@EE@Z	76.3360	76.3360	76.3360	0xe3070	ffc957bc4e5d
 hero	?GiveExperience@hero@@QAEHHHE@Z	100.0000	100.0000	100.0000	0xe33b0	f855005f641d
 hero	?GiveResource@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xe3600	934aedcd34c8
 hero	?GiveSS@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0xe22d0	8cb3163ef67c
@@ -3035,7 +3035,7 @@ questlogwindow	?QuestSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100
 questlogwindow	?UpdateQuestLocator@TQuestLogWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x12e270	27dea5832804
 questlogwindow	?WindowHandler@TQuestLogWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x12e410	0fd21b85c6e8
 questlogwindow	?quest_text_row@type_quest@@QAEPBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x12e6b0	32ce11802590
-quickherowindow	??0TQuickHeroWindow@@QAE@PAVhero@@W4TViewLevel@0@@Z	92.5668	92.5668	92.5668	0x12ead0	cf7573892452
+quickherowindow	??0TQuickHeroWindow@@QAE@PAVhero@@W4TViewLevel@0@@Z	94.0777	94.0777	94.0777	0x12ead0	7911576f4e36
 quickherowindow	??1TQuickHeroWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x12f3d0	1548de5efd87
 quickherowindow	??_GTQuickHeroWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x12f3a0	-
 quickinfowindow	??0TQuickCreatureWindow@@QAE@W4TViewLevel@0@W4TCreatureType@@HW4TDisposition@0@H@Z	100.0000	100.0000	100.0000	0x12f8c0	d4641c42c5be
@@ -4259,7 +4259,7 @@ townmgr	?SetRolloverText@TTavernWindow@@QAEXH@Z	81.4136	81.4136	81.4136	0x1d7920
 townmgr	?SetRolloverText@TThievesGuildWindow@@QAEXH@Z	94.1758	94.1758	94.1758	0x1c9710	0a961efcf30d
 townmgr	?SetupExtraStuff@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1c33f0	c43032f622bc
 townmgr	?SetupMage@townManager@@QAEXPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1d6ef0	afcd68211831
-townmgr	?SetupThievesGuild@TThievesGuildWindow@@QAEXH@Z	93.3762	93.3762	93.3762	0x1dda10	79aadf9d6391
+townmgr	?SetupThievesGuild@TThievesGuildWindow@@QAEXH@Z	94.0399	94.0399	94.0399	0x1dda10	6aa44ae8ec96
 townmgr	?SetupTown@townManager@@QAEXE@Z	98.1050	98.1050	98.1050	0x1c6870	f9008c697e79
 townmgr	?SetupWell@townManager@@QAEXPAVTCastleWindow@@@Z	98.5801	98.5801	98.5801	0x1dd390	b88c92e68bc5
 townmgr	?SortStats@@YIXPAJPAC@Z	100.0000	100.0000	100.0000	0x1df160	e24a3b5e17da

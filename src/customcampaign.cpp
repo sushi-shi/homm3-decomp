@@ -2612,6 +2612,15 @@ void SCampaign::CompleteCurrentMap(void* campaignHeader)
 
     if (scenario.index < 0) {
         scenario.index = carryOverHeroes.size();
+        // LADDER, measured 2026-09-06 and REVERTED: this append spelled
+        // `insert(carryOverHeroes.end(), ...)` is worth 78.6801 -> 80.2280
+        // (+24 B), but the direct spelling lets VC6 expand
+        // `vector<vector<hero>>::insert` in full and FIVE named COMDATs stop
+        // being emitted - insert (528 B), _Ucopy, _Ufill, std::fill and
+        // std::copy_backward, all four banked EXACT - for a net loss of four
+        // exact rows and 0.08 tree fuzzy.  When a rung would delete the last
+        // out-of-line instantiation of a template in the TU, price the
+        // COMDATs it takes with it, not just the row.
         carryOverHeroes.push_back(std::vector<hero>());
         field_4c.push_back(std::vector<type_artifact>());
     }
