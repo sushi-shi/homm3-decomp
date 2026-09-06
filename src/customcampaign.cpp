@@ -3046,14 +3046,14 @@ static short ReadCampaignWord(TAbstractFile* infile)
 // THREE RETAIL-PROVEN RUNGS ARE WITHHELD, all blocked on the same budget,
 // and all three got CHEAPER as the budget closed - measure them again after
 // every mass step, they flip together:
-//   1. the <36 tail zeroing as
-//      `std::fill(campaignCompleted + 14, campaignCompleted + 21, 0)`
-//      instead of the constant-count memset. Byte-EXACT locally: VC6 expands
+//   1. LANDED 2026-09-06 at 64.6979 (polish lane 46): the <36 tail zeroing
+//      as `std::fill(campaignCompleted + 14, campaignCompleted + 21, 0)`
+//      instead of the constant-count memset. Byte-EXACT: VC6 expands
 //      the char* overload's `memset(_F, _X, _L - _F)` with the count
 //      unfolded, giving retail's `cmp edi,ecx / je / sub / shr 2 /
 //      rep stosd / and 3 / rep stosb` at 0x48a9ab..0x48a9c5 against our
-//      individual stores. Cost -0.70 at 59.0405, -0.41 at 60.5021, and
-//      +2.44 at the +20 dose.
+//      individual stores. Cost -0.70 at 59.0405, -0.41 at 60.5021,
+//      +2.44 at the +20 dose, +0.28 at 64.6979.
 //   2. LANDED 2026-09-06 at 64.3277 (polish lane 46):
 //      `campaignFilename = saved.campaignFilename;` instead of the explicit
 //      `.assign(ptr, strlen(ptr))`. This is the section-6b depth ladder run
@@ -3189,8 +3189,8 @@ void SCampaign::Load(TAbstractFile* infile, int saveVersion)
         infile->Read(campaignCompleted, sizeof(campaignCompleted));
     } else {
         infile->Read(campaignCompleted, 14);
-        memset(campaignCompleted + 14, 0,
-               sizeof(campaignCompleted) - 14);
+        std::fill(campaignCompleted + 14,
+                  campaignCompleted + sizeof(campaignCompleted), 0);
     }
 
     unsigned char count = ReadCampaignByte(infile);
