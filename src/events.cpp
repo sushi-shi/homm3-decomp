@@ -9284,6 +9284,15 @@ VA_COMPGEN(0x004af2c0, 0x6B, VECTOR_DTOR, string)
 // arguments, `ret 0xc`).
 VA_COMPGEN(0x004af800, 0x38, VECTOR_UCOPY, string)
 
+// COMDAT pairing: vector<type_dialog_resource>::size(). Byte-exact over the
+// whole 19-byte extent against this object's own COMDAT, and UNIQUE there -
+// the `sar eax,3` is the only type-dependent instruction, so any other
+// eight-byte element would collide, and events.obj emits no other. It also
+// sits exactly in the hole its neighbours leave (0x4af2c0 + 0x6b ends at
+// 0x4af32b, 0x4af350 opens the next), and the vector<type_dialog_resource>
+// `insert` already claimed at 0x54cba0 is one of its four retail callers.
+VA_COMPGEN(0x004af330, 0x13, VECTOR_SIZE, type_dialog_resource)
+
 // COMDAT pairing: vector<type_dialog_resource>::insert(iterator, const T&).
 // The element is 8 bytes and so is overview_item_record, and both TUs compile
 // this overload to the same 453 bytes, so size alone cannot separate them -

@@ -1095,6 +1095,7 @@ command	?ViewCastleBallista@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x
 command	?auto_resolve_combat@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x76200	6eb565e3b9de
 command	?automate_catapult@combatManager@@QAEEXZ	99.8804	99.8804	99.8804	0x73c00	71c4c4b222be
 command	?automate_first_aid_tent@combatManager@@QAEEXZ	98.0451	98.1203	98.1203	0x73ea0	918e38f5f06f
+command	?begin@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@QAE?AViterator@12@XZ	100.0000	100.0000	100.0000	0x7a670	-
 command	?do_animations@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x74040	27696fba95ba
 command	?get_surrender_cost@combatManager@@QAEJXZ	100.0000	100.0000	100.0000	0x77a00	8fa812f0287e
 command	?get_tower_string@combatManager@@ABE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TWallSection@1@JJ@Z	100.0000	100.0000	100.0000	0x7a2d0	8238c96bb1e7
@@ -1772,6 +1773,7 @@ events	?monsters_join@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@
 events	?monsters_sell_out@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	100.0000	100.0000	100.0000	0xa7250	f7b1ec4933f6
 events	?read@CCombatInitMsg@@UAEEPAVTAbstractFile@@@Z	98.1880	98.1880	98.1880	0xad1f0	98638ed1cdad
 events	?show_rewards@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@2@J@Z	100.0000	100.0000	100.0000	0xa0b00	9287544ef4a4
+events	?size@?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0xaf330	-
 events	?write@CCombatInitMsg@@UBEEPAVTAbstractFile@@@Z	97.9917	97.9917	97.9917	0xad340	7abc6d18bbac
 exec	??0executive@@QAE@XZ	100.0000	100.0000	100.0000	0xb0900	e5caaee573f2
 exec	?AddManager@executive@@QAEHPAVbaseManager@@H@Z	100.0000	100.0000	100.0000	0xb0b20	11f81dc72e6a
