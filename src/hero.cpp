@@ -6149,6 +6149,14 @@ unsigned char hero::HeroFn_004E2550(long artifact, long slot)
 // carrier (58.29) and the same with a string local (53.21). Those all
 // measured a caller with no catch scope and none of them is evidence
 // about this body now.
+// Re-measured WITH the catch scope, since a rejected knob is only
+// rejected for the inline structure it was measured in: the depth ladder
+// (`allowable[slot]`, which reaches test through operator[]) is now
+// BYTE-FLAT at 94.5203 - with an EH frame present it no longer pushes
+// _Xran out of line, so the ladder has nothing left to trade here. The
+// _Eos direction is a confirmed OVER-inline (base 0 calls vs retail 1),
+// whose doctrinal lever is caller-shrink, and a 437-byte body with no
+// liftable block and no DC-named helper has no dose to give.
 VA(0x004e2840, 0x1B5)  // retail-only, hero member, ret 8; size absorbs the
                        // 0x4e29dc catch funclet (boundary correction 2026-09-06b)
 unsigned char hero::HeroFn_004E2840(long artifact, long slot)
