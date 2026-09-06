@@ -6704,7 +6704,12 @@ bool game::LoadMap(TAbstractFile* mapFile)
     }
 
     for (int pool = 0; pool < 8; ++pool) {
-        lithPools[pool].erase(lithPools[pool].begin(), lithPools[pool].end());
+            // DEPTH LADDER: this ONE pool reset is `clear()`; the other
+            // five stay the longhand range erase polish 29 banked.  Retail
+            // CALLS the range-erase COMDAT at all six and clear()'s own
+            // wrapper takes the /Ob2 site here, so 75.4768 -> 75.9944; a
+            // greedy second round over the other five finds nothing.
+            lithPools[pool].clear();
         lithExitPools[pool].erase(lithExitPools[pool].begin(), lithExitPools[pool].end());
     }
     whirlpools.erase(whirlpools.begin(), whirlpools.end());

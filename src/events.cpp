@@ -4046,7 +4046,14 @@ static void exchange_spells(hero* first_hero, hero* second_hero)
                 && akSpellTraits[spell].level <= second_spell_level) {
                 second_hero->AddSpell(spell);
                 if (gpCurrentPlayer->IsLocalHuman())
-                    spells_taught.push_back(spell);
+            // DEPTH LADDER (docs/vc6/inliner.md 6b): this ONE append is
+            // `insert(end(), x)`; the other four in this body stay
+            // push_back.  92.1640 -> 94.7989, and a greedy second round over
+            // the remaining four finds nothing.  Site #1 measures the same
+            // 94.7989, #2 93.05 and #3 93.33; the `.append` -> `+=` rung on
+            // the thirteen text stores is a flat 93.2791 at every site, so
+            // this append is the one the budget turns on.
+            spells_taught.insert(spells_taught.end(), spell);
             }
 
             if (second_hero->is_in_spellbook(spell)

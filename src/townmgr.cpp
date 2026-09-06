@@ -10032,7 +10032,11 @@ void TThievesGuildWindow::SetupThievesGuild(int iThievesGuilds)
             }
             if (bestHero) {
                 heroWidgetMap[HERO_P0 + column] = bestHero->id;
-                Widgets.push_back(new bitmapBorder(
+                // DEPTH LADDER: this ONE append is `insert(end(), x)`;
+                // the other eight in this body stay push_back.  93.3762 ->
+                // 94.0399 (site #0 is 93.6631, #2..#4 are 93.90 each) and a
+                // greedy second round finds nothing.
+                Widgets.insert(Widgets.end(), new bitmapBorder(
                     66 * column + 0x104, 0x168, 0x30, 0x20,
                     column + HERO_P0,
                     akHeroTraits[bestHero->portrait].smallPortraitName,
