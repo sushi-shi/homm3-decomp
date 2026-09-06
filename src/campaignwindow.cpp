@@ -16,6 +16,12 @@
 #include "widget.h"
 #include "winmgr.h"
 
+// smackmgr.obj's video opener (retail 0x597570), for OpenPreview below.
+// Declared file-locally rather than through smackmgr.h so this compiland's
+// include closure does not widen: the constructor here is a measured
+// register-homing plateau and nothing else in the file needs that header.
+void VideoOpen(int id, int x, int y, int w, int h, int a6, int a7, int a8);
+
 // Source-private in the Dreamcast compiland. Retail's constructor stores the
 // active dialog here and its destructor clears it before destroying the base.
 DATA(0x00694e2c) static TCampaignWindow* gpCampaignWindow;
@@ -42,6 +48,32 @@ inline void TCampaignWindow::HideText()
             text->send_message(widget::WIDGET_CLEAR_STATUS,
                 widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
     }
+}
+
+// Retail 0x45e7c0, Complete-only (no Dreamcast counterpart) and the FIRST
+// body of campaignwindow.obj's .text: it sits six bytes ahead of the
+// constructor, behind the object's own static-initializer run at
+// 0x45e3d0..0x45e7bf. The constructor's twenty-row loop is its only caller.
+//
+// One preview row's video: open it at the row's own position, pause the
+// track, snapshot the twelve consecutive Bink globals into the row and clear
+// gBinkVideo so the next row opens a fresh one, then hang the row's still on
+// the window. The destructor and the hover handler restore that snapshot.
+VA(0x0045e7c0, 0x27A)  // constructor call edge + gCampaignPreviews row arithmetic (*0x50 + 0x66c498), retail-only
+void TCampaignWindow::OpenPreview(int campaignIndex)
+{
+    SCampaignPreview* preview = &gCampaignPreviews[campaignIndex];
+
+    VideoOpen(preview->video, preview->x, preview->y, PREVIEW_WIDTH,
+              PREVIEW_HEIGHT, 1, 0, 1);
+    gBinkPaused = 0;
+    _BinkPause(gBinkVideo, 0);
+    memcpy(preview->binkState, &gBinkVideo, 12 * sizeof(int));
+    gBinkVideo = 0;
+
+    Widgets.push_back(new bitmapBorder16(preview->x, preview->y,
+        PREVIEW_WIDTH, PREVIEW_HEIGHT, preview->widgetId, preview->image,
+        0x800));
 }
 
 // E:\gamedcs\campaignwindow.cpp:86

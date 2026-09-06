@@ -90,7 +90,6 @@ public:
 
     type_normal_dialog_frame(long x, long y, long w, long h, long id,
                              EGameResource resource, long qualifier);
-    virtual ~type_normal_dialog_frame();
     virtual unsigned char handle_click(unsigned char down_click,
                                        unsigned char right_click);
 };
