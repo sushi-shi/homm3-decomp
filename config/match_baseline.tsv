@@ -80,7 +80,7 @@ advmgr	?DisableButtons@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1a2e0	d6a
 advmgr	?DoAdvCommand@advManager@@QAEPAVNewmapCell@@PAUtype_point@@@Z	94.3953	94.3953	94.3953	0x7b80	32436604fe85
 advmgr	?DoAdventureOptions@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1ab00	7e482f83bb0c
 advmgr	?DoSystemOptions@advManager@@QAEEXZ	100.0000	100.0000	100.0000	0x1ac00	0c2dfd994c0d
-advmgr	?DrawAdvObj@advManager@@QAEXHHHHH@Z	87.9441	87.9441	87.9441	0x10c00	c26caf1d0826
+advmgr	?DrawAdvObj@advManager@@QAEXHHHHH@Z	87.9441	87.9441	87.9441	0x10c00	2b4e6eaa9d59
 advmgr	?DrawAdvObjShadow@advManager@@QAEXHHHHH@Z	85.2335	85.2335	85.2335	0x11590	0fc90effafac
 advmgr	?DrawAdventureMapGems@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0xf2f0	9d3fdf2e2504
 advmgr	?DrawArrow@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x120b0	26e7ce6af6e8
@@ -2583,7 +2583,7 @@ mapcell	?FindTrigger@CObject@@QBEXAAH0@Z	100.0000	100.0000	100.0000	0xfec30	8bf5
 mapcell	?GenerateHeightMap@NewfullMap@@QAEXPBVCObject@@QAY05C@Z	100.0000	100.0000	100.0000	0x105060	263bca9fdbb3
 mapcell	?HasTriggerableEvent@NewmapCell@@QAE?BEXZ	100.0000	100.0000	100.0000	0xfcdc0	c469cb530486
 mapcell	?Init@NewfullMap@@QAEXHE@Z	100.0000	100.0000	100.0000	0xfd4f0	0e3efc8b6f3e
-mapcell	?Load@NewfullMap@@QAEHPAVTAbstractFile@@HEH@Z	92.2018	92.2018	92.2018	0xfdbc0	ec12d9b5b459
+mapcell	?Load@NewfullMap@@QAEHPAVTAbstractFile@@HEH@Z	93.4037	93.4037	93.4037	0xfdbc0	865c591aa62c
 mapcell	?Load@TTimedEvent@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xfc6a0	c3c11baeb8d4
 mapcell	?LoadShipyards@NewfullMap@@QAEXXZ	100.0000	100.0000	100.0000	0x100de0	f2eafd7f6a58
 mapcell	?NewfullMapFn_004FD950@NewfullMap@@QAEXPAVTAbstractFile@@H@Z	90.4916	90.4916	90.4916	0xfd950	02bb8ab5cf4d
