@@ -419,6 +419,14 @@ struct TRmgGridPoint {
     unsigned int y;
 
     TRmgGridPoint() {}
+    // The retained river-painter ctor at 0x55ee50 copies both GetSize result
+    // components before storing its adapter. This copy boundary restores all
+    // 118 bytes; an implicit copy interleaves adapter and y stores (99.71%).
+    // Moving the adapter into the caller ctor body instead stores its vptr
+    // too early (99.10%); a copy assignment does not affect construction.
+    TRmgGridPoint(const TRmgGridPoint& other)
+        : x(other.x), y(other.y) {}
+
     TRmgGridPoint(const unsigned int& newX, const unsigned int& newY)
         : x(newX), y(newY) {}
 

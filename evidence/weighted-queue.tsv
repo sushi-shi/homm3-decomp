@@ -2,7 +2,6 @@
 # Admitted compiled bodies, sorted by increasing MAX/history, then decreasing retail size.
 # Banked-exact functions stay excluded despite current-score dips.
 va	size	current	maximum	historical	remaining_bytes	unit	function	state
-0x005b45f0	621	23.330544	23.3305	23.3305	476.117595	rmg_terrain	??0TRmgTerrainPainter@@QAE@PAVTRmgMapInterface@@HH@Z	admitted
 0x00489e20	1104	33.818653	35.3057	35.3057	714.2250720000001	customcampaign	?PruneCrossoverHeroes@SCampaign@@QAEXPAX@Z	admitted
 0x00574a90	586	35.38249	35.3825	35.3825	378.65855	seerhut	?load@TSeerHut@@QAEXPAVTAbstractFile@@H@Z	admitted
 0x0056ce50	286	10.5	41.9271	41.9271	166.08849400000003	seerhut	?LoadFromMap@type_quest@@UAEXPAVTAbstractFile@@@Z	admitted
@@ -56,7 +55,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x004eb060	491	81.044945	81.0449	81.0449	93.06954100000002	iconwdgt	?NextRandomFrame@iconWidget@@QAEXXZ	admitted
 0x004d6920	593	81.12042	81.1204	81.1204	111.95602799999998	gzinflatebuf	?underflow@TGzInflateBuf@@UAEHXZ	admitted
 0x0058a440	830	81.30488	81.3049	81.3049	155.16932999999997	singleselectionwindow	?OnGameHeaderInfoInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	admitted
-0x005b7520	362	81.33093	81.3309	81.3309	67.58214200000002	rmg_terrain	?ChangeTerrain@TRmgTerrainBrush@@QAEXHH@Z	admitted
 0x00474bf0	392	81.36957	81.3696	81.3696	73.03116799999997	command	?is_computer_action@combatManager@@QAEEPBVarmy@@@Z	admitted
 0x004cde40	224	81.410255	81.4103	81.4103	41.640927999999995	game	?get_underground_gate_exit@game@@QAE?AUtype_point@@PBVNewmapCell@@@Z	admitted
 0x005d7920	522	81.41358	81.4136	81.4136	97.02100800000001	townmgr	?SetRolloverText@TTavernWindow@@QAEXH@Z	admitted
@@ -66,7 +64,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x005bf810	226	81.72619	81.7262	81.7262	41.29878799999999	town	?get_legion_bonus@town@@QAEJJ@Z	admitted
 0x00580430	1595	81.08467	81.0847	81.7345	291.334725	singleselectionwindow	?RebuildFilteredPlayerSetup@TSingleSelectionWindow@@QAEXXZ	admitted
 0x004e4990	1014	81.76774	81.7677	81.7677	184.8755219999999	hero	?GetMobility@hero@@QAEHE@Z	admitted
-0x005b5440	1576	81.84317	81.8432	81.8432	286.1511680000001	rmg_terrain	?RepairTerrainPoint@TRmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	admitted
+0x005b5440	1576	81.70826	81.8432	81.8432	286.1511680000001	rmg_terrain	?RepairTerrainPoint@TRmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	admitted
 0x0042e0b0	2926	81.88646	81.8865	81.8865	530.0010100000002	ai_player	?AI_choose_destination@@YIHPAVhero@@JAAUHeroDestination@@AAJEE@Z	admitted
 0x004cafd0	3348	82.21976	82.2198	82.2198	595.2810959999997	game	?TransmitSaveGame@game@@QAEHHHEE@Z	admitted
 0x00514d80	644	73.32632	82.2717	82.2717	114.17025200000005	objecttype	?load@TObjectTypeTable@@QAEXPAD@Z	admitted
@@ -230,6 +228,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x0040a5d0	1542	91.10057	91.1006	91.1006	137.22874800000002	advmgr	?ProcessMapSelect@advManager@@QAEXPBVmessage@@PAUtype_point@@PAPAVNewmapCell@@@Z	admitted
 0x005a61f0	355	91.10169	91.1017	91.1017	31.588965000000012	spells	?GetNextChainLightningTarget@combatManager@@QAEJPBVarmy@@J@Z	admitted
 0x004590c0	4889	91.18802	91.188	91.188	430.81867999999986	campaignbrief	??0TCampaignBrief@@QAE@EE@Z	admitted
+0x005b45f0	621	91.221756	91.2218	91.2218	54.512622000000015	rmg_terrain	??0TRmgTerrainPainter@@QAE@PAVTRmgMapInterface@@HH@Z	admitted
 0x00412c40	2881	91.2477	91.2477	91.2477	252.15376300000005	advmgr	?UpdateRadar@advManager@@QAEXUtype_point@@EEEEE@Z	admitted
 0x00451220	915	91.297295	91.2973	91.2973	79.62970499999997	bottomviewsubwindow	??0TBottomViewResourceMessage@@QAE@PAVheroWindow@@HHPBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	admitted
 0x0058d510	2624	91.43498	91.435	91.435	224.74560000000002	singleselectionwindow	?DrawHeroAdvancedOption@TSingleSelectionWindow@@QAEXHEH@Z	admitted
@@ -376,7 +375,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x0055b060	887	95.69202	95.692	95.692	38.211960000000104	resourcemanager	?LoadPalette@ResourceManager@@YIPAVTPalette16@@PBD@Z	admitted
 0x0043f900	2041	94.46939	95.7033	95.7033	87.69564699999995	army	?range_attack@army@@QAEXPAV1@@Z	admitted
 0x004ea810	756	95.70397	95.704	95.704	32.47776000000008	iconwdgt	?Main@iconWidget@@UAEHPAVmessage@@@Z	admitted
-0x00549cb0	3728	94.093895	95.7066	95.7066	160.0579520000001	rmg	?WriteMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	admitted
+0x00549cb0	3728	94.10172	95.7066	95.7066	160.0579520000001	rmg	?WriteMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	admitted
 0x004c3ef0	1176	67.558685	95.6972	95.7136	50.40806400000002	game	?readMapPlayerSlot@TPlayerSlotAttributes@CMapHeaderData@@QAEXPAVTAbstractFile@@H@Z	admitted
 0x00463c60	1084	95.682655	95.7196	95.7196	46.39953599999995	cmbtmgr	?InitNonVisualVars@combatManager@@QAEXXZ	admitted
 0x00592f10	694	95.726776	95.7268	95.7268	29.656007999999993	singleselectionwindow	?_Unguarded_insert@std@@YIXPAUGameSelectionHeadersStruct@@U2@UTSortMapsBySize@@@Z	admitted
@@ -582,7 +581,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00490f60	197	99.64286	99.6429	99.6429	0.7034869999999982	diff	?Apply@CDiffFile@@QAEPAXPAEH@Z	admitted
 0x00465330	1270	99.64975	99.6497	99.6497	4.448810000000043	cmbtmgr	?SetNextArmy@combatManager@@QAEXHH@Z	admitted
 0x005c9be0	11504	99.66054	99.6605	99.6605	39.05608000000042	townmgr	??0THallWindow@@QAE@H@Z	admitted
-0x0055ee50	118	99.70731	99.7073	99.7073	0.3453860000000015	rmg_support	??0TRmgRiverPainter@@QAE@PAVTRmgMapAdapterInterface@@HABUTRmgGridPoint@@@Z	admitted
 0x005b6810	132	99.745766	99.7458	99.7458	0.3355439999999912	rmg_terrain	?HasSeparatedNeighbours@TRmgTerrainPainter@@QAEEABUTRmgGridPoint@@@Z	admitted
 0x004c06f0	377	99.746376	99.7464	99.7464	0.9560720000000353	game	?randomize_university@game@@QAEXPAVNewmapCell@@@Z	admitted
 0x004c3890	996	99.8359	99.8359	99.8359	1.6344360000000036	game	?loadVictoryCondition@NewSMapHeader@@QAEHDPAVTAbstractFile@@H@Z	admitted

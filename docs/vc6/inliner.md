@@ -941,6 +941,23 @@ delegation; its original source spelling remains provisional because the
 DC corpus has no RMG compiland. Caller-specific residuals and prior peaks
 remain recorded rather than being hidden by an inline directive.
 
+### A grid copy boundary changes neighboring STL decisions
+
+The retained river-painter constructor at `0x55ee50` copies both components
+of its virtual `GetSize` result before storing the adapter pointer. An
+explicit `TRmgGridPoint` copy constructor restores all 118 raw bytes after
+seven relocations. Implicit copying interleaves the adapter and second size
+store (99.71%); moving that assignment into the base constructor body places
+the vptr store too early (99.10%). Copy assignment is byte-neutral here.
+
+The same declaration closes `TRmgTerrainBrush::ChangeTerrain` (`0x5b7520`,
+362 raw bytes and 13 matching blocks) by restoring its retained set-distance
+helper. It also raises the terrain-painter constructor from 23.33% to 91.22%:
+both set initialization calls remain out of line and vector insertion expands.
+These are consequences of a shared value-copy boundary; no STL body or inline
+control changed. The map size accessor and terrain-brush destructor currently
+dip, with their 100% peaks retained. `createRiver` remains at 85.9575%.
+
 ## 7. Using it
 
 ```sh
