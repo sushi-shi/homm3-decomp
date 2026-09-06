@@ -734,6 +734,7 @@ bottomviewsubwindow	??0bad_cast@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x5
 bottomviewsubwindow	??0bad_cast@std@@QAE@PBD@Z	100.0000	100.0000	100.0000	0x54a10	-
 bottomviewsubwindow	??0ios_base@std@@IAE@XZ	100.0000	100.0000	100.0000	0x515c0	-
 bottomviewsubwindow	??0strstreambuf@std@@QAE@H@Z	100.0000	100.0000	100.0000	0x51600	-
+bottomviewsubwindow	??1?$basic_ios@DU?$char_traits@D@std@@@std@@UAE@XZ	100.0000	100.0000	100.0000	0x53f40	-
 bottomviewsubwindow	??1?$basic_ostream@DU?$char_traits@D@std@@@std@@UAE@XZ	100.0000	100.0000	100.0000	0x53a20	-
 bottomviewsubwindow	??1?$basic_streambuf@DU?$char_traits@D@std@@@std@@UAE@XZ	100.0000	100.0000	100.0000	0x54000	-
 bottomviewsubwindow	??1?$numpunct@D@std@@UAE@XZ	100.0000	100.0000	100.0000	0x55bf0	-
@@ -744,6 +745,7 @@ bottomviewsubwindow	??1TBottomViewMessage@@UAE@XZ	100.0000	100.0000	100.0000	0x5
 bottomviewsubwindow	??1TBottomViewNewTurn@@UAE@XZ	100.0000	100.0000	100.0000	0x51120	daa50fab084f
 bottomviewsubwindow	??1TBottomViewResourceMessage@@UAE@XZ	100.0000	100.0000	100.0000	0x517a0	e06a223069f8
 bottomviewsubwindow	??1TBottomViewTown@@UAE@XZ	100.0000	100.0000	100.0000	0x52b00	bd09da0ac1f4
+bottomviewsubwindow	??1bad_cast@std@@UAE@XZ	100.0000	100.0000	100.0000	0x53c70	-
 bottomviewsubwindow	??1locale@std@@QAE@XZ	100.0000	100.0000	100.0000	0x53d70	-
 bottomviewsubwindow	??1sentry@?$basic_ostream@DU?$char_traits@D@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x54320	-
 bottomviewsubwindow	??1type_bottom_view_window@@UAE@XZ	100.0000	100.0000	100.0000	0x50d50	7bf99d8681a0
@@ -752,7 +754,10 @@ bottomviewsubwindow	??6?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEAAV01@H@Z
 bottomviewsubwindow	??6std@@YAAAV?$basic_ostream@DU?$char_traits@D@std@@@0@AAV10@PBD@Z	100.0000	100.0000	100.0000	0x54450	-
 bottomviewsubwindow	??Bid@locale@std@@QAEIXZ	100.0000	100.0000	100.0000	0x53cf0	-
 bottomviewsubwindow	??_Dostrstream@std@@QAEXXZ	100.0000	100.0000	100.0000	0x51750	-
+bottomviewsubwindow	??_G?$basic_ios@DU?$char_traits@D@std@@@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x542c0	-
 bottomviewsubwindow	??_G?$basic_ostream@DU?$char_traits@D@std@@@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x54280	-
+bottomviewsubwindow	??_G?$basic_streambuf@DU?$char_traits@D@std@@@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x542f0	-
+bottomviewsubwindow	??_G?$numpunct@D@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x55bc0	-
 bottomviewsubwindow	??_GTBottomViewEnemyTurn@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x53640	-
 bottomviewsubwindow	??_GTBottomViewHero@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x52140	-
 bottomviewsubwindow	??_GTBottomViewKingdom@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x531a0	-
@@ -760,6 +765,7 @@ bottomviewsubwindow	??_GTBottomViewMessage@@UAEPAXI@Z	100.0000	100.0000	100.0000
 bottomviewsubwindow	??_GTBottomViewNewTurn@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x510f0	-
 bottomviewsubwindow	??_GTBottomViewResourceMessage@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x51770	-
 bottomviewsubwindow	??_GTBottomViewTown@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x52ad0	-
+bottomviewsubwindow	??_Gbad_cast@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x53ca0	-
 bottomviewsubwindow	??_Gios_base@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x515d0	-
 bottomviewsubwindow	??_Gostrstream@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x51720	-
 bottomviewsubwindow	??_Gstrstreambuf@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x516f0	-
@@ -1166,6 +1172,7 @@ customcampaign	??0ScenarioStruct@TCampaignBrief@@QAE@XZ	100.0000	100.0000	100.00
 customcampaign	??0TCampaignStartHeroOption@@QAE@XZ	100.0000	100.0000	100.0000	0x883d0	3f394b6bd515
 customcampaign	??0hero@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x60850	-
 customcampaign	??0locale@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x8d800	-
+customcampaign	??0locale@std@@QAE@XZ	100.0000	100.0000	100.0000	0x88e60	-
 customcampaign	??0out_of_range@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x4700	-
 customcampaign	??1?$basic_filebuf@DU?$char_traits@D@std@@@std@@UAE@XZ	100.0000	100.0000	100.0000	0x8bd50	-
 customcampaign	??1CampaignHeaderStruct@TCampaignBrief@@QAE@XZ	75.7203	78.5339	78.5339	0x886a0	966762622807
@@ -1178,6 +1185,7 @@ customcampaign	??1TCampaignStartOption@@UAE@XZ	100.0000	100.0000	100.0000	0x84f4
 customcampaign	??4?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@QAEAAV01@ABV01@@Z	100.0000	100.0000	100.0000	0x5ff30	-
 customcampaign	??_G?$basic_filebuf@DU?$char_traits@D@std@@@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x8bd20	-
 customcampaign	??_G?$codecvt@DDH@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x8ec30	-
+customcampaign	??_GScenarioStruct@TCampaignBrief@@QAEPAXI@Z	100.0000	100.0000	100.0000	0x88eb0	-
 customcampaign	??_GTAbstractFile@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x87dd0	-
 customcampaign	??_GTCampaignBonus@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x84020	-
 customcampaign	??_GTCampaignSpellBonus@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x85340	-
