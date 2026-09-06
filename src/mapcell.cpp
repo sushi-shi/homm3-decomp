@@ -871,6 +871,19 @@ int NewfullMap::Read(TAbstractFile* infile, int size, unsigned char two_layers,
 // inline_depth(0) reaches 84.27%, so the scoped no-inline attribute preserves
 // the established caller wall while leaving this function independently
 // matchable.
+//
+// [polish-45] The first `!!` names the remaining shape precisely: retail
+// SINKS the masked count.  `mov esi,[ebp-0xc] / and esi,0xffff` keeps the
+// value in ESI across the whole inlined resize and only writes it back to
+// count's own address-taken slot just before the loop; this compile does the
+// read-modify-write `mov ecx,[ebp-0x4] / and ecx,0xffff / mov [ebp-0x4],ecx`
+// at the statement and reloads for every later use.  The stack ordering is
+// the mirror image too - retail assigns -0x4 to the quest pointer, -0x8 to
+// `i` and -0xc to `count`, this compile assigns -0x4/-0x8/-0xc to
+// count/quest/i - so the two compiles walked the same symbols in opposite
+// handle order (docs/vc6/regalloc.md 0).  Frames are the same size (0x1c),
+// so no local is missing; the earlier "second promoted count" probe (88.6135)
+// is the right family but the wrong direction.
 #pragma auto_inline(off)
 VA(0x004fd950, 0x268)  // caller Load 0xfdbc0; TQuestGuard ctor/load + vector resize/push_back
 void NewfullMap::NewfullMapFn_004FD950(
@@ -5404,6 +5417,14 @@ void NewfullMap::GenerateHeightMap(const CObject* object,
 #define HOMM3_MAPCELL_RELEASE_VERIFY(expression) \
     static_cast<void>(expression)
 
+// [polish-45] The missing frame dword is now located: retail's 0x7c frame
+// carries `mov dword ptr [ebp-0x14], edi` in the GenerateHeightMap argument
+// build - it HOMES `newObject` there and reloads it - where this compile's
+// 0x78 frame keeps that pointer only in EDI.  Every slot from -0x10 down is
+// then shifted by the same 4 bytes.  So the "missing mass" the note above
+// infers is one more live value at that point, not one more statement: any
+// candidate spelling has to make `newObject` (or something with its live
+// range) need a home across GenerateHeightMap.
 VA(0x00505230, 0x3D9)  // order-map: calls GenerateHeightMap 0x505060 + vector<TObjectCell>::insert machinery 0x50a400; sole caller PlaceObject 0x505b20 (DC-isomorphic), dc 0xf36b0
 void NewfullMap::StampObject(NewmapCell* thisCell,
                              NewmapCell::TObjectCell* objectCell)
