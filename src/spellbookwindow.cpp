@@ -127,6 +127,23 @@ void TSpellbookWindow::Reset()
 }
 #endif
 
+// E:\gamedcs\spellbookwindow.cpp:69 - the remembered-view reset. It is the
+// row immediately BEFORE this compiland's carved span (spellbookwindow.obj
+// starts at 0x59baa0, this sits at 0x59ba80), game::ResetGame (0x4cecb0) is
+// its only caller and already spells the call, and every address it writes
+// is one of this file's own remembered-view data claims: LastSchool
+// (0x6a34f4) back to zero and LastPage / LastContext / lastSpellbookHeroId
+// (0x684b40 / 0x684b44 / 0x684b48) back to the -1 their definitions above
+// carry. Retail materialises the -1 once and stores it three times.
+VA(0x0059ba80, 0x1D)  // sole caller game::ResetGame + this file's four remembered-view data claims, dc 0x14bc58
+void TSpellbookWindow::Reset()
+{
+    LastSchool = const_invalid_school;
+    LastPage = -1;
+    LastContext = eContextInvalid;
+    lastSpellbookHeroId = -1;
+}
+
 // E:\gamedcs\spellbookwindow.cpp:128
 // Residual (96.8014%): the RETURN OBJECT's default construction, and it is
 // the same `_Tidy` depth wall advmgr's BVResMsg/BVMessage carry.  Retail
