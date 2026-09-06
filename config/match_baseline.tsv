@@ -1011,7 +1011,7 @@ combatcontrolsubwindow	?Show@TCombatCreatureSubWindow@@QAEXXZ	100.0000	100.0000	
 combatcontrolsubwindow	?Show@TCombatHeroSubWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x6cdf0	95931175f31b
 combatcontrolsubwindow	?UnShow@TCombatCreatureSubWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x6df80	d77e780c6671
 combatcontrolsubwindow	?UnShow@TCombatHeroSubWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x6ce70	3392c2a4ac72
-combatcontrolsubwindow	?Update@TCombatCreatureSubWindow@@QAEXPBVarmy@@PBVhero@@@Z	78.9793	78.9793	78.9793	0x6dc30	7f85273edd09
+combatcontrolsubwindow	?Update@TCombatCreatureSubWindow@@QAEXPBVarmy@@PBVhero@@@Z	90.3734	90.3734	90.3734	0x6dc30	6d01ec9beeaa
 combatcontrolsubwindow	?Update@TCombatHeroSubWindow@@QAEXABVhero@@PBV2@_N@Z	100.0000	100.0000	100.0000	0x6cc10	d3d77a0d58ab
 combatcontrolsubwindow	?set_rollover@TCombatControlSubWindow@@UAEXPBD@Z	100.0000	100.0000	100.0000	0x6bf50	0feb222511f2
 combatoptionswindow	??0TCombatOptionsWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x6e3b0	0e9100a239e5
