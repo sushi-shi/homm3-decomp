@@ -709,7 +709,7 @@ void game::SetupDynamicStuff(int bUpdate, int bForceUpdate)
                 // that puts the constant conjunct second.
                 for (item = 0; item < 8 && item < lastBackpackIndex;
                      item++) {
-                    artifact = *currHero->get_backpack(
+                    artifact = currHero->get_backpack(
                         (gOverviewBackpackStart[heroNumber] + item)
                             % lastBackpackIndex);
                     iconWidgetDynamic[slot + iCurBitmap] = new iconWidget(
@@ -748,7 +748,7 @@ void game::SetupDynamicStuff(int bUpdate, int bForceUpdate)
             } else {
                 iOffsetToMon = 292;
                 for (item = 0; item < kNumArtifactSlots / 2; item++) {
-                    artifact = *currHero->get_artifact(
+                    artifact = currHero->get_artifact(
                         (item + (kNumArtifactSlots / 2)
                             * gOverviewHeroArtifactPage[heroNumber])
                             % kNumArtifactSlots);
@@ -1294,7 +1294,7 @@ int game::ProcessIconSelect(int codeY, unsigned char bRightMouse)
             case OVERVIEW_HERO_ARTIFACT_FIRST_ID + 8:
                 show_artifact(
                     currHero,
-                    *currHero->get_artifact(
+                    currHero->get_artifact(
                         (codeY - 119
                          + 9 * gOverviewHeroArtifactPage[selectedIndex])
                         % 18),
@@ -1315,7 +1315,7 @@ int game::ProcessIconSelect(int codeY, unsigned char bRightMouse)
                     break;
                 show_artifact(
                     currHero,
-                    *currHero->get_backpack(
+                    currHero->get_backpack(
                         (gOverviewBackpackStart[selectedIndex]
                          + codeY - 130) % lastBackpackIndex),
                     bRightMouse);
@@ -2117,7 +2117,7 @@ void TOverviewWindow::DoRollover(int codeY)
                     (codeY - OVERVIEW_HERO_ARTIFACT_FIRST_ID
                      + 9 * gOverviewHeroArtifactPage[
                          giOverviewTop[giOverviewType] + iSlot]) % 18)
-                    ->get_rollover_text(gText);
+                    .get_rollover_text(gText);
                 break;
 
             case OVERVIEW_HERO_BACKPACK_FIRST_ID:
@@ -2139,7 +2139,7 @@ void TOverviewWindow::DoRollover(int codeY)
                     (gOverviewBackpackStart[
                          giOverviewTop[giOverviewType] + iSlot] + codeY
                      - OVERVIEW_HERO_BACKPACK_FIRST_ID)
-                    % lastBackpackIndex)->get_rollover_text(gText);
+                    % lastBackpackIndex).get_rollover_text(gText);
                 break;
             }
 
@@ -2857,7 +2857,7 @@ void UpdateBackpack(int iSlot)
 
     for (; i < 8 && i < lastBackpackIndex; ++i) {
         msg.codeY = i + iSlotOff + 130;
-        artifact = *currHero->get_backpack(
+        artifact = currHero->get_backpack(
             (gOverviewBackpackStart[heroNumber] + i) % lastBackpackIndex);
         msg.extra = artifact.artifactId;
         overWin->BroadcastMessage(&msg);

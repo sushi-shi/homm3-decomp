@@ -5420,12 +5420,12 @@ static long total_artifact_value(hero* candidate, long player_id)
     long slot;
     for (slot = 0; slot < HERO_BACKPACK_CAPACITY; ++slot) {
         type_artifact backpack_artifact(
-            candidate->get_backpack(slot)->artifactId);
+            candidate->get_backpack(slot).artifactId);
         total += AI_get_artifact_player_value(backpack_artifact, player_id);
     }
     for (slot = 0; slot < 19; ++slot) {
         type_artifact equipped_artifact(
-            candidate->get_artifact(slot)->artifactId);
+            candidate->get_artifact(slot).artifactId);
         total += AI_get_artifact_player_value(equipped_artifact, player_id);
     }
     return total;
@@ -6544,7 +6544,7 @@ void AI_equip_artifacts(hero* our_hero)
     type_artifact artifact;
     int backpack_slot = our_hero->get_last_backpack_index() + 1;
     while (backpack_slot-- > 0) {
-        artifact = *our_hero->get_backpack(backpack_slot);
+        artifact = our_hero->get_backpack(backpack_slot);
         if (artifact.artifactId != ARTIFACT_NONE
             && add_artifact(our_hero, artifact, &base_value, 0, 19, 0, 0)) {
             our_hero->remove_backpack_artifact(backpack_slot);
@@ -6619,7 +6619,7 @@ long get_full_value(const hero* our_hero)
     value += caster.get_best_spell_value(SPELL_VALUE_SPECIAL);
 
     for (int slot = 0; slot < 19; ++slot) {
-        type_artifact artifact = *our_hero->get_artifact(slot);
+        type_artifact artifact = our_hero->get_artifact(slot);
         if (artifact.artifactId != -1)
             value += AI_get_value_of_artifact(artifact, our_hero, 1, 1);
     }

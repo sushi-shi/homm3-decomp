@@ -174,7 +174,8 @@ struct type_artifact {
 // type_artifact this pointer.
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >
         get_description() const;
-    void get_rollover_text(char* buffer);
+    // hero.cpp:2432 (dc 0xcd86c) also proves a const this pointer.
+    void get_rollover_text(char* buffer) const;
 };
 
 // Shared packed prefix of heroes and boats. Dreamcast CodeView proves both
@@ -831,25 +832,18 @@ public:
     // 0x4d9070 / 0x4d90c0, the two artifact tallies.
     long get_equipped_artifacts(unsigned char countWarMachines);
     long get_number_in_backpack(unsigned char countWarMachines);
-    // Dreamcast keeps these Hero.h accessors out of line; retail /Ob2 folds
-    // them into their callers. The DC TArtifactSlot parameter is an ordinal
-    // enum, whereas this reconstruction already uses that name for the slot
-    // record, so the byte-equivalent retail index is represented as long.
-    const type_artifact* get_artifact(long slot) const
+    // Hero.h:965/970 (dc 0x27e8c/0x27e9c): both accessors return a
+    // const type_artifact reference through const this. Keep this interface
+    // shared by const and mutable heroes. Complete scans nineteen ordinals;
+    // the long index here includes the extra slot beyond DC's TArtifactSlot.
+    // Reference and pointer controls emit the same PruneCrossoverHeroes bytes.
+    const type_artifact& get_artifact(long slot) const
     {
-        return &equipped[slot];
+        return equipped[slot];
     }
-    type_artifact* get_artifact(long slot)
+    const type_artifact& get_backpack(long slot) const
     {
-        return &equipped[slot];
-    }
-    const type_artifact* get_backpack(long slot) const
-    {
-        return &backpack[slot];
-    }
-    type_artifact* get_backpack(long slot)
-    {
-        return &backpack[slot];
+        return backpack[slot];
     }
     // E:\gamedcs\Hero.h:664. Dreamcast emits this header helper from
     // overview.obj. Complete emits no standalone wrapper; ProcessIconSelect

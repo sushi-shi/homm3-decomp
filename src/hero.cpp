@@ -2998,9 +2998,10 @@ void UpdateBackpack()
 }
 
 
-// E:\gamedcs\hero.cpp:2432
+// E:\gamedcs\hero.cpp:2432. CodeView dc 0xcd86c carries const this;
+// only the output buffer is modified, and retail agrees with all three arms.
 VA(0x004db350, 0x86)  // anchor-global, dc 0xcd86c
-void type_artifact::get_rollover_text(char* buffer)
+void type_artifact::get_rollover_text(char* buffer) const
 {
     if (artifactId == ARTIFACT_NONE)
         strcpy(buffer, gEmptyArtifactRolloverText);
