@@ -56,6 +56,20 @@ branches select `+0x64` where retail selects `+0x44`. Its 99.7458% checkpoint
 is still partial. Use symbolic branch targets or resolved raw bytes to check
 this distinction; equal instruction and return counts do not settle it.
 
+## A byte-returning accessor can preserve bitfield extraction
+
+`ScoreObjectPlacement` (`0x536bc0`) tests bit 27 with `shr edx,27` followed
+by `test dl,1`, while a later condition on bit 25 tests the containing dword
+directly. Reading the unsigned one-bit field in the first condition folds
+to `test dword ptr [item+0x28],0x08000000` in the candidate. Returning that
+field through an ordinary `unsigned char` member accessor preserves the
+shift and byte test after expansion (84.2027% to 84.6788%).
+
+This supports a narrow accessor boundary as a source hypothesis. It does
+not establish the original method name or prove that every shifted flag
+test came from a helper. Keep the canonical bitfield and verify the caller;
+do not replace the record with a raw-word alias to force the extraction.
+
 ## Diagnosis taxonomy (D-classes → branch signatures)
 
 Emitted by `_flow.diagnose`; catalog IDs are

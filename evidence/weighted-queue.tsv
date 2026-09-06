@@ -2,7 +2,6 @@
 # Sorted by increasing current score, then decreasing unmatched bytes.
 # Unscored rows rank at zero; MAX/history never hide current residuals.
 va	size	current	maximum	historical	remaining_bytes	unit	function	state
-0x00536bc0	1524		0.0	0.0	1524.0	seg_0013	game_1373a0_sub00_136bc0	unscored
 0x00536560	1522		0.0	0.0	1522.0	seg_0013	game_rand_trn_txt_136560	unscored
 0x0053fcb0	1516		0.0	0.0	1516.0	seg_0013	game_144920_sub02_13fcb0	unscored
 0x005b4b20	1483		0.0	0.0	1483.0	seg_001b	game_1b4960_sub00_1b4b20	unscored
@@ -110,7 +109,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00543c70	418		0.0	0.0	418.0	seg_0014	game_143e20_sub02_143c70	unscored
 0x0054dbc0	416		0.0	0.0	416.0	seg_0014	game_14c730_sub04_14dbc0	unscored
 0x0054da20	415		0.0	0.0	415.0	seg_0014	game_14c730_sub03_14da20	unscored
-0x00532e40	414		0.0	0.0	414.0	seg_0013	game_136bc0_sub01_132e40	unscored
 0x00531170	412		0.0	0.0	412.0	seg_0013	game_131cf0_sub00_131170	unscored
 0x00537970	409		0.0	0.0	409.0	seg_0013	game_149930_sub01_137970	unscored
 0x00515010	408		0.0	0.0	408.0	seg_0011	game_214260_sub00_115010	unscored
@@ -527,6 +525,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00554f10	570	84.472046	84.472	84.472	88.5093378	remote	?WaitForReadyToPlayMsg@@YIXXZ	non-exact
 0x005997d0	703	84.52804	84.528	84.528	108.76787879999998	soundmgr	?Open@soundManager@@UAEHH@Z	non-exact
 0x00429110	1708	84.58684	84.5868	84.5868	263.2567728000001	ai_player	?make_gift@type_AI_player@@QAEXJ@Z	non-exact
+0x00536bc0	1524	84.67878	84.6788	84.6788	233.49539280000002	rmg	?ScoreObjectPlacement@type_random_map_generator@@QAEHPAUTRmgObjectPropertiesRef@@UTRmgMapPosition@@@Z	non-exact
 0x0042fee0	1720	84.83158	84.8316	84.8316	260.89682399999987	ai_player	?AI_AttemptMove@@YIXPAVhero@@AAUHeroDestination@@AAJE@Z	non-exact
 0x0044b620	510	84.85475	84.8547	84.8547	77.240775	armygrp	?Merge@armyGroup@@QAEEPAV1@@Z	non-exact
 0x0052e430	638	84.94444	96.5463	96.5463	96.05447280000001	questlogwindow	?DoQuestLog@@YIXH@Z	non-exact
