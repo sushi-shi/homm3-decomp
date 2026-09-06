@@ -1458,7 +1458,7 @@ int oldmain()
                 gpGame->campaign.ApplyBriefingChoice(briefingChoice);
                 int playerPos =
                     campaignBrief.scenarios[currentMap]
-                        ->options->GetPlayerPosition(briefingChoice);
+                        ->options->GetPlayer(briefingChoice);
                 gpGame->players[playerPos].isHuman = 1;
                 gpGame->players[playerPos].isLocal = 1;
                 gLocalGamePos = playerPos;

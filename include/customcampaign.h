@@ -276,63 +276,6 @@ enum ECampaignBonusType {
     CAMPAIGN_BONUS_RESOURCE = 7
 };
 
-// The scenario's "starting options" chooser, and it is a HIERARCHY: three
-// concrete 13-slot vftables (0x63d98c, 0x63dad8, 0x63db0c) sit under an
-// abstract root at 0x63d958 whose six unimplemented slots are __purecall
-// and whose slots 5, 7 and 12 carry real shared bodies (0x484f80,
-// 0x485090, 0x485000). The SLOT ROLES read straight off 0x63d98c, the
-// start-BONUS option, whose every override is a one-line forward to one
-// element of a std::vector<TCampaignBonus*> at this+8:
-//   slot 1 -> the element's building predicate (TCampaignBonus+0x04)
-//   slot 2 -> the element COUNT, `(_Last - _First) / 4`
-//   slot 3 -> the element's icon .def name (TCampaignBonus+0x08)
-//   slot 4 -> the element's icon frame  (TCampaignBonus+0x0c)
-//   slot 6 -> the element's description (TCampaignBonus+0x10)
-//   slot 9 -> the list reader (the type byte 0..7 switch)
-//   slot 10 -> Apply on the element campaign.briefingChoice selects
-//   slot 11 -> SetTown from the map header's own main-town type
-// and the player the whole list belongs to is the dword at +4, byte-proven
-// three ways: the reader stores the FIRST byte it reads there, slot 10
-// hands it to TCampaignBonus::Apply as `whichPlayer`, and slot 11 indexes
-// `header->playerSlotAttributes[+4]` with the 0x44 stride.
-// NAMES ARE ROLE INVENTIONS: customcampaign.obj has no Dreamcast twin and
-// no RTTI descriptor names any of these classes. Slots 5, 7 and 12 keep
-// ordinal-derived names because only their bodies, not their callers, are
-// decoded; their first parameter is the same opaque per-scenario record in
-// all three (it carries a byte vector at +0x18, an int row at +0x4c, a
-// vector at +0x70 and a five-dword bit block at +0x90).
-class TCampaignStartOption {
-public:
-    // 0x484f40, and it is the DESTRUCTOR, not a constructor: the body is
-    // one vptr store with no `mov eax,ecx`, which no VC6 constructor emits.
-    // Defined out of line in the .cpp so the plain body is emitted at all;
-    // 0x484f50, the root's `??_G`, then inlines it, as does every derived
-    // destructor.
-    virtual ~TCampaignStartOption();
-    virtual bool IsBuildingBonus(int which) const = 0;
-    virtual int GetCount() const = 0;
-    virtual const char* GetIconDefName(void* scenario, int which) const = 0;
-    virtual int GetIconIndex(int which) const = 0;
-    // 0x484f80, inherited by the bonus and the third option: sums the
-    // 5-dword bit block through the nibble table at 0x67729c and answers
-    // the campaign's crossover index.
-    virtual int _slot5(void* scenario, int which) const;
-    virtual std::string GetText(void* scenario, int which) const = 0;
-    // 0x485090, `or eax,-1 / ret 4` - inherited unchanged by ALL THREE
-    // concrete classes, so the root is where the -1 lives.
-    virtual int _slot7(int which) const;
-    virtual int GetPlayer(int which) const = 0;
-    virtual void Read(TAbstractFile* file) = 0;
-    // `ret 4`: the slot takes one argument this option never reads, and
-    // both sibling options answer it with the shared do-nothing at
-    // 0x485d80.
-    virtual void Apply(void* scenario) = 0;
-    virtual void SetTown(CMapHeaderData* header) = 0;
-    // 0x485000: every prerequisite scenario the record marks must already
-    // be completed in gpGame->campaign.mapScores.
-    virtual bool _slot12(void* scenario, int value) const;
-};
-
 // Vftable 0x63d98c, 0x18 bytes: the player at +4 and the bonus list at +8.
 class TCampaignStartBonusOption : public TCampaignStartOption {
 public:

@@ -151,7 +151,7 @@ void TCampaignBrief::Select(int which)
     }
     BroadcastMessage(&msg);
 
-    if (!campaign->scenarios[which]->options->_vslot2()) {
+    if (!campaign->scenarios[which]->options->GetCount()) {
         widget* ok = GetWidget(DIALOG_RETURN_OK);
         if (ok)
             ok->enable(1);
@@ -193,7 +193,7 @@ VA(0x00458010, 0x10F)  // handler caller + DC source identity, dc 0x58a9c
 void TCampaignBrief::UpdateAllyEnemyFlags()
 {
     gCampaignBriefPlayerSlot =
-        campaign->scenarios[selected_scenario]->options->GetPlayerPosition(
+        campaign->scenarios[selected_scenario]->options->GetPlayer(
             gpGame->campaign.briefingChoice);
     int enemyFlagId = ENEMY_FLAG1_ID;
     int allyFlagId = ALLY_FLAG1_ID;
@@ -373,7 +373,7 @@ void TCampaignBrief::UpdateBonusIcons()
     ScenarioStruct* scenario = campaign->scenarios[selected_scenario];
     int i;
 
-    if (scenario->options->_vslot2() == ScenarioStartOptions::CHOICE_COUNT_PAIR) {
+    if (scenario->options->GetCount() == TCampaignStartOption::CHOICE_COUNT_PAIR) {
         start_bonus_borders[0]->x = 509;
         start_bonus_borders[1]->x = 577;
     } else {
@@ -385,22 +385,22 @@ void TCampaignBrief::UpdateBonusIcons()
         sprite_bonus_images[i]->x = start_bonus_borders[i]->x + 1;
     }
 
-    for (i = 0; i < scenario->options->_vslot2(); i++) {
+    for (i = 0; i < scenario->options->GetCount(); i++) {
         start_bonus_borders[i]->show();
         if (i == gpGame->campaign.briefingChoice)
             start_bonus_borders[i]->send_message(widget::WIDGET_SET_STATUS, 4);
         else
             start_bonus_borders[i]->send_message(widget::WIDGET_CLEAR_STATUS,
                                                  4);
-        const char* name = scenario->options->_vslot3(&gpGame->campaign, i);
-        if (scenario->options->_vslot1(i)) {
+        const char* name = scenario->options->GetIconDefName(&gpGame->campaign, i);
+        if (scenario->options->IsBuildingBonus(i)) {
             bitmap_bonus_images[i]->show();
             bitmap_bonus_images[i]->SetImage(name);
             sprite_bonus_images[i]->hide();
         } else {
             sprite_bonus_images[i]->show();
             sprite_bonus_images[i]->SetSprite(name);
-            sprite_bonus_images[i]->SetIconFrame(scenario->options->_vslot4(i));
+            sprite_bonus_images[i]->SetIconFrame(scenario->options->GetIconIndex(i));
             bitmap_bonus_images[i]->hide();
         }
         std::string text;
@@ -421,7 +421,7 @@ VA(0x00458fe0, 0x2C)  // UpdateBonusIcons callee, retail-only
 std::string TCampaignBrief::ScenarioStruct::GetBonusText(
     CampaignHeaderStruct* campaign, int option)
 {
-    return options->_vslot6(campaign, option);
+    return options->GetText(campaign, option);
 }
 
 // Complete-only; see campaignbrief.h.
@@ -1240,7 +1240,7 @@ static int CampaignBriefHandler(message& msg)
         IncProgressBar(1);
 
         int gamePos = brief->campaign->scenarios[selected]
-                          ->options->GetPlayerPosition(choice);
+                          ->options->GetPlayer(choice);
         strcpy(gpGame->players[gamePos].cName, gLocalPlayerName);
         gLocalGamePos = gamePos;
         brief->campaign->StartScenario(selected, choice);
