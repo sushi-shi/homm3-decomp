@@ -369,7 +369,7 @@ ai_player	?get_value@type_luck_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100
 ai_player	?get_value@type_might_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x325a0	c3707f6021db
 ai_player	?get_value@type_morale_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x32780	5694a26eed27
 ai_player	?get_value@type_movement_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x326e0	cdd4f6a339c8
-ai_player	?get_value@type_necromancy_artifact@@UBEJPBVhero@@EE@Z	82.5645	82.5645	82.5645	0x32640	902f021c295e
+ai_player	?get_value@type_necromancy_artifact@@UBEJPBVhero@@EE@Z	85.8871	85.8871	85.8871	0x32640	d499e24974fb
 ai_player	?get_value@type_power_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x325e0	556b92ca1e21
 ai_player	?get_value@type_school_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x32890	c0c11251f4cc
 ai_player	?get_value@type_scouting_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x32510	35c02b28a9cf
@@ -2995,7 +2995,7 @@ puzzlewindow	?AI_attempt_puzzle_guess@@YI?AUtype_point@@J@Z	97.1621	97.1621	97.1
 puzzlewindow	?UpdatePuzzle@TPuzzleWindow@@QAEHH@Z	100.0000	100.0000	100.0000	0x12c6c0	34a059e6b8d9
 puzzlewindow	?WindowHandler@TPuzzleWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x12c640	86e9c14d488e
 puzzlewindow	?mark_puzzle@Bitmap816@@QAEXPAEJJ@Z	100.0000	100.0000	100.0000	0x12c8b0	6e09b505ce58
-puzzlewindow	?match_puzzle@@YI?AUtype_point@@JPAY0BB@Utype_AI_puzzle_tile@@@Z	85.9449	85.9449	85.9449	0x12cf10	c78ca95ebda2
+puzzlewindow	?match_puzzle@@YI?AUtype_point@@JPAY0BB@Utype_AI_puzzle_tile@@@Z	92.4089	92.4089	92.4089	0x12cf10	bc65f8bdb7ba
 puzzlewindow	?test@?$bitset@$0DA@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0x1067e0	-
 questlogwindow	??0TQuestLogWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x12d8c0	b23447582f0c
 questlogwindow	??1TQuestLogWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x12e1e0	7ad7c6e06db8
@@ -3634,7 +3634,7 @@ singleselectionwindow	?DrawHeroAdvancedOption@TSingleSelectionWindow@@QAEXHEH@Z	
 singleselectionwindow	?ExitDialog@TSingleSelectionWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x187bc0	30a0ba0eb038
 singleselectionwindow	?Finish@CNewPlayerUpdateProc@@UAEXXZ	87.0155	89.5855	89.5855	0x1795a0	a10ac565f1b2
 singleselectionwindow	?Finish@t_map_list_update@@UAEXXZ	100.0000	100.0000	100.0000	0x178930	ea9b5caf124a
-singleselectionwindow	?GenerateRandomMap@TSingleSelectionWindow@@QAEEPBD@Z	91.9735	91.9735	91.9735	0x1860e0	b98cb0b0fe42
+singleselectionwindow	?GenerateRandomMap@TSingleSelectionWindow@@QAEEPBD@Z	92.6386	92.6386	92.6386	0x1860e0	222fb15edd66
 singleselectionwindow	?GetCurrentScenario@SCampaign@@QAEPAUCampaignScenarioInfo@@XZ	100.0000	100.0000	100.0000	0x17c780	bc7af54de7f2
 singleselectionwindow	?GetDisplayFace@TSingleSelectionWindow@@QAEHH@Z	85.2673	85.2673	85.2673	0x18d0e0	92d84b43f953
 singleselectionwindow	?GetFileName@TSingleSelectionWindow@@QAEPBDH@Z	100.0000	100.0000	100.0000	0x183f20	07e99906abc9
@@ -3679,7 +3679,7 @@ singleselectionwindow	?OnGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNet
 # SetCurrentMap/OnSetAsHostMsg bodies landing in the TU dropped the
 # pair again with both sources byte-identical. Recovery rides with
 # DrawHeroAdvancedOption reaching 100.
-singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	99.8868	100.0000	100.0000	0x17cdc0	0e5de8f038ec
+singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0	0e5de8f038ec
 singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	9177fbb0fa83
 # 2026-08-27 hand-lowered 100.0000 -> 99.8710 (hist keeps 100.0000): the
 # documented TU-state flap (master accepted this pair down at 99.89/99.87
@@ -3694,7 +3694,7 @@ singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100
 # 2026-08-27 (round 3): the interim full build re-banked the transient
 # peak a third time; re-lowered with the round's bodies landed. Same
 # scheduler flap, same recovery path.
-singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0	66eb0a0e15c8
+singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0	66eb0a0e15c8
 singleselectionwindow	?OnMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2193	90.2193	90.2193	0x189710	3ad2be3935a3
 singleselectionwindow	?OnNameClick@TSingleSelectionWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x18b620	ef174e28edf8
 singleselectionwindow	?OnNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	97.5366	97.5366	97.5366	0x18b510	862e2a9c058b
@@ -3745,7 +3745,7 @@ singleselectionwindow	?TurnOffFilterOptions@TSingleSelectionWindow@@QAEXXZ	100.0
 singleselectionwindow	?TurnOffScenarioOptions@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1819a0	a9525efc65a0
 singleselectionwindow	?Update@TSingleSelectionWindow@@QAEHXZ	98.9811	98.9811	98.9811	0x184550	2af0b29d580d
 singleselectionwindow	?UpdateAllyEnemyFlags@TSingleSelectionWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x185300	2c20fda4ec7c
-singleselectionwindow	?UpdateFilterWidgets@TSingleSelectionWindow@@QAEXXZ	95.5156	95.5156	95.5156	0x17ef70	3d4e79067521
+singleselectionwindow	?UpdateFilterWidgets@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x17ef70	556b48626d84
 singleselectionwindow	?UpdateGameVars@TSingleSelectionWindow@@QAEXXZ	67.9099	67.9099	67.9099	0x183580	6c6326aca773
 singleselectionwindow	?UpdateMainWindow@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x17fb90	6df63d32a090
 singleselectionwindow	?UpdateNameLists@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x18c960	e1e322eccb71
