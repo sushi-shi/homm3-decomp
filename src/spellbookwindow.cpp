@@ -128,6 +128,16 @@ void TSpellbookWindow::Reset()
 #endif
 
 // E:\gamedcs\spellbookwindow.cpp:128
+// Residual (96.8014%): the RETURN OBJECT's default construction, and it is
+// the same `_Tidy` depth wall advmgr's BVResMsg/BVMessage carry.  Retail
+// builds the hidden return value as `mov [esi],cl / push 0 / mov ecx,esi /
+// call basic_string::_Tidy` and then `assign(str, 0, npos)`; this compile
+// EXPANDS `_Tidy` into three inline zero stores (`[esi+4]/[esi+8]/[esi+0xc]`)
+// and calls the same assign.  Everything else agrees - 36 = 36 blocks,
+// 21 = 21 branches and 18 of 19 calls, and the two bodies are the same size.
+// There is no source statement at the NRV construction to respell, and
+// `#pragma inline_depth(0)` is barred by the cleanliness floor (and measured
+// catastrophic on the two BV twins that carry the identical wall).
 VA(0x0059baa0, 0x341)  // retail widens DC's magic-plains byte to the Complete magic-terrain field at +0x6c; dc 0x14bcf4
 std::string TSpellbookWindow::get_spell_description(
     SpellID spell, const hero* current_hero, unsigned char rollover)

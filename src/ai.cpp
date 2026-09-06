@@ -120,6 +120,13 @@ inline const _TYPE& min_ref_xvalue(_TYPE _X, const _TYPE& _Y)
 // static_cast<double>, both 96.29 - VC6 then evaluates the CALL first and
 // converts afterwards; declaring the double at function scope instead of
 // in the loop body is byte-identical to declaring it in the loop.
+// Residual (99.8919%): one stack-home cycle and nothing else.  Retail puts
+// the three entry stores at [-0x10]/[-0xc]/[-0x14] and its `double` scratch at
+// [-0x8]; ours has them at [-0x8]/[-0x4]/[-0xc] with the double at [-0x14] -
+// the same overlay rotated, on an equal frame.  Measured and rejected
+// 2026-09-06, both byte-flat at 99.8919: declaring `double damage` third
+// (after `result`) and declaring it last (after `estimate`).  Declaration
+// order does not move a slot cycle; see playerData::save for the same result.
 VA(0x0041e190, 0x2A8)  // order-map(DC ai.obj head) + anchor-callee find_AI_targets, dc 0x23450
 int combatManager::ChooseBallistaTarget(int target_group, int attack_skill, int average_damage)
 {
@@ -2869,6 +2876,17 @@ wait:
 // VC6 then drops the `not` shape entirely, and `% 2` in place of `& 1`
 // is worse again (81.4). Filed with the compiler-generation class.
 // E:\gamedcs\ai.cpp:2272
+// Residual (98.4697%): retail widens the complemented flying bit through a
+// byte before the caller's mask - `shr eax / not al / AND EAX,0xFF / and eax,1
+// / or al,2` against our `shr eax / not al / and eax,1 / or al,2`.  The extra
+// zero-extension is what an `unsigned char`-returning attribute test emits;
+// the Dreamcast public settles our declaration instead (`?Is@army@@QBA_NI@Z`,
+// `_N` = bool), so the widening cannot come from this caller and the return
+// type is not ours to change.  Measured and rejected, all byte-flat at
+// 98.4697 unless noted: `static_cast<unsigned char>(Is(...)) ? 2 : 3`,
+// `2 | (static_cast<unsigned char>(~Is(...)) & 1)`, a named `unsigned char`
+// local holding Is(...), `2 | !Is(...)`, dropping the parentheses;
+// `2 + !Is(...)` falls to 97.5510 and `3 - (Is(...) & 1)` to 90.9694.
 VA(0x004221f0, 0xD0)  // anchor-callee, dc 0x27138
 void combatManager::DoCompAI(int whichGroup)
 {
@@ -3193,6 +3211,14 @@ long combatManager::simulate_actions(std::vector<army*>& list, long i,
 // reach 99.95 and none reaches 100 - and splitting the declarations from
 // the assignments is byte-flat, so the slot order is not source-reachable
 // through the local list.
+// EXACT since 2026-09-06.  The four `field_*` restores at the foot are what
+// assigns their save slots: written 0x40-before-0x3c this compile handed
+// saved_3c [ebp-0x14] and saved_40 [ebp-0x10] where retail has them the other
+// way round, and the tail then stored ecx/eax to the wrong members.  Restoring
+// them in ascending member order (3c, 40, 44, 48) gives retail's slot map and
+// its `mov [esi+0x40],ecx / mov [esi+0x3c],eax` tail exactly.  Reordering the
+// DECLARATIONS is not the lever - the slots follow the variables, not their
+// declaration order (measured: 99.9512 either way).
 VA(0x00422a40, 0xD8)  // anchor-callee(find_move_order) + order-map(DC ai.obj), dc 0x277f4
 void combatManager::simulate_combat(long our_group, unsigned char checking_surrender)
 {
@@ -3209,8 +3235,8 @@ void combatManager::simulate_combat(long our_group, unsigned char checking_surre
     if (checking_surrender)
         simulate_actions(order, stopped_at, 1 - our_group);
 
-    field_40 = saved_40;
     field_3c = saved_3c;
+    field_40 = saved_40;
     field_44 = saved_44;
     field_48 = saved_48;
 }

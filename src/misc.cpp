@@ -89,6 +89,18 @@ void GenerateUniqueSystemID()
 }
 
 // E:\gamedcs\misc.cpp:170
+// BOUNDED 2026-09-06: the instruction counts are EQUAL (169 = 169; the four
+// rows that look surplus on our side are the object's trailing NOP pad), the
+// memory-reference multiset is equal, and the whole residual is the internal
+// SCHEDULE of block 0.  Retail batches four `and reg,ecx` together and then
+// four store/load pairs; this compile interleaves them.  Retail's first-load
+// order is 0x1c 0x30 0x28 0x24 0x20 0x64 0x68 0x2c 0x40 0x44 0x3c 0x6c 0x18
+// 0x38 0x48 0x4c FTT 0x8f 0x54 0x60 - which agrees with the source order
+// below as far as combatAutoCreatures and then differs - but load order is
+// NOT source order for VC6 here (ours starts 0x28 0x30 0x64 while the source
+// starts 0x1c 0x30 0x28), and reordering the run to retail's load sequence
+// (combatShadeLevel/autosave/blackoutComputer ahead of the two combat
+// toggles) costs 99.1018 -> 92.9256 and is rejected.
 // All 24 CFG blocks agree and 23 are instruction-exact. Retail's B0 has
 // one redundant second `and eax, 1` on an already-masked value; repeating
 // the source assignment is eliminated by VC6, so the canonical validation

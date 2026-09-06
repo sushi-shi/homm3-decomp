@@ -2083,7 +2083,13 @@ int playerData::save(TAbstractFile* outfile)
     // puts x/flags/bits at -0xc/-0x8/-0x4, retail at -0x8/-0xc/-0x6. The int
     // buffer at -0x10 and both byte buffers are exact. Moving bits to function
     // scope and a const-reference combinations alias are byte-flat; removing
-    // the alias for a direct member call falls to 98.2109%. The flat relocation
+    // the alias for a direct member call falls to 98.2109%.
+    // DECLARATION ORDER IS NOT THE LEVER (measured 2026-09-06, both byte-flat
+    // at 99.9557): hoisting `int x;` above `unsigned long flags;` and sinking
+    // it below `char value;` each leave x at -0xc and flags at -0x8.  The
+    // slots follow the variables, not their declaration order - the same
+    // result the ai.cpp simulate_combat pair gave, where the lever turned out
+    // to be the ORDER OF THE ASSIGNMENT STATEMENTS instead. The flat relocation
     // view also names the same bitset<12>::_Xran callee through a synthetic
     // target label because its retail row is unclaimed.
     unsigned char bits[2];
@@ -7990,6 +7996,14 @@ static __forceinline void set_saved_header_availability(
 // Measured and rejected here: byte-array indexing of the one-byte mask
 // (88.70), branch-local duplicate inserts (74.89), a conditional bitset
 // argument (84.30), and explicit bitset construction in the old arm (83.15).
+// Also rejected 2026-09-06: `availability.set(player, available)` in place of
+// the `availability[player] = available` proxy store, 90.1290 both with and
+// without an explicit `!= 0` on the value.  The house rule that `set(i,v)`
+// gives a CALLED `_Xran` while `[i]=v` gives an expanded one is the right
+// direction here - retail's one target-only call IS `bitset<8>::_Xran` - but
+// the depth this callee expands at moves the four surrounding
+// `_Tidy`/`assign`/`out_of_range`/`__CxxThrowException` sites with it and
+// costs more than the call is worth.
 VA(0x004c5630, 0x7CD)  // DC Load identity + saved-header callers + helper edges
 int NewSMapHeader::Load(TAbstractFile* infile, int saveVersion)
 {
@@ -11113,6 +11127,30 @@ inline const char* GetRandomTownName(int townType)
 // they would write); retail's RANDOM_TOWN arm does NOT emit them, but a
 // front-end-visible / C2-eliminated statement would carry cb without
 // emitting.  That is the shape to look for - do not ship the carrier.
+// CORRECTION 2026-09-06: THE CFG IS NOT CLOSED, and the note above is wrong
+// to say so.  Retail has 57 blocks against this compile's 42 and 31 branches
+// against 23, with FIVE target-only calls - `_Xlen`, `_Tidy` x3 and `_Copy`,
+// all of them internals of `basic_string::_Grow`.  The fifteen missing blocks
+// are one construct: retail EXPANDS the random-name arm's
+// `assign(const char*, size_type)` and the `_Grow` inside it, and calls only
+// _Grow's own helpers, where this compile CALLS `_Grow` itself and stops a
+// level short.  That is an UNDER-inline, whose lever is caller mass - which
+// is exactly why polish lane 21's `if (0)` titration reached 98.63 at N=50:
+// the dose was buying the budget that expands _Grow, not filling fifteen
+// separate holes.  The number to look for is therefore ONE construct worth
+// ~50 statements of caller_cb, not fifty statements.
+// Measured and rejected 2026-09-06 (baseline 80.3874):
+//   * `cName = GetRandomTownName(...)` (operator=(const char*)) 80.3874,
+//     byte-flat - the library level of the RANDOM arm is not the selector;
+//   * `cName.assign(ptr, strlen(ptr))` 65.4176, and with the pointer named
+//     first 79.4547 - both still 15 blocks short;
+//   * `cName.assign(townExtra->name, 0, npos)` in the CUSTOM arm makes the
+//     block count EXACT (57 = 57, 0 missing) and scores 50.4032 - the
+//     structure it buys is the wrong one, because retail CALLS that same
+//     three-argument assign at that site (the two sides already pair there)
+//     and the frame goes from 4 B under retail's 0x18c to 4 B over.
+// So the custom arm is right as written and the whole deficit is the random
+// arm's expansion depth.
 VA(0x004caa70, 0x39C)  // DC name/order + retail map/vector/string shape
 void game::ProcessOnMapTowns()
 {
