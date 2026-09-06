@@ -910,7 +910,7 @@ void NewfullMap::NewfullMapFn_004FD950(
 // than leaving it, and starving readMapObjects' objectTypes.resize costs an
 // exact function elsewhere in the unit (1459 -> 1458) because loadMapObjects
 // shares that instantiation. Both were measured and reverted.
-static void resizeSeerHutList(NewfullMap* map, int count)
+static void resizeSeerHutList(NewfullMap* map, short count)
 {
     map->SeerHutList.resize(count);
 }
@@ -952,6 +952,24 @@ static void resizeSeerHutList(NewfullMap* map, int count)
 // reachable: move the resize into a function small enough to be starved of
 // budget and it stays a call, then let the single-call-site static inline
 // back. resizeSeerHutList above does that, 72.8624 -> 77.3789.
+//
+// 2026-09-06, polish lane 38, the DC TYPE-RECORD sweep: 92.2018 -> 93.4037
+// on ONE WORD - resizeSeerHutList's parameter is `short`, not `int`.  The
+// Dreamcast block types this body's `count` as T_INT4 and retail REFUTES
+// that (`movsx ecx, word ptr [ebp+0xa]` at fn+0x2a2 is a signed 16-bit
+// load), so the local stays `short`; what the DC record does buy is the
+// helper's own parameter.  Widened to `int` the conversion happens at the
+// CALL, so VC6 sign-extends BEFORE the TSeerHut temporary is constructed
+// and has to spill the result across the ctor (`movsx ecx,[ebp+0x12] / mov
+// [ebp+8],ecx / call ??0TSeerHut / mov edx,[ebp+8]`); narrowed to `short`
+// the conversion happens INSIDE the inlined callee, after the ctor, which
+// is retail's order exactly (`call ??0TSeerHut / movsx ecx,[ebp+0xa]`).
+// The loop index moves to retail's own [ebp+0x10] home with it.
+// Measured and rejected in the same pass: block-scoping the `count`
+// declaration + its Read + the resize call together, 93.3792.
+// The DC also names the seer-hut loop index `sprite_num` where this body
+// says `i`; the rename is byte-inert and is taken so the next lane's
+// name-matched scan sees it.
 //
 // 77.3789 -> 82.8043 (2026-08-20) ON ONE MORE PIN, and it is NOT the
 // mapObjectData half the old text expected. Retail CALLS
@@ -1069,15 +1087,15 @@ int NewfullMap::Load(TAbstractFile* infile, int size, unsigned char two_layers,
     // condition - twice, once at entry and once on the back edge - where our
     // CL expands it. The pin is lexical, so restoring the depth before the
     // body leaves the body's own decisions alone.
-    int i;
+    int sprite_num;
 #pragma inline_depth(0)
-    for (i = 0; i < SeerHutList.size(); ++i)
+    for (sprite_num = 0; sprite_num < SeerHutList.size(); ++sprite_num)
 #pragma inline_depth()
     {
-        SeerHutList[i].load(infile, saveVersion);
-        if (SeerHutList[i].quest)
+        SeerHutList[sprite_num].load(infile, saveVersion);
+        if (SeerHutList[sprite_num].quest)
             mapObjectData.push_back(static_cast<CMapObjectData*>(
-                static_cast<void*>(SeerHutList[i].quest)));
+                static_cast<void*>(SeerHutList[sprite_num].quest)));
     }
 
     if (saveVersion >= 25)
