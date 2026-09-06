@@ -2514,6 +2514,16 @@ void combatManager::TurnOffHighlighter(unsigned char drawIt)
 // and spelling the DC-attested IsActive call directly scores 84.86% because
 // it consumes an inline-budget slot and leaves a second string _Tidy call.
 // Keeping a named army-row base is the best measured natural spelling.
+// Countdown sweep 2026-09-06: retail computes ONE `&armies[currentSide][0]
+// .numTroops` (edi at fn+0x4b2, disp 0x5518 folded into the lea) and shares
+// it between this loop and the inlined get_surrender_cost walk, and homes
+// `heroes[currentSide]` at [ebp-0x20] from the enclosing guard; ours
+// recomputes both.  Two spellings measured against 94.4335: dropping the
+// named row base so both loops spell `&armies[currentSide][slot]` scores
+// 94.3892, and the countdown pointer walk
+// `army* p = armies[currentSide]; for (int slot = 20; slot--; p++)` is
+// BYTE-FLAT.  The wall is the cross-inline CSE of the row base, not the
+// loop form.
 VA(0x00477ee0, 0x3E5)  // exhaustive command order-map + call graph, dc 0x6ee60
 void combatManager::CheckGetAIMove()
 {
