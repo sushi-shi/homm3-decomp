@@ -9,6 +9,7 @@
 #include "terrain_type.h"
 
 class TAbstractFile;
+class TSpreadsheetResource;
 struct TRmgTownSlot;
 struct TRmgZone;
 struct TRmgTerrainTile;
@@ -287,24 +288,66 @@ struct TRmgZoneConnection {
     char opaque000b[0x11];
 };
 
-// The template-side zone record owns its connection list.  Generated zones
-// point at one of these records; the map-header writer proves the player/town
-// fields through +0x1c and ConnectZones proves the vector at +0xc8.
-struct TRmgTownSlot {
-    int zoneIndex;                    // +0x00
-    int kind;                         // +0x04: human (0) or computer (1)
-    char opaque0008[0x14];
-    int playerIndex;                  // +0x1c
-    char opaque0020[0xa8];
-    std::vector<TRmgZoneConnection> connections; // +0xc8
+enum ERmgTemplateZoneKind {
+    RMG_TEMPLATE_HUMAN = 0,
+    RMG_TEMPLATE_COMPUTER = 1,
+    RMG_TEMPLATE_TREASURE = 2,
+    RMG_TEMPLATE_JUNCTION = 3
 };
 
-struct TRmgZoneBounds {
-    int minimumX;
-    int minimumY;
-    int maximumX;
-    int maximumY;
+struct TRmgTreasureRange {
+    int minimum;
+    int maximum;
+    int density;
 };
+
+// ReadRmgTemplateZones allocates 0xd4 bytes and constructs connections at
+// +0xc4. ConnectZones reads its _First at +0xc8 and _Last at +0xcc;
+// those pointer offsets must not be mistaken for the vector's own offset.
+// Unresolved scalar groups retain offset-based names until their consumers
+// establish their roles. Other field names are provisional retail roles.
+struct TRmgTownSlot {
+    int zoneIndex;                    // +0x00
+    int kind;                         // +0x04: ERmgTemplateZoneKind
+    int size;                         // +0x08
+    int minimumHumanPlayers;          // +0x0c
+    int maximumHumanPlayers;          // +0x10
+    int minimumPlayers;               // +0x14
+    int maximumPlayers;               // +0x18
+    int playerIndex;                  // +0x1c
+    int parameters0020[8];
+    unsigned char flag0040;
+    unsigned char allowedTowns[9];    // +0x41
+    int parameters004c[7];
+    int parameters0068[7];
+    unsigned char flag0084;
+    unsigned char allowedTerrain[8];  // +0x85
+    int monsterStrength;              // +0x90
+    unsigned char flag0094;
+    unsigned char allowedMonsters[10]; // +0x95
+    TRmgTreasureRange treasure[3];     // +0xa0
+    std::vector<TRmgZoneConnection> connections; // +0xc4
+};
+SIZE(TRmgTownSlot, 0xd4);
+
+// The rmg.txt coordinator allocates this 0x38-byte object, assigns its
+// name and size limits, and passes it to the zone reader in edx.
+struct TRmgTemplate {
+    std::string name;                  // +0x00
+    std::vector<TRmgTownSlot*> zones;   // +0x10
+    char opaque0020[0x10];
+    int minimumSize;                  // +0x30
+    int maximumSize;                  // +0x34
+
+    ~TRmgTemplate();
+    TRmgTownSlot* FindZone(int zoneIndex);
+};
+SIZE(TRmgTemplate, 0x38);
+
+void ReadRmgTemplateZones(
+    const TSpreadsheetResource* sheet, TRmgTemplate* mapTemplate,
+    int firstRow, int endRow, int humanPlayers, int computerPlayers,
+    int mapVersion);
 
 // Retail's common direction table contains eight consecutive two-dword
 // offsets.  Its cinit at 0x530da0 proves the user-provided constructor while
@@ -316,6 +359,37 @@ struct TPoint {
 
     TPoint() {}
     TPoint(int newX, int newY) : x(newX), y(newY) {}
+
+    int Length() const;
+
+    // Provisional source surface for the paired component arithmetic in
+    // the retail clipping and midpoint-displacement bodies.
+    TPoint operator-(const TPoint& other) const
+    {
+        return TPoint(x - other.x, y - other.y);
+    }
+    TPoint operator*(int scale) const
+    {
+        return TPoint(x * scale, y * scale);
+    }
+    TPoint operator/(int divisor) const
+    {
+        return TPoint(x / divisor, y / divisor);
+    }
+    TPoint& operator+=(const TPoint& offset)
+    {
+        x += offset.x;
+        y += offset.y;
+        return *this;
+    }
+    bool operator==(const TPoint& other) const
+    {
+        return x == other.x && y == other.y;
+    }
+    bool operator!=(const TPoint& other) const
+    {
+        return !(*this == other);
+    }
 
     bool operator<(const TPoint& other) const
     {
@@ -329,8 +403,25 @@ inline TRmgMapPosition TRmgMapPosition::operator+(
     return TRmgMapPosition(x + offset.x, y + offset.y, z);
 }
 
+struct TRmgZoneBounds {
+    int minimumX;
+    int minimumY;
+    int maximumX;
+    int maximumY;
+
+    bool Contains(const TPoint& point) const
+    {
+        return point.x >= minimumX && point.x < maximumX &&
+            point.y >= minimumY && point.y < maximumY;
+    }
+};
+
+TPoint ClipRmgBoundaryPoint(
+    const TRmgZoneBounds& bounds, TPoint point, TPoint toward);
+
 enum ERmgConnectionConstants {
-    RMG_SHIPYARD_WATER_OFFSET_COUNT = 4
+    RMG_SHIPYARD_WATER_OFFSET_COUNT = 4,
+    RMG_WATER_ISLANDS = 2
 };
 
 // The function-local river-delta table has a non-trivial empty destructor:
@@ -387,7 +478,7 @@ struct TRmgGroundTileData {
     unsigned roadPassable : 1;
     unsigned borderObject : 1;
     unsigned subterraneanGate : 1;
-    unsigned unknown28 : 1;
+    unsigned zoneBoundary : 1;
     unsigned roadTarget : 1;
     unsigned riverTarget : 1;
     unsigned impassable : 1;
@@ -618,12 +709,25 @@ struct TRmgZone {
     char opaque0008[0x4];
     int terrain;                     // +0x0c
     TRmgMapPosition levelPosition;   // +0x10
-    int opaque001c;
+    int boundaryRoughness;            // +0x1c: minimum of adjacent zones
     TRmgZoneBounds bounds;           // +0x20
     TRmgMapPosition position;        // +0x30: main town
     unsigned char active;            // +0x3c
-    char opaque003d[0x3c7];
+    char opaque003d[0x3b7];
+    std::vector<TPoint> boundary;    // +0x3f4: clipped polygon vertices
     std::vector<TPoint> entrances;   // +0x404
+};
+
+// Partial Voronoi topology recovered from TraceZoneBoundary and its caller
+// at 0x53e050. The twin's owning zone identifies the region across an edge;
+// following next traverses a closed polygon. Names are provisional.
+struct TRmgBoundaryVertex {
+    char opaque0000[8];
+    TRmgZone* zone;                   // +0x08
+    TRmgBoundaryVertex* twin;        // +0x0c
+    TRmgBoundaryVertex* next;        // +0x10
+    char opaque0014[8];
+    TPoint position;                  // +0x1c
 };
 
 // The RMG progress sink is used through its third vtable slot by the zone
@@ -701,6 +805,11 @@ public:
     }
 
     void InitializeObjectGenerators();
+    void DrawIrregularZoneBoundary(
+        TPoint from, TPoint to, int zoneIndex, int level, int roughness);
+    void DrawStraightZoneBoundary(
+        TPoint from, TPoint to, int zoneIndex, int level);
+    void TraceZoneBoundary(TRmgBoundaryVertex* first, unsigned char irregular);
     unsigned char CreateGroundConnection(
         TRmgZone* source,
         TRmgZoneConnection* connection,

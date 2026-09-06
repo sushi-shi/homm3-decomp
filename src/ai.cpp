@@ -2479,7 +2479,14 @@ unsigned char combatManager::choose_melee_target(const army* current_army, unsig
 {
     long enemy_attacks[COMBAT_GRID_CELLS];
 
-    long side = estimate->side;
+    // BOUND BY `const long&`, not copied: retail re-reads `estimate->side`
+    // across the opaque mark_* calls rather than keeping a cached copy live,
+    // which is worth 89.6892 -> 91.6697.  Writing `estimate->side` out at all
+    // twelve uses and dropping the local reproduces the same reloads and
+    // scores 91.6502, so the named binding is the better spelling of the same
+    // fact.  The same change at the sibling declarations (line 1955,
+    // AICheckRetreat's caller) LOSES 13.6, so it is per-body.
+    const long& side = estimate->side;
     const army* best_enemy = 0;
     long best_value = 0;
     long best_troops = 0;
@@ -3066,6 +3073,17 @@ static void simulate_simple_attack(army* current_army, army* target,
 // prices the first site with the most budget, so the separation needs a
 // per-site pin, which this lane may not add. Tried and rejected: extern
 // rather than static linkage on the helper (byte-flat to the digit).
+// 2026-09-06, polish lane 38 (77.5103 -> 79.6584): the multi-head fan-out is
+// a do/while with a POST-DECREMENT condition, not a `for (d = 7; d >= 0;
+// d--)`. Retail's back edge is `mov ecx,edi / dec edi / test ecx,ecx / mov
+// [ebp+0x10],edi / jne` at fn+0x116 - the test is on the PRE-decrement value
+// and the direction is memory-homed in a dead parameter slot; the `>= 0`
+// form gives `dec ecx / jns` and keeps the counter in a register.
+// Residual (79.6584%): one per-site inliner decision. Retail CALLS
+// `compute_fire_shield_damage` at the multi-head site (call #6) and EXPANDS
+// it at the two single-target sites, where we expand all three - the
+// `budget / sites-remaining` split inside the inlined `simulate_simple_attack`.
+// The frame is also 0xc over retail's 0x8 as a consequence.
 VA(0x004224e0, 0x2B4)  // anchor-caller(the 3-argument overload) + anchor-callee(compute_fire_shield_damage), dc 0x2746c
 void combatManager::simulate_melee_attack(army* current_army, long hex,
                                           army* target, long enemy_hex,
@@ -3077,7 +3095,8 @@ void combatManager::simulate_melee_attack(army* current_army, long hex,
         long directions = current_army->get_multi_head_directions(hex, target,
                                                                   enemy_hex);
         long hit = 0;
-        for (long direction = 7; direction >= 0; direction--) {
+        long direction = 7;
+        do {
             if (!(directions & (1 << direction)))
                 continue;
             long adjacent = current_army->get_adjacent_hex(hex, direction);
@@ -3093,7 +3112,7 @@ void combatManager::simulate_melee_attack(army* current_army, long hex,
                 continue;
             hit |= bit;
             simulate_simple_attack(current_army, victim, 0, 0, 0);
-        }
+        } while (direction--);
         return;
     }
 

@@ -871,6 +871,37 @@ int NewfullMap::Read(TAbstractFile* infile, int size, unsigned char two_layers,
 // inline_depth(0) reaches 84.27%, so the scoped no-inline attribute preserves
 // the established caller wall while leaving this function independently
 // matchable.
+//
+// [polish-45] The first `!!` names the remaining shape precisely: retail
+// SINKS the masked count.  `mov esi,[ebp-0xc] / and esi,0xffff` keeps the
+// value in ESI across the whole inlined resize and only writes it back to
+// count's own address-taken slot just before the loop; this compile does the
+// read-modify-write `mov ecx,[ebp-0x4] / and ecx,0xffff / mov [ebp-0x4],ecx`
+// at the statement and reloads for every later use.  The stack ordering is
+// the mirror image too - retail assigns -0x4 to the quest pointer, -0x8 to
+// `i` and -0xc to `count`, this compile assigns -0x4/-0x8/-0xc to
+// count/quest/i - so the two compiles walked the same symbols in opposite
+// handle order (docs/vc6/regalloc.md 0).  Frames are the same size (0x1c),
+// so no local is missing; the earlier "second promoted count" probe (88.6135)
+// is the right family but the wrong direction.
+//
+// [polish-47] The slot ledger is now read off the bytes, and BOTH sides home
+// the same three values - the difference is only WHICH slot each got.
+// Retail: quest at [ebp-0x4] (stored in the branch shadow of
+// `mov eax,[ebx+eax] / test eax,eax / je`), i at -0x8, count at -0xc.
+// This compile: count at -0x4, quest at -0x8, i at -0xc. Two source
+// orderings measured against that, do not retry:
+//   * declaring `int i; int count;` as a top-of-function block (retail's
+//     order for those two) - BYTE-FLAT at 90.4930. It does move i from
+//     -0x4's neighbour down to -0xc, so declaration order DOES drive the
+//     numbering, but count stays at -0x4 and nothing else follows.
+//   * the full DC-style block `type_quest* quest; int i; int count;` with
+//     the loop body reading `quest = QuestGuardList[i].quest` once -
+//     90.4930 -> 82.2581, and the branch polarity flips. Naming the quest
+//     pointer lengthens its live range across the load() call and costs far
+//     more than the slot it buys.
+// So the residual is the handle NUMBERING with the same local set, not a
+// missing or extra local: docs/vc6/handle-order.md's C1-capped class.
 #pragma auto_inline(off)
 VA(0x004fd950, 0x268)  // caller Load 0xfdbc0; TQuestGuard ctor/load + vector resize/push_back
 void NewfullMap::NewfullMapFn_004FD950(
@@ -910,7 +941,7 @@ void NewfullMap::NewfullMapFn_004FD950(
 // than leaving it, and starving readMapObjects' objectTypes.resize costs an
 // exact function elsewhere in the unit (1459 -> 1458) because loadMapObjects
 // shares that instantiation. Both were measured and reverted.
-static void resizeSeerHutList(NewfullMap* map, int count)
+static void resizeSeerHutList(NewfullMap* map, short count)
 {
     map->SeerHutList.resize(count);
 }
@@ -952,6 +983,24 @@ static void resizeSeerHutList(NewfullMap* map, int count)
 // reachable: move the resize into a function small enough to be starved of
 // budget and it stays a call, then let the single-call-site static inline
 // back. resizeSeerHutList above does that, 72.8624 -> 77.3789.
+//
+// 2026-09-06, polish lane 38, the DC TYPE-RECORD sweep: 92.2018 -> 93.4037
+// on ONE WORD - resizeSeerHutList's parameter is `short`, not `int`.  The
+// Dreamcast block types this body's `count` as T_INT4 and retail REFUTES
+// that (`movsx ecx, word ptr [ebp+0xa]` at fn+0x2a2 is a signed 16-bit
+// load), so the local stays `short`; what the DC record does buy is the
+// helper's own parameter.  Widened to `int` the conversion happens at the
+// CALL, so VC6 sign-extends BEFORE the TSeerHut temporary is constructed
+// and has to spill the result across the ctor (`movsx ecx,[ebp+0x12] / mov
+// [ebp+8],ecx / call ??0TSeerHut / mov edx,[ebp+8]`); narrowed to `short`
+// the conversion happens INSIDE the inlined callee, after the ctor, which
+// is retail's order exactly (`call ??0TSeerHut / movsx ecx,[ebp+0xa]`).
+// The loop index moves to retail's own [ebp+0x10] home with it.
+// Measured and rejected in the same pass: block-scoping the `count`
+// declaration + its Read + the resize call together, 93.3792.
+// The DC also names the seer-hut loop index `sprite_num` where this body
+// says `i`; the rename is byte-inert and is taken so the next lane's
+// name-matched scan sees it.
 //
 // 77.3789 -> 82.8043 (2026-08-20) ON ONE MORE PIN, and it is NOT the
 // mapObjectData half the old text expected. Retail CALLS
@@ -1069,15 +1118,15 @@ int NewfullMap::Load(TAbstractFile* infile, int size, unsigned char two_layers,
     // condition - twice, once at entry and once on the back edge - where our
     // CL expands it. The pin is lexical, so restoring the depth before the
     // body leaves the body's own decisions alone.
-    int i;
+    int sprite_num;
 #pragma inline_depth(0)
-    for (i = 0; i < SeerHutList.size(); ++i)
+    for (sprite_num = 0; sprite_num < SeerHutList.size(); ++sprite_num)
 #pragma inline_depth()
     {
-        SeerHutList[i].load(infile, saveVersion);
-        if (SeerHutList[i].quest)
+        SeerHutList[sprite_num].load(infile, saveVersion);
+        if (SeerHutList[sprite_num].quest)
             mapObjectData.push_back(static_cast<CMapObjectData*>(
-                static_cast<void*>(SeerHutList[i].quest)));
+                static_cast<void*>(SeerHutList[sprite_num].quest)));
     }
 
     if (saveVersion >= 25)
@@ -2178,7 +2227,11 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
         return -1;
     count = value;
     if (count == 0) {
-        thisBox->Spells.clear();
+        // DEPTH LADDER (docs/vc6/inliner.md 6b): this third list's empty arm
+        // is the LONGHAND range erase; the two above it stay `clear()`.
+        // 93.0057 -> 95.3605, and a greedy second round over the other two
+        // finds nothing - the rung is per-site here as everywhere.
+        thisBox->Spells.erase(thisBox->Spells.begin(), thisBox->Spells.end());
     } else {
         thisBox->Spells.resize(count);
         for (i = 0; i < count; ++i) {
@@ -5386,6 +5439,24 @@ void NewfullMap::GenerateHeightMap(const CObject* object,
 #define HOMM3_MAPCELL_RELEASE_VERIFY(expression) \
     static_cast<void>(expression)
 
+// [polish-45] The missing frame dword is now located: retail's 0x7c frame
+// carries `mov dword ptr [ebp-0x14], edi` in the GenerateHeightMap argument
+// build - it HOMES `newObject` there and reloads it - where this compile's
+// 0x78 frame keeps that pointer only in EDI.  Every slot from -0x10 down is
+// then shifted by the same 4 bytes.  So the "missing mass" the note above
+// infers is one more live value at that point, not one more statement: any
+// candidate spelling has to make `newObject` (or something with its live
+// range) need a home across GenerateHeightMap.
+//
+// [polish-47] And it is NOT a missing statement. dc 0xf36b0's line table
+// runs 4053 (open) / 4054 (the object-list reference) / 4055 (end()) /
+// 4057 (`&objects[objCell.objectIndex]`) / 4058 (GenerateHeightMap) /
+// 4063 (the `while`) with NO breakpoint between 4058 and 4063 and none
+// between 4055 and 4057 either, so the prologue carries exactly the four
+// statements this candidate already has. Whatever gives retail its extra
+// live value at the call is an allocation artifact of the same source, not
+// a fifth element - which puts this row with NewfullMapFn_004FD950's
+// handle-numbering residual, not with a reconstruction gap.
 VA(0x00505230, 0x3D9)  // order-map: calls GenerateHeightMap 0x505060 + vector<TObjectCell>::insert machinery 0x50a400; sole caller PlaceObject 0x505b20 (DC-isomorphic), dc 0xf36b0
 void NewfullMap::StampObject(NewmapCell* thisCell,
                              NewmapCell::TObjectCell* objectCell)
@@ -5853,32 +5924,25 @@ void NewfullMap::NewfullMapFn_00505F20(CObject* object, int objectType,
 // NewfullMapFn_00505DA0 calls once per row of objects.txt, whose address
 // advmgr_objects.h already records against this class.
 //
-// Dreamcast proves the class fields and _getBitPos(x, y) = 47 - y * 8 - x;
-// its two named constructors are default/copy overloads. This conversion is
-// Complete-only. Retail's first two test results pass through byte-sized
-// temporary homes before set(), as in Dinkumware's bit-reference assignment.
-// Keep the proxy operation on both sides and calculate each operand's index
-// through the class helper; retail retains distinct source/destination values.
+// The four 48-cell masks are transposed cell by cell through the class's own
+// _getBitPos(x, y) = 47 - y * 8 - x.
 //
-// Residual (41.95%): 21 candidate blocks versus 14 retail. The last 48-cell
-// set and the terrain set still expand here, while retail retains all five;
-// retail also expands two source tests that the current caller keeps out of
-// line. Negative controls: direct set/test with a shared index gives 39.16%;
-// recalculating those direct-call indices gives 0%; proxy assignment with one
-// shared index gives 36.50%. The earlier read-only operator[] substitution
-// gave 12.95%. Do not flatten the recovered reference assignments to chase
-// these inliner choices. Plain-char dimensions and implicit narrowing are
-// byte-flat but retain the types recorded in Dreamcast's field list 0x309c.
-// The ordinary integer dimension getters restore retail's dword loads before
-// its byte stores, raising 40.92% to 41.95%; direct field access narrows the
-// loads themselves. A const source view reproduces the two-called/two-expanded
-// test split (40.72%) but still expands the final stores. Coordinate-reading
-// getter hypotheses also leave those stores expanded and fail to separate the
-// two indices, so they remain out. A destination-only local (28.72%) and an
-// explicit descending destination counter (40.87%) do not close the caller;
-// the latter does reproduce separate index registers. Reassociating the source
-// index as 47-(y*8+x) is byte-flat. These are remaining source-state questions,
-// not permission for an inline pin or a synthetic release assertion.
+// Residual (62.10%): the bitset members, and only them. Retail CALLS
+// bitset<48>::test at two of the four reads and expands the range check at
+// the other two; our /Ob2 budget expands more of them, which is the block
+// surplus and the surplus out_of_range throw path.
+// The DEPTH LADDER (docs/vc6/inliner.md 6b) moved this row 39.16 -> 62.10:
+// the five WRITES spelled `bits[i] = v` rather than `bits.set(i, v)`.
+// Titrated, all measured at the same delink generation:
+//   writes .set  + reads .test  (the old spelling)      39.1636
+//   writes [i]   + reads .test  (SHIPPED)               62.0970
+//   writes [i]   + reads [i]                            36.4970
+//   inner-4 [i]  + mask_34 .set                         43.3576
+//   inner-4 .set + mask_34 [i]                          34.6000
+// so the five writes only pay TOGETHER, and flipping the reads costs 25.6.
+// The remaining hole is retail's two `test` CALLS; there is no spelling
+// shallower than `.test(i)` for a bit read, so that half needs caller mass,
+// not a respelling (the same floor OnBeginGame hit).
 //
 // The image name, sizes, four masks, recommended-terrain mask, type, subtype
 // and underlay flag cross here. hasTrigger, triggerCell, slotCategory and
@@ -5890,16 +5954,13 @@ CObjectType::CObjectType(TObjectType* source)
     width = source->GetWidth();
     height = source->GetHeight();
 
-    for (unsigned y = 0; y < 6; y++) {
+    for (int y = 0; y < 6; y++) {
         for (unsigned x = 0; x < 8; x++) {
-            drawCells[_getBitPos(x, y)] =
-                source->imageInfo.drawMask[_getBitPos(x, y)];
-            passableCells[_getBitPos(x, y)] =
-                source->passableMask[_getBitPos(x, y)];
-            shadowCells[_getBitPos(x, y)] =
-                source->imageInfo.shadowMask[_getBitPos(x, y)];
-            triggerCells[_getBitPos(x, y)] =
-                source->triggerMask[_getBitPos(x, y)];
+            unsigned pos = _getBitPos(x, y);
+            drawCells[pos] = source->imageInfo.drawMask.test(pos);
+            passableCells[pos] = source->passableMask.test(pos);
+            shadowCells[pos] = source->imageInfo.shadowMask.test(pos);
+            triggerCells[pos] = source->triggerMask.test(pos);
         }
     }
 

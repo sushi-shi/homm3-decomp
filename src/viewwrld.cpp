@@ -1364,7 +1364,17 @@ TViewWorldWindow::TViewWorldWindow()
 #pragma inline_depth()
     Widgets.push_back(SurfaceButton);
 
-    Widgets.push_back(new bitmapBorder(
+    // DEPTH LADDER (docs/vc6/inliner.md 6b): this ONE append is spelled
+    // `insert(end(), x)`; the other forty-four in this constructor stay
+    // `push_back`.  Retail CALLS `vector<widget*>::insert` here and expands
+    // it everywhere else, and the shallower spelling at this site alone is
+    // worth 96.4425 -> 97.0623.  Titrated per site, all 45 measured singly:
+    // every other site is a LOSS (the plateau is 96.2923, the worst 90.9541
+    // at the surface-button append), the next best is the `ok` append at
+    // 96.5179, and #43 PLUS `ok` together fall back to 96.4869 - so the rung
+    // is worth exactly one site here.
+    std::vector<widget*>& widgets = Widgets;
+    widgets.insert(widgets.end(), new bitmapBorder(
         725, 537, 68, 34, -1, "box66x32.pcx", 0x800));
     button* ok = new button(
         726, 538, 66, 32, 0x7802, "iOkay32.def", 0, 1, 0, 1, 2);

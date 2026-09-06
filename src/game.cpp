@@ -625,7 +625,7 @@ unsigned char InitImmMouse(void* hInst, void* hwnd)
         DATA(0x00696d78)
         static TImmMouseRuntime immMouse(hInst, hwnd);
         return 1;
-    } catch (...) {
+    } catch (TImmMouseRuntime::t_initialize_failure) {
         return 0;
     }
 }
@@ -3215,7 +3215,7 @@ int SavedGameHeader::Load(TAbstractFile* infile)
             infile = new TGzFile(openedName.c_str(), "rb");
             ownedInput = std::auto_ptr<TAbstractFile>(infile);
         }
-        catch (...) {
+        catch (TGzFile::TOpenFailure) {
             return -1;
         }
         _chdir("..");
@@ -4817,7 +4817,7 @@ int game::LoadGame(const char* filename, int bIsOrigData, int bIsQuickLoad)
 
         Load(&infile);
         return 1;
-    } catch (...) {
+    } catch (TGzFile::TOpenFailure) {
         return 0;
     }
 }
@@ -5115,7 +5115,7 @@ void game::ValidateVictoryLossConditions(unsigned char check_map_locations)
         int numHumanTeams = 0;
         int owner;
         int townTeam;
-        for (int teamCheck = 0; teamCheck < 8; ++teamCheck) {
+        for (unsigned int teamCheck = 0; teamCheck < 8; ++teamCheck) {
             if (validate_is_human_team(this, teamCheck))
                 ++numHumanTeams;
         }
@@ -5405,7 +5405,7 @@ unsigned char game::NewMap(const char* mapPath, const char* mapName,
             gText, DATA_COMPGEN(0x00677d6c, newMapGzReadMode, "rb"));
         NewMap(&mapFile, playerHeroFaces, NULL, gameVersion);
         return 1;
-    } catch (...) {
+    } catch (TGzFile::TOpenFailure) {
         return 0;
     }
 }
@@ -5887,6 +5887,36 @@ static __forceinline void randomize_witch_hut(NewmapCell* cell)
 // a statement pin: retail CALLS ExtraInfoUnion::SetWagon(EGameResource,
 // short) at randomize_wagon's first store and ExtraInfoUnion::set_pyramid
 // at randomize_pyramid's, and this CL expands both.
+// 2026-09-06, polish lane 48. READ predict-inline's census HERE BEFORE
+// trusting it: most of its reported divergence is COMDAT NAME FOLDING, not
+// an inline decision. VC6 emits one body for every POD-pointer vector and
+// one for every bitset whose _Nw agrees, so `~type_creature_bank` x5 +
+// `~vector<long>` x1 IS retail's `~vector<widget*>` x6; `bitset<5>::
+// operator[]` x3 + `bitset<28>::operator[]` x3 IS retail's `bitset<145>::
+// operator[]` x6; `vector<type_point>::insert` x4 + `vector<long>::insert`
+// x1 IS retail's `vector<widget*>::insert` x5; and the two one-argument
+// inserts pair off likewise. All four net to zero.
+// The REAL frontier deltas, after that reduction, are four: (1) four bitset
+// constructor sites where retail expands the ctor and calls `_Tidy`
+// (bitset<5> x3, bitset<28> x1) while the depth-0 pins here emit a ctor
+// call instead - the same midpoint LoadMap's note describes, and the same
+// candidate fix; (2) two `reference::operator bool` sites where retail
+// expands the conversion and calls `test`; (3) SetWagon(EGameResource,
+// short) and set_pyramid, both already recorded above; (4) the RELIC arm.
+// GetRandomArtifactId's 17-vs-18 call census IS that RELIC arm and NOT a
+// missing statement - verified by disassembly: retail's jump table at
+// +0x14a dispatches BLACK_BOX's five arms, keeps ANY (`push 0xe`, +0x155)
+// and RELIC (`push 0x10`, +0x165) as its own hot pair and cross-jumps
+// TREASURE/MINOR/MAJOR away, then runs the seven-call BLACK_MARKET record
+// (+0x175..+0x1cf) into vector<TBlackMarket>::insert - nine calls there
+// against our eight, with the other nine sites in each object agreeing
+// exactly. Do not go looking for an eighteenth source call site.
+// Pin census, each removal measured alone against 87.0102: the five
+// creature-bank block-scope pins are NOT interchangeable - four cost
+// -0.6891 apiece but the FIRST (the CREATURE_BANK case) is BYTE-FLAT
+// across the whole TU and has been removed. The rest of this body's
+// roster costs -100 (x2, two helper rows stop existing as separate
+// symbols), -10.85, -5.13, -1.01 and -0.88.
 VA(0x004c0cc0, 0x1668)  // NewMap caller + dc order, dc 0xac910
 void game::RandomizeEvents()
 {
@@ -5992,9 +6022,7 @@ void game::RandomizeEvents()
                             &bank,
                             creature_bank_type_from_int(tempCell->objectIndex));
                         creatureBanks.push_back(bank);
-#pragma inline_depth(0)
                     }
-#pragma inline_depth()
                     break;
 
                 case CREATURE_GENERATOR_1:
@@ -6520,6 +6548,54 @@ static inline void read_map_player_name(char* destination,
 // line, which is a depth-2 A9 decision. Measured and rejected: a statement
 // pin on that read (-0.80, it takes the whole expansion out of line);
 // spelling it `serializedSkillCopy.test(skill)` (70.70 -> 20.20).
+// 2026-09-06, polish lane 48. Three of this body's fifteen inline-depth pins
+// were doing no work: the pins around the two bitset<144> constructions and
+// the bitset<129> one are the sites where retail ALSO calls the constructor
+// (retail's 0x4c2550/0x4c2563 keep the unclaimed ctor row), so /Ob2 declines
+// them on cost with or without the pin. Removing all three is 75.47679 ->
+// 75.48383 and byte-flat on every other row in the TU; each one alone gives
+// the same 75.48383, so they do not interact. The remaining twelve pins are
+// load-bearing: removing them individually measures 65.90 (`++it`), 68.99,
+// 72.69 (the merge-loop read), 72.76, 73.95, 74.16, 74.39, 74.48, 75.31,
+// 75.45, 75.45 and 25.95 (the spell-copy loop).
+// The artifact merge loop's SHAPE is recovered but not bankable. Retail
+// walks artifactDisabled with a pointer and an `!=` end compare, which VC6
+// only emits with a zero-trip guard (`cmp esi,eax / je` at retail+0x197,
+// end recomputed at the back edge from the spilled `this`), where an index
+// loop keeps `cmp esi,0x90 / jl` and no guard - our own std::copy at +0x4ae
+// is the control for that idiom. Writing it as a pointer loop reproduces
+// retail's block skeleton and takes the branch census from 62-vs-63 to an
+// exact 63-vs-63, but objdiff falls 75.48 -> 74.14 (74.18 with the store
+// left as `artifactDisabled[artifact]`, which is retail's separate second
+// induction pointer). The dip is register collateral: retail spends all
+// three callee-saved registers on the loop and homes `this`, where this CL
+// keeps `this` in EBX. Re-take the pointer spelling if the frontier below
+// ever frees that register.
+// The frontier itself is the wall, and it is reciprocal: predict-inline
+// reports 7 under-inlines against 8 over-inlines, and every one is the same
+// decision - retail expands the OUTER operation and calls the inner helper
+// (~basic_string -> _Tidy, bitset ctor -> _Tidy, _Tree::operator++ -> _Inc,
+// reference::operator bool -> test, resize's second size()), where this CL
+// calls the outer. Depth 0 suppresses both layers, so no pin reaches it.
+// THE LEAD THIS LANE COULD NOT SHIP, measured and reproducible. The
+// `std::bitset<70> serializedSpells(0)` pin below is spelled depth 0, but
+// retail's reloc stream at that site is `?_Tidy@?$bitset@$0EG@@std@@AAEXK@Z`
+// where ours is `??0?$bitset@$0EG@@std@@QAE@K@Z` - retail EXPANDS the
+// constructor and CALLS _Tidy, which is depth 1, not depth 0. Respelling
+// that one pin `#pragma inline_depth(1)` measures 75.48383 -> 78.28552 with
+// ZERO collateral anywhere in the TU, and the corroboration is structural,
+// not a score wobble: the block skeleton goes 106-vs-105 with one missing
+// block to an exact 105-vs-105 with none, and exact blocks go 11 -> 47.
+// Doses: bitset<70> alone 78.28552, bitset<28> alone (`serializedSkills`)
+// 76.50, BOTH together 77.75 - they do not add, only the first is wanted.
+// Removing either pin outright is 73.95 / 74.16, i.e. WORSE than depth 0,
+// which is the point: retail sits at the one-level midpoint that neither
+// depth 0 nor no-pin reaches. NOT APPLIED HERE because CLAUDE.md says
+// existing inline-depth pins may only be REMOVED and 0 -> 1 is a retune.
+// The identical device already exists three times in this TU for the same
+// construct (NewSMapHeader::Read's depth-1 pins at `mapName.erase()`, its
+// bitset<MAP_HEADER_LEGACY_HERO_COUNT> and its bitset<8>), so what this
+// needs is a policy ruling, not more evidence.
 VA(0x004c2450, 0x88E)  // sole NewMap caller + full stream/callee sequence
 bool game::LoadMap(TAbstractFile* mapFile)
 {
@@ -6547,13 +6623,9 @@ bool game::LoadMap(TAbstractFile* mapFile)
     }
 
     if (mapHeader.version != MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-#pragma inline_depth(0)
         std::bitset<144> disabledArtifacts(0);
-#pragma inline_depth()
         if (mapHeader.version != MAP_FORMAT_ARMAGEDDONS_BLADE) {
-#pragma inline_depth(0)
             std::bitset<144> serializedArtifacts(0);
-#pragma inline_depth()
             unsigned char artifactBits[18];
             mapFile->Read(artifactBits, sizeof(artifactBits));
             for (unsigned int artifactBit = 0;
@@ -6575,9 +6647,7 @@ bool game::LoadMap(TAbstractFile* mapFile)
 #pragma inline_depth()
             }
 
-#pragma inline_depth(0)
             std::bitset<129> serializedArtifacts(0);
-#pragma inline_depth()
             unsigned char artifactBits[17];
             mapFile->Read(artifactBits, sizeof(artifactBits));
             for (unsigned int legacyBit = 0; legacyBit < 129; ++legacyBit) {
@@ -6623,7 +6693,7 @@ bool game::LoadMap(TAbstractFile* mapFile)
         }
 
         const std::bitset<70> serializedSpellCopy = serializedSpells;
-        for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+        for (unsigned int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
             if (serializedSpellCopy[spell]) {
                 for (artifact = 0; artifact < 144; ++artifact) {
                     if (akArtifactTraits[artifact].givesSpells) {
@@ -6672,8 +6742,12 @@ bool game::LoadMap(TAbstractFile* mapFile)
         < sizeof(rumourCount)) {
         return false;
     }
-    rumours.resize(rumourCount);
-    for (TRumour* rumour = rumours.begin(); rumour != rumours.end();
+    // The rumour list NAMED AS A REFERENCE: retail reads its _First/_Last
+    // through the vector's own address rather than folding the member offset
+    // off gpGame.  75.9944 -> 76.5443.
+    std::vector<TRumour>& r_rumours = rumours;
+    r_rumours.resize(rumourCount);
+    for (TRumour* rumour = r_rumours.begin(); rumour != r_rumours.end();
          ++rumour) {
         std::string throwAway;
         if (readMapString(mapFile, &throwAway) < 0
@@ -6712,7 +6786,12 @@ bool game::LoadMap(TAbstractFile* mapFile)
     }
 
     for (int pool = 0; pool < 8; ++pool) {
-        lithPools[pool].erase(lithPools[pool].begin(), lithPools[pool].end());
+            // DEPTH LADDER: this ONE pool reset is `clear()`; the other
+            // five stay the longhand range erase polish 29 banked.  Retail
+            // CALLS the range-erase COMDAT at all six and clear()'s own
+            // wrapper takes the /Ob2 site here, so 75.4768 -> 75.9944; a
+            // greedy second round over the other five finds nothing.
+            lithPools[pool].clear();
         lithExitPools[pool].erase(lithExitPools[pool].begin(), lithExitPools[pool].end());
     }
     whirlpools.erase(whirlpools.begin(), whirlpools.end());
@@ -8247,7 +8326,7 @@ int NewSMapHeader::Get(const char* path, const char* filename,
         int result = Read(&infile, campaignMap);
         if (result < 0)
             return -1;
-    } catch (...) {
+    } catch (TGzFile::TOpenFailure) {
         return -1;
     }
     return 0;
@@ -9265,12 +9344,7 @@ void game::NextPlayer()
 
         if (gpCurrentPlayer->IsLocalHuman()
             || (gNetworkActive69954c && gpCurrentPlayer->IsHuman())) {
-            gCompleteDrawEnabled = 1;
-            gpAdvManager->UpdateRadar(1, 1, 0, 0, 0);
-            gpAdvManager->advWindow->GetWidget(8)->enable(1);
-            gpAdvManager->advWindow->GetWidget(7)->enable(1);
-            gpAdvManager->advWindow->GetWidget(6)->enable(1);
-            gpAdvManager->advWindow->GetWidget(12)->enable(1);
+            CancelComputerScreen();
         }
     }
 
@@ -10663,6 +10737,9 @@ void game::ProcessRandomObjects()
 VA(0x004ca040, 0x1F1)  // linkorder, dc 0xb5cdc
 void game::CreateTownHeroes(int* startingHeroIds)
 {
+    // MAX 99.6203 is NOT reachable as written: it was measured with this
+    // loop spelled `i != 8`, an unnamed domain compare that fails the
+    // cleanliness floor (docs/vc6/behavior-catalog.md D24).
     for (int i = 0; i < 8; i++) {
         if (!mapHeader.playerSlotAttributes[i].GenerateHero)
             continue;
@@ -10847,6 +10924,13 @@ void game::SetupAdjacentMons()
 }
 
 // E:\gamedcs\game.cpp:9636
+// NextPlayer's local-human arm calls this. Retail expands it there (its
+// UpdateRadar at +0x810 and the four GetWidget/enable pairs behind it) and
+// the restoration from the longhand copy is byte-flat, 81.3343 - NextPlayer
+// is 142 statements, so its /Ob2 budget is already pinned at the 35000
+// ceiling and the caller_cb this frees changes no decision. See
+// docs/vc6/inliner.md, "a callee defined LATER in the TU still inlines":
+// the definition is 1700 lines below the call site and VC6 still takes it.
 VA(0x004ca530, 0x80)  // dc 0xb62f8 + UpdateRadar/widget call graph
 void game::CancelComputerScreen()
 {
@@ -11339,6 +11423,48 @@ void game::ProcessOnMapHeroes()
 // including the 0x351-byte cFileName buffer at -0x3b8 against -0x3b0). So
 // the surplus is TWO separate 4-byte steps in the msg-temporary band, not
 // one 8-byte local - do not go looking for a single surplus dword.
+// 2026-09-06, polish lane 38, three findings and one fix, all measured:
+//  * FIXED: this body called `calc_crc_long` through remote.h's stale DC-only
+//    declaration `int (unsigned char*, int)`, which does not decorate to the
+//    symbol remote.cpp:95 defines (`unsigned long (const unsigned char*,
+//    unsigned)`), so the reloc pointed at a name nothing owns. The header now
+//    carries the real signature; byte-flat on every row (objdiff runs at
+//    function_reloc_diffs=none) but the `--calls` divergence row is gone.
+//  * The DC TYPE RECORD types `dataTimeOutStart` T_INT4 where this body says
+//    `unsigned long`: BYTE-FLAT, and `unsigned long` is kept because it is
+//    what `GameTime::Get`/`ElapsedSince` take.
+//  * The DC block names three locals this body has no counterpart for -
+//    `attempts` (sp+0xd8) BESIDE `retryCount`, `queueSize` (sp+0xcc) BESIDE
+//    `numMsgs`, and `pNetMsg` (sp+0x3c) BESIDE `pConfirmMsg` - so they are
+//    extra constructs, not renames. Their frame band (sp+0xcc..0xd8, next to
+//    `pMsg` at 0xd0) is the confirm loop's, and `numMsgs` here is incremented
+//    and never read, which is the shape of a DC pair where only one survived.
+//    Not reconstructed: nothing in the retail stream names a second queue
+//    counter, and the 122-vs-122 block / 63-vs-63 branch CFG says the missing
+//    mass is not a statement. The remaining `--calls` delta is a LAYOUT one:
+//    retail places the `Stop(); if (inGame) RestoreScreen();` block at
+//    fn+0x94f and jumps to the epilogue at fn+0x1105, where our C2 sinks the
+//    same source statements to fn+0xc16.
+// 2026-09-06, polish lane 41 - the 8-byte frame surplus is a SPILL cascade,
+// not a missing or surplus local, and the slot census now names both dwords:
+//  * `iFileSize` has its own home at [ebp-0x6c], BELOW the
+//    CGameTransmitInitMsg temporary, where retail packs it into [ebp-0x38]
+//    ABOVE that temporary (retail `mov [ebp-0x38],esi` at fn+0x2d1 against
+//    our `mov [ebp-0x6c],esi` at fn+0x2dd).  Moving `int iFileSize;` up to
+//    procedure scope beside pGameTransmitMainMsg, with the FileSize() call
+//    left as a plain assignment where it is, is BYTE-FLAT - VC6 colours this
+//    slot by live range, not by declaration position, so the DC frame order
+//    is not reachable from the declaration list.
+//  * The other dword is the CDiffMaker arm: retail keeps ONE of the two
+//    File::GetLength results in EBX across the new/Read/CDiffMaker sequence
+//    (`mov ebx,eax / push ebx`, later `push ebx / mov ebx,[ebp-..] / push
+//    ebx`), where we spill BOTH (`push eax / mov [ebp-..],eax`, later two
+//    reloads).  Retail also keeps `isDiff` in BL (`xor bl,bl` in the entry
+//    block) where we home it as the byte [ebp-0x15]; that byte and the EBX
+//    spill are the same pressure fact.
+// So the frame is a CONSEQUENCE: retail has one more callee-saved register
+// free through the diff arm than this build does.  Do not hunt for a surplus
+// local or reorder declarations - measure the diff arm's register pressure.
 VA(0x004cafd0, 0xD14)  // retail body + typed catch + continuation/tables
 int game::TransmitSaveGame(int iToWho, int thisPlayerDead,
                            unsigned char inGame, unsigned char makeOrig)

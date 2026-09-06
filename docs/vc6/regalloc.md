@@ -573,6 +573,38 @@ still expands one level too far. The old inline_depth(1) pin around
 `AI_consolidate_army` is now byte-flat and has been removed: standalone
 `do_swap` remains exact and its nested copy retains the retail call.
 
+### 6i. A named endpoint pointer changes address formation
+
+`type_random_map_generator::DrawStraightZoneBoundary` (0x53c220) reaches
+all 362 raw retail bytes with a named `TRmgMapItem* lastItem` followed by
+`lastItem->zoneState.zone = zoneIndex`. Flattening those statements into
+`map.GetMapItem(...)->zoneState.zone = zoneIndex` leaves the loop and step
+setup intact, but changes the endpoint's address calculation: the candidate
+loads the map base later and folds the field displacement into the pointer;
+retail forms the item pointer first and accesses its `+0x20` field.
+
+This is a local lifetime/address-formation control, with no extra operation,
+helper declaration, or inline directive. Check an evidenced intermediate
+pointer before attributing a final SIB/address mismatch to global compiler
+state. The negative control and step-initialization controls are recorded
+beside the function.
+
+### 6j. A temporary point's scope controls arithmetic register roles
+
+`DrawIrregularZoneBoundary` (0x53bff0) matched 98.0198% with a named
+`delta = to - from` that lived through displacement calculation. Keeping
+the subtraction and perpendicular construction together in a nested block,
+with `perpendicular` declared outside it, ended delta's lifetime before
+`Length()` and restored retail's register roles (99.90099%). Exchanging
+the commutative midpoint addends to `from.x + to.x` and `from.y + to.y`
+then settled the remaining SIB encodings: all 555 raw bytes match.
+
+The scalar negative control, assigning perpendicular's two components
+independently, collapsed a retained intermediate and scored 90.3416%.
+This is a measured lifetime hypothesis; without a DC counterpart it is
+not a recovered original lexical scope. A byte match also does not settle
+whether the midpoint calculation was itself a helper expansion.
+
 ## 7. Files
 
 | path | role |

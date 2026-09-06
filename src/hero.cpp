@@ -4363,10 +4363,20 @@ static void show_hero_skills(int code, unsigned char right_mouse)
 // reports the RTM 8168 back end BYTE-IDENTICAL to SP3 (1089+327 on both
 // sides, sp3_vs_rtm 0; evidence/vc6/c2-generation-verdicts.tsv). If the
 // merge-set flip is generational at all, it is the FRONT END: retail's
-// Rich header carries 26 RTM-stamped C++ objects, hero.obj is a
-// candidate, and rtm-generation.md Â§4 already names the C1XX+C2 overlay
-// as the one unexplored generation lever - staged, hash-recorded, NOT
-// admitted; running it is a separate decision, not a lane action.
+// Rich header carries 26 RTM-stamped C++ objects and hero.obj was a
+// candidate.
+//
+// THE FRONT END IS NOW RULED OUT TOO (2026-09-06). `genab run --gen rtm-fe`
+// swaps C1XX 12.00.8168 in beside the RTM back end and sweeps all 146
+// units: this function's bytes are IDENTICAL on both sides (it is absent
+// from evidence/vc6/fe-generation-verdicts.tsv, which lists every function
+// that differs at all), and hero.obj's five functions that DO differ
+// (HeroFn_004E2550, equip_artifact, remove_artifact,
+// THeroScreenWindow::update_slot, update_spell_list) are all back-end-only
+// jb/jl loop-guard twins that move AWAY from retail. The captured IL is
+// byte-identical between the two front ends apart from its own two-byte
+// version word (rtm-generation.md §6), so there is no front-end lever
+// here. The merge-set flip is a model gap, not a vintage.
 //
 // THE FOURTH UpdateArmies CALL IS NOW EXPLAINED (2026-08-20), and this
 // corrects the earlier "nothing missing" diagnosis. In the selected-army
@@ -6097,89 +6107,73 @@ unsigned char hero::HeroFn_004E2550(long artifact, long slot)
 // allowable-slot class, then hands the real work to HeroFn_004E2550 -
 // but when the slot is already occupied it SAVES the displaced record,
 // removes it, runs the attempt, and puts the displaced artifact back
-// whatever the answer was. The `.test(slot)` bounds check is inlined
-// WITH bitset<19>::_Xran's whole throw body here (the string temporary,
-// the exception construction and __CxxThrowException are all in the
-// 0x4e2840 span), where the same accessor in HeroFn_004DC100 leaves
-// _Xran a call - a per-caller /Ob2 budget difference.
+// whatever the answer was. The restore is retail's, on BOTH paths: the
+// image's EH metadata proves a `try`/`catch (...)` here. The FuncInfo
+// this body's handler stub points at has nTryBlocks=1, tryLow=tryHigh=2,
+// catchHigh=3 and a NULL type descriptor (catch-all), and the state
+// stores bracket exactly one statement - `mov [ebp-4],2` at +0x166 just
+// before the second HeroFn_004E2550 and `mov [ebp-4],-1` at +0x17b right
+// after it. The catch funclet the HandlerType names (0x4e29dc, 25 B, no
+// prologue, the parent's EBP frame) reads &displaced off [ebp-0x1c] and
+// `this` off [ebp-0x14], calls equip_artifact, and rethrows with
+// `push 0 / push 0 / call __CxxThrowException@8`. So the source is
+// `try { accepted = HeroFn_004E2550(...); } catch (...) { restore;
+// throw; }` with the normal-path restore repeated below - the same
+// restore-on-unwind idiom artifact.cpp's va_end pair has.
 //
-// Residual (44.9%): that inlined _Xran, and ONLY that. Every other
-// instruction agrees; the whole delta is retail's ~56-row expansion of
-// bitset<19>::_Xran's `_THROW(out_of_range, "invalid bitset<N>
-// position")` - the strlen, the string assign, the exception
-// construction and __CxxThrowException - against our single CALL to the
-// same COMDAT, plus the /GX frame retail therefore needs and we do not.
-// This is an UNDER-inline, the opposite direction from HeroFn_004DC100
-// six functions up, so it is not a systematic budget offset in this
-// compiland. Tried and rejected, one compile each: routing the gate
-// through DC's own artifact.h inline `artifactAllowedInSlot`
-// (dc 0x37d88), which adds an expansion level (44.93, byte-flat); and
-// eight byte-inert dead assignments to grow the caller's statement mass
-// the way the /Ob2 rule says the budget follows (44.93, byte-flat) -
-// so the lever here is NOT caller size, and no source spelling in this
-// body reaches the decision. THIRD measurement, 2026-08-20, and it is a
-// MODEL finding worth keeping: `#pragma inline_depth(0)` around the four
-// call sites AFTER the `.test()` (both HeroFn_004E2550 sites,
-// remove_artifact, equip_artifact) is BYTE-FLAT at 44.93. The /Ob2 rule
-// gives a nested expansion `budget / sites-remaining`, so if pinning a
-// later site removed it from that divisor the _Xran under-inline here
-// would have opened up. It does not: the divisor counts call SITES
-// whether or not they are pinned. Site pins are the lever for an
-// OVER-inline only - they cannot buy an under-inline back.
-// FOURTH, and it closes the search over the DEPTH lever that took
-// HeroFn_004DC100 65.97 -> 87.27 and GiveArtifact 64.63 -> 75.10 the same
-// day. That lever works by spelling a bitset access one wrapper LEVEL
-// DEEPER (`b[i]` reaches test through `operator[]`), which pushes _Xran
-// out of line. Here the divergence points the OTHER way - retail expands
-// _Xran and we call it - so it would need a SHALLOWER spelling, and
-// <bitset> has none: `test(_P)` already calls `_Xran` directly, and the
-// only other bounds-checked accessor, `at(_P)`, checks TWICE (once itself
-// and once through the `test` it forwards to) where retail checks once.
-// The depth ladder has no rung below `test`.
+// That try is ALSO what makes `.test(slot)` behave: VC6 will not expand
+// a callee that introduces EH state into a caller with no EH frame, so
+// with no catch scope here bitset<19>::_Xran stayed a CALL where retail
+// expands its whole `_THROW(out_of_range, "invalid bitset<N> position")`
+// body inline. That under-inline is what pinned this row at 44.93 for a
+// week and what a hand-spelled range guard plus an explicit throw bought
+// back structurally at 78.86 (2026-08-21). With the real try/catch in
+// place the natural `allowable.test(slot)` scores IDENTICALLY to that
+// hand-spelled guard - 85.7554 either way, same call multiset, same
+// blocks - so the invented union-of-pointers bitset view is retired and
+// the plain accessor stands. 78.8633 -> 85.7554 on the try/catch alone.
 //
-// FIFTH named the mechanism (2026-08-20): VC6 would not expand `_Xran`
-// into a caller which did not already own an EH frame. A destructible
-// string probe proved that by making the throw path appear, but its own
-// construction/destruction was invented noise.
+// The remaining 25 bytes were a CARVE boundary: 0x4e29dc's funclet was
+// its own carve row, so our emitted body carried it and retail's target
+// symbol stopped short. Absorbing it (412 -> 437, the LoadFontData
+// precedent) took the row to 94.5203.
 //
-// CLOSED STRUCTURALLY 2026-08-21 (44.93 -> 78.86): spell Dinkumware's
-// `bitset<19>::test` body explicitly - its unsigned range guard followed
-// by the same dword-indexed bit test. This is not a different algorithm;
-// bitset<19> is one unsigned-long word in the installed VC6 header. It
-// gives the caller the required /GX frame without duplicating `_Xran`.
-// The branch sequence is now exact: 4 conditional branches and 3 returns
-// on both sides.
-//
-// Residual (78.9%): optimizer state inside the inlined range throw. Retail
-// leaves string::_Eos as a call and allocates a 0x3c frame with two EH
-// homes; our direct expansion inlines _Eos and uses 0x34. The ordinary
-// body after the throw has the same calls and bit-test instruction family;
-// the remaining tail-order/state stores follow from that EH layout.
-// Tried and rejected after the structural gain, one compile each unless
-// noted: explicit guard plus the original `test` (two throw paths, 57.60);
-// one-use inline/forceinline range helper (stays a call, 44.38); one-use
-// string-return helper (stays a call, 56.58); local unused type-count
-// probes at 1, 2 and 8 definitions (44.93, byte-flat); empty-destructor
-// carrier (55.53); optimizer-elided contradictory throw carrier (58.29),
-// and the same with a string local (53.21). The NH3API wrapper's
-// `in_enum_range` checks are outside the game method; retail has no extra
-// artifact-enum branch here, so they are not a compiled-out ASSERT/TRACE
-// carrier for this body.
-VA(0x004e2840, 0x19C)  // retail-only, hero member, ret 8
+// Residual (94.5%): one block, and one call. Retail leaves
+// basic_string::_Eos a CALL inside the inlined _Xran throw path where we
+// expand it (+0x98 target-only); everything else - prologue, 0x3c frame,
+// both EH homes, four branches, three rets, the bit test and all three
+// tails - is byte-identical. That is an OVER-inline of a five-line
+// private member at the same depth as the `_Grow` both sides call, so it
+// is a budget quotient, not a spelling.
+// Tried and rejected before the try/catch landed, one compile each:
+// routing the gate through DC's artifact.h inline `artifactAllowedInSlot`
+// (44.93, byte-flat); eight byte-inert dead assignments to grow the
+// caller (44.93, byte-flat); `#pragma inline_depth(0)` on the four call
+// sites after the .test() (44.93, byte-flat - the /Ob2 divisor counts
+// call SITES whether or not they are pinned, so site pins cannot buy an
+// under-inline back); a shallower bitset accessor (none exists - `at`
+// checks twice); explicit guard plus the original `test` (57.60); a
+// one-use inline range helper (44.38); a one-use string-return helper
+// (56.58); local unused type-count probes at 1, 2 and 8 (44.93,
+// byte-flat); an empty-destructor carrier (55.53); a contradictory-throw
+// carrier (58.29) and the same with a string local (53.21). Those all
+// measured a caller with no catch scope and none of them is evidence
+// about this body now.
+// Re-measured WITH the catch scope, since a rejected knob is only
+// rejected for the inline structure it was measured in: the depth ladder
+// (`allowable[slot]`, which reaches test through operator[]) is now
+// BYTE-FLAT at 94.5203 - with an EH frame present it no longer pushes
+// _Xran out of line, so the ladder has nothing left to trade here. The
+// _Eos direction is a confirmed OVER-inline (base 0 calls vs retail 1),
+// whose doctrinal lever is caller-shrink, and a 437-byte body with no
+// liftable block and no DC-named helper has no dose to give.
+VA(0x004e2840, 0x1B5)  // retail-only, hero member, ret 8; size absorbs the
+                       // 0x4e29dc catch funclet (boundary correction 2026-09-06b)
 unsigned char hero::HeroFn_004E2840(long artifact, long slot)
 {
     const std::bitset<19>& allowable =
         aArtifactSlotMasks[akArtifactTraits[artifact].allowableSlotMask];
-    if (static_cast<unsigned long>(slot) >= 19)
-        throw std::out_of_range("invalid bitset<N> position");
-
-    union bitset19_view {
-        const std::bitset<19>* bits;
-        const unsigned long* words;
-    } view;
-    view.bits = &allowable;
-    if (!(view.words[static_cast<unsigned long>(slot) / 32]
-          & (1UL << (static_cast<unsigned long>(slot) % 32))))
+    if (!allowable.test(slot))
         return 0;
 
     if (equipped[slot].artifactId == ARTIFACT_NONE)
@@ -6187,7 +6181,13 @@ unsigned char hero::HeroFn_004E2840(long artifact, long slot)
 
     type_artifact displaced = equipped[slot];
     remove_artifact(slot);
-    unsigned char accepted = HeroFn_004E2550(artifact, slot);
+    unsigned char accepted;
+    try {
+        accepted = HeroFn_004E2550(artifact, slot);
+    } catch (...) {
+        equip_artifact(&displaced, slot);
+        throw;
+    }
     equip_artifact(&displaced, slot);
     return accepted;
 }
@@ -6595,7 +6595,10 @@ unsigned char hero::GiveArtifact(const type_artifact* artifact,
                             HeroFn_004DBF30(targetCombo, -1);
                         }
                     }
-                    player.assembledCombinations.set(targetCombo);
+            // DEPTH LADDER: this ONE bitset write is spelled `[i] = true`
+            // rather than `set(i)`; the other two in this body stay `set`.
+            // 75.1012 -> 76.3360, and a greedy second round finds nothing.
+            player.assembledCombinations[targetCombo] = true;
                 }
             }
         }

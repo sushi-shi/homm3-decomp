@@ -1779,14 +1779,16 @@ unsigned char searchArray::FindCombatPath(const army* current_army,
     long best_distance = 800;
     long best_hex = -1;
     result.clear();
-    queue.clear();
+    // The BFS queue NAMED AS A REFERENCE: 87.6468 -> 87.9780.
+    std::vector<pathCell>& r_queue = queue;
+    r_queue.clear();
     memset(cellData, 0, COMBAT_GRID_CELLS * sizeof(pathCell));
 
     PushCombatPoint(start_hex, current_army->facing ? 1 : 4, 0, 0, limit);
 
-    while (queue.size() > 0) {
-        pathCell cell = queue.back();
-        queue.pop_back();
+    while (r_queue.size() > 0) {
+        pathCell cell = r_queue.back();
+        r_queue.pop_back();
 
         long cost = cell.cost;
         if (cost > limit)

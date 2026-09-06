@@ -78,7 +78,7 @@ TImmMouseRuntime::TImmMouseRuntime(void* hInst, void* hwnd)
         file.pubseekoff(0, std::ios_base::beg);
         project = std::auto_ptr<char>(new char[size]);
         file.sgetn(project.get(), size);
-    } catch (...) {
+    } catch (t_initialize_failure) {
         LODFile* resource = ResourceManager::PointToBitmapResource("H3Shad.ifr");
         if (resource == 0)
             throw t_initialize_failure();

@@ -347,12 +347,29 @@ cleanly, and the split says which tool to point at them:
   (`is_computer_action` 6 vs 10, `iconWidget::Main` 17 vs 16,
   `border::Main` 8 vs 7, `CHotspotWidget::Main` 5 vs 4, `GetMobility` 3 vs
   2, `ProcessMapSelect` 13 vs 12, `GetSoundId` 73 vs 71, …). This is the
-  **tail-merge generation family**: our SP3 cross-jumper merges epilogues
-  retail's generation left duplicated, and the merged copy then SINKS,
+  **tail-merge family** (it was called the "tail-merge GENERATION family"
+  until 2026-09-06 - see below): our SP3 cross-jumper merges epilogues
+  retail's object left duplicated, and the merged copy then SINKS,
   which is what turns a short backward `jcc` in retail into a long forward
   one here. Every row in this group already carries a residual note with
   three to five rejected exit shapes. `why-branch` reports D6 on them and
   finds no catalog mutation. **Do not spend a lane on this group.**
+
+  **The name was wrong and the generation is now excluded (2026-09-06).**
+  Track R A/B'd this whole roster against VC6 RTM in both passes - the
+  back end alone (C2 12.00.8168) and then the front end too (C1XX
+  12.00.8168 + C2 12.00.8168, `genab run --gen rtm-fe`, all 146 units).
+  `border::Main` 31+26, `CHotspotWidget::Main` 29+22, `hero::GetMobility`
+  210+14, `ProcessMapSelect` 150+57, `GetSoundId` 440+8, `CheckEndGame`
+  169+2, `handle_artifact_click` 22+6, `OnTCP` 52+6,
+  `HighScoreWindowHandler` 126+28, `CombatOptionsWindowHandler` 156+22,
+  `DisplayVCWinLoss` 110+64, `TTavernWindow::SetRolloverText` 65+0,
+  `advManager::MoveHero` 678+150, `iconWidget::Main` 46+30,
+  `is_computer_action` 44+50, plus `ValidAttack` 70+59, `AppWndProc` 29+0,
+  `VideoClose` 2+20 - **identical scores and identical bytes on both
+  sides, `sp3_vs_rtm == 0` for every one**. Retail's duplicated epilogues
+  are not an older compiler's output; they are a cross-jumper decision our
+  model does not reproduce (docs/vc6/rtm-generation.md §6).
 - **branch-count delta (19 of 56)** — the terminator differs because one
   side has WHOLE BLOCKS the other lacks, and reading `--calls` positionally
   always names an /Ob2 site, never a statement. Retail expands
@@ -383,3 +400,37 @@ two. Counting retail's temps at such a call site reads the local's declared
 type straight off the bytes: `hero::GetLuck`'s `luck` is `long`
 (87.7439 -> 88.0662, twelve bytes of tail recovered and two dead
 write-backs removed). Count the temps before assuming a plain `int`.
+
+## An expanded comparison helper can determine arm placement
+
+`DrawIrregularZoneBoundary` (0x53bff0) placed terminal marking before
+subdivision when the point equality checks were written as scalar
+comparisons. Reversing the predicate, reversing source arms, and using
+nested comparisons with `continue` did not restore retail's placement.
+Writing the comparisons through `TPoint::operator==` changed that layout:
+38.3069% became 92.8168%, with all branch targets agreeing. Defining
+`operator!=` through `!(*this == other)` and using the negative guard was
+byte-neutral at that checkpoint. Subsequent type and lifetime corrections
+closed all 555 raw bytes without an inline directive.
+
+The helper boundary therefore matters even when its final instructions
+are ordinary coordinate comparisons. This is compiler evidence for the
+candidate surface, not proof of the original RMG declaration: the DC
+corpus has no identified counterpart, and its retained `type_point`
+comparison methods concern a different packed coordinate type.
+
+## A separate case can preserve the switch table despite an equal default
+
+`ReadRmgTemplateZones` (0x538480) dispatches on `tolower` of a template
+field. Retail's table covers `'a'`, `'n'`, `'s'`, and `'w'`; `'a'` and the
+default both assign strength 3. Grouping `case 'a': default:` in source
+removed `'a'` from C1's switch and produced a three-test comparison chain.
+Giving `'a'` its own assignment and `break` preserves the four-case table;
+the emitted table still shares the identical destination with default.
+
+The combined switch/town-flag correction raised 86.8319% to 92.9708%.
+The second correction wrote the flag's 0/1 assignments inside the two arms,
+matching retail's immediate byte stores instead of materializing a boolean
+register for a common store. A positive row-validation scope then raised
+the reader to 96.9468%; its remaining deltas lie in vector insertion and
+cleanup. These are retail/VC6 controls, with no DC RMG source counterpart.

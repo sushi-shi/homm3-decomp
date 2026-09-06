@@ -303,13 +303,16 @@ inline const T& _cpp_max(T left, T right)
     return left < right ? right : left;
 }
 
-// seerhut.obj's list formatter, 0x56c960.  It joins a vector with the
-// localized final separator and returns the result through the usual hidden
-// std::string return buffer (ECX), with the vector reference in EDX under
-// this compiland's /Gr profile.  Unclaimed - declared so the three container
-// quest requirement builders can name the shared operation.
-std::string join_quest_requirements(
-    const std::vector<std::string>& requirements);
+// seerhuttext.obj's list formatter, 0x56c960 (JoinTextList, exact there).  It
+// joins a vector with the localized final separator and returns the result
+// through the usual hidden std::string return buffer (ECX), with the vector
+// reference in EDX under this compiland's /Gr profile.  Declared here rather
+// than through seerhuttext.h for the include-set reason format_string and
+// NormalDialog below carry.  The reloc census (2026-09-06) is what settled
+// the identity: retail's call at every one of the nine quest requirement
+// builders below targets 0x56c960, where this tree used to name an
+// undefined `JoinTextList`.
+std::string JoinTextList(const std::vector<std::string>& items);
 
 // kb.obj's centred message box, 0x4f6570 - kb.h declares it, but the ten
 // quest dialog bodies below are this compiland's only consumers of that
@@ -406,6 +409,28 @@ void type_quest::Load(TAbstractFile* file, int version)
 // deadline ahead of them - the selector and the table row are savegame-only,
 // which is the split quest.h records between the two loaders.
 // E:\gamedcs\seerhut.cpp
+// Residual (41.9271%), and 2026-09-06 (polish lane 38) LOCATES IT EXACTLY.
+// The three reads are `proposalText = ReadLengthPrefixedString(file);` with
+// no named binding at all: written that way the frame becomes retail's 0x20
+// (against 0x30 here), the three temporaries collapse onto retail's ONE slot
+// at [ebp-0x1c], and the emitted stream is identical to retail's through the
+// first `assign(const string&, 0, npos)` call - the `diagnose` EH census
+// predicts it ([0,-1,1,-1,2] against our [reg,1,2], i.e. a temporary born and
+// destroyed per statement rather than three alive at once).
+// It still measures 10.5000 and is NOT shipped, for one reason: at that
+// source depth VC6 expands `basic_string::_Tidy` at all three destruction
+// sites where retail CALLS it (retail expands `~basic_string` and keeps
+// `_Tidy` out of line), and three inline `_Tidy` bodies cost more than the
+// whole frame/slot correction buys. The lever is a per-site `inline_depth(0)`
+// on each assignment, which this lane may not add; whoever may add one should
+// take the direct-assignment form WITH the pins and not the current spelling.
+// Also measured and rejected: block-scoping each `const std::string&` binding
+// so the temporaries die per statement WITHOUT changing the binding, 6.6354.
+// 2026-09-06: the section-6b `operator=` -> `assign` rung, applied to all
+// three assignments in BOTH this body and type_quest::Load, is byte-flat to
+// the digit (41.9271 / 49.7043 unchanged). VC6's `operator=(const string&)`
+// is the pure forwarder the doc warns about here, so the ladder has no rung
+// to give at these sites; the `_Tidy` decision is untouched by it.
 VA(0x0056ce50, 0x11E)  // anchor-vtable 0x64174c slot 12 + the chain from all eight leaf LoadFromMaps, retail-only
 void type_quest::LoadFromMap(TAbstractFile* file)
 {
@@ -715,7 +740,10 @@ void type_skill_quest::DoProposalDialog(hero* current_hero)
     signed char missing[4];
     for (int i = 0; i < 4; ++i) {
         int have = current_hero->GetPrimarySkill(i);
-        int required = required_skills[i];
+        // BOUND BY `const int&`: retail re-reads the requirement at both
+        // the compare and the store rather than keeping a copy live.
+        // 75.4324 -> 80.8108.
+        const int& required = required_skills[i];
         missing[i] = required > have ? required : 0;
     }
 
@@ -727,7 +755,7 @@ void type_skill_quest::DoProposalDialog(hero* current_hero)
         std::vector<type_dialog_resource> dialogResources;
 #pragma inline_depth()
         type_dialog_resource resource;
-        for (int i = 0; i < 4; ++i) {
+        for (unsigned int i = 0; i < 4; ++i) {
             if (missing[i] > 0) {
                 resource.resource = 0x1f + i;
                 resource.qualifier = 0x10000
@@ -781,11 +809,24 @@ void type_skill_quest::DoProposalDialog(hero* current_hero)
 // Slot 5 presents one primary-skill picture for every positive requirement.
 // The picture class advances from 0x1f with the skill index, while the
 // qualifier packs the displayed value below a high-word one.
-// Residual (75.8427%): semantics and all twelve CFG blocks agree, but retail
+// THE PICTURE LOOP IS A POINTER WALK WITH ITS OWN DOWN-COUNTER (75.8427 ->
+// 76.2136, 2026-09-06).  Retail's tail is `inc esi / dec ebx / jne` with
+// `mov ebx,4` ahead of it and the picture id strength-reduced into
+// `mov edi,0x1f / sub edi,esi / lea edx,[edi+esi]`; an indexed
+// `for (int i = 0; i < 4; ++i)` gives VC6 TWO reductions (0xdf-this and
+// 0xc0-this) and rebuilds the bound as `lea eax,[ecx+esi] / cmp eax,4 / jl`,
+// with no counter at all.  Spelled with the three explicit induction
+// variables the reductions collapse to retail's one and the down-counter
+// appears.  Measured and rejected: the two-variable form that derives the
+// picture id from `skill - required_skills` (65.37) - VC6 needs the id as its
+// own variable to produce the `0x1f - esi` invariant.
+// Residual (76.2136%): semantics and all twelve CFG blocks agree, but retail
 // keeps the GetProgressDialogText return object alive while taking c_str()
 // directly from the returned EAX; this CL invocation reloads the same string
 // slot before the vector loop and consequently chooses a different register
-// schedule. Tried and rejected: a named string alone, a bare c_str pointer
+// schedule.  The counter is the visible cost of that: retail spends EBX on it
+// while ours pools the constant 0 there (`cmp al,bl` against retail's
+// `test al,al`) and spills `remaining` to [ebp-0x14]. Tried and rejected: a named string alone, a bare c_str pointer
 // (destroys the temporary before the loop), a named string plus saved pointer,
 // and the lifetime-extending const reference below. VC6's accepted non-const
 // temporary-reference extension is byte-identical to the const form, so it
@@ -799,15 +840,25 @@ void type_skill_quest::DoProgressDialog()
     const std::string& text = GetProgressDialogText();
     const char* textPointer = text.c_str();
     std::vector<type_dialog_resource> dialogResources;
-    for (int i = 0; i < 4; ++i) {
-        if (required_skills[i] > 0) {
+    // MAX 76.5169 was measured with the indexed loop written `i != 4` - an
+    // unnamed domain compare that fails the cleanliness floor
+    // (docs/vc6/behavior-catalog.md D24); the pointer walk below is the
+    // best admissible form (76.2135).
+    const signed char* skill = required_skills;
+    int picture = 0x1f;
+    int remaining = 4;
+    do {
+        if (*skill > 0) {
             type_dialog_resource resource;
-            resource.resource = 0x1f + i;
+            resource.resource = picture;
             resource.qualifier = 0x10000
-                | static_cast<unsigned short>(required_skills[i]);
+                | static_cast<unsigned short>(*skill);
             dialogResources.push_back(resource);
         }
-    }
+        ++skill;
+        ++picture;
+        --remaining;
+    } while (remaining);
     extended_dialog(textPointer, dialogResources, -1, -1, 0);
 }
 
@@ -881,7 +932,7 @@ std::string type_skill_quest::skill_requirement_text(
                 gPrimarySkillNames[i], required_skills[i]));
         }
     }
-    return join_quest_requirements(requirements);
+    return JoinTextList(requirements);
 }
 // E:\gamedcs\seerhut.cpp
 // Residual (96.53%): the CFG is exact (13 branches and two returns on both
@@ -1370,7 +1421,7 @@ std::string type_artifact_quest::GetRequirementText()
     std::vector<std::string> requirements;
     for (unsigned i = 0; i < artifacts.size(); ++i)
         requirements.push_back(akArtifactTraits[artifacts[i]].name);
-    return join_quest_requirements(requirements);
+    return JoinTextList(requirements);
 }
 // The three CONTAINER leaves take their vararg from slot 6 - a real
 // virtual call on `this`, which is what the `call dword ptr [eax+0x18]`
@@ -1444,7 +1495,7 @@ void type_artifact_quest::DoProposalDialog(hero* current_hero)
         std::string textFormat = texts[QUEST_TEXT_PROGRESS];
         std::string text = format_string(
             textFormat.c_str(),
-            join_quest_requirements(requirements).c_str());
+            JoinTextList(requirements).c_str());
         textPointer = text.c_str();
         std::vector<type_dialog_resource> dialogResources;
         type_dialog_resource resource;
@@ -1467,7 +1518,12 @@ void type_artifact_quest::DoProposalDialog(hero* current_hero)
         for (unsigned i = 0; i < missingArtifacts.size(); ++i) {
             resource.resource = 8;
             resource.qualifier = missingArtifacts[i];
-            dialogResources.push_back(resource);
+            // DEPTH LADDER (docs/vc6/inliner.md 6b): this append alone is
+            // spelled `insert(end(), x)`; the two in the sibling arm above
+            // stay `push_back`.  89.1000 -> 92.0556.  Per-site: the two
+            // sibling sites give 91.6667 each, all three together 85.7667,
+            // and a greedy second round over the survivors finds nothing.
+            dialogResources.insert(dialogResources.end(), resource);
         }
         extended_dialog(textPointer, dialogResources, -1, -1, 0);
     }
@@ -1636,7 +1692,7 @@ std::string type_creature_quest::GetRequirementText()
             counts[i], GetArmyName(types[i], counts[i]));
         requirements.push_back(requirement);
     }
-    return join_quest_requirements(requirements);
+    return JoinTextList(requirements);
 }
 // E:\gamedcs\seerhut.cpp
 VA(0x00570690, 0xCF)  // anchor-vtable 0x6418b4 slot 7 + the shared text-table shape, retail-only
@@ -1714,7 +1770,7 @@ void type_creature_quest::DoProposalDialog(hero* current_hero)
         std::string textFormat = texts[QUEST_TEXT_PROGRESS];
         text = format_string(
             textFormat.c_str(),
-            join_quest_requirements(requirements).c_str());
+            JoinTextList(requirements).c_str());
     } else {
         text = progressText;
     }
@@ -1766,9 +1822,9 @@ void type_creature_quest::DoProgressDialog()
                 textFormat += get_time_limit_text();
             text = format_string(
                 textFormat.c_str(),
-                join_quest_requirements(requirements).c_str());
+                JoinTextList(requirements).c_str());
         } else {
-            text = GetProposalDialogText();
+            text = GetProgressDialogText();
         }
         extended_dialog(text.c_str(), dialogResources, -1, -1, 0);
     }
@@ -1940,7 +1996,7 @@ std::string type_resource_quest::GetRequirementText()
             requirements.push_back(requirement);
         }
     }
-    return join_quest_requirements(requirements);
+    return JoinTextList(requirements);
 }
 // E:\gamedcs\seerhut.cpp
 VA(0x005716e0, 0xCF)  // anchor-vtable 0x6418f0 slot 7 + the shared text-table shape, retail-only
@@ -2019,7 +2075,7 @@ void type_resource_quest::DoProposalDialog(hero* current_hero)
         std::string textFormat = texts[QUEST_TEXT_PROGRESS];
         text = format_string(
             textFormat.c_str(),
-            join_quest_requirements(requirements).c_str());
+            JoinTextList(requirements).c_str());
     } else {
         text = progressText;
     }
@@ -2117,7 +2173,7 @@ void type_resource_quest::SetDefaultText()
             requirements.push_back(requirement);
         }
     }
-    requirement = join_quest_requirements(requirements);
+    requirement = JoinTextList(requirements);
     if (proposalText.length() == 0)
         proposalText = format_string(texts[QUEST_TEXT_PROPOSAL].c_str(),
                               requirement.c_str());
@@ -2714,6 +2770,9 @@ int TSeerHut::getValue(hero* currentHero)
 // (83.56%), and a two-string diagnostic reached 95.1173 with four _Tidy
 // calls against retail's three plus delete. These were instruments only;
 // no dead objects, synthetic carrier or inline fence belongs in this body.
+// Main-branch controls additionally found dropping inline from GetRewardType
+// byte-flat. Its unframed early-no-quest variant measured 36.4529%; that
+// control does not settle source order after the helper expansions return.
 VA(0x00573670, 0x400)  // code plus two retail switch tables in the admitted row
 void TSeerHut::DoSeerEvent(hero* current_hero, bool human_player)
 {
@@ -3362,6 +3421,60 @@ void TSeerHut::read(TAbstractFile* infile)
 // removes an extra constructor-argument copy and raises MAX to 35.3825%.
 // Retail reads through [ebp+8], then keeps the masked row at [ebp-0x1c]; a
 // single address-taken textRow used for both roles was the 30.4931% control.
+// 2026-09-06: the section-6b `push_back(x)` -> `insert(end(), x)` rung on the
+// shared three-argument constructor LOSES at both of its call sites - this
+// row 35.3825 -> 30.7962 and TSeerHut::read (0x574610) 86.8092 -> 86.7912 -
+// so the constructor keeps `push_back`. That rung is now measured here; do
+// not re-sweep it. (It is also the WRONG DIRECTION: push_back -> insert
+// removes a level, and this row needs the leaf pushed one level further OUT,
+// not in.)
+// 2026-09-06 (polish lane 44), the residual LOCATED to one decision, and two
+// standing hypotheses closed:
+//   * The boundary is `vector<TArtifact>::insert(iterator, const T&)`.
+//     Retail CALLS it (delinked as `vector<int>::insert`, ICF-folded on the
+//     4-byte element, at +0x182); we expand it, and that single decision is
+//     the whole 26-blocks/15-branches against retail's 10/5 - it drags in
+//     ELEVEN base-only calls that retail does not make at all: `size`,
+//     `_Ucopy` x3, `_Ufill` x2, `_Destroy`, operator new, operator delete.
+//     Everything else agrees: both sides expand the type_artifact_quest
+//     constructor (SetDefaultText stands at +0x2cb on both), and the four
+//     `_Tidy` / 0x5157d0 rows are ICF label noise, not divergence.
+//   * NOT a pasted helper. The tree-wide census (claimed short bodies matched
+//     modulo identifier renames against every statement window in src/ and
+//     include/) reports nothing in seerhut.obj; its one hit here,
+//     type_quest::LoadFromMap inside type_quest::Load, is the two sibling
+//     vtable slots 11 and 12 sharing their trailing three-string run, which
+//     no call could express.
+//   * NOT a missing early statement. `sema diff --source` walks the <28 arm
+//     with every read group `==` from `infile->Read(&int_buffer, ...)` through
+//     the sixth byte; the first `!!` after the prologue is the textBuffer slot
+//     alone.
+// 2026-09-06 (polish lane 46), the NEGATIVE CONTROL the located residual
+// was missing, read off the DECISION rather than the score (so the missing
+// code the old probe measured does not confuse it): deleting the ENTIRE
+// >=28 arm - every Read, the `create_quest` call site and all four member
+// stores - leaves `insert` expanded exactly as before.  predict-inline
+// still reports `?insert@?$vector@HV?$allocator@H@std@@@std@@QAEPAHPAHABH
+// @Z` base x0 / retail x1; the only row that moves is `create_quest`, which
+// joins it because the site is gone.  So caller-shrink does not reach this
+// site: `budget = 2*cb(TSeerHut::load)` is clamped here, and the decision
+// belongs to the depth-3 quotient `budget/(n-k)` handed down through the
+// type_artifact_quest constructor and push_back's own two sites.  Retail's
+// argument binding is not the difference either - its inlined constructor
+// homes the by-value `artifact` at [ebp-0x18] for `push_back(const T&)` to
+// take the address of, then RE-READS that home for the
+// `gpGame->artifactDisabled[artifact]` store at 0x574be1, which is what our
+// spelling already emits.  Same wall class as smackmgr ShowVideo's.
+//
+// The 8-byte frame surplus (our `sub esp,0x1c` against retail's 0x14) is
+// downstream of that same expansion, not a source fact: retail packs the
+// reused `value` byte at [ebp+0xb] and `textBuffer` at [ebp+8] - both inside
+// the PARAMETER HOME, free because infile and saveVersion die into esi/ebx in
+// the prologue - and keeps `this` in edi, where our register pressure spills
+// it to [ebp-0x24]. Shrinking the caller cannot be measured directly here:
+// the >=28 arm is too large a share of the row's bytes for its removal to be
+// read as a budget signal (gutting it measures 20.03, which is the missing
+// code, not the budget).
 //
 // The savegame reader and the exact mirror of save (0x573fd0): NewfullMap
 // ::Load calls it on every element of the SeerHutList it has just resized,

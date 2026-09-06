@@ -576,6 +576,48 @@ callers. Measure the actual overload and call site. This function still
 has separate artifact stack homes and the wrong first vector insertion
 boundary, so the remaining 0.59 points are not an established allocator wall.
 
+### Constructed return values and local return objects differ after inlining
+
+`SelectTerrainTransition` (retail `0x005b3e80`, 1,887 bytes) reaches 100%
+with an ordinary static helper returning `TRmgTerrainFlip(x, y)`. Returning
+a named flip local after assigning its two fields instead moves the caller's
+two-byte temporary from `ebp-2` to `ebp-8` and its saved output pointer from
+`ebp-8` to `ebp-4`. The total frame size remains eight bytes, so frame size
+alone misses the difference. Both helpers expand under `/Ob2`.
+
+Replacing the helper calls with direct construction is another negative
+control: it keeps the temporary layout but changes the fourth reflection
+loop's register allocation, scoring 99.7991%. Adding an explicit empty
+destructor prevents the value-return helper from auto-inlining; the retail
+array's registered empty cleanup therefore does not itself prove a
+user-declared destructor. No inline pragmas or artificial caller operations
+are needed. These are retail-supported source hypotheses; this Complete-only
+function has no Dreamcast counterpart.
+
+### Source arm order controls nested inlining before cold-code placement
+
+`ReadRmgTemplateZones` (`0x00538480`, 1,671 bytes) demonstrates that retail's
+physical arm order does not fix C1's source statement order. Its invalid-player
+cleanup lies after the large parsing/insertion arm in x86. Writing the accepted
+arm first, followed by `else { delete slot; }`, lets VC6 expand the connection
+vector destructor; retail retains that call at `0x00538ab0`.
+
+Writing the same filter as `if (invalid) { delete slot; } else { ... }`
+restores the retained vector destructor naturally. With the diagnostic
+three-argument `vector::insert` spelling, this moves 96.94682% to 98.08062%.
+Restoring ordinary `push_back(slot)` then reaches 100%: all 1,671 raw bytes
+match after resolving 33 relocations, including the embedded switch tables.
+The extra STL boundaries also recover the retail growth temporaries and
+registers; selecting the count-insert overload had only compensated for the
+incorrect arm order. No new inline pragma or release-elided assertion remains.
+
+A cleanup-only pin is an insufficient diagnosis: temporarily pinning the
+implicit member teardown retains the vector destructor but leaves the growth
+mismatch and introduces an unwanted spreadsheet subscript call. Inspect both
+the ordered named call stream and the insertion expansion after restoring
+source control flow. This function has no Dreamcast counterpart; the source
+order is established by the VC6/retail controls, not a recovered line table.
+
 ## A missing helper can alter an earlier expansion
 
 `game::InitNewGame` (`0x513320`) reached 100% by restoring the ordinary
@@ -741,6 +783,66 @@ residual as an allocator tie-break. Restoring the helper and field-accessor
 boundaries reproduces all 17 blocks without an inline keyword or pragma.
 A matching call multiset does not prove the source helper structure is
 complete: a helper expanded on both sides can still delimit register lifetimes.
+
+## A callee defined LATER in the TU still inlines
+
+Measured 2026-09-06 (polish lane 44), pinned SP3 CL under Wine, on the real
+tree. A pasted helper body is **never forced by definition order**: `/Ob2`
+expands a callee whose *definition* stands below the call site, as long as a
+declaration precedes it. C1 hands C2 the whole TU's IL before C2 chooses, so
+the "define it above the caller" folklore does not apply to this back end.
+
+The clean control is `binkmanager.cpp`. `NextBinkFrame` (`0x44daa0`,
+`binkmanager.cpp:214`) carried the thirteen statements of `CloseBinkVideo`
+(`0x44dcc0`, defined at `binkmanager.cpp:285`, seventy lines BELOW it)
+written out longhand. Replacing them with the call is byte-flat -- 92.9245
+before and after -- and `sema diff --calls` still shows the two
+`_BinkPause`/`_BinkClose` pairs standing inline at `+0x173..+0x192`, i.e.
+VC6 reached down the file, took the body, and emitted retail's expansion.
+The only prerequisite was the declaration already in `binkmanager.h:124`.
+
+So the helper-boundary rule in CLAUDE.md is enforceable everywhere, and
+"the definition comes later" is not a reason to keep a longhand copy.
+
+### The census, and where the caller_cb lever actually bites
+
+The tree-wide sweep for claimed helper bodies copied into callers (short
+claimed bodies, normalised modulo identifier renames, matched against every
+window of every other body) found six live sites. Every one is byte-flat
+once restored:
+
+| caller | helper | score, before = after |
+|---|---|---|
+| `advManager::Open` `0x406fd0` | `ForceNewHover` | 97.9312 |
+| `advManager::DoAdvCommand` `0x407b80` | `ForceNewHover` | 94.3953 |
+| `advManager::ProcessKeyPress` `0x408c40` | `ForceNewHover` | 97.6091 |
+| `advManager::SetHeroContext` `0x417b20` | `DeactivateCurrHero` | 99.2746 |
+| `NextBinkFrame` `0x44daa0` | `CloseBinkVideo` | 92.9245 |
+| `VideoClose` `0x5975f0` | `CloseSmacker` | 95.9231 |
+
+Retail expands the helper at all six; the call is the source fact and the
+bytes do not care. The sixth row carries the census's only positive retail
+proof, and it is worth the pattern: `ShowVideo` (`0x598af0`) expands
+`VideoClose` three times, and its THIRD expansion at `+0x284` runs
+`VideoSoundOnOff / service_sounds / CALL CloseSmacker / CALL CloseBinkVideo`.
+A call to `CloseSmacker` standing *inside* an expansion of `VideoClose` can
+only come from a `CloseSmacker()` call in `VideoClose`'s own source -- a
+longhand copy there would have been expanded with everything else. **When a
+suspected paste has a caller that retail expands, read that caller's call
+stream: a helper call surviving inside the expansion proves the boundary.**
+Its cost is `ShowVideo` 48.6988 -> 41.0154, TU collateral kept under the
+"preserve proven helpers through score dips" rule; `VideoClose` itself is
+flat and MAX is unmoved. That flatness is itself the model's prediction and
+sharpens the polish-42 result (`CampaignHeaderStruct::Load`, +4.44 for the
+same edit). The budget is `clamp(2 x caller_cb, 1000, 35000)`, so moving
+mass out of `caller_cb` can only change an expansion decision while
+`caller_cb` sits inside `[500, 17500]`. Below it the 1000 floor absorbs the
+change; above it the 35000 ceiling does. `game::NextPlayer` (`0x4c6fe0`, 142
+statements) is the ceiling control: restoring its pasted
+`game::CancelComputerScreen` body is byte-flat at 81.3343, because that
+caller is saturated. Do not expect a pasted-helper restoration to pay on a
+very large or a very small caller -- take it for the source fact, and look
+for the mid-band callers when hunting score.
 
 ## 7. Using it
 

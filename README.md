@@ -12,23 +12,23 @@ the game, supply your own legally obtained retail `HEROES3.EXE` and Dreamcast `H
 
 <!-- match-score:start -->
 
-**Executable matched: 90.01%** — fuzzy-weighted bytes over all 1,998,778 unfiltered bytes.
+**Executable matched: 90.49%** — fuzzy-weighted bytes over all 1,998,803 unfiltered bytes.
 
-**Match score** — 3,709 / 4,765 functions exact (77.8%) across the full engine (4361 in linked units).
+**Match score** — 3,729 / 4,764 functions exact (78.3%) across the full engine (4370 in linked units).
 
-**Function exact MAX** — 3,740 / 4,765 functions (78.5%) have reached 100%.
+**Function exact MAX** — 3,758 / 4,764 functions (78.9%) have reached 100%.
 
 | Module        | Units |     Functions exact |  Function exact MAX |   Fuzzy | Fuzzy Max |
 | :------------ | ----: | ------------------: | ------------------: | ------: | --------: |
-| `game`        |   132 | 3640 / 4292 (84.8%) | 3671 / 4292 (85.5%) |  95.80% |    96.45% |
+| `game`        |   132 | 3660 / 4301 (85.1%) | 3689 / 4301 (85.8%) |  96.03% |    96.65% |
 | `zlib-1.1.3`  |    14 |    69 / 69 (100.0%) |    69 / 69 (100.0%) | 100.00% |   100.00% |
-| `(unmatched)` |     — |      0 / 404 (0.0%) |      0 / 404 (0.0%) |    0.0% |      0.0% |
+| `(unmatched)` |     — |      0 / 394 (0.0%) |      0 / 394 (0.0%) |    0.0% |      0.0% |
 
 _Excluded from the % above — generated/library code, not independent reconstruction targets:_
 
 | Category              | Functions | Code (B) | Why excluded                                                       |
 | :-------------------- | --------: | -------: | :----------------------------------------------------------------- |
-| `EH unwind funclets`  |     5,126 |   53,176 | compiler EH unwind funclets; match with their parent function      |
+| `EH unwind funclets`  |     5,125 |   53,151 | compiler EH unwind funclets; match with their parent function      |
 | `CRT/C++ runtime`     |       914 |  110,625 | CRT/C++ runtime, named not matched (config/retail-runtime-map.tsv) |
 | `init/cleanup thunks` |     1,119 |   94,433 | .CRT$XCU dynamic-initializer bodies (compiler-generated)           |
 | `import thunks`       |        27 |      162 | FF 25 jumps through the IAT                                        |
@@ -85,6 +85,21 @@ paths again when initializing after a clean.
 Clangd works with the existing Neovim/CoC setup; hover and SDK definition lookup
 have been verified. `compile_commands.json` refreshes automatically on shell entry,
 configure, and build.
+
+Generate a browsable Dreamcast source tree from the embedded debug symbols:
+
+```sh
+homm3 dreamcast structure                         # all modules
+homm3 dreamcast structure --module cursor --asm --output /tmp/dc-cursor
+```
+
+The default output is `evidence/dreamcast/structure/README.md`, with annotated
+C++ stubs and JSON for each compiland, plus a type catalogue. It includes decoded
+signatures, scoped locals, recorded scope nesting, source-line spans and gaps,
+inline evidence, and inferred SH4 control flow. These are Dreamcast reference
+facts; the generated files are not build inputs. See
+[the structure exporter documentation](docs/dc-line-tables.md#generated-source-structure)
+for the format and its evidence limits.
 
 ## License
 
