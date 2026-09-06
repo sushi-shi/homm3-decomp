@@ -541,7 +541,9 @@ TCampaignBrief::TCampaignBrief(unsigned char newCampaign,
             mapTraits.m_akRegionTraits[regionIndex];
         ScenarioStruct* scenario = campaign->scenarios[regionIndex];
         if (scenario->inflated_size > 0) {
-            int color = scenario->region_color;
+            // BOUND BY `const int&`: retail re-reads the scenario's colour
+            // at each of the three image-name subscripts.  88.3754 -> 89.0593.
+            const int& color = scenario->region_color;
             if (gpGame->campaign.mapScores[regionIndex].completed) {
                 widgets.insert(widgets.end(), new bitmapBorder(
                                 region.m_offsetX, region.m_offsetY, 20, 20,

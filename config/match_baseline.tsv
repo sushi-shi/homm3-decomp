@@ -203,7 +203,7 @@ ai	?choose_creature_spell@combatManager@@QAEEPBVarmy@@PAJPAUtype_AI_combat_param
 ai	?choose_cyclops_action@combatManager@@QAEEJJPAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x1eea0	fc94ca3ae01d
 ai	?choose_defense_hex@combatManager@@QAEEPBVarmy@@0PAJ1PAVsearchArray@@@Z	99.0992	99.0992	99.0992	0x205d0	6a12ed69ada4
 ai	?choose_melee_action@combatManager@@QAEJPBVarmy@@EEJ@Z	100.0000	100.0000	100.0000	0x21f80	dfa5fb3cc335
-ai	?choose_melee_target@combatManager@@QAEEPBVarmy@@EPAJPAUtype_AI_combat_parameters@@@Z	89.6892	89.6892	89.6892	0x21680	4fd6c83ca64b
+ai	?choose_melee_target@combatManager@@QAEEPBVarmy@@EPAJPAUtype_AI_combat_parameters@@@Z	91.6697	91.6697	91.6697	0x21680	023e5f0f11e6
 ai	?choose_resurrect_action@combatManager@@QAEEPBVarmy@@PAJPAUtype_AI_combat_parameters@@@Z	17.8614	95.7822	95.7822	0x21000	2ab8c2cddb45
 ai	?choose_shooter_action@combatManager@@QAEXPBVarmy@@EJ@Z	100.0000	100.0000	100.0000	0x1f060	22994db66524
 ai	?choose_shooter_target@combatManager@@QAEJPBVarmy@@PAUtype_AI_combat_parameters@@PAJ@Z	100.0000	100.0000	100.0000	0x1eb80	2b9dba5e9708
@@ -839,7 +839,7 @@ campaignbrief	??0CMapHeaderData@@QAE@XZ	100.0000	100.0000	100.0000	0x5a990	-
 campaignbrief	??0LossConditionStruct@@QAE@XZ	100.0000	100.0000	100.0000	0x5bac0	-
 campaignbrief	??0NewSMapHeader@@QAE@XZ	99.8438	99.8438	99.8438	0x5a7a0	-
 campaignbrief	??0SGameSetupOptions@@QAE@XZ	100.0000	100.0000	100.0000	0x5ac20	-
-campaignbrief	??0TCampaignBrief@@QAE@EE@Z	88.3754	88.3754	88.3754	0x590c0	0f7b8c4f94a8
+campaignbrief	??0TCampaignBrief@@QAE@EE@Z	89.0593	89.0593	89.0593	0x590c0	90437b65f6ad
 campaignbrief	??0TPlayerSlotAttributes@CMapHeaderData@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x5da70	-
 campaignbrief	??0TPlayerSlotAttributes@CMapHeaderData@@QAE@XZ	65.9200	65.9200	65.9200	0x5a950	-
 campaignbrief	??1?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x5b140	-
