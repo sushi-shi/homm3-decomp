@@ -95,6 +95,24 @@ static TArtifactSlotTraits aArtifactSlotTraits[19];
 // and the throw's own temporaries, so retail's EH frame is a CONSEQUENCE
 // of the expansion rather than an independent cause a spelling can supply.
 // Both rows stay at their banked MAX.
+// Residual (32.15%/22.16%, both twins): retail EXPANDS bitset<N>::_Xran's
+// whole out_of_range throw path (two basic_strings, the exception object,
+// __CxxThrowException) and therefore carries an EH frame; we emit a bare
+// `call ?_Xran@?$bitset@...@ABEXXZ` with no fs:[0] registration at all.
+// Polish lane 37 measured the mechanism directly: adding one destructible
+// local (`std::string probe;`) to this body makes VC6 emit the EH frame AND
+// expand the throw, reproducing retail's `mov al, byte ptr [ebp+0xf]`
+// allocator raid - so the rule "VC6 will not expand a callee that introduces
+// EH state into a caller with no EH frame" is confirmed here. It is NOT a
+// budget question: an `if (0) { count = count; }` carrier at N = 2, 6, 12 and
+// 30 statements leaves the prologue byte-identical (no `push -1`) every time.
+// Tried and rejected as byte-flat (identical object, both twins): the
+// `mask[va_arg(...)] = 1` proxy store in place of `mask.set(...)`, and the
+// non-rotated `goto` loop form that reproduces retail's `jmp <top test>`
+// back edge. Retail's frame is fully accounted for by the throw temporaries
+// (esp home -0x10, string -0x20, mask -0x34, string -0x44, exception -0x50 =
+// 0x44), so retail has no surplus local a spelling could supply; the EH frame
+// must arrive from a construct not yet identified. Do not ship a probe local.
 VA(0x0044c720, 0x10B)  // anchor-callee the aArtifactSlotMasks cinit's 14 calls, retail-only file static
 static std::bitset<19> MakeArtifactSlotMask(unsigned count, ...)
 {
@@ -115,9 +133,11 @@ static std::bitset<144> MakeArtifactComponentMask(unsigned count, ...)
     std::bitset<144> mask;
     va_list components;
     va_start(components, count);
-    while (count > 0) {
-        mask.set(va_arg(components, int));
+component_loop:
+    if (count > 0) {
+        mask[va_arg(components, int)] = 1;
         --count;
+        goto component_loop;
     }
     va_end(components);
     return mask;
