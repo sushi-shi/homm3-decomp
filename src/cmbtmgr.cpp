@@ -3223,6 +3223,27 @@ unsigned char combatManager::InLineOfSight(int sourceIndex, int destIndex) const
 // rotation guard, so no second compare is emitted.
 // Residual (90.5928%): register/scheduling only - every block boundary and
 // branch now agrees.
+// Residual (90.5938%), fully localised by polish lane 37: there is NO
+// structural difference left. All 37 blocks are exact, the 21 branches and
+// 12 calls agree, and the whole floating-point stream matches retail
+// instruction for instruction - `fild deltaY / fstp t1 / fild remaining /
+// fstp t2 / fld t2 / fmul flatness / fsubr t1 / fild step / fstp t1 /
+// fmul t1 / fdiv nframes_d` on both sides. Only the ebp DISPLACEMENTS
+// differ, and they differ because retail's frame is 0x9c against our 0x8c.
+// Retail's map is: `saved` at -0xa8 (0x38 bytes, as SIZE(Bitmap16Bit)
+// proves), then a TWELVE-BYTE HOLE at -0x70..-0x65 that nothing addresses,
+// then `bottom` at -0x64, the three doubles at -0x60/-0x58/-0x50 and the
+// dwords at -0x48/-0x44/-0x40. Ours packs the same seven slots into
+// -0x60..-0x40 with `bottom` at -0x40 and no hole. So the missing fact is a
+// 12-byte local retail allocates and never addresses through ebp - not a
+// spelling of anything already here. MEASURED AND REJECTED: promoting
+// `travelX`/`remaining` out of the `if (nframes > 0)` costs 1.25 (89.34);
+// promoting `right`/`bottom` to function scope or to the guard's block is
+// byte-flat at both placements; naming `deltaY - remaining * flatness` as a
+// `double drop` scores 91.02 but is SOURCE-FALSE - retail never stores that
+// subtraction (it keeps it on the FPU stack and multiplies the step temp
+// straight into it), so the named local buys its 0.43 with two instructions
+// retail has not got and is not a frame retail homes.
 VA(0x00467a00, 0x3AF)  // anchor-global, dc 0x614f0
 void combatManager::ShootBallisticMissile(int startX, int startY, int destX,
                                           int destY, const CSprite* missile)
