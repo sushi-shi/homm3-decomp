@@ -4357,6 +4357,14 @@ static int MouseInScrollZone()
 // dwords it prices (0x10 against our 0x8) all go together.  That is an
 // OVER-inline of a template leaf with no admissible lever: a statement pin is
 // a falling-only floor and caller-shrink would need an invented static.
+// 2026-09-06, polish lane 36, the DC LOCAL-SCOPE SWEEP - measured and
+// rejected.  The Dreamcast block names TWO `cellExtra` locals
+// (ExtraInfoUnion, sp+0x44 and sp+0x40), i.e. the trigger cell's extraInfo
+// is read once into a named union per block and both the TOWN id and the
+// SHIPYARD owner come out of it, where this body calls
+// `get_trigger_cell()->get_map_extraInfo()` at all four sites.  One
+// `ExtraInfoUnion cellExtra;` per big block scores 91.6133 and one per ARM
+// scores the same, against 91.6263 - retail re-reads.
 VA(0x0040e360, 0x918)  // anchor-callee, dc 0xf3a8
 int advManager::ProcessHover(int mouseX, int mouseY)
 {
