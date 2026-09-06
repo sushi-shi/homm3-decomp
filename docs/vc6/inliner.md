@@ -70,12 +70,24 @@ Matcher guidance:
   reconstruction presents a small `cb` → the 1000 floor → everything starves.
   Finish the body; the inlining follows. Do not chase `_Tidy`/`vector`
   spellings, pragmas, or header variants — they are not the input.
-* The budget lever is *statement mass*, not bytes: dead stores and other
-  byte-inert statements move `cb` (this is A6's real mechanism). On a
-  byte-plateaued function whose only residual is an under-inline (A9,
-  `do_general_melee`), the honest fix is raising `caller_cb` past the
-  knife-edge or slimming an earlier callee's `cb` — quantified by the model
-  (§5.8).
+* The budget depends on front-end statement mass (`cb`), not emitted
+  bytes. Dead stores and other byte-inert statements can change `cb`; this
+  is a **compiler diagnostic finding, not permission to add such statements
+  to reconstructed source**. A budget-only probe may locate a threshold,
+  but remove it after the experiment. A better score does not justify it.
+  Recover the caller/callee declarations, body visibility and source order,
+  local lifetimes, and meaningful operations supported by Dreamcast and
+  retail evidence. Preserve proven helper boundaries through score dips.
+* Retain `HOMM3_RELEASE_VERIFY(expression)` only for a meaningful recovered
+  invariant supported by line-table and codegen evidence. A line gap alone
+  does not prove an assertion. Do not retain dummy calls, self-assignments,
+  repeated expressions, unreachable branches, or alternate declarations to
+  change the inline budget. Every retained VERIFY and temporary inline-depth
+  experiment needs a source comment naming caller, callee and retail/DC
+  evidence, plus a negative control showing that flattening or de-inlining
+  fails. Remove diagnostic pragmas before commit. The matching rules in
+  [AGENTS.md](../../AGENTS.md#helper-boundaries-and-inlining) govern which
+  source changes are admissible; the budget model only explains codegen.
 * A15 ("leaf spelling is a global variable") now has a mechanism: a leaf's
   `cb` enters every caller's sequential budget arithmetic, so respelling a
   leaf re-decides inline structure at every call site in the image.
