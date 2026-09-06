@@ -2914,7 +2914,15 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
     if (gpGame->mapHeader.version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
         identifier = 0;
     } else {
-        infile->Read(&identifier, sizeof(identifier));
+        // The else arm reads into its OWN local and assigns: retail's
+        // `mov ecx,[ebp-0x18] / mov [ebp-0x18],ecx` at the join is that
+        // copy after the allocator coalesced the two slots (+0.58).
+        // Reading straight into `identifier` loses the pair; hoisting the
+        // zero out of the if arm scores 94.95 and the whole-block rewrite
+        // 94.96.
+        int rawIdentifier;
+        infile->Read(&rawIdentifier, sizeof(rawIdentifier));
+        identifier = rawIdentifier;
     }
 
     short quantity;
