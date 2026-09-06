@@ -4107,6 +4107,7 @@ textwdgt	??_GtextWidget@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1bc250	-
 textwdgt	?Draw@bitmapBackedTextWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x1bc7f0	d9483aaae311
 textwdgt	?Draw@textWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x1bc5f0	a6c8e7afad1c
 textwdgt	?Main@textWidget@@UAEHPAVmessage@@@Z	98.4931	98.4931	98.4931	0x1bc440	742a9581d00d
+tiles	?BuildTileNeighbourMask@@YIXHHHHPAE@Z	100.0000	100.0000	100.0000	0x1bc910	621851be8771
 town	??0town@@QAE@XZ	100.0000	100.0000	100.0000	0x1bde80	bf112f8952d9
 town	?ApplySpecialBuildingEffect@town@@QAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x1bd8e0	4949cdd0ed0e
 town	?BuildBuilding@town@@QAE?AW4type_building_id@@HEE@Z	92.5627	99.3036	99.3036	0x1bede0	b9c8a33ff42b
