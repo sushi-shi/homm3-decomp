@@ -867,6 +867,8 @@ campaignbrief	?get_campaign_name@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$
 campaignbrief	?insert@?$vector@UCampaignScenarioPreview@@V?$allocator@UCampaignScenarioPreview@@@std@@@std@@QAEXPAUCampaignScenarioPreview@@IABU3@@Z	100.0000	100.0000	100.0000	0x5c960	-
 campaignmap	?InitializeCampaignMapTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0x5dee0	4134d1efefe4
 campaignmap	__h3cg$campaignmap$static_dtor$campaignNames	100.0000	100.0000	100.0000	0x5e1f0	-
+campaignmusic	?InitializeCampaignMusicTable@@YIEXZ	100.0000	100.0000	100.0000	0x5e250	592bace7db51
+campaignmusic	__h3cg$campaignmusic$static_dtor$campaignMusicTracks	100.0000	100.0000	100.0000	0x5e3b0	-
 campaignwindow	??0TCampaignWindow@@QAE@EH@Z	97.2737	98.4726	98.4726	0x5ea40	24481ac60d0b
 campaignwindow	??1SCampaign@@QAE@XZ	100.0000	100.0000	100.0000	0x5f110	-
 campaignwindow	??1TCampaignWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x5f210	aee78d937417
