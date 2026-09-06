@@ -621,8 +621,8 @@ struct TRmgMapItem {
     // CreateRiver's predicate reads shift the high tile bits and test a
     // byte result. These queries recover that boundary; direct field tests
     // instead use dword masks. Names remain provisional without RMG symbols.
-    bool IsRiverTarget() const { return tileData.riverTarget != 0; }
-    bool IsImpassable() const { return tileData.impassable != 0; }
+    bool isRiverTarget() const { return tileData.riverTarget != 0; }
+    bool isImpassable() const { return tileData.impassable != 0; }
 
     // ScoreObjectPlacement reads bit 27 with shr/test dl, whereas its
     // direct roadPassable condition tests the containing dword. The
@@ -646,7 +646,7 @@ struct TRmgMapItem {
     // provisional because Dreamcast contains no RMG compiland. Keeping
     // the scalar cost write and struct assignment directly in each caller
     // loses that snapshot (BuildRoadCostMap 73.7139% versus 75.6686%).
-    void SetMovementCost(int cost, TRmgMapPosition previous)
+    void setMovementCost(int cost, TRmgMapPosition previous)
     {
         movement.cost = cost;
         previousTile = previous;
@@ -657,7 +657,7 @@ struct TRmgMapItem {
     // Its role name is provisional; Dreamcast has no RMG compiland.  A
     // generic cost parameter instead lowers the constant write as XOR,
     // whereas retail retains the constant AND/OR form.
-    void ResetMovement(TRmgMapPosition previous)
+    void resetMovement(TRmgMapPosition previous)
     {
         movement.cost = 32000;
         previousTile = previous;
@@ -978,13 +978,13 @@ public:
     int PlaceBorderObject(
         TRmgMapPosition position, int count, TRmgZone* zone);
     type_object* CreateGuard(int value, TRmgZone* zone);
-    void ResetMovementCosts();
+    void resetMovementCosts();
     // Provisional Complete-only spelling: the 0x548290 road-target pass is
     // the sole direct caller, and the body builds the road traversal costs.
     void BuildRoadCostMap(TRmgMapPosition position);
     // Provisional spelling: retail's water-wheel caller and the river-delta
     // object selection prove the role; the Dreamcast build has no RMG TU.
-    void CreateRiver(TRmgMapPosition source);
+    void createRiver(TRmgMapPosition source);
     void WriteMapHeader(TAbstractFile* outfile);
 };
 

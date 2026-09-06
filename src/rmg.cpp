@@ -1,4 +1,8 @@
 // rmg.cpp - Complete-only random-map generator support.
+// Evidence lookup spellings retained by the normalized river reconstruction:
+// CreateRiver, ResetMovementCosts, InsertRmgWorkItem, IsRiverTarget,
+// IsImpassable, SetMovementCost, ResetMovement; globals gRmgDirections,
+// gRmgShipyardWaterOffsets, gLandRiverDeltaIndex and gSnowRiverDeltaIndex.
 //
 // The Dreamcast build has no RMG compiland. Retail's direct caller graph
 // reaches this library from TSingleSelectionWindow::GenerateRandomMap, and
@@ -33,7 +37,7 @@ namespace {
 // The cinit at 0x530da0 writes these eight clockwise neighbours.  The river
 // search advances by two entries, selecting only the four cardinal offsets.
 DATA(0x0069CDC0)
-TPoint gRmgDirections[8] = {
+TPoint g_rmgDirections[8] = {
     TPoint(1, 0),
     TPoint(1, 1),
     TPoint(0, 1),
@@ -48,7 +52,7 @@ TPoint gRmgDirections[8] = {
 // four water-facing squares beside their upper and lower edges before it
 // floods the reachable water region.
 DATA(0x0069CE00)
-TPoint gRmgShipyardWaterOffsets[RMG_SHIPYARD_WATER_OFFSET_COUNT] = {
+TPoint g_rmgShipyardWaterOffsets[RMG_SHIPYARD_WATER_OFFSET_COUNT] = {
     TPoint(-3, 0),
     TPoint(1, 0),
     TPoint(-3, 1),
@@ -56,10 +60,10 @@ TPoint gRmgShipyardWaterOffsets[RMG_SHIPYARD_WATER_OFFSET_COUNT] = {
 };
 
 DATA(0x006409A0)
-static const int gLandRiverDeltaIndex[4] = {2, 0, 3, 1};
+static const int g_landRiverDeltaIndex[4] = {2, 0, 3, 1};
 
 DATA(0x006409B0)
-static const int gSnowRiverDeltaIndex[4] = {7, 5, 4, 6};
+static const int g_snowRiverDeltaIndex[4] = {7, 5, 4, 6};
 
 // Thirty-two radial directions used by the placement and boundary passes.
 DATA(0x00682500)
@@ -1859,7 +1863,7 @@ unsigned char type_random_map_generator::CreateGroundConnection(
             && item->zoneState.connectionEligibility == destinationZone
             && static_cast<int>(item->objects.size()) <= 0) {
             TRmgMapPosition other = (*borderPositions)[index]
-                + gRmgDirections[item->tileData.connectionDirection];
+                + g_rmgDirections[item->tileData.connectionDirection];
             if (static_cast<int>(map.GetMapItem(other)->objects.size()) <= 0) {
                 ++eligibleCount;
                 int cost = item->movement.unknown;
@@ -1891,7 +1895,7 @@ unsigned char type_random_map_generator::CreateGroundConnection(
     for (int crossing = 0; crossing < count; ++crossing) {
         int selected = rand() % candidates.size();
         TRmgMapPosition position = candidates[selected];
-        TPoint direction = gRmgDirections[
+        TPoint direction = g_rmgDirections[
             map.GetMapItem(position)->tileData.connectionDirection];
         TRmgMapPosition otherPosition = candidates[selected] + direction;
 
@@ -2159,8 +2163,8 @@ void type_random_map_generator::ConnectZones()
                 int direction = mapItem->tileData.connectionDirection;
                 TRmgMapItem* otherMapItem = map.GetMapItem(
                     TRmgMapPosition(
-                        position.x + gRmgDirections[direction].x,
-                        position.y + gRmgDirections[direction].y,
+                        position.x + g_rmgDirections[direction].x,
+                        position.y + g_rmgDirections[direction].y,
                         position.z));
                 if (otherMapItem->tile.landType != eTerrainWater
                     && otherMapItem->zoneState.zone
@@ -2276,7 +2280,7 @@ void type_random_map_generator::ConnectZones()
                          ++waterOffset) {
                         TRmgMapPosition waterPosition =
                             shipyardPosition
-                            + gRmgShipyardWaterOffsets[waterOffset];
+                            + g_rmgShipyardWaterOffsets[waterOffset];
                         if (waterPosition.x >= 0
                             && waterPosition.x < map.mapWidth
                             && map.GetMapItem(waterPosition)->tile.landType
@@ -2398,7 +2402,7 @@ VA_COMPGEN(0x0054D9E0, 0x39, STD_COPY, TRmgMapPosition)
 // The search uses one top test with two unconditional back edges in retail.
 // VC6 rotates for (;;) and while (first < last) spellings; while (1) keeps
 // this top test and restores that flow in CreateRiver (76.51% -> 79.82%).
-static void InsertRmgWorkItem(
+static void insertRmgWorkItem(
     std::vector<TRmgMapPosition>& positions,
     std::vector<int>& costs,
     TRmgMapPosition position,
@@ -2487,8 +2491,8 @@ void type_random_map_generator::BuildRoadCostMap(TRmgMapPosition position)
                     if (nextMapItem->movement.cost <= nextCost)
                         continue;
 
-                    nextMapItem->SetMovementCost(nextCost, position);
-                    InsertRmgWorkItem(
+                    nextMapItem->setMovementCost(nextCost, position);
+                    insertRmgWorkItem(
                         openPositions, openCosts, nextPosition, nextCost);
                 }
                 break;
@@ -2507,8 +2511,8 @@ void type_random_map_generator::BuildRoadCostMap(TRmgMapPosition position)
                     if (nextMapItem->movement.cost <= nextCost)
                         continue;
 
-                    nextMapItem->SetMovementCost(nextCost, position);
-                    InsertRmgWorkItem(
+                    nextMapItem->setMovementCost(nextCost, position);
+                    insertRmgWorkItem(
                         openPositions, openCosts, nextPosition, nextCost);
                 }
                 break;
@@ -2522,8 +2526,8 @@ void type_random_map_generator::BuildRoadCostMap(TRmgMapPosition position)
                 TRmgMapItem* nextMapItem = map.GetMapItem(nextPosition);
                 int nextCost = positionCost + 1;
                 if (nextMapItem->movement.cost > nextCost) {
-                    nextMapItem->SetMovementCost(nextCost, position);
-                    InsertRmgWorkItem(
+                    nextMapItem->setMovementCost(nextCost, position);
+                    insertRmgWorkItem(
                         openPositions, openCosts,
                         nextPosition, nextCost);
                 }
@@ -2533,7 +2537,7 @@ void type_random_map_generator::BuildRoadCostMap(TRmgMapPosition position)
         }
 
         while (direction--) {
-            TPoint* directionOffset = &gRmgDirections[direction];
+            TPoint* directionOffset = &g_rmgDirections[direction];
             TRmgMapPosition nextPosition;
             nextPosition.x = position.x + directionOffset->x;
             nextPosition.y = position.y + directionOffset->y;
@@ -2573,8 +2577,8 @@ void type_random_map_generator::BuildRoadCostMap(TRmgMapPosition position)
             if (nextMapItem->movement.cost <= nextCost)
                 continue;
 
-            nextMapItem->SetMovementCost(nextCost, position);
-            InsertRmgWorkItem(
+            nextMapItem->setMovementCost(nextCost, position);
+            insertRmgWorkItem(
                 openPositions, openCosts, nextPosition, nextCost);
         }
     }
@@ -2596,7 +2600,7 @@ void type_random_map_generator::BuildRoadCostMap(TRmgMapPosition position)
 // Its final empty-vector cleanup now has separate returns where retail shares
 // the final delete epilogue. Preserve the exact reset sequence through that
 // remaining caller cleanup work.
-void type_random_map_generator::ResetMovementCosts()
+void type_random_map_generator::resetMovementCosts()
 {
     TRmgMapPosition resetPosition(-1, -1, -1);
     TRmgMapItem* mapItem = map.GetMapItem(0, 0);
@@ -2605,7 +2609,7 @@ void type_random_map_generator::ResetMovementCosts()
     TRmgGridPoint mapSize(width, height);
     int mapItemCount = mapSize.x * mapSize.y * map.numberLevels;
     while (mapItemCount--) {
-        mapItem->ResetMovement(resetPosition);
+        mapItem->resetMovement(resetPosition);
         ++mapItem;
     }
 }
@@ -2687,10 +2691,18 @@ void type_random_map_generator::ResetMovementCosts()
 // are byte-flat. A const-ref setter changes the shared road helper's proved by-value boundary and is
 // rejected; a combined reset/cost setter and by-value position assignment
 // also fail the reset's constant-cost and copy sequence.
+// Additional controls with the grid reset: reusing the seed position or
+// shortening its scope leaves the cleanup mismatch (84.93/85.34%). Empty
+// sized-vector constructors lose reset/seed regions and may grow the frame
+// to 0xc0. A grid projection constructor and canonical delta addition do not
+// recover the painting lifetimes. A const prototype query scores 86.40% but
+// removes two CFG blocks; named bitset references/results also fail to restore
+// the retained range-check pointer. None is evidence for replacing the
+// current interface or hiding the early vector cleanup mismatch.
 VA(0x00548DF0, 0x99F)  // water-wheel caller + river-delta object; retail-only
-void type_random_map_generator::CreateRiver(TRmgMapPosition source)
+void type_random_map_generator::createRiver(TRmgMapPosition source)
 {
-    ResetMovementCosts();
+    resetMovementCosts();
 
     TRmgMapItem* mapItem;
     TRmgMapPosition emptyPosition;
@@ -2743,7 +2755,7 @@ void type_random_map_generator::CreateRiver(TRmgMapPosition source)
         mapItem = map.GetMapItem(position);
         int positionCost = mapItem->movement.cost;
         for (direction = 0; direction < 8; direction += 2) {
-            nextPosition = position + gRmgDirections[direction];
+            nextPosition = position + g_rmgDirections[direction];
 
             if (nextPosition.x < 0 || nextPosition.x >= map.mapWidth
                 || nextPosition.y < 0 || nextPosition.y >= map.mapHeight)
@@ -2752,7 +2764,7 @@ void type_random_map_generator::CreateRiver(TRmgMapPosition source)
             mapItem = map.GetMapItem(nextPosition);
             if (mapItem->tile.landType == eTerrainWater
                 || mapItem->tile.landType == eTerrainRock
-                || mapItem->IsImpassable()
+                || mapItem->isImpassable()
                 || (mapItem->tile.landType == eTerrainSnow) != sourceIsSnow)
                 continue;
 
@@ -2768,18 +2780,18 @@ void type_random_map_generator::CreateRiver(TRmgMapPosition source)
                 & (1 << oppositeDirection))
                 continue;
 
-            mapItem->SetMovementCost(nextCost, position);
-            InsertRmgWorkItem(
+            mapItem->setMovementCost(nextCost, position);
+            insertRmgWorkItem(
                 openPositions, openCosts, nextPosition, nextCost);
 
-            if (mapItem->IsRiverTarget()) {
+            if (mapItem->isRiverTarget()) {
                 openPositions.clear();
                 break;
             }
         }
     }
 
-    if (!mapItem->IsRiverTarget())
+    if (!mapItem->isRiverTarget())
         return;
 
     mapItem->tileData.riverTarget = 1;
@@ -2805,8 +2817,8 @@ void type_random_map_generator::CreateRiver(TRmgMapPosition source)
         };
 
         int deltaIndex = sourceIsSnow
-            ? gSnowRiverDeltaIndex[direction]
-            : gLandRiverDeltaIndex[direction];
+            ? g_snowRiverDeltaIndex[direction]
+            : g_landRiverDeltaIndex[direction];
         TTerrainType landType = mapItem->tile.landType;
         int prototypeIndex = 0;
         for (; prototypeIndex < objectPrototypes[TERRAIN_RIVER_DELTA].size();
@@ -2830,7 +2842,7 @@ void type_random_map_generator::CreateRiver(TRmgMapPosition source)
                 nextPosition.y + deltaOffsets[direction].y,
                 nextPosition.z));
 
-        nextPosition = nextPosition + gRmgDirections[direction * 2];
+        nextPosition = nextPosition + g_rmgDirections[direction * 2];
         riverPainter.DrawTo(TRmgGridPoint(nextPosition.x, nextPosition.y));
         mapItem = map.GetMapItem(nextPosition);
         mapItem->tileData.riverTarget = 1;
