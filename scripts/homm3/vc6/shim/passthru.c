@@ -1,4 +1,4 @@
-/* homm3.vc6.shim/passthru.c - C2-slot pass-through instrumentation DLL (v1).
+/* homm3.vc6.shim/passthru.c - C2-slot pass-through instrumentation DLL.
  *
  * Drop-in replacement for the pinned back end C2.DLL (12.00.8447, sha256
  * a0cc45f8..., image base 0x10700000).  The CL driver (12.00.8168) resolves
@@ -18,6 +18,8 @@
  * arguments unchanged to the real back end (renamed C2_real.dll in the same
  * directory by shim/build.py), and return its return value.  Inertness is
  * proven by shim/build.py's byte-identity gate, not assumed.
+ * HOMM3_VC6_INLINE_TRACE=1 additionally observes live inline budgets through
+ * inline_trace.h; inline_trace.py gates each trace against captured-IL replay.
  *
  * Log file: the Windows path in HOMM3_VC6_SHIM_LOG (build.py passes the
  * winepath of build/vc6/shim/argv.log), else c2shim_argv.log in the cwd.
@@ -127,6 +129,8 @@ static void wr_stamp(HANDLE h)
     wr_dec(h, GetTickCount());
 }
 
+#include "inline_trace.h"
+
 /* ---- locate the real back end ----------------------------------------- */
 
 static int resolve_real(void)
@@ -211,6 +215,12 @@ int __stdcall InvokeCompilerPass(int argc, char **argv, int fLastTU)
             CloseHandle(h);
         }
         return 2;  /* driver treats nonzero as pass failure */
+    }
+    if (trace_requested() && !trace_install()) {
+        h = log_open();
+        wr_str(h, "# inline ERROR pinned hook bytes or executable memory unavailable\n");
+        CloseHandle(h);
+        return 2;
     }
     ret = s_invoke(argc, argv, fLastTU);
     h = log_open();
