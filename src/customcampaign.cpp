@@ -3036,12 +3036,14 @@ static short ReadCampaignWord(TAbstractFile* infile)
 // `CampaignScenarioInfo& scenario` for the mapScores loop is
 // 61.3492 -> 62.2807.
 //
-// FOURTH WITHHELD RUNG, same class and same block as the three below:
-// `std::vector<hero>& heroPool = carryOverHeroes[pool];`, proved by retail
-// computing `&carryOverHeroes[pool]` at 0x48b5e5..0x48b5ef before the
-// hero-count `Read` at 0x48b5fa.  It is the budget's, not the spelling's:
-// cost -1.08 at 61.3492 and only -0.10 at 62.2807, so it is tracking the
-// other three down and flips with them.
+// The sibling `std::vector<hero>& heroPool = carryOverHeroes[pool];` is
+// proved the same way - retail computes `&carryOverHeroes[pool]` at
+// 0x48b5e5..0x48b5ef before the hero-count `Read` at 0x48b5fa - and it was
+// the budget's, not the spelling's: cost -1.08 at 61.3492, -0.10 at
+// 62.2807, +0.61 at 64.9752.  ALL FOUR withheld rungs flipped positive
+// inside this lane once the element references landed, which retires the
+// "they flip together" note: the budget hole is now shallow enough that
+// each retail-proven spelling pays on its own.
 //
 // THREE RETAIL-PROVEN RUNGS ARE WITHHELD, all blocked on the same budget,
 // and all three got CHEAPER as the budget closed - measure them again after
@@ -3216,10 +3218,11 @@ void SCampaign::Load(TAbstractFile* infile, int saveVersion)
     field_4c.resize(count);
 
     for (int pool = 0; pool < count; ++pool) {
+        std::vector<hero>& heroPool = carryOverHeroes[pool];
         unsigned char heroCount = ReadCampaignByte(infile);
-        carryOverHeroes[pool].resize(heroCount);
+        heroPool.resize(heroCount);
         for (int whichHero = 0; whichHero < heroCount; ++whichHero)
-            carryOverHeroes[pool][whichHero].load(infile, saveVersion);
+            heroPool[whichHero].load(infile, saveVersion);
 
         std::vector<type_artifact>& artifactPool = field_4c[pool];
         unsigned short artifactCount =
