@@ -1010,6 +1010,9 @@ void type_AI_player::reset_magus_hut_value()
 // forms were tested; none exceeded this source-equivalent plateau.
 #endif  // @carcass
 
+// Tried and rejected 2026-09-06: retail homes the sort's `_Last` at
+// [ebp-0x14] where we keep it in EDI; naming `creatures.end()` in an
+// iterator local, and naming both iterators, are byte-flat.
 VA(0x00429ad0, 0x280)  // anchor-callee, dc 0x2f280
 void type_AI_player::calculate_reserve()
 {
