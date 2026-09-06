@@ -3519,6 +3519,23 @@ void TSeerHut::read(TAbstractFile* infile)
 //     with every read group `==` from `infile->Read(&int_buffer, ...)` through
 //     the sixth byte; the first `!!` after the prologue is the textBuffer slot
 //     alone.
+// 2026-09-06 (polish lane 46), the NEGATIVE CONTROL the located residual
+// was missing, read off the DECISION rather than the score (so the missing
+// code the old probe measured does not confuse it): deleting the ENTIRE
+// >=28 arm - every Read, the `create_quest` call site and all four member
+// stores - leaves `insert` expanded exactly as before.  predict-inline
+// still reports `?insert@?$vector@HV?$allocator@H@std@@@std@@QAEPAHPAHABH
+// @Z` base x0 / retail x1; the only row that moves is `create_quest`, which
+// joins it because the site is gone.  So caller-shrink does not reach this
+// site: `budget = 2*cb(TSeerHut::load)` is clamped here, and the decision
+// belongs to the depth-3 quotient `budget/(n-k)` handed down through the
+// type_artifact_quest constructor and push_back's own two sites.  Retail's
+// argument binding is not the difference either - its inlined constructor
+// homes the by-value `artifact` at [ebp-0x18] for `push_back(const T&)` to
+// take the address of, then RE-READS that home for the
+// `gpGame->artifactDisabled[artifact]` store at 0x574be1, which is what our
+// spelling already emits.  Same wall class as smackmgr ShowVideo's.
+//
 // The 8-byte frame surplus (our `sub esp,0x1c` against retail's 0x14) is
 // downstream of that same expansion, not a source fact: retail packs the
 // reused `value` byte at [ebp+0xb] and `textBuffer` at [ebp+8] - both inside
