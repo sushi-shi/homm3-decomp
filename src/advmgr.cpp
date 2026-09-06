@@ -3797,6 +3797,12 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
     // unconditionally. That reads like a bug and is NOT one to fix: retail
     // really does emit those two calls outside the guard here, and bracing
     // both arms was measured at 89.28 against the unbraced 89.82.
+    // RE-MEASURED 2026-09-06 on this lane's tree (the helpers routed, the
+    // globals corrected, the arm map read): the verdict holds, bracing both
+    // costs 96.9535 -> 96.6973.  It matters because the OBELISK arm's -0x30
+    // hangs off this selector - our OBELISK ends `mov [ebp+0x10],eax / jmp`
+    // straight into it, where retail keeps a `je` on the AND's own flags and
+    // its own copy of the visited sprintf.
     case SIREN:
         strcpy(gText, gAdventureObjectNames[SIREN]);
         if (cell->is_trigger && currentHero)
