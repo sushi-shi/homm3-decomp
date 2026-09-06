@@ -3317,6 +3317,14 @@ static void set_tomb_help_text(
     }
 }
 
+// The ternary is retail's own shape at BOTH callers: SetRolloverText's arm
+// (+0x1ca4, 0xb6 B) and QuickInfo's (+0x1f73, the same 0xb6) each hoist
+// `gpGeneralText->m_texts` OUT of the branch - `mov eax,[gpGeneralText] /
+// shl edx,2 / mov eax,[eax+0x20] / test dx,dx` - which only a common
+// subexpression across the two GetText arms produces.  The if/else spelling
+// duplicates the load into each arm: measured 2026-09-06 at WATER_WHEEL +0x44
+// against retail (SetRolloverText 96.0784, QuickInfo 95.0826) where the
+// ternary lands at +7 (96.8953 / 95.8819).
 static void set_water_wheel_help_text(
     char* buffer, NewmapCell* cell, const char* separator)
 {
@@ -3324,15 +3332,21 @@ static void set_water_wheel_help_text(
     if (cell->is_trigger && cell->PlayerKnowsCell(gNetLocalGamePos)) {
         strcat(buffer, separator);
         short gold = (cell->extraInfo & 0x1f) * 500;
-        if (gold == 0)
-            strcat(buffer,
-                   gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT));
-        else
-            strcat(buffer,
-                   gpGeneralText->GetText(GENERAL_TEXT_UNVISITED_OBJECT));
+        strcat(buffer,
+               gold == 0
+                   ? gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT)
+                   : gpGeneralText->GetText(GENERAL_TEXT_UNVISITED_OBJECT));
     }
 }
 
+// Retail's WINDMILL keeps TWO complete strcat expansions (+0x1e8a, 0xf4 B),
+// each loading gpGeneralText itself and into a DIFFERENT register (ecx then
+// eax), which reads as if/else rather than a ternary.  It is not: spelling
+// this arm if/else while WATER_WHEEL above stays a ternary costs three points
+// on each caller - SetRolloverText 96.8953 -> 93.8242, QuickInfo 95.8819 ->
+// 92.7502 (2026-09-06) - because the WAGON/WARRIOR_TOMB/WATER_WHEEL arms all
+// cross-jump INTO this arm's two blocks and the if/else form moves their entry
+// points.  The residual -30 B here is that merge depth, not the branch shape.
 static void set_windmill_help_text(
     char* buffer, NewmapCell* cell, const char* separator)
 {
@@ -3340,12 +3354,10 @@ static void set_windmill_help_text(
     if (cell->is_trigger && cell->PlayerKnowsCell(gNetLocalGamePos)) {
         strcat(buffer, separator);
         unsigned long amount = cell->extraInfo >> 13;
-        if ((amount & 0xf) == 0)
-            strcat(buffer,
-                   gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT));
-        else
-            strcat(buffer,
-                   gpGeneralText->GetText(GENERAL_TEXT_UNVISITED_OBJECT));
+        strcat(buffer,
+               (amount & 0xf) == 0
+                   ? gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT)
+                   : gpGeneralText->GetText(GENERAL_TEXT_UNVISITED_OBJECT));
     }
 }
 
@@ -3777,45 +3789,21 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
         }
         break;
     case WAGON:
-        strcpy(gText, gAdventureObjectNames[WAGON]);
-        if (cell->is_trigger) {
-            strcat(gText, separator);
-            strcat(gText, cell->PlayerKnowsCell(gNetLocalGamePos)
-                ? gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT)
-                : gpGeneralText->GetText(GENERAL_TEXT_UNVISITED_OBJECT));
-        }
+        set_wagon_help_text(gText, cell, separator);
         break;
     SET_VISITED_ROLLOVER(WAR_SCHOOL, WarSchoolInfo,
         currentHero->WarSchoolFlags
         & (1UL << (cell->extraInfo & 0x1f)));
     case WARRIOR_TOMB:
-        strcpy(gText, gAdventureObjectNames[WARRIOR_TOMB]);
-        if (cell->is_trigger) {
-            strcat(gText, separator);
-            strcat(gText, cell->PlayerKnowsCell(gNetLocalGamePos)
-                ? gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT)
-                : gpGeneralText->GetText(GENERAL_TEXT_UNVISITED_OBJECT));
-        }
+        set_tomb_help_text(gText, cell, separator);
         break;
     case WATER_WHEEL:
-        strcpy(gText, gAdventureObjectNames[WATER_WHEEL]);
-        if (cell->is_trigger && cell->PlayerKnowsCell(gNetLocalGamePos)) {
-            strcat(gText, separator);
-            strcat(gText, (cell->extraInfo & 0x1f) == 0
-                ? gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT)
-                : gpGeneralText->GetText(GENERAL_TEXT_UNVISITED_OBJECT));
-        }
+        set_water_wheel_help_text(gText, cell, separator);
         break;
     SET_VISITED_ROLLOVER(WATERING_HOLE, WateringHoleInfo,
         currentHero->flags & 0x40);
     case WINDMILL:
-        strcpy(gText, gAdventureObjectNames[WINDMILL]);
-        if (cell->is_trigger && cell->PlayerKnowsCell(gNetLocalGamePos)) {
-            strcat(gText, separator);
-            strcat(gText, ((cell->extraInfo >> 13) & 0xf) == 0
-                ? gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT)
-                : gpGeneralText->GetText(GENERAL_TEXT_UNVISITED_OBJECT));
-        }
+        set_windmill_help_text(gText, cell, separator);
         break;
     case WITCH_HUT:
         set_witch_hut_help_text(gText, currentHero, cell,
