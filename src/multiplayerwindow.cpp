@@ -1756,9 +1756,13 @@ unsigned char TMultiPlayerWindow::OnSearch()
 #pragma inline_depth(0)
         InitRemote(MP_TCP, 0, 0);
 #pragma inline_depth()
-#pragma inline_depth(0)
+        // This arm's `return 0;` used to carry its own depth pin. Removing
+        // exactly that one is OnSearch 89.76576 -> 94.18919, a new MAX, with
+        // no other row moving; a full 16-subset enumeration over the four
+        // candidate pins in this body shows every larger set is worse and
+        // (4,7) and (4,5,7) actually FALL (2026-09-06, polish lane 50). The
+        // three siblings stay pinned.
         return 0;
-#pragma inline_depth()
     }
 
 #pragma inline_depth(0)

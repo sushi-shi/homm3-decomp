@@ -1222,10 +1222,11 @@ static void saveQuestGuardList(NewfullMap* map, TAbstractFile* outfile)
     // The mirror of the seer-hut helper, one call further: retail calls
     // vector<TQuestGuard>::size THREE times (Save+0x254 for this count,
     // +0x26e and +0x297 for the loop) where our CL only left the loop's
-    // two out of line.
-#pragma inline_depth(0)
+    // two out of line. The `inline_depth(0)` pin that forced this one out
+    // of line is now a LOSS: removing it is NewfullMap::Save 91.88699 ->
+    // 93.71233, a new MAX, with no other row moving (2026-09-06, polish
+    // lane 50).
     int count = map->QuestGuardList.size();
-#pragma inline_depth()
     outfile->Write(&count, 2);
     for (unsigned int i = 0; i < map->QuestGuardList.size(); ++i)
         map->QuestGuardList[i].save(outfile);

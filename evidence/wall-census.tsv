@@ -26,17 +26,17 @@ not diagnosed	147	75.9951	75.9951	611	multiplayerwindow	?OnTCP@TMultiPlayerWindo
 not diagnosed	195	76.3360	76.3360	825	hero	?GiveArtifact@hero@@QAEEPBUtype_artifact@@EE@Z	diagnose	-
 not diagnosed	58	76.5169	76.2135	245	seerhut	?DoProgressDialog@type_skill_quest@@UAEXXZ	diagnose	-
 not diagnosed	118	76.6378	76.6378	503	objecttype	??5@YIAAV?$basic_istream@DU?$char_traits@D@std@@@std@@AAV01@AAUTObjectType@@@Z	diagnose	-
-not diagnosed	509	76.7482	73.9564	2190	game	?LoadMap@game@@QAE_NPAVTAbstractFile@@@Z	diagnose	-
 not diagnosed	511	76.9439	76.9439	2218	rmg	?CreateSubterraneanGate@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	diagnose	-
 not diagnosed	25	77.3913	77.3913	110	objecttype	?Accepts@TNativeTerrainObjectFilter@@UBEHPBUTObjectType@@@Z	diagnose	-
 not diagnosed	81	77.4872	77.4872	359	adventuremapwindow	?SendChat@CAdventurMapChatEdit@@UAEXPBDH@Z	diagnose	-
 not diagnosed	148	78.1174	50.3902	676	events	?DoEventArtifact@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	diagnose	-
 not diagnosed	364	78.1958	78.1958	1668	philai	?get_skill_value@@YIJPBVhero@@W4TSecondarySkill@@E@Z	diagnose	-
+not diagnosed	476	78.2855	74.4768	2190	game	?LoadMap@game@@QAE_NPAVTAbstractFile@@@Z	diagnose	-
 not diagnosed	66	78.5339	75.7203	306	customcampaign	??1CampaignHeaderStruct@TCampaignBrief@@QAE@XZ	diagnose	-
 not diagnosed	238	78.5926	78.5926	1112	hiscore	?HighScoreWindowHandler@@YIHAAVmessage@@@Z	diagnose	-
 not diagnosed	309	78.7597	77.2669	1455	singleselectionwindow	?OnBeginGame@TSingleSelectionWindow@@QAEEXZ	diagnose	-
-not diagnosed	1521	78.7882	78.7882	7172	kb	?oldmain@@YIHXZ	diagnose	-
 not diagnosed	186	78.8074	78.8074	880	customcampaign	?Save@SCampaign@@QAEXPAVTAbstractFile@@@Z	diagnose	-
+not diagnosed	1510	78.9421	78.9421	7172	kb	?oldmain@@YIHXZ	diagnose	-
 not diagnosed	187	79.1107	79.1107	894	kb	?DisplayLCWinLoss@@YIEPAVLossConditionStruct@@PAH1E@Z	diagnose	-
 not diagnosed	121	79.1518	79.1518	579	cmbtmgr	?place_obstacle@combatManager@@QAEEH@Z	diagnose	-
 not diagnosed	590	79.2531	66.4461	2846	customcampaign	?Load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	diagnose	-
@@ -54,7 +54,6 @@ not diagnosed	285	80.9474	53.9715	1494	customcampaign	?Load@CampaignHeaderStruct
 not diagnosed	100	81.0400	81.0400	530	hero	?update_spell_list@hero@@QAEXXZ	diagnose	-
 not diagnosed	91	81.0407	81.0407	479	path	?ValidAttack@army@@QBEHHHHHPAH@Z	diagnose	-
 not diagnosed	93	81.0449	81.0449	491	iconwdgt	?NextRandomFrame@iconWidget@@QAEXXZ	diagnose	-
-not diagnosed	123	81.0631	81.0631	652	seerhut	?DoProposalDialog@type_skill_quest@@UAEXPAVhero@@@Z	diagnose	-
 not diagnosed	112	81.1204	81.1204	593	gzinflatebuf	?underflow@TGzInflateBuf@@UAEHXZ	diagnose	-
 not diagnosed	155	81.3049	81.3049	830	singleselectionwindow	?OnGameHeaderInfoInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	diagnose	-
 not diagnosed	73	81.3696	81.3696	392	command	?is_computer_action@combatManager@@QAEEPBVarmy@@@Z	diagnose	-
@@ -76,6 +75,7 @@ not diagnosed	38	82.9333	82.9333	224	mousemgr	?SetPointer@mouseManager@@QAEXHW4E
 not diagnosed	212	83.0188	83.0188	1247	advmgr	?ShowRoute@advManager@@QAEXHHH@Z	diagnose	-
 not diagnosed	37	83.0357	83.0357	216	events	?DoTreasureDialog@advManager@@QAEXPAVhero@@H_N@Z	diagnose	-
 not diagnosed	466	83.2115	81.4249	2776	cspriteframe	?DrawTile@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@EE@Z	diagnose	-
+not diagnosed	109	83.2252	83.2252	652	seerhut	?DoProposalDialog@type_skill_quest@@UAEXPAVhero@@@Z	diagnose	-
 not diagnosed	236	83.2900	83.2900	1414	customcampaign	?Read@ScenarioStruct@TCampaignBrief@@QAEXPAVTAbstractFile@@HH@Z	diagnose	-
 not diagnosed	395	83.3584	81.3343	2375	game	?NextPlayer@game@@QAEXXZ	diagnose	-
 not diagnosed	305	83.3598	83.3598	1834	combatoptionswindow	?CombatOptionsWindowHandler@@YIHAAVmessage@@@Z	diagnose	-
@@ -91,7 +91,6 @@ not diagnosed	31	84.4118	84.4118	201	game	?ClaimGarrison@game@@QAEXHH@Z	diagnose
 not diagnosed	96	84.4576	84.4576	620	campaignwindow	?CampaignWindowHandler@@YIHAAVmessage@@@Z	diagnose	-
 not diagnosed	109	84.5280	84.5280	703	soundmgr	?Open@soundManager@@UAEHH@Z	diagnose	-
 not diagnosed	263	84.5868	84.5868	1708	ai_player	?make_gift@type_AI_player@@QAEXJ@Z	diagnose	-
-not diagnosed	261	84.8316	84.8316	1720	ai_player	?AI_AttemptMove@@YIXPAVhero@@AAUHeroDestination@@AAJE@Z	diagnose	-
 not diagnosed	417	84.8412	84.0502	2748	swapmgr	?Main@swapManager@@UAEHAAVmessage@@@Z	diagnose	-
 not diagnosed	77	84.8547	84.8547	510	armygrp	?Merge@armyGroup@@QAEEPAV1@@Z	diagnose	-
 not diagnosed	155	84.9579	84.9579	1032	spells	?Earthquake@combatManager@@QAEXH@Z	diagnose	-
@@ -104,6 +103,7 @@ not diagnosed	221	85.5843	85.5843	1536	customcampaign	?CompleteCurrentMap@SCampa
 not diagnosed	111	85.6339	85.6339	775	advmgr	?ViewPuzzle@advManager@@QAEXXZ	diagnose	-
 not diagnosed	63	85.8333	85.8333	447	ai_player	?check_trade_supply@type_AI_player@@QAE_NPBHJPAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	diagnose	-
 not diagnosed	21	85.8871	85.8871	151	ai_player	?get_value@type_necromancy_artifact@@UBEJPBVhero@@EE@Z	diagnose	-
+not diagnosed	242	85.9228	85.9228	1720	ai_player	?AI_AttemptMove@@YIXPAVhero@@AAUHeroDestination@@AAJE@Z	diagnose	-
 not diagnosed	114	85.9771	85.9771	816	town	?create_building@town@@QAE?AW4type_building_id@@W42@@Z	diagnose	-
 not diagnosed	85	85.9839	85.9839	608	customcampaign	?GetText@TCampaignStartCrossoverOption@@UBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAXH@Z	diagnose	-
 not diagnosed	130	86.0884	86.0884	936	game	?read_map_hero_setups@game@@QAEXPAVTAbstractFile@@H@Z	diagnose	-
@@ -227,7 +227,6 @@ not diagnosed	32	91.1017	91.1017	355	spells	?GetNextChainLightningTarget@combatM
 not diagnosed	431	91.1880	91.1880	4889	campaignbrief	??0TCampaignBrief@@QAE@EE@Z	diagnose	-
 not diagnosed	252	91.2477	91.2477	2881	advmgr	?UpdateRadar@advManager@@QAEXUtype_point@@EEEEE@Z	diagnose	-
 not diagnosed	80	91.2973	91.2973	915	bottomviewsubwindow	??0TBottomViewResourceMessage@@QAE@PAVheroWindow@@HHPBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	diagnose	-
-not diagnosed	142	91.3243	89.7658	1638	multiplayerwindow	?OnSearch@TMultiPlayerWindow@@QAEEXZ	diagnose	-
 not diagnosed	225	91.4350	91.4350	2624	singleselectionwindow	?DrawHeroAdvancedOption@TSingleSelectionWindow@@QAEXHEH@Z	diagnose	-
 not diagnosed	113	91.4600	90.8184	1318	army	?attack_wall@army@@AAEXW4TWallTargetId@@J@Z	diagnose	-
 not diagnosed	116	91.4864	91.1018	1357	advspells	?SummonBoat@advManager@@QAEXH@Z	diagnose	-
@@ -242,7 +241,6 @@ not diagnosed	22	91.7125	91.7125	263	army	?Turn@army@@QAEXE@Z	diagnose	-
 not diagnosed	37	91.7323	91.7323	451	kb	?EventWindowHandler@@YIHPAVmessage@@@Z	diagnose	-
 not diagnosed	801	91.7373	91.7373	9692	overview	?SetupDynamicStuff@game@@QAEXHH@Z	diagnose	-
 not diagnosed	69	91.8147	91.8147	847	spells	?ViewSpells@combatManager@@QAEHXZ	diagnose	-
-not diagnosed	58	91.8870	91.8870	721	mapcell	?Save@NewfullMap@@QAEHPAVTAbstractFile@@HE@Z	diagnose	-
 not diagnosed	73	91.9303	91.9303	907	events	?DoEventShipyard@advManager@@QAEXPAVNewmapCell@@Utype_point@@E@Z	diagnose	-
 not diagnosed	70	91.9430	91.9430	873	hillfortwindow	?HillFortWindowHandler@@YIHAAVmessage@@@Z	diagnose	-
 not diagnosed	132	91.9548	91.9548	1646	ai_combat	?initialize_creatures@type_AI_combat_data@@QAEXNPBVhero@@@Z	diagnose	-
@@ -300,6 +298,7 @@ not diagnosed	43	93.6191	93.6191	667	kb	?NormalDialog@@YIXPBDHHHHHHHHHHH@Z	diagn
 not diagnosed	15	93.6364	93.6364	238	multiplayerwindow	?OnKeyPress@CHotSeatEdit@@UAEHPAVmessage@@@Z	diagnose	-
 not diagnosed	120	93.6672	93.6672	1895	castle	?WindowHandler@THallWindow@@UAEHPAVmessage@@@Z	diagnose	-
 not diagnosed	31	93.6951	93.6951	488	townmgr	?DoUniversity@townManager@@QAEXXZ	diagnose	-
+not diagnosed	45	93.7123	93.7123	721	mapcell	?Save@NewfullMap@@QAEHPAVTAbstractFile@@HE@Z	diagnose	-
 not diagnosed	40	93.8038	93.8038	641	customcampaignwindow	?UpdateList@TCustomCampaignWindow@@QAEXXZ	diagnose	-
 not diagnosed	46	93.8054	93.8054	747	advmgr	?SetTownContext@advManager@@QAEXHEE@Z	diagnose	-
 not diagnosed	13	93.8667	93.8667	216	initialize	?create_included_mask@@YIXPBHPA_J@Z	diagnose	-
@@ -315,6 +314,7 @@ not diagnosed	33	94.1648	94.1648	571	army	?get_berserk_targets@army@@QBEXAAV?$ve
 not diagnosed	111	94.1675	94.1675	1904	mousemgr	?Update@mouseManager@@QAEXE@Z	diagnose	-
 not diagnosed	30	94.1749	94.1749	512	hero	?HeroFn_004D9CC0@hero@@QAEHH@Z	diagnose	-
 not diagnosed	32	94.1758	94.1758	544	townmgr	?SetRolloverText@TThievesGuildWindow@@QAEXH@Z	diagnose	-
+not diagnosed	95	94.1892	94.1892	1638	multiplayerwindow	?OnSearch@TMultiPlayerWindow@@QAEEXZ	diagnose	-
 not diagnosed	93	94.2017	94.2017	1596	army	?animate_missile@army@@AAEXPAV1@@Z	diagnose	-
 not diagnosed	22	94.2771	94.2771	377	singleselectionpopups	?Main@CHotspotWidget@@UAEHPAVmessage@@@Z	diagnose	-
 not diagnosed	171	94.3953	94.3953	3056	advmgr	?DoAdvCommand@advManager@@QAEPAVNewmapCell@@PAUtype_point@@@Z	diagnose	-
