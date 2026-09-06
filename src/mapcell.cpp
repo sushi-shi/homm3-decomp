@@ -884,6 +884,24 @@ int NewfullMap::Read(TAbstractFile* infile, int size, unsigned char two_layers,
 // handle order (docs/vc6/regalloc.md 0).  Frames are the same size (0x1c),
 // so no local is missing; the earlier "second promoted count" probe (88.6135)
 // is the right family but the wrong direction.
+//
+// [polish-47] The slot ledger is now read off the bytes, and BOTH sides home
+// the same three values - the difference is only WHICH slot each got.
+// Retail: quest at [ebp-0x4] (stored in the branch shadow of
+// `mov eax,[ebx+eax] / test eax,eax / je`), i at -0x8, count at -0xc.
+// This compile: count at -0x4, quest at -0x8, i at -0xc. Two source
+// orderings measured against that, do not retry:
+//   * declaring `int i; int count;` as a top-of-function block (retail's
+//     order for those two) - BYTE-FLAT at 90.4930. It does move i from
+//     -0x4's neighbour down to -0xc, so declaration order DOES drive the
+//     numbering, but count stays at -0x4 and nothing else follows.
+//   * the full DC-style block `type_quest* quest; int i; int count;` with
+//     the loop body reading `quest = QuestGuardList[i].quest` once -
+//     90.4930 -> 82.2581, and the branch polarity flips. Naming the quest
+//     pointer lengthens its live range across the load() call and costs far
+//     more than the slot it buys.
+// So the residual is the handle NUMBERING with the same local set, not a
+// missing or extra local: docs/vc6/handle-order.md's C1-capped class.
 #pragma auto_inline(off)
 VA(0x004fd950, 0x268)  // caller Load 0xfdbc0; TQuestGuard ctor/load + vector resize/push_back
 void NewfullMap::NewfullMapFn_004FD950(
@@ -5425,6 +5443,16 @@ void NewfullMap::GenerateHeightMap(const CObject* object,
 // infers is one more live value at that point, not one more statement: any
 // candidate spelling has to make `newObject` (or something with its live
 // range) need a home across GenerateHeightMap.
+//
+// [polish-47] And it is NOT a missing statement. dc 0xf36b0's line table
+// runs 4053 (open) / 4054 (the object-list reference) / 4055 (end()) /
+// 4057 (`&objects[objCell.objectIndex]`) / 4058 (GenerateHeightMap) /
+// 4063 (the `while`) with NO breakpoint between 4058 and 4063 and none
+// between 4055 and 4057 either, so the prologue carries exactly the four
+// statements this candidate already has. Whatever gives retail its extra
+// live value at the call is an allocation artifact of the same source, not
+// a fifth element - which puts this row with NewfullMapFn_004FD950's
+// handle-numbering residual, not with a reconstruction gap.
 VA(0x00505230, 0x3D9)  // order-map: calls GenerateHeightMap 0x505060 + vector<TObjectCell>::insert machinery 0x50a400; sole caller PlaceObject 0x505b20 (DC-isomorphic), dc 0xf36b0
 void NewfullMap::StampObject(NewmapCell* thisCell,
                              NewmapCell::TObjectCell* objectCell)
