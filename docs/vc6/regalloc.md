@@ -296,6 +296,33 @@ compiled by the pinned SP3 CL at the game profile (`build/p30/sibprobe*.cpp`):
    the same pair encodes base=index.** Probe `z1`/`z2` mirror CombatIsOver:
    swapping the two statements swaps which array gets which encoding.
 
+3. **pointer + index: the birth position of an UNRELATED nearby local moves
+   it.** Two more levers, both measured 2026-09-06 (polish 32), both closing a
+   row whose SIB transposition was its ONLY divergence:
+   * **A named default-constructed local passed to a defaulted STL parameter
+     must be the DEFAULT ARGUMENT.** `game::LoadBoatPool` writes seven
+     `boats[x].field =` stores; with `boat defaultBoat; boats.resize(n,
+     defaultBoat);` ahead of the loop all seven encode base=offset against
+     retail's base=pointer (99.6447), and `boats.resize(n)` - Dinkumware's
+     `resize(size_type, _Ty _X = _Ty())` - makes all seven agree
+     (**100.0000**), with no other byte moving. Hoisting the same declaration
+     to the top of the frame instead costs 5.96 (93.6853), so it is the
+     temporary's BIRTH POSITION, not its existence. A hand-rolled probe of the
+     identical loop (`build/p32/sib1.cpp`) and the exact twin `SaveBoatPool`,
+     neither of which has such a local, both already emit retail's order.
+   * **A block-scoped loop index against a reused function-scope one.**
+     `initialize_ballistics_table`'s inlined sea-row `GetRow` addressed
+     `[edi+edx]` against retail's `[edx+edi]` (99.9485, the row's only byte).
+     Giving that loop its own `for (int row = 2; ...)` instead of reusing the
+     function-scope `int i` flips it: **100.0000**. Hoisting the loop's
+     destination pointer above `int i` costs 5.50 (94.4485); moving
+     `++sea_movement` out of the for-increment is byte-flat.
+
+   Both say the same thing: the pair's encoding is C1 handle/creation state,
+   and the cheapest source knobs on that state are a local's SCOPE and the
+   birth position of a temporary, neither of which touches the addressing
+   expression itself.
+
 Byte-flat for this class, all measured this lane: source addend order;
 `*(p+i)`, `&p[i]`, `i[p]`; naming the pointer, the index or the whole address
 in a local; declaring that local before or after the counter; a local copy of
