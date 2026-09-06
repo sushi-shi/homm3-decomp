@@ -1485,7 +1485,12 @@ void type_artifact_quest::DoProposalDialog(hero* current_hero)
         for (unsigned i = 0; i < missingArtifacts.size(); ++i) {
             resource.resource = 8;
             resource.qualifier = missingArtifacts[i];
-            dialogResources.push_back(resource);
+            // DEPTH LADDER (docs/vc6/inliner.md 6b): this append alone is
+            // spelled `insert(end(), x)`; the two in the sibling arm above
+            // stay `push_back`.  89.1000 -> 92.0556.  Per-site: the two
+            // sibling sites give 91.6667 each, all three together 85.7667,
+            // and a greedy second round over the survivors finds nothing.
+            dialogResources.insert(dialogResources.end(), resource);
         }
         extended_dialog(textPointer, dialogResources, -1, -1, 0);
     }
