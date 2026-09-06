@@ -113,32 +113,14 @@ def _wine_dir(path: Path) -> str | None:
 
 
 def _resolve_symbol(obj: Path, fn: str) -> str:
-    """The one public text symbol of *obj* matching --fn. Prefers an exact
-    decorated/undecorated identity; falls back to unique substring."""
-    names = _asm._public_text_symbols(obj)
-    strong = [n for n in names
-              if n == fn or n.startswith(f"?{fn}@@")
-              or re.fullmatch(rf"[@_]?{re.escape(fn)}(@\d+)?", n)]
-    if len(strong) == 1:
-        return strong[0]
-    subs = sorted(n for n in names if fn in n)
-    if len(strong) > 1:
-        _common.die(f"--fn {fn!r} is ambiguous in {obj.name}: "
-                    + ", ".join(sorted(strong)))
-    if len(subs) == 1:
-        return subs[0]
-    if not subs:
-        _common.die(f"--fn {fn!r} matches no public text symbol of "
-                    f"{obj.name}; symbols: "
-                    + ", ".join(sorted(names)[:12]))
-    _common.die(f"--fn {fn!r} is ambiguous in {obj.name}: "
-                + ", ".join(subs[:12]))
+    from homm3.vc6 import _selection
+    return _selection.object_symbol(obj, fn)
 
 
-def _fn_text(obj: Path, fn: str) -> tuple:
-    """(disassembly text, resolved symbol) for fn inside a compiled obj."""
+def _fn_text(obj: Path, fn: str, ordinal: int = 0) -> tuple:
+    """(disassembly text, resolved symbol) for one selected object body."""
     sym = _resolve_symbol(obj, fn)
-    return _asm.objdump(obj, sym, 0), sym
+    return _asm.objdump(obj, sym, ordinal), sym
 
 
 def _reference_side(args) -> tuple:
@@ -153,31 +135,11 @@ def _reference_side(args) -> tuple:
                                 _wine_dir(ref_src.parent))
         if obj is None:
             _common.die(f"reference TU failed to compile:\n{tail}")
-        text, sym = _fn_text(obj, args.fn)
+        text, sym = _fn_text(obj, getattr(args, "_source_fn", args.fn))
         return text, f"compiled {ref_src.name} ({sym})"
 
-    spec = args.against
-    if ":" in spec:
-        unit_hint, fnspec = spec.split(":", 1)
-    else:
-        unit_hint, fnspec = None, spec
-    from homm3.sema.context import get_context
-    ctx = get_context()
-    name, unit, rva, size, ordinal = ctx.symbols.resolve_fn(fnspec)
-    if unit_hint and unit_hint != unit:
-        print(f"[note: {name} belongs to unit {unit or '(none)'}, "
-              f"not {unit_hint} - using the resolved unit]")
-    target_obj = _asm.TARGET / f"{unit}.c.obj"
-    if target_obj.is_file():
-        return (_asm.objdump(target_obj, name, ordinal),
-                f"delinked {unit}.c.obj ({name})")
-    if not size:
-        _common.die(f"{name} has no recorded size - cannot carve its "
-                    "image span")
-    return (_asm.image_text(ctx, rva, size, name),
-            f"retail image @ 0x{rva:x} ({name}, {size} B; capstone "
-            "producer - branch kinds are producer-robust, but inline "
-            "jump tables clip the stream)")
+    from homm3.vc6 import _selection
+    return _selection.reference_text(args.against)
 
 
 # --- mutation library (regex-guided; the compiler is the verdict) ------------------
@@ -609,17 +571,26 @@ def _slug(label: str) -> str:
 
 
 def run_why(args) -> int:
+    from homm3.vc6 import _selection, _unit
+    _selection.prepare(args)
     src = Path(args.src).resolve()
     if not src.is_file():
         _common.die(f"source missing: {src}")
     for sub in ("base", "ref", "mut"):
         shutil.rmtree(SCRATCH / sub, ignore_errors=True)
 
-    base_obj, tail = _compile_tu(src, SCRATCH / "base",
-                                 _wine_dir(src.parent))
+    unit = _selection.reference_unit(args)
+    if unit:
+        base_obj, tail = _unit.compile_text(
+            src.read_text(), unit, SCRATCH / "base", "base")
+    else:
+        base_obj, tail = _compile_tu(src, SCRATCH / "base",
+                                     _wine_dir(src.parent))
     if base_obj is None:
         _common.die(f"base TU failed to compile:\n{tail}")
-    base_text, base_sym = _fn_text(base_obj, args.fn)
+    base_text, base_sym = _fn_text(
+        base_obj, args.fn, getattr(args, "_fn_ordinal", 0))
+    args.fn = base_sym
     ref_text, ref_label = _reference_side(args)
 
     base_prof = _flow.profile(base_text)
@@ -644,7 +615,11 @@ def run_why(args) -> int:
             row = {"label": mut["label"], "catalog": mut["catalog"],
                    "file": str(mut_src.relative_to(_common.REPO)),
                    "distance": None, "delta": None, "status": ""}
-            obj, err = _compile_tu(mut_src, mut_dir, include_dir)
+            if unit:
+                obj, err = _unit.compile_text(mut["text"], unit, mut_dir,
+                                               mut_src.stem)
+            else:
+                obj, err = _compile_tu(mut_src, mut_dir, include_dir)
             if obj is None:
                 row["status"] = "compile-error (discarded)"
             else:

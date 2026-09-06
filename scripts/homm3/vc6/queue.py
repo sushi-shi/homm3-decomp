@@ -258,7 +258,7 @@ def _run_admission(args) -> int:
         print(f"  {code / 1024:8.1f} KB  {count:4d} fn  {state}")
     if rows:
         print("\nnext largest admissions:")
-        for r in rows[:20]:
+        for r in rows[:getattr(args, "limit", 20) or None]:
             label = r["label"] or "(unnamed)"
             print(f"  {r['size']:6d} B  0x{r['rva'] + 0x400000:08x}  "
                   f"{r['state']:<19} {r['owner'] or r['candidates']:<28} "
@@ -485,6 +485,10 @@ def _run_polish(args) -> int:
                 str(r["size"]), r["unit"], r["fn"],
                 r["route"], r["knob"].replace("\t", " "))) + "\n")
 
+    print("\nnext polish functions (ascending effective MAX):")
+    for r in rows[:getattr(args, "limit", 20) or None]:
+        print(f"  {r['max_fuzzy']:6.2f}%  {r['unit']}:{r['fn']}  {r['route']}")
+
     by_class = collections.defaultdict(list)
     by_unit = collections.defaultdict(float)
     for r in rows:
@@ -528,6 +532,8 @@ def _run_polish(args) -> int:
 
 
 def run(args) -> int:
+    if getattr(args, "limit", 20) < 0:
+        _common.die("--limit must be >= 0")
     if getattr(args, "polish", False):
         return _run_polish(args)
     return _run_admission(args)

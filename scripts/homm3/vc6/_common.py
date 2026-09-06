@@ -40,16 +40,8 @@ def provenance(generator: str, extra: list[str] | None = None) -> list[str]:
     return lines + list(extra or [])
 
 
-def log_invocation(rc: int, cmd: str | None = None) -> None:
-    """One line per `homm3 vc6` invocation; must NEVER break the tool."""
-    try:
-        import shlex
-        now = datetime.datetime.now()
-        if cmd is None:
-            cmd = shlex.join(["homm3", "vc6", *sys.argv[1:]])
-        LOG.parent.mkdir(parents=True, exist_ok=True)
-        with LOG.open("a") as fh:
-            fh.write("[{}][{}][{}]: {}\n".format(
-                now.date(), now.strftime("%H:%M:%S"), rc, cmd))
-    except Exception:
-        pass  # logging is best-effort by design
+def log_invocation(rc: int, cmd: str | None = None, **metadata) -> None:
+    from homm3.core import usage
+    import shlex
+    usage.append(LOG, cmd or shlex.join(["homm3", "vc6", *sys.argv[1:]]),
+                 rc, **metadata)

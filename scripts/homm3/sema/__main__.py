@@ -54,8 +54,20 @@ import sys
 from homm3.sema import _common
 
 
+class _Parser(argparse.ArgumentParser):
+    def parse_args(self, *args, **kwargs):
+        result = super().parse_args(*args, **kwargs)
+        if getattr(result, "sema", None) == "diff":
+            detailed = any(getattr(result, key, False) for key in
+                           ("structure", "asm", "branches", "source", "calls", "relocs"))
+            if detailed and (result.summary or result.why_bytes or result.json):
+                self.error("--summary, --why-bytes and --json combine with each other; "
+                           "select a detailed view separately")
+        return result
+
+
 def _build_parser() -> argparse.ArgumentParser:
-    ap = argparse.ArgumentParser(
+    ap = _Parser(
         prog="homm3 sema", description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     ss = ap.add_subparsers(dest="sema", required=True)
@@ -79,7 +91,8 @@ def _build_parser() -> argparse.ArgumentParser:
 
     sd = ss.add_parser(
         "diff", help="base-vs-target block diff (skeleton default; rc=1 differs)")
-    sd.add_argument("target", help="0x<addr> or symbol name")
+    sd.add_argument("target", nargs="+", help="retail selector(s)")
+    sd.add_argument("--json", action="store_true", help="structured summaries for all selectors")
     sd.add_argument("--no-build", dest="no_build", action="store_true",
                     help="compare the last built object; skip the in-place "
                          "unit refresh (ninja target + normalize + report)")
@@ -108,10 +121,10 @@ def _build_parser() -> argparse.ArgumentParser:
                       help="ordered comparison of every reloc reference, "
                            "calls AND data (--calls is this view restricted "
                            "to calls)")
-    mode.add_argument("--summary", action="store_true",
+    sd.add_argument("--summary", action="store_true",
                       help="one screen: which views agree, the first "
                            "divergence, and the next view to run")
-    mode.add_argument("--why-bytes", dest="why_bytes", action="store_true",
+    sd.add_argument("--why-bytes", dest="why_bytes", action="store_true",
                       help="--summary plus the first byte-level divergence "
                            "unmasked (both sides' bytes and relocs) with its "
                            "kind")
@@ -156,10 +169,34 @@ def _build_parser() -> argparse.ArgumentParser:
     st.add_argument("target", nargs="?", help="0x<addr> or symbol name")
     st.add_argument("--find", metavar="TEXT",
                     help="case-insensitive literal search across all functions")
+    raw = ss.add_parser("data", help="bounded retail hex, pointer, vtable or string reads")
+    raw.add_argument("addr", help="retail VA/RVA or data name")
+    raw.add_argument("--format", choices=("hex", "pointers", "vtable", "string"), default="hex")
+    raw.add_argument("--size", type=lambda s: int(s, 0), help="hex/string byte span (default 64)")
+    raw.add_argument("--count", type=int, help="pointer slots (default 16; vtable defaults to admitted extent)")
+    raw.add_argument("--json", action="store_true")
+
+    candidates = ss.add_parser("candidates", help="search emitted functions; optional retail mnemonic ranking")
+    candidates.add_argument("target", nargs="?", help="retail selector to rank against")
+    candidates.add_argument("--find", help="candidate name substring (mangled or demangled)")
+    candidates.add_argument("--unclaimed", action="store_true", help="only emitted functions without a retail pairing")
+    candidates.add_argument("--limit", type=int, default=20, help="rows shown (0 = all)")
+    compare = ss.add_parser("compare", help="explicit retail-versus-symbol comparison before claiming")
+    compare.add_argument("target", help="retail selector")
+    compare.add_argument("--symbol", required=True, help="candidate mangled or unambiguous name")
+    compare.add_argument("--ordinal", type=int, default=0, help="occurrence of a duplicated candidate symbol")
+    compare.add_argument("--why-bytes", action="store_true")
+    compare.add_argument("--asm", action="store_true", help="unmasked assembly diff")
+    for parser in (candidates, compare):
+        obj = parser.add_mutually_exclusive_group()
+        obj.add_argument("--unit", help="candidate manifest TU")
+        obj.add_argument("--object", help="explicit compiled object path")
+        parser.add_argument("--no-build", action="store_true", help="use the last built unit object")
+        parser.add_argument("--json", action="store_true")
     return ap
 
 
-COMMANDS = ("xref", "diff", "disasm", "rva", "strings")
+COMMANDS = ("xref", "diff", "disasm", "rva", "strings", "data", "candidates", "compare")
 
 # What agents typed under `homm3 sema` that lives elsewhere (usage-log
 # audit): the vc6 solvers, dreamcast lookups, and flag spellings guessed
@@ -193,26 +230,23 @@ def _redirect(argv: list[str]) -> None:
                 + (f" - you want `{hint}`" if hint else ""))
 
 
+def _dispatch(argv):
+    _redirect(argv)
+    args = _build_parser().parse_args(argv)
+    from homm3.sema import diff, disasm, rva, strings, xref, data, candidates, compare
+    tool = {"xref": xref, "diff": diff, "disasm": disasm,
+            "rva": rva, "strings": strings, "data": data,
+            "candidates": candidates, "compare": compare}[args.sema]
+    return tool.run(args) or 0
+
+
 def main(argv=None) -> int:
-    argv = list(sys.argv[1:] if argv is None else argv)
-    # Log what THIS call parsed, not sys.argv: a programmatic main(argv)
-    # would otherwise write another process's command line to the log.
+    from homm3.core.usage import run_logged
     import shlex
+    argv = list(sys.argv[1:] if argv is None else argv)
     cmd = shlex.join(["homm3", "sema", *argv])
-    rc = 0
-    try:
-        _redirect(argv)
-        args = _build_parser().parse_args(argv)
-        from homm3.sema import diff, disasm, rva, strings, xref
-        tool = {"xref": xref, "diff": diff, "disasm": disasm,
-                "rva": rva, "strings": strings}[args.sema]
-        tool.run(args)
-    except SystemExit as e:
-        rc = e.code if isinstance(e.code, int) else (0 if e.code is None else 1)
-        _common.log_invocation(rc, cmd)
-        raise
-    _common.log_invocation(rc, cmd)
-    return rc
+    return run_logged(_dispatch, argv,
+                      lambda rc, **meta: _common.log_invocation(rc, cmd, **meta))
 
 
 if __name__ == "__main__":

@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import json
 import re
+import sys
 from collections import Counter
 from pathlib import Path
 
@@ -271,38 +272,22 @@ def _current_report_score(unit: str | None, symbol: str,
     return None
 
 
-def _default_against(src: Path, fn: str) -> tuple[str, str] | None:
-    """Infer ``(unit, UNIT:FN)`` for a manifest-owned source file.
-
-    ``predict-inline`` is part of the ordinary matching loop, so requiring a
-    caller to repeat the unit already named by ``config/units.toml`` is both
-    noisy and error-prone.  An explicit ``--against`` still wins; sources
-    outside the manifest remain ambiguous and must name their reference.
-    """
-    unit = _unit.unit_for_source(src)
-    if not unit:
-        return None
-    return unit, f"{unit}:{fn}"
-
-
 def run_predict(args) -> int:
+    from homm3.vc6 import _selection
+    _selection.prepare(args)
     src = Path(args.src).resolve()
     if not src.is_file():
         _common.die(f"source missing: {src}")
-    if not getattr(args, "against", None) \
-            and not getattr(args, "against_src", None):
-        inferred = _default_against(src, args.fn)
-        if inferred is None:
-            _common.die(
-                "no implicit retail reference: source is not a units.toml "
-                "unit; pass --against UNIT:FN or --against-src FILE")
-        unit, args.against = inferred
-    else:
-        unit = reg_model._resolve_unit(args) \
-            if getattr(args, "against", None) else None
+    unit = _selection.reference_unit(args)
     # base: the in-unit obj the ratchet scored (or a faithful compile)
-    if unit and _unit.base_obj(unit):
+    manifest_src = _unit.source_for_unit(unit) if unit else None
+    if manifest_src and manifest_src.resolve() == src:
+        note = None if getattr(args, "no_build", False) else _asm.refresh_unit(unit)
+        if note:
+            print(note, file=sys.stderr)
         base_obj = _unit.base_obj(unit)
+        if base_obj is None:
+            _common.die(f"missing compiled object for {unit}; run homm3 build {unit}")
     elif unit:
         base_obj, tail = _unit.compile_text(src.read_text(), unit,
                                             reg_model.SCRATCH / "base", "base")
@@ -314,7 +299,9 @@ def run_predict(args) -> int:
         if base_obj is None:
             _common.die(f"base failed to compile:\n{tail}")
 
-    base_text, base_sym = reg_model._fn_text(base_obj, args.fn)
+    base_text, base_sym = reg_model._fn_text(
+        base_obj, args.fn, getattr(args, "_fn_ordinal", 0))
+    args.fn = base_sym
     ref_text, ref_label = reg_model._reference_side(args)
 
     base_calls, ref_calls = _called(base_text), _called(ref_text)

@@ -988,10 +988,11 @@ def _summary_lines(facts: dict) -> tuple[list[str], bool, str]:
     return lines, agree, nxt
 
 
-def _summary_view(ctx, base_text, target_text, rva, name, unit, ordinal,
-                  verbose: bool, why_bytes: bool) -> int:
+def _summary_facts(ctx, base_text, target_text, rva, name, unit, ordinal,
+                   why_bytes: bool, *, source_enabled: bool = True,
+                   report_enabled: bool = True) -> dict:
     try:
-        pct = ctx.fn_fuzzy(unit, name)
+        pct = ctx.fn_fuzzy(unit, name) if report_enabled else None
     except Exception:
         pct = None
     census = _asm.skeleton_census(_asm.cfg(base_text), _asm.cfg(target_text))
@@ -1005,7 +1006,10 @@ def _summary_view(ctx, base_text, target_text, rva, name, unit, ordinal,
     asm = _masked_asm_delta(base_text, target_text)
     div = _first_divergence(base_text, target_text)
     source_loaded = False
+    source_details = {"verified": False, "first_statement": None}
     try:
+        if not source_enabled:
+            raise source_view.SourceError("unclaimed comparison; no verified source map")
         source_map = source_view.load(unit, name, ordinal, _asm.BASE / f"{unit}.obj")
     except source_view.NoLineRecords:
         source = "(unavailable: compiler-generated body - no /Z7 statements)"
@@ -1013,13 +1017,29 @@ def _summary_view(ctx, base_text, target_text, rva, name, unit, ordinal,
         source = f"(unavailable: {str(exc).splitlines()[0]})"
     else:
         source_loaded = True
+        source_details["verified"] = True
         _text, _exact, first = _source_diff_full(base_text, target_text, source_map)
+        if first:
+            source_details["first_statement"] = {"file": str(source_map.source),
+                                                   "line": first.line, "text": first.text}
         source = (f"{source_map.source}:{first.line} | {first.text}   [/Z7 verified]"
                   if first else "(none - no divergent statement)")
     facts = {"rva": rva, "name": name, "unit": unit, "pct": pct, "census": census,
              "branches": branches, "calls": calls, "relocs": relocs, "asm": asm,
              "divergence": div, "source": source, "source_loaded": source_loaded,
-             "why_bytes": why_bytes}
+             "why_bytes": why_bytes, "source_details": source_details}
+    _lines, agree, nxt = _summary_lines(facts)
+    facts.update(agree=agree, next_view=nxt, ordinal=ordinal, va=rva + 0x400000)
+    return facts
+
+
+def _summary_view(ctx, base_text, target_text, rva, name, unit, ordinal,
+                  verbose: bool, why_bytes: bool) -> int:
+    facts = _summary_facts(ctx, base_text, target_text, rva, name, unit, ordinal,
+                           why_bytes)
+    census, branches, calls, relocs = (facts[k] for k in
+                                     ("census", "branches", "calls", "relocs"))
+    div, pct = facts["divergence"], facts["pct"]
     lines, agree, _nxt = _summary_lines(facts)
     if verbose:
         lines = _summary_verbose(lines, census, branches, calls, relocs)
@@ -1061,12 +1081,14 @@ def _summary_verbose(lines, census, branches, calls, relocs, cap: int = 8):
     return out
 
 
-def run(args) -> None:
-    ctx = get_context()
+def _run_one(args, ctx, refreshed):
     name, unit, rva, _size, ordinal = ctx.symbols.resolve_fn(args.target)
-    if not getattr(args, "no_build", False) and (_asm.TARGET / f"{unit}.c.obj").is_file():
+    if (not getattr(args, "no_build", False) and unit not in refreshed
+            and (_asm.TARGET / f"{unit}.c.obj").is_file()):
         note = _asm.refresh_unit(unit)
+        refreshed.add(unit)
         if note:
+            ctx._report = ()
             print(note)
     normal_base = _asm.NORMAL_BASE / f"{unit}.obj"
     normal_target = _asm.NORMAL_TARGET / f"{unit}.c.obj"
@@ -1099,6 +1121,12 @@ def run(args) -> None:
     if base_spec:
         print(f"[scoped diff: base {base_spec}; target {target_spec}; "
               "ranges are function-local and end exclusive]")
+
+    if getattr(args, "json", False):
+        facts = _summary_facts(ctx, base_text, target_text, rva, name, unit,
+                               ordinal, args.why_bytes)
+        facts["range"] = {"base": base_spec, "target": target_spec}
+        return facts
 
     if args.branches:
         sys.exit(_branch_view(base_text, target_text, rva, name, args.verbose))
@@ -1154,3 +1182,58 @@ def run(args) -> None:
     if exact:
         _hint_branches(ctx, rva, name, unit)
     sys.exit(0 if exact else 1)
+
+
+def _json_value(value):
+    if isinstance(value, bytes):
+        return value.hex()
+    if isinstance(value, dict):
+        return {str(k): _json_value(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_json_value(v) for v in value]
+    return value
+
+
+def run(args) -> int:
+    import contextlib
+    import copy
+    import io
+    import json
+    detailed = any(getattr(args, key, False) for key in
+                   ("structure", "asm", "branches", "source", "calls", "relocs"))
+    if detailed and (args.summary or args.why_bytes or getattr(args, "json", False)):
+        die("--summary, --why-bytes and --json combine with each other; "
+            "select a detailed view in a separate invocation")
+    targets = args.target if isinstance(args.target, list) else [args.target]
+    ctx, refreshed, results, rc = get_context(), set(), [], 0
+    for selector in targets:
+        query = copy.copy(args)
+        query.target = selector
+        error, notes = io.StringIO(), io.StringIO()
+        facts, code = None, 0
+        try:
+            with contextlib.redirect_stderr(error):
+                if getattr(args, "json", False):
+                    with contextlib.redirect_stdout(notes):
+                        facts = _run_one(query, ctx, refreshed)
+                    code = 0 if facts["agree"] else 1
+                else:
+                    if len(targets) > 1:
+                        print(f"[selector: {selector}]")
+                    _run_one(query, ctx, refreshed)
+        except SystemExit as exc:
+            code = exc.code if isinstance(exc.code, int) else 2
+            if isinstance(exc.code, str):
+                error.write(exc.code)
+        if notes.getvalue():
+            print(notes.getvalue(), end="", file=sys.stderr)
+        if error.getvalue():
+            print(error.getvalue(), end="", file=sys.stderr)
+        results.append({"selector": selector, "rc": code,
+                        "error": error.getvalue().strip() if code == 2 else None,
+                        "summary": facts})
+        rc = max(rc, code)
+    if getattr(args, "json", False):
+        print(json.dumps(_json_value({"schema": "homm3.sema.diff.v1",
+                                      "results": results}), indent=2))
+    return rc
