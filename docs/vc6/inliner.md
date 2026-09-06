@@ -512,6 +512,48 @@ Two riders:
   is worth -0.19 (94.32 pinned against 94.51 unpinned), so it came out and the
   tree's pin count fell 354 -> 353.
 
+### Constructed return values and local return objects differ after inlining
+
+`SelectTerrainTransition` (retail `0x005b3e80`, 1,887 bytes) reaches 100%
+with an ordinary static helper returning `TRmgTerrainFlip(x, y)`. Returning
+a named flip local after assigning its two fields instead moves the caller's
+two-byte temporary from `ebp-2` to `ebp-8` and its saved output pointer from
+`ebp-8` to `ebp-4`. The total frame size remains eight bytes, so frame size
+alone misses the difference. Both helpers expand under `/Ob2`.
+
+Replacing the helper calls with direct construction is another negative
+control: it keeps the temporary layout but changes the fourth reflection
+loop's register allocation, scoring 99.7991%. Adding an explicit empty
+destructor prevents the value-return helper from auto-inlining; the retail
+array's registered empty cleanup therefore does not itself prove a
+user-declared destructor. No inline pragmas or artificial caller operations
+are needed. These are retail-supported source hypotheses; this Complete-only
+function has no Dreamcast counterpart.
+
+### Source arm order controls nested inlining before cold-code placement
+
+`ReadRmgTemplateZones` (`0x00538480`, 1,671 bytes) demonstrates that retail's
+physical arm order does not fix C1's source statement order. Its invalid-player
+cleanup lies after the large parsing/insertion arm in x86. Writing the accepted
+arm first, followed by `else { delete slot; }`, lets VC6 expand the connection
+vector destructor; retail retains that call at `0x00538ab0`.
+
+Writing the same filter as `if (invalid) { delete slot; } else { ... }`
+restores the retained vector destructor naturally. With the diagnostic
+three-argument `vector::insert` spelling, this moves 96.94682% to 98.08062%.
+Restoring ordinary `push_back(slot)` then reaches 100%: all 1,671 raw bytes
+match after resolving 33 relocations, including the embedded switch tables.
+The extra STL boundaries also recover the retail growth temporaries and
+registers; selecting the count-insert overload had only compensated for the
+incorrect arm order. No new inline pragma or release-elided assertion remains.
+
+A cleanup-only pin is an insufficient diagnosis: temporarily pinning the
+implicit member teardown retains the vector destructor but leaves the growth
+mismatch and introduces an unwanted spreadsheet subscript call. Inspect both
+the ordered named call stream and the insertion expansion after restoring
+source control flow. This function has no Dreamcast counterpart; the source
+order is established by the VC6/retail controls, not a recovered line table.
+
 ## 7. Using it
 
 ```sh

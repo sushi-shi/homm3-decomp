@@ -10,9 +10,28 @@
 #include "rmg_terrain.h"
 
 // Provisional role spelling. The fastcall ABI and two-byte output are fixed
-// by the call at 0x5b5f4e; the 1,887-byte body remains an admission target.
+// by the call at 0x5b5f4e. All selector names are provisional retail roles.
 int __fastcall SelectTerrainTransition(
     const int* neighbours, TRmgTerrainFlip* flip);
+
+// Four reflections of the eight neighbour slots. Read from the pinned
+// retail image; both flip bytes index this table independently.
+DATA(0x00642C00)
+const int gRmgReflectedNeighbours[2][2][8] = {
+    {{0, 1, 2, 3, 4, 5, 6, 7}, {4, 3, 2, 1, 0, 7, 6, 5}},
+    {{0, 7, 6, 5, 4, 3, 2, 1}, {4, 5, 6, 7, 0, 1, 2, 3}}
+};
+
+// Provisional value-return helper, auto-inlined at every selector site.
+// Returning the constructed value reproduces retail's temporary at ebp-2
+// and the saved output pointer at ebp-8. A named local return instead puts
+// them at ebp-8 and ebp-4 (99.93%); replacing the helper calls with direct
+// construction changes the fourth reflection loop's registers (99.7991%).
+// An explicit empty flip destructor prevents the helper from auto-inlining.
+static TRmgTerrainFlip MakeTerrainFlip(unsigned char x, unsigned char y)
+{
+    return TRmgTerrainFlip(x, y);
+}
 
 VA(0x005B3DD0, 0x6F)  // called and expanded in the retail terrain cluster
 void TRmgTerrainPainter::InitializePackedCell(
@@ -27,14 +46,197 @@ void TRmgTerrainPainter::InitializePackedCell(
     packed.initialized = 1;
 }
 
-#if 0  // @carcass - retained transition selector
 VA(0x005B3E80, 0x75F)  // fastcall call at 0x5b5f4e; retail-only
 int __fastcall SelectTerrainTransition(
     const int* neighbours, TRmgTerrainFlip* flip)
 {
-    return 0;  // @stub
+    // Retail +0x09..+0x7b: guarded local-static construction in this order,
+    // with a registered empty cleanup. No Dreamcast RMG counterpart.
+    DATA(0x006A52B8)
+    static TRmgTerrainFlip flips[4] = {
+        MakeTerrainFlip(0, 0), MakeTerrainFlip(0, 1),
+        MakeTerrainFlip(1, 0), MakeTerrainFlip(1, 1)
+    };
+    unsigned int i;
+    for (i = 0; i < 4; ++i) {
+        const int* order = gRmgReflectedNeighbours[flips[i].flipX][flips[i].flipY];
+        if (neighbours[order[2]] == RMG_NEIGHBOUR_BLEND_EDGE &&
+            neighbours[order[4]] == RMG_NEIGHBOUR_BLEND_EDGE) {
+            if (neighbours[order[1]] == RMG_NEIGHBOUR_HARD_EDGE &&
+                neighbours[order[5]] == RMG_NEIGHBOUR_HARD_EDGE) {
+                *flip = flips[i];
+                return 28;
+            }
+            if (neighbours[order[3]] == RMG_NEIGHBOUR_HARD_EDGE) {
+                *flip = flips[i];
+                return 27;
+            }
+        }
+    }
+    for (i = 0; i < 4; ++i) {
+        const int* order = gRmgReflectedNeighbours[flips[i].flipX][flips[i].flipY];
+        if (neighbours[order[0]] == RMG_NEIGHBOUR_BLEND_EDGE &&
+            neighbours[order[6]] == RMG_NEIGHBOUR_BLEND_EDGE) {
+            if (neighbours[order[3]] != RMG_NEIGHBOUR_NO_EDGE) {
+                *flip = flips[i];
+                return neighbours[order[3]] == RMG_NEIGHBOUR_BLEND_EDGE ? 23 : 25;
+            }
+        } else if (neighbours[order[0]] == RMG_NEIGHBOUR_HARD_EDGE &&
+                   neighbours[order[6]] == RMG_NEIGHBOUR_HARD_EDGE) {
+            if (neighbours[order[3]] != RMG_NEIGHBOUR_NO_EDGE) {
+                *flip = flips[i];
+                return neighbours[order[3]] == RMG_NEIGHBOUR_HARD_EDGE ? 24 : 26;
+            }
+        }
+    }
+    for (i = 0; i < 4; ++i) {
+        const int* order = gRmgReflectedNeighbours[flips[i].flipX][flips[i].flipY];
+        if (neighbours[order[2]] == RMG_NEIGHBOUR_HARD_EDGE &&
+            neighbours[order[4]] == RMG_NEIGHBOUR_BLEND_EDGE) {
+            if (neighbours[order[5]] != RMG_NEIGHBOUR_HARD_EDGE) {
+                *flip = flips[i];
+                return 21;
+            } else {
+                *flip = MakeTerrainFlip(!flips[i].flipX, !flips[i].flipY);
+                return 8;
+            }
+        }
+        if (neighbours[order[2]] == RMG_NEIGHBOUR_BLEND_EDGE &&
+            neighbours[order[4]] == RMG_NEIGHBOUR_HARD_EDGE) {
+            if (neighbours[order[1]] != RMG_NEIGHBOUR_HARD_EDGE) {
+                *flip = flips[i];
+                return 22;
+            } else {
+                *flip = MakeTerrainFlip(!flips[i].flipX, !flips[i].flipY);
+                return 8;
+            }
+        }
+    }
+    for (i = 0; i < 4; ++i) {
+        const int* order = gRmgReflectedNeighbours[flips[i].flipX][flips[i].flipY];
+        if (neighbours[order[2]] == RMG_NEIGHBOUR_BLEND_EDGE &&
+            neighbours[order[4]] == RMG_NEIGHBOUR_BLEND_EDGE) {
+            *flip = flips[i];
+            if (neighbours[order[5]] == RMG_NEIGHBOUR_HARD_EDGE)
+                return 17;
+            if (neighbours[order[1]] == RMG_NEIGHBOUR_HARD_EDGE)
+                return 18;
+        }
+    }
+    for (i = 0; i < 4; ++i) {
+        const int* order = gRmgReflectedNeighbours[flips[i].flipX][flips[i].flipY];
+        if (neighbours[order[0]] == RMG_NEIGHBOUR_BLEND_EDGE &&
+            neighbours[order[6]] == RMG_NEIGHBOUR_BLEND_EDGE) {
+            *flip = flips[i];
+            return 2;
+        }
+        if (neighbours[order[0]] == RMG_NEIGHBOUR_HARD_EDGE &&
+            neighbours[order[6]] == RMG_NEIGHBOUR_HARD_EDGE) {
+            *flip = flips[i];
+            return 8;
+        }
+    }
+    for (i = 0; i < 4; ++i) {
+        const int* order = gRmgReflectedNeighbours[flips[i].flipX][flips[i].flipY];
+        if (neighbours[order[2]] == RMG_NEIGHBOUR_BLEND_EDGE &&
+            neighbours[order[5]] == RMG_NEIGHBOUR_HARD_EDGE) {
+            *flip = flips[i];
+            return 17;
+        }
+        if (neighbours[order[4]] == RMG_NEIGHBOUR_BLEND_EDGE &&
+            neighbours[order[1]] == RMG_NEIGHBOUR_HARD_EDGE) {
+            *flip = flips[i];
+            return 18;
+        }
+        if (neighbours[order[2]] == RMG_NEIGHBOUR_HARD_EDGE &&
+            neighbours[order[5]] == RMG_NEIGHBOUR_BLEND_EDGE) {
+            *flip = flips[i];
+            return 21;
+        }
+        if (neighbours[order[4]] == RMG_NEIGHBOUR_HARD_EDGE &&
+            neighbours[order[1]] == RMG_NEIGHBOUR_BLEND_EDGE) {
+            *flip = flips[i];
+            return 22;
+        }
+        if ((neighbours[order[6]] == RMG_NEIGHBOUR_BLEND_EDGE &&
+             neighbours[order[1]] == RMG_NEIGHBOUR_BLEND_EDGE) ||
+            (neighbours[order[0]] == RMG_NEIGHBOUR_BLEND_EDGE &&
+             neighbours[order[5]] == RMG_NEIGHBOUR_BLEND_EDGE)) {
+            *flip = flips[i];
+            return 2;
+        }
+        if ((neighbours[order[6]] == RMG_NEIGHBOUR_HARD_EDGE &&
+             neighbours[order[1]] == RMG_NEIGHBOUR_HARD_EDGE) ||
+            (neighbours[order[0]] == RMG_NEIGHBOUR_HARD_EDGE &&
+             neighbours[order[5]] == RMG_NEIGHBOUR_HARD_EDGE)) {
+            *flip = flips[i];
+            return 8;
+        }
+    }
+    for (i = 0; i < 4; ++i) {
+        const int* order = gRmgReflectedNeighbours[flips[i].flipX][flips[i].flipY];
+        if (neighbours[order[2]] == RMG_NEIGHBOUR_BLEND_EDGE &&
+            neighbours[order[3]] == RMG_NEIGHBOUR_HARD_EDGE) {
+            *flip = flips[i];
+            return 19;
+        }
+        if (neighbours[order[4]] == RMG_NEIGHBOUR_BLEND_EDGE &&
+            neighbours[order[3]] == RMG_NEIGHBOUR_HARD_EDGE) {
+            *flip = flips[i];
+            return 20;
+        }
+    }
+    for (i = 0; i < 4; ++i) {
+        const int* order = gRmgReflectedNeighbours[flips[i].flipX][flips[i].flipY];
+        if (neighbours[order[0]] == RMG_NEIGHBOUR_BLEND_EDGE) {
+            *flip = flips[i];
+            return 4;
+        }
+        if (neighbours[order[0]] == RMG_NEIGHBOUR_HARD_EDGE) {
+            *flip = flips[i];
+            return 10;
+        }
+        if (neighbours[order[6]] == RMG_NEIGHBOUR_BLEND_EDGE) {
+            *flip = flips[i];
+            return 3;
+        }
+        if (neighbours[order[6]] == RMG_NEIGHBOUR_HARD_EDGE) {
+            *flip = flips[i];
+            return 9;
+        }
+    }
+    for (i = 0; i < 4; ++i) {
+        const int* order = gRmgReflectedNeighbours[flips[i].flipX][flips[i].flipY];
+        if (neighbours[order[7]] == RMG_NEIGHBOUR_BLEND_EDGE &&
+            neighbours[order[3]] == RMG_NEIGHBOUR_BLEND_EDGE) {
+            *flip = flips[i];
+            return 14;
+        }
+        if (neighbours[order[7]] == RMG_NEIGHBOUR_BLEND_EDGE &&
+            neighbours[order[3]] == RMG_NEIGHBOUR_HARD_EDGE) {
+            *flip = flips[i];
+            return 15;
+        }
+        if (neighbours[order[7]] == RMG_NEIGHBOUR_HARD_EDGE &&
+            neighbours[order[3]] == RMG_NEIGHBOUR_HARD_EDGE) {
+            *flip = flips[i];
+            return 16;
+        }
+    }
+    for (i = 0; i < 4; ++i) {
+        const int* order = gRmgReflectedNeighbours[flips[i].flipX][flips[i].flipY];
+        if (neighbours[order[3]] == RMG_NEIGHBOUR_BLEND_EDGE) {
+            *flip = flips[i];
+            return 5;
+        }
+        if (neighbours[order[3]] == RMG_NEIGHBOUR_HARD_EDGE) {
+            *flip = flips[i];
+            return 11;
+        }
+    }
+    *flip = MakeTerrainFlip(0, 0);
+    return 0;
 }
-#endif
 
 VA(0x005B48D0, 0x8D)  // repeated caller identity in 0x5b3dd0..0x5b76f0
 TRmgPackedTerrainCell* TRmgTerrainPainter::GetPackedCell(

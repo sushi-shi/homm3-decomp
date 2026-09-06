@@ -9,6 +9,7 @@
 #undef _MT
 #include <algorithm>
 #include <bitset>
+#include <ctype.h>
 #include <set>
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,6 +20,7 @@
 #include "armygrp.h"
 #include "bitset_iterator.h"
 #include "rmg.h"
+#include "textresource.h"
 
 typedef std::set<TPoint> TRmgPointSet;
 
@@ -94,6 +96,14 @@ static const char* gRmgTownNames[9] = {
     DATA_COMPGEN(0x00682758, rmgTownFortress, "fortress"),
     DATA_COMPGEN(0x00682750, rmgTownConflux, "conflux")
 };
+
+// ReadRmgTemplateZones repeatedly tests a nullable field for a nonempty,
+// non-space leading character. Keep the shared predicate as an ordinary
+// helper; its original name and declaration are not in the DC corpus.
+static bool IsRmgTemplateFieldSet(const char* value)
+{
+    return value && value[0] && value[0] != ' ';
+}
 
 } // namespace
 
@@ -267,6 +277,29 @@ static void set_available_rmg_heroes(
     }
 }
 
+// The generator destructor calls this body at 0x537e84, then frees the
+// template. It deletes every owned slot, destroys zones, and finally name;
+// the member offsets agree with the rmg.txt coordinator and zone reader.
+VA(0x00532FE0, 0xB4) // anchor-callee 0x537e84; thiscall, ret 0; retail-only
+TRmgTemplate::~TRmgTemplate()
+{
+    for (int zone = 0; zone < zones.size(); ++zone)
+        delete zones[zone];
+}
+
+// The rmg.txt connection reader calls this for both endpoint identifiers.
+// It searches the template's pointer vector and compares each slot's first
+// field; ret 4 fixes the member's one integer argument.
+VA(0x005330A0, 0x3E) // anchor-callee 0x53824c/0x538257; retail-only
+TRmgTownSlot* TRmgTemplate::FindZone(int zoneIndex)
+{
+    for (int zone = 0; zone < zones.size(); ++zone) {
+        if (zones[zone]->zoneIndex == zoneIndex)
+            return zones[zone];
+    }
+    return 0;
+}
+
 // Complete-only helper called by InitializeObjectGenerators at 0x538b10.
 // The four argument loads, five stores, vtable relocation, and `ret 0x10`
 // independently prove this constructor and the shared 0x14-byte prefix.
@@ -331,6 +364,133 @@ TRmgMapItem* type_random_map::GetMapItem(TRmgMapPosition point)
     return mapItems
         + (point.z * mapHeight + point.y) * mapWidth
         + point.x;
+}
+
+// The rmg.txt coordinator at 0x5381ad passes the spreadsheet in ecx,
+// template in edx, then row bounds/player counts/map version on the stack.
+// Retail's new(0xd4), field stores and connection-vector constructor prove
+// TRmgTownSlot's layout independently of the generated-zone consumers.
+// GetRow is the canonical DC-proven TextResource.h helper (dc 0x508a4,
+// lines 128/131, with two absent lines); there is no DC RMG counterpart.
+// Names and the shared field predicate remain provisional.
+// Exact: all 1,671 retail bytes, including the switch tables, after resolving
+// 33 relocations; 139/139 CFG blocks agree. The rejected-player arm must
+// precede the accepted arm in source, although VC6 places its cleanup last.
+// That order retains the connection-vector destructor at 0x46a650; using
+// ordinary push_back then reproduces the full insertion expansion.
+// Controls: accepted arm first with count-insert scores 96.94682% and
+// expands vector cleanup; rejection first with count-insert reaches 98.08062%
+// but has different growth temporaries/registers. The exact push_back form
+// preserves the canonical STL interface rather than selecting its nested
+// overload to compensate for the wrong source order.
+// The positive row-validation scope is also significant: an early continue
+// leaves slot too broadly scoped (92.97% vs 96.95% with the old count-insert).
+// Grouping case 'a' with default replaces retail's jump table with compares;
+// town flags require separate 0/1 store arms. Named insertion iterators,
+// a narrower terrain-local scope, explicit empty slot special members and
+// a byte-returning field predicate were neutral on the 96.95% control.
+// Flattening the provisional predicate with count-insert changes two SIB
+// operands (96.91252%); with push_back it retains nested leaves (68.95026%).
+// Temporary inline-depth controls were removed: pinning delete either did
+// nothing or retained the wrong scalar-deleting boundary; pinning implicit
+// member cleanup left growth differences and added a non-retail row call.
+// GetRow's DC line gap motivated bounds-check probes, but the row-count
+// accessor added a non-retail size call and direct size was byte-neutral.
+// Neither supplies evidence for a retained release-elided assertion.
+VA(0x00538480, 0x687) // anchor-callee 0x5381ad; fastcall, ret 0x14; retail-only
+void ReadRmgTemplateZones(
+    const TSpreadsheetResource* sheet, TRmgTemplate* mapTemplate,
+    int firstRow, int endRow, int humanPlayers, int computerPlayers,
+    int mapVersion)
+{
+    for (int row = firstRow; row < endRow; ++row) {
+        const TSpreadsheetResource::TStringVector& values = sheet->GetRow(row);
+        if (values.size() >= 3 && IsRmgTemplateFieldSet(values[3]) &&
+            values.size() > 75) {
+
+            TRmgTownSlot* slot = new TRmgTownSlot;
+            slot->zoneIndex = atoi(values[3]);
+            slot->kind = RMG_TEMPLATE_TREASURE;
+            if (IsRmgTemplateFieldSet(values[4]))
+                slot->kind = RMG_TEMPLATE_HUMAN;
+            if (IsRmgTemplateFieldSet(values[5]))
+                slot->kind = RMG_TEMPLATE_COMPUTER;
+            if (IsRmgTemplateFieldSet(values[6]))
+                slot->kind = RMG_TEMPLATE_TREASURE;
+            if (IsRmgTemplateFieldSet(values[7]))
+                slot->kind = RMG_TEMPLATE_JUNCTION;
+            slot->size = atoi(values[8]);
+            slot->minimumHumanPlayers = atoi(values[9]);
+            slot->maximumHumanPlayers = atoi(values[10]);
+            slot->minimumPlayers = atoi(values[11]);
+            slot->maximumPlayers = atoi(values[12]);
+            if (slot->minimumHumanPlayers > humanPlayers ||
+                slot->maximumHumanPlayers < humanPlayers ||
+                slot->minimumPlayers > humanPlayers + computerPlayers ||
+                slot->maximumPlayers < humanPlayers + computerPlayers) {
+                delete slot;
+            } else {
+                slot->playerIndex = atoi(values[13]) - 1;
+                slot->parameters0020[0] = atoi(values[14]);
+                slot->parameters0020[1] = atoi(values[15]);
+                slot->parameters0020[2] = atoi(values[16]);
+                slot->parameters0020[3] = atoi(values[17]);
+                slot->parameters0020[4] = atoi(values[18]);
+                slot->parameters0020[5] = atoi(values[19]);
+                slot->parameters0020[6] = atoi(values[20]);
+                slot->parameters0020[7] = atoi(values[21]);
+                slot->flag0040 = 0;
+                if (IsRmgTemplateFieldSet(values[22]))
+                    slot->flag0040 = 1;
+                int townCount;
+                if (mapVersion >= RMG_MAP_ARMAGEDDONS_BLADE)
+                    townCount = 9;
+                else {
+                    townCount = 8;
+                    slot->allowedTowns[8] = 0;
+                }
+                while (townCount--) {
+                    if (IsRmgTemplateFieldSet(values[23 + townCount]))
+                        slot->allowedTowns[townCount] = 1;
+                    else
+                        slot->allowedTowns[townCount] = 0;
+                }
+                for (int mine = 0; mine < 7; ++mine)
+                    slot->parameters004c[mine] = atoi(values[32 + mine]);
+                for (int resource = 0; resource < 7; ++resource)
+                    slot->parameters0068[resource] = atoi(values[39 + resource]);
+                slot->flag0084 = IsRmgTemplateFieldSet(values[46]);
+                unsigned char anyTerrain = 0;
+                for (int terrain = 0; terrain < 8; ++terrain) {
+                    slot->allowedTerrain[terrain] =
+                        IsRmgTemplateFieldSet(values[47 + terrain]);
+                    if (slot->allowedTerrain[terrain])
+                        anyTerrain = 1;
+                }
+                if (!anyTerrain)
+                    slot->allowedTerrain[0] = 1;
+                switch (tolower(values[55][0])) {
+                case 'n': slot->monsterStrength = 0; break;
+                case 'w': slot->monsterStrength = 2; break;
+                case 's': slot->monsterStrength = 4; break;
+                case 'a': slot->monsterStrength = 3; break;
+                default: slot->monsterStrength = 3; break;
+                }
+                slot->flag0094 = IsRmgTemplateFieldSet(values[56]);
+                for (int monster = 0; monster < 10; ++monster)
+                    slot->allowedMonsters[monster] =
+                        IsRmgTemplateFieldSet(values[57 + monster]);
+                if (mapVersion < RMG_MAP_ARMAGEDDONS_BLADE)
+                    slot->allowedMonsters[8] = 0;
+                for (int treasure = 0; treasure < 3; ++treasure) {
+                    slot->treasure[treasure].minimum = atoi(values[67 + 3 * treasure]);
+                    slot->treasure[treasure].maximum = atoi(values[68 + 3 * treasure]);
+                    slot->treasure[treasure].density = atoi(values[69 + 3 * treasure]);
+                }
+                mapTemplate->zones.push_back(slot);
+            }
+        }
+    }
 }
 
 // Complete-only object-generator roster.  Retail proves the source-level
@@ -517,6 +677,281 @@ void type_random_map_generator::InitializeObjectGenerators()
     objectGenerators.push_back(new type_treasure_def(110, 0, 500, 50));
     objectGenerators.push_back(new type_treasure_def(112, 0, 2500, 150));
     objectGenerators.push_back(new type_witch_hut_def());
+}
+
+// Retail keeps a vector of pending endpoints. Splitting pushes the old
+// endpoint followed by the perturbed midpoint; completed unit edges mark
+// the clamped starting cell and advance the current point.
+// Exact: 555/555 raw retail bytes, resolving all 11 relocations. Keeping
+// the comparison operators makes subdivision precede marking (38.31 ->
+// 92.82%); flattened comparisons, reversed predicates and nested continue
+// leave the arms misplaced. The arithmetic operators and vector calls
+// preserve the retained insert/erase/Length/rand/insert/insert/delete
+// sequence; std::stack instead retains the vector constructor.
+// The long min/max arguments require conversion temporaries from int,
+// but long clamp results bind directly (96.76%). size() > 0 preserves
+// retail's shifted element count (98.02%); empty() and a bare size() test
+// fold it into a masked byte-count test. Ending delta's scope before
+// Length restores the register roles (99.90%); from-before-to midpoint
+// operands settle the final SIB encoding. Extending delta's scope or
+// assigning perpendicular's components independently loses exactness.
+// Source boundaries remain provisional: no RMG counterpart or TPoint
+// declaration was found in the DC corpus. DC type_point's retained ==,
+// != and DistanceSquared use a different, four-byte packed x/y/z type.
+// Neither this byte match nor that roster's absence settles whether the
+// midpoint expression expanded another helper. Do not infer blank lines
+// or assertions without a corresponding source-line record and evidence.
+VA(0x0053BFF0, 0x22B) // caller 0x53c65b; thiscall, ret 0x1c; retail-only
+void type_random_map_generator::DrawIrregularZoneBoundary(
+    TPoint from, TPoint to, int zoneIndex, int level, int roughness)
+{
+    std::vector<TPoint> pending;
+    unsigned char markBoundary = level == 1 || waterContent != RMG_WATER_ISLANDS;
+    pending.push_back(to);
+    while (pending.size() > 0) {
+        to = pending.back();
+        pending.pop_back();
+        TPoint midpoint((from.x + to.x + 1) / 2, (from.y + to.y + 1) / 2);
+        if (midpoint != from && midpoint != to) {
+            TPoint perpendicular;
+            {
+                TPoint delta = to - from;
+                perpendicular = TPoint(-delta.y, delta.x);
+            }
+            int length = perpendicular.Length();
+            if (length > 1) {
+                int limit = std::_cpp_min<long>(length, roughness);
+                int displacement = rand() % limit - limit / 2;
+                perpendicular = perpendicular * displacement / length;
+                midpoint += perpendicular;
+            }
+            pending.push_back(to);
+            pending.push_back(midpoint);
+        } else {
+            long x = std::_cpp_max<long>(from.x, 0);
+            x = std::_cpp_min<long>(x, map.mapWidth - 1);
+            long y = std::_cpp_max<long>(from.y, 0);
+            y = std::_cpp_min<long>(y, map.mapHeight - 1);
+            TRmgMapItem* item = map.GetMapItem(x, y, level);
+            item->zoneState.zone = zoneIndex;
+            if (markBoundary)
+                item->tileData.zoneBoundary = 1;
+            from = to;
+        }
+    }
+}
+
+// Exact: 362/362 raw retail bytes, with no relocations. Both constructor
+// assignments for the shallow/steep steps keep diagonal.x in memory;
+// component initialization in the shallow arm and the common x=1 reproduce
+// retail's inc in the diagonal loop. Hoisting the y sign before the slope
+// test is wrong (77.57%). At the endpoint, flattening lastItem into the
+// zone assignment changes only the final address calculation and loses
+// exactness. Keep the actual map-item local, as in the loop above it.
+VA(0x0053C220, 0x16A) // caller 0x53c4a2; thiscall, ret 0x18; retail-only
+void type_random_map_generator::DrawStraightZoneBoundary(
+    TPoint from, TPoint to, int zoneIndex, int level)
+{
+    if (from.x > to.x)
+        std::swap(from, to);
+    int dx = to.x - from.x;
+    int dy = to.y - from.y;
+    int verticalDistance = abs(dy);
+    int major;
+    int minor;
+    TPoint straight;
+    TPoint diagonal;
+    if (dx > verticalDistance) {
+        major = dx;
+        minor = verticalDistance;
+        straight.x = 1;
+        straight.y = 0;
+        diagonal.y = dy > 0 ? 1 : -1;
+    } else {
+        major = verticalDistance;
+        minor = dx;
+        straight = TPoint(0, dy > 0 ? 1 : -1);
+        diagonal = straight;
+    }
+    diagonal.x = 1;
+    unsigned char markBoundary = level == 1 || waterContent != RMG_WATER_ISLANDS;
+    int error = major / 2;
+    while (from.x != to.x || from.y != to.y) {
+        TRmgMapItem* item = map.GetMapItem(from.x, from.y, level);
+        item->zoneState.zone = zoneIndex;
+        if (markBoundary)
+            item->tileData.zoneBoundary = 1;
+        error += minor;
+        if (error < major) {
+            from.x += straight.x;
+            from.y += straight.y;
+        } else {
+            error -= major;
+            from.x += diagonal.x;
+            from.y += diagonal.y;
+        }
+    }
+    TRmgMapItem* lastItem = map.GetMapItem(from.x, from.y, level);
+    lastItem->zoneState.zone = zoneIndex;
+}
+
+// The zone coordinator at 0x53e050 calls this with its generator receiver
+// and a vertex returned by the Voronoi lookup at 0x5fd6b0. The body clips
+// each edge, marks the owning zone's map cells, and records the polygon at
+// zone+0x3f4. All names are provisional; Dreamcast has no RMG compiland.
+// Residual: VC6 sinks the rectangle fallback to the end; retail emits it
+// after the initial edge search. An explicit search goto is byte-flat;
+// a do/while plus a separate success jump adds a branch. Bounds constructors
+// or chained stores enlarge the frame from retail's 0x90 to 0x94. Retail
+// copies each fallback corner to a temporary before insertion: direct
+// lvalue arguments peaked at 57.83% but omit those copies; explicit copies
+// retain them at 57.14%. Member-wise construction changes nested vector
+// inlining again (55.61%). Preserve the copied-point evidence and diagnose
+// the remaining insert expansions by site, allowing for cross-type ICF.
+VA(0x0053C390, 0x730) // caller 0x53e5f4/0x53e602, ret 8; retail-only
+void type_random_map_generator::TraceZoneBoundary(
+    TRmgBoundaryVertex* first, unsigned char irregular)
+{
+    TRmgBoundaryVertex* vertex = first;
+    TRmgZone* zone = vertex->zone;
+    int zoneIndex = zone->slot->zoneIndex;
+    TRmgMapPosition zonePosition = zone->levelPosition;
+    TRmgZoneBounds bounds = {0, 0, map.mapWidth, map.mapHeight};
+    TRmgBoundaryVertex* next;
+    TPoint originalFrom;
+    TPoint originalTo;
+    TPoint from;
+    TPoint to;
+
+    for (;;) {
+        next = vertex->next;
+        originalFrom = vertex->position;
+        originalTo = next->position;
+        from = ClipRmgBoundaryPoint(bounds, vertex->position, next->position);
+        to = ClipRmgBoundaryPoint(bounds, originalTo, originalFrom);
+        if (bounds.Contains(from) && from != to)
+            break;
+        vertex = next;
+        if (vertex == first) {
+            TPoint upperLeft(bounds.minimumX, bounds.minimumY);
+            TPoint upperRight(bounds.maximumX - 1, bounds.minimumY);
+            TPoint lowerLeft(bounds.minimumX, bounds.maximumY - 1);
+            TPoint lowerRight(bounds.maximumX - 1, bounds.maximumY - 1);
+            DrawStraightZoneBoundary(lowerRight, upperRight, zoneIndex, zonePosition.z);
+            DrawStraightZoneBoundary(upperRight, upperLeft, zoneIndex, zonePosition.z);
+            DrawStraightZoneBoundary(upperLeft, lowerLeft, zoneIndex, zonePosition.z);
+            DrawStraightZoneBoundary(lowerLeft, lowerRight, zoneIndex, zonePosition.z);
+            zone->boundary.push_back(TPoint(lowerRight));
+            zone->boundary.push_back(TPoint(upperRight));
+            zone->boundary.push_back(TPoint(upperLeft));
+            zone->boundary.push_back(TPoint(lowerLeft));
+            return;
+        }
+    }
+
+    first = vertex;
+    do {
+        next = vertex->next;
+        TRmgZone* neighbour = next->twin->zone;
+        originalFrom = vertex->position;
+        originalTo = next->position;
+        from = ClipRmgBoundaryPoint(bounds, vertex->position, next->position);
+        to = ClipRmgBoundaryPoint(bounds, originalTo, originalFrom);
+        zone->boundary.push_back(TPoint(from.x, from.y));
+
+        if (!neighbour || neighbour->slot->zoneIndex > zoneIndex) {
+            int roughness = zone->boundaryRoughness;
+            if (neighbour) {
+                int neighbourRoughness = neighbour->boundaryRoughness;
+                roughness = std::_cpp_min(roughness, neighbourRoughness);
+            }
+            if (irregular)
+                DrawIrregularZoneBoundary(from, to, zoneIndex, zonePosition.z, roughness);
+            else
+                DrawStraightZoneBoundary(from, to, zoneIndex, zonePosition.z);
+        }
+
+        vertex = next;
+        if (to != originalTo) {
+            from = to;
+            for (;;) {
+                next = next->next;
+                to = ClipRmgBoundaryPoint(bounds, vertex->position, next->position);
+                if (bounds.Contains(to))
+                    break;
+                vertex = next;
+            }
+            while (from.x != to.x && from.y != to.y) {
+                TPoint corner;
+                if (from.x == bounds.minimumX && from.y != bounds.minimumY)
+                    corner = TPoint(bounds.minimumX, bounds.minimumY);
+                else if (from.y == bounds.minimumY && from.x != bounds.maximumX - 1)
+                    corner = TPoint(bounds.maximumX - 1, bounds.minimumY);
+                else if (from.x == bounds.maximumX - 1 && from.y != bounds.maximumY - 1)
+                    corner = TPoint(bounds.maximumX - 1, bounds.maximumY - 1);
+                else
+                    corner = TPoint(bounds.minimumX, bounds.maximumY - 1);
+                DrawStraightZoneBoundary(from, corner, zoneIndex, zonePosition.z);
+                zone->boundary.push_back(TPoint(from.x, from.y));
+                from = corner;
+            }
+            DrawStraightZoneBoundary(from, to, zoneIndex, zonePosition.z);
+            zone->boundary.push_back(TPoint(from.x, from.y));
+        }
+    } while (vertex != first);
+}
+
+// Each outside coordinate is advanced along the original segment. Retail
+// multiplies both components before dividing; retaining those intermediate
+// points preserves its signed integer arithmetic, including truncation.
+// The arithmetic operators are a source hypothesis supported by the paired
+// intermediate stores, not recovered Dreamcast declarations. Scalar named
+// numerator/step points peak at 63.41%; operators reach 64.18%. Both still
+// have a 0x24 frame against retail's 0x1c. Moving the clipped copy across
+// the early return changes only the local-lifetime plateau; it does not
+// recover retail's EBX/EDI clipped coordinates and ESI/ECX delta registers.
+VA(0x0053CAC0, 0x266) // caller 0x53c407; hidden result ecx, bounds edx; retail-only
+TPoint ClipRmgBoundaryPoint(
+    const TRmgZoneBounds& bounds, TPoint point, TPoint toward)
+{
+    if (bounds.Contains(point))
+        return point;
+
+    TPoint delta = toward - point;
+    TPoint clipped = point;
+    if (clipped.x < bounds.minimumX && delta.x) {
+        int distance = bounds.minimumX - clipped.x;
+        clipped += delta * distance / delta.x;
+        if (point.y >= bounds.minimumY && clipped.y < bounds.minimumY)
+            return point;
+        if (point.y < bounds.maximumY && clipped.y >= bounds.maximumY)
+            return point;
+    }
+    if (clipped.y < bounds.minimumY && delta.y) {
+        int distance = bounds.minimumY - clipped.y;
+        clipped += delta * distance / delta.y;
+        if (point.x >= bounds.minimumX && clipped.x < bounds.minimumX)
+            return point;
+        if (point.x < bounds.maximumX && clipped.x >= bounds.maximumX)
+            return point;
+    }
+    if (clipped.x >= bounds.maximumX && delta.x) {
+        int distance = bounds.maximumX - clipped.x - 1;
+        clipped += delta * distance / delta.x;
+        if (point.y >= bounds.minimumY && clipped.y < bounds.minimumY)
+            return point;
+        if (point.y < bounds.maximumY && clipped.y >= bounds.maximumY)
+            return point;
+    }
+    if (clipped.y >= bounds.maximumY && delta.y) {
+        int distance = bounds.maximumY - clipped.y - 1;
+        clipped += delta * distance / delta.y;
+        if (point.x >= bounds.minimumX && clipped.x < bounds.minimumX)
+            return point;
+        if (point.x < bounds.maximumX && clipped.x >= bounds.maximumX)
+            return point;
+    }
+    return clipped;
 }
 
 // Complete-only subterranean connection pass.  The caller walks paired
@@ -939,6 +1374,10 @@ void type_random_map_generator::ConnectZones()
 VA_COMPGEN(0x00404200, 0x209, VECTOR_INSERT, Int)
 VA_COMPGEN(0x00422F50, 0x1B1, VECTOR_INSERT, Int)
 VA_COMPGEN(0x004347A0, 0x32E, VECTOR_INSERT, TRmgMapPosition)
+
+// DrawIrregularZoneBoundary retains this single-element erase. Its
+// eight-byte copy loop and ret 4 agree in all 61 raw retail bytes.
+VA_COMPGEN(0x0054CD70, 0x3D, VECTOR_ERASE, TPoint)
 
 // BuildRoadCostMap and CreateRiver both materialize a separate by-value
 // position immediately before this identical descending binary search.  The
