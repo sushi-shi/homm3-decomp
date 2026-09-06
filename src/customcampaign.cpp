@@ -2259,7 +2259,15 @@ void TCampaignBrief::CampaignHeaderStruct::GetAvailableScenarios(
 // 21 target-shifted blocks is that one displacement. Tried and rejected
 // 2026-09-06: inverting the two arms so the !scroll_delay case leads
 // (82.36) and flattening both arms onto `redraw &&` conditions (83.88,
-// byte-flat). It is a C2 block-placement choice, not the condition order.
+// byte-flat); nesting the scroll test inside an `if (!scroll_delay)` with
+// `--scroll_delay` in the else (82.36, i.e. the same loss as the inversion -
+// it is the arm ORDER that costs, not the nesting); and, decisively, a
+// `goto scroll_one_row` out of the else-if with `++scroll_y; goto
+// resume_subtitle;` parked at the foot of the strip block, which is EXACTLY
+// retail's `jmp 0x4892fa` / block-at-0x4892a1 shape and is BYTE-FLAT to the
+// digit (83.8848) - C2 folds the goto straight back into the inline
+// position. So the sink is not reachable from the source at all: it is a C2
+// block-placement choice, not the condition order and not a goto.
 VA(0x00488fb0, 0x528)  // PlayScenarioPrologue callee + music-cell reader, retail-only
 void TCampaignBrief::MapTextStruct::Play()
 {
