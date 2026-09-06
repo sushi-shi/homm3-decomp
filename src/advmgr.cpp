@@ -313,8 +313,8 @@ CNetMsg* CAdvMgrNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
             gpAdvManager->UpdBottomView(1, 1, 1);
         }
         if (gpCurrentPlayer->IsHuman()) {
-            RemoteFn_00553AA0(gUnnamed69d7b0, gpGeneralText->GetText(352),
-                              gpCurrentPlayer->cName);
+            SystemMsg(&chatMan, gpGeneralText->GetText(352),
+                      gpCurrentPlayer->cName);
             gUnnamed69d810 = gNetLocalGamePos;
         }
         break;
@@ -326,7 +326,7 @@ CNetMsg* CAdvMgrNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
             m_pAbortPopupMsg = pNetMsg;
             return 0;
         }
-        RemoteFn_00556430(pMsg->m_gamePos);
+        HandlePlayerDrop(pMsg->m_gamePos);
         break;
     }
     case RS_PLAYER_DROP_UPDATE: {
@@ -445,8 +445,8 @@ CNetMsg* CAdvMgrNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
         break;
     }
     case RS_PLAYER_ACTIVE:
-        RemoteFn_00553AA0(
-            gUnnamed69d7b0, gpGeneralText->GetText(40),
+        SystemMsg(
+            &chatMan, gpGeneralText->GetText(40),
             gpGame->GetPlayerName(gpGame->GetLocalPlayerGamePos()));
         break;
     case RS_GIFT:
@@ -9709,7 +9709,7 @@ void advManager::StartLocalPlayerTurn()
             }
         }
 
-        GameFn_004CA530(gpGame);
+        gpGame->CancelComputerScreen();
         gbThisNetGotAdventureControl = 1;
         gpSoundManager->field_84 = 0;
 
@@ -9729,7 +9729,7 @@ void advManager::StartLocalPlayerTurn()
         gpSoundManager->field_84 = 0;
         gUnnamed699544 = GameTime::Get();
     }
-    GameFn_004CC7D0(gpGame);
+    gpGame->DoNewTurn();
 
     advWindow->UpdateHeroLocators(-1, 1, 1);
     advWindow->UpdateTownLocators(-1, 1, 1);

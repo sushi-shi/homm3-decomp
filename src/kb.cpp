@@ -277,11 +277,11 @@ unsigned char InitializeRandomTavernText();
 unsigned char initialize_creature_bank_traits();
 unsigned char InitializeCreatureGeneratorNames();
 unsigned char InitializeCreatureTypeTraitsTable();
-void GameFn_0041B500();
+void InitializeAdventureObjectNames();
 unsigned char InitializeBuildingCostsTables();
 unsigned char InitializeExtraInfoText();
 unsigned char InitializeHeroSpecificAbilitiesTable();
-unsigned char CampaignMapFn_0045E250();
+unsigned char InitializeCampaignMusicTable();
 int InterpretCommandLine();
 unsigned char InitializeAdventureEventText();
 unsigned char InitializeSpellTraitsTable();
@@ -362,7 +362,7 @@ static unsigned char LoadGameData()
         return 0;
     if (!InitializeCreatureTypeTraitsTable())
         return 0;
-    GameFn_0041B500();
+    InitializeAdventureObjectNames();
     if (!InitializeArtifactTraitsTable())
         return 0;
     if (!InitializeSpellTraitsTable())
@@ -425,7 +425,7 @@ static unsigned char LoadGameData()
         return 0;
     if (!InitializeArrayText())
         return 0;
-    return CampaignMapFn_0045E250();
+    return InitializeCampaignMusicTable();
 }
 
 // E:\gamedcs\kb.cpp:3763. Source-static and single-call for the same reason
