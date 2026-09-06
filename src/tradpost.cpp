@@ -2573,11 +2573,11 @@ void TSellArtifactWindow::Update(unsigned char bUpdate)
         else
             iRightQty = 1;
         if (gSelectedArtifact < 18) {
-            art = gpMarketHero->get_artifact(gSelectedArtifact)->artifactId;
+            art = gpMarketHero->get_artifact(gSelectedArtifact).artifactId;
         } else {
             art = gpMarketHero->get_backpack(
                 (gBackpackStart + gSelectedArtifact - 18)
-                % gpMarketHero->get_number_in_backpack(1))->artifactId;
+                % gpMarketHero->get_number_in_backpack(1)).artifactId;
         }
         sprintf(gText, (*gpGeneralText)[269],
                 iRightQty,
@@ -2635,11 +2635,11 @@ void TSellArtifactWindow::Update(unsigned char bUpdate)
                 msg.codeY = 9;
                 if (gSelectedArtifact < 18) {
                     msg.extra = gpMarketHero->get_artifact(
-                        gSelectedArtifact)->artifactId;
+                        gSelectedArtifact).artifactId;
                 } else {
                     msg.extra = gpMarketHero->get_backpack(
                         (gBackpackStart + gSelectedArtifact - 18)
-                        % gpMarketHero->get_number_in_backpack(1))->artifactId;
+                        % gpMarketHero->get_number_in_backpack(1)).artifactId;
                 }
                 BroadcastMessage(&msg);
                 msg.codeX = widget::WIDGET_SET_TEXT;
@@ -3143,7 +3143,7 @@ void TSellArtifactWindow::UpdateMarketBackpack()
     for (int k = 0; k < 5 && k < numInBackpack; ++k) {
         icon.codeY = k + 0x66;
         icon.extra = gpMarketHero->get_backpack(
-            ((gBackpackStart & 0xff) + k) % numInBackpack)->artifactId;
+            ((gBackpackStart & 0xff) + k) % numInBackpack).artifactId;
         BroadcastMessage(&icon);
     }
 }
@@ -3820,7 +3820,7 @@ int TSellArtifactWindow::WindowHandler(message* msg)
             int artifactSlot = msg->codeY - MARKET_ARTIFACT_SLOT_00_ID;
             type_artifact artifact;
             if (artifactSlot < 18) {
-                artifact = *gpMarketHero->get_artifact(artifactSlot);
+                artifact = gpMarketHero->get_artifact(artifactSlot);
                 gpMarketHero->ViewArtifact(&artifact, 1);
                 return MESSAGE_DISPATCH_CONSUME;
             } else {

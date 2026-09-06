@@ -12,7 +12,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00506080	468	61.07879	62.3455	62.3455	176.22306	mapcell	??0CObjectType@@QAE@PAUTObjectType@@@Z	admitted
 0x00526d40	915	64.31193	64.3119	64.3119	326.546115	philai	??0type_spellvalue@@QAE@PBVhero@@@Z	admitted
 0x00583580	780	34.04054	67.9099	67.9099	250.30278000000007	singleselectionwindow	?UpdateGameVars@TSingleSelectionWindow@@QAEXXZ	admitted
-0x00489e20	1104	71.06736	71.0674	71.0674	319.41590399999995	customcampaign	?PruneCrossoverHeroes@SCampaign@@QAEXPAX@Z	admitted
+0x00489e20	1104	71.03886	71.0674	71.0674	319.41590399999995	customcampaign	?PruneCrossoverHeroes@SCampaign@@QAEXPAX@Z	admitted
 0x005b5a70	2215	42.021492	74.7623	74.7623	559.0150550000002	rmg_terrain	?PaintTransitions@TRmgTerrainPainter@@QAEXXZ	admitted
 0x0056fbc0	230	75.23529	75.2353	75.2353	56.958810000000014	seerhut	?DoProgressDialog@type_artifact_quest@@UAEXXZ	admitted
 0x00431800	962	75.383835	75.3838	75.3838	236.8078440000001	ai_player	?consider_hiring@@YI_NJPAVhero@@@Z	admitted
@@ -38,7 +38,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x004f2960	894	79.11069	79.1107	79.1107	186.7503420000001	kb	?DisplayLCWinLoss@@YIEPAVLossConditionStruct@@PAH1E@Z	admitted
 0x00466010	579	79.15183	79.1518	79.1518	120.71107800000003	cmbtmgr	?place_obstacle@combatManager@@QAEEH@Z	admitted
 0x0048a310	2846	66.44606	66.4461	79.2531	590.456774	customcampaign	?Load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	admitted
-0x00578e00	607	79.25824	79.3242	79.3242	125.502106	singleselectionwindow	??0GameSelectionHeadersStruct@@QAE@XZ	admitted
+0x00578e00	607	73.14835	79.3242	79.3242	125.502106	singleselectionwindow	??0GameSelectionHeadersStruct@@QAE@XZ	admitted
 0x00542080	2218	79.429504	79.4295	79.4295	456.25368999999984	rmg	?CreateSubterraneanGate@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	admitted
 0x004224e0	692	79.65844	79.6584	79.6584	140.76387200000002	ai	?simulate_melee_attack@combatManager@@QAEXPAVarmy@@J0JJ@Z	admitted
 0x0049fa90	4203	79.82593	79.8259	79.8259	847.9174229999998	events	?GiveBlackBoxReward@advManager@@QAE_NPBDPAVhero@@PAVNewmapCell@@Utype_point@@_NPAVBlackBoxData@@@Z	admitted
@@ -615,4 +615,4 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x004f0b20	1169	99.976135	99.9761	99.9761	0.2793909999999874	kb	?handle_click@type_normal_dialog_frame@@UAEEEE@Z	admitted
 0x005b08b0	1263	99.97872	99.9787	99.9787	0.26901900000002366	swapmgr	?SetRolloverText@swapManager@@QAEXH@Z	admitted
 0x004a84f0	9538	99.372734	99.9881	99.9911	0.8488820000000548	events	?DispatchEvent@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	admitted
-0x00441610	1696	98.92514	99.9962	99.9962	0.0644479999999703	army	?do_attack@army@@QAEEPAV1@H@Z	admitted
+0x00441610	1696	98.88676	99.9962	99.9962	0.0644479999999703	army	?do_attack@army@@QAEEPAV1@H@Z	admitted

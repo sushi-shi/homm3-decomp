@@ -1134,7 +1134,7 @@ inline void swapManager::update_artifact_widget(long id, TArtifact artifact)
 VA(0x005aef00, 0x24C)  // dc-order + typed retail body, dc 0x15cd2c
 void swapManager::UpdateSlot(int iHero, TArtifactSlot slot)
 {
-    int artifact = heroes[iHero]->get_artifact(slot)->artifactId;
+    int artifact = heroes[iHero]->get_artifact(slot).artifactId;
     if (artifact == ARTIFACT_NONE)
     {
         int type = akArtifactSlotTraits[slot].type;
@@ -1202,7 +1202,7 @@ void swapManager::update_all_slots()
 void swapManager::UpdateBackpackItem(int iHero, int i)
 {
     message msg;
-    type_artifact artifact = *heroes[iHero]->get_backpack(i);
+    type_artifact artifact = heroes[iHero]->get_backpack(i);
     msg.id = MESSAGE_WIDGET;
     msg.codeX = 4;
     // Complete shifts the backpack widget band by two from Dreamcast's 0x57.
@@ -1337,7 +1337,7 @@ void swapManager::handle_artifact_click(long side, long id, unsigned char right_
     TArtifactSlot slot =
         static_cast<TArtifactSlot>(id) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
     hero* our_hero = heroes[side];
-    type_artifact old_artifact = *our_hero->get_artifact(slot);
+    type_artifact old_artifact = our_hero->get_artifact(slot);
 
     if (gHeroScreenDraggedArtifact.artifactId == ARTIFACT_NONE) {
         if (old_artifact.artifactId == ARTIFACT_NONE)
@@ -1456,7 +1456,7 @@ VA(0x005af990, 0x251)  // roster bracket + body/callees, dc 0x15d2e0
 void swapManager::handle_backpack_click(long side, long id, unsigned char right_click)
 {
     hero* our_hero = heroes[side];
-    type_artifact old_artifact = *our_hero->get_backpack(id);
+    type_artifact old_artifact = our_hero->get_backpack(id);
 
     if (gHeroScreenDraggedArtifact.artifactId == ARTIFACT_NONE) {
         if (old_artifact.artifactId != ARTIFACT_NONE && CanModHero(side)) {
@@ -2225,14 +2225,14 @@ void swapManager::SetRolloverText(int codeY)
     case kSwapRolloverLeftArtifact18:
         heroes[0]
             ->get_artifact(static_cast<TArtifactSlot>(codeY - kSwapRolloverLeftArtifact0) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */)
-            ->get_rollover_text(gText);
+            .get_rollover_text(gText);
         break;
 
     case kSwapRolloverLeftBackpack0: case kSwapRolloverLeftBackpack1:
     case kSwapRolloverLeftBackpack2: case kSwapRolloverLeftBackpack3:
     case kSwapRolloverLeftBackpack4:
         heroes[0]->get_backpack(codeY - kSwapRolloverLeftBackpack0)
-            ->get_rollover_text(gText);
+            .get_rollover_text(gText);
         break;
 
     case kSwapRolloverRightArtifact0: case kSwapRolloverRightArtifact1:
@@ -2247,14 +2247,14 @@ void swapManager::SetRolloverText(int codeY)
     case kSwapRolloverRightArtifact18:
         heroes[1]
             ->get_artifact(static_cast<TArtifactSlot>(codeY - kSwapRolloverRightArtifact0) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */)
-            ->get_rollover_text(gText);
+            .get_rollover_text(gText);
         break;
 
     case kSwapRolloverRightBackpack0: case kSwapRolloverRightBackpack1:
     case kSwapRolloverRightBackpack2: case kSwapRolloverRightBackpack3:
     case kSwapRolloverRightBackpack4:
         heroes[1]->get_backpack(codeY - kSwapRolloverRightBackpack0)
-            ->get_rollover_text(gText);
+            .get_rollover_text(gText);
         break;
 
     default:

@@ -2827,7 +2827,7 @@ int TCampaignBrief::ScenarioStruct::GetMaxCrossoverHeroes() const
 // carries this identity.
 // Retail's reverse loops test the count BEFORE decrementing. Pool and
 // option counters are signed; hero selection and artifact counters are
-// unsigned. All use `i--` as the condition. The initial `i-- > 0` spelling
+// unsigned. Reverse loops use `i--` as the condition. The initial `i-- > 0` spelling
 // on unsigned counters raised 12.3264 to 22.4741, but retained JBE entry
 // tests: DoPreLoadCustomization's exact control proves that JE entries and
 // JA backedges come from unsigned `i--`. Correcting both sites here raises
@@ -2837,6 +2837,10 @@ int TCampaignBrief::ScenarioStruct::GetMaxCrossoverHeroes() const
 // raises Prune to 71.07% and recovers its first three calls. The remaining
 // differences include the second scenario loop's size queries, erase-copy
 // depth, artifact insertion, the second sort, and final hero destruction.
+// The forward scenario loop ends in signed JL at +0x264: both its index
+// and size comparison must be signed (71.04% current, 71.07% banked).
+// A header helper for the whole limit query loses four retail CFG blocks
+// and changes the frame to 0xd0 (60.64%); keep this phase in Prune.
 // The shared includes.h max(int,int) wrapper raises this to 26.1010:
 // retail +0x210 and +0x232 copy both operands to temporary homes before
 // selecting a reference. Direct std::_cpp_max on the caller's lvalues
@@ -2875,7 +2879,7 @@ void SCampaign::PruneCrossoverHeroes(void* campaignHeader)
         }
 
         int keepCount = 0;
-        for (unsigned int iScenario = 0;
+        for (int iScenario = 0;
              iScenario < static_cast<int>(header->scenarios.size());
              ++iScenario) {
             TCampaignBrief::ScenarioStruct* scenario =
@@ -2901,12 +2905,12 @@ void SCampaign::PruneCrossoverHeroes(void* campaignHeader)
             type_artifact artifact;
             int slot;
             for (slot = 0; slot < CROSSOVER_EQUIPPED_ARTIFACT_SLOTS; ++slot) {
-                artifact = *sourceHero.get_artifact(slot);
+                artifact = sourceHero.get_artifact(slot);
                 if (artifact.artifactId != ARTIFACT_NONE)
                     pooledArtifacts.push_back(artifact);
             }
             for (slot = 0; slot < CROSSOVER_BACKPACK_SLOTS; ++slot) {
-                artifact = *sourceHero.get_backpack(slot);
+                artifact = sourceHero.get_backpack(slot);
                 if (artifact.artifactId != ARTIFACT_NONE)
                     pooledArtifacts.push_back(artifact);
             }
