@@ -3428,6 +3428,13 @@ static inline long BoltDeltaSquared(long destination, long current)
     return delta * delta;
 }
 
+// Residual (97.32%): the two FP scratch slots are transposed - retail loads
+// `travelled` off [ebp+8] the instant it is stored and reuses that slot for
+// the divisor's float temp, so its later temps land in [ebp-4] and ours in
+// [ebp+8]; the instruction stream is otherwise identical. Tried and rejected,
+// all byte-flat at 97.3158: dropping the named `travelled` local entirely,
+// an implicit (uncast) divisor, and a second named `float total` declared
+// after `travelled`. Declaring `total` BEFORE the division measured 96.1467.
 VA(0x005a5260, 0x1DC)  // order-map+arity, dc 0x1542b4
 void combatManager::ResetBoltAngle(SBolt* psBolt)
 {

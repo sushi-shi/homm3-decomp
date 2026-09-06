@@ -12,7 +12,7 @@ adventuremapwindow	??0TAdventureMapWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x1
 adventuremapwindow	??1TAdventureMapWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x2b10	edbb40617def
 adventuremapwindow	??_GTAdventureMapWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x2ae0	-
 adventuremapwindow	?Activate@CGameChatEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x22b0	5582f5bcc3f3
-adventuremapwindow	?CheckAdvCheatCode@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	91.3705	91.3705	91.3705	0x2450	ec4fd0a665ee
+adventuremapwindow	?CheckAdvCheatCode@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	92.2270	92.2270	92.2270	0x2450	d0e132da2b84
 adventuremapwindow	?ClearBottomView@TAdventureMapWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x3ee0	c44f40d9b96c
 adventuremapwindow	?Close@TAdventureMapWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x14d0	463fe91487af
 adventuremapwindow	?DoHeroKnob@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x3220	5b941b78c07c
@@ -125,7 +125,7 @@ advmgr	?PopupPlayerTurnInfo@@YIXXZ	100.0000	100.0000	100.0000	0x19c80	98baf17560
 advmgr	?ProcessDeSelect@advManager@@QAEHPBVmessage@@PAEPAUtype_point@@PAPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x9a70	ea04b60e2e3c
 advmgr	?ProcessHover@advManager@@QAEHHH@Z	91.6263	91.6263	91.6263	0xe360	16cc0b40843a
 advmgr	?ProcessKeyPress@advManager@@QAEHPBVmessage@@PAEPAUtype_point@@PAPAVNewmapCell@@@Z	97.6091	97.6091	97.6091	0x8c40	b6aba7b9a3a7
-advmgr	?ProcessMapSelect@advManager@@QAEXPBVmessage@@PAUtype_point@@PAPAVNewmapCell@@@Z	91.1006	91.1006	91.1006	0xa5d0	e94ec6649fc3
+advmgr	?ProcessMapSelect@advManager@@QAEXPBVmessage@@PAUtype_point@@PAPAVNewmapCell@@@Z	91.1006	91.1006	91.1006	0xa5d0	3d3b17f3fece
 advmgr	?ProcessRadarSelect@advManager@@QAEXPBVmessage@@@Z	100.0000	100.0000	100.0000	0xa0c0	5c36b56e1c0a
 advmgr	?ProcessSearch@advManager@@QAEHHHH@Z	94.6792	94.6792	94.6792	0xec90	438a0713d228
 advmgr	?ProcessSelect@advManager@@QAEHPBVmessage@@PAUtype_point@@PAPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x97e0	61b96265198a
@@ -955,7 +955,7 @@ cmbtmgr	?RaiseSkeletons@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x69f2
 cmbtmgr	?RemoveArmyFromGrid@combatManager@@QAEXABVarmy@@@Z	100.0000	100.0000	100.0000	0x68730	62af9d7bc87c
 cmbtmgr	?RemoveObstacle@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x66b30	101875d9e158
 cmbtmgr	?ResetHitByCreature@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x65fe0	037b24bc169a
-cmbtmgr	?SetNextArmy@combatManager@@QAEXHH@Z	99.6497	99.6497	99.6497	0x65330	eb3505fa04bd
+cmbtmgr	?SetNextArmy@combatManager@@QAEXHH@Z	99.6497	99.6497	99.6497	0x65330	19ec32df5ec1
 cmbtmgr	?SetupAdjacencyArray@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x640a0	1ec64dc6109f
 cmbtmgr	?SetupAndLoadObstacles@combatManager@@QAEXXZ	98.1402	98.1402	98.1402	0x66290	e1280d4cefce
 cmbtmgr	?SetupCombat@combatManager@@QAEXUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HHHE@Z	100.0000	100.0000	100.0000	0x639f0	9a212de8b1a4
@@ -2490,7 +2490,7 @@ kb	?Draw@Bitmap16Bit@@QBEXHHHHPAV1@HH_N@Z	100.0000	100.0000	100.0000	0xf0010	5a6
 kb	?Draw@CSprite@@QAEXHHHHHHPAVBitmap16Bit@@HHEE@Z	100.0000	100.0000	100.0000	0xf0050	eec7edf8835a
 kb	?DrawProgressCount@@YIXXZ	100.0000	100.0000	100.0000	0xed230	a745829ef928
 kb	?EarlySetup@@YIHXZ	94.2515	94.2515	94.2515	0xed650	2283a578b78f
-kb	?EventWindowHandler@@YIHPAVmessage@@@Z	82.0787	82.0787	82.0787	0xf0fc0	3d44369f32b5
+kb	?EventWindowHandler@@YIHPAVmessage@@@Z	91.7323	91.7323	91.7323	0xf0fc0	7dcb6fb0354a
 kb	?FileError@@YIXPBD@Z	100.0000	100.0000	100.0000	0xf3a60	1a1fb33324ec
 kb	?GameUnsaved@@YIHXZ	100.0000	100.0000	100.0000	0xf4310	8134b9e04baa
 kb	?GetMap@Bitmap16Bit@@QAEPAGHH@Z	100.0000	100.0000	100.0000	0xefff0	a69c8d90f6da
@@ -3751,7 +3751,7 @@ singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100
 singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0	66eb0a0e15c8
 singleselectionwindow	?OnMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2193	90.2193	90.2193	0x189710	3ad2be3935a3
 singleselectionwindow	?OnNameClick@TSingleSelectionWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x18b620	ef174e28edf8
-singleselectionwindow	?OnNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	97.5366	97.5366	97.5366	0x18b510	862e2a9c058b
+singleselectionwindow	?OnNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18b510	6d33ea4ad8f8
 singleselectionwindow	?OnNewPlayerMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	97.0628	97.0628	97.0628	0x189fa0	e6b5ff348cc8
 singleselectionwindow	?OnNewSetupInfoMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x189c60	65a1e8c13fb3
 singleselectionwindow	?OnPingMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x1894d0	7251d5d2375d
@@ -3806,7 +3806,7 @@ singleselectionwindow	?UpdateNameLists@TSingleSelectionWindow@@QAEXXZ	100.0000	1
 singleselectionwindow	?UpdatePlayerPositions@TSingleSelectionWindow@@QAEXE@Z	98.4856	98.4856	98.4856	0x188330	fc48e3f6365d
 singleselectionwindow	?UpdateTown@TSingleSelectionWindow@@QAEXHW4TTownType@@E@Z	100.0000	100.0000	100.0000	0x18cd50	6be56f51c2e4
 singleselectionwindow	?WindowFn_00582e90@TSingleSelectionWindow@@QAEXPAV?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x182e90	078af1123e68
-singleselectionwindow	?WindowHandler@TSingleSelectionWindow@@UAEHPAVmessage@@@Z	97.6901	97.6901	97.6901	0x187d00	252e5d706c40
+singleselectionwindow	?WindowHandler@TSingleSelectionWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x187d00	ff7ecc5cdf3f
 singleselectionwindow	?_Construct@std@@YIXPAUGameSelectionHeadersStruct@@ABU2@@Z	100.0000	100.0000	100.0000	0x18f480	-
 singleselectionwindow	?_Destroy@?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@IAEXPAUGameSelectionHeadersStruct@@0@Z	100.0000	100.0000	100.0000	0x18f080	-
 singleselectionwindow	?_Init@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@IAEXXZ	100.0000	100.0000	100.0000	0x18ffc0	-

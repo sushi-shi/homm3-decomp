@@ -628,6 +628,13 @@ void CAdventurMapChatEdit::SendChat(const char* sChat, int toWho)
 // depth zero suppresses the required outer operator= inline (80.38%). The
 // remaining residual is the two nested basic_string::_Tidy calls retail keeps
 // out of line; do not flatten the proven flag to chase that compiler midpoint.
+// The Neo arm's experience increment is a NAMED LOCAL: retail calls
+// GetExperienceIncrement first and only then pushes GiveExperience's two
+// constant arguments, which the folded single-expression call cannot produce
+// (VC6 sinks the constants ahead of the nested call). 91.3705 -> 92.2340.
+// Tried and rejected at that plateau: naming `(*gpGeneralText)[261]` in a
+// `const char*` before the assignment to hold retail's ESI copy of the
+// string pointer - byte-flat at 92.2340.
 VA(0x00402450, 0x5D3)  // anchor-global, dc 0x3b0
 void CheckAdvCheatCode(std::string& chatString)
 {
@@ -673,8 +680,8 @@ void CheckAdvCheatCode(std::string& chatString)
                    0x0063a4a8, advCheatNeo, "ajparb"))
                && currentHero) {
         cheatUsed = true;
-        currentHero->GiveExperience(
-            hero::GetExperienceIncrement(currentHero->level), 1, 1);
+        int increment = hero::GetExperienceIncrement(currentHero->level);
+        currentHero->GiveExperience(increment, 1, 1);
     } else if (code.compare(DATA_COMPGEN(
                    0x0063a4b0, advCheatFollowTheWhiteRabbit,
                    "ajpsbyybjgurjuvgrenoovg"))
