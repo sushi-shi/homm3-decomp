@@ -11127,6 +11127,30 @@ inline const char* GetRandomTownName(int townType)
 // they would write); retail's RANDOM_TOWN arm does NOT emit them, but a
 // front-end-visible / C2-eliminated statement would carry cb without
 // emitting.  That is the shape to look for - do not ship the carrier.
+// CORRECTION 2026-09-06: THE CFG IS NOT CLOSED, and the note above is wrong
+// to say so.  Retail has 57 blocks against this compile's 42 and 31 branches
+// against 23, with FIVE target-only calls - `_Xlen`, `_Tidy` x3 and `_Copy`,
+// all of them internals of `basic_string::_Grow`.  The fifteen missing blocks
+// are one construct: retail EXPANDS the random-name arm's
+// `assign(const char*, size_type)` and the `_Grow` inside it, and calls only
+// _Grow's own helpers, where this compile CALLS `_Grow` itself and stops a
+// level short.  That is an UNDER-inline, whose lever is caller mass - which
+// is exactly why polish lane 21's `if (0)` titration reached 98.63 at N=50:
+// the dose was buying the budget that expands _Grow, not filling fifteen
+// separate holes.  The number to look for is therefore ONE construct worth
+// ~50 statements of caller_cb, not fifty statements.
+// Measured and rejected 2026-09-06 (baseline 80.3874):
+//   * `cName = GetRandomTownName(...)` (operator=(const char*)) 80.3874,
+//     byte-flat - the library level of the RANDOM arm is not the selector;
+//   * `cName.assign(ptr, strlen(ptr))` 65.4176, and with the pointer named
+//     first 79.4547 - both still 15 blocks short;
+//   * `cName.assign(townExtra->name, 0, npos)` in the CUSTOM arm makes the
+//     block count EXACT (57 = 57, 0 missing) and scores 50.4032 - the
+//     structure it buys is the wrong one, because retail CALLS that same
+//     three-argument assign at that site (the two sides already pair there)
+//     and the frame goes from 4 B under retail's 0x18c to 4 B over.
+// So the custom arm is right as written and the whole deficit is the random
+// arm's expansion depth.
 VA(0x004caa70, 0x39C)  // DC name/order + retail map/vector/string shape
 void game::ProcessOnMapTowns()
 {
