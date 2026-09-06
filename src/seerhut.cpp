@@ -819,11 +819,24 @@ void type_skill_quest::DoProposalDialog(hero* current_hero)
 // Slot 5 presents one primary-skill picture for every positive requirement.
 // The picture class advances from 0x1f with the skill index, while the
 // qualifier packs the displayed value below a high-word one.
-// Residual (75.8427%): semantics and all twelve CFG blocks agree, but retail
+// THE PICTURE LOOP IS A POINTER WALK WITH ITS OWN DOWN-COUNTER (75.8427 ->
+// 76.2136, 2026-09-06).  Retail's tail is `inc esi / dec ebx / jne` with
+// `mov ebx,4` ahead of it and the picture id strength-reduced into
+// `mov edi,0x1f / sub edi,esi / lea edx,[edi+esi]`; an indexed
+// `for (int i = 0; i < 4; ++i)` gives VC6 TWO reductions (0xdf-this and
+// 0xc0-this) and rebuilds the bound as `lea eax,[ecx+esi] / cmp eax,4 / jl`,
+// with no counter at all.  Spelled with the three explicit induction
+// variables the reductions collapse to retail's one and the down-counter
+// appears.  Measured and rejected: the two-variable form that derives the
+// picture id from `skill - required_skills` (65.37) - VC6 needs the id as its
+// own variable to produce the `0x1f - esi` invariant.
+// Residual (76.2136%): semantics and all twelve CFG blocks agree, but retail
 // keeps the GetProgressDialogText return object alive while taking c_str()
 // directly from the returned EAX; this CL invocation reloads the same string
 // slot before the vector loop and consequently chooses a different register
-// schedule. Tried and rejected: a named string alone, a bare c_str pointer
+// schedule.  The counter is the visible cost of that: retail spends EBX on it
+// while ours pools the constant 0 there (`cmp al,bl` against retail's
+// `test al,al`) and spills `remaining` to [ebp-0x14]. Tried and rejected: a named string alone, a bare c_str pointer
 // (destroys the temporary before the loop), a named string plus saved pointer,
 // and the lifetime-extending const reference below. VC6's accepted non-const
 // temporary-reference extension is byte-identical to the const form, so it
@@ -837,15 +850,21 @@ void type_skill_quest::DoProgressDialog()
     const std::string& text = GetProgressDialogText();
     const char* textPointer = text.c_str();
     std::vector<type_dialog_resource> dialogResources;
-    for (int i = 0; i < 4; ++i) {
-        if (required_skills[i] > 0) {
+    const signed char* skill = required_skills;
+    int picture = 0x1f;
+    int remaining = 4;
+    do {
+        if (*skill > 0) {
             type_dialog_resource resource;
-            resource.resource = 0x1f + i;
+            resource.resource = picture;
             resource.qualifier = 0x10000
-                | static_cast<unsigned short>(required_skills[i]);
+                | static_cast<unsigned short>(*skill);
             dialogResources.push_back(resource);
         }
-    }
+        ++skill;
+        ++picture;
+        --remaining;
+    } while (remaining);
     extended_dialog(textPointer, dialogResources, -1, -1, 0);
 }
 
