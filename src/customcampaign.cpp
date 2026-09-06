@@ -1100,7 +1100,7 @@ void TCampaignStartHeroOption::Read(TAbstractFile* file)
         file->Read(&value, sizeof(signed char));
         count = value;
     }
-    m_choices.clear();
+    m_choices.erase(m_choices.begin(), m_choices.end());
     for (int i = 0; i != count; ++i) {
         TCampaignHeroChoice choice;
         {
@@ -1635,9 +1635,17 @@ void TCampaignBrief::ScenarioStruct::PlaceCrossoverHeroes()
 // to the option player's heroes in turn until one accepts it. The chosen
 // start option's own Apply runs last, on every path.
 //
-// Residual: retail keeps `crossover_artifacts.test`'s `_Xran` throw path
-// expanded here (the "invalid bitset<N> position" string is this row's own),
-// which is the same bitset boundary ScenarioStruct::Read carries.
+// Residual (73.00%): the bitset throw path. 2026-09-06: 72.57 -> 73.00 by
+// spelling the membership test as `crossover_artifacts[id]` rather than
+// `.test(id)` - one more inline level on the way to `_Xran`, which pushes
+// `out_of_range(const string&)` back out of line exactly as retail has it.
+// What is left is one level further still: retail CALLS
+// `basic_string(const char*, const allocator&)` where we expand it into
+// `_Tidy` + `assign(ptr, len)`. Measured and rejected: `SCampaign&` instead
+// of `SCampaign*` for the campaign alias (byte-flat), reading
+// `gpGame->campaign.briefingChoice` directly rather than through the alias
+// (72.27). The 4-byte frame surplus is our spill of that alias - retail
+// keeps it in ESI for the whole body and homes only `this`.
 VA(0x00487900, 0x2CD)  // anchor-caller(game::NewMap +0x5cb), retail-only
 void TCampaignBrief::ScenarioStruct::GiveCrossoverArtifacts()
 {
@@ -1674,7 +1682,7 @@ void TCampaignBrief::ScenarioStruct::GiveCrossoverArtifacts()
             artifact = artifacts[iArtifact];
             if (artifact.artifactId == ARTIFACT_NONE)
                 continue;
-            if (!crossover_artifacts.test(artifact.artifactId))
+            if (!crossover_artifacts[artifact.artifactId])
                 continue;
             for (int iPlayerHero = 0;
                  iPlayerHero < gpGame->players[player].numHeroes;
