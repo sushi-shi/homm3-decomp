@@ -9,11 +9,34 @@ and printing a false tool failure.
 from __future__ import annotations
 
 import unittest
+from pathlib import Path
+import tempfile
+from unittest.mock import patch
 
-from homm3.vc6 import report
+from homm3.vc6 import _selection, report
 
 
 class PublicSymbolResolution(unittest.TestCase):
+
+    def test_static_function_resolves_against_external_retail_symbol(self):
+        from homm3.build.test_eh_handler_normalization import FixtureSection, _coff, _symbol
+        from homm3.build.canonicalize_data_symbols import FUNCTION_TYPE
+        from homm3.sema import _asm
+        fn = "_mask"
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for suffix, storage in ((".obj", 3), (".c.obj", 2)):
+                (root / ("unit" + suffix)).write_bytes(_coff(
+                    (FixtureSection(".text", b"\xc3", ()),), (
+                        _symbol(fn, 0, 1, FUNCTION_TYPE, storage),
+                        _symbol("$L1", 0, 1, 0, 3),
+                        _symbol("undef", 0, 0, FUNCTION_TYPE, 2))))
+            obj = root / "unit.obj"
+            self.assertEqual(_asm._function_text_symbols(obj), {fn})
+            self.assertEqual(_selection.object_symbol(obj, fn), fn)
+            with patch.object(_asm, "BASE", root), patch.object(_asm, "TARGET", root), \
+                    patch.object(report, "get_context", side_effect=LookupError):
+                self.assertEqual(report._resolve_public_symbol("unit", fn), (fn, 0))
 
     def test_exact_mangled_symbol_is_selected(self):
         name = "?BuildBuilding@town@@QAE?AW4type_building_id@@HEE@Z"

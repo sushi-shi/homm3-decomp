@@ -57,6 +57,17 @@ def _public_text_symbols(obj) -> set:
     return _text_symbols(obj, public_only=True)
 
 
+def _function_text_symbols(obj) -> set[str]:
+    """Emitted functions of either linkage; exclude labels and undefineds."""
+    from homm3.build.canonicalize_data_symbols import (
+        CoffObject, FUNCTION_TYPE, MEM_EXECUTE)
+
+    coff = CoffObject(obj.read_bytes())
+    return {sym.name for sym in coff.symbols.values()
+            if sym.section > 0 and sym.typ == FUNCTION_TYPE and
+            coff.sections[sym.section - 1].characteristics & MEM_EXECUTE}
+
+
 _SYMBOL_TITLE = re.compile(r"^\s*[0-9a-fA-F]+ <(.+)>:$")
 
 
@@ -110,7 +121,8 @@ def objdump(obj, name: str, ordinal: int) -> str:
     if res.returncode != 0:
         die(f"llvm-objdump failed on {obj.name}:\n{res.stderr.strip()}")
     body = _slice_public_symbol(
-        res.stdout, name, ordinal, _public_text_symbols(obj))
+        res.stdout, name, ordinal,
+        _public_text_symbols(obj) | _function_text_symbols(obj))
     if body is None:
         die(f"symbol {name} not found in {obj.relative_to(common.HOMM3_DIR)}")
     return body

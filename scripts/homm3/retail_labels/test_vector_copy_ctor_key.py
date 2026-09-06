@@ -169,6 +169,9 @@ class VectorOwnerTest(unittest.TestCase):
             "cobjecttype@fctor")
         self.assertEqual(source._demangle_key("??_FTFoo@@QAEXXZ"),
                          "tfoo@fctor")
+        self.assertEqual(source._demangle_key(
+            "??_F?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@QAEXXZ"),
+            "set@fctor")
 
     def test_the_kind_is_registered_both_sides(self):
         self.assertIn("VECTOR_COPY_CTOR", source.COMPGEN_KINDS)

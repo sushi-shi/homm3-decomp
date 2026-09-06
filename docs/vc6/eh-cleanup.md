@@ -79,6 +79,30 @@ Worked example — `Bitmap816`:
 The destructor's missing 14-byte funclet **is** the `mov [ebp-4],1` vs our
 `,2`. One immediate; the cause is two lines of TU input.
 
+## Catch scopes can explain an apparent inliner wall
+
+The two variadic artifact-mask builders (`0x44c720`, `0x44c830`) reached
+100% from 22.16% / 32.15% after reconstructing `try { ... } catch (...)`
+around their loops, calling `va_end` on both exits, and using
+`mask[index] = true`. `va_end` emits no Win32 instructions.
+
+Retail FuncInfo at `0x649538` / `0x6495a0` has one try-block covering
+states 0..2, with a null type descriptor identifying a catch-all handler.
+The handlers at `0x44c7e7` / `0x44c907` rethrow. The second
+`__CxxThrowException` call was source-level catch behavior, not compiler
+residue from expanding `bitset::_Xran`.
+
+Restoring the catch alone takes the 19-bit builder to 67.91%, with
+`_Xran` expanded but `basic_string::assign` expanded too far. Subscript
+assignment supplies the matching nested call boundary. Without the catch,
+subscript and `set` are byte-identical. Inspect the retail try-block map
+before attributing the entire missing EH frame to an inliner budget.
+
+The diagnostic now distinguishes an empty EH transcript from an unreadable
+function. One side having no frame must still report the difference. Its
+negative control uses the builders' old no-frame shape against retail's
+catch transcript and verifies that EH evidence precedes inline suggestions.
+
 ## Reading a divergence
 
 `diagnose` reports two kinds.
