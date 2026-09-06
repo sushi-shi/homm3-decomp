@@ -557,6 +557,17 @@ void combatManager::SetCombatDirections(int hex)
     current_army->slot = old_slot;
 }
 
+
+// COMDAT pairing: set<int>'s `_Tree::begin()`, byte-exact over its whole
+// 17-byte extent against this object's own COMDAT and UNIQUE there. It
+// returns `iterator(_Head->_Left)` through a hidden pointer, which is why a
+// four-byte accessor is a real COMDAT at all: `mov eax,[ecx+4] /
+// mov ecx,[eax] / mov eax,[ebp+8] / mov [eax],ecx / ret 4`. Its four retail
+// callers - ResourceManager::RemapGraphics and ::SaturateGraphics plus two
+// random-map bodies - all walk a set<int>, and cmbtmgr and spells already
+// claim the rest of this instantiation's tree surface under the same owner.
+VA_COMPGEN(0x0047a670, 0x11, TREE_BEGIN, int_set)
+
 #if 0  // @carcass
 
 // E:\gamedcs\command.cpp:709

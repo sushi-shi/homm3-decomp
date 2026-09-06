@@ -416,6 +416,7 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "TREE_CONST_ITERATOR_DEC", "TREE_CONST_ITERATOR_INC",
                  "TREE_COPY", "TREE_COPY_NODE", "TREE_ERASE",
                  "TREE_BUYNODE", "TREE_INIT", "TREE_COPY_ASSIGN",
+                 "TREE_BEGIN",
                  "STRINGBUF_OVERFLOW", "STRINGBUF_INIT",
                  "DEQUE_FREEFRONT", "DEQUE_FREEBACK", "DEQUE_BUYBACK",
                  "BASIC_STRING_ASSIGN_PTR_SIZE",
@@ -1090,6 +1091,13 @@ def _demangle_key(mangled: str):
         if "IAEPAU_Node@" in mangled:
             return f"{tree_owner.lower()}@tree_copy_node"
         return f"{tree_owner.lower()}@tree_copy"
+    # `_Tree::begin()`, which returns `iterator(_Head->_Left)` through a
+    # hidden pointer and therefore IS a real COMDAT rather than an inlined
+    # load. Without its own arm it falls out on TEMPLATE_MEMBER_RE as
+    # `std__tree_begin` - a spelling no VA_COMPGEN owner can produce, and one
+    # every tree instantiation in the image would share.
+    if mangled.startswith("?begin@?$_Tree@") and tree_owner:
+        return f"{tree_owner.lower()}@tree_begin"
     if mangled.startswith("?_Buynode@?$_Tree@") and tree_owner:
         return f"{tree_owner.lower()}@tree_buynode"
     if mangled.startswith("?_Erase@?$_Tree@") and tree_owner:
@@ -2025,6 +2033,10 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
         if "$tree_min$" in row["name"]:
             owner = row["name"].rsplit("$", 1)[1].lower()
             claim_keys.setdefault(f"{owner}@tree_min", []).append(row)
+            continue
+        if "$tree_begin$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}@tree_begin", []).append(row)
             continue
         if "$tree_insert$" in row["name"]:
             owner = row["name"].rsplit("$", 1)[1].lower()
