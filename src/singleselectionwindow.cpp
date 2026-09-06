@@ -7871,6 +7871,26 @@ unsigned char TSingleSelectionWindow::BeginSavedGame()
 // map and the whole save image go out to the other machines before the last
 // progress tick.
 //
+// MEASURED AND REJECTED (polish 29), and the pair is instructive because
+// each half is right and only together do they pay: hand-expanding the
+// member walk in the message constructor (`static_cast<CMapHeaderData&>
+// (m_header) = *pMapHeader;` plus the two string and the bitset member
+// assignments) makes the tail of the call stream agree EXACTLY with
+// retail - `??4CMapHeaderData`, `assign(str, 0, npos)` twice, the bitset
+// copied inline - and still scores 70.30 against 74.90, because the
+// constructor half is still inverted and the added mass just shifts every
+// offset. Taking `NewSMapHeader::NewSMapHeader()` out of line (declared in
+// game.h, defined in campaignbrief.cpp) closes that half too and the row
+// reaches 81.87 - but the ctor is inline in retail's OTHER callers, and
+// the tree pays 3634 -> 3631 exact / 95.49 -> 95.35 fuzzy for it:
+// ??0game 87.85 -> 76.45, ??0SavedGameHeader 98.88 -> 48.35,
+// ??0CGameHeaderInfoMsg 98.80 -> 17.97, RebuildFilteredPlayerSetup
+// 71.54 -> 40.37, and ??0CMapHeaderData / ??0VictoryConditionStruct /
+// ??0LossConditionStruct / bitset<156>::_Tidy each 100 -> 0 (they are
+// COMDATs only the inline constructor pulls in). So the split is a
+// per-site /Ob2 decision, and reaching it needs the pin this lane may not
+// add.
+//
 // Residual (74.90%): branches and block count agree exactly; the whole gap
 // is the CNewMapHeaderInfoMsg construction. Retail CALLS NewSMapHeader's
 // default constructor and EXPANDS its operator= (base assign call, two

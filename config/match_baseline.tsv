@@ -1244,7 +1244,7 @@ customcampaign	?GetText@TCampaignSpellScrollBonus@@UBE?AV?$basic_string@DU?$char
 customcampaign	?GetText@TCampaignStartBonusOption@@UBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAXH@Z	100.0000	100.0000	100.0000	0x85470	61636b8e6d40
 customcampaign	?GetText@TCampaignStartCrossoverOption@@UBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAXH@Z	85.9839	85.9839	85.9839	0x85530	24e678d42c24
 customcampaign	?GetText@TCampaignStartHeroOption@@UBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAXH@Z	100.0000	100.0000	100.0000	0x85a90	e98cc795c460
-customcampaign	?GiveCrossoverArtifacts@ScenarioStruct@TCampaignBrief@@QAEXXZ	72.5726	72.5726	72.5726	0x87900	e8b49dc9c53f
+customcampaign	?GiveCrossoverArtifacts@ScenarioStruct@TCampaignBrief@@QAEXXZ	73.0000	73.0000	73.0000	0x87900	ef1c5ea8448b
 customcampaign	?InitializeCrossoverHero@ScenarioStruct@TCampaignBrief@@QAEXPAUHeroPlaceholderData@@PAVhero@@@Z	89.9737	90.3468	90.3468	0x86590	71fd9dcba9df
 customcampaign	?IsBuildingBonus@TCampaignBonus@@UBE_NXZ	100.0000	100.0000	100.0000	0x84d50	64fc8f9da4b6
 customcampaign	?IsBuildingBonus@TCampaignBuildingBonus@@UBE_NXZ	100.0000	100.0000	100.0000	0x84620	8a8ba9549996
