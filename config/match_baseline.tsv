@@ -3363,7 +3363,7 @@ rmg	?CanPlaceZone@type_random_map_generator@@QAEEPAUTRmgZone@@@Z	98.0374	98.0374
 rmg	?ClipRmgBoundaryPoint@@YI?AUTPoint@@ABUTRmgZoneBounds@@U1@1@Z	100.0000	100.0000	100.0000	0x13cac0	d8d1560749fd
 rmg	?ConnectZones@type_random_map_generator@@QAEXXZ	93.6151	93.6151	93.6151	0x143240	15b3547beb28
 rmg	?CreateGroundConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@PAV?$vector@PAUTRmgMapItem@@V?$allocator@PAUTRmgMapItem@@@std@@@std@@PAV?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@5@@Z	72.8086	77.3131	77.3131	0x141140	5de91233b8bb
-rmg	?CreateRiver@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	83.9498	84.0026	84.0026	0x148df0	f7738ac1c202
+rmg	?CreateRiver@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	85.9575	85.9575	85.9575	0x148df0	f7738ac1c202
 rmg	?CreateSubterraneanGate@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	79.4295	79.4295	79.4295	0x142080	a11c5ad53ad8
 rmg	?DrawIrregularZoneBoundary@type_random_map_generator@@QAEXUTPoint@@0HHH@Z	100.0000	100.0000	100.0000	0x13bff0	ffe492142c72
 rmg	?DrawStraightZoneBoundary@type_random_map_generator@@QAEXUTPoint@@0HH@Z	100.0000	100.0000	100.0000	0x13c220	37631f283728
