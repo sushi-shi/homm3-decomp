@@ -3085,6 +3085,13 @@ ResourceManager::TCacheMap::lower_bound_iterator(TCacheIterator* result,
 // COMDAT pairing: basic_ostringstream::_G?$basic_ostringstream, mnemonic agreement 1.000.
 VA_COMPGEN(0x0055dae0, 0x30, SCALAR_DELETING_DTOR, basic_ostringstream)
 
+// COMDAT pairing, 2026-09-06: basic_stringbuf<char>'s scalar deleting
+// destructor. The identification is the CALLEE, not the size - retail's
+// 0x55db10 is the standard `??_G` shape whose non-deleting half is the
+// ??1?$basic_stringbuf already claimed one row later at 0x55db40 - and this
+// compiland's own `??_G?$basic_stringbuf@D...` is 33 bytes on the nose.
+VA_COMPGEN(0x0055db10, 0x21, SCALAR_DELETING_DTOR, basic_stringbuf)
+
 // COMDAT pairing: basic_stringbuf::0?$basic_stringbuf, mnemonic agreement 0.994.
 VA_COMPGEN(0x0055e440, 0xFF, CLASS_CTOR, basic_stringbuf)
 
