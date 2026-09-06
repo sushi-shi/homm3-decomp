@@ -1012,6 +1012,15 @@ inline unsigned char town::IsCapitol() const
 // still have 111 instructions, 13 blocks, seven conditional branches and one
 // return, with matching symbolic branch streams. The old direct masks and
 // hand-expanded cell index were therefore a source-false local maximum.
+// The redundant `if (town_count <= 0) return;` ahead of the loop is NOT in
+// retail's source: retail emits ONE `test edx,edx / jle <exit>` and enters
+// the body straight from it, where the explicit guard makes VC6 emit that
+// test AND the loop's own guard - 8 branches against retail's 7.  Dropping
+// it: 85.4123 -> 87.2072, branches clean 7/7.  Retail's remaining induction
+// form is C2's own rewrite: the count at [ebp-0x8], `-(player+0x40)` at
+// [ebp-0x4], a `char*` cursor in EBX and `slot` recovered as `bias + cursor`
+// for the test; hoisting `const char* townIds = player->townIds;` is
+// byte-flat either way, so the cursor is not reachable from the subscript.
 // The only residual is the register/schedule chosen for the final
 // `built |= City Hall; active &= ~Capitol` mask pair. `vc6 why-reg` measured
 // all 14 applicable catalog mutations: declaration swaps and un-naming the
@@ -1026,8 +1035,6 @@ void town::destroy_extra_capitol()
     if (IsCapitol() && owner >= 0) {
         playerData* player = &gpGame->players[owner];
         int town_count = player->numTowns;
-        if (town_count <= 0)
-            return;
 
         // Dreamcast proves the owner-town scan and both IsCapitol helper
         // boundaries.  The former null-relative cursor bias merely forced
