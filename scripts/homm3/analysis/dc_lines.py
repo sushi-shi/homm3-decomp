@@ -10,7 +10,7 @@ three records that nothing else in this tree combines:
   * the **S_GPROC32 scope tree** (S_REGREL32 parameters/locals + one
     S_BLOCK32 per lexical `{ }`) - the original parameter list and the brace
     structure;
-  * capstone's SH4 disassembly of `../orig/dreamcast/H3.EXE`, with the
+  * capstone's SH4 disassembly of the initialized Dreamcast executable, with the
     literal-pool operands resolved back to DC symbol names.
 
 The result is a statement-by-statement listing of the compiland the
@@ -47,108 +47,33 @@ so a literal-pool VA is `dc_offset + 0x11000` and the raw file offset is
 va 0x19e000 / 0x1a8000 / 0x1e1000.
 """
 import argparse
-import json
-import re
 import sys
 
-from ..core import common
-
-DUMP = common.HOMM3_DIR.parent / "homm3-symbols/HoMM3-Dreamcast-Dump/dump.txt"
-EXE = common.HOMM3_DIR.parent / "orig/dreamcast/H3.EXE"
+from ..core import inputs, nb11
 
 IMGBASE = 0x10000
 SECVA = {1: 0x1000, 2: 0x19E000, 3: 0x1A8000, 4: 0x1E1000}
 TEXT_RAW = 0x400
 POOL_BASE = IMGBASE + SECVA[1]          # dc offset -> literal-pool VA
 
-PROC_RE = re.compile(
-    r"^\(\w+\) (S_GPROC32|S_LPROC32): \[0001:([0-9A-F]{8})\], "
-    r"Cb: ([0-9A-F]{8}), Type:\s+\S+, (.*)$")
-BLOCK_RE = re.compile(
-    r"^\s*\(\w+\)\s+S_BLOCK32: \[0001:([0-9A-F]{8})\], Cb: ([0-9A-F]{8})")
-REGREL_RE = re.compile(
-    r"^\s*\(\w+\)\s+S_REGREL32: (\w+)\+([0-9A-F]{8}), Type:\s+\S+, (.*)$")
-END_RE = re.compile(r"^\(\w+\) S_END")
-LINETAB_RE = re.compile(
-    r"^  (\S.*?), 0001:([0-9A-F]{8})-([0-9A-F]{8}), line/addr pairs = (\d+)")
-PAIR_RE = re.compile(r"(\d+) ([0-9A-F]{8})")
-PUB_RE = re.compile(
-    r"S_PUB32: \[000(\d):([0-9A-F]{8})\], Flags: [0-9A-F]+, (.*)$")
-DATA_RE = re.compile(
-    r"(S_GDATA32|S_LDATA32): \[000(\d):([0-9A-F]{8})\], Type:\s+\S+, (.*)$")
+
+def load_symbols() -> nb11.Symbols:
+    return inputs.dreamcast_symbols()
 
 
-def _dump_lines():
-    with DUMP.open(errors="replace") as fh:
-        return fh.read().splitlines()
+def symbol_map(symbols: nb11.Symbols):
+    return symbols.names
 
 
-def symbol_map(lines):
-    """VA -> name, over every section the dump names."""
-    out = {}
-    for ln in lines:
-        m = PROC_RE.match(ln)
-        if m:
-            out.setdefault(POOL_BASE + int(m.group(2), 16), m.group(4).strip())
-            continue
-        m = PUB_RE.search(ln)
-        if m:
-            sec, off = int(m.group(1)), int(m.group(2), 16)
-            if sec in SECVA:
-                out.setdefault(IMGBASE + SECVA[sec] + off, m.group(3).strip())
-            continue
-        m = DATA_RE.search(ln)
-        if m:
-            sec, off = int(m.group(2)), int(m.group(3), 16)
-            if sec in SECVA:
-                out.setdefault(IMGBASE + SECVA[sec] + off, m.group(4).strip())
-    return out
-
-
-def find_proc(lines, off):
-    """(name, cb, [(reg, off, name)], [(addr, cb)]) for the proc at `off`."""
-    want = "%08X" % off
-    for i, ln in enumerate(lines):
-        m = PROC_RE.match(ln)
-        if not m or m.group(2) != want:
-            continue
-        name, cb = m.group(4).strip(), int(m.group(3), 16)
-        locals_, blocks = [], []
-        for ln2 in lines[i + 1:]:
-            if PROC_RE.match(ln2) or END_RE.match(ln2):
-                break
-            mb = BLOCK_RE.match(ln2)
-            if mb:
-                blocks.append((int(mb.group(1), 16), int(mb.group(2), 16)))
-            mr = REGREL_RE.match(ln2)
-            if mr:
-                locals_.append(
-                    (mr.group(1), int(mr.group(2), 16), mr.group(3).strip()))
-        return name, cb, locals_, blocks
+def find_proc(symbols: nb11.Symbols, off):
+    proc = symbols.procedures.get(off)
+    if proc is not None:
+        return proc.name, proc.size, proc.locals, proc.scopes
     return None
 
 
-def line_table(lines, off, cb):
-    """Sorted [(addr, line, file)] for every pair inside [off, off+cb)."""
-    out, i, n = [], 0, len(lines)
-    while i < n:
-        m = LINETAB_RE.match(lines[i])
-        if m:
-            lo, hi = int(m.group(2), 16), int(m.group(3), 16)
-            if not (hi < off or lo >= off + cb):
-                fname, j = m.group(1), i + 1
-                while (j < n and not LINETAB_RE.match(lines[j])
-                       and "***" not in lines[j]):
-                    for pm in PAIR_RE.finditer(lines[j]):
-                        a = int(pm.group(2), 16)
-                        if off <= a < off + cb:
-                            out.append((a, int(pm.group(1)), fname))
-                    j += 1
-                i = j
-                continue
-        i += 1
-    out.sort()
-    return out
+def line_table(symbols: nb11.Symbols, off, cb):
+    return symbols.line_table(off, cb)
 
 
 class Sh4(object):
@@ -199,7 +124,7 @@ class Sh4(object):
 
 
 def render(off, asm=False, out=sys.stdout):
-    lines = _dump_lines()
+    lines = load_symbols()
     got = find_proc(lines, off)
     if not got:
         print("no S_GPROC32/S_LPROC32 at dc 0x%x" % off, file=out)
@@ -207,7 +132,7 @@ def render(off, asm=False, out=sys.stdout):
     name, cb, locals_, blocks = got
     syms = symbol_map(lines)
     lt = line_table(lines, off, cb)
-    data = EXE.read_bytes()
+    data = inputs.read_dreamcast_exe()
     sh4 = Sh4(data)
 
     def sym(va):
@@ -277,14 +202,12 @@ def _dump_asm(sh4, data, start, end, syms, out):
 
 
 def find(pattern, out=sys.stdout):
-    lines = _dump_lines()
+    lines = load_symbols()
     hits = 0
-    for ln in lines:
-        m = PROC_RE.match(ln)
-        if m and pattern.lower() in m.group(4).lower():
+    for offset, proc in lines.procedures.items():
+        if pattern.lower() in proc.name.lower():
             print("  dc 0x%-7x Cb=0x%-5x %s"
-                  % (int(m.group(2), 16), int(m.group(3), 16),
-                     m.group(4).strip()), file=out)
+                  % (offset, proc.size, proc.name), file=out)
             hits += 1
     if not hits:
         print("  no proc name contains %r" % pattern, file=out)
