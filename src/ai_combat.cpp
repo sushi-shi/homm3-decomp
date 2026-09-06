@@ -1003,6 +1003,13 @@ void type_AI_combat_data::cast_summoning(type_spell_choice* choice)
 // initializer, a function-scope spell counter declared after mastery, and
 // moving the mastery declaration ahead of spell_power. No source-reachable
 // register-order lever was found in the bounded pass.
+// MEASURED AND REJECTED (polish 29), all byte-flat at 87.0391: naming the
+// familiar's mana share in its own `long`, swapping the `best_mana_cost` /
+// `mastery` declarations, dropping `register` from `spell_power`, and moving
+// `mastery` into the loop. The frame and its whole slot SET already agree
+// with retail exactly; what differs is a permutation - `spell` lives in EDI
+// and `best_mana_cost` at [ebp-0x18] in retail against our ESI / [ebp-0x1c] -
+// so this is the register-homing family with no declaration lever left.
 VA(0x00425bd0, 0x593)  // anchor-global, dc 0x2b094
 void type_AI_combat_data::cast_spell(
     type_AI_combat_data& defender,

@@ -8176,8 +8176,10 @@ int advManager::CreatureBankEvent(hero* who, NewmapCell* cell, const char* cText
             result += reward_strings[i];
         }
 
-        std::string reward_text;
-        reward_text = format_string(
+        // The initialiser form, not default-construct-then-assign: retail
+        // builds the reward line directly into its destination (inlined
+        // `_Tidy`, called `assign`), which is worth 89.3406 -> 91.5867.
+        std::string reward_text = format_string(
             gpAdventureEventText->GetText(34),
             GetArmyName(leader_monster, creature_count), result.c_str());
         extended_dialog(reward_text.c_str(), resources, -1, -1, 0);
