@@ -935,7 +935,7 @@ __forceinline long value_of_hill_fort(const hero* current_hero,
 {
     int funds[NUM_RESOURCES];
     memcpy(funds, gpCurrentPlayer->resources, sizeof(funds));
-    int cost[NUM_RESOURCES];
+    long cost[NUM_RESOURCES];
     long value = 0;
 
     for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
@@ -3258,7 +3258,7 @@ int ValueOfStables(const hero* current_hero, long* move_cost)
 VA(0x00527bb0, 0x11D)  // anchor-callee, dc 0x111630
 void AI_visit_hill_fort(hero* current_hero)
 {
-    int cost[NUM_RESOURCES];
+    long cost[NUM_RESOURCES];
 
     for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
         TCreatureType creature = current_hero->army.armyTypes[i];
