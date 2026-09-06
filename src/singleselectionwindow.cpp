@@ -5933,19 +5933,22 @@ int TSingleSelectionWindow::WindowHandler(message* msg)
             if (id != lastIMHoverID) {
                 if (id >= 0x107 && id <= 0x10e) {
                     if (lastIMHoverID != -1) {
-                        GetWidget(lastIMHoverID)->send_message(
+                        widget* previous = GetWidget(lastIMHoverID);
+                        previous->send_message(
                             widget::WIDGET_CLEAR_STATUS, 0x10);
                         DrawHeroAdvancedOption(
                             lastIMHoverID - 0x107, 1, -1);
                     }
                     if (!bVideoPaused || pDPlay->IsHost()) {
-                        GetWidget(id)->send_message(
+                        widget* hovered = GetWidget(id);
+                        hovered->send_message(
                             widget::WIDGET_SET_STATUS, 0x10);
                         DrawHeroAdvancedOption(id - 0x107, 1, -1);
                     }
                     lastIMHoverID = id;
                 } else if (lastIMHoverID != -1) {
-                    GetWidget(lastIMHoverID)->send_message(
+                    widget* previous = GetWidget(lastIMHoverID);
+                    previous->send_message(
                         widget::WIDGET_CLEAR_STATUS, 0x10);
                     DrawHeroAdvancedOption(lastIMHoverID - 0x107, 1, -1);
                     lastIMHoverID = -1;
