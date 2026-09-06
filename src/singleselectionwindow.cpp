@@ -7677,6 +7677,13 @@ void TSingleSelectionWindow::SendPlayerFaces()
 // `static_cast<const std::bitset<4>&>(...)[class]` + `Text.begin()` dialog
 // idiom over `.test()` + `GetText()` (+0.52).
 // E:\gamedcs\singleselectionwindow.cpp:7698
+// MEASURED AND REJECTED (polish 29): the context-feature membership test
+// spelled without the const cast (byte-flat) and as `.test(gameVersionClass)`
+// (76.71 against 78.76). The remaining throw-path divergence is one inline
+// level short of retail - retail CALLS `bitset<4>::_Xran()` where we expand
+// it down to the string and out_of_range construction - and the same
+// GiveCrossoverArtifacts lever that bought one level here has no deeper
+// spelling to give.
 VA(0x0058BCE0, 0x5AF)  // begin-button caller and DC source shape, dc 0x142674
 unsigned char TSingleSelectionWindow::OnBeginGame()
 {
