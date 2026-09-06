@@ -375,8 +375,9 @@ back-end-only.**  The five rows the front end touches at all
 `ConnectZones`, `CreateRiver`, `CreateSubterraneanGate`) all carry
 `sp3_vs_rtm == 0` - masked/textual detail, not code.
 
-Section 6.1 explains why, and the explanation was confirmed on the three
-units whose objects the front end moves: their captured `gl` streams differ
+Section 6.1 explains why, and the explanation was confirmed on three units
+whose whole OBJECT the front end moves even though no function in them
+reaches the verdict grade: their captured `gl` streams differ
 from the SP3 front end's at **offset 0x13-0x14 and nowhere else**
 (swapmgr 92,116 B, ai_player 134,251 B, singleselectionwindow 152,752 B -
 `18 21` vs `e8 1f`, the front end's own version word).  C1XX 12.00.8168
