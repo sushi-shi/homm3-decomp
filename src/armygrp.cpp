@@ -1916,6 +1916,15 @@ static void apply_morale_magic_terrain(int magicTerrain, TCreatureType creature,
     }
 }
 
+// THE SPIRIT-OF-OPPRESSION ARM ASSIGNS, IT DOES NOT APPEND (byte-flat,
+// 2026-09-06, reloc census). Retail's call at fn+0x6ce is
+// basic_string::assign(const basic_string&, uint, uint) where ours was
+// append(...); every instruction around it - the akArtifactTraits load, the
+// three pushes, the npos load, the EH state byte and the temporary's _Tidy -
+// is identical on both sides, so only the relocation target differed and
+// objdiff (function_reloc_diffs=none) does not score it. Same class and same
+// verdict as get_luck_description's hero arm below; recorded because the call
+// multiset is what `predict-inline` reads.
 VA(0x0044b960, 0x859)  // retail-body signature, dc 0x4f708
 std::string armyGroup::get_morale_description(
     TCreatureType creature, int morale, const hero* ownerHero,
@@ -2016,7 +2025,7 @@ std::string armyGroup::get_morale_description(
          || (otherHero && const_cast<hero*>(otherHero)->IsWieldingArtifact(
                               ARTIFACT_SPIRIT_OF_OPPRESSION)))
         && currentMorale > 0) {
-        result += format_string(
+        result = format_string(
             gSpiritOppressionMoraleFormat,
             akArtifactTraits[ARTIFACT_SPIRIT_OF_OPPRESSION].name);
         currentMorale = 0;
