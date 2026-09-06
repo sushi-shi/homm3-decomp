@@ -1257,7 +1257,7 @@ customcampaign	?IsBuildingBonus@TCampaignBuildingBonus@@UBE_NXZ	100.0000	100.000
 customcampaign	?IsBuildingBonus@TCampaignStartBonusOption@@UBE_NH@Z	100.0000	100.0000	100.0000	0x85430	bcddb4b1212f
 customcampaign	?IsBuildingBonus@TCampaignStartCrossoverOption@@UBE_NH@Z	100.0000	100.0000	100.0000	0x85a30	40cf16111627
 customcampaign	?Load@CampaignHeaderStruct@TCampaignBrief@@QAE_NXZ	49.5351	49.5351	80.9474	0x88880	0604e159da45
-customcampaign	?Load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	59.0405	59.0405	79.2531	0x8a310	6c018aec4b3c
+customcampaign	?Load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	59.2573	59.2573	79.2531	0x8a310	197e6530f231
 customcampaign	?LoadMapHeader@ScenarioStruct@TCampaignBrief@@QAEXPAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@PAVNewSMapHeader@@H@Z	100.0000	100.0000	100.0000	0x87d30	3ede48bd4a11
 customcampaign	?LoadScenario@CampaignHeaderStruct@TCampaignBrief@@QAE_NHPAVNewSMapHeader@@@Z	100.0000	100.0000	100.0000	0x88810	40cf52fbb7ea
 customcampaign	?MarkCrossoverHeroes@ScenarioStruct@TCampaignBrief@@QAEXPAE@Z	100.0000	100.0000	100.0000	0x87e10	6ceadd79996e
@@ -1542,7 +1542,7 @@ event_record	??_Gtype_event_record@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x9a5b0
 event_record	??_Gtype_record_move_hero@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x9a620	-
 event_record	??_Gtype_record_shroud@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x9bbd0	-
 event_record	?ResetVisibility@game@@QAEXHHHHH@Z	84.7767	84.7767	84.7767	0x9d3d0	87ba0841d9ed
-event_record	?SetVisibility@game@@QAEXHHHHHE@Z	85.6452	85.6452	85.6452	0x9d160	0032c9bd289c
+event_record	?SetVisibility@game@@QAEXHHHHHE@Z	86.7235	86.7235	86.7235	0x9d160	7617ce31b827
 event_record	?clear_event_records@game@@QAEXD@Z	100.0000	100.0000	100.0000	0x9d6c0	330281a46ec4
 event_record	?clear_event_records@game@@QAEXXZ	100.0000	100.0000	100.0000	0x9d630	30315cd97a10
 event_record	?create@type_record_claim_mine@@SIPAVtype_event_record@@XZ	100.0000	100.0000	100.0000	0x9aa40	cd7ab567d111
@@ -1780,7 +1780,7 @@ findpath	??1searchArray@@QAE@XZ	100.0000	100.0000	100.0000	0xb13e0	62c3039992a2
 findpath	?CalcTerrainCost@@YIHPBVNewmapCell@@HHJJJJJE@Z	100.0000	100.0000	100.0000	0xb1740	c1ac09d9aed8
 findpath	?Clear@searchArray@@QAEXJJJ@Z	100.0000	100.0000	100.0000	0xb1530	7639b0a8b387
 findpath	?Close@searchArray@@QAEXXZ	100.0000	100.0000	100.0000	0xb1500	089bb45888a1
-findpath	?FindCombatPath@searchArray@@QAEEPBVarmy@@JJEJJ@Z	87.6468	87.6468	87.6468	0xb3400	9c98fae86cbb
+findpath	?FindCombatPath@searchArray@@QAEEPBVarmy@@JJEJJ@Z	87.9780	87.9780	87.9780	0xb3400	79ae3cbbcb0a
 findpath	?GetTerrainCost@@YIHPAVhero@@Utype_point@@HH@Z	100.0000	100.0000	100.0000	0xb18c0	9365931b7150
 findpath	?Init@searchArray@@QAEXXZ	100.0000	100.0000	100.0000	0xb1460	3ca1a85ca5e4
 findpath	?MinimumTerrainCost@@YIHPBVNewmapCell@@HJJJE@Z	100.0000	100.0000	100.0000	0xb1880	b240130b71a1
@@ -1959,7 +1959,7 @@ game	?LoadBoatPool@game@@QAEHPAVTAbstractFile@@@Z	99.6447	99.6447	99.6447	0xb9a0
 game	?LoadGame@game@@QAEHPBDHH@Z	100.0000	100.0000	100.0000	0xbf330	fc53c93a80bc
 game	?LoadGarrisonPool@game@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xb96f0	e574c834f8c2
 game	?LoadHeroId@@YIHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xba210	a3d376c1431f
-game	?LoadMap@game@@QAE_NPAVTAbstractFile@@@Z	75.9944	75.9944	75.9944	0xc2450	0fc9500a9aaf
+game	?LoadMap@game@@QAE_NPAVTAbstractFile@@@Z	76.5443	76.5443	76.5443	0xc2450	6e0028ce132c
 game	?LoadMinePool@game@@QAEHPAVTAbstractFile@@H@Z	98.8718	100.0000	100.0000	0xb9340	2a102f6e81b3
 game	?LoadRumours@game@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbbe40	793f39b40d8e
 game	?LoadSignPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9070	f739107b463c
@@ -3461,7 +3461,7 @@ seerhut	?DoProposalDialog@type_defeat_hero_quest@@UAEXPAVhero@@@Z	100.0000	100.0
 seerhut	?DoProposalDialog@type_experience_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x16d4b0	f15a501e3b80
 seerhut	?DoProposalDialog@type_monster_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x16ec00	75b80eb26ca1
 seerhut	?DoProposalDialog@type_resource_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x171840	8daaed82c0be
-seerhut	?DoProposalDialog@type_skill_quest@@UAEXPAVhero@@@Z	75.4324	75.4324	75.4324	0x16dad0	edd70be3a3af
+seerhut	?DoProposalDialog@type_skill_quest@@UAEXPAVhero@@@Z	80.8108	80.8108	80.8108	0x16dad0	41ea53ff086b
 seerhut	?DoSeerEvent@TSeerHut@@QAEXPAVhero@@_N@Z	44.4753	46.3642	46.3642	0x173670	bfd3fcd81424
 seerhut	?GetAIValue@type_artifact_quest@@UAEHH@Z	100.0000	100.0000	100.0000	0x16f5a0	e8c4868db654
 seerhut	?GetAIValue@type_creature_quest@@UAEHH@Z	100.0000	100.0000	100.0000	0x170480	386e7f03466e

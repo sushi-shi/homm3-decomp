@@ -733,7 +733,10 @@ void type_skill_quest::DoProposalDialog(hero* current_hero)
     signed char missing[4];
     for (int i = 0; i < 4; ++i) {
         int have = current_hero->GetPrimarySkill(i);
-        int required = required_skills[i];
+        // BOUND BY `const int&`: retail re-reads the requirement at both
+        // the compare and the store rather than keeping a copy live.
+        // 75.4324 -> 80.8108.
+        const int& required = required_skills[i];
         missing[i] = required > have ? required : 0;
     }
 

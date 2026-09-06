@@ -6664,8 +6664,12 @@ bool game::LoadMap(TAbstractFile* mapFile)
         < sizeof(rumourCount)) {
         return false;
     }
-    rumours.resize(rumourCount);
-    for (TRumour* rumour = rumours.begin(); rumour != rumours.end();
+    // The rumour list NAMED AS A REFERENCE: retail reads its _First/_Last
+    // through the vector's own address rather than folding the member offset
+    // off gpGame.  75.9944 -> 76.5443.
+    std::vector<TRumour>& r_rumours = rumours;
+    r_rumours.resize(rumourCount);
+    for (TRumour* rumour = r_rumours.begin(); rumour != r_rumours.end();
          ++rumour) {
         std::string throwAway;
         if (readMapString(mapFile, &throwAway) < 0

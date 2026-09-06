@@ -2907,7 +2907,10 @@ static short ReadCampaignWord(TAbstractFile* infile)
 VA(0x0048a310, 0xB1E)  // SavedGameHeader::Load caller + member/helper graph
 void SCampaign::Load(TAbstractFile* infile, int saveVersion)
 {
-    mapScores.clear();
+    // The scenario-score list NAMED AS A REFERENCE across all nine uses:
+    // 59.0405 -> 59.2573.
+    std::vector<MapScore>& r_mapScores = mapScores;
+    r_mapScores.clear();
     carryOverHeroes.clear();
 
     if (saveVersion < 28) {
@@ -2933,9 +2936,9 @@ void SCampaign::Load(TAbstractFile* infile, int saveVersion)
         memcpy(campaignCompleted, saved.campaignCompleted,
                sizeof(saved.campaignCompleted));
 
-        mapScores.resize(saved.numScenarios);
+        r_mapScores.resize(saved.numScenarios);
         for (int i = 0; i < saved.numScenarios; ++i) {
-            CampaignScenarioInfo& scenario = mapScores[i];
+            CampaignScenarioInfo& scenario = r_mapScores[i];
             // Retail +0x191 preserves this source order. Together with the
             // bool legacy field, the loop now has the exact instruction and
             // memory-access structure; only earlier live-register choices
@@ -3025,15 +3028,15 @@ void SCampaign::Load(TAbstractFile* infile, int saveVersion)
     }
 
     unsigned char count = ReadCampaignByte(infile);
-    mapScores.resize(count);
+    r_mapScores.resize(count);
     for (int i = 0; i < count; ++i) {
-        mapScores[i].completed = ReadCampaignByte(infile) != 0;
-        infile->Read(&mapScores[i].days, sizeof(mapScores[i].days));
-        infile->Read(&mapScores[i].score, sizeof(mapScores[i].score));
+        r_mapScores[i].completed = ReadCampaignByte(infile) != 0;
+        infile->Read(&r_mapScores[i].days, sizeof(r_mapScores[i].days));
+        infile->Read(&r_mapScores[i].score, sizeof(r_mapScores[i].score));
 
-        mapScores[i].complete_order =
+        r_mapScores[i].complete_order =
             static_cast<signed char>(ReadCampaignByte(infile));
-        mapScores[i].index =
+        r_mapScores[i].index =
             static_cast<signed char>(ReadCampaignByte(infile));
     }
 
