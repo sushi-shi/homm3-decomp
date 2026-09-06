@@ -575,7 +575,7 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
 
     // The upgrade button greys itself out when the player cannot pay.
     if (upgrade != -1) {
-        int cost[7];
+        long cost[7];
         get_upgrade_cost(creature_type_from_int(ArmyType),
                          creature_type_from_int(upgrade), ArmySize, cost);
         for (int i = 0; i < 7; i++) {
@@ -915,7 +915,7 @@ int TViewArmyWindow::WindowHandler(message* msg)
         if (msg->codeX == widget::WIDGET_DESELECT) {
             switch (msg->codeY) {
             case UPGRADE_ID: {
-                int cost[7];
+                long cost[7];
                 int amount;
                 amount = 0;
                 union {

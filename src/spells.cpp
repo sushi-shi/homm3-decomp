@@ -4664,6 +4664,13 @@ void combatManager::ShowMassSpell(const unsigned char (*bEffected)[20],
 // memory-homes iDir, iDirCount AND iHexCount (ebx/ecx/edx are per-use
 // reloads there), so its pressure came from values ours never
 // materializes - not a source-order fact anyone has named yet.
+// 2026-09-06, polish lane 36, the DC LOCAL-SCOPE SWEEP: no gap here, only a
+// naming SHIFT.  The Dreamcast block names four locals and they line up one
+// step across from ours - its `iSourceHexCount` (sp+0x3c) is the 0..2 loop
+// this body calls `iDirCount`, its `iDirCount` (sp+0x30) is our `iDir`, its
+// `iHexCount` (sp+0x34) is our `step`, and the 1..11 outer loop this body
+// calls `iHexCount` is register-allocated (r12) and unnamed in CodeView.
+// `iSourceHexIndex` is the one name that matches. Nothing is missing.
 VA(0x005a6c70, 0x405)  // order-map+arity, dc 0x155f0c
 void combatManager::MirrorImage(int targetIndex, int level)
 {

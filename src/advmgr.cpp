@@ -3421,6 +3421,20 @@ static void set_windmill_help_text(
 // missing branch is reachable and its price is higher than the branch, which
 // puts the OBELISK quarter of the deficit with the other three (the
 // QUEST_GUARD temporary's inlined _Tidy) in the budget class.
+// 2026-09-06, polish lane 36, the DC LOCAL-SCOPE SWEEP (93.9598 -> 94.0915):
+// the block names `thisHut` (CodeView 0x2664, sp+0x38) for the SEER arm's
+// SeerHutList row, so the row is addressed once through a named reference
+// instead of subscripted inside the rollover call.  Measured and rejected on
+// top of that: naming the LIGHTHOUSE arm's twice-read
+// `gpGame->mines[extraInfo].playerOwner` in the `owner` local the DC also
+// carries (sp+0x3c) - 93.8845, retail re-reads it; and moving the
+// `type_cell_adjuster` declaration up to the DC's slot order (between
+// tempText and playerbit) - 93.4910.  The DC's `cTemp` buffers x4 and its
+// `abandoned`/`guarded` pair do not transfer: Complete writes the global
+// gText here, and the mine arm is the separate AdvmgrFn_0040D670 body the DC
+// had inlined.  Its `player`/`iThisPlayer` are this body's `thisPlayer`/
+// `player` with the names swapped, and `this_generator`/`type` are
+// `mapGenerator`/`generatorType`.
 VA(0x0040b150, 0x229C)  // anchor-global, dc 0xc13c
 void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
 {
@@ -3705,9 +3719,8 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
         strcpy(gText, gResourceNames[cell->objectIndex]);
         break;
     case SEER: {
-        strcpy(gText,
-            fullMap->SeerHutList[cell->extraInfo]
-                .SeerHutFn_005741B0(player).c_str());
+        TSeerHut& thisHut = fullMap->SeerHutList[cell->extraInfo];
+        strcpy(gText, thisHut.SeerHutFn_005741B0(player).c_str());
         break;
     }
     case SHRINE1:
@@ -4353,6 +4366,14 @@ static int MouseInScrollZone()
 // dwords it prices (0x10 against our 0x8) all go together.  That is an
 // OVER-inline of a template leaf with no admissible lever: a statement pin is
 // a falling-only floor and caller-shrink would need an invented static.
+// 2026-09-06, polish lane 36, the DC LOCAL-SCOPE SWEEP - measured and
+// rejected.  The Dreamcast block names TWO `cellExtra` locals
+// (ExtraInfoUnion, sp+0x44 and sp+0x40), i.e. the trigger cell's extraInfo
+// is read once into a named union per block and both the TOWN id and the
+// SHIPYARD owner come out of it, where this body calls
+// `get_trigger_cell()->get_map_extraInfo()` at all four sites.  One
+// `ExtraInfoUnion cellExtra;` per big block scores 91.6133 and one per ARM
+// scores the same, against 91.6263 - retail re-reads.
 VA(0x0040e360, 0x918)  // anchor-callee, dc 0xf3a8
 int advManager::ProcessHover(int mouseX, int mouseY)
 {
@@ -5362,6 +5383,16 @@ void advManager::DrawBoatPartShadow(int part, TDrawParts& boatParts,
 // it is not source-reachable. The one candidate the model still compiled
 // (swapping the baseX/baseY declarations) measured +8 distance, no
 // improvement. DrawAdvObjShadow below carries the identical wall.
+// 2026-09-06, polish lane 36 (87.5901 -> 87.9441), the DC LOCAL-SCOPE SWEEP,
+// and it PARTLY REFUTES the paragraph above: a source knob does move this
+// row.  The Dreamcast block names `Obj` (CodeView 0x30b6 = `CObject*`,
+// sp+0x9c) beside ObjCell/ObjType/SprPtr, i.e. the map's object row is
+// addressed ONCE through a named pointer and both `typeIndex` reads go
+// through it, where this body subscripted `mapObjects->objects[...]` twice.
+// The other three names in that group are renames this body already has
+// (ObjCell = objCell, ObjType = objType, SprPtr = sprite).  The `this`
+// ESI/EDI permutation the note above describes is unchanged; this was the
+// last missing named local, not a fix for it.
 VA(0x00410c00, 0x98E)  // anchor-callee, dc 0x12334
 void advManager::DrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 {
@@ -5417,10 +5448,10 @@ void advManager::DrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                 AdvFullMapObjectsView* mapObjects =
                     static_cast<AdvFullMapObjectsView*>(
                         static_cast<void*>(fullMap));
-                CObjectType* objType = &mapObjects->objectTypes[
-                    mapObjects->objects[objCell->objectIndex].typeIndex];
-                CSprite* sprite = mapObjects->sprites[
-                    mapObjects->objects[objCell->objectIndex].typeIndex];
+                CObject* Obj = &mapObjects->objects[objCell->objectIndex];
+                CObjectType* objType =
+                    &mapObjects->objectTypes[Obj->typeIndex];
+                CSprite* sprite = mapObjects->sprites[Obj->typeIndex];
                 // THE OFFSETS ARE RE-DERIVED PER DRAW ARM, not hoisted
                 // (86.3772 -> 87.5901, 2026-08-19). Retail recomputes
                 // `movsx ecx,dl / sar ecx,4` and then `shl dl,4 / movsx /
@@ -7016,6 +7047,17 @@ void advManager::UpdateRadar(unsigned char updateFlag, unsigned char bPartialUpd
 // VERIFY is bounded separately on the preceding 94.804726 shape: discarded
 // `cellDescription.empty()` and `cellDescription.size()` accessors are both
 // byte-flat. Neither enters the residual cross-jump or frame decision.
+// 2026-09-06, polish lane 36, the DC LOCAL-SCOPE SWEEP (94.8708 -> 95.0826):
+// the same `thisHut` the sibling SetRolloverText wanted - the DC block names
+// it (CodeView 0x2664) for the SEER arm's SeerHutList row, addressed once
+// through a named reference instead of subscripted inside the call.  The
+// declaration block above already stands in the DC's exact local order
+// (testFlag, width, visited, testCell, player, map_point, x, currHero, y,
+// iPlayer, tempText, playerBit, height, infolevel), which is why nothing
+// else in that list moves.  Measured and rejected on top: binding the
+// rollover's by-value string return in the DC's `result` local (0x1329 =
+// std::string, sp+0x9c), either by value or by const& - both 93.0753, so
+// retail consumes the temporary in place here.
 VA(0x004137c0, 0x25A0)  // linkorder, dc 0x15fdc
 void advManager::QuickInfo(int cellX, int cellY, int z)
 {
@@ -7458,11 +7500,12 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
             case RESOURCE:
                 strcpy(gText, gResourceNames[cell->objectIndex]);
                 break;
-            case SEER:
+            case SEER: {
+                TSeerHut& thisHut = fullMap->SeerHutList[cell->extraInfo];
                 strcpy(gText,
-                    fullMap->SeerHutList[cell->extraInfo]
-                        .SeerHutFn_005743E0(iPlayer).c_str());
+                       thisHut.SeerHutFn_005743E0(iPlayer).c_str());
                 break;
+            }
             case SHRINE1:
                 SetShrineHelpText(gText, currHero, cell, Shrine1Info,
                                   newLine, separator);
@@ -8676,6 +8719,14 @@ DATA(0x0063a64c) static const int akSoundVolumes[8] = { 32, 28, 20, 10,
 // the loop, stored through the local) does NOT reproduce retail's
 // `mov ebx,0x7f` - VC6 constant-propagates it straight back to the
 // immediate store. Byte-flat at 75.4080.
+// 2026-09-06, polish lane 36: the Dreamcast block names `const int
+// MAX_RANGE = 4;` as the function's FIRST statement (advmgr.cpp:9786, stored
+// to sp+0x18) and both its loops compare against that 4 - which is exactly
+// the `mov dword ptr [ebp-0x1c], 4` the note above calls the residual.
+// Measured and rejected against 75.4080: MAX_RANGE declared and used as the
+// ring loop's bound 75.3781; the same non-const 75.3781; declared but unused
+// byte-flat.  VC6 constant-propagates the initialiser in every form, so the
+// spilled 4 is not reachable from a source constant.
 VA(0x004183d0, 0x245)  // anchor-global, dc 0x1b164
 void advManager::SetEnvironmentOrigin(type_point point, int reset)
 {

@@ -5487,6 +5487,14 @@ long AI_get_artifact_player_value(const type_artifact& artifact,
 // against the player's per-resource doubles, then the best unoccupied
 // town - building its tavern if it must and can - is compared against a
 // numHeroes * gold-value * gHeroGoldCost bar seeded as the initial best.
+// 2026-09-06, polish lane 36, the DC LOCAL-SCOPE SWEEP: the block names four
+// locals - creature_cost (CodeView 0x402f = `const short*`), search_array,
+// `player` as an L-VALUE REFERENCE (0x293c) and base_value.  Both reachable
+// spellings measured and rejected against 75.3838: `playerData& player =
+// gpGame->players[player_id];` with every use through `.` is BYTE-FLAT, and
+// naming the traits cost row (`const int* creature_cost =
+// akCreatureTypeTraits[type].cost;`) costs 0.05 (75.3333).  The inliner wall
+// the note above describes is untouched by either.
 VA(0x00431800, 0x3c2)  // anchor-callee unique (town::hire), dc 0x354bc
 bool consider_hiring(long player_id, hero* candidate)
 {
