@@ -877,6 +877,7 @@ campaignwindow	??4?$vector@UCampaignScenarioInfo@@V?$allocator@UCampaignScenario
 campaignwindow	??_GTCampaignWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x5f0e0	-
 campaignwindow	?CampaignWindowHandler@@YIHAAVmessage@@@Z	84.4576	84.4576	84.4576	0x5f2f0	52f73ae83d4d
 campaignwindow	?DoModal@TCampaignWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x5f2c0	da4900d2fde7
+campaignwindow	?OpenPreview@TCampaignWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x5e7c0	bf2707dbc453
 castle	?CanBuy@@YIHPBVtown@@H@Z	100.0000	100.0000	100.0000	0x61130	ca57faf6f310
 castle	?GetBuildingName@@YIPBDHH@Z	100.0000	100.0000	100.0000	0x610e0	4757b0885c8c
 castle	?SetupCastle@townManager@@QAEXPAVheroWindow@@H@Z	98.0447	98.0447	98.0447	0x61190	1a25bad3171c
