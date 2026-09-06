@@ -2784,6 +2784,30 @@ void SCampaign::CompleteCurrentMap(void* campaignHeader)
     PruneCrossoverHeroes(campaignHeader);
 }
 
+// PruneCrossoverHeroes gathers both artifact arrays from one retained hero.
+// This ordinary helper restores the two single-element insert calls, the
+// second retained sort, and the second erase's retained copy (94.2643%).
+// Its expansion through the final pool assignment reproduces retail
+// +0x32f..+0x3e6: 183 bytes after four relocations. The 453-byte folded
+// artifact/dialog-resource insert bodies agree outside their relocations.
+// Flattening these loops is the 71.0389% negative control; an unused helper
+// is byte-neutral. Receiver and name remain provisional (Complete-only).
+void hero::collectArtifacts(std::vector<type_artifact>& artifacts) const
+{
+    type_artifact artifact;
+    int slot;
+    for (slot = 0; slot < CROSSOVER_EQUIPPED_ARTIFACT_SLOTS; ++slot) {
+        artifact = get_artifact(slot);
+        if (artifact.artifactId != ARTIFACT_NONE)
+            artifacts.push_back(artifact);
+    }
+    for (slot = 0; slot < CROSSOVER_BACKPACK_SLOTS; ++slot) {
+        artifact = get_backpack(slot);
+        if (artifact.artifactId != ARTIFACT_NONE)
+            artifacts.push_back(artifact);
+    }
+}
+
 // Prune's first loop retains both scenario-vector size queries and each
 // ScenarioStruct::MarkCrossoverHeroes call. Keeping this header-owned phase
 // as an ordinary helper recovers that boundary; leaving the helper unused
@@ -2818,44 +2842,34 @@ int TCampaignBrief::ScenarioStruct::GetMaxCrossoverHeroes() const
     return best;
 }
 
-// CompleteCurrentMap's tail call, and its sole caller. It flags every hero
-// the still-unfinished scenarios ask for, then walks each crossover pool
-// backwards: the flagged heroes move to a keep list, the rest are ranked by
-// CrossoverHeroStronger and the best `keepCount` of them join it, the
-// leftovers surrender their artifacts to the pool's artifact list, and the
-// keep list replaces the pool. Role-based provisional name; no Dreamcast row
-// carries this identity.
-// Retail's reverse loops test the count BEFORE decrementing. Pool and
+// CompleteCurrentMap's tail call flags heroes requested by unfinished
+// scenarios, keeps those heroes plus each pool's strongest permitted ones,
+// gathers the leftovers' artifacts, then replaces the pool with its keep list.
+// Role-based provisional name; no Dreamcast counterpart survives.
+//
+// Retail's reverse loops test the count before decrementing. Pool and
 // option counters are signed; hero selection and artifact counters are
-// unsigned. Reverse loops use `i--` as the condition. The initial `i-- > 0` spelling
-// on unsigned counters raised 12.3264 to 22.4741, but retained JBE entry
-// tests: DoPreLoadCustomization's exact control proves that JE entries and
-// JA backedges come from unsigned `i--`. Correcting both sites here raises
-// current 33.5052 to 33.97 while MAX remains 34.6269. The original
-// `size()-1; i>=0; --i` is the negative control, introducing
-// signed exit tests absent from retail. The header-owned marking helper
-// raises Prune to 71.07% and recovers its first three calls. The remaining
-// differences include the second scenario loop's size queries, erase-copy
-// depth, artifact insertion, the second sort, and final hero destruction.
-// The forward scenario loop ends in signed JL at +0x264: both its index
-// and size comparison must be signed (71.04% current, 71.07% banked).
-// A header helper for the whole limit query loses four retail CFG blocks
-// and changes the frame to 0xd0 (60.64%); keep this phase in Prune.
-// The shared includes.h max(int,int) wrapper raises this to 26.1010:
-// retail +0x210 and +0x232 copy both operands to temporary homes before
-// selecting a reference. Direct std::_cpp_max on the caller's lvalues
-// instead keeps those variables address-taken across the surrounding loop.
-// At the first keep-list append, push_back retains retail's two-argument
-// single-element insert; direct insert(end(), value) expands that layer and
-// calls the three-argument count overload instead. The other append sites
-// still expand too deeply and remain part of the inline-boundary residual.
-// Dreamcast hero.h:965/970 retains get_artifact/get_backpack; using those
-// accessors also restores the second retained hero-insert call. Retail keeps
-// the source hero across both artifact loops and reuses one eight-byte artifact
-// temporary at [ebp-0x48]. The shared local restores the 0xd8-byte frame and
-// wanted[] at [ebp-0xe4], though current similarity is 33.5052% (MAX 34.6269).
-// Controls: direct array access 34.6269; accessors with repeated hero lookup
-// 33.5648; a retained hero with separate artifact temporaries 34.2824.
+// unsigned. Unsigned `i--` gives the JE entry / JA backedge also proved by
+// exact DoPreLoadCustomization. `size()-1; i>=0; --i` adds wrong signed
+// exits; `i-- > 0` instead leaves JBE entries. The forward scenario loop
+// ends in signed JL at +0x264, requiring a signed index and comparison.
+//
+// Header marking and per-hero artifact collection are ordinary helpers;
+// their own notes record the retained boundaries and flattening controls.
+// Keep one source hero across both artifact loops and one eight-byte
+// artifact temporary at [ebp-0x48], matching the 0xd8-byte frame and the
+// wanted[] home at [ebp-0xe4]. Separate temporaries or repeated hero lookup
+// lose those lifetimes. Dreamcast Hero.h:965/970 proves both accessors.
+//
+// The max(int,int) wrapper owns temporary operand homes at +0x210/+0x232;
+// direct std::_cpp_max instead takes addresses of the caller's variables.
+// Keep push_back: direct insert(end(), value) expands the wrong overload.
+// A helper for the entire limit phase loses four retail virtual calls and
+// changes the frame to 0xd0. A scalar header count query restores both
+// second-loop size calls, but the second erase then expands copy too far
+// (92.9715%). At 94.2643%, the residual is that count-query boundary and
+// final hero destruction: retail retains the deleting destructor while
+// this compile expands through the string's _Tidy call.
 VA(0x00489e20, 0x450)  // anchor-caller(CompleteCurrentMap +0x5e8), retail-only
 void SCampaign::PruneCrossoverHeroes(void* campaignHeader)
 {
@@ -2902,18 +2916,7 @@ void SCampaign::PruneCrossoverHeroes(void* campaignHeader)
         for (unsigned int rest = pooled.size(); rest--;) {
             std::vector<type_artifact>& pooledArtifacts = field_4c[pool];
             hero& sourceHero = pooled[rest];
-            type_artifact artifact;
-            int slot;
-            for (slot = 0; slot < CROSSOVER_EQUIPPED_ARTIFACT_SLOTS; ++slot) {
-                artifact = sourceHero.get_artifact(slot);
-                if (artifact.artifactId != ARTIFACT_NONE)
-                    pooledArtifacts.push_back(artifact);
-            }
-            for (slot = 0; slot < CROSSOVER_BACKPACK_SLOTS; ++slot) {
-                artifact = sourceHero.get_backpack(slot);
-                if (artifact.artifactId != ARTIFACT_NONE)
-                    pooledArtifacts.push_back(artifact);
-            }
+            sourceHero.collectArtifacts(pooledArtifacts);
         }
 
         std::sort(kept.begin(), kept.end(), CrossoverHeroStronger());

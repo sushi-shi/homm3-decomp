@@ -12,7 +12,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00506080	468	61.07879	62.3455	62.3455	176.22306	mapcell	??0CObjectType@@QAE@PAUTObjectType@@@Z	admitted
 0x00526d40	915	64.31193	64.3119	64.3119	326.546115	philai	??0type_spellvalue@@QAE@PBVhero@@@Z	admitted
 0x00583580	780	34.04054	67.9099	67.9099	250.30278000000007	singleselectionwindow	?UpdateGameVars@TSingleSelectionWindow@@QAEXXZ	admitted
-0x00489e20	1104	71.03886	71.0674	71.0674	319.41590399999995	customcampaign	?PruneCrossoverHeroes@SCampaign@@QAEXPAX@Z	admitted
 0x005b5a70	2215	42.021492	74.7623	74.7623	559.0150550000002	rmg_terrain	?PaintTransitions@TRmgTerrainPainter@@QAEXXZ	admitted
 0x0056fbc0	230	75.23529	75.2353	75.2353	56.958810000000014	seerhut	?DoProgressDialog@type_artifact_quest@@UAEXXZ	admitted
 0x00431800	962	75.383835	75.3838	75.3838	236.8078440000001	ai_player	?consider_hiring@@YI_NJPAVhero@@@Z	admitted
@@ -38,7 +37,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x004f2960	894	79.11069	79.1107	79.1107	186.7503420000001	kb	?DisplayLCWinLoss@@YIEPAVLossConditionStruct@@PAH1E@Z	admitted
 0x00466010	579	79.15183	79.1518	79.1518	120.71107800000003	cmbtmgr	?place_obstacle@combatManager@@QAEEH@Z	admitted
 0x0048a310	2846	66.44606	66.4461	79.2531	590.456774	customcampaign	?Load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	admitted
-0x00578e00	607	73.14835	79.3242	79.3242	125.502106	singleselectionwindow	??0GameSelectionHeadersStruct@@QAE@XZ	admitted
+0x00578e00	607	79.25824	79.3242	79.3242	125.502106	singleselectionwindow	??0GameSelectionHeadersStruct@@QAE@XZ	admitted
 0x00542080	2218	79.429504	79.4295	79.4295	456.25368999999984	rmg	?CreateSubterraneanGate@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	admitted
 0x004224e0	692	79.65844	79.6584	79.6584	140.76387200000002	ai	?simulate_melee_attack@combatManager@@QAEXPAVarmy@@J0JJ@Z	admitted
 0x0049fa90	4203	79.82593	79.8259	79.8259	847.9174229999998	events	?GiveBlackBoxReward@advManager@@QAE_NPBDPAVhero@@PAVNewmapCell@@Utype_point@@_NPAVBlackBoxData@@@Z	admitted
@@ -319,6 +318,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x005c9710	543	94.17583	94.1758	94.1758	31.62540600000001	townmgr	?SetRolloverText@TThievesGuildWindow@@QAEXH@Z	admitted
 0x00511660	1638	94.189186	94.1892	94.1892	95.18090400000008	multiplayerwindow	?OnSearch@TMultiPlayerWindow@@QAEEXZ	admitted
 0x0043f2c0	1595	94.2017	94.2017	94.2017	92.48288500000001	army	?animate_missile@army@@AAEXPAV1@@Z	admitted
+0x00489e20	1104	94.26425	94.2643	94.2643	63.32212799999999	customcampaign	?PruneCrossoverHeroes@SCampaign@@QAEXPAX@Z	admitted
 0x00575290	377	94.27711	94.2771	94.2771	21.57533299999999	singleselectionpopups	?Main@CHotspotWidget@@UAEHPAVmessage@@@Z	admitted
 0x00407b80	3056	94.39535	94.3953	94.3953	171.27963199999988	advmgr	?DoAdvCommand@advManager@@QAEPAVNewmapCell@@PAUtype_point@@@Z	admitted
 0x005b3140	1566	94.39567	94.3957	94.3957	87.76333799999993	systemoptionswindow	?WindowHandler@TSystemOptionsWindow@@UAEHPAVmessage@@@Z	admitted
