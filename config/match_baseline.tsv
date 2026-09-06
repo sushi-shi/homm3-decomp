@@ -1274,7 +1274,7 @@ customcampaign	?PlaceStartingHero@ScenarioStruct@TCampaignBrief@@QAEXPAUHeroPlac
 customcampaign	?Play@MapTextStruct@TCampaignBrief@@QAEXXZ	83.8848	83.8848	83.8848	0x88fb0	050e401b33b9
 customcampaign	?PlayScenarioEpilogue@SCampaign@@QAEXPAX@Z	100.0000	100.0000	100.0000	0x8a2a0	44199f541435
 customcampaign	?PlayScenarioPrologue@SCampaign@@QAEXPAX@Z	100.0000	100.0000	100.0000	0x8a270	f20101db493f
-customcampaign	?PruneCrossoverHeroes@SCampaign@@QAEXPAX@Z	33.8187	35.3057	35.3057	0x89e20	7aa993b9f758
+customcampaign	?PruneCrossoverHeroes@SCampaign@@QAEXPAX@Z	71.0674	71.0674	71.0674	0x89e20	5f9cdd5972b9
 customcampaign	?Read@ScenarioStruct@TCampaignBrief@@QAEXPAVTAbstractFile@@HH@Z	83.2900	83.2900	83.2900	0x87e40	3b0022124a56
 customcampaign	?Read@TCampaignArtifactBonus@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x848a0	12ae38c37e2c
 customcampaign	?Read@TCampaignBuildingBonus@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x845f0	23b205dc12fa

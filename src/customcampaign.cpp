@@ -2784,6 +2784,21 @@ void SCampaign::CompleteCurrentMap(void* campaignHeader)
     PruneCrossoverHeroes(campaignHeader);
 }
 
+// Prune's first loop retains both scenario-vector size queries and each
+// ScenarioStruct::MarkCrossoverHeroes call. Keeping this header-owned phase
+// as an ordinary helper recovers that boundary; leaving the helper unused
+// is byte-neutral, while flattening the loop again loses it (33.82%).
+// Prune +0x35..+0x84 reproduces all 79 retail bytes after four relocations;
+// the shared pointer-vector size body also agrees in all 19 bytes.
+// The role and spelling remain provisional: Complete has no Dreamcast twin.
+void TCampaignBrief::CampaignHeaderStruct::markRequiredHeroes(unsigned char* wanted)
+{
+    for (unsigned int iMap = 0; iMap < scenarios.size(); ++iMap) {
+        if (!gpGame->campaign.mapScores[iMap].completed)
+            scenarios[iMap]->MarkCrossoverHeroes(wanted);
+    }
+}
+
 // Retail PruneCrossoverHeroes repeats the scenario's inflated_size check
 // at +0x1c1 after the outer guard at +0x1a1. Treat the inner count query as
 // a scenario helper (provisional name): it still expands fully into Prune,
@@ -2818,9 +2833,10 @@ int TCampaignBrief::ScenarioStruct::GetMaxCrossoverHeroes() const
 // JA backedges come from unsigned `i--`. Correcting both sites here raises
 // current 33.5052 to 33.97 while MAX remains 34.6269. The original
 // `size()-1; i>=0; --i` is the negative control, introducing
-// signed exit tests absent from retail. The remaining surplus includes
-// expanded size/MarkCrossoverHeroes, sort, insert and assignment helpers;
-// their source boundaries still need to reach retail's inline decisions.
+// signed exit tests absent from retail. The header-owned marking helper
+// raises Prune to 71.07% and recovers its first three calls. The remaining
+// differences include the second scenario loop's size queries, erase-copy
+// depth, artifact insertion, the second sort, and final hero destruction.
 // The shared includes.h max(int,int) wrapper raises this to 26.1010:
 // retail +0x210 and +0x232 copy both operands to temporary homes before
 // selecting a reference. Direct std::_cpp_max on the caller's lvalues
@@ -2845,10 +2861,7 @@ void SCampaign::PruneCrossoverHeroes(void* campaignHeader)
     unsigned char wanted[game::HERO_COUNT];
     memset(wanted, 0, sizeof wanted);
 
-    for (unsigned int iMap = 0; iMap < header->scenarios.size(); ++iMap) {
-        if (!gpGame->campaign.mapScores[iMap].completed)
-            header->scenarios[iMap]->MarkCrossoverHeroes(wanted);
-    }
+    header->markRequiredHeroes(wanted);
 
     for (int pool = carryOverHeroes.size(); pool--;) {
         std::vector<hero>& pooled = carryOverHeroes[pool];
