@@ -13339,6 +13339,45 @@ unsigned char save_vector(TAbstractFile* outfile,
     return written;
 }
 
+// E:\gamedcs\game.cpp:2754, dc 0xc1f64.
+// The creature-bank specialization: the only pool whose element is not a
+// flat block, so it walks the vector and writes the record field by field.
+// The five widths retail pushes - 0x38, 0x1c, 4, 1, then the artifact
+// vector - independently confirm type_creature_bank's layout, and the
+// element stride falls out of the 0x6c magic divide at the top.
+// Same "wide local, narrow write" idiom as the two block writers above:
+// both counts are int locals written with sizeof(short), and both payload
+// lengths are recomputed from the SHORT re-read on each side of the
+// compare (retail emits `movsx word` twice per length). `_First` is
+// re-read every iteration - retail keeps only the byte offset live across
+// the back edge.
+VA(0x004d2b80, 0x102)  // anchor-callee (game::Save creatureBanks), dc 0xc1f64
+unsigned char save_object_vector(TAbstractFile* outfile,
+                                 std::vector<type_creature_bank>* src_vector)
+{
+    int count = src_vector->size();
+    if (outfile->Write(&count, sizeof(short)) < sizeof(short))
+        return 0;
+
+    for (int i = 0; i < static_cast<short>(count); ++i) {
+        type_creature_bank& bank = (*src_vector)[i];
+        outfile->Write(&bank.guards, sizeof(bank.guards));
+        outfile->Write(bank.resources, sizeof(bank.resources));
+        outfile->Write(&bank.reward_creature, sizeof(bank.reward_creature));
+        outfile->Write(&bank.reward_creatures, sizeof(bank.reward_creatures));
+
+        int artifactCount = bank.artifacts.size();
+        if (outfile->Write(&artifactCount, sizeof(short)) < sizeof(short))
+            return 0;
+        if (outfile->Write(bank.artifacts.begin(),
+                           static_cast<short>(artifactCount) *
+                               sizeof(TArtifact)) <
+            static_cast<short>(artifactCount) * sizeof(TArtifact))
+            return 0;
+    }
+    return 1;
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\game.cpp:11869

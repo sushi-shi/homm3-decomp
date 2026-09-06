@@ -709,6 +709,7 @@ border	?Draw@bitmapBorder@@UAEXXZ	100.0000	100.0000	100.0000	0x50450	ef7ee06309e
 border	?Draw@coloredBorderFrame@@UAEXXZ	100.0000	100.0000	100.0000	0x501e0	a408a6b78dad
 border	?GetRealHeight@bitmapBorder@@UAEHXZ	100.0000	100.0000	100.0000	0x504b0	1d37e6eb327d
 border	?GetRealWidth@bitmapBorder@@UAEHXZ	100.0000	100.0000	100.0000	0x504a0	d4959313501c
+border	?Main@bitmapBorder16@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x50860	17ad71c55435
 border	?Main@bitmapBorder@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x50550	3bb516ab312c
 border	?Main@border@@UAEHPAVmessage@@@Z	94.9505	94.9505	94.9505	0x4ff60	8355dcbca578
 border	?Main@coloredBorderFrame@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x50240	e918059c889d
@@ -2117,6 +2118,7 @@ game	?save@SGameSetupOptions@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.000
 game	?save@generator@@QAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb86e0	6c43e518cf50
 game	?save@playerData@@QAEHPAVTAbstractFile@@@Z	99.9557	99.9557	99.9557	0xba670	d2abbc9a4110
 game	?saveVictoryCondition@NewSMapHeader@@QAEHDPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xc35a0	066f0b00ef0d
+game	?save_object_vector@@YIEPAVTAbstractFile@@PAV?$vector@Utype_creature_bank@@V?$allocator@Utype_creature_bank@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0xd2b80	40e9667bf454
 game	?save_vector@@YIEPAVTAbstractFile@@PAV?$vector@Utype_point@@V?$allocator@Utype_point@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0xd2ac0	7fc9affa4f3e
 game	?save_vector@@YIEPAVTAbstractFile@@PAV?$vector@Utype_university@@V?$allocator@Utype_university@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0xd2b20	ff34a4a02e55
 game	?set@?$bitset@$07@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0xd4cc0	-
@@ -2731,8 +2733,11 @@ multiplayerwindow	?OnDirectJoin@TMultiPlayerWindow@@QAEEXZ	100.0000	100.0000	100
 multiplayerwindow	?OnHost@TMultiPlayerWindow@@QAEEXZ	100.0000	100.0000	100.0000	0x10fda0	c64a2083689a
 multiplayerwindow	?OnHotSeat@TMultiPlayerWindow@@QAEEXZ	100.0000	100.0000	100.0000	0x111d40	e4b6bf119e26
 multiplayerwindow	?OnJoin@TMultiPlayerWindow@@QAEEXZ	100.0000	100.0000	100.0000	0x110f40	17a15123af76
-multiplayerwindow	?OnKeyPress@CMPEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1107d0	08798805fe29
+multiplayerwindow	?OnKeyPress@CHotSeatEdit@@UAEHPAVmessage@@@Z	93.6364	93.6364	93.6364	0x10df60	44ce612bac3c
+multiplayerwindow	?OnKeyPress@CMPEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1107d0	ae1f2bdf7d0e
+multiplayerwindow	?OnKeyPress@CMPInputEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x10de50	a1331644848c
 multiplayerwindow	?OnKeyPress@CMultiPlayerWindowEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x10ed60	d631a790ede6
+multiplayerwindow	?OnKillFocus@CHotSeatEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x10dee0	424055d00598
 multiplayerwindow	?OnModemJoin@TMultiPlayerWindow@@QAEEXZ	100.0000	100.0000	100.0000	0x110a10	aaea3cbefc02
 multiplayerwindow	?OnNextEdit@CMPEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x110850	b569183ed88b
 multiplayerwindow	?OnOK@CHotSeatDlg@@QAEEXZ	100.0000	100.0000	100.0000	0x112470	dae5065a6e04
@@ -2744,7 +2749,7 @@ multiplayerwindow	?OnWidgetDeselect@CMPInputDlg@@UAEHHPAE@Z	100.0000	100.0000	10
 multiplayerwindow	?OnWidgetDeselect@TMultiPlayerWindow@@UAEHHPAE@Z	97.4932	98.1199	98.1199	0x10f4e0	fc151a47d3e1
 multiplayerwindow	?SetFocus@CMPEdit@@UAEXE@Z	100.0000	100.0000	100.0000	0x110890	33da61fc1578
 multiplayerwindow	?Update@TMultiPlayerWindow@@QAEXXZ	99.2080	99.2080	99.2080	0x10f0f0	516545f38ff1
-multiplayerwindow	?UpdateOK@CMPInputDlg@@QAEXXZ	100.0000	100.0000	100.0000	0x110980	9a40794dbe27
+multiplayerwindow	?UpdateOK@CMPInputDlg@@UAEXXZ	100.0000	100.0000	100.0000	0x110980	9a40794dbe27
 multiplayerwindow	?WindowHandler@TMultiPlayerWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x10f940	8037720e1234
 netmsg	??0t_complex_net_message@@QAE@W4eRS_Messages@@@Z	100.0000	100.0000	100.0000	0x112c50	184b15d84935
 netmsg	??0t_complex_net_message@@QAE@XZ	100.0000	100.0000	100.0000	0x112c20	4d4e95336a91
@@ -3673,7 +3678,7 @@ singleselectionwindow	?OnGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNet
 # SetCurrentMap/OnSetAsHostMsg bodies landing in the TU dropped the
 # pair again with both sources byte-identical. Recovery rides with
 # DrawHeroAdvancedOption reaching 100.
-singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	99.8868	100.0000	100.0000	0x17cdc0	0e5de8f038ec
+singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0	0e5de8f038ec
 singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	9177fbb0fa83
 # 2026-08-27 hand-lowered 100.0000 -> 99.8710 (hist keeps 100.0000): the
 # documented TU-state flap (master accepted this pair down at 99.89/99.87
