@@ -47,7 +47,12 @@ public:
     // the runtime_error base, so the family carries a default constructor
     // beside the message-carrying one.
     TDebugBreak();
-    TDebugBreak(const char* text);
+    // INLINE AND EMPTY, proven from the other side: TRuntimeError's
+    // message-carrying constructor (0x49a0c0) runs its base list and emits
+    // NOTHING for this base - no call, no store - where the default form
+    // above is a real out-of-line call at 0x524360. An empty base with an
+    // empty inline constructor is the only shape that produces both.
+    TDebugBreak(const char* text) {}
 };
 
 class TRuntimeError : public TDebugBreak, public std::runtime_error {
