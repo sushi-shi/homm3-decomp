@@ -4807,6 +4807,31 @@ int advManager::ProcessSearch(int x, int y, int z)
 }
 
 // E:\gamedcs\advmgr.cpp:4983
+// The `auto_inline(off)` pin below is COUPLED to three longhand copies of
+// this body - ProcessRadarSelect's two (0x40a0c0, at advmgr.cpp:2373 and
+// :2420 on the DC line table) and HideRoute's one (0x419300, :10553).
+// Retail EXPANDS the body at exactly those three sites and CALLS it at the
+// eight others, and the pin can only say "call everywhere", so the three
+// expansions have to be written out.  Dreamcast names the calls and their
+// arguments outright - `mov #0,r5 / mov #0,r6 / jsr @?UpdateScreen@
+// advManager@@QAAXHH@Z` at dc 0xa406, 0xa86a and 0x1c536 - so
+// `UpdateScreen(0, 0);` is the source, not the paste.
+//
+// MEASURED 2026-09-06 (polish lane 46), the honest restoration - all three
+// pastes replaced by `UpdateScreen(0, 0);` AND this pin removed:
+//   * the three target rows all HOLD at 100: ProcessRadarSelect, HideRoute
+//     and UpdateScreen itself.  Our /Ob2 picks retail's expansion at every
+//     one of them with no pin at all.
+//   * the collateral is four of the eight CALL sites, which then expand
+//     where retail calls: ProcessDeSelect 100 -> 85.26, ProcessKeyPress
+//     97.61 -> 87.90, DoAdvCommand 94.40 -> 85.11, and ShowRoute
+//     83.02 -> 52.52 (it expands HideRoute, so the new UpdateScreen call
+//     lands one level deeper).  Unit 96.16 -> 94.80, one exact row lost.
+// So the pin is load-bearing for those four and the paste is load-bearing
+// for these three; neither half can go alone.  The retail state is a
+// per-site decision inside one TU, and the four regressed callers are the
+// real target: each is over-inlining a callee retail calls, exactly the
+// residual class ShowVideo's note describes.  Withheld, not refuted.
 VA(0x0040f270, 0x7D)  // anchor-global, dc 0x10520
 #pragma auto_inline(off)
 void advManager::UpdateScreen(int bAllowIntermediateMouse, int bForceDraw)
