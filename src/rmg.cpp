@@ -1613,7 +1613,8 @@ TRmgZoneConnection* TRmgTownSlot::FindConnection(int destinationZone)
 // to the marked neighbour. The inner square becomes border terrain and the
 // outer empty square loses gate eligibility. Painting is deferred per level.
 // All role names are provisional: this Complete-only pass has no DC body.
-// Residual (97.0488%): clamp scheduling and map-view/painting-loop registers.
+// Residual (98.3965%): zero CSE/row scheduling in the second clamp group
+// (0x53fee8), and the final maximum-X clamp's EAX/ECX schedule (0x540030).
 // The guarded do loop keeps the exhaustion exit forward (0x53fe49) and
 // jumps back to the item lookup (0x53fe4b). A for/while condition instead
 // uses a backward jl plus a forward jmp with the same operation sequence.
@@ -1641,16 +1642,20 @@ TRmgZoneConnection* TRmgTownSlot::FindConnection(int destinationZone)
 // GetSize() in the six clamps adds virtual calls absent from retail (76.64%).
 // TPoint's reference-argument constructor is neutral here, but is unproved
 // for the signed type and changes DrawIrregularZoneBoundary's arithmetic.
-// Map-view controls: a separate plane-size local, four scalar/pointer ctor
-// arguments, and creating the map before lastTerrain change the dimension
-// loads/stores or terrain lifetime away from retail. Swapping the dimension
-// assignments does not restore the height-first multiplication sequence.
-// Computing a plane pointer first matches painting registers, but keeps the
-// wrong multiply operand and dimension-store schedule (97.0039%). A three-arg
-// view constructor is equivalent with direct plane arithmetic; using GetMapItem
-// there reloads dimensions. Pointer/level store order alone is byte-neutral.
-// Two-coordinate and three-coordinate member copies add loads/stores or move
-// the vptr away from retail; neither establishes the original dimension type.
+// Lower corners use the canonical subtraction operator. Flattening that
+// call into TPoint(x-radius,y-radius) loses the second scan's retail load
+// order. A by-value subtraction argument instead changes the outer induction
+// from x+2 to x-1.
+// Two TPoint members or by-value corner setters make bounds lose the 0x84
+// frame. Named clamped corners add homes. Deferred upper-field stores do not
+// fix the schedule; naming maximumX alone also moves homes without fixing it.
+// Upper point addition changes the first upper-Y loads; constructing both
+// corners before clamping promotes the outer row into EBX. An origin-plus-
+// extent form keeps lower.y live rather than retail's original row value.
+// Shared center values and int/long field substitutions are byte-neutral.
+// Buffer-first constructor arguments recover the map view and painting loop;
+// the rejected map/level pair, dimensions-first arguments, plane local, and
+// initializer-list controls are recorded beside the constructor in rmg.h.
 VA(0x0053FCB0, 0x5EC) // anchor-callee 0x544a31; thiscall, ret 0; retail-only
 void type_random_map_generator::RepairWaterZoneBorders()
 {
@@ -1672,8 +1677,11 @@ void type_random_map_generator::RepairWaterZoneBorders()
 
                 unsigned char found = 0;
                 TRmgZoneBounds bounds;
-                bounds.minimumY = max(position.y - 1, 0);
-                bounds.minimumX = max(position.x - 1, 0);
+                {
+                    TPoint lower = TPoint(position.x, position.y) - TPoint(1, 1);
+                    bounds.minimumY = max(lower.y, 0);
+                    bounds.minimumX = max(lower.x, 0);
+                }
                 bounds.maximumY = min(position.y + 2, map.mapHeight);
                 bounds.maximumX = min(position.x + 2, map.mapWidth);
                 nearby.z = position.z;
@@ -1701,8 +1709,11 @@ void type_random_map_generator::RepairWaterZoneBorders()
                 if (!found || zone->slot->FindConnection(destinationZone))
                     continue;
 
-                bounds.minimumY = max(position.y - 1, 0);
-                bounds.minimumX = max(position.x - 1, 0);
+                {
+                    TPoint lower = TPoint(position.x, position.y) - TPoint(1, 1);
+                    bounds.minimumY = max(lower.y, 0);
+                    bounds.minimumX = max(lower.x, 0);
+                }
                 bounds.maximumY = min(position.y + 2, map.mapHeight);
                 bounds.maximumX = min(position.x + 2, map.mapWidth);
                 for (nearby.y = bounds.minimumY; nearby.y < bounds.maximumY; ++nearby.y) {
@@ -1719,8 +1730,11 @@ void type_random_map_generator::RepairWaterZoneBorders()
                     }
                 }
 
-                bounds.minimumY = max(position.y - 2, 0);
-                bounds.minimumX = max(position.x - 2, 0);
+                {
+                    TPoint lower = TPoint(position.x, position.y) - TPoint(2, 2);
+                    bounds.minimumY = max(lower.y, 0);
+                    bounds.minimumX = max(lower.x, 0);
+                }
                 bounds.maximumY = min(position.y + 3, map.mapHeight);
                 bounds.maximumX = min(position.x + 3, map.mapWidth);
                 for (nearby.y = bounds.minimumY; nearby.y < bounds.maximumY; ++nearby.y) {
@@ -1737,7 +1751,8 @@ void type_random_map_generator::RepairWaterZoneBorders()
         }
         if (positions.size()) {
             TTerrainType lastTerrain = terrains[0];
-            type_random_map levelMap(map, position.z);
+            type_random_map levelMap(map.GetMapItem(0, 0, position.z),
+                map.mapWidth, map.mapHeight);
             TRmgTerrainBrush brush(&levelMap, lastTerrain, 4);
             for (unsigned int i = 0; i < positions.size(); ++i) {
                 terrain = terrains[i];
@@ -2540,7 +2555,8 @@ void type_random_map_generator::BuildRoadCostMap(TRmgMapPosition position)
 // choose different inline depths. With GetMapItem delegating to its scalar
 // overload, final map cleanup calls the vector deleting destructor instead
 // of retail's direct array iterator, and the trailing vector _Destroy is
-// retained (33.67439%; direct accessor arithmetic gives 39.066925%). Retain
+// retained (34.56628% with the buffer-first view). The earlier map/level view
+// scored 33.67439%, or 39.066925% with direct accessor arithmetic. Retain
 // these source/CFG corrections through score dips. A combined cost/predecessor
 // setter and by-value position assignment do not reproduce the reset's
 // constant-cost and copy sequence.
@@ -2654,7 +2670,8 @@ void type_random_map_generator::CreateRiver(TRmgMapPosition source)
     mapItem->tileData.riverTarget = 1;
     position = nextPosition;
 
-    type_random_map levelMap(map, nextPosition.z);
+    type_random_map levelMap(map.GetMapItem(0, 0, nextPosition.z),
+        map.mapWidth, map.mapHeight);
     TRmgMapAdapter mapAdapter(&levelMap);
     TRmgRiverPainter riverPainter(
         &mapAdapter, riverType, TRmgGridPoint(nextPosition.x, nextPosition.y));
