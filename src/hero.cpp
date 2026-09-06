@@ -316,12 +316,7 @@ static TSecondarySkill kMagicSchools[4] = {
 
 #if 0  // @carcass
 
-// E:\gamedcs\hero.cpp:219
-DC_ONLY(0xca728, 0x96)
-unsigned char InitializeHeroSpecificAbilitiesTable()
-{
-    // @stub
-}
+// E:\gamedcs\hero.cpp:219 - promoted to a live claim (see below).
 
 // E:\gamedcs\hero.cpp:254
 DC_ONLY(0xca7c0, 0x12)
@@ -352,6 +347,57 @@ unsigned char initialize_ballistics_table()
 }
 
 #endif  // @carcass
+
+// The specialty table itself and the const reference every reader goes
+// through, the campaignmap.obj pattern: retail's writable array is at
+// 0x678420 and the reference cell immediately after it at 0x679c80, which is
+// what fixes the 156-row extent (0x679c80 - 0x678420 = 156 * 40).
+DATA(0x00678420)
+THeroSpecificAbility aHeroSpecificAbilitiesImp[156];
+
+DATA(0x00679c80)
+const THeroSpecificAbility (&akHeroSpecificAbilities)[156] =
+    aHeroSpecificAbilitiesImp;
+
+// E:\gamedcs\hero.cpp:219, promoted from DC_ONLY on body evidence: the
+// herospec.txt literal, the 40-byte row stride and the EarlySetup call edge
+// kb.cpp's own list names. Three consecutive text columns per row, from
+// spreadsheet line i + 2 - the two header lines are what makes the entry
+// guard demand 158 rows for 156 heroes.
+//
+// TWO SPELLING FACTS, both measured here:
+//   * the row must be NAMED as a `const TStringVector&`. Written
+//     `GetRow(i + 2)[n]` three times VC6 re-derives the outer vector's
+//     _First at each cell (73.90); naming the row leaves the outer read
+//     once and the INNER _First reloaded three times, which is retail's
+//     `[esi+4]` run (88.29).
+//   * the loop counter is the SPREADSHEET ROW, 2..157, with the table
+//     subscript biased by -2. That is what puts retail's `jl` on the
+//     DESTINATION cursor: `i < 156` with `GetRow(i + 2)` makes VC6 keep the
+//     source index as the surviving induction variable instead (88.29), and
+//     a hand-walked destination pointer is byte-identical to that. 100.0000
+//     with the bias on the subscript.
+VA(0x004d71a0, 0x71)  // anchor-string herospec.txt + anchor-caller EarlySetup, dc 0xca728
+unsigned char InitializeHeroSpecificAbilitiesTable()
+{
+    TSpreadsheetResource* pText = ResourceManager::GetSpreadsheet(
+        DATA_COMPGEN(0x00679ccc, heroSpecificAbilityTextName, "herospec.txt"));
+    if (pText == 0)
+        return 0;
+
+    if (pText->GetNumberOfRows() < 158) {
+        pText->Dispose();
+        return 0;
+    }
+
+    for (int i = 2; i < 158; i++) {
+        const TSpreadsheetResource::TStringVector& row = pText->GetRow(i);
+        aHeroSpecificAbilitiesImp[i - 2].shortText = row[0];
+        aHeroSpecificAbilitiesImp[i - 2].mediumText = row[1];
+        aHeroSpecificAbilitiesImp[i - 2].longText = row[2];
+    }
+    return 1;
+}
 
 // E:\gamedcs\hero.cpp:259
 // Complete keeps the Dreamcast-named getter out of line. The 40-byte

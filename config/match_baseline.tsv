@@ -2257,6 +2257,7 @@ hero	?HeroFn_004E5DE0@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe5de0	ec2f952e9a
 hero	?HeroFn_004E6120@hero@@QBEXHPAUTCreatureTypeTraits@@@Z	100.0000	100.0000	100.0000	0xe6120	0ad9c16ec449
 hero	?HeroScreenUpdate@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xd9990	aebceb76e89c
 hero	?HeroView@@YIHHHHE@Z	100.0000	100.0000	100.0000	0xe1800	f02e79d1de49
+hero	?InitializeHeroSpecificAbilitiesTable@@YIEXZ	100.0000	100.0000	100.0000	0xd71a0	0d14687b237a
 hero	?IsInIdentifyRange@hero@@QAEEPBUtype_point@@@Z	100.0000	100.0000	100.0000	0xe5e10	1a9bbb7cfeac
 hero	?IsMobile@hero@@QAEEXZ	100.0000	100.0000	100.0000	0xe5f30	c6edcb416792
 hero	?IsWieldingArtifact@hero@@QAEEH@Z	100.0000	100.0000	100.0000	0xd91f0	2534e38ca00c
