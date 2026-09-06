@@ -4536,6 +4536,13 @@ inline void army::adjust_hitpoints()
 // one level and retains std::copy/_Destroy calls (14 instructions). Raising
 // inline_depth to 255 is byte-inert; explicit erase(begin,end) was the former
 // source-false plateau and may not return.
+// Residual (97.3596%): the frame, 0x28 against retail's 0x38, and one block.
+// Retail's SPELL_BIND arm ends the binder teardown with an out-of-line
+// `_Destroy(_First, _Last)` followed by `_Last = _First` - the erase tail -
+// where we expand a different lowering of the same clear. MEASURED AND
+// REJECTED 2026-09-06: spelling the clear as
+// `binders.erase(binders.begin(), binders.end())`, which is what Dinkumware's
+// own clear() expands to, costs 11.1 (97.3596 -> 86.2600).
 VA(0x00444510, 0x3DB)  // anchor-global, dc 0x49748
 void army::CancelIndividualSpell(int spell)
 {
