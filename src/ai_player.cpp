@@ -688,7 +688,7 @@ void type_AI_player::end_turn()
 
     unsigned char prohibited_creatures[145];
     fill_prohibited_array(&gpGame->players[team], prohibited_creatures);
-    while (purchase_buildings(prohibited_creatures)) {
+    while (purchase_building(prohibited_creatures)) {
     }
     hire_heroes();
     calculate_demand();
@@ -1010,6 +1010,9 @@ void type_AI_player::reset_magus_hut_value()
 // forms were tested; none exceeded this source-equivalent plateau.
 #endif  // @carcass
 
+// Tried and rejected 2026-09-06: retail homes the sort's `_Last` at
+// [ebp-0x14] where we keep it in EDI; naming `creatures.end()` in an
+// iterator local, and naming both iterators, are byte-flat.
 VA(0x00429ad0, 0x280)  // anchor-callee, dc 0x2f280
 void type_AI_player::calculate_reserve()
 {
@@ -1091,6 +1094,14 @@ static __forceinline long sum_player_dwellings(int player_id)
 // `game + player_index` in playerDisabled. Naming that load or its game
 // pointer and reversing the subscript were byte-flat; this is a post-RA
 // address-encoding distinction, not missing game behavior.
+// 2026-09-06 (docs/vc6/regalloc.md 6b, the B18 corpus): the class IS source-
+// reachable when both operands are locals whose birth order can move - that
+// closed philai value_of_enemy_town - but not here. The pair is (a freshly
+// loaded global pointer, an unscaled counter) at its first occurrence in the
+// function, where our CL always encodes base=pointer. Declaring
+// `game* current_game = gpGame;` ahead of `player_index` (the shape the
+// lever predicts) keeps base=pointer and costs 1.66 points plus a frame
+// dword: 99.9678 -> 98.31.
 VA(0x00429d50, 0x3F9)  // DC identity/caller + retail body; dc 0x2f694
 void fill_prohibited_array(playerData* player, unsigned char* prohibited)
 {
@@ -9304,9 +9315,16 @@ VA_COMPGEN(0x00434650, 0x26, VECTOR_DTOR, pathCell)
 // highest operand-level agreement in the whole sweep (0.904).
 VA_COMPGEN(0x00434680, 0x4D, VECTOR_ERASE, type_creature_source)
 
-// COMDAT pairing: vector<HeroDestination>::_Ucopy, agreement 0.941; the
-// type_creature_source and pathCell arms score 0.806 and 0.523 at operand level.
-VA_COMPGEN(0x00434ba0, 0x43, VECTOR_UCOPY, HeroDestination)
+// COMDAT pairing: vector<type_creature_source>::_Ucopy. The mnemonic sweep
+// that first landed here read HeroDestination (agreement 0.941 against
+// type_creature_source's 0.806), and the ELEMENT STRIDE overrules it: this
+// body walks with `add ecx,0xc / add eax,0xc` and copies exactly three
+// dwords, so its element is 12 bytes. SIZE(type_creature_source, 12) is that
+// element; HeroDestination is 16 (find_all_destinations walks it with
+// `add edi,0x10`), and its own 16-byte _Ucopy is the body /OPT:ICF folded
+// onto game.obj's byte-identical vector<type_university>::_Ucopy at
+// 0x434c70 - four dwords, `add ecx,0x10` - which is claimed there and exact.
+VA_COMPGEN(0x00434ba0, 0x43, VECTOR_UCOPY, type_creature_source)
 
 // COMDAT pairing: vector<pathCell>::_Ucopy, agreement 0.952; the
 // type_creature_source arm scores 0.531 at operand level.

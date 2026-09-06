@@ -288,6 +288,17 @@ SIZE(TArtifactSlotTraits, 8);
 // 0x4dbe80..0x4dc100 walk as a bitset<144> (five dwords). It is typed only
 // in hero.obj's narrow view; other translation units retain the proven pad.
 struct TCombinationArtifact {
+    // The cinit at 0x44c960 builds each of the twelve records in a 24-byte
+    // stack temporary - the id dword stored FIRST, then the component
+    // builder's five-word result copied in behind it - and only then
+    // `rep movsd`s the whole temporary into the table. That is an inlined
+    // two-argument constructor plus the implicit copy, and VC6 cannot
+    // spell it any other way: brace initialization of a record carrying a
+    // bitset member is a hard C2440 for this compiler.
+    TCombinationArtifact() {}
+    TCombinationArtifact(int id, const std::bitset<144>& usedComponents)
+        : artifactId(id), components(usedComponents) {}
+
     int artifactId;             // +0x00
     std::bitset<144> components;
 };

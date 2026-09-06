@@ -56,19 +56,23 @@ public:
     // (with a LOD fallback in its catch), and the three globals it
     // publishes.
     TImmMouseRuntime(void* hInst, void* hwnd);
-    ~TImmMouseRuntime();
+    // Retail's atexit thunk at 0x4b6910 - the address InitImmMouse hands to
+    // _atexit, 58 B - is this destructor EXPANDED, so it is defined inline
+    // here.  It touches no member: the holder is the eight bytes at
+    // 0x696d78 and the two singletons sit AFTER it at 0x696d84 and
+    // 0x696d80.  `delete gImmProject` is the non-virtual imported dtor plus
+    // operator delete; `delete gImmDevice` is the virtual scalar deleting
+    // destructor (`push 1 / call [eax]`).  Because the body names no
+    // member, the `$E<n>` thunk carries no relocation to the owned datum -
+    // see canonicalize_data_symbols' owner-free static-destructor arm and
+    // its control in build/test_ownerless_static_dtor.py.
+    ~TImmMouseRuntime()
+    {
+        gImmProject->Close();
+        delete gImmProject;
+        delete gImmDevice;
+    }
 };
-
-// Retail 0x4b6910 is the 58-byte atexit expansion registered by InitImmMouse.
-// It touches the two global singletons, not the local static holder. The
-// project uses its imported non-virtual destructor plus operator delete;
-// the device uses its virtual scalar deleting destructor (push 1/call [eax]).
-inline TImmMouseRuntime::~TImmMouseRuntime()
-{
-    gImmProject->Close();
-    delete gImmProject;
-    delete gImmDevice;
-}
 
 class TImmMouseEffect {
 public:

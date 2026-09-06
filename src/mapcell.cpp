@@ -1272,6 +1272,20 @@ int NewfullMap::Save(TAbstractFile* outfile, int size, unsigned char twoLayers)
 // why-reg v2 reports the bindings agreeing at every first definition, so
 // the divergence is past the B1 minimum slice: a caller-independent
 // scheduling/homing cap, not a spelling.
+// 2026-09-06, the xor-insert re-examined against the bytes. Retail's tail is
+// `mov cx,[esi+0xc] / and ecx,0xffc0` scheduled EARLY (between the bit-4 and
+// bit-3 extractions), then `mov al,[ebp+0x10] / mov bl,al / and bl,1 /
+// movsx bx,bl / xor ebx,ecx / or edx,ebx` - i.e. `acc5 | (bit0 ^ preserved)`,
+// exactly the association C precedence gives `a | b ^ c`. This compile emits
+// `(acc5 | bit0) | preserved` with the word load LAST, and no source
+// grouping reaches the other association: four more spellings measured this
+// lane, all worse - the last field read through `flags` rather than `value`
+// (93.62), ascending bit order WITH the unsigned hoist (95.40, so the note's
+// earlier ascending measurement was not just the char), the `& 0x40` test
+// read through `flags` (92.00), a separate `signed char flagByte` local for
+// the seventh read (95.03), and the bit-0 store hoisted above the other five
+// (95.40). The six stores are one merged read-modify-write either way; what
+// moves is only which pair VC6 combines first.
 VA(0x004fe220, 0x26B)  // order-map: leaf (file I/O devirtualized-inline); called x2 by Read 0xfd690 in the layer slot, dc 0xecf98
 int NewfullMap::readMapLayer(TAbstractFile* infile, int size, int layer)
 {
@@ -5113,17 +5127,13 @@ void NewfullMap::GenerateHeightMap(const CObject* object,
         int depth = 1;
         for (int row = 0; row < objectTypes[typeIndex].height; ++row) {
             if (row > 0) {
-                if (!objectTypes[typeIndex].passableCells.test(
-                        47 - row * 8 - col)
-                    && objectTypes[typeIndex].passableCells.test(
-                        55 - row * 8 - col))
+                if (!objectTypes[typeIndex].passableCells[47 - row * 8 - col]
+                    && objectTypes[typeIndex].passableCells[55 - row * 8 - col])
                     depth = 1;
             }
             if (col > 0) {
-                if (objectTypes[typeIndex].passableCells.test(
-                        47 - row * 8 - col)
-                    && !objectTypes[typeIndex].passableCells.test(
-                        48 - row * 8 - col))
+                if (objectTypes[typeIndex].passableCells[47 - row * 8 - col]
+                    && !objectTypes[typeIndex].passableCells[48 - row * 8 - col])
                     depth = heightMap[col - 1][row];
             }
             heightMap[col][row] = static_cast<signed char>(depth);

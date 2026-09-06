@@ -630,8 +630,13 @@ unsigned char InitImmMouse(void* hInst, void* hwnd)
     }
 }
 
-// InitImmMouse registers this callback; teardown is expanded from the holder.
-VA_COMPGEN(0x004b6910, 0x3A, STATIC_DTOR, immMouse)  // anchor-callee, retail-only
+// The exit thunk _atexit receives from InitImmMouse above: retail expanded
+// the whole of `~TImmMouseRuntime` into it, so the 58 bytes are the two
+// singleton teardowns and nothing of the holder itself. The claim binds
+// through canonicalize_data_symbols' owner-free static-destructor arm -
+// nothing in the body relocates `immMouse`, because the unused `this` went
+// with the expansion (build/test_ownerless_static_dtor.py is its control).
+VA_COMPGEN(0x004b6910, 0x3A, STATIC_DTOR, immMouse)
 
 // ImmMouseWindowMoved: re-derives the client origin via
 // ClientToScreen and offsets every tracked effect rect (linked list
@@ -1507,8 +1512,16 @@ int game::LoadBoatPool(TAbstractFile* infile)
     if (count < sizeof(uchar_buffer))
         return -1;
 
-    boat defaultBoat;
-    boats.resize(uchar_buffer, defaultBoat);
+    // `resize(n)`, NOT `resize(n, defaultBoat)`: Dinkumware's second parameter
+    // defaults to `_Ty()`, and the temporary is born where a named local is
+    // not.  The seven `boats[x].field =` stores encode the SIB base/index the
+    // other way round with a named `boat defaultBoat;` before the resize
+    // (99.6447 - our base=offset against retail's base=pointer, the only
+    // divergence in 569 B); hoisting that declaration to the top of the frame
+    // instead costs 5.96 (93.6853).  With the default argument every byte
+    // agrees, and the exact twin SaveBoatPool - which has no such local -
+    // already emitted retail's order.
+    boats.resize(uchar_buffer);
     for (x = 0; x < boats.size(); ++x) {
         count = infile->Read(&char_buffer, sizeof(char_buffer));
         if (count < sizeof(char_buffer))
@@ -6699,13 +6712,13 @@ bool game::LoadMap(TAbstractFile* mapFile)
     }
 
     for (int pool = 0; pool < 8; ++pool) {
-        lithPools[pool].clear();
-        lithExitPools[pool].clear();
+        lithPools[pool].erase(lithPools[pool].begin(), lithPools[pool].end());
+        lithExitPools[pool].erase(lithExitPools[pool].begin(), lithExitPools[pool].end());
     }
-    whirlpools.clear();
-    undergroundGateExits.clear();
-    undergroundGatePairs.clear();
-    monsterIdentifiers.clear();
+    whirlpools.erase(whirlpools.begin(), whirlpools.end());
+    undergroundGateExits.erase(undergroundGateExits.begin(), undergroundGateExits.end());
+    undergroundGatePairs.erase(undergroundGatePairs.begin(), undergroundGatePairs.end());
+    monsterIdentifiers.erase(monsterIdentifiers.begin(), monsterIdentifiers.end());
 
     return worldMap.Read(mapFile, mapHeader.Size, mapHeader.HasTwoLayers,
                          mapHeader.version) >= 0;
@@ -8163,7 +8176,7 @@ int NewSMapHeader::Load(TAbstractFile* infile, int saveVersion)
             teamInfo[i] = i;
     }
 
-    heroPlayerSetups.clear();
+    heroPlayerSetups.erase(heroPlayerSetups.begin(), heroPlayerSetups.end());
     if (saveVersion < SAVE_VERSION_CUSTOM_HERO_SETUPS)
         return 0;
 

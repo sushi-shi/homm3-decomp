@@ -3815,7 +3815,7 @@ void TSingleSelectionWindow::MakeHeroFilter()
             std::map<int, type_map_hero_info>::iterator it =
                 gpGame->mapHeader.heroPlayerSetups.find(h);
             if (it != gpGame->mapHeader.heroPlayerSetups.end()) {
-                if (!it->second.field_14.test(i))
+                if (!it->second.field_14[i])
                     continue;
             }
             p->availableHeroes[p->availableHeroesCount] = h;
@@ -3840,6 +3840,25 @@ TSingleSelectionWindow::~TSingleSelectionWindow();
 // dtor is empty. novtable (see the class) is what keeps the vptr
 // unstored, exactly as retail's bytes have it.
 // E:\gamedcs\singleselectionwindow.cpp:1553
+// UNREACHABLE, PROVEN 2026-09-06 - this row banks 0 and no source shape
+// that keeps the rest of the class exact can emit it. A whole-image scan of
+// the absolute operand finds ZERO references to 0x583ec0: neither concrete
+// vtable holds it (0x641d38 t_map_list_update and 0x641d44
+// CNewPlayerUpdateProc are three slots each - Go, Tick, Finish - and
+// 0x641d50 is already the next class's table), and no call site reaches it,
+// so retail kept a dead COMDAT (which is also why /OPT:REF cannot have been
+// on). Three VC6 probes at the unit's own flags settle what would emit it:
+//   * novtable + non-virtual ~Task + `delete basePtr`: emits `??1Task` only.
+//     This is our current state and it is what makes 0x583ef0 exact.
+//   * novtable + VIRTUAL ~Task: emits `??_GProc`/`??_7Proc` - the DERIVED
+//     class's wrapper, never `??_GTask` - and widens both concrete vtables
+//     to four slots, which retail's three refute.
+//   * non-virtual ~Task with novtable REMOVED: still no `??_G` at all, and
+//     `??1Task` gains a leading `mov dword ptr [esi], offset ??_7Task` that
+//     retail's 0x583ef0 does not have, so it would trade an exact row for
+//     nothing.
+// A `??_G<C>` needs C's own vtable to be emitted, and an abstract novtable
+// interface never emits one. Leave the claim; do not spend a lane on it.
 VA_COMPGEN(0x00583EC0, 0x21, SCALAR_DELETING_DTOR, CNewPlayerUpdateTask)  // wrapper calls the task dtor below; DC concrete-proc wrapper at 0x1489f0
 #pragma auto_inline(off)
 VA(0x00583ef0, 0x26)  // anchor-callee direct dtor call in WindowHandler's delete site + in ??_G-shaped 0x583ec0 + Man::PlayerDropped 0x589480, dc 0x148a28
@@ -5697,6 +5716,13 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
 // digit): scoping the counter into the `for` and deleting the function-scope
 // declaration, declaring `int i;` FIRST of all the locals, and rewriting the
 // loop as `i = 0; while (i < 15) { ...; ++i; }`.
+// The residual is retail's `xor edx,edx` ahead of the times[] clear - it
+// keeps `i` in its own register across the memset where we spend the
+// memset's zero on it. Pairing the counter with the memset the way
+// docs/vc6 records for the prologue-counter lever is WORSE, measured
+// 2026-09-06: `i = 0;` before the memset 98.9548 (with `for (; ...)` and
+// with a `while` alike), and moving the memset BELOW the sprintf loop
+// 89.1584.
 VA(0x005879A0, 0x219)
 std::string GetRandomMapName()
 {
@@ -5914,19 +5940,22 @@ int TSingleSelectionWindow::WindowHandler(message* msg)
             if (id != lastIMHoverID) {
                 if (id >= 0x107 && id <= 0x10e) {
                     if (lastIMHoverID != -1) {
-                        GetWidget(lastIMHoverID)->send_message(
+                        widget* previous = GetWidget(lastIMHoverID);
+                        previous->send_message(
                             widget::WIDGET_CLEAR_STATUS, 0x10);
                         DrawHeroAdvancedOption(
                             lastIMHoverID - 0x107, 1, -1);
                     }
                     if (!bVideoPaused || pDPlay->IsHost()) {
-                        GetWidget(id)->send_message(
+                        widget* hovered = GetWidget(id);
+                        hovered->send_message(
                             widget::WIDGET_SET_STATUS, 0x10);
                         DrawHeroAdvancedOption(id - 0x107, 1, -1);
                     }
                     lastIMHoverID = id;
                 } else if (lastIMHoverID != -1) {
-                    GetWidget(lastIMHoverID)->send_message(
+                    widget* previous = GetWidget(lastIMHoverID);
+                    previous->send_message(
                         widget::WIDGET_CLEAR_STATUS, 0x10);
                     DrawHeroAdvancedOption(lastIMHoverID - 0x107, 1, -1);
                     lastIMHoverID = -1;
@@ -7468,10 +7497,12 @@ void TSingleSelectionWindow::OnNewHostMsg(CNetMsg* pNetMsg)
 {
     receivedMaps = 0;
     receivingMaps = 1;
-    if (chatShowing)
-        GetWidget(179)->send_message(widget::WIDGET_CLEAR_STATUS,
-                                     widget::WIDGET_ACTIVE
-                                         | widget::WIDGET_DRAWN);
+    if (chatShowing) {
+        widget* chatWidget = GetWidget(179);
+        chatWidget->send_message(widget::WIDGET_CLEAR_STATUS,
+                                 widget::WIDGET_ACTIVE
+                                     | widget::WIDGET_DRAWN);
+    }
     currentIndex = 0;
     currentMap = 0;
     sortDirection = 1;
@@ -7677,6 +7708,13 @@ void TSingleSelectionWindow::SendPlayerFaces()
 // `static_cast<const std::bitset<4>&>(...)[class]` + `Text.begin()` dialog
 // idiom over `.test()` + `GetText()` (+0.52).
 // E:\gamedcs\singleselectionwindow.cpp:7698
+// MEASURED AND REJECTED (polish 29): the context-feature membership test
+// spelled without the const cast (byte-flat) and as `.test(gameVersionClass)`
+// (76.71 against 78.76). The remaining throw-path divergence is one inline
+// level short of retail - retail CALLS `bitset<4>::_Xran()` where we expand
+// it down to the string and out_of_range construction - and the same
+// GiveCrossoverArtifacts lever that bought one level here has no deeper
+// spelling to give.
 VA(0x0058BCE0, 0x5AF)  // begin-button caller and DC source shape, dc 0x142674
 unsigned char TSingleSelectionWindow::OnBeginGame()
 {
@@ -7870,6 +7908,26 @@ unsigned char TSingleSelectionWindow::BeginSavedGame()
 // own availability list. On a network game the fresh map header, the seat
 // map and the whole save image go out to the other machines before the last
 // progress tick.
+//
+// MEASURED AND REJECTED (polish 29), and the pair is instructive because
+// each half is right and only together do they pay: hand-expanding the
+// member walk in the message constructor (`static_cast<CMapHeaderData&>
+// (m_header) = *pMapHeader;` plus the two string and the bitset member
+// assignments) makes the tail of the call stream agree EXACTLY with
+// retail - `??4CMapHeaderData`, `assign(str, 0, npos)` twice, the bitset
+// copied inline - and still scores 70.30 against 74.90, because the
+// constructor half is still inverted and the added mass just shifts every
+// offset. Taking `NewSMapHeader::NewSMapHeader()` out of line (declared in
+// game.h, defined in campaignbrief.cpp) closes that half too and the row
+// reaches 81.87 - but the ctor is inline in retail's OTHER callers, and
+// the tree pays 3634 -> 3631 exact / 95.49 -> 95.35 fuzzy for it:
+// ??0game 87.85 -> 76.45, ??0SavedGameHeader 98.88 -> 48.35,
+// ??0CGameHeaderInfoMsg 98.80 -> 17.97, RebuildFilteredPlayerSetup
+// 71.54 -> 40.37, and ??0CMapHeaderData / ??0VictoryConditionStruct /
+// ??0LossConditionStruct / bitset<156>::_Tidy each 100 -> 0 (they are
+// COMDATs only the inline constructor pulls in). So the split is a
+// per-site /Ob2 decision, and reaching it needs the pin this lane may not
+// add.
 //
 // Residual (74.90%): branches and block count agree exactly; the whole gap
 // is the CNewMapHeaderInfoMsg construction. Retail CALLS NewSMapHeader's
@@ -8674,6 +8732,16 @@ void TSingleSelectionWindow::OnDeleteFile()
 // construction (dc 0x14514c), but emits no separate deleting wrapper here.
 VA_COMPGEN(0x0058e2e0, 0x21, SCALAR_DELETING_DTOR,
            CSingleSelectionNetMsgHandler)
+
+// COMDAT pairing: CRequestHeroFaceReplyMsg's two-argument constructor, the
+// out-of-line copy of the header inline. This one is settled by BYTES, not
+// by shape: the whole 49-byte extent is equal to this object's own COMDAT
+// to the digit, and the only place it could be confused - CScrollMsg's
+// identically shaped `(int, int)` constructor next door - differs in exactly
+// the message-id immediate (0x403 against this row's 0x40c,
+// RS_REQUEST_HERO_FACE_REPLY). The 0x1c size immediate is sizeof the class,
+// and the two arguments land at +0x14 and +0x18 as the class declares.
+VA_COMPGEN(0x0058e6c0, 0x31, CLASS_CTOR, CRequestHeroFaceReplyMsg)
 
 // E:\gamedcs\singleselectionwindow.cpp:8764
 VA(0x0058e310, 0x21)  // anchor-vtable CSingleSelectionNetMsgHandler vtbl 0x241ce8 slot1 (CheckHandleNet; cf CNetMsgHandler layout), dc 0x1451a0
@@ -9524,7 +9592,7 @@ void TSingleSelectionWindow::SetNewPlayerSlot(CNetPlayerInfo* pPlayer)
         int gameVersion = pCurrentHeader->saved.gameVersion;
         int required = gameVersion == GAME_VERSION_SOD
                        ? 2 : gameVersion == GAME_VERSION_AB;
-        if (!gGameContextFeatures[field_1898].test(required))
+        if (!gGameContextFeatures[field_1898][required])
             TurnOffAdvancedOptions();
         return;
     }
@@ -9533,7 +9601,7 @@ void TSingleSelectionWindow::SetNewPlayerSlot(CNetPlayerInfo* pPlayer)
         int mapVersion = gpGame->mapHeader.version;
         int required = mapVersion > MAP_FORMAT_ARMAGEDDONS_BLADE
                        ? 2 : mapVersion > MAP_FORMAT_RESTORATION_OF_ERATHIA;
-        if (!gGameContextFeatures[field_1898].test(required))
+        if (!gGameContextFeatures[field_1898][required])
             TurnOffAdvancedOptions();
     }
     if (!inAdvancedOptions)

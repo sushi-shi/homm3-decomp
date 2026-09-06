@@ -36,6 +36,18 @@ DATA(0x006a7dd8) THelpText gUniversityWindowHelp[2];
 // right-click description. The pointer is zero-fill storage until that setup.
 DATA(0x006a7dec) static const char* gUniversitySkillHelpFormat;
 
+// E:\gamedcs\university_window.cpp:50. The two-store latch setter, and it
+// belongs in this TU rather than the carcass: retail EXPANDS it at its one
+// call site in skill_click (the call census reads `set_skill base x1 vs
+// retail x0`), which /Ob2 can only do from a visible body.
+DC_ONLY(0x18fad8, 0xA)
+void type_university_skill_button::set_skill(TSecondarySkill new_skill,
+                                             unsigned char new_click)
+{
+    skill = new_skill;
+    click = new_click;
+}
+
 // E:\gamedcs\university_window.cpp:65. Complete emits no surviving
 // out-of-line body, but both allocations in the window constructor preserve
 // this source helper in full: iconWidget base construction, derived vtable,
@@ -578,13 +590,6 @@ int type_university_window::ExitDialog(message* msg)
 }
 
 #if 0  // @carcass: no distinct retail bodies promoted yet
-
-// E:\gamedcs\university_window.cpp:50
-DC_ONLY(0x18fad8, 0xA)
-void type_university_skill_button::set_skill(TSecondarySkill new_skill, unsigned char new_click)
-{
-    // @stub
-}
 
 // E:\gamedcs\university_window.cpp:68
 DC_ONLY(0x18fae4, 0x34)

@@ -23,6 +23,7 @@
 // the lobby non-virtual member set, exactly as retail did.
 #include "dxplay.h"
 #include "dxplay_com.h"
+#include "exceptions.h"
 
 // VC6's <new> declares `operator delete` WITHOUT an exception specification,
 // so under /GX every explicit `::operator delete` becomes a throw point and
@@ -1575,9 +1576,28 @@ VA_COMPGEN(0x0049a020, 0x73, SCALAR_DELETING_DTOR, CAutoArray)
 // destructor calls Destroy; retail inlines that helper after discarding its
 // return value, leaving the guard, scalar delete and two field clears. The
 // VC6 header-inline destructor emits that body as the ??1CDPlayMsg COMDAT.
-// NEXT LANE - one physical gap function remains unclaimed inside the span:
-//    0x49a0c0 (249B, ret 4, EH, called from 0x1b500): substantial, unidentified
-//      1-param value-class method/dtor variant.
+
+// TRuntimeError's message-carrying constructor - the one body of the game's
+// own exception family that lives in THIS compiland's span, and the callee
+// every `throw TAllocationFailure()` site reaches (objnames' 0x41b500
+// expands the derived body around a call to it; gzinflatebuf keeps its own
+// 0x4d6b80 COMDAT and calls it three times).
+//
+// The body is the base list and nothing else. TDebugBreak is an empty base
+// with an empty inline constructor, so it emits nothing at all; the
+// `std::string(text)` temporary is built in place (strlen, `_Grow`, the
+// `rep movsd` copy) and handed to std::runtime_error, whose constructor VC6
+// expands here - the member string's allocator byte plus three zero stores
+// followed by `assign(temp, 0, npos)` is Dinkumware's own copy constructor
+// verbatim. `exception::exception("")` goes out of line through the
+// RECYCLED `[ebp+8]` parameter slot, which is where retail parks the empty
+// literal's address, and the allocator temporary raids `[ebp+0xb]` - the
+// dead hidden-return slot a full-width pointer parameter leaves free.
+VA(0x0049a0c0, 0xF9)  // linkorder (dxplay span, after 0x49a020) + anchor-callee objnames 0x41b500 / gzinflatebuf 0x4d6b80, retail-only
+TRuntimeError::TRuntimeError(const char* text)
+    : TDebugBreak(text), std::runtime_error(std::string(text))
+{
+}
 
 #if 0  // @carcass -- DC_ONLY, unclaimed (folded / inlined / unlocated)
 // E:\gamedcs\dxplay.cpp:66

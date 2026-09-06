@@ -3428,6 +3428,13 @@ static inline long BoltDeltaSquared(long destination, long current)
     return delta * delta;
 }
 
+// Residual (97.32%): the two FP scratch slots are transposed - retail loads
+// `travelled` off [ebp+8] the instant it is stored and reuses that slot for
+// the divisor's float temp, so its later temps land in [ebp-4] and ours in
+// [ebp+8]; the instruction stream is otherwise identical. Tried and rejected,
+// all byte-flat at 97.3158: dropping the named `travelled` local entirely,
+// an implicit (uncast) divisor, and a second named `float total` declared
+// after `travelled`. Declaring `total` BEFORE the division measured 96.1467.
 VA(0x005a5260, 0x1DC)  // order-map+arity, dc 0x1542b4
 void combatManager::ResetBoltAngle(SBolt* psBolt)
 {
@@ -5163,6 +5170,13 @@ long combatManager::ComputeSpellDamage(SpellID spell, long spell_power, long mas
 //     early-out carries a third, ~15 instructions we tail-merge away.
 //     Writing an explicit `return damage;` inside the message scope is
 //     also exactly neutral - our CL re-merges it.
+//   * NOT the GetArmyName depth lever (2026-09-06). Writing the four name
+//     sites as `GetArmyName(targetArmy->creatureType, targetArmy->numTroops)`
+//     instead of `targetArmy->GetName()` - which is worth +10 and +2.5 on
+//     drawing's two message bodies - costs 16.2 here (88.49 -> 72.25).
+//     Retail CALLS the lookup in this body; a tree-wide census of
+//     `?GetArmyName@@YIPBDHH@Z` call counts (base against delinked target)
+//     names the bodies where the decision differs, and this is not one.
 VA(0x005a78e0, 0x2CD)  // anchor-callee+arity, dc 0x156c30
 long combatManager::ModifySpellDamage(long base_damage, SpellID iSpellType,
                                       const hero* castingHero,

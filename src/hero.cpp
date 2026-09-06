@@ -430,9 +430,9 @@ static unsigned char initialize_move_constants()
         gLandMovement[i] = atoi(resource->GetRow(i + 2)[1]);
 
     int* sea_movement = gSeaMovement;
-    for (i = 2; i < 2 + kNumMasteries; ++i, ++sea_movement) {
+    for (int row = 2; row < 2 + kNumMasteries; ++row, ++sea_movement) {
         const TSpreadsheetResource::TStringVector& values =
-            resource->GetRow(i);
+            resource->GetRow(row);
         *sea_movement = atoi(values[3]);
     }
 
@@ -453,14 +453,17 @@ static unsigned char initialize_move_constants()
 // the sheet, and then contains initialize_move_constants in full. That is
 // exactly the DC-proven return-helper boundary after VC6 /Ob2 inlining.
 //
-// Residual (99.9485%): all 19 CFG blocks, nine branches, five returns and
-// every instruction agree. One SIB byte in the inlined sea-row GetRow names
-// the same effective address as `[edi+edx]` rather than retail's `[edx+edi]`.
-// `why-reg --model` reports identical EDI/ESI/EBX first definitions and only
-// four unpaired visible slots, placing this past the allocator's minimum
-// slice. Measured negative controls: coupling the destination to `i - 2`
-// scores 98.5309%; carrying an independent destination index scores 95.52%;
-// a scoped row reference and the direct expression both retain 99.9485%.
+// CLOSED 2026-09-06 (99.9485 -> 100.0000). The last byte was one SIB in the
+// inlined sea-row GetRow, `[edi+edx]` against retail's `[edx+edi]`, with all
+// 19 CFG blocks, nine branches, five returns and every instruction already
+// agreeing. It is C1 handle state, not the allocator: giving the sea loop its
+// OWN block-scoped index (`for (int row = 2; ...)`) instead of reusing the
+// function-scope `int i` flips the base/index and changes nothing else.
+// Measured negative controls, all against the 99.9485 plateau: coupling the
+// destination to `i - 2` scores 98.5309; an independent destination index
+// 95.52; hoisting `int* sea_movement` above `int i` 94.4485; moving
+// `++sea_movement` out of the for-increment into the body, a scoped row
+// reference and the direct expression are all byte-flat.
 VA(0x004d7240, 0x223)  // exhaustive link-order bracket + two table literals, dc 0xca984
 unsigned char initialize_ballistics_table()
 {
@@ -1792,16 +1795,14 @@ std::bitset<70> mark_spells(int artifactId)
         mark_spells_of_level(result, kFifthLevelSpell);
         break;
     case ARTIFACT_ARMAGEDDONS_BLADE:
-        result.set(SPELL_ARMAGEDDON, true);
+        result[SPELL_ARMAGEDDON] = true;
         break;
     case ARTIFACT_SEA_CAPTAINS_HAT:
-#pragma inline_depth(0)
-        result.set(SPELL_SUMMON_BOAT, true);
-#pragma inline_depth()
-        result.set(kSpellScuttleBoat, true);
+        result[SPELL_SUMMON_BOAT] = true;
+        result[kSpellScuttleBoat] = true;
         break;
     case ARTIFACT_TITANS_THUNDER:
-        result.set(SPELL_TITANS_LIGHTNING_BOLT, true);
+        result[SPELL_TITANS_LIGHTNING_BOLT] = true;
         break;
     }
     if (artifactId != ARTIFACT_TITANS_THUNDER)
@@ -7296,6 +7297,19 @@ static TCreatureType GetUpgradedCreature(TCreatureType type)
 // as `if (!sea_movement) goto land_movement` breaks that canonical family and
 // collapses to 5.6129%. An explicit backward join therefore cannot preserve
 // retail's placement with this front end.
+// 2026-09-06, the sea half's ability test re-measured against the bytes.
+// Retail loads `.type` into ECX through the indexed form and LEAs the row
+// address separately (`mov ecx,[eax+8*edx] / lea eax,[eax+8*edx] / test
+// ecx,ecx`), where this compile forms one address and compares memory. Three
+// spellings: a `const THeroSpecificAbility& ability` hoisted beside
+// `mobility` costs 0.24 (81.53 - it lifts the row address above the
+// skillLevel guard, which retail keeps below it); the same reference nested
+// INSIDE an `if (skillLevel > 0)` block restores retail's placement and is
+// byte-flat at 81.7677; naming `int abilityType = ability.type` on top of
+// that is byte-flat too (VC6 folds the local straight back into the compare).
+// The remaining sea-half delta - `mobility` homed in the recycled [ebp+8]
+// parameter slot where retail keeps it in ESI all the way to the join - is
+// downstream of the join placement below, not an independent spelling.
 // The navigation-specialist bonus divides by TWENTY, not ten: retail's
 // `mov eax,0x66666667 / imul ecx / sar edx,3` at 0x4e4a1e is the signed
 // magic pair for /20 (shift 2 would be /10), and the shift is the only byte
@@ -7890,10 +7904,19 @@ long hero::modify_spell_damage(SpellID spell, int damage,
 // 99.5833: `*(stats + skill)`, a `const signed char* skills = stats;` hoist,
 // and an explicit `this->stats[skill]` in hero.h's GetPrimarySkill. So the
 // SIB base/index choice is unreachable from the accessor as well as from the
-// caller. Four other rows in the tree carry the identical single-swap
-// residual (ai_player::fill_prohibited_array 99.9678, seerhuttext
-// LoadSeerHutTextColumn 99.9621, philai value_of_enemy_town 99.9561,
-// diff CDiffFile::Apply 99.6429 with three swaps).
+// caller. philai value_of_enemy_town, which carried the same residual, is now
+// EXACT - see docs/vc6/regalloc.md 6b: for a two-LOCAL sum the base slot goes
+// to the local born later, so hoisting the other one's first assignment flips
+// the byte. That lever cannot reach THIS row: one operand is `this`, born at
+// entry, and the pair's first (and only) occurrence in the function always
+// encodes base=pointer. Sixteen further spellings measured 99.5833 in an
+// exact standalone replica of this body (build/p30/sibprobe9/10/12.cpp): all
+// six declaration permutations of total/skill/remaining, `unsigned`/`short`
+// skill, increment-before-call, `GetPrimarySkill(skill++)`, a plain `for`,
+// naming the call result, a `short` accumulator, all four accessor spellings
+// and a dead duplicate read. Three rows still carry this residual
+// (ai_player::fill_prohibited_array 99.9678, seerhuttext
+// LoadSeerHutTextColumn 99.9621, diff CDiffFile::Apply 99.6429, 3 swaps).
 VA(0x004e5960, 0x38)  // linkorder, dc 0xd544c
 short hero::get_primary_skill_total()
 {

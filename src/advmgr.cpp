@@ -2978,6 +2978,10 @@ void advManager::ProcessMapSelect(const message* msg, type_point* trigger_point,
         }
         if (myPos != gpGame->GetHero(clickedIndex)->owner)
             return;
+        // Retail homes this bool at [ebp+0xc] and pushes SetHeroContext's
+        // trailing 1 AFTER the IsLocalHuman call, but naming it is a loss
+        // in both widths: `unsigned char waitingPlayer` 89.99 and
+        // `int waitingPlayer` 90.55 against 91.10 for the folded call.
         SetHeroContext(clickedIndex, 0, !gpCurrentPlayer->IsLocalHuman(), 1);
         return;
     }
@@ -10063,7 +10067,12 @@ void advManager::ViewPuzzle()
         gUnnamed6989f4 = 1;
         CompleteDraw(centre.x, centre.y, centre.z, 0, 0);
         gUnnamed6989f4 = 0;
-        arrowTileset->DrawAdvObjWithFlag(
+        // DrawTile (0x47bf50), NOT DrawAdvObjWithFlag (0x47be10): the
+        // delinked target resolves this relocation to the tile entry, and
+        // the two are separate claimed bodies, so it is not an ICF fold.
+        // Byte-flat (a call relocation's name is not scored) but it stops
+        // the call census reporting a phantom divergence here.
+        arrowTileset->DrawTile(
             0, 0, 0, 32, 32, gpWindowManager->screenBitmap->map,
             (grailX - centre.x) * 32 + (32 - arrowTileset->Width) / 2,
             (grailY - centre.y) * 32 + (32 - arrowTileset->Height) / 2,

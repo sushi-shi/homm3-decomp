@@ -43,6 +43,122 @@ std::pair<const std::basic_string<char, std::char_traits<char>,
 // and setImageName's are the same object, so both initialize through this.
 VA_COMPGEN(0x00514060, 0xCA, CLASS_CTOR, TObjectImageNameTable)
 
+// --- the object-type filter family -----------------------------------------
+//
+// See objecttype.h for the class shapes and why every name here is a role
+// description. Retail's own emission order is what fixes the source order:
+// the three predicates first, then the fifteen file-scope objects whose
+// dynamic initializers run 0x514280..0x5145e0 with the constructor arguments
+// 0..8, none, and 1..5 - and the pointer table at 0x640288 lists them in
+// exactly that sequence.
+
+// Retail 0x5141b0. The unplaced-object gate first, then the bounds-checked
+// bitset<10> test (retail leaves `bitset<10>::_Xran` a call at 0x404410),
+// then Dinkumware's nibble-table `count()` over the single word.
+//
+// Residual (77.4%): the register-save placement, and only that. Retail
+// returns from the slotCategory gate BEFORE any callee-saved push
+// (`xor al,al / pop ebp / ret 4`) and pushes esi then edi afterwards; our
+// CL pushes edi at entry and therefore merges all three false exits into
+// one tail, which also costs the `test dword ptr [edi+4*esi], eax` folding
+// (we load through ecx because esi is popped early). Tried and rejected,
+// one compile each: `&&`-ing the gate into the other two conditions
+// (77.39, byte-flat), a `const bitset<10>&` local for the two mask uses
+// (77.39, byte-flat), `return false` for the gate's own exit (77.39,
+// byte-flat), and splitting the test and count into separate guards
+// (62.59 - that one really does change the flow, for the worse). The two
+// sibling predicates below are EXACT with the same idioms, so the wall is
+// not the spelling of any expression here.
+VA(0x005141B0, 0x6E)  // anchor-vtable 0x6402c4 slot 1; anchor-global the nine 0..8 initializers at 0x514280..0x514450; retail-only
+int TNativeTerrainObjectFilter::Accepts(const TObjectType* objectType) const
+{
+    if (objectType->slotCategory != 0)
+        return 0;
+    if (objectType->recommendedTerrainMask.test(m_terrain)
+        && objectType->recommendedTerrainMask.count() <= 3)
+        return 1;
+    return 0;
+}
+
+// Retail 0x514220. The same gate and the same `count()`, with the opposite
+// arm and no terrain test - which is what makes the pair a partition of the
+// unplaced objects into terrain-specific and terrain-agnostic.
+VA(0x00514220, 0x3D)  // anchor-vtable 0x6402d4 slot 1; retail-only
+int TAnyTerrainObjectFilter::Accepts(const TObjectType* objectType) const
+{
+    if (objectType->slotCategory == 0
+        && objectType->recommendedTerrainMask.count() > 3)
+        return 1;
+    return 0;
+}
+
+// Retail 0x514260, one compare and a `sete`.
+VA(0x00514260, 0x19)  // anchor-vtable 0x6402dc slot 1; anchor-global the five 1..5 initializers at 0x5144f0..0x5145e0; retail-only
+int TSlotCategoryObjectFilter::Accepts(const TObjectType* objectType) const
+{
+    return objectType->slotCategory == m_slotCategory;
+}
+
+VA(0x005142A0, 0x15)  // anchor-global called by the nine terrain initializers; retail-only
+TNativeTerrainObjectFilter::TNativeTerrainObjectFilter(int terrain)
+    : m_terrain(terrain)
+{
+}
+
+VA_COMPGEN(0x005142C0, 0x21, SCALAR_DELETING_DTOR, TNativeTerrainObjectFilter)
+
+VA(0x005144B0, 0x9)  // anchor-global called by the single initializer at 0x514480; retail-only
+TAnyTerrainObjectFilter::TAnyTerrainObjectFilter()
+{
+}
+
+VA_COMPGEN(0x005144C0, 0x21, SCALAR_DELETING_DTOR, TAnyTerrainObjectFilter)
+
+VA(0x00514510, 0x15)  // anchor-global called by the five category initializers; retail-only
+TSlotCategoryObjectFilter::TSlotCategoryObjectFilter(int slotCategory)
+    : m_slotCategory(slotCategory)
+{
+}
+
+// Retail 0x514530: the base vptr store and nothing else, which is what both
+// derived scalar deleting destructors above call directly.
+VA(0x00514530, 0x7)  // anchor-vtable 0x6402cc slot 0's callee; retail-only
+TObjectTypeFilter::~TObjectTypeFilter()
+{
+}
+
+// The fifteen filter objects, in the order their dynamic initializers run.
+// Terrain ids follow terrain_type.h; rock (9) has no filter.
+DATA(0x0069cb30) TNativeTerrainObjectFilter gDirtObjectFilter(0);
+DATA(0x0069cb38) TNativeTerrainObjectFilter gSandObjectFilter(1);
+DATA(0x0069cb10) TNativeTerrainObjectFilter gGrassObjectFilter(2);
+DATA(0x0069caf8) TNativeTerrainObjectFilter gSnowObjectFilter(3);
+DATA(0x0069cb28) TNativeTerrainObjectFilter gSwampObjectFilter(4);
+DATA(0x0069cac8) TNativeTerrainObjectFilter gRoughObjectFilter(5);
+DATA(0x0069cad8) TNativeTerrainObjectFilter gSubterraneanObjectFilter(6);
+DATA(0x0069cad0) TNativeTerrainObjectFilter gLavaObjectFilter(7);
+DATA(0x0069cb20) TNativeTerrainObjectFilter gWaterObjectFilter(8);
+DATA(0x0069cae0) TAnyTerrainObjectFilter gAnyTerrainObjectFilter;
+DATA(0x0069cb18) TSlotCategoryObjectFilter gSlotCategory1ObjectFilter(1);
+DATA(0x0069caf0) TSlotCategoryObjectFilter gSlotCategory2ObjectFilter(2);
+DATA(0x0069cae8) TSlotCategoryObjectFilter gSlotCategory3ObjectFilter(3);
+DATA(0x0069cb08) TSlotCategoryObjectFilter gSlotCategory4ObjectFilter(4);
+DATA(0x0069cb00) TSlotCategoryObjectFilter gSlotCategory5ObjectFilter(5);
+
+// Retail 0x640288, fifteen relocations in the initializer order above.
+DATA(0x00640288)
+TObjectTypeFilter* const gObjectTypeFilters[OBJECT_TYPE_FILTER_COUNT] = {
+    &gDirtObjectFilter,          &gSandObjectFilter,
+    &gGrassObjectFilter,         &gSnowObjectFilter,
+    &gSwampObjectFilter,         &gRoughObjectFilter,
+    &gSubterraneanObjectFilter,  &gLavaObjectFilter,
+    &gWaterObjectFilter,         &gAnyTerrainObjectFilter,
+    &gSlotCategory1ObjectFilter, &gSlotCategory2ObjectFilter,
+    &gSlotCategory3ObjectFilter, &gSlotCategory4ObjectFilter,
+    &gSlotCategory5ObjectFilter
+};
+
+
 // Retail 0x514610, TObjectType::setImageName - the .msk cache loader and
 // the registry's growth path. Two function-local statics with SEPARATE
 // guard bytes: the image-name registry at 0x69cb80 (guard 0x69cb64, which
@@ -70,6 +186,24 @@ VA_COMPGEN(0x00514060, 0xCA, CLASS_CTOR, TObjectImageNameTable)
 // vector::insert at the site while `push_back(x)` charges a free wrapper
 // and prices the nested insert at budget/sites-remaining; which of the two
 // reproduces retail depends on how much budget the site has left.
+// RE-MEASURED 2026-09-06: that ranking has EXPIRED. At the current delink
+// generation cache-push_back and cache-insert are byte-identical (47.7708
+// to the digit, and 47.7708 is also the banked MAX), so the four-way sweep
+// above no longer separates them. Do not re-derive a lever from it.
+//
+// IDENTIFIED 2026-09-06, NOT YET CLAIMABLE: the row retail calls at
+// fn+0x150, 0x516c10 (522 B), is `vector<TImageInfo>::insert(iterator,
+// const TImageInfo&)` - the TWO-argument, iterator-returning overload, with
+// the three-argument `insert(iterator, size_type, const T&)` expanded inside
+// it (`ret 8`, the 0x2aaaaaab /24 reciprocal, `add [ebx+8],0x18`). The
+// 24-byte element is TImageInfo itself, which the call site proves: the
+// record at [ebp-0x6c] is two zeroed dwords followed by two
+// `bitset<48>::_Tidy` calls, and the row cursor right after is
+// `lea edx,[ebx+2*ebx] / lea ebx,[eax+8*edx]`. The three-argument overload
+// is already claimed at 0x46aeb0. This one is not claimable yet for the
+// same reason as `basic_string::resize` below: VC6 inlines the two-argument
+// wrapper at both `push_back` and `insert(end(), x)` spellings and emits no
+// COMDAT for it, so there is no base symbol for a VA_COMPGEN to pair.
 //
 // Residual (42.63%): three /Ob2 over-inlines and nothing else. Retail
 // CALLS the registry's own constructor, the pair constructor at 0x517c30
@@ -379,10 +513,18 @@ VA_COMPGEN(0x00515f50, 0x106, CLASS_CTOR, ctype)
 VA_COMPGEN(0x00516130, 0x21, SCALAR_DELETING_DTOR, ctype)
 VA_COMPGEN(0x00516160, 0x24, IMPLICIT_DTOR, ctype)
 
-// COMDAT pairing: locale::facet's scalar deleting destructor, agreement
-// 1.000 - the body writes vtbl_2402cc into the object before the delete,
-// which is the base-facet vtable, not any derived facet's.
-VA_COMPGEN(0x00516560, 0x23, SCALAR_DELETING_DTOR, facet)
+// CORRECTED 2026-09-06. This row was claimed as locale::facet's scalar
+// deleting destructor on the strength of its 1.000 body agreement, but the
+// body is generic - every `??_G` of a class with no members to destroy has
+// these fifteen instructions - and the ONE discriminating operand says
+// otherwise. It writes vtbl_2402cc, and 0x6402cc is a TWO-slot vtable whose
+// second entry is `_purecall`: an abstract class with a virtual destructor
+// and one pure virtual, which is exactly TObjectTypeFilter above (whose own
+// `??1` at 0x514530 writes the same vtable and is EXACT). locale::facet has
+// no pure virtual at all - its vtable 0x645700 is ONE slot wide - so the
+// real `??_Gfacet` is the copy bottomviewsubwindow.obj keeps at 0x454740,
+// and `??1facet` is 0x51a110 below.
+VA_COMPGEN(0x00516560, 0x23, SCALAR_DELETING_DTOR, TObjectTypeFilter)
 
 // COMDAT pairing: strstreambuf(const char*, int), agreement 0.957.
 VA_COMPGEN(0x005165f0, 0xE7, CLASS_CTOR, strstreambuf)
@@ -391,6 +533,20 @@ VA_COMPGEN(0x005165f0, 0xE7, CLASS_CTOR, strstreambuf)
 // It calls the CRT's own ??1istrstream@std@@ at 0x60af24 by name, so no
 // similarity argument is needed.
 VA_COMPGEN(0x00516720, 0x30, SCALAR_DELETING_DTOR, istrstream)
+
+// COMDAT pairing: istrstream's `vbase destructor' closure, the sibling of
+// the scalar deleting destructor above and byte-identical to this object's
+// own `??_Distrstream` COMDAT - `lea esi,[ecx+0x58]` onto the virtual
+// basic_ios subobject, then the CRT's ??1istrstream and the basic_ios<char>
+// destructor at 0x453f40. The 20-byte extent matches ostrstream's already
+// claimed twin in bottomviewsubwindow (0x451750, also 0x14). Declaration
+// only, in MSVC's own backtick spelling - there is no source body.
+#if 0  // @carcass: compiler-generated closure, claim only
+
+VA(0x00516750, 0x14)
+void istrstream::`vbase destructor'();
+
+#endif  // @carcass
 
 // COMDAT pairing: bitset<48>::flip(), agreement 1.000 - the trigger-mask
 // member TObjectType::setTriggerMask flips, and 48 is the only bitset width
@@ -459,6 +615,25 @@ VA_COMPGEN(0x0051b5d0, 0xB3, TREE_CONST_ITERATOR_DEC, string)
 // this change. Ordered by RVA; agreements are the masked-mnemonic difflib
 // ratio against the compiled COMDAT of the same content size.
 
+// IDENTIFIED 2026-09-06, NOT YET CLAIMABLE: retail 0x515010 (408 B) is
+// `basic_string<char>::resize(size_type)`, this object's own COMDAT copy.
+// The bytes are Dinkumware's one-argument overload with both arms expanded -
+// `_N <= _Len ? erase(_N) : append(_N - _Len, _E(0))`. The erase arm is the
+// no-op `_Xran` guard on `_Len < _P0` (retail's `cmp [ebx+8],esi / jae` over
+// `_Xran`), `_Split()` (the `_Ptr[-1]` refcount test, `_Tidy(1)`, the inline
+// strlen, `_Grow`, `memmove`) and `_Eos`; the append arm is `_Xlen()` behind
+// `npos - _Len <= _N`, the second `_Xlen` behind `_Grow`'s own `npos - 3`
+// test, and the `rep stosb` of `_Tr::assign(_Ptr + _Len, _N, _C)`. `ret 4`
+// and the `[ebx+8]` / `[ebx+4]` member reads fix the arity and the receiver.
+// It cannot be claimed yet: a VA_COMPGEN only pairs a COFF symbol VC6 has
+// already emitted, and no site in this file's reconstructed source calls
+// `resize`. The retail whole-image xref finds the only CALL in
+// `collate<char>::do_transform` (0x614260, outside this band), so every use
+// inside objecttype.obj was inlined and the emitted COMDAT is the leftover -
+// which means the call site is in a body of this TU still unwritten, not in
+// one already here. A future lane that adds it should also add
+// BASIC_STRING_RESIZE to DIRECT_SYMBOL_COMPGEN_KINDS.
+
 // COMDAT pairing: basic_streambuf<char>::sgetc, agreement 1.000.
 VA_COMPGEN(0x005157b0, 0x20, STREAMBUF_SGETC, char)
 
@@ -526,6 +701,12 @@ VA_COMPGEN(0x00519d70, 0x393, NUM_GET_DO_GET, char)
 // COMDAT pairing: num_get<char>::_Getifld, agreement 0.968 - the integer
 // field scanner the five integral do_get arms share.
 VA_COMPGEN(0x0051a1f0, 0x534, NUM_GET_GETIFLD, char)
+
+// COMDAT pairing: locale::facet's destructor - `mov [ecx], vtbl_245700 /
+// ret`, and 0x645700 is the one-slot vtable whose single entry is the
+// `??_Gfacet` bottomviewsubwindow.obj keeps at 0x454740. The two objects
+// win one COMDAT of the class each, which is why neither is here twice.
+VA_COMPGEN(0x0051a110, 0x7, IMPLICIT_DTOR, facet)
 
 // COMDAT pairing: istreambuf_iterator<char>'s operator*, _Inc and _Peek,
 // agreements 1.000, 1.000 and 1.000.

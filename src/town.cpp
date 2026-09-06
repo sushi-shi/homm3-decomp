@@ -836,7 +836,7 @@ void town::initialize_spells(const TownExtra* town_setup)
     for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
         set_town_spell_bit(
             prohibited, spell,
-            spells.test(spell) || gpGame->spellDisabled[spell]);
+            spells[spell] || gpGame->spellDisabled[spell]);
     }
 
     for (int level = 1; level <= 5; ++level) {
@@ -845,11 +845,11 @@ void town::initialize_spells(const TownExtra* town_setup)
             int totalWeight = 0;
             int spell;
             for (spell = 0; spell < hero::NUM_SPELLS; ++spell) {
-                if (!prohibited.test(spell)
+                if (!prohibited[spell]
                     && akSpellTraits[spell].level == level) {
                     totalWeight +=
                         akSpellTraits[spell].townProbability[type];
-                    if (town_setup->fixedSpells.test(spell)) {
+                    if (town_setup->fixedSpells[spell]) {
                         mageGuildSpells[level - 1][slot] = spell;
                         prohibited.set(spell);
                         break;
@@ -865,7 +865,7 @@ void town::initialize_spells(const TownExtra* town_setup)
             }
             int roll = Random(1, totalWeight);
             for (spell = 0; spell < hero::NUM_SPELLS; ++spell) {
-                if (!prohibited.test(spell)
+                if (!prohibited[spell]
                     && akSpellTraits[spell].level == level) {
                     roll -= akSpellTraits[spell].townProbability[type];
                     if (roll <= 0)

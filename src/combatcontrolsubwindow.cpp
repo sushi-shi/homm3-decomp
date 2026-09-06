@@ -841,6 +841,14 @@ TCombatCreatureSubWindow::~TCombatCreatureSubWindow()
 // stack count (the override wins unless it is -1). Both arms then run the
 // three standing-spell icons over the LAST three entries of the stack's
 // spell-influence queue and set the overlay text.
+// Residual (78.98%): the frame is one dword SHORT of retail's (0x54 vs
+// 0x58) - retail homes the traits row address at [ebp-4] and the second
+// get_adjusted_attack result at [ebp+0xc] where we keep both in registers -
+// and retail CALLS deque<int>::iterator::operator+= at the spell-queue walk
+// where we expand it. Tried and rejected: a `const TCreatureTypeTraits*`
+// instead of the reference (byte-flat), naming the shooting attack in a
+// local (byte-flat), landing _cpp_max's result in a third local
+// (byte-flat), and an explicit `if (shootAttack > attack)` (76.77).
 VA(0x0046dc30, 0x2C2)  // roster order + "%d(%d)" pair + the three spell icons, dc 0x66648
 void TCombatCreatureSubWindow::Update(const army* info, const hero* owner)
 {

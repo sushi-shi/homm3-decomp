@@ -1650,18 +1650,18 @@ void combatManager::SetNextArmy(int group, int index)
             if (casting_hero) {
                 if (casting_hero->IsWieldingArtifact(
                         ARTIFACT_ANGELIC_ALLIANCE)) {
-                    if (Unnamed5a40d0(SPELL_PRAYER, 3, currentSide, 1, 2))
+                    if (HasValidSpellTarget(SPELL_PRAYER, 3, currentSide, 1, 2))
                         CastSpell(SPELL_PRAYER, -1, 2, -1, 3, 10);
                 }
                 if (casting_hero->IsWieldingArtifact(
                         ARTIFACT_ARMOR_OF_THE_DAMNED)) {
-                    if (Unnamed5a40d0(SPELL_SLOW, 3, currentSide, 1, 2))
+                    if (HasValidSpellTarget(SPELL_SLOW, 3, currentSide, 1, 2))
                         CastSpell(SPELL_SLOW, -1, 2, -1, 3, 50);
-                    if (Unnamed5a40d0(SPELL_CURSE, 3, currentSide, 1, 2))
+                    if (HasValidSpellTarget(SPELL_CURSE, 3, currentSide, 1, 2))
                         CastSpell(SPELL_CURSE, -1, 2, -1, 3, 50);
-                    if (Unnamed5a40d0(SPELL_WEAKNESS, 3, currentSide, 1, 2))
+                    if (HasValidSpellTarget(SPELL_WEAKNESS, 3, currentSide, 1, 2))
                         CastSpell(SPELL_WEAKNESS, -1, 2, -1, 3, 50);
-                    if (Unnamed5a40d0(SPELL_MISFORTUNE, 3, currentSide, 1, 2))
+                    if (HasValidSpellTarget(SPELL_MISFORTUNE, 3, currentSide, 1, 2))
                         CastSpell(SPELL_MISFORTUNE, -1, 2, -1, 3, 50);
                 }
             }
@@ -4426,12 +4426,18 @@ unsigned char combatManager::Unnamed469e50(
 // shared family lookup and converts the count at a two-for-three ratio; the
 // four RoE elementals have no promoted form. A second failure clears the
 // pending count, while either successful merge leaves the fields intact.
-// Residual (93.2203%): all twelve blocks, branches and non-conversion
-// instructions agree. Retail materializes each Add result as a byte truth
-// value (`test/setne/test`); this VC6 compile folds both to direct tests.
-// Separate bool/byte locals, explicit comparisons/casts, double negation,
-// a tiny inline adapter and a register hint were byte-inert, so the natural
-// implicit bool assignment is retained.
+// CLOSED 2026-09-06 (93.2203 -> 100.0000). Retail materializes each Add
+// result as a byte truth value (`test / setne al / test al,al`) where this
+// compile folded both into direct tests, and the lever is the FLAG'S LIVE
+// RANGE, not its type or its spelling: one `bool added` that survives the
+// promotion block and is tested ONCE after it forces VC6 to keep a real
+// byte, at both assignment sites. The earlier note listed separate
+// bool/byte locals, explicit comparisons/casts, double negation, a tiny
+// inline adapter and a register hint as byte-inert - all still true, and
+// this lane adds `unsigned char added` (92.8814), an explicit `!= 0` on
+// each assignment, two initializer-form bools and a function-scope
+// declaration (all byte-flat). Only the merged `if (!added) { ... }` moves
+// it, because only that makes the flag live across a call.
 VA(0x00469f20, 0xBA)  // anchor-callee, dc 0x6359c
 void combatManager::RaiseSkeletons(int side)
 {
@@ -4439,24 +4445,23 @@ void combatManager::RaiseSkeletons(int side)
         bool added;
         added = armyGroups[side]->Add(
             raisedCreatureType, raisedCreatureCount, -1);
-        if (added)
-            return;
+        if (!added) {
+            TCreatureType upgradedType = raisedCreatureType;
+            if (!gpGame->f_1f698
+                && (upgradedType == CREATURE_AIR_ELEMENTAL
+                    || upgradedType == CREATURE_EARTH_ELEMENTAL
+                    || upgradedType == CREATURE_FIRE_ELEMENTAL
+                    || upgradedType == CREATURE_WATER_ELEMENTAL)) {
+                upgradedType = CREATURE_NONE;
+            } else {
+                upgradedType = UpgradedCreatureType(upgradedType);
+            }
 
-        TCreatureType upgradedType = raisedCreatureType;
-        if (!gpGame->f_1f698
-            && (upgradedType == CREATURE_AIR_ELEMENTAL
-                || upgradedType == CREATURE_EARTH_ELEMENTAL
-                || upgradedType == CREATURE_FIRE_ELEMENTAL
-                || upgradedType == CREATURE_WATER_ELEMENTAL)) {
-            upgradedType = CREATURE_NONE;
-        } else {
-            upgradedType = UpgradedCreatureType(upgradedType);
+            raisedCreatureType = upgradedType;
+            raisedCreatureCount = (raisedCreatureCount * 2 + 2) / 3;
+            added = armyGroups[side]->Add(
+                raisedCreatureType, raisedCreatureCount, -1);
         }
-
-        raisedCreatureType = upgradedType;
-        raisedCreatureCount = (raisedCreatureCount * 2 + 2) / 3;
-        added = armyGroups[side]->Add(
-            raisedCreatureType, raisedCreatureCount, -1);
         if (added)
             return;
     }
@@ -5566,7 +5571,13 @@ VA_COMPGEN(0x0046a870, 0x50F, TREE_ERASE_ITERATOR, int_set)
 // 0x46adc1 and frees each node through `operator delete`.
 VA_COMPGEN(0x0046ad80, 0x7E, TREE_ERASE, int_set)
 
-// const_iterator::_Inc is the family's fifth member and sits at 0x46ae00,
-// named outright by the runtime map. NOT CLAIMED: the function-universe
-// classifier bands that row as runtime code, and a claim on it fails the
-// CLASS-overlap gate. Left to whoever re-bands the runtime split.
+// const_iterator::_Inc is the family's fifth member. RE-BANDED 2026-09-06:
+// the runtime map's own row for it read "Exact 163-byte Dinkumware
+// set<int>::const_iterator increment COMDAT; LearnSpellFromEagleEye's base
+// object supplies the authoritative public" - that is this compiland, and
+// the map's header says such rows "get properly mapped as matching
+// proceeds". This object's own `?_Inc@const_iterator@?$_Tree@HH...` COMDAT
+// is byte-identical to the retail row and it sits between two claims of
+// this same family, so the row is game code and the runtime-map entry has
+// been retired.
+VA_COMPGEN(0x0046ae00, 0xA3, TREE_CONST_ITERATOR_INC, int_set)
