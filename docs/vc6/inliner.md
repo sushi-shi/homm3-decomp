@@ -977,8 +977,8 @@ expanding (85.7667%). Together they retain both desired cache calls and expand
 the tree find (98.2893%). The constructor's two-argument zero-flip form, explicit
 default flip arguments, and the existing flip-value factory leave the score unchanged.
 
-After recovering point-copy initialization and the base tile's lifetime, the
-full checkpoint is 99.5570%. The gated trace now reads caller cost 920, initial
+With the comparison-return predicate, recovering point-copy initialization
+and the base tile's lifetime reached a full checkpoint of 99.5570%. The gated trace now reads caller cost 920, initial
 budget 1,840, and base-tile constructor cost 52. The first cache read gets 48
 units at depth 3, so the cost-90 `getPackedCell` stays out of line. The two
 interior rule reads get 122 and 109 and expand it; the final rule read gets 77
@@ -1018,6 +1018,42 @@ retain identical code bytes. Retail proves the shared accessor role but not
 an explicit source `inline` qualifier. Neutral source-form controls and
 the point/flip-construction failures are recorded beside `paintPoint`, rather
 than inferred to be compiler limitations.
+
+### A guard-return predicate crosses the free-expansion cutoff
+
+`rmgTerrainPainter::isPaintTerrain` exposes the remaining distance-wrapper
+boundary through ordinary source control flow:
+
+```cpp
+if (getTerrain(point) == getPaintTerrain())
+    return 1;
+return 0;
+```
+
+The comparison-return form costs 38 and is free under the cutoff of 40. The
+guard-return form costs 47 and is charged. The unchanged `paintPoint` root
+still costs 920, but the inner cost-41 `_Distance` wrapper now receives only
+38 units and stays out of line, exactly as at retail 0x5b4f7f. The preceding
+tree find still expands. This is a meaningful predicate body, with no dummy
+operation, assertion, pragma, or compiler modification.
+
+Keeping the separate named point return initially leaves 99.0163% because
+this later call decision changes the direction-loop registers. Returning the
+compound translation (`return result += offset`) after the recovered coordinate
+copy initialization restores them and reaches 99.9204%. The point-addition cost
+is now 60 rather than 63. The first cache read receives 46, the two interior
+copies 115 and 108, and the final cache read 76, against a cost of 90. Both
+distance calls retain the three-argument wrapper, at budgets 18 and 38.
+
+The final passive trace reproduces all 56,910 object bytes outside the COFF
+timestamp. A separate raw audit resolves all 61 named relocations in the
+1,483-byte caller, admitting only the correct distance overload. Exactly eight
+bytes remain different: the two cache products at 0x5b4f06 and 0x5b4fee load y
+then multiply by width, whereas retail loads width then multiplies by y.
+Every other opcode, immediate, stack displacement, branch/call target, and
+data operand agrees. A lower intermediate score therefore did not refute
+the corrected call boundary, and the old named-return result did not survive
+that change in compiler state.
 
 ## 7. Using it
 

@@ -426,14 +426,14 @@ struct TRmgGridPoint {
     }
     TRmgGridPoint operator+(const TPoint& offset) const
     {
-        // Copy-initialize from the coordinate-constructed value, then return
-        // the named translated point. Retail paintPoint 0x5b4e38..0x5b4e55
-        // retains the original x at EBP-0x14 before the two additions.
-        // Direct initialization loses that store; returning the compound
-        // expression changes the direction register and addition schedule.
+        // Copy-initialize the coordinate value, then return the compound
+        // translation. Retail paintPoint 0x5b4e38..0x5b4e55 retains original x
+        // at EBP-0x14 before the additions. With its guard-return terrain
+        // predicate, a separate named return changes the direction register
+        // and addition schedule (99.0163% versus 99.9204%). The older named-
+        // return result depended on the comparison-return predicate.
         TRmgGridPoint result = TRmgGridPoint(x, y);
-        result += offset;
-        return result;
+        return result += offset;
     }
 };
 
