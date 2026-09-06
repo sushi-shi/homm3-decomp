@@ -9209,29 +9209,27 @@ void advManager::ReceiveHeroTownData(CCombatInitMsg* pCombatInitMsg, int* iFromW
     }
 }
 
-// E:\gamedcs\events.cpp:6709 (dc 0x9cf24). The interior pin makes the
-// implicit member teardown CALL ~CNetMsgHandlerPause, ~CCombatInitMsg
-// (retail's 0x4ad130 COMDAT) and ~CAnimatedDlg instead of expanding
-// them; the dtor itself stays an /Ob2 candidate and expands at its one
-// invocation site (DoCombat's remote-receive exit). ~CCombatInitMsg
-// stays COMPILER-GENERATED: SendHeroTownData and DoNetCombat need its
-// inline expansion at their own exits (declaring it cost both their
-// 100.0000). DEFINED AT THE FILE'S END, and the placement is
-// load-bearing: defined at the top, the pinned body is where the
-// synthesized ~CCombatInitMsg first MATERIALIZES, and the pin bakes
-// into that shared IL - a per-callee knob that turned Send/DoNet's
-// expanded string teardowns into member-dtor calls (100.00 -> 97.3 /
-// 92.2). Down here the msg dtor materializes first, unpinned, at
-// SendHeroTownData's own exit.
-// Residual: this user-defined dtor re-stores the vptr at
-// entry where retail's expansion has no vtable store - measured
-// against the synthesized-dtor spelling (98.54, three _Tidy
-// expansions) and kept as the closer shape.
-CWaitForRemoteBattleDlg::~CWaitForRemoteBattleDlg()
-{
-#pragma inline_depth(0)
-}
-#pragma inline_depth()
+// RETIRED 2026-09-06, claim lane 31, and the note it replaces had the trade
+// priced against only ONE of the two rows involved.
+//
+// The user-defined `~CWaitForRemoteBattleDlg()` with an interior
+// `#pragma inline_depth(0)` was kept here because it made DoCombat's one
+// inline expansion of the destructor call ~CNetMsgHandlerPause,
+// ~CCombatInitMsg and ~CAnimatedDlg rather than expand their string
+// teardowns, and because the synthesized spelling measured 98.54 there
+// against 99.05. What that measurement never looked at is the emitted
+// COMDAT: retail's own `??1CWaitForRemoteBattleDlg` is 0x4aea00 in this
+// object's band, it has NO vtable store and it EXPANDS all three string
+// teardowns - exactly the synthesized shape. The user-defined form scored
+// that 253-byte row 28.9125.
+//
+// Removing the declaration (the class inherits CAnimatedDlg's virtual
+// destructor, so the implicit one stays virtual) and the definition with
+// it: 0x4aea00 28.9125 -> 100.0000 and DoCombat 99.0481 -> 98.5379, i.e.
+// +180 B against -8 B, with SendHeroTownData, DoNetCombat,
+// ReceiveHeroTownData, ~CCombatInitMsg, the constructor, Wait,
+// handle_message and the scalar deleting destructor all holding at
+// 100.0000. It also retires an inline-depth pin.
 
 // COMDAT pairing: std::_Sort<int, spell_level_order>, agreement 0.985.
 VA_COMPGEN(0x004b00b0, 0x294, STD_SORT, int_spell_level_order)
@@ -9300,3 +9298,15 @@ VA_COMPGEN(0x0054cba0, 0x1C5, VECTOR_INSERT, type_dialog_resource)
 // COMDAT pairing: town's implicit destructor, agreement 1.000 at an exactly
 // equal 74-byte extent.
 VA_COMPGEN(0x004ad0e0, 0x4A, IMPLICIT_DTOR, town)
+
+// COMDAT pairing: CWaitForRemoteBattleDlg's implicit destructor. Not a
+// similarity argument - remote.cpp's own scalar deleting destructor claim at
+// 0x557060 calls this row at +6, and remote.obj REFERENCES the name without
+// defining it while this object is the one compiland in the tree that emits
+// it, so the linker had exactly one copy to select. The body agrees with the
+// class from the other side too: it destroys the CNetMsgHandlerPause at
+// +0xbc0 first and then walks the dialog's string members.
+// Residual: retail EXPANDS the base-class string teardowns (80 instructions
+// against our 27, which calls them), i.e. an under-inline on our side, not a
+// misidentification.
+VA_COMPGEN(0x004aea00, 0xFD, IMPLICIT_DTOR, CWaitForRemoteBattleDlg)

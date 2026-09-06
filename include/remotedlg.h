@@ -236,13 +236,14 @@ SIZE(CCombatInitMsg, 0xb40);
 class CWaitForRemoteBattleDlg : public CAnimatedDlg {
 public:
     CWaitForRemoteBattleDlg();
-    // USER-DEFINED, and the DC proves it: E:\gamedcs\events.cpp:6709
-    // (dc 0x9cf24) is ~CWaitForRemoteBattleDlg, an events.cpp body.
-    // Defined there with a pinned interior so the member teardown CALLS
-    // ~CNetMsgHandlerPause / ~CCombatInitMsg (retail 0x4ad130) /
-    // ~CAnimatedDlg, retail's exact expansion at DoCombat's one
-    // invocation site.
-    virtual ~CWaitForRemoteBattleDlg();
+    // COMPILER-GENERATED, corrected 2026-09-06 (claim lane 31). DC lists
+    // a `~CWaitForRemoteBattleDlg` at E:\gamedcs\events.cpp:6709
+    // (dc 0x9cf24), but the x86 COMDAT retail selected for it - 0x4aea00,
+    // in events.obj's band - has no vtable store at entry and expands all
+    // three member string teardowns, which is the synthesized shape and
+    // not the user-defined one. Declaring it here scored that row 28.9125;
+    // leaving it implicit scores 100.0000 (see the note in events.cpp).
+    // The destructor stays virtual through CAnimatedDlg's.
     void Wait(int playerPos);
     virtual int handle_message(message& msg);  // slot 3
 
