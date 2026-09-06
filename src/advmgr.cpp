@@ -4657,6 +4657,13 @@ void advManager::Reseed(int targetX, int targetY)
 // permutation is not source-reachable, capped after one compile. The
 // frame stays 0x38 vs 0x30: our two records do not share slots with the
 // description string temp the way retail packs them.
+//
+// 94.68 -> 96.15 (polish 49, lever A census): the CheckDimNextHeroBut tail
+// is the SAME longhand shape DoAdvCommand already carries. Retail loads
+// gpAdvManager into ESI at 0x40f1e0, ahead of BOTH IsLocalHuman and
+// HasMobileHero, and reads [esi+0x44] in each arm; two source reads of the
+// global cannot survive two calls, so the manager is hoisted into a local
+// here exactly as at advmgr.cpp:2235.
 VA(0x0040ec90, 0x5AD)  // anchor-callee, dc 0xfd84
 int advManager::ProcessSearch(int x, int y, int z)
 {
@@ -4793,12 +4800,14 @@ int advManager::ProcessSearch(int x, int y, int z)
         && !gpGame->heroes[gpCurrentPlayer->currHeroId].IsMobile()) {
         ShowRoute(1, 0, 0);
         gpAdvManager->advWindow->UpdateHeroLocators(-1, 1, 1);
+
+        advManager* dimTarget = gpAdvManager;
         if (gpCurrentPlayer->IsLocalHuman()
             && gpCurrentPlayer->HasMobileHero())
-            gpAdvManager->advWindow->WidgetClearStatus(
+            dimTarget->advWindow->WidgetClearStatus(
                 11, widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
         else
-            gpAdvManager->advWindow->WidgetSetStatus(
+            dimTarget->advWindow->WidgetSetStatus(
                 11, widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
     }
 

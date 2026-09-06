@@ -6892,6 +6892,24 @@ void AI_initialize()
 // necromancy arm; inline_depth(255) and force-inlining the outer constructor
 // were byte-flat, while inline-qualifying the shared base over-expanded later
 // retail call sites and fell to 76.42%, so no synthetic control is retained.
+//
+// 91.95 -> 95.16 (polish 49, lever A/C census): retail NEVER folds the two
+// stream reads of a two-argument arm into one pointer bump. The SCHOOL,
+// INCOME and CREATURE_GROWTH arms each show `mov reg,[esi] / add esi,4 /
+// call operator new / mov reg2,[esi] / add esi,4` (0x434dd1..0x434df6 for
+// CREATURE_GROWTH) - the first datum is read BEFORE `operator new` and
+// survives it in a callee-saved register, which only happens when the source
+// binds it to a named local ahead of the new-expression. Our single
+// `new T(*definition++, *definition++)` let CL merge both bumps into
+// `add esi,8` at +0x222/+0x2dd/+0x305. Naming the first read restores all
+// three sites and both esi bumps per arm.
+//
+// Residual (95.16%): ONE swapped inline decision - retail CALLS
+// type_combat_artifact's ctor in the NECROMANCY arm (t+0x165) and expands
+// it in SHOOTER_BONUS (t+0x37d); we do the exact opposite (+0x38c call,
+// necromancy expanded). DURATION, SCHOOL and UNDEAD_KING_CLOAK keep their
+// calls on both sides, so this is a per-site /Ob2 budget boundary, not a
+// missing source element.
 VA(0x00434100, 0x490)  // tail target/fresh frame + DC helper, dc 0x35f08
 static void initialize_artifact_effects()
 {
@@ -6937,10 +6955,12 @@ static void initialize_artifact_effects()
                 case ARTIFACT_EFFECT_DURATION:
                     effect = new type_duration_artifact(*definition++);
                     break;
-                case ARTIFACT_EFFECT_SCHOOL:
+                case ARTIFACT_EFFECT_SCHOOL: {
+                    TSpellSchool school = (TSpellSchool)*definition++;
                     effect = new type_school_artifact(
-                        (TSpellSchool)*definition++, *definition++);
+                        school, *definition++);
                     break;
+                }
                 case ARTIFACT_EFFECT_ANTIMAGIC:
                     effect = new type_antimagic_artifact(*definition++);
                     break;
@@ -6954,14 +6974,18 @@ static void initialize_artifact_effects()
                     effect = new type_tome_artifact(
                         (TSpellSchool)*definition++);
                     break;
-                case ARTIFACT_EFFECT_INCOME:
+                case ARTIFACT_EFFECT_INCOME: {
+                    long amount = *definition++;
                     effect = new type_income_artifact(
-                        *definition++, (EGameResource)*definition++);
+                        amount, (EGameResource)*definition++);
                     break;
-                case ARTIFACT_EFFECT_CREATURE_GROWTH:
+                }
+                case ARTIFACT_EFFECT_CREATURE_GROWTH: {
+                    long level = *definition++;
                     effect = new type_creature_growth_artifact(
-                        *definition++, *definition++);
+                        level, *definition++);
                     break;
+                }
                 case ARTIFACT_EFFECT_SPELL:
                     effect = new type_spell_artifact(
                         (SpellID)*definition++);

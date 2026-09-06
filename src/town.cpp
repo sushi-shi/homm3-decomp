@@ -1394,6 +1394,18 @@ long town::get_legion_bonus(long dwelling)
     return bonus;
 }
 
+// Residual (81.73%): retail duplicates the `bonus /= 2` tail into all THREE
+// inner paths and its no-bit path opens with a DEAD `xor eax,eax` (the sunk
+// `bonus = 0` initialiser) before `mov eax,edi`; we share one tail between
+// the citadel and no-bit paths and keep `bonus` coalesced onto growth's EDI
+// (`add edi,edi` where retail has `mov eax,edi / add eax,edi`).
+// MEASURED (polish 49): the three-armed form with an explicit
+// `else bonus = growth;` and both arms written as expressions of `growth`
+// reproduces retail's `lea eax,[edi+edi]`-class castle arm but merges the
+// other two even harder - 81.7262 -> 81.0714. Respelling ONLY the citadel
+// arm as `growth / 2 + growth` is byte-flat. The tail duplication is a
+// register/layout decision, not a statement shape.
+
 // E:\gamedcs\town.cpp:1639
 // RETAIL-ONLY row first: 0x005bf900 (`ret 4`) sits between the two DC
 // rows, is called BY get_growth_rate below and by 0x5c5b40, and divides
