@@ -1399,6 +1399,9 @@ VA_COMPGEN(0x0054CD70, 0x3D, VECTOR_ERASE, TPoint)
 // standalone body.  An ordinary internal helper reproduces that boundary and
 // lets VC6 /Ob2 decide the expansions; Dreamcast has no RMG compiland, so the
 // original spelling and linkage remain provisional.
+// The search uses one top test with two unconditional back edges in retail.
+// VC6 rotates for (;;) and while (first < last) spellings; while (1) keeps
+// this top test and restores that flow in CreateRiver (76.51% -> 79.82%).
 static void InsertRmgWorkItem(
     std::vector<TRmgMapPosition>& positions,
     std::vector<int>& costs,
@@ -1408,7 +1411,7 @@ static void InsertRmgWorkItem(
     int first = 0;
     int last = positions.size();
     int middle;
-    for (;;) {
+    while (1) {
         middle = (first + last) >> 1;
         if (first >= last)
             break;
@@ -1433,6 +1436,7 @@ static void InsertRmgWorkItem(
 // negative control. The shared by-value predecessor setter raises that to
 // 75.6686% and restores the separate coordinate snapshot before the cost
 // store. Its spelling remains provisional without Dreamcast source.
+// The shared top-tested search also raises this to 81.8701%.
 // Residual: the seed inserts and popped-element erases still expand deeper
 // than retail. Both monolith position inserts now retain the two-argument
 // boundary; the underground-gate site still expands it. The final neighbour
@@ -1580,6 +1584,26 @@ void type_random_map_generator::BuildRoadCostMap(TRmgMapPosition position)
     }
 }
 
+// CreateRiver and the retail route at 0x548500 share this constructor,
+// GetMapItem(0, 0), and whole-map predecessor/cost reset sequence. Keeping
+// that common pass as an ordinary generator helper recovers all six seed
+// insert calls, both popped-element erase calls, and the range erase in
+// CreateRiver (75.23%, versus 71.47% with the pass flattened there).
+// Dreamcast has no RMG compiland; the role name/linkage remain provisional.
+// Named dimensions, scalar getters and TPoint size queries do not recover
+// retail's height temporary: they either stay flat or spill the map-item
+// pointer instead. Do not infer dimension accessors from their fuzzy score.
+void type_random_map_generator::ResetMovementCosts()
+{
+    TRmgMapPosition resetPosition(-1, -1, -1);
+    TRmgMapItem* mapItem = map.GetMapItem(0, 0);
+    int mapItemCount = map.mapWidth * map.mapHeight * map.numberLevels;
+    while (mapItemCount--) {
+        mapItem->ResetMovement(resetPosition);
+        ++mapItem;
+    }
+}
+
 // The Complete RMG has no Dreamcast counterpart.  Retail nevertheless fixes
 // the whole source-level algorithm: two parallel vectors form a descending
 // cost worklist, four cardinal neighbours relax a randomized Dijkstra search,
@@ -1602,31 +1626,38 @@ void type_random_map_generator::BuildRoadCostMap(TRmgMapPosition position)
 // The three seed predecessors copy one explicit invalid position, retaining
 // its z home across the first two inserts as retail does (71.86%). Keeping
 // the invalid x/y/z writes directly on each tile instead leaves 68.45%.
-// Scope the initial reset position separately from the worklist position:
+// Keep the reset helper's initial position separate from the worklist position:
 // its out-of-line constructor receives its address. Ending that lifetime
 // lets VC6 remove the relaxation setter's redundant predecessor snapshot,
 // preserve the queue insertion's distinct next-position copy, and recover
 // retail's 0xbc-byte frame (71.47%, with 71.86% banked). A separate but
 // unscoped reset position leaves a 0xc8-byte frame and scores 71.31%.
-// Residual: some seed inserts, worklist erases and vector destruction still
-// expand beyond retail. Direct erase() calls expand even further (61.45%
-// before the seed-copy correction). An explicit predecessor copy and const
-// by-value parameter are byte-flat. A const-ref
-// setter changes the shared road helper's proved by-value boundary and is
+// The shared reset helper recovers the seed/worklist vector boundaries.
+// Test blockedDirections as a bitfield at both uses: retail tests AH before
+// shifting and keeps the four-bit mask in each direction test. A cached
+// unsigned value instead normalizes the field up front (75.23% vs 74.77%).
+// The one-bit river/impassable predicates return byte values: bool queries
+// restore all three SHR/TEST-byte sequences (76.51%); unsigned-char queries
+// are identical, while direct field tests select dword masks.
+// The terrain filter compares the field directly: its equality-only uses
+// lower to retail's AND 0x3f (81.24%). A named signed terrain local, even
+// const, instead retains SHL/SAR sign extension (79.82%). The delta-path
+// terrain local remains signed because it is also used as a bitset index.
+// Residual: early-return vector destruction still expands beyond retail.
+// River-target setters/markers are byte-flat. Delta copy constructors,
+// reference components and a TPoint base are also flat. Giving TPoint an
+// empty destructor adds cleanup states absent from retail; using a trivial
+// TPoint for the delta table removes retail's atexit call. Neither resolves
+// the ordered static initialization, so keep the existing type boundary.
+// Direct erase() calls expand even further (61.45% before the seed-copy
+// correction). An explicit predecessor copy and const by-value parameter
+// are byte-flat. A const-ref setter changes the shared road helper's proved by-value boundary and is
 // rejected; a combined reset/cost setter and by-value position assignment
 // also fail the reset's constant-cost and copy sequence.
 VA(0x00548DF0, 0x99F)  // water-wheel caller + river-delta object; retail-only
 void type_random_map_generator::CreateRiver(TRmgMapPosition source)
 {
-    {
-        TRmgMapPosition resetPosition(-1, -1, -1);
-        TRmgMapItem* mapItem = map.GetMapItem(0, 0);
-        int mapItemCount = map.mapWidth * map.mapHeight * map.numberLevels;
-        while (mapItemCount--) {
-            mapItem->ResetMovement(resetPosition);
-            ++mapItem;
-        }
-    }
+    ResetMovementCosts();
 
     TRmgMapItem* mapItem;
     TRmgMapPosition emptyPosition;
@@ -1686,10 +1717,10 @@ void type_random_map_generator::CreateRiver(TRmgMapPosition source)
                 continue;
 
             mapItem = map.GetMapItem(nextPosition);
-            TTerrainType landType = mapItem->tile.landType;
-            if (landType == eTerrainWater || landType == eTerrainRock
-                || mapItem->tileData.impassable
-                || (landType == eTerrainSnow) != sourceIsSnow)
+            if (mapItem->tile.landType == eTerrainWater
+                || mapItem->tile.landType == eTerrainRock
+                || mapItem->IsImpassable()
+                || (mapItem->tile.landType == eTerrainSnow) != sourceIsSnow)
                 continue;
 
             int nextCost = positionCost + (rand() & 31) + 1;
@@ -1708,14 +1739,14 @@ void type_random_map_generator::CreateRiver(TRmgMapPosition source)
             InsertRmgWorkItem(
                 openPositions, openCosts, nextPosition, nextCost);
 
-            if (mapItem->tileData.riverTarget) {
+            if (mapItem->IsRiverTarget()) {
                 openPositions.clear();
                 break;
             }
         }
     }
 
-    if (!mapItem->tileData.riverTarget)
+    if (!mapItem->IsRiverTarget())
         return;
 
     mapItem->tileData.riverTarget = 1;
@@ -1726,10 +1757,9 @@ void type_random_map_generator::CreateRiver(TRmgMapPosition source)
     TRmgRiverPainter riverPainter(
         &mapAdapter, riverType, TPoint(nextPosition.x, nextPosition.y));
 
-    unsigned blockedDirections = mapItem->tileData.blockedDirections;
-    if (blockedDirections) {
+    if (mapItem->tileData.blockedDirections) {
         for (direction = 0; direction < 4; ++direction) {
-            if (blockedDirections & (1 << direction))
+            if (mapItem->tileData.blockedDirections & (1 << direction))
                 break;
         }
 

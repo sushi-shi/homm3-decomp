@@ -844,6 +844,27 @@ caller is saturated. Do not expect a pasted-helper restoration to pay on a
 very large or a very small caller -- take it for the source fact, and look
 for the mid-band callers when hunting score.
 
+### A shared reset pass changes the following vector boundaries
+
+`CreateRiver` (`0x548df0`) and the retail route at `0x548500` begin with the
+same invalid-position constructor, `GetMapItem(0, 0)` call, map-volume
+calculation and predecessor/cost reset loop. Representing that pass as an
+ordinary generator method, `ResetMovementCosts`, changes CreateRiver's
+later STL expansions: all six seed inserts, both popped-element erases and
+the worklist clear retain retail's call boundaries. The score rises from
+71.4710% to 75.2265% with the same `0xbc` frame; all other current scores
+stay unchanged. Flattening the pass back into the caller is the negative
+control. The helper still expands under `/Ob2` and adds no retail claim.
+
+The repeated retail sequence supports a shared operation. Its original
+name and linkage remain hypotheses because Dreamcast has no RMG compiland.
+A free helper taking the generator by reference produces the same bytes;
+a map receiver scores 73.1583% and derives the map pointer before the
+position constructor, unlike retail. This is another instance where
+recovering a helper affects later calls even though that helper itself
+emits no call. It does not justify arbitrary extraction to adjust the
+inliner budget.
+
 ## 7. Using it
 
 ```sh

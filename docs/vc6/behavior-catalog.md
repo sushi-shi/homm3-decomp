@@ -802,6 +802,16 @@ one body. All 19 blocks, 10 branches and five calls match retail. Both forms
 preserve the same helper calls; no caller-side duplication of AllocSize's
 size guard or inline suppression is required.
 
+The shared descending worklist search in `CreateRiver` (`0x548df0`) and
+`BuildRoadCostMap` (`0x547880`) confirms this distinction inside an
+auto-inlined helper. `while (1)` retains the midpoint calculation and
+comparison at one loop header, with two unconditional back edges. The
+`for (;;)` spelling, an initial midpoint followed by `while (first < last)`,
+and a `for` with midpoint updates all duplicate the guard. Changing only
+the loop form banks 76.5058% -> 79.8160% for the river and 75.6686% ->
+81.8701% for the road. `while (true)` and moving the inserts into the loop's
+exit arm are byte-identical to `while (1)`.
+
 ### D3. LICM legality forces a duplicated guard, then jump-threading removes ours — `VideoClose`, 95.9%
 Retail has THREE test sites, we have two: the entry guard before the hoisted
 `mov esi,[__imp__BinkPause]` (the duplicated guard making LICM legal), a real

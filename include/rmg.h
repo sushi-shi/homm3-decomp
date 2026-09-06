@@ -562,6 +562,12 @@ struct TRmgMapItem {
     TRmgGroundTileData tileData;          // +0x28
     TRmgConnectionDecoration connection;  // +0x2c
 
+    // CreateRiver's predicate reads shift the high tile bits and test a
+    // byte result. These queries recover that boundary; direct field tests
+    // instead use dword masks. Names remain provisional without RMG symbols.
+    bool IsRiverTarget() const { return tileData.riverTarget != 0; }
+    bool IsImpassable() const { return tileData.impassable != 0; }
+
     // Retail road/river relaxation copies the predecessor to a separate
     // parameter home before storing cost and coordinates. The by-value
     // boundary is inferred from those repeated x86 copies; the name is
@@ -832,6 +838,7 @@ public:
     int PlaceBorderObject(
         TRmgMapPosition position, int count, TRmgZone* zone);
     type_object* CreateGuard(int value, TRmgZone* zone);
+    void ResetMovementCosts();
     // Provisional Complete-only spelling: the 0x548290 road-target pass is
     // the sole direct caller, and the body builds the road traversal costs.
     void BuildRoadCostMap(TRmgMapPosition position);
