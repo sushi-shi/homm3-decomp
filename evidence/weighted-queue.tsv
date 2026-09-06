@@ -2,7 +2,6 @@
 # Sorted by increasing current score, then decreasing unmatched bytes.
 # Unscored rows rank at zero; MAX/history never hide current residuals.
 va	size	current	maximum	historical	remaining_bytes	unit	function	state
-0x005b4b20	1483		0.0	0.0	1483.0	seg_001b	game_1b4960_sub00_1b4b20	unscored
 0x00541ad0	1456		0.0	0.0	1456.0	seg_0014	game_143240_sub01_141ad0	unscored
 0x0053dad0	1407		0.0	0.0	1407.0	seg_0013	game_13e050_sub02_13dad0	unscored
 0x00543e20	1396		0.0	0.0	1396.0	seg_0014	game_144920_sub04_143e20	unscored
@@ -27,7 +26,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x0054b8c0	901		0.0	0.0	901.0	seg_0014	game_1338e0_sub01_14b8c0	unscored
 0x00549930	891		0.0	0.0	891.0	seg_0014	game_14bf60_sub01_149930	unscored
 0x0053ae80	874		0.0	0.0	874.0	seg_0013	game_13b970_sub00_13ae80	unscored
-0x005b50f0	846		0.0	0.0	846.0	seg_001b	game_1b4b20_sub02_1b50f0	unscored
+0x005b50f0	846		0.0	0.0	846.0	rmg_terrain	TRmgTerrainPainter_QueueOtherTerrainNeighbours	unscored
 0x005fd790	840		0.0	0.0	840.0	seg_001f	game_13e050_sub05_1fd790	unscored
 0x0053bcb0	827		0.0	0.0	827.0	seg_0013	game_149930_sub02_13bcb0	unscored
 0x0053e6a0	823		0.0	0.0	823.0	seg_0013	game_149930_sub04_13e6a0	unscored
@@ -329,7 +328,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x005b3a50	33		0.0	0.0	33.0	seg_001b	game_1b3a50	unscored
 0x005fdb10	33		0.0	0.0	33.0	seg_001f	game_1fd790_sub03_1fdb10	unscored
 0x005b76d0	32		0.0	0.0	32.0	seg_001b	game_2349db_sub00_1b76d0	unscored
-0x005b8ca0	32		0.0	0.0	32.0	seg_001b	game_1b4b20_sub12_1b8ca0	unscored
 0x006039a0	32		0.0	0.0	32.0	seg_0020	game_203b20_sub00_2039a0	unscored
 0x00530e20	28		0.0	0.0	28.0	seg_0013	game_176f00_sub01_130e20	unscored
 0x005361e0	24		0.0	0.0	24.0	seg_0013	game_136070_sub01_1361e0	unscored
@@ -389,7 +387,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00574a90	586	35.38249	35.3825	35.3825	378.6586086	seerhut	?load@TSeerHut@@QAEXPAVTAbstractFile@@H@Z	non-exact
 0x00548df0	2463	36.019306	39.6178	39.6178	1575.8444932199998	rmg	?CreateRiver@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	non-exact
 0x005f9ed0	784	38.54582	43.1116	43.1116	481.80077120000004	viewwrld	?VWDrawUnderlay@advManager@@QAEXHHHHH@Z	non-exact
-0x005b5a70	2215	42.021492	74.7623	74.7623	1284.2239522	rmg_terrain	?PaintTransitions@TRmgTerrainPainter@@QAEXXZ	non-exact
 0x00573670	1024	42.570988	46.3642	46.3642	588.07308288	seerhut	?DoSeerEvent@TSeerHut@@QAEXPAVhero@@_N@Z	non-exact
 0x00598af0	901	45.81467	48.6988	48.6988	488.2098233	smackmgr	?ShowVideo@@YIXHHHHHHHH@Z	non-exact
 0x0049f7e0	676	50.390152	78.1174	78.1174	335.36257248	events	?DoEventArtifact@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	non-exact
@@ -407,6 +404,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x004ec460	111	73.333336	100.0	100.0	29.599997039999995	inputmgr	??0inputManager@@QAE@XZ	non-exact
 0x004dd2d0	5182	74.21898	75.4051	75.4051	1335.9724564	hero	?WindowHandler@THeroScreenWindow@@UAEHPAVmessage@@@Z	non-exact
 0x004c2450	2190	74.47679	78.2855	78.2855	558.9582990000001	game	?LoadMap@game@@QAE_NPAVTAbstractFile@@@Z	non-exact
+0x005b5a70	2215	74.73199	74.7623	74.7623	559.6864215000002	rmg_terrain	?PaintTransitions@TRmgTerrainPainter@@QAEXXZ	non-exact
 0x0056fbc0	230	75.23529	75.2353	75.2353	56.95883299999998	seerhut	?DoProgressDialog@type_artifact_quest@@UAEXXZ	non-exact
 0x00547880	1969	75.28175	75.6686	75.6686	486.70234249999993	rmg	?BuildRoadCostMap@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	non-exact
 0x00431800	962	75.383835	75.3838	75.3838	236.8075072999999	ai_player	?consider_hiring@@YI_NJPAVhero@@@Z	non-exact
@@ -718,7 +716,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00485b60	507	93.99505	93.9951	93.9951	30.445096499999988	customcampaign	?Read@TCampaignStartHeroOption@@UAEXPAVTAbstractFile@@@Z	non-exact
 0x004521f0	2260	94.00537	98.7476	98.7476	135.47863800000002	bottomviewsubwindow	??0TBottomViewTown@@QAE@PAVheroWindow@@@Z	non-exact
 0x0052ead0	2248	94.07766	94.0777	94.0777	133.1342032000001	quickherowindow	??0TQuickHeroWindow@@QAE@PAVhero@@W4TViewLevel@0@@Z	non-exact
-0x00549cb0	3728	94.10172	95.7066	95.7066	219.8878784	rmg	?WriteMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	non-exact
+0x00549cb0	3728	94.093895	95.7066	95.7066	220.17959439999981	rmg	?WriteMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	non-exact
 0x005503a0	1428	94.157364	96.5558	96.5558	83.43284208000001	recruit	?Update@recruitUnit@@QAEXEJ@Z	non-exact
 0x00445490	571	94.16477	94.1648	94.1648	33.31916329999995	army	?get_berserk_targets@army@@QBEXAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	non-exact
 0x0050cd90	1904	94.16746	94.1675	94.1675	111.05156159999994	mousemgr	?Update@mouseManager@@QAEXE@Z	non-exact
@@ -764,6 +762,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x004e7eb0	1613	95.27273	95.2727	95.2727	76.25086510000008	hillfortwindow	?Recalculate@THillFortWindow@@QAEXE@Z	non-exact
 0x00595420	531	95.27612	95.2761	95.2761	25.083802799999955	singleselectionwindow	?_Unguarded_partition@std@@YIPAUGameSelectionHeadersStruct@@PAU2@0U2@UTSortMapsBySize@@@Z	non-exact
 0x0043bf20	281	95.27778	95.2778	95.2778	13.269438199999966	ai_tactical	?set_melee_enemies@type_AI_spellcaster@@QAEXXZ	non-exact
+0x005b4b20	1483	95.314644	95.3146	95.3146	69.48382947999994	rmg_terrain	?PaintPoint@TRmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	non-exact
 0x00481900	449	95.319145	95.3191	95.3191	21.01703894999998	cursor	?CheckAdjacentMon@advManager@@QAEXPAH@Z	non-exact
 0x004ff6b0	1333	95.360535	95.3605	95.3605	61.84406844999997	mapcell	?readBlackBox@NewfullMap@@QAEHPAVTAbstractFile@@PAVBlackBoxData@@H@Z	non-exact
 0x004ed650	1256	95.38012	95.3801	95.3801	58.02569279999998	kb	?EarlySetup@@YIHXZ	non-exact

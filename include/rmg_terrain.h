@@ -142,7 +142,10 @@ public:
         return GetPackedCell(point)->GetTerrain();
     }
     void PaintTransitions();
+    int SelectBaseFrame(const TRmgGridPoint& point, int terrain, int oldFrame);
+    void SetTile(const TRmgGridPoint& point, const TRmgTerrainTile& tile);
     void PaintPoint(const TRmgGridPoint& point);
+    void QueueOtherTerrainNeighbours(const TRmgGridPoint& point);
     void RepairTerrainPoint(const TRmgGridPoint& point);
     unsigned char IsHorizontalGap(const TRmgGridPoint& point, int terrain);
     unsigned char IsVerticalGap(const TRmgGridPoint& point, int terrain);
