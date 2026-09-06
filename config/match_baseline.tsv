@@ -79,7 +79,7 @@ advmgr	?DemobilizeCurrHero@advManager@@QAEXEE@Z	100.0000	100.0000	100.0000	0x176
 advmgr	?DisableButtons@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1a2e0	d6a15e176a45
 advmgr	?DoAdvCommand@advManager@@QAEPAVNewmapCell@@PAUtype_point@@@Z	94.3953	94.3953	94.3953	0x7b80	32436604fe85
 advmgr	?DoAdventureOptions@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1ab00	7e482f83bb0c
-advmgr	?DoSystemOptions@advManager@@QAEEXZ	100.0000	100.0000	100.0000	0x1ac00	f0fa0f6b3869
+advmgr	?DoSystemOptions@advManager@@QAEEXZ	100.0000	100.0000	100.0000	0x1ac00	0c2dfd994c0d
 advmgr	?DrawAdvObj@advManager@@QAEXHHHHH@Z	87.5901	87.5901	87.5901	0x10c00	6dd954fdb94d
 advmgr	?DrawAdvObjShadow@advManager@@QAEXHHHHH@Z	85.2335	85.2335	85.2335	0x11590	0fc90effafac
 advmgr	?DrawAdventureMapGems@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0xf2f0	9d3fdf2e2504
@@ -112,14 +112,14 @@ advmgr	?HideRoute@advManager@@QAEXHHH@Z	100.0000	100.0000	100.0000	0x19300	a01c2
 advmgr	?InMapArea@advManager@@QAEHHH@Z	100.0000	100.0000	100.0000	0x7ac0	a25055baa104
 advmgr	?InitializeCreatureGeneratorNames@@YIEXZ	100.0000	100.0000	100.0000	0x5d20	88ca09dd747b
 advmgr	?InitializeExtraInfoText@@YIEXZ	100.0000	100.0000	100.0000	0x5d80	0ceaca9c8477
-advmgr	?InsertSound@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x18c10	fb681d5af28b
+advmgr	?InsertSound@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x18c10	d0552607b9e5
 advmgr	?LoadRemote@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x1a100	4879fea7104a
 advmgr	?Main@advManager@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x87b0	c51bc4b80cb3
 advmgr	?MapExtraPosAndAdjacentsSet@@YIHHHHE@Z	100.0000	100.0000	100.0000	0x1a750	da0ec4e4df8f
 advmgr	?MobilizeCurrHero@advManager@@QAEXHEE@Z	100.0000	100.0000	100.0000	0x175e0	c62e97fe2615
 advmgr	?MonsterQuickView@advManager@@QAEXPBVNewmapCell@@HH@Z	100.0000	100.0000	100.0000	0x17150	524a4a09d472
 advmgr	?MoreTreesNear@advManager@@QAEHUtype_point@@@Z	100.0000	100.0000	100.0000	0x1adb0	f79b495487dd
-advmgr	?Open@advManager@@UAEHH@Z	97.9257	97.9257	97.9257	0x6fd0	a822c4686151
+advmgr	?Open@advManager@@UAEHH@Z	97.9257	97.9257	97.9257	0x6fd0	6f74ea690549
 advmgr	?OverrideBottomView@advManager@@QAEXW4EBottomViewType@1@H@Z	100.0000	100.0000	100.0000	0x15d60	98751fa2643c
 advmgr	?PopupPlayerTurnInfo@@YIXXZ	100.0000	100.0000	100.0000	0x19c80	98baf175609e
 advmgr	?ProcessDeSelect@advManager@@QAEHPBVmessage@@PAEPAUtype_point@@PAPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x9a70	ea04b60e2e3c
@@ -405,7 +405,7 @@ ai_player	?value_of_castle_upgrade@@YIHPAVtown@@PAH@Z	100.0000	100.0000	100.0000
 ai_player	?value_of_dwelling@@YIJPAVtown@@FPAEPAH@Z	100.0000	100.0000	100.0000	0x2b520	cb505ef769e2
 ai_player	?value_of_dwelling_upgrade@@YIJPAVtown@@FPAH@Z	100.0000	100.0000	100.0000	0x2b5b0	ed44c0985ecc
 ai_player	?value_of_hall@@YIJPAVtown@@W4type_building_id@@@Z	100.0000	100.0000	100.0000	0x2b8b0	c795dd7375ac
-ai_player	?value_of_hiring@@YIJPAVtown@@PAVhero@@PAVsearchArray@@@Z	99.9522	99.9522	99.9522	0x31bd0	166320dbc4bb
+ai_player	?value_of_hiring@@YIJPAVtown@@PAVhero@@PAVsearchArray@@@Z	99.9522	99.9522	99.9522	0x31bd0	1204887e95fa
 ai_player	?value_of_horde@@YIJPAVtown@@W4type_building_id@@PAEPAH@Z	100.0000	100.0000	100.0000	0x2b790	0ffb63118ec0
 ai_player	?value_of_horde_upgrade@@YIJPAVtown@@W4type_building_id@@PAEPAH@Z	100.0000	100.0000	100.0000	0x2b800	5eaa0276a877
 ai_tactical	??0army@@QAE@ABV0@@Z	66.4292	100.0000	100.0000	0x37a00	-
@@ -3004,7 +3004,7 @@ philai	?buy_siege_engine@@YIXPAVhero@@PAVtown@@W4type_building_id@@W4TArtifact@@
 philai	?buy_special_building@@YIXPAVhero@@PAVtown@@@Z	100.0000	100.0000	100.0000	0x1259e0	7e579e56a42a
 philai	?consider_garrisoning@@YIXPAVhero@@PAVtown@@@Z	100.0000	100.0000	100.0000	0x125200	cf8bb24776d5
 philai	?get_artifact_purchase_price@@YIJW4TArtifact@@JPAW4EGameResource@@@Z	100.0000	100.0000	100.0000	0x124550	367ebb372732
-philai	?get_artifact_purchase_value@@YIJW4TArtifact@@JPAJ@Z	100.0000	100.0000	100.0000	0x129750	c1301b4b1284
+philai	?get_artifact_purchase_value@@YIJW4TArtifact@@JPAJ@Z	100.0000	100.0000	100.0000	0x129750	1ae5a1357188
 philai	?get_best_spell_value@type_spellvalue@@QBEJJ@Z	100.0000	100.0000	100.0000	0x1275b0	582c835debc4
 philai	?get_damage_spell_value@type_spellvalue@@IBEJHHJJ@Z	100.0000	100.0000	100.0000	0x1270e0	2a4bbfb780ef
 philai	?get_enchantment_value@type_spellvalue@@IBEJHHJ@Z	100.0000	100.0000	100.0000	0x127290	f6e9f9a4334f
@@ -3022,7 +3022,7 @@ philai	?value_of_experience@@YIMPBVhero@@ABVarmyGroup@@@Z	100.0000	100.0000	100.
 philai	?value_of_learning@@YIJPBVhero@@H@Z	100.0000	100.0000	100.0000	0x1298d0	960d0b7d5c71
 philai	?value_of_monsters@@YIJPBVhero@@PAVNewmapCell@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x12a140	2cff9ac32748
 philai	?value_of_move_source@@YIHPBVhero@@JFPAJ@Z	100.0000	100.0000	100.0000	0x12a1e0	6b73fb80fa3b
-philai	?value_of_obelisk@@YIHPAVNewmapCell@@J@Z	100.0000	100.0000	100.0000	0x12a2b0	e7e914c61166
+philai	?value_of_obelisk@@YIHPAVNewmapCell@@J@Z	100.0000	100.0000	100.0000	0x12a2b0	078be120bc03
 philai	?value_of_pyramid@@YIJPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x12a410	abcea3974388
 philai	?value_of_recruiting@@YIJPBVhero@@W4TCreatureType@@F@Z	100.0000	100.0000	100.0000	0x12a710	13dc310c5a82
 philai	?value_of_reinforcing@@YIJPAVhero@@PAVtown@@F@Z	100.0000	100.0000	100.0000	0x12b090	6c6aa1411e60
@@ -3914,7 +3914,7 @@ soundmgr	?ClearMemSample@@YIXUSAMPLE2@@@Z	100.0000	100.0000	100.0000	0x19a410	9b
 soundmgr	?Close@soundManager@@UAEXXZ	100.0000	100.0000	100.0000	0x199a90	a1f1d063d202
 soundmgr	?ConvertVolume@soundManager@@QAEHHH@Z	100.0000	100.0000	100.0000	0x1996c0	96821469d708
 soundmgr	?GetSampleInfo@soundManager@@QAEHPAVds_memsample@@F@Z	100.0000	100.0000	100.0000	0x19a030	a035f0a81c2e
-soundmgr	?LoadPlaySample@@YI?AUSAMPLE2@@PBD@Z	100.0000	100.0000	100.0000	0x19a470	47875135802d
+soundmgr	?LoadPlaySample@@YI?AUSAMPLE2@@PBD@Z	100.0000	100.0000	100.0000	0x19a470	f56f3050ae10
 soundmgr	?MemorySample@soundManager@@QAEPAVds_memsample@@PAVsample@@@Z	100.0000	100.0000	100.0000	0x19a210	0786fac3e3f7
 soundmgr	?ModifySample@soundManager@@QAEXPAVds_memsample@@FJ@Z	100.0000	100.0000	100.0000	0x199f40	09b720813952
 soundmgr	?MusicPlaying@soundManager@@QAEHXZ	100.0000	100.0000	100.0000	0x19a3f0	446e23461cd7
@@ -3934,7 +3934,7 @@ soundmgr	?ThreadStopMP3@soundManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19b080
 soundmgr	?WaitEndSample@@YIXUSAMPLE2@@H@Z	100.0000	100.0000	100.0000	0x19a4c0	4ac493ee2ddb
 soundmgr	?WaitEndSampleThread@@YAXPAX@Z	92.0000	92.0000	92.0000	0x19a6b0	3c7d574d543e
 soundmgr	?WaitSample@soundManager@@QAEXPAVds_memsample@@H@Z	100.0000	100.0000	100.0000	0x199ec0	4e0c2d4a7b1e
-soundmgr	?launch_sample@@YIXPBDHH@Z	100.0000	100.0000	100.0000	0x19a590	fd40c4638b00
+soundmgr	?launch_sample@@YIXPBDHH@Z	100.0000	100.0000	100.0000	0x19a590	d72dc1a0fc2c
 soundmgr	?service_sounds@soundManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19a7d0	f6b0ffef62a0
 spellbookwindow	??0TSpellbookWindow@@QAE@PBVhero@@PBVarmyGroup@@W4TSpellContext@0@H@Z	100.0000	100.0000	100.0000	0x19bdf0	93b2a916ccce
 spellbookwindow	??1TSpellbookWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x19c8f0	0e9a0a414042
