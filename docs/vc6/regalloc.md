@@ -605,6 +605,129 @@ This is a measured lifetime hypothesis; without a DC counterpart it is
 not a recovered original lexical scope. A byte match also does not settle
 whether the midpoint calculation was itself a helper expansion.
 
+### 6g. A bounds aggregate preserves the retail stack frame
+
+`RepairWaterZoneBorders` (0x53fcb0) stores its four rectangular bounds in
+consecutive homes at EBP-0x50 through EBP-0x44. The minimum-y home is dead,
+but remains part of that four-integer area. Two `TPoint` corners and four
+independent scalars produce the same clamp instructions, yet VC6 folds their
+storage and allocates a 0x7c frame instead of retail's 0x84.
+
+Using the existing `TRmgZoneBounds` aggregate restores that area. Keeping
+one terrain local across searching and painting then reproduces every
+observed local home, including both vectors, the two coordinates, the brush,
+and the level map. Separate terrain locals score slightly higher (97.0449%
+versus 96.9219%) but shift the vector and current-pointer homes by four bytes.
+The candidate with the retail frame is retained; MAX/history bank the peak.
+
+This is a type/lifetime finding from raw stack operands, not proof of an
+original class name. Scalar declaration hoisting, scoping the nearby point
+to one cell, and changing the found flag to native bool were neutral controls.
+No padding local, lifetime-extending dummy operation, or inline directive
+is involved. The remaining instruction differences are documented
+beside the function.
+
+Two `TPoint` members inside one bounds object also shrink this frame to
+0x7c, as do the tested by-value corner setters. A named clamped upper point
+instead grows it to 0x88. The four integer fields and direct stores preserve
+the observed homes; enclosing two constructed points in a record is not
+equivalent for VC6's local allocation.
+
+### 6h. Constructor argument order preserves dimension values
+
+The plane view in `RepairWaterZoneBorders` originally used the candidate
+signature `(type_random_map& source, int level)`. It stored width too early
+and differed from retail in both dimension multiplication and the subsequent
+painting loop's registers. Recovering a buffer-first signature
+`(TRmgMapItem* items, int width, int height)` and calling it with
+`map.GetMapItem(0, 0, position.z), map.mapWidth, map.mapHeight` preserves
+the dimension values before the pointer calculation.
+
+This raises 97.0918% to 98.3965%. After placing the candidate fragment at its
+retail address and resolving five relocations, all 232 bytes from 0x540124
+to 0x54020c agree, including the painting loop's raw branch displacements.
+The function's 0x84 frame and existing search bytes remain unchanged.
+
+Dimensions-first scalar arguments reload dimensions. A map/level pair,
+a separate plane local, and an all-member initializer list do not reproduce
+the same loads, multiplication operand, or vptr/store order. The constructor
+keeps body assignments and the caller keeps its canonical map accessor.
+This is a retail-driven model of an expanded constructor, with no DC RMG
+counterpart; the other view caller, `CreateRiver`, remains partial.
+
+### 6i. A caller improvement does not prove a helper declaration
+
+The former member-subtraction model made
+`TPoint(position.x, position.y) - TPoint(radius, radius)` restore the second
+scan's map-index operand order in `RepairWaterZoneBorders` (97.04883% to
+97.0918% before the buffer-first constructor recovery). Direct component
+construction lost that order; changing only the member's argument to a value
+changed the outer induction from retail's x+2 to x-1. An unused addition
+member was neutral. Those were useful controls, but the const-reference
+member declaration was still a hypothesis.
+
+The retained Voronoi arithmetic below supersedes that declaration. Direct
+lower-corner construction initially retained the retail x+2 induction at
+98.3535%, below the old model's 98.3965% MAX. Naming the original row and
+keeping it through the upper clamps then restored the map-index operand
+order at 98.3965%, with the free operations and two-value ABI intact.
+The temporary dip was not evidence for restoring the disproved interface.
+
+Shared lower/radius values, by contrast, alter outer-loop registers. Merely
+reusing a lower variable or assigning it after default construction is
+neutral. Reusing one clamped point for both corners still grows the frame
+to 0x88. These controls distinguish value lifetime from variable scope.
+
+### 6j. Retained calls distinguish point translation from vector arithmetic
+
+`TRmgVoronoi::BuildVertices` at 0x5fdb40 forms a circumcenter from three
+site positions. Its retained helper sequence provides stronger interface
+evidence than the already exact, fully expanded arithmetic in the clipping
+and irregular-boundary callers:
+
+| Retail body | Operation model | ABI | Raw bytes |
+|---|---|---|---:|
+| 0x5fdcb0 | vector + vector | member, eight-byte right value, hidden result | 30/30 |
+| 0x5fdcd0 | vector * scalar | member, integer scale, hidden result | 29/29 |
+| 0x5fdcf0 | vector / scalar | member, signed integer division, hidden result | 37/37 |
+| 0x5fdd20 | point + vector | free, two eight-byte values, result in ECX | 32/32 |
+| 0x5fdd40 | point - point | free, two eight-byte values, result in ECX | 32/32 |
+
+The subtraction results feed displacement arithmetic; the last free addition
+translates the origin by the resulting vector. Distinguishing the position
+and displacement types accounts for both the member and free addition
+interfaces without competing overloads on a single type. `TPoint` and
+`TRmgVector` are role names, not recovered Dreamcast declarations.
+
+All 160 bytes agree without relocations. The length helper at 0x5fceb0
+belongs to the displacement type and remains exact. Ordinary definitions
+remain visible in the arithmetic TU, without inline controls. The clipping
+body imported from master's c447c5f3 remains 614/614 bytes exact, as do the
+irregular and straight boundary bodies. Thus exact expanded callers alone
+did not settle the former member/free or point/vector models.
+
+### 6k. Named dimension values settle the clamp allocation
+
+`RepairWaterZoneBorders` reached 100% by naming `height = map.mapHeight`
+immediately before `min(row + upper, height)` and `width = map.mapWidth`
+immediately before `min(position.x + upper, width)` in all three bounds
+groups. The original row remains a separate value through each group.
+These single-use locals preserve the retail dimension loads and change VC6's
+allocation of the surrounding clamp operands. The second group's two zeros
+are materialized independently, and the last maximum-X comparison uses the
+retail EAX/ECX roles and store order. All 90 CFG blocks agree; the function
+retains its 0x84 frame and all observed local homes.
+Resolving the 18 relocations reproduces all 1,516 raw function bytes. The
+registration handler and five-state unwind table also agree after placement.
+
+Flattening the dimension locals restores both residual regions at 98.3965%.
+Updating the row in place instead changes already matching upper-Y loads
+(97.4473%); naming column before row loses the recovered map-index operand
+order (98.3535%). Using map-item references is byte-neutral. No helper
+declaration, inline control, or unused operation is needed. This is a measured
+source/value-lifetime model for a retail-only function, not proof of the
+original local names or lexical scope.
+
 ## 7. Files
 
 | path | role |

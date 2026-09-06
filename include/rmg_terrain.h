@@ -3,6 +3,7 @@
 #define HOMM3_RMG_TERRAIN_H
 
 #include <set>
+#include <memory>
 #include <vector>
 #include "rmg.h"
 
@@ -73,7 +74,7 @@ struct TRmgPackedTerrainCell {
 class TRmgTerrainRule {
 public:
     unsigned char blendsWithOtherTerrain; // +0x04
-    unsigned char opaque0005;              // +0x05
+    unsigned char allowsSeparatedNeighbours; // +0x05
     char pad0006[2];
 
     virtual ~TRmgTerrainRule() {}
@@ -91,6 +92,13 @@ public:
 // Retail 0x642bd8 is a pointer table in the read-only .rdata section.
 extern TRmgTerrainRule* const gRmgTerrainRules[];
 
+// RepairTerrainPoint ranks up to four disjoint runs in an eight-cell ring.
+struct TRmgTerrainGap {
+    unsigned int weight;
+    unsigned int start;
+    unsigned int length;
+};
+
 enum TRmgTerrainTransitionCase {
     RMG_TERRAIN_FIRST_DIAGONAL_LOW = 2,
     RMG_TERRAIN_SECOND_DIAGONAL_LOW = 5,
@@ -103,38 +111,68 @@ enum TRmgTerrainTransitionCase {
 // point sets followed by the packed-cell vector.
 class TRmgTerrainPainter {
 public:
-    TRmgMapAdapterInterface* adapter;               // +0x00
-    int parameterA;                                 // +0x04
+    TRmgMapInterface* adapter;                // +0x00
+    int paintTerrain;                               // +0x04
     int transitionStrength;                         // +0x08
     unsigned int width;                             // +0x0c
     unsigned int height;                            // +0x10
-    std::set<TPoint> primaryPoints;                  // +0x14
-    std::set<TPoint> secondaryPoints;                // +0x24
-    std::vector<TRmgPackedTerrainCell> packedCells;  // +0x34
+    std::set<TRmgGridPoint> primaryPoints;            // +0x14
+    std::set<TRmgGridPoint> secondaryPoints;          // +0x24
+    std::vector<TRmgPackedTerrainCell> packedCells;   // +0x34
 
     TRmgTerrainPainter(
-        TRmgMapAdapterInterface* newAdapter,
+        TRmgMapInterface* newAdapter,
         int newParameterA,
         int newTransitionStrength);
     ~TRmgTerrainPainter();
 
-    void InitializePackedCell(const TPoint& point, unsigned int index);
-    TRmgPackedTerrainCell* GetPackedCell(const TPoint& point);
+    void Finish();
+    void ChangeTerrain(int terrain, int strength);
+    void PaintRectangle(
+        unsigned int x, unsigned int y,
+        unsigned int rectangleWidth, unsigned int rectangleHeight);
+
+    void InitializePackedCell(const TRmgGridPoint& point, unsigned int index);
+    TRmgPackedTerrainCell* GetPackedCell(const TRmgGridPoint& point);
     // Retail repeatedly expands this field accessor while retaining the
     // nested GetPackedCell call. Keeping the source helper is therefore
     // required even though it has no separately emitted body.
-    inline int GetTerrain(const TPoint& point)
+    inline int GetTerrain(const TRmgGridPoint& point)
     {
         return GetPackedCell(point)->GetTerrain();
     }
     void PaintTransitions();
+    void PaintPoint(const TRmgGridPoint& point);
+    void RepairTerrainPoint(const TRmgGridPoint& point);
+    unsigned char IsHorizontalGap(const TRmgGridPoint& point, int terrain);
+    unsigned char IsVerticalGap(const TRmgGridPoint& point, int terrain);
+    unsigned char IsHorizontalGap(const TRmgGridPoint& point);
+    unsigned char IsVerticalGap(const TRmgGridPoint& point);
+    unsigned char NeedsTerrainRepair(const TRmgGridPoint& point);
+    unsigned char HasSeparatedNeighbours(const TRmgGridPoint& point);
+    void BuildMatchingNeighbourMask(
+        const TRmgGridPoint& point, unsigned char* matches);
 
-    void BuildNeighbourKinds(const TPoint& point, int* neighbours);
+    void BuildNeighbourKinds(const TRmgGridPoint& point, int* neighbours);
     unsigned char CheckFirstDiagonal(
-        const TPoint& point, const TRmgTerrainFlip& flip);
+        const TRmgGridPoint& point, const TRmgTerrainFlip& flip);
     unsigned char CheckSecondDiagonal(
-        const TPoint& point, const TRmgTerrainFlip& flip);
-    int GetTransitionStrength(const TPoint& point, int terrain);
+        const TRmgGridPoint& point, const TRmgTerrainFlip& flip);
+    int GetTransitionStrength(const TRmgGridPoint& point, int terrain);
+};
+
+// Provisional facade name. The ctor at 0x5b7250 initializes the exact VC6
+// auto_ptr ownership byte/pointer pair; 0x5b72f0 conditionally deletes it.
+class TRmgTerrainBrush {
+public:
+    std::auto_ptr<TRmgTerrainPainter> painter;
+
+    TRmgTerrainBrush(TRmgMapInterface* map, int terrain, int strength);
+    ~TRmgTerrainBrush();
+    void ChangeTerrain(int terrain, int strength);
+    void PaintRectangle(
+        unsigned int x, unsigned int y,
+        unsigned int rectangleWidth, unsigned int rectangleHeight);
 };
 
 SIZE(TRmgTerrainTile, 0x0c);
@@ -142,5 +180,6 @@ SIZE(TRmgTerrainFlip, 0x02);
 SIZE(TRmgPackedTerrainCell, 0x02);
 SIZE(TRmgTerrainRule, 0x08);
 SIZE(TRmgTerrainPainter, 0x44);
+SIZE(TRmgTerrainBrush, 0x08);
 
 #endif  // HOMM3_RMG_TERRAIN_H
