@@ -325,6 +325,13 @@ void searchArray::enter_town(const hero* current_hero, long start_town,
 // A trigger the AI treats as hostile: priced once per cell (the
 // `monster` slot doubles as the "already charged" mark), refused outright
 // below -500000000, and otherwise folded into the barrier value.
+//
+// Residual (91.54%): five masked rows, all in the two stores. Retail
+// schedules `mov edx,[esi]` before the `add` and writes monster (+0xc)
+// ahead of barrier_value (+0x10); we load the point after the add and
+// write the two in the opposite order. MEASURED NEGATIVE (polish 49):
+// swapping the two source statements is 91.5385 -> 89.8461 - the store
+// order here follows the scheduler, not the statement order.
 VA(0x0056aad0, 0x68)  // exhaustive search.obj order-map, dc 0x12bbc8
 unsigned char searchArray::enter_hostile_trigger(const hero* current_hero,
                                                  pathCell* cell)
