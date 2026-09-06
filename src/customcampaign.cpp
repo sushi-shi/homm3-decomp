@@ -3021,6 +3021,28 @@ static short ReadCampaignWord(TAbstractFile* infile)
 // never writing a second count. Dropping our second
 // `count = ReadCampaignByte(infile);` is 60.5021 -> 61.3492.
 //
+// The same pass recovered retail's ELEMENT REFERENCES in the >=28 arm, and
+// their proof is a load the compiler could not have hoisted on its own:
+// retail computes `&field_4c[pool]` at 0x48b6ba (`mov edi,[ebx+0x50]` +
+// `add edi,edx`) BEFORE the virtual `Read` at 0x48b6cc that fetches the
+// artifact count, and computes `mapScores._First` at 0x48b416 before the
+// first `Read` of each scenario iteration.  A virtual call can store to
+// `this`, so VC6 may only sink those loads past it when the source itself
+// evaluated the subscript first - i.e. the source binds a reference at the
+// top of the block.  With `std::vector<type_artifact>& artifactPool` the
+// artifact loop becomes retail's bytes exactly (`movsx ecx,word[ebp+0xa]` /
+// `mov edx,[edi+4]` / `mov [edx+8*eax],ecx` against our former three-
+// instruction re-derivation from `this`), byte-flat at 61.3492; adding
+// `CampaignScenarioInfo& scenario` for the mapScores loop is
+// 61.3492 -> 62.2807.
+//
+// FOURTH WITHHELD RUNG, same class and same block as the three below:
+// `std::vector<hero>& heroPool = carryOverHeroes[pool];`, proved by retail
+// computing `&carryOverHeroes[pool]` at 0x48b5e5..0x48b5ef before the
+// hero-count `Read` at 0x48b5fa.  It is the budget's, not the spelling's:
+// cost -1.08 at 61.3492 and only -0.10 at 62.2807, so it is tracking the
+// other three down and flips with them.
+//
 // THREE RETAIL-PROVEN RUNGS ARE WITHHELD, all blocked on the same budget,
 // and all three got CHEAPER as the budget closed - measure them again after
 // every mass step, they flip together:
@@ -3173,13 +3195,14 @@ void SCampaign::Load(TAbstractFile* infile, int saveVersion)
     unsigned char count = ReadCampaignByte(infile);
     mapScores.resize(count);
     for (int i = 0; i < count; ++i) {
-        mapScores[i].completed = ReadCampaignByte(infile) != 0;
-        infile->Read(&mapScores[i].days, sizeof(mapScores[i].days));
-        infile->Read(&mapScores[i].score, sizeof(mapScores[i].score));
+        CampaignScenarioInfo& scenario = mapScores[i];
+        scenario.completed = ReadCampaignByte(infile) != 0;
+        infile->Read(&scenario.days, sizeof(scenario.days));
+        infile->Read(&scenario.score, sizeof(scenario.score));
 
-        mapScores[i].complete_order =
+        scenario.complete_order =
             static_cast<signed char>(ReadCampaignByte(infile));
-        mapScores[i].index =
+        scenario.index =
             static_cast<signed char>(ReadCampaignByte(infile));
     }
 
@@ -3193,15 +3216,16 @@ void SCampaign::Load(TAbstractFile* infile, int saveVersion)
         for (int whichHero = 0; whichHero < heroCount; ++whichHero)
             carryOverHeroes[pool][whichHero].load(infile, saveVersion);
 
+        std::vector<type_artifact>& artifactPool = field_4c[pool];
         unsigned short artifactCount =
             static_cast<unsigned short>(ReadCampaignWord(infile));
-        field_4c[pool].resize(artifactCount);
+        artifactPool.resize(artifactCount);
         for (int whichArtifact = 0; whichArtifact < artifactCount;
              ++whichArtifact) {
             int artifactId = ReadCampaignWord(infile);
-            memcpy(&field_4c[pool][whichArtifact].artifactId, &artifactId,
+            memcpy(&artifactPool[whichArtifact].artifactId, &artifactId,
                    sizeof(artifactId));
-            field_4c[pool][whichArtifact].extra = ReadCampaignWord(infile);
+            artifactPool[whichArtifact].extra = ReadCampaignWord(infile);
         }
     }
 
