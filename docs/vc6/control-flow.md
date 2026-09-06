@@ -460,3 +460,25 @@ matching retail's immediate byte stores instead of materializing a boolean
 register for a common store. A positive row-validation scope then raised
 the reader to 96.9468%; its remaining deltas lie in vector insertion and
 cleanup. These are retail/VC6 controls, with no DC RMG source counterpart.
+
+## Returning a byte predicate directly can preserve its caller's comparison
+
+`TRmgTerrainPainter::NeedsTerrainRepair` ends by consulting
+`HasSeparatedNeighbours`, whose retained body returns only 0 or 1. Returning
+that byte result directly after the other guards makes both painter cleanup
+expansions use retail's `cmp al,bl`, with BL already zero. Returning it through
+`&&`, explicitly comparing it with zero, or writing a final conditional 1/0
+return instead produces `test al,al`. Changing the wrapper's return type to
+native bool alone is neutral. The direct byte return closes all 549 bytes of
+the brush destructor (0x5b72f0) and all 521 bytes of the painter destructor
+(0x5b76f0), with their calls and branch destinations independently resolved.
+
+These expressions agree because the retained nested predicate has a proven
+0/1 range. This control does not justify removing normalization from an
+arbitrary byte-valued function. The helper boundaries remain ordinary and
+shared; no inline directive is involved.
+
+The same checkpoint corrected the plane-view map's shared painting interface
+and constructor statement order. `RepairWaterZoneBorders` reached 96.6543%;
+the unchanged `CreateRiver` caller measured 38.57014%, below its 39.6178%
+peak. Its MAX/history remain intact for the later caller-specific work.
