@@ -5113,17 +5113,13 @@ void NewfullMap::GenerateHeightMap(const CObject* object,
         int depth = 1;
         for (int row = 0; row < objectTypes[typeIndex].height; ++row) {
             if (row > 0) {
-                if (!objectTypes[typeIndex].passableCells.test(
-                        47 - row * 8 - col)
-                    && objectTypes[typeIndex].passableCells.test(
-                        55 - row * 8 - col))
+                if (!objectTypes[typeIndex].passableCells[47 - row * 8 - col]
+                    && objectTypes[typeIndex].passableCells[55 - row * 8 - col])
                     depth = 1;
             }
             if (col > 0) {
-                if (objectTypes[typeIndex].passableCells.test(
-                        47 - row * 8 - col)
-                    && !objectTypes[typeIndex].passableCells.test(
-                        48 - row * 8 - col))
+                if (objectTypes[typeIndex].passableCells[47 - row * 8 - col]
+                    && !objectTypes[typeIndex].passableCells[48 - row * 8 - col])
                     depth = heightMap[col - 1][row];
             }
             heightMap[col][row] = static_cast<signed char>(depth);

@@ -3815,7 +3815,7 @@ void TSingleSelectionWindow::MakeHeroFilter()
             std::map<int, type_map_hero_info>::iterator it =
                 gpGame->mapHeader.heroPlayerSetups.find(h);
             if (it != gpGame->mapHeader.heroPlayerSetups.end()) {
-                if (!it->second.field_14.test(i))
+                if (!it->second.field_14[i])
                     continue;
             }
             p->availableHeroes[p->availableHeroesCount] = h;
@@ -9551,7 +9551,7 @@ void TSingleSelectionWindow::SetNewPlayerSlot(CNetPlayerInfo* pPlayer)
         int gameVersion = pCurrentHeader->saved.gameVersion;
         int required = gameVersion == GAME_VERSION_SOD
                        ? 2 : gameVersion == GAME_VERSION_AB;
-        if (!gGameContextFeatures[field_1898].test(required))
+        if (!gGameContextFeatures[field_1898][required])
             TurnOffAdvancedOptions();
         return;
     }
@@ -9560,7 +9560,7 @@ void TSingleSelectionWindow::SetNewPlayerSlot(CNetPlayerInfo* pPlayer)
         int mapVersion = gpGame->mapHeader.version;
         int required = mapVersion > MAP_FORMAT_ARMAGEDDONS_BLADE
                        ? 2 : mapVersion > MAP_FORMAT_RESTORATION_OF_ERATHIA;
-        if (!gGameContextFeatures[field_1898].test(required))
+        if (!gGameContextFeatures[field_1898][required])
             TurnOffAdvancedOptions();
     }
     if (!inAdvancedOptions)

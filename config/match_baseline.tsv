@@ -2332,7 +2332,7 @@ hero	?initialize_ballistics_table@@YIEXZ	99.9485	99.9485	99.9485	0xd7240	efe8d27
 hero	?is_in_patrol_radius@hero@@QAEEUtype_point@@@Z	100.0000	100.0000	100.0000	0xe56e0	aac539b8e247
 hero	?load@hero@@QAEHPAVTAbstractFile@@H@Z	87.9412	87.9412	87.9412	0xd7a20	aff07e3a435b
 hero	?load@type_obscuring_object@@QAE_NPAX@Z	100.0000	100.0000	100.0000	0xd74f0	db54b7dfade2
-hero	?mark_spells@@YI?AV?$bitset@$0EG@@std@@H@Z	93.9578	93.9578	93.9578	0xd9350	c0d4b8790738
+hero	?mark_spells@@YI?AV?$bitset@$0EG@@std@@H@Z	94.5148	94.5148	94.5148	0xd9350	a5a1980e374e
 hero	?modify_spell_damage@hero@@QAEJHHPBVarmy@@@Z	100.0000	100.0000	100.0000	0xe5760	1df233283c7b
 hero	?obscure_cell@type_obscuring_object@@QAEXW4TAdventureObjectType@@J@Z	100.0000	100.0000	100.0000	0xd75d0	e61e6d2eae78
 hero	?push_back@?$vector@HV?$allocator@H@std@@@std@@QAEXABH@Z	100.0000	100.0000	100.0000	0xe6500	1b73316923dc
@@ -2564,7 +2564,7 @@ mapcell	??_ENewmapCell@@QAEPAXI@Z	100.0000	100.0000	100.0000	0xfd460	-
 mapcell	??_F?$vector@VCObjectType@@V?$allocator@VCObjectType@@@std@@@std@@QAEXXZ	100.0000	100.0000	100.0000	0xfd1c0	-
 mapcell	?CalculateCellExtra@NewfullMap@@QAEXPAVNewmapCell@@E@Z	100.0000	100.0000	100.0000	0x105a10	fef8e1e64fc2
 mapcell	?FindTrigger@CObject@@QBEXAAH0@Z	100.0000	100.0000	100.0000	0xfec30	8bf56ff7c07a
-mapcell	?GenerateHeightMap@NewfullMap@@QAEXPBVCObject@@QAY05C@Z	96.7484	96.7484	96.7484	0x105060	3840cd3adf20
+mapcell	?GenerateHeightMap@NewfullMap@@QAEXPBVCObject@@QAY05C@Z	100.0000	100.0000	100.0000	0x105060	263bca9fdbb3
 mapcell	?HasTriggerableEvent@NewmapCell@@QAE?BEXZ	100.0000	100.0000	100.0000	0xfcdc0	c469cb530486
 mapcell	?Init@NewfullMap@@QAEXHE@Z	100.0000	100.0000	100.0000	0xfd4f0	0e3efc8b6f3e
 mapcell	?Load@NewfullMap@@QAEHPAVTAbstractFile@@HEH@Z	92.2018	92.2018	92.2018	0xfdbc0	ec12d9b5b459
@@ -3689,7 +3689,7 @@ singleselectionwindow	?InitializeVCDescriptions@@YIEXZ	100.0000	100.0000	100.000
 singleselectionwindow	?IsFaceTaken@CNetPlayerHandler@@QAEEHH@Z	100.0000	100.0000	100.0000	0x177d10	2bc3c3eeed3b
 singleselectionwindow	?IsHost@TSingleSelectionWindow@@QAEEXZ	100.0000	100.0000	100.0000	0x18adf0	e487f50b96a0
 singleselectionwindow	?IsVersionCompatible@TSingleSelectionWindow@@QAEEPBD@Z	100.0000	100.0000	100.0000	0x189d30	34afc25d8233
-singleselectionwindow	?MakeHeroFilter@TSingleSelectionWindow@@QAEXXZ	87.3429	87.3429	87.3429	0x183890	f9bfa6cb1a83
+singleselectionwindow	?MakeHeroFilter@TSingleSelectionWindow@@QAEXXZ	87.5476	87.5476	87.5476	0x183890	571970ca66ca
 singleselectionwindow	?NewPlayer@CNewPlayerUpdateMan@@QAEXK@Z	100.0000	100.0000	100.0000	0x18a280	58894ede70c1
 singleselectionwindow	?OnBadVersionMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18df50	65c8466f6086
 singleselectionwindow	?OnBeginGame@TSingleSelectionWindow@@QAEEXZ	78.7597	78.7597	78.7597	0x18bce0	e0fdbb934541
@@ -3744,7 +3744,7 @@ singleselectionwindow	?SetCurrentMap@TSingleSelectionWindow@@QAEXHE@Z	99.9874	99
 singleselectionwindow	?SetDifficultyHiLite@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x186060	bb24a651e754
 singleselectionwindow	?SetFilter@TSingleSelectionWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x185d90	2ecaed8a359d
 singleselectionwindow	?SetHumanSlot@TSingleSelectionWindow@@QAEXXZ	91.0411	91.0411	91.0411	0x184c40	724dcde598b6
-singleselectionwindow	?SetNewPlayerSlot@TSingleSelectionWindow@@QAEXPAVCNetPlayerInfo@@@Z	63.0729	63.0729	63.0729	0x18e700	2219f29725ba
+singleselectionwindow	?SetNewPlayerSlot@TSingleSelectionWindow@@QAEXPAVCNetPlayerInfo@@@Z	68.8219	68.8219	68.8219	0x18e700	37f85a1dd352
 singleselectionwindow	?SetNextPlayer@CNetPlayerHandler@@QAEEH@Z	100.0000	100.0000	100.0000	0x177ae0	4c3eb8268fb4
 singleselectionwindow	?SetResolution@CChatSlider@@UAEXH@Z	100.0000	100.0000	100.0000	0x17c9d0	bf03de3a1dd7
 singleselectionwindow	?SetState@CChatSlider@@UAEXH@Z	100.0000	100.0000	100.0000	0x17ca00	c4f553fae318
@@ -4147,7 +4147,7 @@ town	?increase_population@town@@QAEXW4TCreatureType@@0J@Z	100.0000	100.0000	100.
 town	?initialize@town@@QAEXPBVTownExtra@@@Z	100.0000	100.0000	100.0000	0x1c0670	6c604eaecf04
 town	?initialize_buildings@@YIXPAVtown@@PBVTownExtra@@@Z	100.0000	100.0000	100.0000	0x1c08c0	fdcd7aca7bee
 town	?initialize_hordes@town@@SIXXZ	100.0000	100.0000	100.0000	0x1bdf60	2453506fb508
-town	?initialize_spells@town@@QAEXPBVTownExtra@@@Z	97.7386	97.7386	97.7386	0x1be600	7ede4222f099
+town	?initialize_spells@town@@QAEXPBVTownExtra@@@Z	100.0000	100.0000	100.0000	0x1be600	4d7cdf84e327
 town	?is_legal_building@town@@QBEEW4type_building_id@@@Z	100.0000	100.0000	100.0000	0x1c12a0	e3dcc8598062
 town	?load@town@@QAEHPAVTAbstractFile@@H@Z	98.0017	98.0017	98.0017	0x1bcd60	c2a37557aae6
 town	?remove_garrison_hero@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1be390	1cd0c5fe4f8a

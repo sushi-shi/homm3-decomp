@@ -411,6 +411,50 @@ always counts `call` + tail `jmp`.
 * The `hidden-args` term of the arg-count check (`0x18d54` jump table) is
   assumed satisfied — the front end emits matching IL for legal calls.
 
+## 6b. The library-accessor DEPTH lever (measured 2026-09-06, polish 29)
+
+The `/Ob2` budget is spent per call site, so the SPELLING of a library
+accessor - which is to say how many inline levels stand between the caller's
+statement and the leaf the budget runs out on - is a source lever with no
+pragma involved. `std::bitset<N>` is the cleanest instance in this tree
+because Dinkumware layers it exactly:
+
+    operator[](size_t) const  ->  test(size_t)  ->  _Xran()  ->
+        out_of_range(const string&)  ->  basic_string(const char*, alloc)
+
+so writing `b[i]` instead of `b.test(i)` costs the leaf one level of budget
+and pushes whatever was marginal back OUT of line, which is where retail
+frequently has it. Swept over every `.test(` / `.set(` site whose owning row
+sits below 100 at its banked MAX (36 rows):
+
+| row | before -> after |
+| --- | --- |
+| `town::initialize_spells` | 97.7386 -> **100.0000** |
+| `NewfullMap::GenerateHeightMap` | 96.7484 -> **100.0000** |
+| `TSingleSelectionWindow::SetNewPlayerSlot` | 63.0729 -> 68.8219 |
+| `TCampaignBrief::ScenarioStruct::GiveCrossoverArtifacts` | 72.5726 -> 73.0000 |
+| `mark_spells` (`.set(i,v)` -> `[i] = v`) | 93.9578 -> 94.5148 |
+| `TSingleSelectionWindow::MakeHeroFilter` | 87.3429 -> 87.5476 |
+
+It is NOT a general improvement, and the losers are as informative as the
+winners: `armyGroup::get_morale_description` 93.06 -> 89.04,
+`NewSMapHeader::Save` 87.00 -> 80.36, `AI_attempt_puzzle_guess` 97.16 ->
+95.60, `town::GiveSpells` 99.92 -> 99.70, `hero::HeroFn_004DC100`
+87.27 -> 79.24 on the `.set` form, and eleven rows byte-flat. Read it as a
+per-site fact about which level retail's budget ran out on, and MEASURE both
+spellings; the flat rows are the ones where the leaf was never marginal.
+
+Two riders:
+
+* `TSingleSelectionWindow::OnBeginGame` shows the ladder has a floor. It is
+  already spelled `[...]` through a `const bitset<4>&` and retail is STILL one
+  level less inlined - it CALLS `bitset<4>::_Xran()` - and there is no deeper
+  legal spelling, so that one needs caller mass, not a respelling.
+* The lever can RETIRE a pin. `mark_spells` carried a statement
+  `#pragma inline_depth(0)` around one `.set`; with the subscript form the pin
+  is worth -0.19 (94.32 pinned against 94.51 unpinned), so it came out and the
+  tree's pin count fell 354 -> 353.
+
 ## 7. Using it
 
 ```sh
