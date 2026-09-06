@@ -114,11 +114,37 @@ int TGzInflateBuf::get_byte()
 // short. The EH transcript is now 17 state stores against retail's 14 -
 // three surplus, one whole `throw TDataError()` group (its string
 // temporary, its exception object, and the return to state 2). Retail
-// expands read_byte's EOF throw at exactly three sites and CALLS
-// read_byte at the rest; we expand it at four, which is also what the
-// call diff shows (retail calls get_byte at +47b where we have the
-// string constructor, and we call _Tidy at +45a where retail does not).
-// That is an inliner dose, not an EH fact.
+// expands the TDataError CONSTRUCTION at three sites and calls
+// ??0TDataError at nine; we expand at four and call at eight.
+// Read positionally (the census says how many sites disagree, only the
+// order says which) the two streams are IDENTICAL for their first 27
+// entries and part company at exactly one place: retail has a THIRD
+// consecutive `call get_byte` at +0x432 followed by two ??0TDataError
+// calls at +0x442 / +0x45e, where we open the expanded group at +0x448
+// instead. Counting the whole body, retail issues TWELVE `call get_byte`
+// against our TEN with twelve TDataError sites on both sides - so retail's
+// source has TWO MORE read positions than ours, not a different inline
+// dose, and they are in the `(flags & 4)` extra-field block where retail
+// reads three bytes in a row (+0x40a, +0x422, +0x432) and we read two.
+// MEASURED, and it CORRECTS this note's own earlier reading. The two
+// missing positions are the name/comment skip loops: written
+// `while (read_byte() != 0) { }` VC6 PEELS the condition and emits
+// read_byte at the guard AND at the bottom, and the note above had called
+// that peel the CAUSE of "one surplus get_byte". It is the opposite -
+// retail HAS the peeled arity. Peeling both loops brings our census to
+// 12 get_byte against retail's 12 and carries the positional agreement
+// five entries further (they now part company at index 32, not 27), and
+// it still scores 90.7660 against 92.6749, so it is not shipped.
+// What it exposes is the real residual: with the arity right, the ONE
+// TDataError construction we expand sits at read site 10 (the comment
+// loop) where retail's sits at site 12 (the second header-CRC byte), and
+// we then CALL at 11 and 12 because the expansion at 10 already spent the
+// budget. Expanding too EARLY in the site order is the caller-too-large
+// signature, so the direction is caller-shrink - and a retail-only TU with
+// no DC roster has no named helper to lift into. Do not re-measure the
+// loop FORM again (while(1)+break 83.40, explicit decrement 88.67, counted
+// for 89.52, peel 90.77): the form is settled and the arity is a separate,
+// now-known fact.
 // Retail also loads gz_magic[0] into EBX ahead of the first compare
 // where we read it as a memory operand, and CALLS basic_string::_Tidy on
 // the TDataError path where we expand it. Measured and rejected for the
