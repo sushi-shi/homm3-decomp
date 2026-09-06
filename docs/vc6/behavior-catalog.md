@@ -727,6 +727,32 @@ renames the DC's.
 - status: byte-proven, one closure
 - probe: none yet (a c*-family oracle case would need a two-Read body)
 
+### C11. Reading the DC LOCAL-SCOPE SWEEP: only an absent CONSTRUCT pays
+The sweep (list every Dreamcast procedure-scope local, subtract the names our
+body already uses) has a high false-positive rate, and the difference between
+its hits is worth stating because it decides where to spend a measurement.
+Every closure it produced in polish lane 36 came from a name whose CONSTRUCT
+was absent, not merely its spelling: `Recalculate`'s seven per-iteration widget
+ids (+11.2), `FizzleForwardX`'s three per-row pointer walkers and nine channel
+locals (+8.7), `readScholarData`'s `scholar_info` POINTER (-> EXACT),
+`readResourceData`'s `count` (-> EXACT), `SetRolloverText`/`QuickInfo`'s
+`thisHut` and `DrawAdvObj`'s `Obj` (a container row addressed once instead of
+subscripted twice).
+The misses are all the other kind. A DC name our body carries under a
+different spelling (`player`/`iThisPlayer` swapped, `this_generator` =
+`mapGenerator`, `this_font` = `pFont`, `enemy_army_group` = `group`,
+`slotAtt` = `slot`, MirrorImage's four loop counters shifted one step across)
+is byte-inert by construction. Worse, a DC local can be DECLARED AND NEVER
+READ in the Dreamcast body itself - `TTradeResourceWindow::Update`'s three
+"Temp" locals and `THillFortWindow::Recalculate`'s `iBestHeroValue` group have
+no instruction touching their slots - so before spending a build, grep the DC
+disassembly for the slot. And a DC-proven SCOPE can lose: hoisting
+`CreatureBankEvent`'s `artifact` record to the DC's function scope - the exact
+shape that took `type_record_shroud::load` 84 -> 100 - costs 0.64 there.
+- evidence: this lane's residual notes across 14 bodies
+- status: methodology bound, measured
+- probe: none (not a compiler behavior)
+
 ### C9. Measurement hygiene the corpus depends on (model-training caveats)
 objdiff fuzzy gives partial credit for a differing displacement (a 97%
 function can have every local mis-slotted); masked diffs hide immediates (the
