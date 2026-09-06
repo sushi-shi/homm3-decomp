@@ -859,19 +859,26 @@ int TViewArmyWindow::WindowHandler(message* msg)
     if (msg->qualifier & MESSAGE_MODIFIER_RIGHT) {
         if (msg->codeX == widget::WIDGET_SELECT
             || msg->codeX == widget::WIDGET_RIGHT_SELECT) {
+            // `text.assign(...)` at all seven help-text stores, not
+            // `text = ...`: basic_string::operator= is a forwarder to
+            // assign that CARRIES the assign call, so spelling the deeper
+            // level directly is worth 92.5744 -> 99.1520 here. Measured and
+            // rejected on top of it: `.append` for the four `text +=`
+            // stores (byte-flat) and a named `const std::string& rclick`
+            // for the default arm's subscript (72.70).
             int helpID = convertID2HelpID(msg->codeY);
             int iResType = -1;
             std::string text;
             switch (helpID) {
             case MORALE_HELP_INDEX:
                 if (morale > 0) {
-                    text = format_string(gMoraleTexts[3], gMoraleTexts[0]);
+                    text.assign(format_string(gMoraleTexts[3], gMoraleTexts[0]));
                     iResType = 14;
                 } else if (morale == 0) {
-                    text = format_string(gMoraleTexts[3], gMoraleTexts[1]);
+                    text.assign(format_string(gMoraleTexts[3], gMoraleTexts[1]));
                     iResType = 15;
                 } else {
-                    text = format_string(gMoraleTexts[3], gMoraleTexts[2]);
+                    text.assign(format_string(gMoraleTexts[3], gMoraleTexts[2]));
                     iResType = 16;
                 }
                 if (morale_help.length() == 0)
@@ -881,13 +888,13 @@ int TViewArmyWindow::WindowHandler(message* msg)
                 break;
             case LUCK_HELP_INDEX:
                 if (luck > 0) {
-                    text = format_string(gLuckTexts[3], gLuckTexts[0]);
+                    text.assign(format_string(gLuckTexts[3], gLuckTexts[0]));
                     iResType = 11;
                 } else if (luck == 0) {
-                    text = format_string(gLuckTexts[3], gLuckTexts[1]);
+                    text.assign(format_string(gLuckTexts[3], gLuckTexts[1]));
                     iResType = 12;
                 } else {
-                    text = format_string(gLuckTexts[3], gLuckTexts[2]);
+                    text.assign(format_string(gLuckTexts[3], gLuckTexts[2]));
                     iResType = 13;
                 }
                 if (luck_help.length() == 0)
@@ -897,7 +904,7 @@ int TViewArmyWindow::WindowHandler(message* msg)
                 break;
             default:
                 if (helpID >= 0)
-                    text = gViewArmyHelp[helpID].rclick;
+                    text.assign(gViewArmyHelp[helpID].rclick);
                 break;
             }
             if (text.length() > 0)

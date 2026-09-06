@@ -452,6 +452,19 @@ two more rows moved on it:
 | `InitializeSeerHutText` | `push_back(x)` -> `insert(end(), x)` | 79.8841 -> **100.0000** |
 | `exchange_spells` | `s += x` -> `s.append(x)` (13 sites) | 88.6905 -> 92.1640 |
 
+And the widest one, `basic_string::operator=` -> `assign`, swept over all 37
+sub-100 rows that assign to a `std::string` local:
+
+| row | change | before -> after |
+| --- | --- | --- |
+| `TViewArmyWindow::WindowHandler` | `text = X` -> `text.assign(X)` (7 sites) | 92.5744 -> 99.1520 |
+
+One winner out of 37, three losers (`QuickInfo` 94.87 -> 94.55,
+`CreatureBankEvent` 91.59 -> 91.41, `TSpellbookWindow::WindowHandler`
+99.90 -> 98.81), three non-compiling and thirty byte-flat. The hit rate is
+low; the payoff when it lands is 6.6 points on a row 97 of whose 98 blocks
+were already exact, so sweep it, do not reason about it.
+
 **THE INTERMEDIATE LEVEL MUST CARRY MASS.** This is the bound, and it is what
 separates the levers above from the ones that do nothing. `bitset::test` holds
 a range check, `push_back` holds an `insert` call, `operator+=` holds an
