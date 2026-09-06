@@ -12,7 +12,7 @@ class TAbstractFile;
 class TSpreadsheetResource;
 struct TRmgTownSlot;
 struct TRmgZone;
-struct TRmgTerrainTile;
+struct rmgTerrainTile;
 struct TPoint;
 struct TObjectType;
 
@@ -426,11 +426,14 @@ struct TRmgGridPoint {
     }
     TRmgGridPoint operator+(const TPoint& offset) const
     {
-        // Use the retained coordinate constructor for the translated value.
-        // In PaintPoint this preserves the final GetPackedCell call at
-        // 0x5b509e; implicit whole-point copying expands it instead.
-        TRmgGridPoint result(x, y);
-        return result += offset;
+        // Copy-initialize from the coordinate-constructed value, then return
+        // the named translated point. Retail paintPoint 0x5b4e38..0x5b4e55
+        // retains the original x at EBP-0x14 before the two additions.
+        // Direct initialization loses that store; returning the compound
+        // expression changes the direction register and addition schedule.
+        TRmgGridPoint result = TRmgGridPoint(x, y);
+        result += offset;
+        return result;
     }
 };
 
@@ -664,10 +667,10 @@ class TRmgMapAdapterInterface {
 public:
     virtual ~TRmgMapAdapterInterface() {}
     virtual void SetTile(
-        const TRmgGridPoint& point, const TRmgTerrainTile& tile) = 0;
+        const TRmgGridPoint& point, const rmgTerrainTile& tile) = 0;
     virtual void SetOverlay(const TRmgGridPoint& point, int value) = 0;
     virtual TRmgGridPoint GetSize() = 0;
-    virtual TRmgTerrainTile GetTile(const TRmgGridPoint& point) = 0;
+    virtual rmgTerrainTile GetTile(const TRmgGridPoint& point) = 0;
     virtual int GetLand(const TRmgGridPoint& point) = 0;
     virtual int GetOverlay(const TRmgGridPoint& point) = 0;
 };
@@ -705,10 +708,10 @@ public:
     }
 
     virtual void SetTile(
-        const TRmgGridPoint& point, const TRmgTerrainTile& tile);
+        const TRmgGridPoint& point, const rmgTerrainTile& tile);
     virtual void SetOverlay(const TRmgGridPoint& point, int value);
     virtual TRmgGridPoint GetSize();
-    virtual TRmgTerrainTile GetTile(const TRmgGridPoint& point);
+    virtual rmgTerrainTile GetTile(const TRmgGridPoint& point);
     virtual int GetLand(const TRmgGridPoint& point);
     virtual int GetOverlay(const TRmgGridPoint& point);
 
@@ -736,10 +739,10 @@ public:
     inline TRmgMapAdapter(type_random_map* newMap) : map(newMap) {}
 
     virtual void SetTile(
-        const TRmgGridPoint& point, const TRmgTerrainTile& tile);
+        const TRmgGridPoint& point, const rmgTerrainTile& tile);
     virtual void SetOverlay(const TRmgGridPoint& point, int value);
     virtual TRmgGridPoint GetSize();
-    virtual TRmgTerrainTile GetTile(const TRmgGridPoint& point);
+    virtual rmgTerrainTile GetTile(const TRmgGridPoint& point);
     virtual int GetLand(const TRmgGridPoint& point);
     virtual int GetOverlay(const TRmgGridPoint& point);
 };

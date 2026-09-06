@@ -38,12 +38,12 @@ VA(0x005B3DD0, 0x6F)  // called and expanded in the retail terrain cluster
 void rmgTerrainPainter::initializePackedCell(
     const TRmgGridPoint& point, unsigned int index)
 {
-    TRmgTerrainTile tile = m_adapter->GetTile(point);
+    rmgTerrainTile tile = m_adapter->GetTile(point);
     TRmgPackedTerrainCell& packed = m_packedCells[index];
-    packed.terrain = tile.terrain;
-    packed.frame = tile.frame;
-    packed.flipX = tile.flipX;
-    packed.flipY = tile.flipY;
+    packed.terrain = tile.m_terrain;
+    packed.frame = tile.m_frame;
+    packed.flipX = tile.m_flipX;
+    packed.flipY = tile.m_flipY;
     packed.initialized = 1;
 }
 
@@ -280,15 +280,30 @@ int rmgTerrainPainter::selectBaseFrame(
 // cache initialization from an adapter read has a different store order.
 // This ordinary helper is inferred from retail expansions, with no DC name.
 void rmgTerrainPainter::setTile(
-    const TRmgGridPoint& point, const TRmgTerrainTile& tile)
+    const TRmgGridPoint& point, const rmgTerrainTile& tile)
 {
     m_adapter->SetTile(point, tile);
     TRmgPackedTerrainCell& packed = m_packedCells[point.y * m_width + point.x];
     packed.SetInitialized();
-    packed.SetTerrain(tile.terrain);
-    packed.SetFrame(tile.frame);
-    packed.SetFlipX(tile.flipX);
-    packed.SetFlipY(tile.flipY);
+    packed.SetTerrain(tile.m_terrain);
+    packed.SetFrame(tile.m_frame);
+    packed.SetFlipX(tile.m_flipX);
+    packed.SetFlipY(tile.m_flipY);
+}
+
+// Provisional terrain-comparison interface, inferred from the first
+// eight-neighbour read at retail 0x5b4e55. Both accessors participate:
+// flattening the configured-terrain read into the predicate expands that
+// cache call. Keep these ordinary helpers and the base-tile constructor;
+// their combined expansions recover the first and final cache boundaries.
+int rmgTerrainPainter::getPaintTerrain() const
+{
+    return m_paintTerrain;
+}
+
+unsigned char rmgTerrainPainter::isPaintTerrain(const TRmgGridPoint& point)
+{
+    return getTerrain(point) == getPaintTerrain();
 }
 
 // Paint a base tile, refresh its cache, then reconcile the two repair sets.
@@ -296,57 +311,57 @@ void rmgTerrainPainter::setTile(
 // the other rules recheck every matching neighbour. The rectangle painter
 // calls this body at 0x5b4a2d; RepairTerrainPoint and Finish share it.
 // Names are provisional: this Complete-only code has no Dreamcast body.
-// Residual (97.0506%): GetPackedCell expands at the first eight-neighbour
-// terrain read (retail 0x5b4e55). The inner primary-set erase also expands
-// the three-argument distance wrapper to its four-argument overload
-// (0x5b4f7f). The frame is 0x54 versus 0x50; the retained pre-translation
-// x copy at 0x5b4e3f is still missing. Constructing the translation's initial
-// value from its coordinates restores the final GetPackedCell call at
-// 0x5b509e; implicit whole-point copying leaves 95.3146% and expands it.
-// Flattening SetTile leaves 78.4213%; flattening frame selection leaves
-// 90.9367% with the named frame, or 92.2405% with direct tile.frame assignment
-// but the wrong entry load schedule. Reusing one nearby point across all
-// branches gives 91.1519% after both shared helpers are present.
-// An explicit grid copy constructor retains a copy call absent from retail
-// (91.8861%). Value offset arguments and direct sum construction change the
-// direction-loop loads; copy assignment of the origin leaves 93.5063%.
-// Tile-only scopes, separate nearby assignment, early loop guards, named
-// terrain/index/coordinate values, and a free translation with reference
-// operands do not improve the constructor-based result. A tile constructor
-// changes later call boundaries (85.7667%); a by-value SetTile argument adds
-// an extra entry copy (95.7884%). A nested packed-cell writer is retained
-// where retail expands the field stores (81.9566%). The recovered neighbour
-// queue body below leaves this caller unchanged. No inline controls are used.
-// Budget tracing (object-identity gated): caller cb=933, initial budget
-// 1866. The first extra getPackedCell expansion has cb=90, budget=106;
-// the inner three-argument _Distance has cb=41, budget=45. The final rule
-// read has budget=73 and correctly keeps the cb=90 cache helper out of line.
-// A named lookup iterator changes find/end evaluation (89.1573%); a cache
-// hit early return changes getPackedCell's retained bytes (93.4211% there).
-// Coordinate accessors alter x/y allocation without restoring the original-x
-// home (97.0036%); a by-value terrain-accessor point adds copies (72.9584%).
-// Shared terrain comparison, const translation result, direct temporary
-// return, and a validity accessor leave the two call-boundary deltas intact.
-// A scratch C2 counterfactual rejects just the first cache expansion and
-// the inner distance wrapper, preserving their original budget charges.
-// Its full named call sequence matches retail, but the 0x54 frame and missing
-// original-x store remain: those storage deltas need independent recovery.
-// No counterfactual object enters the matching build. A call-site depth-one
-// pragma is byte-neutral; pinning a direct cache call changes later decisions
-// (91.4213%) and is not an isolated control. A signed-direction conversion
-// gives 95.7902%; free value-origin addition with a named return gives 92.3924%.
-// An assignment-based grid copy constructor, explicit grid assignment, and
-// declaring the loop index before its mask leave 97.0506% unchanged.
+// Residual (99.5570%): the inner erase expands the three-argument _Distance
+// into its four-argument overload (retail 0x5b4f7f keeps the wrapper). Two
+// expanded cache reads load y before multiplying by width, while retail
+// loads width before multiplying by y. The original-x store and translation
+// schedule now match; the scoped base tile restores the 0x50-byte frame.
+// Constructor + isPaintTerrain/getPaintTerrain leaves 98.2893% with direct
+// coordinate initialization. Copy initialization restores the original-x
+// store (98.5805%); returning the named result fixes translation registers
+// (99.5389%); ending frame/tile lifetime before the worklists fixes the frame.
+// Separate nearby declaration/assignment or direct initialization is neutral.
+// The base-tile constructor's explicit zero flips, default flip arguments,
+// and existing flip-value factory give the same measured paintPoint score.
+//
+// Negative controls before the point-copy recovery: plain terrain comparison
+// and tile-field assignments leave 97.0506%, over-inlining the first cache
+// read. A predicate without its configured-terrain accessor is neutral there;
+// the two-accessor predicate alone restores the first call but expands the
+// final one (96.6293%). The tile constructor alone blocks the inner tree find
+// (85.7667%). Flattening setTile leaves 78.4213%; flattening frame selection
+// leaves 90.9367% with a named frame or 92.2405% with direct frame assignment
+// and the wrong entry load schedule. A by-value tile writer adds an entry
+// copy (95.7884%); a nested packed-cell writer retains a call absent in retail
+// (81.9566%). One nearby point shared across branches leaves 91.1519%.
+// Explicit fieldwise grid copy construction retains an unwanted copy call
+// (91.8861%); assignment-based copy construction is neutral. Direct sum
+// construction, value offset arguments, signed-direction conversion (95.7902%)
+// and free value-origin addition (92.3924%) change the translation schedule.
+// Origin copy assignment leaves 93.5063%; coordinate accessors leave 97.0036%.
+// Const results, named coordinates/terrain/index, loop guards, and index
+// declaration before the mask do not restore the missing copy. A named set
+// iterator changes find/end evaluation (89.1573%). A by-value terrain point
+// adds input copies (72.9584%); cache-hit early return breaks the exact cache
+// helper (93.4211% there). The recovered neighbour queue body is caller-neutral.
+//
+// A budget-preserving scratch C2 rejection of only the two unwanted copies
+// reproduces the named retail call sequence at the old 97.0506% checkpoint,
+// but keeps its storage deltas. This isolated the point-copy/lifetime problem;
+// no modified-compiler object enters a matching build. Outer inline_depth(1)
+// is byte-neutral, while pinning a direct cache read changes later decisions
+// (91.4213%). All pragma probes were removed. Nested return-value selection
+// in needsTerrainRepair changes the exact destructors' byte-result tests
+// (95.0543% here); adjacent guards and cache multiplication operand reversal
+// and a native-bool terrain predicate are neutral at the current checkpoint.
 VA(0x005B4B20, 0x5CB) // anchor-callee 0x5b4960, 0x5b5440; thiscall, ret 4
 void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
 {
-    int frame = selectBaseFrame(point, m_paintTerrain, -1);
-    TRmgTerrainTile tile;
-    tile.terrain = m_paintTerrain;
-    tile.frame = frame;
-    tile.flipX = 0;
-    tile.flipY = 0;
-    setTile(point, tile);
+    {
+        int frame = selectBaseFrame(point, m_paintTerrain, -1);
+        rmgTerrainTile tile(m_paintTerrain, frame);
+        setTile(point, tile);
+    }
 
     if (m_secondaryPoints.find(point) != m_secondaryPoints.end())
         m_secondaryPoints.erase(point);
@@ -391,7 +406,7 @@ void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
         for (unsigned int direction = 0; direction < TILE_DIR_COUNT; ++direction) {
             if (neighbourExists[direction]) {
                 TRmgGridPoint nearby = point + gTileDirections[direction];
-                if (getTerrain(nearby) == m_paintTerrain) {
+                if (isPaintTerrain(nearby)) {
                     if (m_primaryPoints.find(nearby) != m_primaryPoints.end()) {
                         if (!needsTerrainRepair(nearby)) {
                             m_primaryPoints.erase(nearby);
@@ -690,32 +705,32 @@ void rmgTerrainPainter::paintTransitions()
                         transition = 13;
                 }
 
-                TRmgTerrainTile tile = getPackedCell(point)->GetTile();
+                rmgTerrainTile tile = getPackedCell(point)->GetTile();
 
                 int newFrame;
                 if (transition) {
-                    newFrame = gRmgTerrainRules[tile.terrain]
+                    newFrame = gRmgTerrainRules[tile.m_terrain]
                         ->SelectTransitionFrame(
-                            transition, flip, flip, tile.frame);
+                            transition, flip, flip, tile.m_frame);
                 } else {
-                    newFrame = selectBaseFrame(point, tile.terrain, tile.frame);
+                    newFrame = selectBaseFrame(point, tile.m_terrain, tile.m_frame);
                 }
 
-                if (tile.frame != newFrame || tile.flipX != flip.flipX
-                    || tile.flipY != flip.flipY) {
-                    tile.flipX = flip.flipX;
-                    tile.flipY = flip.flipY;
-                    tile.frame = newFrame;
+                if (tile.m_frame != newFrame || tile.m_flipX != flip.flipX
+                    || tile.m_flipY != flip.flipY) {
+                    tile.m_flipX = flip.flipX;
+                    tile.m_flipY = flip.flipY;
+                    tile.m_frame = newFrame;
                     setTile(point, tile);
                 }
             } else {
-                TRmgTerrainTile tile = getPackedCell(point)->GetTile();
+                rmgTerrainTile tile = getPackedCell(point)->GetTile();
 
-                int newFrame = selectBaseFrame(point, tile.terrain, tile.frame);
-                if (tile.frame != newFrame || tile.flipX || tile.flipY) {
-                    tile.frame = newFrame;
-                    tile.flipX = 0;
-                    tile.flipY = 0;
+                int newFrame = selectBaseFrame(point, tile.m_terrain, tile.m_frame);
+                if (tile.m_frame != newFrame || tile.m_flipX || tile.m_flipY) {
+                    tile.m_frame = newFrame;
+                    tile.m_flipX = 0;
+                    tile.m_flipY = 0;
                     setTile(point, tile);
                 }
             }

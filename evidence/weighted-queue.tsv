@@ -457,12 +457,12 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x004daf90	570	81.7	81.7	81.7	104.30999999999996	hero	?update_slot@THeroScreenWindow@@QAEXJ@Z	non-exact
 0x005bf810	226	81.72619	81.7262	81.7262	41.2988106	town	?get_legion_bonus@town@@QAEJJ@Z	non-exact
 0x004e4990	1014	81.76774	81.7677	81.7677	184.8751164	hero	?GetMobility@hero@@QAEHE@Z	non-exact
-0x005b5440	1576	81.84317	81.8432	81.8432	286.15164080000005	rmg_terrain	?repairTerrainPoint@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	non-exact
 0x0042e0b0	2926	81.88646	81.8865	81.8865	530.0021804000002	ai_player	?AI_choose_destination@@YIHPAVhero@@JAAUHeroDestination@@AAJEE@Z	non-exact
 0x004cafd0	3348	82.21976	82.2198	82.2198	595.2824352000001	game	?TransmitSaveGame@game@@QAEHHHEE@Z	non-exact
 0x005a6c70	1029	82.34042	82.3404	82.3404	181.7170782000001	spells	?MirrorImage@combatManager@@QAEXHH@Z	non-exact
 0x00422060	398	82.48837	82.4884	82.4884	69.6962874	ai	?place_shooter@combatManager@@QAEXPBVarmy@@@Z	non-exact
 0x0056a0d0	642	82.55238	86.3333	86.3333	112.01372039999998	search	?BuildPath@searchArray@@QAEHPBVhero@@J@Z	non-exact
+0x005b5440	1576	82.83474	82.8347	82.8347	270.5244976000001	rmg_terrain	?repairTerrainPoint@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	non-exact
 0x004d8720	1040	82.85906	82.8591	82.8591	178.26577600000005	hero	?initialize@hero@@QAEXF@Z	non-exact
 0x0050cca0	224	82.933334	82.9333	82.9333	38.22933183999999	mousemgr	?SetPointer@mouseManager@@QAEXHW4EPointerSet@1@@Z	non-exact
 0x005021c0	2101	82.95695	92.7472	92.7472	358.0744804999999	mapcell	?readHeroData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	non-exact
@@ -716,7 +716,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00485b60	507	93.99505	93.9951	93.9951	30.445096499999988	customcampaign	?Read@TCampaignStartHeroOption@@UAEXPAVTAbstractFile@@@Z	non-exact
 0x004521f0	2260	94.00537	98.7476	98.7476	135.47863800000002	bottomviewsubwindow	??0TBottomViewTown@@QAE@PAVheroWindow@@@Z	non-exact
 0x0052ead0	2248	94.07766	94.0777	94.0777	133.1342032000001	quickherowindow	??0TQuickHeroWindow@@QAE@PAVhero@@W4TViewLevel@0@@Z	non-exact
-0x00549cb0	3728	94.093895	95.7066	95.7066	220.17959439999981	rmg	?WriteMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	non-exact
+0x00549cb0	3728	94.10172	95.7066	95.7066	219.8878784	rmg	?WriteMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	non-exact
 0x005503a0	1428	94.157364	96.5558	96.5558	83.43284208000001	recruit	?Update@recruitUnit@@QAEXEJ@Z	non-exact
 0x00445490	571	94.16477	94.1648	94.1648	33.31916329999995	army	?get_berserk_targets@army@@QBEXAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	non-exact
 0x0050cd90	1904	94.16746	94.1675	94.1675	111.05156159999994	mousemgr	?Update@mouseManager@@QAEXE@Z	non-exact
@@ -828,7 +828,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00418620	1508	96.90312	96.9031	96.9031	46.700950400000025	advmgr	?GetSoundId@advManager@@QAE?AW4e_looping_sound_id@@HHH@Z	non-exact
 0x00403c40	120	96.95122	100.0	100.0	3.6585359999999945	adventuremapwindow	?SetElevationToggleImage@TAdventureMapWindow@@QAEEH@Z	non-exact
 0x0040b150	8860	96.95354	96.9535	96.9535	269.9163559999996	advmgr	?SetRolloverText@advManager@@QAEXPAVNewmapCell@@HH@Z	non-exact
-0x005b4b20	1483	97.05064	97.0506	97.0506	43.739008800000015	rmg_terrain	?paintPoint@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	non-exact
 0x00589fa0	729	97.06278	97.0628	97.0628	21.41233379999997	singleselectionwindow	?OnNewPlayerMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	non-exact
 0x00557af0	520	97.093025	97.093	97.093	15.116270000000004	remote	?CheckForWarning@CTurnDuration@@QAEXXZ	non-exact
 0x0043aca0	686	97.09956	97.0996	97.0996	19.89701840000003	ai_tactical	?consider_resurrect@type_AI_spellcaster@@QAEXPAUtype_spell_choice@@@Z	non-exact
@@ -974,6 +973,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x005ba6e0	495	99.44444	99.4444	99.4444	2.750021999999997	textscroller	?SetText@type_text_scroller@@QAEXPBD@Z	non-exact
 0x004fc1a0	494	99.47369	99.4737	99.4737	2.5999713999999825	mapcell	?Read@TTimedEvent@@QAEHPAVTAbstractFile@@H@Z	non-exact
 0x005f95b0	907	99.53737	99.5374	99.5374	4.196054100000075	viewwrld	?VWDrawRoad@advManager@@QAEXHHHHH@Z	non-exact
+0x005b4b20	1483	99.55696	99.557	99.557	6.570283199999919	rmg_terrain	?paintPoint@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	non-exact
 0x00570b80	725	99.5679	99.5679	99.5679	3.132725000000014	seerhut	?DoProgressDialog@type_creature_quest@@UAEXXZ	non-exact
 0x004e5960	56	99.583336	99.5833	99.5833	0.23333183999999996	hero	?get_primary_skill_total@hero@@QAEFXZ	non-exact
 0x00588330	1122	99.61981	99.6198	99.6198	4.265731800000028	singleselectionwindow	?UpdatePlayerPositions@TSingleSelectionWindow@@QAEXE@Z	non-exact
