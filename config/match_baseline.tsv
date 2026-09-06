@@ -3233,6 +3233,7 @@ resourcemanager	??1?$map@UTCacheMapKey@ResourceManager@@PAVresource@@U?$less@UTC
 resourcemanager	??Hstd@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@0@ABV10@PBD@Z	100.0000	100.0000	100.0000	0xb7ec0	-
 resourcemanager	??_D?$basic_ostringstream@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x1594f0	-
 resourcemanager	??_G?$basic_ostringstream@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x15dae0	-
+resourcemanager	??_G?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x15db10	-
 resourcemanager	??_Gt_lod_file_adapter@ResourceManager@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x15a7d0	-
 resourcemanager	??_Gt_stdio_file_adapter@ResourceManager@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x15a7a0	-
 resourcemanager	?AddToCache@ResourceManager@@YIXPAVresource@@@Z	100.0000	100.0000	100.0000	0x1594b0	54c081464e04
@@ -3758,6 +3759,7 @@ singleselectionwindow	?WindowHandler@TSingleSelectionWindow@@UAEHPAVmessage@@@Z	
 singleselectionwindow	?_Construct@std@@YIXPAUGameSelectionHeadersStruct@@ABU2@@Z	100.0000	100.0000	100.0000	0x18f480	-
 singleselectionwindow	?_Destroy@?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@IAEXPAUGameSelectionHeadersStruct@@0@Z	100.0000	100.0000	100.0000	0x18f080	-
 singleselectionwindow	?_Init@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@IAEXXZ	100.0000	100.0000	100.0000	0x18ffc0	-
+singleselectionwindow	?_Lbound@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@IBEPAU_Node@12@ABH@Z	100.0000	100.0000	100.0000	0x18f110	-
 singleselectionwindow	?_Median@std@@YI?AUGameSelectionHeadersStruct@@U2@00UTSortMapsByLoss@@@Z	100.0000	100.0000	100.0000	0x195b30	-
 singleselectionwindow	?_Median@std@@YI?AUGameSelectionHeadersStruct@@U2@00UTSortMapsByName@@@Z	100.0000	100.0000	100.0000	0x1939f0	-
 singleselectionwindow	?_Median@std@@YI?AUGameSelectionHeadersStruct@@U2@00UTSortMapsByPlayers@@@Z	100.0000	100.0000	100.0000	0x1946e0	-
@@ -3776,6 +3778,7 @@ singleselectionwindow	?_Sort_0@std@@YIXPAUGameSelectionHeadersStruct@@0UTSortMap
 singleselectionwindow	?_Sort_0@std@@YIXPAUGameSelectionHeadersStruct@@0UTSortMapsBySize@@0@Z	91.9961	91.9961	91.9961	0x191310	-
 singleselectionwindow	?_Sort_0@std@@YIXPAUGameSelectionHeadersStruct@@0UTSortMapsByVersion@@0@Z	100.0000	100.0000	100.0000	0x190e50	-
 singleselectionwindow	?_Sort_0@std@@YIXPAUGameSelectionHeadersStruct@@0UTSortMapsByVictory@@0@Z	100.0000	100.0000	100.0000	0x191970	-
+singleselectionwindow	?_Tidy@?$bitset@$03@std@@AAEXK@Z	100.0000	100.0000	100.0000	0x18eaf0	-
 singleselectionwindow	?_Tidy@?$bitset@$0JM@@std@@AAEXK@Z	100.0000	100.0000	100.0000	0x5c1a0	-
 singleselectionwindow	?_Ucopy@?$vector@UCampaignScenarioInfo@@V?$allocator@UCampaignScenarioInfo@@@std@@@std@@IAEPAUCampaignScenarioInfo@@PBU3@0PAU3@@Z	100.0000	100.0000	100.0000	0x18fe40	-
 singleselectionwindow	?_Ucopy@?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@IAEPAUGameSelectionHeadersStruct@@PBU3@0PAU3@@Z	100.0000	100.0000	100.0000	0x18f0b0	-
@@ -3792,11 +3795,15 @@ singleselectionwindow	?_Unguarded_partition@std@@YIPAUGameSelectionHeadersStruct
 singleselectionwindow	?_Unguarded_partition@std@@YIPAUGameSelectionHeadersStruct@@PAU2@0U2@UTSortMapsByVersion@@@Z	100.0000	100.0000	100.0000	0x194f20	-
 singleselectionwindow	?_Unguarded_partition@std@@YIPAUGameSelectionHeadersStruct@@PAU2@0U2@UTSortMapsByVictory@@@Z	100.0000	100.0000	100.0000	0x195920	-
 singleselectionwindow	?capacity@?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x18ebb0	-
+singleselectionwindow	?copy@std@@YIPAUGameSelectionHeadersStruct@@PBU2@0PAU2@@Z	100.0000	100.0000	100.0000	0x18f160	-
 singleselectionwindow	?copy@std@@YIPAV?$vector@Vhero@@V?$allocator@Vhero@@@std@@@1@PBV21@0PAV21@@Z	100.0000	100.0000	100.0000	0x8e220	9a2a923d5ca5
 singleselectionwindow	?copy_backward@std@@YIPAUGameSelectionHeadersStruct@@PAU2@00@Z	100.0000	100.0000	100.0000	0x191650	-
 singleselectionwindow	?erase@?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@QAEPAUGameSelectionHeadersStruct@@PAU3@0@Z	100.0000	100.0000	100.0000	0x18ef20	-
+singleselectionwindow	?find@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@QAE?AViterator@12@ABH@Z	100.0000	100.0000	100.0000	0x18eb60	-
+singleselectionwindow	?flip@?$bitset@$03@std@@QAEAAV12@XZ	100.0000	100.0000	100.0000	0x18eae0	-
 singleselectionwindow	?handle_message@CHostWaitDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1891b0	2f7d258a8d85
 singleselectionwindow	?insert@?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@QAEXPAUGameSelectionHeadersStruct@@IABU3@@Z	100.0000	100.0000	100.0000	0x18ebe0	-
+singleselectionwindow	?lower_bound@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@QAE?AViterator@12@ABH@Z	100.0000	100.0000	100.0000	0x18f0f0	-
 singleselectionwindow	?read@CGameHeaderInfoMsg@@UAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x177880	38cdff55ff80
 singleselectionwindow	?read@CNewMapHeaderInfoMsg@@UAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x177a10	5ae328e46dc0
 singleselectionwindow	?size@?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x18eab0	-

@@ -9741,6 +9741,14 @@ void* CAutoArray<int>::`scalar deleting destructor'(unsigned __flags)
 // 0x7c-stride walk masking against gGameContextFeatures is GetPlayerCount,
 // reconstructed above.
 
+// NOT CLAIMED, and recorded so no later lane re-derives it: 0x58eb50 (15 B)
+// is this compiland's `char_traits<char>::assign` on content - a unique
+// 15-byte match at mnemonic agreement 1.000, against a 20 B `_Eos` as the
+// only other candidate - but the declarator form is the only claim form the
+// join has for it (no compgen kind builds the flat char_traits key), and
+// campaignbrief already owns that lexical name at 0x45dc90. The label
+// authority refuses a duplicate proven name across two retail rows, so this
+// row needs a char_traits kind before it can be claimed.
 #if 0  // @carcass: Dinkumware instantiations emitted by this compiland
 
 VA(0x0058fe80, 0x66)  // COMDAT pairing (unique 102 B in this obj)
@@ -10084,13 +10092,37 @@ VA_COMPGEN(0x00595e10, 0x204, STD_UNGUARDED_PARTITION,
 //             calls `_Construct<vector<hero>>` at 0x45fce0 and 0x594220
 //             calls `_Construct<vector<type_artifact>>` at 0x45fdc0.
 //
-// Not claimable, and recorded so no later lane re-derives it: 0x58f160
-// (787 B) is `std::copy<GameSelectionHeadersStruct*>`, but this compiland
-// emits TWO instantiations of it - the const-source `PBU2@0PAU2@` and the
-// mutable-source `PAU2@00@` - each 772 B and byte-identical, which is why
-// /OPT:ICF folded them onto retail's single row. One claim against a
-// two-member group of equal length is ambiguous in both directions and
-// every oracle in the join refuses it, correctly.
+// 0x58f160 (787 B) is `std::copy<GameSelectionHeadersStruct*>`, and this
+// compiland emits TWO instantiations of it - the const-source `PBU2@0PAU2@`
+// and the mutable-source `PAU2@00@` - each 772 B and byte-identical, which is
+// why /OPT:ICF folded them onto retail's single row. An earlier lane recorded
+// that as UNCLAIMABLE because every join oracle refused a one-claim /
+// two-name group; `_icf_group_pairing` is the oracle that reaches exactly
+// this shape and it landed after that note was written, so the claim is made
+// below and the note corrected here rather than left to mislead a later lane.
+
+// COMDAT pairing, 2026-09-06: every row below is a unique content match
+// against one of this compiland's own unpaired COMDATs, found by sweeping
+// the unclaimed retail rows of the singleselectionwindow..slider gap against
+// singleselectionwindow.obj's emitted template instantiations (capstone
+// mnemonic agreement 1.000 at equal length in each case).
+//
+//   0x58eae0  14 B  bitset<4>::flip()          - the only 4-bit bitset here
+//   0x58eaf0  21 B  bitset<4>::_Tidy(unsigned long)
+//   0x58eb60  75 B  _Tree<int,type_map_hero_info>::find
+//   0x58f0f0  23 B  _Tree<...>::lower_bound
+//   0x58f110  73 B  _Tree<...>::_Lbound
+//
+// The two bitset rows are the LAST two of the four-bit instantiation the
+// campaign-selection filter carries; the three tree rows complete the
+// map<int,type_map_hero_info> surface whose _Init / _Copy / _Erase /
+// operator= halves this file already claims.
+VA_COMPGEN(0x0058eae0, 0xE, BITSET_FLIP, Bitset4)
+VA_COMPGEN(0x0058eaf0, 0x15, BITSET_TIDY, Bitset4)
+VA_COMPGEN(0x0058eb60, 0x4B, TREE_FIND, type_map_hero_info)
+VA_COMPGEN(0x0058f0f0, 0x17, TREE_LOWER_BOUND, type_map_hero_info)
+VA_COMPGEN(0x0058f110, 0x49, TREE_LBOUND, type_map_hero_info)
+VA_COMPGEN(0x0058f160, 0x313, STD_COPY, GameSelectionHeadersStruct)
 
 VA_COMPGEN(0x0058eb10, 0x36, TREE_COPY_ASSIGN, type_map_hero_info)
 VA_COMPGEN(0x0058fa60, 0x1AA, IMPLICIT_COPY_CTOR, NewSMapHeader)
