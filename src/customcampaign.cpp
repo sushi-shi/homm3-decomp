@@ -1100,7 +1100,7 @@ void TCampaignStartHeroOption::Read(TAbstractFile* file)
         file->Read(&value, sizeof(signed char));
         count = value;
     }
-    m_choices.clear();
+    m_choices.erase(m_choices.begin(), m_choices.end());
     for (int i = 0; i != count; ++i) {
         TCampaignHeroChoice choice;
         {

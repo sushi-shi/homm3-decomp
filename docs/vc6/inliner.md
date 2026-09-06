@@ -465,6 +465,16 @@ One winner out of 37, three losers (`QuickInfo` 94.87 -> 94.55,
 low; the payoff when it lands is 6.6 points on a row 97 of whose 98 blocks
 were already exact, so sweep it, do not reason about it.
 
+`clear()` is the fourth mass-carrying forwarder (`clear()` is literally
+`erase(begin(), end())`, and the erase is the mass). Swept over 29 sub-100
+rows: `TCampaignStartHeroOption::Read` 88.9802 -> 92.6089 and
+`NewSMapHeader::Load` 92.5118 -> 92.6763; two byte-flat, one non-compiling,
+and TWENTY-FOUR losers, several catastrophic - `army::HeroFn_00445490`
+92.52 -> 14.41, `readMapObjects` 92.20 -> 27.51, `readBlackBox` 93.01 -> 66.11,
+`TTextScroller::SetText` 99.44 -> 73.40. This is the lowest hit rate of the
+four and the most dangerous; it is worth sweeping only because the sweep is
+mechanical and each row is measured on its own.
+
 **THE INTERMEDIATE LEVEL MUST CARRY MASS.** This is the bound, and it is what
 separates the levers above from the ones that do nothing. `bitset::test` holds
 a range check, `push_back` holds an `insert` call, `operator+=` holds an

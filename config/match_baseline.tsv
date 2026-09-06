@@ -1271,7 +1271,7 @@ customcampaign	?Read@TCampaignSecondarySkillBonus@@UAEXPAVTAbstractFile@@@Z	100.
 customcampaign	?Read@TCampaignSpellBonus@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x84050	62ab037aba16
 customcampaign	?Read@TCampaignStartBonusOption@@UAEXPAVTAbstractFile@@@Z	95.6897	95.6897	95.6897	0x85190	68792b901cfd
 customcampaign	?Read@TCampaignStartCrossoverOption@@UAEXPAVTAbstractFile@@@Z	93.6869	93.6869	93.6869	0x857b0	5d27db6c6607
-customcampaign	?Read@TCampaignStartHeroOption@@UAEXPAVTAbstractFile@@@Z	88.9802	88.9802	88.9802	0x85b60	b9e50374a172
+customcampaign	?Read@TCampaignStartHeroOption@@UAEXPAVTAbstractFile@@@Z	92.6089	92.6089	92.6089	0x85b60	85057ce158f6
 customcampaign	?Read@TStreamBufFile@@UAEHPAXH@Z	100.0000	100.0000	100.0000	0x83f10	d4a8f9e13d4a
 customcampaign	?ReadLengthPrefixedString@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAVTAbstractFile@@@Z	81.6506	81.6506	81.6506	0x85d90	20e8cfd1014a
 customcampaign	?RehomeCampaignHeroSetup@game@@QAEXH@Z	98.4901	98.4901	98.4901	0x86110	ed9d2f18df98
@@ -1945,7 +1945,7 @@ game	?IsLastHuman@game@@QBE_NH@Z	100.0000	100.0000	100.0000	0xcec50	bd4b88d0c5a3
 game	?IsLocalHuman@game@@QBE_NH@Z	100.0000	100.0000	100.0000	0xce970	cc0ecd614d91
 game	?IsLocalHuman@playerData@@QBE_NXZ	100.0000	100.0000	100.0000	0xbad80	4683cab7027a
 game	?IsMultiplayer@game@@QBE_NXZ	100.0000	100.0000	100.0000	0xcec90	bf9d3de21a93
-game	?Load@NewSMapHeader@@QAEHPAVTAbstractFile@@H@Z	92.5118	92.5118	92.5118	0xc5630	3910a566acf1
+game	?Load@NewSMapHeader@@QAEHPAVTAbstractFile@@H@Z	92.6763	92.6763	92.6763	0xc5630	dfd4024bf24f
 game	?Load@SavedGameHeader@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbc750	99bb7010e0dc
 game	?Load@game@@QAEHPAVTAbstractFile@@@Z	60.5547	92.4127	92.4127	0xbcda0	76f5d7575936
 game	?LoadBoatPool@game@@QAEHPAVTAbstractFile@@@Z	99.6447	99.6447	99.6447	0xb9a00	6dff534ebbf5
