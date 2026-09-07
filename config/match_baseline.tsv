@@ -2796,6 +2796,7 @@ objecttype	?setImageName@TObjectType@@QAEAAU1@ABV?$basic_string@DU?$char_traits@
 objecttype	?setTriggerMask@TObjectType@@QAEAAU1@ABV?$bitset@$0DA@@std@@@Z	100.0000	100.0000	100.0000	0x114a60	6916bb8f2922
 objecttype	?setstate@?$basic_ios@DU?$char_traits@D@std@@@std@@QAEXH_N@Z	100.0000	100.0000	100.0000	0x115f20	-
 objecttype	?sgetc@?$basic_streambuf@DU?$char_traits@D@std@@@std@@QAEHXZ	100.0000	100.0000	100.0000	0x1157b0	-
+objecttype	?size@?$vector@UTObjectType@@V?$allocator@UTObjectType@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x14c910	-
 objecttype	?use_facet@std@@YAABV?$ctype@D@1@ABVlocale@1@PBV21@_N@Z	100.0000	100.0000	100.0000	0x11a990	-
 objecttype	?use_facet@std@@YAABV?$numpunct@D@1@ABVlocale@1@PBV21@_N@Z	100.0000	100.0000	100.0000	0x11ab90	-
 objecttype	__h3cg$objecttype$vector_insert_count$TImageInfo	0.0000	100.0000	100.0000	0x6aeb0	-
