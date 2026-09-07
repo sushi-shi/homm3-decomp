@@ -453,6 +453,7 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "DEQUE_CONST_ITERATOR_CTOR_NODE",
                  "TREE_CONST_ITERATOR_CTOR",
                  "TREE_ITERATOR_EQUAL", "TREE_LOWER_BOUND", "TREE_UPPER_BOUND",
+                 "TREE_EQUAL_RANGE", "MAP_INSERT",
                  "STREAMBUF_XSPUTN",
                  "PAIR_CONST_INT_DTOR", "PAIR_CTOR",
                  "STD_CONSTRUCT", "STD_COPY",
@@ -1119,6 +1120,10 @@ def _demangle_key(mangled: str):
         return f"{tree_owner.lower()}@tree_lower_bound"
     if mangled.startswith("?upper_bound@?$_Tree@") and tree_owner:
         return f"{tree_owner.lower()}@tree_upper_bound"
+    if mangled.startswith("?equal_range@?$_Tree@") and tree_owner:
+        return f"{tree_owner.lower()}@tree_equal_range"
+    if mangled.startswith("?insert@?$map@V?$basic_string@D"):
+        return "string@map_insert"
     # _Tree's two _Copy overloads and its node eraser. `_Copy` is
     # overloaded on the SAME class, so the two arms are separate kinds
     # rather than one two-member group: the node form is the one whose
@@ -2250,7 +2255,7 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                                "tree_init", "tree_copy_assign",
                                "tree_const_iterator_ctor",
                                "tree_iterator_equal", "tree_lower_bound",
-                               "tree_upper_bound",
+                               "tree_upper_bound", "tree_equal_range",
                                "deque_const_iterator_ctor_node",
                                "deque_const_iterator_ctor",
                                "deque_erase")
@@ -2258,6 +2263,10 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
         if tree_or_deque is not None:
             owner = row["name"].rsplit("$", 1)[1].lower()
             claim_keys.setdefault(f"{owner}@{tree_or_deque}", []).append(row)
+            continue
+        if "$map_insert$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}@map_insert", []).append(row)
             continue
         char_member = next(
             (member for _p, _s, member in CHAR_STREAM_MEMBERS
