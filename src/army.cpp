@@ -2628,7 +2628,9 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
 // Naming normalization: 98.9251 -> 98.8868, solely the independent EDI/EBX
 // reload order after doMultiHeadAttack (+0x2e5/+0x2e8). A 34-build Gruntz
 // forest/local-name product found two states; six disposable forest trials
-// recovered the pre-pass masked bytes. No probe declarations were retained.
+// recovered the pre-pass masked bytes. The tree-wide 30-forest sweep repeated
+// that result for this unchanged 2cfc7442c153 body: trial 29 reached 98.9251%
+// twice, so that score is banked as MAX. No probe declarations were retained.
 // The result-local order documented above measured 98.8829 here and was
 // rejected. See docs/name-normalization.md; MAX/history remain preserved.
 VA(0x00441610, 0x6A0)  // corroborates, dc 0x46bec

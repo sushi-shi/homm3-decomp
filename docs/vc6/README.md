@@ -45,6 +45,7 @@ model cannot rot.
 | `scripts/homm3/vc6/{inline_model,reg_model,il}.py` | the predictors + solvers |
 | `homm3 vc6 il-locals UNIT --fn NAME` | candidate local handles from GL-recorded SY body offsets, using the canonical source/profile; named-symbol overlay, not optimizer register order |
 | `scripts/homm3/vc6/{diagnose,report,queue}.py` | one-function routing, plateau report, and recoverable-byte wall census |
+| `scripts/homm3/vc6/tu_state_sweep.py` | resumable, batched disposable declaration-forest search for every `CUR < HIST` row |
 | `scripts/homm3/vc6/_source.py` | the solvers' source-body locator (demangle + definition grammar + `#if 0` masking) |
 | `scripts/homm3/vc6/_eh.py` | the EH cleanup transcript (`[ebp-4]` state stores) — object lifetimes, the one signal the three solvers do not read |
 | `scripts/homm3/vc6/census.py` | the gates (each with a negative control) |
@@ -80,6 +81,15 @@ retail byte size, and omits RVAs recorded in `config/simple-match-parked.tsv`.
 It uses the current implementation's MAX for exactness and keeps HIST visible
 as lost-peak evidence. Its generated output is
 `evidence/smallest-match-queue.tsv`.
+
+`homm3 vc6 state-sweep --trials 30 --jobs 8 --bank` groups every numeric
+`CUR < HIST` row by TU, inserts one deterministic declaration forest before
+the earliest affected source claim, and scores every compiled function in the
+TU from that single object. Results are cached by source, retail target,
+normalization inputs, generator version, and seed. A higher observation is
+compiled a second time before it can raise MAX; the clean CUR is never
+replaced. Authored source and function hashes must remain unchanged for the
+whole run. See [tu-state-sweep.md](tu-state-sweep.md) for the audit contract.
 
 Before invoking disassembly, the router requires a unique emitted function
 shared by the compiled and delinked objects. File-static functions qualify;
