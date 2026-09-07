@@ -302,6 +302,14 @@ TRmgGridPoint type_random_map::getSize()
     return TRmgGridPoint(m_mapWidth, m_mapHeight);
 }
 
+// Unclaimed retail 0x532790 is slot 3 of both concrete adapter vtables at
+// 0x640a04 and 0x640a3c. Five compiled forms of
+// `TRmgMapAdapter::getSize() { return m_map->getSize(); }` preserve the call,
+// relocation, CFG, and ABI but allocate the returned temporary through the
+// opposite register pair (best 85.18%). The other table belongs to the still
+// unrecovered concrete road adapter at 0x532320..0x5324b0, so the shared ICF
+// representative stays banked with that class cluster.
+
 // The boundary coordinator constructs both a temporary zone and owned
 // water zones through this same retained body. The final three members are
 // vectors; 0x53d9ae/0x53da0d prove signed-short connection distances.
