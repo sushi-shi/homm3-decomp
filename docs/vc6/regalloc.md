@@ -728,6 +728,353 @@ declaration, inline control, or unused operation is needed. This is a measured
 source/value-lifetime model for a retail-only function, not proof of the
 original local names or lexical scope.
 
+### 6l. A retained comparison distinguishes free and member interfaces
+
+The grid-set lookup in `PaintPoint` calls 0x5b8ca0 with the two point addresses
+in ECX and EDX, without stack arguments. The 32-byte callee compares unsigned
+y, then x, and returns with plain `ret`. That boundary contradicts the former
+`TRmgGridPoint` member comparison, which passes its right reference on the
+stack. An ordinary free `bool operator<(const TRmgGridPoint&, const
+TRmgGridPoint&)` reproduces all 32 raw bytes without relocations.
+
+The source-label scanner now joins this bounded `operator<` spelling to its
+VC6 `??M` public, alongside the arithmetic operators. Equal-size join tests
+keep the operators distinct and reject `<=`, `<<`, and template-owner forms;
+the 130-test label suite passes. The source declaration remains the name owner.
+
+### 6m. Copy initialization, named return, and the base tile's lifetime
+
+The grid translation in `rmgTerrainPainter::paintPoint` (0x5b4b20) exposed
+three distinct source-form effects with the comparison-return terrain predicate.
+First, construct its working point through a copied coordinate value:
+
+```cpp
+TRmgGridPoint result = TRmgGridPoint(x, y);
+result += offset;
+return result;
+```
+
+Direct initialization of `result` removes retail's original-x store at
+0x5b4e3f. Copy initialization restores the EBP-0x14 store and lifts the caller
+from 98.2893% to 98.5805%. Returning `result += offset` still uses the wrong
+direction register and schedules the two additions differently. Applying the
+compound operation separately and returning the named result reproduces the
+entire translation sequence at 0x5b4e38..0x5b4e5a (99.5389%). Direct initialization
+of the caller's nearby point instead of copy initialization is neutral.
+
+The remaining frame excess is a different lifetime. A scope around the named
+frame selection, base-tile construction, and `setTile` call ends the tile's
+lifetime before the worklist updates. This reduces the frame from 0x58 to
+retail's 0x50 without disturbing the original-x store (99.5570%). The earlier
+tile-scope probe with flat field assignments was neutral; that observation did
+not transfer to the reconstructed constructor and point-copy state.
+
+The current 48-block CFG has matching branch destinations. Two commuted cache
+multiplications and the distance-wrapper expansion remain. Coordinate-constructor
+body assignments, multiplication operand reversal, and adjacent repair guards
+are neutral; rewriting repair selection as nested conditional values changes
+the exact destructors' byte-result tests and was reverted. The grid constructor
+and free comparator remain raw-exact at 24 and 32 bytes, and the shared return
+change also improves `repairTerrainPoint` from 81.8432% to 82.8347%.
+
+The later guard-return predicate changes this return-form result. It restores
+the retail distance-wrapper call but leaves the named point return at 99.0163%.
+Returning `result += offset` instead restores the complete translation and
+backedge, reaching 99.9204%. Its ordinary compiler output has retail's 1,483-byte
+length, 0x50-byte frame, and all 61 resolved relocations. Only eight bytes in
+the two commuted cache products remain. Reversing the field additions instead
+retains an unwanted helper and gives 97.4864%. A source-form observation must
+be rechecked after a later inline decision changes; the earlier named-return
+result was not a permanent requirement of the point class.
+
+### 6n. Observe multiplication operands before allocation
+
+<!-- c2-role: function 0x2003e constrainNativeOperands -->
+<!-- c2-role: global 0xa5a88 nativeInstructionNames -->
+
+At the 99.9204% `paintPoint` checkpoint, the remaining eight raw bytes exchange
+the memory operands of two `mov ebx, ...` / `imul ebx, ...` pairs. A passive
+scratch shim now observes the pinned C2 machine-operand constraint routine at
+RVA `0x2003e`. Its instruction-name table at `0xa5a88` identifies opcode `0xc1`
+as `_imul2`. The trace sees three such operations for this caller. At the two
+residual sites, the first source has kind byte 1 and a field-symbol record
+with offset 4; the second has kind byte 6. At the already-exact entry product,
+both sources have kind byte 6. These are compiler representations after
+optimization, not recovered retail declarations or a proven explanation of
+the commutation.
+
+The scratch trace hooks whole instructions, preserves registers, flags and
+last-error state, and passes complete object identity against unmodified VC6
+outside the COFF timestamp. Its runner restores the normal shim in `finally`.
+Working artifacts live in `build/rmg-multiply-trace/`; the copied, hash-gated
+Ghidra project lives in `build/re/vc6/`. Neither instrumented compiler output
+nor edited compiler state is used for matching.
+
+Source controls distinguish this observation from a fix: a pointer cache
+parameter, a named cache-cell reference, and signed multiplication intermediates
+leave the same eight bytes. A const-reference binding for the translated point
+changes the distance-wrapper expansion and gives 98.5986%. Restoring the
+434-byte retail rectangle caller before `paintPoint` also preserves its eight
+remaining differences. The operand-class observation therefore does not justify
+changing the canonical point interface or adding an inlining control.
+
+The next passive trace locates the actual ordering decision. The optimizer
+driver starts at `0x6819b`. A hook at its phase checkpoint, C2 RVA `0x9ab4`,
+snapshots the generic multiplication
+nodes between optimization passes. Immediately before the second
+`FUN_1070f349(body, 2)` call, both residual products have width first and the
+local row second. Hardware write watchpoints on their source-list heads catch
+the reversal at `0xd008` (reported EIP `0xd00b`). This is the source-list sort in
+`FUN_1070cee1`, using `FUN_1070e725` and comparator `FUN_1070e12f`.
+
+<!-- c2-role: function 0x9ab4 phaseCheckpoint -->
+<!-- c2-role: function 0x6819b optimizeFunction -->
+<!-- c2-role: function 0xf349 optimizeExpressions -->
+<!-- c2-role: function 0xcee1 rankAndSortOperands -->
+<!-- c2-role: site 0xd008 storeSortedOperands -->
+<!-- c2-role: function 0xe725 sortOperandList -->
+<!-- c2-role: function 0xe12f compareOperandRanks -->
+
+The comparator orders the packed unsigned value at operand offset `+0xc`.
+`FUN_1070d19e` combines an expression-demand value in the top byte, a recursive
+cost component in the next byte, and the low 16 bits from `FUN_1070d25d`.
+The earlier phase snapshot had width at `0x01020060` and row at `0x00016660`,
+but those are **not** the two ranks compared by the sort. A later passive
+watch on the width rank catches instruction `0xcf2a` (reported EIP `0xcf2d`)
+recomputing it to `0x00010007` before the source-list reversal. At the actual
+`0xd008` write, both residual products have row `0x00016660` first and width
+`0x00010007` second. `0xe12f` returns positive when the left rank is smaller;
+the list sort puts the larger rank first. The cost components therefore tie,
+and the low hash bits decide this ordering. The earlier conclusion that
+changing those low bits could not matter was based on a stale phase rank.
+
+The rank/definition trace and the rank-plus-list watch both preserve complete
+object identity outside the COFF timestamp; their runner restores the normal
+shim. Working artifacts are `build/rmg-multiply-rank-origin/`. The row's field
+symbol has generated handle `0x333` at this checkpoint, while its original
+eight-byte local has a different handle. Runtime pointers remain only guarded
+selectors for these observations, not stable compiler identities.
+
+The hash cases are directly readable in the pinned table at `0xdf00` /
+`0xdee0` and the labeled `hashOperand` listing. Kinds 1–3 enter `0xd305`;
+the row's category-4 field symbol uses the handle at symbol `+0x1c`, folds
+its two 16-bit halves, and rotates that result left by five bits. Handle
+`0x333` therefore gives `0x6660`. Kinds 5–6 enter `0xd2c9`: they combine the
+folded displacement at operand `+0x24`, opcode minus `0x145`, and the base
+operand hash shifted left by eight, retaining the low 16 bits.
+
+Here the width base is a kind-2 operand with a category-3 symbol, handle
+`0x41c`, and no definition link at the observation point. The category-3
+case at `0xd365` hashes that handle shifted left by six. With width opcode
+`0x14c` and zero displacement in this IR representation, its final hash is
+`(7 + (0x41c << 14)) & 0xffff`, namely `7`. The corresponding values for
+base handles ending in 1, 2 or 3 modulo four would be `0x4007`, `0x8007` or
+`0xc007`. These formulas describe C2 symbol identities, not source names or
+machine register numbers. They do not authorize manufacturing declarations
+or changing compiler state to force a match. The remaining source question
+is how the natural expression/temporary creation order produces those handles.
+
+<!-- c2-role: function 0xd19e computeOperandRank -->
+<!-- c2-role: function 0xd25d hashOperand -->
+<!-- c2-role: site 0xcf2a storeRecomputedOperandRank -->
+
+The width base's origin is now observed as well. A passive hook at `0x6ac8`,
+after the call to `0x673f` and before `0x235b` constructs a kind-2 operand,
+records the returned symbol and the original expression operands. At this
+checkpoint, handle `0x41c` represents generic addition (`0x16d`) of the
+original `this` symbol (handle 1) and constant `0xc`. It is the shared address
+of `m_width`, first encountered in the opening `setTile` expansion, rather
+than the symbol for `this` itself. Five observed requests reuse that symbol,
+including the addresses feeding both residual products.
+
+The immediate creation sequence includes address `point + 4` (`0x419`),
+its loaded value (`0x41b`), address `this + 0xc` (`0x41c`), its loaded value
+(`0x41e`), and their product (`0x41f`). These are observed generated handles,
+not original source locals. The call at `0x11593` supplies the expression
+opcode, type and operand list to `0x6ab4`; the latter obtains a symbol via
+`0x673f` and creates its value operand via `0x235b`. The physical Ghidra entry
+at `0x1158b` is only a fragment, so it is not assigned a whole-function role.
+
+<!-- c2-role: function 0x6ab4 makeExpressionValueOperand -->
+<!-- c2-role: function 0x673f getExpressionValueSymbol -->
+<!-- c2-role: function 0x235b makeSymbolValueOperand -->
+<!-- c2-role: site 0x6ac8 expressionValueSymbolReady -->
+
+This trace checks the active function name, the returned symbol's readable
+record and the observed handle range before recording it. It preserves the
+entire object outside its timestamp and restores the normal shim in `finally`.
+Artifacts are in `build/rmg-width-address-origin/`. Ordinary source controls
+using a pointer cache alias, reversing the multiplication, or putting x first
+in `setTile` leave all eight caller differences. Naming width changes the
+entry product and distance-wrapper expansion, but leaves both residual
+products row-first. Thus merely rewriting the setter expression has not
+recovered the required natural symbol order.
+
+The handle allocation explains another limit on that search. `0x64bb`
+requests allocation kind `0xf` from `0x1da6`, then sets the returned record's
+category byte to 3. The pinned dispatch tables at `0x226c` / `0x2254` send
+kind `0xf` to `0x1eb4`, which consumes successive 84-byte records from the
+arena at `0x9bc74`. This is a distinct path from the kind-3 free list at
+`0x9bc60`; that free list must not be used to explain expression allocation.
+
+`0x53f4` allocates a 12-byte header followed by 32 records. It preassigns their
+handles at record offset `+0x1c`, incrementing `0x9bc4c` by 32 per arena. The
+initialization at `0x1bcc6` zeroes that counter and creates four other arenas
+before clearing the expression-arena pointer. Therefore allocations into a
+different arena can change an expression handle's upper bits without changing
+its low five bits. The slot within its own arena is the relevant local order;
+total declarations or allocations across all pools are not an equivalent count.
+
+A passive hook at `0x64c5` checks the active caller, readable arena bounds and
+84-byte slot alignment before recording allocation. It confirms that the
+current width address is slot 28 of the arena beginning at handle `0x400`:
+handle `0x41c`. The named-width setter control instead creates that address at
+slot 25, handle `0x419`. Its low-bit hash contribution changes from `7` to
+`0x4007`, but the ordinary output still has both residual products row-first.
+Both traces reproduce their respective complete ordinary-compiler objects
+outside COFF timestamps, and the normal shim is restored. The artifacts are
+`build/rmg-expression-arena-trace/` and `build/rmg-expression-arena-run.log`.
+
+<!-- c2-role: function 0x64bb makeExpressionSymbol -->
+<!-- c2-role: function 0x1da6 allocateSymbolRecord -->
+<!-- c2-role: function 0x53f4 allocateSymbolArena -->
+<!-- c2-role: function 0x1bcc6 initializeSymbolArenas -->
+<!-- c2-role: global 0x9bc74 expressionSymbolArena -->
+<!-- c2-role: global 0x9bc4c nextSymbolArenaHandle -->
+<!-- c2-role: site 0x64c5 expressionSymbolAllocated -->
+
+The distinction develops before that sort. After inlining, the two row reads
+are indirect operands (kind 6). A later passive snapshot at `FUN_1070f1f0`
+entry separates the first `FUN_1070f349` call from that follow-up: the row
+operands are already kind 2 when the follow-up begins. The later pass
+`FUN_107261bf` changes those to kind 1. Their
+width operands remain indirect. These observations describe candidate C2
+state, not the retail compiler's input or recovered point declarations.
+
+<!-- c2-role: function 0x261bf promoteLocalOperands -->
+
+A separate opcode write watchpoint finds the generic multiplication-to-native
+rewrite at `0x2873b` (reported EIP `0x2873e`) in `FUN_10728610`. Its variable
+32-bit multiplication arm selects `_imul2` without reversing the source list.
+The later operand-constraint routine therefore receives the already ordered
+operands. These phase and write-watchpoint traces each pass whole-object
+identity against an unmodified compile outside the COFF timestamp. The Wine
+watchpoints use a vectored single-step handler and two four-byte write slots;
+the handler preserves last-error state and clears handled debug status. The
+source-list watch disables each slot after native lowering replaces its list.
+Scratch runners restore the normal compiler shim in `finally`.
+
+<!-- c2-role: function 0x28610 lowerNativeOpcode -->
+<!-- c2-role: site 0x2873b selectNativeMultiply -->
+
+A **modified-compiler counterfactual**, kept outside matching, swaps only those
+two source lists after expression optimization and before native lowering.
+That produces all 1483 retail bytes, with all 61 named relocations independently
+resolved. Compared with its unmodified control, the only section-data changes
+are the eight `paintPoint` bytes; the corresponding COFF section-definition
+checksum also changes. This proves that the two operand decisions suffice to
+explain the residual. It does **not** establish a source reconstruction, and
+the ordinary compiler's result remains 99.9204%, with eight raw differences.
+
+Working artifacts are `build/rmg-multiply-phases/`,
+`build/rmg-multiply-commute-watch/`, `build/rmg-multiply-watch/`, and the explicitly
+separate `build/rmg-multiply-counterfactual/`. The first opcode-watch run selected
+the entry variable product and a constant scale product; the later source-list
+watch selects both residual products. Runtime addresses and ordinal positions
+are observations of this checkpoint, not stable compiler interfaces.
+
+The first residual's field fold is now traced directly. Its row operand comes
+from a clone of an address of an eight-byte local aggregate. The clone routine
+at `0x156f` allocates through `0x12f7`, using the kind-indexed size table at
+`0xa0184`. A guarded watch
+on that live clone catches `FUN_1070c6fd` replacing the aggregate symbol with
+an offset-4 field symbol at instruction `0xc832` (reported EIP `0xc835`).
+`FUN_10741ed0` then changes the operand's type at `0x41fb5` and calls
+`FUN_1070fd9d`, which changes its kind from 3 to 2 at `0xfdaa` (reported EIP
+`0xfdad`). Thus the observed chain is address-plus-field-offset folding,
+dereference folding, then the second expression pass's operand sort. The
+clone and field-watch runs both preserve whole-object identity. The artifacts
+are `build/rmg-multiply-row-promotion/` and `build/rmg-multiply-row-watch/`.
+
+<!-- c2-role: function 0x156f cloneOperand -->
+<!-- c2-role: function 0x12f7 allocateOperand -->
+<!-- c2-role: global 0xa0184 operandSizes -->
+<!-- c2-role: function 0xc6fd foldAddressOffset -->
+<!-- c2-role: site 0xc832 storeFieldSymbol -->
+<!-- c2-role: function 0x41ed0 propagateDereference -->
+<!-- c2-role: site 0x41fb5 setDereferencedType -->
+<!-- c2-role: function 0xfd9d dereferenceOperand -->
+<!-- c2-role: site 0xfdaa makeLocalValue -->
+
+The address fold calls `0x37fc` to find or create the offset field symbol.
+It is gated by the dword at `0xac128`. A cold block at `0x837d5`, reached
+from C2's input-header decoder near `0x69616`, writes that flag after testing
+bit 3 of a header byte. Its source option meaning is still unknown; the
+label describes only the observed folding guard.
+
+<!-- c2-role: function 0x37fc findOrCreateFieldSymbol -->
+<!-- c2-role: global 0xac128 addressFoldDisabled -->
+<!-- c2-role: site 0x837d5 disableAddressFold -->
+
+Runtime pointers alone are insufficient to join these observations. The
+instrumented DLL's layout can shift C2 allocations while the emitted object
+remains identical, and allocations are also reused later in compilation.
+An initial watch selected by a prior run's pointer failed its guard. The
+successful watch locates the clone using the observed local symbol handle
+and clone ordinal, then checks its live opcode, type and owner before arming.
+Those selectors are still checkpoint-specific. Traces must establish the
+allocation's identity and lifetime before attributing a later write to it.
+
+An ordinary-compiler source control at this same checkpoint also rules out
+splitting the cache calculation into assignments: initializing `index` from
+width or row, applying `*=`, then adding x produces the same 1483-byte caller
+and the same eight differences. The unmodified scratch control and both
+variants resolve all 61 relocations in the raw verifier. These candidates
+remain outside the matching objects; see `build/rmg-width-assignment-control/`.
+
+The residual is now closed with ordinary VC6. `paintPoint` passes
+`rmgTerrainTile(m_paintTerrain, frame)` directly to `setTile`, and names the
+direction-table element as `const TPoint& offset` before `point + offset`.
+It retains the ordinary guard-return terrain predicate and the compound
+grid-addition return. All 1483 retail bytes match, including 61 independently
+resolved named relocations. No compiler-state mutation or inlining pragma is
+part of this source.
+
+The source fix has two measured effects. A passive hook at `0x64c5` now also
+records the pending expression operands from `0x99620`. In the earlier
+named-tile source, handles `0x40c` through `0x411` comprise three pairs of
+opcode `0x165` / `0x14c` expressions. Their aggregate field records describe
+regions `[4,12)`, `[8,12)` and `[9,12)` of the tile. These are observed compiler
+regions, not a recovered name or complete meaning for opcode `0x165`. The
+direct temporary removes those six entries from the prefix. The same width
+address therefore receives handle `0x416` instead of `0x41c`. After the second
+expression pass, both products have width rank `0x00018007` first and row
+rank `0x00016660` second. The row still has handle `0x333`.
+
+The temporary also lowers the caller's observed `cb` from 920 to 914. With
+the guard predicate, that changes a nested tree-find expansion and gives the
+inner three-argument `_Distance` wrapper a budget of 58 against its cost of
+41. A comparison-return predicate restores the tree-find expansion but still
+gives that wrapper budget 45, so it expands into the four-argument overload.
+The named direction reference raises the caller to `cb=919`; with the guard
+predicate the wrapper budget is 38 and it remains a call, as in retail. The
+original `cb=920` and recovered `cb=919` sources share that decision. Exact
+source recovery does not require reproducing the earlier candidate's total
+cost or any aggregate compiler-node count.
+
+The old source, direct temporary with either predicate, and final exact source
+each pass whole-object identity between passive and ordinary compiles outside
+the COFF timestamp. All runners restore the normal shim in `finally`.
+Artifacts are `build/rmg-expression-prefix-trace/`,
+`build/rmg-direct-tile-budget-trace/` and `build/rmg-direct-tile-exact-trace/`.
+The prefix also supplies negative controls: reversing the constructor's first
+two field stores leaves the same allocation prefix while changing emitted
+entry bytes; an owned two-byte flip value changes the middle expressions but
+still consumes six slots and leaves width at `0x41c`. Thus neither source
+store order nor field grouping alone predicts the required operand rank.
+
+<!-- c2-role: global 0x99620 expressionArguments -->
+
 ## 7. Files
 
 | path | role |

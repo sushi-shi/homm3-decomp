@@ -37,6 +37,7 @@ if __package__ in (None, ""):  # standalone: put scripts/ on the path
 # sibling module, same directory (ghidra_scripts/ has no __init__ by design)
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import import_c2  # noqa: E402
+import c2_disasm  # noqa: E402
 
 OUT_DIR = import_c2.RAW_DIR / "regasg"
 BASE = import_c2.IMAGE_BASE
@@ -87,18 +88,8 @@ def _decompiler(program):
 
 
 def _disasm_span(program, lo_rva, hi_rva):
-    """Flat listing text for [lo, hi): 'rva  bytes  mnemonic operands'."""
-    listing = program.getListing()
-    space = program.getAddressFactory().getDefaultAddressSpace()
-    lines = []
-    it = listing.getInstructions(space.getAddress(BASE + lo_rva), True)
-    for ins in it:
-        rva = ins.getAddress().getOffset() - BASE
-        if rva >= hi_rva:
-            break
-        raw = " ".join("%02x" % (b & 0xFF) for b in ins.getBytes())
-        lines.append("%6x  %-24s %s" % (rva, raw, str(ins)))
-    return lines
+    """The same labeled, byte-verified listing as `homm3 vc6 disasm`."""
+    return c2_disasm.render_span(program, lo_rva, hi_rva).splitlines()
 
 
 def cmd_dump(program, args):

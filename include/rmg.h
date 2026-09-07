@@ -12,7 +12,7 @@ class TAbstractFile;
 class TSpreadsheetResource;
 struct TRmgTownSlot;
 struct TRmgZone;
-struct TRmgTerrainTile;
+struct rmgTerrainTile;
 struct TPoint;
 struct TObjectType;
 
@@ -519,10 +519,6 @@ struct TRmgGridPoint {
     TRmgGridPoint(const unsigned int& newX, const unsigned int& newY)
         : m_x(newX), m_y(newY) {}
 
-    bool operator<(const TRmgGridPoint& other) const
-    {
-        return m_y < other.m_y || (m_y == other.m_y && m_x < other.m_x);
-    }
     TRmgGridPoint& operator+=(const TPoint& offset)
     {
         m_x += offset.m_x;
@@ -531,10 +527,20 @@ struct TRmgGridPoint {
     }
     TRmgGridPoint operator+(const TPoint& offset) const
     {
-        TRmgGridPoint result = *this;
+        // Copy-initialize the coordinate value, then return the compound
+        // translation. Retail paintPoint 0x5b4e38..0x5b4e55 retains original x
+        // at EBP-0x14 before the additions. With its guard-return terrain
+        // predicate, a separate named return changes the direction register
+        // and addition schedule (99.0163% versus 99.9204%). The older named-
+        // return result depended on the comparison-return predicate.
+        TRmgGridPoint result = TRmgGridPoint(m_x, m_y);
         return result += offset;
     }
 };
+
+// The retained comparison at 0x5b8ca0 receives both point addresses in
+// ECX/EDX and returns without popping arguments: a free fastcall boundary.
+bool operator<(const TRmgGridPoint& left, const TRmgGridPoint& right);
 
 struct TRmgZoneBounds {
     // Before normalization: minimumX.
@@ -859,10 +865,10 @@ class TRmgMapAdapterInterface {
 public:
     virtual ~TRmgMapAdapterInterface() {}
     virtual void setTile(
-        const TRmgGridPoint& point, const TRmgTerrainTile& tile) = 0;
+        const TRmgGridPoint& point, const rmgTerrainTile& tile) = 0;
     virtual void setOverlay(const TRmgGridPoint& point, int value) = 0;
     virtual TRmgGridPoint getSize() = 0;
-    virtual TRmgTerrainTile getTile(const TRmgGridPoint& point) = 0;
+    virtual rmgTerrainTile getTile(const TRmgGridPoint& point) = 0;
     virtual int getLand(const TRmgGridPoint& point) = 0;
     virtual int getOverlay(const TRmgGridPoint& point) = 0;
 };
@@ -908,10 +914,10 @@ public:
     }
 
     virtual void setTile(
-        const TRmgGridPoint& point, const TRmgTerrainTile& tile);
+        const TRmgGridPoint& point, const rmgTerrainTile& tile);
     virtual void setOverlay(const TRmgGridPoint& point, int value);
     virtual TRmgGridPoint getSize();
-    virtual TRmgTerrainTile getTile(const TRmgGridPoint& point);
+    virtual rmgTerrainTile getTile(const TRmgGridPoint& point);
     virtual int getLand(const TRmgGridPoint& point);
     virtual int getOverlay(const TRmgGridPoint& point);
 
@@ -944,10 +950,10 @@ public:
 
     // Before normalization (function): TRmgMapAdapter::SetTile.
     virtual void setTile(
-        const TRmgGridPoint& point, const TRmgTerrainTile& tile);
+        const TRmgGridPoint& point, const rmgTerrainTile& tile);
     virtual void setOverlay(const TRmgGridPoint& point, int value);
     virtual TRmgGridPoint getSize();
-    virtual TRmgTerrainTile getTile(const TRmgGridPoint& point);
+    virtual rmgTerrainTile getTile(const TRmgGridPoint& point);
     virtual int getLand(const TRmgGridPoint& point);
     virtual int getOverlay(const TRmgGridPoint& point);
 };

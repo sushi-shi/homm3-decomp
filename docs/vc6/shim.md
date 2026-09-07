@@ -158,29 +158,63 @@ python3 -m homm3.vc6.shim.build negative   # prove the gate can fail
 python3 -m homm3.vc6.shim.build clean      # remove overlay + scratch
 ```
 
-## 4. Phase 3 extension path (not in v1)
+## 4. Gated inline-budget observations
 
-The shim already executes inside the compiler process at pass time, after
-`C2_real.dll` is mapped and before/after every `InvokeCompilerPass`. The
-planned extension keeps the byte-identity gate as the standing inertness
-fence and adds, between the log and the forward:
+`trace` builds a temporary `SHIM_INLINE_TRACE` overlay, compiles a real TU
+using its exact `config/units.toml` profile, and compares the complete object
+with an uninstrumented compile. Only the four-byte COFF timestamp is ignored.
+The normal shim is restored in `finally`, including rejected traces. The
+pinned toolchain is unchanged; normal matching builds never use this overlay.
 
-- read C2 globals by `LoadLibraryA("C2_real.dll") + RVA` (the DLL prefers
-  base 0x10700000 and carries a `.reloc` section, so use the returned
-  HMODULE as the base, never the preferred base) - first target: the
-  `/Ob2` inliner budget trajectory around each pass;
-- optionally install IAT or hot-patch hooks inside `C2_real.dll` for
-  per-decision tracing.
+```sh
+python3 -m homm3.vc6.shim.build trace rmg_terrain --fn paintPoint
+```
 
-Any such build must keep a hook-free configuration that still passes the
-gate, and every instrumented conclusion needs a gate-green control run of
-the same source. v1 deliberately contains no hooks.
+The function filter is a case-sensitive substring of the compiler symbol.
+The command writes `comparisons.log` and `verdict.txt` below
+`build/vc6/shim/gate/inline-trace/<unit>/`. An absent function, failed compile,
+or any object difference prevents a passing verdict. Read the verdict before
+using the observations. `sym` rows associate process-local addresses with
+compiler names; `main` gives the root function's front-end size estimate;
+`site` gives the root, owner, callee, signed size estimate, remaining budget,
+expansion depth, remaining candidate sites, and running size.
+
+Two guarded hooks replay whole original instructions:
+
+| C2 RVA | observation | replayed instructions |
+| --- | --- | --- |
+| 0x1995c | root body in ESI; symbol = body[0] | `mov eax,[esi]; movsx eax,word ptr [eax+0x6d]` |
+| 0x19f8c | callee in EDI; current expansion frame at ESP | `mov ax,[edi+0x6d]; mov esi,[esp+0x48]` |
+
+The loaded DLL base owns each address. Expected opcode bytes must agree
+before patching. Both hooks preserve integer registers, flags, and the thread's
+last-error value around logging. The name pointer at symbol+0x18 was observed
+in the sample and terrain compiles. Existing inliner evidence identifies the
+signed size estimate at symbol+0x6d. At the second site, ESP+0x48 is budget,
++0x34 depth, +0x30 sites remaining, and +0x1c the current owner body.
+
+These are **budget comparisons, not final inline decisions**. Arity and depth
+rejections occur before the second hook; post-substitution vetoes can occur
+after it. Confirm the actual named call sequence in the emitted object.
+The tool supplies measured compiler inputs; it does not authorize adding
+unused source operations to change them.
+
+Validation: the renamed terrain TU is 56,064 bytes and reproduces every
+non-timestamp byte through the instrumented overlay. All 70 emitted code
+sections also remain byte-identical across the painter's naming migration.
+The ordinary sample gate passes its argv and identity checks. The existing
+`negative` control removes `-Gy`, detects changed bytes, and restores a passing
+normal shim. Combining that same mutation with `trace` on the terrain TU
+produces 45,539 differing object bytes, which `trace` rejects before restoring
+the normal shim. These controls establish that a plausible log alone cannot
+pass the identity gate.
 
 ## 5. Files
 
 | Path | Role |
 |---|---|
 | `scripts/homm3/vc6/shim/passthru.c` | the shim DLL source (C89, CRT-free) |
+| `scripts/homm3/vc6/shim/inline_trace.c` | optional guarded budget hooks; omitted from the normal shim |
 | `scripts/homm3/vc6/shim/passthru.def` | the two decorated exports |
 | `scripts/homm3/vc6/shim/sample_tu.cpp` | frozen gate input - do not edit |
 | `scripts/homm3/vc6/shim/build.py` | overlay builder + gates (CLI above) |
