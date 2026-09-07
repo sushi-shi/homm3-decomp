@@ -1058,3 +1058,8 @@ VA_COMPGEN(0x00515260, 0xF, IMPLICIT_DTOR, basic_istream)
 // carve, not the codegen.
 VA_COMPGEN(0x00515270, 0x207, ISTREAM_EXTRACT_INT, char)
 VA_COMPGEN(0x00517830, 0x2BE, ISTREAM_EXTRACT_STRING, char)
+
+// TObjectTypeTable::load calls this specialization twice, and the RMG object
+// table supplies the third retail call. The signed magic division by the
+// proven 0x4c TObjectType stride distinguishes it from every pointer vector.
+VA_COMPGEN(0x0054C910, 0x21, VECTOR_SIZE, TObjectType)
