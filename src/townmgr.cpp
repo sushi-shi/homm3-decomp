@@ -6944,7 +6944,7 @@ int townManager::buyBuild(int buildingId, int infoOnly, int quickView)
         { 303, 303, 303, 377, 377, 377,   0 },
         { 303, 303, 303, 303, 377, 377, 377 }
     };
-    int types[7];
+    EGameResource types[7];
     int amounts[7];
     message msg;
     int i;

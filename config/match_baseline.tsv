@@ -4033,7 +4033,7 @@ town	?createBuilding@town@@QAE?AW4type_building_id@@W42@@Z	85.9771	85.9771	85.97
 town	?deallocate@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1be2d0	8a85a251cab1
 town	?destroyExtraCapitol@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1bec60	9bc7711e89e1
 town	?getArmy@town@@QBEABVarmyGroup@@XZ	100.0000	100.0000	100.0000	0x1c1460	5e6f9deb8b10
-town	?getBuildCost@town@@QBEFW4type_building_id@@PAH1@Z	81.4912	81.4912	81.4912	0x1c1180	e861d539b352
+town	?getBuildCost@town@@QBEFW4type_building_id@@PAW4EGameResource@@PAH@Z	100.0000	100.0000	100.0000	0x1c1180	a62568eafc5c
 town	?getBuildCost@town@@QBEXW4type_building_id@@PAH@Z	100.0000	100.0000	100.0000	0x1c10f0	d9a92d9192c1
 town	?getBuildCostArray@town@@QBEPAHW4type_building_id@@@Z	100.0000	100.0000	100.0000	0x1c1080	41b5b1b1036f
 town	?getBuildableMask@town@@QBE_JXZ	99.8839	99.8839	99.8839	0x1c0f20	042d5b314632

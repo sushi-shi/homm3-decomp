@@ -2279,43 +2279,30 @@ void town::getBuildCost(type_building_id building, int* resources) const
            NUM_RESOURCES * sizeof(int));
 }
 
-// E:\gamedcs\town.cpp:2224
-// Packs the nonzero cost columns down into (types, amounts) and returns
-// how many there were. The cursor plus explicit seven-entry down-counter
-// reproduce retail's loop direction and its reuse of the dead `building`
-// parameter slot, raising this row 77.46% -> 81.49%. The remaining delta
-// is register homing: retail keeps `count` in ebx, the cursor in ecx and
-// the resource id in edx; this compile rotates those values through
-// esi/edx/ecx and keeps `amounts` live across the memset. The DC's own
-// EGameResource* output signature was also compiled and paired on a fresh
-// delink; it was byte-inert and required a source-only enum cast, so the
-// zero-cast int* spelling remains. Rejected lower-scoring forms: memset
-// before cost selection (0%), count after costs (74.65% with this loop),
-// an indexed for loop (77.46%), a walking pointer with an up-counter
-// (74.0%), and resource lifetime extended across the memset (79.39%).
-// why-reg v2 --model --il-order (2026-08-13) classifies the remaining
-// EBX/ESI transposition as the C1 front-end handle-state class: target and
-// base expose the same definition slots in different pseudo processing
-// order, and the earlier target pseudo is not source-nameable.
+// E:\gamedcs\town.cpp:2224. Packs positive cost columns into typed
+// resource ids and amounts, returning a short count. DC line 2230 uses a
+// signed short resource index (the loop increment sign-extends a word);
+// line 2235 stores costs[resource] with the count increment.
+// Exact: restore that indexed short loop and let VC6 derive the retail
+// cursor/down-counter. The former hand-written cursor with an int resource
+// index scored 81.4912 and mis-homed count/costs; an indexed int loop gives
+// 77.4561. The short loop reaches 100 with either count++ in the amount
+// subscript or a separate increment. The DC-proven EGameResource* signature
+// and its enum conversion preserve the exact bytes.
+// Before normalization: get_build_cost.
 VA(0x005c1180, 0xA9)  // linkorder, dc 0x168910
-short town::getBuildCost(type_building_id building, int* types,
-                           int* amounts) const
+short town::getBuildCost(type_building_id building, EGameResource* types,
+                         int* amounts) const
 {
     short count = 0;
     const int* costs = getBuildCostArray(building);
     memset(amounts, 0, NUM_RESOURCES * sizeof(int));
-    int resource = 0;
-    // Before normalization (locals): resources_left.
-    int resourcesLeft = NUM_RESOURCES;
-    do {
-        if (*costs > 0) {
-            types[count] = resource;
-            amounts[count] = *costs;
-            count++;
+    for (short resource = 0; resource < NUM_RESOURCES; resource++) {
+        if (costs[resource] > 0) {
+            types[count] = EGameResource(resource);
+            amounts[count++] = costs[resource];
         }
-        costs++;
-        resource++;
-    } while (--resourcesLeft);
+    }
     return count;
 }
 

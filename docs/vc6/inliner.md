@@ -1586,3 +1586,19 @@ expression, retains two pointer calculations and null branches before the call
 and scores 91.6049%.
 Retail's saved ESI pointer proves the required lifetime. The different DC
 broadcast-text and redraw arguments are also excluded by the retail call edges.
+
+
+### Recover the induction type before spelling the optimized loop by hand
+
+`town::getBuildCost` (0x5c1180, compact resource-list overload) stopped at
+81.4912% with an explicit cursor and seven-entry down-counter. Its register
+allocation was blamed on front-end handle state. Dreamcast town.cpp:2230
+instead uses an indexed loop with a signed short resource id; its increment
+sign-extends a word.
+
+Restoring that loop reaches 100%: VC6 derives retail's cursor, down-counter,
+and reuse of the dead building argument slot. An indexed int loop gives
+77.4561%, so the induction type is essential even though retail's optimized
+counter runs in a full register. Incrementing count in the amount subscript
+or as a separate statement produces identical bytes. Restoring the proven
+`EGameResource*` output signature and its enum conversion is byte-neutral.
