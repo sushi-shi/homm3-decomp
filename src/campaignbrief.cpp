@@ -175,6 +175,10 @@ void TCampaignBrief::select(int which)
 // NewSMapHeader's own (the two strings and the POD tail follow inline).
 // Retail retains this object's copy, the first in link order to need it.
 VA_COMPGEN(0x00457cb0, 0x2B8, IMPLICIT_COPY_ASSIGN, CMapHeaderData)
+// The copy assignment compares its source int-vector size with this retained
+// destination capacity helper. Dreamcast names the specialization at
+// stl_vector.h:199 (dc 0x169d60); retail fixes the Dinkumware empty check.
+VA_COMPGEN(0x0054DEB0, 0x13, VECTOR_CAPACITY, Int)
 
 #if 0  // Dreamcast-only carcass; retained as evidence, not emitted for retail.
 // E:\gamedcs\campaignbrief.cpp:462
