@@ -574,9 +574,11 @@ directly in the caller expands that constructor and scores 87.9486%.
 
 This function has no Dreamcast counterpart. The accessor is provisional;
 the retained constructor, bitset calls and boolean homes are retail
-facts. Later local-lifetime and packed-byte-index changes reach 96.0790%
-with the same calls. The controls and remaining scheduling differences are
-recorded beside the function in `src/objecttype.cpp`.
+facts. Later local-lifetime and packed-byte-index changes reach 96.0790%.
+A second byte-verified trace has the same caller cost of 577, all 22 root
+candidates, and every nested budget unchanged. These measured gains come
+without changing inline decisions. The controls and remaining scheduling
+differences are recorded beside the function in `src/objecttype.cpp`.
 
 ### The checked bitset accessor can recover another boundary
 
