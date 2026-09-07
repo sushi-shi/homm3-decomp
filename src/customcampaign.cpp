@@ -2187,78 +2187,32 @@ int TCampaignBrief::CampaignHeaderStruct::getNumMaps() const
 // TGzInflateBuf for the header block, and again per scenario for the map
 // header the start-options record then folds into the scenario.
 //
-// Residual (49.5%): the /Ob2 budget, in ONE direction - every remaining
-// divergence is a callee we expand and retail calls, and the extra four EH
-// cleanup regions `vc6 diagnose` reports are that expansion's own
-// partially-constructed subobjects, not a missing lifetime. Two clusters
-// carry it: `NewSMapHeader mapHeader;` (retail calls the compiler-generated
-// ??0CMapHeaderData@@QAE@XZ at 0x45a990 - campaignbrief.obj emits and
-// claims that COMDAT - while our CL expands its five member constructions
-// in place) and `scenario->hero_placeholders = mapHeader.placeholders`
-// (retail calls the vector operator= COMDAT; we expand it into twelve
-// size/capacity/_Ucopy/_Destroy calls). The two documented levers for this
-// class are a statement pin and a caller-shrink helper split, and both are
-// closed here: this lane adds no inline_depth pins, and the Dreamcast
-// roster names no helper to split out of a Complete-only body.
-// DOSE, measured 2026-09-06 (throwaway probes, none shipped): the hole IS
-// budget-shaped and small. Taking 5 lines (the clear+FreeData head), 5 more
-// (the scenario-record loop) and 13 more (the per-scenario map-header block)
-// out of `caller_cb` carries 49.5351 -> 80.9541, at which point BOTH
-// clusters named above pair - ??0CMapHeaderData is CALLED and the
-// placeholder vector's operator= is CALLED - and the skeleton closes from
-// 78-vs-49 blocks to 50-vs-49 with one missing block. Intermediate doses:
-// map-header loop alone 70.25/70.77/71.11 by boundary, head alone 55.93,
-// head+loop-body 76.23/77.88/79.10/80.60 by boundary. Overshoot is real -
-// adding the file-open block to the largest dose drops it to 55.59 - and at
-// the peak the residual has FLIPPED SIGN: the two basic_string and the
-// bitset<300> subobject constructors and ~NewSMapHeader all become CALLS
-// where retail expands them. So ~31 points here are reachable through
-// caller mass alone, and what is wanted is the real construct that carries
-// it. The frame
-// is 12 bytes over retail's 0x528 for the same reason - our fpos temporary
-// pair and the memory-homed running offset are pushed apart by the
-// expansions above, where retail keeps the offset in ESI throughout.
+// Residual: current 53.9715%; the historical 80.9474% peak remains banked.
+// Retail calls ScenarioStruct's scalar deleting destructor, vector::clear,
+// freeData, basic_streambuf's constructor, CMapHeaderData's constructor and
+// the placeholder vector assignment where this candidate expands them.
+// The expanded base construction and vector assignment introduce most of
+// the extra branches. Keep the canonical helpers and their source calls.
 //
-// 2026-09-06, CLOSED IN PART (49.5351 -> 53.9715) by restoring the
-// ScenarioStruct::LoadMapHeader call this body had pasted in longhand. The
-// helper is claimed at 0x487d30 and stays exact; its four statements were
-// spelled out here verbatim (`pubseekoff`, the TGzInflateBuf/TStreamBufFile
-// pair, `mapHeader.Read`), which is precisely the "per-scenario map-header
-// block (13 lines)" the dose study below had to remove by hand to reach its
-// peak. Retail still EXPANDS the helper at this site - both TGzInflateBuf
-// ctor/dtor pairs remain in the caller on both sides - so this is the
-// docs/vc6/inliner.md "a missing helper can alter an earlier expansion"
-// effect exactly: C1 sizes the caller BEFORE expansion, so writing the call
-// lowers caller_cb, lowers the /Ob2 budget, and stops the over-expansion
-// downstream. The call census goes from 11 target-only calls to ZERO: every
-// callee retail has, we now have, and the whole remainder is 20 base-only
-// sites where we still expand what retail calls.
-// 2026-09-06, first-divergence anchor (measured before that fix). The
-// budget hole does not start somewhere in the middle of this body - it
-// starts at SITE 0 and never lets up. Walking the head instruction for
-// instruction, retail CALLS and we EXPAND, in source order and without a
-// single exception: `delete scenarios[i]` is `push 1 / call ??_GScenario-
-// Struct` in retail (that COMDAT is ours, 33 B and already exact) against
-// our inlined `call ??1ScenarioStruct / push / call operator delete`;
-// `scenarios.clear()` is `mov ecx,edi / call ?clear@vector<...>` against our
-// expanded `std::copy` + `_Destroy` pair; `FreeData()` is `mov ecx,ebx /
-// call ?FreeData@...` against our expanded vtable-slot-0 delete; and
-// `new std::filebuf` calls `??0basic_streambuf<char>` where we expand it and
-// go straight to `??0locale`. Retail therefore compiled this body with its
-// /Ob2 budget at or near the 1000 floor, rejecting EVERY candidate from the
-// first one. That is a whole-body property of `caller_cb`, so no per-site
-// respelling can reach it - which the section-6b ladder now confirms by
-// measurement: `scenarios.push_back(scenario)` -> `insert(end(), scenario)`
-// is 49.5351 -> 48.5470, `scenarios.clear()` -> `erase(begin(), end())` is
-// 49.5351 -> 48.0435, and `campaign_name`/`campaign_desc` `operator=` ->
-// `assign` (all three sites) is byte-flat at 49.5351. The dose figures above
-// stand; what is still missing is the source construct that puts caller_cb
-// where retail's was, and this anchor says any candidate construct must move
-// the FIRST site, not a late one.
+// homm3 vc6 predict-inline's passive trace measures caller cb=1077 and
+// initial budget=2154. The scalar deleting destructor is cb=50 with budget
+// 2112 and 28 sites remaining; freeData is cb=101 with budget 1952 and 26
+// remaining. Both expand. Later, vector assignment is cb=369 with budget
+// 571 and two sites remaining, and also expands. These are candidate
+// measurements; retail's original caller budget has not been recovered.
 //
-// Measured and kept: dispatching the six header reads through a
-// TAbstractFile* rather than the concrete TStreamBufFile local is worth
-// +3.85 (45.6886 -> 49.5379) - see the note at the pointer's declaration.
+// Restoring the existing loadMapHeader call improved 49.5351% to 53.9715%.
+// Retail expands that helper here, retaining both TGzInflateBuf ctor/dtor
+// pairs. Prior artificial helper splits reached about 80.95%, but identify
+// no recoverable source boundary and are not retained. They also made some
+// NewSMapHeader subobject constructors and its destructor stay out of line
+// where retail expands them; a uniform reduction is not a complete repair.
+//
+// Negative controls: direct insert(end(), 1, scenario) scores 44.4627%; a
+// countdown scenario-record loop produces identical function bytes; limiting
+// currentDirectory to the file-open scope leaves the score at 53.9715%.
+// Keep reads through TAbstractFile*: retail uses the virtual slot at +4.
+// Calling streamFile.read directly instead devirtualizes and expands them.
 VA(0x00488880, 0x5D6)  // anchor-caller(TCampaignBrief ctor), retail-only
 bool TCampaignBrief::CampaignHeaderStruct::load()
 {
