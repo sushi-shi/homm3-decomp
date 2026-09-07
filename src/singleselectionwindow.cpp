@@ -9917,14 +9917,13 @@ void* CAutoArray<int>::`scalar deleting destructor'(unsigned __flags)
 // 0x7c-stride walk masking against gGameContextFeatures is GetPlayerCount,
 // reconstructed above.
 
-// NOT CLAIMED, and recorded so no later lane re-derives it: 0x58eb50 (15 B)
-// is this compiland's `char_traits<char>::assign` on content - a unique
-// 15-byte match at mnemonic agreement 1.000, against a 20 B `_Eos` as the
-// only other candidate - but the declarator form is the only claim form the
-// join has for it (no compgen kind builds the flat char_traits key), and
-// campaignbrief already owns that lexical name at 0x45dc90. The label
-// authority refuses a duplicate proven name across two retail rows, so this
-// row needs a char_traits kind before it can be claimed.
+// NOT CLAIMED: retail call semantics identify 0x58eb50 as
+// map<int,type_map_hero_info>::end(), not the same-size char_traits::assign
+// candidate once proposed from mnemonic agreement. Its callers pass the map
+// in ECX and a hidden iterator result on the stack; the body copies `_Head`
+// from this+4. This TU inlines every end() and emits no standalone COMDAT, so
+// the boundary remains parked with its two caller inlining residuals rather
+// than being assigned to an unrelated emitted symbol.
 #if 0  // @carcass: Dinkumware instantiations emitted by this compiland
 
 VA(0x0058fe80, 0x66)  // COMDAT pairing (unique 102 B in this obj)
