@@ -1,7 +1,4 @@
-[queue] 912 active unmatched target(s), smallest first; 22 parked
-      33 B  0x00583ec0  unadmitted    carcass             singleselectionwindow:__h3cg$singleselectionwindow$scalar_deleting_dtor$CNewPlayerUpda
-      33 B  0x005b3a50  unadmitted    bracketed           systemoptionswindow..text:game_1b3a50
-      33 B  0x005fdb10  unadmitted    bracketed           viewwrld..widget:game_1fd790_sub03_1fdb10
+[queue] 909 active unmatched target(s), smallest first; 24 parked
       34 B  0x004fa050  unadmitted    bracketed           levelupwindow..lodfile:game_f9f00_sub01_fa050
       35 B  0x004cfec0  unadmitted    carcass             game:__h3cg$game$vector_destroy$type_map_hero_identity
       35 B  0x00530e40  unadmitted    bracketed           quicktownwindow..recruit:game_130e40
@@ -913,8 +910,7 @@
    11619 B  0x00579960  MAX 95.8142%  compiled            singleselectionwindow:??0TSingleSelectionWindow@@QAE@H@Z
 
 wrote evidence/smallest-match-queue.tsv
-ted	run the evidence pass and iterate up to five scored candidates
-compiled	793	0x00457990	92.1064	92.1064	92.1064	campaignbrief	campaignbrief	?select@TCampaignBrief@@QAEXH@Z	admitted	run the evidence pass and iterate up to five scored candidates
+dence pass and iterate up to five scored candidates
 compiled	794	0x005636c0	86.1308	86.1308	86.1308	sacrifice_window	sacrifice_window	?backpackClick@type_sacrifice_window@@QAEXJE@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	795	0x005d05f0	95.6856	95.6856	95.6856	townmgr	townmgr	?setCommandAndText@type_garrison_base_window@@QAEXPAVmessage@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	796	0x005a3250	99.9703	99.9703	99.9703	spells	spells	?handleCastWallSpell@@YIHAAVmessage@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
