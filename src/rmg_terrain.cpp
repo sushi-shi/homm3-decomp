@@ -10,6 +10,72 @@
 
 DATA(0x00642BD8) extern TRmgTerrainRule* const g_rmgTerrainRules[];
 
+// Vtable 0x642c98 slot 1 tests the count for pattern value 1. The constructor
+// at 0x5b3780 builds that range at +0x1c/+0x20 from its copied entry array.
+VA(0x005B3840, 0x0C)  // Complete-only pattern terrain rule
+unsigned char TRmgPatternTerrainRule::hasEntries()
+{
+    return 0 < m_ranges[1].m_count;
+}
+
+// Both concrete terrain-rule deleting destructors call this retained base
+// boundary. Retail restores the six-slot pure base vtable at 0x642c80.
+VA(0x005B3850, 0x07)  // terrain-rule deleting destructors; Complete-only
+TRmgTerrainRule::~TRmgTerrainRule()
+{
+}
+
+TRmgTableTerrainRule::~TRmgTableTerrainRule()
+{
+}
+
+// Vtable 0x642c98 slot 2 reads the byte at +4 in an eight-byte source entry.
+// The pattern-rule constructor at 0x5b3780 copies the same entry records.
+VA(0x005B3860, 0x11)  // Complete-only pattern terrain rule
+unsigned char TRmgPatternTerrainRule::isSpecialFrame(int frame)
+{
+    return m_entries[frame].m_special;
+}
+
+// Each copied source entry is two dwords. Vtable 0x642c98 slot 3 returns
+// the first dword of the requested entry through the pointer at +0x10.
+VA(0x005B3880, 0x10)  // Complete-only pattern terrain rule
+int TRmgPatternTerrainRule::getEntry(int index)
+{
+    return m_entries[index].m_frame;
+}
+
+// The sole caller is the static initializer at 0x5b3da0. Retail clears the
+// two inherited rule flags and installs vtable 0x642cb0.
+VA(0x005B3A20, 0x11)  // Complete-only table terrain rule
+TRmgTableTerrainRule::TRmgTableTerrainRule()
+{
+}
+
+// Retail vtable 0x642cb0 slot 1 is this constant-false query.  The surrounding
+// constructor at 0x5b3a20, vtable, fixed-table methods, and the first admitted
+// painter method at 0x5b3dd0 place it in this Complete-only compiland.  There
+// is no Dreamcast RMG counterpart; `xor al, al; ret` fixes the byte return.
+// The direct constant-false body matched on the first scored candidate.
+VA(0x005B3A40, 0x03)
+unsigned char TRmgTableTerrainRule::hasEntries()
+{
+    return 0;
+}
+
+// Both concrete six-slot terrain-rule vtables use this ICF-folded deleting
+// wrapper. The emitted table-rule closure calls the shared retained destructor
+// at 0x5b3850 and has the same complete-object delete semantics.
+VA_COMPGEN(0x005B3A50, 0x21, SCALAR_DELETING_DTOR, TRmgTableTerrainRule)
+
+// Vtable 0x642cb0 slot 3 indexes the first dword of the fixed eight-byte
+// transition records at 0x6424a8. There is no Dreamcast RMG counterpart.
+VA(0x005B3A80, 0x11)
+int TRmgTableTerrainRule::getEntry(int index)
+{
+    return g_rmgTerrainPatterns[index].m_frame;
+}
+
 // Provisional role spelling. The fastcall ABI and two-byte output are fixed
 // by the call at 0x5b5f4e. All selector names are provisional retail roles.
 // Before normalization (function): SelectTerrainTransition.
@@ -746,10 +812,12 @@ void rmgTerrainPainter::repairTerrainPoint(const TRmgGridPoint& point)
         do {
             unsigned int smallest = 0;
             unsigned int smallestWeight = gaps[0].m_weight;
-            for (unsigned int gap = 1; gap < gapCount; ++gap) {
-                if (gaps[gap].m_weight < smallestWeight) {
-                    smallest = gap;
-                    smallestWeight = gaps[gap].m_weight;
+            {
+                for (unsigned int gap = 1; gap < gapCount; ++gap) {
+                    if (gaps[gap].m_weight < smallestWeight) {
+                        smallest = gap;
+                        smallestWeight = gaps[gap].m_weight;
+                    }
                 }
             }
             unsigned int end =
@@ -760,7 +828,7 @@ void rmgTerrainPainter::repairTerrainPoint(const TRmgGridPoint& point)
                     paintPoint(point + g_tileDirections[direction]);
             }
             --gapCount;
-            for (gap = smallest; gap < gapCount; ++gap)
+            for (unsigned int gap = smallest; gap < gapCount; ++gap)
                 gaps[gap] = gaps[gap + 1];
         } while (gapCount > 1);
     }
@@ -1139,6 +1207,11 @@ void TRmgTerrainBrush::paintRectangle(
     m_painter->paintRectangle(x, y, rectangleWidth, rectangleHeight);
 }
 
+// The brush constructor's allocation-failure unwind reaches the retained
+// Dinkumware auto_ptr destructor. Its {owns, pointer} layout, pointee
+// destructor call, and scalar delete exactly identify this specialization.
+VA_COMPGEN(0x005B76D0, 0x20, IMPLICIT_DTOR, rmgTerrainPainter_auto_ptr)
+
 VA(0x005B76F0, 0x209) // anchor-callee 0x5b76d9; retained painter destructor
 rmgTerrainPainter::~rmgTerrainPainter()
 {
@@ -1148,6 +1221,20 @@ rmgTerrainPainter::~rmgTerrainPainter()
 // The four late point constructions in RepairTerrainPoint pass x and y by
 // reference. The retained two-store body is 24 bytes including ret 8.
 VA_COMPGEN(0x005B76B0, 0x18, CLASS_CTOR, TRmgGridPoint)
+
+// PaintPoint and TRmgTerrainBrush::changeTerrain retain this one-dword
+// iterator wrapper around the tree's raw-node lower bound.
+VA_COMPGEN(0x005B85A0, 0x17, TREE_LOWER_BOUND, TRmgGridPoint)
+// PaintPoint retains the two-bound wrapper returning its iterator pair.
+VA_COMPGEN(0x005B85C0, 0x2C, TREE_EQUAL_RANGE, TRmgGridPoint)
+VA_COMPGEN(0x005B8A20, 0x17, TREE_UPPER_BOUND, TRmgGridPoint)
+
+// erase(key) in TRmgTerrainBrush::changeTerrain retains Dinkumware's
+// public distance wrapper and its category-dispatched overload. The wrapper
+// increments the caller's count directly; the unused tag argument accounts
+// for the tagged body's missing self-store.
+VA_COMPGEN(0x005B8C70, 0x2B, STD_DISTANCE, TRmgGridPoint)
+VA_COMPGEN(0x005B8CD0, 0x28, STD_DISTANCE_TAGGED, TRmgGridPoint)
 
 // The set lookup at 0x5b4e96 retains this free comparison. Its unsigned
 // y-then-x ordering also appears in the tree's expanded comparisons.

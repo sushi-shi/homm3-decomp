@@ -32,6 +32,36 @@
 
 typedef std::set<TPoint> TRmgPointSet;
 
+// Complete-only progress base constructor. Retail's sole caller is the
+// TRandomMapProgress constructor; vtable 0x6409c0 and the existing SetTotal
+// body prove the total at +4, followed by the zeroed completed count at +8.
+VA(0x00530E20, 0x1C)
+TProgressSink::TProgressSink(int totalSteps)
+{
+    m_steps = totalSteps;
+    m_done = 0;
+}
+
+// Vtable 0x6409c0 slot 0 retains the generated deleting wrapper between the
+// constructor and the ordinary destructor in retail link order.
+VA_COMPGEN(0x00530E40, 0x23, SCALAR_DELETING_DTOR, TProgressSink)
+
+// Complete-only RMG base virtual, exact on the first scored candidate. Vtable
+// 0x6409c0 and three retail cleanup callers all restore this same vptr;
+// Dreamcast has no RMG compiland.
+VA(0x00530E70, 0x07)
+TProgressSink::~TProgressSink()
+{
+}
+
+// Vtable 0x6409c0 slot 1 stores the new total at +4. The derived progress
+// dialog overrides the same interface while the base Advance slot stays pure.
+VA(0x00530E80, 0x0D)  // Complete-only RMG progress base
+void TProgressSink::setTotal(int totalSteps)
+{
+    m_steps = totalSteps;
+}
+
 namespace {
 
 // The cinit at 0x530da0 writes these eight clockwise neighbours.  The river
@@ -282,6 +312,83 @@ static void setAvailableRmgHeroes(
     }
 }
 
+// Vtable 0x6409cc slot 0 and the 0x14-byte concrete map layout identify this
+// scalar deleting wrapper. Its non-deleting half destroys the owned array of
+// 0x30-byte TRmgMapItem elements before restoring the abstract map vtable.
+VA_COMPGEN(0x00530F80, 0x21, SCALAR_DELETING_DTOR, type_random_map)
+
+// The array construction at 0x530fb0 passes this body to VC6's vector
+// destructor iterator with a 0x30-byte stride. It destroys TRmgMapItem's
+// vector<type_object*> at offset zero; rmg.obj emits the implicit destructor
+// byte-for-byte from the recovered aggregate declaration.
+VA_COMPGEN(0x00530EE0, 0x26, IMPLICIT_DTOR, TRmgMapItem)
+
+// The array constructor at 0x530e90 calls this initializer after constructing
+// m_objects, and type_random_map::clear calls it for every allocated cell.
+// Dreamcast has no RMG compiland, so the original method spelling is unknown;
+// `clear` describes the retail operation while preserving its real boundary.
+// Four compiled forms peaked at 76.95%. Direct member writes store the packed
+// connection word too early (73.68%); local packed-field snapshots recover the
+// retail masks and final store order, leaving only EDI lifetime/load scheduling.
+// Keep the fifth probe for this 111-byte function's own queue position.
+VA(0x00530F10, 0x6F)
+void TRmgMapItem::clear()
+{
+    m_objects.erase(m_objects.begin(), m_objects.end());
+
+    TRmgConnectionDecoration connection = m_connection;
+    TRmgGroundTile tile = m_tile;
+    TRmgGroundTileData tileData = m_tileData;
+    connection.m_present = 0;
+    tile.m_landType = eTerrainWater;
+    tile.m_terrainFrame = 21;
+    tile.m_riverType = 0;
+    tile.m_riverFrame = 0;
+    tile.m_roadType = 0;
+    tileData.m_roadFrame = 0;
+    tileData.m_blockedDirections = 0;
+    tileData.m_connectionDirection = 0;
+    tileData.m_terrainFlipX = 0;
+    tileData.m_terrainFlipY = 0;
+    tileData.m_riverFlipX = 0;
+    tileData.m_riverFlipY = 0;
+    tileData.m_roadFlipX = 0;
+    tileData.m_roadFlipY = 0;
+    tileData.m_coastal = 0;
+    tileData.m_roadEntrance = 0;
+    tileData.m_placementOutline = 0;
+    tileData.m_roadPassable = 1;
+    tileData.m_borderObject = 0;
+    tileData.m_subterraneanGate = 1;
+    tileData.m_zoneBoundary = 0;
+    tileData.m_roadTarget = 0;
+    tileData.m_riverTarget = 0;
+    tileData.m_impassable = 0;
+    m_connection = connection;
+    m_tile = tile;
+    m_movement.m_cost = 32700;
+    m_movement.m_zonePathCost = 32700;
+    m_zoneState.m_score = 32700;
+    m_zoneState.m_zone = -1;
+    m_zoneState.m_connectionEligibility = -1;
+    m_previousTile.m_x = -1;
+    m_tileData = tileData;
+}
+
+// Retail's generation retry path invokes this on its temporary map before
+// reinitializing every cell. The post-decrement count produces the zero guard
+// and single 0x30-stride loop seen in all 42 bytes at 0x531140.
+VA(0x00531140, 0x2A)
+void type_random_map::clear()
+{
+    TRmgMapItem* mapItem = m_mapItems;
+    int mapItemCount = m_mapWidth * m_mapHeight * m_numberLevels;
+    while (mapItemCount--) {
+        mapItem->clear();
+        ++mapItem;
+    }
+}
+
 #if 0 // @carcass - retained placement helper shared by gate and shipyard paths
 VA(0x00531CF0, 0x1A5) // anchor-callee 0x541c73; thiscall, ret 0x14; retail-only
 unsigned char type_random_map::canPlaceObject(
@@ -301,6 +408,78 @@ TRmgGridPoint type_random_map::getSize()
 {
     return TRmgGridPoint(m_mapWidth, m_mapHeight);
 }
+
+// Vtable 0x6409cc slots 5 and 6 index the 0x30-byte cell array with the
+// supplied x/y point. The two signed extracts select the six-bit land kind
+// and its adjacent eight-bit terrain frame from TRmgGroundTile.
+VA(0x005322C0, 0x2A)
+int type_random_map::getLand(const TRmgGridPoint& point)
+{
+    return m_mapItems[point.m_y * m_mapWidth + point.m_x].m_tile.m_landType;
+}
+
+VA(0x005322F0, 0x2A)
+int type_random_map::getOverlay(const TRmgGridPoint& point)
+{
+    return m_mapItems[point.m_y * m_mapWidth + point.m_x]
+        .m_tile.m_terrainFrame;
+}
+
+// Complete-only base of the road adapter, exact on the first scored candidate.
+// The derived deleting destructor at 0x532320 and one retail cleanup path call
+// this retained vptr restoration; Dreamcast has no RMG compiland.
+VA(0x00532350, 0x07)
+TRmgRoadMapAdapterInterface::~TRmgRoadMapAdapterInterface()
+{
+}
+
+// Vtable 0x640a20 slot 0 retains the road-interface deleting wrapper; retail
+// places this generated COMDAT later than the ordinary destructor.
+VA_COMPGEN(0x00537940, 0x23, SCALAR_DELETING_DTOR, TRmgRoadMapAdapterInterface)
+
+// Complete-only base of the river adapter, exact on the first scored candidate.
+// The derived deleting destructor at 0x5324e0 and two CreateRiver cleanup paths
+// call this retained vptr restoration; Dreamcast has no RMG compiland.
+VA(0x00532510, 0x07)
+TRmgMapAdapterInterface::~TRmgMapAdapterInterface()
+{
+}
+
+// Vtable 0x640a58 slot 0 retains the interface's generated deleting wrapper;
+// retail places its COMDAT later than the ordinary destructor.
+VA_COMPGEN(0x00537910, 0x23, SCALAR_DELETING_DTOR, TRmgMapAdapterInterface)
+
+// Vtable 0x640a3c slot 0 and the 0x08 concrete adapter layout identify this
+// scalar deleting wrapper. The retained body delegates to the adapter-interface
+// destructor at 0x532510 before conditionally releasing the object.
+VA_COMPGEN(0x005324E0, 0x21, SCALAR_DELETING_DTOR, TRmgMapAdapter)
+
+// Concrete river-adapter vtable 0x640a3c slots 5 and 6 read the packed river
+// kind and underlying land kind from the wrapped map's 0x30-byte cell array.
+VA(0x00532830, 0x2D)
+int TRmgMapAdapter::getLand(const TRmgGridPoint& point)
+{
+    return m_map->m_mapItems[point.m_y * m_map->m_mapWidth + point.m_x]
+        .m_tile.m_riverType;
+}
+
+VA(0x00532860, 0x2D)
+int TRmgMapAdapter::getOverlay(const TRmgGridPoint& point)
+{
+    return m_map->m_mapItems[point.m_y * m_map->m_mapWidth + point.m_x]
+        .m_tile.m_landType;
+}
+
+// Unclaimed retail 0x532790 is slot 3 of both concrete adapter vtables at
+// 0x640a04 and 0x640a3c. Five compiled forms of
+// `TRmgMapAdapter::getSize() { return m_map->getSize(); }` preserve the call,
+// relocation, CFG, and ABI but allocate the returned temporary through the
+// opposite register pair (best 85.18%). The other table belongs to the still
+// unrecovered concrete road adapter at 0x532320..0x5324b0, so the shared ICF
+// representative stays banked with that class cluster.
+// Its 45-byte slots at 0x532480/0x5324b0 index the wrapped map identically
+// and extract road type / land type, but neither can be emitted until that
+// concrete road-adapter declaration and vtable are recovered.
 
 // The boundary coordinator constructs both a temporary zone and owned
 // water zones through this same retained body. The final three members are
@@ -479,6 +658,10 @@ type_object::type_object(TRmgObjectPropertiesRef* newProperties)
     clearPlacementMarks();
 }
 
+// Base-object vtable 0x640a74 slot 0 retains the generated deleting wrapper;
+// its non-deleting half is the shared refcount release at 0x5338d0.
+VA_COMPGEN(0x00533120, 0x2D, SCALAR_DELETING_DTOR, type_object)
+
 // Retained reset at 0x533150; its expansion also ends the preceding ctor.
 // Preserve the ordinary helper's retail order after that constructor.
 VA(0x00533150, 0x12) // five placement marks, thiscall, ret 0; retail-only
@@ -512,6 +695,15 @@ type_object::~type_object()
     --m_properties->m_refCount;
 }
 
+// The hero-object factory marks the selected index in disabledHeroes before
+// construction. Vtable 0x640b14 slot 1 clears that byte when the reservation
+// is released.
+VA(0x00533C70, 0x0F)  // factory 0x5348d0; Complete-only RMG object
+void rmgHeroObject::unknownOperation()
+{
+    m_generator->m_disabledHeroes[m_heroIndex] = 0;
+}
+
 // Complete-only helper called by InitializeObjectGenerators at 0x538b10.
 // The four argument loads, five stores, vtable relocation, and `ret 0x10`
 // independently prove this constructor and the shared 0x14-byte prefix.
@@ -523,6 +715,14 @@ type_treasure_def::type_treasure_def(
     m_subtype = newSubtype;
     m_value = newValue;
     m_density = newDensity;
+}
+
+// Complete-only RMG virtual recovered from the inherited slot in the
+// type_treasure_def family of retail vtables; Dreamcast has no RMG compiland.
+VA(0x00534190, 0x06)
+int type_treasure_def::getValue(void*, void*)
+{
+    return m_value;
 }
 
 // The compiler expands the common four-store constructor in each of these
@@ -564,6 +764,31 @@ type_spell_scroll_def::type_spell_scroll_def(int newSpellLevel, int newValue)
 {
     m_spellLevel = newSpellLevel;
 }
+
+// Vtable 0x640c30 slot 1 belongs to type_key_tent_def. The key-tent
+// registration loop stores the color in m_subtype, and retail returns this
+// definition's value only while that color is the generator's next free one.
+VA(0x00534FA0, 0x21)
+int type_key_tent_def::getValue(void*, void* map)
+{
+    type_random_map_generator* generator =
+        static_cast<type_random_map_generator*>(map);
+    if (generator->m_nextKeyTentColor != m_subtype)
+        return -1;
+    return m_value;
+}
+
+// The seven-slot abstract map table at 0x6409e8 and sixteen retail cleanup
+// tails identify this virtual base destructor, exact on the first scored
+// candidate. Dreamcast has no RMG compiland.
+VA(0x005361A0, 0x07)
+TRmgMapInterface::~TRmgMapInterface()
+{
+}
+
+// Vtable 0x6409e8 slot 0 retains this generated wrapper immediately after
+// the exact abstract-base destructor in retail link order.
+VA_COMPGEN(0x005361B0, 0x23, SCALAR_DELETING_DTOR, TRmgMapInterface)
 
 // rand_trn.txt supplies one rule per nonempty row starting at row three.
 // The two 232x10 vector grids group rules and subtypes by remapped object
@@ -2765,6 +2990,18 @@ VA_COMPGEN(0x00404200, 0x209, VECTOR_INSERT, Int)
 VA_COMPGEN(0x00422F50, 0x1B1, VECTOR_INSERT, Int)
 VA_COMPGEN(0x004347A0, 0x32E, VECTOR_INSERT, TRmgMapPosition)
 
+// The RMG position insertion at 0x54c3f0 and spellbook's 12-byte entry
+// insertion both call retail 0x54dd60. Their plain three-dword copies are
+// ICF-identical; this TU naturally emits the TRmgMapPosition specialization.
+VA_COMPGEN(0x0054DD60, 0x15, STD_CONSTRUCT, TRmgMapPosition)
+
+// Retail vector<TRmgObjectPlacementRule>::insert at 0x54c730 retains its
+// 41-byte _Ufill loop at 0x54d8f0 and the 260-byte _Construct body at
+// 0x54dd80.  The current insert expands that loop while still calling
+// _Construct at each site; its much larger caller body confirms this is an
+// unresolved nested-inliner boundary.  Recover the insert before claiming
+// _Ufill rather than manufacturing an unrelated ODR use.
+
 // ReadObjectPlacementRules retains the allocator-taking int-vector ctor;
 // its two local vector grids also take the default-constructor closure's
 // address. Resolved retail bodies are 27/27 and 24/24 bytes respectively.
@@ -3773,6 +4010,17 @@ void __fastcall emitRmgPointSetIncrement(TRmgPointSet::const_iterator* it)
 {
     ++*it;
 }
+
+// Unclaimed retail 0x54d0f0 allocates a 16-byte link node and substitutes
+// the new node for either null neighbour argument. Its sole natural call is
+// in the unreconstructed 0x543e20 RMG graph routine, so the node type and
+// retention boundary remain parked with that caller.
+
+// Unclaimed retail 0x5fdae0 is a 43-byte stdcall orientation test over three
+// by-value TPoint arguments. Its only calls are inside the unreconstructed
+// 840-byte half-edge repair routine at 0x5fd790. A faithful standalone body is
+// discarded by VC6, so natural retention depends on recovering that caller;
+// no dummy ODR use is introduced merely to keep the helper.
 
 // BuildVertices at 0x5fdb40 distinguishes displacement arithmetic from point
 // translation. It calls these five bodies while forming the circumcenter:

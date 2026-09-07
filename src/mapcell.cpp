@@ -6118,6 +6118,9 @@ VA_COMPGEN(0x005090b0, 0x30C, VECTOR_INSERT, generator)
 // immediately before copy<TTimedEvent> and copy<type_university>, so copy<int>
 // is the primary owner even though the surviving retail xref uses an alias.
 VA_COMPGEN(0x005093c0, 0x25, STD_COPY, Int)
+// BlackBoxData's exact implicit assignment retains the const-source overload
+// separately; its body is the same dword-copy loop as the mutable overload.
+VA_COMPGEN(0x0054df40, 0x25, STD_COPY, const_int)
 // Residual (96.50%, compiler CSE wall): after the implicit padding fields
 // were removed, base and retail have the same 36-block CFG and differ in
 // only three blocks. Retail hoists string::npos (0x63a60c) into ESI for the

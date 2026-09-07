@@ -9878,14 +9878,13 @@ void* CAutoArray<int>::`scalar deleting destructor'(unsigned __flags)
 // 0x7c-stride walk masking against gGameContextFeatures is GetPlayerCount,
 // reconstructed above.
 
-// NOT CLAIMED, and recorded so no later lane re-derives it: 0x58eb50 (15 B)
-// is this compiland's `char_traits<char>::assign` on content - a unique
-// 15-byte match at mnemonic agreement 1.000, against a 20 B `_Eos` as the
-// only other candidate - but the declarator form is the only claim form the
-// join has for it (no compgen kind builds the flat char_traits key), and
-// campaignbrief already owns that lexical name at 0x45dc90. The label
-// authority refuses a duplicate proven name across two retail rows, so this
-// row needs a char_traits kind before it can be claimed.
+// NOT CLAIMED: retail call semantics identify 0x58eb50 as
+// map<int,type_map_hero_info>::end(), not the same-size char_traits::assign
+// candidate once proposed from mnemonic agreement. Its callers pass the map
+// in ECX and a hidden iterator result on the stack; the body copies `_Head`
+// from this+4. This TU inlines every end() and emits no standalone COMDAT, so
+// the boundary remains parked with its two caller inlining residuals rather
+// than being assigned to an unrelated emitted symbol.
 #if 0  // @carcass: Dinkumware instantiations emitted by this compiland
 
 VA(0x0058fe80, 0x66)  // COMDAT pairing (unique 102 B in this obj)
@@ -10250,16 +10249,22 @@ VA_COMPGEN(0x00595e10, 0x204, STD_UNGUARDED_PARTITION,
 // singleselectionwindow.obj's emitted template instantiations (capstone
 // mnemonic agreement 1.000 at equal length in each case).
 //
+//   0x515480  20 B  bitset<4>::operator&=      - ICF-shared with bitset<10>
 //   0x58eae0  14 B  bitset<4>::flip()          - the only 4-bit bitset here
 //   0x58eaf0  21 B  bitset<4>::_Tidy(unsigned long)
 //   0x58eb60  75 B  _Tree<int,type_map_hero_info>::find
 //   0x58f0f0  23 B  _Tree<...>::lower_bound
 //   0x58f110  73 B  _Tree<...>::_Lbound
 //
-// The two bitset rows are the LAST two of the four-bit instantiation the
+// The 0x515480 row has two retail callers: TObjectType's bitset<10>
+// terrain intersection and setNewPlayerSlot's bitset<4> feature intersection.
+// Their one-word operator&= bodies are ICF-identical; this TU naturally emits
+// the exact bitset<4> public, while objecttype expands its bitset<10> call.
+// The other two bitset rows are the LAST two of the four-bit instantiation the
 // campaign-selection filter carries; the three tree rows complete the
 // map<int,type_map_hero_info> surface whose _Init / _Copy / _Erase /
 // operator= halves this file already claims.
+VA_COMPGEN(0x00515480, 0x14, BITSET_AND_ASSIGN, Bitset4)
 VA_COMPGEN(0x0058eae0, 0xE, BITSET_FLIP, Bitset4)
 VA_COMPGEN(0x0058eaf0, 0x15, BITSET_TIDY, Bitset4)
 VA_COMPGEN(0x0058eb60, 0x4B, TREE_FIND, type_map_hero_info)

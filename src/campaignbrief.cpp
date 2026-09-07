@@ -175,6 +175,10 @@ void TCampaignBrief::select(int which)
 // NewSMapHeader's own (the two strings and the POD tail follow inline).
 // Retail retains this object's copy, the first in link order to need it.
 VA_COMPGEN(0x00457cb0, 0x2B8, IMPLICIT_COPY_ASSIGN, CMapHeaderData)
+// The copy assignment compares its source int-vector size with this retained
+// destination capacity helper. Dreamcast names the specialization at
+// stl_vector.h:199 (dc 0x169d60); retail fixes the Dinkumware empty check.
+VA_COMPGEN(0x0054DEB0, 0x13, VECTOR_CAPACITY, Int)
 
 #if 0  // Dreamcast-only carcass; retained as evidence, not emitted for retail.
 // E:\gamedcs\campaignbrief.cpp:462
@@ -940,6 +944,12 @@ VA_COMPGEN(0x0045D370, 0xA3, TREE_CONST_ITERATOR_INC, type_map_hero_info)
 // map's node copy drives. Byte-verified against the emitted COMDAT at 0.973
 // mnemonic agreement over 343 bytes.
 VA_COMPGEN(0x0045d8e0, 0x157, IMPLICIT_COPY_ASSIGN, type_map_hero_identity)
+
+// The vector copy-assignment above and both TPlayerSlotAttributes assignment
+// loops invoke this wrapper on 0x14-byte hero-identity elements. Its retained
+// destructor call tears down the string at +4 before optional scalar delete.
+VA_COMPGEN(0x0045DA40, 0x21, SCALAR_DELETING_DTOR,
+           type_map_hero_identity)
 
 // E:\gamedcs\campaignbrief.cpp:1011
 // Exact checkpoint (2026-09-01): all 15 retail CFG blocks and all 399 bytes
