@@ -3595,6 +3595,7 @@ singleselectionwindow	??RTSortMapsByName@@QBE_NABUGameSelectionHeadersStruct@@0@
 singleselectionwindow	??RTSortMapsByPlayers@@QBE_NABUGameSelectionHeadersStruct@@0@Z	100.0000	100.0000	100.0000	0x190e00	397f977a831f
 singleselectionwindow	??RTSortMapsByVersion@@QBE_NABUGameSelectionHeadersStruct@@0@Z	100.0000	100.0000	100.0000	0x191190	1bac4be63f4f
 singleselectionwindow	??RTSortMapsByVictory@@QBE_NABUGameSelectionHeadersStruct@@0@Z	100.0000	100.0000	100.0000	0x191cb0	6746133d6261
+singleselectionwindow	??_4?$bitset@$03@std@@QAEAAV01@ABV01@@Z	100.0000	100.0000	100.0000	0x115480	-
 singleselectionwindow	??_GCChatSave@CChatWidget@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x17cb40	-
 singleselectionwindow	??_GCChatSlider@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x17ca50	-
 singleselectionwindow	??_GCChatWidget@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x17cb70	-

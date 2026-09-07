@@ -23,6 +23,7 @@
  *                                  VECTOR_* / BITSET_* / TREE_* / STD_* /
  *                                  BASIC_STRING_* / OSTREAM_* /
  *                                  INSERTION_SORT_1 /
+ *                                  BITSET_AND_ASSIGN /
  *                                  IMPLICIT_COPY_CTOR /
  *                                  IMPLICIT_COPY_ASSIGN / IMPLICIT_DTOR;
  *                                  owner names the
