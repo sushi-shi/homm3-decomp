@@ -2631,6 +2631,9 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
 // recovered the pre-pass masked bytes. The tree-wide 30-forest sweep repeated
 // that result for this unchanged 2cfc7442c153 body: trial 29 reached 98.9251%
 // twice, so that score is banked as MAX. No probe declarations were retained.
+// A target-local 240-trial follow-up on 2026-09-07 crossed the twelve
+// non-include Gruntz state families and found no state above that 98.9251%
+// MAX. The remaining two-store residual stays a source-matching problem.
 // The result-local order documented above measured 98.8829 here and was
 // rejected. See docs/name-normalization.md; MAX/history remain preserved.
 VA(0x00441610, 0x6A0)  // corroborates, dc 0x46bec
