@@ -755,6 +755,17 @@ void townObject::draw(int incFrame, unsigned char drawHotspots)
 // here exactly once, which is what fixes the layout: two arrays cleared
 // by inline memset (seven object slots at +0x40, forty-four strip slots
 // at +0x5c), the -1 sentinels, and the two file-scope words.
+//
+// Manual HIST recovery (2026-09-07): candidate and retail are one 50-
+// instruction block with the same call, return and extent. Retail delays the
+// upper-dword zero stores for canBuyMask/canBuildMask; the clean build emits
+// them beside the lower stores and scores 99.0800%. All 511 positions of
+// Gruntz's stride-one typedef-handle phase were byte-flat. All 24 orders of
+// the four adjacent mask/count/type assignments were also measured: moving
+// the two scalar stores first reaches 99.32%, but contradicts the recovered
+// Dreamcast statement order and is rejected. Dreamcast public `castleOpen`
+// supports the future data rename g_castleOpen; that rename is byte-flat here.
+// No probe or score-only assignment order is retained.
 
 // E:\gamedcs\townmgr.cpp:1999
 VA(0x005c3310, 0xDF)  // anchor-vtable 0x643720 + baseManager base ctor, dc 0x16a59c

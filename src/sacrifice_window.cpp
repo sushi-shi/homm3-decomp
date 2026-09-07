@@ -1837,6 +1837,10 @@ type_sacrifice_window::type_sacrifice_window(hero* newHero, int curPlayer)
 // forest probe before this function (seed 20260906, baseline + 16 trials)
 // finds two islands, 99.5918% and 99.9983%; all 16 forests recover the prior
 // score. No probe noise is retained; the production residual remains.
+// A target-local manual follow-up on 2026-09-07 covered 240 trials across
+// Gruntz's typedef, enum, struct, class, packed, member, extern, static-data,
+// prototype, function, forest and stride-one typedef-count families. None
+// exceeded 99.9983%, so the DC-proven constructor order remains authoritative.
 VA(0x00560380, 0xD67)  // ctor caller + dc name/order/locals, dc 0x1246b8
 void type_sacrifice_window::createArtifactWidgets(
     // Before normalization (locals): widget_id, cur_player, icon_widget, artifact_offering,

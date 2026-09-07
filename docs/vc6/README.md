@@ -92,6 +92,8 @@ target, normalization inputs, generator version, and seed. A higher observation
 is compiled a second time before it can raise MAX; the clean CUR is never
 replaced. Authored source and function hashes must remain unchanged for the
 whole run. See [tu-state-sweep.md](tu-state-sweep.md) for the audit contract.
+Manual follow-up for rows that remain below HIST is recorded in
+[manual-hist-recovery.md](manual-hist-recovery.md).
 
 Before invoking disassembly, the router requires a unique emitted function
 shared by the compiled and delinked objects. File-static functions qualify;
