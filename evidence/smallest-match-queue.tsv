@@ -1,7 +1,6 @@
 # GENERATED: homm3 vc6 queue --smallest - regenerate, never hand-edit.
 # Independent retail targets, smallest first; parked RVAs omitted.
 state	size	va	current_fuzzy	max_fuzzy	hist_fuzzy	owner	candidates	label	relation	action
-bracketed	8	0x0055edb0	-	0.0000	0.0000	resourcemanager..sacrifice_window	resourcemanager,ressw,sacrifice_window	game_15edb0	bracketed	resolve the owner, then add its VA claim and body
 bracketed	8	0x0055f320	-	0.0000	0.0000	resourcemanager..sacrifice_window	resourcemanager,ressw,sacrifice_window	game_15f320	bracketed	resolve the owner, then add its VA claim and body
 bracketed	9	0x0048e9d0	-	0.0000	0.0000	customcampaign..dialogbox	customcampaign,dc_input,dc_precompiledheaders,dialogbox	game_8bf00_sub02_8e9d0	bracketed	resolve the owner, then add its VA claim and body
 bracketed	11	0x004f9ca0	-	0.0000	0.0000	levelupwindow..lodfile	levelupwindow,lodfile	game_f9ca0	bracketed	resolve the owner, then add its VA claim and body
@@ -930,7 +929,7 @@ compiled	3281	0x0046ceb0	99.2844	99.2844	99.2844	combatcontrolsubwindow	combatco
 compiled	3324	0x0050e050	92.9147	92.9147	92.9147	multiplayerwindow	multiplayerwindow	??0TMultiPlayerWindow@@QAE@XZ	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	3348	0x004cafd0	82.2198	82.2198	82.2198	game	game	?transmitSaveGame@game@@QAEHHHEE@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	3710	0x004f8880	99.1299	99.1299	99.1300	levelupwindow	levelupwindow	??0TLevelUpWindow@@QAE@PAVhero@@HHH@Z	admitted	run the evidence pass and iterate up to five scored candidates
-compiled	3728	0x00549cb0	93.2786	95.7066	95.7066	rmg	rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
+compiled	3728	0x00549cb0	93.2864	95.7066	95.7066	rmg	rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	3778	0x004bcda0	60.5547	92.4127	92.4127	game	game	?load@game@@QAEHPAVTAbstractFile@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	3785	0x004f4eb0	99.1667	99.1667	99.1667	kb	kb	?set@type_dialog_icon@@QAEXW4EGameResource@@J@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	4203	0x0049fa90	79.8259	79.8259	79.8259	events	events	?giveBlackBoxReward@advManager@@QAE_NPBDPAVhero@@PAVNewmapCell@@Utype_point@@_NPAVBlackBoxData@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
