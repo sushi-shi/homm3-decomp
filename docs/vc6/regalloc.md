@@ -1415,3 +1415,14 @@ the frame size and four offsets of the artifact buffer. Additional loop/phase
 scopes, word declaration hoists, and unsigned-short spelling were byte-flat.
 The function's own comment records the controls; frame storage reuse is
 still unresolved, so this is not a byte-exact result.
+
+### Materialize call-argument values before diagnosing register rotation
+
+`combatManager::markMoat` (0x421590) reached 100% by naming the moat damage
+before each `getLossCombatValue` call. Retail loads the defending town before
+`killsOnly`; the local lets VC6 reproduce that scheduling and assign
+estimate/attacks/hex to ESI/EDI/EBX. The inline table expression scored 79.9375%
+with the same CFG. Caching only the town pointer reached 91.625%; changing the
+index types or sharing the hex local was byte-flat. All thirteen retail CFG
+blocks match after the damage local, and the exact padded 240-byte function
+has SHA-256 `0db9e77505e353b05f2a08f719afd06ca5da16de4600205c4e0218c5323b6f55`.

@@ -2339,49 +2339,45 @@ void combatManager::markFirewalls(const army* currentArmy, long* enemyAttacks, t
 // caller; no Dreamcast roster row attests a name, so mark_moat follows this
 // TU's own mark_* family.
 //
-// WALL 2026-08-22 (79.9375%, 225 bytes): control flow is closed - both
-// sides have eight conditional branches, one return and thirteen blocks,
-// with branch-shape distance zero. The residual is one VC6 register-role
-// rotation: candidate assigns estimate/enemy_attacks/hex to EDI/EBX/ESI;
-// retail assigns them ESI/EDI/EBX. That forces one otherwise needless move
-// per table walk (83 aligned instructions against retail's 80). why-reg v2
-// reports 63 register-visible slots and identical definition slots/order,
-// classifying the difference as C1/front-end pseudo processing order; its
-// first-created estimate alias is copy-propagated and byte-inert. The full
-// bounded catalog agrees: named zero is distance-flat at 63, while volatile
-// row (69), unnamed hex (77), volatile hex (81/107), and a byte-typed hex
-// (61.175% byte score, with invented homes) all regress. No algorithm or
-// branch delta remains.
+// Retail loads the defending town before killsOnly and passes its moat
+// damage to getLossCombatValue. Materialize that damage in a local before
+// each call: VC6 then uses ESI/EDI/EBX for estimate/attacks/hex and matches
+// all 225 bytes. An inline table expression scored 79.9375%; caching only
+// the town pointer reached 91.625%. Changing index types or sharing hex
+// between the loops was byte-flat. The residual was a source temporary,
+// not an unavoidable front-end register-order difference.
 // Before normalization (locals): current_army, enemy_attacks.
 VA(0x00421590, 0xE1)
 void combatManager::markMoat(const army* currentArmy, long* enemyAttacks,
-                              type_AI_combat_parameters* estimate)
+                         type_AI_combat_parameters* estimate)
 {
     if (!m_moatOn)
         return;
 
     long row;
     for (row = 0; row < 11; row++) {
-            long hex = g_moatColumns[row];
-            if (m_drawbridgeState == DRAWBRIDGE_UP
-                    || hex != COMBAT_HEX_GATE_MOAT) {
-                enemyAttacks[hex] -= currentArmy->getLossCombatValue(
-                        estimate->m_lowestAttack, estimate->m_lowestAttack, 0,
-                        g_moatDamage[m_defendingTown->m_type], estimate->m_killsOnly);
-            }
+        long hex = g_moatColumns[row];
+        if (m_drawbridgeState == DRAWBRIDGE_UP
+                || hex != COMBAT_HEX_GATE_MOAT) {
+            long damage = g_moatDamage[m_defendingTown->m_type];
+            enemyAttacks[hex] -= currentArmy->getLossCombatValue(
+                    estimate->m_lowestAttack, estimate->m_lowestAttack, 0,
+                    damage, estimate->m_killsOnly);
         }
+    }
 
     if (!m_moatIsWide)
         return;
     for (row = 0; row < 11; row++) {
-            long hex = g_outerMoatColumns[row];
-            if (m_drawbridgeState == DRAWBRIDGE_UP
-                    || hex != COMBAT_HEX_OUTER_MOAT) {
-                enemyAttacks[hex] -= currentArmy->getLossCombatValue(
-                        estimate->m_lowestAttack, estimate->m_lowestAttack, 0,
-                        g_moatDamage[m_defendingTown->m_type], estimate->m_killsOnly);
-            }
+        long hex = g_outerMoatColumns[row];
+        if (m_drawbridgeState == DRAWBRIDGE_UP
+                || hex != COMBAT_HEX_OUTER_MOAT) {
+            long damage = g_moatDamage[m_defendingTown->m_type];
+            enemyAttacks[hex] -= currentArmy->getLossCombatValue(
+                    estimate->m_lowestAttack, estimate->m_lowestAttack, 0,
+                    damage, estimate->m_killsOnly);
         }
+    }
 }
 
 // E:\gamedcs\ai.cpp:1896

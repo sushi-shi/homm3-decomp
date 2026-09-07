@@ -2853,28 +2853,28 @@ void aiJoinDecision(hero* currentHero, TCreatureType creature,
 // Before normalization (function): do_monster_join_dialog.
 void doMonsterJoinDialog(hero* inHero, armyGroup* monsters, int flag);
 
-// E:\gamedcs\events.cpp:838.  The reward-line collector, Dreamcast's
-// add_reward: push one icon/quantity pair and seed the dialog text from
-// the per-reward alternate when nothing has claimed it yet. A static
-// whose every site /Ob2 expands, so no retail body exists (dc 0x91308,
-// DC_ONLY).
+// Before normalization (function): show_rewards.
+static void showRewards(std::string& text,
+                        std::vector<type_dialog_resource>& rewards,
+                        long threshold);
+
+// DC events.cpp:838-846, dc 0x91308: ordinary static add_reward owns
+// push_back, the empty-text assignment, and show_rewards(..., 8).
+// Retail expands this helper and push_back while retaining insert calls.
+// Moving the flush into callers loses the nested inlining context.
 // Before normalization (function): add_reward.
-inline void addReward(std::string& text, const std::string& alternate,
-                       std::vector<type_dialog_resource>& rewards,
-                       int resource, long qualifier)
+static void addReward(std::string& text, const std::string& alternate,
+                      std::vector<type_dialog_resource>& rewards,
+                      EGameResource resource, long qualifier)
 {
     type_dialog_resource reward;
     reward.m_resource = resource;
     reward.m_qualifier = qualifier;
-    rewards.insert(rewards.end(), reward);
+    rewards.push_back(reward);
     if (text.length() == 0)
         text = alternate;
+    showRewards(text, rewards, 8);
 }
-
-// Before normalization (function): show_rewards.
-void showRewards(std::string& text,
-                  std::vector<type_dialog_resource>& rewards,
-                  long threshold);
 
 // E:\gamedcs\events.cpp:852.  Pandora's Box's shared payout: walk the
 // record's ten reward classes, collecting up to eight icon lines per
@@ -2882,25 +2882,25 @@ void showRewards(std::string& text,
 // reward as it is reported. The cell parameter is never read; retail
 // keeps it (`ret 0x18`), so this does too. Returns whether anything at
 // all was paid out.
-// [2026-08-27] Residual (79.66%): per-site expansion depth inside the
-// nine remaining show_rewards expansions. Retail's threshold-8 copies
-// keep vector::size() and clear() as COMDAT calls while its threshold-1
-// flushes inline size and call erase(begin,end); ours inlines size
-// everywhere and splits clear/erase differently, and the 2-arg
-// vector::insert wrapper expands at nine add_reward copies retail keeps
-// as calls. All are depth-2 A9-quotient decisions a statement pin cannot
-// split (N=0 only). Tried and rejected: pinning add_reward's insert
-// (67.0), the same with end() hoisted (69.1), the creature site written
-// longhand (71.2). The five show_rewards site pins above are measured
-// (+12.8) and load-bearing.
+// DC events.cpp:856 constructs msg from text; lines 955..1046 pass
+// format_string temporaries directly to add_reward. Together with its
+// restored helper boundary, these remove all five old inline-depth pins.
+// Retail returns the saved byte after string cleanup, agreeing with DC's
+// unsigned-char signature; bool added a setne and extended its lifetime.
+// Residual (94.71%): positive-morale show_rewards still calls where retail
+// expands it, and later insert/clear expansion and temporary slots differ.
+// Controls: moving show_rewards before add_reward, using a shared signed
+// loop index, and spelling the pending-message temporary explicitly are
+// byte-flat. Caching the secondary-skill byte loses retail's repeated test.
 // Before normalization (locals): current_hero, human_player, BlackBox.
 VA(0x0049fa90, 0x106B)  // dc-bracket forced, ret 0x18=p7 + format_string reward text, dc 0x9138c
-bool advManager::giveBlackBoxReward(const char* text, hero* currentHero, NewmapCell* cell, type_point point, bool humanPlayer, BlackBoxData* blackBox)
+unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero,
+    NewmapCell* cell, type_point point, unsigned char humanPlayer,
+    BlackBoxData* blackBox)
 {
+    long exp = 0;
     unsigned char gave = 0;
-    int exp = 0;
-    std::string message;
-    message = text;
+    std::string message(text);
     std::string alternate;
     std::vector<type_dialog_resource> rewards;
     alternate = formatString(g_adventureEventText->getText(175),
@@ -2910,10 +2910,7 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero, NewmapC
         exp = currentHero->getExperienceBonusFactor()
               * blackBox->m_experienceBonus;
         if (humanPlayer) {
-            addReward(message, alternate, rewards, 17, exp);
-#pragma inline_depth(0)
-            showRewards(message, rewards, 8);
-#pragma inline_depth()
+            addReward(message, alternate, rewards, RES_EXPERIENCE, exp);
         }
         gave = 1;
     }
@@ -2921,39 +2918,37 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero, NewmapC
     for (int i = 0; i < 4; i++) {
         if (blackBox->m_primarySkillBonus[i] > 0) {
             if (humanPlayer) {
-                addReward(message, alternate, rewards, 31 + i,
+                addReward(message, alternate, rewards,
+                          static_cast<EGameResource>(RES_PRIMARY_SKILL_ATTACK + i),
                            blackBox->m_primarySkillBonus[i]);
-#pragma inline_depth(0)
-                showRewards(message, rewards, 8);
-#pragma inline_depth()
             }
             gave = 1;
-            currentHero->m_stats[i] += blackBox->m_primarySkillBonus[i];
+            currentHero->adjustPrimarySkill(i, blackBox->m_primarySkillBonus[i]);
         }
     }
 
     for (unsigned int j = 0; j < blackBox->m_secondarySkills.size(); j++) {
-        int skill = blackBox->m_secondarySkills[j].m_type;
-        int level = blackBox->m_secondarySkills[j].m_level;
-        signed char have = currentHero->m_skillLevel[skill];
-        if (have == 0 && currentHero->m_skillCount < 8) {
+        TSecondarySkill skill = static_cast<TSecondarySkill>(blackBox->m_secondarySkills[j].m_type);
+        TSkillMastery level = static_cast<TSkillMastery>(blackBox->m_secondarySkills[j].m_level);
+        unsigned char skillGiven = 0;
+        if (currentHero->m_skillLevel[skill] == 0 && currentHero->m_skillCount < 8) {
             currentHero->giveSS(skill, level);
-        } else if (have > 0 && have < level) {
-            currentHero->giveSS(skill, level - have);
-        } else {
-            continue;
+            skillGiven = 1;
+        } else if (currentHero->m_skillLevel[skill] > 0
+                   && currentHero->m_skillLevel[skill] < level) {
+            currentHero->giveSS(skill, level - currentHero->m_skillLevel[skill]);
+            skillGiven = 1;
         }
+        if (!skillGiven)
+            continue;
         if (humanPlayer) {
-            addReward(message, alternate, rewards, 20,
+            addReward(message, alternate, rewards, RES_SECONDARY_SKILL,
                        skill * 3 + level + 2);
-#pragma inline_depth(0)
-            showRewards(message, rewards, 8);
-#pragma inline_depth()
         }
         gave = 1;
     }
 
-    int mana = blackBox->m_manaBonus;
+    long mana = blackBox->m_manaBonus;
     if (mana != 0) {
         if (currentHero->m_mana + mana > 999) {
             mana = 999 - currentHero->m_mana;
@@ -2966,10 +2961,7 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero, NewmapC
                                       currentHero->m_name);
         }
         if (humanPlayer && mana != 0) {
-            addReward(message, alternate, rewards, 35, mana);
-#pragma inline_depth(0)
-            showRewards(message, rewards, 8);
-#pragma inline_depth()
+            addReward(message, alternate, rewards, RES_MANA, mana);
         }
         currentHero->m_mana += mana;
         gave = 1;
@@ -2978,21 +2970,15 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero, NewmapC
     if (blackBox->m_moraleBonus != 0) {
         if (humanPlayer) {
             if (blackBox->m_moraleBonus < 0) {
-                std::string moraleText = formatString(
+                addReward(message, formatString(
                     g_adventureEventText->getText(178),
-                    currentHero->m_name);
-                addReward(message, moraleText, rewards, 16,
+                    currentHero->m_name), rewards, RES_BAD_MORALE,
                            blackBox->m_moraleBonus);
-#pragma inline_depth(0)
-                showRewards(message, rewards, 8);
-#pragma inline_depth()
             } else {
-                std::string moraleText = formatString(
+                addReward(message, formatString(
                     g_adventureEventText->getText(179),
-                    currentHero->m_name);
-                addReward(message, moraleText, rewards, 14,
+                    currentHero->m_name), rewards, RES_GOOD_MORALE,
                            blackBox->m_moraleBonus);
-                showRewards(message, rewards, 8);
             }
         }
         gave = 1;
@@ -3002,19 +2988,15 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero, NewmapC
     if (blackBox->m_luckBonus != 0) {
         if (humanPlayer) {
             if (blackBox->m_luckBonus < 0) {
-                std::string luckText = formatString(
+                addReward(message, formatString(
                     g_adventureEventText->getText(180),
-                    currentHero->m_name);
-                addReward(message, luckText, rewards, 13,
+                    currentHero->m_name), rewards, RES_BAD_LUCK,
                            blackBox->m_luckBonus);
-                showRewards(message, rewards, 8);
             } else {
-                std::string luckText = formatString(
+                addReward(message, formatString(
                     g_adventureEventText->getText(181),
-                    currentHero->m_name);
-                addReward(message, luckText, rewards, 11,
+                    currentHero->m_name), rewards, RES_GOOD_LUCK,
                            blackBox->m_luckBonus);
-                showRewards(message, rewards, 8);
             }
         }
         gave = 1;
@@ -3026,19 +3008,15 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero, NewmapC
         if (blackBox->m_resQty[k] != 0) {
             if (humanPlayer) {
                 if (blackBox->m_resQty[k] > 0) {
-                    std::string resText = formatString(
+                    addReward(message, formatString(
                         g_adventureEventText->getText(183),
-                        currentHero->m_name);
-                    addReward(message, resText, rewards, k,
+                        currentHero->m_name), rewards, static_cast<EGameResource>(k),
                                blackBox->m_resQty[k]);
-                    showRewards(message, rewards, 8);
                 } else {
-                    std::string resText = formatString(
+                    addReward(message, formatString(
                         g_adventureEventText->getText(182),
-                        currentHero->m_name);
-                    addReward(message, resText, rewards, k,
+                        currentHero->m_name), rewards, static_cast<EGameResource>(k),
                                blackBox->m_resQty[k] - 100000);
-                    showRewards(message, rewards, 8);
                 }
             }
             currentHero->giveResource(k, blackBox->m_resQty[k]);
@@ -3047,21 +3025,16 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero, NewmapC
     }
     showRewards(message, rewards, 1);
 
-    type_artifact artifact;
-    artifact.m_artifactId = ARTIFACT_NONE;
-    artifact.m_extra = -1;
+    type_artifact artifact(ARTIFACT_NONE);
     for (unsigned int m = 0; m < blackBox->m_artifacts.size(); m++) {
         if (currentHero->getNumberInBackpack(1) < 64) {
             if (humanPlayer) {
-                std::string artText = formatString(
+                addReward(message, formatString(
                     g_adventureEventText->getText(183),
-                    currentHero->m_name);
-                addReward(message, artText, rewards, 8,
+                    currentHero->m_name), rewards, RES_ARTIFACT,
                            blackBox->m_artifacts[m]);
-                showRewards(message, rewards, 8);
             }
-            memcpy(&artifact.m_artifactId, &blackBox->m_artifacts[m],
-                   sizeof artifact.m_artifactId);
+            artifact.m_artifactId = static_cast<TArtifact>(blackBox->m_artifacts[m]);
             currentHero->giveArtifact(&artifact, 1, 1);
             if (!humanPlayer)
                 aiEquipArtifacts(currentHero);
@@ -3074,7 +3047,7 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero, NewmapC
         for (unsigned int n = 0; n < blackBox->m_spells.size(); n++) {
             if (g_spellTraits[blackBox->m_spells[n]].m_level
                     <= currentHero->m_skillLevel[eSecSkillWisdom] + 2
-                && !currentHero->m_inSpellbook[blackBox->m_spells[n]]) {
+                && !currentHero->isInSpellbook(static_cast<SpellID>(blackBox->m_spells[n]))) {
                 if (humanPlayer) {
                     if (rewards.size() != 0) {
                         std::string pendingText = formatString(
@@ -3082,12 +3055,10 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero, NewmapC
                             currentHero->m_name);
                         message = pendingText;
                     }
-                    std::string spellText = formatString(
+                    addReward(message, formatString(
                         g_adventureEventText->getText(184),
-                        currentHero->m_name);
-                    addReward(message, spellText, rewards, 9,
+                        currentHero->m_name), rewards, RES_SPELL,
                                blackBox->m_spells[n]);
-                    showRewards(message, rewards, 8);
                 }
                 currentHero->addSpell(blackBox->m_spells[n]);
                 gave = 1;
@@ -3096,8 +3067,8 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero, NewmapC
     }
     showRewards(message, rewards, 1);
 
-    armyGroup creatures = blackBox->m_creatures;
     unsigned char joinFailed = 0;
+    armyGroup creatures = blackBox->m_creatures;
     for (unsigned int p = 0; p < 7; p++) {
         int type = creatures.m_armies[p];
         int count = creatures.m_numTroops[p];
@@ -3112,9 +3083,8 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero, NewmapC
                 alternate = formatString(
                     g_adventureEventText->getText(186),
                     getArmyName(type, 2), currentHero->m_name);
-            addReward(message, alternate, rewards, 21,
+            addReward(message, alternate, rewards, RES_MONSTER,
                        ((count & 0xffff) << 16) | (type & 0xffff));
-            showRewards(message, rewards, 8);
         }
         if (currentHero->m_army.add(type, count, -1)) {
             creatures.dismiss(p);
@@ -3143,11 +3113,10 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero, NewmapC
 
 // E:\gamedcs\events.cpp:826.  The page flusher, Dreamcast's
 // show_rewards: once `threshold` lines are pending, show the page and
-// reset both collectors. Five of the nine sites call this body and the
-// other four expand it, which is the /Ob2 quotient growing as sites are
-// consumed.
+// reset both collectors. Retail calls it for the first five reward sites;
+// later add_reward copies and the threshold-one flushes expand it.
 VA(0x004a0b00, 0x112)  // anchor-callee extended_dialog + erase pair, dc 0x912bc
-void showRewards(std::string& text,
+static void showRewards(std::string& text,
                   std::vector<type_dialog_resource>& rewards,
                   long threshold)
 {

@@ -222,7 +222,7 @@ ai	?isIncapacitated@army@@QBE_NXZ	100.0000	100.0000	100.0000	0x1f380	b4ae90f81aa
 ai	?markEnemyAttacks@combatManager@@QAEXPBVarmy@@PAJ1PAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x20260	f208e193dfd2
 ai	?markFirewalls@combatManager@@QAEXPBVarmy@@PAJPAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x214f0	435ac8044be1
 ai	?markFriendlyArmies@combatManager@@QAEXPBVarmy@@PAJJPBUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x1fb60	b7588f88aefb
-ai	?markMoat@combatManager@@QAEXPBVarmy@@PAJPAUtype_AI_combat_parameters@@@Z	79.9375	79.9375	79.9375	0x21590	e1307d20cf1d
+ai	?markMoat@combatManager@@QAEXPBVarmy@@PAJPAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x21590	3474190027ee
 ai	?markMultiheadedEnemy@combatManager@@QAEXPBVarmy@@0PAJJPAVsearchArray@@PAUtype_AI_combat_parameters@@@Z	94.5399	94.5399	94.5399	0x1fd60	b55602ee3446
 ai	?moveToward@combatManager@@QAEEPBVarmy@@JPBJE@Z	100.0000	100.0000	100.0000	0x1f580	643f5bbf02bf
 ai	?placeShooter@combatManager@@QAEXPBVarmy@@@Z	82.4884	82.4884	82.4884	0x22060	6f6675315d86
@@ -1703,7 +1703,7 @@ events	?getLikeModifier@advManager@@SIHPAVhero@@W4TCreatureType@@@Z	100.0000	100
 events	?getTeam@game@@QBEHH@Z	100.0000	100.0000	100.0000	0xa5960	05bc2e2df5fa
 events	?getTreasureData@advManager@@QBEPAVTreasureData@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x9f040	47dcf4055fab
 events	?giveArtifact@advManager@@QAEXPAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0x9e8f0	0472ec131f90
-events	?giveBlackBoxReward@advManager@@QAE_NPBDPAVhero@@PAVNewmapCell@@Utype_point@@_NPAVBlackBoxData@@@Z	79.8259	79.8259	79.8259	0x9fa90	45f30e5d0f93
+events	?giveBlackBoxReward@advManager@@QAEEPBDPAVhero@@PAVNewmapCell@@Utype_point@@EPAVBlackBoxData@@@Z	94.7087	94.7087	94.7087	0x9fa90	efc04c30d3d5
 events	?handleMapEvent@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa0ed0	bfb14a42181f
 events	?heroLoses@advManager@@QAEXPAVhero@@H@Z	100.0000	100.0000	100.0000	0xac930	684b2032a8fa
 events	?heroSwap@advManager@@QAEXPAVhero@@0@Z	100.0000	100.0000	100.0000	0xaadf0	9edabae1ba00
