@@ -10,6 +10,13 @@
 
 DATA(0x00642BD8) extern TRmgTerrainRule* const g_rmgTerrainRules[];
 
+// Both concrete terrain-rule deleting destructors call this retained base
+// boundary. Retail restores the six-slot pure base vtable at 0x642c80.
+VA(0x005B3850, 0x07)  // terrain-rule deleting destructors; Complete-only
+TRmgTerrainRule::~TRmgTerrainRule()
+{
+}
+
 // Retail vtable 0x642cb0 slot 1 is this constant-false query.  The surrounding
 // constructor at 0x5b3a20, vtable, fixed-table methods, and the first admitted
 // painter method at 0x5b3dd0 place it in this Complete-only compiland.  There

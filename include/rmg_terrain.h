@@ -103,7 +103,7 @@ public:
     unsigned char m_allowsSeparatedNeighbours; // +0x05
     char m_tailPadding[2];
 
-    virtual ~TRmgTerrainRule() {}
+    virtual ~TRmgTerrainRule();
     // Before normalization (function): TRmgTerrainRule::HasEntries.
     virtual unsigned char hasEntries() = 0;
     // Before normalization (function): TRmgTerrainRule::IsSpecialFrame.
