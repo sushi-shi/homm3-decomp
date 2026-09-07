@@ -450,6 +450,12 @@ void rmgTerrainPainter::paintRectangle(
 // for the operand ranking, identity controls, and limits of that experiment.
 // Current-checkpoint controls that initialize index from width or row, then
 // apply *= and += in getPackedCell, also leave the same eight raw differences.
+// With the corrected hash-tie evidence, named terrain return values, const
+// entry frame/tile values, and a named direction reference remain byte-flat.
+// A named cell pointer/reference in getTerrain leaves 235 raw differences;
+// predicate comparison locals or a direct frame argument over-expand _Distance.
+// A copied direction value changes the function extent. These controls retain
+// no source changes; the actual sort ranks and hash inputs are in section 6n.
 VA(0x005B4B20, 0x5CB) // anchor-callee 0x5b4960, 0x5b5440; thiscall, ret 4
 void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
 {
