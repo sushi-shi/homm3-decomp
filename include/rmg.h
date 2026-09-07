@@ -927,6 +927,21 @@ public:
     virtual int getOverlay(const TRmgGridPoint& point) = 0;
 };
 
+// The road-decoration adapter has the same seven-slot shape but a distinct
+// abstract vtable at 0x640a20. Its concrete subclass writes the packed road
+// fields through the bodies beginning at 0x532360.
+class TRmgRoadMapAdapterInterface {
+public:
+    virtual ~TRmgRoadMapAdapterInterface();
+    virtual void setTile(
+        const TRmgGridPoint& point, const rmgTerrainTile& tile) = 0;
+    virtual void setOverlay(const TRmgGridPoint& point, int value) = 0;
+    virtual TRmgGridPoint getSize() = 0;
+    virtual rmgTerrainTile getTile(const TRmgGridPoint& point) = 0;
+    virtual int getLand(const TRmgGridPoint& point) = 0;
+    virtual int getOverlay(const TRmgGridPoint& point) = 0;
+};
+
 class type_random_map : public TRmgMapInterface {
 public:
     // Before normalization: ownsMapItems.
@@ -1389,6 +1404,7 @@ SIZE(TRmgMapItem, 0x30);
 SIZE(type_random_map, 0x18);
 SIZE(TRmgMapInterface, 0x04);
 SIZE(TRmgMapAdapterInterface, 0x04);
+SIZE(TRmgRoadMapAdapterInterface, 0x04);
 SIZE(TRmgMapAdapter, 0x08);
 SIZE(TRmgLinePainter, 0x10);
 SIZE(TRmgLineWalker, 0x10);

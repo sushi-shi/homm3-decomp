@@ -310,20 +310,19 @@ TRmgGridPoint type_random_map::getSize()
     return TRmgGridPoint(m_mapWidth, m_mapHeight);
 }
 
-// Complete-only base of the map adapter, exact on the first scored candidate.
-// The derived deleting destructor at 0x532320 and two retail cleanup paths
-// call this retained vptr restoration; Dreamcast has no RMG compiland.
+// Complete-only base of the road adapter, exact on the first scored candidate.
+// The derived deleting destructor at 0x532320 and one retail cleanup path call
+// this retained vptr restoration; Dreamcast has no RMG compiland.
 VA(0x00532350, 0x07)
-TRmgMapAdapterInterface::~TRmgMapAdapterInterface()
+TRmgRoadMapAdapterInterface::~TRmgRoadMapAdapterInterface()
 {
 }
 
-// Complete-only base of the owned map view, exact on the first scored
-// candidate. The derived deleting destructor at 0x5324e0 and two CreateRiver
-// cleanup paths call this retained vptr restoration; Dreamcast has no RMG
-// compiland.
+// Complete-only base of the river adapter, exact on the first scored candidate.
+// The derived deleting destructor at 0x5324e0 and two CreateRiver cleanup paths
+// call this retained vptr restoration; Dreamcast has no RMG compiland.
 VA(0x00532510, 0x07)
-TRmgMapInterface::~TRmgMapInterface()
+TRmgMapAdapterInterface::~TRmgMapAdapterInterface()
 {
 }
 
@@ -596,6 +595,14 @@ type_spell_scroll_def::type_spell_scroll_def(int newSpellLevel, int newValue)
     : type_treasure_def(0x5d, 0, newValue, 30)
 {
     m_spellLevel = newSpellLevel;
+}
+
+// The seven-slot abstract map table at 0x6409e8 and sixteen retail cleanup
+// tails identify this virtual base destructor, exact on the first scored
+// candidate. Dreamcast has no RMG compiland.
+VA(0x005361A0, 0x07)
+TRmgMapInterface::~TRmgMapInterface()
+{
 }
 
 // rand_trn.txt supplies one rule per nonempty row starting at row three.
