@@ -11,10 +11,27 @@ from homm3.vc6.shim import build
 
 
 class InlineTraceTest(unittest.TestCase):
+    def test_named_comparisons_keep_overloads_and_budget_fields(self):
+        rows = [
+            "sym a caller", "sym b ?overload", "main a cb=1200",
+            "site root=a owner=a callee=b cb=96 budget=95 depth=2 remain=3 running=1500",
+            "site root=a owner=b callee=c cb=20 budget=0 depth=3 remain=1 running=1520",
+        ]
+        with patch("homm3.core.undname.demangle", return_value={"?overload": "void helper(int)"}):
+            text = build._formatInlineTrace(rows)
+        self.assertIn("Function: caller (cb=1200)", text)
+        self.assertIn("#1 depth=2  void helper(int)", text)
+        self.assertIn("size=96 budget=95 sites remaining=3 running size=1500", text)
+        self.assertIn("owner: void helper(int)", text)
+        self.assertIn("<unresolved symbol c>", text)
+
     def run_trace(self, *, changed_byte=False, missing_stream=False,
                   observed=True):
         with tempfile.TemporaryDirectory() as directory, ExitStack() as stack:
             root = Path(directory)
+            named = root / "gate/inline-trace/unit/comparisons.txt"
+            named.parent.mkdir(parents=True)
+            named.write_text("old passing trace\n")
             source = root / "original.cpp"
             source.write_text("namespace { int value; }\n")
             flags = ["/O2", "/Ob2", "/MT", "/GX"]
@@ -65,6 +82,7 @@ class InlineTraceTest(unittest.TestCase):
                 except SystemExit:
                     result = "error"
             verdict = (root / "gate/inline-trace/unit/verdict.txt").read_text()
+            self.assertEqual(named.exists(), result == 0)
             return result, verdict, feeds, streams, shim.call_args_list
 
     def test_same_capture_replayed_and_only_timestamp_ignored(self):

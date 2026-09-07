@@ -433,6 +433,41 @@ def _traceReplay(out: Path, source: Path, flags: list[str],
     return _cc_wrap(out, source, [*flags, f"/d2il{prefix}"], extra_env)
 
 
+def _formatInlineTrace(rows: list[str]) -> str:
+    """Label the passive observations with the compiler's own symbol names."""
+    from homm3.core import undname
+
+    symbols = {}
+    for row in rows:
+        if row.startswith("sym "):
+            _, address, name = row.split(" ", 2)
+            symbols[address] = name
+    demangled = undname.demangle(symbols.values())
+
+    def label(address: str) -> str:
+        name = symbols.get(address)
+        if name is None:
+            return f"<unresolved symbol {address}>"
+        return demangled.get(name, name)
+
+    lines = ["Verified passive observations; budget comparisons are not final inline decisions."]
+    number = 0
+    for row in rows:
+        if row.startswith("main "):
+            _, address, estimate = row.split()
+            lines.extend(["", f"Function: {label(address)} ({estimate})"])
+        elif row.startswith("site "):
+            fields = dict(word.split("=", 1) for word in row.split()[1:])
+            number += 1
+            lines.extend([
+                f"#{number} depth={fields['depth']}  {label(fields['callee'])}",
+                f"  owner: {label(fields['owner'])}",
+                f"  size={fields['cb']} budget={fields['budget']} "
+                f"sites remaining={fields['remain']} running size={fields['running']}",
+            ])
+    return "\n".join(lines) + "\n"
+
+
 def runInlineTrace(unit: str, function: str) -> int:
     """Observe a real TU's C2 budget comparisons, fenced by byte equality.
 
@@ -457,8 +492,10 @@ def runInlineTrace(unit: str, function: str) -> int:
     reference = output / "reference.obj"
     instrumented = output / "instrumented.obj"
     observations = output / "comparisons.log"
+    named = output / "comparisons.txt"
     verdict = output / "verdict.txt"
     observations.write_text("")
+    named.unlink(missing_ok=True)
     verdict.write_text("UNVERIFIED: compilation/identity checks pending\n")
     streams = _traceCapture(source, flags, output)
     process = _traceReplay(reference, source, flags, streams)
@@ -491,8 +528,10 @@ def runInlineTrace(unit: str, function: str) -> int:
             f"profile: {' '.join(flags)}\n"
             "Both back ends consumed the same captured front-end streams.\n"
             "Observations are budget comparisons, not final inline decisions.\n")
+        named.write_text(_formatInlineTrace(rows))
         verdict.write_text(message)
         print(f"[shim] {message.strip()}")
+        print(f"[shim] named comparisons: {named}")
         print(f"[shim] comparisons: {observations}")
         return 0
     finally:
