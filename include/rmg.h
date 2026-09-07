@@ -1306,6 +1306,7 @@ public:
         TRmgMapPosition position, int count, TRmgZone* zone);
     // Before normalization (function): type_random_map_generator::CreateGuard.
     type_object* createGuard(int value, TRmgZone* zone);
+    unsigned char placeObjectInZone(type_object* object, TRmgZone* zone);
     void placeGuard(TRmgMapPosition position, int value);
     // Provisional Complete-only spelling: the 0x548290 road-target pass is
     // the sole direct caller, and the body builds the road traversal costs.
