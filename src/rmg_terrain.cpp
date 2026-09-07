@@ -1170,8 +1170,10 @@ VA_COMPGEN(0x005B85A0, 0x17, TREE_LOWER_BOUND, TRmgGridPoint)
 VA_COMPGEN(0x005B8A20, 0x17, TREE_UPPER_BOUND, TRmgGridPoint)
 
 // erase(key) in TRmgTerrainBrush::changeTerrain retains Dinkumware's
-// category-dispatched distance overload.  Its unused tag argument accounts
-// for the missing self-store relative to the 43-byte public wrapper.
+// public distance wrapper and its category-dispatched overload. The wrapper
+// increments the caller's count directly; the unused tag argument accounts
+// for the tagged body's missing self-store.
+VA_COMPGEN(0x005B8C70, 0x2B, STD_DISTANCE, TRmgGridPoint)
 VA_COMPGEN(0x005B8CD0, 0x28, STD_DISTANCE_TAGGED, TRmgGridPoint)
 
 // The set lookup at 0x5b4e96 retains this free comparison. Its unsigned
