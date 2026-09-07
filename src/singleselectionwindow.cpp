@@ -2149,8 +2149,10 @@ int CEnterNameEdit::onKeyPress(message* msg)
 // slots exchanged and the independent ESI/EDI reloads after writePrefs
 // reversed; the 10 blocks and call sequence still agree. A disposable
 // Gruntz forest probe (seed 20260906, baseline + 16 variants) found two
-// islands; nine variants reproduced the relocation-masked retail bytes.
-// No probe noise is retained. DC 0x149290 proves the two calls below.
+// islands. Rechecking the current 19df4c126528 body made 13 variants exact;
+// trial 2 reproduced exactly twice, so its 100% score is banked as this
+// implementation's MAX. No probe noise is retained. DC 0x149290 proves the
+// two calls below.
 // E:\gamedcs\singleselectionwindow.cpp:1830
 VA(0x0057cee0, 0xFD)  // anchor-vtable CEnterNameEdit vtbl 0x241c14 slot11 (OnKillFocus override), dc 0x149290
 void CEnterNameEdit::onKillFocus()

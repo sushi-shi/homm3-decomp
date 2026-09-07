@@ -16,11 +16,11 @@ the game, supply your own legally obtained retail `HEROES3.EXE` and Dreamcast `H
 
 **Match score** — 3,764 / 4,764 functions exact (79.0%) across the full engine (4424 in linked units).
 
-**Function exact MAX** — 3,764 / 4,764 current implementations (79.0%) have reached 100%.
+**Function exact MAX** — 3,765 / 4,764 current implementations (79.0%) have reached 100%.
 
 | Module        | Units |     Functions exact |  Function exact MAX |   Fuzzy | Fuzzy Max |
 | :------------ | ----: | ------------------: | ------------------: | ------: | --------: |
-| `game`        |   132 | 3695 / 4355 (84.8%) | 3695 / 4355 (84.8%) |  96.08% |    96.08% |
+| `game`        |   132 | 3695 / 4355 (84.8%) | 3696 / 4355 (84.9%) |  96.08% |    96.08% |
 | `zlib-1.1.3`  |    14 |    69 / 69 (100.0%) |    69 / 69 (100.0%) | 100.00% |   100.00% |
 | `(unmatched)` |     — |      0 / 340 (0.0%) |      0 / 340 (0.0%) |    0.0% |      0.0% |
 
