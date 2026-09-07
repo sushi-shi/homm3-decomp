@@ -640,11 +640,11 @@ armygrp	?splitArmy@armyGroup@@QAEXHPAV1@HEE@Z	100.0000	100.0000	100.0000	0x49e90
 armygrp	?splitSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x496c0	924c9667864e
 armygrp	?swap@armyGroup@@QAEXHPAV1@H@Z	100.0000	100.0000	100.0000	0x4ad60	5a0b50472943
 armygrp	?windowHandler@TSplitWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x4a180	069fbfdff31a
+artifact	?_Tidy@?$bitset@$0BD@@std@@AAEXK@Z	100.0000	100.0000	100.0000	0x4d3e0	-
 artifact	?_Xran@?$bitset@$0BD@@std@@ABEXXZ	100.0000	100.0000	100.0000	0x4d400	-
 artifact	?initializeArtifactTraitsTable@@YIEXZ	80.5129	80.5129	80.5129	0x4cd50	562fa92196e0
 artifact	?makeArtifactComponentMask@@YA?AV?$bitset@$0JA@@std@@IZZ	100.0000	100.0000	100.0000	0x4c830	c2d4204bb619
 artifact	?makeArtifactSlotMask@@YA?AV?$bitset@$0BD@@std@@IZZ	100.0000	100.0000	100.0000	0x4c720	5b3823d02cac
-artifact	__h3cg$artifact$bitset_tidy$Bitset19	0.0000	0.0000	0.0000	0x4d3e0	-
 artifact	__h3cg$artifact$static_dtor$artifactSlotStrings	100.0000	100.0000	100.0000	0x4d340	-
 artifact	__h3cg$artifact$static_dtor$artifactStrings	100.0000	100.0000	100.0000	0x4d360	-
 basemgr	??0baseManager@@QAE@XZ	100.0000	100.0000	100.0000	0x4d530	86ef1e8a0778
