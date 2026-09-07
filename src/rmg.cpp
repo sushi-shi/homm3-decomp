@@ -349,6 +349,11 @@ TRmgMapAdapterInterface::~TRmgMapAdapterInterface()
 {
 }
 
+// Vtable 0x640a3c slot 0 and the 0x08 concrete adapter layout identify this
+// scalar deleting wrapper. The retained body delegates to the adapter-interface
+// destructor at 0x532510 before conditionally releasing the object.
+VA_COMPGEN(0x005324E0, 0x21, SCALAR_DELETING_DTOR, TRmgMapAdapter)
+
 // The boundary coordinator constructs both a temporary zone and owned
 // water zones through this same retained body. The final three members are
 // vectors; 0x53d9ae/0x53da0d prove signed-short connection distances.
