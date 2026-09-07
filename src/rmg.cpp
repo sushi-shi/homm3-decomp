@@ -2175,6 +2175,14 @@ unsigned char type_random_map_generator::canPlaceShipyard(TRmgMapPosition positi
 // cutoff as assignment breaks the independently exact retained value helper.
 // Naming the source slot/value before the destination slot improves the
 // opening; adding a separate destination index reverses that improvement.
+// Further controls: a saved TPoint entrance adds a four-byte stack home;
+// initializing guardValue from the requested value before the policy test
+// hoists its load into the unguarded path. A const conditional result changes
+// table registers but still spills guardValue. Reusing the prototype index
+// in the water loop is neutral. Value-returning trigger subtraction with a
+// plain final increment grows the frame and expands the base constructor.
+// A by-value addition offset is neutral here but moves the ground caller
+// from 80.43471% to 76.63149%, without resolving this final coordinate copy.
 VA(0x00541AD0, 0x5B0) // anchor-callee connectZones; thiscall, ret 8; retail-only
 unsigned char type_random_map_generator::createShipyardConnection(
     TRmgZone* source, TRmgZoneConnection* connection)
