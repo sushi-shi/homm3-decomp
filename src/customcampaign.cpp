@@ -3072,159 +3072,38 @@ static short readCampaignWord(TAbstractFile* infile)
     return value;
 }
 
-// The two leading clears are `clear()`, not `erase(begin(), end())`:
-// retail CALLS both range-erase COMDATs (0x48a345, 0x48a355) where the
-// longhand form makes VC6 expand them, because clear()'s own wrapper takes
-// the /Ob2 site and the nested erase then gets budget/sites-remaining
-// instead of the whole remaining budget. 55.7915 -> 59.0405 on that line.
+// Complete campaign deserialization; no Dreamcast SCampaign counterpart.
+// Retail proves the 0x66a9-byte legacy record, sixteen 0x462-byte heroes,
+// and field-by-field promotion (not a whole-record copy). The modern arm
+// mirrors save(): one pool count resizes both carry-over vectors.
+// Named score/pool references preserve addresses evaluated before reads
+// and constructor calls; the legacy hero-count bound is re-read each turn.
+// Both leading clear() wrappers must remain: their nested erase calls agree
+// with retail, while spelling erase(begin(), end()) expands those workers.
 //
-// Complete-only campaign deserializer. The >=28 arm is the field-for-field
-// inverse of retail SCampaign::Save at 0x48ae90. The older arm is fixed by
-// the 0x66a9-byte Read, the compiler-generated 2x8 LegacyCampaignHero
-// construction, and every source/destination displacement in the promotion
-// loops. There is no Dreamcast procedure: that port does not use this PC save
-// format, so retail x86 is the sole code and ABI verdict here.
+// Retail's count loads mask to 8/16 bits and keep signed int loop bounds.
+// The artifact fields sign-extend two-byte reads; a direct TArtifact cast
+// expresses that conversion without the old memcpy carrier. The legacy
+// secret flag is reset after the filename assignment (retail +0xd0).
+// Widened counts plus the cast score 67.8382%; correcting the flag order
+// gives 68.1930%; sharing the two outer counters gives 69.5768% (2026-09-07).
+// Separate scopes for days/score reads are byte-flat. Keep the 79.2531% MAX.
 //
-// Residual (60.5021%): 133 blocks against retail's 89 and 15 target-only STL
-// calls, and it is ALL /Ob2 budget in one direction - we expand, retail
-// calls. Read positionally: in the >=28 arm retail CALLS
-// `vector<T>::size()` at the LEADING site of every one of the five resizes
-// (0x48aa49, and the same shape at each) and calls `field_6c.resize`
-// outright at the tail (delinked `vector<type_point>::resize`, ICF-folded
-// with the 4-byte element), while we expand the first size() into its
-// `0x66666667` magic divide at each and expand the whole tail resize into
-// four blocks. In the pre-v28 arm the direction is the same one step down:
-// retail reaches `??_H` for the 16-element LegacyCampaignHero array and the
-// by-length `basic_string::assign`, we expand a per-element ctor loop and
-// `_Grow`.
-//
-// 2026-09-06 (polish lane 44), what the retail bytes SETTLE about the
-// pre-v28 arm's source, against the four hypotheses the mass hunt carried:
-//   * NOT a block move. The scalar header is thirteen individual moves at
-//     0x48a366..0x48a3a8 (VC6 folds three adjacent bytes into one dword load
-//     and uses al/ah), and the promotion body copies field by field with the
-//     record's dead ranges SKIPPED: 0x1a/0x1e/0x1f/0x2c/0x30/0x3b/0x4d/0x51,
-//     then 0x8b, 0x8c, and only then three `rep movsd` runs of 56/28/28 for
-//     army, skillLevel and skillOrder. A `memcpy`/struct copy of the whole
-//     record cannot produce that, and the 0x31..0x3a, 0x3d..0x4c and
-//     0x53..0x8a gaps prove the source names the members. Both "read it as
-//     one POD block" hypotheses are REFUTED, not merely unmeasured.
-//   * The stats copy is a real byte loop (0x48a7e4, `mov al`/`mov byte`,
-//     `cmp esi,4`), not a memcpy - our spelling is already retail's.
-//   * `??_H` and the by-length `assign` are BUDGET symptoms, not spellings:
-//     retail calls both at a smaller budget and our source already asks for
-//     both. `??_H` is reached through the out-of-line LegacyCampaignHero
-//     constructor exactly as intended; what differs is that our /Ob2 then
-//     expands the thunk's four-instruction loop.
-// So the mass construct is NOT in the promotion body's shape. What the same
-// pass DID find is below.
-// DOSE, measured 2026-09-06 (throwaway probes, none shipped - the tree
-// forbids the file-static caller-shrink device that produced them): moving
-// roughly the pre-v28 arm's scalar header (13 lines) plus its two
-// hero-promotion loops (47 lines) out of `caller_cb` is worth
-// 59.0405 -> 79.2549, and the >=28 arm then takes retail's exact
-// size/insert/size/erase shape at all five resize sites with the tail
-// resize called. Smaller and larger doses both fall away sharply: the whole
-// pre-v28 arm 68.89, from the mapScores loop 64.65, from the resize(2) pair
-// 66.10, the pool loops alone 73.98, pools+scores-loop 75.20. So the hole is
-// budget-shaped and its size is known; what is missing is the construct that
-// carries that mass in retail's own source, which is NOT a helper split -
-// no Dreamcast procedure exists for this body to name one from.
-//
-// THE HOLE IS STATEMENT-COUNT SENSITIVE AT ~1.5 POINTS PER STATEMENT, and
-// polish 44 collected one statement of it: retail RE-READS
-// `saved.carryOverHeroCounts[pool]` in the promotion loop's condition
-// (`movsx edx, byte ptr [ebp+ecx-0x4e9]` at 0x48a827, inside the back edge)
-// and again for the resize argument at 0x48a734, so the bound is NOT
-// hoisted into a local. Dropping our `int heroCount` and spelling both uses
-// as `saved.carryOverHeroCounts[pool]` is worth 59.0415 -> 60.5021. That is
-// the polish-41 variable-bound rung, and the return on ONE statement says
-// the remaining ~60-statement dose is the same kind of thing, not one
-// construct.
-//
-// 2026-09-06 (polish lane 46), the RE-READ/FOLD pass over the >=28 arm found
-// one statement that is a source BUG as well as caller mass: retail reads the
-// pool count ONCE and resizes BOTH pools with it. Between the
-// `carryOverHeroes` resize's teardown (0x48b436 `_Destroy`, 0x48b43f
-// `operator delete`) and the `field_4c` resize's leading `size()` (0x48b462)
-// there is no virtual `Read` at all - the second resize reuses edi. Retail
-// SCampaign::Save at 0x48ae90 confirms the format from the other side: it
-// writes `carryOverHeroes.size()` and then goes straight into the pool loop,
-// never writing a second count. Dropping our second
-// `count = ReadCampaignByte(infile);` is 60.5021 -> 61.3492.
-//
-// The pre-v28 arm binds the same reference, and its proof is EVALUATION
-// ORDER rather than aliasing: retail computes `&carryOverHeroes[pool]`
-// (0x48a3ff `mov ebx,[ebx+0x40]` + `lea edi,[ebx+eax]`, homed at
-// [ebp-0x30]) BEFORE constructing resize's `hero()` temporary at 0x48a411,
-// while `carryOverHeroes[pool].resize(n)` builds the temporary first.  With
-// `std::vector<hero>& heroPool` the whole pool-loop preheader becomes
-// retail's instruction sequence and its frame slots ([ebp-0x40],
-// [ebp-0x4dc], [ebp-0x4e9]) line up.  65.5871 -> 65.7852.
-//
-// The same pass recovered retail's ELEMENT REFERENCES in the >=28 arm, and
-// their proof is a load the compiler could not have hoisted on its own:
-// retail computes `&field_4c[pool]` at 0x48b6ba (`mov edi,[ebx+0x50]` +
-// `add edi,edx`) BEFORE the virtual `Read` at 0x48b6cc that fetches the
-// artifact count, and computes `mapScores._First` at 0x48b416 before the
-// first `Read` of each scenario iteration.  A virtual call can store to
-// `this`, so VC6 may only sink those loads past it when the source itself
-// evaluated the subscript first - i.e. the source binds a reference at the
-// top of the block.  With `std::vector<type_artifact>& artifactPool` the
-// artifact loop becomes retail's bytes exactly (`movsx ecx,word[ebp+0xa]` /
-// `mov edx,[edi+4]` / `mov [edx+8*eax],ecx` against our former three-
-// instruction re-derivation from `this`), byte-flat at 61.3492; adding
-// `CampaignScenarioInfo& scenario` for the mapScores loop is
-// 61.3492 -> 62.2807.
-//
-// The sibling `std::vector<hero>& heroPool = carryOverHeroes[pool];` is
-// proved the same way - retail computes `&carryOverHeroes[pool]` at
-// 0x48b5e5..0x48b5ef before the hero-count `Read` at 0x48b5fa - and it was
-// the budget's, not the spelling's: cost -1.08 at 61.3492, -0.10 at
-// 62.2807, +0.61 at 64.9752.  ALL FOUR withheld rungs flipped positive
-// inside this lane once the element references landed, which retires the
-// "they flip together" note: the budget hole is now shallow enough that
-// each retail-proven spelling pays on its own.
-//
-// THREE RETAIL-PROVEN RUNGS ARE WITHHELD, all blocked on the same budget,
-// and all three got CHEAPER as the budget closed - measure them again after
-// every mass step, they flip together:
-//   1. LANDED 2026-09-06 at 64.6979 (polish lane 46): the <36 tail zeroing
-//      as `std::fill(campaignCompleted + 14, campaignCompleted + 21, 0)`
-//      instead of the constant-count memset. Byte-EXACT: VC6 expands
-//      the char* overload's `memset(_F, _X, _L - _F)` with the count
-//      unfolded, giving retail's `cmp edi,ecx / je / sub / shr 2 /
-//      rep stosd / and 3 / rep stosb` at 0x48a9ab..0x48a9c5 against our
-//      individual stores. Cost -0.70 at 59.0405, -0.41 at 60.5021,
-//      +2.44 at the +20 dose, +0.28 at 64.6979.
-//   2. LANDED 2026-09-06 at 64.3277 (polish lane 46):
-//      `campaignFilename = saved.campaignFilename;` instead of the explicit
-//      `.assign(ptr, strlen(ptr))`. This is the section-6b depth ladder run
-//      BACKWARDS - operator=(const char*) -> assign(const char*) ->
-//      assign(ptr, len) puts the leaf one level deeper, and VC6 then CALLS
-//      `?assign@...@QAEAAV12@PBDI@Z` exactly where retail does (0x48a698),
-//      with the same inline `repne scasb` strlen in front of it. Cost -0.75
-//      at 59.0415, -0.31 at 60.5021, +0.37 at 64.3277.
-//   3. LANDED 2026-09-06 at 62.2807 (polish lane 46): `days` and `score`
-//      read into a block-scoped temporary and then assigned, instead of
-//      `infile->Read(&scenario.days, ...)` straight into the member. Retail
-//      reads both into stack temps and copies ([ebp-0x38] at 0x48a939,
-//      [ebp-0x30] at 0x48a952). Cost -0.23 at 60.5021, +2.05 at 62.2807 -
-//      the first of the four to flip, and it flipped the moment the
-//      `scenario` reference put the loop on retail's addressing.
-// The frame surplus is GONE: the `days`/`score` temporaries take the slots
-// the `int artifactId` carrier used to add, so the candidate now allocates
-// retail's 0x6b7c and every named slot lines up ([ebp-0x40] for `this`,
-// [ebp-0x4b09] for the legacy hero array, [ebp-0x6b88] for the record,
-// [ebp-0x4e9] for the carry-over counts).  `int artifactId` plus its memcpy
-// stays: TArtifact is an enum and the board ratchets enum casts at zero, so
-// retail's `movsx ecx,word ptr [ebp+0xa]` straight into the member at
-// 0x48ac6b has no cast-free spelling here.
+// Residual: the array-constructor iterator and nested vector size/resize
+// helpers still expand where retail retains calls. The 69.5768% trace
+// has caller cb 1816, budget 3632: the legacy iterator costs 49 with budget
+// 63, and modern leading size() costs 42 with budgets 78..125.
+// String assignment already stops at the correct by-length worker; the
+// old diagnosis of an expanded _Grow there was stale.
+// Earlier probes that extracted arbitrary portions of legacy promotion
+// into new helpers changed the budget but did not prove source boundaries.
+// Keep field promotion, real STL helpers, std::fill for the seven missing
+// completion flags, and the separate read-then-assign scalar operations.
 VA(0x0048a310, 0xB1E)  // SavedGameHeader::Load caller + member/helper graph
 void SCampaign::load(TAbstractFile* infile, int saveVersion)
 {
-    // The scenario-score list NAMED AS A REFERENCE across all nine uses:
-    // 59.0405 -> 59.2573.
+    int i;
+    int pool;
     // Before normalization (locals): r_mapScores.
     std::vector<MapScore>& rMapScores = m_mapScores;
     rMapScores.clear();
@@ -3246,8 +3125,8 @@ void SCampaign::load(TAbstractFile* infile, int saveVersion)
         m_numMapRegions = -1;
         m_briefingChoice = saved.m_briefingChoice;
         m_crossoverArrayIndex = 0;
-        m_secretActive = false;
         m_campaignFilename = saved.m_campaignFilename;
+        m_secretActive = false;
 
         memset(m_campaignCompleted, 0, sizeof(m_campaignCompleted));
         // Retail 0x48a406..0x48a41f copies 4+2+1 bytes: only the seven
@@ -3255,7 +3134,7 @@ void SCampaign::load(TAbstractFile* infile, int saveVersion)
         memcpy(m_campaignCompleted, saved.m_campaignCompleted, 7);
 
         rMapScores.resize(saved.m_numScenarios);
-        for (int i = 0; i < saved.m_numScenarios; ++i) {
+        for (i = 0; i < saved.m_numScenarios; ++i) {
             CampaignScenarioInfo& scenario = rMapScores[i];
             // Retail +0x191 preserves this source order. Together with the
             // bool legacy field, the loop now has the exact instruction and
@@ -3271,7 +3150,7 @@ void SCampaign::load(TAbstractFile* infile, int saveVersion)
         m_carryOverHeroes.resize(2);
         m_carryoverArtifact.resize(2);
 
-        for (int pool = 0; pool < 2; ++pool) {
+        for (pool = 0; pool < 2; ++pool) {
             std::vector<hero>& heroPool = m_carryOverHeroes[pool];
             heroPool.resize(saved.m_carryOverHeroCounts[pool]);
 
@@ -3346,9 +3225,9 @@ void SCampaign::load(TAbstractFile* infile, int saveVersion)
                   m_campaignCompleted + sizeof(m_campaignCompleted), 0);
     }
 
-    unsigned char count = readCampaignByte(infile);
+    int count = readCampaignByte(infile);
     rMapScores.resize(count);
-    for (int i = 0; i < count; ++i) {
+    for (i = 0; i < count; ++i) {
         CampaignScenarioInfo& scenario = m_mapScores[i];
         scenario.m_completed = readCampaignByte(infile) != 0;
         int days;
@@ -3368,22 +3247,21 @@ void SCampaign::load(TAbstractFile* infile, int saveVersion)
     m_carryOverHeroes.resize(count);
     m_carryoverArtifact.resize(count);
 
-    for (int pool = 0; pool < count; ++pool) {
+    for (pool = 0; pool < count; ++pool) {
         std::vector<hero>& heroPool = m_carryOverHeroes[pool];
-        unsigned char heroCount = readCampaignByte(infile);
+        int heroCount = readCampaignByte(infile);
         heroPool.resize(heroCount);
         for (int whichHero = 0; whichHero < heroCount; ++whichHero)
             heroPool[whichHero].load(infile, saveVersion);
 
         std::vector<type_artifact>& artifactPool = m_carryoverArtifact[pool];
-        unsigned short artifactCount =
+        int artifactCount =
             static_cast<unsigned short>(readCampaignWord(infile));
         artifactPool.resize(artifactCount);
         for (int whichArtifact = 0; whichArtifact < artifactCount;
              ++whichArtifact) {
-            int artifactId = readCampaignWord(infile);
-            memcpy(&artifactPool[whichArtifact].m_artifactId, &artifactId,
-                   sizeof(artifactId));
+            artifactPool[whichArtifact].m_artifactId =
+                static_cast<TArtifact>(readCampaignWord(infile));
             artifactPool[whichArtifact].m_extra = readCampaignWord(infile);
         }
     }

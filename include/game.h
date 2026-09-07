@@ -1326,7 +1326,11 @@ public:
     // Before normalization: availableHeroes.
     std::bitset<156> m_availableHeroes;
 
-    NewSMapHeader() : m_availableHeroes(0)
+    // bitset's default constructor already zeroes every hero bit. The
+    // unsigned-long overload adds a value-loading loop to VC6's pre-inline
+    // estimate even for 0. That suppresses the second string assignment's
+    // expansion inside GameSelectionHeadersStruct (73.1483% versus 100%).
+    NewSMapHeader()
     {
         m_version = 0;
         m_difficulty = 0;
