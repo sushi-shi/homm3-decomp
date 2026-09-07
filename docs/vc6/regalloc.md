@@ -245,6 +245,47 @@ with its normal-profile compile. Artifacts and the 45-choice replay are under
 function remains at 96.6403%; none of these diagnostic hooks changes a
 compiler decision or constitutes a matching checkpoint.
 
+#### Static storage class can prevent propagation (2026-09-07)
+
+The two end-pointer loads above diverge during propagation, before register
+assignment. At the 96.6403 checkpoint, both `vector::end()` expansions create
+kind-4 result temporaries through `0x19d6e`. The global optimization driver
+`0x13615` removes the cache temporary's executable uses but retains the
+registry temporary. Its operand substitution routine `0x70c7` explains why:
+`0x7365` tests the replacement symbol's kind, and `0x74d8` rejects a kind-7
+replacement unless the original symbol is also kind 7. A kind-4 local cannot
+be replaced by that kind-7 storage operand. Kind-8 storage passes this check.
+This is a specific restriction, not a general failure to propagate locals.
+
+In the active TU, an external inline accessor gives its local static kind-7
+storage; an ordinary accessor gives kind 8. A `static inline` accessor also
+retains kind 8. The earlier registry accessor was external inline, while the
+cache accessor was ordinary. Reversing those declarations changes which
+end-pointer result survives to global assignment. Returning the mapped index
+by value then restores the subsequent scratch allocation. With the record
+selected before the string copy, these ordinary C++ changes raise
+`setImageName` from 96.6403 to 99.2095. Its 791-byte body retains all 27 calls
+and EH states `0,-1,1,-1`; only the counter's zeroing instruction remains
+before the reads instead of at the loop entry. Guard-byte separation proves
+the shared accessor boundary; it did not prove the old `inline` declaration.
+
+Observe each temporary's lifetime, not just its first allocated handle.
+The registry's final ID `0x105` reused the same 84-byte slot six times during
+inlining. Allocation hooks at `0x1e2b` and `0x1e47`, the result hook at
+`0x19d6e`, and the phase driver observations establish the final use. A freed
+record's old preference/definition fields are not live allocation evidence.
+
+All hooks are passive. The substitution trace reproduces its complete
+421,023-byte object outside the COFF timestamp. The final storage-class
+trace reproduces its 421,000-byte object and confirms kind 8 for the registry
+field and kind 7 for the cache field. Its normal-profile function, including
+padding, hashes to
+`7ef1c6dff4104f771e25d4074a6d94c6ec030c232f2ac0013428e6075ddc74ba`.
+Artifacts are under
+`build/least-matched/object-image-20260907/{local-allocation-trace,temporary-phase-trace,substitution-trace,storage-class-trace}/`;
+source controls and the banked object are alongside them. No modified
+compiler decision supplies the matching score.
+
 ### 3c. Source creation order
 
 **"Creation order" means the FIRST ASSIGNMENT, not the declaration**

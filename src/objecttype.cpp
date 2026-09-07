@@ -18,6 +18,18 @@
 #include "resourcemanager.h"
 #include "textresource.h"
 
+// Shared registry at 0x69cb80, guard 0x69cb64. GetImageName's empty-name
+// static has a separate guard at 0x69cb70, proving a shared accessor boundary.
+// That does not prove an inline declaration: C2 classifies this ordinary
+// helper's static as kind 8. The former inline definition made it kind 7,
+// preventing propagation of rows.end() and assigning its temporary EAX
+// where retail uses EDX. See docs/vc6/regalloc.md for the byte-verified trace.
+static TObjectImageNameTable& GetObjectImageNames()
+{
+    static TObjectImageNameTable imageNames;
+    return imageNames;
+}
+
 // The registry map's value_type constructor, retail 0x517c30: the string
 // copy expanded in place (allocator byte, _Tidy's three zero stores, then
 // assign(_X, 0, npos)) and the mapped index read back through its
@@ -161,7 +173,11 @@ TObjectTypeFilter* const gObjectTypeFilters[OBJECT_TYPE_FILTER_COUNT] = {
 // A caller-local class owning or deriving from the vector also preserves
 // the constructor call and is byte-identical at 96.5929. The retained
 // constructor therefore establishes a boundary, not this accessor uniquely.
-static std::vector<TObjectType::TImageInfo>& getObjectImageCache()
+// External inline storage makes the cache fields kind 7 in VC6. Together
+// with the ordinary registry accessor and value-returning lookup, it
+// reproduces the retail cache/string operands. A static inline definition
+// keeps kind 8 storage and does not recover those operands.
+inline std::vector<TObjectType::TImageInfo>& getObjectImageCache()
 {
     static std::vector<TObjectType::TImageInfo> imageCache;
     return imageCache;
@@ -344,9 +360,26 @@ static std::vector<TObjectType::TImageInfo>& getObjectImageCache()
 // size call and scores 90.4743; its EDX append position is not retail's load.
 // A reference-returning lookup with an early existing-entry return scores
 // 88.7352: it adds separate +0x1c address calculations and a forward jump.
-// Remaining: lookup operands and string-copy scheduling, and cell's explicit
-// early initialization instead of materialization at the loop. No inline
-// controls or release-elided operations are used.
+// C2 storage-class tracing resolves the accessor mismatch: the ordinary
+// registry accessor gives kind-8 storage, allowing rows.end() to propagate;
+// the external inline cache accessor gives kind 7 and retains its result.
+// With GetIndex returning by value and record selected before the string
+// copy, MAX rises to 99.2095. All 27 calls and EH states still agree; the
+// only instruction difference is XOR ESI,ESI at +0x21b instead of +0x251.
+// The old guard-byte evidence proved a shared registry accessor, not inline.
+// Negative controls at this checkpoint: an ordinary cache gives 96.2055;
+// static inline does not change its storage kind; a reference-returning
+// lookup with inline cache gives 94.6443. Selecting record after the string
+// copy gives 95.9486. Moving the counter initializer after the reads or the
+// width store changes register ownership (91.7312); a loop-local counter
+// gives 92.5020. Preincrement from unsigned -1 reproduces that latter body.
+// An early do/while is byte-identical to 99.2095. Moving initialization before
+// the file guard or lookup changes the CFG and gives 93.6482/93.6680.
+// The current output-reference lookup controls give 96.5415/96.0395 and
+// preserve the wrong registry operands. A flattened lookup with a separate
+// entry factory or typed make_pair gives 78.1067/75.8103 and different calls.
+// Remaining: counter initialization placement. No inline-depth controls or
+// release-elided operations are used.
 VA(0x00514610, 0x317)  // anchor-callee 0x514b80 per-row `>>`; anchor-global 0x6aba80 .msk cache; retail-only
 TObjectType& TObjectType::setImageName(
     const std::basic_string<char, std::char_traits<char>,
@@ -362,10 +395,10 @@ TObjectType& TObjectType::setImageName(
 
     if (imageNumber == oldCount) {
         imageCache.push_back(TImageInfo(emptySize));
+        TImageInfo* record = &imageCache[oldCount];
 
         std::basic_string<char, std::char_traits<char>,
                           std::allocator<char> > maskName(name);
-        TImageInfo* record = &imageCache[oldCount];
         std::string::size_type dot = maskName.rfind('.');
         if (dot != std::string::npos) {
             maskName.replace(dot, maskName.size() - dot,
