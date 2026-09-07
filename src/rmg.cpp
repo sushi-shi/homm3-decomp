@@ -42,6 +42,10 @@ TProgressSink::TProgressSink(int totalSteps)
     m_done = 0;
 }
 
+// Vtable 0x6409c0 slot 0 retains the generated deleting wrapper between the
+// constructor and the ordinary destructor in retail link order.
+VA_COMPGEN(0x00530E40, 0x23, SCALAR_DELETING_DTOR, TProgressSink)
+
 // Complete-only RMG base virtual, exact on the first scored candidate. Vtable
 // 0x6409c0 and three retail cleanup callers all restore this same vptr;
 // Dreamcast has no RMG compiland.
