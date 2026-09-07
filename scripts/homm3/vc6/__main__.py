@@ -27,6 +27,9 @@ Subcommands
         block's [tryLow, tryHigh] state range, the type each arm catches
         and the catch funclet addresses. A body where retail has a try and
         we have none is a target, not an inliner wall.
+  state-sweep [--trials 30] [--jobs 4] [--bank]
+        Compile transient declaration forests once per affected TU, score all
+        rows with CUR < HIST together, reproduce improvements, and bank MAX.
   check [--argv|--il|--inline|--reg|--locator|--all]
         The gates (each ships a negative control).
 
@@ -162,6 +165,17 @@ def _build_parser() -> argparse.ArgumentParser:
     pq.add_argument("--limit", type=int, default=20, metavar="N",
                     help="maximum ranked functions to display (default 20; 0 = all)")
 
+    ps = ss.add_parser("state-sweep", help="batch transient TU-state search for "
+                       "all CUR < HIST rows")
+    ps.add_argument("--trials", type=int, default=30,
+                    help="deterministic declaration forests per TU (default 30)")
+    ps.add_argument("--seed", type=int, default=20260906)
+    ps.add_argument("--jobs", type=int, default=4,
+                    help="parallel VC6 compiles (default 4)")
+    ps.add_argument("--unit", help="optional comma-separated affected TU filter")
+    ps.add_argument("--bank", action="store_true",
+                    help="write reproduced improvements to MAX/HIST")
+
     ss.add_parser("tryblocks", help="retail's catch-scope census: every "
                   "FuncInfo with nTryBlocks > 0, its try extents, catch "
                   "types and funclet addresses")
@@ -190,6 +204,7 @@ _TOOLS = {
     "disasm": ("disasm", "run"),
     "report": ("report", "run"),
     "queue": ("queue", "run"),
+    "state-sweep": ("tu_state_sweep", "run"),
     "tryblocks": ("tryblocks", "run"),
     "check": ("census", "run_check"),
 }
