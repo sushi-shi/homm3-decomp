@@ -23,10 +23,9 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00488880	1494	53.9868	53.9868	80.9474	284.64584399999995	customcampaign	?load@CampaignHeaderStruct@TCampaignBrief@@QAE_NXZ	admitted
 0x0044cd50	1512	81.3762	81.3762	81.3762	281.591856	artifact	?initializeArtifactTraitsTable@@YIEXZ	admitted
 0x004d6920	593	81.4346	81.4346	81.4346	110.092822	gzinflatebuf	?underflow@TGzInflateBuf@@UAEHXZ	admitted
-0x00580430	1595	81.08467	81.0847	81.7345	291.334725	singleselectionwindow	?rebuildFilteredPlayerSetup@TSingleSelectionWindow@@QAEXXZ	admitted
-0x00514b80	503	81.7405	81.7405	81.7405	91.84528500000003	objecttype	??5@YIAAV?$basic_istream@DU?$char_traits@D@std@@@std@@AAV01@AAUTObjectType@@@Z	admitted
 0x004e4990	1014	81.76774	81.7677	81.7677	184.8755219999999	hero	?getMobility@hero@@QAEHE@Z	admitted
 0x00541140	1594	81.8175	81.8175	81.8175	289.82905	rmg	?createGroundConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@PAV?$vector@PAUTRmgMapItem@@V?$allocator@PAUTRmgMapItem@@@std@@@std@@PAV?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@5@@Z	admitted
+0x00580430	1595	81.8719	81.8719	81.8719	289.14319500000005	singleselectionwindow	?rebuildFilteredPlayerSetup@TSingleSelectionWindow@@QAEXXZ	admitted
 0x0042e0b0	2926	81.88646	81.8865	81.8865	530.0010100000002	ai_player	?aiChooseDestination@@YIHPAVhero@@JAAUHeroDestination@@AAJEE@Z	admitted
 0x005f2a40	968	82.017	82.017	82.017	174.07544000000004	victorylossconditions	?checkForDefeatedHeroLoss@LossConditionStruct@@QAEEPBVhero@@@Z	admitted
 0x00542080	2218	82.1005	82.1005	82.1005	397.01091	rmg	?createSubterraneanGate@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	admitted

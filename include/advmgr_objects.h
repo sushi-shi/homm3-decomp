@@ -340,6 +340,17 @@ struct TObjectType {
         const std::basic_string<char, std::char_traits<char>,
                                 std::allocator<char> >& name);
     TObjectType& setTriggerMask(const std::bitset<48>& mask);
+    // Provisional fluent setter names: retail objects.txt extraction retains
+    // the two setters above and expands this ordered field/invariant chain.
+    // The corresponding ordinary definitions live in objecttype.cpp.
+    TObjectType& setPassableMask(const std::bitset<48>& mask);
+    TObjectType& setTerrainMask(const std::bitset<10>& mask);
+    TObjectType& setRecommendedTerrainMask(const std::bitset<10>& mask);
+    TObjectType& setObjectType(TAdventureObjectType type);
+    TObjectType& setSubtype(int subtype);
+    TObjectType& setSlotCategory(int category);
+    TObjectType& setUnderlay(bool underlay);
+
 };
 SIZE(TObjectType, 0x4c);
 

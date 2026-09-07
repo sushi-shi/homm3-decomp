@@ -2793,39 +2793,20 @@ void TSingleSelectionWindow::setupFilterOptions()
 // every seat's hero/town choice, redraws, and mirrors the new positions to
 // the other machines through SendPlayerPositions.
 //
-// Residual (71.54%): every statement is present and the call streams agree
-// on 20 of 22 real sites; what is left is three /Ob2 decisions in the same
-// body, all of them budget rather than spelling. (1) Retail CALLS
-// basic_string::basic_string(const allocator&) for BOTH of the local
-// header's strings; we expand the first (it becomes an inline _Tidy). (2)
-// Inside AssignData retail expands operator=(const char*) at both sites -
-// one down to assign(), one a level further to _Grow - while game.h's
-// former inline_depth(1) left us calling operator= outright.
-// MEASURED 2026-09-05 by deleting that pragma and re-diffing three of its
-// callers in one compile: this row 71.5355 -> 81.0800, OnBeginGame 78.7597
-// -> 77.2700, UpdateGameVars 67.9099 -> 38.0800. So the pragma is NOT inert
-// (contra "only N=0 bites"), it is worth +9.5 here and -29.8 there, and the
-// split requires the original per-site compiler state. Both AssignData pins
-// were removed on 2026-09-06; this row now scores 81.0847%, with its 81.7345%
-// historical peak preserved. (3) The
-// SendPlayerPositions expansion: retail CALLS ??0CNetPlayerHandlerPlayer
-// for m_netPlayer[8] and only ??0CNetPlayerInfo for m_compPlayer[8], while
-// our budget expands both loops in full - the same per-site split
-// singleselectionwindow.h:165 records for the two other CUpdatePlayerPosMsg
-// sites. The frame is 8 B short for exactly this reason: retail's two extra
-// dword temps hold the char* operands live across its expanded operator=.
-// DOSE for (3), measured 2026-09-06 (throwaway probes, none shipped): six
-// lines - the four-store seat-reset loop - out of `caller_cb` restores BOTH
-// constructor calls, 71.5355 -> 81.2220, at which point the call streams
-// agree at report level with zero one-sided sites on either side and the
-// skeleton closes from 40-vs-36 blocks to 35-vs-36. Six more (the host
-// widget block) add 0.51 (81.7278). Overshoot again is real: the eight-seat
-// header loop instead of the reset loop gives 77.15, both together 69.43,
-// and the player-count block 72.88. So (3) is worth ~10 points and the dose
-// is small - what is wanted is the real construct that carries it.
-// Tried and rejected: field_18A0[4] + field_18A0[2] operand order
-// (byte-flat). Fixed here: the version ternary is `== CONTEXT_1 ? 21 : 14`
-// (retail's `and al,-7 / add eax,0x15`), not the other way round.
+// Residual (81.8719%; former history 81.7345%): retain a reference to the
+// local row from its header assignment through AssignData/SetText. Retail
+// reuses EBX for that row and saves the window separately. Binding before
+// the title/description copies scores 73.73684%; a pointer is byte-identical
+// there. Per-seat references score 79.17162%, per-slot references 80.97941%.
+// Swapping the independent playable/difficulty stores and the count-sum
+// operands leaves the score unchanged. Keep the original statement order.
+// Remaining boundaries: retail calls both local string constructors,
+// expands only the second AssignData string assignment through _Grow, and
+// calls the first message-array seat constructor while expanding the second
+// down to CNetPlayerInfo. Our trace expands the first string constructor,
+// both assignments through _Grow, and both seat constructors. The message
+// helper and header constructor retain their Dreamcast-proven operations;
+// this Complete-only caller supplies no DC source for a missing boundary.
 VA(0x00580430, 0x63B)  // Complete-only filtered player/setup rebuild
 void TSingleSelectionWindow::rebuildFilteredPlayerSetup()
 {
@@ -2874,21 +2855,22 @@ void TSingleSelectionWindow::rebuildFilteredPlayerSetup()
            sizeof(m_localHeader.m_heroAvailability));
     strcpy(m_localHeader.m_title, g_generalText->getText(741));
     strcpy(m_localHeader.m_description, g_generalText->getText(742));
-    m_localHeader.m_header = header;
+    GameSelectionHeadersStruct& localHeader = m_localHeader;
+    localHeader.m_header = header;
 
     g_game->initNewGame(g_game->m_setup.m_difficulty, 0, &header, 0);
-    m_localHeader.m_setup = g_game->m_setup;
-    m_currentHeader = &m_localHeader;
+    localHeader.m_setup = g_game->m_setup;
+    m_currentHeader = &localHeader;
 
-    g_game->m_setup = m_localHeader.m_setup;
-    memcpy(g_game->m_heroAvailability, m_localHeader.m_heroAvailability,
-           sizeof(m_localHeader.m_heroAvailability));
-    g_game->m_mapHeader.assignData(&m_localHeader.m_header, m_localHeader.m_title,
-                                 m_localHeader.m_description);
+    g_game->m_setup = localHeader.m_setup;
+    memcpy(g_game->m_heroAvailability, localHeader.m_heroAvailability,
+           sizeof(localHeader.m_heroAvailability));
+    g_game->m_mapHeader.assignData(&localHeader.m_header, localHeader.m_title,
+                                 localHeader.m_description);
     g_game->m_setup.m_turnDuration = static_cast<signed char>(m_durationIndex);
     g_game->m_setup.m_difficulty = static_cast<signed char>(g_lastDiff);
     static_cast<CScrollTextWidget*>(m_descriptionWidget)
-        ->setText(m_localHeader.m_description);
+        ->setText(localHeader.m_description);
 
     for (int j = 0; j < CNetPlayerHandler::MAX_PLAYERS; ++j) {
         m_players.m_humanPlayers[j].m_heroIndex = -1;

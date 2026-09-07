@@ -1620,3 +1620,24 @@ with its index scoped to the loop scores 74.7688%, with the decrement either
 as a statement or in test(). The DC-proven TArtifactSlot/TArtifact interfaces
 leave the exact bytes unchanged. Preserve Complete's call to the extended
 artifact-eligibility method in place of the older DC predicate.
+
+## Fluent setters restore the caller's nested bitset decisions
+
+The objects.txt row extractor (0x514b80) reached 100% from 81.7405% by
+restoring ordinary fluent setters for passability, terrain, recommendations,
+object type, subtype, slot category, and underlay. Retail retains the image
+and trigger setters; its recommended-terrain intersection immediately before
+an overwrite also exposes the invariant maintained by a terrain setter.
+The full chain retains retail's bitset union and intersection calls while
+expanding string destruction. With the same declarations, flattening the
+setter calls and default-constructing the input masks scores 76.63784%.
+
+The earlier three unsigned-long zero constructors had compensated for the
+flattened boundaries. They score 87.57838% with the restored chain, whereas
+default constructors reach 99.89189%. Converting the two nine-bit inputs to
+ten-bit masks as temporary setter arguments reaches 100%; named conversion
+locals leave different stack slots. The chain evaluates the recommended
+terrain argument before legal terrain, explaining retail's conversion order.
+Explicit bitset temporaries and implicit unsigned-long conversions emit
+identical bytes. These setter names remain provisional for this Complete-only
+compiland; no new retail function claims are needed.
