@@ -3236,6 +3236,7 @@ rmg	?findZone@TRmgTemplate@@QAEPAUTRmgTownSlot@@H@Z	100.0000	100.0000	100.0000	0
 rmg	?getMapItem@type_random_map@@QAEPAUTRmgMapItem@@UTRmgMapPosition@@@Z	100.0000	100.0000	100.0000	0x1378e0	6cf5b1e45767
 rmg	?getRmgGuardValue@@YIHHH@Z	100.0000	100.0000	100.0000	0x145e00	d88a58e28d17
 rmg	?getSize@type_random_map@@UAE?AUTRmgGridPoint@@XZ	97.5556	100.0000	100.0000	0x132240	505c3a1069ef
+rmg	?getValue@type_treasure_def@@UAEHPAX0@Z	100.0000	100.0000	100.0000	0x134190	ee5cc0f97d30
 rmg	?initializeObjectGenerators@type_random_map_generator@@QAEXXZ	97.4646	97.4676	97.4676	0x138b10	3d8815234772
 rmg	?insert@?$vector@HV?$allocator@H@std@@@std@@QAEPAHPAHABH@Z	100.0000	100.0000	100.0000	0x22f50	-
 rmg	?insert@?$vector@HV?$allocator@H@std@@@std@@QAEXPAHIABH@Z	100.0000	100.0000	100.0000	0x4200	-
