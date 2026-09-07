@@ -5,7 +5,7 @@ from homm3.vc6.weighted_queue import ranked_rows
 
 
 class WeightedQueueTests(unittest.TestCase):
-    def test_excludes_banked_dips_and_uncompiled_claims(self):
+    def test_hist_does_not_exclude_current_implementation_headroom(self):
         report = {"units": [{"name": "game/example", "functions": [
             {"name": "exact", "fuzzy_match_percent": 100.0},
             {"name": "dip", "fuzzy_match_percent": 80.0},
@@ -24,10 +24,13 @@ class WeightedQueueTests(unittest.TestCase):
         categories = {rva: "target" for rva in sizes}
         compiled = set(baseline) - {("example", "stub")}
         rows = ranked_rows(report, baseline, categories, sizes, compiled)
-        self.assertEqual([r["va"] for r in rows], ["0x00400003"])
+        self.assertEqual([r["va"] for r in rows],
+                         ["0x00400003", "0x00400002"])
         self.assertEqual(rows[0]["state"], "admitted")
         self.assertIsNone(rows[0]["current"])
         self.assertAlmostEqual(rows[0]["remaining_bytes"], 70)
+        self.assertEqual(rows[1]["historical"], 100)
+        self.assertAlmostEqual(rows[1]["remaining_bytes"], 50)
 
     def test_orders_by_peak_then_size_and_deduplicates_aliases(self):
         report = {"units": [{"name": "u", "functions": [
@@ -48,7 +51,7 @@ class WeightedQueueTests(unittest.TestCase):
         rows = ranked_rows(report, baseline,
                            {1: "target", 2: "target", 3: "zlib", 4: "runtime"},
                            sizes, set(baseline))
-        self.assertEqual([r["function"] for r in rows], ["low", "small", "dip"])
+        self.assertEqual([r["function"] for r in rows], ["small", "low", "dip"])
         self.assertAlmostEqual(rows[-1]["remaining_bytes"], 90)
 
     def test_missing_checkpoint_identity_fails_instead_of_inventing_zero(self):

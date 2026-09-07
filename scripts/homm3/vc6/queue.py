@@ -16,8 +16,8 @@ import json
 
 from homm3.vc6 import _common, diagnose
 
-HEADER = ("class", "recoverable", "max_fuzzy", "current_fuzzy", "size",
-          "unit", "fn", "route", "knob")
+HEADER = ("class", "recoverable", "max_fuzzy", "hist_fuzzy", "headroom",
+          "current_fuzzy", "size", "unit", "fn", "route", "knob")
 ADMISSION_HEADER = ("state", "size", "rva", "relation", "owner",
                     "candidates", "label", "action")
 SMALLEST_HEADER = ("state", "size", "va", "current_fuzzy", "max_fuzzy",
@@ -36,7 +36,13 @@ def _size(fn):
 def _load_maxima(path=None):
     from homm3.match.status import load_baseline
     path = path or (_common.REPO / "config/match_baseline.tsv")
-    return {key: row.best for key, row in load_baseline(path).items()}
+    return {key: row.max for key, row in load_baseline(path).items()}
+
+
+def _load_history(path=None):
+    from homm3.match.status import load_baseline
+    path = path or (_common.REPO / "config/match_baseline.tsv")
+    return {key: row.hist for key, row in load_baseline(path).items()}
 
 
 def _parked_rvas_from_text(text):
@@ -365,15 +371,18 @@ def _run_polish(args) -> int:
     only = set(filter(None, (args.unit or "").split(",")))
     rows, failed = [], []
     maxima = _load_maxima()
+    history = _load_history()
     targets = _targets(maxima)
     for i, (unit, fn, pct, current, size) in enumerate(targets, 1):
         if only and unit not in only:
             continue
         row = {
             "class": "not diagnosed", "recoverable": size * (1 - pct / 100),
-            "max_fuzzy": pct, "current_fuzzy": current, "size": size,
+            "max_fuzzy": pct, "hist_fuzzy": history.get((unit, fn), pct),
+            "current_fuzzy": current, "size": size,
             "unit": unit, "fn": fn, "route": "diagnose", "knob": "",
         }
+        row["headroom"] = max(0.0, row["hist_fuzzy"] - pct)
         rows.append(row)
         if not getattr(args, "diagnose", False):
             continue
@@ -408,7 +417,7 @@ def _run_polish(args) -> int:
     with out.open("w") as fh:
         command = "homm3 vc6 queue" + (" --diagnose" if getattr(args, "diagnose", False) else "")
         fh.write(f"# GENERATED: {command} - regenerate, never hand-edit.\n")
-        fh.write("# Existing compiled bodies, sorted by banked MAX/history; "
+        fh.write("# Existing compiled bodies, sorted by current-implementation MAX; "
                  "retail size breaks ties.\n")
         fh.write("# Banked-exact current dips are observational and excluded.\n")
         fh.write("# recoverable = size * (1 - max_fuzzy/100).\n")
@@ -417,13 +426,17 @@ def _run_polish(args) -> int:
             fh.write("\t".join((
                 r["class"], f"{r['recoverable']:.0f}",
                 f"{r['max_fuzzy']:.4f}",
+                f"{r['hist_fuzzy']:.4f}", f"{r['headroom']:.4f}",
                 (f"{r['current_fuzzy']:.4f}" if r['current_fuzzy'] is not None else "-"),
                 str(r["size"]), r["unit"], r["fn"],
                 r["route"], r["knob"].replace("\t", " ") or "-")) + "\n")
 
     print("\nnext polish functions (ascending banked MAX):")
     for r in rows[:getattr(args, "limit", 20) or None]:
-        print(f"  {r['max_fuzzy']:6.2f}%  {r['unit']}:{r['fn']}  {r['route']}")
+        lost = (f"  HIST {r['hist_fuzzy']:6.2f}% (+{r['headroom']:.2f})"
+                if r["headroom"] > 1e-6 else "")
+        print(f"  {r['max_fuzzy']:6.2f}%  {r['unit']}:{r['fn']}  "
+              f"{r['route']}{lost}")
 
     by_class = collections.defaultdict(list)
     by_unit = collections.defaultdict(float)

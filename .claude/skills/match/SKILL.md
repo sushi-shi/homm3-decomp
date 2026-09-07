@@ -11,19 +11,24 @@ produces code byte-identical to retail `HEROES3.EXE`, verified by objdiff throug
 `homm3 build`. External sources remain hypotheses until retail-byte evidence proves
 them; substantive outcomes are recorded in the port plan's §5 decision log.
 
-## The governing ledger: per-function MAX fuzzy (ratchet)
+## The governing ledger: per-function CUR / MAX / HIST
 
-`config/match_baseline.tsv` records each function's best-observed fuzzy; a drop
-below MAX fails the build. **MAX is the only ledger** (gruntz doctrine): current-%
-dips from correct changes are acceptable — the user tracks MAX, not simultaneous
-exactness. A deliberate lower is a hand edit of the baseline row with a dated
-comment (precedent: GetArmyMorale). Promoting a carcass fn renames its row —
-DELETE the superseded flat-name row in the same change or the gate reports it
-MISSING forever.
+`config/match_baseline.tsv` maintains the invariant **CUR <= MAX <= HIST**.
+CUR is the latest full-build score. MAX is the best score reached by the
+function's CURRENT source implementation: unrelated CUR dips leave it held,
+while a proven function `src_hash` change resets it to the new CUR. HIST is the
+all-time peak across current and older implementations and never drops for the
+same retail RVA. We work against MAX because it preserves the behavior of the
+source that is actually present; `HIST > MAX` is a breakage lead for recovering
+something an older implementation did better. A source-edit MAX drop is
+reported but is observational, not a build failure; source/retail evidence
+decides admissibility. Promoting a carcass fn renames its row — DELETE the
+superseded flat-name row in the same change or the gate reports it MISSING
+forever.
 
-**A PEAK CAN BE LOST WITHOUT `hist` RECORDING IT.** If an edit regresses and
-is re-banked at the lower value before anyone notices, BOTH `max` and `hist`
-sit at the lower number and nothing in the ledger remembers. `game::Load`'s
+**A PEAK COULD BE LOST BEFORE HIST WAS DISTINCT FROM MAX.** If an edit regressed
+and was re-banked at the lower value before anyone noticed, both fields sat at
+the lower number and nothing in the old ledger remembered. `game::Load`'s
 five `type_point emptyPoint;` declarations had drifted back INSIDE their pins;
 `max` and `hist` both read 90.98, and the only surviving record was its own
 residual note, which quoted 91.8624 — exactly where re-hoisting them landed.
@@ -34,10 +39,10 @@ routinely cite OTHER functions' scores ("costs SetupHeroView 99.53"), and a
 note sitting between two claims attaches to the row that FOLLOWS it. The
 precise check is `hist > max`, which `homm3 vc6 queue` already reports.
 
-**CHECK `hist` AGAINST `max` — THE RATCHET CANNOT SEE A LOST PEAK.** It
-compares against `max`, so once a max has been accepted downward the row sits
-below a value it once reached and the build stays green forever. `hist` is the
-only record. `homm3 vc6 queue` now reports every such row.
+**CHECK `hist` AGAINST `max`.** The active work frontier is MAX; HIST is the
+only record of a better older implementation. `homm3 vc6 queue` keeps every
+`hist > max` row actionable instead of treating the historical peak as the
+current implementation's bank.
 
 This is not hypothetical, and it happened TWICE from the same cause:
 - A retired view gate left a header invariant unenforced — the `#if` went with
@@ -226,9 +231,9 @@ and `ESpellId`. A per-TU view lets two incompatible models of the same type
 coexist indefinitely, because no TU ever sees both.
 
 **BUT DO NOT OVER-GATE FOR IT.** The ledger tracks `cur`, `max` AND `hist`,
-and the ratchet compares against `max`: a perturbation lowers `cur` while
-`max` and `hist` keep the peak, and even `--accept-regressions` leaves `hist`
-intact (`status.py:321` says exactly that when it reports one). So an
+with `cur <= max <= hist`: an unrelated perturbation lowers `cur` while `max`
+and `hist` keep their peaks. A source edit resets `max` and preserves `hist`.
+So an
 include-set perturbation costs a RE-MEASURE by a later lane, not the result.
 Gate a declarator when it is genuinely compile-required — a name collision, a
 type not every TU can see — not merely because it moves a score. 91 view
