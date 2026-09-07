@@ -878,6 +878,71 @@ is how the natural expression/temporary creation order produces those handles.
 <!-- c2-role: function 0xd25d hashOperand -->
 <!-- c2-role: site 0xcf2a storeRecomputedOperandRank -->
 
+The width base's origin is now observed as well. A passive hook at `0x6ac8`,
+after the call to `0x673f` and before `0x235b` constructs a kind-2 operand,
+records the returned symbol and the original expression operands. At this
+checkpoint, handle `0x41c` represents generic addition (`0x16d`) of the
+original `this` symbol (handle 1) and constant `0xc`. It is the shared address
+of `m_width`, first encountered in the opening `setTile` expansion, rather
+than the symbol for `this` itself. Five observed requests reuse that symbol,
+including the addresses feeding both residual products.
+
+The immediate creation sequence includes address `point + 4` (`0x419`),
+its loaded value (`0x41b`), address `this + 0xc` (`0x41c`), its loaded value
+(`0x41e`), and their product (`0x41f`). These are observed generated handles,
+not original source locals. The call at `0x11593` supplies the expression
+opcode, type and operand list to `0x6ab4`; the latter obtains a symbol via
+`0x673f` and creates its value operand via `0x235b`. The physical Ghidra entry
+at `0x1158b` is only a fragment, so it is not assigned a whole-function role.
+
+<!-- c2-role: function 0x6ab4 makeExpressionValueOperand -->
+<!-- c2-role: function 0x673f getExpressionValueSymbol -->
+<!-- c2-role: function 0x235b makeSymbolValueOperand -->
+<!-- c2-role: site 0x6ac8 expressionValueSymbolReady -->
+
+This trace checks the active function name, the returned symbol's readable
+record and the observed handle range before recording it. It preserves the
+entire object outside its timestamp and restores the normal shim in `finally`.
+Artifacts are in `build/rmg-width-address-origin/`. Ordinary source controls
+using a pointer cache alias, reversing the multiplication, or putting x first
+in `setTile` leave all eight caller differences. Naming width changes the
+entry product and distance-wrapper expansion, but leaves both residual
+products row-first. Thus merely rewriting the setter expression has not
+recovered the required natural symbol order.
+
+The handle allocation explains another limit on that search. `0x64bb`
+requests allocation kind `0xf` from `0x1da6`, then sets the returned record's
+category byte to 3. The pinned dispatch tables at `0x226c` / `0x2254` send
+kind `0xf` to `0x1eb4`, which consumes successive 84-byte records from the
+arena at `0x9bc74`. This is a distinct path from the kind-3 free list at
+`0x9bc60`; that free list must not be used to explain expression allocation.
+
+`0x53f4` allocates a 12-byte header followed by 32 records. It preassigns their
+handles at record offset `+0x1c`, incrementing `0x9bc4c` by 32 per arena. The
+initialization at `0x1bcc6` zeroes that counter and creates four other arenas
+before clearing the expression-arena pointer. Therefore allocations into a
+different arena can change an expression handle's upper bits without changing
+its low five bits. The slot within its own arena is the relevant local order;
+total declarations or allocations across all pools are not an equivalent count.
+
+A passive hook at `0x64c5` checks the active caller, readable arena bounds and
+84-byte slot alignment before recording allocation. It confirms that the
+current width address is slot 28 of the arena beginning at handle `0x400`:
+handle `0x41c`. The named-width setter control instead creates that address at
+slot 25, handle `0x419`. Its low-bit hash contribution changes from `7` to
+`0x4007`, but the ordinary output still has both residual products row-first.
+Both traces reproduce their respective complete ordinary-compiler objects
+outside COFF timestamps, and the normal shim is restored. The artifacts are
+`build/rmg-expression-arena-trace/` and `build/rmg-expression-arena-run.log`.
+
+<!-- c2-role: function 0x64bb makeExpressionSymbol -->
+<!-- c2-role: function 0x1da6 allocateSymbolRecord -->
+<!-- c2-role: function 0x53f4 allocateSymbolArena -->
+<!-- c2-role: function 0x1bcc6 initializeSymbolArenas -->
+<!-- c2-role: global 0x9bc74 expressionSymbolArena -->
+<!-- c2-role: global 0x9bc4c nextSymbolArenaHandle -->
+<!-- c2-role: site 0x64c5 expressionSymbolAllocated -->
+
 The distinction develops before that sort. After inlining, the two row reads
 are indirect operands (kind 6). A later passive snapshot at `FUN_1070f1f0`
 entry separates the first `FUN_1070f349` call from that follow-up: the row

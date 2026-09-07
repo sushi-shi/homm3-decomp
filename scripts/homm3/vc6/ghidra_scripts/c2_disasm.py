@@ -49,6 +49,14 @@ def span_rows(program, binary, lo, hi):
     listing = program.getListing()
     first = listing.getInstructionAt(_address(program, lo))
     if first is None:
+        containing = listing.getInstructionContaining(_address(program, lo))
+        if containing is not None:
+            row = _row(program, binary, containing)
+            end = row.rva + len(row.raw)
+            raise ValueError(
+                f"rva 0x{lo:x} is not a Ghidra instruction boundary; "
+                f"it splits instruction [0x{row.rva:x}, 0x{end:x}). "
+                f"Start at 0x{row.rva:x} to include it or 0x{end:x} to skip it")
         raise ValueError(f"rva 0x{lo:x} is not a Ghidra instruction boundary")
     rows = []
     for ins in listing.getInstructions(_address(program, lo), True):
@@ -56,7 +64,10 @@ def span_rows(program, binary, lo, hi):
         if rva >= hi:
             break
         if rva + ins.getLength() > hi:
-            raise ValueError(f"range end 0x{hi:x} splits instruction at 0x{rva:x}")
+            raise ValueError(
+                f"range end 0x{hi:x} splits instruction at 0x{rva:x}; "
+                f"use end 0x{rva + ins.getLength():x} to include it "
+                f"or 0x{rva:x} to exclude it")
         rows.append(_row(program, binary, ins))
     return rows
 
