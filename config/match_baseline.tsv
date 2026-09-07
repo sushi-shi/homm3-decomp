@@ -2753,9 +2753,9 @@ objecttype	?_Tidy@?$_Tidyfac@V?$ctype@D@std@@@std@@SAXXZ	100.0000	100.0000	100.0
 objecttype	?_Tidy@?$_Tidyfac@V?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@@std@@SAXXZ	100.0000	100.0000	100.0000	0x11b170	-
 objecttype	?_Xinv@?$bitset@$08@std@@ABEXXZ	100.0000	100.0000	100.0000	0x117680	-
 objecttype	?_Xinv@?$bitset@$0DA@@std@@ABEXXZ	100.0000	100.0000	100.0000	0x116e40	-
-objecttype	?accepts@TAnyTerrainObjectFilter@@UBEHPBUTObjectType@@@Z	100.0000	100.0000	100.0000	0x114220	9f749c90e318
-objecttype	?accepts@TNativeTerrainObjectFilter@@UBEHPBUTObjectType@@@Z	77.3913	77.3913	77.3913	0x1141b0	ee6fddc3bf04
-objecttype	?accepts@TSlotCategoryObjectFilter@@UBEHPBUTObjectType@@@Z	100.0000	100.0000	100.0000	0x114260	0c2c8ca458ac
+objecttype	?accepts@TAnyTerrainObjectFilter@@UBEEPBUTObjectType@@@Z	100.0000	100.0000	100.0000	0x114220	9f749c90e318
+objecttype	?accepts@TNativeTerrainObjectFilter@@UBEEPBUTObjectType@@@Z	100.0000	100.0000	100.0000	0x1141b0	0d7a6271bcff
+objecttype	?accepts@TSlotCategoryObjectFilter@@UBEEPBUTObjectType@@@Z	100.0000	100.0000	100.0000	0x114260	0c2c8ca458ac
 objecttype	?clear@?$basic_ios@DU?$char_traits@D@std@@@std@@QAEXH_N@Z	100.0000	100.0000	100.0000	0x117af0	-
 objecttype	?compare@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QBEHABV12@@Z	100.0000	100.0000	100.0000	0x11b8b0	-
 objecttype	?compare@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QBEHIIPBDI@Z	100.0000	100.0000	100.0000	0x11b910	-
