@@ -318,6 +318,8 @@ struct TRmgMapPosition {
     TRmgMapPosition(int newX, int newY, int newZ);
 
     TRmgMapPosition operator+(const TPoint& offset) const;
+    TRmgMapPosition& operator+=(const TPoint& offset);
+    TRmgMapPosition& operator-=(const TPoint& offset);
 };
 
 // Complete's zone-connection records are walked at a 0x1c-byte stride by
@@ -768,6 +770,7 @@ public:
     // Retail retains this body at 0x5330e0 beneath derived construction.
     // No Dreamcast inline declaration exists for this Complete-only type.
     type_object(TRmgObjectPropertiesRef* newProperties);
+    TRmgMapPosition getPosition() const;
 
     // The constructor and placement scorer share this five-byte reset.
     // The method name is provisional; retail preserves the store order.
@@ -1303,6 +1306,7 @@ public:
         TRmgMapPosition position, int count, TRmgZone* zone);
     // Before normalization (function): type_random_map_generator::CreateGuard.
     type_object* createGuard(int value, TRmgZone* zone);
+    void placeGuard(TRmgMapPosition position, int value);
     // Provisional Complete-only spelling: the 0x548290 road-target pass is
     // the sole direct caller, and the body builds the road traversal costs.
     // Before normalization (function): type_random_map_generator::BuildRoadCostMap.
