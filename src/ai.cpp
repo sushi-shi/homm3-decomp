@@ -3090,12 +3090,11 @@ long combatManager::computeFireShieldDamage(long damage, const army* attacker, c
                              targetHero, attacker, 0);
 }
 
-// E:\gamedcs\ai.cpp:2397. The static one-exchange scorer. It has NO retail
-// row: all three of its call sites are in the body below and /Ob2 expands
-// every one of them, which is exactly the "inlined single-call statics
-// vanish" rule. Its shape is read off those three expansions - the
-// breath-attack site is the one that skips the fire-shield half, which is
-// what the fifth parameter selects.
+// E:\gamedcs\ai.cpp:2397. Canonical static single-exchange scorer;
+// retail expands all three melee call sites. DC line 2409 tests ranged
+// first, then breath_attack, before computing fire-shield retaliation.
+// Keeping that meaningful ranged guard is byte-flat for these melee calls,
+// which all pass zero, but preserves the helper's recovered semantics.
 // Before normalization (function): simulate_simple_attack.
 // Before normalization (locals): current_army, breath_attack, target_hits.
 static void simulateSimpleAttack(army* currentArmy, army* target,
@@ -3107,7 +3106,7 @@ static void simulateSimpleAttack(army* currentArmy, army* target,
         return;
     long damage = aiGetAttackDamage(currentArmy, hits, target, ranged,
                                        distance);
-    if (!breathAttack) {
+    if (!ranged && !breathAttack) {
         long targetHits = target->getTotalHitPoints(1);
         long burn = g_combatManager->computeFireShieldDamage(
             damage, currentArmy, target, targetHits);
@@ -3118,32 +3117,18 @@ static void simulateSimpleAttack(army* currentArmy, army* target,
     target->setAIExpectedDamage(target->getAIExpectedDamage() + damage);
 }
 
-// E:\gamedcs\ai.cpp:2433. The five-argument simulate_melee_attack, and the
-// widest of the four simulation bodies: a multi-headed attacker scores every
-// direction its head mask covers (each enemy stack once - the bitIndex mask
-// is what de-duplicates a two-hex stack reached from two directions), and
-// anything else scores the target plus, for a breath attacker, whatever
-// stands in the hex behind it.
-// Residual (77.5%): ONE inline decision, at the first of the three
-// simulate_simple_attack expansions. Retail keeps
-// compute_fire_shield_damage a CALL inside the multi-head loop and expands
-// it at the plain-attack site below; ours expands it at both, which is the
-// whole 5-block/4-call difference (base 41 blocks and 30 calls against
-// retail's 36 and 26 - every other call pairs in order). The /Ob2 divisor
-// prices the first site with the most budget, so the separation needs a
-// per-site pin, which this lane may not add. Tried and rejected: extern
-// rather than static linkage on the helper (byte-flat to the digit).
-// 2026-09-06, polish lane 38 (77.5103 -> 79.6584): the multi-head fan-out is
-// a do/while with a POST-DECREMENT condition, not a `for (d = 7; d >= 0;
-// d--)`. Retail's back edge is `mov ecx,edi / dec edi / test ecx,ecx / mov
-// [ebp+0x10],edi / jne` at fn+0x116 - the test is on the PRE-decrement value
-// and the direction is memory-homed in a dead parameter slot; the `>= 0`
-// form gives `dec ecx / jns` and keeps the counter in a register.
-// Residual (79.6584%): one per-site inliner decision. Retail CALLS
-// `compute_fire_shield_damage` at the multi-head site (call #6) and EXPANDS
-// it at the two single-target sites, where we expand all three - the
-// `budget / sites-remaining` split inside the inlined `simulate_simple_attack`.
-// The frame is also 0xc over retail's 0x8 as a consequence.
+// E:\gamedcs\ai.cpp:2433. Dreamcast proves army::Is at 2435/2468,
+// ValidHex at 2451/2475, and the canonical simulate_simple_attack calls.
+// Retail's multi-head back edge tests the pre-decrement value with jg:
+// use direction-- > 0, not the former != 0 test. Restoring those source
+// operations raises 79.6584% to 97.0988% and naturally retains the first
+// computeFireShieldDamage call while expanding the plain-attack copy.
+// The intermediate trace gives the first site budget 139 versus cost 143,
+// and the plain site budget 157. No inline pin is needed.
+// Dreamcast lines 2473/2474 separately evaluate get_adjacent_hex and
+// GetAdjacentCellIndex. Naming that intermediate value restores retail's
+// direction lifetime and reaches 100% (2026-09-07). Nesting the two calls
+// is the 97.0988% negative control. Preserve the helpers and statement order.
 // Before normalization (locals): current_army, enemy_hex, our_group, multi_head, behind_hex,
 // hit_points, no_retaliation, double_attack.
 VA(0x004224e0, 0x2B4)  // anchor-caller(the 3-argument overload) + anchor-callee(compute_fire_shield_damage), dc 0x2746c
@@ -3151,9 +3136,7 @@ void combatManager::simulateMeleeAttack(army* currentArmy, long hex,
                                           army* target, long enemyHex,
                                           long ourGroup)
 {
-    unsigned char multiHead = static_cast<unsigned char>(
-        static_cast<unsigned>(currentArmy->m_monInfo.m_attributes) >> 19);
-    if (multiHead & 1) {
+    if (currentArmy->is(1u << 19)) {
         long directions = currentArmy->getMultiHeadDirections(hex, target,
                                                                   enemyHex);
         long hit = 0;
@@ -3162,7 +3145,7 @@ void combatManager::simulateMeleeAttack(army* currentArmy, long hex,
             if (!(directions & (1 << direction)))
                 continue;
             long adjacent = currentArmy->getAdjacentHex(hex, direction);
-            if (adjacent < 0 || adjacent >= COMBAT_GRID_CELLS)
+            if (!validHex(adjacent))
                 continue;
             army* victim = m_cells[adjacent].getArmy();
             if (!victim)
@@ -3174,21 +3157,19 @@ void combatManager::simulateMeleeAttack(army* currentArmy, long hex,
                 continue;
             hit |= bit;
             simulateSimpleAttack(currentArmy, victim, 0, 0, 0);
-        } while (direction--);
+        } while (direction-- > 0);
         return;
     }
 
     simulateSimpleAttack(currentArmy, target,
                            g_searchArray->getHex(hex)->m_cost, 0, 0);
 
-    unsigned char breath = static_cast<unsigned char>(
-        static_cast<unsigned>(currentArmy->m_monInfo.m_attributes) >> 3);
-    if (breath & 1) {
+    if (currentArmy->is(1u << 3)) {
         long direction = currentArmy->getAttackDirection(hex, target,
                                                             enemyHex);
-        long behindHex = currentArmy->getAdjacentCellIndex(
-            currentArmy->getAdjacentHex(hex, direction), direction);
-        if (behindHex < 0 || behindHex >= COMBAT_GRID_CELLS)
+        long behindHex = currentArmy->getAdjacentHex(hex, direction);
+        behindHex = currentArmy->getAdjacentCellIndex(behindHex, direction);
+        if (!validHex(behindHex))
             return;
         army* behind = m_cells[behindHex].getArmy();
         if (!behind || behind == target)

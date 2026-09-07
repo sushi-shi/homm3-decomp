@@ -19,8 +19,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x004ee3e0	7172	78.7743	78.9421	78.9421	1510.2725880000005	kb	?oldmain@@YIHXZ	admitted
 0x004f2960	894	79.1107	79.1107	79.1107	186.7503420000001	kb	?displayLCWinLoss@@YIEAAVLossConditionStruct@@AAH1E@Z	admitted
 0x0048a310	2846	69.5768	69.5768	79.2531	590.456774	customcampaign	?load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	admitted
-0x00542080	2218	79.429504	79.4987	79.4987	454.718834	rmg	?createSubterraneanGate@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	admitted
-0x004224e0	692	79.65844	79.6584	79.6584	140.76387200000002	ai	?simulateMeleeAttack@combatManager@@QAEXPAVarmy@@J0JJ@Z	admitted
 0x0049fa90	4203	79.82593	79.8259	79.8259	847.9174229999998	events	?giveBlackBoxReward@advManager@@QAE_NPBDPAVhero@@PAVNewmapCell@@Utype_point@@_NPAVBlackBoxData@@@Z	admitted
 0x00421590	225	79.9375	79.9375	79.9375	45.140625000000014	ai	?markMoat@combatManager@@QAEXPBVarmy@@PAJPAUtype_AI_combat_parameters@@@Z	admitted
 0x00521960	2819	80.0996	80.0996	80.0996	560.9922760000002	overview	?windowHandler@TOverviewWindow@@UAEHPAVmessage@@@Z	admitted
@@ -47,6 +45,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x004e4990	1014	81.76774	81.7677	81.7677	184.8755219999999	hero	?getMobility@hero@@QAEHE@Z	admitted
 0x0042e0b0	2926	81.88646	81.8865	81.8865	530.0010100000002	ai_player	?aiChooseDestination@@YIHPAVhero@@JAAUHeroDestination@@AAJEE@Z	admitted
 0x005f2a40	968	82.017	82.017	82.017	174.07544000000004	victorylossconditions	?checkForDefeatedHeroLoss@LossConditionStruct@@QAEEPBVhero@@@Z	admitted
+0x00542080	2218	82.1005	82.1005	82.1005	397.01091	rmg	?createSubterraneanGate@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	admitted
 0x004cafd0	3348	82.21976	82.2198	82.2198	595.2810959999997	game	?transmitSaveGame@game@@QAEHHHEE@Z	admitted
 0x00514d80	644	73.32632	82.2717	82.2717	114.17025200000005	objecttype	?load@TObjectTypeTable@@QAEXPAD@Z	admitted
 0x005a6c70	1029	82.34042	82.3404	82.3404	181.71728399999998	spells	?mirrorImage@combatManager@@QAEXHH@Z	admitted

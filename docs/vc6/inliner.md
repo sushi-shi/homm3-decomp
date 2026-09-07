@@ -1386,3 +1386,21 @@ changes. No added types, inline controls, or flattened helper bodies are
 needed. The normal TU build and passive trace reproduce the exact 608-byte
 padded caller, SHA-256
 `1410609cf6a3b14cae54bc40945c85bd38d6c8d127bfc26973b5572f49918094`.
+
+
+### Restore predicate calls before forcing a nested call
+
+`combatManager::simulateMeleeAttack` (0x4224e0) reached 100% after restoring
+Dreamcast's `army::Is` and `combatManager::ValidHex` calls, the retail
+positive post-decrement loop test, and the separate breath-coordinate
+statements at DC ai.cpp:2473/2474. Replacing the predicates with raw shifts
+and comparisons had left too much budget for the first nested fire-shield
+calculation. The prior note incorrectly concluded that this site needed a pin.
+
+The exact caller costs 376 with initial budget 1000. Inside the canonical
+`simulateSimpleAttack`, `computeFireShieldDamage` costs 143: its multi-head
+site receives 139 and stays a call; its plain-attack site receives 157 and
+expands. Predicate/loop recovery alone reaches 97.0988%; separating the two
+adjacent-cell calls fixes the remaining direction lifetime and reaches 100%.
+All 36 retail CFG blocks agree. The verified padded body has 704 bytes and
+SHA-256 `6abb39482afe1d855242d8803dc124a085ade6bfb86d3b1f6d5e8a8bfa134449`.
