@@ -1,7 +1,6 @@
 # GENERATED: homm3 vc6 queue --smallest - regenerate, never hand-edit.
 # Independent retail targets, smallest first; parked RVAs omitted.
 state	size	va	current_fuzzy	max_fuzzy	hist_fuzzy	owner	candidates	label	relation	action
-bracketed	22	0x004fa520	-	0.0000	0.0000	levelupwindow..lodfile	levelupwindow,lodfile	game_f9f00_sub02_fa520	bracketed	resolve the owner, then add its VA claim and body
 carcass	23	0x0044d3e0	-	0.0000	0.0000	artifact	artifact	__h3cg$artifact$bitset_tidy$Bitset19	bracketed	enable the existing VA claim and reconstruct its body
 bracketed	23	0x0055f330	-	0.0000	0.0000	resourcemanager..sacrifice_window	resourcemanager,ressw,sacrifice_window	game_15f330	bracketed	resolve the owner, then add its VA claim and body
 bracketed	23	0x005b85a0	-	0.0000	0.0000	systemoptionswindow..text	systemoptionswindow,text	game_1b4b20_sub09_1b85a0	bracketed	resolve the owner, then add its VA claim and body
