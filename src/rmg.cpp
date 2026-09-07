@@ -345,6 +345,10 @@ TRmgRoadMapAdapterInterface::~TRmgRoadMapAdapterInterface()
 {
 }
 
+// Vtable 0x640a20 slot 0 retains the road-interface deleting wrapper; retail
+// places this generated COMDAT later than the ordinary destructor.
+VA_COMPGEN(0x00537940, 0x23, SCALAR_DELETING_DTOR, TRmgRoadMapAdapterInterface)
+
 // Complete-only base of the river adapter, exact on the first scored candidate.
 // The derived deleting destructor at 0x5324e0 and two CreateRiver cleanup paths
 // call this retained vptr restoration; Dreamcast has no RMG compiland.
