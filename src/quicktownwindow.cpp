@@ -170,6 +170,9 @@ TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TView
             // `*(silo_income + current)`, an EGameResource induction variable,
             // an EGameResource array, and both together. A function-scope
             // `current` and an `int&` alias are also byte-flat at 98.8368%.
+            // An explicit nested block with `int current;` immediately before
+            // the `for (current = WOOD; ...)` is likewise byte-flat, so the
+            // home is not recovered by the ordinary VC6 block-scope lever.
             // Strictly worse:
             // `resource[++resource_count]` with a -1 seed 97.4860, re-reading
             // `thisTown->get_silo_income()` in the test 97.2123, `> 0` for the

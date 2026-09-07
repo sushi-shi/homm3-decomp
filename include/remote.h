@@ -277,9 +277,9 @@ extern CDPlayHeroes* g_dPlay;
 // Before normalization: gbDPlayReady.
 extern unsigned char g_dPlayReady;
 // Before normalization: gbMPlayer.
-extern unsigned char g_mPlayer;
+extern bool g_mPlayer;
 // Before normalization: gbMPlayerHost.
-extern unsigned char g_mPlayerHost;
+extern bool g_mPlayerHost;
 // Before normalization: gcTCPAddress.
 extern char g_tcpAddress[21];
 

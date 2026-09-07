@@ -204,13 +204,14 @@ DC_ONLY(0x71218, 0xB8)
 static void splitSlot(armyGroup* currentArmyGroup, long slot, long groups)
 {
     long freeSlot = slot;
-    for (; groups > 1; --groups) {
+    long groupsLeft = groups;
+    for (; groupsLeft > 1; --groupsLeft) {
         while (freeSlot < armyGroup::ARMY_GROUP_SLOT_COUNT
                && currentArmyGroup->m_armies[freeSlot] != -1)
             ++freeSlot;
         if (freeSlot == armyGroup::ARMY_GROUP_SLOT_COUNT)
             break;
-        long amount = currentArmyGroup->m_numTroops[slot] / groups;
+        long amount = currentArmyGroup->m_numTroops[slot] / groupsLeft;
         currentArmyGroup->m_numTroops[slot] -= amount;
         currentArmyGroup->add(currentArmyGroup->m_armies[slot], amount, freeSlot);
     }
@@ -243,11 +244,14 @@ static void splitSlot(armyGroup* currentArmyGroup, long slot, long groups)
 // `bank->guards.armyTypes[slot]` at each use instead lets VC6 re-materialise
 // the load inside each compare block and duplicate the store.
 //
-// Residual (98.1132%): reloc NAMES only. All four push_back sites call the
-// vector insert COMDAT that the retail link folded with
-// vector<widget*>::insert; our object names its own vector<TArtifact>
-// instantiation. The report scores calls and relocs as AGREE and the
-// skeleton has no divergent block.
+// Exact (2026-09-07, 98.1132% -> 100%): preserving the `groups` parameter
+// through a `groupsLeft` countdown declared after splitSlot's free cursor
+// makes VC6 initialize slot/ESI before groups/EDI in all five expansions,
+// as retail does. Consuming IsBaseCreature's canonical int result as an
+// unsigned byte supplies retail's final `test al,al`. All 78 blocks, 50
+// branches and masked instruction rows now agree. The four push_back call
+// names still reflect retail ICF with vector<widget*>::insert, but the report
+// correctly judges those calls and relocations equivalent.
 VA(0x0047ad90, 0x36E)  // anchor-callee(armyGroup::Add + GetRandomArtifactId), dc 0x712d0
 void initializeCreatureBank(type_creature_bank* bank,
                               type_creature_bank_type type)
@@ -298,7 +302,7 @@ void initializeCreatureBank(type_creature_bank* bank,
     if (random(1, 100) <= level->m_upgradeChance) {
         TCreatureType current = bank->m_guards.m_armyTypes[slot];
         if (!(g_game->m_f1f698 == 0 && isBaseElemental(current))
-            && isBaseCreature(current)) {
+            && static_cast<unsigned char>(isBaseCreature(current))) {
             TCreatureType promoted = bank->m_guards.m_armyTypes[slot];
             int upgraded;
             if (g_game->m_f1f698 == 0 && isBaseElemental(promoted))

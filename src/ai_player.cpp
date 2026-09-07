@@ -6354,7 +6354,11 @@ long type_angelic_alliance_artifact::getValue(
 // code delta is the first `/ 250` return's quotient register schedule (retail
 // keeps it in edx across the split epilogue; this compiler spelling moves it
 // through eax), plus cosmetic names for two float constants and the creature
-// traits relocation. The later `/ 250` arm is instruction-exact.
+// traits relocation. The later `/ 250` arm is instruction-exact. A bounded
+// why-reg sweep found six local/declaration candidates flat or worse; naming
+// either the numerator or the completed quotient in this early arm is also
+// byte-flat. Keep the direct expression rather than manufacture a register
+// carrier.
 VA(0x004333a0, 0x174)  // vtable-slot 0x63b768 (provisional type), retail-only
 long type_undead_king_cloak_artifact::getValue(const hero* owner,
                                                 unsigned char equipped,

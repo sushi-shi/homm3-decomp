@@ -550,24 +550,17 @@ void slider::draw()
 VA(0x00597020, 0x84)  // contiguous slider block, dc 0x14aaa0
 void slider::setKnob(int inX)
 {
-    // Residual (88.44%): the CFG and the 64-instruction tail agree. In the
-    // arithmetic head retail binds knobSize/base to ESI/EDI while this source
-    // binds them to EDI/ESI. why-reg v2 (2026-08-11, --il-order) proves equal
-    // definition slots but different C1 pseudo processing order and caps the
-    // transposition as front-end handle state, not a statement-level knob.
-    // 2026-08-14 adds the second half of the picture: retail evaluates the
-    // offset as (-half) - base - knobSize (`neg edx` on the halved value),
-    // while our CL REASSOCIATES every spelling into (-knobSize) - half - base
-    // (`neg edi` on knobSize). Six spellings measured - plain declarations
-    // 88.36, base declared first 87.70, non-compound assignment 88.44, a named
-    // `half` local 88.44, else-if clamp 84.92, fully parenthesised negation
-    // 88.44 - so the reassociation is a C2 choice with no source handle. Retail
-    // also re-tests with `test eax,eax; jge` where our CL folds the clamp into
-    // the `add`'s flags with `jns`; no spelling separated them.
-    int knobSize;
-    int base = (knobSize = m_knobStart,
-                m_width > m_height ? static_cast<int>(m_x) : static_cast<int>(m_y));
-    inX += -(knobSize / 2) - base - knobSize;
+    // EXACT 2026-09-07 (88.44 -> 100.0). The old candidate collapsed the
+    // width/height choice into a ternary fed by named `knobSize` and `base`
+    // locals, then diagnosed the resulting ESI/EDI swap as a front-end wall.
+    // Dreamcast line 707..710 instead proves two source arms and records no
+    // locals. Repeating the member expression in those arms lets VC6 hoist
+    // m_knobStart by itself; retail's register binding, subtraction order,
+    // separate clamp test, and all ten blocks then match exactly.
+    if (m_width > m_height)
+        inX -= m_knobStart / 2 + m_x + m_knobStart;
+    else
+        inX -= m_knobStart / 2 + m_y + m_knobStart;
     if (inX < 0)
         inX = 0;
     if (inX > m_knobRange)

@@ -269,15 +269,15 @@ bool CDPlayHeroes::pollRemote()
 // the adjacent readiness byte are rooted throughout the remote/front-end
 // call graph.
 DATA(0x0069d808) CDPlayHeroes* g_dPlay;
-// The adjacent PC bytes are the packed counterparts of Dreamcast's
-// gbMPlayer/gbMPlayerHost pair.  TestIfLobbyLaunched and
-// HandleMPlayerLaunch independently distinguish their roles.
+// The adjacent PC bytes are the packed counterparts of Dreamcast's bool
+// gbMPlayer/gbMPlayerHost pair. TestIfLobbyLaunched and HandleMPlayerLaunch
+// independently distinguish their roles.
 DATA(0x0069d80c) unsigned char g_dPlayReady;
-DATA(0x00699550) unsigned char g_mPlayer;
+DATA(0x00699550) bool g_mPlayer;
 // Dreamcast publishes `bDefeatedAllPlayers` as a bool in remote.obj. Retail's
 // win/loss handlers independently locate the PC cell and store full dwords,
 // so the PC representation is int even though the role and owner transfer.
-DATA(0x00699551) unsigned char g_mPlayerHost;
+DATA(0x00699551) bool g_mPlayerHost;
 DATA(0x00699510) int g_defeatedAllPlayers;
 // Dreamcast publishes gcTCPAddress as char[21]; retail's client launch arm
 // passes this exact cell both to the log formatter and InitConnection.
@@ -1296,10 +1296,10 @@ unsigned char CChatManager::hasOldChat()
 // restored; retail's unsigned first timeout test requires the explicit cast
 // around ElapsedSince. DC's 1096..1099 line gap places `i` after the five state
 // updates; restoring that scope is byte-flat but preserves the positive fact.
-// Splitting killTime's declaration is also flat. why-reg v2 measures distance
-// 28, identifies identical definition slots but different C1 handle state,
-// and its only legal control (swapping changed/chatKilled stores) worsens the
-// distance to 32.
+// Splitting killTime's declaration is also flat. The remaining C1 role swap
+// was the order of the two loop locals: declaring msgNbr before i assigns the
+// timestamp/count lane to EBX and the zero/counter lane to EDI exactly as
+// retail does. Swapping changed/chatKilled instead worsens the distance to 32.
 // E:\gamedcs\remote.cpp:1080
 VA(0x00553df0, 0xE4)  // anchor-global, dc 0x11c7b0
 void CChatManager::killOldChat()
@@ -1318,8 +1318,8 @@ void CChatManager::killOldChat()
             m_changed = 1;
             m_chatKilled = 1;
 
-            int i = 0;
             int msgNbr = m_currMsg;
+            int i = 0;
             while (i < m_msgCount - 1) {
                 unsigned long nextKillTime = m_msgArray[msgNbr].m_killTime;
                 long elapsed = GameTime::elapsedSince(nextKillTime);

@@ -720,6 +720,14 @@ void launchSample(const char* sampleName, int maxTime, int channel)
 // The address taken by launch_sample is a cdecl thread entry.  Its packet
 // fields, 100-ms elapsed-time loop, live-waiter accounting, and final
 // ClearMemSample expansion are all independently visible in retail.
+// Residual (92.00%): candidate and retail each emit 95 instructions, the
+// same 13 symbolic branches and the same ten calls. The 17/18-block view is
+// one path-dependent reload schedule inside the provisional SamplePlaying
+// expansion: retail keeps the manager in EAX on early exits and inserts a
+// one-instruction reload block after the loop; this C1 allocation uses ESI
+// and reloads later in ClearMemSample. Swapping the helper's two parameters
+// and naming its critical-section pointer are both byte-flat across this row
+// and its four exact sibling callers, so retain the common helper boundary.
 // E:\gamedcs\soundmgr.cpp:911/976 vicinity; PC worker has no DC row.
 VA(0x0059a6b0, 0x113)  // address-taken + packet layout, retail-only
 void __cdecl waitEndSampleThread(void* arglist)

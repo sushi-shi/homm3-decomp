@@ -153,7 +153,9 @@ void TPalette16::convert24to16(const unsigned char* p24, int rbits, int rshift,
 // has): `unsigned char`/`char` x cast-the-difference / cast-the-parameter /
 // `= 8` then `-= bits` compound / interleaved declaration - all six land at
 // 81.15-81.18 and 81.71, well under the int form.  The 8-bit width is
-// therefore NOT reachable through the local's type here.
+// therefore NOT reachable through the local's type here. Retyping the three
+// helper parameters themselves to `unsigned char` is worse still
+// (94.85/94.94 -> 89.16/87.75); DC's all-int Convert24to16 signature stays.
 VA(0x005226d0, 0x9D)  // dc-order-map + six-field conversion loop, dc 0x10a338
 TPalette16::TPalette16(const TPalette24* p24, int rbits, int rshift,
                        int gbits, int gshift, int bbits, int bshift)
@@ -203,15 +205,19 @@ TPalette16::TPalette16(const char* name, const TPalette24* p24,
 // `blue | (red | green)` parenthesisation (98.92, byte-flat), `*dst++`
 // (98.92, byte-flat), an `unsigned` counter (98.92, byte-flat), advancing
 // src before dst (98.92, byte-flat), and biasing src by +1 with [-1]/[0]/[1]
-// subscripts to reproduce the 0x1d pointer directly (73.92).
+// subscripts to reproduce the 0x1d pointer directly (73.92). Dreamcast's
+// lower-bound local table retains `const unsigned int rm1` and `gm1`; adding
+// const to all three scale locals is byte-flat at the peak. Removing the
+// third named scale and spelling blue inline is not the missing source shape:
+// VC6 stops hoisting that invariant and the function falls to 61.58%.
 VA(0x00522810, 0xC6)  // dc-order-map + the three TPalette16 mask statics, dc 0x10a508
 TPalette16::TPalette16(const TPalette24* p24)
     : resource(0, RESOURCE_TYPE_NONE)
 {
     // Before normalization (locals): red_scale, green_scale, blue_scale.
-    unsigned int redScale = (s_redMask + s_redMask) & ~s_redMask;
-    unsigned int greenScale = (s_greenMask + s_greenMask) & ~s_greenMask;
-    unsigned int blueScale = (s_blueMask + s_blueMask) & ~s_blueMask;
+    const unsigned int redScale = (s_redMask + s_redMask) & ~s_redMask;
+    const unsigned int greenScale = (s_greenMask + s_greenMask) & ~s_greenMask;
+    const unsigned int blueScale = (s_blueMask + s_blueMask) & ~s_blueMask;
     unsigned short* dst = m_data;
     const unsigned char* src = p24->m_colors.m_data[0];
     for (int index = 0; index < 256; ++index) {

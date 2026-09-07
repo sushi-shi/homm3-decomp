@@ -566,6 +566,13 @@ int TCampaignPrimarySkillBonus::getIconIndex() const
 // The list of positive deltas, joined with ", " and a final " and ".
 // The running counter is decremented AFTER the row is appended, so it is
 // the number of rows still to come that picks the separator.
+// Retail's final format load is m_text[716] (offset 0xb30), not the former
+// m_text[708] (0xb10). Residual (97.5395%): all 34 blocks, 19 branches and
+// 14 calls agree; only caller-saved register/EH-state scheduling around the
+// final temporary string assignment differs. Explicit `list.assign(...)`
+// and naming `list.c_str()` are byte-flat. Naming the format pointer makes
+// the assignment/return tail agree but hoists its load across the preceding
+// string cleanup and falls to 96.86%, so the direct expression stays.
 VA(0x00484910, 0x275)  // anchor-vtable (0x63da00+0x10), retail-only
 std::string TCampaignPrimarySkillBonus::getText() const
 {
@@ -588,7 +595,7 @@ std::string TCampaignPrimarySkillBonus::getText() const
                 list += ", ";
         }
     }
-    list = formatString(g_generalText->m_text[708], list.c_str());
+    list = formatString(g_generalText->m_text[716], list.c_str());
     return list;
 }
 
@@ -1300,17 +1307,19 @@ TCampaignBrief::ScenarioStruct::~ScenarioStruct()
 // placement x to -1, and the availability table follows - the new id takes
 // the record's owner, the old one goes back to the tavern pool. Name
 // provisional.
-// Residual (98.49%): four register-naming rows at the head of the
-// compiler-generated copy - retail hoists the first member's byte load
-// (`mov cl,[esi]`) above the `push edi` and finishes the newHeroId*0x334
-// index chain in EAX where we finish it in EDX - plus one unclaimed data
-// name on akHeroTraits. Tried and rejected: `signed char owner` 94.62,
-// `unsigned char owner` 97.41, `int heroClass` (does not compile - arg 4 is
-// THeroClass), `newSetup.operator=(setup)` 98.46, naming the destination
-// reference BEFORE the copy 98.46. The +49.4 that got here was two facts:
-// game.h's HeroExtra pads had to stop being members (retail's copy skips
-// every one of them) and both `owner` and `heroClass` are named locals -
-// retail evaluates argument 1 FIRST, which no in-call spelling reproduces.
+// 2026-09-07: 98.4901 -> 99.9509 by reading setup.m_owner directly in the
+// GetNewHeroId call; the prior named int owner rotated EAX/ECX/EDX throughout
+// the copy. heroClass remains a named THeroClass because that fixes its
+// evaluation before the direct owner read. All 38 blocks, 20 branches and 5
+// calls agree. The only remaining code delta exchanges the compiler copy's
+// two stack homes: retail puts setup at [ebp-0x14] and the source/destination
+// delta at [ebp-0x10], while this compile does the reverse. Rejected controls:
+// pointer versus reference and function-scope heroClass/newHeroId are
+// byte-flat; binding setup after the guard falls to 97.55; signed-char owner
+// scored 94.62, unsigned-char owner 97.41, explicit operator= and naming the
+// destination before the copy 98.46. Do not manufacture a spill carrier.
+// The major recovery still depends on game.h's HeroExtra pads not being
+// members: retail's generated assignment skips every one of them.
 VA(0x00486110, 0x32F)  // anchor-caller(DoPreLoadCustomization +0x117), retail-only
 void game::rehomeCampaignHeroSetup(int heroId)
 {
@@ -1318,9 +1327,8 @@ void game::rehomeCampaignHeroSetup(int heroId)
     if (setup.m_location.m_x < 0)
         return;
 
-    int owner = setup.m_owner;
     THeroClass heroClass = g_heroTraits[heroId].m_heroClass;
-    int newHeroId = getNewHeroId(owner, kNumHeroClasses, 1, heroClass);
+    int newHeroId = getNewHeroId(setup.m_owner, kNumHeroClasses, 1, heroClass);
     if (newHeroId == -1) {
         setup.m_location.m_x = -1;
         return;
@@ -2920,6 +2928,8 @@ bool TCampaignBrief::ScenarioStruct::usesCrossoverPool(int pool)
 // named count/default-player results are byte-neutral. So are moving this
 // ordinary definition beside MarkCrossoverHeroes or after Prune, and
 // replacing the duplicate options interface with TCampaignStartOption.
+// Hoisting the loop index or splitting best's declaration/initialization is
+// likewise byte-neutral, so neither explains the three scratch-register swaps.
 int TCampaignBrief::ScenarioStruct::getMaxCrossoverHeroes() const
 {
     int best = 0;

@@ -1825,6 +1825,10 @@ unsigned char searchArray::findCombatPath(const army* currentArmy,
 
     long bestDistance = 800;
     long bestHex = -1;
+    // Dreamcast CodeView names function-scope `pathCell pc` and emits its
+    // empty constructor before both vector clears. Restoring that lifetime
+    // is byte-flat at 87.9780 but preserves the positive source evidence.
+    pathCell pc;
     m_result.clear();
     // The BFS queue NAMED AS A REFERENCE: 87.6468 -> 87.9780.
     std::vector<pathCell>& rQueue = m_queue;
@@ -1834,25 +1838,25 @@ unsigned char searchArray::findCombatPath(const army* currentArmy,
     pushCombatPoint(startHex, currentArmy->m_facing ? 1 : 4, 0, 0, limit);
 
     while (rQueue.size() > 0) {
-        pathCell cell = rQueue.back();
+        pc = rQueue.back();
         rQueue.pop_back();
 
-        long cost = cell.m_cost;
+        long cost = pc.m_cost;
         if (cost > limit)
             continue;
 
         if (destination >= 0 && destination < COMBAT_GRID_CELLS
-                && cell.m_flightCost == 0) {
-            long distance = combatManager::getDistance(cell.m_point.m_x, destination);
+                && pc.m_flightCost == 0) {
+            long distance = combatManager::getDistance(pc.m_point.m_x, destination);
             if (distance < bestDistance) {
-                bestHex = cell.m_point.m_x;
+                bestHex = pc.m_point.m_x;
                 bestDistance = distance;
                 if (distance == 0)
                     break;
             }
         }
 
-        long hex = cell.m_point.m_x;
+        long hex = pc.m_point.m_x;
         long adjacent;
         long direction;
         for (direction = 0; direction < 6; direction++) {
@@ -1888,7 +1892,7 @@ unsigned char searchArray::findCombatPath(const army* currentArmy,
                         blocked = 1;
                     if ((currentArmy->m_monInfo.m_attributes & 1)
                             && isMoat(static_cast<short>(
-                                    cell.m_point.m_x
+                                    pc.m_point.m_x
                                     + (currentArmy->m_facing ? 1 : -1))))
                         blocked = 1;
                 }
@@ -1911,7 +1915,7 @@ unsigned char searchArray::findCombatPath(const army* currentArmy,
                         || currentArmy->m_creatureType == CREATURE_DEVIL
                         || currentArmy->m_creatureType == CREATURE_ARCH_DEVIL))
                     continue;
-                flightCost = cell.m_flightCost + 1;
+                flightCost = pc.m_flightCost + 1;
                 if (flightCost >= currentArmy->getSpeed())
                     continue;
             }
@@ -1925,7 +1929,7 @@ unsigned char searchArray::findCombatPath(const army* currentArmy,
             pathCell* reached = getCellData(adjacent);
             reached->m_point.m_x = static_cast<short>(adjacent);
             reached->m_direction = direction;
-            reached->m_lastPoint = cell.m_point;
+            reached->m_lastPoint = pc.m_point;
             m_result.push_back(reached);
         }
 
@@ -1958,70 +1962,45 @@ pathCell* searchArray::getCellData(long pos)
     return &m_cellData[pos];
 }
 
-// PushCombatPoint's second /Ob2 budget dose, and the one that closed its call
-// multiset: 78.5950 -> 90.2555.  No Dreamcast row; a codegen device.
-// Before normalization (function): fill_combat_cell.
-// Before normalization (locals): path_cell, flight_cost.
-static void fillCombatCell(pathCell* currentPathCell, int index, int direction,
-                             int cost, int flightCost)
-{
-    currentPathCell->m_point.m_x = index;
-    currentPathCell->m_visited = 1;
-    currentPathCell->m_direction = direction;
-    currentPathCell->m_flightCost = flightCost;
-    currentPathCell->m_point.m_y = 0;
-    currentPathCell->m_cost = cost;
-}
-
-// PushCombatPoint's ordering-key search, lifted for the same /Ob2 budget
-// reason find_queue_slot above is - see that note.  No Dreamcast row here
-// either; it is a codegen device.
-// Before normalization (function): find_combat_queue_slot.
-static int findCombatQueueSlot(searchArray* search, int cost)
-{
-    int first = 0;
-    int last = search->m_queue.size();
-    int middle = last / 2;
-    while (last > first) {
-        if (cost < search->m_queue[middle].m_cost)
-            first = middle + 1;
-        else
-            last = middle;
-        middle = (first + last) / 2;
-    }
-    return middle;
-}
-
 // E:\gamedcs\findpath.cpp:1372
 // `ret 0x14` = five stack arguments over `this`, the DC count exactly,
 // and the body opens by bounds-checking its first argument against the
 // combat grid: `test ecx,ecx; jl out; cmp ecx,0xbb; jge out` - 187
 // again, so parameter one is the hex index.
 //
-// Residual (90.2555%): 75.7383 -> 90.2555, 2026-08-20, and THE CALL MULTISET
-// IS NOW EXACT - twelve out-of-line calls on each side, same identities, same
-// order, every one within eight bytes of retail's offset.  Two edits:
+// RECONSTRUCTED 2026-09-07 (90.2555 -> 98.01). Dreamcast proves that the
+// binary search and six path-cell writes belong in this function, followed
+// by insert/push_back; the former candidate instead moved both source regions
+// into unproven file-local helpers and spelled the tail as insert(end(), 1,
+// value). Restoring the canonical body and push_back reached 92.66. DC line
+// 1390/1394 then supplied the decisive declaration order: `last = size()`
+// before `first = 0`. That lets VC6 shrink-wrap EDI exactly like retail and
+// takes the body to 97.21 with all branches aligned.
 //
-//   * TWO insert sites, not one.  Retail branches `cmp esi,edx / jae` on
-//     `middle` against `queue.size()` at +0x167 and CALLS
-//     vector<pathCell>::insert (0x4b3f70) at +0x183 on the fallthrough, then
-//     EXPANDS a second insert from +0x1f3 down.  This is PushPoint's shape
-//     with the arms the other way round: there the `begin()+middle` arm is
-//     expanded and the `end()` arm called, here the `begin()+middle` arm is
-//     CALLED.  Writing both arms and pinning the called one: 75.7383 ->
-//     77.0966.
-//   * the /Ob2 caller-shrink, in two doses - the ordering-key search into
-//     find_combat_queue_slot (77.0966 -> 78.5950) and the six field stores
-//     into fill_combat_cell (78.5950 -> 90.2555).  The second dose is what
-//     stops us expanding the `size()` retail calls at +0x1e0 and the first
-//     `_Ucopy` at +0x209.
+// Complete schedules the packed writes best with y cleared before the flight
+// field, unlike the older DC line order (1415 flight, 1416 y). Assigning cost
+// immediately after visited raises 98.01 -> 98.98: all 42 blocks remain exact,
+// and the only masked delta is a two-instruction direction-mask/cost-load
+// transpose while assembling the same packed bits; B21 through the epilogue
+// are exact. A 29-candidate why-reg pass at this peak found every adjacent
+// field-order change flat or worse.
+// Negative controls: DC's flight-before-y order is 97.21; visited-before-x is
+// 97.40; `visited |= 1` is byte-flat at 98.01; cost-before-flight is 97.18;
+// moving visited after y is 97.62; moving y before direction is 97.45.
 //
-// What is left is register and scheduling in the head, not the inliner.
+// The inline-depth pin is local to PushCombatPoint's first
+// vector<pathCell>::insert call. Retail calls that overload in this arm and
+// expands the push_back arm; without the pin VC6 expands the first arm too
+// (75.7383 -> 77.0966 when the call boundary was restored). DC corroborates
+// the same insert/push_back arm split, although its STL insert has two source
+// arguments rather than VC6's count overload.
 // Before normalization (locals): flight_cost, pCell, path_cell.
 VA(0x004b3bb0, 0x35C)  // anchor-bracket, dc 0xa0f54
 void searchArray::pushCombatPoint(int index, int direction, int cost, int flightCost, int limit)
 {
-    if (index < 0 || index >= 187 || cost > limit)
+    if (!combatManager::validHex(index))
+        return;
+    if (cost > limit)
         return;
 
     pathCell* cell = getCellData(index);
@@ -2030,10 +2009,24 @@ void searchArray::pushCombatPoint(int index, int direction, int cost, int flight
     if (m_queue.size() >= 500)
         return;
 
-    int middle = findCombatQueueSlot(this, cost);
+    int last = m_queue.size();
+    int first = 0;
+    int middle = last / 2;
+    while (last > first) {
+        if (cost < m_queue[middle].m_cost)
+            first = middle + 1;
+        else
+            last = middle;
+        middle = (first + last) / 2;
+    }
 
     pathCell currentPathCell;
-    fillCombatCell(&currentPathCell, index, direction, cost, flightCost);
+    currentPathCell.m_point.m_x = index;
+    currentPathCell.m_visited = 1;
+    currentPathCell.m_cost = cost;
+    currentPathCell.m_direction = direction;
+    currentPathCell.m_point.m_y = 0;
+    currentPathCell.m_flightCost = flightCost;
 
     if (middle < m_queue.size()) {
         pathCell* pos = m_queue.begin() + middle;
@@ -2041,7 +2034,7 @@ void searchArray::pushCombatPoint(int index, int direction, int cost, int flight
         m_queue.insert(pos, 1, currentPathCell);
 #pragma inline_depth()
     } else {
-        m_queue.insert(m_queue.end(), 1, currentPathCell);
+        m_queue.push_back(currentPathCell);
     }
     *cell = currentPathCell;
 }

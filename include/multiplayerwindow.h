@@ -49,12 +49,14 @@ SIZE(TIPv4SocketAddress, 0x10);
 // vtable 0x640184 and zeros the two links); CMPInputEdit derives it and its
 // own constructor is inline, so `new CMPInputEdit` calls 0x510760 then stores
 // 0x640130. CHotSeatEdit derives textEntryWidget directly with an inline
-// constructor, so `new CHotSeatEdit` inlines the base ctor and stores 0x640210.
+// constructor: this is the only model that preserves the retail constructor's
+// later vector-inlining state. Its DC OnKeyPress nevertheless reuses
+// CMPEdit::OnKeyPress, and retail table 0x640210 folds the identical
+// SetFocus/OnNextEdit/OnPrevEdit bodies onto CMPEdit's addresses.
 // CMPEdit overrides SetFocus(14)/OnKeyPress(15) and introduces the virtual
 // OnPrevEdit(19)/OnNextEdit(20) pair; CMPInputEdit re-overrides
 // OnKeyPress(15); CHotSeatEdit overrides OnKillFocus(11)/SetFocus(14)/
-// OnKeyPress(15). Only the constructors and the two inline setters are
-// reached from this TU; the override bodies live in their own carve rows.
+// OnKeyPress(15) and carries its own ring-walk pair.
 class CMPEdit : public textEntryWidget {
 public:
     // Before normalization: nextEdit.
@@ -137,10 +139,6 @@ public:
     virtual void setFocus(unsigned char state);   // slot 14, retail 0x510890
     // Before normalization (function): CHotSeatEdit::OnKeyPress.
     virtual int onKeyPress(message* msg);         // slot 15, retail 0x50df60
-    // This class introduces its own ring-walk pair - it does not derive
-    // CMPEdit - and retail's table 0x640210 carries CMPEdit's two addresses
-    // at slots 19/20 because /OPT:ICF folded the byte-identical bodies onto
-    // 0x510850 / 0x510870. Declared in the corrected order above.
     // Before normalization (function): CHotSeatEdit::OnNextEdit.
     virtual void onNextEdit();                    // slot 19, folded 0x510850
     // Before normalization (function): CHotSeatEdit::OnPrevEdit.
@@ -180,13 +178,15 @@ public:
     unsigned char onOK();
     // Non-virtual, and the vtable proves it: 0x6401d8 stops after slot 13
     // (0x240210, CHotSeatEdit's table, starts at +0x38). Retail emits no
-    // body for either - both are expanded into CHotSeatEdit's two overrides
-    // 0x50dee0 / 0x50df60, which is where the DC roster's UpdateOK
-    // (dc 0x102d4c) and GetPlayerCount (dc 0x102cf8) went.
+    // body for these helpers - they expand into CHotSeatEdit's two overrides.
+    // DC separates UpdateOK (dc 0x102d4c), which only updates widget 519,
+    // from OnKillFocus (dc 0x102cc8), which then redraws the dialog.
     // Before normalization (function): CHotSeatDlg::GetPlayerCount.
     int getPlayerCount();
     // Before normalization (function): CHotSeatDlg::UpdateOK.
     void updateOK();
+    // Before normalization (function): CHotSeatDlg::OnKillFocus.
+    void onKillFocus(int id);
 };
 SIZE(CHotSeatDlg, 0x114);
 

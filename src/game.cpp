@@ -1463,9 +1463,16 @@ int game::saveSignPool(TAbstractFile* outfile)
 // char_buffer's function lifetime keeps its [ebp+0xb] byte live across the
 // inlined resize and prevents VC6 from borrowing that argument word, closing
 // all 25 blocks. Source-shape debt remains: Dreamcast records x as int, while
-// this exact spelling needs unsigned int. Both a plain signed comparison and
+// this best non-volatile spelling needs unsigned int. Both a plain signed comparison and
 // an explicit unsigned comparison with int x change the resize inline graph
 // and measure 93.58%; that negative result does not by itself prove skew.
+// Residual (98.8718%, re-audited 2026-09-07): 24/25 blocks are exact and the
+// only five instruction rows are VC6 coalescing the adjacent legacy type and
+// amount bytes into one word load. The historical 100% checkpoint made the
+// legacy record volatile; that codegen shaper is prohibited and stays removed.
+// Testing the fields directly scores 92.16 and perturbs all following register
+// choices; nesting amountValue under the first test is byte-identical to the
+// current plateau. Neither is a source-supported replacement.
 VA(0x004b9340, 0x240)  // anchor-global (ClaimMine vector) + read-slot, dc 0xa3e5c
 int game::loadMinePool(TAbstractFile* infile, int saveVersion)
 {
@@ -9010,10 +9017,11 @@ void game::claimGarrison(int garrisonId, int newPlayerOwner)
 //      where the member form indexes off `this` in EBX. 95.0587 -> 98.6034,
 //      and `this` moves into ESI as retail has it. Same tell as
 //      InitiateSpell's two mouse-pick sites.
-// Residual (98.60%): one block. Retail reloads mapCell into EAX at the END
-// of the obscuring-hero arm so the join reads `[eax]`; we reload it in the
-// join itself. Hoisting the shipyardInfo declaration above the arm is
-// byte-flat.
+// EXACT: the last register-lifetime mismatch disappeared when the cached
+// `oldPlayerOwner` local was removed and each old-owner test/use read
+// `shipyardInfo->m_owner` directly. That makes VC6 reload mapCell at the end
+// of the obscuring-hero arm, as retail does. Hoisting the shipyardInfo
+// declaration above the arm was byte-flat.
 VA(0x004c6a30, 0x21F)  // anchor-global, dc 0xb1a50
 void game::claimShipyard(type_point location, int newPlayerOwner)
 {
@@ -9027,10 +9035,9 @@ void game::claimShipyard(type_point location, int newPlayerOwner)
     ShipyardInfo* shipyardInfo =
         static_cast<ShipyardInfo*>(
             static_cast<void*>(&mapCell->m_extraInfo));
-    int oldPlayerOwner = shipyardInfo->m_owner;
-    if (oldPlayerOwner != newPlayerOwner) {
-        if (oldPlayerOwner >= 0) {
-            playerData* oldPlayer = &m_players[oldPlayerOwner];
+    if (shipyardInfo->m_owner != newPlayerOwner) {
+        if (shipyardInfo->m_owner >= 0) {
+            playerData* oldPlayer = &m_players[shipyardInfo->m_owner];
             long index = 0;
             while (index < oldPlayer->m_shipyards.size()) {
                 if (oldPlayer->m_shipyards[index].m_x == location.m_x &&

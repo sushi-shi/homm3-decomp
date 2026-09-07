@@ -3070,9 +3070,10 @@ int NewfullMap::readSignData(TAbstractFile* infile, CObject* signObject)
 // (T_RCHAR) is this body's `grade` and its `short_buffer` is `quantity`, both
 // already the right signedness.  Still open in that block: the DC also names a
 // single `int_buffer` where this body has `identifier`, `rawIdentifier`,
-// `quantityRead` and `artifact`, and a single `ListSize` for `customIndex` -
-// untried, and the `rawIdentifier` split above is banked at +0.58 so a collapse
-// must beat that.
+// `quantityRead` and `artifact`, and a single `ListSize` for `customIndex`.
+// Hoisting one shared int for the resource and artifact reads regressed to
+// 96.84 by extending its lifetime without shrinking the frame; the
+// `rawIdentifier` split above is banked at +0.58 so a collapse must beat that.
 VA(0x005013b0, 0x3DC)  // order-map: calls Random 0x50b230 + readString 0x4c6010 + vector<MonsterData> grow 0x506d70; called by readObject; EH-bearing, dc 0xf0390
 int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
 {
@@ -3101,33 +3102,34 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
     monsterObject->m_extraInfo = (monsterObject->m_extraInfo & 0xfffff000)
         | (quantity & 0xfff);
 
-    signed char grade;
-    if (infile->read(&grade, sizeof(grade)) < sizeof(grade))
+    // DC names one `disposition` byte. Sharing it as the switch result adds
+    // retail's missing block and raises 97.12 -> 97.29. A separate promoted
+    // selector is optimized back to the two-byte 97.12 shape.
+    signed char disposition;
+    if (infile->read(&disposition, sizeof(disposition)) < sizeof(disposition))
         return -1;
 
-    signed char armySize;
-    switch (grade) {
+    switch (disposition) {
     case MONSTER_QTY_UNRESOLVED:
-        armySize = -4;
+        disposition = -4;
         break;
     case MONSTER_QTY_RANDOM_1_7:
-        armySize = static_cast<signed char>(random(1, 7));
+        disposition = static_cast<signed char>(random(1, 7));
         break;
     case MONSTER_QTY_RANDOM_1_10:
-        armySize = static_cast<signed char>(random(1, 10));
+        disposition = static_cast<signed char>(random(1, 10));
         break;
     case MONSTER_QTY_RANDOM_4_10:
-        armySize = static_cast<signed char>(random(4, 10));
+        disposition = static_cast<signed char>(random(4, 10));
         break;
     case MONSTER_QTY_FIXED_10:
-        armySize = 10;
+        disposition = 10;
         break;
     default:
-        armySize = grade;
         break;
     }
     monsterObject->m_extraInfo = (monsterObject->m_extraInfo & 0xfffe0fff)
-        | ((armySize & 0x1f) << 12);
+        | ((disposition & 0x1f) << 12);
 
     // Before normalization (locals): char_buffer.
     unsigned char charBuffer;

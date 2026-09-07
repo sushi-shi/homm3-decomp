@@ -2455,7 +2455,11 @@ long type_AI_spellcaster::get_move_order_change_value(const army* our_army)
 // `lea eax,[ecx+1]`. Register-homing family.
 // Tried and rejected: naming the first term in its own local, and
 // naming the whole difference - both byte-identical at 96.8602, VC6
-// folds either back into the expression.
+// folds either back into the expression. Hoisting the loop index's
+// declaration above `time`, and carrying a named `oldTime` alias
+// through the cap, are byte-identical too; initializing that index
+// before the target-time call worsens the same body to 96.02 because
+// retail does not start its lifetime there.
 //
 // Three edits took this from 74.62: inverting the null-target test so
 // the zero arm is the FALL-THROUGH (`if (target == 0) { effect = 0; }

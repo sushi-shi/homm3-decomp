@@ -2098,6 +2098,12 @@ int handleCastSacrifice(message& msg)
 // below, expanded here by /Ob2 (the sete/inc radius and setne centre
 // flag are its body); the hex-side one is written out longhand, as the
 // Dreamcast lines 2094..2102 have it.
+// RESIDUAL (98.5000%): all 37 CFG blocks, 19 branches, and 11 calls match.
+// The remaining rows are one scratch-register rotation shared by the army-call
+// arguments and the hex-vector construction. Declaring the outer counter
+// before its loop is byte-flat; moving `changed` before the first vector drops
+// to 96.81% by perturbing its EH setup. why-reg's six natural expression/local
+// probes were flat or worse.
 void markAreaHighlights(SpellID spell, TSkillMastery mastery, long hex)
 {
     std::vector<army*> targets;
@@ -2223,6 +2229,12 @@ static long g_castWallIndexToCastOn = -1;
 // that. display_failure_reason is expanded into the refusal arm - the
 // out-of-line get_failure_reason call, the c_str() null-arm and the
 // string teardown are its body.
+// Residual (99.97026%): all 37 CFG blocks, all 21 branches, and every
+// instruction byte agree. The sole real relocation difference is the
+// vector<long>::insert growth call at +0x182: retail's linker selected the
+// byte-identical vector<int>::insert COMDAT emitted by rmg. Dreamcast names
+// vector<long> in both scoped `hexes` objects, so retain the source-proven
+// type rather than rewriting an interface to chase the folded owner label.
 VA(0x005a3250, 0x31C)  // retail order+handler call, dc 0x1527bc
 int handleCastWallSpell(message& msg)
 {

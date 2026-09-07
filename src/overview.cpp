@@ -151,8 +151,10 @@ void updateBackpack(int slot);
 // and swapping the two function-scope declarations, are both byte-flat.
 // The eight bytes are in the array/temporary overlay described above.
 // byte-inert: the DC CodeView local order, monsterX/monsterY swapped
-// (90.40, stores reorder only), currTown/currHero declared first in their
-// blocks. The DC statement order of the town block matches ours.
+// (90.40, stores reorder only), and the exact interleaving recorded by DC
+// (`monsterX`, `titleYOffs`, `monsterY`, `titleXOffs`, `titleWidths`),
+// which remains 91.7373. Also byte-inert: currTown/currHero declared first
+// in their blocks. The DC statement order of the town block matches ours.
 //
 // 90.9107 -> 91.7418 (2026-09-05): the town row's TWO `iLookup` chains
 // carry their default in a FINAL `else` ARM, not in a leading assignment.
@@ -2842,33 +2844,21 @@ int TOverviewWindow::windowHandler(message* msg)
 // and backpack-start arrays, Complete's 200-id / 116-pixel slot strides, and
 // the eight-slot widening.
 //
-// Residual (96.574%): ten of eleven retail CFG blocks align semantically. VC6
-// keeps the slot-id base in ebx but reloads it at the loop test in this TU,
-// while retail reloads it at the loop bottom; that adds one exit-only block.
-// The remaining byte delta is the equivalent commutative LEA operand order.
-// Negative controls: declaring `i` at the DC local-list position and assigning
-// it in the for initializer drops to 91.930%; reversing `i + iSlotOff` is
-// codegen-neutral and cannot change the LEA encoding. The current source keeps
-// every DC-proven local, statement group and scope while banking the best VC6
-// lowering found.
-// E:\gamedcs\overview.cpp:1528
-// Residual (96.5741%): ONE surplus instruction and one encoder tie-break.
-// Retail restores `iSlotOff` into EBX at the FOOT of the row loop
-// (`mov ebx,[ebp-0xc]` immediately before `inc edi`), so the one reload
-// serves both the next iteration's `lea ebx,[ebx+edi+0x82]` and the three
-// post-loop uses; this compile reloads it at the loop HEAD instead and then
-// needs a second reload after the loop.  The remaining row is the B18 SIB
-// tie-break, `lea ebx,[ebx+edi+0x82]` against `lea ebx,[edi+ebx+0x82]`.
-// Measured and rejected 2026-09-06, byte-flat at 96.5741: writing the
-// widget id as `iSlotOff + i + 130` instead of `i + iSlotOff + 130` - VC6
-// canonicalises the addend order exactly as it does for `&`, so the SIB
-// order is not reachable from the source operand order.
+// Putting slotOff and i before heroNumber agrees with the Dreamcast source-line
+// order and moves VC6's EBX reload to the retail loop foot. That removes the
+// former surplus exit block and raises this body from 96.5741% to 99.9074%:
+// all eleven retail CFG blocks and every instruction now agree except one
+// equivalent SIB encoding, `lea ebx,[edi+ebx+0x82]` versus retail's
+// `lea ebx,[ebx+edi+0x82]`. Negative controls: declaring `i` at its former
+// position and assigning it in the for initializer drops to 91.930%; reversing
+// the two widget-id addends or grouping `slotOff + 130` first is byte-neutral
+// even after the declaration-order correction.
 VA(0x00522470, 0x15E)  // body/arity identified, dc 0x107668
 void updateBackpack(int slot)
 {
-    int heroNumber = g_overviewTop[g_overviewType] + slot;
     int slotOff = slot * 200 + 200;
     int i = 0;
+    int heroNumber = g_overviewTop[g_overviewType] + slot;
     hero* currHero = g_game->getHero(g_overviewHeroIds[heroNumber]);
     int lastBackpackIndex = currHero->getLastBackpackIndex() + 1;
     type_artifact artifact;
