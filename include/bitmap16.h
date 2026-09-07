@@ -118,8 +118,6 @@ public:
     // run is the DC signature verbatim.
     // Before normalization (function): Bitmap16Bit::FillRect.
     void fillRect(int x, int y, int w, int h, unsigned short color);
-    // Before normalization (function): Bitmap16Bit::Grab.
-    void grab(const unsigned short* src, int srcX, int srcY, int srcWidth, int srcHeight, int srcPitch);
     // Before normalization (function): Bitmap16Bit::Draw.
     void draw(int srcX, int srcY, int srcWidth, int srcHeight, unsigned short* dst, int dstX, int dstY, int dstWidth, int dstHeight, int dstPitch, bool flipped) const;
     // DC Bitmap16.h:162 header forwarding overload. ResourceManager's
@@ -131,6 +129,18 @@ public:
         draw(srcX, srcY, srcWidth, srcHeight, dst->getMap(0, 0),
              dstX, dstY, dst->getWidth(), dst->getHeight(), dst->getPitch(),
              flipped);
+    }
+    // Before normalization (function): Bitmap16Bit::Grab.
+    void grab(const unsigned short* src, int srcX, int srcY, int srcWidth, int srcHeight, int srcPitch);
+    // DC Bitmap16.h:168, retained at dc 0x4cb1c. This header forwarding
+    // overload calls GetMap/GetWidth/GetHeight/GetPitch and then the raw
+    // six-argument Grab. Complete's ShootAnimatedMissile expands it into
+    // the retained raw call at 0x0044e3f0.
+    // Before normalization (function): Bitmap16Bit::Grab.
+    void grab(const Bitmap16Bit* src, int srcX, int srcY)
+    {
+        grab(src->getMap(0, 0), srcX, srcY, src->getWidth(), src->getHeight(),
+             src->getPitch());
     }
     // Retail bodies 0x44e540 / 0x44e780, both reached from
     // coloredBorderFrame::Draw (0x4501e0): its five-argument push run is
