@@ -692,6 +692,9 @@ TCreatureType siegeArtifactToCreature(TArtifact engine)
 // corroborates all three helper boundaries by expanding their bodies. Keeping
 // those source facts raises the current candidate from 88.2360% to 96.5558%
 // and makes every instruction through the GetArmyName join exact.
+// The tree-wide 30-forest TU-state sweep reproduced this unchanged
+// 75fd1ca020f9 body's 96.5558% historical peak twice at trial 24, so that
+// transient result is banked as MAX; no probe declarations are retained.
 //
 // DC line 533 is one statement containing HasArtifact and the `1 - result`
 // store. Spelling that assignment directly (with no synthetic `owned` local)

@@ -537,7 +537,7 @@ army	?computeDefenderDamageReduction@army@@QBENE@Z	100.0000	100.0000	100.0000	0x
 army	?considerAttack@army@@QAEXPBV1@JJ@Z	100.0000	100.0000	100.0000	0x48840	1c749144bef3
 army	?cure@army@@QAEXHHPBVhero@@@Z	100.0000	100.0000	100.0000	0x46500	b798d45ffe05
 army	?damage@army@@QAEHH@Z	100.0000	100.0000	100.0000	0x44090	009dce137b6d
-army	?doAttack@army@@QAEEPAV1@H@Z	98.8868	98.8868	99.9962	0x41610	2cfc7442c153
+army	?doAttack@army@@QAEEPAV1@H@Z	98.8868	98.9251	99.9962	0x41610	2cfc7442c153
 army	?doAttack@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x41cb0	933b8d8871b4
 army	?doFireShield@army@@AAEXJ@Z	100.0000	100.0000	100.0000	0x409c0	89b7919ee308
 army	?doMultiHeadAttack@army@@QAEXIPAH0PAJ@Z	100.0000	100.0000	100.0000	0x40310	ecdb5f58e893
@@ -2989,7 +2989,7 @@ recruit	?quickViewRecruit@@YIXPAVtown@@H@Z	100.0000	100.0000	100.0000	0x151750	d
 recruit	?quickViewRecruit@@YIXW4TCreatureType@@PAF@Z	100.0000	100.0000	100.0000	0x151780	9fd90a3edb9a
 recruit	?recruitSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x14e800	c3d547c3581c
 recruit	?siegeArtifactToCreature@@YI?AW4TCreatureType@@W4TArtifact@@@Z	100.0000	100.0000	100.0000	0x150360	33e3eee578c8
-recruit	?update@recruitUnit@@QAEXEJ@Z	94.1574	94.1574	96.5558	0x1503a0	75fd1ca020f9
+recruit	?update@recruitUnit@@QAEXEJ@Z	94.1574	96.5558	96.5558	0x1503a0	75fd1ca020f9
 remote	??0CAnimatedDlg@@QAE@XZ	100.0000	100.0000	100.0000	0x154a50	c8b9d011fc93
 remote	??0CChatEdit@@QAE@HHHHHPAD0W4TColor@font@@W4EJustify@2@0HHHHHH@Z	100.0000	100.0000	100.0000	0x1541a0	d4594021d1c8
 remote	??0CGameTransferDlg@@QAE@E@Z	100.0000	100.0000	100.0000	0x157720	90c10f45e08d
