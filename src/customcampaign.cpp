@@ -3719,6 +3719,11 @@ VA_COMPGEN(0x0048d8d0, 0x38, VECTOR_UCOPY, type_artifact_vector)
 // COMDAT pairing: hero::copy_backward, mnemonic agreement 0.918.
 VA_COMPGEN(0x0048e880, 0x3B, STD_COPY_BACKWARD, hero)
 
+// The adjacent hero fill walks the same 0x492-byte records forward and
+// invokes hero::operator= once per element.  Its sole non-loop relocation
+// and all 42 bytes identify the specialization independently of link order.
+VA_COMPGEN(0x0048e850, 0x2A, STD_FILL, hero)
+
 // COMDAT pairing: hero::_Ufill, mnemonic agreement 0.913.
 VA_COMPGEN(0x0048d970, 0x2C, VECTOR_UFILL, hero)
 

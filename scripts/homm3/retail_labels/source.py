@@ -457,6 +457,7 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "PAIR_CONST_INT_DTOR", "PAIR_CTOR",
                  "STD_CONSTRUCT", "STD_COPY",
                  "STD_DISTANCE", "STD_DISTANCE_TAGGED",
+                 "LOCAL_STATIC_DTOR",
                  "CLASS_CTOR",
                  "IMPLICIT_COPY_CTOR", "IMPLICIT_COPY_ASSIGN",
                  "IMPLICIT_DTOR"}
@@ -1053,6 +1054,15 @@ def _demangle_key(mangled: str):
     `Class_operator_equal` / `Class_operator_not_equal` spellings. The four
     arithmetic operators keep their operation and simple qualified owner;
     other special operators return None."""
+    # VC6 gives a function-local static's registered teardown a named `$A`
+    # function symbol derived from the datum and its containing function.
+    # Keep the datum name as the semantic owner; the ordinary STATIC_DTOR
+    # path is reserved for anonymous `$E<n>` compiler thunks.
+    local_static_dtor = re.match(
+        r"^\?([A-Za-z_]\w*)@\?1\?\?.+@\$[A-Z]V", mangled)
+    if local_static_dtor:
+        return f"{local_static_dtor.group(1).lower()}@local_static_dtor"
+
     tree_value = re.search(
         r"\?\$_Tree@H(?:V|U)\?\$pair@\$\$CBH(?:V|U)([A-Za-z_]\w*)@",
         mangled)
@@ -2277,6 +2287,11 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
         if "$std_copy$" in row["name"]:
             owner = row["name"].rsplit("$", 1)[1].lower()
             claim_keys.setdefault(f"{owner}@std_copy", []).append(row)
+            continue
+        if "$local_static_dtor$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(
+                f"{owner}@local_static_dtor", []).append(row)
             continue
         if "$class_ctor$" in row["name"]:
             owner = row["name"].rsplit("$", 1)[1].lower()

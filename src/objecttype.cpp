@@ -198,6 +198,11 @@ inline std::vector<TObjectType::TImageInfo>& getObjectImageCache()
     return imageCache;
 }
 
+// The accessor registers this function-local vector teardown with atexit.
+// Retail frees imageCache's allocation and clears its three pointer fields;
+// the named cache relocation distinguishes the 42-byte static destructor.
+VA_COMPGEN(0x00514930, 0x2A, LOCAL_STATIC_DTOR, imageCache)
+
 // Retail 0x514610, TObjectType::setImageName - the .msk cache loader and
 // the registry's growth path. Two function-local statics with SEPARATE
 // guard bytes: the image-name registry at 0x69cb80 (guard 0x69cb64, which
