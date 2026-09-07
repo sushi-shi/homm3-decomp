@@ -1662,3 +1662,20 @@ This TU's `cppMin`/`cppMax` selectors also returned references to their own
 by-value argument copies. Reference parameters repair those lifetimes without
 changing this function's bytes. Do not preserve dangling selector references
 or replace an aggregate with scalar fields merely to avoid a header dependency.
+
+### Artifact initialization can decide a later string cleanup boundary
+
+`hero::initialize` (0x4d8720) had been described as a string-inliner wall:
+retail retains two `basic_string::_Tidy` calls, while the reconstruction
+expanded the first into a delete path. DC hero.cpp:1260-1262 proves a
+`SetPrimarySkill` call and a signed-short loop index; restoring them first
+reproduces the retail stats loop and raises 82.8591% to 85.6745%.
+
+Changing the two artifact arrays from per-element default construction to
+`std::fill` then restores both string cleanup calls and reaches 91.0235%,
+without changing the string assignment. The remaining array pointer-end
+guards differ from retail's counted loops. `fill_n` is not equivalent for
+code generation: VC6 turns it into overlapping `rep movsd` fills (79.5302%).
+An explicit `ARTIFACT_NONE` constructor and a literal empty string are each
+byte-flat against the per-element-loop candidate. Diagnose preceding source
+operations before treating a nested library decision as fixed compiler state.

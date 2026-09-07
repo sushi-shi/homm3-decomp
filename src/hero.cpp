@@ -1187,21 +1187,25 @@ hero::hero()
 // stride-8 backpack slots from +0x1d4, and the two 28-byte
 // secondary-skill bands at +0xc9 / +0xe5.
 
-// Reconstructed through every retail store and branch. Restoring the
-// Dreamcast-proven `SetPrimarySkill` source calls raised 82.8591 -> 89.67,
-// closed the CFG from 44/40 to 40/40 blocks, and aligned all 21 branches and
-// all 10 calls. Reusing the function-scope `i` is required; a fresh
-// block-local counter falls to 82.53. The residual
-// is dominated by VC6 front-end/inliner state: retail leaves two Dinkumware
-// string::_Tidy calls and expands operator delete, while this compile leaves
-// one _Tidy call and one delete call. `operator=`, direct `assign`, a class
-// inline wrapper, and inline_depth 2/3/4 are byte-identical. The remaining
-// non-string deltas are register/order choices (memset address setup and the
-// four-byte stats loop), not missing initialization semantics. Release VERIFY
-// carriers do not reach this boundary either (2026-08-21): one and four
-// `TownSpecialGrantedMask.size()` invariants and one/eight user-defined
-// `_cpp_max(index,index)` invariants are all byte-flat at 82.8591%, with the
-// same one missing `_Tidy` call and 24-vs-21 branch count.
+// DC hero.cpp:1260-1262 calls SetPrimarySkill from a signed-short loop;
+// the increment at dc 0xcbf44 truncates/sign-extends it, as does the army
+// loop at 0xcc054. Restoring the canonical call and short i reproduces the
+// entire retail stats loop (+0x15f..+0x17f), raising 82.8591 -> 85.6745%.
+// Standard artifact fills then restore both retained string::_Tidy calls
+// without changing the string assignment, reaching 91.0235%. The remaining
+// early differences are the fills' pointer-end guards versus retail's
+// countdown loops, plus memset/trait-load scheduling. The old diagnosis of
+// an unavoidable string-inliner wall was false: these preceding source
+// operations determine that nested boundary.
+// A shared function-scope int index with per-element artifact loops was
+// independently measured at 89.67%; a fresh int index gives 82.5336%.
+// Controls: short skill-only index 85.6409%;
+// literal empty-name assignment and explicit ARTIFACT_NONE construction are
+// byte-flat against the 85.6745% loop candidate. fill_n emits an overlapping
+// rep-movsd fill instead of retail's two-store loops (79.5302%). Older string
+// assign/operator= wrappers and inline_depth 2/3/4 were byte-flat; a zero-depth
+// assign pin lost to 62.31%. Synthetic invariant carriers were also byte-flat
+// and are not retained.
 VA(0x004d8720, 0x410)  // anchor-bracket + layout, dc 0xcbe80
 void hero::initialize(short index)
 {
@@ -1211,13 +1215,11 @@ void hero::initialize(short index)
     memset(m_inSpellbook, 0, sizeof(m_inSpellbook));
     memset(m_availableSpells, 0, sizeof(m_availableSpells));
 
-    int i;
-    for (i = 0; i < 19; i++)
-        m_equipped[i] = type_artifact();
+    short i;
+    std::fill(m_equipped, m_equipped + 19, type_artifact());
 
     memset(m_artifactSlotCounts, 0, sizeof(m_artifactSlotCounts));
-    for (i = 0; i < 64; i++)
-        m_backpack[i] = type_artifact();
+    std::fill(m_backpack, m_backpack + 64, type_artifact());
     m_backpackCount = 0;
     memset(m_skillLevel, 0, sizeof(m_skillLevel));
     memset(m_skillOrder, 0, sizeof(m_skillOrder));
@@ -1235,9 +1237,9 @@ void hero::initialize(short index)
     m_name[sizeof(m_name) - 1] = 0;
     m_heroClass = g_heroTraits[index].m_heroClass;
     m_skillCount = 0;
-    for (i = 0; i < 4; i++)
-        setPrimarySkill(
-            i, g_heroClasses[m_heroClass].m_initialPrimarySkill[i]);
+    for (i = 0; i < 4; ++i) {
+        setPrimarySkill(i, g_heroClasses[m_heroClass].m_initialPrimarySkill[i]);
+    }
 
     // Both GiveSS calls here, and the third in SetSS, used to carry
     // statement `inline_depth(0)` pins that held retail's out-of-line
@@ -1278,12 +1280,6 @@ void hero::initialize(short index)
     m_dWalkSpellsCast = 0;
     m_visionsPower = eMasteryInvalid;
     m_hasCustomName = 0;
-    // MEASURED NEGATIVE, do not retry: `#pragma inline_depth(0)` on this
-    // assignment costs 82.86 -> 62.31. The identical pin on the identical
-    // spelling in HeroFn_004D8B30 pays +38.93 there, so the assign pin is
-    // NOT a general lever for this TU's string stores - retail inlines the
-    // assign HERE and calls it THERE, and the two must be spelled
-    // differently even though both read `customName = <char const*>`.
     m_customName = g_emptyRolloverText;
     m_isSleeping = 0;
     m_formation = 2;

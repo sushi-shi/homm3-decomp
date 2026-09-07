@@ -28,9 +28,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x005f2a40	968	82.017	82.017	82.017	174.07544000000004	victorylossconditions	?checkForDefeatedHeroLoss@LossConditionStruct@@QAEEPBVhero@@@Z	admitted
 0x00542080	2218	82.1005	82.1005	82.1005	397.01091	rmg	?createSubterraneanGate@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	admitted
 0x00514d80	644	73.32632	82.2717	82.2717	114.17025200000005	objecttype	?load@TObjectTypeTable@@QAEXPAD@Z	admitted
-0x005b5440	1576	81.6644	82.8347	82.8347	270.5251280000001	rmg_terrain	?repairTerrainPoint@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	admitted
-0x004d8720	1040	82.85906	82.8591	82.8591	178.26536000000004	hero	?initialize@hero@@QAEXF@Z	admitted
-0x0050cca0	224	82.933334	82.9333	82.9333	38.22940800000001	mousemgr	?setPointer@mouseManager@@QAEXHW4EPointerSet@1@@Z	admitted
 0x0042e0b0	2926	82.964	82.964	82.964	498.4733600000002	ai_player	?aiChooseDestination@@YIHPAVhero@@JAAUHeroDestination@@AAJEE@Z	admitted
 0x00418dd0	1247	83.01877	83.0188	83.0188	211.75556399999996	advmgr	?showRoute@advManager@@QAEXHHH@Z	admitted
 0x004a6440	216	83.03571	83.0357	83.0357	36.642888	events	?doTreasureDialog@advManager@@QAEXPAVhero@@H_N@Z	admitted
@@ -149,6 +146,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x005c0d20	317	81.18519	89.6018	89.6018	32.96229400000001	town	?canBuild@town@@QBEEF@Z	admitted
 0x005979d0	660	89.634705	89.6347	89.6347	68.41098	smackmgr	?videoDrawRects@@YIXXZ	admitted
 0x004a5610	838	89.67007	89.6701	89.6701	86.56456199999994	events	?doEventShrine@advManager@@QAEXPAVhero@@PAVNewmapCell@@PBDW4GlobalInfoFlags@@_N@Z	admitted
+0x005b5440	1576	89.715	89.715	89.715	162.0916	rmg_terrain	?repairTerrainPoint@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	admitted
 0x005d7b30	737	89.7235	89.7235	89.7235	75.737805	townmgr	?windowHandler@TTavernWindow@@UAEHPAVmessage@@@Z	admitted
 0x0059ec50	2728	89.8044	89.8044	89.8044	278.1359679999998	spells	?initiateSpell@combatManager@@QAEXHH@Z	admitted
 0x004b2da0	587	89.81768	89.8177	89.8177	59.770101	findpath	?seedCombatPosition@searchArray@@QAEXPBVarmy@@JJEJ@Z	admitted
@@ -187,6 +185,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x005554e0	201	86.333336	90.9167	90.9167	18.25743299999999	remote	??1CWaitForReadyPlayersDlg@@UAE@XZ	admitted
 0x004267c0	1021	90.93293	90.9329	90.9329	92.57509099999994	ai_combat	?chooseMelee@type_AI_combat_data@@QBE_NABV1@W4type_speed_catagory@@@Z	admitted
 0x005f3b50	1714	90.95206	90.9521	90.9521	155.08100599999995	viewarmywindow	??0TViewArmyWindow@@QAE@PAVarmyGroup@@HPBVhero@@PBVtown@@HHHEEE@Z	admitted
+0x004d8720	1040	91.0235	91.0235	91.0235	93.35559999999998	hero	?initialize@hero@@QAEXF@Z	admitted
 0x00584c40	1037	91.0411	91.0411	91.0411	92.90379300000004	singleselectionwindow	?setHumanSlot@TSingleSelectionWindow@@QAEXXZ	admitted
 0x005c14c0	502	91.04651	91.0465	91.0465	44.946570000000015	town	?initializeBuildingCostsTables@town@@SIEXZ	admitted
 0x0040a5d0	1542	91.10057	91.1006	91.1006	137.22874800000002	advmgr	?processMapSelect@advManager@@QAEXPBVmessage@@PAUtype_point@@PAPAVNewmapCell@@@Z	admitted

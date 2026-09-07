@@ -2248,7 +2248,7 @@ hero	?heroFn004E6120@hero@@QBEXHPAUTCreatureTypeTraits@@@Z	100.0000	100.0000	100
 hero	?heroScreenUpdate@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xd9990	2c4866d09a4d
 hero	?heroView@@YIHHHHE@Z	100.0000	100.0000	100.0000	0xe1800	2d7a7dcf9e6e
 hero	?hire@hero@@QAEXHUtype_point@@@Z	100.0000	100.0000	100.0000	0xd7890	bd59c194e584
-hero	?initialize@hero@@QAEXF@Z	82.8591	82.8591	82.8591	0xd8720	e0d707748d0e
+hero	?initialize@hero@@QAEXF@Z	91.0235	91.0235	91.0235	0xd8720	218f1b02d3cb
 hero	?initialize@type_obscuring_object@@QAEXXZ	100.0000	100.0000	100.0000	0xd74d0	61f4a59d6b75
 hero	?initializeBallisticsTable@@YIEXZ	100.0000	100.0000	100.0000	0xd7240	bdc6b60bb7eb
 hero	?initializeHeroSpecificAbilitiesTable@@YIEXZ	100.0000	100.0000	100.0000	0xd71a0	af776221be71
@@ -2638,7 +2638,7 @@ mousemgr	?loadFrame@mouseManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x10d8b0	e7
 mousemgr	?mouseCoords@mouseManager@@QAEXPAH0@Z	100.0000	100.0000	100.0000	0x10d500	d8746d78006c
 mousemgr	?open@mouseManager@@UAEHH@Z	100.0000	100.0000	100.0000	0x10cbf0	091bf7f5fa60
 mousemgr	?reset@mouseManager@@QAEXXZ	100.0000	100.0000	100.0000	0x10cc80	229fd0c2b800
-mousemgr	?setPointer@mouseManager@@QAEXHW4EPointerSet@1@@Z	82.9333	82.9333	82.9333	0x10cca0	681333d2ecd3
+mousemgr	?setPointer@mouseManager@@QAEXHW4EPointerSet@1@@Z	100.0000	100.0000	100.0000	0x10cca0	63e6f9f46e23
 mousemgr	?showPointer@mouseManager@@QAEX_N@Z	100.0000	100.0000	100.0000	0x10d5b0	dcbb60ed101b
 mousemgr	?showSystemCursor@mouseManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x10da20	df9e01a6fd4b
 mousemgr	?update@mouseManager@@QAEXE@Z	94.1675	94.1675	94.1675	0x10cd90	89e55a7d7663
@@ -3341,7 +3341,7 @@ rmg_terrain	?paintRectangle@TRmgTerrainBrush@@QAEXIIII@Z	100.0000	100.0000	100.0
 rmg_terrain	?paintRectangle@rmgTerrainPainter@@QAEXIIII@Z	69.9804	69.9804	69.9804	0x1b4960	31acc1f13cc2
 rmg_terrain	?paintTransitions@rmgTerrainPainter@@QAEXXZ	84.0645	84.0645	84.0645	0x1b5a70	0b7316a9d9ed
 rmg_terrain	?queueOtherTerrainNeighbours@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	63.6299	63.6299	63.6299	0x1b50f0	5f7770ec945d
-rmg_terrain	?repairTerrainPoint@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	81.6644	82.8347	82.8347	0x1b5440	3d5ac079ea40
+rmg_terrain	?repairTerrainPoint@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	89.7150	89.7150	89.7150	0x1b5440	2c693c3b66d3
 rmg_terrain	?selectTerrainTransition@@YIHPBHPAUTRmgTerrainFlip@@@Z	100.0000	100.0000	100.0000	0x1b3e80	e20e360ba25b
 rmg_terrain	?upper_bound@?$_Tree@UTRmgGridPoint@@U1@U_Kfn@?$set@UTRmgGridPoint@@U?$less@UTRmgGridPoint@@@std@@V?$allocator@UTRmgGridPoint@@@3@@std@@U?$less@UTRmgGridPoint@@@4@V?$allocator@UTRmgGridPoint@@@4@@std@@QAE?AViterator@12@ABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x1b8a20	-
 rmg_terrain	rmgTerrainPainter_buildNeighbourKinds	0.0000	0.0000	0.0000	0x1b68a0	9614bbe04bb0

@@ -744,38 +744,46 @@ unsigned char rmgTerrainPainter::needsTerrainRepair(const TRmgGridPoint& point)
 // gap in the neighbour ring. Cardinal directions have weight two and
 // diagonals weight one. The worklist at 0x5b72f0 passes its first primary
 // point to this method; PaintPoint consumes the resulting repairs.
-// Remaining: some nested GetPackedCell and point-constructor calls still
-// over-inline. Retail also retains the copied x component at +0x5bb while
-// our point-addition return folds it away. Keep the canonical arithmetic
-// and predicates; no inline-depth pin is used to hide those differences.
+// Separate paint statements let the preceding predicate temporaries expire:
+// retail reuses EBP-0x10 at +0x32 and +0xbd. Together with canonical dimension
+// and paint-terrain accessors, this raises MAX 82.8347 -> 89.7150%. All cache
+// reads now retain getPackedCell; the two vertical-gap second-coordinate
+// constructors still over-inline. Retail also retains the copied x at +0x5bb.
+// Controls: separate statements alone 80.9056%; dimensions alone 84.5649%;
+// together 89.5970%. A positive-guard rewrite is byte-identical; a byte choice
+// local introduces extra result/branch code (87.1956%). Explicit helper edge
+// returns do not restore the missing constructors (89.3019%). Returning a
+// named point after += is byte-flat; copy-constructing it changes the load
+// order (89.8583% scratch) but still omits retail's copied-x store. Retain the
+// coordinate construction supported by paintPoint's separate retail evidence.
 VA(0x005B5440, 0x628) // anchor-callee 0x5b7358; thiscall, ret 4; retail-only
 void rmgTerrainPainter::repairTerrainPoint(const TRmgGridPoint& point)
 {
     if (isVerticalGap(point)) {
-        paintPoint(
-            !needsTerrainRepair(TRmgGridPoint(point.m_x, point.m_y - 1))
-                && (needsTerrainRepair(TRmgGridPoint(point.m_x, point.m_y + 1))
-                    || (isHorizontalGap(
-                            TRmgGridPoint(point.m_x, point.m_y - 1), m_paintTerrain)
-                        && !isHorizontalGap(
-                            TRmgGridPoint(point.m_x, point.m_y + 1), m_paintTerrain)))
-            ? TRmgGridPoint(point.m_x, point.m_y + 1)
-            : TRmgGridPoint(point.m_x, point.m_y - 1));
+        if (!needsTerrainRepair(TRmgGridPoint(point.m_x, point.m_y - 1)) &&
+            (needsTerrainRepair(TRmgGridPoint(point.m_x, point.m_y + 1)) ||
+             (isHorizontalGap(TRmgGridPoint(point.m_x, point.m_y - 1),
+                              getPaintTerrain()) &&
+              !isHorizontalGap(TRmgGridPoint(point.m_x, point.m_y + 1),
+                               getPaintTerrain()))))
+            paintPoint(TRmgGridPoint(point.m_x, point.m_y + 1));
+        else
+            paintPoint(TRmgGridPoint(point.m_x, point.m_y - 1));
     }
     if (isHorizontalGap(point)) {
-        paintPoint(
-            !needsTerrainRepair(TRmgGridPoint(point.m_x - 1, point.m_y))
-                && (needsTerrainRepair(TRmgGridPoint(point.m_x + 1, point.m_y))
-                    || (isVerticalGap(
-                            TRmgGridPoint(point.m_x - 1, point.m_y), m_paintTerrain)
-                        && !isVerticalGap(
-                            TRmgGridPoint(point.m_x + 1, point.m_y), m_paintTerrain)))
-            ? TRmgGridPoint(point.m_x + 1, point.m_y)
-            : TRmgGridPoint(point.m_x - 1, point.m_y));
+        if (!needsTerrainRepair(TRmgGridPoint(point.m_x - 1, point.m_y)) &&
+            (needsTerrainRepair(TRmgGridPoint(point.m_x + 1, point.m_y)) ||
+             (isVerticalGap(TRmgGridPoint(point.m_x - 1, point.m_y),
+                            getPaintTerrain()) &&
+              !isVerticalGap(TRmgGridPoint(point.m_x + 1, point.m_y),
+                             getPaintTerrain()))))
+            paintPoint(TRmgGridPoint(point.m_x + 1, point.m_y));
+        else
+            paintPoint(TRmgGridPoint(point.m_x - 1, point.m_y));
     }
 
-    if (!g_rmgTerrainRules[m_paintTerrain]->m_allowsSeparatedNeighbours
-        && hasSeparatedNeighbours(point)) {
+    if (!g_rmgTerrainRules[getPaintTerrain()]->m_allowsSeparatedNeighbours &&
+        hasSeparatedNeighbours(point)) {
         unsigned char matches[TILE_DIR_COUNT];
         buildMatchingNeighbourMask(point, matches);
         TRmgTerrainGap gaps[TILE_DIR_COUNT / 2];
@@ -807,8 +815,8 @@ void rmgTerrainPainter::repairTerrainPoint(const TRmgGridPoint& point)
 
     gapsBuilt:
         unsigned char neighbourExists[TILE_DIR_COUNT];
-        buildTileNeighbourMask(
-            m_width, m_height, point.m_x, point.m_y, neighbourExists);
+        buildTileNeighbourMask(getWidth(), getHeight(), point.m_x, point.m_y,
+                               neighbourExists);
         do {
             unsigned int smallest = 0;
             unsigned int smallestWeight = gaps[0].m_weight;
@@ -1019,7 +1027,7 @@ VA(0x005B6320, 0x107) // anchor-callee 0x5b569f; retail-only
 unsigned char rmgTerrainPainter::isHorizontalGap(
     const TRmgGridPoint& point, int terrain)
 {
-    return point.m_x > 0 && point.m_x < m_width - 1
+    return point.m_x > 0 && point.m_x < getWidth() - 1
         && getTerrain(TRmgGridPoint(point.m_x - 1, point.m_y)) != terrain
         && getTerrain(TRmgGridPoint(point.m_x + 1, point.m_y)) != terrain;
 }
@@ -1028,7 +1036,7 @@ VA(0x005B6430, 0x106) // anchor-callee 0x5b545f; retail-only
 unsigned char rmgTerrainPainter::isVerticalGap(
     const TRmgGridPoint& point, int terrain)
 {
-    return point.m_y > 0 && point.m_y < m_height - 1
+    return point.m_y > 0 && point.m_y < getHeight() - 1
         && getTerrain(TRmgGridPoint(point.m_x, point.m_y - 1)) != terrain
         && getTerrain(TRmgGridPoint(point.m_x, point.m_y + 1)) != terrain;
 }
