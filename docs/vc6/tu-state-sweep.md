@@ -25,6 +25,8 @@ Banking fails closed:
   decimals;
 - authored source files and `config/match_baseline.tsv` must not change during
   the sweep;
+- headers, compiler/profile, retail targets and scoring code must also stay
+  unchanged; their content fingerprints invalidate cached trials after changes;
 - a row with a function hash must still have that exact live hash;
 - CUR remains the clean canonical-build score;
 - only MAX is raised, with HIST raised too if the observation is a new all-time
@@ -51,7 +53,8 @@ Its corrected target-local grouped rerun completed another 1,470 candidate
 compiles over the same 49 TUs. It found no additional reproducible MAX gains.
 The current include-set implementation supersedes that search strategy.
 
-The seed-20260906 include-set census on 2026-09-07 ran 100 states for each of
+Before integration onto `31446de4`, the generator-v5 seed-20260906 include-set
+census on 2026-09-07 ran 100 states for each of
 the same 49 TUs. All 4,900 candidate TUs compiled and produced 307,500
 function-score observations. Each of the original 128 recovery targets has 100
 samples. Thirteen functions moved in at least one state; the full extrema are:

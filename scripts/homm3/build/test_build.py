@@ -60,6 +60,13 @@ class BuildModeTest(unittest.TestCase):
         self.assertEqual(build.main([]), 0)
         self.mocks["delink"].assert_called_once_with([])
 
+    def test_failed_source_gate_still_refreshes_readme_and_remains_fatal(self):
+        self.mocks["claims"].side_effect = lambda: ["invalid source claim"]
+        self.assertEqual(build.main([]), 1)
+        self.mocks["cleanliness"].assert_called_once_with(write=False)
+        self.mocks["checkpoint"].assert_called_once()
+        self.mocks["readme"].assert_called_once()
+
     def test_fast_build_preserves_targets_and_skips_checkpoint(self):
         self.assertEqual(build.main(["--fast", "cursor"]), 0)
         self.assertEqual(self.events, ["configure", "compile", "normalize", "configure", "report"])

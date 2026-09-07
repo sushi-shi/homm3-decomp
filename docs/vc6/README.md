@@ -45,7 +45,7 @@ model cannot rot.
 | `scripts/homm3/vc6/{inline_model,reg_model,il}.py` | the predictors + solvers |
 | `homm3 vc6 il-locals UNIT --fn NAME` | candidate local handles from GL-recorded SY body offsets, using the canonical source/profile; named-symbol overlay, not optimizer register order |
 | `scripts/homm3/vc6/{diagnose,report,queue}.py` | one-function routing, plateau report, and recoverable-byte wall census |
-| `scripts/homm3/vc6/tu_state_sweep.py` | resumable, batched disposable declaration-forest search for every `CUR < HIST` row |
+| `scripts/homm3/vc6/tu_state_sweep.py` | resumable random-include search once per TU with `MAX < HIST` rows, recording all function scores |
 | `scripts/homm3/vc6/_source.py` | the solvers' source-body locator (demangle + definition grammar + `#if 0` masking) |
 | `scripts/homm3/vc6/_eh.py` | the EH cleanup transcript (`[ebp-4]` state stores) — object lifetimes, the one signal the three solvers do not read |
 | `scripts/homm3/vc6/census.py` | the gates (each with a negative control) |
@@ -88,7 +88,8 @@ headers absent from that TU's transitive project-header closure, then scores
 every compiled function in the TU from that single object. Per-trial records
 capture the selected order and every function score, while the summary lists
 every score movement, including drops. Results are cached by source, retail
-target, normalization inputs, generator version, and seed. A higher observation
+target, header contents, compiler/profile, normalization code and inputs,
+generator version, and seed. A higher observation
 is compiled a second time before it can raise MAX; the clean CUR is never
 replaced. Authored source and function hashes must remain unchanged for the
 whole run. See [tu-state-sweep.md](tu-state-sweep.md) for the audit contract.

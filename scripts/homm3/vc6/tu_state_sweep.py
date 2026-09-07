@@ -21,6 +21,7 @@ import json
 import os
 import random
 import re
+import shutil
 import subprocess
 import tempfile
 from collections import Counter, defaultdict
@@ -35,7 +36,7 @@ from homm3.match import status
 from homm3.vc6._unit import compile_text, source_for_unit
 
 
-GENERATOR_VERSION = 5
+GENERATOR_VERSION = 6
 DEFAULT_SEED = 20260906
 DEFAULT_TRIALS = 30
 MIN_HEADERS_PER_TRIAL = 5
@@ -169,7 +170,8 @@ def insert_variant(original: str, insertions: tuple[tuple[int, int, int], ...],
     """Insert a variant at each requested site (one site for include sweeps)."""
     candidate = original
     for offset, line, rva in sorted(insertions, reverse=True):
-        candidate = (candidate[:offset] + f"{variant.body}#line {line}\n"
+        separator = "\n" if offset and candidate[offset - 1] != "\n" else ""
+        candidate = (candidate[:offset] + separator + f"{variant.body}#line {line}\n"
                      + candidate[offset:])
     return candidate
 
@@ -180,10 +182,55 @@ def _initial_include_insertion(text: str) -> tuple[int, int]:
     limit = first_marker.start() if first_marker else len(text)
     includes = [match for match in _INCLUDE_DIRECTIVE.finditer(text)
                 if match.start() < limit]
-    offset = includes[-1].end() if includes else _top_level_insertion_offset(text)
-    if offset < len(text) and text[offset] == "\n":
-        offset += 1
+    if includes:
+        # Consume the whole directive, including trailing comments. Inserting
+        # after the closing quote can join two directives or comment out the
+        # first injected header while still producing a successful compile.
+        end = text.find("\n", includes[-1].end())
+        offset = end + 1 if end >= 0 else len(text)
+    else:
+        offset = _top_level_insertion_offset(text)
     return offset, _logical_line_at(text, offset)
+
+
+def _files_digest(paths) -> str:
+    identity = hashlib.sha256()
+    for path in sorted(set(paths)):
+        identity.update(str(path.resolve()).encode())
+        identity.update(b"\0")
+        identity.update(hashlib.sha256(path.read_bytes()).digest())
+    return identity.hexdigest()
+
+
+def _shared_inputs_digest() -> str:
+    """Invalidate observations when compiler, headers or scoring inputs move.
+
+    A conservative superset is deliberate: the random include set can reach
+    any project header, and normalization code is itself part of the verdict.
+    The same fingerprint is checked again before any bank is written.
+    """
+    from homm3.core.cc_wrap import msvc_dir
+
+    root = common.HOMM3_DIR
+    paths = []
+    for relative in ("include", "vendor/zlib-1.1.3"):
+        paths.extend(path for path in (root / relative).rglob("*")
+                     if path.is_file())
+    paths.extend((root / "scripts/homm3").rglob("*.py"))
+    paths.extend((root / "src").rglob("*.h"))
+    paths.extend((normalize.OBJDIFF / "target").glob("*.c.obj"))
+    paths.extend(path for path in (
+        root / "config/units.toml", normalize.COMPGEN_MANIFEST,
+        normalize.SYMBOL_NAMES) if path.is_file())
+    compiler = msvc_dir()
+    for relative in ("bin", "include"):
+        paths.extend(path for path in (compiler / relative).rglob("*")
+                     if path.is_file())
+    for command in ("objdiff-cli", "wine"):
+        if executable := shutil.which(command):
+            paths.append(Path(executable))
+    environment = {key: os.environ.get(key) for key in ("CL", "_CL_")}
+    return _sha256((_files_digest(paths) + json.dumps(environment)).encode())
 
 
 @lru_cache(maxsize=None)
@@ -322,11 +369,14 @@ def _report_scores(
         raise RuntimeError((proc.stdout + proc.stderr).strip())
     report = json.loads((directory / "report.json").read_text())
     wanted = {key[1] for key in plan.scored}
-    return {
+    observed = {
         fn["name"]: float(fn.get("fuzzy_match_percent") or 0.0)
         for fn in report["units"][0].get("functions", [])
         if fn.get("name") in wanted
     }
+    # A header can change whether a retained body is emitted at all. Missing
+    # candidate functions are a score change too, never silently omit them.
+    return {symbol: observed.get(symbol, 0.0) for symbol in sorted(wanted)}
 
 
 def _trial_path(plan: UnitPlan, trial: int) -> Path:
@@ -394,7 +444,8 @@ def affected_by_unit(rows: dict) -> dict[str, tuple[tuple[str, str], ...]]:
     return {unit: tuple(sorted(keys)) for unit, keys in grouped.items()}
 
 
-def _plans(rows: dict, units: set[str] | None, seed: int, trials: int) -> list[UnitPlan]:
+def _plans(rows: dict, units: set[str] | None, seed: int, trials: int,
+           inputs_digest: str) -> list[UnitPlan]:
     affected = affected_by_unit(rows)
     if units is not None:
         unknown = units - set(affected)
@@ -424,6 +475,7 @@ def _plans(rows: dict, units: set[str] | None, seed: int, trials: int) -> list[U
         identity = hashlib.sha256()
         for payload in (
                 source_bytes, target_bytes, compgen, symbol_names,
+                inputs_digest.encode(), repr(scored).encode(),
                 f"generator={GENERATOR_VERSION};seed={seed};trials={trials};"
                 f"insertions={insertions};headers={include_pool}".encode()):
             identity.update(hashlib.sha256(payload).digest())
@@ -504,10 +556,13 @@ def bank_rows(rows: dict, reproduced: dict, live_hashes: dict) -> tuple[dict, li
 
 
 def run(args) -> int:
+    if args.trials < 1 or args.jobs < 1:
+        common.die("state-sweep requires positive --trials and --jobs")
+    inputs_digest = _shared_inputs_digest()
     rows = status.load_baseline()
     units = ({part.strip() for part in args.unit.split(",") if part.strip()}
              if args.unit else None)
-    plans = _plans(rows, units, args.seed, args.trials)
+    plans = _plans(rows, units, args.seed, args.trials, inputs_digest)
     variants_by_unit = {
         plan.unit: make_variants(
             args.trials, args.seed, plan.unit, plan.include_pool)
@@ -589,6 +644,9 @@ def run(args) -> int:
         common.die("authored source changed during sweep: " + ", ".join(source_changed))
     if _sha256(status.BASELINE.read_bytes()) != baseline_digest:
         common.die("match_baseline.tsv changed during sweep; refusing stale bank")
+    if _shared_inputs_digest() != inputs_digest:
+        common.die("compiler, headers or scoring inputs changed during sweep; "
+                   "refusing stale bank")
 
     live_hashes = status.source_hashes()
     updated, changes = bank_rows(rows, reproduced, live_hashes)
@@ -601,6 +659,8 @@ def run(args) -> int:
     summary = {
         "generator": "random-project-includes",
         "generator_version": GENERATOR_VERSION,
+        "inputs_digest": inputs_digest,
+        "contexts": {plan.unit: plan.context for plan in plans},
         "seed": args.seed,
         "trials_per_tu": args.trials,
         "affected_functions": affected_count,
@@ -621,12 +681,14 @@ def run(args) -> int:
         ],
     }
     scope = hashlib.sha256(
-        ",".join(plan.unit for plan in plans).encode()).hexdigest()[:8]
+        ",".join(f"{plan.unit}:{plan.context}" for plan in plans).encode()
+    ).hexdigest()[:8]
     summary_path = (common.HOMM3_DIR / "build/tu-state-sweep" /
                     f"summary-includes-{args.seed}-{args.trials}-{scope}.json")
     _write_json(summary_path, summary)
     for item in summary["reproduced_improvements"]:
-        print(f"[vc6 state-sweep] BANK {item['unit']} {item['function']}: "
+        action = "BANK" if args.bank else "WOULD BANK"
+        print(f"[vc6 state-sweep] {action} {item['unit']} {item['function']}: "
               f"MAX {item['old_max']:.4f} -> {item['new_max']:.4f} "
               f"(trial {item['trial']})")
     print(f"[vc6 state-sweep] captured {len(observed_changes)} function(s) "
@@ -635,6 +697,7 @@ def run(args) -> int:
           f"scored; {score_observations} function-score observation(s)")
     if args.bank:
         status.write_baseline(updated)
+        status.write_readme(status.load_report())
         print(f"[vc6 state-sweep] banked {len(changes)} reproduced improvement(s) "
               f"-> {status.BASELINE}")
     else:

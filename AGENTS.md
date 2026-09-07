@@ -63,8 +63,10 @@ it. A lower similarity score is insufficient. Preserve proven classes, interface
 helpers, and scopes through temporary score dips, including header/TU collateral;
 measure that collateral and keep prior peaks in max/history. Score dips are
 observational, not build failures. `homm3 status check` attributes a regression
-only when a function's own source changed and its score fell from the preceding
-current checkpoint; MAX remains monotone.
+only when a function's own source hash changed and its new MAX fell below the
+preceding MAX. The invariant is CUR <= MAX <= HIST: MAX is monotone for an
+unchanged function hash, a proven edit resets MAX to CUR, and HIST retains the
+all-time peak. Tooling prioritizes MAX; HIST is a lead for recovering lost peaks.
 
 ## Helper boundaries and inlining
 
