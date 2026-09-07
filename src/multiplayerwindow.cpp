@@ -1652,63 +1652,44 @@ unsigned char getIPAddress(char* ipAddress)
 }
 
 // E:\gamedcs\multiplayerwindow.cpp:1884
-// Source-complete residual. All 20 semantic blocks, calls, stack offsets and
-// per-block instructions agree with retail. why-branch measured only six
-// differing instructions: three topology deltas have identical branch
-// mnemonics but different landing blocks, with no catalog mutation available.
-// VC6 schedules the connection-failure dialog at the function tail here;
-// retail places that cold return between the textWidget constructor and its
-// null-allocation continuation. TCP setup activates the host/join/search
-// controls, publishes the local address once, refreshes the DirectPlay session
-// array and redraws the browser.
-// Residual (73.58%, polish lane 2, 2026-09-05): every instruction of
-// this body is retail's; the whole gap is ONE sunk block. The failure
-// exit (`NormalDialog(459); return 0`, ~60 B) is jump-only on both
-// sides, and retail parks it between the textWidget constructor's join
-// `jmp` and the `xor edi,edi` null arm of `new` (0x5115dd), where our
-// CL sinks it to the end of the function. Splitting the `||` into two
-// `if`s cross-jumps back to one block and moves nothing (73.53). The
-// same sunk-block placement question stands on townManager::Main's
-// return-1 block and THeroScreenWindow::WindowHandler's exitFlag
-// device; it is a C2 layout rule, not a body spelling.
+// Byte-exact (2026-09-07): restore the ordinary InitRemote helper call
+// proved by DC line 1885. VC6 expands its body and places the failure dialog
+// between the textWidget constructor's join jump and null-allocation arm,
+// exactly as retail does. The former flattened setup made that failure exit
+// sink to the end; it was not an unavoidable C2 layout rule.
+// Control: flattened setup 75.9952%, canonical initRemote call 100%; restoring
+// widget::show calls and the nested GetIPAddress/GetWidget guards is byte-flat
+// at 100%. DC 1892..1894 and 1903/1905 prove those source boundaries.
+// Original local names: sIPAddress -> ipAddress, sOut -> addressText.
 VA(0x005113f0, 0x263)  // TCP InitRemote/GetIPAddress/session-enum flow, dc 0x101784
 unsigned char TMultiPlayerWindow::onTCP()
 {
     char ipAddress[80];
 
-    g_mpNetProtocol = MP_TCP;
-    if (!::initRemote(MP_TCP, m_playerName->m_text.c_str())
-        || !initConnection(0, 0)) {
+    if (!initRemote(MP_TCP, 0, 0)) {
         normalDialog(g_generalText->getText(459), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return 0;
     }
 
-    DPCAPS caps;
-    g_dPlay->getCaps(&caps, 1);
-    m_sessionRefreshTimeout = caps.m_timeout + 100;
-    if (g_mpNetProtocol == MP_TCP)
-        m_sessionRefreshTimeout = 1000;
-
     if (m_host)
-        m_host->sendMessage(widget::WIDGET_SET_STATUS,
-                           widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_join->sendMessage(widget::WIDGET_SET_STATUS,
-                       widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_search->sendMessage(widget::WIDGET_SET_STATUS,
-                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        m_host->show();
+    m_join->show();
+    m_search->show();
     m_search->enable(1);
     m_join->enable(0);
 
-    if (getIPAddress(ipAddress) && !getWidget(IP_ADDRESS_ID)) {
-        char addressText[256];
-        textWidget* ipWidget = new textWidget(
-            0, 16, m_width, 50, 0, "bigfont.fnt", font::PRIMARY,
-            IP_ADDRESS_ID, 1, 0, 8);
-        m_widgets.push_back(ipWidget);
-        addWidget(ipWidget, -1);
-        sprintf(addressText, g_generalText->getText(460), ipAddress);
-        ipWidget->setText(addressText);
+    if (getIPAddress(ipAddress)) {
+        if (!getWidget(IP_ADDRESS_ID)) {
+            char addressText[256];
+            textWidget* ipWidget = new textWidget(
+                0, 16, m_width, 50, 0, "bigfont.fnt", font::PRIMARY,
+                IP_ADDRESS_ID, 1, 0, 8);
+            m_widgets.push_back(ipWidget);
+            addWidget(ipWidget, -1);
+            sprintf(addressText, g_generalText->getText(460), ipAddress);
+            ipWidget->setText(addressText);
+        }
     }
 
     m_sessions->destroy();

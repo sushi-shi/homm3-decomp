@@ -2675,7 +2675,7 @@ multiplayerwindow	?onNextEdit@CMPEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x11085
 multiplayerwindow	?onOK@CHotSeatDlg@@QAEEXZ	100.0000	100.0000	100.0000	0x112470	554a45549b62
 multiplayerwindow	?onPrevEdit@CMPEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x110870	8b9da623d420
 multiplayerwindow	?onSearch@TMultiPlayerWindow@@QAEEXZ	94.1892	94.1892	94.1892	0x111660	a9f82c6cfda3
-multiplayerwindow	?onTCP@TMultiPlayerWindow@@QAEEXZ	75.9951	75.9951	75.9951	0x1113f0	88487d615bd4
+multiplayerwindow	?onTCP@TMultiPlayerWindow@@QAEEXZ	100.0000	100.0000	100.0000	0x1113f0	c492044a0467
 multiplayerwindow	?onWidgetDeselect@CHotSeatDlg@@UAEHHPAE@Z	100.0000	100.0000	100.0000	0x112420	78e4f1d865cd
 multiplayerwindow	?onWidgetDeselect@CMPInputDlg@@UAEHHPAE@Z	100.0000	100.0000	100.0000	0x1108f0	806e1f5cc2a6
 multiplayerwindow	?onWidgetDeselect@TMultiPlayerWindow@@UAEHHPAE@Z	97.4932	98.1199	98.1199	0x10f4e0	7c2d49ac4e75
@@ -4271,7 +4271,7 @@ victorylossconditions	??0?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@
 victorylossconditions	?appliesToPlayer@VictoryConditionStruct@@QBEHJ@Z	100.0000	100.0000	100.0000	0x1f15a0	d46074573b63
 victorylossconditions	?checkForArtifactTransportWin@VictoryConditionStruct@@QAEEPBVhero@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x1f2860	1f95601e85cd
 victorylossconditions	?checkForArtifactWin@VictoryConditionStruct@@QAEEXZ	98.2057	98.2057	98.2057	0x1f1610	a1e3642acf91
-victorylossconditions	?checkForDefeatedHeroLoss@LossConditionStruct@@QAEEPBVhero@@@Z	75.8636	75.8636	75.8636	0x1f2a40	9f5c1c55ab9a
+victorylossconditions	?checkForDefeatedHeroLoss@LossConditionStruct@@QAEEPBVhero@@@Z	82.0170	82.0170	82.0170	0x1f2a40	ad170bd91420
 victorylossconditions	?checkForDefeatedMonsterWin@VictoryConditionStruct@@QAE_NPBVhero@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x1f2390	8627723629f7
 victorylossconditions	?checkForDefeatedTownLoss@LossConditionStruct@@QAEEHPBVtown@@@Z	100.0000	100.0000	100.0000	0x1f2e40	07cb6c50ebee
 victorylossconditions	?checkForFlaggedGeneratorWin@VictoryConditionStruct@@QAEEXZ	100.0000	100.0000	100.0000	0x1f2600	e5f22c4922ab

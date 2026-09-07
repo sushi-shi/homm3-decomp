@@ -603,3 +603,36 @@ and the 581-byte function. C2 merges the two priority stores while holding
 0x7f in EBX and spilling the first loop's count. A named sentinel constant
 on the flattened source had been byte-neutral, so that earlier result did
 not establish an unreachable register assignment.
+
+## Check a byte return before duplicating the surrounding tail
+
+`LossConditionStruct::checkForDefeatedHeroLoss` (0x5f2a40) used a duplicated
+ordinary-loss tail to compensate for poor block placement. Deleting just the
+duplicate measured 10.6676%, which had been taken as a reason to keep it.
+Retail instead rejects other loss types and returns the hero-id comparison
+through `sete al`. An early rejection followed by a named `unsigned char`
+result restores that return lowering and reaches 81.8182% with one tail.
+
+Binding the artifact components by reference before their loop also restores
+retail's stable table address, bringing the active TU build to 82.0170% from
+75.8636%. The byte-result control with positive type-test nesting measures
+11.2784%; an early rejection with a direct bool return measures 80.9943%.
+The result type and the guard both matter. Local-scope controls are byte-flat.
+The remaining shared-return and block-placement differences are unresolved;
+the simplified tail is not a claim of an exact function.
+
+## An expanded helper retains source structure that flattening loses
+
+`TMultiPlayerWindow::onTCP` (0x5113f0) reached 100% from 75.9952% by calling
+its existing ordinary `initRemote(MP_TCP, 0, 0)` helper, as Dreamcast line
+1885 proves. The previous caller copied the helper's protocol assignment,
+two initialization guards, capabilities query, and timeout assignments into
+its own body. Its instructions matched individually, but the connection
+failure dialog and return were sunk to the function's end.
+
+VC6 expands the real helper and places that failure block between the
+`textWidget` constructor's join jump and null-allocation arm, reproducing
+retail. Restoring the existing `widget::show` calls and Dreamcast's nested
+address-query/widget-existence checks is byte-neutral. Identical emitted
+operations do not make a flattened helper equivalent for compiler layout;
+restore the proven call before blaming the compiler generation.

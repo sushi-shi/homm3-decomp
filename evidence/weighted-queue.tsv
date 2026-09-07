@@ -8,8 +8,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00506080	468	61.07879	62.3455	62.3455	176.22306	mapcell	??0CObjectType@@QAE@PAUTObjectType@@@Z	admitted
 0x00526d40	915	64.3242	64.3242	64.3242	326.4335699999999	philai	??0type_spellvalue@@QAE@PBVhero@@@Z	admitted
 0x00583580	780	34.04054	67.9099	67.9099	250.30278000000007	singleselectionwindow	?updateGameVars@TSingleSelectionWindow@@QAEXXZ	admitted
-0x005f2a40	968	75.86364	75.8636	75.8636	233.64035199999992	victorylossconditions	?checkForDefeatedHeroLoss@LossConditionStruct@@QAEEPBVhero@@@Z	admitted
-0x005113f0	611	75.99515	75.9951	75.9951	146.66993900000003	multiplayerwindow	?onTCP@TMultiPlayerWindow@@QAEEXZ	admitted
 0x004e3070	825	76.33603	76.336	76.336	195.22799999999998	hero	?giveArtifact@hero@@QAEEPBUtype_artifact@@EE@Z	admitted
 0x0056dd60	245	76.213486	76.5169	76.5169	57.53359499999998	seerhut	?doProgressDialog@type_skill_quest@@UAEXXZ	admitted
 0x00514b80	503	76.63784	76.6378	76.6378	117.511866	objecttype	??5@YIAAV?$basic_istream@DU?$char_traits@D@std@@@std@@AAV01@AAUTObjectType@@@Z	admitted
@@ -55,6 +53,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00580430	1595	81.08467	81.0847	81.7345	291.334725	singleselectionwindow	?rebuildFilteredPlayerSetup@TSingleSelectionWindow@@QAEXXZ	admitted
 0x004e4990	1014	81.76774	81.7677	81.7677	184.8755219999999	hero	?getMobility@hero@@QAEHE@Z	admitted
 0x0042e0b0	2926	81.88646	81.8865	81.8865	530.0010100000002	ai_player	?aiChooseDestination@@YIHPAVhero@@JAAUHeroDestination@@AAJEE@Z	admitted
+0x005f2a40	968	82.017	82.017	82.017	174.07544000000004	victorylossconditions	?checkForDefeatedHeroLoss@LossConditionStruct@@QAEEPBVhero@@@Z	admitted
 0x004cafd0	3348	82.21976	82.2198	82.2198	595.2810959999997	game	?transmitSaveGame@game@@QAEHHHEE@Z	admitted
 0x00514d80	644	73.32632	82.2717	82.2717	114.17025200000005	objecttype	?load@TObjectTypeTable@@QAEXPAD@Z	admitted
 0x005a6c70	1029	82.34042	82.3404	82.3404	181.71728399999998	spells	?mirrorImage@combatManager@@QAEXHH@Z	admitted

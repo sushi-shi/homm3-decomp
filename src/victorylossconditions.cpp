@@ -737,32 +737,27 @@ static const int g_lossPortrait146 = 0x92;
 // In campaign mode a per-campaign table of protected heroes (and, in
 // two campaigns, carried quest artifacts) loses the game immediately;
 // outside those arms the ordinary lose-hero condition compares ids.
-// THE TAIL IS SPELLED TWICE ON PURPOSE, and that is a byte-measured
-// lever worth 62 points (10.67 -> 73.01): with a single post-switch
-// tail our CL hoists the merged tail block between the case-14 and
-// case-15 arms (chaining it after case 14's loop exit), which
-// misaligns every arm after it. Duplicating the tail - once inside the
-// campaign block for the arms, once at the end for the !gCampaignMode
-// path - pins the arms' copy at retail's position. Retail's head
-// reaches the SAME single tail with a far jump, so its source likely
-// wrote it once and its CL simply did not hoist.
-// Residual (75.8636%): our CL cross-jumps several single-compare arms'
-// return-1 epilogues (case 10's leading id test, cases 12/9) onto case
-// 15's shared instance, emitting `je shared` where retail keeps the
-// jne-plus-inline-epilogue ladder, and the !gCampaignMode tail copy
-// stays inline at the head where retail jumps far. The merged-return
-// class (path.obj/kbwin); polarity flips, a goto spelling, a trailing
-// default arm, and solver-proposed case swaps all measured equal or
-// worse. Conventional release VERIFY carriers are bounded too
-// (2026-08-21): one and four `TownSpecialGrantedMask.size()` invariants,
-// one `SpellIsAvailable(SPELL_SUMMON_BOAT)` accessor, and the larger pure
-// `GetPrimarySkill(0) >= 0` invariant are all byte-flat at 75.8636%. They
-// enter C2 as real inline expressions and then disappear, but none changes
-// this function's cross-jump phase.
-// Fresh why-branch measurement: candidate 335 instructions / 65 branches /
-// 18 returns versus retail 334 / 64 / 19, both 89 blocks, for distance 162.
-// The solver classifies the remaining gap as D6 retail-side exit duplication;
-// adjacent case swaps are flat or +2/+4/+14, and full reversal is +16.
+// Retail's ordinary tail rejects other loss types, then returns a byte-valued
+// id comparison. Keep that tail once: a named unsigned-char result reproduces
+// its sete al epilogue without the wider bool-to-int temporary. Together with
+// the early loss-type rejection this improves MAX 75.8636 -> 82.0170
+// (2026-09-07). The older duplicated tail was compensating for the wrong
+// result lowering; it is not source evidence.
+// Retail +0x1b0 loads the combination-artifact table before initializing the
+// loop index and keeps the components reference across hasArtifact calls.
+// Re-subscripting the global on every iteration incorrectly reloads the table.
+// DC 0x1906d4 proves the const hero parameter, but its older campaign-3-only
+// implementation writes the loss state here. Complete performs those writes
+// in the following helper; do not import the older stores or entry type guard.
+// Controls: deleting only the duplicate tail 10.6676%; early guard with byte
+// result 81.8182%; components reference alone 76.0625%; both repairs 82.0170%.
+// On the combined source, direct bool return is 80.9943%, positive type-test
+// nesting with byte result 11.2784%; loop/arm-local declarations are byte-flat.
+// Residual: the type guard still sits after campaign 14 instead of after the
+// entire switch; several return-1 branches share different epilogues. The
+// candidate has 17 returns versus retail's 19; the artifact call sequence
+// agrees. Earlier polarity/goto/default/case-order controls did not resolve
+// that placement. No compiler-generation conclusion follows from this gap.
 // E:\gamedcs\victorylossconditions.cpp:463
 VA(0x005f2a40, 0x3C8)  // anchor-global, dc 0x1906d4
 unsigned char LossConditionStruct::checkForDefeatedHeroLoss(const hero* loser)
@@ -802,7 +797,7 @@ unsigned char LossConditionStruct::checkForDefeatedHeroLoss(const hero* loser)
             if (h->m_id == g_lossHero147)
                 return 1;
             break;
-        case g_lossCampaign14:
+        case g_lossCampaign14: {
             if (h->m_id == g_lossHero45)
                 return 1;
             map = g_game->m_campaign.m_currentMap;
@@ -819,12 +814,15 @@ unsigned char LossConditionStruct::checkForDefeatedHeroLoss(const hero* loser)
             }
             if (h->hasArtifact(ARTIFACT_ANGELIC_ALLIANCE))
                 return 1;
+            const std::bitset<144>& components =
+                g_combinationArtifacts[0].m_components;
             for (i = 0; i < 0x90; ++i) {
-                if (g_combinationArtifacts[0].m_components.test(i)
+                if (components.test(i)
                     && h->hasArtifact(i))
                     return 1;
             }
             break;
+        }
         case g_lossCampaign15:
             map = g_game->m_campaign.m_currentMap;
             if (map == 1) {
@@ -874,13 +872,11 @@ unsigned char LossConditionStruct::checkForDefeatedHeroLoss(const hero* loser)
                 return 1;
             break;
         }
-        if (m_type == LOSS_CONDITION_LOSE_HERO)
-            return h->m_id == m_heroId;
-        return 0;
     }
-    if (m_type == LOSS_CONDITION_LOSE_HERO)
-        return h->m_id == m_heroId;
-    return 0;
+    if (m_type != LOSS_CONDITION_LOSE_HERO)
+        return 0;
+    unsigned char defeated = h->m_id == m_heroId;
+    return defeated;
 }
 
 // Retail brackets this Complete-only helper directly between
