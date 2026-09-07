@@ -2,7 +2,6 @@
 # Sorted by increasing current score, then decreasing unmatched bytes.
 # Unscored rows rank at zero; MAX/history never hide current residuals.
 va	size	current	maximum	historical	remaining_bytes	unit	function	state
-0x00541ad0	1456		0.0	0.0	1456.0	seg_0014	game_143240_sub01_141ad0	unscored
 0x0053dad0	1407		0.0	0.0	1407.0	seg_0013	game_13e050_sub02_13dad0	unscored
 0x00543e20	1396		0.0	0.0	1396.0	seg_0014	game_144920_sub04_143e20	unscored
 0x00542ce0	1364		0.0	0.0	1364.0	seg_0014	game_143240_sub03_142ce0	unscored
@@ -99,7 +98,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x0048bf00	429		34.7407	34.7407	429.0	customcampaign	__h3cg$customcampaign$vector_insert_single$unsigned_char	unscored
 0x00536200	428		0.0	0.0	428.0	seg_0013	game_objects_txt_136200	unscored
 0x005363b0	425		0.0	0.0	425.0	seg_0013	game_136170_sub00_1363b0	unscored
-0x00531cf0	421		0.0	0.0	421.0	seg_0013	game_141ad0_sub00_131cf0	unscored
+0x00531cf0	421		0.0	0.0	421.0	rmg	type_random_map_canPlaceObject	unscored
 0x00543c70	418		0.0	0.0	418.0	seg_0014	game_143e20_sub02_143c70	unscored
 0x0054dbc0	416		0.0	0.0	416.0	seg_0014	game_14c730_sub04_14dbc0	unscored
 0x0054da20	415		0.0	0.0	415.0	seg_0014	game_14c730_sub03_14da20	unscored
@@ -107,7 +106,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00537970	409		0.0	0.0	409.0	seg_0013	game_149930_sub01_137970	unscored
 0x00515010	408		0.0	0.0	408.0	seg_0011	game_214260_sub00_115010	unscored
 0x00535ee0	399		0.0	0.0	399.0	seg_0013	game_135110_sub04_135ee0	unscored
-0x00541780	397		0.0	0.0	397.0	seg_0014	game_141ad0_sub02_141780	unscored
+0x00541780	397		0.0	0.0	397.0	rmg	type_random_map_generator_floodConnectionRegion	unscored
 0x004d2e50	396		100.0	100.0	396.0	game	__h3cg$game$std_copy$type_map_hero_identity	unscored
 0x0054b300	395		0.0	0.0	395.0	seg_0014	game_14b490_sub00_14b300	unscored
 0x00548c70	381		0.0	0.0	381.0	seg_0014	game_149870_sub01_148c70	unscored
@@ -115,7 +114,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x0054b180	372		0.0	0.0	372.0	seg_0014	game_14b300_sub00_14b180	unscored
 0x00540fc0	370		0.0	0.0	370.0	seg_0014	game_141140_sub02_140fc0	unscored
 0x005fdb40	366		0.0	0.0	366.0	seg_001f	game_13e050_sub06_1fdb40	unscored
-0x00541960	364		0.0	0.0	364.0	seg_0014	game_141ad0_sub03_141960	unscored
+0x00541960	364		0.0	0.0	364.0	rmg	type_random_map_generator_canPlaceShipyard	unscored
 0x005332f0	362		0.0	0.0	362.0	seg_0013	game_1332f0	unscored
 0x004fa3c0	342		0.0	0.0	342.0	seg_000f	game_fa280_sub00_fa3c0	unscored
 0x005b7cd0	342		0.0	0.0	342.0	seg_001b	game_1b4b20_sub06_1b7cd0	unscored
@@ -168,7 +167,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00533f40	175		0.0	0.0	175.0	seg_0013	game_133f40	unscored
 0x005b8670	168		0.0	0.0	168.0	seg_001b	game_1b45f0_sub01_1b8670	unscored
 0x00530fb0	160		0.0	0.0	160.0	seg_0013	game_136070_sub00_130fb0	unscored
-0x00533460	160		0.0	0.0	160.0	seg_0013	game_133460	unscored
+0x00533460	160		0.0	0.0	160.0	rmg	rmgOwnableObject_write	unscored
 0x00534af0	158		0.0	0.0	158.0	seg_0013	game_134af0	unscored
 0x00603810	154		0.0	0.0	154.0	seg_0020	game_203e00_sub00_203810	unscored
 0x00532ab0	150		0.0	0.0	150.0	seg_0013	game_13bcb0_sub01_132ab0	unscored
@@ -247,7 +246,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x0054d920	59		0.0	0.0	59.0	seg_0014	game_cf0f0_sub02_14d920	unscored
 0x0054d960	59		0.0	0.0	59.0	seg_0014	game_13e9e0_sub02_14d960	unscored
 0x0054d580	58		0.0	0.0	58.0	seg_0014	game_2cb70_sub02_14d580	unscored
-0x005330e0	57		0.0	0.0	57.0	seg_0013	game_141ad0_sub01_1330e0	unscored
 0x0054c6f0	57		0.0	0.0	57.0	seg_0014	game_8a310_sub12_14c6f0	unscored
 0x0054c170	56		0.0	0.0	56.0	seg_0014	game_22f81f_sub00_14c170	unscored
 0x0054d8b0	56		0.0	0.0	56.0	seg_0014	game_14c730_sub01_14d8b0	unscored
@@ -312,7 +310,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00530f80	33		0.0	0.0	33.0	seg_0013	game_130f80	unscored
 0x00532320	33		0.0	0.0	33.0	seg_0013	game_132320	unscored
 0x005324e0	33		0.0	0.0	33.0	seg_0013	game_1324e0	unscored
-0x00533590	33		0.0	0.0	33.0	seg_0013	game_145990_sub00_133590	unscored
 0x00533680	33		0.0	0.0	33.0	seg_0013	game_133680	unscored
 0x005339c0	33		0.0	0.0	33.0	seg_0013	game_1339c0	unscored
 0x00534fa0	33		0.0	0.0	33.0	seg_0013	game_134fa0	unscored
@@ -344,7 +341,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x0054deb0	19		0.0	0.0	19.0	seg_0014	game_57cb0_sub03_14deb0	unscored
 0x0055ee30	19		0.0	0.0	19.0	seg_0015	game_15ee30	unscored
 0x0055f390	19		0.0	0.0	19.0	seg_0015	game_15f390	unscored
-0x00533150	18		0.0	0.0	18.0	seg_0013	game_144d90_sub00_133150	unscored
 0x0054c3d0	18		0.0	0.0	18.0	seg_0014	game_13d8e0_sub00_14c3d0	unscored
 0x005b3860	17		0.0	0.0	17.0	seg_001b	game_1b3860	unscored
 0x005b3a20	17		0.0	0.0	17.0	seg_001b	game_1b3da0_sub00_1b3a20	unscored
@@ -354,7 +350,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x0058eb50	15		0.0	0.0	15.0	seg_0018	game_183890_sub00_18eb50	unscored
 0x005b8cc0	15		0.0	0.0	15.0	seg_001b	game_6a070_sub03_1b8cc0	unscored
 0x00530e80	13		0.0	0.0	13.0	seg_0013	game_130e80	unscored
-0x005338d0	13		0.0	0.0	13.0	seg_0013	game_133590_sub00_1338d0	unscored
 0x005b3840	12		0.0	0.0	12.0	seg_001b	game_1b3840	unscored
 0x004f9ca0	11		0.0	0.0	11.0	seg_000f	game_f9ca0	unscored
 0x0048e9d0	9		0.0	0.0	9.0	seg_0008	game_8bf00_sub02_8e9d0	unscored
@@ -574,6 +569,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x004d85f0	302	89.27957	89.2796	89.2796	32.37569859999998	hero	??0hero@@QAE@XZ	non-exact
 0x005a5440	1612	89.316536	94.9073	94.9073	172.21743967999996	spells	?drawBolt@combatManager@@QAEXPAUSBolt@@H@Z	non-exact
 0x005b0ef0	468	89.34965	89.3496	89.3496	49.84363800000004	swapmgr	?update@swapManager@@QAEXXZ	non-exact
+0x00541ad0	1456	89.38996	89.39	89.39	154.48218239999997	rmg	?createShipyardConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	non-exact
 0x00559510	1217	89.391014	89.391	89.391	129.11135961999997	resourcemanager	@game_null_159510@12	non-exact
 0x0047ab30	596	89.45498	89.455	89.455	62.84831919999996	creature_bank	?initializeCreatureBankTraits@@YIEXZ	non-exact
 0x004eb250	237	89.46667	89.4667	89.4667	24.963992100000016	iconwdgt	?nextRandomSiegeEngineFrame@iconWidget@@QAEXXZ	non-exact
@@ -688,7 +684,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x004e2a00	455	93.20513	93.2051	93.2051	30.91665850000004	hero	?equipArtifact@hero@@QAEEPBUtype_artifact@@J@Z	non-exact
 0x0040abe0	893	93.20886	93.2089	93.2089	60.64488019999996	advmgr	?getArmyHelpText@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBVarmyGroup@@E@Z	non-exact
 0x0056a360	158	93.261536	93.2615	93.2615	10.646773119999981	search	?checkAdjacentMonster@@YIEPBVhero@@PAUpathCell@@W4type_search_type@@@Z	non-exact
-0x00549cb0	3728	93.27856	95.7066	95.7066	250.57528320000003	rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	non-exact
+0x00549cb0	3728	93.286385	95.7066	95.7066	250.28356720000022	rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	non-exact
 0x00441fa0	1121	93.31624	93.3162	93.3162	74.92494960000006	army	?walkTo@army@@QAEEHE@Z	non-exact
 0x00416060	247	93.333336	93.3333	93.3333	16.46666008	advmgr	?bvResMsg@advManager@@QAEXPBDHH@Z	non-exact
 0x004726b0	305	93.348625	93.3486	93.3486	20.286693750000012	combatwindow	?sendChat@CCombatChatEdit@@UAEXPBDH@Z	non-exact

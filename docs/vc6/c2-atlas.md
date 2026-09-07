@@ -33,6 +33,9 @@ for inferred roles. Local branches get address-based labels. Unknown targets
 retain Ghidra names or addresses. These are compiler-analysis labels; game
 symbols remain owned by the game source annotations.
 
+Ghidra labels, including compiler source paths containing backslashes, are
+inserted literally. They are never parsed as regular-expression replacements.
+
 Role annotations live beside their supporting prose in `docs/vc6/*.md`:
 `<!-- c2-role: function 0x156f cloneOperand -->`. The kinds are `function`,
 `global` and `site`. The renderer reads those annotations directly; there is
