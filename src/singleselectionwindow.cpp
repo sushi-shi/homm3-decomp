@@ -10288,16 +10288,22 @@ VA_COMPGEN(0x00595e10, 0x204, STD_UNGUARDED_PARTITION,
 // singleselectionwindow.obj's emitted template instantiations (capstone
 // mnemonic agreement 1.000 at equal length in each case).
 //
+//   0x515480  20 B  bitset<4>::operator&=      - ICF-shared with bitset<10>
 //   0x58eae0  14 B  bitset<4>::flip()          - the only 4-bit bitset here
 //   0x58eaf0  21 B  bitset<4>::_Tidy(unsigned long)
 //   0x58eb60  75 B  _Tree<int,type_map_hero_info>::find
 //   0x58f0f0  23 B  _Tree<...>::lower_bound
 //   0x58f110  73 B  _Tree<...>::_Lbound
 //
-// The two bitset rows are the LAST two of the four-bit instantiation the
+// The 0x515480 row has two retail callers: TObjectType's bitset<10>
+// terrain intersection and setNewPlayerSlot's bitset<4> feature intersection.
+// Their one-word operator&= bodies are ICF-identical; this TU naturally emits
+// the exact bitset<4> public, while objecttype expands its bitset<10> call.
+// The other two bitset rows are the LAST two of the four-bit instantiation the
 // campaign-selection filter carries; the three tree rows complete the
 // map<int,type_map_hero_info> surface whose _Init / _Copy / _Erase /
 // operator= halves this file already claims.
+VA_COMPGEN(0x00515480, 0x14, BITSET_AND_ASSIGN, Bitset4)
 VA_COMPGEN(0x0058eae0, 0xE, BITSET_FLIP, Bitset4)
 VA_COMPGEN(0x0058eaf0, 0x15, BITSET_TIDY, Bitset4)
 VA_COMPGEN(0x0058eb60, 0x4B, TREE_FIND, type_map_hero_info)
