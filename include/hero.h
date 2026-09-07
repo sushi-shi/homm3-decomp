@@ -1098,6 +1098,10 @@ public:
     // the boat bit out of `flags` and forwards to the other.
     // Before normalization (function): hero::GetMobility.
     // Before normalization (locals): sea_movement.
+    // Dreamcast hero.cpp:5709/5734; ordinary movement helpers expanded here.
+    // Original names: GetLogisticsFactor, GetNavigationFactor.
+    float getLogisticsFactor() const;
+    long getNavigationFactor() const;
     int getMobility(unsigned char seaMovement);
     // Before normalization (function): hero::GetMobility.
     int getMobility();
