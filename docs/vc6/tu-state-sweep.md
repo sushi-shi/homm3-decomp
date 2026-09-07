@@ -79,3 +79,18 @@ Only `army::doAttack` and `recruitUnit::update` rose above CUR, and both merely
 reproduced their already-banked MAX. No observation exceeded MAX, so this run
 made no ledger change. The runner's JSON summary retains the exact mangled
 identities, trial numbers, and ordered header sets for both extrema.
+
+The integration check on `a5348767` used generator v6 after fixing insertion
+after commented include directives and invalidating caches on header, compiler
+profile, toolchain, and scoring-input changes. It covered all 133 numeric
+`MAX < HIST` rows in 53 TUs with three trials per TU: 158 of 159 candidates
+compiled, producing 9,751 function-score observations and nine changed functions.
+The skipped `resourcemanager` trial included `smackmgr.h`, whose
+`SoundHeaderStruct` conflicts with the TU's sound header; the failed combination
+is recorded in the summary and contributes no score.
+
+`advManager::doCombat` in `events` reproduced MAX **98.1758% -> 98.5379%**
+at trial 3 with unchanged source hash `17546f59628a`; CUR remains 98.1758%
+and HIST remains 99.1139%. The fresh README and all four matching queues use
+the integrated MAX values. This three-trial integration check is separate from
+the preceding 100-trial recovery census.

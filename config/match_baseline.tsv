@@ -1635,7 +1635,7 @@ events	?copy_backward@std@@YIPAV?$basic_string@DU?$char_traits@D@std@@V?$allocat
 events	?creatureBankEvent@advManager@@QAEHPAVhero@@PAVNewmapCell@@PBDUtype_point@@E@Z	91.5889	91.5889	91.5889	0xabdc0	0fbb0a8acb6b
 events	?dispatchEvent@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	99.3727	99.3727	99.9911	0xa84f0	01d0baaa0fac
 events	?doAIEvent@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@@Z	100.0000	100.0000	100.0000	0xacca0	1ed928d8e665
-events	?doCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	98.1758	98.1758	99.1139	0xad470	17546f59628a
+events	?doCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	98.1758	98.5379	99.1139	0xad470	17546f59628a
 events	?doCustomArtifact@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	98.2381	98.2381	99.1492	0x9f070	264555464136
 events	?doCustomResource@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa4780	613b7a452b9b
 events	?doCustomSpellScroll@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	97.4451	97.4451	97.4451	0xa5a80	189dc96286ef
@@ -3338,9 +3338,9 @@ rmg_terrain	?hasEntries@TRmgPatternTerrainRule@@UAEEXZ	100.0000	100.0000	100.000
 rmg_terrain	?hasEntries@TRmgTableTerrainRule@@UAEEXZ	100.0000	100.0000	100.0000	0x1b3a40	9fc6d13cda16
 rmg_terrain	?hasSeparatedNeighbours@rmgTerrainPainter@@QAEEABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x1b6810	96cda942cbe5
 rmg_terrain	?initializePackedCell@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@I@Z	100.0000	100.0000	100.0000	0x1b3dd0	e2b27f66e488
-rmg_terrain	?isHorizontalGap@rmgTerrainPainter@@QAEEABUTRmgGridPoint@@H@Z	100.0000	100.0000	100.0000	0x1b6320	07f31a9ae185
+rmg_terrain	?isHorizontalGap@rmgTerrainPainter@@QAEEABUTRmgGridPoint@@H@Z	100.0000	100.0000	100.0000	0x1b6320	3d38f29ba8e4
 rmg_terrain	?isSpecialFrame@TRmgPatternTerrainRule@@UAEEH@Z	100.0000	100.0000	100.0000	0x1b3860	53126e2e7f59
-rmg_terrain	?isVerticalGap@rmgTerrainPainter@@QAEEABUTRmgGridPoint@@H@Z	100.0000	100.0000	100.0000	0x1b6430	cfe488302f49
+rmg_terrain	?isVerticalGap@rmgTerrainPainter@@QAEEABUTRmgGridPoint@@H@Z	100.0000	100.0000	100.0000	0x1b6430	173ed0fbca8f
 rmg_terrain	?lower_bound@?$_Tree@UTRmgGridPoint@@U1@U_Kfn@?$set@UTRmgGridPoint@@U?$less@UTRmgGridPoint@@@std@@V?$allocator@UTRmgGridPoint@@@3@@std@@U?$less@UTRmgGridPoint@@@4@V?$allocator@UTRmgGridPoint@@@4@@std@@QAE?AViterator@12@ABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x1b85a0	-
 rmg_terrain	?paintPoint@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	89.0488	89.0488	100.0000	0x1b4b20	1e8d784f5410
 rmg_terrain	?paintRectangle@TRmgTerrainBrush@@QAEXIIII@Z	100.0000	100.0000	100.0000	0x1b7690	2e230eeb2b4b
