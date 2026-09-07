@@ -1449,3 +1449,19 @@ at 0x58d294 and 0x58d3b4 directly index the hero array. The introduced `getHero`
 accessor added a -1/null check after each map call. One direct array access gives
 94.11702%; both give 100%, with all 39 retail CFG blocks exact. Preserve the
 selection helper and its scopes rather than flattening it to avoid the dip.
+
+
+### Preserve the value-returning wrapper around min/max
+
+`TViewWorldWindow::updateRadar` (0x5fc8f0) stopped at 80.75% with four
+16-bit selected-operand loads where retail uses DWORD loads before inserting
+10-bit coordinate fields. The local clamp templates returned references to
+by-value parameters. Those templates had collapsed two distinct interfaces.
+
+Dreamcast `includes.h:97,114` records `int max(int,int)` and `int min(int,int)`;
+their bodies call the reference-returning `_cpp_max`/`_cpp_min` selectors.
+Using the existing `homm3_minmax.h` wrappers restores both the operand stack
+homes and value-returning boundary, reaching 100% with all 17 CFG blocks exact.
+The earlier cast/type-width probes targeted the consequence of the wrong
+wrapper signature. Restoring the DC-proven `drawWindow()` call is byte-neutral;
+its ordinary body expands while `vwCompleteDraw` remains a call.
