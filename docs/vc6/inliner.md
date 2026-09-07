@@ -1569,3 +1569,20 @@ hero-trigger early return preserves the exact bytes. The recovered zCell
 expression `cellData + x + y * size + z * size * size` and the factored
 indexing form emit identical caller bytes. A combined hero/gate condition
 is byte-identical as well.
+
+
+### Restore an accessor before diagnosing distant intrinsic-copy joins
+
+`TTavernWindow::setRolloverText` (0x5d7920) stopped at 81.4136% with a folded
+hero/name address and a different shared `strcpy` expansion. Restoring the
+portrait's Dreamcast-proven `game::getHero` call alone reaches 100%, including
+the split `lea hero; add 0x23` and retail's gold/rumour/default copy join.
+A named pointer to the flattened array entry had not reproduced that boundary.
+Restoring the hire arm's getter leaves the exact bytes unchanged.
+
+Complete retains one named recruit pointer across `heroFn004D8F70`. Repeating
+the getter inside both sprintf arguments, as in the older DC direct class-table
+expression, retains two pointer calculations and null branches before the call
+and scores 91.6049%.
+Retail's saved ESI pointer proves the required lifetime. The different DC
+broadcast-text and redraw arguments are also excluded by the retail call edges.

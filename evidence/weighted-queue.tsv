@@ -22,7 +22,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00521960	2819	80.0996	80.0996	80.0996	560.9922760000002	overview	?windowHandler@TOverviewWindow@@UAEHPAVmessage@@@Z	admitted
 0x00488880	1494	53.9868	53.9868	80.9474	284.64584399999995	customcampaign	?load@CampaignHeaderStruct@TCampaignBrief@@QAE_NXZ	admitted
 0x0044cd50	1512	81.3762	81.3762	81.3762	281.591856	artifact	?initializeArtifactTraitsTable@@YIEXZ	admitted
-0x005d7920	522	81.41358	81.4136	81.4136	97.02100800000001	townmgr	?setRolloverText@TTavernWindow@@QAEXH@Z	admitted
 0x004d6920	593	81.4346	81.4346	81.4346	110.092822	gzinflatebuf	?underflow@TGzInflateBuf@@UAEHXZ	admitted
 0x005c1180	169	81.49123	81.4912	81.4912	31.279871999999987	town	?getBuildCost@town@@QBEFW4type_building_id@@PAH1@Z	admitted
 0x00485d90	443	81.650604	81.6506	81.6506	81.28784200000003	customcampaign	?readLengthPrefixedString@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAVTAbstractFile@@@Z	admitted
