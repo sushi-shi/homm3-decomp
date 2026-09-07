@@ -326,6 +326,12 @@ unsigned char type_random_map::canPlaceObject(
 // 0x30-byte TRmgMapItem elements before restoring the abstract map vtable.
 VA_COMPGEN(0x00530F80, 0x21, SCALAR_DELETING_DTOR, type_random_map)
 
+// The array construction at 0x530fb0 passes this body to VC6's vector
+// destructor iterator with a 0x30-byte stride. It destroys TRmgMapItem's
+// vector<type_object*> at offset zero; rmg.obj emits the implicit destructor
+// byte-for-byte from the recovered aggregate declaration.
+VA_COMPGEN(0x00530EE0, 0x26, IMPLICIT_DTOR, TRmgMapItem)
+
 // Vtable 0x6409cc slot 3 returns the map's two unsigned dimensions.
 // The hidden result pointer and two stores fix the coordinate return ABI.
 // The proven grid copy constructor moves the width load before the result
