@@ -7831,30 +7831,22 @@ void TSingleSelectionWindow::sendPlayerFaces()
 // two seated players in a network game - before the pointer/session/progress
 // preamble hands off to BeginSavedGame or BeginNewGame.
 //
-// Residual (78.76%): 1433 emitted bytes against retail's 1455, every
-// statement present, and the whole gap is ONE sequential /Ob2 budget
-// difference. Retail EXPANDS AssignData's two operator=(const char*) sites
-// (down to assign(), the same pair RebuildFilteredPlayerSetup shows) and,
-// having spent that budget early, CALLS bitset<4>::_Xran at the
-// game-context test; we call operator= and therefore still have budget to
-// expand the whole _Xran throw path (basic_string ctor + out_of_range ctor
-// + _CxxThrowException, ~50 B) inline, which also costs the EBX/EDX
-// binding around the bit test and two extra epilogues. The knob is
-// game.h's AssignData. Its two pins were removed on 2026-09-06: this row
-// now scores 77.2669%, with its 78.7597% MAX preserved. Fixed here: naming
-// `GameSelectionHeadersStruct* pHeader = &m_localHeader;` (+0.55 - retail
-// spills `this` at entry and repurposes the callee-saved register for the
-// row) and adopting SetupScenarioOptions' proven
-// `static_cast<const std::bitset<4>&>(...)[class]` + `Text.begin()` dialog
-// idiom over `.test()` + `GetText()` (+0.52).
+// Residual (78.9055% MAX, 2026-09-07): retail computes the local-header
+// address after successful generation. Separating the two failure checks
+// and declaring header between them raises 77.2669% to 78.9055%; the two
+// candidate cleanup exits remain separate where retail shares one. Controls
+// retaining a shared condition and naming header after it score 76.9959%;
+// assigning header in getHeader's argument scores 77.2669%.
+// Passive C2 trace corrects the old diagnosis: both AssignData string
+// operator= sites expand. Its first assign(ptr, size), cb 69, receives budget
+// 65 and remains a call, as in retail; the second receives 131 and expands
+// too far. bitset<4>::_Xran, cb 65, receives 84 and likewise expands where
+// retail calls it. The verified candidate is 1552 padded bytes with a 0x50
+// frame versus retail's 0x30. Preserve the canonical helper operations;
+// restoring removed pins would conceal these remaining inline decisions.
+// Earlier controls: removing the const bitset cast was byte-flat; .test()
+// scored 76.71% against the then-current 78.76% candidate.
 // E:\gamedcs\singleselectionwindow.cpp:7698
-// MEASURED AND REJECTED (polish 29): the context-feature membership test
-// spelled without the const cast (byte-flat) and as `.test(gameVersionClass)`
-// (76.71 against 78.76). The remaining throw-path divergence is one inline
-// level short of retail - retail CALLS `bitset<4>::_Xran()` where we expand
-// it down to the string and out_of_range construction - and the same
-// GiveCrossoverArtifacts lever that bought one level here has no deeper
-// spelling to give.
 VA(0x0058BCE0, 0x5AF)  // begin-button caller and DC source shape, dc 0x142674
 unsigned char TSingleSelectionWindow::onBeginGame()
 {
@@ -7865,11 +7857,11 @@ unsigned char TSingleSelectionWindow::onBeginGame()
             transmitRemoteDataDPID(&msg, 0, false, true);
         }
         // Before normalization (locals): pHeader, pSessionDesc.
+        if (!generateRandomMap(name.c_str()))
+            return 0;
         GameSelectionHeadersStruct* header = &m_localHeader;
-        if (!generateRandomMap(name.c_str())
-                || getHeader(DATA_COMPGEN(0x006836ac, randomMapsDir,
-                                          "random_maps"),
-                             const_cast<char*>(name.c_str()), header))
+        if (getHeader(DATA_COMPGEN(0x006836ac, randomMapsDir, "random_maps"),
+                      const_cast<char*>(name.c_str()), header))
             return 0;
         g_game->m_setup = header->m_setup;
         memcpy(g_game->m_heroAvailability, header->m_heroAvailability,

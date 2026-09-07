@@ -1395,3 +1395,23 @@ reset arm's expanded `getMonType` lookup. Binding its integer result to
 This is a concrete value/lifetime reconstruction, with no artificial calls,
 declarations, or inline controls. The exact 1120-byte padded caller has SHA-256
 `8406701804be9029cf749a7e0781812f2ad8063406a6c5594624730d54c1781c`.
+
+
+### Check retained references before blaming register-order state
+
+`SCampaign::save` (0x48ae90) had matching control flow and call order at
+78.8074%, but retail kept each score record and each inner pool vector in EDI
+across writes. Naming those references raised the score to 99.6062%. The
+score reference alone reached 88.0368%; the pool references alone reached
+85.4136%. The register-model diagnosis of permuted callee-saved roles did
+not establish that source changes could not recover them.
+
+Per-write scalar lifetimes let VC6 reuse the dead stream-parameter home for
+byte, int, and short values. Combined with retail-proven short serialization
+buffers and a shared outer counter, these reached 99.9858%. A short cast
+assigned to an int buffer emitted `movsx`; an actual short local emitted
+retail's `mov ax` and widened stack store. Five non-relocation bytes remain:
+the frame size and four offsets of the artifact buffer. Additional loop/phase
+scopes, word declaration hoists, and unsigned-short spelling were byte-flat.
+The function's own comment records the controls; frame storage reuse is
+still unresolved, so this is not a byte-exact result.

@@ -15,11 +15,9 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x004c2450	2190	63.8664	78.2855	78.2855	475.54755000000006	game	?loadMap@game@@QAE_NPAVTAbstractFile@@@Z	admitted
 0x004886a0	306	75.72034	78.5339	78.5339	65.686266	customcampaign	??1CampaignHeaderStruct@TCampaignBrief@@QAE@XZ	admitted
 0x004dd2d0	5182	78.6458	78.6458	78.6458	1106.574644	hero	?windowHandler@THeroScreenWindow@@UAEHPAVmessage@@@Z	admitted
-0x0058bce0	1455	77.26694	78.7597	78.7597	309.04636500000004	singleselectionwindow	?onBeginGame@TSingleSelectionWindow@@QAEEXZ	admitted
-0x0048ae90	880	78.807365	78.8074	78.8074	186.49487999999997	customcampaign	?save@SCampaign@@QAEXPAVTAbstractFile@@@Z	admitted
-0x004ee3e0	7172	78.9421	78.9421	78.9421	1510.2725880000005	kb	?oldmain@@YIHXZ	admitted
-0x004f2960	894	79.11069	79.1107	79.1107	186.7503420000001	kb	?displayLCWinLoss@@YIEPAVLossConditionStruct@@PAH1E@Z	admitted
-0x00466010	579	79.15183	79.1518	79.1518	120.71107800000003	cmbtmgr	?placeObstacle@combatManager@@QAEEH@Z	admitted
+0x0058bce0	1455	78.9055	78.9055	78.9055	306.9249749999999	singleselectionwindow	?onBeginGame@TSingleSelectionWindow@@QAEEXZ	admitted
+0x004ee3e0	7172	78.7743	78.9421	78.9421	1510.2725880000005	kb	?oldmain@@YIHXZ	admitted
+0x004f2960	894	79.1107	79.1107	79.1107	186.7503420000001	kb	?displayLCWinLoss@@YIEAAVLossConditionStruct@@AAH1E@Z	admitted
 0x0048a310	2846	66.44606	66.4461	79.2531	590.456774	customcampaign	?load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	admitted
 0x00578e00	607	79.25824	79.3242	79.3242	125.502106	singleselectionwindow	??0GameSelectionHeadersStruct@@QAE@XZ	admitted
 0x00542080	2218	79.429504	79.4987	79.4987	454.718834	rmg	?createSubterraneanGate@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	admitted
@@ -605,5 +603,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00430ab0	1217	99.97555	99.9755	99.9755	0.29816500000006174	ai_player	?attemptTeleport@@YIEPAVhero@@AAV?$vector@UpathCell@@V?$allocator@UpathCell@@@std@@@std@@J@Z	admitted
 0x004f0b20	1169	99.976135	99.9761	99.9761	0.2793909999999874	kb	?handleClick@type_normal_dialog_frame@@UAEEEE@Z	admitted
 0x005b08b0	1263	99.9787	99.9787	99.9787	0.26901900000002366	swapmgr	?setRolloverText@swapManager@@QAEXH@Z	admitted
+0x0048ae90	880	99.9858	99.9858	99.9858	0.12495999999997842	customcampaign	?save@SCampaign@@QAEXPAVTAbstractFile@@@Z	admitted
 0x004a84f0	9538	99.372734	99.9881	99.9911	0.8488820000000548	events	?dispatchEvent@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	admitted
 0x00441610	1696	98.8868	99.9962	99.9962	0.0644479999999703	army	?doAttack@army@@QAEEPAV1@H@Z	admitted

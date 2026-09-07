@@ -386,9 +386,9 @@ bool displayVCWinLoss(VictoryConditionStruct& victoryCondition,
                       // Before normalization (locals): bGameWon, bGameLost.
                       int& gameWon, int& gameLost, bool remoteCheck);
 // Before normalization (function): DisplayLCWinLoss.
-unsigned char displayLCWinLoss(LossConditionStruct* lossCondition,
+unsigned char displayLCWinLoss(LossConditionStruct& lossCondition,
                                // Before normalization (locals): bGameWon, bGameLost.
-                               int* gameWon, int* gameLost,
+                               int& gameWon, int& gameLost,
                                unsigned char remoteCheck);
 // Retail .bss 0x6972b8, an INT that every CheckEndGame caller which then
 // wants to keep touching the adventure UI reads immediately afterwards -
@@ -537,7 +537,7 @@ void unloadProgressBar();
 // CODEVIEW(E:\gamedcs\netmsg.h:472, dc 0xe6f34) void CPlayerDeadMsg::CPlayerDeadMsg(int who);
 
 // --- CPlayerLostMsg ---
-// CODEVIEW(E:\gamedcs\netmsg.h:519, dc 0xe6fbc) void CPlayerLostMsg::CPlayerLostMsg(int loser, LossConditionStruct* lossConditionStruct);
+// CODEVIEW(E:\gamedcs\netmsg.h:519, dc 0xe6fbc) void CPlayerLostMsg::CPlayerLostMsg(int loser, LossConditionStruct& lossConditionStruct);
 
 // --- CPlayerWonMsg ---
 // CODEVIEW(E:\gamedcs\netmsg.h:505, dc 0xe6f5c) void CPlayerWonMsg::CPlayerWonMsg(int gamePos, VictoryConditionStruct* victoryConditionStruct);

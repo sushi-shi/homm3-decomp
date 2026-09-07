@@ -2101,104 +2101,19 @@ void combatManager::resetHitByCreature()
 }
 
 // E:\gamedcs\cmbtmgr.cpp:2768
-// RECONSTRUCTED 2026-08-20 (0.00 -> 49.09%). The candidate walk, both
-// placement bounds, the extra-hex sweep, the Fortress wall-column veto
-// and the whole TObstacle build/insert/PlaceObstacle tail are recovered;
-// the retail bytes settle three source shapes on the way:
-//   * the hex loop is a GOTO loop, not a while: retail has ONE Pick()
-//     call site, and a while/for(;;)+break gets rotated with the test
-//     duplicated into the failure tail (48.28 -> 49.09 on the switch);
-//   * the extra-hex rejections jump straight to the outer back edge, so
-//     they are gotos, not a break plus an `i < count` re-test (46.08 ->
-//     48.28);
-//   * the obstacle row is a 20-byte type_obstacle_shape, proven by
-//     retail forming the base as `4 * (5 * id) + table`.
-// 49.09 -> 67.19% 2026-08-20, and the lever was an INLINER decision, not
-// any of the register noise the earlier residual note blamed. predict-
-// inline reads it in one line - `PlaceObstacle base x0 vs retail x1` -
-// so our /Ob2 was expanding 191 bytes of a callee that retail CALLS. The
-// scoped inline_depth(0) at that statement is the whole fix; the earlier
-// note's register story was downstream of it. Worth remembering: the
-// register-transposition reading was measured honestly and was still the
-// wrong root cause, because a 191-byte inline moves every allocation
-// after it.
-//
-//
-// 67.19 -> 74.84% 2026-08-20, both points off the same three-part
-// residual the note below named, and both fixed with the pin rather than
-// against it:
-//   * HOIST WHAT RETAIL KEEPS INLINE OUT OF A PINNED STATEMENT. The
-//     PlaceObstacle pin also de-inlined the `obstacles.size() - 1` in
-//     the same statement, which retail expands here; landing it in a
-//     named local ahead of the pragma is worth 6.50 (67.1937 ->
-//     73.6911).
-//   * PIN THE FAILURE-PATH RETURN. Retail destroys the picker OUT OF
-//     LINE there (a call to 0x46a650) and inlines the operator delete
-//     only on the success path; a scoped inline_depth(0) on the
-//     `return 0;` statement alone reproduces that split, +1.15
-//     (73.6911 -> 74.8377).
-//
-// Residual (74.84%): ONE part left, and it is the loop shape. Retail has
-// ONE Pick call at the top with every rejection jumping back to it; our
-// CL emits a SECOND copy at the bottom (base x2 vs retail x1), which is
-// also the whole 19-vs-18 conditional-branch gap and the one remaining
-// operator delete. The goto form is already what this body is written
-// in, so VC6's "goto flow is not rotated" rule does not hold for a loop
-// whose header is a call. Note that the SIBLING wants the opposite:
-// SetupAndLoadObstacles' reject loop needs TWO Pick sites and gained
-// 1.64 when it got them. Tried and rejected earlier: break + re-test,
-// while-loop form, and an int (rather than byte) odd-row flag.
-// RE-MEASURED 2026-08-20 under the "a rejected knob is context-dependent,
-// re-try it after any earlier inline decision changes" rule, i.e. after
-// all three pins above landed: wrapping this exact body in
-// `for (;;) { ... next_hex:; }` is BYTE-FLAT at 74.8377. The loop keyword
-// is canonicalised away here, so the rotation is not reachable through
-// it. One unexplained byte-level lead for the next reader, NOT yet a
-// hypothesis: on the failure path retail destroys the picker through
-// `lea ecx,[ebp-0x48]` while we pass `lea ecx,[ebp-0x50]`, the object's
-// own base - an eight-byte sub-object offset no spelling here produced.
-// 74.8377 -> 75.5550, 2026-08-20 (second pass): why-branch's D13 route.
-// `cell_index` is an UNSIGNED CHAR (+0.38 - the /17 and %17 lower
-// unsigned, and a combat hex index fits a byte), and with that landed
-// the previously-rejected INT odd-row flag GAINED (+0.34) - the
-// context-dependence rule again; the byte flag was only right while
-// cell_index was an int. Also measured this pass:
-//   * the dead trailing `goto next_hex` after the always-returning
-//     block is canonicalised away - removing it is byte-flat;
-//   * the while-with-Pick-in-the-condition form
-//     (`while ((hex = picker.Pick()) >= 0x12)` with `next_hex:;` at
-//     the body end) is BYTE-FLAT at 74.8377 too - every loop keyword
-//     form canonicalises to the same object, so retail's one-header
-//     shape (entry `jmp` over a 3-byte edi reload stub into a single
-//     Pick site; ours duplicates the header and homes hex in ESI where
-//     retail keeps it in ECX) is NOT reachable through loop spelling.
-//   * removing the return-0 pin re-measures at -1.15 exactly; it is a
-//     straight win, not the cause of the duplication.
-// The [ebp-0x48] lead is now DECODED, not mysterious: both sides
-// construct the picker at [ebp-0x50]; -0x48 is picker.marks, the
-// vector<unsigned char> member at +8. Retail's failure path INLINES
-// the empty ~TPickANumber and CALLS the shared vector-dtor COMDAT
-// (0x46a650) on the member; our pin forces ~TPickANumber itself out
-// of line with the base receiver. The exact split needs depth 1
-// inlined + depth 2 called, which no pragma spells (only N=0 bites).
-// 2026-09-05: 75.5550 -> 79.1503 and the branch view went CLEAN (18 = 18,
-// 2 = 2 rets) by turning the `next_hex:` retry into `while (1) { ... }`
-// with the label moved to the END of the loop body as a forward continue
-// point. The old shape put the label at the TOP of the body, where it had
-// BOTH a fall-in predecessor and eight backward gotos, and VC6 peels such a
-// label. Same lever as wingraph's DDBlit (63.77 -> 100) and kb::oldmain
-// (73.35 -> 75.97) the same day. Both pins are untouched.
-// RE-OPENED 2026-08-20 against the numerator lever and STRENGTHENED,
-// two measurements: lifting the eight obstacle-record stores into a
-// single-call-site static (the BuyBuild caller-shrink, the only
-// goto-free liftable block in this body) is BYTE-FLAT at 75.5550 with
-// the return-0 pin kept, and 69.9215 with the pin dropped - the
-// caller-cb dose does not produce the natural depth-2 refusal, and the
-// imposed one remains strictly better than none. The duplicated Pick
-// site and the dtor receiver are not numerator-reachable; every other
-// block is glued to the loop by `goto next_hex` exits and cannot lift.
-// Before normalization (locals): obstacle_id, row_is_odd, cell_index, cell_column, wall_column,
-// obstacle_slot.
+// Dreamcast proves the const byte base_row_is_odd, bOverlap rejection flag,
+// GridX/GridY/RowIsOdd calls, and push_back at line 2848. Retail keeps the
+// signed extra-hex offset plus hex as an int (movsx/add, no byte truncation).
+// The forward retry label at the end of the while body preserves its single
+// Pick call; a label at the loop header made VC6 duplicate the call.
+// Restoring the pinned VC6 vector's push_back -> insert(one) -> insert(count)
+// boundaries naturally retains the counted-insert call and expands only the
+// outer picker destructor on failure: the vector receiver is picker + 8.
+// These boundaries plus the signed index reproduce the retail body at 100%.
+// Controls: byte index with these helpers scores 79.644%; bypassing the
+// wrappers needs forced calls and gives the wrong failure destructor receiver.
+// Before normalization (locals): obstacle_id, base_row_is_odd, bOverlap,
+// cell_index, cell_column, wall_column, obstacle_slot.
 VA(0x00466010, 0x243)  // dc-callgraph unique, dc 0x60354
 unsigned char combatManager::placeObstacle(int obstacleId)
 {
@@ -2208,34 +2123,33 @@ unsigned char combatManager::placeObstacle(int obstacleId)
     while (1) {
         hex = picker.pick();
         if (hex < 0x12)
-#pragma inline_depth(0)
             return 0;
-#pragma inline_depth()
         {
-            int row = hex / COMBAT_GRID_ROW_STRIDE;
+            int row = gridY(hex);
             if (shape->m_minRow > row)
                 goto next_hex;
-            int column = hex % COMBAT_GRID_ROW_STRIDE;
+            int column = gridX(hex);
             if (column == 0)
                 goto next_hex;
             if (shape->m_width + column > 15)
                 goto next_hex;
             if (m_cells[hex].m_attributes & 0x3f)
                 goto next_hex;
-            int rowIsOdd = row & 1;
+            const unsigned char baseRowIsOdd = rowIsOdd(row);
+            unsigned char overlap = 0;
             for (int i = 0; i < shape->m_extraHexCount; i++) {
-                unsigned char cellIndex = shape->m_extraHexOffsets[i] + hex;
-                if (rowIsOdd
-                        && ((cellIndex / COMBAT_GRID_ROW_STRIDE) & 1) == 0)
+                int cellIndex = shape->m_extraHexOffsets[i] + hex;
+                if (baseRowIsOdd && !rowIsOdd(gridY(cellIndex)))
                     cellIndex--;
-                int cellColumn = cellIndex % COMBAT_GRID_ROW_STRIDE;
-                if (cellColumn <= 2)
-                    goto next_hex;
-                if (cellColumn >= 14)
-                    goto next_hex;
-                if (m_cells[cellIndex].m_attributes & 0x3f)
-                    goto next_hex;
+                int cellColumn = gridX(cellIndex);
+                if (cellColumn <= 2 || cellColumn >= 14
+                        || (m_cells[cellIndex].m_attributes & 0x3f)) {
+                    overlap = 1;
+                    break;
+                }
             }
+            if (overlap)
+                goto next_hex;
 
             if (g_game->m_f1f698 < 2 && m_fortificationLevel >= 2
                     && m_defendingTown->m_type == TOWN_STRONGHOLD) {
@@ -2255,19 +2169,11 @@ unsigned char combatManager::placeObstacle(int obstacleId)
             obstacle.m_spellDamage = 0;
             obstacle.m_duration = 0;
             obstacle.m_dispelEffect = -1;
-            // OVER-INLINE, pinned. insert is defined in this TU so that
-            // SetupAndLoadObstacles can expand it the way retail does; retail
-            // CALLS it here (0x46aeb0), and without the pin our /Ob2 expands
-            // it at both sites.
-#pragma inline_depth(0)
-            m_obstacles.insert(m_obstacles.m_end, 1, obstacle);
-#pragma inline_depth()
-            // Retail CALLS PlaceObstacle here - predict-inline reads it as
-            // `base x0 vs retail x1`, i.e. 191 bytes our /Ob2 was expanding
-            // inline and retail was not. Scoped to this one statement so that
-            // PlaceAllObstacles, which is already exact WITH the call, is not
-            // disturbed (the auto_inline(off)-around-the-callee form would
-            // have reached it too).
+            m_obstacles.pushBack(obstacle);
+            // Existing PlaceObstacle pin: retail calls the retained worker
+            // at 0x4669b0; DC cmbtmgr.cpp:2851 also names that boundary.
+            // Removing this pin with the canonical vector wrappers and int
+            // cell index expands the worker and scores 60.5654% (100% kept).
             int obstacleSlot = m_obstacles.size() - 1;
 #pragma inline_depth(0)
             placeObstacle(&obstacle, obstacleSlot, hex, 2);
