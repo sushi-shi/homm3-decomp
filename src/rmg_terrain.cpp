@@ -357,7 +357,19 @@ void rmgTerrainPainter::paintRectangle(
 // the other rules recheck every matching neighbour. The rectangle painter
 // calls this body at 0x5b4a2d; RepairTerrainPoint and Finish share it.
 // Names are provisional: this Complete-only code has no Dreamcast body.
-// Residual (99.9204%): only eight raw bytes differ. The expanded cache
+// Exact: all 1483 retail bytes, including all 61 named relocations. Pass the
+// constructed tile directly to setTile, ending its lifetime before the sets,
+// and name the direction-table entry by const reference before translating.
+// These source boundaries retain the guard-return terrain predicate and the
+// compound grid-addition return. The temporary restores both width-first
+// products; the direction reference restores the caller's inlining budget.
+// Without that reference, the distance wrapper expands and loop registers
+// change. Copying the direction value instead leaves 174 raw differences.
+// No inlining pragma, dummy operation, or modified compiler is used. The
+// passive compiler observations and identity controls are in regalloc.md 6n.
+//
+// The following controls refer to earlier named-tile checkpoints.
+// At 99.9204%, eight raw bytes differ. The expanded cache
 // products at 0x5b4f06/0x5b4fee load y and multiply by width; retail loads
 // width and multiplies by y. All 61 named relocations, branch destinations,
 // the 1483-byte length, 0x50-byte frame, and point translation are exact.
@@ -471,13 +483,22 @@ void rmgTerrainPainter::paintRectangle(
 // over-expands _Distance and keeps both products row-first.
 // Nesting the strength call directly in selectBaseFrame's virtual-call
 // argument grows the section to 1504 bytes and keeps both products row-first.
+// Implicit rather than explicit tile padding leaves the same eight bytes;
+// frame-first constructor assignments leave 25. An owned flip value and
+// reference constructor parameters over-expand _Distance and keep row first.
+// Directly binding the constructed tile to setTile fixes both products;
+// retaining a named tile via copy initialization or const-reference binding
+// also fixes those products but changes the entry schedule/extent. With the
+// direct temporary, comparison-return isPaintTerrain leaves 98.68% (including
+// the four-argument distance call and translation registers); a named grid
+// return or direct frame argument does not close that coupled residual. The
+// retained guard predicate plus named direction reference closes it entirely.
 VA(0x005B4B20, 0x5CB) // anchor-callee 0x5b4960, 0x5b5440; thiscall, ret 4
 void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
 {
     {
         int frame = selectBaseFrame(point, m_paintTerrain, -1);
-        rmgTerrainTile tile(m_paintTerrain, frame);
-        setTile(point, tile);
+        setTile(point, rmgTerrainTile(m_paintTerrain, frame));
     }
 
     if (m_secondaryPoints.find(point) != m_secondaryPoints.end())
@@ -522,7 +543,8 @@ void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
             m_width, m_height, point.x, point.y, neighbourExists);
         for (unsigned int direction = 0; direction < TILE_DIR_COUNT; ++direction) {
             if (neighbourExists[direction]) {
-                TRmgGridPoint nearby = point + gTileDirections[direction];
+                const TPoint& offset = gTileDirections[direction];
+                TRmgGridPoint nearby = point + offset;
                 if (isPaintTerrain(nearby)) {
                     if (m_primaryPoints.find(nearby) != m_primaryPoints.end()) {
                         if (!needsTerrainRepair(nearby)) {

@@ -1032,6 +1032,49 @@ and the same eight differences. The unmodified scratch control and both
 variants resolve all 61 relocations in the raw verifier. These candidates
 remain outside the matching objects; see `build/rmg-width-assignment-control/`.
 
+The residual is now closed with ordinary VC6. `paintPoint` passes
+`rmgTerrainTile(m_paintTerrain, frame)` directly to `setTile`, and names the
+direction-table element as `const TPoint& offset` before `point + offset`.
+It retains the ordinary guard-return terrain predicate and the compound
+grid-addition return. All 1483 retail bytes match, including 61 independently
+resolved named relocations. No compiler-state mutation or inlining pragma is
+part of this source.
+
+The source fix has two measured effects. A passive hook at `0x64c5` now also
+records the pending expression operands from `0x99620`. In the earlier
+named-tile source, handles `0x40c` through `0x411` comprise three pairs of
+opcode `0x165` / `0x14c` expressions. Their aggregate field records describe
+regions `[4,12)`, `[8,12)` and `[9,12)` of the tile. These are observed compiler
+regions, not a recovered name or complete meaning for opcode `0x165`. The
+direct temporary removes those six entries from the prefix. The same width
+address therefore receives handle `0x416` instead of `0x41c`. After the second
+expression pass, both products have width rank `0x00018007` first and row
+rank `0x00016660` second. The row still has handle `0x333`.
+
+The temporary also lowers the caller's observed `cb` from 920 to 914. With
+the guard predicate, that changes a nested tree-find expansion and gives the
+inner three-argument `_Distance` wrapper a budget of 58 against its cost of
+41. A comparison-return predicate restores the tree-find expansion but still
+gives that wrapper budget 45, so it expands into the four-argument overload.
+The named direction reference raises the caller to `cb=919`; with the guard
+predicate the wrapper budget is 38 and it remains a call, as in retail. The
+original `cb=920` and recovered `cb=919` sources share that decision. Exact
+source recovery does not require reproducing the earlier candidate's total
+cost or any aggregate compiler-node count.
+
+The old source, direct temporary with either predicate, and final exact source
+each pass whole-object identity between passive and ordinary compiles outside
+the COFF timestamp. All runners restore the normal shim in `finally`.
+Artifacts are `build/rmg-expression-prefix-trace/`,
+`build/rmg-direct-tile-budget-trace/` and `build/rmg-direct-tile-exact-trace/`.
+The prefix also supplies negative controls: reversing the constructor's first
+two field stores leaves the same allocation prefix while changing emitted
+entry bytes; an owned two-byte flip value changes the middle expressions but
+still consumes six slots and leaves width at `0x41c`. Thus neither source
+store order nor field grouping alone predicts the required operand rank.
+
+<!-- c2-role: global 0x99620 expressionArguments -->
+
 ## 7. Files
 
 | path | role |

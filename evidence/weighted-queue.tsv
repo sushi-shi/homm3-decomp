@@ -996,7 +996,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x005af990	593	99.898476	99.8985	99.8985	0.6020373199999839	swapmgr	?handle_backpack_click@swapManager@@QAEXJJE@Z	non-exact
 0x0059d040	2976	99.901085	99.9011	99.9011	2.943710400000313	spellbookwindow	?WindowHandler@TSpellbookWindow@@UAEHPAVmessage@@@Z	non-exact
 0x005bc280	301	99.91304	99.913	99.913	0.2617496000000078	textwdgt	??0textWidget@@QAE@HHHHPBD0W4TColor@font@@HIHH@Z	non-exact
-0x005b4b20	1483	99.92043	99.9204	99.9204	1.1800231000000976	rmg_terrain	?paintPoint@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	non-exact
 0x005be030	467	99.92157	99.9216	99.9216	0.36626809999998133	town	?GiveSpells@town@@QAEXPAVhero@@@Z	non-exact
 0x0055b470	721	99.92727	99.9273	99.9273	0.5243833000000702	resourcemanager	?GetPalette24@ResourceManager@@YIPAVTPalette24@@PBD@Z	non-exact
 0x0047e820	1856	99.93084	99.9308	99.9308	1.2836096000000268	cspriteframe	?DrawTileShadow@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@EE@Z	non-exact
