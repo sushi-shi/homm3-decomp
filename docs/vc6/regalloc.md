@@ -79,6 +79,10 @@ under wine.
 
 <!-- c2-role: site 0x8be6c rebindRegisterPreferenceLoop -->
 <!-- c2-role: site 0x8c1dc chooseCandidateRegister -->
+<!-- c2-role: function 0x3356b bindTemporaryRegister -->
+<!-- c2-role: site 0x3356e storeTemporaryBinding -->
+<!-- c2-role: site 0x323fe storeIndexedTemporaryBinding -->
+<!-- c2-role: global 0xac380 currentFunctionBody -->
 <!-- c2-role: global 0xa09f0 initialRegisterPreferenceOrder -->
 <!-- c2-role: global 0xadff4 registerPreferenceOrder -->
 <!-- c2-role: global 0x9d6ec registerBindings -->
@@ -87,7 +91,7 @@ under wine.
 <!-- c2-role: global 0xa9194 registerEncodingNames -->
 
 These inferred role labels are supported by the reads and probes below.
-The two code labels name observation sites, not recovered function starts;
+The `site` labels name observation points, not recovered function starts;
 their physical intervals may be fragments of larger compiler functions.
 
 | what | where | evidence |
@@ -110,6 +114,47 @@ their physical intervals may be fragments of larger compiler functions.
 cluster) sits 16 bytes before the runtime preference table - the "list/
 regasg allocator state" neighbourhood the atlas flagged is exactly this
 block.
+
+### Passive temporary-binding observations
+
+```sh
+homm3 vc6 trace-registers rmg --fn createShipyardConnection
+```
+
+This captures the manifest source/profile once, then replays identical C1
+streams through unmodified and instrumented C2. The whole objects must agree
+outside the four timestamp bytes before `bindings.txt` is published under
+`build/vc6/shim/gate/register-trace/<unit>/`. Both replays use the same output
+path because `/Z7` includes that path in its object metadata. A changed byte,
+failed compile, or missing observation rejects the report. The hook-free shim
+is restored in `finally`, including failure paths. The normal matching object
+is never replaced.
+
+The two guarded stores are `0x3356e` (`binding[ESI] = EDX`) and `0x323fe`
+(`binding[EAX] = EDX`). The first belongs to the complete routine at `0x3356b`:
+it stores the binding, marks the register descriptor used through `0x3359b`,
+and returns that descriptor. The second is an independently observed store;
+its label does not claim the surrounding routine's complete purpose. Each
+snapshot records the selected register and the binding table **before** the
+store. `currentFunctionBody` supplies the containing function's actual mangled
+name. Value category at `+4` and handle at `+0x1c` are captured together, avoiding
+stale identities from reused heap addresses.
+
+These are compiler temporary identities, **not recovered C++ local names**.
+Category 3 names an expression temporary. This does not observe all coloring,
+spills, releases, or register occupancy; an empty binding-table slot does not
+prove that the corresponding machine register is available for any value.
+In particular, the two older first-fit sites at `0x8be6c` and `0x8c20d` did
+not fire for the shipyard function, while the two stores above produced 151
+observations. That result limits the explanatory reach of the simple model
+below; it does not explain the late `guardValue`/`entranceX` allocation.
+
+A scratch `/Z7` control also produced 151 events, with whole-object equality
+under instrumentation and the same 1472-byte candidate function section as
+the release compile. Its generated temporaries still lacked source-local
+names. This control therefore does not authorize labeling those handles as
+`guardValue` or `entranceX`. The candidate section includes alignment padding;
+the authoritative retail function remains 1456 bytes.
 
 ## 3. The model
 

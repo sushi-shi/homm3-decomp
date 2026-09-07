@@ -62,6 +62,16 @@ class CompilerDisassembly(unittest.TestCase):
                                   (disasm.Reference(0x156f, "address"),))
         self.assertIn("MOV EAX,0x1070156f0", disasm.render([row], self.roles))
 
+    def test_ghidra_string_labels_are_inserted_literally(self):
+        for name in (r"s_src\8447\reg.c", r"s_line\ntext", r"s_name\g<1>"):
+            with self.subTest(name=name):
+                row = disasm.Instruction(
+                    0x8e877, b"", "PUSH 0x107a2000",
+                    (disasm.Reference(0xa2000, "address", name),))
+                text = disasm.render([row], self.roles)
+                self.assertIn("PUSH " + name, text)
+                self.assertIn("address " + name + " (rva 0xa2000)", text)
+
     def test_local_range_rejects_reversed_or_missing_bounds(self):
         self.assertEqual(disasm.local_range("+0x10:+0x20"), (16, 32))
         for spec in ("+20:+10", "0:0", "-1:20", ":20", "0:", "0:1:2"):

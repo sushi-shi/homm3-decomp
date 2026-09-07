@@ -93,7 +93,12 @@ def _build_parser() -> argparse.ArgumentParser:
                     help="v2: model-proposed candidates to compile (default 1)")
     pw.add_argument("--il-order", action="store_true",
                     help="v2: derive pseudo order from the captured IL handles")
+
     pw.add_argument("--json", action="store_true")
+
+    pr = ss.add_parser("trace-registers", help="passive temporary-register stores, gated by object identity")
+    pr.add_argument("unit", help="unit in config/units.toml")
+    pr.add_argument("--fn", required=True, help="function-name substring")
 
     pb = ss.add_parser("why-branch", help="which control-flow spelling "
                        "reproduces retail's jumps")
@@ -168,6 +173,7 @@ _TOOLS = {
     "il-diff": ("il", "run_diff"),
     "predict-inline": ("inline_model", "run_predict"),
     "why-reg": ("reg_model", "run_why"),
+    "trace-registers": ("register_trace", "run"),
     "why-branch": ("flow_model", "run_why"),
     "oracle": ("oracle", "run"),
     "diagnose": ("diagnose", "run"),

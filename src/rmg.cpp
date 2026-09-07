@@ -2183,6 +2183,10 @@ unsigned char type_random_map_generator::canPlaceShipyard(TRmgMapPosition positi
 // plain final increment grows the frame and expands the base constructor.
 // A by-value addition offset is neutral here but moves the ground caller
 // from 80.43471% to 76.63149%, without resolving this final coordinate copy.
+// An entry-wide zero initialization grows the frame from 0x68 to 0x6c
+// (93.24324%) and still homes guardValue. Consuming operator-='s returned
+// reference for entranceX, and returning the named operator+ result after
+// a separate += statement, are both byte-neutral at 94.85907%.
 VA(0x00541AD0, 0x5B0) // anchor-callee connectZones; thiscall, ret 8; retail-only
 unsigned char type_random_map_generator::createShipyardConnection(
     TRmgZone* source, TRmgZoneConnection* connection)

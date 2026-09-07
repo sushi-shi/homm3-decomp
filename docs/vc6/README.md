@@ -38,6 +38,7 @@ model cannot rot.
 | `scripts/homm3/vc6/` | the area package (`homm3 vc6 <verb>`) |
 | `scripts/homm3/vc6/_toolchain.py` | hash-gated PE reader over the compiler binaries |
 | `scripts/homm3/vc6/disasm.py` | labeled C2 assembly and code references; inferred roles read from the owning evidence prose |
+| `scripts/homm3/vc6/register_trace.py` | `trace-registers UNIT --fn NAME`: verified temporary-binding snapshots with function and compiler-site labels; limited to two documented stores |
 | `scripts/homm3/vc6/argv.py` | CL spec-table decoder → per-pass argv model |
 | `scripts/homm3/vc6/passes.py` | run C1XX / C2 as separate steps (IL persistence) |
 | `scripts/homm3/vc6/oracle.py` | real-compiler ground-truth runners |

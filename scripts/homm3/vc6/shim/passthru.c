@@ -160,6 +160,8 @@ static int resolveReal(void)
 
 #ifdef SHIM_INLINE_TRACE
 #include "inline_trace.c"
+#elif defined(SHIM_REGISTER_TRACE)
+#include "register_trace.c"
 #endif
 
 /* ---- the two exported entry points (names via passthru.def) ----------- */
@@ -221,6 +223,15 @@ int __stdcall InvokeCompilerPass(int argc, char **argv, int fLastTU)
         h = logOpen();
         if (h != INVALID_HANDLE_VALUE) {
             writeString(h, "# inline trace instruction guard failed\n");
+            CloseHandle(h);
+        }
+        return 3;
+    }
+#elif defined(SHIM_REGISTER_TRACE)
+    if (!installRegisterTrace()) {
+        h = logOpen();
+        if (h != INVALID_HANDLE_VALUE) {
+            writeString(h, "# register trace instruction guard failed\n");
             CloseHandle(h);
         }
         return 3;

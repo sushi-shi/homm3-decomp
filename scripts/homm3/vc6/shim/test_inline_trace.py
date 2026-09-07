@@ -26,10 +26,12 @@ class InlineTraceTest(unittest.TestCase):
         self.assertIn("<unresolved symbol c>", text)
 
     def run_trace(self, *, changed_byte=False, missing_stream=False,
-                  observed=True):
+                  observed=True, registers=False, debug_path=False):
         with tempfile.TemporaryDirectory() as directory, ExitStack() as stack:
             root = Path(directory)
-            named = root / "gate/inline-trace/unit/comparisons.txt"
+            kind = "register" if registers else "inline"
+            stem = "bindings" if registers else "comparisons"
+            named = root / f"gate/{kind}-trace/unit/{stem}.txt"
             named.parent.mkdir(parents=True)
             named.write_text("old passing trace\n")
             source = root / "original.cpp"
@@ -38,6 +40,7 @@ class InlineTraceTest(unittest.TestCase):
             streams = {suffix: f"fixed nonce {suffix}".encode()
                        for suffix in ("in", "gl", "sy", "ex")}
             feeds = []
+            output_paths = []
 
             def compile_object(out, src, options, env=None):
                 self.assertEqual(src, source)
@@ -54,17 +57,28 @@ class InlineTraceTest(unittest.TestCase):
                 feed = {suffix: Path(prefix + suffix).read_bytes()
                         for suffix in streams}
                 feeds.append(feed)
+                output_paths.append(out)
                 # Model C2 consuming the stream files. The next replay must
                 # restore the original capture, not reuse the consumed input.
                 for suffix in streams:
                     Path(prefix + suffix).unlink()
                 body = bytearray(range(20))
+                if debug_path:
+                    body.extend(str(out).encode())
                 body[4:8] = bytes([len(feeds)]) * 4
                 if env:
                     if changed_byte:
                         body[12] ^= 1
                     if observed:
-                        Path(env["HOMM3_VC6_SHIM_LOG"]).write_text("main abc cb=100\n")
+                        if registers:
+                            self.assertEqual(env["HOMM3_VC6_REGISTER_TRACE"], "function")
+                            row = ("sym abc caller\nregister root=abc site=0003356e "
+                                   "selected=edx value=3:00000042 " + " ".join(
+                                       f"{r}=free" for r in
+                                       ("eax", "ecx", "edx", "ebx", "esp", "ebp", "esi", "edi")))
+                        else:
+                            row = "main abc cb=100\n"
+                        Path(env["HOMM3_VC6_SHIM_LOG"]).write_text(row)
                 out.write_bytes(body)
                 return subprocess.CompletedProcess([], 0, "", "")
 
@@ -78,11 +92,14 @@ class InlineTraceTest(unittest.TestCase):
             stack.enter_context(patch("homm3.vc6._unit.flags_for_unit", return_value=flags))
             with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
                 try:
-                    result = build.runInlineTrace("unit", "function")
+                    result = (build.runRegisterTrace if registers else
+                              build.runInlineTrace)("unit", "function")
                 except SystemExit:
                     result = "error"
-            verdict = (root / "gate/inline-trace/unit/verdict.txt").read_text()
+            verdict = (root / f"gate/{kind}-trace/unit/verdict.txt").read_text()
             self.assertEqual(named.exists(), result == 0)
+            if len(output_paths) == 2:
+                self.assertEqual(output_paths[0], output_paths[1])
             return result, verdict, feeds, streams, shim.call_args_list
 
     def test_same_capture_replayed_and_only_timestamp_ignored(self):
@@ -107,6 +124,29 @@ class InlineTraceTest(unittest.TestCase):
 
     def test_absent_function_rejects_trace_and_restores_shim(self):
         result, verdict, _feeds, _streams, calls = self.run_trace(observed=False)
+        self.assertEqual(result, "error")
+        self.assertIn("FAIL: no matching function", verdict)
+        self.assertEqual(calls[-1].kwargs, {"negative": False})
+
+    def test_debug_object_path_remains_identical(self):
+        result, verdict, *_ = self.run_trace(debug_path=True)
+        self.assertEqual(result, 0)
+        self.assertTrue(verdict.startswith("PASS:"))
+
+    def test_register_mode_uses_same_capture_and_identity_gate(self):
+        result, verdict, feeds, streams, calls = self.run_trace(registers=True)
+        self.assertEqual(result, 0)
+        self.assertIn("not the full allocator", verdict)
+        self.assertEqual(feeds, [streams, streams])
+        self.assertEqual(calls[0].kwargs, {"registerTrace": True})
+        self.assertEqual(calls[-1].kwargs, {"negative": False})
+        result, verdict, _, _, calls = self.run_trace(registers=True, changed_byte=True)
+        self.assertEqual(result, 1)
+        self.assertIn("FAIL: 1 object differences", verdict)
+        self.assertEqual(calls[-1].kwargs, {"negative": False})
+
+    def test_missing_register_events_fail_closed(self):
+        result, verdict, _, _, calls = self.run_trace(registers=True, observed=False)
         self.assertEqual(result, "error")
         self.assertIn("FAIL: no matching function", verdict)
         self.assertEqual(calls[-1].kwargs, {"negative": False})
