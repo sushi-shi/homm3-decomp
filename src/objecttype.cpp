@@ -537,6 +537,51 @@ TObjectType& TObjectType::setTriggerMask(const std::bitset<48>& mask)
     return *this;
 }
 
+// Fluent object-template setters inferred from the retail row reader.
+// Names are provisional. setPassableMask includes cells outside the image;
+// setTerrainMask keeps recommended terrain inside the new legal terrain.
+// Keep ordinary member boundaries: the reader's expanded chain reproduces
+// retail's retained bitset operations and string destruction. Flattening
+// these calls with the same declarations/default constructors scores 76.6378%.
+TObjectType& TObjectType::setPassableMask(const std::bitset<48>& mask)
+{
+    m_passableMask = mask | ~m_imageInfo.m_drawMask;
+    return *this;
+}
+
+TObjectType& TObjectType::setTerrainMask(const std::bitset<10>& mask)
+{
+    m_recommendedTerrainMask &= mask;
+    m_terrainMask = mask;
+    return *this;
+}
+
+TObjectType& TObjectType::setRecommendedTerrainMask(const std::bitset<10>& mask)
+{
+    m_recommendedTerrainMask = mask;
+    return *this;
+}
+TObjectType& TObjectType::setObjectType(TAdventureObjectType type)
+{
+    m_objectType = type;
+    return *this;
+}
+TObjectType& TObjectType::setSubtype(int subtype)
+{
+    m_subtype = subtype;
+    return *this;
+}
+TObjectType& TObjectType::setSlotCategory(int category)
+{
+    m_slotCategory = category;
+    return *this;
+}
+TObjectType& TObjectType::setUnderlay(bool underlay)
+{
+    m_isUnderlay = underlay;
+    return *this;
+}
+
 // Retail 0x514b80, the per-row parser load() runs over every objects.txt
 // line after the first. Free and __fastcall under /Gr (stream in ECX,
 // record in EDX), and it answers the stream.
@@ -557,24 +602,24 @@ TObjectType& TObjectType::setTriggerMask(const std::bitset<48>& mask)
 // statements later is retail's, not a transcription slip: retail issues
 // the operator&= call on the member at 0x514d04 and then overwrites the
 // member at 0x514d12, and a store cannot be moved across that call.
-// Residual (81.7405%, 2026-09-07): the zero-valued unsigned-long
-// constructors for passable, trigger and terrainRead reproduce retail's
-// three retained _Tidy calls at +0x3e, +0x47 and +0x50. recommendedRead's
-// zeroing remains expanded. This is a constructor-overload hypothesis,
-// supported by the call sequence rather than a Dreamcast declaration.
-// Controls: all default constructors 76.6378%; only the two 48-bit masks
-// given zero 79.5892%; only the two 9-bit sets 73.2865%; all four 78.2865%.
-// An inner scope for the non-string locals is byte-flat on the default form.
-// Remaining: retail calls the outer bitset<48> union and bitset<10> &=;
-// the candidate expands those boundaries. Retail expands string cleanup,
-// while the candidate calls _Tidy(true). Frame size remains 0x64.
+// Exact: default-construct the four input masks and pass the converted
+// ten-bit masks as temporary arguments in the fluent setter expression.
+// Right-to-left argument evaluation constructs recommended terrain before
+// legal terrain; their expression lifetime gives retail's stack-slot reuse.
+// The full chain with named conversion locals scores 99.89189%; expression
+// temporaries (explicit or implicit conversion) reach 100%. The flattened
+// default-constructor control scores 76.63784% with identical declarations.
+// The old three unsigned-long zero constructors compensated for flattened
+// helpers: with the recovered chain they score 87.57838% (all four: 72.4162%).
+// Only the passability/terrain setters with flattened scalar fields score
+// 72.91892% on that old zero-constructor form. Retain the whole ordered API.
 VA(0x00514b80, 0x1F7)  // anchor-caller 0x514d80 per-row loop; anchor-callee setImageName/setTriggerMask; retail-only
 std::istream& operator>>(std::istream& is, TObjectType& objectType)
 {
     std::string imageName;
-    std::bitset<48> passable(0);
-    std::bitset<48> trigger(0);
-    std::bitset<9> terrainRead(0);
+    std::bitset<48> passable;
+    std::bitset<48> trigger;
+    std::bitset<9> terrainRead;
     std::bitset<9> recommendedRead;
     union {
         // Before normalization: raw.
@@ -589,20 +634,11 @@ std::istream& operator>>(std::istream& is, TObjectType& objectType)
     is >> imageName >> passable >> trigger >> terrainRead >> recommendedRead
         >> typeRead.m_raw >> subtype >> slotCategory >> underlay;
 
-    std::bitset<10> recommendedTerrain(recommendedRead.to_ulong());
-    std::bitset<10> terrain(terrainRead.to_ulong());
-
-    TObjectType& named = objectType.setImageName(imageName);
-    named.m_passableMask = passable | ~named.m_imageInfo.m_drawMask;
-
-    TObjectType& row = named.setTriggerMask(trigger);
-    row.m_recommendedTerrainMask &= terrain;
-    row.m_terrainMask = terrain;
-    row.m_recommendedTerrainMask = recommendedTerrain;
-    row.m_objectType = typeRead.m_typed;
-    row.m_subtype = subtype;
-    row.m_slotCategory = slotCategory;
-    row.m_isUnderlay = underlay != 0;
+    objectType.setImageName(imageName).setPassableMask(passable)
+        .setTriggerMask(trigger).setTerrainMask(std::bitset<10>(terrainRead.to_ulong()))
+        .setRecommendedTerrainMask(std::bitset<10>(recommendedRead.to_ulong()))
+        .setObjectType(typeRead.m_typed).setSubtype(subtype)
+        .setSlotCategory(slotCategory).setUnderlay(underlay != 0);
     return is;
 }
 
