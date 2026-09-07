@@ -382,6 +382,12 @@ public:
     {
         return m_result.size();
     }
+    // DC FindPath.h:221-223, get_step: the route direction is a byte result
+    // read from the indexed pathCell, distinct from get_step_cell's pointer.
+    unsigned char getStep(long i) const
+    {
+        return m_result[i]->m_direction;
+    }
     // Before normalization (function): searchArray::get_step_cell.
     const pathCell* getStepCell(long i) const
     {
