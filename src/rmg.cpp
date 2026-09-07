@@ -40,6 +40,14 @@ TProgressSink::~TProgressSink()
 {
 }
 
+// Vtable 0x6409c0 slot 1 stores the new total at +4. The derived progress
+// dialog overrides the same interface while the base Advance slot stays pure.
+VA(0x00530E80, 0x0D)  // Complete-only RMG progress base
+void TProgressSink::setTotal(int totalSteps)
+{
+    m_steps = totalSteps;
+}
+
 namespace {
 
 // The cinit at 0x530da0 writes these eight clockwise neighbours.  The river
