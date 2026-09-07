@@ -21,12 +21,11 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x0048a310	2846	69.5768	69.5768	79.2531	590.456774	customcampaign	?load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	admitted
 0x00521960	2819	80.0996	80.0996	80.0996	560.9922760000002	overview	?windowHandler@TOverviewWindow@@UAEHPAVmessage@@@Z	admitted
 0x00488880	1494	53.9868	53.9868	80.9474	284.64584399999995	customcampaign	?load@CampaignHeaderStruct@TCampaignBrief@@QAE_NXZ	admitted
-0x004d6920	593	81.12042	81.1204	81.1204	111.95602799999998	gzinflatebuf	?underflow@TGzInflateBuf@@UAEHXZ	admitted
-0x0058a440	830	81.30488	81.3049	81.3049	155.16932999999997	singleselectionwindow	?onGameHeaderInfoInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	admitted
 0x00474bf0	392	81.36957	81.3696	81.3696	73.03116799999997	command	?isComputerAction@combatManager@@QAEEPBVarmy@@@Z	admitted
 0x0044cd50	1512	81.3762	81.3762	81.3762	281.591856	artifact	?initializeArtifactTraitsTable@@YIEXZ	admitted
 0x004cde40	224	81.410255	81.4103	81.4103	41.640927999999995	game	?getUndergroundGateExit@game@@QAE?AUtype_point@@PBVNewmapCell@@@Z	admitted
 0x005d7920	522	81.41358	81.4136	81.4136	97.02100800000001	townmgr	?setRolloverText@TTavernWindow@@QAEXH@Z	admitted
+0x004d6920	593	81.4346	81.4346	81.4346	110.092822	gzinflatebuf	?underflow@TGzInflateBuf@@UAEHXZ	admitted
 0x005c1180	169	81.49123	81.4912	81.4912	31.279871999999987	town	?getBuildCost@town@@QBEFW4type_building_id@@PAH1@Z	admitted
 0x00485d90	443	81.650604	81.6506	81.6506	81.28784200000003	customcampaign	?readLengthPrefixedString@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAVTAbstractFile@@@Z	admitted
 0x004daf90	570	81.7	81.7	81.7	104.30999999999996	hero	?updateSlot@THeroScreenWindow@@QAEXJ@Z	admitted

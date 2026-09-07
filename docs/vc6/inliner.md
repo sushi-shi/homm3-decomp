@@ -1517,3 +1517,20 @@ that boundary and reaches 100%. It also restores the 0x5c frame and the saved
 Reusing the result variable for the random roll, or spelling the transition
 conditions as the Dreamcast conjunctions, leaves those exact bytes unchanged.
 The table's const anonymous aggregate and ordinary helper calls remain intact.
+
+
+### Error-arm helpers can determine later vector expansion
+
+`TSingleSelectionWindow::onGameHeaderInfoInitMsg` (0x58a440) flattened both
+`CBadVersionMsg(version, text)` and `onBadVersionMsg`, although Dreamcast lines
+7031/7032 name those calls. Restoring the ordinary constructor alone raises
+81.3049% to 94.8089%; restoring only the handler gives 87.5488%. Together they
+reach 99.8008% and restore retail's later vector copy, erase and size calls.
+The error arm's zero-register and text-load differences disappear too.
+
+The last difference is statement order: retail loads `numMaps` before the
+window's net-game flag store. Moving the count declaration before that store
+reaches 100%; introducing a separate flag local instead gives 97.1951%.
+The constructor remains an ordinary two-argument function with its CNetMsg
+initializer and two bounded copies, at its original source position among
+message constructors. No inline-depth control is needed.
