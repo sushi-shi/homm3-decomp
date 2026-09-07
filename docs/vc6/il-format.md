@@ -138,9 +138,16 @@ The name SCAN (`_il.scan_names`) walks printable 0-terminated runs preceded
 by a 00 byte and tries strongly framed function/data/local records before
 embedded-handle and generic symbol/file forms, gated by handle plausibility
 (<= high-water) and a name charset. Rich-TU `sy` locals use
-`01 <scope> <u16 handle> 02 00 00 <name>`. Strong framing must win: otherwise
+`01 <tag> <u16 handle> 02 00 00 <name>`. The shorter
+`01 <tag> <u16 handle> 00 <name>` form also occurs with tags 00/01/02/04/05;
+the tag semantics are not recovered. RMG examples are tag 02 `nearby`
+(`ac 56`), tag 04 `offset` (`d8 56`), and tag 05 `value` (`e0 56`).
+Strong framing must win: otherwise
 an ordinary mangled name beginning `?P` is a plausible embedded handle
-`0x503f` and loses its first two characters. It is an OVERLAY: it annotates
+`0x503f` and loses its first two characters. Missing the shorter local tags
+similarly changed `nearby` into `arby@0x656e` and `destinationZone` into
+`stinationZone@0x6564`, both plausible below RMG's high-water mark.
+It is an OVERLAY: it annotates
 the byte diff (names in order, handle-shift summaries, per-function ex spans),
 never replaces it.
 Known residual noise: junk runs from attribute bytes can scan as records;
@@ -152,6 +159,46 @@ Per function, in `in`-order: header `03 01 <u16 block-handle> 1f 00 01 01
 0d 01`, parameter records `01 01 <u16 handle> 00 <name cstr>` + 8-byte type
 tail, terminator `0d 02 06`. The tool splits on the terminator for block
 counts; the type-tail semantics are OPEN.
+
+### 4.3a Function ownership comes from the recorded SY offset
+
+<!-- c2-role: function 0x1ca09 readSignedIL32 -->
+<!-- c2-role: site 0x1d22d storeFunctionEXStart -->
+<!-- c2-role: site 0x1d235 storeFunctionSYStart -->
+
+The symbol reader calls `readSignedIL32` twice at `0x1d228/0x1d230`,
+storing the results at symbol offsets `+0x4f/+0x53`. The reader accepts a
+signed byte, except `80` escapes a signed little-endian dword. Thus the
+paired EX/SY offsets have independently decoded framing; the surrounding
+GL attribute grammar remains an overlay.
+
+A passive, frozen-IL RMG trace observed shipyard's function symbol holding
+EX `0x27546` and SY `0x9e38`; these match the adjacent GL fields
+`80 46 75 02 00 80 38 9e 00 00`. Instrumented and reference objects agreed
+at all 134,042 bytes outside the COFF timestamp. The subsequent function,
+`createSubterraneanGate`, records SY `0xa235`.
+
+Shipyard's declaration handle is `0x4377`, while its parameters and body
+locals were created much later (`source@0x5699`, `entranceX@0x56ca`,
+`guardValue@0x56dc`, `strength@0x56df`, `value@0x56e0`). Selecting SY records
+between neighboring function **declaration handles** missed these locals.
+The corrected tool starts at the recorded SY offset and ends at the next
+observed body start, explicitly reporting that limited boundary evidence.
+It rejects ambiguous function selectors and shared starts. Nested lexical
+scope framing and unnamed symbols are still open; front-end handles are
+not optimizer pseudo identities or a recovered register allocation order.
+
+```
+homm3 vc6 il-locals rmg --fn createShipyardConnection
+homm3 vc6 disasm readSignedIL32 --verbose
+```
+
+`il-locals` and `why-reg --model --il-order` now share a capture of the
+canonical source path with its `config/units.toml` profile. RMG uses `/MT`;
+the former local-order path silently used a copied TU and default `/ML`
+flags. Name framing, distant body handles, signed/extended offsets,
+overlapping marker bytes, ambiguity, and canonical capture have negative
+controls in `test_il.py`.
 
 ### 4.4 `ex` - opaque, segmented from `gl`
 

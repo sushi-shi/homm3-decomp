@@ -43,6 +43,7 @@ model cannot rot.
 | `scripts/homm3/vc6/passes.py` | run C1XX / C2 as separate steps (IL persistence) |
 | `scripts/homm3/vc6/oracle.py` | real-compiler ground-truth runners |
 | `scripts/homm3/vc6/{inline_model,reg_model,il}.py` | the predictors + solvers |
+| `homm3 vc6 il-locals UNIT --fn NAME` | candidate local handles from GL-recorded SY body offsets, using the canonical source/profile; named-symbol overlay, not optimizer register order |
 | `scripts/homm3/vc6/{diagnose,report,queue}.py` | one-function routing, plateau report, and recoverable-byte wall census |
 | `scripts/homm3/vc6/_source.py` | the solvers' source-body locator (demangle + definition grammar + `#if 0` masking) |
 | `scripts/homm3/vc6/_eh.py` | the EH cleanup transcript (`[ebp-4]` state stores) — object lifetimes, the one signal the three solvers do not read |
