@@ -802,6 +802,9 @@ VA_COMPGEN(0x0051a120, 0xCC, CLASS_CTOR, basic_string)
 // COMDAT pairing: _Tree<string,...>::insert(const value_type&), agreement
 // 0.969, and the pair<iterator,bool> constructor it returns through,
 // agreement 1.000 - the latter is 0x51af50's only call into this span.
+// setImageName retains map<string,int>::insert as a thin hidden-return
+// wrapper around the tree insertion below.
+VA_COMPGEN(0x00517B70, 0x2C, MAP_INSERT, string)
 VA_COMPGEN(0x0051af50, 0x156, TREE_INSERT, string)
 VA_COMPGEN(0x0051b150, 0x18, CLASS_CTOR, pair)
 

@@ -1,8 +1,6 @@
 # GENERATED: homm3 vc6 queue --smallest - regenerate, never hand-edit.
 # Independent retail targets, smallest first; parked RVAs omitted.
 state	size	va	current_fuzzy	max_fuzzy	hist_fuzzy	owner	candidates	label	relation	action
-bracketed	44	0x00517b70	-	0.0000	0.0000	newgame..overview	newgame,overview	game_114610_sub05_117b70	bracketed	resolve the owner, then add its VA claim and body
-bracketed	44	0x005b85c0	-	0.0000	0.0000	systemoptionswindow..text	systemoptionswindow,text	game_1b4b20_sub10_1b85c0	bracketed	resolve the owner, then add its VA claim and body
 bracketed	45	0x00532480	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_132480	bracketed	resolve the owner, then add its VA claim and body
 bracketed	45	0x005324b0	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_1324b0	bracketed	resolve the owner, then add its VA claim and body
 bracketed	45	0x00532830	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_132830	bracketed	resolve the owner, then add its VA claim and body
