@@ -382,6 +382,11 @@ inline std::vector<TObjectType::TImageInfo>& getObjectImageCache()
 // A full-width bit mask instead gives 92.4625. None preserves retail's file
 // register: the byte-verified current trace still assigns maskFile ESI first,
 // then moves oldCount to EDI and this to EBX (docs/vc6/regalloc.md section 3b).
+// Pointer and reference return signatures produce identical function bytes
+// with either counter placement. A separate selected resource is also neutral;
+// a ternary fallback gives 92.1265 and changes the branch connections. Using
+// imageNumber for the record index reloads the member after insert (83.7273),
+// absent from retail; capturing that member before insert gives 92.0909.
 // The current output-reference lookup controls give 96.5415/96.0395 and
 // preserve the wrong registry operands. A flattened lookup with a separate
 // entry factory or typed make_pair gives 78.1067/75.8103 and different calls.
