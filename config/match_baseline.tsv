@@ -1880,6 +1880,8 @@ game	?_Tidy@?$bitset@$07@std@@AAEXK@Z	100.0000	100.0000	100.0000	0xcff30	-
 game	?_Tidy@?$bitset@$0BM@@std@@AAEXK@Z	100.0000	100.0000	100.0000	0xd1830	-
 game	?_Tidy@?$bitset@$0EG@@std@@AAEXK@Z	100.0000	100.0000	100.0000	0xcfa10	-
 game	?_Tidy@?$bitset@$0IA@@std@@AAEXK@Z	100.0000	100.0000	100.0000	0xd4e90	-
+game	?_Tidy@?$bitset@$0IB@@std@@AAEXK@Z	100.0000	100.0000	100.0000	0x8ed20	-
+game	?_Tidy@?$bitset@$0JA@@std@@AAEXK@Z	100.0000	100.0000	100.0000	0x8c0b0	-
 game	?_Tidy@?$bitset@$0JB@@std@@AAEXK@Z	100.0000	100.0000	100.0000	0x8d480	-
 game	?_Ubound@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@U_Kfn@?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@3@U?$less@PAVCImmEnclosure@@@3@V?$allocator@UtagRECT@@@3@@std@@IBEPAU_Node@12@ABQAVCImmEnclosure@@@Z	100.0000	100.0000	100.0000	0xb7e70	-
 game	?_Ucopy@?$vector@Utype_university@@V?$allocator@Utype_university@@@std@@@std@@IAEPAUtype_university@@PBU3@0PAU3@@Z	100.0000	100.0000	100.0000	0x34c70	-
