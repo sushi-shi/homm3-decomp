@@ -7467,59 +7467,37 @@ TTavernWindow::~TTavernWindow()
     }
 }
 
-// The tavern's status line. Six widget ids answer - the two recruit
-// portraits (5, 6), the thieves' guild button (11), the hire button
-// (12), the rumour panel (15) and the cancel button (0x7800) - and
-// everything else gets the shared empty line. The dispatch is a
-// BINARY-SEARCH lowering (cmp/jg then cmp/je, not the dense dec/je
-// chain), which is what a sparse `switch` compiles to on this CL.
+// E:\gamedcs\townmgr.cpp:7847. Six widget ids provide rollover text;
+// hire refusals test gold, the hero cap, then town occupancy. Refusals read
+// g_currentPlayer, while Complete's recruit lookup uses the local player.
 //
-// The hire button is the only arm that reasons: it refuses in the order
-// the bytes have it - not enough gold, the cap of eight heroes already
-// reached, the town's own square already occupied - and only then
-// describes the hero the page has selected. Every one of those refusals
-// reads gpCurrentPlayer, while the hero lookup reads the LOCAL player,
-// which is why both pointers are live in the frame at once.
+// Exact: DC lines 7865/7870/7877/7879 prove game::GetHero calls. Restoring
+// the portrait getter alone raises 81.4136 to 100 and restores retail's
+// split hero/name address as well as its gold/rumour/default strcpy join.
+// The hire getter preserves those bytes. The old claim that the split and
+// copy joins were unreachable VC6 behavior was caused by the flattened
+// accessor, not a compiler-generation difference.
 //
-// The empty answer is a bare `gText[0] = 0`, not a strcpy of the empty
-// string: retail stores a single zero byte at the absolute address.
-//
-// The five copies of the line are five `strcpy` intrinsics; VC6
-// cross-jumps two of them onto a shared expansion and leaves the tail
-// (`and ecx,3 / rep movsb`) shared by all of them. That merge is the
-// compiler's, not a source shape.
-//
-// Residual (81.4136%): calls (6/6), branches (14/14), returns (1/1) and
-// blocks (28/28) agree; base has 161 instructions against retail's 162.
-// Both emit four full intrinsic copy bodies and one shared `rep movsb` tail,
-// but C2 chooses different representatives for one full-copy join: retail
-// shares gold/rumour/default and leaves town-occupied open, while this compile
-// shares town-occupied/rumour/default and leaves gold open. An explicit join
-// over retail's predecessor set raises fuzzy to 83.6975 only by collapsing all
-// four copies to one (139 instructions), so that structurally wrong family is
-// rejected. One-call inline wrappers at either the gold or town site are
-// byte-flat. A named `hero*` for the RECRUIT arm's own sprintf is
-// byte-flat too (2026-08-21) even though retail splits that address as
-// `lea eax,[... + 0x21620] / add eax,0x23` where this compile folds a single
-// `lea ... + 0x21643` - VC6 re-folds the offset back through the named
-// pointer, so the split is not source-reachable here. Removing the DC-unattested named `recruit` pointer regresses to
-// 76.8086; the remaining scratch-register swaps follow the same block-choice
-// tie. This is the merged-block/compiler-generation class.
-
-// E:\gamedcs\townmgr.cpp
+// Retain the named hire recruit across Complete's heroFn004D8F70 call:
+// retail saves one hero pointer in ESI across that call. Repeating GetHero
+// as in the older DC direct class-table expression retains two pointer
+// calculations and null branches before the call (91.6049). Complete calls rollover
+// slot 13 directly and drawWindow(0,13,14), whereas DC broadcasts text and
+// draws with 1; retain the retail call sequence and arguments.
+// Before normalization: SetRolloverText, codeY, GetHero.
 VA(0x005d7920, 0x20A)  // anchor-caller(TTavernWindow::WindowHandler 0x5d7b30 hover arm) + anchor-callee(rolloverText slot 13) + arity(ret 4), dc 0x17a7a0
-void TTavernWindow::setRolloverText(int id)
+void TTavernWindow::setRolloverText(int codeY)
 {
     playerData* player = g_game->getLocalPlayer();
 
-    switch (id) {
+    switch (codeY) {
     case RECRUIT_0_ID:
     case RECRUIT_1_ID:
-        if (player->m_recruits[id - RECRUIT_0_ID] == -1)
+        if (player->m_recruits[codeY - RECRUIT_0_ID] == -1)
             g_text[0] = 0;
         else
             sprintf(g_text, g_tavernInfo[4],
-                    g_game->m_heroes[player->m_recruits[id - RECRUIT_0_ID]].m_name);
+                    g_game->getHero(player->m_recruits[codeY - RECRUIT_0_ID])->m_name);
         break;
 
     case THIEVES_GUILD_BUTTON_ID:
@@ -7539,7 +7517,7 @@ void TTavernWindow::setRolloverText(int id)
             } else if (player->m_recruits[m_selectedRecruit] == -1) {
                 g_text[0] = 0;
             } else {
-                hero* recruit = &g_game->m_heroes[player->m_recruits[m_selectedRecruit]];
+                hero* recruit = g_game->getHero(player->m_recruits[m_selectedRecruit]);
                 sprintf(g_text, g_tavernInfo[3], recruit->m_name,
                         recruit->heroFn004D8F70());
             }

@@ -4165,7 +4165,7 @@ townmgr	?setRightClickText@TBlacksmithWindow@@QAEXH@Z	100.0000	100.0000	100.0000
 townmgr	?setRolloverText@TBlacksmithWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1d1b60	bc551e07bc9a
 townmgr	?setRolloverText@TCastleWindow@@QAEXPAVmessage@@@Z	97.7688	97.7688	97.7688	0x1dcbf0	792d5890af40
 townmgr	?setRolloverText@TMageGuildWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1ce1c0	685178ddd87a
-townmgr	?setRolloverText@TTavernWindow@@QAEXH@Z	81.4136	81.4136	81.4136	0x1d7920	29e6c491947a
+townmgr	?setRolloverText@TTavernWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1d7920	c8876b3dd874
 townmgr	?setRolloverText@TThievesGuildWindow@@QAEXH@Z	94.1758	94.1758	94.1758	0x1c9710	51d2f698511a
 townmgr	?setupExtraStuff@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1c33f0	d9f664b8316b
 townmgr	?setupMage@townManager@@QAEXPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1d6ef0	58ba8b515b7e
