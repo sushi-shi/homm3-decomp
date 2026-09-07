@@ -4309,6 +4309,7 @@ viewarmywindow	?createSpeedWidget@TViewArmyWindow@@QAEXHH@Z	100.0000	100.0000	10
 viewarmywindow	?createSpellInfluenceWidgets@TViewArmyWindow@@QAEXPBVarmy@@@Z	86.6570	86.6570	86.6570	0x1f65b0	5883c3231f4b
 viewarmywindow	?createUpgradeWidget@TViewArmyWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1f6ae0	5aa48468ec44
 viewarmywindow	?doModal@TViewArmyWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1f47f0	33d962c82a0a
+viewarmywindow	?max_size@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x4bc0	-
 viewarmywindow	?windowHandler@TViewArmyWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1f4850	8f7e6aeff96a
 viewwrld	??0TViewWorldWindow@@QAE@XZ	97.1358	97.1358	97.1358	0x1fa600	0ba348bb8170
 viewwrld	??1TViewWorldWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1fbd60	5f22f3d5fc49
