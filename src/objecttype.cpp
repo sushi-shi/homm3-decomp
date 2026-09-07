@@ -300,7 +300,16 @@ static std::vector<TObjectType::TImageInfo>& getObjectImageCache()
 // after changing only the comparison symbol's spelling. Calling an append
 // helper directly from this caller adds eight CFG blocks; a const-iterator
 // result adds three. Neither recovers the lookup's retained call decisions.
-// Remaining: lookup exit and string-copy scheduling, and cell's zero being
+// Returning a stable index reference through a separate result iterator
+// raises MAX to 96.6403: all 22 instruction-pattern blocks now agree, with
+// the same 27 named calls and EH states 0,-1,1,-1. The existing-entry path
+// keeps EAX and only the insertion path reloads found. Returning the whole
+// map entry by const reference is byte-identical. Moving record before the
+// string copy scores 96.1265; a loop-local counter gives 92.0079 and merges
+// a block. A named scalar index in the caller gives 87.8696. The size-query
+// wrappers remain neutral together; typed resource reads give 87.8696, and
+// returning an insertion pair changes the CFG and gives 73.5652.
+// Remaining: lookup operands and string-copy scheduling, and cell's zero being
 // hoisted before the reads instead of materialized at the loop. No inline
 // controls or release-elided operations are used.
 VA(0x00514610, 0x317)  // anchor-callee 0x514b80 per-row `>>`; anchor-global 0x6aba80 .msk cache; retail-only
