@@ -1254,7 +1254,7 @@ public:
     // construction into SetHeroContext and move_hero, so the canonical
     // declaration belongs to hero rather than either TU's private view.
     // Before normalization (function): hero::get_target.
-    __forceinline type_point getTarget() const
+    type_point getTarget() const
     {
         return type_point(m_pathTargetX, m_pathTargetY, m_pathTargetZ);
     }

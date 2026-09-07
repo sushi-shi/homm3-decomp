@@ -55,7 +55,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x0056a0d0	642	82.55238	82.5524	86.3333	112.01359199999997	search	?buildPath@searchArray@@QAEHPBVhero@@J@Z	admitted
 0x005021c0	2101	82.95695	82.957	92.7472	358.07343000000014	mapcell	?readHeroData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	admitted
 0x0042e0b0	2926	82.963974	82.964	82.964	498.4733600000002	ai_player	?aiChooseDestination@@YIHPAVhero@@JAAUHeroDestination@@AAJEE@Z	admitted
-0x00418dd0	1247	83.01877	83.0188	83.0188	211.75556399999996	advmgr	?showRoute@advManager@@QAEXHHH@Z	admitted
 0x004a6440	216	83.03571	83.0357	83.0357	36.642888	events	?doTreasureDialog@advManager@@QAEXPAVhero@@H_N@Z	admitted
 0x0056dad0	652	83.22523	83.2252	83.2252	109.371696	seerhut	?doProposalDialog@type_skill_quest@@UAEXPAVhero@@@Z	admitted
 0x00487e40	1414	83.28998	83.29	83.29	236.27939999999987	customcampaign	?read@ScenarioStruct@TCampaignBrief@@QAEXPAVTAbstractFile@@HH@Z	admitted
@@ -348,7 +347,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00522770	159	94.93651	94.9365	94.9365	8.050965000000016	palette	??0TPalette16@@QAE@PBDPBVTPalette24@@HHHHHH@Z	admitted
 0x0044ff60	461	94.95049	94.9505	94.9505	23.27819499999998	border	?main@border@@UAEHPAVmessage@@@Z	admitted
 0x004f15e0	4936	94.95207	94.9521	94.9521	249.16434399999972	kb	?displayVCWinLoss@@YI_NAAVVictoryConditionStruct@@AAH1_N@Z	admitted
-0x00467db0	1130	94.96491	94.9649	94.9649	56.89663000000004	cmbtmgr	?shootAnimatedMissile@combatManager@@QAEXHHHHHPBMPBQBD@Z	admitted
 0x00500430	1144	95.0	95.0	95.0	57.20000000000005	mapcell	?loadBlackBox@NewfullMap@@QAEHPAVTAbstractFile@@PAVBlackBoxData@@H@Z	admitted
 0x0055b8d0	553	95.0	95.0	100.0	27.650000000000023	resourcemanager	?loadFont@ResourceManager@@YIPAVfont@@PBD@Z	admitted
 0x00465ad0	1091	95.034386	95.0344	95.0344	54.17469599999991	cmbtmgr	?keepAttack@combatManager@@QAEXH@Z	admitted

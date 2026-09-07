@@ -4877,33 +4877,12 @@ int advManager::processSearch(int x, int y, int z)
 }
 
 // E:\gamedcs\advmgr.cpp:4983
-// The `auto_inline(off)` pin below is COUPLED to three longhand copies of
-// this body - ProcessRadarSelect's two (0x40a0c0, at advmgr.cpp:2373 and
-// :2420 on the DC line table) and HideRoute's one (0x419300, :10553).
-// Retail EXPANDS the body at exactly those three sites and CALLS it at the
-// eight others, and the pin can only say "call everywhere", so the three
-// expansions have to be written out.  Dreamcast names the calls and their
-// arguments outright - `mov #0,r5 / mov #0,r6 / jsr @?UpdateScreen@
-// advManager@@QAAXHH@Z` at dc 0xa406, 0xa86a and 0x1c536 - so
-// `UpdateScreen(0, 0);` is the source, not the paste.
-//
-// MEASURED 2026-09-06 (polish lane 46), the honest restoration - all three
-// pastes replaced by `UpdateScreen(0, 0);` AND this pin removed:
-//   * the three target rows all HOLD at 100: ProcessRadarSelect, HideRoute
-//     and UpdateScreen itself.  Our /Ob2 picks retail's expansion at every
-//     one of them with no pin at all.
-//   * the collateral is four of the eight CALL sites, which then expand
-//     where retail calls: ProcessDeSelect 100 -> 85.26, ProcessKeyPress
-//     97.61 -> 87.90, DoAdvCommand 94.40 -> 85.11, and ShowRoute
-//     83.02 -> 52.52 (it expands HideRoute, so the new UpdateScreen call
-//     lands one level deeper).  Unit 96.16 -> 94.80, one exact row lost.
-// So the pin is load-bearing for those four and the paste is load-bearing
-// for these three; neither half can go alone.  The retail state is a
-// per-site decision inside one TU, and the four regressed callers are the
-// real target: each is over-inlining a callee retail calls, exactly the
-// residual class ShowVideo's note describes.  Withheld, not refuted.
+// Keep this ordinary body visible to callers. With ShowRoute's canonical
+// HideRoute calls and recovered locals/expressions, removing its old global
+// inline pin is byte-flat at 95.2198%, and the completed caller reaches 100%.
+// The earlier 52.52% control used a flattened route implementation; it did
+// not establish that the pin or pasted helper bodies were necessary.
 VA(0x0040f270, 0x7D)  // anchor-global, dc 0x10520
-#pragma auto_inline(off)
 // Before normalization (locals): bAllowIntermediateMouse, bForceDraw.
 void advManager::updateScreen(int allowIntermediateMouse, int forceDraw)
 {
@@ -4924,7 +4903,6 @@ void advManager::updateScreen(int allowIntermediateMouse, int forceDraw)
     }
     process1WindowsMessage();
 }
-#pragma auto_inline(on)
 
 // E:\gamedcs\advmgr.cpp:5002
 VA(0x0040f2f0, 0xF8)  // linkorder, dc 0x10640
@@ -5066,13 +5044,11 @@ void advManager::completeDraw(int startX, int startY, int z, unsigned char force
 
 // E:\gamedcs\advmgr.cpp:5223
 VA(0x0040f870, 0x43)  // linkorder, dc 0x10c9c
-#pragma auto_inline(off)
 void advManager::completeDraw(unsigned char forceDraw)
 {
     completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z,
                  forceDraw, true);
 }
-#pragma auto_inline(on)
 
 // E:\gamedcs\advmgr.cpp:5505
 VA(0x0040f8c0, 0x265)  // anchor-global, dc 0x10cf4
@@ -9266,186 +9242,96 @@ void advManager::insertSound(int x, int y, int z, int soundPriority,
     m_touchedSounds ^= 1 << m_soundArray[best].m_soundId;
 }
 
-// The "no route to draw" tail, inlined at all three of ShowRoute's exits
-// where the arrow overlay has to come down: dim the move button, forget
-// the hero's path target, and repaint only if the overlay was actually up.
-// It carries a bRemoveTarget flag exactly as its out-of-line body-twin
-// HideRoute does: the first exit (currHeroId already -1) passes 0 and the
-// whole heroId block folds away in that inlined copy - retail copy 1 has
-// no currHeroId recheck while copies 2 and 3 keep it, which a flag
-// constant-folded per site produces and a shared re-reading body cannot
-// (the IsLocalHuman/BroadcastMessage calls make the global opaque).
-// Before normalization (function): clear_adventure_route.
-// Before normalization (locals): bUpdateScreen, bRemoveTarget.
-static void clearAdventureRoute(advManager* manager, int updateScreen,
-                                  int removeTarget)
-{
-    if (!g_currentPlayer->isLocalHuman()
-        && (!g_unnamed6989c8 || !g_unnamed69ccd4))
-        return;
-
-    g_windowManager->broadcastMessage(
-        MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
-        TAdventureMapWindow::MOVE_ID,
-        widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
-
-    if (removeTarget) {
-        int heroId = g_currentPlayer->m_currHeroId;
-        if (heroId != -1) {
-            hero* currentHero = &g_game->m_heroes[heroId];
-            currentHero->m_pathTargetX = -1;
-            currentHero->m_pathTargetY = -1;
-        }
-    }
-
-    if (!manager->m_showRoute)
-        return;
-    manager->m_showRoute = 0;
-    if (!updateScreen)
-        return;
-
-    manager->completeDraw(0);
-    manager->updateScreen(0, 0);
-}
-
-// E:\gamedcs\advmgr.cpp:10436
-// Rebuilds the adventure-map route overlay. Retail runs the path search
-// from the hero's stored target, then walks the resulting cell list BACK
-// TO FRONT writing one arrow frame per step into routeArray: the final
-// step gets frame 1 (the target marker) and every other step indexes
-// gRouteArrowFrames[previous direction][this direction] + 2. Steps that
-// fall beyond the hero's remaining movement are pushed into the greyed
-// bank by adding 0x19, and reaching any affordable step is what un-dims
-// the move button at the end.
+// E:\gamedcs\advmgr.cpp:10436-10523. Preserve the canonical HideRoute,
+// get_target/get_location, get_path_steps/get_step, GetNumMapLevels and
+// GetRouteArrayPtr calls. The latter is evaluated separately for the final
+// marker, intermediate arrow and unaffordable-step adjustment. Original
+// locals: steps, curr, bMoveAvail, testMobility, i, native_terrain, point,
+// RouteArrayPtr, dir, nextDir, wStat. Their function-scope lifetimes and the
+// get_location assignment restore retail's coalesced point slot and registers.
 //
-// 73.82 -> 79.97 (2026-08-20) on ONE `#pragma inline_depth(0)` around the
-// seedTarget construction. The analysis below is intact and correct - the
-// ctor expansion really does survive every budget experiment, and retail's
-// call really is NOT a budget rejection - but "outside the budget model"
-// does not mean "unreachable". inline_depth(0) is STATEMENT-granular in
-// VC6, so it imposes the call retail has without needing to explain why
-// retail refuses the site. advManager::Open's two vector::insert sites,
-// the other member of this family, went 52.72 -> 97.80 the same way.
-//
-// 79.97 -> 82.85 (2026-08-20) on two source facts the frame/flow sweep
-// found: (1) the path-length gate compares size() SIGNED - retail emits
-// `sub edx,ecx / test edx,0xfffffffc / jle` (the /4 quotient folded into a
-// masked test), ours was `sar edx,2 / je`, so the source casts:
-// `static_cast<int>(result.size()) <= 0`. (2) the walk start is a COPY of
-// a separately-built hero point (`mov ecx,[ebp-0x1c] / mov [ebp-0x1c],ecx`
-// - a self-store, i.e. a type_point copy VC6 coalesced onto one slot, the
-// same shape ProcessKeyPress's SPACE arm carries), so the source builds
-// heroPos.x/y/z and then `type_point step = heroPos;`. Our copy picks a
-// SEPARATE slot (edi via [ebp-0x20]) where retail coalesces; brace-scoping
-// the copy is byte-inert, so the coalesce is allocator state, not scope.
-//
-// Residual (82.85%): flow-distance 0; the mass is ONE whole-body ESI/EBX
-// role swap (this/currentHero in esi on retail, ebx on ours; ~20 slots
-// each way) plus the un-coalesced copy slot and the frame (0x28 vs 0x1c).
-// why-reg --model calls the swap C2-side handle STATE, not handle order -
-// its proposed heroPos.y-first store order measures 82.85 -> 79.65 and
-// delaying routeAffordable's `= 0` below the IsLocalHuman early-out
-// measures 82.85 -> 81.23, so the creation-order lever is spent both ways
-// and the swap is not source-reachable.
-//
-// The earlier over-inline reading of this function was wrong twice over:
-// the "missing" CompleteDraw/UpdateScreen calls were VC6 cross-jumping
-// copy 1's tail into copy 2's (identical bytes), not inlining, and copy
-// 1's missing pathTarget clear was never value propagation (the
-// IsLocalHuman/BroadcastMessage calls make the global opaque) - it is a
-// bRemoveTarget flag constant-folded per site, exactly HideRoute's
-// convention (see clear_adventure_route). With the flag and with
-// routeAffordable initialized at the top (retail zeroes EBX at entry and
-// stores it before the first call, which flavors copy 1's tail with
-// ebx-pushes vs copy 2's immediates and kills the cross-jump), the shape
-// is retail's: 3 rets, CompleteDraw(uchar) x3, UpdateScreen x4, frame
-// 0x1c. The ctor expansion survives every budget experiment - dead-mass
-// doses in clear_adventure_route flip the clears to calls (candidacy
-// cliff at cb>=1000) without ever un-inlining the ctor, and sequential
-// budget arithmetic cannot reject a small site at the SeedTo position
-// while accepting the bigger clear#3 after it, so retail's call is NOT a
-// budget rejection; whatever refuses it is front-end site state our
-// spelling sweep (named local vs temp expression) does not reach.
-// Before normalization (locals): bUpdateScreen, bReseed, bChangeButton.
+// MAX 83.0188 -> 100%, with the point-site inline_depth pin and both global
+// CompleteDraw/UpdateScreen pins removed. Canonical caller calls alone were
+// 60.9062%; restoring HideRoute's own drawing calls raised 89.6300%. Removing
+// the CompleteDraw pin then reached 95.2198%; removing UpdateScreen's pin was
+// byte-flat. A single wStat conditional expression (DC line 10507) reached
+// 96.3861%. Finally, compound coordinate steps at DC 10475/10476 made the
+// get_target constructor receive budget 58 against cost 59, while the later
+// get_location copy receives 66 and expands. Explicit x = x + delta gave
+// budgets 62/65 and over-inlined the first constructor; prefix i decrement
+// was byte-flat. All 47 retail blocks and 1247 body bytes now match without
+// artificial invariants, alternate declarations or forced inline decisions.
+// Before normalization (parameters): bUpdateScreen, bReseed, bChangeButton.
 VA(0x00418dd0, 0x4DF)  // linkorder, dc 0x1c05c
 void advManager::showRoute(int updateScreen, int reseed, int changeButton)
 {
-    int routeAffordable = 0;
+    int steps;
+    hero* curr;
+    int moveAvail = 0;
+    int testMobility;
+    int i;
+    TTerrainType nativeTerrain;
+    type_point point;
+    unsigned short* routeArrayPtr;
+    int dir;
+    int nextDir;
+    int widgetStatus;
 
     if (!g_currentPlayer->isLocalHuman())
         return;
-
-    int heroId = g_currentPlayer->m_currHeroId;
-    if (heroId == -1) {
-        clearAdventureRoute(this, updateScreen, 0);
+    if (g_currentPlayer->m_currHeroId == -1) {
+        hideRoute(updateScreen, 0, 1);
+        return;
+    }
+    curr = g_game->getCurrHero();
+    if (curr->m_pathTargetX == -1) {
+        hideRoute(updateScreen, 1, 1);
         return;
     }
 
-    hero* currentHero = &g_game->m_heroes[heroId];
-    if (currentHero->m_pathTargetX == -1) {
-        clearAdventureRoute(this, updateScreen, 1);
-        return;
-    }
-
-    // The point is a TEMPORARY, not a named local: retail reads it back
-    // through the constructor's returned `this` (`call ??0type_point /
-    // mov eax,[eax]`), where naming it re-reads the frame slot instead.
-#pragma inline_depth(0)
-    seedTo(type_point(currentHero->m_pathTargetX, currentHero->m_pathTargetY,
-                      currentHero->m_pathTargetZ));
-#pragma inline_depth()
-
-    int pathLength = g_searchArray->buildPath(currentHero, 0xea5f);
-    if (static_cast<int>(g_searchArray->m_result.size()) <= 0
-        || pathLength <= 0) {
-        clearAdventureRoute(this, updateScreen, 1);
-    } else {
+    seedTo(curr->getTarget());
+    steps = g_searchArray->buildPath(curr, 0xea5f);
+    if (g_searchArray->getPathSteps() > 0 && steps > 0) {
         memset(m_routeArray, 0,
-               (g_game->m_worldMap.m_hasTwoLevels + 1) * g_mapHeight * g_mapWidth
+               g_game->getNumMapLevels() * g_mapHeight * g_mapWidth
                    * sizeof(unsigned short));
         m_showRoute = 1;
+        testMobility = curr->m_movePoints;
+        point = curr->getLocation();
+        nativeTerrain = curr->m_army.getNativeTerrain();
 
-        int movePoints = currentHero->m_movePoints;
-        type_point heroPos(currentHero->m_x, currentHero->m_y, currentHero->m_z);
-        type_point step = heroPos;
-
-        currentHero->m_army.getNativeTerrain();
-
-        int i;
-        for (i = g_searchArray->m_result.size() - 1; i >= 0; i--) {
-            int dir = g_searchArray->m_result[i]->m_direction;
-            movePoints -= getTerrainCost(currentHero, step, dir, movePoints);
-            step.m_x = step.m_x + g_stepDeltaX[4 * dir];
-            step.m_y = step.m_y + g_stepDeltaY[4 * dir];
-
-            unsigned short* arrow =
-                &m_routeArray[(step.m_z * g_mapHeight + step.m_y) * g_mapWidth
-                            + step.m_x];
+        for (i = g_searchArray->getPathSteps() - 1; i >= 0; i--) {
+            dir = g_searchArray->getStep(i);
+            testMobility -= getTerrainCost(curr, point, dir, testMobility);
+            point.m_x += g_normalDirTable[dir].m_x;
+            point.m_y += g_normalDirTable[dir].m_y;
             if (i == 0) {
-                *arrow = 1;
+                routeArrayPtr = getRouteArrayPtr(point.m_x, point.m_y, point.m_z);
+                *routeArrayPtr = 1;
             } else {
-                int prevDir = g_searchArray->m_result[i - 1]->m_direction;
-                *arrow = g_routeArrowFrames[prevDir][dir] + 2;
+                nextDir = g_searchArray->getStep(i - 1);
+                routeArrayPtr = getRouteArrayPtr(point.m_x, point.m_y, point.m_z);
+                *routeArrayPtr = g_routeArrowFrames[nextDir][dir] + 2;
             }
-
-            if (movePoints < 0)
-                *arrow += 0x19;
-            else
-                routeAffordable = 1;
+            if (testMobility < 0) {
+                routeArrayPtr = getRouteArrayPtr(point.m_x, point.m_y, point.m_z);
+                *routeArrayPtr += 0x19;
+            } else {
+                moveAvail = 1;
+            }
         }
-
         if (changeButton) {
+            widgetStatus = moveAvail ? widget::WIDGET_CLEAR_STATUS
+                                     : widget::WIDGET_SET_STATUS;
             g_windowManager->broadcastMessage(
-                MESSAGE_WIDGET,
-                routeAffordable ? widget::WIDGET_CLEAR_STATUS
-                                : widget::WIDGET_SET_STATUS,
-                TAdventureMapWindow::MOVE_ID,
+                MESSAGE_WIDGET, widgetStatus, TAdventureMapWindow::MOVE_ID,
                 widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
         }
+    } else {
+        hideRoute(updateScreen, 1, 1);
     }
-
     if (updateScreen) {
-        completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z, 0, 1);
+        completeDraw(0);
         this->updateScreen(0, 0);
     }
 }
@@ -9458,18 +9344,9 @@ void advManager::showRoute(int updateScreen, int reseed, int changeButton)
 // the file in retail link order.
 #endif  // @carcass
 
-// MEASURED NEGATIVE, do not retry: `#pragma auto_inline(off)` around this
-// constructor. predict-inline reports ShowRoute as the one body where
-// retail CALLS the ctor and our CL expands it, and switching the pragma on
-// does move ShowRoute 65.27 -> 73.87 - but retail inlines this ctor
-// everywhere else in the compiland, so the same edit knocks THIRTEEN exact
-// functions off at once (DrawArrow, DrawArrowShadow, DrawGround,
-// DrawRiver, DrawRoad, DrawShroud, DrawBoatPart, DrawBoatPartShadow,
-// HeroQuickView, ScanForHeroOrBoat, SeedTo 100 -> 39.19, get_map_center
-// 100 -> 53.61, DemobilizeCurrHero) and takes the unit 70.08 -> 68.45.
-// VC6's inline decision is per-CALLEE, so the pragma cannot be aimed at
-// ShowRoute alone; whatever refuses the expansion there is a property of
-// that one call site.
+// The canonical constructor stays in struct.h. ShowRoute now retains this
+// call naturally inside get_target while expanding the get_location copy;
+// the former per-callee pin diagnosis was disproved by its recovered source.
 #if 0  // @carcass -- canonical inline body is in struct.h
 VA(0x004192b0, 0x44)  // anchor-callee, dc 0x1edb0
 type_point::type_point(short new_x, short new_y, short new_z)
@@ -9503,7 +9380,7 @@ void advManager::hideRoute(int updateScreen, int removeTarget,
     if (removeTarget) {
         int heroId = g_currentPlayer->m_currHeroId;
         if (heroId != -1) {
-            hero* currentHero = &g_game->m_heroes[heroId];
+            hero* currentHero = g_game->getCurrHero();
             currentHero->m_pathTargetX = -1;
             currentHero->m_pathTargetY = -1;
         }
@@ -9515,23 +9392,8 @@ void advManager::hideRoute(int updateScreen, int removeTarget,
     if (!updateScreen)
         return;
 
-    completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z, 0, 1);
-    g_windowManager->updateScreen(ADVENTURE_SCREEN_X, ADVENTURE_SCREEN_Y,
-                                  ADVENTURE_SCREEN_WIDTH,
-                                  ADVENTURE_SCREEN_HEIGHT);
-
-    unsigned long curTime = GameTime::get();
-    if (static_cast<long>(
-            curTime - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT]) >= 0
-        && !m_animCtrPaused) {
-        ++m_animCtr;
-        long elapsedTime =
-            curTime - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
-        g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
-            cppMax(elapsedTime,
-                     static_cast<long>(ADVENTURE_ANIMATION_MAX_ELAPSED));
-    }
-    process1WindowsMessage();
+    completeDraw(0);
+    this->updateScreen(0, 0);
 }
 
 #if 0  // @carcass

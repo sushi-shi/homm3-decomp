@@ -1679,3 +1679,27 @@ code generation: VC6 turns it into overlapping `rep movsd` fills (79.5302%).
 An explicit `ARTIFACT_NONE` constructor and a literal empty string are each
 byte-flat against the per-element-loop candidate. Diagnose preceding source
 operations before treating a nested library decision as fixed compiler state.
+
+### Compound bitfield updates can cross a nested constructor frontier
+
+`advManager::showRoute` (0x418dd0) reaches 100% from 83.0188% by restoring
+Dreamcast's canonical helper calls, function-scope locals, point assignment,
+and separately evaluated route-array pointers. The private clearing helper
+was a duplicate of `hideRoute`; restoring the member's own `completeDraw`
+and `updateScreen` calls makes the earlier “unreachable constructor” diagnosis
+obsolete. The point-site depth pin and both drawing-helper pins are removed.
+
+With ordinary helpers, a single conditional expression for the DC `wStat`
+local reaches 96.3861%. Writing the two bitfield coordinate steps as `+=`
+then reaches 100%. Passive C2 traces show why: explicit `x = x + delta` gives
+the constructor in `getTarget` budget 62 against cost 59; compound updates
+give it 58, so it remains a call. The later `getLocation` constructor receives
+66 and expands, exactly as retail requires. The prefix loop decrement is
+byte-flat. Both source forms have the same coordinate semantics, but different
+pre-inline costs; no dummy expression or artificial declaration is necessary.
+
+The final production object matches all 47 CFG blocks, 30 branches and three
+returns. Removing only the point pin had scored 79.3968%; restoring canonical
+calls while leaving `hideRoute` flattened scored 60.9062%. Restoring the full
+helper chain reaches 89.6300%, then removing the `completeDraw` pin reaches
+95.2198%. Removing the `updateScreen` pin at that checkpoint is byte-flat.

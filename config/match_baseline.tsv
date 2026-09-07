@@ -165,7 +165,7 @@ advmgr	?setShrineHelpText@@YIXPADPAVhero@@PAVNewmapCell@@W4GlobalInfoFlags@@PBD4
 advmgr	?setTownContext@advManager@@QAEXHEE@Z	93.8054	93.8054	93.8054	0x17830	bdb99ec2b598
 advmgr	?setTreeHelpText@@YIXPADPAVhero@@PAVNewmapCell@@PBD3@Z	100.0000	100.0000	100.0000	0xdb00	2e8e39550be1
 advmgr	?setWitchHutHelpText@@YIXPADPAVhero@@PAVNewmapCell@@PBD3@Z	100.0000	100.0000	100.0000	0xdcc0	89757e48978e
-advmgr	?showRoute@advManager@@QAEXHHH@Z	83.0188	83.0188	83.0188	0x18dd0	7028a18c4672
+advmgr	?showRoute@advManager@@QAEXHHH@Z	100.0000	100.0000	100.0000	0x18dd0	6d89652c1057
 advmgr	?startLocalPlayerTurn@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19e00	9846ce591b2e
 advmgr	?townQuickView@advManager@@QAEXHHHE@Z	93.0922	93.0922	93.0922	0x167a0	6e4a0decba9d
 advmgr	?trimLoopingSounds@advManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x1a1e0	fc94da4b7cef
