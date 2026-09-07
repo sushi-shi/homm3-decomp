@@ -560,19 +560,24 @@ TObjectType& TObjectType::setTriggerMask(const std::bitset<48>& mask)
 // statements later is retail's, not a transcription slip: retail issues
 // the operator&= call on the member at 0x514d04 and then overwrites the
 // member at 0x514d12, and a store cannot be moved across that call.
-// Residual (76.64%): frame exact at 0x64, and the whole delta is one
-// /Ob2 split. Retail CALLS bitset<48>::_Tidy twice and bitset<9>::_Tidy
-// once at the head and EXPANDS the string's _Tidy(true) at the tail (its
-// second `ret` and its operator delete); we do the exact opposite. The
-// lever for the over-inlined half is caller-shrink and this body has no
-// mass to lift.
+// Residual (81.7405%, 2026-09-07): the zero-valued unsigned-long
+// constructors for passable, trigger and terrainRead reproduce retail's
+// three retained _Tidy calls at +0x3e, +0x47 and +0x50. recommendedRead's
+// zeroing remains expanded. This is a constructor-overload hypothesis,
+// supported by the call sequence rather than a Dreamcast declaration.
+// Controls: all default constructors 76.6378%; only the two 48-bit masks
+// given zero 79.5892%; only the two 9-bit sets 73.2865%; all four 78.2865%.
+// An inner scope for the non-string locals is byte-flat on the default form.
+// Remaining: retail calls the outer bitset<48> union and bitset<10> &=;
+// the candidate expands those boundaries. Retail expands string cleanup,
+// while the candidate calls _Tidy(true). Frame size remains 0x64.
 VA(0x00514b80, 0x1F7)  // anchor-caller 0x514d80 per-row loop; anchor-callee setImageName/setTriggerMask; retail-only
 std::istream& operator>>(std::istream& is, TObjectType& objectType)
 {
     std::string imageName;
-    std::bitset<48> passable;
-    std::bitset<48> trigger;
-    std::bitset<9> terrainRead;
+    std::bitset<48> passable(0);
+    std::bitset<48> trigger(0);
+    std::bitset<9> terrainRead(0);
     std::bitset<9> recommendedRead;
     union {
         // Before normalization: raw.
