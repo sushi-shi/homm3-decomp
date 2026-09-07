@@ -1534,3 +1534,20 @@ reaches 100%; introducing a separate flag local instead gives 97.1951%.
 The constructor remains an ordinary two-argument function with its CNetMsg
 initializer and two bounded copies, at its original source position among
 message constructors. No inline-depth control is needed.
+
+
+### Return expression and original guard scopes jointly control tail merging
+
+`combatManager::isComputerAction(const army*)` (0x474bf0) stopped at 81.3696%
+with a supposed VC6 merged-return limitation. Its source had moved the
+repeated go-solo/control guard after the switch and expanded the final logical
+return into `if (...) return 0; return 1;`.
+
+Dreamcast command.cpp:946..984 keeps that guard inside each arm, and line 989
+returns the player/human logical expression. Retail distinguishes that final
+full-EAX result from its earlier AL constant returns. Restoring only the guard
+scopes scores 74.6377%; only the logical return scores 79.2391%. Restoring both
+reaches 100%: VC6 merges the repeated guards while preserving the machine-arm
+return blocks. The canonical `getControllingSide()` call replaces the flattened
+hypnotize expression without changing the exact bytes. Neither individual
+score dip disproved the recovered source structure.

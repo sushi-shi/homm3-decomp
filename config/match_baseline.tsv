@@ -1067,7 +1067,7 @@ command	?getControl@combatManager@@QAEXXZ	98.2830	98.2830	98.2830	0x782d0	2524e0
 command	?getSurrenderCost@combatManager@@QAEJXZ	100.0000	100.0000	100.0000	0x77a00	fa49cfa33a66
 command	?getTowerString@combatManager@@ABE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TWallSection@1@JJ@Z	100.0000	100.0000	100.0000	0x7a2d0	6ddb26623f6b
 command	?handleCombatPlayerDrop@combatManager@@QAEEKPAVmessage@@@Z	100.0000	100.0000	100.0000	0x7a500	7be8073905f4
-command	?isComputerAction@combatManager@@QAEEPBVarmy@@@Z	81.3696	81.3696	81.3696	0x74bf0	b081df5a0ae2
+command	?isComputerAction@combatManager@@QAEEPBVarmy@@@Z	100.0000	100.0000	100.0000	0x74bf0	a31de26ed2d1
 command	?isComputerAction@combatManager@@QAEEXZ	100.0000	100.0000	100.0000	0x74ba0	f716b405552d
 command	?isOutsidePlacementBoundry@combatManager@@QAEEHH@Z	100.0000	100.0000	100.0000	0x763f0	33d37dbcad5c
 command	?main@combatManager@@UAEHAAVmessage@@@Z	97.6611	97.6611	97.6611	0x740d0	6dc75421d60c
