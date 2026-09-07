@@ -1008,6 +1008,8 @@ public:
     virtual int getLand(const TRmgGridPoint& point);
     virtual int getOverlay(const TRmgGridPoint& point);
 
+    void clear();
+
     TRmgMapItem* getMapItem(int x, int y);
     // Before normalization (function): type_random_map::GetMapItem.
     inline TRmgMapItem* getMapItem(int x, int y, int z)
