@@ -16,6 +16,26 @@ struct rmgTerrainTile;
 struct TPoint;
 struct TObjectType;
 
+// The abstract progress sink driven by Complete's random-map generator.
+// Retail constructor 0x530e20 stores vtable 0x6409c0, the step total at +4,
+// and zero at +8. The vtable holds a scalar deleting destructor at 0x530e40,
+// SetTotal at 0x530e80, and _purecall in the Advance slot.
+class TProgressSink {
+public:
+    // Before normalization: steps.
+    int m_steps;
+    // Before normalization: done.
+    int m_done;
+
+    TProgressSink(int totalSteps);
+    virtual ~TProgressSink();
+    // Before normalization (function): TProgressSink::SetTotal.
+    virtual void setTotal(int totalSteps);
+    // Before normalization (function): TProgressSink::Advance.
+    virtual void advance(int amount) = 0;
+};
+SIZE(TProgressSink, 0xc);
+
 // Complete's random-map object factories share this five-dword prefix.  The
 // constructor at 0x534160 writes the four fields, while vtable 0x640b64 proves
 // three virtual operations: an object factory taking three arguments, a
