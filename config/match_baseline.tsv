@@ -3292,6 +3292,7 @@ rmg_support	??1TRmgRiverPainter@@UAE@XZ	100.0000	100.0000	100.0000	0x15eda0	60a4
 rmg_support	??1TRmgRoadPainter@@UAE@XZ	100.0000	100.0000	100.0000	0x15f460	52104fd8eba9
 rmg_support	??1TRmgVoronoi@@QAE@XZ	100.0000	100.0000	100.0000	0x1fd330	8b8ca13a7a35
 rmg_support	??_GTRmgRiverPainter@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x15eed0	-
+rmg_support	?canPaint@TRmgLinePainter@@UAEHABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x15ee00	97886bd9259e
 rmg_support	?getLand@TRmgLinePainter@@UAEHABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x15ee30	df5b45b1cd8b
 rmg_support	?getLand@TRmgRoadLinePainter@@UAEHABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x15f390	c8b07bd6d0ec
 rmg_support	?getMapItem@type_random_map@@QAEPAUTRmgMapItem@@HH@Z	100.0000	100.0000	100.0000	0x146990	a7e22d644e0f
