@@ -154,6 +154,8 @@ def _build_parser() -> argparse.ArgumentParser:
                       help="polish existing compiled functions (the default)")
     mode.add_argument("--admission", action="store_true",
                       help="list functions without compiled bodies, largest first")
+    mode.add_argument("--smallest", action="store_true",
+                      help="combine every unmatched target, smallest first")
     pq.add_argument("--diagnose", action="store_true",
                     help="also diagnose every polish target (slower)")
     pq.add_argument("--quiet", action="store_true")
