@@ -180,6 +180,32 @@ conflict sets matter. `_regmodel.assign` remains a model of the documented
 call-crossing slice; it does not model this cursor or the complete selector.
 No modified-compiler result is a matching checkpoint.
 
+The local selector does not account for every emitted register. A second
+byte-verified trace at `0x323c8` records operands as the binding-update walk
+receives each instruction. In the same function it visited 251 instructions,
+with the same 36 selector requests and 55 writes of already assigned registers
+at `0x323fe`. The registry's `_Last` load at function offset `+0xd0` already
+has EAX assigned to a local temporary (backend ID `0x105`, symbol kind 4).
+It does not pass through the scratch selector. The cache's `_Last` load at
+`+0x140` does: request 10 selects EDX for a kind-3 pseudo. The two similar
+loads therefore require different allocation evidence; cursor arithmetic
+alone cannot explain both.
+
+The instruction trace reproduced its complete 421,030-byte `/Z7` object
+outside the timestamp and the normal function's 800 bytes including padding
+(SHA-256 `bf79c365b8fa6c15b2139eca7ade8fef3b8ab10fd1daff5d8c6eb8903c005314`).
+Controls are under
+`build/least-matched/object-image-20260907/instruction-binding-trace/`.
+At this checkpoint, naming the append position, using `push_back`, assigning
+the iterator in the insert argument, and naming the caller's index reference
+are byte-identical. These spellings do not change the observed ownership.
+
+Hook boundaries must preserve branch-entry addresses. The binding store at
+`0x323fe` is seven bytes; `0x32405` is a branch target. A nine-byte trampoline
+that also steals `mov esi,[esi]` at that target makes the traversal loop
+without advancing on its skip path. The seven-byte hook leaves that target
+intact and passes the object-identity check.
+
 ### 3b. Source creation order
 
 **"Creation order" means the FIRST ASSIGNMENT, not the declaration**
