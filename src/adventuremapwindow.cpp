@@ -593,6 +593,13 @@ void checkAdvCheatCode(std::string& chatString);
 // less faithful to retail's _Tidy-then-assign shape: default construction
 // followed by `chatString = sChat` or by `assign(sChat, strlen(sChat))`
 // (77.56 both).
+// Passive trace (2026-09-07, identical 400-byte candidate): caller cb=184,
+// initial budget=1000 and four top-level candidates. The string constructor
+// receives 250; nested assign(const char*, size) receives 82 for cost 69 and
+// expands. Restoring DC's CheckAdvCheatCode-before-SendChat definition order
+// is byte-identical at 77.4872%, so source order does not explain this site.
+// DC 262 proves the retained const-char-pointer constructor; default-string
+// assignment controls do not recover that source boundary.
 // Before normalization (locals): sChat.
 VA(0x004022e0, 0x167)  // anchor-string("gosolo") + anchor-callee(CheckAdvCheatCode), dc 0x330c
 void CAdventurMapChatEdit::sendChat(const char* chat, int toWho)

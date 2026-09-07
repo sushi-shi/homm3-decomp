@@ -11,11 +11,9 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x004e3070	825	76.33603	76.336	76.336	195.22799999999998	hero	?giveArtifact@hero@@QAEEPBUtype_artifact@@EE@Z	admitted
 0x005b6540	714	77.26087	77.2609	77.2609	162.35717399999993	rmg_terrain	?buildMatchingNeighbourMask@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@PAE@Z	admitted
 0x004022e0	359	77.48718	77.4872	77.4872	80.82095199999999	adventuremapwindow	?sendChat@CAdventurMapChatEdit@@UAEXPBDH@Z	admitted
-0x0049f7e0	676	50.390152	78.1174	78.1174	147.92637599999998	events	?doEventArtifact@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	admitted
 0x00524690	1668	78.19582	78.1958	78.1958	363.69405599999993	philai	?getSkillValue@@YIJPBVhero@@W4TSecondarySkill@@E@Z	admitted
-0x004c2450	2190	74.47679	78.2855	78.2855	475.54755000000006	game	?loadMap@game@@QAE_NPAVTAbstractFile@@@Z	admitted
+0x004c2450	2190	63.8664	78.2855	78.2855	475.54755000000006	game	?loadMap@game@@QAE_NPAVTAbstractFile@@@Z	admitted
 0x004886a0	306	75.72034	78.5339	78.5339	65.686266	customcampaign	??1CampaignHeaderStruct@TCampaignBrief@@QAE@XZ	admitted
-0x004ea1d0	1112	78.59259	78.5926	78.5926	238.050288	hiscore	?highScoreWindowHandler@@YIHAAVmessage@@@Z	admitted
 0x004dd2d0	5182	78.6458	78.6458	78.6458	1106.574644	hero	?windowHandler@THeroScreenWindow@@UAEHPAVmessage@@@Z	admitted
 0x0058bce0	1455	77.26694	78.7597	78.7597	309.04636500000004	singleselectionwindow	?onBeginGame@TSingleSelectionWindow@@QAEEXZ	admitted
 0x0048ae90	880	78.807365	78.8074	78.8074	186.49487999999997	customcampaign	?save@SCampaign@@QAEXPAVTAbstractFile@@@Z	admitted
@@ -91,6 +89,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x0042f980	713	85.34764	85.3476	85.3476	104.471612	ai_player	?netValueOfLocation@@YIHPAVhero@@PAUHeroDestination@@PAJPAUpathCell@@PAVsearchArray@@@Z	admitted
 0x00489820	1536	85.58429	85.5843	85.5843	221.42515199999997	customcampaign	?completeCurrentMap@SCampaign@@QAEXPAX@Z	admitted
 0x0041a7f0	775	85.63393	85.6339	85.6339	111.33727500000003	advmgr	?viewPuzzle@advManager@@QAEXXZ	admitted
+0x0049f7e0	676	85.8144	85.8144	85.8144	95.89465599999998	events	?doEventArtifact@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	admitted
 0x0042a2b0	447	85.833336	85.8333	85.8333	63.325149000000046	ai_player	?checkTradeSupply@type_AI_player@@QAE_NPBHJPAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	admitted
 0x00432640	151	85.8871	85.8871	85.8871	21.310478999999994	ai_player	?getValue@type_necromancy_artifact@@UBEJPBVhero@@EE@Z	admitted
 0x0042fee0	1720	85.922806	85.9228	85.9228	242.12784000000002	ai_player	?aiAttemptMove@@YIXPAVhero@@AAUHeroDestination@@AAJE@Z	admitted

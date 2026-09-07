@@ -1333,3 +1333,34 @@ The Ghidra evidence regenerates with
 `python3 scripts/homm3/vc6/ghidra_scripts/inline_probe.py dump|refs|callers`
 against the persisted atlas project (never re-analyze; `atlas --regen
 --reimport` owns that).
+
+### Canonical construction can restore a nested inline boundary
+
+`advManager::doEventArtifact` (0x49f7e0) reached 85.81439% from banked
+78.1174% after recovering its nested helper calls and the source operations in
+`advManager::giveArtifact`. Dreamcast events.cpp:481 proves construction with
+`ARTIFACT_NONE`; line 483 assigns `GetArtifactIndex()`. Replacing redundant
+sentinel stores and a `memcpy` with those operations lowers the hand-over
+helper's traced C2 cost from 133 to 113. Its direct free-artifact expansion has
+budget 113, while the two skill-arm expansions have budgets 6 and 4. This
+restores retail's expand/call/call decisions without inline controls.
+
+Either redundant initialization or the `memcpy` assignment alone restores the
+same 672-byte caller control, which keeps all three hand-over calls. The
+canonical caller is 752 bytes including alignment, SHA-256
+`8282bef18e0cd334fc454b975f8fb68cb53f1358c711d79fc616756b44e1198b`.
+The remaining differences are early short loads and unmerged skill-success
+tails. Inspect the callee's recovered operations before treating a small
+nested-budget miss as unavoidable compiler state.
+
+### A byte-inert caller probe does not establish the small-free class
+
+The campaign-header destructor (0x4886a0) previously inferred that `freeData`
+was in C2's cost-at-most-40 class because extra free/charged caller sites did
+not prevent expansion. The 2026-09-07 passive trace measures cost **101** and
+site budget **752**, with the state gate allowing expansion. Nested `clear`
+expands `erase` at cost/budget 69/144, then retains `_Destroy` at 49/29.
+Those observations replace the inferred cost bound; an unchanged result from
+a caller probe alone cannot identify which inline gate admitted the callee.
+The measured caller is 368 bytes including padding, SHA-256
+`4cd34e2faf32b5283dd26976c49e3e8286cfb5f5487fbdca9eb0e067ba8f63df`.
