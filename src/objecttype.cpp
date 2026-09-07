@@ -244,6 +244,24 @@ static std::vector<TObjectType::TImageInfo>& getObjectImageCache()
 // The retained cache insert at 0x516c10 agrees in every non-relocation
 // byte of its 522-byte body, including its ten call sites. Its _Construct
 // at 0x517b50 uses a six-dword rep movsd, consistent with the ordinary copy.
+// An explicit point copy constructor contradicts that callee: _Construct
+// grows from 20 to 39 bytes and replaces rep movsd with six individual
+// load/store pairs. Coordinate constructors taking values or references
+// are neutral when the empty point is initialized before the row count.
+//
+// Further boundary controls do not close the residual: an ordinary free
+// GetIndex is neutral; a separate registry-append helper changes nested
+// decisions. Separate whole-mask, raw-data and decode helpers reach only
+// 88.7945, 88.1739 and 84.2727. A TImageInfo::readMask member remains called.
+// Naming the loop's two bitset references, narrowing dimension lifetimes,
+// and reusing oldCount for cell also fail. Moving only the byte-index/bit
+// declarations outside the loop is neutral. bitset::at retains two bounds
+// branches absent from retail; it is not an elided-check explanation.
+// Include-order controls are neutral. The configured CPU scheduling agrees
+// with /G5; /G6 lowers the score to 84.1067. why-reg's first named-flag probe
+// worsens its register distance from 48 to 53. Its retained-value mapping
+// already agrees: ESI=this, EBX=oldCount, EDI=name. With a loop-local index,
+// file and cell share ESI and this/name swap; early cell separates them.
 // Remaining: lookup exit and string-copy scheduling, and cell's zero being
 // hoisted before the reads instead of materialized at the loop. No inline
 // controls or release-elided operations are used.
