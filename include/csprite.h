@@ -171,8 +171,9 @@ public:
               Bitmap16Bit* dst, int dx, int dy, unsigned char hflip,
               unsigned char tblit)
     {
-        draw(seqnum, framenum, sx, sy, sw, sh, dst->m_map, dx, dy,
-             dst->m_width, dst->m_height, dst->m_pitch, hflip, tblit);
+        draw(seqnum, framenum, sx, sy, sw, sh, dst->getMap(0, 0), dx, dy,
+             dst->getWidth(), dst->getHeight(), dst->getPitch(), hflip,
+             tblit);
     }
     // Retail 0x47bd60. Order-mapped (it is the row between Draw at
     // 0x47bcf0 and DrawAdvObj at 0x47bdc0, exactly where the DC roster

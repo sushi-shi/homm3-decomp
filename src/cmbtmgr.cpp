@@ -3298,28 +3298,10 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
 // So rotation here is NOT the goto-loop signature - that test only reads
 // that way when the loop condition is hoistable in the first place.
 //
-// Residual (91.1780%): the same three classes as ShootMissile, and the
-// two shared ones are shared for the same reason. The inlined
-// IsQuickCombat takes both player-record addresses with LEA instead of
-// folding +0xe4 into the load (LowerDoor and the out-of-line const twin
-// both fold, so this is schedule, not spelling); the `+15` ahead of the
-// magic divide comes out `mov`+`add` where retail has one `lea`, in both
-// animators identically; and retail's `right`/`bottom` seed sits in the
-// loop preheader where ours straddles the entry guard. The rest is
-// scratch-register preference (edx->ecx x10, eax->edx x6).
-// Tried and rejected, all re-measured on fuzzy rather than on the
-// solver's distance: `frame` declared last in its block (the solver's
-// own top pick - 20 slots of register distance BETTER but 90.71 fuzzy,
-// the two metrics ranking it opposite ways), `frame` hoisted above the
-// Bitmap16Bit (90.17), and `right`/`bottom` ahead of ARROW_DELAY (90.59).
-// 2026-09-05: 93.5075 -> 94.9636 on ShootBallisticMissile's lever (see its
-// note above). Retail computes `right` and `bottom` in a FIVE-instruction
-// preheader AFTER the loop's `cmp nframes,0 / jle`, keeping only `frame = 0`
-// and `step = 0` above it; a plain `for` puts all four above the guard.
-// Scoping right/bottom inside an explicit `if (nframes > 0)` and hoisting
-// `step` out reproduces the split - blocks now 54/54 with zero flow-kind,
-// target-shift or missing rows against 53-vs-54 with 26 flow-kind before.
-// Residual (94.9636%): one size-only block; registers and scheduling only.
+// 2026-09-05: 93.5075 -> 94.9636 by computing `right` and `bottom` in an
+// explicit guarded preheader (see ShootBallisticMissile above). A plain
+// `for` puts all four loop seeds above the guard; this form gives retail's
+// 54 blocks and 29 branches.
 // NOTE FOR ShootMissile BELOW: the identical edit REGRESSES it, twice. Its
 // skeleton does close the same way (62/62, zero flow) but fuzzy falls
 // 93.9772 -> 92.4708 with `step` hoisted and 92.3592 with `step` left in the
@@ -3328,8 +3310,23 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
 // 2026-09-07 evidence refresh: DC types `deltaX`, `nframes`, and ARROW_DELAY
 // as const and `missile` as a const pointer; restoring those qualifiers is
 // byte-flat at 94.9649 and preserves the proven source facts. Commuting the
-// frame numerator to `15 + distance` is also byte-flat and still emits the
-// same mov/add rather than retail's LEA, so the canonical order remains.
+// frame numerator to `15 + distance` is byte-flat.
+//
+// 2026-09-07: 94.9649 -> 100.0000. A named `distance` produces retail's
+// `lea eax,[eax+15]` rounding preheader; testing `step < nframes` shares the
+// zero carrier with the loop counter; and declaring `bottom` before `right`
+// selects retail's scratch allocation while VC6 still emits right first.
+// The large recovery is source-boundary evidence: Bitmap16Bit::Draw,
+// Bitmap16Bit::Grab and CSprite::Draw all have Dreamcast header forwarding
+// overloads, and the latter two were missing or mis-modelled in our headers.
+// Restoring calls to those canonical wrappers, plus CSprite::Draw's proven
+// GetMap/GetWidth/GetHeight/GetPitch body, makes all 54 blocks, 29 branches
+// and 17 emitted calls exact. Bitmap16Bit::Grab was byte-flat before the
+// CSprite correction but closed the last twelve rows after it; its verdict is
+// context-dependent. Negative controls: initialized `frame` before
+// ARROW_DELAY scores 95.33; predeclared frame/step, chained zero assignment,
+// split right/bottom assignments, and a block-local screen pointer are
+// byte-flat; the old pasted wrapper bodies score 96.05.
 VA(0x00467db0, 0x46A)  // dc-bracket forced, dc 0x619a8
 void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
                                          int destY, int nsprites,
@@ -3345,8 +3342,9 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
     const int deltaX = destX - startX;
     int deltaY = destY - startY;
     unsigned char flipped = deltaX < 0;
-    const int nframes = (static_cast<int>(sqrt(static_cast<double>(
-                             deltaY * deltaY + deltaX * deltaX))) + 15) / 31;
+    const int distance = static_cast<int>(sqrt(static_cast<double>(
+        deltaY * deltaY + deltaX * deltaX)));
+    const int nframes = (distance + 15) / 31;
     int addX;
     int addY;
     if (nframes > 0) {
@@ -3397,17 +3395,14 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
 
     int frame = 0;
     int step = 0;
-    if (nframes > 0) {
-        int right = x + width - 1;
+    if (step < nframes) {
         int bottom = y + height - 1;
+        int right = x + width - 1;
         for (; step < nframes; step++) {
             unsigned long nextFrameTime = GameTime::get() + arrowDelay;
             if (step != 0) {
                 saved.draw(0, 0, width, height,
-                           g_windowManager->m_screenBitmap->m_map, x, y,
-                           g_windowManager->m_screenBitmap->m_width,
-                           g_windowManager->m_screenBitmap->m_height,
-                           g_windowManager->m_screenBitmap->m_pitch, false);
+                           g_windowManager->m_screenBitmap, x, y, false);
                 updateArea.m_minX = x;
                 updateArea.m_minY = y;
                 updateArea.m_maxX = right;
@@ -3417,15 +3412,9 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
                 y += addY;
                 bottom += addY;
             }
-            saved.grab(g_windowManager->m_screenBitmap->m_map, x, y,
-                       g_windowManager->m_screenBitmap->m_width,
-                       g_windowManager->m_screenBitmap->m_height,
-                       g_windowManager->m_screenBitmap->m_pitch);
+            saved.grab(g_windowManager->m_screenBitmap, x, y);
             missile->draw(0, frame, 0, 0, width, height,
-                          g_windowManager->m_screenBitmap->m_map, x, y,
-                          g_windowManager->m_screenBitmap->m_width,
-                          g_windowManager->m_screenBitmap->m_height,
-                          g_windowManager->m_screenBitmap->m_pitch, flipped, 1);
+                          g_windowManager->m_screenBitmap, x, y, flipped, 1);
             if (updateArea.m_minX > x)
                 updateArea.m_minX = x;
             if (updateArea.m_minY > y)
@@ -3453,10 +3442,8 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
         }
     }
 
-    saved.draw(0, 0, width, height, g_windowManager->m_screenBitmap->m_map, x, y,
-               g_windowManager->m_screenBitmap->m_width,
-               g_windowManager->m_screenBitmap->m_height,
-               g_windowManager->m_screenBitmap->m_pitch, false);
+    saved.draw(0, 0, width, height,
+               g_windowManager->m_screenBitmap, x, y, false);
     g_windowManager->updateScreen(x, y, width, height);
     missile->dispose();
 }
