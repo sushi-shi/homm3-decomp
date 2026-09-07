@@ -4313,7 +4313,7 @@ viewwrld	??0TViewWorldWindow@@QAE@XZ	97.1358	97.1358	97.1358	0x1fa600	0ba348bb81
 viewwrld	??1TViewWorldWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1fbd60	5f22f3d5fc49
 viewwrld	??_GTViewWorldWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1fbd30	-
 viewwrld	?init@TViewWorldWindow@@QAEXUtype_point@@E@Z	98.8939	98.8939	98.8939	0x1fc240	15b38c7965e2
-viewwrld	?updateRadar@TViewWorldWindow@@AAEXHHM@Z	80.7500	80.7500	80.7500	0x1fc8f0	15a920c66a3b
+viewwrld	?updateRadar@TViewWorldWindow@@AAEXHHM@Z	100.0000	100.0000	100.0000	0x1fc8f0	a0112da18e13
 viewwrld	?updateViewWorld@TViewWorldWindow@@AAEXPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1fc7a0	42ab75afe1c2
 viewwrld	?viewWorld@advManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0x1fbf90	217ae0f652a9
 viewwrld	?viewWorldSurfaceHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1fbdf0	5ef0cf8d4a30

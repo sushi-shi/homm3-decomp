@@ -20,7 +20,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x004f2960	894	79.1107	79.1107	79.1107	186.7503420000001	kb	?displayLCWinLoss@@YIEAAVLossConditionStruct@@AAH1E@Z	admitted
 0x0048a310	2846	69.5768	69.5768	79.2531	590.456774	customcampaign	?load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	admitted
 0x00521960	2819	80.0996	80.0996	80.0996	560.9922760000002	overview	?windowHandler@TOverviewWindow@@UAEHPAVmessage@@@Z	admitted
-0x005fc8f0	531	80.75	80.75	80.75	102.2175	viewwrld	?updateRadar@TViewWorldWindow@@AAEXHHM@Z	admitted
 0x00488880	1494	53.9868	53.9868	80.9474	284.64584399999995	customcampaign	?load@CampaignHeaderStruct@TCampaignBrief@@QAE_NXZ	admitted
 0x004d95d0	530	81.04	81.04	81.04	100.488	hero	?updateSpellList@hero@@QAEXXZ	admitted
 0x00523bb0	479	81.040695	81.0407	81.0407	90.815047	path	?validAttack@army@@QBEHHHHHPAH@Z	admitted

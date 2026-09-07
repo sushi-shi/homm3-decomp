@@ -23,6 +23,7 @@
 #include "textwdgt.h"
 #include "widget.h"
 #include "winmgr.h"
+#include "homm3_minmax.h"
 
 // Dreamcast publishes this source-private renderer state by name. Retail
 // independently fixes each address through the repeated view-world draw
@@ -82,27 +83,6 @@ DATA(0x006aac28) Bitmap16Bit* g_memoryBuffer;
 // Before normalization: view_heroes.
 DATA(0x006aac30)
 static unsigned char g_viewHeroes;
-
-// VC6's own <xutility> reference-returning min/max, in the by-value form
-// this tree has byte-proven three times over (ai_combat.cpp, ai_tactical.cpp,
-// diff.cpp). update_radar needs exactly that signature and no other: it
-// clamps `origin.x` and `origin.y`, which are BITFIELDS, so no reference can
-// bind to the argument and retail's own shape - both operands copied into
-// stack temps, then the ADDRESS selected between them - is what a by-value
-// parameter returned by const reference emits.
-template <class _TYPE>
-// Before normalization (locals): _X, _Y.
-inline const _TYPE& cppMin(_TYPE x, _TYPE y)
-{
-    return (y < x ? y : x);
-}
-
-template <class _TYPE>
-// Before normalization (locals): _X, _Y.
-inline const _TYPE& cppMax(_TYPE x, _TYPE y)
-{
-    return (x < y ? y : x);
-}
 
 // E:\gamedcs\viewwrld.cpp:100
 // The magic-number float-to-int conversion. Retail emits NO body for it:
@@ -1695,6 +1675,15 @@ void TViewWorldWindow::init(type_point newCenter, unsigned char updateFlag)
     }
 }
 
+// E:\gamedcs\viewwrld.cpp:1549, dc 0x195ffc. This ordinary method's
+// only source operation is the five-argument adventure repaint. Complete
+// expands the method into updateRadar while retaining vwCompleteDraw.
+void TViewWorldWindow::drawWindow()
+{
+    g_advManager->vwCompleteDraw(m_origin.m_x, m_origin.m_y, m_origin.m_z,
+                                m_viewableWidth, m_viewableHeight);
+}
+
 // E:\gamedcs\viewwrld.cpp:1558. Both level callbacks above call it. The
 // eight per-layer passes are the Dreamcast's statement order exactly
 // (ground, river, road, underlay, object shadows, objects, then the
@@ -1787,28 +1776,18 @@ void TViewWorldWindow::updateViewWorld(message* msg)
     g_windowManager->updateScreen(0, 0, 800, 600);
 }
 
-// E:\gamedcs\viewwrld.cpp:1675
-// The radar drag handler. (mrx, mry) is a screen point inside the
-// adventure window's own RadarWidget, which this window borrows for its
-// mini-map: retail reads the widget's x/y/width/height once through
-// gpAdvManager->advWindow->RadarWidget and clamps the point into it, then
-// divides the offset by the caller's tiles-per-pixel divisor and centres
-// the view on the result. Both clamp pairs are the by-value _cpp_max /
-// _cpp_min above - retail copies BOTH operands to stack slots and selects
-// between their addresses, which is that template and not an `if`. The
-// four widget fields are NAMED: retail loads x, y, width and height into
-// four registers at entry and never re-reads them (78.42 -> 80.75 over
-// caching only the pointer).
-// Residual (80.75%): every one of the four bitfield stores. Retail loads
-// the clamp result as a DWORD and inserts it with 32-bit xor/and; our CL
-// narrows the load to a word and inserts at 16 bits, and the rest of the
-// delta is the scheduling that follows. Measured and rejected on the
-// helper signature - const-ref parameters returning by value 76.34,
-// const-ref both ways 78.76, by-value both ways 76.34, against 80.75 for
-// by-value parameters returning `const _TYPE&` - and on the argument form:
-// an explicit `<int>` template argument, `origin.x + 0`, a
-// `static_cast<int>` around the RESULT and a `long` domain throughout are
-// all byte-flat, and naming the two reads in int locals costs 6.93.
+// E:\gamedcs\viewwrld.cpp:1675, dc 0x1962fc. Cache the radar's four
+// rectangle fields, clamp the screen position, convert to map coordinates,
+// then clamp the origin and repaint through the proven drawWindow helper.
+// The includes.h min/max wrappers take and return int values, delegating to
+// std::_cpp_min/_cpp_max's const-reference selectors. Both layers matter:
+// retail keeps the operand stack homes and loads the selected DWORD before
+// inserting each 10-bit coordinate. The old by-value/reference-returning
+// local templates narrowed those loads and stopped at 80.75%; the shared
+// wrappers reach 100%. Restoring drawWindow's source call is byte-neutral.
+// Earlier argument casts, explicit int template arguments, and a long domain
+// were byte-neutral with the incorrect local wrappers; extra coordinate
+// locals lost matching registers. No bitfield layout change is needed.
 // Before normalization (locals): fRadarDivisor.
 VA(0x005fc8f0, 0x213)  // anchor-callee UpdateRadar + VWCompleteDraw, anchor-caller WindowHandler, dc 0x1962fc
 void TViewWorldWindow::updateRadar(int mrx, int mry, float radarDivisor)
@@ -1830,17 +1809,16 @@ void TViewWorldWindow::updateRadar(int mrx, int mry, float radarDivisor)
 
     m_origin.m_x = static_cast<int>((mrx - rx) / radarDivisor) - g_viewHalfWidth;
     m_origin.m_y = static_cast<int>((mry - ry) / radarDivisor) - g_viewHalfHeight;
-    m_origin.m_x = cppMax(static_cast<int>(m_origin.m_x), 0);
-    m_origin.m_y = cppMax(static_cast<int>(m_origin.m_y), 0);
-    m_origin.m_x = cppMin(static_cast<int>(m_origin.m_x),
+    m_origin.m_x = max(static_cast<int>(m_origin.m_x), 0);
+    m_origin.m_y = max(static_cast<int>(m_origin.m_y), 0);
+    m_origin.m_x = min(static_cast<int>(m_origin.m_x),
                         g_mapWidth - m_viewableWidth);
-    m_origin.m_y = cppMin(static_cast<int>(m_origin.m_y),
+    m_origin.m_y = min(static_cast<int>(m_origin.m_y),
                         g_mapHeight - m_viewableHeight);
 
     g_advManager->updateRadar(m_origin, 1, 1, g_viewMines, g_viewHeroes,
                               g_viewTowns);
-    g_advManager->vwCompleteDraw(m_origin.m_x, m_origin.m_y, m_origin.m_z, m_viewableWidth,
-                                 m_viewableHeight);
+    drawWindow();
     g_windowManager->updateScreen(8, 8, 592, 544);
 }
 
@@ -1960,13 +1938,6 @@ int TViewWorldWindow::windowHandler(message* msg)
 }
 
 #if 0  // @carcass
-
-// E:\gamedcs\viewwrld.cpp:1549
-DC_ONLY(0x195ffc, 0x42)
-void TViewWorldWindow::drawWindow()
-{
-    // @stub
-}
 
 // E:\gamedcs\viewwrld.cpp:1392
 DC_ONLY(0x196b18, 0x34)
