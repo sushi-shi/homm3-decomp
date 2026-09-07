@@ -678,6 +678,12 @@ std::istream& operator>>(std::istream& is, TObjectType& objectType)
 // variants of the bitset initializer. The default constructor can score
 // higher but erases the unsigned-long constructor that retail calls; keep
 // that boundary. The apparent gain is not evidence for the default overload.
+// Current trace: the TObjectType child budget starts at 121, expands the
+// unsigned-long bitset constructor (cost 95), then rejects complement and
+// TImageInfo (cost 42 each) at the remaining 26. Explicit m_imageInfo() and
+// an ordinary TU-local constructor definition are byte-flat. VC6 rejects
+// aggregate initialization of TImageInfo with C2552; its bitset members make
+// that source form unavailable. No constructor or helper changes retained.
 VA(0x00514d80, 0x284)  // anchor-callee ResourceManager::GetText + anchor-bracket NewfullMapFn_00505DA0; retail-only
 void TObjectTypeTable::load(char* filename)
 {

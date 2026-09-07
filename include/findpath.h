@@ -6,6 +6,7 @@
 #define HOMM3_FINDPATH_H
 
 #include <va.h>
+#include <windows.h>
 #include <vector>
 
 #include "struct.h"
@@ -13,7 +14,6 @@
 class army;
 class hero;
 class NewmapCell;
-struct tagRECT;
 
 // Dreamcast CodeView supplies the complete domain and names; SeedTo's retail
 // call proves const_normal_search == 0 on x86.
@@ -165,20 +165,10 @@ public:
     unsigned char m_limitReached;
     // Before normalization: cellData.
     pathCell* m_cellData;
-    // tagRECT per the DC fieldlist (searchArray+40). Init (0x4b1460)
-    // writes it in the order left, RIGHT, top, BOTTOM - the same
-    // left/right/top/bottom pairing cmbtmgr's hit rectangles already
-    // carry - zeroing the origin and taking the world extents for the
-    // far corner. Four longs rather than a RECT because the tree has
-    // no windows.h surface here.
-    // Before normalization: valid_left.
-    long m_validLeft;                  // +0x28
-    // Before normalization: valid_top.
-    long m_validTop;                   // +0x2c
-    // Before normalization: valid_right.
-    long m_validRight;                 // +0x30
-    // Before normalization: valid_bottom.
-    long m_validBottom;                // +0x34
+    // Dreamcast fieldlist: valid_rectangle at +0x28. Init fills the bounds;
+    // the constructor leaves them uninitialized. Preserve the aggregate so
+    // setRectangle keeps its original one-statement assignment.
+    tagRECT m_validRectangle;
     // Elements are pathCells BY VALUE: FindCombatPath (0x4b3400) pops
     // the back with `mov esi,[queue+8]; add esi,-0x1e; mov [queue+8],esi`
     // - a 30-byte stride on _Last, which only a by-value pathCell gives.
@@ -432,7 +422,7 @@ public:
     // Before normalization (function): searchArray::get_visited_cell.
     pathCell* getVisitedCell(long index) { return m_visitedPoints[index]; }
     // Before normalization (function): searchArray::set_rectangle.
-    void setRectangle(tagRECT& rect);
+    void setRectangle(tagRECT& rect) { m_validRectangle = rect; }
 };
 
 // findpath.h:265 in the DC roster; no retail row of its own - /Ob2

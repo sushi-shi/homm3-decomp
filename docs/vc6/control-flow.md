@@ -697,3 +697,46 @@ evidence against either proven helper. The earlier duplicated-tail and goto
 probes operated on flattened helpers and could not recover the join. Land
 movement is loaded before the Logistics call, as Dreamcast lines 5893/5895
 show; the helper returns the complete factor including its additive one.
+
+
+## Check loop entry and real operands before diagnosing register allocation
+
+`game::transmitSaveGame` (0x4cafd0) had matching branch counts but used a
+`do/while` where DC game.cpp:10382 tests `done` before entering the loop.
+Restoring `while (!done)` repairs the retail branch directions and cleanup
+placement. The combined null-message/timeout predicate at line 10391 is
+byte-flat, but retains the evidenced source boundary.
+
+Two semantic errors had survived the earlier register-allocation diagnosis:
+the status guard used suspended (2) instead of active (1), and compression
+failure called `File::deleteFile` instead of `fileError`. The wrong error calls
+score identically when relocation differences are ignored. Read the named
+call sequence and unmasked operands, not just the percentage. Retail and DC
+also both compute the unusual `totalBlocks % fileSize`; substituting the
+usual file-size remainder is not a reconstruction.
+
+The corrected loop, operands and earlier `done` initialization bank 85.0958%
+through normalized production objects, from 82.2198%. Retaining DC's complete
+transfer-local initialization order gives a lower current score, with that
+peak preserved. Its remaining 12-byte frame excess and register spills are
+still open; equal branch counts had not proved that source control flow was
+already correct.
+
+
+## A decreasing counter can represent a different direction
+
+`combatManager::mirrorImage` (0x5a6c70) reached 100% from 82.3404% after
+restoring two expressions visible in the Dreamcast source mapping. Its search
+selects `dirCount` when the source army faces 1, and `5 - dirCount` otherwise
+(spells.cpp:4604..4607). Retail carries both induction values and chooses one
+before the exclusions. Treating the decreasing counter as compiler-generated
+loop bookkeeping had hidden a behavior bug: the reconstruction always searched
+forward. Restoring direction selection reaches 86.1216%.
+
+The animation computes `delta * (16 - frame) / 16` at DC lines 4685/4686.
+Writing explicit running offsets instead kept additional values alive; allowing
+VC6 to derive its own steps reproduces all 57 retail blocks and reaches 100%.
+The source also jumps out of the search loops to a separate placement block.
+Restoring that boundary and the canonical validity/column/front-offset helpers
+is byte-flat, but preserves the positive source evidence. No direction reversal
+is acceptable without establishing which facing selects it.

@@ -1641,3 +1641,24 @@ terrain argument before legal terrain, explaining retail's conversion order.
 Explicit bitset temporaries and implicit unsigned-long conversions emit
 identical bytes. These setter names remain provisional for this Complete-only
 compiland; no new retail function claims are needed.
+
+## Preserve an aggregate assignment before forcing its setter inline
+
+`aiChooseDestination` (0x42e0b0) had forced both ordinary source helpers
+inline and pinned eight nested statements. Dreamcast's fieldlist already
+identified `searchArray::valid_rectangle` as a `tagRECT`, but the header had
+split it into four longs. Its reconstructed setter consequently performed
+four assignments instead of the single statement at FindPath.h:258.
+
+Restoring the aggregate and header assignment reaches 82.96397%, above the
+81.88646% prior MAX, with ordinary `markStrategicMap`/`unblockLith` and the
+proven `game::getCell` call. The four-assignment ordinary form reaches only
+78.54367%; its setter costs 62 in the trace against a budget of 47 and stays
+out of line. Header and out-of-class aggregate assignments are byte-identical.
+Removing the eight pins is also byte-identical after restoring ordinary
+helpers. The missing fourth unblock cleanup call remains unresolved.
+
+This TU's `cppMin`/`cppMax` selectors also returned references to their own
+by-value argument copies. Reference parameters repair those lifetimes without
+changing this function's bytes. Do not preserve dangling selector references
+or replace an aggregate with scalar fields merely to avoid a header dependency.

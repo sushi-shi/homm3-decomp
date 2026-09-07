@@ -106,10 +106,10 @@ void searchArray::init()
         delete m_isMoatSlowed;
     m_cellData = 0;
     m_isMoatSlowed = 0;
-    m_validLeft = 0;
-    m_validRight = g_mapWidth;
-    m_validTop = 0;
-    m_validBottom = g_mapHeight;
+    m_validRectangle.left = 0;
+    m_validRectangle.right = g_mapWidth;
+    m_validRectangle.top = 0;
+    m_validRectangle.bottom = g_mapHeight;
     m_cellData = new pathCell[(g_game->m_worldMap.m_hasTwoLevels + 1) * g_mapHeight
             * g_mapWidth * 2];
     m_isMoatSlowed = new unsigned char[187];
@@ -191,15 +191,15 @@ void searchArray::clear(long flyLevel, long startZ, long stopZ)
     m_result.clear();
     m_visitedPoints.clear();
 
-    long width = m_validRight - m_validLeft;
+    long width = m_validRectangle.right - m_validRectangle.left;
     if (width <= 0)
         return;
 
     type_point point;
-    point.m_x = static_cast<short>(m_validLeft);
+    point.m_x = static_cast<short>(m_validRectangle.left);
     for (point.m_z = static_cast<short>(startZ); point.m_z < stopZ; point.m_z++) {
         for (long fly = 0; fly <= flyLevel; fly++) {
-            for (point.m_y = static_cast<short>(m_validTop); point.m_y < m_validBottom;
+            for (point.m_y = static_cast<short>(m_validRectangle.top); point.m_y < m_validRectangle.bottom;
                     point.m_y++) {
                 pathCell* row = m_cellData;
                 if (row != 0) {
@@ -655,8 +655,8 @@ void searchArray::pushPoint(const pathCell* oldCell, pathCell* point,
 
     if (!point->m_point.isValid())
         return;
-    if (point->m_point.m_x < m_validLeft || point->m_point.m_x >= m_validRight
-            || point->m_point.m_y < m_validTop || point->m_point.m_y >= m_validBottom)
+    if (point->m_point.m_x < m_validRectangle.left || point->m_point.m_x >= m_validRectangle.right
+            || point->m_point.m_y < m_validRectangle.top || point->m_point.m_y >= m_validRectangle.bottom)
         return;
 
     point->m_lastPoint = oldCell->m_point;

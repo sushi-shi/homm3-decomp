@@ -753,6 +753,9 @@ static const int g_lossPortrait146 = 0x92;
 // result 81.8182%; components reference alone 76.0625%; both repairs 82.0170%.
 // On the combined source, direct bool return is 80.9943%, positive type-test
 // nesting with byte result 11.2784%; loop/arm-local declarations are byte-flat.
+// An else-if after the campaign-10 hero guard, a positive map-2/3/4 guard
+// around the shared artifact checks, and initializing the byte result at entry
+// also reproduce the same bytes at 82.0170%; none repairs return placement.
 // Residual: the type guard still sits after campaign 14 instead of after the
 // entire switch; several return-1 branches share different epilogues. The
 // candidate has 17 returns versus retail's 19; the artifact call sequence
