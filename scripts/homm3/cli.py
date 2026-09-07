@@ -50,7 +50,8 @@ Subcommands
   status [functions [FILTER...]|update|check]
         Scoreboard (homm3.match.status): per-unit table; `functions` shows
         cur/max/hist; `update` regenerates config/match_baseline.tsv; `check`
-        reports functions below their high-water checkpoint without gating.
+        reports source edits whose new MAX falls below the prior MAX without
+        gating. Unrelated CUR dips are silent; HIST preserves older peaks.
 
   sema <xref|diff|disasm|rva|strings|data|candidates|compare> ...
         Read-only navigation over the retail image (homm3.sema): caller
