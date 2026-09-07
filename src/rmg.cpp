@@ -1901,16 +1901,69 @@ type_object* type_random_map_generator::createGuard(int value, TRmgZone* zone)
     return 0; // @stub
 }
 
+#endif
+
 // The shipyard caller at 0x541fc5 passes its entrance, count 3 and destination.
-// The body allocates border objects and advances the generator's used-color
-// cursor; a negative result leaves the caller's ordinary guard enabled.
+// Retail selects matching BORDER_TENT/BORDER_GUARD prototypes by color, places
+// the tent in the destination zone, then lays adjacent guards at the entrance.
+// Missing tent returns -1; missing guard returns 0, as the two retail exits
+// at 0x540dbf and 0x540e1f prove. These source names are Complete-only roles.
+// Exact: 598/598 raw retail bytes after resolving all five relocations.
+// Reuse index in all three loops. A separate guardIndex changes only the
+// SIB bytes at 0x540f6a and 0x540f9e (596/598 bytes, 99.90566%). Naming
+// byte-vector bases or using begin()[index] leaves those two bytes wrong.
+// The entrance clears borderObject (bit 26) and sets subterraneanGate (27);
+// swapped flags can hide behind the fuzzy score, so verify raw operands.
 VA(0x00540D60, 0x256) // anchor-callee createShipyardConnection; thiscall, ret 0x14
 int type_random_map_generator::placeBorderObject(
     TRmgMapPosition position, int count, TRmgZone* zone)
 {
-    return 0; // @stub
+    int color = m_nextKeyTentColor;
+    int index = 0;
+    for (; index < m_objectPrototypes[BORDER_TENT].size(); ++index) {
+        if (m_objectPrototypes[BORDER_TENT][index]->m_prototype->m_subtype == color)
+            break;
+    }
+    if (index == m_objectPrototypes[BORDER_TENT].size())
+        return -1;
+    TRmgObjectPropertiesRef* tentProperties = m_objectPrototypes[BORDER_TENT][index];
+
+    index = 0;
+    for (; index < m_objectPrototypes[BORDER_GUARD].size(); ++index) {
+        if (m_objectPrototypes[BORDER_GUARD][index]->m_prototype->m_subtype == color)
+            break;
+    }
+    if (index == m_objectPrototypes[BORDER_GUARD].size())
+        return 0;
+    TRmgObjectPropertiesRef* guardProperties = m_objectPrototypes[BORDER_GUARD][index];
+    type_object* tent = new type_object(tentProperties);
+    if (!placeObjectInZone(tent, zone)) {
+        delete tent;
+        return -1;
+    }
+
+    for (index = 0; index < count; ++index) {
+        type_object* guard = new type_object(guardProperties);
+        TRmgMapItem* item = m_map.getMapItem(position);
+        item->m_connection.m_present = 0;
+        item->m_connection.m_direction = 0;
+        if (!item->m_connection.m_present) {
+            item->m_tileData.m_borderObject = 0;
+            item->m_tileData.m_subterraneanGate = 1;
+        }
+        addObject(guard, position);
+        ++position.m_x;
+    }
+
+    m_disabledKeyTents[color] = 1;
+    m_nextKeyTentColor = 0;
+    while (m_nextKeyTentColor < m_disabledKeyTents.size()
+           && m_disabledKeyTents[m_nextKeyTentColor])
+        ++m_nextKeyTentColor;
+    return color;
 }
 
+#if 0 // @carcass - retained connection decoration
 // Both ground border placements call this with their returned direction.
 // Retail clips the surrounding rectangle and updates connection/obstacle bits.
 VA(0x00540FC0, 0x172) // anchor-callee createGroundConnection; thiscall, ret 0x10
@@ -2408,6 +2461,17 @@ unsigned char type_random_map_generator::createSubterraneanGate(
 
     return 1;
 }
+
+#if 0 // @carcass - retained object placement in a zone
+// Called by placeBorderObject at 0x540e81 with a newly created tent and zone.
+// Scans the zone bounds for matching cells accepted by canPlaceObject, then
+// chooses a candidate through rand and forwards it to virtual addObject.
+VA(0x00542930, 0x1C6) // anchor-callee 0x540e81; thiscall, ret 8; retail-only
+unsigned char type_random_map_generator::placeObjectInZone(type_object* object, TRmgZone* zone)
+{
+    return 0; // @stub
+}
+#endif
 
 // Complete's connection coordinator has no Dreamcast counterpart.  Retail
 // proves the three-stage source shape: collect cross-zone boundary squares,
