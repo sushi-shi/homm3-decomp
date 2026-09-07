@@ -3225,6 +3225,7 @@ rmg	??KTRmgVector@@QBE?AU0@H@Z	100.0000	100.0000	100.0000	0x1fdcf0	1e9d7d35bbe5
 rmg	??_F?$vector@HV?$allocator@H@std@@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x136ba0	-
 rmg	??_GTProgressSink@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x130e40	-
 rmg	??_GTRmgMapAdapter@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1324e0	-
+rmg	??_GTRmgMapInterface@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1361b0	-
 rmg	??_GrmgOwnableObject@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x133590	-
 rmg	??_Gtype_random_map@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x130f80	-
 rmg	?_Construct@std@@YIXPAUTRmgMapPosition@@ABU2@@Z	100.0000	100.0000	100.0000	0x14dd60	-

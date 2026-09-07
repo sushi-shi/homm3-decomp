@@ -659,6 +659,10 @@ TRmgMapInterface::~TRmgMapInterface()
 {
 }
 
+// Vtable 0x6409e8 slot 0 retains this generated wrapper immediately after
+// the exact abstract-base destructor in retail link order.
+VA_COMPGEN(0x005361B0, 0x23, SCALAR_DELETING_DTOR, TRmgMapInterface)
+
 // rand_trn.txt supplies one rule per nonempty row starting at row three.
 // The two 232x10 vector grids group rules and subtypes by remapped object
 // type and preferred terrain. The final reverse scan gives later rows
