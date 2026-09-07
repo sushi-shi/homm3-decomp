@@ -154,9 +154,10 @@ TObjectTypeFilter* const gObjectTypeFilters[OBJECT_TYPE_FILTER_COUNT] = {
 
 // Provisional cache accessor: retail's independent guard at 0x6aba7d
 // initializes the vector at 0x6aba80 through its retained constructor.
-// At the 90.64 checkpoint VC6 expands this accessor but gives the nested
-// constructor 43 bytes of budget against its 51-byte cost. A caller-local static expands the
-// constructor and scores 87.9486 instead of 90.6364 in setImageName.
+// At both the 90.64 and 96.08 checkpoints VC6 expands this accessor but
+// gives the nested constructor budget 43 against cost 51. At the earlier
+// checkpoint a caller-local static expands that constructor and scores
+// 87.9486 instead of 90.6364 in setImageName.
 static std::vector<TObjectType::TImageInfo>& getObjectImageCache()
 {
     static std::vector<TObjectType::TImageInfo> imageCache;
@@ -262,6 +263,14 @@ static std::vector<TObjectType::TImageInfo>& getObjectImageCache()
 // worsens its register distance from 48 to 53. Its retained-value mapping
 // already agrees: ESI=this, EBX=oldCount, EDI=name. With a loop-local index,
 // file and cell share ESI and this/name swap; early cell separates them.
+// The full inline trace is unchanged from 90.6364 to 96.0790: caller cost
+// 577, 22 root candidates, and identical budgets at every nested site.
+// Resource-fallback expressions, named proxies and iterator initialization
+// versus assignment are neutral. A separate appended iterator restores
+// retail's EAX return path but removes its initial found store (88.0316).
+// Putting imageNumber's assignment inside the lookup scores 95.2767.
+// Unsigned mapped indices and signed loop indices with unsigned byte-offset
+// arithmetic are neutral; SHR alone does not prove the counter's type.
 // Remaining: lookup exit and string-copy scheduling, and cell's zero being
 // hoisted before the reads instead of materialized at the loop. No inline
 // controls or release-elided operations are used.
