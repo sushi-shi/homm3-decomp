@@ -1083,6 +1083,7 @@ def _summary_verbose(lines, census, branches, calls, relocs, cap: int = 8):
 
 def _run_one(args, ctx, refreshed):
     name, unit, rva, _size, ordinal = ctx.symbols.resolve_fn(args.target)
+    _asm.require_candidate(unit, name, rva)
     if (not getattr(args, "no_build", False) and unit not in refreshed
             and (_asm.TARGET / f"{unit}.c.obj").is_file()):
         note = _asm.refresh_unit(unit)
@@ -1093,9 +1094,10 @@ def _run_one(args, ctx, refreshed):
     normal_base = _asm.NORMAL_BASE / f"{unit}.obj"
     normal_target = _asm.NORMAL_TARGET / f"{unit}.c.obj"
     if not (normal_base.is_file() and normal_target.is_file()):
-        die(f"{name} [{unit or 'no unit'}] has no comparison objects - only "
-            "delinked manifest units (config/units.toml) can diff; "
-            "`homm3 sema disasm` views any retail function")
+        missing = ", ".join(str(p) for p in (normal_base, normal_target) if not p.is_file())
+        die(f"comparison object missing for {name} [TU {unit}]: {missing}; "
+            "run `homm3 build` to compile, delink and normalize this manifest TU. "
+            f"Retail is available with `homm3 sema disasm 0x{rva:x}`.")
     base_text = _asm.objdump(normal_base, name, ordinal)
     target_text = _asm.objdump(normal_target, name, ordinal)
 
