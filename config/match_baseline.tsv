@@ -871,6 +871,7 @@ campaignbrief	?_Ucopy@?$vector@Utype_map_hero_identity@@V?$allocator@Utype_map_h
 campaignbrief	?addBonusIcons@TCampaignBrief@@QAEXXZ	98.8391	98.8391	98.8391	0x58120	7eeb3242df41
 campaignbrief	?assign@?$char_traits@D@std@@SAXAADABD@Z	100.0000	100.0000	100.0000	0x5dc90	e9a7ddfb83ec
 campaignbrief	?campaignBriefHandler@@YIHAAVmessage@@@Z	87.3081	87.3081	87.3081	0x5b1e0	aeead5de7702
+campaignbrief	?capacity@?$vector@HV?$allocator@H@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x14deb0	-
 campaignbrief	?deallocate@?$allocator@D@std@@QAEXPAXI@Z	100.0000	100.0000	100.0000	0x5c1e0	-
 campaignbrief	?doModal@TCampaignBrief@@QAEXXZ	100.0000	100.0000	100.0000	0x5b1b0	06827e22f5b5
 campaignbrief	?erase@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@QAE?AViterator@12@V312@0@Z	98.9798	98.9798	98.9798	0x5c070	-
