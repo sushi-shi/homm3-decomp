@@ -13,6 +13,7 @@ import tempfile
 from types import SimpleNamespace
 from unittest.mock import patch
 
+from homm3.match.status import MatchRow
 from homm3.vc6 import queue
 
 
@@ -30,6 +31,17 @@ class BankedMaxRouting(unittest.TestCase):
                 self.assertEqual(queue.run(_build_parser().parse_args(argv)), 0)
                 polish.assert_called_once()
                 admission.assert_not_called()
+
+    def test_smallest_routes_to_combined_queue(self):
+        from homm3.vc6.__main__ import _build_parser
+        args = _build_parser().parse_args(["queue", "--smallest"])
+        with patch.object(queue, "_run_smallest", return_value=0) as smallest, \
+                patch.object(queue, "_run_polish") as polish, \
+                patch.object(queue, "_run_admission") as admission:
+            self.assertEqual(queue.run(args), 0)
+            smallest.assert_called_once()
+            polish.assert_not_called()
+            admission.assert_not_called()
 
     def test_display_limit_keeps_complete_generated_census(self):
         targets = [("unit", f"fn{i}", score, 90.0, 100)
@@ -144,6 +156,71 @@ class AdmissionRouting(unittest.TestCase):
         self.assertEqual([r["rva"] for r in rows], [0x400, 0x100])
         self.assertEqual(rows[0]["state"], "bracketed")
         self.assertEqual(rows[1]["state"], "carcass")
+
+
+class SmallestFirstRouting(unittest.TestCase):
+
+    def test_combines_states_sorts_by_size_and_deduplicates_rvas(self):
+        data = _report(
+            {"name": "large", "fuzzy_match_percent": 80},
+            {"name": "alias", "fuzzy_match_percent": 90},
+            {"name": "small", "fuzzy_match_percent": 95},
+            {"name": "exact", "fuzzy_match_percent": 100},
+        )
+        baseline = {
+            ("unit", "large"): MatchRow(80, 80, 80, 0x100),
+            ("unit", "alias"): MatchRow(90, 70, 99, 0x100),
+            ("unit", "small"): MatchRow(95, 95, 95, 0x200),
+            ("unit", "exact"): MatchRow(100, 100, 100, 0x300),
+        }
+        admission = [{
+            "state": "bracketed", "size": 1, "rva": 0x400,
+            "relation": "bracketed", "owner": "a..b",
+            "candidates": "a,b", "label": "tiny", "action": "resolve",
+        }, {
+            # An admission alias of compiled RVA 0x200 must not duplicate it.
+            "state": "carcass", "size": 50, "rva": 0x200,
+            "relation": "in-span", "owner": "unit",
+            "candidates": "unit", "label": "stale", "action": "enable",
+        }]
+        rows = queue._smallest_rows_from_parts(
+            data, baseline, admission,
+            {0x100: "target", 0x200: "target", 0x300: "target",
+             0x400: "target"},
+            {0x100: 50, 0x200: 10, 0x300: 5, 0x400: 1},
+            set(baseline), set())
+        self.assertEqual([row["rva"] for row in rows], [0x400, 0x200, 0x100])
+        self.assertEqual(rows[0]["state"], "bracketed")
+        self.assertEqual(rows[1]["state"], "compiled")
+        self.assertEqual(rows[2]["maximum"], 80)
+        self.assertEqual(rows[2]["historical"], 99)
+
+    def test_current_max_not_hist_controls_exact_exclusion(self):
+        baseline = {("unit", "lost"): MatchRow(80, 80, 100, 0x100)}
+        rows = queue._smallest_rows_from_parts(
+            _report({"name": "lost", "fuzzy_match_percent": 80}),
+            baseline, [], {0x100: "target"}, {0x100: 12},
+            set(baseline), set())
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["historical"], 100)
+
+    def test_parked_rvas_are_excluded(self):
+        baseline = {("unit", "body"): MatchRow(50, 50, 50, 0x100)}
+        rows = queue._smallest_rows_from_parts(
+            _report({"name": "body", "fuzzy_match_percent": 50}),
+            baseline, [{
+                "state": "unmapped", "size": 2, "rva": 0x200,
+                "relation": "unmapped", "owner": "", "candidates": "",
+                "label": "", "action": "locate",
+            }], {0x100: "target", 0x200: "target"},
+            {0x100: 10, 0x200: 2}, set(baseline), {0x100, 0x200})
+        self.assertEqual(rows, [])
+
+    def test_parked_ledger_requires_hex_rvas(self):
+        text = "rva\tsize\tstate\n0x10\t1\tparked\n0x20\t2\tunresolved\n"
+        self.assertEqual(queue._parked_rvas_from_text(text), {0x10, 0x20})
+        with self.assertRaisesRegex(ValueError, "invalid parked-ledger row"):
+            queue._parked_rvas_from_text("rva\nnot-hex\n")
 
     def test_admission_queue_is_largest_first(self):
         rows = queue._admission_rows_from_text(

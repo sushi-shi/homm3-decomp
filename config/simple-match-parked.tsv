@@ -1,0 +1,4 @@
+# Hand-maintained ledger for `homm3 vc6 queue --smallest`.
+# One row is added after five scored candidates, or after an ownership evidence
+# pass proves that no defensible source candidate can yet be compiled.
+rva	size	state	attempts	best_fuzzy	bank_commit	unit	function	reason
