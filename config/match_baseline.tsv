@@ -3270,6 +3270,7 @@ rmg_support	??1TRmgRoadPainter@@UAE@XZ	100.0000	100.0000	100.0000	0x15f460	52104
 rmg_support	??1TRmgVoronoi@@QAE@XZ	100.0000	100.0000	100.0000	0x1fd330	8b8ca13a7a35
 rmg_support	?getMapItem@type_random_map@@QAEPAUTRmgMapItem@@HH@Z	100.0000	100.0000	100.0000	0x146990	a7e22d644e0f
 rmg_support	?getPattern@TRmgLinePainter@@UAEPAXH@Z	100.0000	100.0000	100.0000	0x15edb0	93b9f7126612
+rmg_support	?getPattern@TRmgRoadLinePainter@@UAEPAXH@Z	100.0000	100.0000	100.0000	0x15f320	98bb0b228080
 rmg_support	?length@TRmgVector@@QBEHXZ	100.0000	100.0000	100.0000	0x1fceb0	a28cb81fb275
 rmg_terrain	??0TRmgGridPoint@@QAE@ABI0@Z	100.0000	100.0000	100.0000	0x1b76b0	-
 rmg_terrain	??0TRmgTerrainBrush@@QAE@PAVTRmgMapInterface@@HH@Z	100.0000	100.0000	100.0000	0x1b7250	e132b05a16e9
