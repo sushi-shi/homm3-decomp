@@ -2502,6 +2502,7 @@ mapcell	?capacity@?$vector@USecondarySkillData@@V?$allocator@USecondarySkillData
 mapcell	?cellIsTrigger@NewmapCell@@QAEEXZ	100.0000	100.0000	100.0000	0xfcc80	2d7bd8e356c4
 mapcell	?clear@?$vector@PAVCMapObjectData@@V?$allocator@PAVCMapObjectData@@@std@@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x8b4a0	-
 mapcell	?copy@std@@YIPAHPAH00@Z	100.0000	100.0000	100.0000	0x1093c0	-
+mapcell	?copy@std@@YIPAHPBH0PAH@Z	100.0000	100.0000	100.0000	0x14df40	-
 mapcell	?copy@std@@YIPAUSecondarySkillData@@PBU2@0PAU2@@Z	100.0000	100.0000	100.0000	0x10adb0	-
 mapcell	?copy@std@@YIPAUtype_creature_bank@@PAU2@00@Z	100.0000	100.0000	100.0000	0x109620	-
 mapcell	?copy@std@@YIPAUtype_university@@PAU2@00@Z	100.0000	100.0000	100.0000	0x1095e0	-
