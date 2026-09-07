@@ -24,7 +24,8 @@ class BatchTest(unittest.TestCase):
                     from homm3.sema._common import die
                     die("bad selector")
                 return selector, "u", 0x1000, 1, 0
-            ctx = SimpleNamespace(symbols=SimpleNamespace(resolve_fn=resolve),
+            ctx = SimpleNamespace(symbols=SimpleNamespace(resolve_fn=resolve,
+                                                          funcs={}, datas={}),
                                   fn_fuzzy=lambda *a: 100)
             args = _build_parser().parse_args(["diff", "f", "bad", "g", "--json", "--why-bytes"])
             text = "00000000 <fn>:\n 0: c3\tret\n"

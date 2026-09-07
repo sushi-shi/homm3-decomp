@@ -4,6 +4,7 @@ summary digest (--summary/--why-bytes)."""
 from __future__ import annotations
 
 import unittest
+from types import SimpleNamespace
 
 from homm3.sema import _asm, diff
 
@@ -88,6 +89,58 @@ class RefsCompareTest(unittest.TestCase):
                                _calls("?SetFocus@heroWindow@@QAEXH@Z"))
         self.assertEqual(rows[0][0], "~")
         self.assertIsNone(rows[0][3])
+
+    def test_source_admission_comes_from_unique_inventory_provenance(self):
+        ctx = SimpleNamespace(symbols=SimpleNamespace(
+            funcs={0x100: ("Generator_createGuard", "rmg", 0x240, "src-VA"),
+                   0x200: ("looks_named", "rmg", 0x10, "working-label"),
+                   0x300: ("ambiguous", "rmg", 0x10, "src-VA"),
+                   0x400: ("ambiguous", "other", 0x10, "working-label")},
+            datas={0x500: ("guardTable", "rmg", 0x18, "src-DATA")}))
+        names = diff._source_claimed_labels(ctx)
+        self.assertEqual(names, frozenset(("Generator_createGuard", "guardTable")))
+        self.assertEqual(diff._synthetic("looks_named", names), "unclaimed")
+        self.assertEqual(diff._synthetic("ambiguous", names), "unclaimed")
+
+    def test_claimed_label_does_not_become_an_identity_match(self):
+        base, target = _calls("?createGuard@Generator@@QAEHH@Z"), _calls("Generator_createGuard")
+        names = frozenset(("Generator_createGuard",))
+        res = diff._refs_compare(diff._ref_seq(base)[0], diff._ref_seq(target)[0],
+                                 claimed_names=names)
+        self.assertFalse(res["agree"])
+        self.assertTrue(res["report_agree"])
+        self.assertEqual(res["counts"]["source-claimed"], 1)
+        self.assertEqual(res["counts"]["unclaimed"], 0)
+        text, agree = diff._refs_view(base, target, 0x1000, "fn", True,
+                                      claimed_names=names)
+        self.assertFalse(agree)
+        self.assertIn("(retail label - source-claimed)", text)
+        self.assertIn("1 source-claimed labels", text)
+        self.assertIn("already have address annotations", text)
+        self.assertNotIn("; claim the", text)
+        div = diff._first_divergence(base, target, claimed_names=names)
+        self.assertEqual(div["note"], "source-claimed")
+
+    def test_mixed_claimed_unclaimed_and_generated_labels(self):
+        base = _calls("?A@@YAXXZ", "?B@@YAXXZ", "?C@@YAXXZ", "?D@@YAXXZ")
+        target = _calls("Generator_createGuard", "sub_1234", "__h3cg$unit$ctor", "$L1")
+        text, agree = diff._refs_view(base, target, 0x1000, "fn", True,
+                                      claimed_names=frozenset(("Generator_createGuard",)))
+        self.assertFalse(agree)
+        self.assertIn("1 unclaimed retail labels, 1 source-claimed labels, 2 generated/local labels", text)
+        self.assertIn("claim the 1 unclaimed references", text)
+
+    def test_admission_does_not_hide_addends_or_overloads(self):
+        a = _listing(("call 0x9", "e8 04 00 00 00", [(1, "REL32", "known")]), RET)
+        b = _calls("known")
+        res = diff._refs_compare(diff._ref_seq(a)[0], diff._ref_seq(b)[0],
+                                 claimed_names=frozenset(("known",)))
+        self.assertFalse(res["agree"])
+        a, b = _calls("?f@@YAXH@Z"), _calls("?f@@YAXM@Z")
+        res = diff._refs_compare(diff._ref_seq(a)[0], diff._ref_seq(b)[0],
+                                 claimed_names=frozenset(("?f@@YAXH@Z", "?f@@YAXM@Z")))
+        self.assertFalse(res["agree"])
+        self.assertEqual(res["counts"]["real"], 1)
 
     def test_one_inlined_call_does_not_shift_the_pairing(self):
         base = _calls("?A@@YAXXZ", "?size@@QBEIXZ", "??2@YAPAXI@Z", "?_Ucopy@@Z", "??3@YAXPAX@Z")

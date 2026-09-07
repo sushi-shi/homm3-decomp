@@ -276,6 +276,15 @@ static void setAvailableRmgHeroes(
     }
 }
 
+#if 0 // @carcass - retained placement helper shared by gate and shipyard paths
+VA(0x00531CF0, 0x1A5) // anchor-callee 0x541c73; thiscall, ret 0x14; retail-only
+unsigned char type_random_map::canPlaceObject(
+    TRmgObjectPropertiesRef* properties, TRmgMapPosition position, TRmgZone* zone)
+{
+    return 0; // @stub
+}
+#endif
+
 // Vtable 0x6409cc slot 3 returns the map's two unsigned dimensions.
 // The hidden result pointer and two stores fix the coordinate return ABI.
 VA(0x00532240, 0x15) // anchor-vtable 0x6409cc+0x0c; retail-only
@@ -436,6 +445,62 @@ TRmgTownSlot* TRmgTemplate::findZone(int zoneIndex)
             return m_zones[zone];
     }
     return 0;
+}
+
+// Shipyard water probing copies all three fields from the object before
+// adding offsets. This ordinary value accessor models that copy boundary;
+// the source name is inferred from the Complete-only retail use.
+TRmgMapPosition type_object::getPosition() const
+{
+    return m_position;
+}
+
+// Base constructor retained by the shipyard's derived construction at
+// 0x541d3b. The property reference and five placement marks prove the body.
+// Exact: assignment in the body places the vptr before m_properties.
+// A member initializer reverses those stores (98.5238%).
+VA(0x005330E0, 0x39) // anchor-callee 0x541d3b; thiscall, ret 4; retail-only
+type_object::type_object(TRmgObjectPropertiesRef* newProperties)
+{
+    m_properties = newProperties;
+    ++m_properties->m_refCount;
+    m_position.m_x = -1;
+    m_position.m_y = -1;
+    m_position.m_z = -1;
+    clearPlacementMarks();
+}
+
+// Retained reset at 0x533150; its expansion also ends the preceding ctor.
+// Preserve the ordinary helper's retail order after that constructor.
+VA(0x00533150, 0x12) // five placement marks, thiscall, ret 0; retail-only
+void type_object::clearPlacementMarks()
+{
+    m_candidateCovers = 0;
+    m_candidateBehind = 0;
+    m_adjacentToCandidate = 0;
+    m_overlapsCandidate = 0;
+    m_blockedByCandidate = 0;
+}
+
+#if 0 // @carcass - ownable-object vtable 0x640aa4, slot 3
+VA(0x00533460, 0xA0) // base serialization plus unowned player and reserved bytes
+void rmgOwnableObject::write(TAbstractFile* outfile, int parameter)
+{
+} // @stub
+#endif
+
+VA_COMPGEN(0x00533590, 0x21, SCALAR_DELETING_DTOR, rmgOwnableObject)
+
+// Vptr restoration and the property reference release at 0x5338d0.
+// Keep the body visible to the ownable destructor so the base cleanup can
+// expand there. A separate TU leaves a five-byte derived tail-call thunk;
+// an explicit empty derived destructor adds its own vptr store as well.
+// With the body visible, base and ownable destructors have identical 13-byte
+// bodies and the same base-vtable relocation, proving their ICF identity.
+VA(0x005338D0, 0x0D) // anchor-callee 0x533596; retail-only, thiscall, ret 0
+type_object::~type_object()
+{
+    --m_properties->m_refCount;
 }
 
 // Complete-only helper called by InitializeObjectGenerators at 0x538b10.
@@ -1819,14 +1884,132 @@ void type_random_map_generator::repairWaterZoneBorders()
     }
 }
 
+#if 0 // @carcass - retained connection helpers; names describe retail roles
+// The ground connection caller passes a 12-byte position and narrow flag.
+// The body follows each cell's predecessor while clearing its path cost.
+VA(0x005408E0, 0x23F) // anchor-callee createGroundConnection; thiscall, ret 0x10
+void type_random_map_generator::openConnectionPath(
+    TRmgMapPosition position, unsigned char narrow)
+{
+} // @stub
+
+// Zone restrictions select a creature, the requested value determines its
+// count, and the result is a newly allocated guarded object (vtbl 0x640a84).
+VA(0x00540B20, 0x240) // anchor-callee 0x54203b; thiscall, ret 8; retail-only
+type_object* type_random_map_generator::createGuard(int value, TRmgZone* zone)
+{
+    return 0; // @stub
+}
+
+#endif
+
+// The shipyard caller at 0x541fc5 passes its entrance, count 3 and destination.
+// Retail selects matching BORDER_TENT/BORDER_GUARD prototypes by color, places
+// the tent in the destination zone, then lays adjacent guards at the entrance.
+// Missing tent returns -1; missing guard returns 0, as the two retail exits
+// at 0x540dbf and 0x540e1f prove. These source names are Complete-only roles.
+// Exact: 598/598 raw retail bytes after resolving all five relocations.
+// Reuse index in all three loops. A separate guardIndex changes only the
+// SIB bytes at 0x540f6a and 0x540f9e (596/598 bytes, 99.90566%). Naming
+// byte-vector bases or using begin()[index] leaves those two bytes wrong.
+// The entrance clears borderObject (bit 26) and sets subterraneanGate (27);
+// swapped flags can hide behind the fuzzy score, so verify raw operands.
+VA(0x00540D60, 0x256) // anchor-callee createShipyardConnection; thiscall, ret 0x14
+int type_random_map_generator::placeBorderObject(
+    TRmgMapPosition position, int count, TRmgZone* zone)
+{
+    int color = m_nextKeyTentColor;
+    int index = 0;
+    for (; index < m_objectPrototypes[BORDER_TENT].size(); ++index) {
+        if (m_objectPrototypes[BORDER_TENT][index]->m_prototype->m_subtype == color)
+            break;
+    }
+    if (index == m_objectPrototypes[BORDER_TENT].size())
+        return -1;
+    TRmgObjectPropertiesRef* tentProperties = m_objectPrototypes[BORDER_TENT][index];
+
+    index = 0;
+    for (; index < m_objectPrototypes[BORDER_GUARD].size(); ++index) {
+        if (m_objectPrototypes[BORDER_GUARD][index]->m_prototype->m_subtype == color)
+            break;
+    }
+    if (index == m_objectPrototypes[BORDER_GUARD].size())
+        return 0;
+    TRmgObjectPropertiesRef* guardProperties = m_objectPrototypes[BORDER_GUARD][index];
+    type_object* tent = new type_object(tentProperties);
+    if (!placeObjectInZone(tent, zone)) {
+        delete tent;
+        return -1;
+    }
+
+    for (index = 0; index < count; ++index) {
+        type_object* guard = new type_object(guardProperties);
+        TRmgMapItem* item = m_map.getMapItem(position);
+        item->m_connection.m_present = 0;
+        item->m_connection.m_direction = 0;
+        if (!item->m_connection.m_present) {
+            item->m_tileData.m_borderObject = 0;
+            item->m_tileData.m_subterraneanGate = 1;
+        }
+        addObject(guard, position);
+        ++position.m_x;
+    }
+
+    m_disabledKeyTents[color] = 1;
+    m_nextKeyTentColor = 0;
+    while (m_nextKeyTentColor < m_disabledKeyTents.size()
+           && m_disabledKeyTents[m_nextKeyTentColor])
+        ++m_nextKeyTentColor;
+    return color;
+}
+
+#if 0 // @carcass - retained connection decoration
+// Both ground border placements call this with their returned direction.
+// Retail clips the surrounding rectangle and updates connection/obstacle bits.
+VA(0x00540FC0, 0x172) // anchor-callee createGroundConnection; thiscall, ret 0x10
+void type_random_map_generator::markBorderObjectArea(
+    TRmgMapPosition position, int direction)
+{
+} // @stub
+#endif
+
 // Provisional arithmetic boundary for the Complete-only position value.
-// Keep the ordinary body visible to the two direction-addition call sites.
+// Keep the ordinary body visible to ground and shipyard direction additions.
 TRmgMapPosition TRmgMapPosition::operator+(const TPoint& offset) const
 {
     TRmgMapPosition result = *this;
-    result.m_x += offset.m_x;
-    result.m_y += offset.m_y;
-    return result;
+    return result += offset;
+}
+
+TRmgMapPosition& TRmgMapPosition::operator+=(const TPoint& offset)
+{
+    m_x += offset.m_x;
+    m_y += offset.m_y;
+    return *this;
+}
+
+TRmgMapPosition& TRmgMapPosition::operator-=(const TPoint& offset)
+{
+    m_x -= offset.m_x;
+    m_y -= offset.m_y;
+    return *this;
+}
+
+// The ground, shipyard and gate paths share this placement sequence.
+// Shipyard retains an independent y/z coordinate copy at 0x541ff8/0x54200c,
+// consistent with this by-value helper boundary. Name and boundary are a
+// retail-only hypothesis. All five connection sites use this ordinary body;
+// flattening the ground copies loses its final retained map-item accesses.
+// Shipyard is byte-neutral versus a flat body with a separate position copy.
+void type_random_map_generator::placeGuard(TRmgMapPosition position, int value)
+{
+    TRmgMapItem* item = m_map.getMapItem(position);
+    TRmgZone* zone = m_zones[item->m_zoneState.m_zone];
+    if (static_cast<int>(item->m_objects.size()) > 0)
+        return;
+    type_object* guard = createGuard(value, zone);
+    if (guard)
+        addObject(guard, position);
 }
 
 // Complete-only ground connection pass.  ConnectZones passes the paired
@@ -1834,8 +2017,11 @@ TRmgMapPosition TRmgMapPosition::operator+(const TPoint& offset) const
 // crossings, opens their predecessor paths, and records both zone entrances
 // before choosing border objects or a guard.  There is no Dreamcast RMG
 // counterpart; the helper names describe their retained retail bodies.
-// Residual (77.31306%): the two final GetMapItem calls and the final vector
-// destructor expand. Delegating the by-value accessor to its scalar overload
+// Residual (80.43471%): the shared by-value guard helper restores final
+// map-item calls (flattened bodies: 77.31306%), but they target the scalar
+// accessor expansion rather than the retained value overload. The second
+// occupancy size call stays out of line and the final vector destructor expands.
+// Delegating the by-value accessor to its scalar overload
 // restores the first clear's retained range erase; direct accessor arithmetic
 // expands that erase into copy/_Destroy (76.75134%).
 // Retail additionally preserves a 12-byte position temporary that this
@@ -1930,23 +2116,184 @@ unsigned char type_random_map_generator::createGroundConnection(
 
         if (guardValue > 0) {
             if (!(rand() & 1)) {
-                TRmgMapItem* item = m_map.getMapItem(position);
-                TRmgZone* zone = m_zones[item->m_zoneState.m_zone];
-                if (static_cast<int>(item->m_objects.size()) <= 0) {
-                    type_object* guard = createGuard(guardValue, zone);
-                    if (guard)
-                        addObject(guard, position);
-                }
+                placeGuard(position, guardValue);
             } else {
-                TRmgMapItem* item = m_map.getMapItem(otherPosition);
-                TRmgZone* zone = m_zones[item->m_zoneState.m_zone];
-                if (static_cast<int>(item->m_objects.size()) <= 0) {
-                    type_object* guard = createGuard(guardValue, zone);
-                    if (guard)
-                        addObject(guard, otherPosition);
+                placeGuard(otherPosition, guardValue);
+            }
+        }
+    }
+    return 1;
+}
+
+#if 0 // @carcass - retained shipyard connection helpers
+VA(0x00541780, 0x18D) // anchor-callee 0x541f1f; thiscall, ret 0x0c
+void type_random_map_generator::floodConnectionRegion(TRmgMapPosition position)
+{
+} // @stub
+
+VA(0x00541960, 0x16C) // anchor-callee 0x541c94; thiscall, ret 0x0c
+unsigned char type_random_map_generator::canPlaceShipyard(TRmgMapPosition position)
+{
+    return 0; // @stub
+}
+#endif
+
+// Complete-only shipyard connection pass. connectZones calls this at
+// 0x54356a and 0x5437f8 after a failed ground connection. Retail selects
+// prototype 87 (SHIPYARD), scans the source zone's eligible coastal cells,
+// places an ownable object, then opens its water route and entrance guard.
+// Names are inferred roles; there is no Dreamcast RMG compiland.
+// Residual (94.8591%): branch destinations and polarities agree, and the
+// retained constructor/call sequence matches. Destination-lookup registers,
+// the two trigger-x stores and the final guard registers/temporary still differ.
+// Keep one nearby coordinate across scanning and placement: retail reuses
+// EBP-0x30. The scan initializes only z; copying a whole position extends the
+// wrong coordinate lifetimes. Capture visited as a byte for the dword load,
+// shift and byte-test at 0x541c15. Name the prototype index before operator[]
+// so the vector base reloads after rand instead of surviving across it.
+// A trigger-offset value evaluated before nearby's copy recovers both paired
+// loads and subtraction order. Direct entrance-y increment, the object's
+// value-returning position accessor, and a copied water offset with offset
+// first in the additions recover the entrance/water instructions and slots.
+// Capture strength before requested value: either input alone leaves the
+// table calculation's registers wrong. Clear guardValue on border success;
+// a shared success label produces identical bytes, including the direct edge.
+// The late value addition preserves the retained base constructor naturally.
+// Frozen-front-end C2 tracing measures nested budget 95 against base cost 96;
+// no pragma, alternate declaration or release-elided carrier is retained.
+// Controls: plain final ++y expands the base constructor and retains reset
+// (91.93% before opening fixes); compound += reuses an earlier y+1 unlike
+// retail. A default result with direct field calculations removes the extra
+// x store (95.50%) but changes frame homes and also reuses that earlier y+1.
+// Copy-initialize versus assign the addition's local, and a free by-value
+// left operand, are byte-neutral. A full saved entrance coordinate grows the
+// frame; a position setter changes the retained constructor/reset boundary.
+// Separate nearby locals, value-returning trigger subtraction, a full scan
+// position copy and reversed water addends all lose matching instructions.
+// Initializing guardValue to zero before its test changes the branch shape;
+// normalizing the requested input in guardValue is neutral. Rewriting the
+// cutoff as assignment breaks the independently exact retained value helper.
+// Naming the source slot/value before the destination slot improves the
+// opening; adding a separate destination index reverses that improvement.
+// Further controls: a saved TPoint entrance adds a four-byte stack home;
+// initializing guardValue from the requested value before the policy test
+// hoists its load into the unguarded path. A const conditional result changes
+// table registers but still spills guardValue. Reusing the prototype index
+// in the water loop is neutral. Value-returning trigger subtraction with a
+// plain final increment grows the frame and expands the base constructor.
+// A by-value addition offset is neutral here but moves the ground caller
+// from 80.43471% to 76.63149%, without resolving this final coordinate copy.
+// An entry-wide zero initialization grows the frame from 0x68 to 0x6c
+// (93.24324%) and still homes guardValue. Consuming operator-='s returned
+// reference for entranceX, and returning the named operator+ result after
+// a separate += statement, are both byte-neutral at 94.85907%.
+VA(0x00541AD0, 0x5B0) // anchor-callee connectZones; thiscall, ret 8; retail-only
+unsigned char type_random_map_generator::createShipyardConnection(
+    TRmgZone* source, TRmgZoneConnection* connection)
+{
+    TRmgTownSlot* sourceSlot = source->m_slot;
+    int sourceZone = sourceSlot->m_zoneIndex;
+    TRmgTownSlot* destinationSlot = connection->m_destination;
+    TRmgZone* destination = m_zones[destinationSlot->m_zoneIndex];
+    int destinationZone = destination->m_slot->m_zoneIndex;
+    if (source->getLevelPosition().m_z != destination->getLevelPosition().m_z)
+        return 0;
+
+    std::vector<TRmgMapPosition> candidates;
+    int prototypeIndex = rand() % m_objectPrototypes[SHIPYARD].size();
+    TRmgObjectPropertiesRef* properties = m_objectPrototypes[SHIPYARD][prototypeIndex];
+    TObjectType* prototype = properties->m_prototype;
+    TRmgMapPosition nearby;
+    {
+        TRmgZoneBounds bounds = source->m_bounds;
+        TRmgMapPosition position;
+        position.m_z = source->getLevelPosition().m_z;
+        for (position.m_y = bounds.m_minimumY; position.m_y < bounds.m_maximumY;
+             ++position.m_y) {
+            for (position.m_x = bounds.m_minimumX; position.m_x < bounds.m_maximumX;
+                 ++position.m_x) {
+                TRmgMapItem* item = m_map.getMapItem(position);
+                if (item->m_zoneState.m_zone == sourceZone
+                    && item->m_zoneState.m_connectionEligibility == destinationZone) {
+                    unsigned char visited = item->m_tileData.m_connectionVisited;
+                    if (visited)
+                        return 1;
+                    if (item->m_tile.m_landType != eTerrainWater) {
+                        nearby = position;
+                        if (nearby.m_y + 1 < m_map.m_mapHeight) {
+                            for (nearby.m_x = position.m_x;
+                                 nearby.m_x <= position.m_x + 2; ++nearby.m_x) {
+                                if (m_map.canPlaceObject(properties, nearby, source)
+                                    && canPlaceShipyard(nearby))
+                                    candidates.push_back(nearby);
+                            }
+                        }
+                    }
                 }
             }
         }
+    }
+    if (candidates.size() == 0)
+        return 0;
+
+    rmgOwnableObject* shipyard = new rmgOwnableObject(properties);
+    TRmgMapPosition position = candidates[rand() % candidates.size()];
+    addObject(shipyard, position);
+
+    {
+        TPoint triggerOffset(prototype->m_triggerCell.m_x, prototype->m_triggerCell.m_y);
+        nearby = position;
+        nearby -= triggerOffset;
+    }
+    int entranceX = nearby.m_x;
+    m_roadTargets.push_back(nearby);
+
+    nearby = position;
+    ++nearby.m_y;
+    for (nearby.m_x = position.m_x - prototype->getWidth() + 1;
+         nearby.m_x <= position.m_x; ++nearby.m_x) {
+        TRmgMapItem* item = m_map.getMapItem(nearby);
+        if (!item->m_connection.m_present) {
+            item->m_tileData.m_borderObject = 0;
+            item->m_tileData.m_subterraneanGate = 1;
+        }
+        source->m_entrances.push_back(TPoint(nearby.m_x, nearby.m_y));
+    }
+
+    TRmgMapPosition shipyardPosition = shipyard->getPosition();
+    TRmgMapPosition waterPosition;
+    int waterOffset = 0;
+    for (; waterOffset < RMG_SHIPYARD_WATER_OFFSET_COUNT; ++waterOffset) {
+        TPoint offset = g_rmgShipyardWaterOffsets[waterOffset];
+        waterPosition = TRmgMapPosition(
+            offset.m_x + shipyardPosition.m_x,
+            offset.m_y + shipyardPosition.m_y,
+            shipyardPosition.m_z);
+        if (waterPosition.m_x >= 0 && waterPosition.m_x < m_map.m_mapWidth
+            && m_map.getMapItem(waterPosition)->m_tile.m_landType == eTerrainWater)
+            break;
+    }
+    if (waterOffset != RMG_SHIPYARD_WATER_OFFSET_COUNT)
+        floodConnectionRegion(waterPosition);
+
+    int guardValue;
+    if (connection->m_unguarded)
+        guardValue = 0;
+    else {
+        int strength = m_monsterStrength;
+        int value = connection->m_value;
+        guardValue = getRmgGuardValue(value, strength);
+    }
+
+    if (connection->m_placeBorderObjects) {
+        nearby.m_x = entranceX - 1;
+        if (placeBorderObject(nearby, 3, destination) >= 0)
+            guardValue = 0;
+    }
+    if (guardValue > 0) {
+        nearby = position + TPoint(0, 1);
+        nearby.m_x = entranceX;
+        placeGuard(nearby, guardValue);
     }
     return 1;
 }
@@ -2120,25 +2467,23 @@ unsigned char type_random_map_generator::createSubterraneanGate(
     }
 
     if (guardValue > 0) {
-        TRmgMapItem* item = m_map.getMapItem(position);
-        TRmgZone* zone = m_zones[item->m_zoneState.m_zone];
-        if (static_cast<int>(item->m_objects.size()) <= 0) {
-            type_object* guard = createGuard(guardValue, zone);
-            if (guard)
-                addObject(guard, position);
-        }
-
-        item = m_map.getMapItem(otherPosition);
-        zone = m_zones[item->m_zoneState.m_zone];
-        if (static_cast<int>(item->m_objects.size()) <= 0) {
-            type_object* guard = createGuard(guardValue, zone);
-            if (guard)
-                addObject(guard, otherPosition);
-        }
+        placeGuard(position, guardValue);
+        placeGuard(otherPosition, guardValue);
     }
 
     return 1;
 }
+
+#if 0 // @carcass - retained object placement in a zone
+// Called by placeBorderObject at 0x540e81 with a newly created tent and zone.
+// Scans the zone bounds for matching cells accepted by canPlaceObject, then
+// chooses a candidate through rand and forwards it to virtual addObject.
+VA(0x00542930, 0x1C6) // anchor-callee 0x540e81; thiscall, ret 8; retail-only
+unsigned char type_random_map_generator::placeObjectInZone(type_object* object, TRmgZone* zone)
+{
+    return 0; // @stub
+}
+#endif
 
 // Complete's connection coordinator has no Dreamcast counterpart.  Retail
 // proves the three-stage source shape: collect cross-zone boundary squares,
@@ -2243,7 +2588,7 @@ void type_random_map_generator::connectZones()
                 continue;
             }
 
-            if (createBorderConnection(zone, connection)) {
+            if (createShipyardConnection(zone, connection)) {
                 connection->m_connected = 1;
                 continue;
             }
@@ -2332,7 +2677,7 @@ void type_random_map_generator::connectZones()
                 }
             }
 
-            if (createBorderConnection(zone, connection)) {
+            if (createShipyardConnection(zone, connection)) {
                 connection->m_connected = 1;
                 continue;
             }

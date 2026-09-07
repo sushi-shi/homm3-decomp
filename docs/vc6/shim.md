@@ -160,9 +160,10 @@ python3 -m homm3.vc6.shim.build clean      # remove overlay + scratch
 
 ## 4. Gated inline-budget observations
 
-`trace` builds a temporary `SHIM_INLINE_TRACE` overlay, compiles a real TU
-using its exact `config/units.toml` profile, and compares the complete object
-with an uninstrumented compile. Only the four-byte COFF timestamp is ignored.
+`trace` captures a real TU's front-end streams once, using its original source
+path and exact `config/units.toml` profile. It replays those same streams through
+the normal back end and a temporary `SHIM_INLINE_TRACE` overlay, then compares
+the complete objects. Only the four-byte COFF timestamp is ignored.
 The normal shim is restored in `finally`, including rejected traces. The
 pinned toolchain is unchanged; normal matching builds never use this overlay.
 
@@ -178,6 +179,10 @@ using the observations. `sym` rows associate process-local addresses with
 compiler names; `main` gives the root function's front-end size estimate;
 `site` gives the root, owner, callee, signed size estimate, remaining budget,
 expansion depth, remaining candidate sites, and running size.
+After verification, `comparisons.txt` presents the same ordered observations
+with demangled caller/callee signatures and their budgets. It is removed at
+the start of every run, so a failed trace cannot leave an old named report.
+The raw log remains available for checking the process-local symbol mapping.
 
 Two guarded hooks replay whole original instructions:
 
@@ -208,6 +213,17 @@ normal shim. Combining that same mutation with `trace` on the terrain TU
 produces 45,539 differing object bytes, which `trace` rejects before restoring
 the normal shim. These controls establish that a plausible log alone cannot
 pass the identity gate.
+
+The shared front-end capture is necessary for TUs with anonymous namespaces.
+In `rmg`, two independent front-end runs salted their anonymous names
+differently, changing symbol-table order and relocation indices even though
+all section bytes agreed. That trace correctly failed the complete-object gate.
+One `/d1il` capture followed by two `/d2il` replays removes that unrelated
+front-end variation without masking names, indices, or code. The shipyard
+trace then passed all 131,856 non-timestamp object bytes. Each replay receives
+fresh copies because C2 can consume the stream files. Tests cover consumed
+streams, a changed object byte, missing capture streams, and an absent function;
+the latter three cannot produce a passing verdict.
 
 ## 5. Files
 
