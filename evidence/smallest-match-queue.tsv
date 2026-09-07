@@ -4,7 +4,6 @@ state	size	va	current_fuzzy	max_fuzzy	hist_fuzzy	owner	candidates	label	relation
 bracketed	3	0x005b3a40	-	0.0000	0.0000	systemoptionswindow..text	systemoptionswindow,text	game_1b3a40	bracketed	resolve the owner, then add its VA claim and body
 bracketed	6	0x00404bc0	-	0.0000	0.0000	adventuremapwindow..adventureoptionswindow	adventuremapwindow,adventureoptionswindow	game_4860_sub00_4bc0	bracketed	resolve the owner, then add its VA claim and body
 bracketed	6	0x00534190	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_134190	bracketed	resolve the owner, then add its VA claim and body
-bracketed	6	0x0054c0fe	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_14c0fe	bracketed	resolve the owner, then add its VA claim and body
 bracketed	7	0x00487e00	-	0.0000	0.0000	cursor..customcampaign	cursor,customcampaign	game_15a7a0_sub00_87e00	bracketed	resolve the owner, then add its VA claim and body
 bracketed	7	0x00530e70	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_1770c0_sub00_130e70	bracketed	resolve the owner, then add its VA claim and body
 bracketed	7	0x00532350	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_132320_sub00_132350	bracketed	resolve the owner, then add its VA claim and body
@@ -182,12 +181,12 @@ compiled	110	0x004854c0	96.0714	96.0714	96.0714	customcampaign	customcampaign	?g
 compiled	110	0x00498b70	88.4210	88.4210	88.4210	dxplay	dxplay	?testLobbied@CDPlayLobby@@QAEEXZ	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	110	0x005141b0	77.3913	77.3913	77.3913	objecttype	objecttype	?accepts@TNativeTerrainObjectFilter@@UBEHPBUTObjectType@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 bracketed	110	0x00532360	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_132360	bracketed	resolve the owner, then add its VA claim and body
-bracketed	110	0x0054c090	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_1860e0_sub01_14c090	bracketed	resolve the owner, then add its VA claim and body
 bracketed	110	0x005b4860	-	0.0000	0.0000	systemoptionswindow..text	systemoptionswindow,text	game_234980_sub00_1b4860	bracketed	resolve the owner, then add its VA claim and body
 unmapped	110	0x006037a0	-	0.0000	0.0000				unmapped	locate the owning TU, then add its VA claim and body
 bracketed	111	0x00530f10	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_130e90_sub00_130f10	bracketed	resolve the owner, then add its VA claim and body
 bracketed	113	0x0054b100	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_1348d0_sub00_14b100	bracketed	resolve the owner, then add its VA claim and body
 unmapped	115	0x006047b0	-	0.0000	0.0000				unmapped	locate the owning TU, then add its VA claim and body
+bracketed	116	0x0054c090	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_1860e0_sub01_14c090	bracketed	resolve the owner, then add its VA claim and body
 bracketed	116	0x005b3ae0	-	0.0000	0.0000	systemoptionswindow..text	systemoptionswindow,text	game_1b3ae0	bracketed	resolve the owner, then add its VA claim and body
 bracketed	118	0x0055f3b0	-	0.0000	0.0000	resourcemanager..sacrifice_window	resourcemanager,ressw,sacrifice_window	game_148040_sub01_15f3b0	bracketed	resolve the owner, then add its VA claim and body
 compiled	120	0x00432b20	90.6818	90.6818	90.6818	ai_player	ai_player	?getValue@type_antimorale_artifact@@UBEJPBVhero@@EE@Z	admitted	run the evidence pass and iterate up to five scored candidates
