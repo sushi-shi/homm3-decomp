@@ -420,7 +420,7 @@ struct type_AI_spellcaster {
     // Before normalization (function): type_AI_spellcaster::get_protection_value.
     // Before normalization (locals): our_army.
     long getProtectionValue(const army* ourArmy, TSpellSchool school,
-                              long level, long duration, long amount);
+                              long level, long duration, long amount) const;
     // Before normalization (function): type_AI_spellcaster::get_air_protection_value.
     // Before normalization (locals): our_army.
     long getAirProtectionValue(const army* ourArmy,
@@ -437,6 +437,8 @@ struct type_AI_spellcaster {
     // Before normalization (locals): our_army.
     long getWaterProtectionValue(const army* ourArmy,
                                     type_enchant_data caster);
+    // DC ai_tactical.cpp:2116, get_duration. Retail protection expands it.
+    double getDuration(long turns, unsigned char movedThisTurn) const;
     // Before normalization (function): type_AI_spellcaster::get_cancel_value.
     // Before normalization (locals): current_army, bad_spells_only.
     long getCancelValue(army* currentArmy, unsigned char badSpellsOnly);
@@ -679,7 +681,7 @@ long getBreathBonus(long ourGroup, const army* ourArmy, long ourHex,
 // CODEVIEW(E:\gamedcs\ai_tactical.cpp:1884, dc 0x3fc20) long type_AI_spellcaster::get_poison_value(const army* enemy, type_enchant_data caster);
 // CODEVIEW(E:\gamedcs\ai_tactical.cpp:1902, dc 0x3fc80) long type_AI_spellcaster::get_speed_value(const army* our_army, long increase, long duration);
 // CODEVIEW(E:\gamedcs\ai_tactical.cpp:1965, dc 0x3fdb8) long type_AI_spellcaster::get_haste_value(const army* our_army, type_enchant_data caster);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:1975, dc 0x3fde4) long type_AI_spellcaster::get_protection_value(const army* our_army, TSpellSchool school, long level, long duration, long amount);
+// CODEVIEW(E:\gamedcs\ai_tactical.cpp:1975, dc 0x3fde4) long type_AI_spellcaster::get_protection_value(const army* our_army, TSpellSchool school, long level, long duration, long amount) const;
 // CODEVIEW(E:\gamedcs\ai_tactical.cpp:2077, dc 0x40060) long type_AI_spellcaster::get_air_protection_value(const army* our_army, type_enchant_data caster);
 // CODEVIEW(E:\gamedcs\ai_tactical.cpp:2087, dc 0x4008c) long type_AI_spellcaster::get_fire_protection_value(const army* our_army, type_enchant_data caster);
 // CODEVIEW(E:\gamedcs\ai_tactical.cpp:2097, dc 0x400b8) long type_AI_spellcaster::get_earth_protection_value(const army* our_army, type_enchant_data caster);

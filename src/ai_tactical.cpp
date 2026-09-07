@@ -2657,42 +2657,27 @@ long type_AI_spellcaster::getHasteValue(const army* ourArmy, type_enchant_data c
 // get_damage_value - `fild dword / fstp DWORD / fmul dword` - while the
 // closing odds ladder is the TU's usual double one.
 //
-// Residual (80.2%): ONE live-range decision, and everything else in the
-// body follows from it. Every guard, every call, every argument push,
-// every immediate and the whole closing ladder agree; the prologue and
-// the loop TAIL (`add eax,0x22 / inc ebx / add ...,0x88 /
-// cmp eax,0x94c`) are byte-identical. The difference is what owns ESI
-// across the loop: retail parks the akSpellTraits BYTE-OFFSET induction
-// variable there and re-reads `our_army` from [ebp+8] at each of its
-// four in-loop uses, then SPLITS that live range - reusing ESI for the
-// ModifySpellDamage result and restoring the offset from [ebp-0x8] on
-// the way out. Our CL instead enregisters `our_army` in ESI for the
-// whole body and gives the offset EDX, which leaves no scratch register,
-// so the single-use traits reads fold into memory operands
-// (`test dword ptr [edx+ecx+0x1c], eax` where retail loads to a register
-// first) and the eax/edx pair stays transposed through the tail - down
-// to the ladder's zero arm, where retail merges the double's high-half
-// store out of both arms and we store both halves twice.
-// why-reg --model: bindings agree at every first definition (edi<-this,
-// esi<-our_army, ebx<-value), so this is NOT the B1 minimum slice; the
-// two values that would have to move are a PARAMETER and a CALL RESULT,
-// which is the model's own criterion for "no local spelling reaches it".
-// Register-homing family.
-// Tried and rejected: binding the single-use traits reads
-// (`schoolBits`, `level`) to named locals first - the lever that closed
-// the earth/water wrappers below - byte-identical at 80.2110; and this
-// TU's scoped-`for` idiom `{ for (...) { ... } }` around the loop, also
-// byte-identical at 80.2110.
-// Before normalization (locals): our_army, our_hits, slow_flag.
+// DC ai_tactical.cpp:2035-2037 calculates mana cost before reading the
+// hero's mana; line 2041 calculates damage before ModifySpellDamage.
+// Named manaCost and damage values restore retail's ESI spell-offset live
+// range and all 700 function bytes. The combined condition kept ourArmy or
+// the enemy hero in ESI across calls, changing the entire loop allocation.
+// Controls: manaCost alone 94.5232%; base damage alone 89.5106%; a separate
+// power product 93.0253% (93.6793% with manaCost). Keeping a traits reference
+// across calls reaches 87.5696% but removes retail's fresh table loads.
+// The const signature, army::is, SpellIsAvailable, and get_duration boundary
+// come from DC; restoring them is byte-flat before the two statement fixes.
+// Before normalization (locals): our_army, total_hits, enemy_mastery,
+// enemy_power, enemy_army_group.
 VA(0x004396e0, 0x2BC)  // anchor-global, dc 0x3fde4
-long type_AI_spellcaster::getProtectionValue(const army* ourArmy, TSpellSchool school, long level, long duration, long amount)
+long type_AI_spellcaster::getProtectionValue(const army* ourArmy,
+    TSpellSchool school, long level, long duration, long amount) const
 {
     if (!g_combatManager->canCastSpells(m_enemySide, 1))
         return 0;
     if (m_winLikely)
         return 0;
-    unsigned char immune = static_cast<unsigned char>(static_cast<unsigned>(ourArmy->m_monInfo.m_attributes) >> 23);
-    if (immune & 1)
+    if (ourArmy->is(1u << 23))
         return 0;
     long power = g_combatManager->m_spellPower[m_enemySide];
     long value = 0;
@@ -2708,18 +2693,19 @@ long type_AI_spellcaster::getProtectionValue(const army* ourArmy, TSpellSchool s
             continue;
         if (g_spellTraits[i].m_level > level)
             continue;
-        if (!m_enemyHero->m_availableSpells[i])
+        if (!m_enemyHero->spellIsAvailable(static_cast<SpellID>(i)))
             continue;
         if (!g_combatManager->validSpellTargetArmy(i, m_enemySide, ourArmy, 1, 0))
             continue;
-        long mastery = m_enemyHero->getSpellLevel(i, g_combatManager->m_magicTerrain);
-        if (m_enemyHero->getManaCost(i, group, g_combatManager->m_magicTerrain)
-                > m_enemyHero->m_mana)
+        TSkillMastery mastery = m_enemyHero->getSpellLevel(i, g_combatManager->m_magicTerrain);
+        long manaCost = m_enemyHero->getManaCost(
+            i, group, g_combatManager->m_magicTerrain);
+        if (manaCost > m_enemyHero->m_mana)
             continue;
-        long damage = g_combatManager->modifySpellDamage(
-            g_spellTraits[i].m_masteryBonus[mastery]
-            + g_spellTraits[i].m_powerFactor * power,
-            i, m_ourHero, m_enemyHero, ourArmy, 0);
+        long damage = g_spellTraits[i].m_masteryBonus[mastery]
+            + g_spellTraits[i].m_powerFactor * power;
+        damage = g_combatManager->modifySpellDamage(
+            damage, i, m_ourHero, m_enemyHero, ourArmy, 0);
         if (damage == 0)
             continue;
         long reduction = damage * amount / 100;
@@ -2736,19 +2722,8 @@ long type_AI_spellcaster::getProtectionValue(const army* ourArmy, TSpellSchool s
         if (loss > value)
             value = loss;
     }
-    double portion;
-    if (duration >= m_estimate.m_roundsLeft)
-        portion = 1.0;
-    else
-        portion = static_cast<double>(duration) / static_cast<double>(m_estimate.m_roundsLeft);
-    unsigned char slowFlag = static_cast<unsigned char>(static_cast<unsigned>(ourArmy->m_monInfo.m_attributes) >> 26);
-    double scale;
-    if ((slowFlag & 1)
-            && (portion = portion - 1.0 / static_cast<double>(m_estimate.m_roundsLeft)) < 0.0)
-        scale = 0.0;
-    else
-        scale = portion;
-    return static_cast<long>(static_cast<double>(value) * scale);
+    return static_cast<long>(static_cast<double>(value)
+        * getDuration(duration, ourArmy->is(1u << 26)));
 }
 
 // The four protection wrappers, all one `return get_protection_value(
@@ -2808,16 +2783,22 @@ long type_AI_spellcaster::getWaterProtectionValue(const army* ourArmy, type_ench
     return getProtectionValue(ourArmy, eSchoolWater, 5, caster.m_duration, amount);
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\ai_tactical.cpp:2116
-DC_ONLY(0x40130, 0x118)
-double type_AI_spellcaster::get_duration(long turns, unsigned char moved_this_turn)
+// DC ai_tactical.cpp:2116-2129, dc 0x40130. Ordinary const helper;
+// protection value expands it in retail. Original name: get_duration.
+double type_AI_spellcaster::getDuration(long turns, unsigned char movedThisTurn) const
 {
-    // @stub
+    double result;
+    if (turns >= m_estimate.m_roundsLeft)
+        result = 1.0;
+    else
+        result = static_cast<double>(turns) / m_estimate.m_roundsLeft;
+    if (movedThisTurn) {
+        result -= 1.0 / m_estimate.m_roundsLeft;
+        if (result < 0.0)
+            return 0.0;
+    }
+    return result;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:2136
 // What it is worth to strip the spells standing on `current_army` -
