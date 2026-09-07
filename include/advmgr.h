@@ -2077,14 +2077,13 @@ public:
     // Before normalization (locals): current_hero, human_player.
     void handleMapEvent(class hero* currentHero, NewmapCell* cell,
                         type_point point, bool humanPlayer);
-    // The reward payer the box hands its record to (0x49fa90), a PRIVATE
-    // member on the Dreamcast returning bool. DECLARED only; the row is not
-    // claimed here.
+    // DC events.cpp:852 returns unsigned char and takes a byte player flag.
+    // Retail 0x49fa90 returns its saved reward byte after string cleanup.
     // Before normalization (function): advManager::GiveBlackBoxReward.
     // Before normalization (locals): current_hero, human_player, BlackBox.
-    bool giveBlackBoxReward(const char* text, class hero* currentHero,
+    unsigned char giveBlackBoxReward(const char* text, class hero* currentHero,
                             NewmapCell* cell, type_point point,
-                            bool humanPlayer, class BlackBoxData* blackBox);
+                            unsigned char humanPlayer, class BlackBoxData* blackBox);
     // The sea chest (jump-table arm 0x52). Four arguments and `ret 0x10`,
     // the Dreamcast's own signature.
     // Before normalization (function): advManager::DoEventSeaChest.

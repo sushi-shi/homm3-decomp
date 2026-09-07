@@ -19,8 +19,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x004ee3e0	7172	78.7743	78.9421	78.9421	1510.2725880000005	kb	?oldmain@@YIHXZ	admitted
 0x004f2960	894	79.1107	79.1107	79.1107	186.7503420000001	kb	?displayLCWinLoss@@YIEAAVLossConditionStruct@@AAH1E@Z	admitted
 0x0048a310	2846	69.5768	69.5768	79.2531	590.456774	customcampaign	?load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	admitted
-0x0049fa90	4203	79.82593	79.8259	79.8259	847.9174229999998	events	?giveBlackBoxReward@advManager@@QAE_NPBDPAVhero@@PAVNewmapCell@@Utype_point@@_NPAVBlackBoxData@@@Z	admitted
-0x00421590	225	79.9375	79.9375	79.9375	45.140625000000014	ai	?markMoat@combatManager@@QAEXPBVarmy@@PAJPAUtype_AI_combat_parameters@@@Z	admitted
 0x00521960	2819	80.0996	80.0996	80.0996	560.9922760000002	overview	?windowHandler@TOverviewWindow@@UAEHPAVmessage@@@Z	admitted
 0x004396e0	700	80.21097	80.211	80.211	138.523	ai_tactical	?getProtectionValue@type_AI_spellcaster@@QAEJPBVarmy@@W4TSpellSchool@@JJJ@Z	admitted
 0x00541140	1594	79.1717	80.4347	80.4347	311.87088199999994	rmg	?createGroundConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@PAV?$vector@PAUTRmgMapItem@@V?$allocator@PAUTRmgMapItem@@@std@@@std@@PAV?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@5@@Z	admitted
@@ -317,6 +315,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x0049a7c0	324	94.583336	94.5833	94.5833	17.550108000000023	event_record	?replay@type_record_move_hero@@UAEXE@Z	admitted
 0x00601a00	796	94.584	94.584	94.584	43.11135999999999	wingraph	?ddSetFullScreenStatus@@YIEH@Z	admitted
 0x005ea130	1180	94.61039	94.6104	94.6104	63.59728000000006	tradpost	?doMarket@@YIXXZ	admitted
+0x0049fa90	4203	94.7087	94.7087	94.7087	222.39333900000042	events	?giveBlackBoxReward@advManager@@QAEEPBDPAVhero@@PAVNewmapCell@@Utype_point@@EPAVBlackBoxData@@@Z	admitted
 0x004c94d0	205	94.72603	94.726	94.726	10.811700000000002	game	?getRandomArtifactId@game@@QAE?AW4TArtifact@@H@Z	admitted
 0x0051ee50	3024	94.7322	94.7322	94.7322	159.29827199999968	overview	?processIconSelect@game@@QAEHHE@Z	admitted
 0x005f0f60	541	94.75532	94.7553	94.7553	28.373826999999952	university_window	?purchaseClick@type_university_window@@KIHAAVmessage@@@Z	admitted
