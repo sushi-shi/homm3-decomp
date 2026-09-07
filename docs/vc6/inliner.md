@@ -1404,3 +1404,48 @@ expands. Predicate/loop recovery alone reaches 97.0988%; separating the two
 adjacent-cell calls fixes the remaining direction lifetime and reaches 100%.
 All 36 retail CFG blocks agree. The verified padded body has 704 bytes and
 SHA-256 `6abb39482afe1d855242d8803dc124a085ade6bfb86d3b1f6d5e8a8bfa134449`.
+
+
+### Recover iterator traversal before tuning inline budgets
+
+`initializeArtifactTraitsTable` (0x44cd50) had flattened its Dreamcast-proven
+static `InitializeArtifactTraits(int, const vector<char*>&)` and replaced the
+Complete combination-artifact traversal with a scalar bit loop. Two invented,
+compile-time-dead diagnostic calls had raised that version to 80.5129%.
+Removing those calls alone gives 76.87327%; they have no source evidence.
+
+Retail 0x44d063..0x44d0bf compares both a bitset owner and offset with an end
+iterator, searches through `bitset<144>::test`, copies the found offset, then
+checks the end again. A const iterator with `find_if` and an identity predicate
+reproduces that sequence. Plain `find(..., true)` emits `cmp al,1 / je` where
+retail uses `test al,al / jne`; putting find in the increment duplicates the
+initial search and loses the shared loop. The iterator and predicate names are
+provisional; their operations are supported by retail.
+
+Keep the static helper's two parameters. Complete's pooled string copies can
+stay in the caller, while the helper owns cost, slot mask, class and defaults.
+This boundary, the iterator search, a component-traits reference and separate
+name/description pointer loads reach 81.376236% without a carrier or pragma.
+The remaining nested mask `_Tidy`/equality calls and late range-error code
+still differ. A helper with an extra buffer reference and the iterator reaches
+80.19802%; the scalar traversal with that helper reaches 73.65148%.
+
+
+### Early returns in a source helper can restore its nested scan
+
+`TSingleSelectionWindow::getHeroName` (0x58d1f0) flattened `getHeroInPos` and
+reached 80.5798%. Restoring the call initially lowered it: with the recovered
+caller scopes and named map references, C2 gave `getPlayerInPos` budget 73
+against cost 75, leaving that scan out of line at 64.6117%.
+
+Dreamcast `getHeroInPos` lines 8151..8162 first handles generated/random
+heroes with two early returns, then returns the fixed hero or selected hero.
+The assignment/else chain had changed that source structure. Restoring the
+returns expands `getPlayerInPos` naturally and raises the caller to 88.12766%.
+Both map tree finds now stay out of line, as retail requires.
+
+The remaining difference was independent of inlining: retail's fallback names
+at 0x58d294 and 0x58d3b4 directly index the hero array. The introduced `getHero`
+accessor added a -1/null check after each map call. One direct array access gives
+94.11702%; both give 100%, with all 39 retail CFG blocks exact. Preserve the
+selection helper and its scopes rather than flattening it to avoid the dip.

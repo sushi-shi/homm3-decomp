@@ -1983,13 +1983,19 @@ void type_random_map_generator::markBorderObjectArea(
 #endif
 
 // Provisional arithmetic boundary for the Complete-only position value.
-// CreateRiver keeps position.x in EBX and jumps over its backedge reload.
-// A by-value direction and returned coordinate construction recover that
-// sequence; a reference operand leaves a different relaxation register flow.
-// Keep this ordinary body visible to the direction-addition call sites.
+// CreateRiver supports a by-value direction. Ground connection retains the
+// original coordinate before translation at 0x54128c..0x5412be and
+// 0x5414cb..0x5414ff. Construct that value, apply the canonical compound
+// translation, then return it. This remains an ordinary helper.
+// With ground's source-slot locals, this reaches 81.81753%; the prior direct
+// translated construction reaches 78.071556%. Copying *this instead of
+// constructing the coordinate collapses the temporary (76.631485% without
+// the slot locals). The precise constructor expansion remains unresolved.
 TRmgMapPosition TRmgMapPosition::operator+(TPoint offset) const
 {
-    return TRmgMapPosition(m_x + offset.m_x, m_y + offset.m_y, m_z);
+    TRmgMapPosition result(m_x, m_y, m_z);
+    result += offset;
+    return result;
 }
 
 TRmgMapPosition& TRmgMapPosition::operator+=(const TPoint& offset)
@@ -2028,22 +2034,23 @@ void type_random_map_generator::placeGuard(TRmgMapPosition position, int value)
 // crossings, opens their predecessor paths, and records both zone entrances
 // before choosing border objects or a guard.  There is no Dreamcast RMG
 // counterpart; the helper names describe their retained retail bodies.
-// Residual (80.43471%): the shared by-value guard helper restores final
-// map-item calls (flattened bodies: 77.31306%), but they target the scalar
-// accessor expansion rather than the retained value overload. The second
-// occupancy size call stays out of line and the final vector destructor expands.
-// Delegating the by-value accessor to its scalar overload
-// restores the first clear's retained range erase; direct accessor arithmetic
-// expands that erase into copy/_Destroy (76.75134%).
-// Retail additionally preserves a 12-byte position temporary that this
-// candidate folds away.  These are unresolved source/lifetime boundaries.
-// Controls: direct range-erase expands further (71.29874%); positive eligibility
-// scopes versus early continues, a by-value left operand, copy assignment,
-// an intermediate position local, and inline versus ordinary operator bodies
-// are byte-flat.  A by-value direction scores 74.07692%.  A temporary depth-1
-// limit on clear is also flat and has been removed.  Naming candidateCount
-// before the empty check scores 75.386406%; using the two natural size calls
-// restores retail's reuse of the count through the min wrapper.
+// Residual (81.81753%): retail preserves coordinate copies before translation;
+// construct the ordinary addition helper's result before applying its offset.
+// The candidate still retains two coordinate constructors that retail expands;
+// its frame is 0x50 versus retail 0x5c.
+// The final guard accessors call the scalar overload instead of the value
+// overload, and the second guard's occupancy size remains out of line.
+// Source-slot locals reproduce source-index-before-destination lookup; alone
+// they score 78.071556%, combined with the value construction 81.81753%.
+// Controls on the prior helper: a separate scan position copy is 78.48837%;
+// replacing the first/both additions with caller-side copy/+= is
+// 78.701256%/78.31127%; entrance locals are 76.9034%, guard-input locals
+// 77.27907%. Keep the canonical helper calls. Inside the helper, returning
+// the += reference is 81.15385% versus a separate return's 81.63685% before
+// slot locals; copy-initializing from a constructed temporary is 75.432915%.
+// Older controls: direct range erase expands further (71.29874%); naming
+// candidateCount before the empty test is 75.386406%. The two size calls
+// preserve retail's count reuse through min. No inline pin is retained.
 VA(0x00541140, 0x63A) // anchor-callee ConnectZones 0x543550; retail-only
 unsigned char type_random_map_generator::createGroundConnection(
     TRmgZone* source,
@@ -2051,8 +2058,10 @@ unsigned char type_random_map_generator::createGroundConnection(
     std::vector<TRmgMapItem*>* borderItems,
     std::vector<TRmgMapPosition>* borderPositions)
 {
-    TRmgZone* destination = m_zones[connection->m_destination->m_zoneIndex];
-    int sourceZone = source->m_slot->m_zoneIndex;
+    TRmgTownSlot* sourceSlot = source->m_slot;
+    int sourceZone = sourceSlot->m_zoneIndex;
+    TRmgTownSlot* destinationSlot = connection->m_destination;
+    TRmgZone* destination = m_zones[destinationSlot->m_zoneIndex];
     int destinationZone = destination->m_slot->m_zoneIndex;
     if (source->getLevelPosition().m_z != destination->getLevelPosition().m_z)
         return 0;
