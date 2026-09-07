@@ -1140,6 +1140,11 @@ void TRmgTerrainBrush::paintRectangle(
     m_painter->paintRectangle(x, y, rectangleWidth, rectangleHeight);
 }
 
+// The brush constructor's allocation-failure unwind reaches the retained
+// Dinkumware auto_ptr destructor. Its {owns, pointer} layout, pointee
+// destructor call, and scalar delete exactly identify this specialization.
+VA_COMPGEN(0x005B76D0, 0x20, IMPLICIT_DTOR, rmgTerrainPainter_auto_ptr)
+
 VA(0x005B76F0, 0x209) // anchor-callee 0x5b76d9; retained painter destructor
 rmgTerrainPainter::~rmgTerrainPainter()
 {
