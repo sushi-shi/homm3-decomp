@@ -152,6 +152,17 @@ TObjectTypeFilter* const gObjectTypeFilters[OBJECT_TYPE_FILTER_COUNT] = {
 };
 
 
+// Provisional cache accessor: retail's independent guard at 0x6aba7d
+// initializes the vector at 0x6aba80 through its retained constructor.
+// At the 90.64 checkpoint VC6 expands this accessor but gives the nested
+// constructor 43 bytes of budget against its 51-byte cost. A caller-local static expands the
+// constructor and scores 87.9486 instead of 90.6364 in setImageName.
+static std::vector<TObjectType::TImageInfo>& getObjectImageCache()
+{
+    static std::vector<TObjectType::TImageInfo> imageCache;
+    return imageCache;
+}
+
 // Retail 0x514610, TObjectType::setImageName - the .msk cache loader and
 // the registry's growth path. Two function-local statics with SEPARATE
 // guard bytes: the image-name registry at 0x69cb80 (guard 0x69cb64, which
@@ -167,9 +178,9 @@ TObjectTypeFilter* const gObjectTypeFilters[OBJECT_TYPE_FILTER_COUNT] = {
 // when there is no '.'), and `rfind('.')` is what puts the character in
 // the dead parameter home at [ebp+0xb].
 //
-// The tail RE-READS the cache's _First between every member of the copy,
-// because `this` may alias the vector's storage - that is the plain
-// assignment, not a hoisting failure.
+// The tail reloads the cache's _First for each coordinate and each bitset.
+// These are separate source assignments; a whole TImageInfo assignment
+// emits rep movsd and loses the repeated loads.
 // GetIndex is a provisional Complete-only source boundary. Retail expands
 // the first rows.size(), then calls size, pair construction (0x517c30)
 // and row insert inside the lookup's insertion arm. Encapsulating that
@@ -194,28 +205,63 @@ TObjectTypeFilter* const gObjectTypeFilters[OBJECT_TYPE_FILTER_COUNT] = {
 // under VC6 (54.79 is therefore invalid); an aggregate initializer is
 // rejected as C2552; two body assignments occur after the bitset calls.
 //
-// Remaining: the imageCache constructor and both bitset::set calls still
-// expand, unlike retail; 29 vs 22 blocks.
-// Historical append-spelling rankings expired: before GetIndex, cache
-// push_back and insert(end(), x) were byte-identical at 47.7708. Earlier
-// dead-statement probes (removed) were flat then worse; synthetic caller
-// mass did not recover the missing boundaries.
+// The cache accessor, bitset proxy assignments and separate final field
+// copies raise MAX from 58.5099 to 90.6364. operator[](cell) and its proxy's
+// operator=(bool) expand; the two nested set calls remain at 0x51488f and
+// 0x5148a6, including retail's two bool argument stack homes. With the
+// final field copies and cache accessor, direct set calls score 73.2688.
+// A separate mask-reader probe reaches 85.2530 but lacks those bool homes;
+// the ordinary bitset API accounts for them without a new source helper.
+//
+// The appended TImageInfo is a full-expression temporary. Keeping a named
+// record alive across the loader arm costs an extra 20 stack bytes; a
+// block-scoped record produces the same code as the temporary. The
+// resulting frame is retail's 0x60, and both packed masks occupy their
+// retail slots. Removing the provisional constructors still makes an
+// aggregate initializer fail with C2552; implicit default construction
+// leaves the two point coordinates undefined. Passing the point by value,
+// naming the record through a reference, separate zero assignments, and
+// spelling bit arithmetic as / and % are byte-neutral controls.
+//
+// Initializing emptySize at function entry and cell before the resource
+// reads recovers the retail point stores and this/name/count registers.
+// Naming the shared packed-byte index also restores the loop's shift order:
+// MAX 96.0790, 791 bytes, 22 matching branch connections and retail's 0x60
+// frame. Moving cell's initialization back to the for header scores 91.4941;
+// moving only its declaration is byte-neutral. A block-scoped emptySize
+// gives 94.2925 before the byte index is named. Zeroing the point with
+// memset is identical to the earlier aggregate initialization.
+//
+// Negative controls: alternate bitset initializers, point constness, signed
+// byte arrays/masks, a named insertion index/result, and const map iterators
+// are neutral. Coordinate constructors reach 92.8498 but fail to recover the
+// surrounding allocation. Returning an index reference or an iterator is
+// worse; an early return for existing registry entries adds a branch. Moving
+// GetIndex's definition out of the class, before or after this caller, is
+// neutral. The bitset size accessor changes the lookup's nested decisions.
+// TPoint() under VC6 leaves coordinates undefined; it is not zeroing syntax.
+//
+// The retained cache insert at 0x516c10 agrees in every non-relocation
+// byte of its 522-byte body, including its ten call sites. Its _Construct
+// at 0x517b50 uses a six-dword rep movsd, consistent with the ordinary copy.
+// Remaining: lookup exit and string-copy scheduling, and cell's zero being
+// hoisted before the reads instead of materialized at the loop. No inline
+// controls or release-elided operations are used.
 VA(0x00514610, 0x317)  // anchor-callee 0x514b80 per-row `>>`; anchor-global 0x6aba80 .msk cache; retail-only
 TObjectType& TObjectType::setImageName(
     const std::basic_string<char, std::char_traits<char>,
                             std::allocator<char> >& name)
 {
+    TPoint emptySize = { 0, 0 };
     TObjectImageNameTable& imageNames = GetObjectImageNames();
 
     unsigned int oldCount = imageNames.rows.size();
     imageNumber = imageNames.GetIndex(name);
 
-    static std::vector<TImageInfo> imageCache;
+    std::vector<TImageInfo>& imageCache = getObjectImageCache();
 
     if (imageNumber == oldCount) {
-        TPoint emptySize = { 0, 0 };
-        TImageInfo newRecord(emptySize);
-        imageCache.push_back(newRecord);
+        imageCache.push_back(TImageInfo(emptySize));
         TImageInfo* record = &imageCache[oldCount];
 
         std::basic_string<char, std::char_traits<char>,
@@ -236,6 +282,7 @@ TObjectType& TObjectType::setImageName(
             maskFile = ResourceManager::PointToSpriteResource("default.msk");
         }
         if (maskFile != 0) {
+            unsigned int cell = 0;
             char width;
             char height;
             unsigned char drawBits[6];
@@ -247,18 +294,20 @@ TObjectType& TObjectType::setImageName(
             ResourceManager::ReadFromBitmapResource(maskFile, shadowBits, 6);
             record->objectSize.x = width;
             record->objectSize.y = height;
-            for (unsigned int cell = 0; cell < 48; ++cell) {
+            for (; cell < 48; ++cell) {
+                unsigned int byteIndex = cell >> 3;
                 unsigned char bit =
                     static_cast<unsigned char>(1 << (cell & 7));
-                record->drawMask.set(
-                    cell, (drawBits[cell >> 3] & bit) != 0);
-                record->shadowMask.set(
-                    cell, (shadowBits[cell >> 3] & bit) != 0);
+                record->drawMask[cell] = (drawBits[byteIndex] & bit) != 0;
+                record->shadowMask[cell] = (shadowBits[byteIndex] & bit) != 0;
             }
         }
     }
 
-    imageInfo = imageCache[imageNumber];
+    imageInfo.objectSize.x = imageCache[imageNumber].objectSize.x;
+    imageInfo.objectSize.y = imageCache[imageNumber].objectSize.y;
+    imageInfo.drawMask = imageCache[imageNumber].drawMask;
+    imageInfo.shadowMask = imageCache[imageNumber].shadowMask;
     return *this;
 }
 

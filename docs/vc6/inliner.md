@@ -557,6 +557,27 @@ Two riders:
   is worth -0.19 (94.32 pinned against 94.51 unpinned), so it came out and the
   tree's pin count fell 354 -> 353.
 
+### A mutable bitset proxy also explains boolean argument homes
+
+`TObjectType::setImageName` (`0x514610`) calls `bitset<48>::set` twice in
+retail. Writing those calls directly expands both setters. Subscript
+assignment instead expands `operator[]` and `reference::operator=(bool)`,
+leaving `set` out of line and reproducing the two boolean argument stack
+homes. With the cache accessor and separate final field copies already in
+place, this change alone improves 73.2688% to 90.6206%.
+
+The faithful trace at the subsequent 90.6364% temporary-lifetime checkpoint
+measures the proxy assignment at cost 43. Its two nested setter budgets are
+71 and 80 against `set`'s cost of 91. The cache accessor independently gives
+its vector constructor budget 43 against cost 51; putting the static vector
+directly in the caller expands that constructor and scores 87.9486%.
+
+This function has no Dreamcast counterpart. The accessor is provisional;
+the retained constructor, bitset calls and boolean homes are retail
+facts. Later local-lifetime and packed-byte-index changes reach 96.0790%
+with the same calls. The controls and remaining scheduling differences are
+recorded beside the function in `src/objecttype.cpp`.
+
 ### The checked bitset accessor can recover another boundary
 
 `GiveCrossoverArtifacts` (`0x487900`, Complete-only) reaches 99.41% from
