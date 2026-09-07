@@ -321,6 +321,11 @@ static std::vector<TObjectType::TImageInfo>& getObjectImageCache()
 // (35 instead of 36), leaving the following cursor at EDX rather than EAX.
 // Both traces reproduce their respective complete objects byte for byte
 // outside timestamps; this explains the 87.8696 control's allocation shift.
+// Operand tracing separates the registry end's preassigned EAX temporary
+// from the cache end's rotating EDX request. Naming the append position,
+// push_back, an iterator assignment argument, and a named index reference
+// are byte-identical here. Branch-specific mapped-value pointers score
+// 88.9526 and change the CFG; they do not recover retail's lookup exit.
 // Remaining: lookup operands and string-copy scheduling, and cell's zero being
 // hoisted before the reads instead of materialized at the loop. No inline
 // controls or release-elided operations are used.
