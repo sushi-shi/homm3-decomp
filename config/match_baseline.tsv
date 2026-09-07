@@ -3200,6 +3200,7 @@ resourcemanager	?write@t_stdio_file_adapter@ResourceManager@@UAEHPBXH@Z	100.0000
 resourcemanager	@game_null_159510@12	89.3910	89.3910	89.3910	0x159510	8e254a7e6155
 resourcemanager	@game_sprite_1599e0@12	86.9559	86.9559	86.9559	0x1599e0	d198be5c7e9e
 rmg	??0?$vector@HV?$allocator@H@std@@@std@@QAE@ABV?$allocator@H@1@@Z	100.0000	100.0000	100.0000	0x1157d0	-
+rmg	??0TProgressSink@@QAE@H@Z	100.0000	100.0000	100.0000	0x130e20	2f16a6d32876
 rmg	??0TRmgZone@@QAE@PAUTRmgTownSlot@@@Z	100.0000	100.0000	100.0000	0x1329e0	43c69784e0da
 rmg	??0type_black_box_creature_def@@QAE@H@Z	100.0000	100.0000	100.0000	0x134250	20e010faae4c
 rmg	??0type_object@@QAE@PAUTRmgObjectPropertiesRef@@@Z	100.0000	100.0000	100.0000	0x1330e0	34e5f00dfd63
@@ -3261,7 +3262,7 @@ rmg	?setTotal@TProgressSink@@UAEXH@Z	100.0000	100.0000	100.0000	0x130e80	1a97545
 rmg	?size@?$vector@UTRmgZoneConnection@@V?$allocator@UTRmgZoneConnection@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x14c1b0	-
 rmg	?traceZoneBoundary@type_random_map_generator@@QAEXPAUTRmgBoundaryVertex@@E@Z	86.6846	86.6846	86.6846	0x13c390	5f6a818cd691
 rmg	?unknownOperation@rmgHeroObject@@UAEXXZ	100.0000	100.0000	100.0000	0x133c70	12671cc1c8ff
-rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	93.2786	95.7066	95.7066	0x149cb0	d9e51f6131ce
+rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	93.2864	95.7066	95.7066	0x149cb0	d9e51f6131ce
 rmg	rmgOwnableObject_write	0.0000	0.0000	0.0000	0x133460	b87fd52c0b49
 rmg	type_random_map_canPlaceObject	0.0000	0.0000	0.0000	0x131cf0	e8611028f120
 rmg	type_random_map_generator_canPlaceShipyard	0.0000	0.0000	0.0000	0x141960	8d487be66fa8

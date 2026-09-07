@@ -32,6 +32,16 @@
 
 typedef std::set<TPoint> TRmgPointSet;
 
+// Complete-only progress base constructor. Retail's sole caller is the
+// TRandomMapProgress constructor; vtable 0x6409c0 and the existing SetTotal
+// body prove the total at +4, followed by the zeroed completed count at +8.
+VA(0x00530E20, 0x1C)
+TProgressSink::TProgressSink(int totalSteps)
+{
+    m_steps = totalSteps;
+    m_done = 0;
+}
+
 // Complete-only RMG base virtual, exact on the first scored candidate. Vtable
 // 0x6409c0 and three retail cleanup callers all restore this same vptr;
 // Dreamcast has no RMG compiland.
