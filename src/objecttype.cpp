@@ -326,6 +326,13 @@ static std::vector<TObjectType::TImageInfo>& getObjectImageCache()
 // push_back, an iterator assignment argument, and a named index reference
 // are byte-identical here. Branch-specific mapped-value pointers score
 // 88.9526 and change the CFG; they do not recover retail's lookup exit.
+// Global-allocation tracing (docs/vc6/regalloc.md section 3b) assigns cell
+// ESI first with either initializer position. Early initialization excludes
+// ESI from maskFile's candidates; the loop-local control allows ESI reuse
+// and moves this to EDI. This is an interference difference, not merely
+// creation order. The registry end has equal costs for EAX/ECX/EDX/ESI and
+// takes EAX by tie-break. A shared iterator return changes nested expansion
+// and scores 73.5455; explicit cache insert also changes the CFG (87.0316).
 // Remaining: lookup operands and string-copy scheduling, and cell's zero being
 // hoisted before the reads instead of materialized at the loop. No inline
 // controls or release-elided operations are used.

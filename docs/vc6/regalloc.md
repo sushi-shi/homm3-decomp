@@ -23,22 +23,20 @@ All use the pinned binaries under Wine.
   or rotate through EAX/ECX/EDX (section 3a). Call-crossing values lose those
   three registers; byte-sized values lose ESI/EDI/EBP, ESP is excluded, and
   EBP is available only when frameless.
-* Pseudos are assigned **in creation/processing order**: the first
-  call-crossing value takes ESI, the second EDI, the third EBX, the fourth
-  is frame-homed. Swapping two values' creation order swaps their
-  ESI/EDI bindings - byte-proven with probes, and the mechanism behind B1.
+* Small standalone probes follow **creation order**: three call-crossing
+  values take ESI, EDI and EBX; swapping their creation order swaps bindings.
+  This is the minimum model, not a complete allocator description. The
+  real-TU trace in section 3b also shows priority ordering, interference
+  constraints and register costs deciding callee-saved assignments.
 * For named locals, creation order is the front end's **symbol-handle
   order** - directly visible in the IL `sy` stream
   (docs/vc6/il-format.md); the B14 naming lever works by minting the
   handle earlier.
-* On the plateau B1 rows the two compiles (retail's and ours) define the
-  SAME values at the SAME schedule slots and only the ESI/EDI picks are
-  permuted: the same allocator received the same pseudos in a different
-  processing order from a different front-end state. When the transposed
-  pair is a parameter/`this` against an expression value, no statement-
-  local spelling reaches it (the alias is copy-propagated - measured);
-  the residual is the **C1 handle-state class**, and `why-reg --model`
-  now says so after ONE compile instead of a 20-800 compile sweep.
+* The earlier B1 cases show register permutations with unchanged schedules.
+  The minimum model labels some of these **C1 handle-state** cases when
+  aliases are copy-propagated. That label is a hypothesis: unchanged
+  schedules do not exclude changes to interference, costs or assignment
+  priority, and do not uniquely establish a handle-order cause.
 
 ## 1. Method
 
@@ -206,11 +204,54 @@ that also steals `mov esi,[esi]` at that target makes the traversal loop
 without advancing on its skip path. The seven-byte hook leaves that target
 intact and passes the object-identity check.
 
-### 3b. Source creation order
+### 3b. Global assignment uses register costs (2026-09-07)
+
+Before the local walk, `0x245c3` assigns a register to each selected live-range
+group. Its candidate set is at `group+0x20`; the chosen descriptor is stored
+at `group+0x10` (`0x2475e`). It clears the nine-dword cost array at `0x9d868`,
+adds competing groups' copy costs and singleton-candidate penalties, then
+subtracts the current group's copy preferences. It picks the eligible
+register with the lowest signed cost; ties follow the constant preference
+table. This is distinct from the local selector's rotating cursor.
+
+A hook at `0x24754` records that final decision before the candidate set is
+freed. `0x32467` later rewrites group-valued operands using the chosen
+descriptor; calls from `0x32526` to `0x1f828` expose that connection. The
+`setImageName` trace records 23 global assignments, visited in descending
+order of the priority field at `group+0x0c`, rather than source-definition
+order. Replaying minimum-cost selection over the recorded sets and costs
+reproduces all 23 choices. Examples:
+
+| Value | Eligible registers | Relevant costs | Choice |
+|---|---|---|---|
+| loop index `cell` | EBX, ESI, EDI | EBX=2000; ESI=EDI=0 | ESI |
+| `maskFile` | EBX, EDI | EBX=1000; EDI=0 | EDI |
+| parameter `name` | EBX, ESI, EDI | ESI=1800; EBX=EDI=0 | EDI |
+| registry end temporary | EAX, ECX, EDX, ESI | all zero | EAX |
+
+The already rejected loop-local counter control (92.0079%) provides a
+second trace. Its index is still assigned ESI first. The later initialization
+shortens its live range: `maskFile` now permits ESI as well as EBX and EDI,
+with unchanged costs, and chooses ESI. The name parameter also chooses ESI;
+`this` then has only EBX/EDI available and chooses EDI. Moving an initializer
+therefore changes interference and costs without changing which of these
+values is processed first. Declaration/handle order alone is insufficient.
+All 22 choices in this control pass the same minimum-cost replay.
+
+Both instrumented `/Z7` objects reproduce their uninstrumented replays outside
+timestamps (421,023 and 421,144 bytes respectively), and each function agrees
+with its normal-profile compile. Artifacts and the 45-choice replay are under
+`build/least-matched/object-image-20260907/global-color-trace/`. The current
+function remains at 96.6403%; none of these diagnostic hooks changes a
+compiler decision or constitutes a matching checkpoint.
+
+### 3c. Source creation order
 
 **"Creation order" means the FIRST ASSIGNMENT, not the declaration**
 (measured three ways, 2026-09-06, polish 30). A bare `long i;` moved to the
-top of a block is byte-inert; `long i = 0;` moved there re-orders the walk.
+top of a block is byte-inert; moving `long i = 0;` can change allocation.
+The source probes below establish that effect; section 3b shows why it does
+not by itself prove that the allocator's processing order changed.
 That single fact settles three things at once and is the cheapest lever in
 this file to try:
 
@@ -269,19 +310,14 @@ DEFINITION ORDER; only the picks are permuted:
   `start_our`=EDI, `start_enemy`=EBX); ours transposes exactly the first
   pair.
 
-So the B1 swap is NOT a different ranking and NOT a different schedule:
-the same first-fit walk was fed the same pseudos in a different
-processing order. The processing order is upstream of regasg.c - it is
-front-end symbol/handle state (the C1 mechanism made register-visible;
-cf. the il-format.md killer result: an unused struct shifts every later
-handle by +9). Consistent with that: naming levers (B14) flip it when
-the competing pair are expression values a name can hoist, and no
-statement spelling flips it when one side of the pair is a parameter or
-`this` (the alias is copy-propagated - measured on get_attack_change;
-window.cpp:391's 792-compile sweep is the class's historical baseline).
-WHERE exactly C2/C1XX turn handle values into processing order (the
-p2symtab hash, `[handle & 0x3ff]` buckets) is the next phase's RE
-target, not claimed here.
+The original model attributed these swaps to processing order and C1
+symbol/handle state (see il-format.md's measured handle shift). Naming
+probes can flip expression values, while aliases of parameters or `this`
+were copy-propagated in these cases. Those observations remain useful,
+but they did not trace the global allocator. Section 3b now demonstrates
+another mechanism: equal-priority visitation can produce different
+registers through changed candidate sets and costs. These B1 cases need
+that evidence before a handle-order cause can be treated as established.
 
 ## 6. why-reg v2 - the model path
 
