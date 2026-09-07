@@ -25,6 +25,10 @@ TRmgTerrainRule::~TRmgTerrainRule()
 {
 }
 
+TRmgTableTerrainRule::~TRmgTableTerrainRule()
+{
+}
+
 // Vtable 0x642c98 slot 2 reads the byte at +4 in an eight-byte source entry.
 // The pattern-rule constructor at 0x5b3780 copies the same entry records.
 VA(0x005B3860, 0x11)  // Complete-only pattern terrain rule
@@ -58,6 +62,11 @@ unsigned char TRmgTableTerrainRule::hasEntries()
 {
     return 0;
 }
+
+// Both concrete six-slot terrain-rule vtables use this ICF-folded deleting
+// wrapper. The emitted table-rule closure calls the shared retained destructor
+// at 0x5b3850 and has the same complete-object delete semantics.
+VA_COMPGEN(0x005B3A50, 0x21, SCALAR_DELETING_DTOR, TRmgTableTerrainRule)
 
 // Vtable 0x642cb0 slot 3 indexes the first dword of the fixed eight-byte
 // transition records at 0x6424a8. There is no Dreamcast RMG counterpart.
