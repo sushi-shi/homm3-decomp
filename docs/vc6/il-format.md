@@ -58,8 +58,9 @@ Capture properties, measured:
   copies the TU to a common basename (`tu.cpp`) in equal-length work dirs
   and compiles with cwd there, so neither the -f token nor a resolved path
   can pollute an A/B comparison.
-* `st`/`db` streams: reserved in the driver's suffix table, never observed
-  written by C1XX (trivial TUs through initialize.cpp, game profile).
+* `st`/`db` streams: reserved in the driver's suffix table. Neither was
+  observed in the original non-debug captures. `/Z7` emits `db` (confirmed
+  2026-09-07 on objecttype); a debug replay must preserve that fifth stream.
 * The injected token itself is the one argv difference vs a plain compile;
   its inertness on pass-1 OUTPUT is bounded by path-independence plus the
   round-trip oracle.
@@ -97,6 +98,13 @@ capture:  cl /c <flags> /d1il<P> tu.cpp          (IL at <P>*, no obj)
 feed:     cp <P>* <Q>*; cl /c <flags> /d2il<Q> /Foq.obj tu.cpp
 compare:  q.obj vs a plain-compile obj, masking COFF bytes 4..7
 ```
+
+For `/Z7` replay, use the same `/Fo` pathname for both compiler invocations
+and archive each result afterward. CodeView embeds the object filename, so
+distinct output names invalidate a whole-object comparison even when the
+function bytes agree. A same-path objecttype control reproduced all 421,028
+object bytes outside the timestamp, with normal and `/Z7` function bytes also
+identical. Omitting `db` instead fails with C1083 for the missing `ildb` file.
 
 Measured: trivial TU 418/418 B identical **including** the timestamp (same
 second); initialize.cpp (game profile) 24,547/24,547 B identical outside the

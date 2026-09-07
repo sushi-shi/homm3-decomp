@@ -309,6 +309,18 @@ static std::vector<TObjectType::TImageInfo>& getObjectImageCache()
 // a block. A named scalar index in the caller gives 87.8696. The size-query
 // wrappers remain neutral together; typed resource reads give 87.8696, and
 // returning an insertion pair changes the CFG and gives 73.5652.
+// PCH creation/reuse and iterator/reference constness are byte-neutral.
+// A name-copy helper stays called (95.6127), replacing retail's separate
+// _Tidy and assign calls; a complete filename factory also remains called.
+// A by-value temporary point changes the lookup's nested expansion decisions.
+// Byte-verified C2 tracing confirms the rotating volatile-register path is
+// active here (36 requests); see docs/vc6/regalloc.md section 3a. A preferred
+// register does not advance its cursor, so simple first-fit cannot explain
+// the remaining scratch-register choices.
+// Returning GetIndex by value removes its mapped-load allocation request
+// (35 instead of 36), leaving the following cursor at EDX rather than EAX.
+// Both traces reproduce their respective complete objects byte for byte
+// outside timestamps; this explains the 87.8696 control's allocation shift.
 // Remaining: lookup operands and string-copy scheduling, and cell's zero being
 // hoisted before the reads instead of materialized at the loop. No inline
 // controls or release-elided operations are used.
