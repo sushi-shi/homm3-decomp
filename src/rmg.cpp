@@ -2325,6 +2325,19 @@ unsigned char type_random_map_generator::createShipyardConnection(
 // type_object constructions from objectPrototypes[103], and the mirrored
 // entrance/guard updates.  Dreamcast has no RMG compiland, so the method name
 // is role-based while every field and branch below is Windows-retail evidence.
+// Retail reloads the source level-position after rand(), so keep the
+// returned accessor value at that point rather than reusing the early
+// level comparison. This raises 79.4987% to 79.8603%. Applying the existing
+// coordinate subtraction helper gives 80.8917%; separate entrance-point
+// temporaries for each zone give 81.9530%; updating the intersection in
+// sourceBounds gives 82.1005% (2026-09-07). The resulting candidate has
+// 2192 padded bytes. Position accessors versus direct reloaded members,
+// size() versus empty(), placing score after the zone check, and using
+// returned temporaries for the first level comparison are byte-flat.
+// Remaining differences include bound-temporary/frame allocation and
+// over-expansion of the two final placeGuard -> getMapItem calls. Keep
+// those ordinary helper boundaries; source fact recovery, not forced
+// calls or extracted arbitrary blocks, must recover their inline split.
 VA(0x00542080, 0x8AA)
 unsigned char type_random_map_generator::createSubterraneanGate(
     TRmgZone* source, TRmgZoneConnection* connection)
@@ -2332,25 +2345,22 @@ unsigned char type_random_map_generator::createSubterraneanGate(
     TRmgZone* destination = m_zones[connection->m_destination->m_zoneIndex];
     int sourceZone = source->m_slot->m_zoneIndex;
     int destinationZone = destination->m_slot->m_zoneIndex;
-    TRmgMapPosition sourceLevelPosition = source->m_levelPosition;
-    TRmgMapPosition destinationLevelPosition = destination->m_levelPosition;
-
-    if (sourceLevelPosition.m_z == destinationLevelPosition.m_z)
+    if (source->getLevelPosition().m_z == destination->getLevelPosition().m_z)
         return 0;
     if (source->m_terrain == eTerrainWater)
         return 0;
 
     TRmgZoneBounds sourceBounds = source->m_bounds;
     TRmgZoneBounds destinationBounds = destination->m_bounds;
-    int minimumX = std::_cpp_max(
+    sourceBounds.m_minimumX = std::_cpp_max(
         sourceBounds.m_minimumX, destinationBounds.m_minimumX);
-    int minimumY = std::_cpp_max(
+    sourceBounds.m_minimumY = std::_cpp_max(
         sourceBounds.m_minimumY, destinationBounds.m_minimumY);
-    int maximumX = std::_cpp_min(
+    sourceBounds.m_maximumX = std::_cpp_min(
         sourceBounds.m_maximumX, destinationBounds.m_maximumX);
-    int maximumY = std::_cpp_min(
+    sourceBounds.m_maximumY = std::_cpp_min(
         sourceBounds.m_maximumY, destinationBounds.m_maximumY);
-    if (minimumX >= maximumX || minimumY >= maximumY)
+    if (sourceBounds.m_minimumX >= sourceBounds.m_maximumX || sourceBounds.m_minimumY >= sourceBounds.m_maximumY)
         return 0;
 
     int gateIndex = rand() % m_objectPrototypes[103].size();
@@ -2359,16 +2369,16 @@ unsigned char type_random_map_generator::createSubterraneanGate(
 
     std::vector<TRmgMapPosition> candidates;
     int bestScore = 0;
-    TRmgMapPosition position = sourceLevelPosition;
+    TRmgMapPosition position = source->getLevelPosition();
 
-    for (position.m_y = minimumY; position.m_y < maximumY; ++position.m_y) {
-        for (position.m_x = minimumX; position.m_x < maximumX; ++position.m_x) {
+    for (position.m_y = sourceBounds.m_minimumY; position.m_y < sourceBounds.m_maximumY; ++position.m_y) {
+        for (position.m_x = sourceBounds.m_minimumX; position.m_x < sourceBounds.m_maximumX; ++position.m_x) {
             TRmgMapItem* sourceItem = m_map.getMapItem(position);
-            int score = sourceItem->m_zoneState.m_score;
             if (sourceItem->m_zoneState.m_zone != sourceZone)
                 continue;
+            int score = sourceItem->m_zoneState.m_score;
 
-            TRmgMapPosition otherPosition = destination->m_levelPosition;
+            TRmgMapPosition otherPosition = destination->getLevelPosition();
             otherPosition.m_x = position.m_x;
             otherPosition.m_y = position.m_y;
             TRmgMapItem* destinationItem = m_map.getMapItem(otherPosition);
@@ -2392,25 +2402,25 @@ unsigned char type_random_map_generator::createSubterraneanGate(
         }
     }
 
-    if (candidates.empty())
+    if (candidates.size() == 0)
         return 0;
 
     position = candidates[rand() % candidates.size()];
     addObject(new type_object(gateProperties), position);
 
-    TRmgMapPosition otherPosition = destination->m_levelPosition;
+    TRmgMapPosition otherPosition = destination->getLevelPosition();
     otherPosition.m_x = position.m_x;
     otherPosition.m_y = position.m_y;
     addObject(new type_object(gateProperties), otherPosition);
 
-    position.m_x -= gatePrototype->m_triggerCell.m_x;
-    position.m_y -= gatePrototype->m_triggerCell.m_y;
-    otherPosition = destination->m_levelPosition;
+    position -= TPoint(gatePrototype->m_triggerCell.m_x,
+                       gatePrototype->m_triggerCell.m_y);
+    otherPosition = destination->getLevelPosition();
     otherPosition.m_x = position.m_x;
     otherPosition.m_y = position.m_y;
-    TPoint entrance(position.m_x, position.m_y);
-    source->m_entrances.push_back(entrance);
-    destination->m_entrances.push_back(entrance);
+    source->m_entrances.push_back(TPoint(position.m_x, position.m_y));
+    destination->m_entrances.push_back(
+        TPoint(otherPosition.m_x, otherPosition.m_y));
 
     int guardValue;
     if (connection->m_unguarded) {

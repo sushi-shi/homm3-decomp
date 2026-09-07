@@ -230,7 +230,7 @@ ai	?shouldStayInCastle@combatManager@@QAEEPAUtype_AI_combat_parameters@@@Z	100.0
 ai	?simulateActions@combatManager@@QAEJAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@JJ@Z	100.0000	100.0000	100.0000	0x22880	35d9fa42dbd8
 ai	?simulateCombat@combatManager@@QAEXJE@Z	100.0000	100.0000	100.0000	0x22a40	0ed84647b474
 ai	?simulateMeleeAttack@combatManager@@QAEXPAVarmy@@0J@Z	100.0000	100.0000	100.0000	0x227a0	0c5640354b95
-ai	?simulateMeleeAttack@combatManager@@QAEXPAVarmy@@J0JJ@Z	79.6584	79.6584	79.6584	0x224e0	fad1bfca6486
+ai	?simulateMeleeAttack@combatManager@@QAEXPAVarmy@@J0JJ@Z	100.0000	100.0000	100.0000	0x224e0	26b66fb7e42d
 ai	?size@?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x23110	-
 ai	?sodChooseFaerieDragonSpell@combatManager@@AAE_NPBVarmy@@AAJAAUtype_AI_combat_parameters@@@Z	94.5177	94.5177	94.5177	0x20f00	384baea4b92b
 ai_combat	??0type_AI_combat_data@@QAE@PBVhero@@PBVarmyGroup@@N0PBVtown@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x23ee0	a8573d69fac3
@@ -3226,7 +3226,7 @@ rmg	?copy@std@@YIPAUTRmgMapPosition@@PAU2@00@Z	100.0000	100.0000	100.0000	0x14d9
 rmg	?createGroundConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@PAV?$vector@PAUTRmgMapItem@@V?$allocator@PAUTRmgMapItem@@@std@@@std@@PAV?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@5@@Z	79.1717	80.4347	80.4347	0x141140	c064e53941e9
 rmg	?createRiver@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	85.9575	85.9575	85.9575	0x148df0	880909bdd29f
 rmg	?createShipyardConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	92.4189	94.8591	94.8591	0x141ad0	fb3b3934c7bc
-rmg	?createSubterraneanGate@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	79.4987	79.4987	79.4987	0x142080	1682a4864335
+rmg	?createSubterraneanGate@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	82.1005	82.1005	82.1005	0x142080	b0bd0cb2060b
 rmg	?drawIrregularZoneBoundary@type_random_map_generator@@QAEXUTPoint@@0HHH@Z	100.0000	100.0000	100.0000	0x13bff0	fe6f09922735
 rmg	?drawStraightZoneBoundary@type_random_map_generator@@QAEXUTPoint@@0HH@Z	100.0000	100.0000	100.0000	0x13c220	0fe372b1d6ef
 rmg	?erase@?$vector@HV?$allocator@H@std@@@std@@QAEPAHPAH0@Z	100.0000	100.0000	100.0000	0x14cdb0	-
