@@ -8,20 +8,21 @@ modal plateau wall), plus the corners the same mechanism explains for free
 homing). Spill heuristics, coalescing and the full allocator are explicitly
 NOT modelled. Subject: the pinned **C2.DLL 12.00.8447** (hash-gated via
 `_toolchain.PINNED`, image base `0x10700000`; all addresses below are RVAs).
-Every byte and probe cited was measured 2026-08-10 on the pinned binaries
-under wine.
+The initial measurements are from 2026-08-10; later findings are dated below.
+All use the pinned binaries under Wine.
 
 ## TL;DR
 
 * C2 numbers the eight GPRs **machine encoding + 1**: 1=EAX 2=ECX 3=EDX
   4=EBX 5=ESP 6=EBP 7=ESI 8=EDI. The numbers are the symbol HANDLES of
   eight pre-created register symbols in the back-end symbol hash.
-* There is **one allocation preference order**, a 0-terminated dword table
+* There is **one fallback preference order**, a 0-terminated dword table
   `{1,2,3,7,8,4,6}` = **EAX, ECX, EDX, ESI, EDI, EBX, EBP** (const in
   `.rdata:0xa09f0`, runtime copy in `.databe:0xadff4`), consumed
-  **first-fit** by regasg.c. There is no separate per-class order - the
-  classes fall out of exclusions (call-crossing values lose EAX/ECX/EDX,
-  byte-sized values lose ESI/EDI/EBP, ESP never, EBP only when frameless).
+  **first-fit** by regasg.c. The selector can first honor a preferred register
+  or rotate through EAX/ECX/EDX (section 3a). Call-crossing values lose those
+  three registers; byte-sized values lose ESI/EDI/EBP, ESP is excluded, and
+  EBP is available only when frameless.
 * Pseudos are assigned **in creation/processing order**: the first
   call-crossing value takes ESI, the second EDI, the third EBX, the fourth
   is frame-homed. Swapping two values' creation order swaps their
@@ -113,10 +114,10 @@ for pseudo in creation order:
     none left -> frame-homed
 ```
 
-Consequences the corpus already knew as separate facts:
+Consequences within this minimum slice:
 
-* scratch values: EAX first, then ECX, EDX (B14's "first-preference EAX",
-  B10's eax->ecx chain);
+* scratch values follow this order only on the fallback path; the preferred-
+  register and rotating paths below can override it;
 * call-crossing values: ESI, then EDI, then EBX - the observed B1
   register population everywhere in the corpus;
 * a hoisted zero (B8) enters the same walk: EAX in a leaf, the first
@@ -125,6 +126,61 @@ Consequences the corpus already knew as separate facts:
   measured: VC6 frame-homes it at its definition and lets the widened
   reload take the normal walk. This is the mechanism BEHIND B15's "VC6
   homes char locals far more eagerly than ints".
+
+### 3a. Volatile-register rotation is active in a real TU (2026-09-07)
+
+The selector at C2 RVA `0x33273` has three paths before spilling:
+
+1. Honor the pseudo's preferred register (`pseudo+0x2c`) when it is free and
+   absent from that register's conflict set. This does not advance the cursor.
+2. When the dword at `0xac0b0` is nonzero, start at the cursor stored at
+   `0x9d710` and cycle through the table's EAX/ECX/EDX prefix. Skip occupied or
+   conflicting registers; after success, advance to the following register,
+   wrapping to EAX. If none qualifies, continue to the fallback.
+3. Scan the full preference table from its beginning.
+
+The binder at `0x3356b` receives the selected register in ECX and the pseudo
+in EDX, then writes `binding[register]`. Entry hooks at these two RVAs expose
+the cursor, preferred register, pseudo ID (`pseudo+0x1c`), and binding without
+changing compiler decisions. Preserve GPRs, EFLAGS, x87 state and last-error
+state, and verify the resulting object against an uninstrumented replay of
+the same captured IL.
+
+`TObjectType::setImageName` at retail `0x514610`, compiled with its configured
+`/O2 /Ob2 /Oy- /Op /MT /Gr /GX` profile, produced 36 requests and 36 bindings
+through this selector. Rotation was enabled. Its first four requests had no
+occupied registers:
+
+| Request | Cursor before | Selection | Cursor after | Path |
+|---|---|---|---|---|
+| 1 | EAX | EAX | ECX | rotation |
+| 2 | ECX | ECX | EDX | rotation |
+| 3 | EDX | EDX | EAX | rotation |
+| 4 | EAX | EAX | EAX | preferred register |
+
+The complete 156,637-byte object was identical outside its four timestamp
+bytes. A separate `/Z7` replay also passed full-object identity (421,028
+bytes) and reproduced the normal function's bytes. The latter exposes
+candidate statement origins for the allocation requests. The controls are in
+`build/least-matched/object-image-20260907/register-rotation-trace/`.
+
+The lookup's reference-return and value-return controls make the effect
+observable in this caller. With a reference return, request 7 allocates EDX
+for the mapped-value load at node offset `+0x1c`, advancing the cursor to EAX.
+The value-return control lacks that request: it has 35 requests and reaches
+the following allocation with the cursor still at EDX. Its full 156,709-byte
+object also passed replay identity. The score falls from 96.6403 to 87.8696;
+the changed scratch allocation follows from a missing request, rather than
+requiring a different register preference table.
+
+Consequently, another allocation or a change between preferred-register and
+rotating selection can change subsequent scratch-register choices. An empty
+binding array does not imply EAX will be selected: both the cursor and the
+conflict sets matter. `_regmodel.assign` remains a model of the documented
+call-crossing slice; it does not model this cursor or the complete selector.
+No modified-compiler result is a matching checkpoint.
+
+### 3b. Source creation order
 
 **"Creation order" means the FIRST ASSIGNMENT, not the declaration**
 (measured three ways, 2026-09-06, polish 30). A bare `long i;` moved to the

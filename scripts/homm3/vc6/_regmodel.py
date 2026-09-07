@@ -11,15 +11,18 @@ ledger: docs/vc6/regalloc.md; byte evidence measured 2026-08-10):
   the byte-width exclusion drops exactly {7,8,6} = the three GPRs without
   an 8-bit subregister (regasg.c rva 0x8c1dc).
 
-* ONE allocation preference order for every GPR pseudo: the 0-terminated
+* The fallback allocation preference order is the 0-terminated
   dword table {1,2,3,7,8,4,6} = EAX ECX EDX ESI EDI EBX EBP (const copy
   .rdata rva 0xa09f0 with a begin/end pointer pair at 0xa0a14; runtime
   copy .databe rva 0xadff4).  regasg.c walks it FIRST-FIT: 0x8be6c
   (re-bind walk over DAT_107adff4/DAT_107adff8 with the per-register
   binding array .bssbe 0x9d6ec and per-register conflict sets 0x9d6c8)
   and 0x8c1dc (candidate set = the table; first-fit pick at the loop
-  head).  There is no per-class order - the classes fall out of
-  exclusions:
+  head). The selector at 0x33273 can first honor a preferred register or
+  rotate through EAX/ECX/EDX using the cursor at 0x9d710 when 0xac0b0 is
+  enabled. A byte-verified objecttype trace demonstrates both paths;
+  docs/vc6/regalloc.md section 3a records the evidence. The minimum
+  call-crossing slice below excludes those volatile registers:
     - byte-sized pseudo        -> minus {ESI, EDI, EBP}   (0x8c1dc)
     - crosses a call           -> minus {EAX, ECX, EDX}   (clobbered)
     - ESP(5)                   never allocatable (regasg.c region checks
@@ -37,8 +40,8 @@ ledger: docs/vc6/regalloc.md; byte evidence measured 2026-08-10):
 The model is deliberately a MINIMUM SLICE for B1 (+ the B8/B14 corners
 the same walk explains): given call-crossing GPR pseudos in creation
 order it predicts which lands in ESI/EDI/EBX.  It does NOT model spill
-cost, coalescing, or live-range splitting - a prediction is a hypothesis
-and the Wine VC6 compile stays the verdict.
+cost, coalescing, volatile-register rotation, or live-range splitting - a
+prediction is a hypothesis and the Wine VC6 compile stays the verdict.
 """
 from __future__ import annotations
 
