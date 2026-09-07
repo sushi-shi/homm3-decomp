@@ -634,6 +634,19 @@ type_spell_scroll_def::type_spell_scroll_def(int newSpellLevel, int newValue)
     m_spellLevel = newSpellLevel;
 }
 
+// Vtable 0x640c30 slot 1 belongs to type_key_tent_def. The key-tent
+// registration loop stores the color in m_subtype, and retail returns this
+// definition's value only while that color is the generator's next free one.
+VA(0x00534FA0, 0x21)
+int type_key_tent_def::getValue(void*, void* map)
+{
+    type_random_map_generator* generator =
+        static_cast<type_random_map_generator*>(map);
+    if (generator->m_nextKeyTentColor != m_subtype)
+        return -1;
+    return m_value;
+}
+
 // The seven-slot abstract map table at 0x6409e8 and sixteen retail cleanup
 // tails identify this virtual base destructor, exact on the first scored
 // candidate. Dreamcast has no RMG compiland.

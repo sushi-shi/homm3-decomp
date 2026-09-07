@@ -1,6 +1,5 @@
-[queue] 920 active unmatched target(s), smallest first; 17 parked
+[queue] 919 active unmatched target(s), smallest first; 17 parked
       33 B  0x005339c0  unadmitted    bracketed           quicktownwindow..recruit:game_1339c0
-      33 B  0x00534fa0  unadmitted    bracketed           quicktownwindow..recruit:game_134fa0
       33 B  0x00536170  unadmitted    bracketed           quicktownwindow..recruit:game_136170
       33 B  0x00537dc0  unadmitted    bracketed           quicktownwindow..recruit:game_137dc0
       33 B  0x0054c670  unadmitted    bracketed           quicktownwindow..recruit:game_13e9e0_sub00_14c670
@@ -921,8 +920,7 @@
    11619 B  0x00579960  MAX 95.8142%  compiled            singleselectionwindow:??0TSingleSelectionWindow@@QAE@H@Z
 
 wrote evidence/smallest-match-queue.tsv
-e up to five scored candidates
-compiled	787	0x0056f8a0	92.0556	92.0556	92.0556	seerhut	seerhut	?doProposalDialog@type_artifact_quest@@UAEXPAVhero@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
+0556	92.0556	seerhut	seerhut	?doProposalDialog@type_artifact_quest@@UAEXPAVhero@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 bracketed	790	0x005fd010	-	0.0000	0.0000	viewwrld..widget	viewwrld,widget	game_13e050_sub03_1fd010	bracketed	resolve the owner, then add its VA claim and body
 compiled	791	0x00514610	99.2095	99.2095	99.2095	objecttype	objecttype	?setImageName@TObjectType@@QAEAAU1@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	793	0x00457990	92.1064	92.1064	92.1064	campaignbrief	campaignbrief	?select@TCampaignBrief@@QAEXH@Z	admitted	run the evidence pass and iterate up to five scored candidates
