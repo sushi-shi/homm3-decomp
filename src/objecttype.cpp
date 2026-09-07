@@ -271,6 +271,22 @@ static std::vector<TObjectType::TImageInfo>& getObjectImageCache()
 // Putting imageNumber's assignment inside the lookup scores 95.2767.
 // Unsigned mapped indices and signed loop indices with unsigned byte-offset
 // arithmetic are neutral; SHR alone does not prove the counter's type.
+// A separate result iterator, initialized from found and refreshed after
+// the row append, preserves the initial found store AND restores retail's
+// EAX lookup exit. It scores 88.4269 because later temporary allocation
+// changes. Branch-specific result assignments add control flow instead.
+// Entry reference/pointer returns score 95.3676. A generic registry template
+// and find_last_of('.') are neutral; the pinned character overload of
+// find_last_of calls the same rfind overload, so that call does not prove
+// which public spelling retail used.
+// Selecting record after maskName's copy raises MAX to 96.5929 with the
+// same 791-byte extent and 22 branch connections. This still selects the
+// record later than retail's emitted load; it is not an exact schedule.
+// Moving selection past extension replacement scores 90.6759, and moving
+// cell's initialization to the loop with this order scores 92.0079.
+// The normalized names and headers at master 7ea23f51 reproduce both
+// record-order checkpoints byte for byte; spelling += as append is also
+// byte-neutral at both checkpoints.
 // Remaining: lookup exit and string-copy scheduling, and cell's zero being
 // hoisted before the reads instead of materialized at the loop. No inline
 // controls or release-elided operations are used.
@@ -289,10 +305,10 @@ TObjectType& TObjectType::setImageName(
 
     if (imageNumber == oldCount) {
         imageCache.push_back(TImageInfo(emptySize));
-        TImageInfo* record = &imageCache[oldCount];
 
         std::basic_string<char, std::char_traits<char>,
                           std::allocator<char> > maskName(name);
+        TImageInfo* record = &imageCache[oldCount];
         std::string::size_type dot = maskName.rfind('.');
         if (dot != std::string::npos) {
             maskName.replace(dot, maskName.size() - dot,
