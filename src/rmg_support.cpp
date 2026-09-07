@@ -62,6 +62,17 @@ void TRmgLinePainter::setOverlay(const TRmgGridPoint& point, int value)
     m_adapter->setOverlay(point, value);
 }
 
+// Slot 3 of all four river/road painter vtables forwards to the adapter's
+// overlay query and accepts exactly the two retained paintable values.
+VA(0x0055EE00, 0x28)  // vtables 0x641174/0x641190/0x6411f0/0x64120c
+int TRmgLinePainter::canPaint(const TRmgGridPoint& point)
+{
+    int overlay = m_adapter->getOverlay(point);
+    if (overlay == eTerrainWater || overlay == eTerrainRock)
+        return 1;
+    return 0;
+}
+
 // Vtable 0x641174/0x641190 slot 5 forwards the point to the adapter's
 // getLand slot. The Complete-only RMG hierarchy has no Dreamcast counterpart.
 VA(0x0055EE30, 0x13)
