@@ -109,6 +109,12 @@ def _build_parser() -> argparse.ArgumentParser:
     pt = ss.add_parser("atlas", help="headless-Ghidra C2 map -> evidence/vc6")
     pt.add_argument("--regen", action="store_true")
 
+    pa = ss.add_parser("disasm", help="labeled pinned C2.DLL assembly and references")
+    pa.add_argument("target", help="C2 RVA, VA, Ghidra name, or documented role")
+    pa.add_argument("--range", help="end-exclusive offsets from target, e.g. +0:+0x80")
+    pa.add_argument("--refs", action="store_true", help="show incoming code references")
+    pa.add_argument("--verbose", action="store_true", help="include instruction bytes")
+
     pab = ss.add_parser("ab", help="RTM-vs-SP3 generation A/B (Track R): "
                         "build-rtm | build-rtm-fe | verify [--gen ...] | "
                         "run [--gen rtm|rtm-fe] [--fn ...] [--all-units] | "
@@ -166,6 +172,7 @@ _TOOLS = {
     "oracle": ("oracle", "run"),
     "diagnose": ("diagnose", "run"),
     "atlas": ("atlas", "run"),
+    "disasm": ("disasm", "run"),
     "report": ("report", "run"),
     "queue": ("queue", "run"),
     "tryblocks": ("tryblocks", "run"),

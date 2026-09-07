@@ -448,6 +448,8 @@ void rmgTerrainPainter::paintRectangle(
 // of those two source lists reproduces all 1483 retail bytes; ordinary VC6
 // still leaves the eight-byte residual. See docs/vc6/regalloc.md section 6n
 // for the operand ranking, identity controls, and limits of that experiment.
+// Current-checkpoint controls that initialize index from width or row, then
+// apply *= and += in getPackedCell, also leave the same eight raw differences.
 VA(0x005B4B20, 0x5CB) // anchor-callee 0x5b4960, 0x5b5440; thiscall, ret 4
 void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
 {

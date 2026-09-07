@@ -789,6 +789,9 @@ result was not a permanent requirement of the point class.
 
 ### 6n. Observe multiplication operands before allocation
 
+<!-- c2-role: function 0x2003e constrainNativeOperands -->
+<!-- c2-role: global 0xa5a88 nativeInstructionNames -->
+
 At the 99.9204% `paintPoint` checkpoint, the remaining eight raw bytes exchange
 the memory operands of two `mov ebx, ...` / `imul ebx, ...` pairs. A passive
 scratch shim now observes the pinned C2 machine-operand constraint routine at
@@ -815,13 +818,22 @@ changes the distance-wrapper expansion and gives 98.5986%. Restoring the
 remaining differences. The operand-class observation therefore does not justify
 changing the canonical point interface or adding an inlining control.
 
-The next passive trace locates the actual ordering decision. A hook at the
-driver's phase checkpoint, C2 RVA `0x9ab4`, snapshots the generic multiplication
+The next passive trace locates the actual ordering decision. The optimizer
+driver starts at `0x6819b`. A hook at its phase checkpoint, C2 RVA `0x9ab4`,
+snapshots the generic multiplication
 nodes between optimization passes. Immediately before the second
 `FUN_1070f349(body, 2)` call, both residual products have width first and the
 local row second. Hardware write watchpoints on their source-list heads catch
 the reversal at `0xd008` (reported EIP `0xd00b`). This is the source-list sort in
 `FUN_1070cee1`, using `FUN_1070e725` and comparator `FUN_1070e12f`.
+
+<!-- c2-role: function 0x9ab4 phaseCheckpoint -->
+<!-- c2-role: function 0x6819b optimizeFunction -->
+<!-- c2-role: function 0xf349 optimizeExpressions -->
+<!-- c2-role: function 0xcee1 rankAndSortOperands -->
+<!-- c2-role: site 0xd008 storeSortedOperands -->
+<!-- c2-role: function 0xe725 sortOperandList -->
+<!-- c2-role: function 0xe12f compareOperandRanks -->
 
 The comparator orders the packed unsigned value at operand offset `+0xc`.
 In this trace, width has `0x01020060` and the local row has `0x00016660`;
@@ -831,12 +843,18 @@ from `FUN_1070d25d`. Thus changing only a symbol's low-bit hash cannot reverse
 this particular ordering while the higher components remain unchanged. This
 does not exclude source or TU changes that alter the expressions themselves.
 
+<!-- c2-role: function 0xd19e computeOperandRank -->
+<!-- c2-role: function 0xd25d hashOperand -->
+
 The distinction develops before that sort. After inlining, the two row reads
-are indirect operands (kind 6). After the first `FUN_1070f349` call and its
-`FUN_1070f1f0` follow-up they are kind 2; the current snapshots do not separate
-those two calls. The later pass `FUN_107261bf` changes those to kind 1. Their
+are indirect operands (kind 6). A later passive snapshot at `FUN_1070f1f0`
+entry separates the first `FUN_1070f349` call from that follow-up: the row
+operands are already kind 2 when the follow-up begins. The later pass
+`FUN_107261bf` changes those to kind 1. Their
 width operands remain indirect. These observations describe candidate C2
 state, not the retail compiler's input or recovered point declarations.
+
+<!-- c2-role: function 0x261bf promoteLocalOperands -->
 
 A separate opcode write watchpoint finds the generic multiplication-to-native
 rewrite at `0x2873b` (reported EIP `0x2873e`) in `FUN_10728610`. Its variable
@@ -848,6 +866,9 @@ watchpoints use a vectored single-step handler and two four-byte write slots;
 the handler preserves last-error state and clears handled debug status. The
 source-list watch disables each slot after native lowering replaces its list.
 Scratch runners restore the normal compiler shim in `finally`.
+
+<!-- c2-role: function 0x28610 lowerNativeOpcode -->
+<!-- c2-role: site 0x2873b selectNativeMultiply -->
 
 A **modified-compiler counterfactual**, kept outside matching, swaps only those
 two source lists after expression optimization and before native lowering.
@@ -864,6 +885,55 @@ separate `build/rmg-multiply-counterfactual/`. The first opcode-watch run select
 the entry variable product and a constant scale product; the later source-list
 watch selects both residual products. Runtime addresses and ordinal positions
 are observations of this checkpoint, not stable compiler interfaces.
+
+The first residual's field fold is now traced directly. Its row operand comes
+from a clone of an address of an eight-byte local aggregate. The clone routine
+at `0x156f` allocates through `0x12f7`, using the kind-indexed size table at
+`0xa0184`. A guarded watch
+on that live clone catches `FUN_1070c6fd` replacing the aggregate symbol with
+an offset-4 field symbol at instruction `0xc832` (reported EIP `0xc835`).
+`FUN_10741ed0` then changes the operand's type at `0x41fb5` and calls
+`FUN_1070fd9d`, which changes its kind from 3 to 2 at `0xfdaa` (reported EIP
+`0xfdad`). Thus the observed chain is address-plus-field-offset folding,
+dereference folding, then the second expression pass's operand sort. The
+clone and field-watch runs both preserve whole-object identity. The artifacts
+are `build/rmg-multiply-row-promotion/` and `build/rmg-multiply-row-watch/`.
+
+<!-- c2-role: function 0x156f cloneOperand -->
+<!-- c2-role: function 0x12f7 allocateOperand -->
+<!-- c2-role: global 0xa0184 operandSizes -->
+<!-- c2-role: function 0xc6fd foldAddressOffset -->
+<!-- c2-role: site 0xc832 storeFieldSymbol -->
+<!-- c2-role: function 0x41ed0 propagateDereference -->
+<!-- c2-role: site 0x41fb5 setDereferencedType -->
+<!-- c2-role: function 0xfd9d dereferenceOperand -->
+<!-- c2-role: site 0xfdaa makeLocalValue -->
+
+The address fold calls `0x37fc` to find or create the offset field symbol.
+It is gated by the dword at `0xac128`. A cold block at `0x837d5`, reached
+from C2's input-header decoder near `0x69616`, writes that flag after testing
+bit 3 of a header byte. Its source option meaning is still unknown; the
+label describes only the observed folding guard.
+
+<!-- c2-role: function 0x37fc findOrCreateFieldSymbol -->
+<!-- c2-role: global 0xac128 addressFoldDisabled -->
+<!-- c2-role: site 0x837d5 disableAddressFold -->
+
+Runtime pointers alone are insufficient to join these observations. The
+instrumented DLL's layout can shift C2 allocations while the emitted object
+remains identical, and allocations are also reused later in compilation.
+An initial watch selected by a prior run's pointer failed its guard. The
+successful watch locates the clone using the observed local symbol handle
+and clone ordinal, then checks its live opcode, type and owner before arming.
+Those selectors are still checkpoint-specific. Traces must establish the
+allocation's identity and lifetime before attributing a later write to it.
+
+An ordinary-compiler source control at this same checkpoint also rules out
+splitting the cache calculation into assignments: initializing `index` from
+width or row, applying `*=`, then adding x produces the same 1483-byte caller
+and the same eight differences. The unmodified scratch control and both
+variants resolve all 61 relocations in the raw verifier. These candidates
+remain outside the matching objects; see `build/rmg-width-assignment-control/`.
 
 ## 7. Files
 

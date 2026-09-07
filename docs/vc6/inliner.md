@@ -101,6 +101,13 @@ driver at rva `0x19dea`. The working inliner is:
 | option-bit unpack | `0x1bd89` | per-invocation flags → `0xac0**` dword bits |
 | budget clamp stub | `0x93d28` | `mov eax,0x88b8` — the 35000 cap (cold) |
 
+<!-- c2-role: function 0x1994f inlinePass -->
+<!-- c2-role: function 0x199fa expandInlineCalls -->
+<!-- c2-role: function 0x1a27c collectInlineCandidates -->
+<!-- c2-role: function 0x16f04 checkInlineCandidate -->
+<!-- c2-role: function 0x1b973 fetchInlineBody -->
+<!-- c2-role: function 0x94964 checkInlineSizeVeto -->
+
 Correction to the atlas's §3 hunting list: the `.databe` cluster
 `0xac094`–`0xac0d4` is **not** budget state — `0x1bd89` shows those dwords
 are unpacked option BITS (`0xac094`=bit25, `0xac098`=derived, `0xac0a0`=bit18,
