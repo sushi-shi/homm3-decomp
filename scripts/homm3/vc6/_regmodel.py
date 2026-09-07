@@ -29,18 +29,21 @@ ledger: docs/vc6/regalloc.md; byte evidence measured 2026-08-10):
                                ``reg && reg < 9 && reg != 5``)
     - EBP(6)                   only when the function is frameless (/Oy)
 
-* Pseudos receive their register at their DEFINITION, in stream order;
-  for named locals that order follows the front end's symbol-handle
-  creation order (the IL ``sy`` stream, docs/vc6/il-format.md).  Measured
+* The minimum model uses definition order, correlated with the front
+  end's symbol-handle creation order in small probes (the IL ``sy``
+  stream, docs/vc6/il-format.md). Measured
   (2026-08-10, pinned SP3 CL, game profile): three call-crossing locals
   a,b,c created in that order take ESI, EDI, EBX; a fourth is homed to
   the frame; swapping two values' creation order swaps ESI/EDI exactly -
-  the catalog's B1 signature.
+  the catalog's B1 signature. This is not the full global allocator:
+  byte-verified real-TU traces show priority ordering, interference sets
+  and per-register costs at C2 RVA 0x245c3 (regalloc.md section 3b).
 
 The model is deliberately a MINIMUM SLICE for B1 (+ the B8/B14 corners
 the same walk explains): given call-crossing GPR pseudos in creation
 order it predicts which lands in ESI/EDI/EBX.  It does NOT model spill
-cost, coalescing, volatile-register rotation, or live-range splitting - a
+cost, global assignment priorities/costs, coalescing, volatile-register
+rotation, or live-range splitting - a
 prediction is a hypothesis and the Wine VC6 compile stays the verdict.
 """
 from __future__ import annotations
