@@ -120,7 +120,9 @@ def render(rows, roles, *, verbose=False, title=None, focus=()):
             else:
                 name = ref.name or f"rva_0x{ref.rva:x}"
             va = IMAGE_BASE + ref.rva
-            text = re.sub(rf"(?<![\w])0x{va:x}(?![\w])", name, text,
+            # Ghidra string labels can contain backslashes; insert them
+            # literally instead of interpreting replacement backreferences.
+            text = re.sub(rf"(?<![\w])0x{va:x}(?![\w])", lambda _: name, text,
                           flags=re.IGNORECASE)
             notes.append(f"{ref.kind} {name} (rva 0x{ref.rva:x})")
         raw = f"{row.raw.hex(' '):<29} " if verbose else ""

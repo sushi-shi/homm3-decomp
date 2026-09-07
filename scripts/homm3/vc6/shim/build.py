@@ -170,8 +170,11 @@ def build_overlay(force: bool = False) -> None:
                     "rebuild the overlay with `build --force`")
 
 
-def compile_shim(negative: bool = False, *, inlineTrace: bool = False) -> set[str]:
+def compile_shim(negative: bool = False, *, inlineTrace: bool = False,
+                 registerTrace: bool = False) -> set[str]:
     """Compile passthru.c with the pinned VC6 into <overlay>/bin/C2.DLL."""
+    if sum((negative, inlineTrace, registerTrace)) > 1:
+        raise ValueError("select one shim variant")
     real_cl = _toolchain.resolve("CL.EXE")
     real_link = _toolchain.resolve("LINK.EXE")
     real_msvc = cc_wrap.msvc_dir()
@@ -187,6 +190,8 @@ def compile_shim(negative: bool = False, *, inlineTrace: bool = False) -> set[st
         cc_args.append("/DSHIM_NEGATIVE_CONTROL")
     if inlineTrace:
         cc_args.append("/DSHIM_INLINE_TRACE")
+    if registerTrace:
+        cc_args.append("/DSHIM_REGISTER_TRACE")
     cc_args += [f"/Fo{w(obj)}", w(SHIM_DIR / "passthru.c")]
     proc = _wine(real_cl, cc_args, work, {"INCLUDE": w(real_msvc / "include")})
     if not obj.is_file():
@@ -207,7 +212,8 @@ def compile_shim(negative: bool = False, *, inlineTrace: bool = False) -> set[st
         _common.die(f"shim exports {sorted(exports)} != "
                     f"expected {sorted(EXPECTED_EXPORTS)}")
     shutil.copy2(dll, OVERLAY_MSVC / "bin" / "C2.DLL")
-    variant = "NEGATIVE-CONTROL" if negative else "inline-trace" if inlineTrace else "clean"
+    variant = ("NEGATIVE-CONTROL" if negative else "inline-trace" if inlineTrace
+               else "register-trace" if registerTrace else "clean")
     print(f"[shim] {variant} shim installed as {OVERLAY_MSVC / 'bin' / 'C2.DLL'}"
           f" (exports: {', '.join(sorted(exports))})")
     return exports
@@ -477,6 +483,15 @@ def runInlineTrace(unit: str, function: str) -> int:
     outside the four-byte timestamp. Later vetoes can still reject a candidate
     that passes this comparison; the emitted code owns the final verdict.
     """
+    return _runPassiveTrace(unit, function, registers=False)
+
+
+def runRegisterTrace(unit: str, function: str) -> int:
+    """Observe two temporary-binding stores; no claim of complete allocation."""
+    return _runPassiveTrace(unit, function, registers=True)
+
+
+def _runPassiveTrace(unit: str, function: str, *, registers: bool) -> int:
     from homm3.vc6 import _unit
 
     source = _unit.source_for_unit(unit)
@@ -487,29 +502,45 @@ def runInlineTrace(unit: str, function: str) -> int:
         _common.die("--fn needs a nonempty function-name substring under 256 bytes")
     _ensure_wine_env()
     ensure_overlay()
-    output = GATE_DIR / "inline-trace" / unit
+    kind = "register" if registers else "inline"
+    stem = "bindings" if registers else "comparisons"
+    event = "register " if registers else "main "
+    environment_key = "HOMM3_VC6_REGISTER_TRACE" if registers else "HOMM3_VC6_INLINE_TRACE"
+    limitation = ("Observations cover two temporary-binding stores, not the full allocator.\n"
+                  if registers else "Observations are budget comparisons, not final inline decisions.\n")
+    output = GATE_DIR / f"{kind}-trace" / unit
     output.mkdir(parents=True, exist_ok=True)
     reference = output / "reference.obj"
     instrumented = output / "instrumented.obj"
-    observations = output / "comparisons.log"
-    named = output / "comparisons.txt"
+    compiled = output / "compiled.obj"
+    observations = output / f"{stem}.log"
+    named = output / f"{stem}.txt"
     verdict = output / "verdict.txt"
     observations.write_text("")
     named.unlink(missing_ok=True)
     verdict.write_text("UNVERIFIED: compilation/identity checks pending\n")
     streams = _traceCapture(source, flags, output)
-    process = _traceReplay(reference, source, flags, streams)
-    if process.returncode or not reference.is_file():
+    # /Z7 records the object path: use the SAME output for both replays.
+    # Save each result after compilation; never broaden the byte mask.
+    compiled.unlink(missing_ok=True)
+    process = _traceReplay(compiled, source, flags, streams)
+    if process.returncode or not compiled.is_file():
         _common.die(f"reference compile failed:\n{_tail(process)}")
+    reference.write_bytes(compiled.read_bytes())
     try:
-        compile_shim(inlineTrace=True)
-        process = _traceReplay(instrumented, source, flags, streams, {
+        if registers:
+            compile_shim(registerTrace=True)
+        else:
+            compile_shim(inlineTrace=True)
+        compiled.unlink(missing_ok=True)
+        process = _traceReplay(compiled, source, flags, streams, {
             "MSVC_DIR": str(OVERLAY_MSVC),
             "HOMM3_VC6_SHIM_LOG": cc_wrap.winepath_w(observations),
-            "HOMM3_VC6_INLINE_TRACE": function,
+            environment_key: function,
         })
-        if process.returncode or not instrumented.is_file():
+        if process.returncode or not compiled.is_file():
             _common.die(f"instrumented compile failed:\n{_tail(process)}")
+        instrumented.write_bytes(compiled.read_bytes())
         original = reference.read_bytes()
         observed = instrumented.read_bytes()
         differences = _masked_diff(original, observed)
@@ -517,22 +548,26 @@ def runInlineTrace(unit: str, function: str) -> int:
             verdict.write_text(
                 f"FAIL: {len(differences)} object differences outside timestamp; "
                 f"first offsets {differences[:10]}\n")
-            print(f"[shim] inline trace INVALID: {verdict}")
+            print(f"[shim] {kind} trace INVALID: {verdict}")
             return 1
         rows = observations.read_text().splitlines()
-        if not any(row.startswith("main ") for row in rows):
+        if not any(row.startswith(event) for row in rows):
             verdict.write_text("FAIL: no matching function was observed\n")
-            _common.die(f"no function matching {function!r} reached the inliner")
+            _common.die(f"no matching function {function!r} reached the {kind} observation sites")
         message = (
             f"PASS: {len(original)} object bytes equal outside TimeDateStamp; "
             f"profile: {' '.join(flags)}\n"
             "Both back ends consumed the same captured front-end streams.\n"
-            "Observations are budget comparisons, not final inline decisions.\n")
-        named.write_text(_formatInlineTrace(rows))
+            + limitation)
+        if registers:
+            from homm3.vc6.register_trace import format_observations
+            named.write_text(format_observations(rows))
+        else:
+            named.write_text(_formatInlineTrace(rows))
         verdict.write_text(message)
         print(f"[shim] {message.strip()}")
-        print(f"[shim] named comparisons: {named}")
-        print(f"[shim] comparisons: {observations}")
+        print(f"[shim] named {stem}: {named}")
+        print(f"[shim] {stem}: {observations}")
         return 0
     finally:
         compile_shim(negative=False)
