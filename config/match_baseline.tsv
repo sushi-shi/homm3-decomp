@@ -858,6 +858,7 @@ campaignbrief	??4NewSMapHeader@@QAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0x5cd
 campaignbrief	??4TPlayerSlotAttributes@CMapHeaderData@@QAEAAV01@ABV01@@Z	100.0000	100.0000	100.0000	0x5cf70	-
 campaignbrief	??4type_map_hero_identity@@QAEAAU0@ABU0@@Z	100.0000	100.0000	100.0000	0x5d8e0	-
 campaignbrief	??_GTCampaignBrief@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x5ae40	-
+campaignbrief	??_Gtype_map_hero_identity@@QAEPAXI@Z	100.0000	100.0000	100.0000	0x5da40	-
 campaignbrief	?_Buynode@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@IAEPAU_Node@12@PAU312@W4_Redbl@12@@Z	100.0000	100.0000	100.0000	0x5dea0	-
 campaignbrief	?_Construct@std@@YIXPAU?$pair@$$CBHUtype_map_hero_info@@@1@ABU21@@Z	100.0000	100.0000	100.0000	0x5d590	-
 campaignbrief	?_Construct@std@@YIXPAUCampaignScenarioPreview@@ABU2@@Z	100.0000	100.0000	100.0000	0x5d700	-
