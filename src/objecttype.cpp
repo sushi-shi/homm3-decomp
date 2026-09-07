@@ -158,6 +158,9 @@ TObjectTypeFilter* const gObjectTypeFilters[OBJECT_TYPE_FILTER_COUNT] = {
 // gives the nested constructor budget 43 against cost 51. At the earlier
 // checkpoint a caller-local static expands that constructor and scores
 // 87.9486 instead of 90.6364 in setImageName.
+// A caller-local class owning or deriving from the vector also preserves
+// the constructor call and is byte-identical at 96.5929. The retained
+// constructor therefore establishes a boundary, not this accessor uniquely.
 static std::vector<TObjectType::TImageInfo>& getObjectImageCache()
 {
     static std::vector<TObjectType::TImageInfo> imageCache;
@@ -287,6 +290,16 @@ static std::vector<TObjectType::TImageInfo>& getObjectImageCache()
 // The normalized names and headers at master 7ea23f51 reproduce both
 // record-order checkpoints byte for byte; spelling += as append is also
 // byte-neutral at both checkpoints.
+// The substring constructor with name.get_allocator() captures npos in
+// ESI before _Tidy and scores at most 93.1146; retail loads npos afterward.
+// Its default-allocator form also loses the byte copied from name. These
+// controls support the copy constructor rather than a substring operation.
+// Naming the end iterator, widening the insertion pair's scope, taking
+// the containers directly in the lookup helper, and copy-initializing the
+// empty point are byte-neutral. A string-pointer parameter is also neutral
+// after changing only the comparison symbol's spelling. Calling an append
+// helper directly from this caller adds eight CFG blocks; a const-iterator
+// result adds three. Neither recovers the lookup's retained call decisions.
 // Remaining: lookup exit and string-copy scheduling, and cell's zero being
 // hoisted before the reads instead of materialized at the loop. No inline
 // controls or release-elided operations are used.

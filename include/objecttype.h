@@ -21,10 +21,13 @@
 //          allocates 0x24-byte nodes, i.e. a tree header plus
 //          pair<const string, int>;
 //   +0x10  a 16-byte vector whose elements are FOUR bytes wide.
-// The 4-byte element is the map's own ITERATOR: GetImageName reads
-// `rows[i]` and adds 0x0c to reach the key string, and setImageName reads
-// +0x1c from the same pointer to reach the mapped index - node+0x0c and
-// node+0x1c are exactly `->first` and `->second` of that pair. The
+// The 4-byte element carries a map node address, modeled here with the
+// map's iterator. GetImageName reads `rows[i]` and adds 0x0c to reach the
+// key string; setImageName reads +0x1c to reach the mapped index. These
+// are exactly the iterator's `->first` and `->second` accesses. A probe
+// using the pinned STL's raw node-pointer type instead reproduces both
+// setImageName record-order checkpoints byte for byte, so these bytes
+// do not distinguish the two source representations. The
 // registry's growth path in setImageName confirms it from the other side:
 // it inserts into the tree and then push_backs the RETURNED ITERATOR.
 //
