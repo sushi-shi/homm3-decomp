@@ -3969,6 +3969,12 @@ void __fastcall emitRmgPointSetIncrement(TRmgPointSet::const_iterator* it)
     ++*it;
 }
 
+// Unclaimed retail 0x5fdae0 is a 43-byte stdcall orientation test over three
+// by-value TPoint arguments. Its only calls are inside the unreconstructed
+// 840-byte half-edge repair routine at 0x5fd790. A faithful standalone body is
+// discarded by VC6, so natural retention depends on recovering that caller;
+// no dummy ODR use is introduced merely to keep the helper.
+
 // BuildVertices at 0x5fdb40 distinguishes displacement arithmetic from point
 // translation. It calls these five bodies while forming the circumcenter:
 // origin + (edge + perpendicular * numerator / denominator) / 2.
