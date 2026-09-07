@@ -82,6 +82,15 @@ includes the measured flat-label defect and the one-side-only case as negative
 controls, so the census cannot silently regress into treating missing source as
 a compiler wall.
 
+`homm3 sema diff --calls` and `--relocs` distinguish source-claimed retail
+labels from unclaimed, generated and local labels using the regenerated
+symbol inventory's provenance. A carcass `VA` already owns its retail name
+even while its compiled declaration uses a different mangled symbol. The
+report keeps that name difference visible and recommends checking the
+declaration/relocation identity, rather than asking for the same claim again.
+This annotation does not equate overloads, change reference pairing, or hide
+addends. The summary and JSON views carry the same categories.
+
 ## Status
 
 Phase 0 (driver ground truth + probe rig) is in progress. Reusable compiler
