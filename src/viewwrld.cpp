@@ -217,12 +217,15 @@ void VWDrawSprite(CSprite* srcIcon, NewmapCell* thisCell, int frame, int x, int 
 // Other controls: removing objects.size() > 0 scored 40.2597 versus
 // 42.1275; spelling it !objects.empty() scored 41.8933.
 //
-// DC lines 192/193 and 197/198 also clamp screenX > 600 and screenY > 552.
-// The earlier probe emitted additional VC6 checks absent from retail,
-// rather than folding them against the entry guards: River 95.49 -> 95.03,
-// Road 94.60 -> 94.06, AdvObj 94.84 -> 94.23, Underlay 38.86 -> 38.50.
-// That spelling remains a negative control, not proof that Complete
-// removed the source checks.
+// DC lines 192/193 and 197/198 also clamp screenX > 600 and screenY > 552
+// in the respective else arms (dc 0x196930..38 and 0x196944..4c). With the
+// canonical bitmap helpers and paired entry guards, those redundant checks
+// fold away in this retained body, which stays exact. Their C1 source cost
+// nevertheless restores Underlay's retained clip call and closes 38.5458
+// -> 100%, all 35 blocks. Omitting them reproduces the old over-expansion;
+// independent upper-bound ifs are byte-flat, but DC proves the else arms.
+// The older probe's extra emitted checks were a compiler-state result, not
+// evidence that Complete removed the source clamps.
 //
 // 2026-09-06: the direct GetMap address expression from DC Bitmap16.h
 // raises Underlay 42.1275 -> 43.1116, Ground -> 57.8477 and Shroud ->
@@ -231,8 +234,8 @@ void VWDrawSprite(CSprite* srcIcon, NewmapCell* thisCell, int frame, int x, int 
 // scores unchanged. Restoring DrawTile's bitmap accessor calls later raises
 // Ground to 96.8937; restoring its DC border-first/else order closes 100%.
 // These real source relationships recover the boundary with no tail carrier.
-// Underlay remains unfinished: the restored GetNumFrames/DrawAdvObj helper
-// calls leave CUR 38.5458 with six GetMap calls, while MAX 43.1116 is banked.
+// The restored GetNumFrames/DrawAdvObj helper calls initially left Underlay
+// at 38.5458 with six GetMap calls; restoring the upper clamps now closes it.
 inline void VWClipScaleToScreenBuffer(int destX, int destY)
 {
     if (destX + giViewWorldScale < 8 || destX >= 600)
@@ -247,8 +250,12 @@ inline void VWClipScaleToScreenBuffer(int destX, int destY)
     int screenY = destY;
     if (screenX < 8)
         screenX = 8;
+    else if (screenX > 600)
+        screenX = 600;
     if (screenY < 8)
         screenY = 8;
+    else if (screenY > 552)
+        screenY = 552;
 
     unsigned short* screenBufferLineStart =
         gpWindowManager->screenBitmap->GetMap(screenX, screenY);
@@ -1074,6 +1081,8 @@ void VWClipScaleToScreenBuffer(int destX, int destY);
 // +0x40 byte, which the Dreamcast field list names IsUnderlay and this
 // header carries as suppressDraw. The draw call is VWDrawAdvObj's unflagged
 // arm verbatim, so the two bodies corroborate each other's argument shape.
+// Exact after restoring the shared clipped scaler's DC upper clamps; the
+// draw loop itself is unchanged. See that helper for the negative control.
 VA(0x005f9ed0, 0x310)  // exhaustive dc-order-map + VWCompleteDraw call order (4th layer), dc 0x194dcc
 void advManager::VWDrawUnderlay(int srcX, int srcY, int z, int destX, int destY)
 {

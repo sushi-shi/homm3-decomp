@@ -975,6 +975,25 @@ form does not restore the boundaries: the quest constructor still has the
 rule out missing helper calls sharing the nested budget. The helper's original
 name is unknown; Dreamcast's older reader handles a different 24-byte POD.
 
+### Redundant source clamps can select an exact caller
+
+Dreamcast's clipped view-world scaler clamps each destination coordinate
+at both bounds (`viewwrld.cpp:190-198`), even though its entry guards make
+the upper clamps redundant. Restoring those two `else if` arms closes
+`VWDrawUnderlay` (`0x5f9ed0`) from 43.11% MAX to 100%: all 784 bytes match
+after resolving 21 relocations. The retained scaler (`0x5f9d90`) still
+matches all 316 bytes after eight relocations. VC6 removes the redundant
+checks from that body, while their source cost changes its inline decision.
+
+Earlier probes emitted extra checks and lowered scores. With the recovered
+bitmap accessors and paired entry guards, that result no longer holds.
+Revisit a rejected positive source fact when its compiler inputs change;
+an earlier candidate's redundant branches do not prove a revision removed
+the source statements. Omitting the clamps is the 38.55% current control;
+independent upper-bound `if`s are byte-flat, but Dreamcast supplies the
+`else` relationship. The road and river renderers dip to 98.25% and 98.08%,
+with their 99.54% and 98.54% peaks preserved.
+
 ## 7. Using it
 
 ```sh

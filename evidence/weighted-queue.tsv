@@ -3,7 +3,6 @@
 # Banked-exact functions stay excluded despite current-score dips.
 va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x0056ce50	286	10.5	41.9271	41.9271	166.08849400000003	seerhut	?LoadFromMap@type_quest@@UAEXPAVTAbstractFile@@@Z	admitted
-0x005f9ed0	784	38.54582	43.1116	43.1116	446.00505599999997	viewwrld	?VWDrawUnderlay@advManager@@QAEXHHHHH@Z	admitted
 0x00573670	1024	42.570988	46.3642	46.3642	549.2305920000001	seerhut	?DoSeerEvent@TSeerHut@@QAEXPAVhero@@_N@Z	admitted
 0x00598af0	901	45.81467	48.6988	48.6988	462.223812	smackmgr	?ShowVideo@@YIXHHHHHHHH@Z	admitted
 0x0056cd00	335	25.626087	49.7043	49.7043	168.49059499999998	seerhut	?Load@type_quest@@UAEXPAVTAbstractFile@@H@Z	admitted
@@ -139,7 +138,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x004f3f60	855	87.6938	87.6938	87.6938	105.21801	kb	?ShowCongrats@@YIXH@Z	admitted
 0x0043c040	742	87.7343	87.7343	87.7343	91.01149399999993	ai_tactical	?find_enemy_attacks@type_AI_spellcaster@@QAEXXZ	admitted
 0x004cdf20	1413	87.849556	87.8496	87.8496	171.68515200000007	game	??0game@@QAE@XZ	admitted
-0x005f8be0	1590	87.708015	87.8683	87.8683	192.89402999999984	viewwrld	?VWDrawAdvObjShadow@advManager@@QAEXHHHHH@Z	admitted
+0x005f8be0	1590	87.868324	87.8683	87.8683	192.89402999999984	viewwrld	?VWDrawAdvObjShadow@advManager@@QAEXHHHHH@Z	admitted
 0x005c5b40	2168	87.93245	87.9325	87.9325	261.62339999999995	townmgr	?set_bonus_display@TTownScreenWindow@@QAEXPAVtown@@@Z	admitted
 0x0049d3d0	608	87.93488	87.9349	87.9349	73.35580800000004	event_record	?ResetVisibility@game@@QAEXHHHHH@Z	admitted
 0x004d7a20	1695	87.94118	87.9412	87.9412	204.39666000000005	hero	?load@hero@@QAEHPAVTAbstractFile@@H@Z	admitted
@@ -403,7 +402,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x005dce50	294	96.42857	96.4286	96.4286	10.499916000000006	townmgr	?Recruit@TCastleWindow@@QAEXH@Z	admitted
 0x00429ad0	640	91.25571	96.4566	96.4566	22.67776000000005	ai_player	?calculate_reserve@type_AI_player@@QAEXXZ	admitted
 0x005d7ec0	1002	96.48	96.48	96.48	35.27040000000001	townmgr	?DoTavern@@YIEXZ	admitted
-0x005f82e0	2289	95.41656	96.4955	96.4955	80.21800499999974	viewwrld	?VWDrawAdvObj@advManager@@QAEXHHHHH@Z	admitted
+0x005f82e0	2289	96.495476	96.4955	96.4955	80.21800499999974	viewwrld	?VWDrawAdvObj@advManager@@QAEXHHHHH@Z	admitted
 0x00525120	224	96.51852	96.5185	96.5185	7.798559999999984	philai	?value_of_war_factory@@YIJPBVhero@@W4TArtifact@@J@Z	admitted
 0x004d9260	104	96.52778	96.5278	96.5278	3.611088000000003	hero	?DestroySiegeWeaponArtifact@hero@@QAEXH@Z	admitted
 0x0056e0d0	361	96.529854	96.5299	96.5299	12.527060999999993	seerhut	?SetDefaultText@type_skill_quest@@UAEXXZ	admitted
@@ -510,7 +509,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00520e30	2860	97.84852	98.5053	98.5053	42.748419999999804	overview	?DoRollover@TOverviewWindow@@AAEXH@Z	admitted
 0x00452b80	1568	98.52134	98.5213	98.5213	23.18601599999999	bottomviewsubwindow	??0TBottomViewKingdom@@QAE@PAVheroWindow@@@Z	admitted
 0x00443e30	257	98.52273	98.5227	98.5227	3.796661000000009	army	?get_estimated_damage@army@@QBEJPBV1@JEJ@Z	admitted
-0x005f9220	906	98.54122	98.5412	98.5412	13.216727999999941	viewwrld	?VWDrawRiver@advManager@@QAEXHHHHH@Z	admitted
+0x005f9220	906	98.07527	98.5412	98.5412	13.216727999999941	viewwrld	?VWDrawRiver@advManager@@QAEXHHHHH@Z	admitted
 0x0044ae60	666	98.5654	98.5654	98.5654	9.554436000000054	armygrp	?GetMorale@armyGroup@@QBEHPBVhero@@PBVtown@@0PBV1@EEE@Z	admitted
 0x005dd390	1662	98.580124	98.5801	98.5801	23.598737999999937	townmgr	?SetupWell@townManager@@QAEXPAVTCastleWindow@@@Z	admitted
 0x004c6a30	543	98.603355	98.6034	98.6034	7.5835380000000185	game	?ClaimShipyard@game@@QAEXUtype_point@@H@Z	admitted
@@ -569,7 +568,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x005ba6e0	495	99.44444	99.4444	99.4444	2.7502200000000028	textscroller	?SetText@type_text_scroller@@QAEXPBD@Z	admitted
 0x004fc1a0	494	99.47369	99.4737	99.4737	2.5999220000000087	mapcell	?Read@TTimedEvent@@QAEHPAVTAbstractFile@@H@Z	admitted
 0x005253d0	1548	99.180435	99.5109	99.5109	7.571267999999967	philai	?AI_enter_town@@YIXPAVhero@@PAVtown@@@Z	admitted
-0x005f95b0	907	99.53737	99.5374	99.5374	4.195781999999917	viewwrld	?VWDrawRoad@advManager@@QAEXHHHHH@Z	admitted
+0x005f95b0	907	98.24555	99.5374	99.5374	4.195781999999917	viewwrld	?VWDrawRoad@advManager@@QAEXHHHHH@Z	admitted
 0x004448f0	2969	98.937	99.551	99.551	13.330809999999982	army	?SetSpellInfluence@army@@QAEXHHHPBVhero@@@Z	admitted
 0x00570b80	725	99.5679	99.5679	99.5679	3.132725000000014	seerhut	?DoProgressDialog@type_creature_quest@@UAEXXZ	admitted
 0x004e5960	56	99.583336	99.5833	99.5833	0.23335200000000178	hero	?get_primary_skill_total@hero@@QAEFXZ	admitted
