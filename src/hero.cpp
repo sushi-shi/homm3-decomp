@@ -4371,283 +4371,82 @@ static void showHeroSkills(int code, unsigned char rightMouse)
                  -1, 0, -1, 0, -1, 0);
 }
 
-// E:\gamedcs\hero.cpp:3486
-// The hero screen's message pump, 5182 B against DC's 3128: the two
-// free click handlers (handle_artifact_click 526 B, handle_backpack_click
-// 420 B) and show_skills (416 B) have no retail rows of their own and
-// are inlined here.
+// E:\gamedcs\hero.cpp:3486. Retail has 5182 bytes; the DC caller has
+// 3128 and calls handle_artifact_click, handle_backpack_click and show_skills.
+// Preserve those canonical helpers even where Complete expands them.
+// Both byte-indexed widget switches already have the retail case-to-arm
+// assignments and source arm order. The id triplets group by statistic:
+// {0x6b,0x76,0x8b} specialty, {0x6c,0x70,0x77} experience, and
+// {0x6d,0x71,0x78} mana; SetupHeroView independently corroborates them.
 //
-// Shape, all read off the bytes rather than assumed: a prologue chain of
-// msg->id tests, then a three-arm dec-chain switch on msg->codeX, then
-// TWO byte-indexed jump-table switches on msg->codeY - one under
-// WIDGET_DESELECT (index table 0x4de604, pointers 0x4de5e0) and one
-// shared by WIDGET_SELECT and WIDGET_RIGHT_SELECT (index table 0x4de684,
-// pointers 0x4de63c). Both tables were decoded byte for byte; the arm
-// ORDER below is retail's emitted block order, i.e. source order.
+// MAX 78.6458%: DC's exitFlag is NOT the base-handler result. It is zeroed
+// before that call (dc 0xcf566), set by the accepted name dialog (line 3594),
+// and tested after the switch (3949..3953) to forward the changed message.
+// Restoring that flag alone leaves the shared consume return too late.
+// The unchanged-hover EARLY RETURN (DC 3507..3508), together with the flag,
+// places the consume return at retail's exact +0x79. Both sides now retain
+// all fifteen normalDialog calls; the old end-of-function return merged
+// help-dialog tails. The explicit rightMouse 1/0 assignments follow DC
+// 3499..3502 and are byte-identical to the normalized expression here.
 //
-// The three id TRIPLETS hero.h had to leave as ordinal placeholders are
-// resolved by this body, and they group by STAT rather than by
-// icon/label/value: {0x6b,0x76,0x8b} specialty, {0x6c,0x70,0x77}
-// experience, {0x6d,0x71,0x78} spell points. SetupHeroView corroborates
-// each one independently.
-// 71.10 -> 74.47 (2026-08-20) BY PINNING THE SITE, NOT THE FUNCTION, and
-// that CORRECTS the note this entry used to carry. The old text recorded
-// `#pragma auto_inline(off)` on update_all_slots as MEASURED AND REJECTED
-// - it bought WindowHandler 71.10 -> 72.89 but cost SetupHeroView
-// 99.53 -> 98.69, so the max was accepted back down. That trade is an
-// artefact of the KNOB, not of the diagnosis: `auto_inline(off)` marks the
-// callee non-inlinable for the whole compiland, so SetupHeroView loses an
-// expansion retail keeps. `#pragma inline_depth(0)` is STATEMENT-granular,
-// so wrapping the individual call sites here reaches the same four callees
-// with ZERO collateral - SetupHeroView held at exactly 99.5294 across both
-// edits. Applied, each measured:
-//   * HeroFn_004E2840 in handle_artifact_click + get_last_backpack_index
-//     in handle_backpack_click (both base x0 vs retail x1): +2.06.
-//   * the three update_all_slots sites in the two click helpers
-//     (base x1 vs retail x3): +1.31, and it also closed the
-//     update_slot / remove_artifact / equip_artifact count divergences
-//     that followed from those expansions.
-// MEASURED NEGATIVE at the same time: the same pin on `missing.any()`
-// (bitset<144>::any, base x0 vs retail x1) costs 74.47 -> 70.80, because
-// statement granularity cuts both ways - it also de-inlines the bitset
-// machinery the test is built from. See the anchored note at that site.
+// The three army-selection refreshes reread g_heroScreenArmySlot AFTER
+// updateArmies, then branch between SET_STATUS and CLEAR_STATUS broadcasts.
+// Retail sites +0x6c5, +0x7e0 and +0x8bb prove this reread; constant status
+// arguments discarded it. Explicit call arms retain all four updateArmies
+// calls naturally. After the army action, refresh the hover/status bar only
+// for a left click (DC 3822..3824; retail +0x708..+0x7bc): the unconditional
+// refresh was a behavioral mismatch, not an interchangeable merged tail.
+// Its corrected path shares the single updateHeroScreenStatusBar call with
+// mouse movement, as retail does. DC's infowin is the block-scoped
+// TQuickHeroWindow in the hero-locator arm, not missing frame padding.
 //
-// Residual (75.4051%): the census still shows update_all_slots x2 vs x3
-// and SetPointer x4 vs x5 - the SAME defect and it is NOT the inliner:
-// SetPointer is cross-TU and can never be an /Ob2 candidate, so our CL is
-// CROSS-JUMPING
-// the two arms of handle_artifact_click's dragged-artifact if/else, whose
-// `update_all_slots(); DrawWindow(1,0xffff0001,0xffff);` prefixes are
-// identical. Retail does not merge them. UpdateArmies and
-// BroadcastMessage now agree after restoring the proven source arm below.
-// The TQuickTownWindow::
-// QuickWindowWait x0 vs x1 row against our TQuickHeroWindow:: x1 is NOT a
-// wall and not a class-resolution error: all three Quick*Window classes
-// have their own attested QuickWindowWait (dc 0x117818 / 0x1187f8 /
-// 0x117b8c) and retail folded the identical COMDATs onto one label - the
-// same row advmgr.cpp's MonsterQuickView note already discounts.
-// One more open item, NOW READ OFF THE BYTES (2026-08-20) and confirmed
-// A17/D7, not a missing arm: retail emits 15 NormalDialog call
-// instructions where we emit 6, and OUR SIX HELP ARMS ARE BYTE-IDENTICAL
-// TO RETAIL'S up to and including `mov edx,4`. Compare our $L70222 at
-// base+0x1047 with retail fn+0x10e: eleven pushes in the same order, the
-// same `mov ecx,[<help text>]` in the same position, the same
-// `test bl,bl / je <return 1>` guard. The ONLY difference is the last
-// five bytes: retail ends each arm `call NormalDialog / jmp <return 1>`
-// and ours ends `jmp <shared call+jmp>`. Our C2 cross-jumped the two-
-// instruction tail of all six arms (plus three more sites) into one
-// block; retail's did not, even though the tails are identical there too.
+// Controls in the current TU: reread-status ternaries plus exitFlag give
+// 69.0893 raw-probe similarity; adding the hover early return gives 76.6445
+// (76.6464 in the normalized build). Explicit status call arms give 78.0658
+// normalized; the left-click refresh guard raises that to 78.6458. A logical
+// AND/OR spelling of the view-army test changes its lowering but gives
+// 77.9125 normalized before the refresh guard; with the guard it remains
+// below the retained ternary's raw-probe score (77.9857 vs 78.6439).
 //
-// The reverse also happens in this same body, which is why "our
-// cross-jumper is more aggressive" is the wrong summary - the two
-// compiles pick different merge SETS. UpdateHeroScreenStatusBar is base
-// x2 vs retail x1 because RETAIL merges: its mouse-move arm at fn+0x26e
-// (`mov [ecx+0x3c],eax / push esi / call UpdateHeroScreenStatusBar`) is
-// jumped into by the army-slot arm with eax already -1, so retail spells
-// `gpWindowManager->lastHover = -1; UpdateHeroScreenStatusBar(msg);`
-// once for two source sites while we emit it twice.
+// Residual: retail's frame is 0x14c, ours 0x144; retail homes rightMouse in
+// the dead message parameter slot while ours uses [ebp-0x20]. Artifact-click
+// paths still merge one updateAllSlots/setPointer pair retail keeps separate.
+// These cross-TU setPointer calls cannot be an inliner decision. The apparent
+// QuickTown/QuickHero wait difference is an ICF-folded body, not a class error.
+// Full sema CFG views still truncate this row at embedded jump-table data;
+// use complete sema disassembly or an arm range, not the reported block total.
 //
-// The remaining cross-jump counts account for all twelve calls between
-// base's 87 and retail's 99: 9 NormalDialog + 1 QuickWindowWait + 1
-// bitset<144>::any + 1 update_all_slots + 1 SetPointer - 1
-// UpdateHeroScreenStatusBar. docs/vc6/optimization-scope.md puts
-// cross-jumping in the WHOLE-FUNCTION CFG family and
-// docs/vc6/control-flow.md lists A17 as an open class; no source spelling
-// local to the other arms can choose the whole function's merge set.
-//
-// THE NUMERATOR IS NOW SWEPT HERE TOO, AND IT CONFIRMS SHRINK
-// (2026-08-20). The `if (0)` instrument at 1/2/3/4 statements is byte-flat
-// at 74.4733, steps DOWN to 69.9163 at 5, holds there at 10, and falls
-// again to 69.1973 at 20 and 66.9696 at 128. So there is no narrow peak
-// above baseline and growth strictly hurts - the same direction the
-// earlier helper split (56.54 -> 71.10) already paid in - which means any
-// further movement has to come from SHRINKING. One more dose was tried and
-// is byte-flat: lifting the two SHIFT arms into a `wh_shift_toggle()`
-// file-static (74.4733, with SetupHeroView 99.5294 and
-// UpdateHeroScreenStatusBar 92.3601 both unmoved), so that dose sits under
-// the step. The step is worth about five statements, so the next attempt
-// should lift a block of roughly that size rather than a bigger one.
-// Lifting the hero-locator select arm's six simple statements into a
-// single-use file-static has now tested that dose too (2026-08-21): it is
-// byte-flat at the current 75.4051 baseline, with the same 129 branches
-// and 87 calls. Caller segmentation is therefore exhausted at both the
-// two-arm and six-statement scales.
-//
-// THE C2 GENERATION IS NOW RULED OUT TOO (2026-08-20): `homm3 vc6 ab run`
-// on this function - the first Track R run outside the original corpus -
-// reports the RTM 8168 back end BYTE-IDENTICAL to SP3 (1089+327 on both
-// sides, sp3_vs_rtm 0; evidence/vc6/c2-generation-verdicts.tsv). If the
-// merge-set flip is generational at all, it is the FRONT END: retail's
-// Rich header carries 26 RTM-stamped C++ objects and hero.obj was a
-// candidate.
-//
-// THE FRONT END IS NOW RULED OUT TOO (2026-09-06). `genab run --gen rtm-fe`
-// swaps C1XX 12.00.8168 in beside the RTM back end and sweeps all 146
-// units: this function's bytes are IDENTICAL on both sides (it is absent
-// from evidence/vc6/fe-generation-verdicts.tsv, which lists every function
-// that differs at all), and hero.obj's five functions that DO differ
-// (HeroFn_004E2550, equip_artifact, remove_artifact,
-// THeroScreenWindow::update_slot, update_spell_list) are all back-end-only
-// jb/jl loop-guard twins that move AWAY from retail. The captured IL is
-// byte-identical between the two front ends apart from its own two-byte
-// version word (rtm-generation.md §6), so there is no front-end lever
-// here. The merge-set flip is a model gap, not a vintage.
-//
-// THE FOURTH UpdateArmies CALL IS NOW EXPLAINED (2026-08-20), and this
-// corrects the earlier "nothing missing" diagnosis. In the selected-army
-// path, retail tests gUnnamed6aa9d8 before split/merge/swap. When that latch
-// is set, clicking an occupied different slot merely selects that slot,
-// refreshes the seven army widgets, broadcasts the mixed-army status and
-// redraws; an empty slot does nothing. The target block is fn+0x7bc..0x8e1:
-// `test gUnnamed6aa9d8 / je <split path> / cmp army[slot],-1 / je <tail> /
-// mov [gHeroScreenArmySlot],edi / call UpdateArmies`. It is semantic,
-// not padding. A direct same-level else-if initially cost 74.4733 ->
-// 70.1594 by crossing a VC6 whole-function threshold. Restoring the
-// independently attested Hero.h:634 GetMaxMana inline at its five hero.obj
-// sites is byte-flat at every site alone but changes that threshold honestly:
-// with both source corrections present this function reaches 75.4051 and
-// emits all four UpdateArmies calls plus both BroadcastMessage calls.
-// That is the landed form. The qualifier test in the split path is also
-// corrected from MESSAGE_MODIFIER_SHIFT (0x1) to
-// MESSAGE_MODIFIER_SHIFT_KEYS (0x3), exactly retail's `test byte ptr [...],3`;
-// the matcher masks that immediate class, so the semantic correction is
-// score-neutral.
-//
-// Retail's three army refresh arms also do NOT pass the status code as the
-// constant the arm already knows: each emits
-// `mov [gHeroScreenArmySlot],edi / call UpdateArmies / mov
-// eax,[gHeroScreenArmySlot] / cmp eax,-1 / jne push 6 / push 5` in front
-// of heroWindowManager::BroadcastMessage(0x200, .., 0x7f, 0x4008), at
-// fn+0x6c5, fn+0x7e0 and fn+0x8bb - i.e. it RE-READS the global after
-// the call and
-// selects WIDGET_CLEAR_STATUS(6) / WIDGET_SET_STATUS(5) at run time. The
-// values our three compiled arms pass as constants agree with what that select
-// produces, so this is a spelling and not a polarity error. Writing it as
-// the ternary in both arms costs 74.4733 -> 74.2419, so the select alone
-// does not pay: the rest of those two blocks has to converge with it.
-// why-branch's current `right_mouse`-as-int suggestion is also rejected:
-// it costs 75.4051 -> 71.9404, and retail homes the normalized flag as a
-// byte, agreeing with the unsigned-char source and the DC helper arities.
-// Consolidating the three duplicated army-refresh tails into a tiny inline
-// helper is a second six-statement shrink control (2026-08-21). Passing the
-// status as an argument is byte-flat at 75.4051 with 129 branches and 87
-// calls; selecting it inside the helper from gHeroScreenArmySlot regresses
-// to 74.13 with 128 branches. The shared-tail helper therefore cannot move
-// the whole-function cross-jump phase either, and is not retained.
-// Conventional release VERIFY is bounded as well (2026-08-21): evaluating
-// the header-inline `gpGame->GetCurrHero() == gpCurrentHero` invariant at
-// doses 1, 3 and 5 is byte-flat at 75.4051%. The release evaluation is a real
-// accessor candidate rather than an elided TRACE/ASSERT arm, but it does not
-// move this whole-function cross-jump phase.
-// The DC local census is exhausted too (2026-08-21): its only named locals
-// are `exitFlag` and `infowin`. `exitFlag` is the base-handler result tested
-// at entry, and type 0x4D89 proves `infowin` is the block-scoped
-// TQuickHeroWindow already constructed in the hero-locator right-click arm.
-// Retail likewise constructs and destroys that object in this arm, so neither
-// local exposes missing source structure; their identifier spelling cannot
-// affect code generation.
-// Lead for the next lane (2026-09-04, polish lane 2): the DC dossier's
-// `exitFlag` is NOT the base-handler result - it is initialised to 0 in
-// the CAdvPopup::WindowHandler call's delay slot, written once (`= 1`)
-// in the HERO_NAME_ID arm when dialogReturn == DIALOG_RETURN_ACCEPT (dc
-// line 3594), and tested once after the switch (line 3949: `if
-// (exitFlag) { dialogReturn = codeY; codeY = codeX = 10; return 2; }
-// return 1;`). Retail's shape agrees: one return-1 epilogue at fn+0x79
-// with 64 arms jumping back to it and the return-2 block inline after
-// the HERO_NAME_ID arm. Spelled that way here (townManager::Main closed
-// 23 points on the identical device) VC6 does produce the single shared
-// epilogue, but places it after the source-last SELECT arm
-// (show_hero_skills) instead of retail's MOUSE_MOVE `return 1`, and the
-// score falls 75.41 -> 69.34; the current inline `return 2` keeps the
-// epilogue at the end and scores higher only because more arms then
-// align. What decides where VC6 lands the threaded return-1 block is
-// the open question (Main lands it after the TOWN_x arm where retail
-// has the selector arm); solve that and this device is worth ~15 pts.
-// CENSUS 2026-09-05 (the sema CFG/call/reloc views are UNUSABLE on this row -
-// the block builder gives up at the first inline jump table and reports
-// "target 24 blocks / 8 calls"; the RAW `sema disasm` of both sides is
-// complete, 1431 rows, and is the only usable oracle here).
-// Retail emits 15 `NormalDialog` CALLS; this compile emits SIX out of the
-// eleven source sites, because our C2 cross-jumps every right-click help arm
-// (`test bl,bl / je <exit> / 12 pushes / mov ecx,<help text> / mov edx,4 /
-// JMP <shared call>`) while retail ends each arm with its own `call
-// NormalDialog / jmp <exit>` - behaviour-catalog D7, cross-jumping we perform
-// and retail does not, and the same class as the shared `je` in
-// game::ValidateVictoryLossConditions.  Retail also expands
-// hero::HeroScreenUpdate's two dialog sites inline (0x4de1da..0x4de320:
-// `add eax,-0x32 / mov cl,[eax+ecx+0x476]`, the 99-clamp, `setge cl`, the
-// `or ecx,0x10000` pack and `mov ecx,[4*eax+0x6a7540]`).
-// Two independent frame facts, both unexplained: retail reserves 0x14c and
-// this compile 0x144 - EIGHT bytes short, i.e. two named locals missing -
-// and retail homes `right_mouse` in the DEAD `msg` PARAMETER SLOT [ebp+8]
-// with `this` at [ebp-0x18] and localPlayer at [ebp-0x10], where we use
-// [ebp-0x20] / [ebp-0x24] / [ebp-0x18].  Retail's shared `return 1` epilogue
-// sits at fn+0x7e, immediately after the MOUSE_MOVE arm's `mov eax,1`
-// fall-through; ours is threaded to fn+0x128a at the very end.
-// ARM ORDER IS NOT THE PROBLEM - MEASURED AND REFUTED 2026-09-05.  A
-// standing brief said "the jump-table arm ORDER differs"; it does not.
-// Both jump tables were decoded on both sides and they agree exactly.
-// The two BYTE index tables are byte-identical (00 01 08 08 ... 08 04 05
-// 06 07 and 00 00 00 11 ... 10 10 11 05), so the case-to-arm assignment
-// is already right; and sorting each table's targets by address gives the
-// SAME arm sequence on both sides - DESELECT 8,7,0,1,5,2,3,4,6 and SELECT
-// 3,2,8,9,5,7,6,4,0,1,16,14,15,10,11,12,13,17.  Reordering the `case`
-// labels can only make this worse.  Do not spend a round on it.
-//
-// AND THE 15-vs-6 NormalDialog CENSUS IS NOT AN INDEPENDENT DEFECT: it is
-// the epilogue placement wearing a second face.  Retail's merged `return
-// 1` block sits at fn+0x79, as the FALL-THROUGH successor of the
-// MOUSE_MOVE arm, and all 64 other exits `jmp` back to it; ours sits at
-// fn+0x128a, as the fall-through successor of the SOURCE-LAST arm
-// (show_hero_skills).  Because our epilogue is the last block, the last
-// arm's `call NormalDialog` + fall-through is a two-instruction tail that
-// the six right-click help arms share, so C2's cross-jumper merges all six
-// into it (`mov edx,4 / jmp 0x1285`).  Retail's arms end `call
-// NormalDialog / jmp 0x5fd9` - the SAME two-instruction tail, six times,
-// UNMERGED - purely because their shared successor is far away.  So there
-// is exactly ONE decision left in this function, not two: which member of
-// the epilogue merge-set C2 emits in place.  Retail keeps the FIRST
-// (source-order) `return 1`; we keep the LAST.  Every documented attempt
-// (the exitFlag device, caller shrink at four doses, the shared-tail
-// helper, the status-code select, `right_mouse` as int, RTM-vs-SP3) moved
-// something else and left that decision untouched - the exitFlag device in
-// particular DOES produce the single shared epilogue and still places it
-// after show_hero_skills (75.41 -> 69.34), which is what proves the
-// placement is a separate knob from the merge.
-// Two facts that any candidate explanation has to carry: retail's frame is
-// 0x14c against our 0x144 (two named locals we do not have), and retail
-// homes `right_mouse` in the DEAD `msg` parameter slot [ebp+8] while we
-// spend a numbered local on it - both consistent with the frame being
-// allocated after a different set of blocks survived.
-// A third fact that BOUNDS the search: both sides emit exactly TWO `ret 4`
-// sites, and the SECOND one (the HERO_NAME arm's `return 2`) is at the same
-// place on both - base fn+0x198 against retail fn+0x19b.  So the merge-set
-// question is only about which copy of `return 1` survives in place, and
-// everything downstream of fn+0x19b is already aligned.
-// MEASURED AND REJECTED 2026-09-05: wrapping everything after the MOUSE_MOVE
-// arm in an `else` (dropping that arm's own `return 1` so the arm falls into
-// a single trailing one - the shape retail's layout literally has, if/body,
-// join, else-body) scores 70.97 against 74.22, and the epilogue does NOT
-// move: it is still the last block, at fn+0x1291.  So the `else` is not the
-// construct that puts retail's join early, and no source bracketing tried so
-// far reaches C2's choice of surviving copy.
+// Earlier controls, now bounded by the restored source: RTM C1XX and C2 were
+// byte-identical to SP3; case-arm reordering contradicted the decoded tables;
+// a trailing else around the post-hover dispatcher left the epilogue late.
+// Helper splits of the shift arms, hero-locator selection and army refresh
+// tails did not fix that placement. Int-width rightMouse, missing.any pins,
+// dead-statement growth and repeated release-accessor probes did not improve
+// it. Existing click-helper pins are historical diagnostics; do not add more.
+// Their earlier site/whole-callee and nested-depth trials cannot establish
+// that this caller requires a different compiler generation or dummy code.
 VA(0x004dd2d0, 0x143E)  // anchor-bracket + absent-callees, dc 0xcf54c
 int THeroScreenWindow::windowHandler(message* msg)
 {
+    int exitFlag = 0;
     int result = CAdvPopup::windowHandler(msg);
     if (result)
         return result;
 
     playerData* localPlayer = g_game->getLocalPlayer();
     // Before normalization (locals): right_mouse, show_dismiss.
-    unsigned char rightMouse = (msg->m_qualifier & MESSAGE_MODIFIER_RIGHT) != 0;
+    unsigned char rightMouse;
+    if (msg->m_qualifier & MESSAGE_MODIFIER_RIGHT)
+        rightMouse = 1;
+    else
+        rightMouse = 0;
 
     if (msg->m_id == MESSAGE_MOUSE_MOVE) {
         g_windowManager->convertToHover(*msg);
-        if (g_windowManager->m_lastHover != msg->m_codeY) {
-            g_windowManager->m_lastHover = msg->m_codeY;
-            updateHeroScreenStatusBar(msg);
-        }
+        if (g_windowManager->m_lastHover == msg->m_codeY)
+            return MESSAGE_DISPATCH_CONSUME;
+        g_windowManager->m_lastHover = msg->m_codeY;
+        updateHeroScreenStatusBar(msg);
         return MESSAGE_DISPATCH_CONSUME;
     }
 
@@ -4677,10 +4476,7 @@ int THeroScreenWindow::windowHandler(message* msg)
             normalDialog(g_generalText->getText(23), 2, -1, -1, -1, 0,
                          -1, 0, -1, 0, -1, 0);
             if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT) {
-                g_windowManager->m_dialogReturn = msg->m_codeY;
-                msg->m_codeY = 10;
-                msg->m_codeX = 10;
-                return MESSAGE_DISPATCH_FORWARD;
+                exitFlag = 1;
             }
             break;
         case BACKPACK_SCROLL_LEFT_ID:
@@ -4814,10 +4610,17 @@ int THeroScreenWindow::windowHandler(message* msg)
                     if (g_currentHero->m_army.m_armies[slot] != CREATURE_NONE) {
                         g_heroScreenArmySlot = slot;
                         g_currentHero->updateArmies();
-                        g_windowManager->broadcastMessage(
-                            MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
-                            MIXED_ARMY_ID,
-                            widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+                        if (g_heroScreenArmySlot == HERO_SCREEN_NO_ARMY_SLOT) {
+                            g_windowManager->broadcastMessage(
+                                MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
+                                MIXED_ARMY_ID,
+                                widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+                        } else {
+                            g_windowManager->broadcastMessage(
+                                MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
+                                MIXED_ARMY_ID,
+                                widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+                        }
                         g_heroScreenWindow->drawWindow(1, 0xffff0001, 0xffff);
                     }
                 } else if (rightMouse
@@ -4839,10 +4642,17 @@ int THeroScreenWindow::windowHandler(message* msg)
                     if (g_currentHero->m_army.m_armies[slot] != CREATURE_NONE) {
                         g_heroScreenArmySlot = slot;
                         g_currentHero->updateArmies();
-                        g_windowManager->broadcastMessage(
-                            MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
-                            MIXED_ARMY_ID,
-                            widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+                        if (g_heroScreenArmySlot == HERO_SCREEN_NO_ARMY_SLOT) {
+                            g_windowManager->broadcastMessage(
+                                MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
+                                MIXED_ARMY_ID,
+                                widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+                        } else {
+                            g_windowManager->broadcastMessage(
+                                MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
+                                MIXED_ARMY_ID,
+                                widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+                        }
                         g_heroScreenWindow->drawWindow(1, 0xffff0001, 0xffff);
                     }
                 } else if (!rightMouse) {
@@ -4870,14 +4680,23 @@ int THeroScreenWindow::windowHandler(message* msg)
                     }
                     g_heroScreenArmySlot = HERO_SCREEN_NO_ARMY_SLOT;
                     g_currentHero->updateArmies();
-                    g_windowManager->broadcastMessage(
-                        MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
-                        MIXED_ARMY_ID,
-                        widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+                    if (g_heroScreenArmySlot == HERO_SCREEN_NO_ARMY_SLOT) {
+                        g_windowManager->broadcastMessage(
+                            MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
+                            MIXED_ARMY_ID,
+                            widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+                    } else {
+                        g_windowManager->broadcastMessage(
+                            MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
+                            MIXED_ARMY_ID,
+                            widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+                    }
                     g_heroScreenWindow->drawWindow(1, 0xffff0001, 0xffff);
                 }
-                g_windowManager->m_lastHover = -1;
-                updateHeroScreenStatusBar(msg);
+                if (!rightMouse) {
+                    g_windowManager->m_lastHover = -1;
+                    updateHeroScreenStatusBar(msg);
+                }
             }
             break;
 
@@ -4966,6 +4785,12 @@ int THeroScreenWindow::windowHandler(message* msg)
         break;
     }
 
+    if (exitFlag) {
+        g_windowManager->m_dialogReturn = msg->m_codeY;
+        msg->m_codeY = 10;
+        msg->m_codeX = 10;
+        return MESSAGE_DISPATCH_FORWARD;
+    }
     return MESSAGE_DISPATCH_CONSUME;
 }
 

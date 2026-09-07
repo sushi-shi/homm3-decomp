@@ -567,3 +567,39 @@ hypothesis that produces it naturally. An absent flag in optimized assembly
 does not rule out a source flag. Test the complete search and post-search
 control relationship before attributing fallback placement to a compiler
 generation or an unavoidable layout decision.
+
+## An early return can select the shared epilogue's position
+
+`THeroScreenWindow::windowHandler` (0x4dd2d0) kept its shared consume-return
+at the end of the dispatcher, although retail places it immediately after
+mouse movement at +0x79. Restoring Dreamcast's deferred `exitFlag` alone did
+not fix this. The decisive additional source fact is the unchanged-hover
+**early return** before the status update (DC hero.cpp:3507..3508). Replacing
+the inverted conditional around the update with that guard places the shared
+return at +0x79 and restores all fifteen direct `normalDialog` calls. The
+six help arms had previously jumped to a shared dialog-call tail.
+
+The corrected caller also rereads the selected army slot after `updateArmies`
+and branches between two explicit status broadcasts. Guarding the later
+status-bar refresh with `!rightMouse`, proved by both DC 3822..3824 and retail,
+restores the single shared status-update call. The real hero-only build banks
+78.6458% versus the old 75.4051% MAX. All four army-refresh calls now survive.
+The 0x144 versus 0x14c frame and artifact-click path merging remain unresolved;
+the repaired early return does not imply that the whole function is exact.
+
+## Recover indexed expressions before preserving strength-reduced counters
+
+`advManager::setEnvironmentOrigin` (0x4183d0) reached 100% from 75.4080%
+by restoring two Dreamcast source facts. The sound-priority assignment occurs
+in both arms of the reset conditional (advmgr.cpp:9800 and 9803), and the
+ring scan computes each coordinate from the original point, priority, and
+shared index (9822..9829). The previous source manually maintained four
+boundary coordinates and four edge cursors to imitate retail's increments.
+
+VC6 derives those running counters itself from the indexed expressions.
+Restoring only the expressions gives 97.7264%; restoring only the separate
+priority stores gives 77.6667%. Together they reproduce all 27 retail blocks
+and the 581-byte function. C2 merges the two priority stores while holding
+0x7f in EBX and spilling the first loop's count. A named sentinel constant
+on the flattened source had been byte-neutral, so that earlier result did
+not establish an unreachable register assignment.
