@@ -285,12 +285,24 @@ TGzInflateBuf::~TGzInflateBuf()
 // are the same test on zlib's `uInt`. 80.8063 -> 81.1188. The second guard
 // really is `== 0` - retail emits `jne` there.
 //
-// Residual (81.12%): the eight trailer `read_byte()` sites. Retail CALLS
-// read_byte at three of them and expands five; our /Ob2 budget expands all
-// eight, which is the 22-vs-18 branch surplus, the eleven base-only
-// get_byte/throw triples and the 0x20-against-0x3c frame. That is the
-// over-inline class, whose levers here are a statement pin and a
-// caller-shrink helper - neither open to this lane.
+// Retail's raw-copy minimum uses a strict unsigned comparison: spelling
+// avail_in < avail_out ? avail_in : avail_out restores jb and raises this
+// caller from 81.1204% to 81.4346%. std::_cpp_min on copied local counts
+// adds operand homes and scores 79.1832%; keep the direct value expression.
+//
+// Residual: retail expands readByte at trailer positions 1,2,5,6 and calls
+// it at 3,4,7,8. The current body expands all eight. A passive VC6 trace
+// measures caller cb=604, budget=1208, and readByte cb=56 before this fix.
+// Two provisional four-byte readers, following vendored gzio.c::getLong,
+// give a 3-expanded/1-called first group and a 2/2 second group (26.1623%).
+// Addition, OR and separate byte locals emit identical bytes. Combining
+// that helper with std::_cpp_min produces both 2/2 groups but moves the
+// error blocks and adds reference-selection loads (24.4660%; local count
+// copies 29.0419%). No such helper is retained: the repeated pattern is a
+// hypothesis for its boundary, not proof of the original reader body.
+// The candidate also shares its 0x20 exception slot where retail reserves
+// 0x3c. An explicit refill-buffer local is byte-neutral; a separate CRC
+// byte-count local scores 81.3560% and does not resolve the trailer calls.
 VA(0x004d6920, 0x251)  // anchor-vtable ??_7TGzInflateBuf@@6B@ slot 4 + anchor-import @inflate@8, retail-only
 int TGzInflateBuf::underflow()
 {
@@ -331,9 +343,8 @@ int TGzInflateBuf::underflow()
                     }
                 }
             } else {
-                unsigned count = m_stream.avail_in;
-                if (count > m_stream.avail_out)
-                    count = m_stream.avail_out;
+                unsigned count = m_stream.avail_in < m_stream.avail_out
+                    ? m_stream.avail_in : m_stream.avail_out;
                 memcpy(m_stream.next_out, m_stream.next_in, count);
                 m_stream.next_in += count;
                 m_stream.avail_in -= count;

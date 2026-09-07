@@ -470,6 +470,16 @@ inline CNewPlayerMsg::CNewPlayerMsg(CNetPlayerInfo* playerInfo,
     strncpy(m_version, version, sizeof(m_version));
 }
 
+// E:\gamedcs\singleselectionwindow.cpp:773, dc 0x148038. The ordinary
+// two-argument constructor copies the version and error text after CNetMsg.
+// Retail's header-init handler loads the text argument before expanding it.
+CBadVersionMsg::CBadVersionMsg(const char* version, const char* errText)
+    : CNetMsg(RS_BAD_VERSION, sizeof(CBadVersionMsg))
+{
+    strncpy(m_version, version, sizeof(m_version));
+    strncpy(m_errText, errText, sizeof(m_errText));
+}
+
 // The three game-selection description tables: each caches a fixed-count
 // prefix of a text resource into a flat char*[] the info panels index. The
 // copy loop mirrors events.obj's InitializeArtifactEventText - the induction
@@ -7267,46 +7277,36 @@ void CNewPlayerUpdateMan::newPlayer(unsigned long dpid)
 // empty destructor adds that store here and to both BeginNewGame cleanups.
 VA_COMPGEN(0x0058A300, 0x13F, IMPLICIT_DTOR, CNewMapHeaderInfoMsg)
 
-// The transfer opener: version-gate the sender (the short EX form
-// carries none - "1.0" stands in), build the never-sent CBadVersionMsg
-// reply and show the mismatch dialog on failure; otherwise arm the
-// transfer state and resize both header lists to the announced count
-// (the temps expand this ctor with the member ctors called - the
-// composition proof), then clear every row's received flag.
-// Residual (81.3): three inline-boundary/cosmetic classes - (1) the
-// clears: retail expands HeadersA's erase but keeps its degenerate
-// copy(Last,Last,First) as a CALL to the 787 B copy COMDAT 0x58f160,
-// and spells SelectionHeaders' teardown through the erase COMDAT
-// 0x58ef20 (a hoist+pin spelling of the second one measured 77.69 -
-// worse - the iterators' formation drifted); (2) size(): retail calls
-// the 0x58eab0 COMDAT five times where we fold two of the compares
-// inline; (3) the reply arm zero-registers: our CNetMsg ctor homes 0
-// in edi (callee-saved, reused for NormalDialog's zero pushes) where
-// retail uses eax and pushes immediates.
-// E:\gamedcs\singleselectionwindow.cpp:7017
+// Dreamcast singleselectionwindow.cpp:7017. The mismatch arm constructs
+// CBadVersionMsg(hostVersion, GameText[666]), calls OnBadVersionMsg and
+// returns false. Restore those boundaries rather than duplicating their
+// CNetMsg/strncpy/dialog bodies: ctor alone scores 94.8089%, handler alone
+// 87.5488%, and both 99.8008% from 81.3049%. Both ordinary bodies expand
+// here, and their source calls restore the retail vector clear/resize
+// decisions later in this function without any inline-depth controls.
+// Complete loads the map count before storing the net-game flag at
+// 0x58a546/0x58a549. That statement order closes the remaining gap to 100%;
+// a separate flag local instead scores 97.1951%. The header-list containers
+// replace Dreamcast's older arrays, so their operations follow retail.
 // Before normalization (locals): pNetMsg, pMsg.
 VA(0x0058A440, 0x33E)  // anchor-callee RS_GAME_HEADER_INFO_INIT (1024) arm calls it and cancels on failure, size 1.65x dc 0x1f8, dc 0x140f24
 unsigned char TSingleSelectionWindow::onGameHeaderInfoInitMsg(CNetMsg* netMsg)
 {
     CGameHeaderInfoInitMsgEx* msg =
         static_cast<CGameHeaderInfoInitMsgEx*>(netMsg);
-    const char* version =
+    const char* hostVersion =
         DATA_COMPGEN(0x00683900, defaultRemoteVersion, "1.0");
     if (msg->m_size == sizeof(CGameHeaderInfoInitMsgEx))
-        version = msg->m_version;
-    if (!isVersionCompatible(version)) {
-        CBadVersionMsg reply;
-        strncpy(reply.m_version, version, 20);
-        strncpy(reply.m_errText, g_generalText->getText(666), 80);
-        remoteCleanup();
-        sprintf(g_text, reply.m_errText, m_gameVersion, reply.m_version);
-        normalDialog(g_text, 1, 20000, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        hostVersion = msg->m_version;
+    if (!isVersionCompatible(hostVersion)) {
+        CBadVersionMsg badMsg(hostVersion, (*g_generalText)[666]);
+        onBadVersionMsg(&badMsg);
         return 0;
     }
     m_receivedMaps = 0;
     m_receivingMaps = 1;
-    m_flag64 = msg->m_netGame;
     int count = msg->m_numMaps;
+    m_flag64 = msg->m_netGame;
     m_headersA.clear();
     m_headersA.resize(count);
     m_selectionHeaders.clear();
@@ -9267,13 +9267,6 @@ void CTownUpdateMsg::CTownUpdateMsg(int gamePos, TTownType town)
 // E:\gamedcs\singleselectionwindow.cpp:758
 DC_ONLY(0x147f90, 0xA8)
 void CNewPlayerMsg::CNewPlayerMsg(CNetPlayerInfo* pPlayerInfo, char* version)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:773
-DC_ONLY(0x148038, 0x54)
-void CBadVersionMsg::CBadVersionMsg(const char* version, const char* errText)
 {
     // @stub
 }

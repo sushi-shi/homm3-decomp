@@ -541,6 +541,8 @@ public:
     // strncpy bound 0x50 AND the inlined ctor's 0x78 size dword agree.
     char m_errText[80];   // +0x28, format string
 
+    // DC singleselectionwindow.cpp:773; expanded in the retail init handler.
+    CBadVersionMsg(const char* version, const char* errText);
     CBadVersionMsg()
         : CNetMsg(RS_BAD_VERSION, sizeof(CBadVersionMsg))
     {

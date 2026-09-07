@@ -2135,7 +2135,7 @@ gzinflatebuf	??1TGzInflateBuf@@UAE@XZ	100.0000	100.0000	100.0000	0xd6820	fd30112
 gzinflatebuf	??_GTGzInflateBuf@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xd67f0	-
 gzinflatebuf	?getByte@TGzInflateBuf@@AAEHXZ	100.0000	100.0000	100.0000	0xd5fd0	6b7f51d9b437
 gzinflatebuf	?readByte@TGzInflateBuf@@AAEHXZ	100.0000	100.0000	100.0000	0xd6ba0	110d771b2654
-gzinflatebuf	?underflow@TGzInflateBuf@@UAEHXZ	81.1204	81.1204	81.1204	0xd6920	27254f9504db
+gzinflatebuf	?underflow@TGzInflateBuf@@UAEHXZ	81.4346	81.4346	81.4346	0xd6920	1a1e12f4d0d0
 gzio	@check_header@4	100.0000	100.0000	100.0000	0x206490	-
 gzio	@destroy@4	100.0000	100.0000	100.0000	0x206640	-
 gzio	@do_flush@8	100.0000	100.0000	100.0000	0x2069c0	-
@@ -3682,7 +3682,7 @@ singleselectionwindow	?newPlayer@CNewPlayerUpdateMan@@QAEXK@Z	100.0000	100.0000	
 singleselectionwindow	?onBadVersionMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18df50	177b9fa9b9c5
 singleselectionwindow	?onBeginGame@TSingleSelectionWindow@@QAEEXZ	78.9055	78.9055	78.9055	0x18bce0	295028ee9732
 singleselectionwindow	?onDeleteFile@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x18dfb0	db936f38be9b
-singleselectionwindow	?onGameHeaderInfoInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	81.3049	81.3049	81.3049	0x18a440	0eeb5f112cdb
+singleselectionwindow	?onGameHeaderInfoInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18a440	0cbfea828eb9
 singleselectionwindow	?onGameHeaderInfoInitMsgEx@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18a780	d9b76a53f4e7
 singleselectionwindow	?onGameHeaderInfoMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18aa40	619786bdead0
 singleselectionwindow	?onGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x189b20	8e4147210f6f
