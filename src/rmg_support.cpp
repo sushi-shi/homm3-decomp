@@ -8,12 +8,19 @@
 #include <math.h>
 #include "rmg.h"
 
-// The Complete-only river pattern table is built by cinit 0x55ed70 from the
-// thirteen pattern ids at 0x641140. Its concrete container layout is not yet
-// needed by the painter interface.
-struct TRmgLinePatternTable;
+// The Complete-only painter pattern tables are built by cinit 0x55ed70 and
+// 0x55f2f0 from the constant pattern-id arrays at 0x641140 and 0x6411ac.
 DATA(0x0069E5D0) extern TRmgLinePatternTable g_rmgRiverPatternTable;
 DATA(0x0069E650) extern TRmgLinePatternTable g_rmgRoadPatternTable;
+
+// Both table cleanup thunks tail-call this body. The paired constructor owns
+// only the copied pattern-id array at +4; the nine index/count pairs are plain
+// integers and need no cleanup.
+VA(0x004F9CA0, 0x0B)  // cinit cleanups 0x55ed90/0x55f310; Complete-only
+TRmgLinePatternTable::~TRmgLinePatternTable()
+{
+    delete[] m_patterns;
+}
 
 // Retail retains this tiny value constructor throughout the RMG pathfinding
 // cluster.  Its three stores and `ret 0xc` fix both the by-value ABI and the
