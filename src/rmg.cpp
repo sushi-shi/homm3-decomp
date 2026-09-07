@@ -361,6 +361,9 @@ TRmgGridPoint type_random_map::getSize()
 // opposite register pair (best 85.18%). The other table belongs to the still
 // unrecovered concrete road adapter at 0x532320..0x5324b0, so the shared ICF
 // representative stays banked with that class cluster.
+// Its 45-byte slots at 0x532480/0x5324b0 index the wrapped map identically
+// and extract road type / land type, but neither can be emitted until that
+// concrete road-adapter declaration and vtable are recovered.
 
 // The boundary coordinator constructs both a temporary zone and owned
 // water zones through this same retained body. The final three members are
@@ -3821,6 +3824,11 @@ void __fastcall emitRmgPointSetIncrement(TRmgPointSet::const_iterator* it)
 {
     ++*it;
 }
+
+// Unclaimed retail 0x54d0f0 allocates a 16-byte link node and substitutes
+// the new node for either null neighbour argument. Its sole natural call is
+// in the unreconstructed 0x543e20 RMG graph routine, so the node type and
+// retention boundary remain parked with that caller.
 
 // Unclaimed retail 0x5fdae0 is a 43-byte stdcall orientation test over three
 // by-value TPoint arguments. Its only calls are inside the unreconstructed
