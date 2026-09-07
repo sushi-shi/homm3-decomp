@@ -2,9 +2,12 @@
 from __future__ import annotations
 
 import tempfile
+import struct
 from pathlib import Path
 import unittest
+from unittest.mock import patch
 
+from homm3.core.test_codeview import _fixture
 from homm3.sema import diff, source
 
 
@@ -18,6 +21,33 @@ def _asm(*instructions: str) -> str:
 
 
 class SourceMapTest(unittest.TestCase):
+    def test_load_decodes_return_to_begin_line(self):
+        payload = bytearray(_fixture())
+        line_offset = struct.unpack_from("<I", payload, 20 + 28)[0]
+        struct.pack_into("<H", payload, line_offset + 3 * 6 + 4, 0x7fff)
+        with tempfile.TemporaryDirectory() as directory:
+            obj = Path(directory) / "unit.obj"
+            obj.write_bytes(payload)
+            src = Path(directory) / "unit.cpp"
+            src.write_text("\n" * 9 + "{\n    work();\n    finish();\n}\n")
+            with patch.object(source, "_debug_obj", return_value=(
+                    obj, src, "src/unit.cpp")):
+                mapping = source.load("unit", "func", 0, obj)
+        self.assertEqual(mapping.heads_at(1), (source.Statement(1, 10, "{"),))
+        self.assertIn("; src/unit.cpp:10 | {", source.render_disassembly(
+            _asm("nop", "ret"), mapping, verbose=False))
+
+    def test_load_still_rejects_other_out_of_range_lines(self):
+        with tempfile.TemporaryDirectory() as directory:
+            obj = Path(directory) / "unit.obj"
+            obj.write_bytes(_fixture())
+            src = Path(directory) / "unit.cpp"
+            src.write_text("\n" * 12)
+            with patch.object(source, "_debug_obj", return_value=(
+                    obj, src, "src/unit.cpp")):
+                with self.assertRaisesRegex(source.SourceError, "/Z7 line 13"):
+                    source.load("unit", "func", 0, obj)
+
     def test_begin_brace_resolves_to_first_executable_line(self):
         lines = ["int f()", "{", "    // comment", "", "    return 4;", "}"]
         self.assertEqual(source._first_body_line(lines, 2), 5)
