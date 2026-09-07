@@ -375,6 +375,13 @@ inline std::vector<TObjectType::TImageInfo>& getObjectImageCache()
 // gives 92.5020. Preincrement from unsigned -1 reproduces that latter body.
 // An early do/while is byte-identical to 99.2095. Moving initialization before
 // the file guard or lookup changes the CFG and gives 93.6482/93.6680.
+// With the loop-local counter, a named or reused whole point gives 88.8103;
+// an early reference to imageInfo gives 81.9447; bitset::size gives 88.8300.
+// Unsigned long, /8 and %8 arithmetic, reusing oldCount or dot, and explicit
+// success/failure joins all reproduce the 92.5020 late-counter body exactly.
+// A full-width bit mask instead gives 92.4625. None preserves retail's file
+// register: the byte-verified current trace still assigns maskFile ESI first,
+// then moves oldCount to EDI and this to EBX (docs/vc6/regalloc.md section 3b).
 // The current output-reference lookup controls give 96.5415/96.0395 and
 // preserve the wrong registry operands. A flattened lookup with a separate
 // entry factory or typed make_pair gives 78.1067/75.8103 and different calls.
