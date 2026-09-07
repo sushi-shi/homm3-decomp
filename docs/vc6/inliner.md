@@ -668,10 +668,10 @@ chain; Dreamcast's four-byte video stubs prove declarations and order only.
 
 The earlier loop-spelling and cached-count probes could not recover the missing
 top test in the flattened body. Restoring the helper chain does, with no inline
-keyword or pragma. Its callers remain a separate checkpoint: `ShowVideo` now
-auto-inlines the ordinary close at all three sites, but still expands nested
-helpers that retail calls. Restoring the other teardown callers is byte-flat;
-call-site count alone does not explain that remaining decision.
+keyword or pragma. `ShowVideo` also needs the bitmap accessor calls described
+[below](#bitmap-accessors-recover-three-different-cleanup-decisions) to recover
+its three different nested expansions. Restoring other teardown callers was
+byte-flat; their count did not explain those decisions.
 
 ### Campaign hero lookup and the packed-point accessor (2026-09-06)
 
@@ -993,6 +993,31 @@ the source statements. Omitting the clamps is the 38.55% current control;
 independent upper-bound `if`s are byte-flat, but Dreamcast supplies the
 `else` relationship. The road and river renderers dip to 98.25% and 98.08%,
 with their 99.54% and 98.54% peaks preserved.
+
+### Bitmap accessors recover three different cleanup decisions
+
+`ShowVideo` (`0x598af0`) reaches 100% without changing its ordinary cleanup
+helpers. Calling the canonical `GetPitch`, `GetHeight`, and `GetMap(0, 0)`
+at its three buffer setup sites changes the root candidate count from 3 to
+12 and the initial budget from 1000 to 1030. C2 then makes the three distinct
+`VideoClose` expansions that retail requires:
+
+| Close site | Nested budget | `VideoResume` (cost 103) | `CloseSmacker` (cost 62) |
+| :--------- | ------------: | :---------------------- | :---------------------- |
+| Initial close | 82 | Called | Expanded |
+| Audio-open failure | 80 | Called | Expanded |
+| Video-open failure | 105 | Expanded | Called with 2 remaining |
+
+The final resume expansion leaves only one unit for its nested
+`VideoSoundOnOff` (cost 57), so that call also remains, as in retail.
+The accessor change alone reaches 88.66%; keeping the original x/y arguments
+live through both final buffer calls reaches 95.42% and all 42 matching
+blocks. Assigning the pixel format before the frame-advance flag closes the
+remaining register schedule: all 901 bytes match after 91 relocations.
+
+Only dimension accessors give 76.00%; only the map accessor gives 67.31%.
+These controls identify the complete buffer interface and its actual inline
+sites. Counting callers elsewhere in the TU did not restore these decisions.
 
 ## 7. Using it
 

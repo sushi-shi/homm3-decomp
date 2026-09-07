@@ -416,11 +416,11 @@ void VideoPause()
 // E:\gamedcs\smackmgr.cpp:238
 // The sound tail is VideoSoundOnOff, not a copy of it: ShowVideo's THIRD
 // VideoClose expansion (0x598af0 +0x284) expands this body and reaches
-// `call ?VideoSoundOnOff@@YIXXZ` at 0x598d74, one level inside the
+// `call ?VideoSoundOnOff@@YIXH@Z` at 0x598d74, one level inside the
 // expansion, which a longhand `if (smk) sounds(); else if (bink) sounds();`
-// here could not produce.  Byte-flat at 100 in this body (VideoSoundOnOff's
-// cb is under the 0x28 free-inline threshold, so /Ob2 folds it straight
-// back), and it is the boundary ShowVideo's residual is measured against.
+// here could not produce. VideoSoundOnOff expands in this retained body,
+// which stays exact, but remains a call in ShowVideo's third close. Its
+// measured C1 cost is 57, above the free-inline threshold of 40.
 VA(0x00597850, 0xAB)  // anchor-global, dc 0x14ac50
 void VideoResume()
 {
@@ -940,17 +940,26 @@ void SmackManager::SetPixelFormat(unsigned long red_mask,
 // mask are transcribed from the two SmackVolumePan sites.
 // Restoring VideoClose -> VideoResume / CloseSmacker and VideoResume ->
 // VideoSoundOnOff makes ordinary VideoClose auto-inline at all three sites,
-// while its standalone body reaches 100%. The remaining nested decisions
-// over-expand: retail retains VideoResume at the first two sites and
-// CloseSmacker at the last, whereas our current caller expands all of them.
+// while its standalone body reaches 100%. The three bitmap buffer calls
+// use the canonical GetPitch/GetHeight/GetMap accessors. Those later inline
+// candidates restore retail's retained VideoResume calls at the first two
+// close sites and CloseSmacker at the last, raising 45.8147 -> 88.6602%.
 // The sound-track mask and video-open mode are captured before either
 // OpenSmackerTrack call (retail keeps them in ESI and [ebp-8]). Its descriptor
 // index is narrowed to one byte. Recomputing those globals after opening the
-// audio track lost those lifetimes; restoring them raises CUR 39.3089 to
-// 45.81 and matches the entry through +0x3c. MAX 48.6988 remains banked.
+// audio track lost those lifetimes. The final buffer calls also keep the
+// original x/y arguments across SmackVolumePan and the first SmackToBuffer;
+// reloading gSmackX/Y lost those register lifetimes. Keeping x/y raises
+// 88.6602 -> 95.4209%, all 42 CFG blocks matching. Storing the pixel format
+// before the advance flag then closes all 901 bytes. C2 still schedules
+// the format store last; the source order determines the preceding EAX/ECX
+// lifetimes. A separate format local is byte-flat to the 95.4209% control.
+// ShowVideo has no Dreamcast body; the existing bitmap accessors are DC
+// Bitmap16.h helpers, and their use here is established by retail codegen.
 // Restoring the other CloseSmacker callers (VideoPlay, VideoShutDown) and
-// VideoPause's VideoSoundOnOff call is byte-flat: call-site count alone does
-// not recover the remaining 80-vs-42-block nested inline decisions.
+// VideoPause's VideoSoundOnOff call was byte-flat. Using only the bitmap
+// dimension accessors gives 76.0039%; only GetMap gives 67.3050%. Keep the
+// full buffer interface rather than flattening selected accessors.
 // Negative controls from the old flattened helper state: adding inline to
 // VideoClose expanded all nested resume bodies (41.02%, standalone lost);
 // pasting the closes into ShowVideo scored 16.07. Those are not source fixes.
@@ -975,9 +984,9 @@ void ShowVideo(int id, int x, int y, int w, int h, int loop, int autoDraw,
     gSmackVideoId = id;
     gSmackPaused = 0;
     gSmackVideo2 = 0;
-    gSmackAdvance = static_cast<unsigned char>(advance);
     gSmackBufferFlags = (GreenBits == VIDEO_PIXEL_FORMAT_RGB565)
                             ? SMACKBUFFER565 : SMACKBUFFER555;
+    gSmackAdvance = static_cast<unsigned char>(advance);
 
     if (gVideoDescriptors[id].smkAudioStem != "") {
         gSmackVideo2 = OpenSmackerTrack(gVideoDescriptors[id].smkAudioStem,
@@ -989,9 +998,9 @@ void ShowVideo(int id, int x, int y, int w, int h, int loop, int autoDraw,
         SmackVolumePan(gSmackVideo2, SMACK_TRACK_MASK,
             3640 * gUnnamed698758.soundVolume, 0x8000);
         SmackToBuffer(gSmackVideo2, x, y,
-            gpWindowManager->screenBitmap->Pitch,
-            gpWindowManager->screenBitmap->Height,
-            gpWindowManager->screenBitmap->map, gSmackBufferFlags);
+            gpWindowManager->screenBitmap->GetPitch(),
+            gpWindowManager->screenBitmap->GetHeight(),
+            gpWindowManager->screenBitmap->GetMap(0, 0), gSmackBufferFlags);
     }
 
     gSmackVideo = OpenSmackerTrack(gVideoDescriptors[id].smkStem,
@@ -1013,15 +1022,15 @@ void ShowVideo(int id, int x, int y, int w, int h, int loop, int autoDraw,
     gSmackY = y;
     SmackVolumePan(gSmackVideo, SMACK_TRACK_MASK,
         3640 * gUnnamed698758.soundVolume, 0x8000);
-    SmackToBuffer(gSmackVideo, gSmackX, gSmackY,
-        gpWindowManager->screenBitmap->Pitch,
-        gpWindowManager->screenBitmap->Height,
-        gpWindowManager->screenBitmap->map, gSmackBufferFlags);
+    SmackToBuffer(gSmackVideo, x, y,
+        gpWindowManager->screenBitmap->GetPitch(),
+        gpWindowManager->screenBitmap->GetHeight(),
+        gpWindowManager->screenBitmap->GetMap(0, 0), gSmackBufferFlags);
     if (gSmackVideo2)
-        SmackToBuffer(gSmackVideo2, gSmackX, gSmackY,
-            gpWindowManager->screenBitmap->Pitch,
-            gpWindowManager->screenBitmap->Height,
-            gpWindowManager->screenBitmap->map, gSmackBufferFlags);
+        SmackToBuffer(gSmackVideo2, x, y,
+            gpWindowManager->screenBitmap->GetPitch(),
+            gpWindowManager->screenBitmap->GetHeight(),
+            gpWindowManager->screenBitmap->GetMap(0, 0), gSmackBufferFlags);
     gSmackFrameReady = 1;
 }
 
