@@ -2156,6 +2156,7 @@ hero	??0hero@@QAE@XZ	89.2796	89.2796	89.2796	0xd85f0	74119c9d6326
 hero	??0type_obscuring_object@@QAE@XZ	100.0000	100.0000	100.0000	0xd7470	246b11db2cdd
 hero	??1THeroScreenWindow@@UAE@XZ	100.0000	100.0000	100.0000	0xe1550	478379ac136e
 hero	??_GTHeroScreenWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xe1520	-
+hero	?_Ufill@?$vector@HV?$allocator@H@std@@@std@@IAEXPAHIABH@Z	100.0000	100.0000	100.0000	0x8d940	-
 hero	?addSpell@hero@@QAEXH@Z	100.0000	100.0000	100.0000	0xd9330	e33726ce2469
 hero	?addToBackpack@hero@@QAEEPBUtype_artifact@@J@Z	100.0000	100.0000	100.0000	0xe2f90	5baf4f3bdb18
 hero	?any@?$bitset@$0JA@@std@@QBE_NXZ	100.0000	100.0000	100.0000	0xe64c0	-
