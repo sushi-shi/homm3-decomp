@@ -651,3 +651,19 @@ The same scope repair had improved the artifact-quest sibling. Neither
 changes destruction order. An indexed loop within the skill dialog's new
 scope measures 82.5169%; a named string is byte-identical to the reference.
 Returned-string access and cleanup registers remain different from retail.
+
+## Distinct return widths can keep an early exit ahead of register saves
+
+`TNativeTerrainObjectFilter::accepts` (0x5141b0) reached 100% from 77.3913%
+with an unsigned-char return and a direct logical tail. Retail's initial
+slot-category rejection clears only AL and returns before saving ESI/EDI.
+The later bitset-test/count conjunction materializes a full-width logical
+result. The previous int declaration and explicit `if (...) return 1;
+return 0;` let C2 merge the false returns, hoist a register save, and split
+the bitset test's memory operand around an early pop.
+
+Changing only the return type measures 77.0652%; the direct conjunction
+with the byte return reproduces all 110 retail bytes after relocation
+normalization. A byte-return function can contain `mov eax, 1` and
+`xor eax, eax` for a logical expression as well as `xor al, al` for a literal
+early return. The early path provides the discriminating ABI evidence.

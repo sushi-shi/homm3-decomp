@@ -967,10 +967,18 @@ unsigned char rmgTerrainPainter::isVerticalGap(
 
 // Cardinal neighbours use coordinates clamped to the map edge. A diagonal
 // contributes only when at least one adjoining cardinal cell also matches.
-// Remaining nested-inline decisions: retail retains GetPackedCell for the
-// center and all four cardinals; this spelling already expands it for east.
-// At southeast retail also expands InitializePackedCell through adapter
-// slot +0x10, whereas this candidate retains InitializePackedCell.
+// Residual (MAX 77.2609%, rechecked 2026-09-07): retail retains the center
+// and four cardinal getPackedCell calls, then expands the diagonals. The
+// candidate already expands east; southeast retains initializePackedCell
+// where retail expands its adapter read. Passive VC6 trace (identical
+// 656-byte candidate) gives east budget 92 against getPackedCell's cost 90.
+// That expansion consumes 90; southeast later gives initializePackedCell
+// budget 107 against its cost 128. The two differences are sequentially
+// coupled, not independent pins to add. Caller cb=432, initial budget=1000.
+// Controls: existing getWidth/getHeight calls are byte-neutral; replacing
+// the four diagonal conjunctions with explicit if/else guards gives 60.3877%
+// versus 77.2609%. The source already retains the canonical terrain/cache
+// helpers. RMG has no Dreamcast counterpart to supply the missing boundary.
 VA(0x005B6540, 0x2CA) // anchor-callee 0x5b58f8, 0x5b681e; retail-only
 void rmgTerrainPainter::buildMatchingNeighbourMask(
     const TRmgGridPoint& point, unsigned char* matches)

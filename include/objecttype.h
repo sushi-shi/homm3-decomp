@@ -84,8 +84,10 @@ public:
 class TObjectTypeFilter {
 public:
     virtual ~TObjectTypeFilter();
+    // Retail 0x5141bd returns its literal zero through AL. The native-terrain
+    // override is exact with this byte result and a direct logical tail.
     // Before normalization (function): TObjectTypeFilter::Accepts.
-    virtual int accepts(const TObjectType* objectType) const = 0;
+    virtual unsigned char accepts(const TObjectType* objectType) const = 0;
 };
 
 // Retail 0x5141b0. The terrain id lands at +4 and the predicate reads
@@ -97,7 +99,7 @@ class TNativeTerrainObjectFilter : public TObjectTypeFilter {
 public:
     explicit TNativeTerrainObjectFilter(int terrain);
     // Before normalization (function): TNativeTerrainObjectFilter::Accepts.
-    virtual int accepts(const TObjectType* objectType) const;
+    virtual unsigned char accepts(const TObjectType* objectType) const;
 
     int m_terrain;
 };
@@ -109,7 +111,7 @@ class TAnyTerrainObjectFilter : public TObjectTypeFilter {
 public:
     TAnyTerrainObjectFilter();
     // Before normalization (function): TAnyTerrainObjectFilter::Accepts.
-    virtual int accepts(const TObjectType* objectType) const;
+    virtual unsigned char accepts(const TObjectType* objectType) const;
 };
 
 // Retail 0x514260, the whole body a `sete` on one compare: the object's
@@ -118,7 +120,7 @@ class TSlotCategoryObjectFilter : public TObjectTypeFilter {
 public:
     explicit TSlotCategoryObjectFilter(int slotCategory);
     // Before normalization (function): TSlotCategoryObjectFilter::Accepts.
-    virtual int accepts(const TObjectType* objectType) const;
+    virtual unsigned char accepts(const TObjectType* objectType) const;
 
     int m_slotCategory;
 };
