@@ -23,7 +23,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00488880	1494	53.9868	53.9868	80.9474	284.64584399999995	customcampaign	?load@CampaignHeaderStruct@TCampaignBrief@@QAE_NXZ	admitted
 0x0044cd50	1512	81.3762	81.3762	81.3762	281.591856	artifact	?initializeArtifactTraitsTable@@YIEXZ	admitted
 0x004d6920	593	81.4346	81.4346	81.4346	110.092822	gzinflatebuf	?underflow@TGzInflateBuf@@UAEHXZ	admitted
-0x005bf810	226	81.72619	81.7262	81.7262	41.29878799999999	town	?getLegionBonus@town@@QAEJJ@Z	admitted
 0x00580430	1595	81.08467	81.0847	81.7345	291.334725	singleselectionwindow	?rebuildFilteredPlayerSetup@TSingleSelectionWindow@@QAEXXZ	admitted
 0x00514b80	503	81.7405	81.7405	81.7405	91.84528500000003	objecttype	??5@YIAAV?$basic_istream@DU?$char_traits@D@std@@@std@@AAV01@AAUTObjectType@@@Z	admitted
 0x004e4990	1014	81.76774	81.7677	81.7677	184.8755219999999	hero	?getMobility@hero@@QAEHE@Z	admitted

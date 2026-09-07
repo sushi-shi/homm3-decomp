@@ -587,7 +587,7 @@ public:
     // reads only members, but nothing proves constness either way, so
     // it follows get_castle_growth_bonus' neighbour rather than
     // asserting one.
-    // Before normalization (function): town::get_legion_bonus.
+    // Provisional retail-only name; DC get_legion_bonus is the next method.
     long getLegionBonus(long dwelling);
     // 0x5bf900. Per-tier artifact growth contributed by the two heroes
     // associated with this town.

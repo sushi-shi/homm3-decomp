@@ -4043,7 +4043,7 @@ town	?getGrowthRate@town@@QAEFF@Z	100.0000	100.0000	100.0000	0x1bfb60	2a1aa36250
 town	?getHorde@town@@QBEHJ@Z	100.0000	100.0000	100.0000	0x1bf6d0	59113402fd6f
 town	?getHordeBonus@town@@QBEJJ@Z	100.0000	100.0000	100.0000	0x1bf770	bc3a222cf2ce
 town	?getHordeEffect@town@@QBEPAUtype_horde_effect@@W4type_building_id@@@Z	100.0000	100.0000	100.0000	0x1c1230	fda622eca44c
-town	?getLegionBonus@town@@QAEJJ@Z	81.7262	81.7262	81.7262	0x1bf810	ddb5bade8aca
+town	?getLegionBonus@town@@QAEJJ@Z	100.0000	100.0000	100.0000	0x1bf810	65baa256f8c9
 town	?getNativeTerrain@town@@QBE?AW4TTerrainType@@XZ	100.0000	100.0000	100.0000	0x1c1440	d316d2c9b068
 town	?getPortraitFrame@town@@QBEH_N@Z	100.0000	100.0000	100.0000	0x1bd700	673487cfef6c
 town	?getPrimarySkill@hero@@QBEHH@Z	100.0000	100.0000	100.0000	0x1bde40	0c80af73d18a
