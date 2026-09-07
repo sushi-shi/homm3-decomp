@@ -544,6 +544,15 @@ type_object::~type_object()
     --m_properties->m_refCount;
 }
 
+// The hero-object factory marks the selected index in disabledHeroes before
+// construction. Vtable 0x640b14 slot 1 clears that byte when the reservation
+// is released.
+VA(0x00533C70, 0x0F)  // factory 0x5348d0; Complete-only RMG object
+void rmgHeroObject::unknownOperation()
+{
+    m_generator->m_disabledHeroes[m_heroIndex] = 0;
+}
+
 // Complete-only helper called by InitializeObjectGenerators at 0x538b10.
 // The four argument loads, five stores, vtable relocation, and `ret 0x10`
 // independently prove this constructor and the shared 0x14-byte prefix.

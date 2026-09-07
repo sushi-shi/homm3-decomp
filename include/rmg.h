@@ -10,6 +10,7 @@
 
 class TAbstractFile;
 class TSpreadsheetResource;
+class type_random_map_generator;
 struct TRmgTownSlot;
 struct TRmgZone;
 struct rmgTerrainTile;
@@ -834,6 +835,21 @@ public:
         : type_object(properties) {}
     virtual void write(TAbstractFile* outfile, int parameter);
 };
+
+// Factory 0x5348d0 allocates this 0x2c-byte derived object after reserving a
+// hero. Vtable 0x640b14 slot 1 releases that reservation through the generator
+// at +0x1c; the original Complete-only class spelling is unavailable.
+class rmgHeroObject : public type_object {
+public:
+    type_random_map_generator* m_generator; // +0x1c
+    int m_objectId;                         // +0x20
+    int m_heroIndex;                        // +0x24
+    int m_unknown28;                        // +0x28
+
+    virtual void unknownOperation();
+    virtual void write(TAbstractFile* outfile, int parameter);
+};
+SIZE(rmgHeroObject, 0x2c);
 
 struct TRmgMapItem {
     // Before normalization: objects.
