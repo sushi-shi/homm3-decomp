@@ -1960,7 +1960,7 @@ game	?getRandomSpell@game@@QAEHV?$bitset@$04@std@@@Z	100.0000	100.0000	100.0000	
 game	?getRandomWhirlpool@game@@QAEEJPAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcde20	55b20dc77b91
 game	?getStartingHeroId@game@@QAEHHHH@Z	100.0000	100.0000	100.0000	0xbb400	d41530d1d6f9
 game	?getTownId@game@@QAEHHHH@Z	100.0000	100.0000	100.0000	0xbb870	da2eb96b0e71
-game	?getUndergroundGateExit@game@@QAE?AUtype_point@@PBVNewmapCell@@@Z	81.4103	81.4103	81.4103	0xcde40	0fa3dad6dd47
+game	?getUndergroundGateExit@game@@QBE?AUtype_point@@PBVNewmapCell@@@Z	100.0000	100.0000	100.0000	0xcde40	95e57ec99406
 game	?getWorldMapData@game@@QAEPAVNewfullMap@@XZ	100.0000	100.0000	100.0000	0xbb160	e9a1de04af9c
 game	?giveArmy@game@@QAEXPAVarmyGroup@@HHH@Z	100.0000	100.0000	100.0000	0xca340	57e374589c70
 game	?giveTimeEventReward@game@@QAEXPBVTTimedEvent@@@Z	100.0000	100.0000	100.0000	0xcd710	264d39b835da
