@@ -723,64 +723,22 @@ unsigned char combatManager::isComputerAction()
     return isComputerAction(getCurrentArmy());
 }
 
-// E:\gamedcs\command.cpp:928
-// NINE PARAMETERS' WORTH OF EVIDENCE IN ONE BYTE: `ret 4`. The DC
-// roster prints is_computer_action as nullary (one parameter, `this`),
-// but retail pops a stack argument, and every use of it identifies the
-// argument as the acting stack - +0x34 against the five war-machine
-// creature ids, +0x288/+0xf4 as the hypnotize/side pair set_moat
-// already spells the same way, and `mov ecx, arg; call 0x442690`,
-// army::get_owner. The DC port hoisted it to a member; retail passes
-// it.
+// E:\gamedcs\command.cpp:928. Complete moves the policy into this overload;
+// retail ret 4 and the creature/side accesses prove the acting-army argument.
+// The controller call is 0x442690 (get_controller), not get_owner (0x4426d0).
+// Combat preferences belong to SUnnamed698758 at 0x698758: ballista +0x48,
+// catapult +0x44, first-aid tent +0x4c, auto-creatures +0x3c. Only the
+// artillery arm checks for a null controller, as retail does.
 //
-// THE OPTIONS ARE PREFERENCE FIELDS, NOT STANDALONE GLOBALS. All four
-// dwords this body reads land inside SUnnamed698758 (retail .bss
-// 0x698758, claimed in misc.cpp): combatCatapult (+0x44),
-// combatBallista (+0x48), combatFirstAidTent (+0x4c) and
-// combatAutoCreatures (+0x3c) - the same five war-machine flags
-// SetDefaultCombatOptions initialises, which is what fixes the DEFAULT
-// arm's field as combatAutoCreatures rather than a catch-all.
-//
-// The byte at 0x691209 is soundmgr's gbUnk691209. Nothing here
-// contradicts that TU's reading: the address is an ordinal-named byte
-// flag with two independent readers, and both do nothing but test it
-// non-zero (`mov al, byte [0x691209]; test al, al`). The sound guard's
-// `field_84 || gbUnk691209` and this body's `gbUnk691209 && field_132b4`
-// are both consistent with a single global "an automated/attract mode is
-// running" latch; neither reader constrains the other, so the name
-// stays soundmgr's.
-//
-// CASE ORDER IS THE SOURCE'S, not the case values'. The jump table at
-// the tail maps 0x91..0x95 onto four blocks, and those blocks are
-// EMITTED in the order ballista/arrow-tower, catapult, first-aid tent,
-// default - so the switch was written with the artillery pair first.
-// Each of the three machine arms repeats the same three guards
-// verbatim; retail duplicates them rather than factoring, and the two
-// `return 1` epilogues (one shared, one tail-duplicated at the end of
-// each arm) are what that longhand costs.
-//
-// Only the artillery arm null-checks the owner. That asymmetry is
-// retail's, not a modelling gap: the catapult and first-aid arms
-// dereference get_owner's result unguarded.
-//
-// Residual (81.4%): the merged-return family, and nothing else - every
-// instruction, operand and immediate agrees, the two arms that matter
-// are byte-for-byte, and the whole 36-byte gap is three tail-merge
-// decisions our SP3 CL takes and retail does not. Retail lays a LOCAL
-// `return 1` epilogue at the fall-through of the first-aid arm, of the
-// default arm and of the post-switch 0x691209 guard; our CL cross-jumps
-// all three into the shared copy it parked in the catapult arm (and
-// turns the first-aid tail into a bare `jmp` into the catapult tail).
-// Tried and rejected: spelling the default arm's `&&` as two `== 0`
-// breaks with the `return 1` last, which flips the polarity our CL
-// already agrees on elsewhere and LOSES ground (81.37 -> 80.97).
-// CORRECTED 2026-09-05: "every instruction and operand agrees" was not true
-// of the RELOCATION. The owner load's call edge is `army::get_controller`
-// (0x442690), not `get_owner` (0x4426d0) - the flipped-side reader, which is
-// also what the hypnotize ternary below re-derives. objdiff scores relocs at
-// function_reloc_diffs=none, so the wrong callee cost no fuzzy and hid here;
-// the census is now clean and the residual really is the merged-return family.
-// Before normalization (locals): current_army.
+// Exact: DC command.cpp:946..984 retains the go-solo/control guard in each
+// switch arm; line 989 returns the player/human logical expression. Retail
+// uses full EAX for that final result, but AL for the preceding constants.
+// Restoring BOTH source facts fixes the formerly alleged VC6 tail-merge wall
+// (81.3696 -> 100). Per-arm guards alone score 74.6377; the logical return
+// alone scores 79.2391. VC6 shares the repeated guards itself while keeping
+// retail's separate machine-arm returns. getControllingSide replaces the
+// flattened hypnotize expression without changing these exact bytes.
+// Before normalization: is_computer_action, current_army, gbGoSolo.
 VA(0x00474bf0, 0x188)  // anchor-global, dc 0x6bebc
 unsigned char combatManager::isComputerAction(const army* currentArmy)
 {
@@ -799,6 +757,8 @@ unsigned char combatManager::isComputerAction(const army* currentArmy)
             return 1;
         if (owner->m_skillLevel[20] == 0)
             return 1;
+        if (g_unk691209 && m_thisNetHasControl)
+            return 1;
         break;
     case CREATURE_CATAPULT:
         if (m_creaturePlacement)
@@ -806,6 +766,8 @@ unsigned char combatManager::isComputerAction(const army* currentArmy)
         if (m_autoCombatOn && g_unnamed698758.m_combatCatapult)
             return 1;
         if (owner->m_skillLevel[eSecSkillSiegeBallistics] == 0)
+            return 1;
+        if (g_unk691209 && m_thisNetHasControl)
             return 1;
         break;
     case CREATURE_FIRST_AID_TENT:
@@ -815,23 +777,20 @@ unsigned char combatManager::isComputerAction(const army* currentArmy)
             return 1;
         if (owner->m_skillLevel[27] == 0)
             return 1;
+        if (g_unk691209 && m_thisNetHasControl)
+            return 1;
         break;
     default:
         if (m_autoCombatOn && g_unnamed698758.m_combatAutoCreatures)
             return 1;
+        if (g_unk691209 && m_thisNetHasControl)
+            return 1;
         break;
     }
 
-    if (g_unk691209 && m_thisNetHasControl)
-        return 1;
-
-    long side = currentArmy->m_spellInfluence[60]
-        ? 1 - currentArmy->m_combatSide
-        : currentArmy->m_combatSide;
+    int side = currentArmy->getControllingSide();
     int player = m_playerIds[side];
-    if (player != -1 && g_game->isHuman(player))
-        return 0;
-    return 1;
+    return player == -1 || !g_game->isHuman(player);
 }
 
 // E:\gamedcs\command.cpp:1001. The retail identity is closed by the
