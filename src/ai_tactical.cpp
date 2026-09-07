@@ -2881,33 +2881,36 @@ long type_AI_spellcaster::getDispelValue(const army* ourArmy, type_enchant_data 
 }
 
 // E:\gamedcs\ai_tactical.cpp:2191
-// DC 2203..2204 clears the healed amount when the top creature survives the
-// predicted damage; it does not return from the function. Keep that assignment
-// and the shared cleanup at line 2212. Retail folds the zero into a branch to
-// its common ~army call. The earlier return duplicated our implicit teardown.
+// Exact (2026-09-07). DC 2196..2199 loads mastery, then top-creature damage,
+// then forms the power sum for min. Keeping that damage read before the sum
+// restores retail's EDX mastery / ECX damage allocation. DC 2203..2204 clears
+// healed when the top creature survives predicted damage, then joins the
+// shared cleanup at 2212; returning there duplicated our implicit teardown.
 //
-// Focused controls (2026-09-07): the DC guard moves the raw-object probe from
-// 0 to 39.4773%; direct versus copy initialization is byte-identical. Reusing
-// `healing` for the capped result instead of a separate local falls to 27.4318%.
-// A scratch-only inline_depth(0) at the final return yields 97.6705%, exposing
-// the remaining mastery-add / min-result register allocation difference. No
-// pin is retained. C2 accepts ~army (cost 150, budget 959) and expands its
-// member teardown; retail calls its independently matched retained body.
-// Fixing that boundary must preserve the implicit destructor and its real
-// resource/vector/deque cleanup, not remove it or fabricate caller work.
+// Complete's retained ~army belongs after army() in army.cpp. Defining that
+// canonical body there keeps retail's call (97.6705% before the load-order
+// repair); exposing it in this TU expands member cleanup (39.4773%). The
+// ordinary Army-owned body itself matches retail at 100%, without a pin.
+//
+// Controls: direct/copy initialization and long healing locals are byte-flat.
+// Reusing healing for the capped result fell to 27.4318% with implicit cleanup.
+// With the destructor boundary restored, a mastery local alone and one full
+// min expression both give 86.8523%; compound-adding power gives 93.7045%.
+// The named damage read before the sum gives 100%. A scratch-only cleanup pin
+// duplicated the 97.6705% boundary result and is not retained.
 // Earlier 95.4886% controls were byte-flat: reversing/splitting the mastery
-// add and power product, unnamed healing inside cppMin, a named damage local,
-// long arithmetic locals, and a combined win-likely guard. Retail's by-value,
-// reference-returning min still copies both operands before selecting one.
+// add and power product, unnamed healing inside cppMin, a named damage local
+// after the sum, long arithmetic locals, and a combined win-likely guard.
+// Retail's by-value, reference-returning min copies both operands first.
 // Original DC local: current_army. our_army is normalized to ourArmy.
 VA(0x00439c30, 0x10F)  // linkorder, dc 0x403c0
 long type_AI_spellcaster::getCureValue(const army* ourArmy, type_enchant_data caster)
 {
     army currentArmy = *ourArmy;
     long value = getCancelValue(&currentArmy, 1);
-    int healing = caster.getMasteryValue()
-                  + g_spellTraits[SPELL_CURE].m_powerFactor * caster.m_power;
-    int healed = cppMin(healing, ourArmy->m_topCreatureDamage);
+    int mastery = caster.getMasteryValue();
+    int damage = ourArmy->m_topCreatureDamage;
+    int healed = cppMin<int>(mastery + g_spellTraits[SPELL_CURE].m_powerFactor * caster.m_power, damage);
     if (m_winLikely) {
         if (ourArmy->m_topCreatureDamage + ourArmy->getAIExpectedDamage()
                 < ourArmy->m_monInfo.m_hitPoints)
@@ -5002,18 +5005,3 @@ void std::construct(SpellID* __p, const SpellID* __value)
 // it, recording the second spelling as an alias. It sits 8 bytes past the
 // end of this compiland's last claimed function, in its COMDAT tail.
 VA_COMPGEN(0x0043cb10, 0xC, IMPLICIT_DTOR, TResourceHandle)
-
-// COMDAT pairing: ai_tactical.obj's own out-of-line ~army - the only
-// unpaired COMDAT it emits at this scale (270 B against the retail row's
-// 310, 0.905 mnemonic agreement) and the last unclaimed row of the span
-// but one. The claim carries a declarator because _demangle_key keys a
-// destructor `army_army@dtor`, which no compgen kind builds.
-#if 0  // @carcass: COMDAT emitted by this compiland
-
-VA(0x0043d400, 0x136)  // COMDAT pairing (ai_tactical.obj's ??1army@@QAE@XZ)
-army::~army()
-{
-    // @stub
-}
-
-#endif  // @carcass

@@ -1703,3 +1703,28 @@ returns. Removing only the point pin had scored 79.3968%; restoring canonical
 calls while leaving `hideRoute` flattened scored 60.9062%. Restoring the full
 helper chain reaches 89.6300%, then removing the `completeDraw` pin reaches
 95.2198%. Removing the `updateScreen` pin at that checkpoint is byte-flat.
+
+### A generated destructor match does not establish its source owner
+
+`getCureValue` (0x439c30) reaches 100% after restoring `army::~army` as an
+ordinary definition in `army.cpp` and reading the top-creature damage before
+forming the healing sum. Retail places the destructor at 0x43d400, immediately
+after `army::army()` and before `army::playSample`. The earlier COMDAT pairing
+correctly identified its member teardown, but attributed it to `ai_tactical`
+because that object happened to emit an implicit copy.
+
+The ordinary Army-owned destructor matches its retained retail body at 100%.
+A same-TU definition is the negative control: VC6 expands it into the caller,
+scoring 39.4773%, just like the implicit destructor. The separate owner retains
+the call and reaches 97.6705% without an inline pin. This ownership is inferred
+from retail order and the caller controls. Dreamcast attributes its older
+destructor to an `ai.cpp` use site; that does not establish ownership in
+Complete, which added resource-owning members.
+
+The last difference is source evaluation order. DC 2196..2199 reads mastery,
+then the top-creature damage, then forms the power sum. Naming the damage
+before that sum restores retail's mastery in EDX and damage in ECX. A mastery
+local alone and an unnamed min expression both score 86.8523%; compound-adding
+power scores 93.7045%. The order with the earlier damage read reaches 100%.
+The DC guard also assigns zero to the healed amount instead of returning;
+retail merges that assignment into its common destructor path.

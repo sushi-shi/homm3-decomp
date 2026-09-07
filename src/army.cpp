@@ -194,6 +194,17 @@ army::army()
     m_letsPretendImNotHere = 0;
 }
 
+// Complete adds resource-owning handles to army. The retained destructor
+// follows army() and performs only the members' ordinary cleanup. Its body
+// matches 0x43d400 exactly. Keeping this definition in ai_tactical instead
+// expands it into getCureValue (39.4773%); this owner retains retail's call
+// (97.6705% before the caller's remaining arithmetic repair), without pins.
+// DC attributes its older destructor to ai.cpp:1786 (dc 0x28068).
+VA(0x0043d400, 0x136)  // retail member teardown + constructor/destructor order
+army::~army()
+{
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\army.cpp:77
