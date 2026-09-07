@@ -48,6 +48,14 @@ TRmgRiverPainter::TRmgRiverPainter(
 {
 }
 
+// The line painter's ordinary destructor is retained because the derived
+// river painter calls it during cleanup. Retail restores the six-slot base
+// vtable at 0x6411f0; keeping the body inline removes this standalone boundary.
+VA(0x0055F460, 0x07)  // TRmgRiverPainter cleanup; retail-only RMG helper
+TRmgLinePainter::~TRmgLinePainter()
+{
+}
+
 // Called on the perpendicular edge vector by DrawIrregularZoneBoundary.
 // Retail squares the integer components before converting their sum to
 // double, then truncates sqrt's result. The name is provisional; this
