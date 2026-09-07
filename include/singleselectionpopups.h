@@ -8,6 +8,7 @@
 #include "widget.h"
 #include "dialogbox.h"
 #include "message.h"
+#include "rmg.h"
 
 class CSprite;
 
@@ -161,31 +162,6 @@ public:
     // Before normalization (function): CTeamAlignmentDlg::GetTeams.
     void getTeams();
 };
-
-// The abstract progress sink the random-map generator drives.  Retail's
-// constructor 0x530e20 - inside the quicktownwindow..recruit span, so it is
-// declared here and NOT claimed - stores vtable 0x6409c0, the step total at
-// +4 and zero at +8; that vtable is three slots wide, a scalar deleting
-// destructor at 0x530e40, a SetTotal body at 0x530e80, and a PURE third slot
-// (_purecall 0x617d9a) which is exactly the slot TRandomMapProgress overrides
-// at 0x577320.  Ordinal name - no symbol survives.
-class TProgressSink {
-public:
-    // Kept as `steps`: singleselectionwindow.cpp already reads it by that
-    // name through the class this header now owns.
-    // Before normalization: steps.
-    int m_steps;   // +0x04
-    // Before normalization: done.
-    int m_done;    // +0x08
-
-    TProgressSink(int totalSteps);
-    virtual ~TProgressSink();                      // slot 0, retail 0x530e70
-    // Before normalization (function): TProgressSink::SetTotal.
-    virtual void setTotal(int totalSteps);         // slot 1, retail 0x530e80
-    // Before normalization (function): TProgressSink::Advance.
-    virtual void advance(int amount) = 0;          // slot 2, pure at the base
-};
-SIZE(TProgressSink, 0xc);
 
 // The modal progress bar retail raises around the generator run.  Vtable
 // 0x641b14 names three of its four bodies outright (0x577090 scalar deleting

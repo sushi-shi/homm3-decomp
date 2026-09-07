@@ -32,6 +32,14 @@
 
 typedef std::set<TPoint> TRmgPointSet;
 
+// Complete-only RMG base virtual, exact on the first scored candidate. Vtable
+// 0x6409c0 and three retail cleanup callers all restore this same vptr;
+// Dreamcast has no RMG compiland.
+VA(0x00530E70, 0x07)
+TProgressSink::~TProgressSink()
+{
+}
+
 namespace {
 
 // The cinit at 0x530da0 writes these eight clockwise neighbours.  The river
