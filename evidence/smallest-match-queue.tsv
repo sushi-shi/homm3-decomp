@@ -1,4 +1,4 @@
-[queue] 953 active unmatched target(s), smallest first; 21 parked
+[queue] 952 active unmatched target(s), smallest first; 22 parked
        3 B  0x005b3a40  unadmitted    bracketed           systemoptionswindow..text:game_1b3a40
        6 B  0x00404bc0  unadmitted    bracketed           adventuremapwindow..adventureoptionswindow:game_4860_sub00_4bc0
        6 B  0x00534190  unadmitted    bracketed           quicktownwindow..recruit:game_134190
@@ -39,7 +39,6 @@
       33 B  0x00534fa0  unadmitted    bracketed           quicktownwindow..recruit:game_134fa0
       33 B  0x0054c910  unadmitted    bracketed           quicktownwindow..recruit:game_114d80_sub06_14c910
       33 B  0x0055eed0  unadmitted    bracketed           resourcemanager..sacrifice_window:game_15eed0
-      33 B  0x0055f430  unadmitted    bracketed           resourcemanager..sacrifice_window:game_15f430
       33 B  0x00583ec0  unadmitted    carcass             singleselectionwindow:__h3cg$singleselectionwindow$scalar_deleting_dtor$CNewPlayerUpda
       33 B  0x005b3a50  unadmitted    bracketed           systemoptionswindow..text:game_1b3a50
       33 B  0x005fdb10  unadmitted    bracketed           viewwrld..widget:game_1fd790_sub03_1fdb10
@@ -954,8 +953,7 @@
    11619 B  0x00579960  MAX 95.8142%  compiled            singleselectionwindow:??0TSingleSelectionWindow@@QAE@H@Z
 
 wrote evidence/smallest-match-queue.tsv
- pass and iterate up to five scored candidates
-compiled	759	0x00602dc0	84.1098	84.1098	84.1098	winmgr	winmgr	?fizzleForwardX@heroWindowManager@@QAEXHHHHH@Z	admitted	run the evidence pass and iterate up to five scored candidates
+.1098	84.1098	winmgr	winmgr	?fizzleForwardX@heroWindowManager@@QAEXHHHHH@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	761	0x0058e700	98.8866	98.8866	98.8866	singleselectionwindow	singleselectionwindow	?setNewPlayerSlot@TSingleSelectionWindow@@QAEXPAVCNetPlayerInfo@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 bracketed	766	0x005b8720	-	0.0000	0.0000	systemoptionswindow..text	systemoptionswindow,text	game_1b7cd0_sub00_1b8720	bracketed	resolve the owner, then add its VA claim and body
 carcass	767	0x005b68a0	-	0.0000	0.0000	rmg_terrain	rmg_terrain	rmgTerrainPainter_buildNeighbourKinds	bracketed	enable the existing VA claim and reconstruct its body
