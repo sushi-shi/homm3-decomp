@@ -454,6 +454,22 @@ VA_COMPGEN(0x00537910, 0x23, SCALAR_DELETING_DTOR, TRmgMapAdapterInterface)
 // destructor at 0x532510 before conditionally releasing the object.
 VA_COMPGEN(0x005324E0, 0x21, SCALAR_DELETING_DTOR, TRmgMapAdapter)
 
+// Concrete river-adapter vtable 0x640a3c slots 5 and 6 read the packed river
+// kind and underlying land kind from the wrapped map's 0x30-byte cell array.
+VA(0x00532830, 0x2D)
+int TRmgMapAdapter::getLand(const TRmgGridPoint& point)
+{
+    return m_map->m_mapItems[point.m_y * m_map->m_mapWidth + point.m_x]
+        .m_tile.m_riverType;
+}
+
+VA(0x00532860, 0x2D)
+int TRmgMapAdapter::getOverlay(const TRmgGridPoint& point)
+{
+    return m_map->m_mapItems[point.m_y * m_map->m_mapWidth + point.m_x]
+        .m_tile.m_landType;
+}
+
 // Unclaimed retail 0x532790 is slot 3 of both concrete adapter vtables at
 // 0x640a04 and 0x640a3c. Five compiled forms of
 // `TRmgMapAdapter::getSize() { return m_map->getSize(); }` preserve the call,
@@ -638,6 +654,10 @@ type_object::type_object(TRmgObjectPropertiesRef* newProperties)
     m_position.m_z = -1;
     clearPlacementMarks();
 }
+
+// Base-object vtable 0x640a74 slot 0 retains the generated deleting wrapper;
+// its non-deleting half is the shared refcount release at 0x5338d0.
+VA_COMPGEN(0x00533120, 0x2D, SCALAR_DELETING_DTOR, type_object)
 
 // Retained reset at 0x533150; its expansion also ends the preceding ctor.
 // Preserve the ordinary helper's retail order after that constructor.
