@@ -1359,38 +1359,16 @@ long town::getHordeBonus(long dwelling) const
     return bonus;
 }
 
-// E:\gamedcs\town.cpp:1581
-// Widens the town's owner byte at +1 into the 360-byte playerData
-// record (gpGame+0x20ad0) and asks playerData::hasGivenArtifact
-// (0x4bacb0) about artifact 0x85 - the Legion-family growth artifact.
-// The three arms all end in the SAME signed halve, which retail
-// duplicates into each `ret` rather than sharing.
-// Residual (81.7%): control flow AGREES (`--branches`: 4/4 branches,
-// mnemonics and symbolic targets identical) and the whole head - the
-// owner gate, the 45*owner playerData index, the 14*type dwelling
-// lookup, the 116-byte traits stride and the split 64-bit mask test -
-// is byte-exact. Two things are left, and both are register direction:
-// retail accumulates the bonus in EAX while keeping growth in EDI
-// (`mov eax,edi` / `add eax,edi`), where this compile accumulates into
-// EDI and copies out (`add edi,edi` / `add edi,eax; mov eax,edi`); and
-// retail duplicates a FOURTH exit for the neither-bit arm, carrying a
-// dead `xor eax,eax` before its `mov eax,edi` that no spelling here
-// reproduces. Tried and rejected, all four measured:
-//   `return (growth + growth) / 2;` per arm, one expression   73.87
-//   per-arm `bonus = growth + growth;` + explicit else, one
-//     shared `bonus /= 2;` tail                                81.07
-//   per-arm bodies each ending in their own `return bonus / 2;`
-//     (four source returns - VC6 re-merges them to three)      73.87
-//   the spelling below, seeding bonus from growth before the
-//     chain so the Citadel arm can halve in place              81.73
-// The dead `xor eax,eax` is the tell that retail's `bonus` and
-// `growth` did NOT coalesce there and ours do; that is an allocator
-// tie-break, not a statement-order question.
-// Measured and rejected 2026-08-20: rewriting the two guards as early
-// `return 0;`s and the tail as `return bonus / 2;` - aimed at retail's FOUR
-// exits against our three, the tail-duplication direction - costs 18.1
-// (81.7262 -> 63.6309). Retail's fourth exit is not a source-level return.
-VA(0x005bf810, 0xE2)  // anchor-callee (playerData::hasGivenArtifact), dc 0x1675d4
+// Retail-only assembled Legion growth bonus; the name is provisional.
+// The former Dreamcast bridge 0x1675d4 belongs to the following per-tier
+// hero-artifact helper, not this playerData::hasGivenArtifact(0x85) check.
+// Retail reads built at +0x150, with Castle/Citadel bits 9/8. Calculate
+// their contribution first, then add base growth and halve the total.
+// Exact: the explicit no-building zero preserves retail's fourth exit and
+// EAX bonus / EDI growth. Removing that arm scores 78.63095%; seeding bonus
+// with growth before the condition scores 81.7262%. The former allocator
+// wall was a missing contribution branch, not uncontrollable VC6 state.
+VA(0x005bf810, 0xE2)  // anchor-callee (playerData::hasGivenArtifact), retail-only
 long town::getLegionBonus(long dwelling)
 {
     long bonus = 0;
@@ -1400,34 +1378,22 @@ long town::getLegionBonus(long dwelling)
         // built, not available: retail reads the +0x150 qword. The two
         // bits are bitNumber[9] (Castle) and bitNumber[8] (Citadel),
         // tested as a 64-bit AND lowered to the low/high pair.
-        bonus = growth;
         if (m_built & g_bitNumber[CASTLE_CASTLE_ID])
-            bonus += growth;
+            bonus = growth;
         else if (m_built & g_bitNumber[CASTLE_CITADEL_ID])
-            bonus = bonus / 2 + growth;
+            bonus = growth / 2;
+        else
+            bonus = 0;
+        bonus += growth;
         bonus /= 2;
     }
     return bonus;
 }
 
-// Residual (81.73%): retail duplicates the `bonus /= 2` tail into all THREE
-// inner paths and its no-bit path opens with a DEAD `xor eax,eax` (the sunk
-// `bonus = 0` initialiser) before `mov eax,edi`; we share one tail between
-// the citadel and no-bit paths and keep `bonus` coalesced onto growth's EDI
-// (`add edi,edi` where retail has `mov eax,edi / add eax,edi`).
-// MEASURED (polish 49): the three-armed form with an explicit
-// `else bonus = growth;` and both arms written as expressions of `growth`
-// reproduces retail's `lea eax,[edi+edi]`-class castle arm but merges the
-// other two even harder - 81.7262 -> 81.0714. Respelling ONLY the citadel
-// arm as `growth / 2 + growth` is byte-flat. The tail duplication is a
-// register/layout decision, not a statement shape.
-
-// E:\gamedcs\town.cpp:1639
-// RETAIL-ONLY row first: 0x005bf900 (`ret 4`) sits between the two DC
-// rows, is called BY get_growth_rate below and by 0x5c5b40, and divides
-// the argument by 7 to split a dwelling index into tier and town - a
-// shared helper the Dreamcast build does not carry separately. ORDINAL
-// PLACEHOLDER name, flagged unattested.
+// E:\gamedcs\town.cpp:1581, original name town::get_legion_bonus.
+// Retail 0x005bf900 corroborates the Dreamcast tier calculation, hero/map
+// lookup, and artifact 0x76..0x7a contributions. The old bridge incorrectly
+// attached this counterpart to the assembled-artifact helper above.
 // Residual (99.8469%): all 36 blocks and the symbolic branch stream are
 // exact. The only scored code delta is a post-RA scheduling swap in the
 // no-visiting-hero map lookup: retail loads the packed point from [ebp-0xa]
@@ -1441,7 +1407,7 @@ long town::getLegionBonus(long dwelling)
 // the digit): the subscript re-associated as `x + size*(y + size*z)`, both
 // `Size` reads written inline with no named local, and the whole index
 // landed in a named `int index` before the subscript.
-VA(0x005bf900, 0x258)  // retail-only, town member, ret 4
+VA(0x005bf900, 0x258)  // anchor-body (tier/hero/artifact checks), dc 0x1675d4
 long town::townFn005BF900(long dwelling)
 {
     // Before normalization (locals): current_game, garrison_hero, visiting_hero.

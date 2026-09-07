@@ -667,3 +667,17 @@ with the byte return reproduces all 110 retail bytes after relocation
 normalization. A byte-return function can contain `mov eax, 1` and
 `xor eax, eax` for a logical expression as well as `xor al, al` for a literal
 early return. The early path provides the discriminating ABI evidence.
+
+## An explicit zero contribution can preserve a separate return path
+
+`town::getLegionBonus` (0x5bf810) reached 100% from 81.7262% by calculating
+fortification growth as `growth`, `growth / 2`, or an explicit zero before
+adding base growth and halving the result. VC6 keeps the contribution in
+EAX and base growth in EDI, and duplicates the common tail into each arm.
+The no-building path retains a dead `xor eax, eax` from its zero assignment.
+
+Omitting that final zero arm scores 78.63095%, even though the earlier
+initialization makes it semantically redundant. Seeding the accumulator
+with base growth before testing the buildings scores 81.7262%. A dead zero
+and duplicated exit can therefore preserve an explicit source alternative;
+neither alone establishes an uncontrollable register-allocation limitation.
