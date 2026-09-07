@@ -1038,7 +1038,7 @@ public:
         : m_size(newAdapter->getSize()), m_adapter(newAdapter)
     {
     }
-    ~TRmgLinePainter();
+    ~TRmgLinePainter() {}
 
     // Before normalization (function): TRmgLinePainter::GetPattern.
     virtual void* getPattern(int value);
@@ -1073,6 +1073,38 @@ public:
         int newRiverType,
         const TRmgGridPoint& start);
     virtual ~TRmgRiverPainter();
+};
+
+// The road-building cluster at 0x548040 uses a parallel painter hierarchy.
+// Its base and derived vtables at 0x6411f0/0x64120c differ from the river
+// hierarchy's 0x641174/0x641190 tables, while retaining the same line-painting
+// interface shape. Original Complete-only class spellings are unavailable.
+class TRmgRoadLinePainter {
+public:
+    TRmgGridPoint m_size;
+    TRmgMapAdapterInterface* m_adapter;
+
+    inline TRmgRoadLinePainter(TRmgMapAdapterInterface* newAdapter)
+        : m_size(newAdapter->getSize()), m_adapter(newAdapter)
+    {
+    }
+    ~TRmgRoadLinePainter() {}
+
+    virtual void* getPattern(int value);
+    virtual void paintTile(int value, const TRmgMapPosition& tile);
+    virtual void paintOverlay(int value, const TRmgMapPosition& tile);
+    virtual int canPaint(const TRmgGridPoint& point);
+    virtual void paintNeighbour(int value, const TRmgMapPosition& tile);
+    virtual int paintPoint(const TRmgGridPoint& point);
+};
+
+class TRmgRoadPainter : public TRmgRoadLinePainter, public TRmgLineWalker {
+public:
+    TRmgRoadPainter(
+        TRmgMapAdapterInterface* newAdapter,
+        int newRoadType,
+        const TRmgGridPoint& start);
+    virtual ~TRmgRoadPainter();
 };
 
 // A generated zone owns both its template metadata and the Complete-only

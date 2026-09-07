@@ -8,6 +8,12 @@
 #include <math.h>
 #include "rmg.h"
 
+// The Complete-only river pattern table is built by cinit 0x55ed70 from the
+// thirteen pattern ids at 0x641140. Its concrete container layout is not yet
+// needed by the painter interface.
+struct TRmgLinePatternTable;
+DATA(0x0069E5D0) extern TRmgLinePatternTable g_rmgRiverPatternTable;
+
 // Retail retains this tiny value constructor throughout the RMG pathfinding
 // cluster.  Its three stores and `ret 0xc` fix both the by-value ABI and the
 // 12-byte position layout.
@@ -34,6 +40,15 @@ TRmgRiverPainter::~TRmgRiverPainter()
 {
 }
 
+// The first virtual slot returns the shared river pattern table. The argument
+// selects within that table at later painting sites and is intentionally not
+// consumed by this accessor.
+VA(0x0055EDB0, 0x08)  // vtables 0x641174/0x641190; Complete-only
+void* TRmgLinePainter::getPattern(int)
+{
+    return &g_rmgRiverPatternTable;
+}
+
 // Exact: all 118 raw bytes after seven relocations. The grid copy constructor
 // keeps both GetSize result stores before the adapter store. An implicit copy
 // interleaves the adapter and second component (99.71%); moving the adapter
@@ -48,11 +63,11 @@ TRmgRiverPainter::TRmgRiverPainter(
 {
 }
 
-// The line painter's ordinary destructor is retained because the derived
-// river painter calls it during cleanup. Retail restores the six-slot base
-// vtable at 0x6411f0; keeping the body inline removes this standalone boundary.
-VA(0x0055F460, 0x07)  // TRmgRiverPainter cleanup; retail-only RMG helper
-TRmgLinePainter::~TRmgLinePainter()
+// The road painter's empty derived destructor restores its distinct base
+// vtable at 0x6411f0. The road builder at 0x548040 constructs this parallel
+// hierarchy; its scalar deleting destructor is retained at 0x55f430.
+VA(0x0055F460, 0x07)  // road painter cleanup; Complete-only RMG helper
+TRmgRoadPainter::~TRmgRoadPainter()
 {
 }
 
