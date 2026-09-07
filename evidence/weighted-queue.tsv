@@ -4,7 +4,6 @@
 va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x0056ce50	286	10.5	41.9271	41.9271	166.08849400000003	seerhut	?LoadFromMap@type_quest@@UAEXPAVTAbstractFile@@@Z	admitted
 0x00573670	1024	42.570988	46.3642	46.3642	549.2305920000001	seerhut	?DoSeerEvent@TSeerHut@@QAEXPAVhero@@_N@Z	admitted
-0x00598af0	901	45.81467	48.6988	48.6988	462.223812	smackmgr	?ShowVideo@@YIXHHHHHHHH@Z	admitted
 0x0056cd00	335	25.626087	49.7043	49.7043	168.49059499999998	seerhut	?Load@type_quest@@UAEXPAVTAbstractFile@@H@Z	admitted
 0x00514610	791	58.50988	58.5099	58.5099	328.186691	objecttype	?setImageName@TObjectType@@QAEAAU1@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	admitted
 0x00506080	468	61.07879	62.3455	62.3455	176.22306	mapcell	??0CObjectType@@QAE@PAUTObjectType@@@Z	admitted
