@@ -178,6 +178,75 @@ def feed_c2(tu_dir: Path, flags: list[str], cap: dict[str, Path],
     return obj
 
 
+def local_symbol_notes(streams: dict[str, bytes], function: str) -> list[str]:
+    """Name a candidate body's locals using its GL-recorded SY start.
+
+    The next observed body start bounds the scan; neither a full GL grammar
+    nor the nested SY scope grammar is claimed. Handles are front-end
+    identities and must not be presented as optimizer pseudo/register IDs.
+    """
+    gl, sy, ex = (streams[s] for s in ("gl", "sy", "ex"))
+    hw = _il.gl_highwater(gl)
+    if hw is None:
+        raise ValueError("unrecognized GL header")
+    records = _il.fn_body_offsets(gl, _il.scan_names(gl, hw, 3), len(ex), len(sy))
+    matches = [r for r in records if function == r["name"]]
+    if not matches:
+        matches = [r for r in records if function and function in r["name"]]
+    if len(matches) != 1:
+        raise ValueError(f"function needs one supported GL body record; found {len(matches)}")
+    record = matches[0]
+    start = record["sy"]
+    if sum(r["sy"] == start for r in records) != 1:
+        raise ValueError(f"multiple functions share SY start {start:#x}")
+    end = min((r["sy"] for r in records if r["sy"] > start), default=len(sy))
+    if sy[start] != 0x03 or (end < len(sy) and sy[end] != 0x03):
+        raise ValueError("observed SY window lacks the supported body-header byte")
+    locals_ = sorted((r for r in _il.scan_names(sy, hw)
+                      if start <= r["off"] < end), key=lambda r: r["handle"])
+    notes = [f"{record['name']}: declaration handle {record['handle']:#x}, "
+             f"EX start {record['ex']:#x}, SY window [{start:#x}, {end:#x})",
+             "Candidate IL overlay; end is the next observed body start (or EOF). "
+             "Nested scopes and unnamed symbols are not decoded.",
+             "Front-end creation order below is not optimizer pseudo/register order."]
+    notes.extend(f"  {r['handle']:#06x}  SY+{r['off']:#06x}  {r['name']}" for r in locals_)
+    if not locals_:
+        notes.append("  (no names scanned in the recorded SY window)")
+    return notes
+
+
+def capture_local_symbols(src: Path, function: str, output: Path) -> list[str]:
+    """Capture the manifest TU at its real path with its actual flag profile."""
+    from homm3.vc6 import _unit
+    from homm3.vc6.shim.build import _traceCapture
+
+    unit = _unit.unit_for_source(src)
+    flags = _unit.flags_for_unit(unit) if unit else None
+    if flags is None:
+        raise ValueError(f"no manifest profile for {src}")
+    _gate_subjects()
+    _ensure_wine_env()
+    output.mkdir(parents=True, exist_ok=True)
+    streams = _traceCapture(src, flags, output)
+    return [f"{unit}: canonical source and units.toml flags " + " ".join(flags),
+            *local_symbol_notes(streams, function)]
+
+
+def run_locals(args) -> int:
+    from homm3.vc6 import _unit
+
+    source = _unit.source_for_unit(args.unit)
+    if source is None:
+        _common.die(f"unknown unit {args.unit!r}")
+    try:
+        notes = capture_local_symbols(source, args.fn, IL_DIR / "locals" / args.unit)
+    except ValueError as exc:
+        _common.die(str(exc))
+    for note in notes:
+        print(note)
+    return 0
+
+
 def _masked_obj_diff(a: bytes, b: bytes) -> int:
     n = min(len(a), len(b))
     d = sum(1 for i in range(n) if a[i] != b[i] and i not in TS_BYTES)

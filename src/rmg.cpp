@@ -2187,6 +2187,15 @@ unsigned char type_random_map_generator::canPlaceShipyard(TRmgMapPosition positi
 // (93.24324%) and still homes guardValue. Consuming operator-='s returned
 // reference for entranceX, and returning the named operator+ result after
 // a separate += statement, are both byte-neutral at 94.85907%.
+// A long guardValue is also neutral. A separate boolean guard decision
+// emits an absent setg/byte home and changes table registers (93.57529%).
+// A reference to the chosen candidate shrinks the frame to 0x5c and removes
+// retail's coordinate value homes (89.96718%); retain the value copy.
+// Moving only guardValue's declaration before the candidate vector is
+// neutral. Returning immediately on border success adds a cleanup branch
+// and reverses the border-result branch (94.02123%); keep the shared exit.
+// A short-lived entrance value copied into nearby still grows the frame to
+// 0x74 and changes the trigger-load/subtraction sequence (92.79536%).
 VA(0x00541AD0, 0x5B0) // anchor-callee connectZones; thiscall, ret 8; retail-only
 unsigned char type_random_map_generator::createShipyardConnection(
     TRmgZone* source, TRmgZoneConnection* connection)
