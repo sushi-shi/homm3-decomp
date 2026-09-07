@@ -1027,6 +1027,21 @@ public:
     virtual int getOverlay(const TRmgGridPoint& point);
 };
 
+// Cinit 0x55ed70/0x55f2f0 passes a pattern count and a source int array to
+// the retained constructor at 0x4f9be0. That constructor allocates the copied
+// pattern ids, then records the first index and occurrence count for each of
+// the nine pattern values.
+struct TRmgLinePatternTable {
+    int m_patternCount;
+    int* m_patterns;
+    int m_firstIndex[9];
+    int m_valueCount[9];
+
+    TRmgLinePatternTable(int patternCount, const int* patterns);
+    ~TRmgLinePatternTable();
+};
+SIZE(TRmgLinePatternTable, 0x50);
+
 class TRmgLinePainter {
 public:
     // Before normalization: size.
