@@ -1,7 +1,6 @@
 # GENERATED: homm3 vc6 queue --smallest - regenerate, never hand-edit.
 # Independent retail targets, smallest first; parked RVAs omitted.
 state	size	va	current_fuzzy	max_fuzzy	hist_fuzzy	owner	candidates	label	relation	action
-unclaimed-in-span	1	0x005bc690	-	0.0000	0.0000	textwdgt	textwdgt	border_vslot04	in-span	add a VA claim and body to textwdgt
 bracketed	3	0x005b3a40	-	0.0000	0.0000	systemoptionswindow..text	systemoptionswindow,text	game_1b3a40	bracketed	resolve the owner, then add its VA claim and body
 unclaimed-in-span	3	0x005bc7e0	-	0.0000	0.0000	textwdgt	textwdgt	border_vslot03	in-span	add a VA claim and body to textwdgt
 bracketed	6	0x00404bc0	-	0.0000	0.0000	adventuremapwindow..adventureoptionswindow	adventuremapwindow,adventureoptionswindow	game_4860_sub00_4bc0	bracketed	resolve the owner, then add its VA claim and body
