@@ -101,14 +101,14 @@ def main(argv=None) -> int:
         for line in violations:
             print(f"[build] {line}", file=sys.stderr)
 
-    if failed:
-        return 1
+    # Scores describe the completed compile/delink, including when an
+    # independent source gate fails. Keep README consistent with the ledger.
     try:
         status.write_readme(report)
     except Exception as exc:  # the score block must never fail a build
         print(f"[build] README block skipped: {exc}")
 
-    return 0
+    return 1 if failed else 0
 
 
 if __name__ == "__main__":

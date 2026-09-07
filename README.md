@@ -35,6 +35,13 @@ _Excluded from the % above — generated/library code, not independent reconstru
 
 <!-- match-score:end -->
 
+The score ledger always keeps `CUR <= MAX <= HIST`. CUR is the latest full
+build; MAX is the best score observed for the function's current source hash;
+HIST is its all-time peak across source revisions. Tooling prioritizes MAX.
+Unrelated CUR dips keep MAX and are silent. A function's own hash change resets
+MAX to its new CUR; a lower MAX is reported, but is not a build failure.
+`HIST > MAX` identifies historical peaks worth investigating.
+
 ## Pinned target
 
 The canonical image is the **English GOG Heroes III Complete 4.0 (engine 3.2)** executable:

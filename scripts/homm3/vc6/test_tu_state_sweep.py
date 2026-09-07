@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import unittest
+import tempfile
+from pathlib import Path
 
 from homm3.match.status import MatchRow
 from homm3.vc6.tu_state_sweep import (
-    _initial_include_insertion, _project_header_pool, affected_by_unit,
+    _files_digest, _initial_include_insertion, _project_header_pool, affected_by_unit,
     bank_rows, insertion_for, insert_variant, make_variants,
 )
 
@@ -57,6 +59,31 @@ class TuStateSweepTests(unittest.TestCase):
                             for item in left))
         self.assertTrue(all(len(set(item.body.splitlines())) ==
                             len(item.body.splitlines()) for item in left))
+
+    def test_trailing_include_comment_does_not_swallow_injected_header(self):
+        for ending in (' // reason\n', ' /* reason */\r\n', ''):
+            text = '#include "original.h"' + ending
+            offset, line = _initial_include_insertion(text)
+            variant = make_variants(
+                1, 1, "test", tuple(f"new{i}.h" for i in range(10)))[0]
+            candidate = insert_variant(text, ((offset, line, 0),), variant)
+            self.assertIn("\n" + variant.body, candidate)
+            self.assertTrue(candidate.startswith(text))
+
+    def test_input_fingerprint_detects_content_and_membership_changes(self):
+        with tempfile.TemporaryDirectory() as raw:
+            header = Path(raw) / "header.h"
+            flags = Path(raw) / "units.toml"
+            header.write_text("int first;\n")
+            flags.write_text('/O2')
+            original = _files_digest([header, flags])
+            self.assertEqual(original, _files_digest([flags, header]))
+            header.write_text("int other;\n")
+            self.assertNotEqual(original, _files_digest([header, flags]))
+            header.write_text("int first;\n")
+            flags.write_text('/Od')
+            self.assertNotEqual(original, _files_digest([header, flags]))
+            self.assertNotEqual(original, _files_digest([header]))
 
     def test_tu_specific_invalid_header_pairings_are_excluded(self):
         self.assertNotIn(

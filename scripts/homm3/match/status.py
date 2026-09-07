@@ -385,6 +385,17 @@ def cmd_summary(report: dict) -> int:
     return 0
 
 
+def _previous_row(key, rva, previous, by_rva):
+    """Use the same retail identity for checkpoint updates and drop reports."""
+    old_key, old = key, previous.get(key)
+    candidates = by_rva.get(rva, []) if rva is not None else []
+    if len(candidates) == 1:
+        return candidates[0]
+    if old is not None and rva is not None and old.rva not in (None, rva):
+        old = None  # this label now claims a different retail body
+    return old_key, old
+
+
 def update_rows(current: dict, previous: dict, rvas: dict,
                 hashes: dict | None = None) -> tuple[dict, dict]:
     """Pure CUR/MAX/HIST update; stable RVA, not label, owns history.
@@ -407,12 +418,7 @@ def update_rows(current: dict, previous: dict, rvas: dict,
     for key, raw_value in current.items():
         value = round(raw_value, 4)
         rva = rvas.get(key)
-        old_key, old = key, previous.get(key)
-        candidates = by_rva.get(rva, []) if rva is not None else []
-        if len(candidates) == 1:
-            old_key, old = candidates[0]
-        elif old is not None and old.rva not in (None, rva):
-            old = None  # this label now claims a different retail body
+        old_key, old = _previous_row(key, rva, previous, by_rva)
 
         if old is None:
             rows[key] = MatchRow(
@@ -469,7 +475,7 @@ def cmd_update(report: dict) -> int:
 
 
 def checkpoint_drops(current: dict, hashes: dict,
-                     rows: dict) -> list[tuple]:
+                     rows: dict, rvas: dict | None = None) -> list[tuple]:
     """Source edits whose new implementation MAX is below the old MAX.
 
     An unchanged source hash leaves MAX banked, so unrelated CUR movement is
@@ -477,8 +483,16 @@ def checkpoint_drops(current: dict, hashes: dict,
     that implementation resets MAX below the preceding implementation's MAX.
     The report is observational and HIST preserves the old peak.
     """
+    rvas = rvas or {}
+    by_rva = {}
+    for key, row in rows.items():
+        if row.rva is not None:
+            by_rva.setdefault(row.rva, []).append((key, row))
     drops = []
-    for key, row in sorted(rows.items()):
+    for key in sorted(current.keys() | hashes.keys()):
+        _old_key, row = _previous_row(key, rvas.get(key), rows, by_rva)
+        if row is None:
+            continue
         value = current.get(key)
         src_hash = hashes.get(key)
         if (row.src_hash is None or src_hash is None
@@ -495,7 +509,7 @@ def cmd_check(report: dict) -> int:
         print("[status] no baseline yet - run `homm3 status update`")
         return 0
     current = fn_fuzzy(report)
-    drops = checkpoint_drops(current, source_hashes(), rows)
+    drops = checkpoint_drops(current, source_hashes(), rows, function_rvas())
     for (unit, fn), previous_max, historical, value in drops:
         now = f"{value:.2f}%" if value is not None else "MISSING"
         print(f"[status] SOURCE-EDIT MAX DROP {unit} {fn}: "

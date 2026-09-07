@@ -28,8 +28,8 @@ Subcommands
         and the catch funclet addresses. A body where retail has a try and
         we have none is a target, not an inliner wall.
   state-sweep [--trials 30] [--jobs 4] [--bank]
-        Place transient forests beside each affected function, compile them once
-        per TU, score CUR < HIST rows together, reproduce gains, and bank MAX.
+        Add 5-10 unused headers once per TU, score every function in TUs with
+        MAX < HIST rows, reproduce gains, and optionally bank MAX.
   check [--argv|--il|--inline|--reg|--locator|--all]
         The gates (each ships a negative control).
 

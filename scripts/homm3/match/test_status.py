@@ -51,6 +51,23 @@ class UpdateRowsTest(unittest.TestCase):
                          (70.0, 98.0, 99.0))
         self.assertEqual(stats["reset"], 0)
 
+    def test_renamed_source_edit_reports_the_same_rva_max_reset(self):
+        old_key, new_key = ("old_unit", "old_name"), ("new_unit", "new_name")
+        previous = {old_key: MatchRow(80, 98, 100, 0x1234, "old")}
+        current, hashes, rvas = {new_key: 85}, {new_key: "new"}, {new_key: 0x1234}
+        updated, _ = update_rows(current, previous, rvas, hashes)
+        self.assertEqual(updated[new_key].max, 85)
+        self.assertEqual(checkpoint_drops(current, hashes, previous, rvas),
+                         [(new_key, 98, 100, 85)])
+        self.assertEqual(checkpoint_drops(
+            current, {new_key: "old"}, previous, rvas), [])
+
+    def test_reused_label_for_another_rva_does_not_report_a_drop(self):
+        key = ("unit", "name")
+        previous = {key: MatchRow(80, 98, 100, 0x1234, "old")}
+        self.assertEqual(checkpoint_drops(
+            {key: 70}, {key: "new"}, previous, {key: 0x5678}), [])
+
     def test_row_rejects_cur_max_hist_invariant_violations(self):
         with self.assertRaisesRegex(ValueError, "CUR .* exceeds MAX"):
             MatchRow(91.0, 90.0, 100.0)
