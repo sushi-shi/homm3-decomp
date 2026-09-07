@@ -286,6 +286,22 @@ Artifacts are under
 source controls and the banked object are alongside them. No modified
 compiler decision supplies the matching score.
 
+The corrected storage classes do not remove the counter-lifetime effect.
+The corresponding loop-local control scores 92.5020 and reproduces its
+421,121-byte `/Z7` object outside the timestamp. Both traces process `cell`
+first (priority 206, ESI), followed by the byte index and bit mask (160 each),
+then `maskFile` (84). Only the early initializer excludes ESI from the file's
+candidate set. With the late initializer, its ESI/EDI costs both remain zero;
+the fixed tie-break chooses ESI. That changes the subsequent assignments:
+`oldCount` moves from EBX to EDI and `this` from ESI to EBX. The earlier
+reference-returning lookup's late-counter trace chose different downstream
+registers, so its exact assignments should not be carried across the accessor
+correction. Reusing a spent source index and spelling the loader joins with
+explicit jumps reproduce the current late-counter function byte for byte.
+Its 800 bytes including padding hash to
+`6455c63fd9654a29164f437b046f79695dbbfe16fac31218d43edc97f897499d`;
+the paired traces are in `storage-class-trace/{debug,late-counter-debug}/`.
+
 ### 3c. Source creation order
 
 **"Creation order" means the FIRST ASSIGNMENT, not the declaration**
