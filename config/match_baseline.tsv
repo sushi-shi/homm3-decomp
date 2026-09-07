@@ -1326,7 +1326,7 @@ customcampaign	?read@TCampaignStartBonusOption@@UAEXPAVTAbstractFile@@@Z	100.000
 customcampaign	?read@TCampaignStartCrossoverOption@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x857b0	dfe4693ef89e
 customcampaign	?read@TCampaignStartHeroOption@@UAEXPAVTAbstractFile@@@Z	93.9951	93.9951	93.9951	0x85b60	56c3f342c1f7
 customcampaign	?read@TStreamBufFile@@UAEHPAXH@Z	100.0000	100.0000	100.0000	0x83f10	b9df5e779f54
-customcampaign	?readLengthPrefixedString@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAVTAbstractFile@@@Z	81.6506	81.6506	81.6506	0x85d90	9d2e199cc83b
+customcampaign	?readLengthPrefixedString@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAVTAbstractFile@@@Z	95.1988	95.1988	95.1988	0x85d90	2e576b44d65b
 customcampaign	?rehomeCampaignHeroSetup@game@@QAEXH@Z	98.4901	98.4901	98.4901	0x86110	3bda54a45897
 customcampaign	?save@SCampaign@@QAEXPAVTAbstractFile@@@Z	99.9858	99.9858	99.9858	0x8ae90	e8f3d5553fd1
 customcampaign	?seekoff@?$basic_filebuf@DU?$char_traits@D@std@@@std@@MAE?AV?$fpos@H@2@JW4seekdir@ios_base@2@H@Z	100.0000	100.0000	100.0000	0x8baa0	-
@@ -2276,7 +2276,7 @@ hero	?updateArmies@hero@@QAEXXZ	96.7200	96.7200	96.7200	0xd97f0	fb090d3cd6fa
 hero	?updateBackpack@@YIXXZ	100.0000	100.0000	100.0000	0xdb1f0	d992c3564df9
 hero	?updateHeroLocator@THeroScreenWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0xe1600	599471f32e34
 hero	?updateHeroScreenStatusBar@THeroScreenWindow@@QAEXPAVmessage@@@Z	100.0000	100.0000	100.0000	0xdb660	b4b9e086bd65
-hero	?updateSlot@THeroScreenWindow@@QAEXJ@Z	81.7000	81.7000	81.7000	0xdaf90	14bd2524d074
+hero	?updateSlot@THeroScreenWindow@@QAEXW4TArtifactSlot@@@Z	100.0000	100.0000	100.0000	0xdaf90	345cd28d2a06
 hero	?updateSpellList@hero@@QAEXXZ	100.0000	100.0000	100.0000	0xd95d0	724da9b5b1d7
 hero	?updateStats@hero@@QAEXXZ	86.0900	86.0900	86.0900	0xe16d0	0cd5ff6cc529
 hero	?upgradeCreatures@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xe2370	77ce1d032d26

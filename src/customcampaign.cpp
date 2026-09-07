@@ -1203,20 +1203,35 @@ void TCampaignBonus::setTown(int)
 {
 }
 
-// hero.h's length-prefixed string reader, and customcampaign.obj is where
-// its single body lives (game.cpp and this file are its callers). /Gr makes
-// it fastcall, so the hidden return object arrives in ECX and the stream in
-// EDX. The 512-byte chunk buffer is retail's: the payload is copied into the
-// string's own frozen buffer half a kilobyte at a time.
+// Retail-only length-prefixed string reader, declared in hero.h and owned
+// by this TU. /Gr passes the hidden return object in ECX and infile in EDX.
+// Retail freezes the resized string buffer, then reads/copies 512-byte chunks.
+//
+// Residual (95.1988%): end the scalar-read temporary's scope before string
+// construction, carrying its value into resize and the remaining-byte loop.
+// That restores the string at ebp-0x1c, the EBX result and ESI count, raising
+// 81.6506 -> 95.1988. Changing resize(length) alone is byte-flat at 81.6506;
+// the temporary lifetime is essential. Moving the chunk buffer outside the
+// loop, separate zero assignment, memset/value initialization, signed/long
+// read-word types, and ordinary/template value-return readers are all byte-flat
+// on the scoped form. No speculative helper is retained.
+// Retail still has one immediate zero store to the read word at ebp-0x34;
+// VC6 emits two zero-register stores at ebp-0x24. The allocator temporary,
+// saved infile/result and destination slots differ; the string/resize/copy
+// code and call decisions otherwise align. The passive inline trace shows
+// default construction, resize/append, begin/Freeze, copy and destruction
+// expanding with the retained Grow/Eos/assign calls. No Dreamcast counterpart.
 VA(0x00485d90, 0x1BB)  // anchor-caller(ScenarioStruct::Read +0x2b), retail-only
 std::string readLengthPrefixedString(TAbstractFile* infile)
 {
-    unsigned int length = 0;
-    infile->read(&length, sizeof(unsigned int));
-
-    unsigned int remaining = length;
+    unsigned int remaining;
+    {
+        unsigned int length = 0;
+        infile->read(&length, sizeof(unsigned int));
+        remaining = length;
+    }
     std::string text;
-    text.resize(length);
+    text.resize(remaining);
     std::string::iterator dest = text.begin();
     while (remaining > 0) {
         char chunk[512];

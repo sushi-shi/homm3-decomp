@@ -1602,3 +1602,21 @@ and reuse of the dead building argument slot. An indexed int loop gives
 counter runs in a full register. Incrementing count in the amount subscript
 or as a separate statement produces identical bytes. Restoring the proven
 `EGameResource*` output signature and its enum conversion is byte-neutral.
+
+
+### Loop scope and message-helper structure can jointly restore register roles
+
+`THeroScreenWindow::updateSlot` (0x4daf90) stopped at 81.7% with its saved
+register permutation attributed to C1 handle state. The message helper had
+an unsupported inline keyword, redundant constructor stores, and its final
+`WIDGET_DRAWN` assignment moved outside the original branches. Restoring the
+ordinary helper and Dreamcast's branch-local stores reaches 91.3%; restoring
+`getArtifact` calls alone is byte-neutral.
+
+Complete's reverse scan initializes to 19 and decrements before testing its
+bitset. An index declared before `while (true)` reaches 100% with the recovered
+helper, including retail's register roles and separate exit reloads. A `for`
+with its index scoped to the loop scores 74.7688%, with the decrement either
+as a statement or in test(). The DC-proven TArtifactSlot/TArtifact interfaces
+leave the exact bytes unchanged. Preserve Complete's call to the extended
+artifact-eligibility method in place of the older DC predicate.

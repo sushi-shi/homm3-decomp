@@ -23,8 +23,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00488880	1494	53.9868	53.9868	80.9474	284.64584399999995	customcampaign	?load@CampaignHeaderStruct@TCampaignBrief@@QAE_NXZ	admitted
 0x0044cd50	1512	81.3762	81.3762	81.3762	281.591856	artifact	?initializeArtifactTraitsTable@@YIEXZ	admitted
 0x004d6920	593	81.4346	81.4346	81.4346	110.092822	gzinflatebuf	?underflow@TGzInflateBuf@@UAEHXZ	admitted
-0x00485d90	443	81.650604	81.6506	81.6506	81.28784200000003	customcampaign	?readLengthPrefixedString@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAVTAbstractFile@@@Z	admitted
-0x004daf90	570	81.7	81.7	81.7	104.30999999999996	hero	?updateSlot@THeroScreenWindow@@QAEXJ@Z	admitted
 0x005bf810	226	81.72619	81.7262	81.7262	41.29878799999999	town	?getLegionBonus@town@@QAEJJ@Z	admitted
 0x00580430	1595	81.08467	81.0847	81.7345	291.334725	singleselectionwindow	?rebuildFilteredPlayerSetup@TSingleSelectionWindow@@QAEXXZ	admitted
 0x00514b80	503	81.7405	81.7405	81.7405	91.84528500000003	objecttype	??5@YIAAV?$basic_istream@DU?$char_traits@D@std@@@std@@AAV01@AAUTObjectType@@@Z	admitted
@@ -327,6 +325,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x005d5f30	2266	91.082954	95.1207	95.1207	110.56493799999994	townmgr	?buyBuild@townManager@@QAEHHHH@Z	admitted
 0x005019f0	1996	95.16	95.16	95.16	96.6064	mapcell	?readTownData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	admitted
 0x00434100	1168	95.16224	95.1622	95.1622	56.50550400000004	ai_player	?initializeArtifactEffects@@YIXXZ	admitted
+0x00485d90	443	95.1988	95.1988	95.1988	21.269315999999975	customcampaign	?readLengthPrefixedString@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAVTAbstractFile@@@Z	admitted
 0x004e7eb0	1613	95.27273	95.2727	95.2727	76.25134900000002	hillfortwindow	?recalculate@THillFortWindow@@QAEXE@Z	admitted
 0x00595420	531	95.27612	95.2761	95.2761	25.083909000000016	singleselectionwindow	?_Unguarded_partition@std@@YIPAUGameSelectionHeadersStruct@@PAU2@0U2@UTSortMapsBySize@@@Z	admitted
 0x0043bf20	281	95.27778	95.2778	95.2778	13.269381999999997	ai_tactical	?setMeleeEnemies@type_AI_spellcaster@@QAEXXZ	admitted
