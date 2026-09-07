@@ -32,7 +32,6 @@ carcass	23	0x0044d3e0	-	0.0000	0.0000	artifact	artifact	__h3cg$artifact$bitset_t
 bracketed	23	0x0055f330	-	0.0000	0.0000	resourcemanager..sacrifice_window	resourcemanager,ressw,sacrifice_window	game_15f330	bracketed	resolve the owner, then add its VA claim and body
 bracketed	23	0x005b85a0	-	0.0000	0.0000	systemoptionswindow..text	systemoptionswindow,text	game_1b4b20_sub09_1b85a0	bracketed	resolve the owner, then add its VA claim and body
 bracketed	23	0x005b8a20	-	0.0000	0.0000	systemoptionswindow..text	systemoptionswindow,text	game_1b7520_sub00_1b8a20	bracketed	resolve the owner, then add its VA claim and body
-bracketed	24	0x005361e0	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_136070_sub01_1361e0	bracketed	resolve the owner, then add its VA claim and body
 bracketed	24	0x0055ecf0	-	0.0000	0.0000	resourcemanager..sacrifice_window	resourcemanager,ressw,sacrifice_window	game_15a800_sub09_15ecf0	bracketed	resolve the owner, then add its VA claim and body
 bracketed	28	0x00530e20	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_176f00_sub01_130e20	bracketed	resolve the owner, then add its VA claim and body
 bracketed	32	0x005b76d0	-	0.0000	0.0000	systemoptionswindow..text	systemoptionswindow,text	game_2349db_sub00_1b76d0	bracketed	resolve the owner, then add its VA claim and body
