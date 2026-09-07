@@ -6732,79 +6732,31 @@ static inline void readMapPlayerName(char* destination,
 // rumour and hero customization records before handing the remainder to the
 // map-cell owner.
 //
-// Residual (70.64697%, 2026-08-26): all 63 conditional branches and all four
-// returns are present. The candidate has 107 basic blocks against retail's
-// 105 and a 0x90 frame against 0x78. The dominant remaining layout split is
-// the version-21 artifact arm: retail sinks it into the common mask-merge
-// loop's cold slot, while this CL lays it before that loop. The const-view
-// helper above is a codegen device for retail's bitset test shape: a direct
-// call inlines `_Xran` and its exception construction here; the extra inline
-// layer keeps operator[] and test expanded but leaves `_Xran` as the call
-// retail makes. Rumour failure uses a return-site depth pin so both failed
-// string reads share one out-of-line destructor and one retail-shaped exit.
-// Residual (70.70%): the field_4e658 read loop expands bitset<28>::_Xran
-// where retail CALLS it (0x4c2927), and the expanded out_of_range +
-// message string are the whole 0x18-byte frame surplus ([ebp-0x9c] and
-// [ebp-0x40]). Retail's shape is `test`'s body inlined with _Xran out of
-// line, which is a depth-2 A9 decision. Measured and rejected: a statement
-// pin on that read (-0.80, it takes the whole expansion out of line);
-// spelling it `serializedSkillCopy.test(skill)` (70.70 -> 20.20).
-// 2026-09-06, polish lane 48. Three of this body's fifteen inline-depth pins
-// were doing no work: the pins around the two bitset<144> constructions and
-// the bitset<129> one are the sites where retail ALSO calls the constructor
-// (retail's 0x4c2550/0x4c2563 keep the unclaimed ctor row), so /Ob2 declines
-// them on cost with or without the pin. Removing all three is 75.47679 ->
-// 75.48383 and byte-flat on every other row in the TU; each one alone gives
-// the same 75.48383, so they do not interact.
-// 2026-09-06, polish lane 50 re-measured all twelve survivors one at a time
-// from this state (lane 48's list was taken in the fifteen-pin state and
-// does not hold here). Removal costs, in source order: 72.75387, 73.60338,
-// 73.95499, 78.10126, 75.90999, 78.28552, 74.47539, 76.50070, 73.96484,
-// 75.32068, 75.46273 and byte-flat. Four of the twelve were POSITIVE, not
-// load-bearing; the two that this lane took are described below.
-// The artifact merge loop's SHAPE is recovered but not bankable. Retail
-// walks artifactDisabled with a pointer and an `!=` end compare, which VC6
-// only emits with a zero-trip guard (`cmp esi,eax / je` at retail+0x197,
-// end recomputed at the back edge from the spilled `this`), where an index
-// loop keeps `cmp esi,0x90 / jl` and no guard - our own std::copy at +0x4ae
-// is the control for that idiom. Writing it as a pointer loop reproduces
-// retail's block skeleton and takes the branch census from 62-vs-63 to an
-// exact 63-vs-63, but objdiff falls 75.48 -> 74.14 (74.18 with the store
-// left as `artifactDisabled[artifact]`, which is retail's separate second
-// induction pointer). The dip is register collateral: retail spends all
-// three callee-saved registers on the loop and homes `this`, where this CL
-// keeps `this` in EBX. Re-take the pointer spelling if the frontier below
-// ever frees that register.
-// The frontier itself is the wall, and it is reciprocal: predict-inline
-// reports 7 under-inlines against 8 over-inlines, and every one is the same
-// decision - retail expands the OUTER operation and calls the inner helper
-// (~basic_string -> _Tidy, bitset ctor -> _Tidy, _Tree::operator++ -> _Inc,
-// reference::operator bool -> test, resize's second size()), where this CL
-// calls the outer. Depth 0 suppresses both layers, so no pin reaches it.
-// THE LEAD SHIPPED, AND IT NEEDED NO RETUNE (2026-09-06, polish lane 50).
-// The `std::bitset<70> serializedSpells(0)` construction was pinned depth 0,
-// but retail's reloc stream at that site is
-// `?_Tidy@?$bitset@$0EG@@std@@AAEXK@Z` where ours was
-// `??0?$bitset@$0EG@@std@@QAE@K@Z` - retail EXPANDS the constructor and
-// CALLS _Tidy. Lane 48 read that as a 0 -> 1 retune, withheld it for a
-// policy ruling, and recorded "removing either pin outright is 73.95 /
-// 74.16, i.e. WORSE than depth 0". THAT CONTROL WAS WRONG: 73.95 and 74.16
-// are two OTHER pins' removal costs in this body (the 129-bit serialize
-// loop and the 28-bit one). Plain removal of this single pin measures
-// 75.48383 -> 78.28552 - the identical number the depth-1 respelling gives,
-// because the construct nests only one level here, so default depth 8 and
-// depth 1 select the same expansion. The pin therefore just came out under
-// the ordinary removal rule; no retune and no ruling were needed.
-// Corroboration is structural, not a score wobble: the block skeleton goes
-// 106-vs-105 with one missing block to an exact 105-vs-105 with none, and
-// exact blocks go 11 -> 47.
-// The other three positive pins are NOT compatible with it. Alone they are
-// worth 78.10126 (the 129-bit copy loop), 75.90999 (the merge-loop read)
-// and 76.50070 (`serializedSkills`), but a full 32-subset enumeration over
-// the five candidates shows every pair or larger set containing them scores
-// below 78.28552, and the copy-loop + skills pair actually FALLS to
-// 75.31927. Only the bitset<70> pin and the byte-flat `rumours.resize` pin
-// came out; the other three stay pinned at depth 0.
+// Dreamcast's older filename-based LoadMap does not prove Complete's
+// serialization paths. Its shared tail does prove separate readString
+// results/early exits (game.cpp:5649-5655, local hr) and clear calls
+// (5665-5669). Preserve those source operations. Retail likewise tests each
+// read separately and expands the final vector erasures; the previous note
+// incorrectly described those expansions as retained calls.
+//
+// MAX 78.2855. On 2026-09-07 the inherited body measured 74.47679.
+// Restoring all clear calls alone gives 63.79606, separate reads with the
+// failure-return pin removed give 68.89874, and both give 64.73558. Keep
+// the recovered boundaries through the dip. Removing the normal loop-end
+// destructor pin too gives 63.86639 (73.26442 in the inherited body), but
+// replaces its destructor call at +0x61b with retail's required _Tidy call
+// at +0x61d. Both failure exits also retain _Tidy. Remove both destructor
+// pins on that call-sequence evidence; do not keep them for the higher score.
+// The passive source-boundary trace has caller cb 1752 / budget 3504.
+// Bitset<144>::_Tidy costs 72 against 71/70 and stays called, while the
+// 129/70-bit instances get 73/87 and expand. The 28-bit read's _Xran now
+// stays called (cost 65, budget 50), correcting the older frontier diagnosis.
+// Remaining frontier: bitset/container inner-helper expansion decisions
+// still differ. The version-21 artifact arm and merge
+// loop also have different placement/register allocation.
+// Earlier bounded pin-removal controls recovered the bitset<70> constructor
+// expansion and removed the byte-neutral rumours.resize pin. Removing the
+// remaining copy-loop/skills pins together did not improve banked MAX.
 VA(0x004c2450, 0x88E)  // sole NewMap caller + full stream/callee sequence
 bool game::loadMap(TAbstractFile* mapFile)
 {
@@ -6958,16 +6910,14 @@ bool game::loadMap(TAbstractFile* mapFile)
     for (TRumour* rumour = rRumours.begin(); rumour != rRumours.end();
          ++rumour) {
         std::string throwAway;
-        if (readMapString(mapFile, &throwAway) < 0
-            || readMapString(mapFile, &rumour->m_text) < 0) {
-#pragma inline_depth(0)
+        int result = readMapString(mapFile, &throwAway);
+        if (result < 0)
             return false;
-#pragma inline_depth()
-        }
+        result = readMapString(mapFile, &rumour->m_text);
+        if (result < 0)
+            return false;
         rumour->m_unavailable = 0;
-#pragma inline_depth(0)
     }
-#pragma inline_depth()
 
     if (m_mapHeader.m_version != MAP_FORMAT_RESTORATION_OF_ERATHIA
         && m_mapHeader.m_version != MAP_FORMAT_ARMAGEDDONS_BLADE) {
@@ -6992,18 +6942,13 @@ bool game::loadMap(TAbstractFile* mapFile)
     }
 
     for (int pool = 0; pool < 8; ++pool) {
-            // DEPTH LADDER: this ONE pool reset is `clear()`; the other
-            // five stay the longhand range erase polish 29 banked.  Retail
-            // CALLS the range-erase COMDAT at all six and clear()'s own
-            // wrapper takes the /Ob2 site here, so 75.4768 -> 75.9944; a
-            // greedy second round over the other five finds nothing.
-            m_lithPools[pool].clear();
-        m_lithExitPools[pool].erase(m_lithExitPools[pool].begin(), m_lithExitPools[pool].end());
+        m_lithPools[pool].clear();
+        m_lithExitPools[pool].clear();
     }
-    m_whirlpools.erase(m_whirlpools.begin(), m_whirlpools.end());
-    m_undergroundGateExits.erase(m_undergroundGateExits.begin(), m_undergroundGateExits.end());
-    m_undergroundGatePairs.erase(m_undergroundGatePairs.begin(), m_undergroundGatePairs.end());
-    m_monsterIdentifiers.erase(m_monsterIdentifiers.begin(), m_monsterIdentifiers.end());
+    m_whirlpools.clear();
+    m_undergroundGateExits.clear();
+    m_undergroundGatePairs.clear();
+    m_monsterIdentifiers.clear();
 
     return m_worldMap.read(mapFile, m_mapHeader.m_size, m_mapHeader.m_hasTwoLayers,
                          m_mapHeader.m_version) >= 0;

@@ -1478,6 +1478,12 @@ static double g_aiWaterMapFraction = 1.0;
 // same bytes - which is precisely why C2's cross-jumper merges them. The
 // knob is the pseudo-creation count UPSTREAM of the two arms, and it is not
 // reachable from either arm's own spelling. 78.1958 stays the max.
+// 2026-09-07 upstream controls: Dreamcast philai.cpp:3491 computes the
+// creature-traits address before line 3492's troop-value multiplication.
+// Naming that pointer (or const reference) is byte-identical at 78.19582.
+// Promoting GetPrimarySkill's local to int gives 76.2231; promoting this
+// function's mastery local gives 74.4189; both give 69.9535. Keep the byte
+// locals. These controls do not explain the later arithmetic cross-jumps.
 VA(0x00524690, 0x684)  // anchor-callee, dc 0x1135ac
 long getSkillValue(const hero* ourHero, TSecondarySkill skill,
                      unsigned char complexChoice)

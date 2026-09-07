@@ -2109,22 +2109,19 @@ TCampaignBrief::CampaignHeaderStruct::CampaignHeaderStruct(
 // i.e. a `scenarios.clear()`), calls FreeData, then destroys scenarios,
 // campaign_desc, campaign_name and file_name in reverse order.
 //
-// Residual (78.53%): FreeData has ONE call site in this compiland (its
-// other retail caller is customcampaignwindow.obj's scanner, a cross-TU
-// call), so /Ob2 expands it here while retail calls it; with FreeData
-// expanded, spelling the clear() retail evidently wrote measures LOWER
-// (75.72: erase expands and only its _Destroy child stays a call), so it
-// is withheld. Pins are not used in this lane.
-// BOUNDED, measured 2026-09-05 against the /Ob2 rule (docs/vc6/inliner.md):
-// NO caller-side lever reaches this decision. A free candidate site appended
-// after FreeData() - the site-count instrument that moved VWDrawUnderlay 57
-// points - is byte-inert here (78.5339 either way), and a heavily CHARGED
-// site placed before it is inert too: with `scenarios.erase(begin(), end())`
-// in front, the erase expands and burns its cb, and FreeData is STILL
-// expanded (its vtable-slot-0 delete is still inline at +08d; the row falls
-// to 70.3898). Both outcomes say cb(FreeData) <= 0x28, i.e. it is in the
-// small-free class that /Ob2 inlines regardless of budget and site count, so
-// the divergence is not in this caller's statements at all.
+// MAX 78.5339; current canonical clear() body 75.72034. Retail calls
+// both vector::erase and FreeData; candidate expands them and leaves
+// vector::_Destroy called from erase. Keep clear() as the source boundary.
+// The 2026-09-07 passive trace corrects the old small-free-class diagnosis:
+// FreeData's C2 cost is 101, not <=40, and its site has budget 752 after
+// clear/erase. The state gate allows it (body flags 0x8000, callee 0x68).
+// Clear's nested erase costs 69 against budget 144; its _Destroy costs 49
+// against 29 and stays called. These are ordinary measured budget decisions,
+// not proof that caller-side source structure can never affect the frontier.
+// Earlier artificial free/charged-site controls were byte-inert; do not
+// repeat them or use them to infer the helper's cost. Natural loop controls:
+// signed index is byte-identical at 75.72034; naming the scenarios vector
+// by reference gives 67.27966. Neither changes the retained source choice.
 VA(0x004886a0, 0x132)  // anchor-caller(TCampaignBrief ctor), retail-only
 TCampaignBrief::CampaignHeaderStruct::~CampaignHeaderStruct()
 {

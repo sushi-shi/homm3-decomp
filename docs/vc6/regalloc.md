@@ -1376,3 +1376,22 @@ const-reference also removes the snapshot, but the neighboring road caller
 independently preserves a by-value copy. Keep that shared interface and
 investigate caller lifetimes before inferring argument conventions from
 one optimized expansion. The higher score remains banked in MAX/history.
+
+### Name the integer lookup result before its consumers
+
+`highScoreWindowHandler` (0x4ea1d0) reached 100% after restoring its source
+helper boundaries, animation locals, and final dialog-exit flag. Dreamcast
+hiscore.cpp:1165-1166 binds the frame value and creature-pointer slot before
+the increment at 1168; explicit references preserve that evidence and prevent
+the animation update/draw tail merging with the category tail. Restoring the
+switch breaks feeding the final exit flag left 97.90124%, with all 47 CFG
+blocks structurally exact.
+
+`homm3 vc6 why-reg --model` isolated caller-saved register differences in the
+reset arm's expanded `getMonType` lookup. Binding its integer result to
+`monsterType` before the object lookup produces retail's EAX result and reaches
+100%. Binding the resulting `CObjectType*` instead is byte-identical to
+97.90124%; the diagnostic's adjacent exit-store swap is also byte-neutral.
+This is a concrete value/lifetime reconstruction, with no artificial calls,
+declarations, or inline controls. The exact 1120-byte padded caller has SHA-256
+`8406701804be9029cf749a7e0781812f2ad8063406a6c5594624730d54c1781c`.

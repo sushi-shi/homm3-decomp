@@ -39,6 +39,13 @@ public:
             lag = interval;
         return thisFrame + lag;
     }
+    // Dreamcast struct.h:403-405, dc 0x1eec4. HighScoreWindowHandler
+    // compares this signed elapsed interval against 200 in retail.
+    // Before normalization (function): GameTime::Elapsed.
+    static long elapsed(unsigned long stop, unsigned long start)
+    {
+        return static_cast<long>(stop - start);
+    }
     // DC struct.h:411 / :419 (dc 0x1eed4, 0x1ef04) - the other two
     // header inlines of the same family; no retail out-of-line body
     // exists for either. textEntryWidget::SetupDisplayString 0x5bb660

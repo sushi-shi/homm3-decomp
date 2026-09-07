@@ -2488,13 +2488,11 @@ static const char* getArmyName(int type, int count);
 // which is what its `push point / call GetCell` opening says and what
 // makes it usable from an arm that has already lost the cell pointer.
 //
-// The artifact record is built with BOTH fields at -1 before the id is
-// written over the first of them, and retail keeps that dead store: the
-// record's address is taken by GiveArtifact, so VC6 will not eliminate a
-// store into it. Spelled longhand here because type_artifact's default
-// constructor is behind a view this TU does not open - opening it would
-// put a {-1,-1} pair in front of every OTHER artifact record in this file
-// and cost the six rows that build one field at a time.
+// Dreamcast events.cpp:481 constructs type_artifact(ARTIFACT_NONE), then
+// line 483 assigns GetArtifactIndex(). Keep those canonical operations:
+// C2 charges this helper 113, fitting DoEventArtifact's free-arm budget 113.
+// Redundant sentinel stores or the old memcpy assignment instead charge 133
+// and leave a call where retail expands it (2026-09-07 passive trace).
 // Before normalization (locals): current_hero, human_player, artifact_id.
 VA(0x0049e8f0, 0x146)  // linkorder + GetCell/EraseAndFizzle pair, dc 0x90814
 void advManager::giveArtifact(hero* currentHero, type_point point,
@@ -2502,12 +2500,8 @@ void advManager::giveArtifact(hero* currentHero, type_point point,
 {
     NewmapCell* cell = getCell(point);
 
-    type_artifact artifact;
-    artifact.m_artifactId = ARTIFACT_NONE;
-    artifact.m_extra = -1;
-    int artifactId = cell->m_objectIndex;
-    memcpy(&artifact.m_artifactId, &artifactId,
-           sizeof artifact.m_artifactId);
+    type_artifact artifact(ARTIFACT_NONE);
+    artifact.m_artifactId = static_cast<TArtifact>(cell->getArtifactIndex());
     currentHero->giveArtifact(&artifact, 1, 1);
     if (!humanPlayer)
         aiEquipArtifacts(currentHero);
@@ -2743,10 +2737,6 @@ void advManager::doCustomArtifact(hero* currentHero, NewmapCell* cell,
     giveArtifact(currentHero, point, humanPlayer);
 }
 
-// E:\gamedcs\events.cpp:629. The Dreamcast publishes this private helper;
-// retail has no out-of-line body, and both calls below expand it. The two
-// secondary-skill bytes and both dialog paths are byte-visible in those
-// expansions.
 // Before normalization (function): get_artifact_price.
 static inline int getArtifactPrice(const NewmapCell* cell)
 {
@@ -2759,26 +2749,20 @@ static inline bool isDefendedArtifact(const NewmapCell* cell)
     return (cell->m_extraInfo & 0xf) == const_artifact_defended;
 }
 
-// Before normalization (function): get_artifact_index.
-static inline int getArtifactIndex(const NewmapCell* cell)
-{
-    return cell->m_objectIndex;
-}
-
+// Dreamcast events.cpp:629-641: DoArtifactSkillRequirement calls
+// DoEventFreeArtifact on success; its refusal branch names a short artifact.
+// Retail's skill-success dialogs likewise read g_artifactEventText, not the
+// refusal text. Preserve the helper call through its two inline expansions.
 inline void advManager::doArtifactSkillRequirement(
     // Before normalization (locals): current_hero, dialog_text, human_player.
     hero* currentHero, NewmapCell* cell, type_point point,
     int skill, const char* dialogText, bool humanPlayer)
 {
     if (currentHero->m_skillLevel[skill]) {
-        if (humanPlayer)
-            normalDialog(dialogText, 1, -1, -1,
-                         8, getArtifactIndex(cell),
-                         -1, 0, -1, 0, -1, 0);
-        giveArtifact(currentHero, point, humanPlayer);
+        doEventFreeArtifact(currentHero, cell, point, humanPlayer);
     } else if (humanPlayer) {
-        sprintf(g_text, dialogText,
-                g_artifactTraits[getArtifactIndex(cell)].m_name);
+        short artifact = cell->getArtifactIndex();
+        sprintf(g_text, dialogText, g_artifactTraits[artifact].m_name);
         normalDialog(g_text, 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
     }
@@ -2787,30 +2771,17 @@ inline void advManager::doArtifactSkillRequirement(
 // E:\gamedcs\events.cpp:760. The Dreamcast signature and helper roster
 // identify the source surface; retail fixes the price-arm order, costs and
 // text indices. This is the ordinary artifact event dispatcher.
-// Residual (78.12%): retail expands DoArtifactSkillRequirement in BOTH
-// skill arms and cross-jumps everything after each arm's text load +
-// skill-byte test + human test into ONE shared dialog/GiveArtifact/
-// refusal tail; our two expansions stay separate (~85 instructions).
-// Measured 2026-08-27 and REVERTED, both worse in combination (66.10):
-// the refusal text hoisted into a named call-site local (reproduces
-// retail's early per-arm text load exactly) and the has-skill dialog
-// reading gArtifactEventText[index] instead of dialog_text (reproduces
-// the merged block's content - retail's shared dialog provably reads
-// the artifact's own text, so that half IS the retail source). With
-// both, the arms become identical except ONE register (point reloads
-// through edx in arm 1 and eax in arm 2; retail reloads human_player
-// per use where ours caches it in ebx) and the cross-jumper still
-// refuses; why-reg reports no addressable knob (B1 binding + B2
-// homing, reference memory-homes [ebp-0x75]). The next lane should
-// re-try the pair AFTER any inline-structure change here - the merged
-// content is byte-proven, only the merge itself is missing.
-// [2026-09-01] SOURCE-SHAPE CHECKPOINT (77.72%, banked MAX 78.12%):
-// restore Dreamcast's DoEventFreeArtifact boundary and its short artifact
-// local. Retail contains the whole helper in this free arm, but SP3 now
-// keeps its nested GiveArtifact call out of line. Flattening the helper is
-// the negative control that recovers the old score and fails the DC helper
-// gate; spelling the helper __forceinline is byte-flat, so plain inline is
-// retained while this nested-inline budget wall remains open.
+// Residual (85.81%, 2026-09-07): retail shares the two skill-success
+// dialog/GiveArtifact tails; VC6 still emits separate copies. The free helper's
+// short artifact load also stays before the human test instead of sinking.
+// Restoring DoArtifactSkillRequirement's nested DoEventFreeArtifact call and
+// short refusal local fixes the dialog semantics. With the old GiveArtifact
+// reconstruction this measured 0%; recovering its proven constructor and
+// accessor reaches 85.81439. Either redundant sentinel stores or the old
+// memcpy assignment alone reproduces that 672-byte non-expanded control.
+// The canonical 752-byte caller expands GiveArtifact in the free arm at
+// cost/budget 113/113, retaining calls in the skill arms at budgets 6 and 4,
+// exactly the retail call decisions. MAX before this reconstruction: 78.1174.
 // Before normalization (locals): current_hero, human_player.
 VA(0x0049f7e0, 0x2A4)  // anchor-callee DoCustomArtifact+FightForArtifact, ret 0x10=p5, dc 0x91104
 void advManager::doEventArtifact(hero* currentHero, NewmapCell* cell,
