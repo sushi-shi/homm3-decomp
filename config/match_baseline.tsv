@@ -1062,7 +1062,7 @@ command	?checkWin@combatManager@@QAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0
 command	?doAnimations@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x74040	56d5ff46dbf4
 command	?doCommand@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x76bd0	9eb9dd5eb462
 command	?doVictory@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x77470	d3bbb8540ee5
-command	?getCommand@combatManager@@QAEHH@Z	92.5357	92.5714	92.5714	0x76490	91aae2339334
+command	?getCommand@combatManager@@QAEHH@Z	92.5714	92.5714	92.5714	0x76490	91aae2339334
 command	?getControl@combatManager@@QAEXXZ	98.2830	98.2830	98.2830	0x782d0	2524e04bf2aa
 command	?getSurrenderCost@combatManager@@QAEJXZ	100.0000	100.0000	100.0000	0x77a00	fa49cfa33a66
 command	?getTowerString@combatManager@@ABE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TWallSection@1@JJ@Z	100.0000	100.0000	100.0000	0x7a2d0	6ddb26623f6b
@@ -1171,6 +1171,7 @@ customcampaign	??0out_of_range@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x47
 customcampaign	??1?$basic_filebuf@DU?$char_traits@D@std@@@std@@UAE@XZ	100.0000	100.0000	100.0000	0x8bd50	-
 customcampaign	??1CampaignHeaderStruct@TCampaignBrief@@QAE@XZ	75.7203	78.5339	78.5339	0x886a0	25e481455de7
 customcampaign	??1ScenarioStruct@TCampaignBrief@@QAE@XZ	100.0000	100.0000	100.0000	0x85fe0	772cf99b7885
+customcampaign	??1TAbstractFile@@UAE@XZ	100.0000	100.0000	100.0000	0x87e00	1c728b11ec68
 customcampaign	??1TCampaignBonus@@UAE@XZ	100.0000	100.0000	100.0000	0x85370	ad0f9d420d84
 customcampaign	??1TCampaignStartBonusOption@@UAE@XZ	100.0000	100.0000	100.0000	0x850a0	54f2b897d4b4
 customcampaign	??1TCampaignStartCrossoverOption@@UAE@XZ	100.0000	100.0000	100.0000	0x88460	987a0cef8337
@@ -1301,7 +1302,7 @@ customcampaign	?isBuildingBonus@TCampaignBonus@@UBE_NXZ	100.0000	100.0000	100.00
 customcampaign	?isBuildingBonus@TCampaignBuildingBonus@@UBE_NXZ	100.0000	100.0000	100.0000	0x84620	62ab07baaf5d
 customcampaign	?isBuildingBonus@TCampaignStartBonusOption@@UBE_NH@Z	100.0000	100.0000	100.0000	0x85430	0652a4942adf
 customcampaign	?isBuildingBonus@TCampaignStartCrossoverOption@@UBE_NH@Z	100.0000	100.0000	100.0000	0x85a30	0dccac502696
-customcampaign	?load@CampaignHeaderStruct@TCampaignBrief@@QAE_NXZ	53.9868	53.9868	80.9474	0x88880	49d69307bc8d
+customcampaign	?load@CampaignHeaderStruct@TCampaignBrief@@QAE_NXZ	53.9715	53.9868	80.9474	0x88880	49d69307bc8d
 customcampaign	?load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	66.4461	66.4461	79.2531	0x8a310	12f517e19d22
 customcampaign	?loadMapHeader@ScenarioStruct@TCampaignBrief@@QAEXPAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@PAVNewSMapHeader@@H@Z	100.0000	100.0000	100.0000	0x87d30	1be04c1bd184
 customcampaign	?loadScenario@CampaignHeaderStruct@TCampaignBrief@@QAE_NHPAVNewSMapHeader@@@Z	100.0000	100.0000	100.0000	0x88810	c3dd1f3789da
@@ -2118,7 +2119,7 @@ gametypewindow	?doModal@TGameTypeWindow@@QAEXXZ	100.0000	100.0000	100.0000	0xd59
 gametypewindow	?gameTypeWindowHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0xd5940	586a543928b1
 gzfile	??0TGzFile@@QAE@PBD0@Z	100.0000	100.0000	100.0000	0xd6c50	7611e613ebbc
 gzfile	??0TOpenFailure@TGzFile@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0xd6d10	-
-gzfile	??1TGzFile@@UAE@XZ	100.0000	100.0000	100.0000	0xd6d60	bf02969b1ea8
+gzfile	??1TGzFile@@UAE@XZ	80.0000	100.0000	100.0000	0xd6d60	bf02969b1ea8
 gzfile	??1TOpenFailure@TGzFile@@UAE@XZ	100.0000	100.0000	100.0000	0xd6d00	-
 gzfile	??_GTGzFile@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xd6cd0	-
 gzfile	??_GTOpenFailure@TGzFile@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xd6d30	-
@@ -2685,12 +2686,12 @@ multiplayerwindow	?updateOK@CMPInputDlg@@UAEXXZ	100.0000	100.0000	100.0000	0x110
 multiplayerwindow	?windowHandler@TMultiPlayerWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x10f940	26825aae05ac
 netmsg	??0t_complex_net_message@@QAE@W4eRS_Messages@@@Z	100.0000	100.0000	100.0000	0x112c50	d0505ec10fba
 netmsg	??0t_complex_net_message@@QAE@XZ	100.0000	100.0000	100.0000	0x112c20	c64b553666f7
-netmsg	??1t_memory_file@@UAE@XZ	100.0000	100.0000	100.0000	0x112b00	d7dbf2d1e9a6
+netmsg	??1t_memory_file@@UAE@XZ	87.6923	100.0000	100.0000	0x112b00	d7dbf2d1e9a6
 netmsg	??_Gt_memory_file@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x112ad0	-
 netmsg	?read@t_memory_file@@UAEHPAXH@Z	100.0000	100.0000	100.0000	0x112b30	3731cb46b100
-netmsg	?remoteFn00512C80@t_complex_net_message@@QAEEK_N0@Z	100.0000	100.0000	100.0000	0x112c80	06d6e9a6d555
-netmsg	?remoteFn00512D40@t_complex_net_message@@QAEEH_N0@Z	100.0000	100.0000	100.0000	0x112d40	f582af1a806c
-netmsg	?remoteFn00512E00@t_complex_net_message@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x112e00	e19737da0f7b
+netmsg	?remoteFn00512C80@t_complex_net_message@@QAEEK_N0@Z	94.9000	100.0000	100.0000	0x112c80	06d6e9a6d555
+netmsg	?remoteFn00512D40@t_complex_net_message@@QAEEH_N0@Z	94.9000	100.0000	100.0000	0x112d40	f582af1a806c
+netmsg	?remoteFn00512E00@t_complex_net_message@@QAEEPAVCNetMsg@@@Z	92.7714	100.0000	100.0000	0x112e00	e19737da0f7b
 netmsg	?write@t_memory_file@@UAEHPBXH@Z	100.0000	100.0000	100.0000	0x112b80	eeecce4e697d
 newgame	?getAlignmentCount@@YIJH@Z	100.0000	100.0000	100.0000	0x1132b0	6352efb7a2e1
 newgame	?getLossConditionText@game@@QAEXPAD@Z	100.0000	100.0000	100.0000	0x113800	11dde819a9b3
@@ -3157,7 +3158,7 @@ resourcemanager	?getBitmap16@ResourceManager@@YIPAVBitmap16Bit@@PBD@Z	100.0000	1
 resourcemanager	?getBitmap816@ResourceManager@@YIPAVBitmap816@@PBD@Z	97.6325	97.6325	97.6325	0x15a800	600dc73ac69e
 resourcemanager	?getBitmapResourceSize@ResourceManager@@YIHPBD@Z	96.7742	96.7742	96.7742	0x15d070	d3a3ac822507
 resourcemanager	?getFont@ResourceManager@@YIPAVfont@@PBD@Z	100.0000	100.0000	100.0000	0x15bb00	d9177ac4bf79
-resourcemanager	?getPalette24@ResourceManager@@YIPAVTPalette24@@PBD@Z	99.9273	99.9273	99.9273	0x15b470	8f52f95fb449
+resourcemanager	?getPalette24@ResourceManager@@YIPAVTPalette24@@PBD@Z	96.8818	99.9273	99.9273	0x15b470	8f52f95fb449
 resourcemanager	?getPalette@ResourceManager@@YIPAVTPalette16@@PBD@Z	100.0000	100.0000	100.0000	0x15b3e0	e337fc335ce7
 resourcemanager	?getSample@ResourceManager@@YIPAVsample@@PBD@Z	100.0000	100.0000	100.0000	0x15c720	8fd64a2e340b
 resourcemanager	?getSoundFile@ResourceManager@@YI_NPBDAAV?$auto_ptr@D@std@@PAH@Z	100.0000	100.0000	100.0000	0x15c130	9c370299793b
@@ -3166,12 +3167,12 @@ resourcemanager	?getSprite@ResourceManager@@YIPAVCSprite@@PBD@Z	88.8564	88.8564	
 resourcemanager	?getText@ResourceManager@@YIPAVTTextResource@@PBD@Z	100.0000	100.0000	100.0000	0x15bdd0	5d8efe3c1a1a
 resourcemanager	?insertWrapper@TCacheMap@ResourceManager@@QAE?AUTCacheInsertResult@2@ABUTCacheValue@2@@Z	100.0000	100.0000	100.0000	0x15d380	9b61c36f02b8
 resourcemanager	?loadBitmap16@ResourceManager@@YIPAVBitmap16Bit@@PBD@Z	100.0000	100.0000	100.0000	0x15ac40	50f564d8eac4
-resourcemanager	?loadFont@ResourceManager@@YIPAVfont@@PBD@Z	100.0000	100.0000	100.0000	0x15b8d0	c3953f89dd7d
+resourcemanager	?loadFont@ResourceManager@@YIPAVfont@@PBD@Z	95.0000	100.0000	100.0000	0x15b8d0	c3953f89dd7d
 resourcemanager	?loadFontData@ResourceManager@@YIPAVfont@@PBDPAVTAbstractFile@@H@Z	97.6539	97.6539	97.6539	0x15b750	f2b36163a8d0
-resourcemanager	?loadPalette@ResourceManager@@YIPAVTPalette16@@PBD@Z	95.6920	95.6920	95.6920	0x15b060	1c7f97c3b19c
+resourcemanager	?loadPalette@ResourceManager@@YIPAVTPalette16@@PBD@Z	91.5551	95.6920	95.6920	0x15b060	1c7f97c3b19c
 resourcemanager	?loadSample@ResourceManager@@YIPAVsample@@PBD@Z	100.0000	100.0000	100.0000	0x15c3c0	22eaa9dd9781
-resourcemanager	?loadSpreadsheet@ResourceManager@@YIPAVTSpreadsheetResource@@PBD@Z	100.0000	100.0000	100.0000	0x15be60	58ac0ece5eab
-resourcemanager	?loadText@ResourceManager@@YIPAVTTextResource@@PBD@Z	100.0000	100.0000	100.0000	0x15bb90	fcca1ad763c2
+resourcemanager	?loadSpreadsheet@ResourceManager@@YIPAVTSpreadsheetResource@@PBD@Z	97.0297	100.0000	100.0000	0x15be60	58ac0ece5eab
+resourcemanager	?loadText@ResourceManager@@YIPAVTTextResource@@PBD@Z	97.0297	100.0000	100.0000	0x15bb90	fcca1ad763c2
 resourcemanager	?lowerBoundIterator@TCacheMap@ResourceManager@@QAEPAUTCacheIterator@2@PAU32@ABUTCacheMapKey@2@@Z	100.0000	100.0000	100.0000	0x15e740	c86aeceab36e
 resourcemanager	?open@ResourceManager@@YI_N_N0PAH@Z	84.1089	84.1089	84.1089	0x15a250	66655ef304dd
 resourcemanager	?overflow@?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@MAEHH@Z	100.0000	100.0000	100.0000	0x15d630	-
@@ -4060,7 +4061,7 @@ town	?initialize@town@@QAEXPBVTownExtra@@@Z	100.0000	100.0000	100.0000	0x1c0670	
 town	?initializeBuildingCostsTables@town@@SIEXZ	91.0465	91.0465	91.0465	0x1c14c0	e5434b031752
 town	?initializeBuildings@@YIXPAVtown@@PBVTownExtra@@@Z	100.0000	100.0000	100.0000	0x1c08c0	44f51394c04d
 town	?initializeHordes@town@@SIXXZ	100.0000	100.0000	100.0000	0x1bdf60	5e7d3d74ec2d
-town	?initializeSpells@town@@QAEXPBVTownExtra@@@Z	100.0000	100.0000	100.0000	0x1be600	d6f06289d758
+town	?initializeSpells@town@@QAEXPBVTownExtra@@@Z	99.9356	100.0000	100.0000	0x1be600	d6f06289d758
 town	?isLegalBuilding@town@@QBEEW4type_building_id@@@Z	100.0000	100.0000	100.0000	0x1c12a0	4841080eb51d
 town	?load@town@@QAEHPAVTAbstractFile@@H@Z	98.0017	98.0017	98.0017	0x1bcd60	df406bb52217
 town	?placeInMap@town@@QAEXHJE@Z	100.0000	100.0000	100.0000	0x1c13b0	035999459683

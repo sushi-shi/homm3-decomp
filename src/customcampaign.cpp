@@ -1843,9 +1843,21 @@ void TCampaignBrief::ScenarioStruct::loadMapHeader(
     mapHeader->read(&file, which);
 }
 
-// TAbstractFile's deleting destructor; retail keeps this object's copy
-// (the vftable 0x63dac0 slot 0), being the first in link order to
-// instantiate the class.
+// TAbstractFile's ordinary destructor is visible here: retail retains its
+// seven-byte body and expands the same vftable store into the deleting thunk.
+// The body and all 19 retail callers restore vftable 0x63dac0; no
+// TAbstractFile procedure exists in the Dreamcast CodeView corpus. Keeping
+// the body inline, either in or after the class, emits no candidate symbol;
+// this ordinary boundary is exact on its first scored candidate. A full
+// dependent rebuild changes call/inline decisions in eight previously exact
+// TAbstractFile consumers; their historical MAX remains banked.
+VA(0x00487e00, 0x07)
+TAbstractFile::~TAbstractFile()
+{
+}
+
+// Retail keeps this object's deleting-destructor copy (vftable 0x63dac0
+// slot 0), being the first in link order to instantiate the class.
 VA_COMPGEN(0x00487dd0, 0x23, SCALAR_DELETING_DTOR, TAbstractFile)
 
 // Complete-only. PruneCrossoverHeroes' first pass calls this on every
