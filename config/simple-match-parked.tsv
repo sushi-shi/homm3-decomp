@@ -3,3 +3,4 @@
 # pass proves that no defensible source candidate can yet be compiled.
 rva	size	state	attempts	best_fuzzy	bank_commit	unit	function	reason
 0x4df0	1	unresolved-owner	0	-	-	adventuremapwindow..adventureoptionswindow	widget::onSetFocus/onKillFocus	Retail is one ICF-folded ret shared by 200+ vtable/address-taken users; DC proves two empty widget methods in Widget.h, while link order cannot assign the representative to either bracket TU and existing source emits both naturally from border.obj.
+0x1bc690	1	excluded-icf	0	-	-	textwdgt	textWidget::zBufferDraw/textWidget::dim	Retail is the program-wide bare-ret ICF representative with 48 vtable slots plus ordinary calls; DC proves several independent empty publics and the existing textwdgt evidence records the negative control against assigning the shared row to one method.
