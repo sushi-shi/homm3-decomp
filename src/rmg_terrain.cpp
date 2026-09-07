@@ -1153,6 +1153,7 @@ VA_COMPGEN(0x005B76B0, 0x18, CLASS_CTOR, TRmgGridPoint)
 // PaintPoint and TRmgTerrainBrush::changeTerrain retain this one-dword
 // iterator wrapper around the tree's raw-node lower bound.
 VA_COMPGEN(0x005B85A0, 0x17, TREE_LOWER_BOUND, TRmgGridPoint)
+VA_COMPGEN(0x005B8A20, 0x17, TREE_UPPER_BOUND, TRmgGridPoint)
 
 // The set lookup at 0x5b4e96 retains this free comparison. Its unsigned
 // y-then-x ordering also appears in the tree's expanded comparisons.

@@ -452,7 +452,7 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "DEQUE_CONST_ITERATOR_CTOR",
                  "DEQUE_CONST_ITERATOR_CTOR_NODE",
                  "TREE_CONST_ITERATOR_CTOR",
-                 "TREE_ITERATOR_EQUAL", "TREE_LOWER_BOUND",
+                 "TREE_ITERATOR_EQUAL", "TREE_LOWER_BOUND", "TREE_UPPER_BOUND",
                  "STREAMBUF_XSPUTN",
                  "PAIR_CONST_INT_DTOR", "PAIR_CTOR",
                  "STD_CONSTRUCT", "STD_COPY",
@@ -1106,6 +1106,8 @@ def _demangle_key(mangled: str):
     # in retail, which the size oracle can read only when both are claimed.
     if mangled.startswith("?lower_bound@?$_Tree@") and tree_owner:
         return f"{tree_owner.lower()}@tree_lower_bound"
+    if mangled.startswith("?upper_bound@?$_Tree@") and tree_owner:
+        return f"{tree_owner.lower()}@tree_upper_bound"
     # _Tree's two _Copy overloads and its node eraser. `_Copy` is
     # overloaded on the SAME class, so the two arms are separate kinds
     # rather than one two-member group: the node form is the one whose
@@ -2226,6 +2228,7 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                                "tree_init", "tree_copy_assign",
                                "tree_const_iterator_ctor",
                                "tree_iterator_equal", "tree_lower_bound",
+                               "tree_upper_bound",
                                "deque_const_iterator_ctor_node",
                                "deque_const_iterator_ctor",
                                "deque_erase")
@@ -2912,6 +2915,10 @@ def selftest() -> list[str]:
         "U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@"
         "QAE?AViterator@12@ABQAVCImmEnclosure@@@Z":
             "cimmenclosure@tree_lower_bound",
+        "?upper_bound@?$_Tree@PAVCImmEnclosure@@"
+        "U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@"
+        "QAE?AViterator@12@ABQAVCImmEnclosure@@@Z":
+            "cimmenclosure@tree_upper_bound",
         # ...and the same three over a map keyed by VALUE, to prove the
         # owner is read and not hardcoded to the pointer arm.
         "??0const_iterator@?$_Tree@HU?$pair@$$CBH"

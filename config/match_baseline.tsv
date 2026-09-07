@@ -3310,6 +3310,7 @@ rmg_terrain	?paintTransitions@rmgTerrainPainter@@QAEXXZ	74.7320	74.7623	74.7623	
 rmg_terrain	?queueOtherTerrainNeighbours@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	63.6299	63.6299	63.6299	0x1b50f0	5f7770ec945d
 rmg_terrain	?repairTerrainPoint@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	81.6644	82.8347	82.8347	0x1b5440	3d5ac079ea40
 rmg_terrain	?selectTerrainTransition@@YIHPBHPAUTRmgTerrainFlip@@@Z	100.0000	100.0000	100.0000	0x1b3e80	e20e360ba25b
+rmg_terrain	?upper_bound@?$_Tree@UTRmgGridPoint@@U1@U_Kfn@?$set@UTRmgGridPoint@@U?$less@UTRmgGridPoint@@@std@@V?$allocator@UTRmgGridPoint@@@3@@std@@U?$less@UTRmgGridPoint@@@4@V?$allocator@UTRmgGridPoint@@@4@@std@@QAE?AViterator@12@ABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x1b8a20	-
 rmg_terrain	rmgTerrainPainter_buildNeighbourKinds	0.0000	0.0000	0.0000	0x1b68a0	9614bbe04bb0
 rmg_terrain	rmgTerrainPainter_checkFirstDiagonal	0.0000	0.0000	0.0000	0x1b6ba0	b9bc694a45b1
 rmg_terrain	rmgTerrainPainter_checkSecondDiagonal	0.0000	0.0000	0.0000	0x1b6e00	e222addf5fd0
