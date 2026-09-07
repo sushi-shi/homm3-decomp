@@ -1,7 +1,6 @@
 # GENERATED: homm3 vc6 queue --smallest - regenerate, never hand-edit.
 # Independent retail targets, smallest first; parked RVAs omitted.
 state	size	va	current_fuzzy	max_fuzzy	hist_fuzzy	owner	candidates	label	relation	action
-unmapped	32	0x006039a0	-	0.0000	0.0000				unmapped	locate the owning TU, then add its VA claim and body
 bracketed	33	0x00404c29	-	0.0000	0.0000	adventuremapwindow..adventureoptionswindow	adventuremapwindow,adventureoptionswindow	game_4c29	bracketed	resolve the owner, then add its VA claim and body
 bracketed	33	0x0045da40	-	0.0000	0.0000	campaignbrief..campaignmap	campaignbrief,campaignmap	game_5bcd0_sub02_5da40	bracketed	resolve the owner, then add its VA claim and body
 bracketed	33	0x004e6750	-	0.0000	0.0000	hero..herodefs	hero,herodefs	THeroScreenWindow_scalar_deleting_destructor	bracketed	resolve the owner, then add its VA claim and body
