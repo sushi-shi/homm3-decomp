@@ -408,29 +408,19 @@ void type_quest::Load(TAbstractFile* file, int version)
 // Slot 12's base body: the h3m form. Same three strings, but only the
 // deadline ahead of them - the selector and the table row are savegame-only,
 // which is the split quest.h records between the two loaders.
-// E:\gamedcs\seerhut.cpp
-// Residual (41.9271%), and 2026-09-06 (polish lane 38) LOCATES IT EXACTLY.
-// The three reads are `proposalText = ReadLengthPrefixedString(file);` with
-// no named binding at all: written that way the frame becomes retail's 0x20
-// (against 0x30 here), the three temporaries collapse onto retail's ONE slot
-// at [ebp-0x1c], and the emitted stream is identical to retail's through the
-// first `assign(const string&, 0, npos)` call - the `diagnose` EH census
-// predicts it ([0,-1,1,-1,2] against our [reg,1,2], i.e. a temporary born and
-// destroyed per statement rather than three alive at once).
-// It still measures 10.5000 and is NOT shipped, for one reason: at that
-// source depth VC6 expands `basic_string::_Tidy` at all three destruction
-// sites where retail CALLS it (retail expands `~basic_string` and keeps
-// `_Tidy` out of line), and three inline `_Tidy` bodies cost more than the
-// whole frame/slot correction buys. The lever is a per-site `inline_depth(0)`
-// on each assignment, which this lane may not add; whoever may add one should
-// take the direct-assignment form WITH the pins and not the current spelling.
-// Also measured and rejected: block-scoping each `const std::string&` binding
-// so the temporaries die per statement WITHOUT changing the binding, 6.6354.
-// 2026-09-06: the section-6b `operator=` -> `assign` rung, applied to all
-// three assignments in BOTH this body and type_quest::Load, is byte-flat to
-// the digit (41.9271 / 49.7043 unchanged). VC6's `operator=(const string&)`
-// is the pure forwarder the doc warns about here, so the ladder has no rung
-// to give at these sites; the `_Tidy` decision is untouched by it.
+// The current expression lifetimes match retail's 0x20 frame and EH states
+// 0/-1/1/-1/2; the first two results reuse one slot and the third uses a
+// second. See Load above for the two remaining inline boundaries and the
+// preserved 41.9271% peak from the rejected longer-lived form.
+// C2 measures cb=147, budget=1000 and six root candidates. The first _Tidy
+// gets 200 units for its 152-unit body; the final three-argument assign gets
+// 348 for its 307-unit body. Both expand, contrary to these retail sites.
+// Making the existing ReadLengthPrefixedString definition visible is byte-
+// and trace-neutral: C1 does not admit that body as an inline candidate.
+// A value-returning forwarding reader retains an extra wrapper call and
+// still expands the final assign (23.1563%). A read-into-string-reference
+// helper and a shared three-string reader remain out of line, contrary to
+// retail's expanded read/assign/cleanup sequence. Neither is retained.
 VA(0x0056ce50, 0x11E)  // anchor-vtable 0x64174c slot 12 + the chain from all eight leaf LoadFromMaps, retail-only
 void type_quest::LoadFromMap(TAbstractFile* file)
 {

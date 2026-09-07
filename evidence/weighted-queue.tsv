@@ -2,7 +2,6 @@
 # Admitted compiled bodies, sorted by increasing MAX/history, then decreasing retail size.
 # Banked-exact functions stay excluded despite current-score dips.
 va	size	current	maximum	historical	remaining_bytes	unit	function	state
-0x00574a90	586	35.38249	35.3825	35.3825	378.65855	seerhut	?load@TSeerHut@@QAEXPAVTAbstractFile@@H@Z	admitted
 0x0056ce50	286	10.5	41.9271	41.9271	166.08849400000003	seerhut	?LoadFromMap@type_quest@@UAEXPAVTAbstractFile@@@Z	admitted
 0x005f9ed0	784	38.54582	43.1116	43.1116	446.00505599999997	viewwrld	?VWDrawUnderlay@advManager@@QAEXHHHHH@Z	admitted
 0x00573670	1024	42.570988	46.3642	46.3642	549.2305920000001	seerhut	?DoSeerEvent@TSeerHut@@QAEXPAVhero@@_N@Z	admitted
