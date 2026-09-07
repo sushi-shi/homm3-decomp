@@ -1,6 +1,4 @@
-[queue] 914 active unmatched target(s), smallest first; 21 parked
-      33 B  0x0055eed0  unadmitted    bracketed           resourcemanager..sacrifice_window:game_15eed0
-      33 B  0x0055f430  unadmitted    bracketed           resourcemanager..sacrifice_window:game_15f430
+[queue] 912 active unmatched target(s), smallest first; 22 parked
       33 B  0x00583ec0  unadmitted    carcass             singleselectionwindow:__h3cg$singleselectionwindow$scalar_deleting_dtor$CNewPlayerUpda
       33 B  0x005b3a50  unadmitted    bracketed           systemoptionswindow..text:game_1b3a50
       33 B  0x005fdb10  unadmitted    bracketed           viewwrld..widget:game_1fd790_sub03_1fdb10
@@ -915,7 +913,7 @@
    11619 B  0x00579960  MAX 95.8142%  compiled            singleselectionwindow:??0TSingleSelectionWindow@@QAE@H@Z
 
 wrote evidence/smallest-match-queue.tsv
-00514610	99.2095	99.2095	99.2095	objecttype	objecttype	?setImageName@TObjectType@@QAEAAU1@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
+ted	run the evidence pass and iterate up to five scored candidates
 compiled	793	0x00457990	92.1064	92.1064	92.1064	campaignbrief	campaignbrief	?select@TCampaignBrief@@QAEXH@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	794	0x005636c0	86.1308	86.1308	86.1308	sacrifice_window	sacrifice_window	?backpackClick@type_sacrifice_window@@QAEXJE@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	795	0x005d05f0	95.6856	95.6856	95.6856	townmgr	townmgr	?setCommandAndText@type_garrison_base_window@@QAEXPAVmessage@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
