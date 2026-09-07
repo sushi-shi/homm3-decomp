@@ -10,6 +10,17 @@
 
 DATA(0x00642BD8) extern TRmgTerrainRule* const g_rmgTerrainRules[];
 
+// Retail vtable 0x642cb0 slot 1 is this constant-false query.  The surrounding
+// constructor at 0x5b3a20, vtable, fixed-table methods, and the first admitted
+// painter method at 0x5b3dd0 place it in this Complete-only compiland.  There
+// is no Dreamcast RMG counterpart; `xor al, al; ret` fixes the byte return.
+// The direct constant-false body matched on the first scored candidate.
+VA(0x005B3A40, 0x03)
+unsigned char TRmgTableTerrainRule::hasEntries()
+{
+    return 0;
+}
+
 // Provisional role spelling. The fastcall ABI and two-byte output are fixed
 // by the call at 0x5b5f4e. All selector names are provisional retail roles.
 // Before normalization (function): SelectTerrainTransition.

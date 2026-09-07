@@ -105,7 +105,7 @@ public:
 
     virtual ~TRmgTerrainRule() {}
     // Before normalization (function): TRmgTerrainRule::HasEntries.
-    virtual int hasEntries() = 0;
+    virtual unsigned char hasEntries() = 0;
     // Before normalization (function): TRmgTerrainRule::IsSpecialFrame.
     virtual unsigned char isSpecialFrame(int frame) = 0;
     // Before normalization (function): TRmgTerrainRule::GetEntry.
@@ -118,6 +118,25 @@ public:
         TRmgTerrainFlip requestedFlip,
         TRmgTerrainFlip& selectedFlip,
         int oldFrame) = 0;
+};
+
+// Vtable 0x642cb0 is the stateless, table-backed terrain-rule variant.  Its
+// concrete source name is unavailable because the Dreamcast build predates
+// the random-map generator; this role name follows the retail implementation,
+// whose remaining slots read the fixed transition table at 0x6424a8.
+class TRmgTableTerrainRule : public TRmgTerrainRule {
+public:
+    virtual ~TRmgTableTerrainRule();
+    // Before normalization (function): TRmgTableTerrainRule::HasEntries.
+    virtual unsigned char hasEntries();
+    virtual unsigned char isSpecialFrame(int frame);
+    virtual int getEntry(int index);
+    virtual int selectBaseFrame(int value, int oldFrame);
+    virtual int selectTransitionFrame(
+        int transition,
+        TRmgTerrainFlip requestedFlip,
+        TRmgTerrainFlip& selectedFlip,
+        int oldFrame);
 };
 
 // Retail 0x642bd8 is a pointer table in the read-only .rdata section.
