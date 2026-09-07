@@ -28,10 +28,11 @@ All use the pinned binaries under Wine.
   This is the minimum model, not a complete allocator description. The
   real-TU trace in section 3b also shows priority ordering, interference
   constraints and register costs deciding callee-saved assignments.
-* For named locals, creation order is the front end's **symbol-handle
-  order** - directly visible in the IL `sy` stream
-  (docs/vc6/il-format.md); the B14 naming lever works by minting the
-  handle earlier.
+* The IL `sy` stream exposes named locals' front-end handle order, but this
+  is not a general optimizer allocation order. The first-assignment controls
+  in section 3 and shipyard's passive observations below bound that
+  interpretation. Moving a bare declaration can change the front-end handle
+  while leaving every register decision unchanged.
 * The earlier B1 cases show register permutations with unchanged schedules.
   The minimum model labels some of these **C1 handle-state** cases when
   aliases are copy-propagated. That label is a hypothesis: unchanged
