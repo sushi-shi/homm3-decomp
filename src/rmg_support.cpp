@@ -84,6 +84,11 @@ TRmgRiverPainter::TRmgRiverPainter(
 {
 }
 
+// The derived vtable at 0x641190 places this compiler-generated deleting
+// wrapper after the retained constructor. It calls the exact empty derived
+// destructor at 0x55eda0 before conditionally releasing the complete object.
+VA_COMPGEN(0x0055EED0, 0x21, SCALAR_DELETING_DTOR, TRmgRiverPainter)
+
 // Cinit 0x55f2f0 builds the seventeen-entry road pattern table from the ids
 // at 0x6411ac. The road painter's first virtual slot returns that table.
 VA(0x0055F320, 0x08)  // vtables 0x6411f0/0x64120c; Complete-only
