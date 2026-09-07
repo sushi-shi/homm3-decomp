@@ -562,42 +562,18 @@ void iconWidget::setSprite(const char* newSprite)
     m_sprite = ResourceManager::getSprite(newSprite);
 }
 
-// E:\gamedcs\iconwdgt.cpp:478
-// The idle-animation state machine: weighted odds (0:65%, 2:15%,
-// 4:5%, 1:5%, 3:4%, fidgets 11-16 1% each; the table re-initializes
-// per re-roll, matching the retail loop-back into its stores);
-// cs_prewalk/cs_postwalk (0x14/0x15) are the leave/enter transitions
-// with the fidget target parked in PostPostWalkSequence.
-// Residual (81.0449%): Dreamcast proves the fast path calls SetIconFrame,
-// the transition and reroll arms assign one shared `chosen`, and the single
-// tail calls SetIconSequence. Restoring that source shape raises the old
-// 72.0056% plateau and makes the CFG exact (32/32 blocks, 22 exact and ten
-// size-only). The remaining dominant delta is the same invariant-table
-// motion as the siege twin below: B13 carries 24 initializer instructions
-// that retail places at the B14 reroll head. Retail also homes `this` at
-// [ebp-4] (frame 0x5c vs our 0x58), accounting for B0 and the one-instruction
-// reload deltas after the reroll. Fixed here 2026-08-08: the frame-count guard is
-// CSprite::GetNumFrames (a csprite.h inline, DC CSprite.h:293), NOT a
-// cached local - re-expanding it per use took this 69.02 -> 72.01 and
-// SetIconFrame 90.18 -> exact. Dreamcast CodeView further proves that
-// sequenceList is a local const array of an anonymous
-// {creature_seqid sequence_id; int chance;} aggregate; restoring that exact
-// source type and the enum names is byte-identical and does not move this
-// register-allocation plateau.
-// Polish lane 37 localised the residual exactly and added two negative
-// controls. The delta is ONE loop-head placement: retail's three back edges
-// (the inlined GetNumFrames guard's three arms) all target the array
-// initializer's first constant, so retail RE-INITIALIZES sequenceList on
-// every reroll; our C2 hoists the whole 22-store initializer above the loop
-// and the back edges land on `mov edx,0x64` (the Random argument). Retail
-// therefore needs 5 and 1 alive in CALLEE-SAVED ebx/esi across the Random
-// call, which is what evicts `this` to [ebp-4] and makes the frame 0x5c
-// against our 0x58 - the frame delta is a CONSEQUENCE of the un-hoisted
-// initializer, not an independent missing local. Tried and rejected, each
-// BYTE-IDENTICAL to the digit (same object, 81.0449): rewriting the `for(;;)`
-// + `break` as a backward `goto reroll_sequence;` over a braced block (the
-// catalog's "VC6 does not LICM goto flow" lever does not reach an invariant
-// aggregate initializer), and dropping the `const` from sequenceList.
+// Dreamcast iconwdgt.cpp:478. The fast path calls SetIconFrame; the
+// transition arms and random selection feed one SetIconSequence tail.
+// Its const anonymous sequenceList aggregate ends scope at dc 0xd9e86,
+// before the GetNumFrames reroll test (source line 546). A do/while preserves
+// that boundary and reaches 100% from 81.0449%. The for(;;)/break spelling
+// hoisted all odds-table stores before the loop; do/while keeps them at the
+// retail reroll head and naturally homes this at [ebp-4] (frame 0x5c).
+// The table needs neither volatile nor a helper to prevent the hoist.
+// Reusing chosen for the random roll is byte-identical, as is nesting the
+// walk-entry guard; retain separate roll/chosen meanings and the DC-proven
+// positive transition conditions. Earlier goto and non-const probes were
+// byte-identical to the for/break baseline, so they did not test this scope.
 VA(0x004eb060, 0x1EB)  // anchor-global, dc 0xd9d90
 void iconWidget::nextRandomFrame()
 {
@@ -611,7 +587,7 @@ void iconWidget::nextRandomFrame()
     } else if (m_seqId == cs_postwalk) {
         chosen = m_postPostWalkSequence;
     } else {
-        for (;;) {
+        do {
             const struct {
                 // Before normalization: sequence_id.
                 creature_seqid m_sequenceId;
@@ -639,13 +615,11 @@ void iconWidget::nextRandomFrame()
                     break;
             }
             chosen = sequenceList[pick].m_sequenceId;
-            if (m_sprite->getNumFrames(chosen) > 0)
-                break;
-        }
-        if (chosen == cs_walk) {
-            if (m_seqId != cs_walk && m_sprite->getNumFrames(cs_prewalk) > 0)
-                chosen = cs_prewalk;
-        } else if (m_seqId == cs_walk
+        } while (m_sprite->getNumFrames(chosen) <= 0);
+        if (chosen == cs_walk && m_seqId != cs_walk
+            && m_sprite->getNumFrames(cs_prewalk) > 0) {
+            chosen = cs_prewalk;
+        } else if (chosen != cs_walk && m_seqId == cs_walk
                    && m_sprite->getNumFrames(cs_postwalk) > 0) {
             m_postPostWalkSequence = chosen;
             chosen = cs_postwalk;

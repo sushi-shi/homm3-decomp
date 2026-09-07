@@ -2326,7 +2326,7 @@ iconwdgt	?getRealHeight@iconWidget@@UAEHXZ	100.0000	100.0000	100.0000	0xeab30	38
 iconwdgt	?getRealWidth@iconWidget@@UAEHXZ	100.0000	100.0000	100.0000	0xeab20	4f29ec2331b5
 iconwdgt	?handleClick@iconWidget@@UAEEEE@Z	100.0000	100.0000	100.0000	0xeab10	7aebb3faf6a3
 iconwdgt	?main@iconWidget@@UAEHPAVmessage@@@Z	95.7040	95.7040	95.7040	0xea810	bb040b7f6a53
-iconwdgt	?nextRandomFrame@iconWidget@@QAEXXZ	81.0449	81.0449	81.0449	0xeb060	be077e2a879c
+iconwdgt	?nextRandomFrame@iconWidget@@QAEXXZ	100.0000	100.0000	100.0000	0xeb060	c93a8a543f54
 iconwdgt	?nextRandomSiegeEngineFrame@iconWidget@@QAEXXZ	89.4667	89.4667	89.4667	0xeb250	fb91ff7593b3
 iconwdgt	?setIconFrame@iconWidget@@QAEXH@Z	100.0000	100.0000	100.0000	0xeaff0	a0b6ae195ae9
 iconwdgt	?setSprite@iconWidget@@QAEXPBD@Z	100.0000	100.0000	100.0000	0xeb030	00e392e65f35

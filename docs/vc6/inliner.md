@@ -1500,3 +1500,20 @@ branch. Restoring that lifetime reaches 100%, including retail's earlier
 facing load. Replacing `getAdjacentCellIndex`'s explicit bounds guards with
 its DC-proven `validHex` call leaves the caller bytes unchanged. Complete's
 `isEnemy` call remains: retail proves that revision of the enemy criterion.
+
+
+### A do/while scope can retain invariant table stores inside the loop
+
+`iconWidget::nextRandomFrame` (0x4eb060) stopped at 81.0449% with its local
+odds table initialized inside a `for (;;)`, followed by a frame-count test
+and `break`. VC6 moved every table store before the reroll loop, while retail
+reinitializes the table on each attempt. Earlier goto, constness and inline
+budget probes had not changed that motion.
+
+Dreamcast's table scope closes at 0xd9e86 before the `GetNumFrames` condition
+on source line 546. A `do { ... } while (getNumFrames(chosen) <= 0)` preserves
+that boundary and reaches 100%. It also restores the 0x5c frame and the saved
+`this` pointer because the repeated constants now live across `random`.
+Reusing the result variable for the random roll, or spelling the transition
+conditions as the Dreamcast conjunctions, leaves those exact bytes unchanged.
+The table's const anonymous aggregate and ordinary helper calls remain intact.
