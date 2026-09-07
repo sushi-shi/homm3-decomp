@@ -1426,3 +1426,15 @@ with the same CFG. Caching only the town pointer reached 91.625%; changing the
 index types or sharing the hex local was byte-flat. All thirteen retail CFG
 blocks match after the damage local, and the exact padded 240-byte function
 has SHA-256 `0db9e77505e353b05f2a08f719afd06ca5da16de4600205c4e0218c5323b6f55`.
+
+`type_AI_spellcaster::getProtectionValue` (0x4396e0) provides a second
+control. Splitting mana-cost calculation from the comparison with current
+mana reaches 94.5232%; materializing the complete base damage before
+`modifySpellDamage` reaches 89.5106%. Together they reach 100%, restoring
+retail's ESI spell-offset lifetime and its reloads of the army parameter.
+Dreamcast ai_tactical.cpp:2035-2037 separates the mana-cost call and mana
+read; the retail damage calculation precedes its argument loads. Restoring
+`army::is`, `SpellIsAvailable`, the const signature, and the ordinary
+`get_duration` helper is byte-flat before these two statement changes.
+The exact padded 704-byte function has SHA-256
+`9c8c35382ab8b583231581f37408868f3409ae471d6f8b03eadcdc18ddff6fcf`.

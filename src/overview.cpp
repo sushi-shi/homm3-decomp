@@ -113,7 +113,7 @@ static const int g_overviewHelpIds[8] = {
 // that body in Complete even though Dreamcast emitted the helper first.
 // Before normalization (function): get_last_backpack_index.
 // Before normalization (locals): hero_number.
-long getLastBackpackIndex(long heroNumber);
+static long getLastBackpackIndex(long heroNumber);
 // Before normalization (function): UpdateBackpack.
 // Before normalization (locals): iSlot, iSlotOff.
 void updateBackpack(int slot);
@@ -2561,38 +2561,21 @@ static void decrementBackpackStart(long slot)
 // independently fixes the four 200-id hero rows, three artifact-page buttons
 // and two backpack arrows per row, plus the keyboard paging extension.
 //
-// MATCHING (2026-09-04): 76.14 -> 77.96 on two jump-table arm orders (a
-// jump-table switch lays its arms out in source order): the flaggable
-// cases run HOME, PREVIOUS, NEXT, END, CONTROL_14 (retail table +0x8e4:
-// 571a/5722 expanded, 5756 `DoFlaggableButtons(2)`, 5764 `(3)`, 5772) and
-// the keyboard cases PRIOR, NEXT, HOME, END (table +0xae4). The codeX
-// case order measured byte-flat either way.
-// Residual: the /Ob2 budget. Retail expands DoFlaggableButtons at the
-// first two sites only, CALLS UpdateFlaggableIcons inside those
-// expansions and CALLS game::GetHero at depth 3 inside the eight
-// backpack-arrow expansions; we expand all of them (+31 blocks, 162 vs
-// 131). A direction probe (the KEY_DOWN block removed) brings three of
-// those nine calls back, so our caller cb is well above retail's (>= 1.4x
-// by the sequential model) yet every retail statement is present, the
-// four row bodies are separate in retail too (four jump-table clusters)
-// and the DC roster holds no helper to shrink the caller with
-// (get_last_backpack_index, show_artifact and the two backpack steppers
-// are already used). The leaf DoFlaggableButtons is byte-exact and
-// carries retail's double size()-7 evaluation.
-// 2026-09-05: 77.96 -> 80.10 on two Dreamcast facts: the twelve page arms
-// read `giOverviewTop[0]` (DC loads the array's first element with no
-// type shift, where its helpers shift by giOverviewType) - less front-end
-// mass, and the row-3 arrows moved to retail's GetHero /
-// get_last_backpack_index(long) calls; and the mouse-move block returns
-// on the cache hit (DC line 2857) before the store/DoRollover/second
-// return - retail's two epilogues with the DoRollover block sunk.
-// Instrumented (not shipped): five dead statements inside
-// DoFlaggableButtons take this row to 83.07 by pushing the leaf past the
-// 1000-cb candidacy filter (it is then CALLED at all four sites and
-// get_last_backpack_index expands again), so retail's leaf sits within a
-// few statements of ours and the rest is caller mass: the SELECT arm
-// falls through into the mouse test only once msg keeps EDI, which needs
-// the HOME/PREV expansions to stop expanding UpdateFlaggableIcons.
+// Residual (80.10% MAX): VC6 expands all four doFlaggableButtons sites,
+// including updateFlaggableIcons in HOME/PREVIOUS; retail retains the latter
+// and calls doFlaggableButtons for NEXT/END. The current C2 caller is 1321
+// before expansion (budget 2642); updateFlaggableIcons costs 68 against
+// HOME/PREVIOUS nested budgets 81/69. Later backpack getHero calls also
+// over-expand. Retain the canonical helper bodies and source calls.
+// Retail jump-table order is HOME/PREVIOUS/NEXT/END/control, and keyboard
+// PRIOR/NEXT/HOME/END. Its twelve artifact-page arms read overviewTop[0].
+// The mouse cache-hit return precedes the store/rollover/second return.
+// Controls: sharing the keyboard refresh through a common switch exit gives
+// 79.8825%; reusing heroNumber for the selected hero id gives 69.7888% and
+// does not preserve get_last_backpack_index's DC early-return scope.
+// Restoring that helper's static linkage or placing its definition before
+// the backpack steppers is byte-flat. No extra caller statements or inline
+// controls are retained to alter the budget.
 // E:\gamedcs\overview.cpp:2546
 VA(0x00521960, 0xB03)  // vtable slot 9 + exhaustive call/CFG identity, dc 0x10997c
 int TOverviewWindow::windowHandler(message* msg)
@@ -2928,7 +2911,7 @@ void UpdateArtifacts(int iSlot)
 // query. Retail has that exact call/access sequence and fastcall arity.
 // E:\gamedcs\overview.cpp:1597
 VA(0x005225d0, 0x55)  // body/arity identified, dc 0x1078e8
-long getLastBackpackIndex(long heroNumber)
+static long getLastBackpackIndex(long heroNumber)
 {
     if (heroNumber >= g_game->getLocalPlayer()->m_numHeroes)
         return 0;

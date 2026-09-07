@@ -482,7 +482,7 @@ ai_tactical	?getOgreMageValue@type_AI_spellcaster@@QAEJPBVarmy@@@Z	100.0000	100.
 ai_tactical	?getPoisonValue@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x39500	4b87f0999b00
 ai_tactical	?getPrayerValue@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38ac0	834adda808a0
 ai_tactical	?getPrecisionValue@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38b50	6805c40400a6
-ai_tactical	?getProtectionValue@type_AI_spellcaster@@QAEJPBVarmy@@W4TSpellSchool@@JJJ@Z	80.2110	80.2110	80.2110	0x396e0	da598077dc76
+ai_tactical	?getProtectionValue@type_AI_spellcaster@@QBEJPBVarmy@@W4TSpellSchool@@JJJ@Z	100.0000	100.0000	100.0000	0x396e0	13822f2d03a5
 ai_tactical	?getRangedAttackValue@type_AI_combat_parameters@@QAEJPBVarmy@@0@Z	100.0000	100.0000	100.0000	0x35cb0	d5c2b24dc691
 ai_tactical	?getShieldValue@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38c60	237eb81a8b8a
 ai_tactical	?getSimpleAttackEffect@type_AI_combat_parameters@@QAEJPBVarmy@@0EJ@Z	100.0000	100.0000	100.0000	0x35c70	dd5dccc1b6f1

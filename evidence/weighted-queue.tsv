@@ -20,7 +20,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x004f2960	894	79.1107	79.1107	79.1107	186.7503420000001	kb	?displayLCWinLoss@@YIEAAVLossConditionStruct@@AAH1E@Z	admitted
 0x0048a310	2846	69.5768	69.5768	79.2531	590.456774	customcampaign	?load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	admitted
 0x00521960	2819	80.0996	80.0996	80.0996	560.9922760000002	overview	?windowHandler@TOverviewWindow@@UAEHPAVmessage@@@Z	admitted
-0x004396e0	700	80.21097	80.211	80.211	138.523	ai_tactical	?getProtectionValue@type_AI_spellcaster@@QAEJPBVarmy@@W4TSpellSchool@@JJJ@Z	admitted
 0x00541140	1594	79.1717	80.4347	80.4347	311.87088199999994	rmg	?createGroundConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@PAV?$vector@PAUTRmgMapItem@@V?$allocator@PAUTRmgMapItem@@@std@@@std@@PAV?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@5@@Z	admitted
 0x0044cd50	1512	80.51287	80.5129	80.5129	294.64495200000005	artifact	?initializeArtifactTraitsTable@@YIEXZ	admitted
 0x0058d1f0	487	80.57979	80.5798	80.5798	94.57637399999999	singleselectionwindow	?getHeroName@TSingleSelectionWindow@@QAEPBDH@Z	admitted
