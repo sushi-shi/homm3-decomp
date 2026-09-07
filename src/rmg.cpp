@@ -282,15 +282,6 @@ static void setAvailableRmgHeroes(
     }
 }
 
-#if 0 // @carcass - retained placement helper shared by gate and shipyard paths
-VA(0x00531CF0, 0x1A5) // anchor-callee 0x541c73; thiscall, ret 0x14; retail-only
-unsigned char type_random_map::canPlaceObject(
-    TRmgObjectPropertiesRef* properties, TRmgMapPosition position, TRmgZone* zone)
-{
-    return 0; // @stub
-}
-#endif
-
 // The array constructor at 0x530e90 calls this initializer after constructing
 // m_objects, and type_random_map::clear calls it for every allocated cell.
 // Dreamcast has no RMG compiland, so the original method spelling is unknown;
@@ -342,6 +333,15 @@ void TRmgMapItem::clear()
     m_previousTile.m_x = -1;
     m_tileData = tileData;
 }
+
+#if 0 // @carcass - retained placement helper shared by gate and shipyard paths
+VA(0x00531CF0, 0x1A5) // anchor-callee 0x541c73; thiscall, ret 0x14; retail-only
+unsigned char type_random_map::canPlaceObject(
+    TRmgObjectPropertiesRef* properties, TRmgMapPosition position, TRmgZone* zone)
+{
+    return 0; // @stub
+}
+#endif
 
 // Vtable 0x6409cc slot 3 returns the map's two unsigned dimensions.
 // The hidden result pointer and two stores fix the coordinate return ABI.
