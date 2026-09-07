@@ -57,6 +57,11 @@ void* TRmgLinePainter::getPattern(int)
     return &g_rmgRiverPatternTable;
 }
 
+void TRmgLinePainter::setOverlay(const TRmgGridPoint& point, int value)
+{
+    m_adapter->setOverlay(point, value);
+}
+
 // Vtable 0x641174/0x641190 slot 5 forwards the point to the adapter's
 // getLand slot. The Complete-only RMG hierarchy has no Dreamcast counterpart.
 VA(0x0055EE30, 0x13)
@@ -85,6 +90,15 @@ VA(0x0055F320, 0x08)  // vtables 0x6411f0/0x64120c; Complete-only
 void* TRmgRoadLinePainter::getPattern(int)
 {
     return &g_rmgRoadPatternTable;
+}
+
+// The river and road line-painter vtables all share this ICF representative.
+// Loading the adapter at +0xc and dispatching its slot +8 proves setOverlay's
+// two-argument forwarding body; the road COMDAT wins retail link order.
+VA(0x0055F330, 0x17)  // vtables 0x641174/0x641190/0x6411f0/0x64120c; Complete-only
+void TRmgRoadLinePainter::setOverlay(const TRmgGridPoint& point, int value)
+{
+    m_adapter->setOverlay(point, value);
 }
 
 // The road hierarchy's parallel vtables 0x6411f0/0x64120c use the same
