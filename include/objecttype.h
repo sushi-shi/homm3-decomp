@@ -46,10 +46,10 @@ public:
     // the caller expands the pair constructor and scores 47.77 vs 54.77.
     // Keep the returned entry distinct from the iterator passed by reference
     // to vector::insert. In setImageName this preserves retail's existing-
-    // entry EAX path and reloads only after insertion (fn+0xe8). Returning
-    // the stable map value by reference gives 96.6403%; returning it by value
-    // changes later allocation and gives 87.8696. Declaration is provisional.
-    const int& GetIndex(const std::string& name)
+    // entry EAX path and reloads only after insertion (fn+0xe8). With the
+    // ordinary registry accessor, returning the mapped value by value also
+    // restores the caller's scratch allocation; see setImageName's controls.
+    int GetIndex(const std::string& name)
     {
         TNameIndex::iterator found = nameIndex.find(name);
         TNameIndex::iterator result = found;
@@ -65,21 +65,6 @@ public:
         return result->second;
     }
 };
-
-// The registry is a function-local static of an INLINE ACCESSOR, not of
-// either consumer, and retail's guard bytes prove it: GetImageName (0x514960)
-// and setImageName (0x514610) each test 0x69cb64 with mask 1 for the same
-// object, while GetImageName's own empty-name static gets a SECOND byte
-// (0x69cb70), also with mask 1. Two statics declared in one body share a
-// single guard byte with masks 1 and 2, which is what a shared accessor rules
-// out. NAME PROVISIONAL - nothing attests it; only the guard-byte layout and
-// the shared 0x69cb80 object are retail-proven.
-inline TObjectImageNameTable& GetObjectImageNames()
-{
-    static TObjectImageNameTable imageNames;
-    return imageNames;
-}
-
 
 // --- the object-type filter family -----------------------------------------
 //
