@@ -959,6 +959,14 @@ void advManager::vwDrawRiver(int srcX, int srcY, int z, int destX, int destY)
 // unit), the tileset array and the two flip bits (4 and 5 instead of 2 and
 // 3). Retail's identical instruction stream either side of those four
 // differences is what pairs the two.
+// Residual (98.2455%, MAX 99.5374%): all 45 blocks, 31 branches, seven calls
+// and 281 instructions align; the 14 unpaired masked slots are scratch-order
+// choices in the two expanded scaler row latches. The twice-used sourcePixel
+// pointer remains the source-true spelling that established MAX. Reversing
+// `mwidth * g_scaleLine[y]` independently in the clipped and unclipped
+// helpers is byte-flat, while why-reg's six guided local/declaration probes
+// are all worse. Keep the canonical shared helpers and their exact retained
+// clipped body rather than forcing this caller's register assignment.
 VA(0x005f95b0, 0x38B)  // exhaustive dc-order-map + VWCompleteDraw call order (3rd layer), dc 0x1949cc
 void advManager::vwDrawRoad(int srcX, int srcY, int z, int destX, int destY)
 {

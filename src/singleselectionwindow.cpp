@@ -1130,6 +1130,11 @@ VA_COMPGEN(0x00578E00, 0x25F, CLASS_CTOR, GameSelectionHeadersStruct)
 // and the final source-row copy.  Complete adds the transfer-list flag and
 // t_complex_net_message vtable but preserves that order; the implicit
 // GameSelectionHeadersStruct assignment is retail's retained 0x578440 body.
+// Retail comparison is structurally exact (9/9 blocks) and differs only in
+// scheduling the third embedded string constructor's `lea ecx` before its
+// null push. An explicit m_header() initializer is byte-flat at 98.80%;
+// moving flag/number into the initializer list drops this body to 90.74% and
+// also loses an exact TU function, so the source-order assignments remain.
 VA(0x00579060, 0x251)
 CGameHeaderInfoMsg::CGameHeaderInfoMsg(
     // Before normalization (locals): pHeader.
@@ -2160,7 +2165,9 @@ int CEnterNameEdit::onKeyPress(message* msg)
 // reversed; the 10 blocks and call sequence still agree. A disposable
 // Gruntz forest probe (seed 20260906, baseline + 16 variants) found two
 // islands; nine variants reproduced the relocation-masked retail bytes.
-// No probe noise is retained. DC 0x149290 proves the two calls below.
+// No probe noise is retained. Explicit `this->onEnter()` and qualified
+// `CEnterNameEdit::onEnter()` calls are byte-flat negative controls. DC
+// 0x149290 proves the two calls below.
 // E:\gamedcs\singleselectionwindow.cpp:1830
 VA(0x0057cee0, 0xFD)  // anchor-vtable CEnterNameEdit vtbl 0x241c14 slot11 (OnKillFocus override), dc 0x149290
 void CEnterNameEdit::onKillFocus()
@@ -2986,9 +2993,19 @@ void TSingleSelectionWindow::setupScenarioOptions(unsigned char randomMaps)
 // order; the other i belongs to the nested mapChanged reset loop. It also
 // opens a dedicated lexical block around the four town/hero icon pointers and
 // closes it after their y assignments. Both facts are source shape even though
-// they are byte-flat at the current 99.3846% checkpoint. All 101 retail blocks
+// they are byte-flat. All 101 retail blocks
 // and all 56 symbolic branches agree. Initializing the outer i at declaration
 // was tested as a separate lowering and rejected at 96.1750%.
+// 2026-09-07: naming the two Complete-only compatibility-message pointers
+// symmetrically fixes both hidden string-return-buffer schedules and raises
+// 99.3846 -> 99.8030 (14 instruction rows remain). Naming only the first falls
+// to 99.11, so the paired lifetimes are load-bearing. Moving the ten main-loop
+// widget declarations into the loop, or moving the adjacent `i, nextColor`
+// pair below those declarations, is byte-flat; retain their current scope.
+// The residual is a four-home rotation among nextColor, playerType, nameEdit,
+// and an induction temporary. Naming the duration isHost result and declaring
+// compatibilityMessage before gameType symmetrically are byte-flat. why-reg's
+// seven catalog mutations were flat or worse; none reduced the divergence.
 // E:\gamedcs\singleselectionwindow.cpp:2933
 VA(0x00581100, 0x897)  // anchor-callee OnWidgetDeselect 0x5865b0 calls it (site 0x586d43) - the DC edge; size 1.02x dc 0x86C, dc 0x136388
 void TSingleSelectionWindow::setupAdvancedOptions()
@@ -3024,9 +3041,10 @@ void TSingleSelectionWindow::setupAdvancedOptions()
                     text = g_generalText->m_text.begin();
                     gameType = text[747];
                 }
+                const char* compatibilityMessage = text[744];
                 normalDialog(
                     formatString(
-                        text[744],
+                        compatibilityMessage,
                         gameType).c_str(),
                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 return;
@@ -3050,9 +3068,10 @@ void TSingleSelectionWindow::setupAdvancedOptions()
                     text = g_generalText->m_text.begin();
                     gameType = text[747];
                 }
+                const char* compatibilityMessage = text[745];
                 normalDialog(
                     formatString(
-                        text[745],
+                        compatibilityMessage,
                         gameType).c_str(),
                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 return;
@@ -5839,7 +5858,9 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
 // docs/vc6 records for the prologue-counter lever is WORSE, measured
 // 2026-09-06: `i = 0;` before the memset 98.9548 (with `for (; ...)` and
 // with a `while` alike), and moving the memset BELOW the sprintf loop
-// 89.1584.
+// 89.1584. An unsigned counter flips the loop branch signedness and falls to
+// 99.15%. why-reg tested five additional catalog mutations; three were flat,
+// one worse, one invalid, and none moved the EAX/EDX divergence.
 VA(0x005879A0, 0x219)
 std::string getRandomMapName()
 {
@@ -6101,7 +6122,7 @@ int TSingleSelectionWindow::getThisPlayerGamePos()
 // E:\gamedcs\singleselectionwindow.cpp:6301
 #endif  // @carcass
 
-// MATCHING (2026-09-04): 70.46 -> 98.49 on the DC line-table shape
+// EXACT (2026-09-07): 70.46 -> 100 on the DC line-table shape
 // (6301..6440): a plain `if (IsMultiPlayer()) {seat loop} else {solo}`
 // with no gotos, `pPlayer->IsHuman()` for the dpid tests, the solo arm
 // through GetThisPlayer() (its early-return form gives retail's
@@ -6109,10 +6130,11 @@ int TSingleSelectionWindow::getThisPlayerGamePos()
 // `if (IsHost() && updateCurPlayer)`, and both stores of the final
 // mode-3 if/else in each arm. The GetGamePos arm order in the header
 // (early `return -1`, playerPos as the fall-through) is what places the
-// found path in line at 0x588458. Residual: the seat loop's counter
-// lives at [ebp-0x8] here and [ebp-0xc] in retail (slot order only);
-// flipping the commit loop's strcpy/comp arms measured 84.52 and is
-// rejected.
+// found path in line at 0x588458. The final 99.6198 -> 100 step restores
+// DC rows 6382/6385 as separate `if (player)` / `if (!player)` statements;
+// spelling the second condition as `else` removes retail's `mov eax, ebx`
+// before the null test. Flipping the commit loop's strcpy/comp arms measured
+// 84.52 and is rejected.
 // Rebuilds the per-seat game state from the lobby roster: clears the
 // non-host players' local/human flags, assigns or clears each seat's
 // net identity (with the hotseat mode-3 special), commits the roster's
@@ -6170,7 +6192,7 @@ void TSingleSelectionWindow::updatePlayerPositions(unsigned char updateCurPlayer
         CNetPlayerHandlerPlayer* player = m_players.getPlayerInPos(i);
         if (player)
             strcpy(g_game->m_players[i].m_name, player->m_name);
-        else
+        if (!player)
             player = m_players.getCompPlayerInPos(i);
         if (player) {
             g_newMapStartingBonus[i] = player->m_startBonusIndex;
@@ -7407,11 +7429,9 @@ void TSingleSelectionWindow::displayChat()
 
 #endif  // @carcass
 
-// Residual (86.44, from 65.70 on the header's DC GetGamePos arm order):
-// branch census agrees 27=27 and every arm offset lines up; retail keeps
-// the walking index in ecx, re-reads pPlayer from its arg slot and
-// defers the callee-saved pushes past the count==0 early return; ours
-// pushes first and spills the index into that slot - register homing.
+// Exact: DC's sole named local is currFace.  Keeping each exhausted walk in
+// that local and joining both signs at the final player assignment reproduces
+// retail's deferred callee-save prologue and the second isFaceTaken loop tail.
 // Step the player's face selection backward or forward (by the sign of
 // `which`), wrapping an unset index and giving up with -1 once the
 // walk returns to its start, skipping every face another seat holds.
@@ -7420,38 +7440,37 @@ void TSingleSelectionWindow::displayChat()
 VA(0x0058AF20, 0x182)  // anchor-callee RS_REQUEST_HERO_FACE arm calls it (which, pPlayer) - the DC signature, size 1.18x dc 0x146, dc 0x141824
 void TSingleSelectionWindow::getHeroFace(int which, CNetPlayerHandlerPlayer* player)
 {
-    int count = player->m_availableHeroesCount;
-    int idx = player->m_heroIndex;
-    if (count == 0)
+    int currFace = player->m_heroIndex;
+    if (player->m_availableHeroesCount == 0)
         return;
     if (which < 0) {
         do {
-            if (idx > 0)
-                --idx;
-            else if (idx == -1)
-                idx = count - 1;
+            if (currFace > 0)
+                --currFace;
+            else if (currFace == -1)
+                currFace = player->m_availableHeroesCount - 1;
             else {
-                player->m_heroIndex = -1;
-                return;
+                currFace = -1;
+                break;
             }
         } while (m_players.isFaceTaken(
-                     player->m_availableHeroes[idx],
+                     player->m_availableHeroes[currFace],
                      m_players.getGamePos(player->m_dpid)));
     } else {
         do {
-            if (idx < count - 1 && idx >= 0)
-                ++idx;
-            else if (idx == -1)
-                idx = 0;
+            if (currFace < player->m_availableHeroesCount - 1 && currFace >= 0)
+                ++currFace;
+            else if (currFace == -1)
+                currFace = 0;
             else {
-                player->m_heroIndex = -1;
-                return;
+                currFace = -1;
+                break;
             }
         } while (m_players.isFaceTaken(
-                     player->m_availableHeroes[idx],
+                     player->m_availableHeroes[currFace],
                      m_players.getGamePos(player->m_dpid)));
     }
-    player->m_heroIndex = idx;
+    player->m_heroIndex = currFace;
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:7298

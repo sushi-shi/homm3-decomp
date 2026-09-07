@@ -3298,6 +3298,21 @@ std::string TSeerHut::seerHutFn005743E0(int player)
 // states (allocation, completed base, completed artifact member); the remaining
 // member-constructor/insert expansion mismatch still needs natural compiler
 // state. The old note calling this unreachable without an inline pin was wrong.
+//
+// Residual (94.24%, raised from 86.81%): the one-byte Morale, Luck and Primary
+// bonuses are unsigned-char conversions, and the two-byte creature count is an
+// unsigned-short conversion. Those four source types recover the entire switch
+// and tail: all 58 CFG blocks and 22 branches align, 56 blocks are byte-exact,
+// and every post-constructor opcode agrees apart from the resulting eight-byte
+// frame displacement. The two size-only blocks are the legacy artifact arm:
+// retail expands the shared three-argument constructor but calls its nested
+// type_quest(flags), while this caller expands both. The exact load sibling
+// needs both expansions. Plain `inline`, moving the definition ahead of the
+// base constructor, and caller inline-depth(1) are byte-flat. A constructor-level
+// inline-depth(0) is the negative control: read falls to 91.86%, exact load to
+// 82.72%, and is not retained. Naming the artifact falls to 93.70%; an explicit
+// signed comparison is byte-flat. Keep the canonical shared constructor and
+// caller-specific natural inliner state rather than pinning either caller.
 VA(0x00574610, 0x480)  // anchor-caller readObject SEER arm; bracket seerhut..singleselectionpopups
 void TSeerHut::read(TAbstractFile* infile)
 {
@@ -3347,14 +3362,16 @@ void TSeerHut::read(TAbstractFile* infile)
     case eRewardMorale: {
         int intBuffer;
         infile->read(&intBuffer, 1);
-        m_reward.m_value.m_signedLow.m_bonus = intBuffer & 0xff;
+        m_reward.m_value.m_signedLow.m_bonus =
+            static_cast<unsigned char>(intBuffer);
         break;
     }
 
     case eRewardLuck: {
         int intBuffer;
         infile->read(&intBuffer, 1);
-        m_reward.m_value.m_signedLow.m_bonus = intBuffer & 0xff;
+        m_reward.m_value.m_signedLow.m_bonus =
+            static_cast<unsigned char>(intBuffer);
         break;
     }
 
@@ -3374,7 +3391,8 @@ void TSeerHut::read(TAbstractFile* infile)
         infile->read(&charBuffer, sizeof(charBuffer));
         m_reward.m_value.m_primarySkill.m_skillType = charBuffer;
         infile->read(&intBuffer, 1);
-        m_reward.m_value.m_primarySkill.m_bonus = intBuffer & 0xff;
+        m_reward.m_value.m_primarySkill.m_bonus =
+            static_cast<unsigned char>(intBuffer);
         break;
     }
 
@@ -3418,7 +3436,8 @@ void TSeerHut::read(TAbstractFile* infile)
         }
         int countBuffer;
         infile->read(&countBuffer, 2);
-        m_reward.m_value.m_creature.m_count = countBuffer & 0xffff;
+        m_reward.m_value.m_creature.m_count =
+            static_cast<unsigned short>(countBuffer);
         break;
     }
     }

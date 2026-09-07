@@ -67,6 +67,15 @@ inline int sRandom(int lower, int upper)
 // keep when the action is automatic; otherwise a basic catapult chooses a
 // random weakest wall, while the remaining cases prefer surviving towers.
 // Every successful arm writes the catapult order and its target combat hex.
+// Residual (99.8804%): all 59 blocks, 42 branches, five returns and four
+// calls are exact. The only six unpaired masked slots are one EAX/ECX scratch
+// swap while loading the keep's wall section and strength. why-reg finds the
+// callee-saved bindings and IL order identical and classifies this as a C1
+// caller-saved choice. Naming the wall as int or TWallSection, using the
+// canonical getWallStrength helper, nesting the two tests, and swapping the
+// count/skill declaration order are byte-flat; moving the wall lifetime
+// earlier costs 36 rows, while naming `skill == 0` costs 37. Keep the direct
+// DC-shaped access rather than forcing a register with synthetic state.
 VA(0x00473c00, 0x29F)  // anchor-callee: Main's only automate callee w/ Random discriminator + order-map, dc 0x6af98
 unsigned char combatManager::automateCatapult()
 {

@@ -1850,6 +1850,13 @@ void CSprite::draw(int seqnum, int framenum, int sx, int sy, int sw, int sh,
 // call and 0x4f00a0 materializes newGame=1 internally, proving that Complete
 // removed Dreamcast's unsigned-char parameter. The helper remains
 // source-static and out of line in Complete.
+// Residual (99.8872%): all 30 blocks, 15 branches, 44 calls and opcodes are
+// exact. Retail leaves one four-byte allocator hole between exitCampaigns
+// (the exact byte at [ebp-0xd]) and the first 0x4c-byte TCampaignSetWindow,
+// shifting every later RAII object and the frame by four bytes. Restoring a
+// Complete-local `unsigned char newGame = 1` is byte-neutral; widening
+// exitCampaigns to int is worse (99.78%) and contradicts retail's byte
+// store/test. The proven class size and object scopes therefore stay intact.
 VA(0x004f00a0, 0x3EE)
 static unsigned char doCampaignWindow()
 {
@@ -1999,8 +2006,11 @@ static int doSinglePlayerWindow()
     }
 
     // Both Dreamcast and retail normalize the adjacent cancel/okay results.
-    // This spelling preserves the retail CFG; the remaining cmp-vs-dec opcode
-    // is the documented one-instruction residual for this helper.
+    // This spelling preserves all six retail blocks; Complete uses DEC where
+    // VC6 emits CMP 1 here. Negative controls using a consumed pre-decrement,
+    // both as a compact predicate and as nested guards, add a redundant TEST
+    // and fall to 95.76%; an early-return spelling adds a block and falls to
+    // 83.31%. Keep the source-proven non-mutating comparison.
     int dialogResult =
         g_windowManager->m_dialogReturn - DIALOG_RETURN_CANCEL;
     if (dialogResult && dialogResult == 1) {
@@ -2164,7 +2174,9 @@ static int g_unnamed698a38;
 // byte shorter. Everything else - blocks, branches, calls and every
 // other store - is identical. Store position is not the handle:
 // measured 2026-09-06, `gbMPlayer = 0;` moved to the head of the run is
-// byte-flat at 99.6273 and moved to its foot is 99.5983.
+// byte-flat at 99.6273 and moved to its foot is 99.5983. Restoring the
+// Dreamcast-proven `bool` declaration (and spelling the value `false`) also
+// leaves this one-byte encoding choice unchanged.
 VA(0x004f0690, 0x238)  // anchor-caller (EarlySetup) + gcCommandLine walk, dc 0xe1990
 int interpretCommandLine()
 {
@@ -2175,7 +2187,7 @@ int interpretCommandLine()
 
     g_unnamed6783d8 = 1;
     g_unnamed6993dc = 1;
-    g_mPlayer = 0;
+    g_mPlayer = false;
     g_unnamed698a38 = 0;
     g_unnamed6989c8 = 0;
     g_noSound = 0;
@@ -2435,13 +2447,14 @@ unsigned char type_normal_dialog_frame::handleClick(unsigned char downClick,
     }
     return 0;
 }
-// Residual (99.9457%): ONE instruction pair swapped - retail stores
-// artifactId before extra in the RES_ARTIFACT arm's type_artifact, our
-// compile stores extra first, because hero.h's two-argument constructor
-// initialises `extra` in its member-init list and assigns `artifactId`
-// in its body (VC6 emits init-list members ahead of body statements).
-// Reordering the constructor would reach ten other construction sites in
-// six TUs that are currently exact, so it is left alone.
+// Residual (99.98%): all 32 blocks, 12 branches, 15 returns, and 18 calls
+// agree. The two constructor stores now agree too; the only instruction
+// mismatch is the hidden return-buffer address for the first
+// getDescription call (`lea edx` / `push edx` here versus retail EAX).
+// A const-reference cast, a branch-local const reference, and spelling the
+// payload as `(&artifact)->m_extra` are byte-flat. Naming the returned
+// description extends its lifetime and falls to 96.39% with an extra block
+// and return, so retain the direct DC-proven temporary expression.
 // LOWORD/HIWORD is load-bearing and not cosmetic: retail re-reads the
 // qualifier as a WORD (`xor eax,eax / mov ax, word ptr [this+0x3c]`) and
 // shifts the high half UNSIGNED (`shr`), where `qualifier & 0xffff` plus
@@ -3282,7 +3295,7 @@ void playerDead(int gamePos);
 // argument overrides everything.  The `gosolo` latch pair is honoured
 // three times over: the acting seat is temporarily made local so the
 // dialogs address it, and put back on the way out.
-// Residual (89.45%): blocks 85 = 85 and the branch view is clean; two
+// Residual (90.6247%): blocks 85 = 85 and the branch view is clean; two
 // codegen decisions are left. (1) Our CL CROSS-JUMPS the two per-seat
 // NormalDialog calls - the dead-seat notice and the countdown-expiry
 // notice share their last five pushes - into one site where retail
@@ -3296,6 +3309,11 @@ void playerDead(int gamePos);
 // Tried and rejected 2026-09-06 for (2): naming GetLocalPlayerGamePos's
 // result in an `int` local before the GetTeamMask call is byte-flat at
 // 90.6247 and does not move the frame.
+// Tried and rejected 2026-09-07: changing the retail byte latch to the
+// Dreamcast roster's older `int bRemoteWasOn` drops to 86.60; Complete's
+// target explicitly stores/tests [ebp-1]. Removing the four retained
+// formatting-pointer temporaries recreates the older 89.45 plateau and
+// worsens register allocation throughout the player loop.
 // Before normalization (locals): bForceWin, bGameWon, bGameLost, iLiveOpponents,
 // bTookLocalControl, bStandardVictoryAllowed.
 VA(0x004f2ce0, 0x5BA)  // decorated identity (kb.h) + dc-order-map, dc 0xe3780
@@ -4143,20 +4161,18 @@ void fileError(const char* buf)
 // The Dreamcast first parameter survives in Complete's ABI but its body
 // no longer reads it; ShowCongrats still passes the high-score type.
 //
-// Residual (96.8467%): ONE surplus branch. Retail's frame-wait loop is
-// UNROTATED - `call VideoPlaying / test al,al / je exit` at the head with a
-// bare `jmp` back to that call - while our CL rotates it and duplicates the
-// condition at the bottom (`call VideoPlaying / test al,al / jne body`).
-// MEASURED AND REJECTED 2026-09-06, all three byte-flat at 96.8467 with the
-// branch count still 9 against retail's 8: the literal goto-loop
-// transcription (`head: if (!VideoPlaying()) goto stop; ... goto head;`),
-// the same shape written as `for (;;) { if (!VideoPlaying()) goto stop; ... }`,
-// and swapping the `int i; int x;` declaration order (which does not move
-// the [ebp-4]/[ebp-8] home swap those two locals carry either). VC6 rotates
-// this loop however the source spells the edges - the same verdict
-// smackmgr.cpp's VideoClose records for its own drain loop.
+// Exact (2026-09-07, 96.8467% -> 100%): Dreamcast's function-local `message
+// msg` is constructed before the first draw and assigned from GetEvent in
+// the loop; its `SmackTag* smk` is initialized to null and participates in
+// the loop-head guard. Restoring those two source facts as Complete's Smack
+// type makes VC6 release-elide their runtime setup while retaining the
+// unrotated retail loop: one VideoPlaying call at the head and a bare back
+// edge. The structured precheck plus do/while negative control reached
+// 98.9273% but retained two VideoPlaying calls; literal goto/for spellings
+// without the recovered locals remained at 96.8467% with nine branches.
 // Before normalization (function): CongratsWait.
-// Before normalization (locals): iBase, iScore, iDayz, pFont, cTemp.
+// Before normalization (locals): iBase, iScore, iDayz, pFont, cTemp, msg,
+// WinText, smk.
 VA(0x004f3ab0, 0x374)  // anchor-caller (ShowCongrats) + dc-order-map, dc 0xe3e48
 void congratsWait(int mode, char* rank, int base, int score, int dayz)
 {
@@ -4169,6 +4185,8 @@ void congratsWait(int mode, char* rank, int base, int score, int dayz)
         g_generalText->m_text[677]
     };
     char temp[100];
+    message msg;
+    Smack* smk = 0;
     int i;
     int x;
 
@@ -4202,10 +4220,10 @@ void congratsWait(int mode, char* rank, int base, int score, int dayz)
                                  x, 540, 160, 50, 281, 5, -1);
     }
     g_windowManager->updateScreen(0, 0, 800, 600);
-    while (videoPlaying()) {
+    while (!smk && videoPlaying()) {
         pollSound();
         process1WindowsMessage();
-        message msg = g_inputManager->getEvent();
+        msg = g_inputManager->getEvent();
         switch (msg.m_id) {
         case MESSAGE_KEY_DOWN:
             if (msg.m_codeX != KEYCODE_F4)
@@ -4786,6 +4804,8 @@ void type_dialog_icon::set(EGameResource resource, long qualifier)
     // RES_EXPERIENCE char-pointer assignments (85 calls versus our 83).
     // Statement-scoped inline_depth(0) is not the missing boundary: it also
     // de-inlines operator=, grows the CFG to 135 blocks, and scores 94.9238%.
+    // The predictor's depth-1 midpoint, explicit assign(const char*), and
+    // branch-local const-char-pointer lifetimes are all byte-flat at 99.1667%.
     // Rejected source families: signed/unsigned relational count tests,
     // zero-first monster arms, repeated direct LOWORD/HIWORD expressions,
     // and division-based high-word extraction. The quantity-first unsigned

@@ -157,7 +157,7 @@ inline void recruitUnit::updateCost()
 //   0x54fb90  0x30d  add_creature_widgets            CLAIMED, 93.63%
 //   0x54fea0  0x42e  recruitUnit::Open               CLAIMED, exact
 //   0x5502d0  0x8c   recruitUnit::Close              CLAIMED, exact
-//   0x550360  0x3c   siege_artifact_to_creature      CLAIMED, 99.5%
+//   0x550360  0x3c   siege_artifact_to_creature      CLAIMED, exact
 //   0x5503a0  0x594  recruitUnit::Update             CLAIMED, 90.8%
 //   0x550940  0xa08  recruitUnit::Main               CLAIMED, 99.11%
 //   0x551350  0x101  recruitUnit(armyGroup*, ...)    CLAIMED, 98.0%
@@ -660,6 +660,9 @@ static TArtifact siegeMonsterToSiegeArtifact(TCreatureType siegeMon)
 // while its jump table is 0x0f/0x15/0x21/0x1b for artifact ids 3..6.
 // Therefore the source case order is Catapult, Ballista, First Aid, Ammo:
 // artifact 5 maps to Ammo Cart and artifact 6 maps to First Aid Tent.
+// EXACT (2026-09-07): the DC-proven bool correction for the multiplayer
+// flags in remote.h also restores this TU's VC6 type-handle state; all seven
+// retail blocks then match without changing this source body.
 // Before normalization (function): siege_artifact_to_creature.
 VA(0x00550360, 0x3C)  // anchor-bracket + body, dc 0x119d98
 TCreatureType siegeArtifactToCreature(TArtifact engine)

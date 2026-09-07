@@ -230,7 +230,7 @@ void Bitmap16Bit::reference(int w, int h, int pitch, unsigned short* data)
 // the destination extent, then copy row by row. The last parameter selects
 // the keyed path - pixels equal to it are left alone - and the plain path
 // goes through the inline memcpy intrinsic.
-// Residual (81.3%): the source width must be a LOCAL - as a modified
+// Residual (83.5794%): the source width must be a LOCAL - as a modified
 // parameter the body scores 45.22, because retail keeps that value live in
 // EDI across both clips while the height stays in its parameter slot and is
 // reloaded. The one block still unpaired is retail's else-arm that
@@ -241,6 +241,10 @@ void Bitmap16Bit::reference(int w, int h, int pitch, unsigned short* data)
 // mismatches but scores 80.33 - the local declared after the first clip
 // (73.56), after both clips (72.32), and a top-initialised local re-read
 // from the parameter inside the clip (77.13).
+// Rechecked after the const-reference pixel recovery: both `w = srcWidth +
+// dstX` and split `w = srcWidth; w += dstX` spellings remain byte-identical
+// at 83.17. They pair all 26 blocks (21 exact, five size-only) but worsen the
+// current 83.5794 score, so the natural Dreamcast-shaped initialization stays.
 VA(0x0044e2b0, 0x139)  // order-map(DC bitmap16.obj, immediately before Grab), dc 0x51378
 void Bitmap16Bit::draw(int srcX, int srcY, int srcWidth, int srcHeight,
                        unsigned short* dst, int dstX, int dstY, int dstWidth,

@@ -88,9 +88,13 @@ void showTerritorySmacker(unsigned char bEvil2Post)
 
 // E:\gamedcs\campaignbrief.cpp:452. Complete keeps this and
 // ResetMapAndDescription as header-style inlines: neither has a retail
-// body, and Select carries both expanded - which is what makes
-// vector::size a NESTED candidate there, called out of line at both
-// loop tests (0x423110, the pointer-vector size COMDAT).
+// body, and Select carries both expanded. Retail nevertheless keeps
+// vector::size out of line at both loop tests (0x423110, the pointer-vector
+// size COMDAT), while the current compiler state expands it and scores 92.11%.
+// MEASURED AND REJECTED: inline_depth(1) at the ClearSelected call is
+// byte-flat; inline_depth(0) around the loop also calls operator[] and Hide,
+// falling to 91.45%. There is no scoped-depth midpoint for the two nested
+// size calls, so retain the Dreamcast-proven helper and natural library use.
 DC_ONLY(0x589a4, 0x84)
 inline void TCampaignBrief::clearSelected()
 {
@@ -202,15 +206,27 @@ static int g_campaignBriefPlayerSlot;
 // Lay the eight player flags out as allies (ALLY_FLAG1_ID..) and enemies
 // (ENEMY_FLAG1_ID..) of the local player's slot, hiding every flag first and skipping
 // the positions the scenario leaves empty.
+//
+// LANDED: naming the briefing-choice argument before the scenario lookup and
+// retaining the scenario pointer as a source local restores retail's evaluation
+// order; declaring the loop index before the two running widget ids restores its
+// EDI lifetime. Together these move 86.8125 -> 99.8958 with all nine CFG blocks,
+// five branches and thirteen calls exact. The remaining byte is the commutative
+// SIB spelling in the second teamInfo lookup inside Dreamcast-proven OnSameTeam:
+// candidate [ecx+eax+0x1f879], retail [eax+ecx+0x1f879]. Naming either the player
+// slot or the game receiver is byte-flat, so keep the canonical helper boundary.
 VA(0x00458010, 0x10F)  // handler caller + DC source identity, dc 0x58a9c
 void TCampaignBrief::updateAllyEnemyFlags()
 {
+    int briefingChoice = g_game->m_campaign.m_briefingChoice;
+    ScenarioStruct* scenario =
+        m_campaign->m_scenarios[m_selectedScenario];
     g_campaignBriefPlayerSlot =
-        m_campaign->m_scenarios[m_selectedScenario]->m_options->getPlayer(
-            g_game->m_campaign.m_briefingChoice);
+        scenario->m_options->getPlayer(briefingChoice);
+    int i = 0;
     int enemyFlagId = ENEMY_FLAG1_ID;
     int allyFlagId = ALLY_FLAG1_ID;
-    for (int i = 0; i < 8; i++) {
+    for (; i < 8; i++) {
         getWidget(i + ENEMY_FLAG1_ID)->hide();
         getWidget(i + ALLY_FLAG1_ID)->hide();
         if (g_game->m_setup.m_playerPos[i] >= 0) {

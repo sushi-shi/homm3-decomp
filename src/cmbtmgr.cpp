@@ -3325,6 +3325,11 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
 // 93.9772 -> 92.4708 with `step` hoisted and 92.3592 with `step` left in the
 // for-init, so the block-shape win is paid for in register allocation there.
 // Not a spelling to re-try without a different register story.
+// 2026-09-07 evidence refresh: DC types `deltaX`, `nframes`, and ARROW_DELAY
+// as const and `missile` as a const pointer; restoring those qualifiers is
+// byte-flat at 94.9649 and preserves the proven source facts. Commuting the
+// frame numerator to `15 + distance` is also byte-flat and still emits the
+// same mov/add rather than retail's LEA, so the canonical order remains.
 VA(0x00467db0, 0x46A)  // dc-bracket forced, dc 0x619a8
 void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
                                          int destY, int nsprites,
@@ -3337,11 +3342,11 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
     if (isQuickCombat())
         return;
 
-    int deltaX = destX - startX;
+    const int deltaX = destX - startX;
     int deltaY = destY - startY;
     unsigned char flipped = deltaX < 0;
-    int nframes = (static_cast<int>(sqrt(static_cast<double>(
-                       deltaY * deltaY + deltaX * deltaX))) + 15) / 31;
+    const int nframes = (static_cast<int>(sqrt(static_cast<double>(
+                             deltaY * deltaY + deltaX * deltaX))) + 15) / 31;
     int addX;
     int addY;
     if (nframes > 0) {
@@ -3378,7 +3383,7 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
             spriteIndex = nsprites - 1;
     }
 
-    CSprite* missile = ResourceManager::getSprite(fileNames[spriteIndex]);
+    CSprite* const missile = ResourceManager::getSprite(fileNames[spriteIndex]);
     int width = missile->m_width;
     int height = missile->m_height;
     int x = startX - width / 2;
@@ -3387,7 +3392,7 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
     Bitmap16Bit saved(width, height);
     TDrawbridgeBounds updateArea = g_combatAreaLimits;
     drawFrame(0, 0, 0, 0, 1, 0);
-    int arrowdelay = static_cast<int>(
+    const int arrowDelay = static_cast<int>(
         g_combatSpeedFactors[g_unnamed698758.m_combatSpeed] * 33.0f);
 
     int frame = 0;
@@ -3396,7 +3401,7 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
         int right = x + width - 1;
         int bottom = y + height - 1;
         for (; step < nframes; step++) {
-            unsigned long nextFrameTime = GameTime::get() + arrowdelay;
+            unsigned long nextFrameTime = GameTime::get() + arrowDelay;
             if (step != 0) {
                 saved.draw(0, 0, width, height,
                            g_windowManager->m_screenBitmap->m_map, x, y,

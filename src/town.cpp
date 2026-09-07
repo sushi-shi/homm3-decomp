@@ -597,13 +597,10 @@ int town::hasGarrison()
 // backed const-member variants either emit this same order or score worse.
 #endif  // @carcass
 
-// Residual (99.9216%): 37/37 blocks, 23 branches and every call agree. The
-// only delta is the order of the two reloads at the mage-guild loop's tail -
-// retail restores `level` from [ebp-0xc] before `this` from [ebp-0x14], this
-// compile emits them the other way round. Declaring `level` outside the
-// for-init is byte-flat; the frame slots are already retail's.
-// Residual (99.9216%): one scheduling pair at the mage-guild loop's back edge -
-// retail loads `level` before the two condition operands, this compile after.
+// EXACT. Dreamcast records no hero-count local; spelling its one use directly
+// as `2 - (forceHero != 0)` makes VC6 schedule the mage-guild latch's `level`
+// and `this` reloads in retail order. The prior named local was otherwise
+// structurally exact at 99.9216%.
 // Measured and rejected 2026-09-06: swapping the `&&` operands so `level <=
 // field_14` is tested first costs TEN points (99.9216 -> 89.4392) by
 // re-threading the whole guard, so the written operand order is retail's and
@@ -615,8 +612,7 @@ void town::giveSpells(hero* forceHero)
         return;
 
     int heroIndex = 0;
-    int heroCount = 2 - (forceHero != 0);
-    while (heroIndex < heroCount) {
+    while (heroIndex < (2 - (forceHero != 0))) {
         hero* currentHero;
         if (forceHero) {
             currentHero = forceHero;

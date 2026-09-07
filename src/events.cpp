@@ -2652,6 +2652,9 @@ TreasureData* advManager::getTreasureData(NewmapCell* cell) const
 // serializes the inlined accessor. Negative control: putting artifactId
 // first raises the byte score but contradicts those two named statement
 // rows, so it is not an admissible reconstruction.
+// Negative control: spelling DC's unsigned-char human_player literally changes
+// the x86 decorated identity; retail's `_N` suffix proves this parameter is bool.
+// Splitting artifactId's declaration from its accessor assignment is byte-flat.
 // Before normalization (locals): current_hero, human_player, first_guard_amount, first_guard,
 // guard_list, num_armies.
 VA(0x0049f070, 0x765)  // dc-bracket forced, ret 0x10=p5, dc 0x90d34
@@ -2659,7 +2662,7 @@ void advManager::doCustomArtifact(hero* currentHero, NewmapCell* cell,
                                   type_point point, bool humanPlayer)
 {
     TreasureData* treasure = getTreasureData(cell);
-    short artifactId = cell->m_objectIndex;
+    short artifactId = cell->getArtifactIndex();
 
     if (treasure->m_hasCustomGuardians && treasure->m_guardians.getNumArmies()) {
         if (humanPlayer) {
@@ -8802,7 +8805,9 @@ const int g_netCombatSaveVersion = 42;
 // frame at all - it homes the byte buffer at [ebp+0xb] and the dword at
 // [ebp+8], overlapping inside the dead `infile` parameter slot once that
 // pointer is live in ESI. Block-scoping the pair and swapping their
-// declaration order are both byte-flat, measured.
+// declaration order are both byte-flat, measured. Moving int_buffer's
+// declaration to its first assignment, and delaying write's const-cast
+// alias until its tail calls, are byte-flat as well (2026-09-07).
 VA(0x004ad1f0, 0x148)  // anchor-vtable 0x63e508 slot 0; anchor-callee town::load + hero::load, retail-only
 unsigned char CCombatInitMsg::read(TAbstractFile* infile)
 {

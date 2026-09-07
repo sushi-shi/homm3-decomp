@@ -401,13 +401,11 @@ void sliderGames(int state, heroWindow* parentWindow)
     static_cast<TMultiPlayerWindow*>(parentWindow)->m_currentIndex = state;
 }
 
-// The two CHotSeatDlg helpers the DC roster keeps out of line (GetPlayerCount
-// dc 0x102cf8, UpdateOK dc 0x102d4c). Retail emits neither: both appear only
-// as the shared tail of CHotSeatEdit's two overrides below, which is what
-// fixes their bodies - the eight-edit strlen census, the `> 1` predicate on
-// widget 519's enable, and the full-window redraw with retail's own
-// 0xffff0001 / 0xffff id window. Marked `inline` so the TU emits no COMDAT
-// for a function the image does not have.
+// The CHotSeatDlg helpers DC keeps out of line (GetPlayerCount dc 0x102cf8,
+// UpdateOK dc 0x102d4c, OnKillFocus dc 0x102cc8). Retail emits none: they
+// expand into CHotSeatEdit's two overrides below. DC proves that UpdateOK only
+// updates widget 519; OnKillFocus performs the following full-window redraw.
+// Marked `inline` so the TU emits no COMDAT for bodies the image does not have.
 inline int CHotSeatDlg::getPlayerCount()
 {
     int players = 0;
@@ -421,6 +419,11 @@ inline int CHotSeatDlg::getPlayerCount()
 inline void CHotSeatDlg::updateOK()
 {
     getWidget(OKAY_ID)->enable(getPlayerCount() > 1);
+}
+
+inline void CHotSeatDlg::onKillFocus(int id)
+{
+    updateOK();
     drawWindow(1, 0xffff0001, 0xffff);
 }
 
@@ -458,20 +461,18 @@ int CMPInputEdit::onKeyPress(message* msg)
 
 // E:\gamedcs\multiplayerwindow.cpp:854 - promoted from DC_ONLY. Slot 11 of
 // CHotSeatEdit's vtable 0x640210. The base handler first, then the dialog's
-// OK re-evaluation expanded in place (CHotSeatDlg::UpdateOK is NOT virtual -
-// 0x6401d8 has no slot 14 - so retail inlines it here and in the key handler
-// below).
+// dialog helper expands UpdateOK followed by the redraw. CHotSeatDlg has no
+// vtable slot 14, so retail inlines that non-virtual boundary here.
 VA(0x0050dee0, 0x7F)  // anchor-vtable (slot 11 of 0x640210), dc 0xffaec
 void CHotSeatEdit::onKillFocus()
 {
     textEntryWidget::onKillFocus();
-    static_cast<CHotSeatDlg*>(m_parentWindow)->updateOK();
+    static_cast<CHotSeatDlg*>(m_parentWindow)->onKillFocus(m_id);
 }
 
-// CHotSeatEdit's ring walk. No carve row of its own: /OPT:ICF folded both
-// onto CMPEdit's byte-identical 0x510850 / 0x510870, which is exactly why
-// retail's 0x640210 carries those two addresses for a class that does not
-// derive CMPEdit.
+// Retail gives this direct textEntryWidget-derived class the same ring layout
+// and byte-identical walk bodies as CMPEdit; /OPT:ICF folds them onto the
+// canonical CMPEdit entries used by vtable 0x640210.
 void CHotSeatEdit::onNextEdit()
 {
     if (m_nextEdit && (m_nextEdit->m_status & widget::WIDGET_ACTIVE))
@@ -485,30 +486,20 @@ void CHotSeatEdit::onPrevEdit()
 }
 
 // E:\gamedcs\multiplayerwindow.cpp:860 - promoted from DC_ONLY. Slot 15 of
-// vtable 0x640210: CMPInputEdit's handler above with the same trailing OK
-// re-evaluation, except that this dialog's UpdateOK is expanded rather than
-// called. Retail homes the result in the dead `msg` parameter slot, which is
-// what a block-scoped result assigned on every arm gets here.
+// vtable 0x640210. DC explicitly attributes the reused handler to
+// CMPEdit::OnKeyPress, then calls UpdateOK and DrawWindow. The two edit classes
+// have the same base and ring layout, while retail constructor codegen proves
+// CHotSeatEdit is not derived from CMPEdit, so preserve that qualified reuse
+// through the original layout-compatible cast.
 VA(0x0050df60, 0xEE)  // anchor-vtable (slot 15 of 0x640210), dc 0xffb0c
 int CHotSeatEdit::onKeyPress(message* msg)
 {
-    int handled;
-
-    if (!m_hasFocus) {
-        handled = 0;
-    } else if ((HIWORD(GetKeyState(VK_SHIFT)) && msg->m_codeX == KEYCODE_TAB)
-               || msg->m_codeX == KEYCODE_KP_8) {
-        onPrevEdit();
-        handled = 1;
-    } else if (msg->m_codeX == KEYCODE_TAB || msg->m_codeX == KEYCODE_ENTER
-               || msg->m_codeX == KEYCODE_KP_2) {
-        onNextEdit();
-        handled = 1;
-    } else {
-        handled = textEntryWidget::onKeyPress(msg);
-    }
+    int handled = static_cast<CMPEdit*>(static_cast<void*>(this))
+                      ->CMPEdit::onKeyPress(msg);
 
     static_cast<CHotSeatDlg*>(m_parentWindow)->updateOK();
+    static_cast<CHotSeatDlg*>(m_parentWindow)->drawWindow(1, 0xffff0001,
+                                                          0xffff);
     return handled;
 }
 

@@ -1671,67 +1671,60 @@ void game::clearEventRecords(char playerId)
 // DRAWING (each later record still replays, with draw = 0). The acting
 // seat, the current hero/town context and two preference latches are saved
 // across the whole run and restored at the end.
+// EXACT 2026-09-07. DC rows 1285/1291/1298/1300 prove the canonical
+// GetCurrHero/GetHero/GetTown source boundaries, and retail proves their
+// inline expansions. One `size` local is reused by both walks; DC rows
+// 1313-1316 order cancelled, msg, old_speed and was_blacked_out. Finally,
+// the single short-circuit draw initializer at DC row 1325 gives retail's
+// [ebp-0x14] draw home and leaves size at [ebp-0x10]. A named currentTown
+// probe widened the byte before its sign test (one block missed), while the
+// equivalent nested draw assignments reversed those two homes (99.96861%).
 VA(0x0049d7a0, 0x2C1)  // linkorder dc-label + adventure-options edge, dc 0x8e830
 void game::playRecordedEvents()
 {
     int savedPlayer = g_netLocalGamePos;
     playerData* actingPlayer = g_currentPlayer;
 
-    hero* currHero;
-    if (actingPlayer->m_currHeroId != -1)
-        currHero = &g_game->m_heroes[actingPlayer->m_currHeroId];
-    else
-        currHero = 0;
+    town* currTown;
+    hero* currHero = g_game->getCurrHero();
 
     g_completeDrawMessageBypass = 1;
 
-    town* currTown;
-    if (actingPlayer->m_currTownId >= 0 && actingPlayer->m_currTownId != -1)
-        currTown = &g_game->m_towns[actingPlayer->m_currTownId];
+    if (actingPlayer->m_currTownId >= 0)
+        currTown = g_game->getTown(actingPlayer->m_currTownId);
     else
         currTown = 0;
 
     if (currHero == 0 && currTown == 0) {
         if (actingPlayer->m_numHeroes > 0) {
-            if (actingPlayer->m_heroes[0] == -1)
-                currHero = 0;
-            else
-                currHero = &g_game->m_heroes[actingPlayer->m_heroes[0]];
+            currHero = g_game->getHero(actingPlayer->m_heroes[0]);
         } else {
-            if (actingPlayer->m_townIds[0] == -1)
-                currTown = 0;
-            else
-                currTown = &g_game->m_towns[actingPlayer->m_townIds[0]];
+            currTown = g_game->getTown(actingPlayer->m_townIds[0]);
         }
     }
 
-    int i = m_eventRecords.size();
-    while (i--)
-        m_eventRecords[i]->undo();
+    int size = m_eventRecords.size();
+    while (size--)
+        m_eventRecords[size]->undo();
 
     g_advManager->completeDraw(0);
     g_advManager->updateScreen(0, 0);
 
-    int count = m_eventRecords.size();
+    size = m_eventRecords.size();
     unsigned char interrupted = 0;
-    unsigned char savedSuppress = g_unnamed698790 != 0;
+    message msg;
     int savedWalkSpeed = g_unnamed698758.m_computerWalkSpeed;
+    unsigned char savedSuppress = g_unnamed698790 != 0;
     if (g_unnamed698758.m_computerWalkSpeed > 4)
         g_unnamed698758.m_computerWalkSpeed = 4;
     g_unnamed698790 = 0;
 
-    for (int j = 0; j < count; ++j) {
-        unsigned char draw;
-        if (!interrupted) {
-            draw = 1;
-            if (m_eventRecords[j]->m_playerId == savedPlayer)
-                draw = 0;
-        } else {
-            draw = 0;
-        }
+    for (int j = 0; j < size; ++j) {
+        unsigned char draw = !interrupted
+            && m_eventRecords[j]->m_playerId != savedPlayer;
         m_eventRecords[j]->replay(draw);
 
-        message msg = g_inputManager->getEvent();
+        msg = g_inputManager->getEvent();
         if (msg.m_id != MESSAGE_NONE) {
             if (msg.m_id == MESSAGE_KEY_DOWN
                 || msg.m_id == MESSAGE_LEFT_BUTTON_DOWN

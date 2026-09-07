@@ -465,8 +465,15 @@ void advManager::dimensionDoor(int level)
 // `(x-p2->x)*(x-p2->x) + ...` body (95.20), `return dy*dy + dx*dx`
 // (byte-flat), and swapping the receiver to
 // `townLocation.DistanceSquared(&heroLocation)` (98.22). Declaring `dy`
-// BEFORE `dx` is what took it 98.21 -> 99.04. Everything else is
-// reloc-NAME only: gpGeneralText, TeleportTo's own stub and the AddTown
+// BEFORE `dx` is what took it 98.21 -> 99.04. Separating declaration from
+// initialization to keep `dy`
+// declared first but evaluate `dx` first gives 16 masked diff rows instead
+// of 18, but swaps the Dreamcast-proven hero_loc/town_loc stack slots and
+// falls to 98.21; restoring those slots would require moving town_loc out
+// of its evidenced inner scope or duplicating the canonical helper.
+// why-reg tested six catalog mutations at the restored peak: two were
+// byte-flat, two were worse, and none reduced the register divergence.
+// Everything else is reloc-NAME only: gpGeneralText, TeleportTo's own stub and the AddTown
 // mislabel, all of which the ratchet report ignores.
 VA(0x0041d360, 0x5C8)  // anchor-vtable TTownGateWindow ctor/dtor, dc 0x22510
 void advManager::townGate(int level)

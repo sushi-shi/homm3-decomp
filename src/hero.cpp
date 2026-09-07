@@ -1187,7 +1187,11 @@ hero::hero()
 // stride-8 backpack slots from +0x1d4, and the two 28-byte
 // secondary-skill bands at +0xc9 / +0xe5.
 
-// Reconstructed through every retail store and branch. The 82.86% residual
+// Reconstructed through every retail store and branch. Restoring the
+// Dreamcast-proven `SetPrimarySkill` source calls raised 82.8591 -> 89.67,
+// closed the CFG from 44/40 to 40/40 blocks, and aligned all 21 branches and
+// all 10 calls. Reusing the function-scope `i` is required; a fresh
+// block-local counter falls to 82.53. The residual
 // is dominated by VC6 front-end/inliner state: retail leaves two Dinkumware
 // string::_Tidy calls and expands operator delete, while this compile leaves
 // one _Tidy call and one delete call. `operator=`, direct `assign`, a class
@@ -1231,14 +1235,9 @@ void hero::initialize(short index)
     m_name[sizeof(m_name) - 1] = 0;
     m_heroClass = g_heroTraits[index].m_heroClass;
     m_skillCount = 0;
-    int statIndex = 0;
-    signed char* stat = m_stats;
-    int statCount = 4;
-    do {
-        *stat = g_heroClasses[m_heroClass].m_initialPrimarySkill[statIndex];
-        statIndex++;
-        stat++;
-    } while (--statCount);
+    for (i = 0; i < 4; i++)
+        setPrimarySkill(
+            i, g_heroClasses[m_heroClass].m_initialPrimarySkill[i]);
 
     // Both GiveSS calls here, and the third in SetSS, used to carry
     // statement `inline_depth(0)` pins that held retail's out-of-line
@@ -1718,7 +1717,10 @@ unsigned char hero::isWieldingArtifact(int whichArtifact)
 // variable, which is the spelling that would justify the reloads -
 // VC6 then preloads it into esi instead and biases with
 // `lea eax,[esi-0x91]` (86.9%); declaring the loop counter ahead of
-// the switch to shift allocation (no change, 96.5%).
+// the switch to shift allocation (no change, 96.5%). A base-normalized
+// switch expression and a named discriminator followed by
+// `-= CREATURE_CATAPULT` are also byte-flat: VC6 canonicalizes both back to
+// the same EDX-preserving LEA. why-reg found no applicable catalog mutation.
 // Before normalization (locals): creature_type.
 VA(0x004d9260, 0x68)  // dc-bracket forced, dc 0xcc2a8
 void hero::destroySiegeWeaponArtifact(int creatureType)
@@ -2318,7 +2320,9 @@ int hero::getExperience(int level)
 // register. The second copy, the whole float chain and both loops are
 // identical. Tried and rejected: binding `level + 1` to a named local
 // before the call (98.1, no change); binding the first RESULT to a
-// named local (98.1, no change).
+// named local (98.1, no change); reversing the expression tree as
+// `-(GetExperience(level) - GetExperience(level + 1))` (45.94%, the two
+// inline copies no longer retain retail's schedule).
 VA(0x004da420, 0xE4)  // anchor-bracket, dc 0xccc68
 int hero::getExperienceIncrement(int level)
 {
@@ -6113,7 +6117,11 @@ unsigned char hero::heroFn004E2840(long artifact, long slot)
 // through one shared merged `return 0` block (93.21, byte-flat - VC6
 // re-threads it); `slot < 0` instead of `slot == -1` for the entry test,
 // chasing retail's `jge` at branch #1 (87.78, WORSE - the equality
-// spelling is right despite the branch-kind report). Earlier: the search
+// spelling is right despite the branch-kind report). A literal `while`,
+// an explicit top `slot >= 19` guard, and an inverse helper test with an
+// explicit `continue` are all byte-flat at 93.2051: VC6 rotates each one.
+// A `break` followed by `if (slot == 19) return 0`, with the explicit-slot
+// failure in an `else if`, is strictly worse at 90.83. Earlier: the search
 // as an explicit goto loop (85.25 baseline, byte-flat - VC6 rotates it
 // anyway); both failure paths through a shared `reject:` label (80.31).
 VA(0x004e2a00, 0x1C7)  // dc-callgraph unique, dc 0xd39d8
@@ -6687,11 +6695,17 @@ int hero::getLuck(const hero* otherHero, unsigned char onCursedGround,
 // The Grail arm reads `active`, not `built` - the field town::HasBuilding
 // selects for check_included != 0 - and gates on TOWN_CASTLE.
 //
-// Residual (94.8%): three cosmetic items. Retail sinks `push ebx` past
-// the cursed-ground early return (our CL saves it in the prologue); the
-// final clamp homes `morale` at [ebp-8] and the +3 operand in the dead
-// `apply_limits` slot where ours picks the other assignment; and the
-// bitNumber reference is one relocation ADDEND - retail's
+// Restoring the Dreamcast-proven ordinary `limit(-3, morale, 3)` source
+// call raises 94.7974 -> 98.53, makes all 34 branches clean, and makes the
+// clamp blocks byte-identical. Negative controls: spelling the clamp as
+// nested cppMin/cppMax with the inner arguments reversed reaches 95.28;
+// reversing the outer arguments reaches only 90.70/95.04. Separating the
+// function-scope `morale` declaration from its later assignment is byte-flat
+// at 98.5345 and fits the two leading zero-emission Dreamcast source lines.
+//
+// Residual (98.53%): two cosmetic items. Retail sinks `push ebx` past
+// the cursed-ground early return while this compile saves it in the
+// prologue; and the bitNumber reference is one relocation ADDEND - retail's
 // `bitNumber + 0xd0` is carved as its own data symbol, ours is the base
 // plus a displacement, which is a naming difference and not a byte one.
 // Before normalization (locals): on_cursed_ground, apply_limits.
@@ -6699,10 +6713,12 @@ VA(0x004e39b0, 0x2A9)  // anchor-global, dc 0xd41fc
 int hero::getMorale(const hero* otherHero, unsigned char onCursedGround,
                     unsigned char applyLimits)
 {
+    int morale;
+
     if (onCursedGround)
         return 0;
 
-    int morale = g_leadershipBonuses[m_skillLevel[eSecSkillLeadership]];
+    morale = g_leadershipBonuses[m_skillLevel[eSecSkillLeadership]];
     if (m_skillLevel[eSecSkillLeadership] > 0) {
         const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
         if (ability.m_type == eHeroAbilitySecondarySkill &&
@@ -6737,7 +6753,7 @@ int hero::getMorale(const hero* otherHero, unsigned char onCursedGround,
     if (m_flags & 0x800000)
         morale += 500;
     if (applyLimits)
-        return cppMin(cppMax(morale, -3), 3);
+        return limit(-3, morale, 3);
     return morale;
 }
 
@@ -7395,7 +7411,10 @@ TSkillMastery hero::getSpellSchoolLevel(TSpellSchool schoolMask,
 // cl,[ebp+8]`) yet re-reads the complete enum on the fallback path
 // (`mov eax,[ebp+8]`). Dreamcast likewise tests the parameter directly and
 // records no source local; the former volatile byte alias was therefore a
-// source-false optimizer lever. Constant-mask tests express the narrow reads.
+// source-false optimizer lever. Constant-mask tests express the narrow reads;
+// explicit unsigned-char casts on all four tests and a non-volatile byte mask
+// local are both byte-flat at 98.3750 because VC6 folds them back to the same
+// dword load.
 // The `&&` + else form sinks the fallback into the air arm as retail
 // does; hoisting `best_school = school_mask` measured only 77.1%.
 // Before normalization (locals): school_mask, best_school, best_level.

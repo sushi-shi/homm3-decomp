@@ -513,6 +513,15 @@ static unsigned char checkSummonBoat(const hero* currentHero)
 // start cell with the spell's mana cost as the move cost and a distance
 // surcharge on the adjusted cost: half a map-span per level crossed plus
 // the plane offsets, plus four, at fifty a hex.
+// EXACT (2026-09-07): sharing `i` across the two mutually exclusive town
+// scans reproduces retail's common [ebp-0x14] counter home; separate loop
+// declarations reuse an argument slot and score 98.3567. Declaring
+// closestTown before closest fixes the remaining nearest-town zero schedule,
+// and spelling the absolute X delta as new minus start matches retail's
+// equivalent operand order. Together these steps reach 100% with all 38
+// blocks and 18 branches exact. The two reported insert-symbol differences
+// are delinker names at aligned calls and are ignored by the authoritative
+// address-based report.
 // Before normalization (locals): current_hero, start_cell, current_town, closest_town, delta_y,
 // delta_x, new_cell.
 VA(0x0056b050, 0x3E7)  // exhaustive search.obj order-map, dc 0x12bfe0
@@ -529,16 +538,17 @@ void searchArray::checkTownPortal(const hero* currentHero,
         return;
     std::vector<type_point> destinations;
     playerData* player = caster->getPlayer();
+    int i;
     if (caster->getSpellLevel(SPELL_TOWN_PORTAL) >= eMasteryAdvanced) {
-        for (int i = 0; i < player->m_numTowns; i++) {
+        for (i = 0; i < player->m_numTowns; i++) {
             town* currentTown = g_game->getTown(player->m_townIds[i]);
             if (currentTown->m_visitingHeroId < 0)
                 destinations.push_back(currentTown->getLocation());
         }
     } else {
-        long closest = 0;
         town* closestTown = 0;
-        for (int i = 0; i < player->m_numTowns; i++) {
+        long closest = 0;
+        for (i = 0; i < player->m_numTowns; i++) {
             town* currentTown = g_game->getTown(player->m_townIds[i]);
             if (currentTown->m_mapZ != startCell->m_point.m_z)
                 continue;
@@ -559,15 +569,16 @@ void searchArray::checkTownPortal(const hero* currentHero,
     pathCell newCell;
     int cost = caster->getSpellLevel(SPELL_TOWN_PORTAL) == eMasteryExpert
         ? 200 : 300;
-    for (unsigned int i = 0; i < destinations.size(); i++) {
+    for (unsigned int destinationIndex = 0;
+         destinationIndex < destinations.size(); destinationIndex++) {
         newCell = *startCell;
-        newCell.m_point.m_x = destinations[i].m_x;
-        newCell.m_point.m_y = destinations[i].m_y;
-        newCell.m_point.m_z = destinations[i].m_z;
+        newCell.m_point.m_x = destinations[destinationIndex].m_x;
+        newCell.m_point.m_y = destinations[destinationIndex].m_y;
+        newCell.m_point.m_z = destinations[destinationIndex].m_z;
         newCell.m_townPortal = 1;
         int distance = abs(newCell.m_point.m_z - startCell->m_point.m_z)
                 * (g_mapHeight + g_mapWidth) / 2
-            + abs(startCell->m_point.m_x - newCell.m_point.m_x)
+            + abs(newCell.m_point.m_x - startCell->m_point.m_x)
             + abs(newCell.m_point.m_y - startCell->m_point.m_y);
         newCell.m_adjustedCost += (distance + 4) * 50;
         pushPoint(startCell, &newCell, 0, cost, maxMobility, 0,

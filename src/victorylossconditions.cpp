@@ -79,9 +79,12 @@ static const int g_angelicAllianceSecondMap = 9;
 // while the coherent helper changes /Ob2 budget state enough to retain the
 // formerly missing 2-arg vector::_Destroy call. The result has the exact
 // 77-block retail CFG, with 73 blocks size-exact.
-// Residual: 15 register-visible slots across the Complete-only campaign
-// prologue, one commutative hero-array SIB, one winner-store load schedule,
-// and the final exception-cleanup state initialization. Keeping currMap as
+// 98.2057 -> 98.49 (2026-09-07): put the direct-artifact winner store before
+// the gameWon store, matching both Dreamcast's line order and this function's
+// combination-win arm; retail's whole direct-win block is now exact.
+// Residual: register-visible slots across the Complete-only campaign
+// prologue, one commutative hero-array SIB, and the final exception-cleanup
+// state initialization. Keeping currMap as
 // a reference is the whole-body optimum: direct member reads now fall to
 // 92.69% and add a 78th block. The fresh eight-cell why-reg catalog is flat
 // or worse (unnamed comboIdx is flat; volatile team/comboIdx/remaining/j and
@@ -145,8 +148,8 @@ unsigned char VictoryConditionStruct::checkForArtifactWin()
         for (j = 0; j < g_currentPlayer->m_numHeroes; ++j) {
             if (g_game->getHero(g_currentPlayer->m_heroes[j])
                     ->hasArtifact(m_artifactNum)) {
-                m_gameWon = 1;
                 m_playerWinner = static_cast<signed char>(g_netLocalGamePos);
+                m_gameWon = 1;
                 return 1;
             }
         }
