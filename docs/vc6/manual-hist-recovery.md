@@ -16,6 +16,7 @@ declarations:
 | `recruitUnit::main` | 240 trials, 12 Gruntz state families | all states remained 99.0924% |
 | `army::doAttack(army*, int)` | 240 trials, 12 Gruntz state families | no state above 98.9251% MAX |
 | `townManager::townManager` | exhaustive 511-step typedef-handle phase | all states remained 99.0800% |
+| `TAdventureMapWindow::setElevationToggleImage` | retail-ordered source A/B | 96.9512% -> exact |
 
 For `townManager::townManager`, all 24 orders of the four adjacent authentic
 mask/count/type assignments were compiled as a source-shape matrix. The best
@@ -29,3 +30,9 @@ The next pass should work from retail/Dreamcast structure rather than repeat
 these state or ordering probes. In particular, the constructor's only residual
 is the scheduling of two upper-dword zero stores, while the sacrifice function's
 only residual remains its already-documented shared constructor-store order.
+
+The first retained manual recovery is `setElevationToggleImage`. Complete's
+retail body stores `g_elevationToggleLevel` before loading the indexed icon
+pointer, whereas the prior source assignment forced the opposite schedule.
+Moving that assignment below the store makes all three blocks exact while
+preserving the existing `message` local and every call.
