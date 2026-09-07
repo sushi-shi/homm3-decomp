@@ -213,12 +213,10 @@ extern const type_ballistics_traits (&g_constBallisticsTraits)[4];
 // run, which proves the refcount belongs to the pointer members themselves
 // rather than to a wrapper spanning the band.
 //
-// The destructor is declared because the unwind states require one; its body
-// is unobservable (retail keeps no ~army row and no army::operator= row), so
-// it is left empty rather than guessed at.
-//
-// T stays INCOMPLETE for every consumer: only the copy constructor's body
-// dereferences it, and that body is instantiated at the army-copy sites.
+// Retail retains the handle destructor at 0x43cb10: a non-null resource
+// receives its virtual dispose() call. The ordinary army destructor at
+// 0x43d400 owns member cleanup in army.cpp. A TU instantiating these handle
+// constructors/destructors must see the complete resource types.
 template<class T>
 class TResourceHandle {
 public:
@@ -1050,6 +1048,10 @@ public:
     // candidate temporarily scores lower: C1XX assigns member handles from
     // this stream before C2 optimizes any individual function.
     army();
+    // Complete retains this ordinary destructor in Army code at 0x43d400,
+    // immediately after army(). Its body owns the member cleanup; callers
+    // such as getCureValue keep the call. DC attributes it to an ai.cpp use site.
+    ~army();
     // Before normalization (function): army::Init.
     void init(int armyId, int newNumTroops, const hero* owner, int side,
               // Before normalization (locals): iGridIndex, iOrigPos.

@@ -421,7 +421,6 @@ ai_tactical	??0type_AI_spellcaster@@QAE@PAVcombatManager@@JE@Z	93.1850	93.1850	9
 ai_tactical	??0type_spell_choice@@QAE@HW4TSkillMastery@@JJ@Z	100.0000	100.0000	100.0000	0x36980	f967c462fe1b
 ai_tactical	??0type_spell_choice@@QAE@XZ	100.0000	100.0000	100.0000	0x36950	8ce861c42f88
 ai_tactical	??1?$TResourceHandle@VCSprite@@@@QAE@XZ	100.0000	100.0000	100.0000	0x3cb10	-
-ai_tactical	??1army@@QAE@XZ	100.0000	100.0000	100.0000	0x3d400	af6cf572ce37
 ai_tactical	??1type_AI_spellcaster@@UAE@XZ	100.0000	100.0000	100.0000	0x36c30	1a471b89133c
 ai_tactical	??_Gtype_AI_spellcaster@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x36bf0	-
 ai_tactical	?aiGetAttackDamage@@YIJPBVarmy@@J0EJ@Z	100.0000	100.0000	100.0000	0x35980	f1923ad9c67f
@@ -457,7 +456,7 @@ ai_tactical	?getCancelValue@type_AI_spellcaster@@QAEJPAVarmy@@E@Z	100.0000	100.0
 ai_tactical	?getChainLightningValue@type_AI_spellcaster@@QAEJJW4TSkillMastery@@PAVarmy@@@Z	100.0000	100.0000	100.0000	0x37190	c6e1b6e1896a
 ai_tactical	?getCloneValue@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x3b2e0	446949d228a4
 ai_tactical	?getCounterstrokeValue@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x39e80	0377bbe59758
-ai_tactical	?getCureValue@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	39.4773	39.4773	95.4886	0x39c30	b8a9268e52d4
+ai_tactical	?getCureValue@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x39c30	5e0d226c61a6
 ai_tactical	?getCurseValue@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x3b370	63e8fcc1daec
 ai_tactical	?getDamageSpellValue@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x36f60	4125ac4ebd29
 ai_tactical	?getDamageValue@type_AI_spellcaster@@QAEJHJPBVhero@@PBVarmy@@@Z	100.0000	100.0000	100.0000	0x36e30	72bf99369cc3
@@ -506,6 +505,7 @@ ai_tactical	?simulateAttack@type_AI_combat_parameters@@QAEXPBVarmy@@PAJ01EJ@Z	10
 ai_tactical	?unimplemented@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x3b680	aee1cb81d6a6
 ai_tactical	?valueOfLuckAndMorale@@YINJJNN@Z	100.0000	100.0000	100.0000	0x35850	9681290910f4
 army	??0army@@QAE@XZ	95.9811	95.9811	95.9811	0x3d250	4fed37231901
+army	??1army@@QAE@XZ	100.0000	100.0000	100.0000	0x3d400	fb9ef9363c7c
 army	??Eiterator@?$deque@HV?$allocator@H@std@@@std@@QAEAAV012@XZ	100.0000	100.0000	100.0000	0x49230	-
 army	??Fiterator@?$deque@HV?$allocator@H@std@@@std@@QAEAAV012@XZ	100.0000	100.0000	100.0000	0x49270	-
 army	??Yiterator@?$deque@HV?$allocator@H@std@@@std@@QAEAAV012@H@Z	93.9535	93.9535	93.9535	0x491c0	-
