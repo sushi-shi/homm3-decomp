@@ -3406,108 +3406,149 @@ LegacyCampaignHero::LegacyCampaignHero()
 {
 }
 
-// SCampaign::Load's mirror, and the row the constructor above sits in front
-// of. Every scalar goes out through ONE stack slot, so the two buffers here
-// are what retail addresses at [ebp+8] and [ebp+0xb]. Seven leading bytes -
-// the three flags, currentCampaign, numMapRegions, crossoverArrayIndex and
-// briefingChoice all NARROWED to a byte - then the campaign filename as a
-// four-byte length plus its characters, then the 21 completion flags.
+// Complete campaign serialization; no SCampaign::Save counterpart appears
+// in the Dreamcast roster. Retail writes seven leading bytes, the campaign
+// filename length/data, 21 completion flags, then counted score, carry-over,
+// and assigned-carryover runs. Counts are re-read across their back edges.
+// Hero counts are bytes; artifact counts/fields and assigned values use
+// two bytes. The outer hero/artifact vectors share a 16-byte element stride.
 //
-// Three counted runs follow, each with its count written first and each
-// re-reading size() across its own back edge: the map scores (completed,
-// days, score, complete_order, index - the last two narrowed), the carry-over
-// pools (a byte of hero count, hero::save per hero, then the SAME index into
-// field_4c for a two-byte artifact count and two two-byte fields per record),
-// and field_6c's two-byte placeholders. The pool loop indexes both +0x3c and
-// +0x4c off one strength-reduced byte offset because both outer vectors have
-// the same 16-byte element.
-// 78.4646 -> 78.8138 (2026-09-05): retail uses TWO byte buffers, and the
-// split is readable straight off the stores - `isCheater` goes through
-// [ebp-1] and EVERY later byte write through [ebp+0xb], the dead `outfile`
-// parameter home. A second named char after the first write reproduces
-// that exactly: our compile now spends [ebp+0xb] the same way. The earlier
-// note read the same fact as "block-scope the two buffers inside each of
-// the three counted runs", which is the wrong shape (78.4808).
-// Residual (78.8138%): TWO frame dwords. 38/38 blocks with 28 exact,
-// branches clean 16/16 and the call streams AGREE outright; every
-// remaining row is one of the ten size-only blocks. Retail's frame is 0x10
-// and holds exactly three dwords (int_buffer plus ONE live counter pair),
-// ours 0x18 with five - VC6 gives each `for`-scoped counter its own slot
-// where retail reuses two. Measured and rejected: collapsing the five
-// counters onto a shared `i`/`j` pair at function scope, both with the
-// pair declared before and after the buffers (78.7965 each, 0.02 under
-// the kept spelling), and for-scoping them individually (byte-flat).
+// Retail keeps each score record and each inner pool vector in EDI across
+// writes; repeated indexing of the outer vectors loses those lifetimes.
+// Each serialized scalar has a separate lifetime, allowing byte/int/short
+// buffers to reuse the dead outfile parameter home. The first byte still
+// uses [ebp-1] while outfile is live there. Both artifact fields share one
+// short buffer; retail's word loads prove narrowing before the writes.
+//
+// 2026-09-07: score reference alone 88.0368%, pool references alone 85.4136%,
+// both 99.6062% (from 78.8074% MAX). Per-write scalar scopes with short word
+// buffers reach 99.9518%; sharing the artifact word reaches 99.9632%; one
+// outer counter across all three runs reaches 99.9858%. All 38 CFG blocks,
+// 16 branches, and 24 calls agree. The 880-byte candidate differs at five
+// non-relocation bytes: frame 0x14 instead of 0x10 and four artifact-buffer
+// offsets -0x14 instead of -0x10. The hero induction slot is otherwise exact.
+// Controls: narrowing into int gives 97.1048% (movsx); also sharing the inner
+// counters, scoping the hero loop or entire hero phase, hoisting the word
+// to pool/function scope, and unsigned-short buffers are byte-flat at
+// 99.9858%. Extra braces around the three runs were also byte-flat. The
+// earlier shared-counter probe without the recovered references was
+// 78.7965%; that result did not exclude the source reconstruction above.
 VA(0x0048ae90, 0x370)  // link-order successor of LegacyCampaignHero's ctor; SCampaign::Load's mirror
 void SCampaign::save(TAbstractFile* outfile)
 {
     // Before normalization (locals): char_buffer, int_buffer.
-    char charBuffer;
-    char flag;
-    int intBuffer;
+    unsigned int index;
 
-    charBuffer = m_isCheater;
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    flag = m_secretActive;
-    outfile->write(&flag, sizeof(flag));
-    flag = m_currentMap;
-    outfile->write(&flag, sizeof(flag));
-    flag = m_currentCampaign;
-    outfile->write(&flag, sizeof(flag));
-    flag = m_numMapRegions;
-    outfile->write(&flag, sizeof(flag));
-    flag = m_crossoverArrayIndex;
-    outfile->write(&flag, sizeof(flag));
-    flag = m_briefingChoice;
-    outfile->write(&flag, sizeof(flag));
+    {
+        char charBuffer = m_isCheater;
+        outfile->write(&charBuffer, sizeof(charBuffer));
+    }
+    {
+        char flag = m_secretActive;
+        outfile->write(&flag, sizeof(flag));
+    }
+    {
+        char flag = m_currentMap;
+        outfile->write(&flag, sizeof(flag));
+    }
+    {
+        char flag = m_currentCampaign;
+        outfile->write(&flag, sizeof(flag));
+    }
+    {
+        char flag = m_numMapRegions;
+        outfile->write(&flag, sizeof(flag));
+    }
+    {
+        char flag = m_crossoverArrayIndex;
+        outfile->write(&flag, sizeof(flag));
+    }
+    {
+        char flag = m_briefingChoice;
+        outfile->write(&flag, sizeof(flag));
+    }
 
-    intBuffer = m_campaignFilename.length();
-    outfile->write(&intBuffer, sizeof(intBuffer));
+    {
+        int intBuffer = m_campaignFilename.length();
+        outfile->write(&intBuffer, sizeof(intBuffer));
+    }
     outfile->write(m_campaignFilename.c_str(), m_campaignFilename.length());
     outfile->write(m_campaignCompleted, sizeof(m_campaignCompleted));
 
-    flag = m_mapScores.size();
-    outfile->write(&flag, sizeof(flag));
-    for (unsigned int scenario = 0; scenario < m_mapScores.size();
-         ++scenario) {
-        flag = m_mapScores[scenario].m_completed;
-        outfile->write(&flag, sizeof(flag));
-        intBuffer = m_mapScores[scenario].m_days;
-        outfile->write(&intBuffer, sizeof(intBuffer));
-        intBuffer = m_mapScores[scenario].m_score;
-        outfile->write(&intBuffer, sizeof(intBuffer));
-        flag = m_mapScores[scenario].m_completeOrder;
-        outfile->write(&flag, sizeof(flag));
-        flag = m_mapScores[scenario].m_index;
+    {
+        char flag = m_mapScores.size();
         outfile->write(&flag, sizeof(flag));
     }
-
-    flag = m_carryOverHeroes.size();
-    outfile->write(&flag, sizeof(flag));
-    for (unsigned int pool = 0; pool < m_carryOverHeroes.size(); ++pool) {
-        flag = m_carryOverHeroes[pool].size();
-        outfile->write(&flag, sizeof(flag));
-
-        for (unsigned int whichHero = 0;
-             whichHero < m_carryOverHeroes[pool].size(); ++whichHero)
-            m_carryOverHeroes[pool][whichHero].save(outfile);
-
-        intBuffer = m_carryoverArtifact[pool].size();
-        outfile->write(&intBuffer, 2);
-        for (unsigned int whichArtifact = 0;
-             whichArtifact < m_carryoverArtifact[pool].size(); ++whichArtifact) {
-            intBuffer = m_carryoverArtifact[pool][whichArtifact].m_artifactId;
-            outfile->write(&intBuffer, 2);
-            intBuffer = m_carryoverArtifact[pool][whichArtifact].m_extra;
-            outfile->write(&intBuffer, 2);
+    {
+        for (index = 0; index < m_mapScores.size();
+             ++index) {
+            CampaignScenarioInfo& score = m_mapScores[index];
+            {
+                char flag = score.m_completed;
+                outfile->write(&flag, sizeof(flag));
+            }
+            {
+                int intBuffer = score.m_days;
+                outfile->write(&intBuffer, sizeof(intBuffer));
+            }
+            {
+                int intBuffer = score.m_score;
+                outfile->write(&intBuffer, sizeof(intBuffer));
+            }
+            {
+                char flag = score.m_completeOrder;
+                outfile->write(&flag, sizeof(flag));
+            }
+            {
+                char flag = score.m_index;
+                outfile->write(&flag, sizeof(flag));
+            }
         }
     }
 
-    flag = m_assignedCarryover.size();
-    outfile->write(&flag, sizeof(flag));
-    for (unsigned int placeholder = 0; placeholder < m_assignedCarryover.size();
-         ++placeholder) {
-        intBuffer = m_assignedCarryover[placeholder];
-        outfile->write(&intBuffer, 2);
+    {
+        char flag = m_carryOverHeroes.size();
+        outfile->write(&flag, sizeof(flag));
+    }
+    {
+        for (index = 0; index < m_carryOverHeroes.size(); ++index) {
+            std::vector<hero>& heroPool = m_carryOverHeroes[index];
+            {
+                char flag = heroPool.size();
+                outfile->write(&flag, sizeof(flag));
+            }
+
+            for (unsigned int whichHero = 0;
+                 whichHero < heroPool.size(); ++whichHero)
+                heroPool[whichHero].save(outfile);
+
+            std::vector<type_artifact>& artifactPool = m_carryoverArtifact[index];
+            {
+                int intBuffer = artifactPool.size();
+                outfile->write(&intBuffer, 2);
+            }
+            for (unsigned int whichArtifact = 0;
+                 whichArtifact < artifactPool.size(); ++whichArtifact) {
+                short word = static_cast<short>(artifactPool[whichArtifact].m_artifactId);
+                outfile->write(&word, sizeof(word));
+                word = static_cast<short>(artifactPool[whichArtifact].m_extra);
+                outfile->write(&word, sizeof(word));
+            }
+        }
+    }
+
+    {
+        char flag = m_assignedCarryover.size();
+        outfile->write(&flag, sizeof(flag));
+    }
+    {
+        for (index = 0; index < m_assignedCarryover.size();
+             ++index) {
+            {
+                short word = static_cast<short>(m_assignedCarryover[index]);
+                outfile->write(&word, sizeof(word));
+            }
+        }
     }
 }
 

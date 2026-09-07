@@ -2824,8 +2824,8 @@ void handlePlayerLost(CNetMsg* netMsg)
     int gameWon;
     gameWon = 0;
     gameLost = 0;
-    displayLCWinLoss(&message->m_lossCondition,
-                     &gameWon, &gameLost, 1);
+    displayLCWinLoss(message->m_lossCondition,
+                     gameWon, gameLost, 1);
     if (gameLost)
         g_defeatedAllPlayers = 0;
     if (gameWon)

@@ -711,6 +711,20 @@ public:
         // cmbtmgr.cpp so that SetupAndLoadObstacles can expand it the way
         // retail does while place_obstacle keeps retail's call.
         void insert(TObstacle* where, unsigned count, const TObstacle& value);
+        TObstacle* begin() { return m_begin; }
+        TObstacle* end() { return m_end; }
+        // DC cmbtmgr.cpp:2848 calls push_back. Preserve the two forwarding
+        // layers from the pinned VC6 VECTOR: push_back -> insert(one) ->
+        // insert(count), including the iterator returned after reallocation.
+        // Before normalization (function): push_back.
+        void pushBack(const TObstacle& value) { insert(end(), value); }
+        TObstacle* insert(TObstacle* where, const TObstacle& value)
+        {
+            unsigned offset = where - begin();
+            insert(where, 1, value);
+            return begin() + offset;
+        }
+
         // Dinkumware's two uninitialised-range helpers. DECLARED, NOT
         // DEFINED here: retail's insert expansion in SetupAndLoadObstacles
         // CALLS both (0x46b1a0 thiscall/ret 0xc returning the destination
@@ -1799,7 +1813,7 @@ public:
     int drawCreatureAndHeroSubwindows();
 
     // Before normalization (function): combatManager::GridY.
-    int gridY(int index) const { return index / COMBAT_GRID_ROW_STRIDE; }
+    static int gridY(int index) { return index / COMBAT_GRID_ROW_STRIDE; }
     // Before normalization (function): combatManager::ComputeExtent.
     void computeExtent(const CSprite* sprite, int sequence, int frame,
                        int x, int y, SLimitData* limits, int isFlipped,

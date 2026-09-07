@@ -1125,103 +1125,46 @@ static int pickLoadGame();
 inline void showCredits()
 {
     videoDrawCurrentFrame();
-    g_mainBack->draw(0, 0, g_mainBack->m_width, g_mainBack->m_height,
+    g_mainBack->draw(0, 0, g_mainBack->getWidth(), g_mainBack->getHeight(),
                    g_windowManager->m_screenBitmap, 460, 0, false);
     creditsWait();
     videoDrawCurrentFrame();
-    g_mainBack->draw(0, 0, g_mainBack->m_width, g_mainBack->m_height,
+    g_mainBack->draw(0, 0, g_mainBack->getWidth(), g_mainBack->getHeight(),
                    g_windowManager->m_screenBitmap, 460, 0, false);
 }
 
-// E:\gamedcs\kb.cpp:962
-// The Dreamcast line table supplies the helper/statement order and surviving
-// locals; retail fixes the Complete-only menu branches and the 0x1c04 extent.
-// Keep the named helper boundaries visible while this first admission is
-// iterated. Any boundary retail expands is an explicit VC6 inline problem,
-// not permission to flatten the recovered source shape by hand.
-// Residual (73.05%): three regions, all measured 2026-09-05.
-//  - The first ShowProgressBar/IncProgressBar pair in the emitted body is
-//    NOT a threaded copy of the block below: it is DoNewGame's own
-//    TUTORIAL_ID arm (kb.cpp:1700), a separate source site that /Ob2
-//    prices against DoNewGame's budget rather than oldmain's. Retail
-//    CALLS both there and EXPANDS them at oldmain's own setup site and in
-//    the campaign-map arm; we expand at all three, which costs ~120 B and
-//    shifts three blocks, and every block index after it reads as
-//    divergent for that reason alone. All four progress-bar bodies are
-//    EXACT, so their front-end cost estimates match retail's - the
-//    difference is how much of DoNewGame's budget the sites AHEAD of the
-//    TUTORIAL arm consume, and those sites are the ones the existing
-//    inline_depth(0) boundaries hold out of line. Not reachable without
-//    re-pricing those pins.
-//  - Two customcampaign.obj SCampaign members (0x489820, 1536 B, and
-//    0x48a2a0, 112 B) run over the end-of-game CampaignHeaderStruct
-//    between Load and SaveGame(1). Both carve rows are unclaimed and no
-//    Dreamcast identity is proven for them, so the calls are omitted.
-//  - The DoNewGame/DoLoadGame menu tail (retail +0xd60..+0xf40) still
-//    diverges: retail reaches `gUnnamed699584 = 0` from a CREDITS_ID
-//    test on dialogReturn that this reconstruction does not yet spell.
-// 2026-09-05: 73.3528 -> 75.9724 on the two campaign-continue arms alone.
-// Written as a backward `goto` into a label above the TCampaignWindow
-// block, VC6 PEELED each arm - the whole window/VideoOpen/VideoPause/
-// brief body was emitted TWICE, giving 4 TCampaignWindow constructions
-// and 11 VideoPause calls against retail's 2 and 7, and two ~0xa0-byte
-// surplus blocks. `while (1) { ... break; }` emits one copy with retail's
-// own backward `je` into the constructor's argument pushes, and both
-// censuses now agree exactly (2 = 2, 7 = 7). The goto form is right for a
-// top-tested loop whose back edge is the ONLY edge; here the label also
-// had a fall-in predecessor, which is what let the peeler duplicate it.
-// Callee census after that edit - the two leads that are left:
-//  - THREE unclaimed retail rows in kb's own band are compiler-emitted
-//    forwarding overloads this reconstruction spells past. 0x4efff0 (25 B)
-//    is Bitmap16Bit::GetMap(x,y); 0x4f0010 (59 B) is the Bitmap16Bit::Draw
-//    overload taking a Bitmap16Bit* destination, which expands it into the
-//    Width/Height/Pitch/map argument run of the raw PAG form; 0x4f0050
-//    (71 B) is the same forwarder for CSprite::Draw. Retail CALLS them 5, 3
-//    and 5 times; we reach the raw PAG overloads directly (CSprite::Draw x5,
-//    GetMap x3) and never emit a wrapper. Claiming the three rows and
-//    spelling the destination-bitmap overload at those sites is the next
-//    concrete step, and it is worth more than anything else left here.
-//    CHECKED 2026-09-05 - the SPELLING half is already done and the CLAIM
-//    half is currently unreachable. All four oldmain Bitmap16Bit::Draw sites
-//    already call the eight-argument destination-bitmap overload
-//    (bitmap16.h:100), and CSprite has the same wrapper at csprite.h:139;
-//    what differs is that VC6 EXPANDS all three wrappers where retail calls
-//    them. Consequently our kb.obj emits no COMDAT for any of them - its
-//    whole symbol table is 50 rows with no Bitmap16Bit or CSprite entry - so
-//    a VA() claim on 0xefff0 / 0xf0010 / 0xf0050 would land on a symbol the
-//    base object does not contain and register as a 0.0000 MISSING row. The
-//    claim can only follow the inline decision, not lead it, and the inline
-//    decision is the same /Ob2 budget question as the progress-bar split.
-//  - The progress-bar inline split: retail's oldmain holds 6
-//    DrawProgressCount sites against our 3 and CALLS ShowProgressBar once
-//    where we expand all three of ours, which is also where the +1 on
-//    UpdateScreen / GetBitmap16 / GetSprite / Bitmap16Bit::Draw comes from.
-//    The DoNewGame inlining boundary is what decides it.
-// PRICED 2026-09-05 (measured, then REVERTED - that lane could not add
-// pins). The progress-bar split above is worth 75.9721 -> 84.3222, and it
-// takes exactly two kinds of `#pragma inline_depth(0)`:
-//  - one inside IncProgressBar's and one inside ShowProgressBar's OWN body,
-//    around their `DrawProgressCount();` statement. That is the depth-2
-//    refusal retail makes when those helpers are EXPANDED into oldmain
-//    (5 IncProgressBar expansions each leaving a DrawProgressCount CALL,
-//    plus one from an expanded ShowProgressBar = retail's 6), and it alone
-//    is worth 75.9721 -> 82.5065 with base blocks 297 -> 276.
-//    IT COSTS THE TWO HELPERS' OWN ROWS: retail's out-of-line
-//    IncProgressBar and ShowProgressBar bodies EXPAND DrawProgressCount, so
-//    the pin drops them 100.0000 -> 28.0000 and 100.0000 -> 49.1463. A pin
-//    inside a shared inline is a per-CALLEE knob, so the two cannot be
-//    separated; whoever lands this must either accept the two exact rows or
-//    find the caller-mass that produces the split naturally.
-//  - four call-site pins in DoNewGame's TUTORIAL_ID arm, which cost nothing
-//    elsewhere: ShowProgressBar+IncProgressBar together at the head of the
-//    arm (+0.06 and 5 more exact blocks), the IncProgressBar after
-//    ResetGame (+0.01, exact blocks 80 -> 88), and the NewMap arm's
-//    IncProgressBar PAIR (+1.74, exact blocks 88 -> 103). Retail calls
-//    IncProgressBar exactly 4 times and both censuses then agree.
-// Also measured and REFUTED here: `#pragma inline_depth(1)` at the four
-// oldmain-body IncProgressBar sites - the "inline the parent, call the
-// child" spelling - is BYTE-FLAT to the digit, one more confirmation that
-// only N=0 bites.
+// E:\gamedcs\kb.cpp:962. Dreamcast proves the menu/helper boundaries,
+// playerSave lifetime, and TTownType alignment[8]; retail fixes the Complete
+// commands and 0x1c04 extent. Its command table at +0x1bc0 sends NEW_GAME
+// to +0x834, LOAD_GAME to +0xb64, and RESTART to +0xddc. Successful new/load
+// helpers skip restart setup: new goes directly to cleanup (+0x142b), load
+// clears the launch latch at +0xdcd first. Only RESTART reconstructs player
+// setup. The previous separate new/load/restart condition reset a newly
+// created or loaded game a second time and also cleared the latch for
+// unrelated commands. Restoring these paths is retained through the dip.
+//
+// 2026-09-07: 78.9421% MAX preserved. Correct switch paths 77.1614%; TTownType
+// alignment is byte-flat. Retail's signed-word menu dispatch adds 77.3147%;
+// Dreamcast-proven bitmap width/height calls alone give 78.7233%; both yield
+// 78.7743%. DoNewGame/DoLoadGame exit flags now initialize just before their
+// loops (DC 1859/2076); that relocation and removing DoNewGame's remaining
+// SINGLE_ID inline pin are byte-flat. The verified padded body is 7888 B.
+//
+// Passive C2 trace updates the old inline diagnosis: caller cb 3538, initial
+// budget 7076. DoNewGame's two ordinary DoSinglePlayerWindow calls (cb 157)
+// get 143/83 and both stay calls; tutorial ShowProgressBar (116) gets 83 and
+// stays a call too. The first tutorial IncProgressBar still expands where
+// retail calls it. Restart ShowProgressBar expands DrawProgressCount (100)
+// with budget 103; restart IncProgressBar expansions give it 235..254 where
+// retail calls it. DoLoadGame's campaign PickLoadGame (62, budget 129) also
+// expands where retail calls it. Keep these source helpers canonical.
+//
+// Historical controls: backward-goto campaign-continue loops duplicated
+// constructor/video/brief bodies; while/break recovered the single copies.
+// Forcing nested progress calls out of line once raised an older candidate
+// to 84.3222% but contradicted their retained retail bodies; those diagnostic
+// pins were rejected. The two campaign-end calls are now present, so the
+// former missing-call diagnosis and wrapper-admission advice were stale.
 VA(0x004ee3e0, 0x1C04)
 int oldmain()
 {
@@ -1343,8 +1286,8 @@ int oldmain()
         }
         videoNextFrame();
         videoDrawCurrentFrame();
-        g_gameSelectBack->draw(0, 0, g_gameSelectBack->m_width,
-                             g_gameSelectBack->m_height,
+        g_gameSelectBack->draw(0, 0, g_gameSelectBack->getWidth(),
+                             g_gameSelectBack->getHeight(),
                              g_windowManager->m_screenBitmap, 0, 0, false);
         g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
         if (g_gameCommand != TMainMenu::QUIT_ID)
@@ -1449,6 +1392,7 @@ int oldmain()
         case TMainMenu::LOAD_GAME_ID: {
             if (!doLoadGame())
                 continue;
+            g_unnamed699584 = 0;
             break;
         }
 
@@ -1457,7 +1401,7 @@ int oldmain()
             g_highScoreManager->viewHiScore();
             videoResume();
             videoRestart();
-            g_mainBack->draw(0, 0, g_mainBack->m_width, g_mainBack->m_height,
+            g_mainBack->draw(0, 0, g_mainBack->getWidth(), g_mainBack->getHeight(),
                            g_windowManager->m_screenBitmap, 0, 0, false);
             continue;
 
@@ -1465,19 +1409,7 @@ int oldmain()
             showCredits();
             continue;
 
-        case TMainMenu::QUIT_ID:
-            unused = 1;
-            break;
-
-        case TMainMenu::SAVE_GAME_ID:
-        case TMainMenu::RESTART_ID:
-        default:
-            break;
-        }
-
-        if (command == TMainMenu::NEW_GAME_ID
-            || command == TMainMenu::LOAD_GAME_ID
-            || command == TMainMenu::RESTART_ID) {
+        case TMainMenu::RESTART_ID: {
             g_mouseManager->setPointer(1, mouseManager::ADVENTURE_SET);
             showProgressBar();
             incProgressBar(1);
@@ -1486,7 +1418,7 @@ int oldmain()
             for (int i = 0; i < 8; ++i)
                 playerSave[i] = g_game->m_players[i];
 
-            int alignment[8];
+            TTownType alignment[8];
             memcpy(alignment, g_game->m_setup.m_alignment, sizeof(alignment));
 
             if (g_unk69774c)
@@ -1533,8 +1465,16 @@ int oldmain()
             }
             incProgressBar(1);
             incProgressBar(1);
-        } else {
-            g_unnamed699584 = 0;
+            break;
+        }
+
+        case TMainMenu::QUIT_ID:
+            unused = 1;
+            break;
+
+        case TMainMenu::SAVE_GAME_ID:
+        default:
+            break;
         }
 
         g_mainBack->dispose();
@@ -1745,8 +1685,6 @@ int oldmain()
 // tutorial-player setup below and skips VideoPause before the campaign arm.
 static int doNewGame()
 {
-    int exitNewGame = 0;
-
     g_inSetupDialog = 1;
     g_unk69774c = 0;
     g_unnamed69927c = 10;
@@ -1757,10 +1695,11 @@ static int doNewGame()
     g_game->m_isTutorial = 0;
     g_unnamed6972e8 = 0;
 
-    g_gameSelectBack->draw(0, 0, g_gameSelectBack->m_width,
-                         g_gameSelectBack->m_height,
+    g_gameSelectBack->draw(0, 0, g_gameSelectBack->getWidth(),
+                         g_gameSelectBack->getHeight(),
                          g_windowManager->m_screenBitmap, 0, 0, false);
 
+    int exitNewGame = 0;
     while (!exitNewGame) {
         {
             TGameTypeWindow gameTypeWindow(0);
@@ -1771,16 +1710,14 @@ static int doNewGame()
             && g_windowManager->m_dialogReturn != TGameTypeWindow::CAMPAIGN_ID)
             videoPause();
 
-        switch (g_windowManager->m_dialogReturn) {
+        switch (static_cast<short>(g_windowManager->m_dialogReturn)) {
         case TGameTypeWindow::SINGLE_ID:
-            // INLINE BOUNDARY: DoNewGame -> DoSinglePlayerWindow.
-            // Dreamcast kb.cpp:1875 names the call and retail oldmain+0x940
-            // retains the REL32. Negative control: ordinary depth expands
-            // the selection-window ctor/modal/dtor into oldmain.
-#pragma inline_depth(0)
+            // DC kb.cpp:1875 and retail oldmain+0x940 retain this call.
+            // The old inline pin is unnecessary after the menu/source fixes:
+            // ordinary depth is byte-flat (2026-09-07); cb 157 exceeds the
+            // measured budget 143. Keep the ordinary helper call.
             if (doSinglePlayerWindow())
                 exitNewGame = 1;
-#pragma inline_depth()
             break;
 
         case TGameTypeWindow::CAMPAIGN_ID:
@@ -1855,8 +1792,8 @@ static int doNewGame()
         if (!exitNewGame) {
             videoResume();
             videoRestart();
-            g_gameSelectBack->draw(0, 0, g_gameSelectBack->m_width,
-                                 g_gameSelectBack->m_height,
+            g_gameSelectBack->draw(0, 0, g_gameSelectBack->getWidth(),
+                                 g_gameSelectBack->getHeight(),
                                  g_windowManager->m_screenBitmap,
                                  0, 0, false);
         }
@@ -2095,8 +2032,6 @@ static int doMultiPlayerWindow()
 // x86 jump table independently fixes each command-to-arm mapping.
 static int doLoadGame()
 {
-    int exitLoadGame = 0;
-
     g_inSetupDialog = 1;
     g_unk69774c = 0;
     g_unnamed69927c = 10;
@@ -2107,10 +2042,11 @@ static int doLoadGame()
     g_game->m_isTutorial = 0;
     g_unnamed6972e8 = 1;
 
-    g_gameSelectBack->draw(0, 0, g_gameSelectBack->m_width,
-                         g_gameSelectBack->m_height,
+    g_gameSelectBack->draw(0, 0, g_gameSelectBack->getWidth(),
+                         g_gameSelectBack->getHeight(),
                          g_windowManager->m_screenBitmap, 0, 0, false);
 
+    int exitLoadGame = 0;
     while (!exitLoadGame) {
         {
             TGameTypeWindow gameTypeWindow(1);
@@ -2120,7 +2056,7 @@ static int doLoadGame()
         if (g_windowManager->m_dialogReturn != TGameTypeWindow::QUIT_ID)
             videoPause();
 
-        switch (g_windowManager->m_dialogReturn) {
+        switch (static_cast<short>(g_windowManager->m_dialogReturn)) {
         case TGameTypeWindow::SINGLE_ID:
             // INLINE BOUNDARY: DoLoadGame -> PickLoadGame. Dreamcast
             // kb.cpp:2096 and retail oldmain+0xc68 retain the call;
@@ -2177,8 +2113,8 @@ static int doLoadGame()
         if (!exitLoadGame) {
             videoResume();
             videoRestart();
-            g_gameSelectBack->draw(0, 0, g_gameSelectBack->m_width,
-                                 g_gameSelectBack->m_height,
+            g_gameSelectBack->draw(0, 0, g_gameSelectBack->getWidth(),
+                                 g_gameSelectBack->getHeight(),
                                  g_windowManager->m_screenBitmap,
                                  0, 0, false);
         }
@@ -3232,55 +3168,45 @@ CNetMsg::CNetMsg(eRS_Messages subType, unsigned long size)
 }
 #endif
 
-// E:\gamedcs\kb.cpp:3440
-// The loss-condition half of the pair, and the twin of DisplayVCWinLoss
-// above: a three-arm switch on the map's own loss condition, each arm
-// gated on the condition having actually fired and on the losing seat
-// sharing the local player's team.  The town and hero arms name what was
-// lost, the time-limit arm has a fixed row.  Every arm ends the same way -
-// the network broadcast (or the bare latch when this call is already the
-// remote echo), then the message - and the return is the pair of flags the
-// caller passed in.
-// Residual (79.05%): the emitted body is 894 B - retail's size exactly -
-// with 46 = 46 blocks and a clean branch view, so nothing is missing.
-// One inline decision cascades through the whole register allocation:
-// retail EXPANDS LossConditionStruct's default constructor inside the
-// two SendPlayerLost expansions (three byte stores sharing the -1 it
-// keeps in EBX for the dialog arguments) where our compile CALLS it and
-// therefore keeps 0 in EBX and spends immediates on the -1s. The
-// CNetMsg base constructor already agrees at all three sites - expanded
-// twice, called once against the 0x4f2930 COMDAT - so this is the
-// budget running out one level deeper, not a spelling.
-// 2026-09-05: the trailing `||` now goes through an `unsigned char`
-// local, which is what gives retail's byte-wide `xor al,al` /
-// `mov al,1` instead of `xor eax,eax` / `mov eax,1` (79.0534 ->
-// 79.1102). The remaining epilogue difference is downstream of the same
-// register story: retail's EBX holds -1 and is dead by the compares, so
-// its three pops sit AHEAD of them and are shared between both arms.
-// 2026-09-06, polish lane 38, the DC LOCAL-SCOPE SWEEP, and it is a NEGATIVE:
-// the Dreamcast block names exactly ONE local here, `bShowedEndMessage`
-// (T_UCHAR, sp+0x33) - this body's `gameOver` - and NO `localPos`, so the DC
-// source calls `GetLocalPlayerGamePos()` at each of its three uses. Spelling
-// it that way costs 79.1102 -> 72.6985; the cached `int localPos` stands.
+// E:\gamedcs\kb.cpp:3440. Dreamcast proves the reference parameters,
+// entry-time GetLocalPlayerGamePos (3442), separate town lookup (3460)
+// before formatting (3461), and explicit return branch (3559/3560).
+// The missing localPos debug record does not contradict the cached lookup;
+// the prior repeated-accessor probe (72.6985%) did not recover that source.
+// Complete's three condition arms preserve the network helper boundaries
+// and add their retail dialogs. The references and the two statement/return
+// corrections are byte-flat at the 79.1107% MAX (2026-09-07).
+//
+// Residual: 880 padded candidate bytes, 46 CFG blocks and clean branches.
+// Passive C2 trace finds LossConditionStruct's default ctor costs 41. Its
+// town/time-limit sites receive budgets 26/25 and remain calls; retail
+// expands it at all three sites. The hero site receives 53 and expands.
+// CNetMsg already has retail's one call/two expansions. The differing loss
+// ctor decisions prevent retail's shared -1 register and final epilogue.
+// Rewriting its initializer list as the same ordered body assignments is
+// byte-flat, as are naming the town result and spelling the final if/return.
+// Keep the member's default construction before the subsequent assignment:
+// CPlayerLostMsg's DC netmsg.h:519 calls both base/member ctors, then 520
+// stores loser and 521 copies the condition. Moving loser into the initializer
+// list or flattening the default constructor would discard that evidence.
 VA(0x004f2960, 0x37E)  // decorated identity (kb.h) + anchor-caller (CheckEndGame), dc 0xe3558
-unsigned char displayLCWinLoss(LossConditionStruct* lossCondition,
+unsigned char displayLCWinLoss(LossConditionStruct& lossCondition,
                                // Before normalization (locals): bGameWon, bGameLost, cLoserName.
-                               int* gameWon, int* gameLost,
+                               int& gameWon, int& gameLost,
                                unsigned char remoteCheck)
 {
     int localPos = g_game->getLocalPlayerGamePos();
 
-    switch (lossCondition->m_type) {
+    switch (lossCondition.m_type) {
     case LOSS_CONDITION_LOSE_TOWN:
-        if (lossCondition->m_gameLost
-            && g_game->onSameTeam(localPos, lossCondition->m_playerLoser)) {
-            *gameLost = 1;
-            sprintf(g_text, (*g_generalText)[252],
-                    g_game->getTown(
-                        g_game->getTownId(lossCondition->m_townX,
-                                          lossCondition->m_townY,
-                                          lossCondition->m_townZ))
-                        ->m_name.c_str());
+        if (lossCondition.m_gameLost
+            && g_game->onSameTeam(localPos, lossCondition.m_playerLoser)) {
+            gameLost = 1;
+            town* lostTown = g_game->getTown(
+                g_game->getTownId(lossCondition.m_townX,
+                                  lossCondition.m_townY,
+                                  lossCondition.m_townZ));
+            sprintf(g_text, (*g_generalText)[252], lostTown->m_name.c_str());
             if (remoteCheck)
                 g_gameOver = 1;
             else
@@ -3291,18 +3217,18 @@ unsigned char displayLCWinLoss(LossConditionStruct* lossCondition,
         break;
 
     case LOSS_CONDITION_LOSE_HERO:
-        if (lossCondition->m_gameLost
-            && g_game->onSameTeam(localPos, lossCondition->m_playerLoser)) {
-            *gameLost = 1;
-            if (localPos == lossCondition->m_playerLoser) {
+        if (lossCondition.m_gameLost
+            && g_game->onSameTeam(localPos, lossCondition.m_playerLoser)) {
+            gameLost = 1;
+            if (localPos == lossCondition.m_playerLoser) {
                 sprintf(g_text, (*g_generalText)[254],
-                        g_game->getHero(lossCondition->m_heroId)->m_name);
+                        g_game->getHero(lossCondition.m_heroId)->m_name);
             } else {
                 char* loserName =
-                    g_game->getPlayerName(lossCondition->m_playerLoser);
+                    g_game->getPlayerName(lossCondition.m_playerLoser);
                 if (loserName)
                     sprintf(g_text, (*g_generalText)[671], loserName,
-                            g_game->getHero(lossCondition->m_heroId)->m_name);
+                            g_game->getHero(lossCondition.m_heroId)->m_name);
             }
             if (remoteCheck)
                 g_gameOver = 1;
@@ -3314,20 +3240,21 @@ unsigned char displayLCWinLoss(LossConditionStruct* lossCondition,
         break;
 
     case LOSS_CONDITION_TIME_LIMIT:
-        if (lossCondition->m_gameLost) {
+        if (lossCondition.m_gameLost) {
             if (remoteCheck)
                 g_gameOver = 1;
             else
                 sendPlayerLost();
-            *gameLost = 1;
+            gameLost = 1;
             normalDialog((*g_generalText)[255], NORMAL_DIALOG_DEFAULT, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
         }
         break;
     }
 
-    unsigned char gameOver = *gameWon || *gameLost;
-    return gameOver;
+    if (gameWon || gameLost)
+        return 1;
+    return 0;
 }
 
 // The re-entry latch CheckEndGame holds while it runs; its only five
@@ -3469,8 +3396,8 @@ void checkEndGame(int forceWin)
     gameLost = 0;
     if (!displayVCWinLoss(g_game->m_mapHeader.m_victoryCondition, gameWon,
                           gameLost, 0))
-        displayLCWinLoss(&g_game->m_mapHeader.m_lossCondition, &gameWon,
-                         &gameLost, 0);
+        displayLCWinLoss(g_game->m_mapHeader.m_lossCondition, gameWon,
+                         gameLost, 0);
     if (g_game->m_mapHeader.m_victoryCondition.m_type != -1
         && !g_game->m_mapHeader.m_victoryCondition.m_allowNormalVictory)
         standardVictoryAllowed = 0;
