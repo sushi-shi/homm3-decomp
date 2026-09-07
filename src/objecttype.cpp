@@ -283,6 +283,7 @@ inline std::vector<TObjectType::TImageInfo>& getObjectImageCache()
 // grows from 20 to 39 bytes and replaces rep movsd with six individual
 // load/store pairs. Coordinate constructors taking values or references
 // are neutral when the empty point is initialized before the row count.
+VA_COMPGEN(0x00517b50, 0x14, STD_CONSTRUCT, TImageInfo)
 //
 // Further boundary controls do not close the residual: an ordinary free
 // GetIndex is neutral; a separate registry-append helper changes nested

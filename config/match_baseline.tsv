@@ -2737,6 +2737,7 @@ objecttype	??_GTObjectTypeFilter@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x116560	
 objecttype	??_Gistrstream@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x116720	-
 objecttype	??_Glogic_error@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x4660	-
 objecttype	?_Construct@std@@YIXPAU?$pair@$$CBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@1@ABU21@@Z	100.0000	100.0000	100.0000	0x11b6d0	-
+objecttype	?_Construct@std@@YIXPAUTImageInfo@TObjectType@@ABU23@@Z	100.0000	100.0000	100.0000	0x117b50	-
 objecttype	?_Dec@const_iterator@?$_Tree@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$pair@$$CBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@2@U_Kfn@?$map@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@HU?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@2@@2@U?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@2@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x11b5d0	-
 objecttype	?_Doraise@invalid_argument@std@@MBEXXZ	100.0000	100.0000	100.0000	0x116f10	-
 objecttype	?_Doraise@logic_error@std@@MBEXXZ	100.0000	100.0000	100.0000	0x4640	-
