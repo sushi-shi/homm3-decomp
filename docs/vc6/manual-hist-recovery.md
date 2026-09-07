@@ -10,6 +10,11 @@ This work is stacked on the CUR/MAX/HIST tooling PR. The initial manual tranche
 on 2026-09-07 used target-local disposable candidates and retained no synthetic
 declarations:
 
+The preceding random-include sweep covered all 128 original recovery targets
+with 100 TU-state samples each. It reproduced two already-banked MAX values but
+found no new peak, leaving 125 `MAX < HIST` rows for evidence-led manual work.
+The complete movement census is in [tu-state-sweep.md](tu-state-sweep.md).
+
 | Target | Manual campaign | Result |
 |---|---|---|
 | `type_sacrifice_window::createArtifactWidgets` | 240 trials, 12 Gruntz state families | no state above 99.9983% MAX |
