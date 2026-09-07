@@ -740,3 +740,19 @@ The source also jumps out of the search loops to a separate placement block.
 Restoring that boundary and the canonical validity/column/front-offset helpers
 is byte-flat, but preserves the positive source evidence. No direction reversal
 is acceptable without establishing which facing selects it.
+
+
+## Explicit early returns can restore register lifetimes
+
+`combatManager::placeShooter` (0x422060) reaches 100% from 82.4884% by
+restoring DC's combined entry condition and its two explicit action-8 returns
+(ai.cpp:2191/2193 and 2255/2257). A shared `goto wait` produced the right broad
+behavior and branch count, but kept `this` in ESI and spilled the neighbor
+counter. The source returns let VC6 allocate `this` in EBX, reuse that register
+for the count, and save ESI only when entering the search.
+
+The combined condition alone scores 82.2093%; the returns are needed with it.
+Canonical `getHex`/`Is` calls, occupied-neighbor-first source order, and the
+Dreamcast best-hex assignment order are retained; each is byte-flat in the
+corresponding controls. Matching aggregate branch counts had not established
+that the source control-flow form was already correct.

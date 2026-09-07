@@ -28,7 +28,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x005f2a40	968	82.017	82.017	82.017	174.07544000000004	victorylossconditions	?checkForDefeatedHeroLoss@LossConditionStruct@@QAEEPBVhero@@@Z	admitted
 0x00542080	2218	82.1005	82.1005	82.1005	397.01091	rmg	?createSubterraneanGate@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	admitted
 0x00514d80	644	73.32632	82.2717	82.2717	114.17025200000005	objecttype	?load@TObjectTypeTable@@QAEXPAD@Z	admitted
-0x00422060	398	82.48837	82.4884	82.4884	69.69616800000001	ai	?placeShooter@combatManager@@QAEXPBVarmy@@@Z	admitted
 0x005b5440	1576	81.6644	82.8347	82.8347	270.5251280000001	rmg_terrain	?repairTerrainPoint@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	admitted
 0x004d8720	1040	82.85906	82.8591	82.8591	178.26536000000004	hero	?initialize@hero@@QAEXF@Z	admitted
 0x0050cca0	224	82.933334	82.9333	82.9333	38.22940800000001	mousemgr	?setPointer@mouseManager@@QAEXHW4EPointerSet@1@@Z	admitted

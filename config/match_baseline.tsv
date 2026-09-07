@@ -225,7 +225,7 @@ ai	?markFriendlyArmies@combatManager@@QAEXPBVarmy@@PAJJPBUtype_AI_combat_paramet
 ai	?markMoat@combatManager@@QAEXPBVarmy@@PAJPAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x21590	3474190027ee
 ai	?markMultiheadedEnemy@combatManager@@QAEXPBVarmy@@0PAJJPAVsearchArray@@PAUtype_AI_combat_parameters@@@Z	94.5399	94.5399	94.5399	0x1fd60	b55602ee3446
 ai	?moveToward@combatManager@@QAEEPBVarmy@@JPBJE@Z	100.0000	100.0000	100.0000	0x1f580	643f5bbf02bf
-ai	?placeShooter@combatManager@@QAEXPBVarmy@@@Z	82.4884	82.4884	82.4884	0x22060	6f6675315d86
+ai	?placeShooter@combatManager@@QAEXPBVarmy@@@Z	100.0000	100.0000	100.0000	0x22060	efcb9f2802e4
 ai	?shouldStayInCastle@combatManager@@QAEEPAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x213f0	4f49a486c52f
 ai	?simulateActions@combatManager@@QAEJAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@JJ@Z	100.0000	100.0000	100.0000	0x22880	35d9fa42dbd8
 ai	?simulateCombat@combatManager@@QAEXJE@Z	100.0000	100.0000	100.0000	0x22a40	0ed84647b474

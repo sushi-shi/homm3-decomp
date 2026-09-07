@@ -2817,56 +2817,25 @@ long combatManager::chooseMeleeAction(const army* currentArmy, unsigned char tel
 
 #endif  // @carcass
 
-// E:\gamedcs\ai.cpp:2187
-// 398 bytes against the DC body's 398 - the tightest size agreement in
-// the TU - with `ret 4` matching the DC parameter count and a body
-// that calls searchArray::SeedCombatPosition and
-// combatManager::is_outside_placement_boundry. Placement, by name.
+// E:\gamedcs\ai.cpp:2187, DC 0x26fa8. The source locals are best_hex,
+// best_open_hexes and new_hex; both wait exits assign action 8 and return
+// (lines 2191/2193 and 2255/2257). Do not merge them with a source goto.
 //
-// A shooter wants the LOWEST score, and the score counts how many of
-// its neighbouring hexes are free (or its own) - so it walks toward the
-// emptiest corner of its placement zone - except that a single
-// neighbour carrying creatureId bit 2 slams the score to 1000 and rules
-// the hex out entirely. Ties go to standing still.
+// Exact (2026-09-07): the combined entry guard and explicit wait returns let
+// VC6 keep this in EBX, recycle EBX for the neighboring-open-hex count, and
+// delay saving ESI until SeedCombatPosition's arguments. The old shared
+// goto-wait tail changed these bindings; this was a source-control-flow
+// difference, not an unavoidable register-homing wall.
 //
-// The 100 the search starts from is a real ceiling, not a sentinel: a
-// hex with eight free neighbours scores 8, so any reachable hex beats
-// it and only an unreachable board leaves best_hex on the stack's own
-// square - which is the `field_3c = 8` (wait) exit.
-//
-// The two-hex bound test is combatManager::ValidHex, the DC header
-// inline (cmbtmgr.h:1460), used TWICE - once on the loop index and once
-// on the adjacent hex. On the loop index VC6 strength-reduces it onto
-// the SAME 30-byte induction variable the cellData walk uses, which is
-// why the retail bytes read `test esi,esi / jl` plus `cmp esi,0x15ea /
-// jge` (0x15ea = 187 * 30) rather than anything mentioning 187.
-//
-// Residual (82.49%): the register-homing family, and every semantic
-// question is settled - both ValidHex expansions, the strength reduction,
-// the two acceptance guards and the shared wait tail line up. Retail has
-// 21 branches / two returns, as does this source; only the equivalent final
-// best-hex test has opposite layout polarity. What does not align is one
-// cyclic register choice: retail parks `this` in EBX,
-// spills it to a slot across the inner loop and RECYCLES EBX as the
-// neighbour counter, which leaves ESI free for the induction and lets
-// the ESI save shrink-wrap into the middle of SeedCombatPosition's
-// argument pushes. Our CL parks `this` in ESI, keeps EBX for something
-// else and spills the counter to memory (`inc dword ptr [ebp-x]`
-// against retail's `inc ebx`). Tried and measured: one sunk shared
-// `field_3c = 8` tail written as an enclosing `if` (76.5), the same
-// tail written with `goto` (76.8 - it does reproduce retail's three
-// `je`s into one block, and is still worse overall), the acceptance
-// test as one `a < b || (a == b && c)` expression (79.2 against 80.6
-// for retail's two separate `continue` guards, which is what produces
-// the DUPLICATED `cmp ebx,eax` retail carries), and swapping the
-// best_hex/best_value declaration order (80.53 under that older layout).
-// Revisited 2026-08-13 with the DC local roster: the actual function-scope
-// locals are `best_hex`, `best_open_hexes`, `new_hex` in that order. Moving
-// their assignments before SeedCombatPosition, swapping the first two into
-// roster order and merging the three wait exits raised 80.57 -> 82.49.
-// Nesting the positive gates aligns every branch target but scores 82.21;
-// spelling the last normal arm explicitly scores 81.29. Both were rejected.
-// E:\gamedcs\ai.cpp:2187
+// Restore the canonical getHex/Is calls and the occupied-neighbor-first
+// branch at DC lines 2236..2246. A neighbor with attribute bit 2 sets the
+// score to 1000; empty/self neighbors increment it. Lower scores win and ties
+// favor the current hex. DC assigns bestHex before bestOpenHexes.
+// Controls: helper/neighbor-order repair alone is byte-flat at 82.4884%;
+// combining the entry guard alone gives 82.2093%; explicit wait returns
+// then reach 100%. A direct getHex()->visited test, combined placement
+// guard and DC best-value assignment order preserve the exact bytes.
+// The two ValidHex calls also explain retail's 30-byte induction bounds.
 // Before normalization (locals): current_army, best_hex, best_open_hexes, new_hex.
 VA(0x00422060, 0x18E)  // anchor-callee, dc 0x26fa8
 void combatManager::placeShooter(const army* currentArmy)
@@ -2874,51 +2843,49 @@ void combatManager::placeShooter(const army* currentArmy)
     long bestHex;
     long bestOpenHexes;
     long newHex;
-    if (!currentArmy->getSpeed())
-        goto wait;
-    if (!g_game->m_setup.m_difficulty && !m_sideIsAi[m_currentSide])
-        goto wait;
+    if (!currentArmy->getSpeed() ||
+        (!g_game->m_setup.m_difficulty && !m_sideIsAi[m_currentSide])) {
+        m_nextAction = 8;
+        return;
+    }
     bestHex = currentArmy->m_gridIndex;
     bestOpenHexes = 100;
     g_searchArray->seedCombatPosition(currentArmy, m_currentSide, 127,
                                       m_creaturePlacement, -1);
     for (newHex = 0; newHex < COMBAT_GRID_CELLS; newHex++) {
-        if (!validHex(newHex))
+        if (!validHex(newHex) || isOutsidePlacementBoundry(m_currentSide, newHex))
             continue;
-        if (isOutsidePlacementBoundry(m_currentSide, newHex))
-            continue;
-        const pathCell* cell = g_searchArray->m_cellData == 0
-            ? 0 : &g_searchArray->m_cellData[newHex];
-        if (!cell->m_visited)
+        if (!g_searchArray->getHex(newHex)->m_visited)
             continue;
         long value = 0;
         for (long dir = 0; dir < 8; dir++) {
-            if (dir >= 6 && !(currentArmy->m_monInfo.m_attributes & 1))
+            if (dir >= 6 && !currentArmy->is(1u << 0))
                 continue;
             long adjacent = currentArmy->getAdjacentHex(newHex, dir);
             if (!validHex(adjacent))
                 continue;
             army* other = m_cells[adjacent].getArmy();
-            if (other == 0 || other == currentArmy)
+            if (other != 0 && other != currentArmy) {
+                if (other->is(1u << 2))
+                    value = 1000;
+            } else {
                 value++;
-            else if (other->is(1u << 2))
-                value = 1000;
+            }
         }
         if (value > bestOpenHexes)
             continue;
-        if (value == bestOpenHexes
-                && newHex != currentArmy->m_gridIndex)
+        if (value == bestOpenHexes && newHex != currentArmy->m_gridIndex)
             continue;
-        bestOpenHexes = value;
         bestHex = newHex;
+        bestOpenHexes = value;
     }
-    if (bestHex == currentArmy->m_gridIndex)
-        goto wait;
+    if (bestHex == currentArmy->m_gridIndex) {
+        m_nextAction = 8;
+        return;
+    }
     m_nextAction = 2;
     m_nextActionGridIndex = bestHex;
     return;
-wait:
-    m_nextAction = 8;
 }
 
 // E:\gamedcs\ai.cpp:2272
