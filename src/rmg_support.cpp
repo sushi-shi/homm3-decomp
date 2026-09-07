@@ -87,6 +87,14 @@ void* TRmgRoadLinePainter::getPattern(int)
     return &g_rmgRoadPatternTable;
 }
 
+// The road hierarchy's parallel vtables 0x6411f0/0x64120c use the same
+// adapter getLand forwarding shape in slot 5.
+VA(0x0055F390, 0x13)  // Complete-only road painter
+int TRmgRoadLinePainter::getLand(const TRmgGridPoint& point)
+{
+    return m_adapter->getLand(point);
+}
+
 // The road painter's empty derived destructor restores its distinct base
 // vtable at 0x6411f0. The road builder at 0x548040 constructs this parallel
 // hierarchy; its scalar deleting destructor is retained at 0x55f430.
