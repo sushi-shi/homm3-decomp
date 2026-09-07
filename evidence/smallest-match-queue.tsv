@@ -1,4 +1,4 @@
-[queue] 958 active unmatched target(s), smallest first; 16 parked
+[queue] 957 active unmatched target(s), smallest first; 17 parked
        3 B  0x005b3a40  unadmitted    bracketed           systemoptionswindow..text:game_1b3a40
        6 B  0x00404bc0  unadmitted    bracketed           adventuremapwindow..adventureoptionswindow:game_4860_sub00_4bc0
        6 B  0x00534190  unadmitted    bracketed           quicktownwindow..recruit:game_134190
@@ -36,7 +36,6 @@
       33 B  0x0045da40  unadmitted    bracketed           campaignbrief..campaignmap:game_5bcd0_sub02_5da40
       33 B  0x00530f80  unadmitted    bracketed           quicktownwindow..recruit:game_130f80
       33 B  0x005324e0  unadmitted    bracketed           quicktownwindow..recruit:game_1324e0
-      33 B  0x00533680  unadmitted    bracketed           quicktownwindow..recruit:game_133680
       33 B  0x005339c0  unadmitted    bracketed           quicktownwindow..recruit:game_1339c0
       33 B  0x00534fa0  unadmitted    bracketed           quicktownwindow..recruit:game_134fa0
       33 B  0x00536170  unadmitted    bracketed           quicktownwindow..recruit:game_136170
@@ -959,7 +958,7 @@
    11619 B  0x00579960  MAX 95.8142%  compiled            singleselectionwindow:??0TSingleSelectionWindow@@QAE@H@Z
 
 wrote evidence/smallest-match-queue.tsv
-.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_1446a0_sub00_1443a0	bracketed	resolve the owner, then add its VA claim and body
+_1446a0_sub00_1443a0	bracketed	resolve the owner, then add its VA claim and body
 compiled	758	0x0041fd60	94.5399	94.5399	94.5399	ai	ai	?markMultiheadedEnemy@combatManager@@QAEXPBVarmy@@0PAJJPAVsearchArray@@PAUtype_AI_combat_parameters@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	759	0x00602dc0	84.1098	84.1098	84.1098	winmgr	winmgr	?fizzleForwardX@heroWindowManager@@QAEXHHHHH@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	761	0x0058e700	98.8866	98.8866	98.8866	singleselectionwindow	singleselectionwindow	?setNewPlayerSlot@TSingleSelectionWindow@@QAEXPAVCNetPlayerInfo@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
