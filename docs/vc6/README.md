@@ -37,6 +37,7 @@ model cannot rot.
 |---|---|
 | `scripts/homm3/vc6/` | the area package (`homm3 vc6 <verb>`) |
 | `scripts/homm3/vc6/_toolchain.py` | hash-gated PE reader over the compiler binaries |
+| `scripts/homm3/vc6/disasm.py` | labeled C2 assembly and code references; inferred roles read from the owning evidence prose |
 | `scripts/homm3/vc6/argv.py` | CL spec-table decoder → per-pass argv model |
 | `scripts/homm3/vc6/passes.py` | run C1XX / C2 as separate steps (IL persistence) |
 | `scripts/homm3/vc6/oracle.py` | real-compiler ground-truth runners |
@@ -46,6 +47,7 @@ model cannot rot.
 | `scripts/homm3/vc6/_eh.py` | the EH cleanup transcript (`[ebp-4]` state stores) — object lifetimes, the one signal the three solvers do not read |
 | `scripts/homm3/vc6/census.py` | the gates (each with a negative control) |
 | `scripts/homm3/vc6/test_locator.py` | the `locator` gate's cases (`homm3 vc6 check --locator`) |
+| `scripts/homm3/vc6/test_disasm.py` | compiler label provenance, selector, byte identity and range controls (also in the `locator` gate) |
 | `scripts/homm3/vc6/test_report_resolution.py` | negative controls for shared public-symbol routing and unclaimed flat names |
 | `scripts/homm3/vc6/test_queue.py` | negative controls for MAX-first ordering and banked-exact dip exclusion |
 | `scripts/homm3/vc6/shim/` | the C2-slot pass-through/instrumentation DLL |
