@@ -291,6 +291,58 @@ unsigned char type_random_map::canPlaceObject(
 }
 #endif
 
+// The array constructor at 0x530e90 calls this initializer after constructing
+// m_objects, and type_random_map::clear calls it for every allocated cell.
+// Dreamcast has no RMG compiland, so the original method spelling is unknown;
+// `clear` describes the retail operation while preserving its real boundary.
+// Four compiled forms peaked at 76.95%. Direct member writes store the packed
+// connection word too early (73.68%); local packed-field snapshots recover the
+// retail masks and final store order, leaving only EDI lifetime/load scheduling.
+// Keep the fifth probe for this 111-byte function's own queue position.
+VA(0x00530F10, 0x6F)
+void TRmgMapItem::clear()
+{
+    m_objects.erase(m_objects.begin(), m_objects.end());
+
+    TRmgConnectionDecoration connection = m_connection;
+    TRmgGroundTile tile = m_tile;
+    TRmgGroundTileData tileData = m_tileData;
+    connection.m_present = 0;
+    tile.m_landType = eTerrainWater;
+    tile.m_terrainFrame = 21;
+    tile.m_riverType = 0;
+    tile.m_riverFrame = 0;
+    tile.m_roadType = 0;
+    tileData.m_roadFrame = 0;
+    tileData.m_blockedDirections = 0;
+    tileData.m_connectionDirection = 0;
+    tileData.m_terrainFlipX = 0;
+    tileData.m_terrainFlipY = 0;
+    tileData.m_riverFlipX = 0;
+    tileData.m_riverFlipY = 0;
+    tileData.m_roadFlipX = 0;
+    tileData.m_roadFlipY = 0;
+    tileData.m_coastal = 0;
+    tileData.m_roadEntrance = 0;
+    tileData.m_placementOutline = 0;
+    tileData.m_roadPassable = 1;
+    tileData.m_borderObject = 0;
+    tileData.m_subterraneanGate = 1;
+    tileData.m_zoneBoundary = 0;
+    tileData.m_roadTarget = 0;
+    tileData.m_riverTarget = 0;
+    tileData.m_impassable = 0;
+    m_connection = connection;
+    m_tile = tile;
+    m_movement.m_cost = 32700;
+    m_movement.m_zonePathCost = 32700;
+    m_zoneState.m_score = 32700;
+    m_zoneState.m_zone = -1;
+    m_zoneState.m_connectionEligibility = -1;
+    m_previousTile.m_x = -1;
+    m_tileData = tileData;
+}
+
 // Vtable 0x6409cc slot 3 returns the map's two unsigned dimensions.
 // The hidden result pointer and two stores fix the coordinate return ABI.
 // The proven grid copy constructor moves the width load before the result

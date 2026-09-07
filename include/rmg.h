@@ -831,6 +831,8 @@ struct TRmgMapItem {
     // Before normalization: connection.
     TRmgConnectionDecoration m_connection;  // +0x2c
 
+    void clear();
+
     // CreateRiver's predicate reads shift the high tile bits and test a
     // byte result. These queries recover that boundary; direct field tests
     // instead use dword masks. Names remain provisional without RMG symbols.
