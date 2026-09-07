@@ -8,8 +8,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00506080	468	61.07879	62.3455	62.3455	176.22306	mapcell	??0CObjectType@@QAE@PAUTObjectType@@@Z	admitted
 0x00526d40	915	64.3242	64.3242	64.3242	326.4335699999999	philai	??0type_spellvalue@@QAE@PBVhero@@@Z	admitted
 0x00583580	780	34.04054	67.9099	67.9099	250.30278000000007	singleselectionwindow	?updateGameVars@TSingleSelectionWindow@@QAEXXZ	admitted
-0x004dd2d0	5182	74.21898	75.4051	75.4051	1274.5077179999998	hero	?windowHandler@THeroScreenWindow@@UAEHPAVmessage@@@Z	admitted
-0x004183d0	581	75.40796	75.408	75.408	142.87952	advmgr	?setEnvironmentOrigin@advManager@@QAEXUtype_point@@H@Z	admitted
 0x005f2a40	968	75.86364	75.8636	75.8636	233.64035199999992	victorylossconditions	?checkForDefeatedHeroLoss@LossConditionStruct@@QAEEPBVhero@@@Z	admitted
 0x005113f0	611	75.99515	75.9951	75.9951	146.66993900000003	multiplayerwindow	?onTCP@TMultiPlayerWindow@@QAEEXZ	admitted
 0x004e3070	825	76.33603	76.336	76.336	195.22799999999998	hero	?giveArtifact@hero@@QAEEPBUtype_artifact@@EE@Z	admitted
@@ -23,6 +21,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x004c2450	2190	74.47679	78.2855	78.2855	475.54755000000006	game	?loadMap@game@@QAE_NPAVTAbstractFile@@@Z	admitted
 0x004886a0	306	75.72034	78.5339	78.5339	65.686266	customcampaign	??1CampaignHeaderStruct@TCampaignBrief@@QAE@XZ	admitted
 0x004ea1d0	1112	78.59259	78.5926	78.5926	238.050288	hiscore	?highScoreWindowHandler@@YIHAAVmessage@@@Z	admitted
+0x004dd2d0	5182	78.6458	78.6458	78.6458	1106.574644	hero	?windowHandler@THeroScreenWindow@@UAEHPAVmessage@@@Z	admitted
 0x0058bce0	1455	77.26694	78.7597	78.7597	309.04636500000004	singleselectionwindow	?onBeginGame@TSingleSelectionWindow@@QAEEXZ	admitted
 0x0048ae90	880	78.807365	78.8074	78.8074	186.49487999999997	customcampaign	?save@SCampaign@@QAEXPAVTAbstractFile@@@Z	admitted
 0x004ee3e0	7172	78.9421	78.9421	78.9421	1510.2725880000005	kb	?oldmain@@YIHXZ	admitted

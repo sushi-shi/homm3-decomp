@@ -8845,54 +8845,35 @@ unsigned char saveGame(unsigned char campaignWinMode)
 DATA(0x0063a64c) static const int g_soundVolumes[8] = { 32, 28, 20, 10,
                                                         3,  2,  1,  0 };
 
-// E:\gamedcs\advmgr.cpp:9785
-// The adventure ambience re-seed. Retail proves all three phases: a
-// priority reset over the four active slots (silencing them outright when
-// `reset` is set), a square-ring scan that feeds InsertSound the ring
-// index as its priority, and a settle pass that drops anything left above
-// priority 5 and re-volumes whatever InsertSound touched. The scan runs
-// twice, soundsType 1 then 2 - pass 1 only re-prioritises sounds already
-// playing (InsertSound returns early on soundsType 1), pass 2 is the one
-// allowed to claim a free slot. The four running edge counters are what
-// make retail emit inc/inc/dec/dec rather than indexed addressing.
+// E:\gamedcs\advmgr.cpp:9785. Dreamcast proves MAX_RANGE, pri, i and
+// soundsType, and four InsertSound expressions derived from point +/- pri
+// and i (9822..9829). Let VC6 strength-reduce those indexed expressions;
+// the previous handwritten xMin/yMin/xMax/yMax and edge counters imposed
+// different local lifetimes despite traversing the same cells.
+// Keep the priority store in BOTH reset branches: DC 9800 and 9803 record
+// separate assignments with a branch at 9802. VC6 merges the stores while
+// keeping 0x7f in EBX and spilling the first loop's count, exactly retail.
+// Before normalization: MAX_RANGE -> maxRange, pri -> priority.
 //
-// The above was the standing residual note; its VERDICT was wrong and the
-// evidence is left here because the probe that refuted it is cheap:
-//   "Residual (63.94%): register-homing only ... why-reg v2 confirms the
-//    definition slots and their order agree on BOTH sides, with only the
-//    ebx/edi bindings permuted: retail holds `this` in edi ... we hold
-//    `this` in ebx ... Since the value that must move first is `this` - a
-//    parameter - no local spelling reaches it; this is C1 front-end handle
-//    state, the bounded class."
-// 2026-09-05: 63.9403 -> 75.4123 by DELETING the three `x`/`y`/`z` caches
-// and re-reading `point.x`/`point.y`/`point.z` at every use. Retail reads
-// the by-value parameter's own slot fresh before each InsertSound push
-// (`mov edx,[ebp+0xc]` five times in the ring body) and recycles [ebp+8]
-// and [ebp+0xc] for the ring coordinates; three named locals is what took
-// the extra frame word (0x30 against retail's 0x2c) AND what pushed `this`
-// out of EDI. With the caches gone the frame is retail's exactly and
-// `this` is in EDI on both sides - the permutation the note called C1
-// handle state was downstream of a source fact after all. Dose matters:
-// dropping `z` alone is 69.42, all three is 75.41.
-// Residual (75.41%): the first loop's counter. Retail materialises
-// `mov dword ptr [ebp-0x1c], 4` where we keep the strength-reduced count
-// in EBX, so retail has one more call-crossing pseudo than we do at that
-// point and spills the count; every later divergence is that one binding.
-// 2026-09-06: naming the sentinel (`int idlePriority = 0x7f;` hoisted above
-// the loop, stored through the local) does NOT reproduce retail's
-// `mov ebx,0x7f` - VC6 constant-propagates it straight back to the
-// immediate store. Byte-flat at 75.4080.
-// 2026-09-06, polish lane 36: the Dreamcast block names `const int
-// MAX_RANGE = 4;` as the function's FIRST statement (advmgr.cpp:9786, stored
-// to sp+0x18) and both its loops compare against that 4 - which is exactly
-// the `mov dword ptr [ebp-0x1c], 4` the note above calls the residual.
-// Measured and rejected against 75.4080: MAX_RANGE declared and used as the
-// ring loop's bound 75.3781; the same non-const 75.3781; declared but unused
-// byte-flat.  VC6 constant-propagates the initialiser in every form, so the
-// spilled 4 is not reachable from a source constant.
+// Both source corrections together reach 100%. Flattening the priority
+// stores gives 97.7264%; retaining the handwritten ring counters gives
+// 77.6667%; flattening both gives 75.4080. The exact 581-byte retail body
+// has 27 blocks, all matched. The two passes still reprioritize existing
+// sounds before admitting new slots; the final pass drops priorities > 5
+// and updates the volume of touched sounds.
+//
+// Earlier controls used the handwritten-counter shape: named x/y/z caches
+// added a frame word and displaced this from EDI (63.9403%); dropping only
+// z gave 69.42%, all three 75.41%. Naming the idle-priority constant was
+// byte-flat. Using MAX_RANGE as only the ring bound gave 75.3781%, with or
+// without const. A positive-count for loop changed the bottom branch away
+// from dec/jne; a guarded do loop repaired that branch but not allocation.
+// Those probes did not establish a C1 handle-state limit. Retail's counter
+// instructions are the result of strength reduction, not source IV evidence.
 VA(0x004183d0, 0x245)  // anchor-global, dc 0x1b164
 void advManager::setEnvironmentOrigin(type_point point, int reset)
 {
+    const int maxRange = 4;
     if (!g_soundManager->m_playSounds)
         return;
 
@@ -8903,8 +8884,10 @@ void advManager::setEnvironmentOrigin(type_point point, int reset)
                 g_soundManager->stopSample(
                     m_loopedSample[m_soundArray[i].m_soundId]->m_memSample.m_memSampleHandle);
                 m_soundArray[i].m_soundId = LOOPING_SOUND_INVALID;
+                m_soundArray[i].m_priority = 0x7f;
+            } else {
+                m_soundArray[i].m_priority = 0x7f;
             }
-            m_soundArray[i].m_priority = 0x7f;
         }
     }
 
@@ -8920,46 +8903,17 @@ void advManager::setEnvironmentOrigin(type_point point, int reset)
     for (soundsType = 1; soundsType <= 2; soundsType++) {
         insertSound(point.m_x, point.m_y, point.m_z, 0, soundsType);
 
-        int xMin = point.m_x;
-        int yMin = point.m_y;
-        int xMax = point.m_x;
-        int yMax = point.m_y;
-        int ring;
-        int edgeLength;
-        for (ring = 0, edgeLength = 0; edgeLength < 8;
-             ring++, edgeLength += 2) {
-            int topX = xMin;
-            int rightY = yMin;
-            int bottomX = xMax;
-            int leftY = yMax;
-            int k;
-            // The `jle` diagnose names IS this guard after all - the
-            // earlier note drew the wrong conclusion from the right
-            // probe. `k > 0` as the for-condition costs 63.94 -> 57.54
-            // because it also changes the BOTTOM test away from retail's
-            // `dec/jne`; the form that has BOTH ends right is the
-            // explicit-guard do/while below: `if (edgeLength > 0)` gives
-            // retail's `test eax,eax / jle` top and `--k != 0` keeps the
-            // `jne` back edge. Byte-flat on the fuzzy score (the register
-            // permutation dominates at this size) but flow-distance goes
-            // 2 -> 0 and the opcode now matches retail's 0x7e.
-            k = edgeLength;
-            if (edgeLength > 0) {
-                do {
-                    insertSound(topX, yMin, point.m_z, ring, soundsType);
-                    insertSound(xMax, rightY, point.m_z, ring, soundsType);
-                    insertSound(bottomX, yMax, point.m_z, ring, soundsType);
-                    insertSound(xMin, leftY, point.m_z, ring, soundsType);
-                    topX++;
-                    rightY++;
-                    bottomX--;
-                    leftY--;
-                } while (--k != 0);
+        for (int priority = 0; priority < maxRange; ++priority) {
+            for (i = 0; i < 2 * priority; ++i) {
+                insertSound(point.m_x - priority + i, point.m_y - priority,
+                            point.m_z, priority, soundsType);
+                insertSound(point.m_x + priority, point.m_y - priority + i,
+                            point.m_z, priority, soundsType);
+                insertSound(point.m_x + priority - i, point.m_y + priority,
+                            point.m_z, priority, soundsType);
+                insertSound(point.m_x - priority, point.m_y + priority - i,
+                            point.m_z, priority, soundsType);
             }
-            xMax++;
-            yMax++;
-            xMin--;
-            yMin--;
         }
     }
 

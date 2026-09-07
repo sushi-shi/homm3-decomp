@@ -151,7 +151,7 @@ advmgr	?saveGame@@YIEE@Z	100.0000	100.0000	100.0000	0x18160	79a6579aac29
 advmgr	?scanForHeroOrBoat@advManager@@QAE_NHHHGAAY05UTDrawParts@@@Z	100.0000	100.0000	100.0000	0xfb30	80c4c9828a9e
 advmgr	?screenScroll@advManager@@QAEXHH@Z	97.8177	97.8177	97.8177	0x195c0	a2aa0d599338
 advmgr	?seedTo@advManager@@QAEXUtype_point@@@Z	100.0000	100.0000	100.0000	0x194a0	6eb17cfa9e0c
-advmgr	?setEnvironmentOrigin@advManager@@QAEXUtype_point@@H@Z	75.4080	75.4080	75.4080	0x183d0	0de43ddd8441
+advmgr	?setEnvironmentOrigin@advManager@@QAEXUtype_point@@H@Z	100.0000	100.0000	100.0000	0x183d0	820972728375
 advmgr	?setHeroContext@advManager@@QAEXHHEE@Z	99.2746	99.2746	99.2746	0x17b20	5710a92ccc79
 advmgr	?setInitialMapOrigin@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19990	7426f82221eb
 advmgr	?setRolloverText@advManager@@QAEXPAVNewmapCell@@HH@Z	96.9535	96.9535	96.9535	0xb150	8c837f29c4a3
@@ -2284,7 +2284,7 @@ hero	?useSpell@hero@@QAEXH@Z	100.0000	100.0000	100.0000	0xd92d0	4a038153f3c4
 hero	?viewArtifact@hero@@QAEXPBUtype_artifact@@H@Z	100.0000	100.0000	100.0000	0xd9a00	e30cf4014cd2
 hero	?visitedArena@hero@@QBE_NPBVNewmapCell@@@Z	100.0000	100.0000	100.0000	0xe53c0	9b5325d63de6
 hero	?walkOnWater@hero@@QAEXH@Z	100.0000	100.0000	100.0000	0xe5dd0	72e6e34f1d51
-hero	?windowHandler@THeroScreenWindow@@UAEHPAVmessage@@@Z	74.2190	75.4051	75.4051	0xdd2d0	a080c1af58f7
+hero	?windowHandler@THeroScreenWindow@@UAEHPAVmessage@@@Z	78.6458	78.6458	78.6458	0xdd2d0	47471378eb78
 herodefs	?initializeHeroClassTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0xe6920	9ad9aac78f79
 herodefs	?initializeHeroTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0xe67a0	5a152a5c6060
 herodefs	?initializeSSkillTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0xe6b10	46bc0d35db8b
