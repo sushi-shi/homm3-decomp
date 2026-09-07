@@ -20,8 +20,9 @@ module makes that mechanism usable and PROVES it inert:
   negative  the gate's negative control: install the deliberately non-inert
             shim variant (drops every "-Gy" token), require the gate to go
             RED, then restore the clean shim and require it green again.
-  trace     instrument inline-budget comparisons for one configured TU,
-            require exact object identity, then restore the normal shim.
+  trace     capture one configured TU's front-end streams, replay them with
+            inline-budget instrumentation and without, require exact object
+            identity, then restore the normal shim.
   clean     remove the overlay and gate scratch.
 
 rc: 0 = green, 1 = a gate answered NO, 2 = harness error (vc6 convention).
@@ -389,11 +390,55 @@ def run_negative() -> int:
     return rc or (0 if identical else 1)
 
 
+def _traceCapture(source: Path, flags: list[str], output: Path) -> dict[str, bytes]:
+    """Freeze one front-end result without changing the source/include paths.
+
+    VC6 salts anonymous-namespace names on each front-end invocation. Even
+    identical section bytes can then have different symbol/relocation table
+    order. Replaying one unmodified IL capture keeps the full-object identity
+    gate strict; no symbol names, indices, or section contents are masked.
+    """
+    from homm3.vc6 import _il, il
+
+    capture = output / "capture"
+    if capture.exists():
+        shutil.rmtree(capture)
+    capture.mkdir()
+    prefix = cc_wrap.winepath_w(capture / "il")
+    process = _cc_wrap(capture / "unused.obj", source,
+                       [*flags, f"/d1il{prefix}"])
+    # C2's missing seed input is expected: /d1il redirects only pass one.
+    errors = il._real_errors(process)
+    streams = {suffix: (capture / f"il{suffix}").read_bytes()
+               for suffix in _il.STREAM_ORDER
+               if (capture / f"il{suffix}").is_file()}
+    missing = {"in", "gl", "sy", "ex"} - streams.keys()
+    if errors or missing:
+        _common.die(f"trace front-end capture failed (missing {sorted(missing)}):\n"
+                    f"{_tail(process)}")
+    return streams
+
+
+def _traceReplay(out: Path, source: Path, flags: list[str],
+                 streams: dict[str, bytes], extra_env: dict[str, str] | None = None
+                 ) -> subprocess.CompletedProcess:
+    """Give each C2 run fresh copies of the same captured IL streams."""
+    feed = out.parent / "feed"
+    if feed.exists():
+        shutil.rmtree(feed)
+    feed.mkdir()
+    for suffix, data in streams.items():
+        (feed / f"il{suffix}").write_bytes(data)
+    prefix = cc_wrap.winepath_w(feed / "il")
+    return _cc_wrap(out, source, [*flags, f"/d2il{prefix}"], extra_env)
+
+
 def runInlineTrace(unit: str, function: str) -> int:
     """Observe a real TU's C2 budget comparisons, fenced by byte equality.
 
-    The caller's exact manifest profile and source are used for both compiles.
-    A trace is usable only when its object equals the uninstrumented object
+    The caller's exact manifest profile and source are captured once; both
+    back ends consume identical IL. A trace is usable only when its object
+    equals the uninstrumented replay's object
     outside the four-byte timestamp. Later vetoes can still reject a candidate
     that passes this comparison; the emitted code owns the final verdict.
     """
@@ -415,12 +460,13 @@ def runInlineTrace(unit: str, function: str) -> int:
     verdict = output / "verdict.txt"
     observations.write_text("")
     verdict.write_text("UNVERIFIED: compilation/identity checks pending\n")
-    process = _cc_wrap(reference, source, flags)
+    streams = _traceCapture(source, flags, output)
+    process = _traceReplay(reference, source, flags, streams)
     if process.returncode or not reference.is_file():
         _common.die(f"reference compile failed:\n{_tail(process)}")
     try:
         compile_shim(inlineTrace=True)
-        process = _cc_wrap(instrumented, source, flags, {
+        process = _traceReplay(instrumented, source, flags, streams, {
             "MSVC_DIR": str(OVERLAY_MSVC),
             "HOMM3_VC6_SHIM_LOG": cc_wrap.winepath_w(observations),
             "HOMM3_VC6_INLINE_TRACE": function,
@@ -443,6 +489,7 @@ def runInlineTrace(unit: str, function: str) -> int:
         message = (
             f"PASS: {len(original)} object bytes equal outside TimeDateStamp; "
             f"profile: {' '.join(flags)}\n"
+            "Both back ends consumed the same captured front-end streams.\n"
             "Observations are budget comparisons, not final inline decisions.\n")
         verdict.write_text(message)
         print(f"[shim] {message.strip()}")
