@@ -333,8 +333,19 @@ static std::vector<TObjectType::TImageInfo>& getObjectImageCache()
 // creation order. The registry end has equal costs for EAX/ECX/EDX/ESI and
 // takes EAX by tie-break. A shared iterator return changes nested expansion
 // and scores 73.5455; explicit cache insert also changes the CFG (87.0316).
-// Remaining: lookup operands and string-copy scheduling, and cell's zero being
-// hoisted before the reads instead of materialized at the loop. No inline
+// Moving cell's initialization before the third or fourth read keeps 96.6403
+// and the file/index registers, but moves XOR ESI to +0x233 or +0x23f:
+// equal scores are not byte identity. Retail initializes it at +0x251.
+// Separate field-read and file-acquisition helpers reproduce the rejected
+// loop-local-counter function byte for byte. Moving the nullable-file guard
+// or filename lookup into the mask reader instead scores 80.4466/84.7470.
+// The reference-returning lookup as an ordinary free function is byte-neutral
+// with either parameter order. rows.begin()+rows.size() retains an extra
+// size call and scores 90.4743; its EDX append position is not retail's load.
+// A reference-returning lookup with an early existing-entry return scores
+// 88.7352: it adds separate +0x1c address calculations and a forward jump.
+// Remaining: lookup operands and string-copy scheduling, and cell's explicit
+// early initialization instead of materialization at the loop. No inline
 // controls or release-elided operations are used.
 VA(0x00514610, 0x317)  // anchor-callee 0x514b80 per-row `>>`; anchor-global 0x6aba80 .msk cache; retail-only
 TObjectType& TObjectType::setImageName(
