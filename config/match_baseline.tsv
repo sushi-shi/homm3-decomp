@@ -2889,7 +2889,7 @@ objecttype	?load@TObjectTypeTable@@QAEXPAD@Z	73.3263	82.2717	82.2717	0x114d80	fc
 objecttype	?replace@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@IIPBDI@Z	100.0000	100.0000	100.0000	0x115a80	-
 objecttype	?rfind@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QBEIPBDII@Z	100.0000	100.0000	100.0000	0x115c20	-
 objecttype	?sbumpc@?$basic_streambuf@DU?$char_traits@D@std@@@std@@QAEHXZ	100.0000	100.0000	100.0000	0x117b10	-
-objecttype	?setImageName@TObjectType@@QAEAAU1@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	58.5099	58.5099	58.5099	0x114610	d696c7b95d4b
+objecttype	?setImageName@TObjectType@@QAEAAU1@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	96.0790	96.0790	96.0790	0x114610	2a804078a120
 objecttype	?setTriggerMask@TObjectType@@QAEAAU1@ABV?$bitset@$0DA@@std@@@Z	100.0000	100.0000	100.0000	0x114a60	ca5ac080dae0
 objecttype	?setstate@?$basic_ios@DU?$char_traits@D@std@@@std@@QAEXH_N@Z	100.0000	100.0000	100.0000	0x115f20	-
 objecttype	?sgetc@?$basic_streambuf@DU?$char_traits@D@std@@@std@@QAEHXZ	100.0000	100.0000	100.0000	0x1157b0	-

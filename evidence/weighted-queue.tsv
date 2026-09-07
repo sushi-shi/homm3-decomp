@@ -5,7 +5,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x0056ce50	286	10.5	41.9271	41.9271	166.08849400000003	seerhut	?LoadFromMap@type_quest@@UAEXPAVTAbstractFile@@@Z	admitted
 0x00573670	1024	42.570988	46.3642	46.3642	549.2305920000001	seerhut	?DoSeerEvent@TSeerHut@@QAEXPAVhero@@_N@Z	admitted
 0x0056cd00	335	25.626087	49.7043	49.7043	168.49059499999998	seerhut	?Load@type_quest@@UAEXPAVTAbstractFile@@H@Z	admitted
-0x00514610	791	58.50988	58.5099	58.5099	328.186691	objecttype	?setImageName@TObjectType@@QAEAAU1@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	admitted
 0x00506080	468	61.07879	62.3455	62.3455	176.22306	mapcell	??0CObjectType@@QAE@PAUTObjectType@@@Z	admitted
 0x00526d40	915	64.31193	64.3119	64.3119	326.546115	philai	??0type_spellvalue@@QAE@PBVhero@@@Z	admitted
 0x00583580	780	34.04054	67.9099	67.9099	250.30278000000007	singleselectionwindow	?UpdateGameVars@TSingleSelectionWindow@@QAEXXZ	admitted
@@ -385,6 +384,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x0043d250	424	95.98113	95.9811	95.9811	17.04013600000001	army	??0army@@QAE@XZ	admitted
 0x00438490	811	96.06159	96.0616	96.0616	31.94042399999998	ai_tactical	?get_fortune_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	admitted
 0x004854c0	110	96.07143	96.0714	96.0714	4.3214600000000045	customcampaign	?GetIconDefName@TCampaignStartCrossoverOption@@UBEPBDPAXH@Z	admitted
+0x00514610	791	96.07905	96.079	96.079	31.01511000000006	objecttype	?setImageName@TObjectType@@QAEAAU1@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	admitted
 0x0040deb0	975	96.14667	96.1467	96.1467	37.56967500000004	advmgr	?ProcessWaitingHover@advManager@@QAEHHH@Z	admitted
 0x0040ec90	1453	96.15487	96.1549	96.1549	55.869303000000016	advmgr	?ProcessSearch@advManager@@QAEHHHH@Z	admitted
 0x005a6360	842	96.19134	96.1913	96.1913	32.06925399999999	spells	?ChainLightning@combatManager@@QAEXHHH@Z	admitted
