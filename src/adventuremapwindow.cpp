@@ -1554,14 +1554,18 @@ DATA(0x0065f240)
 static int g_sleepImage = -1;
 
 // E:\gamedcs\adventuremapwindow.cpp:1190
+// Complete extends the Dreamcast stub into the icon refresh below. Retail
+// stores the new level before loading the indexed icon pointer; placing the
+// union assignment after that store closes the prior EAX/ECX colour residual
+// (96.9512% -> exact). Declaring the message on either side is byte-identical,
+// so its existing function-block lifetime is preserved.
 VA(0x00403c40, 0x78)  // anchor-global, dc 0x1188
 unsigned char TAdventureMapWindow::setElevationToggleImage(int level)
 {
     if (level != g_elevationToggleLevel) {
         message iconMessage;
-        iconMessage.m_extraText = g_aszElevationIcons[level];
-
         g_elevationToggleLevel = level;
+        iconMessage.m_extraText = g_aszElevationIcons[level];
         broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_NAME,
             ELEVATION_TOGGLE_ID, iconMessage.m_extra);
         broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_PLAYER_PALETTE_COLORS,
