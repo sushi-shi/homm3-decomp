@@ -1902,6 +1902,18 @@ void TCampaignBrief::ScenarioStruct::markCrossoverHeroes(unsigned char* wanted)
 // The indexed-loop negative control loses that two-field end test. An older
 // set/test probe was 28.45%; the retained reference idiom is independently
 // supported by retail's reference::operator=(bool) calls at all three widths.
+// Retail keeps the destination iterator dereference at 0x48eb40 out of line:
+// it copies the iterator's bitset pointer and position directly into the
+// returned bitset<144>::reference. The generic header body is the matching
+// source operation; this specialization records the retained customcampaign
+// boundary immediately before its only caller.
+template<>
+std::bitset<144>::reference bitset_iterator<144>::operator*() const
+{
+    return (*m_bits)[m_position];
+}
+VA_COMPGEN(0x0048eb40, 0x14, BITSET_ITERATOR_DEREF, Bitset144)
+
 // The serialization and prerequisite-insert inline boundaries remain unfinished.
 // Retail puts each absent-text arm first and retains the allocated MapTextStruct
 // in EDI across all three reads. Null-first branches raise 70.55 -> 73.36%; the
