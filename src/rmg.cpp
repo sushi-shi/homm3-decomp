@@ -2803,6 +2803,11 @@ VA_COMPGEN(0x00404200, 0x209, VECTOR_INSERT, Int)
 VA_COMPGEN(0x00422F50, 0x1B1, VECTOR_INSERT, Int)
 VA_COMPGEN(0x004347A0, 0x32E, VECTOR_INSERT, TRmgMapPosition)
 
+// The RMG position insertion at 0x54c3f0 and spellbook's 12-byte entry
+// insertion both call retail 0x54dd60. Their plain three-dword copies are
+// ICF-identical; this TU naturally emits the TRmgMapPosition specialization.
+VA_COMPGEN(0x0054DD60, 0x15, STD_CONSTRUCT, TRmgMapPosition)
+
 // ReadObjectPlacementRules retains the allocator-taking int-vector ctor;
 // its two local vector grids also take the default-constructor closure's
 // address. Resolved retail bodies are 27/27 and 24/24 bytes respectively.
