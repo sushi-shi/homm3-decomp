@@ -353,6 +353,10 @@ TRmgMapAdapterInterface::~TRmgMapAdapterInterface()
 {
 }
 
+// Vtable 0x640a58 slot 0 retains the interface's generated deleting wrapper;
+// retail places its COMDAT later than the ordinary destructor.
+VA_COMPGEN(0x00537910, 0x23, SCALAR_DELETING_DTOR, TRmgMapAdapterInterface)
+
 // Vtable 0x640a3c slot 0 and the 0x08 concrete adapter layout identify this
 // scalar deleting wrapper. The retained body delegates to the adapter-interface
 // destructor at 0x532510 before conditionally releasing the object.
