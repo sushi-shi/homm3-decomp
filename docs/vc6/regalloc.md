@@ -787,6 +787,34 @@ retains an unwanted helper and gives 97.4864%. A source-form observation must
 be rechecked after a later inline decision changes; the earlier named-return
 result was not a permanent requirement of the point class.
 
+### 6n. Observe multiplication operands before allocation
+
+At the 99.9204% `paintPoint` checkpoint, the remaining eight raw bytes exchange
+the memory operands of two `mov ebx, ...` / `imul ebx, ...` pairs. A passive
+scratch shim now observes the pinned C2 machine-operand constraint routine at
+RVA `0x2003e`. Its instruction-name table at `0xa5a88` identifies opcode `0xc1`
+as `_imul2`. The trace sees three such operations for this caller. At the two
+residual sites, the first source has kind byte 1 and a field-symbol record
+with offset 4; the second has kind byte 6. At the already-exact entry product,
+both sources have kind byte 6. These are compiler representations after
+optimization, not recovered retail declarations or a proven explanation of
+the commutation.
+
+The scratch trace hooks whole instructions, preserves registers, flags and
+last-error state, and passes complete object identity against unmodified VC6
+outside the COFF timestamp. Its runner restores the normal shim in `finally`.
+Working artifacts live in `build/rmg-multiply-trace/`; the copied, hash-gated
+Ghidra project lives in `build/re/vc6/`. Neither instrumented compiler output
+nor edited compiler state is used for matching.
+
+Source controls distinguish this observation from a fix: a pointer cache
+parameter, a named cache-cell reference, and signed multiplication intermediates
+leave the same eight bytes. A const-reference binding for the translated point
+changes the distance-wrapper expansion and gives 98.5986%. Restoring the
+434-byte retail rectangle caller before `paintPoint` also preserves its eight
+remaining differences. The operand-class observation therefore does not justify
+changing the canonical point interface or adding an inlining control.
+
 ## 7. Files
 
 | path | role |

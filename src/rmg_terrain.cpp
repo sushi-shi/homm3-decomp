@@ -319,6 +319,39 @@ unsigned char rmgTerrainPainter::isPaintTerrain(const TRmgGridPoint& point)
     return 0;
 }
 
+// The brush forwards its four unsigned bounds to this body at 0x5b76a6.
+// Retail walks one mutable grid point, paints cells of a different terrain,
+// and refreshes the base frame for cells already using the selected terrain.
+// This ordinary caller precedes paintPoint in the retail terrain cluster;
+// there is no Dreamcast RMG compiland or recovered source spelling.
+// Residual (69.9804%): all 13 CFG blocks have the retail destinations, but
+// initializePackedCell is called where retail expands the adapter read and
+// cache fill. The bound loads, loop registers and tile-zero stores also differ.
+// Restoring this predecessor is byte-neutral for paintPoint's eight-byte
+// multiplication residual. Sharing the base-frame/constructed-tile sequence
+// through another helper leaves selectBaseFrame, the tile constructor and
+// setTile called in paintPoint, contradicting its retail expansion (81.6203%).
+VA(0x005B4960, 0x1B2) // anchor-callee 0x5b7690; thiscall, ret 16; retail-only
+void rmgTerrainPainter::paintRectangle(
+    unsigned int x, unsigned int y,
+    unsigned int rectangleWidth, unsigned int rectangleHeight)
+{
+    rectangleWidth += x;
+    rectangleHeight += y;
+    TRmgGridPoint point;
+    for (point.y = y; point.y < rectangleHeight; ++point.y) {
+        for (point.x = x; point.x < rectangleWidth; ++point.x) {
+            if (getPaintTerrain() != getTerrain(point)) {
+                paintPoint(point);
+            } else {
+                int frame = selectBaseFrame(point, m_paintTerrain, -1);
+                rmgTerrainTile tile(m_paintTerrain, frame);
+                setTile(point, tile);
+            }
+        }
+    }
+}
+
 // Paint a base tile, refresh its cache, then reconcile the two repair sets.
 // Terrain rules that permit separated neighbours only release cardinal gaps;
 // the other rules recheck every matching neighbour. The rectangle painter
@@ -403,6 +436,13 @@ unsigned char rmgTerrainPainter::isPaintTerrain(const TRmgGridPoint& point)
 // points, logically const queries with a mutable cache, and a linear-index
 // helper with value/reference width arguments leave the same eight-byte
 // caller residual. Unsigned long grid coordinates were neutral at 99.5570%.
+// A named cache-cell reference, a pointer rather than reference cache parameter,
+// and signed row/width intermediates also leave those eight bytes unchanged.
+// Binding nearby to the translated temporary by const reference instead gives
+// 98.5986% and over-expands the distance wrapper; named reference operands in
+// the cache calculation disturb translation/backedge registers. Both were
+// reverted. The restored rectangle caller supplies an independent instance
+// of the retail width-first product without changing this caller's bytes.
 VA(0x005B4B20, 0x5CB) // anchor-callee 0x5b4960, 0x5b5440; thiscall, ret 4
 void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
 {
