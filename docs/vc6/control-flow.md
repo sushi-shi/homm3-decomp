@@ -681,3 +681,19 @@ initialization makes it semantically redundant. Seeding the accumulator
 with base growth before testing the buildings scores 81.7262%. A dead zero
 and duplicated exit can therefore preserve an explicit source alternative;
 neither alone establishes an uncontrollable register-allocation limitation.
+
+## A retained reference can perturb layout after helper restoration
+
+`hero::getMobility` (0x4e4990) reached 100% from 81.7677% by restoring the
+Dreamcast-proven ordinary Navigation and Logistics helpers, followed by the
+two `towns[t]` lookups in its Lighthouse condition. The helper boundaries
+alone recover retail's backward land-to-AI join and two returns, reaching
+91.07742%. The retained `town&` still changes register allocation throughout
+the function; the separate indexed expressions produce the exact result.
+
+With the same declarations, Navigation alone scores 92.03226% and Logistics
+alone 83.97419%. Their combined lower score with the town reference is not
+evidence against either proven helper. The earlier duplicated-tail and goto
+probes operated on flattened helpers and could not recover the join. Land
+movement is loaded before the Logistics call, as Dreamcast lines 5893/5895
+show; the helper returns the complete factor including its additive one.

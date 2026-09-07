@@ -7049,21 +7049,39 @@ float hero::getExperienceBonusFactor() const
     return factor + 1.0f;
 }
 
-#if 0  // @carcass
+// Logistics' land-movement factor by mastery (retail .rdata 0x63ea68,
+// the same four-float band as the specialty rows above).
+// Before normalization: kLogisticsFactors.
+static const float g_logisticsFactors[kNumMasteries] =
+    { 0.0f, 0.1f, 0.2f, 0.3f };
 
-// E:\gamedcs\hero.cpp:5709
+// E:\gamedcs\hero.cpp:5709, original name hero::GetLogisticsFactor.
 DC_ONLY(0xd49a8, 0x48)
-float hero::GetLogisticsFactor()
+float hero::getLogisticsFactor() const
 {
-    // @stub
+    float factor = g_logisticsFactors[m_skillLevel[eSecSkillLogistics]];
+    if (m_skillLevel[eSecSkillLogistics] > 0) {
+        const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
+        if (ability.m_type == eHeroAbilitySecondarySkill && ability.m_skill == eSecSkillLogistics)
+            factor = (m_level * 0.05f + 1.0f) * factor;
+    }
+    return factor + 1.0f;
 }
 
-// E:\gamedcs\hero.cpp:5734
+// E:\gamedcs\hero.cpp:5734, original name hero::GetNavigationFactor.
 DC_ONLY(0xd49f0, 0x4E)
-long hero::GetNavigationFactor()
+long hero::getNavigationFactor() const
 {
-    // @stub
+    long movement = g_seaMovement[m_skillLevel[eSecSkillNavigation]];
+    if (m_skillLevel[eSecSkillNavigation] > 0) {
+        const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
+        if (ability.m_type == eHeroAbilitySecondarySkill && ability.m_skill == eSecSkillNavigation)
+            movement += m_level * g_seaMovement[0] / 20;
+    }
+    return movement;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:5758
 DC_ONLY(0xd4a40, 0x48)
@@ -7099,12 +7117,6 @@ float hero::getFirstAidFactor()
     }
     return factor + 1.0f;
 }
-
-// Logistics' land-movement factor by mastery (retail .rdata 0x63ea68,
-// the same four-float band as the specialty rows above).
-// Before normalization: kLogisticsFactors.
-static const float g_logisticsFactors[kNumMasteries] =
-    { 0.0f, 0.1f, 0.2f, 0.3f };
 
 // movement.txt, parsed at 0x4d7240 into six .bss cells this TU is the
 // modeled consumer of. The land row is bounded by the parser's own
@@ -7146,45 +7158,19 @@ static TCreatureType getUpgradedCreature(TCreatureType type)
 // The `owner < 6` cap on the AI bonus is likewise anomalous (players run
 // to 8 everywhere else) and is likewise literal.
 //
-// Residual (81.76%, diagnosed 2026-08-20): the AI tail is a
-// TWO-predecessor join RETAIL KEEPS IN PLACE - it sits right after the
-// sea half with the one final ret at fn+0x211, and the land half reaches
-// it with a BACKWARD `jmp fn+0x1c8` (fn+0x2ab) - while our CL sinks the
-// join past the land half and duplicates an exit (3 rets vs retail's 2;
-// four sea-half guards land on br47 instead of br23). This is the same
-// kept-in-place-join layout class as ProcessKeyPress's walk block in
-// advmgr, now seen in a second function and a second TU.
-// MEASURED NEGATIVE, both banked so they are not respent:
-//   * nested single-return (mobility=1000000 in an else-wrap, one
-//     `return mobility`): 81.76 -> 65.91.
-//   * WRITE IT TWICE (the viewarmywindow join lever - AI tail duplicated
-//     into both halves): 81.76 -> 74.13; the cross-jumper merges only
-//     the epilogue, still 3 rets, and the join still sinks. The lever
-//     that cracked viewarmywindow does NOT generalise to this class.
-// The literal retail block order is bounded too (2026-08-21). Leaving the
-// sea arm structured but sending its `else` to a land label below the AI
-// tail, then jumping backward from land, is byte-flat at 81.7645%: C1
-// canonicalizes it to this retained form. Spelling the leading test directly
-// as `if (!sea_movement) goto land_movement` breaks that canonical family and
-// collapses to 5.6129%. An explicit backward join therefore cannot preserve
-// retail's placement with this front end.
-// 2026-09-06, the sea half's ability test re-measured against the bytes.
-// Retail loads `.type` into ECX through the indexed form and LEAs the row
-// address separately (`mov ecx,[eax+8*edx] / lea eax,[eax+8*edx] / test
-// ecx,ecx`), where this compile forms one address and compares memory. Three
-// spellings: a `const THeroSpecificAbility& ability` hoisted beside
-// `mobility` costs 0.24 (81.53 - it lifts the row address above the
-// skillLevel guard, which retail keeps below it); the same reference nested
-// INSIDE an `if (skillLevel > 0)` block restores retail's placement and is
-// byte-flat at 81.7677; naming `int abilityType = ability.type` on top of
-// that is byte-flat too (VC6 folds the local straight back into the compare).
-// The remaining sea-half delta - `mobility` homed in the recycled [ebp+8]
-// parameter slot where retail keeps it in ESI all the way to the join - is
-// downstream of the join placement below, not an independent spelling.
-// The navigation-specialist bonus divides by TWENTY, not ten: retail's
-// `mov eax,0x66666667 / imul ecx / sar edx,3` at 0x4e4a1e is the signed
-// magic pair for /20 (shift 2 would be /10), and the shift is the only byte
-// that moved (81.7645 -> 81.7677).
+// Exact: restore the ordinary GetNavigationFactor/GetLogisticsFactor
+// boundaries (DC 0xd49f0/0xd49a8), load land movement before scaling it,
+// and retain DC's two town-vector lookups in the Lighthouse condition.
+// The helper boundaries recover the backward land-to-AI join and both
+// retail exits; repeated town lookups then recover all remaining registers.
+// Controls with the same declarations: flattened helpers 81.76774%, only
+// Navigation 92.03226%, only Logistics 83.97419%, both with a town reference
+// 91.07742%, both with separate town lookups 100%. Capturing the creature
+// specialty before loading speed scores 96.06129% on the town-reference
+// form; using mobility itself as the slowest-speed local scores 90.92258%.
+// Earlier goto/duplicated-return probes could not repair the flattened
+// helper boundaries. The navigation specialty divides by twenty in both
+// retail and Dreamcast (hero.cpp:5744); no release-elided carrier is needed.
 // Before normalization (locals): sea_movement.
 VA(0x004e4990, 0x3F6)  // corroborates, dc 0xd4b50
 int hero::getMobility(unsigned char seaMovement)
@@ -7194,11 +7180,7 @@ int hero::getMobility(unsigned char seaMovement)
 
     int mobility;
     if (seaMovement) {
-        mobility = g_seaMovement[m_skillLevel[eSecSkillNavigation]];
-        if (m_skillLevel[eSecSkillNavigation] > 0 &&
-            g_heroSpecificAbilities[m_id].m_type == eHeroAbilitySecondarySkill &&
-            g_heroSpecificAbilities[m_id].m_skill == eSecSkillNavigation)
-            mobility += m_level * g_seaMovement[0] / 20;
+        mobility = getNavigationFactor();
 
         if (m_owner != -1)
             mobility += g_game->mineTypesOwned(m_owner, 100) *
@@ -7208,9 +7190,8 @@ int hero::getMobility(unsigned char seaMovement)
             mobility += g_lighthouseMovementBonus;
 
         for (unsigned int t = 0; t < g_game->m_towns.size(); t++) {
-            town& thisTown = g_game->m_towns[t];
-            if (thisTown.m_type == TOWN_CASTLE &&
-                thisTown.hasBuilding(SPECIAL_BUILDING_ID, 0))
+            if (g_game->m_towns[t].m_type == TOWN_CASTLE &&
+                g_game->m_towns[t].hasBuilding(SPECIAL_BUILDING_ID, 0))
                 mobility += g_lighthouseMovementBonus;
         }
 
@@ -7236,14 +7217,8 @@ int hero::getMobility(unsigned char seaMovement)
             }
         }
 
-        float movementFactor =
-            g_logisticsFactors[m_skillLevel[eSecSkillLogistics]];
-        if (m_skillLevel[eSecSkillLogistics] > 0 &&
-            g_heroSpecificAbilities[m_id].m_type == eHeroAbilitySecondarySkill &&
-            g_heroSpecificAbilities[m_id].m_skill == eSecSkillLogistics)
-            movementFactor = (m_level * 0.05f + 1.0f) * movementFactor;
-        mobility = static_cast<int>(
-            (movementFactor + 1.0f) * g_landMovement[slowest]);
+        mobility = g_landMovement[slowest];
+        mobility = static_cast<int>(mobility * getLogisticsFactor());
 
         if (isWieldingArtifact(0x62))
             mobility += g_bootsOfSpeedMovementBonus;
