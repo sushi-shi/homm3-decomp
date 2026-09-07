@@ -10,6 +10,14 @@
 
 DATA(0x00642BD8) extern TRmgTerrainRule* const g_rmgTerrainRules[];
 
+// Vtable 0x642c98 slot 1 tests the count for pattern value 1. The constructor
+// at 0x5b3780 builds that range at +0x1c/+0x20 from its copied entry array.
+VA(0x005B3840, 0x0C)  // Complete-only pattern terrain rule
+unsigned char TRmgPatternTerrainRule::hasEntries()
+{
+    return 0 < m_ranges[1].m_count;
+}
+
 // Both concrete terrain-rule deleting destructors call this retained base
 // boundary. Retail restores the six-slot pure base vtable at 0x642c80.
 VA(0x005B3850, 0x07)  // terrain-rule deleting destructors; Complete-only

@@ -120,6 +120,33 @@ public:
         int oldFrame) = 0;
 };
 
+struct TRmgTerrainPatternRange {
+    int m_firstIndex;
+    unsigned int m_count;
+};
+
+// Constructor 0x5b3780 copies its entry array and builds 58 first/count
+// ranges at +0x14. This data-backed rule supplies vtable 0x642c98; its
+// original Complete-only class name is unavailable.
+class TRmgPatternTerrainRule : public TRmgTerrainRule {
+public:
+    int m_defaultFrame;                         // +0x08
+    int m_entryCount;                           // +0x0c
+    const int* m_entries;                       // +0x10
+    TRmgTerrainPatternRange m_ranges[58];        // +0x14
+
+    virtual ~TRmgPatternTerrainRule();
+    virtual unsigned char hasEntries();
+    virtual unsigned char isSpecialFrame(int frame);
+    virtual int getEntry(int index);
+    virtual int selectBaseFrame(int value, int oldFrame);
+    virtual int selectTransitionFrame(
+        int transition,
+        TRmgTerrainFlip requestedFlip,
+        TRmgTerrainFlip& selectedFlip,
+        int oldFrame);
+};
+
 // Vtable 0x642cb0 is the stateless, table-backed terrain-rule variant.  Its
 // concrete source name is unavailable because the Dreamcast build predates
 // the random-map generator; this role name follows the retail implementation,
