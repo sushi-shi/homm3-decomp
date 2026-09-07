@@ -1179,6 +1179,7 @@ customcampaign	??1TCampaignStartCrossoverOption@@UAE@XZ	100.0000	100.0000	100.00
 customcampaign	??1TCampaignStartHeroOption@@UAE@XZ	100.0000	100.0000	100.0000	0x88490	bae8220a1517
 customcampaign	??1TCampaignStartOption@@UAE@XZ	100.0000	100.0000	100.0000	0x84f40	f99c5ebd8015
 customcampaign	??4?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@QAEAAV01@ABV01@@Z	100.0000	100.0000	100.0000	0x5ff30	-
+customcampaign	??D?$bitset_iterator@$0JA@@@QBE?AVreference@?$bitset@$0JA@@std@@XZ	100.0000	100.0000	100.0000	0x8eb40	-
 customcampaign	??RCrossoverHeroStronger@@QBE_NAAVhero@@0@Z	100.0000	100.0000	100.0000	0x83f80	7244797eb802
 customcampaign	??_G?$basic_filebuf@DU?$char_traits@D@std@@@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x8bd20	-
 customcampaign	??_G?$codecvt@DDH@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x8ec30	-
