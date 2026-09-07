@@ -17,6 +17,7 @@ declarations:
 | `army::doAttack(army*, int)` | 240 trials, 12 Gruntz state families | no state above 98.9251% MAX |
 | `townManager::townManager` | exhaustive 511-step typedef-handle phase | all states remained 99.0800% |
 | `TAdventureMapWindow::setElevationToggleImage` | retail-ordered source A/B | 96.9512% -> exact |
+| `TAdventureMapWindow::setSleepImage` | helper-boundary repair plus 240 trials, 12 state families | source repaired; all states remained 86.6667% |
 
 For `townManager::townManager`, all 24 orders of the four adjacent authentic
 mask/count/type assignments were compiled as a source-shape matrix. The best
@@ -36,3 +37,14 @@ retail body stores `g_elevationToggleLevel` before loading the indexed icon
 pointer, whereas the prior source assignment forced the opposite schedule.
 Moving that assignment below the store makes all three blocks exact while
 preserving the existing `message` local and every call.
+
+The adjacent `setSleepImage` row exposed why historical score alone is not
+source evidence.  Its four-byte same-class Dreamcast stub says nothing about
+the Complete body, but the older real `TAdvMenu::SetSleepImage` body explicitly
+calls `button::clear_hotkeys` and `button::set_hotkey` on consecutive source
+lines.  The reconstruction had flattened the former into direct vector access.
+Restoring the one-call header wrapper is byte-flat at the current compiler
+state, while `predict-inline` still identifies one extra out-of-line
+`vector<int>::size` in the candidate.  Twelve target-local state families did
+not recover the 100% HIST, so the helper is retained and the remaining nested
+inliner residual stays open.

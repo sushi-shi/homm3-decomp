@@ -1578,7 +1578,15 @@ unsigned char TAdventureMapWindow::setElevationToggleImage(int level)
     return 0;
 }
 
-VA(0x00403cc0, 0x215)  // anchor-global, dc 0x118c
+// The four-byte class-name counterpart at dc 0x118c is uninformative, but the
+// older TAdvMenu::SetSleepImage body at dc 0x2a74 positively calls the two
+// distinct button.h helpers clear_hotkeys and set_hotkey on consecutive source
+// lines.  Keep both canonical wrappers: flattening clear_hotkeys was source
+// false and happened to be byte-identical at the current compiler state.  A
+// 240-trial, 12-family target-local state campaign remained at 86.6667%; the
+// residual is a nested vector<int> inliner decision, not evidence to erase the
+// helper boundary again.
+VA(0x00403cc0, 0x215)  // anchor-global, dc 0x118c; real older body dc 0x2a74
 void TAdventureMapWindow::setSleepImage(int image)
 {
     if (image != g_sleepImage) {
@@ -1595,7 +1603,7 @@ void TAdventureMapWindow::setSleepImage(int image)
         widgetSetStatus(SLEEP_ID, widget::WIDGET_UPDATE);
 
         button* sleepButton = static_cast<button*>(getWidget(SLEEP_ID));
-        sleepButton->m_hotKeyCodes.clear();
+        sleepButton->clearHotkeys();
         sleepButton->setHotkey(g_aiSleepHotkeys[image]);
     }
 }

@@ -111,9 +111,15 @@ public:
     {
         // Dreamcast button.h:105 is a single vector<int>::push_back call.
         // Retail corroborates that body in hero.obj's retained COMDAT and
-        // in the exact SetSleepImage and marketplace-caller expansions.
+        // in SetSleepImage and the marketplace-caller expansions.
         m_hotKeyCodes.push_back(code);
     }
+    // Dreamcast button.h:120-122 proves this separate wrapper and its single
+    // vector<int>::clear call.  Its call from TAdvMenu::SetSleepImage is also
+    // explicit in the Dreamcast line table; preserve the helper boundary so
+    // VC6 sees the same inlining candidate before setHotkey.
+    // Before normalization (function): button::clear_hotkeys.
+    void clearHotkeys() { m_hotKeyCodes.clear(); }
     // Dreamcast button.h:99 (dc 0x669f4, 6 B SH4: one store). A free
     // /Ob2 candidate site wherever a caller uses it - see
     // TSingleSelectionWindow::CreateFilterWidgets, whose insert-expansion
