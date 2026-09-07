@@ -2,3 +2,4 @@
 # One row is added after five scored candidates, or after an ownership evidence
 # pass proves that no defensible source candidate can yet be compiled.
 rva	size	state	attempts	best_fuzzy	bank_commit	unit	function	reason
+0x4df0	1	unresolved-owner	0	-	-	adventuremapwindow..adventureoptionswindow	widget::onSetFocus/onKillFocus	Retail is one ICF-folded ret shared by 200+ vtable/address-taken users; DC proves two empty widget methods in Widget.h, while link order cannot assign the representative to either bracket TU and existing source emits both naturally from border.obj.
