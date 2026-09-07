@@ -3281,6 +3281,7 @@ rmg_support	?getMapItem@type_random_map@@QAEPAUTRmgMapItem@@HH@Z	100.0000	100.00
 rmg_support	?getPattern@TRmgLinePainter@@UAEPAXH@Z	100.0000	100.0000	100.0000	0x15edb0	93b9f7126612
 rmg_support	?getPattern@TRmgRoadLinePainter@@UAEPAXH@Z	100.0000	100.0000	100.0000	0x15f320	98bb0b228080
 rmg_support	?length@TRmgVector@@QBEHXZ	100.0000	100.0000	100.0000	0x1fceb0	a28cb81fb275
+rmg_support	?setOverlay@TRmgRoadLinePainter@@UAEXABUTRmgGridPoint@@H@Z	100.0000	100.0000	100.0000	0x15f330	ccd69cec548f
 rmg_terrain	??0TRmgGridPoint@@QAE@ABI0@Z	100.0000	100.0000	100.0000	0x1b76b0	-
 rmg_terrain	??0TRmgTableTerrainRule@@QAE@XZ	100.0000	100.0000	100.0000	0x1b3a20	419dcc552fab
 rmg_terrain	??0TRmgTerrainBrush@@QAE@PAVTRmgMapInterface@@HH@Z	100.0000	100.0000	100.0000	0x1b7250	e132b05a16e9
