@@ -25,12 +25,20 @@ TRmgTerrainRule::~TRmgTerrainRule()
 {
 }
 
+// Vtable 0x642c98 slot 2 reads the byte at +4 in an eight-byte source entry.
+// The pattern-rule constructor at 0x5b3780 copies the same entry records.
+VA(0x005B3860, 0x11)  // Complete-only pattern terrain rule
+unsigned char TRmgPatternTerrainRule::isSpecialFrame(int frame)
+{
+    return m_entries[frame].m_special;
+}
+
 // Each copied source entry is two dwords. Vtable 0x642c98 slot 3 returns
 // the first dword of the requested entry through the pointer at +0x10.
 VA(0x005B3880, 0x10)  // Complete-only pattern terrain rule
 int TRmgPatternTerrainRule::getEntry(int index)
 {
-    return m_entries[index * 2];
+    return m_entries[index].m_frame;
 }
 
 // Retail vtable 0x642cb0 slot 1 is this constant-false query.  The surrounding
@@ -770,10 +778,12 @@ void rmgTerrainPainter::repairTerrainPoint(const TRmgGridPoint& point)
         do {
             unsigned int smallest = 0;
             unsigned int smallestWeight = gaps[0].m_weight;
-            for (unsigned int gap = 1; gap < gapCount; ++gap) {
-                if (gaps[gap].m_weight < smallestWeight) {
-                    smallest = gap;
-                    smallestWeight = gaps[gap].m_weight;
+            {
+                for (unsigned int gap = 1; gap < gapCount; ++gap) {
+                    if (gaps[gap].m_weight < smallestWeight) {
+                        smallest = gap;
+                        smallestWeight = gaps[gap].m_weight;
+                    }
                 }
             }
             unsigned int end =
@@ -784,7 +794,7 @@ void rmgTerrainPainter::repairTerrainPoint(const TRmgGridPoint& point)
                     paintPoint(point + g_tileDirections[direction]);
             }
             --gapCount;
-            for (gap = smallest; gap < gapCount; ++gap)
+            for (unsigned int gap = smallest; gap < gapCount; ++gap)
                 gaps[gap] = gaps[gap + 1];
         } while (gapCount > 1);
     }

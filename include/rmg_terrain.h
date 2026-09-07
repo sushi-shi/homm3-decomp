@@ -125,6 +125,12 @@ struct TRmgTerrainPatternRange {
     unsigned int m_count;
 };
 
+struct TRmgTerrainPatternEntry {
+    int m_frame;
+    unsigned char m_special;
+    char m_padding[3];
+};
+
 // Constructor 0x5b3780 copies its entry array and builds 58 first/count
 // ranges at +0x14. This data-backed rule supplies vtable 0x642c98; its
 // original Complete-only class name is unavailable.
@@ -132,7 +138,7 @@ class TRmgPatternTerrainRule : public TRmgTerrainRule {
 public:
     int m_defaultFrame;                         // +0x08
     int m_entryCount;                           // +0x0c
-    const int* m_entries;                       // +0x10
+    const TRmgTerrainPatternEntry* m_entries;   // +0x10
     TRmgTerrainPatternRange m_ranges[58];        // +0x14
 
     virtual ~TRmgPatternTerrainRule();
