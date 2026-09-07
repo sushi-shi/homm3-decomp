@@ -62,14 +62,14 @@ inline void setCreatureType(TCreatureType& slot, int value)
 
 template <class _TYPE>
 // Before normalization (locals): _X, _Y.
-inline const _TYPE& cppMin(_TYPE x, _TYPE y)
+inline const _TYPE& cppMin(const _TYPE& x, const _TYPE& y)
 {
     return (y < x ? y : x);
 }
 
 template <class _TYPE>
 // Before normalization (locals): _X, _Y.
-inline const _TYPE& cppMax(_TYPE x, _TYPE y)
+inline const _TYPE& cppMax(const _TYPE& x, const _TYPE& y)
 {
     return (x < y ? y : x);
 }
@@ -4021,21 +4021,12 @@ void markDangerZones(const hero* ourHero, long* dangerZones)
     }
 }
 
-// The three helpers below are source-visible in the Dreamcast line table but
-// folded into AI_choose_destination by retail VC6.  Their boundaries are
-// reconstruction facts: keeping them here preserves the same helper calls
-// without manufacturing retail-only out-of-line slots.
-__forceinline void searchArray::setRectangle(tagRECT& rect)
-{
-    m_validLeft = rect.left;
-    m_validTop = rect.top;
-    m_validRight = rect.right;
-    m_validBottom = rect.bottom;
-}
-
+// Dreamcast places these two ordinary static helpers in ai_player.cpp.
+// Their source calls remain visible to VC6; setRectangle's aggregate
+// assignment lives at its original header boundary in findpath.h.
 // E:\gamedcs\ai_player.cpp:3390
 // Before normalization (function): mark_strategic_map.
-static __forceinline void markStrategicMap(
+static void markStrategicMap(
     // Before normalization (locals): current_hero, strategic_map, search_array, top_x,
     // was_trigger, top_y, level_size, nearby_cost, stop_x, stop_y.
     hero* currentHero, long* strategicMap,
@@ -4072,15 +4063,10 @@ static __forceinline void markStrategicMap(
         rect.bottom = min(static_cast<long>(point.m_point.m_y) + 6, g_mapHeight);
         currentSearchArray.setRectangle(rect);
         g_advManager->m_advWindow->animateBottomView(0);
-        // mark_strategic_map -> type_point::type_point(-1,-1,-1): both the
-        // Dreamcast xref and Complete's retained constructor call prove this
-        // nested boundary; flattening it loses the retail call/EH shape.
-#pragma inline_depth(0)
         currentSearchArray.seedPosition(
             currentHero, point.m_point, type_point(-1, -1, -1), 500,
             cell->m_groundSet == eTerrainWater, const_AI_treasure_search,
             59999, 0);
-#pragma inline_depth()
 
         short nearbyCost;
         if (!g_adventureObjectTraits[type][0]) {
@@ -4124,7 +4110,7 @@ static __forceinline void markStrategicMap(
 // Before normalization (function): unblock_lith.
 // Before normalization (locals): current_hero, best_distance, was_on_map, current_town,
 // path_cell.
-static __forceinline void unblockLith(hero* currentHero,
+static void unblockLith(hero* currentHero,
                                        HeroDestination& destination,
                                        long& bestDistance)
 {
@@ -4134,12 +4120,8 @@ static __forceinline void unblockLith(hero* currentHero,
     // later-revision spelling search.cpp:581 already carries.
     unsigned char wasOnMap = currentHero->m_valid;
     currentHero->restoreCell();
-    // unblock_lith -> get_location -> game::get_cell: DC line 3578 and
-    // Complete both retain this nested pair on the unnamed temporary.
-#pragma inline_depth(0)
     NewmapCell* cell =
         g_game->getCell(currentHero->getLocation());
-#pragma inline_depth()
 
     if (!cell->m_isTrigger) {
         if (wasOnMap)
@@ -4147,12 +4129,7 @@ static __forceinline void unblockLith(hero* currentHero,
         return;
     }
     if (cell->m_type == TOWN) {
-        // unblock_lith -> game::GetTown: Complete adds this owner refinement
-        // to the Dreamcast TOWN scope and retains the helper call; flattening
-        // the initializer expands GetTown and loses the retail branch group.
-#pragma inline_depth(0)
         town* currentTown = g_game->getTown(cell->m_extraInfo);
-#pragma inline_depth()
         if (currentTown->m_owner == currentHero->m_owner) {
             if (wasOnMap)
                 currentHero->obscureCell();
@@ -4173,33 +4150,18 @@ static __forceinline void unblockLith(hero* currentHero,
         point.m_y = currentHero->m_y + g_normalDirTable[direction].m_y;
         if (!point.isValid())
             continue;
-        // unblock_lith -> NewfullMap::cell: DC line 3606 and Complete's loop
-        // both retain this map lookup before the trigger test; flattening the
-        // direct call erases one of retail's two NewfullMap calls.
-#pragma inline_depth(0)
         if (g_game->m_worldMap.cell(
                 point.m_x, point.m_y, point.m_z)->m_isTrigger)
-#pragma inline_depth()
             continue;
         if (getMapExtra(point.m_x, point.m_y, point.m_z) & MAP_EXTRA_MONSTER)
             continue;
-        // unblock_lith -> searchArray::get_cell: DC line 3613 names this
-        // loop statement and Complete retains the call; flattening the
-        // initializer erases one of retail's two searchArray calls.
-#pragma inline_depth(0)
         pathCell* currentPathCell =
             g_searchArray->getCell(point, false);
-#pragma inline_depth()
         if (!currentPathCell->m_visited)
             continue;
         if (destination.m_point.m_x >= 0 && closest <= currentPathCell->m_cost)
             continue;
-        // unblock_lith -> searchArray::get_danger_value: DC line 3620 and
-        // Complete both retain this predicate helper; flattening it erases
-        // retail's only call and folds the following continue test.
-#pragma inline_depth(0)
         if (g_searchArray->getDangerValue(point) < 0)
-#pragma inline_depth()
             continue;
         closest = currentPathCell->m_cost;
         destination.m_point = point;
@@ -4214,38 +4176,20 @@ static __forceinline void unblockLith(hero* currentHero,
 // output operands are references; move_hero's retail /Gr call passes their
 // addresses in the same argument positions.  Retail corroborates the full
 // helper/statement skeleton and folds mark_strategic_map plus unblock_lith.
-// Residual (76.37%, opened at 63.3090%): the vector(0) constructor, signed-
-// short/unsigned-size comparisons, map-level count, min/max operand order and
-// six retail-retained helper boundaries now produce the exact 31/31 call
-// census. The candidate has 133 blocks to retail's 136 and a 0xe4 vs 0xec
-// frame. Its remaining call-shape wall is the vector cleanup: our copy expands
-// the destructor to a second operator delete, while retail retains one
-// unclaimed destructor call beside the strategic-map delete. Preserve the
-// coherent DC helper/statement shape across that backend budget split.
-// 77.08 -> 81.89 (2026-09-05), two statement facts in the two folded
-// helpers, both read straight off retail's schedule:
-//  - mark_strategic_map reads `cell->type` BEFORE the GetMapExtra guard.
-//    Retail loads `[ebx+0x1e]` at 0x42e19f, four instructions after the
-//    GetCell that produced EBX and 0x2a bytes AHEAD of the GetMapExtra
-//    call at 0x42e1c9; no compiler may hoist a load across that opaque
-//    call, so the early read is a source fact and not a schedule. Written
-//    after the guard (where the value is first USED) VC6 spills the cell
-//    pointer to the dead `[ebp+0x14]` parameter home and keeps the packed
-//    point dword live in EBX instead; written before it, retail's EBX/cell
-//    allocation returns. +4.52 on its own.
-//  - unblock_lith's `was_on_map` is the raw `valid` byte, not
-//    `is_on_map()`. Retail emits `mov cl,[edi+6] / mov [ebp+0x17],cl`;
-//    the bool facade adds `test`/`setne` that no spelling of the
-//    assignment removes. +0.29, and search.cpp:581 already carries the
-//    same finding with the same reasoning.
-// Residual (81.89%): the four inlined unblock_lith `obscure_cell` arms.
-// Retail keeps all four separate because their blocks are not byte-equal -
-// the first takes its receiver from EDI (0x42e429) while the other three
-// reload [ebp-0x20], and two of those use different scratch registers - so
-// its cross-jumper leaves them alone; ours emits three identical blocks and
-// folds the TOWN-owner arm onto the first. That is downstream of which
-// register holds current_hero after the get_cell call, and the 4-byte frame
-// deficit (0xe8 vs 0xec) goes with it.
+// MAX 82.9640%: ordinary static helpers, the original game::getCell call,
+// and searchArray's tagRECT assignment replace forced inlining and the
+// eight statement pins. With four separate bounds assignments, ordinary
+// helpers score 77.53057%, adding the game accessor 78.54367%, and removing
+// all pins is byte-identical. Restoring tagRECT raises that form to 82.96397%;
+// header and out-of-class aggregate assignments emit identical bytes.
+// Keep cppMin/cppMax arguments by reference: their old by-value arguments
+// produced dangling result references. This fix is byte-flat here.
+// The source schedule still requires markStrategicMap to read cell->type
+// before GetMapExtra, and Complete snapshots m_valid directly in unblockLith.
+// Residual: the initial unblockLith cleanup paths still merge. A combined
+// town-owner condition, a scope ending the initial cell before the direction
+// loop, and both together are byte-flat. No corresponding source rewrite
+// has yet recovered retail's fourth obscureCell call.
 // Before normalization (locals): current_hero, max_distance, best_point, best_raw_value,
 // allow_spells, explore_mode, raw_value, nearby_cost, no_towns, best_distance, map_cells,
 // strategic_map, best_cell, path_cell, is_nearby, candidate_raw.
@@ -4318,15 +4262,8 @@ int aiChooseDestination(hero* currentHero, long maxDistance,
 
         pathCell* currentPathCell = g_searchArray->getCell(point.m_point, false);
         unsigned char isNearby = 0;
-        // AI_choose_destination -> type_point::operator== / NewfullMap::cell:
-        // Complete retains both calls in its retail-decoded last-point
-        // trigger statement; flattening this condition erases both boundaries.
-#pragma inline_depth(0)
         if (currentPathCell->m_lastPoint == start
-            && g_game->m_worldMap.cell(currentPathCell->m_lastPoint.m_x,
-                                     currentPathCell->m_lastPoint.m_y,
-                                     currentPathCell->m_lastPoint.m_z)->m_isTrigger) {
-#pragma inline_depth()
+            && g_game->getCell(currentPathCell->m_lastPoint)->m_isTrigger) {
             isNearby = 1;
         }
         if (currentPathCell->m_cost <= nearbyCost
@@ -4385,12 +4322,7 @@ int aiChooseDestination(hero* currentHero, long maxDistance,
     currentHero->m_targetIsCritical = bestPoint.m_isCritical;
     currentHero->m_targetDistance = static_cast<short>(bestDistance);
     delete[] strategicMap;
-    // AI_choose_destination -> vector<HeroDestination>::~vector: Complete's
-    // unwind transcript resets state to -1 and retains this implicit cleanup;
-    // flattening the return expands it into a second operator delete call.
-#pragma inline_depth(0)
     return rawValue;
-#pragma inline_depth()
 }
 
 #if 0  // @carcass: claim-only homes for retained header COMDATs

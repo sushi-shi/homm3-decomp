@@ -4721,146 +4721,122 @@ void combatManager::showMassSpell(const unsigned char (*effected)[20],
     checkRebirth();
 }
 
-// Mirror Image: find a free hex near the caster's stack, put an
-// identical clone of it there, and slide the clone out of the original's
-// hex into its own over sixteen frames.
+// Mirror Image searches rings 1..10, each source hex, then six directions.
+// DC 0x155f0c, spells.cpp:4604..4607 selects dirCount when facing == 1,
+// otherwise 5 - dirCount. Retail +0x77..+0x169 preserves both induction
+// values and selects the direction before the six exclusions. The former
+// unconditional forward search was a behavior bug, not a register-homing wall.
 //
-// Local names are the Dreamcast roster's own (variables.csv, dc
-// 0x155f0c): iHexCount, iDirCount, iSourceHexIndex and iSourceHexCount
-// are attested rows, and the parameters are targetIndex and level.
+// DC line 4650 jumps out of all search loops to the placement block after
+// the failure dialog/return (4657/4659). Keep that boundary and the canonical
+// ValidHex, InInvisibleColumn and OffsetToFront(-1) calls. Retail discards
+// AddArmy's return and reacquires the clone through the destination cell.
+// `level` is unused in retail; ret 8 still proves the two-argument ABI.
 //
-// `level` IS DEAD - no instruction in the 1029 bytes reads [ebp+0xc] -
-// and that is retail's own shape, not a mis-read arity: `ret 8` fixes
-// two arguments and the DC roster names both.
-//
-// THE SEARCH IS THREE NESTED LOOPS, widening: for each RING distance 1
-// to 10, for each of the source stack's two hexes, for each of the six
-// directions, walk that many steps and take the first hex the stack
-// fits in. The two off-field margin columns (0 and 16) are refused
-// explicitly on top of whatever CanFit says.
-//
-// SIX HAND-WRITTEN EXCLUSIONS sit in front of the walk, and they are
-// spelled as six separate `continue`s rather than one disjunction:
-// retail re-tests `facing` at the head of each and our CL folds the
-// first three into one `jne` past the whole facing==1 group, which is
-// exactly what a run of separate ifs on a common first term produces.
-// What they encode is that a wide stack may not clone into the hex its
-// own second half occupies.
-//
-// THE CLONE IS RE-READ, NOT CAPTURED: retail throws AddArmy's return
-// value away and asks cells[hex].get_army() for the stack it just
-// placed.
-//
-// Residual (82.3%): one class with one knock-on. Retail keeps the
-// direction counter in MEMORY and pairs it with a separate DOWNCOUNTER
-// (5 down to -1) where our CL keeps it in EBX and compares against 6 -
-// the trip-count transform VC6 applies only when the induction variable
-// is already frame-homed, which is a register decision, not a loop form.
-// That is the whole one-branch difference why-branch reports (41 vs 42),
-// and it drags the placement-block bindings with it (`ebx`/`edi` swapped
-// for the source stack and the clone's cell base). Tried and rejected:
-// all eight of why-branch's D10 induction mutations - the best,
-// reversing the direction order, MEASURES +0.22 fuzzy (82.56) but is
-// REJECTED on semantics: it changes which hex the clone lands in, and
-// a reconstruction must not trade behavior for bytes. Also tried
-// 2026-08-21: hoisting iDir's declaration one scope out (byte-flat),
-// and why-reg's model finds the first ESI/EDI/EBX definitions agreeing
-// on both sides, so the homing flip is past the model's reach. Retail
-// memory-homes iDir, iDirCount AND iHexCount (ebx/ecx/edx are per-use
-// reloads there), so its pressure came from values ours never
-// materializes - not a source-order fact anyone has named yet.
-// 2026-09-06, polish lane 36, the DC LOCAL-SCOPE SWEEP: no gap here, only a
-// naming SHIFT.  The Dreamcast block names four locals and they line up one
-// step across from ours - its `iSourceHexCount` (sp+0x3c) is the 0..2 loop
-// this body calls `iDirCount`, its `iDirCount` (sp+0x30) is our `iDir`, its
-// `iHexCount` (sp+0x34) is our `step`, and the 1..11 outer loop this body
-// calls `iHexCount` is register-allocated (r12) and unnamed in CodeView.
-// `iSourceHexIndex` is the one name that matches. Nothing is missing.
+// Exact (2026-09-07): DC lines 4685/4686 compute each animation displacement
+// as delta * (16 - frame) / 16. VC6 derives retail's negative steps itself;
+// explicit xoff/yoff accumulators kept extra live values and spilled them.
+// Controls: restoring helpers/early guard/separate placement alone is byte-flat
+// at 82.3404%; facing-dependent directions reach 86.1216%; the animation
+// expression then reaches 100%. A ternary direction selector is byte-flat.
+// Declaring dy before dx changes retail's coordinate-load order (99.8663%).
+// Before normalization (locals): iSourceHexCount, iDirCount, iSourceHexIndex,
+// iHexCount; distance is the unnamed DC outer-loop value. The old source
+// incorrectly shifted those four names onto other induction variables.
 VA(0x005a6c70, 0x405)  // order-map+arity, dc 0x155f0c
 void combatManager::mirrorImage(int targetIndex, int level)
 {
-    if (targetIndex >= 0 && targetIndex < COMBAT_GRID_CELLS) {
-        army* source = m_cells[targetIndex].getArmy();
-        // Before normalization (locals): iHexCount, iDirCount, iSourceHexIndex, iDir.
-        { for (int hexCount = 1; hexCount < 11; hexCount++) {
-            { for (int dirCount = 0; dirCount < 2; dirCount++) {
-                long sourceHexIndex;
-                if (dirCount == 0) {
-                    sourceHexIndex = source->m_gridIndex;
-                } else {
-                    if (!(source->is(1u << 0)))
-                        continue;
-                    sourceHexIndex =
-                        source->m_gridIndex + (source->m_facing ? 1 : -1);
-                }
-                { for (int dir = 0; dir < COMBAT_DIRECTION_COUNT; dir++) {
-                    if (source->m_facing == 1 && dir == COMBAT_DIRECTION_1 && dirCount == 0
-                        && hexCount == 1)
-                        continue;
-                    if (source->m_facing == 1 && dir == COMBAT_DIRECTION_4 && dirCount == 0
-                        && hexCount == 1)
-                        continue;
-                    if (source->m_facing == 1 && dir == COMBAT_DIRECTION_4 && dirCount == 1
-                        && hexCount <= 2)
-                        continue;
-                    if (source->m_facing == 0 && dir == COMBAT_DIRECTION_4 && dirCount == 0
-                        && hexCount == 1)
-                        continue;
-                    if (source->m_facing == 0 && dir == COMBAT_DIRECTION_1 && dirCount == 0
-                        && hexCount == 1)
-                        continue;
-                    if (source->m_facing == 0 && dir == COMBAT_DIRECTION_1 && dirCount == 1
-                        && hexCount <= 2)
-                        continue;
-                    long hex = sourceHexIndex;
-                    { for (int step = 0; step < hexCount; step++) {
-                        hex = getAdjacentCellIndexNoArmy(hex, dir);
-                        if (hex >= 0 && hex < COMBAT_GRID_CELLS
-                            && hex % COMBAT_GRID_ROW_STRIDE != 0
-                            && hex % COMBAT_GRID_ROW_STRIDE
-                                   != COMBAT_GRID_LAST_COLUMN
-                            && source->canFit(hex, 0, 0)) {
-                            addArmy(m_currentSide, source->m_creatureType,
-                                    source->m_numTroops, hex, 0x800000, 0);
-                            army* mirror = m_cells[hex].getArmy();
-                            mirror->m_monInfo.m_attributes |= 0x400000;
-                            mirror->m_roundsLeftBeforeVanish =
-                                m_heroes[m_currentSide]->getSpellDurationBonus()
-                                + m_spellPower[m_currentSide];
-                            source->m_mirrorDestIndex = mirror->m_bitIndex;
-                            mirror->m_mirrorSourceIndex = source->m_bitIndex;
-                            long dx = m_cells[source->m_gridIndex].m_refX
-                                - m_cells[mirror->m_gridIndex].m_refX;
-                            long dy = m_cells[source->m_gridIndex].m_refY
-                                - m_cells[mirror->m_gridIndex].m_refY;
-                            resetLimitCreature();
-                            markCreatureEffect(m_cells[hex].m_armySide,
-                                               m_cells[hex].m_armySlot);
-                            markCreatureEffect(m_cells[targetIndex].m_armySide,
-                                               m_cells[targetIndex].m_armySlot);
-                            computeMaxExtent();
-                            long xoff = dx * 16;
-                            long yoff = dy * 16;
-                            { for (int frame = 0; frame < 16; frame++) {
-                                mirror->m_xSpecialMod = xoff / 16;
-                                mirror->m_ySpecialMod = yoff / 16;
-                                drawFrame(1, 1, 0, 50, 1, 1);
-                                xoff -= dx;
-                                yoff -= dy;
-                            } }
-                            mirror->m_xSpecialMod = 0;
-                            mirror->m_ySpecialMod = 0;
-                            updateGrid(0, 1);
-                            drawFrame(1, 0, 0, 0, 1, 0);
-                            return;
+    if (!validHex(targetIndex))
+        return;
+    army* source = m_cells[targetIndex].getArmy();
+    long hex;
+    {
+        for (int distance = 1; distance < 11; distance++) {
+            {
+                for (int sourceHexCount = 0; sourceHexCount < 2; sourceHexCount++) {
+                    int sourceHexIndex;
+                    if (sourceHexCount == 0) {
+                        sourceHexIndex = source->m_gridIndex;
+                    } else {
+                        if (!(source->is(1u << 0)))
+                            continue;
+                        sourceHexIndex =
+                            source->m_gridIndex + source->offsetToFront(-1);
+                    }
+                    {
+                        for (int dirCount = 0; dirCount < COMBAT_DIRECTION_COUNT;
+                             dirCount++) {
+                            int dir;
+                            if (source->m_facing == 1)
+                                dir = dirCount;
+                            else
+                                dir = 5 - dirCount;
+                            if (source->m_facing == 1 && dir == COMBAT_DIRECTION_1 &&
+                                sourceHexCount == 0 && distance == 1)
+                                continue;
+                            if (source->m_facing == 1 && dir == COMBAT_DIRECTION_4 &&
+                                sourceHexCount == 0 && distance == 1)
+                                continue;
+                            if (source->m_facing == 1 && dir == COMBAT_DIRECTION_4 &&
+                                sourceHexCount == 1 && distance <= 2)
+                                continue;
+                            if (source->m_facing == 0 && dir == COMBAT_DIRECTION_4 &&
+                                sourceHexCount == 0 && distance == 1)
+                                continue;
+                            if (source->m_facing == 0 && dir == COMBAT_DIRECTION_1 &&
+                                sourceHexCount == 0 && distance == 1)
+                                continue;
+                            if (source->m_facing == 0 && dir == COMBAT_DIRECTION_1 &&
+                                sourceHexCount == 1 && distance <= 2)
+                                continue;
+                            hex = sourceHexIndex;
+                            {
+                                for (int hexCount = 0; hexCount < distance;
+                                     hexCount++) {
+                                    hex = getAdjacentCellIndexNoArmy(hex, dir);
+                                    if (validHex(hex) && !inInvisibleColumn(hex) &&
+                                        source->canFit(hex, 0, 0)) {
+                                        goto placeMirror;
+                                    }
+                                }
+                            }
                         }
-                    } }
-                } }
-            } }
-        } }
-        normalDialog(g_generalText->getText(189), 1, -1, -1, -1, 0, -1, 0,
-                     -1, 0, -1, 0);
+                    }
+                }
+            }
+        }
     }
+    normalDialog(g_generalText->getText(189), 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+    return;
+
+placeMirror:
+    addArmy(m_currentSide, source->m_creatureType, source->m_numTroops, hex, 0x800000,
+            0);
+    army* mirror = m_cells[hex].getArmy();
+    mirror->m_monInfo.m_attributes |= 0x400000;
+    mirror->m_roundsLeftBeforeVanish =
+        m_heroes[m_currentSide]->getSpellDurationBonus() + m_spellPower[m_currentSide];
+    source->m_mirrorDestIndex = mirror->m_bitIndex;
+    mirror->m_mirrorSourceIndex = source->m_bitIndex;
+    long dx = m_cells[source->m_gridIndex].m_refX - m_cells[mirror->m_gridIndex].m_refX;
+    long dy = m_cells[source->m_gridIndex].m_refY - m_cells[mirror->m_gridIndex].m_refY;
+    resetLimitCreature();
+    markCreatureEffect(m_cells[hex].m_armySide, m_cells[hex].m_armySlot);
+    markCreatureEffect(m_cells[targetIndex].m_armySide,
+                       m_cells[targetIndex].m_armySlot);
+    computeMaxExtent();
+    {
+        for (int frame = 0; frame < 16; frame++) {
+            mirror->m_xSpecialMod = dx * (16 - frame) / 16;
+            mirror->m_ySpecialMod = dy * (16 - frame) / 16;
+            drawFrame(1, 1, 0, 50, 1, 1);
+        }
+    }
+    mirror->m_xSpecialMod = 0;
+    mirror->m_ySpecialMod = 0;
+    updateGrid(0, 1);
+    drawFrame(1, 0, 0, 0, 1, 0);
+    return;
 }
 
 // E:\gamedcs\spells.cpp:4705

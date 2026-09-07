@@ -25,16 +25,14 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x004d6920	593	81.4346	81.4346	81.4346	110.092822	gzinflatebuf	?underflow@TGzInflateBuf@@UAEHXZ	admitted
 0x00541140	1594	81.8175	81.8175	81.8175	289.82905	rmg	?createGroundConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@PAV?$vector@PAUTRmgMapItem@@V?$allocator@PAUTRmgMapItem@@@std@@@std@@PAV?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@5@@Z	admitted
 0x00580430	1595	81.8719	81.8719	81.8719	289.14319500000005	singleselectionwindow	?rebuildFilteredPlayerSetup@TSingleSelectionWindow@@QAEXXZ	admitted
-0x0042e0b0	2926	81.88646	81.8865	81.8865	530.0010100000002	ai_player	?aiChooseDestination@@YIHPAVhero@@JAAUHeroDestination@@AAJEE@Z	admitted
 0x005f2a40	968	82.017	82.017	82.017	174.07544000000004	victorylossconditions	?checkForDefeatedHeroLoss@LossConditionStruct@@QAEEPBVhero@@@Z	admitted
 0x00542080	2218	82.1005	82.1005	82.1005	397.01091	rmg	?createSubterraneanGate@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	admitted
-0x004cafd0	3348	82.21976	82.2198	82.2198	595.2810959999997	game	?transmitSaveGame@game@@QAEHHHEE@Z	admitted
 0x00514d80	644	73.32632	82.2717	82.2717	114.17025200000005	objecttype	?load@TObjectTypeTable@@QAEXPAD@Z	admitted
-0x005a6c70	1029	82.34042	82.3404	82.3404	181.71728399999998	spells	?mirrorImage@combatManager@@QAEXHH@Z	admitted
 0x00422060	398	82.48837	82.4884	82.4884	69.69616800000001	ai	?placeShooter@combatManager@@QAEXPBVarmy@@@Z	admitted
 0x005b5440	1576	81.6644	82.8347	82.8347	270.5251280000001	rmg_terrain	?repairTerrainPoint@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	admitted
 0x004d8720	1040	82.85906	82.8591	82.8591	178.26536000000004	hero	?initialize@hero@@QAEXF@Z	admitted
 0x0050cca0	224	82.933334	82.9333	82.9333	38.22940800000001	mousemgr	?setPointer@mouseManager@@QAEXHW4EPointerSet@1@@Z	admitted
+0x0042e0b0	2926	82.964	82.964	82.964	498.4733600000002	ai_player	?aiChooseDestination@@YIHPAVhero@@JAAUHeroDestination@@AAJEE@Z	admitted
 0x00418dd0	1247	83.01877	83.0188	83.0188	211.75556399999996	advmgr	?showRoute@advManager@@QAEXHHH@Z	admitted
 0x004a6440	216	83.03571	83.0357	83.0357	36.642888	events	?doTreasureDialog@advManager@@QAEXPAVhero@@H_N@Z	admitted
 0x0047dd40	2776	81.42486	83.2115	83.2115	466.04875999999985	cspriteframe	?drawTile@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@EE@Z	admitted
@@ -61,6 +59,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x0044b620	510	84.85475	84.8547	84.8547	77.24103000000002	armygrp	?merge@armyGroup@@QAEEPAV1@@Z	admitted
 0x005a7c80	1032	84.95786	84.9579	84.9579	155.23447200000004	spells	?earthquake@combatManager@@QAEXH@Z	admitted
 0x0042a580	1470	85.02825	85.0282	85.0282	220.08546	ai_player	?canTradeResources@type_AI_player@@QAE_NPBHPAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	admitted
+0x004cafd0	3348	83.8044	85.0958	85.0958	498.992616	game	?transmitSaveGame@game@@QAEHHHEE@Z	admitted
 0x0056d040	503	85.11236	85.1124	85.1124	74.884628	seerhut	?getTimeLimitText@type_quest@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	admitted
 0x00411590	1508	85.23351	85.2335	85.2335	222.67881999999992	advmgr	?drawAdvObjShadow@advManager@@QAEXHHHHH@Z	admitted
 0x0058d0e0	266	85.26733	85.2673	85.2673	39.188981999999996	singleselectionwindow	?getDisplayFace@TSingleSelectionWindow@@QAEHH@Z	admitted
@@ -105,7 +104,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x004b1a70	2189	87.54884	87.5488	87.5488	272.5567679999999	findpath	?pushPoint@searchArray@@QAEXPBUpathCell@@PAU2@HHHJUtype_point@@H@Z	admitted
 0x004f3f60	855	87.6938	87.6938	87.6938	105.21801	kb	?showCongrats@@YIXH@Z	admitted
 0x0043c040	742	87.7343	87.7343	87.7343	91.01149399999993	ai_tactical	?findEnemyAttacks@type_AI_spellcaster@@QAEXXZ	admitted
-0x004cdf20	1413	87.849556	87.8496	87.8496	171.68515200000007	game	??0game@@QAE@XZ	admitted
 0x005f8be0	1590	87.8683	87.8683	87.8683	192.89402999999984	viewwrld	?vwDrawAdvObjShadow@advManager@@QAEXHHHHH@Z	admitted
 0x005c5b40	2168	87.93245	87.9325	87.9325	261.62339999999995	townmgr	?setBonusDisplay@TTownScreenWindow@@QAEXPAVtown@@@Z	admitted
 0x0049d3d0	608	87.93488	87.9349	87.9349	73.35580800000004	event_record	?resetVisibility@game@@QAEXHHHHH@Z	admitted
@@ -134,6 +132,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x005eb6a0	2009	88.65799	88.8247	88.8247	224.51177699999977	tradpost	?update@TBuyArtifactWindow@@QAEXE@Z	admitted
 0x005533d0	427	88.854965	88.855	88.855	47.589149999999975	remote	?sendIt@CDPlayHeroes@@QAE_NPAVCNetMsg@@K_N@Z	admitted
 0x0055c7b0	1859	88.85645	88.8564	88.8564	207.15952400000018	resourcemanager	?getSprite@ResourceManager@@YIPAVCSprite@@PBD@Z	admitted
+0x004cdf20	1413	87.849556	88.8584	88.8584	157.43080799999996	game	??0game@@QAE@XZ	admitted
 0x0049c560	440	88.925285	88.9253	88.9253	48.72868000000002	event_record	?recordHideBoat@game@@QAEXPAVboat@@EH@Z	admitted
 0x005971f0	217	88.92538	88.9254	88.9254	24.031882000000003	smackmgr	?videoRealignBuffers@@YIXXZ	admitted
 0x005822d0	2152	88.90396	88.9695	88.9695	237.37635999999998	singleselectionwindow	?processRightSelect@TSingleSelectionWindow@@UAEEH@Z	admitted
@@ -492,13 +491,11 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x004521f0	2260	94.00537	98.7476	98.7476	28.304239999999954	bottomviewsubwindow	??0TBottomViewTown@@QAE@PAVheroWindow@@@Z	admitted
 0x004b5490	776	96.812294	98.7864	98.7864	9.417536000000027	font	?drawBoundedString@font@@QAEXPBDPAVBitmap16Bit@@HHHHHIH@Z	admitted
 0x005ec550	1978	98.75221	98.7947	98.7947	23.840833999999962	tradpost	?update@TSellCreatureWindow@@QAEX_N@Z	admitted
-0x00579060	593	98.79518	98.7952	98.7952	7.144464000000035	singleselectionwindow	??0CGameHeaderInfoMsg@@QAE@EHPAUGameSelectionHeadersStruct@@@Z	admitted
 0x004dad00	643	98.80734	98.8073	98.8073	7.6690610000000135	hero	?getSkillAward@@YI?AW4TSecondarySkill@@PBVhero@@W4TSkillMastery@@1W41@@Z	admitted
 0x0044e940	952	98.83006	98.8301	98.8301	11.137448000000013	bitmap16	?colorize@Bitmap16Bit@@QAEXHHHHMM@Z	admitted
 0x005d6a80	1135	98.83651	98.8365	98.8365	13.205724999999944	townmgr	?buildObj@townManager@@QAEXH@Z	admitted
 0x00530120	1661	98.836845	98.8368	98.8368	19.320752000000144	quicktownwindow	??0TQuickTownWindow@@QAE@PBVtown@@W4TViewLevel@0@@Z	admitted
 0x00458120	3100	98.839134	98.8391	98.8391	35.98789999999994	campaignbrief	?addBonusIcons@TCampaignBrief@@QAEXXZ	admitted
-0x004bc0e0	593	98.8764	98.8764	98.8764	6.662947999999949	game	??0SavedGameHeader@@QAE@XZ	admitted
 0x0058e700	761	98.88664	98.8866	98.8866	8.472973999999983	singleselectionwindow	?setNewPlayerSlot@TSingleSelectionWindow@@QAEXPAVCNetPlayerInfo@@@Z	admitted
 0x005fc240	628	98.893936	98.8939	98.8939	6.946307999999992	viewwrld	?init@TViewWorldWindow@@QAEXUtype_point@@E@Z	admitted
 0x00494440	2005	97.3124	98.913	98.913	21.794350000000094	drawing	?drawFrame@combatManager@@QAEXEEEHEE@Z	admitted
@@ -556,7 +553,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x004c3890	996	99.8359	99.8359	99.8359	1.6344360000000036	game	?loadVictoryCondition@NewSMapHeader@@QAEHDPAVTAbstractFile@@H@Z	admitted
 0x004c8780	1975	98.89481	99.837	99.837	3.21925000000004	game	?perWeek@game@@QAEXXZ	admitted
 0x005bd2f0	1026	99.837006	99.837	99.837	1.6723800000000208	town	?save@town@@QAEHPAVTAbstractFile@@@Z	admitted
-0x0045a7a0	419	99.84375	99.8438	99.8438	0.65447799999998	campaignbrief	??0NewSMapHeader@@QAE@XZ	admitted
 0x00437800	501	68.49701	99.8503	99.8503	0.7499969999999853	ai_tactical	?getAttackSkillValue@type_AI_spellcaster@@QAEJPBVarmy@@0JJ@Z	admitted
 0x004f6990	3212	99.855446	99.8554	99.8554	4.64455199999983	kb	?doNormalDialog@@YIXUTNormalDialogInfo@@@Z	admitted
 0x005a4970	585	99.85646	99.8565	99.8565	0.8394750000000439	spells	?areaEffect@combatManager@@QAEXJHJJ@Z	admitted

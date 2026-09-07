@@ -11563,94 +11563,42 @@ void game::processOnMapHeroes()
 }
 
 // Retail's EH metadata, live cross-chunk control flow, four-argument ABI and
-// SaveGame/diff/transmit/resend callee fingerprint prove this complete span.
-// 2026-09-05 (72.85 -> 81.87): the EH-state transcript now matches retail
-// store for store. Retail's abort handling lives INSIDE the confirmation
-// loop where `kill` is still alive: the timeout dialog's refusal runs its
-// two arms inline and each `return 0`s (arm 1 without a delete, arm 2 with
-// `gUnnamed69d80d = 1; delete[] data` after its loop), the dropped-target
-// arm returns 0 itself after HandlePlayerDrop, and no abort flag exists;
-// the timeout arm is the `else` of the message arm so the loop end is one
-// shared `if (msg) DestroyMsg` block; only `data` is deleted at the exits.
-// Frame facts: the end message is block-scoped so the resend copy overlays
-// it; `iReturn` sits outside the try with the size test after the catch;
-// the send loop caps `m_blockSize` directly (signed compare, cap arm first)
-// and re-reads it after the transmit, converts totalBlocks in the loop
-// (VC6 hoists it past the entry test), and its `bool useGuaranteed` shares
-// a block with the loop so retryCount overlays it; the resend passes true.
-// Residual: register homing - retail keeps bytesLeft in EBX and re-reads
-// pGameTransmitMainMsg per use, and rotates the confirmation loop with its
-// reload block at the head; our frame is 8 B larger.
-// 2026-09-05: 81.8730 -> 82.1341. Retail loads `gpGame` five times in this
-// body and this reconstruction loaded it ZERO times - the three player-scan
-// loops reach the local seat through `gpGame->GetLocalPlayerGamePos()`, not
-// the member call, even though `this` IS gpGame (same tell as ClaimShipyard
-// and InitiateSpell). Both censuses now read 5. Measured and rejected in the
-// same pass: putting `gpGame->` on the loops' own `players[i]` as well costs
-// 1.72 (82.13 -> 80.41), and the blanket rewrite of every `players[...]` in
-// the body costs 1.82 - the global belongs on the accessor call only.
-// Also byte-flat: swapping the isDiff/diffSize declaration order. Moving
-// `unsigned char isDiff = 0;` down to the `if (inGame)` is +0.04 and is not
-// shipped - retail stores only the diffSize zero at that point, so the
-// declaration position is a real question, but 0.04 does not evidence it.
-// [polish 16] The FIRST CDestroyPlayerMsg site does not cache the dpid, and
-// retail says so directly: at fn+0x14d3e it forms `ebx = &players[iToWho]`
-// once and then reads `[ebx+0x20b98]` THREE times - into the DestroyPlayer
-// argument, into HandlePlayerDrop's ecx, and into the recycled `[ebp+0x10]`
-// home - where a `killDPID` local put the value in esi and pushed that. The
-// two sites are NOT symmetric and the knobs do not add: un-caching the
-// iToWho site alone is 82.1332 -> 82.2224, the loop site alone 82.1980, and
-// BOTH TOGETHER 82.0300, below baseline. Only the first is shipped.
-// The frame is still 8 B over (0x3ac against retail's 0x3a4) and the slot
-// census says where: the three CNetMsg temporaries line up at a shift of 0
-// (the 0x0c..0x64 dword run is identical), then 4 (base's first 0x3eb msg at
-// -0x68 against retail's -0x64), then 8 (the 0x3e8 msg at -0xb4 against
-// -0xac, the second 0x3eb msg at -0xdc against -0xd4, and everything below
-// including the 0x351-byte cFileName buffer at -0x3b8 against -0x3b0). So
-// the surplus is TWO separate 4-byte steps in the msg-temporary band, not
-// one 8-byte local - do not go looking for a single surplus dword.
-// 2026-09-06, polish lane 38, three findings and one fix, all measured:
-//  * FIXED: this body called `calc_crc_long` through remote.h's stale DC-only
-//    declaration `int (unsigned char*, int)`, which does not decorate to the
-//    symbol remote.cpp:95 defines (`unsigned long (const unsigned char*,
-//    unsigned)`), so the reloc pointed at a name nothing owns. The header now
-//    carries the real signature; byte-flat on every row (objdiff runs at
-//    function_reloc_diffs=none) but the `--calls` divergence row is gone.
-//  * The DC TYPE RECORD types `dataTimeOutStart` T_INT4 where this body says
-//    `unsigned long`: BYTE-FLAT, and `unsigned long` is kept because it is
-//    what `GameTime::Get`/`ElapsedSince` take.
-//  * The DC block names three locals this body has no counterpart for -
-//    `attempts` (sp+0xd8) BESIDE `retryCount`, `queueSize` (sp+0xcc) BESIDE
-//    `numMsgs`, and `pNetMsg` (sp+0x3c) BESIDE `pConfirmMsg` - so they are
-//    extra constructs, not renames. Their frame band (sp+0xcc..0xd8, next to
-//    `pMsg` at 0xd0) is the confirm loop's, and `numMsgs` here is incremented
-//    and never read, which is the shape of a DC pair where only one survived.
-//    Not reconstructed: nothing in the retail stream names a second queue
-//    counter, and the 122-vs-122 block / 63-vs-63 branch CFG says the missing
-//    mass is not a statement. The remaining `--calls` delta is a LAYOUT one:
-//    retail places the `Stop(); if (inGame) RestoreScreen();` block at
-//    fn+0x94f and jumps to the epilogue at fn+0x1105, where our C2 sinks the
-//    same source statements to fn+0xc16.
-// 2026-09-06, polish lane 41 - the 8-byte frame surplus is a SPILL cascade,
-// not a missing or surplus local, and the slot census now names both dwords:
-//  * `iFileSize` has its own home at [ebp-0x6c], BELOW the
-//    CGameTransmitInitMsg temporary, where retail packs it into [ebp-0x38]
-//    ABOVE that temporary (retail `mov [ebp-0x38],esi` at fn+0x2d1 against
-//    our `mov [ebp-0x6c],esi` at fn+0x2dd).  Moving `int iFileSize;` up to
-//    procedure scope beside pGameTransmitMainMsg, with the FileSize() call
-//    left as a plain assignment where it is, is BYTE-FLAT - VC6 colours this
-//    slot by live range, not by declaration position, so the DC frame order
-//    is not reachable from the declaration list.
-//  * The other dword is the CDiffMaker arm: retail keeps ONE of the two
-//    File::GetLength results in EBX across the new/Read/CDiffMaker sequence
-//    (`mov ebx,eax / push ebx`, later `push ebx / mov ebx,[ebp-..] / push
-//    ebx`), where we spill BOTH (`push eax / mov [ebp-..],eax`, later two
-//    reloads).  Retail also keeps `isDiff` in BL (`xor bl,bl` in the entry
-//    block) where we home it as the byte [ebp-0x15]; that byte and the EBX
-//    spill are the same pressure fact.
-// So the frame is a CONSEQUENCE: retail has one more callee-saved register
-// free through the diff arm than this build does.  Do not hunt for a surplus
-// local or reorder declarations - measure the diff arm's register pressure.
+// SaveGame/diff/transmit/resend fingerprint prove this complete span.
+// DC 0xb7560 supplies the signature, named locals, scopes and statement order.
+// Its line 10382 tests done before the confirmation loop; line 10391 combines
+// the null-message and timeout predicates. Keep CMessageKill alive through
+// abort returns, and keep the end-message temporary scoped before resends.
+//
+// Retail corrections: +0xa6 tests status 1 (active); +0x21c/+0x247 call
+// fileError on compression failure, as DC lines 10215/10222 also do. Only
+// the initial removal calls File::deleteFile. At +0x39f, idiv uses the quotient
+// totalBlocks as dividend and fileSize as divisor. DC line 10289 also passes
+// those operands to __modls: preserve totalBlocks % fileSize despite its
+// unusual behavior; fileSize % payloadSize is a different algorithm.
+//
+// MAX 85.0958 (2026-09-07), source hash 9fbd6fc3c561: the retail fixes,
+// while loop and done initialized before the player bitmap, verified through
+// normalized production objects. DC lines 10279..10286 initialize bytesLeft,
+// current, done, numMsgs and curBlock earlier, before the transfer UI; retain
+// that full order through the current dip. A lower score does not reject it.
+// Scratch controls: top-tested loop 84.0000%; combined timeout byte-flat;
+// remainder plus earlier done 84.4738%; complete DC initializer order 83.6804%.
+// Production normalization scores differ from those raw-object probes.
+//
+// Complete uses bool useGuaranteed: DC's unsigned char introduces a test/setne
+// conversion before the send loop that retail lacks (81.4869 control).
+// Array new in CreateMsg and removing the artificial send-only scope are
+// byte-flat. The three player scans use g_game->getLocalPlayerGamePos(), but
+// access this->m_players; substituting global player-array reads was worse.
+// The first destroy-player path reloads its dpid across opaque calls; the
+// broadcast loop has a named killDPID, as DC also records. Preserve both.
+//
+// Residual: the DC-order candidate's frame is 0x3b0 versus retail's 0x3a4.
+// Retail keeps isDiff/newSize in BL/EBX through disjoint phases and bytesLeft
+// in EBX through transmission; the candidate keeps the packet pointer there
+// and spills these values. Moving the fileSize declaration alone and swapping
+// isDiff/diffSize declarations were byte-flat in earlier controls. Missing DC
+// queueSize/attempts/pNetMsg have no independent retail semantics proven yet.
 // Before normalization (locals): iToWho, pGameTransmitMainMsg, bSChangeSounds, cFileName, pOld,
 // pNew, pDiff, iReturn, pFile, iFileSize, iFullGameCRC, pSmack, pConfirmMsg, pMsg.
 VA(0x004cafd0, 0xD14)  // retail body + typed catch + continuation/tables
@@ -11669,7 +11617,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
     g_soundManager->switchAmbientMusic(-1);
     g_soundManager->m_playSounds = changeSounds;
 
-    if (g_advManager->m_status == baseManager::STATUS_SUSPENDED)
+    if (g_advManager->m_status == baseManager::STATUS_ACTIVE)
         g_advManager->bvMessage((*g_generalText)[99]);
 
     saveGame(g_loadedGameName, 0, 0, !inGame, 1);
@@ -11710,11 +11658,11 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
                                            xferDiffWriteMode, "wb6"));
                 returnValue = compressedFile.write(diff, diffSize);
             } catch (TGzFile::TOpenFailure) {
-                File::deleteFile(diffFilename);
+                fileError(diffFilename);
                 shutDown(0);
             }
             if (returnValue != static_cast<int>(diffSize)) {
-                File::deleteFile(diffFilename);
+                fileError(diffFilename);
                 shutDown(0);
             }
             delete diff;
@@ -11744,9 +11692,14 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
     if (!transmitRemoteData(&msg, toWho, false, true))
         shutDown(0);
 
-    g_unnamed69d80d = 0;
     int totalBlocks = fileSize / GAME_TRANSMIT_PAYLOAD_SIZE;
-    if (fileSize % GAME_TRANSMIT_PAYLOAD_SIZE)
+    int bytesLeft = fileSize;
+    unsigned char* current = data;
+    unsigned char done = 0;
+    unsigned long numMsgs = 0;
+    int curBlock = 0;
+    g_unnamed69d80d = 0;
+    if (totalBlocks % fileSize)
         ++totalBlocks;
 
     CGameTransferSmack smack;
@@ -11764,41 +11717,35 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
         transferSmack = &dlg.m_smack;
     }
 
+    bool useGuaranteed = false;
+    if (g_dPlayReady || g_mpNetProtocol == MP_TCP)
     {
-        bool useGuaranteed = false;
-        if (g_dPlayReady || g_mpNetProtocol == MP_TCP)
-        {
-            g_logFile.log(DATA_COMPGEN(0x00677f88, xferGuaranteedLog,
-                                    "Using guaranteed!!"));
-            useGuaranteed = true;
-        }
+        g_logFile.log(DATA_COMPGEN(0x00677f88, xferGuaranteedLog,
+                                "Using guaranteed!!"));
+        useGuaranteed = true;
+    }
 
-        transferSmack->start();
-        unsigned char* current = data;
-        int bytesLeft = fileSize;
-        int curBlock = 0;
-        while (bytesLeft > 0) {
-            pollSound();
-            checkDoMain(0, 1);
+    transferSmack->start();
+    while (bytesLeft > 0) {
+        pollSound();
+        checkDoMain(0, 1);
 
-            if (bytesLeft >= GAME_TRANSMIT_PAYLOAD_SIZE)
-                gameTransmitMainMsg->m_blockSize = GAME_TRANSMIT_PAYLOAD_SIZE;
-            else
-                gameTransmitMainMsg->m_blockSize = bytesLeft;
-            transferSmack->setPercentage(static_cast<float>(curBlock)
-                                  / static_cast<float>(totalBlocks));
+        if (bytesLeft >= GAME_TRANSMIT_PAYLOAD_SIZE)
+            gameTransmitMainMsg->m_blockSize = GAME_TRANSMIT_PAYLOAD_SIZE;
+        else
+            gameTransmitMainMsg->m_blockSize = bytesLeft;
+        transferSmack->setPercentage(static_cast<float>(curBlock)
+                              / static_cast<float>(totalBlocks));
 
-            gameTransmitMainMsg->m_blockNbr = curBlock;
-            gameTransmitMainMsg->update(current,
-                                         gameTransmitMainMsg->m_blockSize);
-            transmitRemoteData(gameTransmitMainMsg, toWho,
-                               false, useGuaranteed);
+        gameTransmitMainMsg->m_blockNbr = curBlock;
+        gameTransmitMainMsg->update(current,
+                                     gameTransmitMainMsg->m_blockSize);
+        transmitRemoteData(gameTransmitMainMsg, toWho,
+                           false, useGuaranteed);
 
-            current += gameTransmitMainMsg->m_blockSize;
-            bytesLeft -= gameTransmitMainMsg->m_blockSize;
-            ++curBlock;
-        }
-
+        current += gameTransmitMainMsg->m_blockSize;
+        bytesLeft -= gameTransmitMainMsg->m_blockSize;
+        ++curBlock;
     }
 
     g_logFile.log(DATA_COMPGEN(
@@ -11814,71 +11761,67 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
     memset(playerDone, 0, sizeof(playerDone));
     unsigned long dataTimeOutStart = GameTime::get();
     int retryCount = 0;
-    unsigned long numMsgs = 0;
-    unsigned char done = 0;
 
-    do {
+    while (!done) {
         pollSound();
         checkDoMain(0, 1);
         CNetMsg* confirmMsg = getRemoteData(1, 0);
         CMessageKill kill(confirmMsg);
 
-        if (!confirmMsg) {
-            if (GameTime::elapsedSince(dataTimeOutStart)
-                    > GAME_TRANSMIT_TIMEOUT) {
-                ++retryCount;
-                g_logFile.log(DATA_COMPGEN(
-                                0x00677f34, xferTimeoutLog,
-                                "Timeout sending save game [%d]"),
-                            retryCount);
-                if (retryCount > 1) {
-                    normalDialog((*g_generalText)[82], 2, -1, -1,
-                                 -1, 0, -1, 0, -1, 0, -1, 0);
-                    if (g_windowManager->m_dialogReturn
-                            != DIALOG_RETURN_ACCEPT) {
-                        if (inGame && toWho != NET_MESSAGE_RECIPIENT_ALL) {
-                            g_dPlay->destroyPlayer(m_players[toWho].m_dpid);
-                            handlePlayerDrop(m_players[toWho].m_dpid);
-                            CDestroyPlayerMsg destroyMsg(
-                                m_players[toWho].m_dpid);
-                            m_players[toWho].clearNetInfo();
-                            g_unnamed69d80d = 1;
-                            transmitRemoteDataDPID(&destroyMsg, 0,
-                                                   false, true);
-                            return 0;
-                        } else {
-                            for (int i = 0; i < 8; ++i) {
-                                if (m_players[i].isHuman() && !playerDone[i]
-                                        && i != g_game->getLocalPlayerGamePos()) {
-                                    unsigned long killDPID =
-                                        m_players[i].m_dpid;
-                                    g_dPlay->destroyPlayer(killDPID);
-                                    handlePlayerDrop(killDPID);
-                                    CDestroyPlayerMsg destroyMsg(killDPID);
-                                    m_players[i].clearNetInfo();
-                                    transmitRemoteDataDPID(&destroyMsg, 0,
-                                                           false, true);
-                                }
+        if (!confirmMsg && GameTime::elapsedSince(dataTimeOutStart)
+                > GAME_TRANSMIT_TIMEOUT) {
+            ++retryCount;
+            g_logFile.log(DATA_COMPGEN(
+                            0x00677f34, xferTimeoutLog,
+                            "Timeout sending save game [%d]"),
+                        retryCount);
+            if (retryCount > 1) {
+                normalDialog((*g_generalText)[82], 2, -1, -1,
+                             -1, 0, -1, 0, -1, 0, -1, 0);
+                if (g_windowManager->m_dialogReturn
+                        != DIALOG_RETURN_ACCEPT) {
+                    if (inGame && toWho != NET_MESSAGE_RECIPIENT_ALL) {
+                        g_dPlay->destroyPlayer(m_players[toWho].m_dpid);
+                        handlePlayerDrop(m_players[toWho].m_dpid);
+                        CDestroyPlayerMsg destroyMsg(
+                            m_players[toWho].m_dpid);
+                        m_players[toWho].clearNetInfo();
+                        g_unnamed69d80d = 1;
+                        transmitRemoteDataDPID(&destroyMsg, 0,
+                                               false, true);
+                        return 0;
+                    } else {
+                        for (int i = 0; i < 8; ++i) {
+                            if (m_players[i].isHuman() && !playerDone[i]
+                                    && i != g_game->getLocalPlayerGamePos()) {
+                                unsigned long killDPID =
+                                    m_players[i].m_dpid;
+                                g_dPlay->destroyPlayer(killDPID);
+                                handlePlayerDrop(killDPID);
+                                CDestroyPlayerMsg destroyMsg(killDPID);
+                                m_players[i].clearNetInfo();
+                                transmitRemoteDataDPID(&destroyMsg, 0,
+                                                       false, true);
                             }
-                            g_unnamed69d80d = 1;
-                            delete[] data;
-                            return 0;
                         }
-                    }
-                }
-
-                dataTimeOutStart = GameTime::get();
-                for (int i = 0; i < 8; ++i) {
-                    if (m_players[i].isHuman() && !playerDone[i]
-                            && i != g_game->getLocalPlayerGamePos()) {
-                        CGameTransmitEndMsg resendEnd(
-                            g_monthType, g_monthTypeExtra,
-                            g_weekType, g_weekTypeExtra, diffSize);
-                        transmitRemoteData(&resendEnd, i, false, true);
+                        g_unnamed69d80d = 1;
+                        delete[] data;
+                        return 0;
                     }
                 }
             }
-        } else {
+
+            dataTimeOutStart = GameTime::get();
+            for (int i = 0; i < 8; ++i) {
+                if (m_players[i].isHuman() && !playerDone[i]
+                        && i != g_game->getLocalPlayerGamePos()) {
+                    CGameTransmitEndMsg resendEnd(
+                        g_monthType, g_monthTypeExtra,
+                        g_weekType, g_weekTypeExtra, diffSize);
+                    transmitRemoteData(&resendEnd, i, false, true);
+                }
+            }
+        } else if (confirmMsg) {
 
             ++numMsgs;
             dataTimeOutStart = GameTime::get();
@@ -11948,7 +11891,7 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
             }
             }
         }
-    } while (!done);
+    }
 
     transferSmack->stop();
     if (inGame)
