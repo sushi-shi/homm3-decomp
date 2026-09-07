@@ -317,6 +317,11 @@ unsigned char type_random_map::canPlaceObject(
 }
 #endif
 
+// Vtable 0x6409cc slot 0 and the 0x14-byte concrete map layout identify this
+// scalar deleting wrapper. Its non-deleting half destroys the owned array of
+// 0x30-byte TRmgMapItem elements before restoring the abstract map vtable.
+VA_COMPGEN(0x00530F80, 0x21, SCALAR_DELETING_DTOR, type_random_map)
+
 // Vtable 0x6409cc slot 3 returns the map's two unsigned dimensions.
 // The hidden result pointer and two stores fix the coordinate return ABI.
 // The proven grid copy constructor moves the width load before the result
