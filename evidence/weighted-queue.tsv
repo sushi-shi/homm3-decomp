@@ -2,7 +2,6 @@
 # Admitted compiled bodies, sorted by increasing current-implementation MAX, then decreasing retail size.
 # HIST is retained to expose peaks lost by source edits; it does not exclude a row.
 va	size	current	maximum	historical	remaining_bytes	unit	function	state
-0x00439c30	271		0.0	95.4886	271.0	ai_tactical	?getCureValue@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	admitted
 0x00439d40	148		0.0	100.0	148.0	ai_tactical	?getAntimagicValue@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	admitted
 0x00439de0	148		0.0	100.0	148.0	ai_tactical	?getBacklashValue@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	admitted
 0x005bc760	123		0.0	100.0	123.0	textwdgt	??0bitmapBackedTextWidget@@QAE@HHHHPBD00W4TColor@font@@HIH@Z	admitted
@@ -13,6 +12,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x0056cd00	335	25.626087	25.6261	49.7043	249.15256499999998	seerhut	?load@type_quest@@UAEXPAVTAbstractFile@@H@Z	admitted
 0x004e59a0	248	32.623375	32.6234	100.0	167.09396800000002	hero	?fly@hero@@QAEXH@Z	admitted
 0x00583580	780	34.04054	34.0405	67.9099	514.4840999999999	singleselectionwindow	?updateGameVars@TSingleSelectionWindow@@QAEXXZ	admitted
+0x00439c30	271	39.4773	39.4773	95.4886	164.016517	ai_tactical	?getCureValue@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	admitted
 0x00573670	1024	42.570988	42.571	46.3642	588.07296	seerhut	?doSeerEvent@TSeerHut@@QAEXPAVhero@@_N@Z	admitted
 0x00488880	1494	53.986843	53.9868	80.9474	687.4372079999999	customcampaign	?load@CampaignHeaderStruct@TCampaignBrief@@QAE_NXZ	admitted
 0x004bcda0	3778	60.554672	60.5547	92.4127	1490.2434340000002	game	?load@game@@QAEHPAVTAbstractFile@@@Z	admitted

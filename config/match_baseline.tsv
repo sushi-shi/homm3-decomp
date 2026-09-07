@@ -457,7 +457,7 @@ ai_tactical	?getCancelValue@type_AI_spellcaster@@QAEJPAVarmy@@E@Z	100.0000	100.0
 ai_tactical	?getChainLightningValue@type_AI_spellcaster@@QAEJJW4TSkillMastery@@PAVarmy@@@Z	100.0000	100.0000	100.0000	0x37190	c6e1b6e1896a
 ai_tactical	?getCloneValue@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x3b2e0	446949d228a4
 ai_tactical	?getCounterstrokeValue@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x39e80	0377bbe59758
-ai_tactical	?getCureValue@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	0.0000	0.0000	95.4886	0x39c30	3a03854feef9
+ai_tactical	?getCureValue@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	39.4773	39.4773	95.4886	0x39c30	b8a9268e52d4
 ai_tactical	?getCurseValue@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x3b370	63e8fcc1daec
 ai_tactical	?getDamageSpellValue@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x36f60	4125ac4ebd29
 ai_tactical	?getDamageValue@type_AI_spellcaster@@QAEJHJPBVhero@@PBVarmy@@@Z	100.0000	100.0000	100.0000	0x36e30	72bf99369cc3

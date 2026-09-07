@@ -2881,43 +2881,37 @@ long type_AI_spellcaster::getDispelValue(const army* ourArmy, type_enchant_data 
 }
 
 // E:\gamedcs\ai_tactical.cpp:2191
-// Residual (95.5%): register colouring - retail parks the spell's
-// mastery bonus in EDX (so ECX is free to pre-load topCreatureDamage
-// before the add) and keeps the _cpp_min result in EDX while testing
-// field_1c in AL; ours holds them in ECX and EAX respectively, which
-// renames the whole tail. Tried and rejected: evaluating the mastery
-// bonus before the power product, and the `&&` form of the field_1c
-// guard instead of nested ifs (both 95.5%), and un-naming `healing` so
-// the sum is the _cpp_min's inline first argument (95.4886, identical
-// to the named form - the naming lever that closed the
-// SpellCastWorkChance family does not reach this call site).
-// Register-homing family.
-// Cure prices two things at once: dispelling the bad spells off the
-// copy (get_cancel_value with bad_spells_only = 1) and the hit points
-// it puts back, capped at what the top creature has actually lost -
-// the `lea &a / jl / lea &b / mov [eax]` pair is _cpp_min's
-// reference-returning selection, not a cmov-style ternary.
-// Re-swept 2026-08-08 with the four levers that closed six functions
-// in this TU the same day - none reaches it. The residual is one
-// SCHEDULING slot: retail loads our_army->topCreatureDamage between
-// the power multiply and the add that finishes `healing`, our CL
-// completes the add first, and the two params pushes rename behind it.
-// Tried and rejected: splitting the multiply from the mastery add
-// (either order), naming topCreatureDamage as its own local, and long
-// instead of int for the pair - all four byte-identical at 95.49.
-// Before normalization (locals): our_army, test_army.
+// DC 2203..2204 clears the healed amount when the top creature survives the
+// predicted damage; it does not return from the function. Keep that assignment
+// and the shared cleanup at line 2212. Retail folds the zero into a branch to
+// its common ~army call. The earlier return duplicated our implicit teardown.
+//
+// Focused controls (2026-09-07): the DC guard moves the raw-object probe from
+// 0 to 39.4773%; direct versus copy initialization is byte-identical. Reusing
+// `healing` for the capped result instead of a separate local falls to 27.4318%.
+// A scratch-only inline_depth(0) at the final return yields 97.6705%, exposing
+// the remaining mastery-add / min-result register allocation difference. No
+// pin is retained. C2 accepts ~army (cost 150, budget 959) and expands its
+// member teardown; retail calls its independently matched retained body.
+// Fixing that boundary must preserve the implicit destructor and its real
+// resource/vector/deque cleanup, not remove it or fabricate caller work.
+// Earlier 95.4886% controls were byte-flat: reversing/splitting the mastery
+// add and power product, unnamed healing inside cppMin, a named damage local,
+// long arithmetic locals, and a combined win-likely guard. Retail's by-value,
+// reference-returning min still copies both operands before selecting one.
+// Original DC local: current_army. our_army is normalized to ourArmy.
 VA(0x00439c30, 0x10F)  // linkorder, dc 0x403c0
 long type_AI_spellcaster::getCureValue(const army* ourArmy, type_enchant_data caster)
 {
-    army testArmy = *ourArmy;
-    long value = getCancelValue(&testArmy, 1);
+    army currentArmy = *ourArmy;
+    long value = getCancelValue(&currentArmy, 1);
     int healing = caster.getMasteryValue()
                   + g_spellTraits[SPELL_CURE].m_powerFactor * caster.m_power;
     int healed = cppMin(healing, ourArmy->m_topCreatureDamage);
     if (m_winLikely) {
         if (ourArmy->m_topCreatureDamage + ourArmy->getAIExpectedDamage()
                 < ourArmy->m_monInfo.m_hitPoints)
-            return value;
+            healed = 0;
     }
     if (healed > 0)
         value = static_cast<long>(
