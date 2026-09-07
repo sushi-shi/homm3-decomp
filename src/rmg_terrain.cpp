@@ -59,6 +59,14 @@ unsigned char TRmgTableTerrainRule::hasEntries()
     return 0;
 }
 
+// Vtable 0x642cb0 slot 3 indexes the first dword of the fixed eight-byte
+// transition records at 0x6424a8. There is no Dreamcast RMG counterpart.
+VA(0x005B3A80, 0x11)
+int TRmgTableTerrainRule::getEntry(int index)
+{
+    return g_rmgTerrainPatterns[index].m_frame;
+}
+
 // Provisional role spelling. The fastcall ABI and two-byte output are fixed
 // by the call at 0x5b5f4e. All selector names are provisional retail roles.
 // Before normalization (function): SelectTerrainTransition.

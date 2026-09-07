@@ -133,6 +133,9 @@ struct TRmgTerrainPatternEntry {
     char m_padding[3];
 };
 
+// Fixed table at retail 0x6424a8; the Complete-only source name is unknown.
+extern const TRmgTerrainPatternEntry g_rmgTerrainPatterns[];
+
 // Constructor 0x5b3780 copies its entry array and builds 58 first/count
 // ranges at +0x14. This data-backed rule supplies vtable 0x642c98; its
 // original Complete-only class name is unavailable.
