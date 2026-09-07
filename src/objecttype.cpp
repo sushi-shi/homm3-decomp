@@ -405,6 +405,12 @@ inline std::vector<TObjectType::TImageInfo>& getObjectImageCache()
 // The current output-reference lookup controls give 96.5415/96.0395 and
 // preserve the wrong registry operands. A flattened lookup with a separate
 // entry factory or typed make_pair gives 78.1067/75.8103 and different calls.
+// With the merged normalized headers, declaring cell or maskFile at function
+// entry but assigning at the original use reproduces the 92.5020 late-counter
+// body byte for byte. Hoisting all raw-read locals changes stack allocation
+// and scores 89.9842. Declaration order alone does not recover the file/counter
+// interference; homm3 vc6 why-reg --model also finds no binding permutation
+// in the 99.2095 body (the residual is instruction placement).
 // Remaining: counter initialization placement. No inline-depth controls or
 // release-elided operations are used.
 VA(0x00514610, 0x317)  // anchor-callee 0x514b80 per-row `>>`; anchor-global 0x6aba80 .msk cache; retail-only
