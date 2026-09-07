@@ -21,7 +21,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x0048a310	2846	69.5768	69.5768	79.2531	590.456774	customcampaign	?load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	admitted
 0x00521960	2819	80.0996	80.0996	80.0996	560.9922760000002	overview	?windowHandler@TOverviewWindow@@UAEHPAVmessage@@@Z	admitted
 0x00488880	1494	53.9868	53.9868	80.9474	284.64584399999995	customcampaign	?load@CampaignHeaderStruct@TCampaignBrief@@QAE_NXZ	admitted
-0x00523bb0	479	81.040695	81.0407	81.0407	90.815047	path	?validAttack@army@@QBEHHHHHPAH@Z	admitted
 0x004eb060	491	81.044945	81.0449	81.0449	93.06954100000002	iconwdgt	?nextRandomFrame@iconWidget@@QAEXXZ	admitted
 0x004d6920	593	81.12042	81.1204	81.1204	111.95602799999998	gzinflatebuf	?underflow@TGzInflateBuf@@UAEHXZ	admitted
 0x0058a440	830	81.30488	81.3049	81.3049	155.16932999999997	singleselectionwindow	?onGameHeaderInfoInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	admitted

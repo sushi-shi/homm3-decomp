@@ -1483,3 +1483,20 @@ lifetime extension. `logical_or<unsigned char>` emits identical bytes, so that
 functor type cannot be distinguished by this match. Dreamcast proves the older
 spellbook/artifact operation; Complete's generic and combination grant loops
 are reconstructed from retail.
+
+
+### Restore output stores before blaming an inline tail merge
+
+`army::validAttack` (0x523bb0) stopped at 81.0407% with duplicated fragments
+of `getAdjacentCellIndex`. The source had flattened three adjacency calls,
+the `validHex`/`hasArmy` predicates, and the output stores. Its comment called
+retail's shared tail unreachable by VC6.
+
+Dreamcast path.cpp:159..223 writes each adjacency result through the output
+pointer, then validates and reads that location. Restoring those stores and
+the canonical calls reaches 95.4651%; C2 now shares the wide-direction tails.
+Dreamcast also initializes the adjacent-cell local before the wide-creature
+branch. Restoring that lifetime reaches 100%, including retail's earlier
+facing load. Replacing `getAdjacentCellIndex`'s explicit bounds guards with
+its DC-proven `validHex` call leaves the caller bytes unchanged. Complete's
+`isEnemy` call remains: retail proves that revision of the enemy criterion.

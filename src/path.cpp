@@ -25,9 +25,8 @@
 // points WORSE than the duplicated one). Applying it closed FindPath,
 // GetAdjacentCellIndex, GetAdjacentCellIndexNoArmy and
 // get_adjacent_hex in one edit. The same block-placement trick works
-// for a non-return merged block: see ValidAttack's `other` bounds
-// check, where the `cell = -1` arm has to be the `if` arm and the
-// table load the `else` arm for the -1 block to land first.
+// for a non-return merged block. ValidAttack now obtains that bounds check
+// by calling the canonical GetAdjacentCellIndex; its explicit copy is gone.
 // Second family lever, byte-proven here and worth trying anywhere
 // `creatureId & 1` appears (cmbtmgr, ai_tactical, army): retail
 // computes the two-hex test as a BYTE-typed value and reuses it -
@@ -127,101 +126,74 @@ unsigned army::getAttackMask(int currIndex, int criteria, int literalTargetIndex
     return mask;
 }
 
-// E:\gamedcs\path.cpp:159
-// The wide-creature 6/7 arms call GetAdjacentCellIndex with a
-// pre-remapped direction; /Ob2 inlines it and keeps its own 6/7 arms
-// live because the argument is not constant enough to fold.
-// Two things were reconstructed here 2026-08-08 (59.72% -> 81.04%):
-//   * `facing` is dispatched with a real `switch` (VC6's `sub ecx,0`
-//     / `dec ecx` chain), not an if/else-if - the switch is what lays
-//     the DEFENDER arm out first and the ATTACKER arm second, which
-//     no if/else ordering reproduces (69.3% / 74.5%);
-//   * each criteria case ends in a POSITIVE `if (...) return 1;
-//     break;`, not `if (!...) return 0; ... return 1;`. The negative
-//     form let our CL fold all three `return 1` tails into `setge` /
-//     `sete` / a neg-sbb-neg bool, losing exactly the three branches
-//     the counter was reporting missing.
-// Residual (81.0%): ONE extra branch, the last real tail-merge in the
-// TU. Retail cross-jumps the two inlined GetAdjacentCellIndex bodies
-// in the wide arms - the WIDE_LOWER arm's `cmp <dir>,6` mismatch
-// jumps straight into the WIDE_UPPER arm's `cmp <dir>,7` block, so
-// one copy serves both call sites. Our CL emits both copies. Unlike
-// the bounds-check merge above this one is NOT reachable from the
-// source: the two inlines have different first tests and only the
-// second half is common. Tried and rejected: a byte-typed twoHex
-// local (byte-identical), `(facing == 1) ?` instead of `facing ?`
-// (78.2%), testing WIDE_LOWER before WIDE_UPPER (80.7%).
+// Dreamcast path.cpp:159. Preserve its ValidHex, GetAdjacentCellIndex and
+// HasArmy calls. Complete's enemy arm calls IsEnemy rather than comparing
+// controlling/owning sides directly, as the older Dreamcast build does.
+// Dreamcast initializes the adjacent-cell local before the wide-creature
+// branch and writes each result through testCellIndex. Restoring those stores
+// lets VC6 share the two inlined wide-direction tails (81.0407% -> 95.4651%);
+// restoring the local's earlier initialization reaches 100%. The old comment
+// calling that tail merge unreachable was disproved by these source changes.
+// Keep the facing switch and positive criteria returns: earlier if/else and
+// negative-return probes changed retail's dispatch layout and boolean tails.
 // Before normalization (locals): iLiteralIndex.
 VA(0x00523bb0, 0x1DF)  // anchor-global, dc 0x10ca6c
 int army::validAttack(int currIndex, int direction, int criteria, int literalIndex, int* testCellIndex) const
 {
-    if (currIndex < 0)
+    if (!combatManager::validHex(currIndex))
         return 0;
-    if (currIndex >= 187)
-        return 0;
-    int cell = currIndex;
+    int other = currIndex;
     if (m_monInfo.m_attributes & 1) {
         if (direction == COMBAT_DIRECTION_WIDE_UPPER) {
-            cell = getAdjacentCellIndex(currIndex, m_facing ? 0 : 5);
+            *testCellIndex = getAdjacentCellIndex(currIndex, m_facing ? 0 : 5);
         } else if (direction == COMBAT_DIRECTION_WIDE_LOWER) {
-            cell = getAdjacentCellIndex(currIndex, m_facing ? 2 : 3);
+            *testCellIndex = getAdjacentCellIndex(currIndex, m_facing ? 2 : 3);
         } else {
-            int other = currIndex;
             switch (m_facing) {
                 case FACING_ATTACKER:
                     if (direction >= 3)
-                        other = g_combatManager->m_adjacentCells[currIndex][4];
+                        other = getAdjacentCellIndex(currIndex, 4);
                     break;
                 case FACING_DEFENDER:
                     if (direction <= 2)
-                        other = g_combatManager->m_adjacentCells[currIndex][1];
+                        other = getAdjacentCellIndex(currIndex, 1);
                     break;
             }
             if (other == -1)
                 return 0;
-            if (other < 0)
-                goto other_off_grid;
-            if (other >= 187) {
-other_off_grid:
-                cell = -1;
-            } else {
-                cell = g_combatManager->m_adjacentCells[other][direction];
-            }
+            *testCellIndex = getAdjacentCellIndex(other, direction);
         }
     } else {
-        cell = getAdjacentCellIndex(currIndex, direction);
+        *testCellIndex = getAdjacentCellIndex(currIndex, direction);
     }
-    *testCellIndex = cell;
-    if (cell < 0 || cell >= 187)
+    if (!combatManager::validHex(*testCellIndex))
         return 0;
-    if (literalIndex != -1 && cell != literalIndex)
+    if (literalIndex != -1 && *testCellIndex != literalIndex)
         return 0;
-    hexcell* hc = &g_combatManager->m_cells[cell];
+    hexcell* hc = &g_combatManager->m_cells[*testCellIndex];
     switch (criteria) {
         case ATTACK_CRITERIA_SELF:
             if (hc->m_armySide == m_side && hc->m_armySlot == m_slot)
                 return 1;
             break;
         case ATTACK_CRITERIA_ENEMY:
-            if (hc->m_armySide >= 0 && isEnemy(hc->getArmy()))
+            if (hc->hasArmy() && isEnemy(hc->getArmy()))
                 return 1;
             break;
         case ATTACK_CRITERIA_OCCUPIED:
-            if (hc->m_armySide >= 0)
+            if (hc->hasArmy())
                 return 1;
             break;
     }
     return 0;
 }
 
-// E:\gamedcs\path.cpp:238
+// E:\gamedcs\path.cpp:238. Line 239 calls the canonical ValidHex inline;
+// retaining that call is byte-neutral in the exact ValidAttack caller.
 VA(0x00523d90, 0x57)  // anchor-global, dc 0x10cbf8
 int army::getAdjacentCellIndex(int currIndex, int direction) const
 {
-    if (currIndex < 0)
-        goto off_grid;
-    if (currIndex >= 187)
-off_grid:
+    if (!combatManager::validHex(currIndex))
         return -1;
     if (direction == COMBAT_DIRECTION_WIDE_UPPER)
         direction = (m_facing == 1) ? 5 : 0;
