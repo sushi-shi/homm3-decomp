@@ -1,4 +1,4 @@
-[queue] 956 active unmatched target(s), smallest first; 18 parked
+[queue] 953 active unmatched target(s), smallest first; 21 parked
        3 B  0x005b3a40  unadmitted    bracketed           systemoptionswindow..text:game_1b3a40
        6 B  0x00404bc0  unadmitted    bracketed           adventuremapwindow..adventureoptionswindow:game_4860_sub00_4bc0
        6 B  0x00534190  unadmitted    bracketed           quicktownwindow..recruit:game_134190
@@ -37,9 +37,6 @@
       33 B  0x00530f80  unadmitted    bracketed           quicktownwindow..recruit:game_130f80
       33 B  0x005324e0  unadmitted    bracketed           quicktownwindow..recruit:game_1324e0
       33 B  0x00534fa0  unadmitted    bracketed           quicktownwindow..recruit:game_134fa0
-      33 B  0x00536170  unadmitted    bracketed           quicktownwindow..recruit:game_136170
-      33 B  0x00537dc0  unadmitted    bracketed           quicktownwindow..recruit:game_137dc0
-      33 B  0x0054c670  unadmitted    bracketed           quicktownwindow..recruit:game_13e9e0_sub00_14c670
       33 B  0x0054c910  unadmitted    bracketed           quicktownwindow..recruit:game_114d80_sub06_14c910
       33 B  0x0055eed0  unadmitted    bracketed           resourcemanager..sacrifice_window:game_15eed0
       33 B  0x0055f430  unadmitted    bracketed           resourcemanager..sacrifice_window:game_15f430
@@ -957,8 +954,7 @@
    11619 B  0x00579960  MAX 95.8142%  compiled            singleselectionwindow:??0TSingleSelectionWindow@@QAE@H@Z
 
 wrote evidence/smallest-match-queue.tsv
-claim and body
-compiled	758	0x0041fd60	94.5399	94.5399	94.5399	ai	ai	?markMultiheadedEnemy@combatManager@@QAEXPBVarmy@@0PAJJPAVsearchArray@@PAUtype_AI_combat_parameters@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
+ pass and iterate up to five scored candidates
 compiled	759	0x00602dc0	84.1098	84.1098	84.1098	winmgr	winmgr	?fizzleForwardX@heroWindowManager@@QAEXHHHHH@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	761	0x0058e700	98.8866	98.8866	98.8866	singleselectionwindow	singleselectionwindow	?setNewPlayerSlot@TSingleSelectionWindow@@QAEXPAVCNetPlayerInfo@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 bracketed	766	0x005b8720	-	0.0000	0.0000	systemoptionswindow..text	systemoptionswindow,text	game_1b7cd0_sub00_1b8720	bracketed	resolve the owner, then add its VA claim and body
