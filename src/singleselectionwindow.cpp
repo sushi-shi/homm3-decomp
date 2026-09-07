@@ -8370,9 +8370,13 @@ int TSingleSelectionWindow::getDisplayFace(int gamePos)
 }
 
 // Dreamcast preserves this helper boundary and ProcessRightSelect calls it
-// in source. Complete expands the body at that site, so there is no separate
-// retail row: select the scenario-fixed hero when present, otherwise the
-// seat's chosen entry from its filtered hero list.
+// in source. Complete expands it in getHeroName, selecting the hero without
+// the portrait remapping performed by DC getHeroName's GetDisplayFace call.
+// Keep DC's early-return order: generated/random hero first, then the fixed
+// hero and finally the selected available hero (lines 8151..8162).
+// In getHeroName, the old assignment/else chain gave nested getPlayerInPos
+// budget 73 against cost 75 and left a call. Restoring these returns expands
+// that scan naturally (64.6117% -> 88.12766% before fixing name accesses).
 // E:\gamedcs\singleselectionwindow.cpp:8143
 inline int TSingleSelectionWindow::getHeroInPos(int gamePos)
 {
@@ -8382,18 +8386,14 @@ inline int TSingleSelectionWindow::getHeroInPos(int gamePos)
         player = m_players.getCompPlayerInPos(gamePos);
     CMapHeaderData::TPlayerSlotAttributes* slotAtt =
         &g_game->m_mapHeader.m_playerSlotAttributes[gamePos];
-    int heroId;
-    if (!slotAtt->m_generateHero && !slotAtt->m_hasRandomHero) {
-        if (slotAtt->m_nonRandomHeroId != -1)
-            heroId = slotAtt->m_nonRandomHeroId;
-        else
-            heroId = player->m_availableHeroes[player->m_heroIndex];
-    } else if (player->m_heroIndex != -1) {
-        heroId = player->m_availableHeroes[player->m_heroIndex];
-    } else {
-        heroId = -1;
+    if (slotAtt->m_generateHero || slotAtt->m_hasRandomHero) {
+        if (player->m_heroIndex == -1)
+            return -1;
+        return player->m_availableHeroes[player->m_heroIndex];
     }
-    return heroId;
+    if (slotAtt->m_nonRandomHeroId != -1)
+        return slotAtt->m_nonRandomHeroId;
+    return player->m_availableHeroes[player->m_heroIndex];
 }
 
 // The selected seat's town. Dreamcast falls back to pick_alignment when a
@@ -8414,24 +8414,21 @@ inline TTownType TSingleSelectionWindow::getDisplayTown(int gamePos)
         static_cast<unsigned short>(slotAtt->m_legalAlignments), 1);
 }
 
-// Retail 0x58d1f0's 1.4x growth over the DC row absorbs GetHeroInPos
-// (dc 0xB0, no retail row of its own). The network arm's heroId is a
-// [ebp-4] local; the local arm's recycles the spent gamePos slot -
-// two block-scoped locals, not one. general-text 524 is the no-hero
-// row; the setup-pool name wins over the static hero table when the
-// map carries one.
-// Residual (80.5): retail CALLS map::find (0x58eb60) at both sites;
-// our CL calls it at site 1 and expands it at site 2 (the lower_bound
-// call inside is the tell), and the two heroId locals swap homes
-// ([ebp-4] vs the recycled [ebp+8]) behind that. The find boundary is
-// the same /Ob2 collector class as GetDisplayFace above. A function-
-// scoped iterator vs two block-scoped ones is byte-flat.
-// E:\gamedcs\singleselectionwindow.cpp:8201
+// E:\gamedcs\singleselectionwindow.cpp:8201, dc 0x1436b4.
+// Complete selects the hero through getHeroInPos rather than DC's portrait
+// accessor. Keep the network heroId inside its arm and the local heroId
+// after that returning arm; retail homes them at EBP-4 and EBP+8 respectively.
+// Named map references preserve their addresses across the two retained finds.
+// Retail 0x58d294/0x58d3b4 indexes the hero-name array directly after lookup;
+// getHero() adds an absent -1 test and produces 88.12766%. Changing only the
+// first fallback gives 94.11702%; both direct accesses reach 100%.
+// Controls before restoring the helper's early returns: its call alone is
+// 61.893616%, corrected hero/iterator scopes 61.76064%, named maps 61.207447%,
+// and DC's fall-through scope 64.6117%. Iterator-local scopes and empty()
+// spelling are byte-neutral there. No inlining override is needed.
 VA(0x0058D1F0, 0x1E7)  // anchor-callee DrawHeroAdvancedOption pushes its return as the hero-name text in both mode arms; head reads the same playerSlotAttributes band, size 1.4x dc 0x15C, dc 0x1436b4
 const char* TSingleSelectionWindow::getHeroName(int gamePos)
 {
-    std::map<int, type_map_hero_info>::iterator it;
-    int heroId;
     CMapHeaderData::TPlayerSlotAttributes* slot =
         &g_game->m_mapHeader.m_playerSlotAttributes[gamePos];
     if (m_flag64) {
@@ -8439,44 +8436,34 @@ const char* TSingleSelectionWindow::getHeroName(int gamePos)
             if (strlen(slot->m_nonRandomHeroCustomName) != 0)
                 return slot->m_nonRandomHeroCustomName;
         }
-        heroId = g_game->m_setup.m_startingHero[gamePos];
+        int heroId = g_game->m_setup.m_startingHero[gamePos];
         if (heroId == -1)
             return g_generalText->getText(524);
-        it = g_game->m_mapHeader.m_heroPlayerSetups.find(heroId);
-        if (it != g_game->m_mapHeader.m_heroPlayerSetups.end()
+        std::map<int, type_map_hero_info>& setups =
+            g_game->m_mapHeader.m_heroPlayerSetups;
+        std::map<int, type_map_hero_info>::iterator it = setups.find(heroId);
+        if (it != setups.end()
                 && it->second.m_name.size() != 0)
             return it->second.m_name.c_str();
-        return g_game->getHero(heroId)->m_name;
-    } else {
-        CNetPlayerHandlerPlayer* p = m_players.getPlayerInPos(gamePos);
-        if (!p)
-            p = m_players.getCompPlayerInPos(gamePos);
-        int heroId;
-        if (!slot->m_generateHero && !slot->m_hasRandomHero) {
-            if (slot->m_nonRandomHeroId != -1)
-                heroId = slot->m_nonRandomHeroId;
-            else
-                heroId = p->m_availableHeroes[p->m_heroIndex];
-        } else if (p->m_heroIndex != -1) {
-            heroId = p->m_availableHeroes[p->m_heroIndex];
-        } else {
-            heroId = -1;
-        }
-        if (heroId == -1)
-            return g_generalText->getText(524);
-        if (slot->m_nonRandomHeroId != -1) {
-            if (strlen(slot->m_nonRandomHeroCustomName) != 0)
-                return slot->m_nonRandomHeroCustomName;
-        }
-        if (slot->m_nonRandomHeroId != -1 && !slot->m_generateHero
-                && !slot->m_hasRandomHero)
-            heroId = slot->m_nonRandomHeroId;
-        it = g_game->m_mapHeader.m_heroPlayerSetups.find(heroId);
-        if (it != g_game->m_mapHeader.m_heroPlayerSetups.end()
-                && it->second.m_name.size() != 0)
-            return it->second.m_name.c_str();
-        return g_game->getHero(heroId)->m_name;
+        return g_game->m_heroes[heroId].m_name;
     }
+    int heroId = getHeroInPos(gamePos);
+    if (heroId == -1)
+        return g_generalText->getText(524);
+    if (slot->m_nonRandomHeroId != -1) {
+        if (strlen(slot->m_nonRandomHeroCustomName) != 0)
+            return slot->m_nonRandomHeroCustomName;
+    }
+    if (slot->m_nonRandomHeroId != -1 && !slot->m_generateHero
+            && !slot->m_hasRandomHero)
+        heroId = slot->m_nonRandomHeroId;
+    std::map<int, type_map_hero_info>& setups =
+        g_game->m_mapHeader.m_heroPlayerSetups;
+    std::map<int, type_map_hero_info>::iterator it = setups.find(heroId);
+    if (it != setups.end()
+            && it->second.m_name.size() != 0)
+        return it->second.m_name.c_str();
+    return g_game->m_heroes[heroId].m_name;
 }
 
 // Case-blind prefix search over the filtered list; on a hit the row

@@ -641,7 +641,7 @@ armygrp	?splitSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0
 armygrp	?swap@armyGroup@@QAEXHPAV1@H@Z	100.0000	100.0000	100.0000	0x4ad60	5a0b50472943
 armygrp	?windowHandler@TSplitWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x4a180	069fbfdff31a
 artifact	?_Xran@?$bitset@$0BD@@std@@ABEXXZ	100.0000	100.0000	100.0000	0x4d400	-
-artifact	?initializeArtifactTraitsTable@@YIEXZ	80.5129	80.5129	80.5129	0x4cd50	562fa92196e0
+artifact	?initializeArtifactTraitsTable@@YIEXZ	81.3762	81.3762	81.3762	0x4cd50	cbea397abf1f
 artifact	?makeArtifactComponentMask@@YA?AV?$bitset@$0JA@@std@@IZZ	100.0000	100.0000	100.0000	0x4c830	c2d4204bb619
 artifact	?makeArtifactSlotMask@@YA?AV?$bitset@$0BD@@std@@IZZ	100.0000	100.0000	100.0000	0x4c720	5b3823d02cac
 artifact	__h3cg$artifact$bitset_tidy$Bitset19	0.0000	0.0000	0.0000	0x4d3e0	-
@@ -3223,7 +3223,7 @@ rmg	?clearPlacementMarks@type_object@@QAEXXZ	100.0000	100.0000	100.0000	0x133150
 rmg	?clipRmgBoundaryPoint@@YI?AUTPoint@@ABUTRmgZoneBounds@@U1@1@Z	100.0000	100.0000	100.0000	0x13cac0	9f6a8d239172
 rmg	?connectZones@type_random_map_generator@@QAEXXZ	93.6151	93.6151	93.6151	0x143240	dcb7dbc0bfdd
 rmg	?copy@std@@YIPAUTRmgMapPosition@@PAU2@00@Z	100.0000	100.0000	100.0000	0x14d9e0	-
-rmg	?createGroundConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@PAV?$vector@PAUTRmgMapItem@@V?$allocator@PAUTRmgMapItem@@@std@@@std@@PAV?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@5@@Z	79.1717	80.4347	80.4347	0x141140	c064e53941e9
+rmg	?createGroundConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@PAV?$vector@PAUTRmgMapItem@@V?$allocator@PAUTRmgMapItem@@@std@@@std@@PAV?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@5@@Z	81.8175	81.8175	81.8175	0x141140	29940445411f
 rmg	?createRiver@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	85.9575	85.9575	85.9575	0x148df0	880909bdd29f
 rmg	?createShipyardConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	92.4189	94.8591	94.8591	0x141ad0	fb3b3934c7bc
 rmg	?createSubterraneanGate@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	82.1005	82.1005	82.1005	0x142080	b0bd0cb2060b
@@ -3652,7 +3652,7 @@ singleselectionwindow	?getFileName@TSingleSelectionWindow@@QAEPBDH@Z	100.0000	10
 singleselectionwindow	?getHeader@TSingleSelectionWindow@@QAEHPAD0PAUGameSelectionHeadersStruct@@@Z	100.0000	100.0000	100.0000	0x183170	b095b673bf4f
 singleselectionwindow	?getHeaders@TSingleSelectionWindow@@QAEXPAV?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@@Z	87.0700	87.0700	87.0700	0x182b40	ba94bc70107d
 singleselectionwindow	?getHeroFace@TSingleSelectionWindow@@QAEXHPAVCNetPlayerHandlerPlayer@@@Z	86.4387	86.4387	86.4387	0x18af20	16667d7b8fa6
-singleselectionwindow	?getHeroName@TSingleSelectionWindow@@QAEPBDH@Z	80.5798	80.5798	80.5798	0x18d1f0	a68aaa510f6c
+singleselectionwindow	?getHeroName@TSingleSelectionWindow@@QAEPBDH@Z	100.0000	100.0000	100.0000	0x18d1f0	7fb9e38da28e
 singleselectionwindow	?getMapName@TSingleSelectionWindow@@QAEPBDH@Z	100.0000	100.0000	100.0000	0x184010	f7d1de89a43d
 singleselectionwindow	?getPlayer@CNetPlayerHandler@@QAEPAVCNetPlayerHandlerPlayer@@K@Z	100.0000	100.0000	100.0000	0x177ce0	74378ced80ae
 singleselectionwindow	?getPlayerInPos@CNetPlayerHandler@@QAEPAVCNetPlayerHandlerPlayer@@H@Z	100.0000	100.0000	100.0000	0x177bb0	e7c3adcbb7bb
