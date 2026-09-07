@@ -907,6 +907,28 @@ recovering a helper affects later calls even though that helper itself
 emits no call. It does not justify arbitrary extraction to adjust the
 inliner budget.
 
+### Caller-state rejection before budget testing
+
+`homm3 vc6 predict-inline 0x573670 --trace` now reports the collector gate
+at C2 RVA `0x1a418..0x1a427`. It rejects the candidate when both
+`currentFunctionBody->flags34 & 0x18000 == 0` and
+`callee->flags73 & 0x300 != 0`. The passive hook at `0x1a412` observes
+these values before the original load; it changes no gate input.
+
+In `TSeerHut::doSeerEvent`, body flags are zero and the two dialog helpers
+have flags `0x568` and `0x5c8`. Both fail this gate, while `hasExpired`
+and `getValue` pass. The rejected helpers never reach a budget test, so
+changing their costs or their caller's budget cannot admit them through
+this path. Existing EH-bearing `type_quest::loadFromMap` has body flags
+`0x8000` and passes the gate. These observations support an EH-state
+interpretation; the trace reports the bits and the specific gate, not a
+complete classifier for every compiler flag.
+
+Both traces preserve all 130,401 object bytes outside the timestamp and
+reproduce their selected current function bytes. Source recovery must
+account for the caller's real object lifetimes or a different evidenced
+boundary; an unused object merely forcing an exception frame is not a fix.
+
 ### Live budget inputs from the unchanged compiler body
 
 `homm3 vc6 predict-inline <selector> --trace` records C2's selected caller

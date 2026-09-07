@@ -1,10 +1,11 @@
-/* Passive budget observations for pinned VC6 C2.DLL 12.00.8447.
+/* Passive candidate-state and budget observations for pinned VC6 C2.DLL 12.00.8447.
  * Included only in the temporary SHIM_INLINE_TRACE overlay. Normal builds
  * never select this DLL; the trace command restores the hook-free shim.
  *
  * 0x1995c: ESI -> function body, body[0] -> symbol, symbol+0x18 -> name.
  * 0x19f8c: EDI -> callee symbol; ESP+0x48 budget, +0x34 depth,
  * +0x30 sites remaining, +0x1c owner body. symbol+0x6d is signed cb.
+ * 0x1a412: EDI -> callee symbol before the caller-state eligibility gate.
  * The second hook observes the budget comparison, before possible later
  * rejection. It does NOT claim the final inline decision; inspect output.
  *
@@ -15,6 +16,8 @@
  */
 static void *g_mainReturn;
 static void *g_siteReturn;
+static void *g_candidateReturn;
+static unsigned char **g_currentBodySlot;
 static unsigned long g_root;
 static unsigned long g_seen[8192];
 static unsigned g_seenCount;
@@ -75,6 +78,43 @@ static void __cdecl traceSite(unsigned long *regs)
     SetLastError(lastError);
 }
 
+/* Collector gate at 0x1a418..0x1a427 precedes size/budget checks.
+ * Observe its inputs; passing this one gate does not imply admission. */
+static void __cdecl traceCandidate(unsigned char *sym)
+{
+    HANDLE h;
+    DWORD lastError;
+    unsigned char *body;
+    if (!g_selected) return;
+    lastError = GetLastError();
+    h = logOpen();
+    if (h == INVALID_HANDLE_VALUE) { SetLastError(lastError); return; }
+    body = *g_currentBodySlot;
+    traceSymbol(h, sym);
+    writeString(h, "candidate root="); writeHex(h, g_root);
+    writeString(h, " callee="); writeHex(h, (unsigned long)sym);
+    writeString(h, " body_flags="); writeHex(h, *(unsigned long *)(body+0x34));
+    writeString(h, " callee_flags="); writeHex(h, *(unsigned long *)(sym+0x73));
+    writeString(h, "\n"); CloseHandle(h);
+    SetLastError(lastError);
+}
+
+static void __declspec(naked) candidateHook(void)
+{
+    __asm {
+        pushfd
+        pushad
+        push edi
+        call traceCandidate
+        add esp, 4
+        popad
+        popfd
+        mov ecx, dword ptr [g_currentBodySlot]
+        mov ecx, [ecx]
+        jmp dword ptr [g_candidateReturn]
+    }
+}
+
 static void __declspec(naked) mainHook(void)
 {
     __asm {
@@ -113,13 +153,18 @@ static int installInlineTrace(void)
     static int installed;
     static const unsigned char mainBytes[] = {0x8b,0x06,0x0f,0xbf,0x40,0x6d};
     static const unsigned char siteBytes[] = {0x66,0x8b,0x47,0x6d,0x8b,0x74,0x24,0x48};
+    unsigned char candidateBytes[] = {0x8b,0x0d,0,0,0,0};
     if (installed) return 1;
     if (GetEnvironmentVariableA("HOMM3_VC6_INLINE_TRACE", g_filter,
         sizeof g_filter) >= sizeof g_filter) return 0;
+    g_currentBodySlot = (unsigned char **)((char *)g_real+0xac380);
+    *(unsigned long *)(candidateBytes+2) = (unsigned long)g_currentBodySlot;
+    g_candidateReturn = (char *)g_real+0x1a418;
     g_mainReturn = (char *)g_real+0x19962;
     g_siteReturn = (char *)g_real+0x19f94;
     if (!patchHook(0x1995c, mainHook, mainBytes, sizeof mainBytes)) return 0;
     if (!patchHook(0x19f8c, siteHook, siteBytes, sizeof siteBytes)) return 0;
+    if (!patchHook(0x1a412, candidateHook, candidateBytes, sizeof candidateBytes)) return 0;
     installed = 1;
     return 1;
 }

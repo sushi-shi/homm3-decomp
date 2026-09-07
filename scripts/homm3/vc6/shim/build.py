@@ -462,6 +462,13 @@ def _formatInlineTrace(rows: list[str]) -> str:
         if row.startswith("main "):
             _, address, estimate = row.split()
             lines.extend(["", f"Function: {label(address)} ({estimate})"])
+        elif row.startswith("candidate "):
+            fields = dict(word.split("=", 1) for word in row.split()[1:])
+            allowed = (int(fields["body_flags"], 16) & 0x18000
+                       or not (int(fields["callee_flags"], 16) & 0x300))
+            if not allowed:
+                lines.append(f"Caller-state gate rejects {label(fields['callee'])} "
+                             "before budget testing.")
         elif row.startswith("site "):
             fields = dict(word.split("=", 1) for word in row.split()[1:])
             number += 1

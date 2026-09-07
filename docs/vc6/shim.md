@@ -179,20 +179,24 @@ using the observations. `sym` rows associate process-local addresses with
 compiler names; `main` gives the root function's front-end size estimate;
 `site` gives the root, owner, callee, signed size estimate, remaining budget,
 expansion depth, remaining candidate sites, and running size.
+`candidate` rows record the caller-body and callee-symbol flags before the
+collector's state gate. A failing gate is labelled before-budget rejection;
+a passing gate does not prove admission or expansion.
 After verification, `comparisons.txt` presents the same ordered observations
 with demangled caller/callee signatures and their budgets. It is removed at
 the start of every run, so a failed trace cannot leave an old named report.
 The raw log remains available for checking the process-local symbol mapping.
 
-Two guarded hooks replay whole original instructions:
+Three guarded hooks replay whole original instructions:
 
 | C2 RVA | observation | replayed instructions |
 | --- | --- | --- |
 | 0x1995c | root body in ESI; symbol = body[0] | `mov eax,[esi]; movsx eax,word ptr [eax+0x6d]` |
 | 0x19f8c | callee in EDI; current expansion frame at ESP | `mov ax,[edi+0x6d]; mov esi,[esp+0x48]` |
+| 0x1a412 | callee in EDI; current body from C2 RVA 0xac380 | `mov ecx,[currentFunctionBody]` |
 
 The loaded DLL base owns each address. Expected opcode bytes must agree
-before patching. Both hooks preserve integer registers, flags, and the thread's
+before patching. All hooks preserve integer registers, flags, and the thread's
 last-error value around logging. The name pointer at symbol+0x18 was observed
 in the sample and terrain compiles. Existing inliner evidence identifies the
 signed size estimate at symbol+0x6d. At the second site, ESP+0x48 is budget,

@@ -67,7 +67,7 @@ def _parse_overlay_trace(text: str, symbol: str) -> dict:
         if line.startswith("sym "):
             _, address, name = line.split(" ", 2)
             names[address] = name
-    caller, sites = None, []
+    caller, sites, candidates = None, [], []
     for line in lines:
         if line.startswith("main "):
             _, address, estimate = line.split()
@@ -76,6 +76,16 @@ def _parse_overlay_trace(text: str, symbol: str) -> dict:
             cb = int(estimate.removeprefix("cb="))
             caller = dict(id=address, symbol=symbol, cb=cb,
                           initial_budget=min(35000, max(1000, 2 * cb)))
+        elif line.startswith("candidate "):
+            fields = dict(word.split("=", 1) for word in line.split()[1:])
+            if caller is None or fields["root"] != caller["id"] or fields["callee"] not in names:
+                raise ValueError("inline candidate has no matching caller or symbol")
+            body_flags = int(fields["body_flags"], 16)
+            callee_flags = int(fields["callee_flags"], 16)
+            candidates.append(dict(symbol=names[fields["callee"]],
+                                   body_flags=body_flags, callee_flags=callee_flags,
+                                   state_gate_allows=bool(body_flags & 0x18000)
+                                       or not bool(callee_flags & 0x300)))
         elif line.startswith("site "):
             fields = dict(word.split("=", 1) for word in line.split()[1:])
             if caller is None or fields["root"] != caller["id"]:
@@ -91,7 +101,7 @@ def _parse_overlay_trace(text: str, symbol: str) -> dict:
                               budget_allows=cb <= 40 or budget >= cb))
     if caller is None:
         raise ValueError(f"C2 did not trace {symbol}")
-    return dict(caller=caller, sites=sites)
+    return dict(caller=caller, sites=sites, candidates=candidates)
 
 
 def verify_identity(reference: bytes, traced: bytes) -> dict:
