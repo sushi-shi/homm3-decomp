@@ -310,6 +310,14 @@ TRmgGridPoint type_random_map::getSize()
     return TRmgGridPoint(m_mapWidth, m_mapHeight);
 }
 
+// Complete-only base of the map adapter, exact on the first scored candidate.
+// The derived deleting destructor at 0x532320 and two retail cleanup paths
+// call this retained vptr restoration; Dreamcast has no RMG compiland.
+VA(0x00532350, 0x07)
+TRmgMapAdapterInterface::~TRmgMapAdapterInterface()
+{
+}
+
 // The boundary coordinator constructs both a temporary zone and owned
 // water zones through this same retained body. The final three members are
 // vectors; 0x53d9ae/0x53da0d prove signed-short connection distances.

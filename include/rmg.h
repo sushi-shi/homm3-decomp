@@ -917,7 +917,7 @@ public:
 
 class TRmgMapAdapterInterface {
 public:
-    virtual ~TRmgMapAdapterInterface() {}
+    virtual ~TRmgMapAdapterInterface();
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile) = 0;
     virtual void setOverlay(const TRmgGridPoint& point, int value) = 0;
