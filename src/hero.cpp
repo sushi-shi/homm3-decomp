@@ -6451,60 +6451,23 @@ unsigned char hero::addToBackpack(const type_artifact* artifact, long slot)
 // `prompt` must be a NAMED local: its _Tidy runs AFTER the dialogReturn
 // block, not at the end of the NormalDialog full-expression.
 //
-// 57.88 -> 64.63 (2026-08-20), the same two site pins that took the
-// HeroFn_004DC100 twin 48.77 -> 65.97: `#pragma inline_depth(0)` on
-// `missing.set(artifactId, false)` and on `if (!missing.any())`, because
-// retail keeps bitset<144>::set(size_t, bool) and bitset<144>::any() OUT
-// OF LINE where our CL expanded both. That CORRECTS this note's old
-// verdict, which read the divergence as caller statement mass ("nothing
-// local reaches that") and left the row at 57.88: the extra EH cleanup
-// regions it blamed are DOWNSTREAM of those expansions - each inlined
-// bounds throw builds its own `invalid bitset<N> position` string
-// temporary - so removing the expansions removes the regions.
-// The old note's other claim was half right, and the OTHER half is worth
-// 64.6316 -> 75.1012 (2026-08-20). It said retail leaves bitset<12>'s
-// bounds path out of line at the `assembledCombinations` test - true, but
-// the callee is `_Xran`, not `test`: retail emits `cmp ebx,0xc / jb /
-// call bitset<12>::_Xran` at fn+0x8f0, i.e. `test` INLINE with only its
-// throw out of line. That is why the site pin (which takes `test` itself
-// out of line, and GetLocalPlayerGamePos with it) measured 64.63 ->
-// 59.86 and stays rejected.
-//
-// The lever is DEPTH, not a pragma. VC6's <bitset> defines
-// `bool operator[](size_t _P) const { return (test(_P)); }`, so writing
-// the site as `!player.assembledCombinations[targetCombo]` puts `test` at
-// depth 2 and `_Xran` at depth 3 instead of 1 and 2 - one level past what
-// /Ob2 will expand here - and the call appears with retail's registers.
-// Nothing else about the statement changes.
-// Retail EXPANDS the throw at this function's other two bitset<12> sites
-// (fn+0x9c5 and fn+0xa51, both `cmp ,0xc` followed by an inline
-// out_of_range construction), so those two deliberately stay `.set(...)`.
-//
-// Residual (75.1%), RE-DERIVED FROM TODAY'S BYTES (2026-08-20): the
-// remaining structural row is the FIRST bitset<12> site itself - base
-// EXPANDS the `invalid bitset<N> position` throw at fn+0x104..0x13d
-// (string ctor + logic_error ctor + CxxThrow, one extra EH state, the
-// 27-vs-23 branch surplus) where retail emits `cmp ebx,0xc /
-// lea esi,[edi+0xe8] / jb / mov ecx,esi / call bitset<12>::_Xran`
-// (fn+0xffff..0x10e). Retail expands sites 2 and 3 exactly as we do.
-// The depth ladder is EXHAUSTED here: the site already reads through
-// operator[] (the note above), retail's shape needs _Xran-ONLY out of
-// line (test stays inline), the statement pin takes test and
-// GetLocalPlayerGamePos with it (measured 59.86), and <bitset> has no
-// deeper rung. READ THE QUOTIENT: retail REFUSES the early site and
-// accepts the two later ones - the A9 `budget / sites-remaining`
-// shape - and our two `inline_depth(0)` pins above this site REMOVE
-// candidate sites from that denominator, raising our quotient at site 1
-// past the throw's cost. The pins bought +6.75 and cannot be traded
-// back; the site is priced as bounded until a knob exists that imposes
-// a call WITHOUT shrinking the candidate set. basic_string::_Tidy x3
-// vs x2 is the same story's tail.
-// Release-elided diagnostic tails provide that denominator class but not the
-// needed depth selectivity (2026-08-21): one, two and four dead call arms all
-// regress 75.1012 -> 64.6316 with 28 branches against retail's 23; eight fall
-// to 58.6356. They reprice the whole nested bitset/string surface rather than
-// isolating the first `_Xran`. This carrier therefore closes the denominator
-// hypothesis without solving the per-depth boundary.
+// Residual (MAX 76.3360%, rechecked 2026-09-07): retail keeps the first
+// bitset<12>::_Xran out of line and expands the two later bounds failures.
+// The candidate expands the first throw too, adding an EH state and growing
+// the frame from 0x64 to 0x78. The retained bitset<144> set/any pins reproduce
+// those two retail calls; removing both expands them (64.9514%).
+// Controls on the current TU: reading through a const bitset<12> subscript,
+// either a cast or a named reference, is byte-identical at 76.3360%; direct
+// test() is 72.2875%. Removing both pins with the const read gives 64.5870%.
+// Neither constness nor removing the pins restores the first _Xran boundary.
+// The first write uses the bitset proxy assignment (old control 75.1012 ->
+// 76.3360); the later write stays set(). Earlier site pins on the read also
+// de-inlined its parent accessor and GetLocalPlayerGamePos, losing ground.
+// Earlier discarded release-elided call carriers changed several exception
+// expansions together and supplied no proof of a missing source invariant.
+// DC's older GiveArtifact has no combination-assembly path; it proves only
+// the equipment/backpack and end-check helper boundaries here. The remaining
+// per-site inlining decision needs positive Complete/VC6 evidence.
 VA(0x004e3070, 0x339)  // anchor-global, dc 0xd3de4
 unsigned char hero::giveArtifact(const type_artifact* artifact,
                                  // Before normalization (locals): bAnnounce, bCheckEnd.
@@ -6530,11 +6493,6 @@ unsigned char hero::giveArtifact(const type_artifact* artifact,
 #pragma inline_depth()
                     playerData& player = g_game->m_players[m_owner];
                     if (announce) {
-                        // MEASURED NEGATIVE, do not retry: pinning this
-                        // test to chase the out-of-line bitset<12>::test
-                        // the old note claimed retail keeps costs
-                        // 64.63 -> 59.86 - the statement pin also
-                        // de-inlines GetLocalPlayerGamePos beside it.
                         if (m_owner == g_game->getLocalPlayerGamePos() &&
                             !player.m_assembledCombinations[targetCombo]) {
                             int assembled =
@@ -6551,10 +6509,7 @@ unsigned char hero::giveArtifact(const type_artifact* artifact,
                             heroFn004DBF30(targetCombo, -1);
                         }
                     }
-            // DEPTH LADDER: this ONE bitset write is spelled `[i] = true`
-            // rather than `set(i)`; the other two in this body stay `set`.
-            // 75.1012 -> 76.3360, and a greedy second round finds nothing.
-            player.m_assembledCombinations[targetCombo] = true;
+                    player.m_assembledCombinations[targetCombo] = true;
                 }
             }
         }

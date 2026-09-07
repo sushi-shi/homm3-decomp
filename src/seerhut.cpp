@@ -826,57 +826,45 @@ void type_skill_quest::doProposalDialog(hero* currentHero)
 // Slot 5 presents one primary-skill picture for every positive requirement.
 // The picture class advances from 0x1f with the skill index, while the
 // qualifier packs the displayed value below a high-word one.
-// THE PICTURE LOOP IS A POINTER WALK WITH ITS OWN DOWN-COUNTER (75.8427 ->
-// 76.2136, 2026-09-06).  Retail's tail is `inc esi / dec ebx / jne` with
-// `mov ebx,4` ahead of it and the picture id strength-reduced into
-// `mov edi,0x1f / sub edi,esi / lea edx,[edi+esi]`; an indexed
-// `for (int i = 0; i < 4; ++i)` gives VC6 TWO reductions (0xdf-this and
-// 0xc0-this) and rebuilds the bound as `lea eax,[ecx+esi] / cmp eax,4 / jl`,
-// with no counter at all.  Spelled with the three explicit induction
-// variables the reductions collapse to retail's one and the down-counter
-// appears.  Measured and rejected: the two-variable form that derives the
-// picture id from `skill - required_skills` (65.37) - VC6 needs the id as its
-// own variable to produce the `0x1f - esi` invariant.
-// Residual (76.2136%): semantics and all twelve CFG blocks agree, but retail
-// keeps the GetProgressDialogText return object alive while taking c_str()
-// directly from the returned EAX; this CL invocation reloads the same string
-// slot before the vector loop and consequently chooses a different register
-// schedule.  The counter is the visible cost of that: retail spends EBX on it
-// while ours pools the constant 0 there (`cmp al,bl` against retail's
-// `test al,al`) and spills `remaining` to [ebp-0x14]. Tried and rejected: a named string alone, a bare c_str pointer
-// (destroys the temporary before the loop), a named string plus saved pointer,
-// and the lifetime-extending const reference below. VC6's accepted non-const
-// temporary-reference extension is byte-identical to the const form, so it
-// cannot recover the returned-EAX schedule either. The const form models the
-// shipped lifetime honestly and is retained instead of forcing allocator
-// scaffolding.
+// Residual (96.6180%, 2026-09-07): the resource vector has an inner scope,
+// ending before the lifetime-extended text. This removes the three post-delete
+// zero stores and restores retail's 0x30 frame and EBX loop down-counter
+// (76.2135 -> 94.2360%). Declaring the skill cursor before the vector also
+// restores its initialization schedule (96.6180%). The three-variable walk
+// preserves retail's inc-cursor/dec-count loop and picture-id induction.
+// Controls: indexed i < 4 within the scope gives 82.5169%; a named string
+// instead of the const reference is byte-flat at 94.2360%. Moving the picture
+// resource outside the loop is byte-flat after the cursor-order repair.
+// Remaining: c_str reloads the return slot instead of dereferencing returned
+// EAX, and string destruction uses ECX rather than retail's EAX/ECX pair.
+// The earlier bare c_str pointer destroyed the temporary before the loop and
+// is invalid; mutable/const lifetime-extending references gave the same bytes.
+// This Complete quest has no Dreamcast counterpart to settle the source form.
 // E:\gamedcs\seerhut.cpp
 VA(0x0056dd60, 0xF5)  // anchor-vtable 0x6417c4 slot 5 + dialog picture rows, retail-only
 void type_skill_quest::doProgressDialog()
 {
     const std::string& text = getProgressDialogText();
     const char* textPointer = text.c_str();
-    std::vector<type_dialog_resource> dialogResources;
-    // MAX 76.5169 was measured with the indexed loop written `i != 4` - an
-    // unnamed domain compare that fails the cleanliness floor
-    // (docs/vc6/behavior-catalog.md D24); the pointer walk below is the
-    // best admissible form (76.2135).
-    const signed char* skill = m_requiredSkills;
-    int picture = 0x1f;
-    int remaining = 4;
-    do {
-        if (*skill > 0) {
-            type_dialog_resource resource;
-            resource.m_resource = picture;
-            resource.m_qualifier = 0x10000
-                | static_cast<unsigned short>(*skill);
-            dialogResources.push_back(resource);
-        }
-        ++skill;
-        ++picture;
-        --remaining;
-    } while (remaining);
-    extendedDialog(textPointer, dialogResources, -1, -1, 0);
+    {
+        const signed char* skill = m_requiredSkills;
+        std::vector<type_dialog_resource> dialogResources;
+        int picture = 0x1f;
+        int remaining = 4;
+        do {
+            if (*skill > 0) {
+                type_dialog_resource resource;
+                resource.m_resource = picture;
+                resource.m_qualifier = 0x10000
+                    | static_cast<unsigned short>(*skill);
+                dialogResources.push_back(resource);
+            }
+            ++skill;
+            ++picture;
+            --remaining;
+        } while (remaining);
+        extendedDialog(textPointer, dialogResources, -1, -1, 0);
+    }
 }
 
 // E:\gamedcs\seerhut.cpp

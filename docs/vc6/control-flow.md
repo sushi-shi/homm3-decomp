@@ -636,3 +636,18 @@ retail. Restoring the existing `widget::show` calls and Dreamcast's nested
 address-query/widget-existence checks is byte-neutral. Identical emitted
 operations do not make a flattened helper equivalent for compiler layout;
 restore the proven call before blaming the compiler generation.
+
+## A container scope can free the loop-counter register
+
+`type_skill_quest::doProgressDialog` (0x56dd60) held zero in EBX and spilled
+its four-iteration counter. Retail uses EBX for the counter and deletes the
+resource vector without clearing its three pointers. An inner vector scope,
+ending before the lifetime-extended dialog string, removes those stores and
+restores the 0x30 frame and register counter: 76.2135% becomes 94.2360%.
+Declaring the skill cursor before the vector restores the initialization
+schedule and reaches 96.6180% in the active TU build.
+
+The same scope repair had improved the artifact-quest sibling. Neither
+changes destruction order. An indexed loop within the skill dialog's new
+scope measures 82.5169%; a named string is byte-identical to the reference.
+Returned-string access and cleanup registers remain different from retail.
