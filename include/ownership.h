@@ -5,33 +5,35 @@
 template<class T>
 class TAutoArrayPtr {
 public:
-    TAutoArrayPtr(T* ptr = 0) : _m_bOwns(ptr != 0), _m_ptr(ptr) {}
+    TAutoArrayPtr(T* ptr = 0) : m_owns(ptr != 0), m_ptr(ptr) {}
     TAutoArrayPtr(const TAutoArrayPtr& rhs)
-        : _m_bOwns(rhs._m_bOwns), _m_ptr(rhs._m_ptr)
+        : m_owns(rhs.m_owns), m_ptr(rhs.m_ptr)
     {
-        rhs._m_bOwns = 0;
+        rhs.m_owns = 0;
     }
-    ~TAutoArrayPtr() { if (_m_bOwns) delete [] _m_ptr; }
+    ~TAutoArrayPtr() { if (m_owns) delete [] m_ptr; }
 
     TAutoArrayPtr& operator=(const TAutoArrayPtr& rhs)
     {
-        if (_m_ptr != rhs._m_ptr) {
-            if (_m_bOwns)
-                delete [] _m_ptr;
-            _m_bOwns = rhs._m_bOwns;
-        } else if (rhs._m_bOwns) {
-            _m_bOwns = 1;
+        if (m_ptr != rhs.m_ptr) {
+            if (m_owns)
+                delete [] m_ptr;
+            m_owns = rhs.m_owns;
+        } else if (rhs.m_owns) {
+            m_owns = 1;
         }
-        _m_ptr = rhs._m_ptr;
-        rhs._m_bOwns = 0;
+        m_ptr = rhs.m_ptr;
+        rhs.m_owns = 0;
         return *this;
     }
 
-    T* get() const { return _m_ptr; }
+    T* get() const { return m_ptr; }
 
 private:
-    mutable unsigned char _m_bOwns;
-    T* _m_ptr;
+    // Before normalization: _m_bOwns.
+    mutable unsigned char m_owns;
+    // Before normalization: _m_ptr.
+    T* m_ptr;
 };
 
 // Scalar twin of TAutoArrayPtr. ResourceManager's temporary 24-bit bitmap
@@ -40,43 +42,47 @@ private:
 template<class T>
 class TAutoPtr {
 public:
-    TAutoPtr(T* ptr = 0) : _m_bOwns(ptr != 0), _m_ptr(ptr) {}
+    TAutoPtr(T* ptr = 0) : m_owns(ptr != 0), m_ptr(ptr) {}
     TAutoPtr(const TAutoPtr& rhs)
-        : _m_bOwns(rhs._m_bOwns), _m_ptr(rhs._m_ptr)
+        : m_owns(rhs.m_owns), m_ptr(rhs.m_ptr)
     {
-        rhs._m_bOwns = 0;
+        rhs.m_owns = 0;
     }
-    ~TAutoPtr() { if (_m_bOwns) delete _m_ptr; }
+    ~TAutoPtr() { if (m_owns) delete m_ptr; }
 
-    T* get() const { return _m_ptr; }
-    T* operator->() const { return _m_ptr; }
+    T* get() const { return m_ptr; }
+    T* operator->() const { return m_ptr; }
 
 private:
-    mutable unsigned char _m_bOwns;
-    T* _m_ptr;
+    // Before normalization: _m_bOwns.
+    mutable unsigned char m_owns;
+    // Before normalization: _m_ptr.
+    T* m_ptr;
 };
 
 template<class T>
 class TResourcePtr {
 public:
-    TResourcePtr(T* ptr = 0) : _m_bOwns(ptr != 0), _m_ptr(ptr) {}
+    TResourcePtr(T* ptr = 0) : m_owns(ptr != 0), m_ptr(ptr) {}
     TResourcePtr(const TResourcePtr& rhs)
-        : _m_bOwns(rhs._m_bOwns), _m_ptr(rhs._m_ptr)
+        : m_owns(rhs.m_owns), m_ptr(rhs.m_ptr)
     {
-        rhs._m_bOwns = 0;
+        rhs.m_owns = 0;
     }
     ~TResourcePtr()
     {
-        if (_m_bOwns && _m_ptr)
-            _m_ptr->Dispose();
+        if (m_owns && m_ptr)
+            m_ptr->dispose();
     }
 
-    T* get() const { return _m_ptr; }
-    T* operator->() const { return _m_ptr; }
+    T* get() const { return m_ptr; }
+    T* operator->() const { return m_ptr; }
 
 private:
-    mutable unsigned char _m_bOwns;
-    T* _m_ptr;
+    // Before normalization: _m_bOwns.
+    mutable unsigned char m_owns;
+    // Before normalization: _m_ptr.
+    T* m_ptr;
 };
 
 // Retail ResourceManager's font-stream helper proves a second, pointer-only
@@ -87,17 +93,18 @@ private:
 template<class T>
 class TScopedResourcePtr {
 public:
-    TScopedResourcePtr(T* ptr = 0) : _m_ptr(ptr) {}
+    TScopedResourcePtr(T* ptr = 0) : m_ptr(ptr) {}
     ~TScopedResourcePtr()
     {
-        if (_m_ptr)
-            _m_ptr->Dispose();
+        if (m_ptr)
+            m_ptr->dispose();
     }
 
-    T* get() const { return _m_ptr; }
+    T* get() const { return m_ptr; }
 
 private:
-    T* _m_ptr;
+    // Before normalization: _m_ptr.
+    T* m_ptr;
 };
 
 #endif

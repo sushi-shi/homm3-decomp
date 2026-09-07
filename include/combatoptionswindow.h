@@ -67,36 +67,48 @@ public:
         CREATURE_INFO_LEVEL_COMPACT = 2
     };
 
-    unsigned char bPrefsChanged;  // +0x4c
-    char pad_4d[3];
-    textWidget* RolloverWidget;   // +0x50
+    // Before normalization: bPrefsChanged.
+    unsigned char m_prefsChanged;  // +0x4c
+    // Before normalization: pad_4d.
+    // The preceding byte field and following four-byte field establish
+    // this alignment gap; the reference layout retains the same boundary.
+    char m_paddingBeforeRolloverWidget[3];
+    // Before normalization: RolloverWidget.
+    textWidget* m_rolloverWidget;   // +0x50
 
     TCombatOptionsWindow();
     virtual ~TCombatOptionsWindow();
     int convertID2HelpID(int id) const;
-    void DoModal();
+    // Before normalization (function): TCombatOptionsWindow::DoModal.
+    void doModal();
     // Retail emits no out-of-line body for any of the four: /Ob2 expands
     // them at every call site, and the free handler is one of those sites,
     // so they cannot be private. HighlightCombatSpeed's expansion is
     // register-visible - the inlined `this` is the EDI retail holds across
     // the whole speed sweep, where a direct global load reloads per call.
-    void HighlightCombatSpeed();
-    void HighlightGrid();
-    void HighlightMovementShadow();
-    void HighlightMouseShadow();
+    // Before normalization (function): TCombatOptionsWindow::HighlightCombatSpeed.
+    void highlightCombatSpeed();
+    // Before normalization (function): TCombatOptionsWindow::HighlightGrid.
+    void highlightGrid();
+    // Before normalization (function): TCombatOptionsWindow::HighlightMovementShadow.
+    void highlightMovementShadow();
+    // Before normalization (function): TCombatOptionsWindow::HighlightMouseShadow.
+    void highlightMouseShadow();
 };
 SIZE(TCombatOptionsWindow, 0x54);
 
 // Retail /Gr passes the message by reference in ECX, matching DoDialog's
 // byte-proven TDialogHandler type.
-int CombatOptionsWindowHandler(message& msg);
+// Before normalization (function): CombatOptionsWindowHandler.
+int combatOptionsWindowHandler(message& msg);
 
 // The rollover/right-click pairs this dialog's help path indexes with
 // convertID2HelpID's answer. Stride 8 and base 0x6a55ac are byte-proven by
 // the handler's `mov ecx,[8*eax + 0x6a55ac]`; the ID mapping reaches 38,
 // so at least 39 rows exist (the next initialised datum is 0x6a5704, which
 // leaves room for 43). Definition + DATA claim in src/combatoptionswindow.cpp.
-extern THelpText gCombatOptionsHelp[39];
+// Before normalization: gCombatOptionsHelp.
+extern THelpText g_combatOptionsHelp[39];
 
 // The "Default" button's callee is misc.obj's SetDefaultCombatOptions
 // (declared in misc.h, defined in src/misc.cpp) - NOT a new function: its

@@ -29,7 +29,8 @@ public:
 
 // The free-function overload the give path calls (remote.h:438); declared here
 // to avoid pulling remote.h's DirectPlay closure into this TU.
-int TransmitRemoteData(CNetMsg* pMsg, int toWho, bool compressMsg,
+// Before normalization (locals): pMsg.
+int transmitRemoteData(CNetMsg* msg, int toWho, bool compressMsg,
                        bool guaranteed);
 
 // The gMarketWindow selector DoMarket dispatches on: the five dialog panes in
@@ -57,7 +58,7 @@ enum EMarketSource {
 // carries the retail address claim (0x6a5e64). Declared here (consumer-side
 // plain extern, the ai_player.h / advmgr.h pattern) for the resource-trade
 // widgets, whose sell/buy id ranges both fold onto this array.
-extern const char* gResourceNames[7];
+extern const char* g_resourceNames[7];
 
 enum EMarketWidgetId {
     MARKET_LEFT_PANEL_ID = 5,

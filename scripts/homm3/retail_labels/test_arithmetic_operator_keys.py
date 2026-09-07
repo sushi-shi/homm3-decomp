@@ -1,4 +1,4 @@
-"""Arithmetic claims must bind by operator and owner, even at equal sizes."""
+"""Arithmetic and ordering claims must bind by operator and owner, even at equal sizes."""
 
 import tempfile
 import unittest
@@ -19,6 +19,8 @@ OPERATORS = (
      "??H@YI?AUTPoint@@U0@UTRmgVector@@@Z", "operator_plus"),
     ("TRmgVector operator-(TPoint left, TPoint right)",
      "??G@YI?AUTRmgVector@@UTPoint@@0@Z", "operator_minus"),
+    ("bool operator<(const TRmgGridPoint& left, const TRmgGridPoint& right)",
+     "??M@YI_NABUTRmgGridPoint@@0@Z", "operator_less"),
 )
 
 
@@ -63,14 +65,18 @@ class ArithmeticOperatorKeysTest(unittest.TestCase):
         for decl in (
             "Vector& Vector::operator+=(Vector right)",
             "Vector& Vector::operator++()",
+            "bool Vector::operator<=(const Vector& right) const",
+            "Vector operator<<(Vector left, int shift)",
             "bool Vector::operator==(Vector right) const",
             "Vector vector<int>::operator+(Vector right)",
             "Vector ns::vector<int>::operator*(int scale)",
         ):
-            self.assertIsNone(source.ARITHMETIC_OPERATOR_RE.search(decl), decl)
+            self.assertIsNone(source.VALUE_OPERATOR_RE.search(decl), decl)
         for symbol in (
             "??YVector@@QAEAAV0@ABV0@@Z",  # +=
             "??EVector@@QAEAAV0@XZ",      # ++
+            "??NVector@@QBE_NABV0@@Z",    # <=
+            "??6@YI?AVVector@@V0@H@Z",    # <<
             "??H?$vector@H@std@@QAEHH@Z", # template owner
         ):
             self.assertIsNone(source._demangle_key(symbol), symbol)

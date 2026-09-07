@@ -21,14 +21,16 @@ enum ESpellTargetFlags {
     SPELL_TARGET_MARK_AREA = 0x280
 };
 
-unsigned char SpellTargetsASingleArmy(int spell, int sslevel);
-unsigned char InitializeSpellTraitsTable();
+unsigned char spellTargetsASingleArmy(int spell, int sslevel);
+// Before normalization (function): InitializeSpellTraitsTable.
+unsigned char initializeSpellTraitsTable();
 
 // Mutable implementation storage filled from sptraits.txt. The public
 // akSpellTraits pointer/reference cell is at 0x687f58; retail writes this
 // adjacent 81*136-byte backing array directly. Name is provisional because
 // only the public DC array name survives.
-extern SSpellTraits aSpellTraitsImp[81];
+// Before normalization: aSpellTraitsImp.
+extern SSpellTraits g_spellTraitsImp[81];
 
 namespace {
 
@@ -36,13 +38,14 @@ namespace {
 // inline representatives; spelldefs' lazy static arrays are its only storage.
 class TAutoStrPtr {
 public:
-    TAutoStrPtr() : pStr(0) {}
-    ~TAutoStrPtr() { delete[] pStr; }
-    void set(char* value) { pStr = value; }
-    char* get() const { return pStr; }
+    TAutoStrPtr() : m_str(0) {}
+    ~TAutoStrPtr() { delete[] m_str; }
+    void set(char* value) { m_str = value; }
+    char* get() const { return m_str; }
 
 private:
-    char* pStr;
+    // Before normalization: pStr.
+    char* m_str;
 };
 
 }

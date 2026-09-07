@@ -19,7 +19,8 @@
 #include "viewarmywindow.h"
 #include "winmgr.h"
 
-static const TCreatureType giDeathCreature[145] = {
+// Before normalization: giDeathCreature.
+static const TCreatureType g_deathCreature[145] = {
     CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
     CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
     CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
@@ -52,25 +53,31 @@ static const TCreatureType giDeathCreature[145] = {
 };
 
 // Complete adds the nineteenth SoD equipment slot to DC's 18-pair table.
-static const long slot_definitions[19][2] = {
+// Before normalization: slot_definitions.
+static const long g_slotDefinitions[19][2] = {
     {143, 18}, {202, 230}, {143, 68}, {17, 57}, {196, 172},
     {143, 119}, {65, 57}, {244, 172}, {149, 283}, {17, 131},
     {33, 181}, {49, 232}, {65, 283}, {198, 18}, {244, 18},
     {244, 64}, {244, 110}, {244, 299}, {15, 283}
 };
 
-static const long row_start[5][2] = {
+// Before normalization: row_start.
+static const long g_rowStart[5][2] = {
     {314, 50}, {314, 120}, {314, 190}, {314, 260}, {395, 330}
 };
-static const long row_size[5] = {5, 5, 5, 5, 2};
+// Before normalization: row_size.
+static const long g_rowSize[5] = {5, 5, 5, 5, 2};
 
-static const long const_creature_sources[2][2] = {
+// Before normalization: const_creature_sources.
+static const long g_constCreatureSources[2][2] = {
     {45, 109}, {128, 305}
 };
-static const long const_source_sizes[2][2] = {
+// Before normalization: const_source_sizes.
+static const long g_constSourceSizes[2][2] = {
     {3, 2}, {1, 1}
 };
-static const long const_creature_offerings[2][2] = {
+// Before normalization: const_creature_offerings.
+static const long g_constCreatureOfferings[2][2] = {
     {334, 109}, {417, 305}
 };
 
@@ -92,7 +99,7 @@ void type_doll_slot_widget::type_doll_slot_widget(const type_doll_slot_definitio
 
 // E:\gamedcs\sacrifice_window.cpp:178
 DC_ONLY(0x123f88, 0x28)
-unsigned char type_doll_slot_widget::handle_click(unsigned char down_click, unsigned char right_click)
+unsigned char type_doll_slot_widget::handleClick(unsigned char down_click, unsigned char right_click)
 {
     // @stub
 }
@@ -106,7 +113,7 @@ void type_backpack_slot_widget::type_backpack_slot_widget(const type_icon_defini
 
 // E:\gamedcs\sacrifice_window.cpp:213
 DC_ONLY(0x124028, 0x28)
-unsigned char type_backpack_slot_widget::handle_click(unsigned char down_click, unsigned char right_click)
+unsigned char type_backpack_slot_widget::handleClick(unsigned char down_click, unsigned char right_click)
 {
     // @stub
 }
@@ -120,7 +127,7 @@ void type_artifact_offering_widget::type_artifact_offering_widget(long new_x, lo
 
 // E:\gamedcs\sacrifice_window.cpp:243
 DC_ONLY(0x1240c4, 0x28)
-unsigned char type_artifact_offering_widget::handle_click(unsigned char down_click, unsigned char right_click)
+unsigned char type_artifact_offering_widget::handleClick(unsigned char down_click, unsigned char right_click)
 {
     // @stub
 }
@@ -134,7 +141,7 @@ void type_army_slot_widget::type_army_slot_widget(long new_x, long new_y, long n
 
 // E:\gamedcs\sacrifice_window.cpp:272
 DC_ONLY(0x12416c, 0x30)
-unsigned char type_army_slot_widget::handle_click(unsigned char down_click, unsigned char right_click)
+unsigned char type_army_slot_widget::handleClick(unsigned char down_click, unsigned char right_click)
 {
     // @stub
 }
@@ -148,21 +155,21 @@ void type_sacrifice_window::type_sacrifice_window(hero* new_hero, int cur_player
 
 // E:\gamedcs\sacrifice_window.cpp:360
 DC_ONLY(0x1246b8, 0x7A8)
-void type_sacrifice_window::create_artifact_widgets(long* widget_id, int cur_player)
+void type_sacrifice_window::createArtifactWidgets(long* widget_id, int cur_player)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:536
 DC_ONLY(0x124e60, 0x76A)
-void type_sacrifice_window::create_creature_widgets(long* widget_id, int cur_player)
+void type_sacrifice_window::createCreatureWidgets(long* widget_id, int cur_player)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:699
 DC_ONLY(0x1255cc, 0x258)
-long type_sacrifice_window::create_creature_icons(long icon_x, long icon_y, long columns, long rows, long item_number, long* widget_id, iconWidget** icon_widgets, iconWidget** selection_widgets, textWidget** text_widgets, unsigned char left_pane)
+long type_sacrifice_window::createCreatureIcons(long icon_x, long icon_y, long columns, long rows, long item_number, long* widget_id, iconWidget** icon_widgets, iconWidget** selection_widgets, textWidget** text_widgets, unsigned char left_pane)
 {
     // @stub
 }
@@ -176,161 +183,161 @@ void type_sacrifice_window::~type_sacrifice_window()
 
 // E:\gamedcs\sacrifice_window.cpp:760
 DC_ONLY(0x1258ac, 0xEC)
-std::basic_string<char,std::char_traits<char>,std::allocator<char> convert_with_commas(__$ReturnUdt, long value)
+std::basic_string<char,std::char_traits<char>,std::allocator<char> convertWithCommas(__$ReturnUdt, long value)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:784
 DC_ONLY(0x125998, 0xB2)
-void type_sacrifice_window::update_experience()
+void type_sacrifice_window::updateExperience()
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:800
 DC_ONLY(0x125a4c, 0x5E)
-void update_artifact_widget(iconWidget* slot_widget, type_artifact artifact)
+void updateArtifactWidget(iconWidget* slot_widget, type_artifact artifact)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:821
 DC_ONLY(0x125aac, 0x90)
-void update_offering(iconWidget* artifact_widget, textWidget* value_widget, const type_artifact_offering* offering)
+void updateOffering(iconWidget* artifact_widget, textWidget* value_widget, const type_artifact_offering* offering)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:841
 DC_ONLY(0x125b3c, 0xF6)
-void type_sacrifice_window::update_slot(TArtifactSlot slot)
+void type_sacrifice_window::updateSlot(TArtifactSlot slot)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:865
 DC_ONLY(0x125c34, 0x2A)
-void type_sacrifice_window::update_all_slots()
+void type_sacrifice_window::updateAllSlots()
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:880
 DC_ONLY(0x125c60, 0x17E)
-void type_sacrifice_window::set_artifact_mode()
+void type_sacrifice_window::setArtifactMode()
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:914
 DC_ONLY(0x125de0, 0x28)
-long sacrifice_value(TCreatureType creature)
+long sacrificeValue(TCreatureType creature)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:924
 DC_ONLY(0x125e08, 0x25A)
-void type_sacrifice_window::update_creature_offering(type_creature_offering* creature)
+void type_sacrifice_window::updateCreatureOffering(type_creature_offering* creature)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:990
 DC_ONLY(0x126064, 0x180)
-void type_sacrifice_window::set_creature_mode()
+void type_sacrifice_window::setCreatureMode()
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1036
 DC_ONLY(0x1261e4, 0x70)
-void type_sacrifice_window::pick_up_artifact(type_artifact artifact, TArtifactSlot slot, unsigned char new_artifact)
+void type_sacrifice_window::pickUpArtifact(type_artifact artifact, TArtifactSlot slot, unsigned char new_artifact)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1053
 DC_ONLY(0x126254, 0x90)
-void type_sacrifice_window::put_down_artifact(unsigned char change_experience)
+void type_sacrifice_window::putDownArtifact(unsigned char change_experience)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1071
 DC_ONLY(0x1262e4, 0x13A)
-void type_sacrifice_window::artifact_click(TArtifactSlot slot, unsigned char right_click)
+void type_sacrifice_window::artifactClick(TArtifactSlot slot, unsigned char right_click)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1127
 DC_ONLY(0x126420, 0xBA)
-void type_sacrifice_window::update_backpack()
+void type_sacrifice_window::updateBackpack()
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1150
 DC_ONLY(0x1264dc, 0xDC)
-void type_sacrifice_window::backpack_click(long slot, unsigned char right_click)
+void type_sacrifice_window::backpackClick(long slot, unsigned char right_click)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1189
 DC_ONLY(0x1265b8, 0x88)
-void type_sacrifice_window::update_artifact_offering(long slot)
+void type_sacrifice_window::updateArtifactOffering(long slot)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1200
 DC_ONLY(0x126640, 0xDC)
-void type_sacrifice_window::offering_click(long slot, unsigned char right_click)
+void type_sacrifice_window::offeringClick(long slot, unsigned char right_click)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1236
 DC_ONLY(0x12671c, 0x90)
-int type_sacrifice_window::scroll_backpack_left(message* msg)
+int type_sacrifice_window::scrollBackpackLeft(message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1262
 DC_ONLY(0x1267ac, 0x6E)
-int type_sacrifice_window::scroll_backpack_right(message* msg)
+int type_sacrifice_window::scrollBackpackRight(message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1289
 DC_ONLY(0x12681c, 0x88)
-unsigned char type_sacrifice_window::add_artifact(type_artifact artifact, TArtifactSlot source)
+unsigned char type_sacrifice_window::addArtifact(type_artifact artifact, TArtifactSlot source)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1310
 DC_ONLY(0x1268a4, 0xA0)
-void type_sacrifice_window::empty_backpack()
+void type_sacrifice_window::emptyBackpack()
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1338
 DC_ONLY(0x126944, 0x68)
-int type_sacrifice_window::empty_backpack(message* msg)
+int type_sacrifice_window::emptyBackpack(message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1365
 DC_ONLY(0x1269ac, 0xC4)
-int type_sacrifice_window::all_artifacts(message* msg)
+int type_sacrifice_window::allArtifacts(message* msg)
 {
     // @stub
 }
@@ -344,14 +351,14 @@ int type_sacrifice_window::sacrifice(message* msg)
 
 // E:\gamedcs\sacrifice_window.cpp:1472
 DC_ONLY(0x126c5c, 0x66)
-int type_sacrifice_window::sacrifice_creatures(message* msg)
+int type_sacrifice_window::sacrificeCreatures(message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1499
 DC_ONLY(0x126cc4, 0x5A)
-void type_sacrifice_window::return_artifact(const type_artifact_offering* artifact)
+void type_sacrifice_window::returnArtifact(const type_artifact_offering* artifact)
 {
     // @stub
 }
@@ -365,56 +372,56 @@ void type_sacrifice_window::clear()
 
 // E:\gamedcs\sacrifice_window.cpp:1544
 DC_ONLY(0x126d98, 0x8A)
-int type_sacrifice_window::exit_click(message* msg)
+int type_sacrifice_window::exitClick(message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1572
 DC_ONLY(0x126e24, 0xB2)
-void type_sacrifice_window::set_creature_sacrifice(long slot, long new_amount)
+void type_sacrifice_window::setCreatureSacrifice(long slot, long new_amount)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1599
 DC_ONLY(0x126ed8, 0x54)
-long type_sacrifice_window::get_max_amount(long slot)
+long type_sacrifice_window::getMaxAmount(long slot)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1626
 DC_ONLY(0x126f2c, 0xBE)
-int type_sacrifice_window::all_creatures(message* msg)
+int type_sacrifice_window::allCreatures(message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1663
 DC_ONLY(0x126fec, 0x78)
-int type_sacrifice_window::max_creatures(message* msg)
+int type_sacrifice_window::maxCreatures(message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1692
 DC_ONLY(0x127064, 0x8C)
-int type_sacrifice_window::sacrifice_artifacts(message* msg)
+int type_sacrifice_window::sacrificeArtifacts(message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1721
 DC_ONLY(0x1270f0, 0x29E)
-void type_sacrifice_window::creature_click(long slot, unsigned char right_click, unsigned char left_pane)
+void type_sacrifice_window::creatureClick(long slot, unsigned char right_click, unsigned char left_pane)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1796
 DC_ONLY(0x127390, 0x74)
-void type_sacrifice_window::creature_slider_change(int state, heroWindow* parent_window)
+void type_sacrifice_window::creatureSliderChange(int state, heroWindow* parent_window)
 {
     // @stub
 }
@@ -427,14 +434,14 @@ void type_sacrifice_window::creature_slider_change(int state, heroWindow* parent
 // into both arms. Blocked only on naming those two helpers - neither has a
 // call edge that fixes which roster entry it is.
 DC_ONLY(0x127404, 0x38)
-void type_sacrifice_window::DoModal(unsigned char fadeIn)
+void type_sacrifice_window::doModal(unsigned char fadeIn)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1830
 DC_ONLY(0x12743c, 0x48)
-void type_sacrifice_window::handle_widget_hover(widget* current_widget)
+void type_sacrifice_window::handleWidgetHover(widget* current_widget)
 {
     // @stub
 }
@@ -444,14 +451,14 @@ void type_sacrifice_window::handle_widget_hover(widget* current_widget)
 // transformer-slot rows is ExitDialog, not this. WindowHandler has no retail
 // row of its own in this bracket; ExitDialog is reconstructed below.
 DC_ONLY(0x127484, 0x36)
-int type_sacrifice_window::WindowHandler(message* msg)
+int type_sacrifice_window::windowHandler(message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1859
 DC_ONLY(0x1274bc, 0x38)
-int type_sacrifice_window::ExitDialog(message* msg)
+int type_sacrifice_window::exitDialog(message* msg)
 {
     // @stub
 }
@@ -465,7 +472,7 @@ void type_transformer_slot::type_transformer_slot(long new_x, long new_y, long n
 
 // E:\gamedcs\sacrifice_window.cpp:1900
 DC_ONLY(0x127598, 0x26)
-unsigned char type_transformer_slot::handle_click(unsigned char down_click, unsigned char right_click)
+unsigned char type_transformer_slot::handleClick(unsigned char down_click, unsigned char right_click)
 {
     // @stub
 }
@@ -493,7 +500,7 @@ void type_skeleton_window::unselect()
 
 // E:\gamedcs\sacrifice_window.cpp:2157
 DC_ONLY(0x127acc, 0x9C)
-void type_skeleton_window::update_buttons()
+void type_skeleton_window::updateButtons()
 {
     // @stub
 }
@@ -507,56 +514,56 @@ void type_skeleton_window::update(long group, long index)
 
 // E:\gamedcs\sacrifice_window.cpp:2216
 DC_ONLY(0x127e50, 0x1F6)
-void type_skeleton_window::creature_click(long side, long slot, unsigned char right_click)
+void type_skeleton_window::creatureClick(long side, long slot, unsigned char right_click)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2281
 DC_ONLY(0x128048, 0x36)
-int type_skeleton_window::WindowHandler(message* msg)
+int type_skeleton_window::windowHandler(message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2293
 DC_ONLY(0x128080, 0x16)
-int type_skeleton_window::ExitDialog(message* msg)
+int type_skeleton_window::exitDialog(message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2306
 DC_ONLY(0x128098, 0x48)
-void type_skeleton_window::handle_widget_hover(widget* current_widget)
+void type_skeleton_window::handleWidgetHover(widget* current_widget)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2326
 DC_ONLY(0x1280e0, 0x1CE)
-void type_skeleton_window::create_creature_icons(long icon_x, long icon_y, long columns, long rows, long group_number, long item_number, long* widget_id, iconWidget** icon_widgets, iconWidget** selection_widgets, textWidget** text_widgets)
+void type_skeleton_window::createCreatureIcons(long icon_x, long icon_y, long columns, long rows, long group_number, long item_number, long* widget_id, iconWidget** icon_widgets, iconWidget** selection_widgets, textWidget** text_widgets)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2385
 DC_ONLY(0x1282b0, 0x5E)
-void move_all_armies(armyGroup* source, armyGroup* dest)
+void moveAllArmies(armyGroup* source, armyGroup* dest)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2407
 DC_ONLY(0x128310, 0x9A)
-int type_skeleton_window::all_creatures(message* msg)
+int type_skeleton_window::allCreatures(message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2441
 DC_ONLY(0x1283ac, 0xBC)
-int type_skeleton_window::exit_click(message* msg)
+int type_skeleton_window::exitClick(message* msg)
 {
     // @stub
 }
@@ -577,7 +584,7 @@ void widget::clear_hover_widget()
 
 // E:\gamedcs\slider.h:104
 DC_ONLY(0x1285a8, 0x8)
-int slider::get_maximum()
+int slider::getMaximum()
 {
     // @stub
 }
@@ -1546,14 +1553,16 @@ void std::__destroy_aux()
 // type_artifact stores the retail id as an int while the source interface to
 // get_backpack_error keeps the CodeView TArtifact enum. The union is the
 // established in-tree representation bridge and compiles to no code.
-inline TArtifact artifact_from_int(int value)
+inline TArtifact artifactFromInt(int value)
 {
     union {
-        int integer;
-        TArtifact artifact;
+        // Before normalization: integer.
+        int m_integer;
+        // Before normalization: artifact.
+        TArtifact m_artifact;
     } converted;
-    converted.integer = value;
-    return converted.artifact;
+    converted.m_integer = value;
+    return converted.m_artifact;
 }
 
 // E:\gamedcs\sacrifice_window.cpp:125
@@ -1564,29 +1573,30 @@ VA(0x0055fc30, 0xab)  // retained public helper + dc name/order, dc 0x123e8c
 void type_artifact_offering::set(const type_artifact* artifact, long slot,
                                  const hero* owner)
 {
-    long artifact_class =
-        akArtifactTraits[artifact->artifactId].artifactClass;
-    artifactId = artifact->artifactId;
-    extra = artifact->extra;
-    source = slot;
-    value = 0;
+    // Before normalization (locals): artifact_class.
+    long artifactClass =
+        g_artifactTraits[artifact->m_artifactId].m_artifactClass;
+    m_artifactId = artifact->m_artifactId;
+    m_extra = artifact->m_extra;
+    m_source = slot;
+    m_value = 0;
 
-    switch (artifact_class) {
+    switch (artifactClass) {
     case SACRIFICE_ARTIFACT_CLASS_TREASURE:
-        value = 1000;
+        m_value = 1000;
         break;
     case SACRIFICE_ARTIFACT_CLASS_MINOR:
-        value = 1500;
+        m_value = 1500;
         break;
     case SACRIFICE_ARTIFACT_CLASS_MAJOR:
-        value = 3000;
+        m_value = 3000;
         break;
     case SACRIFICE_ARTIFACT_CLASS_RELIC:
-        value = 6000;
+        m_value = 6000;
         break;
     }
-    value = static_cast<long>(
-        value * owner->GetExperienceBonusFactor());
+    m_value = static_cast<long>(
+        m_value * owner->getExperienceBonusFactor());
 }
 
 // The window member takes the ordinary empty-artifact construction. The
@@ -1606,30 +1616,32 @@ inline type_artifact_offering::type_artifact_offering(TArtifact artifact)
 // All Complete calls are expanded into the artifact widget builder.
 inline type_doll_slot_widget::type_doll_slot_widget(
     const type_doll_slot_definition& def, long id)
-    : iconWidget(def.x, def.y, def.width, def.height, id, def.image,
+    : iconWidget(def.m_x, def.m_y, def.m_width, def.m_height, id, def.m_image,
                  0, 0, 0, 0, 16)
 {
-    slot = def.slot;
+    m_slot = def.m_slot;
 }
 
 // E:\gamedcs\sacrifice_window.cpp:204
 // All Complete calls are expanded into the artifact widget builder.
 inline type_backpack_slot_widget::type_backpack_slot_widget(
-    const type_icon_definition& def, long new_slot, long id)
-    : iconWidget(def.x, def.y, def.width, def.height, id, def.image,
+    // Before normalization (locals): new_slot.
+    const type_icon_definition& def, long newSlot, long id)
+    : iconWidget(def.m_x, def.m_y, def.m_width, def.m_height, id, def.m_image,
                  0, 0, 0, 0, 16)
 {
-    slot = new_slot;
+    m_slot = newSlot;
 }
 
 // E:\gamedcs\sacrifice_window.cpp:235
 // All Complete calls are expanded into the artifact widget builder.
 inline type_artifact_offering_widget::type_artifact_offering_widget(
-    long x, long y, long width, long height, long new_item_number,
+    // Before normalization (locals): new_item_number.
+    long x, long y, long width, long height, long newItemNumber,
     long id, const char* image)
     : iconWidget(x, y, width, height, id, image, 0, 0, 0, 0, 16)
 {
-    item_number = new_item_number;
+    m_itemNumber = newItemNumber;
 }
 
 // E:\gamedcs\sacrifice_window.cpp:178
@@ -1637,12 +1649,13 @@ inline type_artifact_offering_widget::type_artifact_offering_widget(
 // Dreamcast roster's own order (doll, backpack, offering, army), same 0x26
 // body shape, and forwarding to artifact_click - the equipped-slot handler.
 VA(0x0055fce0, 0x26)  // linkorder + iconWidget parent/+0x48 read, dc 0x123f88
-unsigned char type_doll_slot_widget::handle_click(
-    unsigned char down_click, unsigned char right_click)
+unsigned char type_doll_slot_widget::handleClick(
+    // Before normalization (locals): down_click, right_click.
+    unsigned char downClick, unsigned char rightClick)
 {
-    if (down_click) {
-        static_cast<type_sacrifice_window*>(parentWindow)->artifact_click(
-            slot, right_click);
+    if (downClick) {
+        static_cast<type_sacrifice_window*>(m_parentWindow)->artifactClick(
+            m_slot, rightClick);
         return 1;
     }
     return 0;
@@ -1652,12 +1665,13 @@ unsigned char type_doll_slot_widget::handle_click(
 // retail body reads iconWidget's parent at +4 and this class's slot at +0x48.
 // E:\gamedcs\sacrifice_window.cpp:213
 VA(0x0055fd10, 0x26)
-unsigned char type_backpack_slot_widget::handle_click(
-    unsigned char down_click, unsigned char right_click)
+unsigned char type_backpack_slot_widget::handleClick(
+    // Before normalization (locals): down_click, right_click.
+    unsigned char downClick, unsigned char rightClick)
 {
-    if (down_click) {
-        static_cast<type_sacrifice_window*>(parentWindow)->backpack_click(
-            slot, right_click);
+    if (downClick) {
+        static_cast<type_sacrifice_window*>(m_parentWindow)->backpackClick(
+            m_slot, rightClick);
         return 1;
     }
     return 0;
@@ -1667,12 +1681,13 @@ unsigned char type_backpack_slot_widget::handle_click(
 // the carved 0x563a80 entry, whose +0xc0 offering vector fixes the identity.
 // E:\gamedcs\sacrifice_window.cpp:243
 VA(0x0055fd40, 0x26)
-unsigned char type_artifact_offering_widget::handle_click(
-    unsigned char down_click, unsigned char right_click)
+unsigned char type_artifact_offering_widget::handleClick(
+    // Before normalization (locals): down_click, right_click.
+    unsigned char downClick, unsigned char rightClick)
 {
-    if (down_click) {
-        static_cast<type_sacrifice_window*>(parentWindow)->offering_click(
-            item_number, right_click);
+    if (downClick) {
+        static_cast<type_sacrifice_window*>(m_parentWindow)->offeringClick(
+            m_itemNumber, rightClick);
         return 1;
     }
     return 0;
@@ -1692,12 +1707,13 @@ VA_COMPGEN(0x0055fd70, 0x21, SCALAR_DELETING_DTOR,
 // That is creature_click's (slot, right_click, left_pane) exactly, and the
 // pair matches the Dreamcast constructor's (new_slot, _left_pane).
 VA(0x0055fda0, 0x2a)  // linkorder + the +0x48/+0x4c pair, dc 0x12416c
-unsigned char type_army_slot_widget::handle_click(
-    unsigned char down_click, unsigned char right_click)
+unsigned char type_army_slot_widget::handleClick(
+    // Before normalization (locals): down_click, right_click.
+    unsigned char downClick, unsigned char rightClick)
 {
-    if (down_click) {
-        static_cast<type_sacrifice_window*>(parentWindow)->creature_click(
-            slot, right_click, left_pane);
+    if (downClick) {
+        static_cast<type_sacrifice_window*>(m_parentWindow)->creatureClick(
+            m_slot, rightClick, m_leftPane);
         return 1;
     }
     return 0;
@@ -1708,13 +1724,15 @@ unsigned char type_army_slot_widget::handle_click(
 // separately claimable copy. The base constructor arguments and the three
 // trailing stores are byte-proven by those two expansions.
 type_army_slot_widget::type_army_slot_widget(
-    long new_x, long new_y, long new_w, long new_h, long new_slot,
-    long new_id, const char* image, unsigned char new_left_pane)
-    : iconWidget(new_x, new_y, new_w, new_h, new_id, image,
+    // Before normalization (locals): new_x, new_y, new_w, new_h, new_slot, new_id,
+    // new_left_pane.
+    long newX, long newY, long newW, long newH, long newSlot,
+    long newId, const char* image, unsigned char newLeftPane)
+    : iconWidget(newX, newY, newW, newH, newId, image,
                  0, 0, 0, 0, 16)
 {
-    slot = new_slot;
-    left_pane = new_left_pane;
+    m_slot = newSlot;
+    m_leftPane = newLeftPane;
 }
 
 // E:\gamedcs\sacrifice_window.cpp:287
@@ -1725,72 +1743,73 @@ type_army_slot_widget::type_army_slot_widget(
 // tests below. The callbacks are reference-taking fastcall entries in this
 // TU; type_func_button stores the same machine pointer behind its historical
 // message* interface, so the casts change no bytes or calling convention.
+// Before normalization (locals): new_hero, cur_player, widget_id, new_widget, town_type.
 VA(0x0055fdd0, 0x574)  // ctor call graph + dc name/signature/order, dc 0x12419c
-type_sacrifice_window::type_sacrifice_window(hero* new_hero, int cur_player)
+type_sacrifice_window::type_sacrifice_window(hero* newHero, int curPlayer)
     : CAdvPopup(0, 0, 800, 600, 0)
 {
-    current_hero = new_hero;
-    x = 100;
-    y = 2;
-    width = 600;
-    height = 593;
-    type = 18;
+    m_currentHero = newHero;
+    m_x = 100;
+    m_y = 2;
+    m_width = 600;
+    m_height = 593;
+    m_type = 18;
 
-    long widget_id = 100;
-    widget* new_widget;
-    Widgets.reserve(150);
-    create_artifact_widgets(widget_id, cur_player);
-    create_creature_widgets(widget_id, cur_player);
+    long widgetId = 100;
+    widget* newWidget;
+    m_widgets.reserve(150);
+    createArtifactWidgets(widgetId, curPlayer);
+    createCreatureWidgets(widgetId, curPlayer);
 
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         24, 414, 104, 50,
-        gpGeneralText->GetText(SACRIFICE_GENERAL_TEXT_NEXT_LEVEL),
-        "smalfont.fnt", font::HEADING, widget_id++, 1, 0, 8));
+        g_generalText->getText(SACRIFICE_GENERAL_TEXT_NEXT_LEVEL),
+        "smalfont.fnt", font::HEADING, widgetId++, 1, 0, 8));
 
-    experience_widget = new textWidget(
-        44, 468, 66, 16, emptyRolloverText, "smalfont.fnt",
-        font::PRIMARY, widget_id++, 1, 0, 8);
-    Widgets.push_back(experience_widget);
+    m_experienceWidget = new textWidget(
+        44, 468, 66, 16, g_emptyRolloverText, "smalfont.fnt",
+        font::PRIMARY, widgetId++, 1, 0, 8);
+    m_widgets.push_back(m_experienceWidget);
 
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         24, 492, 104, 42,
-        gpGeneralText->GetText(SACRIFICE_GENERAL_TEXT_TOTAL_EXPERIENCE),
-        "smalfont.fnt", font::HEADING, widget_id++, 1, 0, 8));
+        g_generalText->getText(SACRIFICE_GENERAL_TEXT_TOTAL_EXPERIENCE),
+        "smalfont.fnt", font::HEADING, widgetId++, 1, 0, 8));
 
-    experience_total_widget = new textWidget(
-        41, 536, 66, 16, emptyRolloverText, "smalfont.fnt",
-        font::PRIMARY, widget_id++, 1, 0, 8);
-    Widgets.push_back(experience_total_widget);
+    m_experienceTotalWidget = new textWidget(
+        41, 536, 66, 16, g_emptyRolloverText, "smalfont.fnt",
+        font::PRIMARY, widgetId++, 1, 0, 8);
+    m_widgets.push_back(m_experienceTotalWidget);
 
-    sacrifice_button = new type_func_button(
-        269, 520, 64, 32, widget_id++, "AltSacr.def",
+    m_sacrificeButton = new type_func_button(
+        269, 520, 64, 32, widgetId++, "AltSacr.def",
         sacrifice, 0, 1);
-    Widgets.push_back(sacrifice_button);
+    m_widgets.push_back(m_sacrificeButton);
 
-    new_widget = new type_func_button(
-        515, 520, 64, 30, widget_id++, "iOkay.def",
-        exit_click, 0, 1);
-    static_cast<type_func_button*>(new_widget)->set_hotkey(28);
-    new_widget->set_help_text(
-        gSacrificeWindowHelp[SACRIFICE_HELP_EXIT_BUTTON].text, 0, 1);
-    Widgets.push_back(new_widget);
+    newWidget = new type_func_button(
+        515, 520, 64, 30, widgetId++, "iOkay.def",
+        exitClick, 0, 1);
+    static_cast<type_func_button*>(newWidget)->setHotkey(28);
+    newWidget->setHelpText(
+        g_sacrificeWindowHelp[SACRIFICE_HELP_EXIT_BUTTON].m_text, 0, 1);
+    m_widgets.push_back(newWidget);
 
-    rolloverText = new textWidget(
-        8, 567, 584, 18, emptyRolloverText, "smalfont.fnt",
-        font::PRIMARY, widget_id++, 1, 0, 8);
-    Widgets.push_back(rolloverText);
+    m_rolloverText = new textWidget(
+        8, 567, 584, 18, g_emptyRolloverText, "smalfont.fnt",
+        font::PRIMARY, widgetId++, 1, 0, 8);
+    m_widgets.push_back(m_rolloverText);
 
-    int town_type = akHeroClasses[current_hero->heroClass].townType;
-    can_sacrifice_artifacts =
-        !(town_type > TOWN_TOWER && town_type < TOWN_STRONGHOLD);
-    can_sacrifice_creatures = town_type > TOWN_TOWER;
-    total_experience = 0;
+    int townType = g_heroClasses[m_currentHero->m_heroClass].m_townType;
+    m_canSacrificeArtifacts =
+        !(townType > TOWN_TOWER && townType < TOWN_STRONGHOLD);
+    m_canSacrificeCreatures = townType > TOWN_TOWER;
+    m_totalExperience = 0;
 
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
-            AddWidget(*it, -1);
+            addWidget(*it, -1);
         else
-            MemError();
+            memError();
     }
 }
 
@@ -1812,147 +1831,155 @@ type_sacrifice_window::type_sacrifice_window(hero* new_hero, int cur_player)
 // stores is forbidden: DC Hero.h:211-212 and retail value_of_town prove the
 // shared id-then-extra source order. Preserve the coherent header state and
 // the banked exact peak; this is a measured C1 handle-order collateral wall.
+// TownExtra consolidation collateral: 99.9983% -> 99.5918%. The masked
+// difference is the EBX reload placement at the artifact-row loop boundary;
+// the retained source calls and types stay proven. A disposable Gruntz
+// forest probe before this function (seed 20260906, baseline + 16 trials)
+// finds two islands, 99.5918% and 99.9983%; all 16 forests recover the prior
+// score. No probe noise is retained; the production residual remains.
 VA(0x00560380, 0xD67)  // ctor caller + dc name/order/locals, dc 0x1246b8
-void type_sacrifice_window::create_artifact_widgets(
-    long& widget_id, int cur_player)
+void type_sacrifice_window::createArtifactWidgets(
+    // Before normalization (locals): widget_id, cur_player, icon_widget, artifact_offering,
+    // item_count, text_widget, item_x, item_y, text_x, text_y.
+    long& widgetId, int curPlayer)
 {
-    artifact_widgets.reserve(80);
+    m_artifactWidgets.reserve(80);
 
     bitmapBorder* background = new bitmapBorder(
-        0, 0, 600, 593, widget_id++,
-        gpGame->f_1f698 >= 2 ? "AltrArt2.pcx" : "AltarArt.pcx", 0x800);
-    background->SetPlayerPaletteColors(cur_player);
-    Widgets.push_back(background);
-    artifact_widgets.push_back(background);
+        0, 0, 600, 593, widgetId++,
+        g_game->m_f1f698 >= 2 ? "AltrArt2.pcx" : "AltarArt.pcx", 0x800);
+    background->setPlayerPaletteColors(curPlayer);
+    m_widgets.push_back(background);
+    m_artifactWidgets.push_back(background);
 
     type_doll_slot_definition def;
-    iconWidget* icon_widget;
-    def.width = 44;
-    def.height = 44;
-    def.image = "artifact.def";
-    long count = gpGame->f_1f698 >= 2 ? 19 : 18;
+    iconWidget* currentIconWidget;
+    def.m_width = 44;
+    def.m_height = 44;
+    def.m_image = "artifact.def";
+    long count = g_game->m_f1f698 >= 2 ? 19 : 18;
     long i;
     for (i = 0; i < count; ++i) {
-        def.x = slot_definitions[i][0];
-        def.y = slot_definitions[i][1];
-        def.slot = i;
+        def.m_x = g_slotDefinitions[i][0];
+        def.m_y = g_slotDefinitions[i][1];
+        def.m_slot = i;
 
-        icon_widget = new iconWidget(
-            def.x, def.y, def.width, def.height, widget_id++, def.image,
+        currentIconWidget = new iconWidget(
+            def.m_x, def.m_y, def.m_width, def.m_height, widgetId++, def.m_image,
             0, 0, 0, 0, 16);
-        Widgets.push_back(icon_widget);
-        slot_back_widgets.push_back(icon_widget);
+        m_widgets.push_back(currentIconWidget);
+        m_slotBackWidgets.push_back(currentIconWidget);
 
-        icon_widget = new type_doll_slot_widget(def, widget_id++);
-        Widgets.push_back(icon_widget);
-        slot_widgets.push_back(icon_widget);
-        artifact_widgets.push_back(icon_widget);
+        currentIconWidget = new type_doll_slot_widget(def, widgetId++);
+        m_widgets.push_back(currentIconWidget);
+        m_slotWidgets.push_back(currentIconWidget);
+        m_artifactWidgets.push_back(currentIconWidget);
     }
 
-    def.x = 43;
-    def.y = 352;
+    def.m_x = 43;
+    def.m_y = 352;
     for (i = 0; i < 5; ++i) {
-        icon_widget = new type_backpack_slot_widget(def, i, widget_id++);
-        def.x += 44;
-        Widgets.push_back(icon_widget);
-        backpack_widgets.push_back(icon_widget);
-        artifact_widgets.push_back(icon_widget);
+        currentIconWidget = new type_backpack_slot_widget(def, i, widgetId++);
+        def.m_x += 44;
+        m_widgets.push_back(currentIconWidget);
+        m_backpackWidgets.push_back(currentIconWidget);
+        m_artifactWidgets.push_back(currentIconWidget);
     }
 
-    left_backpack_button = new type_func_button(
-        20, 352, 22, 46, widget_id++, "hsbtns3.def",
-        scroll_backpack_left, 0, 1);
-    Widgets.push_back(left_backpack_button);
-    artifact_widgets.push_back(left_backpack_button);
+    m_leftBackpackButton = new type_func_button(
+        20, 352, 22, 46, widgetId++, "hsbtns3.def",
+        scrollBackpackLeft, 0, 1);
+    m_widgets.push_back(m_leftBackpackButton);
+    m_artifactWidgets.push_back(m_leftBackpackButton);
 
-    right_backpack_button = new type_func_button(
-        264, 352, 22, 46, widget_id++, "hsbtns5.def",
-        scroll_backpack_right, 0, 1);
-    Widgets.push_back(right_backpack_button);
-    artifact_widgets.push_back(right_backpack_button);
+    m_rightBackpackButton = new type_func_button(
+        264, 352, 22, 46, widgetId++, "hsbtns5.def",
+        scrollBackpackRight, 0, 1);
+    m_widgets.push_back(m_rightBackpackButton);
+    m_artifactWidgets.push_back(m_rightBackpackButton);
 
-    type_artifact_offering artifact_offering(ARTIFACT_NONE);
-    long item_count = 0;
-    textWidget* text_widget;
+    type_artifact_offering artifactOffering(ARTIFACT_NONE);
+    long itemCount = 0;
+    textWidget* currentTextWidget;
     for (long j = 0; j < 5; ++j) {
-        long item_x = row_start[j][0];
-        long item_y = row_start[j][1];
-        long text_x = item_x - 2;
-        long text_y = item_y + 47;
-        for (count = row_size[j]; count > 0; --count) {
-            text_widget = new textWidget(
-                text_x, text_y, 48, 16, emptyRolloverText,
-                "smalfont.fnt", font::PRIMARY, widget_id++, 1, 0, 8);
-            Widgets.push_back(text_widget);
-            artifact_widgets.push_back(text_widget);
-            artifact_value_widgets.push_back(text_widget);
+        long itemX = g_rowStart[j][0];
+        long itemY = g_rowStart[j][1];
+        long textX = itemX - 2;
+        long textY = itemY + 47;
+        for (count = g_rowSize[j]; count > 0; --count) {
+            currentTextWidget = new textWidget(
+                textX, textY, 48, 16, g_emptyRolloverText,
+                "smalfont.fnt", font::PRIMARY, widgetId++, 1, 0, 8);
+            m_widgets.push_back(currentTextWidget);
+            m_artifactWidgets.push_back(currentTextWidget);
+            m_artifactValueWidgets.push_back(currentTextWidget);
 
-            icon_widget = new type_artifact_offering_widget(
-                item_x, item_y, 44, 44, item_count++,
-                widget_id++, "artifact.def");
-            Widgets.push_back(icon_widget);
-            artifact_widgets.push_back(icon_widget);
-            artifact_offering_widgets.push_back(icon_widget);
-            artifact_offerings.push_back(artifact_offering);
+            currentIconWidget = new type_artifact_offering_widget(
+                itemX, itemY, 44, 44, itemCount++,
+                widgetId++, "artifact.def");
+            m_widgets.push_back(currentIconWidget);
+            m_artifactWidgets.push_back(currentIconWidget);
+            m_artifactOfferingWidgets.push_back(currentIconWidget);
+            m_artifactOfferings.push_back(artifactOffering);
 
-            text_x += 54;
-            item_x += 54;
+            textX += 54;
+            itemX += 54;
         }
     }
 
-    current_artifact_value = new textWidget(
+    m_currentArtifactValue = new textWidget(
         269, 492, 66, 16,
         DATA_COMPGEN(0x00682a08, artifactZeroText, "0"),
-        "smalfont.fnt", font::PRIMARY, widget_id++, 1, 0, 8);
-    Widgets.push_back(current_artifact_value);
-    artifact_widgets.push_back(current_artifact_value);
+        "smalfont.fnt", font::PRIMARY, widgetId++, 1, 0, 8);
+    m_widgets.push_back(m_currentArtifactValue);
+    m_artifactWidgets.push_back(m_currentArtifactValue);
 
-    current_artifact_widget = new iconWidget(
-        279, 440, 44, 44, widget_id++, "artifact.def",
+    m_currentArtifactWidget = new iconWidget(
+        279, 440, 44, 44, widgetId++, "artifact.def",
         0, 0, 0, 0, 16);
-    current_artifact_widget->set_help_text(
-        gSacrificeWindowHelp[SACRIFICE_HELP_CURRENT_ARTIFACT].text, 0, 1);
-    Widgets.push_back(current_artifact_widget);
-    artifact_widgets.push_back(current_artifact_widget);
+    m_currentArtifactWidget->setHelpText(
+        g_sacrificeWindowHelp[SACRIFICE_HELP_CURRENT_ARTIFACT].m_text, 0, 1);
+    m_widgets.push_back(m_currentArtifactWidget);
+    m_artifactWidgets.push_back(m_currentArtifactWidget);
 
-    empty_backpack_button = new type_func_button(
-        146, 520, 64, 32, widget_id++, "AltEmBk.def",
-        empty_backpack, 0, 1);
-    empty_backpack_button->set_help_text(
-        gSacrificeWindowHelp[SACRIFICE_HELP_EMPTY_BACKPACK].text, 0, 1);
-    Widgets.push_back(empty_backpack_button);
-    artifact_widgets.push_back(empty_backpack_button);
+    m_emptyBackpackButton = new type_func_button(
+        146, 520, 64, 32, widgetId++, "AltEmBk.def",
+        emptyBackpack, 0, 1);
+    m_emptyBackpackButton->setHelpText(
+        g_sacrificeWindowHelp[SACRIFICE_HELP_EMPTY_BACKPACK].m_text, 0, 1);
+    m_widgets.push_back(m_emptyBackpackButton);
+    m_artifactWidgets.push_back(m_emptyBackpackButton);
 
-    all_artifacts_button = new type_func_button(
-        392, 520, 64, 32, widget_id++, "AltFill.def",
-        all_artifacts, 0, 1);
-    all_artifacts_button->set_help_text(
-        gSacrificeWindowHelp[SACRIFICE_HELP_ALL_ARTIFACTS].text, 0, 1);
-    Widgets.push_back(all_artifacts_button);
-    artifact_widgets.push_back(all_artifacts_button);
+    m_allArtifactsButton = new type_func_button(
+        392, 520, 64, 32, widgetId++, "AltFill.def",
+        allArtifacts, 0, 1);
+    m_allArtifactsButton->setHelpText(
+        g_sacrificeWindowHelp[SACRIFICE_HELP_ALL_ARTIFACTS].m_text, 0, 1);
+    m_widgets.push_back(m_allArtifactsButton);
+    m_artifactWidgets.push_back(m_allArtifactsButton);
 
-    creatures_button = new type_func_button(
-        515, 421, 64, 32, widget_id++, "AltSacC.def",
-        sacrifice_creatures, 0, 1);
-    creatures_button->set_help_text(
-        gSacrificeWindowHelp[SACRIFICE_HELP_SACRIFICE_CREATURES_BUTTON].text,
+    m_creaturesButton = new type_func_button(
+        515, 421, 64, 32, widgetId++, "AltSacC.def",
+        sacrificeCreatures, 0, 1);
+    m_creaturesButton->setHelpText(
+        g_sacrificeWindowHelp[SACRIFICE_HELP_SACRIFICE_CREATURES_BUTTON].m_text,
         0, 1);
-    Widgets.push_back(creatures_button);
-    artifact_widgets.push_back(creatures_button);
+    m_widgets.push_back(m_creaturesButton);
+    m_artifactWidgets.push_back(m_creaturesButton);
 
-    text_widget = new textWidget(
+    currentTextWidget = new textWidget(
         317, 23, 256, 18,
-        gpGeneralText->GetText(SACRIFICE_GENERAL_TEXT_ARTIFACTS_TITLE),
-        "smalfont.fnt", font::HEADING, widget_id++, 1, 0, 8);
-    Widgets.push_back(text_widget);
-    artifact_widgets.push_back(text_widget);
+        g_generalText->getText(SACRIFICE_GENERAL_TEXT_ARTIFACTS_TITLE),
+        "smalfont.fnt", font::HEADING, widgetId++, 1, 0, 8);
+    m_widgets.push_back(currentTextWidget);
+    m_artifactWidgets.push_back(currentTextWidget);
 
-    text_widget = new textWidget(
+    currentTextWidget = new textWidget(
         159, 415, 283, 18,
-        gpGeneralText->GetText(SACRIFICE_GENERAL_TEXT_CREATURES_TITLE),
-        "smalfont.fnt", font::HEADING, widget_id++, 1, 0, 8);
-    Widgets.push_back(text_widget);
-    artifact_widgets.push_back(text_widget);
+        g_generalText->getText(SACRIFICE_GENERAL_TEXT_CREATURES_TITLE),
+        "smalfont.fnt", font::HEADING, widgetId++, 1, 0, 8);
+    m_widgets.push_back(currentTextWidget);
+    m_artifactWidgets.push_back(currentTextWidget);
 }
 
 // E:\gamedcs\sacrifice_window.cpp:536
@@ -1961,159 +1988,161 @@ void type_sacrifice_window::create_artifact_widgets(
 // six pointers in each offering record, the two current-creature portraits,
 // help rows 5..12, and every Widgets/creature_widgets insertion.
 VA(0x005610f0, 0xE73)  // ctor caller + dc name/order/locals, dc 0x124e60
-void type_sacrifice_window::create_creature_widgets(
-    long& widget_id, int cur_player)
+void type_sacrifice_window::createCreatureWidgets(
+    // Before normalization (locals): widget_id, cur_player, text_widget, new_icon_widgets,
+    // selection_frames, new_text_widgets, item_number, def_index.
+    long& widgetId, int curPlayer)
 {
     std::string buffer;
     long count;
-    creature_widgets.reserve(60);
+    m_creatureWidgets.reserve(60);
 
     bitmapBorder* background = new bitmapBorder(
-        0, 0, 600, 593, widget_id++, "AltarMon.pcx", 0x800);
-    background->SetPlayerPaletteColors(cur_player);
-    Widgets.push_back(background);
-    creature_widgets.push_back(background);
+        0, 0, 600, 593, widgetId++, "AltarMon.pcx", 0x800);
+    background->setPlayerPaletteColors(curPlayer);
+    m_widgets.push_back(background);
+    m_creatureWidgets.push_back(background);
 
-    buffer = format_string(
-        gpGeneralText->GetText(SACRIFICE_GENERAL_TEXT_HERO_NAME),
-        current_hero->name);
+    buffer = formatString(
+        g_generalText->getText(SACRIFICE_GENERAL_TEXT_HERO_NAME),
+        m_currentHero->m_name);
 
-    textWidget* text_widget = new textWidget(
+    textWidget* currentTextWidget = new textWidget(
         28, 21, 256, 18, buffer.c_str(), "smalfont.fnt",
-        font::HEADING, widget_id++, 1, 0, 8);
-    Widgets.push_back(text_widget);
-    creature_widgets.push_back(text_widget);
+        font::HEADING, widgetId++, 1, 0, 8);
+    m_widgets.push_back(currentTextWidget);
+    m_creatureWidgets.push_back(currentTextWidget);
 
-    creature_name_widget = new textWidget(
-        29, 56, 256, 42, emptyRolloverText, "medfont.fnt",
-        font::HEADING, widget_id++, 1, 0, 8);
-    Widgets.push_back(creature_name_widget);
-    creature_widgets.push_back(creature_name_widget);
+    m_creatureNameWidget = new textWidget(
+        29, 56, 256, 42, g_emptyRolloverText, "medfont.fnt",
+        font::HEADING, widgetId++, 1, 0, 8);
+    m_widgets.push_back(m_creatureNameWidget);
+    m_creatureWidgets.push_back(m_creatureNameWidget);
 
-    text_widget = new textWidget(
+    currentTextWidget = new textWidget(
         317, 21, 256, 18,
-        gpGeneralText->GetText(SACRIFICE_GENERAL_TEXT_SOURCE_CREATURES),
-        "smalfont.fnt", font::HEADING, widget_id++, 1, 0, 8);
-    Widgets.push_back(text_widget);
-    creature_widgets.push_back(text_widget);
+        g_generalText->getText(SACRIFICE_GENERAL_TEXT_SOURCE_CREATURES),
+        "smalfont.fnt", font::HEADING, widgetId++, 1, 0, 8);
+    m_widgets.push_back(currentTextWidget);
+    m_creatureWidgets.push_back(currentTextWidget);
 
-    text_widget = new textWidget(
+    currentTextWidget = new textWidget(
         318, 56, 256, 42,
-        gpGeneralText->GetText(SACRIFICE_GENERAL_TEXT_OFFERED_CREATURES),
-        "smalfont.fnt", font::HEADING, widget_id++, 1, 0, 8);
-    Widgets.push_back(text_widget);
-    creature_widgets.push_back(text_widget);
+        g_generalText->getText(SACRIFICE_GENERAL_TEXT_OFFERED_CREATURES),
+        "smalfont.fnt", font::HEADING, widgetId++, 1, 0, 8);
+    m_widgets.push_back(currentTextWidget);
+    m_creatureWidgets.push_back(currentTextWidget);
 
-    iconWidget* new_icon_widgets[7];
-    iconWidget* selection_frames[7];
-    textWidget* new_text_widgets[7];
-    long item_number = 0;
+    iconWidget* newIconWidgets[7];
+    iconWidget* selectionFrames[7];
+    textWidget* newTextWidgets[7];
+    long itemNumber = 0;
 
-    for (long def_index = 0; def_index < 2; ++def_index) {
-        count = create_creature_icons(
-            const_creature_sources[def_index][0],
-            const_creature_sources[def_index][1],
-            const_source_sizes[def_index][0],
-            const_source_sizes[def_index][1], item_number, widget_id,
-            new_icon_widgets, selection_frames, new_text_widgets, 1);
+    for (long defIndex = 0; defIndex < 2; ++defIndex) {
+        count = createCreatureIcons(
+            g_constCreatureSources[defIndex][0],
+            g_constCreatureSources[defIndex][1],
+            g_constSourceSizes[defIndex][0],
+            g_constSourceSizes[defIndex][1], itemNumber, widgetId,
+            newIconWidgets, selectionFrames, newTextWidgets, 1);
         for (long i = 0; i < count; ++i) {
-            creature_offerings[item_number + i].icon_widget =
-                new_icon_widgets[i];
-            creature_offerings[item_number + i].field_08 =
-                new_text_widgets[i];
-            creature_offerings[item_number + i].field_04 =
-                selection_frames[i];
+            m_creatureOfferings[itemNumber + i].m_iconWidget =
+                newIconWidgets[i];
+            m_creatureOfferings[itemNumber + i].m_creatureCountText =
+                newTextWidgets[i];
+            m_creatureOfferings[itemNumber + i].m_sourceSelectionFrame =
+                selectionFrames[i];
         }
-        item_number += count;
+        itemNumber += count;
     }
 
-    item_number = 0;
-    for (def_index = 0; def_index < 2; ++def_index) {
-        count = create_creature_icons(
-            const_creature_offerings[def_index][0],
-            const_creature_offerings[def_index][1],
-            const_source_sizes[def_index][0],
-            const_source_sizes[def_index][1], item_number, widget_id,
-            new_icon_widgets, selection_frames, new_text_widgets, 0);
+    itemNumber = 0;
+    for (defIndex = 0; defIndex < 2; ++defIndex) {
+        count = createCreatureIcons(
+            g_constCreatureOfferings[defIndex][0],
+            g_constCreatureOfferings[defIndex][1],
+            g_constSourceSizes[defIndex][0],
+            g_constSourceSizes[defIndex][1], itemNumber, widgetId,
+            newIconWidgets, selectionFrames, newTextWidgets, 0);
         for (long i = 0; i < count; ++i) {
             type_creature_offering& offering =
-                creature_offerings[item_number + i];
-            offering.selection_widget = new_icon_widgets[i];
-            offering.field_14 = new_text_widgets[i];
-            offering.field_10 = selection_frames[i];
+                m_creatureOfferings[itemNumber + i];
+            offering.m_selectionWidget = newIconWidgets[i];
+            offering.m_experienceText = newTextWidgets[i];
+            offering.m_offeringSelectionFrame = selectionFrames[i];
         }
-        item_number += count;
+        itemNumber += count;
     }
 
-    current_creature.field_08 = new textWidget(
-        145, 493, 66, 16, emptyRolloverText, "smalfont.fnt",
-        font::PRIMARY, widget_id++, 1, 0, 8);
-    current_creature.field_08->set_help_text(
-        gSacrificeWindowHelp[SACRIFICE_HELP_CURRENT_CREATURE_AMOUNT].text,
+    m_currentCreature.m_creatureCountText = new textWidget(
+        145, 493, 66, 16, g_emptyRolloverText, "smalfont.fnt",
+        font::PRIMARY, widgetId++, 1, 0, 8);
+    m_currentCreature.m_creatureCountText->setHelpText(
+        g_sacrificeWindowHelp[SACRIFICE_HELP_CURRENT_CREATURE_AMOUNT].m_text,
         0, 1);
-    Widgets.push_back(current_creature.field_08);
-    creature_widgets.push_back(current_creature.field_08);
+    m_widgets.push_back(m_currentCreature.m_creatureCountText);
+    m_creatureWidgets.push_back(m_currentCreature.m_creatureCountText);
 
-    current_creature.icon_widget = new type_army_slot_widget(
-        149, 421, 58, 64, -1, widget_id++, "Twcrport.def", 1);
-    current_creature.icon_widget->set_help_text(
-        gSacrificeWindowHelp[SACRIFICE_HELP_CURRENT_SOURCE_CREATURE].text,
+    m_currentCreature.m_iconWidget = new type_army_slot_widget(
+        149, 421, 58, 64, -1, widgetId++, "Twcrport.def", 1);
+    m_currentCreature.m_iconWidget->setHelpText(
+        g_sacrificeWindowHelp[SACRIFICE_HELP_CURRENT_SOURCE_CREATURE].m_text,
         0, 1);
-    Widgets.push_back(current_creature.icon_widget);
-    creature_widgets.push_back(current_creature.icon_widget);
-    current_creature.field_04 = 0;
+    m_widgets.push_back(m_currentCreature.m_iconWidget);
+    m_creatureWidgets.push_back(m_currentCreature.m_iconWidget);
+    m_currentCreature.m_sourceSelectionFrame = 0;
 
-    current_creature.field_14 = new textWidget(
-        391, 493, 66, 16, emptyRolloverText, "smalfont.fnt",
-        font::PRIMARY, widget_id++, 1, 0, 8);
-    current_creature.field_14->set_help_text(
-        gSacrificeWindowHelp[SACRIFICE_HELP_CURRENT_OFFERING_AMOUNT].text,
+    m_currentCreature.m_experienceText = new textWidget(
+        391, 493, 66, 16, g_emptyRolloverText, "smalfont.fnt",
+        font::PRIMARY, widgetId++, 1, 0, 8);
+    m_currentCreature.m_experienceText->setHelpText(
+        g_sacrificeWindowHelp[SACRIFICE_HELP_CURRENT_OFFERING_AMOUNT].m_text,
         0, 1);
-    Widgets.push_back(current_creature.field_14);
-    creature_widgets.push_back(current_creature.field_14);
+    m_widgets.push_back(m_currentCreature.m_experienceText);
+    m_creatureWidgets.push_back(m_currentCreature.m_experienceText);
 
-    current_creature.selection_widget = new type_army_slot_widget(
-        395, 421, 58, 64, -2, widget_id++, "TwCrPort.def", 0);
-    current_creature.selection_widget->set_help_text(
-        gSacrificeWindowHelp[SACRIFICE_HELP_CURRENT_OFFERING_CREATURE].text,
+    m_currentCreature.m_selectionWidget = new type_army_slot_widget(
+        395, 421, 58, 64, -2, widgetId++, "TwCrPort.def", 0);
+    m_currentCreature.m_selectionWidget->setHelpText(
+        g_sacrificeWindowHelp[SACRIFICE_HELP_CURRENT_OFFERING_CREATURE].m_text,
         0, 1);
-    Widgets.push_back(current_creature.selection_widget);
-    creature_widgets.push_back(current_creature.selection_widget);
-    current_creature.field_10 = 0;
+    m_widgets.push_back(m_currentCreature.m_selectionWidget);
+    m_creatureWidgets.push_back(m_currentCreature.m_selectionWidget);
+    m_currentCreature.m_offeringSelectionFrame = 0;
 
-    creature_slider = new slider(
-        230, 479, 138, 16, widget_id++, 1, creature_slider_change,
+    m_creatureSlider = new slider(
+        230, 479, 138, 16, widgetId++, 1, creatureSliderChange,
         slider::BROWN, 0, 0);
-    creature_slider->set_help_text(
-        gSacrificeWindowHelp[SACRIFICE_HELP_CREATURE_SLIDER].text, 0, 1);
-    Widgets.push_back(creature_slider);
-    creature_widgets.push_back(creature_slider);
+    m_creatureSlider->setHelpText(
+        g_sacrificeWindowHelp[SACRIFICE_HELP_CREATURE_SLIDER].m_text, 0, 1);
+    m_widgets.push_back(m_creatureSlider);
+    m_creatureWidgets.push_back(m_creatureSlider);
 
-    max_creatures_button = new type_func_button(
-        146, 520, 64, 32, widget_id++, "IrcBtns.def",
-        max_creatures, 0, 1);
-    max_creatures_button->set_help_text(
-        gSacrificeWindowHelp[SACRIFICE_HELP_MAX_CREATURES].text, 0, 1);
-    Widgets.push_back(max_creatures_button);
-    creature_widgets.push_back(max_creatures_button);
+    m_maxCreaturesButton = new type_func_button(
+        146, 520, 64, 32, widgetId++, "IrcBtns.def",
+        maxCreatures, 0, 1);
+    m_maxCreaturesButton->setHelpText(
+        g_sacrificeWindowHelp[SACRIFICE_HELP_MAX_CREATURES].m_text, 0, 1);
+    m_widgets.push_back(m_maxCreaturesButton);
+    m_creatureWidgets.push_back(m_maxCreaturesButton);
 
-    all_creatures_button = new type_func_button(
-        392, 520, 64, 32, widget_id++, "AltArmy.def",
-        all_creatures, 0, 1);
-    all_creatures_button->set_help_text(
-        gSacrificeWindowHelp[SACRIFICE_HELP_ALL_CREATURES].text, 0, 1);
-    Widgets.push_back(all_creatures_button);
-    creature_widgets.push_back(all_creatures_button);
+    m_allCreaturesButton = new type_func_button(
+        392, 520, 64, 32, widgetId++, "AltArmy.def",
+        allCreatures, 0, 1);
+    m_allCreaturesButton->setHelpText(
+        g_sacrificeWindowHelp[SACRIFICE_HELP_ALL_CREATURES].m_text, 0, 1);
+    m_widgets.push_back(m_allCreaturesButton);
+    m_creatureWidgets.push_back(m_allCreaturesButton);
 
-    artifacts_button = new type_func_button(
-        515, 421, 54, 32, widget_id++, "AltArt.def",
-        sacrifice_artifacts, 0, 1);
-    artifacts_button->set_help_text(
-        gSacrificeWindowHelp[
-            SACRIFICE_HELP_SACRIFICE_ARTIFACTS_BUTTON].text,
+    m_artifactsButton = new type_func_button(
+        515, 421, 54, 32, widgetId++, "AltArt.def",
+        sacrificeArtifacts, 0, 1);
+    m_artifactsButton->setHelpText(
+        g_sacrificeWindowHelp[
+            SACRIFICE_HELP_SACRIFICE_ARTIFACTS_BUTTON].m_text,
         0, 1);
-    Widgets.push_back(artifacts_button);
-    creature_widgets.push_back(artifacts_button);
+    m_widgets.push_back(m_artifactsButton);
+    m_creatureWidgets.push_back(m_artifactsButton);
 }
 
 // E:\gamedcs\sacrifice_window.cpp:699
@@ -2123,48 +2152,50 @@ void type_sacrifice_window::create_creature_widgets(
 // resources, help row 13, all six vector insertions per cell and the running
 // item/count result.
 VA(0x00561f70, 0x427)  // anchor-caller + dc name/signature/order, dc 0x1255cc
-long type_sacrifice_window::create_creature_icons(
-    long icon_x, long icon_y, long columns, long rows, long item_number,
-    long& widget_id, iconWidget** icon_widgets,
-    iconWidget** selection_widgets, textWidget** text_widgets,
-    unsigned char left_pane)
+long type_sacrifice_window::createCreatureIcons(
+    // Before normalization (locals): icon_x, icon_y, item_number, widget_id, icon_widgets,
+    // selection_widgets, text_widgets, left_pane, text_x, text_y.
+    long iconX, long iconY, long columns, long rows, long itemNumber,
+    long& widgetId, iconWidget** iconWidgets,
+    iconWidget** selectionWidgets, textWidget** textWidgets,
+    unsigned char leftPane)
 {
     long count = 0;
-    long text_x = icon_x - 4;
-    long text_y = icon_y + 68;
+    long textX = iconX - 4;
+    long textY = iconY + 68;
 
     for (long row = 0; row < rows; ++row) {
         for (long column = 0; column < columns; ++column) {
-            text_widgets[count] = new textWidget(
-                text_x, text_y, 66, 16, emptyRolloverText,
-                "smalfont.fnt", font::PRIMARY, widget_id++, 1, 0, 8);
-            text_widgets[count]->set_help_text(
-                gSacrificeWindowHelp[SACRIFICE_HELP_CREATURE_SLOT].text,
+            textWidgets[count] = new textWidget(
+                textX, textY, 66, 16, g_emptyRolloverText,
+                "smalfont.fnt", font::PRIMARY, widgetId++, 1, 0, 8);
+            textWidgets[count]->setHelpText(
+                g_sacrificeWindowHelp[SACRIFICE_HELP_CREATURE_SLOT].m_text,
                 0, 1);
-            Widgets.push_back(text_widgets[count]);
-            creature_widgets.push_back(text_widgets[count]);
+            m_widgets.push_back(textWidgets[count]);
+            m_creatureWidgets.push_back(textWidgets[count]);
 
-            icon_widgets[count] = new type_army_slot_widget(
-                icon_x, icon_y, 58, 64, item_number + count, widget_id++,
-                "twcrport.def", left_pane);
-            Widgets.push_back(icon_widgets[count]);
-            creature_widgets.push_back(icon_widgets[count]);
+            iconWidgets[count] = new type_army_slot_widget(
+                iconX, iconY, 58, 64, itemNumber + count, widgetId++,
+                "twcrport.def", leftPane);
+            m_widgets.push_back(iconWidgets[count]);
+            m_creatureWidgets.push_back(iconWidgets[count]);
 
-            selection_widgets[count] = new type_army_slot_widget(
-                icon_x, icon_y, 58, 64, item_number + count, widget_id++,
-                "TwCrPort.def", left_pane);
-            Widgets.push_back(selection_widgets[count]);
-            creature_widgets.push_back(selection_widgets[count]);
-            selection_widgets[count]->SetIconFrame(1);
+            selectionWidgets[count] = new type_army_slot_widget(
+                iconX, iconY, 58, 64, itemNumber + count, widgetId++,
+                "TwCrPort.def", leftPane);
+            m_widgets.push_back(selectionWidgets[count]);
+            m_creatureWidgets.push_back(selectionWidgets[count]);
+            selectionWidgets[count]->setIconFrame(1);
 
             ++count;
-            text_x += 83;
-            icon_x += 83;
+            textX += 83;
+            iconX += 83;
         }
-        text_x -= columns * 83;
-        icon_x -= columns * 83;
-        text_y += 98;
-        icon_y += 98;
+        textX -= columns * 83;
+        iconX -= columns * 83;
+        textY += 98;
+        iconY += 98;
     }
     return count;
 }
@@ -2182,7 +2213,7 @@ VA_COMPGEN(0x00560350, 0x21, SCALAR_DELETING_DTOR,
 VA(0x005623a0, 0x15b)  // vtable slot 0 + dc name/order, dc 0x125824
 type_sacrifice_window::~type_sacrifice_window()
 {
-    delete_widgets();
+    deleteWidgets();
 }
 
 // E:\gamedcs\sacrifice_window.cpp:760
@@ -2191,11 +2222,11 @@ type_sacrifice_window::~type_sacrifice_window()
 // the characteristic index/check and inlined Dinkumware string machinery.
 // The definition stays in source order; its annotated redeclaration below
 // records the later position of the retained retail COMDAT.
-std::string convert_with_commas(long value)
+std::string convertWithCommas(long value)
 {
     long digits = 0;
     std::string result;
-    result = format_string(
+    result = formatString(
         DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"), value);
 
     long position = result.length();
@@ -2214,37 +2245,39 @@ std::string convert_with_commas(long value)
 // writes the two adjacent text widgets and enables the button at +0xa4 iff
 // there is experience available to sacrifice.
 VA(0x00562500, 0x15a)  // dc order/name + body/field graph, dc 0x125998
-void type_sacrifice_window::update_experience()
+void type_sacrifice_window::updateExperience()
 {
     std::string text;
-    text = convert_with_commas(
-        hero::GetExperience(current_hero->level + 1)
-        - current_hero->experience);
-    experience_widget->SetText(text.c_str());
+    text = convertWithCommas(
+        hero::getExperience(m_currentHero->m_level + 1)
+        - m_currentHero->m_experience);
+    m_experienceWidget->setText(text.c_str());
 
-    text = convert_with_commas(total_experience);
-    experience_total_widget->SetText(text.c_str());
-    sacrifice_button->enable(total_experience > 0);
+    text = convertWithCommas(m_totalExperience);
+    m_experienceTotalWidget->setText(text.c_str());
+    m_sacrificeButton->enable(m_totalExperience > 0);
 }
 
 VA(0x00562660, 0x1d5)  // dc order/name + body/ABI, dc 0x1258ac
-std::string convert_with_commas(long value);
+std::string convertWithCommas(long value);
 
 // E:\gamedcs\sacrifice_window.cpp:800
 // The source helper precedes update_slot; retail deferred its retained
 // out-of-line COMDAT to 0x5639e0. Its annotated redeclaration therefore sits
 // at that retail position below, while the real definition stays here in the
 // source order proved by the Dreamcast line map.
-void update_artifact_widget(iconWidget* slot_widget, type_artifact artifact)
+// Before normalization (function): update_artifact_widget.
+// Before normalization (locals): slot_widget.
+void updateArtifactWidget(iconWidget* slotWidget, type_artifact artifact)
 {
-    if (artifact.artifactId == ARTIFACT_NONE) {
-        slot_widget->set_visible(0);
-        slot_widget->set_help_text(0, 0, 1);
+    if (artifact.m_artifactId == ARTIFACT_NONE) {
+        slotWidget->setVisible(0);
+        slotWidget->setHelpText(0, 0, 1);
     } else {
-        slot_widget->SetIconFrame(artifact.artifactId);
-        slot_widget->set_visible(1);
-        slot_widget->set_help_text(
-            akArtifactTraits[artifact.artifactId].name, 0, 1);
+        slotWidget->setIconFrame(artifact.m_artifactId);
+        slotWidget->setVisible(1);
+        slotWidget->setHelpText(
+            g_artifactTraits[artifact.m_artifactId].m_name, 0, 1);
     }
 }
 
@@ -2256,43 +2289,44 @@ void update_artifact_widget(iconWidget* slot_widget, type_artifact artifact)
 // the back layer and shows frame 0x90 on the drop target; otherwise the front
 // layer shows the equipped artifact or the slot's ARTSLOTS.TXT name.
 VA(0x00562840, 0x166)  // caller/callee graph + dc name/ABI, dc 0x125b3c
-void type_sacrifice_window::update_slot(long slot)
+void type_sacrifice_window::updateSlot(long slot)
 {
-    type_artifact artifact = current_hero->equipped[slot];
+    type_artifact artifact = m_currentHero->m_equipped[slot];
 
-    if (holding_artifact.artifactId != ARTIFACT_NONE
-        && current_hero->HeroFn_004E2840(
-               holding_artifact.artifactId, slot)) {
-        iconWidget* slot_widget = slot_back_widgets[slot];
-        if (artifact.artifactId == ARTIFACT_NONE) {
-            slot_widget->send_message(widget::WIDGET_CLEAR_STATUS,
+    if (m_holdingArtifact.m_artifactId != ARTIFACT_NONE
+        && m_currentHero->heroFn004E2840(
+               m_holdingArtifact.m_artifactId, slot)) {
+        // Before normalization (locals): slot_widget.
+        iconWidget* slotWidget = m_slotBackWidgets[slot];
+        if (artifact.m_artifactId == ARTIFACT_NONE) {
+            slotWidget->sendMessage(widget::WIDGET_CLEAR_STATUS,
                                       widget::WIDGET_DRAWN);
-            slot_widget->set_help_text(0, 0, 1);
+            slotWidget->setHelpText(0, 0, 1);
         } else {
-            slot_widget->SetIconFrame(artifact.artifactId);
+            slotWidget->setIconFrame(artifact.m_artifactId);
             // In retail this is nested inside the helper expansion above,
             // after its first set_visible site spent the available depth.
             // The reduced live TU lacks that earlier inline context, so pin
             // this one nested edge at the same out-of-line boundary.
 #pragma inline_depth(0)
-            slot_widget->set_visible(1);
+            slotWidget->setVisible(1);
 #pragma inline_depth()
-            slot_widget->set_help_text(
-                akArtifactTraits[artifact.artifactId].name, 0, 1);
+            slotWidget->setHelpText(
+                g_artifactTraits[artifact.m_artifactId].m_name, 0, 1);
         }
 
-        slot_widgets[slot]->set_visible(1);
-        slot_widgets[slot]->SetIconFrame(SACRIFICE_ARTIFACT_SLOT_DROP_FRAME);
-        slot_widgets[slot]->set_help_text(
-            slot_back_widgets[slot]->get_help_text(), 0, 1);
+        m_slotWidgets[slot]->setVisible(1);
+        m_slotWidgets[slot]->setIconFrame(SACRIFICE_ARTIFACT_SLOT_DROP_FRAME);
+        m_slotWidgets[slot]->setHelpText(
+            m_slotBackWidgets[slot]->getHelpText(), 0, 1);
     } else {
-        slot_back_widgets[slot]->set_visible(0);
-        update_artifact_widget(slot_widgets[slot], artifact);
+        m_slotBackWidgets[slot]->setVisible(0);
+        updateArtifactWidget(m_slotWidgets[slot], artifact);
     }
 
-    if (artifact.artifactId == ARTIFACT_NONE) {
-        slot_widgets[slot]->set_help_text(
-            akArtifactSlotTraits[slot].name, 0, 1);
+    if (artifact.m_artifactId == ARTIFACT_NONE) {
+        m_slotWidgets[slot]->setHelpText(
+            g_artifactSlotTraits[slot].m_name, 0, 1);
     }
 }
 
@@ -2302,7 +2336,7 @@ void type_sacrifice_window::update_slot(long slot)
 // the one source body stays the header's.
 #if 0 // @carcass
 VA(0x005629b0, 0x22)  // hd-crossbuild; Widget.h:263, dc 0x56df8
-void widget::set_visible(unsigned char arg)
+void widget::setVisible(unsigned char arg)
 {
     // @stub
 }
@@ -2313,11 +2347,12 @@ void widget::set_visible(unsigned char arg)
 // are artifact-mode paths. Complete adds the nineteenth SoD equipment slot
 // exactly when the established map-version field reaches two.
 VA(0x005629e0, 0x33)  // body/call graph + dc name/signature, dc 0x125c34
-void type_sacrifice_window::update_all_slots()
+void type_sacrifice_window::updateAllSlots()
 {
-    long slot_count = gpGame->f_1f698 >= 2 ? 19 : 18;
-    for (long slot = 0; slot < slot_count; ++slot)
-        update_slot(slot);
+    // Before normalization (locals): slot_count.
+    long slotCount = g_game->m_f1f698 >= 2 ? 19 : 18;
+    for (long slot = 0; slot < slotCount; ++slot)
+        updateSlot(slot);
 }
 
 // E:\gamedcs\sacrifice_window.cpp:880
@@ -2325,42 +2360,43 @@ void type_sacrifice_window::update_all_slots()
 // visible in retail. The small refresh helpers are expanded here by /Ob2,
 // leaving calls only to update_slot, update_offering and update_experience.
 VA(0x00562a20, 0x24e)  // DoModal callee + dc name/order, dc 0x125c60
-void type_sacrifice_window::set_artifact_mode()
+void type_sacrifice_window::setArtifactMode()
 {
     unsigned long i;
-    for (i = 0; i < creature_widgets.size(); ++i)
-        creature_widgets[i]->hide();
-    for (i = 0; i < artifact_widgets.size(); ++i)
-        artifact_widgets[i]->show();
+    for (i = 0; i < m_creatureWidgets.size(); ++i)
+        m_creatureWidgets[i]->hide();
+    for (i = 0; i < m_artifactWidgets.size(); ++i)
+        m_artifactWidgets[i]->show();
 
-    holding_artifact.artifactId = ARTIFACT_NONE;
-    update_all_slots();
+    m_holdingArtifact.m_artifactId = ARTIFACT_NONE;
+    updateAllSlots();
 
-    for (i = 0; i < artifact_offering_widgets.size(); ++i)
-        update_artifact_offering(i);
+    for (i = 0; i < m_artifactOfferingWidgets.size(); ++i)
+        updateArtifactOffering(i);
 
-    for (i = 0; i < backpack_widgets.size(); ++i)
-        update_artifact_widget(backpack_widgets[i], current_hero->backpack[i]);
+    for (i = 0; i < m_backpackWidgets.size(); ++i)
+        updateArtifactWidget(m_backpackWidgets[i], m_currentHero->m_backpack[i]);
 
-    unsigned char scroll_backpack =
-        current_hero->get_last_backpack_index() + 1 > backpack_widgets.size();
-    left_backpack_button->enable(scroll_backpack);
-    right_backpack_button->enable(scroll_backpack);
+    // Before normalization (locals): scroll_backpack.
+    unsigned char scrollBackpack =
+        m_currentHero->getLastBackpackIndex() + 1 > m_backpackWidgets.size();
+    m_leftBackpackButton->enable(scrollBackpack);
+    m_rightBackpackButton->enable(scrollBackpack);
 
-    update_offering(current_artifact_widget, current_artifact_value,
-                    &holding_artifact);
-    sacrificing_artifacts = 1;
-    empty_backpack_button->enable(
-        current_hero->get_number_in_backpack(1) > 0);
-    sacrifice_button->enable(0);
-    sacrifice_button->set_help_text(
-        gSacrificeWindowHelp[SACRIFICE_HELP_SACRIFICE_ARTIFACTS].text,
+    updateOffering(m_currentArtifactWidget, m_currentArtifactValue,
+                    &m_holdingArtifact);
+    m_sacrificingArtifacts = 1;
+    m_emptyBackpackButton->enable(
+        m_currentHero->getNumberInBackpack(1) > 0);
+    m_sacrificeButton->enable(0);
+    m_sacrificeButton->setHelpText(
+        g_sacrificeWindowHelp[SACRIFICE_HELP_SACRIFICE_ARTIFACTS].m_text,
         0, 1);
-    all_artifacts_button->enable(
-        current_hero->get_number_in_backpack(1) > 0
-        || current_hero->get_equipped_artifacts(1) > 0);
-    creatures_button->enable(can_sacrifice_creatures);
-    update_experience();
+    m_allArtifactsButton->enable(
+        m_currentHero->getNumberInBackpack(1) > 0
+        || m_currentHero->getEquippedArtifacts(1) > 0);
+    m_creaturesButton->enable(m_canSacrificeCreatures);
+    updateExperience();
 }
 
 // E:\gamedcs\sacrifice_window.cpp:821
@@ -2369,34 +2405,35 @@ void type_sacrifice_window::set_artifact_mode()
 // second dword load. The two help pointers are rows 14 and 15 of the
 // HELP.TXT table whose base and twenty-row extent are independently proven
 // by the loader at 0x5b9b52.
+// Before normalization (locals): artifact_widget, value_widget.
 VA(0x00562c70, 0x124)  // dc order/name + body/ABI, dc 0x125aac
-void update_offering(iconWidget* artifact_widget, textWidget* value_widget,
+void updateOffering(iconWidget* artifactWidget, textWidget* valueWidget,
                      const type_artifact_offering* offering)
 {
     type_artifact artifact = *offering;
-    if (artifact.artifactId == -1) {
-        artifact_widget->send_message(widget::WIDGET_CLEAR_STATUS,
+    if (artifact.m_artifactId == -1) {
+        artifactWidget->sendMessage(widget::WIDGET_CLEAR_STATUS,
                                       widget::WIDGET_DRAWN);
-        artifact_widget->set_help_text(0, 0, 1);
+        artifactWidget->setHelpText(0, 0, 1);
     } else {
-        artifact_widget->SetIconFrame(artifact.artifactId);
-        artifact_widget->send_message(widget::WIDGET_SET_STATUS,
+        artifactWidget->setIconFrame(artifact.m_artifactId);
+        artifactWidget->sendMessage(widget::WIDGET_SET_STATUS,
                                       widget::WIDGET_DRAWN);
-        artifact_widget->set_help_text(
-            akArtifactTraits[artifact.artifactId].name, 0, 1);
+        artifactWidget->setHelpText(
+            g_artifactTraits[artifact.m_artifactId].m_name, 0, 1);
     }
 
-    if (offering->artifactId == -1) {
-        artifact_widget->set_help_text(
-            gSacrificeWindowHelp[SACRIFICE_HELP_EMPTY_ARTIFACT_OFFERING].text,
+    if (offering->m_artifactId == -1) {
+        artifactWidget->setHelpText(
+            g_sacrificeWindowHelp[SACRIFICE_HELP_EMPTY_ARTIFACT_OFFERING].m_text,
             0, 1);
-        value_widget->set_visible(0);
-        value_widget->set_help_text(0, 0, 1);
+        valueWidget->setVisible(0);
+        valueWidget->setHelpText(0, 0, 1);
     } else {
-        value_widget->SetText(convert_with_commas(offering->value).c_str());
-        value_widget->set_visible(1);
-        value_widget->set_help_text(
-            gSacrificeWindowHelp[SACRIFICE_HELP_ARTIFACT_OFFERING_VALUE].text,
+        valueWidget->setText(convertWithCommas(offering->m_value).c_str());
+        valueWidget->setVisible(1);
+        valueWidget->setHelpText(
+            g_sacrificeWindowHelp[SACRIFICE_HELP_ARTIFACT_OFFERING_VALUE].m_text,
             0, 1);
     }
 }
@@ -2404,20 +2441,22 @@ void update_offering(iconWidget* artifact_widget, textWidget* value_widget,
 // E:\gamedcs\CreatureType.h:296 (dc 0x1ef94). The constant plural count
 // folds the inner choice at this caller, while retail retains both range
 // tests and the shared empty-rollover fallback.
-static inline const char* GetArmyName(int type, int count)
+// Before normalization (function): GetArmyName.
+static inline const char* getArmyName(int type, int count)
 {
     return type >= 0 && type <= 0x96
-               ? (count == 1 ? akCreatureTypeTraits[type].m_name
-                             : akCreatureTypeTraits[type].m_plural_name)
-               : emptyRolloverText;
+               ? (count == 1 ? g_creatureTypeTraits[type].m_name
+                             : g_creatureTypeTraits[type].m_pluralName)
+               : g_emptyRolloverText;
 }
 
 // E:\gamedcs\sacrifice_window.cpp:914
 // Inlined at both retail callers. The AI-value load at +0x40 and the signed
 // divide-by-forty reciprocal fix this integer value exactly.
-long sacrifice_value(TCreatureType creature)
+// Before normalization (function): sacrifice_value.
+long sacrificeValue(TCreatureType creature)
 {
-    return akCreatureTypeTraits[creature].AI_value / 40 * 5;
+    return g_creatureTypeTraits[creature].m_aiValue / 40 * 5;
 }
 
 // E:\gamedcs\sacrifice_window.cpp:924
@@ -2447,61 +2486,62 @@ long sacrifice_value(TCreatureType creature)
 // at fn+0x20 and cascades.  The two block-scoped strings do not overlay on
 // either side, so the cycle is an allocation order, not a lifetime fact.
 VA(0x00562da0, 0x3a2)  // dc order/name/signature + retail field graph, dc 0x125e08
-void type_sacrifice_window::update_creature_offering(
+void type_sacrifice_window::updateCreatureOffering(
     type_creature_offering* creature)
 {
-    TCreatureType creature_type;
+    // Before normalization (locals): creature_type, total_hits, help_text.
+    TCreatureType creatureType;
     long available;
-    if (creature->group < 0) {
-        creature_type = CREATURE_NONE;
-        creature->amount = 0;
+    if (creature->m_group < 0) {
+        creatureType = CREATURE_NONE;
+        creature->m_amount = 0;
     } else {
-        creature_type = current_hero->army.armyTypes[creature->group];
-        available = current_hero->army.numTroops[creature->group];
+        creatureType = m_currentHero->m_army.m_armyTypes[creature->m_group];
+        available = m_currentHero->m_army.m_numTroops[creature->m_group];
     }
 
-    if (creature_type == CREATURE_NONE) {
-        creature->icon_widget->set_visible(0);
-        creature->field_08->set_visible(0);
-        creature->selection_widget->set_visible(0);
-        creature->field_14->set_visible(0);
+    if (creatureType == CREATURE_NONE) {
+        creature->m_iconWidget->setVisible(0);
+        creature->m_creatureCountText->setVisible(0);
+        creature->m_selectionWidget->setVisible(0);
+        creature->m_experienceText->setVisible(0);
     } else {
-        long total_hits = static_cast<long>(
-            (sacrifice_value(creature_type) * creature->amount)
-            * current_hero->GetExperienceBonusFactor());
+        long totalHits = static_cast<long>(
+            (sacrificeValue(creatureType) * creature->m_amount)
+            * m_currentHero->getExperienceBonusFactor());
         std::string result;
 
-        creature->icon_widget->SetIconFrame(creature_type + 2);
-        creature->icon_widget->set_visible(1);
-        if (!creature->field_04) {
-            result = convert_with_commas(creature->amount);
+        creature->m_iconWidget->setIconFrame(creatureType + 2);
+        creature->m_iconWidget->setVisible(1);
+        if (!creature->m_sourceSelectionFrame) {
+            result = convertWithCommas(creature->m_amount);
         } else {
-            result = convert_with_commas(available);
+            result = convertWithCommas(available);
         }
-        creature->field_08->SetText(result.c_str());
-        creature->field_08->set_visible(1);
+        creature->m_creatureCountText->setText(result.c_str());
+        creature->m_creatureCountText->setVisible(1);
 
-        creature->selection_widget->SetIconFrame(creature_type + 2);
-        creature->selection_widget->set_visible(creature->amount > 0);
-        result = convert_with_commas(total_hits);
-        result = format_string(
-            gpGeneralText->GetText(SACRIFICE_GENERAL_TEXT_EXPERIENCE),
+        creature->m_selectionWidget->setIconFrame(creatureType + 2);
+        creature->m_selectionWidget->setVisible(creature->m_amount > 0);
+        result = convertWithCommas(totalHits);
+        result = formatString(
+            g_generalText->getText(SACRIFICE_GENERAL_TEXT_EXPERIENCE),
             result.c_str());
-        creature->field_14->SetText(result.c_str());
-        creature->field_14->set_visible(creature->amount > 0);
+        creature->m_experienceText->setText(result.c_str());
+        creature->m_experienceText->setVisible(creature->m_amount > 0);
     }
 
-    if (creature->field_04) {
-        if (creature_type == CREATURE_NONE) {
-            creature->field_04->set_help_text(0, 0, 1);
-            creature->field_10->set_help_text(0, 0, 1);
+    if (creature->m_sourceSelectionFrame) {
+        if (creatureType == CREATURE_NONE) {
+            creature->m_sourceSelectionFrame->setHelpText(0, 0, 1);
+            creature->m_offeringSelectionFrame->setHelpText(0, 0, 1);
         } else {
-            std::string help_text;
-            help_text = format_string(
-                gpGeneralText->GetText(SACRIFICE_GENERAL_TEXT_CREATURE),
-                GetArmyName(creature_type, 0));
-            creature->field_04->set_help_text(help_text.c_str(), 0, 1);
-            creature->field_10->set_help_text(help_text.c_str(), 0, 1);
+            std::string helpText;
+            helpText = formatString(
+                g_generalText->getText(SACRIFICE_GENERAL_TEXT_CREATURE),
+                getArmyName(creatureType, 0));
+            creature->m_sourceSelectionFrame->setHelpText(helpText.c_str(), 0, 1);
+            creature->m_offeringSelectionFrame->setHelpText(helpText.c_str(), 0, 1);
         }
     }
 }
@@ -2511,56 +2551,57 @@ void type_sacrifice_window::update_creature_offering(
 // seven fixed 32-byte creature records, seeds group/amount and calls the
 // retained offering updater before configuring the mode-specific controls.
 VA(0x00563150, 0x141)  // DoModal callee + dc name/order, dc 0x126064
-void type_sacrifice_window::set_creature_mode()
+void type_sacrifice_window::setCreatureMode()
 {
     unsigned long i;
-    for (i = 0; i < artifact_widgets.size(); ++i)
-        artifact_widgets[i]->hide();
-    for (i = 0; i < creature_widgets.size(); ++i)
-        creature_widgets[i]->show();
+    for (i = 0; i < m_artifactWidgets.size(); ++i)
+        m_artifactWidgets[i]->hide();
+    for (i = 0; i < m_creatureWidgets.size(); ++i)
+        m_creatureWidgets[i]->show();
 
     for (long group = 0; group < 7; ++group) {
-        creature_offerings[group].amount = 0;
-        creature_offerings[group].group = group;
-        update_creature_offering(&creature_offerings[group]);
-        creature_offerings[group].field_04->set_visible(0);
-        creature_offerings[group].field_10->set_visible(0);
+        m_creatureOfferings[group].m_amount = 0;
+        m_creatureOfferings[group].m_group = group;
+        updateCreatureOffering(&m_creatureOfferings[group]);
+        m_creatureOfferings[group].m_sourceSelectionFrame->setVisible(0);
+        m_creatureOfferings[group].m_offeringSelectionFrame->setVisible(0);
     }
 
-    current_creature.group = -1;
-    update_creature_offering(&current_creature);
-    sacrificing_artifacts = 0;
-    max_creatures_button->enable(0);
-    creature_slider->enable(0);
-    sacrifice_button->enable(0);
-    sacrifice_button->set_help_text(
-        gSacrificeWindowHelp[SACRIFICE_HELP_SACRIFICE_CREATURES].text,
+    m_currentCreature.m_group = -1;
+    updateCreatureOffering(&m_currentCreature);
+    m_sacrificingArtifacts = 0;
+    m_maxCreaturesButton->enable(0);
+    m_creatureSlider->enable(0);
+    m_sacrificeButton->enable(0);
+    m_sacrificeButton->setHelpText(
+        g_sacrificeWindowHelp[SACRIFICE_HELP_SACRIFICE_CREATURES].m_text,
         0, 1);
-    creature_name_widget->set_visible(0);
-    all_creatures_button->enable(
-        current_hero->army.get_creature_total() > 1);
-    artifacts_button->enable(can_sacrifice_artifacts);
-    update_experience();
+    m_creatureNameWidget->setVisible(0);
+    m_allCreaturesButton->enable(
+        m_currentHero->m_army.getCreatureTotal() > 1);
+    m_artifactsButton->enable(m_canSacrificeArtifacts);
+    updateExperience();
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1036
 // Retail expands this helper at the click sites. The DC line map fixes the
 // source order and argument ABI; the Complete mouse-pointer and refresh call
 // graph independently proves the body.
-void type_sacrifice_window::pick_up_artifact(
-    type_artifact artifact, long slot, unsigned char new_artifact)
+void type_sacrifice_window::pickUpArtifact(
+    // Before normalization (locals): new_artifact.
+    type_artifact artifact, long slot, unsigned char newArtifact)
 {
-    holding_artifact.set(&artifact, slot, current_hero);
-    if (new_artifact) {
-        total_experience += holding_artifact.value;
-        update_experience();
+    m_holdingArtifact.set(&artifact, slot, m_currentHero);
+    if (newArtifact) {
+        m_totalExperience += m_holdingArtifact.m_value;
+        updateExperience();
     }
-    update_offering(current_artifact_widget, current_artifact_value,
-                    &holding_artifact);
-    gpMouseManager->SetPointer(holding_artifact.artifactId,
+    updateOffering(m_currentArtifactWidget, m_currentArtifactValue,
+                    &m_holdingArtifact);
+    g_mouseManager->setPointer(m_holdingArtifact.m_artifactId,
                                mouseManager::ARTIFACT_SET);
-    update_all_slots();
-    DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+    updateAllSlots();
+    drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
 }
 
 // CODEGEN SCAFFOLD: this partial reconstruction is one source-level inline
@@ -2568,7 +2609,8 @@ void type_sacrifice_window::pick_up_artifact(
 // The empty tail call emits no instructions; it only keeps the third nested
 // vector::insert out of line, as retail does. Remove it when the missing
 // original source expression that supplied that candidate is recovered.
-static void transformer_grid_inline_surface()
+// Before normalization (function): transformer_grid_inline_surface.
+static void transformerGridInlineSurface()
 {
 }
 
@@ -2576,19 +2618,20 @@ static void transformer_grid_inline_surface()
 // The Dreamcast line table and xref graph prove this helper boundary at each
 // artifact-drop site. Complete folds the false change-experience arm into
 // sacrifice, but retains the helper's redraw as a distinct inline tail.
-void type_sacrifice_window::put_down_artifact(
-    unsigned char change_experience)
+void type_sacrifice_window::putDownArtifact(
+    // Before normalization (locals): change_experience.
+    unsigned char changeExperience)
 {
-    if (change_experience) {
-        total_experience -= holding_artifact.value;
-        update_experience();
+    if (changeExperience) {
+        m_totalExperience -= m_holdingArtifact.m_value;
+        updateExperience();
     }
-    holding_artifact.artifactId = ARTIFACT_NONE;
-    update_offering(current_artifact_widget, current_artifact_value,
-                    &holding_artifact);
-    gpMouseManager->SetPointer(0, mouseManager::DEFAULT_SET);
-    update_all_slots();
-    DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+    m_holdingArtifact.m_artifactId = ARTIFACT_NONE;
+    updateOffering(m_currentArtifactWidget, m_currentArtifactValue,
+                    &m_holdingArtifact);
+    g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
+    updateAllSlots();
+    drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1071
@@ -2602,71 +2645,73 @@ void type_sacrifice_window::put_down_artifact(
 // pickup runs; retail's sacrifice-specific general-text row 483 closes the
 // last two immediate bytes.
 VA(0x005632a0, 0x417)  // widget call edge + dc name/order, dc 0x1262e4
-void type_sacrifice_window::artifact_click(
-    long slot, unsigned char right_click)
+void type_sacrifice_window::artifactClick(
+    // Before normalization (locals): right_click, old_artifact.
+    long slot, unsigned char rightClick)
 {
-    type_artifact old_artifact = current_hero->equipped[slot];
+    type_artifact oldArtifact = m_currentHero->m_equipped[slot];
 
-    if (holding_artifact.artifactId == ARTIFACT_NONE) {
-        if (old_artifact.artifactId == ARTIFACT_NONE)
+    if (m_holdingArtifact.m_artifactId == ARTIFACT_NONE) {
+        if (oldArtifact.m_artifactId == ARTIFACT_NONE)
             return;
 
-        if (right_click) {
-            current_hero->ViewArtifact(&old_artifact, right_click);
+        if (rightClick) {
+            m_currentHero->viewArtifact(&oldArtifact, rightClick);
             return;
         }
 
-        if (old_artifact.artifactId == ARTIFACT_SPELLBOOK) {
+        if (oldArtifact.m_artifactId == ARTIFACT_SPELLBOOK) {
             TSpellbookWindow spellbook(
-                current_hero, 0, TSpellbookWindow::eContextNeither,
-                current_hero->get_special_terrain());
-            spellbook.DoModal(0);
+                m_currentHero, 0, TSpellbookWindow::eContextNeither,
+                m_currentHero->getSpecialTerrain());
+            spellbook.doModal(0);
             return;
         }
 
-        if (old_artifact.artifactId == ARTIFACT_CATAPULT) {
-            NormalDialog(
-                gpGeneralText->GetText(
+        if (oldArtifact.m_artifactId == ARTIFACT_CATAPULT) {
+            normalDialog(
+                g_generalText->getText(
                     SACRIFICE_GENERAL_TEXT_CANNOT_SACRIFICE_ARTIFACT),
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             return;
         }
 
-        current_hero->remove_artifact(slot);
-        update_slot(slot);
-        pick_up_artifact(old_artifact, slot, 1);
+        m_currentHero->removeArtifact(slot);
+        updateSlot(slot);
+        pickUpArtifact(oldArtifact, slot, 1);
         return;
     }
 
-    if (right_click)
+    if (rightClick)
         return;
-    if (!current_hero->HeroFn_004E2840(
-            holding_artifact.artifactId, slot))
+    if (!m_currentHero->heroFn004E2840(
+            m_holdingArtifact.m_artifactId, slot))
         return;
 
-    if (old_artifact.artifactId != ARTIFACT_NONE)
-        current_hero->remove_artifact(slot);
-    current_hero->equip_artifact(&holding_artifact, slot);
-    update_slot(slot);
-    put_down_artifact(1);
-    if (old_artifact.artifactId != ARTIFACT_NONE)
-        pick_up_artifact(old_artifact, slot, 1);
+    if (oldArtifact.m_artifactId != ARTIFACT_NONE)
+        m_currentHero->removeArtifact(slot);
+    m_currentHero->equipArtifact(&m_holdingArtifact, slot);
+    updateSlot(slot);
+    putDownArtifact(1);
+    if (oldArtifact.m_artifactId != ARTIFACT_NONE)
+        pickUpArtifact(oldArtifact, slot, 1);
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1127
 // Complete expands this helper into both halves of backpack_click. Its widget
 // vector walk and shared scrolling-state byte are directly visible there.
-void type_sacrifice_window::update_backpack()
+void type_sacrifice_window::updateBackpack()
 {
-    for (unsigned long i = 0; i < backpack_widgets.size(); ++i)
-        update_artifact_widget(backpack_widgets[i],
-                               current_hero->backpack[i]);
+    for (unsigned long i = 0; i < m_backpackWidgets.size(); ++i)
+        updateArtifactWidget(m_backpackWidgets[i],
+                               m_currentHero->m_backpack[i]);
 
-    unsigned char scroll_backpack =
-        current_hero->get_last_backpack_index() + 1
-        > backpack_widgets.size();
-    left_backpack_button->enable(scroll_backpack);
-    right_backpack_button->enable(scroll_backpack);
+    // Before normalization (locals): scroll_backpack.
+    unsigned char scrollBackpack =
+        m_currentHero->getLastBackpackIndex() + 1
+        > m_backpackWidgets.size();
+    m_leftBackpackButton->enable(scrollBackpack);
+    m_rightBackpackButton->enable(scrollBackpack);
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1150
@@ -2682,33 +2727,34 @@ void type_sacrifice_window::update_backpack()
 // handler in the DC line table's nested if/else-if form is byte-flat, so the
 // closest source-authentic spelling is retained without a per-site pragma.
 VA(0x005636c0, 0x31a)  // widget call edge + dc name/order, dc 0x1264dc
-void type_sacrifice_window::backpack_click(
-    long slot, unsigned char right_click)
+void type_sacrifice_window::backpackClick(
+    // Before normalization (locals): right_click, old_artifact.
+    long slot, unsigned char rightClick)
 {
-    type_artifact old_artifact = current_hero->backpack[slot];
+    type_artifact oldArtifact = m_currentHero->m_backpack[slot];
 
-    if (holding_artifact.artifactId == ARTIFACT_NONE) {
-        if (old_artifact.artifactId != ARTIFACT_NONE) {
-            if (right_click) {
-                current_hero->ViewArtifact(
-                    &old_artifact, right_click);
+    if (m_holdingArtifact.m_artifactId == ARTIFACT_NONE) {
+        if (oldArtifact.m_artifactId != ARTIFACT_NONE) {
+            if (rightClick) {
+                m_currentHero->viewArtifact(
+                    &oldArtifact, rightClick);
             } else {
-                current_hero->remove_backpack_artifact(slot);
-                update_backpack();
-                pick_up_artifact(old_artifact, 19, 1);
+                m_currentHero->removeBackpackArtifact(slot);
+                updateBackpack();
+                pickUpArtifact(oldArtifact, 19, 1);
             }
         }
-    } else if (!right_click) {
-        if (!current_hero->add_to_backpack(&holding_artifact, slot)) {
-            NormalDialog(
-                current_hero
-                    ->get_backpack_error(
-                        artifact_from_int(holding_artifact.artifactId))
+    } else if (!rightClick) {
+        if (!m_currentHero->addToBackpack(&m_holdingArtifact, slot)) {
+            normalDialog(
+                m_currentHero
+                    ->getBackpackError(
+                        artifactFromInt(m_holdingArtifact.m_artifactId))
                     .c_str(),
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         } else {
-            update_backpack();
-            put_down_artifact(1);
+            updateBackpack();
+            putDownArtifact(1);
         }
     }
 }
@@ -2716,18 +2762,18 @@ void type_sacrifice_window::backpack_click(
 // The retained copy of the source helper above. The 8-byte by-value argument
 // and artifact-traits lookup independently fix this exact retail COMDAT.
 VA(0x005639e0, 0x5b)  // linkorder + body/ABI, dc 0x125a4c
-void update_artifact_widget(iconWidget* slot_widget, type_artifact artifact);
+void updateArtifactWidget(iconWidget* slotWidget, type_artifact artifact);
 
 // E:\gamedcs\sacrifice_window.cpp:1189
 // The three indexed _First loads independently prove the adjacent vector
 // layout: offering records at +0xc0, value widgets at +0xd0 and artifact
 // widgets at +0xe0. VC6 evaluates the forwarding arguments right-to-left.
 VA(0x00563a40, 0x31)  // dc order/name + retail vector offsets, dc 0x1265b8
-void type_sacrifice_window::update_artifact_offering(long slot)
+void type_sacrifice_window::updateArtifactOffering(long slot)
 {
-    update_offering(artifact_offering_widgets[slot],
-                    artifact_value_widgets[slot],
-                    &artifact_offerings[slot]);
+    updateOffering(m_artifactOfferingWidgets[slot],
+                    m_artifactValueWidgets[slot],
+                    &m_artifactOfferings[slot]);
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1200
@@ -2736,29 +2782,30 @@ void type_sacrifice_window::update_artifact_offering(long slot)
 // held artifact while retaining its original source slot and sacrifice value;
 // right click only opens the ordinary artifact description.
 VA(0x00563a80, 0x31b)  // widget call edge + dc name/order, dc 0x126640
-void type_sacrifice_window::offering_click(
-    long slot, unsigned char right_click)
+void type_sacrifice_window::offeringClick(
+    // Before normalization (locals): right_click, old_artifact.
+    long slot, unsigned char rightClick)
 {
-    type_artifact_offering old_artifact = artifact_offerings[slot];
+    type_artifact_offering oldArtifact = m_artifactOfferings[slot];
 
-    if (holding_artifact.artifactId == ARTIFACT_NONE) {
-        if (old_artifact.artifactId != ARTIFACT_NONE) {
-            if (right_click) {
-                current_hero->ViewArtifact(
-                    &old_artifact, right_click);
+    if (m_holdingArtifact.m_artifactId == ARTIFACT_NONE) {
+        if (oldArtifact.m_artifactId != ARTIFACT_NONE) {
+            if (rightClick) {
+                m_currentHero->viewArtifact(
+                    &oldArtifact, rightClick);
             } else {
-                artifact_offerings[slot].artifactId = ARTIFACT_NONE;
-                update_artifact_offering(slot);
-                pick_up_artifact(
-                    old_artifact, old_artifact.source, 0);
+                m_artifactOfferings[slot].m_artifactId = ARTIFACT_NONE;
+                updateArtifactOffering(slot);
+                pickUpArtifact(
+                    oldArtifact, oldArtifact.m_source, 0);
             }
         }
-    } else if (!right_click) {
-        artifact_offerings[slot] = holding_artifact;
-        update_artifact_offering(slot);
-        put_down_artifact(0);
-        if (old_artifact.artifactId != ARTIFACT_NONE)
-            pick_up_artifact(old_artifact, old_artifact.source, 0);
+    } else if (!rightClick) {
+        m_artifactOfferings[slot] = m_holdingArtifact;
+        updateArtifactOffering(slot);
+        putDownArtifact(0);
+        if (oldArtifact.m_artifactId != ARTIFACT_NONE)
+            pickUpArtifact(oldArtifact, oldArtifact.m_source, 0);
     }
 }
 
@@ -2767,23 +2814,23 @@ void type_sacrifice_window::offering_click(
 // button. The Complete body calls hero::rotate_backpack_left and expands the
 // adjacent update_backpack helper before redrawing the dialog.
 VA(0x00563da0, 0x152)  // callback address-take + dc name/signature/order
-int type_sacrifice_window::scroll_backpack_left(message& msg)
+int type_sacrifice_window::scrollBackpackLeft(message& msg)
 {
-    if (msg.codeX == widget::WIDGET_RIGHT_SELECT) {
-        NormalDialog(
-            gSacrificeWindowHelp[
-                SACRIFICE_HELP_SCROLL_BACKPACK_LEFT].rclick,
+    if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
+        normalDialog(
+            g_sacrificeWindowHelp[
+                SACRIFICE_HELP_SCROLL_BACKPACK_LEFT].m_rclick,
             4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return MESSAGE_DISPATCH_CONSUME;
     }
 
-    if (msg.codeX == widget::WIDGET_DESELECT
-        && !(msg.qualifier & MESSAGE_MODIFIER_RIGHT)) {
+    if (msg.m_codeX == widget::WIDGET_DESELECT
+        && !(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
         type_sacrifice_window* window =
-            static_cast<type_sacrifice_window*>(msg.window);
-        window->current_hero->rotate_backpack_left();
-        window->update_backpack();
-        window->DrawWindow(
+            static_cast<type_sacrifice_window*>(msg.m_window);
+        window->m_currentHero->rotateBackpackLeft();
+        window->updateBackpack();
+        window->drawWindow(
             1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
         return MESSAGE_DISPATCH_CONSUME;
     }
@@ -2794,23 +2841,23 @@ int type_sacrifice_window::scroll_backpack_left(message& msg)
 // The right scroll button supplies the symmetric address-taken callback. Its
 // body is byte-for-byte parallel except for the help row and hero operation.
 VA(0x00563f00, 0x152)  // callback address-take + dc name/signature/order
-int type_sacrifice_window::scroll_backpack_right(message& msg)
+int type_sacrifice_window::scrollBackpackRight(message& msg)
 {
-    if (msg.codeX == widget::WIDGET_RIGHT_SELECT) {
-        NormalDialog(
-            gSacrificeWindowHelp[
-                SACRIFICE_HELP_SCROLL_BACKPACK_RIGHT].rclick,
+    if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
+        normalDialog(
+            g_sacrificeWindowHelp[
+                SACRIFICE_HELP_SCROLL_BACKPACK_RIGHT].m_rclick,
             4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return MESSAGE_DISPATCH_CONSUME;
     }
 
-    if (msg.codeX == widget::WIDGET_DESELECT
-        && !(msg.qualifier & MESSAGE_MODIFIER_RIGHT)) {
+    if (msg.m_codeX == widget::WIDGET_DESELECT
+        && !(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
         type_sacrifice_window* window =
-            static_cast<type_sacrifice_window*>(msg.window);
-        window->current_hero->rotate_backpack_right();
-        window->update_backpack();
-        window->DrawWindow(
+            static_cast<type_sacrifice_window*>(msg.m_window);
+        window->m_currentHero->rotateBackpackRight();
+        window->updateBackpack();
+        window->drawWindow(
             1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
         return MESSAGE_DISPATCH_CONSUME;
     }
@@ -2821,63 +2868,63 @@ int type_sacrifice_window::scroll_backpack_right(message& msg)
 // Complete expands this helper into both artifact-batch callbacks. It fills
 // the first empty offering, adds that record's scaled value, and refreshes
 // the corresponding pair of offering widgets.
-unsigned char type_sacrifice_window::add_artifact(
+unsigned char type_sacrifice_window::addArtifact(
     type_artifact artifact, long source)
 {
     unsigned long i;
-    for (i = 0; i < artifact_offerings.size(); ++i) {
-        if (artifact_offerings[i].artifactId == ARTIFACT_NONE)
+    for (i = 0; i < m_artifactOfferings.size(); ++i) {
+        if (m_artifactOfferings[i].m_artifactId == ARTIFACT_NONE)
             break;
     }
-    if (i == artifact_offerings.size())
+    if (i == m_artifactOfferings.size())
         return 0;
 
-    artifact_offerings[i].set(&artifact, source, current_hero);
-    total_experience += artifact_offerings[i].value;
-    update_artifact_offering(i);
+    m_artifactOfferings[i].set(&artifact, source, m_currentHero);
+    m_totalExperience += m_artifactOfferings[i].m_value;
+    updateArtifactOffering(i);
     return 1;
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1310
 // The helper is expanded at each callback. Retail scans the fixed 64-record
 // backpack for its next occupied slot and stops if the offering pane fills.
-void type_sacrifice_window::empty_backpack()
+void type_sacrifice_window::emptyBackpack()
 {
     type_artifact artifact;
-    while (current_hero->get_number_in_backpack(1) > 0) {
+    while (m_currentHero->getNumberInBackpack(1) > 0) {
         long i;
         for (i = 0; i < SACRIFICE_BACKPACK_ARTIFACT_COUNT; ++i) {
-            artifact = current_hero->backpack[i];
-            if (artifact.artifactId != ARTIFACT_NONE)
+            artifact = m_currentHero->m_backpack[i];
+            if (artifact.m_artifactId != ARTIFACT_NONE)
                 break;
         }
-        if (!add_artifact(artifact, SACRIFICE_BACKPACK_SOURCE_SLOT))
+        if (!addArtifact(artifact, SACRIFICE_BACKPACK_SOURCE_SLOT))
             break;
-        current_hero->remove_backpack_artifact(i);
+        m_currentHero->removeBackpackArtifact(i);
     }
-    update_backpack();
+    updateBackpack();
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1338
 // create_artifact_widgets stores this private static callback on the empty-
 // backpack button. Both add_artifact and empty_backpack expand in Complete.
 VA(0x00564060, 0x2d3)  // callback address-take + dc name/signature/order
-int type_sacrifice_window::empty_backpack(message& msg)
+int type_sacrifice_window::emptyBackpack(message& msg)
 {
-    if (msg.codeX == widget::WIDGET_RIGHT_SELECT) {
-        NormalDialog(
-            gSacrificeWindowHelp[SACRIFICE_HELP_EMPTY_BACKPACK].rclick,
+    if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
+        normalDialog(
+            g_sacrificeWindowHelp[SACRIFICE_HELP_EMPTY_BACKPACK].m_rclick,
             4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return MESSAGE_DISPATCH_CONSUME;
     }
 
-    if (msg.codeX == widget::WIDGET_DESELECT
-        && !(msg.qualifier & MESSAGE_MODIFIER_RIGHT)) {
+    if (msg.m_codeX == widget::WIDGET_DESELECT
+        && !(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
         type_sacrifice_window* window =
-            static_cast<type_sacrifice_window*>(msg.window);
-        window->empty_backpack();
-        window->update_experience();
-        window->DrawWindow(
+            static_cast<type_sacrifice_window*>(msg.m_window);
+        window->emptyBackpack();
+        window->updateExperience();
+        window->drawWindow(
             1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
         return MESSAGE_DISPATCH_CONSUME;
     }
@@ -2901,32 +2948,32 @@ int type_sacrifice_window::empty_backpack(message& msg)
 // empty-backpack callback (and force-inlining update_backpack also regresses
 // backpack_click), so the source-authentic call graph is retained.
 VA(0x00564340, 0x35f)  // callback address-take + dc name/signature/order
-int type_sacrifice_window::all_artifacts(message& msg)
+int type_sacrifice_window::allArtifacts(message& msg)
 {
-    if (msg.codeX == widget::WIDGET_RIGHT_SELECT) {
-        NormalDialog(
-            gSacrificeWindowHelp[SACRIFICE_HELP_ALL_ARTIFACTS].rclick,
+    if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
+        normalDialog(
+            g_sacrificeWindowHelp[SACRIFICE_HELP_ALL_ARTIFACTS].m_rclick,
             4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return MESSAGE_DISPATCH_CONSUME;
     }
 
-    if (msg.codeX == widget::WIDGET_DESELECT
-        && !(msg.qualifier & MESSAGE_MODIFIER_RIGHT)) {
+    if (msg.m_codeX == widget::WIDGET_DESELECT
+        && !(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
         type_sacrifice_window* window =
-            static_cast<type_sacrifice_window*>(msg.window);
+            static_cast<type_sacrifice_window*>(msg.m_window);
         type_artifact artifact;
         for (long slot = 0; slot < SACRIFICE_EQUIPPED_SLOT_COUNT; ++slot) {
-            artifact = window->current_hero->equipped[slot];
-            if (artifact.artifactId != ARTIFACT_NONE) {
-                if (!window->add_artifact(artifact, slot))
+            artifact = window->m_currentHero->m_equipped[slot];
+            if (artifact.m_artifactId != ARTIFACT_NONE) {
+                if (!window->addArtifact(artifact, slot))
                     break;
-                window->current_hero->remove_artifact(slot);
-                window->update_slot(slot);
+                window->m_currentHero->removeArtifact(slot);
+                window->updateSlot(slot);
             }
         }
-        window->empty_backpack();
-        window->update_experience();
-        window->DrawWindow(
+        window->emptyBackpack();
+        window->updateExperience();
+        window->drawWindow(
             1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
         return MESSAGE_DISPATCH_CONSUME;
     }
@@ -2946,59 +2993,59 @@ int type_sacrifice_window::all_artifacts(message& msg)
 VA(0x005646a0, 0x269)  // callback address-take + dc name/signature/order
 int type_sacrifice_window::sacrifice(message& msg)
 {
-    if (msg.codeX == widget::WIDGET_RIGHT_SELECT) {
-        NormalDialog(
-            gSacrificeWindowHelp[
-                SACRIFICE_HELP_SACRIFICE_ARTIFACTS].rclick,
+    if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
+        normalDialog(
+            g_sacrificeWindowHelp[
+                SACRIFICE_HELP_SACRIFICE_ARTIFACTS].m_rclick,
             4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return MESSAGE_DISPATCH_CONSUME;
     }
 
-    if (msg.codeX == widget::WIDGET_DESELECT
-        && !(msg.qualifier & MESSAGE_MODIFIER_RIGHT)) {
+    if (msg.m_codeX == widget::WIDGET_DESELECT
+        && !(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
         type_sacrifice_window* window =
-            static_cast<type_sacrifice_window*>(msg.window);
-        if (window->sacrificing_artifacts) {
+            static_cast<type_sacrifice_window*>(msg.m_window);
+        if (window->m_sacrificingArtifacts) {
             for (unsigned long i = 0;
-                 i < window->artifact_offerings.size(); ++i) {
-                window->artifact_offerings[i].artifactId = ARTIFACT_NONE;
-                window->update_artifact_offering(i);
+                 i < window->m_artifactOfferings.size(); ++i) {
+                window->m_artifactOfferings[i].m_artifactId = ARTIFACT_NONE;
+                window->updateArtifactOffering(i);
             }
-            if (window->holding_artifact.artifactId != ARTIFACT_NONE)
-                window->put_down_artifact(0);
+            if (window->m_holdingArtifact.m_artifactId != ARTIFACT_NONE)
+                window->putDownArtifact(0);
         } else {
-            armyGroup* army = &window->current_hero->army;
+            armyGroup* army = &window->m_currentHero->m_army;
             long group;
             for (group = 0;
                  group < armyGroup::ARMY_GROUP_SLOT_COUNT; ++group) {
-                army->numTroops[group] -=
-                    window->creature_offerings[group].amount;
-                if (army->numTroops[group] <= 0)
-                    army->Dismiss(group);
-                window->creature_offerings[group].amount = 0;
-                window->update_creature_offering(
-                    &window->creature_offerings[group]);
-                window->creature_offerings[group].field_04->set_visible(0);
-                window->creature_offerings[group].field_10->set_visible(0);
+                army->m_numTroops[group] -=
+                    window->m_creatureOfferings[group].m_amount;
+                if (army->m_numTroops[group] <= 0)
+                    army->dismiss(group);
+                window->m_creatureOfferings[group].m_amount = 0;
+                window->updateCreatureOffering(
+                    &window->m_creatureOfferings[group]);
+                window->m_creatureOfferings[group].m_sourceSelectionFrame->setVisible(0);
+                window->m_creatureOfferings[group].m_offeringSelectionFrame->setVisible(0);
             }
-            window->current_creature.group = -1;
-            window->update_creature_offering(&window->current_creature);
-            window->creature_name_widget->set_visible(0);
-            window->all_creatures_button->enable(
-                army->get_creature_total() > 1);
-            window->creature_slider->SetResolution(1);
-            window->creature_slider->SetState(0);
-            window->creature_slider->enable(0);
-            window->max_creatures_button->enable(0);
+            window->m_currentCreature.m_group = -1;
+            window->updateCreatureOffering(&window->m_currentCreature);
+            window->m_creatureNameWidget->setVisible(0);
+            window->m_allCreaturesButton->enable(
+                army->getCreatureTotal() > 1);
+            window->m_creatureSlider->setResolution(1);
+            window->m_creatureSlider->setState(0);
+            window->m_creatureSlider->enable(0);
+            window->m_maxCreaturesButton->enable(0);
         }
 
-        window->DrawWindow(
+        window->drawWindow(
             1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-        window->current_hero->GiveExperience(
-            window->total_experience, 1, 1);
-        window->total_experience = 0;
-        window->update_experience();
-        window->DrawWindow(
+        window->m_currentHero->giveExperience(
+            window->m_totalExperience, 1, 1);
+        window->m_totalExperience = 0;
+        window->updateExperience();
+        window->drawWindow(
             1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
         return MESSAGE_DISPATCH_CONSUME;
     }
@@ -3010,23 +3057,23 @@ int type_sacrifice_window::sacrifice(message& msg)
 // Complete expands clear and return_artifact exactly as in the later
 // artifact-mode twin, then restores creature mode and redraws the dialog.
 VA(0x00564910, 0x164)  // callback address-take + dc name/signature/order
-int type_sacrifice_window::sacrifice_creatures(message& msg)
+int type_sacrifice_window::sacrificeCreatures(message& msg)
 {
-    if (msg.codeX == widget::WIDGET_RIGHT_SELECT) {
-        NormalDialog(
-            gSacrificeWindowHelp[
-                SACRIFICE_HELP_SACRIFICE_CREATURES_BUTTON].rclick,
+    if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
+        normalDialog(
+            g_sacrificeWindowHelp[
+                SACRIFICE_HELP_SACRIFICE_CREATURES_BUTTON].m_rclick,
             4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return MESSAGE_DISPATCH_CONSUME;
     }
 
-    if (msg.codeX == widget::WIDGET_DESELECT
-        && !(msg.qualifier & MESSAGE_MODIFIER_RIGHT)) {
+    if (msg.m_codeX == widget::WIDGET_DESELECT
+        && !(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
         type_sacrifice_window* window =
-            static_cast<type_sacrifice_window*>(msg.window);
+            static_cast<type_sacrifice_window*>(msg.m_window);
         window->clear();
-        window->set_creature_mode();
-        window->DrawWindow(
+        window->setCreatureMode();
+        window->drawWindow(
             1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
         return MESSAGE_DISPATCH_CONSUME;
     }
@@ -3037,18 +3084,18 @@ int type_sacrifice_window::sacrifice_creatures(message& msg)
 // Complete expands it into clear. The same order is independently repeated
 // by ExitDialog: original equipped slot, any legal equipped slot, backpack,
 // then a final arbitrary equipped-slot fallback.
-void type_sacrifice_window::return_artifact(
+void type_sacrifice_window::returnArtifact(
     const type_artifact_offering& artifact)
 {
-    if (artifact.source < 19) {
-        if (current_hero->equip_artifact(&artifact, artifact.source))
+    if (artifact.m_source < 19) {
+        if (m_currentHero->equipArtifact(&artifact, artifact.m_source))
             return;
-        if (current_hero->equip_artifact(&artifact, -1))
+        if (m_currentHero->equipArtifact(&artifact, -1))
             return;
     }
-    if (current_hero->add_to_backpack(&artifact, -1))
+    if (m_currentHero->addToBackpack(&artifact, -1))
         return;
-    current_hero->equip_artifact(&artifact, -1);
+    m_currentHero->equipArtifact(&artifact, -1);
 }
 
 // The Dreamcast line map places clear at source line 1521. Complete expands
@@ -3056,18 +3103,18 @@ void type_sacrifice_window::return_artifact(
 // terminal total reset expose the entire body.
 void type_sacrifice_window::clear()
 {
-    for (unsigned long i = 0; i < artifact_offerings.size(); ++i) {
-        if (artifact_offerings[i].artifactId != ARTIFACT_NONE) {
-            return_artifact(artifact_offerings[i]);
-            artifact_offerings[i].artifactId = ARTIFACT_NONE;
+    for (unsigned long i = 0; i < m_artifactOfferings.size(); ++i) {
+        if (m_artifactOfferings[i].m_artifactId != ARTIFACT_NONE) {
+            returnArtifact(m_artifactOfferings[i]);
+            m_artifactOfferings[i].m_artifactId = ARTIFACT_NONE;
         }
     }
 
-    if (holding_artifact.artifactId != ARTIFACT_NONE) {
-        return_artifact(holding_artifact);
-        holding_artifact.artifactId = ARTIFACT_NONE;
+    if (m_holdingArtifact.m_artifactId != ARTIFACT_NONE) {
+        returnArtifact(m_holdingArtifact);
+        m_holdingArtifact.m_artifactId = ARTIFACT_NONE;
     }
-    total_experience = 0;
+    m_totalExperience = 0;
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1544
@@ -3075,24 +3122,24 @@ void type_sacrifice_window::clear()
 // expands clear, then closes the modal dialog with the standard widget
 // message fields rather than calling the virtual ExitDialog override.
 VA(0x00564a80, 0x171)  // callback address-take + dc name/signature/order
-int type_sacrifice_window::exit_click(message& msg)
+int type_sacrifice_window::exitClick(message& msg)
 {
-    if (msg.codeX == widget::WIDGET_RIGHT_SELECT) {
-        NormalDialog(
-            gSacrificeWindowHelp[SACRIFICE_HELP_EXIT_BUTTON].rclick,
+    if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
+        normalDialog(
+            g_sacrificeWindowHelp[SACRIFICE_HELP_EXIT_BUTTON].m_rclick,
             4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return MESSAGE_DISPATCH_CONSUME;
     }
 
-    if (msg.codeX == widget::WIDGET_DESELECT
-        && !(msg.qualifier & MESSAGE_MODIFIER_RIGHT)) {
+    if (msg.m_codeX == widget::WIDGET_DESELECT
+        && !(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
         type_sacrifice_window* window =
-            static_cast<type_sacrifice_window*>(msg.window);
+            static_cast<type_sacrifice_window*>(msg.m_window);
         window->clear();
-        msg.id = MESSAGE_WIDGET;
-        gpWindowManager->dialogReturn = 0;
-        msg.codeY = widget::WIDGET_END_DIALOG;
-        msg.codeX = widget::WIDGET_END_DIALOG;
+        msg.m_id = MESSAGE_WIDGET;
+        g_windowManager->m_dialogReturn = 0;
+        msg.m_codeY = widget::WIDGET_END_DIALOG;
+        msg.m_codeX = widget::WIDGET_END_DIALOG;
         return MESSAGE_DISPATCH_FORWARD;
     }
     return 0;
@@ -3103,43 +3150,44 @@ int type_sacrifice_window::exit_click(message& msg)
 // row. Direct array subscripts preserve VC6's shared pre-base index, while
 // the right-hand bonus-factor operands keep each result live on the x87
 // stack exactly as in update_creature_offering.
+// Before normalization (locals): new_amount, creature_type, old_experience.
 VA(0x00564c00, 0xe6)  // caller/callee graph + dc name/signature/order
-void type_sacrifice_window::set_creature_sacrifice(long slot, long new_amount)
+void type_sacrifice_window::setCreatureSacrifice(long slot, long newAmount)
 {
-    if (creature_offerings[slot].amount == new_amount)
+    if (m_creatureOfferings[slot].m_amount == newAmount)
         return;
 
-    TCreatureType creature_type = current_hero->army.armyTypes[slot];
-    long value = sacrifice_value(creature_type);
-    long old_experience = static_cast<long>(
-        (value * creature_offerings[slot].amount)
-        * current_hero->GetExperienceBonusFactor());
-    total_experience += static_cast<long>(
-        (value * new_amount) * current_hero->GetExperienceBonusFactor())
-        - old_experience;
+    TCreatureType creatureType = m_currentHero->m_army.m_armyTypes[slot];
+    long value = sacrificeValue(creatureType);
+    long oldExperience = static_cast<long>(
+        (value * m_creatureOfferings[slot].m_amount)
+        * m_currentHero->getExperienceBonusFactor());
+    m_totalExperience += static_cast<long>(
+        (value * newAmount) * m_currentHero->getExperienceBonusFactor())
+        - oldExperience;
 
-    creature_offerings[slot].amount = new_amount;
-    update_creature_offering(&creature_offerings[slot]);
-    if (current_creature.group == slot) {
-        current_creature.amount = new_amount;
-        update_creature_offering(&current_creature);
+    m_creatureOfferings[slot].m_amount = newAmount;
+    updateCreatureOffering(&m_creatureOfferings[slot]);
+    if (m_currentCreature.m_group == slot) {
+        m_currentCreature.m_amount = newAmount;
+        updateCreatureOffering(&m_currentCreature);
     }
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1599
 // Retail expands this helper at both callers. The scan preserves one troop
 // only when every other army slot has already been offered to its limit.
-long type_sacrifice_window::get_max_amount(long slot) const
+long type_sacrifice_window::getMaxAmount(long slot) const
 {
-    long amount = current_hero->army.numTroops[slot];
+    long amount = m_currentHero->m_army.m_numTroops[slot];
     if (amount <= 0)
         return 0;
 
     long other;
     for (other = 0; other < armyGroup::ARMY_GROUP_SLOT_COUNT; ++other) {
         if (other != slot
-            && creature_offerings[other].amount
-                < current_hero->army.numTroops[other])
+            && m_creatureOfferings[other].m_amount
+                < m_currentHero->m_army.m_numTroops[other])
             break;
     }
     if (other == armyGroup::ARMY_GROUP_SLOT_COUNT)
@@ -3152,28 +3200,28 @@ long type_sacrifice_window::get_max_amount(long slot) const
 // address. Complete's fastcall entry therefore receives message by reference
 // in ECX; its window field supplies the owning sacrifice dialog.
 VA(0x00564cf0, 0xe9)  // callback address-take + dc name/signature/order
-int type_sacrifice_window::all_creatures(message& msg)
+int type_sacrifice_window::allCreatures(message& msg)
 {
-    if (msg.codeX == widget::WIDGET_RIGHT_SELECT) {
-        NormalDialog(
-            gSacrificeWindowHelp[SACRIFICE_HELP_ALL_CREATURES].rclick,
+    if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
+        normalDialog(
+            g_sacrificeWindowHelp[SACRIFICE_HELP_ALL_CREATURES].m_rclick,
             4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return MESSAGE_DISPATCH_CONSUME;
     }
 
-    if (msg.codeX == widget::WIDGET_DESELECT
-        && !(msg.qualifier & MESSAGE_MODIFIER_RIGHT)) {
+    if (msg.m_codeX == widget::WIDGET_DESELECT
+        && !(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
         type_sacrifice_window* window =
-            static_cast<type_sacrifice_window*>(msg.window);
+            static_cast<type_sacrifice_window*>(msg.m_window);
         long slot = armyGroup::ARMY_GROUP_SLOT_COUNT - 1;
         do {
-            window->set_creature_sacrifice(
-                slot, window->get_max_amount(slot));
+            window->setCreatureSacrifice(
+                slot, window->getMaxAmount(slot));
         } while (slot--);
-        window->creature_slider->SetState(
-            window->creature_slider->get_maximum() - 1);
-        window->update_experience();
-        window->DrawWindow(
+        window->m_creatureSlider->setState(
+            window->m_creatureSlider->getMaximum() - 1);
+        window->updateExperience();
+        window->drawWindow(
             1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
         return MESSAGE_DISPATCH_CONSUME;
     }
@@ -3185,22 +3233,22 @@ int type_sacrifice_window::all_creatures(message& msg)
 // previously missing retail boundary. Its 0x88-byte body ends in `ret` and
 // is followed by eight alignment NOPs before sacrifice_artifacts.
 VA(0x00564de0, 0x88)  // callback address-take + dc name/signature/order
-int type_sacrifice_window::max_creatures(message& msg)
+int type_sacrifice_window::maxCreatures(message& msg)
 {
-    if (msg.codeX == widget::WIDGET_RIGHT_SELECT) {
-        NormalDialog(
-            gSacrificeWindowHelp[SACRIFICE_HELP_MAX_CREATURES].rclick,
+    if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
+        normalDialog(
+            g_sacrificeWindowHelp[SACRIFICE_HELP_MAX_CREATURES].m_rclick,
             4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return MESSAGE_DISPATCH_CONSUME;
     }
 
-    if (msg.codeX == widget::WIDGET_DESELECT
-        && !(msg.qualifier & MESSAGE_MODIFIER_RIGHT)) {
+    if (msg.m_codeX == widget::WIDGET_DESELECT
+        && !(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
         type_sacrifice_window* window =
-            static_cast<type_sacrifice_window*>(msg.window);
-        int maximum = window->creature_slider->get_maximum() - 1;
-        window->creature_slider->SetState(maximum);
-        creature_slider_change(maximum, window);
+            static_cast<type_sacrifice_window*>(msg.m_window);
+        int maximum = window->m_creatureSlider->getMaximum() - 1;
+        window->m_creatureSlider->setState(maximum);
+        creatureSliderChange(maximum, window);
         return MESSAGE_DISPATCH_CONSUME;
     }
     return 0;
@@ -3211,23 +3259,23 @@ int type_sacrifice_window::max_creatures(message& msg)
 // expands both clear and return_artifact, so the body itself proves every
 // artifact-return fallback as well as the final mode refresh.
 VA(0x00564e70, 0x164)  // callback address-take + dc name/signature/order
-int type_sacrifice_window::sacrifice_artifacts(message& msg)
+int type_sacrifice_window::sacrificeArtifacts(message& msg)
 {
-    if (msg.codeX == widget::WIDGET_RIGHT_SELECT) {
-        NormalDialog(
-            gSacrificeWindowHelp[
-                SACRIFICE_HELP_SACRIFICE_ARTIFACTS_BUTTON].rclick,
+    if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
+        normalDialog(
+            g_sacrificeWindowHelp[
+                SACRIFICE_HELP_SACRIFICE_ARTIFACTS_BUTTON].m_rclick,
             4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return MESSAGE_DISPATCH_CONSUME;
     }
 
-    if (msg.codeX == widget::WIDGET_DESELECT
-        && !(msg.qualifier & MESSAGE_MODIFIER_RIGHT)) {
+    if (msg.m_codeX == widget::WIDGET_DESELECT
+        && !(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
         type_sacrifice_window* window =
-            static_cast<type_sacrifice_window*>(msg.window);
+            static_cast<type_sacrifice_window*>(msg.m_window);
         window->clear();
-        window->set_artifact_mode();
-        window->DrawWindow(
+        window->setArtifactMode();
+        window->drawWindow(
             1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
         return MESSAGE_DISPATCH_CONSUME;
     }
@@ -3240,67 +3288,68 @@ int type_sacrifice_window::sacrifice_artifacts(message& msg)
 // a left click changes the selected offering and slider bounds, while a
 // repeated or right click opens the creature detail window.
 VA(0x00564fe0, 0x394)  // anchor-caller + dc name/signature/order, dc 0x1270f0
-void type_sacrifice_window::creature_click(
-    long slot, unsigned char right_click, unsigned char left_pane)
+void type_sacrifice_window::creatureClick(
+    // Before normalization (locals): right_click, left_pane, creature_type, view_army_window.
+    long slot, unsigned char rightClick, unsigned char leftPane)
 {
-    if (right_click || slot == current_creature.group || slot < 0) {
+    if (rightClick || slot == m_currentCreature.m_group || slot < 0) {
         if (slot < 0)
-            slot = current_creature.group;
+            slot = m_currentCreature.m_group;
         if (slot < 0) {
-            if (right_click) {
-                NormalDialog(
-                    gpGeneralText->GetText(
+            if (rightClick) {
+                normalDialog(
+                    g_generalText->getText(
                         SACRIFICE_GENERAL_TEXT_EMPTY_CREATURE),
                     4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             }
             return;
         }
 
-        TCreatureType creature_type = current_hero->army.armyTypes[slot];
-        long amount = creature_offerings[slot].amount;
-        if (left_pane)
-            amount = current_hero->army.numTroops[slot] - amount;
-        if (creature_type != CREATURE_NONE && amount > 0) {
-            TViewArmyWindow view_army_window(
-                creature_type, 0x77, 0x20,
-                static_cast<unsigned char>(!right_click));
-            view_army_window.CenterWindow(-1, -1);
-            if (right_click)
-                view_army_window.QuickView();
+        TCreatureType creatureType = m_currentHero->m_army.m_armyTypes[slot];
+        long amount = m_creatureOfferings[slot].m_amount;
+        if (leftPane)
+            amount = m_currentHero->m_army.m_numTroops[slot] - amount;
+        if (creatureType != CREATURE_NONE && amount > 0) {
+            TViewArmyWindow viewArmyWindow(
+                creatureType, 0x77, 0x20,
+                static_cast<unsigned char>(!rightClick));
+            viewArmyWindow.centerWindow(-1, -1);
+            if (rightClick)
+                viewArmyWindow.quickView();
             else
-                view_army_window.DoModal();
+                viewArmyWindow.doModal();
         }
     } else {
-        if (current_creature.group >= 0) {
-            creature_offerings[current_creature.group].field_10->set_visible(0);
-            creature_offerings[current_creature.group].field_04->set_visible(0);
+        if (m_currentCreature.m_group >= 0) {
+            m_creatureOfferings[m_currentCreature.m_group].m_offeringSelectionFrame->setVisible(0);
+            m_creatureOfferings[m_currentCreature.m_group].m_sourceSelectionFrame->setVisible(0);
         }
 
-        current_creature.group = slot;
-        current_creature.amount = creature_offerings[slot].amount;
-        update_creature_offering(&current_creature);
-        update_creature_offering(&creature_offerings[slot]);
+        m_currentCreature.m_group = slot;
+        m_currentCreature.m_amount = m_creatureOfferings[slot].m_amount;
+        updateCreatureOffering(&m_currentCreature);
+        updateCreatureOffering(&m_creatureOfferings[slot]);
 
-        if (current_hero->army.armyTypes[slot] == CREATURE_NONE) {
-            creature_name_widget->set_visible(0);
+        if (m_currentHero->m_army.m_armyTypes[slot] == CREATURE_NONE) {
+            m_creatureNameWidget->setVisible(0);
         } else {
             std::string buffer;
-            buffer = format_string(
-                gpGeneralText->GetText(
+            buffer = formatString(
+                g_generalText->getText(
                     SACRIFICE_GENERAL_TEXT_CREATURE_NAME),
-                GetArmyName(current_hero->army.armyTypes[slot], 0));
-            creature_name_widget->SetText(buffer.c_str());
-            creature_name_widget->set_visible(1);
-            creature_offerings[slot].field_10->set_visible(1);
-            creature_offerings[slot].field_04->set_visible(1);
+                getArmyName(m_currentHero->m_army.m_armyTypes[slot], 0));
+            m_creatureNameWidget->setText(buffer.c_str());
+            m_creatureNameWidget->setVisible(1);
+            m_creatureOfferings[slot].m_offeringSelectionFrame->setVisible(1);
+            m_creatureOfferings[slot].m_sourceSelectionFrame->setVisible(1);
         }
 
-        long maximum = get_max_amount(slot);
-        creature_slider->SetResolution(maximum + 1);
-        creature_slider->SetState(current_creature.amount);
-        creature_slider->enable(maximum > 0);
-        max_creatures_button->enable(maximum > 0);
-        DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+        long maximum = getMaxAmount(slot);
+        m_creatureSlider->setResolution(maximum + 1);
+        m_creatureSlider->setState(m_currentCreature.m_amount);
+        m_creatureSlider->enable(maximum > 0);
+        m_maxCreaturesButton->enable(maximum > 0);
+        drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
     }
 }
 
@@ -3310,14 +3359,15 @@ void type_sacrifice_window::creature_click(
 // two refresh calls and final full-window draw agree with the Dreamcast
 // private static callback signature and source order.
 VA(0x00565380, 0x2e)  // callback address-take + dc name/signature/order
-void type_sacrifice_window::creature_slider_change(
-    int state, heroWindow* parent_window)
+void type_sacrifice_window::creatureSliderChange(
+    // Before normalization (locals): parent_window.
+    int state, heroWindow* parentWindow)
 {
     type_sacrifice_window* window =
-        static_cast<type_sacrifice_window*>(parent_window);
-    window->set_creature_sacrifice(window->current_creature.group, state);
-    window->update_experience();
-    window->DrawWindow(
+        static_cast<type_sacrifice_window*>(parentWindow);
+    window->setCreatureSacrifice(window->m_currentCreature.m_group, state);
+    window->updateExperience();
+    window->drawWindow(
         1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
 }
 
@@ -3330,13 +3380,13 @@ void type_sacrifice_window::creature_slider_change(
 // heroWindow::DoModal call into both arms rather than merging them, which is
 // what the plain if/else spelling produces.
 VA(0x005653b0, 0x37)  // anchor-callee (heroWindow::DoModal) + linkorder, dc 0x127404
-int type_sacrifice_window::DoModal(unsigned char fadeIn)
+int type_sacrifice_window::doModal(unsigned char fadeIn)
 {
-    if (can_sacrifice_artifacts)
-        set_artifact_mode();
+    if (m_canSacrificeArtifacts)
+        setArtifactMode();
     else
-        set_creature_mode();
-    return heroWindow::DoModal(fadeIn);
+        setCreatureMode();
+    return heroWindow::doModal(fadeIn);
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1830
@@ -3345,14 +3395,15 @@ int type_sacrifice_window::DoModal(unsigned char fadeIn)
 // call [edx+0x34]` run: it occurs exactly three times image-wide, here and
 // in the two already landed. 59 bytes rather than 56 only because the
 // rollover pointer at +0x8c needs a 32-bit displacement.
+// Before normalization (locals): current_widget.
 VA(0x005653f0, 0x3b)  // anchor-vtable (slot 4 shape) + RollOver read, dc 0x12743c
-void type_sacrifice_window::handle_widget_hover(widget* current_widget)
+void type_sacrifice_window::handleWidgetHover(widget* currentWidget)
 {
-    if (!current_widget->RollOver)
-        rolloverText->SetText(emptyRolloverText);
+    if (!currentWidget->m_rollOver)
+        m_rolloverText->setText(g_emptyRolloverText);
     else
-        rolloverText->SetText(current_widget->RollOver);
-    DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+        m_rolloverText->setText(currentWidget->m_rollOver);
+    drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1859
@@ -3361,27 +3412,27 @@ void type_sacrifice_window::handle_widget_hover(widget* current_widget)
 // arbitrary equipped slot, the backpack, and finally the arbitrary equipped
 // path once more before closing the modal dialog.
 VA(0x00565430, 0x80)  // anchor-vtable slot 14, dc 0x1274bc
-int type_sacrifice_window::ExitDialog(message* msg)
+int type_sacrifice_window::exitDialog(message* msg)
 {
-    type_artifact_offering* artifact = &holding_artifact;
-    msg->id = MESSAGE_WIDGET;
-    gpWindowManager->dialogReturn = 0;
-    msg->codeY = widget::WIDGET_END_DIALOG;
-    msg->codeX = widget::WIDGET_END_DIALOG;
+    type_artifact_offering* artifact = &m_holdingArtifact;
+    msg->m_id = MESSAGE_WIDGET;
+    g_windowManager->m_dialogReturn = 0;
+    msg->m_codeY = widget::WIDGET_END_DIALOG;
+    msg->m_codeX = widget::WIDGET_END_DIALOG;
 
-    if (artifact->artifactId != -1) {
-        if (artifact->source < 19) {
-            if (current_hero->equip_artifact(artifact, artifact->source))
+    if (artifact->m_artifactId != -1) {
+        if (artifact->m_source < 19) {
+            if (m_currentHero->equipArtifact(artifact, artifact->m_source))
                 goto artifact_returned;
-            if (current_hero->equip_artifact(artifact, -1))
+            if (m_currentHero->equipArtifact(artifact, -1))
                 goto artifact_returned;
         }
-        if (current_hero->add_to_backpack(artifact, -1))
+        if (m_currentHero->addToBackpack(artifact, -1))
             goto artifact_returned;
-        current_hero->equip_artifact(artifact, -1);
+        m_currentHero->equipArtifact(artifact, -1);
 
 artifact_returned:
-        artifact->artifactId = ARTIFACT_NONE;
+        artifact->m_artifactId = ARTIFACT_NONE;
     }
     return MESSAGE_DISPATCH_FORWARD;
 }
@@ -3404,12 +3455,13 @@ artifact_returned:
 VA_COMPGEN(0x005654b0, 0x5, IMPLICIT_DTOR, type_transformer_slot)  // dc 0x128764
 
 VA(0x005654c0, 0x2a)  // linkorder + the +0x48/+0x4c pair, dc 0x127598
-unsigned char type_transformer_slot::handle_click(
-    unsigned char down_click, unsigned char right_click)
+unsigned char type_transformer_slot::handleClick(
+    // Before normalization (locals): down_click, right_click.
+    unsigned char downClick, unsigned char rightClick)
 {
-    if (down_click) {
-        static_cast<type_skeleton_window*>(parentWindow)->creature_click(
-            group, slot, right_click);
+    if (downClick) {
+        static_cast<type_skeleton_window*>(m_parentWindow)->creatureClick(
+            m_group, m_slot, rightClick);
         return 1;
     }
     return 0;
@@ -3419,13 +3471,14 @@ unsigned char type_transformer_slot::handle_click(
 // Complete expands both calls in the transformer icon grid and retains no
 // separately claimable constructor body.
 type_transformer_slot::type_transformer_slot(
-    long new_x, long new_y, long new_w, long new_h, long new_group,
-    long new_slot, long new_id, const char* image)
-    : iconWidget(new_x, new_y, new_w, new_h, new_id, image,
+    // Before normalization (locals): new_x, new_y, new_w, new_h, new_group, new_slot, new_id.
+    long newX, long newY, long newW, long newH, long newGroup,
+    long newSlot, long newId, const char* image)
+    : iconWidget(newX, newY, newW, newH, newId, image,
                  0, 0, 0, 0, 16)
 {
-    slot = new_slot;
-    group = new_group;
+    m_slot = newSlot;
+    m_group = newGroup;
 }
 
 // The transformer dialog's own pair, found by the same vtable-uniqueness
@@ -3451,22 +3504,23 @@ VA_COMPGEN(0x00565f30, 0x21, SCALAR_DELETING_DTOR, type_skeleton_window)
 // widget* temporaries, exit-button base typing and a local vector view were
 // compiled and rejected. This is a source-surface/inlining-context plateau,
 // not license for an opaque carrier or a raised exactness claim.
+// Before normalization (locals): new_army, widget_id, exit_button.
 VA(0x005654f0, 0xA3C)  // vtable/caller + dc name/order/body graph, dc 0x1275c0
-type_skeleton_window::type_skeleton_window(armyGroup* new_army)
+type_skeleton_window::type_skeleton_window(armyGroup* newArmy)
     : CAdvPopup(100, 67, 600, 485, 18)
 {
-    long widget_id = 100;
-    selected_creatures.Initialize();
-    armies[0] = new_army;
-    armies[1] = &selected_creatures;
-    selected_group = -1;
-    selected_index = -1;
+    long widgetId = 100;
+    m_selectedCreatures.initialize();
+    m_armies[0] = newArmy;
+    m_armies[1] = &m_selectedCreatures;
+    m_selectedGroup = -1;
+    m_selectedIndex = -1;
 
     bitmapBorder* background = new bitmapBorder(
-        0, 0, 600, 485, widget_id++, "SkTrnBk.pcx", 0x800);
-    background->SetPlayerPaletteColors(
-        gpGame->GetLocalPlayerGamePos());
-    Widgets.push_back(background);
+        0, 0, 600, 485, widgetId++, "SkTrnBk.pcx", 0x800);
+    background->setPlayerPaletteColors(
+        g_game->getLocalPlayerGamePos());
+    m_widgets.push_back(background);
 
     // TWO levers on this ONE append, and it is the whole residual.
     // (1) DEPTH LADDER (docs/vc6/inliner.md 6b): spelled `insert(end(), x)`
@@ -3477,102 +3531,102 @@ type_skeleton_window::type_skeleton_window(armyGroup* new_army)
     //     the vector's own address (retail `mov eax,[esi+8]`) instead of
     //     folding the member offset off `this` (`mov eax,[edi+0x38]`).  That
     //     single instruction was the last divergence: 99.9936 -> 100.0000.
-    std::vector<widget*>& widgets = Widgets;
+    std::vector<widget*>& widgets = m_widgets;
     widgets.insert(widgets.end(), new textWidget(
         25, 21, 257, 18,
-        gpGeneralText->GetText(
+        g_generalText->getText(
             SACRIFICE_GENERAL_TEXT_TRANSFORMER_SOURCE_TITLE),
         "smalfont.fnt", font::HEADING, -1, 1, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         320, 21, 257, 18,
-        gpGeneralText->GetText(
+        g_generalText->getText(
             SACRIFICE_GENERAL_TEXT_TRANSFORMER_DESTINATION_TITLE),
         "smalfont.fnt", font::HEADING, -1, 1, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         25, 55, 257, 42,
-        gpGeneralText->GetText(
+        g_generalText->getText(
             SACRIFICE_GENERAL_TEXT_TRANSFORMER_SOURCE_DESCRIPTION),
         "medfont.fnt", font::HEADING, -1, 1, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         320, 55, 257, 42,
-        gpGeneralText->GetText(
+        g_generalText->getText(
             SACRIFICE_GENERAL_TEXT_TRANSFORMER_DESTINATION_DESCRIPTION),
         "medfont.fnt", font::HEADING, -1, 1, 0, 8));
 
-    create_creature_icons(
-        45, 109, 3, 2, 0, 0, widget_id,
-        &army_widget[0][0], &select_border[0][0], &army_label[0][0]);
-    create_creature_icons(
-        128, 305, 1, 1, 0, 6, widget_id,
-        &army_widget[0][6], &select_border[0][6], &army_label[0][6]);
-    create_creature_icons(
-        334, 109, 3, 2, 1, 0, widget_id,
-        &army_widget[1][0], &select_border[1][0], &army_label[1][0]);
-    create_creature_icons(
-        417, 305, 1, 1, 1, 6, widget_id,
-        &army_widget[1][6], &select_border[1][6], &army_label[1][6]);
+    createCreatureIcons(
+        45, 109, 3, 2, 0, 0, widgetId,
+        &m_armyWidget[0][0], &m_selectBorder[0][0], &m_armyLabel[0][0]);
+    createCreatureIcons(
+        128, 305, 1, 1, 0, 6, widgetId,
+        &m_armyWidget[0][6], &m_selectBorder[0][6], &m_armyLabel[0][6]);
+    createCreatureIcons(
+        334, 109, 3, 2, 1, 0, widgetId,
+        &m_armyWidget[1][0], &m_selectBorder[1][0], &m_armyLabel[1][0]);
+    createCreatureIcons(
+        417, 305, 1, 1, 1, 6, widgetId,
+        &m_armyWidget[1][6], &m_selectBorder[1][6], &m_armyLabel[1][6]);
 
-    all_creatures_button = new type_func_button(
-        146, 416, 64, 32, widget_id++, "AltArmy.def",
-        all_creatures, 0, 1);
-    all_creatures_button->set_help_text(
-        gTransformerWindowHelp[TRANSFORMER_HELP_ALL_CREATURES].text,
+    m_allCreaturesButton = new type_func_button(
+        146, 416, 64, 32, widgetId++, "AltArmy.def",
+        allCreatures, 0, 1);
+    m_allCreaturesButton->setHelpText(
+        g_transformerWindowHelp[TRANSFORMER_HELP_ALL_CREATURES].m_text,
         0, 1);
-    Widgets.push_back(all_creatures_button);
+    m_widgets.push_back(m_allCreaturesButton);
 
-    sacrifice_button = new type_func_button(
-        269, 416, 64, 32, widget_id++, "AltSacr.def",
+    m_sacrificeButton = new type_func_button(
+        269, 416, 64, 32, widgetId++, "AltSacr.def",
         sacrifice, 0, 1);
-    sacrifice_button->set_help_text(
-        gTransformerWindowHelp[TRANSFORMER_HELP_SACRIFICE].text,
+    m_sacrificeButton->setHelpText(
+        g_transformerWindowHelp[TRANSFORMER_HELP_SACRIFICE].m_text,
         0, 1);
-    sacrifice_button->enable(0);
-    Widgets.push_back(sacrifice_button);
+    m_sacrificeButton->enable(0);
+    m_widgets.push_back(m_sacrificeButton);
 
-    type_func_button* exit_button = new type_func_button(
-        392, 416, 64, 32, widget_id++, "iCancel.def",
-        exit_click, 0, 1);
-    exit_button->set_help_text(
-        gTransformerWindowHelp[TRANSFORMER_HELP_EXIT].text, 0, 1);
-    Widgets.push_back(exit_button);
+    type_func_button* exitButton = new type_func_button(
+        392, 416, 64, 32, widgetId++, "iCancel.def",
+        exitClick, 0, 1);
+    exitButton->setHelpText(
+        g_transformerWindowHelp[TRANSFORMER_HELP_EXIT].m_text, 0, 1);
+    m_widgets.push_back(exitButton);
 
-    rolloverText = new textWidget(
-        8, 459, 585, 19, emptyRolloverText, "smalfont.fnt",
-        font::PRIMARY, widget_id++, 1, 0, 8);
-    Widgets.push_back(rolloverText);
+    m_rolloverText = new textWidget(
+        8, 459, 585, 19, g_emptyRolloverText, "smalfont.fnt",
+        font::PRIMARY, widgetId++, 1, 0, 8);
+    m_widgets.push_back(m_rolloverText);
 
     for (long i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i)
         update(0, i);
-    AddWidgetsToMessageStream();
+    addWidgetsToMessageStream();
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2129
 VA(0x00565f60, 0xC2)  // anchor-vtable 0x641694 + ??_G call edge, dc 0x127a08
 type_skeleton_window::~type_skeleton_window()
 {
-    for (unsigned int i = 0; i < death_samples.size(); i++) {
-        gpSoundManager->StopSample(death_samples[i]->field_1c);
-        death_samples[i]->Dispose();
+    for (unsigned int i = 0; i < m_deathSamples.size(); i++) {
+        g_soundManager->stopSample(m_deathSamples[i]->m_memSample.m_memSampleHandle);
+        m_deathSamples[i]->dispose();
     }
-    delete_widgets();
+    deleteWidgets();
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2157
 // All Complete callers inline this source helper. The DC call edges and the
 // repeated retail expansion prove the transformed-army scan and the two
 // terminal button states.
-inline void type_skeleton_window::update_buttons()
+inline void type_skeleton_window::updateButtons()
 {
     long i;
     for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
-        long type = armies[1]->armyTypes[i];
+        long type = m_armies[1]->m_armyTypes[i];
         if (type == CREATURE_NONE)
             continue;
-        if (type != giDeathCreature[type])
+        if (type != g_deathCreature[type])
             break;
     }
-    sacrifice_button->enable(i < armyGroup::ARMY_GROUP_SLOT_COUNT);
-    all_creatures_button->enable(armies[0]->HasCreatures());
+    m_sacrificeButton->enable(i < armyGroup::ARMY_GROUP_SLOT_COUNT);
+    m_allCreaturesButton->enable(m_armies[0]->hasCreatures());
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2172
@@ -3586,112 +3640,113 @@ inline void type_skeleton_window::update_buttons()
 VA(0x00566030, 0x45D)  // dc order/name + caller/xref/body graph, dc 0x127b68
 void type_skeleton_window::update(long group, long index)
 {
-    TCreatureType type = armies[group]->armyTypes[index];
+    TCreatureType type = m_armies[group]->m_armyTypes[index];
     if (type == CREATURE_NONE) {
-        army_widget[group][index]->set_visible(0);
-        army_label[group][index]->set_visible(0);
-        select_border[group][index]->set_help_text(0, 0, 1);
-        army_widget[group][index]->set_help_text(0, 0, 1);
-        army_label[group][index]->set_help_text(0, 0, 1);
+        m_armyWidget[group][index]->setVisible(0);
+        m_armyLabel[group][index]->setVisible(0);
+        m_selectBorder[group][index]->setHelpText(0, 0, 1);
+        m_armyWidget[group][index]->setHelpText(0, 0, 1);
+        m_armyLabel[group][index]->setHelpText(0, 0, 1);
         return;
     }
 
     std::string result;
-    const char* name = GetArmyName(
-        type, armies[group]->numTroops[index]);
+    const char* name = getArmyName(
+        type, m_armies[group]->m_numTroops[index]);
 
-    army_widget[group][index]->SetIconFrame(type + 2);
-    result = format_string(
+    m_armyWidget[group][index]->setIconFrame(type + 2);
+    result = formatString(
         DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
-        armies[group]->numTroops[index]);
-    army_label[group][index]->SetText(result.c_str());
-    army_widget[group][index]->set_visible(1);
-    army_label[group][index]->set_visible(1);
+        m_armies[group]->m_numTroops[index]);
+    m_armyLabel[group][index]->setText(result.c_str());
+    m_armyWidget[group][index]->setVisible(1);
+    m_armyLabel[group][index]->setVisible(1);
 
     if (group == 0) {
-        result = format_string(
-            gpGeneralText->GetText(SACRIFICE_GENERAL_TEXT_CREATURE), name);
+        result = formatString(
+            g_generalText->getText(SACRIFICE_GENERAL_TEXT_CREATURE), name);
     } else {
-        int transformed = giDeathCreature[type];
+        int transformed = g_deathCreature[type];
         if (transformed != type) {
-            result = format_string(
-                gpGeneralText->GetText(
+            result = formatString(
+                g_generalText->getText(
                     SACRIFICE_GENERAL_TEXT_TRANSFORM_CREATURE),
-                name, GetArmyName(
-                    transformed, armies[group]->numTroops[index]));
-        } else if (armies[group]->numTroops[index] == 1) {
-            result = format_string(
-                gpGeneralText->GetText(
+                name, getArmyName(
+                    transformed, m_armies[group]->m_numTroops[index]));
+        } else if (m_armies[group]->m_numTroops[index] == 1) {
+            result = formatString(
+                g_generalText->getText(
                     SACRIFICE_GENERAL_TEXT_ALREADY_TRANSFORMED_ONE),
                 name);
         } else {
-            result = format_string(
-                gpGeneralText->GetText(
+            result = formatString(
+                g_generalText->getText(
                     SACRIFICE_GENERAL_TEXT_ALREADY_TRANSFORMED_MANY),
                 name);
         }
     }
 
-    army_widget[group][index]->set_help_text(result.c_str(), 0, 1);
-    select_border[group][index]->set_help_text(result.c_str(), 0, 1);
-    result = format_string(
+    m_armyWidget[group][index]->setHelpText(result.c_str(), 0, 1);
+    m_selectBorder[group][index]->setHelpText(result.c_str(), 0, 1);
+    result = formatString(
         DATA_COMPGEN(0x006778a4, resourceQuantityFormat, "%d %s"),
-        armies[group]->numTroops[index], name);
-    army_label[group][index]->set_help_text(result.c_str(), 0, 1);
+        m_armies[group]->m_numTroops[index], name);
+    m_armyLabel[group][index]->setHelpText(result.c_str(), 0, 1);
 }
 
 VA(0x00566490, 0x258)
-void type_skeleton_window::creature_click(
-    long side, long slot, unsigned char right_click)
+void type_skeleton_window::creatureClick(
+    // Before normalization (locals): right_click, creature_type, view_army_window.
+    long side, long slot, unsigned char rightClick)
 {
-    TCreatureType creature_type = armies[side]->armyTypes[slot];
+    TCreatureType creatureType = m_armies[side]->m_armyTypes[slot];
 
-    if (right_click
-        || (slot == selected_index && side == selected_group)) {
-        if (creature_type != CREATURE_NONE) {
-            TViewArmyWindow view_army_window(
-                creature_type, 0x77, 0x20,
-                static_cast<unsigned char>(!right_click));
-            view_army_window.CenterWindow(-1, -1);
-            if (right_click)
-                view_army_window.QuickView();
+    if (rightClick
+        || (slot == m_selectedIndex && side == m_selectedGroup)) {
+        if (creatureType != CREATURE_NONE) {
+            TViewArmyWindow viewArmyWindow(
+                creatureType, 0x77, 0x20,
+                static_cast<unsigned char>(!rightClick));
+            viewArmyWindow.centerWindow(-1, -1);
+            if (rightClick)
+                viewArmyWindow.quickView();
             else
-                view_army_window.DoModal();
+                viewArmyWindow.doModal();
         }
-    } else if (selected_group < 0) {
-        selected_index = slot;
-        selected_group = side;
-        select_border[side][slot]->send_message(
+    } else if (m_selectedGroup < 0) {
+        m_selectedIndex = slot;
+        m_selectedGroup = side;
+        m_selectBorder[side][slot]->sendMessage(
             widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
-        select_border[side][slot]->Draw();
-        DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+        m_selectBorder[side][slot]->draw();
+        drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
     } else {
-        if (creature_type
-            == armies[selected_group]->armyTypes[selected_index]) {
-            armies[side]->Add(
-                creature_type,
-                armies[selected_group]->numTroops[selected_index], slot);
-            armies[selected_group]->Dismiss(selected_index);
+        if (creatureType
+            == m_armies[m_selectedGroup]->m_armyTypes[m_selectedIndex]) {
+            m_armies[side]->add(
+                creatureType,
+                m_armies[m_selectedGroup]->m_numTroops[m_selectedIndex], slot);
+            m_armies[m_selectedGroup]->dismiss(m_selectedIndex);
         } else {
-            long troops = armies[side]->numTroops[slot];
-            armies[side]->armyTypes[slot] =
-                armies[selected_group]->armyTypes[selected_index];
-            armies[side]->numTroops[slot] =
-                armies[selected_group]->numTroops[selected_index];
-            armies[selected_group]->armyTypes[selected_index] = creature_type;
-            armies[selected_group]->numTroops[selected_index] = troops;
+            long troops = m_armies[side]->m_numTroops[slot];
+            m_armies[side]->m_armyTypes[slot] =
+                m_armies[m_selectedGroup]->m_armyTypes[m_selectedIndex];
+            m_armies[side]->m_numTroops[slot] =
+                m_armies[m_selectedGroup]->m_numTroops[m_selectedIndex];
+            m_armies[m_selectedGroup]->m_armyTypes[m_selectedIndex] = creatureType;
+            m_armies[m_selectedGroup]->m_numTroops[m_selectedIndex] = troops;
         }
-        select_border[selected_group][selected_index]->send_message(
+        m_selectBorder[m_selectedGroup][m_selectedIndex]->sendMessage(
             widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
         update(side, slot);
-        update(selected_group, selected_index);
+        update(m_selectedGroup, m_selectedIndex);
 
-        widget::last_hover_widget = 0;
-        selected_group = -1;
-        selected_index = -1;
+        widget::s_lastHoverWidget = 0;
+        m_selectedGroup = -1;
+        m_selectedIndex = -1;
 
-        update_buttons();
-        DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+        updateButtons();
+        drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
     }
 }
 
@@ -3699,13 +3754,13 @@ void type_skeleton_window::creature_click(
 // Slot 9, sitting two rows past creature_click 0x566490 - the call target the
 // transformer slot above pins - in the Dreamcast roster's order.
 VA(0x005666f0, 0x2e)  // anchor-callee (CAdvPopup slot 9) + linkorder, dc 0x128048
-int type_skeleton_window::WindowHandler(message* msg)
+int type_skeleton_window::windowHandler(message* msg)
 {
-    int result = CAdvPopup::WindowHandler(msg);
+    int result = CAdvPopup::windowHandler(msg);
     if (result)
         return result;
-    if (msg->id == MESSAGE_MOUSE_MOVE)
-        return gpWindowManager->ConvertToHover(*msg);
+    if (msg->m_id == MESSAGE_MOUSE_MOVE)
+        return g_windowManager->convertToHover(*msg);
     return 0;
 }
 
@@ -3714,14 +3769,15 @@ int type_skeleton_window::WindowHandler(message* msg)
 // type_university_window::handle_widget_hover has at 0x5f0dc0 - including
 // retail's tail-merge of the two SetText call sites - with the rollover
 // pointer at +0x60 rather than +0x70.
+// Before normalization (locals): current_widget.
 VA(0x00566720, 0x38)  // anchor-vtable (slot 4 shape) + RollOver read, dc 0x128098
-void type_skeleton_window::handle_widget_hover(widget* current_widget)
+void type_skeleton_window::handleWidgetHover(widget* currentWidget)
 {
-    if (!current_widget->RollOver)
-        rolloverText->SetText(emptyRolloverText);
+    if (!currentWidget->m_rollOver)
+        m_rolloverText->setText(g_emptyRolloverText);
     else
-        rolloverText->SetText(current_widget->RollOver);
-    DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+        m_rolloverText->setText(currentWidget->m_rollOver);
+    drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2326
@@ -3731,64 +3787,68 @@ void type_skeleton_window::handle_widget_hover(widget* current_widget)
 // One measured byte-free candidate-site scaffold restores retail's third
 // vector insertion topology; see transformer_grid_inline_surface above.
 VA(0x00566760, 0x28f)  // anchor-caller + dc name/signature/order, dc 0x1280e0
-void type_skeleton_window::create_creature_icons(
-    long icon_x, long icon_y, long columns, long rows,
-    long group_number, long item_number, long& widget_id,
-    iconWidget** icon_widgets, iconWidget** selection_widgets,
-    textWidget** text_widgets)
+void type_skeleton_window::createCreatureIcons(
+    // Before normalization (locals): icon_x, icon_y, group_number, item_number, widget_id,
+    // icon_widgets, selection_widgets, text_widgets, text_x, text_y.
+    long iconX, long iconY, long columns, long rows,
+    long groupNumber, long itemNumber, long& widgetId,
+    iconWidget** iconWidgets, iconWidget** selectionWidgets,
+    textWidget** textWidgets)
 {
     long row;
     long count = 0;
     long column;
-    long text_x = icon_x - 5;
-    long text_y = icon_y + 68;
+    long textX = iconX - 5;
+    long textY = iconY + 68;
 
     for (row = 0; row < rows; ++row) {
         for (column = 0; column < columns; ++column) {
-            text_widgets[count] = new textWidget(
-                text_x, text_y, 66, 16, emptyRolloverText,
-                "smalfont.fnt", font::PRIMARY, widget_id++, 1, 0, 8);
-            Widgets.push_back(text_widgets[count]);
+            textWidgets[count] = new textWidget(
+                textX, textY, 66, 16, g_emptyRolloverText,
+                "smalfont.fnt", font::PRIMARY, widgetId++, 1, 0, 8);
+            m_widgets.push_back(textWidgets[count]);
 
-            icon_widgets[count] = new type_transformer_slot(
-                icon_x, icon_y, 58, 64, group_number, item_number + count,
-                widget_id++, "twcrport.def");
-            Widgets.push_back(icon_widgets[count]);
+            iconWidgets[count] = new type_transformer_slot(
+                iconX, iconY, 58, 64, groupNumber, itemNumber + count,
+                widgetId++, "twcrport.def");
+            m_widgets.push_back(iconWidgets[count]);
 
-            selection_widgets[count] = new type_transformer_slot(
-                icon_x, icon_y, 58, 64, group_number, item_number + count,
-                widget_id++, "TwCrPort.def");
-            Widgets.push_back(selection_widgets[count]);
-            selection_widgets[count]->SetIconFrame(1);
-            selection_widgets[count]->send_message(
+            selectionWidgets[count] = new type_transformer_slot(
+                iconX, iconY, 58, 64, groupNumber, itemNumber + count,
+                widgetId++, "TwCrPort.def");
+            m_widgets.push_back(selectionWidgets[count]);
+            selectionWidgets[count]->setIconFrame(1);
+            selectionWidgets[count]->sendMessage(
                 widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
 
             ++count;
-            text_x += 83;
-            icon_x += 83;
+            textX += 83;
+            iconX += 83;
         }
-        text_x -= columns * 83;
-        icon_x -= columns * 83;
-        text_y += 98;
-        icon_y += 98;
+        textX -= columns * 83;
+        iconX -= columns * 83;
+        textY += 98;
+        iconY += 98;
     }
-    transformer_grid_inline_surface();
+    transformerGridInlineSurface();
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2385
 // DC names this helper and records both transformer callbacks as callers.
 // Complete expands both calls: occupied source slots move into the same
 // destination slot when free, otherwise armyGroup::Add chooses a slot.
-inline void move_all_armies(armyGroup* source, armyGroup* dest)
+// Before normalization (function): move_all_armies.
+inline void moveAllArmies(armyGroup* source, armyGroup* dest)
 {
     for (long i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
-        if (source->armyTypes[i] == CREATURE_NONE)
+        if (source->m_armyTypes[i] == CREATURE_NONE)
             continue;
-        long dest_index = i;
-        if (dest->armyTypes[i] != CREATURE_NONE)
-            dest_index = -1;
-        dest->Add(source->armyTypes[i], source->numTroops[i], dest_index);
-        source->Dismiss(i);
+        // Before normalization (locals): dest_index.
+        long destIndex = i;
+        if (dest->m_armyTypes[i] != CREATURE_NONE)
+            destIndex = -1;
+        dest->add(source->m_armyTypes[i], source->m_numTroops[i], destIndex);
+        source->dismiss(i);
     }
 }
 
@@ -3796,27 +3856,27 @@ inline void move_all_armies(armyGroup* source, armyGroup* dest)
 // The AltArmy callback address in the constructor and DC's source/call graph
 // fix the identity. Complete inlines move_all_armies and update_buttons.
 VA(0x005669f0, 0x137)  // ctor callback + dc name/order/callees, dc 0x128310
-int type_skeleton_window::all_creatures(message& msg)
+int type_skeleton_window::allCreatures(message& msg)
 {
-    if (msg.codeX == widget::WIDGET_RIGHT_SELECT
-        && (msg.qualifier & MESSAGE_MODIFIER_RIGHT)) {
-        NormalDialog(
-            gTransformerWindowHelp[TRANSFORMER_HELP_ALL_CREATURES].rclick,
+    if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT
+        && (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
+        normalDialog(
+            g_transformerWindowHelp[TRANSFORMER_HELP_ALL_CREATURES].m_rclick,
             4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return MESSAGE_DISPATCH_CONSUME;
     }
 
-    if (msg.codeX == widget::WIDGET_DESELECT
-        && !(msg.qualifier & MESSAGE_MODIFIER_RIGHT)) {
+    if (msg.m_codeX == widget::WIDGET_DESELECT
+        && !(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
         type_skeleton_window* window =
-            static_cast<type_skeleton_window*>(msg.window);
-        move_all_armies(window->armies[0], window->armies[1]);
+            static_cast<type_skeleton_window*>(msg.m_window);
+        moveAllArmies(window->m_armies[0], window->m_armies[1]);
         for (long i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
             window->update(0, i);
             window->update(1, i);
         }
-        window->update_buttons();
-        window->DrawWindow(
+        window->updateButtons();
+        window->drawWindow(
             1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
         return MESSAGE_DISPATCH_CONSUME;
     }
@@ -3827,25 +3887,25 @@ int type_skeleton_window::all_creatures(message& msg)
 // The iCancel callback address, the standard dialog-close tail and the DC
 // move_all_armies edge identify this row and its reverse move direction.
 VA(0x00566b30, 0xE4)  // ctor callback + dc name/order/callees, dc 0x1283ac
-int type_skeleton_window::exit_click(message& msg)
+int type_skeleton_window::exitClick(message& msg)
 {
-    if (msg.codeX == widget::WIDGET_RIGHT_SELECT
-        && (msg.qualifier & MESSAGE_MODIFIER_RIGHT)) {
-        NormalDialog(
-            gTransformerWindowHelp[TRANSFORMER_HELP_EXIT].rclick,
+    if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT
+        && (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
+        normalDialog(
+            g_transformerWindowHelp[TRANSFORMER_HELP_EXIT].m_rclick,
             4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return MESSAGE_DISPATCH_CONSUME;
     }
 
-    if (msg.codeX == widget::WIDGET_DESELECT
-        && !(msg.qualifier & MESSAGE_MODIFIER_RIGHT)) {
+    if (msg.m_codeX == widget::WIDGET_DESELECT
+        && !(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
         type_skeleton_window* window =
-            static_cast<type_skeleton_window*>(msg.window);
-        move_all_armies(window->armies[1], window->armies[0]);
-        msg.id = MESSAGE_WIDGET;
-        gpWindowManager->dialogReturn = 0;
-        msg.codeY = widget::WIDGET_END_DIALOG;
-        msg.codeX = widget::WIDGET_END_DIALOG;
+            static_cast<type_skeleton_window*>(msg.m_window);
+        moveAllArmies(window->m_armies[1], window->m_armies[0]);
+        msg.m_id = MESSAGE_WIDGET;
+        g_windowManager->m_dialogReturn = 0;
+        msg.m_codeY = widget::WIDGET_END_DIALOG;
+        msg.m_codeX = widget::WIDGET_END_DIALOG;
         return MESSAGE_DISPATCH_FORWARD;
     }
     return 0;
@@ -3857,35 +3917,36 @@ int type_skeleton_window::exit_click(message& msg)
 VA(0x00566c20, 0x15F)  // ctor callback + dc name/order/callees, dc 0x128468
 int type_skeleton_window::sacrifice(message& msg)
 {
-    if (msg.codeX == widget::WIDGET_RIGHT_SELECT
-        && (msg.qualifier & MESSAGE_MODIFIER_RIGHT)) {
-        NormalDialog(
-            gTransformerWindowHelp[TRANSFORMER_HELP_SACRIFICE].rclick,
+    if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT
+        && (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
+        normalDialog(
+            g_transformerWindowHelp[TRANSFORMER_HELP_SACRIFICE].m_rclick,
             4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return MESSAGE_DISPATCH_CONSUME;
     }
 
-    if (msg.codeX == widget::WIDGET_DESELECT
-        && !(msg.qualifier & MESSAGE_MODIFIER_RIGHT)) {
+    if (msg.m_codeX == widget::WIDGET_DESELECT
+        && !(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
         type_skeleton_window* window =
-            static_cast<type_skeleton_window*>(msg.window);
+            static_cast<type_skeleton_window*>(msg.m_window);
         for (long i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
-            TCreatureType type = window->armies[1]->armyTypes[i];
-            if (type == CREATURE_NONE || type == giDeathCreature[type])
+            TCreatureType type = window->m_armies[1]->m_armyTypes[i];
+            if (type == CREATURE_NONE || type == g_deathCreature[type])
                 continue;
 
-            sprintf(gText,
+            sprintf(g_text,
                     DATA_COMPGEN(0x006609e0, transformerKillSampleFormat,
                                  "%skill.82M"),
-                    akCreatureTypeTraits[type].cSamplePrefix);
-            sample* new_sample = ResourceManager::GetSample(gText);
-            window->death_samples.push_back(new_sample);
-            gpSoundManager->MemorySample(new_sample);
-            window->armies[1]->armyTypes[i] = giDeathCreature[type];
+                    g_creatureTypeTraits[type].m_samplePrefix);
+            // Before normalization (locals): new_sample.
+            sample* newSample = ResourceManager::getSample(g_text);
+            window->m_deathSamples.push_back(newSample);
+            g_soundManager->memorySample(newSample);
+            window->m_armies[1]->m_armyTypes[i] = g_deathCreature[type];
             window->update(1, i);
         }
-        window->update_buttons();
-        window->DrawWindow(
+        window->updateButtons();
+        window->drawWindow(
             1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
         return MESSAGE_DISPATCH_CONSUME;
     }

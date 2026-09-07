@@ -8,12 +8,16 @@
 // independently proves the 16-byte stride and name at +0; retail's loader
 // fills the three mastery strings at +4/+8/+c.
 struct TSSkillTraits {
-    const char* name;
-    const char* levelNames[3];
+    // Before normalization: name.
+    const char* m_name;
+    // Before normalization: levelNames.
+    const char* m_levelNames[3];
 };
 SIZE(TSSkillTraits, 0x10);
 
-DATA(0x00698cf0) extern TSSkillTraits aSSkillTraits[28];
-DATA(0x0067dcf0) extern const TSSkillTraits (&akSSkillTraits)[28];
+// Before normalization: aSSkillTraits.
+// Before normalization: akSSkillTraits.
+DATA(0x00698cf0) extern TSSkillTraits g_sSkillTraitsStorage[28];
+DATA(0x0067dcf0) extern const TSSkillTraits (&g_sSkillTraits)[28];
 
 #endif  /* HOMM3_SSKILLTRAITS_H */

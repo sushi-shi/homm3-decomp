@@ -70,12 +70,24 @@ Matcher guidance:
   reconstruction presents a small `cb` → the 1000 floor → everything starves.
   Finish the body; the inlining follows. Do not chase `_Tidy`/`vector`
   spellings, pragmas, or header variants — they are not the input.
-* The budget lever is *statement mass*, not bytes: dead stores and other
-  byte-inert statements move `cb` (this is A6's real mechanism). On a
-  byte-plateaued function whose only residual is an under-inline (A9,
-  `do_general_melee`), the honest fix is raising `caller_cb` past the
-  knife-edge or slimming an earlier callee's `cb` — quantified by the model
-  (§5.8).
+* The budget depends on front-end statement mass (`cb`), not emitted
+  bytes. Dead stores and other byte-inert statements can change `cb`; this
+  is a **compiler diagnostic finding, not permission to add such statements
+  to reconstructed source**. A budget-only probe may locate a threshold,
+  but remove it after the experiment. A better score does not justify it.
+  Recover the caller/callee declarations, body visibility and source order,
+  local lifetimes, and meaningful operations supported by Dreamcast and
+  retail evidence. Preserve proven helper boundaries through score dips.
+* Retain `HOMM3_RELEASE_VERIFY(expression)` only for a meaningful recovered
+  invariant supported by line-table and codegen evidence. A line gap alone
+  does not prove an assertion. Do not retain dummy calls, self-assignments,
+  repeated expressions, unreachable branches, or alternate declarations to
+  change the inline budget. Every retained VERIFY and temporary inline-depth
+  experiment needs a source comment naming caller, callee and retail/DC
+  evidence, plus a negative control showing that flattening or de-inlining
+  fails. Remove diagnostic pragmas before commit. The matching rules in
+  [AGENTS.md](../../AGENTS.md#helper-boundaries-and-inlining) govern which
+  source changes are admissible; the budget model only explains codegen.
 * A15 ("leaf spelling is a global variable") now has a mechanism: a leaf's
   `cb` enters every caller's sequential budget arithmetic, so respelling a
   leaf re-decides inline structure at every call site in the image.
@@ -100,6 +112,13 @@ driver at rva `0x19dea`. The working inliner is:
 | `inl_veto` | `0x94964` | post-substitution size veto (cold; option-gated) |
 | option-bit unpack | `0x1bd89` | per-invocation flags → `0xac0**` dword bits |
 | budget clamp stub | `0x93d28` | `mov eax,0x88b8` — the 35000 cap (cold) |
+
+<!-- c2-role: function 0x1994f inlinePass -->
+<!-- c2-role: function 0x199fa expandInlineCalls -->
+<!-- c2-role: function 0x1a27c collectInlineCandidates -->
+<!-- c2-role: function 0x16f04 checkInlineCandidate -->
+<!-- c2-role: function 0x1b973 fetchInlineBody -->
+<!-- c2-role: function 0x94964 checkInlineSizeVeto -->
 
 Correction to the atlas's §3 hunting list: the `.databe` cluster
 `0xac094`–`0xac0d4` is **not** budget state — `0x1bd89` shows those dwords
@@ -891,13 +910,14 @@ inliner budget.
 ### Live budget inputs from the unchanged compiler body
 
 `homm3 vc6 predict-inline <selector> --trace` records C2's selected caller
-and each reached inline-budget test. The optional shim hooks use RVAs
-`0x1994f` (root entry) and `0x19f8c` (site budget test), verifying all eight
-replaced bytes first. At entry ECX points to a body whose first word is the
-symbol; symbol `+0x18` is its decorated name and `+0x28` its IL handle.
+and each reached inline-budget test. It uses the canonical temporary shim's
+hooks at `0x1995c` (root size) and `0x19f8c` (site budget test), with verified
+instruction bytes and the loaded DLL base. At the root ESI points to a body
+whose first word is the symbol; symbol `+0x18` is its decorated name.
 At the site EDI is the callee symbol; original ESP `+0x34`, `+0x48` and
 `+0x30` hold depth, budget and remaining candidates respectively. The hooks
-preserve GPRs, EFLAGS, x87 and Win32 last-error state.
+preserve integer registers, EFLAGS and Win32 last-error state. See
+[shim.md](shim.md#4-gated-inline-budget-observations) for the shared overlay.
 
 These records follow argument-count, depth and force-inline checks but
 precede the budget/running-size checks and substitution veto. A recorded
@@ -1041,6 +1061,184 @@ remaining register schedule: all 901 bytes match after 91 relocations.
 Only dimension accessors give 76.00%; only the map accessor gives 67.31%.
 These controls identify the complete buffer interface and its actual inline
 sites. Counting callers elsewhere in the TU did not restore these decisions.
+
+### Repeated tile operations expose shared helper boundaries
+
+`PaintPoint` (0x5b4b20) and both update paths in `PaintTransitions` (0x5b5a70)
+write the adapter, then refresh the packed cache with validity first and four
+field setters. An ordinary shared `SetTile(point, tile)` preserves that
+operation and raises `PaintPoint` from 78.4213% to 92.2405%. Flattening the
+body into its callers changes later set and gap-predicate expansions.
+
+The same callers compute transition strength before loading the base-frame
+rule's virtual receiver. A shared `SelectBaseFrame(point, terrain, oldFrame)`
+captures the terrain index across that call and preserves this evaluation
+order. With a named frame result and scoped neighbour points, `PaintPoint`
+reaches 95.3146%. `PaintTransitions`, which initially fell to 38.6271% when
+the tile writer was recovered, returns to 74.7320% with its proven unsigned
+grid interface intact; its 74.7623% historical peak remains banked.
+
+These are retail-derived boundaries with provisional names and no Dreamcast
+counterpart. The remaining `PaintPoint` expansions are documented beside the
+function. No inline keyword, pragma, or unused operation is added. Recovering
+one common operation can expose another missing boundary in a different
+caller; preserve the stronger interface while checking that collateral.
+
+### Coordinate construction affects later nested calls
+
+The grid translation used by `PaintPoint` can initialize its working value
+with the retained two-reference coordinate constructor before applying the
+offset. This leaves the arithmetic expansion unchanged but restores the final
+`GetPackedCell` call at retail 0x5b509e, raising the caller from 95.3146% to
+97.0506%. The first neighbour read still expands `GetPackedCell`, and the
+inner set erase still expands the three-argument distance wrapper. Its frame
+and original-x temporary remain different. This supports the constructor
+boundary, without establishing original local names or a free/member addition
+interface: a free addition taking both operands by reference is byte-neutral.
+
+Named coordinate values, named cache indices, tighter tile scopes, separate
+nearby assignment, and early-continue loop guards are also byte-neutral. An
+explicit grid copy constructor instead introduces a retained call absent from
+retail. Giving the shared tile writer a value argument adds an entry copy;
+adding an aggregate packed-cell writer retains that method where retail has
+field stores. Neither is evidence for replacing the existing writer interface.
+Recovering the retained neighbour-queue body is neutral for `PaintPoint`, so
+its former declaration-only state does not explain these remaining decisions.
+
+### Measured budget comparisons in the terrain painter
+
+The gated [C2 shim trace](shim.md#4-gated-inline-budget-observations) reads
+actual candidate costs and budgets from the configured terrain compile.
+For `rmgTerrainPainter::paintPoint` (prior role `TRmgTerrainPainter::PaintPoint`,
+retail 0x5b4b20) at the earlier 97.0506% checkpoint, the front-end caller
+estimate is 933 and the initial budget
+is 1,866. At the first eight-neighbour terrain comparison, `getPackedCell`
+has cost 90 and budget 106 at depth 2. At the inner set erase, the three-argument
+`_Distance` has cost 41 and budget 45 at depth 3; its four-argument child
+has cost 45 but only 4 budget units. Those readings explain the two observed
+unwanted expansions. The final rule read gives `getPackedCell` only 73 units
+and correctly retains the call.
+
+Both compiled objects agree outside the COFF timestamp. The painter's lowerCamelCase
+method/type names and `m_` field prefixes leave all 70 emitted code sections
+unchanged. Source-owned comments preserve the earlier provisional role names;
+retail labels and checkpoint rows are regenerated from the new declarations.
+The trace measures candidate compiler state, not missing retail source tokens.
+
+A scratch counterfactual separates the two unwanted inline copies from the
+storage residual. At the existing `0x19f8c` hook, reject the first depth-two
+`getPackedCell` and the following three-argument `_Distance` by returning to
+the compiler's rejection path at `0x19a94`. Charge their original costs (90
+and 41) to the current budget before rejecting: their baseline child
+expansions are all free, so this preserves the later budget decisions.
+This is deliberately a modified-compiler experiment, outside the passive
+trace command and the matching build. Its normal-shim restoration is mandatory.
+
+The diagnostic reproduces all 56 named/virtual retail call sites in order,
+including the correct distance overload, yet still has a 0x54-byte frame
+(retail 0x50) and omits the original-x store at 0x5b4e3f. Thus neither storage
+delta can be attributed solely to those inline copies. The ordinary byte-checked
+`/Z7` object records the tile at EBP-0x54, the neighbour mask at EBP-0x38,
+and all five scoped nearby points at EBP-0x28; it omits the optimizer's
+unnamed temporaries, so those records do not identify the extra allocation.
+A lexical `inline_depth(1)` at the outer terrain read is byte-neutral because
+the nested call retains its own lexical allowance. Flattening just this read
+and pinning its cache call changes the caller's budget and later calls, so it
+is not an equivalent control. Both source pragma probes were removed.
+
+### Recover the tile constructor and terrain predicate together
+
+`paintPoint` now constructs a base tile from terrain/frame and tests matching
+terrain through an ordinary `isPaintTerrain(point)` helper. That helper calls
+both `getTerrain(point)` and `getPaintTerrain()`. Each operation has a meaningful
+value; no dummy call, assertion, or inline control is present. Names and the
+interface remain retail-derived hypotheses, since this TU has no DC counterpart.
+
+The individual controls explain why a lower intermediate score did not reject
+these boundaries. Before the point-copy recovery, the two-accessor predicate
+alone restored the first cache call but freed enough budget to expand the final
+one (96.6293%). The tile constructor alone prevented the inner tree find from
+expanding (85.7667%). Together they retain both desired cache calls and expand
+the tree find (98.2893%). The constructor's two-argument zero-flip form, explicit
+default flip arguments, and the existing flip-value factory leave the score unchanged.
+
+With the comparison-return predicate, recovering point-copy initialization
+and the base tile's lifetime reached a full checkpoint of 99.5570%. The gated trace now reads caller cost 920, initial
+budget 1,840, and base-tile constructor cost 52. The first cache read gets 48
+units at depth 3, so the cost-90 `getPackedCell` stays out of line. The two
+interior rule reads get 122 and 109 and expand it; the final rule read gets 77
+and retains it. The inner distance wrapper still receives 47 for cost 41 and
+expands, leaving only 6 for its cost-45 fourth-argument child. Its unwanted
+expansion is still a real residual, despite report-level relocation agreement.
+
+The trace object matches all 56,600 reference bytes outside the COFF timestamp.
+Renaming the recovered terrain-tile type and its fields leaves all 74 named
+function sections byte-identical. Full build and raw checks preserve the cache
+reader/initializer, gap predicates, coordinate constructor/comparator, both
+worklist destructors, and the exact 1,516-byte water-border repair.
+
+### Recheck storage after changing a later inline decision
+
+At the 99.5570% terrain-painter source, the retained three-argument `_Distance`
+body reproduces all 43 retail bytes at 0x5b8c70, including the resolved iterator
+increment call. The caller still expands that wrapper into the four-argument
+version. Its identity is therefore independently established; report-level
+relocation agreement does not settle the caller's overload.
+
+A new scratch compiler control rejects only that eligible depth-three wrapper,
+charging its original 41 units before the rejection. The source already retains
+the first cache call, so the old two-site control must not be reused unchanged.
+This diagnostic reaches retail's 1,483-byte function length and restores the
+three-argument call. It also changes the earlier direction pointer from EDX to
+EBX, changes the point-translation schedule, and changes the loop backedge's
+registers. Both cache multiplications still load y before width. Correcting a
+later inline decision can therefore change earlier storage; a near-exact
+translation sequence is not an invariant across that decision. The diagnostic
+object never enters objdiff or the checkpoint, and the normal shim is restored.
+
+The ordinary TU definition of `getTerrain` preserves the 99.5570% caller and
+both exact worklist destructors. Moving the body adds its ordinary candidate
+section; all existing C++ function sections compared with the banked trace
+retain identical code bytes. Retail proves the shared accessor role but not
+an explicit source `inline` qualifier. Neutral source-form controls and
+the point/flip-construction failures are recorded beside `paintPoint`, rather
+than inferred to be compiler limitations.
+
+### A guard-return predicate crosses the free-expansion cutoff
+
+`rmgTerrainPainter::isPaintTerrain` exposes the remaining distance-wrapper
+boundary through ordinary source control flow:
+
+```cpp
+if (getTerrain(point) == getPaintTerrain())
+    return 1;
+return 0;
+```
+
+The comparison-return form costs 38 and is free under the cutoff of 40. The
+guard-return form costs 47 and is charged. The unchanged `paintPoint` root
+still costs 920, but the inner cost-41 `_Distance` wrapper now receives only
+38 units and stays out of line, exactly as at retail 0x5b4f7f. The preceding
+tree find still expands. This is a meaningful predicate body, with no dummy
+operation, assertion, pragma, or compiler modification.
+
+Keeping the separate named point return initially leaves 99.0163% because
+this later call decision changes the direction-loop registers. Returning the
+compound translation (`return result += offset`) after the recovered coordinate
+copy initialization restores them and reaches 99.9204%. The point-addition cost
+is now 60 rather than 63. The first cache read receives 46, the two interior
+copies 115 and 108, and the final cache read 76, against a cost of 90. Both
+distance calls retain the three-argument wrapper, at budgets 18 and 38.
+
+The final passive trace reproduces all 56,910 object bytes outside the COFF
+timestamp. A separate raw audit resolves all 61 named relocations in the
+1,483-byte caller, admitting only the correct distance overload. Exactly eight
+bytes remain different: the two cache products at 0x5b4f06 and 0x5b4fee load y
+then multiply by width, whereas retail loads width then multiplies by y.
+Every other opcode, immediate, stack displacement, branch/call target, and
+data operand agrees. A lower intermediate score therefore did not refute
+the corrected call boundary, and the old named-return result did not survive
+that change in compiler state.
 
 ## 7. Using it
 

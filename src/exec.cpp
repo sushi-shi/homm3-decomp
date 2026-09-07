@@ -43,10 +43,10 @@
 VA(0x004b0900, 0x10)  // dc-order-map (precedes InitSystem), dc 0x9e510
 executive::executive()
 {
-    headManager = 0;
-    tailManager = 0;
-    currentManager = 0;
-    dialogReturn = 0;
+    m_headManager = 0;
+    m_tailManager = 0;
+    m_currentManager = 0;
+    m_dialogReturn = 0;
 }
 
 // gpGeneralText is the canonical TTextResource loaded from genrltxt.txt.
@@ -55,14 +55,14 @@ executive::executive()
 // the Complete address: it opens the input manager and adds the mouse/window
 // managers in the exact three statement groups preserved by CodeView.
 VA(0x004b0910, 0x79)  // anchor-callee + dc-order-map, dc 0x9e520
-int executive::InitSystem()
+int executive::initSystem()
 {
-    if (gpInputManager->Open(-1))
-        ShutDown((*gpGeneralText)[131]);
-    if (AddManager(gpMouseManager, -1))
-        ShutDown((*gpGeneralText)[133]);
-    if (AddManager(gpWindowManager, -1))
-        ShutDown((*gpGeneralText)[134]);
+    if (g_inputManager->open(-1))
+        shutDown((*g_generalText)[131]);
+    if (addManager(g_mouseManager, -1))
+        shutDown((*g_generalText)[133]);
+    if (addManager(g_windowManager, -1))
+        shutDown((*g_generalText)[134]);
     return 0;
 }
 
@@ -70,29 +70,29 @@ int executive::InitSystem()
 // Dreamcast set bInShutDown, adds the sound manager's Close, and keeps
 // the (now empty) EarlyShutDownSystem call - it lands on the ICF `ret`.
 VA(0x004b0990, 0x78)  // anchor-caller ShutDown + dc-order-map, dc 0x9e594
-void executive::ShutDownSystem()
+void executive::shutDownSystem()
 {
-    bShutDownDone = 1;
-    gpSoundManager->Close();
-    EarlyShutDownSystem();
+    g_shutDownDone = 1;
+    g_soundManager->close();
+    earlyShutDownSystem();
 
-    baseManager* thisManager = headManager;
+    baseManager* thisManager = m_headManager;
     while (thisManager) {
-        baseManager* nextManager = thisManager->nextManager;
-        if (thisManager != gpWindowManager && thisManager != gpMouseManager)
-            RemoveManager(thisManager);
+        baseManager* nextManager = thisManager->m_nextManager;
+        if (thisManager != g_windowManager && thisManager != g_mouseManager)
+            removeManager(thisManager);
         thisManager = nextManager;
     }
-    if (gpWindowManager->status == baseManager::STATUS_ACTIVE)
-        RemoveManager(gpWindowManager);
-    if (gpMouseManager->status == baseManager::STATUS_ACTIVE)
-        RemoveManager(gpMouseManager);
-    gpInputManager->Close();
+    if (g_windowManager->m_status == baseManager::STATUS_ACTIVE)
+        removeManager(g_windowManager);
+    if (g_mouseManager->m_status == baseManager::STATUS_ACTIVE)
+        removeManager(g_mouseManager);
+    g_inputManager->close();
 }
 
 // E:\gamedcs\exec.cpp:103
 VA(0x004b0a10, 0x10B)  // anchor-global, dc 0x9e66c
-int executive::DoDialog(baseManager* newDialog)
+int executive::doDialog(baseManager* newDialog)
 {
     executive dialogExec;
     baseManager* savedMgr[20];
@@ -102,27 +102,27 @@ int executive::DoDialog(baseManager* newDialog)
     int count = 0;
     int i;
 
-    for (m = headManager; m; count++) {
+    for (m = m_headManager; m; count++) {
         savedMgr[count] = m;
-        savedPrev[count] = m->prevManager;
-        savedNext[count] = m->nextManager;
-        m = m->nextManager;
+        savedPrev[count] = m->m_prevManager;
+        savedNext[count] = m->m_nextManager;
+        m = m->m_nextManager;
     }
-    if (AddManager(newDialog, -1))
-        ShutDown(gpGeneralText->GetText(GENERAL_TEXT_SHUTDOWN));
-    if (dialogExec.AddManager(gpMouseManager, -1))
-        ShutDown(gpGeneralText->GetText(GENERAL_TEXT_SHUTDOWN));
-    if (dialogExec.AddManager(gpWindowManager, -1))
-        ShutDown(gpGeneralText->GetText(GENERAL_TEXT_SHUTDOWN));
-    if (dialogExec.AddManager(newDialog, -1))
-        ShutDown(gpGeneralText->GetText(GENERAL_TEXT_SHUTDOWN));
-    dialogExec.MainLoop();
-    RemoveManager(newDialog);
+    if (addManager(newDialog, -1))
+        shutDown(g_generalText->getText(GENERAL_TEXT_SHUTDOWN));
+    if (dialogExec.addManager(g_mouseManager, -1))
+        shutDown(g_generalText->getText(GENERAL_TEXT_SHUTDOWN));
+    if (dialogExec.addManager(g_windowManager, -1))
+        shutDown(g_generalText->getText(GENERAL_TEXT_SHUTDOWN));
+    if (dialogExec.addManager(newDialog, -1))
+        shutDown(g_generalText->getText(GENERAL_TEXT_SHUTDOWN));
+    dialogExec.mainLoop();
+    removeManager(newDialog);
     for (i = 0; i < count; i++) {
-        savedMgr[i]->prevManager = savedPrev[i];
-        savedMgr[i]->nextManager = savedNext[i];
+        savedMgr[i]->m_prevManager = savedPrev[i];
+        savedMgr[i]->m_nextManager = savedNext[i];
     }
-    return dialogExec.dialogReturn;
+    return dialogExec.m_dialogReturn;
 }
 
 #if 0  // @carcass
@@ -135,70 +135,70 @@ int executive::DoDialog(baseManager* newDialog)
 // residual disappeared once the TU's canonical include closure landed.
 // E:\gamedcs\exec.cpp:147
 VA(0x004b0b20, 0xCB)  // anchor-global, dc 0x9e778
-int executive::AddManager(baseManager* newManager, int newPriority)
+int executive::addManager(baseManager* newManager, int newPriority)
 {
     if (!newManager)
         return 3;
     if (newPriority == -1) {
-        if (!tailManager)
+        if (!m_tailManager)
             newPriority = 0;
         else
-            newPriority = tailManager->priority + 1;
+            newPriority = m_tailManager->m_priority + 1;
     }
-    if (!newManager->status && newManager->Open(newPriority))
+    if (!newManager->m_status && newManager->open(newPriority))
         return 3;
-    baseManager* current = tailManager;
-    while (current && current->priority > newPriority)
-        current = current->prevManager;
+    baseManager* current = m_tailManager;
+    while (current && current->m_priority > newPriority)
+        current = current->m_prevManager;
     if (!current) {
-        newManager->nextManager = headManager;
-        newManager->prevManager = 0;
-        if (headManager)
-            headManager->prevManager = newManager;
-        headManager = newManager;
-        if (!tailManager)
-            tailManager = newManager;
-    } else if (!current->nextManager) {
-        newManager->prevManager = tailManager;
-        newManager->nextManager = 0;
-        tailManager->nextManager = newManager;
-        tailManager = newManager;
+        newManager->m_nextManager = m_headManager;
+        newManager->m_prevManager = 0;
+        if (m_headManager)
+            m_headManager->m_prevManager = newManager;
+        m_headManager = newManager;
+        if (!m_tailManager)
+            m_tailManager = newManager;
+    } else if (!current->m_nextManager) {
+        newManager->m_prevManager = m_tailManager;
+        newManager->m_nextManager = 0;
+        m_tailManager->m_nextManager = newManager;
+        m_tailManager = newManager;
     } else {
-        newManager->prevManager = current;
-        newManager->nextManager = current->nextManager;
-        current->nextManager->prevManager = newManager;
-        current->nextManager = newManager;
+        newManager->m_prevManager = current;
+        newManager->m_nextManager = current->m_nextManager;
+        current->m_nextManager->m_prevManager = newManager;
+        current->m_nextManager = newManager;
     }
     return 0;
 }
 
 // E:\gamedcs\exec.cpp:219
 VA(0x004b0bf0, 0x79)  // anchor-global, dc 0x9e838
-void executive::RemoveManager(baseManager* killManager)
+void executive::removeManager(baseManager* killManager)
 {
     if (!killManager)
         return;
-    killManager->Close();
-    baseManager* prev = killManager->prevManager;
+    killManager->close();
+    baseManager* prev = killManager->m_prevManager;
     if (!prev) {
-        if (headManager == tailManager) {
-            tailManager = 0;
-            headManager = 0;
+        if (m_headManager == m_tailManager) {
+            m_tailManager = 0;
+            m_headManager = 0;
         } else {
-            headManager = killManager->nextManager;
-            headManager->prevManager = 0;
+            m_headManager = killManager->m_nextManager;
+            m_headManager->m_prevManager = 0;
         }
-        killManager->prevManager = 0;
-        killManager->nextManager = 0;
+        killManager->m_prevManager = 0;
+        killManager->m_nextManager = 0;
         return;
     }
-    prev->nextManager = killManager->nextManager;
-    if (!prev->nextManager)
-        tailManager = prev;
+    prev->m_nextManager = killManager->m_nextManager;
+    if (!prev->m_nextManager)
+        m_tailManager = prev;
     else
-        prev->nextManager->prevManager = prev;
-    killManager->prevManager = 0;
-    killManager->nextManager = 0;
+        prev->m_nextManager->m_prevManager = prev;
+    killManager->m_prevManager = 0;
+    killManager->m_nextManager = 0;
 }
 
 
@@ -230,57 +230,57 @@ void executive::RemoveManager(baseManager* killManager)
 // RemoveManager(currentManager) spelling is the measured maximum.
 // E:\gamedcs\exec.cpp:268
 VA(0x004b0c70, 0x1D0)  // anchor-global + contiguous catch handlers, dc 0x9e898
-void executive::CallManager(baseManager* newManager)
+void executive::callManager(baseManager* newManager)
 {
-    baseManager* saved = currentManager;
+    baseManager* saved = m_currentManager;
 
     try {
-        if (saved == gpAdvManager) {
-            gpAdvManager->status = 2;
-            gpAdvManager->advWindow->SleepAllWidgets(1);
-            gpAdvManager->bHeroLogoShowing = 0;
+        if (saved == g_advManager) {
+            g_advManager->m_status = 2;
+            g_advManager->m_advWindow->sleepAllWidgets(1);
+            g_advManager->m_heroLogoShowing = 0;
         } else {
-            RemoveManager(currentManager);
+            removeManager(m_currentManager);
         }
         try {
-            if (AddManager(newManager, -1))
-                ShutDown(gpGeneralText->GetText(GENERAL_TEXT_SHUTDOWN));
+            if (addManager(newManager, -1))
+                shutDown(g_generalText->getText(GENERAL_TEXT_SHUTDOWN));
             try {
-                MainLoop();
+                mainLoop();
             } catch (...) {
-                RemoveManager(newManager);
+                removeManager(newManager);
                 throw;
             }
-            RemoveManager(newManager);
+            removeManager(newManager);
         } catch (...) {
-            if (saved == gpAdvManager) {
-                gpAdvManager->status = 1;
-                gpAdvManager->advWindow->SleepAllWidgets(0);
+            if (saved == g_advManager) {
+                g_advManager->m_status = 1;
+                g_advManager->m_advWindow->sleepAllWidgets(0);
             } else {
-                if (AddManager(saved, -1))
-                    ShutDown(gpGeneralText->GetText(GENERAL_TEXT_SHUTDOWN));
+                if (addManager(saved, -1))
+                    shutDown(g_generalText->getText(GENERAL_TEXT_SHUTDOWN));
             }
             throw;
         }
-        if (saved == gpAdvManager) {
-            gpAdvManager->status = 1;
-            gpAdvManager->advWindow->SleepAllWidgets(0);
-            gpAdvManager->RedrawAdvScreen(1, 0);
-            KBChangeMenu(dfltMenu);
-            gpAdvManager->ForceNewHover();
-            gpAdvManager->OverrideBottomView(
+        if (saved == g_advManager) {
+            g_advManager->m_status = 1;
+            g_advManager->m_advWindow->sleepAllWidgets(0);
+            g_advManager->redrawAdvScreen(1, 0);
+            kbChangeMenu(g_dfltMenu);
+            g_advManager->forceNewHover();
+            g_advManager->overrideBottomView(
                 advManager::BOTTOM_VIEW_DEFAULT, -1);
-            if (gpWindowManager->isWaitingForFadeIn)
-                gpWindowManager->FadeScreen(0, 4, 0);
+            if (g_windowManager->m_isWaitingForFadeIn)
+                g_windowManager->fadeScreen(0, 4, 0);
         } else {
-            if (AddManager(saved, -1))
-                ShutDown(gpGeneralText->GetText(GENERAL_TEXT_SHUTDOWN));
+            if (addManager(saved, -1))
+                shutDown(g_generalText->getText(GENERAL_TEXT_SHUTDOWN));
         }
     } catch (...) {
-        currentManager = saved;
+        m_currentManager = saved;
         throw;
     }
-    currentManager = saved;
+    m_currentManager = saved;
 }
 
 // E:\gamedcs\exec.cpp:340
@@ -293,54 +293,54 @@ void executive::CallManager(baseManager* newManager)
 // Retail's dec/dec/sub-2 chain proves the three distinct arms.
 // E:\gamedcs\exec.cpp:340
 VA(0x004b0e40, 0xF5)  // anchor-callee, dc 0x9e9b0
-void executive::MainLoop()
+void executive::mainLoop()
 {
     message msg;
     int done = 0;
     int dispatch;
 
-    if (!headManager)
+    if (!m_headManager)
         return;
-    gpInputManager->Flush();
+    g_inputManager->flush();
     while (!done) {
-        Process1WindowsMessage();
-        msg = gpInputManager->GetEvent();
+        process1WindowsMessage();
+        msg = g_inputManager->getEvent();
         dispatch = 1;
-        currentManager = headManager;
-        if (!currentManager)
+        m_currentManager = m_headManager;
+        if (!m_currentManager)
             return;
-        while (currentManager && dispatch && !done) {
-            if (currentManager->status == 1
-                    && (msg.id != MESSAGE_MOUSE_MOVE
-                        || currentManager != gpWindowManager)) {
-                switch (currentManager->Main(msg)) {
+        while (m_currentManager && dispatch && !done) {
+            if (m_currentManager->m_status == 1
+                    && (msg.m_id != MESSAGE_MOUSE_MOVE
+                        || m_currentManager != g_windowManager)) {
+                switch (m_currentManager->main(msg)) {
                     case MESSAGE_DISPATCH_CONSUME:
                         dispatch = 0;
                         break;
                     case MESSAGE_DISPATCH_FORWARD:
-                        if (msg.id & MESSAGE_EXECUTIVE) {
+                        if (msg.m_id & MESSAGE_EXECUTIVE) {
                             // Retail merges homm2's TERMINATE_LOOP and
                             // RETURN_RESULT tails at the done store, but
                             // only RETURN_RESULT copies msg.extra first.
-                            switch (msg.codeX) {
+                            switch (msg.m_codeX) {
                                 case EXECUTIVE_COMMAND_TERMINATE_LOOP:
                                     done = 1;
                                     break;
                                 case EXECUTIVE_COMMAND_RETURN_RESULT:
-                                    dialogReturn = msg.extra;
+                                    m_dialogReturn = msg.m_extra;
                                     done = 1;
                                     break;
                                 case EXECUTIVE_COMMAND_REMOVE_MANAGER:
-                                    RemoveManager(currentManager);
-                                    currentManager = 0;
+                                    removeManager(m_currentManager);
+                                    m_currentManager = 0;
                                     break;
                             }
                         }
                         break;
                 }
             }
-            if (currentManager)
-                currentManager = currentManager->nextManager;
+            if (m_currentManager)
+                m_currentManager = m_currentManager->m_nextManager;
         }
     }
 }

@@ -38,21 +38,34 @@ enum EStripIconSet {
 // (?select_army@townManager@@AAAXPAVstrip@@J_N@Z).
 class strip {
 public:
-    char pad_00[0x1c];  // +0x00 untouched by the five retail bodies
-    int x;              // +0x1c ctor inX
-    int y;              // +0x20 ctor inY
-    int pos;            // +0x24 ctor inPos - widget-id family selector
-    long owner;         // +0x28 ctor new_owner (dead in the retail bodies)
-    int current;        // +0x2c ctor -2; selected slot (-1 = owner, 0..6)
-    char pad_30[0x34];  // +0x30 untouched by the five retail bodies
-    int icons;          // +0x64 ctor newIcons (icon-set id; 161 = frame set)
-    heroWindow* win;    // +0x68 ctor inWin
-    armyGroup* group;   // +0x6c ctor groupToDraw (0 = empty strip)
-    int iconFrame;      // +0x70 ctor newIconFrame (-1 = no owner picture)
-    hero* thisHero;     // +0x74 ctor new_hero (dead in the retail bodies)
+    // Before normalization: pad_00.
+    char m_pad00[0x1c];  // +0x00 untouched by the five retail bodies
+    // Before normalization: x.
+    int m_x;              // +0x1c ctor inX
+    // Before normalization: y.
+    int m_y;              // +0x20 ctor inY
+    // Before normalization: pos.
+    int m_pos;            // +0x24 ctor inPos - widget-id family selector
+    // Before normalization: owner.
+    long m_owner;         // +0x28 ctor new_owner (dead in the retail bodies)
+    // Before normalization: current.
+    int m_current;        // +0x2c ctor -2; selected slot (-1 = owner, 0..6)
+    // Before normalization: pad_30.
+    char m_pad30[0x34];  // +0x30 untouched by the five retail bodies
+    // Before normalization: icons.
+    int m_icons;          // +0x64 ctor newIcons (icon-set id; 161 = frame set)
+    // Before normalization: win.
+    heroWindow* m_win;    // +0x68 ctor inWin
+    // Before normalization: group.
+    armyGroup* m_group;   // +0x6c ctor groupToDraw (0 = empty strip)
+    // Before normalization: iconFrame.
+    int m_iconFrame;      // +0x70 ctor newIconFrame (-1 = no owner picture)
+    // Before normalization: thisHero.
+    hero* m_thisHero;     // +0x74 ctor new_hero (dead in the retail bodies)
 
     strip(int inX, int inY, int inPos, int newIcons, int newIconFrame,
-          long new_owner, hero* new_hero, armyGroup* groupToDraw, int firstId,
+          // Before normalization (locals): new_owner, new_hero.
+          long newOwner, hero* newHero, armyGroup* groupToDraw, int firstId,
           unsigned char update, heroWindow* inWin);
     // Declared, deliberately NOT defined - not here and not in strip.cpp.
     // Retail's `delete strip` calls a real out-of-line body before
@@ -65,14 +78,22 @@ public:
     // inline, or leaving it undeclared, drops the call and blocks every
     // body that frees a strip.
     ~strip();
-    void Draw(TCreatureType divide_creature);
-    void DrawIcons(unsigned char update, TCreatureType divide_creature);
+    // Before normalization (function): strip::Draw.
+    // Before normalization (locals): divide_creature.
+    void draw(TCreatureType divideCreature);
+    // Before normalization (function): strip::DrawIcons.
+    // Before normalization (locals): divide_creature.
+    void drawIcons(unsigned char update, TCreatureType divideCreature);
 
 protected:
-    void DrawNumber(int i);
-    void DrawOwner(int frame);
-    void DrawMonster(int i, int frame);
-    void DrawSelector(int i);
+    // Before normalization (function): strip::DrawNumber.
+    void drawNumber(int i);
+    // Before normalization (function): strip::DrawOwner.
+    void drawOwner(int frame);
+    // Before normalization (function): strip::DrawMonster.
+    void drawMonster(int i, int frame);
+    // Before normalization (function): strip::DrawSelector.
+    void drawSelector(int i);
 };
 SIZE(strip, 0x78);
 

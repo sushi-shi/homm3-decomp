@@ -95,13 +95,16 @@ public:
 
     class TSpellbookEntry {
     public:
-        SpellID Id;
-        TSpellSchool School;
-        int Mastery;
+        // Before normalization: Id.
+        SpellID m_id;
+        // Before normalization: School.
+        TSpellSchool m_school;
+        // Before normalization: Mastery.
+        int m_mastery;
 
         TSpellbookEntry(SpellID id, TSpellSchool school,
                         int mastery)
-            : Id(id), School(school), Mastery(mastery)
+            : m_id(id), m_school(school), m_mastery(mastery)
         {
         }
         bool operator<(const TSpellbookEntry& y) const;
@@ -110,50 +113,86 @@ public:
     TSpellbookWindow(const hero* h, const armyGroup* g,
                      TSpellContext context, int magicTerrain);
     virtual ~TSpellbookWindow();
-    virtual int Open(int newPriority, unsigned char update);
-    virtual void Close(unsigned char update);
-    virtual int WindowHandler(message* msg);
+    // Before normalization (function): TSpellbookWindow::Open.
+    virtual int open(int newPriority, unsigned char update);
+    // Before normalization (function): TSpellbookWindow::Close.
+    virtual void close(unsigned char update);
+    // Before normalization (function): TSpellbookWindow::WindowHandler.
+    virtual int windowHandler(message* msg);
 
-    void SetSchool(TSpellSchool school);
-    unsigned GetSchool();
-    void SetContext(TSpellContext context);
-    unsigned GetContextMask();
-    void GotoPage(int page);
-    int GetPage();
-    void PreviousPage();
-    void NextPage();
-    static void Reset();
+    // Before normalization (function): TSpellbookWindow::SetSchool.
+    void setSchool(TSpellSchool school);
+    // Before normalization (function): TSpellbookWindow::GetSchool.
+    unsigned getSchool();
+    // Before normalization (function): TSpellbookWindow::SetContext.
+    void setContext(TSpellContext context);
+    // Before normalization (function): TSpellbookWindow::GetContextMask.
+    unsigned getContextMask();
+    // Before normalization (function): TSpellbookWindow::GotoPage.
+    void gotoPage(int page);
+    // Before normalization (function): TSpellbookWindow::GetPage.
+    int getPage();
+    // Before normalization (function): TSpellbookWindow::PreviousPage.
+    void previousPage();
+    // Before normalization (function): TSpellbookWindow::NextPage.
+    void nextPage();
+    // Before normalization (function): TSpellbookWindow::Reset.
+    static void reset();
 
 private:
-    static int LastPage;
-    static TSpellContext LastContext;
-    static TSpellSchool LastSchool;
+    // Before normalization: LastPage.
+    static int s_lastPage;
+    // Before normalization: LastContext.
+    static TSpellContext s_lastContext;
+    // Before normalization: LastSchool.
+    static TSpellSchool s_lastSchool;
 
-    std::string get_spell_description(SpellID spell,
-                                      const hero* current_hero,
+    // Before normalization (function): TSpellbookWindow::get_spell_description.
+    std::string getSpellDescription(SpellID spell,
+                                      // Before normalization (locals): current_hero.
+                                      const hero* currentHero,
                                       unsigned char rollover);
 
-    const TSpellContext AllowedContext;       // +0x60
-    const hero* Hero;                         // +0x64
-    const armyGroup* EnemyGroup;              // +0x68
-    int OnMagicPlains;                        // +0x6c; retail widens DC's byte
-    TSpellSchool School;                      // +0x70
-    unsigned ContextMask;                     // +0x74
-    int Page;                                 // +0x78
-    SpellID SpellMap[SPELLS_PER_PAGE];        // +0x7c
-    iconWidget** SpellLevelWidgets;           // +0xac
-    iconWidget** SpellIconWidgets;            // +0xb0
-    textWidget** SpellNameWidgets;            // +0xb4
-    iconWidget* HeadingWidget;                // +0xb8
-    bitmapBorder* NextPageWidget;              // +0xbc
-    bitmapBorder* PreviousPageWidget;          // +0xc0
-    iconWidget* SchoolTabsWidget;              // +0xc4
-    bitmapBackedTextWidget* RolloverWidget;    // +0xc8
+    // Before normalization: AllowedContext.
+    const TSpellContext m_allowedContext;       // +0x60
+    // Before normalization: Hero.
+    const hero* m_hero;                         // +0x64
+    // Before normalization: EnemyGroup.
+    const armyGroup* m_enemyGroup;              // +0x68
+    // Before normalization: OnMagicPlains.
+    int m_onMagicPlains;                        // +0x6c; retail widens DC's byte
+    // Before normalization: School.
+    TSpellSchool m_school;                      // +0x70
+    // Before normalization: ContextMask.
+    unsigned m_contextMask;                     // +0x74
+    // Before normalization: Page.
+    int m_page;                                 // +0x78
+    // Before normalization: SpellMap.
+    SpellID m_spellMap[SPELLS_PER_PAGE];        // +0x7c
+    // Before normalization: SpellLevelWidgets.
+    iconWidget** m_spellLevelWidgets;           // +0xac
+    // Before normalization: SpellIconWidgets.
+    iconWidget** m_spellIconWidgets;            // +0xb0
+    // Before normalization: SpellNameWidgets.
+    textWidget** m_spellNameWidgets;            // +0xb4
+    // Before normalization: HeadingWidget.
+    iconWidget* m_headingWidget;                // +0xb8
+    // Before normalization: NextPageWidget.
+    bitmapBorder* m_nextPageWidget;              // +0xbc
+    // Before normalization: PreviousPageWidget.
+    bitmapBorder* m_previousPageWidget;          // +0xc0
+    // Before normalization: SchoolTabsWidget.
+    iconWidget* m_schoolTabsWidget;              // +0xc4
+    // Before normalization: RolloverWidget.
+    bitmapBackedTextWidget* m_rolloverWidget;    // +0xc8
 
     int convertID2HelpID(int id);
-    static int GetPositionFromSchool(unsigned schoolMask);
-    static TSpellSchool GetSchoolFromPosition(int position);
-    void DisplayNewSchool(int position);
+    // Before normalization (function): TSpellbookWindow::GetPositionFromSchool.
+    static int getPositionFromSchool(unsigned schoolMask);
+    // Before normalization (function): TSpellbookWindow::GetSchoolFromPosition.
+    static TSpellSchool getSchoolFromPosition(int position);
+    // Before normalization (function): TSpellbookWindow::DisplayNewSchool.
+    void displayNewSchool(int position);
 };
 SIZE(TSpellbookWindow, 0xcc);
 SIZE(TSpellbookWindow::TSpellbookEntry, 0x0c);

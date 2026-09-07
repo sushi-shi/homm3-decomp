@@ -9,22 +9,26 @@
 // compare members while sharing the out-of-line encoder at 0x402a30.
 class TCheatCode {
 public:
-    TCheatCode() { code[0] = 0; }
+    TCheatCode() { m_code[0] = 0; }
     TCheatCode(const char* value) { encode(value); }
 
     bool compare(const char* value) const
     {
-        return _strcmpi(code, value) == 0;
+        return _strcmpi(m_code, value) == 0;
     }
 
-    const char* GetCode() const { return code; }
+    // Before normalization (function): TCheatCode::GetCode.
+    const char* getCode() const { return m_code; }
 
 private:
     void encode(const char* value);
 
-    static const char* a;
-    static const char* b;
-    char code[200];
+    // Before normalization: a.
+    static const char* s_a;
+    // Before normalization: b.
+    static const char* s_b;
+    // Before normalization: code.
+    char m_code[200];
 };
 SIZE(TCheatCode, 200);
 

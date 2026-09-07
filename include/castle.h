@@ -13,15 +13,20 @@ class town;
 // four .bss string arrays keyed by (townType, buildingId) with the
 // dwelling ids (15, 17..29) taking stride-10 and stride-15 town rows.
 // Names are provisional.
-extern const char* gBuildingNamesCommon[];   // 0x6a64e4, id < 15
-extern const char* gBuildingNamesDwelling[]; // 0x6a53fc, id == 15
-extern const char* gBuildingNamesTown[];     // 0x6a5390, 17 <= id < 30
-extern const char* gBuildingNamesUpgrade[];  // 0x6a6230, id >= 30
+// Before normalization: gBuildingNamesCommon.
+extern const char* g_buildingNamesCommon[];   // 0x6a64e4, id < 15
+// Before normalization: gBuildingNamesDwelling.
+extern const char* g_buildingNamesDwelling[]; // 0x6a53fc, id == 15
+// Before normalization: gBuildingNamesTown.
+extern const char* g_buildingNamesTown[];     // 0x6a5390, 17 <= id < 30
+// Before normalization: gBuildingNamesUpgrade.
+extern const char* g_buildingNamesUpgrade[];  // 0x6a6230, id >= 30
 
 // Dreamcast names this ten-entry hall-page text table. Complete retail
 // reads entries 0..9 at 0x6a7428..0x6a744c for the same Capitol, dock,
 // prerequisite, affordability, help, and empty-rollover roles.
-extern const char* cHallInfo[10];
+// Before normalization: cHallInfo.
+extern const char* g_hallInfo[10];
 
 // Building-id domain landmarks the name lookup switches on (the
 // dwelling row, the town-row band start, the upgrade band start).
@@ -32,16 +37,20 @@ enum EBuildingId {
     BUILDING_ID_UPGRADE_FIRST = 30
 };
 
-const char* GetBuildingName(int townType, int buildingId);
-int CanBuy(const town* currTown, int buildingId);
+// Before normalization (function): GetBuildingName.
+const char* getBuildingName(int townType, int buildingId);
+// Before normalization (function): CanBuy.
+int canBuy(const town* currTown, int buildingId);
 
 // Retail extends the Dreamcast hall-screen table with Conflux while
 // preserving the original 18-byte row width. SetupCastle copies one row
 // into its working order and advances entries along their upgrade chains.
+// Before normalization: TownSpecStructScreen.
 DATA(0x0066cf98)
-extern const unsigned char TownSpecStructScreen[9][18];
+extern const unsigned char g_townSpecStructScreen[9][18];
+// Before normalization: NumOfTownSpecStrScreen.
 DATA(0x0066d03c)
-extern const unsigned char NumOfTownSpecStrScreen[9];
+extern const unsigned char g_numOfTownSpecStrScreen[9];
 
 // The four parallel widget bands driven by SetupCastle. Values are the
 // Complete message operands; the names are reconstructed from their roles.

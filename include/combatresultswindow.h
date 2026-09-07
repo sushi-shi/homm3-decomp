@@ -16,12 +16,16 @@ class message;
 class TCombatResultsWindow : public heroWindow {
 public:
     TCombatResultsWindow(const hero* attacker, const hero* defender,
-        int my_side, int winning_side, unsigned char is_siege,
+        // Before normalization (locals): my_side, winning_side, is_siege.
+        int mySide, int winningSide, unsigned char isSiege,
         int experience);
     virtual ~TCombatResultsWindow();
-    virtual int Open(int newPriority, unsigned char update);
-    virtual void Close(unsigned char update);
-    void DoModal();
+    // Before normalization (function): TCombatResultsWindow::Open.
+    virtual int open(int newPriority, unsigned char update);
+    // Before normalization (function): TCombatResultsWindow::Close.
+    virtual void close(unsigned char update);
+    // Before normalization (function): TCombatResultsWindow::DoModal.
+    void doModal();
 
     // Dreamcast TCombatResultsWindow::EOtherWidgetIDs.
     //
@@ -71,7 +75,8 @@ SIZE(TCombatResultsWindow, 0x4c);
 // references, eight of them ours). No DATA claim is made - this TU does not
 // define it - and the declaration moves to the real owner's header as soon as
 // 0x477470's compiland is located.
-extern int gCombatResultFlag695014;
+// Before normalization: gCombatResultFlag695014.
+extern int g_combatResultFlag695014;
 // Retail .data 0x6701a8, the six MP3 names the flag above selects,
 // READ FROM THE IMAGE in order: "win battle", "losecombat",
 // "defend castle", "retreat battle", "surrender battle", "losecastle" -
@@ -81,10 +86,12 @@ extern int gCombatResultFlag695014;
 // soundManager::StartMP3; declared here beside its index rather than in
 // command.h because the two are one datum. DECLARATION ONLY - no TU in
 // this tree defines it yet, so no DATA claim.
-extern const char* const gCombatResultMusic[6];
+// Before normalization: gCombatResultMusic.
+extern const char* const g_combatResultMusic[6];
 
 // Retail /Gr passes the message in ECX, matching DoDialog's callback shape.
-int CombatResultsWindowHandler(message& msg);
+// Before normalization (function): CombatResultsWindowHandler.
+int combatResultsWindowHandler(message& msg);
 
 // --- TCombatResultsWindow ---
 // CODEVIEW(E:\gamedcs\combatresultswindow.cpp:72, dc 0x68364) void TCombatResultsWindow::TCombatResultsWindow(const hero* attacker, const hero* defender, int my_side, int winning_side, unsigned char is_siege, int experience);

@@ -29,11 +29,11 @@
 VA(0x004fa590, 0x77)  // order-map TU head, dc 0xe908c
 void LODFile::clear()
 {
-    if (opened) {
-        subindex.clear();
-        fclose(fileptr);
-        delete dataBuffer;
-        opened = 0;
+    if (m_opened) {
+        m_subindex.clear();
+        fclose(m_fileptr);
+        delete m_dataBuffer;
+        m_opened = 0;
     }
 }
 
@@ -56,13 +56,14 @@ void* LODFile::getDataPtr(const char* item_name)
 #endif  // @carcass
 
 // E:\gamedcs\lodfile.cpp:93
+// Before normalization (locals): item_name.
 VA(0x004fa610, 0x45)  // anchor-global, dc 0xe9154
-LODEntry* LODFile::getItemIndex(const char* item_name)
+LODEntry* LODFile::getItemIndex(const char* itemName)
 {
-    if (opened) {
-        Find(0, numEntries, item_name);
-        if (matchindex >= 0)
-            return &subindex[matchindex];
+    if (m_opened) {
+        find(0, m_numEntries, itemName);
+        if (m_matchindex >= 0)
+            return &m_subindex[m_matchindex];
     }
     return 0;
 }
@@ -82,19 +83,20 @@ LODEntry* LODFile::getItemIndex(const char* item_name)
 // Negative controls: a midpoint-valued `half` stops at 79.18, while mutating
 // `begin` directly in both short scans stops at 84.01 and swaps index/offset
 // register roles.
+// Before normalization (locals): item_name.
 VA(0x004fa660, 0x113)  // anchor-global, dc 0xe91c0
-void LODFile::Find(unsigned begin, unsigned end, const char* item_name)
+void LODFile::find(unsigned begin, unsigned end, const char* itemName)
 {
     for (;;) {
         if (begin == end) {
-            matchindex = -1;
+            m_matchindex = -1;
             return;
         }
 
         unsigned half = (end - begin) / 2;
-        int order = _strcmpi(item_name, subindex[begin + half].name);
+        int order = _strcmpi(itemName, m_subindex[begin + half].m_name);
         if (order == 0) {
-            matchindex = begin + half;
+            m_matchindex = begin + half;
             return;
         }
         if (order < 0) {
@@ -103,12 +105,12 @@ void LODFile::Find(unsigned begin, unsigned end, const char* item_name)
                 continue;
             } else {
                 for (unsigned i = begin; i < end; i++) {
-                    if (_strcmpi(item_name, subindex[i].name) == 0) {
-                        matchindex = i;
+                    if (_strcmpi(itemName, m_subindex[i].m_name) == 0) {
+                        m_matchindex = i;
                         return;
                     }
                 }
-                matchindex = -1;
+                m_matchindex = -1;
                 return;
             }
         } else {
@@ -117,12 +119,12 @@ void LODFile::Find(unsigned begin, unsigned end, const char* item_name)
                 continue;
             } else {
                 for (unsigned j = begin; j < end; j++) {
-                    if (_strcmpi(item_name, subindex[j].name) == 0) {
-                        matchindex = j;
+                    if (_strcmpi(itemName, m_subindex[j].m_name) == 0) {
+                        m_matchindex = j;
                         return;
                     }
                 }
-                matchindex = -1;
+                m_matchindex = -1;
                 return;
             }
         }
@@ -494,11 +496,11 @@ void std::__destroy_aux()
 // stores; retail repeats them exactly in open's vector-resize temporary.
 LODEntry::LODEntry()
 {
-    name[0] = 0;
-    offset = 0;
-    size = 0;
-    attrib = 0;
-    csize = 0;
+    m_name[0] = 0;
+    m_offset = 0;
+    m_size = 0;
+    m_attrib = 0;
+    m_csize = 0;
 }
 
 // E:\gamedcs\lodfile.cpp:266.  No retail row of its own: /Ob2 folds it
@@ -506,10 +508,10 @@ LODEntry::LODEntry()
 // repne scasb + rep movs pair.
 LODHeader::LODHeader()
 {
-    strcpy(LOD_ID, DATA_COMPGEN(0x0067fa58, lodSignature, "LOD"));
-    version = 500;
-    numEntries = 0;
-    memset(reserved, 0, sizeof(reserved));
+    strcpy(m_lodId, DATA_COMPGEN(0x0067fa58, lodSignature, "LOD"));
+    m_version = 500;
+    m_numEntries = 0;
+    memset(m_reserved, 0, sizeof(m_reserved));
 }
 
 // E:\gamedcs\lodfile.cpp:240.  Members construct first (header, then the
@@ -519,9 +521,9 @@ LODHeader::LODHeader()
 VA(0x004fa780, 0x7B)  // order-map constructor, dc 0xe9330
 LODFile::LODFile()
 {
-    fileptr = 0;
-    opened = 0;
-    dataBuffer = 0;
+    m_fileptr = 0;
+    m_opened = 0;
+    m_dataBuffer = 0;
 }
 
 // E:\gamedcs\lodfile.cpp:252.  clear() inlines here in full; the vector
@@ -542,25 +544,25 @@ LODFile::~LODFile()
 VA(0x004fa8a0, 0x1C4)  // anchor-bracket + body/import evidence, dc 0xe941c
 int LODFile::open(const char* filename, int flags)
 {
-    if (opened)
+    if (m_opened)
         clear();
 
     if (flags & 1)
-        fileptr = fopen(filename,
+        m_fileptr = fopen(filename,
             DATA_COMPGEN(0x00677d6c, lodReadMode, "rb"));
     else
-        fileptr = fopen(filename,
+        m_fileptr = fopen(filename,
             DATA_COMPGEN(0x0067fa5c, lodUpdateMode, "rb+"));
-    if (!fileptr)
+    if (!m_fileptr)
         return 1;
 
-    strcpy(LODFileName, filename);
-    fread(&header, sizeof(header), 1, fileptr);
-    numEntries = header.numEntries;
-    subindex.resize(numEntries);
-    fread(&subindex[0], sizeof(LODEntry), numEntries, fileptr);
-    fseek(fileptr, 0, SEEK_SET);
-    opened = 1;
+    strcpy(m_lodFileName, filename);
+    fread(&m_header, sizeof(m_header), 1, m_fileptr);
+    m_numEntries = m_header.m_numEntries;
+    m_subindex.resize(m_numEntries);
+    fread(&m_subindex[0], sizeof(LODEntry), m_numEntries, m_fileptr);
+    fseek(m_fileptr, 0, SEEK_SET);
+    m_opened = 1;
     return 0;
 }
 
@@ -577,24 +579,24 @@ int LODFile::open(const char* filename, int flags)
 VA(0x004faa70, 0xAB)  // anchor-global, dc 0xe9690
 unsigned char LODFile::pointAt(const char* itemName)
 {
-    if (!opened)
+    if (!m_opened)
         goto fail;
-    Find(0, numEntries, itemName);
-    if (matchindex < 0)
+    find(0, m_numEntries, itemName);
+    if (m_matchindex < 0)
         goto fail;
-    fseek(fileptr, subindex[matchindex].offset, SEEK_SET);
-    dataItemIndex = matchindex;
-    if (fileptr == 0) {
+    fseek(m_fileptr, m_subindex[m_matchindex].m_offset, SEEK_SET);
+    m_dataItemIndex = m_matchindex;
+    if (m_fileptr == 0) {
 fail:
-        dataItemIndex = -1;
-        dataPos = -1;
+        m_dataItemIndex = -1;
+        m_dataPos = -1;
         return 0;
     }
-    dataItemIndex = matchindex;
-    dataPos = 0;
-    delete dataBuffer;
-    dataBuffer = 0;
-    dataBufferSize = 0;
+    m_dataItemIndex = m_matchindex;
+    m_dataPos = 0;
+    delete m_dataBuffer;
+    m_dataBuffer = 0;
+    m_dataBufferSize = 0;
     return 1;
 }
 
@@ -607,27 +609,27 @@ fail:
 VA(0x004fab20, 0x114)  // anchor-global, dc 0xe96e0
 int LODFile::read(void* dest, int numBytes)
 {
-    if (!opened)
+    if (!m_opened)
         return -1;
-    if (dataItemIndex == -1)
+    if (m_dataItemIndex == -1)
         return -1;
 
-    LODEntry entry = subindex[dataItemIndex];
-    if (entry.csize) {
-        if (dataBuffer == 0) {
-            dataBuffer = new unsigned char[entry.size];
-            dataBufferSize = entry.size;
-            dataPos = 0;
-            unsigned char* packed = new unsigned char[entry.csize];
-            fread(packed, 1, entry.csize, fileptr);
-            unsigned long destLen = dataBufferSize;
-            uncompress(dataBuffer, &destLen, packed, entry.csize);
+    LODEntry entry = m_subindex[m_dataItemIndex];
+    if (entry.m_csize) {
+        if (m_dataBuffer == 0) {
+            m_dataBuffer = new unsigned char[entry.m_size];
+            m_dataBufferSize = entry.m_size;
+            m_dataPos = 0;
+            unsigned char* packed = new unsigned char[entry.m_csize];
+            fread(packed, 1, entry.m_csize, m_fileptr);
+            unsigned long destLen = m_dataBufferSize;
+            uncompress(m_dataBuffer, &destLen, packed, entry.m_csize);
             delete packed;
         }
-        memcpy(dest, dataBuffer + dataPos, numBytes);
-        dataPos += numBytes;
+        memcpy(dest, m_dataBuffer + m_dataPos, numBytes);
+        m_dataPos += numBytes;
     } else {
-        fread(dest, 1, numBytes, fileptr);
+        fread(dest, 1, numBytes, m_fileptr);
     }
     return 0;
 }

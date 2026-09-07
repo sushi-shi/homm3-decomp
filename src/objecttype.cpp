@@ -24,7 +24,7 @@
 // helper's static as kind 8. The former inline definition made it kind 7,
 // preventing propagation of rows.end() and assigning its temporary EAX
 // where retail uses EDX. See docs/vc6/regalloc.md for the byte-verified trace.
-static TObjectImageNameTable& GetObjectImageNames()
+static TObjectImageNameTable& getObjectImageNames()
 {
     static TObjectImageNameTable imageNames;
     return imageNames;
@@ -75,12 +75,12 @@ VA_COMPGEN(0x00514060, 0xCA, CLASS_CTOR, TObjectImageNameTable)
 // sibling predicates below are EXACT with the same idioms, so the wall is
 // not the spelling of any expression here.
 VA(0x005141B0, 0x6E)  // anchor-vtable 0x6402c4 slot 1; anchor-global the nine 0..8 initializers at 0x514280..0x514450; retail-only
-int TNativeTerrainObjectFilter::Accepts(const TObjectType* objectType) const
+int TNativeTerrainObjectFilter::accepts(const TObjectType* objectType) const
 {
-    if (objectType->slotCategory != 0)
+    if (objectType->m_slotCategory != 0)
         return 0;
-    if (objectType->recommendedTerrainMask.test(m_terrain)
-        && objectType->recommendedTerrainMask.count() <= 3)
+    if (objectType->m_recommendedTerrainMask.test(m_terrain)
+        && objectType->m_recommendedTerrainMask.count() <= 3)
         return 1;
     return 0;
 }
@@ -89,19 +89,19 @@ int TNativeTerrainObjectFilter::Accepts(const TObjectType* objectType) const
 // arm and no terrain test - which is what makes the pair a partition of the
 // unplaced objects into terrain-specific and terrain-agnostic.
 VA(0x00514220, 0x3D)  // anchor-vtable 0x6402d4 slot 1; retail-only
-int TAnyTerrainObjectFilter::Accepts(const TObjectType* objectType) const
+int TAnyTerrainObjectFilter::accepts(const TObjectType* objectType) const
 {
-    if (objectType->slotCategory == 0
-        && objectType->recommendedTerrainMask.count() > 3)
+    if (objectType->m_slotCategory == 0
+        && objectType->m_recommendedTerrainMask.count() > 3)
         return 1;
     return 0;
 }
 
 // Retail 0x514260, one compare and a `sete`.
 VA(0x00514260, 0x19)  // anchor-vtable 0x6402dc slot 1; anchor-global the five 1..5 initializers at 0x5144f0..0x5145e0; retail-only
-int TSlotCategoryObjectFilter::Accepts(const TObjectType* objectType) const
+int TSlotCategoryObjectFilter::accepts(const TObjectType* objectType) const
 {
-    return objectType->slotCategory == m_slotCategory;
+    return objectType->m_slotCategory == m_slotCategory;
 }
 
 VA(0x005142A0, 0x15)  // anchor-global called by the nine terrain initializers; retail-only
@@ -134,33 +134,48 @@ TObjectTypeFilter::~TObjectTypeFilter()
 
 // The fifteen filter objects, in the order their dynamic initializers run.
 // Terrain ids follow terrain_type.h; rock (9) has no filter.
-DATA(0x0069cb30) TNativeTerrainObjectFilter gDirtObjectFilter(0);
-DATA(0x0069cb38) TNativeTerrainObjectFilter gSandObjectFilter(1);
-DATA(0x0069cb10) TNativeTerrainObjectFilter gGrassObjectFilter(2);
-DATA(0x0069caf8) TNativeTerrainObjectFilter gSnowObjectFilter(3);
-DATA(0x0069cb28) TNativeTerrainObjectFilter gSwampObjectFilter(4);
-DATA(0x0069cac8) TNativeTerrainObjectFilter gRoughObjectFilter(5);
-DATA(0x0069cad8) TNativeTerrainObjectFilter gSubterraneanObjectFilter(6);
-DATA(0x0069cad0) TNativeTerrainObjectFilter gLavaObjectFilter(7);
-DATA(0x0069cb20) TNativeTerrainObjectFilter gWaterObjectFilter(8);
-DATA(0x0069cae0) TAnyTerrainObjectFilter gAnyTerrainObjectFilter;
-DATA(0x0069cb18) TSlotCategoryObjectFilter gSlotCategory1ObjectFilter(1);
-DATA(0x0069caf0) TSlotCategoryObjectFilter gSlotCategory2ObjectFilter(2);
-DATA(0x0069cae8) TSlotCategoryObjectFilter gSlotCategory3ObjectFilter(3);
-DATA(0x0069cb08) TSlotCategoryObjectFilter gSlotCategory4ObjectFilter(4);
-DATA(0x0069cb00) TSlotCategoryObjectFilter gSlotCategory5ObjectFilter(5);
+// Before normalization: gDirtObjectFilter.
+// Before normalization: gSandObjectFilter.
+DATA(0x0069cb30) TNativeTerrainObjectFilter g_dirtObjectFilter(0);
+// Before normalization: gGrassObjectFilter.
+DATA(0x0069cb38) TNativeTerrainObjectFilter g_sandObjectFilter(1);
+// Before normalization: gSnowObjectFilter.
+DATA(0x0069cb10) TNativeTerrainObjectFilter g_grassObjectFilter(2);
+// Before normalization: gSwampObjectFilter.
+DATA(0x0069caf8) TNativeTerrainObjectFilter g_snowObjectFilter(3);
+// Before normalization: gRoughObjectFilter.
+DATA(0x0069cb28) TNativeTerrainObjectFilter g_swampObjectFilter(4);
+// Before normalization: gSubterraneanObjectFilter.
+DATA(0x0069cac8) TNativeTerrainObjectFilter g_roughObjectFilter(5);
+// Before normalization: gLavaObjectFilter.
+DATA(0x0069cad8) TNativeTerrainObjectFilter g_subterraneanObjectFilter(6);
+// Before normalization: gWaterObjectFilter.
+DATA(0x0069cad0) TNativeTerrainObjectFilter g_lavaObjectFilter(7);
+// Before normalization: gAnyTerrainObjectFilter.
+DATA(0x0069cb20) TNativeTerrainObjectFilter g_waterObjectFilter(8);
+// Before normalization: gSlotCategory1ObjectFilter.
+DATA(0x0069cae0) TAnyTerrainObjectFilter g_anyTerrainObjectFilter;
+// Before normalization: gSlotCategory2ObjectFilter.
+DATA(0x0069cb18) TSlotCategoryObjectFilter g_slotCategory1ObjectFilter(1);
+// Before normalization: gSlotCategory3ObjectFilter.
+DATA(0x0069caf0) TSlotCategoryObjectFilter g_slotCategory2ObjectFilter(2);
+// Before normalization: gSlotCategory4ObjectFilter.
+DATA(0x0069cae8) TSlotCategoryObjectFilter g_slotCategory3ObjectFilter(3);
+// Before normalization: gSlotCategory5ObjectFilter.
+DATA(0x0069cb08) TSlotCategoryObjectFilter g_slotCategory4ObjectFilter(4);
+DATA(0x0069cb00) TSlotCategoryObjectFilter g_slotCategory5ObjectFilter(5);
 
 // Retail 0x640288, fifteen relocations in the initializer order above.
 DATA(0x00640288)
-TObjectTypeFilter* const gObjectTypeFilters[OBJECT_TYPE_FILTER_COUNT] = {
-    &gDirtObjectFilter,          &gSandObjectFilter,
-    &gGrassObjectFilter,         &gSnowObjectFilter,
-    &gSwampObjectFilter,         &gRoughObjectFilter,
-    &gSubterraneanObjectFilter,  &gLavaObjectFilter,
-    &gWaterObjectFilter,         &gAnyTerrainObjectFilter,
-    &gSlotCategory1ObjectFilter, &gSlotCategory2ObjectFilter,
-    &gSlotCategory3ObjectFilter, &gSlotCategory4ObjectFilter,
-    &gSlotCategory5ObjectFilter
+TObjectTypeFilter* const g_objectTypeFilters[OBJECT_TYPE_FILTER_COUNT] = {
+    &g_dirtObjectFilter,          &g_sandObjectFilter,
+    &g_grassObjectFilter,         &g_snowObjectFilter,
+    &g_swampObjectFilter,         &g_roughObjectFilter,
+    &g_subterraneanObjectFilter,  &g_lavaObjectFilter,
+    &g_waterObjectFilter,         &g_anyTerrainObjectFilter,
+    &g_slotCategory1ObjectFilter, &g_slotCategory2ObjectFilter,
+    &g_slotCategory3ObjectFilter, &g_slotCategory4ObjectFilter,
+    &g_slotCategory5ObjectFilter
 };
 
 
@@ -398,14 +413,14 @@ TObjectType& TObjectType::setImageName(
                             std::allocator<char> >& name)
 {
     TPoint emptySize = { 0, 0 };
-    TObjectImageNameTable& imageNames = GetObjectImageNames();
+    TObjectImageNameTable& imageNames = getObjectImageNames();
 
-    unsigned int oldCount = imageNames.rows.size();
-    imageNumber = imageNames.GetIndex(name);
+    unsigned int oldCount = imageNames.m_rows.size();
+    m_imageNumber = imageNames.getIndex(name);
 
     std::vector<TImageInfo>& imageCache = getObjectImageCache();
 
-    if (imageNumber == oldCount) {
+    if (m_imageNumber == oldCount) {
         imageCache.push_back(TImageInfo(emptySize));
         TImageInfo* record = &imageCache[oldCount];
 
@@ -422,9 +437,9 @@ TObjectType& TObjectType::setImageName(
         }
 
         LODFile* maskFile =
-            ResourceManager::PointToSpriteResource(maskName.c_str());
+            ResourceManager::pointToSpriteResource(maskName.c_str());
         if (maskFile == 0) {
-            maskFile = ResourceManager::PointToSpriteResource("default.msk");
+            maskFile = ResourceManager::pointToSpriteResource("default.msk");
         }
         if (maskFile != 0) {
             unsigned int cell = 0;
@@ -433,26 +448,26 @@ TObjectType& TObjectType::setImageName(
             unsigned char drawBits[6];
             unsigned char shadowBits[6];
 
-            ResourceManager::ReadFromBitmapResource(maskFile, &width, 1);
-            ResourceManager::ReadFromBitmapResource(maskFile, &height, 1);
-            ResourceManager::ReadFromBitmapResource(maskFile, drawBits, 6);
-            ResourceManager::ReadFromBitmapResource(maskFile, shadowBits, 6);
-            record->objectSize.x = width;
-            record->objectSize.y = height;
+            ResourceManager::readFromBitmapResource(maskFile, &width, 1);
+            ResourceManager::readFromBitmapResource(maskFile, &height, 1);
+            ResourceManager::readFromBitmapResource(maskFile, drawBits, 6);
+            ResourceManager::readFromBitmapResource(maskFile, shadowBits, 6);
+            record->m_objectSize.m_x = width;
+            record->m_objectSize.m_y = height;
             for (; cell < 48; ++cell) {
                 unsigned int byteIndex = cell >> 3;
                 unsigned char bit =
                     static_cast<unsigned char>(1 << (cell & 7));
-                record->drawMask[cell] = (drawBits[byteIndex] & bit) != 0;
-                record->shadowMask[cell] = (shadowBits[byteIndex] & bit) != 0;
+                record->m_drawMask[cell] = (drawBits[byteIndex] & bit) != 0;
+                record->m_shadowMask[cell] = (shadowBits[byteIndex] & bit) != 0;
             }
         }
     }
 
-    imageInfo.objectSize.x = imageCache[imageNumber].objectSize.x;
-    imageInfo.objectSize.y = imageCache[imageNumber].objectSize.y;
-    imageInfo.drawMask = imageCache[imageNumber].drawMask;
-    imageInfo.shadowMask = imageCache[imageNumber].shadowMask;
+    m_imageInfo.m_objectSize.m_x = imageCache[m_imageNumber].m_objectSize.m_x;
+    m_imageInfo.m_objectSize.m_y = imageCache[m_imageNumber].m_objectSize.m_y;
+    m_imageInfo.m_drawMask = imageCache[m_imageNumber].m_drawMask;
+    m_imageInfo.m_shadowMask = imageCache[m_imageNumber].m_shadowMask;
     return *this;
 }
 
@@ -465,13 +480,13 @@ TObjectType& TObjectType::setImageName(
 // arm returns the address of the empty string itself.
 VA(0x00514960, 0xAD)  // anchor-global 0x69cb80 registry + 0x69cb48 empty name; sole caller CObjectType(TObjectType*), retail-only
 const std::basic_string<char, std::char_traits<char>, std::allocator<char> >&
-TObjectType::GetImageName()
+TObjectType::getImageName()
 {
     static std::string emptyImageName;
-    TObjectImageNameTable& imageNames = GetObjectImageNames();
+    TObjectImageNameTable& imageNames = getObjectImageNames();
 
-    if (imageNumber < imageNames.rows.size())
-        return imageNames.rows[imageNumber]->first;
+    if (m_imageNumber < imageNames.m_rows.size())
+        return imageNames.m_rows[m_imageNumber]->first;
     return emptyImageName;
 }
 
@@ -492,14 +507,14 @@ TObjectType::GetImageName()
 VA(0x00514a60, 0x11D)  // anchor-callee 0x514b80 per-row `>>`; anchor-global {8,6} at 0x640278; retail-only
 TObjectType& TObjectType::setTriggerMask(const std::bitset<48>& mask)
 {
-    triggerMask = mask & ~passableMask;
-    hasTrigger = triggerMask.any();
-    if (hasTrigger) {
+    m_triggerMask = mask & ~m_passableMask;
+    m_hasTrigger = m_triggerMask.any();
+    if (m_hasTrigger) {
         for (int y = 0;; ++y) {
             for (unsigned x = 0; x < 8; ++x) {
-                if (triggerMask.test(CObjectType::_getBitPos(x, y))) {
-                    triggerCell.x = x;
-                    triggerCell.y = y;
+                if (m_triggerMask.test(CObjectType::getBitPos(x, y))) {
+                    m_triggerCell.m_x = x;
+                    m_triggerCell.m_y = y;
                     return *this;
                 }
             }
@@ -511,10 +526,10 @@ TObjectType& TObjectType::setTriggerMask(const std::bitset<48>& mask)
         // and rejected: x-then-y assignments 99.9818 (both stores and
         // both loads transposed), `triggerCell = gNoTriggerCell` 96.26,
         // the two member-to-member assignments without the temps 96.26.
-        int noTriggerX = gNoTriggerCell.x;
-        int noTriggerY = gNoTriggerCell.y;
-        triggerCell.y = noTriggerY;
-        triggerCell.x = noTriggerX;
+        int noTriggerX = g_noTriggerCell.m_x;
+        int noTriggerY = g_noTriggerCell.m_y;
+        m_triggerCell.m_y = noTriggerY;
+        m_triggerCell.m_x = noTriggerX;
     }
     return *this;
 }
@@ -554,30 +569,32 @@ std::istream& operator>>(std::istream& is, TObjectType& objectType)
     std::bitset<9> terrainRead;
     std::bitset<9> recommendedRead;
     union {
-        int raw;
-        TAdventureObjectType typed;
+        // Before normalization: raw.
+        int m_raw;
+        // Before normalization: typed.
+        TAdventureObjectType m_typed;
     } typeRead;
     int subtype;
     int slotCategory;
     int underlay;
 
     is >> imageName >> passable >> trigger >> terrainRead >> recommendedRead
-        >> typeRead.raw >> subtype >> slotCategory >> underlay;
+        >> typeRead.m_raw >> subtype >> slotCategory >> underlay;
 
     std::bitset<10> recommendedTerrain(recommendedRead.to_ulong());
     std::bitset<10> terrain(terrainRead.to_ulong());
 
     TObjectType& named = objectType.setImageName(imageName);
-    named.passableMask = passable | ~named.imageInfo.drawMask;
+    named.m_passableMask = passable | ~named.m_imageInfo.m_drawMask;
 
     TObjectType& row = named.setTriggerMask(trigger);
-    row.recommendedTerrainMask &= terrain;
-    row.terrainMask = terrain;
-    row.recommendedTerrainMask = recommendedTerrain;
-    row.objectType = typeRead.typed;
-    row.subtype = subtype;
-    row.slotCategory = slotCategory;
-    row.isUnderlay = underlay != 0;
+    row.m_recommendedTerrainMask &= terrain;
+    row.m_terrainMask = terrain;
+    row.m_recommendedTerrainMask = recommendedTerrain;
+    row.m_objectType = typeRead.m_typed;
+    row.m_subtype = subtype;
+    row.m_slotCategory = slotCategory;
+    row.m_isUnderlay = underlay != 0;
     return is;
 }
 
@@ -614,22 +631,22 @@ std::istream& operator>>(std::istream& is, TObjectType& objectType)
 VA(0x00514d80, 0x284)  // anchor-callee ResourceManager::GetText + anchor-bracket NewfullMapFn_00505DA0; retail-only
 void TObjectTypeTable::load(char* filename)
 {
-    TTextResource* text = ResourceManager::GetText(filename);
+    TTextResource* text = ResourceManager::getText(filename);
     if (text == 0)
         throw TRuntimeError();
 
     try {
-        int count = atoi(text->GetText(0));
-        objectTypes.resize(count);
+        int count = atoi(text->getText(0));
+        m_objectTypes.resize(count);
         for (int i = 0; i < count; ++i) {
-            std::istrstream row(text->GetText(i + 1));
-            row >> objectTypes[i];
+            std::istrstream row(text->getText(i + 1));
+            row >> m_objectTypes[i];
         }
     } catch (...) {
-        text->Dispose();
+        text->dispose();
         throw;
     }
-    text->Dispose();
+    text->dispose();
 }
 
 // Retail 0x517780 is the nine-block Dinkumware tree-successor walk, reached
@@ -643,7 +660,8 @@ VA_COMPGEN(0x00517780, 0xA3, TREE_CONST_ITERATOR_INC, string)
 
 // Minimum ODR use needed to retain the real VC6/Dinkumware COMDAT. This
 // wrapper is not a retail claim and adds no target/report row.
-void __fastcall EmitObjectImageNameIndexIncrement(
+// Before normalization (function): EmitObjectImageNameIndexIncrement.
+void __fastcall emitObjectImageNameIndexIncrement(
     TObjectImageNameTable::TNameIndex::const_iterator* it)
 {
     ++*it;

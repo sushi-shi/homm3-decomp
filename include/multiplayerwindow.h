@@ -20,16 +20,20 @@ struct _DPCOMPORTADDRESS;
 
 // multiplayerwindow.cpp owns this 21-byte preference-backed player name.
 // DoNewGame and the campaign launch copy it into a player cName slot.
-extern char gLocalPlayerName[21];
-extern int gUnnamed69927c;
-extern int gUnnamed699288;
+extern char g_localPlayerName[21];
+// Before normalization: gUnnamed69927c.
+extern int g_unnamed69927c;
+// Before normalization: gUnnamed699288.
+extern int g_unnamed699288;
 
 // Cast-free storage for the Winsock bind call in GetIPAddress. Both views are
 // the same 16-byte IPv4 socket-address record; keeping the union in the domain
 // header avoids a TU-local layout view.
 union TIPv4SocketAddress {
-    sockaddr_in internet;
-    sockaddr generic;
+    // Before normalization: internet.
+    sockaddr_in m_internet;
+    // Before normalization: generic.
+    sockaddr m_generic;
 };
 SIZE(TIPv4SocketAddress, 0x10);
 
@@ -53,17 +57,25 @@ SIZE(TIPv4SocketAddress, 0x10);
 // reached from this TU; the override bodies live in their own carve rows.
 class CMPEdit : public textEntryWidget {
 public:
-    CMPEdit* nextEdit;   // +0x70
-    CMPEdit* prevEdit;   // +0x74
+    // Before normalization: nextEdit.
+    CMPEdit* m_nextEdit;   // +0x70
+    // Before normalization: prevEdit.
+    CMPEdit* m_prevEdit;   // +0x74
 
     CMPEdit(int x, int y, int w, int h, int textSize, const char* text,
             const char* fontName, font::TColor color, unsigned justification,
             const char* backgroundIcon, int backgroundFrame, int id,
             int style, int readType, int insetX, int insetY);
-    void SetNextEdit(CMPEdit* pNextEdit) { nextEdit = pNextEdit; }
-    void SetPrevEdit(CMPEdit* pPrevEdit) { prevEdit = pPrevEdit; }
-    virtual void SetFocus(unsigned char state);  // slot 14, retail 0x510890
-    virtual int OnKeyPress(message* msg);        // slot 15, retail 0x5107d0
+    // Before normalization (function): CMPEdit::SetNextEdit.
+    // Before normalization (locals): pNextEdit.
+    void setNextEdit(CMPEdit* nextEdit) { m_nextEdit = nextEdit; }
+    // Before normalization (function): CMPEdit::SetPrevEdit.
+    // Before normalization (locals): pPrevEdit.
+    void setPrevEdit(CMPEdit* prevEdit) { m_prevEdit = prevEdit; }
+    // Before normalization (function): CMPEdit::SetFocus.
+    virtual void setFocus(unsigned char state);  // slot 14, retail 0x510890
+    // Before normalization (function): CMPEdit::OnKeyPress.
+    virtual int onKeyPress(message* msg);        // slot 15, retail 0x5107d0
     // DECLARATION ORDER CORRECTED 2026-09-06 (claim lane 31): retail's own
     // table 0x640184 holds 0x510850 at slot 19 and 0x510870 at slot 20, and
     // the two bodies are told apart by the member they read - 0x510850 reads
@@ -72,8 +84,10 @@ public:
     // reason. The pair had been declared the other way round, which put the
     // WRONG body in each vtable slot; the call sites below move with it, so
     // no emitted instruction changes.
-    virtual void OnNextEdit();                   // slot 19, retail 0x510850
-    virtual void OnPrevEdit();                   // slot 20, retail 0x510870
+    // Before normalization (function): CMPEdit::OnNextEdit.
+    virtual void onNextEdit();                   // slot 19, retail 0x510850
+    // Before normalization (function): CMPEdit::OnPrevEdit.
+    virtual void onPrevEdit();                   // slot 20, retail 0x510870
 };
 
 class CMPInputEdit : public CMPEdit {
@@ -88,13 +102,16 @@ public:
                   insetY)
     {
     }
-    virtual int OnKeyPress(message* msg);         // slot 15, retail 0x50de50
+    // Before normalization (function): CMPInputEdit::OnKeyPress.
+    virtual int onKeyPress(message* msg);         // slot 15, retail 0x50de50
 };
 
 class CHotSeatEdit : public textEntryWidget {
 public:
-    CHotSeatEdit* nextEdit;   // +0x70
-    CHotSeatEdit* prevEdit;   // +0x74
+    // Before normalization: nextEdit.
+    CHotSeatEdit* m_nextEdit;   // +0x70
+    // Before normalization: prevEdit.
+    CHotSeatEdit* m_prevEdit;   // +0x74
 
     CHotSeatEdit(int x, int y, int w, int h, int textSize, const char* text,
                  const char* fontName, font::TColor color,
@@ -105,20 +122,29 @@ public:
                           justification, backgroundIcon, backgroundFrame, id,
                           style, readType, insetX, insetY)
     {
-        nextEdit = 0;
-        prevEdit = 0;
+        m_nextEdit = 0;
+        m_prevEdit = 0;
     }
-    void SetNextEdit(CHotSeatEdit* pNextEdit) { nextEdit = pNextEdit; }
-    void SetPrevEdit(CHotSeatEdit* pPrevEdit) { prevEdit = pPrevEdit; }
-    virtual void OnKillFocus();                   // slot 11, retail 0x50dee0
-    virtual void SetFocus(unsigned char state);   // slot 14, retail 0x510890
-    virtual int OnKeyPress(message* msg);         // slot 15, retail 0x50df60
+    // Before normalization (function): CHotSeatEdit::SetNextEdit.
+    // Before normalization (locals): pNextEdit.
+    void setNextEdit(CHotSeatEdit* nextEdit) { m_nextEdit = nextEdit; }
+    // Before normalization (function): CHotSeatEdit::SetPrevEdit.
+    // Before normalization (locals): pPrevEdit.
+    void setPrevEdit(CHotSeatEdit* prevEdit) { m_prevEdit = prevEdit; }
+    // Before normalization (function): CHotSeatEdit::OnKillFocus.
+    virtual void onKillFocus();                   // slot 11, retail 0x50dee0
+    // Before normalization (function): CHotSeatEdit::SetFocus.
+    virtual void setFocus(unsigned char state);   // slot 14, retail 0x510890
+    // Before normalization (function): CHotSeatEdit::OnKeyPress.
+    virtual int onKeyPress(message* msg);         // slot 15, retail 0x50df60
     // This class introduces its own ring-walk pair - it does not derive
     // CMPEdit - and retail's table 0x640210 carries CMPEdit's two addresses
     // at slots 19/20 because /OPT:ICF folded the byte-identical bodies onto
     // 0x510850 / 0x510870. Declared in the corrected order above.
-    virtual void OnNextEdit();                    // slot 19, folded 0x510850
-    virtual void OnPrevEdit();                    // slot 20, folded 0x510870
+    // Before normalization (function): CHotSeatEdit::OnNextEdit.
+    virtual void onNextEdit();                    // slot 19, folded 0x510850
+    // Before normalization (function): CHotSeatEdit::OnPrevEdit.
+    virtual void onPrevEdit();                    // slot 20, folded 0x510870
 };
 
 // DC derives CHotSeatDlg from CHeroWindowEx and places its `edit` run at
@@ -138,22 +164,29 @@ public:
         BACK_ID = 520
     };
 
-    CHotSeatEdit* edit[8];       // +0x50
+    // Before normalization: edit.
+    CHotSeatEdit* m_edit[8];       // +0x50
     textWidget* m_rollover;      // +0x70
-    THelpText gHotSeatHelp[20];  // +0x74, DC identity/extent after repack
+    // Before normalization: gHotSeatHelp.
+    THelpText m_hotSeatHelp[20];  // +0x74, DC identity/extent after repack
 
     CHotSeatDlg();
     virtual ~CHotSeatDlg();
-    virtual int OnWidgetDeselect(int id, unsigned char* exitFlag);
-    virtual textWidget* GetRolloverWidget();
-    unsigned char OnOK();
+    // Before normalization (function): CHotSeatDlg::OnWidgetDeselect.
+    virtual int onWidgetDeselect(int id, unsigned char* exitFlag);
+    // Before normalization (function): CHotSeatDlg::GetRolloverWidget.
+    virtual textWidget* getRolloverWidget();
+    // Before normalization (function): CHotSeatDlg::OnOK.
+    unsigned char onOK();
     // Non-virtual, and the vtable proves it: 0x6401d8 stops after slot 13
     // (0x240210, CHotSeatEdit's table, starts at +0x38). Retail emits no
     // body for either - both are expanded into CHotSeatEdit's two overrides
     // 0x50dee0 / 0x50df60, which is where the DC roster's UpdateOK
     // (dc 0x102d4c) and GetPlayerCount (dc 0x102cf8) went.
-    int GetPlayerCount();
-    void UpdateOK();
+    // Before normalization (function): CHotSeatDlg::GetPlayerCount.
+    int getPlayerCount();
+    // Before normalization (function): CHotSeatDlg::UpdateOK.
+    void updateOK();
 };
 SIZE(CHotSeatDlg, 0x114);
 
@@ -184,21 +217,33 @@ public:
         ROLLOVER_ID = 507
     };
 
-    CMPInputEdit* field1;  // +0x50
-    CMPInputEdit* field2;  // +0x54
-    textWidget* header1;   // +0x58
-    textWidget* header2;   // +0x5c
-    textWidget* rollover;  // +0x60
+    // Original members: CMPInputDlg::field1/field2 (DC class 0x4484,
+    // +0x4c/+0x50). These name the two text-entry fields, not unknown
+    // offsets. The PC base shifts both by four bytes; retain OG names.
+    CMPInputEdit* m_field1;  // +0x50
+    CMPInputEdit* m_field2;  // +0x54
+    // Before normalization: header1.
+    textWidget* m_header1;   // +0x58
+    // Before normalization: header2.
+    textWidget* m_header2;   // +0x5c
+    // Before normalization: rollover.
+    textWidget* m_rollover;  // +0x60
 
     __forceinline CMPInputDlg(int maxChars1, int maxChars2);
     virtual ~CMPInputDlg();
-    virtual int OnWidgetDeselect(int id, unsigned char* bExitFlag);
-    virtual textWidget* GetRolloverWidget();
-    unsigned char OnOK();
-    virtual void UpdateOK();  // slot 14, retail 0x510980
-    __forceinline void DisableOK()
+    // Before normalization (function): CMPInputDlg::OnWidgetDeselect.
+    // Before normalization (locals): bExitFlag.
+    virtual int onWidgetDeselect(int id, unsigned char* exitFlag);
+    // Before normalization (function): CMPInputDlg::GetRolloverWidget.
+    virtual textWidget* getRolloverWidget();
+    // Before normalization (function): CMPInputDlg::OnOK.
+    unsigned char onOK();
+    // Before normalization (function): CMPInputDlg::UpdateOK.
+    virtual void updateOK();  // slot 14, retail 0x510980
+    // Before normalization (function): CMPInputDlg::DisableOK.
+    __forceinline void disableOK()
     {
-        GetWidget(OKAY_ID)->enable(0);
+        getWidget(OKAY_ID)->enable(0);
     }
 };
 SIZE(CMPInputDlg, 0x64);
@@ -213,9 +258,11 @@ public:
         password
     };
 
-    bool GetSessionInfo(unsigned long index, char* sessName, char* userName,
+    // Before normalization (function): CHeroSessions::GetSessionInfo.
+    bool getSessionInfo(unsigned long index, char* sessName, char* userName,
                         int& numPlayers, eSessionStatus& status);
-    bool GetSessionInfo(int index, char* sessName, char* userName,
+    // Before normalization (function): CHeroSessions::GetSessionInfo.
+    bool getSessionInfo(int index, char* sessName, char* userName,
                         int& numPlayers, eSessionStatus& status);
 };
 SIZE(CHeroSessions, 0x14);
@@ -238,7 +285,8 @@ public:
                           style, readType, insetX, insetY)
     {
     }
-    virtual int OnKeyPress(message* msg);  // slot 15, retail 0x50ed60
+    // Before normalization (function): CMultiPlayerWindowEdit::OnKeyPress.
+    virtual int onKeyPress(message* msg);  // slot 15, retail 0x50ed60
 };
 
 // TMultiPlayerWindow - CHeroWindowEx multiplayer session browser / host UI.
@@ -277,63 +325,114 @@ public:
         IP_ADDRESS_ID = 126
     };
 
-    CSprite* GameState;                     // +0x50
-    unsigned char inSessionList;            // +0x54
-    unsigned char showSplash;               // +0x55
-    int currentGame;                        // +0x58
-    int currentIndex;                       // +0x5c
-    CHeroSessions* pSessions;               // +0x60
-    unsigned long sessTimer;                // +0x64
-    unsigned long sessionRefreshTimeout;    // +0x68
-    char localIPAddress[80];                // +0x6c
-    textWidget* playerName;                 // +0xbc (DC textEntryWidget*)
-    unsigned char hostJoinScreen;           // +0xc0
-    widget* splash;                         // +0xc4 (DC bitmapBorder*)
-    widget* hotSeat;                        // +0xc8 (DC button*)
-    widget* ipx;                            // +0xcc
-    widget* tcp;                            // +0xd0
-    widget* modem;                          // +0xd4
-    widget* direct;                         // +0xd8
-    widget* online;                         // +0xdc
-    widget* host;                           // +0xe0
-    widget* join;                           // +0xe4
-    widget* search;                         // +0xe8
-    widget* cancel;                         // +0xec
-    widget* gameSlider;                     // +0xf0 (DC slider*)
-    textWidget* sessNameHeader;             // +0xf4
-    textWidget* userNameHeader;             // +0xf8
-    textWidget* RolloverWidget;             // +0xfc
+    // Before normalization: GameState.
+    CSprite* m_gameState;                     // +0x50
+    // Before normalization: inSessionList.
+    unsigned char m_inSessionList;            // +0x54
+    // Before normalization: showSplash.
+    unsigned char m_showSplash;               // +0x55
+    // Before normalization: currentGame.
+    int m_currentGame;                        // +0x58
+    // Before normalization: currentIndex.
+    int m_currentIndex;                       // +0x5c
+    // Before normalization: pSessions.
+    CHeroSessions* m_sessions;               // +0x60
+    // Before normalization: sessTimer.
+    unsigned long m_sessTimer;                // +0x64
+    // Before normalization: sessionRefreshTimeout.
+    unsigned long m_sessionRefreshTimeout;    // +0x68
+    // Before normalization: localIPAddress.
+    char m_localIpAddress[80];                // +0x6c
+    // Before normalization: playerName.
+    textWidget* m_playerName;                 // +0xbc (DC textEntryWidget*)
+    // Before normalization: hostJoinScreen.
+    unsigned char m_hostJoinScreen;           // +0xc0
+    // Before normalization: splash.
+    widget* m_splash;                         // +0xc4 (DC bitmapBorder*)
+    // Before normalization: hotSeat.
+    widget* m_hotSeat;                        // +0xc8 (DC button*)
+    // Before normalization: ipx.
+    widget* m_ipx;                            // +0xcc
+    // Before normalization: tcp.
+    widget* m_tcp;                            // +0xd0
+    // Before normalization: modem.
+    widget* m_modem;                          // +0xd4
+    // Before normalization: direct.
+    widget* m_direct;                         // +0xd8
+    // Before normalization: online.
+    widget* m_online;                         // +0xdc
+    // Before normalization: host.
+    widget* m_host;                           // +0xe0
+    // Before normalization: join.
+    widget* m_join;                           // +0xe4
+    // Before normalization: search.
+    widget* m_search;                         // +0xe8
+    // Before normalization: cancel.
+    widget* m_cancel;                         // +0xec
+    // Before normalization: gameSlider.
+    widget* m_gameSlider;                     // +0xf0 (DC slider*)
+    // Before normalization: sessNameHeader.
+    textWidget* m_sessNameHeader;             // +0xf4
+    // Before normalization: userNameHeader.
+    textWidget* m_userNameHeader;             // +0xf8
+    // Before normalization: RolloverWidget.
+    textWidget* m_rolloverWidget;             // +0xfc
 
     TMultiPlayerWindow();
     virtual ~TMultiPlayerWindow();
-    virtual int WindowHandler(message* msg);
-    virtual int OnWidgetDeselect(int id, unsigned char* bExitFlag);
-    virtual textWidget* GetRolloverWidget();
-    void GoSessionList();
-    void GoMainMenu();
-    void Update();
-    unsigned char JoinSession(CDPlaySession* pSession, const char* password);
-    unsigned char OnHost();
-    unsigned char OnJoin();
-    unsigned char OnTCP();
-    unsigned char OnIPX();
-    unsigned char OnSearch();
-    unsigned char OnHotSeat();
-    unsigned char OnModem();
-    unsigned char OnDirect();
-    unsigned char HostSession(const char* sessName, const char* password);
-    unsigned char InitRemote(eNetGameType netGameType, const char* sExtra,
+    // Before normalization (function): TMultiPlayerWindow::WindowHandler.
+    virtual int windowHandler(message* msg);
+    // Before normalization (function): TMultiPlayerWindow::OnWidgetDeselect.
+    // Before normalization (locals): bExitFlag.
+    virtual int onWidgetDeselect(int id, unsigned char* exitFlag);
+    // Before normalization (function): TMultiPlayerWindow::GetRolloverWidget.
+    virtual textWidget* getRolloverWidget();
+    // Before normalization (function): TMultiPlayerWindow::GoSessionList.
+    void goSessionList();
+    // Before normalization (function): TMultiPlayerWindow::GoMainMenu.
+    void goMainMenu();
+    // Before normalization (function): TMultiPlayerWindow::Update.
+    void update();
+    // Before normalization (function): TMultiPlayerWindow::JoinSession.
+    // Before normalization (locals): pSession.
+    unsigned char joinSession(CDPlaySession* session, const char* password);
+    // Before normalization (function): TMultiPlayerWindow::OnHost.
+    unsigned char onHost();
+    // Before normalization (function): TMultiPlayerWindow::OnJoin.
+    unsigned char onJoin();
+    // Before normalization (function): TMultiPlayerWindow::OnTCP.
+    unsigned char onTCP();
+    // Before normalization (function): TMultiPlayerWindow::OnIPX.
+    unsigned char onIPX();
+    // Before normalization (function): TMultiPlayerWindow::OnSearch.
+    unsigned char onSearch();
+    // Before normalization (function): TMultiPlayerWindow::OnHotSeat.
+    unsigned char onHotSeat();
+    // Before normalization (function): TMultiPlayerWindow::OnModem.
+    unsigned char onModem();
+    // Before normalization (function): TMultiPlayerWindow::OnDirect.
+    unsigned char onDirect();
+    // Before normalization (function): TMultiPlayerWindow::HostSession.
+    unsigned char hostSession(const char* sessName, const char* password);
+    // Before normalization (function): TMultiPlayerWindow::InitRemote.
+    // Before normalization (locals): sExtra.
+    unsigned char initRemote(eNetGameType netGameType, const char* extra,
                              _DPCOMPORTADDRESS* comportInfo);
-    unsigned char OnModemHost();
-    unsigned char OnDirectHost();
-    unsigned char OnModemJoin();
-    unsigned char OnDirectJoin();
+    // Before normalization (function): TMultiPlayerWindow::OnModemHost.
+    unsigned char onModemHost();
+    // Before normalization (function): TMultiPlayerWindow::OnDirectHost.
+    unsigned char onDirectHost();
+    // Before normalization (function): TMultiPlayerWindow::OnModemJoin.
+    unsigned char onModemJoin();
+    // Before normalization (function): TMultiPlayerWindow::OnDirectJoin.
+    unsigned char onDirectJoin();
 };
 SIZE(TMultiPlayerWindow, 0x100);
 
 // The singleton the ctor latches to `this` (0x50e050+0x66) and the dtor
 // nulls (0x50ee40+0x51). No DC public names it - provisional house name.
-DATA(0x0069ca28) extern TMultiPlayerWindow* gpMultiPlayerWindow;
+// Before normalization: gpMultiPlayerWindow.
+DATA(0x0069ca28) extern TMultiPlayerWindow* g_multiPlayerWindow;
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\multiplayerwindow.cpp:94, dc 0xffaac) void AddHelp(THelpText* pHelpText, const char* rollover, const char* RightClick);

@@ -127,7 +127,8 @@ struct func_moves_before {
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\ai.cpp:365, dc 0x2400c)
-long get_area_attack_value(const army* current_army, long hex, long our_group,
+// Before normalization (locals): current_army, our_group.
+long getAreaAttackValue(const army* currentArmy, long hex, long ourGroup,
                            type_AI_combat_parameters* data);
 // CODEVIEW(E:\gamedcs\ai.cpp:610, dc 0x24604) long get_move_order(const army* current_army);
 // CODEVIEW(E:\gamedcs\ai.cpp:696, dc 0x248b4) long get_attack_value(const army* current_army, const army* enemy, long enemy_hit_points, type_AI_combat_parameters* data);

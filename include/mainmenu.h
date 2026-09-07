@@ -10,10 +10,14 @@
 class message;
 
 struct TMainMenuButtonRect {
-    short x;
-    short y;
-    short width;
-    short height;
+    // Before normalization: x.
+    short m_x;
+    // Before normalization: y.
+    short m_y;
+    // Before normalization: width.
+    short m_width;
+    // Before normalization: height.
+    short m_height;
 };
 SIZE(TMainMenuButtonRect, 0x8);
 
@@ -44,22 +48,30 @@ public:
 
     TMainMenu();
     virtual ~TMainMenu();
-    void DoModal();
+    // Before normalization (function): TMainMenu::DoModal.
+    void doModal();
 
-    friend int MainMenuHandler(message& msg);
+    // Before normalization (function): MainMenuHandler.
+    friend int mainMenuHandler(message& msg);
 
 private:
-    unsigned char bShowCDMessage;
-    char pad_4d[3];
-    widget* RolloverWidget;
+    // Before normalization: bShowCDMessage.
+    unsigned char m_showCdMessage;
+    // Before normalization: pad_4d.
+    // The preceding byte field and following four-byte field establish
+    // this alignment gap; the reference layout retains the same boundary.
+    char m_paddingBeforeRolloverWidget[3];
+    // Before normalization: RolloverWidget.
+    widget* m_rolloverWidget;
 };
 SIZE(TMainMenu, 0x54);
 
-int MainMenuHandler(message& msg);
+int mainMenuHandler(message& msg);
 
 // SetupCDDrive's result. Dreamcast kb.cpp's static SetupCDRom and retail
 // oldmain both dispatch on this value before the front-end is opened.
-extern int gCDDriveNumber;
+// Before normalization: gCDDriveNumber.
+extern int g_cdDriveNumber;
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\mainmenu.cpp:135, dc 0xea618) int MainMenuHandler(message* msg);

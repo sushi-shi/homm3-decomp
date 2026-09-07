@@ -37,8 +37,10 @@ class TObjectImageNameTable {
 public:
     typedef std::map<std::string, int> TNameIndex;
 
-    TNameIndex nameIndex;
-    std::vector<TNameIndex::iterator> rows;
+    // Before normalization: nameIndex.
+    TNameIndex m_nameIndex;
+    // Before normalization: rows.
+    std::vector<TNameIndex::iterator> m_rows;
 
     // Provisional name and boundary inferred from retail setImageName:
     // its first rows.size() expands, but this insertion path calls size,
@@ -49,17 +51,17 @@ public:
     // entry EAX path and reloads only after insertion (fn+0xe8). With the
     // ordinary registry accessor, returning the mapped value by value also
     // restores the caller's scratch allocation; see setImageName's controls.
-    int GetIndex(const std::string& name)
+    int getIndex(const std::string& name)
     {
-        TNameIndex::iterator found = nameIndex.find(name);
+        TNameIndex::iterator found = m_nameIndex.find(name);
         TNameIndex::iterator result = found;
-        if (found == nameIndex.end()) {
+        if (found == m_nameIndex.end()) {
             // Retail copies both returned fields, including the unused
             // bool into a stack home. Extracting .first directly drops it.
-            std::pair<TNameIndex::iterator, bool> inserted = nameIndex.insert(
-                TNameIndex::value_type(name, rows.size()));
+            std::pair<TNameIndex::iterator, bool> inserted = m_nameIndex.insert(
+                TNameIndex::value_type(name, m_rows.size()));
             found = inserted.first;
-            rows.insert(rows.end(), found);
+            m_rows.insert(m_rows.end(), found);
             result = found;
         }
         return result->second;
@@ -82,7 +84,8 @@ public:
 class TObjectTypeFilter {
 public:
     virtual ~TObjectTypeFilter();
-    virtual int Accepts(const TObjectType* objectType) const = 0;
+    // Before normalization (function): TObjectTypeFilter::Accepts.
+    virtual int accepts(const TObjectType* objectType) const = 0;
 };
 
 // Retail 0x5141b0. The terrain id lands at +4 and the predicate reads
@@ -93,7 +96,8 @@ public:
 class TNativeTerrainObjectFilter : public TObjectTypeFilter {
 public:
     explicit TNativeTerrainObjectFilter(int terrain);
-    virtual int Accepts(const TObjectType* objectType) const;
+    // Before normalization (function): TNativeTerrainObjectFilter::Accepts.
+    virtual int accepts(const TObjectType* objectType) const;
 
     int m_terrain;
 };
@@ -104,7 +108,8 @@ public:
 class TAnyTerrainObjectFilter : public TObjectTypeFilter {
 public:
     TAnyTerrainObjectFilter();
-    virtual int Accepts(const TObjectType* objectType) const;
+    // Before normalization (function): TAnyTerrainObjectFilter::Accepts.
+    virtual int accepts(const TObjectType* objectType) const;
 };
 
 // Retail 0x514260, the whole body a `sete` on one compare: the object's
@@ -112,7 +117,8 @@ public:
 class TSlotCategoryObjectFilter : public TObjectTypeFilter {
 public:
     explicit TSlotCategoryObjectFilter(int slotCategory);
-    virtual int Accepts(const TObjectType* objectType) const;
+    // Before normalization (function): TSlotCategoryObjectFilter::Accepts.
+    virtual int accepts(const TObjectType* objectType) const;
 
     int m_slotCategory;
 };
@@ -121,7 +127,8 @@ enum EObjectTypeFilterConstants {
     OBJECT_TYPE_FILTER_COUNT = 15
 };
 
-extern TObjectTypeFilter* const gObjectTypeFilters[OBJECT_TYPE_FILTER_COUNT];
+// Before normalization: gObjectTypeFilters.
+extern TObjectTypeFilter* const g_objectTypeFilters[OBJECT_TYPE_FILTER_COUNT];
 
 // The per-row parser TObjectTypeTable::load runs over each objects.txt
 // line, retail 0x514b80. Free and therefore __fastcall under /Gr: the

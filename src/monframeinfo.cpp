@@ -8,15 +8,17 @@
 #include "textresource.h"
 #include "resourcemanager.h"
 
-static void InitializeCreatureAnimationTraits(int id,
+// Before normalization (function): InitializeCreatureAnimationTraits.
+static void initializeCreatureAnimationTraits(int id,
                                               const std::vector<char*>& row);
 
 // The parse target. File-static (the Dreamcast dump publishes only the
 // gMonFrameInfo reference below, never the array); name provisional.
 // Extent proof: bss 0x6998e0 up to mousemgr.cpp's timer latches at
 // 0x69ca18 is exactly 150 * 0x54.
+// Before normalization: sMonFrameInfoTable.
 DATA(0x006998e0)
-static SMonFrameInfo sMonFrameInfoTable[150];
+static SMonFrameInfo g_monFrameInfoTable[150];
 
 // Dreamcast public ?gMonFrameInfo@@3AAY0HK@$$CBUSMonFrameInfo@@A - the
 // const-reference view the rest of the game reads. Retail keeps it as
@@ -24,7 +26,7 @@ static SMonFrameInfo sMonFrameInfoTable[150];
 // "cranim.txt" literal (monframeinfo.obj's whole .data contribution).
 // The DC bound is 122 (RoE-era roster); retail's extent proves 150.
 DATA(0x0067ff24)
-const SMonFrameInfo (&gMonFrameInfo)[150] = sMonFrameInfoTable;
+const SMonFrameInfo (&g_monFrameInfo)[150] = g_monFrameInfoTable;
 
 // E:\gamedcs\monframeinfo.cpp:36
 // Row layout of cranim.txt: 2 header rows, then 14 creatures per town
@@ -35,91 +37,92 @@ const SMonFrameInfo (&gMonFrameInfo)[150] = sMonFrameInfoTable;
 // floor is retail's own (a 184-row file passes it only because the
 // check predates the last groups).
 // E:\gamedcs\monframeinfo.cpp:36
+// Before normalization (function): InitializeCreatureAnimationTraitsTable.
 VA(0x0050c810, 0x1E9)  // anchor-global (the "cranim.txt" load below), dc 0xfe598
-unsigned char InitializeCreatureAnimationTraitsTable()
+unsigned char initializeCreatureAnimationTraitsTable()
 {
-    TSpreadsheetResource* sheet = ResourceManager::GetSpreadsheet(
+    TSpreadsheetResource* sheet = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x0067ff28, cranimSpreadsheetName, "cranim.txt"));
     if (!sheet)
         return 0;
-    if (sheet->GetNumberOfRows() < 179) {
-        sheet->Dispose();
+    if (sheet->getNumberOfRows() < 179) {
+        sheet->dispose();
         return 0;
     }
     int id = 0;
     int row = 2;
     { for (int t = 0; t < 14; ++t) {
-        InitializeCreatureAnimationTraits(id, sheet->GetRow(row));
+        initializeCreatureAnimationTraits(id, sheet->getRow(row));
         ++id;
         ++row;
     } }
     row += 3;
     { for (int t = 0; t < 14; ++t) {
-        InitializeCreatureAnimationTraits(id, sheet->GetRow(row));
+        initializeCreatureAnimationTraits(id, sheet->getRow(row));
         ++id;
         ++row;
     } }
     row += 3;
     { for (int t = 0; t < 14; ++t) {
-        InitializeCreatureAnimationTraits(id, sheet->GetRow(row));
+        initializeCreatureAnimationTraits(id, sheet->getRow(row));
         ++id;
         ++row;
     } }
     row += 3;
     { for (int t = 0; t < 14; ++t) {
-        InitializeCreatureAnimationTraits(id, sheet->GetRow(row));
+        initializeCreatureAnimationTraits(id, sheet->getRow(row));
         ++id;
         ++row;
     } }
     row += 3;
     { for (int t = 0; t < 14; ++t) {
-        InitializeCreatureAnimationTraits(id, sheet->GetRow(row));
+        initializeCreatureAnimationTraits(id, sheet->getRow(row));
         ++id;
         ++row;
     } }
     row += 3;
     { for (int t = 0; t < 14; ++t) {
-        InitializeCreatureAnimationTraits(id, sheet->GetRow(row));
+        initializeCreatureAnimationTraits(id, sheet->getRow(row));
         ++id;
         ++row;
     } }
     row += 3;
     { for (int t = 0; t < 14; ++t) {
-        InitializeCreatureAnimationTraits(id, sheet->GetRow(row));
+        initializeCreatureAnimationTraits(id, sheet->getRow(row));
         ++id;
         ++row;
     } }
     row += 3;
     { for (int t = 0; t < 14; ++t) {
-        InitializeCreatureAnimationTraits(id, sheet->GetRow(row));
+        initializeCreatureAnimationTraits(id, sheet->getRow(row));
         ++id;
         ++row;
     } }
     row += 3;
     { for (int t = 0; t < 6; ++t) {
-        InitializeCreatureAnimationTraits(id, sheet->GetRow(row));
+        initializeCreatureAnimationTraits(id, sheet->getRow(row));
         ++id;
         ++row;
     } }
     row += 3;
     { for (int t = 0; t < 14; ++t) {
-        InitializeCreatureAnimationTraits(id, sheet->GetRow(row));
+        initializeCreatureAnimationTraits(id, sheet->getRow(row));
         ++id;
         ++row;
     } }
     row += 3;
     { for (int t = 0; t < 13; ++t) {
-        InitializeCreatureAnimationTraits(id, sheet->GetRow(row));
+        initializeCreatureAnimationTraits(id, sheet->getRow(row));
         ++id;
         ++row;
     } }
     row += 3;
     { for (int t = 0; t < 4; ++t) {
-        InitializeCreatureAnimationTraits(id, sheet->GetRow(row));
+        initializeCreatureAnimationTraits(id, sheet->getRow(row));
         ++id;
         ++row;
     } }
-    sheet->Dispose();
+    sheet->dispose();
     return 1;
 }
 
@@ -129,25 +132,25 @@ unsigned char InitializeCreatureAnimationTraitsTable()
 // constant the linker shares - not wrapped here to keep its owner).
 // E:\gamedcs\monframeinfo.cpp:170
 VA(0x0050ca00, 0x126)  // linkorder, dc 0xfe764
-static void InitializeCreatureAnimationTraits(int id,
+static void initializeCreatureAnimationTraits(int id,
                                               const std::vector<char*>& row)
 {
-    SMonFrameInfo& traits = sMonFrameInfoTable[id];
+    SMonFrameInfo& traits = g_monFrameInfoTable[id];
 
-    traits.iFidgetFrequency = static_cast<int>(atof(row[0])
+    traits.m_fidgetFrequency = static_cast<int>(atof(row[0])
         * DATA_COMPGEN(0x00640020, fidgetFrequencyScale, 9000.0));
-    traits.iWalkCycleTime = static_cast<int>(atof(row[1]) * 500.0);
-    traits.iAttackStartCycleTime = static_cast<int>(atof(row[2]) * 500.0);
-    traits.iFlightPixelSpan = static_cast<int>(atof(row[3])
+    traits.m_walkCycleTime = static_cast<int>(atof(row[1]) * 500.0);
+    traits.m_attackStartCycleTime = static_cast<int>(atof(row[2]) * 500.0);
+    traits.m_flightPixelSpan = static_cast<int>(atof(row[3])
         * DATA_COMPGEN(0x00640018, flightPixelScale, 115.0));
-    traits.iMissileOffset[0] = static_cast<short>(atoi(row[4]));
-    traits.iMissileOffset[1] = static_cast<short>(atoi(row[5]));
-    traits.iMissileOffset[2] = static_cast<short>(atoi(row[6]));
-    traits.iMissileOffset[3] = static_cast<short>(atoi(row[7]));
-    traits.iMissileOffset[4] = static_cast<short>(atoi(row[8]));
-    traits.iMissileOffset[5] = static_cast<short>(atoi(row[9]));
+    traits.m_missileOffset[0] = static_cast<short>(atoi(row[4]));
+    traits.m_missileOffset[1] = static_cast<short>(atoi(row[5]));
+    traits.m_missileOffset[2] = static_cast<short>(atoi(row[6]));
+    traits.m_missileOffset[3] = static_cast<short>(atoi(row[7]));
+    traits.m_missileOffset[4] = static_cast<short>(atoi(row[8]));
+    traits.m_missileOffset[5] = static_cast<short>(atoi(row[9]));
     { for (int i = 10; i < 22; ++i)
-        traits.fArrowAngle[i - 10] = static_cast<float>(atof(row[i])); }
-    traits.iExtraNumTroopsXOffset = atoi(row[22]);
-    traits.iAttackFrames = atoi(row[23]);
+        traits.m_arrowAngle[i - 10] = static_cast<float>(atof(row[i])); }
+    traits.m_extraNumTroopsXOffset = atoi(row[22]);
+    traits.m_attackFrames = atoi(row[23]);
 }

@@ -9,33 +9,43 @@
 
 class ds_memsample;
 
-// Bootstrap VIEW (resource lineage unmodeled): button::Select seeds
-// the three fields before handing the click sample to
-// soundManager::MemorySample; names unattested.
+// Dreamcast sample owns MemorySampleStructure memSample (types 0x1c9a /
+// 0x51ce). The DC structure has four words; the PC version adds data and
+// size after the handle. NH3API core/resources/sounds.hpp supplies that
+// 0x18-byte PC layout. Retail sample::sample 0x566da0 independently stores
+// channel/volume/loop at +0x28/+0x2c/+0x30, allocates data at +0x20, stores
+// its byte count at +0x24, and clears the handle at +0x1c.
+struct MemorySampleStructure {
+    // Original memHSample: the typed Miles handle stored by
+    // soundManager::memorySample 0x59a210, previously sample::field_1c.
+    ds_memsample* m_memSampleHandle;
+    void* m_data;
+    // NH3API size (size_t); retail getSize 0x566e90 adds this byte count
+    // to sizeof(sample). Previously sample::field_24.
+    unsigned int m_size;
+    // DC/NH3API memCindex, memVolume, memLooping. Retail playback uses
+    // these for the sound-channel range, volume, and AIL loop count.
+    // Previously sample::field_28, field_2c, field_30 respectively.
+    int m_memCindex;
+    int m_memVolume;
+    int m_memLooping;
+};
+SIZE(MemorySampleStructure, 0x18);
+
 class sample : public resource {
 public:
-    // Retyped 2026-08-07: soundManager::MemorySample (0x59a210) stores
-    // the Miles handle it started into this slot
-    // (`mov [ebx+0x1c], edi`), so it is the live ds_memsample*, not a
-    // plain int. sample::sample only ever zeroes it.
-    ds_memsample* field_1c;
-    void* data;
-    int field_24;
-    int field_28;
-    int field_2c;
-    int field_30;
+    // Original Dreamcast/NH3API member memSample; PC resource base is 0x1c.
+    MemorySampleStructure m_memSample;
 
-    // Retail 0x566da0: six stack params (ret 0x18). The first three are
-    // byte-derived roles (name forwarded to the resource base with type
-    // 0x20, then a new'd buffer memcpy'd from src for len bytes); the
-    // trailing three land in field_28/2c/30 and take the Dreamcast
-    // prototype's channel/volume/loop names - PROVISIONAL, the DC class
-    // itself was rewritten (one MemorySampleStructure member).
+    // Retail 0x566da0: six stack params (ret 0x18). The resource base gets
+    // newName/type 0x20; src/len initialize the owned sample buffer.
     sample(const char* newName, const void* src, long len,
            long channel, long volume, long loop);
     virtual ~sample();  // retail 0x566e60; vtable 0x6416d0
-    virtual unsigned int GetSize() const;
+    // Before normalization (function): sample::GetSize.
+    virtual unsigned int getSize() const;
 };
+SIZE(sample, 0x34);
 
 // --- sample ---
 // CODEVIEW(E:\gamedcs\sample.cpp:55, dc 0x129b3c) void sample::sample(long channel, long volume, long loop);

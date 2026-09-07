@@ -37,17 +37,26 @@ public:
     // against the value anywhere in the tree.
     enum { STATUS_ACTIVE = 1, STATUS_SUSPENDED = 2 };
 
-    baseManager* nextManager;
-    baseManager* prevManager;
-    int id;
-    int priority;
-    char cMgrName[32];
-    int status;
+    // Before normalization: nextManager.
+    baseManager* m_nextManager;
+    // Before normalization: prevManager.
+    baseManager* m_prevManager;
+    // Before normalization: id.
+    int m_id;
+    // Before normalization: priority.
+    int m_priority;
+    // Before normalization: cMgrName.
+    char m_mgrName[32];
+    // Before normalization: status.
+    int m_status;
 
     baseManager();
-    virtual int Open(int) = 0;         // slot 0
-    virtual void Close() = 0;          // slot 1
-    virtual int Main(message& msg) = 0;  // slot 2, DC ?Main@...@@UAAHAAUmessage@@@Z
+    // Before normalization (function): baseManager::Open.
+    virtual int open(int) = 0;         // slot 0
+    // Before normalization (function): baseManager::Close.
+    virtual void close() = 0;          // slot 1
+    // Before normalization (function): baseManager::Main.
+    virtual int main(message& msg) = 0;  // slot 2, DC ?Main@...@@UAAHAAUmessage@@@Z
 };
 SIZE(baseManager, 56);
 

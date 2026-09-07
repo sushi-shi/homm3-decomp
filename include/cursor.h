@@ -15,7 +15,8 @@ enum ECursorMoveTuning {
 };
 
 // --- globals ---
-void SendMapChange(CMapChange* pMapChange);  // 0x482390, dc 0x7c9f8
+// Before normalization (locals): pMapChange.
+void sendMapChange(CMapChange* mapChange);  // 0x482390, dc 0x7c9f8
 
 // --- advManager ---
 // CODEVIEW(E:\gamedcs\cursor.cpp:52, dc 0x79a48) void advManager::StartCursor(int direction);

@@ -26,16 +26,20 @@ struct TCampaignMapTraits {
     const char* m_name;
     const char* m_imageName;
     int m_numRegions;
-    const TRegionTraits* m_akRegionTraits;
+    const TRegionTraits* m_regionTraits;
 };
 SIZE(TCampaignMapTraits::TRegionTraits, 108);
 SIZE(TCampaignMapTraits, 16);
 
-extern const TCampaignMapTraits (&akCampaignMapTraits)[21];
-extern TCampaignMapTraits aCampaignMapTraitsImp[21];
-extern TCampaignMapTraits::TRegionTraits* const aCampaignRegionTraits[21];
+// Before normalization: akCampaignMapTraits.
+extern const TCampaignMapTraits (&g_campaignMapTraits)[21];
+// Before normalization: aCampaignMapTraitsImp.
+extern TCampaignMapTraits g_campaignMapTraitsImp[21];
+// Before normalization: aCampaignRegionTraits.
+extern TCampaignMapTraits::TRegionTraits* const g_campaignRegionTraits[21];
 
-unsigned char InitializeCampaignMapTraitsTable();
+// Before normalization (function): InitializeCampaignMapTraitsTable.
+unsigned char initializeCampaignMapTraitsTable();
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\campaignmap.cpp:161, dc 0x5af64) unsigned char InitializeCampaignMapTraitsTable();

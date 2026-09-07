@@ -20,26 +20,43 @@ class widget;
 // 0x5aa390, so only the destructor is virtual.
 class TSubWindow {
 public:
-    int x;
-    int y;
-    int width;
-    int height;
-    std::vector<widget*> Widgets;
-    heroWindow* parentWindow;
-    int lowId;
-    int highId;
-    Bitmap16Bit* background;
+    // Before normalization: x.
+    int m_x;
+    // Before normalization: y.
+    int m_y;
+    // Before normalization: width.
+    int m_width;
+    // Before normalization: height.
+    int m_height;
+    // Before normalization: Widgets.
+    std::vector<widget*> m_widgets;
+    // Before normalization: parentWindow.
+    heroWindow* m_parentWindow;
+    // Before normalization: lowId.
+    int m_lowId;
+    // Before normalization: highId.
+    int m_highId;
+    // Before normalization: background.
+    Bitmap16Bit* m_background;
 
     TSubWindow();
-    TSubWindow(int x, int y, int w, int h, heroWindow* parent_window);
+    // Before normalization (locals): parent_window.
+    TSubWindow(int x, int y, int w, int h, heroWindow* parentWindow);
     virtual ~TSubWindow();
 
-    void initialize(int x, int y, int w, int h, heroWindow* parent_window);
-    void AddWidget(widget* newWidget, int newPriority);
-    void RemoveWidget(widget* killWidget);
-    void Draw(unsigned char update, int iLowID, int iHighID);
-    void SaveBackground();
-    void RestoreBackground();
+    // Before normalization (locals): parent_window.
+    void initialize(int x, int y, int w, int h, heroWindow* parentWindow);
+    // Before normalization (function): TSubWindow::AddWidget.
+    void addWidget(widget* newWidget, int newPriority);
+    // Before normalization (function): TSubWindow::RemoveWidget.
+    void removeWidget(widget* killWidget);
+    // Before normalization (function): TSubWindow::Draw.
+    // Before normalization (locals): iLowID, iHighID.
+    void draw(unsigned char update, int lowID, int highID);
+    // Before normalization (function): TSubWindow::SaveBackground.
+    void saveBackground();
+    // Before normalization (function): TSubWindow::RestoreBackground.
+    void restoreBackground();
 };
 SIZE(TSubWindow, 0x34);
 

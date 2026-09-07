@@ -16,22 +16,28 @@ public:
         PLAYER_NAME_SIZE = 21
     };
 
-    int playerCount;
-    char names[MAX_PLAYERS][PLAYER_NAME_SIZE];
+    // Before normalization: playerCount.
+    int m_playerCount;
+    // Before normalization: names.
+    char m_names[MAX_PLAYERS][PLAYER_NAME_SIZE];
 
-    CHotSeatMan() : playerCount(0) {}
-    void Clear() { playerCount = 0; }
-    void AddPlayer(const char* name)
+    CHotSeatMan() : m_playerCount(0) {}
+    // Before normalization (function): CHotSeatMan::Clear.
+    void clear() { m_playerCount = 0; }
+    // Before normalization (function): CHotSeatMan::AddPlayer.
+    void addPlayer(const char* name)
     {
-        if (playerCount < MAX_PLAYERS) {
-            strcpy(names[playerCount], name);
-            ++playerCount;
+        if (m_playerCount < MAX_PLAYERS) {
+            strcpy(m_names[m_playerCount], name);
+            ++m_playerCount;
         }
     }
-    char* GetName(int player);
+    // Before normalization (function): CHotSeatMan::GetName.
+    char* getName(int player);
 };
 SIZE(CHotSeatMan, 0xac);
 
-DATA(0x0069ca50) extern CHotSeatMan* gpHotSeatMan;
+// Before normalization: gpHotSeatMan.
+DATA(0x0069ca50) extern CHotSeatMan* g_hotSeatMan;
 
 #endif /* HOMM3_HOTSEAT_H */

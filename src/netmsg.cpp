@@ -39,7 +39,7 @@ t_memory_file::~t_memory_file()
 // Retail 0x512b30, slot 1 of 0x640264. A short read is not an error: the
 // count is clamped to what is left and answered back.
 VA(0x00512b30, 0x43)  // anchor-vtable 0x640264 slot 1; retail-only
-int t_memory_file::Read(void* data, int size)
+int t_memory_file::read(void* data, int size)
 {
     if (m_position + size > m_capacity) {
         size = m_capacity - m_position;
@@ -53,7 +53,7 @@ int t_memory_file::Read(void* data, int size)
 // or the exact shortfall, whichever is larger, and the grown buffer is
 // always owned - a borrowed one is copied out and left alone.
 VA(0x00512b80, 0x9D)  // anchor-vtable 0x640264 slot 2; retail-only
-int t_memory_file::Write(const void* data, int size)
+int t_memory_file::write(const void* data, int size)
 {
     if (m_position + size > m_capacity) {
         unsigned int grown = m_capacity + 100;
@@ -81,13 +81,13 @@ int t_memory_file::Write(const void* data, int size)
 // first rung, 1000.
 VA(0x00512c20, 0x22)  // anchor-vtable 0x640270; anchor-caller 0x5887a0
 t_complex_net_message::t_complex_net_message()
-    : netmsg(RS_GAME_TRANSMIT_INIT, 0)
+    : m_netmsg(RS_GAME_TRANSMIT_INIT, 0)
 {
 }
 
 VA(0x00512c50, 0x27)  // anchor-vtable 0x640270; anchor-caller 0x4aeb50
 t_complex_net_message::t_complex_net_message(eRS_Messages subType)
-    : netmsg(subType, 0)
+    : m_netmsg(subType, 0)
 {
 }
 
@@ -98,39 +98,40 @@ t_complex_net_message::t_complex_net_message(eRS_Messages subType)
 // is what both transports take - and answer whether the transport accepted
 // it. They differ only in which transport they call.
 VA(0x00512c80, 0xBA)  // anchor-callee TransmitRemoteDataDPID; retail-only
-unsigned char t_complex_net_message::RemoteFn_00512C80(
+unsigned char t_complex_net_message::remoteFn00512C80(
     unsigned long dpid, bool compressMsg, bool guaranteed)
 {
     t_memory_file outfile;
-    outfile.Write(&netmsg, sizeof(CNetMsg));
+    outfile.write(&m_netmsg, sizeof(CNetMsg));
     write(&outfile);
     CNetMsg* wire = static_cast<CNetMsg*>(static_cast<void*>(outfile.m_buffer));
-    wire->size = outfile.m_position;
-    return TransmitRemoteDataDPID(wire, dpid, compressMsg, guaranteed) != 0;
+    wire->m_size = outfile.m_position;
+    return transmitRemoteDataDPID(wire, dpid, compressMsg, guaranteed) != 0;
 }
 
 VA(0x00512d40, 0xBA)  // anchor-callee TransmitRemoteData; retail-only
-unsigned char t_complex_net_message::RemoteFn_00512D40(
+unsigned char t_complex_net_message::remoteFn00512D40(
     int toWho, bool compressMsg, bool guaranteed)
 {
     t_memory_file outfile;
-    outfile.Write(&netmsg, sizeof(CNetMsg));
+    outfile.write(&m_netmsg, sizeof(CNetMsg));
     write(&outfile);
     CNetMsg* wire = static_cast<CNetMsg*>(static_cast<void*>(outfile.m_buffer));
-    wire->size = outfile.m_position;
-    return TransmitRemoteData(wire, toWho, compressMsg, guaranteed) != 0;
+    wire->m_size = outfile.m_position;
+    return transmitRemoteData(wire, toWho, compressMsg, guaranteed) != 0;
 }
 
 // Retail 0x512e00, the receive half. The stream borrows the received
 // message's own bytes, the twenty-byte image is read back through the
 // stream (which is what clamps a short message and leaves the read position
 // on the payload), and the rest is the virtual read()'s.
+// Before normalization (locals): pNetMsg.
 VA(0x00512e00, 0xBF)  // anchor-vtable 0x640270 slot 0; retail-only
-unsigned char t_complex_net_message::RemoteFn_00512E00(CNetMsg* pNetMsg)
+unsigned char t_complex_net_message::remoteFn00512E00(CNetMsg* netMsg)
 {
-    t_memory_file infile(static_cast<char*>(static_cast<void*>(pNetMsg)),
-                         pNetMsg->size);
-    infile.Read(&netmsg, sizeof(CNetMsg));
+    t_memory_file infile(static_cast<char*>(static_cast<void*>(netMsg)),
+                         netMsg->m_size);
+    infile.read(&m_netmsg, sizeof(CNetMsg));
     // TWO returns, not one: retail duplicates the stream's scope-exit
     // teardown into both arms of the read() test rather than sharing a
     // tail, and the FAILURE arm is the fall-through - `jne` past the

@@ -22,14 +22,15 @@
 // (*)[16]` pointer at 0x660428 that every reader goes through holds
 // exactly this address.
 DATA(0x00691698)
-TAdvObjectTraits gAdventureObjectTraitRows[ADVENTURE_OBJECT_TRAIT_COUNT];
+TAdvObjectTraits g_adventureObjectTraitRows[ADVENTURE_OBJECT_TRAIT_COUNT];
 
 // The five .rdata override tables the loader replays over the zeroed
 // rows, in the order it walks them. Each is a list of adventure-object
 // ids; only the first carries a second column, the objnames.txt row that
 // id reads its name from.
+// Before normalization: kAdventureObjectNameRows.
 DATA(0x0063a6e4)
-static const TAdvObjectNameRow kAdventureObjectNameRows[] = {
+static const TAdvObjectNameRow g_adventureObjectNameRows[] = {
     {165, 114}, {166, 115}, {167, 116}, {168, 117}, {169, 118}, {170,
     119}, {171, 120}, {172, 121}, {173, 122}, {174, 123}, {175, 124},
     {176, 125}, {177, 126}, {178, 127}, {179, 128}, {180, 129}, {181,
@@ -41,8 +42,9 @@ static const TAdvObjectNameRow kAdventureObjectNameRows[] = {
     21}, {230, 46}
 };
 
+// Before normalization: kAdventureObjectTrait3Ids.
 DATA(0x0063a854)
-static const int kAdventureObjectTrait3Ids[] = {
+static const int g_adventureObjectTrait3Ids[] = {
     114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126,
     127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139,
     140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152,
@@ -53,22 +55,25 @@ static const int kAdventureObjectTrait3Ids[] = {
     208, 209, 210, 211
 };
 
+// Before normalization: kAdventureObjectTrait2Ids.
 DATA(0x0063a9d0)
-static const int kAdventureObjectTrait2Ids[] = {
+static const int g_adventureObjectTrait2Ids[] = {
     5, 6, 9, 12, 26, 29, 34, 54, 59, 62, 65, 66, 67, 68, 69, 70, 71, 72,
     73, 74, 75, 162, 163, 164, 76, 79, 81, 82, 86, 93, 101, 212, 214,
     215
 };
 
+// Before normalization: kAdventureObjectLandBlockedIds.
 DATA(0x0063aa58)
-static const int kAdventureObjectLandBlockedIds[] = {
+static const int g_adventureObjectLandBlockedIds[] = {
     3, 5, 6, 8, 9, 11, 12, 22, 26, 29, 34, 36, 52, 54, 59, 62, 65, 66,
     67, 68, 69, 70, 71, 72, 73, 74, 75, 162, 163, 164, 76, 79, 81, 82,
     85, 86, 92, 93, 95, 101, 214, 215
 };
 
+// Before normalization: kAdventureObjectTrait1Ids.
 DATA(0x0063ab00)
-static const int kAdventureObjectTrait1Ids[] = {
+static const int g_adventureObjectTrait1Ids[] = {
     3, 5, 6, 8, 9, 11, 12, 22, 26, 29, 33, 34, 36, 54, 59, 65, 66, 67,
     68, 69, 70, 71, 72, 73, 74, 75, 162, 163, 164, 76, 79, 81, 82, 85,
     86, 93, 101, 111, 212, 214, 215, 219
@@ -100,45 +105,45 @@ static const int kAdventureObjectTrait1Ids[] = {
 // separate pointer), its store order (-> 98.38), and UNSIGNED counters
 // for the two text loops where the zeroing loop's is signed (-> 98.99).
 VA(0x0041b500, 0x28B)  // anchor-global 0x691698 trait rows + 0x660428 pointer; sole caller 0x4ed80d; retail-only
-void InitializeAdventureObjectNames()
+void initializeAdventureObjectNames()
 {
     static std::auto_ptr<char> nameBuffer;
 
     int i;
-    TAdvObjectTraits* row = gAdventureObjectTraitRows;
+    TAdvObjectTraits* row = g_adventureObjectTraitRows;
     for (i = 0; i < ADVENTURE_OBJECT_TRAIT_COUNT; ++i, ++row) {
-        row->trait1 = 0;
-        row->trait2 = 0;
-        row->blocksLanding = 0;
-        row->trait3 = 0;
-        row->name = "";
-        row->nameRow = i;
+        row->m_trait1 = 0;
+        row->m_trait2 = 0;
+        row->m_blocksLanding = 0;
+        row->m_trait3 = 0;
+        row->m_name = "";
+        row->m_nameRow = i;
     }
 
-    for (i = 0; i < sizeof(kAdventureObjectNameRows)
-                        / sizeof(kAdventureObjectNameRows[0]); ++i) {
-        gAdventureObjectTraitRows[kAdventureObjectNameRows[i].objectType]
-            .nameRow = kAdventureObjectNameRows[i].nameRow;
+    for (i = 0; i < sizeof(g_adventureObjectNameRows)
+                        / sizeof(g_adventureObjectNameRows[0]); ++i) {
+        g_adventureObjectTraitRows[g_adventureObjectNameRows[i].m_objectType]
+            .m_nameRow = g_adventureObjectNameRows[i].m_nameRow;
     }
-    for (i = 0; i < sizeof(kAdventureObjectTrait3Ids)
-                        / sizeof(kAdventureObjectTrait3Ids[0]); ++i) {
-        gAdventureObjectTraitRows[kAdventureObjectTrait3Ids[i]].trait3 = 1;
+    for (i = 0; i < sizeof(g_adventureObjectTrait3Ids)
+                        / sizeof(g_adventureObjectTrait3Ids[0]); ++i) {
+        g_adventureObjectTraitRows[g_adventureObjectTrait3Ids[i]].m_trait3 = 1;
     }
-    for (i = 0; i < sizeof(kAdventureObjectTrait2Ids)
-                        / sizeof(kAdventureObjectTrait2Ids[0]); ++i) {
-        gAdventureObjectTraitRows[kAdventureObjectTrait2Ids[i]].trait2 = 1;
+    for (i = 0; i < sizeof(g_adventureObjectTrait2Ids)
+                        / sizeof(g_adventureObjectTrait2Ids[0]); ++i) {
+        g_adventureObjectTraitRows[g_adventureObjectTrait2Ids[i]].m_trait2 = 1;
     }
-    for (i = 0; i < sizeof(kAdventureObjectLandBlockedIds)
-                        / sizeof(kAdventureObjectLandBlockedIds[0]); ++i) {
-        gAdventureObjectTraitRows[kAdventureObjectLandBlockedIds[i]]
-            .blocksLanding = 1;
+    for (i = 0; i < sizeof(g_adventureObjectLandBlockedIds)
+                        / sizeof(g_adventureObjectLandBlockedIds[0]); ++i) {
+        g_adventureObjectTraitRows[g_adventureObjectLandBlockedIds[i]]
+            .m_blocksLanding = 1;
     }
-    for (i = 0; i < sizeof(kAdventureObjectTrait1Ids)
-                        / sizeof(kAdventureObjectTrait1Ids[0]); ++i) {
-        gAdventureObjectTraitRows[kAdventureObjectTrait1Ids[i]].trait1 = 1;
+    for (i = 0; i < sizeof(g_adventureObjectTrait1Ids)
+                        / sizeof(g_adventureObjectTrait1Ids[0]); ++i) {
+        g_adventureObjectTraitRows[g_adventureObjectTrait1Ids[i]].m_trait1 = 1;
     }
 
-    TTextResource* names = ResourceManager::GetText(
+    TTextResource* names = ResourceManager::getText(
         DATA_COMPGEN(0x006604b4, objectNamesFileName, "objnames.txt"));
     TTextResourceGuard guard(names);
     if (names == 0)
@@ -147,7 +152,7 @@ void InitializeAdventureObjectNames()
     unsigned int total = 0;
     unsigned int line;
     for (line = 0; line < ADVENTURE_OBJECT_TRAIT_COUNT; ++line)
-        total += strlen(names->GetText(line)) + 1;
+        total += strlen(names->getText(line)) + 1;
 
     nameBuffer = std::auto_ptr<char>(new char[total]);
     if (nameBuffer.get() == 0)
@@ -155,10 +160,10 @@ void InitializeAdventureObjectNames()
 
     char* next = nameBuffer.get();
     for (line = 0; line < ADVENTURE_OBJECT_TRAIT_COUNT; ++line) {
-        const char* text = names->GetText(line);
+        const char* text = names->getText(line);
         unsigned int size = strlen(text) + 1;
         memcpy(next, text, size);
-        gAdventureObjectTraitRows[line].name = next;
+        g_adventureObjectTraitRows[line].m_name = next;
         next += size;
     }
 }
@@ -168,6 +173,6 @@ void InitializeAdventureObjectNames()
 VA(0x0041bd90, 0x12)  // anchor-eh 0x627890 unwind funclet for 0x41b500 state 0, retail-only
 TTextResourceGuard::~TTextResourceGuard()
 {
-    if (have && text != 0)
-        text->Dispose();
+    if (m_have && m_text != 0)
+        m_text->dispose();
 }

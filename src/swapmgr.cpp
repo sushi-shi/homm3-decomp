@@ -23,20 +23,24 @@
 #include "textresource.h"
 #include "textwdgt.h"
 
-DATA(0x006a3d08) static int gUnnamed6a3d08;
+// Before normalization: gUnnamed6a3d08.
 // Dreamcast names the sparse widget-id lookup gStatNames. Retail folds its
 // biased view into the indexed address 0x6a51c4, so only the admitted case
 // values (115..118 and 145) are valid consumers of this base.
-DATA(0x006a51c4) extern const char* gStatNames[];
+// Before normalization: gStatNames.
+DATA(0x006a3d08) static int g_unnamed6a3d08;
 // swapmgr singleton (bss 0x6a3d30): the ctor stores `this`, Reset/Open/Close consult it.
-DATA(0x006a3d30) swapManager* gpSwapManager;
+// Before normalization: gpSwapManager.
+DATA(0x006a51c4) extern const char* g_statNames[];
+DATA(0x006a3d30) swapManager* g_swapManager;
 
 // The shared includes.h helper is named by Reset's four Dreamcast xrefs
 // (dc 0x1ef5c), once around each morale/luck call. Retail's inlined clamp
 // selects one of the argument addresses, matching the reference-returning
 // template independently proved by the other TUs.
 template <class T>
-static inline const T& t_limit(const T& minimum, const T& value,
+// Before normalization (function): t_limit.
+static inline const T& tLimit(const T& minimum, const T& value,
                                const T& maximum)
 {
     return value < minimum ? minimum
@@ -45,39 +49,45 @@ static inline const T& t_limit(const T& minimum, const T& value,
 
 static inline int limit(int minimum, int value, int maximum)
 {
-    return t_limit(minimum, value, maximum);
+    return tLimit(minimum, value, maximum);
 }
 
 // The dragged-artifact record stores its id as an int while the recovered
 // hero interface keeps the Dreamcast TArtifact parameter.  This established
 // in-tree union bridge preserves that source type without emitting a cast.
-inline TArtifact artifact_from_int(int value)
+inline TArtifact artifactFromInt(int value)
 {
     union {
-        int integer;
-        TArtifact artifact;
+        // Before normalization: integer.
+        int m_integer;
+        // Before normalization: artifact.
+        TArtifact m_artifact;
     } converted;
-    converted.integer = value;
-    return converted.artifact;
+    converted.m_integer = value;
+    return converted.m_artifact;
 }
 
-inline int text_pointer_payload(char* text)
+// Before normalization (function): text_pointer_payload.
+inline int textPointerPayload(char* text)
 {
     union {
-        char* pointer;
-        int payload;
+        // Before normalization: pointer.
+        char* m_pointer;
+        // Before normalization: payload.
+        int m_payload;
     } converted;
-    converted.pointer = text;
-    return converted.payload;
+    converted.m_pointer = text;
+    return converted.m_payload;
 }
 
-static inline const char* GetArmyName(int type, int count)
+// Before normalization (function): GetArmyName.
+static inline const char* getArmyName(int type, int count)
 {
     if (type < 0 || type > kSwapRolloverCreatureLast)
-        return emptyRolloverText;
+        return g_emptyRolloverText;
     if (count == 1)
-        return akCreatureTypeTraits[type].m_name;
-    return akCreatureTypeTraits[type].m_plural_name;
+        return g_creatureTypeTraits[type].m_name;
+    return g_creatureTypeTraits[type].m_pluralName;
 }
 
 // E:\gamedcs\swapmgr.cpp:120. Dreamcast proves the class identity and
@@ -86,8 +96,8 @@ static inline const char* GetArmyName(int type, int count)
 CHeroUpdateMsg::CHeroUpdateMsg(hero* left, hero* right)
     : CNetMsg(RS_HERO_UPDATE, sizeof(CHeroUpdateMsg))
 {
-    leftHero = *left;
-    rightHero = *right;
+    m_leftHero = *left;
+    m_rightHero = *right;
 }
 
 // E:\gamedcs\swapmgr.cpp:130
@@ -125,601 +135,602 @@ VA(0x005aaa80, 0x38E9)
 TSwapWindow::TSwapWindow(hero** heroes)
     : heroWindow(0, 0, 800, 600, 1)
 {
-    Widgets.reserve(125);
+    m_widgets.reserve(125);
 
     const char* background =
-        gpGame->f_1f698 == GAME_VERSION_SOD ? "trade2.pcx" : "trade.pcx";
-    Widgets.push_back(new bitmapBorder(
-        0, 0, width, height, 0, background, 0x800));
+        g_game->m_f1f698 == GAME_VERSION_SOD ? "trade2.pcx" : "trade.pcx";
+    m_widgets.push_back(new bitmapBorder(
+        0, 0, m_width, m_height, 0, background, 0x800));
 
-    field_4c = new textWidget(
+    m_chatText = new textWidget(
         0x145, 0xfa, 0x94, 0x132, 0, "smalfont.fnt",
         font::CHAT, 0x12d, font::BOTTOM_JUSTIFIED, 0, 8);
-    field_50 = new CSwapManagerChatEdit(
+    m_chatEdit = new CSwapManagerChatEdit(
         4, 0x242, 0x2d4, 0x12, 0x7f, "", "smalfont.fnt",
         font::WHITE, font::LEFT_JUSTIFIED, "TStatBar.pcx",
         0, 0x12c, 0x100, 0, 7, 5);
 
-    if (gNetworkActive69954c && gpSwapManager->field_5c) {
-        field_54 = new bitmapBorder(
+    if (g_networkActive69954c && g_swapManager->m_humanPlayerTrade) {
+        m_leftArrow = new bitmapBorder(
             0x16e, 0xfa, 0x43, 0x10f, 0, "trarrowl.pcx", 0x800);
-        field_58 = new bitmapBorder(
+        m_rightArrow = new bitmapBorder(
             0x16e, 0xfa, 0x43, 0x10f, 0, "trarrowr.pcx", 0x800);
-        Widgets.push_back(field_54);
-        Widgets.push_back(field_58);
-        field_5c = new button(
+        m_widgets.push_back(m_leftArrow);
+        m_widgets.push_back(m_rightArrow);
+        m_receiveButton = new button(
             0x15f, 0xbd, 0x62, 0x30, kSwapReceiveFromAlly,
             "trrecb.def", 0, 1, 0, 0, 2);
-        UpdateArrows();
+        updateArrows();
     } else {
-        if (heroes[1]->owner != gpGame->GetLocalPlayerGamePos()) {
-            Widgets.push_back(new bitmapBorder(
+        if (heroes[1]->m_owner != g_game->getLocalPlayerGamePos()) {
+            m_widgets.push_back(new bitmapBorder(
                 0x16e, 0xfa, 0x43, 0x10f, 0,
                 "trarrowr.pcx", 0x800));
         }
-        field_54 = 0;
-        field_58 = 0;
-        field_5c = 0;
+        m_leftArrow = 0;
+        m_rightArrow = 0;
+        m_receiveButton = 0;
     }
 
-    Widgets.push_back(field_4c);
+    m_widgets.push_back(m_chatText);
 
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x180, 0x11, 0x20, 0x20, 0x73, "pskil32.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x180, 0x35, 0x20, 0x20, 0x74, "pskil32.def",
         1, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x180, 0x59, 0x20, 0x20, 0x75, "pskil32.def",
         2, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x180, 0x7d, 0x20, 0x20, 0x76, "pskil32.def",
         3, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
 
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x43, 0x2d, 0x20, 0x20, 0x69, "un32.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x67, 0x2d, 0x20, 0x20, 0x6f, "pskil32.def",
         4, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x8b, 0x2d, 0x20, 0x20, 0x71, "pskil32.def",
         5, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0xb0, 0x2d, 0x1e, 0x14, 0x6b, "imrl30.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0xd4, 0x2d, 0x1e, 0x14, 0x6d, "ilck30.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
 
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         0x14a, 0x1b, 0x2e, 0x14, 0, "smalfont.fnt",
         font::PRIMARY, 3, font::CENTER_JUSTIFIED, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         0x14a, 0x3f, 0x2e, 0x14, 0, "smalfont.fnt",
         font::PRIMARY, 4, font::CENTER_JUSTIFIED, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         0x14a, 0x63, 0x2e, 0x14, 0, "smalfont.fnt",
         font::PRIMARY, 5, font::CENTER_JUSTIFIED, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         0x14a, 0x87, 0x2e, 0x14, 0, "smalfont.fnt",
         font::PRIMARY, 6, font::CENTER_JUSTIFIED, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         0x2c, 0x11, 0xc8, 0x14, 0, "smalfont.fnt",
         font::PRIMARY, 0x57, font::RIGHT_JUSTIFIED, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         0x67, 0x3f, 0x20, 0x14, 0, "smalfont.fnt",
         font::PRIMARY, 0x51, font::CENTER_JUSTIFIED, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         0x8b, 0x3f, 0x20, 0x14, 0, "smalfont.fnt",
         font::PRIMARY, 0x53, font::CENTER_JUSTIFIED, 0, 8));
 
-    Widgets.push_back(new button(
+    m_widgets.push_back(new button(
         0x0a, 0x2c, 0x34, 0x24, kSwapLeftQuestLog,
         "hsbtns4.def", 0, 1, 0, 0, 2));
-    Widgets.push_back(new button(
+    m_widgets.push_back(new button(
         0x0a, 0x84, 0x30, 0x1e, kSwapRefreshLeft,
         "tsbtns.def", 0, 1, 0, 0, 2));
-    Widgets.push_back(new button(
+    m_widgets.push_back(new button(
         0x2e, 0x203, 0x16, 0x2e, kSwapLeftBackpackLeft,
         "hsbtns3.def", 0, 1, 0, 0, 2));
-    Widgets.push_back(new button(
+    m_widgets.push_back(new button(
         0x12b, 0x203, 0x16, 0x2e, kSwapLeftBackpackRight,
         "hsbtns5.def", 0, 1, 0, 0, 2));
 
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x22e, 0x2d, 0x20, 0x20, 0x6a, "un32.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x251, 0x2d, 0x20, 0x20, 0x70, "pskil32.def",
         4, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x275, 0x2d, 0x20, 0x20, 0x72, "pskil32.def",
         5, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x29a, 0x2d, 0x1e, 0x14, 0x6c, "imrl30.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x2be, 0x2d, 0x1e, 0x14, 0x6e, "ilck30.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
 
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         0x1a8, 0x1a, 0x2e, 0x14, 0, "smalfont.fnt",
         font::PRIMARY, 8, font::CENTER_JUSTIFIED, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         0x1a8, 0x3e, 0x2e, 0x14, 0, "smalfont.fnt",
         font::PRIMARY, 9, font::CENTER_JUSTIFIED, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         0x1a8, 0x62, 0x2e, 0x14, 0, "smalfont.fnt",
         font::PRIMARY, 10, font::CENTER_JUSTIFIED, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         0x1a8, 0x86, 0x2e, 0x14, 0, "smalfont.fnt",
         font::PRIMARY, 11, font::CENTER_JUSTIFIED, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         0x22b, 0x11, 0xc8, 0x14, 0, "smalfont.fnt",
         font::PRIMARY, 0x58, font::LEFT_JUSTIFIED, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         0x251, 0x3f, 0x20, 0x14, 0, "smalfont.fnt",
         font::PRIMARY, 0x52, font::CENTER_JUSTIFIED, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         0x275, 0x3f, 0x20, 0x14, 0, "smalfont.fnt",
         font::PRIMARY, 0x54, font::CENTER_JUSTIFIED, 0, 8));
 
-    Widgets.push_back(new button(
+    m_widgets.push_back(new button(
         0x2e4, 0x2c, 0x34, 0x24, kSwapRightQuestLog,
         "hsbtns4.def", 0, 1, 0, 0, 2));
-    Widgets.push_back(new button(
+    m_widgets.push_back(new button(
         0x2e4, 0x84, 0x30, 0x1e, kSwapRefreshRight,
         "tsbtns.def", 0, 1, 0, 0, 2));
-    Widgets.push_back(new button(
+    m_widgets.push_back(new button(
         0x1dd, 0x203, 0x16, 0x2e, kSwapRightBackpackLeft,
         "hsbtns3.def", 0, 1, 0, 0, 2));
-    Widgets.push_back(new button(
+    m_widgets.push_back(new button(
         0x2da, 0x203, 0x16, 0x2e, kSwapRightBackpackRight,
         "hsbtns5.def", 0, 1, 0, 0, 2));
 
-    Widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new bitmapBorder(
         0x101, 0x0d, 0x3a, 0x40, 1, 0, 0x800));
-    Widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new bitmapBorder(
         0x1e5, 0x0d, 0x3a, 0x40, 2, 0, 0x800));
 
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x45, 0x83, 0x20, 0x20, 0x0d, "cprsmall.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x69, 0x83, 0x20, 0x20, 0x0e, "cprsmall.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x8d, 0x83, 0x20, 0x20, 0x0f, "cprsmall.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0xb1, 0x83, 0x20, 0x20, 0x10, "cprsmall.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0xd5, 0x83, 0x20, 0x20, 0x11, "cprsmall.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0xf9, 0x83, 0x20, 0x20, 0x12, "cprsmall.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x11d, 0x83, 0x20, 0x20, 0x13, "cprsmall.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
 
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         0x46, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
         font::PRIMARY, 0x41, font::RIGHT_JUSTIFIED, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         0x6a, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
         font::PRIMARY, 0x42, font::RIGHT_JUSTIFIED, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         0x8e, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
         font::PRIMARY, 0x43, font::RIGHT_JUSTIFIED, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         0xb2, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
         font::PRIMARY, 0x44, font::RIGHT_JUSTIFIED, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         0xd6, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
         font::PRIMARY, 0x45, font::RIGHT_JUSTIFIED, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         0xfa, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
         font::PRIMARY, 0x46, font::RIGHT_JUSTIFIED, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         0x11e, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
         font::PRIMARY, 0x47, font::RIGHT_JUSTIFIED, 0, 8));
 
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x1e7, 0x83, 0x20, 0x20, 0x14, "cprsmall.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x20b, 0x83, 0x20, 0x20, 0x15, "cprsmall.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x22f, 0x83, 0x20, 0x20, 0x16, "cprsmall.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x253, 0x83, 0x20, 0x20, 0x17, "cprsmall.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x277, 0x83, 0x20, 0x20, 0x18, "cprsmall.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x29b, 0x83, 0x20, 0x20, 0x19, "cprsmall.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x2bf, 0x83, 0x20, 0x20, 0x1a, "cprsmall.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
 
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         0x1e8, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
         font::PRIMARY, 0x48, font::RIGHT_JUSTIFIED, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         0x20c, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
         font::PRIMARY, 0x49, font::RIGHT_JUSTIFIED, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         0x230, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
         font::PRIMARY, 0x4a, font::RIGHT_JUSTIFIED, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         0x254, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
         font::PRIMARY, 0x4b, font::RIGHT_JUSTIFIED, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         0x278, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
         font::PRIMARY, 0x4c, font::RIGHT_JUSTIFIED, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         0x29c, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
         font::PRIMARY, 0x4d, font::RIGHT_JUSTIFIED, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         0x2c0, 0x99, 0x1d, 0x14, 0, "tiny.fnt",
         font::PRIMARY, 0x4e, font::RIGHT_JUSTIFIED, 0, 8));
 
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0xae, 0xb4, 0x2c, 0x2c, 0x96, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0xe9, 0x188, 0x2c, 0x2c, 0x97, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0xae, 0xe6, 0x2c, 0x2c, 0x98, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x30, 0xdb, 0x2c, 0x2c, 0x99, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0xe3, 0x14e, 0x2c, 0x2c, 0x9a, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0xae, 0x119, 0x2c, 0x2c, 0x9b, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x60, 0xdb, 0x2c, 0x2c, 0x9c, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x113, 0x14e, 0x2c, 0x2c, 0x9d, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0xb4, 0x1bd, 0x2c, 0x2c, 0x9e, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x30, 0x125, 0x2c, 0x2c, 0x9f, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x40, 0x157, 0x2c, 0x2c, 0xa0, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x50, 0x18a, 0x2c, 0x2c, 0xa1, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x60, 0x1bd, 0x2c, 0x2c, 0xa2, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0xe5, 0xb4, 0x2c, 0x2c, 0xa3, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x113, 0xb4, 0x2c, 0x2c, 0xa4, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x113, 0xe2, 0x2c, 0x2c, 0xa5, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x113, 0x110, 0x2c, 0x2c, 0xa6, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x113, 0x1cd, 0x2c, 0x2c, 0xa7, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    if (gpGame->f_1f698 == GAME_VERSION_SOD) {
-        Widgets.push_back(new iconWidget(
+    if (g_game->m_f1f698 == GAME_VERSION_SOD) {
+        m_widgets.push_back(new iconWidget(
             0x2e, 0x1bd, 0x2c, 0x2c, 0xa8, "artifact.def",
             0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
     }
 
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x25e, 0xb4, 0x2c, 0x2c, 0xa9, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x299, 0x188, 0x2c, 0x2c, 0xaa, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x25e, 0xe6, 0x2c, 0x2c, 0xab, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x1e0, 0xdb, 0x2c, 0x2c, 0xac, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x293, 0x14e, 0x2c, 0x2c, 0xad, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x25e, 0x119, 0x2c, 0x2c, 0xae, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x210, 0xdb, 0x2c, 0x2c, 0xaf, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x2c3, 0x14e, 0x2c, 0x2c, 0xb0, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x264, 0x1bd, 0x2c, 0x2c, 0xb1, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x1e0, 0x125, 0x2c, 0x2c, 0xb2, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x1f0, 0x157, 0x2c, 0x2c, 0xb3, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x200, 0x18a, 0x2c, 0x2c, 0xb4, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x210, 0x1bd, 0x2c, 0x2c, 0xb5, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x295, 0xb4, 0x2c, 0x2c, 0xb6, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x2c3, 0xb4, 0x2c, 0x2c, 0xb7, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x2c3, 0xe2, 0x2c, 0x2c, 0xb8, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x2c3, 0x110, 0x2c, 0x2c, 0xb9, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x2c3, 0x1cd, 0x2c, 0x2c, 0xba, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    if (gpGame->f_1f698 == GAME_VERSION_SOD) {
-        Widgets.push_back(new iconWidget(
+    if (g_game->m_f1f698 == GAME_VERSION_SOD) {
+        m_widgets.push_back(new iconWidget(
             0x1de, 0x1bd, 0x2c, 0x2c, 0xbb, "artifact.def",
             0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
     }
 
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0xae, 0xb4, 0x2c, 0x2c, 0x1b, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0xe9, 0x188, 0x2c, 0x2c, 0x1c, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0xae, 0xe6, 0x2c, 0x2c, 0x1d, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x30, 0xdb, 0x2c, 0x2c, 0x1e, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0xe3, 0x14e, 0x2c, 0x2c, 0x1f, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0xae, 0x119, 0x2c, 0x2c, 0x20, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x60, 0xdb, 0x2c, 0x2c, 0x21, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x113, 0x14e, 0x2c, 0x2c, 0x22, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0xb4, 0x1bd, 0x2c, 0x2c, 0x23, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x30, 0x125, 0x2c, 0x2c, 0x24, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x40, 0x157, 0x2c, 0x2c, 0x25, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x50, 0x18a, 0x2c, 0x2c, 0x26, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x60, 0x1bd, 0x2c, 0x2c, 0x27, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0xe5, 0xb4, 0x2c, 0x2c, 0x28, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x113, 0xb4, 0x2c, 0x2c, 0x29, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x113, 0xe2, 0x2c, 0x2c, 0x2a, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x113, 0x110, 0x2c, 0x2c, 0x2b, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x113, 0x1cd, 0x2c, 0x2c, 0x2c, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    if (gpGame->f_1f698 == GAME_VERSION_SOD) {
-        Widgets.push_back(new iconWidget(
+    if (g_game->m_f1f698 == GAME_VERSION_SOD) {
+        m_widgets.push_back(new iconWidget(
             0x2e, 0x1bd, 0x2c, 0x2c, 0x2d, "artifact.def",
             0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
     }
 
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x25e, 0xb4, 0x2c, 0x2c, 0x2e, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x299, 0x188, 0x2c, 0x2c, 0x2f, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x25e, 0xe6, 0x2c, 0x2c, 0x30, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x1e0, 0xdb, 0x2c, 0x2c, 0x31, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x293, 0x14e, 0x2c, 0x2c, 0x32, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x25e, 0x119, 0x2c, 0x2c, 0x33, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x210, 0xdb, 0x2c, 0x2c, 0x34, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x2c3, 0x14e, 0x2c, 0x2c, 0x35, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x264, 0x1bd, 0x2c, 0x2c, 0x36, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x1e0, 0x125, 0x2c, 0x2c, 0x37, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x1f0, 0x157, 0x2c, 0x2c, 0x38, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x200, 0x18a, 0x2c, 0x2c, 0x39, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x210, 0x1bd, 0x2c, 0x2c, 0x3a, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x295, 0xb4, 0x2c, 0x2c, 0x3b, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x2c3, 0xb4, 0x2c, 0x2c, 0x3c, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x2c3, 0xe2, 0x2c, 0x2c, 0x3d, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x2c3, 0x110, 0x2c, 0x2c, 0x3e, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x2c3, 0x1cd, 0x2c, 0x2c, 0x3f, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    if (gpGame->f_1f698 == GAME_VERSION_SOD) {
-        Widgets.push_back(new iconWidget(
+    if (g_game->m_f1f698 == GAME_VERSION_SOD) {
+        m_widgets.push_back(new iconWidget(
             0x1de, 0x1bd, 0x2c, 0x2c, 0x40, "artifact.def",
             0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
     }
 
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x44, 0x203, 0x2c, 0x2c, 0x59, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x72, 0x203, 0x2c, 0x2c, 0x5a, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0xa0, 0x203, 0x2c, 0x2c, 0x5b, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0xce, 0x203, 0x2c, 0x2c, 0x5c, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0xfc, 0x203, 0x2c, 0x2c, 0x5d, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x1f4, 0x203, 0x2c, 0x2c, 0x5e, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x222, 0x203, 0x2c, 0x2c, 0x5f, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x250, 0x203, 0x2c, 0x2c, 0x60, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x27e, 0x203, 0x2c, 0x2c, 0x61, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x2ac, 0x203, 0x2c, 0x2c, 0x62, "artifact.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
 
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x1e, 0x57, 0x20, 0x20, 0xc8, "secsk32.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x42, 0x57, 0x20, 0x20, 0xc9, "secsk32.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x66, 0x57, 0x20, 0x20, 0xca, "secsk32.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x8a, 0x57, 0x20, 0x20, 0xcb, "secsk32.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0xae, 0x57, 0x20, 0x20, 0xcc, "secsk32.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0xd2, 0x57, 0x20, 0x20, 0xcd, "secsk32.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0xf6, 0x57, 0x20, 0x20, 0xce, "secsk32.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x11a, 0x57, 0x20, 0x20, 0xcf, "secsk32.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x1e4, 0x57, 0x20, 0x20, 0xd0, "secsk32.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x208, 0x57, 0x20, 0x20, 0xd1, "secsk32.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x22c, 0x57, 0x20, 0x20, 0xd2, "secsk32.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x250, 0x57, 0x20, 0x20, 0xd3, "secsk32.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x274, 0x57, 0x20, 0x20, 0xd4, "secsk32.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x298, 0x57, 0x20, 0x20, 0xd5, "secsk32.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x2bc, 0x57, 0x20, 0x20, 0xd6, "secsk32.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         0x2e0, 0x57, 0x20, 0x20, 0xd7, "secsk32.def",
         0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
 
-    Widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new bitmapBorder(
         4, 0x242, 0x2d4, 0x12, 0x7a, "TStatBar.pcx", 0x800));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         4, 0x242, 0x2d4, 0x12, 0, "smalfont.fnt",
         font::PRIMARY, 0x7b, font::CENTER_JUSTIFIED, 0, 8));
-    Widgets.push_back(new button(
+    m_widgets.push_back(new button(
         0x2dc, 0x237, 0x40, 0x1e, 0x7800,
         "iOkay.def", 0, 1, 1, 0x1c, 2));
 
-    Widgets.push_back(field_50);
-    if (field_5c)
-        Widgets.push_back(field_5c);
+    m_widgets.push_back(m_chatEdit);
+    if (m_receiveButton)
+        m_widgets.push_back(m_receiveButton);
 
-    for (std::vector<widget*>::iterator it = Widgets.begin();
-         it != Widgets.end(); ++it) {
+    for (std::vector<widget*>::iterator it = m_widgets.begin();
+         it != m_widgets.end(); ++it) {
         if (*it)
-            AddWidget(*it, -1);
+            addWidget(*it, -1);
         else
-            MemError();
+            memError();
     }
 }
 
 // E:\gamedcs\swapmgr.cpp:196
+// Before normalization (locals): sChat.
 VA(0x005ae370, 0x1D)  // anchor-callee + vtable-forward, dc 0x15f13c
-void CSwapManagerChatEdit::SendChat(const char* sChat, int toWho)
+void CSwapManagerChatEdit::sendChat(const char* chat, int toWho)
 {
-    ::SendChat(sChat, toWho);
-    SendChatCleanup();
+    ::sendChat(chat, toWho);
+    sendChatCleanup();
 }
 
 // E:\gamedcs\swapmgr.cpp:454 - vtable slot 0.
@@ -729,7 +740,7 @@ VA_COMPGEN(0x005ae390, 0x21, SCALAR_DELETING_DTOR, TSwapWindow)
 VA(0x005ae3c0, 0x6B)  // inherited widget ownership + heroWindow dtor, dc 0x15c320
 TSwapWindow::~TSwapWindow()
 {
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
@@ -737,40 +748,40 @@ TSwapWindow::~TSwapWindow()
 
 // E:\gamedcs\swapmgr.cpp:465
 VA(0x005ae430, 0xCB)  // dc-bracket forced + body corroborates, dc 0x15c384
-void TSwapWindow::UpdateArrows()
+void TSwapWindow::updateArrows()
 {
-    if (!field_54)
+    if (!m_leftArrow)
         return;
-    if (!field_58)
+    if (!m_rightArrow)
         return;
 
-    if (gpSwapManager->field_5d)
+    if (g_swapManager->m_givingToAlly)
     {
-        if (gpSwapManager->IsLeftHero())
+        if (g_swapManager->isLeftHero())
         {
-            field_54->hide();
-            field_58->show();
+            m_leftArrow->hide();
+            m_rightArrow->show();
         }
         else
         {
-            field_54->show();
-            field_58->hide();
+            m_leftArrow->show();
+            m_rightArrow->hide();
         }
-        field_5c->enable(1);
+        m_receiveButton->enable(1);
     }
     else
     {
-        if (gpSwapManager->IsLeftHero())
+        if (g_swapManager->isLeftHero())
         {
-            field_54->show();
-            field_58->hide();
+            m_leftArrow->show();
+            m_rightArrow->hide();
         }
         else
         {
-            field_54->hide();
-            field_58->show();
+            m_leftArrow->hide();
+            m_rightArrow->show();
         }
-        field_5c->enable(0);
+        m_receiveButton->enable(0);
     }
 }
 
@@ -778,27 +789,27 @@ void TSwapWindow::UpdateArrows()
 VA(0x005ae500, 0xA9)  // anchor-callee ??0baseManager + IsHuman, ret 8, dc 0x15c470
 swapManager::swapManager(hero* leftHero, hero* rightHero)
 {
-    heroes[0] = leftHero;
-    heroes[1] = rightHero;
-    parent = 0;
-    border = 0;
-    field_48 = -1;
-    field_4c = -1;
-    field_58 = -1;
-    field_50 = -1;
-    field_54 = -1;
-    field_5d = 1;
-    field_5c = 0;
-    if (bVideoPaused
-        && leftHero->owner != rightHero->owner
-        && gpGame->IsHuman(leftHero->owner)
-        && gpGame->IsHuman(rightHero->owner))
+    m_heroes[0] = leftHero;
+    m_heroes[1] = rightHero;
+    m_parent = 0;
+    m_border = 0;
+    m_sourceHeroIndex = -1;
+    m_destinationHeroIndex = -1;
+    m_armySelectionPending = -1;
+    m_sourceArmySlot = -1;
+    m_destinationArmySlot = -1;
+    m_givingToAlly = 1;
+    m_humanPlayerTrade = 0;
+    if (g_videoPaused
+        && leftHero->m_owner != rightHero->m_owner
+        && g_game->isHuman(leftHero->m_owner)
+        && g_game->isHuman(rightHero->m_owner))
     {
-        field_5c = 1;
-        field_5d = (heroes[0]->owner == gpGame->GetLocalPlayerGamePos());
+        m_humanPlayerTrade = 1;
+        m_givingToAlly = (m_heroes[0]->m_owner == g_game->getLocalPlayerGamePos());
     }
-    gpSwapManager = this;
-    field_64 = 0;
+    g_swapManager = this;
+    m_netMsgHandler = 0;
 }
 // E:\gamedcs\swapmgr.cpp:617
 // Dreamcast proves the single message local, the six BroadcastMessage
@@ -806,47 +817,47 @@ swapManager::swapManager(hero* leftHero, hero* rightHero)
 // Complete shifts this widget band by two and VC6 inlines both message's
 // constructor and the shared reference-returning limit helper.
 VA(0x005ae5b0, 0x19B)  // ctor/Open bracket + full DC statement roster, dc 0x15c534
-void swapManager::Reset()
+void swapManager::reset()
 {
     message msg;
 
-    field_48 = field_4c = field_58 = field_50 = field_54 = -1;
-    gUnnamed6a3d08 = 0;
+    m_sourceHeroIndex = m_destinationHeroIndex = m_armySelectionPending = m_sourceArmySlot = m_destinationArmySlot = -1;
+    g_unnamed6a3d08 = 0;
 
-    msg.id = MESSAGE_WIDGET;
-    msg.codeX = widget::WIDGET_SET_STATUS;
-    msg.extra = widget::WIDGET_DIMMED_NODRAW;
-    msg.codeY = 103;
-    parent->BroadcastMessage(&msg);
+    msg.m_id = MESSAGE_WIDGET;
+    msg.m_codeX = widget::WIDGET_SET_STATUS;
+    msg.m_extra = widget::WIDGET_DIMMED_NODRAW;
+    msg.m_codeY = 103;
+    m_parent->broadcastMessage(&msg);
 
-    msg.codeY = 104;
-    parent->BroadcastMessage(&msg);
+    msg.m_codeY = 104;
+    m_parent->broadcastMessage(&msg);
 
-    msg.codeX = widget::WIDGET_SET_ICON_FRAME;
-    msg.codeY = 107;
-    msg.extra = limit(-3, heroes[0]->GetMorale(0, 0, 1), 3) + 3;
-    parent->BroadcastMessage(&msg);
+    msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+    msg.m_codeY = 107;
+    msg.m_extra = limit(-3, m_heroes[0]->getMorale(0, 0, 1), 3) + 3;
+    m_parent->broadcastMessage(&msg);
 
-    msg.codeY = 108;
-    msg.extra = limit(-3, heroes[1]->GetMorale(0, 0, 1), 3) + 3;
-    parent->BroadcastMessage(&msg);
+    msg.m_codeY = 108;
+    msg.m_extra = limit(-3, m_heroes[1]->getMorale(0, 0, 1), 3) + 3;
+    m_parent->broadcastMessage(&msg);
 
-    msg.codeY = 109;
-    msg.extra = limit(-3, heroes[0]->GetLuck(0, 0, 1), 3) + 3;
-    parent->BroadcastMessage(&msg);
+    msg.m_codeY = 109;
+    msg.m_extra = limit(-3, m_heroes[0]->getLuck(0, 0, 1), 3) + 3;
+    m_parent->broadcastMessage(&msg);
 
-    msg.codeY = 110;
-    msg.extra = limit(-3, heroes[1]->GetLuck(0, 0, 1), 3) + 3;
-    parent->BroadcastMessage(&msg);
+    msg.m_codeY = 110;
+    msg.m_extra = limit(-3, m_heroes[1]->getLuck(0, 0, 1), 3) + 3;
+    m_parent->broadcastMessage(&msg);
 }
 
 // E:\gamedcs\swapmgr.cpp:655
 // The WinCE no-argument screen update became an explicit full-screen update
 // in Complete; the window draw boundary and return value remain shared.
-int swapManager::DrawSwapWin()
+int swapManager::drawSwapWin()
 {
-    parent->DrawWindow(0, 0xffff0001, 0xffff);
-    gpWindowManager->UpdateScreen(0, 0, 800, 600);
+    m_parent->drawWindow(0, 0xffff0001, 0xffff);
+    g_windowManager->updateScreen(0, 0, 800, 600);
     return 0;
 }
 
@@ -863,102 +874,103 @@ int swapManager::DrawSwapWin()
 // downstream scratch-register choices. The bounded why-reg model found no
 // movable creation-order carrier.
 VA(0x005ae750, 0x3A2)  // full retail body + dc 0x15c66c dossier
-int swapManager::Open(int newPriority)
+int swapManager::open(int newPriority)
 {
-    gHeroScreenDraggedArtifact.artifactId = ARTIFACT_NONE;
-    parent = new TSwapWindow(heroes);
-    if (!parent)
-        MemError();
+    g_heroScreenDraggedArtifact.m_artifactId = ARTIFACT_NONE;
+    m_parent = new TSwapWindow(m_heroes);
+    if (!m_parent)
+        memError();
 
-    Reset();
+    reset();
 
     message msg;
-    msg.id = MESSAGE_WIDGET;
-    msg.codeX = 13;
-    msg.codeY = 0;
-    msg.extra = gpGame->GetLocalPlayerGamePos();
-    parent->BroadcastMessage(&msg);
+    msg.m_id = MESSAGE_WIDGET;
+    msg.m_codeX = 13;
+    msg.m_codeY = 0;
+    msg.m_extra = g_game->getLocalPlayerGamePos();
+    m_parent->broadcastMessage(&msg);
 
-    msg.codeX = widget::WIDGET_SET_STATUS;
-    msg.extra = widget::WIDGET_DIMMED_NODRAW;
-    msg.codeY = kSwapRefreshLeft;
-    parent->BroadcastMessage(&msg);
-    msg.codeY = kSwapRefreshRight;
-    parent->BroadcastMessage(&msg);
+    msg.m_codeX = widget::WIDGET_SET_STATUS;
+    msg.m_extra = widget::WIDGET_DIMMED_NODRAW;
+    msg.m_codeY = kSwapRefreshLeft;
+    m_parent->broadcastMessage(&msg);
+    msg.m_codeY = kSwapRefreshRight;
+    m_parent->broadcastMessage(&msg);
 
-    for (int iHero = 0; iHero < 2; iHero++) {
+    // Before normalization (locals): iHero, iSkill.
+    for (int hero = 0; hero < 2; hero++) {
         // DC line 698 is one portrait-update statement. Retail passes the
         // portrait pointer directly to the five-argument overload; the local
         // message remains the sole object used by the surrounding updates.
-        msg.extraText =
-            akHeroTraits[heroes[iHero]->portrait].largePortraitName;
-        parent->BroadcastMessage(
-            MESSAGE_WIDGET, widget::WIDGET_SET_IMAGE, iHero + 1,
-            msg.extra);
+        msg.m_extraText =
+            g_heroTraits[m_heroes[hero]->m_portrait].m_largePortraitName;
+        m_parent->broadcastMessage(
+            MESSAGE_WIDGET, widget::WIDGET_SET_IMAGE, hero + 1,
+            msg.m_extra);
 
-        sprintf(gText, gpGeneralText->GetText(139),
-                heroes[iHero]->name, heroes[iHero]->level,
-                heroes[iHero]->HeroFn_004D8F70());
-        msg.codeX = widget::WIDGET_SET_TEXT;
-        msg.codeY = iHero + 87;
-        msg.extraText = gText;
-        parent->BroadcastMessage(&msg);
+        sprintf(g_text, g_generalText->getText(139),
+                m_heroes[hero]->m_name, m_heroes[hero]->m_level,
+                m_heroes[hero]->heroFn004D8F70());
+        msg.m_codeX = widget::WIDGET_SET_TEXT;
+        msg.m_codeY = hero + 87;
+        msg.m_extraText = g_text;
+        m_parent->broadcastMessage(&msg);
 
-        if (heroes[iHero]->experience < 10000)
-            sprintf(gText, "%d", heroes[iHero]->experience);
+        if (m_heroes[hero]->m_experience < 10000)
+            sprintf(g_text, "%d", m_heroes[hero]->m_experience);
         else
-            sprintf(gText, "%dk", heroes[iHero]->experience / 1000);
-        msg.codeY = iHero + 81;
-        parent->BroadcastMessage(&msg);
+            sprintf(g_text, "%dk", m_heroes[hero]->m_experience / 1000);
+        msg.m_codeY = hero + 81;
+        m_parent->broadcastMessage(&msg);
 
-        sprintf(gText, "%d", heroes[iHero]->mana);
-        msg.codeY = iHero + 83;
-        parent->BroadcastMessage(&msg);
+        sprintf(g_text, "%d", m_heroes[hero]->m_mana);
+        msg.m_codeY = hero + 83;
+        m_parent->broadcastMessage(&msg);
 
-        msg.codeX = widget::WIDGET_SET_ICON_FRAME;
-        msg.codeY = iHero + 105;
-        msg.extra = heroes[iHero]->id;
-        parent->BroadcastMessage(&msg);
+        msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+        msg.m_codeY = hero + 105;
+        msg.m_extra = m_heroes[hero]->m_id;
+        m_parent->broadcastMessage(&msg);
 
-        for (int iSkill = 0; iSkill < 8; ++iSkill) {
-            if (iSkill < heroes[iHero]->skillCount) {
-                int skill = heroes[iHero]->GetNthSS(iSkill);
-                msg.codeX = widget::WIDGET_SET_ICON_FRAME;
-                msg.codeY = iHero * 8 + iSkill + 200;
-                msg.extra = heroes[iHero]->skillLevel[skill]
+        for (int skillIndex = 0; skillIndex < 8; ++skillIndex) {
+            if (skillIndex < m_heroes[hero]->m_skillCount) {
+                int skill = m_heroes[hero]->getNthSS(skillIndex);
+                msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+                msg.m_codeY = hero * 8 + skillIndex + 200;
+                msg.m_extra = m_heroes[hero]->m_skillLevel[skill]
                             + 3 * skill + 2;
             } else {
-                msg.codeX = widget::WIDGET_CLEAR_STATUS;
-                msg.codeY = iHero * 8 + iSkill + 200;
-                msg.extra = widget::WIDGET_DRAWN;
+                msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+                msg.m_codeY = hero * 8 + skillIndex + 200;
+                msg.m_extra = widget::WIDGET_DRAWN;
             }
-            parent->BroadcastMessage(&msg);
+            m_parent->broadcastMessage(&msg);
         }
     }
 
-    UpdateBackpack(0);
-    UpdateBackpack(1);
-    gpAdvManager->DisableButtons();
-    Update();
+    updateBackpack(0);
+    updateBackpack(1);
+    g_advManager->disableButtons();
+    update();
 
-    gpWindowManager->AddWindow(parent, -1, 1);
-    KBChangeMenu(dfltMenu);
-    border = ResourceManager::GetBitmap816(
+    g_windowManager->addWindow(m_parent, -1, 1);
+    kbChangeMenu(g_dfltMenu);
+    m_border = ResourceManager::getBitmap816(
         DATA_COMPGEN(0x00688524, swapTradeSelectorBitmapName,
                      "TradeSel.pcx"));
-    gpWindowManager->UpdateScreen(0, 0, 800, 600);
-    gpMouseManager->SetPointer(0, mouseManager::DEFAULT_SET);
+    g_windowManager->updateScreen(0, 0, 800, 600);
+    g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
 
-    id = 0x100;
-    priority = newPriority;
-    status = STATUS_ACTIVE;
-    strcpy(cMgrName,
+    m_id = 0x100;
+    m_priority = newPriority;
+    m_status = STATUS_ACTIVE;
+    strcpy(m_mgrName,
            DATA_COMPGEN(0x00688518, swapManagerName, "swapManager"));
 
-    if (pDPlay) {
-        field_60 = pDPlay->GetNetMsgHandler();
-        field_64 = new CSwapMgrNetMsgHandler;
-        pDPlay->SetNetMsgHandler(field_64);
+    if (g_dPlay) {
+        m_previousNetMsgHandler = g_dPlay->getNetMsgHandler();
+        m_netMsgHandler = new CSwapMgrNetMsgHandler;
+        g_dPlay->setNetMsgHandler(m_netMsgHandler);
     }
     return 0;
 }
@@ -967,107 +979,108 @@ int swapManager::Open(int newPriority)
 // The exact Open/Close bracket and five-case retail jump table identify this
 // handler. Dreamcast proves the case/helper order and common DestroyMsg tail;
 // Complete expands GetOtherHero, HandleHeroUpdateMsg and OnGiveMeStuffMsg.
+// Before normalization (locals): pNetMsg.
 VA(0x005aeb00, 0x213)  // anchor-bracket + switch/callee roster, dc 0x15f228
-CNetMsg* CSwapMgrNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
+CNetMsg* CSwapMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
 {
-    switch (pNetMsg->subType)
+    switch (netMsg->m_subType)
     {
     case RS_PLAYER_DROPPED: {
         if (m_inPopup)
         {
-            m_pAbortPopupMsg = pNetMsg;
+            m_abortPopupMsg = netMsg;
             return 0;
         }
-        int otherPlayer = gpSwapManager->GetOtherHero()->owner;
-        if (gpGame->GetGamePosFromDPID(pNetMsg->field_04)
+        int otherPlayer = g_swapManager->getOtherHero()->m_owner;
+        if (g_game->getGamePosFromDPID(netMsg->m_dpidFrom)
             == otherPlayer)
-            field_0c = 1;
-        HandlePlayerDrop(pNetMsg->field_04);
+            m_exitRequested = 1;
+        handlePlayerDrop(netMsg->m_dpidFrom);
         break;
     }
 
     case RS_HERO_UPDATE:
-        gpSwapManager->HandleHeroUpdateMsg(pNetMsg);
+        g_swapManager->handleHeroUpdateMsg(netMsg);
         break;
 
     case RS_TRADE_REQUEST_DONE:
         if (m_inPopup)
         {
-            m_pAbortPopupMsg = pNetMsg;
+            m_abortPopupMsg = netMsg;
             return 0;
         }
-        field_0c = 1;
+        m_exitRequested = 1;
         break;
 
     case RS_CHAT_MSG:
-        ReceiveChat(static_cast<CChatMsg*>(pNetMsg)->m_text,
-                    pNetMsg->field_00);
+        receiveChat(static_cast<CChatMsg*>(netMsg)->m_text,
+                    netMsg->m_from);
         break;
 
     case RS_GIVE_ME_STUFF:
-        gpSwapManager->OnGiveMeStuffMsg();
+        g_swapManager->onGiveMeStuffMsg();
         break;
 
     default:
-        CNetMsgHandler::HandleNetMsg(pNetMsg);
+        CNetMsgHandler::handleNetMsg(netMsg);
         break;
     }
 
-    if (pNetMsg)
-        DestroyMsg(pNetMsg);
+    if (netMsg)
+        destroyMsg(netMsg);
     return 0;
 }
 
 // E:\gamedcs\swapmgr.cpp:789
 
 VA(0x005aed20, 0x9B)  // exact retail teardown, dc 0x15ca44
-void swapManager::Close()
+void swapManager::close()
 {
-    if (gHeroScreenDraggedArtifact.artifactId != -1)
+    if (g_heroScreenDraggedArtifact.m_artifactId != -1)
     {
-        heroes[0]->GiveArtifact(&gHeroScreenDraggedArtifact, 0, 0);
-        gHeroScreenDraggedArtifact.artifactId = ARTIFACT_NONE;
+        m_heroes[0]->giveArtifact(&g_heroScreenDraggedArtifact, 0, 0);
+        g_heroScreenDraggedArtifact.m_artifactId = ARTIFACT_NONE;
     }
-    border->Dispose();
-    gpWindowManager->RemoveWindow(parent);
-    delete parent;
-    status = 0;
-    if (pDPlay)
-        pDPlay->SetNetMsgHandler(field_60);
-    delete field_64;
-    gpAdvManager->status = 1;
-    gpAdvManager->EnableButtons();
-    gpAdvManager->Reseed(0, 0);
+    m_border->dispose();
+    g_windowManager->removeWindow(m_parent);
+    delete m_parent;
+    m_status = 0;
+    if (g_dPlay)
+        g_dPlay->setNetMsgHandler(m_previousNetMsgHandler);
+    delete m_netMsgHandler;
+    g_advManager->m_status = 1;
+    g_advManager->enableButtons();
+    g_advManager->reseed(0, 0);
 }
 // E:\gamedcs\swapmgr.cpp:816
 VA(0x005aedc0, 0x140)
-void swapManager::DrawSelector()
+void swapManager::drawSelector()
 {
     int x = 0;
     int y = 0;
 
-    if (field_48 == -1)
+    if (m_sourceHeroIndex == -1)
         return;
-    if (field_50 == -1)
+    if (m_sourceArmySlot == -1)
         return;
 
-    if (gUnnamed6a3d08)
+    if (g_unnamed6a3d08)
     {
-        int selectedType = heroes[field_48]->army.armies[field_50];
+        int selectedType = m_heroes[m_sourceHeroIndex]->m_army.m_armies[m_sourceArmySlot];
         x = 0x43;
         for (int hero = 0; hero < 2; hero++)
         {
             for (int slot = 0; slot < 7; slot++, x += 0x24)
             {
-                if (!(hero == field_48 && slot == field_50))
+                if (!(hero == m_sourceHeroIndex && slot == m_sourceArmySlot))
                 {
-                    int creature = heroes[hero]->army.armies[slot];
+                    int creature = m_heroes[hero]->m_army.m_armies[slot];
                     if (creature == -1 || creature == selectedType)
                     {
-                        border->Draw(0, 0, 0x24, 0x24,
-                                     gpWindowManager->screenBitmap,
+                        m_border->draw(0, 0, 0x24, 0x24,
+                                     g_windowManager->m_screenBitmap,
                                      x - 2, 0x81, true);
-                        gpWindowManager->UpdateScreen(x - 2, 0x81,
+                        g_windowManager->updateScreen(x - 2, 0x81,
                                                       0x24, 0x24);
                     }
                 }
@@ -1077,50 +1090,50 @@ void swapManager::DrawSelector()
     }
     else
     {
-        switch (field_48)
+        switch (m_sourceHeroIndex)
         {
         case kSwapSelectLeft:
-            if (field_58 == 0)
+            if (m_armySelectionPending == 0)
             {
-                x = field_50 * 36 + 0x41;
+                x = m_sourceArmySlot * 36 + 0x41;
                 y = 0x81;
             }
             break;
         case kSwapSelectRight:
-            if (field_58 == 0)
+            if (m_armySelectionPending == 0)
             {
-                x = field_50 * 36 + 0x1e3;
+                x = m_sourceArmySlot * 36 + 0x1e3;
                 y = 0x81;
             }
             break;
         }
-        border->Draw(0, 0, 0x24, 0x24, gpWindowManager->screenBitmap,
+        m_border->draw(0, 0, 0x24, 0x24, g_windowManager->m_screenBitmap,
                      x, y, true);
-        gpWindowManager->UpdateScreen(x, y, 0x24, 0x24);
+        g_windowManager->updateScreen(x, y, 0x24, 0x24);
     }
 }
 
 // E:\gamedcs\swapmgr.cpp:914
 DC_ONLY(0x15cccc, 0x5E)
-inline void swapManager::update_artifact_widget(long id, TArtifact artifact)
+inline void swapManager::updateArtifactWidget(long id, TArtifact artifact)
 {
     message msg;
-    msg.id = MESSAGE_WIDGET;
-    msg.codeY = id;
+    msg.m_id = MESSAGE_WIDGET;
+    msg.m_codeY = id;
     if (artifact == ARTIFACT_NONE)
     {
-        msg.codeX = widget::WIDGET_CLEAR_STATUS;
-        msg.extra = widget::WIDGET_DRAWN;
+        msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+        msg.m_extra = widget::WIDGET_DRAWN;
     }
     else
     {
-        msg.codeX = widget::WIDGET_SET_ICON_FRAME;
-        msg.extra = artifact;
-        parent->BroadcastMessage(&msg);
-        msg.codeX = widget::WIDGET_SET_STATUS;
-        msg.extra = widget::WIDGET_DRAWN;
+        msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+        msg.m_extra = artifact;
+        m_parent->broadcastMessage(&msg);
+        msg.m_codeX = widget::WIDGET_SET_STATUS;
+        msg.m_extra = widget::WIDGET_DRAWN;
     }
-    parent->BroadcastMessage(&msg);
+    m_parent->broadcastMessage(&msg);
 }
 
 // E:\gamedcs\swapmgr.cpp:940
@@ -1131,17 +1144,18 @@ inline void swapManager::update_artifact_widget(long id, TArtifact artifact)
 // dword load, slot-class tables, reverse scan and two widget-id bands.
 // Complete changes the first widget band but preserves Dreamcast's +0x1b
 // second band.  Retail proves that immediate independently in both arms.
+// Before normalization (locals): iHero.
 VA(0x005aef00, 0x24C)  // dc-order + typed retail body, dc 0x15cd2c
-void swapManager::UpdateSlot(int iHero, TArtifactSlot slot)
+void swapManager::updateSlot(int hero, TArtifactSlot slot)
 {
-    int artifact = heroes[iHero]->get_artifact(slot).artifactId;
+    int artifact = m_heroes[hero]->getArtifact(slot).m_artifactId;
     if (artifact == ARTIFACT_NONE)
     {
-        int type = akArtifactSlotTraits[slot].type;
-        unsigned int remaining = heroes[iHero]->artifactSlotCounts[type];
+        int type = g_artifactSlotTraits[slot].m_type;
+        unsigned int remaining = m_heroes[hero]->m_artifactSlotCounts[type];
         if (remaining > 0)
         {
-            const std::bitset<19>& slots = aArtifactSlotMasks[type];
+            const std::bitset<19>& slots = g_artifactSlotMasks[type];
             for (int i = kNumArtifactSlots + 1; ; )
             {
                 --i;
@@ -1152,102 +1166,105 @@ void swapManager::UpdateSlot(int iHero, TArtifactSlot slot)
                     artifact = 0x91;
                     break;
                 }
-                if (heroes[iHero]->equipped[i].artifactId == ARTIFACT_NONE
+                if (m_heroes[hero]->m_equipped[i].m_artifactId == ARTIFACT_NONE
                     && --remaining == 0)
                     break;
             }
         }
     }
 
-    if (gHeroScreenDraggedArtifact.artifactId != ARTIFACT_NONE
-        && heroes[iHero]->HeroFn_004E2840(
-               gHeroScreenDraggedArtifact.artifactId, slot))
+    if (g_heroScreenDraggedArtifact.m_artifactId != ARTIFACT_NONE
+        && m_heroes[hero]->heroFn004E2840(
+               g_heroScreenDraggedArtifact.m_artifactId, slot))
     {
-        update_artifact_widget(
-            iHero * (kNumArtifactSlots + 1) + slot + 0x96,
-            artifact_from_int(artifact));
-        update_artifact_widget(
-            iHero * (kNumArtifactSlots + 1) + slot + 0x1b,
-            artifact_from_int(0x90));
+        updateArtifactWidget(
+            hero * (kNumArtifactSlots + 1) + slot + 0x96,
+            artifactFromInt(artifact));
+        updateArtifactWidget(
+            hero * (kNumArtifactSlots + 1) + slot + 0x1b,
+            artifactFromInt(0x90));
     }
     else
     {
-        update_artifact_widget(
-            iHero * (kNumArtifactSlots + 1) + slot + 0x96,
+        updateArtifactWidget(
+            hero * (kNumArtifactSlots + 1) + slot + 0x96,
             ARTIFACT_NONE);
-        update_artifact_widget(
-            iHero * (kNumArtifactSlots + 1) + slot + 0x1b,
-            artifact_from_int(artifact));
+        updateArtifactWidget(
+            hero * (kNumArtifactSlots + 1) + slot + 0x1b,
+            artifactFromInt(artifact));
     }
 }
 
 // Dreamcast preserves this helper as the nested two-hero, nineteen-slot
 // UpdateSlot walk. Complete /Ob2 expands it into both known retail callers.
-void swapManager::update_all_slots()
+void swapManager::updateAllSlots()
 {
-    for (int iHero = 0; iHero < 2; ++iHero)
+    // Before normalization (locals): iHero.
+    for (int hero = 0; hero < 2; ++hero)
         for (int slot = const_first_artifact_slot;
              slot < kNumArtifactSlots + 1;
              slot++)
             // Complete adds ordinal 18 to Dreamcast's public TArtifactSlot
             // domain; keep the proved callee ABI and make that revision
             // boundary explicit instead of flattening UpdateSlot to int.
-            UpdateSlot(iHero, static_cast<TArtifactSlot>(slot) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
+            updateSlot(hero, static_cast<TArtifactSlot>(slot) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
 }
 
 // E:\gamedcs\swapmgr.cpp:977
 // Dreamcast preserves this source helper boundary; Complete /Ob2 expands its
 // sole call into UpdateBackpack, where the parameterized subscript is what
 // produces retail's stride-eight induction variable.
-void swapManager::UpdateBackpackItem(int iHero, int i)
+// Before normalization (locals): iHero.
+void swapManager::updateBackpackItem(int hero, int i)
 {
     message msg;
-    type_artifact artifact = heroes[iHero]->get_backpack(i);
-    msg.id = MESSAGE_WIDGET;
-    msg.codeX = 4;
+    type_artifact artifact = m_heroes[hero]->getBackpack(i);
+    msg.m_id = MESSAGE_WIDGET;
+    msg.m_codeX = 4;
     // Complete shifts the backpack widget band by two from Dreamcast's 0x57.
-    msg.codeY = 5 * iHero + i + 0x59;
-    if (artifact.artifactId == -1)
+    msg.m_codeY = 5 * hero + i + 0x59;
+    if (artifact.m_artifactId == -1)
     {
-        msg.codeX = 6;
-        msg.extra = 4;
+        msg.m_codeX = 6;
+        msg.m_extra = 4;
     }
     else
     {
-        msg.codeX = 4;
-        msg.extra = artifact.artifactId;
-        parent->BroadcastMessage(&msg);
-        msg.codeX = 5;
-        msg.extra = 4;
+        msg.m_codeX = 4;
+        msg.m_extra = artifact.m_artifactId;
+        m_parent->broadcastMessage(&msg);
+        msg.m_codeX = 5;
+        msg.m_extra = 4;
     }
-    parent->BroadcastMessage(&msg);
+    m_parent->broadcastMessage(&msg);
 }
 
 // E:\gamedcs\swapmgr.cpp:1004
+// Before normalization (locals): iHero.
 VA(0x005af150, 0x157)  // anchor-callee + helper-inline, dc 0x15cea4
-void swapManager::UpdateBackpack(int iHero)
+void swapManager::updateBackpack(int hero)
 {
     message msg;
-    msg.id = MESSAGE_WIDGET;
+    msg.m_id = MESSAGE_WIDGET;
 
     for (int i = 0; i < 5; ++i)
-        UpdateBackpackItem(iHero, i);
+        updateBackpackItem(hero, i);
 
-    msg.codeX = (heroes[iHero]->get_last_backpack_index() + 1 > 5) ? 6 : 5;
-    msg.extra = 0x1000;
-    msg.codeY = iHero + 0x63;
-    parent->BroadcastMessage(&msg);
+    msg.m_codeX = (m_heroes[hero]->getLastBackpackIndex() + 1 > 5) ? 6 : 5;
+    msg.m_extra = 0x1000;
+    msg.m_codeY = hero + 0x63;
+    m_parent->broadcastMessage(&msg);
 
-    msg.codeY = iHero + 0x65;
-    parent->BroadcastMessage(&msg);
+    msg.m_codeY = hero + 0x65;
+    m_parent->broadcastMessage(&msg);
 
-    msg.codeX = (heroes[iHero]->get_last_backpack_index() + 1 <= 5) ? 6 : 5;
-    msg.extra = 2;
-    msg.codeY = iHero + 0x63;
-    parent->BroadcastMessage(&msg);
+    msg.m_codeX = (m_heroes[hero]->getLastBackpackIndex() + 1 <= 5) ? 6 : 5;
+    msg.m_extra = 2;
+    msg.m_codeY = hero + 0x63;
+    m_parent->broadcastMessage(&msg);
 
-    msg.codeY = iHero + 0x65;
-    parent->BroadcastMessage(&msg);
+    msg.m_codeY = hero + 0x65;
+    m_parent->broadcastMessage(&msg);
 }
 
 // E:\gamedcs\swapmgr.cpp:1031
@@ -1260,64 +1277,65 @@ void swapManager::UpdateBackpack(int iHero)
 // Branch-local/result locals and explicit false-arm Reset returns were
 // measured byte-flat; one shared helper result reaches 35 blocks but scores
 // 91.0132%, so the DC-proven no-local statement shape remains authoritative.
+// Before normalization (locals): iHero, iMonster, bRightMouse, bShift.
 VA(0x005af2b0, 0x2DD)  // roster bracket + DC statement/CFG shape, dc 0x15cf54
-void swapManager::HandleMonster(int iHero, int iMonster, int bRightMouse, unsigned char bShift)
+void swapManager::handleMonster(int hero, int monster, int rightMouse, unsigned char shift)
 {
-    if (bRightMouse)
+    if (rightMouse)
     {
-        if (heroes[iHero]->army.armies[iMonster] != CREATURE_NONE)
-            gpGame->ViewArmy(heroes[iHero]->army, iMonster, heroes[iHero],
+        if (m_heroes[hero]->m_army.m_armies[monster] != CREATURE_NONE)
+            g_game->viewArmy(m_heroes[hero]->m_army, monster, m_heroes[hero],
                              0, 0x77, 0x14, 0, 1);
         return;
     }
 
-    if (field_58)
+    if (m_armySelectionPending)
     {
-        if (heroes[iHero]->army.armies[iMonster] != CREATURE_NONE
-            && CanModHero(iHero))
+        if (m_heroes[hero]->m_army.m_armies[monster] != CREATURE_NONE
+            && canModHero(hero))
         {
-            field_48 = iHero;
-            field_4c = -1;
-            field_58 = 0;
-            field_50 = iMonster;
-            field_54 = -1;
+            m_sourceHeroIndex = hero;
+            m_destinationHeroIndex = -1;
+            m_armySelectionPending = 0;
+            m_sourceArmySlot = monster;
+            m_destinationArmySlot = -1;
 
-            if (heroes[field_48]->owner == gNetLocalGamePos)
+            if (m_heroes[m_sourceHeroIndex]->m_owner == g_netLocalGamePos)
             {
-                gpWindowManager->BroadcastMessage(
+                g_windowManager->broadcastMessage(
                     MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
                     kSwapRefreshLeft, 0x4008);
-                gpWindowManager->BroadcastMessage(
+                g_windowManager->broadcastMessage(
                     MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
                     kSwapRefreshRight, 0x4008);
             }
         }
         else
-            Reset();
+            reset();
         return;
     }
 
-    field_4c = iHero;
-    field_54 = iMonster;
-    if (field_48 == iHero && field_50 == iMonster)
-        ViewMon();
-    else if (heroes[field_48]->owner == gNetLocalGamePos)
+    m_destinationHeroIndex = hero;
+    m_destinationArmySlot = monster;
+    if (m_sourceHeroIndex == hero && m_sourceArmySlot == monster)
+        viewMon();
+    else if (m_heroes[m_sourceHeroIndex]->m_owner == g_netLocalGamePos)
     {
-        if ((gUnnamed6a3d08 || bShift)
-            && (heroes[field_4c]->army.armies[field_54] == CREATURE_NONE
-                || heroes[field_4c]->army.armies[field_54]
-                       == heroes[field_48]->army.armies[field_50]))
+        if ((g_unnamed6a3d08 || shift)
+            && (m_heroes[m_destinationHeroIndex]->m_army.m_armies[m_destinationArmySlot] == CREATURE_NONE
+                || m_heroes[m_destinationHeroIndex]->m_army.m_armies[m_destinationArmySlot]
+                       == m_heroes[m_sourceHeroIndex]->m_army.m_armies[m_sourceArmySlot]))
         {
-            gUnnamed6a3d08 = 0;
-            if (CanModHero(field_4c))
-                heroes[field_48]->army.SplitArmy(
-                    field_50, &heroes[field_4c]->army, field_54, 1, 1);
+            g_unnamed6a3d08 = 0;
+            if (canModHero(m_destinationHeroIndex))
+                m_heroes[m_sourceHeroIndex]->m_army.splitArmy(
+                    m_sourceArmySlot, &m_heroes[m_destinationHeroIndex]->m_army, m_destinationArmySlot, 1, 1);
         }
         else
-            SwapMons();
+            swapMons();
     }
 
-    Reset();
+    reset();
 }
 
 // E:\gamedcs\swapmgr.cpp:1106
@@ -1331,114 +1349,115 @@ void swapManager::HandleMonster(int iHero, int iMonster, int bRightMouse, unsign
 // why-branch finds no applicable source mutation and why-reg's model finds no
 // binding divergence; restoring CanModHero's older direct returns is the
 // negative control and lowers this caller to 87.81%.
+// Before normalization (locals): right_click, our_hero, old_artifact.
 VA(0x005af590, 0x3F7)  // Main roster/callees + full retail body, dc 0x15d150
-void swapManager::handle_artifact_click(long side, long id, unsigned char right_click)
+void swapManager::handleArtifactClick(long side, long id, unsigned char rightClick)
 {
     TArtifactSlot slot =
         static_cast<TArtifactSlot>(id) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
-    hero* our_hero = heroes[side];
-    type_artifact old_artifact = our_hero->get_artifact(slot);
+    hero* ourHero = m_heroes[side];
+    type_artifact oldArtifact = ourHero->getArtifact(slot);
 
-    if (gHeroScreenDraggedArtifact.artifactId == ARTIFACT_NONE) {
-        if (old_artifact.artifactId == ARTIFACT_NONE)
+    if (g_heroScreenDraggedArtifact.m_artifactId == ARTIFACT_NONE) {
+        if (oldArtifact.m_artifactId == ARTIFACT_NONE)
             return;
 
-        if (right_click) {
-            if (old_artifact.artifactId == ARTIFACT_SPELLBOOK) {
-                NormalDialog(gpGeneralText->GetText(22), 4, -1, 28,
+        if (rightClick) {
+            if (oldArtifact.m_artifactId == ARTIFACT_SPELLBOOK) {
+                normalDialog(g_generalText->getText(22), 4, -1, 28,
                              -1, 0, -1, 0, -1, 0, -1, 0);
                 return;
             }
 
-            if (gpGame->f_1f698 >= 2) {
+            if (g_game->m_f1f698 >= 2) {
                 int targetCombo =
-                    akArtifactTraits[old_artifact.artifactId].targetCombo;
-                if (akArtifactTraits[old_artifact.artifactId].comboType
+                    g_artifactTraits[oldArtifact.m_artifactId].m_targetCombo;
+                if (g_artifactTraits[oldArtifact.m_artifactId].m_comboType
                     != -1) {
-                    if (our_hero->HeroFn_004D9B30(
-                            old_artifact.artifactId)
+                    if (ourHero->heroFn004D9B30(
+                            oldArtifact.m_artifactId)
                         == DIALOG_RETURN_ACCEPT) {
-                        our_hero->HeroFn_004DC070(slot);
-                        Update();
-                        DrawSwapWin();
+                        ourHero->heroFn004DC070(slot);
+                        this->update();
+                        drawSwapWin();
                     }
                     return;
                 }
 
                 if (targetCombo != -1
-                    && our_hero->HeroFn_004DBE80(targetCombo)) {
-                    if (our_hero->HeroFn_004D9CC0(
-                            old_artifact.artifactId)
+                    && ourHero->heroFn004DBE80(targetCombo)) {
+                    if (ourHero->heroFn004D9CC0(
+                            oldArtifact.m_artifactId)
                         == DIALOG_RETURN_ACCEPT) {
-                        our_hero->HeroFn_004DBF30(targetCombo, slot);
-                        Update();
-                        DrawSwapWin();
+                        ourHero->heroFn004DBF30(targetCombo, slot);
+                        this->update();
+                        drawSwapWin();
                     }
                     return;
                 }
 
-                our_hero->ViewArtifact(&old_artifact, right_click);
+                ourHero->viewArtifact(&oldArtifact, rightClick);
                 return;
             }
 
-            our_hero->ViewArtifact(&old_artifact, right_click);
+            ourHero->viewArtifact(&oldArtifact, rightClick);
             return;
         }
 
         if (slot == eArtifactSlotSpellbook
             || slot == eArtifactSlotWarMachine4) {
-            NormalDialog(gpGeneralText->GetText(22), 1, -1, -1,
+            normalDialog(g_generalText->getText(22), 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             return;
         }
 
-        if (CanModHero(side)) {
-            gHeroScreenDraggedArtifact = old_artifact;
-            our_hero->remove_artifact(slot);
-            Update();
-            gpMouseManager->SetPointer(
-                gHeroScreenDraggedArtifact.artifactId,
+        if (canModHero(side)) {
+            g_heroScreenDraggedArtifact = oldArtifact;
+            ourHero->removeArtifact(slot);
+            this->update();
+            g_mouseManager->setPointer(
+                g_heroScreenDraggedArtifact.m_artifactId,
                 mouseManager::ARTIFACT_SET);
-            Reset();
+            reset();
         }
         return;
     }
 
-    if (right_click)
+    if (rightClick)
         return;
-    if (!our_hero->HeroFn_004E2840(
-            gHeroScreenDraggedArtifact.artifactId, slot))
+    if (!ourHero->heroFn004E2840(
+            g_heroScreenDraggedArtifact.m_artifactId, slot))
         return;
 
-    if (gCampaignMode
-        && old_artifact.artifactId == ARTIFACT_ARMAGEDDONS_BLADE
-        && gpGame->campaign.currentCampaign == ARMAGEDDONS_BLADE_CAMPAIGN
-        && gpGame->campaign.currentMap == ARMAGEDDONS_BLADE_MAP
-        && our_hero->id != ARMAGEDDONS_BLADE_EXEMPT_HERO) {
-        NormalDialog(gpGeneralText->GetText(762), 1, -1, -1,
+    if (g_campaignMode
+        && oldArtifact.m_artifactId == ARTIFACT_ARMAGEDDONS_BLADE
+        && g_game->m_campaign.m_currentCampaign == ARMAGEDDONS_BLADE_CAMPAIGN
+        && g_game->m_campaign.m_currentMap == ARMAGEDDONS_BLADE_MAP
+        && ourHero->m_id != ARMAGEDDONS_BLADE_EXEMPT_HERO) {
+        normalDialog(g_generalText->getText(762), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return;
     }
 
-    if (old_artifact.artifactId == ARTIFACT_NONE) {
-        our_hero->equip_artifact(&gHeroScreenDraggedArtifact, slot);
-        if (gpGame->f_1f698 >= 2)
-            our_hero->HeroFn_004DC100(slot);
-        gHeroScreenDraggedArtifact.artifactId = ARTIFACT_NONE;
-        Update();
-        gpMouseManager->SetPointer(0, mouseManager::DEFAULT_SET);
-        Reset();
-    } else if (CanModHero(side)) {
-        our_hero->remove_artifact(slot);
-        our_hero->equip_artifact(&gHeroScreenDraggedArtifact, slot);
-        if (gpGame->f_1f698 >= 2)
-            our_hero->HeroFn_004DC100(slot);
-        gHeroScreenDraggedArtifact = old_artifact;
-        Update();
-        gpMouseManager->SetPointer(
-            gHeroScreenDraggedArtifact.artifactId,
+    if (oldArtifact.m_artifactId == ARTIFACT_NONE) {
+        ourHero->equipArtifact(&g_heroScreenDraggedArtifact, slot);
+        if (g_game->m_f1f698 >= 2)
+            ourHero->heroFn004DC100(slot);
+        g_heroScreenDraggedArtifact.m_artifactId = ARTIFACT_NONE;
+        this->update();
+        g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
+        reset();
+    } else if (canModHero(side)) {
+        ourHero->removeArtifact(slot);
+        ourHero->equipArtifact(&g_heroScreenDraggedArtifact, slot);
+        if (g_game->m_f1f698 >= 2)
+            ourHero->heroFn004DC100(slot);
+        g_heroScreenDraggedArtifact = oldArtifact;
+        this->update();
+        g_mouseManager->setPointer(
+            g_heroScreenDraggedArtifact.m_artifactId,
             mouseManager::ARTIFACT_SET);
-        Reset();
+        reset();
     }
 }
 
@@ -1452,54 +1471,55 @@ void swapManager::handle_artifact_click(long side, long id, unsigned char right_
 // get_backpack_error argument chain; why-reg's model caps it as front-end
 // handle state.  Naming the string temporary is the negative control and
 // drops this function to 97.86% without repairing the transpose.
+// Before normalization (locals): right_click, our_hero, old_artifact.
 VA(0x005af990, 0x251)  // roster bracket + body/callees, dc 0x15d2e0
-void swapManager::handle_backpack_click(long side, long id, unsigned char right_click)
+void swapManager::handleBackpackClick(long side, long id, unsigned char rightClick)
 {
-    hero* our_hero = heroes[side];
-    type_artifact old_artifact = our_hero->get_backpack(id);
+    hero* ourHero = m_heroes[side];
+    type_artifact oldArtifact = ourHero->getBackpack(id);
 
-    if (gHeroScreenDraggedArtifact.artifactId == ARTIFACT_NONE) {
-        if (old_artifact.artifactId != ARTIFACT_NONE && CanModHero(side)) {
-            if (right_click) {
-                our_hero->ViewArtifact(&old_artifact, right_click);
+    if (g_heroScreenDraggedArtifact.m_artifactId == ARTIFACT_NONE) {
+        if (oldArtifact.m_artifactId != ARTIFACT_NONE && canModHero(side)) {
+            if (rightClick) {
+                ourHero->viewArtifact(&oldArtifact, rightClick);
                 return;
             }
-            gHeroScreenDraggedArtifact = old_artifact;
-            our_hero->remove_backpack_artifact(id);
-            UpdateBackpack(side);
-            update_all_slots();
-            gpMouseManager->SetPointer(
-                gHeroScreenDraggedArtifact.artifactId,
+            g_heroScreenDraggedArtifact = oldArtifact;
+            ourHero->removeBackpackArtifact(id);
+            updateBackpack(side);
+            updateAllSlots();
+            g_mouseManager->setPointer(
+                g_heroScreenDraggedArtifact.m_artifactId,
                 mouseManager::ARTIFACT_SET);
         }
-    } else if (!right_click) {
-        if (!our_hero->add_to_backpack(&gHeroScreenDraggedArtifact, id)) {
-            NormalDialog(
-                our_hero
-                    ->get_backpack_error(artifact_from_int(
-                        gHeroScreenDraggedArtifact.artifactId))
+    } else if (!rightClick) {
+        if (!ourHero->addToBackpack(&g_heroScreenDraggedArtifact, id)) {
+            normalDialog(
+                ourHero
+                    ->getBackpackError(artifactFromInt(
+                        g_heroScreenDraggedArtifact.m_artifactId))
                     .c_str(),
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             return;
         }
-        gHeroScreenDraggedArtifact.artifactId = ARTIFACT_NONE;
-        UpdateBackpack(side);
-        update_all_slots();
-        gpMouseManager->SetPointer(0, mouseManager::DEFAULT_SET);
+        g_heroScreenDraggedArtifact.m_artifactId = ARTIFACT_NONE;
+        updateBackpack(side);
+        updateAllSlots();
+        g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
     }
 }
 
 // E:\gamedcs\swapmgr.cpp:1208
 VA(0x005afbf0, 0x17A)  // full retail body + dc signature/order, dc 0x15d440
-void swapManager::SendHeroUpdate()
+void swapManager::sendHeroUpdate()
 {
-    if (gNetworkActive69954c && field_5c && field_5d) {
-        int otherPlayer = GetOtherHero()->owner;
-        if (!field_64->GetAbortPopupMsg()) {
-            hero* leftHero = heroes[0];
-            hero* rightHero = heroes[1];
+    if (g_networkActive69954c && m_humanPlayerTrade && m_givingToAlly) {
+        int otherPlayer = getOtherHero()->m_owner;
+        if (!m_netMsgHandler->getAbortPopupMsg()) {
+            hero* leftHero = m_heroes[0];
+            hero* rightHero = m_heroes[1];
             CHeroUpdateMsg msg(leftHero, rightHero);
-            TransmitRemoteData(&msg, otherPlayer, true, true);
+            transmitRemoteData(&msg, otherPlayer, true, true);
         }
     }
 }
@@ -1507,52 +1527,52 @@ void swapManager::SendHeroUpdate()
 // E:\gamedcs\swapmgr.cpp:1660. Dreamcast keeps this one-statement helper;
 // Complete folds it into both exits of Main.
 DC_ONLY(0x15de34, 0xC)
-inline int swapManager::ExitSwapManager(message& msg)
+inline int swapManager::exitSwapManager(message& msg)
 {
-    msg.id = MESSAGE_EXECUTIVE;
-    msg.codeX = EXECUTIVE_COMMAND_RETURN_RESULT;
+    msg.m_id = MESSAGE_EXECUTIVE;
+    msg.m_codeX = EXECUTIVE_COMMAND_RETURN_RESULT;
     return MESSAGE_DISPATCH_FORWARD;
 }
 
 // E:\gamedcs\swapmgr.cpp:2140. The older build retains this refresh
 // boundary; Complete expands its Update body at Main's chat-refresh site.
 DC_ONLY(0x15eb90, 0x1A)
-inline void swapManager::OnChatUpdate()
+inline void swapManager::onChatUpdate()
 {
-    DrawSwapWin();
-    Update();
+    drawSwapWin();
+    update();
 }
 
 // Dreamcast retains a substantial WinCE side-swap body. Complete's desktop
 // dispatcher has no corresponding instructions at Main's attested call site;
 // keep the source boundary while recording that proven revision removal.
 DC_ONLY(0x15de40, 0x4C8)
-inline void swapManager::swap_side()
+inline void swapManager::swapSide()
 {
 }
 
 // Dreamcast proves all three as inline accessors. Earlier callers in this TU
 // still force VC6 to materialize IsLeftHero's retail COMDAT, while Main sees
 // the bodies here and can recover the retail expansions and shared tails.
-inline bool swapManager::IsLeftHero()
+inline bool swapManager::isLeftHero()
 {
-    if (heroes[0]->owner == gpGame->GetLocalPlayerGamePos())
+    if (m_heroes[0]->m_owner == g_game->getLocalPlayerGamePos())
         return true;
     return false;
 }
 
-inline unsigned char swapManager::IsRightHero()
+inline unsigned char swapManager::isRightHero()
 {
-    if (heroes[1]->owner == gpGame->GetLocalPlayerGamePos())
+    if (m_heroes[1]->m_owner == g_game->getLocalPlayerGamePos())
         return true;
     return false;
 }
 
-inline hero* swapManager::GetOtherHero()
+inline hero* swapManager::getOtherHero()
 {
-    if (IsLeftHero())
-        return heroes[1];
-    return heroes[0];
+    if (isLeftHero())
+        return m_heroes[1];
+    return m_heroes[0];
 }
 
 #if 0  // @carcass: the active implicit special member emits this COMDAT
@@ -1574,33 +1594,33 @@ CHeroUpdateMsg::~CHeroUpdateMsg()
 // DC's positive ctor/helper order at line 1243. Keep the recovered order; the
 // residual retail store scheduling is optimizer state, not source evidence.
 VA(0x005afdf0, 0xABB)  // full retail dispatcher + dc 0x15d4ac dossier
-int swapManager::Main(message& msg)
+int swapManager::main(message& msg)
 {
     int exitFlag = 0;
     unsigned char rightMouse =
-        (msg.qualifier & MESSAGE_MODIFIER_RIGHT) != 0;
+        (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT) != 0;
     unsigned char shift =
-        (msg.qualifier & MESSAGE_MODIFIER_SHIFT_KEYS) != 0;
+        (msg.m_qualifier & MESSAGE_MODIFIER_SHIFT_KEYS) != 0;
 
-    if (gTurnDuration69d630.IsExpired())
+    if (g_turnDuration69d630.isExpired())
     {
-        if (gNetworkActive69954c)
+        if (g_networkActive69954c)
         {
             CTradeRequestDoneMsg requestDone;
-            TransmitRemoteData(&requestDone, GetOtherHero()->owner, 0, 1);
+            transmitRemoteData(&requestDone, getOtherHero()->m_owner, 0, 1);
         }
-        return ExitSwapManager(msg);
+        return exitSwapManager(msg);
     }
 
-    if (gNetworkActive69954c)
+    if (g_networkActive69954c)
     {
-        field_64->CheckHandleNet(0, 0);
-        if (static_cast<CSwapMgrNetMsgHandler*>(field_64)->field_0c)
+        m_netMsgHandler->checkHandleNet(0, 0);
+        if (static_cast<CSwapMgrNetMsgHandler*>(m_netMsgHandler)->m_exitRequested)
         {
-            if (IsLeftHero())
+            if (isLeftHero())
             {
                 CTradeRequestDoneMsg requestDone;
-                TransmitRemoteData(&requestDone, GetOtherHero()->owner, 0, 1);
+                transmitRemoteData(&requestDone, getOtherHero()->m_owner, 0, 1);
             }
             exitFlag = 1;
         }
@@ -1608,30 +1628,30 @@ int swapManager::Main(message& msg)
 
     if (!exitFlag)
     {
-        switch (msg.id)
+        switch (msg.m_id)
         {
         case MESSAGE_RIGHT_BUTTON_DOWN:
             if (!rightMouse)
             {
-                Reset();
-                Update();
-                DrawSwapWin();
+                reset();
+                this->update();
+                drawSwapWin();
             }
             break;
 
         case MESSAGE_WIDGET:
-            switch (msg.codeX)
+            switch (msg.m_codeX)
             {
             case widget::WIDGET_DESELECT:
                 if (!rightMouse)
-                    OnWidgetDeselect(msg, exitFlag);
+                    onWidgetDeselect(msg, exitFlag);
                 break;
 
             case widget::WIDGET_END_DIALOG:
-                if (gNetworkActive69954c && field_5c)
+                if (g_networkActive69954c && m_humanPlayerTrade)
                 {
                     CTradeRequestDoneMsg requestDone;
-                    TransmitRemoteData(&requestDone, GetOtherHero()->owner,
+                    transmitRemoteData(&requestDone, getOtherHero()->m_owner,
                                        0, 1);
                 }
                 exitFlag = 1;
@@ -1639,7 +1659,7 @@ int swapManager::Main(message& msg)
 
             case widget::WIDGET_SELECT:
             case widget::WIDGET_RIGHT_SELECT:
-                switch (msg.codeY)
+                switch (msg.m_codeY)
                 {
                 {
                     int skillHero;
@@ -1652,11 +1672,11 @@ int swapManager::Main(message& msg)
                 case kSwapRolloverLeftSkill5:
                 case kSwapRolloverLeftSkill6:
                 case kSwapRolloverLeftSkill7:
-                    if (gHeroScreenDraggedArtifact.artifactId
+                    if (g_heroScreenDraggedArtifact.m_artifactId
                         != ARTIFACT_NONE)
                         break;
                     skillHero = 0;
-                    skillIndex = msg.codeY - kSwapRolloverLeftSkill0;
+                    skillIndex = msg.m_codeY - kSwapRolloverLeftSkill0;
                     goto show_secondary_skill;
 
                 case kSwapRolloverRightSkill0:
@@ -1667,11 +1687,11 @@ int swapManager::Main(message& msg)
                 case kSwapRolloverRightSkill5:
                 case kSwapRolloverRightSkill6:
                 case kSwapRolloverRightSkill7:
-                    if (gHeroScreenDraggedArtifact.artifactId
+                    if (g_heroScreenDraggedArtifact.m_artifactId
                         != ARTIFACT_NONE)
                         break;
                     skillHero = 1;
-                    skillIndex = msg.codeY - kSwapRolloverRightSkill0;
+                    skillIndex = msg.m_codeY - kSwapRolloverRightSkill0;
 
                 // DC lines 1311-1338 expose two side/index assignments and
                 // one shared GetNthSS/string/dialog scope. Retail's B32/B34
@@ -1680,19 +1700,19 @@ int swapManager::Main(message& msg)
                 // volatile side local to 82.62%, and a byte local to 83.43%;
                 // the shared int form retains the coherent 84.05% shape.
                 show_secondary_skill:
-                    if (skillIndex < heroes[skillHero]->skillCount)
+                    if (skillIndex < m_heroes[skillHero]->m_skillCount)
                     {
-                        int skill = heroes[skillHero]->GetNthSS(skillIndex);
-                        strcpy(gText,
-                               akSSkillTraits[skill].levelNames[
-                                   heroes[skillHero]->skillLevel[skill] - 1]);
-                        NormalDialog(
-                            gText,
+                        int skill = m_heroes[skillHero]->getNthSS(skillIndex);
+                        strcpy(g_text,
+                               g_sSkillTraits[skill].m_levelNames[
+                                   m_heroes[skillHero]->m_skillLevel[skill] - 1]);
+                        normalDialog(
+                            g_text,
                             rightMouse
                                 ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
                                 : hero::PRIMARY_STAT_DIALOG_TYPE,
                             -1, -1, 20,
-                            heroes[skillHero]->skillLevel[skill]
+                            m_heroes[skillHero]->m_skillLevel[skill]
                                 + 3 * skill + 2,
                             -1, 0, -1, 0, -1, 0);
                     }
@@ -1700,24 +1720,24 @@ int swapManager::Main(message& msg)
                 }
 
                 case kSwapRolloverHeroLeft:
-                    if (gHeroScreenDraggedArtifact.artifactId == ARTIFACT_NONE
-                        && IsLeftHero() && field_5d)
+                    if (g_heroScreenDraggedArtifact.m_artifactId == ARTIFACT_NONE
+                        && isLeftHero() && m_givingToAlly)
                     {
-                        HeroView(heroes[0]->id, 1, 0, 0);
-                        DrawSwapWin();
-                        Reset();
-                        SendHeroUpdate();
+                        heroView(m_heroes[0]->m_id, 1, 0, 0);
+                        drawSwapWin();
+                        reset();
+                        sendHeroUpdate();
                     }
                     break;
 
                 case kSwapRolloverHeroRight:
-                    if (gHeroScreenDraggedArtifact.artifactId == ARTIFACT_NONE
-                        && IsRightHero() && field_5d)
+                    if (g_heroScreenDraggedArtifact.m_artifactId == ARTIFACT_NONE
+                        && isRightHero() && m_givingToAlly)
                     {
-                        HeroView(heroes[1]->id, 1, 0, 0);
-                        DrawSwapWin();
-                        Reset();
-                        SendHeroUpdate();
+                        heroView(m_heroes[1]->m_id, 1, 0, 0);
+                        drawSwapWin();
+                        reset();
+                        sendHeroUpdate();
                     }
                     break;
 
@@ -1740,10 +1760,10 @@ int swapManager::Main(message& msg)
                 case kSwapRolloverLeftArtifact16:
                 case kSwapRolloverLeftArtifact17:
                 case kSwapRolloverLeftArtifact18:
-                    handle_artifact_click(
-                        0, msg.codeY - kSwapRolloverLeftArtifact0,
+                    handleArtifactClick(
+                        0, msg.m_codeY - kSwapRolloverLeftArtifact0,
                         rightMouse);
-                    SendHeroUpdate();
+                    sendHeroUpdate();
                     break;
 
                 case kSwapRolloverRightArtifact0:
@@ -1765,10 +1785,10 @@ int swapManager::Main(message& msg)
                 case kSwapRolloverRightArtifact16:
                 case kSwapRolloverRightArtifact17:
                 case kSwapRolloverRightArtifact18:
-                    handle_artifact_click(
-                        1, msg.codeY - kSwapRolloverRightArtifact0,
+                    handleArtifactClick(
+                        1, msg.m_codeY - kSwapRolloverRightArtifact0,
                         rightMouse);
-                    SendHeroUpdate();
+                    sendHeroUpdate();
                     break;
 
                 case kSwapRolloverLeftBackpack0:
@@ -1776,10 +1796,10 @@ int swapManager::Main(message& msg)
                 case kSwapRolloverLeftBackpack2:
                 case kSwapRolloverLeftBackpack3:
                 case kSwapRolloverLeftBackpack4:
-                    handle_backpack_click(
-                        0, msg.codeY - kSwapRolloverLeftBackpack0,
+                    handleBackpackClick(
+                        0, msg.m_codeY - kSwapRolloverLeftBackpack0,
                         rightMouse);
-                    SendHeroUpdate();
+                    sendHeroUpdate();
                     break;
 
                 case kSwapRolloverRightBackpack0:
@@ -1787,11 +1807,11 @@ int swapManager::Main(message& msg)
                 case kSwapRolloverRightBackpack2:
                 case kSwapRolloverRightBackpack3:
                 case kSwapRolloverRightBackpack4:
-                    handle_backpack_click(
-                        1, msg.codeY - kSwapRolloverRightBackpack0,
+                    handleBackpackClick(
+                        1, msg.m_codeY - kSwapRolloverRightBackpack0,
                         rightMouse);
-                    SendHeroUpdate();
-                    swap_side();
+                    sendHeroUpdate();
+                    swapSide();
                     break;
 
                 case kSwapRolloverLeftArmy0:
@@ -1801,13 +1821,13 @@ int swapManager::Main(message& msg)
                 case kSwapRolloverLeftArmy4:
                 case kSwapRolloverLeftArmy5:
                 case kSwapRolloverLeftArmy6:
-                    if (gHeroScreenDraggedArtifact.artifactId
+                    if (g_heroScreenDraggedArtifact.m_artifactId
                         == ARTIFACT_NONE)
                     {
-                        HandleMonster(
-                            0, msg.codeY - kSwapRolloverLeftArmy0,
+                        handleMonster(
+                            0, msg.m_codeY - kSwapRolloverLeftArmy0,
                             rightMouse, shift);
-                        SendHeroUpdate();
+                        sendHeroUpdate();
                     }
                     break;
 
@@ -1818,13 +1838,13 @@ int swapManager::Main(message& msg)
                 case kSwapRolloverRightArmy4:
                 case kSwapRolloverRightArmy5:
                 case kSwapRolloverRightArmy6:
-                    if (gHeroScreenDraggedArtifact.artifactId
+                    if (g_heroScreenDraggedArtifact.m_artifactId
                         == ARTIFACT_NONE)
                     {
-                        HandleMonster(
-                            1, msg.codeY - kSwapRolloverRightArmy0,
+                        handleMonster(
+                            1, msg.m_codeY - kSwapRolloverRightArmy0,
                             rightMouse, shift);
-                        SendHeroUpdate();
+                        sendHeroUpdate();
                     }
                     break;
 
@@ -1835,13 +1855,13 @@ int swapManager::Main(message& msg)
                 case kSwapRolloverLeftArmyCount4:
                 case kSwapRolloverLeftArmyCount5:
                 case kSwapRolloverLeftArmyCount6:
-                    if (gHeroScreenDraggedArtifact.artifactId
+                    if (g_heroScreenDraggedArtifact.m_artifactId
                         == ARTIFACT_NONE)
                     {
-                        HandleMonster(
-                            0, msg.codeY - kSwapRolloverLeftArmyCount0,
+                        handleMonster(
+                            0, msg.m_codeY - kSwapRolloverLeftArmyCount0,
                                       rightMouse, shift);
-                        SendHeroUpdate();
+                        sendHeroUpdate();
                     }
                     break;
 
@@ -1852,13 +1872,13 @@ int swapManager::Main(message& msg)
                 case kSwapRolloverRightArmyCount4:
                 case kSwapRolloverRightArmyCount5:
                 case kSwapRolloverRightArmyCount6:
-                    if (gHeroScreenDraggedArtifact.artifactId
+                    if (g_heroScreenDraggedArtifact.m_artifactId
                         == ARTIFACT_NONE)
                     {
-                        HandleMonster(
-                            1, msg.codeY - kSwapRolloverRightArmyCount0,
+                        handleMonster(
+                            1, msg.m_codeY - kSwapRolloverRightArmyCount0,
                                       rightMouse, shift);
-                        SendHeroUpdate();
+                        sendHeroUpdate();
                     }
                     break;
 
@@ -1867,35 +1887,35 @@ int swapManager::Main(message& msg)
                 // order even though the older Dreamcast switch laid the
                 // left text statements first.
                 case kSwapRolloverMoraleLeft:
-                    if (gHeroScreenDraggedArtifact.artifactId
+                    if (g_heroScreenDraggedArtifact.m_artifactId
                         == ARTIFACT_NONE)
-                        gpGame->ShowMoraleInfo(
-                            heroes[0],
+                        g_game->showMoraleInfo(
+                            m_heroes[0],
                             rightMouse
                                 ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
                                 : hero::PRIMARY_STAT_DIALOG_TYPE);
                     break;
 
                 case kSwapRolloverLuckLeft:
-                    if (gHeroScreenDraggedArtifact.artifactId
+                    if (g_heroScreenDraggedArtifact.m_artifactId
                         == ARTIFACT_NONE)
-                        gpGame->ShowLuckInfo(
-                            heroes[0],
+                        g_game->showLuckInfo(
+                            m_heroes[0],
                             rightMouse
                                 ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
                                 : hero::PRIMARY_STAT_DIALOG_TYPE);
                     break;
 
                 case kSwapRolloverText9Left:
-                    if (gHeroScreenDraggedArtifact.artifactId
+                    if (g_heroScreenDraggedArtifact.m_artifactId
                         == ARTIFACT_NONE)
                     {
-                        sprintf(gText, gpGeneralText->GetText(3),
-                                heroes[0]->level,
-                                hero::GetExperience(heroes[0]->level + 1),
-                                heroes[0]->experience);
-                        NormalDialog(
-                            gText,
+                        sprintf(g_text, g_generalText->getText(3),
+                                m_heroes[0]->m_level,
+                                hero::getExperience(m_heroes[0]->m_level + 1),
+                                m_heroes[0]->m_experience);
+                        normalDialog(
+                            g_text,
                             rightMouse
                                 ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
                                 : hero::PRIMARY_STAT_DIALOG_TYPE,
@@ -1904,14 +1924,14 @@ int swapManager::Main(message& msg)
                     break;
 
                 case kSwapRolloverText22Left:
-                    if (gHeroScreenDraggedArtifact.artifactId
+                    if (g_heroScreenDraggedArtifact.m_artifactId
                         == ARTIFACT_NONE)
                     {
-                        sprintf(gText, gpGeneralText->GetText(206),
-                                heroes[0]->name, heroes[0]->mana,
-                                heroes[0]->GetMaxMana());
-                        NormalDialog(
-                            gText,
+                        sprintf(g_text, g_generalText->getText(206),
+                                m_heroes[0]->m_name, m_heroes[0]->m_mana,
+                                m_heroes[0]->getMaxMana());
+                        normalDialog(
+                            g_text,
                             rightMouse
                                 ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
                                 : hero::PRIMARY_STAT_DIALOG_TYPE,
@@ -1920,13 +1940,13 @@ int swapManager::Main(message& msg)
                     break;
 
                 case kSwapRolloverText27Left:
-                    if (gHeroScreenDraggedArtifact.artifactId
+                    if (g_heroScreenDraggedArtifact.m_artifactId
                         == ARTIFACT_NONE)
                     {
-                        strcpy(gText,
-                               akHeroSpecificAbilities[heroes[0]->id].longText);
-                        NormalDialog(
-                            gText,
+                        strcpy(g_text,
+                               g_heroSpecificAbilities[m_heroes[0]->m_id].m_longText);
+                        normalDialog(
+                            g_text,
                             rightMouse
                                 ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
                                 : hero::PRIMARY_STAT_DIALOG_TYPE,
@@ -1938,35 +1958,35 @@ int swapManager::Main(message& msg)
                 // hero; retail B71-B88 places these calls before its text
                 // cases while preserving the shared DC helper boundaries.
                 case kSwapRolloverMoraleRight:
-                    if (gHeroScreenDraggedArtifact.artifactId
+                    if (g_heroScreenDraggedArtifact.m_artifactId
                         == ARTIFACT_NONE)
-                        gpGame->ShowMoraleInfo(
-                            heroes[1],
+                        g_game->showMoraleInfo(
+                            m_heroes[1],
                             rightMouse
                                 ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
                                 : hero::PRIMARY_STAT_DIALOG_TYPE);
                     break;
 
                 case kSwapRolloverLuckRight:
-                    if (gHeroScreenDraggedArtifact.artifactId
+                    if (g_heroScreenDraggedArtifact.m_artifactId
                         == ARTIFACT_NONE)
-                        gpGame->ShowLuckInfo(
-                            heroes[1],
+                        g_game->showLuckInfo(
+                            m_heroes[1],
                             rightMouse
                                 ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
                                 : hero::PRIMARY_STAT_DIALOG_TYPE);
                     break;
 
                 case kSwapRolloverText9Right:
-                    if (gHeroScreenDraggedArtifact.artifactId
+                    if (g_heroScreenDraggedArtifact.m_artifactId
                         == ARTIFACT_NONE)
                     {
-                        sprintf(gText, gpGeneralText->GetText(3),
-                                heroes[1]->level,
-                                hero::GetExperience(heroes[1]->level + 1),
-                                heroes[1]->experience);
-                        NormalDialog(
-                            gText,
+                        sprintf(g_text, g_generalText->getText(3),
+                                m_heroes[1]->m_level,
+                                hero::getExperience(m_heroes[1]->m_level + 1),
+                                m_heroes[1]->m_experience);
+                        normalDialog(
+                            g_text,
                             rightMouse
                                 ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
                                 : hero::PRIMARY_STAT_DIALOG_TYPE,
@@ -1975,14 +1995,14 @@ int swapManager::Main(message& msg)
                     break;
 
                 case kSwapRolloverText22Right:
-                    if (gHeroScreenDraggedArtifact.artifactId
+                    if (g_heroScreenDraggedArtifact.m_artifactId
                         == ARTIFACT_NONE)
                     {
-                        sprintf(gText, gpGeneralText->GetText(206),
-                                heroes[1]->name, heroes[1]->mana,
-                                heroes[1]->GetMaxMana());
-                        NormalDialog(
-                            gText,
+                        sprintf(g_text, g_generalText->getText(206),
+                                m_heroes[1]->m_name, m_heroes[1]->m_mana,
+                                m_heroes[1]->getMaxMana());
+                        normalDialog(
+                            g_text,
                             rightMouse
                                 ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
                                 : hero::PRIMARY_STAT_DIALOG_TYPE,
@@ -1991,13 +2011,13 @@ int swapManager::Main(message& msg)
                     break;
 
                 case kSwapRolloverText27Right:
-                    if (gHeroScreenDraggedArtifact.artifactId
+                    if (g_heroScreenDraggedArtifact.m_artifactId
                         == ARTIFACT_NONE)
                     {
-                        strcpy(gText,
-                               akHeroSpecificAbilities[heroes[1]->id].longText);
-                        NormalDialog(
-                            gText,
+                        strcpy(g_text,
+                               g_heroSpecificAbilities[m_heroes[1]->m_id].m_longText);
+                        normalDialog(
+                            g_text,
                             rightMouse
                                 ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
                                 : hero::PRIMARY_STAT_DIALOG_TYPE,
@@ -2009,10 +2029,10 @@ int swapManager::Main(message& msg)
                 case kSwapRolloverLeftPrimary1:
                 case kSwapRolloverLeftPrimary2:
                 case kSwapRolloverLeftPrimary3:
-                    if (gHeroScreenDraggedArtifact.artifactId
+                    if (g_heroScreenDraggedArtifact.m_artifactId
                         == ARTIFACT_NONE)
-                        heroes[0]->ViewStat(
-                            msg.codeY - kSwapRolloverLeftPrimary0,
+                        m_heroes[0]->viewStat(
+                            msg.m_codeY - kSwapRolloverLeftPrimary0,
                             rightMouse);
                     break;
 
@@ -2020,10 +2040,10 @@ int swapManager::Main(message& msg)
                 case kSwapRolloverRightPrimary1:
                 case kSwapRolloverRightPrimary2:
                 case kSwapRolloverRightPrimary3:
-                    if (gHeroScreenDraggedArtifact.artifactId
+                    if (g_heroScreenDraggedArtifact.m_artifactId
                         == ARTIFACT_NONE)
-                        heroes[1]->ViewStat(
-                            msg.codeY - kSwapRolloverRightPrimary0,
+                        m_heroes[1]->viewStat(
+                            msg.m_codeY - kSwapRolloverRightPrimary0,
                             rightMouse);
                     break;
 
@@ -2031,50 +2051,50 @@ int swapManager::Main(message& msg)
                 case kSwapRolloverStat116:
                 case kSwapRolloverStat117:
                 case kSwapRolloverStat118:
-                    if (gHeroScreenDraggedArtifact.artifactId
+                    if (g_heroScreenDraggedArtifact.m_artifactId
                         == ARTIFACT_NONE)
-                        heroes[1]->ViewStat(
-                            msg.codeY - kSwapRolloverStat115,
+                        m_heroes[1]->viewStat(
+                            msg.m_codeY - kSwapRolloverStat115,
                             rightMouse);
                     break;
 
                 case kSwapRolloverArmyMoveLeft:
                 case kSwapRolloverArmyMoveRight:
                     if (rightMouse)
-                        NormalDialog(gHeroScreenMixedArmyHelp, 4,
+                        normalDialog(g_heroScreenMixedArmyHelp, 4,
                                      -1, -1, -1, 0,
                                      -1, 0, -1, 0, -1, 0);
                     break;
                 }
 
-                if (!rightMouse && msg.codeY != kSwapNoRefreshWidget)
+                if (!rightMouse && msg.m_codeY != kSwapNoRefreshWidget)
                 {
-                    Update();
-                    DrawSwapWin();
-                    DrawSelector();
+                    this->update();
+                    drawSwapWin();
+                    drawSelector();
                 }
                 break;
             }
             break;
 
         case MESSAGE_MOUSE_MOVE:
-            gpWindowManager->ConvertToHover(msg);
-            if (msg.codeY == gpWindowManager->lastHover)
+            g_windowManager->convertToHover(msg);
+            if (msg.m_codeY == g_windowManager->m_lastHover)
                 return MESSAGE_DISPATCH_CONSUME;
-            gpWindowManager->lastHover = msg.codeY;
-            SetRolloverText(msg.codeY);
+            g_windowManager->m_lastHover = msg.m_codeY;
+            setRolloverText(msg.m_codeY);
             break;
         }
     }
 
-    if (chatMan.ChatChanged() || chatMan.HasOldChat())
+    if (g_chatMan.chatChanged() || g_chatMan.hasOldChat())
     {
-        chatMan.UpdateWidget(parent->field_4c, 1, 20);
-        OnChatUpdate();
+        g_chatMan.updateWidget(m_parent->m_chatText, 1, 20);
+        onChatUpdate();
     }
 
     if (exitFlag == 1)
-        return ExitSwapManager(msg);
+        return exitSwapManager(msg);
     return MESSAGE_DISPATCH_CONSUME;
 }
 
@@ -2093,9 +2113,9 @@ int swapManager::Main(message& msg)
 // in the right-skill mastery-byte load. The emitted addresses and semantics
 // agree, so neither flat label spelling is replaced with a source-false alias.
 VA(0x005b08b0, 0x4EF)  // retail byte table + DC statement roster, dc 0x15e308
-void swapManager::SetRolloverText(int codeY)
+void swapManager::setRolloverText(int codeY)
 {
-    if (parent->field_50->bHasFocus)
+    if (m_parent->m_chatEdit->m_hasFocus)
         return;
 
     switch (codeY)
@@ -2103,75 +2123,75 @@ void swapManager::SetRolloverText(int codeY)
     case kSwapRolloverStat115: case kSwapRolloverStat116:
     case kSwapRolloverStat117: case kSwapRolloverStat118:
     case kSwapRolloverStat145:
-        sprintf(gText, gHeroScreenNameFormat, gStatNames[codeY]);
+        sprintf(g_text, g_heroScreenNameFormat, g_statNames[codeY]);
         break;
 
     case kSwapRolloverLeftPrimary0: case kSwapRolloverLeftPrimary1:
     case kSwapRolloverLeftPrimary2: case kSwapRolloverLeftPrimary3:
-        sprintf(gText, gHeroScreenNameFormat,
-                gPrimarySkillNames[codeY - kSwapRolloverLeftPrimary0]);
+        sprintf(g_text, g_heroScreenNameFormat,
+                g_primarySkillNames[codeY - kSwapRolloverLeftPrimary0]);
         break;
 
     case kSwapRolloverRightPrimary0: case kSwapRolloverRightPrimary1:
     case kSwapRolloverRightPrimary2: case kSwapRolloverRightPrimary3:
-        sprintf(gText, gHeroScreenNameFormat,
-                gPrimarySkillNames[codeY - kSwapRolloverRightPrimary0]);
+        sprintf(g_text, g_heroScreenNameFormat,
+                g_primarySkillNames[codeY - kSwapRolloverRightPrimary0]);
         break;
 
     case kSwapRolloverHeroLeft: case kSwapRolloverHeroRight:
-        sprintf(gText, gpGeneralText->GetText(16),
-                heroes[codeY - kSwapRolloverHeroLeft]->name,
-                heroes[codeY - kSwapRolloverHeroLeft]->HeroFn_004D8F70());
+        sprintf(g_text, g_generalText->getText(16),
+                m_heroes[codeY - kSwapRolloverHeroLeft]->m_name,
+                m_heroes[codeY - kSwapRolloverHeroLeft]->heroFn004D8F70());
         break;
 
     case kSwapRolloverMoraleLeft: case kSwapRolloverMoraleRight:
-        if (heroes[codeY - kSwapRolloverMoraleLeft]->GetMorale(0, 0, 1) > 0)
-            strcpy(gText, gHeroScreenMoraleHighText);
-        else if (heroes[codeY - kSwapRolloverMoraleLeft]->GetMorale(0, 0, 1) == 0)
-            strcpy(gText, gHeroScreenMoraleNeutralText);
+        if (m_heroes[codeY - kSwapRolloverMoraleLeft]->getMorale(0, 0, 1) > 0)
+            strcpy(g_text, g_heroScreenMoraleHighText);
+        else if (m_heroes[codeY - kSwapRolloverMoraleLeft]->getMorale(0, 0, 1) == 0)
+            strcpy(g_text, g_heroScreenMoraleNeutralText);
         else
-            strcpy(gText, gHeroScreenMoraleLowText);
+            strcpy(g_text, g_heroScreenMoraleLowText);
         break;
 
     case kSwapRolloverLuckLeft: case kSwapRolloverLuckRight:
-        if (heroes[codeY - kSwapRolloverLuckLeft]->GetLuck(0, 0, 1) > 0)
-            strcpy(gText, gHeroScreenLuckHighText);
-        else if (heroes[codeY - kSwapRolloverLuckLeft]->GetLuck(0, 0, 1) == 0)
-            strcpy(gText, gHeroScreenLuckNeutralText);
+        if (m_heroes[codeY - kSwapRolloverLuckLeft]->getLuck(0, 0, 1) > 0)
+            strcpy(g_text, g_heroScreenLuckHighText);
+        else if (m_heroes[codeY - kSwapRolloverLuckLeft]->getLuck(0, 0, 1) == 0)
+            strcpy(g_text, g_heroScreenLuckNeutralText);
         else
-            strcpy(gText, gHeroScreenLuckLowText);
+            strcpy(g_text, g_heroScreenLuckLowText);
         break;
 
     case kSwapRolloverText27Left: case kSwapRolloverText27Right:
-        strcpy(gText, gHeroScreenText27);
+        strcpy(g_text, g_heroScreenText27);
         break;
 
     case kSwapRolloverText9Left: case kSwapRolloverText9Right:
-        strcpy(gText, gHeroScreenText9);
+        strcpy(g_text, g_heroScreenText9);
         break;
 
     case kSwapRolloverText22Left: case kSwapRolloverText22Right:
-        strcpy(gText, gHeroScreenText22);
+        strcpy(g_text, g_heroScreenText22);
         break;
 
     case kSwapRolloverArmyMoveLeft: case kSwapRolloverArmyMoveRight:
-        sprintf(gText, gHeroScreenArmyMoveFormat,
-                gpGeneralText->GetText(44));
+        sprintf(g_text, g_heroScreenArmyMoveFormat,
+                g_generalText->getText(44));
         break;
 
     case kSwapRolloverText0Left: case kSwapRolloverText0Right:
-        strcpy(gText, gHeroScreenText0);
+        strcpy(g_text, g_heroScreenText0);
         break;
 
     case kSwapRolloverLeftArmy0: case kSwapRolloverLeftArmy1:
     case kSwapRolloverLeftArmy2: case kSwapRolloverLeftArmy3:
     case kSwapRolloverLeftArmy4: case kSwapRolloverLeftArmy5:
     case kSwapRolloverLeftArmy6:
-        if (heroes[0]->army.armies[codeY - kSwapRolloverLeftArmy0] == CREATURE_NONE)
-            strcpy(gText, emptyRolloverText);
+        if (m_heroes[0]->m_army.m_armies[codeY - kSwapRolloverLeftArmy0] == CREATURE_NONE)
+            strcpy(g_text, g_emptyRolloverText);
         else
-            sprintf(gText, gHeroScreenNameFormat,
-                    GetArmyName(heroes[0]->army.armies[
+            sprintf(g_text, g_heroScreenNameFormat,
+                    getArmyName(m_heroes[0]->m_army.m_armies[
                                     codeY - kSwapRolloverLeftArmy0], 2));
         break;
 
@@ -2179,11 +2199,11 @@ void swapManager::SetRolloverText(int codeY)
     case kSwapRolloverRightArmy2: case kSwapRolloverRightArmy3:
     case kSwapRolloverRightArmy4: case kSwapRolloverRightArmy5:
     case kSwapRolloverRightArmy6:
-        if (heroes[1]->army.armies[codeY - kSwapRolloverRightArmy0] == CREATURE_NONE)
-            strcpy(gText, emptyRolloverText);
+        if (m_heroes[1]->m_army.m_armies[codeY - kSwapRolloverRightArmy0] == CREATURE_NONE)
+            strcpy(g_text, g_emptyRolloverText);
         else
-            sprintf(gText, gHeroScreenNameFormat,
-                    GetArmyName(heroes[1]->army.armies[
+            sprintf(g_text, g_heroScreenNameFormat,
+                    getArmyName(m_heroes[1]->m_army.m_armies[
                                     codeY - kSwapRolloverRightArmy0], 2));
         break;
 
@@ -2191,12 +2211,12 @@ void swapManager::SetRolloverText(int codeY)
     case kSwapRolloverLeftSkill2: case kSwapRolloverLeftSkill3:
     case kSwapRolloverLeftSkill4: case kSwapRolloverLeftSkill5:
     case kSwapRolloverLeftSkill6: case kSwapRolloverLeftSkill7:
-        if (codeY - kSwapRolloverLeftSkill0 < heroes[0]->skillCount) {
-            int skill = heroes[0]->GetNthSS(
+        if (codeY - kSwapRolloverLeftSkill0 < m_heroes[0]->m_skillCount) {
+            int skill = m_heroes[0]->getNthSS(
                 codeY - kSwapRolloverLeftSkill0);
-            sprintf(gText, gHeroScreenSecondarySkillFormat,
-                    gSkillMasteryNamesBiased[heroes[0]->skillLevel[skill]],
-                    akSSkillTraits[skill].name);
+            sprintf(g_text, g_heroScreenSecondarySkillFormat,
+                    g_skillMasteryNamesBiased[m_heroes[0]->m_skillLevel[skill]],
+                    g_sSkillTraits[skill].m_name);
         }
         break;
 
@@ -2204,12 +2224,12 @@ void swapManager::SetRolloverText(int codeY)
     case kSwapRolloverRightSkill2: case kSwapRolloverRightSkill3:
     case kSwapRolloverRightSkill4: case kSwapRolloverRightSkill5:
     case kSwapRolloverRightSkill6: case kSwapRolloverRightSkill7:
-        if (codeY - kSwapRolloverRightSkill0 < heroes[1]->skillCount) {
-            int skill = heroes[1]->GetNthSS(
+        if (codeY - kSwapRolloverRightSkill0 < m_heroes[1]->m_skillCount) {
+            int skill = m_heroes[1]->getNthSS(
                 codeY - kSwapRolloverRightSkill0);
-            sprintf(gText, gHeroScreenSecondarySkillFormat,
-                    gSkillMasteryNamesBiased[heroes[1]->skillLevel[skill]],
-                    akSSkillTraits[skill].name);
+            sprintf(g_text, g_heroScreenSecondarySkillFormat,
+                    g_skillMasteryNamesBiased[m_heroes[1]->m_skillLevel[skill]],
+                    g_sSkillTraits[skill].m_name);
         }
         break;
 
@@ -2223,16 +2243,16 @@ void swapManager::SetRolloverText(int codeY)
     case kSwapRolloverLeftArtifact14: case kSwapRolloverLeftArtifact15:
     case kSwapRolloverLeftArtifact16: case kSwapRolloverLeftArtifact17:
     case kSwapRolloverLeftArtifact18:
-        heroes[0]
-            ->get_artifact(static_cast<TArtifactSlot>(codeY - kSwapRolloverLeftArtifact0) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */)
-            .get_rollover_text(gText);
+        m_heroes[0]
+            ->getArtifact(static_cast<TArtifactSlot>(codeY - kSwapRolloverLeftArtifact0) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */)
+            .getRolloverText(g_text);
         break;
 
     case kSwapRolloverLeftBackpack0: case kSwapRolloverLeftBackpack1:
     case kSwapRolloverLeftBackpack2: case kSwapRolloverLeftBackpack3:
     case kSwapRolloverLeftBackpack4:
-        heroes[0]->get_backpack(codeY - kSwapRolloverLeftBackpack0)
-            .get_rollover_text(gText);
+        m_heroes[0]->getBackpack(codeY - kSwapRolloverLeftBackpack0)
+            .getRolloverText(g_text);
         break;
 
     case kSwapRolloverRightArtifact0: case kSwapRolloverRightArtifact1:
@@ -2245,27 +2265,27 @@ void swapManager::SetRolloverText(int codeY)
     case kSwapRolloverRightArtifact14: case kSwapRolloverRightArtifact15:
     case kSwapRolloverRightArtifact16: case kSwapRolloverRightArtifact17:
     case kSwapRolloverRightArtifact18:
-        heroes[1]
-            ->get_artifact(static_cast<TArtifactSlot>(codeY - kSwapRolloverRightArtifact0) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */)
-            .get_rollover_text(gText);
+        m_heroes[1]
+            ->getArtifact(static_cast<TArtifactSlot>(codeY - kSwapRolloverRightArtifact0) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */)
+            .getRolloverText(g_text);
         break;
 
     case kSwapRolloverRightBackpack0: case kSwapRolloverRightBackpack1:
     case kSwapRolloverRightBackpack2: case kSwapRolloverRightBackpack3:
     case kSwapRolloverRightBackpack4:
-        heroes[1]->get_backpack(codeY - kSwapRolloverRightBackpack0)
-            .get_rollover_text(gText);
+        m_heroes[1]->getBackpack(codeY - kSwapRolloverRightBackpack0)
+            .getRolloverText(g_text);
         break;
 
     default:
-        strcpy(gText, emptyRolloverText);
+        strcpy(g_text, g_emptyRolloverText);
         break;
     }
 
-    parent->BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
-                             0x7b, text_pointer_payload(gText));
-    parent->DrawWindow(0, 0x7a, 0x7b);
-    gpWindowManager->UpdateScreen(4, 0x242, 0x2d4, 0x12);
+    m_parent->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
+                             0x7b, textPointerPayload(g_text));
+    m_parent->drawWindow(0, 0x7a, 0x7b);
+    g_windowManager->updateScreen(4, 0x242, 0x2d4, 0x12);
 }
 
 // E:\gamedcs\swapmgr.cpp:2024
@@ -2274,39 +2294,39 @@ void swapManager::SetRolloverText(int codeY)
 // HandleMonster expands the helper while retaining the GetNumArmies and
 // ViewArmy call order; retail fixes the first-selected hero/second slot pair.
 DC_ONLY(0x15e85c, 0x5E)
-void swapManager::ViewMon()
+void swapManager::viewMon()
 {
-    gpGame->ViewArmy(heroes[field_48]->army, field_54, heroes[field_48],
+    g_game->viewArmy(m_heroes[m_sourceHeroIndex]->m_army, m_destinationArmySlot, m_heroes[m_sourceHeroIndex],
                      0, 0x77, 0x14,
-                     heroes[field_48]->army.GetNumArmies() > 1, 0);
+                     m_heroes[m_sourceHeroIndex]->m_army.getNumArmies() > 1, 0);
 }
 
 #if 0  // @carcass
 
 // E:\gamedcs\swapmgr.cpp:2030
 DC_ONLY(0x15e8bc, 0x142)
-void swapManager::SwapMons()
+void swapManager::swapMons()
 {
     // @stub
 }
 
 // E:\gamedcs\swapmgr.cpp:2140
 DC_ONLY(0x15eb90, 0x1A)
-void swapManager::OnChatUpdate()
+void swapManager::onChatUpdate()
 {
     // @stub
 }
 
 // E:\gamedcs\swapmgr.cpp:2147
 DC_ONLY(0x15ebac, 0xAA)
-void swapManager::HandleHeroUpdateMsg(CNetMsg* pNetMsg)
+void swapManager::handleHeroUpdateMsg(CNetMsg* pNetMsg)
 {
     // @stub
 }
 
 // E:\gamedcs\swapmgr.cpp:2231
 DC_ONLY(0x15edf8, 0x2A)
-unsigned char swapManager::IsLeftHero()
+unsigned char swapManager::isLeftHero()
 {
     // @stub
 }
@@ -2320,14 +2340,14 @@ hero* swapManager::GetOurHero()
 
 // E:\gamedcs\swapmgr.cpp:2267
 DC_ONLY(0x15ee98, 0x82)
-bool swapManager::CanModHero(int hero)
+bool swapManager::canModHero(int hero)
 {
     // @stub
 }
 
 // E:\gamedcs\swapmgr.cpp:2298
 DC_ONLY(0x15ef60, 0x70)
-void swapManager::OnGiveMeStuffMsg()
+void swapManager::onGiveMeStuffMsg()
 {
     // @stub
 }
@@ -2376,7 +2396,7 @@ void CSwapMgrNetMsgHandler::CSwapMgrNetMsgHandler()
 
 // E:\gamedcs\swapmgr.cpp:518
 DC_ONLY(0x15f228, 0x100)
-CNetMsg* CSwapMgrNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
+CNetMsg* CSwapMgrNetMsgHandler::handleNetMsg(CNetMsg* pNetMsg)
 {
     // @stub
 }
@@ -2392,34 +2412,34 @@ CNetMsg* CSwapMgrNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
 // semantics and scores 90.98%. Reversing the two recovered loop tests is
 // byte-flat, so the Dreamcast order remains the source ratchet.
 VA(0x005b0da0, 0x141)  // anchor-global, dc 0x15e8bc
-void swapManager::SwapMons()
+void swapManager::swapMons()
 {
     int nonemptyTroops = 0;
     for (int slot = 0; slot < 7; ++slot)
-        if (heroes[field_48]->army.armies[slot] != CREATURE_NONE
-            && heroes[field_48]->army.numTroops[slot] > 0)
+        if (m_heroes[m_sourceHeroIndex]->m_army.m_armies[slot] != CREATURE_NONE
+            && m_heroes[m_sourceHeroIndex]->m_army.m_numTroops[slot] > 0)
             ++nonemptyTroops;
-    armyGroup* source = &heroes[field_48]->army;
-    armyGroup* destination = &heroes[field_4c]->army;
+    armyGroup* source = &m_heroes[m_sourceHeroIndex]->m_army;
+    armyGroup* destination = &m_heroes[m_destinationHeroIndex]->m_army;
 
-    if (destination->armies[field_54] == source->armies[field_50]) {
-        if (source->GetNumArmies() == 1)
+    if (destination->m_armies[m_destinationArmySlot] == source->m_armies[m_sourceArmySlot]) {
+        if (source->getNumArmies() == 1)
             return;
-        destination->numTroops[field_54] += source->numTroops[field_50];
-        source->armies[field_50] = CREATURE_NONE;
-        source->numTroops[field_50] = 0;
+        destination->m_numTroops[m_destinationArmySlot] += source->m_numTroops[m_sourceArmySlot];
+        source->m_armies[m_sourceArmySlot] = CREATURE_NONE;
+        source->m_numTroops[m_sourceArmySlot] = 0;
         return;
     }
 
     if (source != destination) {
-        if (source->GetNumArmies() == 1
-            && destination->armies[field_54] == CREATURE_NONE)
+        if (source->getNumArmies() == 1
+            && destination->m_armies[m_destinationArmySlot] == CREATURE_NONE)
             return;
-        if (!CanModHero(field_4c)
-            && destination->armies[field_54] != CREATURE_NONE)
+        if (!canModHero(m_destinationHeroIndex)
+            && destination->m_armies[m_destinationArmySlot] != CREATURE_NONE)
             return;
     }
-    source->Swap(field_50, destination, field_54);
+    source->swap(m_sourceArmySlot, destination, m_destinationArmySlot);
 }
 
 // E:\gamedcs\swapmgr.cpp:2072
@@ -2431,86 +2451,87 @@ void swapManager::SwapMons()
 // named primary-skill temporary and hoisting `side` beside `i` both compile to
 // the same 89.35% bytes, so neither is a valid carrier for that allocator wall.
 VA(0x005b0ef0, 0x1D4)  // body/callee corroborates, dc 0x15ea00
-void swapManager::Update()
+void swapManager::update()
 {
     message msg;
-    msg.id = MESSAGE_WIDGET;
+    msg.m_id = MESSAGE_WIDGET;
 
     int i;
     for (int side = 0; side < 2; ++side)
     {
-        msg.codeX = 3;
-        msg.extraText = gText;
+        msg.m_codeX = 3;
+        msg.m_extraText = g_text;
         for (i = 0; i < 4; ++i)
         {
-            msg.codeY = 3 + side * 5 + i;
-            sprintf(gText,
+            msg.m_codeY = 3 + side * 5 + i;
+            sprintf(g_text,
                     DATA_COMPGEN(0x00660a1c, swapDecimalFormat, "%d"),
-                    heroes[side]->GetPrimarySkill(i));
-            parent->BroadcastMessage(&msg);
+                    m_heroes[side]->getPrimarySkill(i));
+            m_parent->broadcastMessage(&msg);
         }
 
         for (i = 0; i < 7; ++i)
         {
-            msg.codeY = 0xd + side * 7 + i;
-            if (heroes[side]->army.armies[i] == CREATURE_NONE)
+            msg.m_codeY = 0xd + side * 7 + i;
+            if (m_heroes[side]->m_army.m_armies[i] == CREATURE_NONE)
             {
-                msg.codeX = 6;
-                msg.extra = 4;
+                msg.m_codeX = 6;
+                msg.m_extra = 4;
             }
             else
             {
-                msg.codeX = 5;
-                msg.extra = 4;
-                parent->BroadcastMessage(&msg);
-                msg.codeX = 4;
-                msg.extra = heroes[side]->army.armies[i] + 2;
+                msg.m_codeX = 5;
+                msg.m_extra = 4;
+                m_parent->broadcastMessage(&msg);
+                msg.m_codeX = 4;
+                msg.m_extra = m_heroes[side]->m_army.m_armies[i] + 2;
             }
-            parent->BroadcastMessage(&msg);
+            m_parent->broadcastMessage(&msg);
         }
 
         for (i = 0; i < 7; ++i)
         {
-            msg.codeY = 0x41 + side * 7 + i;
-            if (heroes[side]->army.armies[i] == CREATURE_NONE)
+            msg.m_codeY = 0x41 + side * 7 + i;
+            if (m_heroes[side]->m_army.m_armies[i] == CREATURE_NONE)
             {
-                msg.codeX = 6;
-                msg.extra = 4;
+                msg.m_codeX = 6;
+                msg.m_extra = 4;
             }
             else
             {
-                msg.codeX = 5;
-                msg.extra = 4;
-                parent->BroadcastMessage(&msg);
-                msg.codeX = 3;
-                sprintf(gText,
+                msg.m_codeX = 5;
+                msg.m_extra = 4;
+                m_parent->broadcastMessage(&msg);
+                msg.m_codeX = 3;
+                sprintf(g_text,
                         DATA_COMPGEN(0x00660a1c, swapDecimalFormat, "%d"),
-                        heroes[side]->army.numTroops[i]);
-                msg.extraText = gText;
+                        m_heroes[side]->m_army.m_numTroops[i]);
+                msg.m_extraText = g_text;
             }
-            parent->BroadcastMessage(&msg);
+            m_parent->broadcastMessage(&msg);
         }
     }
 
-    update_all_slots();
+    updateAllSlots();
 }
 
 // E:\gamedcs\swapmgr.cpp:2147
 // Dreamcast proves two snapshot assignments followed by the popup guard and
 // UpdateBackpack(0/1), Update, DrawSwapWin helper order. Retail independently
 // proves Complete's 0x492-byte hero layout and expands this entire boundary.
-void swapManager::HandleHeroUpdateMsg(CNetMsg* pNetMsg)
+// Before normalization (locals): pNetMsg.
+void swapManager::handleHeroUpdateMsg(CNetMsg* netMsg)
 {
-    CHeroUpdateMsg* update = static_cast<CHeroUpdateMsg*>(pNetMsg);
-    gpGame->heroes[update->leftHero.id] = update->leftHero;
-    gpGame->heroes[update->rightHero.id] = update->rightHero;
+    CHeroUpdateMsg* update = static_cast<CHeroUpdateMsg*>(netMsg);
+    g_game->m_heroes[update->m_leftHero.m_id] = update->m_leftHero;
+    g_game->m_heroes[update->m_rightHero.m_id] = update->m_rightHero;
 
-    if (!field_64->IsInPopup())
+    if (!m_netMsgHandler->isInPopup())
     {
-        UpdateBackpack(0);
-        UpdateBackpack(1);
-        Update();
-        DrawSwapWin();
+        updateBackpack(0);
+        updateBackpack(1);
+        this->update();
+        drawSwapWin();
     }
 }
 
@@ -2526,68 +2547,68 @@ void swapManager::HandleHeroUpdateMsg(CNetMsg* pNetMsg)
 // the source-false negative control and the banked MAX prevents that local
 // scheduling artifact from overriding the positive Dreamcast fact.
 VA(0x005b10d0, 0x2A8)  // switch ids/callees + ret 8, dc 0x15ec58
-void swapManager::OnWidgetDeselect(message& msg, int& exitFlag)
+void swapManager::onWidgetDeselect(message& msg, int& exitFlag)
 {
-    switch (msg.codeY)
+    switch (msg.m_codeY)
     {
     case kSwapLeftBackpackLeft:
-        heroes[0]->rotate_backpack_left();
-        UpdateBackpack(0);
-        DrawSwapWin();
-        SendHeroUpdate();
+        m_heroes[0]->rotateBackpackLeft();
+        updateBackpack(0);
+        drawSwapWin();
+        sendHeroUpdate();
         break;
 
     case kSwapRightBackpackLeft:
-        heroes[1]->rotate_backpack_left();
-        UpdateBackpack(1);
-        DrawSwapWin();
-        SendHeroUpdate();
+        m_heroes[1]->rotateBackpackLeft();
+        updateBackpack(1);
+        drawSwapWin();
+        sendHeroUpdate();
         break;
 
     case kSwapLeftBackpackRight:
-        heroes[0]->rotate_backpack_right();
-        UpdateBackpack(0);
-        DrawSwapWin();
-        SendHeroUpdate();
+        m_heroes[0]->rotateBackpackRight();
+        updateBackpack(0);
+        drawSwapWin();
+        sendHeroUpdate();
         break;
 
     case kSwapRightBackpackRight:
-        heroes[1]->rotate_backpack_right();
-        UpdateBackpack(1);
-        DrawSwapWin();
-        SendHeroUpdate();
+        m_heroes[1]->rotateBackpackRight();
+        updateBackpack(1);
+        drawSwapWin();
+        sendHeroUpdate();
         break;
 
     case kSwapLeftQuestLog:
-        if (IsLeftHero())
-            DoQuestLog(gNetLocalGamePos);
+        if (isLeftHero())
+            doQuestLog(g_netLocalGamePos);
         break;
 
     case kSwapRightQuestLog:
-        if (IsRightHero())
-            DoQuestLog(gNetLocalGamePos);
+        if (isRightHero())
+            doQuestLog(g_netLocalGamePos);
         break;
 
     case kSwapRefreshLeft:
     case kSwapRefreshRight:
-        gUnnamed6a3d08 = 1;
-        Update();
-        DrawSwapWin();
-        DrawSelector();
+        g_unnamed6a3d08 = 1;
+        this->update();
+        drawSwapWin();
+        drawSelector();
         break;
 
     case kSwapReceiveFromAlly:
-        OnReceiveFromAlly();
+        onReceiveFromAlly();
         break;
 
     case kSwapTradeRequestDone:
-        if (gNetworkActive69954c
-            && gpCurrentPlayer->IsLocalHuman()
-            && field_5c)
+        if (g_networkActive69954c
+            && g_currentPlayer->isLocalHuman()
+            && m_humanPlayerTrade)
         {
             CTradeRequestDoneMsg requestDone;
-            hero* otherHero = GetOtherHero();
-            TransmitRemoteData(&requestDone, otherHero->owner, 0, 1);
+            hero* otherHero = getOtherHero();
+            transmitRemoteData(&requestDone, otherHero->m_owner, 0, 1);
         }
         exitFlag = 1;
         break;
@@ -2598,15 +2619,15 @@ void swapManager::OnWidgetDeselect(message& msg, int& exitFlag)
 // E:\gamedcs\swapmgr.cpp:2231. The retail-order claim remains here while the
 // canonical inline definition above Main controls caller lowering.
 VA(0x005b1380, 0x1C)
-bool swapManager::IsLeftHero()
+bool swapManager::isLeftHero()
 {
-    if (heroes[0]->owner == gpGame->GetLocalPlayerGamePos())
+    if (heroes[0]->owner == g_game->getLocalPlayerGamePos())
         return true;
     return false;
 }
 #endif
 
-bool swapManager::CanModHero(int whichHero)
+bool swapManager::canModHero(int whichHero)
 {
     // Complete lowers this helper as false guards followed by one true tail in
     // handle_backpack_click, HandleMonster and SwapMons.  Restoring the older
@@ -2615,36 +2636,36 @@ bool swapManager::CanModHero(int whichHero)
     // 90.98->86.12 and 93.42->87.81.  The calls, predicates and statement
     // order remain the DC-proved ones; only the Complete-era hot-seat return
     // spelling differs.
-    if (iMPNetProtocol == MP_HOTSEAT) {
-        if (!gpGame->OnSameTeam(
-                heroes[whichHero]->owner,
-                gpGame->GetLocalPlayerGamePos()))
+    if (g_mpNetProtocol == MP_HOTSEAT) {
+        if (!g_game->onSameTeam(
+                m_heroes[whichHero]->m_owner,
+                g_game->getLocalPlayerGamePos()))
             return false;
         return true;
     }
-    if (field_5c && !field_5d)
+    if (m_humanPlayerTrade && !m_givingToAlly)
         return false;
-    return heroes[whichHero]->owner == gpGame->GetLocalPlayerGamePos();
+    return m_heroes[whichHero]->m_owner == g_game->getLocalPlayerGamePos();
 }
 
 // E:\gamedcs\swapmgr.cpp:2287
-void swapManager::OnReceiveFromAlly()
+void swapManager::onReceiveFromAlly()
 {
-    field_5d = 0;
-    parent->UpdateArrows();
-    DrawSwapWin();
+    m_givingToAlly = 0;
+    m_parent->updateArrows();
+    drawSwapWin();
 
     CGiveMeStuffMsg giveMeStuff;
-    hero* otherHero = GetOtherHero();
-    TransmitRemoteData(&giveMeStuff, otherHero->owner, 0, 1);
+    hero* otherHero = getOtherHero();
+    transmitRemoteData(&giveMeStuff, otherHero->m_owner, 0, 1);
 }
 
 // E:\gamedcs\swapmgr.cpp:2298
 // Dreamcast proves the three-statement helper; Complete expands it in the
 // give-me-stuff dispatcher arm and expands DrawSwapWin one level further.
-void swapManager::OnGiveMeStuffMsg()
+void swapManager::onGiveMeStuffMsg()
 {
-    field_5d = 1;
-    parent->UpdateArrows();
-    DrawSwapWin();
+    m_givingToAlly = 1;
+    m_parent->updateArrows();
+    drawSwapWin();
 }

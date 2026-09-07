@@ -22,8 +22,9 @@
 #include "winmm_thunks.h"
 
 // homm2 BUTTON.cpp's file-static modifier latch, same name and role.
+// Before normalization: iLeftRightSave.
 DATA(0x00694da8)
-static int iLeftRightSave;
+static int g_leftRightSave;
 
 // Unimplemented carcass stubs stay lexically present (labels and
 // the va-claims gate scan text) but outside compilation.
@@ -33,12 +34,12 @@ static int iLeftRightSave;
 button::button()
     : widget(0, 0, 0, 0, 0, 0)
 {
-    buttonIcon = 0;
-    normalFrame = 0;
-    selectedFrame = 0;
-    disabled_frame = 2;
-    field_40 = 3;
-    endDialog = 0;
+    m_buttonIcon = 0;
+    m_normalFrame = 0;
+    m_selectedFrame = 0;
+    m_disabledFrame = 2;
+    m_highlightedFrame = 3;
+    m_endDialog = 0;
 }
 
 // E:\gamedcs\button.cpp:51 - button::`scalar deleting destructor'
@@ -57,13 +58,13 @@ VA(0x00455ef0, 0x1F7)  // linkorder bracket; GetSprite/widget-ctor callees byte-
 button::button(int x, int y, int w, int h, int id, const char* image, int normal, int selected, unsigned char end, int hotkey, int style)
     : widget(x, y, w, h, id, style)
 {
-    disabled_frame = 2;
-    normalFrame = normal;
-    selectedFrame = selected;
-    field_40 = 3;
-    endDialog = end;
-    hotKeyCodes.push_back(hotkey);
-    buttonIcon = ResourceManager::GetSprite(image);
+    m_disabledFrame = 2;
+    m_normalFrame = normal;
+    m_selectedFrame = selected;
+    m_highlightedFrame = 3;
+    m_endDialog = end;
+    m_hotKeyCodes.push_back(hotkey);
+    m_buttonIcon = ResourceManager::getSprite(image);
 }
 
 #if 0  // @carcass
@@ -80,14 +81,14 @@ button::button(int x, int y, int w, int h, int id, const char* image, int normal
 VA(0x004560f0, 0x9A)  // anchor-global, dc 0x571ec
 inline button::~button()
 {
-    buttonIcon->Dispose();
+    m_buttonIcon->dispose();
 }
 
 #if 0  // @carcass
 
 // E:\gamedcs\button.cpp:104
 DC_ONLY(0x57234, 0x32)
-void button::SetPalette(const char* palette_name)
+void button::setPalette(const char* palette_name)
 {
     // @stub
 }
@@ -104,21 +105,21 @@ void button::initialize(int x, int y, int w, int h, int id, const char* image, i
 // homm2's inline DeselectSelected survives with the endDialog variant;
 // /Ob2 expands it at all four Main sites and emits no standalone copy
 // (the `inline` keyword keeps it out of the object, matching retail).
-inline int button::DeselectSelected(message* msg)
+inline int button::deselectSelected(message* msg)
 {
-    if (!(status & WIDGET_SELECTED))
+    if (!(m_status & WIDGET_SELECTED))
         return 0;
-    status &= ~WIDGET_SELECTED;
-    Draw();
-    gpWindowManager->UpdateScreen(x + parentWindow->x, y + parentWindow->y, width, height);
-    msg->id = MESSAGE_WIDGET;
-    msg->codeY = id;
-    if (endDialog == 1)
-        msg->codeX = widget::WIDGET_END_DIALOG;
+    m_status &= ~WIDGET_SELECTED;
+    draw();
+    g_windowManager->updateScreen(m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);
+    msg->m_id = MESSAGE_WIDGET;
+    msg->m_codeY = m_id;
+    if (m_endDialog == 1)
+        msg->m_codeX = widget::WIDGET_END_DIALOG;
     else
-        msg->codeX = widget::WIDGET_DESELECT;
-    msg->qualifier = iLeftRightSave;
-    iLeftRightSave = 0;
+        msg->m_codeX = widget::WIDGET_DESELECT;
+    msg->m_qualifier = g_leftRightSave;
+    g_leftRightSave = 0;
     return 2;
 }
 
@@ -165,126 +166,126 @@ inline int button::DeselectSelected(message* msg)
 // load falls back to reloading the icon sprite by the same name.
 // E:\gamedcs\button.cpp:131
 VA(0x00456190, 0x6CF)  // linkorder bracket; Select/widget-Main/manager callees byte-proven, dc 0x572d0
-int button::Main(message* msg)
+int button::main(message* msg)
 {
-    if (style == WIDGET_STYLE_AUTO_REPEAT && (status & WIDGET_SELECTED)) {
-        unsigned long repeatTime = glTimers[GLOBAL_BUTTON_REPEAT_TIMER_SLOT];
-        if (static_cast<int>(GameTime::Get() - repeatTime) > 0)
-            return DeselectSelected(msg);
+    if (m_style == WIDGET_STYLE_AUTO_REPEAT && (m_status & WIDGET_SELECTED)) {
+        unsigned long repeatTime = g_timers[GLOBAL_BUTTON_REPEAT_TIMER_SLOT];
+        if (static_cast<int>(GameTime::get() - repeatTime) > 0)
+            return deselectSelected(msg);
     }
-    if (field_2C > 0)
+    if (m_sleepCount > 0)
         return 0;
-    if (!(status & WIDGET_ACTIVE)) {
-        if (msg->id != MESSAGE_WIDGET)
+    if (!(m_status & WIDGET_ACTIVE)) {
+        if (msg->m_id != MESSAGE_WIDGET)
             return 0;
-        return widget::Main(msg);
+        return widget::main(msg);
     }
     unsigned char isDisabled = 0;
-    if (status & WIDGET_DISABLED)
+    if (m_status & WIDGET_DISABLED)
         isDisabled = 1;
-    switch (msg->id) {
+    switch (msg->m_id) {
     case MESSAGE_KEY_DOWN: {
         if (isDisabled)
             return 0;
-        if (!(status & WIDGET_DRAWN))
+        if (!(m_status & WIDGET_DRAWN))
             break;
-        if (status & WIDGET_DIMMED)
+        if (m_status & WIDGET_DIMMED)
             break;
-        for (unsigned int key = 0; key < hotKeyCodes.size(); key++) {
-            if (hotKeyCodes[key] == msg->codeX)
-                return Select(msg);
+        for (unsigned int key = 0; key < m_hotKeyCodes.size(); key++) {
+            if (m_hotKeyCodes[key] == msg->m_codeX)
+                return select(msg);
         }
         return 0;
     }
     case MESSAGE_KEY_UP: {
         if (isDisabled)
             return 0;
-        if (!(status & WIDGET_DRAWN))
+        if (!(m_status & WIDGET_DRAWN))
             break;
-        if (status & WIDGET_DIMMED)
+        if (m_status & WIDGET_DIMMED)
             break;
-        for (unsigned int key = 0; key < hotKeyCodes.size(); key++) {
-            if (hotKeyCodes[key] == msg->codeX)
-                return DeselectSelected(msg);
+        for (unsigned int key = 0; key < m_hotKeyCodes.size(); key++) {
+            if (m_hotKeyCodes[key] == msg->m_codeX)
+                return deselectSelected(msg);
         }
         return 0;
     }
     case MESSAGE_LEFT_BUTTON_DOWN: {
         if (isDisabled)
             return 0;
-        if (!(status & WIDGET_DRAWN))
+        if (!(m_status & WIDGET_DRAWN))
             break;
-        short mouseX = msg->codeX - parentWindow->x;
-        short mouseY = msg->codeY - parentWindow->y;
-        if (status & WIDGET_DIMMED)
+        short mouseX = msg->m_codeX - m_parentWindow->m_x;
+        short mouseY = msg->m_codeY - m_parentWindow->m_y;
+        if (m_status & WIDGET_DIMMED)
             return 0;
-        if (mouseX < x || mouseY < y || mouseX >= x + width
-            || mouseY >= y + height)
+        if (mouseX < m_x || mouseY < m_y || mouseX >= m_x + m_width
+            || mouseY >= m_y + m_height)
             return 0;
-        Select(msg);
+        select(msg);
         // Both exits BREAK to one shared `return DeselectSelected(msg)`
         // below: DeselectSelected is /Ob2-inlined, so spelling either
         // exit as its own `return` expands the whole 139-byte deselect
         // body twice where retail expands it once (67.38 -> ...).
         for (;;) {
-            if (msg->id == MESSAGE_LEFT_BUTTON_UP
-                || msg->id == MESSAGE_RIGHT_BUTTON_UP)
+            if (msg->m_id == MESSAGE_LEFT_BUTTON_UP
+                || msg->m_id == MESSAGE_RIGHT_BUTTON_UP)
                 break;
-            gpMouseManager->Main(*msg);
-            if (msg->id == MESSAGE_MOUSE_MOVE) {
-                short moveX = msg->codeX - parentWindow->x;
-                short moveY = msg->codeY - parentWindow->y;
-                if (moveX >= x && moveY >= y && moveX < x + width
-                    && moveY < y + height) {
-                    if (!(status & WIDGET_SELECTED))
-                        Select(msg);
+            g_mouseManager->main(*msg);
+            if (msg->m_id == MESSAGE_MOUSE_MOVE) {
+                short moveX = msg->m_codeX - m_parentWindow->m_x;
+                short moveY = msg->m_codeY - m_parentWindow->m_y;
+                if (moveX >= m_x && moveY >= m_y && moveX < m_x + m_width
+                    && moveY < m_y + m_height) {
+                    if (!(m_status & WIDGET_SELECTED))
+                        select(msg);
                 } else {
-                    DeselectSelected(msg);
+                    deselectSelected(msg);
                 }
             }
-            Process1WindowsMessage();
-            PollSound();
-            *msg = gpInputManager->GetEvent();
-            if (msg->id == MESSAGE_LEFT_BUTTON_UP)
+            process1WindowsMessage();
+            pollSound();
+            *msg = g_inputManager->getEvent();
+            if (msg->m_id == MESSAGE_LEFT_BUTTON_UP)
                 break;
         }
-        return DeselectSelected(msg);
+        return deselectSelected(msg);
     }
     case MESSAGE_LEFT_BUTTON_UP: {
         if (isDisabled)
             return 0;
-        if (!(status & WIDGET_DRAWN))
+        if (!(m_status & WIDGET_DRAWN))
             break;
-        if (!(status & WIDGET_SELECTED))
+        if (!(m_status & WIDGET_SELECTED))
             break;
-        return DeselectSelected(msg);
+        return deselectSelected(msg);
     }
     case MESSAGE_RIGHT_BUTTON_DOWN:
         break;
     case MESSAGE_WIDGET: {
-        if (msg->codeY != id)
+        if (msg->m_codeY != m_id)
             break;
-        switch (msg->codeX) {
+        switch (msg->m_codeX) {
         case widget::WIDGET_SET_PALETTE: {
-            TPalette16* newPalette = ResourceManager::GetPalette(msg->extraText);
+            TPalette16* newPalette = ResourceManager::getPalette(msg->m_extraText);
             if (newPalette) {
-                buttonIcon->SetPalette(newPalette->data);
-                newPalette->Dispose();
+                m_buttonIcon->setPalette(newPalette->m_data);
+                newPalette->dispose();
                 return 1;
             }
-            if (buttonIcon)
-                buttonIcon->Dispose();
-            buttonIcon = ResourceManager::GetSprite(msg->extraText);
+            if (m_buttonIcon)
+                m_buttonIcon->dispose();
+            m_buttonIcon = ResourceManager::getSprite(msg->m_extraText);
             return 1;
         }
         case widget::WIDGET_SET_ICON_NAME:
-            buttonIcon = ResourceManager::GetSprite(msg->extraText);
+            m_buttonIcon = ResourceManager::getSprite(msg->m_extraText);
             return 1;
         case widget::WIDGET_SET_TEXT:
-            SetText(msg->extraText);
+            setText(msg->m_extraText);
             return 1;
         case widget::WIDGET_SET_PLAYER_PALETTE_COLORS:
-            SetPlayerPaletteColors(msg->extra);
+            setPlayerPaletteColors(msg->m_extra);
             return 1;
         }
         break;
@@ -294,17 +295,17 @@ int button::Main(message* msg)
             return 0;
         break;
     }
-    if (!(status & WIDGET_DRAWN))
-        return widget::Main(msg);
-    short rightX = msg->codeX - parentWindow->x;
-    short rightY = msg->codeY - parentWindow->y;
-    if (rightX < x || rightY < y || rightX >= x + width
-        || rightY >= y + height)
+    if (!(m_status & WIDGET_DRAWN))
+        return widget::main(msg);
+    short rightX = msg->m_codeX - m_parentWindow->m_x;
+    short rightY = msg->m_codeY - m_parentWindow->m_y;
+    if (rightX < m_x || rightY < m_y || rightX >= m_x + m_width
+        || rightY >= m_y + m_height)
         return 0;
-    msg->id = MESSAGE_WIDGET;
-    msg->codeX = widget::WIDGET_RIGHT_SELECT;
-    msg->codeY = id;
-    msg->qualifier = MESSAGE_MODIFIER_RIGHT;
+    msg->m_id = MESSAGE_WIDGET;
+    msg->m_codeX = widget::WIDGET_RIGHT_SELECT;
+    msg->m_codeY = m_id;
+    msg->m_qualifier = MESSAGE_MODIFIER_RIGHT;
     return 2;
 }
 
@@ -319,25 +320,25 @@ int button::Main(message* msg)
 // the same sixty-tick delay.
 // E:\gamedcs\button.cpp:366
 VA(0x00456860, 0xDA)  // linkorder bracket; MemorySample/UpdateScreen callees byte-proven, dc 0x57730
-int button::Select(message* msg)
+int button::select(message* msg)
 {
-    status |= WIDGET_SELECTED;
-    if (click_sample) {
-        int saved = gpSoundManager->field_84;
-        gpSoundManager->field_84 = 1;
-        click_sample->field_2c = 0x40;
-        click_sample->field_30 = 1;
-        click_sample->field_28 = 3;
-        gpSoundManager->MemorySample(click_sample);
-        gpSoundManager->field_84 = saved;
+    m_status |= WIDGET_SELECTED;
+    if (s_clickSample) {
+        int saved = g_soundManager->m_playSounds;
+        g_soundManager->m_playSounds = 1;
+        s_clickSample->m_memSample.m_memVolume = 0x40;
+        s_clickSample->m_memSample.m_memLooping = 1;
+        s_clickSample->m_memSample.m_memCindex = 3;
+        g_soundManager->memorySample(s_clickSample);
+        g_soundManager->m_playSounds = saved;
     }
-    Draw();
-    gpWindowManager->UpdateScreen(x + parentWindow->x, y + parentWindow->y, width, height);
-    msg->id = MESSAGE_WIDGET;
-    msg->codeX = widget::WIDGET_SELECT;
-    msg->codeY = id;
-    glTimers[GLOBAL_BUTTON_REPEAT_TIMER_SLOT] = timeGetTime() + BUTTON_REPEAT_DELAY_TICKS;
-    iLeftRightSave = msg->qualifier & 0x300;
+    draw();
+    g_windowManager->updateScreen(m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);
+    msg->m_id = MESSAGE_WIDGET;
+    msg->m_codeX = widget::WIDGET_SELECT;
+    msg->m_codeY = m_id;
+    g_timers[GLOBAL_BUTTON_REPEAT_TIMER_SLOT] = timeGetTime() + BUTTON_REPEAT_DELAY_TICKS;
+    g_leftRightSave = msg->m_qualifier & 0x300;
     return 2;
 }
 
@@ -345,21 +346,21 @@ int button::Select(message* msg)
 
 // E:\gamedcs\button.cpp:401
 DC_ONLY(0x57854, 0xBC)
-int button::Deselect(message* msg)
+int button::deselect(message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\button.cpp:429
 DC_ONLY(0x57910, 0x12)
-int button::GetRealWidth()
+int button::getRealWidth()
 {
     // @stub
 }
 
 // E:\gamedcs\button.cpp:435
 DC_ONLY(0x57924, 0x12)
-int button::GetRealHeight()
+int button::getRealHeight()
 {
     // @stub
 }
@@ -379,39 +380,39 @@ void button::zBufferDraw()
 // frame past the sequence-0 count clamps to 0.
 // E:\gamedcs\button.cpp:446
 VA(0x00456940, 0x99)  // vtable-slot 4 of button (0x63bb54), dc 0x5793c
-void button::Draw()
+void button::draw()
 {
-    if (!(status & WIDGET_DRAWN))
+    if (!(m_status & WIDGET_DRAWN))
         return;
-    int frame = normalFrame;
+    int frame = m_normalFrame;
     int frameCount;
-    if (buttonIcon->numSequences > 0 && buttonIcon->validSeqMask[0])
-        frameCount = buttonIcon->s[0]->numFrames;
+    if (m_buttonIcon->m_numSequences > 0 && m_buttonIcon->m_validSeqMask[0])
+        frameCount = m_buttonIcon->m_s[0]->m_numFrames;
     else
         frameCount = 0;
-    if ((status & WIDGET_HIGHLIGHTED) && !(status & WIDGET_SELECTED)) {
-        frame = field_40;
-    } else if (!(status & (WIDGET_DIMMED | WIDGET_DISABLED))) {
-        if (status & WIDGET_SELECTED)
-            frame = selectedFrame;
+    if ((m_status & WIDGET_HIGHLIGHTED) && !(m_status & WIDGET_SELECTED)) {
+        frame = m_highlightedFrame;
+    } else if (!(m_status & (WIDGET_DIMMED | WIDGET_DISABLED))) {
+        if (m_status & WIDGET_SELECTED)
+            frame = m_selectedFrame;
     } else {
-        frame = disabled_frame;
+        frame = m_disabledFrame;
     }
     if (frame >= frameCount)
         frame = 0;
-    buttonIcon->DrawInterface(frame, 0, 0, buttonIcon->Width, buttonIcon->Height,
-                              gpWindowManager->screenBitmap->map,
-                              x + parentWindow->x, y + parentWindow->y,
-                              gpWindowManager->screenBitmap->Width,
-                              gpWindowManager->screenBitmap->Height,
-                              gpWindowManager->screenBitmap->Pitch, 0);
+    m_buttonIcon->drawInterface(frame, 0, 0, m_buttonIcon->m_width, m_buttonIcon->m_height,
+                              g_windowManager->m_screenBitmap->m_map,
+                              m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y,
+                              g_windowManager->m_screenBitmap->m_width,
+                              g_windowManager->m_screenBitmap->m_height,
+                              g_windowManager->m_screenBitmap->m_pitch, 0);
 }
 
 #if 0  // @carcass
 
 // E:\gamedcs\button.cpp:471
 DC_ONLY(0x57a24, 0x4)
-void button::Dim()
+void button::dim()
 {
     // @stub
 }
@@ -420,10 +421,10 @@ void button::Dim()
 
 // E:\gamedcs\button.cpp:477
 VA(0x004569e0, 0x2E)  // anchor-global, dc 0x57a28
-void button::SetPlayerPaletteColors(int whichPlayer)
+void button::setPlayerPaletteColors(int whichPlayer)
 {
-    ::SetPlayerPaletteColors(buttonIcon->GetPalette(), whichPlayer);
-    ::SetPlayerPaletteColors(buttonIcon->p24, whichPlayer);
+    ::setPlayerPaletteColors(m_buttonIcon->getPalette(), whichPlayer);
+    ::setPlayerPaletteColors(m_buttonIcon->m_p24, whichPlayer);
 }
 
 // Retail-only (no DC roster entry - DC's widget has no 13th virtual).
@@ -435,9 +436,9 @@ void button::SetPlayerPaletteColors(int whichPlayer)
 // /Ob2-inlined nothing because widget::_vslot12 has no definition
 // visible here (widget.h declares it only, the Close idiom).
 VA(0x00456a10, 0x10)  // anchor-vtable (slot 12 of 0x63bb54/0x63bb88/0x63bbbc), retail-only
-void button::_vslot12(int on)
+void button::vslot12(int on)
 {
-    widget::_vslot12(on);
+    widget::vslot12(on);
 }
 
 #if 0  // @carcass
@@ -488,28 +489,29 @@ VA_COMPGEN(0x00456a20, 0x21, SCALAR_DELETING_DTOR, textButton)
 // Builds on the inlined button() default, then initializes through
 // widget::initialize - the DC shape, not a delegation to the eleven-arg
 // button ctor.
+// Before normalization (locals): text_, font_name, new_color.
 VA(0x00456a50, 0x193)  // linkorder bracket; initialize/GetSprite/GetFont callees byte-proven, dc 0x57ab4
-textButton::textButton(int x, int y, int w, int h, int id, const char* image, const char* text_, const char* font_name, int normal, int selected, unsigned char end, int hotkey, int style, int new_color)
+textButton::textButton(int x, int y, int w, int h, int id, const char* image, const char* text, const char* fontName, int normal, int selected, unsigned char end, int hotkey, int style, int newColor)
     : button()
 {
     initialize(x, y, w, h, id, style);
-    normalFrame = normal;
-    selectedFrame = selected;
-    disabled_frame = 2;
-    field_40 = 3;
-    endDialog = end;
-    set_hotkey(hotkey);
-    buttonIcon = ResourceManager::GetSprite(image);
-    SetText(text_);
-    Font = ResourceManager::GetFont(font_name);
-    textColor = new_color;
+    m_normalFrame = normal;
+    m_selectedFrame = selected;
+    m_disabledFrame = 2;
+    m_highlightedFrame = 3;
+    m_endDialog = end;
+    setHotkey(hotkey);
+    m_buttonIcon = ResourceManager::getSprite(image);
+    setText(text);
+    m_font = ResourceManager::getFont(fontName);
+    m_textColor = newColor;
 }
 
 // E:\gamedcs\button.cpp:519
 VA(0x00456bf0, 0xAB)  // anchor-global, dc 0x57b5c
 textButton::~textButton()
 {
-    Font->Dispose();
+    m_font->dispose();
 }
 
 #if 0  // @carcass
@@ -524,28 +526,28 @@ textButton::~textButton()
 // allocation: status stays in CX and the parent pointer occupies EAX.
 // E:\gamedcs\button.cpp:525
 VA(0x00456ca0, 0x82)  // vtable-slot 4 of textButton (0x63bb88), dc 0x57b98
-void textButton::Draw()
+void textButton::draw()
 {
-    if (!(status & WIDGET_DRAWN))
+    if (!(m_status & WIDGET_DRAWN))
         return;
-    button::Draw();
-    short buttonStatus = status;
-    int color = textColor;
+    button::draw();
+    short buttonStatus = m_status;
+    int color = m_textColor;
     if (buttonStatus & (WIDGET_DIMMED | WIDGET_DISABLED))
         color += 2;
-    heroWindow* parent = parentWindow;
+    heroWindow* parent = m_parentWindow;
     int drawY;
     if (buttonStatus & WIDGET_SELECTED)
-        drawY = y + parent->y;
+        drawY = m_y + parent->m_y;
     else
-        drawY = y + parent->y - 1;
+        drawY = m_y + parent->m_y - 1;
     int drawX;
     if (buttonStatus & WIDGET_SELECTED)
-        drawX = x + parent->x + 1;
+        drawX = m_x + parent->m_x + 1;
     else
-        drawX = x + parent->x;
-    Font->DrawBoundedString(Text.c_str(), gpWindowManager->screenBitmap,
-                            drawX, drawY, width, height, color, 5, -1);
+        drawX = m_x + parent->m_x;
+    m_font->drawBoundedString(m_text.c_str(), g_windowManager->m_screenBitmap,
+                            drawX, drawY, m_width, m_height, color, 5, -1);
 }
 
 #if 0  // @carcass
@@ -560,7 +562,7 @@ type_func_button::type_func_button(long x, long y, long w, long h, long id,
                                    int normal, int selected)
     : button(x, y, w, h, id, image, normal, selected, 0, 0, 2)
 {
-    handler = newHandler;
+    m_handler = newHandler;
 }
 
 #if 0  // @carcass
@@ -592,13 +594,13 @@ type_func_button::~type_func_button()
 
 // E:\gamedcs\button.cpp:574
 VA(0x00456e50, 0x44)  // vtable-slot 2 of type_func_button (0x63bbbc), dc 0x57d48
-int type_func_button::Main(message* msg)
+int type_func_button::main(message* msg)
 {
-    int result = button::Main(msg);
-    if (result != 1 && (status & WIDGET_ACTIVE) && field_2C <= 0
-        && msg->id == MESSAGE_WIDGET && msg->codeY == id) {
-        msg->window = parentWindow;
-        return handler(*msg);
+    int result = button::main(msg);
+    if (result != 1 && (m_status & WIDGET_ACTIVE) && m_sleepCount <= 0
+        && msg->m_id == MESSAGE_WIDGET && msg->m_codeY == m_id) {
+        msg->m_window = m_parentWindow;
+        return m_handler(*msg);
     }
     return result;
 }
@@ -607,14 +609,14 @@ int type_func_button::Main(message* msg)
 
 // E:\gamedcs\Button.h:78
 DC_ONLY(0x57da4, 0x18)
-void button::SetText(const char* new_text)
+void button::setText(const char* new_text)
 {
     // @stub
 }
 
 // E:\gamedcs\CSprite.h:284
 DC_ONLY(0x57dbc, 0x24)
-TPalette24* CSprite::GetPalette24()
+TPalette24* CSprite::getPalette24()
 {
     // @stub
 }
@@ -713,4 +715,4 @@ void std::_STL_alloc_proxy<int *,int,std::allocator<int> >::_STL_alloc_proxy<int
 #endif  // @carcass
 
 DATA(0x00694da4)
-sample* button::click_sample;
+sample* button::s_clickSample;

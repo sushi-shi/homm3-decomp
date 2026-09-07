@@ -34,11 +34,12 @@ enum ETileDirection {
 };
 
 struct TPoint;
-extern TPoint gTileDirections[TILE_DIR_COUNT];
+// Before normalization: gTileDirections.
+extern TPoint g_tileDirections[TILE_DIR_COUNT];
 
 // Retail 0x5bc910. Fills an eight-entry byte mask with "this neighbour is on
 // the map", clearing the three directions each grid edge removes.
-void __fastcall BuildTileNeighbourMask(int width, int height, int x, int y,
+void __fastcall buildTileNeighbourMask(int width, int height, int x, int y,
                                        unsigned char* neighbourExists);
 
 #endif

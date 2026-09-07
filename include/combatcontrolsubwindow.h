@@ -38,7 +38,8 @@ public:
     // TCombatControlSubWindow fills it in - with a bitmapBackedTextWidget
     // over 'cRollovr.pcx' - and the derived TYPE is what the constructor
     // proves, because push_back has to build a widget* temporary for it.
-    bitmapBackedTextWidget* rolloverWidget;
+    // Before normalization: rolloverWidget.
+    bitmapBackedTextWidget* m_rolloverWidget;
 
     // Retail CALLS this out of line from both derived constructors; its
     // body is 0x46b610, reconstructed in the .cpp. That body is also what
@@ -46,15 +47,20 @@ public:
     // precedes the +0x34 null, so the null is a body statement here and
     // not a derived one.
     type_combat_sub_window(heroWindow* parent,
-                           const char* background_sprite_name);
+                           // Before normalization (locals): background_sprite_name.
+                           const char* backgroundSpriteName);
     virtual ~type_combat_sub_window();
     // Slots 1 and 2 inherit the image-wide empty-body folds at 0x485d80
     // (`ret 4`) and 0x5bc7e0 (`ret 8`). The Dreamcast decorated publics
     // independently preserve the same PBD/JJ arguments; only the generated
     // prototype comments below lost them.
-    virtual void set_rollover(const char* new_text);
-    virtual void set_rollover_buttons(int first, int second);
-    virtual void DisableAllButtons();
+    // Before normalization (function): type_combat_sub_window::set_rollover.
+    // Before normalization (locals): new_text.
+    virtual void setRollover(const char* newText);
+    // Before normalization (function): type_combat_sub_window::set_rollover_buttons.
+    virtual void setRolloverButtons(int first, int second);
+    // Before normalization (function): type_combat_sub_window::DisableAllButtons.
+    virtual void disableAllButtons();
 };
 SIZE(type_combat_sub_window, 0x38);
 
@@ -67,12 +73,16 @@ public:
     // The two 'ComSlide.def' arrows over the combat message log, +0x38 and
     // +0x3c; the constructor is the only body that writes either, and it
     // dims both at the end.
-    type_func_button* logScrollUpButton;
-    type_func_button* logScrollDownButton;
+    // Before normalization: logScrollUpButton.
+    type_func_button* m_logScrollUpButton;
+    // Before normalization: logScrollDownButton.
+    type_func_button* m_logScrollDownButton;
 
     TCombatControlSubWindow(heroWindow* parent);
     virtual ~TCombatControlSubWindow();
-    virtual void set_rollover(const char* new_text);
+    // Before normalization (function): TCombatControlSubWindow::set_rollover.
+    // Before normalization (locals): new_text.
+    virtual void setRollover(const char* newText);
 };
 SIZE(TCombatControlSubWindow, 0x40);
 
@@ -82,12 +92,14 @@ class TCombatPlacementSubWindow : public type_combat_sub_window {
 private:
     // 0x4721d0 allocates this class at 0x3c against the base's 0x38, and
     // no body in the image writes the difference.
-    char pad_038[4];
+    // Before normalization: pad_038.
+    char m_pad038[4];
 
 public:
     TCombatPlacementSubWindow(heroWindow* parent);
     virtual ~TCombatPlacementSubWindow();
-    virtual void DisableAllButtons();
+    // Before normalization (function): TCombatPlacementSubWindow::DisableAllButtons.
+    virtual void disableAllButtons();
 };
 SIZE(TCombatPlacementSubWindow, 0x3c);
 
@@ -96,24 +108,39 @@ SIZE(TCombatPlacementSubWindow, 0x3c);
 // fields at +0x34..+0x54, and the shown byte at +0x58.
 class TCombatHeroSubWindow : public TSubWindow {
 public:
-    bitmapBorder* backgroundWidget;
-    bitmapBorder* portrait;
-    textWidget* attackText;
-    textWidget* defenseText;
-    textWidget* powerText;
-    textWidget* knowledgeText;
-    iconWidget* moraleIcon;
-    iconWidget* luckIcon;
-    textWidget* manaText;
-    bool shown;
+    // Before normalization: backgroundWidget.
+    bitmapBorder* m_backgroundWidget;
+    // Before normalization: portrait.
+    bitmapBorder* m_portrait;
+    // Before normalization: attackText.
+    textWidget* m_attackText;
+    // Before normalization: defenseText.
+    textWidget* m_defenseText;
+    // Before normalization: powerText.
+    textWidget* m_powerText;
+    // Before normalization: knowledgeText.
+    textWidget* m_knowledgeText;
+    // Before normalization: moraleIcon.
+    iconWidget* m_moraleIcon;
+    // Before normalization: luckIcon.
+    iconWidget* m_luckIcon;
+    // Before normalization: manaText.
+    textWidget* m_manaText;
+    // Before normalization: shown.
+    bool m_shown;
 
     TCombatHeroSubWindow(int x, int y, int w, int h, heroWindow* parent);
     virtual ~TCombatHeroSubWindow();
-    void Update(const hero& info, const hero* otherHero,
-                bool on_cursed_ground);
-    void Show();
-    void UnShow();
-    bool IsShown() const { return shown; }
+    // Before normalization (function): TCombatHeroSubWindow::Update.
+    void update(const hero& info, const hero* otherHero,
+                // Before normalization (locals): on_cursed_ground.
+                bool onCursedGround);
+    // Before normalization (function): TCombatHeroSubWindow::Show.
+    void show();
+    // Before normalization (function): TCombatHeroSubWindow::UnShow.
+    void unShow();
+    // Before normalization (function): TCombatHeroSubWindow::IsShown.
+    bool isShown() const { return m_shown; }
 };
 SIZE(TCombatHeroSubWindow, 0x5c);
 
@@ -124,23 +151,40 @@ SIZE(TCombatHeroSubWindow, 0x5c);
 // byte at +0x68 for each of TCombatWindow's four panels.
 class TCombatCreatureSubWindow : public TSubWindow {
 public:
-    bitmapBorder* backgroundWidget;  // +0x34
-    iconWidget* creatureIcon;         // +0x38, full-stat arm only
-    textWidget* attackText;           // +0x3c, full-stat arm only
-    textWidget* defenseText;          // +0x40, full-stat arm only
-    textWidget* damageText;           // +0x44, full-stat arm only
-    textWidget* speedText;            // +0x48, full-stat arm only
-    iconWidget* moraleIcon;            // +0x4c, full-stat arm only
-    iconWidget* luckIcon;              // +0x50, full-stat arm only
-    textWidget* countText;             // +0x54, full-stat arm only
-    iconWidget* spellIcons[3];         // +0x58
-    textWidget* spellText;             // +0x64
-    bool shown;
-    char pad_69[3];
-    int viewLevel;                     // +0x6c
+    // Before normalization: backgroundWidget.
+    bitmapBorder* m_backgroundWidget;  // +0x34
+    // Before normalization: creatureIcon.
+    iconWidget* m_creatureIcon;         // +0x38, full-stat arm only
+    // Before normalization: attackText.
+    textWidget* m_attackText;           // +0x3c, full-stat arm only
+    // Before normalization: defenseText.
+    textWidget* m_defenseText;          // +0x40, full-stat arm only
+    // Before normalization: damageText.
+    textWidget* m_damageText;           // +0x44, full-stat arm only
+    // Before normalization: speedText.
+    textWidget* m_speedText;            // +0x48, full-stat arm only
+    // Before normalization: moraleIcon.
+    iconWidget* m_moraleIcon;            // +0x4c, full-stat arm only
+    // Before normalization: luckIcon.
+    iconWidget* m_luckIcon;              // +0x50, full-stat arm only
+    // Before normalization: countText.
+    textWidget* m_countText;             // +0x54, full-stat arm only
+    // Before normalization: spellIcons.
+    iconWidget* m_spellIcons[3];         // +0x58
+    // Before normalization: spellText.
+    textWidget* m_spellText;             // +0x64
+    // Before normalization: shown.
+    bool m_shown;
+    // Before normalization: pad_69.
+    // Retail shown is a byte at +0x68; viewLevel is an int at +0x6c.
+    // These three bytes align the integer.
+    char m_paddingBeforeViewLevel[3];
+    // Before normalization: viewLevel.
+    int m_viewLevel;                     // +0x6c
 
     TCombatCreatureSubWindow(int x, int y, int w, int h,
-                             heroWindow* parent, int view_level);
+                             // Before normalization (locals): view_level.
+                             heroWindow* parent, int viewLevel);
 
     // Its 0x63d444 table holds exactly one slot: 0x63d440 (the sibling
     // TCombatHeroSubWindow's table) sits four bytes earlier, so neither
@@ -151,8 +195,10 @@ public:
     // ProcessCombatMsg's retail call sites independently prove their
     // pointer ABI.  They remain out of line just like the sibling hero
     // panel methods.
-    void Update(const army* info, const hero* owner);
-    void Show();
+    // Before normalization (function): TCombatCreatureSubWindow::Update.
+    void update(const army* info, const hero* owner);
+    // Before normalization (function): TCombatCreatureSubWindow::Show.
+    void show();
 
     // 0x46df80. LOCATED 2026-08-13 from combatManager::DoCommand
     // (0x476bd0), which closes the two hero panels through the proven
@@ -166,8 +212,10 @@ public:
     // creature-panel bodies, in the DC roster's own order. The BODY is
     // not reconstructed here - combatcontrolsubwindow.cpp still carries
     // it as a carcass.
-    void UnShow();
-    bool IsShown() const { return shown; }
+    // Before normalization (function): TCombatCreatureSubWindow::UnShow.
+    void unShow();
+    // Before normalization (function): TCombatCreatureSubWindow::IsShown.
+    bool isShown() const { return m_shown; }
 };
 SIZE(TCombatCreatureSubWindow, 0x70);
 

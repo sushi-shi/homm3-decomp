@@ -515,22 +515,35 @@ def _source_diff_full(base_text: str, target_text: str, source_map,
 # 100 there. These views judge like the interactive default and state the
 # report-level verdict next to it. The retail side names an UNCLAIMED
 # callee/global with a carve label (sub_f6570, data_2a5d5c, exe_new) that
-# MSVC can never emit - the same syntactic rule vc6/inline_model.py:81 uses
-# (sema must not import vc6, so the regex is repeated here).
+# MSVC can never emit. Source-claimed carcasses also have non-compiler labels;
+# their admission comes from the generated inventory's provenance. Neither
+# case proves that a differing compiler symbol refers to the same address.
 
 _EMITTABLE = re.compile(r"^[?_@]")
 _IND_DISP = re.compile(r"[+-]\s*(0x[0-9a-f]+)\s*\]")
 _HEX_LIT = re.compile(r"0x[0-9a-f]+")
 
 
-def _synthetic(name: str) -> str | None:
+def _source_claimed_labels(ctx) -> frozenset[str]:
+    """Read admission from the generated inventory, never infer it from spelling."""
+    db = ctx.symbols
+    owners, claimed = {}, set()
+    for kind, table in (("func", db.funcs), ("data", db.datas)):
+        for rva, row in table.items():
+            owners.setdefault(row[0], set()).add((kind, rva))
+            if row[3].startswith(("src-VA", "src-DATA")):
+                claimed.add(row[0])
+    return frozenset(name for name in claimed if len(owners[name]) == 1)
+
+
+def _synthetic(name: str, claimed_names=frozenset()) -> str | None:
     """Why *name* cannot have been spelled by our compiler, or None."""
     if name.startswith("$L"):
         return "local"
     if name.startswith("__h3cg$"):
         return "compgen"
     if not _EMITTABLE.match(name):
-        return "unclaimed"
+        return "source-claimed" if name in claimed_names else "unclaimed"
     return None
 
 
@@ -582,12 +595,15 @@ def _ref_seq(text: str) -> tuple[list, int | None]:
     return refs, stop
 
 
-def _refs_compare(base_refs: list, target_refs: list) -> dict:
+def _refs_compare(base_refs: list, target_refs: list, *,
+                  claimed_names=frozenset()) -> dict:
     """Pair the two reference sequences and judge every pair.
 
     rows: [(tag, base_ref|None, target_ref|None, note)] with tag = same /
     ~ different / - base-only / + target-only; note = why the retail name
-    could never match by spelling (unclaimed / local / compgen) or None.
+    could never match by spelling (source-claimed / unclaimed / local /
+    compgen) or None. Admission only annotates the row; it never aliases
+    symbols, changes pairing, or suppresses a name/addend difference.
     agree = no ~/-/+ (objdiff name_address); report_agree = what the
     ratchet's function_reloc_diffs=none sees: every pair the same kind and
     nothing one-sided. Pairing is a SequenceMatcher over (class, name)
@@ -615,7 +631,7 @@ def _refs_compare(base_refs: list, target_refs: list) -> dict:
         _to, tk, ts, ta, _tt = t
         if bk == tk and bs == ts and ba == ta:
             return "=", None
-        return "~", _synthetic(ts) or _synthetic(bs)
+        return "~", _synthetic(ts, claimed_names) or _synthetic(bs, claimed_names)
 
     rows = []
     matcher = difflib.SequenceMatcher(a=keys(base_refs, target_names),
@@ -641,6 +657,9 @@ def _refs_compare(base_refs: list, target_refs: list) -> dict:
         rows.extend(("+", None, target_refs[ti], None) for ti in range(j1 + shared, j2))
     counts = Counter(row[0] for row in rows)
     counts["synthetic"] = sum(1 for row in rows if row[0] == "~" and row[3])
+    for category in ("unclaimed", "source-claimed", "local", "compgen"):
+        counts[category] = sum(1 for row in rows
+                               if row[0] == "~" and row[3] == category)
     counts["real"] = counts["~"] - counts["synthetic"]
     agree = counts["~"] + counts["-"] + counts["+"] == 0
     report_agree = (counts["-"] + counts["+"] == 0 and all(
@@ -658,7 +677,8 @@ def _ref_name(ref) -> str:
 
 
 def _refs_view(base_text: str, target_text: str, rva: int, name: str,
-               calls_only: bool, verbose: bool = False) -> tuple[str, bool]:
+               calls_only: bool, verbose: bool = False, *,
+               claimed_names=frozenset()) -> tuple[str, bool]:
     """Render --calls / --relocs; (text, agree)."""
     base_refs, bstop = _ref_seq(base_text)
     target_refs, tstop = _ref_seq(target_text)
@@ -689,7 +709,7 @@ def _refs_view(base_text: str, target_text: str, rva: int, name: str,
         out.append(f"  no {'calls' if calls_only else 'relocations'} on either side.")
         return "\n".join(out) + "\n", True
     out.append(f"  base {census(base_refs)}   |   target {census(target_refs)}")
-    res = _refs_compare(base_refs, target_refs)
+    res = _refs_compare(base_refs, target_refs, claimed_names=claimed_names)
     for i, (tag, b, t, note) in enumerate(res["rows"]):
         kind_col = "" if calls_only else f"{(b or t)[1]:<5}"
         where = f"+{b[0]:03x}" if b else f"t+{t[0]:03x}"
@@ -698,7 +718,7 @@ def _refs_view(base_text: str, target_text: str, rva: int, name: str,
         elif tag == "~":
             text = f"{_ref_name(b)} -> {_ref_name(t)}"
             if note:
-                text += f"  ({'retail label - ' if note == 'unclaimed' else ''}{note})"
+                text += f"  ({'retail label - ' if note in ('unclaimed', 'source-claimed') else ''}{note})"
         elif tag == "-":
             text = _ref_name(b)
         else:
@@ -710,8 +730,13 @@ def _refs_view(base_text: str, target_text: str, rva: int, name: str,
             if t:
                 out.append(f"        target t+{t[0]:03x}: {t[4]}")
     c = res["counts"]
-    out.append(f"  {c['=']} same, {c['~']} different ({c['synthetic']} unclaimed "
-               f"retail labels, {c['real']} real), {c['-']} base-only, "
+    categories = [f"{c['unclaimed']} unclaimed retail labels"]
+    if c["source-claimed"]:
+        categories.append(f"{c['source-claimed']} source-claimed labels")
+    if c["local"] + c["compgen"]:
+        categories.append(f"{c['local'] + c['compgen']} generated/local labels")
+    categories.append(f"{c['real']} real")
+    out.append(f"  {c['=']} same, {c['~']} different ({', '.join(categories)}), {c['-']} base-only, "
                f"{c['+']} target-only")
     seq = "CALL SEQUENCES" if calls_only else "REFERENCE SEQUENCES"
     if res["agree"]:
@@ -720,18 +745,19 @@ def _refs_view(base_text: str, target_text: str, rva: int, name: str,
     else:
         report = "AGREE" if res["report_agree"] else "DIFFER"
         if c["-"] or c["+"]:
-            hint = ("a one-sided reference is an inlining decision (we call out "
-                    "of line what retail expanded, or the reverse); fix the "
-                    "callee's inline shape before touching registers")
+            hint = ("a one-sided reference can reflect inlining or control-flow "
+                    "differences; inspect the named call sites")
         elif c["real"]:
             hint = ("a different symbol at the same position - the wrong "
                     "overload/helper, or a mislabeled retail function; check it "
                     "with `homm3 sema rva`")
         else:
-            hint = (f"all {c['synthetic']} differing rows are unclaimed retail "
-                    "labels; claim them (VA) to compare by name")
-        if c["synthetic"] and (c["-"] or c["+"] or c["real"]):
-            hint += f"; claim the {c['synthetic']} unclaimed callees (VA) to compare them by name"
+            hint = "retail labels differ from compiler symbols"
+        if c["source-claimed"]:
+            hint += ("; source-claimed labels already have address annotations, "
+                     "so check declarations and relocation identities")
+        if c["unclaimed"]:
+            hint += f"; claim the {c['unclaimed']} unclaimed references to compare them by name"
         out.append(f"  name_address: {seq} DIFFER   |   report (none): {report} - {hint}.")
     return "\n".join(out) + "\n", res["agree"]
 
@@ -755,7 +781,8 @@ def _zeroed(raw: bytes, off: int, relocs) -> bytes:
     return bytes(data)
 
 
-def _first_divergence(base_text: str, target_text: str) -> dict | None:
+def _first_divergence(base_text: str, target_text: str, *,
+                      claimed_names=frozenset()) -> dict | None:
     """The first place the two sides' BYTES disagree, walking the aligned
     blocks and the aligned instructions inside them; None when nothing
     differs. A divergence that is only a reloc symbol spelling
@@ -826,7 +853,7 @@ def _first_divergence(base_text: str, target_text: str) -> dict | None:
             if brow["relocs"] != trow["relocs"]:
                 note = None
                 for _k, symbol, _a in trow["relocs"] + brow["relocs"]:
-                    note = note or _synthetic(symbol)
+                    note = note or _synthetic(symbol, claimed_names)
                 found = hit("reloc-target", block, bblock, tblock, brow, trow, prev, note)
                 if not found["cosmetic"]:
                     return found
@@ -947,7 +974,13 @@ def _summary_lines(facts: dict) -> tuple[list[str], bool, str]:
         report = "AGREE" if res["report_agree"] else "DIFFERS"
         parts = [f"{c['=']} same"]
         if c["~"]:
-            parts.append(f"{c['~']} different ({c['synthetic']} unclaimed, {c['real']} real)")
+            labels = []
+            for key in ("unclaimed", "source-claimed", "local", "compgen"):
+                count = c.get(key, c["synthetic"] if key == "unclaimed" else 0)
+                if count:
+                    labels.append(f"{count} {key}")
+            labels.append(f"{c['real']} real")
+            parts.append(f"{c['~']} different ({', '.join(labels)})")
         if c["-"]:
             parts.append(f"{c['-']} base-only")
         if c["+"]:
@@ -1000,11 +1033,13 @@ def _summary_facts(ctx, base_text, target_text, rva, name, unit, ordinal,
     brefs, _bs = _ref_seq(base_text)
     trefs, _ts = _ref_seq(target_text)
     flow = ("call", "jmp", "ind")
+    claimed_names = _source_claimed_labels(ctx)
     calls = _refs_compare([r for r in brefs if r[1] in flow],
-                          [r for r in trefs if r[1] in flow])
-    relocs = _refs_compare(brefs, trefs)
+                          [r for r in trefs if r[1] in flow],
+                          claimed_names=claimed_names)
+    relocs = _refs_compare(brefs, trefs, claimed_names=claimed_names)
     asm = _masked_asm_delta(base_text, target_text)
-    div = _first_divergence(base_text, target_text)
+    div = _first_divergence(base_text, target_text, claimed_names=claimed_names)
     source_loaded = False
     source_details = {"verified": False, "first_statement": None}
     try:
@@ -1083,6 +1118,7 @@ def _summary_verbose(lines, census, branches, calls, relocs, cap: int = 8):
 
 def _run_one(args, ctx, refreshed):
     name, unit, rva, _size, ordinal = ctx.symbols.resolve_fn(args.target)
+    _asm.require_candidate(unit, name, rva)
     if (not getattr(args, "no_build", False) and unit not in refreshed
             and (_asm.TARGET / f"{unit}.c.obj").is_file()):
         note = _asm.refresh_unit(unit)
@@ -1093,9 +1129,10 @@ def _run_one(args, ctx, refreshed):
     normal_base = _asm.NORMAL_BASE / f"{unit}.obj"
     normal_target = _asm.NORMAL_TARGET / f"{unit}.c.obj"
     if not (normal_base.is_file() and normal_target.is_file()):
-        die(f"{name} [{unit or 'no unit'}] has no comparison objects - only "
-            "delinked manifest units (config/units.toml) can diff; "
-            "`homm3 sema disasm` views any retail function")
+        missing = ", ".join(str(p) for p in (normal_base, normal_target) if not p.is_file())
+        die(f"comparison object missing for {name} [TU {unit}]: {missing}; "
+            "run `homm3 build` to compile, delink and normalize this manifest TU. "
+            f"Retail is available with `homm3 sema disasm 0x{rva:x}`.")
     base_text = _asm.objdump(normal_base, name, ordinal)
     target_text = _asm.objdump(normal_target, name, ordinal)
 
@@ -1132,7 +1169,8 @@ def _run_one(args, ctx, refreshed):
         sys.exit(_branch_view(base_text, target_text, rva, name, args.verbose))
     if args.calls or args.relocs:
         output, agree = _refs_view(base_text, target_text, rva, name,
-                                   calls_only=bool(args.calls), verbose=args.verbose)
+                                   calls_only=bool(args.calls), verbose=args.verbose,
+                                   claimed_names=_source_claimed_labels(ctx))
         print(output, end="")
         sys.exit(0 if agree else 1)
     if args.summary or args.why_bytes:

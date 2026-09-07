@@ -31,13 +31,13 @@
 // at 0x4b61b0 (excluded class, never claimed as source); its `_Nil` and
 // `_Nilrefs` statics live at 0x696d8c/0x696d90.
 DATA(0x00696d60)
-std::map<CImmEnclosure*, RECT> gImmEffectEntries;
-DATA(0x00696d70) long gImmWindowX;
-DATA(0x00696d74) long gImmWindowY;
-DATA(0x00696d7c) HWND gImmWindow;
-DATA(0x00696d80) CImmDevice* gImmDevice;
-DATA(0x00696d84) CImmProject* gImmProject;
-DATA(0x00696d88) CImmCompoundEffect* gImmEffect;
+std::map<CImmEnclosure*, RECT> g_immEffectEntries;
+DATA(0x00696d70) long g_immWindowX;
+DATA(0x00696d74) long g_immWindowY;
+DATA(0x00696d7c) HWND g_immWindow;
+DATA(0x00696d80) CImmDevice* g_immDevice;
+DATA(0x00696d84) CImmProject* g_immProject;
+DATA(0x00696d88) CImmCompoundEffect* g_immEffect;
 
 // COMDAT pairing: `??_Gt_create_failure`, the scalar deleting destructor
 // slot 0 of the throw vftable at 0x63e634 points at. It sits far ahead of
@@ -54,18 +54,19 @@ VA_COMPGEN(0x0041bed0, 0x21, SCALAR_DELETING_DTOR, t_create_failure)
 // Retail's own class name is `t_initializer`, in ForceFeedback.cpp's
 // unnamed namespace - see imm_mouse.h, where the role name and the nested
 // throw type are documented.
+// Before normalization (locals): hInst.
 VA(0x004b6260, 0x462)  // anchor-import (CImmMouse::Initialize) + anchor-rtti, retail-only
-TImmMouseRuntime::TImmMouseRuntime(void* hInst, void* hwnd)
+TImmMouseRuntime::TImmMouseRuntime(void* instance, void* hwnd)
 {
-    gImmWindow = static_cast<HWND>(hwnd);
-    gImmWindowX = 0;
-    gImmWindowY = 0;
+    g_immWindow = static_cast<HWND>(hwnd);
+    g_immWindowX = 0;
+    g_immWindowY = 0;
     ClientToScreen(static_cast<HWND>(hwnd),
-                   static_cast<POINT*>(static_cast<void*>(&gImmWindowX)));
+                   static_cast<POINT*>(static_cast<void*>(&g_immWindowX)));
     CIFCErrors::m_dwErrHandlingFlags = 1;
 
     std::auto_ptr<CImmMouse> mouse(new CImmMouse);
-    if (!mouse->Initialize(hInst, hwnd, 4))
+    if (!mouse->Initialize(instance, hwnd, 4))
         throw t_initialize_failure();
 
     std::auto_ptr<char> project;
@@ -79,19 +80,19 @@ TImmMouseRuntime::TImmMouseRuntime(void* hInst, void* hwnd)
         project = std::auto_ptr<char>(new char[size]);
         file.sgetn(project.get(), size);
     } catch (t_initialize_failure) {
-        LODFile* resource = ResourceManager::PointToBitmapResource("H3Shad.ifr");
+        LODFile* resource = ResourceManager::pointToBitmapResource("H3Shad.ifr");
         if (resource == 0)
             throw t_initialize_failure();
-        int size = ResourceManager::GetBitmapResourceSize("H3Shad.ifr");
+        int size = ResourceManager::getBitmapResourceSize("H3Shad.ifr");
         project = std::auto_ptr<char>(new char[size]);
-        ResourceManager::ReadFromBitmapResource(resource, project.get(), size);
+        ResourceManager::readFromBitmapResource(resource, project.get(), size);
     }
 
     std::auto_ptr<CImmProject> immProject(new CImmProject);
     if (!immProject->LoadProjectFromMemory(project.get(), mouse.get()))
         throw t_initialize_failure();
-    gImmDevice = mouse.release();
-    gImmProject = immProject.release();
+    g_immDevice = mouse.release();
+    g_immProject = immProject.release();
 }
 
 // COMDAT pairings the constructor above forces out: the throw type's own
@@ -115,12 +116,12 @@ VA_COMPGEN(0x004b6730, 0x157, IMPLICIT_COPY_CTOR, t_initialize_failure)
 VA(0x004b69f0, 0x5B)  // anchor-import (CImmProject::CreateEffect), retail-only
 unsigned char PlayImmEffect(const char* effectName, int count)
 {
-    if (gImmProject == 0)
+    if (g_immProject == 0)
         return 0;
-    if (gImmEffect != 0)
-        gImmProject->DestroyEffect(gImmEffect);
-    gImmEffect = gImmProject->CreateEffect(effectName, 0, 0);
-    return gImmEffect != 0 && gImmEffect->Start(count, 0) != 0;
+    if (g_immEffect != 0)
+        g_immProject->DestroyEffect(g_immEffect);
+    g_immEffect = g_immProject->CreateEffect(effectName, 0, 0);
+    return g_immEffect != 0 && g_immEffect->Start(count, 0) != 0;
 }
 
 // One tracked enclosure. `new CImmEnclosure` lands in the auto_ptr member
@@ -136,14 +137,14 @@ force_feedback::t_enclosure::t_enclosure(const RECT* rect, long a,
     : m_enclosure(new CImmEnclosure)
 {
     RECT bounds = *rect;
-    OffsetRect(&bounds, gImmWindowX, gImmWindowY);
-    if (!m_enclosure->Initialize(gImmDevice, &bounds, a, a, b, b, c, c,
+    OffsetRect(&bounds, g_immWindowX, g_immWindowY);
+    if (!m_enclosure->Initialize(g_immDevice, &bounds, a, a, b, b, c, c,
                                  (d ? 0x66 : 0) | (e ? 0x99 : 0), 0, 0, 0, 0))
         throw t_create_failure();
     // `make_pair`, not `value_type(...)`: the deduced pair's copy is what
     // orders the five stores right/top/left/bottom behind `first`
     // (99.99% against 97.98% for either explicit pair spelling).
-    gImmEffectEntries.insert(std::make_pair(m_enclosure.get(), bounds));
+    g_immEffectEntries.insert(std::make_pair(m_enclosure.get(), bounds));
 }
 
 // COMDAT pairing: the client-side scalar deleting destructor for the

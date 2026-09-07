@@ -17,36 +17,50 @@ class Bitmap16Bit;
 // Bitmap16Bit and Bitmap816.
 class Bitmap24Bit : public resource {
 public:
-    unsigned int DataSize;
-    int ImageSize;
-    int Width;
-    int Height;
-    unsigned char* data;
+    // Before normalization: DataSize.
+    unsigned int m_dataSize;
+    // Before normalization: ImageSize.
+    int m_imageSize;
+    // Before normalization: Width.
+    int m_width;
+    // Before normalization: Height.
+    int m_height;
+    // Before normalization: data.
+    unsigned char* m_data;
 
     virtual ~Bitmap24Bit();
-    virtual unsigned int GetSize() const;
+    // Before normalization (function): Bitmap24Bit::GetSize.
+    virtual unsigned int getSize() const;
 
     Bitmap24Bit(const char* name, int w, int h,
                 const unsigned char* source, int size);
     Bitmap24Bit(const char* name, const char* path);
 
-    int GetWidth() const { return Width; }
-    int GetHeight() const { return Height; }
+    // Before normalization (function): Bitmap24Bit::GetWidth.
+    int getWidth() const { return m_width; }
+    // Before normalization (function): Bitmap24Bit::GetHeight.
+    int getHeight() const { return m_height; }
     // Dreamcast bitmap24.h:72 (dc 0x533b0); both row advances in the raw
     // Draw body inline this exact 24-bit pitch calculation in retail.
-    int GetPitch() const { return Width * 3; }
-    void Draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst,
+    // Before normalization (function): Bitmap24Bit::GetPitch.
+    int getPitch() const { return m_width * 3; }
+    // Before normalization (function): Bitmap24Bit::Draw.
+    void draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst,
               int dx, int dy) const;
-    void Draw(int sx, int sy, int sw, int sh, unsigned short* dst,
+    // Before normalization (function): Bitmap24Bit::Draw.
+    void draw(int sx, int sy, int sw, int sh, unsigned short* dst,
               int dx, int dy, int dw, int dh, int dpitch) const;
-    void AdjustHSV(int x, int y, int w, int h, float hue,
-                   float hue_adjust, float saturation_adjust,
-                   float value_adjust);
-    void AdjustHSV(float hue, float hue_adjust, float saturation_adjust,
-                   float value_adjust)
+    // Before normalization (function): Bitmap24Bit::AdjustHSV.
+    void adjustHSV(int x, int y, int w, int h, float hue,
+                   // Before normalization (locals): hue_adjust, saturation_adjust, value_adjust.
+                   float hueAdjust, float saturationAdjust,
+                   float valueAdjust);
+    // Before normalization (function): Bitmap24Bit::AdjustHSV.
+    void adjustHSV(float hue, float hueAdjust, float saturationAdjust,
+                   float valueAdjust)
     {
-        AdjustHSV(0, 0, GetWidth(), GetHeight(), hue, hue_adjust,
-                  saturation_adjust, value_adjust);
+        adjustHSV(0, 0, getWidth(), getHeight(), hue, hueAdjust,
+                  saturationAdjust, valueAdjust);
     }
 
 private:

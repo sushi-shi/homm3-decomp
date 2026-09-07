@@ -32,8 +32,10 @@ enum EMapSize {
 };
 
 struct CampaignScenarioPreview : public NewSMapHeader {
-    SGameSetupOptions game_setup;
-    bool available;
+    // Before normalization: game_setup.
+    SGameSetupOptions m_gameSetup;
+    // Before normalization: available.
+    bool m_available;
 };
 SIZE(CampaignScenarioPreview, 0x4d4);
 
@@ -74,28 +76,28 @@ public:
     // 0x484f50, the root's `??_G`, then inlines it, as does every derived
     // destructor.
     virtual ~TCampaignStartOption();
-    virtual bool IsBuildingBonus(int which) const = 0;
-    virtual int GetCount() const = 0;
-    virtual const char* GetIconDefName(void* scenario, int which) const = 0;
-    virtual int GetIconIndex(int which) const = 0;
+    virtual bool isBuildingBonus(int which) const = 0;
+    virtual int getCount() const = 0;
+    virtual const char* getIconDefName(void* scenario, int which) const = 0;
+    virtual int getIconIndex(int which) const = 0;
     // 0x484f80, inherited by the bonus and the third option: sums the
     // 5-dword bit block through the nibble table at 0x67729c and answers
     // the campaign's crossover index.
-    virtual int _slot5(void* scenario, int which) const;
-    virtual std::string GetText(void* scenario, int which) const = 0;
+    virtual int slot5(void* scenario, int which) const;
+    virtual std::string getText(void* scenario, int which) const = 0;
     // 0x485090, `or eax,-1 / ret 4` - inherited unchanged by ALL THREE
     // concrete classes, so the root is where the -1 lives.
-    virtual int _slot7(int which) const;
-    virtual int GetPlayer(int which) const = 0;
-    virtual void Read(TAbstractFile* file) = 0;
+    virtual int slot7(int which) const;
+    virtual int getPlayer(int which) const = 0;
+    virtual void read(TAbstractFile* file) = 0;
     // `ret 4`: the slot takes one argument this option never reads, and
     // both sibling options answer it with the shared do-nothing at
     // 0x485d80.
-    virtual void Apply(void* scenario) = 0;
-    virtual void SetTown(CMapHeaderData* header) = 0;
+    virtual void apply(void* scenario) = 0;
+    virtual void setTown(CMapHeaderData* header) = 0;
     // 0x485000: every prerequisite scenario the record marks must already
     // be completed in gpGame->campaign.mapScores.
-    virtual bool _slot12(void* scenario, int value) const;
+    virtual bool slot12(void* scenario, int value) const;
 };
 
 // Retail Complete diverges from the Dreamcast class after heroWindow, but
@@ -106,13 +108,17 @@ public:
     struct CampaignHeaderStruct;
 
     struct MapTextStruct {
-        int video;
-        int audio;
-        std::string subtitles;
+        // Before normalization: video.
+        int m_video;
+        // Before normalization: audio.
+        int m_audio;
+        // Before normalization: subtitles.
+        std::string m_subtitles;
 
         // Retail 0x488fb0, the thiscall SCampaign::PlayScenarioPrologue
         // makes on a scenario's prologue record (name provisional).
-        void Play();
+        // Before normalization (function): TCampaignBrief::MapTextStruct::Play.
+        void play();
     };
 
     // The empty NewMapCampaignContext base is how game::NewMap receives the
@@ -121,34 +127,59 @@ public:
     // cannot name a nested type, so the base carries the relationship;
     // being empty it leaves every proven offset in place.
     struct ScenarioStruct : public NewMapCampaignContext {
-        std::string name;
-        int offset;
+        // Before normalization: name.
+        std::string m_name;
+        // Before normalization: offset.
+        int m_offset;
         // Retail tests this field with a signed `jle` before loading a
         // scenario.  The width agrees with the cross-build record, but the
         // Complete codegen proves the signed PC spelling.
-        int inflated_size;
+        // Before normalization: inflated_size.
+        int m_inflatedSize;
         // Byte elements: GetAvailableScenarios (0x488f00) walks _First at
         // +0x1c with `cmp byte ptr [ebx+edx],0` on a unit stride, and the
         // prologue pointer follows at +0x3c (a Dinkumware vector<bool>
         // would push it to +0x40).
-        std::vector<unsigned char> prerequisites;
-        std::string region_desc;
-        unsigned char region_color;
-        signed char difficulty;
-        char pad_3a[2];
-        MapTextStruct* prologue;
-        MapTextStruct* epilogue;
-        bool retain_xp;
-        bool retain_pskills;
-        bool retain_sskills;
-        bool retain_spellbook;
-        bool retain_artifacts;
-        char pad_49[3];
-        int heroes_status[8];
-        std::vector<int> hero_placeholders;
-        std::bitset<145> crossover_creatures;
-        std::bitset<144> crossover_artifacts;
-        TCampaignStartOption* options;
+        // Before normalization: prerequisites.
+        std::vector<unsigned char> m_prerequisites;
+        // Before normalization: region_desc.
+        std::string m_regionDesc;
+        // Before normalization: region_color.
+        unsigned char m_regionColor;
+        // Before normalization: difficulty.
+        signed char m_difficulty;
+        // Before normalization: pad_3a.
+        // The loader reads regionColor/difficulty as bytes at +0x38/39;
+        // prologue starts at +0x3c. These two bytes align the pointer.
+        char m_paddingBeforePrologue[2];
+        // Before normalization: prologue.
+        MapTextStruct* m_prologue;
+        // Before normalization: epilogue.
+        MapTextStruct* m_epilogue;
+        // Before normalization: retain_xp.
+        bool m_retainXp;
+        // Before normalization: retain_pskills.
+        bool m_retainPskills;
+        // Before normalization: retain_sskills.
+        bool m_retainSskills;
+        // Before normalization: retain_spellbook.
+        bool m_retainSpellbook;
+        // Before normalization: retain_artifacts.
+        bool m_retainArtifacts;
+        // Before normalization: pad_49.
+        // The loader expands five retention bits into booleans at +0x44..48;
+        // heroesStatus starts at +0x4c. These three bytes align the integer array.
+        char m_paddingBeforeHeroesStatus[3];
+        // Before normalization: heroes_status.
+        int m_heroesStatus[8];
+        // Before normalization: hero_placeholders.
+        std::vector<int> m_heroPlaceholders;
+        // Before normalization: crossover_creatures.
+        std::bitset<145> m_crossoverCreatures;
+        // Before normalization: crossover_artifacts.
+        std::bitset<144> m_crossoverArtifacts;
+        // Before normalization: options.
+        TCampaignStartOption* m_options;
 
         // Retail 0x485f50, immediately ahead of the destructor: the three
         // record pointers and the eight carry-over hero slots are cleared
@@ -160,14 +191,16 @@ public:
         // scenario count (the prerequisite bitmap's width) and the third
         // the campaign file version. Name provisional - no Dreamcast row
         // covers this Complete-only type.
-        void Read(TAbstractFile* infile, int numScenarios,
+        // Before normalization (function): TCampaignBrief::ScenarioStruct::Read.
+        void read(TAbstractFile* infile, int numScenarios,
                   int campaignVersion);
         // Complete's campaign-map loader calls this on the selected
         // scenario record for each matching map hero placeholder.  The
         // receiver offsets prove this is ScenarioStruct itself; both
         // arguments are fixed by the 0x10-byte placeholder stride and the
         // 0x492-byte carry-over hero vector stride.
-        void InitializeCrossoverHero(HeroPlaceholderData* placeholder,
+        // Before normalization (function): TCampaignBrief::ScenarioStruct::InitializeCrossoverHero.
+        void initializeCrossoverHero(HeroPlaceholderData* placeholder,
                                      hero* sourceHero);
         // Retail 0x487020, the placeholder half of the same pass: a map
         // hero placeholder with no carried hero behind it becomes a live
@@ -176,35 +209,44 @@ public:
         // registered with its player, the availability table and the
         // fog. `this` is dead in the body - the receiver is fixed by the
         // call site, not by the code. Name provisional.
-        void PlaceStartingHero(HeroPlaceholderData* placeholder);
+        // Before normalization (function): TCampaignBrief::ScenarioStruct::PlaceStartingHero.
+        void placeStartingHero(HeroPlaceholderData* placeholder);
         // Retail 0x487290, game::NewMap's second campaign callee: the map's
         // hero placeholders are sorted by power rating and handed the
         // scenario's carried heroes, strongest first. Name provisional.
-        void PlaceCrossoverHeroes();
+        // Before normalization (function): TCampaignBrief::ScenarioStruct::PlaceCrossoverHeroes.
+        void placeCrossoverHeroes();
         // Retail 0x487900, game::NewMap's third campaign callee: every
         // artifact the scenario's carry-over pool still holds is offered to
         // the option's player, and the option's own Apply runs last. Name
         // provisional.
-        void GiveCrossoverArtifacts();
+        // Before normalization (function): TCampaignBrief::ScenarioStruct::GiveCrossoverArtifacts.
+        void giveCrossoverArtifacts();
         // Complete-only retained wrapper at 0x4884c0.  The campaign-header
         // wrapper below is its sole direct caller.
-        void StartScenario(std::streambuf* stream, int option);
-        std::string GetRegionDescription() const;
+        // Before normalization (function): TCampaignBrief::ScenarioStruct::StartScenario.
+        void startScenario(std::streambuf* stream, int option);
+        // Before normalization (function): TCampaignBrief::ScenarioStruct::GetRegionDescription.
+        std::string getRegionDescription() const;
         // Retail 0x458fe0, the header-inline COMDAT campaignbrief.obj
         // retains: the option's bonus help text through the options
         // record's slot 6. Name provisional.
-        std::string GetBonusText(CampaignHeaderStruct* campaign, int option);
+        // Before normalization (function): TCampaignBrief::ScenarioStruct::GetBonusText.
+        std::string getBonusText(CampaignHeaderStruct* campaign, int option);
         ~ScenarioStruct();
         // Retail 0x487d30: LoadScenario's callee, which inflates the map
         // header of scenario `which` out of the campaign stream (name
         // provisional).
-        void LoadMapHeader(std::streambuf* stream, NewSMapHeader* mapHeader,
+        // Before normalization (function): TCampaignBrief::ScenarioStruct::LoadMapHeader.
+        void loadMapHeader(std::streambuf* stream, NewSMapHeader* mapHeader,
                            int which);
         // Retail 0x487e10: flags this scenario's hero placeholders in
         // SCampaign::PruneCrossoverHeroes' per-hero-id table (provisional).
-        void MarkCrossoverHeroes(unsigned char* wanted);
+        // Before normalization (function): TCampaignBrief::ScenarioStruct::MarkCrossoverHeroes.
+        void markCrossoverHeroes(unsigned char* wanted);
         // Prune's repeated inflated_size guard suggests an inlined scenario
         // query in retail; the role name is provisional.
+        // Before normalization (function): TCampaignBrief::ScenarioStruct::GetMaxCrossoverHeroes.
         int getMaxCrossoverHeroes() const;
         // Complete pool-eligibility predicate; retail expansion in Prune.
         bool usesCrossoverPool(int pool);
@@ -219,46 +261,70 @@ public:
             CAMPAIGN_FILE_VERSION_UNSUPPORTED = 2
         };
 
-        EFileError file_error;
-        std::string file_name;
-        int campaign_version;
-        int region_map;
-        std::string campaign_name;
-        std::string campaign_desc;
-        std::vector<ScenarioStruct*> scenarios;
-        unsigned char* data;
+        // Before normalization: file_error.
+        EFileError m_fileError;
+        // Before normalization: file_name.
+        std::string m_fileName;
+        // Before normalization: campaign_version.
+        int m_campaignVersion;
+        // Before normalization: region_map.
+        int m_regionMap;
+        // Before normalization: campaign_name.
+        std::string m_campaignName;
+        // Before normalization: campaign_desc.
+        std::string m_campaignDesc;
+        // Before normalization: scenarios.
+        std::vector<ScenarioStruct*> m_scenarios;
+        // Before normalization: data.
+        unsigned char* m_data;
         // FreeData (0x4887e0) destroys it through vtable slot 0 with the
         // deleting flag, and the two loaders hand it to ScenarioStruct.
         // A std::streambuf (a filebuf or a strstreambuf by Load's vftable
         // stores): the loaders seek it through slot 8 with seekoff's
         // hidden-return-plus-three ABI and wrap it in a TGzInflateBuf.
-        std::streambuf* stream;
-        bool variable_difficulty;
-        char pad_55[3];
-        int campaign_music;
+        // Before normalization: stream.
+        std::streambuf* m_stream;
+        // Before normalization: variable_difficulty.
+        bool m_variableDifficulty;
+        // Before normalization: pad_55.
+        // The loader stores variableDifficulty as a bool at +0x54 and
+        // campaignMusic as an int at +0x58. These three bytes align the integer.
+        char m_paddingBeforeCampaignMusic[3];
+        // Before normalization: campaign_music.
+        int m_campaignMusic;
 
         CampaignHeaderStruct(const char* filename);
         ~CampaignHeaderStruct();
-        bool Load();
-        bool LoadScenario(int which, NewSMapHeader* mapHeader);
-        std::string GetCampaignName() const;
-        std::string GetCampaignDescription() const;
+        // Before normalization (function): TCampaignBrief::CampaignHeaderStruct::Load.
+        bool load();
+        // Before normalization (function): TCampaignBrief::CampaignHeaderStruct::LoadScenario.
+        bool loadScenario(int which, NewSMapHeader* mapHeader);
+        // Before normalization (function): TCampaignBrief::CampaignHeaderStruct::GetCampaignName.
+        std::string getCampaignName() const;
+        // Before normalization (function): TCampaignBrief::CampaignHeaderStruct::GetCampaignDescription.
+        std::string getCampaignDescription() const;
         // Retail 0x483740: a by-value copy of file_name. It is a /Gy
         // COMDAT sitting in customcampaignwindow.obj's band - the first
         // object in link order that calls it - so that unit carries the
         // definition and the claim. Name provisional.
-        std::string GetFileName() const;
-        void StartMusic();
-        void GetAvailableScenarios(unsigned char* available) const;
-        void StartScenario(int which, int option);
+        // Before normalization (function): TCampaignBrief::CampaignHeaderStruct::GetFileName.
+        std::string getFileName() const;
+        // Before normalization (function): TCampaignBrief::CampaignHeaderStruct::StartMusic.
+        void startMusic();
+        // Before normalization (function): TCampaignBrief::CampaignHeaderStruct::GetAvailableScenarios.
+        void getAvailableScenarios(unsigned char* available) const;
+        // Before normalization (function): TCampaignBrief::CampaignHeaderStruct::StartScenario.
+        void startScenario(int which, int option);
         // Retail 0x4887e0 / 0x488850, both Complete-only and named from
         // their bodies (provisional): release the stream and the inflated
         // data; count the scenarios that carry map data.
-        void FreeData();
-        int GetNumMaps() const;
+        // Before normalization (function): TCampaignBrief::CampaignHeaderStruct::FreeData.
+        void freeData();
+        // Before normalization (function): TCampaignBrief::CampaignHeaderStruct::GetNumMaps.
+        int getNumMaps() const;
         // Prune's header-owned marking pass; name provisional without a DC row.
         void markRequiredHeroes(unsigned char* wanted);
-        // Total scenario slots, unlike the populated-map count GetNumMaps.
+        // Total scenario slots, unlike the populated-map count getNumMaps.
         int getScenarioCount() const;
     };
 
@@ -407,46 +473,71 @@ public:
     };
     enum { NWIDGETS = 80 };
 
-    unsigned short* zBuffer;
-    int oldVolume;
-    std::vector<CampaignScenarioPreview> scenarios;
-    CampaignHeaderStruct* campaign;
-    int field_68;
-    int selected_scenario;
-    coloredBorderFrame* start_bonus_borders[3];
-    bitmapBorder* bitmap_bonus_images[3];
-    iconWidget* sprite_bonus_images[3];
-    button* difficulty_buttons[5];
-    type_func_button* difficulty_decr_button;
-    type_func_button* difficulty_incr_button;
-    type_text_scroller* scroller;
+    // Before normalization: zBuffer.
+    unsigned short* m_zBuffer;
+    // Before normalization: oldVolume.
+    int m_oldVolume;
+    // Before normalization: scenarios.
+    std::vector<CampaignScenarioPreview> m_scenarios;
+    // Before normalization: campaign.
+    CampaignHeaderStruct* m_campaign;
+    // Before normalization: field_68.
+    int m_field68;
+    // Before normalization: selected_scenario.
+    int m_selectedScenario;
+    // Before normalization: start_bonus_borders.
+    coloredBorderFrame* m_startBonusBorders[3];
+    // Before normalization: bitmap_bonus_images.
+    bitmapBorder* m_bitmapBonusImages[3];
+    // Before normalization: sprite_bonus_images.
+    iconWidget* m_spriteBonusImages[3];
+    // Before normalization: difficulty_buttons.
+    button* m_difficultyButtons[5];
+    // Before normalization: difficulty_decr_button.
+    type_func_button* m_difficultyDecrButton;
+    // Before normalization: difficulty_incr_button.
+    type_func_button* m_difficultyIncrButton;
+    // Before normalization: scroller.
+    type_text_scroller* m_scroller;
 
     TCampaignBrief(unsigned char newCampaign, unsigned char viewFromGame);
     virtual ~TCampaignBrief();
-    void AddBonusIcons();
-    void UpdateBonusIcons();
-    void DoModal();
-    void Select(int which);
-    void ClearSelected();
-    void ResetMapAndDescription(int which);
-    void SetHumanSlot();
-    void SetupCurrentTerritory();
-    void UpdateAllyEnemyFlags();
+    // Before normalization (function): TCampaignBrief::AddBonusIcons.
+    void addBonusIcons();
+    // Before normalization (function): TCampaignBrief::UpdateBonusIcons.
+    void updateBonusIcons();
+    // Before normalization (function): TCampaignBrief::DoModal.
+    void doModal();
+    // Before normalization (function): TCampaignBrief::Select.
+    void select(int which);
+    // Before normalization (function): TCampaignBrief::ClearSelected.
+    void clearSelected();
+    // Before normalization (function): TCampaignBrief::ResetMapAndDescription.
+    void resetMapAndDescription(int which);
+    // Before normalization (function): TCampaignBrief::SetHumanSlot.
+    void setHumanSlot();
+    // Before normalization (function): TCampaignBrief::SetupCurrentTerritory.
+    void setupCurrentTerritory();
+    // Before normalization (function): TCampaignBrief::UpdateAllyEnemyFlags.
+    void updateAllyEnemyFlags();
     // Retail 0x459010, Complete-only (name provisional): shows the
     // difficulty button matching gpGame->setup.difficulty and, outside the
     // in-game view, the two arrow buttons a variable-difficulty campaign
     // allows around it. Select calls it right after UpdateBonusIcons.
-    void UpdateDifficultyButtons();
+    // Before normalization (function): TCampaignBrief::UpdateDifficultyButtons.
+    void updateDifficultyButtons();
 
 private:
     // The Dreamcast procedure is S_LPROC32 (file-static) yet calls this
     // private helper, proving the owning header grants it friendship;
     // campaignbrief.cpp declares the static ahead of this header so the
     // friend binds to it.
-    friend int CampaignBriefHandler(message& msg);
+    // Before normalization (function): CampaignBriefHandler.
+    friend int campaignBriefHandler(message& msg);
     // The DC class type contains this private member in addition to the
     // same-named file-scope helper emitted by campaignbrief.obj.
-    void ShowTerritorySmacker(unsigned char evilPost);
+    // Before normalization (function): TCampaignBrief::ShowTerritorySmacker.
+    void showTerritorySmacker(unsigned char evilPost);
     int convertID2HelpID(int id) const;
 };
 SIZE(TCampaignBrief::MapTextStruct, 0x18);

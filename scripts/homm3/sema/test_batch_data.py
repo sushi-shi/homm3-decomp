@@ -24,13 +24,15 @@ class BatchTest(unittest.TestCase):
                     from homm3.sema._common import die
                     die("bad selector")
                 return selector, "u", 0x1000, 1, 0
-            ctx = SimpleNamespace(symbols=SimpleNamespace(resolve_fn=resolve),
+            ctx = SimpleNamespace(symbols=SimpleNamespace(resolve_fn=resolve,
+                                                          funcs={}, datas={}),
                                   fn_fuzzy=lambda *a: 100)
             args = _build_parser().parse_args(["diff", "f", "bad", "g", "--json", "--why-bytes"])
             text = "00000000 <fn>:\n 0: c3\tret\n"
             with patch.object(diff, "get_context", return_value=ctx), \
                     patch.multiple(_asm, TARGET=root, NORMAL_BASE=root, NORMAL_TARGET=root), \
                     patch.object(_asm, "objdump", return_value=text), \
+                    patch.object(_asm.manifest, "by_unit", return_value={"u": {}}), \
                     patch.object(_asm, "refresh_unit", return_value="refreshed") as refresh, \
                     patch.object(source, "load", side_effect=source.SourceError("test")), \
                     contextlib.redirect_stdout(io.StringIO()) as out, \

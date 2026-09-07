@@ -20,8 +20,10 @@ enum TTownType;
 // CScenarioInfoDlg::ProcessRightSelect is their only caller, and it hands
 // them SGameSetupOptions::alignment[] - modelled `int` here - so the
 // parameter stays an ordinal.  Retail-only: no Dreamcast row fixes an ABI.
-const char* GetStartingResourceName(int town);
-const char* GetStartingResourceDescription(int town);
+// Before normalization (function): GetStartingResourceName.
+const char* getStartingResourceName(int town);
+// Before normalization (function): GetStartingResourceDescription.
+const char* getStartingResourceDescription(int town);
 
 // A bare rectangular click target. Retail's 0x575220 ctor calls
 // ??0widget@@QAE@XZ (the default base ctor) and writes x/y/width/height/id
@@ -33,9 +35,11 @@ class CHotspotWidget : public widget {
 public:
     CHotspotWidget(int xPos, int yPos, int w, int h, int widgetId);
     virtual ~CHotspotWidget();
-    virtual int Main(message* msg);  // slot 2, retail 0x575290
+    // Before normalization (function): CHotspotWidget::Main.
+    virtual int main(message* msg);  // slot 2, retail 0x575290
     virtual void zBufferDraw(unsigned short* zBuffer, int id); // slot 3
-    virtual void Draw();             // slot 4, folded onto 0x404df0
+    // Before normalization (function): CHotspotWidget::Draw.
+    virtual void draw();             // slot 4, folded onto 0x404df0
 };
 
 // Retail's constructor allocates 0x38 bytes and writes the sprite and frame
@@ -43,14 +47,19 @@ public:
 // independently fixes the four overrides below.
 class CSpriteWidget : public widget {
 public:
-    CSprite* sprite;
-    int frame;
+    // Before normalization: sprite.
+    CSprite* m_sprite;
+    // Before normalization: frame.
+    int m_frame;
 
-    CSpriteWidget(int xPos, int yPos, CSprite* pSprite, int spriteFrame);
+    // Before normalization (locals): pSprite.
+    CSpriteWidget(int xPos, int yPos, CSprite* sprite, int spriteFrame);
     virtual ~CSpriteWidget();
-    virtual int Main(message* msg);  // slot 2, retail 0x575a10
+    // Before normalization (function): CSpriteWidget::Main.
+    virtual int main(message* msg);  // slot 2, retail 0x575a10
     virtual void zBufferDraw(unsigned short* zBuffer, int id); // slot 3
-    virtual void Draw();             // slot 4, retail 0x575750
+    // Before normalization (function): CSpriteWidget::Draw.
+    virtual void draw();             // slot 4, retail 0x575750
 };
 SIZE(CSpriteWidget, 0x38);
 
@@ -60,12 +69,16 @@ SIZE(CSpriteWidget, 0x38);
 // zBufferDraw onto the shared empty.
 class CBitmapWidget : public widget {
 public:
-    Bitmap816* image;
+    // Before normalization: image.
+    Bitmap816* m_image;
 
-    CBitmapWidget(int xPos, int yPos, Bitmap816* pImage);
-    virtual int Main(message* msg);  // slot 2, folds onto 0x575a10
+    // Before normalization (locals): pImage.
+    CBitmapWidget(int xPos, int yPos, Bitmap816* image);
+    // Before normalization (function): CBitmapWidget::Main.
+    virtual int main(message* msg);  // slot 2, folds onto 0x575a10
     virtual void zBufferDraw(unsigned short* zBuffer, int id); // slot 3
-    virtual void Draw();             // slot 4, retail 0x575a20
+    // Before normalization (function): CBitmapWidget::Draw.
+    virtual void draw();             // slot 4, retail 0x575a20
 };
 
 class CNetMsgHandler;
@@ -77,21 +90,24 @@ class CNetMsgHandler;
 // at +0x54 - the first byte past the 0x54-byte TDialogBox base.
 class CSingleSelPopup : public TDialogBox {
 public:
-    unsigned char gameMode;
+    // Before normalization: gameMode.
+    unsigned char m_gameMode;
 
     CSingleSelPopup(int type, unsigned char newGameMode)
         : TDialogBox(type)
     {
-        gameMode = newGameMode;
+        m_gameMode = newGameMode;
     }
     // Inlined into every CreateWin: push the widget onto the window's vector
     // and register it with priority -1 (dc 0x12eef4).
-    void Add(widget* w)
+    // Before normalization (function): CSingleSelPopup::Add.
+    void add(widget* w)
     {
-        Widgets.push_back(w);
-        AddWidget(w, -1);
+        m_widgets.push_back(w);
+        addWidget(w, -1);
     }
-    virtual int handle_message(message& msg);  // slot 3, retail 0x575430
+    // Before normalization (function): CSingleSelPopup::handle_message.
+    virtual int handleMessage(message& msg);  // slot 3, retail 0x575430
 };
 
 // The four dialogs. Each ctor pushes 0x12 through TDialogBox, stores its own
@@ -106,20 +122,25 @@ public:
 class CBonusDlg : public CSingleSelPopup {
 public:
     CBonusDlg(unsigned char newGameMode);       // retail 0x575410
-    unsigned char CreateWin(const char* title, CSprite* sprite, int frame, const char* botTitle, const char* description);
-    unsigned char CreateWin(const char* title, Bitmap816* pImage, const char* botTitle, const char* description);
+    // Before normalization (function): CBonusDlg::CreateWin.
+    unsigned char createWin(const char* title, CSprite* sprite, int frame, const char* botTitle, const char* description);
+    // Before normalization (function): CBonusDlg::CreateWin.
+    // Before normalization (locals): pImage.
+    unsigned char createWin(const char* title, Bitmap816* image, const char* botTitle, const char* description);
 };
 
 class CHeroDlg : public CSingleSelPopup {
 public:
     CHeroDlg(unsigned char newGameMode);        // retail 0x575a70
-    unsigned char CreateWin(Bitmap816* heroPick, const char* heroName, CSprite* specialtyIcon, int frame, const char* specialtyName, const char* desc);
+    // Before normalization (function): CHeroDlg::CreateWin.
+    unsigned char createWin(Bitmap816* heroPick, const char* heroName, CSprite* specialtyIcon, int frame, const char* specialtyName, const char* desc);
 };
 
 class CTownDlg : public CSingleSelPopup {
 public:
     CTownDlg(unsigned char newGameMode);        // retail 0x575e10
-    unsigned char CreateWin(CSprite* town, int frame, TTownType townType);
+    // Before normalization (function): CTownDlg::CreateWin.
+    unsigned char createWin(CSprite* town, int frame, TTownType townType);
 };
 
 // The team-alignment picker adds a team-mask table at +0x58 and a count at
@@ -127,13 +148,18 @@ public:
 // [+0x78]).
 class CTeamAlignmentDlg : public CSingleSelPopup {
 public:
-    int teamMasks[8];
-    int numTeams;
+    // Before normalization: teamMasks.
+    int m_teamMasks[8];
+    // Before normalization: numTeams.
+    int m_numTeams;
 
     CTeamAlignmentDlg(unsigned char newGameMode);  // retail 0x5764d0
-    unsigned char CreateWin();
-    int CountNumPlayers(int teamNbr);
-    void GetTeams();
+    // Before normalization (function): CTeamAlignmentDlg::CreateWin.
+    unsigned char createWin();
+    // Before normalization (function): CTeamAlignmentDlg::CountNumPlayers.
+    int countNumPlayers(int teamNbr);
+    // Before normalization (function): CTeamAlignmentDlg::GetTeams.
+    void getTeams();
 };
 
 // The abstract progress sink the random-map generator drives.  Retail's
@@ -147,13 +173,17 @@ class TProgressSink {
 public:
     // Kept as `steps`: singleselectionwindow.cpp already reads it by that
     // name through the class this header now owns.
-    int steps;   // +0x04
-    int done;    // +0x08
+    // Before normalization: steps.
+    int m_steps;   // +0x04
+    // Before normalization: done.
+    int m_done;    // +0x08
 
     TProgressSink(int totalSteps);
     virtual ~TProgressSink();                      // slot 0, retail 0x530e70
-    virtual void SetTotal(int totalSteps);         // slot 1, retail 0x530e80
-    virtual void Advance(int amount) = 0;          // slot 2, pure at the base
+    // Before normalization (function): TProgressSink::SetTotal.
+    virtual void setTotal(int totalSteps);         // slot 1, retail 0x530e80
+    // Before normalization (function): TProgressSink::Advance.
+    virtual void advance(int amount) = 0;          // slot 2, pure at the base
 };
 SIZE(TProgressSink, 0xc);
 
@@ -163,23 +193,36 @@ SIZE(TProgressSink, 0xc);
 // and the repaint 0x577180 reach the rest.  Ordinal name.
 class TRandomMapProgress : public TProgressSink {
 public:
-    std::vector<widget*> widgets;   // +0x0c
-    heroWindow* window;             // +0x1c
-    CSprite* barSprite;             // +0x20
+    // Before normalization: widgets.
+    std::vector<widget*> m_widgets;   // +0x0c
+    // Before normalization: window.
+    heroWindow* m_window;             // +0x1c
+    // Before normalization: barSprite.
+    CSprite* m_barSprite;             // +0x20
     // The last permille-ish position Draw painted, cached so a repaint at an
     // unchanged position costs nothing.  Retail compares the fresh
     // `done * 256 / total` against it and returns when they agree.
-    int drawnPosition;              // +0x24
-    char pad_28[0x30 - 0x28];
+    // Before normalization: drawnPosition.
+    int m_drawnPosition;              // +0x24
+    // Before normalization: pad_28. The old eight-byte tail overlapped
+    // retail's live monsterStrength/min temporary: constructor receiver
+    // ebp-0x5c at 0x5862ef, independent word ebp-0x30 at 0x586306/0x586437.
+    // Retain only the unresolved word at +0x28. The known fields fill
+    // 0x28 bytes; 0x2c is an extent bound, not a proven retail sizeof.
+    char m_pad28[4];
 
     TRandomMapProgress(int totalSteps);
     virtual ~TRandomMapProgress();
-    virtual void SetTotal(int totalSteps);
-    virtual void Advance(int amount);
+    // Before normalization (function): TRandomMapProgress::SetTotal.
+    virtual void setTotal(int totalSteps);
+    // Before normalization (function): TRandomMapProgress::Advance.
+    virtual void advance(int amount);
     // Ordinal name, retained from the earlier singleselectionwindow.h model
     // because that TU already calls it by this spelling.
-    void LoadProgFn_00577180();  // retail 0x577180
+    // Before normalization (function): TRandomMapProgress::LoadProgFn_00577180.
+    void loadProgFn00577180();  // retail 0x577180
 };
-SIZE(TRandomMapProgress, 0x30);
+// Check this provisional view; exact retail extent remains unresolved.
+SIZE(TRandomMapProgress, 0x2c);
 
 #endif  /* HOMM3_SINGLESELECTIONPOPUPS_H */

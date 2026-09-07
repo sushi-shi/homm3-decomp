@@ -10,12 +10,12 @@ template <size_t N>
 class bitset_iterator {
 public:
     bitset_iterator()
-        : bits_(0), position_(0)
+        : m_bits(0), m_position(0)
     {
     }
 
     bitset_iterator(std::bitset<N>& bits, size_t position)
-        : bits_(&bits), position_(position)
+        : m_bits(&bits), m_position(position)
     {
     }
 
@@ -23,24 +23,26 @@ public:
 
     bitset_iterator& operator++()
     {
-        ++position_;
+        ++m_position;
         return *this;
     }
 
     bool operator!=(const bitset_iterator& other) const
     {
-        return bits_ != other.bits_ || position_ != other.position_;
+        return m_bits != other.m_bits || m_position != other.m_position;
     }
 
 private:
-    std::bitset<N>* bits_;
-    size_t position_;
+    // Before normalization: bits_.
+    std::bitset<N>* m_bits;
+    // Before normalization: position_.
+    size_t m_position;
 };
 
 template <size_t N>
 typename std::bitset<N>::reference bitset_iterator<N>::operator*() const
 {
-    return (*bits_)[position_];
+    return (*m_bits)[m_position];
 }
 
 #endif

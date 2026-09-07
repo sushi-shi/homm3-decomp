@@ -91,20 +91,30 @@ public:
 
     enum { NWIDGETS = 44 };
 
-    unsigned char bPrefsChanged;   // +0x60
-    char pad_61[3];
-    int quickCombatSave;           // +0x64
+    // Before normalization: bPrefsChanged.
+    unsigned char m_prefsChanged;   // +0x60
+    // Before normalization: pad_61.
+    // The preceding byte field and following four-byte field establish
+    // this alignment gap; the reference layout retains the same boundary.
+    char m_paddingBeforeQuickCombatSave[3];
+    // Before normalization: quickCombatSave.
+    int m_quickCombatSave;           // +0x64
 
     TSystemOptionsWindow();
     virtual ~TSystemOptionsWindow();
     int convertID2HelpID(int id) const;
-    void DoModal();
-    virtual int WindowHandler(message* msg);
-    void UpdateSystemOptions(unsigned char bFirstUpdate);
+    // Before normalization (function): TSystemOptionsWindow::DoModal.
+    void doModal();
+    // Before normalization (function): TSystemOptionsWindow::WindowHandler.
+    virtual int windowHandler(message* msg);
+    // Before normalization (function): TSystemOptionsWindow::UpdateSystemOptions.
+    // Before normalization (locals): bFirstUpdate.
+    void updateSystemOptions(unsigned char firstUpdate);
 };
 SIZE(TSystemOptionsWindow, 0x68);
 
-DATA(0x006a7584) extern THelpText gSystemOptionsHelp[48];
+// Before normalization: gSystemOptionsHelp.
+DATA(0x006a7584) extern THelpText g_systemOptionsHelp[48];
 
 // --- TSystemOptionsWindow ---
 // CODEVIEW(E:\gamedcs\systemoptionswindow.cpp:43, dc 0x15f588) void TSystemOptionsWindow::TSystemOptionsWindow();

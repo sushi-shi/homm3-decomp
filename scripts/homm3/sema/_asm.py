@@ -24,6 +24,7 @@ import re
 import struct
 import subprocess
 
+from homm3 import manifest
 from homm3.core import common
 from homm3.sema._common import die
 
@@ -97,6 +98,15 @@ def _slice_public_symbol(text, name, ordinal, public_names):
     return "\n".join(body).rstrip() + "\n"
 
 
+def require_candidate(unit, name, rva):
+    """Reject retail-only owners before attempting any candidate compilation."""
+    if not unit or unit not in manifest.by_unit():
+        die(f"{name} [{unit or 'no unit'}] has no candidate TU in "
+            f"config/units.toml; view retail with `homm3 sema disasm 0x{rva:x}`. "
+            "Admit the owning TU and its source claim before requesting "
+            "candidate disassembly or a diff.")
+
+
 def objdump(obj, name: str, ordinal: int) -> str:
     """The named function's rows from *obj*, freshness-guarded when the
     object is a disposable normalized comparison copy."""
@@ -112,8 +122,10 @@ def objdump(obj, name: str, ordinal: int) -> str:
         from homm3.build.normalized_freshness import freshness_problems
         problems = freshness_problems(obj)
         if problems:
-            die("stale normalized comparison object (re-run without "
-                "--no-build to refresh this unit, or `homm3 build`):\n  "
+            unit = obj.name.removesuffix(".c.obj").removesuffix(".obj")
+            die(f"stale normalized comparison object for TU {unit}: {obj} "
+                f"(re-run without --no-build or run `homm3 build --fast {unit}`; "
+                "if retail targets/claims changed, run `homm3 build`):\n  "
                 + "\n  ".join(problems[:5]))
     res = subprocess.run(
         ["llvm-objdump", "-dr", "--x86-asm-syntax=intel", str(obj)],
@@ -124,7 +136,14 @@ def objdump(obj, name: str, ordinal: int) -> str:
         res.stdout, name, ordinal,
         _public_text_symbols(obj) | _function_text_symbols(obj))
     if body is None:
-        die(f"symbol {name} not found in {obj.relative_to(common.HOMM3_DIR)}")
+        unit = obj.name.removesuffix(".c.obj").removesuffix(".obj")
+        side = "candidate" if obj.parent in (BASE, NORMAL_BASE) else "retail target"
+        die(f"symbol {name} not found in {obj.relative_to(common.HOMM3_DIR)} "
+            f"({side}, TU {unit}, occurrence {ordinal}); "
+            f"run `homm3 build` to refresh claims, delink and normalization. "
+            "If the symbol is still absent, check the owning source VA/VA_COMPGEN "
+            "claim against the emitted COFF symbol; a missing emitted body or "
+            "incorrect binding cannot be fixed by retrying another diff view.")
     return body
 
 
@@ -156,8 +175,17 @@ def refresh_unit(unit: str, *, run=subprocess.run) -> str | None:
                   cwd=common.HOMM3_DIR, capture_output=True, text=True)
         if res.returncode != 0:
             tail = "\n".join((res.stdout + res.stderr).strip().splitlines()[-25:])
-            die(f"{unit} does not compile - fix the source (or --no-build to "
-                f"diff the last built object):\n{tail}")
+            from homm3.core.usage import classify_error
+            category = classify_error(tail)
+            if category.startswith("environment."):
+                advice = "check Wine/toolchain availability and execution permissions"
+            elif category == "compile.cpp":
+                advice = "fix the C++ compiler errors below"
+            else:
+                advice = "check the build command and diagnostics below"
+            die(f"{unit} candidate refresh failed [{category}] - {advice} "
+                "(--no-build only compares an existing, fresh normalized object):"
+                f"\n{tail}")
         compiled = "no work to do" not in res.stdout
         from homm3.build import normalize_objs
         counts = normalize_objs.normalize_unit(unit)

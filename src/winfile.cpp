@@ -41,55 +41,57 @@
 VA(0x005ffb20, 0x14)  // linkorder + body: stores vtbl 0x643d20, zeroes m_hFile/+0x108 open byte; dc 0x198434
 File::File()
 {
-    m_hFile = NULL;
-    open = FALSE;
+    m_file = NULL;
+    m_open = FALSE;
 }
 
 // E:\gamedcs\winfile.cpp:39
 VA(0x005ffb40, 0x15)  // linkorder + import-anchor (CloseHandle); dc 0x198468
 File::~File()
 {
-    if (m_hFile)
-        CloseHandle(m_hFile);
+    if (m_file)
+        CloseHandle(m_file);
 }
 
 // E:\gamedcs\winfile.cpp:45
 VA(0x005ffb60, 0xB)  // vtable-slot 2 of File (0x643d20); dc 0x19849c
-unsigned char File::IsOpen()
+unsigned char File::isOpen()
 {
-    return m_hFile != NULL;
+    return m_file != NULL;
 }
 
 // E:\gamedcs\winfile.cpp:50
 VA(0x005ffb70, 0x20)  // vtable-slot 0 of File (0x643d20) + import-anchor (CloseHandle); dc 0x1984a8
-unsigned char File::Close()
+unsigned char File::close()
 {
-    if (!m_hFile)
+    if (!m_file)
         return FALSE;
 
-    CloseHandle(m_hFile);
-    m_hFile = NULL;
+    CloseHandle(m_file);
+    m_file = NULL;
     return TRUE;
 }
 
 // E:\gamedcs\winfile.cpp:70 - no retail body; inlined into Delete and
 // Open below (the one-pass inliner needs the body before its callers).
-inline unsigned char File::Exists(const char* sFilename)
+// Before normalization (locals): sFilename.
+inline unsigned char File::exists(const char* filename)
 {
-    return _access(sFilename, 0) == 0;
+    return _access(filename, 0) == 0;
 }
 
 // E:\gamedcs\winfile.cpp:77
+// Before normalization (locals): sFilename, bDeleted.
 VA(0x005ffb90, 0x24)  // linkorder + import-anchor (DeleteFileA) + inlined Exists (_access 0x61a26e); dc 0x1984f0
-unsigned char File::Delete(const char* sFilename)
+unsigned char File::deleteFile(const char* filename)
 {
-    unsigned char bDeleted;
+    unsigned char deleted;
 
-    if (!Exists(sFilename))
+    if (!exists(filename))
         return FALSE;
 
-    bDeleted = DeleteFileA(sFilename) != 0;
-    return bDeleted;
+    deleted = DeleteFileA(filename) != 0;
+    return deleted;
 }
 
 // E:\gamedcs\winfile.cpp:139
@@ -97,109 +99,112 @@ unsigned char File::Delete(const char* sFilename)
 // open and is created (CREATE_NEW) otherwise. Both CreateFileA calls
 // share FILE_SHARE_READ / FILE_ATTRIBUTE_NORMAL|FILE_FLAG_RANDOM_ACCESS
 // and retail cross-jumps them into one call site.
+// Before normalization (locals): sFilename.
 VA(0x005ffbc0, 0x84)  // vtable-slot 1 of File (0x643d20) + import-anchor (CreateFileA); dc 0x198568
-unsigned char File::Open(const char* sFilename, FileMode mode)
+unsigned char File::open(const char* filename, FileMode mode)
 {
-    if (m_hFile) {
-        CloseHandle(m_hFile);
-        m_hFile = NULL;
+    if (m_file) {
+        CloseHandle(m_file);
+        m_file = NULL;
     }
 
-    if (Exists(sFilename)) {
-        m_hFile = CreateFileA(sFilename, mode, FILE_SHARE_READ, NULL, OPEN_EXISTING,
+    if (exists(filename)) {
+        m_file = CreateFileA(filename, mode, FILE_SHARE_READ, NULL, OPEN_EXISTING,
                               FILE_ATTRIBUTE_NORMAL | FILE_FLAG_RANDOM_ACCESS, NULL);
     } else {
         if (mode == modeRead)
             return FALSE;
-        m_hFile = CreateFileA(sFilename, mode, FILE_SHARE_READ, NULL, CREATE_NEW,
+        m_file = CreateFileA(filename, mode, FILE_SHARE_READ, NULL, CREATE_NEW,
                               FILE_ATTRIBUTE_NORMAL | FILE_FLAG_RANDOM_ACCESS, NULL);
     }
 
-    if (m_hFile == INVALID_HANDLE_VALUE) {
-        m_hFile = NULL;
+    if (m_file == INVALID_HANDLE_VALUE) {
+        m_file = NULL;
         return FALSE;
     }
     return TRUE;
 }
 
 // E:\gamedcs\winfile.cpp:184
+// Before normalization (locals): pData.
 VA(0x005ffc50, 0x30)  // vtable-slot 4 of File (0x643d20) + import-anchor (WriteFile); dc 0x1985b8
-unsigned long File::Write(void* pData, unsigned long dBytes)
+unsigned long File::write(void* data, unsigned long dBytes)
 {
     unsigned long dBytesWritten;
 
-    if (!m_hFile)
-        return m_hFileValue;
+    if (!m_file)
+        return m_fileValue;
 
-    return WriteFile(m_hFile, pData, dBytes, &dBytesWritten, NULL) ? dBytesWritten : 0;
+    return WriteFile(m_file, data, dBytes, &dBytesWritten, NULL) ? dBytesWritten : 0;
 }
 
 // E:\gamedcs\winfile.cpp:199
+// Before normalization (locals): pData.
 VA(0x005ffc80, 0x30)  // vtable-slot 3 of File (0x643d20) + import-anchor (ReadFile); dc 0x1985e4
-unsigned long File::Read(void* pData, unsigned long dBytes)
+unsigned long File::read(void* data, unsigned long dBytes)
 {
     unsigned long dBytesRead;
 
-    if (!m_hFile)
-        return m_hFileValue;
+    if (!m_file)
+        return m_fileValue;
 
-    return ReadFile(m_hFile, pData, dBytes, &dBytesRead, NULL) ? dBytesRead : 0;
+    return ReadFile(m_file, data, dBytes, &dBytesRead, NULL) ? dBytesRead : 0;
 }
 
 // E:\gamedcs\winfile.cpp:212
 VA(0x005ffcb0, 0x16)  // vtable-slot 7 of File (0x643d20) + import-anchor (SetFilePointer, FILE_END); dc 0x198610
-unsigned long File::SeekEnd()
+unsigned long File::seekEnd()
 {
-    if (!m_hFile)
-        return m_hFileValue;
+    if (!m_file)
+        return m_fileValue;
 
-    return SetFilePointer(m_hFile, 0, NULL, FILE_END);
+    return SetFilePointer(m_file, 0, NULL, FILE_END);
 }
 
 // E:\gamedcs\winfile.cpp:220
 VA(0x005ffcd0, 0x16)  // vtable-slot 6 of File (0x643d20) + import-anchor (SetFilePointer, FILE_BEGIN); dc 0x198630
-unsigned long File::SeekBegin()
+unsigned long File::seekBegin()
 {
-    if (!m_hFile)
-        return m_hFileValue;
+    if (!m_file)
+        return m_fileValue;
 
-    return SetFilePointer(m_hFile, 0, NULL, FILE_BEGIN);
+    return SetFilePointer(m_file, 0, NULL, FILE_BEGIN);
 }
 
 // E:\gamedcs\winfile.cpp:230
 VA(0x005ffcf0, 0x21)  // vtable-slot 8 of File (0x643d20) + import-anchor (SetFilePointer, FILE_CURRENT); dc 0x198650
-unsigned long File::SeekCur(int seekAmt)
+unsigned long File::seekCur(int seekAmt)
 {
-    if (!m_hFile)
-        return m_hFileValue;
+    if (!m_file)
+        return m_fileValue;
 
-    return SetFilePointer(m_hFile, seekAmt, NULL, FILE_CURRENT);
+    return SetFilePointer(m_file, seekAmt, NULL, FILE_CURRENT);
 }
 
 // E:\gamedcs\winfile.cpp:240
 // dStart == 0 seeks straight from the beginning; otherwise position
 // to dStart absolute, then advance dBytesToSeek relative.
 VA(0x005ffd20, 0x4E)  // vtable-slot 5 of File (0x643d20) + import-anchor (SetFilePointer x2); dc 0x198670
-unsigned long File::Seek(unsigned long dBytesToSeek, unsigned long dStart)
+unsigned long File::seek(unsigned long dBytesToSeek, unsigned long dStart)
 {
-    if (!m_hFile)
-        return m_hFileValue;
+    if (!m_file)
+        return m_fileValue;
 
     if (dStart == 0)
-        return SetFilePointer(m_hFile, dBytesToSeek, NULL, FILE_BEGIN);
+        return SetFilePointer(m_file, dBytesToSeek, NULL, FILE_BEGIN);
 
-    SetFilePointer(m_hFile, dStart, NULL, FILE_BEGIN);
-    return SetFilePointer(m_hFile, dBytesToSeek, NULL, FILE_CURRENT);
+    SetFilePointer(m_file, dStart, NULL, FILE_BEGIN);
+    return SetFilePointer(m_file, dBytesToSeek, NULL, FILE_CURRENT);
 }
 
 // E:\gamedcs\winfile.cpp:255
 VA(0x005ffd70, 0x16)  // vtable-slot 9 of File (0x643d20) + import-anchor (SetFilePointer, 0/FILE_CURRENT); dc 0x1986e4
-unsigned long File::GetPosition()
+unsigned long File::getPosition()
 {
-    if (!m_hFile)
-        return m_hFileValue;
+    if (!m_file)
+        return m_fileValue;
 
-    return SetFilePointer(m_hFile, 0, NULL, FILE_CURRENT);
+    return SetFilePointer(m_file, 0, NULL, FILE_CURRENT);
 }
 
 // E:\gamedcs\winfile.cpp:265
@@ -207,16 +212,16 @@ unsigned long File::GetPosition()
 // self-calls dispatch through the vtable (slots 9/7/5) - retail does
 // not devirtualize them.
 VA(0x005ffd90, 0x32)  // vtable-slot 10 of File (0x643d20) + body (virtual self-dispatch); dc 0x198704
-unsigned long File::GetLength()
+unsigned long File::getLength()
 {
     unsigned long dPosition;
     unsigned long dLength;
 
-    if (!m_hFile)
+    if (!m_file)
         return 0;
 
-    dPosition = GetPosition();
-    dLength = SeekEnd();
-    Seek(dPosition, 0);
+    dPosition = getPosition();
+    dLength = seekEnd();
+    seek(dPosition, 0);
     return dLength;
 }

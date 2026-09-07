@@ -22,11 +22,16 @@ extern "C" int uncompress(unsigned char* dest, unsigned long* destLen,
 // The 32-byte archive-directory row. Retail Find's indexing uses a five-bit
 // shift, while open reads these same five fields from the on-disk table.
 struct LODEntry {
-    char name[16];
-    int offset;
-    int size;
-    int attrib;
-    int csize;
+    // Before normalization: name.
+    char m_name[16];
+    // Before normalization: offset.
+    int m_offset;
+    // Before normalization: size.
+    int m_size;
+    // Before normalization: attrib.
+    int m_attrib;
+    // Before normalization: csize.
+    int m_csize;
 
     LODEntry();
 };
@@ -35,10 +40,17 @@ SIZE(LODEntry, 0x20);
 // Retail's inlined header constructor writes "LOD" at +0, version 500 at
 // +4, and clears the remaining 84 bytes.
 struct LODHeader {
-    char LOD_ID[4];
-    int version;
-    int numEntries;
-    char reserved[80];
+    // Before normalization: LOD_ID.
+    char m_lodId[4];
+    // Before normalization: version.
+    int m_version;
+    // Before normalization: numEntries.
+    int m_numEntries;
+    // Original Dreamcast LODHeader::reserved is char[80] at +12,
+    // exactly matching the retail 0x5c-byte header and constructor clear.
+    // This is documented reserved storage, not an unresolved field.
+    // Before normalization: reserved.
+    char m_reserved[80];
 
     // No retail row of its own - LODFile's constructor 0x4fa780 carries
     // it inline, in this order: the "LOD" strcpy into this+0x11c, the
@@ -52,28 +64,42 @@ SIZE(LODHeader, 0x5c);
 // for every field and DoNewGame's static storage proves the total 0x18c size.
 class LODFile {
 public:
-    FILE* fileptr;
-    char LODFileName[256];
-    int opened;
-    unsigned char* dataBuffer;
-    unsigned long dataBufferSize;
-    int dataItemIndex;
-    int dataPos;
-    int matchindex;
-    LODHeader header;
-    int numEntries;
-    std::vector<LODEntry> subindex;
+    // Before normalization: fileptr.
+    FILE* m_fileptr;
+    // Before normalization: LODFileName.
+    char m_lodFileName[256];
+    // Before normalization: opened.
+    int m_opened;
+    // Before normalization: dataBuffer.
+    unsigned char* m_dataBuffer;
+    // Before normalization: dataBufferSize.
+    unsigned long m_dataBufferSize;
+    // Before normalization: dataItemIndex.
+    int m_dataItemIndex;
+    // Before normalization: dataPos.
+    int m_dataPos;
+    // Before normalization: matchindex.
+    int m_matchindex;
+    // Before normalization: header.
+    LODHeader m_header;
+    // Before normalization: numEntries.
+    int m_numEntries;
+    // Before normalization: subindex.
+    std::vector<LODEntry> m_subindex;
 
     LODFile();
     ~LODFile();
     void clear();
     int open(const char* filename, int flags);
-    LODEntry* getItemIndex(const char* item_name);
+    // Before normalization (locals): item_name.
+    LODEntry* getItemIndex(const char* itemName);
     unsigned char pointAt(const char* itemName);
     int read(void* dest, int numBytes);
 
 private:
-    void Find(unsigned begin, unsigned end, const char* item_name);
+    // Before normalization (function): LODFile::Find.
+    // Before normalization (locals): item_name.
+    void find(unsigned begin, unsigned end, const char* itemName);
 };
 SIZE(LODFile, 0x18c);
 
@@ -81,8 +107,10 @@ SIZE(LODFile, 0x18c);
 // slots. Open proves the leading dword is the archive pathname and every
 // resource lookup independently proves the LODFile subobject at +4.
 struct TResourceLODSlot {
-    const char* archiveName;
-    LODFile file;
+    // Before normalization: archiveName.
+    const char* m_archiveName;
+    // Before normalization: file.
+    LODFile m_file;
 
     TResourceLODSlot(const char* name);
 };

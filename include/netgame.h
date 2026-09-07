@@ -26,6 +26,7 @@ enum eNetGameType {
 
 // .bss 0x6989f0. Defined by the TU that owns the network setup (not
 // located) - extern only, no DATA claim, the bitNumber pattern.
-extern eNetGameType iMPNetProtocol;
+// Before normalization: iMPNetProtocol.
+extern eNetGameType g_mpNetProtocol;
 
 #endif /* HOMM3_NETGAME_H */

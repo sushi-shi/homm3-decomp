@@ -14,14 +14,14 @@
 // this first code admission; these independently located declarations give
 // the function's relocations source authority without fabricating its data.
 DATA(0x00663538)
-TCampaignMapTraits aCampaignMapTraitsImp[21];
+TCampaignMapTraits g_campaignMapTraitsImp[21];
 
 DATA(0x00663688)
-const TCampaignMapTraits (&akCampaignMapTraits)[21] = aCampaignMapTraitsImp;
+const TCampaignMapTraits (&g_campaignMapTraits)[21] = g_campaignMapTraitsImp;
 
 // Exact 21-pointer walk used by the region-name pass (entry zero is null).
 DATA(0x0063bc50)
-TCampaignMapTraits::TRegionTraits* const aCampaignRegionTraits[21] = { 0 };
+TCampaignMapTraits::TRegionTraits* const g_campaignRegionTraits[21] = { 0 };
 
 // E:\gamedcs\campaignmap.cpp:161
 // Exact source-shape checkpoint (2026-09-01): Dreamcast records
@@ -29,7 +29,7 @@ TCampaignMapTraits::TRegionTraits* const aCampaignRegionTraits[21] = { 0 };
 // scopes. Retail corroborates every helper boundary and loop group; the
 // source-labelled comparison is 42/42 blocks and 784/784 bytes identical.
 VA(0x0045dee0, 0x310)  // anchor-string/caller, dc 0x5af64
-unsigned char InitializeCampaignMapTraitsTable()
+unsigned char initializeCampaignMapTraitsTable()
 {
     DATA_COMPGEN_GUARD(0x00694df8, campaignNamesGuard, campaignNames)
     // The initializer's atexit address-take pairs this wrapper with DC $E436
@@ -40,31 +40,32 @@ unsigned char InitializeCampaignMapTraitsTable()
     DATA(0x00694e00)
     static TAutoArrayPtr<char> campaignNames;
 
-    TResourcePtr<TTextResource> pTextResource(
-        ResourceManager::GetText(
+    // Before normalization (locals): pTextResource.
+    TResourcePtr<TTextResource> textResource(
+        ResourceManager::getText(
             DATA_COMPGEN(0x0066b7bc, campaignTextName, "camptext.txt")));
-    if (!pTextResource.get())
+    if (!textResource.get())
         return 0;
 
     unsigned strSize = 0;
     int textLine = 1;
     unsigned campaign;
     for (campaign = 0; campaign < 21; ++campaign) {
-        if (akCampaignMapTraits[campaign].m_numRegions > 0) {
-            strSize += strlen(pTextResource->GetText(textLine)) + 1;
+        if (g_campaignMapTraits[campaign].m_numRegions > 0) {
+            strSize += strlen(textResource->getText(textLine)) + 1;
             ++textLine;
         }
     }
 
     for (campaign = 0; campaign < 21; ++campaign) {
-        if (akCampaignMapTraits[campaign].m_numRegions > 0) {
-            while (strlen(pTextResource->GetText(textLine)) == 0)
+        if (g_campaignMapTraits[campaign].m_numRegions > 0) {
+            while (strlen(textResource->getText(textLine)) == 0)
                 ++textLine;
             ++textLine;
             for (unsigned region = 0;
-                 region < akCampaignMapTraits[campaign].m_numRegions;
+                 region < g_campaignMapTraits[campaign].m_numRegions;
                  ++region) {
-                strSize += strlen(pTextResource->GetText(textLine)) + 1;
+                strSize += strlen(textResource->getText(textLine)) + 1;
                 ++textLine;
             }
         }
@@ -77,28 +78,28 @@ unsigned char InitializeCampaignMapTraitsTable()
     char* destination = campaignNames.get();
     textLine = 1;
     for (campaign = 0; campaign < 21; ++campaign) {
-        if (akCampaignMapTraits[campaign].m_numRegions > 0) {
-            const char* source = pTextResource->GetText(textLine);
+        if (g_campaignMapTraits[campaign].m_numRegions > 0) {
+            const char* source = textResource->getText(textLine);
             unsigned length = strlen(source) + 1;
             memcpy(destination, source, length);
-            aCampaignMapTraitsImp[campaign].m_name = destination;
+            g_campaignMapTraitsImp[campaign].m_name = destination;
             destination += length;
             ++textLine;
         }
     }
 
     for (campaign = 0; campaign < 21; ++campaign) {
-        if (akCampaignMapTraits[campaign].m_numRegions > 0) {
-            while (strlen(pTextResource->GetText(textLine)) == 0)
+        if (g_campaignMapTraits[campaign].m_numRegions > 0) {
+            while (strlen(textResource->getText(textLine)) == 0)
                 ++textLine;
             ++textLine;
             for (unsigned region = 0;
-                 region < akCampaignMapTraits[campaign].m_numRegions;
+                 region < g_campaignMapTraits[campaign].m_numRegions;
                  ++region) {
-                const char* source = pTextResource->GetText(textLine);
+                const char* source = textResource->getText(textLine);
                 unsigned length = strlen(source) + 1;
                 memcpy(destination, source, length);
-                aCampaignRegionTraits[campaign][region].m_name = destination;
+                g_campaignRegionTraits[campaign][region].m_name = destination;
                 destination += length;
                 ++textLine;
             }

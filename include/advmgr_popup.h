@@ -4,30 +4,35 @@
 
 #include "window.h"
 
-// The adventure-dialog base. The Dreamcast field list gives the three
-// protected ints at +0x4c/+0x50/+0x54; retail's 8-byte wider Dinkumware
-// vector in heroWindow shifts them to +0x54/+0x58/+0x5c. Retail's ctor
-// independently proves the preceding +0x50 dword and the byte at +0x5c;
-// the latter overlaps the low byte of exitCommand and is restored by the
-// destructor. Total retail size is therefore 0x60.
+// Dreamcast places exitId/exitCodeX/exitCommand at +0x4c/+0x50/+0x54.
+// Retail's CHeroWindowEx ends at +0x50, so the fields move by four bytes,
+// to +0x50/+0x54/+0x58. DC ExitDialog (0x1ec80) and retail 0x41b190
+// independently send the first two through message.id/codeX and the last
+// through windowManager.dialogReturn. Complete adds its saved popup-state
+// byte at +0x5c, followed by alignment to the 0x60-byte object size.
 class CAdvPopup : public CHeroWindowEx {
-public:
-    int field_50;
 protected:
-    int exitId;
-    int exitCodeX;
-    union {
-        int exitCommand;
-        unsigned char savedPlayerState;
-    };
+    // Previously field_50; original Dreamcast name: exitId.
+    int m_exitId;
+    // Previously misidentified as exitId; original: exitCodeX.
+    int m_exitCodeX;
+    // Previously misidentified as exitCodeX; original: exitCommand.
+    int m_exitCommand;
+    // Complete-only: ctor 0x41b040 saves the handler's popup state and
+    // dtor 0x41b120 restores it. This byte does not overlap exitCommand.
+    unsigned char m_savedPlayerState;
+    // The saved byte ends at +0x5d. The class's four-byte alignment
+    // supplies the trailing three bytes; there is no additional member.
 
 public:
     CAdvPopup(int winX, int winY, int winWidth, int winHeight,
               unsigned winType);
     virtual ~CAdvPopup();
-    virtual int WindowHandler(message* msg);             // slot 9
+    // Before normalization (function): CAdvPopup::WindowHandler.
+    virtual int windowHandler(message* msg);             // slot 9
 protected:
-    virtual int ExitDialog(message* msg);                 // slot 14
+    // Before normalization (function): CAdvPopup::ExitDialog.
+    virtual int exitDialog(message* msg);                 // slot 14
 };
 SIZE(CAdvPopup, 0x60);
 
