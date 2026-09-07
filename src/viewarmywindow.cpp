@@ -1503,6 +1503,15 @@ void TViewArmyWindow::createDismissWidget()
 // a reloc-name-only row in that function's asm diff).
 VA_COMPGEN(0x00404860, 0x210, BASIC_STRING_ASSIGN_STR, char)
 
+// Dinkumware basic_string<char>::max_size. Retail's six-byte body returns
+// npos-2 (0xfffffffd), and the assign body above retains the call. Dreamcast's
+// older STLport body at dc 0x4950 proves the same public helper boundary but
+// delegates to _String_base::max_size instead. The first attempted ownership
+// by adventuremapwindow was rejected before scoring because that object only
+// references the COMDAT; viewarmywindow is the object that emits its body.
+// The corrected ownership matched on the first scored candidate.
+VA_COMPGEN(0x00404bc0, 0x06, BASIC_STRING_MAX_SIZE, char)
+
 // COMDAT pairing: basic_string<char>::_Split - the reference-count split that
 // assign/_Freeze reach; a nullary private thiscall in the same Dinkumware
 // block as _Tidy (0x40f0), _Grow (0x4a90) and the assign above.

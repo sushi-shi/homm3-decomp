@@ -253,6 +253,7 @@ CHAR_STREAM_MEMBERS = (
     ("?pbackfail@?$basic_stringbuf@D", None, "stringbuf_pbackfail"),
     ("?underflow@?$basic_stringbuf@D", None, "stringbuf_underflow"),
     ("?substr@?$basic_string@D", None, "basic_string_substr"),
+    ("?max_size@?$basic_string@D", "QBEIXZ", "basic_string_max_size"),
     ("?_Grow@?$basic_string@D", None, "basic_string_grow"),
     ("?append@?$basic_string@D", "@ABV12@II@Z", "basic_string_append_str"),
     ("?append@?$basic_string@D", "@PBDI@Z", "basic_string_append_ptr"),
