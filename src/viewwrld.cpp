@@ -1453,6 +1453,11 @@ TViewWorldWindow::TViewWorldWindow()
 // destructor below.
 VA_COMPGEN(0x005fbd30, 0x21, SCALAR_DELETING_DTOR, TViewWorldWindow)
 
+// The two retained vector<widget*>::insert overloads at 0x5fd390 and
+// 0x5fdd60 both call this guarded four-byte fill loop. viewwrld.obj emits
+// the same specialization from the recovered widget-vector operations.
+VA_COMPGEN(0x005fdf20, 0x26, VECTOR_UFILL, widget)
+
 // E:\gamedcs\viewwrld.cpp:1396
 VA(0x005fbd60, 0x86)  // vtable + owned-resource teardown, dc 0x195ac4
 TViewWorldWindow::~TViewWorldWindow()

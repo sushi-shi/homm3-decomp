@@ -4359,6 +4359,7 @@ viewarmywindow	?windowHandler@TViewArmyWindow@@UAEHPAVmessage@@@Z	100.0000	100.0
 viewwrld	??0TViewWorldWindow@@QAE@XZ	97.1358	97.1358	97.1358	0x1fa600	0ba348bb8170
 viewwrld	??1TViewWorldWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1fbd60	5f22f3d5fc49
 viewwrld	??_GTViewWorldWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1fbd30	-
+viewwrld	?_Ufill@?$vector@PAVwidget@@V?$allocator@PAVwidget@@@std@@@std@@IAEXPAPAVwidget@@IABQAV3@@Z	100.0000	100.0000	100.0000	0x1fdf20	-
 viewwrld	?init@TViewWorldWindow@@QAEXUtype_point@@E@Z	98.8939	98.8939	98.8939	0x1fc240	15b38c7965e2
 viewwrld	?updateRadar@TViewWorldWindow@@AAEXHHM@Z	80.7500	80.7500	80.7500	0x1fc8f0	15a920c66a3b
 viewwrld	?updateViewWorld@TViewWorldWindow@@AAEXPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1fc7a0	42ab75afe1c2
