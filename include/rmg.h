@@ -1073,13 +1073,12 @@ public:
 
     // Before normalization (function): TRmgLinePainter::GetPattern.
     virtual void* getPattern(int value);
-    // Before normalization (function): TRmgLinePainter::PaintTile.
-    virtual void paintTile(int value, const TRmgMapPosition& tile);
-    // Before normalization (function): TRmgLinePainter::PaintOverlay.
-    virtual void paintOverlay(int value, const TRmgMapPosition& tile);
+    virtual void setTile(
+        const TRmgGridPoint& point, const rmgTerrainTile& tile);
+    virtual void setOverlay(const TRmgGridPoint& point, int value);
     virtual int canPaint(const TRmgGridPoint& point);
-    virtual void paintNeighbour(int value, const TRmgMapPosition& tile);
-    virtual int paintPoint(const TRmgGridPoint& point);
+    virtual rmgTerrainTile getTile(const TRmgGridPoint& point);
+    virtual int getLand(const TRmgGridPoint& point);
 };
 
 class TRmgLineWalker {
@@ -1122,11 +1121,12 @@ public:
     ~TRmgRoadLinePainter() {}
 
     virtual void* getPattern(int value);
-    virtual void paintTile(int value, const TRmgMapPosition& tile);
-    virtual void paintOverlay(int value, const TRmgMapPosition& tile);
+    virtual void setTile(
+        const TRmgGridPoint& point, const rmgTerrainTile& tile);
+    virtual void setOverlay(const TRmgGridPoint& point, int value);
     virtual int canPaint(const TRmgGridPoint& point);
-    virtual void paintNeighbour(int value, const TRmgMapPosition& tile);
-    virtual int paintPoint(const TRmgGridPoint& point);
+    virtual rmgTerrainTile getTile(const TRmgGridPoint& point);
+    virtual int getLand(const TRmgGridPoint& point);
 };
 
 class TRmgRoadPainter : public TRmgRoadLinePainter, public TRmgLineWalker {

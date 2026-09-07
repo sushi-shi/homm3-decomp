@@ -57,6 +57,14 @@ void* TRmgLinePainter::getPattern(int)
     return &g_rmgRiverPatternTable;
 }
 
+// Vtable 0x641174/0x641190 slot 5 forwards the point to the adapter's
+// getLand slot. The Complete-only RMG hierarchy has no Dreamcast counterpart.
+VA(0x0055EE30, 0x13)
+int TRmgLinePainter::getLand(const TRmgGridPoint& point)
+{
+    return m_adapter->getLand(point);
+}
+
 // Exact: all 118 raw bytes after seven relocations. The grid copy constructor
 // keeps both GetSize result stores before the adapter store. An implicit copy
 // interleaves the adapter and second component (99.71%); moving the adapter
