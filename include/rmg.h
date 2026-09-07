@@ -1038,7 +1038,7 @@ public:
         : m_size(newAdapter->getSize()), m_adapter(newAdapter)
     {
     }
-    ~TRmgLinePainter() {}
+    ~TRmgLinePainter();
 
     // Before normalization (function): TRmgLinePainter::GetPattern.
     virtual void* getPattern(int value);
