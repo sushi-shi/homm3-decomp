@@ -134,6 +134,11 @@ public:
     void hidePointer();
     // Before normalization (function): mouseManager::ShowPointer.
     void showPointer(bool restore);
+    // DC MouseMgr.h:189-200 (Enable/Disable) returns DisableCount without
+    // mutating it in this build. SetPointer discards both results, so retail
+    // has no call or count update. Keep the canonical source boundaries.
+    int enable() { return m_disableCount; }
+    int disable() { return m_disableCount; }
     // E:\gamedcs\MouseMgr.h:215/216. Dreamcast emits these header helpers
     // in kb.obj/adventuremapwindow.obj; Complete folds both into the direct
     // +0x4c/+0x50 loads at their call sites.

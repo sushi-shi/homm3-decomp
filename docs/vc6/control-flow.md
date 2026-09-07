@@ -756,3 +756,17 @@ Canonical `getHex`/`Is` calls, occupied-neighbor-first source order, and the
 Dreamcast best-hex assignment order are retained; each is byte-flat in the
 corresponding controls. Matching aggregate branch counts had not established
 that the source control-flow form was already correct.
+
+`mouseManager::setPointer` (0x50cca0) independently demonstrates the same
+source-exit effect. DC mousemgr.cpp:449-453 returns separately for three entry
+guards, then 479-493 returns after clearing busy state for a negative or
+unchanged frame. Restoring all five returns raises 82.9333% to 100%: VC6 merges
+the lock destruction and busy cleanup, but now shares zero in EBX throughout
+the 224-byte body. Restoring only the entry guards gives 83.1333%, whether they
+are separate or combined. The prior named-zero experiment was 78.87%.
+
+The DC `Enable`/`Disable` header bodies only read `DisableCount` in this build.
+Their canonical calls are preserved; the discarded results compile away and
+leave the 100% bytes unchanged. Read these tiny bodies before assuming their
+names imply mutations. The PC sprite disposal remains independently proven
+by retail.
