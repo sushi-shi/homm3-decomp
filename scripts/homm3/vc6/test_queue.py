@@ -68,7 +68,9 @@ class BankedMaxRouting(unittest.TestCase):
             self.assertEqual(queue.run(SimpleNamespace(unit=None, limit=20)), 0)
             diagnose.assert_not_called()
             census = (Path(tmp) / "evidence/wall-census.tsv").read_text()
-            self.assertIn("25.0000\t10.0000\t100\tunit\tbody", census)
+            self.assertIn(
+                "25.0000\t25.0000\t0.0000\t10.0000\t100\tunit\tbody",
+                census)
 
     def test_banked_exact_dips_and_missing_scores_are_excluded(self):
         for current in ({"fuzzy_match_percent": 12.0}, {}):
@@ -101,16 +103,18 @@ class BankedMaxRouting(unittest.TestCase):
             _report(fn), {}, {("unit", fn["name"])}),
             [("unit", fn["name"], 0.0, None, 12)])
 
-    def test_history_counts_as_banked_and_near_exact_still_needs_work(self):
+    def test_history_does_not_hide_work_below_current_implementation_max(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "baseline.tsv"
             path.write_text("unit\tbanked\t12\t90\t100\t0x100\t-\n"
                             "unit\tnear\t99.9995\t99.9995\t99.9995\t0x200\t-\n")
             maxima = queue._load_maxima(path)
-        self.assertEqual(maxima[("unit", "banked")], 100.0)
+            history = queue._load_history(path)
+        self.assertEqual(maxima[("unit", "banked")], 90.0)
+        self.assertEqual(history[("unit", "banked")], 100.0)
         targets = queue._partition_targets(
             _report({"name": "banked"}, {"name": "near"}), maxima, set(maxima))
-        self.assertEqual([r[1] for r in targets], ["near"])
+        self.assertEqual([r[1] for r in targets], ["banked", "near"])
 
     def test_compiled_inventory_requires_defined_executable_function(self):
         from homm3.build.test_eh_handler_normalization import FixtureSection, _coff, _symbol
@@ -169,7 +173,7 @@ class SmallestFirstRouting(unittest.TestCase):
         )
         baseline = {
             ("unit", "large"): MatchRow(80, 80, 80, 0x100),
-            ("unit", "alias"): MatchRow(90, 70, 99, 0x100),
+            ("unit", "alias"): MatchRow(70, 70, 99, 0x100),
             ("unit", "small"): MatchRow(95, 95, 95, 0x200),
             ("unit", "exact"): MatchRow(100, 100, 100, 0x300),
         }

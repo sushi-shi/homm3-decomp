@@ -757,7 +757,8 @@ shape that took `type_record_shroud::load` 84 -> 100 - costs 0.64 there.
 objdiff fuzzy gives partial credit for a differing displacement (a 97%
 function can have every local mis-slotted); masked diffs hide immediates (the
 IDC_ARROW and 0x54cc bugs); reloc-name-only rows on data are cosmetic; scores
-against a broken build are void; MAX is the only ledger.
+against a broken build are void. CUR <= MAX <= HIST: MAX is the current
+implementation's work frontier, while HIST exposes peaks lost across edits.
 - evidence: homm2 `docs/patterns/INDEX.md:12-15`; SKILL.md:69-71
 - status: doctrine
 - probe: none (not a compiler behavior)

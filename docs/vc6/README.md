@@ -65,10 +65,12 @@ model cannot rot.
 
 ## Residual-routing contract
 
-`homm3 vc6 queue` ranks existing compiled functions by ascending banked
-MAX/history, with retail size breaking ties. Current scores do not change the
-order, and functions that have reached 100% stay excluded through current-score
-dips. The census records recoverable bytes as remaining work. `--diagnose`
+`homm3 vc6 queue` ranks existing compiled functions by ascending banked MAX for
+their current source implementation, with retail size breaking ties. Current
+scores do not change the order while the source hash is unchanged. A source
+edit resets MAX while HIST preserves the old peak, so `HIST > MAX` exposes
+known recoverable headroom instead of hiding it from the queue. The census
+records recoverable bytes as remaining work. `--diagnose`
 adds solver routing; `--admission` explicitly lists functions without compiled
 bodies. Both modes write generated evidence.
 

@@ -1,8 +1,9 @@
-"""Generate the admitted-function polish queue from banked MAX/history.
+"""Generate the admitted-function polish queue from banked MAX.
 
 Run `HOMM3_DIR=<worktree> python -m homm3.vc6.weighted_queue` after a full
 build. Lowest banked scores rank first, with retail size breaking ties.
-Banked-exact functions stay excluded when their current score dips.
+HIST remains visible as lost-headroom evidence but does not hide work whose
+current implementation has a lower MAX.
 """
 from __future__ import annotations
 
@@ -43,16 +44,15 @@ def ranked_rows(report, baseline, categories, sizes, compiled):
         if categories[rva] not in ("target", "zlib"):
             continue
         maximum, historical = peaks[rva]
-        best = max(maximum, historical)
-        if best >= EXACT:
+        if maximum >= EXACT:
             continue
         size = sizes[rva]
         rows.append(dict(
             va=f"0x{rva + common.IMAGE_BASE:08x}", size=size,
             current=current, maximum=maximum, historical=historical,
-            remaining_bytes=size * (1 - best / 100),
+            remaining_bytes=size * (1 - maximum / 100),
             unit=owner, function=name, state="admitted"))
-    rows.sort(key=lambda row: (max(row["maximum"], row["historical"]),
+    rows.sort(key=lambda row: (row["maximum"],
                               -row["size"], row["va"]))
     return rows
 
@@ -67,8 +67,8 @@ def main():
     output = root / "evidence/weighted-queue.tsv"
     with output.open("w") as stream:
         stream.write("# GENERATED: python -m homm3.vc6.weighted_queue\n")
-        stream.write("# Admitted compiled bodies, sorted by increasing MAX/history, then decreasing retail size.\n")
-        stream.write("# Banked-exact functions stay excluded despite current-score dips.\n")
+        stream.write("# Admitted compiled bodies, sorted by increasing current-implementation MAX, then decreasing retail size.\n")
+        stream.write("# HIST is retained to expose peaks lost by source edits; it does not exclude a row.\n")
         writer = csv.DictWriter(stream, fieldnames=[
             "va", "size", "current", "maximum", "historical",
             "remaining_bytes", "unit", "function", "state"], delimiter="\t", lineterminator="\n")
@@ -77,8 +77,8 @@ def main():
     print(f"{len(rows)} remaining functions; "
           f"{sum(r['remaining_bytes'] for r in rows):,.1f} unmatched weighted bytes")
     for row in rows[:20]:
-        score = max(row["maximum"], row["historical"])
-        print(f"{row['va']} {row['size']:6d} B MAX {score:8.4f}% "
+        print(f"{row['va']} {row['size']:6d} B MAX {row['maximum']:8.4f}% "
+              f"HIST {row['historical']:8.4f}% "
               f"{row['unit']}:{row['function']}")
     print(f"Wrote {output}")
 
