@@ -455,7 +455,6 @@ not diagnosed	25	96.8123	98.7864	1.9741	96.8123	776	font	?drawBoundedString@font
 not diagnosed	28	96.8467	96.8467	0.0000	96.8467	884	kb	?congratsWait@@YIXHPADHHH@Z	diagnose	-
 not diagnosed	20	96.8602	96.8602	0.0000	96.8602	651	ai_tactical	?getMuckAndMireValue@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	diagnose	-
 not diagnosed	47	96.9031	96.9031	0.0000	96.9031	1508	advmgr	?getSoundId@advManager@@QAE?AW4e_looping_sound_id@@HHH@Z	diagnose	-
-not diagnosed	4	96.9512	100.0000	3.0488	100.0000	120	adventuremapwindow	?setElevationToggleImage@TAdventureMapWindow@@QAEEH@Z	diagnose	-
 not diagnosed	270	96.9535	96.9535	0.0000	96.9535	8860	advmgr	?setRolloverText@advManager@@QAEXPAVNewmapCell@@HH@Z	diagnose	-
 not diagnosed	21	97.0628	97.0628	0.0000	97.0628	729	singleselectionwindow	?onNewPlayerMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	diagnose	-
 not diagnosed	15	97.0930	97.0930	0.0000	97.0930	520	remote	?checkForWarning@CTurnDuration@@QAEXXZ	diagnose	-
