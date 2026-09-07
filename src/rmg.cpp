@@ -525,6 +525,14 @@ type_treasure_def::type_treasure_def(
     m_density = newDensity;
 }
 
+// Complete-only RMG virtual recovered from the inherited slot in the
+// type_treasure_def family of retail vtables; Dreamcast has no RMG compiland.
+VA(0x00534190, 0x06)
+int type_treasure_def::getValue(void*, void*)
+{
+    return m_value;
+}
+
 // The compiler expands the common four-store constructor in each of these
 // derived definitions; retail retains only the derived vptr store.  This is
 // ordinary /Ob2 expansion of a real helper boundary, not a hand-flattened
