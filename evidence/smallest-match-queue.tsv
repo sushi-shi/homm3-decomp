@@ -1,7 +1,6 @@
 # GENERATED: homm3 vc6 queue --smallest - regenerate, never hand-edit.
 # Independent retail targets, smallest first; parked RVAs omitted.
 state	size	va	current_fuzzy	max_fuzzy	hist_fuzzy	owner	candidates	label	relation	action
-bracketed	42	0x00531140	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_1466e0_sub00_131140	bracketed	resolve the owner, then add its VA claim and body
 bracketed	42	0x005322c0	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_1322c0	bracketed	resolve the owner, then add its VA claim and body
 bracketed	42	0x005322f0	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_1322f0	bracketed	resolve the owner, then add its VA claim and body
 bracketed	43	0x005b8c70	-	0.0000	0.0000	systemoptionswindow..text	systemoptionswindow,text	game_1b4b20_sub11_1b8c70	bracketed	resolve the owner, then add its VA claim and body
@@ -98,7 +97,7 @@ compiled	110	0x005141b0	77.3913	77.3913	77.3913	objecttype	objecttype	?accepts@T
 bracketed	110	0x00532360	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_132360	bracketed	resolve the owner, then add its VA claim and body
 bracketed	110	0x005b4860	-	0.0000	0.0000	systemoptionswindow..text	systemoptionswindow,text	game_234980_sub00_1b4860	bracketed	resolve the owner, then add its VA claim and body
 unmapped	110	0x006037a0	-	0.0000	0.0000				unmapped	locate the owning TU, then add its VA claim and body
-bracketed	111	0x00530f10	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_130e90_sub00_130f10	bracketed	resolve the owner, then add its VA claim and body
+compiled	111	0x00530f10	76.9474	76.9474	76.9474	rmg	rmg	?clear@TRmgMapItem@@QAEXXZ	admitted	run the evidence pass and iterate up to five scored candidates
 bracketed	113	0x0054b100	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_1348d0_sub00_14b100	bracketed	resolve the owner, then add its VA claim and body
 unmapped	115	0x006047b0	-	0.0000	0.0000				unmapped	locate the owning TU, then add its VA claim and body
 bracketed	116	0x0054c090	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_1860e0_sub01_14c090	bracketed	resolve the owner, then add its VA claim and body

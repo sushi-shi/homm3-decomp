@@ -312,15 +312,6 @@ static void setAvailableRmgHeroes(
     }
 }
 
-#if 0 // @carcass - retained placement helper shared by gate and shipyard paths
-VA(0x00531CF0, 0x1A5) // anchor-callee 0x541c73; thiscall, ret 0x14; retail-only
-unsigned char type_random_map::canPlaceObject(
-    TRmgObjectPropertiesRef* properties, TRmgMapPosition position, TRmgZone* zone)
-{
-    return 0; // @stub
-}
-#endif
-
 // Vtable 0x6409cc slot 0 and the 0x14-byte concrete map layout identify this
 // scalar deleting wrapper. Its non-deleting half destroys the owned array of
 // 0x30-byte TRmgMapItem elements before restoring the abstract map vtable.
@@ -383,6 +374,29 @@ void TRmgMapItem::clear()
     m_previousTile.m_x = -1;
     m_tileData = tileData;
 }
+
+// Retail's generation retry path invokes this on its temporary map before
+// reinitializing every cell. The post-decrement count produces the zero guard
+// and single 0x30-stride loop seen in all 42 bytes at 0x531140.
+VA(0x00531140, 0x2A)
+void type_random_map::clear()
+{
+    TRmgMapItem* mapItem = m_mapItems;
+    int mapItemCount = m_mapWidth * m_mapHeight * m_numberLevels;
+    while (mapItemCount--) {
+        mapItem->clear();
+        ++mapItem;
+    }
+}
+
+#if 0 // @carcass - retained placement helper shared by gate and shipyard paths
+VA(0x00531CF0, 0x1A5) // anchor-callee 0x541c73; thiscall, ret 0x14; retail-only
+unsigned char type_random_map::canPlaceObject(
+    TRmgObjectPropertiesRef* properties, TRmgMapPosition position, TRmgZone* zone)
+{
+    return 0; // @stub
+}
+#endif
 
 // Vtable 0x6409cc slot 3 returns the map's two unsigned dimensions.
 // The hidden result pointer and two stores fix the coordinate return ABI.
