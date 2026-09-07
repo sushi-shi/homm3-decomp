@@ -4,7 +4,8 @@ import unittest
 
 from homm3.match.status import MatchRow
 from homm3.vc6.tu_state_sweep import (
-    affected_by_unit, bank_rows, insertion_for, make_variants,
+    affected_by_unit, bank_rows, insertion_for, insertions_for, insert_variant,
+    make_variants,
 )
 
 
@@ -28,6 +29,21 @@ class TuStateSweepTests(unittest.TestCase):
         offset, line = insertion_for(text, (0x200, 0x100))
         self.assertTrue(text[offset:].startswith("\n// first evidence\n"))
         self.assertEqual(line, 4)
+
+    def test_grouped_trial_inserts_unique_forest_beside_each_function(self):
+        text = ("#include <x>\n\nint before;\n\n// first evidence\n"
+                "VA(0x00400100, 4)\nvoid first() {}\n\n"
+                "// second evidence\nVA(0x00400200, 4)\nvoid second() {}\n")
+        insertions = insertions_for(text, (0x200, 0x100))
+        self.assertEqual([item[2] for item in insertions], [0x100, 0x200])
+        variant = make_variants(1, 20260906)[0]
+        candidate = insert_variant(text, insertions, variant)
+        self.assertIn("_RVA_00000100_FOREST_TYPEDEF_0", candidate)
+        self.assertIn("_RVA_00000200_FOREST_TYPEDEF_0", candidate)
+        self.assertLess(candidate.index("_RVA_00000100"),
+                        candidate.index("VA(0x00400100"))
+        self.assertLess(candidate.index("_RVA_00000200"),
+                        candidate.index("VA(0x00400200"))
 
     def test_forest_sequence_is_deterministic(self):
         left = make_variants(30, 20260906)

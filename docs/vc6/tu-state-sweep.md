@@ -8,10 +8,13 @@ runner searches that state without retaining synthetic code:
 homm3 vc6 state-sweep --trials 30 --jobs 8 --bank
 ```
 
-The runner discovers every numeric `CUR < HIST` row, groups them by translation
-unit, and compiles each forest once per TU. All compiled functions in that TU
-are scored, so an unrelated improvement is also eligible for banking. Generated
-source copies, objects, reports, and resumable trial records live only under
+The runner discovers every numeric `CUR < HIST` row and groups them by
+translation unit. In each trial it inserts a uniquely named copy of the forest
+beside every affected function, then compiles that combined source once. This
+preserves Gruntz's target-local placement while one TU compile tests all of its
+affected functions. All compiled functions in that TU are scored, so an
+unrelated improvement is also eligible for banking. Generated source copies,
+objects, reports, and resumable trial records live only under
 `build/tu-state-sweep/`.
 
 Banking fails closed:
@@ -26,8 +29,11 @@ Banking fails closed:
   peak;
 - no synthetic declaration is copied into authored source.
 
-The seed-20260906 run on 2026-09-07 covered 128 affected functions in 49 TUs:
-30 forests per TU, 1,470 candidate compiles. Two new observations reproduced:
+The initial seed-20260906 run on 2026-09-07 covered 128 affected functions in
+49 TUs: 30 forests per TU, 1,470 candidate compiles. It inserted only above the
+earliest affected function and is retained here as an implementation-history
+result; the target-local grouped rerun supersedes it. Two observations from the
+initial run reproduced:
 
 | TU | Function | Previous MAX | Reproduced MAX | Trial |
 |---|---|---:|---:|---:|
@@ -37,3 +43,6 @@ The seed-20260906 run on 2026-09-07 covered 128 affected functions in 49 TUs:
 `CEnterNameEdit::onKillFocus`, banked immediately before the batch run, is the
 known exact control: the same generator's trial 2 reproduces 100% while its
 clean CUR remains 99.8710%.
+
+The corrected target-local grouped rerun completed another 1,470 candidate
+compiles over the same 49 TUs. It found no additional reproducible MAX gains.

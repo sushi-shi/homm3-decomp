@@ -35,7 +35,7 @@ from homm3.match import status
 from homm3.vc6._unit import compile_text, source_for_unit
 
 
-GENERATOR_VERSION = 1
+GENERATOR_VERSION = 2
 DEFAULT_SEED = 20260906
 DEFAULT_TRIALS = 30
 DEFAULT_MIN_FOREST_WIDTH = 10
@@ -66,8 +66,7 @@ class UnitPlan:
     source: Path
     original: str
     source_digest: str
-    insertion_offset: int
-    insertion_line: int
+    insertions: tuple[tuple[int, int, int], ...]
     affected: tuple[tuple[str, str], ...]
     scored: tuple[tuple[str, str], ...]
     target_first: bytes
@@ -124,6 +123,26 @@ def insertion_for(text: str, rvas: tuple[int, ...]) -> tuple[int, int]:
     offset = (_leading_metadata_offset(text, min(positions)) if positions
               else _top_level_insertion_offset(text))
     return offset, _logical_line_at(text, offset)
+
+
+def insertions_for(text: str, rvas: tuple[int, ...]) -> tuple[tuple[int, int, int], ...]:
+    """Return one Gruntz-style insertion beside every affected function."""
+    insertions = []
+    for rva in sorted(set(rvas)):
+        offset, line = insertion_for(text, (rva,))
+        insertions.append((offset, line, rva))
+    return tuple(insertions)
+
+
+def insert_variant(original: str, insertions: tuple[tuple[int, int, int], ...],
+                   variant: Variant) -> str:
+    """Insert a uniquely named copy of *variant* beside every affected RVA."""
+    candidate = original
+    ident = f"GRUNTZ_TU_STATE_PROBE_{variant.tag.replace('-', '_').upper()}"
+    for offset, line, rva in sorted(insertions, reverse=True):
+        body = variant.body.replace(ident, f"{ident}_RVA_{rva:08X}")
+        candidate = candidate[:offset] + f"{body}#line {line}\n" + candidate[offset:]
+    return candidate
 
 
 def _make_declaration_forest(
@@ -365,9 +384,7 @@ def _write_json(path: Path, payload: dict) -> None:
 def run_trial(plan: UnitPlan, variant: Variant, *, cache: bool = True) -> dict:
     if cache and (cached := _read_cached(plan, variant)) is not None:
         return cached
-    candidate = (plan.original[:plan.insertion_offset]
-                 + variant.block(plan.insertion_line)
-                 + plan.original[plan.insertion_offset:])
+    candidate = insert_variant(plan.original, plan.insertions, variant)
     scratch_root = common.HOMM3_DIR / "build/tu-state-sweep/tmp"
     scratch_root.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(
@@ -421,7 +438,7 @@ def _plans(rows: dict, units: set[str] | None, seed: int, trials: int) -> list[U
         target_bytes = target.read_bytes()
         rvas = tuple(row.rva for key in keys
                      if (row := rows[key]).rva is not None)
-        offset, line = insertion_for(original, rvas)
+        insertions = insertions_for(original, rvas)
         scored = tuple(sorted(
             key for key, row in rows.items()
             if key[0] == unit and row.cur is not None))
@@ -429,14 +446,14 @@ def _plans(rows: dict, units: set[str] | None, seed: int, trials: int) -> list[U
         for payload in (
                 source_bytes, target_bytes, compgen, symbol_names,
                 f"generator={GENERATOR_VERSION};seed={seed};trials={trials};"
-                f"offset={offset}".encode()):
+                f"insertions={insertions}".encode()):
             identity.update(hashlib.sha256(payload).digest())
         context = identity.hexdigest()[:16]
         result_dir = (common.HOMM3_DIR / "build/tu-state-sweep/results" /
                       unit / context)
         result_dir.mkdir(parents=True, exist_ok=True)
         plans.append(UnitPlan(
-            unit, source, original, _sha256(source_bytes), offset, line,
+            unit, source, original, _sha256(source_bytes), insertions,
             keys, scored, _first_pass(unit, target_bytes), context, result_dir))
     return plans
 
