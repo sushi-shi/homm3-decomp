@@ -25,6 +25,14 @@ TRmgTerrainRule::~TRmgTerrainRule()
 {
 }
 
+// Each copied source entry is two dwords. Vtable 0x642c98 slot 3 returns
+// the first dword of the requested entry through the pointer at +0x10.
+VA(0x005B3880, 0x10)  // Complete-only pattern terrain rule
+int TRmgPatternTerrainRule::getEntry(int index)
+{
+    return m_entries[index * 2];
+}
+
 // Retail vtable 0x642cb0 slot 1 is this constant-false query.  The surrounding
 // constructor at 0x5b3a20, vtable, fixed-table methods, and the first admitted
 // painter method at 0x5b3dd0 place it in this Complete-only compiland.  There

@@ -3284,6 +3284,7 @@ rmg_terrain	??1rmgTerrainPainter@@QAE@XZ	100.0000	100.0000	100.0000	0x1b76f0	b32
 rmg_terrain	??M@YI_NABUTRmgGridPoint@@0@Z	100.0000	100.0000	100.0000	0x1b8ca0	b8578ef512b9
 rmg_terrain	?buildMatchingNeighbourMask@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@PAE@Z	77.2609	77.2609	77.2609	0x1b6540	605f0e10d3ea
 rmg_terrain	?changeTerrain@TRmgTerrainBrush@@QAEXHH@Z	100.0000	100.0000	100.0000	0x1b7520	e1bee61f4043
+rmg_terrain	?getEntry@TRmgPatternTerrainRule@@UAEHH@Z	100.0000	100.0000	100.0000	0x1b3880	fa1db982da6d
 rmg_terrain	?getPackedCell@rmgTerrainPainter@@QAEPAUTRmgPackedTerrainCell@@ABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x1b48d0	fe243c14bfe0
 rmg_terrain	?hasEntries@TRmgPatternTerrainRule@@UAEEXZ	100.0000	100.0000	100.0000	0x1b3840	689aa34d7a84
 rmg_terrain	?hasEntries@TRmgTableTerrainRule@@UAEEXZ	100.0000	100.0000	100.0000	0x1b3a40	9fc6d13cda16
