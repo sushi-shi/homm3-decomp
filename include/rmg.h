@@ -765,26 +765,13 @@ public:
     // Before normalization: tailPadding.
     char m_tailPadding[3];
 
-    inline type_object(TRmgObjectPropertiesRef* newProperties)
-        : m_properties(newProperties)
-    {
-        ++m_properties->m_refCount;
-        m_position.m_x = -1;
-        m_position.m_y = -1;
-        m_position.m_z = -1;
-        clearPlacementMarks();
-    }
+    // Retail retains this body at 0x5330e0 beneath derived construction.
+    // No Dreamcast inline declaration exists for this Complete-only type.
+    type_object(TRmgObjectPropertiesRef* newProperties);
 
     // The constructor and placement scorer share this five-byte reset.
     // The method name is provisional; retail preserves the store order.
-    void clearPlacementMarks()
-    {
-        m_candidateCovers = 0;
-        m_candidateBehind = 0;
-        m_adjacentToCandidate = 0;
-        m_overlapsCandidate = 0;
-        m_blockedByCandidate = 0;
-    }
+    void clearPlacementMarks();
 
     unsigned char isPlacementTouched() const
     {
@@ -797,7 +784,20 @@ public:
     // Before normalization (function): type_object::IsWritable.
     virtual unsigned char isWritable() const;
     // Before normalization (function): type_object::Write.
-    virtual void write(TAbstractFile* outfile);
+    // Retail base/ownable writers 0x533170/0x533460 both pop eight bytes.
+    // The second stack word is unused there; its source role is unresolved.
+    virtual void write(TAbstractFile* outfile, int parameter);
+};
+
+// Provisional Complete-only role. The shipyard path allocates 0x1c bytes,
+// calls type_object's constructor, then replaces its vptr with 0x640aa4.
+// That table shares the base's middle slots and overrides serialization:
+// 0x533460 appends an unowned player byte and three reserved bytes.
+class rmgOwnableObject : public type_object {
+public:
+    rmgOwnableObject(TRmgObjectPropertiesRef* properties)
+        : type_object(properties) {}
+    virtual void write(TAbstractFile* outfile, int parameter);
 };
 
 struct TRmgMapItem {
@@ -1278,9 +1278,12 @@ public:
         std::vector<TRmgMapPosition>* borderPositions);
     // Before normalization (function): type_random_map_generator::FloodConnectionRegion.
     void floodConnectionRegion(TRmgMapPosition position);
-    // Before normalization (function): type_random_map_generator::CreateBorderConnection.
-    unsigned char createBorderConnection(
+    // Earlier provisional name: CreateBorderConnection/createBorderConnection.
+    // Retail 0x541ad0 selects objectPrototypes[SHIPYARD] and places it beside
+    // reachable water. No Dreamcast RMG name is available.
+    unsigned char createShipyardConnection(
         TRmgZone* source, TRmgZoneConnection* connection);
+    unsigned char canPlaceShipyard(TRmgMapPosition position);
     // Before normalization (function): type_random_map_generator::CreateSubterraneanGate.
     unsigned char createSubterraneanGate(
         TRmgZone* source, TRmgZoneConnection* connection);
@@ -1324,6 +1327,7 @@ SIZE(TRmgConnectionDecoration, 0x04);
 SIZE(TRmgObjectPlacementRule, 0x4c);
 SIZE(TRmgObjectPropertiesRef, 0xe8);
 SIZE(type_object, 0x1c);
+SIZE(rmgOwnableObject, 0x1c);
 SIZE(TRmgMapItem, 0x30);
 SIZE(type_random_map, 0x18);
 SIZE(TRmgMapAdapterInterface, 0x04);
