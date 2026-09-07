@@ -179,6 +179,10 @@ using the observations. `sym` rows associate process-local addresses with
 compiler names; `main` gives the root function's front-end size estimate;
 `site` gives the root, owner, callee, signed size estimate, remaining budget,
 expansion depth, remaining candidate sites, and running size.
+After verification, `comparisons.txt` presents the same ordered observations
+with demangled caller/callee signatures and their budgets. It is removed at
+the start of every run, so a failed trace cannot leave an old named report.
+The raw log remains available for checking the process-local symbol mapping.
 
 Two guarded hooks replay whole original instructions:
 
