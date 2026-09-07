@@ -456,6 +456,21 @@ void rmgTerrainPainter::paintRectangle(
 // predicate comparison locals or a direct frame argument over-expand _Distance.
 // A copied direction value changes the function extent. These controls retain
 // no source changes; the actual sort ranks and hash inputs are in section 6n.
+// Following the width-address creation back to setTile, a pointer cache alias,
+// reversed product, and x-first sum remain byte-flat. A named setter index,
+// a braced if/else predicate, and a flag-result predicate over-expand _Distance
+// and still emit both residual products row-first. A named setter width also
+// reverses the already-exact entry product. Reversing the predicate guard is
+// byte-flat. All of these controls were compiled separately and reverted.
+// At the same checkpoint, explicit copy initialization at all four cardinal
+// sites leaves 117 raw differences; translating them through the existing
+// point-addition helper grows the section to 1552 bytes. Both keep the two
+// row-first products. Defaulted flip constructor parameters and assigning
+// the two zero flips in the constructor body remain at eight differences.
+// A used width reference bound before or after the setter's adapter call also
+// over-expands _Distance and keeps both products row-first.
+// Nesting the strength call directly in selectBaseFrame's virtual-call
+// argument grows the section to 1504 bytes and keeps both products row-first.
 VA(0x005B4B20, 0x5CB) // anchor-callee 0x5b4960, 0x5b5440; thiscall, ret 4
 void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
 {

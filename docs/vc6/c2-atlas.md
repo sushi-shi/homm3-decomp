@@ -43,7 +43,10 @@ addresses or names are errors. Only the pinned C2 pressing is admitted.
 The default interval runs from the selected address to the next Ghidra
 function entry. `--range` uses hexadecimal offsets from the selected address,
 with an exclusive end; both instruction boundaries must be respected. This
-is a physical listing, not a reconstructed function CFG: C2's cold blocks
+check reports the enclosing instruction's boundaries when an endpoint splits
+one, so the request can explicitly include or exclude that instruction.
+It never silently rounds the requested range. The output is a physical
+listing, not a reconstructed function CFG: C2's cold blocks
 can lie elsewhere. The tool does not assign nearby cold blocks to a named
 routine. `--refs` lists actual incoming code-reference sites, retaining their
 addresses without inferring ownership from proximity.

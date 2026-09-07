@@ -118,9 +118,13 @@ class CompilerDisassembly(unittest.TestCase):
         binary = SimpleNamespace(data=b"\x83\xec\x08\x90\x90", rva_to_off=lambda rva: 0)
         rows = backend.span_rows(program, binary, 0x156f, 0x1574)
         self.assertEqual([r.raw for r in rows], [b"\x83\xec\x08"])
-        with self.assertRaisesRegex(ValueError, "splits instruction"):
+        with self.assertRaisesRegex(ValueError, "use end 0x1572 to include it or 0x156f to exclude it"):
             backend.span_rows(program, binary, 0x156f, 0x1570)
         listing.getInstructionAt.return_value = None
+        listing.getInstructionContaining.return_value = ins
+        with self.assertRaisesRegex(ValueError, "Start at 0x156f to include it or 0x1572 to skip it"):
+            backend.span_rows(program, binary, 0x1570, 0x1574)
+        listing.getInstructionContaining.return_value = None
         with self.assertRaisesRegex(ValueError, "not a Ghidra instruction boundary"):
             backend.span_rows(program, binary, 0x1570, 0x1574)
 
