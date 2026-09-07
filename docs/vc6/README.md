@@ -83,11 +83,13 @@ as lost-peak evidence. Its generated output is
 `evidence/smallest-match-queue.tsv`.
 
 `homm3 vc6 state-sweep --trials 30 --jobs 8 --bank` groups every numeric
-`CUR < HIST` row by TU, inserts one deterministic declaration forest before
-the earliest affected source claim, and scores every compiled function in the
-TU from that single object. Results are cached by source, retail target,
-normalization inputs, generator version, and seed. A higher observation is
-compiled a second time before it can raise MAX; the clean CUR is never
+`MAX < HIST` row by TU. Each trial adds one shuffled set of five to ten project
+headers absent from that TU's transitive project-header closure, then scores
+every compiled function in the TU from that single object. Per-trial records
+capture the selected order and every function score, while the summary lists
+every score movement, including drops. Results are cached by source, retail
+target, normalization inputs, generator version, and seed. A higher observation
+is compiled a second time before it can raise MAX; the clean CUR is never
 replaced. Authored source and function hashes must remain unchanged for the
 whole run. See [tu-state-sweep.md](tu-state-sweep.md) for the audit contract.
 

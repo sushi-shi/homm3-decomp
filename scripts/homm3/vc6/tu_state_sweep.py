@@ -1,17 +1,17 @@
 """Batch disposable VC6 translation-unit state search.
 
-Discover every configured function whose clean ``CUR`` is below ``HIST``, group
-the functions by translation unit, then compile thirty deterministic declaration
-forests per TU.  One candidate object scores every function in that TU, so a
-multi-function unit costs thirty compiles rather than thirty compiles per row.
+Discover every configured function whose preserved ``MAX`` is below ``HIST``,
+group the functions by translation unit, then compile deterministic random
+include sets per TU. One candidate object scores every function in that TU.
 
-The declarations are inserted before the earliest affected function and exist
-only in a source copy under ``build/tu-state-sweep``.  Authored source is never
-rewritten.  Higher observations are reproduced with a second compile before
+Each trial adds one shuffled block of five to ten project headers absent from
+that TU's transitive include closure. The block exists only in a source copy under
+``build/tu-state-sweep``; authored source is never rewritten. Higher
+observations are reproduced with a second compile before
 ``--bank`` raises MAX (and HIST when a genuinely new all-time peak is found).
 CUR always remains the clean-build score.
 
-The declaration generator is adapted from Gruntz's ``permute state`` search.
+The include-state strategy follows Gruntz's TU-state search.
 """
 from __future__ import annotations
 
@@ -35,19 +35,48 @@ from homm3.match import status
 from homm3.vc6._unit import compile_text, source_for_unit
 
 
-GENERATOR_VERSION = 2
+GENERATOR_VERSION = 5
 DEFAULT_SEED = 20260906
 DEFAULT_TRIALS = 30
-DEFAULT_MIN_FOREST_WIDTH = 10
-DEFAULT_MAX_DECLARATIONS = 64
-SAFE_SCALAR_TYPES = (
-    "char", "unsigned char", "short", "unsigned short", "int",
-    "unsigned long",
-)
-SAFE_CALLING_CONVENTIONS = ("__cdecl", "__fastcall", "__stdcall")
-SAFE_ENUM_VALUES = (
-    -32768, -1, 0, 1, 2, 7, 31, 255, 256, 1024, 32767, 65535,
-)
+MIN_HEADERS_PER_TRIAL = 5
+MAX_HEADERS_PER_TRIAL = 10
+_INCLUDE_DIRECTIVE = re.compile(
+    r'^\s*#\s*include\s*[<"]([^>"]+)[>"]', re.M)
+_SOURCE_MARKER = re.compile(
+    r'^[ \t]*(?:VA(?:_COMPGEN)?|DATA(?:_COMPGEN)?|DC_ONLY)\(', re.M)
+_MACRO_DEFINITION = re.compile(
+    r'^\s*#\s*define\s+([A-Za-z_]\w*)', re.M)
+_IDENTIFIER = re.compile(r'\b[A-Za-z_]\w*\b')
+# These headers proved context-dependent or declaration-changing in the
+# all-TU compatibility census. They are not general parser-state inputs.
+UNSAFE_RANDOM_INCLUDE_HEADERS = frozenset({
+    "DC_input.h",
+    "DC_precompiledheaders.h",
+    "ResSw.h",
+    "ai_spellvalue.h",
+    "ai_tactical.h",
+    "army.h",
+    "creaturetype.h",
+    "customcampaign_legacy.h",
+    "herodefs.h",
+    "homm3_minmax.h",
+    "pcx.h",
+    "quest.h",
+    "resourcemanager.h",
+    "resourcemanager_sound.h",
+    "singleselectionwindow.h",
+    "singleselectionwindow_priv.h",
+    "timer.h",
+    "winmm_thunks.h",
+})
+# These otherwise useful headers conflict with declarations intentionally kept
+# local to one compiland.  The all-TU include compatibility census identified
+# each pairing: keep the header available to every other TU.
+UNSAFE_RANDOM_INCLUDE_HEADERS_BY_UNIT = {
+    "diff": frozenset({"kbwin.h"}),
+    "singleselectionwindow": frozenset({"resourcemanager_cache_result.h"}),
+    "spells": frozenset({"autostrptr.h"}),
+}
 
 
 @dataclass(frozen=True)
@@ -72,6 +101,7 @@ class UnitPlan:
     target_first: bytes
     context: str
     result_dir: Path
+    include_pool: tuple[str, ...]
 
 
 def _sha256(payload: bytes) -> str:
@@ -136,160 +166,103 @@ def insertions_for(text: str, rvas: tuple[int, ...]) -> tuple[tuple[int, int, in
 
 def insert_variant(original: str, insertions: tuple[tuple[int, int, int], ...],
                    variant: Variant) -> str:
-    """Insert a uniquely named copy of *variant* beside every affected RVA."""
+    """Insert a variant at each requested site (one site for include sweeps)."""
     candidate = original
-    ident = f"GRUNTZ_TU_STATE_PROBE_{variant.tag.replace('-', '_').upper()}"
     for offset, line, rva in sorted(insertions, reverse=True):
-        body = variant.body.replace(ident, f"{ident}_RVA_{rva:08X}")
-        candidate = candidate[:offset] + f"{body}#line {line}\n" + candidate[offset:]
+        candidate = (candidate[:offset] + f"{variant.body}#line {line}\n"
+                     + candidate[offset:])
     return candidate
 
 
-def _make_declaration_forest(
-        rng: random.Random, ident: str, width: int) -> str:
-    atoms: list[tuple[str, str]] = []
-    typedef_shapes = (
-        lambda name, scalar, index: f"typedef {scalar} {name};\n",
-        lambda name, scalar, index: f"typedef {scalar} *{name};\n",
-        lambda name, scalar, index: (
-            f"typedef {scalar} {name}[{2 + index % 7}];\n"),
-        lambda name, scalar, index: (
-            f"typedef {scalar} (__cdecl *{name})(int, unsigned long);\n"),
-        lambda name, scalar, index: f"typedef const {scalar} *{name};\n",
-    )
-    for index in range(width):
-        scalar = rng.choice(SAFE_SCALAR_TYPES)
-        shape = rng.randrange(len(typedef_shapes))
-        name = f"{ident}_FOREST_TYPEDEF_{index}"
-        atoms.append((f"typedef:{shape}:{index}",
-                      typedef_shapes[shape](name, scalar, index)))
-
-    for index in range(width):
-        name = f"{ident}_FOREST_CLASS_{index}"
-        scalar = rng.choice(SAFE_SCALAR_TYPES)
-        constant = rng.choice((1, 2, 3, 7, 15, 31))
-        shape = rng.randrange(8)
-        if shape == 0:
-            body = f"class {name} {{ public: {scalar} m_value; int ProbeRead(int); }};\n"
-        elif shape == 1:
-            body = (
-                f"class {name} {{ private: {scalar} m_value; public: "
-                f"int ProbeIdentity(int value) {{ return value; }} protected: "
-                f"unsigned long m_state; }};\n")
-        elif shape == 2:
-            body = (
-                f"class {name} {{ public: typedef {scalar} ProbeValue; "
-                f"enum ProbeKind {{ PROBE_ZERO = 0, PROBE_LIMIT = {constant} }}; "
-                f"ProbeValue m_values[{2 + index % 4}]; }};\n")
-        elif shape == 3:
-            body = (
-                f"class {name} {{ public: static {scalar} s_value; "
-                f"static int ProbeStatic(int); int ProbeMember(unsigned long) const; }};\n")
-        elif shape == 4:
-            body = (
-                f"class {name} {{ public: virtual int ProbeVirtual(int); "
-                f"virtual unsigned long ProbeWide(unsigned long); }};\n")
-        elif shape == 5:
-            body = (
-                f"class {name} {{ public: int ProbeOverload(int); "
-                f"int ProbeOverload(unsigned long); int ProbeOverload(const char *); }};\n")
-        elif shape == 6:
-            body = (
-                f"class {name} {{ private: unsigned int m_low : {1 + index % 7}; "
-                f"unsigned int m_high : {1 + (index + 3) % 7}; "
-                f"public: int ProbeBits() const; }};\n")
-        else:
-            pack = (1, 2, 4, 8)[index % 4]
-            body = (
-                f"#pragma pack(push, {pack})\nclass {name} {{ public: char m_tag; "
-                f"{scalar} m_value; int ProbePacked(int value) "
-                f"{{ return value ^ {constant}; }} }};\n#pragma pack(pop)\n")
-        atoms.append((f"class:{shape}:{index}", body))
-
-    prototype_shapes = (
-        lambda name, convention, scalar: f"{scalar} {convention} {name}({scalar});\n",
-        lambda name, convention, scalar: (
-            f"int {convention} {name}(int, unsigned long);\n"),
-        lambda name, convention, scalar: (
-            f"{scalar} *{convention} {name}({scalar} *, unsigned int);\n"),
-        lambda name, convention, scalar: (
-            f"void {convention} {name}(const {scalar} *, const {scalar} *);\n"),
-    )
-    for index in range(width):
-        name = f"{ident}_FOREST_PROTOTYPE_{index}"
-        convention = rng.choice(SAFE_CALLING_CONVENTIONS)
-        scalar = rng.choice(SAFE_SCALAR_TYPES)
-        shape = rng.randrange(len(prototype_shapes))
-        atoms.append((f"prototype:{shape}:{index}",
-                      prototype_shapes[shape](name, convention, scalar)))
-
-    function_shapes = (
-        lambda name, convention, constant: (
-            f"static int {convention} {name}(int value) {{ return value; }}\n"),
-        lambda name, convention, constant: (
-            f"static int {convention} {name}(int value) "
-            f"{{ return value ^ {constant}; }}\n"),
-        lambda name, convention, constant: (
-            f"static unsigned long {convention} {name}(unsigned long left, "
-            f"unsigned long right) {{ return (left + right) ^ {constant}UL; }}\n"),
-        lambda name, convention, constant: (
-            f"static int {convention} {name}(int left, int right) "
-            f"{{ return left < right ? left + {constant} : right - {constant}; }}\n"),
-    )
-    for index in range(width):
-        name = f"{ident}_FOREST_FUNCTION_{index}"
-        convention = rng.choice(SAFE_CALLING_CONVENTIONS)
-        constant = rng.choice((1, 2, 3, 7, 15, 31, 63, 127))
-        shape = rng.randrange(len(function_shapes))
-        atoms.append((f"function:{shape}:{index}",
-                      function_shapes[shape](name, convention, constant)))
-    rng.shuffle(atoms)
-    return "".join(body for _label, body in atoms)
+def _initial_include_insertion(text: str) -> tuple[int, int]:
+    """Insert once after the TU's initial include block, before any body."""
+    first_marker = _SOURCE_MARKER.search(text)
+    limit = first_marker.start() if first_marker else len(text)
+    includes = [match for match in _INCLUDE_DIRECTIVE.finditer(text)
+                if match.start() < limit]
+    offset = includes[-1].end() if includes else _top_level_insertion_offset(text)
+    if offset < len(text) and text[offset] == "\n":
+        offset += 1
+    return offset, _logical_line_at(text, offset)
 
 
-def make_variants(count: int, seed: int) -> tuple[Variant, ...]:
-    """Generate the same forest sequence as Gruntz's seed/family runner."""
-    rng = random.Random(seed)
+@lru_cache(maxsize=None)
+def _project_header_closure(header: str) -> frozenset[str]:
+    """One project header and all project headers it includes transitively."""
+    header_root = common.HOMM3_DIR / "include"
+    pending = [header]
+    visited = set()
+    while pending:
+        relative = pending.pop()
+        if relative in visited:
+            continue
+        visited.add(relative)
+        path = header_root / relative
+        if not path.is_file():
+            continue
+        contents = path.read_text(errors="replace")
+        for child in _INCLUDE_DIRECTIVE.findall(contents):
+            child = child.replace("\\", "/")
+            if (header_root / child).is_file():
+                pending.append(child)
+    return frozenset(visited)
+
+
+@lru_cache(maxsize=None)
+def _project_header_macros(header: str) -> frozenset[str]:
+    """Macros introduced by one project header's project-header closure."""
+    header_root = common.HOMM3_DIR / "include"
+    macros = set()
+    for relative in _project_header_closure(header):
+        path = header_root / relative
+        if path.is_file():
+            macros.update(_MACRO_DEFINITION.findall(
+                path.read_text(errors="replace")))
+    return frozenset(macros)
+
+
+def _project_header_pool(text: str, unit: str = "") -> tuple[str, ...]:
+    """Absent, generally compatible headers unable to macro-rewrite the TU."""
+    header_root = common.HOMM3_DIR / "include"
+    direct = {name.replace("\\", "/")
+              for name in _INCLUDE_DIRECTIVE.findall(text)}
+    included = {name.lower() for name in direct}
+    for header in direct:
+        if (header_root / header).is_file():
+            included.update(name.lower()
+                            for name in _project_header_closure(header))
+    source_identifiers = set(_IDENTIFIER.findall(text))
+    unit_exclusions = UNSAFE_RANDOM_INCLUDE_HEADERS_BY_UNIT.get(
+        unit, frozenset())
+    headers = []
+    for path in sorted(header_root.rglob("*.h")):
+        relative = path.relative_to(header_root).as_posix()
+        if (relative.lower() not in included
+                and relative not in UNSAFE_RANDOM_INCLUDE_HEADERS
+                and relative not in unit_exclusions
+                and not (_project_header_macros(relative) & source_identifiers)):
+            headers.append(relative)
+    return tuple(headers)
+
+
+def make_variants(
+        count: int, seed: int, unit: str,
+        headers: tuple[str, ...]) -> tuple[Variant, ...]:
+    """Choose 5-10 transitively absent headers in random order per TU/trial."""
+    if len(headers) < MIN_HEADERS_PER_TRIAL:
+        common.die(f"{unit}: fewer than {MIN_HEADERS_PER_TRIAL} unused headers")
+    unit_seed = int.from_bytes(
+        hashlib.sha256(f"{seed}:{unit}".encode()).digest()[:8], "big")
+    rng = random.Random(unit_seed)
     variants = []
+    maximum = min(MAX_HEADERS_PER_TRIAL, len(headers))
     for trial in range(1, count + 1):
+        header_count = rng.randint(MIN_HEADERS_PER_TRIAL, maximum)
+        selected = rng.sample(headers, header_count)
+        rng.shuffle(selected)
         tag = f"{seed:08x}-{trial:04d}-{rng.getrandbits(32):08x}"
-        # Preserve the audited Gruntz spelling too: VC6's state can depend on
-        # identifier-table population, not merely declaration shapes.
-        ident = f"GRUNTZ_TU_STATE_PROBE_{tag.replace('-', '_').upper()}"
-        width = DEFAULT_MIN_FOREST_WIDTH + (
-            (trial - 1) %
-            (DEFAULT_MAX_DECLARATIONS - DEFAULT_MIN_FOREST_WIDTH + 1))
-        forest = _make_declaration_forest(rng, ident, width)
-
-        # Keep RNG consumption identical to the Gruntz multi-family generator;
-        # otherwise trial N would not reproduce an audited Gruntz forest.
-        repeat = 1 + rng.randrange(4)
-        for _ in range(repeat):
-            rng.choice(SAFE_SCALAR_TYPES)
-        enum_count = 1 + rng.randrange(8)
-        enum_values = [rng.choice(SAFE_ENUM_VALUES) for _ in range(enum_count)]
-        rng.shuffle(enum_values)
-        member_count = 1 + rng.randrange(6)
-        for _ in range(member_count):
-            rng.choice(SAFE_SCALAR_TYPES)
-            if rng.randrange(3) == 0:
-                rng.randrange(4)
-        rng.choice((1, 2, 4, 8))
-        for _ in range(2 + rng.randrange(5)):
-            rng.choice(SAFE_SCALAR_TYPES)
-        rng.randrange(3)
-        rng.choice((0, 1, 3, 7, 15, 31))
-        for _ in range(repeat):
-            rng.choice(SAFE_SCALAR_TYPES)
-        for _ in range(repeat):
-            rng.choice(SAFE_ENUM_VALUES)
-        for _ in range(repeat):
-            rng.choice(SAFE_SCALAR_TYPES)
-        rng.choice((0, 1, 3, 7, 15, 31, 63, 127))
-        rng.randrange(4)
-        include_choices = list(range(10))
-        rng.shuffle(include_choices)
-        variants.append(Variant(trial, tag, forest))
+        body = "".join(f'#include "{header}"\n' for header in selected)
+        variants.append(Variant(trial, tag, body))
     return tuple(variants)
 
 
@@ -376,8 +349,13 @@ def _read_cached(plan: UnitPlan, variant: Variant) -> dict | None:
 
 def _write_json(path: Path, payload: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_suffix(path.suffix + ".tmp")
-    temporary.write_text(json.dumps(payload, sort_keys=True) + "\n")
+    # Separate sweep processes may share a resumable cache.  A fixed `.tmp`
+    # sibling lets their atomic writes clobber one another before rename.
+    with tempfile.NamedTemporaryFile(
+            mode="w", encoding="utf-8", dir=path.parent,
+            prefix=path.name + ".", suffix=".tmp", delete=False) as stream:
+        temporary = Path(stream.name)
+        stream.write(json.dumps(payload, sort_keys=True) + "\n")
     temporary.replace(path)
 
 
@@ -400,6 +378,7 @@ def run_trial(plan: UnitPlan, variant: Variant, *, cache: bool = True) -> dict:
         "context": plan.context,
         "trial": variant.trial,
         "tag": variant.tag,
+        "headers": _INCLUDE_DIRECTIVE.findall(variant.body),
         "scores": scores,
     }
     if cache:
@@ -410,7 +389,7 @@ def run_trial(plan: UnitPlan, variant: Variant, *, cache: bool = True) -> dict:
 def affected_by_unit(rows: dict) -> dict[str, tuple[tuple[str, str], ...]]:
     grouped: dict[str, list[tuple[str, str]]] = defaultdict(list)
     for key, row in rows.items():
-        if row.cur is not None and row.cur < row.hist - 1e-9:
+        if row.cur is not None and row.max < row.hist - 1e-9:
             grouped[key[0]].append(key)
     return {unit: tuple(sorted(keys)) for unit, keys in grouped.items()}
 
@@ -420,7 +399,7 @@ def _plans(rows: dict, units: set[str] | None, seed: int, trials: int) -> list[U
     if units is not None:
         unknown = units - set(affected)
         if unknown:
-            common.die("requested unit(s) have no CUR < HIST rows: "
+            common.die("requested unit(s) have no MAX < HIST rows: "
                        + ", ".join(sorted(unknown)))
         affected = {unit: keys for unit, keys in affected.items() if unit in units}
     plans = []
@@ -436,9 +415,9 @@ def _plans(rows: dict, units: set[str] | None, seed: int, trials: int) -> list[U
         original = source.read_text()
         source_bytes = source.read_bytes()
         target_bytes = target.read_bytes()
-        rvas = tuple(row.rva for key in keys
-                     if (row := rows[key]).rva is not None)
-        insertions = insertions_for(original, rvas)
+        insertion_offset, insertion_line = _initial_include_insertion(original)
+        insertions = ((insertion_offset, insertion_line, 0),)
+        include_pool = _project_header_pool(original, unit)
         scored = tuple(sorted(
             key for key, row in rows.items()
             if key[0] == unit and row.cur is not None))
@@ -446,7 +425,7 @@ def _plans(rows: dict, units: set[str] | None, seed: int, trials: int) -> list[U
         for payload in (
                 source_bytes, target_bytes, compgen, symbol_names,
                 f"generator={GENERATOR_VERSION};seed={seed};trials={trials};"
-                f"insertions={insertions}".encode()):
+                f"insertions={insertions};headers={include_pool}".encode()):
             identity.update(hashlib.sha256(payload).digest())
         context = identity.hexdigest()[:16]
         result_dir = (common.HOMM3_DIR / "build/tu-state-sweep/results" /
@@ -454,7 +433,8 @@ def _plans(rows: dict, units: set[str] | None, seed: int, trials: int) -> list[U
         result_dir.mkdir(parents=True, exist_ok=True)
         plans.append(UnitPlan(
             unit, source, original, _sha256(source_bytes), insertions,
-            keys, scored, _first_pass(unit, target_bytes), context, result_dir))
+            keys, scored, _first_pass(unit, target_bytes), context, result_dir,
+            include_pool))
     return plans
 
 
@@ -469,6 +449,40 @@ def _best_results(plans: list[UnitPlan], results: dict) -> dict:
                 if previous is None or candidate > previous:
                     best[key] = candidate
     return best
+
+
+def _observed_score_changes(plans: list[UnitPlan], results: dict, rows: dict) -> list[dict]:
+    """Summarize every function whose score moved in any candidate TU."""
+    changes = []
+    for plan in plans:
+        observations = results.get(plan.unit, ())
+        for key in plan.scored:
+            row = rows[key]
+            scored = [
+                (round(result["scores"][key[1]], 4), result["trial"],
+                 result.get("headers", []))
+                for result in observations if key[1] in result["scores"]
+            ]
+            if not scored:
+                continue
+            low = min(scored)
+            high = max(scored)
+            if low[0] == row.cur and high[0] == row.cur:
+                continue
+            changes.append({
+                "unit": key[0],
+                "function": key[1],
+                "cur": row.cur,
+                "max": row.max,
+                "hist": row.hist,
+                "lowest": low[0],
+                "lowest_trial": low[1],
+                "lowest_headers": low[2],
+                "highest": high[0],
+                "highest_trial": high[1],
+                "highest_headers": high[2],
+            })
+    return changes
 
 
 def bank_rows(rows: dict, reproduced: dict, live_hashes: dict) -> tuple[dict, list]:
@@ -493,17 +507,23 @@ def run(args) -> int:
     rows = status.load_baseline()
     units = ({part.strip() for part in args.unit.split(",") if part.strip()}
              if args.unit else None)
-    variants = make_variants(args.trials, args.seed)
     plans = _plans(rows, units, args.seed, args.trials)
+    variants_by_unit = {
+        plan.unit: make_variants(
+            args.trials, args.seed, plan.unit, plan.include_pool)
+        for plan in plans
+    }
     baseline_digest = _sha256(status.BASELINE.read_bytes())
     source_digests = {plan.source: plan.source_digest for plan in plans}
     affected_count = sum(len(plan.affected) for plan in plans)
-    print(f"[vc6 state-sweep] {affected_count} CUR < HIST function(s) in "
+    print(f"[vc6 state-sweep] {affected_count} MAX < HIST function(s) in "
           f"{len(plans)} TU(s); {args.trials} trials/TU; {args.jobs} worker(s)")
 
     results: dict[str, list[dict]] = defaultdict(list)
     counts = Counter()
-    tasks = [(plan, variant) for plan in plans for variant in variants]
+    tasks = [(plan, variant)
+             for plan in plans for variant in variants_by_unit[plan.unit]]
+    failures = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=args.jobs) as executor:
         futures = {
             executor.submit(run_trial, plan, variant): (plan, variant)
@@ -511,15 +531,21 @@ def run(args) -> int:
         }
         for future in concurrent.futures.as_completed(futures):
             plan, variant = futures[future]
+            counts[plan.unit] += 1
+            done = counts[plan.unit]
             try:
                 result = future.result()
             except Exception as exc:
-                for pending in futures:
-                    pending.cancel()
-                common.die(str(exc))
-            results[plan.unit].append(result)
-            counts[plan.unit] += 1
-            done = counts[plan.unit]
+                failures.append({
+                    "unit": plan.unit, "trial": variant.trial,
+                    "headers": _INCLUDE_DIRECTIVE.findall(variant.body),
+                    "error": str(exc),
+                })
+                first_error = str(exc).splitlines()[0]
+                print(f"[vc6 state-sweep] SKIP {plan.unit} "
+                      f"trial {variant.trial}: {first_error}", flush=True)
+            else:
+                results[plan.unit].append(result)
             if done == args.trials or done % 10 == 0:
                 print(f"[vc6 state-sweep] {plan.unit}: {done}/{args.trials}",
                       flush=True)
@@ -534,11 +560,12 @@ def run(args) -> int:
     print(f"[vc6 state-sweep] {len(winners)} winning TU/trial pair(s) require reproduction")
 
     by_unit = {plan.unit: plan for plan in plans}
-    by_trial = {variant.trial: variant for variant in variants}
     reproduced = {}
     with concurrent.futures.ThreadPoolExecutor(max_workers=args.jobs) as executor:
         futures = {
-            executor.submit(run_trial, by_unit[unit], by_trial[trial], cache=False):
+            executor.submit(
+                run_trial, by_unit[unit],
+                variants_by_unit[unit][trial - 1], cache=False):
                 (unit, trial, keys)
             for (unit, trial), keys in winners.items()
         }
@@ -565,12 +592,25 @@ def run(args) -> int:
 
     live_hashes = status.source_hashes()
     updated, changes = bank_rows(rows, reproduced, live_hashes)
+    observed_changes = _observed_score_changes(plans, results, rows)
+    successful_trials = sum(len(unit_results)
+                            for unit_results in results.values())
+    score_observations = sum(
+        len(result["scores"])
+        for unit_results in results.values() for result in unit_results)
     summary = {
+        "generator": "random-project-includes",
+        "generator_version": GENERATOR_VERSION,
         "seed": args.seed,
         "trials_per_tu": args.trials,
         "affected_functions": affected_count,
         "translation_units": len(plans),
-        "compiled_trials": len(tasks),
+        "attempted_trials": len(tasks),
+        "successful_trials": successful_trials,
+        "score_observations": score_observations,
+        "failed_trials": sorted(
+            failures, key=lambda item: (item["unit"], item["trial"])),
+        "observed_score_changes": observed_changes,
         "reproduced_improvements": [
             {
                 "unit": key[0], "function": key[1], "old_max": old_max,
@@ -580,13 +620,19 @@ def run(args) -> int:
             for key, old_max, new_max, old_hist, new_hist in changes
         ],
     }
+    scope = hashlib.sha256(
+        ",".join(plan.unit for plan in plans).encode()).hexdigest()[:8]
     summary_path = (common.HOMM3_DIR / "build/tu-state-sweep" /
-                    f"summary-{args.seed}-{args.trials}.json")
+                    f"summary-includes-{args.seed}-{args.trials}-{scope}.json")
     _write_json(summary_path, summary)
     for item in summary["reproduced_improvements"]:
         print(f"[vc6 state-sweep] BANK {item['unit']} {item['function']}: "
               f"MAX {item['old_max']:.4f} -> {item['new_max']:.4f} "
               f"(trial {item['trial']})")
+    print(f"[vc6 state-sweep] captured {len(observed_changes)} function(s) "
+          "whose score changed in at least one candidate TU")
+    print(f"[vc6 state-sweep] {successful_trials}/{len(tasks)} candidate TU(s) "
+          f"scored; {score_observations} function-score observation(s)")
     if args.bank:
         status.write_baseline(updated)
         print(f"[vc6 state-sweep] banked {len(changes)} reproduced improvement(s) "

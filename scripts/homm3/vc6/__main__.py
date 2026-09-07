@@ -166,9 +166,9 @@ def _build_parser() -> argparse.ArgumentParser:
                     help="maximum ranked functions to display (default 20; 0 = all)")
 
     ps = ss.add_parser("state-sweep", help="batch transient TU-state search for "
-                       "all CUR < HIST rows")
+                       "all MAX < HIST rows")
     ps.add_argument("--trials", type=int, default=30,
-                    help="target-local grouped forest trials per TU (default 30)")
+                    help="random include-set trials per TU (default 30)")
     ps.add_argument("--seed", type=int, default=20260906)
     ps.add_argument("--jobs", type=int, default=4,
                     help="parallel VC6 compiles (default 4)")
