@@ -1,11 +1,4 @@
-[queue] 909 active unmatched target(s), smallest first; 24 parked
-      34 B  0x004fa050  unadmitted    bracketed           levelupwindow..lodfile:game_f9f00_sub01_fa050
-      35 B  0x004cfec0  unadmitted    carcass             game:__h3cg$game$vector_destroy$type_map_hero_identity
-      35 B  0x00530e40  unadmitted    bracketed           quicktownwindow..recruit:game_130e40
-      35 B  0x005361b0  unadmitted    bracketed           quicktownwindow..recruit:game_1361b0
-      35 B  0x00537910  unadmitted    bracketed           quicktownwindow..recruit:game_137910
-      35 B  0x00537940  unadmitted    bracketed           quicktownwindow..recruit:game_137940
-      35 B  0x0054c940  unadmitted    bracketed           quicktownwindow..recruit:game_14c730_sub00_14c940
+[queue] 902 active unmatched target(s), smallest first; 27 parked
       36 B  0x0048db40  unadmitted    bracketed           customcampaign..dialogbox:game_8bf00_sub00_8db40
       36 B  0x0048db70  unadmitted    bracketed           customcampaign..dialogbox:game_8bf00_sub01_8db70
       36 B  0x005b8060  unadmitted    bracketed           systemoptionswindow..text:game_1b5a70_sub04_1b8060
@@ -910,9 +903,7 @@
    11619 B  0x00579960  MAX 95.8142%  compiled            singleselectionwindow:??0TSingleSelectionWindow@@QAE@H@Z
 
 wrote evidence/smallest-match-queue.tsv
-dence pass and iterate up to five scored candidates
-compiled	794	0x005636c0	86.1308	86.1308	86.1308	sacrifice_window	sacrifice_window	?backpackClick@type_sacrifice_window@@QAEXJE@Z	admitted	run the evidence pass and iterate up to five scored candidates
-compiled	795	0x005d05f0	95.6856	95.6856	95.6856	townmgr	townmgr	?setCommandAndText@type_garrison_base_window@@QAEXPAVmessage@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
+d candidates
 compiled	796	0x005a3250	99.9703	99.9703	99.9703	spells	spells	?handleCastWallSpell@@YIHAAVmessage@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	796	0x00601a00	94.5840	94.5840	94.5840	wingraph	wingraph	?ddSetFullScreenStatus@@YIEH@Z	admitted	run the evidence pass and iterate up to five scored candidates
 bracketed	798	0x0053e9e0	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_13ed00_sub00_13e9e0	bracketed	resolve the owner, then add its VA claim and body
