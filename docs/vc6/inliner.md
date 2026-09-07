@@ -1465,3 +1465,21 @@ homes and value-returning boundary, reaching 100% with all 17 CFG blocks exact.
 The earlier cast/type-width probes targeted the consequence of the wrong
 wrapper signature. Restoring the DC-proven `drawWindow()` call is byte-neutral;
 its ordinary body expands while `vwCompleteDraw` remains a call.
+
+
+### Separate input/output cursors can identify a missing transform
+
+`hero::updateSpellList` (0x4d95d0) reached 81.04% with hand-written spell-grant
+loops. Retail keeps an input cursor and a separately homed output cursor in
+each loop, alongside a bitset owner/offset. Its bounds check runs before the
+logical OR, although the bit value test can still short-circuit. A scalar
+`*dst = *dst || granted.test(spell)` loses both properties.
+
+Binary `std::transform` with the existing `bitset_iterator<70>` and
+`std::logical_or<bool>` reproduces the two loops and reaches 100%. The apparent
+20-byte stack-frame deficit (0x48 versus 0x5c) disappears with the iterator and
+algorithm locals; it did not require an extra container copy or artificial
+lifetime extension. `logical_or<unsigned char>` emits identical bytes, so that
+functor type cannot be distinguished by this match. Dreamcast proves the older
+spellbook/artifact operation; Complete's generic and combination grant loops
+are reconstructed from retail.

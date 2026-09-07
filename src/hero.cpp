@@ -14,6 +14,9 @@
 // tail near the end of this file). No vendoring: the toolchain already
 // carries the exact headers that built the retail COMDATs.
 #include <bitset>
+#include <functional>
+#include <algorithm>
+#include "bitset_iterator.h"
 #include <vector>
 #include <stdio.h>
 #include <string.h>
@@ -1891,49 +1894,18 @@ std::bitset<70> markSpells(int artifactId)
     return result;
 }
 
-// E:\gamedcs\hero.cpp:1542
-// Rebuilds available_spells from the spellbook plus every spell-granting
-// artifact the hero wears. The two grant loops are written LONGHAND
-// twice because retail expands them twice - once for the worn artifact
-// itself and once per component of the combination it belongs to.
-//
-// Loop forms are not interchangeable here and each is taken from the
-// bytes: the 19-slot sweep is a DOWNCOUNT (`mov ecx,0x13` / `dec` /
-// `jne`); the 144-component sweep is a signed INDEX loop, which survives
-// strength reduction as `cmp <byte offset>,0x1200 / jl`; and the 70-entry
-// grant loop is a POINTER walk closing on `!=`, not an index compare -
-// equality has no signedness, which is why the pointer-compare rule that
-// governs the other two does not reach it. The `jb` inside the grant
-// loop is bitset::test's own size_t bounds check, not the loop.
-//
-// Residual (78.0%): block counts AGREE (34 vs 34); the whole distance is
-// two branch KINDS transposed inside each grant loop - `vc6 diagnose`
-// reads #6/#7 and #15/#16 as base jne/jb against retail jb/jne, i.e. the
-// loop guard and bitset::test's bounds check come out in the opposite
-// order. Tried and rejected: the same loop as a `for` with both
-// increments in the header (69.97, WORSE). The `while` form here is the
-// best measured spelling; the transposition reads as guard polarity,
-// a D8 arm-order item the catalog has no lever for on a pointer-guarded
-// loop.
-//
-// 78.04 -> 80.93 (2026-08-20), two of the three witnesses above CLOSED:
-//  - the eager two-dword load IS a struct copy: `type_artifact current =
-//    *slot;` reproduces retail's `mov edx,[eax] / mov eax,[eax+4] /
-//    cmp edx,-1` exactly, and it also lands the scroll store - dl still
-//    holds the id (ARTIFACT_SPELL_SCROLL == 1), so `[ebx+eax+0x430],dl`
-//    now byte-matches without materializing the immediate. (+1.43)
-//  - the paired jne<->jb transpositions in BOTH copy loops were the ||
-//    OPERAND ORDER: retail evaluates `granted.test(spell) || *dst`, the
-//    bounds check ahead of the short-circuit. flow-distance 2 -> 0.
-//    (+1.46)
-// STILL OPEN - the 20-byte frame gap (retail sub esp,0x5c vs our 0x48):
-// every deep local sits 0x14 higher on retail's side (its first bitset
-// temp at -0x50, ours at -0x3c) plus the dst memory-home at [ebp-0x4].
-// MEASURED NEGATIVE: a by-value `std::bitset<144> components` copy is
-// exactly 20 bytes but adds copy code retail lacks, 80.93 -> 76.59.
-// Best remaining hypothesis: retail's two bitset<70> `granted` temps do
-// NOT share a slot (12+12 > our one coalesced 12), the class of slot
-// packing why-reg cannot reach. Call multisets AGREE - not /Ob2.
+// Dreamcast hero.cpp:1542 rebuilds the spell list from the spellbook and
+// equipped artifacts. Complete adds generic grants and combination components.
+// Retail 0x4d9678..0x4d96be and 0x4d9764..0x4d97a4 retain separate input and
+// output cursors plus a bitset owner/offset. Dereferencing the bitset iterator
+// checks bounds before logical_or, while the bit value can short-circuit.
+// Binary std::transform with the canonical bitset_iterator reproduces both
+// loops and the 0x5c frame exactly (81.04% -> 100%). The hand-written loops
+// collapsed the two cursors and moved the bounds check inside short-circuit
+// evaluation. Their 0x48 frame was not evidence for a missing bitset copy.
+// logical_or<unsigned char> is byte-identical to logical_or<bool>; bool
+// expresses the spell flags. Keep the two-dword type_artifact value copy:
+// retail loads both id and extra before checking for an empty slot.
 VA(0x004d95d0, 0x212)  // dc-bracket forced, dc 0xcc38c
 void hero::updateSpellList()
 {
@@ -1951,13 +1923,10 @@ void hero::updateSpellList()
             } else {
                 if (g_artifactTraits[artifactId].m_givesSpells) {
                     std::bitset<70> granted = markSpells(artifactId);
-                    unsigned char* dst = m_availableSpells;
-                    unsigned int spell = 0;
-                    while (dst != m_availableSpells + NUM_SPELLS) {
-                        *dst = *dst || granted.test(spell);
-                        ++dst;
-                        ++spell;
-                    }
+                    std::transform(m_availableSpells,
+                                   m_availableSpells + NUM_SPELLS,
+                                   bitset_iterator<70>(granted, 0),
+                                   m_availableSpells, std::logical_or<bool>());
                 }
                 int comboType = g_artifactTraits[artifactId].m_comboType;
                 if (comboType != -1) {
@@ -1967,13 +1936,11 @@ void hero::updateSpellList()
                         if (components.test(component) &&
                             g_artifactTraits[component].m_givesSpells) {
                             std::bitset<70> granted = markSpells(component);
-                            unsigned char* dst = m_availableSpells;
-                            unsigned int spell = 0;
-                            while (dst != m_availableSpells + NUM_SPELLS) {
-                                *dst = *dst || granted.test(spell);
-                                ++dst;
-                                ++spell;
-                            }
+                            std::transform(m_availableSpells,
+                                           m_availableSpells + NUM_SPELLS,
+                                           bitset_iterator<70>(granted, 0),
+                                           m_availableSpells,
+                                           std::logical_or<bool>());
                         }
                     }
                 }
