@@ -35,7 +35,6 @@ bracketed	23	0x005b8a20	-	0.0000	0.0000	systemoptionswindow..text	systemoptionsw
 bracketed	24	0x0055ecf0	-	0.0000	0.0000	resourcemanager..sacrifice_window	resourcemanager,ressw,sacrifice_window	game_15a800_sub09_15ecf0	bracketed	resolve the owner, then add its VA claim and body
 bracketed	28	0x00530e20	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_176f00_sub01_130e20	bracketed	resolve the owner, then add its VA claim and body
 bracketed	32	0x005b76d0	-	0.0000	0.0000	systemoptionswindow..text	systemoptionswindow,text	game_2349db_sub00_1b76d0	bracketed	resolve the owner, then add its VA claim and body
-unmapped	32	0x006039a0	-	0.0000	0.0000				unmapped	locate the owning TU, then add its VA claim and body
 bracketed	33	0x00404c29	-	0.0000	0.0000	adventuremapwindow..adventureoptionswindow	adventuremapwindow,adventureoptionswindow	game_4c29	bracketed	resolve the owner, then add its VA claim and body
 bracketed	33	0x0045da40	-	0.0000	0.0000	campaignbrief..campaignmap	campaignbrief,campaignmap	game_5bcd0_sub02_5da40	bracketed	resolve the owner, then add its VA claim and body
 bracketed	33	0x004e6750	-	0.0000	0.0000	hero..herodefs	hero,herodefs	THeroScreenWindow_scalar_deleting_destructor	bracketed	resolve the owner, then add its VA claim and body
