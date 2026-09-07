@@ -38,28 +38,29 @@
 // zlib's own gzio.c spells the pair exactly this way, and the constructor
 // LOADS both rather than testing immediates, which is what proves it is a
 // table rather than two literals.
-DATA(0x0063e6fc) static int gz_magic[2] = {0x1f, 0x8b};
+// Before normalization: gz_magic.
+DATA(0x0063e6fc) static int g_gzMagic[2] = {0x1f, 0x8b};
 
 // 0x4d5fd0: refill next_in from the source streambuf when it is empty and
 // hand back the next byte, or -1 at end of source.
 VA(0x004d5fd0, 0x74)  // anchor-bracket, retail-only
-int TGzInflateBuf::get_byte()
+int TGzInflateBuf::getByte()
 {
-    if (stream.avail_in == 0) {
-        if (source_eof)
+    if (m_stream.avail_in == 0) {
+        if (m_sourceEof)
             return -1;
-        int count = source->sgetn(
-            static_cast<char*>(static_cast<void*>(buffer)), 0x200);
+        int count = m_source->sgetn(
+            static_cast<char*>(static_cast<void*>(m_buffer)), 0x200);
         if (count < 0x200)
-            source_eof = 1;
-        stream.next_in = buffer;
-        stream.avail_in = count;
+            m_sourceEof = 1;
+        m_stream.next_in = m_buffer;
+        m_stream.avail_in = count;
         if (count == 0)
             return -1;
     }
-    unsigned char c = *stream.next_in;
-    ++stream.next_in;
-    --stream.avail_in;
+    unsigned char c = *m_stream.next_in;
+    ++m_stream.next_in;
+    --m_stream.avail_in;
     return c;
 }
 
@@ -157,86 +158,86 @@ int TGzInflateBuf::get_byte()
 // decrement 88.67, a counted `for` 89.52.
 VA(0x004d6050, 0x58A)  // anchor-vtable ??_7TGzInflateBuf@@6B@ + anchor-import @inflateInit2_@16, retail-only
 TGzInflateBuf::TGzInflateBuf(std::streambuf* newSource)
-    : source(newSource),
-      buffer(0),
-      out_buffer(0),
-      crc(crc32(0, 0, 0)),
-      ok(1),
-      source_eof(0),
-      inflating(0)
+    : m_source(newSource),
+      m_buffer(0),
+      m_outBuffer(0),
+      m_crc(crc32(0, 0, 0)),
+      m_ok(1),
+      m_sourceEof(0),
+      m_inflating(0)
 {
-    buffer = new unsigned char[0x400];
-    if (buffer == 0)
+    m_buffer = new unsigned char[0x400];
+    if (m_buffer == 0)
         throw TAllocationFailure();
-    std::auto_ptr<unsigned char> ownedBuffer(buffer);
-    out_buffer = buffer + 0x200;
-    setg(static_cast<char*>(static_cast<void*>(out_buffer)),
-         static_cast<char*>(static_cast<void*>(out_buffer)),
-         static_cast<char*>(static_cast<void*>(out_buffer)));
+    std::auto_ptr<unsigned char> ownedBuffer(m_buffer);
+    m_outBuffer = m_buffer + 0x200;
+    setg(static_cast<char*>(static_cast<void*>(m_outBuffer)),
+         static_cast<char*>(static_cast<void*>(m_outBuffer)),
+         static_cast<char*>(static_cast<void*>(m_outBuffer)));
     setp(0, 0);
-    stream.next_out = out_buffer;
-    stream.next_in = buffer;
-    stream.avail_in = 0;
-    stream.avail_out = 0x200;
-    stream.zalloc = 0;
-    stream.zfree = 0;
+    m_stream.next_out = m_outBuffer;
+    m_stream.next_in = m_buffer;
+    m_stream.avail_in = 0;
+    m_stream.avail_out = 0x200;
+    m_stream.zalloc = 0;
+    m_stream.zfree = 0;
     try {
-        int magic = get_byte();
+        int magic = getByte();
         if (magic == -1)
             throw false;
         try {
-            if (magic != gz_magic[0])
+            if (magic != g_gzMagic[0])
                 throw false;
-            magic = get_byte();
+            magic = getByte();
             if (magic == -1)
                 throw false;
-            if (magic != gz_magic[1]) {
-                --stream.next_in;
-                ++stream.avail_in;
+            if (magic != g_gzMagic[1]) {
+                --m_stream.next_in;
+                ++m_stream.avail_in;
                 throw false;
             }
         } catch (bool) {
-            --stream.next_in;
-            ++stream.avail_in;
+            --m_stream.next_in;
+            ++m_stream.avail_in;
             throw;
         }
     } catch (bool) {
-        ok = 0;
+        m_ok = 0;
     }
-    if (ok) {
-        int method = read_byte();
+    if (m_ok) {
+        int method = readByte();
         if (method != Z_DEFLATED)
             throw TDataError();
-        int flags = read_byte();
+        int flags = readByte();
         if ((flags & 0xe0) != 0)
             throw TDataError();
         for (int skip = 6; skip > 0; --skip)
-            read_byte();
+            readByte();
         if ((flags & 4) != 0) {
-            int low = read_byte();
-            unsigned extra = (read_byte() << 8) + low;
+            int low = readByte();
+            unsigned extra = (readByte() << 8) + low;
             while (extra-- != 0)
-                read_byte();
+                readByte();
         }
         if ((flags & 8) != 0) {
             while (1) {
-                if (read_byte() == 0)
+                if (readByte() == 0)
                     break;
             }
         }
         if ((flags & 0x10) != 0) {
             while (1) {
-                if (read_byte() == 0)
+                if (readByte() == 0)
                     break;
             }
         }
         if ((flags & 2) != 0) {
-            read_byte();
-            read_byte();
+            readByte();
+            readByte();
         }
-        if (inflateInit2(&stream, -MAX_WBITS) == Z_MEM_ERROR)
+        if (inflateInit2(&m_stream, -MAX_WBITS) == Z_MEM_ERROR)
             throw TAllocationFailure();
-        inflating = 1;
+        m_inflating = 1;
     }
     ownedBuffer.release();
 }
@@ -261,19 +262,19 @@ VA_COMPGEN(0x004d67f0, 0x21, SCALAR_DELETING_DTOR, TGzInflateBuf)
 VA(0x004d6820, 0xF6)  // anchor-import @inflateEnd@4, retail-only
 TGzInflateBuf::~TGzInflateBuf()
 {
-    if (stream.avail_in > 0) {
-        source->pubseekoff(
-            -static_cast<long>(stream.avail_in),
+    if (m_stream.avail_in > 0) {
+        m_source->pubseekoff(
+            -static_cast<long>(m_stream.avail_in),
             std::ios_base::cur, std::ios_base::in);
     }
-    if (ok) {
-        if (inflating)
-            inflateEnd(&stream);
+    if (m_ok) {
+        if (m_inflating)
+            inflateEnd(&m_stream);
     } else if (egptr() > gptr()) {
-        source->pubseekoff(
+        m_source->pubseekoff(
             gptr() - egptr(), std::ios_base::cur, std::ios_base::in);
     }
-    delete buffer;
+    delete m_buffer;
 }
 
 // 0x4d6920: drain the source into the 0x200-byte output half, either
@@ -293,60 +294,60 @@ TGzInflateBuf::~TGzInflateBuf()
 VA(0x004d6920, 0x251)  // anchor-vtable ??_7TGzInflateBuf@@6B@ slot 4 + anchor-import @inflate@8, retail-only
 int TGzInflateBuf::underflow()
 {
-    while (stream.avail_out > 0) {
-        if (stream.avail_in <= 0 && source_eof)
+    while (m_stream.avail_out > 0) {
+        if (m_stream.avail_in <= 0 && m_sourceEof)
             break;
-        if (stream.avail_in == 0) {
-            int count = source->sgetn(
-                static_cast<char*>(static_cast<void*>(buffer)), 0x200);
+        if (m_stream.avail_in == 0) {
+            int count = m_source->sgetn(
+                static_cast<char*>(static_cast<void*>(m_buffer)), 0x200);
             if (count < 0x200)
-                source_eof = 1;
-            stream.avail_in = count;
-            stream.next_in = buffer;
+                m_sourceEof = 1;
+            m_stream.avail_in = count;
+            m_stream.next_in = m_buffer;
         }
-        if (stream.avail_in > 0) {
-            if (ok) {
-                if (inflating) {
-                    int status = inflate(&stream, Z_SYNC_FLUSH);
+        if (m_stream.avail_in > 0) {
+            if (m_ok) {
+                if (m_inflating) {
+                    int status = inflate(&m_stream, Z_SYNC_FLUSH);
                     if (status == Z_MEM_ERROR)
                         throw TAllocationFailure();
                     if (status == Z_DATA_ERROR)
                         throw TDataError();
-                    crc = crc32(crc,
-                                stream.next_out + stream.avail_out - 0x200,
-                                0x200 - stream.avail_out);
+                    m_crc = crc32(m_crc,
+                                m_stream.next_out + m_stream.avail_out - 0x200,
+                                0x200 - m_stream.avail_out);
                     if (status == Z_STREAM_END) {
-                        inflateEnd(&stream);
-                        inflating = 0;
-                        read_byte();
-                        read_byte();
-                        read_byte();
-                        read_byte();
-                        read_byte();
-                        read_byte();
-                        read_byte();
-                        read_byte();
+                        inflateEnd(&m_stream);
+                        m_inflating = 0;
+                        readByte();
+                        readByte();
+                        readByte();
+                        readByte();
+                        readByte();
+                        readByte();
+                        readByte();
+                        readByte();
                         break;
                     }
                 }
             } else {
-                unsigned count = stream.avail_in;
-                if (count > stream.avail_out)
-                    count = stream.avail_out;
-                memcpy(stream.next_out, stream.next_in, count);
-                stream.next_in += count;
-                stream.avail_in -= count;
-                stream.next_out += count;
-                stream.avail_out -= count;
+                unsigned count = m_stream.avail_in;
+                if (count > m_stream.avail_out)
+                    count = m_stream.avail_out;
+                memcpy(m_stream.next_out, m_stream.next_in, count);
+                m_stream.next_in += count;
+                m_stream.avail_in -= count;
+                m_stream.next_out += count;
+                m_stream.avail_out -= count;
             }
         }
     }
-    setg(static_cast<char*>(static_cast<void*>(out_buffer)),
-         static_cast<char*>(static_cast<void*>(out_buffer)),
-         static_cast<char*>(static_cast<void*>(out_buffer))
-             + 0x200 - stream.avail_out);
-    stream.next_out = out_buffer;
-    stream.avail_out = 0x200;
+    setg(static_cast<char*>(static_cast<void*>(m_outBuffer)),
+         static_cast<char*>(static_cast<void*>(m_outBuffer)),
+         static_cast<char*>(static_cast<void*>(m_outBuffer))
+             + 0x200 - m_stream.avail_out);
+    m_stream.next_out = m_outBuffer;
+    m_stream.avail_out = 0x200;
     if (egptr() > eback())
         return static_cast<unsigned char>(*gptr());
     return -1;
@@ -362,9 +363,9 @@ TAllocationFailure::TAllocationFailure();
 
 // 0x4d6ba0: get_byte with the malformed-member throw attached.
 VA(0x004d6ba0, 0x81)  // anchor-bracket, called from 0x4d6920, retail-only
-int TGzInflateBuf::read_byte()
+int TGzInflateBuf::readByte()
 {
-    int c = get_byte();
+    int c = getByte();
     if (c == -1)
         throw TDataError();
     return c;

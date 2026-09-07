@@ -17,11 +17,13 @@
 // DC public gAdventureOptionsHelp; retail consumers prove seven THelpText
 // rows at 0x6a6530 (the sixth row is unused by this dialog's ID mapping).
 // Do not conflate it with Dreamcast's separate gAdventureWindowHelp table.
-DATA(0x006a6530) extern THelpText gAdventureOptionsHelp[7];
+// Before normalization: gAdventureOptionsHelp.
+DATA(0x006a6530) extern THelpText g_adventureOptionsHelp[7];
 
 // File-static hover latch: the retail initializer at 0x65f46c is -1 and the
 // handler is its only image-wide reader/writer.
-DATA(0x0065f46c) static int lastIMHoverID = -1;
+// Before normalization: lastIMHoverID.
+DATA(0x0065f46c) static int g_lastImHoverId = -1;
 
 // E:\gamedcs\adventureoptionswindow.cpp:40
 // EXACT 2026-08-14 (95.1212 -> 100.0). The residual was the usual
@@ -56,66 +58,66 @@ VA(0x004051d0, 0x4AA)  // advopts.pcx + advManager caller, dc 0x4cf4
 TAdventureOptionsWindow::TAdventureOptionsWindow()
     : CAdvPopup(255, 106, 289, 387, 0x12)
 {
-    Widgets.reserve(8);
+    m_widgets.reserve(8);
 
     bitmapBorder* background = new bitmapBorder(
         0, 0, 289, 387, ADVENTURE_OPTION_BACKGROUND_ID,
         "AdvOpts.pcx", 0x800);
-    background->SetPlayerPaletteColors(gpGame->GetLocalPlayerGamePos());
-    Widgets.push_back(background);
+    background->setPlayerPaletteColors(g_game->getLocalPlayerGamePos());
+    m_widgets.push_back(background);
 
     button* action = new button(
         25, 24, 49, 51, VIEW_WORLD_ID,
         "AdvView.def", 0, 1, 0, 0, 2);
-    action->set_hotkey(ADVENTURE_OPTION_VIEW_HOTKEY);
-    Widgets.push_back(action);
+    action->setHotkey(ADVENTURE_OPTION_VIEW_HOTKEY);
+    m_widgets.push_back(action);
 
     action = new button(
         25, 82, 49, 51, VIEW_PUZZLE_ID,
         "AdvPuz.def", 0, 1, 0, 0, 2);
-    action->set_hotkey(ADVENTURE_OPTION_PUZZLE_HOTKEY);
-    Widgets.push_back(action);
+    action->setHotkey(ADVENTURE_OPTION_PUZZLE_HOTKEY);
+    m_widgets.push_back(action);
 
     action = new button(
         25, 140, 49, 51, DIG_ID,
         "AdvDig.def", 0, 1, 0, 0, 2);
-    action->set_hotkey(ADVENTURE_OPTION_DIG_HOTKEY);
-    Widgets.push_back(action);
+    action->setHotkey(ADVENTURE_OPTION_DIG_HOTKEY);
+    m_widgets.push_back(action);
 
     action = new button(
         25, 198, 49, 51, VIEW_SCENARIO_ID,
         "AdvInfo.def", 0, 1, 0, 0, 2);
-    action->set_hotkey(ADVENTURE_OPTION_INFO_HOTKEY);
-    Widgets.push_back(action);
+    action->setHotkey(ADVENTURE_OPTION_INFO_HOTKEY);
+    m_widgets.push_back(action);
 
     action = new button(
         25, 256, 49, 51, REPLAY_ID,
         "AdvTurn.def", 0, 1, 0, 0, 2);
-    action->enable(gpGame->replay_available());
-    action->set_hotkey(ADVENTURE_OPTION_TURN_HOTKEY);
-    Widgets.push_back(action);
+    action->enable(g_game->replayAvailable());
+    action->setHotkey(ADVENTURE_OPTION_TURN_HOTKEY);
+    m_widgets.push_back(action);
 
     button* accept = new button(
         203, 313, 64, 32, ADVENTURE_OPTION_ACCEPT_ID,
         "iOk6432.def", 0, 1, 1, 0, 2);
-    accept->set_hotkey(ADVENTURE_OPTION_ACCEPT_HOTKEY_1);
-    accept->set_hotkey(ADVENTURE_OPTION_ACCEPT_HOTKEY_2);
-    Widgets.push_back(accept);
+    accept->setHotkey(ADVENTURE_OPTION_ACCEPT_HOTKEY_1);
+    accept->setHotkey(ADVENTURE_OPTION_ACCEPT_HOTKEY_2);
+    m_widgets.push_back(accept);
 
-    RolloverWidget = new textWidget(
+    m_rolloverWidget = new textWidget(
         6, 360, 275, 20, "", "smalfont.fnt", font::PRIMARY,
         ADVENTURE_OPTION_ROLLOVER_ID, 5, 0, 8);
-    Widgets.push_back(RolloverWidget);
+    m_widgets.push_back(m_rolloverWidget);
 
-    widget** first = Widgets.begin();
-    if (first != Widgets.end()) {
-        widget** it = Widgets.begin();
+    widget** first = m_widgets.begin();
+    if (first != m_widgets.end()) {
+        widget** it = m_widgets.begin();
         do {
             if (*it)
-                AddWidget(*it, -1);
+                addWidget(*it, -1);
             else
-                MemError();
-        } while (++it != Widgets.end());
+                memError();
+        } while (++it != m_widgets.end());
     }
 
     // THE DIG GATE ASKS game::GetCurrHeroId (89.5711 -> 94.3823,
@@ -123,15 +125,15 @@ TAdventureOptionsWindow::TAdventureOptionsWindow()
     // `?GetCurrHeroId@game@@QAAHXZ` where this body read
     // `gpCurrentPlayer->currHeroId` directly. Same load either way - what
     // moves is the /Ob2 candidate-site count.
-    if (gpGame->GetCurrHeroId() == -1) {
-        widget* dig = GetWidget(DIG_ID);
+    if (g_game->getCurrHeroId() == -1) {
+        widget* dig = getWidget(DIG_ID);
         dig->enable(0);
     }
 
-    if (!gpCurrentPlayer->IsLocalHuman()) {
-        widget* turn = GetWidget(REPLAY_ID);
+    if (!g_currentPlayer->isLocalHuman()) {
+        widget* turn = getWidget(REPLAY_ID);
         turn->enable(0);
-        widget* dig = GetWidget(DIG_ID);
+        widget* dig = getWidget(DIG_ID);
         dig->enable(0);
     }
 }
@@ -142,9 +144,9 @@ TAdventureOptionsWindow::TAdventureOptionsWindow()
 // ownership remains with the window-header emission until that ICF surface is
 // admitted deliberately.
 VA(0x00405680, 0x10)  // header-inline slot-3 forwarder, dc Window.h:210
-int CHeroWindowEx::handle_message(message& msg)
+int CHeroWindowEx::handleMessage(message& msg)
 {
-    return WindowHandler(&msg);
+    return windowHandler(&msg);
 }
 
 VA_COMPGEN(0x00405690, 0x21, SCALAR_DELETING_DTOR, TAdventureOptionsWindow)
@@ -153,7 +155,7 @@ VA_COMPGEN(0x00405690, 0x21, SCALAR_DELETING_DTOR, TAdventureOptionsWindow)
 VA(0x004056c0, 0x6B)  // scalar-dtor callee + derived vtable, dc 0x514c
 TAdventureOptionsWindow::~TAdventureOptionsWindow()
 {
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
@@ -210,58 +212,58 @@ int TAdventureOptionsWindow::convertID2HelpID(int id) const
 // Retail also selects the rollover field for right-click help where Dreamcast
 // loads the other THelpText field; both are direct byte-level Complete changes.
 VA(0x00405730, 0x1FC)  // derived vtable slot 9, dc 0x5204
-int TAdventureOptionsWindow::WindowHandler(message* msg)
+int TAdventureOptionsWindow::windowHandler(message* msg)
 {
-    int result = CAdvPopup::WindowHandler(msg);
+    int result = CAdvPopup::windowHandler(msg);
     if (result)
         return result;
 
     unsigned char closeDialog = false;
-    PollSound();
+    pollSound();
 
-    if (msg->qualifier & MESSAGE_MODIFIER_RIGHT) {
-        if (msg->codeX == widget::WIDGET_SELECT
-            || msg->codeX == widget::WIDGET_RIGHT_SELECT) {
-            int helpID = convertID2HelpID(msg->codeY);
+    if (msg->m_qualifier & MESSAGE_MODIFIER_RIGHT) {
+        if (msg->m_codeX == widget::WIDGET_SELECT
+            || msg->m_codeX == widget::WIDGET_RIGHT_SELECT) {
+            int helpID = convertID2HelpID(msg->m_codeY);
             if (helpID == -1)
                 goto consume;
-            NormalDialog(gAdventureOptionsHelp[helpID].text,
+            normalDialog(g_adventureOptionsHelp[helpID].m_text,
                 4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
         goto consume;
     }
 
-    if (msg->id == MESSAGE_WIDGET) {
-        if (msg->codeX == widget::WIDGET_DESELECT
-            && (msg->codeY == ADVENTURE_OPTION_ACCEPT_ID
-                || (msg->codeY > 0 && msg->codeY <= 5))) {
+    if (msg->m_id == MESSAGE_WIDGET) {
+        if (msg->m_codeX == widget::WIDGET_DESELECT
+            && (msg->m_codeY == ADVENTURE_OPTION_ACCEPT_ID
+                || (msg->m_codeY > 0 && msg->m_codeY <= 5))) {
             closeDialog = true;
         } else {
             goto consume;
         }
-    } else if (msg->id == MESSAGE_MOUSE_MOVE) {
-        int hoverID = findWidget(msg->mouseX, msg->mouseY);
-        if (hoverID != lastIMHoverID) {
-            lastIMHoverID = hoverID;
+    } else if (msg->m_id == MESSAGE_MOUSE_MOVE) {
+        int hoverID = findWidget(msg->m_mouseX, msg->m_mouseY);
+        if (hoverID != g_lastImHoverId) {
+            g_lastImHoverId = hoverID;
             const char* rollover = "";
             if (hoverID != -1) {
-                gpMouseManager->SetPointer(1, mouseManager::DEFAULT_SET);
+                g_mouseManager->setPointer(1, mouseManager::DEFAULT_SET);
                 int helpID = convertID2HelpID(hoverID);
                 if (helpID != -1)
-                    rollover = gAdventureOptionsHelp[helpID].text;
+                    rollover = g_adventureOptionsHelp[helpID].m_text;
             } else {
-                gpMouseManager->SetPointer(0, mouseManager::DEFAULT_SET);
+                g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
             }
-            RolloverWidget->SetText(rollover);
-            DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+            m_rolloverWidget->setText(rollover);
+            drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
         }
     }
 
     if (closeDialog) {
-        msg->id = MESSAGE_WIDGET;
-        gpWindowManager->dialogReturn = msg->codeY;
-        msg->codeY = widget::WIDGET_END_DIALOG;
-        msg->codeX = widget::WIDGET_END_DIALOG;
+        msg->m_id = MESSAGE_WIDGET;
+        g_windowManager->m_dialogReturn = msg->m_codeY;
+        msg->m_codeY = widget::WIDGET_END_DIALOG;
+        msg->m_codeX = widget::WIDGET_END_DIALOG;
         return MESSAGE_DISPATCH_FORWARD;
     }
 

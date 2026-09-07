@@ -43,13 +43,19 @@ class slider;
 // CAdvPopup base (0x60) are named where a reconstructed body attests the store
 // and left as field_NN placeholders where only the size is proven so far.
 class TTradeResourceWindow : public CAdvPopup {
-    slider* resourceSlider;   // +0x60, set by the ctor (TradeResourceSlider)
-    int lastHoverId;          // +0x64, last widget the hover handler rolled over
+    // Before normalization: resourceSlider.
+    slider* m_resourceSlider;   // +0x60, set by the ctor (TradeResourceSlider)
+    // Before normalization: lastHoverId.
+    int m_lastHoverId;          // +0x64, last widget the hover handler rolled over
 public:
     TTradeResourceWindow(int x2, int y2);
-    void Update(unsigned char bUpdate);
-    void SetRolloverText(int codeY);
-    virtual int WindowHandler(message* msg);   // slot 9
+    // Before normalization (function): TTradeResourceWindow::Update.
+    // Before normalization (locals): bUpdate.
+    void update(unsigned char update);
+    // Before normalization (function): TTradeResourceWindow::SetRolloverText.
+    void setRolloverText(int codeY);
+    // Before normalization (function): TTradeResourceWindow::WindowHandler.
+    virtual int windowHandler(message* msg);   // slot 9
     virtual ~TTradeResourceWindow();
 };
 SIZE(TTradeResourceWindow, 0x68);
@@ -62,96 +68,149 @@ public:
     // dword. DoMarket fills field_60 (recipient count) and slotPlayerColor;
     // the ctor stores resourceSlider at +0x84 and WindowHandler's hover uses
     // lastHoverId at +0x88. field_80 is proven only by the 0x8c object size.
-    int field_60;
-    int slotPlayerColor[7];   // +0x64
-    int field_80;             // +0x80
-    slider* resourceSlider;   // +0x84, set by the ctor (GiveResourceSlider)
-    int lastHoverId;          // +0x88, last widget the hover handler rolled over
+    // Before normalization: field_60.
+    // DoMarket counts eligible other players into slotPlayerColor;
+    // the handler bounds recipient-button selection with this count.
+    int m_recipientCount;
+    // Before normalization: slotPlayerColor.
+    int m_slotPlayerColor[7];   // +0x64
+    // Before normalization: field_80.
+    int m_field80;             // +0x80
+    // Before normalization: resourceSlider.
+    slider* m_resourceSlider;   // +0x84, set by the ctor (GiveResourceSlider)
+    // Before normalization: lastHoverId.
+    int m_lastHoverId;          // +0x88, last widget the hover handler rolled over
 
     TGiveResourceWindow(int x2, int y2);
-    void Update(bool bUpdate);
-    void SetRolloverText(int codeY);
-    virtual int WindowHandler(message* msg);   // slot 9
+    // Before normalization (function): TGiveResourceWindow::Update.
+    // Before normalization (locals): bUpdate.
+    void update(bool update);
+    // Before normalization (function): TGiveResourceWindow::SetRolloverText.
+    void setRolloverText(int codeY);
+    // Before normalization (function): TGiveResourceWindow::WindowHandler.
+    virtual int windowHandler(message* msg);   // slot 9
     virtual ~TGiveResourceWindow();
 };
 SIZE(TGiveResourceWindow, 0x8c);
 
 class TBuyArtifactWindow : public CAdvPopup {
-    int lastHoverId;          // +0x60, last widget the hover handler rolled over
+    // Before normalization: lastHoverId.
+    int m_lastHoverId;          // +0x60, last widget the hover handler rolled over
 public:
     TBuyArtifactWindow(int x2, int y2);
-    void Update(unsigned char bUpdate);
-    void SetRolloverText(int codeY);
-    virtual int WindowHandler(message* msg);   // slot 9
+    // Before normalization (function): TBuyArtifactWindow::Update.
+    // Before normalization (locals): bUpdate.
+    void update(unsigned char update);
+    // Before normalization (function): TBuyArtifactWindow::SetRolloverText.
+    void setRolloverText(int codeY);
+    // Before normalization (function): TBuyArtifactWindow::WindowHandler.
+    virtual int windowHandler(message* msg);   // slot 9
     virtual ~TBuyArtifactWindow();
 };
 SIZE(TBuyArtifactWindow, 0x64);
 
 class TSellArtifactWindow : public CAdvPopup {
-    int lastHoverId;          // +0x60, last widget the hover handler rolled over
-    void SetupNewTrade();
-    void UpdateMarketBackpack();
-    void increment_backpack_start();
-    void decrement_backpack_start();
+    // Before normalization: lastHoverId.
+    int m_lastHoverId;          // +0x60, last widget the hover handler rolled over
+    // Before normalization (function): TSellArtifactWindow::SetupNewTrade.
+    void setupNewTrade();
+    // Before normalization (function): TSellArtifactWindow::UpdateMarketBackpack.
+    void updateMarketBackpack();
+    // Before normalization (function): TSellArtifactWindow::increment_backpack_start.
+    void incrementBackpackStart();
+    // Before normalization (function): TSellArtifactWindow::decrement_backpack_start.
+    void decrementBackpackStart();
 public:
     TSellArtifactWindow(int x2, int y2);
-    void update_sell_artifact_widget(message* msg, long i);
-    void SetWidgetOn(short id);
-    void SetWidgetOff(short id);
-    void SetWidgetDisabled(short id);
-    void Update(unsigned char bUpdate);
-    void ComputeTradeRatios(int inLeftResource, int inRightResource,
-                            int* iInTradeRatio, int* bInLeftDenominated,
-                            int* iInMaxUnitsToTrade);
-    void SetRolloverText(int codeY);
-    virtual int WindowHandler(message* msg);   // slot 9
+    // Before normalization (function): TSellArtifactWindow::update_sell_artifact_widget.
+    void updateSellArtifactWidget(message* msg, long i);
+    // Before normalization (function): TSellArtifactWindow::SetWidgetOn.
+    void setWidgetOn(short id);
+    // Before normalization (function): TSellArtifactWindow::SetWidgetOff.
+    void setWidgetOff(short id);
+    // Before normalization (function): TSellArtifactWindow::SetWidgetDisabled.
+    void setWidgetDisabled(short id);
+    // Before normalization (function): TSellArtifactWindow::Update.
+    // Before normalization (locals): bUpdate.
+    void update(unsigned char update);
+    // Before normalization (function): TSellArtifactWindow::ComputeTradeRatios.
+    void computeTradeRatios(int inLeftResource, int inRightResource,
+                            // Before normalization (locals): iInTradeRatio, bInLeftDenominated,
+                            // iInMaxUnitsToTrade.
+                            int* inTradeRatio, int* inLeftDenominated,
+                            int* inMaxUnitsToTrade);
+    // Before normalization (function): TSellArtifactWindow::SetRolloverText.
+    void setRolloverText(int codeY);
+    // Before normalization (function): TSellArtifactWindow::WindowHandler.
+    virtual int windowHandler(message* msg);   // slot 9
     virtual ~TSellArtifactWindow();
 };
 SIZE(TSellArtifactWindow, 0x64);
 
 class TSellCreatureWindow : public CAdvPopup {
-    slider* creatureSlider;   // +0x60, set by the ctor (SellCreatureSlider)
-    int lastHoverId;          // +0x64, last widget the hover handler rolled over
+    // Before normalization: creatureSlider.
+    slider* m_creatureSlider;   // +0x60, set by the ctor (SellCreatureSlider)
+    // Before normalization: lastHoverId.
+    int m_lastHoverId;          // +0x64, last widget the hover handler rolled over
 public:
     TSellCreatureWindow(int x2, int y2);
-    void SetWidgetOn(short id);
-    void SetWidgetOff(short id);
-    void SetWidgetDisabled(short id);
-    void Update(bool bUpdate);
-    void ComputeTradeRatios(int inLeftResource, int inRightResource,
-                            int* iInTradeRatio, int* bInLeftDenominated,
-                            int* iInMaxUnitsToTrade);
-    void SetRolloverText(int codeY);
-    virtual int WindowHandler(message* msg);   // slot 9
+    // Before normalization (function): TSellCreatureWindow::SetWidgetOn.
+    void setWidgetOn(short id);
+    // Before normalization (function): TSellCreatureWindow::SetWidgetOff.
+    void setWidgetOff(short id);
+    // Before normalization (function): TSellCreatureWindow::SetWidgetDisabled.
+    void setWidgetDisabled(short id);
+    // Before normalization (function): TSellCreatureWindow::Update.
+    // Before normalization (locals): bUpdate.
+    void update(bool update);
+    // Before normalization (function): TSellCreatureWindow::ComputeTradeRatios.
+    void computeTradeRatios(int inLeftResource, int inRightResource,
+                            // Before normalization (locals): iInTradeRatio, bInLeftDenominated,
+                            // iInMaxUnitsToTrade.
+                            int* inTradeRatio, int* inLeftDenominated,
+                            int* inMaxUnitsToTrade);
+    // Before normalization (function): TSellCreatureWindow::SetRolloverText.
+    void setRolloverText(int codeY);
+    // Before normalization (function): TSellCreatureWindow::WindowHandler.
+    virtual int windowHandler(message* msg);   // slot 9
     virtual ~TSellCreatureWindow();
 };
 SIZE(TSellCreatureWindow, 0x68);
 
-long get_market_value(EGameResource resource);
+// Before normalization (function): get_market_value.
+long getMarketValue(EGameResource resource);
 
 // The shared body all six market entry points tail into once they have
 // seeded the static market state. The Dreamcast roster has it `static`;
 // retail keeps it out of line because six call sites reach it, so the
 // linkage difference cannot change its callers' code.
-void DoMarket();
-void DoTradingPost();
-void DoMarketplace();
-void DoArtifactMerchants();
+// Before normalization (function): DoMarket.
+void doMarket();
+// Before normalization (function): DoTradingPost.
+void doTradingPost();
+// Before normalization (function): DoMarketplace.
+void doMarketplace();
+// Before normalization (function): DoArtifactMerchants.
+void doArtifactMerchants();
 // Complete's object-213 dispatch passes its active hero in ECX; the
 // Dreamcast no-argument signature therefore changed on the retail branch.
-void DoFreelancersGuild(hero* inHero);
+// Before normalization (function): DoFreelancersGuild.
+void doFreelancersGuild(hero* inHero);
 // The town-screen Stronghold arm separately passes townToView in ECX.
-void DoFreelancersGuild(town* currentTown);
+// Before normalization (function): DoFreelancersGuild.
+void doFreelancersGuild(town* currentTown);
 // DC types the second parameter TArtifact*. The game-side buffer this is
 // aliased against - gpGame's char[0x1c] at +0x1f664, which DoTradingPost
 // passes here - is not admitted as an artifact array yet, so the pointer
 // stays untyped rather than fabricating the element type.
-void DoBlackMarket(hero* inHero, char* blackArtifacts);
+// Before normalization (function): DoBlackMarket.
+void doBlackMarket(hero* inHero, char* blackArtifacts);
 
 // Retail .data 0x678344. The public retail name carries this spelling;
 // calculate_demand indexes entries 1..10 after clamping the number of
 // owned legal Marketplaces. tradpost.cpp owns the admitted definition.
-extern float fTradingPostEfficency[];
+// Before normalization: fTradingPostEfficency.
+extern float g_tradingPostEfficency[];
 
 // The two eleven-float efficiency rows immediately after fTradingPostEfficency
 // (0x678370, 0x67839c), byte-verified from the retail image. The artifact-sale
@@ -160,8 +219,10 @@ extern float fTradingPostEfficency[];
 // Marketplace count. fArtifactPurchaseEfficency carries philai.h's spelling
 // (get_artifact_purchase_price shares it); the creature row's name is
 // provisional. tradpost.cpp owns both admitted definitions.
-extern float fArtifactPurchaseEfficency[];
-extern float fCreatureSaleEfficency[];
+// Before normalization: fArtifactPurchaseEfficency.
+extern float g_artifactPurchaseEfficency[];
+// Before normalization: fCreatureSaleEfficency.
+extern float g_creatureSaleEfficency[];
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\tradpost.cpp:74, dc 0x181a34) void TradeResourceSlider(int state, heroWindow* parent_window);

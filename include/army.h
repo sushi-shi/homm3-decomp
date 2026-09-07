@@ -25,13 +25,15 @@ class CSprite;
 // CreatureType.h:296 in the Dreamcast CodeView source. Retail 0x440100 has
 // the same two-register /Gr ABI and singular/plural trait lookup, with
 // Complete's extended creature-id bound.
-inline const char* GetArmyName(int type, int count);
+// Before normalization (function): GetArmyName.
+inline const char* getArmyName(int type, int count);
 
 // E:\gamedcs\includes.h:124/134. Army.h's GetMorale/GetLuck class-body
 // accessors see the shared reference-returning template and its ordinary
 // by-value wrapper through the original common-header include order.
 template<class T>
-inline const T& t_limit(const T& minimum, const T& value, const T& maximum)
+// Before normalization (function): t_limit.
+inline const T& tLimit(const T& minimum, const T& value, const T& maximum)
 {
     return value < minimum ? minimum
                            : (maximum < value ? maximum : value);
@@ -39,7 +41,7 @@ inline const T& t_limit(const T& minimum, const T& value, const T& maximum)
 
 inline int limit(int minimum, int value, int maximum)
 {
-    return t_limit(minimum, value, maximum);
+    return tLimit(minimum, value, maximum);
 }
 
 // Combat-grid directions as path.cpp's walkers consume them: 0..5 are
@@ -149,20 +151,26 @@ enum EArmySpellCancelType {
 // Dreamcast's field list names this type in army's unconditional private
 // attack_wall overload. It therefore cannot remain a TU-view score control.
 struct type_ballistics_traits {
-    signed char field_00;
-    signed char field_01;
-    signed char field_02;
-    signed char field_03;
+    // Before normalization: field_00; reference member type_ballistics_traits::chance_to_hit_main_building.
+    signed char m_chanceToHitMainBuilding;
+    // Before normalization: field_01; reference member type_ballistics_traits::chance_to_hit_tower.
+    signed char m_chanceToHitTower;
+    // Before normalization: field_02; reference member type_ballistics_traits::chance_to_hit_drawbridge.
+    signed char m_chanceToHitDrawbridge;
+    // Before normalization: field_03; reference member type_ballistics_traits::chance_to_hit_wall.
+    signed char m_chanceToHitWall;
     // Shots per bombardment: AttackWall reads it as the trip count of
     // the loop that calls attack_wall.
-    signed char shots;                // +0x4
+    // Before normalization: shots.
+    signed char m_shots;                // +0x4
     // The cumulative rolls that decide how many levels one hit
     // takes off: attack_wall subtracts [0] and then [1] from a single
     // Random(1, 100) and stops at the first non-positive remainder, so
     // the answer is 0, 1 or 2. The ballist.txt parser independently
     // proves THREE source entries at +5..+7; only the first two need be
     // subtracted because falling through both already selects level 2.
-    signed char levelChance[3];       // +0x5
+    // Before normalization: levelChance.
+    signed char m_levelChance[3];       // +0x5
 };
 SIZE(type_ballistics_traits, 8);
 
@@ -178,7 +186,8 @@ SIZE(type_ballistics_traits, 8);
 // what binds the reference at startup, immediately before the
 // experience ladder at 0x679c88 - so no DATA claim is made here.
 // army.cpp is the only located reader.
-extern const type_ballistics_traits (&const_ballistics_traits)[4];
+// Before normalization: const_ballistics_traits.
+extern const type_ballistics_traits (&g_constBallisticsTraits)[4];
 
 // Opaque head model. The 0x548 stride and the 0x54cc array base in
 // combatManager are byte-proven by hexcell::get_army/get_dead_army
@@ -213,24 +222,25 @@ extern const type_ballistics_traits (&const_ballistics_traits)[4];
 template<class T>
 class TResourceHandle {
 public:
-    T* resource;
+    // Before normalization: resource.
+    T* m_resource;
 
-    TResourceHandle() { resource = 0; }
+    TResourceHandle() { m_resource = 0; }
     TResourceHandle(const TResourceHandle& that)
     {
-        resource = that.resource;
-        if (resource)
-            ++resource->ReferenceCount;
+        m_resource = that.m_resource;
+        if (m_resource)
+            ++m_resource->m_referenceCount;
     }
-    ~TResourceHandle() { if (resource) resource->Dispose(); }
+    ~TResourceHandle() { if (m_resource) m_resource->dispose(); }
 
     TResourceHandle& operator=(T* newResource)
     {
-        resource = newResource;
+        m_resource = newResource;
         return *this;
     }
-    operator T*() const { return resource; }
-    T* operator->() const { return resource; }
+    operator T*() const { return m_resource; }
+    T* operator->() const { return m_resource; }
 };
 
 class army {
@@ -266,17 +276,24 @@ public:
     // iDrawPriority are now canonical: CastSpell's shared post-cast walk
     // independently writes both, so hiding either behind a TU view would
     // discard proven class structure merely to preserve optimizer state.
-    unsigned char bShowAttackFrames;     // +0x00
+    // Before normalization: bShowAttackFrames.
+    unsigned char m_showAttackFrames;     // +0x00
     // The retained copy constructor (0x437a00) proves these five
     // animation-state bytes and the byte at +0x0c are independent
     // members: retail copies each one and leaves their alignment bytes
     // untouched, so no pad is spelled after them.
-    unsigned char bShowRangeFrames;      // +0x01
-    signed char iShowAttackFrameType;    // +0x02
-    signed char iNextFrameType;          // +0x03
-    signed char iRemainingFramesToPlay;  // +0x04
-    int iDrawPriority;                   // +0x08
-    unsigned char field_0c;              // +0x0c
+    // Before normalization: bShowRangeFrames.
+    unsigned char m_showRangeFrames;      // +0x01
+    // Before normalization: iShowAttackFrameType.
+    signed char m_showAttackFrameType;    // +0x02
+    // Before normalization: iNextFrameType.
+    signed char m_nextFrameType;          // +0x03
+    // Before normalization: iRemainingFramesToPlay.
+    signed char m_remainingFramesToPlay;  // +0x04
+    // Before normalization: iDrawPriority.
+    int m_drawPriority;                   // +0x08
+    // Before normalization: field_0c; reference member army::bShowTroopCount.
+    unsigned char m_showTroopCount;              // +0x0c
     // Grid identity, byte-proven by ValidAttack (0x523bb0): the target
     // hexcell's armySide/armySlot pair compares against these.
     //
@@ -291,43 +308,53 @@ public:
     // `target->bitIndex` into them, and command.cpp fills them from
     // the HOVERED cell's armySide/armySlot. This stack's own side and
     // slot are combatSide (+0xf4) and bitIndex (+0xf8).
-    int side;                     // +0x10 == DC groupToAttack
-    int slot;                     // +0x14 == DC indexToAttack
+    // Before normalization: side.
+    int m_side;                     // +0x10 == DC groupToAttack
+    // Before normalization: slot.
+    int m_slot;                     // +0x14 == DC indexToAttack
     // Retype in place: army's own constructor (0x43d250) zeroes this slot
     // as a DWORD (`mov dword ptr [esi+0x18], ebx`) in the same store run
     // that clears pathTarget, field_100 and field_104. Name is the house
     // ordinal placeholder - the width is proven, the role is not.
-    int field_18;                 // +0x18
+    // Before normalization: field_18; reference member army::attackLimit.
+    int m_attackLimit;                 // +0x18
     // ValidPath stores the validated destination here on success.
-    int pathTarget;               // +0x1c
+    // Before normalization: pathTarget.
+    int m_pathTarget;               // +0x1c
     // DC army.bShowPowEffect (members.csv army@32) and
     // army.iRoundsLeftBeforeVanish (army@44) - the low run this class
     // already pairs UNSHIFTED, IsMoving 48/+0x30 through origSpeed
     // 100/+0x64. ResetRound (0x447120) raises the first when the round's
     // poison bites and counts the second down, sending the stack to
     // ProcessDeath the moment it reaches zero.
-    unsigned char bShowPowEffect;  // +0x20
+    // Before normalization: bShowPowEffect.
+    unsigned char m_showPowEffect;  // +0x20
     // DC army.iMirrorSourceIndex / army.iMirrorDestIndex (members.csv
     // army@36 and @40, the same unshifted low run bShowPowEffect 32 and
     // iRoundsLeftBeforeVanish 44 already pair). InitClean (0x43d5c0)
     // resets both to -1 out of the same `or eax,-1` it uses for
     // iPostPowSpellToCast, originalIndex and numTroopsToShowOverride,
     // which is what fixes them as ints rather than the pad.
-    int iMirrorSourceIndex;        // +0x24
-    int iMirrorDestIndex;          // +0x28
-    int iRoundsLeftBeforeVanish;   // +0x2c
+    // Before normalization: iMirrorSourceIndex.
+    int m_mirrorSourceIndex;        // +0x24
+    // Before normalization: iMirrorDestIndex.
+    int m_mirrorDestIndex;          // +0x28
+    // Before normalization: iRoundsLeftBeforeVanish.
+    int m_roundsLeftBeforeVanish;   // +0x2c
     // DC army.IsMoving (members.csv army@48, which is retail +0x30 -
     // the whole DC run 48..100 lands on retail 0x30..0x64 unshifted).
     // army::Fly (0x4b4a40) raises it for the duration of the flight
     // animation and clears it in the same quick-combat-gated tail that
     // stops the walk sample.
-    unsigned char IsMoving;       // +0x30
+    // Before normalization: IsMoving.
+    unsigned char m_isMoving;       // +0x30
     // DC army.LetsPretendImNotHere (members.csv army@49, the byte
     // straight after IsMoving in the run this header already pairs
     // unshifted). SetupAnimation (0x446830) raises it across the single
     // combatManager::DrawFrame that captures the clean background and
     // drops it again immediately after - "draw the field without me".
-    unsigned char LetsPretendImNotHere; // +0x31
+    // Before normalization: LetsPretendImNotHere.
+    unsigned char m_letsPretendImNotHere; // +0x31
     // Creature roster id: ai_tactical compares it against the war
     // machines 0x93/0x94 (get_ranged_attack_value 0x435cb0,
     // set_melee_enemies 0x43bf20) and 0x95 (get_damage_value 0x436e30).
@@ -335,43 +362,54 @@ public:
     // retail's S_PUB32 mangling for that slot is `W4TCreatureType`. The
     // ELABORATED spelling parses in every include order without armygrp.h
     // being visible, which is why this needs no view macro.
-    enum TCreatureType creatureType;   // +0x34, DC army::armyType
+    // Before normalization: creatureType.
+    enum TCreatureType m_creatureType;   // +0x34, DC army::armyType
     // Occupied combat cell. ai_tactical's find_attack_hex (0x436840)
     // feeds it straight into check_adjacent_hexes as the enemy hex,
     // and the type_AI_spellcaster ctor walks armies by it.
-    int gridIndex;                // +0x38
+    // Before normalization: gridIndex.
+    int m_gridIndex;                // +0x38
     // DC army.currFrameType / army.currFrameIndex (members.csv army@60
     // and @64). army::Fly drives BOTH: it parks frame type 2 (the stand
     // pose) with index 0 before the drawbridge redraw, switches to type
     // 0 (cs_walk) for the flight, and uses currFrameIndex itself as the
     // per-step frame loop's induction variable.
-    int currFrameType;            // +0x3c
-    int currFrameIndex;           // +0x40
+    // Before normalization: currFrameType.
+    int m_currFrameType;            // +0x3c
+    // Before normalization: currFrameIndex.
+    int m_currFrameIndex;           // +0x40
     // 0 = attacker-facing, 1 = defender-facing: selects the 6/7
     // special-direction remaps in GetAdjacentCellIndex.
-    int facing;                   // +0x44
+    // Before normalization: facing.
+    int m_facing;                   // +0x44
     // DC army.walkDirection (members.csv army@72), the direction id of
     // the step in progress - the run 48..100 this class already pairs
     // unshifted (facing 68/+0x44 one line above, numTroops 76/+0x4c one
     // line below). army::Walk (0x43f0b0) stores its `direction`
     // parameter here before it touches the animation.
-    int walkDirection;            // +0x48
+    // Before normalization: walkDirection.
+    int m_walkDirection;            // +0x48
     // Stack size: set_melee_enemies (0x43bf20) feeds it to
     // get_average_damage as the attacking creature count.
-    int numTroops;                // +0x4c
+    // Before normalization: numTroops.
+    int m_numTroops;                // +0x4c
     // Dreamcast names the adjacent display override and the count restored
     // during this battle. Retail get_surrender_cost subtracts the latter
     // before pricing the surviving stack, independently fixing +0x54.
-    int numTroopsToShowOverride;  // +0x50
-    int numTroopsBattleResurrected; // +0x54
+    // Before normalization: numTroopsToShowOverride.
+    int m_numTroopsToShowOverride;  // +0x50
+    // Before normalization: numTroopsBattleResurrected.
+    int m_numTroopsBattleResurrected; // +0x54
     // Damage already carried by the stack's top creature: the AI adds
     // its expected extra damage to it and compares against hitPoints to
     // decide whether a boost saves a creature (get_defense_boost_value
     // 0x4387c0). Name provisional.
-    int topCreatureDamage;        // +0x58
+    // Before normalization: topCreatureDamage.
+    int m_topCreatureDamage;        // +0x58
     // Original army-group slot, restored by combatManager::UpdateArmyGroup
     // when it writes surviving stacks back after combat.
-    int originalIndex;            // +0x5c (DC origPos)
+    // Before normalization: originalIndex.
+    int m_originalIndex;            // +0x5c (DC origPos)
     // The stack's size at the START of the combat, so that
     // origNumTroops - numTroops is the count this side destroyed:
     // CalculateGainedExperience (0x46a350) multiplies exactly that
@@ -382,21 +420,25 @@ public:
     // residualDamage 0x58, origPos 0x5c, origNumTroops 0x60,
     // origSpeed 0x64 all land on the offsets already proven here),
     // so the pairing is positional, not just nominal.
-    int origNumTroops;            // +0x60
+    // Before normalization: origNumTroops.
+    int m_origNumTroops;            // +0x60
     // Unmodified speed: get_speed_value (0x439550) adds the spell's
     // increase to it and re-times the stack against the result, while
     // GetSpeed() returns the modified value.
-    int baseSpeed;                // +0x64
+    // Before normalization: baseSpeed.
+    int m_baseSpeed;                // +0x64
     // DC army.origWalkCycleTime (members.csv army@104), the slot the
     // iLuckStatus note below always placed here. Sliced 2026-08-20 by
     // CancelIndividualSpell (0x444510): its HASTE and SLOW arms both
     // restore frameInfoWalkCycleTime (+0x158) from this word.
-    int origWalkCycleTime;         // +0x68
+    // Before normalization: origWalkCycleTime.
+    int m_origWalkCycleTime;         // +0x68
     // DC army.origHitPoints (members.csv army@108), the third of the
     // orig* trio after origPos 92/+0x5c and origSpeed 100/+0x64 that
     // this class already carries unshifted. ResetRound recomputes
     // hitPoints from it every round rather than from the live word.
-    int origHitPoints;             // +0x6c
+    // Before normalization: origHitPoints.
+    int m_origHitPoints;             // +0x6c
     // DC army.iLuckStatus (members.csv army@112), UNSHIFTED in this band
     // exactly like origHitPoints 108/+0x6c above and origWalkCycleTime
     // 104/+0x68 in the pad. do_multi_head_attack (0x440310) clears it
@@ -404,7 +446,8 @@ public:
     // fire-shield test, so the luck roll is spent by the first head and
     // the rest of the sweep swings plain. Pad slice - the include-set
     // canaries do not move for one.
-    int iLuckStatus;               // +0x70
+    // Before normalization: iLuckStatus.
+    int m_luckStatus;               // +0x70
     // +0x74 is an EMBEDDED copy of the creature's traits row - the
     // Dreamcast roster's `TCreatureTypeTraits sMonInfo` at 116, ADOPTED
     // AS SUCH 2026-09-05. The retail offsets this class had already
@@ -527,14 +570,16 @@ public:
     // could manufacture a higher local score in unrelated consumers.
     // -> sMonInfo.hasSpell        (+0xdc, row +0x68)
     // -> sMonInfo.wanderingLow/wanderingHigh (+0xe0/+0xe4)
-    TCreatureTypeTraits sMonInfo;  // +0x74 .. +0xe8, 116 B
+    // Before normalization: sMonInfo.
+    TCreatureTypeTraits m_monInfo;  // +0x74 .. +0xe8, 116 B
     // NAMED 2026-08-15 from the Dreamcast member table: DC army@212 is
     // show_fire_shield against this band's already-anchored +20 shift
     // (DC hitByCreature 220 = retail +0xf0, six lines below).
     // do_multi_head_attack (0x440310) is the witness - it raises the
     // byte on the head it burned, and only when adjust_damage handed
     // back a non-zero fire component.
-    unsigned char show_fire_shield;  // +0xe8
+    // Before normalization: show_fire_shield.
+    unsigned char m_showFireShield;  // +0xe8
     // NAMED 2026-08-15 from the Dreamcast member table, and the three
     // bytes come out of it as one run: DC army@212/213/214 are
     // show_fire_shield / bSomeUnitsDamaged / bAllUnitsKilled against
@@ -546,8 +591,10 @@ public:
     // exactly what the DC names say. Pure RENAMES of two bytes that
     // were already unconditional; the wall is name-independent, so a
     // rename cannot move it (GetCommand held 92.5714 across it).
-    unsigned char bSomeUnitsDamaged; // +0xe9
-    unsigned char bAllUnitsKilled;   // +0xea
+    // Before normalization: bSomeUnitsDamaged.
+    unsigned char m_someUnitsDamaged; // +0xe9
+    // Before normalization: bAllUnitsKilled.
+    unsigned char m_allUnitsKilled;   // +0xea
     // DC army.iPostPowSpellToCast (members.csv army@216, a SpellID -
     // retail sits a flat +0x14 above the DC record from hitByCreature
     // onward, so DC 216 lands on +0xec). PowEffect's post-animation
@@ -559,8 +606,10 @@ public:
     // out of the same shared `or eax,-1` it uses for originalIndex and
     // the iMirror pair, which is a second and independent witness that
     // +0xec is a dword field and not pad.
-    int iPostPowSpellToCast;         // +0xec
-    unsigned char hitByCreature;  // +0xf0
+    // Before normalization: iPostPowSpellToCast.
+    int m_postPowSpellToCast;         // +0xec
+    // Before normalization: hitByCreature.
+    unsigned char m_hitByCreature;  // +0xf0
     // The side that OWNS this stack, written once by Init and never by
     // a spell: the hypnotize flip is applied ON READ by
     // get_controlling_side (0x440140), which is why is_enemy (0x442880)
@@ -568,7 +617,8 @@ public:
     // and why get_owner (0x4426d0) reads this field directly while
     // get_controller (0x442690) flips it. FindPath forwards the flipped
     // value into FindCombatPath.
-    int combatSide;               // +0xf4
+    // Before normalization: combatSide.
+    int m_combatSide;               // +0xf4
     // Bit position of this stack in the AI's "already counted" masks:
     // get_hex_attack_value (0x436180) builds 1 << it and folds the bit
     // into the caller's checked word. It is also the stack's SLOT:
@@ -576,7 +626,8 @@ public:
     // it as the occupied hexcell's armySlot, exactly as it stores
     // combatSide (+0xf4) as armySide. Renaming waits on a lane that
     // owns the ai_tactical call sites.
-    int bitIndex;                 // +0xf8
+    // Before normalization: bitIndex.
+    int m_bitIndex;                 // +0xf8
     // +0x110 is an EMBEDDED copy of the creature's ANIMATION traits row
     // - the DC roster's `SMonFrameInfo sMonFrameInfo` at 252, whose
     // 84-byte layout monframeinfo.h already carries - ADOPTED AS SUCH
@@ -613,7 +664,8 @@ public:
     // reset rewrites it from GameTime, and the name is independently
     // corroborated by set_inside_area_effect (0x43efe0), whose whole
     // animation arm is about the cs_fidget sequence.
-    unsigned long iLastFidgetTime; // +0xfc
+    // Before normalization: iLastFidgetTime.
+    unsigned long m_lastFidgetTime; // +0xfc
     // The per-frame DRAW OFFSET a stack is currently displaced by,
     // byte-proven by MirrorImage (0x5a6c70): it sets the pair from the
     // difference between the source hex's and the clone's own hexcell
@@ -623,8 +675,10 @@ public:
     // +0x100 carries the Y difference and +0x104 the X one. Names stay
     // ADDRESS ORDINALS: the behaviour is proven, the roster has no row
     // for either, and nothing else decoded reads them yet.
-    int field_100;                 // +0x100
-    int field_104;                 // +0x104
+    // Before normalization: field_100; reference member army::ySpecialMod.
+    int m_ySpecialMod;                 // +0x100
+    // Before normalization: field_104; reference member army::xSpecialMod.
+    int m_xSpecialMod;                 // +0x104
     // +0x108, the DC roster's `bPowSequenceComplete` (army@244, the same
     // flat +0x14 the band above carries). PowEffect clears it for every
     // stack before the animation loop and raises it the frame a stack
@@ -635,8 +689,10 @@ public:
     // `mov eax,[esi+0x108] / test eax,eax` and
     // `mov dword ptr [esi+0x108],1` - where a char field would emit
     // `mov al` / `mov byte ptr`. Measured +0.03 on that body.
-    int bPowSequenceComplete;      // +0x108
-    char* yModify;                 // +0x10c
+    // Before normalization: bPowSequenceComplete.
+    int m_powSequenceComplete;      // +0x108
+    // Before normalization: yModify.
+    char* m_yModify;                 // +0x10c
     // sMonFrameInfo.iMissileOffset (DC SMonFrameInfo@0, short[6] -
     // monframeinfo.h carries the record), the three launch-point pairs
     // for the ranged poses ur/r/dr. Byte-proven by attack_wall
@@ -670,7 +726,8 @@ public:
     // frame count.
     // -> sMonFrameInfo.iAttackStartCycleTime   (+0x15c, row +0x4c)
     // -> sMonFrameInfo.iFlightPixelSpan        (+0x160, row +0x50)
-    SMonFrameInfo sMonFrameInfo;  // +0x110 .. +0x164, 84 B
+    // Before normalization: sMonFrameInfo.
+    SMonFrameInfo m_monFrameInfo;  // +0x110 .. +0x164, 84 B
     // DC army.stdIcon (members.csv army@336). army::Fly asks it for the
     // walk sequence's frame count through CSprite::GetNumFrames, which
     // is what fixes the type: the retail expansion is that inline's
@@ -682,7 +739,8 @@ public:
     // stdIcon, missileIcon, image_height's plain dword in the middle of it,
     // and the eight-iteration armySample loop - instruction for instruction
     // against retail, fn+0x192..fn+0x202.
-    TResourceHandle<CSprite> stdIcon;    // +0x164
+    // Before normalization: stdIcon.
+    TResourceHandle<CSprite> m_stdIcon;    // +0x164
     // DC army.missileIcon (members.csv army@340, right between stdIcon
     // @336 = +0x164 and image_height @344 = +0x16c). attack_wall
     // (0x445fd0) hands it to ShootBallisticMissile as the CSprite*
@@ -691,16 +749,20 @@ public:
     // from the hexcell's own y, and LoadResources (0x43dd62) writes it
     // as `0x10b - <stdIcon frame metric>` - the stack's own vertical
     // span on the combat field. InitClean zeroes it.
-    TResourceHandle<CSprite> missileIcon;  // +0x168
-    int image_height;             // +0x16c
+    // Before normalization: missileIcon.
+    TResourceHandle<CSprite> m_missileIcon;  // +0x168
+    // Before normalization: image_height.
+    int m_imageHeight;             // +0x16c
     // DC army::armySample is sample*[8] at +0x15c; retail's preceding STL
     // expansion shifts it to +0x170, independently confirmed by play_sample.
-    TResourceHandle<sample> armySample[8];  // +0x170
+    // Before normalization: armySample.
+    TResourceHandle<sample> m_armySample[8];  // +0x170
     // Ordering key the AI compares BETWEEN stacks: should_attack_now
     // (0x436c60) refuses to cast now when any other still-able stack
     // on our side outranks the target's own value here. Name pending a
     // writer.
-    int field_190;                // +0x190
+    // Before normalization: field_190; reference member army::expected_move_order.
+    int m_expectedMoveOrder;                // +0x190
     // DC army.numSpellInfluences (members.csv army@384, which is retail
     // +0x194 on the flat +0x14 shift this class carries from
     // hitByCreature 220/+0xf0 onward).
@@ -708,135 +770,41 @@ public:
     // The two spell rows and their queue are original aggregate members.
     // They stay source-visible in every TU; replacing them with padding in
     // selected consumers changed the class declaration stream seen by C1.
-    int numSpellInfluences;       // +0x194
-    // THE ROW ITSELF, and the array is retail's own model rather than
-    // this header's. ResetRound (0x447120) walks it whole with a single
-    // `lea ebx,[esi+0x198]` and 81 iterations, which is what fixes the
-    // element count: 0x198 + 81*4 == 0x2dc, and DC's own
-    // spellInfluence[80] at 388 with spell_level[80] straight after it
-    // at 708 is the same record one element shorter. Every named field
-    // below is a SLICE of this array - shieldRounds is
-    // spellInfluence[SPELL_SHIELD], berserkFlag is [59], hypnotizeFlag
-    // is [60] - so the two spellings are the same bytes and the union
-    // lets the walkers use the row while the readers keep the names.
-    union {
-        int spellInfluence[81];   // +0x198 .. +0x2db
-        struct {
-    char pad_198[0x6c];
-    // Shield / Air Shield round counters, byte-proven by
-    // ComputeDefenderDamageReduction (0x443d90): the SHOOTING arm gates
-    // on +0x208 and takes its factor from +0x4bc, the melee arm gates
-    // on +0x204 and takes +0x4b8 - exactly the two spells' split, and
-    // exactly where SPELL_SHIELD (27) and SPELL_AIR_SHIELD (28) fall on
-    // the +0x198 round-row base the Bless/Curse pair fixes below.
-    int shieldRounds;             // +0x204
-    int airShieldRounds;          // +0x208
-    // Rounds of Fire Shield left on this stack: get_fire_shield_strength
-    // (0x443130) answers the stack's own 0x4a0 strength while it is
-    // non-zero, and compute_fire_shield_damage (0x422440) uses the same
-    // word (or the Efreet Sultan's innate shield) as the whole gate on
-    // whether a retaliating shield fires at all.
-    int fireShieldRounds;         // +0x20c
-    // The four Protection-from-<school> round counters, byte-proven by
-    // ModifySpellDamageForSpells (0x5a7bb0): it tests the cast spell's
-    // schoolBits (akSpellTraits[spell] +0x1c) bit by bit and, for each
-    // school the spell belongs to, gates on one of these four words and
-    // scales the damage by the matching float at +0x4a8..+0x4b4 below.
-    // The pairing fixes the ORDER - bit 8 goes with +0x21c/+0x4b4, bit 1
-    // with +0x210/+0x4a8, bit 2 with +0x214/+0x4ac, bit 4 with
-    // +0x218/+0x4b0 - and the float run is named by the DC dump as
-    // protectionFrom{Air,Fire,Water,Earth}Factor in exactly the
-    // +0x4a8..+0x4b4 order, so the school bits are Air 1, Fire 2,
-    // Water 4, Earth 8 and these four counters are the same four spells'
-    // entries in the round row. They also land where the standard
-    // SpellID numbering puts them: on the +0x198 base this class already
-    // proves, +0x210..+0x21c is indices 30..33, i.e. SPELL_PROTECTION_AIR
-    // (30) .. SPELL_PROTECTION_EARTH (33), directly after
-    // SPELL_FIRE_SHIELD (29) at +0x20c above.
-    int protectionFromAirRounds;   // +0x210
-    int protectionFromFireRounds;  // +0x214
-    int protectionFromWaterRounds; // +0x218
-    int protectionFromEarthRounds; // +0x21c
-    char pad_220[0x8];
-    // SPELL_MAGIC_MIRROR's entry in the 81-dword spellInfluence row.
-    int magicMirrorRounds;        // +0x228
-    char pad_22c[0x10];
-    // Bless / Curse round counters, byte-proven by get_average_damage
-    // (0x4426f0): while +0x23c is set the stack always rolls its TOP
-    // damage plus the amount at +0x458, and while +0x240 is set it
-    // always rolls its BOTTOM damage minus the amount at +0x45c
-    // floored at 1 - which is exactly what those two spells do.
-    // The pair also lands where the standard SpellID numbering puts
-    // them: taking the already-proven SPELL_MAGIC_MIRROR (36) at
-    // +0x228 as the anchor, the round row starts at +0x198, and
-    // SPELL_BLESS (41) / SPELL_CURSE (42) fall on +0x23c / +0x240
-    // while SPELL_FIRE_SHIELD (29) -> +0x20c, SPELL_MIRTH (49)
-    // .. SPELL_MISFORTUNE (52) -> +0x25c..+0x268, SPELL_BERSERK (59)
-    // -> +0x284, SPELL_HYPNOTIZE (60) -> +0x288, SPELL_FORGETFULNESS
-    // (61) -> +0x28c, SPELL_BLIND (62) -> +0x290, SPELL_STONE (70)
-    // -> +0x2b0, SPELL_BIND (72) -> +0x2b8 and SPELL_PARALYZE (74)
-    // -> +0x2c0 reproduce EVERY other round field this class already
-    // slices, each on independent evidence. The row is not modelled
-    // as an array yet: that is a layout change for the whole army run
-    // and for CancelIndividualSpell's consumers.
-    int blessRounds;              // +0x23c
-    int curseRounds;              // +0x240
-    // Bloodlust / Precision round counters, byte-proven by
-    // get_adjusted_attack (0x442410): the MELEE arm gates on +0x244 and
-    // adds +0x464, the RANGED arm gates on +0x248 and adds +0x468 -
-    // exactly the two spells' split. SPELL_BLOODLUST is 43 and
-    // SPELL_PRECISION 44 on the +0x198 row base.
-    int bloodlustRounds;          // +0x244
-    int precisionRounds;          // +0x248
-    char pad_24c[0x10];
-    // Timed morale/luck modifiers. SetMorale and SetLuck test the round
-    // counters here and apply the matching signed amounts at +0x47c.
-    int moraleBonusRounds;        // +0x25c
-    int moralePenaltyRounds;      // +0x260
-    int luckBonusRounds;          // +0x264
-    int luckPenaltyRounds;        // +0x268
-    char pad_26c[0x4];
-    // Rounds of Slow left on this stack: GetSpeed (0x448cd0) returns the
-    // stack's plain speed while this is clear and otherwise re-times it
-    // through the float at +0x4c8, flooring the result at 1.
-    // SPELL_SLOW is 54, and +0x198 + 54*4 = +0x270.
-    int slowRounds;               // +0x270
-    // Rounds of Slayer, byte-proven by get_adjusted_attack: while it is
-    // up the stack gets +8 attack against a target carrying creature
-    // bit 7, 8 or 9 - each bit gated on its own minimum mastery in
-    // +0x48c - plus the hero's own SPELL 0x37 bonus, and 0x37 IS 55,
-    // which is where SPELL_SLAYER lands on the +0x198 row base.
-    int slayerRounds;             // +0x274
-    // Rounds of Frenzy: get_adjusted_defense (0x442590) answers ZERO
-    // defense outright while this is up and its caller asked for
-    // frenzy to be included - which is precisely what Frenzy does.
-    // SPELL_FRENZY is 56, and +0x198 + 56*4 = +0x278.
-    int frenzyRounds;             // +0x278
-    char pad_27c[0x8];
-    int berserkFlag;              // +0x284 (is_enemy: true vs everyone)
-    int hypnotizeFlag;            // +0x288 (flips the effective side)
-    // Rounds of Forgetfulness, byte-proven by can_shoot (0x4428f0):
-    // while it is up AND the caster's mastery at +0x4c4 reached 2, the
-    // stack cannot shoot at all - which is exactly Forgetfulness's
-    // advanced/expert rule against its basic one. SPELL_FORGETFULNESS
-    // is 61, and +0x198 + 61*4 = +0x28c, so this is the TENTH round
-    // counter to land on the base the Bless/Curse pair fixed.
-    int forgetfulnessRounds;      // +0x28c
-    // Three round counters the combat AI treats as "this stack cannot
-    // act": any of them non-zero disqualifies a stack from the melee
-    // threat census (set_melee_enemies 0x43bf20) and caps a ranged
-    // stack's value (get_ranged_attack_value 0x435cb0). Names pending
-    // a spell-side consumer.
-    int disabled_290;             // +0x290
-    char pad_294[0x1c];
-    int disabled_2b0;             // +0x2b0
-    char pad_2b4[0x4];
-    int boundFlag;                // +0x2b8 (FindPath: moves forced to 0)
-    char pad_2bc[0x4];
-    int disabled_2c0;             // +0x2c0
-    char pad_2c4[0x18];
-        };
-    };
+    // Before normalization: numSpellInfluences.
+    int m_numSpellInfluences;       // +0x194
+    // Original Dreamcast spellInfluence[80]; Complete adds one entry.
+    // ResetRound (0x447120) walks 81 dwords at +0x198, and get_cancel_value
+    // (0x439a80) reads this row 0x144 bytes before the mastery row.
+    // Former anonymous overlay fields were aliases of these spell slots,
+    // not separate members; its ten pad_* spans were ordinary array entries.
+    // Proven retail offset: +0x198 + 4 * SpellID. Former semantic aliases:
+    //   [27] shieldRounds
+    //   [28] airShieldRounds
+    //   [29] fireShieldRounds
+    //   [30] protectionFromAirRounds
+    //   [31] protectionFromFireRounds
+    //   [32] protectionFromWaterRounds
+    //   [33] protectionFromEarthRounds
+    //   [36] magicMirrorRounds
+    //   [41] blessRounds
+    //   [42] curseRounds
+    //   [43] bloodlustRounds
+    //   [44] precisionRounds
+    //   [49] moraleBonusRounds
+    //   [50] moralePenaltyRounds
+    //   [51] luckBonusRounds
+    //   [52] luckPenaltyRounds
+    //   [54] slowRounds
+    //   [55] slayerRounds
+    //   [56] frenzyRounds
+    //   [59] berserkFlag
+    //   [60] hypnotizeFlag
+    //   [61] forgetfulnessRounds
+    //   [62] disabled290
+    //   [70] disabled2b0
+    //   [72] boundFlag
+    //   [74] disabled2c0
+    int m_spellInfluence[81];          // +0x198 .. +0x2db
     // THE SECOND ROW, and it is the one the spellInfluence note above
     // already predicted: "DC's own spellInfluence[80] at 388 with
     // spell_level[80] straight after it at 708". Retail's pair is
@@ -880,21 +848,27 @@ public:
     // codegen; only the mangled COMDAT name differs, and those are
     // unclaimed rows whose reloc names are cosmetic anyway.
     typedef std::deque<int> TSpellQueue;
-    int spell_level[81];          // +0x2dc .. +0x41f
-    TSpellQueue SpellInfluenceQueue;  // +0x420 .. +0x44f
-    float PaletteEffect;          // +0x450 (DC army@1068)
+    // Before normalization: spell_level.
+    int m_spellLevel[81];          // +0x2dc .. +0x41f
+    // Before normalization: SpellInfluenceQueue.
+    TSpellQueue m_spellInfluenceQueue;  // +0x420 .. +0x44f
+    // Before normalization: PaletteEffect.
+    float m_paletteEffect;          // +0x450 (DC army@1068)
     // Retaliations left this round: simulate_attack (0x4359b0) only
     // lets the defender strike back while it is positive, and the DC
     // roster has army::set_retaliation_count feeding it.
-    int retaliationCount;         // +0x454
+    // Before normalization: retaliationCount.
+    int m_retaliationCount;         // +0x454
     // The two signed amounts get_average_damage (0x4426f0) pairs with
     // the Bless and Curse round counters above: it adds +0x458 to
     // maxDamage under Bless and subtracts +0x45c from minDamage under
     // Curse. Sliced from that body alone - the amounts row is offset
     // from the rounds row by one slot against the morale/luck pair
     // below, so no array relation is asserted here.
-    int blessAmount;              // +0x458
-    int curseAmount;              // +0x45c
+    // Before normalization: blessAmount.
+    int m_blessAmount;              // +0x458
+    // Before normalization: curseAmount.
+    int m_curseAmount;              // +0x45c
     // DC army.antiMagicSpellLevel (members.csv army@1084, the slot
     // before bloodlustBonus 1088/+0x464 on the same +0x24 shift).
     // PROVEN FROM BOTH SIDES, by two lanes independently:
@@ -908,11 +882,14 @@ public:
     // That is Anti-Magic's rule from each end, and the same rounds/amount
     // pairing the Bless and Curse fields above already carry. Retyped IN
     // PLACE out of the pad, so the declarator count does not move.
-    int antiMagicSpellLevel;      // +0x460
+    // Before normalization: antiMagicSpellLevel.
+    int m_antiMagicSpellLevel;      // +0x460
     // The two attack amounts get_adjusted_attack pairs with the
     // Bloodlust and Precision round counters above.
-    int bloodlustAmount;          // +0x464
-    int precisionAmount;          // +0x468
+    // Before normalization: bloodlustAmount.
+    int m_bloodlustAmount;          // +0x464
+    // Before normalization: precisionAmount.
+    int m_precisionAmount;          // +0x468
     // Three more of the DC amounts run (members.csv army@1096/1100/1108
     // weaknessPenalty / toughskinBonus / prayerBonus, on the same +0x24
     // shift slayerLevel 1128/+0x48c below anchors), each byte-proven by
@@ -921,17 +898,26 @@ public:
     // defenseSkill, and its PRAYER arm subtracts +0x478 from attack,
     // defense and speed. The slot between them, DC 1104
     // disruptiverayPenalty/+0x474, stays a pad until a body reads it.
-    int weaknessPenalty;          // +0x46c
-    int toughskinBonus;           // +0x470
-    char pad_474[0x4];
-    int prayerBonus;              // +0x478
-    int moraleBonus;              // +0x47c
-    int moralePenalty;            // +0x480
-    int luckBonus;                // +0x484
-    int luckPenalty;              // +0x488
+    // Before normalization: weaknessPenalty.
+    int m_weaknessPenalty;          // +0x46c
+    // Before normalization: toughskinBonus.
+    int m_toughskinBonus;           // +0x470
+    // Before normalization: pad_474; reference member army::disruptiverayPenalty.
+    char m_disruptiverayPenalty[0x4];
+    // Before normalization: prayerBonus.
+    int m_prayerBonus;              // +0x478
+    // Before normalization: moraleBonus.
+    int m_moraleBonus;              // +0x47c
+    // Before normalization: moralePenalty.
+    int m_moralePenalty;            // +0x480
+    // Before normalization: luckBonus.
+    int m_luckBonus;                // +0x484
+    // Before normalization: luckPenalty.
+    int m_luckPenalty;              // +0x488
     // Slayer's mastery level: get_adjusted_attack admits creature bit 7
     // at any level, bit 8 from 2 up and bit 9 from 3 up.
-    int slayerLevel;              // +0x48c
+    // Before normalization: slayerLevel.
+    int m_slayerLevel;              // +0x48c
     // DC army.counterstrokeBonus (members.csv army@1136 on the flat
     // +0x24 shift retaliationCount 1072/+0x454 fixes for this run;
     // slayerLevel 1128/+0x48c two lines above is the same shift).
@@ -944,14 +930,17 @@ public:
     // `distance`, which is the Champion's per-hex charge bonus.
     // process_move_then_attack clears it before movement and once more
     // after the strike.
-    int joustBonus;                // +0x490
-    int counterstrokeBonus;        // +0x494
+    // Before normalization: joustBonus.
+    int m_joustBonus;                // +0x490
+    // Before normalization: counterstrokeBonus.
+    int m_counterstrokeBonus;        // +0x494
     // Frenzy's defense-to-attack conversion factor: while frenzyRounds
     // is up, get_adjusted_attack answers
     // `get_adjusted_defense(enemy, 0) * this + attack`. It is also what
     // makes get_adjusted_defense's own Frenzy early-out consistent -
     // the defense is spent, not counted twice.
-    float frenzyFactor;           // +0x498
+    // Before normalization: frenzyFactor.
+    float m_frenzyFactor;           // +0x498
     // The damage this stack still does while it is shaking off a blind:
     // ComputeAttackerDamageReduction (0x443b90) multiplies the whole
     // reduction by it whenever residualBlindness (+0x4c0) is up. DC name
@@ -960,17 +949,20 @@ public:
     // shieldDamageFactor / airShieldDamageFactor / residualBlindness /
     // residualParalyze - lands on retail +0x498..+0x4c1 unshifted
     // against the three names this header already proved from bodies.
-    float blindFactor;            // +0x49c
+    // Before normalization: blindFactor.
+    float m_blindFactor;            // +0x49c
     // Active Fire Shield multiplier.  get_fire_shield_strength loads
     // this float whenever fireShieldRounds is non-zero; otherwise the
     // innate Efreet Sultan path supplies the shared 0.2f constant.
-    float fireShieldStrength;     // +0x4a0
+    // Before normalization: fireShieldStrength.
+    float m_fireShieldStrength;     // +0x4a0
     // DC army.poison_penalty (members.csv army@1152), the word straight
     // after fire_shield_strength 1148/+0x4a0 in the same DC run. It is
     // a MULTIPLIER, not a count: ResetRound subtracts 0.1f from it once
     // per round, floors the result at 0.5 and rescales the stack's
     // hitPoints by what is left.
-    float poisonPenalty;           // +0x4a4
+    // Before normalization: poisonPenalty.
+    float m_poisonPenalty;           // +0x4a4
     // The four Protection-from-<school> damage multipliers, DC-named
     // (members.csv army 1156/1160/1164/1168 protectionFrom{Air,Fire,
     // Water,Earth}Factor) and pinned to these retail offsets by the same
@@ -979,31 +971,41 @@ public:
     // retail +0x4b8, so the four words between them are +0x4a8..+0x4b4
     // in DC order. ModifySpellDamageForSpells (0x5a7bb0) reads all four
     // and pairs each with the round counter at +0x210..+0x21c above.
-    float protectionFromAirFactor;   // +0x4a8
-    float protectionFromFireFactor;  // +0x4ac
-    float protectionFromWaterFactor; // +0x4b0
-    float protectionFromEarthFactor; // +0x4b4
+    // Before normalization: protectionFromAirFactor.
+    float m_protectionFromAirFactor;   // +0x4a8
+    // Before normalization: protectionFromFireFactor.
+    float m_protectionFromFireFactor;  // +0x4ac
+    // Before normalization: protectionFromWaterFactor.
+    float m_protectionFromWaterFactor; // +0x4b0
+    // Before normalization: protectionFromEarthFactor.
+    float m_protectionFromEarthFactor; // +0x4b4
     // The two damage multipliers ComputeDefenderDamageReduction pairs
     // with shieldRounds and airShieldRounds above.
-    float shieldFactor;           // +0x4b8
-    float airShieldFactor;        // +0x4bc
+    // Before normalization: shieldFactor.
+    float m_shieldFactor;           // +0x4b8
+    // Before normalization: airShieldFactor.
+    float m_airShieldFactor;        // +0x4bc
     // The two "still recovering" flags ComputeAttackerDamageReduction
     // pairs at its tail: residualBlindness scales the attack by
     // blindFactor (+0x49c), residualParalyze by Blind's own advanced
     // mastery percentage, and a stack carrying BOTH takes the smaller of
     // the two. DC names (members.csv army@1180 / @1181), both T_UCHAR,
     // and the retail body loads each with a byte `mov`/`test` pair.
-    unsigned char residualBlindness;  // +0x4c0
-    unsigned char residualParalyze;   // +0x4c1
+    // Before normalization: residualBlindness.
+    unsigned char m_residualBlindness;  // +0x4c0
+    // Before normalization: residualParalyze.
+    unsigned char m_residualParalyze;   // +0x4c1
     // Forgetfulness's mastery level, the gate can_shoot pairs with
     // forgetfulnessRounds: `>= 2` (advanced or expert) stops the stack
     // shooting outright. It does NOT land on any of the per-spell rows
     // this class already models - neither the +0x198 round base nor
     // slayerLevel's - so it is sliced on the body alone and the row it
     // belongs to is left open.
-    int forgetfulnessLevel;       // +0x4c4
+    // Before normalization: forgetfulnessLevel.
+    int m_forgetfulnessLevel;       // +0x4c4
     // Slow's speed multiplier, applied by GetSpeed while slowRounds is up.
-    float slowFactor;             // +0x4c8
+    // Before normalization: slowFactor.
+    float m_slowFactor;             // +0x4c8
     // The tail of the DC amounts run on the +0x20 shift this band
     // carries (DC 1188 forgetfulness_level -> +0x4c4 and DC 1192
     // slowPenalty -> +0x4c8 anchor it): 1196 tailwindBonus, 1200
@@ -1011,29 +1013,36 @@ public:
     // CancelIndividualSpell (0x444510): its HASTE arm subtracts +0x4cc
     // from the speed word and its DISEASE arm adds +0x4d0/+0x4d4 back
     // onto defenseSkill/attackSkill.
-    int tailwindBonus;            // +0x4cc
-    int diseaseDefensePenalty;    // +0x4d0
-    int diseaseAttackPenalty;     // +0x4d4
+    // Before normalization: tailwindBonus.
+    int m_tailwindBonus;            // +0x4cc
+    // Before normalization: diseaseDefensePenalty.
+    int m_diseaseDefensePenalty;    // +0x4d0
+    // Before normalization: diseaseAttackPenalty.
+    int m_diseaseAttackPenalty;     // +0x4d4
     // +0x4d8. combatManager::InitNonVisualVars (0x463c60) is the one
     // decoded reader: its closing walk scans each side's stacks and
     // raises the per-side latch at combatManager+0x1329c the moment it
     // finds a stack whose byte here is non-zero, so the byte is a
     // per-stack "this side has one of these" marker whose meaning that
     // latch does not name either.
-    unsigned char field_4d8;      // +0x4d8
+    // Before normalization: field_4d8; reference member army::OnNativeTerrain.
+    unsigned char m_onNativeTerrain;      // +0x4d8
     // The DEFEND stance's banked defense bonus: new_turn (0x446e30)
     // subtracts it back out of defenseSkill and clears creatureId bit
     // 27 in the same breath, so the bit is "is defending" and this word
     // is what the stance added. Name stays ordinal - no roster row
     // reaches it and the writer (the defend command) is not decoded.
-    int field_4dc;                // +0x4dc
+    // Before normalization: field_4dc; reference member army::DefendBonus.
+    int m_defendBonus;                // +0x4dc
     // Read by combatManager::ViewArmy and forwarded as the first
     // argument of the post-dialog command. The DC name for the nearby
     // scalar run does not survive the retail STL-layout shift, so keep
     // this address-ordinal until that callee is identified.
-    int field_4e0;                // +0x4e0
+    // Before normalization: field_4e0; reference member army::faerieDragonSpell.
+    int m_faerieDragonSpell;                // +0x4e0
     // Magic Mirror redirect percentage; DC/NH3API name backlash_chance.
-    unsigned int backlashChance;  // +0x4e4
+    // Before normalization: backlashChance.
+    unsigned int m_backlashChance;  // +0x4e4
 
     // Dreamcast LF_FIELDLIST 0x205b, entries 97..114.  This is the exact
     // declaration prefix through do_attack, after the public data run and
@@ -1041,200 +1050,390 @@ public:
     // candidate temporarily scores lower: C1XX assigns member handles from
     // this stream before C2 optimizes any individual function.
     army();
-    void Init(int armyId, int newNumTroops, const hero* owner, int side,
-              int inIndex, int iGridIndex, int iOrigPos);
+    // Before normalization (function): army::Init.
+    void init(int armyId, int newNumTroops, const hero* owner, int side,
+              // Before normalization (locals): iGridIndex, iOrigPos.
+              int inIndex, int gridIndex, int origPos);
     void initialize(int type, long number, const hero* owner,
-                    long new_group, long new_index, long new_grid_index);
-    void InitClean();
-    void LoadResources();
-    void FreeResources();
-    void ResetRound();
-    void EndWalk();
-    void Walk(int direction, unsigned char end_walk,
-              unsigned char initial_walk);
-    unsigned char WalkTo(int destIndex, unsigned char restore_facing);
-    int Fly(int destIndex);
-    int FlyTo(int destIndex, unsigned char restore_facing);
-    int Teleport(int destIndex);
-    int TeleportTo(int destIndex, unsigned char restore_facing);
-    long adjust_damage(army* enemy, long base_damage, unsigned char bIsShot,
+                    // Before normalization (locals): new_group, new_index, new_grid_index.
+                    long newGroup, long newIndex, long newGridIndex);
+    // Before normalization (function): army::InitClean.
+    void initClean();
+    // Before normalization (function): army::LoadResources.
+    void loadResources();
+    // Before normalization (function): army::FreeResources.
+    void freeResources();
+    // Before normalization (function): army::ResetRound.
+    void resetRound();
+    // Before normalization (function): army::EndWalk.
+    void endWalk();
+    // Before normalization (function): army::Walk.
+    // Before normalization (locals): end_walk, initial_walk.
+    void walk(int direction, unsigned char endWalk,
+              unsigned char initialWalk);
+    // Before normalization (function): army::WalkTo.
+    // Before normalization (locals): restore_facing.
+    unsigned char walkTo(int destIndex, unsigned char restoreFacing);
+    // Before normalization (function): army::Fly.
+    int fly(int destIndex);
+    // Before normalization (function): army::FlyTo.
+    // Before normalization (locals): restore_facing.
+    int flyTo(int destIndex, unsigned char restoreFacing);
+    // Before normalization (function): army::Teleport.
+    int teleport(int destIndex);
+    // Before normalization (function): army::TeleportTo.
+    // Before normalization (locals): restore_facing.
+    int teleportTo(int destIndex, unsigned char restoreFacing);
+    // Before normalization (function): army::adjust_damage.
+    // Before normalization (locals): base_damage, bIsShot, fire_damage.
+    long adjustDamage(army* enemy, long baseDamage, unsigned char isShot,
                        unsigned char simulated, long distance,
-                       long* fire_damage) const;
-    inline void adjust_hitpoints();
-    unsigned char attack_hex(int hex, unsigned char restore_facing);
-    unsigned char do_attack(army* armyToAttack, int direction);
-    void do_attack(int direction);
+                       long* fireDamage) const;
+    // Before normalization (function): army::adjust_hitpoints.
+    inline void adjustHitpoints();
+    // Before normalization (function): army::attack_hex.
+    // Before normalization (locals): restore_facing.
+    unsigned char attackHex(int hex, unsigned char restoreFacing);
+    // Before normalization (function): army::do_attack.
+    unsigned char doAttack(army* armyToAttack, int direction);
+    // Before normalization (function): army::do_attack.
+    void doAttack(int direction);
 
     // LF_FIELDLIST 0x205b entries 115..227. Overloads share one roster
     // entry; Complete-only additions are kept adjacent to the closest shared
     // family without changing the attested relative order below.
-    void do_multi_head_attack(unsigned attackMask, int* damage, int* killed,
-                              long* fire_damage);
-    void range_attack(army* armyToAttack);
-    void range_attack();
-    void AttackWall(int iTargetGridIndex);
-    void Turn(unsigned char play_animation);
-    bool NeedToTurn(int direction) const;
-    bool can_cast_resurrect(long hex) const;
-    bool can_cast_resurrect() const;
-    unsigned char can_cast_spell(long hex) const;
-    bool can_retaliate(const army& attacker) const;
-    unsigned char can_shoot(const army* excluded) const;
-    void cast_caliph_spell(long hex);
-    void cast_resurrect(long hex);
-    void cast_demonic_resurrect(long hex);
-    unsigned char check_special_attack(army* target);
-    void cast_spell(long hex);
-    void FaerieDragonSpell();
-    unsigned char Unnamed447fe0();
-    unsigned char check_obstacle_attacks(unsigned char is_walking);
-    void clear_AI_values();
-    void consider_attack(const army* enemy, long value,
-                         long attack_distance);
-    unsigned char enemy_is_adjacent(const army* excluded) const;
-    unsigned GetAttackMask(int currIndex, int criteria,
-                           int iLiteralTargetIndex) const;
-    long get_adjusted_attack(const army* enemy,
-                             unsigned char ranged_attack) const;
-    long get_adjusted_defense(const army* enemy,
-                              unsigned char frenzy_included) const;
-    long get_AI_expected_damage() const;
-    const army* get_AI_target() const;
-    long get_AI_target_value() const;
-    long get_AI_target_time(long speed) const;
-    long get_AI_target_time() const;
-    long get_AI_possible_targets() const;
-    long get_attack_modifier(const army* enemy,
-                             unsigned char ranged_attack) const;
-    long get_average_damage(const army* enemy, unsigned char ranged_attack,
-                            long amount, unsigned char limit_damage,
+    // Before normalization (function): army::do_multi_head_attack.
+    void doMultiHeadAttack(unsigned attackMask, int* damage, int* killed,
+                              // Before normalization (locals): fire_damage.
+                              long* fireDamage);
+    // Before normalization (function): army::range_attack.
+    void rangeAttack(army* armyToAttack);
+    // Before normalization (function): army::range_attack.
+    void rangeAttack();
+    // Before normalization (function): army::AttackWall.
+    // Before normalization (locals): iTargetGridIndex.
+    void attackWall(int targetGridIndex);
+    // Before normalization (function): army::Turn.
+    // Before normalization (locals): play_animation.
+    void turn(unsigned char animateTurn);
+    // Before normalization (function): army::NeedToTurn.
+    bool needToTurn(int direction) const;
+    // Before normalization (function): army::can_cast_resurrect.
+    bool canCastResurrect(long hex) const;
+    // Before normalization (function): army::can_cast_resurrect.
+    bool canCastResurrect() const;
+    // Before normalization (function): army::can_cast_spell.
+    unsigned char canCastSpell(long hex) const;
+    // Before normalization (function): army::can_retaliate.
+    bool canRetaliate(const army& attacker) const;
+    // Before normalization (function): army::can_shoot.
+    unsigned char canShoot(const army* excluded) const;
+    // Before normalization (function): army::cast_caliph_spell.
+    void castCaliphSpell(long hex);
+    // Before normalization (function): army::cast_resurrect.
+    void castResurrect(long hex);
+    // Before normalization (function): army::cast_demonic_resurrect.
+    void castDemonicResurrect(long hex);
+    // Before normalization (function): army::check_special_attack.
+    unsigned char checkSpecialAttack(army* target);
+    // Before normalization (function): army::cast_spell.
+    void castSpell(long hex);
+    // Before normalization (function): army::FaerieDragonSpell.
+    void faerieDragonSpell();
+    // Before normalization (function): army::Unnamed447fe0.
+    unsigned char unnamed447fe0();
+    // Before normalization (function): army::check_obstacle_attacks.
+    // Before normalization (locals): is_walking.
+    unsigned char checkObstacleAttacks(unsigned char isWalking);
+    // Before normalization (function): army::clear_AI_values.
+    void clearAIValues();
+    // Before normalization (function): army::consider_attack.
+    void considerAttack(const army* enemy, long value,
+                         // Before normalization (locals): attack_distance.
+                         long attackDistance);
+    // Before normalization (function): army::enemy_is_adjacent.
+    unsigned char enemyIsAdjacent(const army* excluded) const;
+    // Before normalization (function): army::GetAttackMask.
+    unsigned getAttackMask(int currIndex, int criteria,
+                           // Before normalization (locals): iLiteralTargetIndex.
+                           int literalTargetIndex) const;
+    // Before normalization (function): army::get_adjusted_attack.
+    long getAdjustedAttack(const army* enemy,
+                             // Before normalization (locals): ranged_attack.
+                             unsigned char rangedAttack) const;
+    // Before normalization (function): army::get_adjusted_defense.
+    long getAdjustedDefense(const army* enemy,
+                              // Before normalization (locals): frenzy_included.
+                              unsigned char frenzyIncluded) const;
+    // Before normalization (function): army::get_AI_expected_damage.
+    long getAIExpectedDamage() const;
+    // Before normalization (function): army::get_AI_target.
+    const army* getAITarget() const;
+    // Before normalization (function): army::get_AI_target_value.
+    long getAITargetValue() const;
+    // Before normalization (function): army::get_AI_target_time.
+    long getAITargetTime(long speed) const;
+    // Before normalization (function): army::get_AI_target_time.
+    long getAITargetTime() const;
+    // Before normalization (function): army::get_AI_possible_targets.
+    long getAIPossibleTargets() const;
+    // Before normalization (function): army::get_attack_modifier.
+    long getAttackModifier(const army* enemy,
+                             // Before normalization (locals): ranged_attack.
+                             unsigned char rangedAttack) const;
+    // Before normalization (function): army::get_average_damage.
+    // Before normalization (locals): ranged_attack, limit_damage.
+    long getAverageDamage(const army* enemy, unsigned char rangedAttack,
+                            long amount, unsigned char limitDamage,
                             long distance) const;
-    double get_average_damage() const;
-    long get_estimated_damage(const army* target, long amount,
+    // Before normalization (function): army::get_average_damage.
+    double getAverageDamage() const;
+    // Before normalization (function): army::get_estimated_damage.
+    long getEstimatedDamage(const army* target, long amount,
                               unsigned char ranged, long distance) const;
-    void get_berserk_targets(std::vector<army*>& armies) const;
-    int get_owning_side() const;
-    int get_controlling_side() const;
-    hero* get_owner() const;
-    hero* get_controller() const;
-    inline double get_defense_damage_modifier(
-        unsigned char ranged_attack) const;
-    long get_defense_modifier() const;
-    long get_clockwise(long direction) const;
-    long get_counter_clockwise(long direction) const;
-    float get_fire_shield_strength() const;
-    long get_loss_combat_value(long lowest_attack, long lowest_defense,
+    // Before normalization (function): army::get_berserk_targets.
+    void getBerserkTargets(std::vector<army*>& armies) const;
+    // Before normalization (function): army::get_owning_side.
+    int getOwningSide() const;
+    // Before normalization (function): army::get_controlling_side.
+    int getControllingSide() const;
+    // Before normalization (function): army::get_owner.
+    hero* getOwner() const;
+    // Before normalization (function): army::get_controller.
+    hero* getController() const;
+    // Before normalization (function): army::get_defense_damage_modifier.
+    inline double getDefenseDamageModifier(
+        // Before normalization (locals): ranged_attack.
+        unsigned char rangedAttack) const;
+    // Before normalization (function): army::get_defense_modifier.
+    long getDefenseModifier() const;
+    // Before normalization (function): army::get_clockwise.
+    long getClockwise(long direction) const;
+    // Before normalization (function): army::get_counter_clockwise.
+    long getCounterClockwise(long direction) const;
+    // Before normalization (function): army::get_fire_shield_strength.
+    float getFireShieldStrength() const;
+    // Before normalization (function): army::get_loss_combat_value.
+    // Before normalization (locals): lowest_attack, lowest_defense, kills_only.
+    long getLossCombatValue(long lowestAttack, long lowestDefense,
                                unsigned char ranged, long damage,
-                               unsigned char kills_only) const;
-    long get_resurrection_size(const army* target) const;
-    int get_second_grid_index() const;
-    long get_total_combat_value(long lowest_attack,
-                                long lowest_defense) const;
-    long get_total_hit_points(unsigned char simulated) const;
-    double get_unit_combat_value(long lowest_attack, long lowest_defense,
+                               unsigned char killsOnly) const;
+    // Before normalization (function): army::get_resurrection_size.
+    long getResurrectionSize(const army* target) const;
+    // Before normalization (function): army::get_second_grid_index.
+    int getSecondGridIndex() const;
+    // Before normalization (function): army::get_total_combat_value.
+    // Before normalization (locals): lowest_attack, lowest_defense.
+    long getTotalCombatValue(long lowestAttack,
+                                long lowestDefense) const;
+    // Before normalization (function): army::get_total_hit_points.
+    long getTotalHitPoints(unsigned char simulated) const;
+    // Before normalization (function): army::get_unit_combat_value.
+    // Before normalization (locals): lowest_attack, lowest_defense.
+    double getUnitCombatValue(long lowestAttack, long lowestDefense,
                                  unsigned char ranged,
                                  const army* excluded) const;
-    long get_valid_caliph_spells(const army* target) const;
-    int GetBestDirection(int start, int target, int direction);
-    unsigned char is_adjacent(const army* other_army) const;
-    unsigned char is_adjacent(int hex) const;
-    unsigned char is_enemy(const army* arg) const;
-    bool is_in_aura() const;
-    unsigned char move_to(int hex, unsigned char restore_facing);
-    void new_turn();
-    void set_AI_expected_damage(long arg);
-    int FindPath(int fpTargetCellIndex, int maxMoves,
-                 unsigned char bMoveUnlimited,
-                 unsigned char bLiteralTarget);
-    void set_retaliation_count();
-    int ValidAttack(int currIndex, int direction, int criteria,
-                    int iLiteralIndex, int* testCellIndex) const;
-    void ResetPath();
-    unsigned char ValidPath(int destIndex, unsigned char bLiteralTest);
-    unsigned char ValidFlight(int destIndex,
-                              unsigned char bLiteralTest) const;
-    int ValidRange(int destIndex);
-    inline long DamageEnemy(army* enemy, int* iDamage, int* iKilled,
-                            unsigned char bIsShot);
-    int Damage(int damage);
-    int ComputeBaseDamage(unsigned char simulate_only) const;
-    int ComputeAttackerDamageBonuses(int base_damage,
-                                     unsigned char is_shooting,
+    // Before normalization (function): army::get_valid_caliph_spells.
+    long getValidCaliphSpells(const army* target) const;
+    // Before normalization (function): army::GetBestDirection.
+    int getBestDirection(int start, int target, int direction);
+    // Before normalization (function): army::is_adjacent.
+    // Before normalization (locals): other_army.
+    unsigned char isAdjacent(const army* otherArmy) const;
+    // Before normalization (function): army::is_adjacent.
+    unsigned char isAdjacent(int hex) const;
+    // Before normalization (function): army::is_enemy.
+    unsigned char isEnemy(const army* arg) const;
+    // Before normalization (function): army::is_in_aura.
+    bool isInAura() const;
+    // Before normalization (function): army::move_to.
+    // Before normalization (locals): restore_facing.
+    unsigned char moveTo(int hex, unsigned char restoreFacing);
+    // Before normalization (function): army::new_turn.
+    void newTurn();
+    // Before normalization (function): army::set_AI_expected_damage.
+    void setAIExpectedDamage(long arg);
+    // Before normalization (function): army::FindPath.
+    int findPath(int fpTargetCellIndex, int maxMoves,
+                 // Before normalization (locals): bMoveUnlimited, bLiteralTarget.
+                 unsigned char moveUnlimited,
+                 unsigned char literalTarget);
+    // Before normalization (function): army::set_retaliation_count.
+    void setRetaliationCount();
+    // Before normalization (function): army::ValidAttack.
+    int validAttack(int currIndex, int direction, int criteria,
+                    // Before normalization (locals): iLiteralIndex.
+                    int literalIndex, int* testCellIndex) const;
+    // Before normalization (function): army::ResetPath.
+    void resetPath();
+    // Before normalization (function): army::ValidPath.
+    // Before normalization (locals): bLiteralTest.
+    unsigned char validPath(int destIndex, unsigned char literalTest);
+    // Before normalization (function): army::ValidFlight.
+    unsigned char validFlight(int destIndex,
+                              // Before normalization (locals): bLiteralTest.
+                              unsigned char literalTest) const;
+    // Before normalization (function): army::ValidRange.
+    int validRange(int destIndex);
+    // Before normalization (function): army::DamageEnemy.
+    // Before normalization (locals): iDamage, iKilled, bIsShot.
+    inline long damageEnemy(army* enemy, int* damageOut, int* killed,
+                            unsigned char isShot);
+    // Before normalization (function): army::Damage.
+    int damage(int damage);
+    // Before normalization (function): army::ComputeBaseDamage.
+    // Before normalization (locals): simulate_only.
+    int computeBaseDamage(unsigned char simulateOnly) const;
+    // Before normalization (function): army::ComputeAttackerDamageBonuses.
+    // Before normalization (locals): base_damage, is_shooting, simulate_only.
+    int computeAttackerDamageBonuses(int baseDamage,
+                                     unsigned char isShooting,
                                      army* defender,
-                                     unsigned char simulate_only,
+                                     unsigned char simulateOnly,
                                      long distance) const;
-    inline int ComputeDefenderDamageBonuses(int base_damage) const;
-    double ComputeAttackerDamageReduction(const army* defender,
-                                          unsigned char is_shooting) const;
-    double ComputeDefenderDamageReduction(
-        unsigned char is_shooting) const;
-    int compute_attacker_bonus(int base_damage, unsigned char is_shooting,
-                               army* defender, unsigned char simulate_only,
+    // Before normalization (function): army::ComputeDefenderDamageBonuses.
+    // Before normalization (locals): base_damage.
+    inline int computeDefenderDamageBonuses(int baseDamage) const;
+    // Before normalization (function): army::ComputeAttackerDamageReduction.
+    double computeAttackerDamageReduction(const army* defender,
+                                          // Before normalization (locals): is_shooting.
+                                          unsigned char isShooting) const;
+    // Before normalization (function): army::ComputeDefenderDamageReduction.
+    double computeDefenderDamageReduction(
+        // Before normalization (locals): is_shooting.
+        unsigned char isShooting) const;
+    // Before normalization (function): army::compute_attacker_bonus.
+    // Before normalization (locals): base_damage, is_shooting, simulate_only.
+    int computeAttackerBonus(int baseDamage, unsigned char isShooting,
+                               army* defender, unsigned char simulateOnly,
                                long distance) const;
-    void CancelSpellType(int iSpellType);
-    void DecrementSpellRounds();
-    void GoBerserk();
-    void Cure(int level, int iSpellPower, const hero* casting_hero);
-    int CanFit(int destIndex, int bAllowShifting,
-               int* iNewDestIndex) const;
-    void DrawToBuffer(int x, int y, int bNumBoxOnly);
-    void PlayAnimation(int sequence, int nframes, int start_frame);
-    void SetupAnimation();
-    unsigned long Strength();
-    bool IsActive() const;
-    inline void CheckLuck();
-    void SetSpellInfluence(int spell, int power, int mastery,
-                           const hero* casting_hero);
-    void CancelIndividualSpell(int spell);
-    void CancelAllSpells();
-    int BottomY() const;
-    int MidY() const;
-    int TopY() const;
-    int LeftX() const;
-    int RightX() const;
-    int FrontX() const;
-    int MidX() const;
-    bool Is(unsigned attribute) const;
-    bool is_in_area_highlight() const;
-    int OffsetToFront(int direction) const;
-    void ProcessDeath(int bFadeElementals);
-    int OtherArmyAdjacent(int group, int index);
-    int GetAdjacentCellIndex(int currIndex, int direction) const;
-    long get_adjacent_hex(long hex, long direction) const;
-    long get_adjacent_hex(long direction) const;
-    long get_attack_direction(long our_hex, const army* enemy,
-                              long enemy_hex) const;
-    inline long get_attack_direction(long our_hex, const army* enemy) const;
-    long get_attack_direction(const army* enemy) const;
-    long get_multi_head_directions(long our_hex, const army* enemy,
-                                   long enemy_hex) const;
-    long get_spell_time(int spell) const;
-    TSkillMastery get_spell_level(int spell) const;
-    unsigned char set_inside_area_effect(unsigned char arg);
-    void play_sample(TSampleID id);
-    void stop_sample(TSampleID id);
-    void WaitSample(TSampleID which);
-    void add_aura();
-    void remove_aura();
-    void remove_binding();
-    bool cannot_attack() const;
-    inline const char* GetName() const;
-    inline const char* GetName(int count) const;
-    bool IsIncapacitated() const;
-    void SetLuck(const hero* ownerHero, const armyGroup* ownerGroup,
+    // Before normalization (function): army::CancelSpellType.
+    // Before normalization (locals): iSpellType.
+    void cancelSpellType(int spellType);
+    // Before normalization (function): army::DecrementSpellRounds.
+    void decrementSpellRounds();
+    // Before normalization (function): army::GoBerserk.
+    void goBerserk();
+    // Before normalization (function): army::Cure.
+    // Before normalization (locals): iSpellPower, casting_hero.
+    void cure(int level, int spellPower, const hero* castingHero);
+    // Before normalization (function): army::CanFit.
+    // Before normalization (locals): bAllowShifting, iNewDestIndex.
+    int canFit(int destIndex, int allowShifting,
+               int* newDestIndex) const;
+    // Before normalization (function): army::DrawToBuffer.
+    // Before normalization (locals): bNumBoxOnly.
+    void drawToBuffer(int x, int y, int numBoxOnly);
+    // Before normalization (function): army::PlayAnimation.
+    // Before normalization (locals): start_frame.
+    void playAnimation(int sequence, int nframes, int startFrame);
+    // Before normalization (function): army::SetupAnimation.
+    void setupAnimation();
+    // Before normalization (function): army::Strength.
+    unsigned long strength();
+    // Before normalization (function): army::IsActive.
+    bool isActive() const;
+    // Before normalization (function): army::CheckLuck.
+    inline void checkLuck();
+    // Before normalization (function): army::SetSpellInfluence.
+    void setSpellInfluence(int spell, int power, int mastery,
+                           // Before normalization (locals): casting_hero.
+                           const hero* castingHero);
+    // Before normalization (function): army::CancelIndividualSpell.
+    void cancelIndividualSpell(int spell);
+    // Before normalization (function): army::CancelAllSpells.
+    void cancelAllSpells();
+    // Before normalization (function): army::BottomY.
+    int bottomY() const;
+    // Before normalization (function): army::MidY.
+    int midY() const;
+    // Before normalization (function): army::TopY.
+    int topY() const;
+    // Before normalization (function): army::LeftX.
+    int leftX() const;
+    // Before normalization (function): army::RightX.
+    int rightX() const;
+    // Before normalization (function): army::FrontX.
+    int frontX() const;
+    // Before normalization (function): army::MidX.
+    int midX() const;
+    // Before normalization (function): army::Is.
+    bool is(unsigned attribute) const;
+    // Before normalization (function): army::is_in_area_highlight.
+    bool isInAreaHighlight() const;
+    // Before normalization (function): army::OffsetToFront.
+    int offsetToFront(int direction) const;
+    // Before normalization (function): army::ProcessDeath.
+    // Before normalization (locals): bFadeElementals.
+    void processDeath(int fadeElementals);
+    // Before normalization (function): army::OtherArmyAdjacent.
+    int otherArmyAdjacent(int group, int index);
+    // Before normalization (function): army::GetAdjacentCellIndex.
+    int getAdjacentCellIndex(int currIndex, int direction) const;
+    // Before normalization (function): army::get_adjacent_hex.
+    long getAdjacentHex(long hex, long direction) const;
+    // Before normalization (function): army::get_adjacent_hex.
+    long getAdjacentHex(long direction) const;
+    // Before normalization (function): army::get_attack_direction.
+    // Before normalization (locals): our_hex, enemy_hex.
+    long getAttackDirection(long ourHex, const army* enemy,
+                              long enemyHex) const;
+    // Before normalization (function): army::get_attack_direction.
+    inline long getAttackDirection(long ourHex, const army* enemy) const;
+    // Before normalization (function): army::get_attack_direction.
+    long getAttackDirection(const army* enemy) const;
+    // Before normalization (function): army::get_multi_head_directions.
+    // Before normalization (locals): our_hex, enemy_hex.
+    long getMultiHeadDirections(long ourHex, const army* enemy,
+                                   long enemyHex) const;
+    // Before normalization (function): army::get_spell_time.
+    long getSpellTime(int spell) const;
+    // Before normalization (function): army::get_spell_level.
+    TSkillMastery getSpellLevel(int spell) const;
+    // Before normalization (function): army::set_inside_area_effect.
+    unsigned char setInsideAreaEffect(unsigned char arg);
+    // Before normalization (function): army::play_sample.
+    void playSample(TSampleID id);
+    // Before normalization (function): army::stop_sample.
+    void stopSample(TSampleID id);
+    // Before normalization (function): army::WaitSample.
+    void waitSample(TSampleID which);
+    // Before normalization (function): army::add_aura.
+    void addAura();
+    // Before normalization (function): army::remove_aura.
+    void removeAura();
+    // Before normalization (function): army::remove_binding.
+    void removeBinding();
+    // Before normalization (function): army::cannot_attack.
+    bool cannotAttack() const;
+    // Before normalization (function): army::GetName.
+    inline const char* getName() const;
+    // Before normalization (function): army::GetName.
+    inline const char* getName(int count) const;
+    // Before normalization (function): army::IsIncapacitated.
+    bool isIncapacitated() const;
+    // Before normalization (function): army::SetLuck.
+    void setLuck(const hero* ownerHero, const armyGroup* ownerGroup,
                  const town* ownerTown, const hero* otherHero,
                  const armyGroup* otherGroup, int magicTerrain);
-    int GetLuck(unsigned char apply_limits) const;
-    void SetMorale(const hero* ownerHero, const armyGroup* ownerGroup,
+    // Before normalization (function): army::GetLuck.
+    // Before normalization (locals): apply_limits.
+    int getLuck(unsigned char applyLimits) const;
+    // Before normalization (function): army::SetMorale.
+    void setMorale(const hero* ownerHero, const armyGroup* ownerGroup,
                    const town* ownerTown, const hero* otherHero,
                    const armyGroup* otherGroup, int magicTerrain,
                    unsigned char groupAlignments);
-    int GetMorale(unsigned char apply_limits) const;
-    int GetSpeed() const;
+    // Before normalization (function): army::GetMorale.
+    // Before normalization (locals): apply_limits.
+    int getMorale(unsigned char applyLimits) const;
+    // Before normalization (function): army::GetSpeed.
+    int getSpeed() const;
 
     // Complete-only accessor with no Dreamcast row. Keep it after the shared
     // public roster so it cannot split an attested pair.
-    int get_mirror_effect() const;
+    // Before normalization (function): army::get_mirror_effect.
+    int getMirrorEffect() const;
 
     // Complete's NextArmy directly combines the private reset latch with the
     // shared IsIncapacitated helper. The exact retail lowering proves that
@@ -1243,35 +1442,61 @@ public:
     friend class combatManager;
 
 private:
-    void animate_missile(army* armyToAttack);
-    void attack_wall(TWallTargetId wall, long levelsDestroyed);
-    void attack_wall(TWallTargetId wall,
+    // Before normalization (function): army::animate_missile.
+    void animateMissile(army* armyToAttack);
+    // Before normalization (function): army::attack_wall.
+    void attackWall(TWallTargetId wall, long levelsDestroyed);
+    // Before normalization (function): army::attack_wall.
+    void attackWall(TWallTargetId wall,
                      const type_ballistics_traits& ballistics);
-    void do_fire_shield(long damage);
-    void do_post_attack(army* target, int iDamage, int iKilled,
-                        int total_life);
-    void DoHydraAttack(int direction);
-    bool find_flyer_attack_cell(int hex, int direction) const;
-    bool find_flyer_attack_cell(int hex) const;
-    bool LeavesNoBody() const;
-    unsigned char simple_move(int hex, unsigned char restore_facing);
-    double ComputeKarma() const;
+    // Before normalization (function): army::do_fire_shield.
+    void doFireShield(long damage);
+    // Before normalization (function): army::do_post_attack.
+    // Before normalization (locals): iDamage, iKilled, total_life.
+    void doPostAttack(army* target, int attackDamage, int killedCount,
+                        int totalLife);
+    // Before normalization (function): army::DoHydraAttack.
+    void doHydraAttack(int direction);
+    // Before normalization (function): army::find_flyer_attack_cell.
+    bool findFlyerAttackCell(int hex, int direction) const;
+    // Before normalization (function): army::find_flyer_attack_cell.
+    bool findFlyerAttackCell(int hex) const;
+    // Before normalization (function): army::LeavesNoBody.
+    bool leavesNoBody() const;
+    // Before normalization (function): army::simple_move.
+    // Before normalization (locals): restore_facing.
+    unsigned char simpleMove(int hex, unsigned char restoreFacing);
+    // Before normalization (function): army::ComputeKarma.
+    double computeKarma() const;
 
     // LF_FIELDLIST entries 237..249. The established source aliases preserve
     // retail layout while the gate records the Dreamcast names.
-    int morale;                           // +0x4e8, DC iMorale
-    int luck;                             // +0x4ec, DC iLuck
-    unsigned char field_4f0;              // +0x4f0, DC reset_this_round
-    unsigned char is_area_effect_target;  // +0x4f1
-    std::vector<army*> bound_armies;      // +0x4f4
-    std::vector<army*> binders;           // +0x504
-    std::vector<army*> aura_clients;      // +0x514
-    std::vector<army*> aura_sources;      // +0x524
-    int AI_expected_damage;               // +0x534
-    army* AI_target;                      // +0x538
-    long AI_target_value;                 // +0x53c
-    long AI_target_time;                  // +0x540, DC AI_target_distance
-    unsigned AI_possible_targets;         // +0x544
+    // Before normalization: morale.
+    int m_morale;                           // +0x4e8, DC iMorale
+    // Before normalization: luck.
+    int m_luck;                             // +0x4ec, DC iLuck
+    // Before normalization: field_4f0; reference member army::reset_this_round.
+    unsigned char m_resetThisRound;              // +0x4f0, DC reset_this_round
+    // Before normalization: is_area_effect_target.
+    unsigned char m_isAreaEffectTarget;  // +0x4f1
+    // Before normalization: bound_armies.
+    std::vector<army*> m_boundArmies;      // +0x4f4
+    // Before normalization: binders.
+    std::vector<army*> m_binders;           // +0x504
+    // Before normalization: aura_clients.
+    std::vector<army*> m_auraClients;      // +0x514
+    // Before normalization: aura_sources.
+    std::vector<army*> m_auraSources;      // +0x524
+    // Before normalization: AI_expected_damage.
+    int m_aiExpectedDamage;               // +0x534
+    // Before normalization: AI_target.
+    army* m_aiTarget;                      // +0x538
+    // Before normalization: AI_target_value.
+    long m_aiTargetValue;                 // +0x53c
+    // Before normalization: AI_target_time.
+    long m_aiTargetTime;                  // +0x540, DC AI_target_distance
+    // Before normalization: AI_possible_targets.
+    unsigned m_aiPossibleTargets;         // +0x544
 
 #if 0  // superseded unordered/view-fragmented declaration reconstruction
 
@@ -1287,24 +1512,24 @@ private:
     // below is the standing example: DC has two const members, retail a
     // /Gr static), but nothing in x86 codegen can contradict a `this`
     // cv-qualifier, so the mangling is the only evidence there is.
-    int FindPath(int fpTargetCellIndex, int maxMoves,
+    int findPath(int fpTargetCellIndex, int maxMoves,
                  unsigned char bMoveUnlimited, unsigned char bLiteralTarget);
-    unsigned char ValidPath(int destIndex, unsigned char bLiteralTest);
+    unsigned char validPath(int destIndex, unsigned char bLiteralTest);
     // Both const (?GetAttackMask@army@@QBAIHHH@Z,
     // ?ValidAttack@army@@QBAHHHHHPAH@Z); neither body writes through
     // `this` and both drive GetAdjacentCellIndex, already const.
-    unsigned GetAttackMask(int currIndex, int criteria,
+    unsigned getAttackMask(int currIndex, int criteria,
                            int iLiteralTargetIndex) const;
-    int ValidAttack(int currIndex, int direction, int criteria,
+    int validAttack(int currIndex, int direction, int criteria,
                     int iLiteralIndex, int* testCellIndex) const;
     // Both const: ai_tactical's get_breath_bonus (0x436760) drives the
     // pair off the `const army*` it takes as its second parameter.
-    int GetAdjacentCellIndex(int currIndex, int direction) const;
-    long get_adjacent_hex(long hex, long direction) const;
+    int getAdjacentCellIndex(int currIndex, int direction) const;
+    long getAdjacentHex(long hex, long direction) const;
     // 0x445840, claimed in army.cpp. Const because ai_tactical's
     // get_breath_bonus (0x436760) calls it on the `const army*` it
     // takes as its second parameter.
-    long get_attack_direction(long our_hex, const army* enemy,
+    long getAttackDirection(long our_hex, const army* enemy,
                               long enemy_hex) const;
     // 0x4458b0, the two-argument overload: it does not take the enemy's
     // hex but SEARCHES for it, walking this stack's own neighbours and
@@ -1315,12 +1540,12 @@ private:
     // it. ?get_attack_direction@army@@QBAJJPBV1@@Z is a const member,
     // and the retail body reads creatureId / facing and calls
     // get_adjacent_hex (const) and nothing else.
-    inline long get_attack_direction(long our_hex, const army* enemy) const;
+    inline long getAttackDirection(long our_hex, const army* enemy) const;
     // 0x448ab0 (claimed in army.cpp): the bitmask of the directions a
     // wide/multi-headed stack would also strike. Const for the same
     // reason - get_multi_head_bonus (0x436620) drives it off a
     // `const army*`.
-    long get_multi_head_directions(long our_hex, const army* enemy,
+    long getMultiHeadDirections(long our_hex, const army* enemy,
                                    long enemy_hex) const;
     // The two neighbours of a combat direction. DC rows 0x45fc0 /
     // 0x46008, and NEITHER has a retail out-of-line slot - the whole
@@ -1337,29 +1562,29 @@ private:
     // it the way advmgr / events / hero already scope theirs. The
     // measurement is the whole justification: remove the guard and
     // GetCommand drops again.
-    long get_clockwise(long direction) const;
-    long get_counter_clockwise(long direction) const;
+    long getClockwise(long direction) const;
+    long getCounterClockwise(long direction) const;
     // DC public ?CanFit@army@@QBAHHHPAH@Z; mark_teleport's retail call
     // passes (hex, 0, 0) through a const army pointer.
-    int CanFit(int destIndex, int bAllowShifting,
+    int canFit(int destIndex, int bAllowShifting,
                int* iNewDestIndex) const;
-    int GetSpeed() const;                    // 0x448cd0, claimed in army.cpp
+    int getSpeed() const;                    // 0x448cd0, claimed in army.cpp
     // Combat movement surface. The retail call graph from simple_move and
     // the five-function block at 0x4b46c0..0x4b5011 locate fly.obj; these
     // declarations are consumed by the admitted FlyTo/TeleportTo wrappers.
-    void add_aura();                         // 0x43ea70
-    void remove_aura();                      // 0x43ec50
-    void remove_binding();                   // 0x43ee10
+    void addAura();                         // 0x43ea70
+    void removeAura();                      // 0x43ec50
+    void removeBinding();                   // 0x43ee10
     // Raise or lower the "this stack is standing in an area effect"
     // latch and re-pose it: the retail body (0x43efe0) returns 0 when
     // the latch is already the requested value, so callers use the
     // answer as "did anything change". `_N_N` on the DC public
     // (?set_inside_area_effect@army@@QAA_N_N@Z) is both the byte
     // argument and the byte return.
-    unsigned char set_inside_area_effect(unsigned char arg);  // 0x43efe0
-    void play_sample(TSampleID id);          // 0x43d540
-    void stop_sample(TSampleID id);          // 0x43d580
-    void WaitSample(TSampleID which);
+    unsigned char setInsideAreaEffect(unsigned char arg);  // 0x43efe0
+    void playSample(TSampleID id);          // 0x43d540
+    void stopSample(TSampleID id);          // 0x43d580
+    void waitSample(TSampleID which);
     // simple_move is PRIVATE on its own public
     // (?simple_move@army@@AAA_NH_N@Z) and every member of this movement
     // family returns `_N` - bool - and takes `restore_facing` as one:
@@ -1367,7 +1592,7 @@ private:
     // RECORDED, NOT ACTED ON: the access change and the bool retype are
     // one measured pass over the whole family (bool is not free in VC6
     // - it normalizes), and this lane only needed the declarations.
-    unsigned char simple_move(int hex, unsigned char restore_facing);
+    unsigned char simpleMove(int hex, unsigned char restore_facing);
     // BEHIND A VIEW, MEASURED: declaring WalkTo to every consumer of
     // this header costs command.obj's combatManager::GetCommand
     // 92.5714 -> 92.5357 with no semantic change anywhere - the
@@ -1386,44 +1611,44 @@ private:
     // The row is the COMDAT copy of the header inline, emitted because
     // attack_hex's own expansion of can_shoot leaves a real call to it
     // at depth 2 while army::Walk inlines it at depth 1.
-    unsigned char move_to(int hex, unsigned char restore_facing);
+    unsigned char moveTo(int hex, unsigned char restore_facing);
     // ProcessNextAction's two dispatch-only army calls.
-    void AttackWall(int iTargetGridIndex);
-    void cast_spell(long hex);
+    void attackWall(int iTargetGridIndex);
+    void castSpell(long hex);
     // The shooting pair. 0x440160 is the public no-argument entry - it
     // resolves groupToAttack/indexToAttack into the target stack, turns
     // to face it, and fires between one and three volleys - and it
     // hands each volley to the private one-argument overload at
     // 0x43f900 (still a carcass), which is the animation-and-damage
     // worker.
-    void range_attack();
-    void range_attack(army* armyToAttack);
+    void rangeAttack();
+    void rangeAttack(army* armyToAttack);
     // 0x43f2c0, EH-bearing carcass in army.cpp; declared because the
     // volley worker above calls it once per shot.
-    void animate_missile(army* armyToAttack);
-    unsigned char check_obstacle_attacks(unsigned char is_walking);
+    void animateMissile(army* armyToAttack);
+    unsigned char checkObstacleAttacks(unsigned char is_walking);
     // 0x440500, reconstructed in army.cpp: the attacker's on-attack
     // debuff roll (bind/blind/disease/curse/age/stone/poison/acid/
     // paralyze); returns 1 for the three incapacitators.
-    unsigned char check_special_attack(army* target);
+    unsigned char checkSpecialAttack(army* target);
     // 0x440bc0, EH-bearing carcass in army.cpp; declared for
     // do_attack's kill-accounting tail.
-    void do_post_attack(army* target, int iDamage, int iKilled,
+    void doPostAttack(army* target, int iDamage, int iKilled,
                         int total_life);
-    void Turn(unsigned char play_animation); // 0x446720
-    void SetupAnimation();                   // 0x446830
-    void PlayAnimation(int sequence, int nframes, int start_frame);
+    void turn(unsigned char play_animation); // 0x446720
+    void setupAnimation();                   // 0x446830
+    void playAnimation(int sequence, int nframes, int start_frame);
     // 0x43e140, carcass in army.cpp; declared here because army::Fly
     // (fly.obj) calls it once per animation frame.
-    void DrawToBuffer(int x, int y, int bNumBoxOnly);
-    void CancelSpellType(int iSpellType);    // 0x4444d0
-    void CancelIndividualSpell(int spell);   // 0x444510
+    void drawToBuffer(int x, int y, int bNumBoxOnly);
+    void cancelSpellType(int iSpellType);    // 0x4444d0
+    void cancelIndividualSpell(int spell);   // 0x444510
     // The Cure spell's whole effect: restore hit points, clamp the top
     // creature's damage to what the stack can still survive, cancel the
     // fourteen negative influences one by one and heal the remainder.
     // The DC prototype (army.cpp:4739) names the three parameters and
     // retail's `ret 0xc` agrees.
-    void Cure(int level, int iSpellPower, const hero* casting_hero);  // 0x446500
+    void cure(int level, int iSpellPower, const hero* casting_hero);  // 0x446500
     // 0x4448f0, claimed and reconstructed in army.cpp (an earlier
     // revision of this note said 0x4443f0 - a typo, that address is
     // inside ProcessDeath's span; the carve row 0x4448f0/0xB99 with
@@ -1436,19 +1661,19 @@ private:
     // the two spellings are byte-identical everywhere the body uses it
     // (an index, two stores, one signed compare). Only the mangled
     // name differs, and the VA claim owns the pairing.
-    void SetSpellInfluence(int spell, int power, int mastery,
+    void setSpellInfluence(int spell, int power, int mastery,
                            const hero* casting_hero);
     // Const (?ValidFlight@army@@QBA_NH_N@Z): the fly.obj body only
     // reads, and both callees it drives on `this` are already const.
-    unsigned char ValidFlight(int destIndex,
+    unsigned char validFlight(int destIndex,
                               unsigned char bLiteralTest) const;
-    void SetLuck(const hero* ownerHero, const armyGroup* ownerGroup,
+    void setLuck(const hero* ownerHero, const armyGroup* ownerGroup,
                  const town* ownerTown, const hero* otherHero,
                  const armyGroup* otherGroup, int magicTerrain);
-    void SetMorale(const hero* ownerHero, const armyGroup* ownerGroup,
+    void setMorale(const hero* ownerHero, const armyGroup* ownerGroup,
                    const town* ownerTown, const hero* otherHero,
                    const armyGroup* otherGroup, int magicTerrain,
-                   unsigned char field_54b2);
+                   unsigned char m_field54b2);
     // THREE CREATURE IDS THAT BELONG IN armygrp.h's TCreatureType and
     // are parked here instead. Byte-proven 2026-08-14 by two army.obj
     // bodies (get_adjusted_defense 0x442590 multiplies the defender's
@@ -1639,12 +1864,12 @@ public:
     //     for the enchanter and only while the per-side counter at
     //     combatManager+0x132a0 exceeds 2, clearing that counter when
     //     the answer is non-zero.
-    void FaerieDragonSpell();                // 0x447510
-    unsigned char Unnamed447fe0();           // 0x447fe0
+    void faerieDragonSpell();                // 0x447510
+    unsigned char unnamed447fe0();           // 0x447fe0
     // 0x448260, reconstructed in army.cpp: the animated creature-cast
     // dispatcher. combatManager::SetNextArmy-family code is the retail
     // caller; declared with its family here.
-    void cast_spell(long hex);
+    void castSpell(long hex);
     // Const on the DC roster's own mangling
     // (?is_enemy@army@@QBA_NPBV1@@Z), which is what lets
     // combatManager::enemy_is_adjacent take a const army* as the
@@ -1658,21 +1883,21 @@ public:
     // read gpCombatManager->cells[gridIndex] at +0x1c4 and +0x1c6 with
     // the 112-byte hexcell stride. DECLARED, NOT DEFINED - army.cpp
     // still carries both as DC_ONLY carcasses.
-    int MidX() const;                        // 0x446660
-    int MidY() const;                        // 0x446630
-    unsigned char is_enemy(const army* arg) const; // 0x442880
+    int midX() const;                        // 0x446660
+    int midY() const;                        // 0x446630
+    unsigned char isEnemy(const army* arg) const; // 0x442880
     // 0x4429f0: asks the combat manager whether any enemy stack (other
     // than `excluded`) neighbours this stack's own hex, and for a
     // two-hex creature its second hex as well. Const
     // (?enemy_is_adjacent@army@@QBA_NPBV1@@Z) - the last of the chain
     // combatManager::enemy_is_adjacent's own const `this` needs.
-    unsigned char enemy_is_adjacent(const army* excluded) const;
+    unsigned char enemyIsAdjacent(const army* excluded) const;
     // 0x4430d0: clamps the AI's committed damage to what the stack can
     // actually absorb - `_cpp_min(get_total_hit_points(), arg)`.
-    void set_AI_expected_damage(long arg);
-    long get_adjusted_attack(const army* enemy,
+    void setAIExpectedDamage(long arg);
+    long getAdjustedAttack(const army* enemy,
                              unsigned char ranged_attack) const;
-    long get_attack_modifier(const army* enemy,
+    long getAttackModifier(const army* enemy,
                              unsigned char ranged_attack) const;
     // 0x442660 (41 B). The 2026-08-08 note on ai_tactical's
     // type_AI_combat_parameters ctor called this leaf "unidentified";
@@ -1685,23 +1910,23 @@ public:
     // lowest-attack / lowest-defense pair get_attack_modifier feeds.
     // Claimed nowhere yet - declared here so ai_tactical can call it,
     // exactly as can_shoot above.
-    long get_defense_modifier() const;                          // 0x442660
+    long getDefenseModifier() const;                          // 0x442660
     // Combat-AI leaves, all claimed in army.cpp; declared here so
     // ai_tactical can call them (the retail callsites are the
     // location evidence for get_average_damage's own claim).
-    unsigned char can_shoot(const army* excluded) const;        // 0x4428f0
+    unsigned char canShoot(const army* excluded) const;        // 0x4428f0
     // 0x4473d0 / 0x4476c0, carcasses in army.cpp; declared here because
     // combatManager::GetCommand (command.obj) is a caller of both.
     // Both const (?can_cast_resurrect@army@@QBA_NJ@Z,
     // ?can_cast_spell@army@@QBA_NJ@Z).
-    unsigned char can_cast_resurrect(long hex) const;
-    unsigned char can_cast_spell(long hex) const;
-    long get_loss_combat_value(long lowest_attack, long lowest_defense,
+    unsigned char canCastResurrect(long hex) const;
+    unsigned char canCastSpell(long hex) const;
+    long getLossCombatValue(long lowest_attack, long lowest_defense,
                                unsigned char ranged, long damage,
                                unsigned char kills_only) const; // 0x442fd0
-    long get_total_hit_points(unsigned char simulated) const;   // 0x443080
-    inline void CheckLuck();
-    inline long DamageEnemy(army* enemy, int* iDamage, int* iKilled,
+    long getTotalHitPoints(unsigned char simulated) const;   // 0x443080
+    inline void checkLuck();
+    inline long damageEnemy(army* enemy, int* iDamage, int* iKilled,
                             unsigned char bIsShot);
     // 0x442590: the stack's defense as the ATTACKER sees it - zero
     // under Frenzy, reduced 40%/80% against a Behemoth / Ancient
@@ -1711,7 +1936,7 @@ public:
     // already has to declare const for get_attack_modifier's sake,
     // calls it on `this` in the Frenzy tail. Nothing in the body
     // writes.
-    long get_adjusted_defense(const army* enemy,
+    long getAdjustedDefense(const army* enemy,
                               unsigned char frenzy_included) const;
     // 0x443840 / 0x443b90, carcasses in army.cpp; declared because
     // adjust_damage (0x443f40) calls both and retail does NOT inline
@@ -1720,7 +1945,7 @@ public:
     // ?ComputeAttackerDamageReduction@army@@QBANPBV1@_N@Z); the first
     // takes its defender NON-const, the second const, which is the
     // roster's own split and not a transcription slip.
-    int ComputeAttackerDamageBonuses(int base_damage,
+    int computeAttackerDamageBonuses(int base_damage,
                                      unsigned char is_shooting,
                                      army* defender,
                                      unsigned char simulate_only,
@@ -1729,8 +1954,8 @@ public:
     // The Dreamcast body is the single source statement `return 0;`.
     // Keep the named boundary source-visible even though retail VC6 can
     // erase both this body and its call from adjust_damage.
-    inline int ComputeDefenderDamageBonuses(int base_damage) const;
-    double ComputeAttackerDamageReduction(const army* defender,
+    inline int computeDefenderDamageBonuses(int base_damage) const;
+    double computeAttackerDamageReduction(const army* defender,
                                           unsigned char is_shooting) const;
     // 0x443320, the retail-only numeric half of the row above: the
     // offense / archery / spell-bonus arithmetic with no combat
@@ -1740,35 +1965,35 @@ public:
     // same reason adjust_damage's does - the const caller casts, the
     // declaration does not drop it. Declared, not claimed here;
     // army.cpp owns the body.
-    int compute_attacker_bonus(int base_damage, unsigned char is_shooting,
+    int computeAttackerBonus(int base_damage, unsigned char is_shooting,
                                army* defender, unsigned char simulate_only,
                                long distance) const;
     // 0x443160: one swing's RAW damage - the effective creature count,
     // the damage range (hero-attack-scaled for a ballista), then the
     // Bless / Curse / simulation / dice arms. Const
     // (?ComputeBaseDamage@army@@QBAH_N@Z).
-    int ComputeBaseDamage(unsigned char simulate_only) const;
+    int computeBaseDamage(unsigned char simulate_only) const;
     // 0x443d90: the multiplier a defender's own Shield / Air Shield,
     // petrification and hero defense skill put on incoming damage.
     // Const (?ComputeDefenderDamageReduction@army@@QBAN_N@Z), and so is
     // the whole ComputeXxxDamage family beside it in army.cpp.
-    double ComputeDefenderDamageReduction(unsigned char is_shooting) const;
+    double computeDefenderDamageReduction(unsigned char is_shooting) const;
     // 0x447330: how many creatures a resurrect from THIS stack would
     // restore to `target` - the Archangel rule, or the Pit Lord's
     // raise-Demons rule for every other caster. Const
     // (?get_resurrection_size@army@@QBAJPBV1@@Z).
-    long get_resurrection_size(const army* target) const;
+    long getResurrectionSize(const army* target) const;
     // 0x444090: applies one blow's damage to the stack and answers how
     // many creatures it killed.
-    int Damage(int damage);
+    int damage(int damage);
     // 0x440310, the hydra's eight-way sweep, and 0x4409c0, the Fire
     // Shield retaliation. Behind a view because a bare member
     // declaration is this header's own measured include-set trigger;
     // army.cpp is the only consumer of either.
-    void do_multi_head_attack(unsigned attackMask, int* damage, int* killed,
+    void doMultiHeadAttack(unsigned attackMask, int* damage, int* killed,
                               long* fire_damage);
-    void do_fire_shield(long damage);
-    long get_average_damage(const army* enemy, unsigned char ranged_attack,
+    void doFireShield(long damage);
+    long getAverageDamage(const army* enemy, unsigned char ranged_attack,
                             long amount, unsigned char limit_damage,
                             long distance) const;               // 0x442780
     // The no-argument overload (0x4426f0, claimed in army.cpp): what
@@ -1776,7 +2001,7 @@ public:
     // ai_tactical's get_curse_value (0x43b370) is the located caller -
     // `mov ecx, enemy / call` with no stack arguments, and it divides
     // the cursed damage by the result.
-    double get_average_damage() const;                          // 0x4426f0
+    double getAverageDamage() const;                          // 0x4426f0
     // 0x443e30 (257 B, ret 0x10 - four stack args, `this` the
     // attacker): null target answers 0, then it runs the same
     // base-damage / attacker-reduction / hero-defense-factor chain
@@ -1785,14 +2010,14 @@ public:
     // get_attack_skill_value and get_defense_skill_value are its only
     // callers, both asking "what would a 100-creature stack of mine do
     // to this target?" - so the name below is a bootstrap invention.
-    long get_estimated_damage(const army* target, long amount,
+    long getEstimatedDamage(const army* target, long amount,
                               unsigned char ranged, long distance) const;
     // 0x445490, claimed in army.cpp. Fills the caller's vector with the
     // stacks a berserked `this` would be allowed to strike; ai_tactical's
     // get_berserk_value (0x43a400) is the located caller and passes a
     // freshly default-constructed local, so the callee is the only
     // writer. Const because that caller holds the stack as `const army*`.
-    void get_berserk_targets(std::vector<army*>& armies) const;
+    void getBerserkTargets(std::vector<army*>& armies) const;
     // 0x4456d0, claimed in army.cpp: the consumer of the vector above.
     // NON-const, and the body is what says so - it hands `this` to
     // combatManager::berserk_attack, whose first parameter is a plain
@@ -1806,21 +2031,21 @@ public:
     // 2026-08-20 so combatManager::PowEffect, whose death sweep is its
     // second decoded caller, can reach it without also taking
     // ResetRound and the round view's other twenty-six declarators.
-    void ProcessDeath(int bFadeElementals);
-    int get_second_grid_index() const;                          // 0x4466a0
-    int get_mirror_effect() const;                              // 0x4487f0
-    void consider_attack(const army* enemy, long value,
+    void processDeath(int bFadeElementals);
+    int getSecondGridIndex() const;                          // 0x4466a0
+    int getMirrorEffect() const;                              // 0x4487f0
+    void considerAttack(const army* enemy, long value,
                          long attack_distance);                 // 0x448840
-    long get_AI_target_time(long speed) const;                  // 0x448bd0
-    long get_total_combat_value(long lowest_attack,
+    long getAITargetTime(long speed) const;                  // 0x448bd0
+    long getTotalCombatValue(long lowest_attack,
                                 long lowest_defense) const;     // 0x442e60
-    double get_unit_combat_value(long lowest_attack, long lowest_defense,
+    double getUnitCombatValue(long lowest_attack, long lowest_defense,
                                  unsigned char ranged,
                                  const army* excluded) const;   // 0x442a50
     // Returns float in st(0): the stack's own 0x4a0 while
     // fireShieldRounds is set, else the Efreet Sultan's innate
     // constant, else the zero constant (0x443130).
-    float get_fire_shield_strength() const;                     // 0x443130
+    float getFireShieldStrength() const;                     // 0x443130
     // The controller/owner pair. combatSide (+0xf4) stores the OWNER's
     // side, so the body that APPLIES the hypnotize flip is the
     // controller and the raw read is the owner - the inversion this
@@ -1837,10 +2062,10 @@ public:
     // army.cpp's note above the pair. Do not re-litigate.
     // 0x442690 (57 B, ecx only): heroes[get_controlling_side()], the
     // hero currently DIRECTING this stack.
-    hero* get_controller() const;                               // 0x442690
+    hero* getController() const;                               // 0x442690
     // 0x4426d0 (20 B, ecx only): heroes[combatSide], the hero who
     // OWNS this stack regardless of who is directing it.
-    hero* get_owner() const;                                    // 0x4426d0
+    hero* getOwner() const;                                    // 0x4426d0
     // 0x43d8b0 / 0x43d9f0, LOCATED 2026-08-13 from combatManager::AddArmy
     // (0x47a100), which calls them back to back on the freshly claimed
     // slot. Init's SEVEN stack arguments are an exact arity match for the
@@ -1854,7 +2079,7 @@ public:
     // the selected stack in ecx and nothing on the stack, once per stack
     // as that stack comes up. Declared, not claimed - army.cpp owns the
     // body.
-    void new_turn();
+    void newTurn();
     // 0x43d5c0 (358 B) <- army::InitClean (dc 0x438e8, 200 B, 1 param =
     // `this` only; SH4->x86 ratio 1.79, in band). LoadArmies (0x463600)
     // calls it on each of the twenty slots it has just blanked, and the
@@ -1870,35 +2095,35 @@ public:
     // Header-inline declarations. Their exact positions in the LF_FIELDLIST
     // are audited separately; their bodies follow the class in Army.h source
     // order and must never be replaced by TU-specific score scaffolding.
-    unsigned char can_cast_resurrect() const;
-    int GetMorale(unsigned char apply_limits) const;
-    int GetLuck(unsigned char apply_limits) const;
-    int OffsetToFront(int direction) const;
-    void clear_AI_values();
-    unsigned char NeedToTurn(int direction) const;
-    unsigned char Is(unsigned attribute) const;
-    long get_AI_expected_damage() const;
-    const army* get_AI_target() const;
-    long get_AI_target_value() const;
-    long get_AI_target_time() const;
-    long get_AI_possible_targets() const;
-    int get_owning_side() const;
-    int get_controlling_side() const;
-    const char* GetName() const;
-    const char* GetName(int count) const;
-    long get_spell_time(int spell) const;
-    TSkillMastery get_spell_level(int spell) const;
-    unsigned char IsActive() const;
-    unsigned char is_in_aura() const;
-    unsigned char IsIncapacitated() const;
-    unsigned char can_retaliate(const army& attacker) const;
-    unsigned char cannot_attack() const;
-    long get_adjacent_hex(long direction) const;
-    long get_attack_direction(const army* enemy) const;
-    unsigned char is_in_area_highlight() const;
+    unsigned char canCastResurrect() const;
+    int getMorale(unsigned char apply_limits) const;
+    int getLuck(unsigned char apply_limits) const;
+    int offsetToFront(int direction) const;
+    void clearAIValues();
+    unsigned char needToTurn(int direction) const;
+    unsigned char is(unsigned attribute) const;
+    long getAIExpectedDamage() const;
+    const army* getAITarget() const;
+    long getAITargetValue() const;
+    long getAITargetTime() const;
+    long getAIPossibleTargets() const;
+    int getOwningSide() const;
+    int getControllingSide() const;
+    const char* getName() const;
+    const char* getName(int count) const;
+    long getSpellTime(int spell) const;
+    TSkillMastery getSpellLevel(int spell) const;
+    unsigned char isActive() const;
+    unsigned char isInAura() const;
+    unsigned char isIncapacitated() const;
+    unsigned char canRetaliate(const army& attacker) const;
+    unsigned char cannotAttack() const;
+    long getAdjacentHex(long direction) const;
+    long getAttackDirection(const army* enemy) const;
+    unsigned char isInAreaHighlight() const;
 
 private:
-    unsigned char LeavesNoBody() const;
+    unsigned char leavesNoBody() const;
 
     // LF_FIELDLIST 0x205b entries 237..249: the private data tail follows
     // every public and private method declaration.  The names at +0x4e8,
@@ -1906,17 +2131,17 @@ private:
     // the order and access are retained Dreamcast source facts.
     int morale;                           // +0x4e8, DC iMorale
     int luck;                             // +0x4ec, DC iLuck
-    unsigned char field_4f0;              // +0x4f0, DC reset_this_round
-    unsigned char is_area_effect_target;  // +0x4f1
-    std::vector<army*> bound_armies;      // +0x4f4
-    std::vector<army*> binders;           // +0x504
-    std::vector<army*> aura_clients;      // +0x514
-    std::vector<army*> aura_sources;      // +0x524
-    int AI_expected_damage;               // +0x534
-    army* AI_target;                      // +0x538
-    long AI_target_value;                 // +0x53c
-    long AI_target_time;                  // +0x540, DC AI_target_distance
-    unsigned AI_possible_targets;         // +0x544
+    unsigned char m_resetThisRound;              // +0x4f0, DC reset_this_round
+    unsigned char m_isAreaEffectTarget;  // +0x4f1
+    std::vector<army*> m_boundArmies;      // +0x4f4
+    std::vector<army*> m_binders;           // +0x504
+    std::vector<army*> m_auraClients;      // +0x514
+    std::vector<army*> m_auraSources;      // +0x524
+    int m_aiExpectedDamage;               // +0x534
+    army* m_aiTarget;                      // +0x538
+    long m_aiTargetValue;                 // +0x53c
+    long m_aiTargetTime;                  // +0x540, DC AI_target_distance
+    unsigned m_aiPossibleTargets;         // +0x544
 #endif  // superseded unordered/view-fragmented declarations
 };
 SIZE(army, 0x548);
@@ -1927,183 +2152,183 @@ SIZE(army, 0x548);
 // source-line run.
 
     // E:\gamedcs\Army.h:718
-inline bool army::can_cast_resurrect() const
+inline bool army::canCastResurrect() const
     {
-        return (creatureType == ARMY_CREATURE_ARCHANGEL
-                || creatureType == ARMY_CREATURE_PIT_LORD)
-               && sMonInfo.hasSpell > 0;
+        return (m_creatureType == ARMY_CREATURE_ARCHANGEL
+                || m_creatureType == ARMY_CREATURE_PIT_LORD)
+               && m_monInfo.m_hasSpell > 0;
     }
 
     // E:\gamedcs\Army.h:724
-inline int army::GetMorale(unsigned char apply_limits) const
+inline int army::getMorale(unsigned char applyLimits) const
     {
-        return apply_limits ? limit(-3, morale, 3) : morale;
+        return applyLimits ? limit(-3, m_morale, 3) : m_morale;
     }
 
     // E:\gamedcs\Army.h:730
-inline int army::GetLuck(unsigned char apply_limits) const
+inline int army::getLuck(unsigned char applyLimits) const
     {
-        return apply_limits ? limit(-3, luck, 3) : luck;
+        return applyLimits ? limit(-3, m_luck, 3) : m_luck;
     }
 
     // E:\gamedcs\Army.h:736
-inline int army::OffsetToFront(int direction) const
+inline int army::offsetToFront(int direction) const
     {
         if (direction >= 0 && direction <= 2)
             return 1;
         if (direction >= 3 && direction <= 5)
             return -1;
-        return facing ? 1 : -1;
+        return m_facing ? 1 : -1;
     }
 
     // E:\gamedcs\Army.h:752
-inline void army::clear_AI_values()
+inline void army::clearAIValues()
     {
-        AI_expected_damage = 0;
-        AI_target = 0;
-        AI_target_time = 0;
-        AI_target_value = 0;
+        m_aiExpectedDamage = 0;
+        m_aiTarget = 0;
+        m_aiTargetTime = 0;
+        m_aiTargetValue = 0;
     }
 
     // E:\gamedcs\Army.h:760
-inline bool army::NeedToTurn(int direction) const
+inline bool army::needToTurn(int direction) const
     {
-        return direction < 6 && (facing == 0) != (direction >= 3);
+        return direction < 6 && (m_facing == 0) != (direction >= 3);
     }
 
     // E:\gamedcs\Army.h:765
-inline bool army::Is(unsigned attribute) const
+inline bool army::is(unsigned attribute) const
     {
-        return (sMonInfo.attributes & attribute) != 0;
+        return (m_monInfo.m_attributes & attribute) != 0;
     }
 
     // E:\gamedcs\Army.h:770
-inline long army::get_AI_expected_damage() const
+inline long army::getAIExpectedDamage() const
     {
-        return AI_expected_damage;
+        return m_aiExpectedDamage;
     }
 
     // E:\gamedcs\Army.h:775
-inline const army* army::get_AI_target() const
+inline const army* army::getAITarget() const
     {
-        return AI_target;
+        return m_aiTarget;
     }
 
     // E:\gamedcs\Army.h:780
-inline long army::get_AI_target_value() const
+inline long army::getAITargetValue() const
     {
-        return AI_target_value;
+        return m_aiTargetValue;
     }
 
     // E:\gamedcs\Army.h:785
-inline long army::get_AI_target_time() const
+inline long army::getAITargetTime() const
     {
-        return get_AI_target_time(GetSpeed());
+        return getAITargetTime(getSpeed());
     }
 
     // E:\gamedcs\Army.h:790
-inline long army::get_AI_possible_targets() const
+inline long army::getAIPossibleTargets() const
     {
-        return AI_possible_targets;
+        return m_aiPossibleTargets;
     }
 
     // E:\gamedcs\Army.h:795
-inline int army::get_owning_side() const
+inline int army::getOwningSide() const
     {
-        return combatSide;
+        return m_combatSide;
     }
 
     // E:\gamedcs\Army.h:800
-inline int army::get_controlling_side() const
+inline int army::getControllingSide() const
     {
-        if (spellInfluence[60])
-            return 1 - get_owning_side();
-        return get_owning_side();
+        if (m_spellInfluence[60])
+            return 1 - getOwningSide();
+        return getOwningSide();
     }
 
     // E:\gamedcs\Army.h:810
-inline const char* army::GetName() const
+inline const char* army::getName() const
     {
-        return GetArmyName(creatureType, numTroops);
+        return getArmyName(m_creatureType, m_numTroops);
     }
 
     // E:\gamedcs\Army.h:815
-inline const char* army::GetName(int count) const
+inline const char* army::getName(int count) const
     {
-        return GetArmyName(creatureType, count);
+        return getArmyName(m_creatureType, count);
     }
 
     // SpellID is still represented by its retail-width int domain here.
     // E:\gamedcs\Army.h:820
-inline long army::get_spell_time(int spell) const
+inline long army::getSpellTime(int spell) const
     {
-        return spellInfluence[spell];
+        return m_spellInfluence[spell];
     }
 
     // E:\gamedcs\Army.h:825
-inline TSkillMastery army::get_spell_level(int spell) const
+inline TSkillMastery army::getSpellLevel(int spell) const
     {
-        return TSkillMastery(spell_level[spell]);
+        return TSkillMastery(m_spellLevel[spell]);
     }
 
     // E:\gamedcs\Army.h:830
-inline bool army::IsActive() const
+inline bool army::isActive() const
     {
-        return creatureType >= 0 && numTroops > 0;
+        return m_creatureType >= 0 && m_numTroops > 0;
     }
 
     // E:\gamedcs\Army.h:835
-inline bool army::is_in_aura() const
+inline bool army::isInAura() const
     {
-        return aura_sources.size() > 0;
+        return m_auraSources.size() > 0;
     }
 
     // E:\gamedcs\Army.h:840
-inline bool army::IsIncapacitated() const
+inline bool army::isIncapacitated() const
     {
-        return spellInfluence[62] || spellInfluence[70]
-               || spellInfluence[74];
+        return m_spellInfluence[62] || m_spellInfluence[70]
+               || m_spellInfluence[74];
     }
 
     // E:\gamedcs\Army.h:847
-inline bool army::can_retaliate(const army& attacker) const
+inline bool army::canRetaliate(const army& attacker) const
     {
-        return !(attacker.Is(1u << 16)) && !spellInfluence[70]
-               && retaliationCount > 0;
+        return !(attacker.is(1u << 16)) && !m_spellInfluence[70]
+               && m_retaliationCount > 0;
     }
 
     // E:\gamedcs\Army.h:855
 // Complete's inlined copy in consider_single_enchantment keeps the recovered
 // incapacity/attribute prefix but directly contradicts Dreamcast's final
 // Psychic/Magic Elemental pair: retail compares First Aid Tent and Ammo Cart.
-inline bool army::cannot_attack() const
+inline bool army::cannotAttack() const
     {
-        return IsIncapacitated() || Is(1u << 21)
-               || creatureType == ARMY_CREATURE_FIRST_AID_TENT
-               || creatureType == ARMY_CREATURE_AMMO_CART;
+        return isIncapacitated() || is(1u << 21)
+               || m_creatureType == ARMY_CREATURE_FIRST_AID_TENT
+               || m_creatureType == ARMY_CREATURE_AMMO_CART;
     }
 
     // E:\gamedcs\Army.h:864
-inline long army::get_adjacent_hex(long direction) const
+inline long army::getAdjacentHex(long direction) const
     {
-        return get_adjacent_hex(gridIndex, direction);
+        return getAdjacentHex(m_gridIndex, direction);
     }
 
     // E:\gamedcs\Army.h:869
-inline long army::get_attack_direction(const army* enemy) const
+inline long army::getAttackDirection(const army* enemy) const
     {
-        return get_attack_direction(gridIndex, enemy);
+        return getAttackDirection(m_gridIndex, enemy);
     }
 
     // E:\gamedcs\Army.h:875
-inline bool army::LeavesNoBody() const
+inline bool army::leavesNoBody() const
     {
-        return Is((1u << 22) | (1u << 28));
+        return is((1u << 22) | (1u << 28));
     }
     // E:\gamedcs\Army.h:881
-inline bool army::is_in_area_highlight() const
+inline bool army::isInAreaHighlight() const
     {
-        return is_area_effect_target;
+        return m_isAreaEffectTarget;
     }
 // The WIDE-creature direction ring, byte-read from the hash-verified
 // image and self-proving: the two tables are exact mutual inverses
@@ -2117,8 +2342,10 @@ inline bool army::is_in_area_highlight() const
 // to say where. Sliced by army::get_clockwise / get_counter_clockwise,
 // whose only located expansion is get_multi_head_directions
 // (0x448ab0). Names are bootstrap inventions - no roster attests them.
-DATA(0x00660878) extern const long akWideDirectionRingIndex[8];
-DATA(0x00660898) extern const long akWideDirectionRingOrder[8];
+// Before normalization: akWideDirectionRingIndex.
+// Before normalization: akWideDirectionRingOrder.
+DATA(0x00660878) extern const long g_wideDirectionRingIndex[8];
+DATA(0x00660898) extern const long g_wideDirectionRingOrder[8];
 
 // The five globals a walk publishes for the redraw, and their NAMES ARE
 // THE DREAMCAST LITERAL POOL'S - army::Walk's own SH4 body (dc 0x45254)
@@ -2129,11 +2356,16 @@ DATA(0x00660898) extern const long akWideDirectionRingOrder[8];
 // one-hex one; all four are reset to -1 once the move has been placed.
 // They sit immediately below akWideDirectionRingIndex at 0x660878,
 // which is the four dwords 0x660868..0x660874 exactly.
-DATA(0x00660868) extern int giWalkingFrom;
-DATA(0x0066086c) extern int giWalkingFrom2;
-DATA(0x00660870) extern int giWalkingTo;
-DATA(0x00660874) extern int giWalkingTo2;
-DATA(0x00693858) extern int giWalkingYMod;
+// Before normalization: giWalkingFrom.
+// Before normalization: giWalkingFrom2.
+DATA(0x00660868) extern int g_walkingFrom;
+// Before normalization: giWalkingTo.
+DATA(0x0066086c) extern int g_walkingFrom2;
+// Before normalization: giWalkingTo2.
+DATA(0x00660870) extern int g_walkingTo;
+// Before normalization: giWalkingYMod.
+DATA(0x00660874) extern int g_walkingTo2;
+DATA(0x00693858) extern int g_walkingYMod;
 
 // The caliph (creature-cast) spell predicates, both /Gr free functions
 // taking their two arguments in ECX/EDX.
@@ -2157,7 +2389,8 @@ DATA(0x00693858) extern int giWalkingYMod;
 // army.h does not include (and must not start to - the include-set
 // wall this header already routes around for TCreatureType). The
 // class models creatureType the same way, as a plain int.
-unsigned char is_valid_caliph_spell(int spell, const army* target);
+// Before normalization (function): is_valid_caliph_spell.
+unsigned char isValidCaliphSpell(int spell, const army* target);
 // 0x447a80 (1065 B), the worker is_valid_caliph_spell tail-jumps to
 // and army::can_cast_spell (0x4476c0) also calls. It opens by
 // rejecting a target that already carries the spell
@@ -2166,7 +2399,8 @@ unsigned char is_valid_caliph_spell(int spell, const army* target);
 // is_valid_caliph_spell and can_cast_spell - so it is a retail-only
 // factoring and the NAME BELOW IS A BOOTSTRAP INVENTION, same class as
 // get_estimated_damage. Declared so the wrapper can call it; not claimed.
-unsigned char spell_is_valid_on_target(int spell, const army* target);
+// Before normalization (function): spell_is_valid_on_target.
+unsigned char spellIsValidOnTarget(int spell, const army* target);
 
 // ====================================================================
 // THE CODEVIEW BLOCK BELOW IS ROSTER *TEXT*, AND ROSTER TEXT IS LOSSY.

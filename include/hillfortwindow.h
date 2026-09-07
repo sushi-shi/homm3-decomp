@@ -10,7 +10,8 @@
 
 class message;
 
-extern const float afUpgradeCostFactor[7];
+// Before normalization: afUpgradeCostFactor.
+extern const float g_afUpgradeCostFactor[7];
 
 // Retail vtable 0x63eb68 has heroWindow's nine-slot shape; the constructor
 // invokes heroWindow directly and installs that derived vptr.
@@ -122,15 +123,24 @@ public:
     // are the creature type, its count, its dwelling level and the
     // tri-state the two icon tables index.
     struct TUpgradeSlot {
-        char szCount[10];         // +0x00
-        char szGoldCost[10];      // +0x0a
-        char szResourceCost[12];  // +0x14
-        long cost[7];             // +0x20
-        int resourceIndex;        // +0x3c
-        int type;                 // +0x40 (TCreatureType domain)
-        int count;                // +0x44
-        int level;                // +0x48
-        int state;                // +0x4c
+        // Before normalization: szCount.
+        char m_countText[10];         // +0x00
+        // Before normalization: szGoldCost.
+        char m_goldCost[10];      // +0x0a
+        // Before normalization: szResourceCost.
+        char m_resourceCost[12];  // +0x14
+        // Before normalization: cost.
+        long m_cost[7];             // +0x20
+        // Before normalization: resourceIndex.
+        int m_resourceIndex;        // +0x3c
+        // Before normalization: type.
+        int m_type;                 // +0x40 (TCreatureType domain)
+        // Before normalization: count.
+        int m_count;                // +0x44
+        // Before normalization: level.
+        int m_level;                // +0x48
+        // Before normalization: state.
+        int m_state;                // +0x4c
     };
 
     // slot[].state and UpgradeAllButtonState share this domain: it is
@@ -144,21 +154,31 @@ public:
 
     THillFortWindow();
     virtual ~THillFortWindow();
-    void DoModal();
+    // Before normalization (function): THillFortWindow::DoModal.
+    void doModal();
 
-    TUpgradeSlot slot[armyGroup::ARMY_GROUP_SLOT_COUNT];   // +0x4c
-    long totalCost[armyGroup::ARMY_GROUP_SLOT_COUNT];      // +0x27c
-    int UpgradeAllButtonState;                             // +0x298
-    widget* RolloverWidget;                                // +0x29c
+    // Before normalization: slot.
+    TUpgradeSlot m_slot[armyGroup::ARMY_GROUP_SLOT_COUNT];   // +0x4c
+    // Before normalization: totalCost.
+    long m_totalCost[armyGroup::ARMY_GROUP_SLOT_COUNT];      // +0x27c
+    // Before normalization: UpgradeAllButtonState.
+    int m_upgradeAllButtonState;                             // +0x298
+    // Before normalization: RolloverWidget.
+    widget* m_rolloverWidget;                                // +0x29c
 
-    void Recalculate(unsigned char drawDimmedButtons);
-    void UpgradeSlot(int which, unsigned char show_message);
-    void HandleClick(message& msg);
+    // Before normalization (function): THillFortWindow::Recalculate.
+    void recalculate(unsigned char drawDimmedButtons);
+    // Before normalization (function): THillFortWindow::UpgradeSlot.
+    // Before normalization (locals): show_message.
+    void upgradeSlot(int which, unsigned char showMessage);
+    // Before normalization (function): THillFortWindow::HandleClick.
+    void handleClick(message& msg);
 };
 SIZE(THillFortWindow, 0x2a0);
 
 // Retail /Gr passes the message by reference in ECX, matching DoDialog.
-int HillFortWindowHandler(message& msg);
+// Before normalization (function): HillFortWindowHandler.
+int hillFortWindowHandler(message& msg);
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\hillfortwindow.cpp:192, dc 0xd6bd4) bool CanAfford(const long* cost, const long* playerRes);

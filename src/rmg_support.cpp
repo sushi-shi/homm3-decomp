@@ -13,16 +13,16 @@
 // 12-byte position layout.
 VA(0x005355C0, 0x1A)  // retail RMG caller cluster; Complete-only helper
 TRmgMapPosition::TRmgMapPosition(int newX, int newY, int newZ)
-    : x(newX), y(newY), z(newZ)
+    : m_x(newX), m_y(newY), m_z(newZ)
 {
 }
 
 // The two-dimensional accessor is retained by the RMG search initializers.
 // The 0x30 scale independently proves TRmgMapItem's stride.
 VA(0x00546990, 0x1E)  // retail RMG caller cluster; Complete-only helper
-TRmgMapItem* type_random_map::GetMapItem(int x, int y)
+TRmgMapItem* type_random_map::getMapItem(int x, int y)
 {
-    return mapItems + y * mapWidth + x;
+    return m_mapItems + y * m_mapWidth + x;
 }
 
 // The river painter deliberately inherits the generic line walker as its
@@ -49,9 +49,9 @@ TRmgRiverPainter::TRmgRiverPainter(
 // double, then truncates sqrt's result. The name is provisional; this
 // Complete geometry helper has no Dreamcast counterpart.
 VA(0x005FCEB0, 0x39) // anchor-callee 0x53c0d1; thiscall; retail-only
-int TRmgVector::Length() const
+int TRmgVector::length() const
 {
-    return static_cast<int>(sqrt(static_cast<double>(x * x + y * y)));
+    return static_cast<int>(sqrt(static_cast<double>(m_x * m_x + m_y * m_y)));
 }
 
 // The subdivision owns every allocated half-edge and its pointer vector.
@@ -59,6 +59,6 @@ int TRmgVector::Length() const
 VA(0x005FD330, 0x58) // anchor-callee 0x53e685; thiscall, ret 0
 TRmgVoronoi::~TRmgVoronoi()
 {
-    for (int edge = 0; edge < edges.size(); ++edge)
-        delete edges[edge];
+    for (int edge = 0; edge < m_edges.size(); ++edge)
+        delete m_edges[edge];
 }

@@ -12,13 +12,14 @@
 // (CDPlayPlayer, its twin, is complete in dxplay.h).
 class CDPlayGroup {
 public:
-    CDPlayGroup(char* sName, unsigned long dpid)
+    // Before normalization (locals): sName.
+    CDPlayGroup(char* name, unsigned long dpid)
     {
-        strcpy(m_sName, sName);
+        strcpy(m_name, name);
         m_dpid = dpid;
     }
 
-    char m_sName[0x100];      // +0x00
+    char m_name[0x100];      // +0x00
     unsigned long m_dpid;     // +0x100
 };
 
@@ -29,22 +30,24 @@ public:
 // TU (only forward-declared in the shared header).
 class CDPlayAddressElement {
 public:
-    CDPlayAddressElement(const GUID* lpGuid, const void* pData,
+    // Before normalization (locals): lpGuid, pData.
+    CDPlayAddressElement(const GUID* guid, const void* data,
         unsigned long dataSize)
     {
-        m_guid = *lpGuid;
+        m_guid = *guid;
         m_dataSize = dataSize;
-        m_pData = new char[dataSize];
-        memcpy(m_pData, pData, m_dataSize);
+        m_data = new char[dataSize];
+        memcpy(m_data, data, m_dataSize);
     }
 
     ~CDPlayAddressElement()
     {
-        delete [] m_pData;
+        delete [] m_data;
     }
 
     GUID m_guid;              // +0x00
-    char* m_pData;            // +0x10
+    // Before normalization: m_pData.
+    char* m_data;            // +0x10
     unsigned long m_dataSize; // +0x14
 };
 
@@ -132,18 +135,23 @@ enum EDPlaySysMsgType {
 
 // The common message prefix: every DPMSG_* system message leads with dwType.
 struct DPMSG_GENERIC {
-    unsigned long dwType;
+    // Before normalization: dwType.
+    unsigned long m_type;
 };
 
 // DirectPlay value structures consumed only by this TU's wrapper bodies.
 // DPCAPS lives in dplaycaps.h because the multiplayer browser consumes it too;
 // DPCHAT stays private and its 0xc extent is fixed by SendChat.
 struct DPCHAT {
-    unsigned long dwSize;             // +0x00
-    unsigned long dwFlags;            // +0x04
+    // Before normalization: dwSize.
+    unsigned long m_size;             // +0x00
+    // Before normalization: dwFlags.
+    unsigned long m_flags;            // +0x04
     union {
-        unsigned short* lpszMessage;  // +0x08
-        char* lpszMessageA;
+        // Before normalization: lpszMessage.
+        unsigned short* m_message;  // +0x08
+        // Before normalization: lpszMessageA.
+        char* m_messageA;
     };
 };
 SIZE(DPCHAT, 0x0c);
@@ -152,17 +160,28 @@ SIZE(DPCHAT, 0x0c);
 // by RegisterApp's own store; the executable path at +0x34 is the game's own
 // trailing field beyond the stock lobby descriptor.
 struct DPAPPLICATIONDESC {
-    unsigned long dwSize;              // +0x00
-    unsigned long dwFlags;            // +0x04
-    char* lpszApplicationNameA;       // +0x08
-    GUID guidApplication;             // +0x0c
-    char* lpszFilenameA;              // +0x1c
-    char* lpszCommandLineA;           // +0x20
-    char* lpszPathA;                  // +0x24
-    char* lpszCurrentDirectoryA;      // +0x28
-    char* lpszDescriptionA;           // +0x2c
-    unsigned short* lpszDescriptionW; // +0x30
-    char* lpszExecutableA;            // +0x34
+    // Before normalization: dwSize.
+    unsigned long m_size;              // +0x00
+    // Before normalization: dwFlags.
+    unsigned long m_flags;            // +0x04
+    // Before normalization: lpszApplicationNameA.
+    char* m_applicationNameA;       // +0x08
+    // Before normalization: guidApplication.
+    GUID m_guidApplication;             // +0x0c
+    // Before normalization: lpszFilenameA.
+    char* m_filenameA;              // +0x1c
+    // Before normalization: lpszCommandLineA.
+    char* m_commandLineA;           // +0x20
+    // Before normalization: lpszPathA.
+    char* m_pathA;                  // +0x24
+    // Before normalization: lpszCurrentDirectoryA.
+    char* m_currentDirectoryA;      // +0x28
+    // Before normalization: lpszDescriptionA.
+    char* m_descriptionA;           // +0x2c
+    // Before normalization: lpszDescriptionW.
+    unsigned short* m_descriptionW; // +0x30
+    // Before normalization: lpszExecutableA.
+    char* m_executableA;            // +0x34
 };
 SIZE(DPAPPLICATIONDESC, 0x38);
 
@@ -171,46 +190,63 @@ SIZE(DPAPPLICATIONDESC, 0x38);
 // address matters to the emitted code (the reloc immediate is masked). The
 // null GUID doubles as the unset-application-guid sentinel HostSession and the
 // base ctor compare against.
-DATA(0x00643d58) static const GUID s_guidNull =
+// Before normalization: s_guidNull.
+DATA(0x00643d58) static const GUID g_guidNull =
     { 0x00000000, 0x0000, 0x0000, { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } };
-DATA(0x00643d78) static const GUID s_dpaidINet =
+// Before normalization: s_dpaidINet.
+DATA(0x00643d78) static const GUID g_dpaidINet =
     { 0xC4A54DA0, 0xE0AF, 0x11CF, { 0x9C, 0x4E, 0x00, 0xA0, 0xC9, 0x05, 0x42, 0x5E } };
-DATA(0x00643db8) static const GUID s_clsidDirectPlayLobby =
+// Before normalization: s_clsidDirectPlayLobby.
+DATA(0x00643db8) static const GUID g_clsidDirectPlayLobby =
     { 0x2FE8F810, 0xB2A5, 0x11D0, { 0xA7, 0x87, 0x00, 0x00, 0xF8, 0x03, 0xAB, 0xFC } };
-DATA(0x00643dc8) static const GUID s_iidDirectPlayLobby3A =
+// Before normalization: s_iidDirectPlayLobby3A.
+DATA(0x00643dc8) static const GUID g_iidDirectPlayLobby3A =
     { 0x2DB72491, 0x652C, 0x11D1, { 0xA7, 0xA8, 0x00, 0x00, 0xF8, 0x03, 0xAB, 0xFC } };
-DATA(0x00643e18) static const GUID s_clsidDirectPlay =
+// Before normalization: s_clsidDirectPlay.
+DATA(0x00643e18) static const GUID g_clsidDirectPlay =
     { 0xD1EB6D20, 0x8923, 0x11D0, { 0x9D, 0x97, 0x00, 0xA0, 0xC9, 0x0A, 0x43, 0xCB } };
-DATA(0x00643e28) static const GUID s_iidDirectPlay4A =
+// Before normalization: s_iidDirectPlay4A.
+DATA(0x00643e28) static const GUID g_iidDirectPlay4A =
     { 0x0AB1C531, 0x4745, 0x11D1, { 0xA7, 0xA1, 0x00, 0x00, 0xF8, 0x03, 0xAB, 0xFC } };
 
 // The DPAID address-element data-type tags and the four service-provider GUIDs
 // the Create*Connection compound-address builders reference. Values read from the
 // same .rdata pool; DATA-claimed so the reloc names pair.
-DATA(0x00643d68) static const GUID s_dpaidComPort =
+// Before normalization: s_dpaidComPort.
+DATA(0x00643d68) static const GUID g_dpaidComPort =
     { 0xF2F0CE00, 0xE0AF, 0x11CF, { 0x9C, 0x4E, 0x00, 0xA0, 0xC9, 0x05, 0x42, 0x5E } };
-DATA(0x00643d88) static const GUID s_dpaidModem =
+// Before normalization: s_dpaidModem.
+DATA(0x00643d88) static const GUID g_dpaidModem =
     { 0xF6DCC200, 0xA2FE, 0x11D0, { 0x9C, 0x4F, 0x00, 0xA0, 0xC9, 0x05, 0x42, 0x5E } };
-DATA(0x00643d98) static const GUID s_dpaidPhone =
+// Before normalization: s_dpaidPhone.
+DATA(0x00643d98) static const GUID g_dpaidPhone =
     { 0x78EC89A0, 0xE0AF, 0x11CF, { 0x9C, 0x4E, 0x00, 0xA0, 0xC9, 0x05, 0x42, 0x5E } };
-DATA(0x00643da8) static const GUID s_dpaidServiceProvider =
+// Before normalization: s_dpaidServiceProvider.
+DATA(0x00643da8) static const GUID g_dpaidServiceProvider =
     { 0x07D916C0, 0xE0AF, 0x11CF, { 0x9C, 0x4E, 0x00, 0xA0, 0xC9, 0x05, 0x42, 0x5E } };
-DATA(0x00643dd8) static const GUID s_spModem =
+// Before normalization: s_spModem.
+DATA(0x00643dd8) static const GUID g_spModem =
     { 0x44EAA760, 0xCB68, 0x11CF, { 0x9C, 0x4E, 0x00, 0xA0, 0xC9, 0x05, 0x42, 0x5E } };
-DATA(0x00643de8) static const GUID s_spSerial =
+// Before normalization: s_spSerial.
+DATA(0x00643de8) static const GUID g_spSerial =
     { 0x0F1D6860, 0x88D9, 0x11CF, { 0x9C, 0x4E, 0x00, 0xA0, 0xC9, 0x05, 0x42, 0x5E } };
-DATA(0x00643df8) static const GUID s_spTCPIP =
+// Before normalization: s_spTCPIP.
+DATA(0x00643df8) static const GUID g_spTcpip =
     { 0x36E95EE0, 0x8577, 0x11CF, { 0x96, 0x0C, 0x00, 0x80, 0xC7, 0x53, 0x4E, 0x82 } };
-DATA(0x00643e08) static const GUID s_spIPX =
+// Before normalization: s_spIPX.
+DATA(0x00643e08) static const GUID g_spIpx =
     { 0x685BC400, 0x9D2C, 0x11CF, { 0xA9, 0xCD, 0x00, 0xAA, 0x00, 0x68, 0x86, 0xE3 } };
 
 // The lobby compound-address builder consumes an array of these tag/size/value
 // triples; CreateCompoundAddress packs them into an SP address blob.
 struct _DPCOMPORTADDRESS;
 struct DPCOMPOUNDADDRESSELEMENT {
-    GUID guidDataType;         // +0x00
-    unsigned long dwDataSize;  // +0x10
-    const void* lpData;        // +0x14
+    // Before normalization: guidDataType.
+    GUID m_guidDataType;         // +0x00
+    // Before normalization: dwDataSize.
+    unsigned long m_dataSize;  // +0x10
+    // Before normalization: lpData.
+    const void* m_data;        // +0x14
 };
 SIZE(DPCOMPOUNDADDRESSELEMENT, 0x18);
 
@@ -234,52 +270,88 @@ struct IDirectPlay4A {
     virtual unsigned long __stdcall Release() = 0;                                           // 0x08
     virtual long __stdcall AddPlayerToGroup(unsigned long idGroup, unsigned long idPlayer) = 0; // 0x0c
     virtual long __stdcall Close() = 0;                                                      // 0x10
-    virtual long __stdcall CreateGroup(unsigned long* lpidGroup, DPNAME* lpGroupName, void* lpData, unsigned long dwDataSize, unsigned long dwFlags) = 0; // 0x14
-    virtual long __stdcall CreatePlayer(unsigned long* lpidPlayer, DPNAME* lpPlayerName, void* hEvent, void* lpData, unsigned long dwDataSize, unsigned long dwFlags) = 0; // 0x18
+    // Before normalization (locals): lpGroupName, lpData, dwDataSize, dwFlags.
+    virtual long __stdcall CreateGroup(unsigned long* lpidGroup, DPNAME* groupName, void* data, unsigned long dataSize, unsigned long flags) = 0; // 0x14
+    // Before normalization (locals): lpPlayerName, hEvent, lpData, dwDataSize, dwFlags.
+    virtual long __stdcall CreatePlayer(unsigned long* lpidPlayer, DPNAME* playerName, void* event, void* data, unsigned long dataSize, unsigned long flags) = 0; // 0x18
     virtual long __stdcall DeletePlayerFromGroup(unsigned long idGroup, unsigned long idPlayer) = 0; // 0x1c
     virtual long __stdcall DestroyGroup(unsigned long idGroup) = 0;                          // 0x20
     virtual long __stdcall DestroyPlayer(unsigned long idPlayer) = 0;                        // 0x24
-    virtual long __stdcall EnumGroupPlayers(unsigned long idGroup, GUID* lpguidInstance, DPENUMPLAYERSCB2 lpEnumCallback, void* lpContext, unsigned long dwFlags) = 0; // 0x28
-    virtual long __stdcall EnumGroups(GUID* lpguidInstance, DPENUMPLAYERSCB2 lpEnumCallback, void* lpContext, unsigned long dwFlags) = 0; // 0x2c
-    virtual long __stdcall EnumPlayers(GUID* lpguidInstance, DPENUMPLAYERSCB2 lpEnumCallback, void* lpContext, unsigned long dwFlags) = 0; // 0x30
-    virtual long __stdcall EnumSessions(DPSESSIONDESC2* lpsd, unsigned long dwTimeout, DPENUMSESSIONSCB2 lpEnumCallback, void* lpContext, unsigned long dwFlags) = 0; // 0x34
-    virtual long __stdcall GetCaps(DPCAPS* lpDPCaps, unsigned long dwFlags) = 0;             // 0x38
-    virtual long __stdcall GetGroupData(unsigned long idGroup, void* lpData, unsigned long* lpdwDataSize, unsigned long dwFlags) = 0; // 0x3c
-    virtual long __stdcall GetGroupName(unsigned long idGroup, void* lpData, unsigned long* lpdwDataSize) = 0; // 0x40
+    // Before normalization (locals): lpEnumCallback, lpContext, dwFlags.
+    virtual long __stdcall EnumGroupPlayers(unsigned long idGroup, GUID* lpguidInstance, DPENUMPLAYERSCB2 enumCallback, void* context, unsigned long flags) = 0; // 0x28
+    // Before normalization (locals): lpEnumCallback, lpContext, dwFlags.
+    virtual long __stdcall EnumGroups(GUID* lpguidInstance, DPENUMPLAYERSCB2 enumCallback, void* context, unsigned long flags) = 0; // 0x2c
+    // Before normalization (locals): lpEnumCallback, lpContext, dwFlags.
+    virtual long __stdcall EnumPlayers(GUID* lpguidInstance, DPENUMPLAYERSCB2 enumCallback, void* context, unsigned long flags) = 0; // 0x30
+    // Before normalization (locals): dwTimeout, lpEnumCallback, lpContext, dwFlags.
+    virtual long __stdcall EnumSessions(DPSESSIONDESC2* lpsd, unsigned long timeout, DPENUMSESSIONSCB2 enumCallback, void* context, unsigned long flags) = 0; // 0x34
+    // Before normalization (locals): lpDPCaps, dwFlags.
+    virtual long __stdcall GetCaps(DPCAPS* dpCaps, unsigned long flags) = 0;             // 0x38
+    // Before normalization (locals): lpData, dwFlags.
+    virtual long __stdcall GetGroupData(unsigned long idGroup, void* data, unsigned long* lpdwDataSize, unsigned long flags) = 0; // 0x3c
+    // Before normalization (locals): lpData.
+    virtual long __stdcall GetGroupName(unsigned long idGroup, void* data, unsigned long* lpdwDataSize) = 0; // 0x40
     virtual long __stdcall GetMessageCount(unsigned long idPlayer, unsigned long* lpdwCount) = 0; // 0x44
-    virtual long __stdcall GetPlayerAddress(unsigned long idPlayer, void* lpData, unsigned long* lpdwDataSize) = 0; // 0x48
-    virtual long __stdcall GetPlayerCaps(unsigned long idPlayer, DPCAPS* lpPlayerCaps, unsigned long dwFlags) = 0; // 0x4c
-    virtual long __stdcall GetPlayerData(unsigned long idPlayer, void* lpData, unsigned long* lpdwDataSize, unsigned long dwFlags) = 0; // 0x50
-    virtual long __stdcall GetPlayerName(unsigned long idPlayer, void* lpData, unsigned long* lpdwDataSize) = 0; // 0x54
-    virtual long __stdcall GetSessionDesc(void* lpData, unsigned long* lpdwDataSize) = 0;    // 0x58
-    virtual long __stdcall Initialize(GUID* lpGUID) = 0;                                     // 0x5c
-    virtual long __stdcall Open(DPSESSIONDESC2* lpsd, unsigned long dwFlags) = 0;            // 0x60
-    virtual long __stdcall Receive(unsigned long* lpidFrom, unsigned long* lpidTo, unsigned long dwFlags, void* lpData, unsigned long* lpdwDataSize) = 0; // 0x64
-    virtual long __stdcall Send(unsigned long idFrom, unsigned long idTo, unsigned long dwFlags, void* lpData, unsigned long dwDataSize) = 0; // 0x68
-    virtual long __stdcall SetGroupData(unsigned long idGroup, void* lpData, unsigned long dwDataSize, unsigned long dwFlags) = 0; // 0x6c
-    virtual long __stdcall SetGroupName(unsigned long idGroup, DPNAME* lpGroupName, unsigned long dwFlags) = 0; // 0x70
-    virtual long __stdcall SetPlayerData(unsigned long idPlayer, void* lpData, unsigned long dwDataSize, unsigned long dwFlags) = 0; // 0x74
-    virtual long __stdcall SetPlayerName(unsigned long idPlayer, DPNAME* lpPlayerName, unsigned long dwFlags) = 0; // 0x78
-    virtual long __stdcall SetSessionDesc(DPSESSIONDESC2* lpsd, unsigned long dwFlags) = 0;  // 0x7c
+    // Before normalization (locals): lpData.
+    virtual long __stdcall GetPlayerAddress(unsigned long idPlayer, void* data, unsigned long* lpdwDataSize) = 0; // 0x48
+    // Before normalization (locals): lpPlayerCaps, dwFlags.
+    virtual long __stdcall GetPlayerCaps(unsigned long idPlayer, DPCAPS* playerCaps, unsigned long flags) = 0; // 0x4c
+    // Before normalization (locals): lpData, dwFlags.
+    virtual long __stdcall GetPlayerData(unsigned long idPlayer, void* data, unsigned long* lpdwDataSize, unsigned long flags) = 0; // 0x50
+    // Before normalization (locals): lpData.
+    virtual long __stdcall GetPlayerName(unsigned long idPlayer, void* data, unsigned long* lpdwDataSize) = 0; // 0x54
+    // Before normalization (locals): lpData.
+    virtual long __stdcall GetSessionDesc(void* data, unsigned long* lpdwDataSize) = 0;    // 0x58
+    // Before normalization (locals): lpGUID.
+    virtual long __stdcall Initialize(GUID* guid) = 0;                                     // 0x5c
+    // Before normalization (locals): dwFlags.
+    virtual long __stdcall Open(DPSESSIONDESC2* lpsd, unsigned long flags) = 0;            // 0x60
+    // Before normalization (locals): dwFlags, lpData.
+    virtual long __stdcall Receive(unsigned long* lpidFrom, unsigned long* lpidTo, unsigned long flags, void* data, unsigned long* lpdwDataSize) = 0; // 0x64
+    // Before normalization (locals): dwFlags, lpData, dwDataSize.
+    virtual long __stdcall Send(unsigned long idFrom, unsigned long idTo, unsigned long flags, void* data, unsigned long dataSize) = 0; // 0x68
+    // Before normalization (locals): lpData, dwDataSize, dwFlags.
+    virtual long __stdcall SetGroupData(unsigned long idGroup, void* data, unsigned long dataSize, unsigned long flags) = 0; // 0x6c
+    // Before normalization (locals): lpGroupName, dwFlags.
+    virtual long __stdcall SetGroupName(unsigned long idGroup, DPNAME* groupName, unsigned long flags) = 0; // 0x70
+    // Before normalization (locals): lpData, dwDataSize, dwFlags.
+    virtual long __stdcall SetPlayerData(unsigned long idPlayer, void* data, unsigned long dataSize, unsigned long flags) = 0; // 0x74
+    // Before normalization (locals): lpPlayerName, dwFlags.
+    virtual long __stdcall SetPlayerName(unsigned long idPlayer, DPNAME* playerName, unsigned long flags) = 0; // 0x78
+    // Before normalization (locals): dwFlags.
+    virtual long __stdcall SetSessionDesc(DPSESSIONDESC2* lpsd, unsigned long flags) = 0;  // 0x7c
     virtual long __stdcall AddGroupToGroup(unsigned long idParentGroup, unsigned long idGroup) = 0; // 0x80
-    virtual long __stdcall CreateGroupInGroup(unsigned long idParentGroup, unsigned long* lpidGroup, DPNAME* lpGroupName, void* lpData, unsigned long dwDataSize, unsigned long dwFlags) = 0; // 0x84
+    // Before normalization (locals): lpGroupName, lpData, dwDataSize, dwFlags.
+    virtual long __stdcall CreateGroupInGroup(unsigned long idParentGroup, unsigned long* lpidGroup, DPNAME* groupName, void* data, unsigned long dataSize, unsigned long flags) = 0; // 0x84
     virtual long __stdcall DeleteGroupFromGroup(unsigned long idParentGroup, unsigned long idGroup) = 0; // 0x88
-    virtual long __stdcall EnumConnections(const GUID* lpguidApplication, DPENUMCONNECTIONSCB lpEnumCallback, void* lpContext, unsigned long dwFlags) = 0; // 0x8c
-    virtual long __stdcall EnumGroupsInGroup(unsigned long idGroup, GUID* lpguidInstance, DPENUMPLAYERSCB2 lpEnumCallback, void* lpContext, unsigned long dwFlags) = 0; // 0x90
-    virtual long __stdcall GetGroupConnectionSettings(unsigned long dwFlags, unsigned long idGroup, void* lpData, unsigned long* lpdwDataSize) = 0; // 0x94
-    virtual long __stdcall InitializeConnection(void* lpConnection, unsigned long dwFlags) = 0; // 0x98
-    virtual long __stdcall SecureOpen(const DPSESSIONDESC2* lpsd, unsigned long dwFlags, const void* lpSecurity, const void* lpCredentials) = 0; // 0x9c
-    virtual long __stdcall SendChatMessage(unsigned long idFrom, unsigned long idTo, unsigned long dwFlags, void* lpChatMessage) = 0; // 0xa0
-    virtual long __stdcall SetGroupConnectionSettings(unsigned long dwFlags, unsigned long idGroup, void* lpConnection) = 0; // 0xa4
-    virtual long __stdcall StartSession(unsigned long dwFlags, unsigned long idGroup) = 0;   // 0xa8
+    // Before normalization (locals): lpEnumCallback, lpContext, dwFlags.
+    virtual long __stdcall EnumConnections(const GUID* lpguidApplication, DPENUMCONNECTIONSCB enumCallback, void* context, unsigned long flags) = 0; // 0x8c
+    // Before normalization (locals): lpEnumCallback, lpContext, dwFlags.
+    virtual long __stdcall EnumGroupsInGroup(unsigned long idGroup, GUID* lpguidInstance, DPENUMPLAYERSCB2 enumCallback, void* context, unsigned long flags) = 0; // 0x90
+    // Before normalization (locals): dwFlags, lpData.
+    virtual long __stdcall GetGroupConnectionSettings(unsigned long flags, unsigned long idGroup, void* data, unsigned long* lpdwDataSize) = 0; // 0x94
+    // Before normalization (locals): lpConnection, dwFlags.
+    virtual long __stdcall InitializeConnection(void* connection, unsigned long flags) = 0; // 0x98
+    // Before normalization (locals): dwFlags, lpSecurity, lpCredentials.
+    virtual long __stdcall SecureOpen(const DPSESSIONDESC2* lpsd, unsigned long flags, const void* security, const void* credentials) = 0; // 0x9c
+    // Before normalization (locals): dwFlags, lpChatMessage.
+    virtual long __stdcall SendChatMessage(unsigned long idFrom, unsigned long idTo, unsigned long flags, void* chatMessage) = 0; // 0xa0
+    // Before normalization (locals): dwFlags, lpConnection.
+    virtual long __stdcall SetGroupConnectionSettings(unsigned long flags, unsigned long idGroup, void* connection) = 0; // 0xa4
+    // Before normalization (locals): dwFlags.
+    virtual long __stdcall StartSession(unsigned long flags, unsigned long idGroup) = 0;   // 0xa8
     virtual long __stdcall GetGroupFlags(unsigned long idGroup, unsigned long* lpdwFlags) = 0; // 0xac
     virtual long __stdcall GetGroupParent(unsigned long idGroup, unsigned long* lpidParent) = 0; // 0xb0
-    virtual long __stdcall GetPlayerAccount(unsigned long idPlayer, unsigned long dwFlags, void* lpData, unsigned long* lpdwDataSize) = 0; // 0xb4
+    // Before normalization (locals): dwFlags, lpData.
+    virtual long __stdcall GetPlayerAccount(unsigned long idPlayer, unsigned long flags, void* data, unsigned long* lpdwDataSize) = 0; // 0xb4
     virtual long __stdcall GetPlayerFlags(unsigned long idPlayer, unsigned long* lpdwFlags) = 0; // 0xb8
     virtual long __stdcall GetGroupOwner(unsigned long idGroup, unsigned long* lpidOwner) = 0; // 0xbc
     virtual long __stdcall SetGroupOwner(unsigned long idGroup, unsigned long idOwner) = 0;  // 0xc0
-    virtual long __stdcall SendEx(unsigned long idFrom, unsigned long idTo, unsigned long dwFlags, void* lpData, unsigned long dwDataSize, unsigned long dwPriority, unsigned long dwTimeout, void* lpContext, unsigned long* lpdwMsgID) = 0; // 0xc4
-    virtual long __stdcall GetMessageQueue(unsigned long idFrom, unsigned long idTo, unsigned long dwFlags, unsigned long* lpdwNumMsgs, unsigned long* lpdwNumBytes) = 0; // 0xc8
+    // Before normalization (locals): dwFlags, lpData, dwDataSize, dwPriority, dwTimeout,
+    // lpContext.
+    virtual long __stdcall SendEx(unsigned long idFrom, unsigned long idTo, unsigned long flags, void* data, unsigned long dataSize, unsigned long priority, unsigned long timeout, void* context, unsigned long* lpdwMsgID) = 0; // 0xc4
+    // Before normalization (locals): dwFlags.
+    virtual long __stdcall GetMessageQueue(unsigned long idFrom, unsigned long idTo, unsigned long flags, unsigned long* lpdwNumMsgs, unsigned long* lpdwNumBytes) = 0; // 0xc8
 };
 
 // IDirectPlayLobby3A - the lobby object at CDPlayLobby::m_lpLobby (+0x58).
@@ -287,22 +359,38 @@ struct IDirectPlayLobby3A {
     virtual long __stdcall QueryInterface(const GUID& riid, void** ppv) = 0;                 // 0x00
     virtual unsigned long __stdcall AddRef() = 0;                                            // 0x04
     virtual unsigned long __stdcall Release() = 0;                                           // 0x08
-    virtual long __stdcall Connect(unsigned long dwFlags, void** lplpDP, void* pUnk) = 0;    // 0x0c
-    virtual long __stdcall CreateAddress(const GUID& guidSP, const GUID& guidDataType, const void* lpData, unsigned long dwDataSize, void* lpAddress, unsigned long* lpdwAddressSize) = 0; // 0x10
-    virtual long __stdcall EnumAddress(DPENUMADDRESSCB lpEnumAddressCallback, const void* lpAddress, unsigned long dwAddressSize, void* lpContext) = 0; // 0x14
-    virtual long __stdcall EnumAddressTypes(void* lpCallback, const GUID& guidSP, void* lpContext, unsigned long dwFlags) = 0; // 0x18
-    virtual long __stdcall EnumLocalApplications(void* lpCallback, void* lpContext, unsigned long dwFlags) = 0; // 0x1c
-    virtual long __stdcall GetConnectionSettings(unsigned long dwAppID, void* lpData, unsigned long* lpdwDataSize) = 0; // 0x20
-    virtual long __stdcall ReceiveLobbyMessage(unsigned long dwFlags, unsigned long dwAppID, unsigned long* lpdwMessageFlags, void* lpData, unsigned long* lpdwDataSize) = 0; // 0x24
-    virtual long __stdcall RunApplication(unsigned long dwFlags, unsigned long* lpdwAppID, void* lpConn, void* hReceiveEvent) = 0; // 0x28
-    virtual long __stdcall SendLobbyMessage(unsigned long dwFlags, unsigned long dwAppID, void* lpData, unsigned long dwDataSize) = 0; // 0x2c
-    virtual long __stdcall SetConnectionSettings(unsigned long dwFlags, unsigned long dwAppID, void* lpConn) = 0; // 0x30
-    virtual long __stdcall SetLobbyMessageEvent(unsigned long dwFlags, unsigned long dwAppID, void* hReceiveEvent) = 0; // 0x34
-    virtual long __stdcall CreateCompoundAddress(const void* lpElements, unsigned long dwElementCount, void* lpAddress, unsigned long* lpdwAddressSize) = 0; // 0x38
-    virtual long __stdcall ConnectEx(unsigned long dwFlags, const GUID& riid, void** lplpDP, void* pUnk) = 0; // 0x3c
-    virtual long __stdcall RegisterApplication(unsigned long dwFlags, void* lpAppDesc) = 0;  // 0x40
-    virtual long __stdcall UnregisterApplication(unsigned long dwFlags, const GUID& guidApplication) = 0; // 0x44
-    virtual long __stdcall WaitForConnectionSettings(unsigned long dwFlags) = 0;             // 0x48
+    // Before normalization (locals): dwFlags, pUnk.
+    virtual long __stdcall Connect(unsigned long flags, void** lplpDP, void* unk) = 0;    // 0x0c
+    // Before normalization (locals): lpData, dwDataSize, lpAddress.
+    virtual long __stdcall CreateAddress(const GUID& guidSP, const GUID& guidDataType, const void* data, unsigned long dataSize, void* address, unsigned long* lpdwAddressSize) = 0; // 0x10
+    // Before normalization (locals): lpEnumAddressCallback, lpAddress, dwAddressSize, lpContext.
+    virtual long __stdcall EnumAddress(DPENUMADDRESSCB enumAddressCallback, const void* address, unsigned long addressSize, void* context) = 0; // 0x14
+    // Before normalization (locals): lpCallback, lpContext, dwFlags.
+    virtual long __stdcall EnumAddressTypes(void* callback, const GUID& guidSP, void* context, unsigned long flags) = 0; // 0x18
+    // Before normalization (locals): lpCallback, lpContext, dwFlags.
+    virtual long __stdcall EnumLocalApplications(void* callback, void* context, unsigned long flags) = 0; // 0x1c
+    // Before normalization (locals): dwAppID, lpData.
+    virtual long __stdcall GetConnectionSettings(unsigned long appID, void* data, unsigned long* lpdwDataSize) = 0; // 0x20
+    // Before normalization (locals): dwFlags, dwAppID, lpData.
+    virtual long __stdcall ReceiveLobbyMessage(unsigned long flags, unsigned long appID, unsigned long* lpdwMessageFlags, void* data, unsigned long* lpdwDataSize) = 0; // 0x24
+    // Before normalization (locals): dwFlags, lpConn, hReceiveEvent.
+    virtual long __stdcall RunApplication(unsigned long flags, unsigned long* lpdwAppID, void* conn, void* receiveEvent) = 0; // 0x28
+    // Before normalization (locals): dwFlags, dwAppID, lpData, dwDataSize.
+    virtual long __stdcall SendLobbyMessage(unsigned long flags, unsigned long appID, void* data, unsigned long dataSize) = 0; // 0x2c
+    // Before normalization (locals): dwFlags, dwAppID, lpConn.
+    virtual long __stdcall SetConnectionSettings(unsigned long flags, unsigned long appID, void* conn) = 0; // 0x30
+    // Before normalization (locals): dwFlags, dwAppID, hReceiveEvent.
+    virtual long __stdcall SetLobbyMessageEvent(unsigned long flags, unsigned long appID, void* receiveEvent) = 0; // 0x34
+    // Before normalization (locals): lpElements, dwElementCount, lpAddress.
+    virtual long __stdcall CreateCompoundAddress(const void* elements, unsigned long elementCount, void* address, unsigned long* lpdwAddressSize) = 0; // 0x38
+    // Before normalization (locals): dwFlags, pUnk.
+    virtual long __stdcall ConnectEx(unsigned long flags, const GUID& riid, void** lplpDP, void* unk) = 0; // 0x3c
+    // Before normalization (locals): dwFlags, lpAppDesc.
+    virtual long __stdcall RegisterApplication(unsigned long flags, void* appDesc) = 0;  // 0x40
+    // Before normalization (locals): dwFlags.
+    virtual long __stdcall UnregisterApplication(unsigned long flags, const GUID& guidApplication) = 0; // 0x44
+    // Before normalization (locals): dwFlags.
+    virtual long __stdcall WaitForConnectionSettings(unsigned long flags) = 0;             // 0x48
 };
 
 #endif  /* HOMM3_DXPLAY_COM_H */

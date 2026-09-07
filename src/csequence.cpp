@@ -19,40 +19,40 @@ void CSequence::CSequence()
 VA(0x0047b840, 0x44)  // link order + complete field stores, dc 0x71f20
 CSequence::CSequence(const int num)
 {
-    numFrames = 0;
-    allocatedFrames = num;
-    f = new CSpriteFrame*[num];
+    m_numFrames = 0;
+    m_allocatedFrames = num;
+    m_f = new CSpriteFrame*[num];
     for (int i = 0; i < num; ++i)
-        f[i] = 0;
+        m_f[i] = 0;
 }
 
 // E:\gamedcs\csequence.cpp:50
 VA(0x0047b890, 0x0F)  // anchor-bracket + dc destructor identity, dc 0x71f60
 CSequence::~CSequence()
 {
-    if (f)
-        delete[] f;
+    if (m_f)
+        delete[] m_f;
 }
 
 #if 0  // @carcass: overloads inlined or absent from retail
 
 // E:\gamedcs\csequence.cpp:68
 DC_ONLY(0x71f78, 0x4E)
-int CSequence::AddFrame(const char* name)
+int CSequence::addFrame(const char* name)
 {
     // @stub
 }
 
 // E:\gamedcs\csequence.cpp:79
 DC_ONLY(0x71fc8, 0x72)
-int CSequence::AddFrame(const char* name, int w, int h, unsigned char* data, int csize, TEncodingMethod encoding)
+int CSequence::addFrame(const char* name, int w, int h, unsigned char* data, int csize, TEncodingMethod encoding)
 {
     // @stub
 }
 
 // E:\gamedcs\csequence.cpp:91
 DC_ONLY(0x7203c, 0x8A)
-int CSequence::AddFrame(const char* name, int w, int h, unsigned char* data, int csize, TEncodingMethod encoding, int CroppedWidth, int CroppedHeight, int CroppedX, int CroppedY)
+int CSequence::addFrame(const char* name, int w, int h, unsigned char* data, int csize, TEncodingMethod encoding, int m_croppedWidth, int m_croppedHeight, int m_croppedX, int m_croppedY)
 {
     // @stub
 }
@@ -61,12 +61,12 @@ int CSequence::AddFrame(const char* name, int w, int h, unsigned char* data, int
 
 // E:\gamedcs\csequence.cpp:102
 VA(0x0047b8a0, 0x26)  // CSprite caller + direct frame store, dc 0x720c8
-int CSequence::AddFrame(CSpriteFrame* frame)
+int CSequence::addFrame(CSpriteFrame* frame)
 {
-    if (numFrames < allocatedFrames) {
-        f[numFrames] = frame;
-        ++numFrames;
-        return numFrames;
+    if (m_numFrames < m_allocatedFrames) {
+        m_f[m_numFrames] = frame;
+        ++m_numFrames;
+        return m_numFrames;
     }
     return 0;
 }

@@ -42,55 +42,86 @@
 
 // Scenario ordinals used when the fixed legacy matrices are promoted to the
 // current variable-length CampaignScenarioInfo vector.
-DATA(0x0063d8c8) static int legacyCampaignScenarioIndices[7][4];
+// Before normalization: legacyCampaignScenarioIndices.
+DATA(0x0063d8c8) static int g_legacyCampaignScenarioIndices[7][4];
 
 // Retail .data 0x66c218 is a reference cell (the akHeroTraits pattern)
 // holding the campaign music table at 0x66c090; only StartMusic and
 // MapTextStruct::Play read the cell, so customcampaign.obj owns it.
-DATA(0x0066c218) extern const TCampaignMusicTraits* akCampaignMusicTraits;
+DATA(0x0066c218) extern const SCampaignMusicCue* g_campaignMusicTraits;
 
 // The campaign file version at which a scenario's crossover-artifact plane
 // widened from 129 bits to 144; ScenarioStruct::Read still reads and widens
 // the narrow plane below it.
-static const int CAMPAIGN_VERSION_WIDE_ARTIFACTS = 6;
-static const int CROSSOVER_CREATURE_BITS = 145;
-static const int CROSSOVER_ARTIFACT_BITS = 144;
-static const int CROSSOVER_LEGACY_ARTIFACT_BITS = 129;
+// Before normalization: CAMPAIGN_VERSION_WIDE_ARTIFACTS.
+static const int g_campaignVersionWideArtifacts = 6;
+// Before normalization: CROSSOVER_CREATURE_BITS.
+static const int g_crossoverCreatureBits = 145;
+// Before normalization: CROSSOVER_ARTIFACT_BITS.
+static const int g_crossoverArtifactBits = 144;
+// Before normalization: CROSSOVER_LEGACY_ARTIFACT_BITS.
+static const int g_crossoverLegacyArtifactBits = 129;
 
-static const int CROSSOVER_PRIMARY_ARTIFACT_SLOTS = 16;
-static const int CROSSOVER_EQUIPPED_ARTIFACT_SLOTS = 19;
-static const int CROSSOVER_PRIMARY_SKILLS = 4;
-static const int CROSSOVER_SPLIT_CAMPAIGN = 9;
-static const int CROSSOVER_SPLIT_FIRST_SCENARIO = 0;
-static const int CROSSOVER_SPLIT_LAST_SCENARIO = 1;
-static const int CROSSOVER_BONUS_CAMPAIGN = 8;
-static const int CROSSOVER_BONUS_SCENARIO = 3;
-static const int CROSSOVER_BONUS_HERO = 151;
-static const int CROSSOVER_BONUS_PORTRAIT = 153;
-static const int CROSSOVER_BONUS_AMOUNT = 4;
-static const int CROSSOVER_PATROL_CAMPAIGN = 7;
-static const int CROSSOVER_PATROL_FIRST_SCENARIO = 6;
-static const int CROSSOVER_PATROL_LAST_SCENARIO = 7;
-static const int CROSSOVER_PATROL_HERO = 155;
-static const int CROSSOVER_PATROL_RADIUS = 10;
-static const int CROSSOVER_SECONDARY_SKILLS = 28;
-static const int CROSSOVER_BACKPACK_SLOTS = 64;
+// Before normalization: CROSSOVER_PRIMARY_ARTIFACT_SLOTS.
+static const int g_crossoverPrimaryArtifactSlots = 16;
+// Before normalization: CROSSOVER_EQUIPPED_ARTIFACT_SLOTS.
+static const int g_crossoverEquippedArtifactSlots = 19;
+// Before normalization: CROSSOVER_PRIMARY_SKILLS.
+static const int g_crossoverPrimarySkills = 4;
+// Before normalization: CROSSOVER_SPLIT_CAMPAIGN.
+static const int g_crossoverSplitCampaign = 9;
+// Before normalization: CROSSOVER_SPLIT_FIRST_SCENARIO.
+static const int g_crossoverSplitFirstScenario = 0;
+// Before normalization: CROSSOVER_SPLIT_LAST_SCENARIO.
+static const int g_crossoverSplitLastScenario = 1;
+// Before normalization: CROSSOVER_BONUS_CAMPAIGN.
+static const int g_crossoverBonusCampaign = 8;
+// Before normalization: CROSSOVER_BONUS_SCENARIO.
+static const int g_crossoverBonusScenario = 3;
+// Before normalization: CROSSOVER_BONUS_HERO.
+static const int g_crossoverBonusHero = 151;
+// Before normalization: CROSSOVER_BONUS_PORTRAIT.
+static const int g_crossoverBonusPortrait = 153;
+// Before normalization: CROSSOVER_BONUS_AMOUNT.
+static const int g_crossoverBonusAmount = 4;
+// Before normalization: CROSSOVER_PATROL_CAMPAIGN.
+static const int g_crossoverPatrolCampaign = 7;
+// Before normalization: CROSSOVER_PATROL_FIRST_SCENARIO.
+static const int g_crossoverPatrolFirstScenario = 6;
+// Before normalization: CROSSOVER_PATROL_LAST_SCENARIO.
+static const int g_crossoverPatrolLastScenario = 7;
+// Before normalization: CROSSOVER_PATROL_HERO.
+static const int g_crossoverPatrolHero = 155;
+// Before normalization: CROSSOVER_PATROL_RADIUS.
+static const int g_crossoverPatrolRadius = 10;
+// Before normalization: CROSSOVER_SECONDARY_SKILLS.
+static const int g_crossoverSecondarySkills = 28;
+// Before normalization: CROSSOVER_BACKPACK_SLOTS.
+static const int g_crossoverBackpackSlots = 64;
 
 // The three scenario overrides the bonus appliers carry, all four values
 // retail's: the creature bonus hands its stack to a faction-matching town
 // on campaign 1's first map and campaign 3's second, and the building
 // bonus grants a zero building index to EVERY town on campaign 1's fourth
 // map. Names are role inventions.
-static const int CREATURE_BONUS_TOWN_CAMPAIGN_A = 1;
-static const int CREATURE_BONUS_TOWN_SCENARIO_A = 0;
-static const int CREATURE_BONUS_TOWN_CAMPAIGN_B = 3;
-static const int CREATURE_BONUS_TOWN_SCENARIO_B = 1;
-static const int BUILDING_BONUS_ALL_TOWNS_CAMPAIGN = 1;
-static const int BUILDING_BONUS_ALL_TOWNS_SCENARIO = 3;
+// Before normalization: CREATURE_BONUS_TOWN_CAMPAIGN_A.
+static const int g_creatureBonusTownCampaignA = 1;
+// Before normalization: CREATURE_BONUS_TOWN_SCENARIO_A.
+static const int g_creatureBonusTownScenarioA = 0;
+// Before normalization: CREATURE_BONUS_TOWN_CAMPAIGN_B.
+static const int g_creatureBonusTownCampaignB = 3;
+// Before normalization: CREATURE_BONUS_TOWN_SCENARIO_B.
+static const int g_creatureBonusTownScenarioB = 1;
+// Before normalization: BUILDING_BONUS_ALL_TOWNS_CAMPAIGN.
+static const int g_buildingBonusAllTownsCampaign = 1;
+// Before normalization: BUILDING_BONUS_ALL_TOWNS_SCENARIO.
+static const int g_buildingBonusAllTownsScenario = 3;
 // Building indices from 0x25 up are the upgraded dwellings; granting one
 // also grants the base row seven slots below it.
-static const int BUILDING_BONUS_FIRST_UPGRADE = 0x25;
-static const int BUILDING_BONUS_UPGRADE_STRIDE = 7;
+// Before normalization: BUILDING_BONUS_FIRST_UPGRADE.
+static const int g_buildingBonusFirstUpgrade = 0x25;
+// Before normalization: BUILDING_BONUS_UPGRADE_STRIDE.
+static const int g_buildingBonusUpgradeStride = 7;
 
 
 // MapTextStruct::Play's own domain. Every value is retail's; the names are
@@ -99,57 +130,76 @@ static const int BUILDING_BONUS_UPGRADE_STRIDE = 7;
 // the entry chain tests (`== 0x11`, `>= 0x18 && != 0x45`), and the id the
 // sixth VideoOpen argument is switched on happens to share the lowered
 // origin's value without being the same quantity.
-static const int CAMPAIGN_VIDEO_LOWERED = 0x11;
-static const int CAMPAIGN_VIDEO_FIRST_LOWERED = 0x18;
-static const int CAMPAIGN_VIDEO_RAISED = 0x45;
-static const int CAMPAIGN_VIDEO_LOWERED_Y = 100;
-static const int CAMPAIGN_VIDEO_NO_FADE = 100;
+// Before normalization: CAMPAIGN_VIDEO_LOWERED.
+static const int g_campaignVideoLowered = 0x11;
+// Before normalization: CAMPAIGN_VIDEO_FIRST_LOWERED.
+static const int g_campaignVideoFirstLowered = 0x18;
+// Before normalization: CAMPAIGN_VIDEO_RAISED.
+static const int g_campaignVideoRaised = 0x45;
+// Before normalization: CAMPAIGN_VIDEO_LOWERED_Y.
+static const int g_campaignVideoLoweredY = 100;
+// Before normalization: CAMPAIGN_VIDEO_NO_FADE.
+static const int g_campaignVideoNoFade = 100;
 // The subtitle strip: 608 wide at the screen's (96, 510), 82 tall, scrolled
 // one line at a time. The strip bitmap is one font line taller than the text
 // so the first line can slide in.
-static const int CAMPAIGN_SUBTITLE_WIDTH = 0x260;
-static const int CAMPAIGN_SUBTITLE_HEIGHT = 0x52;
-static const int CAMPAIGN_SUBTITLE_X = 0x60;
-static const int CAMPAIGN_SUBTITLE_Y = 0x1fe;
-static const int CAMPAIGN_SUBTITLE_SCROLL_MARGIN = 0x4d;
-static const int CAMPAIGN_SUBTITLE_COLOR = 0x11f;
-static const int CAMPAIGN_SCROLL_INTERVAL = 0x8e;
-static const int CAMPAIGN_LINGER_MS = 3000;
-static const int CAMPAIGN_VIDEO_LINGER_MS = 5000;
-static const int CAMPAIGN_SPEECH_SAMPLE_STATUS = 4;
+// Before normalization: CAMPAIGN_SUBTITLE_WIDTH.
+static const int g_campaignSubtitleWidth = 0x260;
+// Before normalization: CAMPAIGN_SUBTITLE_HEIGHT.
+static const int g_campaignSubtitleHeight = 0x52;
+// Before normalization: CAMPAIGN_SUBTITLE_X.
+static const int g_campaignSubtitleX = 0x60;
+// Before normalization: CAMPAIGN_SUBTITLE_Y.
+static const int g_campaignSubtitleY = 0x1fe;
+// Before normalization: CAMPAIGN_SUBTITLE_SCROLL_MARGIN.
+static const int g_campaignSubtitleScrollMargin = 0x4d;
+// Before normalization: CAMPAIGN_SUBTITLE_COLOR.
+static const int g_campaignSubtitleColor = 0x11f;
+// Before normalization: CAMPAIGN_SCROLL_INTERVAL.
+static const int g_campaignScrollInterval = 0x8e;
+// Before normalization: CAMPAIGN_LINGER_MS.
+static const int g_campaignLingerMs = 3000;
+// Before normalization: CAMPAIGN_VIDEO_LINGER_MS.
+static const int g_campaignVideoLingerMs = 5000;
+// Before normalization: CAMPAIGN_SPEECH_SAMPLE_STATUS.
+static const int g_campaignSpeechSampleStatus = 4;
 // The one key the player may press without ending the sequence.
-static const int CAMPAIGN_SKIP_KEY = 0x3e;
+// Before normalization: CAMPAIGN_SKIP_KEY.
+static const int g_campaignSkipKey = 0x3e;
 
 // The two per-video tables MapTextStruct::Play indexes with `video`. Each is
 // referenced from exactly one site in the whole image - this body - so
 // customcampaign.obj owns both.
-DATA(0x0063d734) extern const int akCampaignVideoIds[];
-DATA(0x00675be8) extern const char* akCampaignVideoSounds[];
+// Before normalization: akCampaignVideoIds.
+// Before normalization: akCampaignVideoSounds.
+DATA(0x0063d734) extern const int g_campaignVideoIds[];
+DATA(0x00675be8) extern const char* g_campaignVideoSounds[];
 
 // The two TStreamBufFile virtuals, emitted at the head of this object
 // (see gzinflatebuf.h): sgetn / sputn on the wrapped streambuf.
 VA(0x00483f10, 0x17)  // TStreamBufFile vftable 0x63dacc slot 1, retail-only
-int TStreamBufFile::Read(void* data, int size)
+int TStreamBufFile::read(void* data, int size)
 {
-    return buffer->sgetn(static_cast<char*>(data), size);
+    return m_buffer->sgetn(static_cast<char*>(data), size);
 }
 
 VA(0x00483f30, 0x17)  // TStreamBufFile vftable 0x63dacc slot 2, retail-only
-int TStreamBufFile::Write(const void* data, int size)
+int TStreamBufFile::write(const void* data, int size)
 {
-    return buffer->sputn(static_cast<const char*>(data), size);
+    return m_buffer->sputn(static_cast<const char*>(data), size);
 }
 
 // The score the ordering below compares. Retail keeps it out of line and
 // calls it from the sort's own expanded comparators, while operator() itself
 // expands it twice - the /Ob2 split between a 155 B caller and the 471 B one.
 VA(0x00483f50, 0x26)  // anchor-callee(0x48fa40's comparator expansion), retail-only
-int GetCrossoverHeroValue(hero* candidate)
+int getCrossoverHeroValue(hero* candidate)
 {
-    int primary = candidate->get_primary_skill_total();
+    int primary = candidate->getPrimarySkillTotal();
     int skills = 0;
-    for (int iSkill = 0; iSkill < CROSSOVER_SECONDARY_SKILLS; ++iSkill)
-        skills += candidate->skillLevel[iSkill];
+    // Before normalization (locals): iSkill.
+    for (int skill = 0; skill < g_crossoverSecondarySkills; ++skill)
+        skills += candidate->m_skillLevel[skill];
     return skills + primary;
 }
 
@@ -160,15 +210,15 @@ int GetCrossoverHeroValue(hero* candidate)
 // TSortMapsBy* predicates all use the compgen form for the same reason.
 bool CrossoverHeroStronger::operator()(hero& lhs, hero& rhs) const
 {
-    int leftValue = GetCrossoverHeroValue(&lhs);
-    int rightValue = GetCrossoverHeroValue(&rhs);
+    int leftValue = getCrossoverHeroValue(&lhs);
+    int rightValue = getCrossoverHeroValue(&rhs);
     if (leftValue != rightValue)
         return leftValue > rightValue;
-    leftValue += lhs.experience;
-    rightValue += rhs.experience;
+    leftValue += lhs.m_experience;
+    rightValue += rhs.m_experience;
     if (leftValue != rightValue)
         return leftValue > rightValue;
-    return lhs.id > rhs.id;
+    return lhs.m_id > rhs.m_id;
 }
 
 // --- the eight campaign start bonuses ---
@@ -184,57 +234,58 @@ bool CrossoverHeroStronger::operator()(hero& lhs, hero& rhs) const
 VA_COMPGEN(0x00484020, 0x23, SCALAR_DELETING_DTOR, TCampaignBonus)
 
 VA(0x00484050, 0x3D)  // anchor-vtable (0x63daa0+0x18 and 0x63da20+0x18), retail-only
-void TCampaignSpellBonus::Read(TAbstractFile* file)
+void TCampaignSpellBonus::read(TAbstractFile* file)
 {
     {
         short heroId;
-        file->Read(&heroId, sizeof(short));
+        file->read(&heroId, sizeof(short));
         m_hero = heroId;
     }
     {
         unsigned char spell;
-        file->Read(&spell, sizeof(unsigned char));
+        file->read(&spell, sizeof(unsigned char));
         m_spell = spell;
     }
 }
 
 VA(0x00484090, 0x6)  // anchor-string (SpellBon.def), retail-only
-const char* TCampaignSpellBonus::GetIconDefName() const
+const char* TCampaignSpellBonus::getIconDefName() const
 {
     return DATA_COMPGEN(0x00677248, spellBonusDefName, "SpellBon.def");
 }
 
 VA(0x004840a0, 0x25)  // anchor-vtable (0x63daa0+0x14), retail-only
-void TCampaignSpellBonus::Apply(int whichPlayer) const
+void TCampaignSpellBonus::apply(int whichPlayer) const
 {
-    hero* target = GetCampaignBonusHero(m_hero, whichPlayer);
+    hero* target = getCampaignBonusHero(m_hero, whichPlayer);
     if (target != 0)
-        target->AddSpell(m_spell);
+        target->addSpell(m_spell);
 }
 
 // The shared hero picker. `best` and the player record are both live
 // before the selector is tested, which is what puts them in the
 // prologue; numHeroes is re-read from the record on every pass.
 VA(0x004840d0, 0x155)  // anchor-callee (five bonus appliers), retail-only
-hero* GetCampaignBonusHero(int heroSelector, int whichPlayer)
+hero* getCampaignBonusHero(int heroSelector, int whichPlayer)
 {
     hero* best = 0;
-    playerData* player = &gpGame->players[whichPlayer];
+    playerData* player = &g_game->m_players[whichPlayer];
     switch (heroSelector) {
     case CAMPAIGN_BONUS_HERO_STRONGEST: {
-        for (int iHero = 0; iHero < player->numHeroes; ++iHero) {
-            int heroId = player->heroes[iHero];
-            hero* candidate = heroId == -1 ? 0 : &gpGame->heroes[heroId];
+        // Before normalization (locals): iHero, iSkill.
+        for (int heroIndex = 0; heroIndex < player->m_numHeroes; ++heroIndex) {
+            int heroId = player->m_heroes[heroIndex];
+            hero* candidate = heroId == -1 ? 0 : &g_game->m_heroes[heroId];
             if (best != 0) {
-                int bestTotal = best->get_primary_skill_total();
+                int bestTotal = best->getPrimarySkillTotal();
                 int bestSkills = 0;
-                int iSkill;
-                for (iSkill = 0; iSkill < 28; ++iSkill)
-                    bestSkills += best->skillLevel[iSkill];
-                int candidateTotal = candidate->get_primary_skill_total();
+                int skill;
+                for (skill = 0; skill < 28; ++skill)
+                    bestSkills += best->m_skillLevel[skill];
+                int candidateTotal = candidate->getPrimarySkillTotal();
                 int candidateSkills = 0;
-                for (iSkill = 0; iSkill < 28; ++iSkill)
-                    candidateSkills += candidate->skillLevel[iSkill];
+                for (skill = 0; skill < 28; ++skill)
+                    candidateSkills += candidate->m_skillLevel[skill];
                 if (bestSkills + bestTotal >= candidateSkills + candidateTotal)
                     continue;
             }
@@ -243,40 +294,40 @@ hero* GetCampaignBonusHero(int heroSelector, int whichPlayer)
         return best;
     }
     case CAMPAIGN_BONUS_HERO_FIRST:
-        if (player->numHeroes == 0)
+        if (player->m_numHeroes == 0)
             return 0;
-        if (player->heroes[0] == -1)
+        if (player->m_heroes[0] == -1)
             return 0;
-        return &gpGame->heroes[player->heroes[0]];
+        return &g_game->m_heroes[player->m_heroes[0]];
     case CAMPAIGN_BONUS_HERO_NONE:
         return 0;
     }
-    hero* chosen = &gpGame->heroes[heroSelector];
-    return chosen->owner == whichPlayer ? chosen : 0;
+    hero* chosen = &g_game->m_heroes[heroSelector];
+    return chosen->m_owner == whichPlayer ? chosen : 0;
 }
 
 // The two spell rows share the general-text pair 708/709: the campaign
 // brief shows one for a learned spell and one for the scroll that
 // carries it.
 VA(0x00484230, 0x46)  // anchor-vtable (0x63daa0+0x10), retail-only
-std::string TCampaignSpellBonus::GetText() const
+std::string TCampaignSpellBonus::getText() const
 {
-    return format_string(gpGeneralText->Text[716], akSpellTraits[m_spell].name);
+    return formatString(g_generalText->m_text[716], g_spellTraits[m_spell].m_name);
 }
 
 VA(0x00484280, 0x46)  // anchor-vtable (0x63da20+0x10), retail-only
-std::string TCampaignSpellScrollBonus::GetText() const
+std::string TCampaignSpellScrollBonus::getText() const
 {
-    return format_string(gpGeneralText->Text[717], akSpellTraits[m_spell].name);
+    return formatString(g_generalText->m_text[717], g_spellTraits[m_spell].m_name);
 }
 
 VA(0x004842d0, 0x3B)  // anchor-vtable (0x63da20+0x14), retail-only
-void TCampaignSpellScrollBonus::Apply(int whichPlayer) const
+void TCampaignSpellScrollBonus::apply(int whichPlayer) const
 {
-    hero* target = GetCampaignBonusHero(m_hero, whichPlayer);
+    hero* target = getCampaignBonusHero(m_hero, whichPlayer);
     if (target != 0) {
         type_artifact scroll(ARTIFACT_SPELL_SCROLL, m_spell);
-        target->GiveArtifact(&scroll, 0, 0);
+        target->giveArtifact(&scroll, 0, 0);
     }
 }
 
@@ -288,78 +339,79 @@ void TCampaignSpellScrollBonus::Apply(int whichPlayer) const
 // creature's own faction. The four dragon ids that answer -1 when
 // f_1f698 is clear are retail's; the field's role is unattested.
 VA(0x00484310, 0x1D5)  // anchor-vtable (0x63da80+0x14), retail-only
-void TCampaignCreatureBonus::Apply(int whichPlayer) const
+void TCampaignCreatureBonus::apply(int whichPlayer) const
 {
-    playerData* player = &gpGame->players[whichPlayer];
-    if ((gpGame->campaign.currentCampaign == CREATURE_BONUS_TOWN_CAMPAIGN_A &&
-         gpGame->campaign.currentMap == CREATURE_BONUS_TOWN_SCENARIO_A) ||
-        (gpGame->campaign.currentCampaign == CREATURE_BONUS_TOWN_CAMPAIGN_B &&
-         gpGame->campaign.currentMap == CREATURE_BONUS_TOWN_SCENARIO_B)) {
+    playerData* player = &g_game->m_players[whichPlayer];
+    if ((g_game->m_campaign.m_currentCampaign == g_creatureBonusTownCampaignA &&
+         g_game->m_campaign.m_currentMap == g_creatureBonusTownScenarioA) ||
+        (g_game->m_campaign.m_currentCampaign == g_creatureBonusTownCampaignB &&
+         g_game->m_campaign.m_currentMap == g_creatureBonusTownScenarioB)) {
         int creature = m_creature;
         int faction;
-        if (gpGame->f_1f698 == 0 &&
+        if (g_game->m_f1f698 == 0 &&
             (creature == CREATURE_AIR_ELEMENTAL ||
              creature == CREATURE_EARTH_ELEMENTAL ||
              creature == CREATURE_FIRE_ELEMENTAL ||
              creature == CREATURE_WATER_ELEMENTAL))
             faction = -1;
         else
-            faction = akCreatureTypeTraits[creature].townType;
-        for (int iTown = 0; iTown < player->numTowns; ++iTown) {
-            town* garrison = gpGame->GetTown(player->townIds[iTown]);
-            if (garrison->type == faction) {
+            faction = g_creatureTypeTraits[creature].m_townType;
+        // Before normalization (locals): iTown.
+        for (int townIndex = 0; townIndex < player->m_numTowns; ++townIndex) {
+            town* garrison = g_game->getTown(player->m_townIds[townIndex]);
+            if (garrison->m_type == faction) {
                 const_cast<armyGroup&>(
-                    static_cast<const town*>(garrison)->get_army())
-                    .Add(creature, m_count, -1);
+                    static_cast<const town*>(garrison)->getArmy())
+                    .add(creature, m_count, -1);
                 return;
             }
         }
     }
-    hero* target = GetCampaignBonusHero(m_hero, whichPlayer);
+    hero* target = getCampaignBonusHero(m_hero, whichPlayer);
     if (target == 0)
         return;
-    if (target->army.Add(m_creature, m_count, -1) != 0)
+    if (target->m_army.add(m_creature, m_count, -1) != 0)
         return;
     int i;
-    for (i = 0; i < player->numHeroes; ++i) {
-        hero* other = gpGame->GetHero(player->heroes[i]);
-        if (other->army.Add(m_creature, m_count, -1) != 0)
+    for (i = 0; i < player->m_numHeroes; ++i) {
+        hero* other = g_game->getHero(player->m_heroes[i]);
+        if (other->m_army.add(m_creature, m_count, -1) != 0)
             return;
     }
-    for (i = 0; i < player->numTowns; ++i) {
-        town* garrison = gpGame->GetTown(player->townIds[i]);
+    for (i = 0; i < player->m_numTowns; ++i) {
+        town* garrison = g_game->getTown(player->m_townIds[i]);
         if (const_cast<armyGroup&>(
-                static_cast<const town*>(garrison)->get_army())
-                .Add(m_creature, m_count, -1) != 0)
+                static_cast<const town*>(garrison)->getArmy())
+                .add(m_creature, m_count, -1) != 0)
             return;
     }
 }
 
 VA(0x004844f0, 0x51)  // anchor-vtable (0x63da80+0x18), retail-only
-void TCampaignCreatureBonus::Read(TAbstractFile* file)
+void TCampaignCreatureBonus::read(TAbstractFile* file)
 {
     {
         short value;
-        file->Read(&value, sizeof(short));
+        file->read(&value, sizeof(short));
         m_hero = value;
-        file->Read(&value, sizeof(short));
+        file->read(&value, sizeof(short));
         m_creature = value;
     }
     {
         unsigned short count;
-        file->Read(&count, sizeof(unsigned short));
+        file->read(&count, sizeof(unsigned short));
         m_count = count;
     }
 }
 
 VA(0x00484550, 0x6)  // anchor-string (twcrport.def), retail-only
-const char* TCampaignCreatureBonus::GetIconDefName() const
+const char* TCampaignCreatureBonus::getIconDefName() const
 {
     return "twcrport.def";
 }
 
 VA(0x00484560, 0x7)  // anchor-vtable (0x63da80+0xc), retail-only
-int TCampaignCreatureBonus::GetIconIndex() const
+int TCampaignCreatureBonus::getIconIndex() const
 {
     return m_creature + 2;
 }
@@ -367,38 +419,38 @@ int TCampaignCreatureBonus::GetIconIndex() const
 // Singular against plural on a count of exactly one, and an empty name
 // for any creature outside the 0..150 table.
 VA(0x00484570, 0x7A)  // anchor-vtable (0x63da80+0x10), retail-only
-std::string TCampaignCreatureBonus::GetText() const
+std::string TCampaignCreatureBonus::getText() const
 {
     const char* name;
     if (m_creature < 0 || m_creature > 150)
         name = "";
     else if (m_count == 1)
-        name = akCreatureTypeTraits[m_creature].m_name;
+        name = g_creatureTypeTraits[m_creature].m_name;
     else
-        name = akCreatureTypeTraits[m_creature].m_plural_name;
-    return format_string(gpGeneralText->Text[718], m_count, name);
+        name = g_creatureTypeTraits[m_creature].m_pluralName;
+    return formatString(g_generalText->m_text[718], m_count, name);
 }
 
 VA(0x004845f0, 0x24)  // anchor-vtable (0x63da60+0x18), retail-only
-void TCampaignBuildingBonus::Read(TAbstractFile* file)
+void TCampaignBuildingBonus::read(TAbstractFile* file)
 {
     {
         unsigned char building;
-        file->Read(&building, sizeof(unsigned char));
+        file->read(&building, sizeof(unsigned char));
         m_building = building;
     }
 }
 
 VA(0x00484620, 0x3)  // anchor-vtable (0x63da60+4), retail-only
-bool TCampaignBuildingBonus::IsBuildingBonus() const
+bool TCampaignBuildingBonus::isBuildingBonus() const
 {
     return true;
 }
 
 VA(0x00484630, 0x17)  // anchor-vtable (0x63da60+8), retail-only
-const char* TCampaignBuildingBonus::GetIconDefName() const
+const char* TCampaignBuildingBonus::getIconDefName() const
 {
-    return gCampaignBuildingIconNames[m_town][m_building];
+    return g_campaignBuildingIconNames[m_town][m_building];
 }
 
 // The building bonus is the only one that has to pick a town, and the
@@ -409,85 +461,86 @@ const char* TCampaignBuildingBonus::GetIconDefName() const
 // indices from 0x25 up also build the row seven slots below them, which
 // is retail's upgrade-implies-base rule.
 VA(0x00484650, 0x146)  // anchor-vtable (0x63da60+0x14), retail-only
-void TCampaignBuildingBonus::Apply(int whichPlayer) const
+void TCampaignBuildingBonus::apply(int whichPlayer) const
 {
-    playerData* player = &gpGame->players[whichPlayer];
+    playerData* player = &g_game->m_players[whichPlayer];
     CMapHeaderData::TPlayerSlotAttributes* slot =
-        &gpGame->mapHeader.playerSlotAttributes[whichPlayer];
-    if (player->numTowns == 0)
+        &g_game->m_mapHeader.m_playerSlotAttributes[whichPlayer];
+    if (player->m_numTowns == 0)
         return;
-    if (gpGame->campaign.currentCampaign == BUILDING_BONUS_ALL_TOWNS_CAMPAIGN &&
-        gpGame->campaign.currentMap == BUILDING_BONUS_ALL_TOWNS_SCENARIO &&
+    if (g_game->m_campaign.m_currentCampaign == g_buildingBonusAllTownsCampaign &&
+        g_game->m_campaign.m_currentMap == g_buildingBonusAllTownsScenario &&
         m_building == 0) {
-        for (int iTown = 0; iTown < player->numTowns; ++iTown) {
-            town* each = gpGame->GetTown(player->townIds[iTown]);
-            each->BuildBuilding(m_building, 0, 0);
+        // Before normalization (locals): iTown.
+        for (int townIndex = 0; townIndex < player->m_numTowns; ++townIndex) {
+            town* each = g_game->getTown(player->m_townIds[townIndex]);
+            each->buildBuilding(m_building, 0, 0);
         }
         return;
     }
     town* target = 0;
-    if (slot->hasMainTown) {
-        int townId = gpGame->GetTownId(slot->CastleLoc.x, slot->CastleLoc.y,
-                                       slot->CastleLoc.z);
+    if (slot->m_hasMainTown) {
+        int townId = g_game->getTownId(slot->m_castleLoc.m_x, slot->m_castleLoc.m_y,
+                                       slot->m_castleLoc.m_z);
         if (townId >= 0)
-            target = gpGame->GetTown(townId);
+            target = g_game->getTown(townId);
     }
     if (target == 0)
-        target = gpGame->GetTown(player->townIds[0]);
-    if (m_building >= BUILDING_BONUS_FIRST_UPGRADE)
-        target->BuildBuilding(m_building - BUILDING_BONUS_UPGRADE_STRIDE, 0, 0);
-    target->BuildBuilding(m_building, 0, 0);
+        target = g_game->getTown(player->m_townIds[0]);
+    if (m_building >= g_buildingBonusFirstUpgrade)
+        target->buildBuilding(m_building - g_buildingBonusUpgradeStride, 0, 0);
+    target->buildBuilding(m_building, 0, 0);
 }
 
 VA(0x004847a0, 0x3C)  // anchor-callee (GetBuildingName 0x4610e0), retail-only
-std::string TCampaignBuildingBonus::GetText() const
+std::string TCampaignBuildingBonus::getText() const
 {
-    const char* format = gpGeneralText->Text[716];
-    return format_string(format, GetBuildingName(m_town, m_building));
+    const char* format = g_generalText->m_text[716];
+    return formatString(format, getBuildingName(m_town, m_building));
 }
 
 VA(0x004847e0, 0x22)  // anchor-vtable (0x63da60+0x1c), retail-only
-void TCampaignBuildingBonus::SetTown(int town)
+void TCampaignBuildingBonus::setTown(int town)
 {
     m_town = town;
-    m_building = gCampaignBuildingRemap[town][m_building];
+    m_building = g_campaignBuildingRemap[town][m_building];
 }
 
 VA(0x00484810, 0x6)  // anchor-string (ArtifBon.def), retail-only
-const char* TCampaignArtifactBonus::GetIconDefName() const
+const char* TCampaignArtifactBonus::getIconDefName() const
 {
     return DATA_COMPGEN(0x00677258, artifactBonusDefName, "ArtifBon.def");
 }
 
 VA(0x00484820, 0x40)  // anchor-vtable (0x63da40+0x10), retail-only
-std::string TCampaignArtifactBonus::GetText() const
+std::string TCampaignArtifactBonus::getText() const
 {
-    return format_string(gpGeneralText->Text[716],
-                         akArtifactTraits[m_artifact].name);
+    return formatString(g_generalText->m_text[716],
+                         g_artifactTraits[m_artifact].m_name);
 }
 
 VA(0x00484860, 0x3B)  // anchor-vtable (0x63da40+0x14), retail-only
-void TCampaignArtifactBonus::Apply(int whichPlayer) const
+void TCampaignArtifactBonus::apply(int whichPlayer) const
 {
-    hero* target = GetCampaignBonusHero(m_hero, whichPlayer);
+    hero* target = getCampaignBonusHero(m_hero, whichPlayer);
     if (target != 0) {
         type_artifact granted(m_artifact, -1);
-        target->GiveArtifact(&granted, 0, 0);
+        target->giveArtifact(&granted, 0, 0);
     }
 }
 
 VA(0x004848a0, 0x38)  // anchor-vtable (0x63da40+0x18), retail-only
-void TCampaignArtifactBonus::Read(TAbstractFile* file)
+void TCampaignArtifactBonus::read(TAbstractFile* file)
 {
     short value;
-    file->Read(&value, sizeof(short));
+    file->read(&value, sizeof(short));
     m_hero = value;
-    file->Read(&value, sizeof(short));
+    file->read(&value, sizeof(short));
     m_artifact = value;
 }
 
 VA(0x004848e0, 0x6)  // anchor-string (PSkilBon.def), retail-only
-const char* TCampaignPrimarySkillBonus::GetIconDefName() const
+const char* TCampaignPrimarySkillBonus::getIconDefName() const
 {
     return DATA_COMPGEN(0x00677268, primarySkillBonusDefName, "PSkilBon.def");
 }
@@ -496,14 +549,15 @@ const char* TCampaignPrimarySkillBonus::GetIconDefName() const
 // the compare is `>` against a running best that starts at zero, so an
 // all-negative row still answers 0.
 VA(0x004848f0, 0x1E)  // anchor-vtable (0x63da00+0xc), retail-only
-int TCampaignPrimarySkillBonus::GetIconIndex() const
+int TCampaignPrimarySkillBonus::getIconIndex() const
 {
     int best = 0;
     int bestValue = 0;
-    for (int iSkill = 0; iSkill < 4; ++iSkill) {
-        if (m_skills[iSkill] > bestValue) {
-            bestValue = m_skills[iSkill];
-            best = iSkill;
+    // Before normalization (locals): iSkill.
+    for (int skill = 0; skill < 4; ++skill) {
+        if (m_skills[skill] > bestValue) {
+            bestValue = m_skills[skill];
+            best = skill;
         }
     }
     return best;
@@ -513,27 +567,28 @@ int TCampaignPrimarySkillBonus::GetIconIndex() const
 // The running counter is decremented AFTER the row is appended, so it is
 // the number of rows still to come that picks the separator.
 VA(0x00484910, 0x275)  // anchor-vtable (0x63da00+0x10), retail-only
-std::string TCampaignPrimarySkillBonus::GetText() const
+std::string TCampaignPrimarySkillBonus::getText() const
 {
     std::string list;
     int remaining = 0;
-    int iStat;
-    for (iStat = 0; iStat < 4; ++iStat)
-        if (m_skills[iStat] > 0)
+    // Before normalization (locals): iStat.
+    int stat;
+    for (stat = 0; stat < 4; ++stat)
+        if (m_skills[stat] > 0)
             ++remaining;
-    for (iStat = 0; iStat < 4; ++iStat) {
-        if (m_skills[iStat] > 0) {
-            list += format_string(
+    for (stat = 0; stat < 4; ++stat) {
+        if (m_skills[stat] > 0) {
+            list += formatString(
                 DATA_COMPGEN(0x00677278, primarySkillBonusFormat, "+%d %s"),
-                m_skills[iStat], gPrimarySkillNames[iStat]);
+                m_skills[stat], g_primarySkillNames[stat]);
             --remaining;
             if (remaining == 1)
-                list += gpGeneralText->Text[142];
+                list += g_generalText->m_text[142];
             else if (remaining > 0)
                 list += ", ";
         }
     }
-    list = format_string(gpGeneralText->Text[708], list.c_str());
+    list = formatString(g_generalText->m_text[708], list.c_str());
     return list;
 }
 
@@ -542,92 +597,93 @@ std::string TCampaignPrimarySkillBonus::GetText() const
 // non-positive one falls back to the stat's own floor - zero for attack
 // and defence, one for power and knowledge.
 VA(0x00484b90, 0x5D)  // anchor-vtable (0x63da00+0x14), retail-only
-void TCampaignPrimarySkillBonus::Apply(int whichPlayer) const
+void TCampaignPrimarySkillBonus::apply(int whichPlayer) const
 {
-    hero* target = GetCampaignBonusHero(m_hero, whichPlayer);
+    hero* target = getCampaignBonusHero(m_hero, whichPlayer);
     if (target != 0) {
-        for (int iStat = 0; iStat < 4; ++iStat) {
+        // Before normalization (locals): iStat.
+        for (int stat = 0; stat < 4; ++stat) {
             int current;
-            if (target->stats[iStat] > 99)
+            if (target->m_stats[stat] > 99)
                 current = 99;
-            else if (target->stats[iStat] > 0)
-                current = target->stats[iStat];
+            else if (target->m_stats[stat] > 0)
+                current = target->m_stats[stat];
             else
-                current = iStat >= 2;
-            target->stats[iStat] = current + m_skills[iStat];
+                current = stat >= 2;
+            target->m_stats[stat] = current + m_skills[stat];
         }
     }
 }
 
 VA(0x00484bf0, 0x31)  // anchor-vtable (0x63da00+0x18), retail-only
-void TCampaignPrimarySkillBonus::Read(TAbstractFile* file)
+void TCampaignPrimarySkillBonus::read(TAbstractFile* file)
 {
     short heroId;
-    file->Read(&heroId, sizeof(short));
+    file->read(&heroId, sizeof(short));
     m_hero = heroId;
-    file->Read(m_skills, sizeof(m_skills));
+    file->read(m_skills, sizeof(m_skills));
 }
 
 VA(0x00484c30, 0x6)  // anchor-string (SSkilBon.def), retail-only
-const char* TCampaignSecondarySkillBonus::GetIconDefName() const
+const char* TCampaignSecondarySkillBonus::getIconDefName() const
 {
     return DATA_COMPGEN(0x00677280, secondarySkillBonusDefName, "SSkilBon.def");
 }
 
 VA(0x00484c40, 0xE)  // anchor-vtable (0x63d9e0+0xc), retail-only
-int TCampaignSecondarySkillBonus::GetIconIndex() const
+int TCampaignSecondarySkillBonus::getIconIndex() const
 {
     return m_skill * 3 + m_level - 1;
 }
 
 VA(0x00484c50, 0x4B)  // anchor-vtable (0x63d9e0+0x10), retail-only
-std::string TCampaignSecondarySkillBonus::GetText() const
+std::string TCampaignSecondarySkillBonus::getText() const
 {
-    return format_string(gpGeneralText->Text[719],
-                         gSkillMasteryNamesBiased[m_level],
-                         akSSkillTraits[m_skill].name);
+    return formatString(g_generalText->m_text[719],
+                         g_skillMasteryNamesBiased[m_level],
+                         g_sSkillTraits[m_skill].m_name);
 }
 
 // A skill the hero does not have yet goes through GiveSS, which also
 // takes the free slot; an already-known one is written in place. Either
 // way a hero who is already better keeps what he has.
 VA(0x00484ca0, 0x4F)  // anchor-vtable (0x63d9e0+0x14), retail-only
-void TCampaignSecondarySkillBonus::Apply(int whichPlayer) const
+void TCampaignSecondarySkillBonus::apply(int whichPlayer) const
 {
-    hero* target = GetCampaignBonusHero(m_hero, whichPlayer);
-    if (target != 0 && target->skillLevel[m_skill] <= m_level) {
-        if (target->skillLevel[m_skill] == 0)
-            target->GiveSS(m_skill, m_level);
+    hero* target = getCampaignBonusHero(m_hero, whichPlayer);
+    if (target != 0 && target->m_skillLevel[m_skill] <= m_level) {
+        if (target->m_skillLevel[m_skill] == 0)
+            target->giveSS(m_skill, m_level);
         else
-            target->skillLevel[m_skill] = m_level;
+            target->m_skillLevel[m_skill] = m_level;
     }
 }
 
 VA(0x00484cf0, 0x56)  // anchor-vtable (0x63d9e0+0x18), retail-only
-void TCampaignSecondarySkillBonus::Read(TAbstractFile* file)
+void TCampaignSecondarySkillBonus::read(TAbstractFile* file)
 {
     {
         short heroId;
-        file->Read(&heroId, sizeof(short));
+        file->read(&heroId, sizeof(short));
         m_hero = heroId;
     }
     {
         unsigned char value;
-        file->Read(&value, sizeof(unsigned char));
+        file->read(&value, sizeof(unsigned char));
         m_skill = value;
-        file->Read(&value, sizeof(unsigned char));
+        file->read(&value, sizeof(unsigned char));
         m_level = value;
     }
 }
 
 VA(0x00484d50, 0x3)  // anchor-vtable (seven of the eight bonus vftables +4), retail-only
-bool TCampaignBonus::IsBuildingBonus() const
+bool TCampaignBonus::isBuildingBonus() const
 {
     return false;
 }
 
 VA(0x00484d60, 0x6)  // anchor-string (BoRes.def), retail-only
-const char* TCampaignResourceBonus::GetIconDefName() const
+const char* TCampaignResourceBonus::getIconDefName() const
 {
     return DATA_COMPGEN(0x00677290, resourceBonusDefName, "BoRes.def");
 }
@@ -636,7 +692,7 @@ const char* TCampaignResourceBonus::GetIconDefName() const
 // every other negative frame 8, which retail spells as a `setne` on -3
 // added to seven.
 VA(0x00484d70, 0x15)  // anchor-vtable (0x63d9c0+0xc), retail-only
-int TCampaignResourceBonus::GetIconIndex() const
+int TCampaignResourceBonus::getIconIndex() const
 {
     if (m_resource < 0)
         return (m_resource != -3) + 7;
@@ -647,7 +703,7 @@ int TCampaignResourceBonus::GetIconIndex() const
 // take the shared resource-name table, and anything else leaves the name
 // null for format_string to print as an empty %s.
 VA(0x00484d90, 0x8E)  // anchor-vtable (0x63d9c0+0x10), retail-only
-std::string TCampaignResourceBonus::GetText() const
+std::string TCampaignResourceBonus::getText() const
 {
     const char* name = 0;
     switch (m_resource) {
@@ -658,26 +714,26 @@ std::string TCampaignResourceBonus::GetText() const
     case CRYSTAL:
     case GEMS:
     case GOLD:
-        name = gResourceNames[m_resource];
+        name = g_resourceNames[m_resource];
         break;
     case CAMPAIGN_BONUS_RESOURCE_WOOD_AND_ORE:
-        name = gpGeneralText->Text[722];
+        name = g_generalText->m_text[722];
         break;
     case CAMPAIGN_BONUS_RESOURCE_RARE:
-        name = gpGeneralText->Text[723];
+        name = g_generalText->m_text[723];
         break;
     case CAMPAIGN_BONUS_RESOURCE_NONE:
         break;
     }
-    return format_string(gpGeneralText->Text[718], m_amount, name);
+    return formatString(g_generalText->m_text[718], m_amount, name);
 }
 
 // Every arm re-reads the amount out of the object; retail never keeps it
 // in a register across the four rare-resource stores.
 VA(0x00484e20, 0xDE)  // anchor-vtable (0x63d9c0+0x14), retail-only
-void TCampaignResourceBonus::Apply(int whichPlayer) const
+void TCampaignResourceBonus::apply(int whichPlayer) const
 {
-    playerData* player = &gpGame->players[whichPlayer];
+    playerData* player = &g_game->m_players[whichPlayer];
     switch (m_resource) {
     case WOOD:
     case MERCURY:
@@ -686,17 +742,17 @@ void TCampaignResourceBonus::Apply(int whichPlayer) const
     case CRYSTAL:
     case GEMS:
     case GOLD:
-        player->resources[m_resource] += m_amount;
+        player->m_resources[m_resource] += m_amount;
         break;
     case CAMPAIGN_BONUS_RESOURCE_WOOD_AND_ORE:
-        player->resources[WOOD] += m_amount;
-        player->resources[ORE] += m_amount;
+        player->m_resources[WOOD] += m_amount;
+        player->m_resources[ORE] += m_amount;
         break;
     case CAMPAIGN_BONUS_RESOURCE_RARE:
-        player->resources[MERCURY] += m_amount;
-        player->resources[SULFUR] += m_amount;
-        player->resources[CRYSTAL] += m_amount;
-        player->resources[GEMS] += m_amount;
+        player->m_resources[MERCURY] += m_amount;
+        player->m_resources[SULFUR] += m_amount;
+        player->m_resources[CRYSTAL] += m_amount;
+        player->m_resources[GEMS] += m_amount;
         break;
     case CAMPAIGN_BONUS_RESOURCE_NONE:
         break;
@@ -704,16 +760,16 @@ void TCampaignResourceBonus::Apply(int whichPlayer) const
 }
 
 VA(0x00484f00, 0x37)  // anchor-vtable (0x63d9c0+0x18), retail-only
-void TCampaignResourceBonus::Read(TAbstractFile* file)
+void TCampaignResourceBonus::read(TAbstractFile* file)
 {
     {
         char resource;
-        file->Read(&resource, sizeof(char));
+        file->read(&resource, sizeof(char));
         m_resource = resource;
     }
     {
         int amount;
-        file->Read(&amount, sizeof(int));
+        file->read(&amount, sizeof(int));
         m_amount = amount;
     }
 }
@@ -738,11 +794,11 @@ VA_COMPGEN(0x00484f50, 0x23, SCALAR_DELETING_DTOR, TCampaignStartOption)
 // over - a crossover artifact, a hero placeholder, or a positive status for
 // this option's own player - and -1 otherwise.
 VA(0x00484f80, 0x7F)  // anchor-vtable (0x63d958+0x14, 0x63d98c+0x14, 0x63db0c+0x14), retail-only
-int TCampaignStartOption::_slot5(void* scenarioRecord, int which) const
+int TCampaignStartOption::slot5(void* scenarioRecord, int which) const
 {
     TCampaignBrief::ScenarioStruct* scenario =
         static_cast<TCampaignBrief::ScenarioStruct*>(scenarioRecord);
-    int player = GetPlayer(which);
+    int player = getPlayer(which);
     // The crossover index must land in a NAMED local initialised to -1 and
     // overwritten under the guard, not in either `return` form: retail sinks
     // the `-1` epilogue to the end of the body and FALLS THROUGH the last
@@ -756,10 +812,10 @@ int TCampaignStartOption::_slot5(void* scenarioRecord, int which) const
     // into its own guard with a duplicated index return (58.27, three
     // epilogues), and a ternary (71.73).
     int result = -1;
-    if (scenario->crossover_artifacts.count() > 0
-        || scenario->hero_placeholders.size() > 0
-        || scenario->heroes_status[player] > 0)
-        result = gpGame->campaign.crossoverArrayIndex;
+    if (scenario->m_crossoverArtifacts.count() > 0
+        || scenario->m_heroPlaceholders.size() > 0
+        || scenario->m_heroesStatus[player] > 0)
+        result = g_game->m_campaign.m_crossoverArrayIndex;
     return result;
 }
 
@@ -769,23 +825,24 @@ int TCampaignStartOption::_slot5(void* scenarioRecord, int which) const
 // own choices must answer slot 5 with the value asked about. An option with
 // no choices at all is asked with -1.
 VA(0x00485000, 0x8B)  // anchor-vtable (0x63d958+0x30, 0x63d98c+0x30, 0x63db0c+0x30), retail-only
-bool TCampaignStartOption::_slot12(void* scenarioRecord, int value) const
+bool TCampaignStartOption::slot12(void* scenarioRecord, int value) const
 {
     TCampaignBrief::ScenarioStruct* scenario =
         static_cast<TCampaignBrief::ScenarioStruct*>(scenarioRecord);
-    for (unsigned int iPrereq = 0;
-         iPrereq < scenario->prerequisites.size(); ++iPrereq)
-        if (scenario->prerequisites[iPrereq]
-            && !gpGame->campaign.mapScores[iPrereq].completed)
+    // Before normalization (locals): iPrereq, iChoice.
+    for (unsigned int prereq = 0;
+         prereq < scenario->m_prerequisites.size(); ++prereq)
+        if (scenario->m_prerequisites[prereq]
+            && !g_game->m_campaign.m_mapScores[prereq].m_completed)
             return false;
 
-    int count = GetCount();
+    int count = getCount();
     if (count == 0) {
-        if (_slot5(scenario, -1) == value)
+        if (slot5(scenario, -1) == value)
             return true;
     } else {
-        for (int iChoice = 0; iChoice < count; ++iChoice)
-            if (_slot5(scenario, iChoice) == value)
+        for (int choice = 0; choice < count; ++choice)
+            if (slot5(scenario, choice) == value)
                 return true;
     }
     return false;
@@ -793,7 +850,7 @@ bool TCampaignStartOption::_slot12(void* scenarioRecord, int value) const
 
 // Slot 7, inherited unchanged by all three concrete options.
 VA(0x00485090, 0x6)  // anchor-vtable (0x63d958+0x1c and both children), retail-only
-int TCampaignStartOption::_slot7(int which) const
+int TCampaignStartOption::slot7(int which) const
 {
     return -1;
 }
@@ -810,13 +867,13 @@ TCampaignStartBonusOption::~TCampaignStartBonusOption()
 VA_COMPGEN(0x00485130, 0x21, SCALAR_DELETING_DTOR, TCampaignStartBonusOption)
 
 VA(0x00485160, 0x13)  // anchor-vtable (0x63d98c+8), retail-only
-int TCampaignStartBonusOption::GetCount() const
+int TCampaignStartBonusOption::getCount() const
 {
     return m_bonuses.size();
 }
 
 VA(0x00485180, 0x6)  // anchor-vtable (0x63d98c+0x20), retail-only
-int TCampaignStartBonusOption::GetPlayer(int which) const
+int TCampaignStartBonusOption::getPlayer(int which) const
 {
     return m_player;
 }
@@ -836,19 +893,19 @@ int TCampaignStartBonusOption::GetPlayer(int which) const
 // re-prices the whole body's inlining), the pointer declared before the
 // type read (flat).
 VA(0x00485190, 0x1B0)  // anchor-vtable (0x63d98c+0x24), retail-only
-void TCampaignStartBonusOption::Read(TAbstractFile* file)
+void TCampaignStartBonusOption::read(TAbstractFile* file)
 {
     int count;
     {
         unsigned char value;
-        file->Read(&value, sizeof(unsigned char));
+        file->read(&value, sizeof(unsigned char));
         m_player = value;
-        file->Read(&value, sizeof(unsigned char));
+        file->read(&value, sizeof(unsigned char));
         count = value;
     }
     while (count--) {
         unsigned char type;
-        file->Read(&type, sizeof(unsigned char));
+        file->read(&type, sizeof(unsigned char));
         TCampaignBonus* bonus;
         switch (type) {
         case CAMPAIGN_BONUS_SPELL:
@@ -876,7 +933,7 @@ void TCampaignStartBonusOption::Read(TAbstractFile* file)
             bonus = new TCampaignResourceBonus;
             break;
         }
-        bonus->Read(file);
+        bonus->read(file);
         m_bonuses.push_back(bonus);
     }
 }
@@ -896,52 +953,52 @@ TCampaignBonus::~TCampaignBonus()
 // rejected: the choice read inline at both uses (-63.8),
 // `m_bonuses.size() > chosen` (-3.42).
 VA(0x00485380, 0x32)  // anchor-vtable (0x63d98c+0x28), retail-only
-void TCampaignStartBonusOption::Apply(void* scenario)
+void TCampaignStartBonusOption::apply(void* scenario)
 {
-    unsigned int chosen = gpGame->campaign.briefingChoice;
+    unsigned int chosen = g_game->m_campaign.m_briefingChoice;
     if (chosen < m_bonuses.size())
-        m_bonuses[chosen]->Apply(m_player);
+        m_bonuses[chosen]->apply(m_player);
 }
 
 // The town every building bonus is bound to is the map header's own main
 // town type for this option's player.
 VA(0x004853c0, 0x46)  // anchor-vtable (0x63d98c+0x2c), retail-only
-void TCampaignStartBonusOption::SetTown(CMapHeaderData* header)
+void TCampaignStartBonusOption::setTown(CMapHeaderData* header)
 {
     for (unsigned int i = 0; i < m_bonuses.size(); ++i)
-        m_bonuses[i]->SetTown(header->playerSlotAttributes[m_player].mainTownType);
+        m_bonuses[i]->setTown(header->m_playerSlotAttributes[m_player].m_mainTownType);
 }
 
 VA(0x00485410, 0x15)  // anchor-vtable (0x63d98c+0x10), retail-only
-int TCampaignStartBonusOption::GetIconIndex(int which) const
+int TCampaignStartBonusOption::getIconIndex(int which) const
 {
-    return m_bonuses[which]->GetIconIndex();
+    return m_bonuses[which]->getIconIndex();
 }
 
 VA(0x00485430, 0x15)  // anchor-vtable (0x63d98c+4), retail-only
-bool TCampaignStartBonusOption::IsBuildingBonus(int which) const
+bool TCampaignStartBonusOption::isBuildingBonus(int which) const
 {
-    return m_bonuses[which]->IsBuildingBonus();
+    return m_bonuses[which]->isBuildingBonus();
 }
 
 VA(0x00485450, 0x15)  // anchor-vtable (0x63d98c+0xc), retail-only
-const char* TCampaignStartBonusOption::GetIconDefName(void* scenario,
+const char* TCampaignStartBonusOption::getIconDefName(void* scenario,
                                                      int which) const
 {
-    return m_bonuses[which]->GetIconDefName();
+    return m_bonuses[which]->getIconDefName();
 }
 
 VA(0x00485470, 0x27)  // anchor-vtable (0x63d98c+0x18), retail-only
-std::string TCampaignStartBonusOption::GetText(void* scenario,
+std::string TCampaignStartBonusOption::getText(void* scenario,
                                                int which) const
 {
-    return m_bonuses[which]->GetText();
+    return m_bonuses[which]->getText();
 }
 
 // --- the crossover-hero starting option (vftable 0x63dad8) ---
 
 VA(0x004854a0, 0x12)  // anchor-vtable (0x63dad8+8), retail-only
-int TCampaignStartCrossoverOption::GetCount() const
+int TCampaignStartCrossoverOption::getCount() const
 {
     return m_choices.size();
 }
@@ -951,16 +1008,16 @@ int TCampaignStartCrossoverOption::GetCount() const
 // frame. The pool is reached through the campaign's own scenario table -
 // mapScores[choice.scenario].index is the crossover slot.
 VA(0x004854c0, 0x6E)  // anchor-string (hpl000kn.pcx), retail-only
-const char* TCampaignStartCrossoverOption::GetIconDefName(void* campaignRecord,
+const char* TCampaignStartCrossoverOption::getIconDefName(void* campaignRecord,
                                                           int which) const
 {
     SCampaign* campaign = static_cast<SCampaign*>(campaignRecord);
-    std::vector<hero>& pool = campaign->carryOverHeroes
-        [campaign->mapScores[m_choices[which].scenario].index];
+    std::vector<hero>& pool = campaign->m_carryOverHeroes
+        [campaign->m_mapScores[m_choices[which].m_scenario].m_index];
     hero* first = pool.size() != 0 ? pool.begin() : 0;
     if (first == 0)
         return "hpl000kn.pcx";
-    return akHeroTraits[first->portrait].largePortraitName;
+    return g_heroTraits[first->m_portrait].m_largePortraitName;
 }
 
 // The help text names the MAP the heroes come from, which is not the choice's
@@ -978,75 +1035,77 @@ const char* TCampaignStartCrossoverOption::GetIconDefName(void* campaignRecord,
 // here (this lane adds no statement pins, and the Dreamcast roster names
 // no helper to split out of a Complete-only body).
 VA(0x00485530, 0x260)  // anchor-callee(CampaignHeaderStruct::Load 0x488880), retail-only
-std::string TCampaignStartCrossoverOption::GetText(void* campaignRecord,
+std::string TCampaignStartCrossoverOption::getText(void* campaignRecord,
                                                    int which) const
 {
     TCampaignBrief::CampaignHeaderStruct* campaign =
         static_cast<TCampaignBrief::CampaignHeaderStruct*>(campaignRecord);
-    int slot = gpGame->campaign.mapScores[m_choices[which].scenario].index;
+    int slot = g_game->m_campaign.m_mapScores[m_choices[which].m_scenario].m_index;
     int source = -1;
-    for (unsigned int iScore = 0;
-         iScore < gpGame->campaign.mapScores.size(); ++iScore)
-        if (gpGame->campaign.mapScores[iScore].completed
-            && gpGame->campaign.mapScores[iScore].index == slot
+    // Before normalization (locals): iScore.
+    for (unsigned int score = 0;
+         score < g_game->m_campaign.m_mapScores.size(); ++score)
+        if (g_game->m_campaign.m_mapScores[score].m_completed
+            && g_game->m_campaign.m_mapScores[score].m_index == slot
             && (source < 0
-                || gpGame->campaign.mapScores[iScore].complete_order
-                       >= gpGame->campaign.mapScores[source].complete_order))
-            source = iScore;
+                || g_game->m_campaign.m_mapScores[score].m_completeOrder
+                       >= g_game->m_campaign.m_mapScores[source].m_completeOrder))
+            source = score;
 
     NewSMapHeader mapHeader;
-    if (campaign->Load())
-        campaign->scenarios[source]->LoadMapHeader(campaign->stream,
+    if (campaign->load())
+        campaign->m_scenarios[source]->loadMapHeader(campaign->m_stream,
                                                    &mapHeader, source);
-    return format_string(gpGeneralText->Text[720], mapHeader.mapName.c_str());
+    return formatString(g_generalText->m_text[720], mapHeader.m_mapName.c_str());
 }
 
 // The player position the pool is handed to. Slot 12 asks with -1 when the
 // option carries no choices at all, which reads the first slot instead.
 VA(0x00485790, 0x17)  // anchor-vtable (0x63dad8+0x20), retail-only
-int TCampaignStartCrossoverOption::GetPlayer(int which) const
+int TCampaignStartCrossoverOption::getPlayer(int which) const
 {
     if (which < 0)
         which = 0;
-    return m_choices[which].player;
+    return m_choices[which].m_player;
 }
 
 VA(0x004857b0, 0x1F4)  // anchor-vtable (0x63dad8+0x24), retail-only
-void TCampaignStartCrossoverOption::Read(TAbstractFile* file)
+void TCampaignStartCrossoverOption::read(TAbstractFile* file)
 {
     int count;
     {
         unsigned char value;
-        file->Read(&value, sizeof(unsigned char));
+        file->read(&value, sizeof(unsigned char));
         count = value;
     }
     while (count--) {
         TCampaignCrossoverChoice choice;
         {
             signed char player;
-            file->Read(&player, sizeof(signed char));
-            choice.player = player;
+            file->read(&player, sizeof(signed char));
+            choice.m_player = player;
         }
         {
             signed char scenario;
-            file->Read(&scenario, sizeof(signed char));
-            choice.scenario = scenario;
+            file->read(&scenario, sizeof(signed char));
+            choice.m_scenario = scenario;
         }
         m_choices.push_back(choice);
     }
 }
 
 VA(0x004859b0, 0x24)  // anchor-vtable (0x63dad8+0x14), retail-only
-int TCampaignStartCrossoverOption::_slot5(void* scenario, int which) const
+int TCampaignStartCrossoverOption::slot5(void* scenario, int which) const
 {
-    return gpGame->campaign.mapScores[m_choices[which].scenario].index;
+    return g_game->m_campaign.m_mapScores[m_choices[which].m_scenario].m_index;
 }
 
 VA(0x004859e0, 0x44)  // anchor-vtable (0x63dad8+0x30), retail-only
-bool TCampaignStartCrossoverOption::_slot12(void* scenario, int value) const
+bool TCampaignStartCrossoverOption::slot12(void* scenario, int value) const
 {
-    for (unsigned int iChoice = 0; iChoice < m_choices.size(); ++iChoice)
-        if (_slot5(scenario, iChoice) == value)
+    // Before normalization (locals): iChoice.
+    for (unsigned int choice = 0; choice < m_choices.size(); ++choice)
+        if (slot5(scenario, choice) == value)
             return true;
     return false;
 }
@@ -1055,46 +1114,46 @@ bool TCampaignStartCrossoverOption::_slot12(void* scenario, int value) const
 // the two identical bodies onto this one address, so only this copy carries
 // the claim (the starting-hero twin below is defined and left unclaimed).
 VA(0x00485a30, 0x5)  // anchor-vtable (0x63dad8+4 and 0x63db0c+4), retail-only
-bool TCampaignStartCrossoverOption::IsBuildingBonus(int which) const
+bool TCampaignStartCrossoverOption::isBuildingBonus(int which) const
 {
     return true;
 }
 
 // --- the starting-hero option (vftable 0x63db0c) ---
 
-bool TCampaignStartHeroOption::IsBuildingBonus(int which) const
+bool TCampaignStartHeroOption::isBuildingBonus(int which) const
 {
     return true;
 }
 
 VA(0x00485a40, 0x13)  // anchor-vtable (0x63db0c+8), retail-only
-int TCampaignStartHeroOption::GetCount() const
+int TCampaignStartHeroOption::getCount() const
 {
     return m_choices.size();
 }
 
 VA(0x00485a60, 0x30)  // anchor-string (CBONN1A3.pcx), retail-only
-const char* TCampaignStartHeroOption::GetIconDefName(void* campaign,
+const char* TCampaignStartHeroOption::getIconDefName(void* campaign,
                                                      int which) const
 {
-    if (m_choices[which].hero == -1)
+    if (m_choices[which].m_hero == -1)
         return "CBONN1A3.pcx";
-    return akHeroTraits[m_choices[which].hero].largePortraitName;
+    return g_heroTraits[m_choices[which].m_hero].m_largePortraitName;
 }
 
 VA(0x00485a90, 0xBA)  // anchor-vtable (0x63db0c+0x18), retail-only
-std::string TCampaignStartHeroOption::GetText(void* campaign, int which) const
+std::string TCampaignStartHeroOption::getText(void* campaign, int which) const
 {
-    if (m_choices[which].hero == -1)
-        return gpGeneralText->Text[721];
-    return format_string(gpGeneralText->Text[716],
-                         akHeroTraits[m_choices[which].hero].defaultName);
+    if (m_choices[which].m_hero == -1)
+        return g_generalText->m_text[721];
+    return formatString(g_generalText->m_text[716],
+                         g_heroTraits[m_choices[which].m_hero].m_defaultName);
 }
 
 VA(0x00485b50, 0x10)  // anchor-vtable (0x63db0c+0x20), retail-only
-int TCampaignStartHeroOption::GetPlayer(int which) const
+int TCampaignStartHeroOption::getPlayer(int which) const
 {
-    return m_choices[which].player;
+    return m_choices[which].m_player;
 }
 
 // 2026-09-06, polish lane 38: the read loop is `while (count--)`, not
@@ -1108,12 +1167,12 @@ int TCampaignStartHeroOption::GetPlayer(int which) const
 // one binding. This body differs from its two siblings only by the
 // `m_choices.erase(begin, end)` ahead of the loop.
 VA(0x00485b60, 0x1FB)  // anchor-vtable (0x63db0c+0x24), retail-only
-void TCampaignStartHeroOption::Read(TAbstractFile* file)
+void TCampaignStartHeroOption::read(TAbstractFile* file)
 {
     int count;
     {
         signed char value;
-        file->Read(&value, sizeof(signed char));
+        file->read(&value, sizeof(signed char));
         count = value;
     }
     m_choices.erase(m_choices.begin(), m_choices.end());
@@ -1121,26 +1180,26 @@ void TCampaignStartHeroOption::Read(TAbstractFile* file)
         TCampaignHeroChoice choice;
         {
             signed char player;
-            file->Read(&player, sizeof(signed char));
-            choice.player = player;
+            file->read(&player, sizeof(signed char));
+            choice.m_player = player;
         }
         {
             short heroId;
-            file->Read(&heroId, sizeof(short));
-            choice.hero = heroId;
+            file->read(&heroId, sizeof(short));
+            choice.m_hero = heroId;
         }
         m_choices.push_back(choice);
     }
 }
 
 VA(0x00485d60, 0x11)  // anchor-vtable (0x63db0c+0x1c), retail-only
-int TCampaignStartHeroOption::_slot7(int which) const
+int TCampaignStartHeroOption::slot7(int which) const
 {
-    return m_choices[which].hero;
+    return m_choices[which].m_hero;
 }
 
 VA(0x00485d80, 0x3)  // anchor-vtable (0x63d938+0x1c), retail-only
-void TCampaignBonus::SetTown(int)
+void TCampaignBonus::setTown(int)
 {
 }
 
@@ -1150,10 +1209,10 @@ void TCampaignBonus::SetTown(int)
 // EDX. The 512-byte chunk buffer is retail's: the payload is copied into the
 // string's own frozen buffer half a kilobyte at a time.
 VA(0x00485d90, 0x1BB)  // anchor-caller(ScenarioStruct::Read +0x2b), retail-only
-std::string ReadLengthPrefixedString(TAbstractFile* infile)
+std::string readLengthPrefixedString(TAbstractFile* infile)
 {
     unsigned int length = 0;
-    infile->Read(&length, sizeof(unsigned int));
+    infile->read(&length, sizeof(unsigned int));
 
     unsigned int remaining = length;
     std::string text;
@@ -1164,7 +1223,7 @@ std::string ReadLengthPrefixedString(TAbstractFile* infile)
         unsigned int count = remaining;
         if (count >= sizeof(chunk))
             count = sizeof(chunk);
-        infile->Read(chunk, count);
+        infile->read(chunk, count);
         std::copy(chunk, chunk + count, dest);
         dest += count;
         remaining -= count;
@@ -1180,11 +1239,12 @@ std::string ReadLengthPrefixedString(TAbstractFile* infile)
 // After the caller's pointer/lifetime corrections, default zero construction
 // reaches 83.29%; the unsigned-long(0) constructor is the 80.95% control.
 template <size_t N>
-std::bitset<N> ReadPackedCampaignBits(TAbstractFile* infile)
+// Before normalization (function): ReadPackedCampaignBits.
+std::bitset<N> readPackedCampaignBits(TAbstractFile* infile)
 {
     std::bitset<N> result;
     unsigned char packed[(N + 7) / 8];
-    infile->Read(packed, sizeof(packed));
+    infile->read(packed, sizeof(packed));
     for (unsigned int index = 0; index < N; ++index) {
         typename std::bitset<N>::reference bit = result[index];
         bit = (packed[index >> 3] & (1 << (index & 7))) != 0;
@@ -1200,10 +1260,10 @@ std::bitset<N> ReadPackedCampaignBits(TAbstractFile* infile)
 VA(0x00485f50, 0x8B)  // ~ScenarioStruct's immediate predecessor, retail-only
 TCampaignBrief::ScenarioStruct::ScenarioStruct()
 {
-    prologue = 0;
-    epilogue = 0;
-    options = 0;
-    memset(heroes_status, 0, sizeof(heroes_status));
+    m_prologue = 0;
+    m_epilogue = 0;
+    m_options = 0;
+    memset(m_heroesStatus, 0, sizeof(m_heroesStatus));
 }
 
 // Complete-only. Retail destroys the two MapTextStruct records and the
@@ -1213,9 +1273,9 @@ TCampaignBrief::ScenarioStruct::ScenarioStruct()
 VA(0x00485fe0, 0x12C)  // ~CampaignHeaderStruct's per-scenario delete callee, retail-only
 TCampaignBrief::ScenarioStruct::~ScenarioStruct()
 {
-    delete prologue;
-    delete epilogue;
-    delete options;
+    delete m_prologue;
+    delete m_epilogue;
+    delete m_options;
 }
 
 // Complete-only. DoPreLoadCustomization's per-hero half: the map's own
@@ -1237,28 +1297,28 @@ TCampaignBrief::ScenarioStruct::~ScenarioStruct()
 // every one of them) and both `owner` and `heroClass` are named locals -
 // retail evaluates argument 1 FIRST, which no in-call spelling reproduces.
 VA(0x00486110, 0x32F)  // anchor-caller(DoPreLoadCustomization +0x117), retail-only
-void game::RehomeCampaignHeroSetup(int heroId)
+void game::rehomeCampaignHeroSetup(int heroId)
 {
-    HeroExtra& setup = heroSetup[heroId];
-    if (setup.location.x < 0)
+    HeroExtra& setup = m_heroSetup[heroId];
+    if (setup.m_location.m_x < 0)
         return;
 
-    int owner = setup.Owner;
-    THeroClass heroClass = akHeroTraits[heroId].heroClass;
-    int newHeroId = GetNewHeroId(owner, kNumHeroClasses, 1, heroClass);
+    int owner = setup.m_owner;
+    THeroClass heroClass = g_heroTraits[heroId].m_heroClass;
+    int newHeroId = getNewHeroId(owner, kNumHeroClasses, 1, heroClass);
     if (newHeroId == -1) {
-        setup.location.x = -1;
+        setup.m_location.m_x = -1;
         return;
     }
 
-    heroSetup[newHeroId] = setup;
-    HeroExtra& newSetup = heroSetup[newHeroId];
-    newSetup.id = newHeroId;
-    setup.location.x = -1;
-    heroAvailability[newHeroId] = setup.Owner;
-    heroAvailability[heroId] = hero::HERO_AVAILABILITY_TAVERN_POOL;
-    if (newSetup.PortraitNumber == heroId)
-        newSetup.PortraitNumber = newHeroId;
+    m_heroSetup[newHeroId] = setup;
+    HeroExtra& newSetup = m_heroSetup[newHeroId];
+    newSetup.m_id = newHeroId;
+    setup.m_location.m_x = -1;
+    m_heroAvailability[newHeroId] = setup.m_owner;
+    m_heroAvailability[heroId] = hero::HERO_AVAILABILITY_TAVERN_POOL;
+    if (newSetup.m_portraitNumber == heroId)
+        newSetup.m_portraitNumber = newHeroId;
 }
 
 // game::NewMap calls this on gpGame->campaign when the map has a campaign
@@ -1272,20 +1332,21 @@ void game::RehomeCampaignHeroSetup(int heroId)
 // scores 81.57 and leaves different entry branches and reloads. The exact
 // form has retail's JE entry tests, JA backedges, and 0xc stack frame.
 VA(0x00486440, 0x145)  // anchor-caller(game::NewMap +0x7bc), dc 0x7d22c
-void SCampaign::DoPreLoadCustomization()
+void SCampaign::doPreLoadCustomization()
 {
-    unsigned int iPool;
-    for (iPool = carryOverHeroes.size(); iPool--;) {
-        std::vector<hero>& pool = carryOverHeroes[iPool];
-        for (unsigned int iHero = pool.size(); iHero--;)
-            gpGame->heroAvailability[pool[iHero].id] =
+    // Before normalization (locals): iPool, iHero.
+    unsigned int poolIndex;
+    for (poolIndex = m_carryOverHeroes.size(); poolIndex--;) {
+        std::vector<hero>& pool = m_carryOverHeroes[poolIndex];
+        for (unsigned int heroIndex = pool.size(); heroIndex--;)
+            g_game->m_heroAvailability[pool[heroIndex].m_id] =
                 hero::HERO_AVAILABILITY_TAVERN_POOL;
     }
 
-    for (iPool = carryOverHeroes.size(); iPool--;) {
-        std::vector<hero>& pool = carryOverHeroes[iPool];
-        for (unsigned int iHero = pool.size(); iHero--;)
-            gpGame->RehomeCampaignHeroSetup(pool[iHero].id);
+    for (poolIndex = m_carryOverHeroes.size(); poolIndex--;) {
+        std::vector<hero>& pool = m_carryOverHeroes[poolIndex];
+        for (unsigned int heroIndex = pool.size(); heroIndex--;)
+            g_game->rehomeCampaignHeroSetup(pool[heroIndex].m_id);
     }
 }
 
@@ -1294,205 +1355,205 @@ void SCampaign::DoPreLoadCustomization()
 // artifact source boundaries. Retail independently proves the ScenarioStruct
 // receiver (+0x44..+0xa4), HeroPlaceholderData argument, and source hero.
 VA(0x00486590, 0xA84)  // two calls from ScenarioStruct's 0x487290 map setup
-void TCampaignBrief::ScenarioStruct::InitializeCrossoverHero(
+void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
     HeroPlaceholderData* placeholder, hero* sourceHero)
 {
-    CObject* object = placeholder->object;
-    hero* currentHero = gpGame->GetHero(sourceHero->id);
-    currentHero->field_01e = 0;
-    currentHero->id = sourceHero->id;
-    SCampaign* currentCampaign = &gpGame->campaign;
+    CObject* object = placeholder->m_object;
+    hero* currentHero = g_game->getHero(sourceHero->m_id);
+    currentHero->m_order = 0;
+    currentHero->m_id = sourceHero->m_id;
+    SCampaign* currentCampaign = &g_game->m_campaign;
     int slot;
 
-    if (currentCampaign->currentCampaign == CROSSOVER_SPLIT_CAMPAIGN
-        && (currentCampaign->currentMap == CROSSOVER_SPLIT_FIRST_SCENARIO
-            || currentCampaign->currentMap
-                == CROSSOVER_SPLIT_LAST_SCENARIO)
-        && (currentCampaign->mapScores[0].completed
-            || currentCampaign->mapScores[1].completed)) {
-        crossover_creatures.reset();
+    if (currentCampaign->m_currentCampaign == g_crossoverSplitCampaign
+        && (currentCampaign->m_currentMap == g_crossoverSplitFirstScenario
+            || currentCampaign->m_currentMap
+                == g_crossoverSplitLastScenario)
+        && (currentCampaign->m_mapScores[0].m_completed
+            || currentCampaign->m_mapScores[1].m_completed)) {
+        m_crossoverCreatures.reset();
     }
 
-    if (retain_xp) {
-        currentHero->experience = sourceHero->experience;
-        currentHero->level = sourceHero->level;
+    if (m_retainXp) {
+        currentHero->m_experience = sourceHero->m_experience;
+        currentHero->m_level = sourceHero->m_level;
     }
 
-    if (retain_pskills) {
-        type_artifact savedArtifacts[CROSSOVER_PRIMARY_ARTIFACT_SLOTS];
-        for (slot = 0; slot < CROSSOVER_PRIMARY_ARTIFACT_SLOTS; ++slot)
+    if (m_retainPskills) {
+        type_artifact savedArtifacts[g_crossoverPrimaryArtifactSlots];
+        for (slot = 0; slot < g_crossoverPrimaryArtifactSlots; ++slot)
             savedArtifacts[slot] = type_artifact();
 
-        for (slot = 0; slot < CROSSOVER_PRIMARY_ARTIFACT_SLOTS; ++slot) {
-            type_artifact artifact = currentHero->equipped[slot];
-            if (artifact.artifactId != ARTIFACT_NONE) {
+        for (slot = 0; slot < g_crossoverPrimaryArtifactSlots; ++slot) {
+            type_artifact artifact = currentHero->m_equipped[slot];
+            if (artifact.m_artifactId != ARTIFACT_NONE) {
                 savedArtifacts[slot] = artifact;
-                currentHero->remove_artifact(slot);
+                currentHero->removeArtifact(slot);
             }
         }
 
-        for (slot = 0; slot < CROSSOVER_PRIMARY_ARTIFACT_SLOTS; ++slot) {
-            type_artifact artifact = sourceHero->equipped[slot];
-            if (artifact.artifactId != ARTIFACT_NONE)
-                currentHero->equip_artifact(&artifact, slot);
+        for (slot = 0; slot < g_crossoverPrimaryArtifactSlots; ++slot) {
+            type_artifact artifact = sourceHero->m_equipped[slot];
+            if (artifact.m_artifactId != ARTIFACT_NONE)
+                currentHero->equipArtifact(&artifact, slot);
         }
 
-        for (int skill = 0; skill < CROSSOVER_PRIMARY_SKILLS; ++skill) {
-            currentHero->SetPrimarySkill(
-                skill, sourceHero->GetPrimarySkill(skill));
+        for (int skill = 0; skill < g_crossoverPrimarySkills; ++skill) {
+            currentHero->setPrimarySkill(
+                skill, sourceHero->getPrimarySkill(skill));
         }
 
-        for (slot = 0; slot < CROSSOVER_PRIMARY_ARTIFACT_SLOTS; ++slot) {
-            type_artifact artifact = currentHero->equipped[slot];
-            if (artifact.artifactId != ARTIFACT_NONE)
-                currentHero->remove_artifact(slot);
+        for (slot = 0; slot < g_crossoverPrimaryArtifactSlots; ++slot) {
+            type_artifact artifact = currentHero->m_equipped[slot];
+            if (artifact.m_artifactId != ARTIFACT_NONE)
+                currentHero->removeArtifact(slot);
         }
 
-        for (slot = 0; slot < CROSSOVER_PRIMARY_ARTIFACT_SLOTS; ++slot) {
-            if (savedArtifacts[slot].artifactId != ARTIFACT_NONE)
-                currentHero->equip_artifact(&savedArtifacts[slot], slot);
+        for (slot = 0; slot < g_crossoverPrimaryArtifactSlots; ++slot) {
+            if (savedArtifacts[slot].m_artifactId != ARTIFACT_NONE)
+                currentHero->equipArtifact(&savedArtifacts[slot], slot);
         }
     }
 
-    if (retain_sskills) {
-        currentHero->skillCount = sourceHero->skillCount;
-        memcpy(currentHero->skillLevel, sourceHero->skillLevel,
-               sizeof(currentHero->skillLevel));
-        memcpy(currentHero->skillOrder, sourceHero->skillOrder,
-               sizeof(currentHero->skillOrder));
+    if (m_retainSskills) {
+        currentHero->m_skillCount = sourceHero->m_skillCount;
+        memcpy(currentHero->m_skillLevel, sourceHero->m_skillLevel,
+               sizeof(currentHero->m_skillLevel));
+        memcpy(currentHero->m_skillOrder, sourceHero->m_skillOrder,
+               sizeof(currentHero->m_skillOrder));
     }
 
     int triggerX;
     int triggerY;
-    object->FindTrigger(triggerX, triggerY);
-    currentHero->x = static_cast<short>(triggerX);
-    currentHero->y = static_cast<short>(triggerY);
-    currentHero->z = object->z;
-    currentHero->owner = static_cast<signed char>(placeholder->owner);
-    currentHero->heroClass = sourceHero->heroClass;
-    currentHero->patrolRadius = -1;
-    currentHero->patrolX = hero::kPatrolNone;
-    strcpy(currentHero->name, sourceHero->name);
-    currentHero->portrait = sourceHero->portrait;
+    object->findTrigger(triggerX, triggerY);
+    currentHero->m_x = static_cast<short>(triggerX);
+    currentHero->m_y = static_cast<short>(triggerY);
+    currentHero->m_z = object->m_z;
+    currentHero->m_owner = static_cast<signed char>(placeholder->m_owner);
+    currentHero->m_heroClass = sourceHero->m_heroClass;
+    currentHero->m_patrolRadius = -1;
+    currentHero->m_patrolX = hero::kPatrolNone;
+    strcpy(currentHero->m_name, sourceHero->m_name);
+    currentHero->m_portrait = sourceHero->m_portrait;
 
-    if (gbUnk69774c) {
-        if (currentCampaign->currentCampaign == CROSSOVER_BONUS_CAMPAIGN
-            && currentCampaign->currentMap == CROSSOVER_BONUS_SCENARIO
-            && sourceHero->id == CROSSOVER_BONUS_HERO) {
-            currentHero->portrait = CROSSOVER_BONUS_PORTRAIT;
-            currentHero->SetPrimarySkill(
-                0, currentHero->GetPrimarySkill(0)
-                    + CROSSOVER_BONUS_AMOUNT);
-            currentHero->SetPrimarySkill(
-                1, currentHero->GetPrimarySkill(1)
-                    + CROSSOVER_BONUS_AMOUNT);
+    if (g_unk69774c) {
+        if (currentCampaign->m_currentCampaign == g_crossoverBonusCampaign
+            && currentCampaign->m_currentMap == g_crossoverBonusScenario
+            && sourceHero->m_id == g_crossoverBonusHero) {
+            currentHero->m_portrait = g_crossoverBonusPortrait;
+            currentHero->setPrimarySkill(
+                0, currentHero->getPrimarySkill(0)
+                    + g_crossoverBonusAmount);
+            currentHero->setPrimarySkill(
+                1, currentHero->getPrimarySkill(1)
+                    + g_crossoverBonusAmount);
         }
-        if (currentCampaign->currentCampaign == CROSSOVER_PATROL_CAMPAIGN
-            && (currentCampaign->currentMap
-                    == CROSSOVER_PATROL_FIRST_SCENARIO
-                || currentCampaign->currentMap
-                    == CROSSOVER_PATROL_LAST_SCENARIO)
-            && sourceHero->id == CROSSOVER_PATROL_HERO) {
-            currentHero->patrolRadius = CROSSOVER_PATROL_RADIUS;
-            currentHero->patrolX = static_cast<unsigned char>(triggerX);
-            currentHero->patrolY = static_cast<unsigned char>(triggerY);
+        if (currentCampaign->m_currentCampaign == g_crossoverPatrolCampaign
+            && (currentCampaign->m_currentMap
+                    == g_crossoverPatrolFirstScenario
+                || currentCampaign->m_currentMap
+                    == g_crossoverPatrolLastScenario)
+            && sourceHero->m_id == g_crossoverPatrolHero) {
+            currentHero->m_patrolRadius = g_crossoverPatrolRadius;
+            currentHero->m_patrolX = static_cast<unsigned char>(triggerX);
+            currentHero->m_patrolY = static_cast<unsigned char>(triggerY);
         }
     }
 
-    currentHero->army.Initialize();
+    currentHero->m_army.initialize();
     for (slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
-        if (sourceHero->army.armies[slot] != -1
-            && crossover_creatures.test(sourceHero->army.armies[slot])) {
-            currentHero->army.Add(sourceHero->army.armies[slot],
-                                  sourceHero->army.numTroops[slot], -1);
+        if (sourceHero->m_army.m_armies[slot] != -1
+            && m_crossoverCreatures.test(sourceHero->m_army.m_armies[slot])) {
+            currentHero->m_army.add(sourceHero->m_army.m_armies[slot],
+                                  sourceHero->m_army.m_numTroops[slot], -1);
         }
     }
-    if (currentHero->army.get_creature_total() == 0)
-        gpGame->SetRandomHeroArmies(currentHero->id, 0, 0);
+    if (currentHero->m_army.getCreatureTotal() == 0)
+        g_game->setRandomHeroArmies(currentHero->m_id, 0, 0);
 
-    if (retain_spellbook) {
-        memset(currentHero->in_spellbook, 0,
-               sizeof(currentHero->in_spellbook));
-        memset(currentHero->available_spells, 0,
-               sizeof(currentHero->available_spells));
+    if (m_retainSpellbook) {
+        memset(currentHero->m_inSpellbook, 0,
+               sizeof(currentHero->m_inSpellbook));
+        memset(currentHero->m_availableSpells, 0,
+               sizeof(currentHero->m_availableSpells));
         for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
-            if (sourceHero->in_spellbook[spell])
-                currentHero->AddSpell(spell);
+            if (sourceHero->m_inSpellbook[spell])
+                currentHero->addSpell(spell);
         }
-        if (!retain_artifacts
-            && sourceHero->equipped[hero::EQUIPPED_SLOT_SPELLBOOK].artifactId
+        if (!m_retainArtifacts
+            && sourceHero->m_equipped[hero::EQUIPPED_SLOT_SPELLBOOK].m_artifactId
                 == ARTIFACT_SPELLBOOK
-            && currentHero->equipped[hero::EQUIPPED_SLOT_SPELLBOOK].artifactId
+            && currentHero->m_equipped[hero::EQUIPPED_SLOT_SPELLBOOK].m_artifactId
                 == ARTIFACT_NONE) {
             type_artifact spellbook(ARTIFACT_SPELLBOOK, -1);
-            currentHero->equip_artifact(&spellbook, -1);
+            currentHero->equipArtifact(&spellbook, -1);
         }
     }
 
-    if (retain_artifacts) {
-        for (slot = 0; slot < CROSSOVER_EQUIPPED_ARTIFACT_SLOTS; ++slot) {
-            type_artifact artifact = currentHero->equipped[slot];
-            if (artifact.artifactId != ARTIFACT_NONE)
-                currentHero->remove_artifact(slot);
+    if (m_retainArtifacts) {
+        for (slot = 0; slot < g_crossoverEquippedArtifactSlots; ++slot) {
+            type_artifact artifact = currentHero->m_equipped[slot];
+            if (artifact.m_artifactId != ARTIFACT_NONE)
+                currentHero->removeArtifact(slot);
         }
-        for (slot = 0; slot < CROSSOVER_EQUIPPED_ARTIFACT_SLOTS; ++slot) {
-            type_artifact artifact = sourceHero->equipped[slot];
-            if (artifact.artifactId != ARTIFACT_NONE)
-                currentHero->equip_artifact(&artifact, slot);
+        for (slot = 0; slot < g_crossoverEquippedArtifactSlots; ++slot) {
+            type_artifact artifact = sourceHero->m_equipped[slot];
+            if (artifact.m_artifactId != ARTIFACT_NONE)
+                currentHero->equipArtifact(&artifact, slot);
         }
-        while (currentHero->get_number_in_backpack(1) > 0) {
-            currentHero->remove_backpack_artifact(
-                static_cast<short>(currentHero->get_last_backpack_index()));
+        while (currentHero->getNumberInBackpack(1) > 0) {
+            currentHero->removeBackpackArtifact(
+                static_cast<short>(currentHero->getLastBackpackIndex()));
         }
         for (slot = 0; slot < HERO_BACKPACK_CAPACITY; ++slot) {
-            if (sourceHero->backpack[slot].artifactId != ARTIFACT_NONE)
-                currentHero->add_to_backpack(&sourceHero->backpack[slot], -1);
+            if (sourceHero->m_backpack[slot].m_artifactId != ARTIFACT_NONE)
+                currentHero->addToBackpack(&sourceHero->m_backpack[slot], -1);
         }
     } else {
-        for (slot = 0; slot < CROSSOVER_EQUIPPED_ARTIFACT_SLOTS; ++slot) {
-            type_artifact artifact = sourceHero->equipped[slot];
-            if (artifact.artifactId != ARTIFACT_NONE
-                && crossover_artifacts.test(artifact.artifactId)) {
-                type_artifact displaced = currentHero->equipped[slot];
-                if (displaced.artifactId != ARTIFACT_NONE)
-                    currentHero->remove_artifact(slot);
-                currentHero->equip_artifact(&artifact, slot);
+        for (slot = 0; slot < g_crossoverEquippedArtifactSlots; ++slot) {
+            type_artifact artifact = sourceHero->m_equipped[slot];
+            if (artifact.m_artifactId != ARTIFACT_NONE
+                && m_crossoverArtifacts.test(artifact.m_artifactId)) {
+                type_artifact displaced = currentHero->m_equipped[slot];
+                if (displaced.m_artifactId != ARTIFACT_NONE)
+                    currentHero->removeArtifact(slot);
+                currentHero->equipArtifact(&artifact, slot);
             }
         }
         for (slot = 0; slot < HERO_BACKPACK_CAPACITY; ++slot) {
-            type_artifact artifact = sourceHero->backpack[slot];
-            if (artifact.artifactId != ARTIFACT_NONE
-                && crossover_artifacts.test(artifact.artifactId)) {
-                currentHero->add_to_backpack(&artifact, -1);
+            type_artifact artifact = sourceHero->m_backpack[slot];
+            if (artifact.m_artifactId != ARTIFACT_NONE
+                && m_crossoverArtifacts.test(artifact.m_artifactId)) {
+                currentHero->addToBackpack(&artifact, -1);
             }
         }
     }
 
-    currentHero->sex = sourceHero->sex;
-    if (sourceHero->hasCustomName) {
-        currentHero->customName = sourceHero->HeroFn_004D8FB0();
-        currentHero->hasCustomName = 1;
+    currentHero->m_sex = sourceHero->m_sex;
+    if (sourceHero->m_hasCustomName) {
+        currentHero->m_customName = sourceHero->heroFn004D8FB0();
+        currentHero->m_hasCustomName = 1;
     }
 
-    currentHero->mana = static_cast<short>(currentHero->GetMaxMana());
-    currentHero->maxMovePoints = currentHero->movePoints
-        = currentHero->GetMobility();
+    currentHero->m_mana = static_cast<short>(currentHero->getMaxMana());
+    currentHero->m_maxMovePoints = currentHero->m_movePoints
+        = currentHero->getMobility();
 
-    type_point heroLocation(currentHero->x, currentHero->y, currentHero->z);
-    --heroLocation.x;
-    NewmapCell* cell = gpGame->worldMap.cell(heroLocation);
-    if (cell->type == PRISON && cell->is_trigger)
-        --currentHero->x;
+    type_point heroLocation(currentHero->m_x, currentHero->m_y, currentHero->m_z);
+    --heroLocation.m_x;
+    NewmapCell* cell = g_game->m_worldMap.cell(heroLocation);
+    if (cell->m_type == PRISON && cell->m_isTrigger)
+        --currentHero->m_x;
 
-    gpGame->players[currentHero->owner].heroes[
-        gpGame->players[currentHero->owner].numHeroes] = currentHero->id;
-    ++gpGame->players[currentHero->owner].numHeroes;
-    currentHero->obscure_cell();
-    gpGame->heroAvailability[currentHero->id] = currentHero->owner;
-    gpGame->heroPoolMap[currentHero->id].set(currentHero->owner);
-    gpGame->SetVisibility(currentHero->x, currentHero->y, currentHero->z,
-                          currentHero->owner, currentHero->GetVisibility(), 1);
-    gpGame->campaign.field_6c.push_back(currentHero->id);
+    g_game->m_players[currentHero->m_owner].m_heroes[
+        g_game->m_players[currentHero->m_owner].m_numHeroes] = currentHero->m_id;
+    ++g_game->m_players[currentHero->m_owner].m_numHeroes;
+    currentHero->obscureCell();
+    g_game->m_heroAvailability[currentHero->m_id] = currentHero->m_owner;
+    g_game->m_heroPoolMap[currentHero->m_id].set(currentHero->m_owner);
+    g_game->setVisibility(currentHero->m_x, currentHero->m_y, currentHero->m_z,
+                          currentHero->m_owner, currentHero->getVisibility(), 1);
+    g_game->m_campaign.m_assignedCarryover.push_back(currentHero->m_id);
 }
 
 // Complete-only, and the sibling of InitializeCrossoverHero above: the map
@@ -1503,53 +1564,53 @@ void TCampaignBrief::ScenarioStruct::InitializeCrossoverHero(
 // steps one west off a town entrance, and is registered with its player,
 // the availability table, the hero pool map and the fog.
 VA(0x00487020, 0x263)  // anchor-caller(0x487290's two placeholder loops), retail-only
-void TCampaignBrief::ScenarioStruct::PlaceStartingHero(
+void TCampaignBrief::ScenarioStruct::placeStartingHero(
     HeroPlaceholderData* placeholder)
 {
-    int heroId = placeholder->heroId;
-    int owner = static_cast<signed char>(placeholder->owner);
+    int heroId = placeholder->m_heroId;
+    int owner = static_cast<signed char>(placeholder->m_owner);
     if (heroId == -1) {
-        heroId = gpGame->GetStartingHeroId(gpGame->setup.alignment[owner],
+        heroId = g_game->getStartingHeroId(g_game->m_setup.m_alignment[owner],
                                            owner, 0);
     } else {
-        gpGame->RehomeCampaignHeroSetup(heroId);
+        g_game->rehomeCampaignHeroSetup(heroId);
     }
 
-    if (gpGame->setup.startingHero[owner] == -1)
-        gpGame->setup.startingHero[owner] = heroId;
+    if (g_game->m_setup.m_startingHero[owner] == -1)
+        g_game->m_setup.m_startingHero[owner] = heroId;
 
-    CObject* object = placeholder->object;
-    hero* currentHero = gpGame->GetHero(heroId);
+    CObject* object = placeholder->m_object;
+    hero* currentHero = g_game->getHero(heroId);
     currentHero->initialize(static_cast<short>(heroId));
-    currentHero->field_01e = 0;
+    currentHero->m_order = 0;
 
     int triggerX;
     int triggerY;
-    object->FindTrigger(triggerX, triggerY);
-    currentHero->x = static_cast<short>(triggerX);
-    currentHero->y = static_cast<short>(triggerY);
-    currentHero->z = object->z;
-    currentHero->owner = static_cast<signed char>(placeholder->owner);
-    gpGame->SetRandomHeroArmies(currentHero->id, 0, 0);
-    currentHero->maxMovePoints = currentHero->movePoints
-        = currentHero->GetMobility();
+    object->findTrigger(triggerX, triggerY);
+    currentHero->m_x = static_cast<short>(triggerX);
+    currentHero->m_y = static_cast<short>(triggerY);
+    currentHero->m_z = object->m_z;
+    currentHero->m_owner = static_cast<signed char>(placeholder->m_owner);
+    g_game->setRandomHeroArmies(currentHero->m_id, 0, 0);
+    currentHero->m_maxMovePoints = currentHero->m_movePoints
+        = currentHero->getMobility();
 
-    type_point heroLocation(currentHero->x, currentHero->y, currentHero->z);
-    --heroLocation.x;
-    if (heroLocation.x >= 0) {
-        NewmapCell* cell = gpGame->worldMap.cell(heroLocation);
-        if (cell->type == TOWN && cell->is_trigger)
-            --currentHero->x;
+    type_point heroLocation(currentHero->m_x, currentHero->m_y, currentHero->m_z);
+    --heroLocation.m_x;
+    if (heroLocation.m_x >= 0) {
+        NewmapCell* cell = g_game->m_worldMap.cell(heroLocation);
+        if (cell->m_type == TOWN && cell->m_isTrigger)
+            --currentHero->m_x;
     }
 
-    gpGame->players[currentHero->owner].heroes[
-        gpGame->players[currentHero->owner].numHeroes] = currentHero->id;
-    ++gpGame->players[currentHero->owner].numHeroes;
-    currentHero->obscure_cell();
-    gpGame->heroAvailability[currentHero->id] = currentHero->owner;
-    gpGame->heroPoolMap[currentHero->id].set(currentHero->owner);
-    gpGame->SetVisibility(currentHero->x, currentHero->y, currentHero->z,
-                          currentHero->owner, currentHero->GetVisibility(), 1);
+    g_game->m_players[currentHero->m_owner].m_heroes[
+        g_game->m_players[currentHero->m_owner].m_numHeroes] = currentHero->m_id;
+    ++g_game->m_players[currentHero->m_owner].m_numHeroes;
+    currentHero->obscureCell();
+    g_game->m_heroAvailability[currentHero->m_id] = currentHero->m_owner;
+    g_game->m_heroPoolMap[currentHero->m_id].set(currentHero->m_owner);
+    g_game->setVisibility(currentHero->m_x, currentHero->m_y, currentHero->m_z,
+                          currentHero->m_owner, currentHero->getVisibility(), 1);
 }
 
 // The map placeholders are handed the campaign's carried heroes strongest
@@ -1560,8 +1621,8 @@ bool HeroPlaceholderStronger::operator()(const HeroPlaceholderData& left,
                                          const HeroPlaceholderData& right)
     const
 {
-    return static_cast<signed char>(left.powerRating)
-        > static_cast<signed char>(right.powerRating);
+    return static_cast<signed char>(left.m_powerRating)
+        > static_cast<signed char>(right.m_powerRating);
 }
 
 // Retail-only lookup boundary, name provisional. PlaceCrossoverHeroes
@@ -1571,13 +1632,14 @@ bool HeroPlaceholderStronger::operator()(const HeroPlaceholderData& left,
 // with both nested size calls intact; flattening it in the caller (same
 // cached ID, pool reference and post-decrement loops) expands those calls
 // and scores 75.0108 rather than 87.2742 before the packed-point correction.
-hero* SCampaign::FindCrossoverHero(int heroId)
+hero* SCampaign::findCrossoverHero(int heroId)
 {
-    for (int iPool = carryOverHeroes.size(); iPool--;) {
-        std::vector<hero>& pool = carryOverHeroes[iPool];
-        for (int iHero = pool.size(); iHero--;) {
-            if (pool[iHero].id == heroId)
-                return &pool[iHero];
+    // Before normalization (locals): iPool, iHero.
+    for (int poolIndex = m_carryOverHeroes.size(); poolIndex--;) {
+        std::vector<hero>& pool = m_carryOverHeroes[poolIndex];
+        for (int heroIndex = pool.size(); heroIndex--;) {
+            if (pool[heroIndex].m_id == heroId)
+                return &pool[heroIndex];
         }
     }
     return 0;
@@ -1610,17 +1672,17 @@ hero* SCampaign::FindCrossoverHero(int heroId)
 // that frame and adds coordinate-packing differences (96.68). Both probes
 // are rejected; neither recovers retail's separate trigger-output homes.
 VA(0x00487290, 0x664)  // anchor-caller(game::NewMap +0x7ce), retail-only
-void TCampaignBrief::ScenarioStruct::PlaceCrossoverHeroes()
+void TCampaignBrief::ScenarioStruct::placeCrossoverHeroes()
 {
-    SCampaign* campaign = &gpGame->campaign;
-    int choice = campaign->briefingChoice;
-    int player = options->GetPlayerPosition(choice);
-    int slot = options->_vslot5(this, choice);
-    campaign->mapScores[campaign->currentMap].index = slot;
+    SCampaign* campaign = &g_game->m_campaign;
+    int choice = campaign->m_briefingChoice;
+    int player = m_options->getPlayerPosition(choice);
+    int slot = m_options->vslot5(this, choice);
+    campaign->m_mapScores[campaign->m_currentMap].m_index = slot;
 
     std::vector<hero> heroes;
     std::vector<HeroPlaceholderData> placeholders =
-        gpGame->worldMap.heroPlaceholders;
+        g_game->m_worldMap.m_heroPlaceholders;
     if (placeholders.size() == 0)
         return;
 
@@ -1628,36 +1690,37 @@ void TCampaignBrief::ScenarioStruct::PlaceCrossoverHeroes()
               HeroPlaceholderStronger());
 
     if (slot >= 0)
-        heroes = campaign->carryOverHeroes[slot];
+        heroes = campaign->m_carryOverHeroes[slot];
 
     HeroPlaceholderData* placeholder;
-    unsigned int iPlaceholder;
-    for (iPlaceholder = 0; iPlaceholder < placeholders.size();
-         ++iPlaceholder) {
-        placeholder = &placeholders[iPlaceholder];
-        if (placeholder->heroId == -1)
+    // Before normalization (locals): iPlaceholder.
+    unsigned int placeholderIndex;
+    for (placeholderIndex = 0; placeholderIndex < placeholders.size();
+         ++placeholderIndex) {
+        placeholder = &placeholders[placeholderIndex];
+        if (placeholder->m_heroId == -1)
             continue;
 
         int carried;
         for (carried = heroes.size(); carried--;) {
-            if (heroes[carried].id == placeholder->heroId)
+            if (heroes[carried].m_id == placeholder->m_heroId)
                 break;
         }
         if (carried >= 0)
             heroes.erase(heroes.begin() + carried);
 
-        hero* carriedHero = campaign->FindCrossoverHero(placeholder->heroId);
+        hero* carriedHero = campaign->findCrossoverHero(placeholder->m_heroId);
         if (carriedHero)
-            InitializeCrossoverHero(placeholder, carriedHero);
+            initializeCrossoverHero(placeholder, carriedHero);
     }
 
     if (heroes.size() != 0) {
-        for (iPlaceholder = 0; iPlaceholder < placeholders.size();
-             ++iPlaceholder) {
-            placeholder = &placeholders[iPlaceholder];
-            if (placeholder->heroId == -1
-                && static_cast<signed char>(placeholder->owner) == player) {
-                InitializeCrossoverHero(placeholder, heroes.begin());
+        for (placeholderIndex = 0; placeholderIndex < placeholders.size();
+             ++placeholderIndex) {
+            placeholder = &placeholders[placeholderIndex];
+            if (placeholder->m_heroId == -1
+                && static_cast<signed char>(placeholder->m_owner) == player) {
+                initializeCrossoverHero(placeholder, heroes.begin());
                 heroes.erase(heroes.begin());
                 if (heroes.size() == 0)
                     break;
@@ -1665,30 +1728,30 @@ void TCampaignBrief::ScenarioStruct::PlaceCrossoverHeroes()
         }
     }
 
-    if (gpGame->mapHeader.lossCondition.Type == 1) {
-        type_point lossHero(gpGame->mapHeader.lossCondition.HeroX,
-                            gpGame->mapHeader.lossCondition.HeroY,
-                            gpGame->mapHeader.lossCondition.HeroZ);
-        NewmapCell* cell = gpGame->worldMap.cell(lossHero);
-        if (!cell->is_trigger || cell->type != HERO) {
-            for (iPlaceholder = 0; iPlaceholder < placeholders.size();
-                 ++iPlaceholder) {
-                placeholder = &placeholders[iPlaceholder];
-                CObject* object = placeholder->object;
+    if (g_game->m_mapHeader.m_lossCondition.m_type == 1) {
+        type_point lossHero(g_game->m_mapHeader.m_lossCondition.m_heroX,
+                            g_game->m_mapHeader.m_lossCondition.m_heroY,
+                            g_game->m_mapHeader.m_lossCondition.m_heroZ);
+        NewmapCell* cell = g_game->m_worldMap.cell(lossHero);
+        if (!cell->m_isTrigger || cell->m_type != HERO) {
+            for (placeholderIndex = 0; placeholderIndex < placeholders.size();
+                 ++placeholderIndex) {
+                placeholder = &placeholders[placeholderIndex];
+                CObject* object = placeholder->m_object;
                 int triggerX;
                 int triggerY;
-                object->FindTrigger(triggerX, triggerY);
-                if (triggerX == lossHero.x && triggerY == lossHero.y
-                    && object->z == lossHero.z) {
-                    PlaceStartingHero(placeholder);
+                object->findTrigger(triggerX, triggerY);
+                if (triggerX == lossHero.m_x && triggerY == lossHero.m_y
+                    && object->m_z == lossHero.m_z) {
+                    placeStartingHero(placeholder);
                     return;
                 }
             }
         }
     }
 
-    if (gpGame->players[player].numHeroes == 0)
-        PlaceStartingHero(placeholder);
+    if (g_game->m_players[player].m_numHeroes == 0)
+        placeStartingHero(placeholder);
 }
 
 // Complete-only, and game::NewMap's third campaign callee. The crossover
@@ -1714,69 +1777,70 @@ void TCampaignBrief::ScenarioStruct::PlaceCrossoverHeroes()
 // default-constructed inner artifact recovers the smaller frame but adds
 // retail-absent -1 stores and changes copy scheduling; it is not retained.
 VA(0x00487900, 0x2CD)  // anchor-caller(game::NewMap +0x5cb), retail-only
-void TCampaignBrief::ScenarioStruct::GiveCrossoverArtifacts()
+void TCampaignBrief::ScenarioStruct::giveCrossoverArtifacts()
 {
-    SCampaign* campaign = &gpGame->campaign;
-    int choice = campaign->briefingChoice;
-    int player = options->GetPlayerPosition(choice);
-    int slot = options->_vslot5(this, choice);
+    SCampaign* campaign = &g_game->m_campaign;
+    int choice = campaign->m_briefingChoice;
+    int player = m_options->getPlayerPosition(choice);
+    int slot = m_options->vslot5(this, choice);
     if (slot >= 0) {
-        std::vector<hero>& heroes = campaign->carryOverHeroes[slot];
+        std::vector<hero>& heroes = campaign->m_carryOverHeroes[slot];
         type_artifact artifact;
-        std::vector<type_artifact> artifacts = campaign->field_4c[slot];
+        std::vector<type_artifact> artifacts = campaign->m_carryoverArtifact[slot];
 
-        for (unsigned int iHero = 0;
-             iHero < heroes.size(); ++iHero) {
-            hero& carried = heroes[iHero];
-            if (gpGame->heroAvailability[carried.id]
+        // Before normalization (locals): iHero, iSlot, iArtifact, iPlayerHero.
+        for (unsigned int heroIndex = 0;
+             heroIndex < heroes.size(); ++heroIndex) {
+            hero& carried = heroes[heroIndex];
+            if (g_game->m_heroAvailability[carried.m_id]
                 != hero::HERO_AVAILABILITY_TAVERN_POOL)
                 continue;
-            int iSlot;
-            for (iSlot = 0; iSlot < CROSSOVER_EQUIPPED_ARTIFACT_SLOTS;
-                 ++iSlot) {
-                type_artifact heroArtifact = carried.equipped[iSlot];
-                if (heroArtifact.artifactId != ARTIFACT_NONE)
+            int slotIndex;
+            for (slotIndex = 0; slotIndex < g_crossoverEquippedArtifactSlots;
+                 ++slotIndex) {
+                type_artifact heroArtifact = carried.m_equipped[slotIndex];
+                if (heroArtifact.m_artifactId != ARTIFACT_NONE)
                     artifacts.push_back(heroArtifact);
             }
-            for (iSlot = 0; iSlot < HERO_BACKPACK_CAPACITY; ++iSlot) {
-                type_artifact heroArtifact = carried.backpack[iSlot];
-                if (heroArtifact.artifactId != ARTIFACT_NONE)
+            for (slotIndex = 0; slotIndex < HERO_BACKPACK_CAPACITY; ++slotIndex) {
+                type_artifact heroArtifact = carried.m_backpack[slotIndex];
+                if (heroArtifact.m_artifactId != ARTIFACT_NONE)
                     artifacts.push_back(heroArtifact);
             }
         }
 
-        for (unsigned int iArtifact = 0; iArtifact < artifacts.size();
-             ++iArtifact) {
-            artifact = artifacts[iArtifact];
-            if (artifact.artifactId == ARTIFACT_NONE)
+        for (unsigned int artifactIndex = 0; artifactIndex < artifacts.size();
+             ++artifactIndex) {
+            artifact = artifacts[artifactIndex];
+            if (artifact.m_artifactId == ARTIFACT_NONE)
                 continue;
-            if (!crossover_artifacts.at(artifact.artifactId))
+            if (!m_crossoverArtifacts.at(artifact.m_artifactId))
                 continue;
-            playerData& recipient = gpGame->players[player];
-            for (int iPlayerHero = 0;
-                 iPlayerHero < recipient.numHeroes;
-                 ++iPlayerHero) {
-                hero* target = gpGame->GetHero(
-                    recipient.heroes[iPlayerHero]);
-                if (target->GiveArtifact(&artifact, 0, 0))
+            playerData& recipient = g_game->m_players[player];
+            for (int playerHero = 0;
+                 playerHero < recipient.m_numHeroes;
+                 ++playerHero) {
+                hero* target = g_game->getHero(
+                    recipient.m_heroes[playerHero]);
+                if (target->giveArtifact(&artifact, 0, 0))
                     break;
             }
         }
     }
 
-    options->_vslot10(this);
+    m_options->vslot10(this);
 }
 
 // Complete-only. Seeks the campaign stream to this scenario's map data
 // and reads the map header out of a gzip-inflating view of it.
 VA(0x00487d30, 0x96)  // LoadScenario's sole callee, retail-only
-void TCampaignBrief::ScenarioStruct::LoadMapHeader(
+void TCampaignBrief::ScenarioStruct::loadMapHeader(
     std::streambuf* stream, NewSMapHeader* mapHeader, int which)
 {
-    stream->pubseekoff(offset, std::ios::beg, std::ios::in);
+    stream->pubseekoff(m_offset, std::ios::beg, std::ios::in);
     TGzInflateBuf inflateBuf(stream);
     TStreamBufFile file(&inflateBuf);
-    mapHeader->Read(&file, which);
+    mapHeader->read(&file, which);
 }
 
 // TAbstractFile's deleting destructor; retail keeps this object's copy
@@ -1789,11 +1853,12 @@ VA_COMPGEN(0x00487dd0, 0x23, SCALAR_DELETING_DTOR, TAbstractFile)
 // still wants is flagged in the caller's per-hero-id table. Name provisional
 // - no Dreamcast row carries it.
 VA(0x00487e10, 0x2D)  // anchor-caller(PruneCrossoverHeroes +0x62), retail-only
-void TCampaignBrief::ScenarioStruct::MarkCrossoverHeroes(unsigned char* wanted)
+void TCampaignBrief::ScenarioStruct::markCrossoverHeroes(unsigned char* wanted)
 {
-    for (unsigned int iPlaceholder = 0;
-         iPlaceholder < hero_placeholders.size(); ++iPlaceholder)
-        wanted[hero_placeholders[iPlaceholder]] = 1;
+    // Before normalization (locals): iPlaceholder.
+    for (unsigned int placeholderIndex = 0;
+         placeholderIndex < m_heroPlaceholders.size(); ++placeholderIndex)
+        wanted[m_heroPlaceholders[placeholderIndex]] = 1;
 }
 
 // Complete-only, reached only from CampaignHeaderStruct::Load's creation
@@ -1834,112 +1899,113 @@ void TCampaignBrief::ScenarioStruct::MarkCrossoverHeroes(unsigned char* wanted)
 // are the negative control. Explicitly widening the one-byte read buffers to
 // masked ints was byte-flat and is not retained.
 VA(0x00487e40, 0x586)  // anchor-caller(CampaignHeaderStruct::Load +0x379), retail-only
-void TCampaignBrief::ScenarioStruct::Read(TAbstractFile* infile,
+void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
                                           int numScenarios,
                                           int campaignVersion)
 {
-    name = ReadLengthPrefixedString(infile);
+    m_name = readLengthPrefixedString(infile);
 
     {
         int size;
-        infile->Read(&size, sizeof(int));
-        inflated_size = size;
+        infile->read(&size, sizeof(int));
+        m_inflatedSize = size;
     }
 
     int prerequisiteBits = 0;
-    infile->Read(&prerequisiteBits, (numScenarios + 7) / 8);
-    for (int iPrereq = 0; iPrereq < numScenarios; ++iPrereq)
-        prerequisites.push_back((prerequisiteBits & (1 << iPrereq)) != 0);
+    infile->read(&prerequisiteBits, (numScenarios + 7) / 8);
+    // Before normalization (locals): iPrereq.
+    for (int prereq = 0; prereq < numScenarios; ++prereq)
+        m_prerequisites.push_back((prerequisiteBits & (1 << prereq)) != 0);
 
     {
         unsigned char value;
-        infile->Read(&value, sizeof(unsigned char));
-        region_color = value;
-        infile->Read(&value, sizeof(unsigned char));
-        difficulty = value;
+        infile->read(&value, sizeof(unsigned char));
+        m_regionColor = value;
+        infile->read(&value, sizeof(unsigned char));
+        m_difficulty = value;
     }
 
-    region_desc = ReadLengthPrefixedString(infile);
+    m_regionDesc = readLengthPrefixedString(infile);
 
     {
         unsigned char present;
-        infile->Read(&present, sizeof(unsigned char));
+        infile->read(&present, sizeof(unsigned char));
         if (!present) {
-            prologue = 0;
+            m_prologue = 0;
         } else {
             MapTextStruct* text = new MapTextStruct;
-            prologue = text;
+            m_prologue = text;
             unsigned char value;
-            infile->Read(&value, sizeof(unsigned char));
-            text->video = value;
-            infile->Read(&value, sizeof(unsigned char));
-            text->audio = value;
-            text->subtitles = ReadLengthPrefixedString(infile);
+            infile->read(&value, sizeof(unsigned char));
+            text->m_video = value;
+            infile->read(&value, sizeof(unsigned char));
+            text->m_audio = value;
+            text->m_subtitles = readLengthPrefixedString(infile);
         }
     }
 
     {
         unsigned char present;
-        infile->Read(&present, sizeof(unsigned char));
+        infile->read(&present, sizeof(unsigned char));
         if (!present) {
-            epilogue = 0;
+            m_epilogue = 0;
         } else {
             MapTextStruct* text = new MapTextStruct;
-            epilogue = text;
+            m_epilogue = text;
             unsigned char value;
-            infile->Read(&value, sizeof(unsigned char));
-            text->video = value;
-            infile->Read(&value, sizeof(unsigned char));
-            text->audio = value;
-            text->subtitles = ReadLengthPrefixedString(infile);
+            infile->read(&value, sizeof(unsigned char));
+            text->m_video = value;
+            infile->read(&value, sizeof(unsigned char));
+            text->m_audio = value;
+            text->m_subtitles = readLengthPrefixedString(infile);
         }
     }
 
     {
         unsigned char flags;
-        infile->Read(&flags, sizeof(unsigned char));
-        retain_xp = flags & 1;
-        retain_pskills = (flags >> 1) & 1;
-        retain_sskills = (flags >> 2) & 1;
-        retain_spellbook = (flags >> 3) & 1;
-        retain_artifacts = (flags >> 4) & 1;
+        infile->read(&flags, sizeof(unsigned char));
+        m_retainXp = flags & 1;
+        m_retainPskills = (flags >> 1) & 1;
+        m_retainSskills = (flags >> 2) & 1;
+        m_retainSpellbook = (flags >> 3) & 1;
+        m_retainArtifacts = (flags >> 4) & 1;
     }
 
-    crossover_creatures = ReadPackedCampaignBits<CROSSOVER_CREATURE_BITS>(infile);
+    m_crossoverCreatures = readPackedCampaignBits<g_crossoverCreatureBits>(infile);
 
-    if (campaignVersion >= CAMPAIGN_VERSION_WIDE_ARTIFACTS) {
-        crossover_artifacts = ReadPackedCampaignBits<CROSSOVER_ARTIFACT_BITS>(infile);
+    if (campaignVersion >= g_campaignVersionWideArtifacts) {
+        m_crossoverArtifacts = readPackedCampaignBits<g_crossoverArtifactBits>(infile);
     } else {
-        std::bitset<129> legacyArtifacts = ReadPackedCampaignBits<129>(infile);
+        std::bitset<129> legacyArtifacts = readPackedCampaignBits<129>(infile);
         std::copy(
             bitset_iterator<129>(legacyArtifacts, 0),
-            bitset_iterator<129>(legacyArtifacts, CROSSOVER_LEGACY_ARTIFACT_BITS),
-            bitset_iterator<144>(crossover_artifacts, 0));
+            bitset_iterator<129>(legacyArtifacts, g_crossoverLegacyArtifactBits),
+            bitset_iterator<144>(m_crossoverArtifacts, 0));
     }
 
     unsigned char optionType;
-    infile->Read(&optionType, sizeof(unsigned char));
+    infile->read(&optionType, sizeof(unsigned char));
     void* record;
     switch (optionType) {
     case CAMPAIGN_START_OPTION_BONUS:
         record = new TCampaignStartBonusOption;
-        options = static_cast<ScenarioStartOptions*>(record);
+        m_options = static_cast<ScenarioStartOptions*>(record);
         break;
     case CAMPAIGN_START_OPTION_CROSSOVER:
         record = new TCampaignStartCrossoverOption;
-        options = static_cast<ScenarioStartOptions*>(record);
+        m_options = static_cast<ScenarioStartOptions*>(record);
         break;
     case CAMPAIGN_START_OPTION_HERO:
         record = new TCampaignStartHeroOption;
-        options = static_cast<ScenarioStartOptions*>(record);
+        m_options = static_cast<ScenarioStartOptions*>(record);
         break;
     default:
-        options = 0;
+        m_options = 0;
         break;
     }
-    if (options)
-        static_cast<TCampaignStartOption*>(static_cast<void*>(options))
-            ->Read(infile);
+    if (m_options)
+        static_cast<TCampaignStartOption*>(static_cast<void*>(m_options))
+            ->read(infile);
 }
 
 #if 0  // Dreamcast-only carcass; retained as evidence, not emitted for retail.
@@ -1980,7 +2046,7 @@ void SCampaign::clear_carryover_pool(TCarryOverPoolNumber pool_num)
 
 // E:\gamedcs\customcampaign.cpp:147
 DC_ONLY(0x7d22c, 0x148)
-void SCampaign::DoPreLoadCustomization()
+void SCampaign::doPreLoadCustomization()
 {
     // @stub
 }
@@ -2008,23 +2074,23 @@ VA_COMPGEN(0x00488460, 0x2C, IMPLICIT_DTOR, TCampaignStartCrossoverOption)
 VA_COMPGEN(0x00488490, 0x2C, IMPLICIT_DTOR, TCampaignStartHeroOption)
 
 VA(0x004884c0, 0x103)  // CampaignHeaderStruct::StartScenario sole caller
-void TCampaignBrief::ScenarioStruct::StartScenario(
+void TCampaignBrief::ScenarioStruct::startScenario(
     std::streambuf* stream, int option)
 {
-    int position = options->GetPlayerPosition(option);
-    gpGame->players[position].isHuman = 1;
-    gpGame->players[position].isLocal = 1;
+    int position = m_options->getPlayerPosition(option);
+    g_game->m_players[position].m_isHuman = 1;
+    g_game->m_players[position].m_isLocal = 1;
 
     int playerHeroFaces[8];
     for (int i = 0; i < 8; i++)
         playerHeroFaces[i] = -1;
-    playerHeroFaces[position] = options->GetStartingHero(option);
-    gpGame->SetupFirstPlayer();
+    playerHeroFaces[position] = m_options->getStartingHero(option);
+    g_game->setupFirstPlayer();
 
-    stream->pubseekoff(offset, std::ios::beg, std::ios::in);
+    stream->pubseekoff(m_offset, std::ios::beg, std::ios::in);
     TGzInflateBuf inflateBuf(stream);
     TStreamBufFile file(&inflateBuf);
-    gpGame->NewMap(&file, playerHeroFaces, this, -1);
+    g_game->newMap(&file, playerHeroFaces, this, -1);
 }
 
 // Complete-only. The four members default-construct (the empty
@@ -2034,10 +2100,10 @@ VA(0x004885d0, 0xCB)  // anchor-caller(TCampaignBrief ctor), retail-only
 TCampaignBrief::CampaignHeaderStruct::CampaignHeaderStruct(
     const char* filename)
 {
-    file_name = filename;
-    data = 0;
-    stream = 0;
-    file_error = CAMPAIGN_FILE_OK;
+    m_fileName = filename;
+    m_data = 0;
+    m_stream = 0;
+    m_fileError = CAMPAIGN_FILE_OK;
 }
 
 // Complete-only. Retail deletes every scenario record (null-checked by
@@ -2065,45 +2131,45 @@ TCampaignBrief::CampaignHeaderStruct::CampaignHeaderStruct(
 VA(0x004886a0, 0x132)  // anchor-caller(TCampaignBrief ctor), retail-only
 TCampaignBrief::CampaignHeaderStruct::~CampaignHeaderStruct()
 {
-    for (unsigned int i = 0; i < scenarios.size(); ++i)
-        delete scenarios[i];
-    scenarios.clear();
-    FreeData();
+    for (unsigned int i = 0; i < m_scenarios.size(); ++i)
+        delete m_scenarios[i];
+    m_scenarios.clear();
+    freeData();
 }
 
 // Complete-only; also reached from the custom-campaign list scanner
 // (0x482fd0 family). Name provisional.
 VA(0x004887e0, 0x30)  // ~CampaignHeaderStruct + 0x482fd0-family callee, retail-only
-void TCampaignBrief::CampaignHeaderStruct::FreeData()
+void TCampaignBrief::CampaignHeaderStruct::freeData()
 {
-    if (stream) {
-        delete stream;
-        stream = 0;
+    if (m_stream) {
+        delete m_stream;
+        m_stream = 0;
     }
-    if (data) {
-        delete[] data;
-        data = 0;
+    if (m_data) {
+        delete[] m_data;
+        m_data = 0;
     }
 }
 
 VA(0x00488810, 0x32)  // anchor-caller(TCampaignBrief ctor), retail-only
-bool TCampaignBrief::CampaignHeaderStruct::LoadScenario(
+bool TCampaignBrief::CampaignHeaderStruct::loadScenario(
     int which, NewSMapHeader* mapHeader)
 {
-    if (!Load())
+    if (!load())
         return false;
-    scenarios[which]->LoadMapHeader(stream, mapHeader, which);
+    m_scenarios[which]->loadMapHeader(m_stream, mapHeader, which);
     return true;
 }
 
 // Complete-only; the 0x482fd0-family caller sizes the campaign list with
 // it. Name provisional.
 VA(0x00488850, 0x2F)  // 0x482fd0-family callee, retail-only
-int TCampaignBrief::CampaignHeaderStruct::GetNumMaps() const
+int TCampaignBrief::CampaignHeaderStruct::getNumMaps() const
 {
     int numMaps = 0;
-    for (unsigned int i = 0; i < scenarios.size(); ++i) {
-        if (scenarios[i]->inflated_size > 0)
+    for (unsigned int i = 0; i < m_scenarios.size(); ++i) {
+        if (m_scenarios[i]->m_inflatedSize > 0)
             ++numMaps;
     }
     return numMaps;
@@ -2200,43 +2266,44 @@ int TCampaignBrief::CampaignHeaderStruct::GetNumMaps() const
 // TAbstractFile* rather than the concrete TStreamBufFile local is worth
 // +3.85 (45.6886 -> 49.5379) - see the note at the pointer's declaration.
 VA(0x00488880, 0x5D6)  // anchor-caller(TCampaignBrief ctor), retail-only
-bool TCampaignBrief::CampaignHeaderStruct::Load()
+bool TCampaignBrief::CampaignHeaderStruct::load()
 {
-    if (stream)
+    if (m_stream)
         return true;
 
-    for (unsigned int iScenario = 0; iScenario < scenarios.size();
-         ++iScenario)
-        delete scenarios[iScenario];
-    scenarios.clear();
-    FreeData();
+    // Before normalization (locals): iScenario, iNew, iScenario2, iSlot.
+    for (unsigned int scenarioIndex = 0; scenarioIndex < m_scenarios.size();
+         ++scenarioIndex)
+        delete m_scenarios[scenarioIndex];
+    m_scenarios.clear();
+    freeData();
 
     std::filebuf* fileBuf = new std::filebuf;
     char currentDirectory[200];
     _getcwd(currentDirectory, sizeof(currentDirectory));
     _chdir(DATA_COMPGEN(0x006772d0, oldMainMapsDir, "maps"));
-    fileBuf->open(file_name.c_str(), std::ios::in | std::ios::binary);
+    fileBuf->open(m_fileName.c_str(), std::ios::in | std::ios::binary);
     _chdir(DATA_COMPGEN(0x006755a0, parentDirectory, ".."));
     if (!fileBuf->is_open()) {
         delete fileBuf;
         LODFile* resource =
-            ResourceManager::PointToBitmapResource(file_name.c_str());
+            ResourceManager::pointToBitmapResource(m_fileName.c_str());
         if (!resource) {
-            file_error = CAMPAIGN_FILE_OPEN_FAILED;
+            m_fileError = CAMPAIGN_FILE_OPEN_FAILED;
             return false;
         }
         int resourceSize =
-            ResourceManager::GetBitmapResourceSize(file_name.c_str());
-        data = new unsigned char[resourceSize];
-        ResourceManager::ReadFromBitmapResource(resource, data, resourceSize);
-        stream = new std::strstreambuf(data, resourceSize);
+            ResourceManager::getBitmapResourceSize(m_fileName.c_str());
+        m_data = new unsigned char[resourceSize];
+        ResourceManager::readFromBitmapResource(resource, m_data, resourceSize);
+        m_stream = new std::strstreambuf(m_data, resourceSize);
     } else {
-        stream = fileBuf;
+        m_stream = fileBuf;
     }
 
     int numScenarios;
     {
-        TGzInflateBuf inflateBuf(stream);
+        TGzInflateBuf inflateBuf(m_stream);
         TStreamBufFile streamFile(&inflateBuf);
         // Retail reads through the abstract interface, not through the
         // concrete local: every read is an indirect `call [vptr+4]` on
@@ -2245,76 +2312,76 @@ bool TCampaignBrief::CampaignHeaderStruct::Load()
         // which turns all six reads into direct sgetn calls on the inflater.
         TAbstractFile* file = &streamFile;
         int intBuffer;
-        file->Read(&intBuffer, 4);
-        campaign_version = intBuffer;
-        if (campaign_version < 4) {
-            file_error = CAMPAIGN_FILE_VERSION_UNSUPPORTED;
+        file->read(&intBuffer, 4);
+        m_campaignVersion = intBuffer;
+        if (m_campaignVersion < 4) {
+            m_fileError = CAMPAIGN_FILE_VERSION_UNSUPPORTED;
             return false;
         }
-        file->Read(&intBuffer, 1);
-        region_map = intBuffer & 0xff;
-        campaign_name = ReadLengthPrefixedString(file);
-        if (campaign_name.length() == 0)
-            campaign_name = gpGeneralText->GetText(509);
-        campaign_desc = ReadLengthPrefixedString(file);
+        file->read(&intBuffer, 1);
+        m_regionMap = intBuffer & 0xff;
+        m_campaignName = readLengthPrefixedString(file);
+        if (m_campaignName.length() == 0)
+            m_campaignName = g_generalText->getText(509);
+        m_campaignDesc = readLengthPrefixedString(file);
         char charBuffer;
-        file->Read(&charBuffer, 1);
-        variable_difficulty = charBuffer != 0;
-        if (campaign_version < 5)
-            campaign_music = 0x25;
+        file->read(&charBuffer, 1);
+        m_variableDifficulty = charBuffer != 0;
+        if (m_campaignVersion < 5)
+            m_campaignMusic = 0x25;
         else {
-            file->Read(&charBuffer, 1);
-            campaign_music = charBuffer;
+            file->read(&charBuffer, 1);
+            m_campaignMusic = charBuffer;
         }
-        numScenarios = akCampaignMapTraits[region_map].m_numRegions;
-        for (int iNew = 0; iNew < numScenarios; ++iNew) {
+        numScenarios = g_campaignMapTraits[m_regionMap].m_numRegions;
+        for (int newValue = 0; newValue < numScenarios; ++newValue) {
             ScenarioStruct* scenario = new ScenarioStruct;
-            scenario->Read(file, numScenarios, campaign_version);
-            scenarios.push_back(scenario);
+            scenario->read(file, numScenarios, m_campaignVersion);
+            m_scenarios.push_back(scenario);
         }
     }
 
-    int mapOffset = stream->pubseekoff(0, std::ios::cur, std::ios::in);
+    int mapOffset = m_stream->pubseekoff(0, std::ios::cur, std::ios::in);
     NewSMapHeader mapHeader;
-    for (int iScenario2 = 0; iScenario2 < numScenarios; ++iScenario2) {
-        ScenarioStruct* scenario = scenarios[iScenario2];
-        scenario->offset = mapOffset;
-        if (scenario->inflated_size > 0) {
-            mapOffset += scenario->inflated_size;
-            scenario->LoadMapHeader(stream, &mapHeader, iScenario2);
-            scenario->options->_vslot11(&mapHeader);
-            scenario->hero_placeholders = mapHeader.placeholders;
-            for (int iSlot = 0; iSlot < 8; ++iSlot)
-                scenario->heroes_status[iSlot] =
-                    mapHeader.playerSlotAttributes[iSlot].field_30;
+    for (int scenario2 = 0; scenario2 < numScenarios; ++scenario2) {
+        ScenarioStruct* scenario = m_scenarios[scenario2];
+        scenario->m_offset = mapOffset;
+        if (scenario->m_inflatedSize > 0) {
+            mapOffset += scenario->m_inflatedSize;
+            scenario->loadMapHeader(m_stream, &mapHeader, scenario2);
+            scenario->m_options->vslot11(&mapHeader);
+            scenario->m_heroPlaceholders = mapHeader.m_placeholders;
+            for (int slotIndex = 0; slotIndex < 8; ++slotIndex)
+                scenario->m_heroesStatus[slotIndex] =
+                    mapHeader.m_playerSlotAttributes[slotIndex].m_defaultPlaceholders;
         }
     }
     return true;
 }
 
 VA(0x00488ee0, 0x1D)  // anchor-caller(TCampaignBrief ctor), retail-only
-void TCampaignBrief::CampaignHeaderStruct::StartMusic()
+void TCampaignBrief::CampaignHeaderStruct::startMusic()
 {
-    gpSoundManager->StartMP3(akCampaignMusicTraits[campaign_music].name, 0, 1);
+    g_soundManager->startMP3(g_campaignMusicTraits[m_campaignMusic].m_name, 0, 1);
 }
 
 // Complete-only. A scenario without map data is marked unavailable and
 // already completed; otherwise every prerequisite scenario must be
 // completed in the running campaign's score table.
 VA(0x00488f00, 0xAC)  // anchor-caller(TCampaignBrief ctor), retail-only
-void TCampaignBrief::CampaignHeaderStruct::GetAvailableScenarios(
+void TCampaignBrief::CampaignHeaderStruct::getAvailableScenarios(
     unsigned char* available) const
 {
-    for (unsigned int i = 0; i < scenarios.size(); ++i) {
-        ScenarioStruct* scenario = scenarios[i];
+    for (unsigned int i = 0; i < m_scenarios.size(); ++i) {
+        ScenarioStruct* scenario = m_scenarios[i];
         available[i] = 1;
-        if (scenario->inflated_size <= 0) {
+        if (scenario->m_inflatedSize <= 0) {
             available[i] = 0;
-            gpGame->campaign.mapScores[i].completed = true;
+            g_game->m_campaign.m_mapScores[i].m_completed = true;
         } else {
-            for (unsigned int j = 0; j < scenario->prerequisites.size(); ++j) {
-                if (scenario->prerequisites[j]
-                    && !gpGame->campaign.mapScores[j].completed) {
+            for (unsigned int j = 0; j < scenario->m_prerequisites.size(); ++j) {
+                if (scenario->m_prerequisites[j]
+                    && !g_game->m_campaign.m_mapScores[j].m_completed) {
                     available[i] = 0;
                     break;
                 }
@@ -2348,189 +2415,192 @@ void TCampaignBrief::CampaignHeaderStruct::GetAvailableScenarios(
 // position. So the sink is not reachable from the source at all: it is a C2
 // block-placement choice, not the condition order and not a goto.
 VA(0x00488fb0, 0x528)  // PlayScenarioPrologue callee + music-cell reader, retail-only
-void TCampaignBrief::MapTextStruct::Play()
+void TCampaignBrief::MapTextStruct::play()
 {
-    if (video < 0)
+    if (m_video < 0)
         return;
 
     int videoY = 0;
-    if (video == CAMPAIGN_VIDEO_LOWERED
-        || (video >= CAMPAIGN_VIDEO_FIRST_LOWERED
-            && video != CAMPAIGN_VIDEO_RAISED))
-        videoY = CAMPAIGN_VIDEO_LOWERED_Y;
+    if (m_video == g_campaignVideoLowered
+        || (m_video >= g_campaignVideoFirstLowered
+            && m_video != g_campaignVideoRaised))
+        videoY = g_campaignVideoLoweredY;
 
-    VideoOpen(akCampaignVideoIds[video], 0, videoY, 0, 0,
-              video != CAMPAIGN_VIDEO_NO_FADE, 0, 1);
+    videoOpen(g_campaignVideoIds[m_video], 0, videoY, 0, 0,
+              m_video != g_campaignVideoNoFade, 0, 1);
 
     unsigned char finished = 0;
-    unsigned char speech_started = 0;
-    int mp3_started = 0;
-    int saved_volume = gUnk698760;
-    long next_scroll = GameTime::Get() + CAMPAIGN_SCROLL_INTERVAL;
-    int text_height = gpBigFont->LineLength(subtitles.c_str(),
-                                            CAMPAIGN_SUBTITLE_WIDTH)
-                      * gpBigFont->fs.height;
+    // Before normalization (locals): speech_started, mp3_started, saved_volume, next_scroll,
+    // text_height, scroll_y, scroll_delay, video_done, speech_name, text_done, text_end,
+    // speech_done, speech_end, video_end.
+    unsigned char speechStarted = 0;
+    int mp3Started = 0;
+    int savedVolume = g_unk698760;
+    long nextScroll = GameTime::get() + g_campaignScrollInterval;
+    int textHeight = g_bigFont->lineLength(m_subtitles.c_str(),
+                                            g_campaignSubtitleWidth)
+                      * g_bigFont->m_fs.m_height;
 
     Bitmap16Bit* strip = 0;
-    int scroll_y = 0;
-    int scroll_delay = gpBigFont->fs.height;
-    unsigned char video_done = 0;
+    int scrollY = 0;
+    int scrollDelay = g_bigFont->m_fs.m_height;
+    unsigned char videoDone = 0;
     unsigned char redraw = 1;
     const char* music = 0;
-    const char* speech_name = 0;
+    const char* speechName = 0;
 
-    if (gpGame->campaign.currentCampaign
+    if (g_game->m_campaign.m_currentCampaign
         != SCampaign::PRE36_CAMPAIGN_REMAP_TARGET) {
-        speech_name = akCampaignVideoSounds[video];
-        if (!*speech_name)
-            speech_name = 0;
+        speechName = g_campaignVideoSounds[m_video];
+        if (!*speechName)
+            speechName = 0;
     }
-    if (audio != -1)
-        music = akCampaignMusicTraits[audio].name;
+    if (m_audio != -1)
+        music = g_campaignMusicTraits[m_audio].m_name;
 
-    gpWindowManager->screenBitmap->FillRect(0, 0, 800, 600, 0);
+    g_windowManager->m_screenBitmap->fillRect(0, 0, 800, 600, 0);
 
-    if (subtitles.length() > 0 && (gbShowSubtitles || !speech_name)) {
-        if (text_height < CAMPAIGN_SUBTITLE_HEIGHT)
-            text_height = CAMPAIGN_SUBTITLE_HEIGHT;
-        strip = new Bitmap16Bit(CAMPAIGN_SUBTITLE_WIDTH,
-                                text_height + gpBigFont->fs.height);
+    if (m_subtitles.length() > 0 && (g_showSubtitles || !speechName)) {
+        if (textHeight < g_campaignSubtitleHeight)
+            textHeight = g_campaignSubtitleHeight;
+        strip = new Bitmap16Bit(g_campaignSubtitleWidth,
+                                textHeight + g_bigFont->m_fs.m_height);
         if (!strip)
-            MemError();
-        strip->FillRect(0, 0, strip->Width, strip->Height, 0);
-        gpBigFont->DrawBoundedString(subtitles.c_str(), strip, 0, 0,
-                                     strip->Width, strip->Height,
-                                     CAMPAIGN_SUBTITLE_COLOR,
+            memError();
+        strip->fillRect(0, 0, strip->m_width, strip->m_height, 0);
+        g_bigFont->drawBoundedString(m_subtitles.c_str(), strip, 0, 0,
+                                     strip->m_width, strip->m_height,
+                                     g_campaignSubtitleColor,
                                      font::CENTER_JUSTIFIED, -1);
     }
 
     sample* speech;
-    if (!speech_name)
+    if (!speechName)
         speech = 0;
     else
-        speech = ResourceManager::GetSample(speech_name);
+        speech = ResourceManager::getSample(speechName);
 
-    gpInputManager->Flush();
-    gpWindowManager->UpdateScreen(0, 0, 800, 600);
+    g_inputManager->flush();
+    g_windowManager->updateScreen(0, 0, 800, 600);
 
-    unsigned char text_done;
-    long text_end = 0;
+    unsigned char textDone;
+    long textEnd = 0;
     if (strip) {
-        text_done = 0;
+        textDone = 0;
     } else {
-        text_done = 1;
-        text_end = GameTime::Get();
+        textDone = 1;
+        textEnd = GameTime::get();
     }
 
-    unsigned char speech_done;
-    long speech_end = 0;
+    unsigned char speechDone;
+    long speechEnd = 0;
     if (!speech) {
-        speech_done = 1;
+        speechDone = 1;
     } else {
-        speech_done = 0;
-        speech_end = GameTime::Get();
+        speechDone = 0;
+        speechEnd = GameTime::get();
     }
 
-    long video_end = 0;
-    if (!gSmackVideo2) {
-        video_done = 1;
-        video_end = GameTime::Get();
+    long videoEnd = 0;
+    if (!g_smackVideo2) {
+        videoDone = 1;
+        videoEnd = GameTime::get();
     }
 
     for (;;) {
-        PollSound();
-        Process1WindowsMessage();
-        if (VideoNeedsUpdate())
-            VideoDrawRects();
+        pollSound();
+        process1WindowsMessage();
+        if (videoNeedsUpdate())
+            videoDrawRects();
 
-        if (static_cast<long>(GameTime::Get() - next_scroll) >= 0) {
+        if (static_cast<long>(GameTime::get() - nextScroll) >= 0) {
             if (strip) {
                 if (redraw) {
-                    if (scroll_delay)
-                        --scroll_delay;
-                    else if (scroll_y < text_height
-                                            - CAMPAIGN_SUBTITLE_SCROLL_MARGIN)
-                        ++scroll_y;
+                    if (scrollDelay)
+                        --scrollDelay;
+                    else if (scrollY < textHeight
+                                            - g_campaignSubtitleScrollMargin)
+                        ++scrollY;
                 }
-                strip->FillRect(CAMPAIGN_SUBTITLE_X, CAMPAIGN_SUBTITLE_Y,
-                                CAMPAIGN_SUBTITLE_WIDTH,
-                                CAMPAIGN_SUBTITLE_HEIGHT, 0);
-                if (scroll_delay) {
-                    strip->Draw(0, 0, CAMPAIGN_SUBTITLE_WIDTH,
-                                CAMPAIGN_SUBTITLE_HEIGHT - scroll_delay,
-                                gpWindowManager->screenBitmap->map,
-                                CAMPAIGN_SUBTITLE_X,
-                                CAMPAIGN_SUBTITLE_Y + scroll_delay,
-                                gpWindowManager->screenBitmap->Width,
-                                gpWindowManager->screenBitmap->Height,
-                                gpWindowManager->screenBitmap->Pitch, false);
+                strip->fillRect(g_campaignSubtitleX, g_campaignSubtitleY,
+                                g_campaignSubtitleWidth,
+                                g_campaignSubtitleHeight, 0);
+                if (scrollDelay) {
+                    strip->draw(0, 0, g_campaignSubtitleWidth,
+                                g_campaignSubtitleHeight - scrollDelay,
+                                g_windowManager->m_screenBitmap->m_map,
+                                g_campaignSubtitleX,
+                                g_campaignSubtitleY + scrollDelay,
+                                g_windowManager->m_screenBitmap->m_width,
+                                g_windowManager->m_screenBitmap->m_height,
+                                g_windowManager->m_screenBitmap->m_pitch, false);
                 } else {
-                    if (scroll_y >= text_height - CAMPAIGN_SUBTITLE_HEIGHT) {
-                        if (!text_done)
-                            text_end = GameTime::Get();
-                        text_done = 1;
+                    if (scrollY >= textHeight - g_campaignSubtitleHeight) {
+                        if (!textDone)
+                            textEnd = GameTime::get();
+                        textDone = 1;
                     }
-                    strip->Draw(0, scroll_y, CAMPAIGN_SUBTITLE_WIDTH,
-                                CAMPAIGN_SUBTITLE_HEIGHT,
-                                gpWindowManager->screenBitmap->map,
-                                CAMPAIGN_SUBTITLE_X, CAMPAIGN_SUBTITLE_Y,
-                                gpWindowManager->screenBitmap->Width,
-                                gpWindowManager->screenBitmap->Height,
-                                gpWindowManager->screenBitmap->Pitch, false);
+                    strip->draw(0, scrollY, g_campaignSubtitleWidth,
+                                g_campaignSubtitleHeight,
+                                g_windowManager->m_screenBitmap->m_map,
+                                g_campaignSubtitleX, g_campaignSubtitleY,
+                                g_windowManager->m_screenBitmap->m_width,
+                                g_windowManager->m_screenBitmap->m_height,
+                                g_windowManager->m_screenBitmap->m_pitch, false);
                 }
                 if (redraw) {
-                    gpWindowManager->UpdateScreen(CAMPAIGN_SUBTITLE_X,
-                                                  CAMPAIGN_SUBTITLE_Y,
-                                                  CAMPAIGN_SUBTITLE_WIDTH,
-                                                  CAMPAIGN_SUBTITLE_HEIGHT);
+                    g_windowManager->updateScreen(g_campaignSubtitleX,
+                                                  g_campaignSubtitleY,
+                                                  g_campaignSubtitleWidth,
+                                                  g_campaignSubtitleHeight);
                     redraw = 0;
                 }
             }
 
-            if (!speech_started && (mp3_started || audio == -1)
+            if (!speechStarted && (mp3Started || m_audio == -1)
                 && speech) {
-                gpSoundManager->MemorySample(speech);
-                speech_started = 1;
-            } else if (mp3_started) {
-                if (speech && !speech_done) {
-                    speech_done = gpSoundManager->GetSampleInfo(
-                                      speech->field_1c,
-                                      CAMPAIGN_SPEECH_SAMPLE_STATUS)
+                g_soundManager->memorySample(speech);
+                speechStarted = 1;
+            } else if (mp3Started) {
+                if (speech && !speechDone) {
+                    speechDone = g_soundManager->getSampleInfo(
+                                      speech->m_memSample.m_memSampleHandle,
+                                      g_campaignSpeechSampleStatus)
                                   == 0;
-                    if (speech_done)
-                        speech_end = GameTime::Get();
+                    if (speechDone)
+                        speechEnd = GameTime::get();
                 }
-            } else if (music && AIL_stream_status(gMP3Stream)
+            } else if (music && AIL_stream_status(g_mp3Stream)
                                     != AIL_STREAM_PLAYING) {
-                gUnk698760 /= 2;
-                gpSoundManager->StartMP3(music, 0, 1);
-                mp3_started = 1;
+                g_unk698760 /= 2;
+                g_soundManager->startMP3(music, 0, 1);
+                mp3Started = 1;
             }
 
-            if (gbShowSubtitles)
+            if (g_showSubtitles)
                 redraw = 1;
-            if (!video_done && !gSmackVideo) {
-                video_done = 1;
-                video_end = GameTime::Get();
+            if (!videoDone && !g_smackVideo) {
+                videoDone = 1;
+                videoEnd = GameTime::get();
             }
-            next_scroll = GameTime::Get() + CAMPAIGN_SCROLL_INTERVAL;
+            nextScroll = GameTime::get() + g_campaignScrollInterval;
 
-            if (speech_done
-                && static_cast<long>(GameTime::Get() - speech_end)
-                       >= CAMPAIGN_LINGER_MS
-                && text_done
-                && static_cast<long>(GameTime::Get() - text_end)
-                       >= CAMPAIGN_LINGER_MS
-                && video_done
-                && static_cast<long>(GameTime::Get() - video_end)
-                       >= CAMPAIGN_VIDEO_LINGER_MS)
+            if (speechDone
+                && static_cast<long>(GameTime::get() - speechEnd)
+                       >= g_campaignLingerMs
+                && textDone
+                && static_cast<long>(GameTime::get() - textEnd)
+                       >= g_campaignLingerMs
+                && videoDone
+                && static_cast<long>(GameTime::get() - videoEnd)
+                       >= g_campaignVideoLingerMs)
                 finished = 1;
         }
 
-        message msg = gpInputManager->GetEvent();
-        switch (msg.id) {
+        message msg = g_inputManager->getEvent();
+        switch (msg.m_id) {
         case MESSAGE_KEY_DOWN:
-            if (msg.codeX != CAMPAIGN_SKIP_KEY)
+            if (msg.m_codeX != g_campaignSkipKey)
                 goto stop;
             break;
         case MESSAGE_LEFT_BUTTON_DOWN:
@@ -2543,19 +2613,19 @@ void TCampaignBrief::MapTextStruct::Play()
 
 stop:
     if (speech) {
-        gpSoundManager->StopSample(speech->field_1c);
-        speech->Dispose();
+        g_soundManager->stopSample(speech->m_memSample.m_memSampleHandle);
+        speech->dispose();
     }
     delete strip;
-    gUnk698760 = saved_volume;
-    VideoClose();
+    g_unk698760 = savedVolume;
+    videoClose();
 }
 
 VA(0x004894e0, 0x1D)  // CampaignBriefHandler launch arm, retail-only
-void TCampaignBrief::CampaignHeaderStruct::StartScenario(
+void TCampaignBrief::CampaignHeaderStruct::startScenario(
     int which, int option)
 {
-    scenarios[which]->StartScenario(stream, option);
+    m_scenarios[which]->startScenario(m_stream, option);
 }
 
 // E:\gamedcs\CustomCampaign.h:199 (dc 0xbcd90, a Dreamcast header inline
@@ -2566,14 +2636,14 @@ void TCampaignBrief::CampaignHeaderStruct::StartScenario(
 VA(0x00489500, 0x88)  // TCampaignWindow ctor callee + member stores, dc 0xbcd90
 SCampaign::SCampaign()
 {
-    isCheater = 0;
-    secretActive = 0;
-    currentMap = -1;
-    numMapRegions = -1;
-    briefingChoice = -1;
-    crossoverArrayIndex = -1;
-    currentCampaign = CAMPAIGN_NONE;
-    memset(campaignCompleted, 0, sizeof(campaignCompleted));
+    m_isCheater = 0;
+    m_secretActive = 0;
+    m_currentMap = -1;
+    m_numMapRegions = -1;
+    m_briefingChoice = -1;
+    m_crossoverArrayIndex = -1;
+    m_currentCampaign = CAMPAIGN_NONE;
+    memset(m_campaignCompleted, 0, sizeof(m_campaignCompleted));
 }
 
 // Complete-only. The custom-campaign window's accept arm hands the chosen
@@ -2583,30 +2653,31 @@ SCampaign::SCampaign()
 // record is a LOCAL - retail expands its constructor, its Load-time scenario
 // teardown and its destructor into this body. Name provisional.
 VA(0x00489590, 0x233)  // anchor-caller(CampaignWindowHandler's deselect arm), retail-only
-void SCampaign::select_campaign(int campaignIndex, const char* filename)
+void SCampaign::selectCampaign(int campaignIndex, const char* filename)
 {
-    mapScores.clear();
-    currentCampaign = campaignIndex;
-    currentMap = 0;
-    crossoverArrayIndex = -1;
-    campaignFilename = filename;
-    carryOverHeroes.clear();
+    m_mapScores.clear();
+    m_currentCampaign = campaignIndex;
+    m_currentMap = 0;
+    m_crossoverArrayIndex = -1;
+    m_campaignFilename = filename;
+    m_carryOverHeroes.clear();
 
     TCampaignBrief::CampaignHeaderStruct campaign(filename);
-    campaign.Load();
-    int count = campaign.scenarios.size();
+    campaign.load();
+    int count = campaign.m_scenarios.size();
     CampaignScenarioInfo blank;
-    for (int iScenario = 0; iScenario < count; ++iScenario)
-        mapScores.push_back(blank);
+    // Before normalization (locals): iScenario.
+    for (int scenarioIndex = 0; scenarioIndex < count; ++scenarioIndex)
+        m_mapScores.push_back(blank);
 }
 
 // E:\gamedcs\CustomCampaign.h:212 (dc 0xe6ef8, attributed to kb.obj in the
 // Dreamcast build); retail's copy sits here.
 VA(0x004897d0, 0x43)  // mapScores walk on the 0x14 stride, dc 0xe6ef8
-unsigned char SCampaign::CampaignComplete()
+unsigned char SCampaign::campaignComplete()
 {
-    for (unsigned int i = 0; i < mapScores.size(); ++i) {
-        if (!mapScores[i].completed)
+    for (unsigned int i = 0; i < m_mapScores.size(); ++i) {
+        if (!m_mapScores[i].m_completed)
             return 0;
     }
     return 1;
@@ -2614,12 +2685,18 @@ unsigned char SCampaign::CampaignComplete()
 
 // The campaign and map ordinals retail's end-of-map bookkeeping compares
 // against literally; the same spelling kb.cpp uses for oldmain's own pair.
-const int CAMPAIGN_ORDINAL_02 = 2;
-const int CAMPAIGN_ORDINAL_07 = 7;
-const int CAMPAIGN_ORDINAL_13 = 13;
-const int CAMPAIGN_ORDINAL_18 = 18;
-const int CAMPAIGN_MAP_ORDINAL_06 = 6;
-const int CAMPAIGN_MAP_ORDINAL_07 = 7;
+// Before normalization: CAMPAIGN_ORDINAL_02.
+const int g_campaignOrdinal02 = 2;
+// Before normalization: CAMPAIGN_ORDINAL_07.
+const int g_campaignOrdinal07 = 7;
+// Before normalization: CAMPAIGN_ORDINAL_13.
+const int g_campaignOrdinal13 = 13;
+// Before normalization: CAMPAIGN_ORDINAL_18.
+const int g_campaignOrdinal18 = 18;
+// Before normalization: CAMPAIGN_MAP_ORDINAL_06.
+const int g_campaignMapOrdinal06 = 6;
+// Before normalization: CAMPAIGN_MAP_ORDINAL_07.
+const int g_campaignMapOrdinal07 = 7;
 
 // Retail-only end-of-campaign-map bookkeeping.  oldmain's own end-of-game
 // arm fixes the pair: this runs over the freshly loaded campaign header
@@ -2673,20 +2750,20 @@ const int CAMPAIGN_MAP_ORDINAL_07 = 7;
 // CompleteCurrentMap twin.  The reverse rung on PruneCrossoverHeroes below
 // LOSES 1.98.
 VA(0x00489820, 0x600)  // anchor-caller(oldmain end-of-campaign arm), retail-only
-void SCampaign::CompleteCurrentMap(void* campaignHeader)
+void SCampaign::completeCurrentMap(void* campaignHeader)
 {
-    CampaignScenarioInfo& scenario = mapScores[currentMap];
+    CampaignScenarioInfo& scenario = m_mapScores[m_currentMap];
 
-    if (scenario.completed)
+    if (scenario.m_completed)
         return;
 
-    scenario.completed = true;
-    scenario.days = gpGame->get_current_turn();
-    scenario.score = gpGame->get_map_score();
-    scenario.complete_order = 0;
+    scenario.m_completed = true;
+    scenario.m_days = g_game->getCurrentTurn();
+    scenario.m_score = g_game->getMapScore();
+    scenario.m_completeOrder = 0;
 
-    if (scenario.index < 0) {
-        scenario.index = carryOverHeroes.size();
+    if (scenario.m_index < 0) {
+        scenario.m_index = m_carryOverHeroes.size();
         // LADDER, measured 2026-09-06 and REVERTED: this append spelled
         // `insert(carryOverHeroes.end(), ...)` is worth 78.6801 -> 80.2280
         // (+24 B), but the direct spelling lets VC6 expand
@@ -2696,27 +2773,27 @@ void SCampaign::CompleteCurrentMap(void* campaignHeader)
         // exact rows and 0.08 tree fuzzy.  When a rung would delete the last
         // out-of-line instantiation of a template in the TU, price the
         // COMDATs it takes with it, not just the row.
-        carryOverHeroes.push_back(std::vector<hero>());
-        field_4c.push_back(std::vector<type_artifact>());
+        m_carryOverHeroes.push_back(std::vector<hero>());
+        m_carryoverArtifact.push_back(std::vector<type_artifact>());
     }
 
-    crossoverArrayIndex = scenario.index;
+    m_crossoverArrayIndex = scenario.m_index;
 
-    for (unsigned int i = 0; i < mapScores.size(); ++i) {
-        if (mapScores[i].completed
-            && mapScores[i].complete_order > scenario.complete_order)
-            scenario.complete_order = mapScores[i].complete_order;
+    for (unsigned int i = 0; i < m_mapScores.size(); ++i) {
+        if (m_mapScores[i].m_completed
+            && m_mapScores[i].m_completeOrder > scenario.m_completeOrder)
+            scenario.m_completeOrder = m_mapScores[i].m_completeOrder;
     }
-    ++scenario.complete_order;
+    ++scenario.m_completeOrder;
 
-    for (unsigned int excluded = 0; excluded < field_6c.size(); ++excluded) {
-        int heroId = field_6c[excluded];
-        int pool = carryOverHeroes.size();
+    for (unsigned int excluded = 0; excluded < m_assignedCarryover.size(); ++excluded) {
+        int heroId = m_assignedCarryover[excluded];
+        int pool = m_carryOverHeroes.size();
         while (pool--) {
-            std::vector<hero>& pooled = carryOverHeroes[pool];
+            std::vector<hero>& pooled = m_carryOverHeroes[pool];
             int which = pooled.size();
             while (which--) {
-                if (pooled[which].id == heroId)
+                if (pooled[which].m_id == heroId)
                     break;
             }
             if (which >= 0) {
@@ -2726,62 +2803,63 @@ void SCampaign::CompleteCurrentMap(void* campaignHeader)
         }
     }
 
-    std::vector<hero>& crossover = carryOverHeroes[crossoverArrayIndex];
+    std::vector<hero>& crossover = m_carryOverHeroes[m_crossoverArrayIndex];
 
     int gamePos;
     for (gamePos = 0; gamePos < 8; ++gamePos) {
-        if (gpGame->players[gamePos].IsHuman())
+        if (g_game->m_players[gamePos].isHuman())
             break;
     }
 
-    playerData* player = &gpGame->players[gamePos];
-    for (int iHero = 0; iHero < player->numHeroes; ++iHero)
-        crossover.push_back(*gpGame->GetHero(player->heroes[iHero]));
+    playerData* player = &g_game->m_players[gamePos];
+    // Before normalization (locals): iHero, iTown.
+    for (int heroIndex = 0; heroIndex < player->m_numHeroes; ++heroIndex)
+        crossover.push_back(*g_game->getHero(player->m_heroes[heroIndex]));
 
-    for (int iTown = 0; iTown < player->numTowns; ++iTown) {
-        town* thisTown = gpGame->GetTown(player->townIds[iTown]);
-        if (thisTown->garrisonHeroId >= 0)
-            crossover.push_back(*gpGame->GetHero(thisTown->garrisonHeroId));
+    for (int townIndex = 0; townIndex < player->m_numTowns; ++townIndex) {
+        town* thisTown = g_game->getTown(player->m_townIds[townIndex]);
+        if (thisTown->m_garrisonHeroId >= 0)
+            crossover.push_back(*g_game->getHero(thisTown->m_garrisonHeroId));
     }
 
-    if (currentCampaign == CAMPAIGN_ORDINAL_07
-        && currentMap == CAMPAIGN_MAP_ORDINAL_06) {
-        if (gpGame->heroes[155].owner != gamePos)
-            crossover.push_back(gpGame->heroes[155]);
+    if (m_currentCampaign == g_campaignOrdinal07
+        && m_currentMap == g_campaignMapOrdinal06) {
+        if (g_game->m_heroes[155].m_owner != gamePos)
+            crossover.push_back(g_game->m_heroes[155]);
     }
-    if (currentCampaign == CAMPAIGN_ORDINAL_18
-        && currentMap == CAMPAIGN_MAP_ORDINAL_07) {
-        if (gpGame->heroes[27].owner != gamePos)
-            crossover.push_back(gpGame->heroes[27]);
-        if (gpGame->heroes[102].owner != gamePos)
-            crossover.push_back(gpGame->heroes[102]);
-        if (gpGame->heroes[148].owner != gamePos)
-            crossover.push_back(gpGame->heroes[148]);
-        if (gpGame->heroes[96].owner != gamePos)
-            crossover.push_back(gpGame->heroes[96]);
+    if (m_currentCampaign == g_campaignOrdinal18
+        && m_currentMap == g_campaignMapOrdinal07) {
+        if (g_game->m_heroes[27].m_owner != gamePos)
+            crossover.push_back(g_game->m_heroes[27]);
+        if (g_game->m_heroes[102].m_owner != gamePos)
+            crossover.push_back(g_game->m_heroes[102]);
+        if (g_game->m_heroes[148].m_owner != gamePos)
+            crossover.push_back(g_game->m_heroes[148]);
+        if (g_game->m_heroes[96].m_owner != gamePos)
+            crossover.push_back(g_game->m_heroes[96]);
     }
 
-    field_4c[crossoverArrayIndex].clear();
+    m_carryoverArtifact[m_crossoverArrayIndex].clear();
 
-    if (CampaignComplete()) {
-        campaignCompleted[currentCampaign] = 1;
-        if (currentCampaign >= CAMPAIGN_ORDINAL_07
-            && currentCampaign < CAMPAIGN_ORDINAL_13 && !isCheater) {
+    if (campaignComplete()) {
+        m_campaignCompleted[m_currentCampaign] = 1;
+        if (m_currentCampaign >= g_campaignOrdinal07
+            && m_currentCampaign < g_campaignOrdinal13 && !m_isCheater) {
             int total = 0;
             int scored = 0;
-            for (unsigned int i = 0; i < mapScores.size(); ++i) {
-                if (mapScores[i].completed && mapScores[i].score >= 0) {
-                    total += mapScores[i].score;
+            for (unsigned int i = 0; i < m_mapScores.size(); ++i) {
+                if (m_mapScores[i].m_completed && m_mapScores[i].m_score >= 0) {
+                    total += m_mapScores[i].m_score;
                     ++scored;
                 }
             }
             if (scored
                 && ((total + scored / 2) / scored) * 5 >= 350)
-                secretActive = 1;
+                m_secretActive = 1;
         }
     }
 
-    PruneCrossoverHeroes(campaignHeader);
+    pruneCrossoverHeroes(campaignHeader);
 }
 
 // Retail PruneCrossoverHeroes repeats the scenario's inflated_size check
@@ -2790,15 +2868,15 @@ void SCampaign::CompleteCurrentMap(void* campaignHeader)
 // while its own max locals retain the retail temporary homes. Flattening
 // this query into Prune leaves 19.3083% current (26.1010% prior MAX);
 // restoring the boundary raises it to 34.6269 without a new retail claim.
-int TCampaignBrief::ScenarioStruct::GetMaxCrossoverHeroes() const
+int TCampaignBrief::ScenarioStruct::getMaxCrossoverHeroes() const
 {
     int best = 0;
-    if (inflated_size > 0) {
-        if (options->_vslot2() == 0)
-            best = heroes_status[options->GetPlayerPosition(-1)];
+    if (m_inflatedSize > 0) {
+        if (m_options->vslot2() == 0)
+            best = m_heroesStatus[m_options->getPlayerPosition(-1)];
         else
-            for (int option = options->_vslot2(); option--;)
-                best = max(best, heroes_status[options->GetPlayerPosition(option)]);
+            for (int option = m_options->vslot2(); option--;)
+                best = max(best, m_heroesStatus[m_options->getPlayerPosition(option)]);
     }
     return best;
 }
@@ -2837,7 +2915,7 @@ int TCampaignBrief::ScenarioStruct::GetMaxCrossoverHeroes() const
 // Controls: direct array access 34.6269; accessors with repeated hero lookup
 // 33.5648; a retained hero with separate artifact temporaries 34.2824.
 VA(0x00489e20, 0x450)  // anchor-caller(CompleteCurrentMap +0x5e8), retail-only
-void SCampaign::PruneCrossoverHeroes(void* campaignHeader)
+void SCampaign::pruneCrossoverHeroes(void* campaignHeader)
 {
     TCampaignBrief::CampaignHeaderStruct* header =
         static_cast<TCampaignBrief::CampaignHeaderStruct*>(campaignHeader);
@@ -2845,31 +2923,32 @@ void SCampaign::PruneCrossoverHeroes(void* campaignHeader)
     unsigned char wanted[game::HERO_COUNT];
     memset(wanted, 0, sizeof wanted);
 
-    for (unsigned int iMap = 0; iMap < header->scenarios.size(); ++iMap) {
-        if (!gpGame->campaign.mapScores[iMap].completed)
-            header->scenarios[iMap]->MarkCrossoverHeroes(wanted);
+    // Before normalization (locals): iMap, iScenario.
+    for (unsigned int map = 0; map < header->m_scenarios.size(); ++map) {
+        if (!g_game->m_campaign.m_mapScores[map].m_completed)
+            header->m_scenarios[map]->markCrossoverHeroes(wanted);
     }
 
-    for (int pool = carryOverHeroes.size(); pool--;) {
-        std::vector<hero>& pooled = carryOverHeroes[pool];
+    for (int pool = m_carryOverHeroes.size(); pool--;) {
+        std::vector<hero>& pooled = m_carryOverHeroes[pool];
         std::vector<hero> kept;
 
         for (unsigned int which = pooled.size(); which--;) {
-            if (wanted[pooled[which].id]) {
+            if (wanted[pooled[which].m_id]) {
                 kept.push_back(pooled[which]);
                 pooled.erase(pooled.begin() + which);
             }
         }
 
         int keepCount = 0;
-        for (unsigned int iScenario = 0;
-             iScenario < static_cast<int>(header->scenarios.size());
-             ++iScenario) {
+        for (unsigned int scenarioIndex = 0;
+             scenarioIndex < static_cast<int>(header->m_scenarios.size());
+             ++scenarioIndex) {
             TCampaignBrief::ScenarioStruct* scenario =
-                header->scenarios[iScenario];
-            if (!mapScores[iScenario].completed && scenario->inflated_size > 0
-                && scenario->options->_vslot12(scenario, pool)) {
-                keepCount = max(keepCount, scenario->GetMaxCrossoverHeroes());
+                header->m_scenarios[scenarioIndex];
+            if (!m_mapScores[scenarioIndex].m_completed && scenario->m_inflatedSize > 0
+                && scenario->m_options->vslot12(scenario, pool)) {
+                keepCount = max(keepCount, scenario->getMaxCrossoverHeroes());
             }
         }
 
@@ -2883,18 +2962,18 @@ void SCampaign::PruneCrossoverHeroes(void* campaignHeader)
         }
 
         for (unsigned int rest = pooled.size(); rest--;) {
-            std::vector<type_artifact>& pooledArtifacts = field_4c[pool];
+            std::vector<type_artifact>& pooledArtifacts = m_carryoverArtifact[pool];
             hero& sourceHero = pooled[rest];
             type_artifact artifact;
             int slot;
-            for (slot = 0; slot < CROSSOVER_EQUIPPED_ARTIFACT_SLOTS; ++slot) {
-                artifact = *sourceHero.get_artifact(slot);
-                if (artifact.artifactId != ARTIFACT_NONE)
+            for (slot = 0; slot < g_crossoverEquippedArtifactSlots; ++slot) {
+                artifact = *sourceHero.getArtifact(slot);
+                if (artifact.m_artifactId != ARTIFACT_NONE)
                     pooledArtifacts.push_back(artifact);
             }
-            for (slot = 0; slot < CROSSOVER_BACKPACK_SLOTS; ++slot) {
-                artifact = *sourceHero.get_backpack(slot);
-                if (artifact.artifactId != ARTIFACT_NONE)
+            for (slot = 0; slot < g_crossoverBackpackSlots; ++slot) {
+                artifact = *sourceHero.getBackpack(slot);
+                if (artifact.m_artifactId != ARTIFACT_NONE)
                     pooledArtifacts.push_back(artifact);
             }
         }
@@ -2905,14 +2984,14 @@ void SCampaign::PruneCrossoverHeroes(void* campaignHeader)
 }
 
 VA(0x0048a270, 0x2F)  // CampaignBriefHandler video/launch arms, retail-only
-void SCampaign::PlayScenarioPrologue(void* campaignHeader)
+void SCampaign::playScenarioPrologue(void* campaignHeader)
 {
-    int map = currentMap;
-    gpSoundManager->StopAllSamples(1);
+    int map = m_currentMap;
+    g_soundManager->stopAllSamples(1);
     TCampaignBrief::CampaignHeaderStruct* header =
         static_cast<TCampaignBrief::CampaignHeaderStruct*>(campaignHeader);
-    if (header->scenarios[map]->prologue)
-        header->scenarios[map]->prologue->Play();
+    if (header->m_scenarios[map]->m_prologue)
+        header->m_scenarios[map]->m_prologue->play();
 }
 
 // oldmain calls this immediately after SaveGame(1) on the same campaign
@@ -2922,33 +3001,35 @@ void SCampaign::PlayScenarioPrologue(void* campaignHeader)
 // maps banked and its third still open, retail follows the epilogue with
 // that map's own prologue.  Provisional name, retail-only.
 VA(0x0048a2a0, 0x70)  // anchor-caller(oldmain end-of-campaign arm), retail-only
-void SCampaign::PlayScenarioEpilogue(void* campaignHeader)
+void SCampaign::playScenarioEpilogue(void* campaignHeader)
 {
-    int map = currentMap;
-    gpSoundManager->StopAllSamples(1);
+    int map = m_currentMap;
+    g_soundManager->stopAllSamples(1);
     TCampaignBrief::CampaignHeaderStruct* header =
         static_cast<TCampaignBrief::CampaignHeaderStruct*>(campaignHeader);
-    if (header->scenarios[map]->epilogue)
-        header->scenarios[map]->epilogue->Play();
-    if (currentCampaign == CAMPAIGN_ORDINAL_02 && mapScores[0].completed
-        && mapScores[1].completed && !mapScores[2].completed) {
-        gpSoundManager->StopAllSamples(1);
-        if (header->scenarios[CAMPAIGN_ORDINAL_02]->prologue)
-            header->scenarios[CAMPAIGN_ORDINAL_02]->prologue->Play();
+    if (header->m_scenarios[map]->m_epilogue)
+        header->m_scenarios[map]->m_epilogue->play();
+    if (m_currentCampaign == g_campaignOrdinal02 && m_mapScores[0].m_completed
+        && m_mapScores[1].m_completed && !m_mapScores[2].m_completed) {
+        g_soundManager->stopAllSamples(1);
+        if (header->m_scenarios[g_campaignOrdinal02]->m_prologue)
+            header->m_scenarios[g_campaignOrdinal02]->m_prologue->play();
     }
 }
 
-static unsigned char ReadCampaignByte(TAbstractFile* infile)
+// Before normalization (function): ReadCampaignByte.
+static unsigned char readCampaignByte(TAbstractFile* infile)
 {
     unsigned char value;
-    infile->Read(&value, sizeof(value));
+    infile->read(&value, sizeof(value));
     return value;
 }
 
-static short ReadCampaignWord(TAbstractFile* infile)
+// Before normalization (function): ReadCampaignWord.
+static short readCampaignWord(TAbstractFile* infile)
 {
     short value;
-    infile->Read(&value, sizeof(value));
+    infile->read(&value, sizeof(value));
     return value;
 }
 
@@ -3101,13 +3182,14 @@ static short ReadCampaignWord(TAbstractFile* infile)
 // retail's `movsx ecx,word ptr [ebp+0xa]` straight into the member at
 // 0x48ac6b has no cast-free spelling here.
 VA(0x0048a310, 0xB1E)  // SavedGameHeader::Load caller + member/helper graph
-void SCampaign::Load(TAbstractFile* infile, int saveVersion)
+void SCampaign::load(TAbstractFile* infile, int saveVersion)
 {
     // The scenario-score list NAMED AS A REFERENCE across all nine uses:
     // 59.0405 -> 59.2573.
-    std::vector<MapScore>& r_mapScores = mapScores;
-    r_mapScores.clear();
-    carryOverHeroes.clear();
+    // Before normalization (locals): r_mapScores.
+    std::vector<MapScore>& rMapScores = m_mapScores;
+    rMapScores.clear();
+    m_carryOverHeroes.clear();
 
     if (saveVersion < 28) {
         // The out-of-line LegacyCampaignHero constructor below is what puts
@@ -3117,160 +3199,161 @@ void SCampaign::Load(TAbstractFile* infile, int saveVersion)
         // still expand the thunk's own four-instruction loop - that last step
         // is the /Ob2 budget, not this declaration.
         LegacyCampaignSave saved;
-        infile->Read(&saved, sizeof(saved));
+        infile->read(&saved, sizeof(saved));
 
-        currentMap = saved.currentMap;
-        isCheater = saved.isCheater;
-        currentCampaign = saved.currentCampaign;
-        numMapRegions = -1;
-        briefingChoice = saved.briefingChoice;
-        crossoverArrayIndex = 0;
-        secretActive = false;
-        campaignFilename = saved.campaignFilename;
+        m_currentMap = saved.m_currentMap;
+        m_isCheater = saved.m_isCheater;
+        m_currentCampaign = saved.m_currentCampaign;
+        m_numMapRegions = -1;
+        m_briefingChoice = saved.m_briefingChoice;
+        m_crossoverArrayIndex = 0;
+        m_secretActive = false;
+        m_campaignFilename = saved.m_campaignFilename;
 
-        memset(campaignCompleted, 0, sizeof(campaignCompleted));
-        memcpy(campaignCompleted, saved.campaignCompleted,
-               sizeof(saved.campaignCompleted));
+        memset(m_campaignCompleted, 0, sizeof(m_campaignCompleted));
+        // Retail 0x48a406..0x48a41f copies 4+2+1 bytes: only the seven
+        // built-in campaigns are promoted from the legacy eight-slot array.
+        memcpy(m_campaignCompleted, saved.m_campaignCompleted, 7);
 
-        r_mapScores.resize(saved.numScenarios);
-        for (int i = 0; i < saved.numScenarios; ++i) {
-            CampaignScenarioInfo& scenario = r_mapScores[i];
+        rMapScores.resize(saved.m_numScenarios);
+        for (int i = 0; i < saved.m_numScenarios; ++i) {
+            CampaignScenarioInfo& scenario = rMapScores[i];
             // Retail +0x191 preserves this source order. Together with the
             // bool legacy field, the loop now has the exact instruction and
             // memory-access structure; only earlier live-register choices
             // rename its ecx/edx and esi/edi pairs.
-            scenario.days = saved.scenarioDays[currentCampaign][i];
-            scenario.index = legacyCampaignScenarioIndices[currentCampaign][i];
-            scenario.score = saved.scenarioScores[currentCampaign][i];
-            scenario.completed =
-                saved.scenarioCompleted[currentCampaign][i];
+            scenario.m_days = saved.m_scenarioDays[m_currentCampaign][i];
+            scenario.m_index = g_legacyCampaignScenarioIndices[m_currentCampaign][i];
+            scenario.m_score = saved.m_scenarioScores[m_currentCampaign][i];
+            scenario.m_completed =
+                saved.m_scenarioCompleted[m_currentCampaign][i];
         }
 
-        carryOverHeroes.resize(2);
-        field_4c.resize(2);
+        m_carryOverHeroes.resize(2);
+        m_carryoverArtifact.resize(2);
 
         for (int pool = 0; pool < 2; ++pool) {
-            std::vector<hero>& heroPool = carryOverHeroes[pool];
-            heroPool.resize(saved.carryOverHeroCounts[pool]);
+            std::vector<hero>& heroPool = m_carryOverHeroes[pool];
+            heroPool.resize(saved.m_carryOverHeroCounts[pool]);
 
             for (int whichHero = 0;
-                 whichHero < saved.carryOverHeroCounts[pool]; ++whichHero) {
+                 whichHero < saved.m_carryOverHeroCounts[pool]; ++whichHero) {
                 const LegacyCampaignHero& oldHero =
-                    saved.carryOverHeroes[pool][whichHero];
+                    saved.m_carryOverHeroes[pool][whichHero];
                 hero& newHero = heroPool[whichHero];
 
-                newHero.id = oldHero.id;
-                newHero.owner = oldHero.owner;
-                strcpy(newHero.name, oldHero.name);
-                newHero.heroClass = oldHero.heroClass;
-                newHero.portrait = oldHero.portrait;
-                newHero.last_magic_school_level =
-                    oldHero.lastMagicSchoolLevel;
-                newHero.experience = oldHero.experience;
-                newHero.level = oldHero.level;
-                newHero.iLevelSeed = oldHero.levelSeed;
-                newHero.lastWisdom = oldHero.lastWisdom;
-                newHero.army = oldHero.army;
-                memcpy(newHero.skillLevel, oldHero.skillLevel,
-                       sizeof(newHero.skillLevel));
-                memcpy(newHero.skillOrder, oldHero.skillOrder,
-                       sizeof(newHero.skillOrder));
-                newHero.skillCount = oldHero.skillCount;
+                newHero.m_id = oldHero.m_id;
+                newHero.m_owner = oldHero.m_owner;
+                strcpy(newHero.m_name, oldHero.m_name);
+                newHero.m_heroClass = oldHero.m_heroClass;
+                newHero.m_portrait = oldHero.m_portrait;
+                newHero.m_lastMagicSchoolLevel =
+                    oldHero.m_lastMagicSchoolLevel;
+                newHero.m_experience = oldHero.m_experience;
+                newHero.m_level = oldHero.m_level;
+                newHero.m_levelSeed = oldHero.m_levelSeed;
+                newHero.m_lastWisdom = oldHero.m_lastWisdom;
+                newHero.m_army = oldHero.m_army;
+                memcpy(newHero.m_skillLevel, oldHero.m_skillLevel,
+                       sizeof(newHero.m_skillLevel));
+                memcpy(newHero.m_skillOrder, oldHero.m_skillOrder,
+                       sizeof(newHero.m_skillOrder));
+                newHero.m_skillCount = oldHero.m_skillCount;
 
                 for (int equippedSlot = 0; equippedSlot < 19;
                      ++equippedSlot) {
-                    type_artifact artifact = oldHero.equipped[equippedSlot];
-                    if (artifact.artifactId != ARTIFACT_NONE)
-                        newHero.equip_artifact(&artifact, equippedSlot);
+                    type_artifact artifact = oldHero.m_equipped[equippedSlot];
+                    if (artifact.m_artifactId != ARTIFACT_NONE)
+                        newHero.equipArtifact(&artifact, equippedSlot);
                 }
                 for (int backpackSlot = 0; backpackSlot < 64;
                      ++backpackSlot) {
-                    type_artifact artifact = oldHero.backpack[backpackSlot];
-                    if (artifact.artifactId != ARTIFACT_NONE)
-                        newHero.add_to_backpack(&artifact, backpackSlot);
+                    type_artifact artifact = oldHero.m_backpack[backpackSlot];
+                    if (artifact.m_artifactId != ARTIFACT_NONE)
+                        newHero.addToBackpack(&artifact, backpackSlot);
                 }
                 for (int spell = 0; spell < 70; ++spell) {
-                    if (oldHero.inSpellbook[spell])
-                        newHero.AddSpell(spell);
+                    if (oldHero.m_inSpellbook[spell])
+                        newHero.addSpell(spell);
                 }
                 for (int stat = 0; stat < 4; ++stat)
-                    newHero.stats[stat] = oldHero.stats[stat];
+                    newHero.m_stats[stat] = oldHero.m_stats[stat];
             }
         }
         return;
     }
 
-    isCheater = ReadCampaignByte(infile) != 0;
+    m_isCheater = readCampaignByte(infile) != 0;
     if (saveVersion >= 26) {
-        secretActive = ReadCampaignByte(infile) != 0;
+        m_secretActive = readCampaignByte(infile) != 0;
     } else {
-        secretActive = false;
+        m_secretActive = false;
     }
-    currentMap = ReadCampaignByte(infile);
-    currentCampaign = ReadCampaignByte(infile);
+    m_currentMap = readCampaignByte(infile);
+    m_currentCampaign = readCampaignByte(infile);
     if (saveVersion < 36
-            && currentCampaign == PRE36_CAMPAIGN_REMAP_SOURCE)
-        currentCampaign = PRE36_CAMPAIGN_REMAP_TARGET;
-    numMapRegions = static_cast<signed char>(ReadCampaignByte(infile));
-    crossoverArrayIndex = ReadCampaignByte(infile);
-    briefingChoice = static_cast<signed char>(ReadCampaignByte(infile));
+            && m_currentCampaign == PRE36_CAMPAIGN_REMAP_SOURCE)
+        m_currentCampaign = PRE36_CAMPAIGN_REMAP_TARGET;
+    m_numMapRegions = static_cast<signed char>(readCampaignByte(infile));
+    m_crossoverArrayIndex = readCampaignByte(infile);
+    m_briefingChoice = static_cast<signed char>(readCampaignByte(infile));
 
-    campaignFilename = ReadLengthPrefixedString(infile);
+    m_campaignFilename = readLengthPrefixedString(infile);
     if (saveVersion >= 36) {
-        infile->Read(campaignCompleted, sizeof(campaignCompleted));
+        infile->read(m_campaignCompleted, sizeof(m_campaignCompleted));
     } else {
-        infile->Read(campaignCompleted, 14);
-        std::fill(campaignCompleted + 14,
-                  campaignCompleted + sizeof(campaignCompleted), 0);
+        infile->read(m_campaignCompleted, 14);
+        std::fill(m_campaignCompleted + 14,
+                  m_campaignCompleted + sizeof(m_campaignCompleted), 0);
     }
 
-    unsigned char count = ReadCampaignByte(infile);
-    r_mapScores.resize(count);
+    unsigned char count = readCampaignByte(infile);
+    rMapScores.resize(count);
     for (int i = 0; i < count; ++i) {
-        CampaignScenarioInfo& scenario = mapScores[i];
-        scenario.completed = ReadCampaignByte(infile) != 0;
+        CampaignScenarioInfo& scenario = m_mapScores[i];
+        scenario.m_completed = readCampaignByte(infile) != 0;
         int days;
-        infile->Read(&days, sizeof(days));
-        scenario.days = days;
+        infile->read(&days, sizeof(days));
+        scenario.m_days = days;
         int score;
-        infile->Read(&score, sizeof(score));
-        scenario.score = score;
+        infile->read(&score, sizeof(score));
+        scenario.m_score = score;
 
-        scenario.complete_order =
-            static_cast<signed char>(ReadCampaignByte(infile));
-        scenario.index =
-            static_cast<signed char>(ReadCampaignByte(infile));
+        scenario.m_completeOrder =
+            static_cast<signed char>(readCampaignByte(infile));
+        scenario.m_index =
+            static_cast<signed char>(readCampaignByte(infile));
     }
 
-    count = ReadCampaignByte(infile);
-    carryOverHeroes.resize(count);
-    field_4c.resize(count);
+    count = readCampaignByte(infile);
+    m_carryOverHeroes.resize(count);
+    m_carryoverArtifact.resize(count);
 
     for (int pool = 0; pool < count; ++pool) {
-        std::vector<hero>& heroPool = carryOverHeroes[pool];
-        unsigned char heroCount = ReadCampaignByte(infile);
+        std::vector<hero>& heroPool = m_carryOverHeroes[pool];
+        unsigned char heroCount = readCampaignByte(infile);
         heroPool.resize(heroCount);
         for (int whichHero = 0; whichHero < heroCount; ++whichHero)
             heroPool[whichHero].load(infile, saveVersion);
 
-        std::vector<type_artifact>& artifactPool = field_4c[pool];
+        std::vector<type_artifact>& artifactPool = m_carryoverArtifact[pool];
         unsigned short artifactCount =
-            static_cast<unsigned short>(ReadCampaignWord(infile));
+            static_cast<unsigned short>(readCampaignWord(infile));
         artifactPool.resize(artifactCount);
         for (int whichArtifact = 0; whichArtifact < artifactCount;
              ++whichArtifact) {
-            int artifactId = ReadCampaignWord(infile);
-            memcpy(&artifactPool[whichArtifact].artifactId, &artifactId,
+            int artifactId = readCampaignWord(infile);
+            memcpy(&artifactPool[whichArtifact].m_artifactId, &artifactId,
                    sizeof(artifactId));
-            artifactPool[whichArtifact].extra = ReadCampaignWord(infile);
+            artifactPool[whichArtifact].m_extra = readCampaignWord(infile);
         }
     }
 
-    count = ReadCampaignByte(infile);
-    field_6c.resize(count);
+    count = readCampaignByte(infile);
+    m_assignedCarryover.resize(count);
     for (int assignedIndex = 0; assignedIndex < count; ++assignedIndex) {
-        short value = ReadCampaignWord(infile);
-        field_6c[assignedIndex] = value;
+        short value = readCampaignWord(infile);
+        m_assignedCarryover[assignedIndex] = value;
     }
 }
 
@@ -3316,75 +3399,76 @@ LegacyCampaignHero::LegacyCampaignHero()
 // pair declared before and after the buffers (78.7965 each, 0.02 under
 // the kept spelling), and for-scoping them individually (byte-flat).
 VA(0x0048ae90, 0x370)  // link-order successor of LegacyCampaignHero's ctor; SCampaign::Load's mirror
-void SCampaign::Save(TAbstractFile* outfile)
+void SCampaign::save(TAbstractFile* outfile)
 {
-    char char_buffer;
+    // Before normalization (locals): char_buffer, int_buffer.
+    char charBuffer;
     char flag;
-    int int_buffer;
+    int intBuffer;
 
-    char_buffer = isCheater;
-    outfile->Write(&char_buffer, sizeof(char_buffer));
-    flag = secretActive;
-    outfile->Write(&flag, sizeof(flag));
-    flag = currentMap;
-    outfile->Write(&flag, sizeof(flag));
-    flag = currentCampaign;
-    outfile->Write(&flag, sizeof(flag));
-    flag = numMapRegions;
-    outfile->Write(&flag, sizeof(flag));
-    flag = crossoverArrayIndex;
-    outfile->Write(&flag, sizeof(flag));
-    flag = briefingChoice;
-    outfile->Write(&flag, sizeof(flag));
+    charBuffer = m_isCheater;
+    outfile->write(&charBuffer, sizeof(charBuffer));
+    flag = m_secretActive;
+    outfile->write(&flag, sizeof(flag));
+    flag = m_currentMap;
+    outfile->write(&flag, sizeof(flag));
+    flag = m_currentCampaign;
+    outfile->write(&flag, sizeof(flag));
+    flag = m_numMapRegions;
+    outfile->write(&flag, sizeof(flag));
+    flag = m_crossoverArrayIndex;
+    outfile->write(&flag, sizeof(flag));
+    flag = m_briefingChoice;
+    outfile->write(&flag, sizeof(flag));
 
-    int_buffer = campaignFilename.length();
-    outfile->Write(&int_buffer, sizeof(int_buffer));
-    outfile->Write(campaignFilename.c_str(), campaignFilename.length());
-    outfile->Write(campaignCompleted, sizeof(campaignCompleted));
+    intBuffer = m_campaignFilename.length();
+    outfile->write(&intBuffer, sizeof(intBuffer));
+    outfile->write(m_campaignFilename.c_str(), m_campaignFilename.length());
+    outfile->write(m_campaignCompleted, sizeof(m_campaignCompleted));
 
-    flag = mapScores.size();
-    outfile->Write(&flag, sizeof(flag));
-    for (unsigned int scenario = 0; scenario < mapScores.size();
+    flag = m_mapScores.size();
+    outfile->write(&flag, sizeof(flag));
+    for (unsigned int scenario = 0; scenario < m_mapScores.size();
          ++scenario) {
-        flag = mapScores[scenario].completed;
-        outfile->Write(&flag, sizeof(flag));
-        int_buffer = mapScores[scenario].days;
-        outfile->Write(&int_buffer, sizeof(int_buffer));
-        int_buffer = mapScores[scenario].score;
-        outfile->Write(&int_buffer, sizeof(int_buffer));
-        flag = mapScores[scenario].complete_order;
-        outfile->Write(&flag, sizeof(flag));
-        flag = mapScores[scenario].index;
-        outfile->Write(&flag, sizeof(flag));
+        flag = m_mapScores[scenario].m_completed;
+        outfile->write(&flag, sizeof(flag));
+        intBuffer = m_mapScores[scenario].m_days;
+        outfile->write(&intBuffer, sizeof(intBuffer));
+        intBuffer = m_mapScores[scenario].m_score;
+        outfile->write(&intBuffer, sizeof(intBuffer));
+        flag = m_mapScores[scenario].m_completeOrder;
+        outfile->write(&flag, sizeof(flag));
+        flag = m_mapScores[scenario].m_index;
+        outfile->write(&flag, sizeof(flag));
     }
 
-    flag = carryOverHeroes.size();
-    outfile->Write(&flag, sizeof(flag));
-    for (unsigned int pool = 0; pool < carryOverHeroes.size(); ++pool) {
-        flag = carryOverHeroes[pool].size();
-        outfile->Write(&flag, sizeof(flag));
+    flag = m_carryOverHeroes.size();
+    outfile->write(&flag, sizeof(flag));
+    for (unsigned int pool = 0; pool < m_carryOverHeroes.size(); ++pool) {
+        flag = m_carryOverHeroes[pool].size();
+        outfile->write(&flag, sizeof(flag));
 
         for (unsigned int whichHero = 0;
-             whichHero < carryOverHeroes[pool].size(); ++whichHero)
-            carryOverHeroes[pool][whichHero].save(outfile);
+             whichHero < m_carryOverHeroes[pool].size(); ++whichHero)
+            m_carryOverHeroes[pool][whichHero].save(outfile);
 
-        int_buffer = field_4c[pool].size();
-        outfile->Write(&int_buffer, 2);
+        intBuffer = m_carryoverArtifact[pool].size();
+        outfile->write(&intBuffer, 2);
         for (unsigned int whichArtifact = 0;
-             whichArtifact < field_4c[pool].size(); ++whichArtifact) {
-            int_buffer = field_4c[pool][whichArtifact].artifactId;
-            outfile->Write(&int_buffer, 2);
-            int_buffer = field_4c[pool][whichArtifact].extra;
-            outfile->Write(&int_buffer, 2);
+             whichArtifact < m_carryoverArtifact[pool].size(); ++whichArtifact) {
+            intBuffer = m_carryoverArtifact[pool][whichArtifact].m_artifactId;
+            outfile->write(&intBuffer, 2);
+            intBuffer = m_carryoverArtifact[pool][whichArtifact].m_extra;
+            outfile->write(&intBuffer, 2);
         }
     }
 
-    flag = field_6c.size();
-    outfile->Write(&flag, sizeof(flag));
-    for (unsigned int placeholder = 0; placeholder < field_6c.size();
+    flag = m_assignedCarryover.size();
+    outfile->write(&flag, sizeof(flag));
+    for (unsigned int placeholder = 0; placeholder < m_assignedCarryover.size();
          ++placeholder) {
-        int_buffer = field_6c[placeholder];
-        outfile->Write(&int_buffer, 2);
+        intBuffer = m_assignedCarryover[placeholder];
+        outfile->write(&intBuffer, 2);
     }
 }
 
@@ -3420,14 +3504,14 @@ VA_COMPGEN(0x0054D330, 0x246, VECTOR_INSERT, type_artifact)
 // non-negative-score guards; the present Complete source is exact at 10/10
 // blocks and 128/128 bytes.
 VA(0x0048b200, 0x80)  // exact-identical retail mapping; dc 0x7d374
-int SCampaign::get_score() const
+int SCampaign::getScore() const
 {
     int totalScore = 0;
     int numScores = 0;
 
-    for (unsigned int i = 0; i < mapScores.size(); ++i) {
-        if (mapScores[i].completed && mapScores[i].score >= 0) {
-            totalScore += mapScores[i].score;
+    for (unsigned int i = 0; i < m_mapScores.size(); ++i) {
+        if (m_mapScores[i].m_completed && m_mapScores[i].m_score >= 0) {
+            totalScore += m_mapScores[i].m_score;
             ++numScores;
         }
     }
@@ -3442,13 +3526,13 @@ int SCampaign::get_score() const
 // preserves the completed-only accumulation and its nested loop scope, and
 // retail corroborates it at 7/7 blocks and 87/87 bytes.
 VA(0x0048b280, 0x57)  // exact-identical retail mapping; dc 0x7d3c0
-int SCampaign::get_total_time() const
+int SCampaign::getTotalTime() const
 {
     int totalTime = 0;
 
-    for (unsigned int i = 0; i < mapScores.size(); ++i) {
-        if (mapScores[i].completed)
-            totalTime += mapScores[i].days;
+    for (unsigned int i = 0; i < m_mapScores.size(); ++i) {
+        if (m_mapScores[i].m_completed)
+            totalTime += m_mapScores[i].m_days;
     }
 
     return totalTime;
@@ -3459,21 +3543,21 @@ int SCampaign::get_total_time() const
 // rewrites the third player slot's alignment (Inferno, or the chosen one
 // of Inferno/Dungeon) - the `sub eax,0 / je / dec / jne` selector form.
 VA(0x0048b2e0, 0x8C)  // CampaignBriefHandler launch arm, retail-only
-void SCampaign::ApplyBriefingChoice(int option)
+void SCampaign::applyBriefingChoice(int option)
 {
-    briefingChoice = option;
-    field_6c.erase(field_6c.begin(), field_6c.end());
-    if (currentCampaign == ALIGNMENT_CHOICE_CAMPAIGN_A
-        && currentMap == ALIGNMENT_CHOICE_MAP)
-        gpGame->setup.alignment[2] = TOWN_INFERNO;
-    if (currentCampaign == ALIGNMENT_CHOICE_CAMPAIGN_B
-        && currentMap == ALIGNMENT_CHOICE_MAP) {
+    m_briefingChoice = option;
+    m_assignedCarryover.erase(m_assignedCarryover.begin(), m_assignedCarryover.end());
+    if (m_currentCampaign == ALIGNMENT_CHOICE_CAMPAIGN_A
+        && m_currentMap == ALIGNMENT_CHOICE_MAP)
+        g_game->m_setup.m_alignment[2] = TOWN_INFERNO;
+    if (m_currentCampaign == ALIGNMENT_CHOICE_CAMPAIGN_B
+        && m_currentMap == ALIGNMENT_CHOICE_MAP) {
         switch (option) {
         case BRIEFING_CHOICE_FIRST:
-            gpGame->setup.alignment[2] = TOWN_INFERNO;
+            g_game->m_setup.m_alignment[2] = TOWN_INFERNO;
             break;
         case BRIEFING_CHOICE_SECOND:
-            gpGame->setup.alignment[2] = TOWN_DUNGEON;
+            g_game->m_setup.m_alignment[2] = TOWN_DUNGEON;
             break;
         }
     }

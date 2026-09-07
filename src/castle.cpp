@@ -18,34 +18,37 @@
 // File-local working state used by the hall page. All later references in
 // this function are relocations to these two bases plus source-array
 // addends, rather than independent globals.
+// Before normalization: gpCastleWindow.
 DATA(0x00694e60)
-static heroWindow* gpCastleWindow;
+static heroWindow* g_castleWindow;
+// Before normalization: CastleBuildOrder.
 DATA(0x00694e70)
-static unsigned char CastleBuildOrder[18];
+static unsigned char g_castleBuildOrder[18];
 
 // Dreamcast public `cHallInfo`; Complete extends the same hall-page text
 // roster through the Conflux-era cases while retaining ten pointer slots.
 DATA(0x006a7428)
-const char* cHallInfo[10];
+const char* g_hallInfo[10];
 
 // Both the rollover and right-click arms map the resource-display widget
 // bands through this shared retail table before indexing the two columns of
 // gAdventureWindowHelp.
+// Before normalization: gHallHelpIndices.
 DATA(0x0063BCC8)
-static const int gHallHelpIndices[8] = {19, 20, 21, 22, 23, 24, 18, 25};
+static const int g_hallHelpIndices[8] = {19, 20, 21, 22, 23, 24, 18, 25};
 
 // E:\gamedcs\castle.cpp:285
 VA(0x004610e0, 0x49)  // anchor-global, dc 0x5c1d8
-const char* GetBuildingName(int townType, int buildingId)
+const char* getBuildingName(int townType, int buildingId)
 {
     if (buildingId < BUILDING_ID_TOWN_FIRST) {
         if (buildingId == BUILDING_ID_DWELLING)
-            return gBuildingNamesDwelling[townType * 11];
-        return gBuildingNamesCommon[buildingId];
+            return g_buildingNamesDwelling[townType * 11];
+        return g_buildingNamesCommon[buildingId];
     }
     if (buildingId < BUILDING_ID_UPGRADE_FIRST)
-        return gBuildingNamesTown[townType * 11 + buildingId];
-    return gBuildingNamesUpgrade[buildingId + townType * 14];
+        return g_buildingNamesTown[townType * 11 + buildingId];
+    return g_buildingNamesUpgrade[buildingId + townType * 14];
 }
 
 #if 0  // @carcass
@@ -54,46 +57,47 @@ const char* GetBuildingName(int townType, int buildingId)
 
 // E:\gamedcs\castle.cpp:307
 VA(0x00461130, 0x5C)  // source-order map + unique retail body, dc 0x5c228
-int CanBuy(const town* currTown, int buildingId)
+int canBuy(const town* currTown, int buildingId)
 {
     int cost[NUM_RESOURCES];
-    currTown->get_build_cost((type_building_id) buildingId, cost);
+    currTown->getBuildCost((type_building_id) buildingId, cost);
 
-    playerData* player = &gpGame->players[gNetLocalGamePos];
+    playerData* player = &g_game->m_players[g_netLocalGamePos];
     for (int resource = 0; resource < NUM_RESOURCES; ++resource) {
-        if (player->resources[resource] < cost[resource])
+        if (player->m_resources[resource] < cost[resource])
             return 0;
     }
     return 1;
 }
 
 // E:\gamedcs\castle.cpp:328
+// Before normalization (locals): bIsReset.
 VA(0x00461190, 0x91C)  // source-order + sole DoHall caller, dc 0x5c278
-void townManager::SetupCastle(heroWindow* inCasWin, int bIsReset)
+void townManager::setupCastle(heroWindow* inCasWin, int isReset)
 {
     int i;
     message msg;
 
-    gpCastleWindow = inCasWin;
-    msg.id = MESSAGE_WIDGET;
-    msg.codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
-    msg.codeY = 0;
-    msg.extra = gpGame->GetLocalPlayerGamePos();
-    gpCastleWindow->BroadcastMessage(&msg);
+    g_castleWindow = inCasWin;
+    msg.m_id = MESSAGE_WIDGET;
+    msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
+    msg.m_codeY = 0;
+    msg.m_extra = g_game->getLocalPlayerGamePos();
+    g_castleWindow->broadcastMessage(&msg);
 
-    for (i = 0; i < NumOfTownSpecStrScreen[townToView->type]; ++i) {
-        CastleBuildOrder[i] = TownSpecStructScreen[townToView->type][i];
+    for (i = 0; i < g_numOfTownSpecStrScreen[m_townToView->m_type]; ++i) {
+        g_castleBuildOrder[i] = g_townSpecStructScreen[m_townToView->m_type][i];
 
-        if (CastleBuildOrder[i] >= DWELLING_0_ID) {
-            if (townToView->HasBuilding(CastleBuildOrder[i], true))
-                CastleBuildOrder[i] += TOWN_DWELLING_COUNT;
+        if (g_castleBuildOrder[i] >= DWELLING_0_ID) {
+            if (m_townToView->hasBuilding(g_castleBuildOrder[i], true))
+                g_castleBuildOrder[i] += TOWN_DWELLING_COUNT;
         } else {
-            switch (CastleBuildOrder[i]) {
+            switch (g_castleBuildOrder[i]) {
             case CASTLE_FORT_ID:
-                if (townToView->HasBuilding(CASTLE_FORT_ID, false)) {
-                    CastleBuildOrder[i] = CASTLE_CITADEL_ID;
-                } else if (townToView->HasBuilding(CASTLE_CITADEL_ID, true)) {
-                    CastleBuildOrder[i] = CASTLE_CASTLE_ID;
+                if (m_townToView->hasBuilding(CASTLE_FORT_ID, false)) {
+                    g_castleBuildOrder[i] = CASTLE_CITADEL_ID;
+                } else if (m_townToView->hasBuilding(CASTLE_CITADEL_ID, true)) {
+                    g_castleBuildOrder[i] = CASTLE_CASTLE_ID;
                 }
                 break;
 
@@ -102,165 +106,165 @@ void townManager::SetupCastle(heroWindow* inCasWin, int bIsReset)
                 // Direct built/active masks are not an equivalent spelling:
                 // they drop Complete from 98.57% to 88.70% and lose two
                 // inline-site branches across the rest of this function.
-                if (townToView->HasBuilding(HALL_VILLAGE_ID, false)) {
-                    CastleBuildOrder[i] = HALL_TOWN_ID;
-                } else if (townToView->HasBuilding(HALL_TOWN_ID, false)) {
-                    CastleBuildOrder[i] = HALL_CITY_ID;
-                } else if (townToView->HasBuilding(HALL_CITY_ID, true)) {
-                    CastleBuildOrder[i] = HALL_CAPITOL_ID;
+                if (m_townToView->hasBuilding(HALL_VILLAGE_ID, false)) {
+                    g_castleBuildOrder[i] = HALL_TOWN_ID;
+                } else if (m_townToView->hasBuilding(HALL_TOWN_ID, false)) {
+                    g_castleBuildOrder[i] = HALL_CITY_ID;
+                } else if (m_townToView->hasBuilding(HALL_CITY_ID, true)) {
+                    g_castleBuildOrder[i] = HALL_CAPITOL_ID;
                 }
                 break;
 
             case MAGE_GUILD_ID:
-                if (townToView->HasBuilding(MAGE_GUILD_ID, false))
-                    CastleBuildOrder[i] = MAGE_GUILD2_ID;
-                else if (townToView->HasBuilding(MAGE_GUILD2_ID, false))
-                    CastleBuildOrder[i] = MAGE_GUILD3_ID;
-                else if (townToView->HasBuilding(MAGE_GUILD3_ID, false)) {
-                    if (townToView->type == TOWN_STRONGHOLD
-                        || townToView->type == TOWN_FORTRESS)
-                        CastleBuildOrder[i] = MAGE_GUILD3_ID;
+                if (m_townToView->hasBuilding(MAGE_GUILD_ID, false))
+                    g_castleBuildOrder[i] = MAGE_GUILD2_ID;
+                else if (m_townToView->hasBuilding(MAGE_GUILD2_ID, false))
+                    g_castleBuildOrder[i] = MAGE_GUILD3_ID;
+                else if (m_townToView->hasBuilding(MAGE_GUILD3_ID, false)) {
+                    if (m_townToView->m_type == TOWN_STRONGHOLD
+                        || m_townToView->m_type == TOWN_FORTRESS)
+                        g_castleBuildOrder[i] = MAGE_GUILD3_ID;
                     else
-                        CastleBuildOrder[i] = MAGE_GUILD4_ID;
-                } else if (townToView->HasBuilding(MAGE_GUILD4_ID, true)) {
+                        g_castleBuildOrder[i] = MAGE_GUILD4_ID;
+                } else if (m_townToView->hasBuilding(MAGE_GUILD4_ID, true)) {
                     // DC lines 398..401 retain this as an if/else pair. VC6
                     // folds that source shape to the retail setne/add sequence;
                     // spelling the arithmetic directly narrows the add to DL.
-                    if (townToView->type == TOWN_CASTLE) {
-                        CastleBuildOrder[i] = MAGE_GUILD4_ID;
+                    if (m_townToView->m_type == TOWN_CASTLE) {
+                        g_castleBuildOrder[i] = MAGE_GUILD4_ID;
                     } else {
-                        CastleBuildOrder[i] = MAGE_GUILD5_ID;
+                        g_castleBuildOrder[i] = MAGE_GUILD5_ID;
                     }
                 }
                 break;
 
             case MARKETPLACE_ID:
-                if (townToView->HasBuilding(MARKETPLACE_ID, true))
-                    CastleBuildOrder[i] = MARKETPLACE_SILO_ID;
+                if (m_townToView->hasBuilding(MARKETPLACE_ID, true))
+                    g_castleBuildOrder[i] = MARKETPLACE_SILO_ID;
                 break;
             }
         }
     }
 
-    switch (townToView->type) {
+    switch (m_townToView->m_type) {
     case TOWN_CASTLE:
-        if (townToView->HasBuilding(DWELLING_2_UPG_ID, true))
-            CastleBuildOrder[14] = HORDE_UPG_ID;
-        if (townToView->HasBuilding(TAVERN_ID, true))
-            CastleBuildOrder[8] = EXTRA_1_ID;
-        if (townToView->HasBuilding(DOCK_ID, true))
-            CastleBuildOrder[9] = SPECIAL_BUILDING_ID;
+        if (m_townToView->hasBuilding(DWELLING_2_UPG_ID, true))
+            g_castleBuildOrder[14] = HORDE_UPG_ID;
+        if (m_townToView->hasBuilding(TAVERN_ID, true))
+            g_castleBuildOrder[8] = EXTRA_1_ID;
+        if (m_townToView->hasBuilding(DOCK_ID, true))
+            g_castleBuildOrder[9] = SPECIAL_BUILDING_ID;
         break;
 
     case TOWN_RAMPART:
-        if (townToView->HasBuilding(DWELLING_1_UPG_ID, true))
-            CastleBuildOrder[13] = HORDE_UPG_ID;
-        if (townToView->HasBuilding(DWELLING_4_UPG_ID, true))
-            CastleBuildOrder[14] = HORDE_2_UPG_ID;
-        if (townToView->HasBuilding(SPECIAL_BUILDING_ID, false)
-            || townToView->HasBuilding(EXTRA_0_ID, false)) {
-            CastleBuildOrder[16] = EXTRA_0_ID;
+        if (m_townToView->hasBuilding(DWELLING_1_UPG_ID, true))
+            g_castleBuildOrder[13] = HORDE_UPG_ID;
+        if (m_townToView->hasBuilding(DWELLING_4_UPG_ID, true))
+            g_castleBuildOrder[14] = HORDE_2_UPG_ID;
+        if (m_townToView->hasBuilding(SPECIAL_BUILDING_ID, false)
+            || m_townToView->hasBuilding(EXTRA_0_ID, false)) {
+            g_castleBuildOrder[16] = EXTRA_0_ID;
         }
         break;
 
     case TOWN_TOWER:
-        if (townToView->HasBuilding(DWELLING_1_UPG_ID, true))
-            CastleBuildOrder[14] = HORDE_UPG_ID;
+        if (m_townToView->hasBuilding(DWELLING_1_UPG_ID, true))
+            g_castleBuildOrder[14] = HORDE_UPG_ID;
         break;
 
     case TOWN_INFERNO:
-        if (townToView->HasBuilding(DWELLING_0_UPG_ID, true))
-            CastleBuildOrder[13] = HORDE_UPG_ID;
-        if (townToView->HasBuilding(DWELLING_2_UPG_ID, true))
-            CastleBuildOrder[17] = HORDE_2_UPG_ID;
+        if (m_townToView->hasBuilding(DWELLING_0_UPG_ID, true))
+            g_castleBuildOrder[13] = HORDE_UPG_ID;
+        if (m_townToView->hasBuilding(DWELLING_2_UPG_ID, true))
+            g_castleBuildOrder[17] = HORDE_2_UPG_ID;
         break;
 
     case TOWN_NECROPOLIS:
-        if (townToView->HasBuilding(DWELLING_0_UPG_ID, true))
-            CastleBuildOrder[14] = HORDE_UPG_ID;
+        if (m_townToView->hasBuilding(DWELLING_0_UPG_ID, true))
+            g_castleBuildOrder[14] = HORDE_UPG_ID;
         break;
 
     case TOWN_DUNGEON:
     case TOWN_STRONGHOLD:
-        if (townToView->HasBuilding(DWELLING_0_UPG_ID, true))
-            CastleBuildOrder[13] = HORDE_UPG_ID;
+        if (m_townToView->hasBuilding(DWELLING_0_UPG_ID, true))
+            g_castleBuildOrder[13] = HORDE_UPG_ID;
         break;
 
     case TOWN_FORTRESS:
-        if (townToView->HasBuilding(DWELLING_0_UPG_ID, true))
-            CastleBuildOrder[14] = HORDE_UPG_ID;
-        if (townToView->HasBuilding(EXTRA_0_ID, false)
-            || townToView->HasBuilding(EXTRA_1_ID, false)) {
-            CastleBuildOrder[15] = EXTRA_1_ID;
+        if (m_townToView->hasBuilding(DWELLING_0_UPG_ID, true))
+            g_castleBuildOrder[14] = HORDE_UPG_ID;
+        if (m_townToView->hasBuilding(EXTRA_0_ID, false)
+            || m_townToView->hasBuilding(EXTRA_1_ID, false)) {
+            g_castleBuildOrder[15] = EXTRA_1_ID;
         }
         break;
 
     case TOWN_CONFLUX:
-        if (townToView->HasBuilding(DWELLING_0_UPG_ID, true))
-            CastleBuildOrder[14] = HORDE_UPG_ID;
+        if (m_townToView->hasBuilding(DWELLING_0_UPG_ID, true))
+            g_castleBuildOrder[14] = HORDE_UPG_ID;
         break;
     }
 
-    canBuyMask = 0;
-    if (townToView->field_02)
-        canBuildMask = 0;
+    m_canBuyMask = 0;
+    if (m_townToView->m_builtThisTurn)
+        m_canBuildMask = 0;
     else
-        canBuildMask = townToView->get_buildable_mask();
+        m_canBuildMask = m_townToView->getBuildableMask();
 
-    for (i = 0; i < NumOfTownSpecStrScreen[townToView->type]; ++i) {
-        if (CanBuy(townToView, CastleBuildOrder[i]))
-            canBuyMask |= bitNumber[CastleBuildOrder[i]];
+    for (i = 0; i < g_numOfTownSpecStrScreen[m_townToView->m_type]; ++i) {
+        if (canBuy(m_townToView, g_castleBuildOrder[i]))
+            m_canBuyMask |= g_bitNumber[g_castleBuildOrder[i]];
     }
 
-    msg.codeX = widget::WIDGET_SET_ICON_FRAME;
-    for (i = 0; i < NumOfTownSpecStrScreen[townToView->type]; ++i) {
-        msg.codeY = CASTLE_BUILD_ICON_FIRST_ID + i;
-        msg.extra = CastleBuildOrder[i];
-        gpCastleWindow->BroadcastMessage(&msg);
+    msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+    for (i = 0; i < g_numOfTownSpecStrScreen[m_townToView->m_type]; ++i) {
+        msg.m_codeY = CASTLE_BUILD_ICON_FIRST_ID + i;
+        msg.m_extra = g_castleBuildOrder[i];
+        g_castleWindow->broadcastMessage(&msg);
     }
 
-    msg.codeX = widget::WIDGET_SET_TEXT;
-    for (i = 0; i < NumOfTownSpecStrScreen[townToView->type]; ++i) {
-        msg.codeY = CASTLE_BUILD_NAME_FIRST_ID + i;
-        msg.extraText =
-            GetBuildingName(townToView->type, CastleBuildOrder[i]);
-        gpCastleWindow->BroadcastMessage(&msg);
+    msg.m_codeX = widget::WIDGET_SET_TEXT;
+    for (i = 0; i < g_numOfTownSpecStrScreen[m_townToView->m_type]; ++i) {
+        msg.m_codeY = CASTLE_BUILD_NAME_FIRST_ID + i;
+        msg.m_extraText =
+            getBuildingName(m_townToView->m_type, g_castleBuildOrder[i]);
+        g_castleWindow->broadcastMessage(&msg);
     }
 
-    for (i = 0; i < NumOfTownSpecStrScreen[townToView->type]; ++i) {
+    for (i = 0; i < g_numOfTownSpecStrScreen[m_townToView->m_type]; ++i) {
         int state = -1;
-        if (townToView->HasBuilding(CastleBuildOrder[i], true))
+        if (m_townToView->hasBuilding(g_castleBuildOrder[i], true))
             state = 0;
-        else if (!(canBuildMask & bitNumber[CastleBuildOrder[i]]))
+        else if (!(m_canBuildMask & g_bitNumber[g_castleBuildOrder[i]]))
             state = 1;
-        else if (!(canBuyMask & bitNumber[CastleBuildOrder[i]]))
+        else if (!(m_canBuyMask & g_bitNumber[g_castleBuildOrder[i]]))
             state = 2;
 
         if (state != -1) {
-            msg.codeX = widget::WIDGET_SET_STATUS;
-            msg.codeY = CASTLE_BUILD_BUTTON_FIRST_ID + i;
-            msg.extra = widget::WIDGET_DRAWN;
-            gpCastleWindow->BroadcastMessage(&msg);
-            msg.codeX = widget::WIDGET_SET_ICON_FRAME;
-            msg.extra = state;
+            msg.m_codeX = widget::WIDGET_SET_STATUS;
+            msg.m_codeY = CASTLE_BUILD_BUTTON_FIRST_ID + i;
+            msg.m_extra = widget::WIDGET_DRAWN;
+            g_castleWindow->broadcastMessage(&msg);
+            msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+            msg.m_extra = state;
         } else {
-            msg.codeX = widget::WIDGET_CLEAR_STATUS;
-            msg.codeY = CASTLE_BUILD_BUTTON_FIRST_ID + i;
-            msg.extra = widget::WIDGET_DRAWN;
+            msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+            msg.m_codeY = CASTLE_BUILD_BUTTON_FIRST_ID + i;
+            msg.m_extra = widget::WIDGET_DRAWN;
         }
-        gpCastleWindow->BroadcastMessage(&msg);
+        g_castleWindow->broadcastMessage(&msg);
 
-        msg.codeX = widget::WIDGET_SET_ICON_FRAME;
-        msg.codeY = CASTLE_BUILD_FRAME_FIRST_ID + i;
+        msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+        msg.m_codeY = CASTLE_BUILD_FRAME_FIRST_ID + i;
         if (!state)
-            msg.extra = 0;
+            msg.m_extra = 0;
         else if (state == -1)
-            msg.extra = 1;
-        else if (townToView->can_ever_build(CastleBuildOrder[i]))
-            msg.extra = 2;
+            msg.m_extra = 1;
+        else if (m_townToView->canEverBuild(g_castleBuildOrder[i]))
+            msg.m_extra = 2;
         else
-            msg.extra = 3;
-        gpCastleWindow->BroadcastMessage(&msg);
+            msg.m_extra = 3;
+        g_castleWindow->broadcastMessage(&msg);
     }
 }
 
@@ -286,38 +290,38 @@ void townManager::SetupCastle(heroWindow* inCasWin, int bIsReset)
 // infoOnly local, text-band arm first. why-reg: bindings agree at every
 // first def; why-branch: D8/D13 named, its one mutation flat.
 VA(0x00461AB0, 0x767)  // THallWindow vtable 0x6437a0 slot 9, dc 0x5c884
-int THallWindow::WindowHandler(message* msg)
+int THallWindow::windowHandler(message* msg)
 {
-    int result = CAdvPopup::WindowHandler(msg);
+    int result = CAdvPopup::windowHandler(msg);
     if (result)
         return result;
 
     int building = CASTLE_BUILDING_NONE;
     int hover = 0;
 
-    if (msg->id == MESSAGE_MOUSE_MOVE || msg->id == MESSAGE_WIDGET) {
-        if (msg->id == MESSAGE_MOUSE_MOVE) {
-            gpWindowManager->ConvertToHover(*msg);
+    if (msg->m_id == MESSAGE_MOUSE_MOVE || msg->m_id == MESSAGE_WIDGET) {
+        if (msg->m_id == MESSAGE_MOUSE_MOVE) {
+            g_windowManager->convertToHover(*msg);
             hover = 1;
         }
 
-        if (msg->codeY >= CASTLE_BUILD_NAME_FIRST_ID
-            && msg->codeY < CASTLE_BUILD_NAME_FIRST_ID + CASTLE_HALL_SLOT_COUNT) {
-            building = msg->codeY - CASTLE_BUILD_NAME_FIRST_ID;
-        } else if (msg->codeY >= CASTLE_BUILD_ICON_FIRST_ID
-                   && msg->codeY < CASTLE_BUILD_ICON_FIRST_ID + CASTLE_HALL_SLOT_COUNT) {
-            building = msg->codeY - CASTLE_BUILD_ICON_FIRST_ID;
-        } else if (msg->codeY >= CASTLE_BUILD_BUTTON_FIRST_ID
-                   && msg->codeY < CASTLE_BUILD_BUTTON_FIRST_ID + CASTLE_HALL_SLOT_COUNT) {
-            building = msg->codeY - CASTLE_BUILD_BUTTON_FIRST_ID;
+        if (msg->m_codeY >= CASTLE_BUILD_NAME_FIRST_ID
+            && msg->m_codeY < CASTLE_BUILD_NAME_FIRST_ID + CASTLE_HALL_SLOT_COUNT) {
+            building = msg->m_codeY - CASTLE_BUILD_NAME_FIRST_ID;
+        } else if (msg->m_codeY >= CASTLE_BUILD_ICON_FIRST_ID
+                   && msg->m_codeY < CASTLE_BUILD_ICON_FIRST_ID + CASTLE_HALL_SLOT_COUNT) {
+            building = msg->m_codeY - CASTLE_BUILD_ICON_FIRST_ID;
+        } else if (msg->m_codeY >= CASTLE_BUILD_BUTTON_FIRST_ID
+                   && msg->m_codeY < CASTLE_BUILD_BUTTON_FIRST_ID + CASTLE_HALL_SLOT_COUNT) {
+            building = msg->m_codeY - CASTLE_BUILD_BUTTON_FIRST_ID;
         }
         if (building != CASTLE_BUILDING_NONE)
-            building = CastleBuildOrder[building];
+            building = g_castleBuildOrder[building];
 
         if (hover) {
-            if (gpTownManager->lastHover == msg->codeY)
+            if (g_townManager->m_lastHover == msg->m_codeY)
                 return MESSAGE_DISPATCH_CONSUME;
-            gpTownManager->lastHover = msg->codeY;
+            g_townManager->m_lastHover = msg->m_codeY;
 
             switch (building) {
             case MAGE_GUILD_ID:
@@ -359,40 +363,40 @@ int THallWindow::WindowHandler(message* msg)
             case DWELLING_4_UPG_ID:
             case DWELLING_5_UPG_ID:
             case DWELLING_6_UPG_ID:
-                if (gpGame->TownAlreadyBuiltOn(gpTownManager->townToView->id)) {
-                    strcpy(gText, (*gpGeneralText)[224]);
-                } else if (gpTownManager->townToView->HasBuilding(building, false)) {
-                    sprintf(gText, cHallInfo[4],
-                            GetBuildingName(gpTownManager->townToView->type, building));
-                } else if (!(gpTownManager->canBuildMask & bitNumber[building])) {
+                if (g_game->townAlreadyBuiltOn(g_townManager->m_townToView->m_id)) {
+                    strcpy(g_text, (*g_generalText)[224]);
+                } else if (g_townManager->m_townToView->hasBuilding(building, false)) {
+                    sprintf(g_text, g_hallInfo[4],
+                            getBuildingName(g_townManager->m_townToView->m_type, building));
+                } else if (!(g_townManager->m_canBuildMask & g_bitNumber[building])) {
                     if (building == HALL_CAPITOL_ID) {
-                        if (gpGame->players[gpTownManager->townToView->owner].HasCapitol()) {
-                            strcpy(gText, cHallInfo[0]);
+                        if (g_game->m_players[g_townManager->m_townToView->m_owner].hasCapitol()) {
+                            strcpy(g_text, g_hallInfo[0]);
                             break;
                         }
                     } else if (building == DOCK_ID) {
-                        if (!gpTownManager->townToView->CanBuildDock()) {
-                            strcpy(gText, cHallInfo[1]);
+                        if (!g_townManager->m_townToView->canBuildDock()) {
+                            strcpy(g_text, g_hallInfo[1]);
                             break;
                         }
                     }
-                    if (!gpTownManager->townToView->can_ever_build(building)) {
-                        strcpy(gText, cHallInfo[2]);
+                    if (!g_townManager->m_townToView->canEverBuild(building)) {
+                        strcpy(g_text, g_hallInfo[2]);
                     } else {
-                        sprintf(gText, cHallInfo[5],
-                                GetBuildingName(gpTownManager->townToView->type, building));
+                        sprintf(g_text, g_hallInfo[5],
+                                getBuildingName(g_townManager->m_townToView->m_type, building));
                     }
-                } else if (!(gpTownManager->canBuyMask & bitNumber[building])) {
-                    sprintf(gText, cHallInfo[6],
-                            GetBuildingName(gpTownManager->townToView->type, building));
+                } else if (!(g_townManager->m_canBuyMask & g_bitNumber[building])) {
+                    sprintf(g_text, g_hallInfo[6],
+                            getBuildingName(g_townManager->m_townToView->m_type, building));
                 } else {
-                    sprintf(gText, cHallInfo[7],
-                            GetBuildingName(gpTownManager->townToView->type, building));
+                    sprintf(g_text, g_hallInfo[7],
+                            getBuildingName(g_townManager->m_townToView->m_type, building));
                 }
                 break;
 
             case CASTLE_BUILDING_NONE:
-                switch (msg->codeY) {
+                switch (msg->m_codeY) {
                 case CASTLE_RESOURCE_TEXT_0_ID:
                 case CASTLE_RESOURCE_TEXT_1_ID:
                 case CASTLE_RESOURCE_TEXT_2_ID:
@@ -401,8 +405,8 @@ int THallWindow::WindowHandler(message* msg)
                 case CASTLE_RESOURCE_TEXT_5_ID:
                 case CASTLE_RESOURCE_TEXT_6_ID:
                 case CASTLE_RESOURCE_TEXT_7_ID:
-                    strcpy(gText, gAdventureWindowHelp[
-                        gHallHelpIndices[msg->codeY - CASTLE_RESOURCE_TEXT_FIRST_ID]].text);
+                    strcpy(g_text, g_adventureWindowHelp[
+                        g_hallHelpIndices[msg->m_codeY - CASTLE_RESOURCE_TEXT_FIRST_ID]].m_text);
                     break;
                 case CASTLE_RESOURCE_BORDER_0_ID:
                 case CASTLE_RESOURCE_BORDER_1_ID:
@@ -411,43 +415,43 @@ int THallWindow::WindowHandler(message* msg)
                 case CASTLE_RESOURCE_BORDER_4_ID:
                 case CASTLE_RESOURCE_BORDER_5_ID:
                 case CASTLE_RESOURCE_BORDER_6_ID:
-                    strcpy(gText, gAdventureWindowHelp[
-                        gHallHelpIndices[msg->codeY - CASTLE_RESOURCE_BORDER_FIRST_ID]].text);
+                    strcpy(g_text, g_adventureWindowHelp[
+                        g_hallHelpIndices[msg->m_codeY - CASTLE_RESOURCE_BORDER_FIRST_ID]].m_text);
                     break;
                 case EXIT_BUTTON_ID:
-                    strcpy(gText, cHallInfo[8]);
+                    strcpy(g_text, g_hallInfo[8]);
                     break;
                 default:
-                    strcpy(gText, cHallInfo[9]);
+                    strcpy(g_text, g_hallInfo[9]);
                     break;
                 }
                 break;
             }
 
-            msg->id = MESSAGE_WIDGET;
-            msg->codeX = widget::WIDGET_SET_TEXT;
-            msg->codeY = CASTLE_ROLLOVER_TEXT_ID;
-            msg->extraText = gText;
-            gpTownManager->hallWindow->BroadcastMessage(msg);
-            gpTownManager->hallWindow->DrawWindow(
+            msg->m_id = MESSAGE_WIDGET;
+            msg->m_codeX = widget::WIDGET_SET_TEXT;
+            msg->m_codeY = CASTLE_ROLLOVER_TEXT_ID;
+            msg->m_extraText = g_text;
+            g_townManager->m_hallWindow->broadcastMessage(msg);
+            g_townManager->m_hallWindow->drawWindow(
                 0, CASTLE_ROLLOVER_DRAW_FIRST_ID, CASTLE_ROLLOVER_TEXT_ID);
-            gpWindowManager->UpdateScreen(8, 0x22c, 0x2de, 0x12);
+            g_windowManager->updateScreen(8, 0x22c, 0x2de, 0x12);
             return MESSAGE_DISPATCH_CONSUME;
         }
     }
 
-    if (msg->id == MESSAGE_WIDGET) {
-        switch (msg->codeX) {
+    if (msg->m_id == MESSAGE_WIDGET) {
+        switch (msg->m_codeX) {
         case widget::WIDGET_DESELECT:
-            if (msg->codeY == EXIT_BUTTON_ID) {
-                msg->codeX = msg->codeY = widget::WIDGET_END_DIALOG;
+            if (msg->m_codeY == EXIT_BUTTON_ID) {
+                msg->m_codeX = msg->m_codeY = widget::WIDGET_END_DIALOG;
                 return MESSAGE_DISPATCH_FORWARD;
             }
             break;
 
         case widget::WIDGET_SELECT:
         case widget::WIDGET_RIGHT_SELECT: {
-            int quickView = (msg->qualifier & MESSAGE_MODIFIER_RIGHT) != 0;
+            int quickView = (msg->m_qualifier & MESSAGE_MODIFIER_RIGHT) != 0;
             switch (building) {
             case MAGE_GUILD_ID:
             case MAGE_GUILD2_ID:
@@ -489,23 +493,23 @@ int THallWindow::WindowHandler(message* msg)
             case DWELLING_5_UPG_ID:
             case DWELLING_6_UPG_ID: {
                 int i;
-                for (i = 0; i < gpTownManager->TownObjectCount; ++i) {
-                    if (gpTownManager->TownObjects[i]->objId == building)
+                for (i = 0; i < g_townManager->m_townObjectCount; ++i) {
+                    if (g_townManager->m_townObjects[i]->m_objId == building)
                         break;
                 }
-                if (gpTownManager->BuyBuild(building,
-                        gpTownManager->townToView->HasBuilding(building, true)
-                            || !(gpTownManager->canBuildMask & bitNumber[building])
-                            || !(gpTownManager->canBuyMask & bitNumber[building]),
+                if (g_townManager->buyBuild(building,
+                        g_townManager->m_townToView->hasBuilding(building, true)
+                            || !(g_townManager->m_canBuildMask & g_bitNumber[building])
+                            || !(g_townManager->m_canBuyMask & g_bitNumber[building]),
                         quickView)) {
-                    msg->codeX = msg->codeY = widget::WIDGET_END_DIALOG;
+                    msg->m_codeX = msg->m_codeY = widget::WIDGET_END_DIALOG;
                     return MESSAGE_DISPATCH_FORWARD;
                 }
                 break;
             }
 
             case CASTLE_BUILDING_NONE:
-                switch (msg->codeY) {
+                switch (msg->m_codeY) {
                 case CASTLE_RESOURCE_BORDER_0_ID:
                 case CASTLE_RESOURCE_BORDER_1_ID:
                 case CASTLE_RESOURCE_BORDER_2_ID:
@@ -513,9 +517,9 @@ int THallWindow::WindowHandler(message* msg)
                 case CASTLE_RESOURCE_BORDER_4_ID:
                 case CASTLE_RESOURCE_BORDER_5_ID:
                 case CASTLE_RESOURCE_BORDER_6_ID:
-                    strcpy(gText, gAdventureWindowHelp[
-                        gHallHelpIndices[msg->codeY - CASTLE_RESOURCE_BORDER_FIRST_ID]].rclick);
-                    NormalDialog(gText, quickView ? 4 : 1,
+                    strcpy(g_text, g_adventureWindowHelp[
+                        g_hallHelpIndices[msg->m_codeY - CASTLE_RESOURCE_BORDER_FIRST_ID]].m_rclick);
+                    normalDialog(g_text, quickView ? 4 : 1,
                                  -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                     break;
                 case CASTLE_RESOURCE_TEXT_0_ID:
@@ -526,9 +530,9 @@ int THallWindow::WindowHandler(message* msg)
                 case CASTLE_RESOURCE_TEXT_5_ID:
                 case CASTLE_RESOURCE_TEXT_6_ID:
                 case CASTLE_RESOURCE_TEXT_7_ID:
-                    strcpy(gText, gAdventureWindowHelp[
-                        gHallHelpIndices[msg->codeY - CASTLE_RESOURCE_TEXT_FIRST_ID]].rclick);
-                    NormalDialog(gText, quickView ? 4 : 1,
+                    strcpy(g_text, g_adventureWindowHelp[
+                        g_hallHelpIndices[msg->m_codeY - CASTLE_RESOURCE_TEXT_FIRST_ID]].m_rclick);
+                    normalDialog(g_text, quickView ? 4 : 1,
                                  -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                     break;
                 }

@@ -318,14 +318,20 @@ public:
     TSpreadsheetResource(const char* name, int size, const char* data);
     virtual ~TSpreadsheetResource();
 
-    virtual unsigned int GetSize() const;
-    int GetNumberOfRows() const { return Spreadsheet.size(); }
-    const TStringVector& GetRow(int r) const { return *Spreadsheet[r]; }
+    // Before normalization (function): TSpreadsheetResource::GetSize.
+    virtual unsigned int getSize() const;
+    // Before normalization (function): TSpreadsheetResource::GetNumberOfRows.
+    int getNumberOfRows() const { return m_spreadsheet.size(); }
+    // Before normalization (function): TSpreadsheetResource::GetRow.
+    const TStringVector& getRow(int r) const { return *m_spreadsheet[r]; }
 
 private:
-    TArray Spreadsheet;  // +0x1c (_First +0x20, _Last +0x24)
-    char* Data;          // +0x2c
-    int DataSize;        // +0x30, retail constructor stores size here
+    // Before normalization: Spreadsheet.
+    TArray m_spreadsheet;  // +0x1c (_First +0x20, _Last +0x24)
+    // Before normalization: Data.
+    char* m_data;          // +0x2c
+    // Before normalization: DataSize.
+    int m_dataSize;        // +0x30, retail constructor stores size here
 };
 SIZE(TSpreadsheetResource, 52);
 
@@ -343,22 +349,27 @@ public:
     TTextResource(const char* name, int size, const char* data);
     virtual ~TTextResource();
 
-    virtual unsigned int GetSize() const;
+    // Before normalization (function): TTextResource::GetSize.
+    virtual unsigned int getSize() const;
     // E:\gamedcs\TextResource.h:66
-    const char* GetText(int r) const { return Text[r]; }
+    // Before normalization (function): TTextResource::GetText.
+    const char* getText(int r) const { return m_text[r]; }
     // E:\gamedcs\TextResource.h:73
-    const char* operator[](int i) const { return GetText(i); }
+    const char* operator[](int i) const { return getText(i); }
 
 public:
     // Canonical backing vector. Public while the decompilation still has
     // direct retail consumers; this replaces the former fake +0x20 view.
-    TTextArray Text;  // +0x1c (_First +0x20)
+    // Before normalization: Text.
+    TTextArray m_text;  // +0x1c (_First +0x20)
 private:
-    char* Data;       // +0x2c
+    // Before normalization: Data.
+    char* m_data;       // +0x2c
 };
 SIZE(TTextResource, 48);
 
-extern TTextResource* gpGeneralText;  // retail .data 0x6a5d5c
+// Before normalization: gpGeneralText.
+extern TTextResource* g_generalText;  // retail .data 0x6a5d5c
 
 // --- TSpreadsheetResource ---
 // CODEVIEW(E:\gamedcs\textresource.cpp:177, dc 0x1639ec) void TSpreadsheetResource::TSpreadsheetResource();

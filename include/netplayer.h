@@ -24,20 +24,25 @@
 
 class CNetPlayerInfo {
 public:
-    unsigned long dpid;   // +0x00
-    char sName[24];       // +0x04
-    int version;          // +0x1c (retail-only extension)
+    // Before normalization: dpid.
+    unsigned long m_dpid;   // +0x00
+    // Before normalization: sName.
+    char m_name[24];       // +0x04
+    // Before normalization: version.
+    int m_version;          // +0x1c (retail-only extension)
 
     // E:\gamedcs\struct.h:340. The Dreamcast body initializes the two
     // shared fields; Complete's added version member belongs to the same
     // base boundary in the retail selection-window TU.
     CNetPlayerInfo();
-    CNetPlayerInfo(char* _sName, unsigned long _dpid);
+    // Before normalization (locals): _sName, _dpid.
+    CNetPlayerInfo(char* name, unsigned long dpid);
 };
 SIZE(CNetPlayerInfo, 32);
 
 // Network-layer singleton defined by remote.cpp. Retail's multiplayer host
 // path writes the DPID, name, and version fields through this complete view.
-extern CNetPlayerInfo gsThisNetPlayerInfo;
+// Before normalization: gsThisNetPlayerInfo.
+extern CNetPlayerInfo g_thisNetPlayerInfo;
 
 #endif /* HOMM3_NETPLAYER_H */

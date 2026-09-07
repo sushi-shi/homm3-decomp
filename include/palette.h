@@ -11,18 +11,24 @@
 // Dreamcast CodeView type 0x184c; retail's TPalette24 constructor consumes
 // this exact four-byte stride and copies the first three channels.
 struct TRGBA {
-    unsigned char Red;
-    unsigned char Green;
-    unsigned char Blue;
-    unsigned char Alpha;
+    // Before normalization: Red.
+    unsigned char m_red;
+    // Before normalization: Green.
+    unsigned char m_green;
+    // Before normalization: Blue.
+    unsigned char m_blue;
+    // Before normalization: Alpha.
+    unsigned char m_alpha;
 };
 SIZE(TRGBA, 4);
 
 // Dreamcast CodeView prototypes; the retail palette transforms at
 // 0x522a10/0x522b50 call the same two global conversion boundaries.
-void RGBToHSV(unsigned int r, unsigned int g, unsigned int b,
+// Before normalization (function): RGBToHSV.
+void rgbToHSV(unsigned int r, unsigned int g, unsigned int b,
               float* h, float* s, float* v);
-void HSVToRGB(float h, float s, float v,
+// Before normalization (function): HSVToRGB.
+void hsvToRGB(float h, float s, float v,
               unsigned int* r, unsigned int* g, unsigned int* b);
 
 // Bootstrap VIEW of the 16-bit palette resource: the RGB555 table
@@ -35,12 +41,14 @@ void HSVToRGB(float h, float s, float v,
 // names provisional.
 class palette {
 public:
-    unsigned short data[256];
+    // Before normalization: data.
+    unsigned short m_data[256];
 };
 
 class paletteHiColor {
 public:
-    unsigned char data[256][3];
+    // Before normalization: data.
+    unsigned char m_data[256][3];
 };
 
 // Retail constructors at 0x522e80 and 0x522f00 copy 0x300 palette bytes
@@ -49,7 +57,8 @@ public:
 // from the same-sized paletteHiColor raw record embedded in Bitmap816.
 class TPalette24 : public resource {
 public:
-    paletteHiColor colors;
+    // Before normalization: colors.
+    paletteHiColor m_colors;
 
     TPalette24();
     TPalette24(const unsigned char* data);
@@ -61,9 +70,12 @@ public:
     // which VC6 only emits when that call is allowed to throw. A throw()
     // here erases that chain (the map collapses to one entry).
     virtual ~TPalette24();
-    virtual unsigned int GetSize() const;
-    void AdjustHSV(float hue, float hue_adjust, float saturation_adjust,
-                   float value_adjust);
+    // Before normalization (function): TPalette24::GetSize.
+    virtual unsigned int getSize() const;
+    // Before normalization (function): TPalette24::AdjustHSV.
+    // Before normalization (locals): hue_adjust, saturation_adjust, value_adjust.
+    void adjustHSV(float hue, float hueAdjust, float saturationAdjust,
+                   float valueAdjust);
 };
 SIZE(TPalette24, 0x31c);
 
@@ -72,13 +84,18 @@ public:
     // Dreamcast CodeView names these three class statics directly. Retail's
     // SetPixelFormat stores its red/green/blue arguments at the corresponding
     // three addresses, and every 16-bit palette transform reads them back.
-    static unsigned int red_mask;
-    static unsigned int green_mask;
-    static unsigned int blue_mask;
+    // Before normalization: red_mask.
+    static unsigned int s_redMask;
+    // Before normalization: green_mask.
+    static unsigned int s_greenMask;
+    // Before normalization: blue_mask.
+    static unsigned int s_blueMask;
 
     union {
-        unsigned short data[256];
-        palette colors;
+        // Before normalization: data.
+        unsigned short m_data[256];
+        // Before normalization: colors.
+        palette m_colors;
     };
 
     // Retail 0x522650 (22 B): the resource base with an empty name and
@@ -106,7 +123,8 @@ public:
     virtual ~TPalette16();
 
     // Retail 0x522b40 returns the fixed 0x21c-byte resource extent.
-    virtual unsigned int GetSize() const;
+    // Before normalization (function): TPalette16::GetSize.
+    virtual unsigned int getSize() const;
 
     // The NWC pointer-taking assignment DC CodeView attests
     // (palette.cpp:194, dc 0x10a8a0); font::SetPalette calls the
@@ -115,9 +133,11 @@ public:
     // DC palette.cpp:210 (dc 0x10a910). Retail keeps NO out-of-line copy -
     // /Ob2 expanded it into each of its constructor call sites - but the
     // boundary is the DC roster's own, not an invention.
-    void Convert24to16(const unsigned char* p24, int rbits, int rshift,
+    // Before normalization (function): TPalette16::Convert24to16.
+    void convert24to16(const unsigned char* p24, int rbits, int rshift,
                        int gbits, int gshift, int bbits, int bshift);
-    void Cycle(int begin, int end, int step);
+    // Before normalization (function): TPalette16::Cycle.
+    void cycle(int begin, int end, int step);
     // The three army::DrawToBuffer (0x43e140) needs for its tint arms -
     // the clone's rolling hue (AdjustHSV over PaletteEffect), the petrify
     // desaturation, the Stone-spell gray and the Bloodlust red. Prototypes
@@ -128,26 +148,34 @@ public:
     // 0x5226a0 declared above, and no separate palette-taking body exists
     // anywhere in the image - the declaration was a second, bodiless
     // spelling of that same constructor. army.cpp passes GetPalette()->data.
-    void AdjustHSV(float hue, float hue_adjust, float saturation_adjust,
-                   float value_adjust);
-    void AdjustSaturation(float amount);
-    void Gray();
+    // Before normalization (function): TPalette16::AdjustHSV.
+    // Before normalization (locals): hue_adjust, saturation_adjust, value_adjust.
+    void adjustHSV(float hue, float hueAdjust, float saturationAdjust,
+                   float valueAdjust);
+    // Before normalization (function): TPalette16::AdjustSaturation.
+    void adjustSaturation(float amount);
+    // Before normalization (function): TPalette16::Gray.
+    void gray();
 };
 
 // The system palette pointer, re-declared here beside its type for
 // consumers that need no townmgr surface (army::DrawToBuffer reads the
 // highlight color out of it). The DATA claim stays on townmgr.h's
 // declaration - this one is declaration only.
-extern TPalette16* gSystemPalette;
+// Before normalization: gSystemPalette.
+extern TPalette16* g_systemPalette;
 // Dreamcast publishes these as gPlayerPalette/gPlayerPalette24. Retail
 // oldmain stores the consecutive Players.pal results at 0x6aaca8/0x6aacac.
-extern TPalette16* gPlayerPalette;
-extern TPalette24* gPlayerPalette24;
+// Before normalization: gPlayerPalette.
+extern TPalette16* g_playerPalette;
+// Before normalization: gPlayerPalette24.
+extern TPalette24* g_playerPalette24;
 
 // Dreamcast ?GetPalette@ResourceManager@@YAPAVTPalette16@@PBD_N@Z
 // (retail body 0x55b3e0 takes just the name; called by button::Main).
 namespace ResourceManager {
-TPalette16* GetPalette(const char* name);
+// Before normalization (function): ResourceManager::GetPalette.
+TPalette16* getPalette(const char* name);
 }
 
 // --- globals ---

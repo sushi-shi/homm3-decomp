@@ -21,7 +21,8 @@
 // wrapper at both morale/luck sites; the reference-returning template supplies
 // its nested selection shape.
 template <class T>
-static inline const T& t_limit(const T& minimum, const T& value,
+// Before normalization (function): t_limit.
+static inline const T& tLimit(const T& minimum, const T& value,
                                const T& maximum)
 {
     return value < minimum ? minimum
@@ -30,14 +31,16 @@ static inline const T& t_limit(const T& minimum, const T& value,
 
 static inline int limit(int minimum, int value, int maximum)
 {
-    return t_limit(minimum, value, maximum);
+    return tLimit(minimum, value, maximum);
 }
 
-DATA(0x00640688) static const POINT gQuickHeroSkillPositions[4] = {
+// Before normalization: gQuickHeroSkillPositions.
+DATA(0x00640688) static const POINT g_quickHeroSkillPositions[4] = {
     {74, 62}, {101, 62}, {129, 62}, {157, 62}
 };
 
-DATA(0x00682378) static int gQuickHeroArmyPositions[7][2] = {
+// Before normalization: gQuickHeroArmyPositions.
+DATA(0x00682378) static int g_quickHeroArmyPositions[7][2] = {
     {45, 84}, {81, 84}, {117, 84}, {27, 132},
     {63, 132}, {99, 132}, {135, 132}
 };
@@ -46,48 +49,50 @@ DATA(0x00682378) static int gQuickHeroArmyPositions[7][2] = {
 // VC6 expands it completely, but pricing the two scans in their own caller
 // moves the constructor from 90.7834 to 91.4264 and removes three excess
 // branches.  See the residual note on the constructor.
-static int choose_quick_hero_disguise(hero* thisHero)
+// Before normalization (function): choose_quick_hero_disguise.
+static int chooseQuickHeroDisguise(hero* thisHero)
 {
-    int disguise_creature = CREATURE_NONE;
-    if (thisHero->disguiseLevel != TQuickHeroWindow::DisguiseInvalid &&
-        thisHero->disguiseLevel <= TQuickHeroWindow::DisguiseAdvanced) {
-        const int* current_army = thisHero->army.armies;
+    // Before normalization (locals): disguise_creature, current_army, town_type.
+    int disguiseCreature = CREATURE_NONE;
+    if (thisHero->m_disguiseLevel != TQuickHeroWindow::DisguiseInvalid &&
+        thisHero->m_disguiseLevel <= TQuickHeroWindow::DisguiseAdvanced) {
+        const int* currentArmy = thisHero->m_army.m_armies;
         for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT;
-             ++slot, ++current_army) {
-            int creature = *current_army;
+             ++slot, ++currentArmy) {
+            int creature = *currentArmy;
             // Retail compares the slot ordinal, not the creature loaded just
             // above.  Preserve that byte-proven source-level wart.
             if (slot != CREATURE_NONE &&
-                (disguise_creature == CREATURE_NONE ||
-                 akCreatureTypeTraits[creature].AI_value >
-                     akCreatureTypeTraits[disguise_creature].AI_value))
-                disguise_creature = creature;
+                (disguiseCreature == CREATURE_NONE ||
+                 g_creatureTypeTraits[creature].m_aiValue >
+                     g_creatureTypeTraits[disguiseCreature].m_aiValue))
+                disguiseCreature = creature;
         }
-    } else if (thisHero->disguiseLevel == TQuickHeroWindow::DisguiseExpert) {
-        int creature = gpGame->f_1f698 ? 145 : 118;
-        int owner = thisHero->owner;
+    } else if (thisHero->m_disguiseLevel == TQuickHeroWindow::DisguiseExpert) {
+        int creature = g_game->m_f1f698 ? 145 : 118;
+        int owner = thisHero->m_owner;
         while (creature--) {
-            int town_type;
-            if (!gpGame->f_1f698 &&
+            int townType;
+            if (!g_game->m_f1f698 &&
                 (creature == CREATURE_AIR_ELEMENTAL ||
                  creature == CREATURE_EARTH_ELEMENTAL ||
                  creature == CREATURE_FIRE_ELEMENTAL ||
                  creature == CREATURE_WATER_ELEMENTAL))
-                town_type = -1;
+                townType = -1;
             else
-                town_type = akCreatureTypeTraits[creature].townType;
+                townType = g_creatureTypeTraits[creature].m_townType;
 
             int alignment = owner >= 0
-                ? gpGame->setup.alignment[owner]
+                ? g_game->m_setup.m_alignment[owner]
                 : -1;
-            if (town_type == alignment &&
-                (disguise_creature == CREATURE_NONE ||
-                 akCreatureTypeTraits[creature].AI_value >
-                     akCreatureTypeTraits[disguise_creature].AI_value))
-                disguise_creature = creature;
+            if (townType == alignment &&
+                (disguiseCreature == CREATURE_NONE ||
+                 g_creatureTypeTraits[creature].m_aiValue >
+                     g_creatureTypeTraits[disguiseCreature].m_aiValue))
+                disguiseCreature = creature;
         }
     }
-    return disguise_creature;
+    return disguiseCreature;
 }
 
 // E:\gamedcs\quickherowindow.cpp:37
@@ -139,114 +144,116 @@ static int choose_quick_hero_disguise(hero* thisHero)
 // TQuickTownWindow::initialize_army_display writes it the same way.  That old
 // per-arm signal remains absent; the current single extra state is later,
 // inside ostrstream construction as documented above.
+// Before normalization (locals): view_level, widget_id, disguise_creature, current_count,
+// quantity_text.
 VA(0x0052ead0, 0x8C8)  // heroqvbk.pcx + vtable/allocation block, dc 0x1170bc
-TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel view_level)
+TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
     : heroWindow(200, 200, 194, 186, 0x12)
 {
-    Widgets.reserve(NWIDGETS);
+    m_widgets.reserve(NWIDGETS);
 
     bitmapBorder* background = new bitmapBorder(
         0, 0, 194, 186, BACKGROUND_ID, "heroqvbk.pcx", 0x800);
-    background->SetPlayerPaletteColors(
-        thisHero->owner >= 0
-            ? thisHero->owner
-            : gpGame->GetLocalPlayerGamePos());
-    Widgets.push_back(background);
+    background->setPlayerPaletteColors(
+        thisHero->m_owner >= 0
+            ? thisHero->m_owner
+            : g_game->getLocalPlayerGamePos());
+    m_widgets.push_back(background);
 
-    Widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new bitmapBorder(
         12, 13, 58, 64, PORTRAIT_ID,
-        akHeroTraits[thisHero->portrait].largePortraitName, 0x800));
+        g_heroTraits[thisHero->m_portrait].m_largePortraitName, 0x800));
 
-    Widgets.push_back(new textWidget(
-        75, 13, 107, 17, thisHero->name, "smalfont.fnt", font::WHITE,
+    m_widgets.push_back(new textWidget(
+        75, 13, 107, 17, thisHero->m_name, "smalfont.fnt", font::WHITE,
         NAME_ID, 0, 0, 8));
 
-    if (view_level >= ViewAll) {
-        int widget_id = PRIMARY_SKILL_1_ID;
+    if (viewLevel >= ViewAll) {
+        int widgetId = PRIMARY_SKILL_1_ID;
         for (int stat = 0; stat < 4; ++stat) {
-            sprintf(gText, "%d", thisHero->GetPrimarySkill(stat));
-            Widgets.push_back(new textWidget(
-                gQuickHeroSkillPositions[stat].x,
-                gQuickHeroSkillPositions[stat].y,
-                23, 16, gText, "smalfont.fnt", font::WHITE,
-                widget_id, 1, 0, 8));
-            ++widget_id;
+            sprintf(g_text, "%d", thisHero->getPrimarySkill(stat));
+            m_widgets.push_back(new textWidget(
+                g_quickHeroSkillPositions[stat].x,
+                g_quickHeroSkillPositions[stat].y,
+                23, 16, g_text, "smalfont.fnt", font::WHITE,
+                widgetId, 1, 0, 8));
+            ++widgetId;
         }
 
 #pragma inline_depth(1)
-        Widgets.push_back(new textWidget(
+        m_widgets.push_back(new textWidget(
             154, 104, 27, 13,
-            format_string("%d", thisHero->mana).c_str(), "tiny.fnt",
+            formatString("%d", thisHero->m_mana).c_str(), "tiny.fnt",
             font::WHITE, MANA_ID, 1, 0, 8));
 #pragma inline_depth(255)
 
         int morale = limit(
-            -3, thisHero->GetMorale(0, 0, 1), 3);
-        Widgets.push_back(new iconWidget(
+            -3, thisHero->getMorale(0, 0, 1), 3);
+        m_widgets.push_back(new iconWidget(
             14, 86, 22, 12, MORALE_ID, "imrl22.def", morale + 3,
             0, 0, 0, 0x10));
 
         int luck = limit(
-            -3, thisHero->GetLuck(0, 0, 1), 3);
-        Widgets.push_back(new iconWidget(
+            -3, thisHero->getLuck(0, 0, 1), 3);
+        m_widgets.push_back(new iconWidget(
             14, 103, 22, 12, LUCK_ID, "ilck22.def", luck + 3,
             0, 0, 0, 0x10));
     }
 
-    if (view_level >= ViewSome && thisHero->army.GetNumArmies() > 0) {
-        int disguise_creature = choose_quick_hero_disguise(thisHero);
+    if (viewLevel >= ViewSome && thisHero->m_army.getNumArmies() > 0) {
+        int disguiseCreature = chooseQuickHeroDisguise(thisHero);
 
-        int widget_id = ARMY_1_SPRITE_ID;
-        int* coordinates = &gQuickHeroArmyPositions[0][0];
-        const int* current_count = thisHero->army.numTroops;
+        int widgetId = ARMY_1_SPRITE_ID;
+        int* coordinates = &g_quickHeroArmyPositions[0][0];
+        const int* currentCount = thisHero->m_army.m_numTroops;
         for (int remaining = armyGroup::ARMY_GROUP_SLOT_COUNT; remaining;
-             --remaining, ++current_count) {
-            int creature = current_count[-armyGroup::ARMY_GROUP_SLOT_COUNT];
+             --remaining, ++currentCount) {
+            int creature = currentCount[-armyGroup::ARMY_GROUP_SLOT_COUNT];
             if (creature == CREATURE_NONE)
                 continue;
-            if (disguise_creature != CREATURE_NONE)
-                creature = disguise_creature;
+            if (disguiseCreature != CREATURE_NONE)
+                creature = disguiseCreature;
 
-            Widgets.push_back(new iconWidget(
-                coordinates[0], coordinates[1], 32, 32, widget_id++,
+            m_widgets.push_back(new iconWidget(
+                coordinates[0], coordinates[1], 32, 32, widgetId++,
                 "cprsmall.def", creature + 2, 0, 0, 0, 0x10));
 
             int count;
-            if (thisHero->disguiseLevel >= DisguiseAdvanced)
+            if (thisHero->m_disguiseLevel >= DisguiseAdvanced)
                 count = 0;
             else
-                count = *current_count;
-            std::ostrstream quantity_text;
-            if (view_level >= ViewAll) {
+                count = *currentCount;
+            std::ostrstream quantityText;
+            if (viewLevel >= ViewAll) {
                 if (count < 10000)
-                    quantity_text << count << std::ends;
+                    quantityText << count << std::ends;
                 else
-                    quantity_text << count / 1000 << "k" << std::ends;
+                    quantityText << count / 1000 << "k" << std::ends;
 
                 // DEPTH LADDER: this ONE append is `insert(end(), x)` -
                 // the other nine in this constructor stay push_back.
                 // 92.5668 -> 94.0777; #9 is the runner-up at 93.8869 and a
                 // greedy second round finds nothing.
-                Widgets.insert(Widgets.end(), new textWidget(
+                m_widgets.insert(m_widgets.end(), new textWidget(
                     coordinates[0], coordinates[1] + 34, 32, 11,
-                    quantity_text.str(), "tiny.fnt", font::WHITE,
-                    widget_id++, 1, 0, 8));
+                    quantityText.str(), "tiny.fnt", font::WHITE,
+                    widgetId++, 1, 0, 8));
             } else {
-                quantity_text << armyGroup::GetArmySizeName(count, 0)
+                quantityText << armyGroup::getArmySizeName(count, 0)
                               << std::ends;
-                Widgets.push_back(new textWidget(
+                m_widgets.push_back(new textWidget(
                     coordinates[0], coordinates[1] + 34, 32, 11,
-                    quantity_text.str(), "tiny.fnt", font::WHITE,
-                    widget_id++, 1, 0, 8));
+                    quantityText.str(), "tiny.fnt", font::WHITE,
+                    widgetId++, 1, 0, 8));
             }
-            quantity_text.freeze(false);
+            quantityText.freeze(false);
             coordinates += 2;
         }
     }
 
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
-            AddWidget(*it, -1);
+            addWidget(*it, -1);
     }
 }
 
@@ -256,7 +263,7 @@ VA_COMPGEN(0x0052f3a0, 0x21, SCALAR_DELETING_DTOR, TQuickHeroWindow)
 VA(0x0052f3d0, 0x6B)  // scalar-dtor callee + vtable 0x6406a8, dc 0x1177b4
 TQuickHeroWindow::~TQuickHeroWindow()
 {
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
@@ -268,7 +275,7 @@ TQuickHeroWindow::~TQuickHeroWindow()
 // quicktownwindow span, so this TU has no distinct contribution to claim.
 #if 0  // @carcass
 DC_ONLY(0x117818, 0x30)
-void TQuickHeroWindow::QuickWindowWait()
+void TQuickHeroWindow::quickWindowWait()
 {
     // @stub
 }

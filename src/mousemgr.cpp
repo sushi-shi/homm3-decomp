@@ -20,28 +20,34 @@
 #include "winmm_thunks.h"
 
 // CheckUpdate's one-time timer latches (BSS; names provisional).
-DATA(0x0069ca20) unsigned char gMouseTimerInit;
+// Before normalization: gMouseTimerInit.
 // SetPointer's re-entrancy latch - the byte immediately after the
 // timer latches, tested and set around the whole swap (name
 // provisional, no DC row for it).
-DATA(0x0069ca21) unsigned char gMouseSetPointerBusy;
-DATA(0x0069ca18) unsigned long gMouseUpdateDeadline;
-DATA(0x0069ca1c) unsigned long gMouseFrameDeadline;
-DATA(0x0069ca22) unsigned char gMouseInUpdate;
+// Before normalization: gMouseSetPointerBusy.
+DATA(0x0069ca20) unsigned char g_mouseTimerInit;
+// Before normalization: gMouseUpdateDeadline.
+DATA(0x0069ca21) unsigned char g_mouseSetPointerBusy;
+// Before normalization: gMouseFrameDeadline.
+DATA(0x0069ca18) unsigned long g_mouseUpdateDeadline;
+// Before normalization: gMouseInUpdate.
+DATA(0x0069ca1c) unsigned long g_mouseFrameDeadline;
+DATA(0x0069ca22) unsigned char g_mouseInUpdate;
 
 // LoadFrame's DirectDraw target and the two live channel masks. Their
 // storage addresses and widths are direct retail operands; names remain
 // house descriptions because no retail symbol survives for them.
-DATA(0x006aacc4) IDirectDrawSurface4* gpDDSMouseSurface;
-DATA(0x006aacc8) IDirectDrawSurface4* gpDDSMouseSaveSurface;
-DATA(0x006aaccc) IDirectDrawSurface4* gpDDSMouseScratchSurface;
-DATA(0x0068c860) unsigned long gColorMask68c860;
-DATA(0x0068c864) unsigned long gColorMask68c864;
-DATA(0x0068c868) unsigned long gColorMask68c868;
+DATA(0x006aacc4) IDirectDrawSurface4* g_ddsMouseSurface;
+DATA(0x006aacc8) IDirectDrawSurface4* g_ddsMouseSaveSurface;
+DATA(0x006aaccc) IDirectDrawSurface4* g_ddsMouseScratchSurface;
+DATA(0x0068c860) unsigned long g_colorMask68c860;
+DATA(0x0068c864) unsigned long g_colorMask68c864;
+DATA(0x0068c868) unsigned long g_colorMask68c868;
 
 // The pointer-set sprite table SetPointer indexes with field_4c: five
 // .DEF names in EPointerSet order (.data 0x67ff38).
-DATA(0x0067ff38) const char* gPointerSetSprites[mouseManager::MAX_POINTER_SETS] = {
+// Before normalization: gPointerSetSprites.
+DATA(0x0067ff38) const char* g_pointerSetSprites[mouseManager::MAX_POINTER_SETS] = {
     DATA_COMPGEN(0x0068160c, pointerSpriteDefault, "crdeflt.DEF"),
     DATA_COMPGEN(0x006815fc, pointerSpriteAdventure, "cradvntr.DEF"),
     DATA_COMPGEN(0x006815ec, pointerSpriteCombat, "crcombat.DEF"),
@@ -51,26 +57,27 @@ DATA(0x0067ff38) const char* gPointerSetSprites[mouseManager::MAX_POINTER_SETS] 
 
 // Five pointer sets, 144 frames per set, one POINT per frame. The extent
 // closes exactly at the first pointer-name string at 0x6815d0.
-DATA(0x0067ff50) POINT gMouseHotSpots[mouseManager::MAX_POINTER_SETS][144];
+// Before normalization: gMouseHotSpots.
+DATA(0x0067ff50) POINT g_mouseHotSpots[mouseManager::MAX_POINTER_SETS][144];
 
 // E:\gamedcs\mousemgr.cpp:315
 VA(0x0050cb50, 0x6F)  // anchor-global, dc 0xfe9d4
 mouseManager::mouseManager()
 {
-    field_74 = 0;
-    field_4c = INVALID_SET;
+    m_busy = 0;
+    m_set = INVALID_SET;
     // baseManager::status, at +0x34 - NOT id at +0xc. The single
     // instruction this ctor was off by was `mov [ebx+0xc],edx` against
     // retail's `mov [ebx+0x34],edx`; 0x34 is where basemgr.h's proven
     // layout (vptr 0 / next 4 / prev 8 / id 0xc / priority 0x10 /
     // cMgrName 0x14..0x33 / status 0x34) puts status.
-    status = 0;
-    strcpy(cMgrName, DATA_COMPGEN(0x00681618, mouseManagerName, "mouseManager"));
-    field_50 = -1;
-    field_54 = 0;
-    field_60 = 0;
-    field_68 = 1;
-    InitializeCriticalSection(&section_mouse);
+    m_status = 0;
+    strcpy(m_mgrName, DATA_COMPGEN(0x00681618, mouseManagerName, "mouseManager"));
+    m_frame = -1;
+    m_sprite = 0;
+    m_disableCount = 0;
+    m_hideCount = 1;
+    InitializeCriticalSection(&m_sectionMouse);
 }
 
 // E:\gamedcs\mousemgr.cpp:332 - mouseManager::`scalar deleting
@@ -90,15 +97,15 @@ VA_COMPGEN(0x0050cbc0, 0x2C, SCALAR_DELETING_DTOR, mouseManager)
 // The three baseManager tail stores are id / priority / status, the
 // inputManager::Open shape.
 VA(0x0050cbf0, 0x4A)  // anchor-vtable (slot 0 of 0x640028), dc 0xfea80
-int mouseManager::Open(int newPriority)
+int mouseManager::open(int newPriority)
 {
-    field_38 = 0;
-    Reset();
+    m_noChangePointer = 0;
+    reset();
     ShowCursor(0);
-    field_64 = 0;
-    id = 0x40;
-    priority = newPriority;
-    status = 1;
+    m_systemPointerIsOn = 0;
+    m_id = 0x40;
+    m_priority = newPriority;
+    m_status = 1;
     return 0;
 }
 
@@ -107,35 +114,35 @@ int mouseManager::Open(int newPriority)
 // The pointer sprite is released through CSprite's virtual slot 1
 // (Dispose), the same slot SetPointer uses.
 VA(0x0050cc40, 0x38)  // anchor-vtable (slot 1 of 0x640028), dc 0xfeab4
-void mouseManager::Close()
+void mouseManager::close()
 {
-    if (status != 1)
+    if (m_status != 1)
         return;
-    unsigned char wasHidden = field_64;
-    status = 0;
+    unsigned char wasHidden = m_systemPointerIsOn;
+    m_status = 0;
     if (!wasHidden) {
         ShowCursor(1);
-        field_64 = 1;
+        m_systemPointerIsOn = 1;
     }
-    if (field_54)
-        field_54->Dispose();
-    field_54 = 0;
+    if (m_sprite)
+        m_sprite->dispose();
+    m_sprite = 0;
 }
 
 // E:\gamedcs\mousemgr.cpp:412
 // Located as AppWndProc's WM_ACTIVATE callee (26 B on DC vs 27 here;
 // zeroes the drag/saved-pointer state block +0x3c..+0x70).
 VA(0x0050cc80, 0x1B)  // anchor-callee, dc 0xfeafc
-void mouseManager::Reset()
+void mouseManager::reset()
 {
-    savedRect.left = 0;
-    savedRect.top = 0;
-    savedRect.right = 0;
-    savedRect.bottom = 0;
-    field_58 = 0;
-    field_5c = 0;
-    field_6c = 0;
-    field_70 = 0;
+    m_savedRect.left = 0;
+    m_savedRect.top = 0;
+    m_savedRect.right = 0;
+    m_savedRect.bottom = 0;
+    m_imageX = 0;
+    m_imageY = 0;
+    m_currentX = 0;
+    m_currentY = 0;
 }
 
 #if 0  // @carcass
@@ -145,7 +152,7 @@ void mouseManager::Reset()
 // 0x4ec560, an /OPT:ICF fold that inputmgr.cpp already claims as
 // inputManager::Main. Declared in mousemgr.h so the slot is modelled.
 DC_ONLY(0xfeb18, 0x4)
-int mouseManager::Main(message& msg)
+int mouseManager::main(message& msg)
 {
     // @stub
 }
@@ -170,26 +177,27 @@ int mouseManager::Main(message& msg)
 // `why-reg --model --il-order` measures 25 register-visible slots, finds the
 // same ESI/EDI first definitions, and classifies EBX's later zero pseudo as
 // outside the model's source-addressable B1 slice.
+// Before normalization (locals): new_frame, new_set.
 VA(0x0050cca0, 0xE0)  // anchor-global, dc 0xfeb1c
-void mouseManager::SetPointer(int new_frame, mouseManager::EPointerSet new_set)
+void mouseManager::setPointer(int newFrame, mouseManager::EPointerSet newSet)
 {
-    TCSLock lock(&section_mouse);
-    if (status == 1 && field_38 == 0 && !gMouseSetPointerBusy) {
-        gMouseSetPointerBusy = 1;
-        field_74++;
-        if (new_set != SAME_SET && new_set != field_4c) {
-            field_4c = new_set;
-            if (field_54)
-                field_54->Dispose();
-            field_54 = ResourceManager::GetSprite(gPointerSetSprites[field_4c]);
-            field_50 = -1;
+    TCSLock lock(&m_sectionMouse);
+    if (m_status == 1 && m_noChangePointer == 0 && !g_mouseSetPointerBusy) {
+        g_mouseSetPointerBusy = 1;
+        m_busy++;
+        if (newSet != SAME_SET && newSet != m_set) {
+            m_set = newSet;
+            if (m_sprite)
+                m_sprite->dispose();
+            m_sprite = ResourceManager::getSprite(g_pointerSetSprites[m_set]);
+            m_frame = -1;
         }
-        if (new_frame >= 0 && new_frame != field_50) {
-            LoadFrame(field_4c == SPELL_SET ? 0 : new_frame);
-            Update(1);
+        if (newFrame >= 0 && newFrame != m_frame) {
+            loadFrame(m_set == SPELL_SET ? 0 : newFrame);
+            update(1);
         }
-        field_74--;
-        gMouseSetPointerBusy = 0;
+        m_busy--;
+        g_mouseSetPointerBusy = 0;
     }
 }
 
@@ -215,38 +223,40 @@ void TCSLock::~TCSLock()
 // These two drawing helpers are fully inlined into Update in retail. Their
 // parameter spills and private RECT temporaries are still visible in that
 // body, while no out-of-line retail copies survive.
-__forceinline void mouseManager::SaveAndDraw(
-    IDirectDrawSurface4* dst_surface,
-    IDirectDrawSurface4* save_surface,
-    const RECT* dst_rect, int x, int y)
+__forceinline void mouseManager::saveAndDraw(
+    // Before normalization (locals): dst_surface, save_surface, dst_rect.
+    IDirectDrawSurface4* dstSurface,
+    IDirectDrawSurface4* saveSurface,
+    const RECT* dstRect, int x, int y)
 {
-    if (!IsRectEmpty(dst_rect)) {
+    if (!IsRectEmpty(dstRect)) {
         RECT saveRect;
         RECT sourceRect;
         saveRect.left = saveRect.top = 0;
         sourceRect.left = sourceRect.top = 0;
         saveRect.right = sourceRect.right =
-            dst_rect->right - dst_rect->left;
+            dstRect->right - dstRect->left;
         saveRect.bottom = sourceRect.bottom =
-            dst_rect->bottom - dst_rect->top;
-        OffsetRect(&sourceRect, dst_rect->left - x, dst_rect->top - y);
-        DDBlit(save_surface, &saveRect, dst_surface, dst_rect, DDBLT_WAIT);
-        if (field_68 == 0)
-            DDBlit(dst_surface, dst_rect, gpDDSMouseSurface, &sourceRect,
+            dstRect->bottom - dstRect->top;
+        OffsetRect(&sourceRect, dstRect->left - x, dstRect->top - y);
+        ddBlit(saveSurface, &saveRect, dstSurface, dstRect, DDBLT_WAIT);
+        if (m_hideCount == 0)
+            ddBlit(dstSurface, dstRect, g_ddsMouseSurface, &sourceRect,
                 DDBLT_WAIT | DDBLT_KEYSRC);
     }
 }
 
-__forceinline void mouseManager::RestoreUnderlying(
-    IDirectDrawSurface4* surface, const RECT* dst_rect)
+__forceinline void mouseManager::restoreUnderlying(
+    // Before normalization (locals): dst_rect.
+    IDirectDrawSurface4* surface, const RECT* dstRect)
 {
-    if (!IsRectEmpty(dst_rect)) {
+    if (!IsRectEmpty(dstRect)) {
         RECT sourceRect;
         sourceRect.left = 0;
         sourceRect.top = 0;
-        sourceRect.right = dst_rect->right - dst_rect->left;
-        sourceRect.bottom = dst_rect->bottom - dst_rect->top;
-        DDBlit(surface, dst_rect, gpDDSMouseSaveSurface, &sourceRect,
+        sourceRect.right = dstRect->right - dstRect->left;
+        sourceRect.bottom = dstRect->bottom - dstRect->top;
+        ddBlit(surface, dstRect, g_ddsMouseSaveSurface, &sourceRect,
             DDBLT_WAIT);
     }
 }
@@ -267,10 +277,11 @@ __forceinline void mouseManager::RestoreUnderlying(
 // ordinary inline, separate coordinate locals and alternate RECT
 // initialization spellings were bounded at <=94.1675%; preserve the
 // canonical semantics instead of encoding allocator state.
+// Before normalization (locals): bForceIt.
 VA(0x0050cd90, 0x770)  // anchor-global, dc 0xfec54
-void mouseManager::Update(unsigned char bForceIt)
+void mouseManager::update(unsigned char forceIt)
 {
-    TCSLock lock(&section_mouse);
+    TCSLock lock(&m_sectionMouse);
     POINT cursor;
     RECT pointerRect;
     RECT combinedRect;
@@ -281,49 +292,49 @@ void mouseManager::Update(unsigned char bForceIt)
     DDSURFACEDESC surfaceDesc;
     int pointerX;
 
-    if (gMouseInUpdate)
+    if (g_mouseInUpdate)
         return;
-    gMouseInUpdate = 1;
+    g_mouseInUpdate = 1;
 
-    if (!bForceIt) {
-        EnterCriticalSection(&section_mouse);
+    if (!forceIt) {
+        EnterCriticalSection(&m_sectionMouse);
         GetCursorPos(&cursor);
         pointerX = cursor.x;
         pointerX &= ~1;
         cursor.x = pointerX;
-        ScreenToClient(hwndApp, &cursor);
-        field_6c = cursor.x;
-        field_70 = cursor.y;
-        LeaveCriticalSection(&section_mouse);
+        ScreenToClient(g_hwndApp, &cursor);
+        m_currentX = cursor.x;
+        m_currentY = cursor.y;
+        LeaveCriticalSection(&m_sectionMouse);
     }
 
-    if (field_68 > 0 && !bForceIt) {
-        gMouseInUpdate = 0;
+    if (m_hideCount > 0 && !forceIt) {
+        g_mouseInUpdate = 0;
         return;
     }
-    if (field_60 > 0) {
-        gMouseInUpdate = 0;
-        return;
-    }
-
-    field_74++;
-    if (!bForceIt
-            && field_58
-                == field_6c - gMouseHotSpots[field_4c][field_50].x
-            && field_5c
-                == field_70 - gMouseHotSpots[field_4c][field_50].y) {
-        gMouseInUpdate = 0;
-        field_74--;
+    if (m_disableCount > 0) {
+        g_mouseInUpdate = 0;
         return;
     }
 
-    field_58 = field_6c - gMouseHotSpots[field_4c][field_50].x;
-    field_5c = field_70 - gMouseHotSpots[field_4c][field_50].y;
+    m_busy++;
+    if (!forceIt
+            && m_imageX
+                == m_currentX - g_mouseHotSpots[m_set][m_frame].x
+            && m_imageY
+                == m_currentY - g_mouseHotSpots[m_set][m_frame].y) {
+        g_mouseInUpdate = 0;
+        m_busy--;
+        return;
+    }
 
-    pointerRect.left = field_58;
-    pointerRect.top = field_5c;
-    pointerRect.right = field_58 + field_54->Width;
-    pointerRect.bottom = field_5c + field_54->Height;
+    m_imageX = m_currentX - g_mouseHotSpots[m_set][m_frame].x;
+    m_imageY = m_currentY - g_mouseHotSpots[m_set][m_frame].y;
+
+    pointerRect.left = m_imageX;
+    pointerRect.top = m_imageY;
+    pointerRect.right = m_imageX + m_sprite->m_width;
+    pointerRect.bottom = m_imageY + m_sprite->m_height;
     if (pointerRect.left < 0)
         pointerRect.left = 0;
     if (pointerRect.top < 0)
@@ -333,20 +344,20 @@ void mouseManager::Update(unsigned char bForceIt)
     if (pointerRect.bottom > 600)
         pointerRect.bottom = 600;
 
-    if (pointerRect.left < savedRect.right
-            && pointerRect.right > savedRect.left
-            && pointerRect.top < savedRect.bottom
-            && pointerRect.bottom > savedRect.top) {
-        UnionRect(&combinedRect, &pointerRect, &savedRect);
+    if (pointerRect.left < m_savedRect.right
+            && pointerRect.right > m_savedRect.left
+            && pointerRect.top < m_savedRect.bottom
+            && pointerRect.bottom > m_savedRect.top) {
+        UnionRect(&combinedRect, &pointerRect, &m_savedRect);
 
         cursor.x = 0;
         cursor.y = 0;
-        ClientToScreen(hwndApp, &cursor);
+        ClientToScreen(g_hwndApp, &cursor);
         OffsetRect(&combinedRect, cursor.x, cursor.y);
 
         memset(&surfaceDesc, 0, sizeof(surfaceDesc));
         surfaceDesc.dwSize = sizeof(surfaceDesc);
-        gpDDSPrimary->GetSurfaceDesc(&surfaceDesc);
+        g_ddsPrimary->GetSurfaceDesc(&surfaceDesc);
         if (combinedRect.left < 0)
             combinedRect.left = 0;
         if (combinedRect.right > static_cast<long>(surfaceDesc.dwWidth))
@@ -363,13 +374,13 @@ void mouseManager::Update(unsigned char bForceIt)
         surfaceRect.top = 0;
         surfaceRect.right = combinedRect.right - combinedRect.left;
         surfaceRect.bottom = combinedRect.bottom - combinedRect.top;
-        DDBlit(gpDDSMouseScratchSurface, &surfaceRect,
-            static_cast<IDirectDrawSurface4*>(static_cast<void*>(gpDDSPrimary)),
+        ddBlit(g_ddsMouseScratchSurface, &surfaceRect,
+            static_cast<IDirectDrawSurface4*>(static_cast<void*>(g_ddsPrimary)),
             &combinedRect, DDBLT_WAIT);
 
-        oldRect = savedRect;
+        oldRect = m_savedRect;
         OffsetRect(&oldRect, -clientRect.left, -clientRect.top);
-        RestoreUnderlying(gpDDSMouseScratchSurface, &oldRect);
+        restoreUnderlying(g_ddsMouseScratchSurface, &oldRect);
 
         if (pointerRect.left < -cursor.x)
             pointerRect.left = -cursor.x;
@@ -382,29 +393,29 @@ void mouseManager::Update(unsigned char bForceIt)
                 > static_cast<long>(surfaceDesc.dwHeight) - cursor.y)
             pointerRect.bottom = surfaceDesc.dwHeight - cursor.y;
 
-        savedRect = pointerRect;
+        m_savedRect = pointerRect;
         OffsetRect(&pointerRect, -clientRect.left, -clientRect.top);
-        SaveAndDraw(gpDDSMouseScratchSurface, gpDDSMouseSaveSurface,
-            &pointerRect, field_58 - clientRect.left,
-            field_5c - clientRect.top);
+        saveAndDraw(g_ddsMouseScratchSurface, g_ddsMouseSaveSurface,
+            &pointerRect, m_imageX - clientRect.left,
+            m_imageY - clientRect.top);
 
         scratchRect.left = 0;
         scratchRect.top = 0;
         scratchRect.right = combinedRect.right - combinedRect.left;
         scratchRect.bottom = combinedRect.bottom - combinedRect.top;
-        DDBlit(
-            static_cast<IDirectDrawSurface4*>(static_cast<void*>(gpDDSPrimary)),
-            &combinedRect, gpDDSMouseScratchSurface, &scratchRect, DDBLT_WAIT);
+        ddBlit(
+            static_cast<IDirectDrawSurface4*>(static_cast<void*>(g_ddsPrimary)),
+            &combinedRect, g_ddsMouseScratchSurface, &scratchRect, DDBLT_WAIT);
     } else {
         combinedRect = pointerRect;
         cursor.x = 0;
         cursor.y = 0;
-        ClientToScreen(hwndApp, &cursor);
+        ClientToScreen(g_hwndApp, &cursor);
         OffsetRect(&combinedRect, cursor.x, cursor.y);
 
         memset(&surfaceDesc, 0, sizeof(surfaceDesc));
         surfaceDesc.dwSize = sizeof(surfaceDesc);
-        gpDDSPrimary->GetSurfaceDesc(&surfaceDesc);
+        g_ddsPrimary->GetSurfaceDesc(&surfaceDesc);
         if (combinedRect.left < 0)
             combinedRect.left = 0;
         if (combinedRect.right > static_cast<long>(surfaceDesc.dwWidth))
@@ -416,45 +427,45 @@ void mouseManager::Update(unsigned char bForceIt)
 
         clientRect = combinedRect;
         OffsetRect(&clientRect, -cursor.x, -cursor.y);
-        SaveAndDraw(static_cast<IDirectDrawSurface4*>(
-                static_cast<void*>(gpDDSPrimary)),
-            gpDDSMouseScratchSurface, &combinedRect,
-            field_58 + cursor.x, field_5c + cursor.y);
+        saveAndDraw(static_cast<IDirectDrawSurface4*>(
+                static_cast<void*>(g_ddsPrimary)),
+            g_ddsMouseScratchSurface, &combinedRect,
+            m_imageX + cursor.x, m_imageY + cursor.y);
 
-        OffsetRect(&savedRect, cursor.x, cursor.y);
-        if (savedRect.left < 0)
-            savedRect.left = 0;
-        if (savedRect.right > static_cast<long>(surfaceDesc.dwWidth))
-            savedRect.right = surfaceDesc.dwWidth;
-        if (savedRect.top < 0)
-            savedRect.top = 0;
-        if (savedRect.bottom > static_cast<long>(surfaceDesc.dwHeight))
-            savedRect.bottom = surfaceDesc.dwHeight;
-        RestoreUnderlying(static_cast<IDirectDrawSurface4*>(
-                static_cast<void*>(gpDDSPrimary)),
-            &savedRect);
+        OffsetRect(&m_savedRect, cursor.x, cursor.y);
+        if (m_savedRect.left < 0)
+            m_savedRect.left = 0;
+        if (m_savedRect.right > static_cast<long>(surfaceDesc.dwWidth))
+            m_savedRect.right = surfaceDesc.dwWidth;
+        if (m_savedRect.top < 0)
+            m_savedRect.top = 0;
+        if (m_savedRect.bottom > static_cast<long>(surfaceDesc.dwHeight))
+            m_savedRect.bottom = surfaceDesc.dwHeight;
+        restoreUnderlying(static_cast<IDirectDrawSurface4*>(
+                static_cast<void*>(g_ddsPrimary)),
+            &m_savedRect);
 
         scratchRect.left = 0;
         scratchRect.top = 0;
         scratchRect.right = clientRect.right - clientRect.left;
         scratchRect.bottom = clientRect.bottom - clientRect.top;
-        DDBlit(gpDDSMouseSaveSurface, &scratchRect,
-            gpDDSMouseScratchSurface, &scratchRect, DDBLT_WAIT);
-        savedRect = clientRect;
+        ddBlit(g_ddsMouseSaveSurface, &scratchRect,
+            g_ddsMouseScratchSurface, &scratchRect, DDBLT_WAIT);
+        m_savedRect = clientRect;
     }
 
-    gMouseInUpdate = 0;
-    field_74--;
+    g_mouseInUpdate = 0;
+    m_busy--;
 }
 
 // E:\gamedcs\mousemgr.cpp:774
 VA(0x0050d500, 0x3F)  // anchor-global, dc 0xff22c
-void mouseManager::MouseCoords(int* x, int* y)
+void mouseManager::mouseCoords(int* x, int* y)
 {
     POINT cursor;
     GetCursorPos(&cursor);
     cursor.x &= ~1;
-    ScreenToClient(hwndApp, &cursor);
+    ScreenToClient(g_hwndApp, &cursor);
     *x = cursor.x;
     *y = cursor.y;
 }
@@ -463,14 +474,14 @@ void mouseManager::MouseCoords(int* x, int* y)
 
 // E:\gamedcs\mousemgr.cpp:798
 DC_ONLY(0xff268, 0xBE)
-void mouseManager::SaveAndDraw(IDirectDrawSurface4* dst_surface, IDirectDrawSurface4* save_surface, const tagRECT* dst_rect, int x, int y)
+void mouseManager::saveAndDraw(IDirectDrawSurface4* dst_surface, IDirectDrawSurface4* save_surface, const tagRECT* dst_rect, int x, int y)
 {
     // @stub
 }
 
 // E:\gamedcs\mousemgr.cpp:844
 DC_ONLY(0xff328, 0x80)
-void mouseManager::RestoreUnderlying(IDirectDrawSurface4* surface, const tagRECT* dst_rect)
+void mouseManager::restoreUnderlying(IDirectDrawSurface4* surface, const tagRECT* dst_rect)
 {
     // @stub
 }
@@ -479,33 +490,33 @@ void mouseManager::RestoreUnderlying(IDirectDrawSurface4* surface, const tagRECT
 
 // E:\gamedcs\mousemgr.cpp:865
 VA(0x0050d540, 0x6F)  // anchor-global, dc 0xff3a8
-void mouseManager::HidePointer()
+void mouseManager::hidePointer()
 {
-    TCSLock lock(&section_mouse);
-    if (++field_68 == 1 && !IsIconic(hwndApp))
-        Update(1);
+    TCSLock lock(&m_sectionMouse);
+    if (++m_hideCount == 1 && !IsIconic(g_hwndApp))
+        update(1);
 }
 
 // E:\gamedcs\mousemgr.cpp:889
 VA(0x0050d5b0, 0xD0)  // anchor-global, dc 0xff3e0
-void mouseManager::ShowPointer(bool force)
+void mouseManager::showPointer(bool force)
 {
-    TCSLock lock(&section_mouse);
+    TCSLock lock(&m_sectionMouse);
     if (force)
-        field_68 = 1;
-    if (field_68 > 0 && --field_68 == 0) {
-        field_74++;
-        EnterCriticalSection(&section_mouse);
+        m_hideCount = 1;
+    if (m_hideCount > 0 && --m_hideCount == 0) {
+        m_busy++;
+        EnterCriticalSection(&m_sectionMouse);
         POINT cursor;
         GetCursorPos(&cursor);
         cursor.x &= ~1;
-        ScreenToClient(hwndApp, &cursor);
-        field_6c = cursor.x;
-        field_70 = cursor.y;
-        LeaveCriticalSection(&section_mouse);
-        if (!IsIconic(hwndApp))
-            Update(1);
-        field_74--;
+        ScreenToClient(g_hwndApp, &cursor);
+        m_currentX = cursor.x;
+        m_currentY = cursor.y;
+        LeaveCriticalSection(&m_sectionMouse);
+        if (!IsIconic(g_hwndApp))
+            update(1);
+        m_busy--;
     }
 }
 
@@ -593,59 +604,59 @@ void mouseManager::GetPointerPosition()
 // expansion. It also emits the byte-exact 25-byte constructor COMDAT claimed
 // below, closing both rows together.
 VA(0x0050d680, 0x210)  // anchor-global, dc 0xff484
-void mouseManager::CheckUpdate()
+void mouseManager::checkUpdate()
 {
-    TCSLock lock(&section_mouse);
-    if (!(gMouseTimerInit & 1)) {
-        gMouseTimerInit |= 1;
-        gMouseUpdateDeadline = timeGetTime() + 33;
+    TCSLock lock(&m_sectionMouse);
+    if (!(g_mouseTimerInit & 1)) {
+        g_mouseTimerInit |= 1;
+        g_mouseUpdateDeadline = timeGetTime() + 33;
     }
-    if (!(gMouseTimerInit & 2)) {
-        gMouseTimerInit |= 2;
-        gMouseFrameDeadline = timeGetTime() + 100;
+    if (!(g_mouseTimerInit & 2)) {
+        g_mouseTimerInit |= 2;
+        g_mouseFrameDeadline = timeGetTime() + 100;
     }
-    if (IsIconic(hwndApp))
+    if (IsIconic(g_hwndApp))
         return;
-    unsigned long deadline = gMouseUpdateDeadline;
-    if (static_cast<int>(timeGetTime() - deadline) >= 0 && field_74 == 0) {
-        deadline = gMouseUpdateDeadline;
+    unsigned long deadline = g_mouseUpdateDeadline;
+    if (static_cast<int>(timeGetTime() - deadline) >= 0 && m_busy == 0) {
+        deadline = g_mouseUpdateDeadline;
         long elapsed = timeGetTime() - deadline;
-        gMouseUpdateDeadline = deadline + (elapsed >= 33 ? elapsed : 33);
-        Update(0);
-        if (GetWindowThreadProcessId(hwndApp, 0) == GetCurrentThreadId()) {
-            if (field_6c >= 0 && field_6c < 800
-                && field_70 >= 0 && field_70 < 600) {
-                if (field_64) {
-                    ShowPointer(0);
+        g_mouseUpdateDeadline = deadline + (elapsed >= 33 ? elapsed : 33);
+        update(0);
+        if (GetWindowThreadProcessId(g_hwndApp, 0) == GetCurrentThreadId()) {
+            if (m_currentX >= 0 && m_currentX < 800
+                && m_currentY >= 0 && m_currentY < 600) {
+                if (m_systemPointerIsOn) {
+                    showPointer(0);
                     ShowCursor(0);
-                    field_64 = 0;
+                    m_systemPointerIsOn = 0;
                 }
-            } else if (!field_64) {
+            } else if (!m_systemPointerIsOn) {
                 ShowCursor(1);
                 {
 #pragma inline_depth(0)
-                    TCSLock inner(&section_mouse);
+                    TCSLock inner(&m_sectionMouse);
 #pragma inline_depth()
-                    if (++field_68 == 1 && !IsIconic(hwndApp))
-                        Update(1);
+                    if (++m_hideCount == 1 && !IsIconic(g_hwndApp))
+                        update(1);
                 }
-                field_64 = 1;
+                m_systemPointerIsOn = 1;
             }
         }
     }
-    deadline = gMouseFrameDeadline;
-    if (static_cast<int>(timeGetTime() - deadline) >= 0 && field_74 == 0) {
-        deadline = gMouseFrameDeadline;
+    deadline = g_mouseFrameDeadline;
+    if (static_cast<int>(timeGetTime() - deadline) >= 0 && m_busy == 0) {
+        deadline = g_mouseFrameDeadline;
         long elapsed = timeGetTime() - deadline;
-        gMouseFrameDeadline = deadline + (elapsed >= 100 ? elapsed : 100);
-        if (field_4c == SPELL_SET) {
+        g_mouseFrameDeadline = deadline + (elapsed >= 100 ? elapsed : 100);
+        if (m_set == SPELL_SET) {
             int frames;
-            if (field_54->numSequences > 0 && *field_54->validSeqMask != 0)
-                frames = field_54->s[0]->numFrames;
+            if (m_sprite->m_numSequences > 0 && *m_sprite->m_validSeqMask != 0)
+                frames = m_sprite->m_s[0]->m_numFrames;
             else
                 frames = 0;
-            LoadFrame((field_50 + 1) % frames);
-            Update(1);
+            loadFrame((m_frame + 1) % frames);
+            update(1);
         }
     }
 }
@@ -720,44 +731,46 @@ void TCSLock::TCSLock(CRITICAL_SECTION* lpCriticalSection)
 // commutative source operands stayed at 97.00%; naming the accumulator
 // locals fell to 88.72%. The explicit sprite local is source-significant:
 // it raised 97.00% to 99.31% by making the whole draw block exact.
+// Before normalization (locals): new_frame.
 VA(0x0050d8b0, 0x16B)  // anchor-global, dc 0xff610
-void mouseManager::LoadFrame(int new_frame)
+void mouseManager::loadFrame(int newFrame)
 {
-    TCSLock lock(&section_mouse);
+    TCSLock lock(&m_sectionMouse);
 
     DDBLTFX fx;
     memset(&fx, 0, sizeof(fx));
     fx.dwSize = sizeof(fx);
-    fx.dwFillColor = RGBto16(0, 255, 255);
-    gpDDSMouseSurface->Blt(0, 0, 0, DDBLT_COLORFILL, &fx);
+    fx.dwFillColor = rgBto16(0, 255, 255);
+    g_ddsMouseSurface->Blt(0, 0, 0, DDBLT_COLORFILL, &fx);
 
     DDSURFACEDESC surfaceDesc;
     memset(&surfaceDesc, 0, sizeof(surfaceDesc));
     surfaceDesc.dwSize = sizeof(surfaceDesc);
-    if (gpDDSMouseSurface->Lock(0,
+    if (g_ddsMouseSurface->Lock(0,
             static_cast<DDSURFACEDESC2*>(static_cast<void*>(&surfaceDesc)),
             DDLOCK_WAIT, 0) == DD_OK) {
         Bitmap16Bit bitmap(0, 0);
         bitmap.reference(surfaceDesc.dwWidth, surfaceDesc.dwHeight,
             surfaceDesc.lPitch,
             static_cast<unsigned short*>(surfaceDesc.lpSurface));
-        CSprite* sprite = field_54;
-        sprite->DrawPointer(new_frame, bitmap.map, 0, 0,
-            bitmap.Width, bitmap.Height, bitmap.Pitch, 0);
-        gpDDSMouseSurface->Unlock(0);
-        field_50 = new_frame;
+        CSprite* sprite = m_sprite;
+        sprite->drawPointer(newFrame, bitmap.m_map, 0, 0,
+            bitmap.m_width, bitmap.m_height, bitmap.m_pitch, 0);
+        g_ddsMouseSurface->Unlock(0);
+        m_frame = newFrame;
     }
 }
 
 // E:\gamedcs\mousemgr.cpp:1120
+// Before normalization (locals): show_it.
 VA(0x0050da20, 0x37)  // anchor-global, dc 0xff708
-void mouseManager::ShowSystemCursor(unsigned char show_it)
+void mouseManager::showSystemCursor(unsigned char showIt)
 {
-    if (show_it) {
+    if (showIt) {
         ShowCursor(1);
-        HidePointer();
+        hidePointer();
     } else {
-        ShowPointer(0);
+        showPointer(0);
         ShowCursor(0);
     }
 }
@@ -780,7 +793,7 @@ unsigned char mouseManager::isBusy()
 
 // E:\gamedcs\WinGraph.h:55
 DC_ONLY(0xff780, 0x60)
-unsigned RGBto16(int r, int g, int b)
+unsigned rgBto16(int r, int g, int b)
 {
     // @stub
 }

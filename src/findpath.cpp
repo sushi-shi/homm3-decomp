@@ -15,7 +15,9 @@
 
 // ai_player.cpp:4643. Kept local because findpath's narrow include set does
 // not otherwise depend on the ai_player class declarations.
-long AI_get_ship_cost(const hero* our_hero, type_point point);
+// Before normalization (function): AI_get_ship_cost.
+// Before normalization (locals): our_hero.
+long aiGetShipCost(const hero* ourHero, type_point point);
 
 // VC6's <xutility> reference-returning min, spelled file-locally for
 // the same reason ai_combat.cpp and ai_tactical.cpp spell it: retail
@@ -29,9 +31,11 @@ long AI_get_ship_cost(const hero* our_hero, type_point point);
 // (the `const _TYPE&` signature was measured and REFUTED in
 // ai_combat.cpp, six exact functions lost).
 template <class _TYPE>
-inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
+// Before normalization (function): _cpp_min.
+// Before normalization (locals): _X, _Y.
+inline const _TYPE& cppMin(_TYPE x, _TYPE y)
 {
-    return (_Y < _X ? _Y : _X);
+    return (y < x ? y : x);
 }
 
 // E:\gamedcs\findpath.cpp:36
@@ -40,9 +44,9 @@ inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
 // searchArray constructor. GetCell's relocation independently names
 // 0x4b1330 as this predicate, and its four signed bound checks prove it.
 VA(0x004b1330, 0x3B)  // anchor-callee, dc 0x9ed40
-unsigned char type_point::is_valid()
+unsigned char type_point::isValid()
 {
-    return x >= 0 && x < MAP_WIDTH && y >= 0 && y < MAP_HEIGHT;
+    return m_x >= 0 && m_x < g_mapWidth && m_y >= 0 && m_y < g_mapHeight;
 }
 
 // E:\gamedcs\findpath.cpp:45
@@ -60,31 +64,31 @@ unsigned char type_point::is_valid()
 VA(0x004b1370, 0x62)  // anchor-global, dc 0x9ed88
 searchArray::searchArray()
 {
-    cellData = 0;
-    bIsMoatSlowed = 0;
-    danger_zones = 0;
-    maxQueueCount = 0;
-    pay_transition_costs = 0;
-    this_turns_movement = 0;
-    land_movement = 0;
-    sea_movement = 0;
-    can_summon_boat = 0;
-    can_cast_teleport = 0;
-    water_walk_level = -1;
-    flight_level = -1;
-    limit_reached = 0;
+    m_cellData = 0;
+    m_isMoatSlowed = 0;
+    m_dangerZones = 0;
+    m_maxQueueCount = 0;
+    m_payTransitionCosts = 0;
+    m_thisTurnsMovement = 0;
+    m_landMovement = 0;
+    m_seaMovement = 0;
+    m_canSummonBoat = 0;
+    m_canCastTeleport = 0;
+    m_waterWalkLevel = -1;
+    m_flightLevel = -1;
+    m_limitReached = 0;
 }
 
 // E:\gamedcs\findpath.cpp:65
 VA(0x004b13e0, 0x78)  // anchor-global, dc 0x9ee08
 searchArray::~searchArray()
 {
-    if (cellData)
-        delete cellData;
-    if (bIsMoatSlowed)
-        delete bIsMoatSlowed;
-    cellData = 0;
-    bIsMoatSlowed = 0;
+    if (m_cellData)
+        delete m_cellData;
+    if (m_isMoatSlowed)
+        delete m_isMoatSlowed;
+    m_cellData = 0;
+    m_isMoatSlowed = 0;
 }
 
 // E:\gamedcs\findpath.cpp:71
@@ -94,33 +98,33 @@ searchArray::~searchArray()
 // allocation itself (`lea x3, lea x5, shl 1`). The moat map is a flat
 // 187-byte combat grid.
 VA(0x004b1460, 0x9F)  // anchor-callee, dc 0x9ee34
-void searchArray::Init()
+void searchArray::init()
 {
-    if (cellData)
-        delete cellData;
-    if (bIsMoatSlowed)
-        delete bIsMoatSlowed;
-    cellData = 0;
-    bIsMoatSlowed = 0;
-    valid_left = 0;
-    valid_right = MAP_WIDTH;
-    valid_top = 0;
-    valid_bottom = MAP_HEIGHT;
-    cellData = new pathCell[(gpGame->worldMap.HasTwoLevels + 1) * MAP_HEIGHT
-            * MAP_WIDTH * 2];
-    bIsMoatSlowed = new unsigned char[187];
+    if (m_cellData)
+        delete m_cellData;
+    if (m_isMoatSlowed)
+        delete m_isMoatSlowed;
+    m_cellData = 0;
+    m_isMoatSlowed = 0;
+    m_validLeft = 0;
+    m_validRight = g_mapWidth;
+    m_validTop = 0;
+    m_validBottom = g_mapHeight;
+    m_cellData = new pathCell[(g_game->m_worldMap.m_hasTwoLevels + 1) * g_mapHeight
+            * g_mapWidth * 2];
+    m_isMoatSlowed = new unsigned char[187];
 }
 
 // E:\gamedcs\findpath.cpp:82
 VA(0x004b1500, 0x2F)  // anchor-bracket, dc 0x9eee8
-void searchArray::Close()
+void searchArray::close()
 {
-    if (cellData)
-        delete cellData;
-    if (bIsMoatSlowed)
-        delete bIsMoatSlowed;
-    cellData = 0;
-    bIsMoatSlowed = 0;
+    if (m_cellData)
+        delete m_cellData;
+    if (m_isMoatSlowed)
+        delete m_isMoatSlowed;
+    m_cellData = 0;
+    m_isMoatSlowed = 0;
 }
 
 // THE FINDPATH ORDER-MAP (2026-08-08). Eighteen carve rows sit in the
@@ -179,28 +183,29 @@ void searchArray::Close()
 // ebx,0xff`). That one declaration also freed the register pressure
 // behind (1)'s spill, and both residual blocks closed together
 // (96.88% -> 100%).
+// Before normalization (locals): fly_level, start_z, stop_z.
 VA(0x004b1530, 0x20F)  // anchor-bracket, dc 0x9ef20
-void searchArray::Clear(long fly_level, long start_z, long stop_z)
+void searchArray::clear(long flyLevel, long startZ, long stopZ)
 {
-    queue.clear();
-    result.clear();
-    visited_points.clear();
+    m_queue.clear();
+    m_result.clear();
+    m_visitedPoints.clear();
 
-    long width = valid_right - valid_left;
+    long width = m_validRight - m_validLeft;
     if (width <= 0)
         return;
 
     type_point point;
-    point.x = static_cast<short>(valid_left);
-    for (point.z = static_cast<short>(start_z); point.z < stop_z; point.z++) {
-        for (long fly = 0; fly <= fly_level; fly++) {
-            for (point.y = static_cast<short>(valid_top); point.y < valid_bottom;
-                    point.y++) {
-                pathCell* row = cellData;
+    point.m_x = static_cast<short>(m_validLeft);
+    for (point.m_z = static_cast<short>(startZ); point.m_z < stopZ; point.m_z++) {
+        for (long fly = 0; fly <= flyLevel; fly++) {
+            for (point.m_y = static_cast<short>(m_validTop); point.m_y < m_validBottom;
+                    point.m_y++) {
+                pathCell* row = m_cellData;
                 if (row != 0) {
                     unsigned char plane = fly != 0;
-                    row += ((point.z * 2 + plane) * MAP_HEIGHT
-                            + point.y) * MAP_WIDTH + point.x;
+                    row += ((point.m_z * 2 + plane) * g_mapHeight
+                            + point.m_y) * g_mapWidth + point.m_x;
                 }
                 memset(row, 0, width * sizeof(pathCell));
             }
@@ -222,7 +227,8 @@ void searchArray::Clear(long fly_level, long start_z, long stop_z)
 // road rows are reached through gRoadCostRow, which maps a
 // NewmapCell::RoadSet id straight onto the row - so the table is one
 // array with a road appendix, not two.
-DATA(0x0063e510) const long gTerrainCost[13][4] = {
+// Before normalization: gTerrainCost.
+DATA(0x0063e510) const long g_terrainCost[13][4] = {
     { 100, 100, 100, 100 },
     { 150, 125, 100, 100 },
     { 100, 100, 100, 100 },
@@ -237,17 +243,20 @@ DATA(0x0063e510) const long gTerrainCost[13][4] = {
     {  65,  65,  65,  65 },
     {  50,  50,  50,  50 }
 };
-DATA(0x0063e5e0) const long gRoadCostRow[4] = { 0, 10, 11, 12 };
+// Before normalization: gRoadCostRow.
 // 0x3fb504f3 exactly - the float nearest sqrt(2), and the multiplier
 // every diagonal step pays. Written as a named `const float` because
 // it sits in the middle of this TU's own .rdata run rather than in the
 // compiler's float pool.
-DATA(0x0063e5f0) const float gDiagonalCost = 1.4142135f;
+// Before normalization: gDiagonalCost.
+DATA(0x0063e5e0) const long g_roadCostRow[4] = { 0, 10, 11, 12 };
 // The .data twin, indexed by TSkillMastery instead of by terrain: what
 // a tile costs a hero who is FLYING or WATER-WALKING over it. Expert
 // costs the same 100 as flat ground; the lower masteries pay a
 // surcharge. Name is a bootstrap invention - no roster reaches it.
-DATA(0x006778ac) long gMasteryTerrainCost[4] = { 140, 140, 120, 100 };
+// Before normalization: gMasteryTerrainCost.
+DATA(0x0063e5f0) const float g_diagonalCost = 1.4142135f;
+DATA(0x006778ac) long g_masteryTerrainCost[4] = { 140, 140, 120, 100 };
 
 // E:\gamedcs\findpath.cpp:131
 // NINE parameters in retail, not the Dreamcast port's eight (`ret
@@ -277,24 +286,27 @@ DATA(0x006778ac) long gMasteryTerrainCost[4] = { 140, 140, 120, 100 };
 // different reason: it is compared against NewmapCell::GroundSet, and
 // GroundSet cannot be typed TTerrainType because that enum is declared
 // in armygrp.h, which INCLUDES mapcell.h.
+// Before normalization (function): CalcTerrainCost.
+// Before normalization (locals): points_left, iPathfinding, end_road, water_walking,
+// native_terrain, param_9.
 VA(0x004b1740, 0x13E)  // anchor-callee, dc 0x9f034
-int CalcTerrainCost(const NewmapCell* cell, int dir, int points_left,
-                    long iPathfinding, long end_road, long flying,
-                    long water_walking, long native_terrain,
-                    unsigned char param_9)
+int calcTerrainCost(const NewmapCell* cell, int dir, int pointsLeft,
+                    long pathfinding, long endRoad, long flying,
+                    long waterWalking, long nativeTerrain,
+                    unsigned char param9)
 {
-    long terrain = cell->GroundSet;
-    long road = cell->RoadSet;
-    if (param_9 && terrain == 1)
+    long terrain = cell->m_groundSet;
+    long road = cell->m_roadSet;
+    if (param9 && terrain == 1)
         terrain = 0;
-    TAdventureObjectType special = cell->get_special_terrain();
+    TAdventureObjectType special = cell->getSpecialTerrain();
     long cost;
-    if (road != 0 && end_road != 0)
-        cost = gTerrainCost[gRoadCostRow[road]][iPathfinding];
-    else if (terrain == native_terrain && special != CURSED_GROUND)
+    if (road != 0 && endRoad != 0)
+        cost = g_terrainCost[g_roadCostRow[road]][pathfinding];
+    else if (terrain == nativeTerrain && special != CURSED_GROUND)
         cost = 100;
     else
-        cost = gTerrainCost[terrain][iPathfinding];
+        cost = g_terrainCost[terrain][pathfinding];
     // A third off every sea step. 0xe1 is one of the ten object ids
     // get_special_terrain (0x4fce20) can answer with and the only one
     // this body reacts to on water; mapcell.h carries the whole
@@ -303,20 +315,20 @@ int CalcTerrainCost(const NewmapCell* cell, int dir, int points_left,
     if (terrain == eTerrainWater
             && special == FAVORABLE_WINDS)
         cost = cost * 2 / 3;
-    if (water_walking >= 0 && terrain == eTerrainWater)
-        cost = gMasteryTerrainCost[water_walking];
+    if (waterWalking >= 0 && terrain == eTerrainWater)
+        cost = g_masteryTerrainCost[waterWalking];
     if (flying >= 0) {
-        if ((cell->flags_00_11 & 0x40) && terrain != eTerrainWater)
-            cost = _cpp_min(cost, gMasteryTerrainCost[flying]);
+        if ((cell->m_flags0011 & 0x40) && terrain != eTerrainWater)
+            cost = cppMin(cost, g_masteryTerrainCost[flying]);
         else
-            cost = gMasteryTerrainCost[flying];
+            cost = g_masteryTerrainCost[flying];
     }
     if (dir & 1) {
-        long full = gTerrainCost[terrain][iPathfinding];
-        if (points_left < full
-                || static_cast<float>(points_left)
-                        >= static_cast<float>(full) * gDiagonalCost)
-            cost = static_cast<long>(static_cast<float>(cost) * gDiagonalCost);
+        long full = g_terrainCost[terrain][pathfinding];
+        if (pointsLeft < full
+                || static_cast<float>(pointsLeft)
+                        >= static_cast<float>(full) * g_diagonalCost)
+            cost = static_cast<long>(static_cast<float>(cost) * g_diagonalCost);
     }
     return cost;
 }
@@ -329,14 +341,15 @@ int CalcTerrainCost(const NewmapCell* cell, int dir, int points_left,
 // the CELL'S OWN signed byte fields at +8 and +4. That is exactly what
 // a "cheapest possible cost from here" estimator does: pretend the
 // destination road is this cell's and that the hero is native here.
+// Before normalization (locals): points_left, iPathfinding, water_walking.
 VA(0x004b1880, 0x33)  // anchor-callee, dc 0x9f154
-int MinimumTerrainCost(const NewmapCell* cell, int points_left,
-                       long iPathfinding, long flying, long water_walking,
+int minimumTerrainCost(const NewmapCell* cell, int pointsLeft,
+                       long pathfinding, long flying, long waterWalking,
                        unsigned char hasNomad)
 {
-    return CalcTerrainCost(cell, 0, points_left, iPathfinding, cell->RoadSet,
-                           flying, water_walking,
-                           cell->GroundSet, hasNomad);
+    return calcTerrainCost(cell, 0, pointsLeft, pathfinding, cell->m_roadSet,
+                           flying, waterWalking,
+                           cell->m_groundSet, hasNomad);
 }
 
 // E:\gamedcs\findpath.cpp:233
@@ -387,44 +400,47 @@ int MinimumTerrainCost(const NewmapCell* cell, int points_left,
 // source as a memory operand; the explicit inline helper below preserves the
 // source packed word in EAX, matching retail's final eager load and xor. The
 // helper emits no out-of-line body and carries only the coordinate semantics.
-static inline void make_terrain_destination(type_point& destination,
+// Before normalization (function): make_terrain_destination.
+static inline void makeTerrainDestination(type_point& destination,
                                             type_point start,
                                             int direction)
 {
-    destination.x = start.x + gStepDeltaX[4 * direction];
-    destination.y = start.y + gStepDeltaY[4 * direction];
-    destination.z = start.z;
+    destination.m_x = start.m_x + g_stepDeltaX[4 * direction];
+    destination.m_y = start.m_y + g_stepDeltaY[4 * direction];
+    destination.m_z = start.m_z;
 }
 
+// Before normalization (locals): current_hero, move_left, water_walking.
 VA(0x004b18c0, 0x1A2)  // anchor-callee, dc 0x9f184
-int GetTerrainCost(hero* current_hero, type_point start, int direction, int move_left)
+int getTerrainCost(hero* currentHero, type_point start, int direction, int moveLeft)
 {
-    NewmapCell* from = gpGame->worldMap.cell(start.x, start.y, start.z);
+    NewmapCell* from = g_game->m_worldMap.cell(start.m_x, start.m_y, start.m_z);
     type_point to;
-    make_terrain_destination(to, start, direction);
-    NewmapCell* dest = gpGame->worldMap.cell(to.x, to.y, to.z);
-    long flying = current_hero->flightLevel;
-    long water_walking = current_hero->waterWalkLevel;
-    if (current_hero->IsWieldingArtifact(0x48))
+    makeTerrainDestination(to, start, direction);
+    NewmapCell* dest = g_game->m_worldMap.cell(to.m_x, to.m_y, to.m_z);
+    long flying = currentHero->m_flightLevel;
+    long waterWalking = currentHero->m_waterWalkLevel;
+    if (currentHero->isWieldingArtifact(0x48))
         flying = 3;
-    if (current_hero->IsWieldingArtifact(0x5a))
-        water_walking = 3;
-    if (current_hero->flags & 0x40000)
-        water_walking = flying = -1;
-    long mastery = current_hero->skillLevel[0];
-    return CalcTerrainCost(from, direction, move_left, mastery,
-                           dest->RoadSet, flying, water_walking,
-                           current_hero->army.GetNativeTerrain(),
-                           current_hero->army.get_creature_total(
+    if (currentHero->isWieldingArtifact(0x5a))
+        waterWalking = 3;
+    if (currentHero->m_flags & 0x40000)
+        waterWalking = flying = -1;
+    long mastery = currentHero->m_skillLevel[0];
+    return calcTerrainCost(from, direction, moveLeft, mastery,
+                           dest->m_roadSet, flying, waterWalking,
+                           currentHero->m_army.getNativeTerrain(),
+                           currentHero->m_army.getCreatureTotal(
                                CREATURE_NOMAD) > 0);
 }
 
 // PushPoint's cursed/garrison terrain test, lifted for the /Ob2 BUDGET probe.
-static unsigned char terrain_forbids_magic(type_point where)
+// Before normalization (function): terrain_forbids_magic.
+static unsigned char terrainForbidsMagic(type_point where)
 {
     TAdventureObjectType special =
-        gpGame->worldMap.cell(where.x, where.y, where.z)
-            ->get_special_terrain();
+        g_game->m_worldMap.cell(where.m_x, where.m_y, where.m_z)
+            ->getSpecialTerrain();
     return special == CURSED_GROUND || special == GARRISON;
 }
 
@@ -459,32 +475,36 @@ static unsigned char terrain_forbids_magic(type_point where)
 // Worth 81.1401 -> 83.7018, and it is what brings visited_points.insert's
 // expansion into agreement with retail's ten calls.  No Dreamcast row; a
 // codegen device.
-static void fill_path_cell(pathCell* point, int direction, long cost,
-                           long adjusted, long barrier_value, long danger,
+// Before normalization (function): fill_path_cell.
+static void fillPathCell(pathCell* point, int direction, long cost,
+                           // Before normalization (locals): barrier_value.
+                           long adjusted, long barrierValue, long danger,
                            int isTrigger, type_point monster)
 {
-    point->direction = direction;
-    point->cost = static_cast<unsigned short>(cost);
-    point->adjusted_cost = static_cast<unsigned short>(adjusted);
-    point->barrier_value = barrier_value;
-    point->danger_value = danger;
-    point->bIsTrigger = isTrigger;
-    point->monster = monster;
-    point->visited = 1;
+    point->m_direction = direction;
+    point->m_cost = static_cast<unsigned short>(cost);
+    point->m_adjustedCost = static_cast<unsigned short>(adjusted);
+    point->m_barrierValue = barrierValue;
+    point->m_dangerValue = danger;
+    point->m_isTrigger = isTrigger;
+    point->m_monster = monster;
+    point->m_visited = 1;
 }
 
-static int find_queue_slot(searchArray* search, long key, long adjusted)
+// Before normalization (function): find_queue_slot.
+static int findQueueSlot(searchArray* search, long key, long adjusted)
 {
-    int last = search->queue.size();
+    int last = search->m_queue.size();
     int middle = last >> 1;
     int first = 0;
     while (last > first) {
-        long entry_key = search->queue[middle].barrier_value;
-        if (search->queue[middle].cost > search->this_turns_movement)
-            entry_key += search->queue[middle].danger_value;
-        if (entry_key < key
-                || (entry_key == key
-                    && adjusted < search->queue[middle].adjusted_cost))
+        // Before normalization (locals): entry_key.
+        long entryKey = search->m_queue[middle].m_barrierValue;
+        if (search->m_queue[middle].m_cost > search->m_thisTurnsMovement)
+            entryKey += search->m_queue[middle].m_dangerValue;
+        if (entryKey < key
+                || (entryKey == key
+                    && adjusted < search->m_queue[middle].m_adjustedCost))
             first = middle + 1;
         else
             last = middle;
@@ -623,48 +643,49 @@ static int find_queue_slot(searchArray* search, long key, long adjusted)
 // retail's `cmp ecx,edx / jb <expanded arm>` looks like read literally - is
 // still worse, and has now been measured in BOTH inline structures:
 // 74.3805 -> 67.4717 before the shrink, 83.7018 -> 81.0180 after.
+// Before normalization (locals): old_cell, move_cost, barrier_value, delta_x, delta_y, dest_key.
 VA(0x004b1a70, 0x88D)  // anchor-bracket, dc 0x9f2a4
-void searchArray::PushPoint(const pathCell* old_cell, pathCell* point,
-                            int direction, int move_cost, int limit,
-                            long barrier_value, type_point monster,
+void searchArray::pushPoint(const pathCell* oldCell, pathCell* point,
+                            int direction, int moveCost, int limit,
+                            long barrierValue, type_point monster,
                             int isTrigger)
 {
-    long cost = old_cell->cost + move_cost;
-    long adjusted = point->adjusted_cost - point->cost + cost;
+    long cost = oldCell->m_cost + moveCost;
+    long adjusted = point->m_adjustedCost - point->m_cost + cost;
 
-    if (!point->point.is_valid())
+    if (!point->m_point.isValid())
         return;
-    if (point->point.x < valid_left || point->point.x >= valid_right
-            || point->point.y < valid_top || point->point.y >= valid_bottom)
+    if (point->m_point.m_x < m_validLeft || point->m_point.m_x >= m_validRight
+            || point->m_point.m_y < m_validTop || point->m_point.m_y >= m_validBottom)
         return;
 
-    point->last_point = old_cell->point;
-    point->field_04_bit11 = old_cell->last_can_stop;
-    if (point->dimension_door) {
-        if (point->last_can_stop && isTrigger)
+    point->m_lastPoint = oldCell->m_point;
+    point->m_lastCanStop = oldCell->m_canStop;
+    if (point->m_dimensionDoor) {
+        if (point->m_canStop && isTrigger)
             return;
-        if (!old_cell->last_can_stop) {
-            point->last_point = old_cell->last_point;
-            point->field_04_bit11 = 1;
+        if (!oldCell->m_canStop) {
+            point->m_lastPoint = oldCell->m_lastPoint;
+            point->m_lastCanStop = 1;
         }
-        long delta_x = point->point.x - point->last_point.x;
-        long delta_y = point->point.y - point->last_point.y;
-        if (abs(delta_x) > 9)
+        long deltaX = point->m_point.m_x - point->m_lastPoint.m_x;
+        long deltaY = point->m_point.m_y - point->m_lastPoint.m_y;
+        if (abs(deltaX) > 9)
             return;
-        if (abs(delta_y) > 8)
+        if (abs(deltaY) > 8)
             return;
-        point->delta_x = delta_x;
-        point->delta_y = delta_y;
+        point->m_deltaX = deltaX;
+        point->m_deltaY = deltaY;
     } else {
-        point->delta_x = 0;
-        point->delta_y = 0;
+        point->m_deltaX = 0;
+        point->m_deltaY = 0;
     }
 
     long danger = 0;
-    if (danger_zones != 0) {
-        danger = *get_danger_cell(danger_zones, point->point);
-        if (cost > this_turns_movement) {
-            danger = _cpp_min(old_cell->danger_value, danger);
+    if (m_dangerZones != 0) {
+        danger = *getDangerCell(m_dangerZones, point->m_point);
+        if (cost > m_thisTurnsMovement) {
+            danger = cppMin(oldCell->m_dangerValue, danger);
             // The "unreachable" sentinel the danger map carries; every
             // producer that vetoes a square outright writes a value at or
             // below it. Spelled as the literal retail compares against.
@@ -673,51 +694,51 @@ void searchArray::PushPoint(const pathCell* old_cell, pathCell* point,
         }
     }
 
-    pathCell* dest = get_cell(point->point, !point->last_can_stop);
+    pathCell* dest = getCell(point->m_point, !point->m_canStop);
 
-    long key = barrier_value;
-    if (cost > this_turns_movement)
-        key = danger + barrier_value;
+    long key = barrierValue;
+    if (cost > m_thisTurnsMovement)
+        key = danger + barrierValue;
 
     unsigned char cheaper = 0;
-    if (dest->visited) {
-        long dest_key = dest->barrier_value;
-        if (dest->cost > this_turns_movement)
-            dest_key += dest->danger_value;
-        if (dest_key > key)
+    if (dest->m_visited) {
+        long destKey = dest->m_barrierValue;
+        if (dest->m_cost > m_thisTurnsMovement)
+            destKey += dest->m_dangerValue;
+        if (destKey > key)
             return;
-        if (dest_key < key)
+        if (destKey < key)
             cheaper = 1;
-        else if (adjusted >= dest->adjusted_cost)
+        else if (adjusted >= dest->m_adjustedCost)
             return;
     }
 
     if (cost > limit && limit > 0 && !cheaper) {
-        limit_reached = 1;
+        m_limitReached = 1;
         return;
     }
 
-    if (dest->visited) {
-        point->magic_forbidden = dest->magic_forbidden;
+    if (dest->m_visited) {
+        point->m_magicForbidden = dest->m_magicForbidden;
     } else {
-        point->magic_forbidden = 0;
-        if (can_cast_teleport || can_summon_boat || can_cast_flight
-                || can_cast_water_walk) {
-            if (terrain_forbids_magic(point->point))
-                point->magic_forbidden = 1;
+        point->m_magicForbidden = 0;
+        if (m_canCastTeleport || m_canSummonBoat || m_canCastFlight
+                || m_canCastWaterWalk) {
+            if (terrainForbidsMagic(point->m_point))
+                point->m_magicForbidden = 1;
         }
     }
 
-    if (queue.size() >= 500)
-        queue.erase(queue.end() - 1);
+    if (m_queue.size() >= 500)
+        m_queue.erase(m_queue.end() - 1);
 
-    int middle = find_queue_slot(this, key, adjusted);
+    int middle = findQueueSlot(this, key, adjusted);
 
-    fill_path_cell(point, direction, cost, adjusted, barrier_value, danger,
+    fillPathCell(point, direction, cost, adjusted, barrierValue, danger,
                    isTrigger, monster);
 
-    if (middle < queue.size())
-        queue.insert(queue.begin() + middle, 1, *point);
+    if (middle < m_queue.size())
+        m_queue.insert(m_queue.begin() + middle, 1, *point);
     else {
         // OVER-INLINE, pinned. Retail expands the `begin() + middle` arm
         // and CALLS this one - the same symbol, the /Ob2 budget simply
@@ -728,14 +749,14 @@ void searchArray::PushPoint(const pathCell* old_cell, pathCell* point,
         // `middle >= size()` with the two blocks swapped - which is what
         // retail's `cmp/jb` into the expanded arm at +0x4dc looks like -
         // measures 74.3805 -> 67.4717.
-        pathCell* tail = queue.end();
+        pathCell* tail = m_queue.end();
 #pragma inline_depth(0)
-        queue.insert(tail, 1, *point);
+        m_queue.insert(tail, 1, *point);
 #pragma inline_depth()
     }
 
-    if (!dest->visited && point->last_can_stop)
-        visited_points.insert(visited_points.end(), 1, dest);
+    if (!dest->m_visited && point->m_canStop)
+        m_visitedPoints.insert(m_visitedPoints.end(), 1, dest);
 
     *dest = *point;
 }
@@ -748,9 +769,10 @@ void searchArray::PushPoint(const pathCell* old_cell, pathCell* point,
 // out of the register, where three separate member reads give two 16-bit
 // loads instead.  Spelled file-local because no retail body has been located
 // for it and the DC roster puts it in a header this TU does not need.
-static int GetMapExtra(type_point point)
+// Before normalization (function): GetMapExtra.
+static int getMapExtra(type_point point)
 {
-    return GetMapExtra(point.x, point.y, point.z);
+    return getMapExtra(point.m_x, point.m_y, point.m_z);
 }
 
 // E:\gamedcs\findpath.cpp:461
@@ -875,318 +897,321 @@ static int GetMapExtra(type_point point)
 // the zero-cast cleanliness floor; reversing the two diagonal corner
 // declarations regresses to 99.19779%; and DC's const srcCell cannot be
 // expressed without changing the still-non-const NewmapCell accessors.
+// Before normalization (locals): current_hero, turn_mobility, adjacent_monster,
+// monster_location, iPathfinding, search_type, native_terrain, needs_boat, across_x, across_y,
+// boat_cell, boat_cost.
 VA(0x004b2300, 0xA94)  // anchor-callee, dc 0x9f718
-void searchArray::TestPossibleDirections(hero* current_hero, pathCell* source,
-                                         long turn_mobility, long maxMobility,
-                                         unsigned char adjacent_monster,
-                                         type_point monster_location,
-                                         long iPathfinding,
-                                         type_search_type search_type,
-                                         long native_terrain)
+void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
+                                         long turnMobility, long maxMobility,
+                                         unsigned char adjacentMonster,
+                                         type_point monsterLocation,
+                                         long pathfinding,
+                                         type_search_type searchType,
+                                         long nativeTerrain)
 {
-    NewmapCell* srcCell = gpAdvManager->GetCell(source->point);
-    long srcGround = srcCell->GroundSet;
+    NewmapCell* srcCell = g_advManager->getCell(source->m_point);
+    long srcGround = srcCell->m_groundSet;
     unsigned char hasNomad =
-        current_hero->army.get_creature_total(CREATURE_NOMAD) > 0;
+        currentHero->m_army.getCreatureTotal(CREATURE_NOMAD) > 0;
 
     for (long direction = 0; direction < 8; direction++) {
         pathCell candidate = *source;
-        candidate.point.x = source->point.x + gStepDeltaX[4 * direction];
-        candidate.point.y = source->point.y + gStepDeltaY[4 * direction];
-        if (!candidate.point.is_valid())
+        candidate.m_point.m_x = source->m_point.m_x + g_stepDeltaX[4 * direction];
+        candidate.m_point.m_y = source->m_point.m_y + g_stepDeltaY[4 * direction];
+        if (!candidate.m_point.isValid())
             continue;
-        if (adjacent_monster) {
-            if (candidate.point.x != monster_location.x)
+        if (adjacentMonster) {
+            if (candidate.m_point.m_x != monsterLocation.m_x)
                 continue;
-            if (candidate.point.y != monster_location.y)
+            if (candidate.m_point.m_y != monsterLocation.m_y)
                 continue;
-            if (candidate.point.z != monster_location.z)
+            if (candidate.m_point.m_z != monsterLocation.m_z)
                 continue;
         }
 
-        NewmapCell* destCell = gpAdvManager->GetCell(candidate.point);
-        long destGround = destCell->GroundSet;
+        NewmapCell* destCell = g_advManager->getCell(candidate.m_point);
+        long destGround = destCell->m_groundSet;
         unsigned char blocked = 0;
         unsigned char impassable = 0;
-        unsigned char needs_boat = 0;
-        candidate.last_can_stop = 1;
-        if (source->dimension_door && source->last_can_stop)
-            candidate.dimension_door = 0;
+        unsigned char needsBoat = 0;
+        candidate.m_canStop = 1;
+        if (source->m_dimensionDoor && source->m_canStop)
+            candidate.m_dimensionDoor = 0;
 
         long cost;
         if (destGround == eTerrainRock) {
             cost = 0;
             impassable = 1;
-            candidate.last_can_stop = 0;
-            candidate.adjusted_cost += 100;
-        } else if (candidate.dimension_door) {
+            candidate.m_canStop = 0;
+            candidate.m_adjustedCost += 100;
+        } else if (candidate.m_dimensionDoor) {
             cost = 0;
-            candidate.adjusted_cost += 100;
-        } else if (source->in_boat) {
-            cost = CalcTerrainCost(srcCell, direction, turn_mobility,
-                                   iPathfinding, 0, -1, -1, -1, hasNomad);
+            candidate.m_adjustedCost += 100;
+        } else if (source->m_inBoat) {
+            cost = calcTerrainCost(srcCell, direction, turnMobility,
+                                   pathfinding, 0, -1, -1, -1, hasNomad);
         } else {
-            cost = CalcTerrainCost(srcCell, direction, turn_mobility,
-                                   iPathfinding, destCell->RoadSet,
-                                   candidate.flying ? flight_level : -1,
-                                   candidate.water_walking ? water_walk_level
+            cost = calcTerrainCost(srcCell, direction, turnMobility,
+                                   pathfinding, destCell->m_roadSet,
+                                   candidate.m_flying ? m_flightLevel : -1,
+                                   candidate.m_waterWalking ? m_waterWalkLevel
                                                            : -1,
-                                   native_terrain, hasNomad);
+                                   nativeTerrain, hasNomad);
         }
 
-        if (cost <= source->move_left) {
-            candidate.move_left = source->move_left - cost;
+        if (cost <= source->m_moveLeft) {
+            candidate.m_moveLeft = source->m_moveLeft - cost;
         } else {
-            if (!source->last_can_stop)
+            if (!source->m_canStop)
                 continue;
-            candidate.move_left = source->in_boat ? sea_movement
-                                                  : land_movement;
-            if (candidate.flying || candidate.water_walking)
-                cost = CalcTerrainCost(srcCell, direction, turn_mobility,
-                                       iPathfinding, destCell->RoadSet,
-                                       -1, -1, native_terrain, hasNomad);
-            candidate.flying = 0;
-            candidate.water_walking = 0;
+            candidate.m_moveLeft = source->m_inBoat ? m_seaMovement
+                                                  : m_landMovement;
+            if (candidate.m_flying || candidate.m_waterWalking)
+                cost = calcTerrainCost(srcCell, direction, turnMobility,
+                                       pathfinding, destCell->m_roadSet,
+                                       -1, -1, nativeTerrain, hasNomad);
+            candidate.m_flying = 0;
+            candidate.m_waterWalking = 0;
         }
 
-        if (destCell->flags_00_11 & 0x100) {
+        if (destCell->m_flags0011 & 0x100) {
             blocked = 1;
-            candidate.last_can_stop = 0;
+            candidate.m_canStop = 0;
         }
 
-        if (!(GetMapExtra(candidate.point.x, candidate.point.y,
-                          candidate.point.z) & gMapVisibilityBit)
-                && search_type != const_AI_enemy_search
-                && (gpCurrentPlayer->IsHuman()
-                    || (!(GetMapExtra(source->point) & gMapVisibilityBit)
-                        && gpCurrentPlayer->numTowns > 0))) {
+        if (!(getMapExtra(candidate.m_point.m_x, candidate.m_point.m_y,
+                          candidate.m_point.m_z) & g_mapVisibilityBit)
+                && searchType != const_AI_enemy_search
+                && (g_currentPlayer->isHuman()
+                    || (!(getMapExtra(source->m_point) & g_mapVisibilityBit)
+                        && g_currentPlayer->m_numTowns > 0))) {
             blocked = 1;
-            candidate.last_can_stop = 0;
+            candidate.m_canStop = 0;
         }
 
-        if (destCell->type == SANCTUARY && destCell->is_trigger
-                && search_type == const_AI_enemy_search) {
+        if (destCell->m_type == SANCTUARY && destCell->m_isTrigger
+                && searchType == const_AI_enemy_search) {
             blocked = 1;
-            candidate.last_can_stop = 0;
+            candidate.m_canStop = 0;
         }
 
-        if (((1 << direction) & 0x83) && srcCell->cell_is_trigger()
-                && gAdventureObjectTraits[srcCell->get_map_object()][1] == 0)
+        if (((1 << direction) & 0x83) && srcCell->cellIsTrigger()
+                && g_adventureObjectTraits[srcCell->getMapObject()][1] == 0)
             blocked = 1;
-        if (((1 << direction) & 0x38) && destCell->cell_is_trigger()
-                && gAdventureObjectTraits[destCell->get_map_object()][1] == 0)
+        if (((1 << direction) & 0x38) && destCell->cellIsTrigger()
+                && g_adventureObjectTraits[destCell->getMapObject()][1] == 0)
             continue;
 
         if (destGround == eTerrainWater) {
-            if (source->in_boat) {
-                if (destCell->type == BOAT && destCell->is_trigger) {
+            if (source->m_inBoat) {
+                if (destCell->m_type == BOAT && destCell->m_isTrigger) {
                     impassable = 1;
-                    candidate.last_can_stop = 0;
+                    candidate.m_canStop = 0;
                 }
                 if (srcGround == eTerrainWater
-                        && gStepDeltaX[4 * direction] != 0
-                        && gStepDeltaY[4 * direction] != 0) {
+                        && g_stepDeltaX[4 * direction] != 0
+                        && g_stepDeltaY[4 * direction] != 0) {
                     // READ-BACK, not a re-read of `source`. Retail extracts
                     // both coordinates from the dword it has just stored into
                     // the copy (`mov ebx,eax / shl ebx,6` on across_x, `mov
                     // eax,[ebp-0x2e]` on across_y), where reading
                     // `source->point.x` again gives a 16-bit `mov bx,ax /
                     // shl bx,6` off the member's own word container.
-                    type_point across_x = source->point;
-                    type_point across_y = source->point;
-                    across_x.x = across_x.x + gStepDeltaX[4 * direction];
-                    across_y.y = across_y.y + gStepDeltaY[4 * direction];
-                    if (gpGame->worldMap.cell(across_x.x, across_x.y,
-                                              across_x.z)->GroundSet
+                    type_point acrossX = source->m_point;
+                    type_point acrossY = source->m_point;
+                    acrossX.m_x = acrossX.m_x + g_stepDeltaX[4 * direction];
+                    acrossY.m_y = acrossY.m_y + g_stepDeltaY[4 * direction];
+                    if (g_game->m_worldMap.cell(acrossX.m_x, acrossX.m_y,
+                                              acrossX.m_z)->m_groundSet
                                 != eTerrainWater
-                            || gpGame->worldMap.cell(across_y.x, across_y.y,
-                                                     across_y.z)->GroundSet
+                            || g_game->m_worldMap.cell(acrossY.m_x, acrossY.m_y,
+                                                     acrossY.m_z)->m_groundSet
                                 != eTerrainWater)
                         impassable = 1;
                 }
             } else {
-                if (!(destCell->is_trigger
-                        && (destCell->type == HERO || destCell->type == BOAT
-                            || destCell->type == SHIPWRECK))) {
-                    if (destCell->is_trigger)
+                if (!(destCell->m_isTrigger
+                        && (destCell->m_type == HERO || destCell->m_type == BOAT
+                            || destCell->m_type == SHIPWRECK))) {
+                    if (destCell->m_isTrigger)
                         blocked = 1;
                     else
-                        needs_boat = 1;
-                    candidate.last_can_stop = 0;
+                        needsBoat = 1;
+                    candidate.m_canStop = 0;
                 }
-                if (source->dimension_door) {
+                if (source->m_dimensionDoor) {
                     impassable = 1;
-                    candidate.last_can_stop = 0;
+                    candidate.m_canStop = 0;
                 }
             }
-        } else if (source->in_boat) {
-            if (source->dimension_door) {
+        } else if (source->m_inBoat) {
+            if (source->m_dimensionDoor) {
                 impassable = 1;
-                candidate.last_can_stop = 0;
+                candidate.m_canStop = 0;
             }
-            if (destCell->type == ANCHOR_POINT) {
-                if (candidate.last_can_stop
-                        && search_type >= const_AI_search) {
-                    if (source->move_left < cost)
-                        cost = source->move_left + sea_movement;
+            if (destCell->m_type == ANCHOR_POINT) {
+                if (candidate.m_canStop
+                        && searchType >= const_AI_search) {
+                    if (source->m_moveLeft < cost)
+                        cost = source->m_moveLeft + m_seaMovement;
                     else
-                        cost = source->move_left;
-                    candidate.move_left = land_movement;
-                    candidate.in_boat = 0;
-                    candidate.flying = 0;
-                    candidate.water_walking = 0;
+                        cost = source->m_moveLeft;
+                    candidate.m_moveLeft = m_landMovement;
+                    candidate.m_inBoat = 0;
+                    candidate.m_flying = 0;
+                    candidate.m_waterWalking = 0;
                 }
             } else {
                 impassable = 1;
-                candidate.last_can_stop = 0;
+                candidate.m_canStop = 0;
             }
         }
 
-        if (destCell->type == HERO && destCell->is_trigger) {
-            hero* other = gpGame->GetHero(destCell->extraInfo);
-            if (other->was_trigger && other->obscuredType == SANCTUARY
-                    && other->owner != current_hero->owner) {
+        if (destCell->m_type == HERO && destCell->m_isTrigger) {
+            hero* other = g_game->getHero(destCell->m_extraInfo);
+            if (other->m_wasTrigger && other->m_obscuredType == SANCTUARY
+                    && other->m_owner != currentHero->m_owner) {
                 blocked = 1;
-                candidate.last_can_stop = 0;
+                candidate.m_canStop = 0;
             }
         }
 
-        if (destCell->is_trigger && search_type >= const_AI_search
-                && (destCell->type == HERO || destCell->type == GARRISON
-                    || destCell->type == MONSTER)
-                && !enter_hostile_trigger(current_hero, &candidate)) {
+        if (destCell->m_isTrigger && searchType >= const_AI_search
+                && (destCell->m_type == HERO || destCell->m_type == GARRISON
+                    || destCell->m_type == MONSTER)
+                && !enterHostileTrigger(currentHero, &candidate)) {
             blocked = 1;
-            candidate.last_can_stop = 0;
+            candidate.m_canStop = 0;
         } else if (!blocked && !impassable
-                   && search_type >= const_AI_search
-                   && check_adjacent_monster(current_hero, &candidate,
-                                             search_type)) {
+                   && searchType >= const_AI_search
+                   && checkAdjacentMonster(currentHero, &candidate,
+                                             searchType)) {
             blocked = 1;
-            candidate.last_can_stop = 0;
+            candidate.m_canStop = 0;
         }
 
-        if (impassable && !candidate.dimension_door) {
-            if (!can_cast_teleport)
+        if (impassable && !candidate.m_dimensionDoor) {
+            if (!m_canCastTeleport)
                 continue;
-            if (!source->last_can_stop)
+            if (!source->m_canStop)
                 continue;
-            if (source->magic_forbidden)
+            if (source->m_magicForbidden)
                 continue;
-            candidate.dimension_door = 1;
-            candidate.adjusted_cost += 500;
+            candidate.m_dimensionDoor = 1;
+            candidate.m_adjustedCost += 500;
             // Spell 8 is Dimension Door - the id is spelled as a literal
             // for the same reason GetTerrainCost spells artifacts 0x48 and
             // 0x5a as literals: naming it means a new enumerator in
             // armygrp.h, whose include closure is measured and live.
-            cost = current_hero->get_spell_level(
-                       8, current_hero->get_special_terrain())
+            cost = currentHero->getSpellLevel(
+                       8, currentHero->getSpecialTerrain())
                        == eMasteryExpert ? 200 : 300;
         }
 
-        if (blocked && !candidate.flying && !candidate.dimension_door) {
-            if (!source->last_can_stop)
+        if (blocked && !candidate.m_flying && !candidate.m_dimensionDoor) {
+            if (!source->m_canStop)
                 continue;
-            if (source->magic_forbidden)
+            if (source->m_magicForbidden)
                 continue;
-            if (!can_cast_flight && !can_cast_teleport)
+            if (!m_canCastFlight && !m_canCastTeleport)
                 continue;
-            candidate.adjusted_cost += 500;
-            if (can_cast_teleport) {
-                candidate.dimension_door = 1;
-                cost = current_hero->get_spell_level(
-                           8, current_hero->get_special_terrain()) == eMasteryExpert ? 200
+            candidate.m_adjustedCost += 500;
+            if (m_canCastTeleport) {
+                candidate.m_dimensionDoor = 1;
+                cost = currentHero->getSpellLevel(
+                           8, currentHero->getSpecialTerrain()) == eMasteryExpert ? 200
                                                                        : 300;
             } else {
-                if (source->in_boat)
+                if (source->m_inBoat)
                     continue;
-                candidate.flying = 1;
-                cost = CalcTerrainCost(srcCell, direction, turn_mobility,
-                                       iPathfinding, destCell->RoadSet,
-                                       flight_level,
-                                       candidate.water_walking
-                                           ? water_walk_level : -1,
-                                       native_terrain, hasNomad);
-                candidate.move_left = land_movement - cost;
+                candidate.m_flying = 1;
+                cost = calcTerrainCost(srcCell, direction, turnMobility,
+                                       pathfinding, destCell->m_roadSet,
+                                       m_flightLevel,
+                                       candidate.m_waterWalking
+                                           ? m_waterWalkLevel : -1,
+                                       nativeTerrain, hasNomad);
+                candidate.m_moveLeft = m_landMovement - cost;
             }
         }
 
-        if (needs_boat && !candidate.flying && !candidate.water_walking
-                && !candidate.dimension_door) {
-            if (!source->last_can_stop)
+        if (needsBoat && !candidate.m_flying && !candidate.m_waterWalking
+                && !candidate.m_dimensionDoor) {
+            if (!source->m_canStop)
                 continue;
-            if (!destCell->is_trigger
-                    && ((can_summon_boat && !source->magic_forbidden)
-                        || (destCell->flags_00_11 & 0x800))) {
-                pathCell boat_cell = candidate;
-                boat_cell.in_boat = 1;
-                boat_cell.last_can_stop = 1;
-                long boat_cost = CalcTerrainCost(srcCell, direction,
-                                                 turn_mobility, iPathfinding,
+            if (!destCell->m_isTrigger
+                    && ((m_canSummonBoat && !source->m_magicForbidden)
+                        || (destCell->m_flags0011 & 0x800))) {
+                pathCell boatCell = candidate;
+                boatCell.m_inBoat = 1;
+                boatCell.m_canStop = 1;
+                long boatCost = calcTerrainCost(srcCell, direction,
+                                                 turnMobility, pathfinding,
                                                  0, -1, -1, -1, hasNomad);
-                boat_cell.adjusted_cost += 500;
-                if (!(can_summon_boat && !source->magic_forbidden))
-                    boat_cell.barrier_value +=
-                        AI_get_ship_cost(current_hero, boat_cell.point);
-                if (pay_transition_costs) {
-                    if (source->move_left < boat_cost)
-                        boat_cost = source->move_left + land_movement;
+                boatCell.m_adjustedCost += 500;
+                if (!(m_canSummonBoat && !source->m_magicForbidden))
+                    boatCell.m_barrierValue +=
+                        aiGetShipCost(currentHero, boatCell.m_point);
+                if (m_payTransitionCosts) {
+                    if (source->m_moveLeft < boatCost)
+                        boatCost = source->m_moveLeft + m_landMovement;
                     else
-                        boat_cost = source->move_left;
-                    boat_cell.move_left = sea_movement;
-                    boat_cell.flying = 0;
-                    boat_cell.water_walking = 0;
+                        boatCost = source->m_moveLeft;
+                    boatCell.m_moveLeft = m_seaMovement;
+                    boatCell.m_flying = 0;
+                    boatCell.m_waterWalking = 0;
                 }
-                PushPoint(source, &boat_cell, direction, boat_cost,
-                          maxMobility, boat_cell.barrier_value,
-                          boat_cell.monster, 0);
+                pushPoint(source, &boatCell, direction, boatCost,
+                          maxMobility, boatCell.m_barrierValue,
+                          boatCell.m_monster, 0);
             }
-            if (source->magic_forbidden)
+            if (source->m_magicForbidden)
                 continue;
-            if (!can_cast_teleport
-                    && !(can_cast_flight && !source->in_boat)
-                    && !(can_cast_water_walk && !source->in_boat))
+            if (!m_canCastTeleport
+                    && !(m_canCastFlight && !source->m_inBoat)
+                    && !(m_canCastWaterWalk && !source->m_inBoat))
                 continue;
-            if (can_cast_teleport) {
-                candidate.adjusted_cost += 500;
-                candidate.dimension_door = 1;
-                cost = current_hero->get_spell_level(
-                           8, current_hero->get_special_terrain()) == eMasteryExpert ? 200
+            if (m_canCastTeleport) {
+                candidate.m_adjustedCost += 500;
+                candidate.m_dimensionDoor = 1;
+                cost = currentHero->getSpellLevel(
+                           8, currentHero->getSpecialTerrain()) == eMasteryExpert ? 200
                                                                        : 300;
-            } else if (flight_level <= water_walk_level) {
-                if (!current_hero->IsWieldingArtifact(0x5a))
-                    candidate.adjusted_cost += 500;
-                candidate.water_walking = 1;
-                cost = CalcTerrainCost(srcCell, direction, turn_mobility,
-                                       iPathfinding, destCell->RoadSet,
-                                       candidate.flying ? flight_level : -1,
-                                       water_walk_level, native_terrain,
+            } else if (m_flightLevel <= m_waterWalkLevel) {
+                if (!currentHero->isWieldingArtifact(0x5a))
+                    candidate.m_adjustedCost += 500;
+                candidate.m_waterWalking = 1;
+                cost = calcTerrainCost(srcCell, direction, turnMobility,
+                                       pathfinding, destCell->m_roadSet,
+                                       candidate.m_flying ? m_flightLevel : -1,
+                                       m_waterWalkLevel, nativeTerrain,
                                        hasNomad);
-                candidate.move_left = land_movement - cost;
+                candidate.m_moveLeft = m_landMovement - cost;
             } else {
-                if (!current_hero->IsWieldingArtifact(0x48))
-                    candidate.adjusted_cost += 500;
-                candidate.flying = 1;
-                cost = CalcTerrainCost(srcCell, direction, turn_mobility,
-                                       iPathfinding, destCell->RoadSet,
-                                       flight_level,
-                                       candidate.water_walking
-                                           ? water_walk_level : -1,
-                                       native_terrain, hasNomad);
-                candidate.move_left = land_movement - cost;
+                if (!currentHero->isWieldingArtifact(0x48))
+                    candidate.m_adjustedCost += 500;
+                candidate.m_flying = 1;
+                cost = calcTerrainCost(srcCell, direction, turnMobility,
+                                       pathfinding, destCell->m_roadSet,
+                                       m_flightLevel,
+                                       candidate.m_waterWalking
+                                           ? m_waterWalkLevel : -1,
+                                       nativeTerrain, hasNomad);
+                candidate.m_moveLeft = m_landMovement - cost;
             }
         }
 
-        if (source->last_can_stop || !destCell->is_trigger
-                || (gAdventureObjectTraits[destCell->type][0] == 0
-                    && destCell->type != TOWN))
-            PushPoint(source, &candidate, direction, cost, maxMobility,
-                      candidate.barrier_value, candidate.monster,
-                      destCell->is_trigger);
-        if ((candidate.flying || candidate.dimension_door)
-                && destCell->is_trigger && candidate.last_can_stop) {
-            candidate.last_can_stop = 0;
-            PushPoint(source, &candidate, direction, cost, maxMobility,
-                      candidate.barrier_value, candidate.monster, 0);
+        if (source->m_canStop || !destCell->m_isTrigger
+                || (g_adventureObjectTraits[destCell->m_type][0] == 0
+                    && destCell->m_type != TOWN))
+            pushPoint(source, &candidate, direction, cost, maxMobility,
+                      candidate.m_barrierValue, candidate.m_monster,
+                      destCell->m_isTrigger);
+        if ((candidate.m_flying || candidate.m_dimensionDoor)
+                && destCell->m_isTrigger && candidate.m_canStop) {
+            candidate.m_canStop = 0;
+            pushPoint(source, &candidate, direction, cost, maxMobility,
+                      candidate.m_barrierValue, candidate.m_monster, 0);
         }
     }
 }
@@ -1239,75 +1264,77 @@ unsigned char searchArray::valid_move_adjacent(const army* current_army, const a
 // the copy, no change); splitting the two creatureId bit tests into
 // nested ifs to stop the dword CSE retail does not perform (no
 // change); dropping the const_cast on GetSpeed (no change).
+// Before normalization (locals): current_group, in_placement_phase, base_speed.
 VA(0x004b2da0, 0x24B)  // anchor-global, dc 0xa03fc
-void searchArray::SeedCombatPosition(const army* thisArmy, long current_group, long limit, unsigned char in_placement_phase, long base_speed)
+void searchArray::seedCombatPosition(const army* thisArmy, long currentGroup, long limit, unsigned char inPlacementPhase, long baseSpeed)
 {
-    if (cellData == 0)
-        Init();
-    if (in_placement_phase) {
-        base_speed = 1000;
+    if (m_cellData == 0)
+        init();
+    if (inPlacementPhase) {
+        baseSpeed = 1000;
         limit = 1000;
     } else {
-        if (base_speed < 0)
-            base_speed = thisArmy->GetSpeed();
-        if (thisArmy->boundFlag)
+        if (baseSpeed < 0)
+            baseSpeed = thisArmy->getSpeed();
+        if (thisArmy->m_spellInfluence[72])
             limit = 0;
     }
-    FindCombatPath(thisArmy, current_group, -1, in_placement_phase, limit,
-                   base_speed);
+    findCombatPath(thisArmy, currentGroup, -1, inPlacementPhase, limit,
+                   baseSpeed);
 
     for (long i = 0; i < COMBAT_GRID_CELLS; i++) {
-        const pathCell* cell = cellData == 0 ? 0 : &cellData[i];
-        if (cell->visited && static_cast<long>(cell->cost) <= base_speed
-                && cell->flight_cost == 0
-                && (!in_placement_phase
-                    || !gpCombatManager->is_outside_placement_boundry(
-                            current_group, i))) {
-            gpCombatManager->cells[i].field_4a = 1;
-            if ((thisArmy->sMonInfo.attributes & 1)
+        const pathCell* cell = m_cellData == 0 ? 0 : &m_cellData[i];
+        if (cell->m_visited && static_cast<long>(cell->m_cost) <= baseSpeed
+                && cell->m_flightCost == 0
+                && (!inPlacementPhase
+                    || !g_combatManager->isOutsidePlacementBoundry(
+                            currentGroup, i))) {
+            g_combatManager->m_cells[i].m_validMove = 1;
+            if ((thisArmy->m_monInfo.m_attributes & 1)
                     && (static_cast<unsigned char>(static_cast<unsigned>(
-                            thisArmy->sMonInfo.attributes) >> 6) & 1) == 0) {
-                long second = i + (thisArmy->facing != 0 ? 1 : -1);
+                            thisArmy->m_monInfo.m_attributes) >> 6) & 1) == 0) {
+                long second = i + (thisArmy->m_facing != 0 ? 1 : -1);
                 if (second < 0 || second >= COMBAT_GRID_CELLS
                         || (second % COMBAT_GRID_ROW_STRIDE != 0
                             && second % COMBAT_GRID_ROW_STRIDE
                                 != COMBAT_GRID_LAST_COLUMN)) {
-                    if (in_placement_phase
-                            && gpCombatManager->is_outside_placement_boundry(
-                                    current_group, second))
-                        gpCombatManager->cells[i].field_4a = 0;
+                    if (inPlacementPhase
+                            && g_combatManager->isOutsidePlacementBoundry(
+                                    currentGroup, second))
+                        g_combatManager->m_cells[i].m_validMove = 0;
                     else
-                        gpCombatManager->cells[second].field_4b = 1;
+                        g_combatManager->m_cells[second].m_frontMove = 1;
                 }
             }
         }
     }
 
-    if (thisArmy->can_shoot(0) && !in_placement_phase
-            && thisArmy->creatureType != CREATURE_CATAPULT) {
-        long other = 1 - current_group;
-        const army* enemy = gpCombatManager->armies[other];
-        for (long j = 0; j < gpCombatManager->numArmies[other]; j++, enemy++) {
+    if (thisArmy->canShoot(0) && !inPlacementPhase
+            && thisArmy->m_creatureType != CREATURE_CATAPULT) {
+        long other = 1 - currentGroup;
+        const army* enemy = g_combatManager->m_armies[other];
+        for (long j = 0; j < g_combatManager->m_numArmies[other]; j++, enemy++) {
             if ((static_cast<unsigned char>(static_cast<unsigned>(
-                        enemy->sMonInfo.attributes) >> 21) & 1) == 0
-                    && enemy->creatureType != CREATURE_ARROW_TOWER) {
-                gpCombatManager->cells[enemy->gridIndex].field_4a = 1;
-                if (enemy->sMonInfo.attributes & 1)
-                    gpCombatManager->cells[enemy->get_second_grid_index()]
-                            .field_4a = 1;
+                        enemy->m_monInfo.m_attributes) >> 21) & 1) == 0
+                    && enemy->m_creatureType != CREATURE_ARROW_TOWER) {
+                g_combatManager->m_cells[enemy->m_gridIndex].m_validMove = 1;
+                if (enemy->m_monInfo.m_attributes & 1)
+                    g_combatManager->m_cells[enemy->getSecondGridIndex()]
+                            .m_validMove = 1;
             }
         }
     }
 }
 
 // E:\gamedcs\findpath.cpp:1172
-inline void searchArray::mark_enemy(long hex, long cost)
+inline void searchArray::markEnemy(long hex, long cost)
 {
-    hexcell* combat_cell = &gpCombatManager->cells[hex];
+    // Before normalization (locals): combat_cell.
+    hexcell* combatCell = &g_combatManager->m_cells[hex];
     pathCell* cell = getCellData(hex);
-    if (!combat_cell->field_4a || cell->cost > cost) {
-        combat_cell->field_4a = 1;
-        cell->cost = static_cast<unsigned short>(cost);
+    if (!combatCell->m_validMove || cell->m_cost > cost) {
+        combatCell->m_validMove = 1;
+        cell->m_cost = static_cast<unsigned short>(cost);
     }
 }
 
@@ -1317,65 +1344,67 @@ inline void searchArray::mark_enemy(long hex, long cost)
 // 0; jne; call searchArray::Init` - the same lazily-allocate-cellData
 // guard SeedCombatPosition (0x4b2da0) already carries, and a direct
 // call to a claimed findpath callee.
+// Before normalization (locals): current_army, current_group, other_group, enemy_group,
+// enemy_index, adjacent_cell.
 VA(0x004b2ff0, 0x298)  // anchor-callee, dc 0xa0630
-void searchArray::mark_teleport(const army* current_army, long current_group)
+void searchArray::markTeleport(const army* currentArmy, long currentGroup)
 {
-    if (cellData == 0)
-        Init();
+    if (m_cellData == 0)
+        init();
 
     for (long hex = 0; hex < COMBAT_GRID_CELLS; ++hex) {
-        pathCell* cell = cellData == 0 ? 0 : &cellData[hex];
-        cell->point.x = static_cast<short>(hex);
-        if (!gpCombatManager->InInvisibleColumn(hex)
-                && current_army->CanFit(hex, 0, 0)
-                && gpCombatManager->is_valid_teleport(current_army, hex)) {
-            gpCombatManager->cells[hex].field_4a = 1;
-            cell->flight_cost = 0;
-            cell->cost = 1;
-            cell->visited = 1;
+        pathCell* cell = m_cellData == 0 ? 0 : &m_cellData[hex];
+        cell->m_point.m_x = static_cast<short>(hex);
+        if (!g_combatManager->inInvisibleColumn(hex)
+                && currentArmy->canFit(hex, 0, 0)
+                && g_combatManager->isValidTeleport(currentArmy, hex)) {
+            g_combatManager->m_cells[hex].m_validMove = 1;
+            cell->m_flightCost = 0;
+            cell->m_cost = 1;
+            cell->m_visited = 1;
         } else {
-            gpCombatManager->cells[hex].field_4a = 0;
-            cell->visited = 0;
+            g_combatManager->m_cells[hex].m_validMove = 0;
+            cell->m_visited = 0;
         }
     }
 
-    long other_group = 1 - current_group;
-    for (long enemy_group = 0; enemy_group < 2; ++enemy_group) {
-        if (enemy_group == current_group)
+    long otherGroup = 1 - currentGroup;
+    for (long enemyGroup = 0; enemyGroup < 2; ++enemyGroup) {
+        if (enemyGroup == currentGroup)
             continue;
-        const army* enemy = &gpCombatManager->armies[enemy_group][0];
-        for (long enemy_index = 0;
-                enemy_index < gpCombatManager->numArmies[other_group];
-                ++enemy_index, ++enemy) {
-            if (enemy == current_army
+        const army* enemy = &g_combatManager->m_armies[enemyGroup][0];
+        for (long enemyIndex = 0;
+                enemyIndex < g_combatManager->m_numArmies[otherGroup];
+                ++enemyIndex, ++enemy) {
+            if (enemy == currentArmy
                     || (static_cast<unsigned char>(static_cast<unsigned>(
-                            enemy->sMonInfo.attributes) >> 21) & 1)
-                    || enemy->creatureType == CREATURE_ARROW_TOWER)
+                            enemy->m_monInfo.m_attributes) >> 21) & 1)
+                    || enemy->m_creatureType == CREATURE_ARROW_TOWER)
                 continue;
 
             long direction =
                 (static_cast<unsigned char>(static_cast<unsigned>(
-                    enemy->sMonInfo.attributes)) & 1) ? 8 : 6;
+                    enemy->m_monInfo.m_attributes)) & 1) ? 8 : 6;
             while (direction-- > 0) {
-                long adjacent = enemy->get_adjacent_hex(enemy->gridIndex,
+                long adjacent = enemy->getAdjacentHex(enemy->m_gridIndex,
                                                         direction);
-                if (gpCombatManager->ValidHex(adjacent)) {
-                    pathCell* adjacent_cell =
-                        cellData == 0 ? 0 : &cellData[adjacent];
-                    if (adjacent_cell->visited)
+                if (g_combatManager->validHex(adjacent)) {
+                    pathCell* adjacentCell =
+                        m_cellData == 0 ? 0 : &m_cellData[adjacent];
+                    if (adjacentCell->m_visited)
                         break;
                 }
             }
             if (direction < 0)
                 continue;
 
-            mark_enemy(enemy->gridIndex, 1);
+            markEnemy(enemy->m_gridIndex, 1);
 
             // Retail repeats the same anchor-hex mark for a wide stack;
             // preserve the original behavior rather than "fixing" it.
             if (static_cast<unsigned char>(static_cast<unsigned>(
-                    enemy->sMonInfo.attributes)) & 1)
-                mark_enemy(enemy->gridIndex, 1);
+                    enemy->m_monInfo.m_attributes)) & 1)
+                markEnemy(enemy->m_gridIndex, 1);
         }
     }
 }
@@ -1403,50 +1432,53 @@ void searchArray::mark_teleport(const army* current_army, long current_group)
 // The rows are the two concentric arcs of a Fortress-style moat: the
 // second table is the first shifted one hex left on every row.
 // Names are provisional - no roster reaches either array.
-DATA(0x0063bce8) const unsigned char gMoatHexes[11] = {
+// Before normalization: gMoatHexes.
+DATA(0x0063bce8) const unsigned char g_moatHexes[11] = {
     11, 28, 44, 61, 77, 95, 111, 129, 146, 164, 181
 };
-DATA(0x0063bcf4) const unsigned char gInnerMoatHexes[11] = {
+// Before normalization: gInnerMoatHexes.
+DATA(0x0063bcf4) const unsigned char g_innerMoatHexes[11] = {
     10, 27, 43, 60, 76, 94, 110, 128, 145, 163, 180
 };
 
 // E:\gamedcs\findpath.cpp:1080
+// Before normalization (locals): current_army.
 VA(0x004b3290, 0x16F)  // anchor-callee, dc 0xa0804
-void searchArray::set_moat(const army* current_army)
+void searchArray::setMoat(const army* currentArmy)
 {
-    memset(bIsMoatSlowed, 0, 187);
-    unsigned char flying = static_cast<unsigned char>(static_cast<unsigned>(current_army->sMonInfo.attributes) >> 1);
+    memset(m_isMoatSlowed, 0, 187);
+    unsigned char flying = static_cast<unsigned char>(static_cast<unsigned>(currentArmy->m_monInfo.m_attributes) >> 1);
     if (flying & 1)
         return;
-    if (current_army->creatureType == CREATURE_ARCH_DEVIL)
+    if (currentArmy->m_creatureType == CREATURE_ARCH_DEVIL)
         return;
-    if (current_army->creatureType == CREATURE_DEVIL)
+    if (currentArmy->m_creatureType == CREATURE_DEVIL)
         return;
-    if (gpCombatManager->field_53a8) {
+    if (g_combatManager->m_moatOn) {
         { for (int hex = 0; hex < 11; ++hex) {
-            bIsMoatSlowed[gMoatHexes[hex]] = 1;
-            if (gpCombatManager->field_53a9)
-                bIsMoatSlowed[gInnerMoatHexes[hex]] = 1;
+            m_isMoatSlowed[g_moatHexes[hex]] = 1;
+            if (g_combatManager->m_moatIsWide)
+                m_isMoatSlowed[g_innerMoatHexes[hex]] = 1;
         } }
-        if (gpCombatManager->drawbridgeState != DRAWBRIDGE_UP
-                || (current_army->hypnotizeFlag ? 1 - current_army->combatSide
-                                                : current_army->combatSide) == 1) {
-            bIsMoatSlowed[gMoatHexes[5]] = 0;
-            if (gpCombatManager->field_53a9)
-                bIsMoatSlowed[gInnerMoatHexes[5]] = 0;
+        if (g_combatManager->m_drawbridgeState != DRAWBRIDGE_UP
+                || (currentArmy->m_spellInfluence[60] ? 1 - currentArmy->m_combatSide
+                                                : currentArmy->m_combatSide) == 1) {
+            m_isMoatSlowed[g_moatHexes[5]] = 0;
+            if (g_combatManager->m_moatIsWide)
+                m_isMoatSlowed[g_innerMoatHexes[5]] = 0;
         }
     }
     { for (int cell = 0; cell < 187; ++cell) {
-        if (gpCombatManager->cells[cell].field_10 & 4) {
+        if (g_combatManager->m_cells[cell].m_attributes & 4) {
             const combatManager::TObstacle* obstacle =
-                &gpCombatManager->obstacles.begin[gpCombatManager->cells[cell].field_14];
-            if (current_army->combatSide == obstacle->owner || obstacle->is_visible)
-                bIsMoatSlowed[cell] = 1;
+                &g_combatManager->m_obstacles.m_begin[g_combatManager->m_cells[cell].m_obstacleIndex];
+            if (currentArmy->m_combatSide == obstacle->m_owner || obstacle->m_isVisible)
+                m_isMoatSlowed[cell] = 1;
         }
     } }
-    bIsMoatSlowed[current_army->gridIndex] = 0;
-    if (current_army->sMonInfo.attributes & 1)
-        bIsMoatSlowed[current_army->get_second_grid_index()] = 0;
+    m_isMoatSlowed[currentArmy->m_gridIndex] = 0;
+    if (currentArmy->m_monInfo.m_attributes & 1)
+        m_isMoatSlowed[currentArmy->getSecondGridIndex()] = 0;
 }
 
 #if 0  // @carcass
@@ -1457,14 +1489,14 @@ void searchArray::set_moat(const army* current_army)
 // case and FindCombatPath carries their bytes - 1927 retail against
 // the DC body's 1082 plus these three at 212 + 72 + 140.
 DC_ONLY(0xa0970, 0xD4)
-unsigned char searchArray::build_combat_path(const army* current_army, int start_hex, int end_hex, int destination)
+unsigned char searchArray::buildCombatPath(const army* current_army, int start_hex, int end_hex, int destination)
 {
     // @stub
 }
 
 // E:\gamedcs\findpath.cpp:1172
 DC_ONLY(0xa0a44, 0x48)
-void searchArray::mark_enemy(long hex, long cost)
+void searchArray::markEnemy(long hex, long cost)
 {
     // @stub
 }
@@ -1485,15 +1517,17 @@ void searchArray::mark_enemy(long hex, long cost)
 // A statement pin inside a shared inline is a per-CALLEE knob, so one body
 // cannot serve both; a second, file-local copy makes it per-caller.  It costs
 // no symbol (both are expanded away) and no header declarator.
-static void mark_enemy_searched(searchArray* search, long hex, long cost)
+// Before normalization (function): mark_enemy_searched.
+static void markEnemySearched(searchArray* search, long hex, long cost)
 {
-    hexcell* combat_cell = &gpCombatManager->cells[hex];
+    // Before normalization (locals): combat_cell.
+    hexcell* combatCell = &g_combatManager->m_cells[hex];
 #pragma inline_depth(0)
     pathCell* cell = search->getCellData(hex);
 #pragma inline_depth()
-    if (!combat_cell->field_4a || cell->cost > cost) {
-        combat_cell->field_4a = 1;
-        cell->cost = static_cast<unsigned short>(cost);
+    if (!combatCell->m_validMove || cell->m_cost > cost) {
+        combatCell->m_validMove = 1;
+        cell->m_cost = static_cast<unsigned short>(cost);
     }
 }
 
@@ -1504,17 +1538,18 @@ static void mark_enemy_searched(searchArray* search, long hex, long cost)
 // hex this enemy stands on IS the destination", which is why retail's
 // caller consumes the result with `sete`/`test`/`jne` rather than with a
 // plain compare.
-unsigned char searchArray::check_enemy_armies(long hex, long cost,
-                                              long current_group,
+unsigned char searchArray::checkEnemyArmies(long hex, long cost,
+                                              // Before normalization (locals): current_group.
+                                              long currentGroup,
                                               long destination)
 {
-    const army* enemy = gpCombatManager->cells[hex].get_army();
-    if (enemy == 0 || enemy->combatSide == current_group)
+    const army* enemy = g_combatManager->m_cells[hex].getArmy();
+    if (enemy == 0 || enemy->m_combatSide == currentGroup)
         return 0;
 
-    mark_enemy_searched(this, enemy->gridIndex, cost);
-    if (enemy->sMonInfo.attributes & 1)
-        mark_enemy_searched(this, enemy->get_second_grid_index(), cost);
+    markEnemySearched(this, enemy->m_gridIndex, cost);
+    if (enemy->m_monInfo.m_attributes & 1)
+        markEnemySearched(this, enemy->getSecondGridIndex(), cost);
     return hex == destination;
 }
 
@@ -1533,81 +1568,90 @@ unsigned char searchArray::check_enemy_armies(long hex, long cost,
 // 78.9419, with no other change.  File-local rather than a member because a
 // declarator in findpath.h reaches seventeen TUs, and every member it needs
 // (`result`, `getCellData`) is already public.
-static unsigned char build_combat_path(searchArray* search,
-                                      const army* current_army,
-                                      int start_hex, int end_hex,
+// Before normalization (function): build_combat_path.
+static unsigned char buildCombatPath(searchArray* search,
+                                      // Before normalization (locals): current_army, start_hex,
+                                      // end_hex, step_cell.
+                                      const army* currentArmy,
+                                      int startHex, int endHex,
                                       int destination)
 {
     if (destination < 0 || destination >= COMBAT_GRID_CELLS)
         return 0;
-    if (current_army->side == -1) {
-        if (end_hex != destination)
+    if (currentArmy->m_side == -1) {
+        if (endHex != destination)
             return 0;
-    } else if (search->result.size() == 0) {
+    } else if (search->m_result.size() == 0) {
         return 0;
     }
 
-    while (end_hex != start_hex) {
-        pathCell* step_cell = search->getCellData(end_hex);
+    while (endHex != startHex) {
+        pathCell* stepCell = search->getCellData(endHex);
         // OVER-INLINE, pinned. Retail calls vector<pathCell*>::insert
         // (0x54d120) at BOTH push sites - +0x672 and +0x734 - and the /Ob2
         // budget simply ran out between them on our side, exactly as it does
         // between PushPoint's two queue.insert arms. `end()` is hoisted out of
         // the pinned statement first because retail keeps it inline.
-        pathCell** tail = search->result.end();
+        pathCell** tail = search->m_result.end();
 #pragma inline_depth(0)
-        search->result.insert(tail, 1, step_cell);
+        search->m_result.insert(tail, 1, stepCell);
 #pragma inline_depth()
-        end_hex = current_army->GetAdjacentCellIndex(
-            end_hex, OppositeDirection(step_cell->direction));
+        endHex = currentArmy->getAdjacentCellIndex(
+            endHex, oppositeDirection(stepCell->m_direction));
     }
-    return search->result.size() > 0;
+    return search->m_result.size() > 0;
 }
 
 // FindCombatPath's speed/limit pick, lifted for the /Ob2 BUDGET probe.
-static void combat_walk_limits(const army* current_army,
-                               unsigned char in_placement_phase,
-                               long* limit, long* base_speed)
+// Before normalization (function): combat_walk_limits.
+// Before normalization (locals): current_army, in_placement_phase, base_speed.
+static void combatWalkLimits(const army* currentArmy,
+                               unsigned char inPlacementPhase,
+                               long* limit, long* baseSpeed)
 {
-    if (in_placement_phase) {
-        *base_speed = *limit = 1000;
+    if (inPlacementPhase) {
+        *baseSpeed = *limit = 1000;
     } else {
-        if (*base_speed < 0)
-            *base_speed = current_army->GetSpeed();
-        if (*base_speed == 0 || current_army->boundFlag)
+        if (*baseSpeed < 0)
+            *baseSpeed = currentArmy->getSpeed();
+        if (*baseSpeed == 0 || currentArmy->m_spellInfluence[72])
             *limit = 0;
     }
 }
 
 // FindCombatPath's siege-pressure preamble, lifted for the /Ob2 BUDGET probe.
-static unsigned char combat_siege_pressure(const army* current_army,
-                                           long current_group)
+// Before normalization (function): combat_siege_pressure.
+// Before normalization (locals): current_army, current_group, siege_pressure.
+static unsigned char combatSiegePressure(const army* currentArmy,
+                                           long currentGroup)
 {
-    unsigned char siege_pressure = 0;
-    if (gpCombatManager->defendingTown != 0
-            && gpCombatManager->is_computer_action(current_army)) {
-        if (current_group == 1
-                || gpCombatManager->drawbridgeState != DRAWBRIDGE_UP)
-            siege_pressure = 1;
-        if (current_army->get_total_hit_points(0)
-                <= gTownSiegeStrength63bd18[
-                        gpCombatManager->defendingTown->type] * 4)
-            siege_pressure = 1;
-        if (siege_pressure
-                && current_army->get_total_hit_points(0)
-                    > gTownSiegeStrength63bd18[
-                            gpCombatManager->defendingTown->type] * 40)
-            siege_pressure = 0;
+    unsigned char siegePressure = 0;
+    if (g_combatManager->m_defendingTown != 0
+            && g_combatManager->isComputerAction(currentArmy)) {
+        if (currentGroup == 1
+                || g_combatManager->m_drawbridgeState != DRAWBRIDGE_UP)
+            siegePressure = 1;
+        if (currentArmy->getTotalHitPoints(0)
+                <= g_townSiegeStrength63bd18[
+                        g_combatManager->m_defendingTown->m_type] * 4)
+            siegePressure = 1;
+        if (siegePressure
+                && currentArmy->getTotalHitPoints(0)
+                    > g_townSiegeStrength63bd18[
+                            g_combatManager->m_defendingTown->m_type] * 40)
+            siegePressure = 0;
     }
-    return siege_pressure;
+    return siegePressure;
 }
 
 // FindCombatPath's 187-cell mark wipe, lifted for the /Ob2 BUDGET probe.
-static void clear_combat_cell_marks()
+// Before normalization (function): clear_combat_cell_marks.
+static void clearCombatCellMarks()
 {
-    for (long clear_hex = 0; clear_hex < COMBAT_GRID_CELLS; clear_hex++) {
-        gpCombatManager->cells[clear_hex].field_4a = 0;
-        gpCombatManager->cells[clear_hex].field_4b = 0;
+    // Before normalization (locals): clear_hex.
+    for (long clearHex = 0; clearHex < COMBAT_GRID_CELLS; clearHex++) {
+        g_combatManager->m_cells[clearHex].m_validMove = 0;
+        g_combatManager->m_cells[clearHex].m_frontMove = 0;
     }
 }
 
@@ -1754,121 +1798,124 @@ static void clear_combat_cell_marks()
 // relocations pair by name (objdiff does not weigh a call relocation's symbol
 // name). And predict-inline's UNDER/OVER rows still pair off falsely here
 // wherever the target side names an unclaimed callee with a synth label.
+// Before normalization (locals): current_army, current_group, in_placement_phase, base_speed,
+// siege_pressure, start_hex, best_distance, best_hex, r_queue, flight_cost, side_step,
+// enemy_cost.
 VA(0x004b3400, 0x787)  // anchor-global, dc 0xa0b18
-unsigned char searchArray::FindCombatPath(const army* current_army,
-                                          long current_group, long destination,
-                                          unsigned char in_placement_phase,
-                                          long limit, long base_speed)
+unsigned char searchArray::findCombatPath(const army* currentArmy,
+                                          long currentGroup, long destination,
+                                          unsigned char inPlacementPhase,
+                                          long limit, long baseSpeed)
 {
-    if (current_army == 0)
+    if (currentArmy == 0)
         return 0;
 
-    unsigned char siege_pressure =
-        combat_siege_pressure(current_army, current_group);
+    unsigned char siegePressure =
+        combatSiegePressure(currentArmy, currentGroup);
 
-    clear_combat_cell_marks();
+    clearCombatCellMarks();
 
-    combat_walk_limits(current_army, in_placement_phase, &limit,
-                       &base_speed);
+    combatWalkLimits(currentArmy, inPlacementPhase, &limit,
+                       &baseSpeed);
 
-    long start_hex = current_army->gridIndex;
-    if (cellData == 0)
-        Init();
-    set_moat(current_army);
+    long startHex = currentArmy->m_gridIndex;
+    if (m_cellData == 0)
+        init();
+    setMoat(currentArmy);
 
-    long best_distance = 800;
-    long best_hex = -1;
-    result.clear();
+    long bestDistance = 800;
+    long bestHex = -1;
+    m_result.clear();
     // The BFS queue NAMED AS A REFERENCE: 87.6468 -> 87.9780.
-    std::vector<pathCell>& r_queue = queue;
-    r_queue.clear();
-    memset(cellData, 0, COMBAT_GRID_CELLS * sizeof(pathCell));
+    std::vector<pathCell>& rQueue = m_queue;
+    rQueue.clear();
+    memset(m_cellData, 0, COMBAT_GRID_CELLS * sizeof(pathCell));
 
-    PushCombatPoint(start_hex, current_army->facing ? 1 : 4, 0, 0, limit);
+    pushCombatPoint(startHex, currentArmy->m_facing ? 1 : 4, 0, 0, limit);
 
-    while (r_queue.size() > 0) {
-        pathCell cell = r_queue.back();
-        r_queue.pop_back();
+    while (rQueue.size() > 0) {
+        pathCell cell = rQueue.back();
+        rQueue.pop_back();
 
-        long cost = cell.cost;
+        long cost = cell.m_cost;
         if (cost > limit)
             continue;
 
         if (destination >= 0 && destination < COMBAT_GRID_CELLS
-                && cell.flight_cost == 0) {
-            long distance = combatManager::get_distance(cell.point.x, destination);
-            if (distance < best_distance) {
-                best_hex = cell.point.x;
-                best_distance = distance;
+                && cell.m_flightCost == 0) {
+            long distance = combatManager::getDistance(cell.m_point.m_x, destination);
+            if (distance < bestDistance) {
+                bestHex = cell.m_point.m_x;
+                bestDistance = distance;
                 if (distance == 0)
                     break;
             }
         }
 
-        long hex = cell.point.x;
+        long hex = cell.m_point.m_x;
         long adjacent;
         long direction;
         for (direction = 0; direction < 6; direction++) {
-            adjacent = current_army->GetAdjacentCellIndex(hex, direction);
+            adjacent = currentArmy->getAdjacentCellIndex(hex, direction);
             if (adjacent < 0 || adjacent >= COMBAT_GRID_CELLS)
                 continue;
 
-            long flight_cost = 0;
+            long flightCost = 0;
             unsigned char moat = 0;
-            if (!(current_army->sMonInfo.attributes & 1)) {
-                moat = is_moat(adjacent);
+            if (!(currentArmy->m_monInfo.m_attributes & 1)) {
+                moat = isMoat(adjacent);
             } else {
-                long side_step = current_army->facing ? 1 : -1;
-                long tail = adjacent + side_step;
-                if (is_moat(adjacent) && adjacent != hex + side_step)
+                long sideStep = currentArmy->m_facing ? 1 : -1;
+                long tail = adjacent + sideStep;
+                if (isMoat(adjacent) && adjacent != hex + sideStep)
                     moat = 1;
-                if (is_moat(tail) && tail != hex)
+                if (isMoat(tail) && tail != hex)
                     moat = 1;
             }
 
             long step = 1;
-            if (moat && base_speed > 0)
-                step = base_speed - cost % base_speed;
+            if (moat && baseSpeed > 0)
+                step = baseSpeed - cost % baseSpeed;
 
-            if (!current_army->CanFit(adjacent, 0, 0)
-                    || (siege_pressure && moat)) {
-                long enemy_cost = cost;
-                if (is_moat(hex))
-                    enemy_cost += base_speed;
+            if (!currentArmy->canFit(adjacent, 0, 0)
+                    || (siegePressure && moat)) {
+                long enemyCost = cost;
+                if (isMoat(hex))
+                    enemyCost += baseSpeed;
                 unsigned char blocked = 0;
-                if (limit <= base_speed) {
-                    if (is_moat(hex))
+                if (limit <= baseSpeed) {
+                    if (isMoat(hex))
                         blocked = 1;
-                    if ((current_army->sMonInfo.attributes & 1)
-                            && is_moat(static_cast<short>(
-                                    cell.point.x
-                                    + (current_army->facing ? 1 : -1))))
+                    if ((currentArmy->m_monInfo.m_attributes & 1)
+                            && isMoat(static_cast<short>(
+                                    cell.m_point.m_x
+                                    + (currentArmy->m_facing ? 1 : -1))))
                         blocked = 1;
                 }
-                if (enemy_cost <= limit && !blocked) {
-                    if (check_enemy_armies(adjacent, enemy_cost, current_group,
+                if (enemyCost <= limit && !blocked) {
+                    if (checkEnemyArmies(adjacent, enemyCost, currentGroup,
                                            destination))
                         goto found;
-                    if (current_army->sMonInfo.attributes & 1) {
+                    if (currentArmy->m_monInfo.m_attributes & 1) {
                         long tail = adjacent
-                            + (current_army->facing ? 1 : -1);
+                            + (currentArmy->m_facing ? 1 : -1);
                         if (tail >= 0 && tail < COMBAT_GRID_CELLS
-                                && check_enemy_armies(tail, enemy_cost,
-                                                      current_group,
+                                && checkEnemyArmies(tail, enemyCost,
+                                                      currentGroup,
                                                       destination))
                             goto found;
                     }
                 }
-                if (!(((static_cast<unsigned>(current_army->sMonInfo.attributes) >> 1)
+                if (!(((static_cast<unsigned>(currentArmy->m_monInfo.m_attributes) >> 1)
                             & 1)
-                        || current_army->creatureType == CREATURE_DEVIL
-                        || current_army->creatureType == CREATURE_ARCH_DEVIL))
+                        || currentArmy->m_creatureType == CREATURE_DEVIL
+                        || currentArmy->m_creatureType == CREATURE_ARCH_DEVIL))
                     continue;
-                flight_cost = cell.flight_cost + 1;
-                if (flight_cost >= current_army->GetSpeed())
+                flightCost = cell.m_flightCost + 1;
+                if (flightCost >= currentArmy->getSpeed())
                     continue;
             }
-            PushCombatPoint(adjacent, direction, cost + step, flight_cost,
+            pushCombatPoint(adjacent, direction, cost + step, flightCost,
                             limit);
         }
         goto searched;
@@ -1876,20 +1923,20 @@ unsigned char searchArray::FindCombatPath(const army* current_army,
     found:
         {
             pathCell* reached = getCellData(adjacent);
-            reached->point.x = static_cast<short>(adjacent);
-            reached->direction = direction;
-            reached->last_point = cell.point;
-            result.push_back(reached);
+            reached->m_point.m_x = static_cast<short>(adjacent);
+            reached->m_direction = direction;
+            reached->m_lastPoint = cell.m_point;
+            m_result.push_back(reached);
         }
 
     searched:
-        if (result.size() > 0) {
-            best_hex = result[0]->last_point.x;
+        if (m_result.size() > 0) {
+            bestHex = m_result[0]->m_lastPoint.m_x;
             break;
         }
     }
 
-    return build_combat_path(this, current_army, start_hex, best_hex,
+    return buildCombatPath(this, currentArmy, startHex, bestHex,
                              destination);
 }
 
@@ -1906,34 +1953,37 @@ unsigned char searchArray::FindCombatPath(const army* current_army,
 VA(0x004b3b90, 0x20)  // anchor-bracket, retail-only
 pathCell* searchArray::getCellData(long pos)
 {
-    if (cellData == 0)
+    if (m_cellData == 0)
         return 0;
-    return &cellData[pos];
+    return &m_cellData[pos];
 }
 
 // PushCombatPoint's second /Ob2 budget dose, and the one that closed its call
 // multiset: 78.5950 -> 90.2555.  No Dreamcast row; a codegen device.
-static void fill_combat_cell(pathCell* path_cell, int index, int direction,
-                             int cost, int flight_cost)
+// Before normalization (function): fill_combat_cell.
+// Before normalization (locals): path_cell, flight_cost.
+static void fillCombatCell(pathCell* currentPathCell, int index, int direction,
+                             int cost, int flightCost)
 {
-    path_cell->point.x = index;
-    path_cell->visited = 1;
-    path_cell->direction = direction;
-    path_cell->flight_cost = flight_cost;
-    path_cell->point.y = 0;
-    path_cell->cost = cost;
+    currentPathCell->m_point.m_x = index;
+    currentPathCell->m_visited = 1;
+    currentPathCell->m_direction = direction;
+    currentPathCell->m_flightCost = flightCost;
+    currentPathCell->m_point.m_y = 0;
+    currentPathCell->m_cost = cost;
 }
 
 // PushCombatPoint's ordering-key search, lifted for the same /Ob2 budget
 // reason find_queue_slot above is - see that note.  No Dreamcast row here
 // either; it is a codegen device.
-static int find_combat_queue_slot(searchArray* search, int cost)
+// Before normalization (function): find_combat_queue_slot.
+static int findCombatQueueSlot(searchArray* search, int cost)
 {
     int first = 0;
-    int last = search->queue.size();
+    int last = search->m_queue.size();
     int middle = last / 2;
     while (last > first) {
-        if (cost < search->queue[middle].cost)
+        if (cost < search->m_queue[middle].m_cost)
             first = middle + 1;
         else
             last = middle;
@@ -1967,32 +2017,33 @@ static int find_combat_queue_slot(searchArray* search, int cost)
 //     `_Ucopy` at +0x209.
 //
 // What is left is register and scheduling in the head, not the inliner.
+// Before normalization (locals): flight_cost, pCell, path_cell.
 VA(0x004b3bb0, 0x35C)  // anchor-bracket, dc 0xa0f54
-void searchArray::PushCombatPoint(int index, int direction, int cost, int flight_cost, int limit)
+void searchArray::pushCombatPoint(int index, int direction, int cost, int flightCost, int limit)
 {
     if (index < 0 || index >= 187 || cost > limit)
         return;
 
-    pathCell* pCell = getCellData(index);
-    if (pCell->visited && pCell->cost <= cost)
+    pathCell* cell = getCellData(index);
+    if (cell->m_visited && cell->m_cost <= cost)
         return;
-    if (queue.size() >= 500)
+    if (m_queue.size() >= 500)
         return;
 
-    int middle = find_combat_queue_slot(this, cost);
+    int middle = findCombatQueueSlot(this, cost);
 
-    pathCell path_cell;
-    fill_combat_cell(&path_cell, index, direction, cost, flight_cost);
+    pathCell currentPathCell;
+    fillCombatCell(&currentPathCell, index, direction, cost, flightCost);
 
-    if (middle < queue.size()) {
-        pathCell* pos = queue.begin() + middle;
+    if (middle < m_queue.size()) {
+        pathCell* pos = m_queue.begin() + middle;
 #pragma inline_depth(0)
-        queue.insert(pos, 1, path_cell);
+        m_queue.insert(pos, 1, currentPathCell);
 #pragma inline_depth()
     } else {
-        queue.insert(queue.end(), 1, path_cell);
+        m_queue.insert(m_queue.end(), 1, currentPathCell);
     }
-    *pCell = path_cell;
+    *cell = currentPathCell;
 }
 
 // E:\gamedcs\findpath.cpp:1427
@@ -2000,19 +2051,20 @@ void searchArray::PushCombatPoint(int index, int direction, int cost, int flight
 // re-loads bIsMoatSlowed between them: a byte store through the map
 // may alias the pointer member itself, so VC6 cannot keep the base.
 VA(0x004b3f10, 0xF)  // anchor-bracket, dc 0xa10b0
-void searchArray::lower_door()
+void searchArray::lowerDoor()
 {
-    bIsMoatSlowed[0x5f] = 0;
-    bIsMoatSlowed[0x5e] = 0;
+    m_isMoatSlowed[0x5f] = 0;
+    m_isMoatSlowed[0x5e] = 0;
 }
 
 // E:\gamedcs\findpath.cpp:1434
+// Before normalization (locals): current_army.
 VA(0x004b3f20, 0x41)  // anchor-global, dc 0xa10c4
-long searchArray::get_travel_time(const army* current_army, long hex)
+long searchArray::getTravelTime(const army* currentArmy, long hex)
 {
-    pathCell* cell = cellData == 0 ? 0 : &cellData[hex];
-    long speed = current_army->GetSpeed();
-    long turns = (cell->cost + speed - 1) / speed;
+    pathCell* cell = m_cellData == 0 ? 0 : &m_cellData[hex];
+    long speed = currentArmy->getSpeed();
+    long turns = (cell->m_cost + speed - 1) / speed;
 
     if (turns < 1)
         turns = 1;
@@ -2023,14 +2075,14 @@ long searchArray::get_travel_time(const army* current_army, long hex)
 
 // E:\gamedcs\hero.h:117
 DC_ONLY(0xa113c, 0x8)
-unsigned char type_obscuring_object::obscured_is_trigger()
+unsigned char type_obscuring_object::obscuredIsTrigger()
 {
     // @stub
 }
 
 // E:\gamedcs\CmbtMgr.h:327
 DC_ONLY(0xa1144, 0x16)
-unsigned char combatManager::TObstacle::IsVisible(int side)
+unsigned char combatManager::TObstacle::isVisible(int side)
 {
     // @stub
 }

@@ -13,22 +13,22 @@
 // E:\gamedcs\widget.cpp:43
 VA(0x005fe340, 0x62)  // call-proven (base call in button ctor 0x455ef0), dc 0x196b4c
 widget::widget(short widgetX, short widgetY, short widgetWidth, short widgetHeight, short widgetId, short widgetStyle)
-    : field_2C(0)
+    : m_sleepCount(0)
 {
-    x = widgetX;
-    y = widgetY;
-    width = widgetWidth;
-    height = widgetHeight;
-    id = widgetId;
-    parentWindow = 0;
-    prevWidget = 0;
-    nextWidget = 0;
-    status = WIDGET_ACTIVE | WIDGET_DRAWN;
-    priority = -1;
-    style = widgetStyle;
-    RollOver = 0;
-    RightClick = 0;
-    freeText = 0;
+    m_x = widgetX;
+    m_y = widgetY;
+    m_width = widgetWidth;
+    m_height = widgetHeight;
+    m_id = widgetId;
+    m_parentWindow = 0;
+    m_prevWidget = 0;
+    m_nextWidget = 0;
+    m_status = WIDGET_ACTIVE | WIDGET_DRAWN;
+    m_priority = -1;
+    m_style = widgetStyle;
+    m_rollOver = 0;
+    m_rightClick = 0;
+    m_freeText = 0;
 }
 
 // E:\gamedcs\widget.cpp:94 - widget::`scalar deleting destructor'
@@ -52,51 +52,52 @@ VA_COMPGEN(0x005fe3b0, 0x5C, SCALAR_DELETING_DTOR, widget)
 // E:\gamedcs\widget.cpp:106
 VA(0x005fe410, 0x1D)  // anchor-vtable + body, dc 0x196bd4
 widget::widget()
-    : field_2C(0)
+    : m_sleepCount(0)
 {
-    RollOver = 0;
-    RightClick = 0;
-    freeText = 0;
-    status = WIDGET_ACTIVE | WIDGET_DRAWN;
+    m_rollOver = 0;
+    m_rightClick = 0;
+    m_freeText = 0;
+    m_status = WIDGET_ACTIVE | WIDGET_DRAWN;
 }
 
 // E:\gamedcs\widget.cpp:127
 VA(0x005fe430, 0x45)  // call-proven (base-dtor call in the button-family dtors), dc 0x196c10
 widget::~widget()
 {
-    if (last_hover_widget == this)
-        last_hover_widget = 0;
-    if (freeText) {
-        if (RightClick)
-            delete RightClick;
-        if (RollOver)
-            delete RollOver;
+    if (s_lastHoverWidget == this)
+        s_lastHoverWidget = 0;
+    if (m_freeText) {
+        if (m_rightClick)
+            delete m_rightClick;
+        if (m_rollOver)
+            delete m_rollOver;
     }
 }
 
 // E:\gamedcs\widget.cpp:152
+// Before normalization (locals): _x, _y, _w, _h, _id, _style.
 VA(0x005fe480, 0x4E)  // call-proven (textButton ctor 0x456a50 calls it), dc 0x196c6c
-void widget::initialize(int _x, int _y, int _w, int _h, int _id, int _style)
+void widget::initialize(int x, int y, int w, int h, int id, int style)
 {
-    parentWindow = 0;
-    prevWidget = 0;
-    nextWidget = 0;
-    x = _x;
-    y = _y;
-    width = _w;
-    height = _h;
-    id = _id;
-    status = WIDGET_ACTIVE | WIDGET_DRAWN;
-    priority = -1;
-    style = _style;
+    m_parentWindow = 0;
+    m_prevWidget = 0;
+    m_nextWidget = 0;
+    m_x = x;
+    m_y = y;
+    m_width = w;
+    m_height = h;
+    m_id = id;
+    m_status = WIDGET_ACTIVE | WIDGET_DRAWN;
+    m_priority = -1;
+    m_style = style;
 }
 
 // E:\gamedcs\widget.cpp:214
 VA(0x005fe4d0, 0x17)  // vtable-slot 1 of the widget family, dc 0x196cbc
-int widget::Open(int newPriority, heroWindow* parent)
+int widget::open(int newPriority, heroWindow* parent)
 {
-    priority = newPriority;
-    parentWindow = parent;
+    m_priority = newPriority;
+    m_parentWindow = parent;
     return 0;
 }
 
@@ -119,85 +120,85 @@ void widget::Close()
 // (names unattested).
 // E:\gamedcs\widget.cpp:249
 VA(0x005fe4f0, 0x2C8)  // linkorder bracket; Draw/Dim/process_hover slots and UpdateScreen callee byte-proven, dc 0x196cd0
-int widget::Main(message* msg)
+int widget::main(message* msg)
 {
-    if (field_2C > 0)
+    if (m_sleepCount > 0)
         return 0;
-    switch (msg->id) {
+    switch (msg->m_id) {
     case MESSAGE_MOUSE_MOVE: {
-        if (!(status & WIDGET_ACTIVE))
+        if (!(m_status & WIDGET_ACTIVE))
             break;
-        short mouseX = msg->codeX - parentWindow->x;
-        short mouseY = msg->codeY - parentWindow->y;
-        if (mouseX < x || mouseY < y || mouseX >= x + width
-            || mouseY >= y + height)
+        short mouseX = msg->m_codeX - m_parentWindow->m_x;
+        short mouseY = msg->m_codeY - m_parentWindow->m_y;
+        if (mouseX < m_x || mouseY < m_y || mouseX >= m_x + m_width
+            || mouseY >= m_y + m_height)
             break;
-        msg->codeY = id;
-        if (last_hover_widget != this) {
-            last_hover_widget = this;
-            process_hover();
+        msg->m_codeY = m_id;
+        if (s_lastHoverWidget != this) {
+            s_lastHoverWidget = this;
+            processHover();
         }
         return 2;
     }
     case MESSAGE_WIDGET:
-        switch (msg->codeX) {
+        switch (msg->m_codeX) {
         case WIDGET_DRAW:
-            if (status & WIDGET_DRAWN)
-                Draw();
-            if ((status & (WIDGET_DRAWN | WIDGET_DIMMED))
+            if (m_status & WIDGET_DRAWN)
+                draw();
+            if ((m_status & (WIDGET_DRAWN | WIDGET_DIMMED))
                 == (WIDGET_DRAWN | WIDGET_DIMMED))
-                Dim();
+                dim();
             break;
         case WIDGET_SET_STATUS:
-            if (msg->codeY != id)
+            if (msg->m_codeY != m_id)
                 break;
-            if (msg->extra == WIDGET_DIMMED_NODRAW) {
-                status |= WIDGET_DIMMED;
+            if (msg->m_extra == WIDGET_DIMMED_NODRAW) {
+                m_status |= WIDGET_DIMMED;
                 return 1;
             }
-            status |= msg->extra;
-            if (msg->extra == WIDGET_DISABLED)
+            m_status |= msg->m_extra;
+            if (msg->m_extra == WIDGET_DISABLED)
                 return 1;
-            if (status & WIDGET_DIMMED) {
-                Draw();
-                Dim();
+            if (m_status & WIDGET_DIMMED) {
+                draw();
+                dim();
             }
-            if (status & WIDGET_UPDATE) {
-                gpWindowManager->UpdateScreen(
-                    x + parentWindow->x, y + parentWindow->y, width, height);
-                status &= ~WIDGET_UPDATE;
+            if (m_status & WIDGET_UPDATE) {
+                g_windowManager->updateScreen(
+                    m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);
+                m_status &= ~WIDGET_UPDATE;
             }
             return 1;
         case WIDGET_CLEAR_STATUS: {
-            if (msg->codeY != id)
+            if (msg->m_codeY != m_id)
                 break;
-            short flags = msg->extra;
-            if (msg->extra == WIDGET_DIMMED_NODRAW) {
-                status &= ~WIDGET_DIMMED;
+            short flags = msg->m_extra;
+            if (msg->m_extra == WIDGET_DIMMED_NODRAW) {
+                m_status &= ~WIDGET_DIMMED;
                 return 1;
             }
-            status &= ~flags;
+            m_status &= ~flags;
             if (flags & WIDGET_DIMMED)
-                Draw();
+                draw();
             if (flags & WIDGET_UPDATE)
-                gpWindowManager->UpdateScreen(
-                    x + parentWindow->x, y + parentWindow->y, width, height);
+                g_windowManager->updateScreen(
+                    m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);
             return 1;
         }
         case WIDGET_SET_X:
-            if (msg->codeY != id)
+            if (msg->m_codeY != m_id)
                 break;
-            x = msg->extra;
+            m_x = msg->m_extra;
             return 1;
         case WIDGET_SET_Y:
-            if (msg->codeY != id)
+            if (msg->m_codeY != m_id)
                 break;
-            y = msg->extra;
+            m_y = msg->m_extra;
             return 1;
         case WIDGET_SET_WIDTH:
-            if (msg->codeY != id)
+            if (msg->m_codeY != m_id)
                 break;
-            width = msg->extra;
+            m_width = msg->m_extra;
             return 1;
         }
         break;
@@ -216,64 +217,64 @@ int widget::Main(message* msg)
 // window, id, codeX, codeY) is NOT one of them: it scores 23.6.
 // E:\gamedcs\widget.cpp:477
 VA(0x005fe7c0, 0x40)  // anchor-global, dc 0x196f88
-int widget::send_message(widget::ECommands command, int extra)
+int widget::sendMessage(widget::ECommands command, int extra)
 {
     message msg;
-    msg.qualifier = 0;
-    msg.mouseX = 0;
-    msg.mouseY = 0;
-    msg.id = MESSAGE_WIDGET;
-    msg.codeX = command;
-    msg.codeY = id;
-    msg.extra = extra;
-    msg.window = parentWindow;
-    return Main(&msg);
+    msg.m_qualifier = 0;
+    msg.m_mouseX = 0;
+    msg.m_mouseY = 0;
+    msg.m_id = MESSAGE_WIDGET;
+    msg.m_codeX = command;
+    msg.m_codeY = m_id;
+    msg.m_extra = extra;
+    msg.m_window = m_parentWindow;
+    return main(&msg);
 }
 
 // E:\gamedcs\widget.cpp:494
 VA(0x005fe800, 0x32)  // linkorder, dc 0x196fc8
-void widget::Dim()
+void widget::dim()
 {
-    gpWindowManager->screenBitmap->Darken(
-        x + parentWindow->x, y + parentWindow->y, width, height);
+    g_windowManager->m_screenBitmap->darken(
+        m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);
 }
 
 // E:\gamedcs\widget.cpp:511
 VA(0x005fe840, 0xE9)  // anchor-global, dc 0x196ffc
-void widget::set_help_text(const char* text, const char* rclick, unsigned char copyText)
+void widget::setHelpText(const char* text, const char* rclick, unsigned char copyText)
 {
-    if (RollOver) {
-        if (freeText)
-            delete RollOver;
-        RollOver = 0;
+    if (m_rollOver) {
+        if (m_freeText)
+            delete m_rollOver;
+        m_rollOver = 0;
     }
-    if (RightClick) {
-        if (freeText)
-            delete RightClick;
-        RightClick = 0;
+    if (m_rightClick) {
+        if (m_freeText)
+            delete m_rightClick;
+        m_rightClick = 0;
     }
     if (copyText) {
-        freeText = 1;
+        m_freeText = 1;
         if (text) {
-            RollOver = new char[strlen(text) + 1];
-            strcpy(RollOver, text);
+            m_rollOver = new char[strlen(text) + 1];
+            strcpy(m_rollOver, text);
         }
         if (rclick) {
-            RightClick = new char[strlen(rclick) + 1];
-            strcpy(RightClick, rclick);
+            m_rightClick = new char[strlen(rclick) + 1];
+            strcpy(m_rightClick, rclick);
         }
     } else {
-        freeText = 0;
-        RollOver = const_cast<char*>(text);
-        RightClick = const_cast<char*>(rclick);
+        m_freeText = 0;
+        m_rollOver = const_cast<char*>(text);
+        m_rightClick = const_cast<char*>(rclick);
     }
 }
 
 // E:\gamedcs\widget.cpp:555
 VA(0x005fe930, 0xC)  // vtable-slot 7 of the widget family, dc 0x1970a8
-void widget::process_hover()
+void widget::processHover()
 {
-    parentWindow->handle_widget_hover(this);
+    m_parentWindow->handleWidgetHover(this);
 }
 
 // E:\gamedcs\widget.cpp:560
@@ -287,26 +288,26 @@ void widget::enable(unsigned char arg)
     // the file's house order by that single move.
     if (arg) {
         message msg;
-        msg.qualifier = 0;
-        msg.mouseX = 0;
-        msg.mouseY = 0;
-        msg.codeY = id;
-        msg.window = parentWindow;
-        msg.id = MESSAGE_WIDGET;
-        msg.codeX = WIDGET_CLEAR_STATUS;
-        msg.extra = WIDGET_DISABLED;
-        Main(&msg);
+        msg.m_qualifier = 0;
+        msg.m_mouseX = 0;
+        msg.m_mouseY = 0;
+        msg.m_codeY = m_id;
+        msg.m_window = m_parentWindow;
+        msg.m_id = MESSAGE_WIDGET;
+        msg.m_codeX = WIDGET_CLEAR_STATUS;
+        msg.m_extra = WIDGET_DISABLED;
+        main(&msg);
     } else {
         message msg;
-        msg.qualifier = 0;
-        msg.mouseX = 0;
-        msg.mouseY = 0;
-        msg.codeY = id;
-        msg.window = parentWindow;
-        msg.id = MESSAGE_WIDGET;
-        msg.codeX = WIDGET_SET_STATUS;
-        msg.extra = WIDGET_DISABLED;
-        Main(&msg);
+        msg.m_qualifier = 0;
+        msg.m_mouseX = 0;
+        msg.m_mouseY = 0;
+        msg.m_codeY = m_id;
+        msg.m_window = m_parentWindow;
+        msg.m_id = MESSAGE_WIDGET;
+        msg.m_codeX = WIDGET_SET_STATUS;
+        msg.m_extra = WIDGET_DISABLED;
+        main(&msg);
     }
 }
 
@@ -314,4 +315,4 @@ void widget::enable(unsigned char arg)
 // retail link order above, at 0x5fe3b0.
 
 DATA(0x006aac68)
-widget* widget::last_hover_widget;
+widget* widget::s_lastHoverWidget;

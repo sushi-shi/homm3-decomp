@@ -71,24 +71,43 @@ public:
     };
     enum { NWIDGETS = 28, VIEW_ARMY_DELAY = 100, NSPELLS = 3 };
 
-    int ArmyType;
-    int ArmySize;
-    int morale;
-    std::string morale_help;
-    int luck;
-    std::string luck_help;
-    int Upgrade;
-    unsigned char ShowingUpgradeButton;
-    unsigned char ShowingDismissButton;
-    unsigned char ShowingOkButton;
-    unsigned char pad_97;
-    int Influence[3];
-    int Duration[3];
-    textWidget* RolloverWidget;
-    iconWidget* SpriteWidget;
+    // Before normalization: ArmyType.
+    int m_armyType;
+    // Before normalization: ArmySize.
+    int m_armySize;
+    // Before normalization: morale.
+    int m_morale;
+    // Before normalization: morale_help.
+    std::string m_moraleHelp;
+    // Before normalization: luck.
+    int m_luck;
+    // Before normalization: luck_help.
+    std::string m_luckHelp;
+    // Before normalization: Upgrade.
+    int m_upgrade;
+    // Before normalization: ShowingUpgradeButton.
+    unsigned char m_showingUpgradeButton;
+    // Before normalization: ShowingDismissButton.
+    unsigned char m_showingDismissButton;
+    // Before normalization: ShowingOkButton.
+    unsigned char m_showingOkButton;
+    // Before normalization: pad_97.
+    // The preceding byte field and following four-byte field establish
+    // this alignment gap; the reference layout retains the same boundary.
+    unsigned char m_paddingBeforeInfluence;
+    // Before normalization: Influence.
+    int m_influence[3];
+    // Before normalization: Duration.
+    int m_duration[3];
+    // Before normalization: RolloverWidget.
+    textWidget* m_rolloverWidget;
+    // Before normalization: SpriteWidget.
+    iconWidget* m_spriteWidget;
 
-    TViewArmyWindow(const army* this_army, int x0, int y0,
-                    unsigned char show_ok);
+    // Before normalization (locals): this_army, show_ok, this_hero, this_town, show_dismiss,
+    // group_alignments, army_type.
+    TViewArmyWindow(const army* thisArmy, int x0, int y0,
+                    unsigned char showOk);
     // TEN arguments in retail (`ret 0x28`), not the Dreamcast's nine:
     // the trailing unsigned char is the alignment-grouping byte, passed
     // straight through to GetArmyMorale's arg5 and get_morale_description's
@@ -96,16 +115,19 @@ public:
     // gpCombatManager->field_54b2. `group` is non-const because
     // GetArmyMorale and GetArmyLuck are; the Dreamcast prototype's
     // `const armyGroup&` predates them.
-    TViewArmyWindow(armyGroup* group, int iarmy, const hero* this_hero,
-                    const town* this_town, int x0, int y0, int upgrade,
-                    unsigned char show_dismiss, unsigned char show_ok,
-                    unsigned char group_alignments);
-    TViewArmyWindow(int army_type, int x0, int y0, unsigned char show_ok);
+    TViewArmyWindow(armyGroup* group, int iarmy, const hero* thisHero,
+                    const town* thisTown, int x0, int y0, int upgrade,
+                    unsigned char showDismiss, unsigned char showOk,
+                    unsigned char groupAlignments);
+    TViewArmyWindow(int armyType, int x0, int y0, unsigned char showOk);
     virtual ~TViewArmyWindow();
-    virtual int WindowHandler(message* msg);
+    // Before normalization (function): TViewArmyWindow::WindowHandler.
+    virtual int windowHandler(message* msg);
     int convertID2HelpID(int id) const;
-    void QuickView();
-    void DoModal();
+    // Before normalization (function): TViewArmyWindow::QuickView.
+    void quickView();
+    // Before normalization (function): TViewArmyWindow::DoModal.
+    void doModal();
     // The four row builders the one-army constructor CALLS rather than
     // inlines, located 2026-08-14 from its own reloc census: the ctor's
     // argument lists match the Dreamcast prototypes term for term
@@ -123,29 +145,58 @@ public:
     // create_background_widget/create_name_widget take their hero and
     // name from the caller because the ctor computes both before the
     // allocation.
-    void create_background_widget(const hero* this_hero);
-    void create_name_widget(const char* name);
-    void create_morale_widget(int new_morale);
-    void create_luck_widget(int new_luck);
-    void create_rollover_widget();
-    void create_portrait_widget(const char* sprite_name, int town_type,
+    // Before normalization (function): TViewArmyWindow::create_background_widget.
+    // Before normalization (locals): this_hero.
+    void createBackgroundWidget(const hero* thisHero);
+    // Before normalization (function): TViewArmyWindow::create_name_widget.
+    void createNameWidget(const char* name);
+    // Before normalization (function): TViewArmyWindow::create_morale_widget.
+    // Before normalization (locals): new_morale.
+    void createMoraleWidget(int newMorale);
+    // Before normalization (function): TViewArmyWindow::create_luck_widget.
+    // Before normalization (locals): new_luck.
+    void createLuckWidget(int newLuck);
+    // Before normalization (function): TViewArmyWindow::create_rollover_widget.
+    void createRolloverWidget();
+    // Before normalization (function): TViewArmyWindow::create_portrait_widget.
+    // Before normalization (locals): sprite_name, town_type.
+    void createPortraitWidget(const char* spriteName, int townType,
                                 int count);                      // 0x5f5060
-    void create_damage_widget(const TCreatureTypeTraits* traits,
-                              const hero* our_hero);             // 0x5f5860
-    void create_shots_widget(const TCreatureTypeTraits* traits,
-                             int normal_shots, int current_shots);  // 0x5f5b30
-    void create_spell_influence_widgets(const army* this_army);   // 0x5f65b0
-    void create_attack_widget(int normal_attack_skill,
-                              int current_attack_skill);
-    void create_defense_widget(int normal_defense_skill,
-                               int current_defense_skill);
-    void create_hitpoints_widget(int normal_hitpoints,
-                                 int current_hitpoints);
-    void create_hitpoints_left_widget(int hitpoints_left);
-    void create_speed_widget(int normal_speed, int current_speed);
-    void create_ok_widget();
-    void create_upgrade_widget();
-    void create_dismiss_widget();
+    // Before normalization (function): TViewArmyWindow::create_damage_widget.
+    void createDamageWidget(const TCreatureTypeTraits* traits,
+                              // Before normalization (locals): our_hero.
+                              const hero* ourHero);             // 0x5f5860
+    // Before normalization (function): TViewArmyWindow::create_shots_widget.
+    void createShotsWidget(const TCreatureTypeTraits* traits,
+                             // Before normalization (locals): normal_shots, current_shots.
+                             int normalShots, int currentShots);  // 0x5f5b30
+    // Before normalization (function): TViewArmyWindow::create_spell_influence_widgets.
+    // Before normalization (locals): this_army.
+    void createSpellInfluenceWidgets(const army* thisArmy);   // 0x5f65b0
+    // Before normalization (function): TViewArmyWindow::create_attack_widget.
+    // Before normalization (locals): normal_attack_skill, current_attack_skill.
+    void createAttackWidget(int normalAttackSkill,
+                              int currentAttackSkill);
+    // Before normalization (function): TViewArmyWindow::create_defense_widget.
+    // Before normalization (locals): normal_defense_skill, current_defense_skill.
+    void createDefenseWidget(int normalDefenseSkill,
+                               int currentDefenseSkill);
+    // Before normalization (function): TViewArmyWindow::create_hitpoints_widget.
+    // Before normalization (locals): normal_hitpoints, current_hitpoints.
+    void createHitpointsWidget(int normalHitpoints,
+                                 int currentHitpoints);
+    // Before normalization (function): TViewArmyWindow::create_hitpoints_left_widget.
+    // Before normalization (locals): hitpoints_left.
+    void createHitpointsLeftWidget(int hitpointsLeft);
+    // Before normalization (function): TViewArmyWindow::create_speed_widget.
+    // Before normalization (locals): normal_speed, current_speed.
+    void createSpeedWidget(int normalSpeed, int currentSpeed);
+    // Before normalization (function): TViewArmyWindow::create_ok_widget.
+    void createOkWidget();
+    // Before normalization (function): TViewArmyWindow::create_upgrade_widget.
+    void createUpgradeWidget();
+    // Before normalization (function): TViewArmyWindow::create_dismiss_widget.
+    void createDismissWidget();
 };
 SIZE(TViewArmyWindow, 0xb8);
 

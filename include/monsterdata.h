@@ -23,14 +23,17 @@ enum EMonsterQuantityPreset {
 
 class MonsterData {
 public:
-    std::basic_string<char, std::char_traits<char>, std::allocator<char> > Message;
-    int ResQty[7];
+    // Before normalization: Message.
+    std::basic_string<char, std::char_traits<char>, std::allocator<char> > m_message;
+    // Before normalization: ResQty.
+    int m_resQty[7];
     // Spelled int, not TArtifact, for the reason armyGroup::armies is
     // spelled int: readMonsterData deserializes it from a one- or two-byte
     // stream field and saveMonsterData narrows it back to a byte, so an
     // enum here would put a cast on every crossing.  ARTIFACT_NONE still
     // assigns.  The Dreamcast declarator's enum is preserved in the name.
-    int Artifact;
+    // Before normalization: Artifact.
+    int m_artifact;
 
     // loadMonsterList's resize temp proves a header-inline constructor: the
     // default argument `_Ty()` that Dinkumware's resize materializes stores
@@ -38,7 +41,7 @@ public:
     // resize can be doing that.  readMonsterData's own temp shows the same
     // single store, so the assignment it used to spell by hand is this
     // constructor's and has been removed there.
-    MonsterData() { Artifact = ARTIFACT_NONE; }
+    MonsterData() { m_artifact = ARTIFACT_NONE; }
 };
 SIZE(MonsterData, 0x30);
 

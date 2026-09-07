@@ -19,7 +19,8 @@
 #include "widget.h"
 #include "winmgr.h"
 
-DATA(0x0069cd20) static TQuestLogWindow* gpQuestLogWindow;
+// Before normalization: gpQuestLogWindow.
+DATA(0x0069cd20) static TQuestLogWindow* g_questLogWindow;
 
 // Dreamcast names QuestActiveforPlayer as a const byte-returning TSeerHut
 // helper.  Its old body tested playerGivenQuest and then !QuestCompleted.
@@ -28,34 +29,36 @@ DATA(0x0069cd20) static TQuestLogWindow* gpQuestLogWindow;
 // and fresh quest-pointer tests.  Keep both pool-specific spellings: retail
 // forms a named quest_text_row pointer for SeerHutList, while the exact
 // UpdateQuestLogButton sibling proves quest_texts()[LOG] for guards.
-inline unsigned char TSeerHut::QuestActiveforPlayer(
+inline unsigned char TSeerHut::questActiveforPlayer(
     const unsigned char playerNum) const
 {
-    type_quest* thisQuest = quest;
+    type_quest* thisQuest = m_quest;
     if (!thisQuest)
         return 0;
 
-    const std::string* questTexts = thisQuest->quest_text_row()
-        + type_quest::QUEST_TEXT_COLUMNS * thisQuest->quest_type();
+    const std::string* questTexts = thisQuest->questTextRow()
+        + type_quest::QUEST_TEXT_COLUMNS * thisQuest->questType();
     return questTexts[type_quest::QUEST_TEXT_LOG].length()
-        && (visitedPlayers & (1 << playerNum))
-        && quest;
+        && (m_visitedPlayers & (1 << playerNum))
+        && m_quest;
 }
 
-inline unsigned char TQuestGuard::QuestActiveforPlayer(
+inline unsigned char TQuestGuard::questActiveforPlayer(
     const unsigned char playerNum) const
 {
-    return quest
-        && quest->quest_texts()[type_quest::QUEST_TEXT_LOG].length()
-        && (visitedPlayers & (1 << playerNum))
-        && quest;
+    return m_quest
+        && m_quest->questTexts()[type_quest::QUEST_TEXT_LOG].length()
+        && (m_visitedPlayers & (1 << playerNum))
+        && m_quest;
 }
 
 // E:\gamedcs\questlogwindow.cpp:34
 // Dreamcast proves the helper call; Complete expands the 16-row version of
 // UpdateQuestLocators and otherwise retains the same scroll/store/redraw
 // sequence.  The second argument is the slider callback ABI and is unused.
-static void QuestSliderCallback(int state, heroWindow* parent_window);
+// Before normalization (function): QuestSliderCallback.
+// Before normalization (locals): parent_window.
+static void questSliderCallback(int state, heroWindow* parentWindow);
 
 // E:\gamedcs\questlogwindow.cpp:43
 // The DC constructor has ten individually-authored text rows. Complete's
@@ -64,69 +67,69 @@ static void QuestSliderCallback(int state, heroWindow* parent_window);
 // sixteen rows, slider, and exit button before AddWidget takes ownership.
 VA(0x0052d8c0, 0x8AF)  // DoQuestLog sole caller + QuestLog.pcx, dc 0x116604
 TQuestLogWindow::TQuestLogWindow()
-  : CAdvPopup(205, 32, 389, 535, 2), firstVisibleQuest(0)
+  : CAdvPopup(205, 32, 389, 535, 2), m_firstVisibleQuest(0)
 {
-    Widgets.reserve(20);
-    Widgets.push_back(new bitmapBorder(
-        0, 0, width, height, 0, "QuestLog.pcx", 0x800));
+    m_widgets.reserve(20);
+    m_widgets.push_back(new bitmapBorder(
+        0, 0, m_width, m_height, 0, "QuestLog.pcx", 0x800));
 
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         45, 122, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 1, 1, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         45, 142, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 2, 1, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         45, 162, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 3, 1, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         45, 182, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 4, 1, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         45, 202, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 5, 1, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         45, 222, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 6, 1, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         45, 242, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 7, 1, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         45, 262, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 8, 1, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         45, 282, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 9, 1, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         45, 302, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 10, 1, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         45, 322, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 11, 1, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         45, 342, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 12, 1, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         45, 362, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 13, 1, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         45, 382, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 14, 1, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         45, 402, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 15, 1, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         45, 422, 285, 20, 0, "smalfont.fnt", font::PRIMARY, 16, 1, 0, 8));
 
-    Widgets.push_back(new slider(
-        335, 112, 16, 343, 17, 10, QuestSliderCallback,
+    m_widgets.push_back(new slider(
+        335, 112, 16, 343, 17, 10, questSliderCallback,
         slider::BROWN, 16, 0));
-    Widgets.push_back(new button(
+    m_widgets.push_back(new button(
         324, 470, 32, 32, DIALOG_RETURN_OK, "QLexit.def",
         0, 1, 1, 28, 2));
 
-    for (std::vector<widget*>::iterator it = Widgets.begin();
-         it != Widgets.end(); ++it) {
+    for (std::vector<widget*>::iterator it = m_widgets.begin();
+         it != m_widgets.end(); ++it) {
         if (*it)
-            AddWidget(*it, -1);
+            addWidget(*it, -1);
         else
-            MemError();
+            memError();
     }
 }
 
 // Complete emits this address-taken static immediately after its constructor,
 // unlike the older Dreamcast compiland's source-row order.
 VA(0x0052e170, 0x3A)  // slider function pointer in the constructor, dc 0x1165dc
-static void QuestSliderCallback(int state, heroWindow* parent_window)
+static void questSliderCallback(int state, heroWindow* parentWindow)
 {
-    gpQuestLogWindow->firstVisibleQuest = state;
-    gpQuestLogWindow->UpdateQuestLocators();
-    gpQuestLogWindow->DrawWindow(
+    g_questLogWindow->m_firstVisibleQuest = state;
+    g_questLogWindow->updateQuestLocators();
+    g_questLogWindow->drawWindow(
         1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
 }
 
@@ -141,7 +144,7 @@ void TQuestLogWindow::~TQuestLogWindow()
 
 // E:\gamedcs\questlogwindow.cpp:89
 DC_ONLY(0x116bd8, 0xA0)
-void TQuestLogWindow::UpdateQuestLocator(int i)
+void TQuestLogWindow::updateQuestLocator(int i)
 {
     // @stub
 }
@@ -175,7 +178,7 @@ VA_COMPGEN(0x0052e1b0, 0x21, SCALAR_DELETING_DTOR, TQuestLogWindow)
 VA(0x0052e1e0, 0x8F)  // vtable 0x640648 + vector<int> teardown at +0x64, dc 0x116b6c
 TQuestLogWindow::~TQuestLogWindow()
 {
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
@@ -211,45 +214,45 @@ TQuestLogWindow::~TQuestLogWindow()
 // codeY is the row's WIDGET ID, i + 1, which is why the caller's loop index
 // is one-based against the log's widgets.
 VA(0x0052e270, 0x19F)  // caller 0x52e430 + seerHutLogList, dc 0x116bd8
-void TQuestLogWindow::UpdateQuestLocator(int i)
+void TQuestLogWindow::updateQuestLocator(int i)
 {
     message msg;
-    msg.id = MESSAGE_WIDGET;
+    msg.m_id = MESSAGE_WIDGET;
 
-    if (firstVisibleQuest + i < seerHutLogList.size()) {
-        int quest = seerHutLogList[firstVisibleQuest + i];
+    if (m_firstVisibleQuest + i < m_seerHutLogList.size()) {
+        int quest = m_seerHutLogList[m_firstVisibleQuest + i];
 
-        if (quest >= gpGame->worldMap.SeerHutList.size())
-            strcpy(gText, gpGame->worldMap.QuestGuardList[
-                       quest - gpGame->worldMap.SeerHutList.size()]
-                       .QuestGuardFn_00572D60().c_str());
+        if (quest >= g_game->m_worldMap.m_seerHutList.size())
+            strcpy(g_text, g_game->m_worldMap.m_questGuardList[
+                       quest - g_game->m_worldMap.m_seerHutList.size()]
+                       .questGuardFn00572D60().c_str());
         else
-            strcpy(gText, gpGame->worldMap.SeerHutList[quest]
+            strcpy(g_text, g_game->m_worldMap.m_seerHutList[quest]
                        .getSeerLogText().c_str());
 
-        msg.codeX = widget::WIDGET_SET_TEXT;
-        msg.codeY = i + 1;
-        msg.extraText = gText;
-        BroadcastMessage(&msg);
+        msg.m_codeX = widget::WIDGET_SET_TEXT;
+        msg.m_codeY = i + 1;
+        msg.m_extraText = g_text;
+        broadcastMessage(&msg);
     }
 }
 
 // Dreamcast preserves this helper as a 12-row loop.  Complete expands the
 // same source boundary into DoQuestLog after increasing the visible list to
 // 16 rows; the singular retail callee and loop schedule prove the revision.
-inline void TQuestLogWindow::UpdateQuestLocators()
+inline void TQuestLogWindow::updateQuestLocators()
 {
     for (int i = 0; i < 16; ++i)
-        UpdateQuestLocator(i);
+        updateQuestLocator(i);
 }
 
 // E:\gamedcs\questlogwindow.cpp:111
 VA(0x0052e410, 0x1d)  // source-order map + both retail call edges, dc 0x116ca4
-int TQuestLogWindow::WindowHandler(message* msg)
+int TQuestLogWindow::windowHandler(message* msg)
 {
-    int result = CAdvPopup::WindowHandler(msg);
+    int result = CAdvPopup::windowHandler(msg);
     if (!result)
-        result = TrueFalseDialogHandler(msg);
+        result = trueFalseDialogHandler(msg);
     return result;
 }
 
@@ -271,39 +274,39 @@ int TQuestLogWindow::WindowHandler(message* msg)
 // under-inlined; that is a MIS-PAIRING - retail's `game_12e430_sub02_12e6b0`
 // IS the call to it (0x52e6b0), and no TU defines a body to inline.
 VA(0x0052e430, 0x27E)  // dc 0x116ccc; Complete adds QuestGuardList
-void DoQuestLog(int player)
+void doQuestLog(int player)
 {
     message msg;
 
-    gpMouseManager->SetPointer(0, mouseManager::DEFAULT_SET);
+    g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
 
-    gpQuestLogWindow = new TQuestLogWindow;
-    if (!gpQuestLogWindow)
-        MemError();
+    g_questLogWindow = new TQuestLogWindow;
+    if (!g_questLogWindow)
+        memError();
 
-    int numberSeerHuts = gpGame->worldMap.SeerHutList.size();
+    int numberSeerHuts = g_game->m_worldMap.m_seerHutList.size();
     int i;
     for (i = 0; i < numberSeerHuts; ++i) {
-        if (gpGame->worldMap.SeerHutList[i]
-                .QuestActiveforPlayer(player))
-            gpQuestLogWindow->seerHutLogList.push_back(i);
+        if (g_game->m_worldMap.m_seerHutList[i]
+                .questActiveforPlayer(player))
+            g_questLogWindow->m_seerHutLogList.push_back(i);
     }
 
-    for (i = 0; i < gpGame->worldMap.QuestGuardList.size(); ++i) {
-        if (gpGame->worldMap.QuestGuardList[i]
-                .QuestActiveforPlayer(player))
-            gpQuestLogWindow->seerHutLogList.push_back(numberSeerHuts + i);
+    for (i = 0; i < g_game->m_worldMap.m_questGuardList.size(); ++i) {
+        if (g_game->m_worldMap.m_questGuardList[i]
+                .questActiveforPlayer(player))
+            g_questLogWindow->m_seerHutLogList.push_back(numberSeerHuts + i);
     }
 
-    msg.id = MESSAGE_WIDGET;
-    msg.codeX = widget::WIDGET_SET_SLIDER_RESOLUTION;
-    msg.codeY = 17;
-    msg.extra = gpQuestLogWindow->seerHutLogList.size() - 15;
-    gpQuestLogWindow->BroadcastMessage(&msg);
+    msg.m_id = MESSAGE_WIDGET;
+    msg.m_codeX = widget::WIDGET_SET_SLIDER_RESOLUTION;
+    msg.m_codeY = 17;
+    msg.m_extra = g_questLogWindow->m_seerHutLogList.size() - 15;
+    g_questLogWindow->broadcastMessage(&msg);
 
-    gpQuestLogWindow->UpdateQuestLocators();
-    gpQuestLogWindow->DoModal(0);
-    delete gpQuestLogWindow;
+    g_questLogWindow->updateQuestLocators();
+    g_questLogWindow->doModal(0);
+    delete g_questLogWindow;
 }
 
 // The row-selecting half of quest_texts(), declared in quest.h and emitted
@@ -314,9 +317,9 @@ void DoQuestLog(int player)
 // with the 52-string row stride showing up as the `field_38 * 13 << 6`
 // product retail duplicates into BOTH arms rather than sharing.
 VA(0x0052e6b0, 0x2E)  // linkorder tail of questlogwindow.obj + the 0x68320c/0x683210 table pair, retail-only
-const std::string* type_quest::quest_text_row()
+const std::string* type_quest::questTextRow()
 {
-    return field_04 ? gQuestTextA[field_38] : gQuestTextB[field_38];
+    return m_seerHut ? g_questTextA[m_textVariant] : g_questTextB[m_textVariant];
 }
 
 #if 0  // @carcass

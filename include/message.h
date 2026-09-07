@@ -86,45 +86,56 @@ enum EMessageModifiers {
 // canonical and VC6 may remove fields overwritten before their first read.
 class message {
 public:
-    int id;
-    int codeX;
-    int codeY;
-    int qualifier;
-    int mouseX;
-    int mouseY;
+    // Before normalization: id.
+    int m_id;
+    // Before normalization: codeX.
+    int m_codeX;
+    // Before normalization: codeY.
+    int m_codeY;
+    // Before normalization: qualifier.
+    int m_qualifier;
+    // Before normalization: mouseX.
+    int m_mouseX;
+    // Before normalization: mouseY.
+    int m_mouseY;
     union {
-        int extra;
-        const char* extraText;
+        // Before normalization: extra.
+        int m_extra;
+        // Before normalization: extraText.
+        const char* m_extraText;
     };
-    heroWindow* window;
+    // Before normalization: window.
+    heroWindow* m_window;
     // The Dreamcast CodeView body at struct.h:42 zeroes the fields in
     // declaration order. The attested consumer sites need the real
     // constructor shape and VC6 removes fields overwritten before first read.
     // Dreamcast type 0x1016 lists this eight-argument overload before the
     // default constructor; both are header-inline source boundaries.
-    message(int id_, int codeX_, int codeY_, int qualifier_,
-            int mouseX_, int mouseY_, int extra_, heroWindow* window_)
+    // Before normalization (locals): id_, codeX_, codeY_, qualifier_, mouseX_, mouseY_, extra_,
+    // window_.
+    message(int id, int codeX, int codeY, int qualifier,
+            int mouseX, int mouseY, int extra, heroWindow* window)
     {
-        id = id_;
-        codeX = codeX_;
-        codeY = codeY_;
-        qualifier = qualifier_;
-        mouseX = mouseX_;
-        mouseY = mouseY_;
-        extra = extra_;
-        window = window_;
+        m_id = id;
+        m_codeX = codeX;
+        m_codeY = codeY;
+        m_qualifier = qualifier;
+        m_mouseX = mouseX;
+        m_mouseY = mouseY;
+        m_extra = extra;
+        m_window = window;
     }
 
     message()
     {
-        id = 0;
-        codeX = 0;
-        codeY = 0;
-        qualifier = 0;
-        mouseX = 0;
-        mouseY = 0;
-        extra = 0;
-        window = 0;
+        m_id = 0;
+        m_codeX = 0;
+        m_codeY = 0;
+        m_qualifier = 0;
+        m_mouseX = 0;
+        m_mouseY = 0;
+        m_extra = 0;
+        m_window = 0;
     }
 };
 SIZE(message, 32);

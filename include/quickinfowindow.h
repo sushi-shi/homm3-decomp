@@ -25,10 +25,11 @@ public:
         JoinPrice = 3
     };
 
-    TQuickCreatureWindow(TViewLevel view_level, TCreatureType id, int count,
+    // Before normalization (locals): view_level.
+    TQuickCreatureWindow(TViewLevel viewLevel, TCreatureType id, int count,
                          TDisposition disposition, int cost);
     virtual ~TQuickCreatureWindow();
-    void QuickWindowWait();
+    void quickWindowWait();
 };
 SIZE(TQuickCreatureWindow, 0x54);
 

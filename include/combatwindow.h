@@ -19,7 +19,8 @@ class message;
 // Eleven interleaved rollover/right-click rows at retail 0x6a6968. The
 // combat-window right-click handler consumes the same table as the combat
 // sub-window constructors.
-extern THelpText gCombatSubWindowHelp[11];
+// Before normalization: gCombatSubWindowHelp.
+extern THelpText g_combatSubWindowHelp[11];
 
 // Retail vtable 0x63d528 and Close independently prove the heroWindow base;
 // combatManager::Open allocates the complete 0x8c-byte object. Close deletes
@@ -46,25 +47,38 @@ public:
     // combat_message and handle_widget_hover both follow this pointer to
     // textEntryWidget::bHasFocus at +0x6d. The constructor initially nulls
     // it; the concrete object is the combat chat editor.
-    textEntryWidget* chatEdit;
+    // Before normalization: chatEdit.
+    textEntryWidget* m_chatEdit;
     // DrawChatText and DrawFrame both load the same pointer at retail +0x50;
     // its DC counterpart is likewise the combat chat text widget.
-    textWidget* chatWidget;
+    // Before normalization: chatWidget.
+    textWidget* m_chatWidget;
     // The four-word VC6 vector begins at +0x54; its pointer triplet at
     // +0x58/+0x5c/+0x60 is byte-proven by combat_message, scroll_rollover,
     // and the destructor.
-    std::vector<std::string*> combatMessages;
-    int combatMessageCount;
-    int combatMessageStart;
-    unsigned long combatMessageTime;
-    type_combat_sub_window* controlSubWindow;
-    TCombatHeroSubWindow* heroSubWindows[2];
-    TCombatCreatureSubWindow* creatureSubWindows[4];
+    // Before normalization: combatMessages.
+    std::vector<std::string*> m_combatMessages;
+    // Before normalization: combatMessageCount.
+    int m_combatMessageCount;
+    // Before normalization: combatMessageStart.
+    int m_combatMessageStart;
+    // Before normalization: combatMessageTime.
+    unsigned long m_combatMessageTime;
+    // Before normalization: controlSubWindow.
+    type_combat_sub_window* m_controlSubWindow;
+    // Before normalization: heroSubWindows.
+    TCombatHeroSubWindow* m_heroSubWindows[2];
+    // Before normalization: creatureSubWindows.
+    TCombatCreatureSubWindow* m_creatureSubWindows[4];
 
     virtual ~TCombatWindow();
-    virtual void Close(unsigned char update);
-    virtual void handle_widget_hover(widget* current_widget);
-    virtual void DrawWindow(unsigned char update, int low, int high);
+    // Before normalization (function): TCombatWindow::Close.
+    virtual void close(unsigned char update);
+    // Before normalization (function): TCombatWindow::handle_widget_hover.
+    // Before normalization (locals): current_widget.
+    virtual void handleWidgetHover(widget* currentWidget);
+    // Before normalization (function): TCombatWindow::DrawWindow.
+    virtual void drawWindow(unsigned char update, int low, int high);
     // 0x472bf0, LOCATED 2026-08-13 from combatManager::RightClick. The
     // 54-byte body clears the +0x64 latch and re-sets the message line
     // from the string at 0x691210 once GameTime has run 3000 ticks past
@@ -72,27 +86,40 @@ public:
     // combat_message at 0x472e90 - which is what pairs it with the DC's
     // TCombatWindow::ClearCombatMessages (combatwindow.cpp:417, 58 SH4
     // bytes against 54).
-    void ClearCombatMessages();
+    // Before normalization (function): TCombatWindow::ClearCombatMessages.
+    void clearCombatMessages();
     static int convertID2HelpID(int id);
-    unsigned char ProcessRightSelect(const message* msg);
-    void set_rollover(const char* new_text);
-    void show_messages(long start);
-    void scroll_rollover(long delta);
-    static int scroll_up(message& msg);
-    static int scroll_down(message& msg);
+    // Before normalization (function): TCombatWindow::ProcessRightSelect.
+    unsigned char processRightSelect(const message* msg);
+    // Before normalization (function): TCombatWindow::set_rollover.
+    // Before normalization (locals): new_text.
+    void setRollover(const char* newText);
+    // Before normalization (function): TCombatWindow::show_messages.
+    void showMessages(long start);
+    // Before normalization (function): TCombatWindow::scroll_rollover.
+    void scrollRollover(long delta);
+    // Before normalization (function): TCombatWindow::scroll_up.
+    static int scrollUp(message& msg);
+    // Before normalization (function): TCombatWindow::scroll_down.
+    static int scrollDown(message& msg);
     // combatwindow.cpp:221, dc 0x69850. combatManager::Open (0x462a20)
     // is the one constructor site in the tree and pushes a single byte,
     // the placement flag it has just computed.
-    TCombatWindow(unsigned char do_placement);
+    // Before normalization (locals): do_placement.
+    TCombatWindow(unsigned char doPlacement);
     // command.cpp and combatwindow.cpp both use the placement teardown;
     // Dreamcast and retail independently prove this class member.
-    void EndPlacementPhase();                              // 0x4731f0
+    // Before normalization (function): TCombatWindow::EndPlacementPhase.
+    void endPlacementPhase();                              // 0x4731f0
     // Retail 0x472e90, the message line ClearCombatMessages forwards to
     // and the one combatManager's morale/damage bodies print through.
-    void combat_message(const char* new_text, unsigned char keep,
+    // Before normalization (function): TCombatWindow::combat_message.
+    // Before normalization (locals): new_text.
+    void combatMessage(const char* newText, unsigned char keep,
                         unsigned char priority);
     // combatwindow.cpp:603, DC 0x6a264; retail body 0x473290.
-    void DrawChatText(unsigned char update);
+    // Before normalization (function): TCombatWindow::DrawChatText.
+    void drawChatText(unsigned char update);
 };
 SIZE(TCombatWindow, 0x8c);
 

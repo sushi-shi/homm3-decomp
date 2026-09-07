@@ -67,14 +67,19 @@ enum EResourceType {
 //                     return their fixed extent plus owned data bytes
 class resource {
 public:
-    char Name[13];
-    EResourceType resType;
-    int ReferenceCount;
+    // Before normalization: Name.
+    char m_name[13];
+    // Before normalization: resType.
+    EResourceType m_resType;
+    // Before normalization: ReferenceCount.
+    int m_referenceCount;
 
     resource(const char* newName, EResourceType newType);
     virtual ~resource();         // slot 0
-    virtual void Dispose();      // slot 1, base body 0x55d0f0
-    virtual unsigned int GetSize() const = 0;  // slot 2, pure at the base
+    // Before normalization (function): resource::Dispose.
+    virtual void dispose();      // slot 1, base body 0x55d0f0
+    // Before normalization (function): resource::GetSize.
+    virtual unsigned int getSize() const = 0;  // slot 2, pure at the base
 };
 SIZE(resource, 28);
 

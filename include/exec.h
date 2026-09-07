@@ -14,10 +14,14 @@
 // list).
 class executive {
 public:
-    baseManager* headManager;
-    baseManager* tailManager;
-    baseManager* currentManager;
-    long dialogReturn;
+    // Before normalization: headManager.
+    baseManager* m_headManager;
+    // Before normalization: tailManager.
+    baseManager* m_tailManager;
+    // Before normalization: currentManager.
+    baseManager* m_currentManager;
+    // Before normalization: dialogReturn.
+    long m_dialogReturn;
 
     // Retail 0x4b0900 - the four zero stores of Dreamcast exec.cpp:37,
     // emitted out of line for the heap instance InitMainClasses builds.
@@ -25,33 +29,44 @@ public:
     // Dreamcast exec.cpp:43 names the source boundary and oldmain is its
     // sole recovered startup caller.  Retail 0x4b0910 consumes this in ECX
     // and returns the nonzero initialization failure tested at 0x4ee414.
-    int InitSystem();
+    // Before normalization (function): executive::InitSystem.
+    int initSystem();
     // Retail 0x4b0990: ShutDown's teardown of the manager list (every
     // manager but the window and mouse managers first, then those two if
     // still active), bracketed by the sound and input managers' Close.
-    void ShutDownSystem();
-    int AddManager(baseManager* newManager, int newPriority);
-    void RemoveManager(baseManager* killManager);
-    int DoDialog(baseManager* newDialog);
-    void CallManager(baseManager* newManager);
-    void MainLoop();
+    // Before normalization (function): executive::ShutDownSystem.
+    void shutDownSystem();
+    // Before normalization (function): executive::AddManager.
+    int addManager(baseManager* newManager, int newPriority);
+    // Before normalization (function): executive::RemoveManager.
+    void removeManager(baseManager* killManager);
+    // Before normalization (function): executive::DoDialog.
+    int doDialog(baseManager* newDialog);
+    // Before normalization (function): executive::CallManager.
+    void callManager(baseManager* newManager);
+    // Before normalization (function): executive::MainLoop.
+    void mainLoop();
 };
 
 // events.obj joins the gate for the refugee camp (0x4a4600), whose
 // recruit dialog is run through gpExecutive->DoDialog. The pointer stays
 // invisible to every TU with no consumer.
-extern executive* gpExecutive;  // retail .bss 0x699500
+// Before normalization: gpExecutive.
+extern executive* g_executive;  // retail .bss 0x699500
 
 // ai_player.obj's shutdown (retail 0x434590), which ShutDown calls between
 // the exit message box and the font teardown; declared on this narrow
 // surface for the same reason as the pump below - kb.cpp must not import
 // ai_player.h's roster for one call.
-void AI_shut_down();
+// Before normalization (function): AI_shut_down.
+void aiShutDown();
 
 // philai.obj's cooperative main-loop pump. ai_player.obj calls it between
 // each enemy mobility calculation and path seed; keeping the declaration in
 // this narrow executive surface avoids importing philai.h's skill roster.
-void CheckDoMain(int bForceMouseCheck, int bMouseOnly);         // 0x5242d0
+// Before normalization (function): CheckDoMain.
+// Before normalization (locals): bForceMouseCheck, bMouseOnly.
+void checkDoMain(int forceMouseCheck, int mouseOnly);         // 0x5242d0
 
 // --- executive ---
 // CODEVIEW(E:\gamedcs\exec.cpp:37, dc 0x9e510) void executive::executive();

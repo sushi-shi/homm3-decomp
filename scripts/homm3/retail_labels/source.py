@@ -1349,11 +1349,13 @@ def _demangle_key(mangled: str):
     # combatManager::TObstacleVector is a HAND-MODELLED container whose
     # members VC6 emits like any other; key it onto the vector family so
     # the claim reads with its siblings instead of needing a new kind.
-    if mangled.startswith("?_Ucopy@TObstacleVector@combatManager@@"):
+    if mangled.startswith(("?_Ucopy@TObstacleVector@combatManager@@",
+                           "?ucopy@TObstacleVector@combatManager@@")):
         return "tobstaclevector@vector_ucopy"
     if mangled.startswith("?size@TObstacleVector@combatManager@@"):
         return "tobstaclevector@vector_size"
-    if mangled.startswith("?_Ufill@TObstacleVector@combatManager@@"):
+    if mangled.startswith(("?_Ufill@TObstacleVector@combatManager@@",
+                           "?ufill@TObstacleVector@combatManager@@")):
         return "tobstaclevector@vector_ufill"
     algorithm_key = _std_algorithm_key(mangled)
     if algorithm_key:
@@ -2988,6 +2990,13 @@ def selftest() -> list[str]:
                       "char@basic_string_nullstr")):
         if _demangle_key(bad) == arm:
             failures.append(f"the {arm} arm stopped rejecting {bad!r}")
+    # Project-owned vector facades retain their compiler-function identities
+    # after source normalization; actual std::vector spellings remain ABI names.
+    for member, key in (("ucopy", "vector_ucopy"), ("ufill", "vector_ufill")):
+        for spelling in (member, "_" + member[0].upper() + member[1:]):
+            if _demangle_key("?" + spelling + "@TObstacleVector@combatManager@@") != \
+                    "tobstaclevector@" + key:
+                failures.append("normalized obstacle vector key regressed: " + spelling)
     # `logic_error::what` rides CHAR_STREAM_MEMBERS; its sibling
     # `runtime_error` and the ctor of the same class must not follow it.
     if _demangle_key("?what@logic_error@std@@UBEPBDXZ")             != "char@logic_error_what":

@@ -57,50 +57,76 @@ class heroWindowManager : public baseManager {
 public:
     // +0x38: NormalDialog's result slot (AppWndProc's WM_CLOSE tests
     // it against 0x7805, the confirm-OK command).
-    int dialogReturn;
+    // Before normalization: dialogReturn.
+    int m_dialogReturn;
     // +0x3c: DC's lastHover (members.csv heroWindowManager@60), the
     // first of DC's lastHover/lastHoverAK pair - retail dropped the
     // second, which is why screenBitmap lands at 0x40 here and 68
     // there. Byte-proven: DoDialog stores -1 into it right before
     // AddWindow, exactly where the buka twin writes m_lastHoverId.
-    int lastHover;
-    Bitmap16Bit* screenBitmap;
-    int colorCyclingOn;
-    unsigned char isWaitingForFadeIn;
-    char pad_49[3];
+    // Before normalization: lastHover.
+    int m_lastHover;
+    // Before normalization: screenBitmap.
+    Bitmap16Bit* m_screenBitmap;
+    // Before normalization: colorCyclingOn.
+    int m_colorCyclingOn;
+    // Before normalization: isWaitingForFadeIn.
+    unsigned char m_isWaitingForFadeIn;
+    // Before normalization: pad_49.
+    // NH3API confirms three alignment bytes between the PC fade-in
+    // flag at +0x48 and bmpFizzleSource at +0x4c. Close proves the pointer role.
+    char m_paddingBeforeFizzleSource[3];
     // +0x4c: the manager's SECOND owned bitmap. Byte-proven by Close
     // (0x6022d0), which deletes it through the same virtual slot-0 +
     // flag-1 tail it uses on screenBitmap, and it is the only member
     // besides screenBitmap the destructor path touches - the fizzle
-    // source the Save/Release pair works on. Name is the house ordinal
-    // placeholder; the role is proven, the spelling is not attested.
-    Bitmap16Bit* field_4C;
+    // source the Save/Release pair works on. Dreamcast supplies the
+    // bmpFizzleSource member name.
+    // Before normalization: field_4C; reference member heroWindowManager::bmpFizzleSource.
+    Bitmap16Bit* m_bmpFizzleSource;
     // The window list, byte-proven by RemoveWindow (located
     // 2026-08-06 by homm3.analysis.dc_callgraph): headWindow@0x50,
     // tailWindow@0x54, lastActive@0x58, activeWindow@0x5c.
-    heroWindow* headWindow;
-    heroWindow* tailWindow;
-    heroWindow* lastActive;
-    heroWindow* activeWindow;
+    // Before normalization: headWindow.
+    heroWindow* m_headWindow;
+    // Before normalization: tailWindow.
+    heroWindow* m_tailWindow;
+    // Before normalization: lastActive.
+    heroWindow* m_lastActive;
+    // Before normalization: activeWindow.
+    heroWindow* m_activeWindow;
 
     // DC overload set also has () and (int,int,int,int,int,int); only
     // the consumed 4-int form (retail 0x602bd0, called by widget::Main)
     // is declared.
     heroWindowManager();
-    virtual int Open(int newPriority);  // slot 0, retail 0x6021b0
-    virtual void Close();               // slot 1, retail 0x6022d0
-    virtual int Main(message& msg);     // slot 2, retail 0x602320
-    int ConvertToHover(message& msg);
-    void UpdateScreen(int x, int y, int w, int h);
-    int BroadcastMessage(int msgId, int msgCodeX, int msgCodeY, int msgExtra);
-    void AddWindow(heroWindow* newWindow, int newPriority,
+    // Before normalization (function): heroWindowManager::Open.
+    virtual int open(int newPriority);  // slot 0, retail 0x6021b0
+    // Before normalization (function): heroWindowManager::Close.
+    virtual void close();               // slot 1, retail 0x6022d0
+    // Before normalization (function): heroWindowManager::Main.
+    virtual int main(message& msg);     // slot 2, retail 0x602320
+    // Before normalization (function): heroWindowManager::ConvertToHover.
+    int convertToHover(message& msg);
+    // Before normalization (function): heroWindowManager::UpdateScreen.
+    void updateScreen(int x, int y, int w, int h);
+    // Before normalization (function): heroWindowManager::BroadcastMessage.
+    int broadcastMessage(int msgId, int msgCodeX, int msgCodeY, int msgExtra);
+    // Before normalization (function): heroWindowManager::AddWindow.
+    void addWindow(heroWindow* newWindow, int newPriority,
                    unsigned char update);
-    void RemoveWindow(heroWindow* killWindow);
-    int DoDialog(heroWindow* dialogWindow, TDialogHandler dialogFunction,
-                 int bFadeIn);
-    int DoDialogDraw(heroWindow* dialogWindow, TDialogHandler dialogFunction,
-                     TDialogHandler dialogDrawFunction, int bFadeIn);
-    void DoQuickView(heroWindow* window);
+    // Before normalization (function): heroWindowManager::RemoveWindow.
+    void removeWindow(heroWindow* killWindow);
+    // Before normalization (function): heroWindowManager::DoDialog.
+    int doDialog(heroWindow* dialogWindow, TDialogHandler dialogFunction,
+                 // Before normalization (locals): bFadeIn.
+                 int fadeIn);
+    // Before normalization (function): heroWindowManager::DoDialogDraw.
+    int doDialogDraw(heroWindow* dialogWindow, TDialogHandler dialogFunction,
+                     // Before normalization (locals): bFadeIn.
+                     TDialogHandler dialogDrawFunction, int fadeIn);
+    // Before normalization (function): heroWindowManager::DoQuickView.
+    void doQuickView(heroWindow* window);
     // 0x602cc0 / 0x602dc0, LOCATED 2026-08-13 from combatManager::AddArmy
     // (0x47a100): it saves a screen rectangle, redraws the combat frame
     // and fizzles the same rectangle forward over 75 ms, which is the
@@ -112,21 +138,31 @@ public:
     // body that does this. Those DC inlines take a `const SLimitData*`;
     // retail passes the four ints, and combatManager's own
     // TDrawbridgeBounds quadruple is what it passes them from.
-    void SaveFizzleSourceX(int startX, int startY, int width, int height);
-    void FizzleForwardX(int startX, int startY, int width, int height,
-                        int iFadeTime);
+    // Before normalization (function): heroWindowManager::SaveFizzleSourceX.
+    void saveFizzleSourceX(int startX, int startY, int width, int height);
+    // Before normalization (function): heroWindowManager::FizzleForwardX.
+    void fizzleForwardX(int startX, int startY, int width, int height,
+                        // Before normalization (locals): iFadeTime.
+                        int fadeTime);
     // 0x6030c0, the fizzle buffer's release. Order-mapped between
     // FizzleForwardX and FadeToBlack and byte-shaped: it deletes
     // field_4C through the virtual slot-0 tail and nulls it.
-    void ReleaseFizzleSource();
-    void FadeScreen(int inOut, int speed, unsigned char expect_fadein);
-    void FadeToBlack(int speed, unsigned char expect_fadein);
-    void FadeFromBlack(int speed);
+    // Before normalization (function): heroWindowManager::ReleaseFizzleSource.
+    void releaseFizzleSource();
+    // Before normalization (function): heroWindowManager::FadeScreen.
+    // Before normalization (locals): expect_fadein.
+    void fadeScreen(int inOut, int speed, unsigned char expectFadein);
+    // Before normalization (function): heroWindowManager::FadeToBlack.
+    // Before normalization (locals): expect_fadein.
+    void fadeToBlack(int speed, unsigned char expectFadein);
+    // Before normalization (function): heroWindowManager::FadeFromBlack.
+    void fadeFromBlack(int speed);
 };
 
 // Retail .bss 0x699280 (DC ?gpWindowManager@@3PAVheroWindowManager@@A);
 // the DATA claim lands with winmgr.cpp.
-extern heroWindowManager* gpWindowManager;
+// Before normalization: gpWindowManager.
+extern heroWindowManager* g_windowManager;
 
 // Three cross-TU dialog globals DoDialog drives. None of them is
 // winmgr-owned - they are declared here (the gUnnamed69d808 precedent)
@@ -138,40 +174,17 @@ extern heroWindowManager* gpWindowManager;
 //   0x6aad20  the dialog nest counter: 0->1 arms SetNoDialogMenus(0),
 //             1->0 fires SetNoDialogMenus(1). No DC public; the name is
 //             homm2(buka) BASE lineage (iDialogNestCount), PROVISIONAL.
-extern int gbInDialog;
-extern int gbSendMouseMoveMessages;
-extern int iDialogNestCount;
+// Before normalization: gbInDialog.
+extern int g_inDialog;
+// Before normalization: gbSendMouseMoveMessages.
+extern int g_sendMouseMoveMessages;
+// Before normalization: iDialogNestCount.
+extern int g_dialogNestCount;
 
 // Shared absolute deadline consumed by modal-dialog handlers. The DATA claim
 // currently lives with levelupwindow.cpp, the first admitted owner/consumer.
-extern unsigned long gDialogDeadline697784;
-
-// Provisional VIEW of the unnamed central object at .bss 0x69d808 (232
-// code references image-wide, written from six sites inside the
-// unclaimed 0x552e00..0x556900 band; its own TU will name it - the
-// textresource.h gpGeneralText precedent). DoQuickView's message pump is the
-// only consumer modeled, and every spelling below is offset-anchored
-// rather than semantic: an OUT-OF-LINE getter (retail 0x5537a0, the
-// 7-byte `mov eax,[ecx+0xf0]; ret`) hands back an object whose virtual
-// slots 1 and 2 the pump drives while bVideoPaused is set.
-class CUnnamed69d808_f0 {
-public:
-    virtual void _vslot0() = 0;
-    virtual void _vslot1(int arg0, int arg1) = 0;
-    virtual int _vslot2() = 0;
-    unsigned char field_04;  // CompleteDraw's early message-pump gate
-};
-struct SUnnamed69d808 {
-    char pad_00[0xf0];
-    CUnnamed69d808_f0* field_f0;      // +0xf0
-    CUnnamed69d808_f0* get_field_f0();  // retail 0x5537a0
-    // The setter twin, retail 0x553770: it installs the new pump, and
-    // when both the outgoing and the incoming one are live it carries
-    // the byte at +4 and slot 2's result across. townManager::Close is
-    // the consumer that proved it.
-    void set_field_f0(CUnnamed69d808_f0* pump);
-};
-extern SUnnamed69d808* gUnnamed69d808;  // .bss 0x69d808
+// Before normalization: gDialogDeadline697784.
+extern unsigned long g_dialogDeadline697784;
 
 // --- Bitmap816 ---
 // CODEVIEW(E:\gamedcs\Bitmap816.h:73, dc 0x19c5e8) const TPalette16* Bitmap816::GetPalette();

@@ -21,57 +21,64 @@
 // byte boat id into the long parameter, which is exactly the
 // `xor eax,eax / mov al,[boat+0x19]` pair hide_boat::undo emits.
 // The one save-file revision inside the [0x12,0x1e] window that omits the
-// boat record's flag/coordinate tail; type_record_hide_boat::load has to
+// boat record's occupancy/hero-ID tail; type_record_hide_boat::load has to
 // step over it, and the cleanliness floor wants the domain named.
-const int SAVE_VERSION_BOAT_FIELDS_ABSENT = 0x1c;
+// Before normalization: SAVE_VERSION_BOAT_FIELDS_ABSENT.
+const int g_saveVersionBoatFieldsAbsent = 0x1c;
 
 // E:\gamedcs\includes.h - the reference-returning clamp templates the
 // visibility sweeps use. Both take BY VALUE and return `const T&`, which is
 // what puts their two temporaries in stack slots and makes retail select
 // between them with a `lea` pair rather than a cmov-style fold.
 template <class _TYPE>
-inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
+// Before normalization (locals): _X, _Y.
+inline const _TYPE& cppMin(_TYPE x, _TYPE y)
 {
-    return (_Y < _X ? _Y : _X);
+    return (y < x ? y : x);
 }
 
 template <class _TYPE>
-inline const _TYPE& max_ref(_TYPE _X, _TYPE _Y)
+// Before normalization (function): max_ref.
+// Before normalization (locals): _X, _Y.
+inline const _TYPE& maxRef(_TYPE x, _TYPE y)
 {
-    return (_X < _Y ? _Y : _X);
+    return (x < y ? y : x);
 }
 
-inline type_record_erase::type_record_erase(type_point _location,
-                                            long _object_id,
-                                            unsigned long _extra_info,
-                                            long _object_index)
+// Before normalization (locals): _location, _object_id, _extra_info, _object_index.
+inline type_record_erase::type_record_erase(type_point location,
+                                            long objectId,
+                                            unsigned long extraInfo,
+                                            long objectIndex)
 {
-    location = _location;
-    object_id = _object_id;
-    extra_info = _extra_info;
-    object_index = _object_index;
+    m_location = location;
+    m_objectId = objectId;
+    m_extraInfo = extraInfo;
+    m_objectIndex = objectIndex;
 }
 
-inline type_record_hide_hero::type_record_hide_hero(hero* who, char _new_owner,
-                                                    unsigned char _town_garrison)
+// Before normalization (locals): _new_owner, _town_garrison.
+inline type_record_hide_hero::type_record_hide_hero(hero* who, char newOwner,
+                                                    unsigned char townGarrison)
 {
     // DC preserves this helper boundary; the two retail inline expansions
     // prove the snapshot is written before the requested replacement owner.
-    current_hero = who;
-    prev_owner = who->owner;
-    new_owner = _new_owner;
-    town_garrison = _town_garrison;
+    m_currentHero = who;
+    m_prevOwner = who->m_owner;
+    m_newOwner = newOwner;
+    m_townGarrison = townGarrison;
 }
 
-inline type_record_show_hero::type_record_show_hero(hero* who, char _new_owner,
-                                                    type_point _location,
-                                                    unsigned char _on_boat)
-    : type_record_hide_hero(who, _new_owner, 0)
+// Before normalization (locals): _new_owner, _location, _on_boat.
+inline type_record_show_hero::type_record_show_hero(hero* who, char newOwner,
+                                                    type_point location,
+                                                    unsigned char onBoat)
+    : type_record_hide_hero(who, newOwner, 0)
 {
-    previous_boat = (who->flags >> 18) & 1;
-    on_boat = _on_boat;
-    previous_location = type_point(who->x, who->y, who->z);
-    location = _location;
+    m_previousBoat = (who->m_flags >> 18) & 1;
+    m_onBoat = onBoat;
+    m_previousLocation = type_point(who->m_x, who->m_y, who->m_z);
+    m_location = location;
 }
 
 // E:\gamedcs\event_record.cpp:36. NO RETAIL BODY of its own - every
@@ -81,7 +88,7 @@ inline type_record_show_hero::type_record_show_hero(hero* who, char _new_owner,
 // type_record_shroud::create (0x49bc30) is the clearest witness.
 type_event_record::type_event_record()
 {
-    player_id = gNetLocalGamePos;
+    m_playerId = g_netLocalGamePos;
 }
 
 // Slot 0 of the base vtable at 0x63de74. The standard VC6 wrapper, except
@@ -93,14 +100,14 @@ VA_COMPGEN(0x0049a5b0, 0x23, SCALAR_DELETING_DTOR, type_event_record)
 VA(0x0049a5e0, 0x1D)  // anchor-vtable, dc 0x8c678
 unsigned char type_event_record::load(TAbstractFile* infile, int version)
 {
-    return infile->Read(&player_id, 1) == 1;
+    return infile->read(&m_playerId, 1) == 1;
 }
 
 // E:\gamedcs\event_record.cpp:60
 VA(0x0049a600, 0x1D)  // anchor-vtable, dc 0x8c698
 unsigned char type_event_record::save(TAbstractFile* outfile)
 {
-    return outfile->Write(&player_id, 1) == 1;
+    return outfile->write(&m_playerId, 1) == 1;
 }
 
 #if 0  // @carcass
@@ -113,15 +120,17 @@ unsigned char type_event_record::save(TAbstractFile* outfile)
 // (`movsx esi, byte ptr [ebp-0x18]` off an int local); the four record
 // replay bodies spell the same three stores out in line, which is what
 // their exact bytes show.
-static void set_player(char new_player)
+// Before normalization (function): set_player.
+// Before normalization (locals): new_player.
+static void setPlayer(char newPlayer)
 {
-    if (gNetLocalGamePos != new_player) {
-        gpAdvManager->DeactivateCurrTown(0);
-        gpAdvManager->DeactivateCurrHero(0);
+    if (g_netLocalGamePos != newPlayer) {
+        g_advManager->deactivateCurrTown(0);
+        g_advManager->deactivateCurrHero(0);
     }
-    gNetLocalGamePos = new_player;
-    gpCurrentPlayer = &gpGame->players[new_player];
-    gUnnamed69ccc4 = 1 << new_player;
+    g_netLocalGamePos = newPlayer;
+    g_currentPlayer = &g_game->m_players[newPlayer];
+    g_unnamed69ccc4 = 1 << newPlayer;
 }
 #if 0  // @carcass
 
@@ -146,15 +155,16 @@ void type_event_record::undo()
 // record_teleport. Dreamcast gives seven ordered source rows and proves that
 // line 100 obtains source through type_obscuring_object::get_location; retail
 // corroborates the same packed x/y/z loads at both inline sites.
-inline type_record_move_hero::type_record_move_hero(hero* _hero,
-                                                    char _direction,
-                                                    type_point _destination)
+// Before normalization (locals): _hero, _direction, _destination.
+inline type_record_move_hero::type_record_move_hero(hero* currentHero,
+                                                    char direction,
+                                                    type_point destination)
 {
-    current_hero = _hero;
-    restore_flag = _hero->facing;
-    direction = _direction;
-    source = _hero->get_location();
-    destination = _destination;
+    m_currentHero = currentHero;
+    m_restoreFlag = currentHero->m_facing;
+    m_direction = direction;
+    m_source = currentHero->getLocation();
+    m_destination = destination;
 }
 
 #if 0  // @carcass
@@ -190,7 +200,7 @@ type_event_record* type_record_move_hero::create()
 
 // E:\gamedcs\event_record.cpp:116
 VA(0x0049a680, 0x6)  // anchor-vtable, dc 0x8c7e8
-type_event_record_type type_record_move_hero::get_type()
+type_event_record_type type_record_move_hero::getType()
 {
     return RECORD_MOVE_HERO;
 }
@@ -199,17 +209,18 @@ type_event_record_type type_record_move_hero::get_type()
 VA(0x0049a690, 0xB1)  // anchor-vtable, dc 0x8c7ec
 unsigned char type_record_move_hero::load(TAbstractFile* infile, int version)
 {
-    if (infile->Read(&player_id, 1) != 1)
+    if (infile->read(&m_playerId, 1) != 1)
         return 0;
-    int hero_id;
-    if (infile->Read(&hero_id, sizeof(hero_id)) != sizeof(hero_id))
+    // Before normalization (locals): hero_id.
+    int heroId;
+    if (infile->read(&heroId, sizeof(heroId)) != sizeof(heroId))
         return 0;
-    current_hero = (hero_id == -1) ? NULL : &gpGame->heroes[hero_id];
-    if (infile->Read(&direction, 1) != 1)
+    m_currentHero = (heroId == -1) ? NULL : &g_game->m_heroes[heroId];
+    if (infile->read(&m_direction, 1) != 1)
         return 0;
-    if (infile->Read(&source, sizeof(source)) != sizeof(source))
+    if (infile->read(&m_source, sizeof(m_source)) != sizeof(m_source))
         return 0;
-    unsigned char ok = infile->Read(&destination, sizeof(destination)) == sizeof(destination);
+    unsigned char ok = infile->read(&m_destination, sizeof(m_destination)) == sizeof(m_destination);
     return ok;
 }
 
@@ -217,12 +228,13 @@ unsigned char type_record_move_hero::load(TAbstractFile* infile, int version)
 VA(0x0049a750, 0x63)  // anchor-vtable, dc 0x8c8bc
 unsigned char type_record_move_hero::save(TAbstractFile* outfile)
 {
-    int hero_id = current_hero->id;
-    outfile->Write(&player_id, 1);
-    outfile->Write(&hero_id, sizeof(hero_id));
-    outfile->Write(&direction, 1);
-    outfile->Write(&source, sizeof(source));
-    unsigned char ok = outfile->Write(&destination, sizeof(destination)) == sizeof(destination);
+    // Before normalization (locals): hero_id.
+    int heroId = m_currentHero->m_id;
+    outfile->write(&m_playerId, 1);
+    outfile->write(&heroId, sizeof(heroId));
+    outfile->write(&m_direction, 1);
+    outfile->write(&m_source, sizeof(m_source));
+    unsigned char ok = outfile->write(&m_destination, sizeof(m_destination)) == sizeof(m_destination);
     return ok;
 }
 
@@ -238,34 +250,34 @@ unsigned char type_record_move_hero::save(TAbstractFile* outfile)
 VA(0x0049a7c0, 0x144)  // anchor-vtable, dc 0x8c91c
 void type_record_move_hero::replay(unsigned char draw)
 {
-    int player = player_id;
-    if (gNetLocalGamePos != player) {
-        gpAdvManager->DeactivateCurrTown(0);
-        gpAdvManager->DeactivateCurrHero(0);
+    int player = m_playerId;
+    if (g_netLocalGamePos != player) {
+        g_advManager->deactivateCurrTown(0);
+        g_advManager->deactivateCurrHero(0);
     }
 
-    gNetLocalGamePos = player;
-    gpCurrentPlayer = &gpGame->players[player];
-    gUnnamed69ccc4 = 1 << player;
+    g_netLocalGamePos = player;
+    g_currentPlayer = &g_game->m_players[player];
+    g_unnamed69ccc4 = 1 << player;
 
-    if (gpCurrentPlayer->currHeroId != current_hero->id
-        || !gpAdvManager->bCurHeroMobile) {
-        gpAdvManager->SetHeroContext(current_hero->id, 1, 0, draw);
+    if (g_currentPlayer->m_currHeroId != m_currentHero->m_id
+        || !g_advManager->m_curHeroMobile) {
+        g_advManager->setHeroContext(m_currentHero->m_id, 1, 0, draw);
     }
 
-    current_hero->facing = direction;
-    if (draw && gpAdvManager->GetMoveShowIt(current_hero, direction)) {
-        gCompleteDrawEnabled = 1;
-        gpAdvManager->drawCursor = 1;
+    m_currentHero->m_facing = m_direction;
+    if (draw && g_advManager->getMoveShowIt(m_currentHero, m_direction)) {
+        g_completeDrawEnabled = 1;
+        g_advManager->m_drawCursor = 1;
     } else {
-        gCompleteDrawEnabled = 0;
+        g_completeDrawEnabled = 0;
     }
 
-    if (gpAdvManager->cursorDirection != direction)
-        gpAdvManager->TurnTo(direction);
-    gpAdvManager->animate_move(current_hero, direction,
-                               destination.x - source.x,
-                               destination.y - source.y);
+    if (g_advManager->m_cursorDirection != m_direction)
+        g_advManager->turnTo(m_direction);
+    g_advManager->animateMove(m_currentHero, m_direction,
+                               m_destination.m_x - m_source.m_x,
+                               m_destination.m_y - m_source.m_y);
 }
 
 // E:\gamedcs\event_record.cpp:186
@@ -276,23 +288,25 @@ void type_record_move_hero::replay(unsigned char draw)
 VA(0x0049a910, 0x65)  // anchor-vtable, dc 0x8c9ec
 void type_record_move_hero::undo()
 {
-    unsigned char was_on_map = current_hero->valid;
-    current_hero->restore_cell();
-    current_hero->facing = restore_flag;
-    current_hero->x = source.x;
-    current_hero->y = source.y;
-    current_hero->z = source.z;
-    if (was_on_map)
-        current_hero->obscure_cell();
+    // Before normalization (locals): was_on_map.
+    unsigned char wasOnMap = m_currentHero->m_valid;
+    m_currentHero->restoreCell();
+    m_currentHero->m_facing = m_restoreFlag;
+    m_currentHero->m_x = m_source.m_x;
+    m_currentHero->m_y = m_source.m_y;
+    m_currentHero->m_z = m_source.m_z;
+    if (wasOnMap)
+        m_currentHero->obscureCell();
 }
 
 // E:\gamedcs\event_record.cpp:204
 // NO RETAIL BODY: the complete construction is expanded into record_teleport.
 // Dreamcast line 204 proves this remains a derived-to-base delegation rather
 // than a flattened duplicate of type_record_move_hero's assignments.
-inline type_record_teleport::type_record_teleport(hero* _hero,
-                                                  type_point _destination)
-    : type_record_move_hero(_hero, _hero->facing, _destination)
+// Before normalization (locals): _hero, _destination.
+inline type_record_teleport::type_record_teleport(hero* currentHero,
+                                                  type_point destination)
+    : type_record_move_hero(currentHero, currentHero->m_facing, destination)
 {
 }
 
@@ -321,7 +335,7 @@ type_event_record* type_record_teleport::create()
 
 // E:\gamedcs\event_record.cpp:219
 VA(0x0049a9b0, 0x6)  // anchor-vtable, dc 0x8caec
-type_event_record_type type_record_teleport::get_type()
+type_event_record_type type_record_teleport::getType()
 {
     return RECORD_TELEPORT;
 }
@@ -333,28 +347,29 @@ type_event_record_type type_record_teleport::get_type()
 VA(0x0049a9c0, 0x7B)  // anchor-vtable, dc 0x8caf0
 void type_record_teleport::replay(unsigned char draw)
 {
-    int player = player_id;
-    if (gNetLocalGamePos != player) {
-        gpAdvManager->DeactivateCurrTown(0);
-        gpAdvManager->DeactivateCurrHero(0);
+    int player = m_playerId;
+    if (g_netLocalGamePos != player) {
+        g_advManager->deactivateCurrTown(0);
+        g_advManager->deactivateCurrHero(0);
     }
 
-    gNetLocalGamePos = player;
-    gpCurrentPlayer = &gpGame->players[player];
-    gUnnamed69ccc4 = 1 << player;
+    g_netLocalGamePos = player;
+    g_currentPlayer = &g_game->m_players[player];
+    g_unnamed69ccc4 = 1 << player;
 
-    gpAdvManager->TeleportTo(current_hero, destination, 0, 0, draw, 1);
+    g_advManager->teleportTo(m_currentHero, m_destination, 0, 0, draw, 1);
 }
 // E:\gamedcs\event_record.cpp:237
 // NO RETAIL BODY: expanded into record_claim_mine. record_claim_town instead
 // invokes the distinct default constructor at dc:0x8eda0. Dreamcast preserves
 // this definition site and the id/new-owner/mine-owner statement order.
-inline type_record_claim_mine::type_record_claim_mine(long _id,
-                                                      char _new_owner)
+// Before normalization (locals): _id, _new_owner.
+inline type_record_claim_mine::type_record_claim_mine(long id,
+                                                      char newOwner)
 {
-    id = _id;
-    new_owner = _new_owner;
-    old_owner = gpGame->mines[_id].playerOwner;
+    m_id = id;
+    m_newOwner = newOwner;
+    m_oldOwner = g_game->m_mines[id].m_playerOwner;
 }
 
 #if 0  // @carcass
@@ -368,7 +383,7 @@ type_event_record* type_record_claim_mine::create()
 
 // E:\gamedcs\event_record.cpp:255
 DC_ONLY(0x8cbb0, 0x4)
-type_event_record_type type_record_claim_mine::get_type()
+type_event_record_type type_record_claim_mine::getType()
 {
     // @stub
 }
@@ -391,13 +406,13 @@ type_event_record* type_record_claim_mine::create()
 VA(0x0049aa70, 0x71)  // anchor-vtable, dc 0x8cbb4
 unsigned char type_record_claim_mine::load(TAbstractFile* infile, int version)
 {
-    if (infile->Read(&player_id, 1) != 1)
+    if (infile->read(&m_playerId, 1) != 1)
         return 0;
-    if (infile->Read(&id, sizeof(id)) != sizeof(id))
+    if (infile->read(&m_id, sizeof(m_id)) != sizeof(m_id))
         return 0;
-    if (infile->Read(&old_owner, 1) != 1)
+    if (infile->read(&m_oldOwner, 1) != 1)
         return 0;
-    unsigned char ok = infile->Read(&new_owner, 1) == 1;
+    unsigned char ok = infile->read(&m_newOwner, 1) == 1;
     return ok;
 }
 
@@ -405,10 +420,10 @@ unsigned char type_record_claim_mine::load(TAbstractFile* infile, int version)
 VA(0x0049aaf0, 0x4A)  // anchor-vtable, dc 0x8cc1c
 unsigned char type_record_claim_mine::save(TAbstractFile* outfile)
 {
-    outfile->Write(&player_id, 1);
-    outfile->Write(&id, sizeof(id));
-    outfile->Write(&old_owner, 1);
-    unsigned char ok = outfile->Write(&new_owner, 1) == 1;
+    outfile->write(&m_playerId, 1);
+    outfile->write(&m_id, sizeof(m_id));
+    outfile->write(&m_oldOwner, 1);
+    unsigned char ok = outfile->write(&m_newOwner, 1) == 1;
     return ok;
 }
 
@@ -419,13 +434,13 @@ unsigned char type_record_claim_mine::save(TAbstractFile* outfile)
 VA(0x0049ab40, 0x74)  // anchor-vtable, dc 0x8cc6c
 void type_record_claim_mine::replay(unsigned char draw)
 {
-    gpGame->ClaimMine(id, new_owner, const_recorded_action);
+    g_game->claimMine(m_id, m_newOwner, const_recorded_action);
     if (draw) {
-        mine& claimed = gpGame->mines[id];
-        if (GetMapExtra(claimed.mapX, claimed.mapY, claimed.mapZ)
-            & gMapVisibilityBit) {
-            gpAdvManager->CompleteDraw(0);
-            gpAdvManager->UpdateScreen(0, 0);
+        mine& claimed = g_game->m_mines[m_id];
+        if (getMapExtra(claimed.m_mapX, claimed.m_mapY, claimed.m_mapZ)
+            & g_mapVisibilityBit) {
+            g_advManager->completeDraw(0);
+            g_advManager->updateScreen(0, 0);
         }
     }
 }
@@ -434,7 +449,7 @@ void type_record_claim_mine::replay(unsigned char draw)
 VA(0x0049abc0, 0x19)  // anchor-vtable, dc 0x8ccd8
 void type_record_claim_mine::undo()
 {
-    gpGame->mines[id].playerOwner = old_owner;
+    g_game->m_mines[m_id].m_playerOwner = m_oldOwner;
 }
 
 // E:\gamedcs\event_record.cpp:44. The base destructor, out of source order
@@ -452,13 +467,14 @@ type_event_record::~type_event_record()
 // The derived body then assigns the three claim fields, with old_owner coming
 // from gpGame->towns. Retail corroborates that final assignment sequence and
 // elides the intermediate claim_mine vptr store.
-inline type_record_claim_town::type_record_claim_town(long _id,
-                                                      char _new_owner)
+// Before normalization (locals): _id, _new_owner.
+inline type_record_claim_town::type_record_claim_town(long id,
+                                                      char newOwner)
     : type_record_claim_mine()
 {
-    id = _id;
-    new_owner = _new_owner;
-    old_owner = gpGame->towns[_id].owner;
+    m_id = id;
+    m_newOwner = newOwner;
+    m_oldOwner = g_game->m_towns[id].m_owner;
 }
 
 #if 0  // @carcass
@@ -475,7 +491,7 @@ type_event_record* type_record_claim_town::create()
 // its vtable (0x63ded4) is 0x16ebc0, outside this compiland's span, where
 // /OPT:ICF folded the `mov eax,4 / ret` onto an identical body elsewhere.
 DC_ONLY(0x8cd84, 0x54)
-type_event_record_type type_record_claim_town::get_type()
+type_event_record_type type_record_claim_town::getType()
 {
     // @stub
 }
@@ -501,13 +517,13 @@ type_event_record* type_record_claim_town::create()
 VA(0x0049ac20, 0x7E)  // anchor-vtable, dc 0x8cdd8
 void type_record_claim_town::replay(unsigned char draw)
 {
-    gpGame->towns[id].owner = new_owner;
+    g_game->m_towns[m_id].m_owner = m_newOwner;
     if (draw) {
-        town& claimed = gpGame->towns[id];
-        if (GetMapExtra(claimed.mapX, claimed.mapY, claimed.mapZ)
-            & gMapVisibilityBit) {
-            gpAdvManager->CompleteDraw(0);
-            gpAdvManager->UpdateScreen(0, 0);
+        town& claimed = g_game->m_towns[m_id];
+        if (getMapExtra(claimed.m_mapX, claimed.m_mapY, claimed.m_mapZ)
+            & g_mapVisibilityBit) {
+            g_advManager->completeDraw(0);
+            g_advManager->updateScreen(0, 0);
         }
     }
 }
@@ -516,21 +532,22 @@ void type_record_claim_town::replay(unsigned char draw)
 VA(0x0049aca0, 0x1D)  // anchor-vtable, dc 0x8ce48
 void type_record_claim_town::undo()
 {
-    gpGame->towns[id].owner = old_owner;
+    g_game->m_towns[m_id].m_owner = m_oldOwner;
 }
 // E:\gamedcs\event_record.cpp:376
 // Dreamcast's older record stores only the boat pointer here. Complete adds
 // the replay state at +0xc/+0x10; record_hide_boat's retail `ret 0xc` and the
 // two independent snapshot loads corroborate the revised constructor inputs.
-inline type_record_hide_boat::type_record_hide_boat(boat* _current_boat,
-                                                    unsigned char _occupied,
-                                                    int _occupying_hero)
+// Before normalization (locals): _current_boat, _occupied, _occupying_hero.
+inline type_record_hide_boat::type_record_hide_boat(boat* currentBoat,
+                                                    unsigned char occupied,
+                                                    int occupyingHero)
 {
-    current_boat = _current_boat;
-    field_0c = _occupied;
-    field_0d = _current_boat->occupied;
-    field_10 = _occupying_hero;
-    field_14 = _current_boat->occupying_hero;
+    m_currentBoat = currentBoat;
+    m_occupied = occupied;
+    m_previousOccupied = currentBoat->m_occupied;
+    m_occupyingHero = occupyingHero;
+    m_previousOccupyingHero = currentBoat->m_occupyingHero;
 }
 
 #if 0  // @carcass
@@ -558,7 +575,7 @@ type_event_record* type_record_hide_boat::create()
 
 // E:\gamedcs\event_record.cpp:392
 VA(0x0049acf0, 0x6)  // anchor-vtable, dc 0x8ced8
-type_event_record_type type_record_hide_boat::get_type()
+type_event_record_type type_record_hide_boat::getType()
 {
     return RECORD_HIDE_BOAT;
 }
@@ -571,34 +588,36 @@ type_event_record_type type_record_hide_boat::get_type()
 VA(0x0049ad00, 0xE7)  // anchor-vtable, dc 0x8cedc
 unsigned char type_record_hide_boat::load(TAbstractFile* infile, int version)
 {
-    if (infile->Read(&player_id, 1) != 1)
+    if (infile->read(&m_playerId, 1) != 1)
         return 0;
-    signed char boat_id;
-    if (infile->Read(&boat_id, 1) != 1)
+    // Before normalization (locals): boat_id.
+    signed char boatId;
+    if (infile->read(&boatId, 1) != 1)
         return 0;
-    if (version >= 0x12 && version != SAVE_VERSION_BOAT_FIELDS_ABSENT
+    if (version >= 0x12 && version != g_saveVersionBoatFieldsAbsent
         && (version <= 0x1e || version >= 0x23)) {
         {
             unsigned char flag;
-            infile->Read(&flag, 1);
-            field_0d = flag != 0;
-            infile->Read(&flag, 1);
-            field_0c = flag != 0;
+            infile->read(&flag, 1);
+            m_previousOccupied = flag != 0;
+            infile->read(&flag, 1);
+            m_occupied = flag != 0;
         }
         {
-            short coord;
-            infile->Read(&coord, sizeof(coord));
-            field_14 = coord;
-            infile->Read(&coord, sizeof(coord));
-            field_10 = coord;
+            // Previously labeled coord; these serialized values are hero IDs.
+            short heroId;
+            infile->read(&heroId, sizeof(heroId));
+            m_previousOccupyingHero = heroId;
+            infile->read(&heroId, sizeof(heroId));
+            m_occupyingHero = heroId;
         }
     } else {
-        field_0d = 0;
-        field_0c = 1;
-        field_14 = -1;
-        field_10 = -1;
+        m_previousOccupied = 0;
+        m_occupied = 1;
+        m_previousOccupyingHero = -1;
+        m_occupyingHero = -1;
     }
-    current_boat = &gpGame->boats[boat_id];
+    m_currentBoat = &g_game->m_boats[boatId];
     return 1;
 }
 
@@ -606,26 +625,26 @@ unsigned char type_record_hide_boat::load(TAbstractFile* infile, int version)
 VA(0x0049adf0, 0x8A)  // anchor-vtable, dc 0x8cf2c
 unsigned char type_record_hide_boat::save(TAbstractFile* outfile)
 {
-    outfile->Write(&player_id, 1);
-    if (outfile->Write(&current_boat->id, 1) != 1)
+    outfile->write(&m_playerId, 1);
+    if (outfile->write(&m_currentBoat->m_id, 1) != 1)
         return 0;
     // Each temp is block-scoped so their non-overlapping lifetimes share the
     // dead outfile param dword ([ebp+8]/[ebp+0xb]), matching retail's frame.
     {
-        unsigned char b = field_0d;
-        outfile->Write(&b, 1);
+        unsigned char b = m_previousOccupied;
+        outfile->write(&b, 1);
     }
     {
-        unsigned char b = field_0c;
-        outfile->Write(&b, 1);
+        unsigned char b = m_occupied;
+        outfile->write(&b, 1);
     }
     {
-        short s = field_14;
-        outfile->Write(&s, sizeof(s));
+        short s = m_previousOccupyingHero;
+        outfile->write(&s, sizeof(s));
     }
     {
-        short s = field_10;
-        outfile->Write(&s, sizeof(s));
+        short s = m_occupyingHero;
+        outfile->write(&s, sizeof(s));
     }
     return 1;
 }
@@ -637,12 +656,12 @@ unsigned char type_record_hide_boat::save(TAbstractFile* outfile)
 VA(0x0049ae80, 0x44)  // anchor-vtable, dc 0x8cf64
 void type_record_hide_boat::replay(unsigned char draw)
 {
-    current_boat->occupied = field_0c;
-    current_boat->occupying_hero = field_10;
-    current_boat->restore_cell();
+    m_currentBoat->m_occupied = m_occupied;
+    m_currentBoat->m_occupyingHero = m_occupyingHero;
+    m_currentBoat->restoreCell();
     if (draw) {
-        gpAdvManager->CompleteDraw(0);
-        gpAdvManager->UpdateScreen(0, 0);
+        g_advManager->completeDraw(0);
+        g_advManager->updateScreen(0, 0);
     }
 }
 
@@ -652,21 +671,22 @@ void type_record_hide_boat::replay(unsigned char draw)
 VA(0x0049aed0, 0x23)  // anchor-vtable, dc 0x8cf94
 void type_record_hide_boat::undo()
 {
-    current_boat->occupied = field_0d;
-    current_boat->occupying_hero = field_14;
-    current_boat->obscure_cell();
+    m_currentBoat->m_occupied = m_previousOccupied;
+    m_currentBoat->m_occupyingHero = m_previousOccupyingHero;
+    m_currentBoat->obscureCell();
 }
 // E:\gamedcs\event_record.cpp:449
 // DC line 450 calls type_obscuring_object::get_location. Retail inlines that
 // helper into the packed x/y/z loads, so keep the source boundary even though
 // spelling the three fields directly produces the same candidate bytes.
-inline type_record_show_boat::type_record_show_boat(boat* _current_boat,
-                                                    type_point _location)
-    : type_record_hide_boat(_current_boat, 0,
-                            _current_boat->occupying_hero)
+// Before normalization (locals): _current_boat, _location.
+inline type_record_show_boat::type_record_show_boat(boat* currentBoat,
+                                                    type_point location)
+    : type_record_hide_boat(currentBoat, 0,
+                            currentBoat->m_occupyingHero)
 {
-    previous_location = _current_boat->get_location();
-    location = _location;
+    m_previousLocation = currentBoat->getLocation();
+    m_location = location;
 }
 
 #if 0  // @carcass
@@ -694,7 +714,7 @@ type_event_record* type_record_show_boat::create()
 
 // E:\gamedcs\event_record.cpp:466
 VA(0x0049af30, 0x6)  // anchor-vtable, dc 0x8d06c
-type_event_record_type type_record_show_boat::get_type()
+type_event_record_type type_record_show_boat::getType()
 {
     return RECORD_SHOW_BOAT;
 }
@@ -705,10 +725,10 @@ unsigned char type_record_show_boat::load(TAbstractFile* infile, int version)
 {
     if (!type_record_hide_boat::load(infile, version))
         return 0;
-    if (infile->Read(&location, sizeof(location)) != sizeof(location))
+    if (infile->read(&m_location, sizeof(m_location)) != sizeof(m_location))
         return 0;
-    unsigned char ok = infile->Read(&previous_location, sizeof(previous_location))
-                       == sizeof(previous_location);
+    unsigned char ok = infile->read(&m_previousLocation, sizeof(m_previousLocation))
+                       == sizeof(m_previousLocation);
     return ok;
 }
 
@@ -721,9 +741,9 @@ VA(0x0049afa0, 0x9F)  // anchor-vtable, dc 0x8d110
 unsigned char type_record_show_boat::save(TAbstractFile* outfile)
 {
     type_record_hide_boat::save(outfile);
-    outfile->Write(&location, sizeof(location));
-    unsigned char ok = outfile->Write(&previous_location, sizeof(previous_location))
-                       == sizeof(previous_location);
+    outfile->write(&m_location, sizeof(m_location));
+    unsigned char ok = outfile->write(&m_previousLocation, sizeof(m_previousLocation))
+                       == sizeof(m_previousLocation);
     return ok;
 }
 
@@ -733,15 +753,15 @@ unsigned char type_record_show_boat::save(TAbstractFile* outfile)
 VA(0x0049b040, 0xB5)  // anchor-vtable, dc 0x8d14c
 void type_record_show_boat::replay(unsigned char draw)
 {
-    current_boat->occupied = field_0c;
-    current_boat->x = location.x;
-    current_boat->y = location.y;
-    current_boat->z = location.z;
-    current_boat->obscure_cell();
-    if (draw && (GetMapExtra(location.x, location.y, location.z)
-                 & gMapVisibilityBit)) {
-        gpAdvManager->CompleteDraw(0);
-        gpAdvManager->UpdateScreen(0, 0);
+    m_currentBoat->m_occupied = m_occupied;
+    m_currentBoat->m_x = m_location.m_x;
+    m_currentBoat->m_y = m_location.m_y;
+    m_currentBoat->m_z = m_location.m_z;
+    m_currentBoat->obscureCell();
+    if (draw && (getMapExtra(m_location.m_x, m_location.m_y, m_location.m_z)
+                 & g_mapVisibilityBit)) {
+        g_advManager->completeDraw(0);
+        g_advManager->updateScreen(0, 0);
     }
 }
 
@@ -750,11 +770,11 @@ void type_record_show_boat::replay(unsigned char draw)
 VA(0x0049b100, 0x4E)  // anchor-vtable, dc 0x8d1d8
 void type_record_show_boat::undo()
 {
-    current_boat->occupied = field_0d;
-    current_boat->restore_cell();
-    current_boat->x = previous_location.x;
-    current_boat->y = previous_location.y;
-    current_boat->z = previous_location.z;
+    m_currentBoat->m_occupied = m_previousOccupied;
+    m_currentBoat->restoreCell();
+    m_currentBoat->m_x = m_previousLocation.m_x;
+    m_currentBoat->m_y = m_previousLocation.m_y;
+    m_currentBoat->m_z = m_previousLocation.m_z;
 }
 #if 0  // @carcass
 
@@ -788,7 +808,7 @@ type_event_record* type_record_erase::create()
 
 // E:\gamedcs\event_record.cpp:552
 VA(0x0049b180, 0x6)  // anchor-vtable, dc 0x8d2b8
-type_event_record_type type_record_erase::get_type()
+type_event_record_type type_record_erase::getType()
 {
     return RECORD_ERASE;
 }
@@ -797,15 +817,15 @@ type_event_record_type type_record_erase::get_type()
 VA(0x0049b190, 0x8B)  // anchor-vtable, dc 0x8d2bc
 unsigned char type_record_erase::load(TAbstractFile* infile, int version)
 {
-    if (infile->Read(&player_id, 1) != 1)
+    if (infile->read(&m_playerId, 1) != 1)
         return 0;
-    if (infile->Read(&location, sizeof(location)) != sizeof(location))
+    if (infile->read(&m_location, sizeof(m_location)) != sizeof(m_location))
         return 0;
-    if (infile->Read(&object_id, sizeof(object_id)) != sizeof(object_id))
+    if (infile->read(&m_objectId, sizeof(m_objectId)) != sizeof(m_objectId))
         return 0;
-    if (infile->Read(&extra_info, sizeof(extra_info)) != sizeof(extra_info))
+    if (infile->read(&m_extraInfo, sizeof(m_extraInfo)) != sizeof(m_extraInfo))
         return 0;
-    unsigned char ok = infile->Read(&object_index, sizeof(object_index)) == sizeof(object_index);
+    unsigned char ok = infile->read(&m_objectIndex, sizeof(m_objectIndex)) == sizeof(m_objectIndex);
     return ok;
 }
 
@@ -813,11 +833,11 @@ unsigned char type_record_erase::load(TAbstractFile* infile, int version)
 VA(0x0049b220, 0x57)  // anchor-vtable, dc 0x8d338
 unsigned char type_record_erase::save(TAbstractFile* outfile)
 {
-    outfile->Write(&player_id, 1);
-    outfile->Write(&location, sizeof(location));
-    outfile->Write(&object_id, sizeof(object_id));
-    outfile->Write(&extra_info, sizeof(extra_info));
-    unsigned char ok = outfile->Write(&object_index, sizeof(object_index)) == sizeof(object_index);
+    outfile->write(&m_playerId, 1);
+    outfile->write(&m_location, sizeof(m_location));
+    outfile->write(&m_objectId, sizeof(m_objectId));
+    outfile->write(&m_extraInfo, sizeof(m_extraInfo));
+    unsigned char ok = outfile->write(&m_objectIndex, sizeof(m_objectIndex)) == sizeof(m_objectIndex);
     return ok;
 }
 
@@ -828,15 +848,15 @@ unsigned char type_record_erase::save(TAbstractFile* outfile)
 VA(0x0049b280, 0xEA)  // anchor-vtable, dc 0x8d3c8
 void type_record_erase::replay(unsigned char draw)
 {
-    NewmapCell* cell = gpGame->worldMap.cell(location);
-    gpAdvManager->MobilizeCurrHero(1, 0, draw);
-    gpAdvManager->EraseObj(cell, location, 0);
-    if (draw && (GetMapExtra(location.x, location.y, location.z)
-                 & gMapVisibilityBit)) {
-        gpAdvManager->CompleteDraw(0);
-        gpAdvManager->UpdateScreen(0, 0);
+    NewmapCell* cell = g_game->m_worldMap.cell(m_location);
+    g_advManager->mobilizeCurrHero(1, 0, draw);
+    g_advManager->eraseObj(cell, m_location, 0);
+    if (draw && (getMapExtra(m_location.m_x, m_location.m_y, m_location.m_z)
+                 & g_mapVisibilityBit)) {
+        g_advManager->completeDraw(0);
+        g_advManager->updateScreen(0, 0);
     }
-    gpAdvManager->DemobilizeCurrHero(0, draw);
+    g_advManager->demobilizeCurrHero(0, draw);
 }
 
 // E:\gamedcs\event_record.cpp:614
@@ -845,10 +865,10 @@ void type_record_erase::replay(unsigned char draw)
 VA(0x0049b370, 0x83)  // anchor-vtable, dc 0x8d46c
 void type_record_erase::undo()
 {
-    gpGame->worldMap.PlaceObject(object_id, 0);
-    NewmapCell* cell = gpGame->worldMap.cell(location);
-    cell->extraInfo = extra_info;
-    cell->objectIndex = object_index;
+    g_game->m_worldMap.placeObject(m_objectId, 0);
+    NewmapCell* cell = g_game->m_worldMap.cell(m_location);
+    cell->m_extraInfo = m_extraInfo;
+    cell->m_objectIndex = m_objectIndex;
 }
 #if 0  // @carcass
 
@@ -868,7 +888,7 @@ type_event_record* type_record_hide_hero::create()
 
 // E:\gamedcs\event_record.cpp:646
 DC_ONLY(0x8d528, 0x4)
-type_event_record_type type_record_hide_hero::get_type()
+type_event_record_type type_record_hide_hero::getType()
 {
     // @stub
 }
@@ -891,21 +911,22 @@ type_event_record* type_record_hide_hero::create()
 VA(0x0049b430, 0xC8)  // anchor-vtable, dc 0x8d52c
 unsigned char type_record_hide_hero::load(TAbstractFile* infile, int version)
 {
-    if (infile->Read(&player_id, 1) != 1)
+    if (infile->read(&m_playerId, 1) != 1)
         return 0;
-    int hero_id;
-    if (infile->Read(&hero_id, sizeof(hero_id)) != sizeof(hero_id))
+    // Before normalization (locals): hero_id.
+    int heroId;
+    if (infile->read(&heroId, sizeof(heroId)) != sizeof(heroId))
         return 0;
-    current_hero = (hero_id == -1) ? NULL : &gpGame->heroes[hero_id];
-    if (infile->Read(&new_owner, 1) != 1)
+    m_currentHero = (heroId == -1) ? NULL : &g_game->m_heroes[heroId];
+    if (infile->read(&m_newOwner, 1) != 1)
         return 0;
-    if (infile->Read(&prev_owner, 1) != 1)
+    if (infile->read(&m_prevOwner, 1) != 1)
         return 0;
-    if (prev_owner < 0) {
-        town_garrison = 0;
+    if (m_prevOwner < 0) {
+        m_townGarrison = 0;
     } else {
-        town_garrison = (static_cast<unsigned>(prev_owner) >> 6) & 1;
-        prev_owner &= 0x3f;
+        m_townGarrison = (static_cast<unsigned>(m_prevOwner) >> 6) & 1;
+        m_prevOwner &= 0x3f;
     }
     return 1;
 }
@@ -914,15 +935,15 @@ unsigned char type_record_hide_hero::load(TAbstractFile* infile, int version)
 VA(0x0049b500, 0x61)  // anchor-vtable, dc 0x8d5a0
 unsigned char type_record_hide_hero::save(TAbstractFile* outfile)
 {
-    outfile->Write(&player_id, 1);
-    outfile->Write(&current_hero->id, sizeof(current_hero->id));
-    outfile->Write(&new_owner, 1);
+    outfile->write(&m_playerId, 1);
+    outfile->write(&m_currentHero->m_id, sizeof(m_currentHero->m_id));
+    outfile->write(&m_newOwner, 1);
     // The trailing byte packs prev_owner(+0xd) with town_garrison(+0xe) in
     // bit6. `|=` is load-bearing for retail's register homing.
-    unsigned char packed = prev_owner;
-    if (town_garrison)
+    unsigned char packed = m_prevOwner;
+    if (m_townGarrison)
         packed |= 0x40;
-    unsigned char ok = outfile->Write(&packed, 1) == 1;
+    unsigned char ok = outfile->write(&packed, 1) == 1;
     return ok;
 }
 
@@ -934,35 +955,35 @@ unsigned char type_record_hide_hero::save(TAbstractFile* outfile)
 VA(0x0049b570, 0x102)  // anchor-vtable, dc 0x8d5f0
 void type_record_hide_hero::replay(unsigned char draw)
 {
-    int player = player_id;
-    if (gNetLocalGamePos != player) {
-        gpAdvManager->DeactivateCurrTown(0);
-        gpAdvManager->DeactivateCurrHero(0);
+    int player = m_playerId;
+    if (g_netLocalGamePos != player) {
+        g_advManager->deactivateCurrTown(0);
+        g_advManager->deactivateCurrHero(0);
     }
 
-    gNetLocalGamePos = player;
-    gpCurrentPlayer = &gpGame->players[player];
-    gUnnamed69ccc4 = 1 << player;
+    g_netLocalGamePos = player;
+    g_currentPlayer = &g_game->m_players[player];
+    g_unnamed69ccc4 = 1 << player;
 
-    if (!town_garrison) {
-        if (player == prev_owner) {
-            if (gpCurrentPlayer->currHeroId != current_hero->id
-                || !gpAdvManager->bCurHeroMobile) {
-                gpAdvManager->SetHeroContext(current_hero->id, 1, 0, draw);
+    if (!m_townGarrison) {
+        if (player == m_prevOwner) {
+            if (g_currentPlayer->m_currHeroId != m_currentHero->m_id
+                || !g_advManager->m_curHeroMobile) {
+                g_advManager->setHeroContext(m_currentHero->m_id, 1, 0, draw);
             }
         }
-        current_hero->restore_cell();
+        m_currentHero->restoreCell();
     }
-    current_hero->restore_cell();
+    m_currentHero->restoreCell();
 
-    current_hero->owner = new_owner;
-    if (gNetLocalGamePos == prev_owner && !town_garrison) {
-        gpAdvManager->drawCursor = 0;
-        gpAdvManager->bCurHeroMobile = 0;
+    m_currentHero->m_owner = m_newOwner;
+    if (g_netLocalGamePos == m_prevOwner && !m_townGarrison) {
+        g_advManager->m_drawCursor = 0;
+        g_advManager->m_curHeroMobile = 0;
     }
     if (draw) {
-        gpAdvManager->CompleteDraw(0);
-        gpAdvManager->UpdateScreen(0, 0);
+        g_advManager->completeDraw(0);
+        g_advManager->updateScreen(0, 0);
     }
 }
 
@@ -970,9 +991,9 @@ void type_record_hide_hero::replay(unsigned char draw)
 VA(0x0049b680, 0x1F)  // anchor-vtable + inlined hero::obscure_cell, dc 0x8d688
 void type_record_hide_hero::undo()
 {
-    current_hero->owner = prev_owner;
-    if (!town_garrison)
-        current_hero->obscure_cell();
+    m_currentHero->m_owner = m_prevOwner;
+    if (!m_townGarrison)
+        m_currentHero->obscureCell();
 }
 #if 0  // @carcass
 
@@ -992,7 +1013,7 @@ type_event_record* type_record_show_hero::create()
 
 // E:\gamedcs\event_record.cpp:744
 DC_ONLY(0x8d7e8, 0x4)
-type_event_record_type type_record_show_hero::get_type()
+type_event_record_type type_record_show_hero::getType()
 {
     // @stub
 }
@@ -1017,13 +1038,13 @@ unsigned char type_record_show_hero::load(TAbstractFile* infile, int version)
 {
     if (!type_record_hide_hero::load(infile, version))
         return 0;
-    if (infile->Read(&location, sizeof(location)) != sizeof(location))
+    if (infile->read(&m_location, sizeof(m_location)) != sizeof(m_location))
         return 0;
-    if (infile->Read(&previous_location, sizeof(previous_location)) != sizeof(previous_location))
+    if (infile->read(&m_previousLocation, sizeof(m_previousLocation)) != sizeof(m_previousLocation))
         return 0;
-    if (infile->Read(&on_boat, 1) != 1)
+    if (infile->read(&m_onBoat, 1) != 1)
         return 0;
-    unsigned char ok = infile->Read(&previous_boat, 1) == 1;
+    unsigned char ok = infile->read(&m_previousBoat, 1) == 1;
     return ok;
 }
 
@@ -1032,10 +1053,10 @@ VA(0x0049b760, 0x95)  // anchor-vtable, dc 0x8d860
 unsigned char type_record_show_hero::save(TAbstractFile* outfile)
 {
     type_record_hide_hero::save(outfile);
-    outfile->Write(&location, sizeof(location));
-    outfile->Write(&previous_location, sizeof(previous_location));
-    outfile->Write(&on_boat, 1);
-    unsigned char ok = outfile->Write(&previous_boat, 1) == 1;
+    outfile->write(&m_location, sizeof(m_location));
+    outfile->write(&m_previousLocation, sizeof(m_previousLocation));
+    outfile->write(&m_onBoat, 1);
+    unsigned char ok = outfile->write(&m_previousBoat, 1) == 1;
     return ok;
 }
 #if 0  // @carcass
@@ -1045,34 +1066,34 @@ unsigned char type_record_show_hero::save(TAbstractFile* outfile)
 VA(0x0049b800, 0x15E)  // complete retail replay path, dc 0x8d8b4
 void type_record_show_hero::replay(unsigned char draw)
 {
-    int player = player_id;
-    if (gNetLocalGamePos != player) {
-        gpAdvManager->DeactivateCurrTown(0);
-        gpAdvManager->DeactivateCurrHero(0);
+    int player = m_playerId;
+    if (g_netLocalGamePos != player) {
+        g_advManager->deactivateCurrTown(0);
+        g_advManager->deactivateCurrHero(0);
     }
 
-    gNetLocalGamePos = player;
-    gpCurrentPlayer = &gpGame->players[player];
-    gUnnamed69ccc4 = 1 << player;
+    g_netLocalGamePos = player;
+    g_currentPlayer = &g_game->m_players[player];
+    g_unnamed69ccc4 = 1 << player;
 
-    current_hero->x = location.x;
-    current_hero->y = location.y;
-    current_hero->z = location.z;
-    current_hero->obscure_cell();
-    current_hero->owner = new_owner;
-    if (on_boat)
-        current_hero->flags |= 0x40000;
+    m_currentHero->m_x = m_location.m_x;
+    m_currentHero->m_y = m_location.m_y;
+    m_currentHero->m_z = m_location.m_z;
+    m_currentHero->obscureCell();
+    m_currentHero->m_owner = m_newOwner;
+    if (m_onBoat)
+        m_currentHero->m_flags |= 0x40000;
     else
-        current_hero->flags &= ~0x40000;
+        m_currentHero->m_flags &= ~0x40000;
 
-    if (draw && (GetMapExtra(location.x, location.y, location.z)
-                 & gMapVisibilityBit)) {
-        if (gpCurrentPlayer->currHeroId != current_hero->id
-            || !gpAdvManager->bCurHeroMobile) {
-            gpAdvManager->SetHeroContext(current_hero->id, 1, 0, draw);
+    if (draw && (getMapExtra(m_location.m_x, m_location.m_y, m_location.m_z)
+                 & g_mapVisibilityBit)) {
+        if (g_currentPlayer->m_currHeroId != m_currentHero->m_id
+            || !g_advManager->m_curHeroMobile) {
+            g_advManager->setHeroContext(m_currentHero->m_id, 1, 0, draw);
         }
-        gpAdvManager->CompleteDraw(0);
-        gpAdvManager->UpdateScreen(0, 0);
+        g_advManager->completeDraw(0);
+        g_advManager->updateScreen(0, 0);
     }
 }
 
@@ -1084,19 +1105,19 @@ void type_record_show_hero::replay(unsigned char draw)
 VA(0x0049b960, 0x9E)  // anchor-vtable, dc 0x8d9f4
 void type_record_show_hero::undo()
 {
-    current_hero->restore_cell();
-    if (gNetLocalGamePos == new_owner) {
-        gpAdvManager->drawCursor = 0;
-        gpAdvManager->bCurHeroMobile = 0;
+    m_currentHero->restoreCell();
+    if (g_netLocalGamePos == m_newOwner) {
+        g_advManager->m_drawCursor = 0;
+        g_advManager->m_curHeroMobile = 0;
     }
-    current_hero->owner = prev_owner;
-    current_hero->x = previous_location.x;
-    current_hero->y = previous_location.y;
-    current_hero->z = previous_location.z;
-    if (previous_boat)
-        current_hero->flags |= 0x40000;
+    m_currentHero->m_owner = m_prevOwner;
+    m_currentHero->m_x = m_previousLocation.m_x;
+    m_currentHero->m_y = m_previousLocation.m_y;
+    m_currentHero->m_z = m_previousLocation.m_z;
+    if (m_previousBoat)
+        m_currentHero->m_flags |= 0x40000;
     else
-        current_hero->flags &= ~0x40000;
+        m_currentHero->m_flags &= ~0x40000;
 }
 #if 0  // @carcass
 
@@ -1130,7 +1151,7 @@ type_event_record* type_record_player_death::create()
 
 // E:\gamedcs\event_record.cpp:858
 VA(0x0049ba30, 0x6)  // anchor-vtable, dc 0x8dae8
-type_event_record_type type_record_player_death::get_type()
+type_event_record_type type_record_player_death::getType()
 {
     return RECORD_PLAYER_DEATH;
 }
@@ -1139,9 +1160,9 @@ type_event_record_type type_record_player_death::get_type()
 VA(0x0049ba40, 0x3D)  // anchor-vtable, dc 0x8daec
 unsigned char type_record_player_death::load(TAbstractFile* infile, int version)
 {
-    if (infile->Read(&player_id, 1) != 1)
+    if (infile->read(&m_playerId, 1) != 1)
         return 0;
-    unsigned char ok = infile->Read(&extra, 1) == 1;
+    unsigned char ok = infile->read(&m_extra, 1) == 1;
     return ok;
 }
 
@@ -1149,8 +1170,8 @@ unsigned char type_record_player_death::load(TAbstractFile* infile, int version)
 VA(0x0049ba80, 0x30)  // anchor-vtable, dc 0x8db2c
 unsigned char type_record_player_death::save(TAbstractFile* outfile)
 {
-    outfile->Write(&player_id, 1);
-    unsigned char ok = outfile->Write(&extra, 1) == 1;
+    outfile->write(&m_playerId, 1);
+    unsigned char ok = outfile->write(&m_extra, 1) == 1;
     return ok;
 }
 #if 0  // @carcass
@@ -1168,9 +1189,9 @@ void type_record_player_death::replay(unsigned char draw)
 {
     if (draw) {
         std::string text;
-        text = format_string(gpGeneralText->GetText(6),
-                             gpGame->GetPlayerName(extra));
-        NormalDialog(text.c_str(), 1, -1, -1, 10, extra, -1, -1, -1, 5000,
+        text = formatString(g_generalText->getText(6),
+                             g_game->getPlayerName(m_extra));
+        normalDialog(text.c_str(), 1, -1, -1, 10, m_extra, -1, -1, -1, 5000,
                      -1, 0);
     }
 }
@@ -1215,7 +1236,7 @@ type_event_record* type_record_shroud::create()
 
 // E:\gamedcs\event_record.cpp:927
 VA(0x0049bc80, 0x6)  // anchor-vtable, dc 0x8dcd4
-type_event_record_type type_record_shroud::get_type()
+type_event_record_type type_record_shroud::getType()
 {
     return RECORD_SHROUD;
 }
@@ -1232,21 +1253,21 @@ type_event_record_type type_record_shroud::get_type()
 VA(0x0049bc90, 0x151)  // dc 0x8dcd8
 unsigned char type_record_shroud::load(TAbstractFile* infile, int version)
 {
-    if (infile->Read(&player_id, 1) != 1)
+    if (infile->read(&m_playerId, 1) != 1)
         return 0;
 
     short count;
-    if (infile->Read(&count, sizeof(count)) != sizeof(count))
+    if (infile->read(&count, sizeof(count)) != sizeof(count))
         return 0;
 
     type_shroud_change change;
-    changes.clear();
-    changes.reserve(count);
+    m_changes.clear();
+    m_changes.reserve(count);
 
     while (count--) {
-        if (infile->Read(&change, sizeof(change)) != sizeof(change))
+        if (infile->read(&change, sizeof(change)) != sizeof(change))
             return 0;
-        changes.push_back(change);
+        m_changes.push_back(change);
     }
     return 1;
 }
@@ -1259,11 +1280,11 @@ unsigned char type_record_shroud::load(TAbstractFile* infile, int version)
 VA(0x0049bdf0, 0x66)  // anchor-vtable, dc 0x8dd88
 unsigned char type_record_shroud::save(TAbstractFile* outfile)
 {
-    outfile->Write(&player_id, 1);
-    short count = changes.size();
-    outfile->Write(&count, sizeof(count));
+    outfile->write(&m_playerId, 1);
+    short count = m_changes.size();
+    outfile->write(&count, sizeof(count));
     for (int i = 0; i < count; ++i)
-        outfile->Write(&changes[i], sizeof(type_shroud_change));
+        outfile->write(&m_changes[i], sizeof(type_shroud_change));
     return 1;
 }
 // E:\gamedcs\event_record.cpp:978
@@ -1273,16 +1294,17 @@ unsigned char type_record_shroud::save(TAbstractFile* outfile)
 // emitting it.  It is defined here at its DC source position so /Ob2 can
 // make that same decision - a defined-but-unclaimed symbol adds no
 // objdiff row of its own.
-void type_record_shroud::add_change(int x, int y, int z,
-                                    short old_value, short new_value)
+void type_record_shroud::addChange(int x, int y, int z,
+                                    // Before normalization (locals): old_value, new_value.
+                                    short oldValue, short newValue)
 {
     type_shroud_change change;
-    change.x = x;
-    change.y = y;
-    change.z = z;
-    change.old_value = old_value;
-    change.new_value = new_value;
-    changes.push_back(change);
+    change.m_x = x;
+    change.m_y = y;
+    change.m_z = z;
+    change.m_oldValue = oldValue;
+    change.m_newValue = newValue;
+    m_changes.push_back(change);
 }
 
 // E:\gamedcs\event_record.cpp:993
@@ -1294,18 +1316,18 @@ VA(0x0049be60, 0xBA)  // anchor-vtable, dc 0x8de70
 void type_record_shroud::replay(unsigned char draw)
 {
     unsigned char changed = 0;
-    int i = changes.size();
+    int i = m_changes.size();
     while (i--) {
-        type_shroud_change change = changes[i];
-        if ((gMapVisibilityBit & change.new_value)
-            != (gMapVisibilityBit & change.old_value)) {
+        type_shroud_change change = m_changes[i];
+        if ((g_mapVisibilityBit & change.m_newValue)
+            != (g_mapVisibilityBit & change.m_oldValue)) {
             changed = 1;
         }
-        *GetMapExtraPtr(change.x, change.y, change.z) = change.new_value;
+        *getMapExtraPtr(change.m_x, change.m_y, change.m_z) = change.m_newValue;
     }
     if (draw && changed) {
-        gpAdvManager->CompleteDraw(0);
-        gpAdvManager->UpdateScreen(0, 0);
+        g_advManager->completeDraw(0);
+        g_advManager->updateScreen(0, 0);
     }
 }
 
@@ -1315,10 +1337,10 @@ void type_record_shroud::replay(unsigned char draw)
 VA(0x0049bf20, 0x6E)  // anchor-vtable, dc 0x8df60
 void type_record_shroud::undo()
 {
-    int i = changes.size();
+    int i = m_changes.size();
     while (i--) {
-        type_shroud_change change = changes[i];
-        *GetMapExtraPtr(change.x, change.y, change.z) = change.old_value;
+        type_shroud_change change = m_changes[i];
+        *getMapExtraPtr(change.m_x, change.m_y, change.m_z) = change.m_oldValue;
     }
 }
 #if 0  // @carcass
@@ -1333,15 +1355,16 @@ void type_record_shroud::undo()
 // map-change message remains stack-built and sent before the direct record
 // push; retail expands both the CNetMsg base constructor (field order
 // subType / field_00 / size / field_04 / field_10) and the record's own.
+// Before normalization (locals): new_owner, current_mine.
 VA(0x0049bf90, 0x1F1)  // anchor-global (0x41c subtype + 0x63debc), dc 0x8dfe0
-void game::record_claim_mine(long id, long new_owner)
+void game::recordClaimMine(long id, long newOwner)
 {
-    mine& current_mine = mines[id];
-    type_point location(current_mine.mapX, current_mine.mapY,
-                        current_mine.mapZ);
-    CMCClaimMine msg(id, new_owner);
-    SendMapChange(&msg);
-    eventRecords.push_back(new type_record_claim_mine(id, new_owner));
+    mine& currentMine = m_mines[id];
+    type_point location(currentMine.m_mapX, currentMine.m_mapY,
+                        currentMine.m_mapZ);
+    CMCClaimMine msg(id, newOwner);
+    sendMapChange(&msg);
+    m_eventRecords.push_back(new type_record_claim_mine(id, newOwner));
 }
 
 // E:\gamedcs\event_record.cpp:1049
@@ -1352,13 +1375,14 @@ void game::record_claim_mine(long id, long new_owner)
 // statement rows restored, all 20 retail blocks are exact. The remaining
 // semantic differences from record_claim_mine are the 0x41d subtype and the
 // town pool used for the old-owner snapshot.
+// Before normalization (locals): new_owner.
 VA(0x0049c190, 0x1FE)  // anchor-global (0x41d subtype + 0x63ded4), dc 0x8e058
-void game::record_claim_town(long id, long new_owner)
+void game::recordClaimTown(long id, long newOwner)
 {
-    GetTown(id);
-    CMCClaimTown msg(id, new_owner);
-    SendMapChange(&msg);
-    eventRecords.push_back(new type_record_claim_town(id, new_owner));
+    getTown(id);
+    CMCClaimTown msg(id, newOwner);
+    sendMapChange(&msg);
+    m_eventRecords.push_back(new type_record_claim_town(id, newOwner));
 }
 // E:\gamedcs\event_record.cpp:1061
 // Residual (88.70%): the inlined vector insert. Retail expands _Ufill's
@@ -1371,12 +1395,12 @@ void game::record_claim_town(long id, long new_owner)
 // the cell (evaluated right-to-left - objectIndex, extraInfo,
 // object_type_index) and the vector's insert.
 VA(0x0049c390, 0x1C2)  // anchor-vtable (constructs 0x63df1c), dc 0x8e0b8
-void game::record_erase_object(NewmapCell* cell, type_point point)
+void game::recordEraseObject(NewmapCell* cell, type_point point)
 {
-    eventRecords.push_back(new type_record_erase(point,
-                                                 cell->object_type_index,
-                                                 cell->extraInfo,
-                                                 cell->objectIndex));
+    m_eventRecords.push_back(new type_record_erase(point,
+                                                 cell->m_objectTypeIndex,
+                                                 cell->m_extraInfo,
+                                                 cell->m_objectIndex));
 }
 #if 0  // @carcass
 
@@ -1386,12 +1410,13 @@ void game::record_erase_object(NewmapCell* cell, type_point point)
 // Retail takes THREE arguments (`ret 0xc`), not the Dreamcast's one: the
 // replay state goes in the record's +0xc/+0x10 pair while the constructor
 // snapshots the boat's current state into +0xd/+0x14 for undo.
+// Before normalization (locals): current_boat, occupying_hero.
 VA(0x0049c560, 0x1B8)  // anchor-vtable (constructs 0x63deec), dc 0x8e108
-void game::record_hide_boat(boat* current_boat, unsigned char occupied,
-                            int occupying_hero)
+void game::recordHideBoat(boat* currentBoat, unsigned char occupied,
+                            int occupyingHero)
 {
-    eventRecords.push_back(new type_record_hide_boat(current_boat, occupied,
-                                                     occupying_hero));
+    m_eventRecords.push_back(new type_record_hide_boat(currentBoat, occupied,
+                                                     occupyingHero));
 }
 #if 0  // @carcass
 
@@ -1402,12 +1427,13 @@ void game::record_hide_boat(boat* current_boat, unsigned char occupied,
 // record's +0xe holds and hide_hero::undo consults.
 // EXACT 2026-08-28 after restoring the DC constructor boundary's
 // prev_owner-before-new_owner statement order.
+// Before normalization (locals): new_owner, town_garrison.
 VA(0x0049c720, 0x1DD)  // anchor-vtable (constructs 0x63df34), dc 0x8e148
-void game::record_hide_hero(hero* who, char new_owner,
-                            unsigned char town_garrison)
+void game::recordHideHero(hero* who, char newOwner,
+                            unsigned char townGarrison)
 {
-    eventRecords.push_back(new type_record_hide_hero(who, new_owner,
-                                                     town_garrison));
+    m_eventRecords.push_back(new type_record_hide_hero(who, newOwner,
+                                                     townGarrison));
 }
 #if 0  // @carcass
 
@@ -1422,10 +1448,11 @@ void game::record_hide_hero(hero* who, char new_owner,
 // capacity-growth spelling: retail duplicates size() on the >1 arm while C1
 // reuses the already-computed distance. Both CFGs have 12 branches/3 returns;
 // direct-field, ordinary-inline and force-inline probes are byte-flat.
+// Before normalization (locals): current_boat.
 VA(0x0049c900, 0x217)  // anchor-vtable (constructs 0x63df04), dc 0x8e18c
-void game::record_show_boat(boat* current_boat, type_point point)
+void game::recordShowBoat(boat* currentBoat, type_point point)
 {
-    eventRecords.push_back(new type_record_show_boat(current_boat, point));
+    m_eventRecords.push_back(new type_record_show_boat(currentBoat, point));
 }
 #if 0  // @carcass
 
@@ -1435,10 +1462,10 @@ void game::record_show_boat(boat* current_boat, type_point point)
 // EXACT 2026-08-28. This second inline consumer closes with the same base
 // constructor ordering as record_hide_hero.
 VA(0x0049cb20, 0x226)  // anchor-vtable (constructs 0x63df4c), dc 0x8e1d0
-void game::record_show_hero(hero* who, signed char player, type_point point,
+void game::recordShowHero(hero* who, signed char player, type_point point,
                             unsigned char reset)
 {
-    eventRecords.push_back(new type_record_show_hero(who, player, point,
+    m_eventRecords.push_back(new type_record_show_hero(who, player, point,
                                                      reset));
 }
 #if 0  // @carcass
@@ -1447,9 +1474,9 @@ void game::record_show_hero(hero* who, signed char player, type_point point,
 
 // E:\gamedcs\event_record.cpp:1106
 VA(0x0049cd50, 0x1FA)  // anchor-vtable (constructs 0x63de8c), dc 0x8e270
-void game::record_move(hero* who, int direction, type_point destination)
+void game::recordMove(hero* who, int direction, type_point destination)
 {
-    eventRecords.push_back(new type_record_move_hero(who, direction,
+    m_eventRecords.push_back(new type_record_move_hero(who, direction,
                                                      destination));
 }
 #if 0  // @carcass
@@ -1474,9 +1501,9 @@ void game::record_player_death(char player_id)
 // derived vptr store is type_record_teleport's 0x63dea4, so
 // record_player_death above has no retail row at all.
 VA(0x0049cf50, 0x20B)  // anchor-vtable (constructs 0x63dea4), dc 0x8e2f8
-void game::record_teleport(hero* who, type_point destination)
+void game::recordTeleport(hero* who, type_point destination)
 {
-    eventRecords.push_back(new type_record_teleport(who, destination));
+    m_eventRecords.push_back(new type_record_teleport(who, destination));
 }
 
 // E:\gamedcs\event_record.cpp:1136
@@ -1498,37 +1525,39 @@ void game::record_teleport(hero* who, type_point destination)
 // queued only for a local, non-empty, non-replay sweep; otherwise it is
 // deleted through the vtable.
 VA(0x0049d160, 0x268)  // anchor-global (0x63df7c + GetMapExtraPtr), dc 0x8e33c
-void game::SetVisibility(int startX, int startY, int z, int whichPlayer,
-                         int range, unsigned char remote_move)
+void game::setVisibility(int startX, int startY, int z, int whichPlayer,
+                         // Before normalization (locals): remote_move, old_value, new_value,
+                         // r_eventRecords.
+                         int range, unsigned char remoteMove)
 {
     if (whichPlayer < 0 || whichPlayer >= 8)
         return;
 
-    unsigned short visMask = GetTeamMask(whichPlayer);
+    unsigned short visMask = getTeamMask(whichPlayer);
     double limit = range + 0.5;
     type_record_shroud* record = new type_record_shroud();
 
-    int x0 = max_ref(startX - range, 0);
-    int x1 = _cpp_min(startX + range + 1, MAP_WIDTH);
-    int y0 = max_ref(startY - range, 0);
-    int y1 = _cpp_min(startY + range + 1, MAP_HEIGHT);
+    int x0 = maxRef(startX - range, 0);
+    int x1 = cppMin(startX + range + 1, g_mapWidth);
+    int y0 = maxRef(startY - range, 0);
+    int y1 = cppMin(startY + range + 1, g_mapHeight);
 
     for (int y = y0; y < y1; ++y) {
         int dy = startY - y;
         for (int x = x0; x < x1; ++x) {
             int dx = startX - x;
             if (sqrt(static_cast<double>(dx * dx + dy * dy)) <= limit) {
-                unsigned short* extra = GetMapExtraPtr(x, y, z);
-                unsigned short old_value = *extra;
-                unsigned short new_value = old_value | visMask;
-                if (old_value != new_value)
-                    record->add_change(x, y, z, old_value, new_value);
-                *extra = new_value;
+                unsigned short* extra = getMapExtraPtr(x, y, z);
+                unsigned short oldValue = *extra;
+                unsigned short newValue = oldValue | visMask;
+                if (oldValue != newValue)
+                    record->addChange(x, y, z, oldValue, newValue);
+                *extra = newValue;
             }
         }
     }
 
-    if (!remote_move && record->changes.size() != 0 && !gCompleteDrawMessageBypass)
+    if (!remoteMove && record->m_changes.size() != 0 && !g_completeDrawMessageBypass)
     {
         // Retail CALLS insert(iterator, n, const T&) here where the smaller
         // game::record_* bodies expand it, so the site is pinned - with
@@ -1537,10 +1566,10 @@ void game::SetVisibility(int startX, int startY, int z, int whichPlayer,
         // The record list NAMED AS A REFERENCE: 85.6452 -> 86.7235.  The same
         // change on `changes` in this body is flat, and on the sibling
         // ResetVisibility 0x49d3d0 it does not beat MAX.
-        std::vector<type_event_record*>& r_eventRecords = eventRecords;
-        type_event_record** at = r_eventRecords.end();
+        std::vector<type_event_record*>& rEventRecords = m_eventRecords;
+        type_event_record** at = rEventRecords.end();
 #pragma inline_depth(0)
-        r_eventRecords.insert(at, 1, record);
+        rEventRecords.insert(at, 1, record);
 #pragma inline_depth()
     } else {
         delete record;
@@ -1554,48 +1583,49 @@ void game::SetVisibility(int startX, int startY, int z, int whichPlayer,
 // Cover of Darkness's semantics exactly - while -1 clears all eight. It
 // also has no replay guard on the queue, only the empty-record one.
 VA(0x0049d3d0, 0x260)  // anchor-global (0x63df7c + GetMapExtraPtr), dc 0x8e54c
-void game::ResetVisibility(int startX, int startY, int z, int whichPlayer,
+void game::resetVisibility(int startX, int startY, int z, int whichPlayer,
                            int range)
 {
     unsigned short keepMask = 0x100;
     if (whichPlayer != -1)
-        keepMask = GetTeamMask(whichPlayer) | 0x100;
+        keepMask = getTeamMask(whichPlayer) | 0x100;
 
     double limit = range + 0.5;
     type_record_shroud* record = new type_record_shroud();
 
-    int x0 = max_ref(startX - range, 0);
-    int x1 = _cpp_min(startX + range + 1, MAP_WIDTH);
-    int y0 = max_ref(startY - range, 0);
-    int y1 = _cpp_min(startY + range + 1, MAP_HEIGHT);
+    int x0 = maxRef(startX - range, 0);
+    int x1 = cppMin(startX + range + 1, g_mapWidth);
+    int y0 = maxRef(startY - range, 0);
+    int y1 = cppMin(startY + range + 1, g_mapHeight);
 
     for (int y = y0; y < y1; ++y) {
         int dy = startY - y;
         for (int x = x0; x < x1; ++x) {
             int dx = startX - x;
             if (sqrt(static_cast<double>(dx * dx + dy * dy)) <= limit) {
-                unsigned short* extra = GetMapExtraPtr(x, y, z);
-                unsigned short old_value = *extra;
-                unsigned short new_value = old_value & keepMask;
-                if (old_value != new_value)
-                    record->add_change(x, y, z, old_value, new_value);
-                *extra = new_value;
+                unsigned short* extra = getMapExtraPtr(x, y, z);
+                // Before normalization (locals): old_value, new_value.
+                unsigned short oldValue = *extra;
+                unsigned short newValue = oldValue & keepMask;
+                if (oldValue != newValue)
+                    record->addChange(x, y, z, oldValue, newValue);
+                *extra = newValue;
             }
         }
     }
 
     // The EMPTY arm is the one retail lays out inline (`jne` forward to the
     // queue), so the test is spelled == 0, not != 0.
-    if (record->changes.size() == 0) {
+    if (record->m_changes.size() == 0) {
         delete record;
     } else {
         // Retail CALLS insert(iterator, n, const T&) here where the smaller
         // game::record_* bodies expand it, so the site is pinned - with
         // end() hoisted OUT of the pinned statement, because retail keeps
         // that one inline (`mov eax,[ecx+8]`).
-        type_event_record** at = eventRecords.end();
+        type_event_record** at = m_eventRecords.end();
 #pragma inline_depth(0)
-        eventRecords.insert(at, 1, record);
+        m_eventRecords.insert(at, 1, record);
 #pragma inline_depth()
     }
 }
@@ -1604,12 +1634,12 @@ void game::ResetVisibility(int startX, int startY, int z, int whichPlayer,
 // E:\gamedcs\event_record.cpp:1239
 #endif  // @carcass
 VA(0x0049d630, 0x8C)  // linkorder dc-label, dc 0x8e730
-void game::clear_event_records()
+void game::clearEventRecords()
 {
-    int i = eventRecords.size();
+    int i = m_eventRecords.size();
     while (i-- != 0)
-        delete eventRecords[i];
-    eventRecords.clear();
+        delete m_eventRecords[i];
+    m_eventRecords.clear();
 }
 
 // E:\gamedcs\event_record.cpp:1251
@@ -1619,19 +1649,20 @@ void game::clear_event_records()
 // then a signed delete loop and vector::erase of [0, i). `i` is an int,
 // which is what makes the size compares unsigned (jae, the usual
 // promotion) while the delete loop's own bound stays signed (jl).
+// Before normalization (locals): player_id.
 VA(0x0049d6c0, 0xD3)  // linkorder dc-label, dc 0x8e77c
-void game::clear_event_records(char player_id)
+void game::clearEventRecords(char playerId)
 {
     int i = 0;
-    while (i < eventRecords.size() && eventRecords[i]->player_id != player_id)
+    while (i < m_eventRecords.size() && m_eventRecords[i]->m_playerId != playerId)
         ++i;
-    if (i == eventRecords.size())
+    if (i == m_eventRecords.size())
         return;
-    while (i < eventRecords.size() && eventRecords[i]->player_id == player_id)
+    while (i < m_eventRecords.size() && m_eventRecords[i]->m_playerId == playerId)
         ++i;
     for (int j = 0; j < i; ++j)
-        delete eventRecords[j];
-    eventRecords.erase(eventRecords.begin(), eventRecords.begin() + i);
+        delete m_eventRecords[j];
+    m_eventRecords.erase(m_eventRecords.begin(), m_eventRecords.begin() + i);
 }
 
 // E:\gamedcs\event_record.cpp:1282
@@ -1641,103 +1672,103 @@ void game::clear_event_records(char player_id)
 // seat, the current hero/town context and two preference latches are saved
 // across the whole run and restored at the end.
 VA(0x0049d7a0, 0x2C1)  // linkorder dc-label + adventure-options edge, dc 0x8e830
-void game::play_recorded_events()
+void game::playRecordedEvents()
 {
-    int savedPlayer = gNetLocalGamePos;
-    playerData* actingPlayer = gpCurrentPlayer;
+    int savedPlayer = g_netLocalGamePos;
+    playerData* actingPlayer = g_currentPlayer;
 
     hero* currHero;
-    if (actingPlayer->currHeroId != -1)
-        currHero = &gpGame->heroes[actingPlayer->currHeroId];
+    if (actingPlayer->m_currHeroId != -1)
+        currHero = &g_game->m_heroes[actingPlayer->m_currHeroId];
     else
         currHero = 0;
 
-    gCompleteDrawMessageBypass = 1;
+    g_completeDrawMessageBypass = 1;
 
     town* currTown;
-    if (actingPlayer->currTownId >= 0 && actingPlayer->currTownId != -1)
-        currTown = &gpGame->towns[actingPlayer->currTownId];
+    if (actingPlayer->m_currTownId >= 0 && actingPlayer->m_currTownId != -1)
+        currTown = &g_game->m_towns[actingPlayer->m_currTownId];
     else
         currTown = 0;
 
     if (currHero == 0 && currTown == 0) {
-        if (actingPlayer->numHeroes > 0) {
-            if (actingPlayer->heroes[0] == -1)
+        if (actingPlayer->m_numHeroes > 0) {
+            if (actingPlayer->m_heroes[0] == -1)
                 currHero = 0;
             else
-                currHero = &gpGame->heroes[actingPlayer->heroes[0]];
+                currHero = &g_game->m_heroes[actingPlayer->m_heroes[0]];
         } else {
-            if (actingPlayer->townIds[0] == -1)
+            if (actingPlayer->m_townIds[0] == -1)
                 currTown = 0;
             else
-                currTown = &gpGame->towns[actingPlayer->townIds[0]];
+                currTown = &g_game->m_towns[actingPlayer->m_townIds[0]];
         }
     }
 
-    int i = eventRecords.size();
+    int i = m_eventRecords.size();
     while (i--)
-        eventRecords[i]->undo();
+        m_eventRecords[i]->undo();
 
-    gpAdvManager->CompleteDraw(0);
-    gpAdvManager->UpdateScreen(0, 0);
+    g_advManager->completeDraw(0);
+    g_advManager->updateScreen(0, 0);
 
-    int count = eventRecords.size();
+    int count = m_eventRecords.size();
     unsigned char interrupted = 0;
-    unsigned char savedSuppress = gUnnamed698790 != 0;
-    int savedWalkSpeed = gUnnamed698758.computerWalkSpeed;
-    if (gUnnamed698758.computerWalkSpeed > 4)
-        gUnnamed698758.computerWalkSpeed = 4;
-    gUnnamed698790 = 0;
+    unsigned char savedSuppress = g_unnamed698790 != 0;
+    int savedWalkSpeed = g_unnamed698758.m_computerWalkSpeed;
+    if (g_unnamed698758.m_computerWalkSpeed > 4)
+        g_unnamed698758.m_computerWalkSpeed = 4;
+    g_unnamed698790 = 0;
 
     for (int j = 0; j < count; ++j) {
         unsigned char draw;
         if (!interrupted) {
             draw = 1;
-            if (eventRecords[j]->player_id == savedPlayer)
+            if (m_eventRecords[j]->m_playerId == savedPlayer)
                 draw = 0;
         } else {
             draw = 0;
         }
-        eventRecords[j]->replay(draw);
+        m_eventRecords[j]->replay(draw);
 
-        message msg = gpInputManager->GetEvent();
-        if (msg.id != MESSAGE_NONE) {
-            if (msg.id == MESSAGE_KEY_DOWN
-                || msg.id == MESSAGE_LEFT_BUTTON_DOWN
-                || msg.id == MESSAGE_RIGHT_BUTTON_DOWN
-                || msg.id == MESSAGE_WIDGET)
+        message msg = g_inputManager->getEvent();
+        if (msg.m_id != MESSAGE_NONE) {
+            if (msg.m_id == MESSAGE_KEY_DOWN
+                || msg.m_id == MESSAGE_LEFT_BUTTON_DOWN
+                || msg.m_id == MESSAGE_RIGHT_BUTTON_DOWN
+                || msg.m_id == MESSAGE_WIDGET)
                 interrupted = 1;
             else
-                Process1WindowsMessage();
+                process1WindowsMessage();
         }
     }
 
-    gCompleteDrawMessageBypass = 0;
-    gCompleteDrawEnabled = 1;
-    set_player(savedPlayer);
+    g_completeDrawMessageBypass = 0;
+    g_completeDrawEnabled = 1;
+    setPlayer(savedPlayer);
 
     if (currHero != 0)
-        gpAdvManager->SetHeroContext(currHero->id, 0, 0, 1);
+        g_advManager->setHeroContext(currHero->m_id, 0, 0, 1);
     if (currTown != 0)
-        gpAdvManager->SetTownContext(currTown->id, 0, 1);
+        g_advManager->setTownContext(currTown->m_id, 0, 1);
 
-    gUnnamed698758.computerWalkSpeed = savedWalkSpeed;
-    gUnnamed698790 = savedSuppress;
-    gpAdvManager->CompleteDraw(0);
-    gpAdvManager->UpdateScreen(0, 0);
+    g_unnamed698758.m_computerWalkSpeed = savedWalkSpeed;
+    g_unnamed698790 = savedSuppress;
+    g_advManager->completeDraw(0);
+    g_advManager->updateScreen(0, 0);
 }
 #if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:1367
 DC_ONLY(0x8ea88, 0x46)
-unsigned char game::replay_available()
+unsigned char game::replayAvailable()
 {
     // @stub
 }
 
 // E:\gamedcs\event_record.cpp:1380
 DC_ONLY(0x8ead0, 0xF4)
-unsigned char game::load_recorded_events(void* infile)
+unsigned char game::loadRecordedEvents(void* infile)
 {
     // @stub
 }
@@ -1961,14 +1992,14 @@ void type_record_player_death::~type_record_player_death()
 
 // E:\gamedcs\event_record.h:319
 DC_ONLY(0x8f258, 0x18)
-long type_record_shroud::get_change_count()
+long type_record_shroud::getChangeCount()
 {
     // @stub
 }
 
 // E:\gamedcs\game.h:877
 DC_ONLY(0x8f270, 0x58)
-unsigned char game::GetTeamMask(int playerNum)
+unsigned char game::getTeamMask(int playerNum)
 {
     // @stub
 }
@@ -2551,10 +2582,10 @@ void std::__destroy_aux()
 
 // E:\gamedcs\event_record.cpp:1367
 VA(0x0049da70, 0x41)  // DC roster order + adventure-options call edge
-unsigned char game::replay_available() const
+unsigned char game::replayAvailable() const
 {
-    for (unsigned i = 0; i < eventRecords.size(); ++i) {
-        if (eventRecords[i]->player_id != gNetLocalGamePos)
+    for (unsigned i = 0; i < m_eventRecords.size(); ++i) {
+        if (m_eventRecords[i]->m_playerId != g_netLocalGamePos)
             return 1;
     }
     return 0;
@@ -2564,8 +2595,9 @@ unsigned char game::replay_available() const
 // the type byte load_recorded_events reads off the stream, in
 // type_event_record_type order, plus the unused zero slot; the retail
 // dispatch is `call dword ptr [ecx*4 + 0x6776b0]` after a 1..11 range check.
+// Before normalization: gRecordCreators.
 DATA(0x006776b0)
-type_event_record* (*gRecordCreators[12])() = {
+type_event_record* (*g_recordCreators[12])() = {
     0,
     type_record_move_hero::create,
     type_record_teleport::create,
@@ -2586,14 +2618,14 @@ type_event_record* (*gRecordCreators[12])() = {
 // is EXPANDED at the head (the reverse delete walk plus the clear), and the
 // type byte indexes the factory table above after a 1..11 range check.
 VA(0x0049dac0, 0x19C)  // linkorder dc-label + factory-table dispatch, dc 0x8ead0
-unsigned char game::load_recorded_events(TAbstractFile* infile, int version)
+unsigned char game::loadRecordedEvents(TAbstractFile* infile, int version)
 {
     int count;
-    if (infile->Read(&count, sizeof(count)) != sizeof(count))
+    if (infile->read(&count, sizeof(count)) != sizeof(count))
         return 0;
 
-    clear_event_records();
-    eventRecords.reserve(count);
+    clearEventRecords();
+    m_eventRecords.reserve(count);
 
     // Both locals are FUNCTION-scoped: retail homes them at [ebp-1] and
     // [ebp-0x18] rather than in the dead parameter slots block scope would
@@ -2602,28 +2634,28 @@ unsigned char game::load_recorded_events(TAbstractFile* infile, int version)
     char type;
     type_event_record* record;
     while (count--) {
-        if (infile->Read(&type, 1) != 1)
+        if (infile->read(&type, 1) != 1)
             return 0;
         if (type <= 0 || type > RECORD_SHROUD)
             return 0;
-        record = (*gRecordCreators[type])();
+        record = (*g_recordCreators[type])();
         if (!record->load(infile, version))
             return 0;
-        eventRecords.push_back(record);
+        m_eventRecords.push_back(record);
     }
     return 1;
 }
 
 // E:\gamedcs\event_record.cpp:1426
 VA(0x0049dc60, 0x8C)  // linkorder dc-label, dc 0x8ebc4
-unsigned char game::save_recorded_events(TAbstractFile* outfile)
+unsigned char game::saveRecordedEvents(TAbstractFile* outfile)
 {
-    int count = eventRecords.size();
-    outfile->Write(&count, 4);
+    int count = m_eventRecords.size();
+    outfile->write(&count, 4);
     for (int i = 0; i < count; ++i) {
-        unsigned char type = eventRecords[i]->get_type();
-        outfile->Write(&type, 1);
-        if (!eventRecords[i]->save(outfile))
+        unsigned char type = m_eventRecords[i]->getType();
+        outfile->write(&type, 1);
+        if (!m_eventRecords[i]->save(outfile))
             return 0;
     }
     return 1;

@@ -20,13 +20,13 @@ namespace {
 
 class TAutoStrPtr {
 public:
-    TAutoStrPtr() : pStr(0) {}
-    ~TAutoStrPtr() { delete[] pStr; }
-    void set(char* value) { pStr = value; }
-    char* get() const { return pStr; }
+    TAutoStrPtr() : m_str(0) {}
+    ~TAutoStrPtr() { delete[] m_str; }
+    void set(char* value) { m_str = value; }
+    char* get() const { return m_str; }
 
 private:
-    char* pStr;
+    char* m_str;
 };
 
 }

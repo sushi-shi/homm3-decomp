@@ -9,8 +9,10 @@ namespace ResourceManager {
 // Kept in an owner header so its one proven shape is available without
 // perturbing unrelated consumers of the public ResourceManager surface.
 struct TCacheTreeInsertResult {
-    TCacheIterator first;
-    bool second;
+    // Before normalization: first.
+    TCacheIterator m_first;
+    // Before normalization: second.
+    bool m_second;
 };
 
 }

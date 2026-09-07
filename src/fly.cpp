@@ -19,15 +19,15 @@
 // UpdateCombatArea expands to the one retail UpdateScreen call. Keeping the
 // inline names here restores the cross-TU source calls without inventing x86
 // bodies which retail does not contain.
-inline bool combatManager::ScrollTo(SLimitData, bool, bool, bool)
+inline bool combatManager::scrollTo(SLimitData, bool, bool, bool)
 {
     return false;
 }
 
-inline void combatManager::UpdateCombatArea(const SLimitData& area)
+inline void combatManager::updateCombatArea(const SLimitData& area)
 {
-    gpWindowManager->UpdateScreen(
-        area.iMinX, area.iMinY, area.Width(), area.Height());
+    g_windowManager->updateScreen(
+        area.m_minX, area.m_minY, area.width(), area.height());
 }
 
 // GameTime, glTimers and gCombatAreaLimits all reach this TU through
@@ -43,7 +43,7 @@ inline void combatManager::UpdateCombatArea(const SLimitData& area)
 // terrain.h bitset initializers.
 #if 0  // @carcass -- inlined away in retail
 DC_ONLY(0xa1360, 0x88)
-unsigned char army::find_flyer_attack_cell(int start, int target)
+unsigned char army::findFlyerAttackCell(int start, int target)
 {
     // @stub
 }
@@ -52,7 +52,7 @@ unsigned char army::find_flyer_attack_cell(int start, int target)
 // E:\gamedcs\fly.cpp:58
 #if 0  // @carcass -- inlined away in retail
 DC_ONLY(0xa13e8, 0x46)
-unsigned char army::find_flyer_attack_cell(int target)
+unsigned char army::findFlyerAttackCell(int target)
 {
     // @stub
 }
@@ -99,49 +99,50 @@ unsigned char army::find_flyer_attack_cell(int target)
 // controls below document why the isolated local maxima must not be
 // reintroduced.
 // E:\gamedcs\fly.cpp:35
-inline bool army::find_flyer_attack_cell(int start, int target) const
+inline bool army::findFlyerAttackCell(int start, int target) const
 {
     for (long dir = 0; dir < 6; dir++) {
-        long adjacent = gpCombatManager->adjacentCells[target][dir];
-        long hex = adjacent - start + gridIndex;
+        long adjacent = g_combatManager->m_adjacentCells[target][dir];
+        long hex = adjacent - start + m_gridIndex;
         if (adjacent >= 0 && hex >= 0 && hex < COMBAT_GRID_CELLS
-                && combatManager::get_distance(start, adjacent) <= GetSpeed()
-                && CanFit(hex, 0, 0))
+                && combatManager::getDistance(start, adjacent) <= getSpeed()
+                && canFit(hex, 0, 0))
             return 1;
     }
     return 0;
 }
 
 // E:\gamedcs\fly.cpp:58
-inline bool army::find_flyer_attack_cell(int target) const
+inline bool army::findFlyerAttackCell(int target) const
 {
-    if (find_flyer_attack_cell(gridIndex, target))
+    if (findFlyerAttackCell(m_gridIndex, target))
         return 1;
-    if (Is(1u << 0)
-            && find_flyer_attack_cell(get_second_grid_index(), target))
+    if (is(1u << 0)
+            && findFlyerAttackCell(getSecondGridIndex(), target))
         return 1;
     return 0;
 }
 
+// Before normalization (locals): bLiteralTest.
 VA(0x004b46c0, 0x2F9)  // simple_move call + ordered fly block, dc 0xa1430
-unsigned char army::ValidFlight(int destIndex, unsigned char bLiteralTest) const
+unsigned char army::validFlight(int destIndex, unsigned char literalTest) const
 {
-    if (!combatManager::ValidHex(destIndex))
+    if (!combatManager::validHex(destIndex))
         return 0;
 
-    if (bLiteralTest || side == -1 || slot == -1) {
-        if (combatManager::get_distance(gridIndex, destIndex) > GetSpeed()
-                && !gpCombatManager->bCreaturePlacement)
+    if (literalTest || m_side == -1 || m_slot == -1) {
+        if (combatManager::getDistance(m_gridIndex, destIndex) > getSpeed()
+                && !g_combatManager->m_creaturePlacement)
             return 0;
-        if (!CanFit(destIndex, 0, 0))
+        if (!canFit(destIndex, 0, 0))
             return 0;
     } else {
-        const army* enemy = &gpCombatManager->armies[side][slot];
-        long enemyHex = enemy->gridIndex;
-        if (!find_flyer_attack_cell(enemyHex)) {
-            if (!enemy->Is(1u << 0)
-                    || !find_flyer_attack_cell(
-                    enemy->get_second_grid_index()))
+        const army* enemy = &g_combatManager->m_armies[m_side][m_slot];
+        long enemyHex = enemy->m_gridIndex;
+        if (!findFlyerAttackCell(enemyHex)) {
+            if (!enemy->is(1u << 0)
+                    || !findFlyerAttackCell(
+                    enemy->getSecondGridIndex()))
                 return 0;
         }
     }
@@ -156,20 +157,21 @@ unsigned char army::ValidFlight(int destIndex, unsigned char bLiteralTest) const
 // stand animation is unconditional: only the corrective turn is gated by a
 // facing change and restore_facing. That retail CFG also determines the
 // destination/old-facing EBX/EDI allocation.
+// Before normalization (locals): restore_facing.
 VA(0x004b49c0, 0x76)  // ordered successor + call to Fly, dc 0xa1514
-int army::FlyTo(int destIndex, unsigned char restore_facing)
+int army::flyTo(int destIndex, unsigned char restoreFacing)
 {
-    if (combatManager::ValidHex(destIndex)) {
-        int oldFacing = facing;
-        remove_aura();
-        remove_binding();
-        Fly(destIndex);
-        add_aura();
-        if (facing != oldFacing && restore_facing)
-            Turn(1);
-        PlayAnimation(2, 1, 0);
-        check_obstacle_attacks(0);
-        gpCombatManager->TestRaiseDoor();
+    if (combatManager::validHex(destIndex)) {
+        int oldFacing = m_facing;
+        removeAura();
+        removeBinding();
+        fly(destIndex);
+        addAura();
+        if (m_facing != oldFacing && restoreFacing)
+            this->turn(1);
+        playAnimation(2, 1, 0);
+        checkObstacleAttacks(0);
+        g_combatManager->testRaiseDoor();
     }
     return 0;
 }
@@ -252,175 +254,177 @@ int army::FlyTo(int destIndex, unsigned char restore_facing)
 // after the four limit reads 78.3829, and a combatManager* local 83.7914.
 // Nothing reaches the hoist without the rotation - confirmed knock-on.
 VA(0x004b4a40, 0x44E)  // FlyTo call + ordered fly block, dc 0xa1590
-int army::Fly(int destIndex)
+int army::fly(int destIndex)
 {
     unsigned char turn;
-    int sourceX = combatManager::GridX(gridIndex);
-    int destX = combatManager::GridX(destIndex);
+    int sourceX = combatManager::gridX(m_gridIndex);
+    int destX = combatManager::gridX(destIndex);
 
     if (sourceX > destX)
-        turn = facing == FACING_DEFENDER;
+        turn = m_facing == FACING_DEFENDER;
     else if (sourceX < destX)
-        turn = facing == FACING_ATTACKER;
+        turn = m_facing == FACING_ATTACKER;
     else
         turn = 0;
 
-    if (gpCombatManager->should_lower_door(this, destIndex)) {
-        currFrameType = 2;
-        currFrameIndex = 0;
-        gpCombatManager->DrawFrame(1, 0, 0, 0, 1, 0);
-        gpCombatManager->LowerDoor();
+    if (g_combatManager->shouldLowerDoor(this, destIndex)) {
+        m_currFrameType = 2;
+        m_currFrameIndex = 0;
+        g_combatManager->drawFrame(1, 0, 0, 0, 1, 0);
+        g_combatManager->lowerDoor();
     }
 
-    if (Is(1u << 0) && turn)
-        destIndex += OffsetToFront(-1);
+    if (is(1u << 0) && turn)
+        destIndex += offsetToFront(-1);
 
-    SetupAnimation();
+    setupAnimation();
     if (turn)
-        Turn(1);
+        this->turn(1);
 
-    long startX = gpCombatManager->cells[gridIndex].field_00;
-    long startY = gpCombatManager->cells[gridIndex].field_02;
-    long spanX = gpCombatManager->cells[destIndex].field_00 - startX;
-    long spanY = gpCombatManager->cells[destIndex].field_02 - startY;
-    long iTtlLoops = static_cast<long>(
+    long startX = g_combatManager->m_cells[m_gridIndex].m_refX;
+    long startY = g_combatManager->m_cells[m_gridIndex].m_refY;
+    long spanX = g_combatManager->m_cells[destIndex].m_refX - startX;
+    long spanY = g_combatManager->m_cells[destIndex].m_refY - startY;
+    // Before normalization (locals): iTtlLoops, iLoop, FLY_PERIOD, TtlExtent.
+    long ttlLoops = static_cast<long>(
         sqrt(static_cast<double>(spanX * spanX + spanY * spanY)));
-    if (sMonFrameInfo.iFlightPixelSpan > 0)
-        iTtlLoops = (iTtlLoops + sMonFrameInfo.iFlightPixelSpan / 2)
-                    / sMonFrameInfo.iFlightPixelSpan;
+    if (m_monFrameInfo.m_flightPixelSpan > 0)
+        ttlLoops = (ttlLoops + m_monFrameInfo.m_flightPixelSpan / 2)
+                    / m_monFrameInfo.m_flightPixelSpan;
     else
-        iTtlLoops = 1;
+        ttlLoops = 1;
 
     float stepX = static_cast<float>(spanX)
-                  / static_cast<float>(iTtlLoops);
+                  / static_cast<float>(ttlLoops);
     float stepY = static_cast<float>(spanY)
-                  / static_cast<float>(iTtlLoops);
-    long iLoop;
+                  / static_cast<float>(ttlLoops);
+    long loop;
 
-    if (!static_cast<const combatManager*>(gpCombatManager)->IsQuickCombat()) {
-        IsMoving = 1;
-        play_sample(PRE_WALK_SAMPLE);
-        PlayAnimation(20, -1, 0);
-        play_sample(WALK_SAMPLE);
-        gpCombatManager->RemoveArmyFromGrid(*this);
+    if (!static_cast<const combatManager*>(g_combatManager)->isQuickCombat()) {
+        m_isMoving = 1;
+        playSample(PRE_WALK_SAMPLE);
+        playAnimation(20, -1, 0);
+        playSample(WALK_SAMPLE);
+        g_combatManager->removeArmyFromGrid(*this);
 
-        currFrameType = 0;
-        long numFlapFrames = stdIcon->GetNumFrames(cs_walk);
+        m_currFrameType = 0;
+        long numFlapFrames = m_stdIcon->getNumFrames(cs_walk);
         float x = static_cast<float>(startX);
         float y = static_cast<float>(startY);
-        const int FLY_PERIOD = static_cast<long>(
-            static_cast<float>(sMonFrameInfo.iWalkCycleTime)
-            * gCombatSpeedFactors[gUnnamed698758.combatSpeed]
+        const int flyperiod = static_cast<long>(
+            static_cast<float>(m_monFrameInfo.m_walkCycleTime)
+            * g_combatSpeedFactors[g_unnamed698758.m_combatSpeed]
             / static_cast<float>(numFlapFrames));
 
-        { for (iLoop = 0; iLoop < iTtlLoops; iLoop++) {
-            for (currFrameIndex = 0; currFrameIndex < numFlapFrames;
-                    currFrameIndex++) {
-                SLimitData TtlExtent = gpCombatManager->drawbridgeBounds;
+        { for (loop = 0; loop < ttlLoops; loop++) {
+            for (m_currFrameIndex = 0; m_currFrameIndex < numFlapFrames;
+                    m_currFrameIndex++) {
+                SLimitData ttlExtent = g_combatManager->m_drawbridgeBounds;
                 x += stepX / static_cast<float>(numFlapFrames);
                 y += stepY / static_cast<float>(numFlapFrames);
-                gpCombatManager->field_53b0->Draw(
-                           gpCombatManager->drawbridgeBounds.iMinX,
-                           gpCombatManager->drawbridgeBounds.iMinY,
-                           gpCombatManager->drawbridgeBounds.Width(),
-                           gpCombatManager->drawbridgeBounds.Height(),
-                           gpWindowManager->screenBitmap->map,
-                           gpCombatManager->drawbridgeBounds.iMinX,
-                           gpCombatManager->drawbridgeBounds.iMinY,
-                           gpWindowManager->screenBitmap->Width,
-                           gpWindowManager->screenBitmap->Height,
-                           gpWindowManager->screenBitmap->Pitch,
+                g_combatManager->m_saveScreenPostGrid->draw(
+                           g_combatManager->m_drawbridgeBounds.m_minX,
+                           g_combatManager->m_drawbridgeBounds.m_minY,
+                           g_combatManager->m_drawbridgeBounds.width(),
+                           g_combatManager->m_drawbridgeBounds.height(),
+                           g_windowManager->m_screenBitmap->m_map,
+                           g_combatManager->m_drawbridgeBounds.m_minX,
+                           g_combatManager->m_drawbridgeBounds.m_minY,
+                           g_windowManager->m_screenBitmap->m_width,
+                           g_windowManager->m_screenBitmap->m_height,
+                           g_windowManager->m_screenBitmap->m_pitch,
                            false);
-                gpCombatManager->drawbridgeBounds = gCombatAreaLimits;
-                gpCombatManager->field_13d2c = 1;
-                DrawToBuffer(static_cast<int>(x), static_cast<int>(y), 0);
-                gpCombatManager->field_13d2c = 0;
-                bool scrolled = gpCombatManager->ScrollTo(
-                    gpCombatManager->drawbridgeBounds, true, true, true);
-                TtlExtent.Include(gpCombatManager->drawbridgeBounds);
-                GameTime::DelayTil(glTimers[0]);
-                glTimers[0] = GameTime::NextFrameTime(glTimers[0], FLY_PERIOD);
+                g_combatManager->m_drawbridgeBounds = g_combatAreaLimits;
+                g_combatManager->m_saveBiggestExtent = 1;
+                drawToBuffer(static_cast<int>(x), static_cast<int>(y), 0);
+                g_combatManager->m_saveBiggestExtent = 0;
+                bool scrolled = g_combatManager->scrollTo(
+                    g_combatManager->m_drawbridgeBounds, true, true, true);
+                ttlExtent.include(g_combatManager->m_drawbridgeBounds);
+                GameTime::delayTil(g_timers[0]);
+                g_timers[0] = GameTime::nextFrameTime(g_timers[0], flyperiod);
                 if (!scrolled)
-                    gpCombatManager->UpdateCombatArea(TtlExtent);
+                    g_combatManager->updateCombatArea(ttlExtent);
             }
         } }
     }
 
-    gpCombatManager->PlaceArmyInGrid(*this, destIndex);
-    gridIndex = destIndex;
+    g_combatManager->placeArmyInGrid(*this, destIndex);
+    m_gridIndex = destIndex;
 
-    if (!static_cast<const combatManager*>(gpCombatManager)->IsQuickCombat()) {
-        play_sample(POST_WALK_SAMPLE);
-        gpSoundManager->StopSample(armySample[WALK_SAMPLE]->field_1c);
-        PlayAnimation(21, -1, 0);
-        PlayAnimation(2, 1, 0);
-        IsMoving = 0;
+    if (!static_cast<const combatManager*>(g_combatManager)->isQuickCombat()) {
+        playSample(POST_WALK_SAMPLE);
+        g_soundManager->stopSample(m_armySample[WALK_SAMPLE]->m_memSample.m_memSampleHandle);
+        playAnimation(21, -1, 0);
+        playAnimation(2, 1, 0);
+        m_isMoving = 0;
     }
 
-    CancelSpellType(0);
+    cancelSpellType(0);
     return 1;
 }
 
 // E:\gamedcs\fly.cpp:300
 // Exact (118/118), source-aligned with the same ValidHex/TestRaiseDoor
 // boundaries and unconditional stand-animation CFG as FlyTo.
+// Before normalization (locals): restore_facing.
 VA(0x004b4e90, 0x76)  // ordered successor + call to Teleport, dc 0xa19a0
-int army::TeleportTo(int destIndex, unsigned char restore_facing)
+int army::teleportTo(int destIndex, unsigned char restoreFacing)
 {
-    if (combatManager::ValidHex(destIndex)) {
-        int oldFacing = facing;
-        remove_aura();
-        remove_binding();
-        Teleport(destIndex);
-        add_aura();
-        if (facing != oldFacing && restore_facing)
-            Turn(1);
-        PlayAnimation(2, 1, 0);
-        check_obstacle_attacks(0);
-        gpCombatManager->TestRaiseDoor();
+    if (combatManager::validHex(destIndex)) {
+        int oldFacing = m_facing;
+        removeAura();
+        removeBinding();
+        teleport(destIndex);
+        addAura();
+        if (m_facing != oldFacing && restoreFacing)
+            this->turn(1);
+        playAnimation(2, 1, 0);
+        checkObstacleAttacks(0);
+        g_combatManager->testRaiseDoor();
     }
     return 0;
 }
 
 // E:\gamedcs\fly.cpp:328
 VA(0x004b4f10, 0x102)  // exact: facing/wide adjustment, quick-combat animation gates, grid move, cancel; dc 0xa1a7c
-int army::Teleport(int destIndex)
+int army::teleport(int destIndex)
 {
     unsigned char turn;
-    int sourceX = combatManager::GridX(gridIndex);
-    int destX = combatManager::GridX(destIndex);
+    int sourceX = combatManager::gridX(m_gridIndex);
+    int destX = combatManager::gridX(destIndex);
 
     if (sourceX > destX)
-        turn = facing == FACING_DEFENDER;
+        turn = m_facing == FACING_DEFENDER;
     else if (sourceX < destX)
-        turn = facing == FACING_ATTACKER;
+        turn = m_facing == FACING_ATTACKER;
     else
         turn = 0;
 
-    if (Is(1u << 0) && turn)
-        destIndex += OffsetToFront(-1);
+    if (is(1u << 0) && turn)
+        destIndex += offsetToFront(-1);
 
-    SetupAnimation();
+    setupAnimation();
     if (turn)
-        Turn(1);
+        this->turn(1);
 
-    if (!gpCombatManager->IsQuickCombat()) {
-        play_sample(PRE_WALK_SAMPLE);
-        PlayAnimation(20, -1, 0);
+    if (!g_combatManager->isQuickCombat()) {
+        playSample(PRE_WALK_SAMPLE);
+        playAnimation(20, -1, 0);
     }
 
-    gpCombatManager->RemoveArmyFromGrid(*this);
-    gpCombatManager->PlaceArmyInGrid(*this, destIndex);
-    gridIndex = destIndex;
+    g_combatManager->removeArmyFromGrid(*this);
+    g_combatManager->placeArmyInGrid(*this, destIndex);
+    m_gridIndex = destIndex;
 
-    if (!gpCombatManager->IsQuickCombat()) {
-        play_sample(POST_WALK_SAMPLE);
-        PlayAnimation(21, -1, 0);
+    if (!g_combatManager->isQuickCombat()) {
+        playSample(POST_WALK_SAMPLE);
+        playAnimation(21, -1, 0);
     }
 
-    if (!gpCombatManager->IsQuickCombat())
-        PlayAnimation(2, 1, 0);
+    if (!g_combatManager->isQuickCombat())
+        playAnimation(2, 1, 0);
 
-    CancelSpellType(0);
+    cancelSpellType(0);
     return 1;
 }

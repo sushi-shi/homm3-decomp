@@ -15,15 +15,19 @@ class CSpriteFrame;
 // independently reads numFrames through CSprite::s[0].
 class CSequence {
 public:
-    int numFrames;
-    int allocatedFrames;
-    CSpriteFrame** f;
+    // Before normalization: numFrames.
+    int m_numFrames;
+    // Before normalization: allocatedFrames.
+    int m_allocatedFrames;
+    // Before normalization: f.
+    CSpriteFrame** m_f;
 
 private:
     friend class CSprite;
     CSequence(int num);
     ~CSequence();
-    int AddFrame(CSpriteFrame* frame);
+    // Before normalization (function): CSequence::AddFrame.
+    int addFrame(CSpriteFrame* frame);
 };
 SIZE(CSequence, 0x0c);
 

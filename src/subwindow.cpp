@@ -12,8 +12,8 @@
 // E:\gamedcs\subwindow.cpp:43
 VA(0x005aa340, 0x41)  // body-proven, dc 0x158d34
 TSubWindow::TSubWindow()
-    : x(0), y(0), width(0), height(0), parentWindow(0),
-      lowId(0xffff), highId(0xffff0001), background(0)
+    : m_x(0), m_y(0), m_width(0), m_height(0), m_parentWindow(0),
+      m_lowId(0xffff), m_highId(0xffff0001), m_background(0)
 {
 }
 
@@ -22,10 +22,11 @@ TSubWindow::TSubWindow()
 VA_COMPGEN(0x005aa390, 0x21, SCALAR_DELETING_DTOR, TSubWindow)
 
 // E:\gamedcs\subwindow.cpp:51
+// Before normalization (locals): parent_window.
 VA(0x005aa3c0, 0x4F)  // body-proven, dc 0x158dac
-TSubWindow::TSubWindow(int inX, int inY, int w, int h, heroWindow* parent_window)
-    : x(inX), y(inY), width(w), height(h), parentWindow(parent_window),
-      lowId(0xffff), highId(0xffff0001), background(0)
+TSubWindow::TSubWindow(int inX, int inY, int w, int h, heroWindow* parentWindow)
+    : m_x(inX), m_y(inY), m_width(w), m_height(h), m_parentWindow(parentWindow),
+      m_lowId(0xffff), m_highId(0xffff0001), m_background(0)
 {
 }
 
@@ -33,84 +34,86 @@ TSubWindow::TSubWindow(int inX, int inY, int w, int h, heroWindow* parent_window
 VA(0x005aa410, 0x60)  // anchor-global, dc 0x158e14
 TSubWindow::~TSubWindow()
 {
-    if (background)
-        delete background;
+    if (m_background)
+        delete m_background;
 }
 
 // E:\gamedcs\subwindow.cpp:63
+// Before normalization (locals): parent_window.
 VA(0x005aa470, 0x25)  // anchor-global, dc 0x158e60
-void TSubWindow::initialize(int inX, int inY, int w, int h, heroWindow* parent_window)
+void TSubWindow::initialize(int inX, int inY, int w, int h, heroWindow* parentWindow)
 {
-    x = inX;
-    y = inY;
-    width = w;
-    height = h;
-    parentWindow = parent_window;
+    m_x = inX;
+    m_y = inY;
+    m_width = w;
+    m_height = h;
+    m_parentWindow = parentWindow;
 }
 
 // E:\gamedcs\subwindow.cpp:82
 VA(0x005aa4a0, 0x45)  // anchor-global, dc 0x158e7c
-void TSubWindow::AddWidget(widget* newWidget, int newPriority)
+void TSubWindow::addWidget(widget* newWidget, int newPriority)
 {
-    newWidget->x += static_cast<short>(x);
-    newWidget->y += static_cast<short>(y);
-    if (newWidget->id < lowId)
-        lowId = newWidget->id;
-    if (newWidget->id > highId)
-        highId = newWidget->id;
-    parentWindow->AddWidget(newWidget, newPriority);
+    newWidget->m_x += static_cast<short>(m_x);
+    newWidget->m_y += static_cast<short>(m_y);
+    if (newWidget->m_id < m_lowId)
+        m_lowId = newWidget->m_id;
+    if (newWidget->m_id > m_highId)
+        m_highId = newWidget->m_id;
+    m_parentWindow->addWidget(newWidget, newPriority);
 }
 
 // E:\gamedcs\subwindow.cpp:111
 #if 0  // @carcass: no retail row in the AddWidget..Draw bracket
 DC_ONLY(0x158ebc, 0x12)
-void TSubWindow::RemoveWidget(widget* killWidget)
+void TSubWindow::removeWidget(widget* killWidget)
 {
     // @stub
 }
 #endif
 
 // E:\gamedcs\subwindow.cpp:125
+// Before normalization (locals): iLowID, iHighID.
 VA(0x005aa4f0, 0x63)  // anchor-global, dc 0x158ed0
-void TSubWindow::Draw(unsigned char update, int iLowID, int iHighID)
+void TSubWindow::draw(unsigned char update, int lowID, int highID)
 {
-    if (iLowID == WINDOW_ALL_WIDGETS_LOW)
-        iLowID = lowId;
-    if (iHighID == WINDOW_ALL_WIDGETS_HIGH)
-        iHighID = highId;
-    parentWindow->DrawWindow(0, iLowID, iHighID);
+    if (lowID == WINDOW_ALL_WIDGETS_LOW)
+        lowID = m_lowId;
+    if (highID == WINDOW_ALL_WIDGETS_HIGH)
+        highID = m_highId;
+    m_parentWindow->drawWindow(0, lowID, highID);
     if (update) {
-        gpWindowManager->UpdateScreen(
-            x + parentWindow->x, y + parentWindow->y, width, height);
+        g_windowManager->updateScreen(
+            m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);
     }
 }
 
 // E:\gamedcs\subwindow.cpp:161
 VA(0x005aa560, 0xA1)  // anchor-global, dc 0x158f4c
-void TSubWindow::SaveBackground()
+void TSubWindow::saveBackground()
 {
-    background = new Bitmap16Bit(width, height);
-    PollSound();
-    Bitmap16Bit* screen = gpWindowManager->screenBitmap;
-    background->Grab(screen->map,
-        x + parentWindow->x, y + parentWindow->y,
-        screen->Width, screen->Height, screen->Pitch);
-    PollSound();
+    m_background = new Bitmap16Bit(m_width, m_height);
+    pollSound();
+    Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
+    m_background->grab(screen->m_map,
+        m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y,
+        screen->m_width, screen->m_height, screen->m_pitch);
+    pollSound();
 }
 
 // E:\gamedcs\subwindow.cpp:181
 VA(0x005aa610, 0x7A)  // anchor-global, dc 0x158fa4
-void TSubWindow::RestoreBackground()
+void TSubWindow::restoreBackground()
 {
-    if (background) {
-        int drawX = x + parentWindow->x;
-        int drawY = y + parentWindow->y;
-        Bitmap16Bit* screen = gpWindowManager->screenBitmap;
-        background->Draw(0, 0, background->Width, background->Height,
-            screen->map, drawX, drawY,
-            screen->Width, screen->Height, screen->Pitch, false);
-        gpWindowManager->UpdateScreen(drawX, drawY, width + 1, height);
-        delete background;
-        background = 0;
+    if (m_background) {
+        int drawX = m_x + m_parentWindow->m_x;
+        int drawY = m_y + m_parentWindow->m_y;
+        Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
+        m_background->draw(0, 0, m_background->m_width, m_background->m_height,
+            screen->m_map, drawX, drawY,
+            screen->m_width, screen->m_height, screen->m_pitch, false);
+        g_windowManager->updateScreen(drawX, drawY, m_width + 1, m_height);
+        delete m_background;
+        m_background = 0;
     }
 }

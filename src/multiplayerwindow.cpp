@@ -24,9 +24,9 @@
 
 #include <direct.h>
 
-unsigned char InitRemote(eNetGameType netGameType, const char* userName);
-unsigned char InitConnection(char* address, _DPCOMPORTADDRESS* comportInfo);
-void RemoteCleanup();
+unsigned char initRemote(eNetGameType netGameType, const char* userName);
+unsigned char initConnection(char* address, _DPCOMPORTADDRESS* comportInfo);
+void remoteCleanup();
 
 #if 0  // @carcass: untouched bodies before the admitted CHotSeatDlg tail
 
@@ -46,7 +46,7 @@ void DeleteTempSaveGame(const char* filename)
 
 // E:\gamedcs\multiplayerwindow.cpp:1005
 DC_ONLY(0x100408, 0x28)
-void SliderGames(int state, heroWindow* parent_window)
+void sliderGames(int state, heroWindow* parent_window)
 {
     // @stub
 }
@@ -71,7 +71,7 @@ void TMultiPlayerWindow::CheckSessions()
 
 // E:\gamedcs\multiplayerwindow.cpp:1461
 DC_ONLY(0x100ed0, 0xC2)
-unsigned char TMultiPlayerWindow::OnModemHost()
+unsigned char TMultiPlayerWindow::onModemHost()
 {
     // @stub
 }
@@ -94,7 +94,7 @@ unsigned char TMultiPlayerWindow::OnModemHost()
 
 // E:\gamedcs\multiplayerwindow.cpp:1944
 DC_ONLY(0x10196c, 0x294)
-unsigned char TMultiPlayerWindow::OnSearch()
+unsigned char TMultiPlayerWindow::onSearch()
 {
     // @stub
 }
@@ -116,14 +116,14 @@ unsigned char TMultiPlayerWindow::IsNT()
 
 // E:\gamedcs\dxplay.h:96
 DC_ONLY(0x101d84, 0x14)
-unsigned char CDPlaySession::IsPasswordProtected()
+unsigned char CDPlaySession::isPasswordProtected()
 {
     // @stub
 }
 
 // E:\gamedcs\dxplay.h:375
 DC_ONLY(0x101d98, 0x6)
-long CDPlay::GetLastError()
+long CDPlay::getLastError()
 {
     // @stub
 }
@@ -137,14 +137,14 @@ void CHotSeatMan::CHotSeatMan()
 
 // E:\gamedcs\remote.h:192
 DC_ONLY(0x101dc4, 0x6)
-void CHotSeatMan::Clear()
+void CHotSeatMan::clear()
 {
     // @stub
 }
 
 // E:\gamedcs\remote.h:197
 DC_ONLY(0x101dcc, 0x34)
-void CHotSeatMan::AddPlayer(const char* sName)
+void CHotSeatMan::addPlayer(const char* sName)
 {
     // @stub
 }
@@ -174,7 +174,7 @@ void CMultiPlayerWindowEdit::~CMultiPlayerWindowEdit()
 
 // E:\gamedcs\multiplayerwindow.cpp:174
 DC_ONLY(0x101f34, 0xE0)
-unsigned char CHeroSessions::GetSessionInfo(unsigned long index, char* sessName, char* userName, int* numPlayers, CHeroSessions::eSessionStatus* status)
+unsigned char CHeroSessions::getSessionInfo(unsigned long index, char* sessName, char* userName, int* numPlayers, CHeroSessions::eSessionStatus* status)
 {
     // @stub
 }
@@ -188,14 +188,14 @@ void CMPEdit::CMPEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int
 
 // E:\gamedcs\multiplayerwindow.cpp:269
 DC_ONLY(0x1020b4, 0x6)
-void CMPEdit::SetNextEdit(CMPEdit* pNextEdit)
+void CMPEdit::setNextEdit(CMPEdit* pNextEdit)
 {
     // @stub
 }
 
 // E:\gamedcs\multiplayerwindow.cpp:274
 DC_ONLY(0x1020bc, 0x6)
-void CMPEdit::SetPrevEdit(CMPEdit* pPrevEdit)
+void CMPEdit::setPrevEdit(CMPEdit* pPrevEdit)
 {
     // @stub
 }
@@ -254,7 +254,7 @@ void CMPInputEdit::~CMPInputEdit()
 
 // E:\gamedcs\multiplayerwindow.cpp:521
 DC_ONLY(0x10286c, 0x24)
-void CMPInputDlg::DisableOK()
+void CMPInputDlg::disableOK()
 {
     // @stub
 }
@@ -265,33 +265,33 @@ void CMPInputDlg::DisableOK()
 #endif
 
 // E:\gamedcs\multiplayerwindow.cpp:174
-inline bool CHeroSessions::GetSessionInfo(unsigned long index, char* sessName,
+inline bool CHeroSessions::getSessionInfo(unsigned long index, char* sessName,
                                           char* userName, int& numPlayers,
                                           eSessionStatus& status)
 {
-    CDPlaySession* session = Get(index);
+    CDPlaySession* session = get(index);
     if (!session)
         return false;
 
     char separator[2];
     separator[0] = static_cast<char>(0xfa);
     separator[1] = 0;
-    char* split = strstr(session->sessionName, separator);
-    int nameLength = strlen(session->sessionName);
+    char* split = strstr(session->m_sessionName, separator);
+    int nameLength = strlen(session->m_sessionName);
     if (split)
-        nameLength = split - session->sessionName;
-    strncpy(sessName, session->sessionName, nameLength);
+        nameLength = split - session->m_sessionName;
+    strncpy(sessName, session->m_sessionName, nameLength);
     sessName[nameLength] = 0;
     if (split)
-        strcpy(userName, &session->sessionName[nameLength + 1]);
+        strcpy(userName, &session->m_sessionName[nameLength + 1]);
     else
         userName[0] = 0;
 
-    numPlayers = session->playerCount;
+    numPlayers = session->m_playerCount;
     status = open;
-    if (session->IsJoinDisabled())
+    if (session->isJoinDisabled())
         status = closed;
-    else if (session->dwFlags & 0x400)
+    else if (session->m_flags & 0x400)
         status = password;
     return true;
 }
@@ -300,33 +300,33 @@ inline bool CHeroSessions::GetSessionInfo(unsigned long index, char* sessName,
 // IsJoinDisabled decisions in retail. Keep a caller-specific int overload so
 // Update's int row expression selects the expanded status test while the
 // Dreamcast-proven unsigned-long overload remains OnJoin's exact lowering.
-inline bool CHeroSessions::GetSessionInfo(
+inline bool CHeroSessions::getSessionInfo(
     int index, char* sessName, char* userName, int& numPlayers,
     eSessionStatus& status)
 {
-    CDPlaySession* session = Get(index);
+    CDPlaySession* session = get(index);
     if (!session)
         return false;
 
     char separator[2];
     separator[0] = static_cast<char>(0xfa);
     separator[1] = 0;
-    char* split = strstr(session->sessionName, separator);
-    int nameLength = strlen(session->sessionName);
+    char* split = strstr(session->m_sessionName, separator);
+    int nameLength = strlen(session->m_sessionName);
     if (split)
-        nameLength = split - session->sessionName;
-    strncpy(sessName, session->sessionName, nameLength);
+        nameLength = split - session->m_sessionName;
+    strncpy(sessName, session->m_sessionName, nameLength);
     sessName[nameLength] = 0;
     if (split)
-        strcpy(userName, &session->sessionName[nameLength + 1]);
+        strcpy(userName, &session->m_sessionName[nameLength + 1]);
     else
         userName[0] = 0;
 
-    numPlayers = session->playerCount;
+    numPlayers = session->m_playerCount;
     status = open;
-    if (session->IsJoinDisabledInline())
+    if (session->isJoinDisabledInline())
         status = closed;
-    else if (session->dwFlags & 0x400)
+    else if (session->m_flags & 0x400)
         status = password;
     return true;
 }
@@ -342,50 +342,63 @@ inline bool CHeroSessions::GetSessionInfo(
 // rollover/right-click help table indexed by (widget id - 101); the two char
 // buffers hold the local player name shown in the entry field and the name of
 // the most recently loaded game (checked for the remote-temp prefix).
-DATA(0x0069880a) char gLoadedGameName[13];
-DATA(0x00698817) char gLocalPlayerName[21];
-DATA(0x006a6578) THelpText gMultiPlayerHelp[30];
+DATA(0x0069880a) char g_loadedGameName[13];
+// Before normalization: gMultiPlayerHelp.
+DATA(0x00698817) char g_localPlayerName[21];
+DATA(0x006a6578) THelpText g_multiPlayerHelp[30];
 
 // Armed by all three retail host paths before they create a DirectPlay
 // session. No public symbol survives for the dword, so the name is ordinal.
-DATA(0x0069927c) int gUnnamed69927c;
+DATA(0x0069927c) int g_unnamed69927c;
 
 // Armed beside the two known multiplayer start flags by Complete's generic
 // join path. Its only other retail writes are in the adjacent host flows.
-DATA(0x00699288) int gUnnamed699288;
+DATA(0x00699288) int g_unnamed699288;
 
-const long DPLAY_ERROR_USER_CANCEL = 0x88770118;
+// Before normalization: DPLAY_ERROR_USER_CANCEL.
+const long g_dplayErrorUserCancel = 0x88770118;
 
 // The sole retail read at 0x50fade promotes the DirectPlay session from the
 // mandatory migrate-host flag to migrate-host|keep-alive. No public symbol
 // survives for the byte, so its name remains ordinal until stronger evidence.
-DATA(0x00681628) static unsigned char gUnnamed681628 = 1;
+// Before normalization: gUnnamed681628.
+DATA(0x00681628) static unsigned char g_unnamed681628 = 1;
 
 // The rollover/right-click help pointers the CMPInputDlg and CHotSeatDlg
 // constructors hand to widget::set_help_text. The OK/Back pair (0x6a7760/
 // 0x6a7768) is shared by both dialogs; the CHotSeatDlg edit ring uses its own
 // pair (0x6a7758/0x6a775c). No DC name; provisional house names.
-DATA(0x006a7758) char* gHotSeatEditRollover;
-DATA(0x006a775c) char* gHotSeatEditRightClick;
-DATA(0x006a7760) char* gDialogOkHelp;
-DATA(0x006a7768) char* gDialogBackHelp;
+// Before normalization: gHotSeatEditRollover.
+// Before normalization: gHotSeatEditRightClick.
+DATA(0x006a7758) char* g_hotSeatEditRollover;
+// Before normalization: gDialogOkHelp.
+DATA(0x006a775c) char* g_hotSeatEditRightClick;
+// Before normalization: gDialogBackHelp.
+DATA(0x006a7760) char* g_dialogOkHelp;
+DATA(0x006a7768) char* g_dialogBackHelp;
 
 // The generic network host dialog supplies separate help strings for its two
 // edit controls and a label for the session-name field. Retail proves their
 // cells and uses; no public names survive, so these remain ordinal.
-DATA(0x006a7770) char* gUnnamed6a7770;
-DATA(0x006a7778) char* gUnnamed6a7778;
-DATA(0x006a7780) char* gUnnamed6a7780;
+// Before normalization: gUnnamed6a7770.
+// Before normalization: gUnnamed6a7778.
+DATA(0x006a7770) char* g_unnamed6a7770;
+// Before normalization: gUnnamed6a7780.
+DATA(0x006a7778) char* g_unnamed6a7778;
 // The TCP search dialog's address field uses a distinct rollover string. The
 // second field reuses gUnnamed6a7778, while the generic OK/Back buttons keep
 // the shared pair above.
-DATA(0x006a7788) char* gSearchAddressHelp;
+// Before normalization: gSearchAddressHelp.
+DATA(0x006a7780) char* g_unnamed6a7780;
+DATA(0x006a7788) char* g_searchAddressHelp;
 
 // E:\gamedcs\multiplayerwindow.cpp:1005
 // Slider callback for the session list; scrolls the displayed window of games.
-void SliderGames(int state, heroWindow* parent_window)
+// Before normalization (function): SliderGames.
+// Before normalization (locals): parent_window.
+void sliderGames(int state, heroWindow* parentWindow)
 {
-    static_cast<TMultiPlayerWindow*>(parent_window)->currentIndex = state;
+    static_cast<TMultiPlayerWindow*>(parentWindow)->m_currentIndex = state;
 }
 
 // The two CHotSeatDlg helpers the DC roster keeps out of line (GetPlayerCount
@@ -395,20 +408,20 @@ void SliderGames(int state, heroWindow* parent_window)
 // widget 519's enable, and the full-window redraw with retail's own
 // 0xffff0001 / 0xffff id window. Marked `inline` so the TU emits no COMDAT
 // for a function the image does not have.
-inline int CHotSeatDlg::GetPlayerCount()
+inline int CHotSeatDlg::getPlayerCount()
 {
     int players = 0;
     for (int i = 0; i < 8; ++i) {
-        if (strlen(edit[i]->Text.c_str()))
+        if (strlen(m_edit[i]->m_text.c_str()))
             ++players;
     }
     return players;
 }
 
-inline void CHotSeatDlg::UpdateOK()
+inline void CHotSeatDlg::updateOK()
 {
-    GetWidget(OKAY_ID)->enable(GetPlayerCount() > 1);
-    DrawWindow(1, 0xffff0001, 0xffff);
+    getWidget(OKAY_ID)->enable(getPlayerCount() > 1);
+    drawWindow(1, 0xffff0001, 0xffff);
 }
 
 // E:\gamedcs\multiplayerwindow.cpp:527 - promoted from DC_ONLY. Slot 15 of
@@ -421,25 +434,25 @@ inline void CHotSeatDlg::UpdateOK()
 // exits, so it is ONE source variable and ONE trailing call; VC6 then
 // duplicates the tail into the three predecessors itself.
 VA(0x0050de50, 0x8F)  // anchor-vtable (slot 15 of 0x640130), dc 0xffac0
-int CMPInputEdit::OnKeyPress(message* msg)
+int CMPInputEdit::onKeyPress(message* msg)
 {
     int handled;
 
-    if (!bHasFocus) {
+    if (!m_hasFocus) {
         handled = 0;
-    } else if ((HIWORD(GetKeyState(VK_SHIFT)) && msg->codeX == KEYCODE_TAB)
-               || msg->codeX == KEYCODE_KP_8) {
-        OnPrevEdit();
+    } else if ((HIWORD(GetKeyState(VK_SHIFT)) && msg->m_codeX == KEYCODE_TAB)
+               || msg->m_codeX == KEYCODE_KP_8) {
+        onPrevEdit();
         handled = 1;
-    } else if (msg->codeX == KEYCODE_TAB || msg->codeX == KEYCODE_ENTER
-               || msg->codeX == KEYCODE_KP_2) {
-        OnNextEdit();
+    } else if (msg->m_codeX == KEYCODE_TAB || msg->m_codeX == KEYCODE_ENTER
+               || msg->m_codeX == KEYCODE_KP_2) {
+        onNextEdit();
         handled = 1;
     } else {
-        handled = textEntryWidget::OnKeyPress(msg);
+        handled = textEntryWidget::onKeyPress(msg);
     }
 
-    static_cast<CMPInputDlg*>(parentWindow)->UpdateOK();
+    static_cast<CMPInputDlg*>(m_parentWindow)->updateOK();
     return handled;
 }
 
@@ -449,26 +462,26 @@ int CMPInputEdit::OnKeyPress(message* msg)
 // 0x6401d8 has no slot 14 - so retail inlines it here and in the key handler
 // below).
 VA(0x0050dee0, 0x7F)  // anchor-vtable (slot 11 of 0x640210), dc 0xffaec
-void CHotSeatEdit::OnKillFocus()
+void CHotSeatEdit::onKillFocus()
 {
-    textEntryWidget::OnKillFocus();
-    static_cast<CHotSeatDlg*>(parentWindow)->UpdateOK();
+    textEntryWidget::onKillFocus();
+    static_cast<CHotSeatDlg*>(m_parentWindow)->updateOK();
 }
 
 // CHotSeatEdit's ring walk. No carve row of its own: /OPT:ICF folded both
 // onto CMPEdit's byte-identical 0x510850 / 0x510870, which is exactly why
 // retail's 0x640210 carries those two addresses for a class that does not
 // derive CMPEdit.
-void CHotSeatEdit::OnNextEdit()
+void CHotSeatEdit::onNextEdit()
 {
-    if (nextEdit && (nextEdit->status & widget::WIDGET_ACTIVE))
-        parentWindow->SetFocus(nextEdit->id);
+    if (m_nextEdit && (m_nextEdit->m_status & widget::WIDGET_ACTIVE))
+        m_parentWindow->setFocus(m_nextEdit->m_id);
 }
 
-void CHotSeatEdit::OnPrevEdit()
+void CHotSeatEdit::onPrevEdit()
 {
-    if (prevEdit && (prevEdit->status & widget::WIDGET_ACTIVE))
-        parentWindow->SetFocus(prevEdit->id);
+    if (m_prevEdit && (m_prevEdit->m_status & widget::WIDGET_ACTIVE))
+        m_parentWindow->setFocus(m_prevEdit->m_id);
 }
 
 // E:\gamedcs\multiplayerwindow.cpp:860 - promoted from DC_ONLY. Slot 15 of
@@ -477,25 +490,25 @@ void CHotSeatEdit::OnPrevEdit()
 // called. Retail homes the result in the dead `msg` parameter slot, which is
 // what a block-scoped result assigned on every arm gets here.
 VA(0x0050df60, 0xEE)  // anchor-vtable (slot 15 of 0x640210), dc 0xffb0c
-int CHotSeatEdit::OnKeyPress(message* msg)
+int CHotSeatEdit::onKeyPress(message* msg)
 {
     int handled;
 
-    if (!bHasFocus) {
+    if (!m_hasFocus) {
         handled = 0;
-    } else if ((HIWORD(GetKeyState(VK_SHIFT)) && msg->codeX == KEYCODE_TAB)
-               || msg->codeX == KEYCODE_KP_8) {
-        OnPrevEdit();
+    } else if ((HIWORD(GetKeyState(VK_SHIFT)) && msg->m_codeX == KEYCODE_TAB)
+               || msg->m_codeX == KEYCODE_KP_8) {
+        onPrevEdit();
         handled = 1;
-    } else if (msg->codeX == KEYCODE_TAB || msg->codeX == KEYCODE_ENTER
-               || msg->codeX == KEYCODE_KP_2) {
-        OnNextEdit();
+    } else if (msg->m_codeX == KEYCODE_TAB || msg->m_codeX == KEYCODE_ENTER
+               || msg->m_codeX == KEYCODE_KP_2) {
+        onNextEdit();
         handled = 1;
     } else {
-        handled = textEntryWidget::OnKeyPress(msg);
+        handled = textEntryWidget::onKeyPress(msg);
     }
 
-    static_cast<CHotSeatDlg*>(parentWindow)->UpdateOK();
+    static_cast<CHotSeatDlg*>(m_parentWindow)->updateOK();
     return handled;
 }
 
@@ -516,115 +529,115 @@ VA(0x0050e050, 0xCFC)  // anchor-vtable 0x6400a0 + CHeroWindowEx base + DeleteFi
 TMultiPlayerWindow::TMultiPlayerWindow()
     : CHeroWindowEx(0, 0, 800, 600, 0)
 {
-    x = 173;
-    y = 55;
-    width = 454;
-    height = 490;
-    type = 16;
-    gpMultiPlayerWindow = this;
-    hostJoinScreen = 0;
+    m_x = 173;
+    m_y = 55;
+    m_width = 454;
+    m_height = 490;
+    m_type = 16;
+    g_multiPlayerWindow = this;
+    m_hostJoinScreen = 0;
 
-    Widgets.reserve(77);
+    m_widgets.reserve(77);
 
-    Widgets.push_back(new bitmapBorder(0, 0, 454, 490, 100, "mupopup.pcx", 0x800));
+    m_widgets.push_back(new bitmapBorder(0, 0, 454, 490, 100, "mupopup.pcx", 0x800));
 
-    hotSeat = 0;
-    if (!gbNoCDRom)
-        hotSeat = new button(373, 78, 64, 48, 102, "muBhot.def", 0, 1, 0, 0, 2);
+    m_hotSeat = 0;
+    if (!g_noCdRom)
+        m_hotSeat = new button(373, 78, 64, 48, 102, "muBhot.def", 0, 1, 0, 0, 2);
 
-    ipx = new button(373, 135, 64, 48, 103, "muBipx.def", 0, 1, 0, 0, 2);
-    tcp = new button(373, 192, 64, 48, 104, "muBtcp.def", 0, 1, 0, 0, 2);
-    modem = new button(373, 249, 64, 48, 105, "muBmodm.def", 0, 1, 0, 0, 2);
-    direct = new button(373, 306, 64, 48, 106, "muBdrct.def", 0, 1, 0, 0, 2);
-    online = new button(373, 363, 64, 48, 101, "mubonl.def", 0, 1, 0, 0, 2);
+    m_ipx = new button(373, 135, 64, 48, 103, "muBipx.def", 0, 1, 0, 0, 2);
+    m_tcp = new button(373, 192, 64, 48, 104, "muBtcp.def", 0, 1, 0, 0, 2);
+    m_modem = new button(373, 249, 64, 48, 105, "muBmodm.def", 0, 1, 0, 0, 2);
+    m_direct = new button(373, 306, 64, 48, 106, "muBdrct.def", 0, 1, 0, 0, 2);
+    m_online = new button(373, 363, 64, 48, 101, "mubonl.def", 0, 1, 0, 0, 2);
 
-    host = 0;
-    if (!gbNoCDRom)
-        host = new button(373, 78, 64, 48, 107, "muBhost.def", 0, 1, 0, 0, 2);
+    m_host = 0;
+    if (!g_noCdRom)
+        m_host = new button(373, 78, 64, 48, 107, "muBhost.def", 0, 1, 0, 0, 2);
 
-    join = new button(373, 135, 64, 48, 108, "muBjoin.def", 0, 1, 0, 0, 2);
-    search = new button(373, 192, 64, 48, 109, "muBsrch.def", 0, 1, 0, 0, 2);
-    cancel = new button(373, 424, 64, 48, 124, "muBcanc.def", 0, 1, 0, 1, 2);
+    m_join = new button(373, 135, 64, 48, 108, "muBjoin.def", 0, 1, 0, 0, 2);
+    m_search = new button(373, 192, 64, 48, 109, "muBsrch.def", 0, 1, 0, 0, 2);
+    m_cancel = new button(373, 424, 64, 48, 124, "muBcanc.def", 0, 1, 0, 1, 2);
 
-    sessNameHeader = new textWidget(216 - x, 146 - y, 127, 18,
-                                    gpGeneralText->GetText(41), "smalfont.fnt",
+    m_sessNameHeader = new textWidget(216 - m_x, 146 - m_y, 127, 18,
+                                    g_generalText->getText(41), "smalfont.fnt",
                                     font::PRIMARY, 127, 1, 0, 8);
-    userNameHeader = new textWidget(346 - x, 146 - y, 127, 18,
-                                    gpGeneralText->GetText(42), "smalfont.fnt",
+    m_userNameHeader = new textWidget(346 - m_x, 146 - m_y, 127, 18,
+                                    g_generalText->getText(42), "smalfont.fnt",
                                     font::PRIMARY, 128, 1, 0, 8);
-    playerName = new CMultiPlayerWindowEdit(19, 436, 334, 18, 21,
-                                            gLocalPlayerName, "smalfont.fnt",
+    m_playerName = new CMultiPlayerWindowEdit(19, 436, 334, 18, 21,
+                                            g_localPlayerName, "smalfont.fnt",
                                             font::WHITE, 0, 0, 0, 125, 0x100, 0,
                                             7, 5);
 
-    if (hotSeat)
-        Widgets.push_back(hotSeat);
-    Widgets.push_back(ipx);
-    Widgets.push_back(tcp);
-    Widgets.push_back(modem);
-    Widgets.push_back(direct);
-    Widgets.push_back(online);
-    Widgets.push_back(host);
-    Widgets.push_back(join);
-    Widgets.push_back(search);
-    Widgets.push_back(cancel);
-    Widgets.push_back(sessNameHeader);
-    Widgets.push_back(userNameHeader);
-    Widgets.push_back(playerName);
+    if (m_hotSeat)
+        m_widgets.push_back(m_hotSeat);
+    m_widgets.push_back(m_ipx);
+    m_widgets.push_back(m_tcp);
+    m_widgets.push_back(m_modem);
+    m_widgets.push_back(m_direct);
+    m_widgets.push_back(m_online);
+    m_widgets.push_back(m_host);
+    m_widgets.push_back(m_join);
+    m_widgets.push_back(m_search);
+    m_widgets.push_back(m_cancel);
+    m_widgets.push_back(m_sessNameHeader);
+    m_widgets.push_back(m_userNameHeader);
+    m_widgets.push_back(m_playerName);
 
-    RolloverWidget = new textWidget(8, 465, 438, 18, 0, "smalfont.fnt",
+    m_rolloverWidget = new textWidget(8, 465, 438, 18, 0, "smalfont.fnt",
                                     font::PRIMARY, 123, 1, 32, 8);
-    Widgets.push_back(RolloverWidget);
+    m_widgets.push_back(m_rolloverWidget);
 
-    widget* gs = new slider(337, 81, 16, 330, 122, 10, SliderGames,
+    widget* gs = new slider(337, 81, 16, 330, 122, 10, sliderGames,
                             slider::BLUE, 0, 0);
-    gameSlider = gs;
-    Widgets.push_back(gs);
+    m_gameSlider = gs;
+    m_widgets.push_back(gs);
 
     int sessionRowY = 112;
     for (int i = 0; sessionRowY < 412; sessionRowY += 25, i++)
-        Widgets.insert(Widgets.end(),
+        m_widgets.insert(m_widgets.end(),
                        new textWidget(18, sessionRowY, 317, 22, 0,
                                       "smalfont.fnt", font::PRIMARY, 110 + i, 1,
                                       0, 8));
 
     widget* mapBorder = new bitmapBorder(16, 77, 338, 335, 129, "mumap.pcx", 0x800);
-    splash = mapBorder;
-    Widgets.push_back(mapBorder);
+    m_splash = mapBorder;
+    m_widgets.push_back(mapBorder);
 
-    AddWidgetsToMessageStream();
-    SetFocus(playerName->id);
-    static_cast<slider*>(gameSlider)->SetResolution(0);
+    addWidgetsToMessageStream();
+    setFocus(m_playerName->m_id);
+    static_cast<slider*>(m_gameSlider)->setResolution(0);
 
-    pSessions = new CHeroSessions;
-    sessTimer = 0;
-    localIPAddress[0] = 0;
-    sessionRefreshTimeout = 0;
-    GameState = ResourceManager::GetSprite("muGstat.def");
-    inSessionList = 0;
-    currentIndex = 0;
-    currentGame = 0;
+    m_sessions = new CHeroSessions;
+    m_sessTimer = 0;
+    m_localIpAddress[0] = 0;
+    m_sessionRefreshTimeout = 0;
+    m_gameState = ResourceManager::getSprite("muGstat.def");
+    m_inSessionList = 0;
+    m_currentIndex = 0;
+    m_currentGame = 0;
 
-    SetHelpText(gMultiPlayerHelp, 101, 110, 0);
-    gameSlider->set_help_text(gMultiPlayerHelp[21].text,
-                              gMultiPlayerHelp[21].rclick, 0);
-    cancel->set_help_text(gMultiPlayerHelp[23].text,
-                          gMultiPlayerHelp[23].rclick, 0);
+    setHelpText(g_multiPlayerHelp, 101, 110, 0);
+    m_gameSlider->setHelpText(g_multiPlayerHelp[21].m_text,
+                              g_multiPlayerHelp[21].m_rclick, 0);
+    m_cancel->setHelpText(g_multiPlayerHelp[23].m_text,
+                          g_multiPlayerHelp[23].m_rclick, 0);
 
-    if (!strnicmp(gLoadedGameName, "RMT", 3)) {
+    if (!strnicmp(g_loadedGameName, "RMT", 3)) {
         char tempPath[452];
-        sprintf(tempPath, "%s%s", ".\\DATA\\", gLoadedGameName);
+        sprintf(tempPath, "%s%s", ".\\DATA\\", g_loadedGameName);
         DeleteFileA(tempPath);
     }
 
-    GoMainMenu();
+    goMainMenu();
 }
 
 // E:\gamedcs\MultiPlayerWindow.h:91
 VA(0x0050ed50, 0x7)  // anchor-vtable 0x6400a0 slot 13 (GetRolloverWidget), dc 0x101da0
-textWidget* TMultiPlayerWindow::GetRolloverWidget()
+textWidget* TMultiPlayerWindow::getRolloverWidget()
 {
-    return RolloverWidget;
+    return m_rolloverWidget;
 }
 
 // Byte-exact. Slot 15 suppresses Enter in the player-name field. Other keys
@@ -634,15 +647,15 @@ textWidget* TMultiPlayerWindow::GetRolloverWidget()
 // PC address.
 // E:\gamedcs\multiplayerwindow.cpp:145
 VA(0x0050ed60, 0x43)  // vtable slot 15 + GetCharPressed/base/Update calls, dc 0x101e98
-int CMultiPlayerWindowEdit::OnKeyPress(message* msg)
+int CMultiPlayerWindowEdit::onKeyPress(message* msg)
 {
-    if (GetCharPressed(msg) == KEYCODE_ENTER)
+    if (getCharPressed(msg) == KEYCODE_ENTER)
         return 0;
 
-    int result = textEntryWidget::OnKeyPress(msg);
+    int result = textEntryWidget::onKeyPress(msg);
     if (!result)
         return 0;
-    gpMultiPlayerWindow->Update();
+    g_multiPlayerWindow->update();
     return result;
 }
 
@@ -660,61 +673,61 @@ VA_COMPGEN(0x0050edb0, 0x21, SCALAR_DELETING_DTOR, TMultiPlayerWindow)
 VA(0x0050ee40, 0xAB)  // anchor-callee: ~dtor reached from scalar-dtor 0x50edb0, dc 0x100430
 TMultiPlayerWindow::~TMultiPlayerWindow()
 {
-    gpMultiPlayerWindow = 0;
-    GameState->Dispose();
-    delete_widgets();
-    pSessions->Destroy();
-    delete pSessions;
+    g_multiPlayerWindow = 0;
+    m_gameState->dispose();
+    deleteWidgets();
+    m_sessions->destroy();
+    delete m_sessions;
 }
 
 // E:\gamedcs\multiplayerwindow.cpp:1025
 VA(0x0050eef0, 0xC9)  // anchor-bracket: no-arg void member; toggles widget set via widget::send_message x12, dc 0x100498
-void TMultiPlayerWindow::GoSessionList()
+void TMultiPlayerWindow::goSessionList()
 {
-    inSessionList = 1;
-    showSplash = 0;
-    splash->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    if (hotSeat)
-        hotSeat->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    ipx->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    tcp->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    modem->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    direct->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    if (host)
-        host->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    join->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    search->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    online->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    userNameHeader->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    sessNameHeader->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    m_inSessionList = 1;
+    m_showSplash = 0;
+    m_splash->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    if (m_hotSeat)
+        m_hotSeat->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    m_ipx->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    m_tcp->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    m_modem->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    m_direct->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    if (m_host)
+        m_host->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    m_join->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    m_search->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    m_online->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    m_userNameHeader->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    m_sessNameHeader->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
 }
 
 // E:\gamedcs\multiplayerwindow.cpp:1049
 VA(0x0050efc0, 0x12B)  // anchor-bracket: send_message x13 + GetWidget + pSessions->Destroy() teardown, dc 0x10051c
-void TMultiPlayerWindow::GoMainMenu()
+void TMultiPlayerWindow::goMainMenu()
 {
-    inSessionList = 0;
-    showSplash = 1;
-    sessTimer = 0;
-    hostJoinScreen = 0;
-    splash->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    if (hotSeat)
-        hotSeat->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    ipx->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    tcp->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    modem->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    direct->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    if (host)
-        host->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    join->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    search->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    online->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    userNameHeader->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    sessNameHeader->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    widget* w = GetWidget(126);
+    m_inSessionList = 0;
+    m_showSplash = 1;
+    m_sessTimer = 0;
+    m_hostJoinScreen = 0;
+    m_splash->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    if (m_hotSeat)
+        m_hotSeat->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    m_ipx->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    m_tcp->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    m_modem->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    m_direct->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    if (m_host)
+        m_host->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    m_join->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    m_search->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    m_online->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    m_userNameHeader->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    m_sessNameHeader->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    widget* w = getWidget(126);
     if (w)
-        w->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    pSessions->Destroy();
+        w->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    m_sessions->destroy();
 }
 
 // The session-list draw. Reads the live session count off pSessions (the
@@ -734,169 +747,170 @@ void TMultiPlayerWindow::GoMainMenu()
 // were also flat at 98.048%. Alternative wx/wy schedules regressed. Differently
 // named pooled-data relocs are cosmetic.
 VA(0x0050f0f0, 0x3E6)  // anchor-callee: sole big drawing method (font::DrawBoundedString x3, CSprite::Draw, session-name strncpy/sprintf), size 0.99x DC, dc 0x1005fc
-void TMultiPlayerWindow::Update()
+void TMultiPlayerWindow::update()
 {
     char userBuf[256];
     char nameBuf[256];
     char countBuf[100];
 
-    int wx = x;
-    int wy = y;
+    int wx = m_x;
+    int wy = m_y;
     int numPlayers;
     CHeroSessions::eSessionStatus status;
-    unsigned long count = pSessions->GetCount();
-    int nShown = 0;
+    unsigned long count = m_sessions->getCount();
+    // Before normalization (locals): nShown, nRow.
+    int shown = 0;
     unsigned char haveName = 0;
 
-    const char* pn = playerName->Text.c_str();
+    const char* pn = m_playerName->m_text.c_str();
     unsigned char anySelected = 0;
     if (pn && strlen(pn))
         haveName = 1;
 
-    if (!showSplash) {
+    if (!m_showSplash) {
         if (count > 0) {
-            DrawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+            drawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
             if (count >= 12)
                 count = 12;
-            int nRow = 0;
+            int row = 0;
             if (count > 0) {
                 wy = wy + 0x70;
                 do {
-                    if (!pSessions->GetSessionInfo(
-                            nRow + currentIndex, nameBuf, userBuf, numPlayers,
+                    if (!m_sessions->getSessionInfo(
+                            row + m_currentIndex, nameBuf, userBuf, numPlayers,
                             status))
                         return;
 
-                    int isSelected = currentGame == nRow + currentIndex;
+                    int isSelected = m_currentGame == row + m_currentIndex;
                     if (status != CHeroSessions::closed) {
                         if (isSelected)
                             anySelected = 1;
-                        nShown++;
+                        shown++;
                     }
 
-                    GameState->Draw(0, status, 0, 0,
-                                    gpMultiPlayerWindow->GameState->Width,
-                                    gpMultiPlayerWindow->GameState->Height,
-                                    gpWindowManager->screenBitmap, wx + 0x12,
+                    m_gameState->draw(0, status, 0, 0,
+                                    g_multiPlayerWindow->m_gameState->m_width,
+                                    g_multiPlayerWindow->m_gameState->m_height,
+                                    g_windowManager->m_screenBitmap, wx + 0x12,
                                     wy, 0, 1);
                     int fontColor = isSelected ? 5 : 1;
-                    gUnnamed698a08->DrawBoundedString(
-                        nameBuf, gpWindowManager->screenBitmap, wx + 0x2b, wy,
+                    g_unnamed698a08->drawBoundedString(
+                        nameBuf, g_windowManager->m_screenBitmap, wx + 0x2b, wy,
                         0x80, 0x16, fontColor, 5, -1);
-                    gUnnamed698a08->DrawBoundedString(
-                        userBuf, gpWindowManager->screenBitmap, wx + 0xad, wy,
+                    g_unnamed698a08->drawBoundedString(
+                        userBuf, g_windowManager->m_screenBitmap, wx + 0xad, wy,
                         0x80, 0x16, fontColor, 5, -1);
                     sprintf(countBuf, "%d", numPlayers);
-                    gUnnamed698a08->DrawBoundedString(
-                        countBuf, gpWindowManager->screenBitmap, wx + 0x130,
+                    g_unnamed698a08->drawBoundedString(
+                        countBuf, g_windowManager->m_screenBitmap, wx + 0x130,
                         wy, 0x1e, 0x16, fontColor, 5, -1);
-                    ++nRow;
+                    ++row;
                     wy += 0x19;
-                } while (nRow < count);
+                } while (row < count);
             }
 
-            if (nShown > 0 && haveName && anySelected)
-                join->enable(1);
+            if (shown > 0 && haveName && anySelected)
+                m_join->enable(1);
             else
-                join->enable(0);
-            if (host) {
-                host->enable(haveName);
-                host->Draw();
+                m_join->enable(0);
+            if (m_host) {
+                m_host->enable(haveName);
+                m_host->draw();
             }
-            join->Draw();
+            m_join->draw();
         } else {
-            if (hostJoinScreen)
-                join->enable(haveName);
+            if (m_hostJoinScreen)
+                m_join->enable(haveName);
             else
-                join->enable(0);
-            if (host)
-                host->enable(haveName);
-            DrawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+                m_join->enable(0);
+            if (m_host)
+                m_host->enable(haveName);
+            drawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
         }
     } else {
-        if (hostJoinScreen) {
-            if (host)
-                host->enable(haveName);
-            join->enable(haveName);
+        if (m_hostJoinScreen) {
+            if (m_host)
+                m_host->enable(haveName);
+            m_join->enable(haveName);
         } else {
-            if (hotSeat)
-                hotSeat->enable(haveName);
-            ipx->enable(haveName);
-            tcp->enable(haveName);
-            modem->enable(haveName);
-            direct->enable(haveName);
+            if (m_hotSeat)
+                m_hotSeat->enable(haveName);
+            m_ipx->enable(haveName);
+            m_tcp->enable(haveName);
+            m_modem->enable(haveName);
+            m_direct->enable(haveName);
         }
-        DrawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+        drawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
     }
 
-    gpWindowManager->UpdateScreen(x, y, width, height);
+    g_windowManager->updateScreen(m_x, m_y, m_width, m_height);
 }
 
 // DC retains these three member helpers and OnWidgetDeselect calls them.
 // Complete emits no standalone bodies; the corresponding retail case arms
 // contain the complete inlined bodies, including Complete's expanded IPX
 // session setup and the later widget-status API.
-inline unsigned char TMultiPlayerWindow::OnIPX()
+inline unsigned char TMultiPlayerWindow::onIPX()
 {
-    iMPNetProtocol = MP_IPX;
-    if (::InitRemote(MP_IPX, playerName->Text.c_str()) &&
-        InitConnection(0, 0)) {
+    g_mpNetProtocol = MP_IPX;
+    if (::initRemote(MP_IPX, m_playerName->m_text.c_str()) &&
+        initConnection(0, 0)) {
         DPCAPS caps;
-        pDPlay->GetCaps(&caps, 1);
-        sessionRefreshTimeout = caps.dwTimeout + 100;
-        if (iMPNetProtocol == MP_TCP)
-            sessionRefreshTimeout = 1000;
+        g_dPlay->getCaps(&caps, 1);
+        m_sessionRefreshTimeout = caps.m_timeout + 100;
+        if (g_mpNetProtocol == MP_TCP)
+            m_sessionRefreshTimeout = 1000;
 
-        if (host)
-            host->send_message(
+        if (m_host)
+            m_host->sendMessage(
                 widget::WIDGET_SET_STATUS,
                 widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        join->send_message(widget::WIDGET_SET_STATUS,
+        m_join->sendMessage(widget::WIDGET_SET_STATUS,
                            widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        join->enable(0);
-        pSessions->Destroy();
-        pDPlay->EnumSessions(pSessions, sessionRefreshTimeout, 0x52);
-        sessTimer = GameTime::Get();
-        static_cast<slider*>(gameSlider)->UpdateResolution(
-            pSessions->GetCount() - 12);
-        Update();
+        m_join->enable(0);
+        m_sessions->destroy();
+        g_dPlay->enumSessions(m_sessions, m_sessionRefreshTimeout, 0x52);
+        m_sessTimer = GameTime::get();
+        static_cast<slider*>(m_gameSlider)->updateResolution(
+            m_sessions->getCount() - 12);
+        update();
         return 1;
     }
 
-    NormalDialog(gpGeneralText->GetText(461), 1, -1, -1,
+    normalDialog(g_generalText->getText(461), 1, -1, -1,
                  -1, 0, -1, 0, -1, 0, -1, 0);
     return 0;
 }
 
-inline unsigned char TMultiPlayerWindow::OnModem()
+inline unsigned char TMultiPlayerWindow::onModem()
 {
-    iMPNetProtocol = MP_MODEM;
-    hostJoinScreen = 1;
-    splash->send_message(widget::WIDGET_SET_STATUS,
+    g_mpNetProtocol = MP_MODEM;
+    m_hostJoinScreen = 1;
+    m_splash->sendMessage(widget::WIDGET_SET_STATUS,
                          widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    if (host)
-        host->send_message(widget::WIDGET_SET_STATUS,
+    if (m_host)
+        m_host->sendMessage(widget::WIDGET_SET_STATUS,
                            widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    join->send_message(widget::WIDGET_SET_STATUS,
+    m_join->sendMessage(widget::WIDGET_SET_STATUS,
                        widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    join->enable(1);
-    Update();
+    m_join->enable(1);
+    update();
     return 1;
 }
 
-inline unsigned char TMultiPlayerWindow::OnDirect()
+inline unsigned char TMultiPlayerWindow::onDirect()
 {
-    iMPNetProtocol = MP_SERIAL;
-    hostJoinScreen = 1;
-    splash->send_message(widget::WIDGET_SET_STATUS,
+    g_mpNetProtocol = MP_SERIAL;
+    m_hostJoinScreen = 1;
+    m_splash->sendMessage(widget::WIDGET_SET_STATUS,
                          widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    if (host)
-        host->send_message(widget::WIDGET_SET_STATUS,
+    if (m_host)
+        m_host->sendMessage(widget::WIDGET_SET_STATUS,
                            widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    join->send_message(widget::WIDGET_SET_STATUS,
+    m_join->sendMessage(widget::WIDGET_SET_STATUS,
                        widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    join->enable(1);
-    Update();
+    m_join->enable(1);
+    update();
     return 1;
 }
 
@@ -908,90 +922,91 @@ inline unsigned char TMultiPlayerWindow::OnDirect()
 // out-of-line spelling fell to 61.757%; __forceinline and success-guard polarity
 // were byte-flat at 97.493%, while making the session pointer volatile fell to
 // 92.580%. Unpromoted helper/data relocation names are cosmetic.
+// Before normalization (locals): bExitFlag.
 VA(0x0050f4e0, 0x458)  // anchor-vtable 0x6400a0 slot 12 (OnWidgetDeselect), dc 0x1009a4
-int TMultiPlayerWindow::OnWidgetDeselect(int id, unsigned char* bExitFlag)
+int TMultiPlayerWindow::onWidgetDeselect(int id, unsigned char* exitFlag)
 {
     switch (id) {
     case CANCEL_ID:
-        if (!inSessionList)
+        if (!m_inSessionList)
             goto connection_failed;
         goto return_to_main_menu;
 
     case IPX_ID: {
-        GoSessionList();
-        if (!OnIPX())
+        goSessionList();
+        if (!onIPX())
             goto connection_failed;
         return 1;
     }
 
 connection_failed:
-    *bExitFlag = 1;
-    gpWindowManager->dialogReturn = DIALOG_RETURN_CANCEL;
-    RemoteCleanup();
+    *exitFlag = 1;
+    g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
+    remoteCleanup();
     return 1;
 
     case TCP_ID:
-        GoSessionList();
-        if (!OnTCP()) {
-            RemoteCleanup();
-            *bExitFlag = 1;
-            gpWindowManager->dialogReturn = DIALOG_RETURN_CANCEL;
+        goSessionList();
+        if (!onTCP()) {
+            remoteCleanup();
+            *exitFlag = 1;
+            g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
             return 1;
         }
         break;
 
     case MODEM_ID:
-        GoSessionList();
-        if (!OnModem())
+        goSessionList();
+        if (!onModem())
             goto connection_failed;
         return 1;
 
     case DIRECT_ID:
-        GoSessionList();
-        if (!OnDirect())
+        goSessionList();
+        if (!onDirect())
             goto connection_failed;
         return 1;
 
     case ONLINE_ID:
         _chdir("online");
-        ShellExecuteA(hwndApp, "open", "autorun.exe", 0, 0, SW_SHOWNORMAL);
-        ShutDown(0);
+        ShellExecuteA(g_hwndApp, "open", "autorun.exe", 0, 0, SW_SHOWNORMAL);
+        shutDown(0);
         return 1;
 
     case HOST_ID:
-        if (OnHost())
+        if (onHost())
             goto exit_dialog;
-        if (gpWindowManager->dialogReturn != DIALOG_RETURN_CANCEL) {
-            gpWindowManager->dialogReturn = DIALOG_RETURN_CANCEL;
-            RemoteCleanup();
-            *bExitFlag = 1;
+        if (g_windowManager->m_dialogReturn != DIALOG_RETURN_CANCEL) {
+            g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
+            remoteCleanup();
+            *exitFlag = 1;
             return 1;
         }
         goto check_host_join_screen;
 
     case JOIN_ID:
-        if (OnJoin()) {
-            *bExitFlag = 1;
+        if (onJoin()) {
+            *exitFlag = 1;
             return 1;
         }
 
 check_host_join_screen:
-        if (hostJoinScreen)
+        if (m_hostJoinScreen)
             goto return_to_main_menu;
         break;
 
     case SEARCH_ID:
-        if (OnSearch())
+        if (onSearch())
             goto exit_dialog;
         break;
 
     exit_dialog:
-        *bExitFlag = 1;
+        *exitFlag = 1;
         return 1;
 
     case HOT_SEAT_ID:
-        if (OnHotSeat()) {
-            *bExitFlag = 1;
+        if (onHotSeat()) {
+            *exitFlag = 1;
             return 1;
         }
         break;
@@ -1008,10 +1023,10 @@ check_host_join_screen:
     case FIRST_SESSION_ID + 9:
     case FIRST_SESSION_ID + 10:
     case LAST_SESSION_ID: {
-        int game = currentIndex + id - FIRST_SESSION_ID;
-        if (game < pSessions->GetCount()) {
-            currentGame = game;
-            Update();
+        int game = m_currentIndex + id - FIRST_SESSION_ID;
+        if (game < m_sessions->getCount()) {
+            m_currentGame = game;
+            update();
         }
         break;
     }
@@ -1024,55 +1039,56 @@ check_host_join_screen:
     return 1;
 
 return_to_main_menu:
-    RemoteCleanup();
-    GoMainMenu();
-    DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-    Update();
+    remoteCleanup();
+    goMainMenu();
+    drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+    update();
     return 1;
 }
 
 VA(0x0050f940, 0xC5)  // anchor-vtable 0x6400a0 slot 9 (WindowHandler); ret 4 = (this,message*)->int.
                       // 197 B vs DC 40: retail inlines the timer-gated session refresh (PollSound +
                       // GameTime::Get) that DC keeps in RefreshSessions/CheckSessions. dc 0x100c1c
-int TMultiPlayerWindow::WindowHandler(message* msg)
+int TMultiPlayerWindow::windowHandler(message* msg)
 {
-    PollSound();
+    pollSound();
     // Retail keeps the pre-call timestamp in EDI, then reuses that saved
     // register for pSessions once the timeout gate succeeds.
-    unsigned long timer = sessTimer;
-    if (timer && GameTime::Get() - timer > sessionRefreshTimeout) {
-        pSessions->Destroy();
-        pDPlay->EnumSessions(pSessions, sessionRefreshTimeout, 0x52);
-        sessTimer = GameTime::Get();
-        static_cast<slider*>(gameSlider)->UpdateResolution(
-            pSessions->GetCount() - 12);
-        Update();
-        sessTimer = GameTime::Get();
+    unsigned long timer = m_sessTimer;
+    if (timer && GameTime::get() - timer > m_sessionRefreshTimeout) {
+        m_sessions->destroy();
+        g_dPlay->enumSessions(m_sessions, m_sessionRefreshTimeout, 0x52);
+        m_sessTimer = GameTime::get();
+        static_cast<slider*>(m_gameSlider)->updateResolution(
+            m_sessions->getCount() - 12);
+        update();
+        m_sessTimer = GameTime::get();
     }
 
-    return CHeroWindowEx::WindowHandler(msg);
+    return CHeroWindowEx::windowHandler(msg);
 }
 
 // Byte-exact. The DC roster fixes the signature and nearby emission order.
 // Retail proves the session GUID field, DirectPlay virtuals, player-info
 // writes and the last-error gate independently in the complete PC flow.
+// Before normalization (locals): pSession.
 VA(0x0050fa10, 0x9F)  // anchor-callees/globals + dc-order-map, dc 0x100ca0
-unsigned char TMultiPlayerWindow::JoinSession(CDPlaySession* pSession, const char* password)
+unsigned char TMultiPlayerWindow::joinSession(CDPlaySession* session, const char* password)
 {
-    if (!pDPlay->JoinSession(&pSession->guidInstance,
+    if (!g_dPlay->joinSession(&session->m_guidInstance,
                              const_cast<char*>(password)))
         return 0;
 
-    int version = *gpVideoGameState;
-    gsThisNetPlayerInfo.dpid = pDPlay->CreatePlayer(
-        gLocalPlayerName, &version, sizeof(version), 0);
-    strcpy(gsThisNetPlayerInfo.sName, gLocalPlayerName);
-    gsThisNetPlayerInfo.version = version;
+    int version = *g_videoGameState;
+    g_thisNetPlayerInfo.m_dpid = g_dPlay->createPlayer(
+        g_localPlayerName, &version, sizeof(version), 0);
+    strcpy(g_thisNetPlayerInfo.m_name, g_localPlayerName);
+    g_thisNetPlayerInfo.m_version = version;
 
-    if (pDPlay->GetLastError())
+    if (g_dPlay->getLastError())
         return 0;
 
-    sessTimer = 0;
+    m_sessTimer = 0;
     return 1;
 }
 
@@ -1080,34 +1096,35 @@ unsigned char TMultiPlayerWindow::JoinSession(CDPlaySession* pSession, const cha
 // local; retail fixes the delimiter, flag construction, DirectPlay virtuals,
 // CNetPlayerInfo writes and TCP-only address query in the complete PC CFG.
 VA(0x0050fab0, 0x106)  // anchor-callee: ret 8 + three independent host-flow callers, dc 0x100d0c
-unsigned char TMultiPlayerWindow::HostSession(const char* sessName, const char* password)
+unsigned char TMultiPlayerWindow::hostSession(const char* sessName, const char* password)
 {
-    char sFullName[256];
-    sprintf(sFullName,
+    // Before normalization (locals): sFullName.
+    char fullName[256];
+    sprintf(fullName,
             DATA_COMPGEN(0x006816e4, multiplayerSessionNameFormat, "%s%c%s"),
-            sessName, 0xfa, gLocalPlayerName);
+            sessName, 0xfa, g_localPlayerName);
 
     unsigned long flags = 4;
-    if (gUnnamed681628)
+    if (g_unnamed681628)
         flags |= 0x40;
-    if (iMPNetProtocol != MP_TCP)
+    if (g_mpNetProtocol != MP_TCP)
         flags |= 0x2000;
 
-    if (!pDPlay->HostSession(sFullName, flags, 8,
+    if (!g_dPlay->hostSession(fullName, flags, 8,
                              const_cast<char*>(password)))
         return 0;
 
-    int version = *gpVideoGameState;
-    gsThisNetPlayerInfo.dpid = pDPlay->CreatePlayer(
-        gLocalPlayerName, &version, sizeof(version), 0);
-    if (!gsThisNetPlayerInfo.dpid)
+    int version = *g_videoGameState;
+    g_thisNetPlayerInfo.m_dpid = g_dPlay->createPlayer(
+        g_localPlayerName, &version, sizeof(version), 0);
+    if (!g_thisNetPlayerInfo.m_dpid)
         return 0;
 
-    strcpy(gsThisNetPlayerInfo.sName, gLocalPlayerName);
-    gsThisNetPlayerInfo.version = version;
+    strcpy(g_thisNetPlayerInfo.m_name, g_localPlayerName);
+    g_thisNetPlayerInfo.m_version = version;
 
-    if (iMPNetProtocol == MP_TCP)
-        pDPlay->GetIPAddress(gsThisNetPlayerInfo.dpid, localIPAddress);
+    if (g_mpNetProtocol == MP_TCP)
+        g_dPlay->getIPAddress(g_thisNetPlayerInfo.m_dpid, m_localIpAddress);
 
     return 1;
 }
@@ -1117,21 +1134,22 @@ unsigned char TMultiPlayerWindow::HostSession(const char* sessName, const char* 
 // reaches the caps query and derives the session-refresh timeout; TCP keeps
 // the original fixed one-second override. DC supplies the signature, local
 // DPCAPS identity and source name; retail fixes the PC layout and every edge.
+// Before normalization (locals): sExtra.
 VA(0x0050fbc0, 0x86)  // anchor-callee: ret 0xC + global InitRemote/InitConnection pair, dc 0x100e18
-unsigned char TMultiPlayerWindow::InitRemote(eNetGameType netGameType, const char* sExtra, _DPCOMPORTADDRESS* comportInfo)
+unsigned char TMultiPlayerWindow::initRemote(eNetGameType netGameType, const char* extra, _DPCOMPORTADDRESS* comportInfo)
 {
     DPCAPS dpCaps;
 
-    iMPNetProtocol = netGameType;
-    if (!::InitRemote(netGameType, playerName->Text.c_str()))
+    g_mpNetProtocol = netGameType;
+    if (!::initRemote(netGameType, m_playerName->m_text.c_str()))
         return 0;
-    if (!InitConnection(const_cast<char*>(sExtra), comportInfo))
+    if (!initConnection(const_cast<char*>(extra), comportInfo))
         return 0;
 
-    pDPlay->GetCaps(&dpCaps, 1);
-    sessionRefreshTimeout = dpCaps.dwTimeout + 100;
-    if (iMPNetProtocol == MP_TCP)
-        sessionRefreshTimeout = 1000;
+    g_dPlay->getCaps(&dpCaps, 1);
+    m_sessionRefreshTimeout = dpCaps.m_timeout + 100;
+    if (g_mpNetProtocol == MP_TCP)
+        m_sessionRefreshTimeout = 1000;
     return 1;
 }
 
@@ -1139,21 +1157,21 @@ unsigned char TMultiPlayerWindow::InitRemote(eNetGameType netGameType, const cha
 // Complete inlines this body into OnHost. Keeping the source boundary is
 // material: VC6 leaves the nested member InitRemote call out of line, exactly
 // as retail does.
-unsigned char TMultiPlayerWindow::OnModemHost()
+unsigned char TMultiPlayerWindow::onModemHost()
 {
-    if (!InitRemote(iMPNetProtocol, 0, 0)) {
-        NormalDialog(gpGeneralText->GetText(448), 1, -1, -1,
+    if (!initRemote(g_mpNetProtocol, 0, 0)) {
+        normalDialog(g_generalText->getText(448), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return 0;
     }
 
-    gUnnamed69927c = 1;
-    gUnnamed6994e4 = 1;
+    g_unnamed69927c = 1;
+    g_unnamed6994e4 = 1;
     ShowCursor(1);
-    if (!HostSession(gpGeneralText->GetText(449), 0)) {
+    if (!hostSession(g_generalText->getText(449), 0)) {
         ShowCursor(0);
-        gpWindowManager->dialogReturn = DIALOG_RETURN_CANCEL;
-        RemoteCleanup();
+        g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
+        remoteCleanup();
         return 0;
     }
     ShowCursor(0);
@@ -1166,25 +1184,25 @@ unsigned char TMultiPlayerWindow::OnModemHost()
 // Complete emits this after absorbing OnModemHost into OnHost, so the retail
 // order differs from the older Dreamcast compiland.
 VA(0x0050fc50, 0x14F)  // anchor-protocol/callees/globals, dc 0x100f94
-unsigned char TMultiPlayerWindow::OnDirectHost()
+unsigned char TMultiPlayerWindow::onDirectHost()
 {
-    if (!InitRemote(MP_SERIAL, 0, 0)) {
-        NormalDialog(gpGeneralText->GetText(450), 1, -1, -1,
+    if (!initRemote(MP_SERIAL, 0, 0)) {
+        normalDialog(g_generalText->getText(450), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return 0;
     }
 
-    gUnnamed69927c = 1;
-    gUnnamed6994e4 = 1;
+    g_unnamed69927c = 1;
+    g_unnamed6994e4 = 1;
     ShowCursor(1);
 
-    if (!HostSession(gpGeneralText->GetText(451), 0)) {
+    if (!hostSession(g_generalText->getText(451), 0)) {
         ShowCursor(0);
-        if (pDPlay->GetLastError() != DPLAY_ERROR_USER_CANCEL)
-            NormalDialog(gpGeneralText->GetText(452), 1, -1, -1,
+        if (g_dPlay->getLastError() != g_dplayErrorUserCancel)
+            normalDialog(g_generalText->getText(452), 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
-        gpWindowManager->dialogReturn = DIALOG_RETURN_CANCEL;
-        RemoteCleanup();
+        g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
+        remoteCleanup();
         return 0;
     }
 
@@ -1199,35 +1217,35 @@ unsigned char TMultiPlayerWindow::OnDirectHost()
 // paths; DC supplies the signature, local-dialog identity and call graph.
 // E:\gamedcs\multiplayerwindow.cpp:1540
 VA(0x0050fda0, 0x2B7)  // anchor-protocol/callees/dialog-vtable, dc 0x101058
-unsigned char TMultiPlayerWindow::OnHost()
+unsigned char TMultiPlayerWindow::onHost()
 {
-    if (iMPNetProtocol == MP_MODEM)
-        return OnModemHost();
+    if (g_mpNetProtocol == MP_MODEM)
+        return onModemHost();
 
-    if (iMPNetProtocol == MP_SERIAL)
-        return OnDirectHost();
+    if (g_mpNetProtocol == MP_SERIAL)
+        return onDirectHost();
 
-    gUnnamed69927c = 1;
-    gUnnamed6994e4 = 1;
-    strcpy(gLocalPlayerName, playerName->GetText());
+    g_unnamed69927c = 1;
+    g_unnamed6994e4 = 1;
+    strcpy(g_localPlayerName, m_playerName->getText());
 
 #pragma inline_depth(0)
     CMPInputDlg sessDlg(20, 20);
 #pragma inline_depth()
-    sessDlg.field1->SetText(gpGeneralText->GetText(453));
-    sessDlg.header1->SetText(gUnnamed6a7780);
-    sessDlg.header2->SetText(gpGeneralText->GetText(454));
-    sessDlg.field1->set_help_text(gUnnamed6a7770, 0, 0);
-    sessDlg.field2->set_help_text(gUnnamed6a7778, 0, 0);
-    sessDlg.DoModal(0);
+    sessDlg.m_field1->setText(g_generalText->getText(453));
+    sessDlg.m_header1->setText(g_unnamed6a7780);
+    sessDlg.m_header2->setText(g_generalText->getText(454));
+    sessDlg.m_field1->setHelpText(g_unnamed6a7770, 0, 0);
+    sessDlg.m_field2->setHelpText(g_unnamed6a7778, 0, 0);
+    sessDlg.doModal(0);
 
-    if (gpWindowManager->dialogReturn == DIALOG_RETURN_CANCEL)
+    if (g_windowManager->m_dialogReturn == DIALOG_RETURN_CANCEL)
         return 0;
 
-    const char* password = sessDlg.field2->Text.c_str();
+    const char* password = sessDlg.m_field2->m_text.c_str();
     if (!strlen(password))
         password = 0;
-    if (!HostSession(sessDlg.field1->Text.c_str(), password))
+    if (!hostSession(sessDlg.m_field1->m_text.c_str(), password))
         return 0;
     return 1;
 }
@@ -1237,43 +1255,43 @@ VA(0x00510060, 0x6F7)  // anchor-vtable 0x6400f4 into this + CHeroWindowEx base 
 __forceinline CMPInputDlg::CMPInputDlg(int maxChars1, int maxChars2)
     : CHeroWindowEx(284, 194, 232, 212, 18)
 {
-    Widgets.reserve(6);
-    Widgets.push_back(new bitmapBorder(0, 0, width, height, BACKGROUND_ID,
+    m_widgets.reserve(6);
+    m_widgets.push_back(new bitmapBorder(0, 0, m_width, m_height, BACKGROUND_ID,
                                        "MuDialog.pcx", 0x800));
 
-    field1 = new CMPInputEdit(17, 66, 198, 23, maxChars1, "", "smalfont.fnt",
+    m_field1 = new CMPInputEdit(17, 66, 198, 23, maxChars1, "", "smalfont.fnt",
                               font::WHITE, 0, 0, 0, FIELD1_ID, 0x100, 0, 7, 5);
-    field2 = new CMPInputEdit(17, 115, 198, 23, maxChars2, "", "smalfont.fnt",
+    m_field2 = new CMPInputEdit(17, 115, 198, 23, maxChars2, "", "smalfont.fnt",
                               font::WHITE, 0, 0, 0, FIELD2_ID, 0x100, 0, 7, 5);
-    field1->SetNextEdit(field2);
-    field2->SetNextEdit(field1);
-    field1->SetPrevEdit(field2);
-    field2->SetPrevEdit(field1);
+    m_field1->setNextEdit(m_field2);
+    m_field2->setNextEdit(m_field1);
+    m_field1->setPrevEdit(m_field2);
+    m_field2->setPrevEdit(m_field1);
 
-    header1 = new textWidget(17, 43, 198, 18, "", "smalfont.fnt", font::WHITE,
+    m_header1 = new textWidget(17, 43, 198, 18, "", "smalfont.fnt", font::WHITE,
                              -1, 1, 0, 8);
-    header2 = new textWidget(17, 92, 198, 18, "", "smalfont.fnt", font::WHITE,
+    m_header2 = new textWidget(17, 92, 198, 18, "", "smalfont.fnt", font::WHITE,
                              -1, 1, 0, 8);
 
-    Widgets.push_back(field1);
-    Widgets.push_back(field2);
-    Widgets.push_back(header1);
-    Widgets.push_back(header2);
-    Widgets.push_back(new button(26, 143, 64, 32, OKAY_ID, "mubchck.def", 0, 1,
+    m_widgets.push_back(m_field1);
+    m_widgets.push_back(m_field2);
+    m_widgets.push_back(m_header1);
+    m_widgets.push_back(m_header2);
+    m_widgets.push_back(new button(26, 143, 64, 32, OKAY_ID, "mubchck.def", 0, 1,
                                  0, 28, 2));
-    Widgets.push_back(new button(142, 143, 64, 32, BACK_ID, "mubcanc.def", 0, 1,
+    m_widgets.push_back(new button(142, 143, 64, 32, BACK_ID, "mubcanc.def", 0, 1,
                                  0, 1, 2));
 
-    rollover = new textWidget(8, 186, 216, 18, 0, "smalfont.fnt", font::PRIMARY,
+    m_rollover = new textWidget(8, 186, 216, 18, 0, "smalfont.fnt", font::PRIMARY,
                               ROLLOVER_ID, 1, 32, 8);
-    Widgets.push_back(rollover);
+    m_widgets.push_back(m_rollover);
 
-    AddWidgetsToMessageStream();
-    SetFocus(field1->id);
-    field1->SetAutoDraw(1);
-    field2->SetAutoDraw(1);
-    GetWidget(OKAY_ID)->set_help_text(gDialogOkHelp, 0, 0);
-    GetWidget(BACK_ID)->set_help_text(gDialogBackHelp, 0, 0);
+    addWidgetsToMessageStream();
+    setFocus(m_field1->m_id);
+    m_field1->setAutoDraw(1);
+    m_field2->setAutoDraw(1);
+    getWidget(OKAY_ID)->setHelpText(g_dialogOkHelp, 0, 0);
+    getWidget(BACK_ID)->setHelpText(g_dialogBackHelp, 0, 0);
 }
 
 // E:\gamedcs\multiplayerwindow.cpp:263 - CMPEdit's out-of-line constructor,
@@ -1289,8 +1307,8 @@ CMPEdit::CMPEdit(int x, int y, int w, int h, int textSize, const char* text,
                       backgroundIcon, backgroundFrame, id, style, readType,
                       insetX, insetY)
 {
-    nextEdit = 0;
-    prevEdit = 0;
+    m_nextEdit = 0;
+    m_prevEdit = 0;
 }
 
 // Slot 15 first rejects input while this edit lacks focus. The Win32 HIWORD
@@ -1302,24 +1320,24 @@ CMPEdit::CMPEdit(int x, int y, int w, int h, int textSize, const char* text,
 // Every other key reaches the text-entry base editor directly.
 // E:\gamedcs\multiplayerwindow.cpp:279
 VA(0x005107d0, 0x73)  // dc 0x1020c4; focus/key dispatch + direct base fallback
-int CMPEdit::OnKeyPress(message* msg)
+int CMPEdit::onKeyPress(message* msg)
 {
-    if (!bHasFocus)
+    if (!m_hasFocus)
         return 0;
 
-    if ((HIWORD(GetKeyState(VK_SHIFT)) && msg->codeX == KEYCODE_TAB)
-        || msg->codeX == KEYCODE_KP_8) {
-        OnPrevEdit();
+    if ((HIWORD(GetKeyState(VK_SHIFT)) && msg->m_codeX == KEYCODE_TAB)
+        || msg->m_codeX == KEYCODE_KP_8) {
+        onPrevEdit();
         return 1;
     }
 
-    if (msg->codeX == KEYCODE_TAB || msg->codeX == KEYCODE_ENTER
-        || msg->codeX == KEYCODE_KP_2) {
-        OnNextEdit();
+    if (msg->m_codeX == KEYCODE_TAB || msg->m_codeX == KEYCODE_ENTER
+        || msg->m_codeX == KEYCODE_KP_2) {
+        onNextEdit();
         return 1;
     }
 
-    return textEntryWidget::OnKeyPress(msg);
+    return textEntryWidget::onKeyPress(msg);
 }
 
 // Byte-exact navigation pair. Each method follows its adjacent edit only when
@@ -1328,63 +1346,64 @@ int CMPEdit::OnKeyPress(message* msg)
 // retail fixes the shifted PC fields and identical four-block shape.
 // E:\gamedcs\multiplayerwindow.cpp:309
 VA(0x00510850, 0x1B)  // dc 0x10215c; nextEdit/status/id + parent SetFocus
-void CMPEdit::OnNextEdit()
+void CMPEdit::onNextEdit()
 {
-    if (nextEdit && (nextEdit->status & widget::WIDGET_ACTIVE))
-        parentWindow->SetFocus(nextEdit->id);
+    if (m_nextEdit && (m_nextEdit->m_status & widget::WIDGET_ACTIVE))
+        m_parentWindow->setFocus(m_nextEdit->m_id);
 }
 
 // E:\gamedcs\multiplayerwindow.cpp:322
 VA(0x00510870, 0x1B)  // dc 0x102184; prevEdit/status/id + parent SetFocus
-void CMPEdit::OnPrevEdit()
+void CMPEdit::onPrevEdit()
 {
-    if (prevEdit && (prevEdit->status & widget::WIDGET_ACTIVE))
-        parentWindow->SetFocus(prevEdit->id);
+    if (m_prevEdit && (m_prevEdit->m_status & widget::WIDGET_ACTIVE))
+        m_parentWindow->setFocus(m_prevEdit->m_id);
 }
 
 // Byte-exact one-call forwarder to the text-entry base implementation.
 // E:\gamedcs\multiplayerwindow.cpp:335
 VA(0x00510890, 0x10)  // dc 0x1021ac; exact base SetFocus forwarder
-void CMPEdit::SetFocus(unsigned char state)
+void CMPEdit::setFocus(unsigned char state)
 {
-    textEntryWidget::SetFocus(state);
+    textEntryWidget::setFocus(state);
 }
 
 // E:\gamedcs\multiplayerwindow.cpp:465
 VA(0x005108a0, 0x4E)  // anchor-callee: ~dtor reached from scalar-dtor 0x5109e0, dc 0x102718
 CMPInputDlg::~CMPInputDlg()
 {
-    delete_widgets();
+    deleteWidgets();
 }
 
 // DC keeps this source helper out of line and OnWidgetDeselect calls it.
 // Complete emits no standalone body, but the retail caller contains exactly
 // its active-field/empty-text guard, proving that VC6 inlined the boundary.
-inline unsigned char CMPInputDlg::OnOK()
+inline unsigned char CMPInputDlg::onOK()
 {
-    if (field1->status & widget::WIDGET_ACTIVE) {
-        if (!strlen(field1->Text.c_str()))
+    if (m_field1->m_status & widget::WIDGET_ACTIVE) {
+        if (!strlen(m_field1->m_text.c_str()))
             return 0;
     }
     return 1;
 }
 
 // E:\gamedcs\multiplayerwindow.cpp:470
+// Before normalization (locals): bExitFlag.
 VA(0x005108f0, 0x72)  // anchor-vtable 0x6400f4 slot 12 (OnWidgetDeselect), dc 0x10275c
-int CMPInputDlg::OnWidgetDeselect(int id, unsigned char* bExitFlag)
+int CMPInputDlg::onWidgetDeselect(int id, unsigned char* exitFlag)
 {
     switch (id) {
     case OKAY_ID:
-        if (OnOK()) {
-            *bExitFlag = 1;
-            gpWindowManager->dialogReturn = DIALOG_RETURN_OK;
+        if (onOK()) {
+            *exitFlag = 1;
+            g_windowManager->m_dialogReturn = DIALOG_RETURN_OK;
             return 1;
         }
         break;
 
     case BACK_ID:
-        *bExitFlag = 1;
-        gpWindowManager->dialogReturn = DIALOG_RETURN_CANCEL;
+        *exitFlag = 1;
+        g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
         return 1;
     }
 
@@ -1393,9 +1412,9 @@ int CMPInputDlg::OnWidgetDeselect(int id, unsigned char* bExitFlag)
 
 // E:\gamedcs\multiplayerwindow.cpp:505
 VA(0x00510970, 0x4)  // anchor-vtable 0x6400f4 slot 13 (GetRolloverWidget), dc 0x1027ec
-textWidget* CMPInputDlg::GetRolloverWidget()
+textWidget* CMPInputDlg::getRolloverWidget()
 {
-    return rollover;
+    return m_rollover;
 }
 
 // Byte-exact. The active first edit selects the disabled/enabled OK branch;
@@ -1404,14 +1423,14 @@ textWidget* CMPInputDlg::GetRolloverWidget()
 // retail fixes the status bit, widget id and empty-first branch polarity.
 // E:\gamedcs\multiplayerwindow.cpp:508
 VA(0x00510980, 0x5D)  // bracketed by getter/sdd + field1/status/widget calls, dc 0x1027f4
-void CMPInputDlg::UpdateOK()
+void CMPInputDlg::updateOK()
 {
-    if (field1->status & widget::WIDGET_ACTIVE) {
-        if (!strlen(field1->Text.c_str()))
-            GetWidget(OKAY_ID)->enable(0);
+    if (m_field1->m_status & widget::WIDGET_ACTIVE) {
+        if (!strlen(m_field1->m_text.c_str()))
+            getWidget(OKAY_ID)->enable(0);
         else
-            GetWidget(OKAY_ID)->enable(1);
-        DrawWindow(1, 0xffff0001, 0xffff);
+            getWidget(OKAY_ID)->enable(1);
+        drawWindow(1, 0xffff0001, 0xffff);
     }
 }
 
@@ -1423,41 +1442,41 @@ VA_COMPGEN(0x005109e0, 0x21, SCALAR_DELETING_DTOR, CMPInputDlg)
 // retail fixes the PC retry count, dialog strings and player-info writes.
 // E:\gamedcs\multiplayerwindow.cpp:1588
 VA(0x00510a10, 0x298)  // OnJoin protocol-5 callee + complete session flow, dc 0x1011b8
-unsigned char TMultiPlayerWindow::OnModemJoin()
+unsigned char TMultiPlayerWindow::onModemJoin()
 {
-    if (!InitRemote(MP_MODEM, 0, 0)) {
-        if (pDPlay->GetLastError() != DPLAY_ERROR_USER_CANCEL)
-            NormalDialog(gpGeneralText->GetText(448), 1, -1, -1,
+    if (!initRemote(MP_MODEM, 0, 0)) {
+        if (g_dPlay->getLastError() != g_dplayErrorUserCancel)
+            normalDialog(g_generalText->getText(448), 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
         return 0;
     }
 
     ShowCursor(1);
-    pSessions->Destroy();
+    m_sessions->destroy();
     for (int retry = 0; retry < 3; ++retry) {
-        pDPlay->EnumSessions(pSessions, 0, 0x42);
-        if (pDPlay->GetLastError() == DPLAY_ERROR_USER_CANCEL)
+        g_dPlay->enumSessions(m_sessions, 0, 0x42);
+        if (g_dPlay->getLastError() == g_dplayErrorUserCancel)
             break;
         if (!retry)
-            gpWindowManager->UpdateScreen(0, 0, 800, 600);
-        if (pSessions->GetCount() > 0)
+            g_windowManager->updateScreen(0, 0, 800, 600);
+        if (m_sessions->getCount() > 0)
             break;
     }
 
-    if (!pSessions->GetCount()) {
+    if (!m_sessions->getCount()) {
         ShowCursor(0);
-        if (pDPlay->GetLastError() != DPLAY_ERROR_USER_CANCEL)
-            NormalDialog(gpGeneralText->GetText(455), 1, -1, -1,
+        if (g_dPlay->getLastError() != g_dplayErrorUserCancel)
+            normalDialog(g_generalText->getText(455), 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
         return 0;
     }
 
     ShowCursor(0);
-    CDPlaySession* session = pSessions->Get(0);
+    CDPlaySession* session = m_sessions->get(0);
     Sleep(1000);
-    if (!JoinSession(session, 0)) {
-        if (pDPlay->GetLastError() != DPLAY_ERROR_USER_CANCEL)
-            NormalDialog(gpGeneralText->GetText(456), 1, -1, -1,
+    if (!joinSession(session, 0)) {
+        if (g_dPlay->getLastError() != g_dplayErrorUserCancel)
+            normalDialog(g_generalText->getText(456), 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
         return 0;
     }
@@ -1471,44 +1490,44 @@ unsigned char TMultiPlayerWindow::OnModemJoin()
 // strings, timeout, protocol reset and inlined helper bodies.
 // E:\gamedcs\multiplayerwindow.cpp:1665
 VA(0x00510cb0, 0x282)  // OnJoin protocol-4 callee + complete session flow, dc 0x101374
-unsigned char TMultiPlayerWindow::OnDirectJoin()
+unsigned char TMultiPlayerWindow::onDirectJoin()
 {
-    if (!InitRemote(MP_SERIAL, 0, 0)) {
-        NormalDialog(gpGeneralText->GetText(450), 1, -1, -1,
+    if (!initRemote(MP_SERIAL, 0, 0)) {
+        normalDialog(g_generalText->getText(450), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return 0;
     }
 
-    pSessions->Destroy();
+    m_sessions->destroy();
     ShowCursor(1);
     for (int retry = 0; retry < 2; ++retry) {
-        unsigned char enumFailed = !pDPlay->EnumSessions(
-            pSessions, sessionRefreshTimeout, 0x42);
-        if (pDPlay->GetLastError() == DPLAY_ERROR_USER_CANCEL)
+        unsigned char enumFailed = !g_dPlay->enumSessions(
+            m_sessions, m_sessionRefreshTimeout, 0x42);
+        if (g_dPlay->getLastError() == g_dplayErrorUserCancel)
             break;
         if (enumFailed)
             break;
         if (!retry)
-            gpWindowManager->UpdateScreen(0, 0, 800, 600);
-        if (pSessions->GetCount() > 0)
+            g_windowManager->updateScreen(0, 0, 800, 600);
+        if (m_sessions->getCount() > 0)
             break;
         if (!retry)
             Sleep(500);
     }
 
-    if (!pSessions->GetCount()) {
+    if (!m_sessions->getCount()) {
         ShowCursor(0);
-        NormalDialog(gpGeneralText->GetText(457), 1, -1, -1,
+        normalDialog(g_generalText->getText(457), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
-        RemoteCleanup();
-        iMPNetProtocol = MP_SERIAL;
+        remoteCleanup();
+        g_mpNetProtocol = MP_SERIAL;
         return 0;
     }
 
     ShowCursor(0);
-    CDPlaySession* session = pSessions->Get(0);
-    if (!JoinSession(session, 0)) {
-        NormalDialog(gpGeneralText->GetText(456), 1, -1, -1,
+    CDPlaySession* session = m_sessions->get(0);
+    if (!joinSession(session, 0)) {
+        normalDialog(g_generalText->getText(456), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return 0;
     }
@@ -1523,29 +1542,29 @@ unsigned char TMultiPlayerWindow::OnDirectJoin()
 // and statement order; the retail body independently fixes all PC globals,
 // flags, dialog indices and the selected-session accesses.
 VA(0x00510f40, 0x380)  // protocol dispatch + selected-session join, dc 0x101510
-unsigned char TMultiPlayerWindow::OnJoin()
+unsigned char TMultiPlayerWindow::onJoin()
 {
-    if (iMPNetProtocol == MP_MODEM)
-        return OnModemJoin();
-    if (iMPNetProtocol == MP_SERIAL)
-        return OnDirectJoin();
+    if (g_mpNetProtocol == MP_MODEM)
+        return onModemJoin();
+    if (g_mpNetProtocol == MP_SERIAL)
+        return onDirectJoin();
 
-    gpWindowManager->dialogReturn = DIALOG_RETURN_OK;
-    gUnnamed69927c = 2;
-    gUnnamed6994e4 = 1;
-    gUnnamed699288 = 1;
-    strcpy(gLocalPlayerName, playerName->GetText());
+    g_windowManager->m_dialogReturn = DIALOG_RETURN_OK;
+    g_unnamed69927c = 2;
+    g_unnamed6994e4 = 1;
+    g_unnamed699288 = 1;
+    strcpy(g_localPlayerName, m_playerName->getText());
 
     char userName[256];
     char sessName[256];
     int numPlayers;
     CHeroSessions::eSessionStatus status;
-    if (!pSessions->GetSessionInfo(static_cast<unsigned long>(currentGame),
+    if (!m_sessions->getSessionInfo(static_cast<unsigned long>(m_currentGame),
                                    sessName, userName,
                                    numPlayers, status))
         return 0;
 
-    CDPlaySession* session = pSessions->Get(currentGame);
+    CDPlaySession* session = m_sessions->get(m_currentGame);
     if (!session)
         return 0;
 
@@ -1553,28 +1572,28 @@ unsigned char TMultiPlayerWindow::OnJoin()
 #pragma inline_depth(0)
     CMPInputDlg dlg(20, 20);
 #pragma inline_depth()
-    if (session->IsPasswordProtected()) {
-        dlg.header1->SetText(gUnnamed6a7780);
-        dlg.header2->SetText((*gpGeneralText)[454]);
-        dlg.field1->enable(0);
-        dlg.field1->SetText(sessName);
-        dlg.DrawWindow(1, 0xffff0001, 0xffff);
-        dlg.SetFocus(dlg.field2->id);
-        dlg.field1->set_help_text(gUnnamed6a7780, 0, 0);
-        dlg.field2->set_help_text(gUnnamed6a7778, 0, 0);
-        dlg.DoModal(0);
-        if (gpWindowManager->dialogReturn == DIALOG_RETURN_CANCEL)
+    if (session->isPasswordProtected()) {
+        dlg.m_header1->setText(g_unnamed6a7780);
+        dlg.m_header2->setText((*g_generalText)[454]);
+        dlg.m_field1->enable(0);
+        dlg.m_field1->setText(sessName);
+        dlg.drawWindow(1, 0xffff0001, 0xffff);
+        dlg.setFocus(dlg.m_field2->m_id);
+        dlg.m_field1->setHelpText(g_unnamed6a7780, 0, 0);
+        dlg.m_field2->setHelpText(g_unnamed6a7778, 0, 0);
+        dlg.doModal(0);
+        if (g_windowManager->m_dialogReturn == DIALOG_RETURN_CANCEL)
             return 0;
-        password = dlg.field2->GetText();
+        password = dlg.m_field2->getText();
     }
 
-    if (JoinSession(session, password))
+    if (joinSession(session, password))
         return 1;
 
-    const char* errorText = (*gpGeneralText)[456];
-    if (pDPlay->GetLastError() == static_cast<long>(0x88770154))
-        errorText = (*gpGeneralText)[458];
-    NormalDialog(errorText, 1, -1, -1,
+    const char* errorText = (*g_generalText)[456];
+    if (g_dPlay->getLastError() == static_cast<long>(0x88770154))
+        errorText = (*g_generalText)[458];
+    normalDialog(errorText, 1, -1, -1,
                  -1, 0, -1, 0, -1, 0, -1, 0);
     return 0;
 }
@@ -1585,7 +1604,7 @@ unsigned char TMultiPlayerWindow::OnJoin()
 // current and maximum player counts exactly as the header definition does.
 #if 0  // @carcass: claim-only - definition lives in multiplayerwindow.h
 VA(0x005112c0, 0x1C)  // exact selected COMDAT, dc 0x101d58
-unsigned char CDPlaySession::IsJoinDisabled()
+unsigned char CDPlaySession::isJoinDisabled()
 {
     // @stub
 }
@@ -1596,8 +1615,10 @@ unsigned char CDPlaySession::IsJoinDisabled()
 // hostname, copy the first IPv4 address's dotted form to the caller, and close
 // the socket.
 // E:\gamedcs\multiplayerwindow.cpp:1822
+// Before normalization (function): GetIPAddress.
+// Before normalization (locals): sIPAddress.
 VA(0x005112e0, 0x101)  // WSAStartup/socket/bind/ioctlsocket/hostname chain, dc 0x101780
-unsigned char GetIPAddress(char* sIPAddress)
+unsigned char getIPAddress(char* ipAddress)
 {
     WSADATA wsaData;
     char hostName[256];
@@ -1610,10 +1631,10 @@ unsigned char GetIPAddress(char* sIPAddress)
     if (socketHandle == INVALID_SOCKET)
         return 0;
 
-    address.internet.sin_family = AF_INET;
-    address.internet.sin_port = htons(2000);
-    address.internet.sin_addr.s_addr = htonl(INADDR_ANY);
-    if (bind(socketHandle, &address.generic, sizeof(address.internet))
+    address.m_internet.sin_family = AF_INET;
+    address.m_internet.sin_port = htons(2000);
+    address.m_internet.sin_addr.s_addr = htonl(INADDR_ANY);
+    if (bind(socketHandle, &address.m_generic, sizeof(address.m_internet))
         == SOCKET_ERROR)
         return 0;
     u_long nonBlocking = 1;
@@ -1625,7 +1646,7 @@ unsigned char GetIPAddress(char* sIPAddress)
     hostent* host = gethostbyname(hostName);
     in_addr internetAddress;
     memcpy(&internetAddress, host->h_addr_list[0], sizeof(internetAddress));
-    strcpy(sIPAddress, inet_ntoa(internetAddress));
+    strcpy(ipAddress, inet_ntoa(internetAddress));
     closesocket(socketHandle);
     return 1;
 }
@@ -1651,51 +1672,51 @@ unsigned char GetIPAddress(char* sIPAddress)
 // return-1 block and THeroScreenWindow::WindowHandler's exitFlag
 // device; it is a C2 layout rule, not a body spelling.
 VA(0x005113f0, 0x263)  // TCP InitRemote/GetIPAddress/session-enum flow, dc 0x101784
-unsigned char TMultiPlayerWindow::OnTCP()
+unsigned char TMultiPlayerWindow::onTCP()
 {
     char ipAddress[80];
 
-    iMPNetProtocol = MP_TCP;
-    if (!::InitRemote(MP_TCP, playerName->Text.c_str())
-        || !InitConnection(0, 0)) {
-        NormalDialog(gpGeneralText->GetText(459), 1, -1, -1,
+    g_mpNetProtocol = MP_TCP;
+    if (!::initRemote(MP_TCP, m_playerName->m_text.c_str())
+        || !initConnection(0, 0)) {
+        normalDialog(g_generalText->getText(459), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return 0;
     }
 
     DPCAPS caps;
-    pDPlay->GetCaps(&caps, 1);
-    sessionRefreshTimeout = caps.dwTimeout + 100;
-    if (iMPNetProtocol == MP_TCP)
-        sessionRefreshTimeout = 1000;
+    g_dPlay->getCaps(&caps, 1);
+    m_sessionRefreshTimeout = caps.m_timeout + 100;
+    if (g_mpNetProtocol == MP_TCP)
+        m_sessionRefreshTimeout = 1000;
 
-    if (host)
-        host->send_message(widget::WIDGET_SET_STATUS,
+    if (m_host)
+        m_host->sendMessage(widget::WIDGET_SET_STATUS,
                            widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    join->send_message(widget::WIDGET_SET_STATUS,
+    m_join->sendMessage(widget::WIDGET_SET_STATUS,
                        widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    search->send_message(widget::WIDGET_SET_STATUS,
+    m_search->sendMessage(widget::WIDGET_SET_STATUS,
                          widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    search->enable(1);
-    join->enable(0);
+    m_search->enable(1);
+    m_join->enable(0);
 
-    if (GetIPAddress(ipAddress) && !GetWidget(IP_ADDRESS_ID)) {
+    if (getIPAddress(ipAddress) && !getWidget(IP_ADDRESS_ID)) {
         char addressText[256];
         textWidget* ipWidget = new textWidget(
-            0, 16, width, 50, 0, "bigfont.fnt", font::PRIMARY,
+            0, 16, m_width, 50, 0, "bigfont.fnt", font::PRIMARY,
             IP_ADDRESS_ID, 1, 0, 8);
-        Widgets.push_back(ipWidget);
-        AddWidget(ipWidget, -1);
-        sprintf(addressText, gpGeneralText->GetText(460), ipAddress);
-        ipWidget->SetText(addressText);
+        m_widgets.push_back(ipWidget);
+        addWidget(ipWidget, -1);
+        sprintf(addressText, g_generalText->getText(460), ipAddress);
+        ipWidget->setText(addressText);
     }
 
-    pSessions->Destroy();
-    pDPlay->EnumSessions(pSessions, sessionRefreshTimeout, 0x52);
-    sessTimer = GameTime::Get();
-    static_cast<slider*>(gameSlider)->UpdateResolution(
-        pSessions->GetCount() - 12);
-    Update();
+    m_sessions->destroy();
+    g_dPlay->enumSessions(m_sessions, m_sessionRefreshTimeout, 0x52);
+    m_sessTimer = GameTime::get();
+    static_cast<slider*>(m_gameSlider)->updateResolution(
+        m_sessions->getCount() - 12);
+    update();
     return 1;
 }
 
@@ -1707,7 +1728,7 @@ unsigned char TMultiPlayerWindow::OnTCP()
 // the Dreamcast xref graph independently records exactly four NormalDialog
 // calls plus JoinSession, InitRemote, CAutoArray::Destroy and CHourGlass.
 VA(0x00511660, 0x666)  // caller slot + complete TCP search flow, dc 0x10196c
-unsigned char TMultiPlayerWindow::OnSearch()
+unsigned char TMultiPlayerWindow::onSearch()
 {
     // Current 89.766%, banked MAX 91.324%: all 13 retail branch tests are
     // present, but C1 feeds
@@ -1723,38 +1744,38 @@ unsigned char TMultiPlayerWindow::OnSearch()
     // sentinel is copy-propagated byte-flat, as the register model predicts;
     // the remaining role swap is not a statement-level lever.
     CMPInputDlg searchDlg(20, 20);
-    searchDlg.header1->SetText((*gpGeneralText)[179]);
-    searchDlg.header2->SetText((*gpGeneralText)[462]);
-    searchDlg.field1->set_help_text(gSearchAddressHelp, 0, 0);
-    searchDlg.field2->set_help_text(gUnnamed6a7778, 0, 0);
-    searchDlg.DisableOK();
-    searchDlg.DoModal(0);
+    searchDlg.m_header1->setText((*g_generalText)[179]);
+    searchDlg.m_header2->setText((*g_generalText)[462]);
+    searchDlg.m_field1->setHelpText(g_searchAddressHelp, 0, 0);
+    searchDlg.m_field2->setHelpText(g_unnamed6a7778, 0, 0);
+    searchDlg.disableOK();
+    searchDlg.doModal(0);
 
-    if (gpWindowManager->dialogReturn == DIALOG_RETURN_CANCEL)
+    if (g_windowManager->m_dialogReturn == DIALOG_RETURN_CANCEL)
         return 0;
 
-    RemoteCleanup();
-    const char* address = searchDlg.field1->GetText();
+    remoteCleanup();
+    const char* address = searchDlg.m_field1->getText();
 #pragma inline_depth(0)
-    if (!InitRemote(MP_TCP, address, 0)) {
+    if (!initRemote(MP_TCP, address, 0)) {
 #pragma inline_depth()
-        NormalDialog((*gpGeneralText)[459], 1, -1, -1,
+        normalDialog((*g_generalText)[459], 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return 0;
     }
 
     CHourGlass hourGlass(1);
 #pragma inline_depth(0)
-    pSessions->Destroy();
+    m_sessions->destroy();
 #pragma inline_depth()
-    pDPlay->EnumSessions(pSessions, 5000, 0x42);
+    g_dPlay->enumSessions(m_sessions, 5000, 0x42);
 
-    if (!pSessions->GetCount()) {
-        NormalDialog((*gpGeneralText)[463], 1, -1, -1,
+    if (!m_sessions->getCount()) {
+        normalDialog((*g_generalText)[463], 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
-        RemoteCleanup();
+        remoteCleanup();
 #pragma inline_depth(0)
-        InitRemote(MP_TCP, 0, 0);
+        initRemote(MP_TCP, 0, 0);
 #pragma inline_depth()
         // This arm's `return 0;` used to carry its own depth pin. Removing
         // exactly that one is OnSearch 89.76576 -> 94.18919, a new MAX, with
@@ -1766,18 +1787,19 @@ unsigned char TMultiPlayerWindow::OnSearch()
     }
 
 #pragma inline_depth(0)
-    if (!JoinSession(pSessions->Get(0), 0)) {
+    if (!joinSession(m_sessions->get(0), 0)) {
 #pragma inline_depth()
-        char sErr[256];
-        long lastError = pDPlay->GetLastError();
-        NormalDialog((*gpGeneralText)[456], 1, -1, -1,
+        // Before normalization (locals): sErr.
+        char errorText[256];
+        long lastError = g_dPlay->getLastError();
+        normalDialog((*g_generalText)[456], 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
-        pDPlay->GetErrorDesc(lastError, sErr);
-        NormalDialog(sErr, 1, -1, -1,
+        g_dPlay->getErrorDesc(lastError, errorText);
+        normalDialog(errorText, 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
-        RemoteCleanup();
+        remoteCleanup();
 #pragma inline_depth(0)
-        InitRemote(MP_TCP, 0, 0);
+        initRemote(MP_TCP, 0, 0);
 #pragma inline_depth()
 #pragma inline_depth(0)
         return 0;
@@ -1811,13 +1833,13 @@ void CMPInputEdit::CMPInputEdit(int x, int y, int w, int h, int textSize,
 // hot-seat protocol. Its compiler-generated cleanup paths account for the two
 // explicit CHotSeatDlg teardown sequences in retail.
 VA(0x00511d40, 0xD1)  // CHotSeatDlg ctor/DoModal/dtor + iMPNetProtocol store, dc 0x101c00
-unsigned char TMultiPlayerWindow::OnHotSeat()
+unsigned char TMultiPlayerWindow::onHotSeat()
 {
     CHotSeatDlg dlg;
-    dlg.DoModal(0);
-    if (gpWindowManager->dialogReturn == DIALOG_RETURN_CANCEL)
+    dlg.doModal(0);
+    if (g_windowManager->m_dialogReturn == DIALOG_RETURN_CANCEL)
         return 0;
-    iMPNetProtocol = MP_HOTSEAT;
+    g_mpNetProtocol = MP_HOTSEAT;
     return 1;
 }
 
@@ -1826,74 +1848,75 @@ VA(0x00511e20, 0x5A1)  // anchor-vtable 0x6401d8 into this + CHeroWindowEx base 
 CHotSeatDlg::CHotSeatDlg()
     : CHeroWindowEx(218, 96, 363, 407, 18)
 {
-    Widgets.reserve(19);
-    Widgets.push_back(new bitmapBorder(0, 0, width, height, BACKGROUND_ID,
+    m_widgets.reserve(19);
+    m_widgets.push_back(new bitmapBorder(0, 0, m_width, m_height, BACKGROUND_ID,
                                        "muhotsea.pcx", 0x800));
-    Widgets.push_back(new textWidget(0, 30, width, 150,
-                                     gpGeneralText->GetText(447), "bigfont.fnt",
+    m_widgets.push_back(new textWidget(0, 30, m_width, 150,
+                                     g_generalText->getText(447), "bigfont.fnt",
                                      font::WHITE, HEADER_ID, 1, 0, 8));
 
     int sy = 178;
     for (int i = 0; i < 8; i++) {
-        edit[i] = new CHotSeatEdit(277 - x, sy - y, 281, 18, 21, "",
+        m_edit[i] = new CHotSeatEdit(277 - m_x, sy - m_y, 281, 18, 21, "",
                                    "smalfont.fnt", font::WHITE, 0, 0, 0,
                                    FIRST_EDIT_ID + i, 0x100, 0, 7, 5);
-        edit[i]->set_help_text(gHotSeatEditRollover, gHotSeatEditRightClick, 0);
-        Widgets.push_back(edit[i]);
+        m_edit[i]->setHelpText(g_hotSeatEditRollover, g_hotSeatEditRightClick, 0);
+        m_widgets.push_back(m_edit[i]);
         sy += 30;
     }
 
     int j;
     for (j = 0; j < 7; j++)
-        edit[j]->SetNextEdit(edit[j + 1]);
+        m_edit[j]->setNextEdit(m_edit[j + 1]);
     for (j = 1; j < 8; j++)
-        edit[j]->SetPrevEdit(edit[j - 1]);
-    edit[0]->SetPrevEdit(edit[7]);
-    edit[7]->SetNextEdit(edit[0]);
+        m_edit[j]->setPrevEdit(m_edit[j - 1]);
+    m_edit[0]->setPrevEdit(m_edit[7]);
+    m_edit[7]->setNextEdit(m_edit[0]);
 
-    Widgets.push_back(new button(95, 338, 64, 32, OKAY_ID, "mubchck.def", 0, 1,
+    m_widgets.push_back(new button(95, 338, 64, 32, OKAY_ID, "mubchck.def", 0, 1,
                                  0, 28, 2));
-    Widgets.push_back(new button(205, 338, 64, 32, BACK_ID, "mubcanc.def", 0, 1,
+    m_widgets.push_back(new button(205, 338, 64, 32, BACK_ID, "mubcanc.def", 0, 1,
                                  0, 1, 2));
 
-    m_rollover = new textWidget(10, 382, width - 20, 18, 0, "smalfont.fnt",
+    m_rollover = new textWidget(10, 382, m_width - 20, 18, 0, "smalfont.fnt",
                                 font::PRIMARY, ROLLOVER_ID, 1, 32, 8);
-    Widgets.push_back(m_rollover);
+    m_widgets.push_back(m_rollover);
 
-    AddWidgetsToMessageStream();
-    edit[0]->SetText(gpMultiPlayerWindow->playerName->Text.c_str());
-    SetFocus(edit[0]->id);
+    addWidgetsToMessageStream();
+    m_edit[0]->setText(g_multiPlayerWindow->m_playerName->m_text.c_str());
+    setFocus(m_edit[0]->m_id);
     for (j = 0; j < 8; j++)
-        edit[j]->SetAutoDraw(1);
-    widget* w = GetWidget(OKAY_ID);
-    w->set_help_text(gDialogOkHelp, 0, 0);
+        m_edit[j]->setAutoDraw(1);
+    widget* w = getWidget(OKAY_ID);
+    w->setHelpText(g_dialogOkHelp, 0, 0);
     w->enable(0);
-    w = GetWidget(BACK_ID);
-    w->set_help_text(gDialogBackHelp, 0, 0);
+    w = getWidget(BACK_ID);
+    w->setHelpText(g_dialogBackHelp, 0, 0);
 }
 
 // E:\gamedcs\multiplayerwindow.cpp:700
 VA(0x005123d0, 0x4E)  // retail vtable teardown, dc 0x102c28
 CHotSeatDlg::~CHotSeatDlg()
 {
-    delete_widgets();
+    deleteWidgets();
 }
 
 // E:\gamedcs\multiplayerwindow.cpp:707
+// Before normalization (locals): bExitFlag.
 VA(0x00512420, 0x4D)  // retail vtable slot 12, dc 0x102c6c
-int CHotSeatDlg::OnWidgetDeselect(int id, unsigned char* bExitFlag)
+int CHotSeatDlg::onWidgetDeselect(int id, unsigned char* exitFlag)
 {
     switch (id) {
     case OKAY_ID:
-        if (OnOK()) {
-            *bExitFlag = 1;
-            gpWindowManager->dialogReturn = DIALOG_RETURN_OK;
+        if (onOK()) {
+            *exitFlag = 1;
+            g_windowManager->m_dialogReturn = DIALOG_RETURN_OK;
         }
         break;
 
     case BACK_ID:
-        *bExitFlag = 1;
-        gpWindowManager->dialogReturn = DIALOG_RETURN_CANCEL;
+        *exitFlag = 1;
+        g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
         return 1;
     }
 
@@ -1903,7 +1926,7 @@ int CHotSeatDlg::OnWidgetDeselect(int id, unsigned char* bExitFlag)
 #if 0  // @carcass
 // E:\gamedcs\multiplayerwindow.cpp:729
 DC_ONLY(0x102cc8, 0x30)
-void CHotSeatDlg::OnKillFocus(int id)
+void CHotSeatDlg::onKillFocus(int id)
 {
     // @stub
 }
@@ -1912,13 +1935,13 @@ void CHotSeatDlg::OnKillFocus(int id)
 
 // E:\gamedcs\multiplayerwindow.cpp:756
 VA(0x00512470, 0xB2)  // retail, dc 0x102d88
-unsigned char CHotSeatDlg::OnOK()
+unsigned char CHotSeatDlg::onOK()
 {
-    gpHotSeatMan = new CHotSeatMan;
+    g_hotSeatMan = new CHotSeatMan;
 
     for (int i = 0; i < 8; ++i) {
-        if (strlen(edit[i]->Text.c_str()))
-            gpHotSeatMan->AddPlayer(edit[i]->Text.c_str());
+        if (strlen(m_edit[i]->m_text.c_str()))
+            g_hotSeatMan->addPlayer(m_edit[i]->m_text.c_str());
     }
 
     return 1;
@@ -1928,7 +1951,7 @@ unsigned char CHotSeatDlg::OnOK()
 
 // E:\gamedcs\multiplayerwindow.cpp:780
 VA(0x00512530, 0x4)  // retail vtable slot 13, dc 0x102e1c
-textWidget* CHotSeatDlg::GetRolloverWidget()
+textWidget* CHotSeatDlg::getRolloverWidget()
 {
     return m_rollover;
 }
@@ -1936,7 +1959,7 @@ textWidget* CHotSeatDlg::GetRolloverWidget()
 #if 0  // @carcass
 // E:\gamedcs\multiplayerwindow.cpp:786
 DC_ONLY(0x102e24, 0x140)
-int CHotSeatDlg::WindowHandler(message* msg)
+int CHotSeatDlg::windowHandler(message* msg)
 {
     // @stub
 }
@@ -1952,7 +1975,7 @@ VA_COMPGEN(0x00512540, 0x21, SCALAR_DELETING_DTOR, CHotSeatDlg)
 // definition remains in multiplayerwindow.h.
 #if 0  // @carcass: claim-only - definition lives in multiplayerwindow.h
 VA(0x00512570, 0x53)  // exact selected COMDAT, dc 0x8c0c0
-void CAutoArray<CDPlaySession>::Destroy(unsigned char deleteData)
+void CAutoArray<CDPlaySession>::destroy(unsigned char deleteData)
 {
     // @stub
 }
@@ -1965,13 +1988,13 @@ void CAutoArray<CDPlaySession>::Destroy(unsigned char deleteData)
 // source shape; these disabled declarators only assign the retail homes.
 #if 0  // @carcass: claim-only - definitions live in multiplayerwindow.h
 VA(0x005125d0, 0x3A)  // exact selected COMDAT, dc 0x103150
-unsigned char CAutoArray<CDPlaySession>::Delete(unsigned long elementNbr)
+unsigned char CAutoArray<CDPlaySession>::deleteElement(unsigned long elementNbr)
 {
     // @stub
 }
 
 VA(0x00512610, 0x5B)  // exact selected COMDAT, dc 0x10318c
-unsigned char CAutoArray<CDPlaySession>::Insert(
+unsigned char CAutoArray<CDPlaySession>::insert(
     unsigned long nextElementNbr, CDPlaySession* element)
 {
     // @stub
@@ -2019,42 +2042,42 @@ void CAutoArray<CDPlaySession>::~CAutoArray<CDPlaySession>()
 
 // E:\gamedcs\array.h:73
 DC_ONLY(0x1030bc, 0x68)
-unsigned char CAutoArray<CDPlaySession>::Add(CDPlaySession* element)
+unsigned char CAutoArray<CDPlaySession>::add(CDPlaySession* element)
 {
     // @stub
 }
 
 // E:\gamedcs\array.h:95
 DC_ONLY(0x103124, 0x14)
-CDPlaySession* CAutoArray<CDPlaySession>::Get(unsigned long elementNbr)
+CDPlaySession* CAutoArray<CDPlaySession>::get(unsigned long elementNbr)
 {
     // @stub
 }
 
 // E:\gamedcs\array.h:103
 DC_ONLY(0x103138, 0x16)
-unsigned char CAutoArray<CDPlaySession>::Put(unsigned long elementNbr, CDPlaySession* element)
+unsigned char CAutoArray<CDPlaySession>::put(unsigned long elementNbr, CDPlaySession* element)
 {
     // @stub
 }
 
 // E:\gamedcs\array.h:113
 DC_ONLY(0x103150, 0x3A)
-unsigned char CAutoArray<CDPlaySession>::Delete(unsigned long elementNbr)
+unsigned char CAutoArray<CDPlaySession>::deleteElement(unsigned long elementNbr)
 {
     // @stub
 }
 
 // E:\gamedcs\array.h:127
 DC_ONLY(0x10318c, 0x6E)
-unsigned char CAutoArray<CDPlaySession>::Insert(unsigned long nextElementNbr, CDPlaySession* element)
+unsigned char CAutoArray<CDPlaySession>::insert(unsigned long nextElementNbr, CDPlaySession* element)
 {
     // @stub
 }
 
 // E:\gamedcs\array.h:144
 DC_ONLY(0x1031fc, 0x4)
-unsigned long CAutoArray<CDPlaySession>::GetCount()
+unsigned long CAutoArray<CDPlaySession>::getCount()
 {
     // @stub
 }

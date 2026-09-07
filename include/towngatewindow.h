@@ -35,18 +35,29 @@ public:
         NUM_TOWN_ENTRIES = 9
     };
 
-    std::vector<int> Towns;
-    int topTown;
-    int selectedTown;
-    bool adventure_spell;
+    // Before normalization: Towns.
+    std::vector<int> m_towns;
+    // Before normalization: topTown.
+    int m_topTown;
+    // Before normalization: selectedTown.
+    int m_selectedTown;
+    // Before normalization: adventure_spell.
+    bool m_adventureSpell;
 
-    TTownGateWindow(bool adventure_spell);
+    // Before normalization (locals): adventure_spell.
+    TTownGateWindow(bool adventureSpell);
     virtual ~TTownGateWindow();
-    void AddTown(int new_town);
-    void UpdateTownLocator(int i);
-    void UpdateTownLocators();
-    void DoModal();
-    virtual int WindowHandler(message* msg);
+    // Before normalization (function): TTownGateWindow::AddTown.
+    // Before normalization (locals): new_town.
+    void addTown(int newTown);
+    // Before normalization (function): TTownGateWindow::UpdateTownLocator.
+    void updateTownLocator(int i);
+    // Before normalization (function): TTownGateWindow::UpdateTownLocators.
+    void updateTownLocators();
+    // Before normalization (function): TTownGateWindow::DoModal.
+    void doModal();
+    // Before normalization (function): TTownGateWindow::WindowHandler.
+    virtual int windowHandler(message* msg);
 };
 SIZE(TTownGateWindow, 0x7c);
 

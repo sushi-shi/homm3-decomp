@@ -42,7 +42,8 @@ enum type_creature_bank_guard_shape {
 // invokes armyGroup::armyGroup at the start of each. The still-unread tail
 // is kept opaque until initialize_creature_bank names its reward fields.
 struct type_creature_bank_level {
-    armyGroup guards;
+    // Before normalization: guards.
+    armyGroup m_guards;
     // SLICED out of the old pad 2026-09-05 by initialize_creature_bank
     // (0x47ad90), the only body that reads any of it. Its opening copy is a
     // `rep movsd` of 14 dwords for the guards, a second of seven for the
@@ -53,16 +54,28 @@ struct type_creature_bank_level {
     // counts whose names come from the class argument each loop hands
     // game::GetRandomArtifactId - 2, 4, 8 and 16, walked in that reverse
     // order. Those four names are PROVISIONAL; nothing attests them.
-    int resources[7];
-    TCreatureType reward_creature;
-    signed char reward_creatures;
-    signed char chance;
-    signed char upgrade_chance;
-    signed char treasure_artifacts;
-    signed char minor_artifacts;
-    signed char major_artifacts;
-    signed char relic_artifacts;
-    char pad_05f;
+    // Before normalization: resources.
+    int m_resources[7];
+    // Before normalization: reward_creature.
+    TCreatureType m_rewardCreature;
+    // Before normalization: reward_creatures.
+    signed char m_rewardCreatures;
+    // Before normalization: chance.
+    signed char m_chance;
+    // Before normalization: upgrade_chance.
+    signed char m_upgradeChance;
+    // Before normalization: treasure_artifacts.
+    signed char m_treasureArtifacts;
+    // Before normalization: minor_artifacts.
+    signed char m_minorArtifacts;
+    // Before normalization: major_artifacts.
+    signed char m_majorArtifacts;
+    // Before normalization: relic_artifacts.
+    signed char m_relicArtifacts;
+    // Before normalization: pad_05f.
+    // The trait loader stores relicArtifacts as the last byte at +0x5e.
+    // The retail table walks 0x60-byte records; this byte aligns their extent.
+    char m_tailPadding;
 
     type_creature_bank_level() {}
 };
@@ -73,21 +86,25 @@ SIZE(type_creature_bank_level, 0x60);
 // independently closes the 0x190 stride; only the old anonymous tail is
 // retired.
 struct type_creature_bank_traits {
-    std::string name;
-    type_creature_bank_level levels[4];
+    // Before normalization: name.
+    std::string m_name;
+    // Before normalization: levels.
+    type_creature_bank_level m_levels[4];
 
     type_creature_bank_traits();
 };
 SIZE(type_creature_bank_traits, 0x190);
 
-extern const type_creature_bank_traits* const_creature_bank_traits;
+// Before normalization: const_creature_bank_traits.
+extern const type_creature_bank_traits* g_constCreatureBankTraits;
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\creature_bank.cpp:32, dc 0x70fe0) void initialize_creature_bank_level(type_creature_bank_level* traits, const std::vector<char* resource);
 // CODEVIEW(E:\gamedcs\creature_bank.cpp:67, dc 0x7112c) unsigned char initialize_creature_bank_traits();
 // CODEVIEW(E:\gamedcs\creature_bank.cpp:146, dc 0x71218) void split_slot(armyGroup* army_group, long slot, long groups);
 // CODEVIEW(E:\gamedcs\creature_bank.cpp:166, dc 0x712d0) - retail 0x47ad90.
-void initialize_creature_bank(type_creature_bank* bank,
+// Before normalization (function): initialize_creature_bank.
+void initializeCreatureBank(type_creature_bank* bank,
                               type_creature_bank_type type);
 
 // --- std ---

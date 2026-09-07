@@ -27,32 +27,34 @@
 // under /Gr. Declared file-locally rather than pulling resourcemanager.h into
 // singleselectionwindow.cpp's include closure.
 namespace ResourceManager {
-    TTextResource* GetText(const char* name);
+    TTextResource* getText(const char* name);
     // The constructor's sprite/bitmap preloads (retail 0x57c375..0x57c4f0):
     // GetSprite 0x55c2e0 and GetBitmap816 0x55a800, both fastcall.
-    CSprite* GetSprite(const char* name);
-    Bitmap816* GetBitmap816(const char* name);
+    CSprite* getSprite(const char* name);
+    Bitmap816* getBitmap816(const char* name);
     // Dreamcast keeps these source helpers out of line. Complete expands the
     // one-operation bodies into the selection-window destructor; explicit
     // nullability remains at the HeroPix call site where retail tests it.
-    inline void Dispose(resource* value) { value->Dispose(); }
-    inline void Dispose(CSprite* value) { value->Dispose(); }
-    inline void del_Spr_from_Cache() {}
+    // Before normalization (function): ResourceManager::Dispose.
+    inline void dispose(resource* value) { value->dispose(); }
+    // Before normalization (function): ResourceManager::Dispose.
+    inline void dispose(CSprite* value) { value->dispose(); }
+    inline void delSprFromCache() {}
 }
 
 // misc.cpp's free-space probe (retail 0x50c7a0), declared file-locally
 // for SaveValid's disk gate rather than pulling misc.h into this
 // closure - the ResourceManager::GetText precedent above.
-unsigned long get_available_disk_space();
-std::string format_string(const char* format, ...);
+unsigned long getAvailableDiskSpace();
+std::string formatString(const char* format, ...);
 
 // The game-context feature bits and their index cell (game.cpp/
 // resourcemanager.cpp own the claims); OnSetAsHostMsg gates the
 // game-type widget (0x82) on bit one - the same test(1) game.cpp's
 // player-slot reader spells. Declared file-locally, the
 // get_available_disk_space precedent.
-extern std::bitset<4> gGameContextFeatures[4];
-extern int* gpVideoGameState;
+extern std::bitset<4> g_gameContextFeatures[4];
+extern int* g_videoGameState;
 
 // The CRT entries SaveValid/OnMapFileNameMsg touch, declared
 // file-locally instead of including <io.h>/<direct.h>: those two
@@ -79,12 +81,14 @@ public:
     {
     }
 
-    virtual void SetResolution(int num);  // slot 13
-    virtual void SetState(int state);     // slot 14
+    // Before normalization (function): CChatSlider::SetResolution.
+    virtual void setResolution(int num);  // slot 13
+    // Before normalization (function): CChatSlider::SetState.
+    virtual void setState(int state);     // slot 14
 };
 
 // The free remote.obj poll wrapper (0x554400), fastcall under /Gr; one arg.
-CNetMsg* GetRemoteData(unsigned char removeFromQueue, unsigned char* wasCompressed);
+CNetMsg* getRemoteData(unsigned char removeFromQueue, unsigned char* wasCompressed);
 
 // The host-wait animated dialog. CAnimatedDlg base is 0x78; handle_message
 // proves the two tail fields (the polled message pointer at +0x78, the awaited
@@ -93,8 +97,9 @@ CNetMsg* GetRemoteData(unsigned char removeFromQueue, unsigned char* wasCompress
 // misc.cpp's PRNG pair and kb's fatal exit, declared here so the
 // CHostWaitDlg::Wait inline below can reach them (the cpp-local rule
 // would hide them from a header inline).
-int Random(int min, int max);
-void SRand(int iSeed);
+int random(int min, int max);
+// Before normalization (locals): iSeed.
+void sRand(int seed);
 
 // Devil / Arch Devil, ids fixed by army.h's Inferno-run arithmetic
 // (Demon 0x30 opens it, 0x35..0x37 close it); the wait dialog rerolls
@@ -109,31 +114,35 @@ class CHostWaitDlg : public CAnimatedDlg {
 public:
     CHostWaitDlg()
     {
-        m_pMsg = 0;
+        m_msg = 0;
         m_forWho = 0;
     }
-    virtual int handle_message(message& msg);  // slot 3
+    // Before normalization (function): CHostWaitDlg::handle_message.
+    virtual int handleMessage(message& msg);  // slot 3
 
     // DC Wait takes the dpid alone; retail's two expansions differ only
     // in the general-text row, so the text rides as a parameter here
     // (provisional widening). Inline - both HandleNetMsg arms expand it,
     // and the virtual Setup/DoModal calls stay virtual because they go
     // through the inlined body's `this`.
-    void Wait(unsigned long forWho, const char* cText)
+    // Before normalization (function): CHostWaitDlg::Wait.
+    // Before normalization (locals): cText.
+    void wait(unsigned long forWho, const char* text)
     {
         m_forWho = forWho;
-        SRand(GameTime::Get());
+        sRand(GameTime::get());
         int creature;
         do {
-            creature = Random(0, 111);
+            creature = random(0, 111);
         } while (creature == WAIT_CREATURE_ARCH_DEVIL
                  || creature == WAIT_CREATURE_DEVIL);
-        Setup(cText, gpMediumFont,
-              akCreatureTypeTraits[creature].m_sprite_name, 0);
-        DoModal(0);
+        setup(text, g_mediumFont,
+              g_creatureTypeTraits[creature].m_spriteName, 0);
+        doModal(0);
     }
 
-    CNetMsg* m_pMsg;         // +0x78
+    // Before normalization: m_pMsg.
+    CNetMsg* m_msg;         // +0x78
     unsigned long m_forWho;  // +0x7c
 };
 
@@ -145,9 +154,11 @@ class CChatWidget : public textWidget {
 public:
     class CChatSave : public Bitmap16Bit {
     public:
-        unsigned char bSaved;  // +0x38
-        CChatSave(int w, int h) : Bitmap16Bit(w, h), bSaved(0) {}
-        unsigned char IsSaved() const { return bSaved; }
+        // Before normalization: bSaved.
+        unsigned char m_saved;  // +0x38
+        CChatSave(int w, int h) : Bitmap16Bit(w, h), m_saved(0) {}
+        // Before normalization (function): CChatWidget::CChatSave::IsSaved.
+        unsigned char isSaved() const { return m_saved; }
     };
 
     CChatWidget(int x, int y, int w, int h, const char* text,
@@ -160,7 +171,8 @@ public:
     }
 
     virtual ~CChatWidget();
-    virtual void Draw();  // slot 4
+    // Before normalization (function): CChatWidget::Draw.
+    virtual void draw();  // slot 4
 
     CChatSave* m_save;  // +0x50
 };
@@ -182,8 +194,10 @@ public:
     {
     }
 
-    virtual void SendChat(const char* text, int toWho);
-    virtual unsigned char IgnoreKey(message* msg);
+    // Before normalization (function): CSingleSelectionChatEdit::SendChat.
+    virtual void sendChat(const char* text, int toWho);
+    // Before normalization (function): CSingleSelectionChatEdit::IgnoreKey.
+    virtual unsigned char ignoreKey(message* msg);
 };
 
 
@@ -357,20 +371,23 @@ enum ESingleSelectionWidgetId {
 // line exactly as retail does; the ctors assign in the body - the
 // isNet-first store order is the byte-proven one.
 struct TSortMapsByName {
-    unsigned char direction;  // +0
-    unsigned char isNet;      // +1
+    // Before normalization: direction.
+    unsigned char m_direction;  // +0
+    // Before normalization: isNet.
+    unsigned char m_isNet;      // +1
     TSortMapsByName(unsigned char dir, unsigned char net)
     {
-        isNet = net;
-        direction = dir;
+        m_isNet = net;
+        m_direction = dir;
     }
     bool operator()(const GameSelectionHeadersStruct& a,
                     const GameSelectionHeadersStruct& b) const;
 };
 
 struct TSortMapsByPlayers {
-    unsigned char direction;  // +0
-    TSortMapsByPlayers(unsigned char dir) { direction = dir; }
+    // Before normalization: direction.
+    unsigned char m_direction;  // +0
+    TSortMapsByPlayers(unsigned char dir) { m_direction = dir; }
     bool operator()(const GameSelectionHeadersStruct& a,
                     const GameSelectionHeadersStruct& b) const;
 };
@@ -392,22 +409,25 @@ struct TSortMapsByVersion : public TSortMapsByName {
 };
 
 struct TSortMapsBySize {
-    unsigned char direction;  // +0
-    TSortMapsBySize(unsigned char dir) { direction = dir; }
+    // Before normalization: direction.
+    unsigned char m_direction;  // +0
+    TSortMapsBySize(unsigned char dir) { m_direction = dir; }
     bool operator()(const GameSelectionHeadersStruct& a,
                     const GameSelectionHeadersStruct& b) const;
 };
 
 struct TSortMapsByVictory {
-    unsigned char direction;  // +0
-    TSortMapsByVictory(unsigned char dir) { direction = dir; }
+    // Before normalization: direction.
+    unsigned char m_direction;  // +0
+    TSortMapsByVictory(unsigned char dir) { m_direction = dir; }
     bool operator()(const GameSelectionHeadersStruct& a,
                     const GameSelectionHeadersStruct& b) const;
 };
 
 struct TSortMapsByLoss {
-    unsigned char direction;  // +0
-    TSortMapsByLoss(unsigned char dir) { direction = dir; }
+    // Before normalization: direction.
+    unsigned char m_direction;  // +0
+    TSortMapsByLoss(unsigned char dir) { m_direction = dir; }
     bool operator()(const GameSelectionHeadersStruct& a,
                     const GameSelectionHeadersStruct& b) const;
 };
@@ -505,7 +525,10 @@ class CNewSetupInfoMsg : public CNetMsg {
 public:
     SGameSetupOptions m_setup;  // +0x14
     unsigned char m_flag;       // +0x1e0, the window's +0x37f byte
-    char pad_1e1[3];
+    // Before normalization: pad_1e1.
+    // Retail stores the preceding flag as one byte; these three bytes
+    // align the following integer payload to a four-byte boundary.
+    char m_paddingBeforeExtras[3];
     int m_extras[8];            // +0x1e4, the window's +0x18a0 run
 
     CNewSetupInfoMsg(SGameSetupOptions* setup);
@@ -534,7 +557,10 @@ class CGameHeaderInfoInitMsg : public CNetMsg {
 public:
     unsigned long m_numMaps;   // +0x14
     unsigned char m_netGame;   // +0x18
-    char pad_19[3];
+    // Before normalization: pad_19.
+    // Retail netGame is a byte at +0x18; the derived version string
+    // starts at +0x1c. These three bytes align the base object size.
+    char m_tailPadding[3];
 
     CGameHeaderInfoInitMsg(unsigned long numMaps,
                            unsigned char loadGameMode,
@@ -569,7 +595,8 @@ public:
     CNetPlayerInfo m_playerInfo;  // +0x14 (dpid/sName/version int)
     char m_version[20];           // +0x34
 
-    CNewPlayerMsg(CNetPlayerInfo* pPlayerInfo, char* version);
+    // Before normalization (locals): pPlayerInfo.
+    CNewPlayerMsg(CNetPlayerInfo* playerInfo, char* version);
 };
 
 // Dreamcast's new-map announcement carries one NewSMapHeader. Complete wraps
@@ -581,7 +608,8 @@ public:
     NewSMapHeader m_header;  // +0x18
 
     CNewMapHeaderInfoMsg() {}
-    CNewMapHeaderInfoMsg(NewSMapHeader* pMapHeader);
+    // Before normalization (locals): pMapHeader.
+    CNewMapHeaderInfoMsg(NewSMapHeader* mapHeader);
     virtual unsigned char read(TAbstractFile* infile);
     virtual unsigned char write(TAbstractFile* outfile) const;
 };
@@ -596,13 +624,17 @@ public:
 class CGameHeaderInfoMsg : public t_complex_net_message {
 public:
     unsigned char m_flag;                 // +0x18
-    char pad_19[3];
+    // Before normalization: pad_19.
+    // Retail stores the preceding flag as one byte; these three bytes
+    // align the following integer payload to a four-byte boundary.
+    char m_paddingBeforeNumber[3];
     int m_number;                         // +0x1c
     GameSelectionHeadersStruct m_header;  // +0x20
 
     CGameHeaderInfoMsg() {}
     CGameHeaderInfoMsg(unsigned char flag, int number,
-                       GameSelectionHeadersStruct* pHeader);
+                       // Before normalization (locals): pHeader.
+                       GameSelectionHeadersStruct* header);
     virtual unsigned char read(TAbstractFile* infile);
     virtual unsigned char write(TAbstractFile* outfile) const;
 };
@@ -626,16 +658,19 @@ public:
     }
 
     // E:\gamedcs\singleselectionwindow.cpp:717
-    CUpdatePlayerPosMsg(CNetPlayerHandlerPlayer* pNetPlayers,
-                        CNetPlayerHandlerPlayer* pCompPlayers);
+    // Before normalization (locals): pNetPlayers, pCompPlayers.
+    CUpdatePlayerPosMsg(CNetPlayerHandlerPlayer* netPlayers,
+                        CNetPlayerHandlerPlayer* compPlayers);
 };
 
 // Dreamcast names the selected row's difficulty mirror `lastDiff`;
 // Complete retains it at .data 0x683454 (initial 1).
-extern int lastDiff;
+// Before normalization: lastDiff.
+extern int g_lastDiff;
 // Shared game snapshot owned by campaignbrief.cpp; Dreamcast publishes this
 // exact `saveHeader` identity at UpdateGameVars' BackupGameHeaders call.
-extern game* saveHeader;
+// Before normalization: saveHeader.
+extern game* g_saveHeader;
 
 // The per-row header broadcast Tick streams (subtype 0x406, 0x84 B);
 // retail's inline expansion fixes every field offset. DC's ctor takes
@@ -645,7 +680,10 @@ extern game* saveHeader;
 class CMapFileNameMsg : public CNetMsg {
 public:
     unsigned char m_flag;         // +0x14
-    char pad_15[3];
+    // Before normalization: pad_15.
+    // Retail stores the preceding flag as one byte; these three bytes
+    // align the following integer payload to a four-byte boundary.
+    char m_paddingBeforeNumber[3];
     int m_number;                 // +0x18
     char m_fileName[0x40];        // +0x1c
     int m_townTypes[8];           // +0x5c
@@ -685,7 +723,10 @@ public:
 class CMapHeaderRequestMsg : public CNetMsg {
 public:
     unsigned char m_flag;  // +0x14
-    char pad_15[3];
+    // Before normalization: pad_15.
+    // Retail stores the preceding flag as one byte; these three bytes
+    // align the following integer payload to a four-byte boundary.
+    char m_paddingBeforeNumber[3];
     int m_number;          // +0x18
 
     // Retail widened the DC (nbr) ctor with the list-select flag; both
@@ -721,7 +762,10 @@ public:
 // [elem+8*i] as the transfer flag and [elem+8*i+4] as the row number.
 struct SHeaderRequest {
     unsigned char m_flag;
-    char pad_1[3];
+    // Before normalization: pad_1.
+    // Retail stores the preceding flag as one byte; these three bytes
+    // align the following integer payload to a four-byte boundary.
+    char m_paddingBeforeNumber[3];
     int m_number;
 };
 
@@ -746,9 +790,12 @@ struct SHeaderRequest {
 class __declspec(novtable) CNewPlayerUpdateTask {
 public:
     CNewPlayerUpdateTask() {}
-    virtual void Go() = 0;
-    virtual void Tick() = 0;
-    virtual void Finish() = 0;
+    // Before normalization (function): CNewPlayerUpdateTask::Go.
+    virtual void go() = 0;
+    // Before normalization (function): CNewPlayerUpdateTask::Tick.
+    virtual void tick() = 0;
+    // Before normalization (function): CNewPlayerUpdateTask::Finish.
+    virtual void finish() = 0;
     ~CNewPlayerUpdateTask();
 
     unsigned long m_dpid;           // +0x04
@@ -760,7 +807,8 @@ public:
     unsigned long m_lastSendTime;   // +0x1c, Tick's 75-tick throttle
     unsigned char m_finished;       // +0x20, Tick-loop delete gate
 
-    unsigned char IsFinished() const { return m_finished; }
+    // Before normalization (function): CNewPlayerUpdateTask::IsFinished.
+    unsigned char isFinished() const { return m_finished; }
 };
 
 // Complete's CNewPlayerUpdateProc implementation. NewPlayer constructs it
@@ -777,11 +825,16 @@ public:
         m_finished = 0;
         m_lastSendTime = 0;
     }
-    virtual void Go();       // slot 0, 0x5789f0
-    virtual void Tick();     // slot 1, 0x578a90
-    virtual void Finish();   // slot 2, 0x5795a0
-    void RequestConfirmation();  // DC source helper, inlined in retail Tick
-    void HandleRequests();       // retail 0x578010
+    // Before normalization (function): CNewPlayerUpdateProc::Go.
+    virtual void go();       // slot 0, 0x5789f0
+    // Before normalization (function): CNewPlayerUpdateProc::Tick.
+    virtual void tick();     // slot 1, 0x578a90
+    // Before normalization (function): CNewPlayerUpdateProc::Finish.
+    virtual void finish();   // slot 2, 0x5795a0
+    // Before normalization (function): CNewPlayerUpdateProc::RequestConfirmation.
+    void requestConfirmation();  // DC source helper, inlined in retail Tick
+    // Before normalization (function): CNewPlayerUpdateProc::HandleRequests.
+    void handleRequests();       // retail 0x578010
 };
 
 // Complete's derived map-list implementation for the added 1083
@@ -790,9 +843,12 @@ public:
 class t_map_list_update : public CNewPlayerUpdateProc {
 public:
     t_map_list_update(unsigned long dpid);
-    virtual void Go();       // slot 0, 0x577d70
-    virtual void Tick();     // slot 1, 0x577de0
-    virtual void Finish();   // slot 2, 0x578930
+    // Before normalization (function): t_map_list_update::Go.
+    virtual void go();       // slot 0, 0x577d70
+    // Before normalization (function): t_map_list_update::Tick.
+    virtual void tick();     // slot 1, 0x577de0
+    // Before normalization (function): t_map_list_update::Finish.
+    virtual void finish();   // slot 2, 0x578930
 };
 
 // The per-lobby set of header-transfer jobs: eight slots, ticked from
@@ -810,7 +866,8 @@ public:
     CNewPlayerUpdateMan();
 
     // DC IsSendingHeaders; Complete expands it into each sort-button arm.
-    unsigned char IsSendingHeaders() const
+    // Before normalization (function): CNewPlayerUpdateMan::IsSendingHeaders.
+    unsigned char isSendingHeaders() const
     {
         for (int i = 0; i < 8; ++i)
             if (m_procs[i])
@@ -819,7 +876,8 @@ public:
     }
 
     // DC GetFirstAvailable; HandleNetMsg's transfer-start arm expands it.
-    int GetFirstAvailable()
+    // Before normalization (function): CNewPlayerUpdateMan::GetFirstAvailable.
+    int getFirstAvailable()
     {
         for (int i = 0; i < 8; ++i)
             if (m_procs[i] == 0)
@@ -828,7 +886,8 @@ public:
     }
 
     // DC GetProc (protected there); the HeaderConfirmed body expands it.
-    CNewPlayerUpdateProc* GetProc(unsigned long dpid)
+    // Before normalization (function): CNewPlayerUpdateMan::GetProc.
+    CNewPlayerUpdateProc* getProc(unsigned long dpid)
     {
         for (int i = 0; i < 8; ++i)
             if (m_procs[i] && m_procs[i]->m_dpid == dpid)
@@ -836,17 +895,22 @@ public:
         return 0;
     }
 
-    void Tick();
-    void PlayerDropped(unsigned long dpid);  // retail 0x589480
-    void HeaderConfirmed(unsigned long dpid);  // retail 0x589270
+    // Before normalization (function): CNewPlayerUpdateMan::Tick.
+    void tick();
+    // Before normalization (function): CNewPlayerUpdateMan::PlayerDropped.
+    void playerDropped(unsigned long dpid);  // retail 0x589480
+    // Before normalization (function): CNewPlayerUpdateMan::HeaderConfirmed.
+    void headerConfirmed(unsigned long dpid);  // retail 0x589270
     // Retail widened the DC (dpid, number) pair with a middle byte; the
     // 1029 arm forwards the request-msg fields verbatim.
-    void HeaderRequested(unsigned long dpid, unsigned char flag,
+    // Before normalization (function): CNewPlayerUpdateMan::HeaderRequested.
+    void headerRequested(unsigned long dpid, unsigned char flag,
                          int number);  // retail 0x5892b0
     // DC NewPlayer (dc 0x14870c, LOCATED round 2 at retail 0x58a280):
     // take the first free slot and start a transfer job for the
     // joining dpid.
-    void NewPlayer(unsigned long dpid);  // retail 0x58a280
+    // Before normalization (function): CNewPlayerUpdateMan::NewPlayer.
+    void newPlayer(unsigned long dpid);  // retail 0x58a280
 };
 
 // RESOLVED (round 2): the round-1 "LoadHeadersList" at 0x58eab0 is the
@@ -882,9 +946,12 @@ public:
     {
     }
 
-    virtual void OnKillFocus();            // slot 11
-    virtual int OnKeyPress(message* msg);  // slot 15
-    int OnEnter();
+    // Before normalization (function): CEnterNameEdit::OnKillFocus.
+    virtual void onKillFocus();            // slot 11
+    // Before normalization (function): CEnterNameEdit::OnKeyPress.
+    virtual int onKeyPress(message* msg);  // slot 15
+    // Before normalization (function): CEnterNameEdit::OnEnter.
+    int onEnter();
 };
 
 // The save-filename editor. vtable 0x241c60 overrides slot 15 (OnKeyPress)
@@ -902,14 +969,17 @@ public:
     {
     }
 
-    virtual int OnKeyPress(message* msg);           // slot 15
-    virtual unsigned char IgnoreKey(message* msg);  // slot 16
+    // Before normalization (function): CSaveGameEdit::OnKeyPress.
+    virtual int onKeyPress(message* msg);           // slot 15
+    // Before normalization (function): CSaveGameEdit::IgnoreKey.
+    virtual unsigned char ignoreKey(message* msg);  // slot 16
 };
 
 // The persisted multiplayer nickname (prefs "Network Name").
 // multiplayerwindow.cpp owns the DATA claim at 0x698817; the name editors
 // commit into it before calling WritePrefs.
-extern char gLocalPlayerName[21];
+// Before normalization: gLocalPlayerName.
+extern char g_localPlayerName[21];
 
 // A cross-module dword at 0x6989f0 the game-selection window branches on
 // during teardown; DoModal and ExitDialog each take a distinct path when it
@@ -919,11 +989,13 @@ extern char gLocalPlayerName[21];
 enum EWindowMode6989f0 {
     WINDOW_MODE_6989F0_3 = 3
 };
-extern int gUnnamed6989f0;
+// Before normalization: gUnnamed6989f0.
+extern int g_unnamed6989f0;
 
 // Three constructor headings (new/load/save) at .bss 0x6a8098. The table's
 // values and indexing are retail-proven; no public spelling survives.
-extern const char* gUnnamed6a8098[];
+// Before normalization: gUnnamed6a8098.
+extern const char* g_unnamed6a8098[];
 
 // Constructor-only domains. DC gives gameMode as int; retail proves the two
 // non-default commands by their load/save setup arms. The context values are
@@ -939,15 +1011,16 @@ enum ESingleSelectionLaunchContext {
 // 0x69954c, the paused-video gate DoModal/ExitDialog test. DECLARATION ONLY
 // (kbwin.cpp owns the DATA claim); declared here rather than by pulling
 // kbwin.h into this closure, the same reason hero.h states for its own copy.
-extern int bVideoPaused;
+extern int g_videoPaused;
 
 // The local network identity. remote.cpp owns the address claim; the
 // selection window reads its dpid when choosing the current lobby player.
-extern CNetPlayerInfo gsThisNetPlayerInfo;
+extern CNetPlayerInfo g_thisNetPlayerInfo;
 
 // The free game-selection message pump (retail dialogDrawFunction, dc
 // 0x145128), passed by address to DoDialogDraw alongside HeroWindowHandler.
 // message& (not message*) so it binds the int(*)(message&) TDialogHandler.
-int Update(message& msg);
+// Before normalization (function): Update.
+int update(message& msg);
 
 #endif  /* HOMM3_SINGLESELECTIONWINDOW_PRIV_H */

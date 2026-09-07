@@ -46,8 +46,9 @@
 // E:\gamedcs\path.cpp:30
 // maxMoves and bLiteralTarget are dead in retail (the placement latch
 // and the bMoveUnlimited flag decide the budget).
+// Before normalization (locals): bMoveUnlimited, bLiteralTarget.
 VA(0x005239d0, 0x96)  // anchor-bracket, dc 0x10c918
-int army::FindPath(int fpTargetCellIndex, int maxMoves, unsigned char bMoveUnlimited, unsigned char bLiteralTarget)
+int army::findPath(int fpTargetCellIndex, int maxMoves, unsigned char moveUnlimited, unsigned char literalTarget)
 {
     if (fpTargetCellIndex < 0)
         goto off_grid;
@@ -55,19 +56,19 @@ int army::FindPath(int fpTargetCellIndex, int maxMoves, unsigned char bMoveUnlim
 off_grid:
         return 0;
     int moves;
-    if (!gpCombatManager->bCreaturePlacement && !bMoveUnlimited)
-        moves = GetSpeed();
+    if (!g_combatManager->m_creaturePlacement && !moveUnlimited)
+        moves = getSpeed();
     else
         moves = 99;
-    if (boundFlag)
+    if (m_spellInfluence[72])
         moves = 0;
     int group;
-    if (hypnotizeFlag)
-        group = 1 - combatSide;
+    if (m_spellInfluence[60])
+        group = 1 - m_combatSide;
     else
-        group = combatSide;
-    return gpSearchArray->FindCombatPath(this, group, fpTargetCellIndex,
-        gpCombatManager->bCreaturePlacement, moves, -1);
+        group = m_combatSide;
+    return g_searchArray->findCombatPath(this, group, fpTargetCellIndex,
+        g_combatManager->m_creaturePlacement, moves, -1);
 }
 
 // E:\gamedcs\path.cpp:51
@@ -77,47 +78,49 @@ off_grid:
 // exact spelling forced the query result through a volatile view of the
 // parameter; that was optimizer steering, not a source fact.  Keep the real
 // assignment and let the banked exact checkpoint record the old codegen.
+// Before normalization (locals): bLiteralTest.
 VA(0x00523a70, 0xA8)  // anchor-bracket, dc 0x10c9a4
-unsigned char army::ValidPath(int destIndex, unsigned char bLiteralTest)
+unsigned char army::validPath(int destIndex, unsigned char literalTest)
 {
     if (destIndex < 0)
         goto off_grid;
     if (destIndex >= 187)
 off_grid:
         return 0;
-    GetSpeed();
+    getSpeed();
     int moves;
-    if (!gpCombatManager->bCreaturePlacement)
-        moves = GetSpeed();
+    if (!g_combatManager->m_creaturePlacement)
+        moves = getSpeed();
     else
         moves = 99;
-    if (boundFlag)
+    if (m_spellInfluence[72])
         moves = 0;
     int group;
-    if (hypnotizeFlag)
-        group = 1 - combatSide;
+    if (m_spellInfluence[60])
+        group = 1 - m_combatSide;
     else
-        group = combatSide;
+        group = m_combatSide;
     int target = destIndex;
-    destIndex = gpSearchArray->FindCombatPath(this, group, destIndex,
-        gpCombatManager->bCreaturePlacement, moves, -1);
+    destIndex = g_searchArray->findCombatPath(this, group, destIndex,
+        g_combatManager->m_creaturePlacement, moves, -1);
     if (!destIndex)
         return 0;
-    pathTarget = target;
+    m_pathTarget = target;
     return 1;
 }
 
 // E:\gamedcs\path.cpp:97
+// Before normalization (locals): iLiteralTargetIndex.
 VA(0x00523b20, 0x89)  // anchor-global, dc 0x10c9ec
-unsigned army::GetAttackMask(int currIndex, int criteria, int iLiteralTargetIndex) const
+unsigned army::getAttackMask(int currIndex, int criteria, int literalTargetIndex) const
 {
     int testCellIndex;
-    unsigned char twoHex = static_cast<unsigned char>(sMonInfo.attributes & 1);
+    unsigned char twoHex = static_cast<unsigned char>(m_monInfo.m_attributes & 1);
     unsigned bit = 1;
     unsigned mask = twoHex ? 0 : 0xc0;
     int dirs = twoHex ? 8 : 6;
     for (int i = 0; i < dirs; i++) {
-        if (!ValidAttack(currIndex, i, criteria, iLiteralTargetIndex, &testCellIndex))
+        if (!validAttack(currIndex, i, criteria, literalTargetIndex, &testCellIndex))
             mask |= bit;
         bit <<= 1;
     }
@@ -148,29 +151,30 @@ unsigned army::GetAttackMask(int currIndex, int criteria, int iLiteralTargetInde
 // second half is common. Tried and rejected: a byte-typed twoHex
 // local (byte-identical), `(facing == 1) ?` instead of `facing ?`
 // (78.2%), testing WIDE_LOWER before WIDE_UPPER (80.7%).
+// Before normalization (locals): iLiteralIndex.
 VA(0x00523bb0, 0x1DF)  // anchor-global, dc 0x10ca6c
-int army::ValidAttack(int currIndex, int direction, int criteria, int iLiteralIndex, int* testCellIndex) const
+int army::validAttack(int currIndex, int direction, int criteria, int literalIndex, int* testCellIndex) const
 {
     if (currIndex < 0)
         return 0;
     if (currIndex >= 187)
         return 0;
     int cell = currIndex;
-    if (sMonInfo.attributes & 1) {
+    if (m_monInfo.m_attributes & 1) {
         if (direction == COMBAT_DIRECTION_WIDE_UPPER) {
-            cell = GetAdjacentCellIndex(currIndex, facing ? 0 : 5);
+            cell = getAdjacentCellIndex(currIndex, m_facing ? 0 : 5);
         } else if (direction == COMBAT_DIRECTION_WIDE_LOWER) {
-            cell = GetAdjacentCellIndex(currIndex, facing ? 2 : 3);
+            cell = getAdjacentCellIndex(currIndex, m_facing ? 2 : 3);
         } else {
             int other = currIndex;
-            switch (facing) {
+            switch (m_facing) {
                 case FACING_ATTACKER:
                     if (direction >= 3)
-                        other = gpCombatManager->adjacentCells[currIndex][4];
+                        other = g_combatManager->m_adjacentCells[currIndex][4];
                     break;
                 case FACING_DEFENDER:
                     if (direction <= 2)
-                        other = gpCombatManager->adjacentCells[currIndex][1];
+                        other = g_combatManager->m_adjacentCells[currIndex][1];
                     break;
             }
             if (other == -1)
@@ -181,29 +185,29 @@ int army::ValidAttack(int currIndex, int direction, int criteria, int iLiteralIn
 other_off_grid:
                 cell = -1;
             } else {
-                cell = gpCombatManager->adjacentCells[other][direction];
+                cell = g_combatManager->m_adjacentCells[other][direction];
             }
         }
     } else {
-        cell = GetAdjacentCellIndex(currIndex, direction);
+        cell = getAdjacentCellIndex(currIndex, direction);
     }
     *testCellIndex = cell;
     if (cell < 0 || cell >= 187)
         return 0;
-    if (iLiteralIndex != -1 && cell != iLiteralIndex)
+    if (literalIndex != -1 && cell != literalIndex)
         return 0;
-    hexcell* hc = &gpCombatManager->cells[cell];
+    hexcell* hc = &g_combatManager->m_cells[cell];
     switch (criteria) {
         case ATTACK_CRITERIA_SELF:
-            if (hc->armySide == side && hc->armySlot == slot)
+            if (hc->m_armySide == m_side && hc->m_armySlot == m_slot)
                 return 1;
             break;
         case ATTACK_CRITERIA_ENEMY:
-            if (hc->armySide >= 0 && is_enemy(hc->get_army()))
+            if (hc->m_armySide >= 0 && isEnemy(hc->getArmy()))
                 return 1;
             break;
         case ATTACK_CRITERIA_OCCUPIED:
-            if (hc->armySide >= 0)
+            if (hc->m_armySide >= 0)
                 return 1;
             break;
     }
@@ -212,7 +216,7 @@ other_off_grid:
 
 // E:\gamedcs\path.cpp:238
 VA(0x00523d90, 0x57)  // anchor-global, dc 0x10cbf8
-int army::GetAdjacentCellIndex(int currIndex, int direction) const
+int army::getAdjacentCellIndex(int currIndex, int direction) const
 {
     if (currIndex < 0)
         goto off_grid;
@@ -220,33 +224,33 @@ int army::GetAdjacentCellIndex(int currIndex, int direction) const
 off_grid:
         return -1;
     if (direction == COMBAT_DIRECTION_WIDE_UPPER)
-        direction = (facing == 1) ? 5 : 0;
+        direction = (m_facing == 1) ? 5 : 0;
     else if (direction == COMBAT_DIRECTION_WIDE_LOWER)
-        direction = (facing == 1) ? 3 : 2;
-    return gpCombatManager->adjacentCells[currIndex][direction];
+        direction = (m_facing == 1) ? 3 : 2;
+    return g_combatManager->m_adjacentCells[currIndex][direction];
 }
 
 // E:\gamedcs\path.cpp:259
 // Two-hex head adjust, then GetAdjacentCellIndex inlined whole.
 VA(0x00523df0, 0x86)  // anchor-bracket, dc 0x10cc80
-long army::get_adjacent_hex(long hex, long direction) const
+long army::getAdjacentHex(long hex, long direction) const
 {
-    if (sMonInfo.attributes & 1) {
-        if (facing == 0) {
+    if (m_monInfo.m_attributes & 1) {
+        if (m_facing == 0) {
             if (direction >= 3)
                 hex--;
         } else if ((direction >= 0 && direction <= 2) || direction >= 6) {
             hex++;
         }
     }
-    return GetAdjacentCellIndex(hex, direction);
+    return getAdjacentCellIndex(hex, direction);
 }
 
 // E:\gamedcs\path.cpp:278
 // Located as the first right-gap resident after the span (DC order
 // NoArmy < OppositeDirection; both precede the cinit cluster).
 VA(0x00523e80, 0x3B)  // linkorder, dc 0x10ccdc
-int GetAdjacentCellIndexNoArmy(int currIndex, int direction)
+int getAdjacentCellIndexNoArmy(int currIndex, int direction)
 {
     if (currIndex < 0)
         goto off_grid;
@@ -257,12 +261,12 @@ off_grid:
         direction = 5;
     else if (direction == COMBAT_DIRECTION_WIDE_LOWER)
         direction = 3;
-    return gpCombatManager->adjacentCells[currIndex][direction];
+    return g_combatManager->m_adjacentCells[currIndex][direction];
 }
 
 // E:\gamedcs\path.cpp:469
 VA(0x00523ec0, 0x1F)  // linkorder, dc 0x10cd28
-int OppositeDirection(int direction)
+int oppositeDirection(int direction)
 {
     if (direction < 6)
         return (direction + 3) % 6;
@@ -274,7 +278,7 @@ int OppositeDirection(int direction)
 
 // E:\gamedcs\path.cpp:480
 DC_ONLY(0x10cd50, 0x4A8)
-int army::GetBestDirection(int currIndex, int destIndex, int currMask)
+int army::getBestDirection(int currIndex, int destIndex, int currMask)
 {
     // @stub
 }

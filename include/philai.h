@@ -36,90 +36,188 @@ public:
     };
 
     philAI();
-    void DoAI(int whichPlayer);
-    void GetTurnAIVars(int whichPlayer);
+    // Before normalization (function): philAI::DoAI.
+    void doAI(int whichPlayer);
+    // Before normalization (function): philAI::GetTurnAIVars.
+    void getTurnAIVars(int whichPlayer);
 };
 
-long AI_get_spell_value(const hero* our_hero, SpellID spell);
+// Before normalization (function): AI_get_spell_value.
+// Before normalization (locals): our_hero.
+long aiGetSpellValue(const hero* ourHero, SpellID spell);
 
 // Dreamcast line 3834 publishes the reference-qualified
 // move-cost parameter in the decorated name (`AAJ`) as well as the local and
 // statement records. Complete retains the same register/stack ABI at
 // 0x528040.
-long AI_value_of_event(const hero* current_hero, type_point point,
-                       long& move_cost);
+// Before normalization (function): AI_value_of_event.
+// Before normalization (locals): current_hero, move_cost.
+long aiValueOfEvent(const hero* currentHero, type_point point,
+                       long& moveCost);
 // Dreamcast line 4217: the two-argument form seeds a zero move cost and
 // forwards. Retail 0x52bd10, the row after AI_join_decision.
-long AI_value_of_event(const hero* current_hero, type_point point);
+// Before normalization (function): AI_value_of_event.
+long aiValueOfEvent(const hero* currentHero, type_point point);
 // Dreamcast line 4204, retail 0x52bc60 (events.obj's GiveBlackBoxReward is
 // the caller): let the AI buy the joining creatures through a
 // type_AI_creature_purchaser seeded with the offered stack.
-void AI_join_decision(hero* current_hero, TCreatureType creature,
+// Before normalization (function): AI_join_decision.
+// Before normalization (locals): current_hero.
+void aiJoinDecision(hero* currentHero, TCreatureType creature,
                       short amount);
 
 // Source-real appraisal boundaries used by AI_value_of_event. Several are
 // expanded or revision-adapted in Complete, but keeping these declarations
 // makes the recovered Dreamcast dispatch state explicit while their bodies
 // are promoted independently.
-long value_of_black_market(const hero* current_hero,
+// Before normalization (function): value_of_black_market.
+// Before normalization (locals): current_hero.
+long valueOfBlackMarket(const hero* currentHero,
                            const NewmapCell* cell);
-int ValueOfArena(const hero* current_hero, NewmapCell* cell);
-int ValueOfMapArtifact(const hero* current_hero, NewmapCell* cell);
-int ValueOfBlackBox(const hero* current_hero, NewmapCell* cell);
-int ValueOfCampfire(playerData* player, NewmapCell* cell);
-int ValueOfDefenseTower(const hero* current_hero, NewmapCell* cell);
-long value_of_bank(const hero* current_hero, NewmapCell* cell);
-int ValueOfGenerator(const hero* current_hero, int x, int y, int z,
-                     NewmapCell* cell, int move_cost);
-long value_of_garrison(const hero* current_hero, NewmapCell* cell);
-long value_of_idol(const hero* current_hero, long move_cost);
-int ValueOfFlotsam(playerData* player);
-int ValueOfGarden(const hero* current_hero, NewmapCell* cell);
-__forceinline int ValueOfLeanTo(NewmapCell* cell, playerData* player);
-__forceinline long value_of_hero_event(
-    const hero* current_hero, NewmapCell* cell, short x, short y, short z,
-    short move_cost);
-__forceinline long value_of_hill_fort(const hero* current_hero,
-                                      long move_cost);
-__forceinline int ValueOfLibrary(const hero* current_hero,
+// Before normalization (function): ValueOfArena.
+// Before normalization (locals): current_hero.
+int valueOfArena(const hero* currentHero, NewmapCell* cell);
+// Before normalization (function): ValueOfMapArtifact.
+// Before normalization (locals): current_hero.
+int valueOfMapArtifact(const hero* currentHero, NewmapCell* cell);
+// Before normalization (function): ValueOfBlackBox.
+// Before normalization (locals): current_hero.
+int valueOfBlackBox(const hero* currentHero, NewmapCell* cell);
+// Before normalization (function): ValueOfCampfire.
+int valueOfCampfire(playerData* player, NewmapCell* cell);
+// Before normalization (function): ValueOfDefenseTower.
+// Before normalization (locals): current_hero.
+int valueOfDefenseTower(const hero* currentHero, NewmapCell* cell);
+// Before normalization (function): value_of_bank.
+// Before normalization (locals): current_hero.
+long valueOfBank(const hero* currentHero, NewmapCell* cell);
+// Before normalization (function): ValueOfGenerator.
+// Before normalization (locals): current_hero, move_cost.
+int valueOfGenerator(const hero* currentHero, int x, int y, int z,
+                     NewmapCell* cell, int moveCost);
+// Before normalization (function): value_of_garrison.
+// Before normalization (locals): current_hero.
+long valueOfGarrison(const hero* currentHero, NewmapCell* cell);
+// Before normalization (function): value_of_idol.
+// Before normalization (locals): current_hero, move_cost.
+long valueOfIdol(const hero* currentHero, long moveCost);
+// Before normalization (function): ValueOfFlotsam.
+int valueOfFlotsam(playerData* player);
+// Before normalization (function): ValueOfGarden.
+// Before normalization (locals): current_hero.
+int valueOfGarden(const hero* currentHero, NewmapCell* cell);
+// Before normalization (function): ValueOfLeanTo.
+__forceinline int valueOfLeanTo(NewmapCell* cell, playerData* player);
+// Before normalization (function): value_of_hero_event.
+__forceinline long valueOfHeroEvent(
+    // Before normalization (locals): current_hero, move_cost.
+    const hero* currentHero, NewmapCell* cell, short x, short y, short z,
+    short moveCost);
+// Before normalization (function): value_of_hill_fort.
+// Before normalization (locals): current_hero, move_cost.
+__forceinline long valueOfHillFort(const hero* currentHero,
+                                      long moveCost);
+// Before normalization (function): ValueOfLibrary.
+// Before normalization (locals): current_hero.
+__forceinline int valueOfLibrary(const hero* currentHero,
                                  NewmapCell* cell);
-__forceinline int ValueOfLighthouse(NewmapCell* cell);
-int ValueOfMagicSchool(const hero* current_hero, NewmapCell* cell);
-__forceinline int ValueOfMercenaryCamp(const hero* current_hero,
+// Before normalization (function): ValueOfLighthouse.
+__forceinline int valueOfLighthouse(NewmapCell* cell);
+// Before normalization (function): ValueOfMagicSchool.
+// Before normalization (locals): current_hero.
+int valueOfMagicSchool(const hero* currentHero, NewmapCell* cell);
+// Before normalization (function): ValueOfMercenaryCamp.
+// Before normalization (locals): current_hero.
+__forceinline int valueOfMercenaryCamp(const hero* currentHero,
                                        NewmapCell* cell);
-int MoraleIncreaseValue(const hero* current_hero, int value);
-int LuckIncreaseValue(const hero* current_hero, int value);
-__forceinline long value_of_magus_hut(long player_id);
-int ValueOfMine(const hero* current_hero, NewmapCell* cell);
-long value_of_monsters(const hero* current_hero, NewmapCell* cell,
+// Before normalization (function): MoraleIncreaseValue.
+// Before normalization (locals): current_hero.
+int moraleIncreaseValue(const hero* currentHero, int value);
+// Before normalization (function): LuckIncreaseValue.
+// Before normalization (locals): current_hero.
+int luckIncreaseValue(const hero* currentHero, int value);
+// Before normalization (function): value_of_magus_hut.
+// Before normalization (locals): player_id.
+__forceinline long valueOfMagusHut(long playerId);
+// Before normalization (function): ValueOfMine.
+// Before normalization (locals): current_hero.
+int valueOfMine(const hero* currentHero, NewmapCell* cell);
+// Before normalization (function): value_of_monsters.
+// Before normalization (locals): current_hero.
+long valueOfMonsters(const hero* currentHero, NewmapCell* cell,
                        type_point point);
-int value_of_move_source(const hero* current_hero, long flag, short increase,
-                         long* move_cost);
-int value_of_obelisk(NewmapCell* cell, long player_id);
-int ValueOfPowerSchool(const hero* current_hero, NewmapCell* cell);
-int ValueOfPrison(NewmapCell* cell, playerData* player);
-long value_of_pyramid(const hero* current_hero, NewmapCell* cell);
-long get_value_of_spring(const hero* current_hero, const NewmapCell* cell,
-                         unsigned short move_cost);
-long get_value_of_well(const hero* current_hero, unsigned short move_cost);
-int ValueOfRallyFlag(const hero* current_hero, long* move_cost);
-int ValueOfRefugeeCamp(const hero* current_hero, NewmapCell* cell);
-long ValueOfResource(const hero* current_hero, NewmapCell* cell,
+// Before normalization (function): value_of_move_source.
+// Before normalization (locals): current_hero, move_cost.
+int valueOfMoveSource(const hero* currentHero, long flag, short increase,
+                         long* moveCost);
+// Before normalization (function): value_of_obelisk.
+// Before normalization (locals): player_id.
+int valueOfObelisk(NewmapCell* cell, long playerId);
+// Before normalization (function): ValueOfPowerSchool.
+// Before normalization (locals): current_hero.
+int valueOfPowerSchool(const hero* currentHero, NewmapCell* cell);
+// Before normalization (function): ValueOfPrison.
+int valueOfPrison(NewmapCell* cell, playerData* player);
+// Before normalization (function): value_of_pyramid.
+// Before normalization (locals): current_hero.
+long valueOfPyramid(const hero* currentHero, NewmapCell* cell);
+// Before normalization (function): get_value_of_spring.
+// Before normalization (locals): current_hero, move_cost.
+long getValueOfSpring(const hero* currentHero, const NewmapCell* cell,
+                         unsigned short moveCost);
+// Before normalization (function): get_value_of_well.
+// Before normalization (locals): current_hero, move_cost.
+long getValueOfWell(const hero* currentHero, unsigned short moveCost);
+// Before normalization (function): ValueOfRallyFlag.
+// Before normalization (locals): current_hero, move_cost.
+int valueOfRallyFlag(const hero* currentHero, long* moveCost);
+// Before normalization (function): ValueOfRefugeeCamp.
+// Before normalization (locals): current_hero.
+int valueOfRefugeeCamp(const hero* currentHero, NewmapCell* cell);
+// Before normalization (function): ValueOfResource.
+// Before normalization (locals): current_hero.
+long valueOfResource(const hero* currentHero, NewmapCell* cell,
                      playerData* player);
-int ValueOfSeaChest(const hero* current_hero, NewmapCell* cell);
-int ValueOfSkeleton(const hero* current_hero, NewmapCell* cell);
-int ValueOfScroll(const hero* current_hero, NewmapCell* cell);
-__forceinline int ValueOfShrine(const hero* current_hero, NewmapCell* cell);
-int ValueOfSirens(const hero* current_hero);
-int ValueOfStables(const hero* current_hero, long* move_cost);
-long value_of_town(const hero* current_hero, int x, int y, int z,
-                   short move_cost);
-int ValueOfTreasure(const hero* current_hero);
-int ValueOfTree(const hero* current_hero, NewmapCell* cell);
-int value_of_wagon(NewmapCell* cell, long player_id);
-long value_of_war_factory(const hero* current_hero, long move_cost);
-int value_of_war_school(const hero* current_hero, NewmapCell* cell);
-int value_of_witch_hut(const hero* current_hero, NewmapCell* cell);
+// Before normalization (function): ValueOfSeaChest.
+// Before normalization (locals): current_hero.
+int valueOfSeaChest(const hero* currentHero, NewmapCell* cell);
+// Before normalization (function): ValueOfSkeleton.
+// Before normalization (locals): current_hero.
+int valueOfSkeleton(const hero* currentHero, NewmapCell* cell);
+// Before normalization (function): ValueOfScroll.
+// Before normalization (locals): current_hero.
+int valueOfScroll(const hero* currentHero, NewmapCell* cell);
+// Before normalization (function): ValueOfShrine.
+// Before normalization (locals): current_hero.
+__forceinline int valueOfShrine(const hero* currentHero, NewmapCell* cell);
+// Before normalization (function): ValueOfSirens.
+// Before normalization (locals): current_hero.
+int valueOfSirens(const hero* currentHero);
+// Before normalization (function): ValueOfStables.
+// Before normalization (locals): current_hero, move_cost.
+int valueOfStables(const hero* currentHero, long* moveCost);
+// Before normalization (function): value_of_town.
+// Before normalization (locals): current_hero, move_cost.
+long valueOfTown(const hero* currentHero, int x, int y, int z,
+                   short moveCost);
+// Before normalization (function): ValueOfTreasure.
+// Before normalization (locals): current_hero.
+int valueOfTreasure(const hero* currentHero);
+// Before normalization (function): ValueOfTree.
+// Before normalization (locals): current_hero.
+int valueOfTree(const hero* currentHero, NewmapCell* cell);
+// Before normalization (function): value_of_wagon.
+// Before normalization (locals): player_id.
+int valueOfWagon(NewmapCell* cell, long playerId);
+// Before normalization (function): value_of_war_factory.
+// Before normalization (locals): current_hero, move_cost.
+long valueOfWarFactory(const hero* currentHero, long moveCost);
+// Before normalization (function): value_of_war_school.
+// Before normalization (locals): current_hero.
+int valueOfWarSchool(const hero* currentHero, NewmapCell* cell);
+// Before normalization (function): value_of_witch_hut.
+// Before normalization (locals): current_hero.
+int valueOfWitchHut(const hero* currentHero, NewmapCell* cell);
 
 // 0x5253d0. DECLARED, not defined - advManager::TownEvent is the caller
 // that needs the declarator, and TownEvent is also what located the row:
@@ -128,22 +226,36 @@ int value_of_witch_hut(const hero* current_hero, NewmapCell* cell);
 // that callee's own parameter order, and 0x5253d0 lands in the
 // path..philai link bracket whose only candidate compilands are path.obj
 // and philai.obj. The row is not claimed from here.
-void AI_enter_town(hero* current_hero, town* current_town);
+// Before normalization (function): AI_enter_town.
+// Before normalization (locals): current_hero, current_town.
+void aiEnterTown(hero* currentHero, town* currentTown);
 
 // The five object visitors advManager::DispatchEvent's AI arms call.
 // The Dreamcast roster supplies every signature (philai.cpp:182 / 389 /
 // 583 / 2513 / 3744); retail's /Gr fastcalls inside 0x4a84f0 agree
 // register-for-register (0x524370 / 0x5243f0 / hill fort / university /
 // war factory). None of the rows is claimed from here.
-void AI_enter_garrison(hero* current_hero, garrison* our_garrison);
+// Before normalization (function): AI_enter_garrison.
+// Before normalization (locals): current_hero, our_garrison.
+void aiEnterGarrison(hero* currentHero, garrison* ourGarrison);
 // The dwelling purchaser DoEventCreatureGenerator's AI tail calls
 // (dc AI_PurchaseCreatures, philai.obj); retail 0x527b00, /Gr
 // (hero in ECX, generator in EDX). Not claimed from here.
-void AI_PurchaseCreatures(hero* current_hero, generator* current_generator);
-void AI_visit_black_market(hero* current_hero, TBlackMarket* black_market);
-void AI_visit_hill_fort(hero* current_hero);
-void AI_visit_university(hero* current_hero, type_university* university);
-void AI_visit_war_factory(hero* current_hero);
+// Before normalization (function): AI_PurchaseCreatures.
+// Before normalization (locals): current_hero, current_generator.
+void aiPurchaseCreatures(hero* currentHero, generator* currentGenerator);
+// Before normalization (function): AI_visit_black_market.
+// Before normalization (locals): current_hero, black_market.
+void aiVisitBlackMarket(hero* currentHero, TBlackMarket* blackMarket);
+// Before normalization (function): AI_visit_hill_fort.
+// Before normalization (locals): current_hero.
+void aiVisitHillFort(hero* currentHero);
+// Before normalization (function): AI_visit_university.
+// Before normalization (locals): current_hero.
+void aiVisitUniversity(hero* currentHero, type_university* university);
+// Before normalization (function): AI_visit_war_factory.
+// Before normalization (locals): current_hero.
+void aiVisitWarFactory(hero* currentHero);
 
 // Retail .data 0x678370, the row immediately after tradpost.h's
 // fTradingPostEfficency (0x678344): three consecutive eleven-float rows
@@ -152,7 +264,7 @@ void AI_visit_war_factory(hero* current_hero);
 // The definition belongs to tradpost.cpp beside its sibling and moves
 // there with the rest of that .data band; declared here meanwhile so the
 // division has a typed name rather than a raw address.
-extern float fArtifactPurchaseEfficency[];
+extern float g_artifactPurchaseEfficency[];
 
 // The two secondary-skill appraisals AI_choose_secondary_skill calls.
 // The Dreamcast roster types the skill as TSecondarySkill; Complete's
@@ -162,10 +274,14 @@ extern float fArtifactPurchaseEfficency[];
 // they cannot be declared static here: VC6 rejects a static function that
 // is declared and called but never defined (C2129). Move them back into
 // philai.cpp as statics when the bodies land.
-long get_skill_value(const hero* our_hero, TSecondarySkill skill,
-                     unsigned char complex_choice);
-unsigned char wants_skill(const hero* our_hero, int skill,
-                          unsigned char complex_choice);
+// Before normalization (function): get_skill_value.
+// Before normalization (locals): our_hero, complex_choice.
+long getSkillValue(const hero* ourHero, TSecondarySkill skill,
+                     unsigned char complexChoice);
+// Before normalization (function): wants_skill.
+// Before normalization (locals): our_hero, complex_choice.
+unsigned char wantsSkill(const hero* ourHero, int skill,
+                          unsigned char complexChoice);
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\philai.cpp:58, dc 0x10d458) int OnMySide(int iWhichPlayer);

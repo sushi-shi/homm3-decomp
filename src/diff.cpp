@@ -5,14 +5,15 @@
 #include "diff.h"
 
 template <class _TYPE>
-inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
+// Before normalization (locals): _X, _Y.
+inline const _TYPE& cppMax(_TYPE x, _TYPE y)
 {
-    return (_X < _Y ? _Y : _X);
+    return (x < y ? y : x);
 }
 
 inline int max(int a, int b)
 {
-    return _cpp_max(a, b);
+    return cppMax(a, b);
 }
 
 #if 0 // @carcass: trivial retail-dropped/inlined bodies
@@ -22,7 +23,7 @@ void CDiffFile::CDiffFile()
 }
 
 DC_ONLY(0x822e4, 0x6)
-unsigned char* CDiffFile::GetData()
+unsigned char* CDiffFile::getData()
 {
     return 0;
 }
@@ -65,7 +66,7 @@ unsigned char* CDiffFile::GetData()
 // homes resultOffset instead.
 // E:\gamedcs\diff.cpp:62
 VA(0x00490f60, 0xc5)  // linkorder + body: allocated output size and 12-byte copy/reference records, dc 0x822ec
-void* CDiffFile::Apply(unsigned char* oldSaveGame, int oldSaveGameSize)
+void* CDiffFile::apply(unsigned char* oldSaveGame, int oldSaveGameSize)
 {
     unsigned char* result = new unsigned char[m_numBytes];
     unsigned int resultOffset = 0;
@@ -75,11 +76,11 @@ void* CDiffFile::Apply(unsigned char* oldSaveGame, int oldSaveGameSize)
     while (resultOffset < m_numBytes) {
         CDiffHeader* header =
             static_cast<CDiffHeader*>(
-                static_cast<void*>(GetData() + diffOffset));
+                static_cast<void*>(getData() + diffOffset));
         if (header->m_copy) {
             diffOffset += sizeof(CDiffHeader);
             memcpy(result + resultOffset,
-                   GetData() + diffOffset,
+                   getData() + diffOffset,
                    header->m_numBytes);
             diffOffset += header->m_numBytes;
             resultOffset += header->m_numBytes;
@@ -107,7 +108,7 @@ CDiffMaker::CDiffMaker(unsigned char* oldData, int oldSize,
 
 #if 0 // @carcass: retail inlined into MakeDiff
 DC_ONLY(0x8238c, 0x4c)
-int CDiffMaker::CountSameBytes(int oldOffset, int newOffset)
+int CDiffMaker::countSameBytes(int oldOffset, int newOffset)
 {
     return 0;
 }
@@ -129,7 +130,7 @@ int CDiffMaker::CountSameBytes(int oldOffset, int newOffset)
 // the reverse chain/store order and volatile deltas are worse.
 // E:\gamedcs\diff.cpp:133
 VA(0x00491050, 0xed)  // linkorder + 64x64 search for a 16-byte synchronization run, dc 0x823d8
-bool CDiffMaker::FindNextSame(int oldOffset, int newOffset,
+bool CDiffMaker::findNextSame(int oldOffset, int newOffset,
                               int& oldCount, int& newCount)
 {
     oldCount = 1;
@@ -194,7 +195,7 @@ found:
 // front-end-handle wall, not license to invent an alias local absent from DC.
 // E:\gamedcs\diff.cpp:174
 VA(0x00491140, 0x1bf)  // linkorder + calls FindNextSame and emits 12-byte records, dc 0x82488
-CDiffFile* CDiffMaker::MakeDiff(unsigned long& diffSize)
+CDiffFile* CDiffMaker::makeDiff(unsigned long& diffSize)
 {
     diffSize = 0;
     int oldOffset = 0;
@@ -205,27 +206,27 @@ CDiffFile* CDiffMaker::MakeDiff(unsigned long& diffSize)
     int newOffset = 0;
 
     for (;;) {
-        int sameCount = CountSameBytes(oldOffset, newOffset);
+        int sameCount = countSameBytes(oldOffset, newOffset);
 
         if (!sameCount) {
             int oldCount = 0;
             int newCount = 0;
-            if (FindNextSame(oldOffset, newOffset, oldCount, newCount)) {
+            if (findNextSame(oldOffset, newOffset, oldCount, newCount)) {
                 CDiffHeader header(newCount, 1, oldCount);
-                memcpy(diff->GetBase() + diffOffset, &header,
+                memcpy(diff->getBase() + diffOffset, &header,
                        sizeof(CDiffHeader));
                 diffOffset += sizeof(CDiffHeader);
-                memcpy(diff->GetBase() + diffOffset,
+                memcpy(diff->getBase() + diffOffset,
                        m_newData + newOffset, newCount);
                 diffOffset += newCount;
                 oldOffset += oldCount;
                 newOffset += newCount;
             } else {
                 CDiffHeader header(m_newSize - newOffset, 1, 0);
-                memcpy(diff->GetBase() + diffOffset, &header,
+                memcpy(diff->getBase() + diffOffset, &header,
                        sizeof(CDiffHeader));
                 diffOffset += sizeof(CDiffHeader);
-                memcpy(diff->GetBase() + diffOffset,
+                memcpy(diff->getBase() + diffOffset,
                        m_newData + newOffset, m_newSize - newOffset);
                 diffOffset += m_newSize - newOffset;
                 diffSize = diffOffset;
@@ -234,7 +235,7 @@ CDiffFile* CDiffMaker::MakeDiff(unsigned long& diffSize)
             }
         } else {
             CDiffHeader header(sameCount, 0, 0);
-            memcpy(diff->GetBase() + diffOffset, &header,
+            memcpy(diff->getBase() + diffOffset, &header,
                    sizeof(CDiffHeader));
             diffOffset += sizeof(CDiffHeader);
             oldOffset += sameCount;

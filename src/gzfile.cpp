@@ -27,9 +27,9 @@
 // behind @gzopen@8, which is retail's order exactly.
 VA(0x004d6c50, 0x76)  // anchor-import @gzopen@8 + anchor-vtable ??_7TGzFile@@6B@, retail-only
 TGzFile::TGzFile(const char* path, const char* mode)
-    : file(gzopen(path, mode))
+    : m_file(gzopen(path, mode))
 {
-    if (file == 0)
+    if (m_file == 0)
         throw TOpenFailure();
 }
 
@@ -45,17 +45,17 @@ VA_COMPGEN(0x004d6d30, 0x21, SCALAR_DELETING_DTOR, TOpenFailure)
 VA(0x004d6d60, 0x19)  // anchor-import @gzclose@4, retail-only
 TGzFile::~TGzFile()
 {
-    gzclose(file);
+    gzclose(m_file);
 }
 
 VA(0x004d6d80, 0x16)  // anchor-import @gzread@12, retail-only
-int TGzFile::Read(void* data, int size)
+int TGzFile::read(void* data, int size)
 {
-    return gzread(file, data, size);
+    return gzread(m_file, data, size);
 }
 
 VA(0x004d6da0, 0x16)  // anchor-import @gzwrite@12, retail-only
-int TGzFile::Write(const void* data, int size)
+int TGzFile::write(const void* data, int size)
 {
-    return gzwrite(file, const_cast<void*>(data), size);
+    return gzwrite(m_file, const_cast<void*>(data), size);
 }

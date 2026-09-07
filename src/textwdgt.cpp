@@ -17,9 +17,10 @@
 // and selects between their ADDRESSES with two LEAs, which no
 // value-returning spelling produces, and the TU needs no other STL surface.
 template <class _TYPE>
-inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
+// Before normalization (locals): _X, _Y.
+inline const _TYPE& cppMin(_TYPE x, _TYPE y)
 {
-    return (_Y < _X ? _Y : _X);
+    return (y < x ? y : x);
 }
 
 #if 0  // @carcass
@@ -76,18 +77,18 @@ textWidget::textWidget(int x, int y, int w, int h, const char* text,
              static_cast<short>(w), static_cast<short>(h),
              static_cast<short>(id), 8)
 {
-    Font = ResourceManager::GetFont(fontName);
+    m_font = ResourceManager::getFont(fontName);
     if (text)
-        Text = text;
-    Color = color;
-    BackColor = backColor;
-    Justify = justify;
+        m_text = text;
+    m_color = color;
+    m_backColor = backColor;
+    m_justify = justify;
 }
 
 VA(0x005bc3b0, 0x8A)  // anchor-global, dc 0x164d24
 textWidget::~textWidget()
 {
-    Font->Dispose();
+    m_font->dispose();
 }
 
 #if 0  // @carcass
@@ -101,7 +102,7 @@ void textWidget::initialize(int x, int y, int w, int h, int id, int style, const
 
 // E:\gamedcs\textwdgt.cpp:120
 DC_ONLY(0x164dd4, 0x1A8)
-int textWidget::Main(message* msg)
+int textWidget::main(message* msg)
 {
     // @stub
 }
@@ -133,7 +134,7 @@ void textWidget::zBufferDraw()
 // both nil-ary DC publics. It too remains an image-wide ICF representative,
 // not textwdgt-owned unclaimed work.
 DC_ONLY(0x165034, 0x4)
-void textWidget::Dim()
+void textWidget::dim()
 {
     // @stub
 }
@@ -160,25 +161,25 @@ void textWidget::Dim()
 // to 92.39041% under the byte verdict. No semantic or control-flow delta is
 // left to justify further source distortion.
 VA(0x005bc440, 0x1AD)
-int textWidget::Main(message* msg)
+int textWidget::main(message* msg)
 {
-    if (field_2C > 0) {
+    if (m_sleepCount > 0) {
 returnZero:
         return 0;
     }
 
-    short widgetStatus = status;
+    short widgetStatus = m_status;
     if (!(widgetStatus & WIDGET_ACTIVE)) {
-        if (msg->id != MESSAGE_WIDGET)
+        if (msg->m_id != MESSAGE_WIDGET)
             goto returnZero;
-        return widget::Main(msg);
+        return widget::main(msg);
     }
 
     bool isDisabled = false;
     if (widgetStatus & WIDGET_DISABLED)
         isDisabled = true;
 
-    switch (msg->id) {
+    switch (msg->m_id) {
     case MESSAGE_LEFT_BUTTON_DOWN:
         if (isDisabled)
             goto returnZero;
@@ -186,23 +187,23 @@ returnZero:
     case MESSAGE_RIGHT_BUTTON_DOWN: {
         if (!(widgetStatus & WIDGET_DRAWN))
             goto returnZero;
-        short mouseY = msg->codeY - parentWindow->y;
-        short mouseX = msg->codeX - parentWindow->x;
-        if (mouseX < x || mouseY < y || mouseX >= x + width
-            || mouseY >= y + height)
+        short mouseY = msg->m_codeY - m_parentWindow->m_y;
+        short mouseX = msg->m_codeX - m_parentWindow->m_x;
+        if (mouseX < m_x || mouseY < m_y || mouseX >= m_x + m_width
+            || mouseY >= m_y + m_height)
             goto returnZero;
-        if (msg->id == MESSAGE_RIGHT_BUTTON_DOWN) {
-            msg->qualifier = MESSAGE_MODIFIER_RIGHT;
-            msg->codeX = WIDGET_RIGHT_SELECT;
-            msg->id = MESSAGE_WIDGET;
-            msg->codeY = id;
+        if (msg->m_id == MESSAGE_RIGHT_BUTTON_DOWN) {
+            msg->m_qualifier = MESSAGE_MODIFIER_RIGHT;
+            msg->m_codeX = WIDGET_RIGHT_SELECT;
+            msg->m_id = MESSAGE_WIDGET;
+            msg->m_codeY = m_id;
             return MESSAGE_DISPATCH_FORWARD;
         }
         widgetStatus |= WIDGET_SELECTED;
-        status = widgetStatus;
-        msg->codeX = WIDGET_SELECT;
-        msg->id = MESSAGE_WIDGET;
-        msg->codeY = id;
+        m_status = widgetStatus;
+        msg->m_codeX = WIDGET_SELECT;
+        msg->m_id = MESSAGE_WIDGET;
+        msg->m_codeY = m_id;
         return MESSAGE_DISPATCH_FORWARD;
     }
 
@@ -215,25 +216,25 @@ returnZero:
             || !(widgetStatus & WIDGET_SELECTED))
             goto returnZero;
         widgetStatus &= ~WIDGET_SELECTED;
-        status = widgetStatus;
-        if (msg->id == MESSAGE_RIGHT_BUTTON_UP)
-            msg->qualifier = MESSAGE_MODIFIER_RIGHT;
-        msg->id = MESSAGE_WIDGET;
-        msg->codeX = WIDGET_DESELECT;
-        msg->codeY = id;
+        m_status = widgetStatus;
+        if (msg->m_id == MESSAGE_RIGHT_BUTTON_UP)
+            msg->m_qualifier = MESSAGE_MODIFIER_RIGHT;
+        msg->m_id = MESSAGE_WIDGET;
+        msg->m_codeX = WIDGET_DESELECT;
+        msg->m_codeY = m_id;
         return MESSAGE_DISPATCH_FORWARD;
 
     case MESSAGE_WIDGET:
-        switch (msg->codeX) {
+        switch (msg->m_codeX) {
         case WIDGET_SET_TEXT:
-            if (msg->codeY == id) {
-                SetText(msg->extraText);
+            if (msg->m_codeY == m_id) {
+                setText(msg->m_extraText);
                 return MESSAGE_DISPATCH_CONSUME;
             }
             break;
         case WIDGET_SET_COLOR:
-            if (msg->codeY == id) {
-                Color = msg->extra;
+            if (msg->m_codeY == m_id) {
+                m_color = msg->m_extra;
                 return MESSAGE_DISPATCH_CONSUME;
             }
             break;
@@ -241,31 +242,31 @@ returnZero:
         break;
     }
 
-    return widget::Main(msg);
+    return widget::main(msg);
 }
 
 // E:\gamedcs\textwdgt.cpp:235
 // Slot 4 of textWidget's vtable 0x642db0, and the ONLY reference to
 // 0x5bc5f0 in the image - so the row is this class's Draw, not a fold.
 VA(0x005bc5f0, 0x92)  // anchor-vtable (0x642dc0) + font/FillRect calls, dc 0x164f80
-void textWidget::Draw()
+void textWidget::draw()
 {
-    if (status & WIDGET_DRAWN) {
-        int drawX = x + parentWindow->x;
-        int drawY = y + parentWindow->y;
-        if (BackColor) {
-            gpWindowManager->screenBitmap->FillRect(
-                drawX, drawY, width, height,
-                gUnnamed6aacb0->backColors[BackColor]);
+    if (m_status & WIDGET_DRAWN) {
+        int drawX = m_x + m_parentWindow->m_x;
+        int drawY = m_y + m_parentWindow->m_y;
+        if (m_backColor) {
+            g_windowManager->m_screenBitmap->fillRect(
+                drawX, drawY, m_width, m_height,
+                g_unnamed6aacb0->m_data[m_backColor]);
         }
         int colorScheme;
-        if (status & WIDGET_DIMMED)
-            colorScheme = Color + 2;
+        if (m_status & WIDGET_DIMMED)
+            colorScheme = m_color + 2;
         else
-            colorScheme = Color;
-        Font->DrawBoundedString(Text.c_str(), gpWindowManager->screenBitmap,
-                                drawX, drawY, width, height,
-                                colorScheme, Justify, -1);
+            colorScheme = m_color;
+        m_font->drawBoundedString(m_text.c_str(), g_windowManager->m_screenBitmap,
+                                drawX, drawY, m_width, m_height,
+                                colorScheme, m_justify, -1);
     }
 }
 
@@ -294,7 +295,7 @@ void iconBackedTextWidget::zBufferDraw()
 
 // E:\gamedcs\textwdgt.cpp:299
 DC_ONLY(0x165114, 0x6E)
-void iconBackedTextWidget::Draw()
+void iconBackedTextWidget::draw()
 {
     // @stub
 }
@@ -322,7 +323,7 @@ void bitmapBackedTextWidget::zBufferDraw()
 
 // E:\gamedcs\textwdgt.cpp:348
 DC_ONLY(0x165258, 0x9C)
-void bitmapBackedTextWidget::Draw()
+void bitmapBackedTextWidget::draw()
 {
     // @stub
 }
@@ -406,7 +407,7 @@ bitmapBackedTextWidget::bitmapBackedTextWidget(
     int style)
     : textWidget(x, y, w, h, text, fontName, color, id, justify, 0, style)
 {
-    image = ResourceManager::GetBitmap816(backName);
+    m_image = ResourceManager::getBitmap816(backName);
 }
 
 // E:\gamedcs\textwdgt.cpp:348
@@ -414,13 +415,13 @@ bitmapBackedTextWidget::bitmapBackedTextWidget(
 // image. Blits the backing bitmap clamped to its own extent, then runs the
 // base text draw.
 VA(0x005bc7f0, 0x7c)  // anchor-vtable (0x642df8) + Bitmap816 blit, dc 0x165258
-void bitmapBackedTextWidget::Draw()
+void bitmapBackedTextWidget::draw()
 {
-    int drawX = x + parentWindow->x;
-    int drawY = y + parentWindow->y;
-    int blitWidth = _cpp_min<int>(image->Width, width);
-    int blitHeight = _cpp_min<int>(image->Height, height);
-    image->Draw(0, 0, blitWidth, blitHeight,
-                gpWindowManager->screenBitmap, drawX, drawY, 0);
-    textWidget::Draw();
+    int drawX = m_x + m_parentWindow->m_x;
+    int drawY = m_y + m_parentWindow->m_y;
+    int blitWidth = cppMin<int>(m_image->m_width, m_width);
+    int blitHeight = cppMin<int>(m_image->m_height, m_height);
+    m_image->draw(0, 0, blitWidth, blitHeight,
+                g_windowManager->m_screenBitmap, drawX, drawY, 0);
+    textWidget::draw();
 }

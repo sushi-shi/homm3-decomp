@@ -7,24 +7,28 @@
 
 #include "armygrp.h"
 
-int IsBaseCreature(TCreatureType monType);
-unsigned char IsSiegeWeapon(TCreatureType creature);
-TCreatureType UpgradedCreatureType(TCreatureType type);
+// Before normalization (function): IsBaseCreature.
+int isBaseCreature(TCreatureType monType);
+// Before normalization (function): IsSiegeWeapon.
+unsigned char isSiegeWeapon(TCreatureType creature);
+// Before normalization (function): UpgradedCreatureType.
+TCreatureType upgradedCreatureType(TCreatureType type);
 
 // Complete extends the Dreamcast creature-name domain through id 0x96.
 // GetArmyName's retail range guard proves the inclusive upper bound.
-const int CREATURE_TYPE_LAST = 0x96;
+// Before normalization: CREATURE_TYPE_LAST.
+const int g_creatureTypeLast = 0x96;
 
 // E:\gamedcs\CreatureType.h:296
-inline const char* GetArmyName(int type, int count)
+inline const char* getArmyName(int type, int count)
 {
-    if (type < 0 || type > CREATURE_TYPE_LAST) {
+    if (type < 0 || type > g_creatureTypeLast) {
         return DATA_COMPGEN(0x00691210, emptyCreatureName, "");
     } else {
         if (count == 1) {
-            return akCreatureTypeTraits[type].m_name;
+            return g_creatureTypeTraits[type].m_name;
         } else {
-            return akCreatureTypeTraits[type].m_plural_name;
+            return g_creatureTypeTraits[type].m_pluralName;
         }
     }
 }
