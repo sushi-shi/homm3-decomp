@@ -657,10 +657,9 @@ public:
     int* getBuildCostArray(type_building_id building) const;
     // Before normalization (function): town::get_build_cost.
     void getBuildCost(type_building_id building, int* resources) const;
-    // DC uses EGameResource* for `types`; int* is byte-identical here and
-    // avoids a source-only enum conversion that the retail code cannot prove.
+    // DC town.cpp:2224 proves the EGameResource* output domain.
     // Before normalization (function): town::get_build_cost.
-    short getBuildCost(type_building_id building, int* types,
+    short getBuildCost(type_building_id building, EGameResource* types,
                          int* amounts) const;
     // Before normalization (function): town::get_horde_effect.
     type_horde_effect* getHordeEffect(type_building_id building) const;
