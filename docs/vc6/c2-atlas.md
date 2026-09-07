@@ -18,6 +18,44 @@ gitignored `build/re/vc6/` (scaffolding, optional); the two TSVs are the
 deliverables. Standing: ANALYSIS OUTPUT, not retail evidence — regenerate,
 never hand-edit.
 
+## Labeled assembly and references
+
+```sh
+homm3 vc6 disasm cloneOperand
+homm3 vc6 disasm 0x1070156f --range +0:+0x31 --verbose
+homm3 vc6 disasm addressFoldDisabled --refs
+homm3 vc6 disasm 0x837d5
+```
+
+Selectors accept a C2 RVA, VA, exact Ghidra name or documented role. The
+listing labels calls, branches and data references, with evidence locations
+for inferred roles. Local branches get address-based labels. Unknown targets
+retain Ghidra names or addresses. These are compiler-analysis labels; game
+symbols remain owned by the game source annotations.
+
+Role annotations live beside their supporting prose in `docs/vc6/*.md`:
+`<!-- c2-role: function 0x156f cloneOperand -->`. The kinds are `function`,
+`global` and `site`. The renderer reads those annotations directly; there is
+no additional symbol inventory or Ghidra rename pass. Every role is explicitly
+inferred, never presented as a recovered original compiler symbol. Duplicate
+addresses or names are errors. Only the pinned C2 pressing is admitted.
+
+The default interval runs from the selected address to the next Ghidra
+function entry. `--range` uses hexadecimal offsets from the selected address,
+with an exclusive end; both instruction boundaries must be respected. This
+is a physical listing, not a reconstructed function CFG: C2's cold blocks
+can lie elsewhere. The tool does not assign nearby cold blocks to a named
+routine. `--refs` lists actual incoming code-reference sites, retaining their
+addresses without inferring ownership from proximity.
+
+Ghidra supplies instruction boundaries, so embedded jump tables are not
+linearly decoded as code. Every displayed instruction is checked against the
+hash-gated DLL, and the cached project's SHA-256 and image base must agree.
+Ghidra settings and cache stay under this worktree's `build/re/vc6/`; no
+scratch launcher is needed. Existing `regasg_probe.py dump` assembly files
+use the same labeled renderer. Its `.c` files remain Ghidra pseudo-C, whose
+fragmented-body limitations still apply.
+
 ## 1. Method
 
 ### 1.1 The ICE-string anchors
