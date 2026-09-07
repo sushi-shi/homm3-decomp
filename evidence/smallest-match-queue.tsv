@@ -50,7 +50,6 @@ bracketed	37	0x0054df40	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow
 bracketed	38	0x0048d940	-	0.0000	0.0000	customcampaign..dialogbox	customcampaign,dc_input,dc_precompiledheaders,dialogbox	game_1510_sub07_8d940	bracketed	resolve the owner, then add its VA claim and body
 bracketed	38	0x00530ee0	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_130fb0_sub01_130ee0	bracketed	resolve the owner, then add its VA claim and body
 bracketed	38	0x005fdf20	-	0.0000	0.0000	viewwrld..widget	viewwrld,widget	game_1fd390_sub00_1fdf20	bracketed	resolve the owner, then add its VA claim and body
-bracketed	39	0x00532790	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_132790	bracketed	resolve the owner, then add its VA claim and body
 bracketed	40	0x0048c0b0	-	0.0000	0.0000	customcampaign..dialogbox	customcampaign,dc_input,dc_precompiledheaders,dialogbox	game_87e40_sub05_8c0b0	bracketed	resolve the owner, then add its VA claim and body
 bracketed	40	0x0055ee00	-	0.0000	0.0000	resourcemanager..sacrifice_window	resourcemanager,ressw,sacrifice_window	game_15ee00	bracketed	resolve the owner, then add its VA claim and body
 bracketed	40	0x005b8cd0	-	0.0000	0.0000	systemoptionswindow..text	systemoptionswindow,text	game_1b7520_sub01_1b8cd0	bracketed	resolve the owner, then add its VA claim and body
