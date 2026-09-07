@@ -18,8 +18,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x0058bce0	1455	78.9055	78.9055	78.9055	306.9249749999999	singleselectionwindow	?onBeginGame@TSingleSelectionWindow@@QAEEXZ	admitted
 0x004ee3e0	7172	78.7743	78.9421	78.9421	1510.2725880000005	kb	?oldmain@@YIHXZ	admitted
 0x004f2960	894	79.1107	79.1107	79.1107	186.7503420000001	kb	?displayLCWinLoss@@YIEAAVLossConditionStruct@@AAH1E@Z	admitted
-0x0048a310	2846	66.44606	66.4461	79.2531	590.456774	customcampaign	?load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	admitted
-0x00578e00	607	79.25824	79.3242	79.3242	125.502106	singleselectionwindow	??0GameSelectionHeadersStruct@@QAE@XZ	admitted
+0x0048a310	2846	69.5768	69.5768	79.2531	590.456774	customcampaign	?load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	admitted
 0x00542080	2218	79.429504	79.4987	79.4987	454.718834	rmg	?createSubterraneanGate@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	admitted
 0x004224e0	692	79.65844	79.6584	79.6584	140.76387200000002	ai	?simulateMeleeAttack@combatManager@@QAEXPAVarmy@@J0JJ@Z	admitted
 0x0049fa90	4203	79.82593	79.8259	79.8259	847.9174229999998	events	?giveBlackBoxReward@advManager@@QAE_NPBDPAVhero@@PAVNewmapCell@@Utype_point@@_NPAVBlackBoxData@@@Z	admitted

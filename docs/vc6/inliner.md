@@ -1364,3 +1364,25 @@ Those observations replace the inferred cost bound; an unchanged result from
 a caller probe alone cannot identify which inline gate admitted the callee.
 The measured caller is 368 bytes including padding, SHA-256
 `4cd34e2faf32b5283dd26976c49e3e8286cfb5f5487fbdca9eb0e067ba8f63df`.
+
+
+### Default construction can differ from an explicit zero argument
+
+`GameSelectionHeadersStruct` (0x578e00) reaches 100% when its nested
+`NewSMapHeader` uses the default `std::bitset<156>` constructor instead of
+`bitset(0)`. Both zero the bits. In the pinned VC6 BITSET, the unsigned-long
+overload also contains a loop that loads set bits from its argument; C2 counts
+that body before eliminating the loop for zero.
+
+The passive trace measures cost 95 for the value constructor and 34 for the
+default constructor. With `bitset(0)`, the second string assignment's
+`assign(ptr, size)` gets budget 41 against cost 69 and remains a call, giving
+73.1483%. Default construction gives the two sites budgets 68 and 137:
+retail's first call remains, and its second expansion appears. The nested
+`_Grow` stays a call (cost 301, budget 68). All six retail CFG blocks agree.
+
+This closes a function previously attributed to unrelated declaration-state
+changes. No added types, inline controls, or flattened helper bodies are
+needed. The normal TU build and passive trace reproduce the exact 608-byte
+padded caller, SHA-256
+`1410609cf6a3b14cae54bc40945c85bd38d6c8d127bfc26973b5572f49918094`.

@@ -1302,7 +1302,7 @@ customcampaign	?isBuildingBonus@TCampaignBuildingBonus@@UBE_NXZ	100.0000	100.000
 customcampaign	?isBuildingBonus@TCampaignStartBonusOption@@UBE_NH@Z	100.0000	100.0000	100.0000	0x85430	0652a4942adf
 customcampaign	?isBuildingBonus@TCampaignStartCrossoverOption@@UBE_NH@Z	100.0000	100.0000	100.0000	0x85a30	0dccac502696
 customcampaign	?load@CampaignHeaderStruct@TCampaignBrief@@QAE_NXZ	53.9868	53.9868	80.9474	0x88880	49d69307bc8d
-customcampaign	?load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	66.4461	66.4461	79.2531	0x8a310	12f517e19d22
+customcampaign	?load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	69.5768	69.5768	79.2531	0x8a310	fb5062f29f87
 customcampaign	?loadMapHeader@ScenarioStruct@TCampaignBrief@@QAEXPAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@PAVNewSMapHeader@@H@Z	100.0000	100.0000	100.0000	0x87d30	1be04c1bd184
 customcampaign	?loadScenario@CampaignHeaderStruct@TCampaignBrief@@QAE_NHPAVNewSMapHeader@@@Z	100.0000	100.0000	100.0000	0x88810	c3dd1f3789da
 customcampaign	?markCrossoverHeroes@ScenarioStruct@TCampaignBrief@@QAEXPAE@Z	100.0000	100.0000	100.0000	0x87e10	a9e18c59e852
@@ -3547,7 +3547,7 @@ singleselectionwindow	??0CNewPlayerUpdateMan@@QAE@XZ	100.0000	100.0000	100.0000	
 singleselectionwindow	??0CRequestHeroFaceReplyMsg@@QAE@HH@Z	100.0000	100.0000	100.0000	0x18e6c0	-
 singleselectionwindow	??0CUpdatePlayerPosMsg@@QAE@PAVCNetPlayerHandlerPlayer@@0@Z	100.0000	100.0000	100.0000	0x179870	80c3a89752f7
 singleselectionwindow	??0GameSelectionHeadersStruct@@QAE@ABU0@@Z	100.0000	100.0000	100.0000	0x1904f0	-
-singleselectionwindow	??0GameSelectionHeadersStruct@@QAE@XZ	73.1483	79.3242	79.3242	0x178e00	-
+singleselectionwindow	??0GameSelectionHeadersStruct@@QAE@XZ	100.0000	100.0000	100.0000	0x178e00	01d621904d25
 singleselectionwindow	??0NewSMapHeader@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x18fa60	-
 singleselectionwindow	??0SCampaign@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x18fc10	-
 singleselectionwindow	??0SavedGameHeader@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x193f50	-

@@ -192,16 +192,12 @@ struct GameSelectionHeadersStruct {
     // Dreamcast CodeView places this source-declared constructor in
     // SingleSelectionWindow.h:73. Complete's wider record keeps the same
     // boundary and adds the two PC text-band clears plus difficulty preset.
-    // Field-recovery collateral: correcting CAdvPopup's shifted member
-    // names/removing its unsupported union changes this retained constructor
-    // (retail 0x578e00) from 79.2582% to 73.1483%, in the string-helper
-    // expansion inside NewSMapHeader construction. Natural popup tail
-    // alignment has the same result. A disposable Gruntz forest search
-    // (seed 20260906, baseline + 16 variants before the TU includes) finds
-    // three byte islands: 73.1483%, 79.2582%, and 79.3242%. No probe noise
-    // is retained and the corrected popup ownership remains authoritative.
-    // Consolidating the duplicate TownExtra views subsequently recovers
-    // 79.3242% with the production source and no compiler-state noise.
+    // Exact at 0x578e00 after NewSMapHeader uses bitset's default constructor.
+    // Its old explicit bitset(0) is semantically redundant but adds a
+    // value-loading loop to VC6's pre-inline cost. That leaves budget 41
+    // for the second string assign(ptr, size), below its cost 69; retail
+    // expands that site and retains the first. Default construction restores
+    // the retail body at 100% (2026-09-07), without compiler-state probes.
     GameSelectionHeadersStruct()
     {
         memset(m_title, 0, sizeof(m_title));
