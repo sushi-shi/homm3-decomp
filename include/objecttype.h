@@ -44,9 +44,15 @@ public:
     // its first rows.size() expands, but this insertion path calls size,
     // the pair constructor and row insert. Flattening this lookup into
     // the caller expands the pair constructor and scores 47.77 vs 54.77.
-    int GetIndex(const std::string& name)
+    // Keep the returned entry distinct from the iterator passed by reference
+    // to vector::insert. In setImageName this preserves retail's existing-
+    // entry EAX path and reloads only after insertion (fn+0xe8). Returning
+    // the stable map value by reference gives 96.6403%; returning it by value
+    // changes later allocation and gives 87.8696. Declaration is provisional.
+    const int& GetIndex(const std::string& name)
     {
         TNameIndex::iterator found = nameIndex.find(name);
+        TNameIndex::iterator result = found;
         if (found == nameIndex.end()) {
             // Retail copies both returned fields, including the unused
             // bool into a stack home. Extracting .first directly drops it.
@@ -54,8 +60,9 @@ public:
                 TNameIndex::value_type(name, rows.size()));
             found = inserted.first;
             rows.insert(rows.end(), found);
+            result = found;
         }
-        return found->second;
+        return result->second;
     }
 };
 
