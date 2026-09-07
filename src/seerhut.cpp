@@ -432,6 +432,13 @@ void type_quest::load(TAbstractFile* file, int version)
 // still expands the final assign (23.1563%). A read-into-string-reference
 // helper and a shared three-string reader remain out of line, contrary to
 // retail's expanded read/assign/cleanup sequence. Neither is retained.
+// Individual proposal/progress/completion const-reference scopes preserve
+// cleanup order but score 8.6146/9.2396/9.6667%, below the 10.50% expression
+// body. A shared assignment helper taking const string& reproduces that
+// expression body byte for byte; taking string by value remains called and
+// removes the caller's EH sequence (33.5625%, 112 bytes versus retail 286).
+// Directly reading the deadline member loses the incoming-slot scratch and
+// scores 2.6771%. None supplies the missing inline boundaries.
 VA(0x0056ce50, 0x11E)  // anchor-vtable 0x64174c slot 12 + the chain from all eight leaf LoadFromMaps, retail-only
 void type_quest::loadFromMap(TAbstractFile* file)
 {
