@@ -53,6 +53,22 @@ class InlineTraceTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 inline_trace.parse_trace(bad, "CreateRiver")
 
+    def test_pre_budget_state_gate_reports_rejection_without_final_verdict(self):
+        prefix = "sym a caller\nsym b helper\nmain a cb=272\n"
+        record = "candidate root=a callee=b body_flags=00000000 callee_flags=0000012a"
+        candidate = inline_trace.parse_trace(prefix + record, "caller")["candidates"][0]
+        self.assertFalse(candidate["state_gate_allows"])
+        self.assertNotIn("expanded", candidate)
+        for changed in (record.replace("body_flags=00000000", "body_flags=00008000"),
+                        record.replace("body_flags=00000000", "body_flags=00010000"),
+                        record.replace("callee_flags=0000012a", "callee_flags=0000002a")):
+            self.assertTrue(inline_trace.parse_trace(prefix + changed, "caller")
+                            ["candidates"][0]["state_gate_allows"])
+        for changed in (record.replace("root=a", "root=c"),
+                        record.replace("callee=b", "callee=c")):
+            with self.assertRaises(ValueError):
+                inline_trace.parse_trace(prefix + changed, "caller")
+
     def test_identity_gate_accepts_only_timestamp_changes(self):
         original = struct.pack('<HHIIIHH', 0x14c, 1, 1, 0, 0, 0, 0) + b'\x55\x8b\xec\xc3'
         stamped = original[:4] + b'\xff' * 4 + original[8:]

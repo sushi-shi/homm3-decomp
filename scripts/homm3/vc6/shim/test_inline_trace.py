@@ -25,6 +25,14 @@ class InlineTraceTest(unittest.TestCase):
         self.assertIn("owner: void helper(int)", text)
         self.assertIn("<unresolved symbol c>", text)
 
+    def test_named_trace_distinguishes_pre_budget_rejection(self):
+        rows = ["sym a caller", "sym b helper", "main a cb=272",
+                "candidate root=a callee=b body_flags=00000000 callee_flags=0000032a",
+                "candidate root=a callee=b body_flags=00018000 callee_flags=0000032a"]
+        with patch("homm3.core.undname.demangle", return_value={}):
+            text = build._formatInlineTrace(rows)
+        self.assertEqual(text.count("Caller-state gate rejects helper before budget testing."), 1)
+
     def run_trace(self, *, changed_byte=False, missing_stream=False,
                   observed=True, registers=False, debug_path=False):
         with tempfile.TemporaryDirectory() as directory, ExitStack() as stack:

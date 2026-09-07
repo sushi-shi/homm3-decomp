@@ -439,6 +439,9 @@ void type_quest::load(TAbstractFile* file, int version)
 // removes the caller's EH sequence (33.5625%, 112 bytes versus retail 286).
 // Directly reading the deadline member loses the incoming-slot scratch and
 // scores 2.6771%. None supplies the missing inline boundaries.
+// /Ob1 is byte-identical to the configured /Ob2 body. /Os retains all
+// three _Tidy calls and uses __EH_prolog (30.4375%); retail retains only
+// the first cleanup and emits its prologue inline. Neither policy explains it.
 VA(0x0056ce50, 0x11E)  // anchor-vtable 0x64174c slot 12 + the chain from all eight leaf LoadFromMaps, retail-only
 void type_quest::loadFromMap(TAbstractFile* file)
 {
@@ -2805,6 +2808,11 @@ int TSeerHut::getValue(hero* currentHero)
 // (83.56%), and a two-string diagnostic reached 95.1173 with four _Tidy
 // calls against retail's three plus delete. These were instruments only;
 // no dead objects, synthetic carrier or inline fence belongs in this body.
+// The byte-verified native candidate trace now locates the refusal before
+// budget testing: C2 0x1a418..0x1a427 sees caller body flags 0 and callee
+// flags 0x568/0x5c8 for the two dialog helpers. Their 0x100 bits fail the
+// caller-state gate. hasExpired/getValue pass; changing cb or the budget
+// cannot remove this prior veto. See docs/vc6/inliner.md for the state test.
 // Main-branch controls additionally found dropping inline from GetRewardType
 // byte-flat. Its unframed early-no-quest variant measured 36.4529%; that
 // control does not settle source order after the helper expansions return.

@@ -523,6 +523,11 @@ def run_predict(args) -> int:
         caller = trace["caller"]
         print(f"[trace] caller cb {caller['cb']}, initial budget {caller['initial_budget']}; "
               f"{len(trace['sites'])} recorded budget tests; identical C2 object")
+        for candidate in trace.get("candidates", []):
+            if not candidate["state_gate_allows"]:
+                print(f"[trace] caller-state gate rejects {candidate['symbol']} "
+                      f"before budget testing (body flags {candidate['body_flags']:#x}, "
+                      f"callee flags {candidate['callee_flags']:#x})")
         print(f"[trace] {trace['directory']}/trace.json")
     print(f"[calls] base emits {sum(base_calls.values())} out-of-line call(s); "
           f"retail {sum(ref_calls.values())}")
