@@ -160,45 +160,55 @@ int mouseManager::main(message& msg)
 #endif  // @carcass
 
 // E:\gamedcs\mousemgr.cpp:445
-// Residual (82.9%): retail hoists the constant 0 into EBX for the
-// whole body (`push ebx; xor ebx,ebx`, then `cmp [esi+0x38],ebx`,
-// `cmp byte [0x69ca21],bl`, `cmp ecx,ebx`, `cmp eax,ebx`, the EH-state
-// store and the final latch clear all read it); this compile
-// materializes each zero at its use (`test eax,eax` after a load, an
-// immediate EH-state store). Constant-CSE / register-homing residual
-// family - every instruction outside it agrees, including the
-// `sub/neg/sbb/and` mask, which is what pinned the LoadFrame ternary
-// polarity: retail forces frame 0 for the ANIMATED set (field_4c ==
-// SPELL_SET) and passes new_frame for every other set, not the
-// reverse (`field_4c == SPELL_SET ? new_frame : 0` compiles to the
-// setne/dec mask instead and scored 77.1). A named `zero` used by the guard,
-// frame condition, ternary, and final byte clear is a negative control: it
-// falls to 78.87% and does not reproduce retail's back-end zero CSE.
-// `why-reg --model --il-order` measures 25 register-visible slots, finds the
-// same ESI/EDI first definitions, and classifies EBX's later zero pseudo as
-// outside the model's source-addressable B1 slice.
+// DC mousemgr.cpp:449-453 has three entry guard returns; lines 479-493
+// separately release the busy latch and return for a negative or unchanged
+// frame. Preserve these source exits even though VC6 merges their lock
+// destruction and final busy/latch cleanup in retail. Together they recover
+// the shared EBX zero and all 224 bytes (82.9333 -> 100%). Entry guards alone,
+// separate or combined, give 83.1333% and still lack that zero CSE. The former
+// named-zero control was 78.87%; this is a source-scope effect, not a request
+// for an artificial zero variable or an unexplained register-homing wall.
+// DC's Disable/Enable are read-only DisableCount helpers; their unused
+// returns disappear in retail. Preserve their calls around loading/cleanup,
+// together with the PC sprite disposal and busy-update order.
 // Before normalization (locals): new_frame, new_set.
 VA(0x0050cca0, 0xE0)  // anchor-global, dc 0xfeb1c
 void mouseManager::setPointer(int newFrame, mouseManager::EPointerSet newSet)
 {
     TCSLock lock(&m_sectionMouse);
-    if (m_status == 1 && m_noChangePointer == 0 && !g_mouseSetPointerBusy) {
-        g_mouseSetPointerBusy = 1;
-        m_busy++;
-        if (newSet != SAME_SET && newSet != m_set) {
-            m_set = newSet;
-            if (m_sprite)
-                m_sprite->dispose();
-            m_sprite = ResourceManager::getSprite(g_pointerSetSprites[m_set]);
-            m_frame = -1;
-        }
-        if (newFrame >= 0 && newFrame != m_frame) {
-            loadFrame(m_set == SPELL_SET ? 0 : newFrame);
-            update(1);
-        }
-        m_busy--;
-        g_mouseSetPointerBusy = 0;
+    if (m_status != 1)
+        return;
+    if (m_noChangePointer != 0)
+        return;
+    if (g_mouseSetPointerBusy)
+        return;
+    g_mouseSetPointerBusy = 1;
+    m_busy++;
+    disable();
+    if (newSet != SAME_SET && newSet != m_set) {
+        m_set = newSet;
+        if (m_sprite)
+            m_sprite->dispose();
+        m_sprite = ResourceManager::getSprite(g_pointerSetSprites[m_set]);
+        m_frame = -1;
     }
+    if (newFrame < 0) {
+        m_busy--;
+        enable();
+        g_mouseSetPointerBusy = 0;
+        return;
+    }
+    if (newFrame == m_frame) {
+        m_busy--;
+        enable();
+        g_mouseSetPointerBusy = 0;
+        return;
+    }
+    loadFrame(m_set == SPELL_SET ? 0 : newFrame);
+    enable();
+    update(1);
+    m_busy--;
+    g_mouseSetPointerBusy = 0;
 }
 
 #if 0  // @carcass
