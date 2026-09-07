@@ -409,6 +409,22 @@ TRmgGridPoint type_random_map::getSize()
     return TRmgGridPoint(m_mapWidth, m_mapHeight);
 }
 
+// Vtable 0x6409cc slots 5 and 6 index the 0x30-byte cell array with the
+// supplied x/y point. The two signed extracts select the six-bit land kind
+// and its adjacent eight-bit terrain frame from TRmgGroundTile.
+VA(0x005322C0, 0x2A)
+int type_random_map::getLand(const TRmgGridPoint& point)
+{
+    return m_mapItems[point.m_y * m_mapWidth + point.m_x].m_tile.m_landType;
+}
+
+VA(0x005322F0, 0x2A)
+int type_random_map::getOverlay(const TRmgGridPoint& point)
+{
+    return m_mapItems[point.m_y * m_mapWidth + point.m_x]
+        .m_tile.m_terrainFrame;
+}
+
 // Complete-only base of the road adapter, exact on the first scored candidate.
 // The derived deleting destructor at 0x532320 and one retail cleanup path call
 // this retained vptr restoration; Dreamcast has no RMG compiland.
