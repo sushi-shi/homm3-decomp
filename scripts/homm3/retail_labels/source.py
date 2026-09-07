@@ -456,6 +456,7 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "STREAMBUF_XSPUTN",
                  "PAIR_CONST_INT_DTOR", "PAIR_CTOR",
                  "STD_CONSTRUCT", "STD_COPY",
+                 "STD_DISTANCE", "STD_DISTANCE_TAGGED",
                  "CLASS_CTOR",
                  "IMPLICIT_COPY_CTOR", "IMPLICIT_COPY_ASSIGN",
                  "IMPLICIT_DTOR"}
@@ -1140,6 +1141,16 @@ def _demangle_key(mangled: str):
         return f"{tree_owner.lower()}@tree_init"
     if mangled.startswith("??4?$_Tree@") and tree_owner:
         return f"{tree_owner.lower()}@tree_copy_assign"
+    # Dinkumware's bidirectional `distance` path retains both the public
+    # three-argument wrapper and the tag-dispatched overload.  They have the
+    # same algorithm and tree owner, but the extra iterator-category argument
+    # removes one otherwise-redundant parameter store in VC6, so keep separate
+    # keys rather than relying on link order to identify the 43/40-byte pair.
+    if mangled.startswith("?_Distance@std@@") and tree_owner:
+        member = ("std_distance_tagged"
+                  if "Ubidirectional_iterator_tag@" in mangled
+                  else "std_distance")
+        return f"{tree_owner.lower()}@{member}"
     # The two bound searches. Same class, same 73-byte shape, and they
     # differ only in which way round the key compare runs, so they are
     # separate kinds for the same reason `_Copy` and `erase` are: a
@@ -2216,7 +2227,8 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             (kind for kind in ("std_sort_0", "std_sort", "std_median",
                                "std_unguarded_partition",
                                "std_unguarded_insert",
-                               "std_copy_backward", "std_fill")
+                               "std_copy_backward", "std_fill",
+                               "std_distance", "std_distance_tagged")
              if f"${kind}$" in row["name"]), None)
         if algorithm is not None:
             owner = row["name"].rsplit("$", 1)[1].lower()
