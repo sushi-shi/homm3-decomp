@@ -95,7 +95,6 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00546520	438		0.0	0.0	438.0	seg_0014	game_1466e0_sub02_146520	unscored
 0x004d2c90	435		0.0	0.0	435.0	seg_000d	game_bdc70_sub01_d2c90	unscored
 0x005b6e00	435		0.0	0.0	435.0	rmg_terrain	rmgTerrainPainter_checkSecondDiagonal	unscored
-0x005b4960	434		0.0	0.0	434.0	seg_001b	game_1b7690_sub00_1b4960	unscored
 0x005fdd60	433		0.0	0.0	433.0	seg_001f	game_1fd010_sub03_1fdd60	unscored
 0x0048bf00	429		34.7407	34.7407	429.0	customcampaign	__h3cg$customcampaign$vector_insert_single$unsigned_char	unscored
 0x00536200	428		0.0	0.0	428.0	seg_0013	game_objects_txt_136200	unscored
@@ -400,6 +399,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x0048a310	2846	66.44606	66.4461	79.2531	954.9451323999998	customcampaign	?Load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	non-exact
 0x004c3ef0	1176	67.558685	95.6972	95.7136	381.5098644	game	?readMapPlayerSlot@TPlayerSlotAttributes@CMapHeaderData@@QAEXPAVTAbstractFile@@H@Z	non-exact
 0x00437800	501	68.49701	99.8503	99.8503	157.82997989999998	ai_tactical	?get_attack_skill_value@type_AI_spellcaster@@QAEJPBVarmy@@0JJ@Z	non-exact
+0x005b4960	434	69.98039	69.9804	69.9804	130.2851074	rmg_terrain	?paintRectangle@rmgTerrainPainter@@QAEXIIII@Z	non-exact
 0x00514d80	644	73.32632	82.2717	82.2717	171.7784992	objecttype	?load@TObjectTypeTable@@QAEXPAD@Z	non-exact
 0x004ec460	111	73.333336	100.0	100.0	29.599997039999995	inputmgr	??0inputManager@@QAE@XZ	non-exact
 0x004dd2d0	5182	74.21898	75.4051	75.4051	1335.9724564	hero	?WindowHandler@THeroScreenWindow@@UAEHPAVmessage@@@Z	non-exact
