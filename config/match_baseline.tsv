@@ -3256,7 +3256,7 @@ rmg	?setTotal@TProgressSink@@UAEXH@Z	100.0000	100.0000	100.0000	0x130e80	1a97545
 rmg	?size@?$vector@UTRmgZoneConnection@@V?$allocator@UTRmgZoneConnection@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x14c1b0	-
 rmg	?traceZoneBoundary@type_random_map_generator@@QAEXPAUTRmgBoundaryVertex@@E@Z	86.6846	86.6846	86.6846	0x13c390	5f6a818cd691
 rmg	?unknownOperation@rmgHeroObject@@UAEXXZ	100.0000	100.0000	100.0000	0x133c70	12671cc1c8ff
-rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	93.2864	95.7066	95.7066	0x149cb0	d9e51f6131ce
+rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	93.2786	95.7066	95.7066	0x149cb0	d9e51f6131ce
 rmg	rmgOwnableObject_write	0.0000	0.0000	0.0000	0x133460	b87fd52c0b49
 rmg	type_random_map_canPlaceObject	0.0000	0.0000	0.0000	0x131cf0	e8611028f120
 rmg	type_random_map_generator_canPlaceShipyard	0.0000	0.0000	0.0000	0x141960	8d487be66fa8
@@ -3276,6 +3276,7 @@ rmg_support	?getPattern@TRmgLinePainter@@UAEPAXH@Z	100.0000	100.0000	100.0000	0x
 rmg_support	?getPattern@TRmgRoadLinePainter@@UAEPAXH@Z	100.0000	100.0000	100.0000	0x15f320	98bb0b228080
 rmg_support	?length@TRmgVector@@QBEHXZ	100.0000	100.0000	100.0000	0x1fceb0	a28cb81fb275
 rmg_terrain	??0TRmgGridPoint@@QAE@ABI0@Z	100.0000	100.0000	100.0000	0x1b76b0	-
+rmg_terrain	??0TRmgTableTerrainRule@@QAE@XZ	100.0000	100.0000	100.0000	0x1b3a20	419dcc552fab
 rmg_terrain	??0TRmgTerrainBrush@@QAE@PAVTRmgMapInterface@@HH@Z	100.0000	100.0000	100.0000	0x1b7250	e132b05a16e9
 rmg_terrain	??0rmgTerrainPainter@@QAE@PAVTRmgMapInterface@@HH@Z	97.9205	97.9205	97.9205	0x1b45f0	6594bbc64db0
 rmg_terrain	??1TRmgTerrainBrush@@QAE@XZ	78.6021	100.0000	100.0000	0x1b72f0	53c27631ac05

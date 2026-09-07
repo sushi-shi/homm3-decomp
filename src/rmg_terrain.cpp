@@ -41,6 +41,13 @@ int TRmgPatternTerrainRule::getEntry(int index)
     return m_entries[index].m_frame;
 }
 
+// The sole caller is the static initializer at 0x5b3da0. Retail clears the
+// two inherited rule flags and installs vtable 0x642cb0.
+VA(0x005B3A20, 0x11)  // Complete-only table terrain rule
+TRmgTableTerrainRule::TRmgTableTerrainRule()
+{
+}
+
 // Retail vtable 0x642cb0 slot 1 is this constant-false query.  The surrounding
 // constructor at 0x5b3a20, vtable, fixed-table methods, and the first admitted
 // painter method at 0x5b3dd0 place it in this Complete-only compiland.  There

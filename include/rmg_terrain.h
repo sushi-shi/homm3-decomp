@@ -103,6 +103,8 @@ public:
     unsigned char m_allowsSeparatedNeighbours; // +0x05
     char m_tailPadding[2];
 
+    TRmgTerrainRule()
+        : m_blendsWithOtherTerrain(0), m_allowsSeparatedNeighbours(0) {}
     virtual ~TRmgTerrainRule();
     // Before normalization (function): TRmgTerrainRule::HasEntries.
     virtual unsigned char hasEntries() = 0;
@@ -159,6 +161,7 @@ public:
 // whose remaining slots read the fixed transition table at 0x6424a8.
 class TRmgTableTerrainRule : public TRmgTerrainRule {
 public:
+    TRmgTableTerrainRule();
     virtual ~TRmgTableTerrainRule();
     // Before normalization (function): TRmgTableTerrainRule::HasEntries.
     virtual unsigned char hasEntries();
