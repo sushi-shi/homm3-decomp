@@ -6,11 +6,12 @@ HIST came from faithful source, an older source-false workaround, or a compiler
 state that the bounded sweep did not visit. A higher fuzzy score alone does not
 authorize a source change.
 
-This work is stacked on the CUR/MAX/HIST tooling PR. The initial manual tranche
+This work was developed on top of the CUR/MAX/HIST tooling changes. The initial manual tranche
 on 2026-09-07 used target-local disposable candidates and retained no synthetic
 declarations:
 
-The preceding random-include sweep covered all 128 original recovery targets
+Before integration onto the moved `decomp-complete-4.0`, the preceding
+random-include sweep covered all 128 original recovery targets
 with 100 TU-state samples each. It reproduced two already-banked MAX values but
 found no new peak, leaving 125 `MAX < HIST` rows for evidence-led manual work.
 The complete movement census is in [tu-state-sweep.md](tu-state-sweep.md).

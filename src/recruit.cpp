@@ -930,8 +930,8 @@ inline int exitRecruitUnit(message& msg)
 // regresses the body to 87.17%, so the semantic source order stays intact.
 // A target-local 240-trial follow-up on 2026-09-07 crossed the twelve
 // non-include Gruntz state families; every candidate remained at 99.0924%.
-// The 99.1111% HIST island is therefore not reachable through those parser-
-// state families, and no synthetic declaration or unsupported local is kept.
+// Those sampled states did not recover the 99.1111% HIST island; no
+// synthetic declaration or unsupported local is kept.
 VA(0x00550940, 0xA08)  // anchor-callee + switch-table bracket, dc 0x11a30c
 int recruitUnit::main(message& msg)
 {
