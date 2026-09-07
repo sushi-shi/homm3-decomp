@@ -4,15 +4,16 @@ import unittest
 
 from homm3.match.status import MatchRow
 from homm3.vc6.tu_state_sweep import (
-    affected_by_unit, bank_rows, insertion_for, insertions_for, insert_variant,
-    make_variants,
+    _initial_include_insertion, _project_header_pool, affected_by_unit,
+    bank_rows, insertion_for, insert_variant, make_variants,
 )
 
 
 class TuStateSweepTests(unittest.TestCase):
-    def test_groups_every_numeric_cur_below_hist(self):
+    def test_groups_every_numeric_max_below_hist(self):
         rows = {
             ("a", "low"): MatchRow(80, 90, 100),
+            ("a", "already-banked"): MatchRow(80, 100, 100),
             ("a", "equal"): MatchRow(100, 100, 100),
             ("b", "missing"): MatchRow(None, 80, 100),
             ("b", "low"): MatchRow(70, 70, 71),
@@ -30,27 +31,44 @@ class TuStateSweepTests(unittest.TestCase):
         self.assertTrue(text[offset:].startswith("\n// first evidence\n"))
         self.assertEqual(line, 4)
 
-    def test_grouped_trial_inserts_unique_forest_beside_each_function(self):
-        text = ("#include <x>\n\nint before;\n\n// first evidence\n"
+    def test_trial_inserts_one_include_block_for_the_whole_tu(self):
+        text = ("#include <x>\n#include \"already.h\"\n\nint before;\n\n// first evidence\n"
                 "VA(0x00400100, 4)\nvoid first() {}\n\n"
                 "// second evidence\nVA(0x00400200, 4)\nvoid second() {}\n")
-        insertions = insertions_for(text, (0x200, 0x100))
-        self.assertEqual([item[2] for item in insertions], [0x100, 0x200])
-        variant = make_variants(1, 20260906)[0]
-        candidate = insert_variant(text, insertions, variant)
-        self.assertIn("_RVA_00000100_FOREST_TYPEDEF_0", candidate)
-        self.assertIn("_RVA_00000200_FOREST_TYPEDEF_0", candidate)
-        self.assertLess(candidate.index("_RVA_00000100"),
-                        candidate.index("VA(0x00400100"))
-        self.assertLess(candidate.index("_RVA_00000200"),
-                        candidate.index("VA(0x00400200"))
+        offset, line = _initial_include_insertion(text)
+        variant = make_variants(
+            1, 20260906, "test", tuple(f"new{i}.h" for i in range(12)))[0]
+        candidate = insert_variant(text, ((offset, line, 0),), variant)
+        self.assertEqual(candidate.count("#line"), 1)
+        self.assertEqual(sum(candidate.count(f'#include "new{i}.h"')
+                             for i in range(12)),
+                         len(variant.body.splitlines()))
+        self.assertLess(candidate.index(variant.body), candidate.index("int before"))
+        self.assertGreater(candidate.index(variant.body),
+                           candidate.index('#include "already.h"'))
 
-    def test_forest_sequence_is_deterministic(self):
-        left = make_variants(30, 20260906)
-        right = make_variants(30, 20260906)
+    def test_include_sequence_is_deterministic_and_has_five_to_ten_headers(self):
+        headers = tuple(f"header{i}.h" for i in range(20))
+        left = make_variants(30, 20260906, "unit", headers)
+        right = make_variants(30, 20260906, "unit", headers)
         self.assertEqual(left, right)
-        self.assertEqual(left[1].tag, "0135282a-0002-ff93bdf3")
         self.assertEqual(len(left), 30)
+        self.assertTrue(all(5 <= len(item.body.splitlines()) <= 10
+                            for item in left))
+        self.assertTrue(all(len(set(item.body.splitlines())) ==
+                            len(item.body.splitlines()) for item in left))
+
+    def test_tu_specific_invalid_header_pairings_are_excluded(self):
+        self.assertNotIn(
+            "kbwin.h", _project_header_pool('#include "diff.h"\n', "diff"))
+        self.assertNotIn(
+            "resourcemanager_cache_result.h",
+            _project_header_pool(
+                '#include "singleselectionwindow_priv.h"\n',
+                "singleselectionwindow"))
+        self.assertNotIn(
+            "autostrptr.h",
+            _project_header_pool('#include "spells.h"\n', "spells"))
 
     def test_bank_keeps_cur_and_raises_hist_only_for_new_peak(self):
         hashed = ("u", "hashed")
