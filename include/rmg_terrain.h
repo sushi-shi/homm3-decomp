@@ -179,6 +179,11 @@ public:
     // required even though it has no separately located retail body.
     // Prior provisional role: GetTerrain
     int getTerrain(const TRmgGridPoint& point);
+    // Provisional dimension accessors inferred from paintTransitions' scalar
+    // loads and inline boundaries. Unused declarations are byte-neutral;
+    // the source calls restore all but one of its retained cache reads.
+    unsigned int getWidth() const;
+    unsigned int getHeight() const;
     // Prior provisional role: PaintTransitions
     void paintTransitions();
     // Prior provisional role: SelectBaseFrame

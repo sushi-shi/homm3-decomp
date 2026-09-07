@@ -6,11 +6,8 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00573670	1024	42.570988	46.3642	46.3642	549.2305920000001	seerhut	?doSeerEvent@TSeerHut@@QAEXPAVhero@@_N@Z	admitted
 0x0056cd00	335	25.626087	49.7043	49.7043	168.49059499999998	seerhut	?load@type_quest@@UAEXPAVTAbstractFile@@H@Z	admitted
 0x00506080	468	61.07879	62.3455	62.3455	176.22306	mapcell	??0CObjectType@@QAE@PAUTObjectType@@@Z	admitted
-0x00526d40	915	64.31193	64.3119	64.3119	326.546115	philai	??0type_spellvalue@@QAE@PBVhero@@@Z	admitted
+0x00526d40	915	64.3242	64.3242	64.3242	326.4335699999999	philai	??0type_spellvalue@@QAE@PBVhero@@@Z	admitted
 0x00583580	780	34.04054	67.9099	67.9099	250.30278000000007	singleselectionwindow	?updateGameVars@TSingleSelectionWindow@@QAEXXZ	admitted
-0x005b5a70	2215	42.021492	74.7623	74.7623	559.0150550000002	rmg_terrain	?paintTransitions@rmgTerrainPainter@@QAEXXZ	admitted
-0x0056fbc0	230	75.23529	75.2353	75.2353	56.958810000000014	seerhut	?doProgressDialog@type_artifact_quest@@UAEXXZ	admitted
-0x00431800	962	75.383835	75.3838	75.3838	236.8078440000001	ai_player	?considerHiring@@YI_NJPAVhero@@@Z	admitted
 0x004dd2d0	5182	74.21898	75.4051	75.4051	1274.5077179999998	hero	?windowHandler@THeroScreenWindow@@UAEHPAVmessage@@@Z	admitted
 0x004183d0	581	75.40796	75.408	75.408	142.87952	advmgr	?setEnvironmentOrigin@advManager@@QAEXUtype_point@@H@Z	admitted
 0x005f2a40	968	75.86364	75.8636	75.8636	233.64035199999992	victorylossconditions	?checkForDefeatedHeroLoss@LossConditionStruct@@QAEEPBVhero@@@Z	admitted
@@ -78,6 +75,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x00547880	1969	75.28175	83.7153	83.7153	320.6457429999999	rmg	?buildRoadCostMap@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	admitted
 0x00488fb0	1320	83.884796	83.8848	83.8848	212.72063999999995	customcampaign	?play@MapTextStruct@TCampaignBrief@@QAEXXZ	admitted
 0x00491140	447	83.924416	83.9477	83.9477	71.75378099999999	diff	?makeDiff@CDiffMaker@@QAEPAVCDiffFile@@AAK@Z	admitted
+0x005b5a70	2215	84.0645	84.0645	84.0645	352.97132500000004	rmg_terrain	?paintTransitions@rmgTerrainPainter@@QAEXXZ	admitted
 0x0055a250	753	84.10887	84.1089	84.1089	119.65998299999994	resourcemanager	?open@ResourceManager@@YI_N_N0PAH@Z	admitted
 0x00602dc0	759	84.1098	84.1098	84.1098	120.60661799999991	winmgr	?fizzleForwardX@heroWindowManager@@QAEXHHHHH@Z	admitted
 0x00491050	237	84.166664	84.1667	84.1667	37.524920999999985	diff	?findNextSame@CDiffMaker@@IAE_NHHAAH0@Z	admitted
@@ -184,6 +182,7 @@ va	size	current	maximum	historical	remaining_bytes	unit	function	state
 0x0059ec50	2728	89.8044	89.8044	89.8044	278.1359679999998	spells	?initiateSpell@combatManager@@QAEXHH@Z	admitted
 0x004b2da0	587	89.81768	89.8177	89.8177	59.770101	findpath	?seedCombatPosition@searchArray@@QAEXPBVarmy@@JJEJ@Z	admitted
 0x004805e0	4892	89.831535	89.8315	89.8315	497.4430199999996	cursor	?moveHero@advManager@@QAEPAVNewmapCell@@HEPAUtype_point@@PAHE1E@Z	admitted
+0x0056fbc0	230	89.8471	89.8471	89.8471	23.351669999999995	seerhut	?doProgressDialog@type_artifact_quest@@UAEXXZ	admitted
 0x00577de0	552	89.87116	89.8712	89.8712	55.91097599999996	singleselectionwindow	?tick@t_map_list_update@@UAEXXZ	admitted
 0x004bf780	1762	90.03148	90.0315	90.0315	175.64497000000003	game	?validateVictoryLossConditions@game@@QAEXE@Z	admitted
 0x0040d3f0	636	90.075	90.075	90.075	63.12299999999997	advmgr	?getCreatureBankHelpText@@YIXPADPAVNewmapCell@@W4type_creature_bank_type@@JPBDE@Z	admitted

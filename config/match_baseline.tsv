@@ -331,7 +331,7 @@ ai_player	?checkTowns@type_town_threat_checker@@QAEXXZ	100.0000	100.0000	100.000
 ai_player	?checkTradeSupply@type_AI_player@@QAE_NPBHJPAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	85.8333	85.8333	85.8333	0x2a2b0	06958639ee9e
 ai_player	?chooseWeakestArmy@type_AI_creature_swapper@@IAEJ_N0@Z	88.3357	88.3357	88.3357	0x2c690	6a8bd4402e8b
 ai_player	?clearMarks@type_town_threat_checker@@UAEXXZ	100.0000	100.0000	100.0000	0x28260	1072ee740594
-ai_player	?considerHiring@@YI_NJPAVhero@@@Z	75.3838	75.3838	75.3838	0x31800	f3e3ab21da1b
+ai_player	?considerHiring@@YI_NJPAVhero@@@Z	100.0000	100.0000	100.0000	0x31800	45ef5c08b1a7
 ai_player	?doBestPurchase@type_AI_creature_purchaser@@IAEJE@Z	97.2740	97.2740	97.2740	0x2d420	a3ed451129b2
 ai_player	?doBestSwap@type_AI_creature_swapper@@IAEJ_N@Z	100.0000	100.0000	100.0000	0x2c280	0bdc24bffc16
 ai_player	?doPurchase@type_AI_creature_purchaser@@QAEXPAVarmyGroup@@F0PAJEE@Z	100.0000	100.0000	100.0000	0x2d690	89652b2a3ee8
@@ -2845,7 +2845,7 @@ path	?oppositeDirection@@YIHH@Z	100.0000	100.0000	100.0000	0x123ec0	764af991f2cd
 path	?validAttack@army@@QBEHHHHHPAH@Z	81.0407	81.0407	81.0407	0x123bb0	77871450a576
 path	?validPath@army@@QAEEHE@Z	95.7377	100.0000	100.0000	0x123a70	d466221a3738
 philai	??0philAI@@QAE@XZ	100.0000	100.0000	100.0000	0x124360	b6d1fdc67350
-philai	??0type_spellvalue@@QAE@PBVhero@@@Z	64.3119	64.3119	64.3119	0x126d40	af684a9bbd0e
+philai	??0type_spellvalue@@QAE@PBVhero@@@Z	64.3242	64.3242	64.3242	0x126d40	1b84b690b85c
 philai	?_Unguarded_insert@std@@YIXPAUtype_creature_value@@U2@U?$greater@Utype_creature_value@@@1@@Z	100.0000	100.0000	100.0000	0x12bd50	-
 philai	?aiBribeMonsters@@YIEPBVhero@@PAVNewmapCell@@W4TCreatureType@@FJ@Z	100.0000	100.0000	100.0000	0x127f60	591ffc11013c
 philai	?aiChooseMagicSkill@@YIHPAVhero@@@Z	100.0000	100.0000	100.0000	0x127cd0	6dd29ce00f8b
@@ -3279,7 +3279,7 @@ rmg_terrain	?isVerticalGap@rmgTerrainPainter@@QAEEABUTRmgGridPoint@@H@Z	100.0000
 rmg_terrain	?paintPoint@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x1b4b20	1e8d784f5410
 rmg_terrain	?paintRectangle@TRmgTerrainBrush@@QAEXIIII@Z	100.0000	100.0000	100.0000	0x1b7690	2e230eeb2b4b
 rmg_terrain	?paintRectangle@rmgTerrainPainter@@QAEXIIII@Z	69.9804	69.9804	69.9804	0x1b4960	31acc1f13cc2
-rmg_terrain	?paintTransitions@rmgTerrainPainter@@QAEXXZ	74.7320	74.7623	74.7623	0x1b5a70	11528afd33c5
+rmg_terrain	?paintTransitions@rmgTerrainPainter@@QAEXXZ	84.0645	84.0645	84.0645	0x1b5a70	0b7316a9d9ed
 rmg_terrain	?queueOtherTerrainNeighbours@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	63.6299	63.6299	63.6299	0x1b50f0	5f7770ec945d
 rmg_terrain	?repairTerrainPoint@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	82.8347	82.8347	82.8347	0x1b5440	e1eba4c84348
 rmg_terrain	?selectTerrainTransition@@YIHPBHPAUTRmgTerrainFlip@@@Z	100.0000	100.0000	100.0000	0x1b3e80	e20e360ba25b
@@ -3381,7 +3381,7 @@ seerhut	??_Gtype_quest@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x16cbe0	-
 seerhut	?_Ufill@?$vector@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@IAEXPAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@IABV32@@Z	100.0000	100.0000	100.0000	0xaf840	-
 seerhut	?createQuest@@YIPAVtype_quest@@HE@Z	100.0000	100.0000	100.0000	0x173240	78029654310a
 seerhut	?doEvent@TQuestGuard@@QAEXPAVhero@@_NPAVNewmapCell@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x172b60	3bfec194735f
-seerhut	?doProgressDialog@type_artifact_quest@@UAEXXZ	75.2353	75.2353	75.2353	0x16fbc0	eb1351b252a6
+seerhut	?doProgressDialog@type_artifact_quest@@UAEXXZ	89.8471	89.8471	89.8471	0x16fbc0	99bb442c1d15
 seerhut	?doProgressDialog@type_be_hero_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x171fc0	906d0902fde5
 seerhut	?doProgressDialog@type_belong_to_player_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x1725b0	a91f7fe1343c
 seerhut	?doProgressDialog@type_creature_quest@@UAEXXZ	99.5679	99.5679	99.5679	0x170b80	f618e2a584a5

@@ -5700,76 +5700,52 @@ int canBuy(const town* currTown, int buildingId);
 long aiGetArtifactPlayerValue(const type_artifact& artifact,
                                   long playerId);
 
-// Residual (75.38%): all phases and the call census agree except one
-// nested inline decision - retail's phase-1 copy of
-// AI_get_artifact_player_value CALLS game::GetHero out of line while both
-// our copy and the (exact) standalone helper expand the game.h inline; a
-// statement pin cannot split a nested callee per context. Measured negative
-// controls: inline_depth(1) around the backpack call and inline_depth(0)
-// around GetHero inside the exact standalone helper were both byte-flat at
-// 75.38 and left the 15/16 call census unchanged. The remaining 44/41-block
-// and ebx-total register-homing family is therefore a genuine caller-context
-// inliner wall, not a missing phase.
-// E:\gamedcs\ai_player.cpp:4476
-// Prices the candidate: every artifact valued on the player's best hero
-// (backpack expands the helper, worn slots call it with extra reset to -1
-// by the default ctor), the army priced through the traits cost columns
-// against the player's per-resource doubles, then the best unoccupied
-// town - building its tavern if it must and can - is compared against a
-// numHeroes * gold-value * gHeroGoldCost bar seeded as the initial best.
-// 2026-09-06, polish lane 36, the DC LOCAL-SCOPE SWEEP: the block names four
-// locals - creature_cost (CodeView 0x402f = `const short*`), search_array,
-// `player` as an L-VALUE REFERENCE (0x293c) and base_value.  Both reachable
-// spellings measured and rejected against 75.3838: `playerData& player =
-// gpGame->players[player_id];` with every use through `.` is BYTE-FLAT, and
-// naming the traits cost row (`const int* creature_cost =
-// akCreatureTypeTraits[type].cost;`) costs 0.05 (75.3333).  The inliner wall
-// the note above describes is untouched by either.
+// E:\gamedcs\ai_player.cpp:4476. Dreamcast names the player reference,
+// creature_cost row, search_array and total_artifact_value call. Restore
+// that canonical helper instead of duplicating its two artifact loops here:
+// VC6 naturally retains getHero in the backpack expansion and calls
+// aiGetArtifactPlayerValue for equipped slots, without the old statement pin.
+// The creature cost row is int-width in retail (DC uses short); define it
+// before converting the troop count, initialize bestTown before searchArray,
+// and carry the initial hiring threshold in the same bestValue updated by
+// the town search. Together these reproduce the retail function at 100%.
+// Negative controls: flattened artifact loops plus the old pin give 75.3838;
+// restoring the helper alone gives 89.7071. A separate threshold leaves
+// 92.0808 with early bestTown alone; from the single-bestValue form (95.8822),
+// omitting early bestTown gives 98.4815 and omitting creatureCost gives
+// 97.4007. The pointer spelling of player is byte-identical, but the reference
+// retains the positive DC type. Before normalization: creature_cost,
+// search_array, player_id. Earlier pin/scope probes used flattened loops and
+// do not establish a caller-context inliner limitation.
 VA(0x00431800, 0x3c2)  // anchor-callee unique (town::hire), dc 0x354bc
 bool considerHiring(long playerId, hero* candidate)
 {
-    long total = 0;
-    playerData* player = &g_game->m_players[playerId];
+    playerData& player = g_game->m_players[playerId];
+    long total = totalArtifactValue(candidate, playerId);
     int slot;
-    for (slot = 0; slot < HERO_BACKPACK_CAPACITY; ++slot) {
-        type_artifact probe;
-        probe.m_artifactId = candidate->m_backpack[slot].m_artifactId;
-        total += aiGetArtifactPlayerValue(probe, playerId);
-    }
-    for (slot = 0; slot < 19; ++slot) {
-        type_artifact probe;
-        probe.m_artifactId = candidate->m_equipped[slot].m_artifactId;
-        // Retail expands the helper into the backpack loop above but CALLS
-        // it here - the statement pin imposes the second decision.
-#pragma inline_depth(0)
-        total += aiGetArtifactPlayerValue(probe, playerId);
-#pragma inline_depth()
-    }
-
     for (slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
         TCreatureType type = candidate->m_army.m_armyTypes[slot];
         if (type != CREATURE_NONE) {
+            const int* creatureCost = g_creatureTypeTraits[type].m_cost;
             double troops = candidate->m_army.m_numTroops[slot];
-            const TCreatureTypeTraits& traits = g_creatureTypeTraits[type];
             for (int resource = 0; resource < 7; ++resource)
                 total = static_cast<long>(
-                    traits.m_cost[resource]
-                    * player->m_ai.m_resourceValue[resource] * troops + total);
+                    creatureCost[resource]
+                    * player.m_ai.m_resourceValue[resource] * troops + total);
         }
     }
 
+    town* bestTown = 0;
     searchArray currentSearchArray;
-    long threshold = static_cast<long>(
-        static_cast<double>(player->m_numHeroes)
-        * player->m_ai.m_resourceValue[GOLD] * g_heroGoldCost);
-    if (threshold > total
-        && player->m_resources[GOLD] < player->m_numHeroes * g_heroGoldCost)
+    long bestValue = static_cast<long>(
+        static_cast<double>(player.m_numHeroes)
+        * player.m_ai.m_resourceValue[GOLD] * g_heroGoldCost);
+    if (bestValue > total
+        && player.m_resources[GOLD] < player.m_numHeroes * g_heroGoldCost)
         return 0;
 
-    long bestValue = threshold;
-    town* bestTown = 0;
-    for (int i = 0; i < player->m_numTowns; ++i) {
-        town* currentTown = g_game->getTown(player->m_townIds[i]);
+    for (int i = 0; i < player.m_numTowns; ++i) {
+        town* currentTown = g_game->getTown(player.m_townIds[i]);
         if (currentTown->m_visitingHeroId >= 0)
             continue;
         long value = total;
@@ -5793,7 +5769,7 @@ bool considerHiring(long playerId, hero* candidate)
     if (!bestTown->hasBuilding(TAVERN_ID, 1)) {
         if (!bestTown->buyBuilding(TAVERN_ID))
             return 0;
-        if (player->m_resources[GOLD] < g_heroGoldCost)
+        if (player.m_resources[GOLD] < g_heroGoldCost)
             return 0;
     }
     bestTown->hire(candidate, playerId);

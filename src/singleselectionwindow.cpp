@@ -3758,6 +3758,13 @@ int TSingleSelectionWindow::getHeader(char* dir, char* filename, GameSelectionHe
 // header pointer follows retail's materialized base across the copy bands
 // (34.0405% versus 34.1577% with direct member expressions); no guessed
 // assertion or synthetic helper is used to steer these remaining boundaries.
+// The verified trace gives the second base assignment cost 315 and budget
+// 325. Expanding it leaves only 10 for the two string operators. Resolving
+// the row separately for setup/availability, then retaining only its
+// description through AssignData/SetText, reaches 58.8784% (976 bytes) but
+// reloads currentMap and SelectionHeaders between the copy bands; retail
+// retains one row address there. Moving the selected reference after those
+// two copies also fails (0.0%, 1040 bytes, confirmed symbol pairing).
 // E:\gamedcs\singleselectionwindow.cpp:3871
 VA(0x00583580, 0x30C)  // anchor-global copies the selected header's planes into gpGame (+0x1f6a0 header band, +0x4df18 setup band) off the SelectionHeaders row - the DC UpdateGameVars body shape; size 0.76x dc 0x408, dc 0x139090
 void TSingleSelectionWindow::updateGameVars()
