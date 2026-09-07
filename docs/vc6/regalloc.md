@@ -77,6 +77,19 @@ under wine.
 
 ## 2. Address ledger (C2.DLL 12.00.8447, RVAs)
 
+<!-- c2-role: site 0x8be6c rebindRegisterPreferenceLoop -->
+<!-- c2-role: site 0x8c1dc chooseCandidateRegister -->
+<!-- c2-role: global 0xa09f0 initialRegisterPreferenceOrder -->
+<!-- c2-role: global 0xadff4 registerPreferenceOrder -->
+<!-- c2-role: global 0x9d6ec registerBindings -->
+<!-- c2-role: global 0x9d6c8 registerConflictSets -->
+<!-- c2-role: global 0xac730 registerDescriptors -->
+<!-- c2-role: global 0xa9194 registerEncodingNames -->
+
+These inferred role labels are supported by the reads and probes below.
+The two code labels name observation sites, not recovered function starts;
+their physical intervals may be fragments of larger compiler functions.
+
 | what | where | evidence |
 |---|---|---|
 | preference table, const `{1,2,3,7,8,4,6,0}` | `.rdata 0xa09f0..0xa0a10` | imm scan; begin/end pointer pair at `0xa0a14/0xa0a18` |
@@ -339,6 +352,15 @@ compiled by the pinned SP3 CL at the game profile (`build/p30/sibprobe*.cpp`):
    LATER takes the BASE slot, and a loop counter's birth position is moved
    by hoisting or sinking its declaration's INITIALISER (a bare declaration
    is still inert, per section 3).
+
+   `type_random_map_generator::placeBorderObject` (0x540d60) supplies another
+   measured reuse case. Its two prototype searches and guard-placement loop
+   share one index. Giving the third loop a separate `guardIndex` changes
+   only the byte-vector SIB bytes at 0x540f6a and 0x540f9e; naming the vector
+   bases or using `begin()[index]` is neutral. Reusing the first index closes
+   all 598 raw bytes, including five resolved relocations. Reusing the
+   prototype/water index in the shipyard caller is neutral, so this remains
+   a site-specific lifetime effect rather than a universal loop spelling.
 
    Bounds measured the same lane, all byte-flat: on
    `ai_player::fill_prohibited_array` (base `[gpGame + player_index]` vs
