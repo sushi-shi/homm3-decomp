@@ -42,26 +42,28 @@
 #include "resourcemanager.h"
 #include "smackmgr.h"
 
-static int get_team(game* thisGame, int playerNum)
+// Before normalization (function): get_team.
+static int getTeam(game* thisGame, int playerNum)
 {
     if (playerNum < 0)
         return playerNum;
-    return thisGame->mapHeader.teamInfo[playerNum];
+    return thisGame->m_mapHeader.m_teamInfo[playerNum];
 }
 
-inline NewmapCell* game::get_cell(type_point point)
+inline NewmapCell* game::getCell(type_point point)
 {
-    return worldMap.cell(point);
+    return m_worldMap.cell(point);
 }
 
 // E:\gamedcs\mapcell.cpp:1119. Dreamcast retains this source helper as an
 // out-of-line SH4 body; Complete expands it into every admitted retail use.
-inline type_point CObject::get_trigger() const
+inline type_point CObject::getTrigger() const
 {
-    int result_x;
-    int result_y;
-    FindTrigger(result_x, result_y);
-    return type_point(result_x, result_y, z);
+    // Before normalization (locals): result_x, result_y.
+    int resultX;
+    int resultY;
+    findTrigger(resultX, resultY);
+    return type_point(resultX, resultY, m_z);
 }
 
 #if 0  // @carcass -- located/reconstruction-pending bodies
@@ -70,16 +72,16 @@ inline type_point CObject::get_trigger() const
 #endif  // @carcass
 
 VA(0x004fbf90, 0x61)  // anchor-global, dc 0xeb6a4
-void ExtraInfoUnion::SetCellVisited(short player)
+void ExtraInfoUnion::setCellVisited(short player)
 {
     if (player < 0 || player >= 8)
         return;
 
-    int team = get_team(gpGame, player);
+    int team = getTeam(g_game, player);
 
     for (int i = 0; i < 8; ++i) {
-        if (gpGame->mapHeader.teamInfo[i] == team)
-            cell_visited_info.visited |= 1 << i;
+        if (g_game->m_mapHeader.m_teamInfo[i] == team)
+            m_cellVisitedInfo.m_visited |= 1 << i;
     }
 }
 
@@ -97,12 +99,12 @@ VA(0x004fc000, 0x19A)  // order-map: Read-only caller, loop stride 0x34 calling 
 int NewfullMap::readTimedEventList(TAbstractFile* infile, int saveVersion)
 {
     int count;
-    if (infile->Read(&count, sizeof(count)) < sizeof(count))
+    if (infile->read(&count, sizeof(count)) < sizeof(count))
         return -1;
 
-    TimedEventList.resize(count);
-    for (unsigned int i = 0; i < TimedEventList.size(); ++i) {
-        if (TimedEventList[i].Read(infile, saveVersion) < 0)
+    m_timedEventList.resize(count);
+    for (unsigned int i = 0; i < m_timedEventList.size(); ++i) {
+        if (m_timedEventList[i].read(infile, saveVersion) < 0)
             return -1;
     }
     return 0;
@@ -129,13 +131,13 @@ int NewfullMap::readTimedEventList(TAbstractFile* infile, int saveVersion)
 // boundary game::LoadGarrisonPool uses for its removable-units flag; below it
 // the flag is forced on rather than read.
 VA(0x004fc1a0, 0x1EE)  // order-map: callers readTimedEventList + readTownData (inlined TTownEvent::Read), calls readString 0x4c6010; EH-bearing, dc 0xeb7d0
-int TTimedEvent::Read(TAbstractFile* infile, int saveVersion)
+int TTimedEvent::read(TAbstractFile* infile, int saveVersion)
 {
     std::string ignored;
     readMapString(infile, &ignored);
-    readMapString(infile, &Message);
+    readMapString(infile, &m_message);
 
-    if (infile->Read(ResQty, sizeof(ResQty)) < sizeof(ResQty))
+    if (infile->read(m_resQty, sizeof(m_resQty)) < sizeof(m_resQty))
         return -1;
     // THE PIN GOES HERE, NOT ON THE TAIL `return 0` (72.9210 -> 99.4737,
     // 2026-08-20).  The note at the bottom of this body had the census right
@@ -146,30 +148,30 @@ int TTimedEvent::Read(TAbstractFile* infile, int saveVersion)
     // expand the refcount-decrement chain in place.  Ours matched sites one
     // and three and expanded site TWO, so exactly one `return -1` was over-
     // inlined.  `#pragma inline_depth(0)` on that statement alone, +26.55.
-    if (infile->Read(&PlayerFlags, sizeof(PlayerFlags)) < sizeof(PlayerFlags))
+    if (infile->read(&m_playerFlags, sizeof(m_playerFlags)) < sizeof(m_playerFlags))
 #pragma inline_depth(0)
         return -1;
 #pragma inline_depth()
 
     if (saveVersion >= 28) {
         unsigned char value;
-        infile->Read(&value, sizeof(value));
-        ApplyToHuman = value != 0;
+        infile->read(&value, sizeof(value));
+        m_applyToHuman = value != 0;
     } else {
-        ApplyToHuman = 1;
+        m_applyToHuman = 1;
     }
 
-    if (infile->Read(&ApplyToComputer, sizeof(ApplyToComputer))
-        < sizeof(ApplyToComputer))
+    if (infile->read(&m_applyToComputer, sizeof(m_applyToComputer))
+        < sizeof(m_applyToComputer))
         return -1;
-    if (infile->Read(&FirstTime, sizeof(FirstTime)) < sizeof(FirstTime))
+    if (infile->read(&m_firstTime, sizeof(m_firstTime)) < sizeof(m_firstTime))
         return -1;
-    ++FirstTime;
-    if (infile->Read(&Interval, sizeof(Interval)) < sizeof(Interval))
+    ++m_firstTime;
+    if (infile->read(&m_interval, sizeof(m_interval)) < sizeof(m_interval))
         return -1;
 
     unsigned char padding[16];
-    if (infile->Read(padding, sizeof(padding)) < sizeof(padding))
+    if (infile->read(padding, sizeof(padding)) < sizeof(padding))
         return -1;
     // MEASURED AND REJECTED: `#pragma inline_depth(0)` on this `return`,
     // 72.9210 -> 67.0263.  It was the right lever at the wrong site - see
@@ -190,13 +192,13 @@ int TTimedEvent::Read(TAbstractFile* infile, int saveVersion)
 VA(0x004fc390, 0xA5)  // order-map: Save-only caller, loop calling TTimedEvent::Save 0xfc440, dc 0xeb9a0
 int NewfullMap::saveTimedEventList(TAbstractFile* outfile)
 {
-    int count = TimedEventList.size();
-    if (static_cast<unsigned>(outfile->Write(&count, sizeof(count)))
+    int count = m_timedEventList.size();
+    if (static_cast<unsigned>(outfile->write(&count, sizeof(count)))
         < sizeof(count))
         return -1;
 
-    for (unsigned int i = 0; i < TimedEventList.size(); ++i) {
-        if (TimedEventList[i].Save(outfile) < 0)
+    for (unsigned int i = 0; i < m_timedEventList.size(); ++i) {
+        if (m_timedEventList[i].save(outfile) < 0)
             return -1;
     }
     return 0;
@@ -204,24 +206,24 @@ int NewfullMap::saveTimedEventList(TAbstractFile* outfile)
 
 // E:\gamedcs\mapcell.cpp:148
 VA(0x004fc440, 0xB7)  // exact timed-event serialization, dc 0xeba38
-int TTimedEvent::Save(TAbstractFile* outfile)
+int TTimedEvent::save(TAbstractFile* outfile)
 {
-    if (game::saveString(outfile, &Message) < 0)
+    if (game::saveString(outfile, &m_message) < 0)
         return -1;
-    if (static_cast<unsigned>(outfile->Write(ResQty, sizeof(ResQty)))
-        < sizeof(ResQty))
+    if (static_cast<unsigned>(outfile->write(m_resQty, sizeof(m_resQty)))
+        < sizeof(m_resQty))
         return -1;
-    if (static_cast<unsigned>(outfile->Write(&PlayerFlags, 1)) < 1)
+    if (static_cast<unsigned>(outfile->write(&m_playerFlags, 1)) < 1)
         return -1;
 
-    unsigned char count = ApplyToHuman;
-    outfile->Write(&count, 1);
+    unsigned char count = m_applyToHuman;
+    outfile->write(&count, 1);
 
-    if (static_cast<unsigned>(outfile->Write(&ApplyToComputer, 1)) < 1)
+    if (static_cast<unsigned>(outfile->write(&m_applyToComputer, 1)) < 1)
         return -1;
-    if (static_cast<unsigned>(outfile->Write(&FirstTime, 2)) < 2)
+    if (static_cast<unsigned>(outfile->write(&m_firstTime, 2)) < 2)
         return -1;
-    return static_cast<unsigned>(outfile->Write(&Interval, 2)) < 2 ? -1 : 0;
+    return static_cast<unsigned>(outfile->write(&m_interval, 2)) < 2 ? -1 : 0;
 }
 
 // E:\gamedcs\mapcell.cpp:179
@@ -235,12 +237,12 @@ VA(0x004fc500, 0x19A)  // order-map: Load-only caller, twin of 0xfc000, loop cal
 int NewfullMap::loadTimedEventList(TAbstractFile* infile, int saveVersion)
 {
     int count;
-    if (infile->Read(&count, sizeof(count)) < sizeof(count))
+    if (infile->read(&count, sizeof(count)) < sizeof(count))
         return -1;
 
-    TimedEventList.resize(count);
-    for (unsigned int i = 0; i < TimedEventList.size(); ++i) {
-        if (TimedEventList[i].Load(infile, saveVersion) < 0)
+    m_timedEventList.resize(count);
+    for (unsigned int i = 0; i < m_timedEventList.size(); ++i) {
+        if (m_timedEventList[i].load(infile, saveVersion) < 0)
             return -1;
     }
     return 0;
@@ -255,36 +257,36 @@ int NewfullMap::loadTimedEventList(TAbstractFile* infile, int saveVersion)
 // it on; the new byte is read without a short-read gate, matching Save's
 // intentionally unchecked write. All other fields retain strict byte counts.
 VA(0x004fc6a0, 0xC8)  // order-map: callers loadTimedEventList + loadTownEventList (inlined TTownEvent::Load), calls loadString 0x4bb990, dc 0xebbbc
-int TTimedEvent::Load(TAbstractFile* infile, int saveVersion)
+int TTimedEvent::load(TAbstractFile* infile, int saveVersion)
 {
-    if (loadString(infile, &Message) < 0)
+    if (loadString(infile, &m_message) < 0)
         return -1;
-    if (static_cast<unsigned>(infile->Read(ResQty, sizeof(ResQty)))
-        < sizeof(ResQty))
+    if (static_cast<unsigned>(infile->read(m_resQty, sizeof(m_resQty)))
+        < sizeof(m_resQty))
         return -1;
-    if (static_cast<unsigned>(infile->Read(&PlayerFlags, 1)) < 1)
+    if (static_cast<unsigned>(infile->read(&m_playerFlags, 1)) < 1)
         return -1;
 
     if (saveVersion >= 42) {
         unsigned char count;
-        infile->Read(&count, 1);
-        ApplyToHuman = count != 0;
+        infile->read(&count, 1);
+        m_applyToHuman = count != 0;
     } else {
-        ApplyToHuman = 1;
+        m_applyToHuman = 1;
     }
 
-    if (static_cast<unsigned>(infile->Read(&ApplyToComputer, 1)) < 1)
+    if (static_cast<unsigned>(infile->read(&m_applyToComputer, 1)) < 1)
         return -1;
-    if (static_cast<unsigned>(infile->Read(&FirstTime, 2)) < 2)
+    if (static_cast<unsigned>(infile->read(&m_firstTime, 2)) < 2)
         return -1;
-    return static_cast<unsigned>(infile->Read(&Interval, 2)) < 2 ? -1 : 0;
+    return static_cast<unsigned>(infile->read(&m_interval, 2)) < 2 ? -1 : 0;
 }
 
 #if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\mapcell.cpp:232
 DC_ONLY(0xebc90, 0x92)
-int TTownEvent::Read(void* infile)
+int TTownEvent::read(void* infile)
 {
     // @stub
 }
@@ -295,19 +297,19 @@ int TTownEvent::Read(void* infile)
 VA(0x004fc770, 0xFA)  // order-map: Save-only caller, calls TTimedEvent::Save 0xfc440 (TTownEvent::Save inlined), dc 0xebd24
 int NewfullMap::saveTownEventList(TAbstractFile* outfile)
 {
-    int count = TownEventList.size();
-    if (static_cast<unsigned>(outfile->Write(&count, sizeof(count)))
+    int count = m_townEventList.size();
+    if (static_cast<unsigned>(outfile->write(&count, sizeof(count)))
         < sizeof(count))
         return -1;
 
-    for (unsigned int i = 0; i < TownEventList.size(); ++i) {
-        TTownEvent& thisEvent = TownEventList[i];
-        thisEvent.TTimedEvent::Save(outfile);
-        if (static_cast<unsigned>(outfile->Write(&thisEvent.TownNum, 1)) < 1)
+    for (unsigned int i = 0; i < m_townEventList.size(); ++i) {
+        TTownEvent& thisEvent = m_townEventList[i];
+        thisEvent.TTimedEvent::save(outfile);
+        if (static_cast<unsigned>(outfile->write(&thisEvent.m_townNum, 1)) < 1)
             return -1;
-        if (static_cast<unsigned>(outfile->Write(&thisEvent.BuildBuildings, 8)) < 8)
+        if (static_cast<unsigned>(outfile->write(&thisEvent.m_buildBuildings, 8)) < 8)
             return -1;
-        if (static_cast<unsigned>(outfile->Write(thisEvent.generatorBonuses, 14)) < 14)
+        if (static_cast<unsigned>(outfile->write(thisEvent.m_generatorBonuses, 14)) < 14)
             return -1;
     }
     return 0;
@@ -317,7 +319,7 @@ int NewfullMap::saveTownEventList(TAbstractFile* outfile)
 
 // E:\gamedcs\mapcell.cpp:283
 DC_ONLY(0xebdbc, 0x7E)
-int TTownEvent::Save(void* outfile)
+int TTownEvent::save(void* outfile)
 {
     // @stub
 }
@@ -332,18 +334,18 @@ VA(0x004fc870, 0x1E4)  // order-map: Load-only caller, calls TTimedEvent::Load 0
 int NewfullMap::loadTownEventList(TAbstractFile* infile, int saveVersion)
 {
     int count;
-    if (infile->Read(&count, sizeof(count)) < sizeof(count))
+    if (infile->read(&count, sizeof(count)) < sizeof(count))
         return -1;
 
-    TownEventList.resize(count);
-    for (unsigned int i = 0; i < TownEventList.size(); ++i) {
-        TTownEvent& thisEvent = TownEventList[i];
-        thisEvent.TTimedEvent::Load(infile, saveVersion);
-        if (static_cast<unsigned>(infile->Read(&thisEvent.TownNum, 1)) < 1)
+    m_townEventList.resize(count);
+    for (unsigned int i = 0; i < m_townEventList.size(); ++i) {
+        TTownEvent& thisEvent = m_townEventList[i];
+        thisEvent.TTimedEvent::load(infile, saveVersion);
+        if (static_cast<unsigned>(infile->read(&thisEvent.m_townNum, 1)) < 1)
             return -1;
-        if (static_cast<unsigned>(infile->Read(&thisEvent.BuildBuildings, 8)) < 8)
+        if (static_cast<unsigned>(infile->read(&thisEvent.m_buildBuildings, 8)) < 8)
             return -1;
-        if (static_cast<unsigned>(infile->Read(thisEvent.generatorBonuses, 14)) < 14)
+        if (static_cast<unsigned>(infile->read(thisEvent.m_generatorBonuses, 14)) < 14)
             return -1;
     }
     return 0;
@@ -353,7 +355,7 @@ int NewfullMap::loadTownEventList(TAbstractFile* infile, int saveVersion)
 
 // E:\gamedcs\mapcell.cpp:329
 DC_ONLY(0xebeec, 0x7E)
-int TTownEvent::Load(void* infile)
+int TTownEvent::load(void* infile)
 {
     // @stub
 }
@@ -364,9 +366,9 @@ int TTownEvent::Load(void* infile)
 // Dreamcast retains an out-of-line copy. Retail's corresponding source-order
 // slot is twelve bytes of NOP padding, while is_diggable contains this exact
 // vector lookup expanded in place, so the Windows helper is inline-only.
-inline CObject* NewmapCell::TObjectCell::get_object() const
+inline CObject* NewmapCell::TObjectCell::getObject() const
 {
-    return &gpGame->worldMap.objects[objectIndex];
+    return &g_game->m_worldMap.m_objects[m_objectIndex];
 }
 
 // The destructor remains implicit in C++. mapcell.obj already emits the real
@@ -392,25 +394,25 @@ VA_COMPGEN(0x004fca60, 0x3E, IMPLICIT_DTOR, TreasureData)
 // frame and 90.8763% local maximum; the helper's constructor is what lets
 // VC6 clear and merge the packed y/z allocation unit as retail does.
 VA(0x004fcaa0, 0x12F)  // anchor-global, dc 0xebf98
-NewmapCell* NewmapCell::get_trigger_cell()
+NewmapCell* NewmapCell::getTriggerCell()
 {
-    if (is_trigger)
+    if (m_isTrigger)
         return this;
 
-    if (type == NOTHING || type == ANCHOR_POINT || type == EVENT
-        || type == HOLY_GRAIL)
+    if (m_type == NOTHING || m_type == ANCHOR_POINT || m_type == EVENT
+        || m_type == HOLY_GRAIL)
         return 0;
 
-    if (object_type_index < 0
-        || object_type_index >= gpGame->worldMap.objects.size())
+    if (m_objectTypeIndex < 0
+        || m_objectTypeIndex >= g_game->m_worldMap.m_objects.size())
         return 0;
 
-    CObject* object = &gpGame->worldMap.objects[object_type_index];
-    type_point location = object->get_trigger();
+    CObject* object = &g_game->m_worldMap.m_objects[m_objectTypeIndex];
+    type_point location = object->getTrigger();
 
-    if (location.x < 0)
+    if (location.m_x < 0)
         return 0;
-    return gpGame->get_cell(location);
+    return g_game->getCell(location);
 }
 
 #if 0  // @carcass -- located/reconstruction-pending bodies
@@ -421,43 +423,44 @@ NewmapCell* NewmapCell::get_trigger_cell()
 // get_obscured_object into valid/obscuredType field reads schedules the boat
 // index after the gpGame load and leaves this body at 93.4848%.
 VA(0x004fcbd0, 0x5C)  // anchor-global, dc 0xec098
-TAdventureObjectType NewmapCell::get_map_object()
+TAdventureObjectType NewmapCell::getMapObject()
 {
-    if (type == HERO) {
-        hero* current_hero = gpGame->GetHero(extraInfo);
-        return current_hero->get_obscured_object();
+    if (m_type == HERO) {
+        // Before normalization (locals): current_hero, current_boat.
+        hero* currentHero = g_game->getHero(m_extraInfo);
+        return currentHero->getObscuredObject();
     }
-    if (type == BOAT) {
-        boat* current_boat = gpGame->GetBoat(extraInfo);
-        return current_boat->get_obscured_object();
+    if (m_type == BOAT) {
+        boat* currentBoat = g_game->getBoat(m_extraInfo);
+        return currentBoat->getObscuredObject();
     }
-    return type;
+    return m_type;
 }
 
 // E:\gamedcs\mapcell.cpp:404
 VA(0x004fcc30, 0x4D)  // anchor-global, dc 0xec114
-unsigned long NewmapCell::get_map_extraInfo()
+unsigned long NewmapCell::getMapExtraInfo()
 {
-    if (type == HERO)
-        return gpGame->GetHero(extraInfo)->extra_info;
-    if (type == BOAT)
-        return gpGame->boats[extraInfo].extra_info;
-    return extraInfo;
+    if (m_type == HERO)
+        return g_game->getHero(m_extraInfo)->m_extraInfo;
+    if (m_type == BOAT)
+        return g_game->m_boats[m_extraInfo].m_extraInfo;
+    return m_extraInfo;
 }
 
 // E:\gamedcs\mapcell.cpp:420
 VA(0x004fcc80, 0x65)  // anchor-global, dc 0xec1c8
-unsigned char NewmapCell::cell_is_trigger()
+unsigned char NewmapCell::cellIsTrigger()
 {
-    if (type == HERO) {
-        hero* obscurer = gpGame->GetHero(extraInfo);
-        return obscurer->valid && obscurer->was_trigger;
+    if (m_type == HERO) {
+        hero* obscurer = g_game->getHero(m_extraInfo);
+        return obscurer->m_valid && obscurer->m_wasTrigger;
     }
-    if (type == BOAT) {
-        boat* obscurer = &gpGame->boats[extraInfo];
-        return obscurer->valid && obscurer->was_trigger;
+    if (m_type == BOAT) {
+        boat* obscurer = &g_game->m_boats[m_extraInfo];
+        return obscurer->m_valid && obscurer->m_wasTrigger;
     }
-    return is_trigger;
+    return m_isTrigger;
 }
 
 // E:\gamedcs\mapcell.cpp:436
@@ -469,20 +472,21 @@ unsigned char NewmapCell::cell_is_trigger()
 // erases the shared NOTHING block and leaves this body at 96.1585%, while the
 // attested guard produces all 208 bytes and all 23 blocks exactly.
 VA(0x004fccf0, 0xD0)  // anchor-global, dc 0xec254
-unsigned char NewmapCell::is_diggable()
+unsigned char NewmapCell::isDiggable()
 {
-    if (GroundSet == eTerrainWater || GroundSet == eTerrainRock)
+    if (m_groundSet == eTerrainWater || m_groundSet == eTerrainRock)
         return 0;
-    if (!(flags_00_11 & 0x40))
+    if (!(m_flags0011 & 0x40))
         return 0;
 
-    TAdventureObjectType object_type = get_map_object();
-    if (object_type != ANCHOR_POINT) {
-        if (object_type != HOLY_GRAIL && object_type != NOTHING)
+    // Before normalization (locals): object_type.
+    TAdventureObjectType objectType = getMapObject();
+    if (objectType != ANCHOR_POINT) {
+        if (objectType != HOLY_GRAIL && objectType != NOTHING)
             return 0;
     } else {
-        for (long i = 0; i < objects.size(); ++i) {
-            if (objects[i].get_object()->get_type() == TERRAIN_HOLE)
+        for (long i = 0; i < m_objects.size(); ++i) {
+            if (m_objects[i].getObject()->getType() == TERRAIN_HOLE)
                 return 0;
         }
     }
@@ -491,16 +495,16 @@ unsigned char NewmapCell::is_diggable()
 
 // E:\gamedcs\mapcell.cpp:464
 VA(0x004fcdc0, 0x58)  // anchor-global, dc 0xec324
-const unsigned char NewmapCell::HasTriggerableEvent()
+const unsigned char NewmapCell::hasTriggerableEvent()
 {
-    if (type == EVENT) {
-        if (gpCurrentPlayer->IsLocalHuman()
-            && ((extraInfo >> 10) & gMapVisibilityBit))
+    if (m_type == EVENT) {
+        if (g_currentPlayer->isLocalHuman()
+            && ((m_extraInfo >> 10) & g_mapVisibilityBit))
             return 1;
 
-        if (!gpCurrentPlayer->IsLocalHuman()
-            && (extraInfo & 0x40000)
-            && ((extraInfo >> 10) & gMapVisibilityBit))
+        if (!g_currentPlayer->isLocalHuman()
+            && (m_extraInfo & 0x40000)
+            && ((m_extraInfo >> 10) & g_mapVisibilityBit))
             return 1;
     }
     return 0;
@@ -519,35 +523,36 @@ const unsigned char NewmapCell::HasTriggerableEvent()
 // the signed comparison produces retail's jle/jg pair on the old i value.
 // The eight post-Dreamcast Complete terrain ids remain retail-byte proof.
 VA(0x004fce20, 0x116)  // anchor-global, dc 0xec3b4
-TAdventureObjectType NewmapCell::get_special_terrain() const
+TAdventureObjectType NewmapCell::getSpecialTerrain() const
 {
-    if (type == HERO && (cellFlags & 0x1000)) {
-        hero* our_hero = gpGame->GetHero(extraInfo);
-        if (our_hero->get_obscured_object() == GARRISON
-                && our_hero->obscured_is_trigger()
-                && objectIndex == 1)
+    if (m_type == HERO && (m_cellFlags & 0x1000)) {
+        // Before normalization (locals): our_hero, object_type.
+        hero* ourHero = g_game->getHero(m_extraInfo);
+        if (ourHero->getObscuredObject() == GARRISON
+                && ourHero->obscuredIsTrigger()
+                && m_objectIndex == 1)
             return GARRISON;
     }
 
-    if (type == GARRISON
-            && (cellFlags & 0x1000)
-            && objectIndex == 1)
-        return type;
+    if (m_type == GARRISON
+            && (m_cellFlags & 0x1000)
+            && m_objectIndex == 1)
+        return m_type;
 
-    for (int i = objects.size(); i-- > 0;) {
-        CObject* object = objects[i].get_object();
-        CObjectType* object_type = object->get_object_type_ptr();
-        if (object_type->objectType == CURSED_GROUND
-                || object_type->objectType == MAGIC_PLAINS
-                || object_type->objectType == HOLY_GROUND
-                || object_type->objectType == EVIL_FOG
-                || object_type->objectType == CLOVER_FIELD_2
-                || object_type->objectType == FAVORABLE_WINDS
-                || object_type->objectType == LUCID_POOLS
-                || object_type->objectType == FIERY_FIELDS
-                || object_type->objectType == ROCKLANDS
-                || object_type->objectType == MAGIC_CLOUDS)
-            return object_type->objectType;
+    for (int i = m_objects.size(); i-- > 0;) {
+        CObject* object = m_objects[i].getObject();
+        CObjectType* objectType = object->getObjectTypePtr();
+        if (objectType->m_objectType == CURSED_GROUND
+                || objectType->m_objectType == MAGIC_PLAINS
+                || objectType->m_objectType == HOLY_GROUND
+                || objectType->m_objectType == EVIL_FOG
+                || objectType->m_objectType == CLOVER_FIELD_2
+                || objectType->m_objectType == FAVORABLE_WINDS
+                || objectType->m_objectType == LUCID_POOLS
+                || objectType->m_objectType == FIERY_FIELDS
+                || objectType->m_objectType == ROCKLANDS
+                || objectType->m_objectType == MAGIC_CLOUDS)
+            return objectType->m_objectType;
     }
     return NOTHING;
 }
@@ -558,9 +563,9 @@ TAdventureObjectType NewmapCell::get_special_terrain() const
 // ground types below. The object ids are retail bytes; the result spellings
 // are the NH3API cross-build enum after the address and mapping were proved.
 VA(0x004fcf40, 0x112)  // hd-crossbuild, anchor-callee
-int NewmapCell::get_magic_terrain_type()
+int NewmapCell::getMagicTerrainType()
 {
-    switch (get_special_terrain()) {
+    switch (getSpecialTerrain()) {
     case MAGIC_PLAINS:
         return MAGIC_TERRAIN_MAGIC_PLAINS;
     case LUCID_POOLS:
@@ -597,7 +602,7 @@ int NewmapCell::get_magic_terrain_type()
 // that call.
 VA(0x004fd060, 0x15C)  // anchor-global, dc 0xec4fc
 NewfullMap::NewfullMap()
-    : cellData(0)
+    : m_cellData(0)
 {
 }
 
@@ -655,14 +660,14 @@ VA_COMPGEN(0x004fd1c0, 0x18, DEFAULT_CTOR_CLOSURE, CObjectType)
 VA(0x004fd1e0, 0x271)  // anchor-global, dc 0xec6a4
 NewfullMap::~NewfullMap()
 {
-    if (cellData) {
-        delete[] cellData;
-        cellData = 0;
+    if (m_cellData) {
+        delete[] m_cellData;
+        m_cellData = 0;
     }
 
     unsigned int i;
-    for (i = 0; i < mapObjectData.size(); ++i)
-        delete mapObjectData[i];
+    for (i = 0; i < m_mapObjectData.size(); ++i)
+        delete m_mapObjectData[i];
     // OVER-INLINE PIN, +2.34 (93.5482 -> 95.8833). Retail calls the
     // out-of-line vector<CMapObjectData*>::clear COMDAT at 0x48b4a0 here;
     // unpinned our CL expands clear() into erase(begin(), end()) and calls
@@ -670,12 +675,12 @@ NewfullMap::~NewfullMap()
     // the same member into erase (0x54cdb0) and must stay unpinned - the
     // two instantiations really do diverge in retail.
 #pragma inline_depth(0)
-    mapObjectData.clear();
+    m_mapObjectData.clear();
 #pragma inline_depth()
 
-    for (i = 0; i < sprites.size(); ++i)
-        sprites[i]->Dispose();
-    sprites.clear();
+    for (i = 0; i < m_sprites.size(); ++i)
+        m_sprites[i]->dispose();
+    m_sprites.clear();
 }
 
 #if 0  // @carcass -- located/reconstruction-pending bodies
@@ -709,30 +714,31 @@ NewmapCell::~NewmapCell()
 }
 
 // E:\gamedcs\mapcell.cpp:550
+// Before normalization (locals): two_layers.
 VA(0x004fd4f0, 0x160)  // order-map: `vector ctor/dtor iterator' + operator new; address-takes NewmapCell ctor 0xfd650 / dtor 0xfd4c0 (Close inlined), dc 0xec80c
-void NewfullMap::Init(int size, unsigned char two_layers)
+void NewfullMap::init(int size, unsigned char twoLayers)
 {
-    Size = size;
-    HasTwoLevels = two_layers;
+    m_size = size;
+    m_hasTwoLevels = twoLayers;
 
-    if (cellData) {
-        delete[] cellData;
-        cellData = 0;
+    if (m_cellData) {
+        delete[] m_cellData;
+        m_cellData = 0;
     }
 
-    for (unsigned int i = 0; i < mapObjectData.size(); ++i)
-        delete mapObjectData[i];
-    mapObjectData.clear();
+    for (unsigned int i = 0; i < m_mapObjectData.size(); ++i)
+        delete m_mapObjectData[i];
+    m_mapObjectData.clear();
 
-    int cellCount = (two_layers != 0) + 1;
-    cellCount *= Size;
-    cellCount *= Size;
-    cellData = new NewmapCell[cellCount];
+    int cellCount = (twoLayers != 0) + 1;
+    cellCount *= m_size;
+    cellCount *= m_size;
+    m_cellData = new NewmapCell[cellCount];
 
-    if (gMapExtra)
-        delete[] gMapExtra;
-    gMapExtra = new unsigned short[cellCount];
-    memset(gMapExtra, 0, cellCount * sizeof(*gMapExtra));
+    if (g_mapExtra)
+        delete[] g_mapExtra;
+    g_mapExtra = new unsigned short[cellCount];
+    memset(g_mapExtra, 0, cellCount * sizeof(*g_mapExtra));
 }
 
 // E:\gamedcs\MapCell.h:685 - moved here from DC tail position (dc 0xf49a4):
@@ -742,19 +748,19 @@ void NewfullMap::Init(int size, unsigned char two_layers)
 VA(0x004fd650, 0x3E)  // order-map: address-taken by Init 0xfd4f0 for `vector ctor iterator'; inits packed NewmapCell incl. vector<TObjectCell> at +0xe, dc 0xf49a4
 NewmapCell::NewmapCell()
 {
-    GroundSet = 0;
-    GroundIndex = 0;
-    RiverSet = 0;
-    RiverIndex = 0;
-    RoadSet = 0;
-    RoadIndex = 0;
-    flags_00_11 = 0;
-    is_trigger = 0;
-    flags_13_15 = 0;
-    type = NOTHING;
-    objectIndex = -1;
-    extraInfo = 0;
-    object_type_index = -1;
+    m_groundSet = 0;
+    m_groundIndex = 0;
+    m_riverSet = 0;
+    m_riverIndex = 0;
+    m_roadSet = 0;
+    m_roadIndex = 0;
+    m_flags0011 = 0;
+    m_isTrigger = 0;
+    m_flags1315 = 0;
+    m_type = NOTHING;
+    m_objectIndex = -1;
+    m_extraInfo = 0;
+    m_objectTypeIndex = -1;
 }
 
 // E:\gamedcs\mapcell.cpp:614
@@ -793,49 +799,50 @@ NewmapCell::NewmapCell()
 // call sites would take this instantiation off the single-digit-call-site
 // path VC6 inlines most eagerly, so this may settle when the TU is finished.
 // Not tried, because it cannot be tried until those two bodies exist.
+// Before normalization (locals): two_layers.
 VA(0x004fd690, 0x2B3)  // order-map: calls readTimedEventList 0xfc000, Init 0xfd4f0, readMapLayer 0xfe220 x2, readMapObjects 0x104470, PlaceObject 0x505b20 (placeObjects inlined), dc 0xec8f4
-int NewfullMap::Read(TAbstractFile* infile, int size, unsigned char two_layers,
+int NewfullMap::read(TAbstractFile* infile, int size, unsigned char twoLayers,
                      int mapVersion)
 {
-    Init(size, two_layers);
+    init(size, twoLayers);
 
     if (readMapLayer(infile, size, 0) < 0)
         return -1;
-    if (two_layers) {
+    if (twoLayers) {
         if (readMapLayer(infile, size, 1) < 0)
             return -1;
     }
 
-    IncProgressBar(1);
+    incProgressBar(1);
 
-    objectTypes.clear();
-    objects.clear();
-    randomDwellings.clear();
-    customTreasure.clear();
-    CustomMonsterList.clear();
-    blackBoxes.clear();
-    SeerHutList.clear();
-    QuestGuardList.clear();
-    TimedEventList.clear();
-    TownEventList.clear();
-    heroPlaceholders.clear();
-    gpGame->towns.clear();
-    gpGame->scenarioTowns.clear();
-    gpGame->signs.clear();
-    gpGame->mines.clear();
-    gpGame->generators.clear();
-    gpGame->garrisons.clear();
-    gpGame->boats.clear();
-    gpGame->field_1f680.clear();
-    gpGame->universities.clear();
-    gpGame->creatureBanks.clear();
+    m_objectTypes.clear();
+    m_objects.clear();
+    m_randomDwellings.clear();
+    m_customTreasure.clear();
+    m_customMonsterList.clear();
+    m_blackBoxes.clear();
+    m_seerHutList.clear();
+    m_questGuardList.clear();
+    m_timedEventList.clear();
+    m_townEventList.clear();
+    m_heroPlaceholders.clear();
+    g_game->m_towns.clear();
+    g_game->m_scenarioTowns.clear();
+    g_game->m_signs.clear();
+    g_game->m_mines.clear();
+    g_game->m_generators.clear();
+    g_game->m_garrisons.clear();
+    g_game->m_boats.clear();
+    g_game->m_blackMarkets.clear();
+    g_game->m_universities.clear();
+    g_game->m_creatureBanks.clear();
 
     if (readMapObjects(infile, mapVersion) < 0)
         return -1;
     if (readTimedEventList(infile, mapVersion) < 0)
         return -1;
 
-    SoD_transformRandomDwellings();
+    soDTransformRandomDwellings();
 
     // Retail CALLS vector<CObject>::size in this loop's CONDITION, at
     // Read+0x285 (entry) and +0x29b (back edge) - the two calls that sit
@@ -843,11 +850,11 @@ int NewfullMap::Read(TAbstractFile* infile, int size, unsigned char two_layers,
     // had inlined. Same lexical placement as Load's seer-hut loop.
     unsigned int i;
 #pragma inline_depth(0)
-    for (i = 0; i < objects.size(); ++i)
+    for (i = 0; i < m_objects.size(); ++i)
 #pragma inline_depth()
-        PlaceObject(i, 1);
+        placeObject(i, 1);
 
-    LoadShipyards();
+    loadShipyards();
     return 0;
 }
 
@@ -904,21 +911,21 @@ int NewfullMap::Read(TAbstractFile* infile, int size, unsigned char two_layers,
 // missing or extra local: docs/vc6/handle-order.md's C1-capped class.
 #pragma auto_inline(off)
 VA(0x004fd950, 0x268)  // caller Load 0xfdbc0; TQuestGuard ctor/load + vector resize/push_back
-void NewfullMap::NewfullMapFn_004FD950(
+void NewfullMap::newfullMapFn004FD950(
     TAbstractFile* infile, int saveVersion)
 {
     int count;
-    infile->Read(&count, 2);
+    infile->read(&count, 2);
     count &= 0xFFFF;
-    QuestGuardList.resize(count);
+    m_questGuardList.resize(count);
 
     if (count > 0) {
         int i = 0;
         do {
-            QuestGuardList[i].load(infile, saveVersion);
-            if (QuestGuardList[i].quest)
-                mapObjectData.push_back(static_cast<CMapObjectData*>(
-                    static_cast<void*>(QuestGuardList[i].quest)));
+            m_questGuardList[i].load(infile, saveVersion);
+            if (m_questGuardList[i].m_quest)
+                m_mapObjectData.push_back(static_cast<CMapObjectData*>(
+                    static_cast<void*>(m_questGuardList[i].m_quest)));
             ++i;
         } while (--count);
     }
@@ -943,7 +950,7 @@ void NewfullMap::NewfullMapFn_004FD950(
 // shares that instantiation. Both were measured and reverted.
 static void resizeSeerHutList(NewfullMap* map, short count)
 {
-    map->SeerHutList.resize(count);
+    map->m_seerHutList.resize(count);
 }
 
 // E:\gamedcs\mapcell.cpp:679
@@ -1063,42 +1070,43 @@ static void resizeSeerHutList(NewfullMap* map, short count)
 // it is the /Ob2 quotient walking down the candidate list, with retail's
 // budget reaching one site earlier than ours.  The direction is UNDER-inline,
 // which wants a LARGER caller, and there is no honest mass to add here.
+// Before normalization (locals): two_layers, sprite_num.
 VA(0x004fdbc0, 0x371)  // order-map: calls loadTimedEventList 0xfc500, loadTownEventList 0xfc870, Init 0xfd4f0, loadMapLayer 0xfe920 x2, loadBlackBoxList/loadMonsterList/loadMapObjects, dc 0xecb94
-int NewfullMap::Load(TAbstractFile* infile, int size, unsigned char two_layers,
+int NewfullMap::load(TAbstractFile* infile, int size, unsigned char twoLayers,
                      int saveVersion)
 {
     HOMM3_MAPCELL_LOAD_RELEASE_VERIFY(
-        two_layers == 0 || two_layers == 1);
+        twoLayers == 0 || twoLayers == 1);
 
-    Init(size, two_layers);
+    init(size, twoLayers);
 
     if (loadMapLayer(infile, size, 0, saveVersion) < 0)
         return -1;
-    if (two_layers) {
+    if (twoLayers) {
         if (loadMapLayer(infile, size, 1, saveVersion) < 0)
             return -1;
     }
 
-    IncProgressBar(1);
+    incProgressBar(1);
 
-    objectTypes.clear();
-    objects.clear();
-    customTreasure.clear();
-    CustomMonsterList.clear();
-    blackBoxes.clear();
-    SeerHutList.clear();
-    QuestGuardList.clear();
-    TimedEventList.clear();
-    TownEventList.clear();
-    gpGame->towns.clear();
-    gpGame->scenarioTowns.clear();
-    gpGame->signs.clear();
-    gpGame->mines.clear();
-    gpGame->generators.clear();
-    gpGame->garrisons.clear();
-    gpGame->boats.clear();
-    gpGame->universities.clear();
-    gpGame->creatureBanks.clear();
+    m_objectTypes.clear();
+    m_objects.clear();
+    m_customTreasure.clear();
+    m_customMonsterList.clear();
+    m_blackBoxes.clear();
+    m_seerHutList.clear();
+    m_questGuardList.clear();
+    m_timedEventList.clear();
+    m_townEventList.clear();
+    g_game->m_towns.clear();
+    g_game->m_scenarioTowns.clear();
+    g_game->m_signs.clear();
+    g_game->m_mines.clear();
+    g_game->m_generators.clear();
+    g_game->m_garrisons.clear();
+    g_game->m_boats.clear();
+    g_game->m_universities.clear();
+    g_game->m_creatureBanks.clear();
 
     if (loadMapObjects(infile) < 0)
         return -1;
@@ -1110,7 +1118,7 @@ int NewfullMap::Load(TAbstractFile* infile, int size, unsigned char two_layers,
         return -1;
 
     short count;
-    if (infile->Read(&count, sizeof(count)) < sizeof(count))
+    if (infile->read(&count, sizeof(count)) < sizeof(count))
         goto load_failure;
 
     resizeSeerHutList(this, count);
@@ -1118,26 +1126,26 @@ int NewfullMap::Load(TAbstractFile* infile, int size, unsigned char two_layers,
     // condition - twice, once at entry and once on the back edge - where our
     // CL expands it. The pin is lexical, so restoring the depth before the
     // body leaves the body's own decisions alone.
-    int sprite_num;
+    int spriteNum;
 #pragma inline_depth(0)
-    for (sprite_num = 0; sprite_num < SeerHutList.size(); ++sprite_num)
+    for (spriteNum = 0; spriteNum < m_seerHutList.size(); ++spriteNum)
 #pragma inline_depth()
     {
-        SeerHutList[sprite_num].load(infile, saveVersion);
-        if (SeerHutList[sprite_num].quest)
-            mapObjectData.push_back(static_cast<CMapObjectData*>(
-                static_cast<void*>(SeerHutList[sprite_num].quest)));
+        m_seerHutList[spriteNum].load(infile, saveVersion);
+        if (m_seerHutList[spriteNum].m_quest)
+            m_mapObjectData.push_back(static_cast<CMapObjectData*>(
+                static_cast<void*>(m_seerHutList[spriteNum].m_quest)));
     }
 
     if (saveVersion >= 25)
-        NewfullMapFn_004FD950(infile, saveVersion);
+        newfullMapFn004FD950(infile, saveVersion);
 
     if (loadTimedEventList(infile, saveVersion) < 0)
         return -1;
     if (loadTownEventList(infile, saveVersion) < 0)
         goto load_failure;
 
-    IncProgressBar(1);
+    incProgressBar(1);
     return 0;
 
 load_failure:
@@ -1159,11 +1167,11 @@ load_failure:
 // three (measured: 28.0548%).
 static int saveBlackBoxList(NewfullMap* map, TAbstractFile* outfile)
 {
-    int count = map->blackBoxes.size();
-    if (static_cast<unsigned>(outfile->Write(&count, 2)) < 2)
+    int count = map->m_blackBoxes.size();
+    if (static_cast<unsigned>(outfile->write(&count, 2)) < 2)
         return -1;
-    for (unsigned int i = 0; i < map->blackBoxes.size(); ++i) {
-        if (map->saveBlackBox(outfile, &map->blackBoxes[i]) < 0)
+    for (unsigned int i = 0; i < map->m_blackBoxes.size(); ++i) {
+        if (map->saveBlackBox(outfile, &map->m_blackBoxes[i]) < 0)
             return -1;
     }
     return 0;
@@ -1171,11 +1179,11 @@ static int saveBlackBoxList(NewfullMap* map, TAbstractFile* outfile)
 
 static int saveTreasureList(NewfullMap* map, TAbstractFile* outfile)
 {
-    int count = map->customTreasure.size();
-    if (static_cast<unsigned>(outfile->Write(&count, 2)) < 2)
+    int count = map->m_customTreasure.size();
+    if (static_cast<unsigned>(outfile->write(&count, 2)) < 2)
         return -1;
-    for (unsigned int i = 0; i < map->customTreasure.size(); ++i) {
-        if (map->saveTreasureData(outfile, &map->customTreasure[i]) < 0)
+    for (unsigned int i = 0; i < map->m_customTreasure.size(); ++i) {
+        if (map->saveTreasureData(outfile, &map->m_customTreasure[i]) < 0)
             return -1;
     }
     return 0;
@@ -1183,11 +1191,11 @@ static int saveTreasureList(NewfullMap* map, TAbstractFile* outfile)
 
 static int saveMonsterList(NewfullMap* map, TAbstractFile* outfile)
 {
-    int count = map->CustomMonsterList.size();
-    if (static_cast<unsigned>(outfile->Write(&count, 2)) < 2)
+    int count = map->m_customMonsterList.size();
+    if (static_cast<unsigned>(outfile->write(&count, 2)) < 2)
         return -1;
-    for (unsigned int i = 0; i < map->CustomMonsterList.size(); ++i) {
-        if (map->saveMonsterData(outfile, &map->CustomMonsterList[i]) < 0)
+    for (unsigned int i = 0; i < map->m_customMonsterList.size(); ++i) {
+        if (map->saveMonsterData(outfile, &map->m_customMonsterList[i]) < 0)
             return -1;
     }
     return 0;
@@ -1202,8 +1210,8 @@ static int saveMonsterList(NewfullMap* map, TAbstractFile* outfile)
 // attested list helpers above.
 static int saveSeerHutList(NewfullMap* map, TAbstractFile* outfile)
 {
-    int count = map->SeerHutList.size();
-    if (static_cast<unsigned>(outfile->Write(&count, 2)) < 2)
+    int count = map->m_seerHutList.size();
+    if (static_cast<unsigned>(outfile->write(&count, 2)) < 2)
         return -1;
     // Retail CALLS vector<TSeerHut>::size in this loop's CONDITION, at
     // Save+0x224 (entry) and +0x246 (back edge), and inlines the count
@@ -1211,9 +1219,9 @@ static int saveSeerHutList(NewfullMap* map, TAbstractFile* outfile)
     // only; the index has to leave the init for that to be legal.
     unsigned int i;
 #pragma inline_depth(0)
-    for (i = 0; i < map->SeerHutList.size(); ++i)
+    for (i = 0; i < map->m_seerHutList.size(); ++i)
 #pragma inline_depth()
-        map->SeerHutList[i].save(outfile);
+        map->m_seerHutList[i].save(outfile);
     return 0;
 }
 
@@ -1226,10 +1234,10 @@ static void saveQuestGuardList(NewfullMap* map, TAbstractFile* outfile)
     // of line is now a LOSS: removing it is NewfullMap::Save 91.88699 ->
     // 93.71233, a new MAX, with no other row moving (2026-09-06, polish
     // lane 50).
-    int count = map->QuestGuardList.size();
-    outfile->Write(&count, 2);
-    for (unsigned int i = 0; i < map->QuestGuardList.size(); ++i)
-        map->QuestGuardList[i].save(outfile);
+    int count = map->m_questGuardList.size();
+    outfile->write(&count, 2);
+    for (unsigned int i = 0; i < map->m_questGuardList.size(); ++i)
+        map->m_questGuardList[i].save(outfile);
 }
 
 // E:\gamedcs\mapcell.cpp:759
@@ -1256,7 +1264,7 @@ static void saveQuestGuardList(NewfullMap* map, TAbstractFile* outfile)
 // levers that reached it are already pulled (28.0548 longhand -> 50.7945
 // with the three attested helpers -> 88.6918 with all five).
 VA(0x004fdf40, 0x2D1)  // order-map: calls saveTimedEventList 0xfc390, saveTownEventList 0xfc770, saveMapLayer 0xfe490 x2, saveMapObjects 0x104a40, TQuestGuard::save, dc 0xecdf8
-int NewfullMap::Save(TAbstractFile* outfile, int size, unsigned char twoLayers)
+int NewfullMap::save(TAbstractFile* outfile, int size, unsigned char twoLayers)
 {
     if (saveMapLayer(outfile, size, 0) < 0)
         return -1;
@@ -1339,61 +1347,61 @@ int NewfullMap::Save(TAbstractFile* outfile, int size, unsigned char twoLayers)
 VA(0x004fe220, 0x26B)  // order-map: leaf (file I/O devirtualized-inline); called x2 by Read 0xfd690 in the layer slot, dc 0xecf98
 int NewfullMap::readMapLayer(TAbstractFile* infile, int size, int layer)
 {
-    NewmapCell* thisCell = &cellData[Size * Size * layer];
+    NewmapCell* thisCell = &m_cellData[m_size * m_size * layer];
 
     for (int y = 0; y < size; ++y) {
         for (int x = 0; x < size; ++x) {
             signed char value;
-            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+            if (infile->read(&value, sizeof(value)) < sizeof(value))
                 return -1;
-            thisCell->GroundSet = value;
-            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+            thisCell->m_groundSet = value;
+            if (infile->read(&value, sizeof(value)) < sizeof(value))
                 return -1;
-            thisCell->GroundIndex = value;
-            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+            thisCell->m_groundIndex = value;
+            if (infile->read(&value, sizeof(value)) < sizeof(value))
                 return -1;
-            thisCell->RiverSet = value;
-            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+            thisCell->m_riverSet = value;
+            if (infile->read(&value, sizeof(value)) < sizeof(value))
                 return -1;
-            thisCell->RiverIndex = value;
-            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+            thisCell->m_riverIndex = value;
+            if (infile->read(&value, sizeof(value)) < sizeof(value))
                 return -1;
-            thisCell->RoadSet = value;
-            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+            thisCell->m_roadSet = value;
+            if (infile->read(&value, sizeof(value)) < sizeof(value))
                 return -1;
-            thisCell->RoadIndex = value;
+            thisCell->m_roadIndex = value;
 
-            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+            if (infile->read(&value, sizeof(value)) < sizeof(value))
                 return -1;
             unsigned int flags = value;
-            thisCell->RoadFlippedVertical = (flags >> 5) & 1;
-            thisCell->RoadFlippedHorizontal = (flags >> 4) & 1;
-            thisCell->RiverFlippedVertical = (flags >> 3) & 1;
-            thisCell->RiverFlippedHorizontal = (flags >> 2) & 1;
-            thisCell->GroundFlippedVertical = (flags >> 1) & 1;
-            thisCell->GroundFlippedHorizontal = value & 1;
+            thisCell->m_roadFlippedVertical = (flags >> 5) & 1;
+            thisCell->m_roadFlippedHorizontal = (flags >> 4) & 1;
+            thisCell->m_riverFlippedVertical = (flags >> 3) & 1;
+            thisCell->m_riverFlippedHorizontal = (flags >> 2) & 1;
+            thisCell->m_groundFlippedVertical = (flags >> 1) & 1;
+            thisCell->m_groundFlippedHorizontal = value & 1;
 
-            if ((value & 0x40) && thisCell->GroundSet != eTerrainWater) {
-                thisCell->type = ANCHOR_POINT;
-                thisCell->is_trigger = 0;
-                thisCell->IsBeachBorder = 1;
+            if ((value & 0x40) && thisCell->m_groundSet != eTerrainWater) {
+                thisCell->m_type = ANCHOR_POINT;
+                thisCell->m_isTrigger = 0;
+                thisCell->m_isBeachBorder = 1;
             }
 
-            thisCell->IsBlocked = 0;
-            thisCell->Passable = 1;
-            if (thisCell->GroundSet == eTerrainRock) {
-                thisCell->Passable = 0;
-                thisCell->IsBlocked = 1;
+            thisCell->m_isBlocked = 0;
+            thisCell->m_passable = 1;
+            if (thisCell->m_groundSet == eTerrainRock) {
+                thisCell->m_passable = 0;
+                thisCell->m_isBlocked = 1;
             }
 
-            if (thisCell->GroundSet == eTerrainWater
-                && thisCell->GroundIndex < 20)
-                thisCell->IsBeachBorder = 1;
+            if (thisCell->m_groundSet == eTerrainWater
+                && thisCell->m_groundIndex < 20)
+                thisCell->m_isBeachBorder = 1;
 
-            if (thisCell->GroundSet == eTerrainWater
-                || thisCell->GroundSet == eTerrainLava
-                || thisCell->RiverSet != 0 || thisCell->RoadSet != 0)
-                thisCell->Animated = 1;
+            if (thisCell->m_groundSet == eTerrainWater
+                || thisCell->m_groundSet == eTerrainLava
+                || thisCell->m_riverSet != 0 || thisCell->m_roadSet != 0)
+                thisCell->m_animated = 1;
 
             ++thisCell;
         }
@@ -1420,56 +1428,56 @@ int NewfullMap::readMapLayer(TAbstractFile* infile, int size, int layer)
 VA(0x004fe490, 0x22A)  // order-map: leaf; called x2 by Save 0xfdf40 in the layer slot, dc 0xed384
 int NewfullMap::saveMapLayer(TAbstractFile* outfile, int size, int layer)
 {
-    NewmapCell* thisCell = &cellData[Size * Size * layer];
+    NewmapCell* thisCell = &m_cellData[m_size * m_size * layer];
 
     for (int y = 0; y < size; ++y) {
         for (int x = 0; x < size; ++x) {
             char byteValue;
-            byteValue = static_cast<char>(thisCell->GroundSet);
-            if (static_cast<unsigned>(outfile->Write(&byteValue, 1)) < 1)
+            byteValue = static_cast<char>(thisCell->m_groundSet);
+            if (static_cast<unsigned>(outfile->write(&byteValue, 1)) < 1)
                 return -1;
-            byteValue = static_cast<char>(thisCell->GroundIndex);
-            if (static_cast<unsigned>(outfile->Write(&byteValue, 1)) < 1)
+            byteValue = static_cast<char>(thisCell->m_groundIndex);
+            if (static_cast<unsigned>(outfile->write(&byteValue, 1)) < 1)
                 return -1;
-            byteValue = static_cast<char>(thisCell->RiverSet);
-            if (static_cast<unsigned>(outfile->Write(&byteValue, 1)) < 1)
+            byteValue = static_cast<char>(thisCell->m_riverSet);
+            if (static_cast<unsigned>(outfile->write(&byteValue, 1)) < 1)
                 return -1;
-            byteValue = static_cast<char>(thisCell->RiverIndex);
-            if (static_cast<unsigned>(outfile->Write(&byteValue, 1)) < 1)
+            byteValue = static_cast<char>(thisCell->m_riverIndex);
+            if (static_cast<unsigned>(outfile->write(&byteValue, 1)) < 1)
                 return -1;
-            byteValue = static_cast<char>(thisCell->RoadSet);
-            if (static_cast<unsigned>(outfile->Write(&byteValue, 1)) < 1)
+            byteValue = static_cast<char>(thisCell->m_roadSet);
+            if (static_cast<unsigned>(outfile->write(&byteValue, 1)) < 1)
                 return -1;
-            byteValue = static_cast<char>(thisCell->RoadIndex);
-            if (static_cast<unsigned>(outfile->Write(&byteValue, 1)) < 1)
+            byteValue = static_cast<char>(thisCell->m_roadIndex);
+            if (static_cast<unsigned>(outfile->write(&byteValue, 1)) < 1)
                 return -1;
 
             short wordValue;
-            wordValue = static_cast<short>(thisCell->cellFlags);
-            if (static_cast<unsigned>(outfile->Write(&wordValue, 2)) < 2)
+            wordValue = static_cast<short>(thisCell->m_cellFlags);
+            if (static_cast<unsigned>(outfile->write(&wordValue, 2)) < 2)
                 return -1;
-            wordValue = static_cast<short>(thisCell->type);
-            if (static_cast<unsigned>(outfile->Write(&wordValue, 2)) < 2)
+            wordValue = static_cast<short>(thisCell->m_type);
+            if (static_cast<unsigned>(outfile->write(&wordValue, 2)) < 2)
                 return -1;
             short indexValue;
-            indexValue = thisCell->objectIndex;
-            if (static_cast<unsigned>(outfile->Write(&indexValue, 2)) < 2)
+            indexValue = thisCell->m_objectIndex;
+            if (static_cast<unsigned>(outfile->write(&indexValue, 2)) < 2)
                 return -1;
-            indexValue = thisCell->object_type_index;
-            if (static_cast<unsigned>(outfile->Write(&indexValue, 2)) < 2)
-                return -1;
-
-            unsigned long extra = thisCell->extraInfo;
-            if (static_cast<unsigned>(outfile->Write(&extra, 4)) < 4)
+            indexValue = thisCell->m_objectTypeIndex;
+            if (static_cast<unsigned>(outfile->write(&indexValue, 2)) < 2)
                 return -1;
 
-            int count = thisCell->objects.size();
-            if (static_cast<unsigned>(outfile->Write(&count, 4)) < 4)
+            unsigned long extra = thisCell->m_extraInfo;
+            if (static_cast<unsigned>(outfile->write(&extra, 4)) < 4)
                 return -1;
 
-            for (unsigned int i = 0; i < thisCell->objects.size(); ++i) {
+            int count = thisCell->m_objects.size();
+            if (static_cast<unsigned>(outfile->write(&count, 4)) < 4)
+                return -1;
+
+            for (unsigned int i = 0; i < thisCell->m_objects.size(); ++i) {
                 if (static_cast<unsigned>(
-                        outfile->Write(&thisCell->objects[i], 4)) < 4)
+                        outfile->write(&thisCell->m_objects[i], 4)) < 4)
                     return -1;
             }
             ++thisCell;
@@ -1483,26 +1491,43 @@ int NewfullMap::saveMapLayer(TAbstractFile* outfile, int size, int layer)
 #endif  // @carcass
 
 union LegacyUpgradeExtraInfo {
-    unsigned long value;
-    LegacyArtifactInfo artifact_info;
-    LegacySkeletonInfo skeleton_info;
-    LegacyMonsterInfo monster_info;
-    LegacyPyramidInfo pyramid_info;
-    LegacyTreasureInfo treasure_info;
-    LegacyWagonInfo wagon_info;
-    LegacyTombInfo tomb_info;
+    // Before normalization: value.
+    unsigned long m_value;
+    // Before normalization: artifact_info.
+    LegacyArtifactInfo m_artifactInfo;
+    // Before normalization: skeleton_info.
+    LegacySkeletonInfo m_skeletonInfo;
+    // Before normalization: monster_info.
+    LegacyMonsterInfo m_monsterInfo;
+    // Before normalization: pyramid_info.
+    LegacyPyramidInfo m_pyramidInfo;
+    // Before normalization: treasure_info.
+    LegacyTreasureInfo m_treasureInfo;
+    // Before normalization: wagon_info.
+    LegacyWagonInfo m_wagonInfo;
+    // Before normalization: tomb_info.
+    LegacyTombInfo m_tombInfo;
 };
 
 union CurrentUpgradeExtraInfo {
-    unsigned long value;
-    CurrentArtifactInfo artifact_info;
-    type_skeleton_info skeleton_info;
-    MonsterInfo monster_info;
-    type_pyramid_info pyramid_info;
-    TreasureInfo treasure_info;
-    CurrentUpgradeWagonInfo wagon_info;
-    type_tomb_info tomb_info;
-    CurrentVisitedInfo visited_info;
+    // Before normalization: value.
+    unsigned long m_value;
+    // Before normalization: artifact_info.
+    CurrentArtifactInfo m_artifactInfo;
+    // Before normalization: skeleton_info.
+    type_skeleton_info m_skeletonInfo;
+    // Before normalization: monster_info.
+    MonsterInfo m_monsterInfo;
+    // Before normalization: pyramid_info.
+    type_pyramid_info m_pyramidInfo;
+    // Before normalization: treasure_info.
+    TreasureInfo m_treasureInfo;
+    // Before normalization: wagon_info.
+    CurrentUpgradeWagonInfo m_wagonInfo;
+    // Before normalization: tomb_info.
+    type_tomb_info m_tombInfo;
+    // Before normalization: visited_info.
+    CurrentVisitedInfo m_visitedInfo;
 };
 
 // Retail-only compatibility pass called once for every loaded map cell.
@@ -1524,7 +1549,7 @@ union CurrentUpgradeExtraInfo {
 // and declaration-order probes are byte-flat. The separate per-arm snapshot
 // below is the best source-faithful form measured.
 VA(0x004fe6c0, 0x254)  // caller loadMapLayer; v25 gate + seven-arm bitfield upgrade
-void upgrade_cell_extra_info(NewmapCell* cell, int saveVersion)
+void upgradeCellExtraInfo(NewmapCell* cell, int saveVersion)
 {
     if (saveVersion >= 25)
         return;
@@ -1533,70 +1558,70 @@ void upgrade_cell_extra_info(NewmapCell* cell, int saveVersion)
     CurrentUpgradeExtraInfo* current =
         static_cast<CurrentUpgradeExtraInfo*>(static_cast<void*>(cell));
 
-    switch (cell->type) {
+    switch (cell->m_type) {
     case ARTIFACT:
-        legacy.value = cell->extraInfo;
-        current->artifact_info.custom = legacy.artifact_info.custom;
-        if (!current->artifact_info.custom) {
-            current->artifact_info.guard = legacy.artifact_info.guard;
-            current->artifact_info.resource_price =
-                legacy.artifact_info.resource_price;
-            current->artifact_info.guard_qty =
-                legacy.artifact_info.guard_qty;
+        legacy.m_value = cell->m_extraInfo;
+        current->m_artifactInfo.m_custom = legacy.m_artifactInfo.m_custom;
+        if (!current->m_artifactInfo.m_custom) {
+            current->m_artifactInfo.m_guard = legacy.m_artifactInfo.m_guard;
+            current->m_artifactInfo.m_resourcePrice =
+                legacy.m_artifactInfo.m_resourcePrice;
+            current->m_artifactInfo.m_guardQty =
+                legacy.m_artifactInfo.m_guardQty;
         }
         break;
 
     case DEAD_GUY:
-        legacy.value = cell->extraInfo;
-        current->skeleton_info.artifact = legacy.skeleton_info.artifact;
-        current->skeleton_info.has_treasure =
-            legacy.skeleton_info.has_treasure;
-        current->skeleton_info.id = legacy.skeleton_info.id;
+        legacy.m_value = cell->m_extraInfo;
+        current->m_skeletonInfo.m_artifact = legacy.m_skeletonInfo.m_artifact;
+        current->m_skeletonInfo.m_hasTreasure =
+            legacy.m_skeletonInfo.m_hasTreasure;
+        current->m_skeletonInfo.m_id = legacy.m_skeletonInfo.m_id;
         break;
 
     case MONSTER:
-        legacy.value = cell->extraInfo;
-        current->monster_info.qty = legacy.monster_info.qty;
-        current->monster_info.disposition = legacy.monster_info.disposition;
-        current->monster_info.never_flee = legacy.monster_info.never_flee;
-        current->monster_info.dont_grow = legacy.monster_info.dont_grow;
-        current->monster_info.index = legacy.monster_info.index;
-        current->monster_info.unused_27 = 0;
-        current->monster_info.custom = legacy.monster_info.custom;
+        legacy.m_value = cell->m_extraInfo;
+        current->m_monsterInfo.m_qty = legacy.m_monsterInfo.m_qty;
+        current->m_monsterInfo.m_disposition = legacy.m_monsterInfo.m_disposition;
+        current->m_monsterInfo.m_neverFlee = legacy.m_monsterInfo.m_neverFlee;
+        current->m_monsterInfo.m_dontGrow = legacy.m_monsterInfo.m_dontGrow;
+        current->m_monsterInfo.m_index = legacy.m_monsterInfo.m_index;
+        current->m_monsterInfo.m_unused27 = 0;
+        current->m_monsterInfo.m_custom = legacy.m_monsterInfo.m_custom;
         break;
 
     case PYRAMID:
-        legacy.value = cell->extraInfo;
-        current->pyramid_info.guarded = legacy.pyramid_info.guarded;
-        current->visited_info.visited_bits =
-            legacy.pyramid_info.visited_bits;
-        current->pyramid_info.spell = legacy.pyramid_info.spell;
+        legacy.m_value = cell->m_extraInfo;
+        current->m_pyramidInfo.m_guarded = legacy.m_pyramidInfo.m_guarded;
+        current->m_visitedInfo.m_visitedBits =
+            legacy.m_pyramidInfo.m_visitedBits;
+        current->m_pyramidInfo.m_spell = legacy.m_pyramidInfo.m_spell;
         break;
 
     case TREASURE_CHEST:
-        legacy.value = cell->extraInfo;
-        current->treasure_info.artifact = legacy.treasure_info.artifact;
-        current->treasure_info.has_artifact =
-            legacy.treasure_info.is_artifact;
-        current->treasure_info.gold = legacy.treasure_info.gold_amount;
+        legacy.m_value = cell->m_extraInfo;
+        current->m_treasureInfo.m_artifact = legacy.m_treasureInfo.m_artifact;
+        current->m_treasureInfo.m_hasArtifact =
+            legacy.m_treasureInfo.m_isArtifact;
+        current->m_treasureInfo.m_gold = legacy.m_treasureInfo.m_goldAmount;
         break;
 
     case WAGON:
-        legacy.value = cell->extraInfo;
-        current->wagon_info.artifact = legacy.wagon_info.artifact;
-        current->wagon_info.full = legacy.wagon_info.full;
-        current->wagon_info.has_artifact = legacy.wagon_info.has_artifact;
-        current->wagon_info.resource = legacy.wagon_info.resource;
-        current->wagon_info.resource_amount =
-            legacy.wagon_info.resource_amount;
-        current->visited_info.visited_bits = legacy.wagon_info.visited_bits;
+        legacy.m_value = cell->m_extraInfo;
+        current->m_wagonInfo.m_artifact = legacy.m_wagonInfo.m_artifact;
+        current->m_wagonInfo.m_full = legacy.m_wagonInfo.m_full;
+        current->m_wagonInfo.m_hasArtifact = legacy.m_wagonInfo.m_hasArtifact;
+        current->m_wagonInfo.m_resource = legacy.m_wagonInfo.m_resource;
+        current->m_wagonInfo.m_resourceAmount =
+            legacy.m_wagonInfo.m_resourceAmount;
+        current->m_visitedInfo.m_visitedBits = legacy.m_wagonInfo.m_visitedBits;
         break;
 
     case WARRIOR_TOMB:
-        legacy.value = cell->extraInfo;
-        current->tomb_info.has_artifact = legacy.tomb_info.full;
-        current->visited_info.visited_bits = legacy.tomb_info.visited_bits;
-        current->tomb_info.artifact = legacy.tomb_info.artifact;
+        legacy.m_value = cell->m_extraInfo;
+        current->m_tombInfo.m_hasArtifact = legacy.m_tombInfo.m_full;
+        current->m_visitedInfo.m_visitedBits = legacy.m_tombInfo.m_visitedBits;
+        current->m_tombInfo.m_artifact = legacy.m_tombInfo.m_artifact;
         break;
     }
 }
@@ -1616,66 +1641,66 @@ VA(0x004fe920, 0x2E5)  // order-map: called x2 by Load 0xfdbc0 in the layer slot
 int NewfullMap::loadMapLayer(TAbstractFile* infile, int size, int layer,
                              int saveVersion)
 {
-    NewmapCell* thisCell = &cellData[Size * Size * layer];
+    NewmapCell* thisCell = &m_cellData[m_size * m_size * layer];
 
     for (int y = 0; y < size; ++y) {
         for (int x = 0; x < size; ++x) {
             signed char value;
-            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+            if (infile->read(&value, sizeof(value)) < sizeof(value))
                 return -1;
-            thisCell->GroundSet = value;
-            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+            thisCell->m_groundSet = value;
+            if (infile->read(&value, sizeof(value)) < sizeof(value))
                 return -1;
-            thisCell->GroundIndex = value;
-            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+            thisCell->m_groundIndex = value;
+            if (infile->read(&value, sizeof(value)) < sizeof(value))
                 return -1;
-            thisCell->RiverSet = value;
-            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+            thisCell->m_riverSet = value;
+            if (infile->read(&value, sizeof(value)) < sizeof(value))
                 return -1;
-            thisCell->RiverIndex = value;
-            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+            thisCell->m_riverIndex = value;
+            if (infile->read(&value, sizeof(value)) < sizeof(value))
                 return -1;
-            thisCell->RoadSet = value;
-            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+            thisCell->m_roadSet = value;
+            if (infile->read(&value, sizeof(value)) < sizeof(value))
                 return -1;
-            thisCell->RoadIndex = value;
+            thisCell->m_roadIndex = value;
 
             unsigned short wordValue;
-            if (infile->Read(&wordValue, sizeof(wordValue)) < sizeof(wordValue))
+            if (infile->read(&wordValue, sizeof(wordValue)) < sizeof(wordValue))
                 return -1;
-            thisCell->cellFlags = wordValue;
-            if (infile->Read(&wordValue, sizeof(wordValue)) < sizeof(wordValue))
+            thisCell->m_cellFlags = wordValue;
+            if (infile->read(&wordValue, sizeof(wordValue)) < sizeof(wordValue))
                 return -1;
-            thisCell->type_value = wordValue;
+            thisCell->m_typeValue = wordValue;
 
             unsigned short indexValue;
-            if (infile->Read(&indexValue, sizeof(indexValue))
+            if (infile->read(&indexValue, sizeof(indexValue))
                 < sizeof(indexValue))
                 return -1;
-            thisCell->objectIndex = indexValue;
-            if (infile->Read(&indexValue, sizeof(indexValue))
+            thisCell->m_objectIndex = indexValue;
+            if (infile->read(&indexValue, sizeof(indexValue))
                 < sizeof(indexValue))
                 return -1;
-            thisCell->object_type_index = indexValue;
+            thisCell->m_objectTypeIndex = indexValue;
 
             unsigned long extra;
-            if (infile->Read(&extra, sizeof(extra)) < sizeof(extra))
+            if (infile->read(&extra, sizeof(extra)) < sizeof(extra))
                 return -1;
-            thisCell->extraInfo = extra;
+            thisCell->m_extraInfo = extra;
 
             int count;
-            if (infile->Read(&count, sizeof(count)) < sizeof(count))
+            if (infile->read(&count, sizeof(count)) < sizeof(count))
                 return -1;
-            thisCell->objects.resize(count);
+            thisCell->m_objects.resize(count);
 
-            for (unsigned int i = 0; i < thisCell->objects.size(); ++i) {
-                if (infile->Read(&thisCell->objects[i],
-                                 sizeof(thisCell->objects[i]))
-                    < sizeof(thisCell->objects[i]))
+            for (unsigned int i = 0; i < thisCell->m_objects.size(); ++i) {
+                if (infile->read(&thisCell->m_objects[i],
+                                 sizeof(thisCell->m_objects[i]))
+                    < sizeof(thisCell->m_objects[i]))
                     return -1;
             }
 
-            upgrade_cell_extra_info(thisCell, saveVersion);
+            upgradeCellExtraInfo(thisCell, saveVersion);
             ++thisCell;
         }
     }
@@ -1695,30 +1720,31 @@ int NewfullMap::readBoatData(void* infile, CObject* boatObject)
 
 // E:\gamedcs\mapcell.cpp:1110
 VA(0x004fec10, 0x1D)  // anchor-global, dc 0xeda1c
-CObjectType* CObject::get_object_type_ptr() const
+CObjectType* CObject::getObjectTypePtr() const
 {
-    return &gpGame->worldMap.objectTypes[typeIndex];
+    return &g_game->m_worldMap.m_objectTypes[m_typeIndex];
 }
 
 // E:\gamedcs\mapcell.cpp:1131
+// Before normalization (locals): result_x, result_y, ObjType, Vert, Horiz.
 VA(0x004fec30, 0x106)  // anchor-global, dc 0xedab8
-void CObject::FindTrigger(int& result_x, int& result_y) const
+void CObject::findTrigger(int& resultX, int& resultY) const
 {
-    result_x = -1;
-    result_y = -1;
+    resultX = -1;
+    resultY = -1;
 
-    CObjectType* ObjType = &gpGame->worldMap.objectTypes[typeIndex];
-    for (int Vert = 0; Vert < ObjType->height; ++Vert) {
-        if (y - Vert < 0 || y - Vert >= MAP_HEIGHT)
+    CObjectType* objType = &g_game->m_worldMap.m_objectTypes[m_typeIndex];
+    for (int vert = 0; vert < objType->m_height; ++vert) {
+        if (m_y - vert < 0 || m_y - vert >= g_mapHeight)
             continue;
 
-        for (int Horiz = 0; Horiz < ObjType->width; ++Horiz) {
-            if (x - Horiz < 0 || x - Horiz >= MAP_WIDTH)
+        for (int horiz = 0; horiz < objType->m_width; ++horiz) {
+            if (m_x - horiz < 0 || m_x - horiz >= g_mapWidth)
                 continue;
 
-            if (ObjType->triggerCells[47 - Vert * 8 - Horiz]) {
-                result_x = x - Horiz;
-                result_y = y - Vert;
+            if (objType->m_triggerCells[47 - vert * 8 - horiz]) {
+                resultX = m_x - horiz;
+                resultY = m_y - vert;
                 return;
             }
         }
@@ -1734,25 +1760,25 @@ int NewfullMap::readGeneratorData(
     signed char owner;
     char padding[3];
 
-    if (infile->Read(&owner, 1) != 1)
+    if (infile->read(&owner, 1) != 1)
         return -1;
-    if (static_cast<unsigned>(infile->Read(padding, 3)) < 3)
+    if (static_cast<unsigned>(infile->read(padding, 3)) < 3)
         return -1;
 
-    CObjectType& objectType = objectTypes[generatorObject->typeIndex];
-    tempGenerator.genType = static_cast<char>(objectType.extra);
-    tempGenerator.genClass = static_cast<char>(objectType.objectType);
+    CObjectType& objectType = m_objectTypes[generatorObject->m_typeIndex];
+    tempGenerator.m_genType = static_cast<char>(objectType.m_extra);
+    tempGenerator.m_genClass = static_cast<char>(objectType.m_objectType);
 
     int x;
     int y;
-    generatorObject->FindTrigger(x, y);
-    tempGenerator.mapX = static_cast<unsigned char>(x);
-    tempGenerator.mapY = static_cast<unsigned char>(y);
-    tempGenerator.mapZ = generatorObject->z;
-    tempGenerator.Initialize(owner);
+    generatorObject->findTrigger(x, y);
+    tempGenerator.m_mapX = static_cast<unsigned char>(x);
+    tempGenerator.m_mapY = static_cast<unsigned char>(y);
+    tempGenerator.m_mapZ = generatorObject->m_z;
+    tempGenerator.initialize(owner);
 
-    gpGame->generators.push_back(tempGenerator);
-    generatorObject->extraInfo = gpGame->generators.size() - 1;
+    g_game->m_generators.push_back(tempGenerator);
+    generatorObject->m_extraInfo = g_game->m_generators.size() - 1;
     return 0;
 }
 
@@ -1778,36 +1804,37 @@ int NewfullMap::readShrineData(void* infile, CObject* shrineObject)
 VA(0x004fee50, 0xBC)  // order-map: calls readString 0x4c6010; callers exactly readArtifact/readSpellScroll/readResource/readBlackBox (DC-isomorphic), dc 0xede58
 int NewfullMap::readTreasureData(TAbstractFile* infile, TreasureData* treasure)
 {
-    readMapString(infile, &treasure->Message);
+    readMapString(infile, &treasure->m_message);
 
-    unsigned char char_buffer;
-    if (static_cast<unsigned>(infile->Read(&char_buffer, 1)) < 1)
+    // Before normalization (locals): char_buffer.
+    unsigned char charBuffer;
+    if (static_cast<unsigned>(infile->read(&charBuffer, 1)) < 1)
         return -1;
-    treasure->HasCustomGuardians = char_buffer != 0;
+    treasure->m_hasCustomGuardians = charBuffer != 0;
 
-    if (treasure->HasCustomGuardians) {
+    if (treasure->m_hasCustomGuardians) {
         for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
-            if (gpGame->mapHeader.version
+            if (g_game->m_mapHeader.m_version
                 == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
                 signed char creature;
-                infile->Read(&creature, sizeof(creature));
-                treasure->Guardians.armies[i] = creature;
+                infile->read(&creature, sizeof(creature));
+                treasure->m_guardians.m_armies[i] = creature;
             } else {
                 short creature;
-                infile->Read(&creature, sizeof(creature));
-                treasure->Guardians.armies[i] = creature;
+                infile->read(&creature, sizeof(creature));
+                treasure->m_guardians.m_armies[i] = creature;
             }
 
             short amount;
-            if (static_cast<unsigned>(infile->Read(&amount, sizeof(amount)))
+            if (static_cast<unsigned>(infile->read(&amount, sizeof(amount)))
                 < sizeof(amount))
                 return -1;
-            treasure->Guardians.numTroops[i] = amount;
+            treasure->m_guardians.m_numTroops[i] = amount;
         }
     }
 
     int ignored;
-    return static_cast<unsigned>(infile->Read(&ignored, sizeof(ignored)))
+    return static_cast<unsigned>(infile->read(&ignored, sizeof(ignored)))
              < sizeof(ignored) ? -1 : 0;
 }
 
@@ -1826,13 +1853,14 @@ int NewfullMap::saveTreasureList(void* outfile)
 VA(0x004fef10, 0x4D)  // order-map: calls armyGroup::save + saveString 0x4bbb60; called by Save (saveTreasureList inlined), dc 0xee020
 int NewfullMap::saveTreasureData(TAbstractFile* outfile, TreasureData* thisTreasure)
 {
-    game::saveString(outfile, &thisTreasure->Message);
+    game::saveString(outfile, &thisTreasure->m_message);
 
-    unsigned char char_buffer = thisTreasure->HasCustomGuardians;
-    if (static_cast<unsigned>(outfile->Write(&char_buffer, 1)) < 1)
+    // Before normalization (locals): char_buffer.
+    unsigned char charBuffer = thisTreasure->m_hasCustomGuardians;
+    if (static_cast<unsigned>(outfile->write(&charBuffer, 1)) < 1)
         return -1;
-    if (thisTreasure->HasCustomGuardians)
-        thisTreasure->Guardians.save(outfile);
+    if (thisTreasure->m_hasCustomGuardians)
+        thisTreasure->m_guardians.save(outfile);
     return 0;
 }
 
@@ -1841,20 +1869,20 @@ VA(0x004fef60, 0x1BD)  // order-map: calls armyGroup ctor/load + loadString 0x4b
 int NewfullMap::loadTreasureList(TAbstractFile* infile)
 {
     short count;
-    if (static_cast<unsigned>(infile->Read(&count, 2)) < 2)
+    if (static_cast<unsigned>(infile->read(&count, 2)) < 2)
         return -1;
 
-    customTreasure.resize(count);
-    for (int i = 0; i < customTreasure.size(); ++i) {
-        TreasureData& treasure = customTreasure[i];
-        loadString(infile, &treasure.Message);
+    m_customTreasure.resize(count);
+    for (int i = 0; i < m_customTreasure.size(); ++i) {
+        TreasureData& treasure = m_customTreasure[i];
+        loadString(infile, &treasure.m_message);
 
         unsigned char hasGuardians;
-        if (static_cast<unsigned>(infile->Read(&hasGuardians, 1)) < 1)
+        if (static_cast<unsigned>(infile->read(&hasGuardians, 1)) < 1)
             return -1;
-        treasure.HasCustomGuardians = hasGuardians != 0;
-        if (treasure.HasCustomGuardians)
-            treasure.Guardians.load(infile);
+        treasure.m_hasCustomGuardians = hasGuardians != 0;
+        if (treasure.m_hasCustomGuardians)
+            treasure.m_guardians.load(infile);
     }
     return 0;
 }
@@ -1874,25 +1902,26 @@ int NewfullMap::loadTreasureData(void* infile, TreasureData* thisTreasure)
 VA(0x004ff120, 0x1C9)  // order-map: calls readTreasureData 0x4fee50 + armyGroup ctor (TreasureData ctor inlined); called by readObject; EH-bearing, dc 0xee1a4
 int NewfullMap::readArtifactData(TAbstractFile* infile, CObject* artifactObject)
 {
-    int treasureIndex = customTreasure.size();
+    int treasureIndex = m_customTreasure.size();
 
-    unsigned char char_buffer;
-    artifactObject->extraInfo = 0;
-    if (static_cast<unsigned>(infile->Read(&char_buffer, 1)) < 1)
+    // Before normalization (locals): char_buffer.
+    unsigned char charBuffer;
+    artifactObject->m_extraInfo = 0;
+    if (static_cast<unsigned>(infile->read(&charBuffer, 1)) < 1)
         return -1;
 
-    if (char_buffer) {
+    if (charBuffer) {
         TreasureData tempTreasure;
         if (readTreasureData(infile, &tempTreasure) == 0) {
             if (treasureIndex < 4000) {
-                customTreasure.push_back(tempTreasure);
+                m_customTreasure.push_back(tempTreasure);
                 // The object's extraInfo carries the custom-record cursor in
                 // its top thirteen bits: a twelve-bit index at 19..30 plus
                 // the "has custom record" marker at bit 31, which retail sets
                 // by OR-ing 0xfffff000 into the index before the shift
                 // discards everything above bit 12.
-                artifactObject->extraInfo = ((treasureIndex | 0xfffff000) << 19)
-                    | (artifactObject->extraInfo & 0x7ffff);
+                artifactObject->m_extraInfo = ((treasureIndex | 0xfffff000) << 19)
+                    | (artifactObject->m_extraInfo & 0x7ffff);
                 return 1;
             }
         } else {
@@ -1959,22 +1988,23 @@ int NewfullMap::readArtifactData(TAbstractFile* infile, CObject* artifactObject)
 VA(0x004ff2f0, 0x1D8)  // order-map: sibling of 0xff120, calls readTreasureData 0x4fee50; called by readObject; EH-bearing, dc 0xee2e0
 int NewfullMap::readSpellScrollData(TAbstractFile* infile, CObject* scrollObject)
 {
-    int ListSize = customTreasure.size();
+    // Before normalization (locals): ListSize, char_buffer.
+    int listSize = m_customTreasure.size();
 
-    char char_buffer;
+    char charBuffer;
     int count;
-    scrollObject->extraInfo = 0;
-    count = infile->Read(&char_buffer, 1);
+    scrollObject->m_extraInfo = 0;
+    count = infile->read(&charBuffer, 1);
     if (static_cast<unsigned>(count) < 1)
         return -1;
 
-    if (char_buffer) {
+    if (charBuffer) {
         TreasureData tempTreasure;
         if (readTreasureData(infile, &tempTreasure) == 0) {
-            if (ListSize < 4000) {
-                customTreasure.push_back(tempTreasure);
-                scrollObject->extraInfo = ((ListSize | 0xfffff000) << 19)
-                    | (scrollObject->extraInfo & 0x7ffff);
+            if (listSize < 4000) {
+                m_customTreasure.push_back(tempTreasure);
+                scrollObject->m_extraInfo = ((listSize | 0xfffff000) << 19)
+                    | (scrollObject->m_extraInfo & 0x7ffff);
             }
         } else {
             return -1;
@@ -1985,13 +2015,13 @@ int NewfullMap::readSpellScrollData(TAbstractFile* infile, CObject* scrollObject
     // record preceded it: the spell id into the low byte of extraInfo,
     // then three bytes of padding whose short count is the only failure
     // this tail reports.
-    count = infile->Read(&char_buffer, 1);
+    count = infile->read(&charBuffer, 1);
     if (static_cast<unsigned>(count) < 1)
         return -1;
-    scrollObject->extraInfo ^= (scrollObject->extraInfo ^ char_buffer) & 0xff;
+    scrollObject->m_extraInfo ^= (scrollObject->m_extraInfo ^ charBuffer) & 0xff;
 
     unsigned char padding[3];
-    count = infile->Read(padding, 3);
+    count = infile->read(padding, 3);
     if (static_cast<unsigned>(count) < 3)
         return -1;
     return 0;
@@ -2059,36 +2089,37 @@ int NewfullMap::readSpellScrollData(TAbstractFile* infile, CObject* scrollObject
 VA(0x004ff4d0, 0x1DA)  // order-map: sibling of 0xff120, calls readTreasureData 0x4fee50; called by readObject; EH-bearing, dc 0xee410
 int NewfullMap::readResourceData(TAbstractFile* infile, CObject* resourceObject)
 {
-    int ListSize = customTreasure.size();
+    // Before normalization (locals): ListSize, char_buffer, int_buffer.
+    int listSize = m_customTreasure.size();
 
-    unsigned char char_buffer;
+    unsigned char charBuffer;
     int count;
-    resourceObject->extraInfo = 0;
-    count = infile->Read(&char_buffer, 1);
+    resourceObject->m_extraInfo = 0;
+    count = infile->read(&charBuffer, 1);
     if (static_cast<unsigned>(count) < 1)
         return -1;
 
-    if (char_buffer) {
+    if (charBuffer) {
         TreasureData tempTreasure;
         if (readTreasureData(infile, &tempTreasure) == 0) {
-            if (ListSize < 4000) {
-                customTreasure.push_back(tempTreasure);
-                resourceObject->extraInfo = ((ListSize | 0xfffff000) << 19)
-                    | (resourceObject->extraInfo & 0x7ffff);
+            if (listSize < 4000) {
+                m_customTreasure.push_back(tempTreasure);
+                resourceObject->m_extraInfo = ((listSize | 0xfffff000) << 19)
+                    | (resourceObject->m_extraInfo & 0x7ffff);
             }
         } else {
             return -1;
         }
     }
 
-    int int_buffer;
-    count = infile->Read(&int_buffer, 4);
+    int intBuffer;
+    count = infile->read(&intBuffer, 4);
     if (static_cast<unsigned>(count) < 4)
         return -1;
-    resourceObject->extraInfo ^= (resourceObject->extraInfo ^ int_buffer) & 0x7ffff;
+    resourceObject->m_extraInfo ^= (resourceObject->m_extraInfo ^ intBuffer) & 0x7ffff;
 
     unsigned char padding[4];
-    count = infile->Read(padding, 4);
+    count = infile->read(padding, 4);
     if (static_cast<unsigned>(count) < 4)
         return -1;
     return 0;
@@ -2153,78 +2184,78 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
     int count;
     int i;
 
-    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+    if (infile->read(&value, sizeof(value)) < sizeof(value))
         return -1;
-    thisBox->HasCustomTreasure = value != 0;
-    if (thisBox->HasCustomTreasure) {
+    thisBox->m_hasCustomTreasure = value != 0;
+    if (thisBox->m_hasCustomTreasure) {
         if (readTreasureData(infile, thisBox) != 0)
             return -1;
     }
 
-    if (infile->Read(&dwordValue, sizeof(dwordValue)) < sizeof(dwordValue))
+    if (infile->read(&dwordValue, sizeof(dwordValue)) < sizeof(dwordValue))
         return -1;
-    thisBox->ExperienceBonus = dwordValue;
-    if (infile->Read(&dwordValue, sizeof(dwordValue)) < sizeof(dwordValue))
+    thisBox->m_experienceBonus = dwordValue;
+    if (infile->read(&dwordValue, sizeof(dwordValue)) < sizeof(dwordValue))
         return -1;
-    thisBox->ManaBonus = dwordValue;
+    thisBox->m_manaBonus = dwordValue;
 
-    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+    if (infile->read(&value, sizeof(value)) < sizeof(value))
         return -1;
-    thisBox->MoraleBonus = value;
-    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+    thisBox->m_moraleBonus = value;
+    if (infile->read(&value, sizeof(value)) < sizeof(value))
         return -1;
-    thisBox->LuckBonus = value;
+    thisBox->m_luckBonus = value;
 
     for (i = 0; i < 7; ++i) {
-        if (infile->Read(&dwordValue, sizeof(dwordValue)) < sizeof(dwordValue))
+        if (infile->read(&dwordValue, sizeof(dwordValue)) < sizeof(dwordValue))
             return -1;
-        thisBox->ResQty[i] = dwordValue;
+        thisBox->m_resQty[i] = dwordValue;
     }
     for (i = 0; i < 4; ++i) {
-        if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        if (infile->read(&value, sizeof(value)) < sizeof(value))
             return -1;
-        thisBox->PrimarySkillBonus[i] = value;
+        thisBox->m_primarySkillBonus[i] = value;
     }
 
-    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+    if (infile->read(&value, sizeof(value)) < sizeof(value))
         return -1;
     count = value;
     if (count == 0) {
-        thisBox->SecondarySkills.clear();
+        thisBox->m_secondarySkills.clear();
     } else {
-        thisBox->SecondarySkills.resize(count);
+        thisBox->m_secondarySkills.resize(count);
         for (i = 0; i < count; ++i) {
-            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+            if (infile->read(&value, sizeof(value)) < sizeof(value))
                 return -1;
-            thisBox->SecondarySkills[i].type = value;
-            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+            thisBox->m_secondarySkills[i].m_type = value;
+            if (infile->read(&value, sizeof(value)) < sizeof(value))
                 return -1;
-            thisBox->SecondarySkills[i].level = value;
+            thisBox->m_secondarySkills[i].m_level = value;
         }
     }
 
-    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+    if (infile->read(&value, sizeof(value)) < sizeof(value))
         return -1;
     count = value;
     if (count == 0) {
-        thisBox->Artifacts.clear();
+        thisBox->m_artifacts.clear();
     } else {
-        thisBox->Artifacts.resize(count);
+        thisBox->m_artifacts.resize(count);
         for (i = 0; i < count; ++i) {
-            if (gpGame->mapHeader.version
+            if (g_game->m_mapHeader.m_version
                 == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
                 signed char narrow;
-                infile->Read(&narrow, sizeof(narrow));
-                thisBox->Artifacts[i] = narrow;
+                infile->read(&narrow, sizeof(narrow));
+                thisBox->m_artifacts[i] = narrow;
             } else {
                 short wide;
-                infile->Read(&wide, sizeof(wide));
-                thisBox->Artifacts[i] = wide;
+                infile->read(&wide, sizeof(wide));
+                thisBox->m_artifacts[i] = wide;
             }
         }
     }
 
-    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+    if (infile->read(&value, sizeof(value)) < sizeof(value))
         return -1;
     count = value;
     if (count == 0) {
@@ -2232,41 +2263,41 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
         // is the LONGHAND range erase; the two above it stay `clear()`.
         // 93.0057 -> 95.3605, and a greedy second round over the other two
         // finds nothing - the rung is per-site here as everywhere.
-        thisBox->Spells.erase(thisBox->Spells.begin(), thisBox->Spells.end());
+        thisBox->m_spells.erase(thisBox->m_spells.begin(), thisBox->m_spells.end());
     } else {
-        thisBox->Spells.resize(count);
+        thisBox->m_spells.resize(count);
         for (i = 0; i < count; ++i) {
-            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+            if (infile->read(&value, sizeof(value)) < sizeof(value))
                 return -1;
-            thisBox->Spells[i] = value;
+            thisBox->m_spells[i] = value;
         }
     }
 
-    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+    if (infile->read(&value, sizeof(value)) < sizeof(value))
         return -1;
     count = value;
-    thisBox->Creatures.Initialize();
+    thisBox->m_creatures.initialize();
     for (i = 0; i < count; ++i) {
         int creature;
         if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
             signed char narrow;
-            infile->Read(&narrow, sizeof(narrow));
+            infile->read(&narrow, sizeof(narrow));
             creature = narrow;
         } else {
             short wide;
-            infile->Read(&wide, sizeof(wide));
+            infile->read(&wide, sizeof(wide));
             creature = wide;
         }
-        thisBox->Creatures.armies[i] = creature;
+        thisBox->m_creatures.m_armies[i] = creature;
 
         short troops;
-        if (infile->Read(&troops, sizeof(troops)) < sizeof(troops))
+        if (infile->read(&troops, sizeof(troops)) < sizeof(troops))
             return -1;
-        thisBox->Creatures.numTroops[i] = troops;
+        thisBox->m_creatures.m_numTroops[i] = troops;
     }
 
     unsigned char padding[8];
-    return infile->Read(padding, sizeof(padding)) < sizeof(padding) ? -1 : 0;
+    return infile->read(padding, sizeof(padding)) < sizeof(padding) ? -1 : 0;
 }
 
 // E:\gamedcs\mapcell.cpp:1708
@@ -2294,17 +2325,17 @@ VA(0x004ffbf0, 0x1F5)  // order-map: calls readBlackBox 0x4ff6b0 + armyGroup cto
 int NewfullMap::readBlackBoxData(TAbstractFile* infile, CObject* blackboxObject,
                                  int mapVersion)
 {
-    int boxIndex = blackBoxes.size();
+    int boxIndex = m_blackBoxes.size();
 
-    blackboxObject->extraInfo = 0;
+    blackboxObject->m_extraInfo = 0;
 
     BlackBoxData tempBox;
     if (readBlackBox(infile, &tempBox, mapVersion) != 0)
         return -1;
 
     if (boxIndex < 400) {
-        blackBoxes.push_back(tempBox);
-        blackboxObject->extraInfo ^= (blackboxObject->extraInfo ^ boxIndex)
+        m_blackBoxes.push_back(tempBox);
+        blackboxObject->m_extraInfo ^= (blackboxObject->m_extraInfo ^ boxIndex)
             & 0x3ff;
     }
     return 0;
@@ -2352,80 +2383,80 @@ BlackBoxData::~BlackBoxData()
 VA(0x004ffea0, 0x35A)  // order-map: calls armyGroup::GetNumArmies + armyGroup::save + saveString 0x4bbb60 (saveTreasureData inlined); called by Save (saveBlackBoxList inlined), dc 0xeebdc
 int NewfullMap::saveBlackBox(TAbstractFile* outfile, BlackBoxData* thisBox)
 {
-    unsigned char value = thisBox->HasCustomTreasure;
-    if (static_cast<unsigned>(outfile->Write(&value, 1)) < 1)
+    unsigned char value = thisBox->m_hasCustomTreasure;
+    if (static_cast<unsigned>(outfile->write(&value, 1)) < 1)
         return -1;
 
-    if (thisBox->HasCustomTreasure) {
+    if (thisBox->m_hasCustomTreasure) {
         if (saveTreasureData(outfile, thisBox) < 0)
             return -1;
     }
 
-    int dwordValue = thisBox->ExperienceBonus;
-    if (static_cast<unsigned>(outfile->Write(&dwordValue, 4)) < 4)
+    int dwordValue = thisBox->m_experienceBonus;
+    if (static_cast<unsigned>(outfile->write(&dwordValue, 4)) < 4)
         return -1;
-    dwordValue = thisBox->ManaBonus;
-    if (static_cast<unsigned>(outfile->Write(&dwordValue, 4)) < 4)
+    dwordValue = thisBox->m_manaBonus;
+    if (static_cast<unsigned>(outfile->write(&dwordValue, 4)) < 4)
         return -1;
 
-    value = thisBox->MoraleBonus;
-    if (static_cast<unsigned>(outfile->Write(&value, 1)) < 1)
+    value = thisBox->m_moraleBonus;
+    if (static_cast<unsigned>(outfile->write(&value, 1)) < 1)
         return -1;
-    value = thisBox->LuckBonus;
-    if (static_cast<unsigned>(outfile->Write(&value, 1)) < 1)
+    value = thisBox->m_luckBonus;
+    if (static_cast<unsigned>(outfile->write(&value, 1)) < 1)
         return -1;
 
     int i;
     for (i = 0; i < 7; ++i) {
-        dwordValue = thisBox->ResQty[i];
-        if (static_cast<unsigned>(outfile->Write(&dwordValue, 4)) < 4)
+        dwordValue = thisBox->m_resQty[i];
+        if (static_cast<unsigned>(outfile->write(&dwordValue, 4)) < 4)
             return -1;
     }
     for (i = 0; i < 4; ++i) {
-        value = thisBox->PrimarySkillBonus[i];
-        if (static_cast<unsigned>(outfile->Write(&value, 1)) < 1)
+        value = thisBox->m_primarySkillBonus[i];
+        if (static_cast<unsigned>(outfile->write(&value, 1)) < 1)
             return -1;
     }
 
-    value = thisBox->SecondarySkills.size();
-    if (static_cast<unsigned>(outfile->Write(&value, 1)) < 1)
+    value = thisBox->m_secondarySkills.size();
+    if (static_cast<unsigned>(outfile->write(&value, 1)) < 1)
         return -1;
-    for (i = 0; i < thisBox->SecondarySkills.size(); ++i) {
-        value = thisBox->SecondarySkills[i].type;
-        if (static_cast<unsigned>(outfile->Write(&value, 1)) < 1)
+    for (i = 0; i < thisBox->m_secondarySkills.size(); ++i) {
+        value = thisBox->m_secondarySkills[i].m_type;
+        if (static_cast<unsigned>(outfile->write(&value, 1)) < 1)
             return -1;
-        value = thisBox->SecondarySkills[i].level;
-        if (static_cast<unsigned>(outfile->Write(&value, 1)) < 1)
+        value = thisBox->m_secondarySkills[i].m_level;
+        if (static_cast<unsigned>(outfile->write(&value, 1)) < 1)
             return -1;
     }
 
-    value = thisBox->Artifacts.size();
-    if (static_cast<unsigned>(outfile->Write(&value, 1)) < 1)
+    value = thisBox->m_artifacts.size();
+    if (static_cast<unsigned>(outfile->write(&value, 1)) < 1)
         return -1;
-    for (i = 0; i < thisBox->Artifacts.size(); ++i) {
-        value = thisBox->Artifacts[i];
-        if (static_cast<unsigned>(outfile->Write(&value, 1)) < 1)
+    for (i = 0; i < thisBox->m_artifacts.size(); ++i) {
+        value = thisBox->m_artifacts[i];
+        if (static_cast<unsigned>(outfile->write(&value, 1)) < 1)
             return -1;
     }
 
-    value = thisBox->Spells.size();
-    if (static_cast<unsigned>(outfile->Write(&value, 1)) < 1)
+    value = thisBox->m_spells.size();
+    if (static_cast<unsigned>(outfile->write(&value, 1)) < 1)
         return -1;
-    for (i = 0; i < thisBox->Spells.size(); ++i) {
-        value = thisBox->Spells[i];
-        if (static_cast<unsigned>(outfile->Write(&value, 1)) < 1)
+    for (i = 0; i < thisBox->m_spells.size(); ++i) {
+        value = thisBox->m_spells[i];
+        if (static_cast<unsigned>(outfile->write(&value, 1)) < 1)
             return -1;
     }
 
-    int numArmies = thisBox->Creatures.GetNumArmies();
+    int numArmies = thisBox->m_creatures.getNumArmies();
     value = numArmies;
-    if (static_cast<unsigned>(outfile->Write(&value, 1)) < 1)
+    if (static_cast<unsigned>(outfile->write(&value, 1)) < 1)
         return -1;
     for (i = 0; i < numArmies; ++i) {
-        short creature = thisBox->Creatures.armies[i];
-        outfile->Write(&creature, 2);
-        short count = thisBox->Creatures.numTroops[i];
-        if (static_cast<unsigned>(outfile->Write(&count, 2)) < 2)
+        short creature = thisBox->m_creatures.m_armies[i];
+        outfile->write(&creature, 2);
+        short count = thisBox->m_creatures.m_numTroops[i];
+        if (static_cast<unsigned>(outfile->write(&count, 2)) < 2)
             return -1;
     }
     return 0;
@@ -2445,12 +2476,12 @@ VA(0x00500200, 0x222)  // order-map: calls loadBlackBox 0x500430; called by Load
 int NewfullMap::loadBlackBoxList(TAbstractFile* infile, int saveVersion)
 {
     short count;
-    if (infile->Read(&count, sizeof(count)) < sizeof(count))
+    if (infile->read(&count, sizeof(count)) < sizeof(count))
         return -1;
 
-    blackBoxes.resize(count);
-    for (unsigned int i = 0; i < blackBoxes.size(); ++i) {
-        if (loadBlackBox(infile, &blackBoxes[i], saveVersion) < 0)
+    m_blackBoxes.resize(count);
+    for (unsigned int i = 0; i < m_blackBoxes.size(); ++i) {
+        if (loadBlackBox(infile, &m_blackBoxes[i], saveVersion) < 0)
             return -1;
     }
     return 0;
@@ -2466,14 +2497,14 @@ int NewfullMap::loadBlackBoxList(TAbstractFile* infile, int saveVersion)
 // file-local static for the same reason loadMonsterData is.
 static int loadTreasureData(TAbstractFile* infile, TreasureData* thisTreasure)
 {
-    loadString(infile, &thisTreasure->Message);
+    loadString(infile, &thisTreasure->m_message);
 
     unsigned char value;
-    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+    if (infile->read(&value, sizeof(value)) < sizeof(value))
         return -1;
-    thisTreasure->HasCustomGuardians = value != 0;
-    if (thisTreasure->HasCustomGuardians)
-        thisTreasure->Guardians.load(infile);
+    thisTreasure->m_hasCustomGuardians = value != 0;
+    if (thisTreasure->m_hasCustomGuardians)
+        thisTreasure->m_guardians.load(infile);
     return 0;
 }
 
@@ -2486,9 +2517,9 @@ static int loadBlackBoxResources(TAbstractFile* infile,
 {
     int value;
     for (int i = 0; i < 7; ++i) {
-        if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        if (infile->read(&value, sizeof(value)) < sizeof(value))
             return -1;
-        thisBox->ResQty[i] = value;
+        thisBox->m_resQty[i] = value;
     }
     return 0;
 }
@@ -2497,12 +2528,12 @@ static int loadBlackBoxDwordBonuses(TAbstractFile* infile,
                                     BlackBoxData* thisBox)
 {
     int value;
-    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+    if (infile->read(&value, sizeof(value)) < sizeof(value))
         return -1;
-    thisBox->ExperienceBonus = value;
-    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+    thisBox->m_experienceBonus = value;
+    if (infile->read(&value, sizeof(value)) < sizeof(value))
         return -1;
-    thisBox->ManaBonus = value;
+    thisBox->m_manaBonus = value;
     return 0;
 }
 
@@ -2511,9 +2542,9 @@ static int loadBlackBoxPrimarySkills(TAbstractFile* infile,
 {
     signed char value;
     for (int i = 0; i < 4; ++i) {
-        if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        if (infile->read(&value, sizeof(value)) < sizeof(value))
             return -1;
-        thisBox->PrimarySkillBonus[i] = value;
+        thisBox->m_primarySkillBonus[i] = value;
     }
     return 0;
 }
@@ -2562,10 +2593,10 @@ int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
     int count;
     int i;
 
-    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+    if (infile->read(&value, sizeof(value)) < sizeof(value))
         return -1;
-    thisBox->HasCustomTreasure = value != 0;
-    if (thisBox->HasCustomTreasure) {
+    thisBox->m_hasCustomTreasure = value != 0;
+    if (thisBox->m_hasCustomTreasure) {
         if (loadTreasureData(infile, thisBox) < 0)
             return -1;
     }
@@ -2573,69 +2604,69 @@ int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
     if (loadBlackBoxDwordBonuses(infile, thisBox) < 0)
         return -1;
 
-    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+    if (infile->read(&value, sizeof(value)) < sizeof(value))
         return -1;
-    thisBox->MoraleBonus = value;
-    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+    thisBox->m_moraleBonus = value;
+    if (infile->read(&value, sizeof(value)) < sizeof(value))
         return -1;
-    thisBox->LuckBonus = value;
+    thisBox->m_luckBonus = value;
 
     if (loadBlackBoxResources(infile, thisBox) < 0)
         return -1;
     if (loadBlackBoxPrimarySkills(infile, thisBox) < 0)
         return -1;
 
-    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+    if (infile->read(&value, sizeof(value)) < sizeof(value))
         return -1;
     count = value;
-    thisBox->SecondarySkills.resize(count);
+    thisBox->m_secondarySkills.resize(count);
     for (i = 0; i < count; ++i) {
-        if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        if (infile->read(&value, sizeof(value)) < sizeof(value))
             return -1;
-        thisBox->SecondarySkills[i].type = value;
-        if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        thisBox->m_secondarySkills[i].m_type = value;
+        if (infile->read(&value, sizeof(value)) < sizeof(value))
             return -1;
-        thisBox->SecondarySkills[i].level = value;
+        thisBox->m_secondarySkills[i].m_level = value;
     }
 
-    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+    if (infile->read(&value, sizeof(value)) < sizeof(value))
         return -1;
     count = value;
-    thisBox->Artifacts.resize(count);
+    thisBox->m_artifacts.resize(count);
     for (i = 0; i < count; ++i) {
         int artifact;
-        infile->Read(&artifact, sizeof(unsigned char));
-        thisBox->Artifacts[i] = artifact & 0xff;
+        infile->read(&artifact, sizeof(unsigned char));
+        thisBox->m_artifacts[i] = artifact & 0xff;
     }
 
-    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+    if (infile->read(&value, sizeof(value)) < sizeof(value))
         return -1;
     count = value;
-    thisBox->Spells.resize(count);
+    thisBox->m_spells.resize(count);
     for (i = 0; i < count; ++i) {
-        if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        if (infile->read(&value, sizeof(value)) < sizeof(value))
             return -1;
-        thisBox->Spells[i] = value;
+        thisBox->m_spells[i] = value;
     }
 
-    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+    if (infile->read(&value, sizeof(value)) < sizeof(value))
         return -1;
     count = value;
-    thisBox->Creatures.Initialize();
+    thisBox->m_creatures.initialize();
     for (i = 0; i < count; ++i) {
         if (saveVersion < 25) {
             signed char narrow;
-            infile->Read(&narrow, sizeof(narrow));
-            thisBox->Creatures.armies[i] = narrow;
+            infile->read(&narrow, sizeof(narrow));
+            thisBox->m_creatures.m_armies[i] = narrow;
         } else {
             short wide;
-            infile->Read(&wide, sizeof(wide));
-            thisBox->Creatures.armies[i] = wide;
+            infile->read(&wide, sizeof(wide));
+            thisBox->m_creatures.m_armies[i] = wide;
         }
         short troops;
-        if (infile->Read(&troops, sizeof(troops)) < sizeof(troops))
+        if (infile->read(&troops, sizeof(troops)) < sizeof(troops))
             return -1;
-        thisBox->Creatures.numTroops[i] = troops;
+        thisBox->m_creatures.m_numTroops[i] = troops;
     }
     return 0;
 }
@@ -2660,37 +2691,37 @@ VA(0x005008b0, 0x27A)  // order-map: calls readBlackBox 0x4ff6b0 + armyGroup cto
 int NewfullMap::readEventData(TAbstractFile* infile, CObject* eventObject,
                               int mapVersion)
 {
-    int boxIndex = blackBoxes.size();
+    int boxIndex = m_blackBoxes.size();
 
-    eventObject->extraInfo = 0;
+    eventObject->m_extraInfo = 0;
 
     BlackBoxData tempBox;
     if (readBlackBox(infile, &tempBox, mapVersion) != 0)
         return -1;
 
     unsigned char value;
-    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+    if (infile->read(&value, sizeof(value)) < sizeof(value))
         return -1;
-    eventObject->extraInfo = (eventObject->extraInfo & 0xfffc03ff)
+    eventObject->m_extraInfo = (eventObject->m_extraInfo & 0xfffc03ff)
         | ((value & 0xff) << 10);
 
-    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+    if (infile->read(&value, sizeof(value)) < sizeof(value))
         return -1;
-    eventObject->extraInfo = (eventObject->extraInfo & 0xfffbffff)
+    eventObject->m_extraInfo = (eventObject->m_extraInfo & 0xfffbffff)
         | ((value & 1) << 18);
 
-    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+    if (infile->read(&value, sizeof(value)) < sizeof(value))
         return -1;
-    eventObject->extraInfo = (eventObject->extraInfo & 0xfff7ffff)
+    eventObject->m_extraInfo = (eventObject->m_extraInfo & 0xfff7ffff)
         | ((value & 1) << 19);
 
     if (boxIndex < 400) {
-        blackBoxes.push_back(tempBox);
-        eventObject->extraInfo ^= (eventObject->extraInfo ^ boxIndex) & 0x3ff;
+        m_blackBoxes.push_back(tempBox);
+        eventObject->m_extraInfo ^= (eventObject->m_extraInfo ^ boxIndex) & 0x3ff;
     }
 
     unsigned char padding[4];
-    if (infile->Read(padding, sizeof(padding)) < sizeof(padding))
+    if (infile->read(padding, sizeof(padding)) < sizeof(padding))
         return -1;
     return 0;
 }
@@ -2750,49 +2781,50 @@ int NewfullMap::readSeerData(void* infile, CObject* seerObject)
 VA(0x00500b30, 0x2AE)  // order-map: calls Random 0x50b230 (DC parallel), only read-slot row between readEventData and readMineData; readSeerData has no retail row (quest-guard rewrite); EH-bearing, dc 0xefbb8
 int NewfullMap::readScholarData(TAbstractFile* infile, CObject* scholarObject)
 {
-    ScholarInfo* scholar_info = &scholarObject->scholar_info;
+    // Before normalization (locals): scholar_info.
+    ScholarInfo* scholarInfo = &scholarObject->m_scholarInfo;
 
     signed char value;
     int count;
-    count = infile->Read(&value, sizeof(value));
+    count = infile->read(&value, sizeof(value));
     if (count < sizeof(value))
         return -1;
 
     unsigned char isRandom = 0;
     if (value == -1) {
-        scholar_info->award = Random(0, 2);
+        scholarInfo->m_award = random(0, 2);
         isRandom = 1;
     } else {
-        scholar_info->award = value;
+        scholarInfo->m_award = value;
     }
 
-    count = infile->Read(&value, sizeof(value));
+    count = infile->read(&value, sizeof(value));
     if (count < sizeof(value))
         return -1;
 
-    scholar_info->primary = 3;
-    scholar_info->secondary = -1;
-    scholar_info->spell = -1;
+    scholarInfo->m_primary = 3;
+    scholarInfo->m_secondary = -1;
+    scholarInfo->m_spell = -1;
 
-    switch (scholar_info->award) {
+    switch (scholarInfo->m_award) {
     case const_scholar_primary_skill:
         if (isRandom)
-            scholar_info->primary = Random(0, 3);
+            scholarInfo->m_primary = random(0, 3);
         else
-            scholar_info->primary = value;
+            scholarInfo->m_primary = value;
         break;
 
     case const_scholar_secondary_skill:
         if (isRandom) {
             std::vector<int> candidates;
             for (int skill = 0; skill < 28; ++skill) {
-                if (!gpGame->field_4e658[skill])
+                if (!g_game->m_ssDisabled[skill])
                     candidates.push_back(skill);
             }
-            scholar_info->secondary =
-                candidates[Random(0, candidates.size() - 1)];
+            scholarInfo->m_secondary =
+                candidates[random(0, candidates.size() - 1)];
         } else {
-            scholar_info->secondary = value;
+            scholarInfo->m_secondary = value;
         }
         break;
 
@@ -2800,20 +2832,20 @@ int NewfullMap::readScholarData(TAbstractFile* infile, CObject* scholarObject)
         if (isRandom) {
             std::vector<int> candidates;
             for (int spell = 0; spell < 70; ++spell) {
-                if (akSpellTraits[spell].schoolBits
-                    && !gpGame->spellDisabled[spell])
+                if (g_spellTraits[spell].m_schoolBits
+                    && !g_game->m_spellDisabledInfo[spell])
                     candidates.push_back(spell);
             }
-            scholar_info->spell =
-                candidates[Random(0, candidates.size() - 1)];
+            scholarInfo->m_spell =
+                candidates[random(0, candidates.size() - 1)];
         } else {
-            scholar_info->spell = value;
+            scholarInfo->m_spell = value;
         }
         break;
     }
 
     unsigned char padding[6];
-    count = infile->Read(padding, sizeof(padding));
+    count = infile->read(padding, sizeof(padding));
     return count < sizeof(padding) ? -1 : 0;
 }
 
@@ -2832,8 +2864,9 @@ int NewfullMap::readShipyardData(void* infile, CObject* shipyardObject)
 // body strength-reduces the indexed walk to a pointer at +4 (the first dy),
 // reads dx from -4, and advances eight bytes through each pair. Retail's
 // writable .data bytes at 0x67faa8..0x67fb07 prove every value.
+// Before normalization: gShipyardOffsets.
 DATA(0x0067faa8)
-static int gShipyardOffsets[12][2] = {
+static int g_shipyardOffsets[12][2] = {
     { -2,  0 }, {  2,  0 }, { -2,  1 }, {  2,  1 },
     { -1,  1 }, {  1,  1 }, {  0,  1 }, { -2, -1 },
     {  2, -1 }, { -1, -1 }, {  1, -1 }, {  0, -1 }
@@ -2850,42 +2883,42 @@ static int gShipyardOffsets[12][2] = {
 // or a boat. Its coordinates are then copied into the ShipyardInfo overlay of
 // every shipyard cell in the object's three-wide horizontal footprint.
 VA(0x00500de0, 0x239)  // anchor-caller + member offsets + HD53 byte-identical name; retail-only
-void NewfullMap::LoadShipyards()
+void NewfullMap::loadShipyards()
 {
     type_point newPoint;
 
-    for (int z = 0; z < HasTwoLevels + 1; ++z) {
-        for (int y = 0; y < MAP_HEIGHT; ++y) {
-            for (int x = 0; x < MAP_WIDTH; ++x) {
-                NewmapCell* cell = &cellData[(z * Size + y) * Size + x];
-                if (!cell->is_trigger || cell->type != SHIPYARD)
+    for (int z = 0; z < m_hasTwoLevels + 1; ++z) {
+        for (int y = 0; y < g_mapHeight; ++y) {
+            for (int x = 0; x < g_mapWidth; ++x) {
+                NewmapCell* cell = &m_cellData[(z * m_size + y) * m_size + x];
+                if (!cell->m_isTrigger || cell->m_type != SHIPYARD)
                     continue;
 
-                newPoint.z = z;
+                newPoint.m_z = z;
                 for (int count = 0; count < 12; ++count) {
-                    newPoint.x = x + gShipyardOffsets[count][0];
-                    newPoint.y = y + gShipyardOffsets[count][1];
-                    if (!newPoint.is_valid())
+                    newPoint.m_x = x + g_shipyardOffsets[count][0];
+                    newPoint.m_y = y + g_shipyardOffsets[count][1];
+                    if (!newPoint.isValid())
                         continue;
 
-                    NewmapCell* boatCell = &cellData[
-                        (newPoint.z * Size + newPoint.y) * Size + newPoint.x];
-                    if (boatCell->GroundSet == eTerrainWater
-                        && !boatCell->IsBlocked
-                        && (!boatCell->is_trigger
-                            || boatCell->type == BOAT)) {
+                    NewmapCell* boatCell = &m_cellData[
+                        (newPoint.m_z * m_size + newPoint.m_y) * m_size + newPoint.m_x];
+                    if (boatCell->m_groundSet == eTerrainWater
+                        && !boatCell->m_isBlocked
+                        && (!boatCell->m_isTrigger
+                            || boatCell->m_type == BOAT)) {
                         for (int checkX = x - 1; checkX <= x + 1; ++checkX) {
-                            if (checkX < 0 || checkX >= MAP_WIDTH)
+                            if (checkX < 0 || checkX >= g_mapWidth)
                                 continue;
                             NewmapCell* shipyardCell =
-                                &cellData[(z * Size + y) * Size + checkX];
-                            if (shipyardCell->type != SHIPYARD)
+                                &m_cellData[(z * m_size + y) * m_size + checkX];
+                            if (shipyardCell->m_type != SHIPYARD)
                                 continue;
                             ShipyardInfo* shipyardInfo =
                                 static_cast<ShipyardInfo*>(static_cast<void*>(
-                                    &shipyardCell->extraInfo));
-                            shipyardInfo->boatX = newPoint.x;
-                            shipyardInfo->boatY = newPoint.y;
+                                    &shipyardCell->m_extraInfo));
+                            shipyardInfo->m_boatX = newPoint.m_x;
+                            shipyardInfo->m_boatY = newPoint.m_y;
                         }
                         break;
                     }
@@ -2903,27 +2936,27 @@ int NewfullMap::readMineData(TAbstractFile* infile, CObject* mineObject)
     signed char owner;
     char padding[3];
 
-    if (static_cast<unsigned>(infile->Read(&owner, 1)) < 1)
+    if (static_cast<unsigned>(infile->read(&owner, 1)) < 1)
         return -1;
-    tempMine.playerOwner = owner;
-    if (static_cast<unsigned>(infile->Read(padding, 3)) < 3)
+    tempMine.m_playerOwner = owner;
+    if (static_cast<unsigned>(infile->read(padding, 3)) < 3)
         return -1;
 
-    CObjectType& objectType = objectTypes[mineObject->typeIndex];
-    if (objectType.objectType != LIGHTHOUSE)
-        tempMine.type = static_cast<char>(objectType.extra);
+    CObjectType& objectType = m_objectTypes[mineObject->m_typeIndex];
+    if (objectType.m_objectType != LIGHTHOUSE)
+        tempMine.m_type = static_cast<char>(objectType.m_extra);
     else
-        tempMine.type = 100;
+        tempMine.m_type = 100;
 
     int x;
     int y;
-    mineObject->FindTrigger(x, y);
-    tempMine.mapX = static_cast<unsigned char>(x);
-    tempMine.mapY = static_cast<unsigned char>(y);
-    tempMine.mapZ = mineObject->z;
+    mineObject->findTrigger(x, y);
+    tempMine.m_mapX = static_cast<unsigned char>(x);
+    tempMine.m_mapY = static_cast<unsigned char>(y);
+    tempMine.m_mapZ = mineObject->m_z;
 
-    gpGame->mines.push_back(tempMine);
-    mineObject->extraInfo = gpGame->mines.size() - 1;
+    g_game->m_mines.push_back(tempMine);
+    mineObject->m_extraInfo = g_game->m_mines.size() - 1;
     return 0;
 }
 
@@ -2936,7 +2969,7 @@ int NewfullMap::readAbandonedMineData(TAbstractFile* infile,
     int mineTypes;
     char padding[3];
 
-    if (static_cast<unsigned>(infile->Read(&mineTypes, 1)) < 1)
+    if (static_cast<unsigned>(infile->read(&mineTypes, 1)) < 1)
         return -1;
 
     int typeCount = 0;
@@ -2947,7 +2980,7 @@ int NewfullMap::readAbandonedMineData(TAbstractFile* infile,
             ++typeCount;
     }
 
-    int selected = Random(1, typeCount);
+    int selected = random(1, typeCount);
     int found = 0;
     type = 0;
     availableTypes = mineTypes & 0xff;
@@ -2958,21 +2991,21 @@ int NewfullMap::readAbandonedMineData(TAbstractFile* infile,
                 break;
         }
     }
-    tempMine.type = static_cast<char>(type);
+    tempMine.m_type = static_cast<char>(type);
 
-    if (static_cast<unsigned>(infile->Read(padding, 3)) < 3)
+    if (static_cast<unsigned>(infile->read(padding, 3)) < 3)
         return -1;
 
     int x;
     int y;
-    mineObject->FindTrigger(x, y);
-    tempMine.mapX = static_cast<unsigned char>(x);
-    tempMine.mapY = static_cast<unsigned char>(y);
-    tempMine.mapZ = mineObject->z;
-    tempMine.field_02 = 1;
+    mineObject->findTrigger(x, y);
+    tempMine.m_mapX = static_cast<unsigned char>(x);
+    tempMine.m_mapY = static_cast<unsigned char>(y);
+    tempMine.m_mapZ = mineObject->m_z;
+    tempMine.m_isAbandoned = 1;
 
-    gpGame->mines.push_back(tempMine);
-    mineObject->extraInfo = gpGame->mines.size() - 1;
+    g_game->m_mines.push_back(tempMine);
+    mineObject->m_extraInfo = g_game->m_mines.size() - 1;
     return 0;
 }
 
@@ -2983,13 +3016,13 @@ int NewfullMap::readSignData(TAbstractFile* infile, CObject* signObject)
     Sign tempSign;
     char padding[4];
 
-    if (readMapString(infile, &tempSign.text) > 0)
-        tempSign.field_00 = 1;
+    if (readMapString(infile, &tempSign.m_signText) > 0)
+        tempSign.m_hasText = 1;
 
-    gpGame->signs.push_back(tempSign);
-    signObject->extraInfo = gpGame->signs.size() - 1;
+    g_game->m_signs.push_back(tempSign);
+    signObject->m_extraInfo = g_game->m_signs.size() - 1;
 
-    if (static_cast<unsigned>(infile->Read(padding, 4)) < 4)
+    if (static_cast<unsigned>(infile->read(padding, 4)) < 4)
         return -1;
     return 0;
 }
@@ -3043,12 +3076,12 @@ int NewfullMap::readSignData(TAbstractFile* infile, CObject* signObject)
 VA(0x005013b0, 0x3DC)  // order-map: calls Random 0x50b230 + readString 0x4c6010 + vector<MonsterData> grow 0x506d70; called by readObject; EH-bearing, dc 0xf0390
 int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
 {
-    int customIndex = CustomMonsterList.size();
+    int customIndex = m_customMonsterList.size();
 
-    monsterObject->extraInfo = 0;
+    monsterObject->m_extraInfo = 0;
 
     int identifier;
-    if (gpGame->mapHeader.version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+    if (g_game->m_mapHeader.m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
         identifier = 0;
     } else {
         // The else arm reads into its OWN local and assigns: retail's
@@ -3058,18 +3091,18 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
         // zero out of the if arm scores 94.95 and the whole-block rewrite
         // 94.96.
         int rawIdentifier;
-        infile->Read(&rawIdentifier, sizeof(rawIdentifier));
+        infile->read(&rawIdentifier, sizeof(rawIdentifier));
         identifier = rawIdentifier;
     }
 
     short quantity;
-    if (infile->Read(&quantity, sizeof(quantity)) < sizeof(quantity))
+    if (infile->read(&quantity, sizeof(quantity)) < sizeof(quantity))
         return -1;
-    monsterObject->extraInfo = (monsterObject->extraInfo & 0xfffff000)
+    monsterObject->m_extraInfo = (monsterObject->m_extraInfo & 0xfffff000)
         | (quantity & 0xfff);
 
     signed char grade;
-    if (infile->Read(&grade, sizeof(grade)) < sizeof(grade))
+    if (infile->read(&grade, sizeof(grade)) < sizeof(grade))
         return -1;
 
     signed char armySize;
@@ -3078,13 +3111,13 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
         armySize = -4;
         break;
     case MONSTER_QTY_RANDOM_1_7:
-        armySize = static_cast<signed char>(Random(1, 7));
+        armySize = static_cast<signed char>(random(1, 7));
         break;
     case MONSTER_QTY_RANDOM_1_10:
-        armySize = static_cast<signed char>(Random(1, 10));
+        armySize = static_cast<signed char>(random(1, 10));
         break;
     case MONSTER_QTY_RANDOM_4_10:
-        armySize = static_cast<signed char>(Random(4, 10));
+        armySize = static_cast<signed char>(random(4, 10));
         break;
     case MONSTER_QTY_FIXED_10:
         armySize = 10;
@@ -3093,18 +3126,19 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
         armySize = grade;
         break;
     }
-    monsterObject->extraInfo = (monsterObject->extraInfo & 0xfffe0fff)
+    monsterObject->m_extraInfo = (monsterObject->m_extraInfo & 0xfffe0fff)
         | ((armySize & 0x1f) << 12);
 
-    unsigned char char_buffer;
-    if (infile->Read(&char_buffer, sizeof(char_buffer))
-        < sizeof(char_buffer))
+    // Before normalization (locals): char_buffer.
+    unsigned char charBuffer;
+    if (infile->read(&charBuffer, sizeof(charBuffer))
+        < sizeof(charBuffer))
         return -1;
 
-    if (char_buffer) {
+    if (charBuffer) {
         // The Artifact = ARTIFACT_NONE store is MonsterData's constructor.
         MonsterData tempMonster;
-        readMapString(infile, &tempMonster.Message);
+        readMapString(infile, &tempMonster.m_message);
 
         // MEASURED AND REJECTED: `#pragma inline_depth(0)` on this `return`.
         // predict-inline says retail CALLS basic_string::_Tidy once here and
@@ -3113,54 +3147,54 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
         // function-scoped, and the pin costs 96.4729 -> 90.0370.
         for (int i = 0; i < 7; ++i) {
             int quantityRead;
-            if (infile->Read(&quantityRead, sizeof(quantityRead))
+            if (infile->read(&quantityRead, sizeof(quantityRead))
                 < sizeof(quantityRead))
                 return -1;
-            tempMonster.ResQty[i] = quantityRead;
+            tempMonster.m_resQty[i] = quantityRead;
         }
 
         int artifact;
-        if (gpGame->mapHeader.version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+        if (g_game->m_mapHeader.m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
             signed char narrow;
-            infile->Read(&narrow, sizeof(narrow));
+            infile->read(&narrow, sizeof(narrow));
             artifact = narrow;
         } else {
             short wide;
-            infile->Read(&wide, sizeof(wide));
+            infile->read(&wide, sizeof(wide));
             artifact = wide;
         }
-        tempMonster.Artifact = artifact;
+        tempMonster.m_artifact = artifact;
 
         if (customIndex < 4000) {
-            CustomMonsterList.push_back(tempMonster);
-            monsterObject->extraInfo = (((customIndex & 0xff) | 0xfffff000)
+            m_customMonsterList.push_back(tempMonster);
+            monsterObject->m_extraInfo = (((customIndex & 0xff) | 0xfffff000)
                                         << 19)
-                | (monsterObject->extraInfo & 0xf807ffff);
+                | (monsterObject->m_extraInfo & 0xf807ffff);
         }
     }
 
-    if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
+    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
-    monsterObject->extraInfo = (monsterObject->extraInfo & 0xfffdffff)
-        | ((char_buffer & 1) << 17);
+    monsterObject->m_extraInfo = (monsterObject->m_extraInfo & 0xfffdffff)
+        | ((charBuffer & 1) << 17);
 
-    if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
+    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
     // The mask retail computes clears bits 27..30 alongside bit 18, so this
     // write lands on more than the one flag; transcribed as the object does
     // it rather than narrowed to the single bit.
-    monsterObject->extraInfo = (monsterObject->extraInfo & 0x87fbffff)
-        | ((char_buffer & 1) << 18);
+    monsterObject->m_extraInfo = (monsterObject->m_extraInfo & 0x87fbffff)
+        | ((charBuffer & 1) << 18);
 
     unsigned char padding[2];
-    if (infile->Read(padding, sizeof(padding)) < sizeof(padding))
+    if (infile->read(padding, sizeof(padding)) < sizeof(padding))
         return -1;
 
     type_point point;
-    point.x = monsterObject->x;
-    point.y = monsterObject->y;
-    point.z = monsterObject->z;
-    gpGame->record_monster_identifier(identifier, point);
+    point.m_x = monsterObject->m_x;
+    point.m_y = monsterObject->m_y;
+    point.m_z = monsterObject->m_z;
+    g_game->recordMonsterIdentifier(identifier, point);
     return 0;
 }
 
@@ -3193,20 +3227,20 @@ int NewfullMap::saveMonsterList(void* outfile)
 // sign-extended.  That final read carries no short-read gate in retail.
 static int loadMonsterData(TAbstractFile* infile, MonsterData* thisMonster)
 {
-    loadString(infile, &thisMonster->Message);
+    loadString(infile, &thisMonster->m_message);
 
     for (int i = 0; i < 7; ++i) {
         int value;
-        if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        if (infile->read(&value, sizeof(value)) < sizeof(value))
             return -1;
-        thisMonster->ResQty[i] = value;
+        thisMonster->m_resQty[i] = value;
     }
 
     int artifact;
-    infile->Read(&artifact, sizeof(unsigned char));
-    thisMonster->Artifact = artifact & 0xff;
-    if (thisMonster->Artifact == (ARTIFACT_NONE & 0xff))
-        thisMonster->Artifact = ARTIFACT_NONE;
+    infile->read(&artifact, sizeof(unsigned char));
+    thisMonster->m_artifact = artifact & 0xff;
+    if (thisMonster->m_artifact == (ARTIFACT_NONE & 0xff))
+        thisMonster->m_artifact = ARTIFACT_NONE;
     return 0;
 }
 
@@ -3217,12 +3251,12 @@ VA(0x00501790, 0x1E3)  // order-map: calls vector<MonsterData> grow 0x506d70 + l
 int NewfullMap::loadMonsterList(TAbstractFile* infile)
 {
     short count;
-    if (infile->Read(&count, sizeof(count)) < sizeof(count))
+    if (infile->read(&count, sizeof(count)) < sizeof(count))
         return -1;
 
-    CustomMonsterList.resize(count);
-    for (unsigned int i = 0; i < CustomMonsterList.size(); ++i) {
-        if (loadMonsterData(infile, &CustomMonsterList[i]) < 0)
+    m_customMonsterList.resize(count);
+    for (unsigned int i = 0; i < m_customMonsterList.size(); ++i) {
+        if (loadMonsterData(infile, &m_customMonsterList[i]) < 0)
             return -1;
     }
     return 0;
@@ -3236,16 +3270,16 @@ int NewfullMap::loadMonsterList(TAbstractFile* infile)
 VA(0x00501980, 0x6B)  // order-map: calls saveString 0x4bbb60; called by Save (saveMonsterList inlined), dc 0xf0824
 int NewfullMap::saveMonsterData(TAbstractFile* outfile, MonsterData* thisMonster)
 {
-    game::saveString(outfile, &thisMonster->Message);
+    game::saveString(outfile, &thisMonster->m_message);
 
     for (int i = 0; i < 7; ++i) {
-        int value = thisMonster->ResQty[i];
-        if (static_cast<unsigned>(outfile->Write(&value, 4)) < 4)
+        int value = thisMonster->m_resQty[i];
+        if (static_cast<unsigned>(outfile->write(&value, 4)) < 4)
             return -1;
     }
 
-    unsigned char artifact = static_cast<unsigned char>(thisMonster->Artifact);
-    return static_cast<unsigned>(outfile->Write(&artifact, 1)) < 1 ? -1 : 0;
+    unsigned char artifact = static_cast<unsigned char>(thisMonster->m_artifact);
+    return static_cast<unsigned>(outfile->write(&artifact, 1)) < 1 ? -1 : 0;
 }
 
 #if 0  // @carcass -- located/reconstruction-pending bodies
@@ -3316,18 +3350,18 @@ static int readTownEvent(TAbstractFile* infile, TTownEvent* thisEvent,
     unsigned char inBuf[6];
     char padding[4];
 
-    thisEvent->Read(infile, mapVersion);
+    thisEvent->read(infile, mapVersion);
 
-    if (infile->Read(inBuf, sizeof(inBuf)) < sizeof(inBuf))
+    if (infile->read(inBuf, sizeof(inBuf)) < sizeof(inBuf))
         return -1;
-    memcpy(&thisEvent->BuildBuildings, inBuf, sizeof(inBuf));
+    memcpy(&thisEvent->m_buildBuildings, inBuf, sizeof(inBuf));
 
-    if (infile->Read(thisEvent->generatorBonuses,
-                     sizeof(thisEvent->generatorBonuses))
-        < sizeof(thisEvent->generatorBonuses))
+    if (infile->read(thisEvent->m_generatorBonuses,
+                     sizeof(thisEvent->m_generatorBonuses))
+        < sizeof(thisEvent->m_generatorBonuses))
         return -1;
 
-    if (infile->Read(padding, sizeof(padding)) < sizeof(padding))
+    if (infile->read(padding, sizeof(padding)) < sizeof(padding))
         return -1;
     return 0;
 }
@@ -3380,125 +3414,126 @@ static int readTownEvent(TAbstractFile* infile, TTownEvent* thisEvent,
 // `char_buffer`/`short_buffer`/`int_buffer` instead of the scoped signed
 // byte/short/value temporaries - regresses to 94.9926%; the x86 block locals
 // below are retained.
-VA(0x005019f0, 0x7CC)  // order-map: calls TTimedEvent::Read 0x4fc1a0 (TTownEvent::Read inlined) + bitset<70> throw helper + vector<TTownEvent> grow 0x508250 + vector<TScenarioTown> grow 0x508cf0; called by readObject; EH-bearing, dc 0xf094c
+VA(0x005019f0, 0x7CC)  // order-map: calls TTimedEvent::Read 0x4fc1a0 (TTownEvent::Read inlined) + bitset<70> throw helper + vector<TTownEvent> grow 0x508250 + vector<TownExtra> grow 0x508cf0; called by readObject; EH-bearing, dc 0xf094c
 int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
                              int mapVersion)
 {
     char padding[3];
-    int int_buffer;
-    TScenarioTown tempTown;
-    short short_buffer;
+    // Before normalization (locals): int_buffer, short_buffer, char_buffer.
+    int intBuffer;
+    TownExtra tempTown;
+    short shortBuffer;
     int count;
     int x;
     int numTownEvents;
     unsigned char inBuf[6];
-    char char_buffer;
+    char charBuffer;
     unsigned char spellBuf[9];
 
-    townObject->extraInfo = gpGame->scenarioTowns.size();
-    tempTown.townType = objectTypes[townObject->typeIndex].extra;
+    townObject->m_extraInfo = g_game->m_scenarioTowns.size();
+    tempTown.m_townType = m_objectTypes[townObject->m_typeIndex].m_extra;
 
-    if (gpGame->mapHeader.version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-        tempTown.castleId = 0;
+    if (g_game->m_mapHeader.m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+        tempTown.m_objRef = 0;
     } else {
-        infile->Read(&int_buffer, sizeof(int_buffer));
-        tempTown.castleId = int_buffer;
+        infile->read(&intBuffer, sizeof(intBuffer));
+        tempTown.m_objRef = intBuffer;
     }
 
-    if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
+    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
-    tempTown.playerOwner = char_buffer;
+    tempTown.m_playerOwner = charBuffer;
 
-    if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
+    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
-    tempTown.bCustomName = char_buffer;
-    if (tempTown.bCustomName)
-        readMapString(infile, &tempTown.name);
+    tempTown.m_customName = charBuffer;
+    if (tempTown.m_customName)
+        readMapString(infile, &tempTown.m_name);
 
-    if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
+    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
-    tempTown.bCustomArmies = char_buffer;
-    if (tempTown.bCustomArmies) {
+    tempTown.m_customArmies = charBuffer;
+    if (tempTown.m_customArmies) {
         for (x = 0; x < armyGroup::ARMY_GROUP_SLOT_COUNT; ++x) {
             int creature;
             if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
                 signed char narrow;
-                infile->Read(&narrow, sizeof(narrow));
+                infile->read(&narrow, sizeof(narrow));
                 creature = narrow;
             } else {
                 short wide;
-                infile->Read(&wide, sizeof(wide));
+                infile->read(&wide, sizeof(wide));
                 creature = wide;
             }
-            tempTown.townArmy.armies[x] = creature;
+            tempTown.m_townArmy.m_armies[x] = creature;
 
-            if (infile->Read(&short_buffer, sizeof(short_buffer))
-                < sizeof(short_buffer))
+            if (infile->read(&shortBuffer, sizeof(shortBuffer))
+                < sizeof(shortBuffer))
                 return -1;
-            tempTown.townArmy.numTroops[x] = short_buffer;
+            tempTown.m_townArmy.m_numTroops[x] = shortBuffer;
         }
     }
 
-    if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
+    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
-    tempTown.bIsGrouped = char_buffer;
+    tempTown.m_isGrouped = charBuffer;
 
-    if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
+    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
-    tempTown.bCustomBuildings = char_buffer;
+    tempTown.m_customBuildings = charBuffer;
 
-    if (tempTown.bCustomBuildings) {
-        if (infile->Read(inBuf, sizeof(inBuf)) < sizeof(inBuf))
+    if (tempTown.m_customBuildings) {
+        if (infile->read(inBuf, sizeof(inBuf)) < sizeof(inBuf))
             return -1;
-        memcpy(&tempTown.BuildingBuiltMask, inBuf, sizeof(inBuf));
-        if (infile->Read(inBuf, sizeof(inBuf)) < sizeof(inBuf))
+        memcpy(&tempTown.m_buildingBuiltMask, inBuf, sizeof(inBuf));
+        if (infile->read(inBuf, sizeof(inBuf)) < sizeof(inBuf))
             return -1;
-        memcpy(&tempTown.BuildingDisabledMask, inBuf, sizeof(inBuf));
+        memcpy(&tempTown.m_buildingDisabledMask, inBuf, sizeof(inBuf));
     } else {
-        if (infile->Read(&char_buffer, sizeof(char_buffer))
-            < sizeof(char_buffer))
+        if (infile->read(&charBuffer, sizeof(charBuffer))
+            < sizeof(charBuffer))
             return -1;
-        tempTown.HasFort = char_buffer;
+        tempTown.m_hasFort = charBuffer;
     }
 
-    if (gpGame->mapHeader.version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+    if (g_game->m_mapHeader.m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
         memset(spellBuf, 0, sizeof(spellBuf));
     } else {
-        infile->Read(spellBuf, sizeof(spellBuf));
+        infile->read(spellBuf, sizeof(spellBuf));
         // The single retail `call bitset<70>::_Xran` at 0x501dbb covers BOTH
         // mask loops - see unpackTownSpellMask's note.  (An older probe wrote
         // this first mask longhand to split the two range checks apart and
         // measured 82.0785 -> 79.9793; the split was the wrong reading.)
-        unpackTownSpellMask(&tempTown.fixedSpells, spellBuf);
+        unpackTownSpellMask(&tempTown.m_fixedSpells, spellBuf);
     }
 
-    if (infile->Read(spellBuf, sizeof(spellBuf)) < sizeof(spellBuf))
+    if (infile->read(spellBuf, sizeof(spellBuf)) < sizeof(spellBuf))
         return -1;
-    unpackTownSpellMask(&tempTown.spells, spellBuf);
+    unpackTownSpellMask(&tempTown.m_spells, spellBuf);
 
-    if (infile->Read(&numTownEvents, sizeof(numTownEvents))
+    if (infile->read(&numTownEvents, sizeof(numTownEvents))
         < sizeof(numTownEvents))
         return -1;
 
     for (count = numTownEvents; count > 0; --count) {
         TTownEvent thisEvent;
         readTownEvent(infile, &thisEvent, mapVersion);
-        thisEvent.TownNum = gpGame->scenarioTowns.size();
-        TownEventList.push_back(thisEvent);
+        thisEvent.m_townNum = g_game->m_scenarioTowns.size();
+        m_townEventList.push_back(thisEvent);
     }
 
-    char_buffer = -1;
+    charBuffer = -1;
     if (mapVersion >= 28)
-        infile->Read(&char_buffer, sizeof(char_buffer));
+        infile->read(&charBuffer, sizeof(charBuffer));
 
-    if (objectTypes[townObject->typeIndex].objectType == RANDOM_TOWN) {
-        if (char_buffer != -1
-            && (gpGame->mapHeader.playerSlotAttributes[char_buffer].CanBeHuman
-                || gpGame->mapHeader.playerSlotAttributes[char_buffer]
-                       .CanBeComputer)) {
-            tempTown.townType = gpGame->setup.alignment[char_buffer];
-        } else if (tempTown.playerOwner != -1) {
-            tempTown.townType = gpGame->setup.alignment[tempTown.playerOwner];
+    if (m_objectTypes[townObject->m_typeIndex].m_objectType == RANDOM_TOWN) {
+        if (charBuffer != -1
+            && (g_game->m_mapHeader.m_playerSlotAttributes[charBuffer].m_canBeHuman
+                || g_game->m_mapHeader.m_playerSlotAttributes[charBuffer]
+                       .m_canBeComputer)) {
+            tempTown.m_townType = g_game->m_setup.m_alignment[charBuffer];
+        } else if (tempTown.m_playerOwner != -1) {
+            tempTown.m_townType = g_game->m_setup.m_alignment[tempTown.m_playerOwner];
         } else {
             // Eight town bits, widened to the ninth only for an
             // expansion-era scenario in the two game states that allow it.
@@ -3514,17 +3549,17 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
             // 24-byte archive-set rows at 0x69e538 - so the pointee is a
             // small game/resource-context ordinal, not a video flag.
             int legalAlignments = 0xff;
-            if ((*gpVideoGameState == 1
-                 || *gpVideoGameState == VIDEO_GAME_STATE_FORCED_BINK_HIGH)
-                && gpGame->f_1f698 >= 1)
+            if ((*g_videoGameState == 1
+                 || *g_videoGameState == VIDEO_GAME_STATE_FORCED_BINK_HIGH)
+                && g_game->m_f1f698 >= 1)
                 legalAlignments = 0x1ff;
-            tempTown.townType = pick_alignment(legalAlignments, 0);
+            tempTown.m_townType = pickAlignment(legalAlignments, 0);
         }
     }
 
-    gpGame->scenarioTowns.push_back(tempTown);
+    g_game->m_scenarioTowns.push_back(tempTown);
 
-    if (infile->Read(padding, sizeof(padding)) < sizeof(padding))
+    if (infile->read(padding, sizeof(padding)) < sizeof(padding))
         return -1;
     return 0;
 }
@@ -3623,17 +3658,19 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
     // not erase that positive shared-source fact.
     char padding[16];
     unsigned char isRandomHero;
-    int HeroID;  // Dreamcast type: THeroID; Complete x86 stores a full int.
-    int int_buffer;
-    short short_buffer;
-    char Owner;
+    // Before normalization (locals): HeroID, int_buffer, short_buffer, Owner, char_buffer,
+    // hero_data, bCustomExperience.
+    int heroID;  // Dreamcast type: THeroID; Complete x86 stores a full int.
+    int intBuffer;
+    short shortBuffer;
+    char owner;
     char customName;
     int count;
     int experience;
     int x;
-    char char_buffer;
+    char charBuffer;
     char tempText[100] = { 0 };
-    HeroExtra* hero_data;
+    HeroExtra* heroData;
 
     // The Shadow of Death quest identifier: absent on the oldest format, and
     // it survives the whole body to reach HeroExtra::field_008.
@@ -3641,72 +3678,72 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
     if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
         identifier = 0;
     } else {
-        infile->Read(&int_buffer, sizeof(int_buffer));
-        identifier = int_buffer;
+        infile->read(&intBuffer, sizeof(intBuffer));
+        identifier = intBuffer;
     }
 
-    infile->Read(&char_buffer, sizeof(char_buffer));
-    Owner = char_buffer;
+    infile->read(&charBuffer, sizeof(charBuffer));
+    owner = charBuffer;
 
-    HeroID = ReadHeroId(infile, mapVersion);
+    heroID = readHeroId(infile, mapVersion);
     isRandomHero = 0;
-    if (HeroID == -1)
+    if (heroID == -1)
         isRandomHero = 1;
 
-    infile->Read(&char_buffer, sizeof(char_buffer));
-    customName = char_buffer != 0;
+    infile->read(&charBuffer, sizeof(charBuffer));
+    customName = charBuffer != 0;
     if (customName) {
-        infile->Read(&int_buffer, sizeof(int_buffer));
-        infile->Read(tempText, int_buffer);
-        tempText[int_buffer] = 0;
+        infile->read(&intBuffer, sizeof(intBuffer));
+        infile->read(tempText, intBuffer);
+        tempText[intBuffer] = 0;
     }
 
     // Restoration of Erathia and Armageddon's Blade always carry the
     // experience dword; Shadow of Death gates it behind a flag byte.  In a
     // campaign game a value below forty is treated as no custom experience at
     // all, which is what the gbUnk69774c consult is doing on both arms.
-    unsigned char bCustomExperience;
+    unsigned char customExperience;
     if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA
         || mapVersion == MAP_FORMAT_ARMAGEDDONS_BLADE) {
-        infile->Read(&int_buffer, sizeof(int_buffer));
-        experience = int_buffer;
-        if (experience != 0 && (!gbUnk69774c || experience >= 40))
-            bCustomExperience = 1;
+        infile->read(&intBuffer, sizeof(intBuffer));
+        experience = intBuffer;
+        if (experience != 0 && (!g_unk69774c || experience >= 40))
+            customExperience = 1;
         else
-            bCustomExperience = 0;
+            customExperience = 0;
     } else {
         char experienceFlag;
-        infile->Read(&experienceFlag, sizeof(experienceFlag));
-        bCustomExperience = experienceFlag != 0;
-        if (bCustomExperience) {
-            infile->Read(&experience, sizeof(experience));
-            if (gbUnk69774c && experience < 40)
-                bCustomExperience = 0;
+        infile->read(&experienceFlag, sizeof(experienceFlag));
+        customExperience = experienceFlag != 0;
+        if (customExperience) {
+            infile->read(&experience, sizeof(experience));
+            if (g_unk69774c && experience < 40)
+                customExperience = 0;
         } else {
             experience = 0;
         }
     }
 
-    if (HeroID == -1) {
-        if (gUnnamed69fb24[char_buffer] != -1) {
-            HeroID = gUnnamed69fb24[char_buffer];
-            gUnnamed69fb24[char_buffer] = -1;
+    if (heroID == -1) {
+        if (g_unnamed69fb24[charBuffer] != -1) {
+            heroID = g_unnamed69fb24[charBuffer];
+            g_unnamed69fb24[charBuffer] = -1;
         } else {
             TTownType alignment;
-            memcpy(&alignment, &gpGame->setup.alignment[char_buffer],
+            memcpy(&alignment, &g_game->m_setup.m_alignment[charBuffer],
                    sizeof(alignment));
-            HeroID = gpGame->GetStartingHeroId(alignment, char_buffer,
+            heroID = g_game->getStartingHeroId(alignment, charBuffer,
                                                experience);
         }
     }
-    if (gpGame->setup.startingHero[char_buffer] == -1)
-        gpGame->setup.startingHero[char_buffer] = HeroID;
+    if (g_game->m_setup.m_startingHero[charBuffer] == -1)
+        g_game->m_setup.m_startingHero[charBuffer] = heroID;
 
-    hero_data = &gpGame->heroSetup[HeroID];
-    hero_data->Owner = Owner;
-    hero_data->id = HeroID;
-    hero_data->field_008 = identifier;
-    heroObject->extraInfo = HeroID;
+    heroData = &g_game->m_heroSetup[heroID];
+    heroData->m_owner = owner;
+    heroData->m_id = heroID;
+    heroData->m_objRef = identifier;
+    heroObject->m_extraInfo = heroID;
 
     // Dreamcast first stores `customName` into bCustomName, then copies only
     // for a non-random hero with `strncpy(Name, tempText, 12)`. Complete
@@ -3715,109 +3752,109 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
     // Our emitted 15-instruction copy sequence is instruction-identical to
     // retail, so the older bounded copy and isRandomHero guard are DC-only.
     if (customName) {
-        hero_data->bCustomName = 1;
-        strcpy(hero_data->Name, tempText);
+        heroData->m_hasCustomName = 1;
+        strcpy(heroData->m_nameBuffer, tempText);
     }
 
-    if (bCustomExperience) {
-        hero_data->bCustomExperience = 1;
-        hero_data->Experience = experience;
+    if (customExperience) {
+        heroData->m_customExperience = 1;
+        heroData->m_experience = experience;
     }
 
     // A random hero keeps its rolled portrait unless the campaign engine is
     // running, which is the only reader of the flag byte pair.
-    infile->Read(&char_buffer, sizeof(char_buffer));
-    if (char_buffer) {
-        infile->Read(&char_buffer, sizeof(char_buffer));
-        if (!isRandomHero || gbUnk69774c) {
-            hero_data->bCustomPortraitNumber = 1;
-            hero_data->PortraitNumber = char_buffer;
+    infile->read(&charBuffer, sizeof(charBuffer));
+    if (charBuffer) {
+        infile->read(&charBuffer, sizeof(charBuffer));
+        if (!isRandomHero || g_unk69774c) {
+            heroData->m_customPortraitNumber = 1;
+            heroData->m_portraitNumber = charBuffer;
         }
     }
 
-    infile->Read(&char_buffer, sizeof(char_buffer));
-    if (char_buffer) {
-        hero_data->bCustomSecondarySkills = 1;
-        infile->Read(&int_buffer, sizeof(int_buffer));
-        hero_data->NumSecondarySkills = int_buffer;
-        for (x = 0; x < hero_data->NumSecondarySkills; ++x) {
-            infile->Read(&char_buffer, sizeof(char_buffer));
-            hero_data->secondarySkill[x] = char_buffer;
-            infile->Read(&char_buffer, sizeof(char_buffer));
-            hero_data->secondarySkillLevel[x] = char_buffer;
+    infile->read(&charBuffer, sizeof(charBuffer));
+    if (charBuffer) {
+        heroData->m_customSecondarySkills = 1;
+        infile->read(&intBuffer, sizeof(intBuffer));
+        heroData->m_numSecondarySkills = intBuffer;
+        for (x = 0; x < heroData->m_numSecondarySkills; ++x) {
+            infile->read(&charBuffer, sizeof(charBuffer));
+            heroData->m_secondarySkill[x] = charBuffer;
+            infile->read(&charBuffer, sizeof(charBuffer));
+            heroData->m_secondarySkillLevel[x] = charBuffer;
         }
     }
 
-    infile->Read(&char_buffer, sizeof(char_buffer));
-    if (char_buffer) {
-        hero_data->bCustomArmies = 1;
+    infile->read(&charBuffer, sizeof(charBuffer));
+    if (charBuffer) {
+        heroData->m_customArmies = 1;
         for (x = 0; x < armyGroup::ARMY_GROUP_SLOT_COUNT; ++x) {
             if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-                infile->Read(&char_buffer, sizeof(char_buffer));
-                int_buffer = char_buffer;
+                infile->read(&charBuffer, sizeof(charBuffer));
+                intBuffer = charBuffer;
             } else {
-                infile->Read(&short_buffer, sizeof(short_buffer));
-                int_buffer = short_buffer;
+                infile->read(&shortBuffer, sizeof(shortBuffer));
+                intBuffer = shortBuffer;
             }
-            hero_data->armies[x] = int_buffer;
+            heroData->m_armies[x] = intBuffer;
 
-            infile->Read(&short_buffer, sizeof(short_buffer));
-            hero_data->numTroops[x] = short_buffer;
+            infile->read(&shortBuffer, sizeof(shortBuffer));
+            heroData->m_numTroops[x] = shortBuffer;
         }
     }
 
-    infile->Read(&char_buffer, sizeof(char_buffer));
-    hero_data->GroupFormation = char_buffer != 0;
+    infile->read(&charBuffer, sizeof(charBuffer));
+    heroData->m_groupFormation = charBuffer != 0;
 
-    infile->Read(&char_buffer, sizeof(char_buffer));
-    if (char_buffer) {
-        hero_data->bCustomArtifacts = 1;
+    infile->read(&charBuffer, sizeof(charBuffer));
+    if (charBuffer) {
+        heroData->m_customArtifacts = 1;
 
         // Eighteen equipped positions before Shadow of Death, nineteen after.
-        count = (gpGame->mapHeader.version
+        count = (g_game->m_mapHeader.m_version
                  == MAP_FORMAT_SHADOW_OF_DEATH) + 18;
         for (x = 0; x < count; ++x) {
-            if (gpGame->mapHeader.version
+            if (g_game->m_mapHeader.m_version
                 == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-                infile->Read(&char_buffer, sizeof(char_buffer));
-                int_buffer = char_buffer;
+                infile->read(&charBuffer, sizeof(charBuffer));
+                intBuffer = charBuffer;
             } else {
-                infile->Read(&short_buffer, sizeof(short_buffer));
-                int_buffer = short_buffer;
+                infile->read(&shortBuffer, sizeof(shortBuffer));
+                intBuffer = shortBuffer;
             }
-            memcpy(&hero_data->artifacts[x].artifactId, &int_buffer,
-                   sizeof hero_data->artifacts[x].artifactId);
+            memcpy(&heroData->m_artifacts[x].m_artifactId, &intBuffer,
+                   sizeof heroData->m_artifacts[x].m_artifactId);
         }
 
-        infile->Read(&short_buffer, sizeof(short_buffer));
-        hero_data->numInBackpack = static_cast<unsigned char>(short_buffer);
-        for (x = 0; x < hero_data->numInBackpack; ++x) {
-            if (gpGame->mapHeader.version
+        infile->read(&shortBuffer, sizeof(shortBuffer));
+        heroData->m_numInBackpack = static_cast<unsigned char>(shortBuffer);
+        for (x = 0; x < heroData->m_numInBackpack; ++x) {
+            if (g_game->m_mapHeader.m_version
                 == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-                infile->Read(&char_buffer, sizeof(char_buffer));
-                int_buffer = char_buffer;
+                infile->read(&charBuffer, sizeof(charBuffer));
+                intBuffer = charBuffer;
             } else {
-                infile->Read(&short_buffer, sizeof(short_buffer));
-                int_buffer = short_buffer;
+                infile->read(&shortBuffer, sizeof(shortBuffer));
+                intBuffer = shortBuffer;
             }
-            memcpy(&hero_data->backpack[x].artifactId, &int_buffer,
-                   sizeof hero_data->backpack[x].artifactId);
+            memcpy(&heroData->m_backpack[x].m_artifactId, &intBuffer,
+                   sizeof heroData->m_backpack[x].m_artifactId);
         }
 
         // The fourth war-machine position is never serialized: every hero
         // starts with the catapult in it.
-        hero_data->artifacts[hero::EQUIPPED_SLOT_WAR_MACHINE_4].artifactId
+        heroData->m_artifacts[hero::EQUIPPED_SLOT_WAR_MACHINE_4].m_artifactId
             = ARTIFACT_CATAPULT;
-        hero_data->artifacts[hero::EQUIPPED_SLOT_WAR_MACHINE_4].extra = -1;
+        heroData->m_artifacts[hero::EQUIPPED_SLOT_WAR_MACHINE_4].m_extra = -1;
     }
 
-    infile->Read(&char_buffer, sizeof(char_buffer));
-    hero_data->PatrolRadius = char_buffer;
+    infile->read(&charBuffer, sizeof(charBuffer));
+    heroData->m_patrolRadius = charBuffer;
 
-    if (gpGame->mapHeader.version != MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-        infile->Read(&char_buffer, sizeof(char_buffer));
-        if (char_buffer) {
-            hero_data->customName = 1;
+    if (g_game->m_mapHeader.m_version != MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+        infile->read(&charBuffer, sizeof(charBuffer));
+        if (charBuffer) {
+            heroData->m_customName = 1;
             // BOUND BY const REFERENCE, not copied.  ReadLengthPrefixedString
             // returns by value and VC6 does not elide the copy into a named
             // `std::string` local, so that spelling puts TWO 16-byte string
@@ -3825,57 +3862,57 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
             // frame bytes (0xf4 -> 0xe4).  C++98 extends the temporary's
             // lifetime to the reference's scope, which is exactly the block
             // the assign sits in.
-            const std::string& heroName = ReadLengthPrefixedString(infile);
+            const std::string& heroName = readLengthPrefixedString(infile);
 #pragma inline_depth(0)
-            hero_data->name.assign(heroName, 0, std::string::npos);
+            heroData->m_name.assign(heroName, 0, std::string::npos);
 #pragma inline_depth()
         }
 
-        infile->Read(&char_buffer, sizeof(char_buffer));
-        if (char_buffer != -1)
-            hero_data->sex = char_buffer;
+        infile->read(&charBuffer, sizeof(charBuffer));
+        if (charBuffer != -1)
+            heroData->m_sex = charBuffer;
 
-        if (gpGame->mapHeader.version == MAP_FORMAT_ARMAGEDDONS_BLADE) {
-            infile->Read(&char_buffer, sizeof(char_buffer));
-            if (char_buffer != -2) {
-                hero_data->customSpells = 1;
-                hero_data->spells = std::bitset<70>(0);
-                if (char_buffer != -1)
-                    hero_data->spells[char_buffer] = 1;
+        if (g_game->m_mapHeader.m_version == MAP_FORMAT_ARMAGEDDONS_BLADE) {
+            infile->read(&charBuffer, sizeof(charBuffer));
+            if (charBuffer != -2) {
+                heroData->m_customSpells = 1;
+                heroData->m_spells = std::bitset<70>(0);
+                if (charBuffer != -1)
+                    heroData->m_spells[charBuffer] = 1;
             }
         } else {
-            infile->Read(&char_buffer, sizeof(char_buffer));
-            if (char_buffer) {
-                hero_data->customSpells = 1;
+            infile->read(&charBuffer, sizeof(charBuffer));
+            if (charBuffer) {
+                heroData->m_customSpells = 1;
                 unsigned char spellMask[9];
-                infile->Read(spellMask, sizeof(spellMask));
+                infile->read(spellMask, sizeof(spellMask));
                 for (int spell = 0; spell < 70; ++spell) {
-                    hero_data->spells[spell] =
+                    heroData->m_spells[spell] =
                         (spellMask[spell / 8] & (1 << (spell % 8))) != 0;
                 }
             }
 
-            infile->Read(&char_buffer, sizeof(char_buffer));
-            if (char_buffer) {
-                hero_data->customPrimarySkills = 1;
+            infile->read(&charBuffer, sizeof(charBuffer));
+            if (charBuffer) {
+                heroData->m_customPrimarySkills = 1;
                 for (x = 0; x < 4; ++x) {
-                    infile->Read(&char_buffer, sizeof(char_buffer));
-                    hero_data->primarySkills[x] = char_buffer;
+                    infile->read(&charBuffer, sizeof(charBuffer));
+                    heroData->m_primarySkills[x] = charBuffer;
                 }
             }
         }
     }
 
-    if (infile->Read(padding, sizeof(padding)) < sizeof(padding))
+    if (infile->read(padding, sizeof(padding)) < sizeof(padding))
         return -1;
 
     // A prison hero is not owned and not in any tavern pool.
-    if (objectTypes[heroObject->typeIndex].objectType == PRISON)
-        gpGame->heroAvailability[HeroID] = 0x41;
+    if (m_objectTypes[heroObject->m_typeIndex].m_objectType == PRISON)
+        g_game->m_heroAvailability[heroID] = 0x41;
     else
-        gpGame->heroAvailability[HeroID] = Owner;
+        g_game->m_heroAvailability[heroID] = owner;
 
-    hero_data->location = heroObject->get_trigger();
+    heroData->m_location = heroObject->getTrigger();
     return 0;
 }
 
@@ -3918,53 +3955,53 @@ int NewfullMap::readGarrisonData(TAbstractFile* infile, CObject* garrisonObject,
     garrison newGarrison;
 
     unsigned char owner;
-    if (infile->Read(&owner, sizeof(owner)) < sizeof(owner))
+    if (infile->read(&owner, sizeof(owner)) < sizeof(owner))
         return -1;
-    newGarrison.playerOwner = owner;
+    newGarrison.m_playerOwner = owner;
 
     unsigned char pad[3];
-    if (infile->Read(pad, sizeof(pad)) < sizeof(pad))
+    if (infile->read(pad, sizeof(pad)) < sizeof(pad))
         return -1;
 
     for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
         int creature;
         if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
             signed char narrow;
-            infile->Read(&narrow, sizeof(narrow));
+            infile->read(&narrow, sizeof(narrow));
             creature = narrow;
         } else {
             short wide;
-            infile->Read(&wide, sizeof(wide));
+            infile->read(&wide, sizeof(wide));
             creature = wide;
         }
-        newGarrison.garrisonArmy.armies[slot] = creature;
+        newGarrison.m_garrisonArmy.m_armies[slot] = creature;
 
         short count;
-        if (infile->Read(&count, sizeof(count)) < sizeof(count))
+        if (infile->read(&count, sizeof(count)) < sizeof(count))
             return -1;
-        newGarrison.garrisonArmy.numTroops[slot] = count;
+        newGarrison.m_garrisonArmy.m_numTroops[slot] = count;
     }
 
-    if (gpGame->mapHeader.version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-        newGarrison.removableTroops = 1;
+    if (g_game->m_mapHeader.m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+        newGarrison.m_removableTroops = 1;
     } else {
         unsigned char value;
-        infile->Read(&value, sizeof(value));
-        newGarrison.removableTroops = value != 0;
+        infile->read(&value, sizeof(value));
+        newGarrison.m_removableTroops = value != 0;
     }
 
     int triggerX;
     int triggerY;
-    garrisonObject->FindTrigger(triggerX, triggerY);
-    newGarrison.mapX = static_cast<unsigned char>(triggerX);
-    newGarrison.mapY = static_cast<unsigned char>(triggerY);
-    newGarrison.mapZ = garrisonObject->z;
+    garrisonObject->findTrigger(triggerX, triggerY);
+    newGarrison.m_mapX = static_cast<unsigned char>(triggerX);
+    newGarrison.m_mapY = static_cast<unsigned char>(triggerY);
+    newGarrison.m_mapZ = garrisonObject->m_z;
 
-    gpGame->garrisons.push_back(newGarrison);
-    garrisonObject->extraInfo = gpGame->garrisons.size() - 1;
+    g_game->m_garrisons.push_back(newGarrison);
+    garrisonObject->m_extraInfo = g_game->m_garrisons.size() - 1;
 
     unsigned char padding[8];
-    if (infile->Read(padding, sizeof(padding)) < sizeof(padding))
+    if (infile->read(padding, sizeof(padding)) < sizeof(padding))
         return -1;
     return 0;
 }
@@ -3985,67 +4022,67 @@ int NewfullMap::readGarrisonData(TAbstractFile* infile, CObject* garrisonObject,
 // conditions. Their zero/nonzero branches, the shared `x`/FindTrigger local,
 // and the width-bound mask scan reproduce all 36 retail blocks.
 VA(0x00502b60, 0x29B)  // anchor-caller + vector/member/callee proof + HD53 byte-identical name; retail-only
-void NewfullMap::SoD_transformRandomDwellings()
+void NewfullMap::soDTransformRandomDwellings()
 {
     generator newGenerator;
 
-    for (unsigned int index = 0; index < randomDwellings.size(); ++index) {
-        RandomDwellingData& dwelling = randomDwellings[index];
+    for (unsigned int index = 0; index < m_randomDwellings.size(); ++index) {
+        RandomDwellingData& dwelling = m_randomDwellings[index];
 
         int alignment;
-        if (dwelling.castleId) {
-            int townIndex = gpGame->scenarioTowns.size();
+        if (dwelling.m_castleId) {
+            int townIndex = g_game->m_scenarioTowns.size();
             while (townIndex--) {
-                if (gpGame->scenarioTowns[townIndex].castleId
-                    == dwelling.castleId)
+                if (g_game->m_scenarioTowns[townIndex].m_objRef
+                    == dwelling.m_castleId)
                     break;
             }
-            alignment = gpGame->scenarioTowns[townIndex].townType;
+            alignment = g_game->m_scenarioTowns[townIndex].m_townType;
         } else {
-            alignment = pick_alignment(dwelling.factionMask, 0);
+            alignment = pickAlignment(dwelling.m_factionMask, 0);
         }
 
-        TCreatureType creature = gTownDwellingCreatures[
+        TCreatureType creature = g_townDwellingCreatures[
             alignment * 2 * TOWN_DWELLING_COUNT
-            + Random(dwelling.minLevel, dwelling.maxLevel)];
+            + random(dwelling.m_minLevel, dwelling.m_maxLevel)];
 
         int generatorType;
         if (creature == CREATURE_STONE_GOLEM) {
-            NewfullMapFn_00505F20(dwelling.object, CREATURE_GENERATOR_4,
+            newfullMapFn00505F20(dwelling.m_object, CREATURE_GENERATOR_4,
                                   1, -1);
-            newGenerator.genClass = CREATURE_GENERATOR_4;
+            newGenerator.m_genClass = CREATURE_GENERATOR_4;
             generatorType = 1;
         } else {
-            newGenerator.genClass = CREATURE_GENERATOR_1;
+            newGenerator.m_genClass = CREATURE_GENERATOR_1;
             generatorType = 79;
             do {
-            } while (gCreatureGenerator1Types[generatorType] != creature
+            } while (g_creatureGenerator1Types[generatorType] != creature
                      && generatorType--);
             if (generatorType < 0)
                 continue;
-            NewfullMapFn_00505F20(dwelling.object, CREATURE_GENERATOR_1,
+            newfullMapFn00505F20(dwelling.m_object, CREATURE_GENERATOR_1,
                                   generatorType, -1);
         }
 
-        CObjectType* objectType = dwelling.object->get_object_type_ptr();
+        CObjectType* objectType = dwelling.m_object->getObjectTypePtr();
         int x;
-        for (x = 0; x < objectType->width; ++x) {
-            if (!objectType->passableCells[47 - x]
-                || objectType->triggerCells[47 - x])
+        for (x = 0; x < objectType->m_width; ++x) {
+            if (!objectType->m_passableCells[47 - x]
+                || objectType->m_triggerCells[47 - x])
                 break;
         }
-        dwelling.object->x += x;
+        dwelling.m_object->m_x += x;
 
         int triggerY;
-        dwelling.object->FindTrigger(x, triggerY);
-        newGenerator.genType = static_cast<char>(generatorType);
-        newGenerator.mapX = static_cast<unsigned char>(x);
-        newGenerator.mapY = static_cast<unsigned char>(triggerY);
-        newGenerator.mapZ = dwelling.object->z;
-        newGenerator.Initialize(dwelling.owner);
+        dwelling.m_object->findTrigger(x, triggerY);
+        newGenerator.m_genType = static_cast<char>(generatorType);
+        newGenerator.m_mapX = static_cast<unsigned char>(x);
+        newGenerator.m_mapY = static_cast<unsigned char>(triggerY);
+        newGenerator.m_mapZ = dwelling.m_object->m_z;
+        newGenerator.initialize(dwelling.m_owner);
 
-        gpGame->generators.push_back(newGenerator);
-        dwelling.object->extraInfo = gpGame->generators.size() - 1;
+        g_game->m_generators.push_back(newGenerator);
+        dwelling.m_object->m_extraInfo = g_game->m_generators.size() - 1;
     }
 }
 
@@ -4086,19 +4123,19 @@ static void readQuestGuardArm(NewfullMap* map, TAbstractFile* infile,
     tempGuard.read(infile);
     {
         std::vector<TQuestGuard>::iterator guardEnd
-            = map->QuestGuardList.end();
+            = map->m_questGuardList.end();
 #pragma inline_depth(0)
-        map->QuestGuardList.insert(guardEnd, tempGuard);
-        tempObject->extraInfo = map->QuestGuardList.size() - 1;
+        map->m_questGuardList.insert(guardEnd, tempGuard);
+        tempObject->m_extraInfo = map->m_questGuardList.size() - 1;
 #pragma inline_depth()
     }
-    if (tempGuard.quest) {
+    if (tempGuard.m_quest) {
         CMapObjectData* questData = static_cast<CMapObjectData*>(
-            static_cast<void*>(tempGuard.quest));
+            static_cast<void*>(tempGuard.m_quest));
         std::vector<CMapObjectData*>::iterator dataEnd
-            = map->mapObjectData.end();
+            = map->m_mapObjectData.end();
 #pragma inline_depth(0)
-        map->mapObjectData.insert(dataEnd, questData);
+        map->m_mapObjectData.insert(dataEnd, questData);
 #pragma inline_depth()
     }
 }
@@ -4214,28 +4251,28 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
                            int mapVersion)
 {
     char value;
-    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+    if (infile->read(&value, sizeof(value)) < sizeof(value))
         return -1;
-    tempObject->x = value;
+    tempObject->m_x = value;
 
-    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+    if (infile->read(&value, sizeof(value)) < sizeof(value))
         return -1;
-    tempObject->y = value;
+    tempObject->m_y = value;
 
-    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+    if (infile->read(&value, sizeof(value)) < sizeof(value))
         return -1;
-    tempObject->z = value;
+    tempObject->m_z = value;
 
     int typeIndex;
-    if (infile->Read(&typeIndex, sizeof(typeIndex)) < sizeof(typeIndex))
+    if (infile->read(&typeIndex, sizeof(typeIndex)) < sizeof(typeIndex))
         return -1;
-    tempObject->typeIndex = static_cast<unsigned short>(typeIndex);
+    tempObject->m_typeIndex = static_cast<unsigned short>(typeIndex);
 
     char padding[5];
-    if (infile->Read(padding, sizeof(padding)) < sizeof(padding))
+    if (infile->read(padding, sizeof(padding)) < sizeof(padding))
         return -1;
 
-    switch (objectTypes[tempObject->typeIndex].objectType) {
+    switch (m_objectTypes[tempObject->m_typeIndex].m_objectType) {
     case ARTIFACT:
     case RANDOM_ARTIFACT:
     case RANDOM_ARTIFACT_1:
@@ -4253,12 +4290,12 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
 
     case BOAT: {
         signed char boatType = static_cast<signed char>(
-            objectTypes[tempObject->typeIndex].extra);
+            m_objectTypes[tempObject->m_typeIndex].m_extra);
         int triggerX;
         int triggerY;
-        tempObject->FindTrigger(triggerX, triggerY);
-        tempObject->extraInfo = gpGame->CreateBoat(
-            triggerX, triggerY, tempObject->z, -1, 1, boatType);
+        tempObject->findTrigger(triggerX, triggerY);
+        tempObject->m_extraInfo = g_game->createBoat(
+            triggerX, triggerY, tempObject->m_z, -1, 1, boatType);
         break;
     }
 
@@ -4285,21 +4322,21 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
 
     case HERO_PLACEHOLDER: {
         HeroPlaceholderData placeholder;
-        placeholder.object = tempObject;
+        placeholder.m_object = tempObject;
 
-        infile->Read(&value, sizeof(value));
-        placeholder.owner = value;
+        infile->read(&value, sizeof(value));
+        placeholder.m_owner = value;
 
-        infile->Read(&value, sizeof(value));
-        placeholder.heroId = value;
-        if (placeholder.heroId
+        infile->read(&value, sizeof(value));
+        placeholder.m_heroId = value;
+        if (placeholder.m_heroId
                 == HeroPlaceholderData::HERO_ID_BY_POWER_RATING) {
-            placeholder.heroId = -1;
-            infile->Read(&value, sizeof(value));
-            placeholder.powerRating = value;
+            placeholder.m_heroId = -1;
+            infile->read(&value, sizeof(value));
+            placeholder.m_powerRating = value;
         }
 
-        heroPlaceholders.push_back(placeholder);
+        m_heroPlaceholders.push_back(placeholder);
         break;
     }
 
@@ -4308,16 +4345,16 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
         break;
 
     case SHIPYARD: {
-        if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        if (infile->read(&value, sizeof(value)) < sizeof(value))
             break;
-        tempObject->shipyard_info.owner = value;
+        tempObject->m_shipyardInfo.m_owner = value;
 
         char shipyardPadding[3];
-        if (infile->Read(shipyardPadding, sizeof(shipyardPadding))
+        if (infile->read(shipyardPadding, sizeof(shipyardPadding))
                 < sizeof(shipyardPadding))
             break;
-        tempObject->shipyard_info.boatX = 0xff;
-        tempObject->shipyard_info.boatY = 0xff;
+        tempObject->m_shipyardInfo.m_boatX = 0xff;
+        tempObject->m_shipyardInfo.m_boatY = 0xff;
         break;
     }
 
@@ -4327,15 +4364,15 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
         break;
 
     case HOLY_GRAIL: {
-        if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        if (infile->read(&value, sizeof(value)) < sizeof(value))
             break;
-        gpGame->ultimateArtifactX = tempObject->x;
-        gpGame->ultimateArtifactY = tempObject->y;
-        gpGame->ultimateArtifactZ = tempObject->z;
-        gpGame->field_1f695 = value;
+        g_game->m_ultimateArtifactX = tempObject->m_x;
+        g_game->m_ultimateArtifactY = tempObject->m_y;
+        g_game->m_ultimateArtifactZ = tempObject->m_z;
+        g_game->m_ultimateRadius = value;
 
         char grailPadding[3];
-        infile->Read(grailPadding, sizeof(grailPadding));
+        infile->read(grailPadding, sizeof(grailPadding));
         break;
     }
 
@@ -4351,27 +4388,27 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
         TSeerHut tempHut;
         tempHut.read(infile);
         {
-            std::vector<TSeerHut>::iterator hutEnd = SeerHutList.end();
+            std::vector<TSeerHut>::iterator hutEnd = m_seerHutList.end();
 #pragma inline_depth(0)
-            SeerHutList.insert(hutEnd, tempHut);
+            m_seerHutList.insert(hutEnd, tempHut);
 #pragma inline_depth()
         }
-        tempObject->extraInfo = SeerHutList.size() - 1;
-        if (tempHut.quest)
-            mapObjectData.push_back(static_cast<CMapObjectData*>(
-                static_cast<void*>(tempHut.quest)));
+        tempObject->m_extraInfo = m_seerHutList.size() - 1;
+        if (tempHut.m_quest)
+            m_mapObjectData.push_back(static_cast<CMapObjectData*>(
+                static_cast<void*>(tempHut.m_quest)));
         break;
     }
 
     case SHRINE1:
     case SHRINE2:
     case SHRINE3: {
-        if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        if (infile->read(&value, sizeof(value)) < sizeof(value))
             break;
-        tempObject->shrine_info.spell = value;
+        tempObject->m_shrineInfo.m_spell = value;
 
         char shrinePadding[3];
-        infile->Read(shrinePadding, sizeof(shrinePadding));
+        infile->read(shrinePadding, sizeof(shrinePadding));
         break;
     }
 
@@ -4381,7 +4418,7 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
         break;
 
     case MINE:
-        if (objectTypes[tempObject->typeIndex].extra == NUM_RESOURCES)
+        if (m_objectTypes[tempObject->m_typeIndex].m_extra == NUM_RESOURCES)
             readAbandonedMineData(infile, tempObject);
         else
             readMineData(infile, tempObject);
@@ -4403,58 +4440,58 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
     case RANDOM_DWELLING: {
         RandomDwellingData dwelling;
 
-        infile->Read(&value, sizeof(value));
-        dwelling.owner = value;
+        infile->read(&value, sizeof(value));
+        dwelling.m_owner = value;
 
-        infile->Read(padding, 3);
+        infile->read(padding, 3);
 
         int castleId;
-        infile->Read(&castleId, sizeof(castleId));
-        dwelling.castleId = castleId;
+        infile->read(&castleId, sizeof(castleId));
+        dwelling.m_castleId = castleId;
         if (castleId == 0) {
             short factionMask;
-            infile->Read(&factionMask, sizeof(factionMask));
-            dwelling.factionMask = factionMask;
+            infile->read(&factionMask, sizeof(factionMask));
+            dwelling.m_factionMask = factionMask;
         }
 
-        infile->Read(&value, sizeof(value));
-        dwelling.minLevel = value;
-        infile->Read(&value, sizeof(value));
-        dwelling.maxLevel = value;
+        infile->read(&value, sizeof(value));
+        dwelling.m_minLevel = value;
+        infile->read(&value, sizeof(value));
+        dwelling.m_maxLevel = value;
 
-        dwelling.object = tempObject;
-        randomDwellings.push_back(dwelling);
+        dwelling.m_object = tempObject;
+        m_randomDwellings.push_back(dwelling);
         break;
     }
 
     case RANDOM_DWELLING_LVL: {
         RandomDwellingData dwelling;
 
-        infile->Read(&value, sizeof(value));
-        dwelling.owner = value;
+        infile->read(&value, sizeof(value));
+        dwelling.m_owner = value;
 
-        infile->Read(padding, 3);
+        infile->read(padding, 3);
 
         int castleId;
-        infile->Read(&castleId, sizeof(castleId));
-        dwelling.castleId = castleId;
+        infile->read(&castleId, sizeof(castleId));
+        dwelling.m_castleId = castleId;
         if (castleId == 0) {
             short factionMask;
-            infile->Read(&factionMask, sizeof(factionMask));
-            dwelling.factionMask = factionMask;
+            infile->read(&factionMask, sizeof(factionMask));
+            dwelling.m_factionMask = factionMask;
         }
 
-        dwelling.minLevel = static_cast<unsigned char>(
-            objectTypes[tempObject->typeIndex].extra);
-        dwelling.maxLevel = static_cast<unsigned char>(
-            objectTypes[tempObject->typeIndex].extra);
+        dwelling.m_minLevel = static_cast<unsigned char>(
+            m_objectTypes[tempObject->m_typeIndex].m_extra);
+        dwelling.m_maxLevel = static_cast<unsigned char>(
+            m_objectTypes[tempObject->m_typeIndex].m_extra);
 
-        dwelling.object = tempObject;
+        dwelling.m_object = tempObject;
         {
             std::vector<RandomDwellingData>::iterator dwellingEnd
-                = randomDwellings.end();
+                = m_randomDwellings.end();
 #pragma inline_depth(0)
-            randomDwellings.insert(dwellingEnd, 1, dwelling);
+            m_randomDwellings.insert(dwellingEnd, 1, dwelling);
 #pragma inline_depth()
         }
         break;
@@ -4463,26 +4500,26 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
     case RANDOM_DWELLING_FACTION: {
         RandomDwellingData dwelling;
 
-        infile->Read(&value, sizeof(value));
-        dwelling.owner = value;
+        infile->read(&value, sizeof(value));
+        dwelling.m_owner = value;
 
-        infile->Read(padding, 3);
+        infile->read(padding, 3);
 
-        dwelling.castleId = 0;
-        dwelling.factionMask = static_cast<unsigned short>(
-            1 << objectTypes[tempObject->typeIndex].extra);
+        dwelling.m_castleId = 0;
+        dwelling.m_factionMask = static_cast<unsigned short>(
+            1 << m_objectTypes[tempObject->m_typeIndex].m_extra);
 
-        infile->Read(&value, sizeof(value));
-        dwelling.minLevel = value;
-        infile->Read(&value, sizeof(value));
-        dwelling.maxLevel = value;
+        infile->read(&value, sizeof(value));
+        dwelling.m_minLevel = value;
+        infile->read(&value, sizeof(value));
+        dwelling.m_maxLevel = value;
 
-        dwelling.object = tempObject;
+        dwelling.m_object = tempObject;
         {
             std::vector<RandomDwellingData>::iterator dwellingEnd
-                = randomDwellings.end();
+                = m_randomDwellings.end();
 #pragma inline_depth(0)
-            randomDwellings.insert(dwellingEnd, 1, dwelling);
+            m_randomDwellings.insert(dwellingEnd, 1, dwelling);
 #pragma inline_depth()
         }
         break;
@@ -4493,12 +4530,12 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
         break;
 
     case WITCH_HUT:
-        if (gpGame->mapHeader.version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-            tempObject->extraInfo = 0xefbf;
+        if (g_game->m_mapHeader.m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+            tempObject->m_extraInfo = 0xefbf;
         } else {
             int allowedSkills;
-            infile->Read(&allowedSkills, sizeof(allowedSkills));
-            tempObject->extraInfo = allowedSkills;
+            infile->read(&allowedSkills, sizeof(allowedSkills));
+            tempObject->m_extraInfo = allowedSkills;
         }
         break;
 
@@ -4514,20 +4551,20 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
 VA(0x00503640, 0x8D)  // order-map: leaf twin of loadObject 0x5036d0; sole caller saveMapObjects 0x504a40 (DC-isomorphic), dc 0xf1b1c
 int NewfullMap::saveObject(TAbstractFile* outfile, CObject* tempObject)
 {
-    unsigned char value = tempObject->x;
-    if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+    unsigned char value = tempObject->m_x;
+    if (outfile->write(&value, sizeof(value)) < sizeof(value))
         return -1;
 
-    value = tempObject->y;
-    if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+    value = tempObject->m_y;
+    if (outfile->write(&value, sizeof(value)) < sizeof(value))
         return -1;
 
-    value = tempObject->z;
-    if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+    value = tempObject->m_z;
+    if (outfile->write(&value, sizeof(value)) < sizeof(value))
         return -1;
 
-    unsigned short typeIndex = tempObject->typeIndex;
-    if (outfile->Write(&typeIndex, sizeof(typeIndex)) < sizeof(typeIndex))
+    unsigned short typeIndex = tempObject->m_typeIndex;
+    if (outfile->write(&typeIndex, sizeof(typeIndex)) < sizeof(typeIndex))
         return -1;
     return 0;
 }
@@ -4538,22 +4575,22 @@ VA(0x005036d0, 0xA4)  // order-map: leaf twin of saveObject 0x503640; sole calle
 int NewfullMap::loadObject(TAbstractFile* infile, CObject* tempObject)
 {
     unsigned char value;
-    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+    if (infile->read(&value, sizeof(value)) < sizeof(value))
         return -1;
-    tempObject->x = value;
+    tempObject->m_x = value;
 
-    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+    if (infile->read(&value, sizeof(value)) < sizeof(value))
         return -1;
-    tempObject->y = value;
+    tempObject->m_y = value;
 
-    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+    if (infile->read(&value, sizeof(value)) < sizeof(value))
         return -1;
-    tempObject->z = value;
+    tempObject->m_z = value;
 
     unsigned short typeIndex;
-    if (infile->Read(&typeIndex, sizeof(typeIndex)) < sizeof(typeIndex))
+    if (infile->read(&typeIndex, sizeof(typeIndex)) < sizeof(typeIndex))
         return -1;
-    tempObject->typeIndex = typeIndex;
+    tempObject->m_typeIndex = typeIndex;
     return 0;
 }
 
@@ -4607,10 +4644,10 @@ int NewfullMap::readObjectType(TAbstractFile* infile,
     unsigned char packed[6];
     int i;
 
-    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+    if (infile->read(&value, sizeof(value)) < sizeof(value))
         return -1;
-    infile->Read(imageName, value);
-    tempObjectType->ImageName = imageName;
+    infile->read(imageName, value);
+    tempObjectType->m_imageName = imageName;
 
     _strrev(imageName);
     imageName[0] = 'k';
@@ -4619,88 +4656,90 @@ int NewfullMap::readObjectType(TAbstractFile* infile,
     _strrev(imageName);
 
     unsigned char usedDefaultMask = 0;
-    LODFile* maskFile = ResourceManager::PointToSpriteResource(imageName);
+    LODFile* maskFile = ResourceManager::pointToSpriteResource(imageName);
     if (maskFile == 0) {
         usedDefaultMask = 1;
-        maskFile = ResourceManager::PointToSpriteResource(
+        maskFile = ResourceManager::pointToSpriteResource(
             DATA_COMPGEN(0x0067fb3c, readObjectTypeDefaultMask,
                          "default.msk"));
         if (maskFile == 0)
             return -1;
     }
 
-    ResourceManager::ReadFromBitmapResource(maskFile, &byteValue,
+    ResourceManager::readFromBitmapResource(maskFile, &byteValue,
                                             sizeof(byteValue));
-    tempObjectType->width = byteValue;
-    ResourceManager::ReadFromBitmapResource(maskFile, &byteValue,
+    tempObjectType->m_width = byteValue;
+    ResourceManager::readFromBitmapResource(maskFile, &byteValue,
                                             sizeof(byteValue));
-    tempObjectType->height = byteValue;
+    tempObjectType->m_height = byteValue;
 
-    ResourceManager::ReadFromBitmapResource(maskFile, packed, sizeof(packed));
+    ResourceManager::readFromBitmapResource(maskFile, packed, sizeof(packed));
     for (i = 0; i < sizeof(packed) * 8; ++i) {
-        tempObjectType->drawCells.set(i,
+        tempObjectType->m_drawCells.set(i,
             (packed[i / 8] & (1 << (i % 8))) != 0);
     }
 
-    if (infile->Read(packed, sizeof(packed)) < sizeof(packed))
+    if (infile->read(packed, sizeof(packed)) < sizeof(packed))
         return -1;
     for (i = 0; i < sizeof(packed) * 8; ++i) {
-        tempObjectType->passableCells.set(i,
+        tempObjectType->m_passableCells.set(i,
             (packed[i / 8] & (1 << (i % 8))) != 0);
     }
 
-    ResourceManager::ReadFromBitmapResource(maskFile, packed, sizeof(packed));
+    ResourceManager::readFromBitmapResource(maskFile, packed, sizeof(packed));
     for (i = 0; i < sizeof(packed) * 8; ++i) {
-        tempObjectType->shadowCells.set(i,
+        tempObjectType->m_shadowCells.set(i,
             (packed[i / 8] & (1 << (i % 8))) != 0);
     }
 
-    if (infile->Read(packed, sizeof(packed)) < sizeof(packed))
+    if (infile->read(packed, sizeof(packed)) < sizeof(packed))
         return -1;
     for (i = 0; i < sizeof(packed) * 8; ++i) {
-        tempObjectType->triggerCells.set(i,
+        tempObjectType->m_triggerCells.set(i,
             (packed[i / 8] & (1 << (i % 8))) != 0);
     }
 
     short landscape;
-    if (infile->Read(&landscape, sizeof(landscape)) < sizeof(landscape))
+    if (infile->read(&landscape, sizeof(landscape)) < sizeof(landscape))
         return -1;
-    if (infile->Read(&landscape, sizeof(landscape)) < sizeof(landscape))
+    if (infile->read(&landscape, sizeof(landscape)) < sizeof(landscape))
         return -1;
 
-    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+    if (infile->read(&value, sizeof(value)) < sizeof(value))
         return -1;
     union {
-        unsigned long raw;
-        TAdventureObjectType typed;
+        // Before normalization: raw.
+        unsigned long m_raw;
+        // Before normalization: typed.
+        TAdventureObjectType m_typed;
     } convertedType;
-    convertedType.raw = value;
-    tempObjectType->objectType = convertedType.typed;
+    convertedType.m_raw = value;
+    tempObjectType->m_objectType = convertedType.m_typed;
     if (usedDefaultMask) {
-        sprintf(gText,
+        sprintf(g_text,
                 DATA_COMPGEN(0x0067fb10, readObjectTypeMissingMask,
                              "Could not load mask file for %s! - Type: %s"),
-                tempObjectType->ImageName.c_str(),
-                gAdventureObjectNames[value]);
-        MessageBoxA(hwndApp, gText, "Error!", 0);
+                tempObjectType->m_imageName.c_str(),
+                g_adventureObjectNames[value]);
+        MessageBoxA(g_hwndApp, g_text, "Error!", 0);
     }
 
-    memcpy(&tempObjectType->objectType,
-           &gAdventureObjectTraits[tempObjectType->objectType][8],
-           sizeof(tempObjectType->objectType));
+    memcpy(&tempObjectType->m_objectType,
+           &g_adventureObjectTraits[tempObjectType->m_objectType][8],
+           sizeof(tempObjectType->m_objectType));
 
-    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+    if (infile->read(&value, sizeof(value)) < sizeof(value))
         return -1;
-    tempObjectType->extra = value;
+    tempObjectType->m_extra = value;
 
-    if (infile->Read(&byteValue, sizeof(byteValue)) < sizeof(byteValue))
+    if (infile->read(&byteValue, sizeof(byteValue)) < sizeof(byteValue))
         return -1;
-    if (infile->Read(&byteValue, sizeof(byteValue)) < sizeof(byteValue))
+    if (infile->read(&byteValue, sizeof(byteValue)) < sizeof(byteValue))
         return -1;
-    tempObjectType->suppressDraw = byteValue != 0;
+    tempObjectType->m_suppressDraw = byteValue != 0;
 
     char unused[16];
-    if (infile->Read(unused, sizeof(unused)) < sizeof(unused))
+    if (infile->read(unused, sizeof(unused)) < sizeof(unused))
         return -1;
     return usedDefaultMask ? READ_OBJECT_TYPE_DEFAULT_MASK : 1;
 }
@@ -4724,13 +4763,13 @@ VA(0x00503c40, 0x2B9)  // order-map: calls saveString 0x4bbb60 + bitset<48> help
 int NewfullMap::saveObjectType(TAbstractFile* outfile,
                                CObjectType* tempObjectType)
 {
-    game::saveString(outfile, &tempObjectType->ImageName);
+    game::saveString(outfile, &tempObjectType->m_imageName);
 
-    char value = tempObjectType->width;
-    if (static_cast<unsigned>(outfile->Write(&value, 1)) < 1)
+    char value = tempObjectType->m_width;
+    if (static_cast<unsigned>(outfile->write(&value, 1)) < 1)
         return -1;
-    value = tempObjectType->height;
-    if (static_cast<unsigned>(outfile->Write(&value, 1)) < 1)
+    value = tempObjectType->m_height;
+    if (static_cast<unsigned>(outfile->write(&value, 1)) < 1)
         return -1;
 
     unsigned char packed[6];
@@ -4738,46 +4777,46 @@ int NewfullMap::saveObjectType(TAbstractFile* outfile,
 
     memset(packed, 0, sizeof(packed));
     for (i = 0; i < sizeof(packed) * 8; ++i) {
-        if (tempObjectType->drawCells.test(i))
+        if (tempObjectType->m_drawCells.test(i))
             packed[i / 8] |= 1 << (i % 8);
     }
-    if (static_cast<unsigned>(outfile->Write(packed, 6)) < 6)
+    if (static_cast<unsigned>(outfile->write(packed, 6)) < 6)
         return -1;
 
     memset(packed, 0, sizeof(packed));
     for (i = 0; i < sizeof(packed) * 8; ++i) {
-        if (tempObjectType->passableCells.test(i))
+        if (tempObjectType->m_passableCells.test(i))
             packed[i / 8] |= 1 << (i % 8);
     }
-    if (static_cast<unsigned>(outfile->Write(packed, 6)) < 6)
+    if (static_cast<unsigned>(outfile->write(packed, 6)) < 6)
         return -1;
 
     memset(packed, 0, sizeof(packed));
     for (i = 0; i < sizeof(packed) * 8; ++i) {
-        if (tempObjectType->shadowCells.test(i))
+        if (tempObjectType->m_shadowCells.test(i))
             packed[i / 8] |= 1 << (i % 8);
     }
-    if (static_cast<unsigned>(outfile->Write(packed, 6)) < 6)
+    if (static_cast<unsigned>(outfile->write(packed, 6)) < 6)
         return -1;
 
     memset(packed, 0, sizeof(packed));
     for (i = 0; i < sizeof(packed) * 8; ++i) {
-        if (tempObjectType->triggerCells.test(i))
+        if (tempObjectType->m_triggerCells.test(i))
             packed[i / 8] |= 1 << (i % 8);
     }
-    if (static_cast<unsigned>(outfile->Write(packed, 6)) < 6)
+    if (static_cast<unsigned>(outfile->write(packed, 6)) < 6)
         return -1;
 
-    short typeValue = tempObjectType->objectType;
-    if (static_cast<unsigned>(outfile->Write(&typeValue, 2)) < 2)
+    short typeValue = tempObjectType->m_objectType;
+    if (static_cast<unsigned>(outfile->write(&typeValue, 2)) < 2)
         return -1;
 
-    int extra = tempObjectType->extra;
-    if (static_cast<unsigned>(outfile->Write(&extra, 4)) < 4)
+    int extra = tempObjectType->m_extra;
+    if (static_cast<unsigned>(outfile->write(&extra, 4)) < 4)
         return -1;
 
-    value = tempObjectType->suppressDraw;
-    return static_cast<unsigned>(outfile->Write(&value, 1)) < 1 ? -1 : 1;
+    value = tempObjectType->m_suppressDraw;
+    return static_cast<unsigned>(outfile->write(&value, 1)) < 1 ? -1 : 1;
 }
 
 #if 0  // @carcass -- located/reconstruction-pending bodies
@@ -4798,65 +4837,67 @@ VA(0x00503f00, 0x35D)  // order-map: calls loadString 0x4bb990 + bitset<48> help
 int NewfullMap::loadObjectType(TAbstractFile* infile,
                                CObjectType* tempObjectType)
 {
-    loadString(infile, &tempObjectType->ImageName);
+    loadString(infile, &tempObjectType->m_imageName);
 
     char value;
-    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+    if (infile->read(&value, sizeof(value)) < sizeof(value))
         return -1;
-    tempObjectType->width = value;
-    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+    tempObjectType->m_width = value;
+    if (infile->read(&value, sizeof(value)) < sizeof(value))
         return -1;
-    tempObjectType->height = value;
+    tempObjectType->m_height = value;
 
     unsigned char packed[6];
     int i;
 
-    if (infile->Read(packed, sizeof(packed)) < sizeof(packed))
+    if (infile->read(packed, sizeof(packed)) < sizeof(packed))
         return -1;
     for (i = 0; i < sizeof(packed) * 8; ++i) {
-        tempObjectType->drawCells.set(i,
+        tempObjectType->m_drawCells.set(i,
             (packed[i / 8] & (1 << (i % 8))) != 0);
     }
 
-    if (infile->Read(packed, sizeof(packed)) < sizeof(packed))
+    if (infile->read(packed, sizeof(packed)) < sizeof(packed))
         return -1;
     for (i = 0; i < sizeof(packed) * 8; ++i) {
-        tempObjectType->passableCells.set(i,
+        tempObjectType->m_passableCells.set(i,
             (packed[i / 8] & (1 << (i % 8))) != 0);
     }
 
-    if (infile->Read(packed, sizeof(packed)) < sizeof(packed))
+    if (infile->read(packed, sizeof(packed)) < sizeof(packed))
         return -1;
     for (i = 0; i < sizeof(packed) * 8; ++i) {
-        tempObjectType->shadowCells.set(i,
+        tempObjectType->m_shadowCells.set(i,
             (packed[i / 8] & (1 << (i % 8))) != 0);
     }
 
-    if (infile->Read(packed, sizeof(packed)) < sizeof(packed))
+    if (infile->read(packed, sizeof(packed)) < sizeof(packed))
         return -1;
     for (i = 0; i < sizeof(packed) * 8; ++i) {
-        tempObjectType->triggerCells.set(i,
+        tempObjectType->m_triggerCells.set(i,
             (packed[i / 8] & (1 << (i % 8))) != 0);
     }
 
     unsigned short typeValue;
-    if (infile->Read(&typeValue, sizeof(typeValue)) < sizeof(typeValue))
+    if (infile->read(&typeValue, sizeof(typeValue)) < sizeof(typeValue))
         return -1;
     union {
-        unsigned long raw;
-        TAdventureObjectType typed;
+        // Before normalization: raw.
+        unsigned long m_raw;
+        // Before normalization: typed.
+        TAdventureObjectType m_typed;
     } convertedType;
-    convertedType.raw = typeValue;
-    tempObjectType->objectType = convertedType.typed;
+    convertedType.m_raw = typeValue;
+    tempObjectType->m_objectType = convertedType.m_typed;
 
     int extra;
-    if (infile->Read(&extra, sizeof(extra)) < sizeof(extra))
+    if (infile->read(&extra, sizeof(extra)) < sizeof(extra))
         return -1;
-    tempObjectType->extra = extra;
+    tempObjectType->m_extra = extra;
 
-    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+    if (infile->read(&value, sizeof(value)) < sizeof(value))
         return -1;
-    tempObjectType->suppressDraw = value != 0;
+    tempObjectType->m_suppressDraw = value != 0;
     return 1;
 }
 
@@ -4970,9 +5011,10 @@ int NewfullMap::loadObjectType(TAbstractFile* infile,
 // static destructor, not the excluded initializer thunk itself.  Dreamcast's
 // mapcell $E483 is the same one-call vector<int> teardown for the source-named
 // InvalidPlacementList (dc 0xf2bb4).
-VA_COMPGEN(0x00504290, 0x2A, STATIC_DTOR, InvalidPlacementList)
+VA_COMPGEN(0x00504290, 0x2A, STATIC_DTOR, g_invalidPlacementList)
+// Before normalization: InvalidPlacementList.
 DATA(0x00699690)
-std::vector<int> InvalidPlacementList;
+std::vector<int> g_invalidPlacementList;
 
 // Retail-only object-type lookup rebuild.  Each of the 232 adventure-object
 // classes owns a vector of type records.  Clear every record's resolved
@@ -5009,27 +5051,27 @@ std::vector<int> InvalidPlacementList;
 // resolve to 0x63a608; no DATA_COMPGEN binding exists in mapcell.obj because
 // the literal's physical owner is another compiland.
 VA(0x005042c0, 0x1A5)  // retail body + two callers: readMapObjects/loadMapObjects; no DC roster row
-void NewfullMap::NewfullMapFn_005042C0()
+void NewfullMap::newfullMapFn005042C0()
 {
     for (int objectClass = 0; objectClass < 232; ++objectClass) {
         for (int typeIndex = 0;
-             typeIndex < objectTypeIndex[objectClass].size(); ++typeIndex) {
-            objectTypeIndex[objectClass][typeIndex].field_42 = 0xffff;
+             typeIndex < m_objectTypeIndex[objectClass].size(); ++typeIndex) {
+            m_objectTypeIndex[objectClass][typeIndex].m_objectTypeIndex = 0xffff;
         }
     }
 
-    for (int i = 0; i < objectTypes.size(); ++i) {
-        int objectClass = objectTypes[i].objectType;
-        int extra = objectTypes[i].extra;
-        int typeIndex = objectTypeIndex[objectClass].size();
+    for (int i = 0; i < m_objectTypes.size(); ++i) {
+        int objectClass = m_objectTypes[i].m_objectType;
+        int extra = m_objectTypes[i].m_extra;
+        int typeIndex = m_objectTypeIndex[objectClass].size();
         while (typeIndex--) {
-            CObjectType& candidate = objectTypeIndex[objectClass][typeIndex];
-            if (candidate.extra == extra
-                && candidate.ImageName == objectTypes[i].ImageName)
+            CObjectType& candidate = m_objectTypeIndex[objectClass][typeIndex];
+            if (candidate.m_extra == extra
+                && candidate.m_imageName == m_objectTypes[i].m_imageName)
                 break;
         }
         if (typeIndex >= 0)
-            objectTypeIndex[objectClass][typeIndex].field_42 =
+            m_objectTypeIndex[objectClass][typeIndex].m_objectTypeIndex =
                 static_cast<unsigned short>(i);
     }
 }
@@ -5038,100 +5080,100 @@ void NewfullMap::NewfullMapFn_005042C0()
 VA(0x00504470, 0x5C9)  // order-map: calls readObject 0x502e00 + readObjectType 0x503780 + GetSprite 0x55c7b0 + Random x2 (CObject ctor inlined) + progress-bar helpers; $E482-$E485 pair sits just before at 0x104260/0x104290 matching DC link order; EH-bearing, dc 0xf2c20
 int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
 {
-    InvalidPlacementList.clear();
+    g_invalidPlacementList.clear();
 
     int count;
-    if (infile->Read(&count, sizeof(count)) < sizeof(count))
+    if (infile->read(&count, sizeof(count)) < sizeof(count))
         return -1;
 
-    objectTypes.resize(count);
+    m_objectTypes.resize(count);
 
     int i;
-    for (i = 0; i < objectTypes.size(); ++i) {
-        int status = readObjectType(infile, &objectTypes[i]);
+    for (i = 0; i < m_objectTypes.size(); ++i) {
+        int status = readObjectType(infile, &m_objectTypes[i]);
         if (status < 0)
             return -1;
-        if (i == objectTypes.size() / 2)
-            IncProgressBar(1);
+        if (i == m_objectTypes.size() / 2)
+            incProgressBar(1);
         if (status == READ_OBJECT_TYPE_DEFAULT_MASK)
-            InvalidPlacementList.push_back(i);
+            g_invalidPlacementList.push_back(i);
     }
 
-    NewfullMapFn_005042C0();
-    IncProgressBar(1);
+    newfullMapFn005042C0();
+    incProgressBar(1);
 
     std::vector<CSprite*> oldSprites;
-    oldSprites.resize(sprites.size());
-    for (i = 0; i < sprites.size(); ++i)
-        oldSprites[i] = sprites[i];
+    oldSprites.resize(m_sprites.size());
+    for (i = 0; i < m_sprites.size(); ++i)
+        oldSprites[i] = m_sprites[i];
 
-    sprites.resize(count);
-    for (i = 0; i < objectTypes.size(); ++i) {
-        sprites[i] =
-            ResourceManager::GetSprite(objectTypes[i].ImageName.c_str());
-        if (i == objectTypes.size() / 3)
-            IncProgressBar(1);
-        if (i == objectTypes.size() / 3 * 2)
-            IncProgressBar(1);
+    m_sprites.resize(count);
+    for (i = 0; i < m_objectTypes.size(); ++i) {
+        m_sprites[i] =
+            ResourceManager::getSprite(m_objectTypes[i].m_imageName.c_str());
+        if (i == m_objectTypes.size() / 3)
+            incProgressBar(1);
+        if (i == m_objectTypes.size() / 3 * 2)
+            incProgressBar(1);
     }
 
     for (i = 0; i < oldSprites.size(); ++i)
-        oldSprites[i]->Dispose();
+        oldSprites[i]->dispose();
     oldSprites.clear();
 
-    IncProgressBar(1);
+    incProgressBar(1);
 
-    if (infile->Read(&count, sizeof(count)) < sizeof(count))
+    if (infile->read(&count, sizeof(count)) < sizeof(count))
         return -1;
 
-    objects.resize(count);
-    for (i = 0; i < objects.size(); ++i) {
-        if (readObject(infile, &objects[i], mapVersion) < 0)
+    m_objects.resize(count);
+    for (i = 0; i < m_objects.size(); ++i) {
+        if (readObject(infile, &m_objects[i], mapVersion) < 0)
             return -1;
 
-        for (unsigned int missing = 0; missing < InvalidPlacementList.size();
+        for (unsigned int missing = 0; missing < g_invalidPlacementList.size();
              ++missing) {
-            if (objects[i].typeIndex == InvalidPlacementList[missing]) {
-                sprintf(gText,
+            if (m_objects[i].m_typeIndex == g_invalidPlacementList[missing]) {
+                sprintf(g_text,
                         DATA_COMPGEN(0x0067fb48, readMapObjectsInvalidObject,
                                      "Invalid Object Referenced!\n\n"
                                      "x: %d y: %d z: %d - Type: %s"),
-                        objects[i].x, objects[i].y, objects[i].z,
-                        gAdventureObjectNames[
-                            objectTypes[objects[i].typeIndex].objectType]);
-                MessageBoxA(hwndApp, gText,
+                        m_objects[i].m_x, m_objects[i].m_y, m_objects[i].m_z,
+                        g_adventureObjectNames[
+                            m_objectTypes[m_objects[i].m_typeIndex].m_objectType]);
+                MessageBoxA(g_hwndApp, g_text,
                             DATA_COMPGEN(0x0067fb08,
                                          readMapObjectsErrorCaption, "Error!"),
                             0);
             }
         }
 
-        objects[i].animationOffset = static_cast<unsigned char>(Random(0, 255));
+        m_objects[i].m_animationOffset = static_cast<unsigned char>(random(0, 255));
     }
 
-    IncProgressBar(1);
+    incProgressBar(1);
     return 1;
 }
 
 VA(0x00504a40, 0x127)  // order-map: calls saveObject 0x503640 + saveObjectType 0x503c40 (exact DC callee pair); called by Save, dc 0xf3018
 int NewfullMap::saveMapObjects(TAbstractFile* outfile)
 {
-    int count = objectTypes.size();
-    if (outfile->Write(&count, sizeof(count)) < sizeof(count))
+    int count = m_objectTypes.size();
+    if (outfile->write(&count, sizeof(count)) < sizeof(count))
         return -1;
 
     unsigned int i;
-    for (i = 0; i < objectTypes.size(); ++i) {
-        if (saveObjectType(outfile, &objectTypes[i]) < 0)
+    for (i = 0; i < m_objectTypes.size(); ++i) {
+        if (saveObjectType(outfile, &m_objectTypes[i]) < 0)
             return -1;
     }
 
-    count = objects.size();
-    if (outfile->Write(&count, sizeof(count)) < sizeof(count))
+    count = m_objects.size();
+    if (outfile->write(&count, sizeof(count)) < sizeof(count))
         return -1;
 
-    for (i = 0; i < objects.size(); ++i) {
-        if (saveObject(outfile, &objects[i]) < 0)
+    for (i = 0; i < m_objects.size(); ++i) {
+        if (saveObject(outfile, &m_objects[i]) < 0)
             return -1;
     }
     return 1;
@@ -5160,52 +5202,52 @@ VA(0x00504b70, 0x4E9)  // order-map: calls loadObject 0x5036d0 + loadObjectType 
 int NewfullMap::loadMapObjects(TAbstractFile* infile)
 {
     int count;
-    if (infile->Read(&count, sizeof(count)) < sizeof(count))
+    if (infile->read(&count, sizeof(count)) < sizeof(count))
         return -1;
 
-    objectTypes.resize(count);
+    m_objectTypes.resize(count);
 
     unsigned int i;
-    for (i = 0; i < objectTypes.size(); ++i) {
-        if (loadObjectType(infile, &objectTypes[i]) < 0)
+    for (i = 0; i < m_objectTypes.size(); ++i) {
+        if (loadObjectType(infile, &m_objectTypes[i]) < 0)
             return -1;
     }
 
-    IncProgressBar(1);
-    NewfullMapFn_005042C0();
+    incProgressBar(1);
+    newfullMapFn005042C0();
 
     std::vector<CSprite*> oldSprites;
-    oldSprites.resize(sprites.size());
-    for (i = 0; i < sprites.size(); ++i)
-        oldSprites[i] = sprites[i];
+    oldSprites.resize(m_sprites.size());
+    for (i = 0; i < m_sprites.size(); ++i)
+        oldSprites[i] = m_sprites[i];
 
-    sprites.resize(objectTypes.size());
-    for (i = 0; i < objectTypes.size(); ++i) {
-        sprites[i] =
-            ResourceManager::GetSprite(objectTypes[i].ImageName.c_str());
-        if (i == objectTypes.size() / 3)
-            IncProgressBar(1);
-        if (i == objectTypes.size() / 3 * 2)
-            IncProgressBar(1);
+    m_sprites.resize(m_objectTypes.size());
+    for (i = 0; i < m_objectTypes.size(); ++i) {
+        m_sprites[i] =
+            ResourceManager::getSprite(m_objectTypes[i].m_imageName.c_str());
+        if (i == m_objectTypes.size() / 3)
+            incProgressBar(1);
+        if (i == m_objectTypes.size() / 3 * 2)
+            incProgressBar(1);
     }
 
     for (i = 0; i < oldSprites.size(); ++i)
-        oldSprites[i]->Dispose();
+        oldSprites[i]->dispose();
     oldSprites.clear();
 
-    IncProgressBar(1);
+    incProgressBar(1);
 
-    if (infile->Read(&count, sizeof(count)) < sizeof(count))
+    if (infile->read(&count, sizeof(count)) < sizeof(count))
         return -1;
 
-    objects.resize(count);
-    for (i = 0; i < objects.size(); ++i) {
-        if (loadObject(infile, &objects[i]) < 0)
+    m_objects.resize(count);
+    for (i = 0; i < m_objects.size(); ++i) {
+        if (loadObject(infile, &m_objects[i]) < 0)
             return -1;
-        objects[i].animationOffset = static_cast<unsigned char>(Random(0, 255));
+        m_objects[i].m_animationOffset = static_cast<unsigned char>(random(0, 255));
     }
 
-    IncProgressBar(1);
+    incProgressBar(1);
     return 1;
 }
 
@@ -5252,27 +5294,27 @@ int NewfullMap::loadMapObjects(TAbstractFile* infile)
 // instructions, same order of effects, one schedule apart.  Branch counts and
 // targets agree 15/15 with a single ret, so nothing structural is left.
 VA(0x00505060, 0x1CD)  // order-map: callers exactly StampObject 0x505230 + PlaceObject 0x505b20 (DC-isomorphic); bitset<48> ops, dc 0xf33fc
-void NewfullMap::GenerateHeightMap(const CObject* object,
+void NewfullMap::generateHeightMap(const CObject* object,
                                    signed char heightMap[8][6])
 {
-    int typeIndex = object->typeIndex;
+    int typeIndex = object->m_typeIndex;
 
     memset(heightMap, 0, 48);
 
-    if (objectTypes[typeIndex].suppressDraw)
+    if (m_objectTypes[typeIndex].m_suppressDraw)
         return;
 
-    for (int col = 0; col < objectTypes[typeIndex].width; ++col) {
+    for (int col = 0; col < m_objectTypes[typeIndex].m_width; ++col) {
         int depth = 1;
-        for (int row = 0; row < objectTypes[typeIndex].height; ++row) {
+        for (int row = 0; row < m_objectTypes[typeIndex].m_height; ++row) {
             if (row > 0) {
-                if (!objectTypes[typeIndex].passableCells[47 - row * 8 - col]
-                    && objectTypes[typeIndex].passableCells[55 - row * 8 - col])
+                if (!m_objectTypes[typeIndex].m_passableCells[47 - row * 8 - col]
+                    && m_objectTypes[typeIndex].m_passableCells[55 - row * 8 - col])
                     depth = 1;
             }
             if (col > 0) {
-                if (objectTypes[typeIndex].passableCells[47 - row * 8 - col]
-                    && !objectTypes[typeIndex].passableCells[48 - row * 8 - col])
+                if (m_objectTypes[typeIndex].m_passableCells[47 - row * 8 - col]
+                    && !m_objectTypes[typeIndex].m_passableCells[48 - row * 8 - col])
                     depth = heightMap[col - 1][row];
             }
             heightMap[col][row] = static_cast<signed char>(depth);
@@ -5470,40 +5512,40 @@ void NewfullMap::GenerateHeightMap(const CObject* object,
 // a fifth element - which puts this row with NewfullMapFn_004FD950's
 // handle-numbering residual, not with a reconstruction gap.
 VA(0x00505230, 0x3D9)  // order-map: calls GenerateHeightMap 0x505060 + vector<TObjectCell>::insert machinery 0x50a400; sole caller PlaceObject 0x505b20 (DC-isomorphic), dc 0xf36b0
-void NewfullMap::StampObject(NewmapCell* thisCell,
+void NewfullMap::stampObject(NewmapCell* thisCell,
                              NewmapCell::TObjectCell* objectCell)
 {
     HOMM3_MAPCELL_RELEASE_VERIFY(thisCell != 0 && objectCell != 0);
 
-    std::vector<NewmapCell::TObjectCell>& objectList = thisCell->objects;
+    std::vector<NewmapCell::TObjectCell>& objectList = thisCell->m_objects;
     std::vector<NewmapCell::TObjectCell>::iterator position
         = objectList.end();
-    CObject* newObject = &objects[objectCell->objectIndex];
+    CObject* newObject = &m_objects[objectCell->m_objectIndex];
 
     signed char heightMap[8][6];
-    GenerateHeightMap(newObject, heightMap);
+    generateHeightMap(newObject, heightMap);
 
     while (position != objectList.begin()) {
-        if (objectCell->layer > (position - 1)->layer)
+        if (objectCell->m_layer > (position - 1)->m_layer)
             break;
 
-        if (objectCell->layer == (position - 1)->layer) {
-            CObject* belowObject = &objects[(position - 1)->objectIndex];
-            CObjectType* newType = &objectTypes[newObject->typeIndex];
+        if (objectCell->m_layer == (position - 1)->m_layer) {
+            CObject* belowObject = &m_objects[(position - 1)->m_objectIndex];
+            CObjectType* newType = &m_objectTypes[newObject->m_typeIndex];
 
             RECT newRect;
-            newRect.left = newObject->x - newType->width + 1;
-            newRect.top = newObject->y - newType->height + 1;
-            newRect.right = newObject->x + 1;
-            newRect.bottom = newObject->y + 1;
+            newRect.left = newObject->m_x - newType->m_width + 1;
+            newRect.top = newObject->m_y - newType->m_height + 1;
+            newRect.right = newObject->m_x + 1;
+            newRect.bottom = newObject->m_y + 1;
 
             RECT belowRect;
-            belowRect.left = belowObject->x
-                - objectTypes[belowObject->typeIndex].width + 1;
-            belowRect.top = belowObject->y
-                - objectTypes[belowObject->typeIndex].height + 1;
-            belowRect.right = belowObject->x + 1;
-            belowRect.bottom = belowObject->y + 1;
+            belowRect.left = belowObject->m_x
+                - m_objectTypes[belowObject->m_typeIndex].m_width + 1;
+            belowRect.top = belowObject->m_y
+                - m_objectTypes[belowObject->m_typeIndex].m_height + 1;
+            belowRect.right = belowObject->m_x + 1;
+            belowRect.bottom = belowObject->m_y + 1;
 
             RECT overlap;
             IntersectRect(&overlap, &newRect, &belowRect);
@@ -5511,14 +5553,14 @@ void NewfullMap::StampObject(NewmapCell* thisCell,
                 overlap.left = 0;
             if (overlap.top < 0)
                 overlap.top = 0;
-            if (overlap.right > MAP_WIDTH)
-                overlap.right = MAP_WIDTH;
-            if (overlap.bottom > MAP_HEIGHT)
-                overlap.bottom = MAP_HEIGHT;
+            if (overlap.right > g_mapWidth)
+                overlap.right = g_mapWidth;
+            if (overlap.bottom > g_mapHeight)
+                overlap.bottom = g_mapHeight;
 
             for (int x = overlap.left; x < overlap.right; ++x) {
-                int objectY = newObject->y;
-                signed char* heights = heightMap[newObject->x - x];
+                int objectY = newObject->m_y;
+                signed char* heights = heightMap[newObject->m_x - x];
                 for (int y = overlap.top; y < overlap.bottom; ++y) {
                     // The ACCESSOR SPELLING LOSES HERE, and by a lot:
                     // `gpGame->worldMap.cell(x, y, newObject->z)` costs
@@ -5527,15 +5569,15 @@ void NewfullMap::StampObject(NewmapCell* thisCell,
                     // on TestPossibleDirections) because those bodies
                     // OVER-inline and the accessor shrinks caller_cb; this
                     // one UNDER-inlines and wants the mass.
-                    NewfullMap& worldMap = gpGame->worldMap;
-                    NewmapCell* cell = &worldMap.cellData[
-                        (newObject->z * worldMap.Size + y) * worldMap.Size
+                    NewfullMap& worldMap = g_game->m_worldMap;
+                    NewmapCell* cell = &worldMap.m_cellData[
+                        (newObject->m_z * worldMap.m_size + y) * worldMap.m_size
                         + x];
                     std::vector<NewmapCell::TObjectCell>::iterator scan
-                        = cell->objects.begin();
-                    while (scan->objectIndex != (position - 1)->objectIndex)
+                        = cell->m_objects.begin();
+                    while (scan->m_objectIndex != (position - 1)->m_objectIndex)
                         ++scan;
-                    if (scan->layer > heights[objectY - y])
+                    if (scan->m_layer > heights[objectY - y])
                         goto sinkPast;
                 }
             }
@@ -5583,103 +5625,104 @@ void NewfullMap::StampObject(NewmapCell* thisCell,
 // the index store: retail schedules the `or byte ptr [cell+0xd],0x10` between
 // the load of objectType->objectType and the store of it, and only that
 // source order puts it there.  Setting it first holds the row at 99.4366.
+// Before normalization (locals): bSetExtraInfo.
 VA(0x00505610, 0x3F8)  // order-map: calls hasFlag 0x40fca0 (DC-unique callee); sole caller CalculateCellExtra 0x505a10 (DC-isomorphic); reverse_iterator templates inlined, dc 0xf3a24
-void NewfullMap::calc_cell_extra(NewmapCell* thisCell, unsigned char bSetExtraInfo)
+void NewfullMap::calcCellExtra(NewmapCell* thisCell, unsigned char setExtraInfo)
 {
-    if (bSetExtraInfo) {
-        short storedIndex = thisCell->object_type_index;
-        if (storedIndex >= 0 && storedIndex < objects.size())
-            objects[storedIndex].extraInfo = thisCell->extraInfo;
+    if (setExtraInfo) {
+        short storedIndex = thisCell->m_objectTypeIndex;
+        if (storedIndex >= 0 && storedIndex < m_objects.size())
+            m_objects[storedIndex].m_extraInfo = thisCell->m_extraInfo;
     }
 
-    thisCell->IsBlocked = 0;
-    thisCell->object_type_index = -1;
-    if (thisCell->GroundSet == eTerrainRock)
-        thisCell->IsBlocked = 1;
+    thisCell->m_isBlocked = 0;
+    thisCell->m_objectTypeIndex = -1;
+    if (thisCell->m_groundSet == eTerrainRock)
+        thisCell->m_isBlocked = 1;
 
-    thisCell->type_value = NOTHING;
-    thisCell->is_trigger = 0;
-    thisCell->Passable = 1;
-    if (thisCell->IsBeachBorder && thisCell->GroundSet != eTerrainWater)
-        thisCell->type_value = ANCHOR_POINT;
+    thisCell->m_typeValue = NOTHING;
+    thisCell->m_isTrigger = 0;
+    thisCell->m_passable = 1;
+    if (thisCell->m_isBeachBorder && thisCell->m_groundSet != eTerrainWater)
+        thisCell->m_typeValue = ANCHOR_POINT;
 
     std::vector<NewmapCell::TObjectCell>::reverse_iterator it;
 
-    for (it = thisCell->objects.rbegin(); it != thisCell->objects.rend();
+    for (it = thisCell->m_objects.rbegin(); it != thisCell->m_objects.rend();
          ++it) {
-        CObject* object = &objects[it->objectIndex];
-        if (sprites[object->typeIndex]->GetNumFrames(0) > 1)
-            thisCell->Animated = 1;
+        CObject* object = &m_objects[it->m_objectIndex];
+        if (m_sprites[object->m_typeIndex]->getNumFrames(0) > 1)
+            thisCell->m_animated = 1;
     }
 
-    for (it = thisCell->objects.rbegin(); it != thisCell->objects.rend();
+    for (it = thisCell->m_objects.rbegin(); it != thisCell->m_objects.rend();
          ++it) {
-        CObject* object = &objects[it->objectIndex];
-        CObjectType* objectType = &objectTypes[object->typeIndex];
-        signed char packed = it->offsets;
+        CObject* object = &m_objects[it->m_objectIndex];
+        CObjectType* objectType = &m_objectTypes[object->m_typeIndex];
+        signed char packed = it->m_offsets;
         int row = packed >> 4;
         int col = static_cast<signed char>(packed << 4) >> 4;
-        if (objectType->triggerCells.test(47 - row * 8 - col)) {
-            thisCell->object_type_index = it->objectIndex;
-            thisCell->type_value = objectType->objectType;
-            thisCell->is_trigger = 1;
-            thisCell->objectIndex = static_cast<short>(objectType->extra);
-            if (bSetExtraInfo)
-                thisCell->extraInfo = object->extraInfo;
+        if (objectType->m_triggerCells.test(47 - row * 8 - col)) {
+            thisCell->m_objectTypeIndex = it->m_objectIndex;
+            thisCell->m_typeValue = objectType->m_objectType;
+            thisCell->m_isTrigger = 1;
+            thisCell->m_objectIndex = static_cast<short>(objectType->m_extra);
+            if (setExtraInfo)
+                thisCell->m_extraInfo = object->m_extraInfo;
             return;
         }
     }
 
-    for (it = thisCell->objects.rbegin(); it != thisCell->objects.rend();
+    for (it = thisCell->m_objects.rbegin(); it != thisCell->m_objects.rend();
          ++it) {
-        CObject* object = &objects[it->objectIndex];
-        CObjectType* objectType = &objectTypes[object->typeIndex];
-        if (hasFlag(objectType->objectType)) {
-            signed char packed = it->offsets;
+        CObject* object = &m_objects[it->m_objectIndex];
+        CObjectType* objectType = &m_objectTypes[object->m_typeIndex];
+        if (hasFlag(objectType->m_objectType)) {
+            signed char packed = it->m_offsets;
             int row = packed >> 4;
             int col = static_cast<signed char>(packed << 4) >> 4;
-            if (!objectType->passableCells.test(47 - row * 8 - col)) {
-                thisCell->object_type_index = it->objectIndex;
-                thisCell->type_value = objectType->objectType;
-                thisCell->objectIndex = static_cast<short>(objectType->extra);
-                if (bSetExtraInfo)
-                    thisCell->extraInfo = object->extraInfo;
-                thisCell->Passable = 0;
-                thisCell->IsBlocked = 1;
+            if (!objectType->m_passableCells.test(47 - row * 8 - col)) {
+                thisCell->m_objectTypeIndex = it->m_objectIndex;
+                thisCell->m_typeValue = objectType->m_objectType;
+                thisCell->m_objectIndex = static_cast<short>(objectType->m_extra);
+                if (setExtraInfo)
+                    thisCell->m_extraInfo = object->m_extraInfo;
+                thisCell->m_passable = 0;
+                thisCell->m_isBlocked = 1;
                 return;
             }
         }
     }
 
-    for (it = thisCell->objects.rbegin(); it != thisCell->objects.rend();
+    for (it = thisCell->m_objects.rbegin(); it != thisCell->m_objects.rend();
          ++it) {
-        CObject* object = &objects[it->objectIndex];
-        CObjectType* objectType = &objectTypes[object->typeIndex];
-        signed char packed = it->offsets;
+        CObject* object = &m_objects[it->m_objectIndex];
+        CObjectType* objectType = &m_objectTypes[object->m_typeIndex];
+        signed char packed = it->m_offsets;
         int row = packed >> 4;
         int col = static_cast<signed char>(packed << 4) >> 4;
-        if (!objectType->passableCells.test(47 - row * 8 - col)) {
-            thisCell->object_type_index = it->objectIndex;
-            thisCell->type_value = objectType->objectType;
-            thisCell->objectIndex = static_cast<short>(objectType->extra);
-            if (bSetExtraInfo)
-                thisCell->extraInfo = object->extraInfo;
-            thisCell->Passable = 0;
-            thisCell->IsBlocked = 1;
+        if (!objectType->m_passableCells.test(47 - row * 8 - col)) {
+            thisCell->m_objectTypeIndex = it->m_objectIndex;
+            thisCell->m_typeValue = objectType->m_objectType;
+            thisCell->m_objectIndex = static_cast<short>(objectType->m_extra);
+            if (setExtraInfo)
+                thisCell->m_extraInfo = object->m_extraInfo;
+            thisCell->m_passable = 0;
+            thisCell->m_isBlocked = 1;
             return;
         }
     }
 
-    for (it = thisCell->objects.rbegin(); it != thisCell->objects.rend();
+    for (it = thisCell->m_objects.rbegin(); it != thisCell->m_objects.rend();
          ++it) {
-        CObject* object = &objects[it->objectIndex];
-        CObjectType* objectType = &objectTypes[object->typeIndex];
-        if (objectType->objectType == TERRAIN_HOLE) {
-            thisCell->object_type_index = it->objectIndex;
-            thisCell->type_value = objectType->objectType;
-            thisCell->objectIndex = static_cast<short>(objectType->extra);
-            if (bSetExtraInfo)
-                thisCell->extraInfo = object->extraInfo;
+        CObject* object = &m_objects[it->m_objectIndex];
+        CObjectType* objectType = &m_objectTypes[object->m_typeIndex];
+        if (objectType->m_objectType == TERRAIN_HOLE) {
+            thisCell->m_objectTypeIndex = it->m_objectIndex;
+            thisCell->m_typeValue = objectType->m_objectType;
+            thisCell->m_objectIndex = static_cast<short>(objectType->m_extra);
+            if (setExtraInfo)
+                thisCell->m_extraInfo = object->m_extraInfo;
             return;
         }
     }
@@ -5690,38 +5733,39 @@ void NewfullMap::calc_cell_extra(NewmapCell* thisCell, unsigned char bSetExtraIn
 // cell, then re-obscures it; EVENT cells are deliberately left untouched.
 // The restored nested get_obscured_object boundary makes get_map_object's
 // expansion exact here too: all 264 bytes and all 23 blocks now agree.
+// Before normalization (locals): bSetExtraInfo.
 VA(0x00505a10, 0x108)  // order-map: calls obscure_cell 0x4d75d0 + restore_cell 0x4d76e0 + calc_cell_extra 0x505610 (DC-isomorphic); callers incl. PlaceObject/EraseObj/ConvertObject, dc 0xf42f0
-void NewfullMap::CalculateCellExtra(NewmapCell* thisCell, unsigned char bSetExtraInfo)
+void NewfullMap::calculateCellExtra(NewmapCell* thisCell, unsigned char setExtraInfo)
 {
     hero* obscuringHero = 0;
     boat* obscuringBoat = 0;
     unsigned char restoreHero = 0;
     unsigned char restoreBoat = 0;
-    TAdventureObjectType visibleType = thisCell->get_map_object();
+    TAdventureObjectType visibleType = thisCell->getMapObject();
 
     if (visibleType == EVENT)
         return;
 
-    if (thisCell->type == HERO) {
-        obscuringHero = gpGame->GetHero(thisCell->extraInfo);
+    if (thisCell->m_type == HERO) {
+        obscuringHero = g_game->getHero(thisCell->m_extraInfo);
         restoreHero = 1;
-        obscuringHero->restore_cell();
+        obscuringHero->restoreCell();
     }
 
-    if (thisCell->type == BOAT) {
-        obscuringBoat = gpGame->GetBoat(thisCell->extraInfo);
+    if (thisCell->m_type == BOAT) {
+        obscuringBoat = g_game->getBoat(thisCell->m_extraInfo);
         restoreBoat = 1;
-        obscuringBoat->restore_cell();
+        obscuringBoat->restoreCell();
     }
 
-    calc_cell_extra(thisCell, bSetExtraInfo);
+    calcCellExtra(thisCell, setExtraInfo);
 
     if (restoreHero)
-        obscuringHero->type_obscuring_object::obscure_cell(
-            HERO, obscuringHero->id);
+        obscuringHero->type_obscuring_object::obscureCell(
+            HERO, obscuringHero->m_id);
     if (restoreBoat)
-        obscuringBoat->type_obscuring_object::obscure_cell(
-            BOAT, obscuringBoat->id);
+        obscuringBoat->type_obscuring_object::obscureCell(
+            BOAT, obscuringBoat->m_id);
 }
 
 // E:\gamedcs\mapcell.cpp:4346
@@ -5751,23 +5795,23 @@ void NewfullMap::CalculateCellExtra(NewmapCell* thisCell, unsigned char bSetExtr
 // the other way round as `(row << 4) | (col & 0xf)` accumulates into the
 // column half instead (`or dl,cl`) and holds the row at 96.7976.
 VA(0x00505b20, 0x1F2)  // anchor-global, dc 0xf43e8
-int NewfullMap::PlaceObject(int objectIndex, unsigned char setExtraInfo)
+int NewfullMap::placeObject(int objectIndex, unsigned char setExtraInfo)
 {
-    CObject* object = &objects[objectIndex];
-    CObjectType* objectType = &objectTypes[object->typeIndex];
+    CObject* object = &m_objects[objectIndex];
+    CObjectType* objectType = &m_objectTypes[object->m_typeIndex];
 
     signed char heightMap[8][6];
-    GenerateHeightMap(object, heightMap);
+    generateHeightMap(object, heightMap);
 
     TAdventureObjectType objectClass =
-        gpGame->worldMap.objectTypes[object->typeIndex].objectType;
+        g_game->m_worldMap.m_objectTypes[object->m_typeIndex].m_objectType;
 
-    for (int col = 0; col < objectType->width; ++col) {
-        if (object->x - col < 0 || object->x - col >= MAP_WIDTH)
+    for (int col = 0; col < objectType->m_width; ++col) {
+        if (object->m_x - col < 0 || object->m_x - col >= g_mapWidth)
             continue;
 
-        for (int row = 0; row < objectType->height; ++row) {
-            if (object->y - row < 0 || object->y - row >= MAP_HEIGHT)
+        for (int row = 0; row < objectType->m_height; ++row) {
+            if (object->m_y - row < 0 || object->m_y - row >= g_mapHeight)
                 continue;
 
             // The row-major lookup is expanded here rather than routed
@@ -5775,10 +5819,10 @@ int NewfullMap::PlaceObject(int objectIndex, unsigned char setExtraInfo)
             // gpGame->worldMap - not off `this` - and reloads gpGame between
             // them, and mapcell.obj cannot take the header's inline copy
             // because advmgr.obj owns that function's out-of-line body.
-            NewmapCell* cell = &gpGame->worldMap.cellData[
-                (object->z * gpGame->worldMap.Size + (object->y - row))
-                    * gpGame->worldMap.Size
-                + (object->x - col)];
+            NewmapCell* cell = &g_game->m_worldMap.m_cellData[
+                (object->m_z * g_game->m_worldMap.m_size + (object->m_y - row))
+                    * g_game->m_worldMap.m_size
+                + (object->m_x - col)];
 
             if (objectClass == HOLY_GRAIL || objectClass == HERO
                 || objectClass == RANDOM_HERO
@@ -5786,22 +5830,22 @@ int NewfullMap::PlaceObject(int objectIndex, unsigned char setExtraInfo)
                 continue;
 
             if (objectClass == EVENT) {
-                if (objectType->triggerCells.test(47 - row * 8 - col)) {
-                    cell->IsBlocked = 0;
-                    cell->is_trigger = 0;
-                    cell->type_value = EVENT;
-                    cell->extraInfo = object->extraInfo;
+                if (objectType->m_triggerCells.test(47 - row * 8 - col)) {
+                    cell->m_isBlocked = 0;
+                    cell->m_isTrigger = 0;
+                    cell->m_typeValue = EVENT;
+                    cell->m_extraInfo = object->m_extraInfo;
                 }
                 continue;
             }
 
             NewmapCell::TObjectCell objectCell;
-            objectCell.objectIndex = static_cast<unsigned short>(objectIndex);
-            objectCell.offsets = static_cast<unsigned char>((col & 0xf)
+            objectCell.m_objectIndex = static_cast<unsigned short>(objectIndex);
+            objectCell.m_offsets = static_cast<unsigned char>((col & 0xf)
                                                             | (row << 4));
-            objectCell.layer = heightMap[col][row];
-            StampObject(cell, &objectCell);
-            CalculateCellExtra(cell, setExtraInfo);
+            objectCell.m_layer = heightMap[col][row];
+            stampObject(cell, &objectCell);
+            calculateCellExtra(cell, setExtraInfo);
         }
     }
     return 0;
@@ -5817,10 +5861,10 @@ int NewfullMap::PlaceObject(int objectIndex, unsigned char setExtraInfo)
 // EXACT 2026-08-27: the source-identical +0x28 twin below differs only in its
 // virtual slot displacement, just as the two retail bodies do.
 VA(0x00505d20, 0x3F)  // linkorder + this@+0xb0=mapObjectData; broadcasts CMapObjectData vslot+0x24 to every record, retail-only (DC-inlined)
-void NewfullMap::NewfullMapFn_00505D20(int heroId, int player)
+void NewfullMap::newfullMapFn00505D20(int heroId, int player)
 {
-    for (unsigned int i = 0; i < mapObjectData.size(); ++i)
-        mapObjectData[i]->NewMapVFn24(heroId, player);
+    for (unsigned int i = 0; i < m_mapObjectData.size(); ++i)
+        m_mapObjectData[i]->newMapVFn24(heroId, player);
 }
 
 // 0x505d60 (declared game.h:461) broadcasts virtual slot +0x28 across the
@@ -5831,10 +5875,10 @@ void NewfullMap::NewfullMapFn_00505D20(int heroId, int player)
 // (0x4a6eda/0x4a70ee/0x4a7444) and DoCombat.  Not in the DC mapcell.cpp
 // roster (DC inlined it); retail-only body.
 VA(0x00505d60, 0x3F)  // linkorder + this@+0xb0=mapObjectData; broadcasts CMapObjectData vslot+0x28 to every record, retail-only (DC-inlined)
-void NewfullMap::NewfullMapFn_00505D60(type_point point, int player)
+void NewfullMap::newfullMapFn00505D60(type_point point, int player)
 {
-    for (unsigned int i = 0; i < mapObjectData.size(); ++i)
-        mapObjectData[i]->NewMapVFn28(point, player);
+    for (unsigned int i = 0; i < m_mapObjectData.size(); ++i)
+        m_mapObjectData[i]->newMapVFn28(point, player);
 }
 
 // The objects.txt object-type loader at 0x505da0, run once from startup
@@ -5848,17 +5892,17 @@ void NewfullMap::NewfullMapFn_00505D60(type_point point, int player)
 // EXACT 2026-08-27: spelling that field read before the temporary constructor
 // preserves retail's ESI type index and EAX source pointer through the call.
 VA(0x00505da0, 0xF8)  // linkorder + this@+0xdc=objectTypeIndex; objects.txt loader, startup caller, retail-only (DC-inlined)
-void NewfullMap::NewfullMapFn_00505DA0()
+void NewfullMap::newfullMapFn00505DA0()
 {
     TObjectTypeTable objectTypeTable;
     objectTypeTable.load(
         DATA_COMPGEN(0x0067fb84, objectTypeTableFilename, "objects.txt"));
 
-    for (unsigned int i = 0; i < objectTypeTable.objectTypes.size(); ++i) {
+    for (unsigned int i = 0; i < objectTypeTable.m_objectTypes.size(); ++i) {
         TAdventureObjectType objectType =
-            objectTypeTable.objectTypes[i].objectType;
-        objectTypeIndex[objectType].push_back(
-            CObjectType(&objectTypeTable.objectTypes[i]));
+            objectTypeTable.m_objectTypes[i].m_objectType;
+        m_objectTypeIndex[objectType].push_back(
+            CObjectType(&objectTypeTable.m_objectTypes[i]));
     }
 }
 
@@ -5869,14 +5913,14 @@ void NewfullMap::NewfullMapFn_00505DA0()
 // with _First re-read per pass; same idiom as NewfullMapFn_005042C0 above.
 // Not in the DC mapcell.cpp roster (DC inlined it); retail-only body.
 VA(0x00505ea0, 0x80)  // linkorder + this@+0xdc=objectTypeIndex; reverse-find CObjectType by extra, caller game::ConvertObject, retail-only (DC-inlined)
-CObjectType* NewfullMap::NewfullMapFn_00505EA0(int objectType, int extra)
+CObjectType* NewfullMap::newfullMapFn00505EA0(int objectType, int extra)
 {
-    int i = objectTypeIndex[objectType].size();
+    int i = m_objectTypeIndex[objectType].size();
     while (i--) {
-        if (objectTypeIndex[objectType][i].extra == extra)
+        if (m_objectTypeIndex[objectType][i].m_extra == extra)
             break;
     }
-    return &objectTypeIndex[objectType][i];
+    return &m_objectTypeIndex[objectType][i];
 }
 
 // 0x505f20 (game::InsertObject's helper, declared game.h:466) reverse-scans
@@ -5898,37 +5942,37 @@ CObjectType* NewfullMap::NewfullMapFn_00505EA0(int objectType, int extra)
 // not score.  A 316-candidate generated declaration/name search was flat;
 // the older reference/push_back hypothesis over-inlines (21 vs 10 branches).
 VA(0x00505f20, 0x157)  // linkorder + this@+0xdc=objectTypeIndex; caller game::InsertObject, retail-only (DC-inlined)
-void NewfullMap::NewfullMapFn_00505F20(CObject* object, int objectType,
+void NewfullMap::newfullMapFn00505F20(CObject* object, int objectType,
                                        int objectIndex, int terrain)
 {
-    int i = objectTypeIndex[objectType].size();
+    int i = m_objectTypeIndex[objectType].size();
     while (i--) {
-        if (objectTypeIndex[objectType][i].extra == objectIndex) {
+        if (m_objectTypeIndex[objectType][i].m_extra == objectIndex) {
             if (terrain == -1)
                 break;
-            if (objectTypeIndex[objectType][i].mask_34[terrain])
+            if (m_objectTypeIndex[objectType][i].m_mask34[terrain])
                 break;
         }
     }
 
-    if (static_cast<short>(objectTypeIndex[objectType][i].field_42) < 0) {
-        objectTypeIndex[objectType][i].field_42 =
-            static_cast<unsigned short>(objectTypes.size());
-        CObjectType& newType = objectTypeIndex[objectType][i];
-        std::vector<CObjectType>::iterator typeEnd = objectTypes.end();
+    if (static_cast<short>(m_objectTypeIndex[objectType][i].m_objectTypeIndex) < 0) {
+        m_objectTypeIndex[objectType][i].m_objectTypeIndex =
+            static_cast<unsigned short>(m_objectTypes.size());
+        CObjectType& newType = m_objectTypeIndex[objectType][i];
+        std::vector<CObjectType>::iterator typeEnd = m_objectTypes.end();
 #pragma inline_depth(0)
-        objectTypes.insert(typeEnd, 1, newType);
+        m_objectTypes.insert(typeEnd, 1, newType);
 #pragma inline_depth()
-        CSprite* sprite = ResourceManager::GetSprite(
-            objectTypeIndex[objectType][i].ImageName.c_str());
-        std::vector<CSprite*>& spriteList = sprites;
+        CSprite* sprite = ResourceManager::getSprite(
+            m_objectTypeIndex[objectType][i].m_imageName.c_str());
+        std::vector<CSprite*>& spriteList = m_sprites;
         std::vector<CSprite*>::iterator spriteEnd = spriteList.end();
 #pragma inline_depth(0)
         spriteList.insert(spriteEnd, 1, sprite);
 #pragma inline_depth()
     }
 
-    object->typeIndex = objectTypeIndex[objectType][i].field_42;
+    object->m_typeIndex = m_objectTypeIndex[objectType][i].m_objectTypeIndex;
 }
 
 // The map-editor template's conversion into the runtime object-type record,
@@ -5968,26 +6012,26 @@ void NewfullMap::NewfullMapFn_00505F20(CObject* object, int objectType,
 VA(0x00506080, 0x1D4)  // sole caller NewfullMapFn_00505DA0 + advmgr_objects.h address, retail-only
 CObjectType::CObjectType(TObjectType* source)
 {
-    ImageName = source->GetImageName();
-    width = source->GetWidth();
-    height = source->GetHeight();
+    m_imageName = source->getImageName();
+    m_width = source->getWidth();
+    m_height = source->getHeight();
 
     for (unsigned y = 0; y < 6; y++) {
         for (unsigned x = 0; x < 8; x++) {
-            unsigned pos = _getBitPos(x, y);
-            drawCells[pos] = source->imageInfo.drawMask.test(pos);
-            passableCells[pos] = source->passableMask.test(pos);
-            shadowCells[pos] = source->imageInfo.shadowMask.test(pos);
-            triggerCells[pos] = source->triggerMask.test(pos);
+            unsigned pos = getBitPos(x, y);
+            m_drawCells[pos] = source->m_imageInfo.m_drawMask.test(pos);
+            m_passableCells[pos] = source->m_passableMask.test(pos);
+            m_shadowCells[pos] = source->m_imageInfo.m_shadowMask.test(pos);
+            m_triggerCells[pos] = source->m_triggerMask.test(pos);
         }
     }
 
     for (int terrain = 0; terrain < 10; terrain++)
-        mask_34[terrain] = source->recommendedTerrainMask[terrain];
+        m_mask34[terrain] = source->m_recommendedTerrainMask[terrain];
 
-    objectType = source->objectType;
-    extra = source->subtype;
-    suppressDraw = source->isUnderlay;
+    m_objectType = source->m_objectType;
+    m_extra = source->m_subtype;
+    m_suppressDraw = source->m_isUnderlay;
 }
 
 // These Dinkumware template members are already emitted by NewfullMap's
@@ -6052,7 +6096,7 @@ VA_COMPGEN(0x005086a0, 0x23, VECTOR_DESTROY, TTownEvent)
 VA_COMPGEN(0x005086d0, 0x53, VECTOR_ERASE, HeroPlaceholderData)
 // Residual (95.04%, compiler CSE wall): same 9-block CFG; its sole differing
 // block begins at string::npos and consists of register scheduling only.
-VA_COMPGEN(0x00508730, 0x12E, VECTOR_ERASE, TScenarioTown)
+VA_COMPGEN(0x00508730, 0x12E, VECTOR_ERASE, TownExtra)
 VA_COMPGEN(0x00508860, 0x44, VECTOR_ERASE, generator)
 VA_COMPGEN(0x005088b0, 0x58, VECTOR_UCOPY, TSeerHut)
 VA_COMPGEN(0x00508910, 0x4E, VECTOR_UFILL, TSeerHut)
@@ -6083,10 +6127,10 @@ VA_COMPGEN(0x00509d20, 0x29, STD_CONSTRUCT, TSeerHut)
 VA_COMPGEN(0x00509d50, 0x0F, STD_CONSTRUCT, TQuestGuard)
 VA_COMPGEN(0x00509d60, 0x188, STD_CONSTRUCT, TTimedEvent)
 VA_COMPGEN(0x00509ef0, 0x1BA, STD_CONSTRUCT, TTownEvent)
-VA_COMPGEN(0x0050a0b0, 0x1DD, STD_CONSTRUCT, TScenarioTown)
+VA_COMPGEN(0x0050a0b0, 0x1DD, STD_CONSTRUCT, TownExtra)
 // Residuals (compiler CSE wall; CFGs identical): MonsterData 94.36%
 // (32 blocks, 4 differ), BlackBoxData 98.57% (31/1), TTimedEvent 96.26%
-// (32/3), TTownEvent 94.06% (33/6), and TScenarioTown 96.71% (30/4).
+// (32/3), TTownEvent 94.06% (33/6), and TownExtra 96.71% (30/4).
 // In each implicit assignment retail hoists string::npos (0x63a60c) and
 // reuses that register; these VC6 instantiations constant-fold the first
 // use to -1 and load npos later, with only register-allocation fallout.
@@ -6096,7 +6140,7 @@ VA_COMPGEN(0x0050a290, 0x161, IMPLICIT_COPY_ASSIGN, MonsterData)
 VA_COMPGEN(0x0050a400, 0x2F6, IMPLICIT_COPY_ASSIGN, BlackBoxData)
 VA_COMPGEN(0x0050a700, 0x17A, IMPLICIT_COPY_ASSIGN, TTimedEvent)
 VA_COMPGEN(0x0050a880, 0x1A2, IMPLICIT_COPY_ASSIGN, TTownEvent)
-VA_COMPGEN(0x0050aa30, 0x1CD, IMPLICIT_COPY_ASSIGN, TScenarioTown)
+VA_COMPGEN(0x0050aa30, 0x1CD, IMPLICIT_COPY_ASSIGN, TownExtra)
 // vector<TArtifact>::operator= is the first emitted owner of the body also
 // called through the byte-identical vector<int> specialization.
 VA_COMPGEN(0x0050ac00, 0x188, VECTOR_COPY_ASSIGN, TArtifact)
@@ -9682,9 +9726,9 @@ void* TTownEvent::`scalar deleting destructor'(unsigned __flags)
 
 #endif  // @carcass
 
-// COMDAT pairing: vector<TScenarioTown>::insert, agreement 0.990
+// COMDAT pairing: vector<TownExtra>::insert, agreement 0.990
 // (349 base vs 342 retail instructions).
-VA_COMPGEN(0x00508cf0, 0x3B9, VECTOR_INSERT, TScenarioTown)
+VA_COMPGEN(0x00508cf0, 0x3B9, VECTOR_INSERT, TownExtra)
 
 // COMDAT pairing: vector<TQuestGuard>::insert, agreement 0.989
 // (320 base vs 313 retail instructions).

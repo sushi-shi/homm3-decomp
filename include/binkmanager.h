@@ -16,23 +16,47 @@ struct IDirectDrawSurface;
 // Partial byte-proven view of the Bink handle: dirty rects at +0x30
 // (stride 0x10), count at +0xb0.
 struct BinkRect {
-    long Left;
-    long Top;
-    long Width;
-    long Height;
+    // Before normalization: Left.
+    long m_left;
+    // Before normalization: Top.
+    long m_top;
+    // Before normalization: Width.
+    long m_width;
+    // Before normalization: Height.
+    long m_height;
 };
 struct BINK {
-    unsigned long Width;      // +0x00
-    unsigned long Height;     // +0x04
+    // Before normalization: Width.
+    unsigned long m_width;      // +0x00
+    // Before normalization: Height.
+    unsigned long m_height;     // +0x04
     // Pad slice, in place: the per-frame pump compares +0x0c against +0x08
     // and stops the video when they meet, and DrawCurrentBinkFrame runs
     // BinkDoFrame only while +0x0c is 1 - the first-frame test.  That is
     // the SDK's Frames / FrameNum pair and nothing else fits.
-    unsigned long Frames;     // +0x08
-    unsigned long FrameNum;   // +0x0c
-    char pad_10[0x20];        // +0x10..0x2f
-    BinkRect FrameRects[8];   // +0x30
-    long NumRects;            // +0xb0
+    // Before normalization: Frames.
+    unsigned long m_frames;     // +0x08
+    // Before normalization: FrameNum.
+    unsigned long m_frameNum;   // +0x0c
+    // Dreamcast BINK (type 0x5548): this eight-word sequence occupies
+    // +0x10..+0x2f between FrameNum and FrameRects. Retail confirms both
+    // bounding fields (+0x0c and +0x30), including the rectangle stride/count.
+    // The bundled newer SDK preserves these names/types but inserts stretch
+    // dimensions and LastFrameNum earlier; its offsets do not apply here.
+    // Original spellings: FrameRate, FrameRateDiv, ReadError, OpenFlags,
+    // BinkType, Size, FrameSize, SndSize. Replaces synthetic pad_10.
+    unsigned long m_frameRate;     // +0x10
+    unsigned long m_frameRateDiv;  // +0x14
+    unsigned long m_readError;     // +0x18
+    unsigned long m_openFlags;     // +0x1c
+    unsigned long m_binkType;      // +0x20
+    unsigned long m_size;          // +0x24
+    unsigned long m_frameSize;     // +0x28
+    unsigned long m_sndSize;       // +0x2c
+    // Before normalization: FrameRects.
+    BinkRect m_frameRects[8];   // +0x30
+    // Before normalization: NumRects.
+    long m_numRects;            // +0xb0
 };
 typedef BINK Bink;
 
@@ -42,44 +66,74 @@ typedef BINK Bink;
 // oldmain independently proves the fields it reads at +8/+20/+32/+48/+52/+56.
 // Keep this ABI here instead of including the incompatible later SDK type.
 struct BINKSUMMARY {
-    unsigned long Width;
-    unsigned long Height;
-    unsigned long TotalTime;
-    unsigned long FileFrameRate;
-    unsigned long FileFrameRateDiv;
-    unsigned long FrameRate;
-    unsigned long FrameRateDiv;
-    unsigned long TotalOpenTime;
-    unsigned long TotalFrames;
-    unsigned long TotalPlayedFrames;
-    unsigned long SkippedFrames;
-    unsigned long SoundSkips;
-    unsigned long TotalBlitTime;
-    unsigned long TotalReadTime;
-    unsigned long TotalDecompTime;
-    unsigned long TotalBackReadTime;
-    unsigned long TotalReadSpeed;
-    unsigned long SlowestFrameTime;
-    unsigned long Slowest2FrameTime;
-    unsigned long SlowestFrameNum;
-    unsigned long Slowest2FrameNum;
-    unsigned long AverageDataRate;
-    unsigned long AverageFrameSize;
-    unsigned long HighestMemAmount;
-    unsigned long TotalIOMemory;
-    unsigned long HighestIOUsed;
-    unsigned long Highest1SecRate;
-    unsigned long Highest1SecFrame;
+    // Before normalization: Width.
+    unsigned long m_width;
+    // Before normalization: Height.
+    unsigned long m_height;
+    // Before normalization: TotalTime.
+    unsigned long m_totalTime;
+    // Before normalization: FileFrameRate.
+    unsigned long m_fileFrameRate;
+    // Before normalization: FileFrameRateDiv.
+    unsigned long m_fileFrameRateDiv;
+    // Before normalization: FrameRate.
+    unsigned long m_frameRate;
+    // Before normalization: FrameRateDiv.
+    unsigned long m_frameRateDiv;
+    // Before normalization: TotalOpenTime.
+    unsigned long m_totalOpenTime;
+    // Before normalization: TotalFrames.
+    unsigned long m_totalFrames;
+    // Before normalization: TotalPlayedFrames.
+    unsigned long m_totalPlayedFrames;
+    // Before normalization: SkippedFrames.
+    unsigned long m_skippedFrames;
+    // Before normalization: SoundSkips.
+    unsigned long m_soundSkips;
+    // Before normalization: TotalBlitTime.
+    unsigned long m_totalBlitTime;
+    // Before normalization: TotalReadTime.
+    unsigned long m_totalReadTime;
+    // Before normalization: TotalDecompTime.
+    unsigned long m_totalDecompTime;
+    // Before normalization: TotalBackReadTime.
+    unsigned long m_totalBackReadTime;
+    // Before normalization: TotalReadSpeed.
+    unsigned long m_totalReadSpeed;
+    // Before normalization: SlowestFrameTime.
+    unsigned long m_slowestFrameTime;
+    // Before normalization: Slowest2FrameTime.
+    unsigned long m_slowest2FrameTime;
+    // Before normalization: SlowestFrameNum.
+    unsigned long m_slowestFrameNum;
+    // Before normalization: Slowest2FrameNum.
+    unsigned long m_slowest2FrameNum;
+    // Before normalization: AverageDataRate.
+    unsigned long m_averageDataRate;
+    // Before normalization: AverageFrameSize.
+    unsigned long m_averageFrameSize;
+    // Before normalization: HighestMemAmount.
+    unsigned long m_highestMemAmount;
+    // Before normalization: TotalIOMemory.
+    unsigned long m_totalIoMemory;
+    // Before normalization: HighestIOUsed.
+    unsigned long m_highestIoUsed;
+    // Before normalization: Highest1SecRate.
+    unsigned long m_highest1SecRate;
+    // Before normalization: Highest1SecFrame.
+    unsigned long m_highest1SecFrame;
 };
 SIZE(BINKSUMMARY, 112);
 
-extern BINKSUMMARY BinkSummary;
+// Before normalization: BinkSummary.
+extern BINKSUMMARY g_binkSummary;
 
 // The binkw32 import surface (leading underscore, the RAD convention -
 // see smackmgr.h; smackmgr.cpp aliases the names back).
 extern "C" {
 __declspec(dllimport) int __stdcall _BinkPause(Bink* bnk, int pause);
-__declspec(dllimport) int __stdcall _BinkDDSurfaceType(IDirectDrawSurface* lpDDS);
+// Before normalization (locals): lpDDS.
+__declspec(dllimport) int __stdcall _BinkDDSurfaceType(IDirectDrawSurface* dds);
 __declspec(dllimport) int __stdcall _BinkGetRects(Bink* bnk, unsigned long flags);
 __declspec(dllimport) int __stdcall _BinkGoto(Bink* bnk,
                                               unsigned long frame,
@@ -101,65 +155,96 @@ __declspec(dllimport) void __stdcall _BinkGetSummary(Bink* bnk,
 // static data roster); retail supplies the full PC implementations.
 class BinkManager {
 public:
-    static BINK* GetBinkFilePtr(const char* filename, int binkOptions);
-    static void SetPixelFormat(unsigned long redMask,
+    // Before normalization (function): BinkManager::GetBinkFilePtr.
+    static BINK* getBinkFilePtr(const char* filename, int binkOptions);
+    // Before normalization (function): BinkManager::SetPixelFormat.
+    static void setPixelFormat(unsigned long redMask,
                                unsigned long greenMask,
                                unsigned long blueMask);
-    static void OpenBink(int id, int x, int y, int w, int h, int flags,
+    // Before normalization (function): BinkManager::OpenBink.
+    static void openBink(int id, int x, int y, int w, int h, int flags,
                          bool updateScreen);
-    static void DrawCurrentBinkFrame();
-    static void RestartBink();
-    static void NextBinkFrame();
-    static void CloseBink();
-    static int PlayBink(int id, int x, int y, int w, int h);
+    // Before normalization (function): BinkManager::DrawCurrentBinkFrame.
+    static void drawCurrentBinkFrame();
+    // Before normalization (function): BinkManager::RestartBink.
+    static void restartBink();
+    // Before normalization (function): BinkManager::NextBinkFrame.
+    static void nextBinkFrame();
+    // Before normalization (function): BinkManager::CloseBink.
+    static void closeBink();
+    // Before normalization (function): BinkManager::PlayBink.
+    static int playBink(int id, int x, int y, int w, int h);
 };
 
 // The bink TU helpers at 0x44dxxx (names provisional, mirrors of the
 // smack set in smackmgr.cpp): the VideoPlay/VideoOpen bink arms and
 // the per-frame advance/draw/close/restart quartet.
-int PlayBinkVideo(int id, int x, int y, int w, int h);                  // 0x44dd20
-void OpenBinkVideo(int id, int x, int y, int w, int h, int a6, int a7); // 0x44d830
-void NextBinkFrame();           // 0x44daa0
-void DrawCurrentBinkFrame();    // 0x44d9e0
-void CloseBinkVideo();          // 0x44dcc0
-void RestartBinkVideo();        // 0x44da50
+// Before normalization (function): PlayBinkVideo.
+int playBinkVideo(int id, int x, int y, int w, int h);                  // 0x44dd20
+// Before normalization (function): OpenBinkVideo.
+void openBinkVideo(int id, int x, int y, int w, int h, int a6, int a7); // 0x44d830
+// Before normalization (function): NextBinkFrame.
+void nextBinkFrame();           // 0x44daa0
+// Before normalization (function): DrawCurrentBinkFrame.
+void drawCurrentBinkFrame();    // 0x44d9e0
+// Before normalization (function): CloseBinkVideo.
+void closeBinkVideo();          // 0x44dcc0
+// Before normalization (function): RestartBinkVideo.
+void restartBinkVideo();        // 0x44da50
 
 // Bink TU globals (.bss 0x694ca0..0x694ce0, owned by the 0x44dxxx TU;
 // names provisional, mirrored from smackmgr.cpp's smack set).
-extern int gBinkSurfaceType;         // 0x694ca0 (BinkDDSurfaceType result)
-extern Bink* gBinkVideo;             // 0x694cb0
-extern Bink* gBinkVideo2;            // 0x694cb4
-extern unsigned char* gBinkBuffer;   // 0x694cb8 (screen pixels at the bink origin)
-extern int gBinkPitch;               // 0x694cbc
-extern int gBinkHeight;              // 0x694cc0
-extern int gBinkX;                   // 0x694cc4
-extern int gBinkY;                   // 0x694cc8
+// Before normalization: gBinkSurfaceType.
+extern int g_binkSurfaceType;         // 0x694ca0 (BinkDDSurfaceType result)
+// Before normalization: gBinkVideo.
+extern Bink* g_binkVideo;             // 0x694cb0
+// Before normalization: gBinkVideo2.
+extern Bink* g_binkVideo2;            // 0x694cb4
+// Before normalization: gBinkBuffer.
+extern unsigned char* g_binkBuffer;   // 0x694cb8 (screen pixels at the bink origin)
+// Before normalization: gBinkPitch.
+extern int g_binkPitch;               // 0x694cbc
+// Before normalization: gBinkHeight.
+extern int g_binkHeight;              // 0x694cc0
+// Before normalization: gBinkX.
+extern int g_binkX;                   // 0x694cc4
+// Before normalization: gBinkY.
+extern int g_binkY;                   // 0x694cc8
 // The two dwords between gBinkY and gBinkVideoId: CampaignWindowHandler
 // hands 0x694cc4/0x694cc8/0x694ccc/0x694cd0 straight to
 // heroWindowManager::UpdateScreen(x, y, w, h), which pairs them with the
 // already-named gBinkX/gBinkY as that call's width and height. Ordinal
 // names until a producer in the bink TU proves stronger ones.
-extern int gBinkUpdateWidth;         // 0x694ccc
-extern int gBinkUpdateHeight;        // 0x694cd0
-extern int gBinkVideoId;             // 0x694cd4 (VIDEO_ID_OVERLAY_BLIT plays via the overlay Blt)
+// Before normalization: gBinkUpdateWidth.
+extern int g_binkUpdateWidth;         // 0x694ccc
+// Before normalization: gBinkUpdateHeight.
+extern int g_binkUpdateHeight;        // 0x694cd0
+// Before normalization: gBinkVideoId.
+extern int g_binkVideoId;             // 0x694cd4 (VIDEO_ID_OVERLAY_BLIT plays via the overlay Blt)
 // 0x694cd8 closes the 12-dword snapshot campaignwindow.cpp copies out of
 // gBinkVideo. NextBinkFrame consults it when the first track reaches its last
 // frame: with it set AND both handles live it closes track one and carries on
 // with track two, otherwise it ends the playback outright. Provisional name.
-extern int gBinkChainTrack;          // 0x694cd8
-extern int gBinkPaused;              // 0x694cdc
-extern unsigned char gBinkDirty;     // 0x694ce0
+// Before normalization: gBinkChainTrack.
+extern int g_binkChainTrack;          // 0x694cd8
+// Before normalization: gBinkPaused.
+extern int g_binkPaused;              // 0x694cdc
+// Before normalization: gBinkDirty.
+extern unsigned char g_binkDirty;     // 0x694ce0
 // The dirty-rect gate the per-frame pump tests before calling
 // VideoDrawRects; the mirror of smackmgr's own rect switch. Provisional.
-extern unsigned char gBinkUseDirtyRects;  // 0x694ca8
+// Before normalization: gBinkUseDirtyRects.
+extern unsigned char g_binkUseDirtyRects;  // 0x694ca8
 // Raised while a bink is actually running: DrawCurrentBinkFrame and
 // NextBinkFrame both refuse to touch the handles without it, and CloseBink
 // drops it. The mirror of smackmgr's gSmackFrameReady. Provisional.
-extern unsigned char gBinkFrameReady;     // 0x694d5c
+// Before normalization: gBinkFrameReady.
+extern unsigned char g_binkFrameReady;     // 0x694d5c
 // The bink twin of smackmgr's gVideoSoundReady, raised by OpenBinkVideo
 // out of exactly the same three-way gate (gUnnamed699290 == 0 &&
 // gpSoundManager->ds != 0 && gUnnamed698758.soundVolume != 0). Provisional.
-extern int gBinkSoundReady;               // 0x694d58
+// Before normalization: gBinkSoundReady.
+extern int g_binkSoundReady;               // 0x694d58
 
 // --- BinkManager ---
 // CODEVIEW(E:\gamedcs\binkmanager.cpp:79, dc 0x50a7c) BINK* BinkManager::GetBinkFilePtr(char* filename, int binkOptions);

@@ -26,30 +26,36 @@
 class TQuestLogWindow : public CAdvPopup {
 public:
     TQuestLogWindow();
-    std::vector<int> seerHutLogList;
+    // Before normalization: seerHutLogList.
+    std::vector<int> m_seerHutLogList;
     // Scroll offset of the topmost listed quest: zeroed by the constructor,
     // untouched by the destructor, and read by UpdateQuestLocator (0x52e270)
     // as the base of the row index it then uses to select out of
     // seerHutLogList, bailing when the sum reaches size(). Both lanes
     // reached that role off the same body; the spelling is a house
     // placeholder, no dump names it.
-    int firstVisibleQuest;  // +0x70
+    // Before normalization: firstVisibleQuest.
+    int m_firstVisibleQuest;  // +0x70
 
     virtual ~TQuestLogWindow();
-    virtual int WindowHandler(message* msg);
+    // Before normalization (function): TQuestLogWindow::WindowHandler.
+    virtual int windowHandler(message* msg);
 
     // 0x52e270, dc 0x116bd8. SINGULAR - it takes the row index and
     // refreshes one log line; the plural UpdateQuestLocators has no retail
     // body of its own because it inlines this one.
-    void UpdateQuestLocator(int i);
-    void UpdateQuestLocators();
+    // Before normalization (function): TQuestLogWindow::UpdateQuestLocator.
+    void updateQuestLocator(int i);
+    // Before normalization (function): TQuestLogWindow::UpdateQuestLocators.
+    void updateQuestLocators();
 };
 SIZE(TQuestLogWindow, 0x74);
 
 // Defined in src/questlogwindow.cpp. Declared here for its second
 // consumer: THeroScreenWindow::WindowHandler's quest-log button arm calls
 // it with the current hero's owner (/Gr, the id in ecx).
-void DoQuestLog(int player);
+// Before normalization (function): DoQuestLog.
+void doQuestLog(int player);
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\questlogwindow.cpp:34, dc 0x1165dc) void QuestSliderCallback(int state, heroWindow* parent_window);

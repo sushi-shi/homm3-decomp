@@ -23,11 +23,11 @@ TFileVersionInfo::TFileVersionInfo(const char* filename)
     unsigned long size = GetFileVersionInfoSizeA(
         const_cast<char*>(filename), &ignoredHandle);
     if (size > 0) {
-        data = new char[size];
-        if (data)
-            GetFileVersionInfoA(const_cast<char*>(filename), 0, size, data);
+        m_data = new char[size];
+        if (m_data)
+            GetFileVersionInfoA(const_cast<char*>(filename), 0, size, m_data);
     } else {
-        data = 0;
+        m_data = 0;
     }
 }
 
@@ -35,16 +35,16 @@ TFileVersionInfo::TFileVersionInfo(const char* filename)
 VA(0x005eedf0, 0xE)  // anchor-import (version.dll), dc 0x18e3b4
 TFileVersionInfo::~TFileVersionInfo()
 {
-    if (data)
-        delete[] data;
+    if (m_data)
+        delete[] m_data;
 }
 
 // E:\gamedcs\u2dvers.cpp:63
 VA(0x005eee00, 0x265)  // anchor-import (version.dll), dc 0x18e3b8
-unsigned char TFileVersionInfo::GetVersionInfo(const char* name, std::string* buffer)
+unsigned char TFileVersionInfo::getVersionInfo(const char* name, std::string* buffer)
 {
     unsigned char found = 0;
-    if (data) {
+    if (m_data) {
         std::string subBlock;
         subBlock = DATA_COMPGEN(0x00643b24, versionInfo040904B0,
             "\\StringFileInfo\\040904B0\\");
@@ -56,14 +56,14 @@ unsigned char TFileVersionInfo::GetVersionInfo(const char* name, std::string* bu
         void* value;
         unsigned int length;
         found = static_cast<unsigned char>(
-            VerQueryValueA(data, const_cast<char*>(subBlock.c_str()),
+            VerQueryValueA(m_data, const_cast<char*>(subBlock.c_str()),
                 &value, &length) != 0);
         if (!found) {
             subBlock = DATA_COMPGEN(0x00643b40, versionInfo040904e4,
                 "\\StringFileInfo\\040904e4\\");
             subBlock += name;
             found = static_cast<unsigned char>(
-                VerQueryValueA(data, const_cast<char*>(subBlock.c_str()),
+                VerQueryValueA(m_data, const_cast<char*>(subBlock.c_str()),
                     &value, &length) != 0);
         }
 

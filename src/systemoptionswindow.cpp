@@ -22,7 +22,7 @@
 #include "widget.h"
 #include "winmgr.h"
 
-DATA(0x006a7584) THelpText gSystemOptionsHelp[48];
+DATA(0x006a7584) THelpText g_systemOptionsHelp[48];
 
 // genrltxt.txt rows this dialog labels itself with. They have no other
 // consumer in the image, so no EGeneralTextIndex name is coined for them;
@@ -55,27 +55,27 @@ DATA(0x006a7584) THelpText gSystemOptionsHelp[48];
 // 0..128 for ai_combat::do_aftermath. The clamp case is a SMALL-BODY case.
 VA(0x005b1790, 0x187C)  // sole sysopbck.pcx reference + vtable block, dc 0x15f588
 TSystemOptionsWindow::TSystemOptionsWindow()
-    : CAdvPopup(159, 56, 481, 487, 0x12), bPrefsChanged(0)
+    : CAdvPopup(159, 56, 481, 487, 0x12), m_prefsChanged(0)
 {
-    quickCombatSave = gCombatQuickMode69877c;
-    Widgets.reserve(NWIDGETS);
+    m_quickCombatSave = g_combatQuickMode69877c;
+    m_widgets.reserve(NWIDGETS);
 
     bitmapBorder* background = new bitmapBorder(
         0, 0, 481, 487, BACKGROUND_ID, "SysOpBck.pcx", 0x800);
-    background->SetPlayerPaletteColors(gpGame->GetLocalPlayerGamePos());
-    Widgets.push_back(background);
+    background->setPlayerPaletteColors(g_game->getLocalPlayerGamePos());
+    m_widgets.push_back(background);
 
-    Widgets.push_back(new button(246, 298, 100, 48,
+    m_widgets.push_back(new button(246, 298, 100, 48,
         TMainMenu::LOAD_GAME_ID, "soload.def", 1, 0, 0, 38, 2));
-    Widgets.push_back(new button(357, 298, 100, 48,
+    m_widgets.push_back(new button(357, 298, 100, 48,
         TMainMenu::SAVE_GAME_ID, "sosave.def", 1, 0, 0, 31, 2));
-    Widgets.push_back(new button(246, 357, 100, 48,
+    m_widgets.push_back(new button(246, 357, 100, 48,
         TMainMenu::RESTART_ID, "sorstrt.def", 1, 0, 0, 19, 2));
-    Widgets.push_back(new button(357, 357, 100, 48,
+    m_widgets.push_back(new button(357, 357, 100, 48,
         TMainMenu::MAIN_MENU_ID, "somain.def", 1, 0, 0, 50, 2));
-    Widgets.push_back(new button(246, 415, 100, 48,
+    m_widgets.push_back(new button(246, 415, 100, 48,
         TMainMenu::QUIT_ID, "soquit.def", 1, 0, 0, 16, 2));
-    Widgets.push_back(new button(357, 415, 100, 48,
+    m_widgets.push_back(new button(357, 415, 100, 48,
         DIALOG_RETURN_SPLIT_ACCEPT, "soretrn.def", 1, 0, 0, 1, 2));
 
     // The two slider loops (LANDED 2026-08-14, 97.6237 -> 98.1326). Retail's
@@ -199,97 +199,97 @@ TSystemOptionsWindow::TSystemOptionsWindow()
     // therefore standing in for two sites retail has and the DC port does not.
     for (int musicSlot = 0; musicSlot < 10; musicSlot++) {
         int musicX = 29 + musicSlot * 19;
-        Widgets.push_back(new iconWidget(
+        m_widgets.push_back(new iconWidget(
             musicX, 359, 18, 36, musicSlot + MUSIC_VOLUME_0_ID, "syslb.def",
             0, 0, 0, 0, 0x10));
     }
 
     for (int effectsSlot = 0; effectsSlot < 10; effectsSlot++) {
         int effectsX = 29 + effectsSlot * 19;
-        Widgets.push_back(new iconWidget(
+        m_widgets.push_back(new iconWidget(
             effectsX, 425, 18, 36, effectsSlot + EFFECTS_VOLUME_0_ID,
             "syslb.def", 0, 0, 0, 0, 0x10));
     }
 
-    Widgets.push_back(new button(28, 77, 46, 32,
+    m_widgets.push_back(new button(28, 77, 46, 32,
         HERO_SPEED_WALK_ID, "sysopb1.def", 0, 1, 0, 0, 2));
-    Widgets.push_back(new button(76, 77, 46, 32,
+    m_widgets.push_back(new button(76, 77, 46, 32,
         HERO_SPEED_CANTER_ID, "sysopb2.def", 0, 1, 0, 0, 2));
-    Widgets.push_back(new button(124, 77, 46, 32,
+    m_widgets.push_back(new button(124, 77, 46, 32,
         HERO_SPEED_GALLOP_ID, "sysopb3.def", 0, 1, 0, 0, 2));
-    Widgets.push_back(new button(172, 77, 46, 32,
+    m_widgets.push_back(new button(172, 77, 46, 32,
         HERO_SPEED_JUMP_ID, "sysopb4.def", 0, 1, 0, 0, 2));
-    Widgets.push_back(new button(28, 144, 46, 32,
+    m_widgets.push_back(new button(28, 144, 46, 32,
         AI_SPEED_CANTER_ID, "sysopb5.def", 0, 1, 0, 0, 2));
-    Widgets.push_back(new button(76, 144, 46, 32,
+    m_widgets.push_back(new button(76, 144, 46, 32,
         AI_SPEED_GALLOP_ID, "sysopb6.def", 0, 1, 0, 0, 2));
-    Widgets.push_back(new button(124, 144, 46, 32,
+    m_widgets.push_back(new button(124, 144, 46, 32,
         AI_SPEED_JUMP_ID, "sysopb7.def", 0, 1, 0, 0, 2));
-    Widgets.push_back(new button(172, 144, 46, 32,
+    m_widgets.push_back(new button(172, 144, 46, 32,
         AI_SPEED_NONE_ID, "sysopb8.def", 0, 1, 0, 0, 2));
-    Widgets.push_back(new button(28, 210, 62, 32,
+    m_widgets.push_back(new button(28, 210, 62, 32,
         WINDOW_SCROLL_SLOW, "sysopb9.def", 0, 1, 0, 0, 2));
-    Widgets.push_back(new button(92, 210, 62, 32,
+    m_widgets.push_back(new button(92, 210, 62, 32,
         WINDOW_SCROLL_MEDIUM, "sysob10.def", 0, 1, 0, 0, 2));
-    Widgets.push_back(new button(156, 210, 62, 32,
+    m_widgets.push_back(new button(156, 210, 62, 32,
         WINDOW_SCROLL_FAST, "sysob11.def", 0, 1, 0, 0, 2));
-    Widgets.push_back(new button(28, 276, 94, 32,
+    m_widgets.push_back(new button(28, 276, 94, 32,
         VIDEO_QUALITY_HIGH, "sysob12.def", 0, 1, 0, 0, 2));
-    Widgets.push_back(new button(124, 276, 94, 32,
+    m_widgets.push_back(new button(124, 276, 94, 32,
         VIDEO_QUALITY_LOW, "sysob13.def", 0, 1, 0, 0, 2));
 
-    Widgets.push_back(new iconWidget(246, 55, 32, 24,
+    m_widgets.push_back(new iconWidget(246, 55, 32, 24,
         SHOW_PATH_ID, "sysopchk.def", 0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(246, 87, 32, 24,
+    m_widgets.push_back(new iconWidget(246, 87, 32, 24,
         MOVE_REMINDER_ID, "sysopchk.def", 0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(246, 119, 32, 24,
+    m_widgets.push_back(new iconWidget(246, 119, 32, 24,
         QUICK_COMBAT_ID, "sysopchk.def", 0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(246, 151, 32, 24,
+    m_widgets.push_back(new iconWidget(246, 151, 32, 24,
         VIDEO_SUBTITLES_ID, "sysopchk.def", 0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(246, 183, 32, 24,
+    m_widgets.push_back(new iconWidget(246, 183, 32, 24,
         TOWN_OUTLINES_ID, "sysopchk.def", 0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(246, 215, 32, 24,
+    m_widgets.push_back(new iconWidget(246, 215, 32, 24,
         ANIMATE_SPELLBOOK_ID, "sysopchk.def", 0, 0, 0, 0, 0x10));
 
-    Widgets.push_back(new textWidget(
-        26, 19, 432, 28, gpGeneralText->GetText(569), "bigfont.fnt",
+    m_widgets.push_back(new textWidget(
+        26, 19, 432, 28, g_generalText->getText(569), "bigfont.fnt",
         font::HEADING, -1, 5, 0, 8));
-    Widgets.push_back(new textWidget(
-        26, 56, 193, 20, gpGeneralText->GetText(570), "medfont.fnt",
+    m_widgets.push_back(new textWidget(
+        26, 56, 193, 20, g_generalText->getText(570), "medfont.fnt",
         font::HEADING, -1, 5, 0, 8));
-    Widgets.push_back(new textWidget(
-        26, 122, 193, 20, gpGeneralText->GetText(571), "medfont.fnt",
+    m_widgets.push_back(new textWidget(
+        26, 122, 193, 20, g_generalText->getText(571), "medfont.fnt",
         font::HEADING, -1, 5, 0, 8));
-    Widgets.push_back(new textWidget(
-        26, 188, 193, 20, gpGeneralText->GetText(572), "medfont.fnt",
+    m_widgets.push_back(new textWidget(
+        26, 188, 193, 20, g_generalText->getText(572), "medfont.fnt",
         font::HEADING, -1, 5, 0, 8));
-    Widgets.push_back(new textWidget(
-        26, 254, 193, 20, gpGeneralText->GetText(21), "medfont.fnt",
+    m_widgets.push_back(new textWidget(
+        26, 254, 193, 20, g_generalText->getText(21), "medfont.fnt",
         font::HEADING, -1, 5, 0, 8));
-    Widgets.push_back(new textWidget(
-        26, 339, 193, 20, gpGeneralText->GetText(395), "medfont.fnt",
+    m_widgets.push_back(new textWidget(
+        26, 339, 193, 20, g_generalText->getText(395), "medfont.fnt",
         font::HEADING, -1, 5, 0, 8));
-    Widgets.push_back(new textWidget(
-        26, 406, 193, 20, gpGeneralText->GetText(396), "medfont.fnt",
+    m_widgets.push_back(new textWidget(
+        26, 406, 193, 20, g_generalText->getText(396), "medfont.fnt",
         font::HEADING, -1, 5, 0, 8));
 
-    Widgets.push_back(new textWidget(
-        282, 55, 182, 24, gpGeneralText->GetText(573), "medfont.fnt",
+    m_widgets.push_back(new textWidget(
+        282, 55, 182, 24, g_generalText->getText(573), "medfont.fnt",
         font::PRIMARY, -1, 4, 0, 8));
-    Widgets.push_back(new textWidget(
-        282, 87, 182, 24, gpGeneralText->GetText(574), "medfont.fnt",
+    m_widgets.push_back(new textWidget(
+        282, 87, 182, 24, g_generalText->getText(574), "medfont.fnt",
         font::PRIMARY, -1, 4, 0, 8));
-    Widgets.push_back(new textWidget(
-        282, 119, 182, 24, gpGeneralText->GetText(575), "medfont.fnt",
+    m_widgets.push_back(new textWidget(
+        282, 119, 182, 24, g_generalText->getText(575), "medfont.fnt",
         font::PRIMARY, -1, 4, 0, 8));
-    Widgets.push_back(new textWidget(
-        282, 151, 182, 24, gpGeneralText->GetText(576), "medfont.fnt",
+    m_widgets.push_back(new textWidget(
+        282, 151, 182, 24, g_generalText->getText(576), "medfont.fnt",
         font::PRIMARY, -1, 4, 0, 8));
-    Widgets.push_back(new textWidget(
-        282, 183, 182, 24, gpGeneralText->GetText(577), "medfont.fnt",
+    m_widgets.push_back(new textWidget(
+        282, 183, 182, 24, g_generalText->getText(577), "medfont.fnt",
         font::PRIMARY, -1, 4, 0, 8));
-    Widgets.push_back(new textWidget(
-        282, 215, 182, 24, gpGeneralText->GetText(578), "medfont.fnt",
+    m_widgets.push_back(new textWidget(
+        282, 215, 182, 24, g_generalText->getText(578), "medfont.fnt",
         font::PRIMARY, -1, 4, 0, 8));
 
     // The registration guard is this constructor's /Ob2 site-count knob, and
@@ -315,111 +315,111 @@ TSystemOptionsWindow::TSystemOptionsWindow()
     // index loop over `size()`/`operator[]` 88.2661, and a hoisted `last`
     // 87.8395. Adding sites past this pair regresses exactly as the ladder
     // predicts: +1 more 95.8281, +2 more 84.6255.
-    widget** first = Widgets.begin();
-    if (first != Widgets.end()) {
-        for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    widget** first = m_widgets.begin();
+    if (first != m_widgets.end()) {
+        for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
             if (*it)
-                AddWidget(*it, -1);
+                addWidget(*it, -1);
             else
-                MemError();
+                memError();
         }
     }
 
     for (int music = MUSIC_VOLUME_0_ID; music <= MUSIC_VOLUME_9_ID; ++music)
-        GetWidget(music)->send_message(widget::WIDGET_CLEAR_STATUS,
+        getWidget(music)->sendMessage(widget::WIDGET_CLEAR_STATUS,
             widget::WIDGET_DRAWN);
-    GetWidget(gUnk698760 + MUSIC_VOLUME_0_ID)->send_message(
+    getWidget(g_unk698760 + MUSIC_VOLUME_0_ID)->sendMessage(
         widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
-    GetWidget(gUnk698760 + MUSIC_VOLUME_0_ID)->send_message(
-        widget::WIDGET_SET_ICON_FRAME, gUnk698760);
+    getWidget(g_unk698760 + MUSIC_VOLUME_0_ID)->sendMessage(
+        widget::WIDGET_SET_ICON_FRAME, g_unk698760);
 
     for (int effects = EFFECTS_VOLUME_0_ID; effects <= EFFECTS_VOLUME_9_ID;
          ++effects)
-        GetWidget(effects)->send_message(widget::WIDGET_CLEAR_STATUS,
+        getWidget(effects)->sendMessage(widget::WIDGET_CLEAR_STATUS,
             widget::WIDGET_DRAWN);
-    GetWidget(gUnk698764 + EFFECTS_VOLUME_0_ID)->send_message(
+    getWidget(g_unk698764 + EFFECTS_VOLUME_0_ID)->sendMessage(
         widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
-    GetWidget(gUnk698764 + EFFECTS_VOLUME_0_ID)->send_message(
-        widget::WIDGET_SET_ICON_FRAME, gUnk698764);
+    getWidget(g_unk698764 + EFFECTS_VOLUME_0_ID)->sendMessage(
+        widget::WIDGET_SET_ICON_FRAME, g_unk698764);
 
     for (int walk = HERO_SPEED_WALK_ID; walk <= HERO_SPEED_JUMP_ID; ++walk)
-        GetWidget(walk)->send_message(widget::WIDGET_CLEAR_STATUS,
+        getWidget(walk)->sendMessage(widget::WIDGET_CLEAR_STATUS,
             widget::WIDGET_DIMMED_NODRAW);
-    GetWidget(gUnnamed698758.walkSpeed + MUSIC_TYPE_MIDI_ID)->send_message(
+    getWidget(g_unnamed698758.m_walkSpeed + MUSIC_TYPE_MIDI_ID)->sendMessage(
         widget::WIDGET_SET_STATUS, widget::WIDGET_DIMMED_NODRAW);
 
     for (int ai = AI_SPEED_CANTER_ID; ai <= AI_SPEED_NONE_ID; ++ai)
-        GetWidget(ai)->send_message(widget::WIDGET_CLEAR_STATUS,
+        getWidget(ai)->sendMessage(widget::WIDGET_CLEAR_STATUS,
             widget::WIDGET_DIMMED_NODRAW);
-    GetWidget(gUnnamed698758.computerWalkSpeed
-            + HERO_SPEED_GALLOP_ID)->send_message(
+    getWidget(g_unnamed698758.m_computerWalkSpeed
+            + HERO_SPEED_GALLOP_ID)->sendMessage(
         widget::WIDGET_SET_STATUS, widget::WIDGET_DIMMED_NODRAW);
 
-    GetWidget(SHOW_PATH_ID)->send_message(widget::WIDGET_SET_ICON_FRAME,
-        gUnnamed698758.showRoute);
+    getWidget(SHOW_PATH_ID)->sendMessage(widget::WIDGET_SET_ICON_FRAME,
+        g_unnamed698758.m_showRoute);
 
-    if (!gpGame->field_1f69d) {
-        GetWidget(MOVE_REMINDER_ID)->send_message(
-            widget::WIDGET_SET_ICON_FRAME, gUnnamed698758.moveReminder);
-        GetWidget(QUICK_COMBAT_ID)->send_message(
-            widget::WIDGET_SET_ICON_FRAME, gUnnamed698758.quickCombat);
+    if (!g_game->m_isTutorial) {
+        getWidget(MOVE_REMINDER_ID)->sendMessage(
+            widget::WIDGET_SET_ICON_FRAME, g_unnamed698758.m_moveReminder);
+        getWidget(QUICK_COMBAT_ID)->sendMessage(
+            widget::WIDGET_SET_ICON_FRAME, g_unnamed698758.m_quickCombat);
     } else {
-        GetWidget(MOVE_REMINDER_ID)->send_message(
+        getWidget(MOVE_REMINDER_ID)->sendMessage(
             widget::WIDGET_SET_ICON_FRAME, 0);
-        GetWidget(MOVE_REMINDER_ID)->send_message(
+        getWidget(MOVE_REMINDER_ID)->sendMessage(
             widget::WIDGET_SET_STATUS, widget::WIDGET_DIMMED_NODRAW);
-        GetWidget(MOVE_REMINDER_ID)->send_message(
+        getWidget(MOVE_REMINDER_ID)->sendMessage(
             widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE);
-        GetWidget(QUICK_COMBAT_ID)->send_message(
+        getWidget(QUICK_COMBAT_ID)->sendMessage(
             widget::WIDGET_SET_ICON_FRAME, 0);
-        GetWidget(QUICK_COMBAT_ID)->send_message(
+        getWidget(QUICK_COMBAT_ID)->sendMessage(
             widget::WIDGET_SET_STATUS, widget::WIDGET_DIMMED_NODRAW);
-        GetWidget(QUICK_COMBAT_ID)->send_message(
+        getWidget(QUICK_COMBAT_ID)->sendMessage(
             widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE);
     }
 
-    GetWidget(VIDEO_SUBTITLES_ID)->send_message(
-        widget::WIDGET_SET_ICON_FRAME, gUnnamed698758.videoSubtitles);
-    GetWidget(TOWN_OUTLINES_ID)->send_message(
-        widget::WIDGET_SET_ICON_FRAME, gUnnamed698758.townOutlines);
-    GetWidget(ANIMATE_SPELLBOOK_ID)->send_message(
-        widget::WIDGET_SET_ICON_FRAME, gUnnamed698758.animateSpellBook);
+    getWidget(VIDEO_SUBTITLES_ID)->sendMessage(
+        widget::WIDGET_SET_ICON_FRAME, g_unnamed698758.m_videoSubtitles);
+    getWidget(TOWN_OUTLINES_ID)->sendMessage(
+        widget::WIDGET_SET_ICON_FRAME, g_unnamed698758.m_townOutlines);
+    getWidget(ANIMATE_SPELLBOOK_ID)->sendMessage(
+        widget::WIDGET_SET_ICON_FRAME, g_unnamed698758.m_animateSpellBook);
 
     for (int scroll = WINDOW_SCROLL_SLOW; scroll <= WINDOW_SCROLL_FAST;
          ++scroll)
-        GetWidget(scroll)->send_message(widget::WIDGET_CLEAR_STATUS,
+        getWidget(scroll)->sendMessage(widget::WIDGET_CLEAR_STATUS,
             widget::WIDGET_DIMMED_NODRAW);
-    GetWidget(gUnnamed698758.windowScrollSpeed
-            + WINDOW_SCROLL_SLOW)->send_message(
+    getWidget(g_unnamed698758.m_windowScrollSpeed
+            + WINDOW_SCROLL_SLOW)->sendMessage(
         widget::WIDGET_SET_STATUS, widget::WIDGET_DIMMED_NODRAW);
 
     for (int video = VIDEO_QUALITY_LOW; video <= VIDEO_QUALITY_HIGH; ++video)
-        GetWidget(video)->send_message(widget::WIDGET_CLEAR_STATUS,
+        getWidget(video)->sendMessage(widget::WIDGET_CLEAR_STATUS,
             widget::WIDGET_DIMMED_NODRAW);
-    GetWidget(gUnnamed698758.binkVideo + VIDEO_QUALITY_LOW)->send_message(
+    getWidget(g_unnamed698758.m_binkVideo + VIDEO_QUALITY_LOW)->sendMessage(
         widget::WIDGET_SET_STATUS, widget::WIDGET_DIMMED_NODRAW);
 
     message networkMessage;
-    networkMessage.codeX = 0;
-    networkMessage.codeY = 0;
-    networkMessage.qualifier = 0;
-    networkMessage.mouseX = 0;
-    networkMessage.mouseY = 0;
-    networkMessage.extra = 0;
-    networkMessage.window = 0;
-    networkMessage.id = MESSAGE_WIDGET;
-    if (gNetworkActive69954c) {
-        GetWidget(TMainMenu::RESTART_ID)->enable(0);
-        networkMessage.codeX = widget::WIDGET_CLEAR_STATUS;
-        networkMessage.extra = widget::WIDGET_ACTIVE;
-        BroadcastMessage(&networkMessage);
-        networkMessage.codeY = TMainMenu::LOAD_GAME_ID;
-        networkMessage.codeX = widget::WIDGET_SET_STATUS;
-        networkMessage.extra = widget::WIDGET_DIMMED_NODRAW;
-        BroadcastMessage(&networkMessage);
-        networkMessage.codeX = widget::WIDGET_CLEAR_STATUS;
-        networkMessage.extra = widget::WIDGET_ACTIVE;
-        BroadcastMessage(&networkMessage);
+    networkMessage.m_codeX = 0;
+    networkMessage.m_codeY = 0;
+    networkMessage.m_qualifier = 0;
+    networkMessage.m_mouseX = 0;
+    networkMessage.m_mouseY = 0;
+    networkMessage.m_extra = 0;
+    networkMessage.m_window = 0;
+    networkMessage.m_id = MESSAGE_WIDGET;
+    if (g_networkActive69954c) {
+        getWidget(TMainMenu::RESTART_ID)->enable(0);
+        networkMessage.m_codeX = widget::WIDGET_CLEAR_STATUS;
+        networkMessage.m_extra = widget::WIDGET_ACTIVE;
+        broadcastMessage(&networkMessage);
+        networkMessage.m_codeY = TMainMenu::LOAD_GAME_ID;
+        networkMessage.m_codeX = widget::WIDGET_SET_STATUS;
+        networkMessage.m_extra = widget::WIDGET_DIMMED_NODRAW;
+        broadcastMessage(&networkMessage);
+        networkMessage.m_codeX = widget::WIDGET_CLEAR_STATUS;
+        networkMessage.m_extra = widget::WIDGET_ACTIVE;
+        broadcastMessage(&networkMessage);
     }
 }
 
@@ -429,7 +429,7 @@ VA_COMPGEN(0x005b3010, 0x21, SCALAR_DELETING_DTOR, TSystemOptionsWindow)
 VA(0x005b3040, 0x6B)  // scalar-dtor callee + vtable 0x642468, dc 0x160634
 TSystemOptionsWindow::~TSystemOptionsWindow()
 {
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
@@ -460,20 +460,20 @@ int TSystemOptionsWindow::convertID2HelpID(int id) const
 
 // E:\gamedcs\systemoptionswindow.cpp:230
 VA(0x005b30b0, 0x8E)  // calls heroWindow::DoModal, preference-update tail; dc 0x160700
-void TSystemOptionsWindow::DoModal()
+void TSystemOptionsWindow::doModal()
 {
-    bPrefsChanged = 0;
-    heroWindow::DoModal(0);
+    m_prefsChanged = 0;
+    heroWindow::doModal(0);
 
-    if (bPrefsChanged) {
-        if (gNetworkActive69954c
-                && gCombatQuickMode69877c != quickCombatSave) {
-            gpGame->GetLocalPlayer()->quickCombat =
-                gCombatQuickMode69877c;
-            CCombatTypeMsg msg(gCombatQuickMode69877c);
-            TransmitRemoteData(&msg, 0x7f, 0, 1);
+    if (m_prefsChanged) {
+        if (g_networkActive69954c
+                && g_combatQuickMode69877c != m_quickCombatSave) {
+            g_game->getLocalPlayer()->m_quickCombat =
+                g_combatQuickMode69877c;
+            CCombatTypeMsg msg(g_combatQuickMode69877c);
+            transmitRemoteData(&msg, 0x7f, 0, 1);
         }
-        WritePrefs();
+        writePrefs();
     }
 }
 
@@ -481,14 +481,15 @@ void TSystemOptionsWindow::DoModal()
 // every call site. Its CodeView rows prove the message::message() constructor
 // boundary and retail retains that initialization in the handler's 0x20-byte
 // frame. Use the real constructor rather than a volatile POD surrogate.
-__forceinline void TSystemOptionsWindow::UpdateSystemOptions(
-    unsigned char bFirstUpdate)
+__forceinline void TSystemOptionsWindow::updateSystemOptions(
+    // Before normalization (locals): bFirstUpdate.
+    unsigned char firstUpdate)
 {
-    if (!bFirstUpdate)
-        bPrefsChanged = 1;
+    if (!firstUpdate)
+        m_prefsChanged = 1;
     message updateMessage;
-    updateMessage.id = MESSAGE_WIDGET;
-    DrawWindow(1, 0xffff0001, 0xffff);
+    updateMessage.m_id = MESSAGE_WIDGET;
+    drawWindow(1, 0xffff0001, 0xffff);
 }
 
 // E:\gamedcs\systemoptionswindow.cpp:260
@@ -530,42 +531,42 @@ __forceinline void TSystemOptionsWindow::UpdateSystemOptions(
 // and click-sample deltas are register rotations over the same loads/stores
 // and calls.
 VA(0x005b3140, 0x61E)  // vtable slot 9 + inlined help switch, dc 0x160770
-int TSystemOptionsWindow::WindowHandler(message* msg)
+int TSystemOptionsWindow::windowHandler(message* msg)
 {
-    int result = CAdvPopup::WindowHandler(msg);
+    int result = CAdvPopup::windowHandler(msg);
     if (result)
         return result;
 
-    PollSound();
+    pollSound();
     register int one = MESSAGE_DISPATCH_CONSUME;
 
-    if (msg->qualifier & MESSAGE_MODIFIER_RIGHT) {
-        if (msg->codeX == widget::WIDGET_SELECT
-                || msg->codeX == widget::WIDGET_RIGHT_SELECT) {
-            int id = msg->codeY;
+    if (msg->m_qualifier & MESSAGE_MODIFIER_RIGHT) {
+        if (msg->m_codeX == widget::WIDGET_SELECT
+                || msg->m_codeX == widget::WIDGET_RIGHT_SELECT) {
+            int id = msg->m_codeY;
             int helpID = convertID2HelpID(id);
             if (helpID >= 0)
-                NormalDialog(gSystemOptionsHelp[helpID].text,
+                normalDialog(g_systemOptionsHelp[helpID].m_text,
                     4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
         goto consume;
     }
 
-    if (msg->id == one)
+    if (msg->m_id == one)
         goto consume;
 
-    if (msg->id != MESSAGE_WIDGET)
+    if (msg->m_id != MESSAGE_WIDGET)
         goto consume;
 
-    switch (msg->codeX) {
+    switch (msg->m_codeX) {
     case widget::WIDGET_SELECT: {
-        int id = findWidget(msg->mouseX, msg->mouseY);
+        int id = findWidget(msg->m_mouseX, msg->m_mouseY);
         if (id >= SHOW_PATH_ID && id <= ANIMATE_SPELLBOOK_ID
-                && button::click_sample) {
-            button::click_sample->field_2c = 0x40;
-            button::click_sample->field_30 = one;
-            button::click_sample->field_28 = 3;
-            gpSoundManager->MemorySample(button::click_sample);
+                && button::s_clickSample) {
+            button::s_clickSample->m_memSample.m_memVolume = 0x40;
+            button::s_clickSample->m_memSample.m_memLooping = one;
+            button::s_clickSample->m_memSample.m_memCindex = 3;
+            g_soundManager->memorySample(button::s_clickSample);
         }
         return one;
     }
@@ -576,7 +577,7 @@ int TSystemOptionsWindow::WindowHandler(message* msg)
     }
 
     {
-        int id = msg->codeY;
+        int id = msg->m_codeY;
 
         if (id == TMainMenu::LOAD_GAME_ID
                 || id == TMainMenu::MAIN_MENU_ID
@@ -590,11 +591,11 @@ int TSystemOptionsWindow::WindowHandler(message* msg)
         switch (id) {
         case VIDEO_QUALITY_LOW:
         case VIDEO_QUALITY_HIGH: {
-            gUnnamed698758.binkVideo = id - VIDEO_QUALITY_LOW;
+            g_unnamed698758.m_binkVideo = id - VIDEO_QUALITY_LOW;
             for (int i = VIDEO_QUALITY_LOW; i <= VIDEO_QUALITY_HIGH; ++i)
-                GetWidget(i)->send_message(widget::WIDGET_CLEAR_STATUS,
+                getWidget(i)->sendMessage(widget::WIDGET_CLEAR_STATUS,
                     widget::WIDGET_DIMMED);
-            GetWidget(gUnnamed698758.binkVideo + VIDEO_QUALITY_LOW)->send_message(
+            getWidget(g_unnamed698758.m_binkVideo + VIDEO_QUALITY_LOW)->sendMessage(
                 widget::WIDGET_SET_STATUS, widget::WIDGET_DIMMED);
             break;
         }
@@ -602,11 +603,11 @@ int TSystemOptionsWindow::WindowHandler(message* msg)
         case WINDOW_SCROLL_SLOW:
         case WINDOW_SCROLL_MEDIUM:
         case WINDOW_SCROLL_FAST: {
-            gUnnamed698758.windowScrollSpeed = id - WINDOW_SCROLL_SLOW;
+            g_unnamed698758.m_windowScrollSpeed = id - WINDOW_SCROLL_SLOW;
             for (int i = WINDOW_SCROLL_SLOW; i <= WINDOW_SCROLL_FAST; ++i)
-                GetWidget(i)->send_message(widget::WIDGET_CLEAR_STATUS,
+                getWidget(i)->sendMessage(widget::WIDGET_CLEAR_STATUS,
                     widget::WIDGET_DIMMED);
-            GetWidget(gUnnamed698758.windowScrollSpeed + WINDOW_SCROLL_SLOW)->send_message(
+            getWidget(g_unnamed698758.m_windowScrollSpeed + WINDOW_SCROLL_SLOW)->sendMessage(
                 widget::WIDGET_SET_STATUS, widget::WIDGET_DIMMED);
             break;
         }
@@ -615,11 +616,11 @@ int TSystemOptionsWindow::WindowHandler(message* msg)
         case HERO_SPEED_CANTER_ID:
         case HERO_SPEED_GALLOP_ID:
         case HERO_SPEED_JUMP_ID: {
-            gUnnamed698758.walkSpeed = id - MUSIC_TYPE_MIDI_ID;
+            g_unnamed698758.m_walkSpeed = id - MUSIC_TYPE_MIDI_ID;
             for (int i = HERO_SPEED_WALK_ID; i <= HERO_SPEED_JUMP_ID; ++i)
-                GetWidget(i)->send_message(widget::WIDGET_CLEAR_STATUS,
+                getWidget(i)->sendMessage(widget::WIDGET_CLEAR_STATUS,
                     widget::WIDGET_DIMMED);
-            GetWidget(gUnnamed698758.walkSpeed + MUSIC_TYPE_MIDI_ID)->send_message(
+            getWidget(g_unnamed698758.m_walkSpeed + MUSIC_TYPE_MIDI_ID)->sendMessage(
                 widget::WIDGET_SET_STATUS, widget::WIDGET_DIMMED);
             break;
         }
@@ -628,13 +629,13 @@ int TSystemOptionsWindow::WindowHandler(message* msg)
         case AI_SPEED_GALLOP_ID:
         case AI_SPEED_JUMP_ID:
         case AI_SPEED_NONE_ID: {
-            gUnnamed698758.computerWalkSpeed = id - HERO_SPEED_GALLOP_ID;
-            gUnnamed698758.blackoutComputer =
-                gUnnamed698758.computerWalkSpeed == AI_SPEED_BLACKOUT_VALUE;
+            g_unnamed698758.m_computerWalkSpeed = id - HERO_SPEED_GALLOP_ID;
+            g_unnamed698758.m_blackoutComputer =
+                g_unnamed698758.m_computerWalkSpeed == AI_SPEED_BLACKOUT_VALUE;
             for (int i = AI_SPEED_CANTER_ID; i <= AI_SPEED_NONE_ID; ++i)
-                GetWidget(i)->send_message(widget::WIDGET_CLEAR_STATUS,
+                getWidget(i)->sendMessage(widget::WIDGET_CLEAR_STATUS,
                     widget::WIDGET_DIMMED);
-            GetWidget(gUnnamed698758.computerWalkSpeed + HERO_SPEED_GALLOP_ID)->send_message(
+            getWidget(g_unnamed698758.m_computerWalkSpeed + HERO_SPEED_GALLOP_ID)->sendMessage(
                 widget::WIDGET_SET_STATUS, widget::WIDGET_DIMMED);
             break;
         }
@@ -645,25 +646,25 @@ int TSystemOptionsWindow::WindowHandler(message* msg)
         case MUSIC_VOLUME_5_ID: case MUSIC_VOLUME_6_ID:
         case MUSIC_VOLUME_7_ID: case MUSIC_VOLUME_8_ID:
         case MUSIC_VOLUME_9_ID: {
-            if (!gUnk698760 && !gpSoundManager->ds) {
-                NormalDialog(
-                    gpGeneralText->GetText(
+            if (!g_unk698760 && !g_soundManager->m_ds) {
+                normalDialog(
+                    g_generalText->getText(
                         GENERAL_TEXT_SYSTEM_OPTIONS_AUDIO_UNAVAILABLE),
                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 return MESSAGE_DISPATCH_CONSUME;
             }
-            gUnk698760 = id - MUSIC_VOLUME_0_ID;
+            g_unk698760 = id - MUSIC_VOLUME_0_ID;
             for (int i = MUSIC_VOLUME_0_ID; i <= MUSIC_VOLUME_9_ID; ++i)
-                GetWidget(i)->send_message(widget::WIDGET_CLEAR_STATUS,
+                getWidget(i)->sendMessage(widget::WIDGET_CLEAR_STATUS,
                     widget::WIDGET_DRAWN);
-            GetWidget(gUnk698760 + MUSIC_VOLUME_0_ID)->send_message(
+            getWidget(g_unk698760 + MUSIC_VOLUME_0_ID)->sendMessage(
                 widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
-            GetWidget(gUnk698760 + MUSIC_VOLUME_0_ID)->send_message(
-                widget::WIDGET_SET_ICON_FRAME, gUnk698760);
-            int save = gpSoundManager->field_84;
-            gpSoundManager->field_84 = one;
-            gpSoundManager->AdjustMusicVolumes();
-            gpSoundManager->field_84 = save;
+            getWidget(g_unk698760 + MUSIC_VOLUME_0_ID)->sendMessage(
+                widget::WIDGET_SET_ICON_FRAME, g_unk698760);
+            int save = g_soundManager->m_playSounds;
+            g_soundManager->m_playSounds = one;
+            g_soundManager->adjustMusicVolumes();
+            g_soundManager->m_playSounds = save;
             break;
         }
 
@@ -673,87 +674,87 @@ int TSystemOptionsWindow::WindowHandler(message* msg)
         case EFFECTS_VOLUME_5_ID: case EFFECTS_VOLUME_6_ID:
         case EFFECTS_VOLUME_7_ID: case EFFECTS_VOLUME_8_ID:
         case EFFECTS_VOLUME_9_ID: {
-            if (!gUnk698764 && !gpSoundManager->ds) {
-                NormalDialog(
-                    gpGeneralText->GetText(
+            if (!g_unk698764 && !g_soundManager->m_ds) {
+                normalDialog(
+                    g_generalText->getText(
                         GENERAL_TEXT_SYSTEM_OPTIONS_AUDIO_UNAVAILABLE),
                     one, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 return MESSAGE_DISPATCH_CONSUME;
             }
-            gUnk698764 = id - EFFECTS_VOLUME_0_ID;
-            gUnnamed698758.lastSoundVolume = gUnk698764;
+            g_unk698764 = id - EFFECTS_VOLUME_0_ID;
+            g_unnamed698758.m_lastSoundVolume = g_unk698764;
             for (int i = EFFECTS_VOLUME_0_ID; i <= EFFECTS_VOLUME_9_ID; ++i)
-                GetWidget(i)->send_message(widget::WIDGET_CLEAR_STATUS,
+                getWidget(i)->sendMessage(widget::WIDGET_CLEAR_STATUS,
                     widget::WIDGET_DRAWN);
-            GetWidget(gUnk698764 + EFFECTS_VOLUME_0_ID)->send_message(
+            getWidget(g_unk698764 + EFFECTS_VOLUME_0_ID)->sendMessage(
                 widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
-            GetWidget(gUnk698764 + EFFECTS_VOLUME_0_ID)->send_message(
-                widget::WIDGET_SET_ICON_FRAME, gUnk698764);
-            int save = gpSoundManager->field_84;
-            gpSoundManager->field_84 = one;
-            gpSoundManager->AdjustSoundVolumes();
-            gpSoundManager->field_84 = save;
+            getWidget(g_unk698764 + EFFECTS_VOLUME_0_ID)->sendMessage(
+                widget::WIDGET_SET_ICON_FRAME, g_unk698764);
+            int save = g_soundManager->m_playSounds;
+            g_soundManager->m_playSounds = one;
+            g_soundManager->adjustSoundVolumes();
+            g_soundManager->m_playSounds = save;
             break;
         }
 
         case SHOW_PATH_ID:
-            gUnnamed698758.showRoute ^= one;
-            GetWidget(SHOW_PATH_ID)->send_message(widget::WIDGET_SET_ICON_FRAME,
-                gUnnamed698758.showRoute);
+            g_unnamed698758.m_showRoute ^= one;
+            getWidget(SHOW_PATH_ID)->sendMessage(widget::WIDGET_SET_ICON_FRAME,
+                g_unnamed698758.m_showRoute);
             break;
         case MOVE_REMINDER_ID:
-            gUnnamed698758.moveReminder ^= one;
-            GetWidget(MOVE_REMINDER_ID)->send_message(
+            g_unnamed698758.m_moveReminder ^= one;
+            getWidget(MOVE_REMINDER_ID)->sendMessage(
                 widget::WIDGET_SET_ICON_FRAME,
-                gUnnamed698758.moveReminder);
+                g_unnamed698758.m_moveReminder);
             break;
         case QUICK_COMBAT_ID:
-            gUnnamed698758.quickCombat ^= one;
-            GetWidget(QUICK_COMBAT_ID)->send_message(
+            g_unnamed698758.m_quickCombat ^= one;
+            getWidget(QUICK_COMBAT_ID)->sendMessage(
                 widget::WIDGET_SET_ICON_FRAME,
-                gUnnamed698758.quickCombat);
+                g_unnamed698758.m_quickCombat);
             break;
         case VIDEO_SUBTITLES_ID:
-            gUnnamed698758.videoSubtitles ^= one;
-            GetWidget(VIDEO_SUBTITLES_ID)->send_message(
+            g_unnamed698758.m_videoSubtitles ^= one;
+            getWidget(VIDEO_SUBTITLES_ID)->sendMessage(
                 widget::WIDGET_SET_ICON_FRAME,
-                gUnnamed698758.videoSubtitles);
+                g_unnamed698758.m_videoSubtitles);
             break;
         case TOWN_OUTLINES_ID:
-            gUnnamed698758.townOutlines ^= one;
-            GetWidget(TOWN_OUTLINES_ID)->send_message(
+            g_unnamed698758.m_townOutlines ^= one;
+            getWidget(TOWN_OUTLINES_ID)->sendMessage(
                 widget::WIDGET_SET_ICON_FRAME,
-                gUnnamed698758.townOutlines);
+                g_unnamed698758.m_townOutlines);
             break;
         case ANIMATE_SPELLBOOK_ID:
-            gUnnamed698758.animateSpellBook ^= one;
-            GetWidget(ANIMATE_SPELLBOOK_ID)->send_message(
+            g_unnamed698758.m_animateSpellBook ^= one;
+            getWidget(ANIMATE_SPELLBOOK_ID)->sendMessage(
                 widget::WIDGET_SET_ICON_FRAME,
-                gUnnamed698758.animateSpellBook);
+                g_unnamed698758.m_animateSpellBook);
             break;
 
         default:
             goto consume;
         }
 
-        UpdateSystemOptions(0);
+        updateSystemOptions(0);
         return MESSAGE_DISPATCH_CONSUME;
     }
 
 confirm_command:
-    NormalDialog(gpGeneralText->GetText(
+    normalDialog(g_generalText->getText(
                      GENERAL_TEXT_SYSTEM_OPTIONS_COMMAND_CONFIRM),
         2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-    if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT)
+    if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT)
         goto consume;
 
 translate_command:
     {
-        int command = msg->codeY;
-        msg->id = MESSAGE_WIDGET;
-        gpWindowManager->dialogReturn = command;
-        msg->codeY = widget::WIDGET_END_DIALOG;
-        msg->codeX = widget::WIDGET_END_DIALOG;
+        int command = msg->m_codeY;
+        msg->m_id = MESSAGE_WIDGET;
+        g_windowManager->m_dialogReturn = command;
+        msg->m_codeY = widget::WIDGET_END_DIALOG;
+        msg->m_codeX = widget::WIDGET_END_DIALOG;
         return MESSAGE_DISPATCH_FORWARD;
     }
 

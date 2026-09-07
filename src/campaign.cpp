@@ -33,18 +33,24 @@
 // The five plate callbacks the constructor address-takes, retail 0x457280 /
 // 0x4572f0 / 0x457360 / 0x4573d0 / 0x457440. Names provisional (nothing
 // attests them); each is named for the sprite its plate carries.
-static int CampaignSetSodHandler(message& msg);
-static int CampaignSetArmHandler(message& msg);
-static int CampaignSetCusHandler(message& msg);
-static int CampaignSetExitHandler(message& msg);
-static int CampaignSetRoeHandler(message& msg);
+// Before normalization (function): CampaignSetSodHandler.
+static int campaignSetSodHandler(message& msg);
+// Before normalization (function): CampaignSetArmHandler.
+static int campaignSetArmHandler(message& msg);
+// Before normalization (function): CampaignSetCusHandler.
+static int campaignSetCusHandler(message& msg);
+// Before normalization (function): CampaignSetExitHandler.
+static int campaignSetExitHandler(message& msg);
+// Before normalization (function): CampaignSetRoeHandler.
+static int campaignSetRoeHandler(message& msg);
 
 // The rollover latch the handler keeps between messages: the widget id the
 // mouse was last over, -1 for none. Retail .data 0x660dc8, the one dword in
 // this compiland's own data band ahead of its string pool, written only by
 // the handler below.
+// Before normalization: gCampaignSetHoverId.
 DATA(0x00660dc8)
-static int gCampaignSetHoverId = -1;
+static int g_campaignSetHoverId = -1;
 
 // The three plate rectangles retail reads out of .rdata rather than folding.
 // SoD's and Armageddon's Blade's are immediates in the constructor's own
@@ -52,9 +58,12 @@ static int gCampaignSetHoverId = -1;
 // which is what fixes them as const-array elements and the element type as
 // `short`. Layout order in .rdata is source order (roe, cus, exit), and the
 // run ends exactly on this class's vtable at 0x63bc08. Names INVENTED.
-DATA(0x0063bbf0) static const short gCampaignSetRoeRect[4] = { 494, 116, 287, 130 };
-DATA(0x0063bbf8) static const short gCampaignSetCusRect[4] = { 554, 358, 169, 110 };
-DATA(0x0063bc00) static const short gCampaignSetExitRect[4] = { 576, 464, 126, 108 };
+// Before normalization: gCampaignSetRoeRect.
+// Before normalization: gCampaignSetCusRect.
+DATA(0x0063bbf0) static const short g_campaignSetRoeRect[4] = { 494, 116, 287, 130 };
+// Before normalization: gCampaignSetExitRect.
+DATA(0x0063bbf8) static const short g_campaignSetCusRect[4] = { 554, 358, 169, 110 };
+DATA(0x0063bc00) static const short g_campaignSetExitRect[4] = { 576, 464, 126, 108 };
 
 // Retail 0x456ec0, the compiland's first real body. Five plates on an
 // 800x600 heroWindow, each a type_func_button carrying its own callback and
@@ -76,51 +85,51 @@ VA(0x00456ec0, 0x337)  // anchor-string CSSsod.def + anchor-vtable 0x63bc08 + Do
 TCampaignSetWindow::TCampaignSetWindow()
     : heroWindow(0, 0, 800, 600, 0)
 {
-    Widgets.reserve(4);
+    m_widgets.reserve(4);
 
     int widgetId = SOD_PLATE_ID;
 
     type_func_button* sodPlate = new type_func_button(
         534, 8, 201, 119, widgetId++,
         DATA_COMPGEN(0x00660dfc, campaignSetSodSprite, "CSSsod.def"),
-        CampaignSetSodHandler, 0, 1);
-    Widgets.push_back(sodPlate);
-    sodPlate->set_hotkey(0x1f);
+        campaignSetSodHandler, 0, 1);
+    m_widgets.push_back(sodPlate);
+    sodPlate->setHotkey(0x1f);
 
-    if (*gpVideoGameState == VIDEO_GAME_STATE_FORCED_BINK_HIGH) {
+    if (*g_videoGameState == VIDEO_GAME_STATE_FORCED_BINK_HIGH) {
         type_func_button* armPlate = new type_func_button(
             486, 242, 305, 119, widgetId++,
             DATA_COMPGEN(0x00660df0, campaignSetArmSprite, "CSSarm.def"),
-            CampaignSetArmHandler, 0, 1);
-        Widgets.push_back(armPlate);
-        armPlate->set_hotkey(0x1e);
+            campaignSetArmHandler, 0, 1);
+        m_widgets.push_back(armPlate);
+        armPlate->setHotkey(0x1e);
     }
 
     type_func_button* roePlate = new type_func_button(
-        gCampaignSetRoeRect[0], gCampaignSetRoeRect[1],
-        gCampaignSetRoeRect[2], gCampaignSetRoeRect[3], widgetId++,
+        g_campaignSetRoeRect[0], g_campaignSetRoeRect[1],
+        g_campaignSetRoeRect[2], g_campaignSetRoeRect[3], widgetId++,
         DATA_COMPGEN(0x00660de4, campaignSetRoeSprite, "CSSroe.def"),
-        CampaignSetRoeHandler, 0, 1);
-    Widgets.push_back(roePlate);
-    roePlate->set_hotkey(0x13);
+        campaignSetRoeHandler, 0, 1);
+    m_widgets.push_back(roePlate);
+    roePlate->setHotkey(0x13);
 
     type_func_button* cusPlate = new type_func_button(
-        gCampaignSetCusRect[0], gCampaignSetCusRect[1],
-        gCampaignSetCusRect[2], gCampaignSetCusRect[3], widgetId++,
+        g_campaignSetCusRect[0], g_campaignSetCusRect[1],
+        g_campaignSetCusRect[2], g_campaignSetCusRect[3], widgetId++,
         DATA_COMPGEN(0x00660dd8, campaignSetCusSprite, "CSScus.def"),
-        CampaignSetCusHandler, 0, 1);
-    Widgets.push_back(cusPlate);
-    cusPlate->set_hotkey(0x2e);
+        campaignSetCusHandler, 0, 1);
+    m_widgets.push_back(cusPlate);
+    cusPlate->setHotkey(0x2e);
 
     type_func_button* exitPlate = new type_func_button(
-        gCampaignSetExitRect[0], gCampaignSetExitRect[1],
-        gCampaignSetExitRect[2], gCampaignSetExitRect[3], widgetId,
+        g_campaignSetExitRect[0], g_campaignSetExitRect[1],
+        g_campaignSetExitRect[2], g_campaignSetExitRect[3], widgetId,
         DATA_COMPGEN(0x00660dcc, campaignSetExitSprite, "CSSexit.def"),
-        CampaignSetExitHandler, 0, 1);
-    Widgets.push_back(exitPlate);
-    exitPlate->set_hotkey(1);
+        campaignSetExitHandler, 0, 1);
+    m_widgets.push_back(exitPlate);
+    exitPlate->setHotkey(1);
 
-    AddWidgetsToMessageStream();
+    addWidgetsToMessageStream();
 }
 
 VA_COMPGEN(0x00457200, 0x21, SCALAR_DELETING_DTOR, TCampaignSetWindow)
@@ -130,92 +139,92 @@ VA_COMPGEN(0x00457200, 0x21, SCALAR_DELETING_DTOR, TCampaignSetWindow)
 VA(0x00457230, 0x4E)  // scalar-dtor callee + vtable 0x63bc08 slot 0's target, retail-only
 TCampaignSetWindow::~TCampaignSetWindow()
 {
-    delete_widgets();
+    deleteWidgets();
 }
 
 // The five plate callbacks. Each answers a right-click with its own help
 // row and a left-release with the modal result DoCampaignWindow switches
 // on; the Exit plate answers the shared 0x7801 dialog-cancel id.
 VA(0x00457280, 0x64)  // ctor address-take (SoD plate), retail-only
-static int CampaignSetSodHandler(message& msg)
+static int campaignSetSodHandler(message& msg)
 {
-    if (msg.codeX == widget::WIDGET_RIGHT_SELECT) {
-        NormalDialog(gpGeneralText->GetText(TCampaignSetWindow::CAMPAIGN_SET_SOD_HELP), 4, -1, -1,
+    if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
+        normalDialog(g_generalText->getText(TCampaignSetWindow::CAMPAIGN_SET_SOD_HELP), 4, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return MESSAGE_DISPATCH_CONSUME;
     }
-    if (msg.codeX == widget::WIDGET_DESELECT && !(msg.qualifier & 0x200)) {
-        msg.id = MESSAGE_WIDGET;
-        msg.codeY = TCampaignSetWindow::CAMPAIGN_SET_SOD_ID;
-        msg.codeX = widget::WIDGET_END_DIALOG;
+    if (msg.m_codeX == widget::WIDGET_DESELECT && !(msg.m_qualifier & 0x200)) {
+        msg.m_id = MESSAGE_WIDGET;
+        msg.m_codeY = TCampaignSetWindow::CAMPAIGN_SET_SOD_ID;
+        msg.m_codeX = widget::WIDGET_END_DIALOG;
         return MESSAGE_DISPATCH_FORWARD;
     }
     return 0;
 }
 
 VA(0x004572f0, 0x64)  // ctor address-take (Armageddon's Blade plate), retail-only
-static int CampaignSetArmHandler(message& msg)
+static int campaignSetArmHandler(message& msg)
 {
-    if (msg.codeX == widget::WIDGET_RIGHT_SELECT) {
-        NormalDialog(gpGeneralText->GetText(TCampaignSetWindow::CAMPAIGN_SET_ARM_HELP), 4, -1, -1,
+    if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
+        normalDialog(g_generalText->getText(TCampaignSetWindow::CAMPAIGN_SET_ARM_HELP), 4, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return MESSAGE_DISPATCH_CONSUME;
     }
-    if (msg.codeX == widget::WIDGET_DESELECT && !(msg.qualifier & 0x200)) {
-        msg.id = MESSAGE_WIDGET;
-        msg.codeY = TCampaignSetWindow::CAMPAIGN_SET_AB_ID;
-        msg.codeX = widget::WIDGET_END_DIALOG;
+    if (msg.m_codeX == widget::WIDGET_DESELECT && !(msg.m_qualifier & 0x200)) {
+        msg.m_id = MESSAGE_WIDGET;
+        msg.m_codeY = TCampaignSetWindow::CAMPAIGN_SET_AB_ID;
+        msg.m_codeX = widget::WIDGET_END_DIALOG;
         return MESSAGE_DISPATCH_FORWARD;
     }
     return 0;
 }
 
 VA(0x00457360, 0x64)  // ctor address-take (custom-campaign plate), retail-only
-static int CampaignSetCusHandler(message& msg)
+static int campaignSetCusHandler(message& msg)
 {
-    if (msg.codeX == widget::WIDGET_RIGHT_SELECT) {
-        NormalDialog(gpGeneralText->GetText(TCampaignSetWindow::CAMPAIGN_SET_CUS_HELP), 4, -1, -1,
+    if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
+        normalDialog(g_generalText->getText(TCampaignSetWindow::CAMPAIGN_SET_CUS_HELP), 4, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return MESSAGE_DISPATCH_CONSUME;
     }
-    if (msg.codeX == widget::WIDGET_DESELECT && !(msg.qualifier & 0x200)) {
-        msg.id = MESSAGE_WIDGET;
-        msg.codeY = TCampaignSetWindow::CUSTOM_CAMPAIGN_ID;
-        msg.codeX = widget::WIDGET_END_DIALOG;
+    if (msg.m_codeX == widget::WIDGET_DESELECT && !(msg.m_qualifier & 0x200)) {
+        msg.m_id = MESSAGE_WIDGET;
+        msg.m_codeY = TCampaignSetWindow::CUSTOM_CAMPAIGN_ID;
+        msg.m_codeX = widget::WIDGET_END_DIALOG;
         return MESSAGE_DISPATCH_FORWARD;
     }
     return 0;
 }
 
 VA(0x004573d0, 0x64)  // ctor address-take (Exit plate), retail-only
-static int CampaignSetExitHandler(message& msg)
+static int campaignSetExitHandler(message& msg)
 {
-    if (msg.codeX == widget::WIDGET_RIGHT_SELECT) {
-        NormalDialog(gpGeneralText->GetText(TCampaignSetWindow::CAMPAIGN_SET_EXIT_HELP), 4, -1,
+    if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
+        normalDialog(g_generalText->getText(TCampaignSetWindow::CAMPAIGN_SET_EXIT_HELP), 4, -1,
                      -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return MESSAGE_DISPATCH_CONSUME;
     }
-    if (msg.codeX == widget::WIDGET_DESELECT && !(msg.qualifier & 0x200)) {
-        msg.id = MESSAGE_WIDGET;
-        msg.codeY = DIALOG_RETURN_CANCEL;
-        msg.codeX = widget::WIDGET_END_DIALOG;
+    if (msg.m_codeX == widget::WIDGET_DESELECT && !(msg.m_qualifier & 0x200)) {
+        msg.m_id = MESSAGE_WIDGET;
+        msg.m_codeY = DIALOG_RETURN_CANCEL;
+        msg.m_codeX = widget::WIDGET_END_DIALOG;
         return MESSAGE_DISPATCH_FORWARD;
     }
     return 0;
 }
 
 VA(0x00457440, 0x60)  // ctor address-take (Restoration of Erathia plate), retail-only
-static int CampaignSetRoeHandler(message& msg)
+static int campaignSetRoeHandler(message& msg)
 {
-    if (msg.codeX == widget::WIDGET_RIGHT_SELECT) {
-        NormalDialog(gpGeneralText->GetText(TCampaignSetWindow::CAMPAIGN_SET_ROE_HELP), 4, -1, -1,
+    if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
+        normalDialog(g_generalText->getText(TCampaignSetWindow::CAMPAIGN_SET_ROE_HELP), 4, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return MESSAGE_DISPATCH_CONSUME;
     }
-    if (msg.codeX == widget::WIDGET_DESELECT && !(msg.qualifier & 0x200)) {
-        msg.id = MESSAGE_WIDGET;
-        msg.codeY = TCampaignSetWindow::CAMPAIGN_SET_ROE_ID;
-        msg.codeX = widget::WIDGET_END_DIALOG;
+    if (msg.m_codeX == widget::WIDGET_DESELECT && !(msg.m_qualifier & 0x200)) {
+        msg.m_id = MESSAGE_WIDGET;
+        msg.m_codeY = TCampaignSetWindow::CAMPAIGN_SET_ROE_ID;
+        msg.m_codeX = widget::WIDGET_END_DIALOG;
         return MESSAGE_DISPATCH_FORWARD;
     }
     return 0;
@@ -225,11 +234,11 @@ static int CampaignSetRoeHandler(message& msg)
 // DoModal - but the same shape plus the menu track, which is what makes the
 // campaign-set page the one that restarts MainMenu.
 VA(0x004574a0, 0x2C)  // anchor-string MainMenu + anchor-callee DoDialog(HeroWindowHandler), retail-only
-void TCampaignSetWindow::DoModal()
+void TCampaignSetWindow::doModal()
 {
-    gpSoundManager->StartMP3(
+    g_soundManager->startMP3(
         DATA_COMPGEN(0x00660e08, campaignSetMusic, "MainMenu"), 0, 1);
-    gpWindowManager->DoDialog(this, HeroWindowHandler, 0);
+    g_windowManager->doDialog(this, heroWindowHandler, 0);
 }
 
 // Retail 0x4574d0, vtable slot 3. The plate hover sweep: whichever plate is
@@ -241,33 +250,33 @@ void TCampaignSetWindow::DoModal()
 // while `c ? 104 : 103` gives `sete cl / add ecx, 103` (95.13 against
 // 100.00).
 VA(0x004574d0, 0xC4)  // vtable 0x63bc08 slot 3, retail-only
-int TCampaignSetWindow::handle_message(message& msg)
+int TCampaignSetWindow::handleMessage(message& msg)
 {
     unsigned char hoverChanged = 0;
 
-    PollSound();
+    pollSound();
 
-    if (msg.id == MESSAGE_MOUSE_MOVE) {
-        int hovered = findWidget(msg.mouseX, msg.mouseY);
-        if (hovered != gCampaignSetHoverId) {
+    if (msg.m_id == MESSAGE_MOUSE_MOVE) {
+        int hovered = findWidget(msg.m_mouseX, msg.m_mouseY);
+        if (hovered != g_campaignSetHoverId) {
             hoverChanged = 1;
-            if (gCampaignSetHoverId != -1)
-                GetWidget(gCampaignSetHoverId)
-                    ->send_message(widget::WIDGET_CLEAR_STATUS, 0x10);
+            if (g_campaignSetHoverId != -1)
+                getWidget(g_campaignSetHoverId)
+                    ->sendMessage(widget::WIDGET_CLEAR_STATUS, 0x10);
             if (hovered != -1)
-                GetWidget(hovered)->send_message(widget::WIDGET_SET_STATUS,
+                getWidget(hovered)->sendMessage(widget::WIDGET_SET_STATUS,
                                                  0x10);
-            gCampaignSetHoverId = hovered;
+            g_campaignSetHoverId = hovered;
         }
     }
 
-    if (VideoNeedsUpdate() || hoverChanged) {
+    if (videoNeedsUpdate() || hoverChanged) {
         int lastPlate = LAST_PLATE_ID;
-        if (*gpVideoGameState == VIDEO_GAME_STATE_FORCED_BINK_HIGH)
+        if (*g_videoGameState == VIDEO_GAME_STATE_FORCED_BINK_HIGH)
             lastPlate = LAST_PLATE_WITH_AB_ID;
-        DrawWindow(0, SOD_PLATE_ID, lastPlate);
-        gpWindowManager->UpdateScreen(482, 9, 308, 562);
-        VideoDrawRects();
+        drawWindow(0, SOD_PLATE_ID, lastPlate);
+        g_windowManager->updateScreen(482, 9, 308, 562);
+        videoDrawRects();
     }
 
     return MESSAGE_DISPATCH_CONSUME;

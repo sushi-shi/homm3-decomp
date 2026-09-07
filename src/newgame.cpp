@@ -16,29 +16,31 @@
 #include "winmgr.h"
 
 // E:\gamedcs\newgame.cpp:191
+// Before normalization (locals): legal_alignments.
 VA(0x005132b0, 0x1B)  // nine-bit loop + source-order boundary, dc 0x103494
-long get_alignment_count(int legal_alignments)
+long getAlignmentCount(int legalAlignments)
 {
     long count = 0;
     for (int i = 0; i < 9; ++i) {
-        if (legal_alignments & (1 << i))
+        if (legalAlignments & (1 << i))
             ++count;
     }
     return count;
 }
 
 // E:\gamedcs\newgame.cpp:204
+// Before normalization (locals): legal_alignments.
 VA(0x005132d0, 0x50)  // inlined count + Random call, dc 0x1034b4
-TTownType pick_alignment(int legal_alignments, unsigned char getFirstAvail)
+TTownType pickAlignment(int legalAlignments, unsigned char getFirstAvail)
 {
-    long count = get_alignment_count(legal_alignments);
+    long count = getAlignmentCount(legalAlignments);
     int which = 1;
 
     if (!getFirstAvail && count > 0)
-        which = Random(1, count);
+        which = random(1, count);
 
     for (int i = 0; i < 9; ++i) {
-        if (legal_alignments & (1 << i)) {
+        if (legalAlignments & (1 << i)) {
             if (--which == 0) {
                 TTownType alignment;
                 memcpy(&alignment, &i, sizeof alignment);
@@ -51,9 +53,9 @@ TTownType pick_alignment(int legal_alignments, unsigned char getFirstAvail)
 
 // E:\gamedcs\Town.h:337. GetLossConditionText's DC row calls this source
 // helper and retail expands its three HasBuilding tests in the same arm.
-inline unsigned char town::IsCastle() const
+inline unsigned char town::isCastle() const
 {
-    if (HasBuilding(CASTLE_FORT_ID, 0))
+    if (hasBuilding(CASTLE_FORT_ID, 0))
         return 1;
 
     // SOURCE-SHAPE RATCHET: DC newgame.cpp:639 proves the IsCastle helper;
@@ -62,19 +64,23 @@ inline unsigned char town::IsCastle() const
     // one call (80.7987%); depth 1 leaves all three calls (87.4340%).
     // The depth-0 pin that stood here is byte-flat - this unit is at 100%
     // with or without it - so it came out (2026-09-06, polish lane 50).
-    return HasBuilding(CASTLE_CITADEL_ID, 0)
-        || HasBuilding(CASTLE_CASTLE_ID, 0);
+    return hasBuilding(CASTLE_CITADEL_ID, 0)
+        || hasBuilding(CASTLE_CASTLE_ID, 0);
 }
 
 // The three map formats InitNewGame accepts, in the order retail tests them.
 // File-scope constants rather than a game.h enum, the same shape game.cpp
 // already uses for MAP_VERSION_OLD_CAMPAIGN_HERO_IDS.
-const int MAP_FORMAT_SOD = 28;
-const int MAP_FORMAT_ROE = 14;
-const int MAP_FORMAT_AB = 21;
+// Before normalization: MAP_FORMAT_SOD.
+const int g_mapFormatSod = 28;
+// Before normalization: MAP_FORMAT_ROE.
+const int g_mapFormatRoe = 14;
+// Before normalization: MAP_FORMAT_AB.
+const int g_mapFormatAb = 21;
 // SGameSetupOptions::playerPos carries a human's seat ordinal, or this
 // sentinel for a slot the computer takes.
-const int SETUP_PLAYER_POS_COMPUTER = 10;
+// Before normalization: SETUP_PLAYER_POS_COMPUTER.
+const int g_setupPlayerPosComputer = 10;
 
 // Complete widens the Dreamcast map-header-only entry point with the selected
 // difficulty, scenario ordinal, and optional stream. TCampaignBrief pushes
@@ -102,94 +108,94 @@ const int SETUP_PLAYER_POS_COMPUTER = 10;
 // needed. Before the helper recovery, naming a slot record or mapHeader as
 // an extra reference had only lowered the score (24.61% / 22.22%).
 VA(0x00513320, 0x41A)  // anchor-caller(TCampaignBrief ctor), dc 0x1034fc
-void game::InitNewGame(int difficulty, int version,
+void game::initNewGame(int difficulty, int version,
                        NewSMapHeader* mapHeader, TAbstractFile* infile)
 {
     int humanCount = 0;
 
-    setup.fileInitialized = 0;
-    setup.curSelectedPlayer = -1;
-    setup.initializationNumHumans =
-        static_cast<signed char>(gUnnamed699274);
+    m_setup.m_fileInitialized = 0;
+    m_setup.m_curSelectedPlayer = -1;
+    m_setup.m_initializationNumHumans =
+        static_cast<signed char>(g_unnamed699274);
 
     if (mapHeader) {
-        this->mapHeader = *mapHeader;
+        this->m_mapHeader = *mapHeader;
     } else if (infile) {
-        this->mapHeader.Read(infile, version);
+        this->m_mapHeader.read(infile, version);
     } else {
-        this->mapHeader.Get(setup.path, setup.filename, version);
+        this->m_mapHeader.get(m_setup.m_path, m_setup.m_filename, version);
     }
 
-    apply_map_header_availability();
+    applyMapHeaderAvailability();
 
-    if (this->mapHeader.version != MAP_FORMAT_SOD
-            && this->mapHeader.version != MAP_FORMAT_ROE
-            && this->mapHeader.version != MAP_FORMAT_AB)
+    if (this->m_mapHeader.m_version != g_mapFormatSod
+            && this->m_mapHeader.m_version != g_mapFormatRoe
+            && this->m_mapHeader.m_version != g_mapFormatAb)
         return;
 
-    SetMapSize(this->mapHeader.Size, this->mapHeader.Size);
+    setMapSize(this->m_mapHeader.m_size, this->m_mapHeader.m_size);
 
     int slot;
     for (slot = 0; slot < 8; slot++)
-        setup.color[slot] = static_cast<signed char>(slot);
+        m_setup.m_color[slot] = static_cast<signed char>(slot);
 
     for (slot = 0; slot < 8; slot++) {
-        if (!this->mapHeader.playerSlotAttributes[slot].CanBeHuman && !this->mapHeader.playerSlotAttributes[slot].CanBeComputer) {
-            setup.handicap[slot] = -1;
-            setup.alignment[slot] = -1;
-            setup.playerPos[slot] = -1;
-            setup.canFlipFromToComputer[slot] = -1;
+        if (!this->m_mapHeader.m_playerSlotAttributes[slot].m_canBeHuman && !this->m_mapHeader.m_playerSlotAttributes[slot].m_canBeComputer) {
+            m_setup.m_handicap[slot] = -1;
+            m_setup.m_alignment[slot] = -1;
+            m_setup.m_playerPos[slot] = -1;
+            m_setup.m_canFlipFromToComputer[slot] = -1;
         } else {
-            setup.handicap[slot] = 0;
+            m_setup.m_handicap[slot] = 0;
 
-            setup.alignment[slot] = pick_alignment(
-                this->mapHeader.playerSlotAttributes[slot].legalAlignments, 0);
-            setup.playerPos[slot] = -1;
-            setup.canFlipFromToComputer[slot] = -1;
+            m_setup.m_alignment[slot] = pickAlignment(
+                this->m_mapHeader.m_playerSlotAttributes[slot].m_legalAlignments, 0);
+            m_setup.m_playerPos[slot] = -1;
+            m_setup.m_canFlipFromToComputer[slot] = -1;
         }
     }
 
     for (slot = 0; slot < 8; slot++) {
-        if (this->mapHeader.playerSlotAttributes[slot].CanBeHuman && !this->mapHeader.playerSlotAttributes[slot].CanBeComputer) {
-            setup.canFlipFromToComputer[slot] = 0;
-            setup.playerPos[slot] = static_cast<signed char>(humanCount);
+        if (this->m_mapHeader.m_playerSlotAttributes[slot].m_canBeHuman && !this->m_mapHeader.m_playerSlotAttributes[slot].m_canBeComputer) {
+            m_setup.m_canFlipFromToComputer[slot] = 0;
+            m_setup.m_playerPos[slot] = static_cast<signed char>(humanCount);
             humanCount++;
-        } else if (!this->mapHeader.playerSlotAttributes[slot].CanBeHuman && this->mapHeader.playerSlotAttributes[slot].CanBeComputer) {
-            setup.playerPos[slot] = SETUP_PLAYER_POS_COMPUTER;
-            setup.canFlipFromToComputer[slot] = 0;
-        } else if (this->mapHeader.playerSlotAttributes[slot].CanBeHuman && this->mapHeader.playerSlotAttributes[slot].CanBeComputer) {
-            setup.canFlipFromToComputer[slot] = 1;
+        } else if (!this->m_mapHeader.m_playerSlotAttributes[slot].m_canBeHuman && this->m_mapHeader.m_playerSlotAttributes[slot].m_canBeComputer) {
+            m_setup.m_playerPos[slot] = g_setupPlayerPosComputer;
+            m_setup.m_canFlipFromToComputer[slot] = 0;
+        } else if (this->m_mapHeader.m_playerSlotAttributes[slot].m_canBeHuman && this->m_mapHeader.m_playerSlotAttributes[slot].m_canBeComputer) {
+            m_setup.m_canFlipFromToComputer[slot] = 1;
         }
     }
 
     for (slot = 0; slot < 8; slot++) {
-        if (setup.playerPos[slot] != -1)
+        if (m_setup.m_playerPos[slot] != -1)
             continue;
 
-        if (humanCount < gUnnamed699274 && this->mapHeader.playerSlotAttributes[slot].CanBeHuman) {
-            setup.playerPos[slot] = static_cast<signed char>(humanCount);
+        if (humanCount < g_unnamed699274 && this->m_mapHeader.m_playerSlotAttributes[slot].m_canBeHuman) {
+            m_setup.m_playerPos[slot] = static_cast<signed char>(humanCount);
             humanCount++;
-        } else if (this->mapHeader.playerSlotAttributes[slot].CanBeComputer) {
-            setup.playerPos[slot] = SETUP_PLAYER_POS_COMPUTER;
+        } else if (this->m_mapHeader.m_playerSlotAttributes[slot].m_canBeComputer) {
+            m_setup.m_playerPos[slot] = g_setupPlayerPosComputer;
         }
     }
 
-    setup.fileInitialized = 1;
-    setup.difficulty = static_cast<signed char>(difficulty);
+    m_setup.m_fileInitialized = 1;
+    m_setup.m_difficulty = static_cast<signed char>(difficulty);
 }
 
 // E:\gamedcs\newgame.cpp:610
 VA(0x00513740, 0xBC)  // exact campaign/scenario stack lifetimes, dc 0x103824
-void game::ShowScenInfo()
+void game::showScenInfo()
 {
-    if (gbUnk69774c) {
+    if (g_unk69774c) {
         TCampaignBrief campaignBrief(0, 1);
-        campaignBrief.DoModal();
-        if (gpWindowManager->dialogReturn == NEWGAME_CAMPAIGN_BRIEF_EXIT)
-            gGameCommand = NEWGAME_COMMAND_QUIT;
+        campaignBrief.doModal();
+        if (g_windowManager->m_dialogReturn == NEWGAME_CAMPAIGN_BRIEF_EXIT)
+            g_gameCommand = NEWGAME_COMMAND_QUIT;
     } else {
         CScenarioInfoDlg scenarioInfo;
-        scenarioInfo.DoModal(0);
+        scenarioInfo.doModal(0);
     }
 }
 
@@ -200,38 +206,38 @@ void game::ShowScenInfo()
 // two HasBuilding calls and selects the town-description text before reading
 // cName; the scoped helper gate and explicit branch reproduce all 22 blocks.
 VA(0x00513800, 0x1D5)  // loss record offset + text indices, dc 0x103888
-void game::GetLossConditionText(char* text)
+void game::getLossConditionText(char* text)
 {
-    LossConditionStruct& loss = mapHeader.lossCondition;
-    if (loss.Type != -1) {
-        switch (loss.Type) {
+    LossConditionStruct& loss = m_mapHeader.m_lossCondition;
+    if (loss.m_type != -1) {
+        switch (loss.m_type) {
         case LOSS_CONDITION_LOSE_TOWN: {
-            town* targetTown = GetTown(GetTownId(
-                loss.TownX, loss.TownY, loss.TownZ));
+            town* targetTown = getTown(getTownId(
+                loss.m_townX, loss.m_townY, loss.m_townZ));
             const char* targetType;
-            if (targetTown->IsCastle())
-                targetType = (*gpGeneralText)[318];
+            if (targetTown->isCastle())
+                targetType = (*g_generalText)[318];
             else
-                targetType = (*gpGeneralText)[49];
-            sprintf(text, (*gpGeneralText)[225], targetType,
-                    targetTown->cName.c_str());
+                targetType = (*g_generalText)[49];
+            sprintf(text, (*g_generalText)[225], targetType,
+                    targetTown->m_name.c_str());
             break;
         }
         case LOSS_CONDITION_LOSE_HERO: {
-            hero* targetHero = GetHero(loss.HeroID);
-            sprintf(text, (*gpGeneralText)[226], targetHero->name);
+            hero* targetHero = getHero(loss.m_heroId);
+            sprintf(text, (*g_generalText)[226], targetHero->m_name);
             break;
         }
         case LOSS_CONDITION_TIME_LIMIT: {
-            int month = (loss.NumDays - 1) / 28 + 1;
-            int week = (loss.NumDays - (month - 1) * 28 - 1) / 7 + 1;
-            int dayOfWeek = (loss.NumDays - 1) % 7 + 1;
-            sprintf(text, (*gpGeneralText)[227], month, week, dayOfWeek);
+            int month = (loss.m_numDays - 1) / 28 + 1;
+            int week = (loss.m_numDays - (month - 1) * 28 - 1) / 7 + 1;
+            int dayOfWeek = (loss.m_numDays - 1) % 7 + 1;
+            sprintf(text, (*g_generalText)[227], month, week, dayOfWeek);
             break;
         }
         }
     } else {
-        strcpy(text, (*gpGeneralText)[228]);
+        strcpy(text, (*g_generalText)[228]);
     }
 }
 
@@ -244,63 +250,63 @@ void game::GetLossConditionText(char* text)
 // double pool), naming gQuestMonsterDirections. GetSideDesc has no retail
 // body: no caller of GetLocalPlayerGamePos sits in newgame's span.
 VA(0x005139e0, 0x64C)  // linkorder after GetLossConditionText + 11-arm switch on victoryCondition.Type, dc 0x103a08
-void game::GetVictoryConditionText(char* text)
+void game::getVictoryConditionText(char* text)
 {
-    VictoryConditionStruct& victory = mapHeader.victoryCondition;
-    if (victory.Type != -1) {
-        switch (victory.Type) {
+    VictoryConditionStruct& victory = m_mapHeader.m_victoryCondition;
+    if (victory.m_type != -1) {
+        switch (victory.m_type) {
         case VICTORY_CONDITION_CAPTURE_TOWN: {
-            town* targetTown = GetTown(GetTownId(
-                victory.TownX, victory.TownY, victory.TownZ));
+            town* targetTown = getTown(getTownId(
+                victory.m_townX, victory.m_townY, victory.m_townZ));
             const char* targetType;
-            if (targetTown->IsCastle())
-                targetType = (*gpGeneralText)[318];
+            if (targetTown->isCastle())
+                targetType = (*g_generalText)[318];
             else
-                targetType = (*gpGeneralText)[49];
-            sprintf(text, (*gpGeneralText)[229], targetType,
-                    targetTown->cName.c_str());
+                targetType = (*g_generalText)[49];
+            sprintf(text, (*g_generalText)[229], targetType,
+                    targetTown->m_name.c_str());
             break;
         }
         case VICTORY_CONDITION_DEFEAT_HERO: {
-            hero* targetHero = GetHero(victory.HeroID);
-            sprintf(text, (*gpGeneralText)[230], targetHero->name);
+            hero* targetHero = getHero(victory.m_heroId);
+            sprintf(text, (*g_generalText)[230], targetHero->m_name);
             break;
         }
         case VICTORY_CONDITION_ARTIFACT:
-            if (victory.ArtifactNum == ARTIFACT_HOLY_GRAIL) {
-                strcpy(text, (*gpGeneralText)[231]);
+            if (victory.m_artifactNum == ARTIFACT_HOLY_GRAIL) {
+                strcpy(text, (*g_generalText)[231]);
             } else {
-                sprintf(text, (*gpGeneralText)[232],
-                        akArtifactTraits[victory.ArtifactNum].name);
+                sprintf(text, (*g_generalText)[232],
+                        g_artifactTraits[victory.m_artifactNum].m_name);
             }
             break;
         case VICTORY_CONDITION_TOTAL_RESOURCES:
-            sprintf(text, (*gpGeneralText)[233], victory.ResourceAmount,
-                    gResourceNames[victory.ResourceType]);
+            sprintf(text, (*g_generalText)[233], victory.m_resourceAmount,
+                    g_resourceNames[victory.m_resourceType]);
             break;
         case VICTORY_CONDITION_UPGRADE_TOWN: {
-            town* targetTown = GetTown(GetTownId(
-                victory.TownX, victory.TownY, victory.TownZ));
-            sprintf(text, (*gpGeneralText)[319], targetTown->cName.c_str());
+            town* targetTown = getTown(getTownId(
+                victory.m_townX, victory.m_townY, victory.m_townZ));
+            sprintf(text, (*g_generalText)[319], targetTown->m_name.c_str());
             break;
         }
         case VICTORY_CONDITION_BUILD_GRAIL: {
-            type_point townPos(victory.TownX, victory.TownY, victory.TownZ);
+            type_point townPos(victory.m_townX, victory.m_townY, victory.m_townZ);
             if (townPos != type_point(-1, -1, -1)) {
-                town* targetTown = GetTown(GetTownId(
-                    victory.TownX, victory.TownY, victory.TownZ));
-                sprintf(text, (*gpGeneralText)[320],
-                        targetTown->cName.c_str());
+                town* targetTown = getTown(getTownId(
+                    victory.m_townX, victory.m_townY, victory.m_townZ));
+                sprintf(text, (*g_generalText)[320],
+                        targetTown->m_name.c_str());
             } else {
-                strcpy(text, (*gpGeneralText)[321]);
+                strcpy(text, (*g_generalText)[321]);
             }
             break;
         }
         case VICTORY_CONDITION_DEFEAT_MONSTER: {
-            int monsterX = victory.MonsterX;
-            int monsterY = victory.MonsterY;
-            int monsterZ = victory.MonsterZ;
-            int size = mapHeader.Size;
+            int monsterX = victory.m_monsterX;
+            int monsterY = victory.m_monsterY;
+            int monsterZ = victory.m_monsterZ;
+            int size = m_mapHeader.m_size;
             int direction;
             if (static_cast<double>(monsterX) < static_cast<double>(size) * 0.33
                 && static_cast<double>(monsterY) < static_cast<double>(size) * 0.33)
@@ -326,43 +332,43 @@ void game::GetVictoryConditionText(char* text)
                 direction = 8;
 
             if (!monsterZ) {
-                sprintf(text, (*gpGeneralText)[322],
-                        victory.CreatureType >= 0 && victory.CreatureType <= 0x96
-                            ? akCreatureTypeTraits[victory.CreatureType].m_plural_name
-                            : emptyRolloverText,
-                        gQuestMonsterDirections[direction]);
+                sprintf(text, (*g_generalText)[322],
+                        victory.m_creatureType >= 0 && victory.m_creatureType <= 0x96
+                            ? g_creatureTypeTraits[victory.m_creatureType].m_pluralName
+                            : g_emptyRolloverText,
+                        g_questMonsterDirections[direction]);
             } else {
-                sprintf(text, (*gpGeneralText)[669],
-                        victory.CreatureType >= 0 && victory.CreatureType <= 0x96
-                            ? akCreatureTypeTraits[victory.CreatureType].m_plural_name
-                            : emptyRolloverText,
-                        gQuestMonsterDirections[direction]);
+                sprintf(text, (*g_generalText)[669],
+                        victory.m_creatureType >= 0 && victory.m_creatureType <= 0x96
+                            ? g_creatureTypeTraits[victory.m_creatureType].m_pluralName
+                            : g_emptyRolloverText,
+                        g_questMonsterDirections[direction]);
             }
             break;
         }
         case VICTORY_CONDITION_TOTAL_CREATURES:
-            sprintf(text, (*gpGeneralText)[323], victory.NumCreatures,
-                    akCreatureTypeTraits[victory.CreatureType].m_plural_name);
+            sprintf(text, (*g_generalText)[323], victory.m_numCreatures,
+                    g_creatureTypeTraits[victory.m_creatureType].m_pluralName);
             break;
         case VICTORY_CONDITION_FLAG_ALL_GENERATORS:
-            strcpy(text, (*gpGeneralText)[324]);
+            strcpy(text, (*g_generalText)[324]);
             break;
         case VICTORY_CONDITION_FLAG_ALL_MINES:
-            strcpy(text, (*gpGeneralText)[325]);
+            strcpy(text, (*g_generalText)[325]);
             break;
         case VICTORY_CONDITION_TRANSPORT_ARTIFACT: {
-            town* targetTown = GetTown(GetTownId(
-                victory.TownX, victory.TownY, victory.TownZ));
-            sprintf(text, (*gpGeneralText)[326],
-                    akArtifactTraits[victory.ArtifactNum].name,
-                    targetTown->cName.c_str());
+            town* targetTown = getTown(getTownId(
+                victory.m_townX, victory.m_townY, victory.m_townZ));
+            sprintf(text, (*g_generalText)[326],
+                    g_artifactTraits[victory.m_artifactNum].m_name,
+                    targetTown->m_name.c_str());
             break;
         }
         }
-        if (victory.AllowNormalVictory)
-            strcat(text, (*gpGeneralText)[234]);
+        if (victory.m_allowNormalVictory)
+            strcat(text, (*g_generalText)[234]);
     } else {
-        strcpy(text, (*gpGeneralText)[235]);
+        strcpy(text, (*g_generalText)[235]);
     }
 }
 
@@ -377,21 +383,21 @@ void game::SetupNetPlayerNames()
 
 // E:\gamedcs\newgame.cpp:355
 DC_ONLY(0x1037f8, 0x14)
-TTownType pick_prev_alignment(unsigned char legal_alignments, TTownType type)
+TTownType pickPrevAlignment(unsigned char legal_alignments, TTownType type)
 {
     // @stub
 }
 
 // E:\gamedcs\newgame.cpp:368
 DC_ONLY(0x10380c, 0x16)
-TTownType pick_next_alignment(unsigned char legal_alignments, TTownType type)
+TTownType pickNextAlignment(unsigned char legal_alignments, TTownType type)
 {
     // @stub
 }
 
 // E:\gamedcs\newgame.cpp:668
 DC_ONLY(0x103a08, 0x5AC)
-void game::GetVictoryConditionText(char* rText)
+void game::getVictoryConditionText(char* rText)
 {
     // @stub
 }

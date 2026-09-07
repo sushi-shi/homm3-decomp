@@ -7,25 +7,31 @@
 // Dreamcast names the 48-byte record; retail independently proves every
 // field through GetSoundFile's filename comparison and file read.
 struct SoundHeaderStruct {
-    char filename[40];
-    int offset;
-    int size;
+    // Before normalization: filename.
+    char m_filename[40];
+    int m_offset;
+    int m_size;
 };
 SIZE(SoundHeaderStruct, 0x30);
 
 // Three retail descriptors at 0x69e500. Each points at one header array,
 // its count, and the Windows file handle used for the positioned read.
 struct TSoundHeaderDescriptor {
-    SoundHeaderStruct** sounds;
-    int* count;
-    HANDLE* file;
+    // Before normalization: sounds.
+    SoundHeaderStruct** m_sounds;
+    // Before normalization: count.
+    int* m_count;
+    // Before normalization: file.
+    HANDLE* m_file;
 };
 SIZE(TSoundHeaderDescriptor, 0x0c);
 
-extern TSoundHeaderDescriptor gSoundHeaderDescriptors[3];
+// Before normalization: gSoundHeaderDescriptors.
+extern TSoundHeaderDescriptor g_soundHeaderDescriptors[3];
 
 namespace ResourceManager {
-bool GetSoundFile(const char* localName, std::auto_ptr<char>& data, int* size);
+// Before normalization (function): ResourceManager::GetSoundFile.
+bool getSoundFile(const char* localName, std::auto_ptr<char>& data, int* size);
 }
 
 #endif

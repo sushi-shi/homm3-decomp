@@ -11,10 +11,11 @@ class message;
 // the same prototype). DECLARED HERE so adventuremapwindow.cpp's own chat
 // sink can reach it without pulling remote.h - which drags dxplay.h and
 // <deque> into this TU's include closure.
-void SendChat(const char* cChat, int toWho);
+// Before normalization (locals): cChat.
+void sendChat(const char* chat, int toWho);
 // Retail .bss 0x69954c, the network-session latch (remote.h owns the
 // canonical declaration; same reason as above).
-extern int gNetworkActive69954c;
+extern int g_networkActive69954c;
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\adventuremapwindow.cpp:63, dc 0x3b0) void CheckAdvCheatCode(std::basic_string<char,std::char_traits<char>,std::allocator<char>& chatString);

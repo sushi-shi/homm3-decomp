@@ -9,7 +9,8 @@
 // InitializeSpecialBuildingText writes 110 pointers at 0x6a53d4 from
 // bldgspec.txt, proving ten rows; market entry points consume the
 // faction-specific building-name column when no visiting hero is present.
-extern const char* gSpecialBuildingNames[10][11];
+// Before normalization: gSpecialBuildingNames.
+extern const char* g_specialBuildingNames[10][11];
 
 // --- the game-data table loaders, in link order after
 // InitializeGeneralText.  The Dreamcast text.obj roster names 26 rows
@@ -25,35 +26,63 @@ extern const char* gSpecialBuildingNames[10][11];
 // exhaustive.  Declared here for kb.obj's EarlySetup, which runs the
 // whole table through its LoadGameData chain; bodies are not claimed
 // yet.
-unsigned char InitializeGeneralText();               // 0x5b90f0
-unsigned char InitializeCustomCampaignText();        // 0x5b9110
-unsigned char InitializeMineEventText();             // 0x5b9150
-unsigned char InitializeCampaignRegionNames();       // 0x5b9180
-unsigned char InitializeHighScoreDefaults();         // 0x5b91d0
-unsigned char InitializeTerrainNames();              // 0x5b92a0
-unsigned char InitializeAdvObjNames();               // 0x5b92d0
-unsigned char InitializeResourceNames();             // 0x5b9310
-unsigned char InitializeMineNames();                 // 0x5b9340
-unsigned char InitializePlayerColors();              // 0x5b9370
-unsigned char InitializePrimaryStatNames();          // 0x5b93c0
-unsigned char InitializeSecondarySkillLevelNames();  // 0x5b93f0
-unsigned char InitializeNeutralBuildingText();       // 0x5b9450
-unsigned char InitializeSpecialBuildingText();       // 0x5b94e0
-unsigned char InitializeDwellingText();              // 0x5b9570
-unsigned char InitializeTownNameText();              // 0x5b9600
-unsigned char InitializeHeroBioText();               // 0x5b9680
-unsigned char InitializeCastleText();                // 0x5b96c0
-unsigned char InitializeTavernText();                // 0x5b96f0
-unsigned char InitializeHallText();                  // 0x5b9720
-unsigned char InitializeTownText();                  // 0x5b9750
-unsigned char InitializeOverviewText();              // 0x5b9790
-unsigned char InitializeHeroText();                  // 0x5b97c0
-unsigned char InitializeCampaignDialogText();        // 0x5b9800
-unsigned char InitializeCreditsText();               // 0x5b9840
+// Before normalization (function): InitializeGeneralText.
+unsigned char initializeGeneralText();               // 0x5b90f0
+// Before normalization (function): InitializeCustomCampaignText.
+unsigned char initializeCustomCampaignText();        // 0x5b9110
+// Before normalization (function): InitializeMineEventText.
+unsigned char initializeMineEventText();             // 0x5b9150
+// Before normalization (function): InitializeCampaignRegionNames.
+unsigned char initializeCampaignRegionNames();       // 0x5b9180
+// Before normalization (function): InitializeHighScoreDefaults.
+unsigned char initializeHighScoreDefaults();         // 0x5b91d0
+// Before normalization (function): InitializeTerrainNames.
+unsigned char initializeTerrainNames();              // 0x5b92a0
+// Before normalization (function): InitializeAdvObjNames.
+unsigned char initializeAdvObjNames();               // 0x5b92d0
+// Before normalization (function): InitializeResourceNames.
+unsigned char initializeResourceNames();             // 0x5b9310
+// Before normalization (function): InitializeMineNames.
+unsigned char initializeMineNames();                 // 0x5b9340
+// Before normalization (function): InitializePlayerColors.
+unsigned char initializePlayerColors();              // 0x5b9370
+// Before normalization (function): InitializePrimaryStatNames.
+unsigned char initializePrimaryStatNames();          // 0x5b93c0
+// Before normalization (function): InitializeSecondarySkillLevelNames.
+unsigned char initializeSecondarySkillLevelNames();  // 0x5b93f0
+// Before normalization (function): InitializeNeutralBuildingText.
+unsigned char initializeNeutralBuildingText();       // 0x5b9450
+// Before normalization (function): InitializeSpecialBuildingText.
+unsigned char initializeSpecialBuildingText();       // 0x5b94e0
+// Before normalization (function): InitializeDwellingText.
+unsigned char initializeDwellingText();              // 0x5b9570
+// Before normalization (function): InitializeTownNameText.
+unsigned char initializeTownNameText();              // 0x5b9600
+// Before normalization (function): InitializeHeroBioText.
+unsigned char initializeHeroBioText();               // 0x5b9680
+// Before normalization (function): InitializeCastleText.
+unsigned char initializeCastleText();                // 0x5b96c0
+// Before normalization (function): InitializeTavernText.
+unsigned char initializeTavernText();                // 0x5b96f0
+// Before normalization (function): InitializeHallText.
+unsigned char initializeHallText();                  // 0x5b9720
+// Before normalization (function): InitializeTownText.
+unsigned char initializeTownText();                  // 0x5b9750
+// Before normalization (function): InitializeOverviewText.
+unsigned char initializeOverviewText();              // 0x5b9790
+// Before normalization (function): InitializeHeroText.
+unsigned char initializeHeroText();                  // 0x5b97c0
+// Before normalization (function): InitializeCampaignDialogText.
+unsigned char initializeCampaignDialogText();        // 0x5b9800
+// Before normalization (function): InitializeCreditsText.
+unsigned char initializeCreditsText();               // 0x5b9840
 // Complete-only: tentcolr.txt, the border-guard tent colour names.
-unsigned char InitializeTentColorText();             // 0x5b9880
-unsigned char InitializeHelpText();                  // 0x5b98b0
-unsigned char InitializeArrayText();                 // 0x5b9cc0
+// Before normalization (function): InitializeTentColorText.
+unsigned char initializeTentColorText();             // 0x5b9880
+// Before normalization (function): InitializeHelpText.
+unsigned char initializeHelpText();                  // 0x5b98b0
+// Before normalization (function): InitializeArrayText.
+unsigned char initializeArrayText();                 // 0x5b9cc0
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\text.cpp:49, dc 0x160ff4) void CheckTextResource();

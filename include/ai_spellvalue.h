@@ -32,7 +32,8 @@ class hero;
 // armygrp.h/artifact.h measurably perturbs unrelated VC6 units through
 // the shared type environment. Unifying the two spellings is a separate,
 // measured decision.
-const int ARTIFACT_RECANTERS_CLOAK = 0x53;
+// Before normalization: ARTIFACT_RECANTERS_CLOAK.
+const int g_artifactRecantersCloak = 0x53;
 
 // SSpellTraits::field_c carries an AI VALUE-CLASS field in bits 15..20:
 // get_raw_spell_value switches on `field_c & 0x1f8000` and dispatches one
@@ -72,7 +73,8 @@ enum ESpellValueClass {
 // followed by zero stores to +0x18/+0x1c/+0x20.
 class type_spellvalue {
 public:
-    type_spellvalue(const hero* new_hero);
+    // Before normalization (locals): new_hero.
+    type_spellvalue(const hero* newHero);
     // Non-trivial solely because of list. Keeping the empty body inline
     // preserves the compiler-generated expansion at each use while giving
     // ai.cpp a source spelling for retail's retained COMDAT copy.
@@ -80,55 +82,77 @@ public:
 
     // ai_spellvalue.h:84 in the Dreamcast roster - the guard
     // AI_get_spell_value applies before appraising anything.
-    unsigned char can_cast_spells() const { return power > 0; }
+    // Before normalization (function): type_spellvalue::can_cast_spells.
+    unsigned char canCastSpells() const { return m_power > 0; }
     // DC ai_spellvalue.h:114 - the one-store setter, inlined at both
     // type_school_artifact::get_value call sites in retail.
-    void set_power(long arg) { power = arg; }
+    // Before normalization (function): type_spellvalue::set_power.
+    void setPower(long arg) { m_power = arg; }
     // DC ai_spellvalue.h:124 - the one-store setter, inlined at every
     // retail call site (dc 0x27c74 is the 4-byte out-of-line copy).
     // combatManager::do_combat_ai is a located caller: it writes the
     // side's whole combat value here before asking for a spell value.
-    void set_stack_value(long arg) { stack_value = arg; }
+    // Before normalization (function): type_spellvalue::set_stack_value.
+    void setStackValue(long arg) { m_stackValue = arg; }
     // DC ai_spellvalue.h:99/119 - the mana pair (dc 0x114bdc/0x114be0
     // are philai.obj's 4-byte out-of-line copies).  Retail
     // AI_set_hero_bonuses (0x527760) is the byte-proven consumer: it
     // reseeds the valuer from hero::mana and reads the initial pool for
     // the well/spring valuations.
-    long get_mana() const { return mana; }
-    void set_mana(long arg) { mana = arg; }
+    // Before normalization (function): type_spellvalue::get_mana.
+    long getMana() const { return m_mana; }
+    // Before normalization (function): type_spellvalue::set_mana.
+    void setMana(long arg) { m_mana = arg; }
     // E:\gamedcs\philai.cpp:1699 (dc 0x10fe64) - the what-if probe:
     // bump power/duration/mana, re-ask get_best_spell_value, restore,
     // return the delta against the caller's baseline.  DEFINED in
     // philai.cpp as the DC build does; retail keeps no out-of-line row
     // (AI_set_hero_bonuses expands it at all six probe sites).
-    long get_value_of_increase(long base_value, long power_change,
-                               long duration_change, long mana_change);
+    // Before normalization (function): type_spellvalue::get_value_of_increase.
+    // Before normalization (locals): base_value, power_change, duration_change, mana_change.
+    long getValueOfIncrease(long baseValue, long powerChange,
+                               long durationChange, long manaChange);
 
-    long get_raw_spell_value(SpellID spell) const;
-    long get_best_spell_value(long bits) const;
+    // Before normalization (function): type_spellvalue::get_raw_spell_value.
+    long getRawSpellValue(SpellID spell) const;
+    // Before normalization (function): type_spellvalue::get_best_spell_value.
+    long getBestSpellValue(long bits) const;
 
 protected:
     // `mastery` is the Dreamcast TSkillMastery; that enum has no
     // retail-proven spelling in this tree yet, and hero::get_spell_level
     // - the only producer at every call site - already returns int, so
     // the parameter stays int and needs no cast.
-    long get_damage_spell_value(SpellID spell, int mastery,
-                                long times_castable, long combat_value) const;
-    long get_mass_damage_spell_value(SpellID spell, int mastery,
-                                     long times_castable) const;
-    long get_enchantment_value(SpellID spell, int mastery,
-                               long times_castable) const;
+    // Before normalization (function): type_spellvalue::get_damage_spell_value.
+    long getDamageSpellValue(SpellID spell, int mastery,
+                                // Before normalization (locals): times_castable, combat_value.
+                                long timesCastable, long combatValue) const;
+    // Before normalization (function): type_spellvalue::get_mass_damage_spell_value.
+    long getMassDamageSpellValue(SpellID spell, int mastery,
+                                     // Before normalization (locals): times_castable.
+                                     long timesCastable) const;
+    // Before normalization (function): type_spellvalue::get_enchantment_value.
+    long getEnchantmentValue(SpellID spell, int mastery,
+                               // Before normalization (locals): times_castable.
+                               long timesCastable) const;
     // E:\\gamedcs\\philai.cpp:1610. Complete expands this one-call helper
     // into the constructor, but the Dreamcast member boundary and local
     // inventory remain authoritative source-shape evidence.
-    void fill_creature_value_list();
+    // Before normalization (function): type_spellvalue::fill_creature_value_list.
+    void fillCreatureValueList();
 
-    const hero* our_hero;   // +0x00
-    long stack_value;       // +0x04
-    long power;             // +0x08
-    long duration;          // +0x0c
-    long mana;              // +0x10
-    std::vector<type_creature_value> list;  // +0x14
+    // Before normalization: our_hero.
+    const hero* m_ourHero;   // +0x00
+    // Before normalization: stack_value.
+    long m_stackValue;       // +0x04
+    // Before normalization: power.
+    long m_power;             // +0x08
+    // Before normalization: duration.
+    long m_duration;          // +0x0c
+    // Before normalization: mana.
+    long m_mana;              // +0x10
+    // Before normalization: list.
+    std::vector<type_creature_value> m_list;  // +0x14
 };
 SIZE(type_spellvalue, 0x24);
 

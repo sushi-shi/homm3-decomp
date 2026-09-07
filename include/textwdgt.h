@@ -17,11 +17,16 @@
 // teardown is implicit.
 class textWidget : public widget {
 public:
-    std::string Text;
-    font* Font;
-    int Color;
-    int BackColor;
-    unsigned int Justify;
+    // Before normalization: Text.
+    std::string m_text;
+    // Before normalization: Font.
+    font* m_font;
+    // Before normalization: Color.
+    int m_color;
+    // Before normalization: BackColor.
+    int m_backColor;
+    // Before normalization: Justify.
+    unsigned int m_justify;
 
     textWidget(int x, int y, int w, int h, const char* text,
                const char* fontName, font::TColor color, int id,
@@ -30,9 +35,11 @@ public:
                const char* fontName, font::TColor color, int id,
                unsigned justify, int backColor, unsigned char focusable);
     virtual ~textWidget();  // retail 0x5bc3b0
-    virtual int Main(message* msg);
+    // Before normalization (function): textWidget::Main.
+    virtual int main(message* msg);
     virtual void zBufferDraw(unsigned short* zBuffer, int id);
-    virtual void Draw();
+    // Before normalization (function): textWidget::Draw.
+    virtual void draw();
     // Slot 13, the ONE virtual textWidget introduces (its vtable
     // 0x642db0 is 14 wide against widget's 13). Retail body 0x57c6d0 is a
     // /Gy header COMDAT far outside textwdgt.obj's band: it takes one
@@ -42,11 +49,14 @@ public:
     // operator= call; textEntryWidget::SetText(const char*) (dc 0x1635dc)
     // overrides exactly this slot at 0x5bb950. The claim-only retail VA home
     // lives in singleselectionwindow.cpp, whose object owns the DC COMDAT.
-    virtual void SetText(const char* new_text) { Text = new_text; }
+    // Before normalization (function): textWidget::SetText.
+    // Before normalization (locals): new_text.
+    virtual void setText(const char* newText) { m_text = newText; }
 
     // E:\gamedcs\TextWdgt.h:67; DC emits this header helper out of line,
     // while Complete folds the c_str() access into its callers.
-    __forceinline const char* GetText() { return Text.c_str(); }
+    // Before normalization (function): textWidget::GetText.
+    __forceinline const char* getText() { return m_text.c_str(); }
 };
 
 class Bitmap816;
@@ -62,18 +72,28 @@ public:
                        const char* fontName, font::TColor color,
                        slider::EGraphics graphics);
     virtual ~type_text_scroller();
-    virtual int Open(int priority, heroWindow* parent);
-    virtual int Main(message* msg);
+    // Before normalization (function): type_text_scroller::Open.
+    virtual int open(int priority, heroWindow* parent);
+    // Before normalization (function): type_text_scroller::Main.
+    virtual int main(message* msg);
     virtual void zBufferDraw(unsigned short* zBuffer, int id);
-    virtual void Draw();
-    void SetText(const char* text);
-    void Refresh(int knobRange);
+    // Before normalization (function): type_text_scroller::Draw.
+    virtual void draw();
+    // Before normalization (function): type_text_scroller::SetText.
+    void setText(const char* text);
+    // Before normalization (function): type_text_scroller::Refresh.
+    void refresh(int knobRange);
 
-    const char* font_filename;
-    std::vector<std::string> text_lines;
-    std::vector<textWidget*> line_images;
-    type_text_slider* text_slider;
-    Bitmap16Bit* background;
+    // Before normalization: font_filename.
+    const char* m_fontFilename;
+    // Before normalization: text_lines.
+    std::vector<std::string> m_textLines;
+    // Before normalization: line_images.
+    std::vector<textWidget*> m_lineImages;
+    // Before normalization: text_slider.
+    type_text_slider* m_textSlider;
+    // Before normalization: background.
+    Bitmap16Bit* m_background;
 };
 SIZE(type_text_scroller, 0x5c);
 
@@ -90,7 +110,8 @@ public:
     // +0x50: the 11-argument constructor 0x5bc760 stores GetBitmap816's
     // result here, and Draw 0x5bc7f0 blits out of it after clamping the
     // widget extent against its +0x24/+0x28 Width/Height.
-    Bitmap816* image;
+    // Before normalization: image.
+    Bitmap816* m_image;
 
     // Retail 0x5bc760. Eleven parameters, ten of which it forwards straight
     // through to the textWidget base in retail's own push order, with a
@@ -104,7 +125,8 @@ public:
                            font::TColor color, int id, unsigned justify,
                            int style);
     virtual ~bitmapBackedTextWidget();
-    virtual void Draw();  // slot 4, retail 0x5bc7f0
+    // Before normalization (function): bitmapBackedTextWidget::Draw.
+    virtual void draw();  // slot 4, retail 0x5bc7f0
 };
 
 // --- bitmapBackedTextWidget ---

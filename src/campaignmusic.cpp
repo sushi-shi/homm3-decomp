@@ -27,18 +27,19 @@
 // names' lengths, one to copy them into the pool - with the resource released
 // through the guard on every exit.
 VA(0x0045e250, 0x160)  // anchor-string CmpMusic.txt + EarlySetup call edge, retail-only
-unsigned char InitializeCampaignMusicTable()
+unsigned char initializeCampaignMusicTable()
 {
-    TResourcePtr<TTextResource> pTextResource(
-        ResourceManager::GetText(
+    // Before normalization (locals): pTextResource.
+    TResourcePtr<TTextResource> textResource(
+        ResourceManager::getText(
             DATA_COMPGEN(0x0066c484, campaignMusicTextName, "CmpMusic.txt")));
-    if (!pTextResource.get())
+    if (!textResource.get())
         return 0;
 
     unsigned strSize = 0;
     unsigned cue;
     for (cue = 0; cue < CAMPAIGN_MUSIC_CUE_COUNT; ++cue)
-        strSize += strlen(pTextResource->GetText(cue)) + 1;
+        strSize += strlen(textResource->getText(cue)) + 1;
 
     // The pool is the static's INITIALIZER, not an assignment into a
     // default-constructed one: retail runs the guard test at this point and
@@ -54,10 +55,10 @@ unsigned char InitializeCampaignMusicTable()
 
     char* destination = campaignMusicTracks.get();
     for (cue = 0; cue < CAMPAIGN_MUSIC_CUE_COUNT; ++cue) {
-        const char* source = pTextResource->GetText(cue);
+        const char* source = textResource->getText(cue);
         unsigned length = strlen(source) + 1;
         memcpy(destination, source, length);
-        gCampaignMusicCues[cue].track = destination;
+        g_campaignMusicCues[cue].m_track = destination;
         destination += length;
     }
     return 1;

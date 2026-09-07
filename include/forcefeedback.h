@@ -29,16 +29,12 @@
 #include <string>
 
 #include <windows.h>
+#include "../vendor/ifc-2.0.3/orig/FeelitAPI.h"
 
 #include <va.h>
 
-// Opaque Immersion types: named only by the import decorations that
-// mention them (`PAUIFeelit@@`, `PAUIFeelitDevice@@`, `ABUFEELIT_EFFECT@@`),
-// so they stay incomplete here.
-struct IFeelit;
-struct IFeelitDevice;
-struct FEELIT_EFFECT;
-
+// Binary API descriptors use the pristine vendor boundary declarations.
+// FEELIT_EFFECT (0x48) and FEELIT_ENCLOSURE (0x38) match IFC 2.0.3.
 class CImmProject;
 
 // The error-policy singleton. `?m_dwErrHandlingFlags@CIFCErrors@@0KA` is
@@ -55,22 +51,41 @@ private:
     friend class TImmMouseRuntime;
 };
 
-// The device handle CImmMouse is passed as. No import mentions a member
-// of it, and every conversion in the image is a no-op (the same pointer
-// value reaches `?Initialize@CImmEnclosure@@...PAVCImmDevice@@...` and
-// `?CreateEffect@CImmProject@@...`), so it is modelled as the empty first
-// base it has to be for that to hold.
+// IFC 2.0.3 effect-cache layout: AddEffect at DLL RVA 0x7300 allocates
+// eight-byte nodes (effect +0, next +4); list destruction at 0x72e0 walks
+// those next pointers. Original SDK spellings are retained below.
+class CImmEffect;
+class CEffectListElement {
+public:
+    CEffectListElement() : m_immEffect(0), m_next(0) {}
+    CImmEffect* m_immEffect;       // SDK m_pImmEffect.
+    CEffectListElement* m_next;   // SDK m_pNext.
+};
+
+class CEffectList {
+public:
+    CEffectList() : m_firstEffect(0) {}
+    __declspec(dllimport) ~CEffectList();
+    CEffectListElement* m_firstEffect; // SDK m_pFirstEffect.
+};
+
+// Same-address polymorphic base, proven by the game's device conversions.
+// IFC20.dll 2.0.3 constructor RVA 0x3f30 and destructor 0x3f50 establish
+// the cache at +4; its vector deleting destructor uses stride 0x24.
 class CImmDevice {
 public:
-    // POLYMORPHIC, and retail proves it from the call sites: the
-    // initializer at 0x4b6260 hands `mouse.get()` straight to
-    // CImmProject::LoadProjectFromMemory's `CImmDevice*` and stores the
-    // same register into gImmDevice with NO adjustment and no null test.
-    // An empty non-polymorphic base sits at +4 behind CImmMouse's own
-    // vfptr, which is exactly the `test/lea +4/xor` sequence VC6 then
-    // emits and retail does not have - so the vptr is the BASE's and
-    // CImmMouse's virtuals are overrides.
     virtual ~CImmDevice();
+
+protected:
+    CEffectList m_cache;          // +04, SDK m_Cache.
+    // Initialize +0xba6d sets this; reset +0xbb8f clears it.
+    int m_initialized;            // +08, SDK BOOL m_bInitialized.
+    // Exported GetDeviceType +0x6be0 returns this word.
+    unsigned long m_deviceType;   // +0c, SDK m_dwDeviceType.
+    // enum_devices_proc +0x42d0 copies the device instance GUID and
+    // sets +20; Initialize +0xb961 passes that GUID to CreateDevice.
+    GUID m_device;                // +10, SDK m_guidDevice.
+    int m_guidValid;              // +20, SDK BOOL m_bGuidValid.
 };
 
 // Client-side vftable 0x63e618, slot for slot:
@@ -89,17 +104,20 @@ public:
     virtual int ChangeScreenResolution(int mode, unsigned long width,
                                        unsigned long height);
     virtual int SwitchToAbsoluteMode(int absolute);
-    int Initialize(void* hInstance, void* hwnd, unsigned long flags);
+    // Before normalization (locals): hInstance.
+    int Initialize(void* instance, void* hwnd, unsigned long flags);
 
 protected:
     virtual int prepare_device();
     virtual void reset();
 
-private:
-    // SIZE IS RETAIL-PROVEN: TImmMouseRuntime's `new CImmMouse` at
-    // 0x4b62af pushes 0x2c, so the object is 44 bytes - the shared vfptr
-    // plus 40 the vendor header spells and no import names.
-    char m_reserved[0x28];
+protected:
+    // IFC20.dll exported GetAPI/GetDevice at RVAs 0x4470/0x4480
+    // return +24/+28. Constructor 0xb7b0 zeros both; reset 0xbb60
+    // releases their COM interfaces. Total 0x2c matches retail allocation.
+    IFeelit* m_api;               // SDK m_piApi.
+    IFeelitDevice* m_device;      // SDK m_piDevice.
+
 };
 
 // The compound effect a project hands back. Non-virtual throughout
@@ -107,6 +125,13 @@ private:
 class __declspec(dllimport) CImmCompoundEffect {
 public:
     int Start(unsigned long iterations, unsigned long flags);
+};
+
+// SDK ECacheState (ImmEffectSuite.h); external enumerator spellings.
+enum ECacheState {
+    IMMCACHE_NOT_ON_DEVICE,
+    IMMCACHE_ON_DEVICE,
+    IMMCACHE_SWAPPED_OUT
 };
 
 // The effect base CImmEnclosure overrides into. Its own two virtuals sit
@@ -122,6 +147,31 @@ public:
                                       CImmDevice* device, unsigned long flags);
     virtual int Start(unsigned long iterations, unsigned long flags,
                       int priority);
+
+protected:
+    // IFC20.dll 2.0.3 constructor RVA 0x48d0 initializes these slots;
+    // cache helpers and exported priority/device getters fix their roles.
+    ECacheState m_cacheState;     // +04, SDK m_CacheState.
+    int m_inCurrentSuite;         // +08, SDK m_bInCurrentSuite.
+    short m_priority;            // +0c, SDK m_Priority; +0e alignment.
+    unsigned long m_lastStarted; // +10, SDK m_dwLastStarted; Start 0x5206.
+    unsigned long m_lastStopped; // +14, SDK m_dwLastStopped.
+    unsigned long m_lastLoaded;  // +18, SDK m_dwLastLoaded.
+    CImmDevice* m_immDevice;      // +1c, SDK m_pImmDevice; GetDevice 0x1470.
+    // Reset at 0x6b20 zeros 0x48 bytes and points axes/directions at the
+    // following arrays. The old version has no embedded m_Envelope.
+    FEELIT_EFFECT m_effect;       // +20, SDK m_Effect (API field spellings).
+    unsigned long m_axes[2];     // +68, SDK m_dwaAxes.
+    long m_directions[2];        // +70, SDK m_laDirections.
+    GUID m_effectGuid;           // +78, SDK m_guidEffect; distinct from descriptor.
+    int m_isPlaying;             // +88, SDK m_bIsPlaying; Start 0x5215.
+    unsigned long m_deviceType;  // +8c, SDK m_dwDeviceType; initialize 0x5a46.
+    // Distinguish the API interface from the owning CImmDevice pointer.
+    IFeelitDevice* m_immDeviceInterface; // +90, SDK m_piImmDevice; 0x5a00.
+    IFeelitEffect* m_immEffect;   // +94, SDK m_piImmEffect; GetEffect 0x1460.
+    unsigned long m_axisCount;   // +98, SDK m_cAxes; initialize 0x5a3d.
+    unsigned long m_noDownload;  // +9c, SDK m_dwNoDownload; initialize 0x59f1.
+    unsigned long m_iterations;  // +a0, SDK m_dwIterations.
 };
 
 // Client-side vftable 0x63e640: `??_G` (0x4b6c30), then the two overrides
@@ -144,20 +194,28 @@ public:
                    CImmEffect* effect, long i, unsigned long j);
     int SetRect(const RECT* rect);
 
-private:
-    // SIZE IS RETAIL-PROVEN: t_enclosure's `new CImmEnclosure` at
-    // 0x4b6a6f pushes 0xe0, so the object is 224 bytes - the shared
-    // vfptr plus 220 the vendor header spells and no import names.
-    char m_reserved[0xdc];
+protected:
+    // DLL constructor 0x7a6e zeros the 0x38-byte descriptor at +a4.
+    // set_parameters 0x81b0 fills its rectangle, wall properties, and
+    // inside-effect API pointer, then stores its address in m_effect.
+    FEELIT_ENCLOSURE m_enclosure; // +a4, SDK m_enclosure.
+    // Start 0x8101 tests this before GetCursorPos and SetCenter.
+    int m_useMousePosAtStart;     // +dc, SDK m_bUseMousePosAtStart.
+    // Total 0xe0 matches the game's allocation. No newer m_pInsideEffect.
+
 };
 
 // The project file. Its constructor is NOT in the import table and
 // retail inlines it as four zero stores over the sixteen bytes `new`
 // buys, so it is an inline in the vendor header - modelled here as the
 // four pointer-width members that zeroing writes.
+// IFC20.dll 2.0.3 (SHA-256 e8c2afa0e2a19cd21d03685fd6f18a025
+// 160c598ae93a9770a124f2a389e3846) confirms the four-slot constructor
+// at DLL RVA 0x6ba0. The newer SDK supplies semantic spellings only;
+// the old DLL's exported consumers below establish their actual offsets.
 class CImmProject {
 public:
-    CImmProject() : m_field0(0), m_field4(0), m_field8(0), m_fieldC(0) {}
+    CImmProject() : m_proj(0), m_createdEffects(0), m_device(0), m_next(0) {}
     __declspec(dllimport) ~CImmProject();
     __declspec(dllimport) int LoadProjectFromMemory(void* data,
                                                     CImmDevice* device);
@@ -167,10 +225,16 @@ public:
     __declspec(dllimport) void DestroyEffect(CImmCompoundEffect* effect);
 
 private:
-    void* m_field0;
-    void* m_field4;
-    void* m_field8;
-    void* m_fieldC;
+    // SDK m_hProj (HIFRPROJECT = LPVOID). Close +0xc0d3 passes this
+    // handle to IFR release; LoadProjectObjectPointer +0xc559 stores it.
+    void* m_proj;
+    // SDK m_pCreatedEffects. append_effect_to_list +0xca84 reads the
+    // head at +4; Close +0xc0ab walks and destroys compound effects.
+    CImmCompoundEffect* m_createdEffects;
+    // SDK m_pDevice. Exported GetDevice +0x6bb0 returns this +8 slot.
+    CImmDevice* m_device;
+    // SDK m_pNext. Exported get_next/set_next +0x6be0/+0x6bd0 use +12.
+    CImmProject* m_next;
 };
 
 // --- ForceFeedback.obj's own objects ---
@@ -179,19 +243,26 @@ private:
 // the enclosure->rectangle map ImmMouseWindowMoved walks. Retail loads
 // the map's `_Head` at 0x696d64; VC6's Dinkumware map places that field
 // at object +4, which fixes the object base at 0x696d60.
+// Before normalization: gImmEffectEntries.
 DATA(0x00696d60)
-extern std::map<CImmEnclosure*, RECT> gImmEffectEntries;
-DATA(0x00696d70) extern long gImmWindowX;
-DATA(0x00696d74) extern long gImmWindowY;
-DATA(0x00696d7c) extern HWND gImmWindow;
+extern std::map<CImmEnclosure*, RECT> g_immEffectEntries;
+// Before normalization: gImmWindowX.
+// Before normalization: gImmWindowY.
+DATA(0x00696d70) extern long g_immWindowX;
+// Before normalization: gImmWindow.
+DATA(0x00696d74) extern long g_immWindowY;
+DATA(0x00696d7c) extern HWND g_immWindow;
 
 // The three singletons the initializer publishes: the mouse (handed out
 // as the device everywhere), the loaded project, and the effect currently
 // playing. PlayImmEffect destroys the previous effect before creating the
 // next, so the last is a single slot rather than a set.
-DATA(0x00696d80) extern CImmDevice* gImmDevice;
-DATA(0x00696d84) extern CImmProject* gImmProject;
-DATA(0x00696d88) extern CImmCompoundEffect* gImmEffect;
+// Before normalization: gImmDevice.
+// Before normalization: gImmProject.
+DATA(0x00696d80) extern CImmDevice* g_immDevice;
+// Before normalization: gImmEffect.
+DATA(0x00696d84) extern CImmProject* g_immProject;
+DATA(0x00696d88) extern CImmCompoundEffect* g_immEffect;
 
 namespace force_feedback {
 

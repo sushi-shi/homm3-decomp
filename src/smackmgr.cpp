@@ -32,7 +32,8 @@
 // GetDriveArchivePath below, which is why the definition is left with its
 // owning TU: 0x6839b8's .data neighbours are singleselectionwindow's and
 // spellbookwindow's blocks, not smackmgr's. Retail initialises it to 'd'.
-DATA(0x006839b8) extern char gArchiveDriveLetter;
+// Before normalization: gArchiveDriveLetter.
+DATA(0x006839b8) extern char g_archiveDriveLetter;
 
 // The Smack/Bink handle views and the smackw32/binkw32 dllimport
 // surface live in smackmgr.h / binkmanager.h; the underscored import
@@ -60,73 +61,98 @@ DATA(0x006839b8) extern char gArchiveDriveLetter;
 #define SMACKOPEN_FROM_ARCHIVE 0x1140
 
 // The Smacker track selection mask ShowVideo hands SmackOpen and
-// SmackVolumePan, and the extra bit that opens a track as audio-only.
+// SmackVolumePan. The extra bit follows the same no-frame-skip policy
+// as Bink's SDK-defined BINKNOSKIP in the parallel opener.
 #define SMACK_TRACK_MASK 0xfe000
-#define SMACKOPEN_AUDIO_ONLY 0x200
+#define SMACKOPEN_NO_FRAME_SKIP 0x200
 
 // The remaining smackmgr.obj bodies, declared ahead of their first
 // in-TU call site. ShowVideo (0x598af0) opens the handle pair and
 // primes the blit state; SmackManager::NextSmackerFrame (0x598eb0) is
 // the DC-named per-frame pump, proven by its SmackNextFrame call
 // (the only body in the compiland that makes one).
-void ShowVideo(int id, int x, int y, int w, int h, int a6, int a7, int a8);
+// Before normalization (function): ShowVideo.
+void showVideo(int id, int x, int y, int w, int h, int a6, int a7, int a8);
 namespace SmackManager {
-void NextSmackerFrame();
-void CloseSmacker();
+// Before normalization (function): SmackManager::NextSmackerFrame.
+void nextSmackerFrame();
+void closeSmacker();
 }
 
 
 // smackmgr.obj .bss cluster 0x69fdf5..0x69fe5c (names provisional;
 // the unreferenced gaps belong to members only the 0x198xxx TU
 // touches).
-DATA(0x0069fdf4) unsigned char gSmackAutoDraw;     // ShowVideo arg 7: pump its own VideoDrawRects
-DATA(0x0069fdf5) unsigned char gSmackDirty;        // decoded frame awaits a blit
-DATA(0x0069fdf8) Smack* gSmackVideo;               // video track handle
-DATA(0x0069fdfc) Smack* gSmackVideo2;              // audio-only track handle
-DATA(0x0069fe00) int gSmackX;                      // blit origin on the screen bitmap
-DATA(0x0069fe04) int gSmackY;
+// Before normalization: gSmackAutoDraw.
+// Before normalization: gSmackDirty.
+DATA(0x0069fdf4) unsigned char g_smackAutoDraw;     // ShowVideo arg 7: pump its own VideoDrawRects
+DATA(0x0069fdf5) unsigned char g_smackDirty;        // decoded frame awaits a blit
+DATA(0x0069fdf8) Smack* g_smackVideo;               // video track handle
+// Before normalization: gSmackX.
+DATA(0x0069fdfc) Smack* g_smackVideo2;              // audio-only track handle
+// Before normalization: gSmackY.
+DATA(0x0069fe00) int g_smackX;                      // blit origin on the screen bitmap
 // ShowVideo latches its own arguments into this quartet for the pump to
 // read back: the requested extent, the id it dispatched on, whether the
 // last frame loops, and whether NextSmackerFrame may advance at all.
-DATA(0x0069fe08) int gSmackReqWidth;               // ShowVideo arg 4
-DATA(0x0069fe0c) int gSmackReqHeight;              // ShowVideo arg 5
-DATA(0x0069fe10) int gSmackVideoId;                // ShowVideo arg 1
-DATA(0x0069fe14) int gSmackLoop;                   // ShowVideo arg 6
-DATA(0x0069fe1c) int gSmackAdvance;                // ShowVideo arg 8 (byte-narrowed on the way in)
+// Before normalization: gSmackReqWidth.
+DATA(0x0069fe04) int g_smackY;
+// Before normalization: gSmackReqHeight.
+DATA(0x0069fe08) int g_smackReqWidth;               // ShowVideo arg 4
+// Before normalization: gSmackVideoId.
+DATA(0x0069fe0c) int g_smackReqHeight;              // ShowVideo arg 5
+// Before normalization: gSmackLoop.
+DATA(0x0069fe10) int g_smackVideoId;                // ShowVideo arg 1
+// Before normalization: gSmackAdvance.
+DATA(0x0069fe14) int g_smackLoop;                   // ShowVideo arg 6
 // The descriptor row ShowVideo takes its audio-track flag from, which is
 // NOT the id it is opening (that goes to gSmackVideoId above). Provisional.
-DATA(0x0069fdec) int gVideoDescriptorIndex;
+// Before normalization: gVideoDescriptorIndex.
+DATA(0x0069fe1c) int g_smackAdvance;                // ShowVideo arg 8 (byte-narrowed on the way in)
 // Nonzero once ShowVideo has decided the Miles driver is live and the user
 // has sound turned up; it is what selects the 0xfe000 track mask on both
 // SmackOpen calls. Provisional.
-DATA(0x0069fe58) int gVideoSoundReady;
+// Before normalization: gVideoSoundReady.
+DATA(0x0069fdec) int g_videoDescriptorIndex;
 // Entry counts, one per archive directory; each is the dword LoadAnimHeaders
 // reads before sizing its (count + 2) allocation.
-DATA(0x0069fde4) int gVideoCount1;
-DATA(0x0069fe34) int gVideoCount2;
-DATA(0x0069fe3c) int gVideoCount3;
-DATA(0x0069fe18) int gSmackPaused;
-DATA(0x0069fe20) unsigned long gSmackBufferFlags;  // SMACKBUFFER555/565
-DATA(0x0069fddc) int RedShift;
-DATA(0x0069fdd8) int RedBits;
-DATA(0x0069fe40) int GreenShift;
-DATA(0x0069fe30) int GreenBits;
-DATA(0x0069fde8) int BlueShift;
-DATA(0x0069fe38) int BlueBits;
-DATA(0x0069fe44) int gVideoPauseCount;
-DATA(0x0069fe48) HANDLE gVideoFile1;               // VideoShutDown's CloseHandle trio
-DATA(0x0069fe4c) HANDLE gVideoFile2;
-DATA(0x0069fe50) HANDLE gVideoFile3;
+DATA(0x0069fe58) int g_videoSoundReady;
+DATA(0x0069fde4) int g_videoCount1;
+DATA(0x0069fe34) int g_videoCount2;
+// Before normalization: gSmackPaused.
+DATA(0x0069fe3c) int g_videoCount3;
+// Before normalization: gSmackBufferFlags.
+DATA(0x0069fe18) int g_smackPaused;
+// Before normalization: RedShift.
+DATA(0x0069fe20) unsigned long g_smackBufferFlags;  // SMACKBUFFER555/565
+// Before normalization: RedBits.
+DATA(0x0069fddc) int g_redShift;
+// Before normalization: GreenShift.
+DATA(0x0069fdd8) int g_redBits;
+// Before normalization: GreenBits.
+DATA(0x0069fe40) int g_greenShift;
+// Before normalization: BlueShift.
+DATA(0x0069fe30) int g_greenBits;
+// Before normalization: BlueBits.
+DATA(0x0069fde8) int g_blueShift;
+// Before normalization: gVideoPauseCount.
+DATA(0x0069fe38) int g_blueBits;
+DATA(0x0069fe44) int g_videoPauseCount;
+DATA(0x0069fe48) HANDLE g_videoFile1;               // VideoShutDown's CloseHandle trio
+DATA(0x0069fe4c) HANDLE g_videoFile2;
 // The three archive directories the handles above index. LoadAnimHeaders
 // (0x598210) pairs them one for one - it stores 0x69fe2c right after opening
 // the file it puts in gVideoFile3, 0x69fe28 with gVideoFile1 and 0x69fde0
 // with gVideoFile2 - and DeleteAnimHeaders then frees them 3, 2, 1, exactly
 // the order VideoShutDown closes the handles in. Names provisional.
-DATA(0x0069fde0) VideoHeaderStruct* gVideoHeader2;
-DATA(0x0069fe28) VideoHeaderStruct* gVideoHeader1;
-DATA(0x0069fe2c) VideoHeaderStruct* gVideoHeader3;
-DATA(0x0069fe54) int gInVideoNextFrame;            // reentry latch
-DATA(0x0069fe5c) unsigned char gSmackFrameReady;   // SmackDoFrame is allowed
+DATA(0x0069fe50) HANDLE g_videoFile3;
+DATA(0x0069fde0) VideoHeaderStruct* g_videoHeader2;
+DATA(0x0069fe28) VideoHeaderStruct* g_videoHeader1;
+// Before normalization: gInVideoNextFrame.
+DATA(0x0069fe2c) VideoHeaderStruct* g_videoHeader3;
+// Before normalization: gSmackFrameReady.
+DATA(0x0069fe54) int g_inVideoNextFrame;            // reentry latch
+DATA(0x0069fe5c) unsigned char g_smackFrameReady;   // SmackDoFrame is allowed
 
 // Dreamcast proves the first two file/header pairs and their types in
 // DeleteSoundHeaders (dc 0x14acc8). Complete's retail loader at 0x5984a0
@@ -134,27 +160,36 @@ DATA(0x0069fe5c) unsigned char gSmackFrameReady;   // SmackDoFrame is allowed
 // teardown below independently proves all six addresses and the sentinel
 // states: file handles live in .data as INVALID_HANDLE_VALUE; header arrays
 // live in .bss as null pointers.
-DATA(0x00682e80) HANDLE SoundFile = INVALID_HANDLE_VALUE;
-DATA(0x0069d848) SoundHeaderStruct* SoundHeader;
-DATA(0x00682e7c) HANDLE SoundFileCD = INVALID_HANDLE_VALUE;
-DATA(0x0069d850) SoundHeaderStruct* SoundHeaderCD;
-DATA(0x00682e84) HANDLE SoundFileCampaign = INVALID_HANDLE_VALUE;
-DATA(0x0069d84c) SoundHeaderStruct* SoundHeaderCampaign;
-DATA(0x0069e5a8) int SoundCount;
-DATA(0x0069e5a4) int SoundCountCD;
-DATA(0x0069e5ac) int SoundCountCampaign;
+// Before normalization: SoundFile.
+// Before normalization: SoundHeader.
+DATA(0x00682e80) HANDLE g_soundFile = INVALID_HANDLE_VALUE;
+// Before normalization: SoundFileCD.
+DATA(0x0069d848) SoundHeaderStruct* g_soundHeader;
+// Before normalization: SoundHeaderCD.
+DATA(0x00682e7c) HANDLE g_soundFileCd = INVALID_HANDLE_VALUE;
+// Before normalization: SoundFileCampaign.
+DATA(0x0069d850) SoundHeaderStruct* g_soundHeaderCd;
+// Before normalization: SoundHeaderCampaign.
+DATA(0x00682e84) HANDLE g_soundFileCampaign = INVALID_HANDLE_VALUE;
+// Before normalization: SoundCount.
+DATA(0x0069d84c) SoundHeaderStruct* g_soundHeaderCampaign;
+// Before normalization: SoundCountCD.
+DATA(0x0069e5a8) int g_soundCount;
+// Before normalization: SoundCountCampaign.
+DATA(0x0069e5a4) int g_soundCountCd;
+DATA(0x0069e5ac) int g_soundCountCampaign;
 
 // E:\gamedcs\smackmgr.cpp:75
 // Complete's retained call in ShowVideo's third close loads ECX=1 at
 // 0x598d6f before calling 0x5971b0. The body ignores that integer argument;
 // Dreamcast's no-argument four-byte stub cannot describe this later ABI.
 VA(0x005971b0, 0x3B)  // anchor-global, dc 0x14ac30
-void VideoSoundOnOff(int on)
+void videoSoundOnOff(int on)
 {
-    if (gSmackVideo || gSmackVideo2)
-        gpSoundManager->service_sounds();
-    else if (gBinkVideo || gBinkVideo2)
-        gpSoundManager->service_sounds();
+    if (g_smackVideo || g_smackVideo2)
+        g_soundManager->serviceSounds();
+    else if (g_binkVideo || g_binkVideo2)
+        g_soundManager->serviceSounds();
 }
 
 // E:\gamedcs\smackmgr.cpp:105
@@ -199,26 +234,26 @@ void VideoSoundOnOff(int on)
 // 8168/8447 in BOTH the front and back end (docs/vc6/rtm-generation.md
 // §6). Do not re-open this as vintage.
 VA(0x005971f0, 0xD9)  // anchor-global, dc 0x14ac34
-void VideoRealignBuffers()
+void videoRealignBuffers()
 {
-    gSmackBufferFlags = (GreenBits == VIDEO_PIXEL_FORMAT_RGB565)
+    g_smackBufferFlags = (g_greenBits == VIDEO_PIXEL_FORMAT_RGB565)
                             ? SMACKBUFFER565 : SMACKBUFFER555;
-    if (gSmackVideo)
-        SmackToBuffer(gSmackVideo, gSmackX, gSmackY,
-            gpWindowManager->screenBitmap->Pitch,
-            gpWindowManager->screenBitmap->Height,
-            gpWindowManager->screenBitmap->map, gSmackBufferFlags);
-    if (gSmackVideo2)
-        SmackToBuffer(gSmackVideo2, gSmackX, gSmackY,
-            gpWindowManager->screenBitmap->Pitch,
-            gpWindowManager->screenBitmap->Height,
-            gpWindowManager->screenBitmap->map, gSmackBufferFlags);
-    gBinkSurfaceType = BinkDDSurfaceType(gpDDSBack);
-    gBinkBuffer = 2 * gBinkX + gpWindowManager->screenBitmap->Pitch * gBinkY
+    if (g_smackVideo)
+        SmackToBuffer(g_smackVideo, g_smackX, g_smackY,
+            g_windowManager->m_screenBitmap->m_pitch,
+            g_windowManager->m_screenBitmap->m_height,
+            g_windowManager->m_screenBitmap->m_map, g_smackBufferFlags);
+    if (g_smackVideo2)
+        SmackToBuffer(g_smackVideo2, g_smackX, g_smackY,
+            g_windowManager->m_screenBitmap->m_pitch,
+            g_windowManager->m_screenBitmap->m_height,
+            g_windowManager->m_screenBitmap->m_map, g_smackBufferFlags);
+    g_binkSurfaceType = BinkDDSurfaceType(g_ddsBack);
+    g_binkBuffer = 2 * g_binkX + g_windowManager->m_screenBitmap->m_pitch * g_binkY
         + static_cast<unsigned char*>(
-              static_cast<void*>(gpWindowManager->screenBitmap->map));
-    gBinkPitch = gpWindowManager->screenBitmap->Pitch;
-    gBinkHeight = gpWindowManager->screenBitmap->Height;
+              static_cast<void*>(g_windowManager->m_screenBitmap->m_map));
+    g_binkPitch = g_windowManager->m_screenBitmap->m_pitch;
+    g_binkHeight = g_windowManager->m_screenBitmap->m_height;
 }
 
 // E:\gamedcs\smackmgr.cpp:130
@@ -249,7 +284,7 @@ void VideoRealignBuffers()
 // int[2] and plain int locals for the origin (earlier lane). `vh = h`
 // before `vw = w` is worth +0.03 and is the form kept.
 VA(0x005972d0, 0x29D)  // anchor-global, dc 0x14ac38
-int VideoPlay(int id, int x, int y, int w, int h)
+int videoPlay(int id, int x, int y, int w, int h)
 {
     POINT pos;
     int vw, vh;
@@ -257,86 +292,86 @@ int VideoPlay(int id, int x, int y, int w, int h)
     unsigned char aborted;
 
     if (id >= VIDEO_ID_FIRST_TABLED
-        && (!gVideoDescriptors[id].useBink || !gUnnamed698758.binkVideo
+        && (!g_videoDescriptors[id].m_useBink || !g_unnamed698758.m_binkVideo
             || (id == VIDEO_ID_STATE_GATED
-                && *gpVideoGameState != VIDEO_GAME_STATE_FORCED_BINK_LOW
-                && *gpVideoGameState != VIDEO_GAME_STATE_FORCED_BINK_HIGH))) {
+                && *g_videoGameState != VIDEO_GAME_STATE_FORCED_BINK_LOW
+                && *g_videoGameState != VIDEO_GAME_STATE_FORCED_BINK_HIGH))) {
         vh = h;
         vw = w;
-        gpSoundManager->field_84 = 1;
-        ShowVideo(id, x, y, vw, vh, 0, 0, 1);
-        if (!gSmackVideo) {
+        g_soundManager->m_playSounds = 1;
+        showVideo(id, x, y, vw, vh, 0, 0, 1);
+        if (!g_smackVideo) {
             result = 0;
         } else {
-            gpMouseManager->HidePointer();
+            g_mouseManager->hidePointer();
             if (vw < 0)
-                vw = gSmackVideo->Width;
+                vw = g_smackVideo->m_width;
             if (vh < 0)
-                vh = gSmackVideo->Height;
-            pos.x = x + (vw - gSmackVideo->Width) / 2;
-            gSmackX = pos.x;
-            pos.y = y + (vh - gSmackVideo->Height) / 2;
-            gSmackY = pos.y;
-            SmackToBuffer(gSmackVideo, pos.x, pos.y,
-                gpWindowManager->screenBitmap->Pitch,
-                gpWindowManager->screenBitmap->Height,
-                gpWindowManager->screenBitmap->map, gSmackBufferFlags);
+                vh = g_smackVideo->m_height;
+            pos.x = x + (vw - g_smackVideo->m_width) / 2;
+            g_smackX = pos.x;
+            pos.y = y + (vh - g_smackVideo->m_height) / 2;
+            g_smackY = pos.y;
+            SmackToBuffer(g_smackVideo, pos.x, pos.y,
+                g_windowManager->m_screenBitmap->m_pitch,
+                g_windowManager->m_screenBitmap->m_height,
+                g_windowManager->m_screenBitmap->m_map, g_smackBufferFlags);
             aborted = 0;
-            gpInputManager->Flush();
+            g_inputManager->flush();
             while (1) {
-                if (gSmackVideo == 0)
+                if (g_smackVideo == 0)
                     break;
-                PollSound();
-                Process1WindowsMessage();
+                pollSound();
+                process1WindowsMessage();
                 {
-                    message msg = gpInputManager->GetEvent();
-                    switch (msg.id) {
+                    message msg = g_inputManager->getEvent();
+                    switch (msg.m_id) {
                         case MESSAGE_KEY_DOWN:
-                            if (msg.codeX == KEYCODE_F4)
+                            if (msg.m_codeX == KEYCODE_F4)
                                 break;
                             // fall through
                         case MESSAGE_LEFT_BUTTON_DOWN:
                         case MESSAGE_RIGHT_BUTTON_DOWN:
-                            if (!gbVideoNoSkip) {
+                            if (!g_videoNoSkip) {
                                 aborted = 1;
                                 goto stop_playback;
                             }
                             break;
                     }
                 }
-                if (VideoNeedsUpdate())
-                    VideoDrawRects();
+                if (videoNeedsUpdate())
+                    videoDrawRects();
             }
 stop_playback:
-            SmackManager::CloseSmacker();
-            if (aborted && gVideoDescriptors[id].fadeOnAbort)
-                gpWindowManager->FadeScreen(1, 4, 0);
+            SmackManager::closeSmacker();
+            if (aborted && g_videoDescriptors[id].m_fadeOnAbort)
+                g_windowManager->fadeScreen(1, 4, 0);
             else
-                gpWindowManager->UpdateScreen(pos.x, pos.y, vw, vh);
-            gpMouseManager->ShowPointer(0);
+                g_windowManager->updateScreen(pos.x, pos.y, vw, vh);
+            g_mouseManager->showPointer(0);
             result = !aborted;
         }
-        gSmackPaused = 0;
-        gSmackFrameReady = 0;
+        g_smackPaused = 0;
+        g_smackFrameReady = 0;
         return result;
     }
-    return PlayBinkVideo(id, x, y, w, h);
+    return playBinkVideo(id, x, y, w, h);
 }
 
 // E:\gamedcs\smackmgr.cpp:143
 // DC's stub is a plain void(); retail forwards eight arguments to
 // ShowVideo (the bink arm drops the last one).
 VA(0x00597570, 0x75)  // anchor-global, dc 0x14ac3c
-void VideoOpen(int id, int x, int y, int w, int h, int a6, int a7, int a8)
+void videoOpen(int id, int x, int y, int w, int h, int a6, int a7, int a8)
 {
     if (id >= VIDEO_ID_FIRST_TABLED
-        && (!gVideoDescriptors[id].useBink || !gUnnamed698758.binkVideo
+        && (!g_videoDescriptors[id].m_useBink || !g_unnamed698758.m_binkVideo
             || (id == VIDEO_ID_STATE_GATED
-                && *gpVideoGameState != VIDEO_GAME_STATE_FORCED_BINK_LOW
-                && *gpVideoGameState != VIDEO_GAME_STATE_FORCED_BINK_HIGH)))
-        ShowVideo(id, x, y, w, h, a6, a7, a8);
+                && *g_videoGameState != VIDEO_GAME_STATE_FORCED_BINK_LOW
+                && *g_videoGameState != VIDEO_GAME_STATE_FORCED_BINK_HIGH)))
+        showVideo(id, x, y, w, h, a6, a7, a8);
     else
-        OpenBinkVideo(id, x, y, w, h, a6, a7);
+        openBinkVideo(id, x, y, w, h, a6, a7);
 }
 
 // E:\gamedcs\smackmgr.cpp:156
@@ -353,64 +388,64 @@ void VideoOpen(int id, int x, int y, int w, int h, int a6, int a7, int a8)
 // could not recover the extra top test; restoring the calls does. No inline
 // keyword or per-site pragma is needed for this standalone exact body.
 VA(0x005975f0, 0xE1)  // anchor-global, dc 0x14ac40
-void VideoClose()
+void videoClose()
 {
-    while (gVideoPauseCount != 0)
-        VideoResume();
-    gpSoundManager->service_sounds();
-    SmackManager::CloseSmacker();
-    CloseBinkVideo();
+    while (g_videoPauseCount != 0)
+        videoResume();
+    g_soundManager->serviceSounds();
+    SmackManager::closeSmacker();
+    closeBinkVideo();
 }
 
 // E:\gamedcs\smackmgr.cpp:176
 VA(0x005976e0, 0x5E)  // anchor-global, dc 0x14ac44
-void VideoNextFrame()
+void videoNextFrame()
 {
-    if (gInVideoNextFrame)
+    if (g_inVideoNextFrame)
         return;
-    gInVideoNextFrame = 1;
-    if (gSmackVideo || gSmackVideo2) {
-        if (!gSmackPaused)
-            SmackManager::NextSmackerFrame();
+    g_inVideoNextFrame = 1;
+    if (g_smackVideo || g_smackVideo2) {
+        if (!g_smackPaused)
+            SmackManager::nextSmackerFrame();
     }
-    if (gBinkVideo || gBinkVideo2) {
-        if (!gBinkPaused)
-            NextBinkFrame();
+    if (g_binkVideo || g_binkVideo2) {
+        if (!g_binkPaused)
+            nextBinkFrame();
     }
-    gInVideoNextFrame = 0;
+    g_inVideoNextFrame = 0;
 }
 
 // E:\gamedcs\smackmgr.cpp:196
 VA(0x00597740, 0x53)  // anchor-global, dc 0x14ac48
-void VideoDrawCurrentFrame()
+void videoDrawCurrentFrame()
 {
-    if (gSmackVideo || gSmackVideo2) {
-        if (!gSmackPaused && gSmackVideo && gSmackFrameReady)
-            SmackDoFrame(gSmackVideo);
+    if (g_smackVideo || g_smackVideo2) {
+        if (!g_smackPaused && g_smackVideo && g_smackFrameReady)
+            SmackDoFrame(g_smackVideo);
     }
-    if (gBinkVideo || gBinkVideo2) {
-        if (!gBinkPaused)
-            DrawCurrentBinkFrame();
+    if (g_binkVideo || g_binkVideo2) {
+        if (!g_binkPaused)
+            drawCurrentBinkFrame();
     }
 }
 
 // E:\gamedcs\smackmgr.cpp:209
 VA(0x005977a0, 0xA6)  // anchor-global, dc 0x14ac4c
-void VideoPause()
+void videoPause()
 {
-    if (++gVideoPauseCount > 1)
+    if (++g_videoPauseCount > 1)
         return;
-    if (gSmackVideo || gSmackVideo2)
-        gSmackPaused = 1;
-    if (gBinkVideo) {
-        gBinkPaused = 1;
-        BinkPause(gBinkVideo, 1);
+    if (g_smackVideo || g_smackVideo2)
+        g_smackPaused = 1;
+    if (g_binkVideo) {
+        g_binkPaused = 1;
+        BinkPause(g_binkVideo, 1);
     }
-    if (gBinkVideo2) {
-        gBinkPaused = 1;
-        BinkPause(gBinkVideo2, 1);
+    if (g_binkVideo2) {
+        g_binkPaused = 1;
+        BinkPause(g_binkVideo2, 1);
     }
-    VideoSoundOnOff(0);
+    videoSoundOnOff(0);
 }
 
 // E:\gamedcs\smackmgr.cpp:238
@@ -422,54 +457,54 @@ void VideoPause()
 // cb is under the 0x28 free-inline threshold, so /Ob2 folds it straight
 // back), and it is the boundary ShowVideo's residual is measured against.
 VA(0x00597850, 0xAB)  // anchor-global, dc 0x14ac50
-void VideoResume()
+void videoResume()
 {
-    if (gVideoPauseCount == 0)
+    if (g_videoPauseCount == 0)
         return;
-    if (--gVideoPauseCount != 0)
+    if (--g_videoPauseCount != 0)
         return;
-    if (gSmackVideo || gSmackVideo2)
-        gSmackPaused = 0;
-    if (gBinkVideo) {
-        gBinkPaused = 0;
-        BinkPause(gBinkVideo, 0);
+    if (g_smackVideo || g_smackVideo2)
+        g_smackPaused = 0;
+    if (g_binkVideo) {
+        g_binkPaused = 0;
+        BinkPause(g_binkVideo, 0);
     }
-    if (gBinkVideo2) {
-        gBinkPaused = 0;
-        BinkPause(gBinkVideo2, 0);
+    if (g_binkVideo2) {
+        g_binkPaused = 0;
+        BinkPause(g_binkVideo2, 0);
     }
-    VideoSoundOnOff(1);
+    videoSoundOnOff(1);
 }
 
 // E:\gamedcs\smackmgr.cpp:265
 VA(0x00597900, 0x23)  // anchor-global, dc 0x14ac54
-void VideoRestart()
+void videoRestart()
 {
-    if (gSmackVideo) {
-        SmackGoto(gSmackVideo, 1);
-        SmackDoFrame(gSmackVideo);
+    if (g_smackVideo) {
+        SmackGoto(g_smackVideo, 1);
+        SmackDoFrame(g_smackVideo);
     }
-    RestartBinkVideo();
+    restartBinkVideo();
 }
 
 // E:\gamedcs\smackmgr.cpp:274
 VA(0x00597930, 0x5A)  // anchor-global, dc 0x14ac58
-unsigned char VideoNeedsUpdate()
+unsigned char videoNeedsUpdate()
 {
-    if (gSmackVideo || gSmackVideo2)
-        return gSmackDirty && !gSmackPaused;
-    else if (gBinkVideo || gBinkVideo2)
-        return gBinkDirty && !gBinkPaused;
+    if (g_smackVideo || g_smackVideo2)
+        return g_smackDirty && !g_smackPaused;
+    else if (g_binkVideo || g_binkVideo2)
+        return g_binkDirty && !g_binkPaused;
     return 0;
 }
 
 // E:\gamedcs\smackmgr.cpp:288
 VA(0x00597990, 0x3F)  // anchor-global, dc 0x14ac5c
-unsigned char VideoPlaying()
+unsigned char videoPlaying()
 {
-    if ((gSmackVideo || gSmackVideo2) && !gSmackPaused)
+    if ((g_smackVideo || g_smackVideo2) && !g_smackPaused)
         return 1;
-    if ((gBinkVideo || gBinkVideo2) && !gBinkPaused)
+    if ((g_binkVideo || g_binkVideo2) && !g_binkPaused)
         return 1;
     return 0;
 }
@@ -502,59 +537,59 @@ unsigned char VideoPlaying()
 // the loop stopped using a pointer local, and here there is no such
 // handle because the index IS already the induction variable.
 VA(0x005979d0, 0x294)  // anchor-global, dc 0x14ac60
-void VideoDrawRects()
+void videoDrawRects()
 {
     int x, y, w, h;
 
-    if ((gSmackVideo || gSmackVideo2) && !gSmackPaused) {
+    if ((g_smackVideo || g_smackVideo2) && !g_smackPaused) {
         Smack* smk;
 
         smk = 0;
-        if (gSmackVideo)
-            smk = gSmackVideo;
-        else if (gSmackVideo2)
-            smk = gSmackVideo2;
-        SmackToBufferRect(smk, gSmackBufferFlags);
-        x = smk->LastRectx;
-        y = smk->LastRecty;
-        w = smk->LastRectw;
-        h = smk->LastRecth;
-        while (SmackToBufferRect(smk, gSmackBufferFlags)) {
-            if (smk->LastRectx < x)
-                x = smk->LastRectx;
-            if (smk->LastRecty < y)
-                y = smk->LastRecty;
-            if (smk->LastRectw + smk->LastRectx > w + x)
-                w = smk->LastRectw + smk->LastRectx - x;
-            if (smk->LastRecth + smk->LastRecty > h + y)
-                h = smk->LastRecth + smk->LastRecty - y;
+        if (g_smackVideo)
+            smk = g_smackVideo;
+        else if (g_smackVideo2)
+            smk = g_smackVideo2;
+        SmackToBufferRect(smk, g_smackBufferFlags);
+        x = smk->m_lastRectx;
+        y = smk->m_lastRecty;
+        w = smk->m_lastRectw;
+        h = smk->m_lastRecth;
+        while (SmackToBufferRect(smk, g_smackBufferFlags)) {
+            if (smk->m_lastRectx < x)
+                x = smk->m_lastRectx;
+            if (smk->m_lastRecty < y)
+                y = smk->m_lastRecty;
+            if (smk->m_lastRectw + smk->m_lastRectx > w + x)
+                w = smk->m_lastRectw + smk->m_lastRectx - x;
+            if (smk->m_lastRecth + smk->m_lastRecty > h + y)
+                h = smk->m_lastRecth + smk->m_lastRecty - y;
         }
-        gpWindowManager->UpdateScreen(x, y, w, h);
-    } else if ((gBinkVideo || gBinkVideo2) && !gBinkPaused) {
+        g_windowManager->updateScreen(x, y, w, h);
+    } else if ((g_binkVideo || g_binkVideo2) && !g_binkPaused) {
         Bink* bnk;
 
-        bnk = gBinkVideo2;
-        if (gBinkVideo)
-            bnk = gBinkVideo;
-        if (gBinkVideoId != VIDEO_ID_OVERLAY_BLIT) {
+        bnk = g_binkVideo2;
+        if (g_binkVideo)
+            bnk = g_binkVideo;
+        if (g_binkVideoId != VIDEO_ID_OVERLAY_BLIT) {
             int i;
 
-            BinkGetRects(bnk, gBinkSurfaceType);
-            w = bnk->FrameRects[0].Width;
-            h = bnk->FrameRects[0].Height;
-            x = bnk->FrameRects[0].Left;
-            y = bnk->FrameRects[0].Top;
-            for (i = 1; i < bnk->NumRects; i++) {
-                if (bnk->FrameRects[i].Left < x)
-                    x = bnk->FrameRects[i].Left;
-                if (bnk->FrameRects[i].Top < y)
-                    y = bnk->FrameRects[i].Top;
-                if (bnk->FrameRects[i].Width + bnk->FrameRects[i].Left > w + x)
-                    w = bnk->FrameRects[i].Width + bnk->FrameRects[i].Left - x;
-                if (bnk->FrameRects[i].Height + bnk->FrameRects[i].Top > h + y)
-                    h = bnk->FrameRects[i].Height + bnk->FrameRects[i].Top - y;
+            BinkGetRects(bnk, g_binkSurfaceType);
+            w = bnk->m_frameRects[0].m_width;
+            h = bnk->m_frameRects[0].m_height;
+            x = bnk->m_frameRects[0].m_left;
+            y = bnk->m_frameRects[0].m_top;
+            for (i = 1; i < bnk->m_numRects; i++) {
+                if (bnk->m_frameRects[i].m_left < x)
+                    x = bnk->m_frameRects[i].m_left;
+                if (bnk->m_frameRects[i].m_top < y)
+                    y = bnk->m_frameRects[i].m_top;
+                if (bnk->m_frameRects[i].m_width + bnk->m_frameRects[i].m_left > w + x)
+                    w = bnk->m_frameRects[i].m_width + bnk->m_frameRects[i].m_left - x;
+                if (bnk->m_frameRects[i].m_height + bnk->m_frameRects[i].m_top > h + y)
+                    h = bnk->m_frameRects[i].m_height + bnk->m_frameRects[i].m_top - y;
             }
-            gpWindowManager->UpdateScreen(gBinkX + x, gBinkY + y, w, h);
+            g_windowManager->updateScreen(g_binkX + x, g_binkY + y, w, h);
         } else {
             POINT pt;
             RECT dst;
@@ -563,7 +598,7 @@ void VideoDrawRects()
 
             pt.x = 0;
             pt.y = 0;
-            ClientToScreen(hwndApp, &pt);
+            ClientToScreen(g_hwndApp, &pt);
             dst.left = 0;
             dst.top = 0;
             dst.right = 800;
@@ -571,35 +606,35 @@ void VideoDrawRects()
             OffsetRect(&dst, pt.x, pt.y);
             src.left = 0;
             src.top = 0;
-            src.right = bnk->Width;
-            src.bottom = bnk->Height;
-            if (gpDDSBack->Unlock(NULL) != 0)
+            src.right = bnk->m_width;
+            src.bottom = bnk->m_height;
+            if (g_ddsBack->Unlock(NULL) != 0)
                 return;
-            gpDDSPrimary->Blt(&dst, gpDDSBack, &src, DDBLT_WAIT, NULL);
+            g_ddsPrimary->Blt(&dst, g_ddsBack, &src, DDBLT_WAIT, NULL);
             memset(&ddsd, 0, sizeof(ddsd));
             ddsd.dwSize = sizeof(ddsd);
-            gpDDSBack->Lock(NULL, &ddsd, DDLOCK_WAIT, NULL);
+            g_ddsBack->Lock(NULL, &ddsd, DDLOCK_WAIT, NULL);
         }
     }
-    gBinkDirty = 0;
-    gSmackDirty = 0;
+    g_binkDirty = 0;
+    g_smackDirty = 0;
 }
 
 // E:\gamedcs\smackmgr.cpp:485
 VA(0x00597c70, 0x84)  // anchor-global, dc 0x14ac64
-void VideoShutDown()
+void videoShutDown()
 {
-    SmackManager::CloseSmacker();
-    CloseBinkVideo();
-    if (gVideoFile3)
-        CloseHandle(gVideoFile3);
-    if (gVideoFile2)
-        CloseHandle(gVideoFile2);
-    if (gVideoFile1)
-        CloseHandle(gVideoFile1);
-    gVideoFile1 = 0;
-    gVideoFile2 = 0;
-    gVideoFile3 = 0;
+    SmackManager::closeSmacker();
+    closeBinkVideo();
+    if (g_videoFile3)
+        CloseHandle(g_videoFile3);
+    if (g_videoFile2)
+        CloseHandle(g_videoFile2);
+    if (g_videoFile1)
+        CloseHandle(g_videoFile1);
+    g_videoFile1 = 0;
+    g_videoFile2 = 0;
+    g_videoFile3 = 0;
 }
 
 // The base archive's path on the drive the misc.obj install scan selected.
@@ -614,11 +649,12 @@ void VideoShutDown()
 // behind the scanned drive letter. VC6 expands basic_string::operator[]
 // through index 0x11 and runs out of /Ob2 budget after it, so the last eight
 // subscripts become CALLS - retail's split exactly.
+// Before normalization (function): GetDriveArchivePath.
 VA(0x00597d00, 0x50E)  // anchor-caller(LoadAnimHeaders, LoadSoundHeaders) + anchor-global(gArchiveDriveLetter)
-std::string GetDriveArchivePath()
+std::string getDriveArchivePath()
 {
     std::string path;
-    path = gArchiveDriveLetter;
+    path = g_archiveDriveLetter;
     path += '\xe3';
     path += '\xad';
     path += '\xa9';
@@ -676,47 +712,48 @@ std::string GetDriveArchivePath()
 // Dreamcast stub opens none: a campaign-relative one built from the
 // 0x597d00 stem, the expansion archive behind the same *gpVideoGameState
 // gate the sound loader uses, and the base archive.
+// Before normalization (function): LoadAnimHeaders.
 VA(0x00598210, 0x223)  // anchor-callee(0x597d00 stem) + order-map, dc 0x14ac68
-unsigned char LoadAnimHeaders()
+unsigned char loadAnimHeaders()
 {
     DWORD nread;
 
-    gVideoFile3 = CreateFileA(GetDriveArchivePath().c_str(), GENERIC_READ,
+    g_videoFile3 = CreateFileA(getDriveArchivePath().c_str(), GENERIC_READ,
         FILE_SHARE_READ, 0, OPEN_EXISTING,
         FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_NORMAL, 0);
-    if (gVideoFile3 != INVALID_HANDLE_VALUE) {
-        ReadFile(gVideoFile3, &gVideoCount3, 4, &nread, 0);
-        gVideoHeader3 = new VideoHeaderStruct[gVideoCount3 + 2];
-        ReadFile(gVideoFile3, gVideoHeader3, 44 * gVideoCount3, &nread, 0);
+    if (g_videoFile3 != INVALID_HANDLE_VALUE) {
+        ReadFile(g_videoFile3, &g_videoCount3, 4, &nread, 0);
+        g_videoHeader3 = new VideoHeaderStruct[g_videoCount3 + 2];
+        ReadFile(g_videoFile3, g_videoHeader3, 44 * g_videoCount3, &nread, 0);
     } else {
-        gVideoFile3 = 0;
+        g_videoFile3 = 0;
     }
 
-    if (*gpVideoGameState == VIDEO_GAME_STATE_EXPANSION_ARCHIVES
-        || *gpVideoGameState == VIDEO_GAME_STATE_FORCED_BINK_HIGH) {
-        gVideoFile1 = CreateFileA("data\\h3ab_ahd.vid", GENERIC_READ,
+    if (*g_videoGameState == VIDEO_GAME_STATE_EXPANSION_ARCHIVES
+        || *g_videoGameState == VIDEO_GAME_STATE_FORCED_BINK_HIGH) {
+        g_videoFile1 = CreateFileA("data\\h3ab_ahd.vid", GENERIC_READ,
             FILE_SHARE_READ, 0, OPEN_EXISTING,
             FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_NORMAL, 0);
-        if (gVideoFile1 == INVALID_HANDLE_VALUE) {
-            MessageBoxA(hwndApp, gpGeneralText->GetText(535),
-                gpGeneralText->GetText(536), 0);
+        if (g_videoFile1 == INVALID_HANDLE_VALUE) {
+            MessageBoxA(g_hwndApp, g_generalText->getText(535),
+                g_generalText->getText(536), 0);
             return 0;
         }
-        ReadFile(gVideoFile1, &gVideoCount1, 4, &nread, 0);
-        gVideoHeader1 = new VideoHeaderStruct[gVideoCount1 + 2];
-        ReadFile(gVideoFile1, gVideoHeader1, 44 * gVideoCount1, &nread, 0);
+        ReadFile(g_videoFile1, &g_videoCount1, 4, &nread, 0);
+        g_videoHeader1 = new VideoHeaderStruct[g_videoCount1 + 2];
+        ReadFile(g_videoFile1, g_videoHeader1, 44 * g_videoCount1, &nread, 0);
     }
 
-    gVideoFile2 = CreateFileA("data\\Video.vid", GENERIC_READ, FILE_SHARE_READ,
+    g_videoFile2 = CreateFileA("data\\Video.vid", GENERIC_READ, FILE_SHARE_READ,
         0, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_NORMAL, 0);
-    if (gVideoFile2 == INVALID_HANDLE_VALUE) {
-        MessageBoxA(hwndApp, gpGeneralText->GetText(535),
-            gpGeneralText->GetText(536), 0);
+    if (g_videoFile2 == INVALID_HANDLE_VALUE) {
+        MessageBoxA(g_hwndApp, g_generalText->getText(535),
+            g_generalText->getText(536), 0);
         return 0;
     }
-    ReadFile(gVideoFile2, &gVideoCount2, 4, &nread, 0);
-    gVideoHeader2 = new VideoHeaderStruct[gVideoCount2 + 2];
-    ReadFile(gVideoFile2, gVideoHeader2, 44 * gVideoCount2, &nread, 0);
+    ReadFile(g_videoFile2, &g_videoCount2, 4, &nread, 0);
+    g_videoHeader2 = new VideoHeaderStruct[g_videoCount2 + 2];
+    ReadFile(g_videoFile2, g_videoHeader2, 44 * g_videoCount2, &nread, 0);
     return 1;
 }
 
@@ -724,19 +761,19 @@ unsigned char LoadAnimHeaders()
 // VideoHeader here; Complete frees three archive directories and clears
 // each pointer, in the same 3/2/1 order VideoShutDown closes their handles.
 VA(0x00598440, 0x55)  // anchor-caller(ShutDown, immediately before DeleteSoundHeaders), dc 0x14ac6c
-void DeleteAnimHeaders()
+void deleteAnimHeaders()
 {
-    if (gVideoHeader3) {
-        delete[] gVideoHeader3;
-        gVideoHeader3 = 0;
+    if (g_videoHeader3) {
+        delete[] g_videoHeader3;
+        g_videoHeader3 = 0;
     }
-    if (gVideoHeader2) {
-        delete[] gVideoHeader2;
-        gVideoHeader2 = 0;
+    if (g_videoHeader2) {
+        delete[] g_videoHeader2;
+        g_videoHeader2 = 0;
     }
-    if (gVideoHeader1) {
-        delete[] gVideoHeader1;
-        gVideoHeader1 = 0;
+    if (g_videoHeader1) {
+        delete[] g_videoHeader1;
+        g_videoHeader1 = 0;
     }
 }
 
@@ -744,48 +781,49 @@ void DeleteAnimHeaders()
 // same three-archive shape - except that the campaign archive is derived
 // here rather than opened blind: the stem is strtok'd at its first '.' and
 // ".snd" appended, and a missing campaign archive is not an error.
+// Before normalization (function): LoadSoundHeaders.
 VA(0x005984a0, 0x240)  // anchor-callee(0x597d00 stem) + order-map, dc 0x14aca0
-unsigned char LoadSoundHeaders()
+unsigned char loadSoundHeaders()
 {
     DWORD nread;
     char path[52];
 
-    SoundFile = CreateFileA("data\\heroes3.snd", GENERIC_READ, FILE_SHARE_READ,
+    g_soundFile = CreateFileA("data\\heroes3.snd", GENERIC_READ, FILE_SHARE_READ,
         0, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_NORMAL, 0);
-    if (SoundFile == INVALID_HANDLE_VALUE) {
-        MessageBoxA(hwndApp, gpGeneralText->GetText(664),
-            gpGeneralText->GetText(665), 0);
+    if (g_soundFile == INVALID_HANDLE_VALUE) {
+        MessageBoxA(g_hwndApp, g_generalText->getText(664),
+            g_generalText->getText(665), 0);
         return 0;
     }
-    ReadFile(SoundFile, &SoundCount, 4, &nread, 0);
-    SoundHeader = new SoundHeaderStruct[SoundCount + 2];
-    ReadFile(SoundFile, SoundHeader, 48 * SoundCount, &nread, 0);
+    ReadFile(g_soundFile, &g_soundCount, 4, &nread, 0);
+    g_soundHeader = new SoundHeaderStruct[g_soundCount + 2];
+    ReadFile(g_soundFile, g_soundHeader, 48 * g_soundCount, &nread, 0);
 
-    if (*gpVideoGameState == VIDEO_GAME_STATE_EXPANSION_ARCHIVES
-        || *gpVideoGameState == VIDEO_GAME_STATE_FORCED_BINK_HIGH) {
-        SoundFileCD = CreateFileA("data\\h3ab_ahd.snd", GENERIC_READ,
+    if (*g_videoGameState == VIDEO_GAME_STATE_EXPANSION_ARCHIVES
+        || *g_videoGameState == VIDEO_GAME_STATE_FORCED_BINK_HIGH) {
+        g_soundFileCd = CreateFileA("data\\h3ab_ahd.snd", GENERIC_READ,
             FILE_SHARE_READ, 0, OPEN_EXISTING,
             FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_NORMAL, 0);
-        if (SoundFileCD == INVALID_HANDLE_VALUE) {
-            MessageBoxA(hwndApp, gpGeneralText->GetText(664),
-                gpGeneralText->GetText(665), 0);
+        if (g_soundFileCd == INVALID_HANDLE_VALUE) {
+            MessageBoxA(g_hwndApp, g_generalText->getText(664),
+                g_generalText->getText(665), 0);
             return 0;
         }
-        ReadFile(SoundFileCD, &SoundCountCD, 4, &nread, 0);
-        SoundHeaderCD = new SoundHeaderStruct[SoundCountCD + 2];
-        ReadFile(SoundFileCD, SoundHeaderCD, 48 * SoundCountCD, &nread, 0);
+        ReadFile(g_soundFileCd, &g_soundCountCd, 4, &nread, 0);
+        g_soundHeaderCd = new SoundHeaderStruct[g_soundCountCd + 2];
+        ReadFile(g_soundFileCd, g_soundHeaderCd, 48 * g_soundCountCd, &nread, 0);
     }
 
-    strcpy(path, GetDriveArchivePath().c_str());
+    strcpy(path, getDriveArchivePath().c_str());
     strtok(path, ".");
     strcat(path, ".snd");
-    SoundFileCampaign = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, 0,
+    g_soundFileCampaign = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, 0,
         OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN | FILE_ATTRIBUTE_NORMAL, 0);
-    if (SoundFileCampaign != INVALID_HANDLE_VALUE) {
-        ReadFile(SoundFileCampaign, &SoundCountCampaign, 4, &nread, 0);
-        SoundHeaderCampaign = new SoundHeaderStruct[SoundCountCampaign + 2];
-        ReadFile(SoundFileCampaign, SoundHeaderCampaign,
-            48 * SoundCountCampaign, &nread, 0);
+    if (g_soundFileCampaign != INVALID_HANDLE_VALUE) {
+        ReadFile(g_soundFileCampaign, &g_soundCountCampaign, 4, &nread, 0);
+        g_soundHeaderCampaign = new SoundHeaderStruct[g_soundCountCampaign + 2];
+        ReadFile(g_soundFileCampaign, g_soundHeaderCampaign,
+            48 * g_soundCountCampaign, &nread, 0);
     }
     return 1;
 }
@@ -795,31 +833,31 @@ unsigned char LoadSoundHeaders()
 // (dc 0x14acc8, 9 blocks). Retail Complete repeats that source shape for the
 // campaign archive and fixes the order and addresses of all three pairs.
 VA(0x005986e0, 0xA2)
-void DeleteSoundHeaders()
+void deleteSoundHeaders()
 {
-    if (SoundFile != INVALID_HANDLE_VALUE) {
-        CloseHandle(SoundFile);
-        SoundFile = INVALID_HANDLE_VALUE;
+    if (g_soundFile != INVALID_HANDLE_VALUE) {
+        CloseHandle(g_soundFile);
+        g_soundFile = INVALID_HANDLE_VALUE;
     }
-    if (SoundHeader) {
-        delete[] SoundHeader;
-        SoundHeader = 0;
+    if (g_soundHeader) {
+        delete[] g_soundHeader;
+        g_soundHeader = 0;
     }
-    if (SoundFileCD != INVALID_HANDLE_VALUE) {
-        CloseHandle(SoundFileCD);
-        SoundFileCD = INVALID_HANDLE_VALUE;
+    if (g_soundFileCd != INVALID_HANDLE_VALUE) {
+        CloseHandle(g_soundFileCd);
+        g_soundFileCd = INVALID_HANDLE_VALUE;
     }
-    if (SoundHeaderCD) {
-        delete[] SoundHeaderCD;
-        SoundHeaderCD = 0;
+    if (g_soundHeaderCd) {
+        delete[] g_soundHeaderCd;
+        g_soundHeaderCd = 0;
     }
-    if (SoundFileCampaign != INVALID_HANDLE_VALUE) {
-        CloseHandle(SoundFileCampaign);
-        SoundFileCampaign = INVALID_HANDLE_VALUE;
+    if (g_soundFileCampaign != INVALID_HANDLE_VALUE) {
+        CloseHandle(g_soundFileCampaign);
+        g_soundFileCampaign = INVALID_HANDLE_VALUE;
     }
-    if (SoundHeaderCampaign) {
-        delete[] SoundHeaderCampaign;
-        SoundHeaderCampaign = 0;
+    if (g_soundHeaderCampaign) {
+        delete[] g_soundHeaderCampaign;
+        g_soundHeaderCampaign = 0;
     }
 }
 
@@ -831,8 +869,9 @@ void DeleteSoundHeaders()
 // archive at *gpVideoGameState 1, behind the campaign archive at 3 - which
 // is the whole reason the body is 683 bytes.
 // Name provisional: the DC roster stubs this compiland's whole video layer.
+// Before normalization (function): OpenSmackerTrack.
 VA(0x00598790, 0x2AB)  // anchor-caller(ShowVideo, both tracks) + anchor-string('.smk'), retail-only
-Smack* OpenSmackerTrack(const char* stem, unsigned long flags,
+Smack* openSmackerTrack(const char* stem, unsigned long flags,
                         unsigned long extraFlags)
 {
     char name[40];
@@ -841,46 +880,46 @@ Smack* OpenSmackerTrack(const char* stem, unsigned long flags,
     strcpy(name, stem);
     strcat(name, ".smk");
 
-    if (*gpVideoGameState == VIDEO_GAME_STATE_EXPANSION_ARCHIVES) {
-        for (i = 0; i < gVideoCount1; i++) {
-            if (_strcmpi(gVideoHeader1[i].name, name) == 0) {
-                gpSoundManager->service_sounds();
-                SetFilePointer(gVideoFile1, gVideoHeader1[i].offset, 0,
+    if (*g_videoGameState == VIDEO_GAME_STATE_EXPANSION_ARCHIVES) {
+        for (i = 0; i < g_videoCount1; i++) {
+            if (_strcmpi(g_videoHeader1[i].m_name, name) == 0) {
+                g_soundManager->serviceSounds();
+                SetFilePointer(g_videoFile1, g_videoHeader1[i].m_offset, 0,
                     FILE_BEGIN);
-                return SmackOpen(gVideoFile1,
+                return SmackOpen(g_videoFile1,
                     flags | extraFlags | SMACKOPEN_FROM_ARCHIVE, -1);
             }
         }
     }
 
-    for (i = 0; i < gVideoCount2; i++) {
-        if (_strcmpi(gVideoHeader2[i].name, name) == 0) {
-            gpSoundManager->service_sounds();
-            SetFilePointer(gVideoFile2, gVideoHeader2[i].offset, 0, FILE_BEGIN);
-            return SmackOpen(gVideoFile2,
+    for (i = 0; i < g_videoCount2; i++) {
+        if (_strcmpi(g_videoHeader2[i].m_name, name) == 0) {
+            g_soundManager->serviceSounds();
+            SetFilePointer(g_videoFile2, g_videoHeader2[i].m_offset, 0, FILE_BEGIN);
+            return SmackOpen(g_videoFile2,
                 flags | extraFlags | SMACKOPEN_FROM_ARCHIVE, -1);
         }
     }
 
-    if (gVideoFile3) {
-        for (i = 0; i < gVideoCount3; i++) {
-            if (_strcmpi(gVideoHeader3[i].name, name) == 0) {
-                gpSoundManager->service_sounds();
-                SetFilePointer(gVideoFile3, gVideoHeader3[i].offset, 0,
+    if (g_videoFile3) {
+        for (i = 0; i < g_videoCount3; i++) {
+            if (_strcmpi(g_videoHeader3[i].m_name, name) == 0) {
+                g_soundManager->serviceSounds();
+                SetFilePointer(g_videoFile3, g_videoHeader3[i].m_offset, 0,
                     FILE_BEGIN);
-                return SmackOpen(gVideoFile3,
+                return SmackOpen(g_videoFile3,
                     flags | extraFlags | SMACKOPEN_FROM_ARCHIVE, -1);
             }
         }
     }
 
-    if (*gpVideoGameState == VIDEO_GAME_STATE_FORCED_BINK_HIGH) {
-        for (i = 0; i < gVideoCount1; i++) {
-            if (_strcmpi(gVideoHeader1[i].name, name) == 0) {
-                gpSoundManager->service_sounds();
-                SetFilePointer(gVideoFile1, gVideoHeader1[i].offset, 0,
+    if (*g_videoGameState == VIDEO_GAME_STATE_FORCED_BINK_HIGH) {
+        for (i = 0; i < g_videoCount1; i++) {
+            if (_strcmpi(g_videoHeader1[i].m_name, name) == 0) {
+                g_soundManager->serviceSounds();
+                SetFilePointer(g_videoFile1, g_videoHeader1[i].m_offset, 0,
                     FILE_BEGIN);
-                return SmackOpen(gVideoFile1,
+                return SmackOpen(g_videoFile1,
                     flags | extraFlags | SMACKOPEN_FROM_ARCHIVE, -1);
             }
         }
@@ -892,42 +931,43 @@ Smack* OpenSmackerTrack(const char* stem, unsigned long flags,
 // proves the three unsigned masks, the shift-count pass followed by the
 // bit-count pass, and all six named globals. Retail independently preserves
 // that statement order and lowers it to this 0xA2-byte fastcall body.
+// Before normalization (locals): red_mask, green_mask, blue_mask.
 VA(0x00598a40, 0xA2)
-void SmackManager::SetPixelFormat(unsigned long red_mask,
-                                  unsigned long green_mask,
-                                  unsigned long blue_mask)
+void SmackManager::setPixelFormat(unsigned long redMask,
+                                  unsigned long greenMask,
+                                  unsigned long blueMask)
 {
-    RedShift = 0;
-    while (!(red_mask & 1) && red_mask) {
-        ++RedShift;
-        red_mask >>= 1;
+    g_redShift = 0;
+    while (!(redMask & 1) && redMask) {
+        ++g_redShift;
+        redMask >>= 1;
     }
-    RedBits = 0;
-    while (red_mask) {
-        ++RedBits;
-        red_mask >>= 1;
-    }
-
-    GreenShift = 0;
-    while (!(green_mask & 1) && green_mask) {
-        ++GreenShift;
-        green_mask >>= 1;
-    }
-    GreenBits = 0;
-    while (green_mask) {
-        ++GreenBits;
-        green_mask >>= 1;
+    g_redBits = 0;
+    while (redMask) {
+        ++g_redBits;
+        redMask >>= 1;
     }
 
-    BlueShift = 0;
-    while (!(blue_mask & 1) && blue_mask) {
-        ++BlueShift;
-        blue_mask >>= 1;
+    g_greenShift = 0;
+    while (!(greenMask & 1) && greenMask) {
+        ++g_greenShift;
+        greenMask >>= 1;
     }
-    BlueBits = 0;
-    while (blue_mask) {
-        ++BlueBits;
-        blue_mask >>= 1;
+    g_greenBits = 0;
+    while (greenMask) {
+        ++g_greenBits;
+        greenMask >>= 1;
+    }
+
+    g_blueShift = 0;
+    while (!(blueMask & 1) && blueMask) {
+        ++g_blueShift;
+        blueMask >>= 1;
+    }
+    g_blueBits = 0;
+    while (blueMask) {
+        ++g_blueBits;
+        blueMask >>= 1;
     }
 }
 
@@ -955,74 +995,74 @@ void SmackManager::SetPixelFormat(unsigned long red_mask,
 // VideoClose expanded all nested resume bodies (41.02%, standalone lost);
 // pasting the closes into ShowVideo scored 16.07. Those are not source fixes.
 VA(0x00598af0, 0x385)  // anchor-caller(VideoPlay/VideoOpen) + anchor-callee(OpenSmackerTrack), retail-only
-void ShowVideo(int id, int x, int y, int w, int h, int loop, int autoDraw,
+void showVideo(int id, int x, int y, int w, int h, int loop, int autoDraw,
                int advance)
 {
-    if (gUnnamed699290 == 0 && gpSoundManager->ds != 0
-        && gUnnamed698758.soundVolume != 0)
-        gVideoSoundReady = 1;
+    if (g_unnamed699290 == 0 && g_soundManager->m_ds != 0
+        && g_unnamed698758.m_soundVolume != 0)
+        g_videoSoundReady = 1;
     else
-        gVideoSoundReady = 0;
+        g_videoSoundReady = 0;
 
-    VideoClose();
+    videoClose();
     SmackUseMMX(1);
 
-    unsigned long trackMask = gVideoSoundReady ? SMACK_TRACK_MASK : 0;
+    unsigned long trackMask = g_videoSoundReady ? SMACK_TRACK_MASK : 0;
     unsigned long videoMode =
-        gVideoDescriptors[static_cast<unsigned char>(gVideoDescriptorIndex)].field_b
-            ? SMACKOPEN_AUDIO_ONLY : 0;
+        g_videoDescriptors[static_cast<unsigned char>(g_videoDescriptorIndex)].m_noFrameSkip
+            ? SMACKOPEN_NO_FRAME_SKIP : 0;
 
-    gSmackVideoId = id;
-    gSmackPaused = 0;
-    gSmackVideo2 = 0;
-    gSmackAdvance = static_cast<unsigned char>(advance);
-    gSmackBufferFlags = (GreenBits == VIDEO_PIXEL_FORMAT_RGB565)
+    g_smackVideoId = id;
+    g_smackPaused = 0;
+    g_smackVideo2 = 0;
+    g_smackAdvance = static_cast<unsigned char>(advance);
+    g_smackBufferFlags = (g_greenBits == VIDEO_PIXEL_FORMAT_RGB565)
                             ? SMACKBUFFER565 : SMACKBUFFER555;
 
-    if (gVideoDescriptors[id].smkAudioStem != "") {
-        gSmackVideo2 = OpenSmackerTrack(gVideoDescriptors[id].smkAudioStem,
-            trackMask, SMACKOPEN_AUDIO_ONLY);
-        if (!gSmackVideo2) {
-            VideoClose();
+    if (g_videoDescriptors[id].m_smkAudioStem != "") {
+        g_smackVideo2 = openSmackerTrack(g_videoDescriptors[id].m_smkAudioStem,
+            trackMask, SMACKOPEN_NO_FRAME_SKIP);
+        if (!g_smackVideo2) {
+            videoClose();
             return;
         }
-        SmackVolumePan(gSmackVideo2, SMACK_TRACK_MASK,
-            3640 * gUnnamed698758.soundVolume, 0x8000);
-        SmackToBuffer(gSmackVideo2, x, y,
-            gpWindowManager->screenBitmap->Pitch,
-            gpWindowManager->screenBitmap->Height,
-            gpWindowManager->screenBitmap->map, gSmackBufferFlags);
+        SmackVolumePan(g_smackVideo2, SMACK_TRACK_MASK,
+            3640 * g_unnamed698758.m_soundVolume, 0x8000);
+        SmackToBuffer(g_smackVideo2, x, y,
+            g_windowManager->m_screenBitmap->m_pitch,
+            g_windowManager->m_screenBitmap->m_height,
+            g_windowManager->m_screenBitmap->m_map, g_smackBufferFlags);
     }
 
-    gSmackVideo = OpenSmackerTrack(gVideoDescriptors[id].smkStem,
+    g_smackVideo = openSmackerTrack(g_videoDescriptors[id].m_smkStem,
         trackMask, videoMode);
-    if (!gSmackVideo) {
-        VideoClose();
+    if (!g_smackVideo) {
+        videoClose();
         return;
     }
 
-    gSmackAutoDraw = autoDraw;
+    g_smackAutoDraw = autoDraw;
     if (w <= 0)
-        w = gSmackVideo->Width;
+        w = g_smackVideo->m_width;
     if (h <= 0)
-        h = gSmackVideo->Height;
-    gSmackReqWidth = w;
-    gSmackReqHeight = h;
-    gSmackLoop = loop;
-    gSmackX = x;
-    gSmackY = y;
-    SmackVolumePan(gSmackVideo, SMACK_TRACK_MASK,
-        3640 * gUnnamed698758.soundVolume, 0x8000);
-    SmackToBuffer(gSmackVideo, gSmackX, gSmackY,
-        gpWindowManager->screenBitmap->Pitch,
-        gpWindowManager->screenBitmap->Height,
-        gpWindowManager->screenBitmap->map, gSmackBufferFlags);
-    if (gSmackVideo2)
-        SmackToBuffer(gSmackVideo2, gSmackX, gSmackY,
-            gpWindowManager->screenBitmap->Pitch,
-            gpWindowManager->screenBitmap->Height,
-            gpWindowManager->screenBitmap->map, gSmackBufferFlags);
-    gSmackFrameReady = 1;
+        h = g_smackVideo->m_height;
+    g_smackReqWidth = w;
+    g_smackReqHeight = h;
+    g_smackLoop = loop;
+    g_smackX = x;
+    g_smackY = y;
+    SmackVolumePan(g_smackVideo, SMACK_TRACK_MASK,
+        3640 * g_unnamed698758.m_soundVolume, 0x8000);
+    SmackToBuffer(g_smackVideo, g_smackX, g_smackY,
+        g_windowManager->m_screenBitmap->m_pitch,
+        g_windowManager->m_screenBitmap->m_height,
+        g_windowManager->m_screenBitmap->m_map, g_smackBufferFlags);
+    if (g_smackVideo2)
+        SmackToBuffer(g_smackVideo2, g_smackX, g_smackY,
+            g_windowManager->m_screenBitmap->m_pitch,
+            g_windowManager->m_screenBitmap->m_height,
+            g_windowManager->m_screenBitmap->m_map, g_smackBufferFlags);
+    g_smackFrameReady = 1;
 }
 
 // The three flat Smacker-track wrappers that close out smackmgr.obj.
@@ -1038,11 +1078,12 @@ namespace SmackManager {
 // (this and GotoSmackerFrame below) is what remote.obj's
 // CGameTransferSmack::SetPercentage seeks-and-draws with.
 // Name provisional: the DC roster stops at CloseSmacker.
+// Before normalization (function): SmackManager::DrawSmackerFrame.
 VA(0x00598e80, 0x25)  // anchor-callee(SmackDoFrame) + anchor-caller(CGameTransferSmack::SetPercentage), retail-only
-void DrawSmackerFrame()
+void drawSmackerFrame()
 {
-    if (gSmackVideo && gSmackFrameReady && !gSmackPaused)
-        SmackDoFrame(gSmackVideo);
+    if (g_smackVideo && g_smackFrameReady && !g_smackPaused)
+        SmackDoFrame(g_smackVideo);
 }
 
 // E:\gamedcs\smackmgr.cpp:1001. The per-frame pump VideoNextFrame drives.
@@ -1061,53 +1102,53 @@ void DrawSmackerFrame()
 // last-frame test as `>=` with the SmackNextFrame case in the trailing
 // `else` is what costs 14.8 - the `<` arm must come FIRST.
 VA(0x00598eb0, 0x193)  // anchor-caller(VideoNextFrame) + anchor-callee(SmackNextFrame), dc 0x14adfc
-void NextSmackerFrame()
+void nextSmackerFrame()
 {
-    Smack* smk = gSmackVideo;
+    Smack* smk = g_smackVideo;
     if (!smk)
-        smk = gSmackVideo2;
-    if (!smk || !gSmackFrameReady || SmackWait(smk) || !gSmackAdvance) {
-        gSmackDirty = 0;
+        smk = g_smackVideo2;
+    if (!smk || !g_smackFrameReady || SmackWait(smk) || !g_smackAdvance) {
+        g_smackDirty = 0;
         return;
     }
-    gSmackDirty = 1;
-    if (gSmackPaused)
+    g_smackDirty = 1;
+    if (g_smackPaused)
         return;
     SmackDoFrame(smk);
-    if (smk->FrameNum < smk->Frames - 1) {
+    if (smk->m_frameNum < smk->m_frames - 1) {
         SmackNextFrame(smk);
-    } else if (gSmackLoop) {
-        if (gSmackVideo && gSmackVideo2) {
-            if (gVideoDescriptors[gSmackVideoId].fadeOnAbort)
-                gpWindowManager->FadeScreen(1, 4, 0);
-            gpSoundManager->service_sounds();
-            SmackClose(gSmackVideo);
-            gSmackVideo = 0;
-            if (gVideoDescriptors[gSmackVideoId].field_9) {
-                SmackDoFrame(gSmackVideo2);
-                gpWindowManager->FadeScreen(0, 4, 0);
+    } else if (g_smackLoop) {
+        if (g_smackVideo && g_smackVideo2) {
+            if (g_videoDescriptors[g_smackVideoId].m_fadeOnAbort)
+                g_windowManager->fadeScreen(1, 4, 0);
+            g_soundManager->serviceSounds();
+            SmackClose(g_smackVideo);
+            g_smackVideo = 0;
+            if (g_videoDescriptors[g_smackVideoId].m_fadeInSecondTrack) {
+                SmackDoFrame(g_smackVideo2);
+                g_windowManager->fadeScreen(0, 4, 0);
             }
         } else {
             SmackNextFrame(smk);
         }
     } else {
-        if (gSmackVideo)
-            SmackClose(gSmackVideo);
-        if (gSmackVideo2)
-            SmackClose(gSmackVideo2);
-        gSmackVideo2 = 0;
-        gSmackVideo = 0;
-        gSmackPaused = 0;
-        gSmackFrameReady = 0;
-        gSmackDirty = 0;
-        if (gVideoDescriptors[gSmackVideoId].fadeOnAbort)
-            gpWindowManager->FadeScreen(1, 4, 0);
+        if (g_smackVideo)
+            SmackClose(g_smackVideo);
+        if (g_smackVideo2)
+            SmackClose(g_smackVideo2);
+        g_smackVideo2 = 0;
+        g_smackVideo = 0;
+        g_smackPaused = 0;
+        g_smackFrameReady = 0;
+        g_smackDirty = 0;
+        if (g_videoDescriptors[g_smackVideoId].m_fadeOnAbort)
+            g_windowManager->fadeScreen(1, 4, 0);
         else
-            gpWindowManager->UpdateScreen(0, 0, 0x320, 0x258);
+            g_windowManager->updateScreen(0, 0, 0x320, 0x258);
         return;
     }
-    if (gSmackAutoDraw)
-        VideoDrawRects();
+    if (g_smackAutoDraw)
+        videoDrawRects();
 }
 
 // E:\gamedcs\smackmgr.cpp:1074. VideoClose expands this body ahead of
@@ -1123,28 +1164,29 @@ void NextSmackerFrame()
 // made. The forward declaration joins the block smackmgr.cpp already keeps
 // for bodies whose first in-TU call site precedes them.
 VA(0x00599050, 0x43)  // anchor-caller(~CGameTransferSmack) + inlined-in VideoClose, dc 0x14ae00
-void CloseSmacker()
+void closeSmacker()
 {
-    if (gSmackVideo)
-        SmackClose(gSmackVideo);
-    if (gSmackVideo2)
-        SmackClose(gSmackVideo2);
-    gSmackVideo2 = 0;
-    gSmackVideo = 0;
-    gSmackPaused = 0;
-    gSmackFrameReady = 0;
-    gSmackDirty = 0;
+    if (g_smackVideo)
+        SmackClose(g_smackVideo);
+    if (g_smackVideo2)
+        SmackClose(g_smackVideo2);
+    g_smackVideo2 = 0;
+    g_smackVideo = 0;
+    g_smackPaused = 0;
+    g_smackFrameReady = 0;
+    g_smackDirty = 0;
 }
 
 // Seek the video track. Fastcall: the frame index arrives in ECX and
 // is pushed straight through to SmackGoto, so the wrapper takes one
 // argument and returns with a bare `ret`.
 // Name provisional: the DC roster stops at CloseSmacker.
+// Before normalization (function): SmackManager::GotoSmackerFrame.
 VA(0x005990a0, 0x1C)  // anchor-callee(SmackGoto) + anchor-caller(CGameTransferSmack::SetPercentage), retail-only
-void GotoSmackerFrame(unsigned long frame)
+void gotoSmackerFrame(unsigned long frame)
 {
-    if (gSmackVideo && gSmackFrameReady)
-        SmackGoto(gSmackVideo, frame);
+    if (g_smackVideo && g_smackFrameReady)
+        SmackGoto(g_smackVideo, frame);
 }
 
 }  // namespace SmackManager
@@ -1153,7 +1195,7 @@ void GotoSmackerFrame(unsigned long frame)
 
 // E:\gamedcs\smackmgr.cpp:569
 DC_ONLY(0x14ac6c, 0x32)
-void DeleteAnimHeaders()
+void deleteAnimHeaders()
 {
     // @stub
 }

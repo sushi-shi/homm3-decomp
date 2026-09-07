@@ -26,10 +26,12 @@ static __forceinline long ftol(double d)
     return *static_cast<long*>(static_cast<void*>(&d));
 }
 
-static inline void RGBToHSV(unsigned int r, unsigned int g,
+// Before normalization (function): RGBToHSV.
+static inline void rgbToHSV(unsigned int r, unsigned int g,
                             unsigned int b, float* h, float* s, float* v)
 {
-    static const float red_hue = 0.0f;
+    // Before normalization (locals): red_hue.
+    static const float redHue = 0.0f;
 
     const unsigned int max =
         (r > g ? r : g) > b ? (r > g ? r : g) : b;
@@ -49,7 +51,7 @@ static inline void RGBToHSV(unsigned int r, unsigned int g,
                    static_cast<float>(max - min);
 
         if (r == max) {
-            *h = (bc - gc) / 6.0f + red_hue;
+            *h = (bc - gc) / 6.0f + redHue;
         } else if (g == max) {
             *h = (rc - bc) / 6.0f + 1.0f / 3.0f;
         } else {
@@ -63,7 +65,8 @@ static inline void RGBToHSV(unsigned int r, unsigned int g,
     }
 }
 
-static inline void HSVToRGB(float h, float s, float v,
+// Before normalization (function): HSVToRGB.
+static inline void hsvToRGB(float h, float s, float v,
                             unsigned int* r, unsigned int* g, unsigned int* b)
 {
     if (s != 0.0f) {
@@ -165,28 +168,28 @@ void Bitmap24Bit::clear()
 
 // E:\gamedcs\bitmap24.cpp:274
 DC_ONLY(0x528f8, 0x70)
-void Bitmap24Bit::Draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx, int dy)
+void Bitmap24Bit::draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx, int dy)
 {
     // @stub
 }
 
 // E:\gamedcs\bitmap24.cpp:349
 DC_ONLY(0x52aa8, 0x424)
-void Bitmap24Bit::AdjustHSV(int x, int y, int w, int h, float hue, float hue_adjust, float saturation_adjust, float value_adjust)
+void Bitmap24Bit::adjustHSV(int x, int y, int w, int h, float hue, float hue_adjust, float saturation_adjust, float value_adjust)
 {
     // @stub
 }
 
 // E:\gamedcs\bitmap24.cpp:446
 DC_ONLY(0x52ecc, 0x1B6)
-void RGBToHSV(unsigned r, unsigned g, unsigned b, float* h, float* s, float* v)
+void rgbToHSV(unsigned r, unsigned g, unsigned b, float* h, float* s, float* v)
 {
     // @stub
 }
 
 // E:\gamedcs\bitmap24.cpp:481
 DC_ONLY(0x53084, 0x32C)
-void HSVToRGB(float h, float s, float v, unsigned* r, unsigned* g, unsigned* b)
+void hsvToRGB(float h, float s, float v, unsigned* r, unsigned* g, unsigned* b)
 {
     // @stub
 }
@@ -213,12 +216,12 @@ VA(0x0044ed50, 0xAA)
 Bitmap24Bit::Bitmap24Bit(const char* name, int w, int h,
                          const unsigned char* source, int size)
     : resource(name, RESOURCE_TYPE_BITMAP24),
-      ImageSize(w * h * 3), Width(w), Height(h)
+      m_imageSize(w * h * 3), m_width(w), m_height(h)
 {
-    DataSize = size ? size : ImageSize;
-    data = new unsigned char[DataSize];
-    if (data)
-        memcpy(data, source, DataSize);
+    m_dataSize = size ? size : m_imageSize;
+    m_data = new unsigned char[m_dataSize];
+    if (m_data)
+        memcpy(m_data, source, m_dataSize);
 }
 
 // Dreamcast CodeView gives filename's array type as exactly char[261]
@@ -227,7 +230,7 @@ Bitmap24Bit::Bitmap24Bit(const char* name, int w, int h,
 VA(0x0044ee00, 0xC0)
 Bitmap24Bit::Bitmap24Bit(const char* name, const char* path)
     : resource(name, RESOURCE_TYPE_BITMAP24),
-      DataSize(0), ImageSize(0), Width(0), Height(0), data(0)
+      m_dataSize(0), m_imageSize(0), m_width(0), m_height(0), m_data(0)
 {
     char filename[261];
     strcpy(filename, path);
@@ -238,8 +241,8 @@ Bitmap24Bit::Bitmap24Bit(const char* name, const char* path)
 VA(0x0044eec0, 0x22)
 Bitmap24Bit::~Bitmap24Bit()
 {
-    if (data)
-        delete[] data;
+    if (m_data)
+        delete[] m_data;
 }
 
 // E:\gamedcs\bitmap24.cpp:225. The DC dossier proves the PcxData/imgdes
@@ -257,23 +260,23 @@ int Bitmap24Bit::importPCXFile(const char* filename)
     if (error)
         return 1;
 
-    Width = pdat.width;
-    Height = pdat.length;
-    ImageSize = Width * Height * 3;
-    DataSize = ImageSize;
-    data = new unsigned char[ImageSize];
-    if (!data)
+    m_width = pdat.m_width;
+    m_height = pdat.m_length;
+    m_imageSize = m_width * m_height * 3;
+    m_dataSize = m_imageSize;
+    m_data = new unsigned char[m_imageSize];
+    if (!m_data)
         return 2;
 
-    allocimage(&pcxfile, pdat.width, pdat.length,
-               pdat.BPPixel * pdat.Nplanes);
+    allocimage(&pcxfile, pdat.m_width, pdat.m_length,
+               pdat.m_bpPixel * pdat.m_nplanes);
     loadpcx(filename, &pcxfile);
     flipimage(&pcxfile, &pcxfile);
 
-    for (int y = 0; y < Height; ++y) {
-        memcpy(data + y * Width * 3,
-               pcxfile.ibuff + y * pcxfile.buffwidth,
-               Width * 3);
+    for (int y = 0; y < m_height; ++y) {
+        memcpy(m_data + y * m_width * 3,
+               pcxfile.m_ibuff + y * pcxfile.m_buffwidth,
+               m_width * 3);
     }
 
     freeimage(&pcxfile);
@@ -281,11 +284,11 @@ int Bitmap24Bit::importPCXFile(const char* filename)
 }
 
 VA(0x0044efd0, 0x37)
-void Bitmap24Bit::Draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst,
+void Bitmap24Bit::draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst,
                        int dx, int dy) const
 {
-    Draw(sx, sy, sw, sh, dst->map, dx, dy,
-         dst->Width, dst->Height, dst->Pitch);
+    draw(sx, sy, sw, sh, dst->m_map, dx, dy,
+         dst->m_width, dst->m_height, dst->m_pitch);
 }
 
 // E:\gamedcs\bitmap24.cpp:280. Dreamcast proves the clipped rectangle,
@@ -294,7 +297,7 @@ void Bitmap24Bit::Draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst,
 // channel conversion and brackets this 353-byte body immediately after the
 // Bitmap16Bit wrapper above.
 VA(0x0044f010, 0x161)  // source-order bracket + RGB mask/data flow, dc 0x52968
-void Bitmap24Bit::Draw(int sx, int sy, int sw, int sh, unsigned short* dst,
+void Bitmap24Bit::draw(int sx, int sy, int sw, int sh, unsigned short* dst,
                        int dx, int dy, int dw, int dh, int dpitch) const
 {
     if (dx < 0) {
@@ -313,27 +316,27 @@ void Bitmap24Bit::Draw(int sx, int sy, int sw, int sh, unsigned short* dst,
         sh = dh - dy;
 
     if (sw > 0 && sh > 0) {
-        unsigned char* src = data + sy * GetPitch() + sx * 3;
+        unsigned char* src = m_data + sy * getPitch() + sx * 3;
         dst = static_cast<unsigned short*>(static_cast<void*>(
             static_cast<unsigned char*>(static_cast<void*>(dst))
             + dy * dpitch + dx * 2));
         // Complete's x86 relocation and byte schedule require this later-
         // revision declaration order. It retains all three DC-named scale
         // locals while assigning bm1/rm1/gm1 to retail's ESI/stack/EBX roles.
-        unsigned int bm1 = (gColorMaskBlue << 1) & ~gColorMaskBlue;
-        unsigned int gm1 = (gColorMaskGreen << 1) & ~gColorMaskGreen;
-        unsigned int rm1 = (gColorMaskRed << 1) & ~gColorMaskRed;
+        unsigned int bm1 = (g_colorMaskBlue << 1) & ~g_colorMaskBlue;
+        unsigned int gm1 = (g_colorMaskGreen << 1) & ~g_colorMaskGreen;
+        unsigned int rm1 = (g_colorMaskRed << 1) & ~g_colorMaskRed;
 
         for (int y = 0; y < sh; ++y) {
             unsigned char* in = src;
             unsigned short* out = dst;
             for (int x = 0; x < sw; ++x) {
                 unsigned int red =
-                    ((in[0] * rm1) >> 8) & gColorMaskRed;
+                    ((in[0] * rm1) >> 8) & g_colorMaskRed;
                 unsigned int green =
-                    ((in[1] * gm1) >> 8) & gColorMaskGreen;
+                    ((in[1] * gm1) >> 8) & g_colorMaskGreen;
                 unsigned int blue =
-                    ((in[2] * bm1) >> 8) & gColorMaskBlue;
+                    ((in[2] * bm1) >> 8) & g_colorMaskBlue;
                 // The operands are commutative; this grouping is retail's
                 // exact red/blue/green source-load schedule under VC6 C1.
                 *out++ = static_cast<unsigned short>(red | blue | green);
@@ -342,7 +345,7 @@ void Bitmap24Bit::Draw(int sx, int sy, int sw, int sh, unsigned short* dst,
             dst = static_cast<unsigned short*>(static_cast<void*>(
                 static_cast<unsigned char*>(static_cast<void*>(dst))
                 + dpitch));
-            src += GetPitch();
+            src += getPitch();
         }
     }
 }
@@ -351,9 +354,9 @@ void Bitmap24Bit::Draw(int sx, int sy, int sw, int sh, unsigned short* dst,
 // byte count at +0x1c, and the destructor plus constructor tail close the
 // fixed object extent at 0x30.
 VA(0x0044f180, 0x7)
-unsigned int Bitmap24Bit::GetSize() const
+unsigned int Bitmap24Bit::getSize() const
 {
-    return DataSize + sizeof(Bitmap24Bit);
+    return m_dataSize + sizeof(Bitmap24Bit);
 }
 
 // E:\gamedcs\bitmap24.cpp:349. Dreamcast proves the three normalization
@@ -366,70 +369,72 @@ unsigned int Bitmap24Bit::GetSize() const
 // control with named float/double union temporaries expands the frame from
 // retail's 0x60 to 0xec and falls to 99.57085%.
 VA(0x0044f190, 0x5F8)  // source-order bracket + inlined HSV helpers, dc 0x52aa8
-void Bitmap24Bit::AdjustHSV(int x, int y, int w, int h, float hue,
-                            float hue_adjust, float saturation_adjust,
-                            float value_adjust)
+void Bitmap24Bit::adjustHSV(int x, int y, int w, int h, float hue,
+                            // Before normalization (locals): hue_adjust, saturation_adjust,
+                            // value_adjust, red_norm, green_norm, blue_norm.
+                            float hueAdjust, float saturationAdjust,
+                            float valueAdjust)
 {
-    const unsigned int red_norm =
+    const unsigned int redNorm =
         std::numeric_limits<int>::max() / 255;
-    const unsigned int green_norm =
+    const unsigned int greenNorm =
         std::numeric_limits<int>::max() / 255;
-    const unsigned int blue_norm =
+    const unsigned int blueNorm =
         std::numeric_limits<int>::max() / 255;
 
-    unsigned char* src = data + y * GetPitch() + x * 3;
+    unsigned char* src = m_data + y * getPitch() + x * 3;
     for (int row = 0; row < h; ++row) {
         unsigned char* pixel = src;
         for (int column = 0; column < w; ++column) {
-            unsigned int r = pixel[2] * red_norm;
-            unsigned int g = pixel[1] * green_norm;
-            unsigned int b = pixel[0] * blue_norm;
+            unsigned int r = pixel[2] * redNorm;
+            unsigned int g = pixel[1] * greenNorm;
+            unsigned int b = pixel[0] * blueNorm;
 
             float h;
             float s;
             float v;
-            RGBToHSV(r, g, b, &h, &s, &v);
+            rgbToHSV(r, g, b, &h, &s, &v);
 
-            if (hue_adjust >= 0.0f) {
+            if (hueAdjust >= 0.0f) {
                 float delta = hue - h;
-                h += delta * hue_adjust;
+                h += delta * hueAdjust;
                 if (fabs(delta) > 0.5) {
                     if (delta > 0.0) {
-                        h += 1.0f - hue_adjust;
+                        h += 1.0f - hueAdjust;
                     } else {
-                        h += hue_adjust;
+                        h += hueAdjust;
                     }
                     if (h >= 1.0)
                         h -= 1.0;
                 }
             }
 
-            if (value_adjust >= 0.0) {
-                if (value_adjust <= 1.0f) {
-                    v *= value_adjust;
+            if (valueAdjust >= 0.0) {
+                if (valueAdjust <= 1.0f) {
+                    v *= valueAdjust;
                 } else {
-                    v = 1.0f - (1.0f - v) / value_adjust;
+                    v = 1.0f - (1.0f - v) / valueAdjust;
                 }
             }
 
-            if (saturation_adjust >= 0.0f) {
-                if (saturation_adjust <= 1.0f) {
-                    s *= saturation_adjust;
+            if (saturationAdjust >= 0.0f) {
+                if (saturationAdjust <= 1.0f) {
+                    s *= saturationAdjust;
                 } else if (v > 0.75 && s < 0.25) {
-                    s = (1.0f - v) * s * saturation_adjust * 4.0f;
+                    s = (1.0f - v) * s * saturationAdjust * 4.0f;
                 } else {
-                    s = 1.0f - (1.0f - s) / saturation_adjust;
+                    s = 1.0f - (1.0f - s) / saturationAdjust;
                 }
             }
 
-            HSVToRGB(h, s, v, &r, &g, &b);
+            hsvToRGB(h, s, v, &r, &g, &b);
 
-            pixel[2] = static_cast<unsigned char>(r / red_norm);
-            pixel[1] = static_cast<unsigned char>(g / green_norm);
-            pixel[0] = static_cast<unsigned char>(b / blue_norm);
+            pixel[2] = static_cast<unsigned char>(r / redNorm);
+            pixel[1] = static_cast<unsigned char>(g / greenNorm);
+            pixel[0] = static_cast<unsigned char>(b / blueNorm);
             pixel += 3;
         }
-        src += GetPitch();
+        src += getPitch();
     }
 }
 

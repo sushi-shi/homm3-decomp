@@ -23,17 +23,20 @@ namespace {
 // Column 2 of artraits.txt names the final physical slot, while column 20
 // names slot zero. The one exception is column 7, the two-handed weapon
 // class (slot 18), which sits between slots 13 and 12 in the file.
+// Before normalization: kArtifactSlotColumnBits.
 DATA(0x0063b940)
-static const int kArtifactSlotColumnBits[19] = {
+static const int g_artifactSlotColumnBits[19] = {
     17, 16, 15, 14, 13, 18, 12, 11, 10, 9,
     8, 7, 6, 5, 4, 3, 2, 1, 0
 };
 
+// Before normalization: kDisabledArtifacts.
 DATA(0x0063b98c)
-static const int kDisabledArtifacts[3] = { 141, 142, 143 };
+static const int g_disabledArtifacts[3] = { 141, 142, 143 };
 
+// Before normalization: kSpellGivingArtifacts.
 DATA(0x0063b998)
-static const int kSpellGivingArtifacts[9] = {
+static const int g_spellGivingArtifacts[9] = {
     1, 128, 123, 124, 86, 87, 88, 89, 135
 };
 
@@ -41,11 +44,13 @@ static const int kSpellGivingArtifacts[9] = {
 // at 0x44c700..0x44cd4f. Their storage and source initializers are a separate
 // admission; declaring the byte-proven addresses here makes this function's
 // data references authoritative without pretending the cinits are claims.
+// Before normalization: aArtifactTraits.
 DATA(0x006939f8)
-static TArtifactTraits aArtifactTraits[144];
+static TArtifactTraits g_artifactTraitsStorage[144];
 
+// Before normalization: aArtifactSlotTraits.
 DATA(0x00694bf8)
-static TArtifactSlotTraits aArtifactSlotTraits[19];
+static TArtifactSlotTraits g_artifactSlotTraitsStorage[19];
 
 } // namespace
 
@@ -74,8 +79,9 @@ static TArtifactSlotTraits aArtifactSlotTraits[19];
 // bounds check or sank the throw after the epilogue. The old diagnosis
 // that the EH frame was solely an inliner consequence was wrong: the
 // retail try-block map independently proves the missing catch scope.
+// Before normalization (function): MakeArtifactSlotMask.
 VA(0x0044c720, 0x10B)  // anchor-callee the aArtifactSlotMasks cinit's 14 calls, retail-only file static
-static std::bitset<19> MakeArtifactSlotMask(unsigned count, ...)
+static std::bitset<19> makeArtifactSlotMask(unsigned count, ...)
 {
     std::bitset<19> mask;
     va_list slots;
@@ -93,8 +99,9 @@ static std::bitset<19> MakeArtifactSlotMask(unsigned count, ...)
     return mask;
 }
 
+// Before normalization (function): MakeArtifactComponentMask.
 VA(0x0044c830, 0x122)  // anchor-callee the aCombinationArtifacts cinit's 12 calls, retail-only file static
-static std::bitset<144> MakeArtifactComponentMask(unsigned count, ...)
+static std::bitset<144> makeArtifactComponentMask(unsigned count, ...)
 {
     std::bitset<144> mask;
     va_list components;
@@ -119,26 +126,26 @@ static std::bitset<144> MakeArtifactComponentMask(unsigned count, ...)
 // 0x6938d8 + 24*i by a six-dword `rep movsd`, which is the record's own
 // two-argument constructor inlined plus its implicit copy.
 DATA(0x006938d8)
-const TCombinationArtifact aCombinationArtifacts[12] = {
+const TCombinationArtifact g_combinationArtifactTable[12] = {
     TCombinationArtifact(0x81,
-        MakeArtifactComponentMask(6, 0x24, 0x21, 0x23, 0x1f, 0x20, 0x22)),
-    TCombinationArtifact(0x82, MakeArtifactComponentMask(3, 0x36, 0x37, 0x38)),
-    TCombinationArtifact(0x83, MakeArtifactComponentMask(3, 0x5f, 0x60, 0x5e)),
+        makeArtifactComponentMask(6, 0x24, 0x21, 0x23, 0x1f, 0x20, 0x22)),
+    TCombinationArtifact(0x82, makeArtifactComponentMask(3, 0x36, 0x37, 0x38)),
+    TCombinationArtifact(0x83, makeArtifactComponentMask(3, 0x5f, 0x60, 0x5e)),
     TCombinationArtifact(0x84,
-        MakeArtifactComponentMask(4, 0x14, 0x08, 0x1a, 0x0e)),
+        makeArtifactComponentMask(4, 0x14, 0x08, 0x1a, 0x0e)),
     TCombinationArtifact(0x85,
-        MakeArtifactComponentMask(5, 0x76, 0x77, 0x78, 0x79, 0x7a)),
+        makeArtifactComponentMask(5, 0x76, 0x77, 0x78, 0x79, 0x7a)),
     TCombinationArtifact(0x86,
-        MakeArtifactComponentMask(9, 0x2c, 0x2b, 0x2a, 0x26, 0x27,
+        makeArtifactComponentMask(9, 0x2c, 0x2b, 0x2a, 0x26, 0x27,
                                   0x25, 0x2d, 0x29, 0x28)),
     TCombinationArtifact(0x87,
-        MakeArtifactComponentMask(4, 0x18, 0x0c, 0x1e, 0x12)),
-    TCombinationArtifact(0x88, MakeArtifactComponentMask(2, 0x7b, 0x47)),
-    TCombinationArtifact(0x89, MakeArtifactComponentMask(3, 0x3c, 0x3d, 0x3e)),
-    TCombinationArtifact(0x8a, MakeArtifactComponentMask(3, 0x49, 0x4a, 0x4b)),
-    TCombinationArtifact(0x8b, MakeArtifactComponentMask(3, 0x4c, 0x4e, 0x4d)),
+        makeArtifactComponentMask(4, 0x18, 0x0c, 0x1e, 0x12)),
+    TCombinationArtifact(0x88, makeArtifactComponentMask(2, 0x7b, 0x47)),
+    TCombinationArtifact(0x89, makeArtifactComponentMask(3, 0x3c, 0x3d, 0x3e)),
+    TCombinationArtifact(0x8a, makeArtifactComponentMask(3, 0x49, 0x4a, 0x4b)),
+    TCombinationArtifact(0x8b, makeArtifactComponentMask(3, 0x4c, 0x4e, 0x4d)),
     TCombinationArtifact(0x8c,
-        MakeArtifactComponentMask(4, 0x6f, 0x6d, 0x6e, 0x71)),
+        makeArtifactComponentMask(4, 0x6f, 0x6d, 0x6e, 0x71)),
 };
 
 // The fifteen allowable-slot classes InitializeArtifactTraitsTable searches
@@ -148,32 +155,32 @@ const TCombinationArtifact aCombinationArtifacts[12] = {
 // multi-slot classes are the ring pair (6, 7) and the misc/backpack group
 // (9, 10, 11, 12, 18).
 DATA(0x00693898)
-const std::bitset<19> aArtifactSlotMasks[15] = {
+const std::bitset<19> g_artifactSlotMasks[15] = {
     std::bitset<19>(),
-    MakeArtifactSlotMask(1, 0),
-    MakeArtifactSlotMask(1, 1),
-    MakeArtifactSlotMask(1, 2),
-    MakeArtifactSlotMask(1, 3),
-    MakeArtifactSlotMask(1, 4),
-    MakeArtifactSlotMask(1, 5),
-    MakeArtifactSlotMask(2, 6, 7),
-    MakeArtifactSlotMask(1, 8),
-    MakeArtifactSlotMask(5, 9, 10, 11, 12, 18),
-    MakeArtifactSlotMask(1, 13),
-    MakeArtifactSlotMask(1, 14),
-    MakeArtifactSlotMask(1, 15),
-    MakeArtifactSlotMask(1, 16),
-    MakeArtifactSlotMask(1, 17),
+    makeArtifactSlotMask(1, 0),
+    makeArtifactSlotMask(1, 1),
+    makeArtifactSlotMask(1, 2),
+    makeArtifactSlotMask(1, 3),
+    makeArtifactSlotMask(1, 4),
+    makeArtifactSlotMask(1, 5),
+    makeArtifactSlotMask(2, 6, 7),
+    makeArtifactSlotMask(1, 8),
+    makeArtifactSlotMask(5, 9, 10, 11, 12, 18),
+    makeArtifactSlotMask(1, 13),
+    makeArtifactSlotMask(1, 14),
+    makeArtifactSlotMask(1, 15),
+    makeArtifactSlotMask(1, 16),
+    makeArtifactSlotMask(1, 17),
 };
 
 DATA(0x00660b64)
-const TArtifactSlotTraits* akArtifactSlotTraits = aArtifactSlotTraits;
+const TArtifactSlotTraits* g_artifactSlotTraits = g_artifactSlotTraitsStorage;
 
 DATA(0x00660b68)
-const TArtifactTraits* akArtifactTraits = aArtifactTraits;
+const TArtifactTraits* g_artifactTraits = g_artifactTraitsStorage;
 
 DATA(0x00660b6c)
-const TCombinationArtifact* gCombinationArtifacts = aCombinationArtifacts;
+const TCombinationArtifact* g_combinationArtifacts = g_combinationArtifactTable;
 
 // E:\gamedcs\artifact.cpp:56
 // Retail requires 146 rows (two headers plus 144 artifacts), packs every
@@ -371,14 +378,14 @@ const TCombinationArtifact* gCombinationArtifacts = aCombinationArtifacts;
 // in both loops does not compile under VC6's old for-scope rule (C2374).
 // The shipped 80.5129 spelling stands.
 VA(0x0044cd50, 0x5E8)  // anchor-strings/caller, dc 0x4fec0
-unsigned char InitializeArtifactTraitsTable()
+unsigned char initializeArtifactTraitsTable()
 {
     {
         TResourcePtr<TSpreadsheetResource> traitsSheet(
-            ResourceManager::GetSpreadsheet(
+            ResourceManager::getSpreadsheet(
                 DATA_COMPGEN(0x00660b80, artifactTraitsSpreadsheetName,
                              "artraits.txt")));
-        if (!traitsSheet.get() || traitsSheet->GetNumberOfRows() < 146) {
+        if (!traitsSheet.get() || traitsSheet->getNumberOfRows() < 146) {
             HOMM3_ARTIFACT_RELEASE_DIAGNOSTIC();
             return 0;
         }
@@ -386,8 +393,8 @@ unsigned char InitializeArtifactTraitsTable()
         unsigned stringBytes = 0;
         int row;
         for (row = 2; row < 146; ++row) {
-            stringBytes += strlen(traitsSheet->GetRow(row)[22])
-                + strlen(traitsSheet->GetRow(row)[0]) + 2;
+            stringBytes += strlen(traitsSheet->getRow(row)[22])
+                + strlen(traitsSheet->getRow(row)[0]) + 2;
         }
 
         DATA_COMPGEN_GUARD(0x006938d4, artifactStringsGuard, artifactStrings)
@@ -400,82 +407,82 @@ unsigned char InitializeArtifactTraitsTable()
         char* destination = artifactStrings.get();
         for (row = 2; row < 146; ++row) {
             const TSpreadsheetResource::TStringVector& values =
-                traitsSheet->GetRow(row);
-            TArtifactTraits& traits = aArtifactTraits[row - 2];
+                traitsSheet->getRow(row);
+            TArtifactTraits& traits = g_artifactTraitsStorage[row - 2];
 
             const char* source = values[0];
             unsigned length = strlen(source) + 1;
             memcpy(destination, source, length);
-            traits.name = destination;
+            traits.m_name = destination;
             destination += length;
 
             source = values[22];
             length = strlen(source) + 1;
             memcpy(destination, source, length);
-            traits.description = destination;
+            traits.m_description = destination;
             destination += length;
 
-            traits.cost = atoi(values[1]);
+            traits.m_cost = atoi(values[1]);
             std::bitset<19> allowableSlots;
             int column;
             for (column = 2; column < 21; ++column) {
-                int bit = kArtifactSlotColumnBits[column - 2];
+                int bit = g_artifactSlotColumnBits[column - 2];
                 bool allowed = values[column][0] != 0
                     && values[column][0] != ' ';
                 allowableSlots[bit] = allowed;
             }
             int mask = 0;
-            while (allowableSlots != aArtifactSlotMasks[mask])
+            while (allowableSlots != g_artifactSlotMasks[mask])
                 ++mask;
-            traits.allowableSlotMask = mask;
+            traits.m_allowableSlotMask = mask;
 
             const char* classCell = values[21];
             char artifactClass = classCell[0];
             if (artifactClass == 'R')
-                traits.artifactClass = 16;
+                traits.m_artifactClass = 16;
             else if (artifactClass == 'J')
-                traits.artifactClass = 8;
+                traits.m_artifactClass = 8;
             else if (artifactClass == 'N')
-                traits.artifactClass = 4;
+                traits.m_artifactClass = 4;
             else if (artifactClass == 'T')
-                traits.artifactClass = 2;
+                traits.m_artifactClass = 2;
             else
-                traits.artifactClass = 1;
-            traits.disabled = 0;
-            traits.comboType = -1;
-            traits.targetCombo = -1;
-            traits.givesSpells = 0;
+                traits.m_artifactClass = 1;
+            traits.m_disabled = 0;
+            traits.m_comboType = -1;
+            traits.m_targetCombo = -1;
+            traits.m_givesSpells = 0;
         }
     }
 
     int artifactId;
     for (artifactId = 0; artifactId < 3; ++artifactId)
-        aArtifactTraits[kDisabledArtifacts[artifactId]].disabled = 1;
+        g_artifactTraitsStorage[g_disabledArtifacts[artifactId]].m_disabled = 1;
     for (artifactId = 0; artifactId < 9; ++artifactId)
-        aArtifactTraits[kSpellGivingArtifacts[artifactId]].givesSpells = 1;
+        g_artifactTraitsStorage[g_spellGivingArtifacts[artifactId]].m_givesSpells = 1;
 
     int combo;
     for (combo = 0; combo < 12; ++combo) {
         const TCombinationArtifact& combination =
-            gCombinationArtifacts[combo];
+            g_combinationArtifacts[combo];
         TArtifactTraits& assembled =
-            aArtifactTraits[combination.artifactId];
-        assembled.comboType = combo;
-        assembled.cost = 0;
+            g_artifactTraitsStorage[combination.m_artifactId];
+        assembled.m_comboType = combo;
+        assembled.m_cost = 0;
         for (artifactId = 0; artifactId < 144; ++artifactId) {
-            if (combination.components[artifactId]) {
-                aArtifactTraits[artifactId].targetCombo = combo;
-                assembled.cost += aArtifactTraits[artifactId].cost;
+            if (combination.m_components[artifactId]) {
+                g_artifactTraitsStorage[artifactId].m_targetCombo = combo;
+                assembled.m_cost += g_artifactTraitsStorage[artifactId].m_cost;
             }
         }
     }
 
     {
         TResourcePtr<TSpreadsheetResource> slotsSheet(
-            ResourceManager::GetSpreadsheet(
+            ResourceManager::getSpreadsheet(
                 DATA_COMPGEN(0x00660b70, artifactSlotsSpreadsheetName,
                              "artslots.txt")));
-        if (!slotsSheet.get() || slotsSheet->GetNumberOfRows() < 19) {
+        if (!slotsSheet.get() || slotsSheet->getNumberOfRows() < 19) {
             HOMM3_ARTIFACT_RELEASE_DIAGNOSTIC();
             return 0;
         }
@@ -483,7 +490,7 @@ unsigned char InitializeArtifactTraitsTable()
         unsigned stringBytes = 0;
         int slot;
         for (slot = 0; slot < 19; ++slot)
-            stringBytes += strlen(slotsSheet->GetRow(slot)[0]) + 1;
+            stringBytes += strlen(slotsSheet->getRow(slot)[0]) + 1;
 
         VA_COMPGEN(0x0044d340, 0x16, STATIC_DTOR, artifactSlotStrings)
         DATA(0x00694c98)
@@ -493,16 +500,16 @@ unsigned char InitializeArtifactTraitsTable()
 
         char* destination = artifactSlotStrings.get();
         for (slot = 0; slot < 19; ++slot) {
-            const char* source = slotsSheet->GetRow(slot)[0];
+            const char* source = slotsSheet->getRow(slot)[0];
             unsigned length = strlen(source) + 1;
             memcpy(destination, source, length);
-            aArtifactSlotTraits[slot].name = destination;
+            g_artifactSlotTraitsStorage[slot].m_name = destination;
             destination += length;
 
             int mask = 0;
-            while (!aArtifactSlotMasks[mask].test(slot))
+            while (!g_artifactSlotMasks[mask].test(slot))
                 ++mask;
-            aArtifactSlotTraits[slot].type = mask;
+            g_artifactSlotTraitsStorage[slot].m_type = mask;
         }
     }
     return 1;
@@ -519,14 +526,14 @@ void InitializeArtifactTraits(int id, const std::vector<char* resource)
 
 // E:\gamedcs\TextResource.h:108
 DC_ONLY(0x5088c, 0x18)
-int TSpreadsheetResource::GetNumberOfRows()
+int TSpreadsheetResource::getNumberOfRows()
 {
     // @stub
 }
 
 // E:\gamedcs\TextResource.h:128
 DC_ONLY(0x508a4, 0x18)
-const std::vector<char* TSpreadsheetResource::GetRow(int r)
+const std::vector<char* TSpreadsheetResource::getRow(int r)
 {
     // @stub
 }

@@ -52,8 +52,8 @@ public:
     // unsigned long result, and VC6 refuses static_cast between
     // pointer and integer while the reinterpret_cast floor stands at 0.
     union {
-        void* m_hFile;
-        unsigned long m_hFileValue;
+        void* m_file;
+        unsigned long m_fileValue;
     };
 
     File();
@@ -61,41 +61,71 @@ public:
 
     // Defined inline in winfile.cpp: no retail body, it survives only
     // inlined into Delete and Open as `_access(sFilename, 0) == 0`.
-    static unsigned char Exists(const char* sFilename);
-    static unsigned char Delete(const char* sFilename);
-    unsigned char Rename(char* sOldName, char* sNewName);                      // dc 0x198508, no retail body
-    unsigned char SetAttribute(char* sFilename, FileAttribute fileAttribute);  // dc 0x198544, no retail body
-    FileAttribute GetAttribute(char* sFilename);                               // dc 0x198548, no retail body
+    // Before normalization (function): File::Exists.
+    // Before normalization (locals): sFilename.
+    static unsigned char exists(const char* filename);
+    // Before normalization (function): File::Delete.
+    // Before normalization (locals): sFilename.
+    static unsigned char deleteFile(const char* filename);
+    // Before normalization (function): File::Rename.
+    // Before normalization (locals): sOldName, sNewName.
+    unsigned char rename(char* oldName, char* newName);                      // dc 0x198508, no retail body
+    // Before normalization (function): File::SetAttribute.
+    // Before normalization (locals): sFilename.
+    unsigned char setAttribute(char* filename, FileAttribute fileAttribute);  // dc 0x198544, no retail body
+    // Before normalization (function): File::GetAttribute.
+    // Before normalization (locals): sFilename.
+    FileAttribute getAttribute(char* filename);                               // dc 0x198548, no retail body
 
-    virtual unsigned char Close();
-    virtual unsigned char Open(const char* sFilename, FileMode mode);
-    virtual unsigned char IsOpen();
-    virtual unsigned long Read(void* pData, unsigned long dBytes);
-    virtual unsigned long Write(void* pData, unsigned long dBytes);
-    virtual unsigned long Seek(unsigned long dBytesToSeek, unsigned long dStart);
-    virtual unsigned long SeekBegin();
-    virtual unsigned long SeekEnd();
-    virtual unsigned long SeekCur(int seekAmt);
-    virtual unsigned long GetPosition();
-    virtual unsigned long GetLength();
+    // Before normalization (function): File::Close.
+    virtual unsigned char close();
+    // Before normalization (function): File::Open.
+    // Before normalization (locals): sFilename.
+    virtual unsigned char open(const char* filename, FileMode mode);
+    // Before normalization (function): File::IsOpen.
+    virtual unsigned char isOpen();
+    // Before normalization (function): File::Read.
+    // Before normalization (locals): pData.
+    virtual unsigned long read(void* data, unsigned long dBytes);
+    // Before normalization (function): File::Write.
+    // Before normalization (locals): pData.
+    virtual unsigned long write(void* data, unsigned long dBytes);
+    // Before normalization (function): File::Seek.
+    virtual unsigned long seek(unsigned long dBytesToSeek, unsigned long dStart);
+    // Before normalization (function): File::SeekBegin.
+    virtual unsigned long seekBegin();
+    // Before normalization (function): File::SeekEnd.
+    virtual unsigned long seekEnd();
+    // Before normalization (function): File::SeekCur.
+    virtual unsigned long seekCur(int seekAmt);
+    // Before normalization (function): File::GetPosition.
+    virtual unsigned long getPosition();
+    // Before normalization (function): File::GetLength.
+    virtual unsigned long getLength();
 
-    char* GetLastError();  // dc 0x1984d0, no retail body
+    // Before normalization (function): File::GetLastError.
+    char* getLastError();  // dc 0x1984d0, no retail body
 
 protected:
-    char sLastError[256];
-    unsigned char open;
+    // Before normalization: sLastError.
+    char m_lastError[256];
+    // Before normalization: open.
+    unsigned char m_open;
 
-    void UpdateError(char* sError);  // dc 0x1984d8, no retail body
+    // Before normalization (function): File::UpdateError.
+    // Before normalization (locals): sError.
+    void updateError(char* errorText);  // dc 0x1984d8, no retail body
 
 private:
     // E:\gamedcs\winfile.h:90-92 - the one header-defined method (the
     // DC winfile.obj contributor segment 0x198864-0x19886f is
     // attributed to winfile.h). No retail body; the retail ctor
     // writes the members directly.
-    void Init()
+    // Before normalization (function): File::Init.
+    void init()
     {
-        m_hFile = NULL;
-        open = FALSE;
+        m_file = NULL;
+        m_open = FALSE;
     }
 };
 SIZE(File, 268);
@@ -111,18 +141,31 @@ class CFindFile {
 public:
     CFindFile();                              // dc 0x198748
     ~CFindFile();                             // dc 0x198768
-    unsigned char FindFile(const char* sFile);  // dc 0x198778
-    unsigned char FindNext();                 // dc 0x19877c
-    void Close();                             // dc 0x198798
-    unsigned long GetLength();                // dc 0x1987bc
-    char* GetFilename();                      // dc 0x1987d4
-    unsigned char IsReadOnly();               // dc 0x1987dc
-    unsigned char IsSystem();                 // dc 0x1987ec
-    unsigned char IsNormal();                 // dc 0x1987fc
-    unsigned char IsDots();                   // dc 0x198810
-    unsigned char IsDirectory();              // dc 0x198814
-    unsigned char IsHidden();                 // dc 0x198830
-    unsigned char IsArchived();               // dc 0x198840
+    // Before normalization (function): CFindFile::FindFile.
+    // Before normalization (locals): sFile.
+    unsigned char findFile(const char* fileName);  // dc 0x198778
+    // Before normalization (function): CFindFile::FindNext.
+    unsigned char findNext();                 // dc 0x19877c
+    // Before normalization (function): CFindFile::Close.
+    void close();                             // dc 0x198798
+    // Before normalization (function): CFindFile::GetLength.
+    unsigned long getLength();                // dc 0x1987bc
+    // Before normalization (function): CFindFile::GetFilename.
+    char* getFilename();                      // dc 0x1987d4
+    // Before normalization (function): CFindFile::IsReadOnly.
+    unsigned char isReadOnly();               // dc 0x1987dc
+    // Before normalization (function): CFindFile::IsSystem.
+    unsigned char isSystem();                 // dc 0x1987ec
+    // Before normalization (function): CFindFile::IsNormal.
+    unsigned char isNormal();                 // dc 0x1987fc
+    // Before normalization (function): CFindFile::IsDots.
+    unsigned char isDots();                   // dc 0x198810
+    // Before normalization (function): CFindFile::IsDirectory.
+    unsigned char isDirectory();              // dc 0x198814
+    // Before normalization (function): CFindFile::IsHidden.
+    unsigned char isHidden();                 // dc 0x198830
+    // Before normalization (function): CFindFile::IsArchived.
+    unsigned char isArchived();               // dc 0x198840
 
 protected:
     void* m_searchHandle;

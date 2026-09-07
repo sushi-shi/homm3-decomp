@@ -139,7 +139,7 @@ char* strrev(char* string)
 
 // E:\gamedcs\h3\DC_precompiledheaders.cpp:210
 DC_ONLY(0x7ffe0, 0x4)
-char* _fullpath(char* absPath, const char* relPath, unsigned maxLength)
+char* _fullpath(char* absPath, const char* relPath, unsigned m_maxLength)
 {
     // @stub
 }

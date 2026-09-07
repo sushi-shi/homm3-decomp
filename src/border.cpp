@@ -83,44 +83,44 @@ border::~border()
 // trampoline back to the early label (91.98%). The remaining duplicate is
 // the merged-return compiler-generation class.
 VA(0x0044ff60, 0x1CD)  // anchor-vtable (slot 2 of 0x63ba24), dc 0x54440
-int border::Main(message* msg)
+int border::main(message* msg)
 {
-    if (field_2C > 0)
+    if (m_sleepCount > 0)
         return 0;
 
     {
-        if (!(status & WIDGET_ACTIVE)) {
-            if (msg->id != MESSAGE_WIDGET)
+        if (!(m_status & WIDGET_ACTIVE)) {
+            if (msg->m_id != MESSAGE_WIDGET)
                 goto returnZero;
-            return widget::Main(msg);
+            return widget::main(msg);
         }
 
         unsigned char isDisabled = 0;
-        if (status & WIDGET_DISABLED)
+        if (m_status & WIDGET_DISABLED)
             isDisabled = 1;
 
-        switch (msg->id) {
+        switch (msg->m_id) {
         case MESSAGE_LEFT_BUTTON_DOWN:
             if (isDisabled)
                 break;
             // fall through
         case MESSAGE_RIGHT_BUTTON_DOWN: {
-            short mouseX = msg->codeX - parentWindow->x;
-            short mouseY = msg->codeY - parentWindow->y;
-            if (mouseX < x || mouseY < y || mouseX >= x + width
-                || mouseY >= y + height)
+            short mouseX = msg->m_codeX - m_parentWindow->m_x;
+            short mouseY = msg->m_codeY - m_parentWindow->m_y;
+            if (mouseX < m_x || mouseY < m_y || mouseX >= m_x + m_width
+                || mouseY >= m_y + m_height)
                 goto returnZero;
-            if (msg->id == MESSAGE_RIGHT_BUTTON_DOWN) {
-                msg->qualifier = MESSAGE_MODIFIER_RIGHT;
-                msg->codeX = WIDGET_RIGHT_SELECT;
+            if (msg->m_id == MESSAGE_RIGHT_BUTTON_DOWN) {
+                msg->m_qualifier = MESSAGE_MODIFIER_RIGHT;
+                msg->m_codeX = WIDGET_RIGHT_SELECT;
             } else {
-                status |= WIDGET_SELECTED;
-                msg->codeX = WIDGET_SELECT;
+                m_status |= WIDGET_SELECTED;
+                msg->m_codeX = WIDGET_SELECT;
             }
-            if (handle_click(1, msg->id == MESSAGE_RIGHT_BUTTON_DOWN))
+            if (handleClick(1, msg->m_id == MESSAGE_RIGHT_BUTTON_DOWN))
                 return 1;
-            msg->id = MESSAGE_WIDGET;
-            msg->codeY = id;
+            msg->m_id = MESSAGE_WIDGET;
+            msg->m_codeY = m_id;
             return 2;
         }
 
@@ -129,18 +129,18 @@ int border::Main(message* msg)
                 break;
             // fall through
         case MESSAGE_RIGHT_BUTTON_UP:
-            if (!(status & WIDGET_SELECTED))
+            if (!(m_status & WIDGET_SELECTED))
                 goto returnZero;
-            status &= ~WIDGET_SELECTED;
-            if (handle_click(0, msg->id == MESSAGE_RIGHT_BUTTON_UP))
+            m_status &= ~WIDGET_SELECTED;
+            if (handleClick(0, msg->m_id == MESSAGE_RIGHT_BUTTON_UP))
                 return 1;
-            msg->id = MESSAGE_WIDGET;
-            msg->codeX = WIDGET_DESELECT;
-            msg->codeY = id;
+            msg->m_id = MESSAGE_WIDGET;
+            msg->m_codeX = WIDGET_DESELECT;
+            msg->m_codeY = m_id;
             return 2;
         }
 
-        return widget::Main(msg);
+        return widget::main(msg);
     }
 
 returnZero:
@@ -163,11 +163,12 @@ returnZero:
 // unwindable across that call.
 VA(0x00450130, 0x6D)  // anchor-bracket + arity (`ret 0x1c`), dc 0x54650
 coloredBorderFrame::coloredBorderFrame(int x, int y, int w, int h, int id,
-                                       int color_, int style)
+                                       // Before normalization (locals): color_.
+                                       int color, int style)
 {
     initialize(x, y, w, h, id, style);
-    color = color_;
-    colorize = 0;
+    m_color = color;
+    m_colorize = 0;
 }
 
 // E:\gamedcs\border.cpp:206 - coloredBorderFrame::`scalar deleting
@@ -197,14 +198,14 @@ coloredBorderFrame::~coloredBorderFrame()
 // callee differ. The colour member is an int; `mov dx, [ecx+0x30]` is
 // the truncation to Colorize/FrameRect's unsigned short parameter.
 VA(0x004501e0, 0x5B)  // anchor-vtable (slot 4 of 0x63ba5c), dc 0x546d4
-void coloredBorderFrame::Draw()
+void coloredBorderFrame::draw()
 {
-    if (colorize)
-        gpWindowManager->screenBitmap->Colorize(x + parentWindow->x,
-            y + parentWindow->y, width, height, color);
+    if (m_colorize)
+        g_windowManager->m_screenBitmap->colorize(m_x + m_parentWindow->m_x,
+            m_y + m_parentWindow->m_y, m_width, m_height, m_color);
     else
-        gpWindowManager->screenBitmap->FrameRect(x + parentWindow->x,
-            y + parentWindow->y, width, height, color);
+        g_windowManager->m_screenBitmap->frameRect(m_x + m_parentWindow->m_x,
+            m_y + m_parentWindow->m_y, m_width, m_height, m_color);
 }
 
 // E:\gamedcs\border.cpp:221 - slot 2 of vtable 0x63ba5c. Two live widget
@@ -216,30 +217,30 @@ void coloredBorderFrame::Draw()
 // precedent). The inactive arm is the fallthrough, so the guard is
 // spelled negated.
 VA(0x00450240, 0x82)  // anchor-vtable (slot 2 of 0x63ba5c), dc 0x54744
-int coloredBorderFrame::Main(message* msg)
+int coloredBorderFrame::main(message* msg)
 {
-    if (field_2C > 0)
+    if (m_sleepCount > 0)
         return 0;
-    if (!(status & WIDGET_ACTIVE)) {
-        if (msg->id != MESSAGE_WIDGET)
+    if (!(m_status & WIDGET_ACTIVE)) {
+        if (msg->m_id != MESSAGE_WIDGET)
             return 0;
-    } else if (msg->id == MESSAGE_WIDGET) {
-        switch (msg->codeX) {
+    } else if (msg->m_id == MESSAGE_WIDGET) {
+        switch (msg->m_codeX) {
         case WIDGET_SET_COLOR:
-            if (msg->codeY == id) {
-                color = msg->extra & 0xFFFF;
+            if (msg->m_codeY == m_id) {
+                m_color = msg->m_extra & 0xFFFF;
                 return 1;
             }
             break;
         case WIDGET_SET_COLORIZE:
-            if (msg->codeY == id) {
-                colorize = msg->extra != 0;
+            if (msg->m_codeY == m_id) {
+                m_colorize = msg->m_extra != 0;
                 return 1;
             }
             break;
         }
     }
-    return border::Main(msg);
+    return border::main(msg);
 }
 
 // E:\gamedcs\border.cpp:280 - promoted from DC_ONLY. Same seven-dword
@@ -250,13 +251,14 @@ int coloredBorderFrame::Main(message* msg)
 // zero, and retail duplicates the whole epilogue for the two arms.
 VA(0x004502d0, 0x8C)  // anchor-bracket + arity (`ret 0x1c`), dc 0x547c0
 bitmapBorder::bitmapBorder(int x, int y, int w, int h, int id,
-                           const char* image_, int style)
+                           // Before normalization (locals): image_.
+                           const char* image, int style)
 {
     initialize(x, y, w, h, id, style);
-    if (image_)
-        image = ResourceManager::GetBitmap816(image_);
+    if (image)
+        m_image = ResourceManager::getBitmap816(image);
     else
-        image = 0;
+        m_image = 0;
 }
 
 #if 0  // @carcass
@@ -270,7 +272,7 @@ void border::initialize(int x, int y, int w, int h, int id, int style, unsigned 
 
 // E:\gamedcs\border.cpp:153
 DC_ONLY(0x54590, 0x4)
-unsigned char border::handle_click(unsigned char down_click, unsigned char right_click)
+unsigned char border::handleClick(unsigned char down_click, unsigned char right_click)
 {
     // @stub
 }
@@ -284,7 +286,7 @@ void border::zBufferDraw()
 
 // E:\gamedcs\border.cpp:161
 DC_ONLY(0x54598, 0x4)
-void border::Draw()
+void border::draw()
 {
     // @stub
 }
@@ -305,7 +307,7 @@ void coloredBorder::zBufferDraw()
 
 // E:\gamedcs\border.cpp:185
 DC_ONLY(0x54618, 0x38)
-void coloredBorder::Draw()
+void coloredBorder::draw()
 {
     // @stub
 }
@@ -328,15 +330,15 @@ VA_COMPGEN(0x00450360, 0x21, SCALAR_DELETING_DTOR, bitmapBorder)
 VA(0x00450390, 0x5B)  // anchor-global, dc 0x54860
 bitmapBorder::~bitmapBorder()
 {
-    if (image)
-        image->Dispose();
+    if (m_image)
+        m_image->dispose();
 }
 
 #if 0  // @carcass
 
 // E:\gamedcs\border.cpp:323
 DC_ONLY(0x54988, 0x38)
-void bitmapBorder::SetPalette(const char* palette_name)
+void bitmapBorder::setPalette(const char* palette_name)
 {
     // @stub
 }
@@ -352,9 +354,9 @@ void bitmapBorder::SetPalette(const char* palette_name)
 VA(0x004503f0, 0x55)  // dc-bracket + body (11-arg zBufferDraw call), dc 0x5489c
 void bitmapBorder::zBufferDraw(unsigned short* zBuffer, int id)
 {
-    if (image)
-        image->zBufferDraw(0, 0, width, height, zBuffer,
-            x + parentWindow->x, y + parentWindow->y, 800, 600, 1600, id);
+    if (m_image)
+        m_image->zBufferDraw(0, 0, m_width, m_height, zBuffer,
+            m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, 800, 600, 1600, id);
 }
 
 // E:\gamedcs\border.cpp:307
@@ -363,11 +365,11 @@ void bitmapBorder::zBufferDraw(unsigned short* zBuffer, int id)
 // gpWindowManager rather than a local, and with the 8-argument
 // Bitmap816 overload.
 VA(0x00450450, 0x44)  // anchor-vtable (slot 4 of 0x63ba94), dc 0x548fc
-void bitmapBorder::Draw()
+void bitmapBorder::draw()
 {
-    if (image)
-        image->Draw(0, 0, width, height, gpWindowManager->screenBitmap,
-            x + parentWindow->x, y + parentWindow->y, 1);
+    if (m_image)
+        m_image->draw(0, 0, m_width, m_height, g_windowManager->m_screenBitmap,
+            m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, 1);
 }
 
 // E:\gamedcs\border.cpp:313
@@ -382,32 +384,33 @@ void bitmapBorder::Draw()
 // resource base is 0x1c on both builds). Retail's bitmapBorder does NOT
 // emit SetPalette between them, which is why the two rows are adjacent.
 VA(0x004504a0, 0xE)  // anchor-vtable (slot 6 of 0x63ba94), dc 0x54948
-int bitmapBorder::GetRealWidth()
+int bitmapBorder::getRealWidth()
 {
-    if (image)
-        return image->Width;
+    if (m_image)
+        return m_image->m_width;
     return 0;
 }
 
 // E:\gamedcs\border.cpp:318
 VA(0x004504b0, 0xE)  // anchor-vtable (slot 5 of 0x63ba94), dc 0x54968
-int bitmapBorder::GetRealHeight()
+int bitmapBorder::getRealHeight()
 {
-    if (image)
-        return image->Height;
+    if (m_image)
+        return m_image->m_height;
     return 0;
 }
 
 // E:\gamedcs\border.cpp:338
+// Before normalization (locals): bitmap_name.
 VA(0x004504c0, 0x5B)  // anchor-global, dc 0x549c0
-void bitmapBorder::SetImage(const char* bitmap_name)
+void bitmapBorder::setImage(const char* bitmapName)
 {
-    if (image != 0) {
-        if (strcmp(image->Name, bitmap_name) == 0)
+    if (m_image != 0) {
+        if (strcmp(m_image->m_name, bitmapName) == 0)
             return;
-        image->Dispose();
+        m_image->dispose();
     }
-    image = ResourceManager::GetBitmap816(bitmap_name);
+    m_image = ResourceManager::getBitmap816(bitmapName);
 }
 
 #if 0  // @carcass
@@ -416,10 +419,10 @@ void bitmapBorder::SetImage(const char* bitmap_name)
 
 // E:\gamedcs\border.cpp:347
 VA(0x00450520, 0x2D)  // anchor-global, dc 0x549ec
-void bitmapBorder::SetPlayerPaletteColors(int whichPlayer)
+void bitmapBorder::setPlayerPaletteColors(int whichPlayer)
 {
-    ::SetPlayerPaletteColors(&image->p16.colors, whichPlayer);
-    ::SetPlayerPaletteColors(&image->p24, whichPlayer);
+    ::setPlayerPaletteColors(&m_image->m_p16.m_colors, whichPlayer);
+    ::setPlayerPaletteColors(&m_image->m_p24, whichPlayer);
 }
 
 // E:\gamedcs\border.cpp:355 - promoted from DC_ONLY 2026-08-14, slot 2 of
@@ -437,39 +440,39 @@ void bitmapBorder::SetPlayerPaletteColors(int whichPlayer)
 // NO bitmapBorder::SetPalette row at all - the rows either side of it
 // (GetRealWidth 0x4504a0, GetRealHeight 0x4504b0) are adjacent.
 VA(0x00450550, 0x132)  // anchor-vtable (slot 2 of 0x63ba94), dc 0x54a20
-int bitmapBorder::Main(message* msg)
+int bitmapBorder::main(message* msg)
 {
-    if (field_2C > 0)
+    if (m_sleepCount > 0)
         return 0;
-    if (!(status & WIDGET_ACTIVE)) {
-        if (msg->id != MESSAGE_WIDGET)
+    if (!(m_status & WIDGET_ACTIVE)) {
+        if (msg->m_id != MESSAGE_WIDGET)
             return 0;
-    } else if (msg->id == MESSAGE_WIDGET && msg->codeY == id) {
-        switch (msg->codeX) {
+    } else if (msg->m_id == MESSAGE_WIDGET && msg->m_codeY == m_id) {
+        switch (msg->m_codeX) {
         case WIDGET_SET_PALETTE: {
             // The name is read BEFORE the image test - retail hoists
             // `mov eax,[eax+0x18]` above the `test ecx,ecx`, which is what
             // an inlined SetPalette(msg->extraText) does to its argument.
-            const char* paletteName = msg->extraText;
-            if (image) {
+            const char* paletteName = msg->m_extraText;
+            if (m_image) {
                 TPalette16* newPalette =
-                    ResourceManager::GetPalette(paletteName);
+                    ResourceManager::getPalette(paletteName);
                 if (newPalette) {
-                    image->SetPalette(newPalette->data);
-                    newPalette->Dispose();
+                    m_image->setPalette(newPalette->m_data);
+                    newPalette->dispose();
                 }
             }
             return 1;
         }
         case WIDGET_SET_IMAGE:
-            SetImage(msg->extraText);
+            setImage(msg->m_extraText);
             return 1;
         case WIDGET_SET_PLAYER_PALETTE_COLORS:
-            SetPlayerPaletteColors(msg->extra);
+            setPlayerPaletteColors(msg->m_extra);
             return 1;
         }
     }
-    return border::Main(msg);
+    return border::main(msg);
 }
 
 #if 0  // @carcass
@@ -484,13 +487,14 @@ int bitmapBorder::Main(message* msg)
 // ResourceManager::GetBitmap16 at 0x55afd0 instead of GetBitmap816.
 VA(0x00450690, 0x8C)  // anchor-bracket + arity (`ret 0x1c`), dc 0x54a98
 bitmapBorder16::bitmapBorder16(int x, int y, int w, int h, int id,
-                               const char* image_, int style)
+                               // Before normalization (locals): image_.
+                               const char* image, int style)
 {
     initialize(x, y, w, h, id, style);
-    if (image_)
-        image = ResourceManager::GetBitmap16(image_);
+    if (image)
+        m_image = ResourceManager::getBitmap16(image);
     else
-        image = 0;
+        m_image = 0;
 }
 
 // E:\gamedcs\border.cpp:404 - bitmapBorder16::`scalar deleting
@@ -502,8 +506,8 @@ VA_COMPGEN(0x00450720, 0x21, SCALAR_DELETING_DTOR, bitmapBorder16)
 VA(0x00450750, 0x5B)  // anchor-global, dc 0x54b68
 bitmapBorder16::~bitmapBorder16()
 {
-    if (image)
-        image->Dispose();
+    if (m_image)
+        m_image->dispose();
 }
 
 #if 0  // @carcass
@@ -524,24 +528,24 @@ void bitmapBorder16::zBufferDraw()
 // verbatim EXCEPT for the parent-window origin added to the destination
 // point - which is exactly what a Draw/Draw2 pair means.
 VA(0x004507b0, 0x55)  // dc-bracket + body (Draw2 plus the window origin), dc 0x54ba8
-void bitmapBorder16::Draw()
+void bitmapBorder16::draw()
 {
-    if (image) {
-        Bitmap16Bit* screen = gpWindowManager->screenBitmap;
-        image->Draw(0, 0, width, height, screen->map,
-            x + parentWindow->x, y + parentWindow->y, screen->Width,
-            screen->Height, screen->Pitch, 0);
+    if (m_image) {
+        Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
+        m_image->draw(0, 0, m_width, m_height, screen->m_map,
+            m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, screen->m_width,
+            screen->m_height, screen->m_pitch, 0);
     }
 }
 
 // E:\gamedcs\border.cpp:425
 VA(0x00450810, 0x44)  // anchor-global, dc 0x54bf0
-void bitmapBorder16::Draw2()
+void bitmapBorder16::draw2()
 {
-    if (image) {
-        Bitmap16Bit* screen = gpWindowManager->screenBitmap;
-        image->Draw(0, 0, width, height, screen->map, x, y, screen->Width,
-            screen->Height, screen->Pitch, 0);
+    if (m_image) {
+        Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
+        m_image->draw(0, 0, m_width, m_height, screen->m_map, m_x, m_y, screen->m_width,
+            screen->m_height, screen->m_pitch, 0);
     }
 }
 
@@ -564,62 +568,63 @@ void bitmapBorder16::Draw2()
 // epilogue and inverts the strcmp branch.
 // E:\gamedcs\border.cpp:441 - bitmapBorder::SetImage one class up with the
 // hi-colour loader. No VA: retail keeps no row for it (see the note below).
-void bitmapBorder16::SetImage(const char* bitmap_name)
+// Before normalization (locals): bitmap_name.
+void bitmapBorder16::setImage(const char* bitmapName)
 {
-    if (image != 0) {
-        if (strcmp(image->Name, bitmap_name) == 0)
+    if (m_image != 0) {
+        if (strcmp(m_image->m_name, bitmapName) == 0)
             return;
-        image->Dispose();
+        m_image->dispose();
     }
-    image = ResourceManager::GetBitmap16(bitmap_name);
+    m_image = ResourceManager::getBitmap16(bitmapName);
 }
 
 VA(0x00450860, 0xC6)  // anchor-vtable (slot 2 of 0x63bacc), dc 0x54c98
-int bitmapBorder16::Main(message* msg)
+int bitmapBorder16::main(message* msg)
 {
-    if (field_2C > 0)
+    if (m_sleepCount > 0)
         return 0;
-    if (!(status & WIDGET_ACTIVE)) {
-        if (msg->id != MESSAGE_WIDGET)
+    if (!(m_status & WIDGET_ACTIVE)) {
+        if (msg->m_id != MESSAGE_WIDGET)
             return 0;
-    } else if (msg->id == MESSAGE_WIDGET && msg->codeY == id) {
-        switch (msg->codeX) {
+    } else if (msg->m_id == MESSAGE_WIDGET && msg->m_codeY == m_id) {
+        switch (msg->m_codeX) {
         case WIDGET_SET_PALETTE:
             return 1;
         case WIDGET_SET_IMAGE:
-            SetImage(msg->extraText);
+            setImage(msg->m_extraText);
             return 1;
         }
     }
-    return border::Main(msg);
+    return border::main(msg);
 }
 
 #if 0  // @carcass
 
 // E:\gamedcs\border.cpp:431
 DC_ONLY(0x54c2c, 0x20)
-int bitmapBorder16::GetRealWidth()
+int bitmapBorder16::getRealWidth()
 {
     // @stub
 }
 
 // E:\gamedcs\border.cpp:436
 DC_ONLY(0x54c4c, 0x20)
-int bitmapBorder16::GetRealHeight()
+int bitmapBorder16::getRealHeight()
 {
     // @stub
 }
 
 // E:\gamedcs\Widget.h:186
 DC_ONLY(0x54d1c, 0x4)
-void widget::OnSetFocus()
+void widget::onSetFocus()
 {
     // @stub
 }
 
 // E:\gamedcs\Widget.h:187
 DC_ONLY(0x54d20, 0x4)
-void widget::OnKillFocus()
+void widget::onKillFocus()
 {
     // @stub
 }

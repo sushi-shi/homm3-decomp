@@ -90,7 +90,7 @@
 // (0x5bdf60, claimed in src/town.cpp), matching the DC xref row
 // initialize_game_data -> town::initialize_hordes.
 VA(0x004eb730, 0x3D5)  // anchor-callee + linkorder, dc 0xdc614
-void initialize_game_data();
+void initializeGameData();
 
 // The nine town_buildings walks create_building_masks feeds to
 // create_requirement_masks, town types 0..8, then the ten include
@@ -99,8 +99,9 @@ void initialize_game_data();
 // -1, next building...; -100 ends the list. Ids are the 0..43
 // bitNumber slot space; every value below is the retail .rdata run
 // 0x63ec80..0x63fe10 verbatim.
+// Before normalization: kTown0Buildings.
 DATA(0x0063ec80)
-static const int kTown0Buildings[] = {
+static const int g_town0Buildings[] = {
     0, -1, 1, 0, -1, 2, 1, -1, 3, 2, -1, 6, -1, 5, -1, 22, 5, -1, 14, -1,
     15, 14, -1, 16, -1, 17, 6, -1, 7, -1, 8, 7, -1, 9, 8, -1, 11, 5, -1,
     12, 11, 16, 0, 14, -1, 13, 12, 9, -1, 30, 7, -1, 37, 30, -1, 31, 30, -1,
@@ -110,8 +111,9 @@ static const int kTown0Buildings[] = {
     -100,
 };
 
+// Before normalization: kTown1Buildings.
 DATA(0x0063ee24)
-static const int kTown1Buildings[] = {
+static const int g_town1Buildings[] = {
     7, -1, 8, 7, -1, 9, 8, -1, 5, -1, 16, -1, 14, -1, 15, 14, -1, 0, -1,
     1, 0, -1, 2, 1, -1, 3, 2, -1, 4, 3, -1, 17, -1, 21, 17, -1, 11, 5, -1,
     12, 11, 0, 16, 14, -1, 13, 12, 9, -1, 30, 7, -1, 37, 30, -1, 31, 30, -1,
@@ -121,8 +123,9 @@ static const int kTown1Buildings[] = {
     -100,
 };
 
+// Before normalization: kTown2Buildings.
 DATA(0x0063efe4)
-static const int kTown2Buildings[] = {
+static const int g_town2Buildings[] = {
     7, -1, 21, 7, -1, 8, 7, -1, 9, 8, -1, 0, -1, 22, 0, -1, 23, 0, -1,
     1, 0, -1, 2, 1, -1, 3, 2, -1, 4, 3, -1, 5, -1, 16, -1, 14, -1, 15, 14, -1,
     17, 14, -1, 11, 5, -1, 12, 11, 14, 16, 0, -1, 13, 12, 9, -1, 30, 7, -1,
@@ -132,8 +135,9 @@ static const int kTown2Buildings[] = {
     -100,
 };
 
+// Before normalization: kTown3Buildings.
 DATA(0x0063f1a0)
-static const int kTown3Buildings[] = {
+static const int g_town3Buildings[] = {
     7, -1, 21, 7, -1, 8, 7, -1, 22, 8, -1, 9, 8, -1, 5, -1, 16, -1, 14, -1,
     15, 14, -1, 0, -1, 23, 0, -1, 1, 0, -1, 2, 1, -1, 3, 2, -1, 4, 3, -1,
     11, 5, -1, 12, 11, 16, 14, 0, -1, 13, 12, 9, -1, 30, 7, -1, 18, 30, -1,
@@ -143,8 +147,9 @@ static const int kTown3Buildings[] = {
     -100,
 };
 
+// Before normalization: kTown4Buildings.
 DATA(0x0063f364)
-static const int kTown4Buildings[] = {
+static const int g_town4Buildings[] = {
     7, -1, 17, 7, -1, 8, 7, -1, 9, 8, -1, 5, -1, 16, -1, 14, -1, 15, 14, -1,
     6, -1, 0, -1, 21, 0, -1, 1, 0, -1, 2, 1, -1, 3, 2, -1, 4, 3, -1,
     11, 5, -1, 12, 11, 14, 16, 0, -1, 13, 12, 9, -1, 30, 7, -1, 22, 30, -1,
@@ -154,8 +159,9 @@ static const int kTown4Buildings[] = {
     -100,
 };
 
+// Before normalization: kTown5Buildings.
 DATA(0x0063f51c)
-static const int kTown5Buildings[] = {
+static const int g_town5Buildings[] = {
     7, -1, 8, 7, -1, 9, 8, -1, 22, -1, 23, -1, 5, -1, 16, -1, 14, -1,
     15, 14, -1, 17, 14, -1, 0, -1, 21, 0, -1, 1, 0, -1, 2, 1, -1, 3, 2, -1,
     4, 3, -1, 11, 5, -1, 12, 11, 16, 14, 0, -1, 13, 12, 9, -1, 30, 7, -1,
@@ -165,8 +171,9 @@ static const int kTown5Buildings[] = {
     -100,
 };
 
+// Before normalization: kTown6Buildings.
 DATA(0x0063f6d0)
-static const int kTown6Buildings[] = {
+static const int g_town6Buildings[] = {
     7, -1, 17, 7, -1, 23, 7, -1, 8, 7, -1, 9, 8, -1, 5, -1, 16, -1,
     22, 16, -1, 14, -1, 15, 14, -1, 21, 14, -1, 0, -1, 1, 0, -1, 2, 1, -1,
     11, 5, -1, 12, 11, 0, 14, 16, -1, 13, 12, 9, -1, 30, 7, -1, 18, 30, -1,
@@ -176,8 +183,9 @@ static const int kTown6Buildings[] = {
     -100,
 };
 
+// Before normalization: kTown7Buildings.
 DATA(0x0063f870)
-static const int kTown7Buildings[] = {
+static const int g_town7Buildings[] = {
     7, -1, 21, 7, -1, 22, 21, -1, 8, 7, -1, 9, 8, -1, 5, -1, 16, -1, 14, -1,
     15, 14, -1, 0, -1, 1, 0, -1, 2, 1, -1, 11, 5, -1, 17, 11, 21, -1,
     12, 11, 14, 16, 0, -1, 6, -1, 13, 12, 9, -1, 30, 7, -1, 18, 30, -1,
@@ -187,8 +195,9 @@ static const int kTown7Buildings[] = {
     -100,
 };
 
+// Before normalization: kTown8Buildings.
 DATA(0x0063fa14)
-static const int kTown8Buildings[] = {
+static const int g_town8Buildings[] = {
     7, -1, 8, 7, -1, 9, 8, -1, 6, -1, 5, -1, 16, -1, 14, -1, 15, 14, -1,
     17, 14, -1, 0, -1, 1, 0, -1, 2, 1, -1, 3, 2, -1, 4, 3, -1, 21, 0, -1,
     11, 5, -1, 12, 11, 14, 16, 0, -1, 13, 12, 9, -1, 30, 7, -1, 18, 30, -1,
@@ -201,64 +210,74 @@ static const int kTown8Buildings[] = {
 // The town-independent half of every included mask: each upgraded
 // dwelling / guild tier includes its base (37 includes 30, 12 includes
 // 11, ...). create_included_mask adds this before the per-town list.
+// Before normalization: kCommonIncludeList.
 DATA(0x0063fbc4)
-static const int kCommonIncludeList[] = {
+static const int g_commonIncludeList[] = {
     1, 0, -1, 2, 1, -1, 3, 2, -1, 4, 3, -1, 8, 7, -1, 9, 8, -1, 11, 10, -1,
     12, 11, -1, 13, 12, -1, 19, 18, -1, 25, 24, -1, 37, 30, -1, 38, 31, -1,
     39, 32, -1, 40, 33, -1, 41, 34, -1, 42, 35, -1, 43, 36, -1,
     -100,
 };
 
+// Before normalization: kTown0IncludeList.
 DATA(0x0063fca0)
-static const int kTown0IncludeList[] = {
+static const int g_town0IncludeList[] = {
     22, 5, -1, 18, 32, -1, 19, 39, 18, -1,
     -100,
 };
 
+// Before normalization: kTown1IncludeList.
 DATA(0x0063fccc)
-static const int kTown1IncludeList[] = {
+static const int g_town1IncludeList[] = {
     18, 31, -1, 19, 38, 18, -1, 24, 34, -1, 25, 41, 24, -1, 21, 17, -1,
     -100,
 };
 
+// Before normalization: kTown2IncludeList.
 DATA(0x0063fd14)
-static const int kTown2IncludeList[] = {
+static const int g_town2IncludeList[] = {
     18, 31, -1, 19, 38, 18, -1,
     -100,
 };
 
+// Before normalization: kTown3IncludeList.
 DATA(0x0063fd34)
-static const int kTown3IncludeList[] = {
+static const int g_town3IncludeList[] = {
     18, 30, -1, 19, 37, 18, -1, 24, 32, -1, 25, 39, 24, -1,
     -100,
 };
 
+// Before normalization: kTown4IncludeList.
 DATA(0x0063fd70)
-static const int kTown4IncludeList[] = {
+static const int g_town4IncludeList[] = {
     18, 30, -1, 19, 37, 18, -1,
     -100,
 };
 
+// Before normalization: kTown5IncludeList.
 DATA(0x0063fd90)
-static const int kTown5IncludeList[] = {
+static const int g_town5IncludeList[] = {
     18, 30, -1, 19, 37, 18, -1,
     -100,
 };
 
+// Before normalization: kTown6IncludeList.
 DATA(0x0063fdb0)
-static const int kTown6IncludeList[] = {
+static const int g_town6IncludeList[] = {
     18, 30, -1, 19, 37, 18, -1,
     -100,
 };
 
+// Before normalization: kTown7IncludeList.
 DATA(0x0063fdd0)
-static const int kTown7IncludeList[] = {
+static const int g_town7IncludeList[] = {
     18, 30, -1, 19, 37, 18, -1,
     -100,
 };
 
+// Before normalization: kTown8IncludeList.
 DATA(0x0063fdf0)
-static const int kTown8IncludeList[] = {
+static const int g_town8IncludeList[] = {
     18, 30, -1, 19, 37, 18, -1,
     -100,
 };
@@ -268,18 +287,20 @@ static const int kTown8IncludeList[] = {
 // inlined into initialize_game_data) with both of create_included_mask's
 // own call sites inlined into 0x4ebb70 - the /Ob2 one-level-deep split
 // the whole TU exhibits.
+// Before normalization (function): add_to_included_mask.
+// Before normalization (locals): include_list, included_buildings.
 VA(0x004ebb10, 0x5A)  // linkorder+body (the bitNumber or-walk), dc 0xdc368
-static void add_to_included_mask(const int* include_list, __int64* included_buildings)
+static void addToIncludedMask(const int* includeList, __int64* includedBuildings)
 {
     do {
-        int building = *include_list++;
+        int building = *includeList++;
         int included;
-        while ((included = *include_list) >= 0) {
-            included_buildings[building] |= bitNumber[included];
-            ++include_list;
-            included_buildings[building] |= included_buildings[included];
+        while ((included = *includeList) >= 0) {
+            includedBuildings[building] |= g_bitNumber[included];
+            ++includeList;
+            includedBuildings[building] |= includedBuildings[included];
         }
-    } while (*++include_list >= 0);
+    } while (*++includeList >= 0);
 }
 
 // E:\gamedcs\initialize.cpp:524
@@ -331,16 +352,18 @@ static void add_to_included_mask(const int* include_list, __int64* included_buil
 // the same cosmetic high-dword relocation split. Moving the duplicate zero
 // store into memcpy's destination comma-expression and naming BOTH the source
 // and destination pointers are byte-flat at 93.8667; neither delays the LEA.
+// Before normalization (function): create_included_mask.
+// Before normalization (locals): include_list, included_buildings, common_list, tail_bytes.
 VA(0x004ebb70, 0xD8)  // linkorder+body (common-list + arg-list walks), dc 0xdc3cc
-static void create_included_mask(const int* include_list, __int64* included_buildings)
+static void createIncludedMask(const int* includeList, __int64* includedBuildings)
 {
-    const int* const common_list = kCommonIncludeList;
-    const unsigned int tail_bytes = (TOWN_BUILDING_SLOTS - 1) * sizeof(__int64);
-    included_buildings[0] = 0;
-    included_buildings[0] = 0;
-    memcpy(included_buildings + 1, included_buildings, tail_bytes);
-    add_to_included_mask(common_list, included_buildings);
-    add_to_included_mask(include_list, included_buildings);
+    const int* const commonList = g_commonIncludeList;
+    const unsigned int tailBytes = (TOWN_BUILDING_SLOTS - 1) * sizeof(__int64);
+    includedBuildings[0] = 0;
+    includedBuildings[0] = 0;
+    memcpy(includedBuildings + 1, includedBuildings, tailBytes);
+    addToIncludedMask(commonList, includedBuildings);
+    addToIncludedMask(includeList, includedBuildings);
 }
 
 // E:\gamedcs\initialize.cpp:538
@@ -349,74 +372,78 @@ static void create_included_mask(const int* include_list, __int64* included_buil
 // and - a file static with no reference left - not emitted. The 3/2
 // call order is retail's own (the row-3 copy precedes the row-2 copy
 // at 0x4eba42/0x4eba7d).
+// Before normalization (function): create_included_masks.
 DC_ONLY(0xdc448, 0x5C)
-static void create_included_masks()
+static void createIncludedMasks()
 {
-    create_included_mask(kTown0IncludeList, town::included_buildings[0]);
-    create_included_mask(kTown1IncludeList, town::included_buildings[1]);
-    create_included_mask(kTown3IncludeList, town::included_buildings[3]);
-    create_included_mask(kTown2IncludeList, town::included_buildings[2]);
-    create_included_mask(kTown4IncludeList, town::included_buildings[4]);
-    create_included_mask(kTown5IncludeList, town::included_buildings[5]);
-    create_included_mask(kTown6IncludeList, town::included_buildings[6]);
-    create_included_mask(kTown7IncludeList, town::included_buildings[7]);
-    create_included_mask(kTown8IncludeList, town::included_buildings[8]);
+    createIncludedMask(g_town0IncludeList, town::s_includedBuildings[0]);
+    createIncludedMask(g_town1IncludeList, town::s_includedBuildings[1]);
+    createIncludedMask(g_town3IncludeList, town::s_includedBuildings[3]);
+    createIncludedMask(g_town2IncludeList, town::s_includedBuildings[2]);
+    createIncludedMask(g_town4IncludeList, town::s_includedBuildings[4]);
+    createIncludedMask(g_town5IncludeList, town::s_includedBuildings[5]);
+    createIncludedMask(g_town6IncludeList, town::s_includedBuildings[6]);
+    createIncludedMask(g_town7IncludeList, town::s_includedBuildings[7]);
+    createIncludedMask(g_town8IncludeList, town::s_includedBuildings[8]);
 }
 
 // E:\gamedcs\initialize.cpp:565
 // Kept out-of-line for the six non-inlined call sites in
 // initialize_game_data (rows 3..8; rows 0..2 are inline copies).
+// Before normalization (function): create_requirement_masks.
+// Before normalization (locals): town_buildings, legal_buildings.
 VA(0x004ebc50, 0x99)  // linkorder+body (legal-mask accumulate), dc 0xdc4a4
-static void create_requirement_masks(const int* town_buildings, __int64* requirements, __int64* legal_buildings)
+static void createRequirementMasks(const int* townBuildings, __int64* requirements, __int64* legalBuildings)
 {
-    *legal_buildings = 0;
+    *legalBuildings = 0;
     do {
-        int building = *town_buildings++;
+        int building = *townBuildings++;
         int required;
-        *legal_buildings |= bitNumber[building];
+        *legalBuildings |= g_bitNumber[building];
         requirements[building] = 0;
-        while ((required = *town_buildings) >= 0) {
-            requirements[building] |= bitNumber[required];
-            ++town_buildings;
+        while ((required = *townBuildings) >= 0) {
+            requirements[building] |= g_bitNumber[required];
+            ++townBuildings;
             requirements[building] |= requirements[required];
         }
-    } while (*++town_buildings >= 0);
+    } while (*++townBuildings >= 0);
 }
 
 // E:\gamedcs\initialize.cpp:594
 // No retail body: called once from initialize_game_data, fully inlined
 // (rows 0..2 as inline copies of create_requirement_masks, 3..8 as
 // calls to 0x4ebc50), then dropped as an unreferenced static.
+// Before normalization (function): create_building_masks.
 DC_ONLY(0xdc534, 0xE0)
-static void create_building_masks()
+static void createBuildingMasks()
 {
-    create_requirement_masks(kTown0Buildings, gHierarchyMask[0],
-                             &gTownEligibleBuildMask[0]);
-    create_requirement_masks(kTown1Buildings, gHierarchyMask[1],
-                             &gTownEligibleBuildMask[1]);
-    create_requirement_masks(kTown2Buildings, gHierarchyMask[2],
-                             &gTownEligibleBuildMask[2]);
-    create_requirement_masks(kTown3Buildings, gHierarchyMask[3],
-                             &gTownEligibleBuildMask[3]);
-    create_requirement_masks(kTown4Buildings, gHierarchyMask[4],
-                             &gTownEligibleBuildMask[4]);
-    create_requirement_masks(kTown5Buildings, gHierarchyMask[5],
-                             &gTownEligibleBuildMask[5]);
-    create_requirement_masks(kTown6Buildings, gHierarchyMask[6],
-                             &gTownEligibleBuildMask[6]);
-    create_requirement_masks(kTown7Buildings, gHierarchyMask[7],
-                             &gTownEligibleBuildMask[7]);
-    create_requirement_masks(kTown8Buildings, gHierarchyMask[8],
-                             &gTownEligibleBuildMask[8]);
+    createRequirementMasks(g_town0Buildings, g_hierarchyMask[0],
+                             &g_townEligibleBuildMask[0]);
+    createRequirementMasks(g_town1Buildings, g_hierarchyMask[1],
+                             &g_townEligibleBuildMask[1]);
+    createRequirementMasks(g_town2Buildings, g_hierarchyMask[2],
+                             &g_townEligibleBuildMask[2]);
+    createRequirementMasks(g_town3Buildings, g_hierarchyMask[3],
+                             &g_townEligibleBuildMask[3]);
+    createRequirementMasks(g_town4Buildings, g_hierarchyMask[4],
+                             &g_townEligibleBuildMask[4]);
+    createRequirementMasks(g_town5Buildings, g_hierarchyMask[5],
+                             &g_townEligibleBuildMask[5]);
+    createRequirementMasks(g_town6Buildings, g_hierarchyMask[6],
+                             &g_townEligibleBuildMask[6]);
+    createRequirementMasks(g_town7Buildings, g_hierarchyMask[7],
+                             &g_townEligibleBuildMask[7]);
+    createRequirementMasks(g_town8Buildings, g_hierarchyMask[8],
+                             &g_townEligibleBuildMask[8]);
 }
 
 // E:\gamedcs\initialize.cpp:625
 // Claim on the forward declaration above (retail link order). Both
 // helpers inline flat into this body; the trailing call becomes the
 // retail tail jmp to town::initialize_hordes (0x5bdf60).
-void initialize_game_data()
+void initializeGameData()
 {
-    create_building_masks();
-    create_included_masks();
-    town::initialize_hordes();
+    createBuildingMasks();
+    createIncludedMasks();
+    town::initializeHordes();
 }

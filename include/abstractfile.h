@@ -9,8 +9,8 @@
 class TAbstractFile {
 public:
     virtual ~TAbstractFile() {}
-    virtual int Read(void* data, int size) = 0;
-    virtual int Write(const void* data, int size) = 0;
+    virtual int read(void* data, int size) = 0;
+    virtual int write(const void* data, int size) = 0;
 };
 
 #endif  /* HOMM3_ABSTRACTFILE_H */

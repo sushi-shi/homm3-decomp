@@ -34,23 +34,26 @@ class TObjectImageNameTable {
 public:
     typedef std::map<std::string, int> TNameIndex;
 
-    TNameIndex nameIndex;
-    std::vector<TNameIndex::iterator> rows;
+    // Before normalization: nameIndex.
+    TNameIndex m_nameIndex;
+    // Before normalization: rows.
+    std::vector<TNameIndex::iterator> m_rows;
 
     // Provisional name and boundary inferred from retail setImageName:
     // its first rows.size() expands, but this insertion path calls size,
     // the pair constructor and row insert. Flattening this lookup into
     // the caller expands the pair constructor and scores 47.77 vs 54.77.
-    int GetIndex(const std::string& name)
+    // Before normalization (function): TObjectImageNameTable::GetIndex.
+    int getIndex(const std::string& name)
     {
-        TNameIndex::iterator found = nameIndex.find(name);
-        if (found == nameIndex.end()) {
+        TNameIndex::iterator found = m_nameIndex.find(name);
+        if (found == m_nameIndex.end()) {
             // Retail copies both returned fields, including the unused
             // bool into a stack home. Extracting .first directly drops it.
-            std::pair<TNameIndex::iterator, bool> inserted = nameIndex.insert(
-                TNameIndex::value_type(name, rows.size()));
+            std::pair<TNameIndex::iterator, bool> inserted = m_nameIndex.insert(
+                TNameIndex::value_type(name, m_rows.size()));
             found = inserted.first;
-            rows.insert(rows.end(), found);
+            m_rows.insert(m_rows.end(), found);
         }
         return found->second;
     }
@@ -64,7 +67,8 @@ public:
 // single guard byte with masks 1 and 2, which is what a shared accessor rules
 // out. NAME PROVISIONAL - nothing attests it; only the guard-byte layout and
 // the shared 0x69cb80 object are retail-proven.
-inline TObjectImageNameTable& GetObjectImageNames()
+// Before normalization (function): GetObjectImageNames.
+inline TObjectImageNameTable& getObjectImageNames()
 {
     static TObjectImageNameTable imageNames;
     return imageNames;
@@ -87,7 +91,8 @@ inline TObjectImageNameTable& GetObjectImageNames()
 class TObjectTypeFilter {
 public:
     virtual ~TObjectTypeFilter();
-    virtual int Accepts(const TObjectType* objectType) const = 0;
+    // Before normalization (function): TObjectTypeFilter::Accepts.
+    virtual int accepts(const TObjectType* objectType) const = 0;
 };
 
 // Retail 0x5141b0. The terrain id lands at +4 and the predicate reads
@@ -98,7 +103,8 @@ public:
 class TNativeTerrainObjectFilter : public TObjectTypeFilter {
 public:
     explicit TNativeTerrainObjectFilter(int terrain);
-    virtual int Accepts(const TObjectType* objectType) const;
+    // Before normalization (function): TNativeTerrainObjectFilter::Accepts.
+    virtual int accepts(const TObjectType* objectType) const;
 
     int m_terrain;
 };
@@ -109,7 +115,8 @@ public:
 class TAnyTerrainObjectFilter : public TObjectTypeFilter {
 public:
     TAnyTerrainObjectFilter();
-    virtual int Accepts(const TObjectType* objectType) const;
+    // Before normalization (function): TAnyTerrainObjectFilter::Accepts.
+    virtual int accepts(const TObjectType* objectType) const;
 };
 
 // Retail 0x514260, the whole body a `sete` on one compare: the object's
@@ -117,7 +124,8 @@ public:
 class TSlotCategoryObjectFilter : public TObjectTypeFilter {
 public:
     explicit TSlotCategoryObjectFilter(int slotCategory);
-    virtual int Accepts(const TObjectType* objectType) const;
+    // Before normalization (function): TSlotCategoryObjectFilter::Accepts.
+    virtual int accepts(const TObjectType* objectType) const;
 
     int m_slotCategory;
 };
@@ -126,7 +134,8 @@ enum EObjectTypeFilterConstants {
     OBJECT_TYPE_FILTER_COUNT = 15
 };
 
-extern TObjectTypeFilter* const gObjectTypeFilters[OBJECT_TYPE_FILTER_COUNT];
+// Before normalization: gObjectTypeFilters.
+extern TObjectTypeFilter* const g_objectTypeFilters[OBJECT_TYPE_FILTER_COUNT];
 
 // The per-row parser TObjectTypeTable::load runs over each objects.txt
 // line, retail 0x514b80. Free and therefore __fastcall under /Gr: the

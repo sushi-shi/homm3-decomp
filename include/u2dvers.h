@@ -21,16 +21,19 @@
 // pointer at +0; callers allocate four bytes for the object.
 class TFileVersionInfo {
 public:
-    char* data;
+    // Before normalization: data.
+    char* m_data;
 
     TFileVersionInfo(const char* filename);
     ~TFileVersionInfo();
-    unsigned char GetVersionInfo(const char* name, std::string* buffer);
+    // Before normalization (function): TFileVersionInfo::GetVersionInfo.
+    unsigned char getVersionInfo(const char* name, std::string* buffer);
     // DC's source-visible wrapper. Complete expands it at the selection
     // window call site into the ProductVersion GetVersionInfo call.
-    unsigned char GetProductVersion(std::string* productVersion)
+    // Before normalization (function): TFileVersionInfo::GetProductVersion.
+    unsigned char getProductVersion(std::string* productVersion)
     {
-        return GetVersionInfo("ProductVersion", productVersion);
+        return getVersionInfo("ProductVersion", productVersion);
     }
 };
 SIZE(TFileVersionInfo, 4);

@@ -16,7 +16,8 @@ class sample;
 class TPalette24;
 class LODFile;
 struct TResourceLODSlot;
-extern TResourceLODSlot gResourceLODSlots[];
+// Before normalization: gResourceLODSlots.
+extern TResourceLODSlot g_resourceLodSlots[];
 
 // Dreamcast: ?GetSprite@ResourceManager@@YAPAVCSprite@@PBD@Z and
 // ?GetFont@ResourceManager@@YAPAVfont@@PBD@Z - the namespace-level
@@ -32,69 +33,97 @@ class TTextResource;
 // (count, LOD-index-list) pairs. The first serves sprites, the second
 // bitmaps, and the final pair remains byte-proven but semantically unnamed.
 struct TResourceArchiveList {
-    int count;
-    int* indices;
+    // Before normalization: count.
+    int m_count;
+    // Before normalization: indices.
+    int* m_indices;
 };
 
 struct TResourceArchiveContext {
-    TResourceArchiveList sprites;
-    TResourceArchiveList bitmaps;
-    TResourceArchiveList sounds;
+    // Before normalization: sprites.
+    TResourceArchiveList m_sprites;
+    // Before normalization: bitmaps.
+    TResourceArchiveList m_bitmaps;
+    // Before normalization: sounds.
+    TResourceArchiveList m_sounds;
 };
 SIZE(TResourceArchiveContext, 0x18);
 
 // Dreamcast CodeView's function-local GetBitmap16 record (type 0x289c),
 // independently byte-proven by retail's three archive-header reads.
 struct TBitmapResourceHeader {
-    int DataSize;
-    int Width;
-    int Height;
+    // Before normalization: DataSize.
+    int m_dataSize;
+    // Before normalization: Width.
+    int m_width;
+    // Before normalization: Height.
+    int m_height;
 };
 SIZE(TBitmapResourceHeader, 0x0c);
 
-extern int* gpVideoGameState;
-extern TResourceArchiveContext gResourceArchiveContexts[4];
+// Before normalization: gpVideoGameState.
+extern int* g_videoGameState;
+// Before normalization: gResourceArchiveContexts.
+extern TResourceArchiveContext g_resourceArchiveContexts[4];
 // Claimed by resourcemanager.obj; the adventure-map phisher-price command
 // toggles it before selecting the palette transform.
-extern unsigned char gGraphicsSaturated;  // retail 0x69e5b0
+// Before normalization: gGraphicsSaturated.
+extern unsigned char g_graphicsSaturated;  // retail 0x69e5b0
 
 namespace ResourceManager {
-void RemapGraphics();
-void SaturateGraphics();
+// Before normalization (function): ResourceManager::RemapGraphics.
+void remapGraphics();
+// Before normalization (function): ResourceManager::SaturateGraphics.
+void saturateGraphics();
 // Complete adds an error-code output to Dreamcast's two-boolean form. The
 // sole retail caller passes an int*, and the catch handler stores through it.
-bool Open(bool openSprites, bool openBitmaps, int* errorCode);
-void Close();
-void SetPath(const char* path);
-void SetPixelFormat(unsigned long redMask, unsigned long greenMask,
+// Before normalization (function): ResourceManager::Open.
+bool open(bool openSprites, bool openBitmaps, int* errorCode);
+// Before normalization (function): ResourceManager::Close.
+void close();
+// Before normalization (function): ResourceManager::SetPath.
+void setPath(const char* path);
+// Before normalization (function): ResourceManager::SetPixelFormat.
+void setPixelFormat(unsigned long redMask, unsigned long greenMask,
                     unsigned long blueMask);             // 0x55a6b0
-CSprite* GetSprite(const char* name);
-font* GetFont(const char* name);
+// Before normalization (function): ResourceManager::GetSprite.
+CSprite* getSprite(const char* name);
+// Before normalization (function): ResourceManager::GetFont.
+font* getFont(const char* name);
 // Dreamcast and retail oldmain load the same Players.pal through the 24-bit
 // sibling immediately after the two TPalette16 loads (retail 0x55b470).
-TPalette24* GetPalette24(const char* name);
-sample* GetSample(const char* name);
+// Before normalization (function): ResourceManager::GetPalette24.
+TPalette24* getPalette24(const char* name);
+// Before normalization (function): ResourceManager::GetSample.
+sample* getSample(const char* name);
 // Retail body 0x55a800 (bitmapBorder::SetImage's loader).
-Bitmap816* GetBitmap816(const char* name);
+// Before normalization (function): ResourceManager::GetBitmap816.
+Bitmap816* getBitmap816(const char* name);
 // Retail body 0x55afd0, the 16-bit twin: same 12-byte strncpy cache-key
 // head, and bitmapBorder16's constructor (0x450690) calls it with ONE
 // fastcall argument where DC's form carries a second `ignore_cache`
 // byte - so retail's is the single-argument overload.
-Bitmap16Bit* GetBitmap16(const char* name);
-void GetBackdrop(const char* resName, Bitmap16Bit* destBmap);
+// Before normalization (function): ResourceManager::GetBitmap16.
+Bitmap16Bit* getBitmap16(const char* name);
+// Before normalization (function): ResourceManager::GetBackdrop.
+void getBackdrop(const char* resName, Bitmap16Bit* destBmap);
 // Retail body 0x55bdd0 (campaignmap's camptext.txt loader).
-TTextResource* GetText(const char* name);
+// Before normalization (function): ResourceManager::GetText.
+TTextResource* getText(const char* name);
 // Retail body 0x55c0a0 (monframeinfo's cranim.txt parser calls it).
-TSpreadsheetResource* GetSpreadsheet(const char* name);
+// Before normalization (function): ResourceManager::GetSpreadsheet.
+TSpreadsheetResource* getSpreadsheet(const char* name);
 // Retail body 0x5594b0; its 12-byte key copy, map insertion and reference
 // increment are repeated inline at the tail of GetSpreadsheet.
-void AddToCache(resource* value);
+// Before normalization (function): ResourceManager::AddToCache.
+void addToCache(resource* value);
 
 // Dreamcast retains this cache sweep out of line and calls it from window
 // construction/destruction sites. Complete has neither that body nor emitted
 // call instructions at those sites, so model the source boundary as a
 // retail-neutral inline no-op for the PC build.
-inline void del_Spr_from_Cache()
+// Before normalization (function): ResourceManager::del_Spr_from_Cache.
+inline void delSprFromCache()
 {
 }
 
@@ -112,8 +141,10 @@ inline void del_Spr_from_Cache()
 // NewfullMap::readObjectType calls PointToSpriteResource exactly twice and
 // ReadFromSpriteResource exactly four times, and retail's readObjectType
 // calls this twice and the reader below four times.
-LODFile* PointToSpriteResource(const char* name);
-LODFile* PointToBitmapResource(const char* name);
+// Before normalization (function): ResourceManager::PointToSpriteResource.
+LODFile* pointToSpriteResource(const char* name);
+// Before normalization (function): ResourceManager::PointToBitmapResource.
+LODFile* pointToBitmapResource(const char* name);
 // Retail body 0x55d0d0, SEVENTEEN bytes - it passes ecx straight through
 // as LODFile::read's `this` and forwards the other two arguments.
 //
@@ -124,23 +155,28 @@ LODFile* PointToBitmapResource(const char* name);
 // mapcell's readObjectType are both in its caller tree - so the two DC
 // names describe one retail function. The tree's already-admitted label
 // for the address is kept rather than re-titled from this lane.
-int ReadFromBitmapResource(LODFile* resource, void* data, int numBytes);
+// Before normalization (function): ResourceManager::ReadFromBitmapResource.
+int readFromBitmapResource(LODFile* resource, void* data, int numBytes);
 // Retail 0x55d070 walks the active context's bitmap LOD list until
 // getItemIndex finds the named entry, then returns that entry's +0x14 size.
-int GetBitmapResourceSize(const char* name);
+// Before normalization (function): ResourceManager::GetBitmapResourceSize.
+int getBitmapResourceSize(const char* name);
 
 // PROVEN retail cache ABI used by AddToCache/GetSpreadsheet. The global map
 // starts at 0x69e528; head is +4. A node holds its 13-byte key at +0xc and
 // resource pointer at +0x1c.
 struct TCacheMapKey {
-    char name[13];
+    // Before normalization: name.
+    char m_name[13];
     TCacheMapKey() {}
     TCacheMapKey(const char* value);
 };
 
 struct TCacheValue {
-    TCacheMapKey first;
-    resource* second;
+    // Before normalization: first.
+    TCacheMapKey m_first;
+    // Before normalization: second.
+    resource* m_second;
     TCacheValue(resource* value);
     TCacheValue(const std::pair<const char*, resource*>& value);
     TCacheValue(const std::pair<const char*, resource*>& value,
@@ -148,14 +184,19 @@ struct TCacheValue {
 };
 
 struct TCacheNode {
-    TCacheNode* left;
-    TCacheNode* parent;
-    TCacheNode* right;
-    TCacheValue value;
+    // Before normalization: left.
+    TCacheNode* m_left;
+    // Before normalization: parent.
+    TCacheNode* m_parent;
+    // Before normalization: right.
+    TCacheNode* m_right;
+    // Before normalization: value.
+    TCacheValue m_value;
 };
 
 struct TCacheIterator {
-    TCacheNode* node;
+    // Before normalization: node.
+    TCacheNode* m_node;
 
     TCacheIterator& operator++();
     bool operator!=(const TCacheIterator& other) const;
@@ -164,8 +205,10 @@ struct TCacheIterator {
 struct TCacheTreeInsertResult;
 
 struct TCacheInsertResult {
-    TCacheIterator first;
-    bool second;
+    // Before normalization: first.
+    TCacheIterator m_first;
+    // Before normalization: second.
+    bool m_second;
 
     TCacheInsertResult(const TCacheIterator& firstValue,
                        const bool& secondValue);
@@ -173,27 +216,44 @@ struct TCacheInsertResult {
 
 class TCacheMap {
 public:
-    unsigned char allocator;
-    unsigned char compare;
-    unsigned char pad_02[2];
-    TCacheNode* head;
-    unsigned char multi;
-    unsigned char pad_09[3];
-    unsigned int size;
+    // Before normalization: allocator.
+    unsigned char m_allocator;
+    // Before normalization: compare.
+    unsigned char m_compare;
+    // Before normalization: pad_02.
+    // VC6 XTREE places its allocator/comparator objects before _Head.
+    // These two bytes align the head pointer at +4 in the proven 16-byte facade.
+    unsigned char m_paddingBeforeHead[2];
+    // Before normalization: head.
+    TCacheNode* m_head;
+    // Before normalization: multi.
+    unsigned char m_multi;
+    // Before normalization: pad_09.
+    // VC6 XTREE places bool _Multi before size_type _Size. The three
+    // bytes after the flag align the size word at +0xc.
+    unsigned char m_paddingBeforeSize[3];
+    // Before normalization: size.
+    unsigned int m_size;
 
     // These model the two compiler-visible layers collapsed into this proven
     // 16-byte facade: the out-of-line tree lookup used by earlier getters,
     // and the same lookup body exposed for C1 to inline in resource::Dispose.
     TCacheIterator find(const TCacheMapKey& key);
-    TCacheIterator find_tree(const TCacheMapKey& key);
-    TCacheIterator find_inline(const TCacheMapKey& key);
+    // Before normalization (function): ResourceManager::TCacheMap::find_tree.
+    TCacheIterator findTree(const TCacheMapKey& key);
+    // Before normalization (function): ResourceManager::TCacheMap::find_inline.
+    TCacheIterator findInline(const TCacheMapKey& key);
     TCacheIterator begin();
-    TCacheIterator end_inline() const;
-    TCacheNode* lower_bound(const TCacheMapKey& key);
-    TCacheIterator* lower_bound_iterator(TCacheIterator* result,
+    // Before normalization (function): ResourceManager::TCacheMap::end_inline.
+    TCacheIterator endInline() const;
+    // Before normalization (function): ResourceManager::TCacheMap::lower_bound.
+    TCacheNode* lowerBound(const TCacheMapKey& key);
+    // Before normalization (function): ResourceManager::TCacheMap::lower_bound_iterator.
+    TCacheIterator* lowerBoundIterator(TCacheIterator* result,
                                          const TCacheMapKey& key);
     TCacheTreeInsertResult insert(const TCacheValue& value);
-    TCacheInsertResult insert_wrapper(const TCacheValue& value);
+    // Before normalization (function): ResourceManager::TCacheMap::insert_wrapper.
+    TCacheInsertResult insertWrapper(const TCacheValue& value);
     TCacheIterator erase(TCacheIterator position);
     TCacheIterator erase(TCacheIterator first, TCacheIterator last);
 };

@@ -99,6 +99,19 @@ findings under [docs/vc6/](docs/vc6/README.md), without a separate chronological
 
 ## Matching data ownership
 
+Preserve original semantic names where evidence exists, preferring Dreamcast
+source names and using NH3API as a fallback. Drop Hungarian type prefixes and
+normalize the semantic part of project-owned identifiers to lowerCamelCase.
+Use scope prefixes consistently: `m_` for instance data members, `s_` for static
+data members, and `g_` for globals (including file-static globals). Locals,
+parameters, and ordinary functions use lowerCamelCase without these prefixes.
+For instance fields, `bShowTroopCount` becomes `m_showTroopCount`,
+`disabled_frame` becomes `m_disabledFrame`, and `Text` becomes `m_text`.
+Apply the convention throughout the code, updating declarations, definitions,
+and uses together. Retain the
+original spelling in the owning source's evidence comment so reference lookup
+remains possible. Preserve required external ABI spellings at their boundaries.
+
 Source annotations own names; build regenerates labels. Do not maintain a second
 symbol ledger. `config/` contains hand-admitted retail inventories and manifests;
 `evidence/` contains generated analysis, which must be regenerated, not hand-edited.

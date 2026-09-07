@@ -17,25 +17,35 @@ class Bitmap816 : public resource {
 public:
     // DC names both dwords; retail vtable slot 2 reads DataSize directly
     // and adds the fixed 0x56c-byte object extent.
-    int DataSize;   // +0x1c
-    int ImageSize;  // +0x20
+    // Before normalization: DataSize.
+    int m_dataSize;   // +0x1c
+    // Before normalization: ImageSize.
+    int m_imageSize;  // +0x20
     // Byte-proven 2026-08-08 by bitmapBorder::GetRealWidth /
     // GetRealHeight (0x4504a0 / 0x4504b0), which read +0x24 and +0x28
     // off this object; the names are the DC fieldlist's (Width@36,
     // Height@40 - the same offsets, since resource is 0x1c on both
     // builds). The rest of the head stays padded until a retail body
     // reads it.
-    int Width;   // +0x24
-    int Height;  // +0x28
-    int Pitch;   // +0x2c
-    unsigned char* map;  // +0x30
-    TPalette16 p16;
-    TPalette24 p24;
+    // Before normalization: Width.
+    int m_width;   // +0x24
+    // Before normalization: Height.
+    int m_height;  // +0x28
+    // Before normalization: Pitch.
+    int m_pitch;   // +0x2c
+    // Before normalization: map.
+    unsigned char* m_map;  // +0x30
+    // Before normalization: p16.
+    TPalette16 m_p16;
+    // Before normalization: p24.
+    TPalette24 m_p24;
 
     // Bitmap816.h:70/71 header accessors. DrawBackground's Dreamcast xref
     // graph records both inlined uses; the retail body reads +0x24/+0x28.
-    int GetWidth() const { return Width; }
-    int GetHeight() const { return Height; }
+    // Before normalization (function): Bitmap816::GetWidth.
+    int getWidth() const { return m_width; }
+    // Before normalization (function): Bitmap816::GetHeight.
+    int getHeight() const { return m_height; }
 
     Bitmap816(const char* name, int w, int h, unsigned char* data,
               TPalette16* palette16, int dataSize);
@@ -47,21 +57,29 @@ public:
     // zBufferDraw (0x450450 / 0x4503f0). Argument lists are the DC
     // roster's, and each is byte-corroborated by its retail call site's
     // push run (8 and 11 arguments respectively).
-    void Draw(int sx, int sy, int sw, int sh, unsigned short* dst, int dx,
+    // Before normalization (function): Bitmap816::Draw.
+    void draw(int sx, int sy, int sw, int sh, unsigned short* dst, int dx,
         int dy, int dw, int dh, int dpitch, bool tblit) const;
-    void Draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx,
+    // Before normalization (function): Bitmap816::Draw.
+    void draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx,
         int dy, bool tblit) const;
     void zBufferDraw(int sx, int sy, int sw, int sh, unsigned short* dst,
         int dx, int dy, int dw, int dh, int dpitch, int id) const;
     int importPCXFile(const char* filename, int rbits, int rshift,
         int gbits, int gshift, int bbits, int bshift);
-    void mark_puzzle(unsigned char* visible, long dest_x, long dest_y);
-    void SetPalette(const unsigned short* pal);
-    void SetPalette(TPalette24* pal24);
-    void ResetPalette();
+    // Before normalization (function): Bitmap816::mark_puzzle.
+    // Before normalization (locals): dest_x, dest_y.
+    void markPuzzle(unsigned char* visible, long destX, long destY);
+    // Before normalization (function): Bitmap816::SetPalette.
+    void setPalette(const unsigned short* pal);
+    // Before normalization (function): Bitmap816::SetPalette.
+    void setPalette(TPalette24* pal24);
+    // Before normalization (function): Bitmap816::ResetPalette.
+    void resetPalette();
 
     virtual ~Bitmap816();
-    virtual unsigned int GetSize() const;
+    // Before normalization (function): Bitmap816::GetSize.
+    virtual unsigned int getSize() const;
     virtual void zBufferDraw(int sx, int sy, int sw, int sh,
         unsigned short* zBuffer, int dx, int dy, int id) const;
 };

@@ -18,20 +18,24 @@
 // and can_take_town (0x428410) builds one the other way round, masking
 // the three source bytes with 0x3ff, 0x3ff and 0xf before packing.
 struct type_point {
-    short x : 10;
-    short y : 10;
-    short z : 4;
+    // Before normalization: x.
+    short m_x : 10;
+    // Before normalization: y.
+    short m_y : 10;
+    // Before normalization: z.
+    short m_z : 4;
 
     type_point() {}
     // E:\\gamedcs\\struct.h:102. Dreamcast CodeView places the body in the
     // shared header, and both Dreamcast and Complete expand it at ordinary
     // call sites. Keep one canonical source definition here so every TU sees
     // the real helper at the original parse point.
-    type_point(short new_x, short new_y, short new_z)
+    // Before normalization (locals): new_x, new_y, new_z.
+    type_point(short newX, short newY, short newZ)
     {
-        x = new_x;
-        y = new_y;
-        z = new_z;
+        m_x = newX;
+        m_y = newY;
+        m_z = newZ;
     }
     unsigned char operator==(const type_point* arg);
     // Dreamcast S_PUB32 is ??8type_point@@QBA_NABU0@@Z: bool return,
@@ -40,15 +44,16 @@ struct type_point {
     // use the proven operator.
     bool operator==(const type_point& arg) const
     {
-        return x == arg.x && y == arg.y && z == arg.z;
+        return m_x == arg.m_x && m_y == arg.m_y && m_z == arg.m_z;
     }
     // Dreamcast retains this source helper out of line in
     // AI_AttemptMove; Complete VC6 expands the same three comparisons.
     bool operator!=(const type_point& arg) const
     {
-        return x != arg.x || y != arg.y || z != arg.z;
+        return m_x != arg.m_x || m_y != arg.m_y || m_z != arg.m_z;
     }
-    unsigned char is_valid();
+    // Before normalization (function): type_point::is_valid.
+    unsigned char isValid();
     // E:\gamedcs\struct.h:120, and advspells.obj's own Dreamcast roster
     // retains it out of line (dc 0x22fe4, 0x2e B). Retail has no body:
     // advManager::TownGate (0x41d360) is the admitted witness and EXPANDS
@@ -57,10 +62,11 @@ struct type_point {
     // `(this->x - p2->x)^2 + (this->y - p2->y)^2` with the two 10-bit
     // bitfields sign-extended through the shl/movsx/sar triple. The z
     // plane takes no part, which is what makes it a MAP distance.
-    int DistanceSquared(const type_point* p2) const
+    // Before normalization (function): type_point::DistanceSquared.
+    int distanceSquared(const type_point* p2) const
     {
-        int dy = y - p2->y;
-        int dx = x - p2->x;
+        int dy = m_y - p2->m_y;
+        int dx = m_x - p2->m_x;
         return dx * dx + dy * dy;
     }
 };
@@ -71,48 +77,58 @@ struct type_point {
 // Its type-handle collateral is banked in score history rather than hidden
 // behind consumer-specific declarations.
 struct SLimitData {
-    int iMinX;
-    int iMinY;
-    int iMaxX;
-    int iMaxY;
+    // Before normalization: iMinX.
+    int m_minX;
+    // Before normalization: iMinY.
+    int m_minY;
+    // Before normalization: iMaxX.
+    int m_maxX;
+    // Before normalization: iMaxY.
+    int m_maxY;
 
     SLimitData() {}
     SLimitData(int minx, int miny, int maxx, int maxy)
-        : iMinX(minx), iMinY(miny), iMaxX(maxx), iMaxY(maxy) {}
-    int Width() const { return iMaxX - iMinX + 1; }
-    int Height() const { return iMaxY - iMinY + 1; }
-    bool Intersects(const SLimitData& limits) const
+        : m_minX(minx), m_minY(miny), m_maxX(maxx), m_maxY(maxy) {}
+    // Before normalization (function): SLimitData::Width.
+    int width() const { return m_maxX - m_minX + 1; }
+    // Before normalization (function): SLimitData::Height.
+    int height() const { return m_maxY - m_minY + 1; }
+    // Before normalization (function): SLimitData::Intersects.
+    bool intersects(const SLimitData& limits) const
     {
-        return iMinX <= limits.iMaxX
-            && iMaxX >= limits.iMinX
-            && iMinY <= limits.iMaxY
-            && iMaxY >= limits.iMinY;
+        return m_minX <= limits.m_maxX
+            && m_maxX >= limits.m_minX
+            && m_minY <= limits.m_maxY
+            && m_maxY >= limits.m_minY;
     }
-    bool IsEmpty() const
+    // Before normalization (function): SLimitData::IsEmpty.
+    bool isEmpty() const
     {
-        return iMaxX < iMinX || iMaxY < iMinY;
+        return m_maxX < m_minX || m_maxY < m_minY;
     }
-    void Clip(const SLimitData& limits)
+    // Before normalization (function): SLimitData::Clip.
+    void clip(const SLimitData& limits)
     {
-        if (iMinX < limits.iMinX)
-            iMinX = limits.iMinX;
-        if (iMinY < limits.iMinY)
-            iMinY = limits.iMinY;
-        if (iMaxX > limits.iMaxX)
-            iMaxX = limits.iMaxX;
-        if (iMaxY > limits.iMaxY)
-            iMaxY = limits.iMaxY;
+        if (m_minX < limits.m_minX)
+            m_minX = limits.m_minX;
+        if (m_minY < limits.m_minY)
+            m_minY = limits.m_minY;
+        if (m_maxX > limits.m_maxX)
+            m_maxX = limits.m_maxX;
+        if (m_maxY > limits.m_maxY)
+            m_maxY = limits.m_maxY;
     }
-    void Include(const SLimitData& limits)
+    // Before normalization (function): SLimitData::Include.
+    void include(const SLimitData& limits)
     {
-        if (iMinX > limits.iMinX)
-            iMinX = limits.iMinX;
-        if (iMinY > limits.iMinY)
-            iMinY = limits.iMinY;
-        if (iMaxX < limits.iMaxX)
-            iMaxX = limits.iMaxX;
-        if (iMaxY < limits.iMaxY)
-            iMaxY = limits.iMaxY;
+        if (m_minX > limits.m_minX)
+            m_minX = limits.m_minX;
+        if (m_minY > limits.m_minY)
+            m_minY = limits.m_minY;
+        if (m_maxX < limits.m_maxX)
+            m_maxX = limits.m_maxX;
+        if (m_maxY < limits.m_maxY)
+            m_maxY = limits.m_maxY;
     }
 };
 SIZE(SLimitData, 0x10);

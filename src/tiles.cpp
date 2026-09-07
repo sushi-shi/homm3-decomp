@@ -25,8 +25,9 @@
 // (-1,1) (-1,0) (-1,-1). TPoint is non-POD, so the values arrive through the
 // compiland's own dynamic initializer rather than from .data - which is why
 // the array is in .bss at all.
+// Before normalization: gTileDirections.
 DATA(0x006a80a8)
-TPoint gTileDirections[TILE_DIR_COUNT] = {
+TPoint g_tileDirections[TILE_DIR_COUNT] = {
     TPoint(0, -1),  TPoint(1, -1),  TPoint(1, 0),   TPoint(1, 1),
     TPoint(0, 1),   TPoint(-1, 1),  TPoint(-1, 0),  TPoint(-1, -1)
 };
@@ -45,7 +46,7 @@ TPoint gTileDirections[TILE_DIR_COUNT] = {
 // expansion owns ecx, edi and eax across the fill.
 VA(0x005BC910, 0x7D)  // anchor-callee: the four callers at 0x4f9f00, 0x4fa3c0,
                       // 0x5b4b20, 0x5b5440 walk 0x6a80a8 by this mask; retail-only
-void __fastcall BuildTileNeighbourMask(int width, int height, int x, int y,
+void __fastcall buildTileNeighbourMask(int width, int height, int x, int y,
                                        unsigned char* neighbourExists)
 {
     std::fill(neighbourExists, neighbourExists + TILE_DIR_COUNT,

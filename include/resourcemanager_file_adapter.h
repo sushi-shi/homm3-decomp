@@ -15,22 +15,28 @@ namespace ResourceManager {
 // behavior at these addresses.
 class t_stdio_file_adapter : public TAbstractFile {
 public:
-    explicit t_stdio_file_adapter(FILE* value) : file(value) {}
+    explicit t_stdio_file_adapter(FILE* value) : m_file(value) {}
 
-    virtual int Read(void* data, int size);
-    virtual int Write(const void*, int) { return 0; }
+    // Before normalization (function): ResourceManager::t_stdio_file_adapter::Read.
+    virtual int read(void* data, int size);
+    // Before normalization (function): ResourceManager::t_stdio_file_adapter::Write.
+    virtual int write(const void*, int) { return 0; }
 
-    FILE* file;
+    // Before normalization: file.
+    FILE* m_file;
 };
 
 class t_lod_file_adapter : public TAbstractFile {
 public:
-    explicit t_lod_file_adapter(LODFile* value) : lod_file(value) {}
+    explicit t_lod_file_adapter(LODFile* value) : m_lodFile(value) {}
 
-    virtual int Read(void* data, int size);
-    virtual int Write(const void*, int) { return 0; }
+    // Before normalization (function): ResourceManager::t_lod_file_adapter::Read.
+    virtual int read(void* data, int size);
+    // Before normalization (function): ResourceManager::t_lod_file_adapter::Write.
+    virtual int write(const void*, int) { return 0; }
 
-    LODFile* lod_file;
+    // Before normalization: lod_file.
+    LODFile* m_lodFile;
 };
 
 }

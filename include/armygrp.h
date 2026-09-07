@@ -539,7 +539,8 @@ enum ESpellId {
 // the fields that function reads are modeled; the full roster gets
 // its own header when spell work begins in earnest.
 struct SSpellTraits {
-    int field_0;              // <= 0 short-circuits to certain-work
+    // Before normalization: field_0; reference member TSpellTraits::m_karma.
+    int m_karma;              // <= 0 short-circuits to certain-work
     // DC TSpellTraits.m_sample (members.csv TSpellTraits@4) - the WAV
     // this spell plays. army::do_fire_shield (0x4409c0) is the witness:
     // it hands `akSpellTraits[SPELL_FIRE_SHIELD].m_sample` straight to
@@ -558,16 +559,20 @@ struct SSpellTraits {
     // are byte-proven, so both are declared for everyone.
     const char* m_sample;     // +0x04
     int m_effect;             // +0x08
-    unsigned int field_c;     // bit 10 gates one immunity family;
+    // Before normalization: field_c; reference member TSpellTraits::m_flags.
+    unsigned int m_flags;     // bit 10 gates one immunity family;
                               // bit 12 (byte +0xd & 0x10) blocks the
                               // spell against siege weapons
     // +0x10 is the display name. SetShrineHelpText passes it as the string
     // argument to the central shrine format after indexing this 136-byte row.
-    const char* name;
+    // Before normalization: name.
+    const char* m_name;
     // Dreamcast-attested m_abbreviated_name; retail's loader duplicates
     // sptraits.txt column 1 into this pointer.
-    const char* abbreviated_name;
-    int level;                // the dragons' magic-immunity gate
+    // Before normalization: abbreviated_name.
+    const char* m_abbreviatedName;
+    // Before normalization: level.
+    int m_level;                // the dragons' magic-immunity gate
     // +0x1c, the spell's SCHOOL MASK - a full dword, byte-proven by
     // hero::get_spell_level (0x4e5080) and hero::GetManaCost
     // (0x4e5240), which both load `[akSpellTraits + spell*136 + 0x1c]`
@@ -588,32 +593,40 @@ struct SSpellTraits {
     // raise belongs to the wider header change-set and was never
     // isolated; see the note above its baseline row.
     union {
-        TSpellSchool school;  // typed consumer view
-        unsigned int schoolBits;  // loader's OR-accumulator view
+        // Before normalization: school.
+        TSpellSchool m_school;  // typed consumer view
+        // Before normalization: schoolBits.
+        unsigned int m_schoolBits;  // loader's OR-accumulator view
     };                        // +0x1c
     // +0x20, the per-mastery MANA COST row: GetManaCost indexes it
     // `[base + 4*(mastery + spell*34) + 0x20]` with the mastery
     // get_spell_level just returned.
-    int mana_cost[4];         // +0x20
+    // Before normalization: mana_cost.
+    int m_manaCost[4];         // +0x20
     // Spell-power multiplier (NH3API m_power_factor): multiplied by the
     // caster's power in get_resurrection_value (0x423d60),
     // get_mass_damage_value (0x42540a) and ai_tactical's
     // get_damage_spell_value (0x436f60: traits[spell*136 + 0x30]).
-    int power_factor;         // +0x30
+    // Before normalization: power_factor.
+    int m_powerFactor;         // +0x30
     // Per-mastery flat bonus row (NH3API m_mastery_bonus):
     // get_damage_spell_value adds [spell*136 + mastery*4 + 0x34].
-    int mastery_bonus[4];     // +0x34
+    // Before normalization: mastery_bonus.
+    int m_masteryBonus[4];     // +0x34
     // +0x44, nine faction weights used by town::initialize_spells.
-    int townProbability[9];
+    // Before normalization: townProbability.
+    int m_townProbability[9];
     // A SECOND per-mastery dword row: get_enchantment_value indexes it
     // as spell*34 + mastery dwords from the table base (0x423cab) =
     // record +0x68 + mastery*4. Distinct from mastery_bonus - both
     // rows are byte-proven by their own consumers. Name provisional.
-    int mastery_values[4];    // +0x68
+    // Before normalization: mastery_values.
+    int m_masteryValues[4];    // +0x68
     // Complete's four per-mastery descriptions. Dreamcast names this
     // m_description at +0x74 before the added ninth town-probability dword;
     // retail InitializeSpellTraits writes the shifted +0x78 row.
-    const char* levelDescriptions[4];  // +0x78
+    // Before normalization: levelDescriptions.
+    const char* m_levelDescriptions[4];  // +0x78
 };
 SIZE(SSpellTraits, 136);
 
@@ -622,10 +635,12 @@ SIZE(SSpellTraits, 136);
 // The 81-entry count is now retail-proven: spelldefs constructs 81 strings
 // and writes the contiguous 136-byte backing rows at 0x685450, whose exact
 // end is this pointer cell (0x685450 + 81*136 == 0x687f58).
-DATA(0x00687f58) extern const SSpellTraits (&akSpellTraits)[81];
+// Before normalization: akSpellTraits.
+DATA(0x00687f58) extern const SSpellTraits (&g_spellTraits)[81];
 
 // spelldefs.cpp owner; retail /Gr passes spell/mastery in ECX/EDX.
-unsigned char SpellTargetsASingleArmy(int spell, int sslevel);
+// Before normalization (function): SpellTargetsASingleArmy.
+unsigned char spellTargetsASingleArmy(int spell, int sslevel);
 
 // The special-ground MODE GetArmyMorale/GetArmyLuck dispatch on (the
 // dword param with sentinels 2..5): cursed ground zeroes the stat,
@@ -656,49 +671,79 @@ enum EMagicTerrain {
 // AI_value @0x40 from the same bodies; field names are the NH3API
 // roster, which lands exactly on those offsets with cost[7].
 struct TCreatureTypeTraits {
-    int townType;
-    int level;
-    const char* cSamplePrefix;
-    const char* m_sprite_name;
-    unsigned int attributes;
+    // Before normalization: townType.
+    int m_townType;
+    // Before normalization: level.
+    int m_level;
+    // Before normalization: cSamplePrefix.
+    const char* m_samplePrefix;
+    // Before normalization: m_sprite_name.
+    const char* m_spriteName;
+    // Before normalization: attributes.
+    unsigned int m_attributes;
     const char* m_name;
-    const char* m_plural_name;
-    const char* special_ability;
-    int cost[7];
-    int baseFightValue;
-    int AI_value;
-    int growthRate;
+    // Before normalization: m_plural_name.
+    const char* m_pluralName;
+    // Before normalization: special_ability.
+    const char* m_specialAbility;
+    // Before normalization: cost.
+    int m_cost[7];
+    // Before normalization: baseFightValue.
+    int m_baseFightValue;
+    // Before normalization: AI_value.
+    int m_aiValue;
+    // Before normalization: growthRate.
+    int m_growthRate;
     // SIXTEEN BITS, not 32: the crtraits.txt parser (0x47b480) stores this
     // column's atoi result with `mov word ptr [esi+0x48], ax` where every
     // neighbouring column takes a dword.
-    short horde_growth_rate;
-    char pad_4a[2];
-    int hitPoints;
-    int speed;
-    int attackSkill;
-    int defenseSkill;
-    int damageLowBound;
-    int damageHighBound;
-    int numShots;
-    int hasSpell;
-    int wanderingLow;
-    int wanderingHigh;
+    // Before normalization: horde_growth_rate.
+    short m_hordeGrowthRate;
+    // Before normalization: pad_4a.
+    // Two alignment bytes before hitPoints at +0x4c. Dreamcast declares
+    // horde_growth_rate as a short; retail parser 0x47b480 writes a word at +0x48.
+    // NH3API widens that field, so its int32 facade is not used here.
+    char m_paddingAfterHordeGrowth[2];
+    // Before normalization: hitPoints.
+    int m_hitPoints;
+    // Before normalization: speed.
+    int m_speed;
+    // Before normalization: attackSkill.
+    int m_attackSkill;
+    // Before normalization: defenseSkill.
+    int m_defenseSkill;
+    // Before normalization: damageLowBound.
+    int m_damageLowBound;
+    // Before normalization: damageHighBound.
+    int m_damageHighBound;
+    // Before normalization: numShots.
+    int m_numShots;
+    // Before normalization: hasSpell.
+    int m_hasSpell;
+    // Before normalization: wanderingLow.
+    int m_wanderingLow;
+    // Before normalization: wanderingHigh.
+    int m_wanderingHigh;
 };
 SIZE(TCreatureTypeTraits, 116);
 
 // attributes bits proven by retail tests: 0x40000 by HasAllUndead
 // (0x44ab20); 0x40 by GetAlignments (0x44abb0), which skips such
 // creatures in the alignment census - the war-machine bit.
-const unsigned int CTA_UNDEAD = 0x40000;
-const unsigned int CTA_SIEGE_WEAPON = 0x40;
+// Before normalization: CTA_UNDEAD.
+const unsigned int g_ctaUndead = 0x40000;
+// Before normalization: CTA_SIEGE_WEAPON.
+const unsigned int g_ctaSiegeWeapon = 0x40;
 // 0x20000 zeroes a stack's morale outright (GetArmyMorale 0x44b11e) -
 // the no-morale trait (undead/elemental/war-machine family).
-const unsigned int CTA_NO_MORALE = 0x20000;
+// Before normalization: CTA_NO_MORALE.
+const unsigned int g_ctaNoMorale = 0x20000;
 // Bit 4, byte-proven by army::new_turn (0x446e30): the Elixir of Life
 // regenerates a stack only when its traits row carries this bit - the
 // living-creature marker (the Elixir does nothing for the undead and
 // the war machines).
-const unsigned int CTA_ALIVE = 0x10;
+// Before normalization: CTA_ALIVE.
+const unsigned int g_ctaAlive = 0x10;
 
 // Artifact ids as the IsWieldingArtifact gates surface them (NH3API
 // artifact.hpp spellings; every name is corroborated by the byte-
@@ -749,7 +794,8 @@ enum EArtifactId {
 // The traits table is reached through a stored pointer (reference
 // global): retail loads [0x6747b0] before indexing. NH3API names it
 // akCreatureTypeTraits (a const reference to the 150-entry array).
-DATA(0x006747b0) extern const TCreatureTypeTraits (&akCreatureTypeTraits)[150];
+// Before normalization: akCreatureTypeTraits.
+DATA(0x006747b0) extern const TCreatureTypeTraits (&g_creatureTypeTraits)[150];
 
 // Creature-card background image by town alignment (CrBkgCas.pcx first,
 // CrBkgEle.pcx last). Retail indexes this biased base with -1 for the
@@ -762,7 +808,8 @@ DATA(0x006747b0) extern const TCreatureTypeTraits (&akCreatureTypeTraits)[150];
 // initialize_game_data from 100.00% to 96.09% - the include-set class,
 // measured, with no semantic change anywhere. armygrp.cpp and
 // viewarmywindow.cpp are the two TUs that define the macro.
-DATA(0x00682910) extern const char* akCreatureBackgrounds[9];
+// Before normalization: akCreatureBackgrounds.
+DATA(0x00682910) extern const char* g_creatureBackgrounds[9];
 
 // Army-size name tables (BSS at 0x6a5bb8, runtime-filled from game
 // text): nine threshold bands x three name sets, 12-byte row stride
@@ -771,7 +818,8 @@ DATA(0x00682910) extern const char* akCreatureBackgrounds[9];
 // NWC's Hungarian-lite is attested by the DC name corpus (b/i/p/gp/
 // gb/psz all in real use: gpGame, pszFormat, iNameSet), but the
 // `apsz` composition specifically is NOT - replace on evidence.
-DATA(0x006a5bb8) extern const char* apszArmySizeNames[9][3];
+// Before normalization: apszArmySizeNames.
+DATA(0x006a5bb8) extern const char* g_apszArmySizeNames[9][3];
 
 // Native terrain by ALIGNMENT (townType order; -1 = none), .rdata:
 // the full table starts one entry earlier at 0x643694 with the -1 row,
@@ -780,7 +828,8 @@ DATA(0x006a5bb8) extern const char* apszArmySizeNames[9][3];
 // legal index. grass, grass, snow, lava, dirt, subterranean, rough,
 // swamp, grass. The NAME is a bootstrap invention (no Dreamcast/NH3API
 // name survives for this table) - replace on evidence.
-DATA(0x00643698) extern const TTerrainType akNativeTerrains[9];
+// Before normalization: akNativeTerrains.
+DATA(0x00643698) extern const TTerrainType g_nativeTerrains[9];
 
 // GetMorale's two town-building tests were bootstrapped here as
 // separate `unsigned int[2]` mask objects (gTavernMask /
@@ -814,68 +863,95 @@ public:
     // NOT work: it breaks five int-typed slot writes in armygrp.cpp and
     // one in townmgr.cpp.
     union {
-        int armies[ARMY_GROUP_SLOT_COUNT];
-        TCreatureType armyTypes[ARMY_GROUP_SLOT_COUNT];
+        // Before normalization: armies.
+        int m_armies[ARMY_GROUP_SLOT_COUNT];
+        // Before normalization: armyTypes.
+        TCreatureType m_armyTypes[ARMY_GROUP_SLOT_COUNT];
     };
-    int numTroops[ARMY_GROUP_SLOT_COUNT];
+    // Before normalization: numTroops.
+    int m_numTroops[ARMY_GROUP_SLOT_COUNT];
 
     armyGroup();
     armyGroup(TCreatureType type, int amount);
-    void Initialize();
-    unsigned char HasCreatures() const;
-    unsigned char HasAllUndead() const;
+    // Before normalization (function): armyGroup::Initialize.
+    void initialize();
+    // Before normalization (function): armyGroup::HasCreatures.
+    unsigned char hasCreatures() const;
+    // Before normalization (function): armyGroup::HasAllUndead.
+    unsigned char hasAllUndead() const;
     // Dreamcast armygrp.cpp:668. Complete retains the same source helper at
     // its morale consumers; VC6 /Ob2 expands the loop and /OPT:REF removes
     // the unreferenced out-of-line copy from retail.
-    unsigned char HasSomeUndead() const;
-    unsigned char IsMember(TCreatureType monType) const;
-    int CanJoin(int monType) const;
-    int GetAlignments(unsigned char* alignments) const;
-    long get_AI_value() const;
-    TTerrainType GetNativeTerrain() const;
-    void SplitArmy(int srcIndex, armyGroup* ag, int destIndex,
+    // Before normalization (function): armyGroup::HasSomeUndead.
+    unsigned char hasSomeUndead() const;
+    // Before normalization (function): armyGroup::IsMember.
+    unsigned char isMember(TCreatureType monType) const;
+    // Before normalization (function): armyGroup::CanJoin.
+    int canJoin(int monType) const;
+    // Before normalization (function): armyGroup::GetAlignments.
+    int getAlignments(unsigned char* alignments) const;
+    // Before normalization (function): armyGroup::get_AI_value.
+    long getAIValue() const;
+    // Before normalization (function): armyGroup::GetNativeTerrain.
+    TTerrainType getNativeTerrain() const;
+    // Before normalization (function): armyGroup::SplitArmy.
+    void splitArmy(int srcIndex, armyGroup* ag, int destIndex,
                    unsigned char inSrcRestricted,
                    unsigned char inDestRestricted);
-    unsigned char Merge(armyGroup* ag);
-    void merge_armies(armyGroup* source);
+    // Before normalization (function): armyGroup::Merge.
+    unsigned char merge(armyGroup* ag);
+    // Before normalization (function): armyGroup::merge_armies.
+    void mergeArmies(armyGroup* source);
     // Overload set, both DC-attested and both byte-located 2026-08-08
     // by arity inside the Swap..GetArmySizeName bracket: the no-arg
     // form is retail 0x44ada0 (`ret`, dc 0x4ef88, 1 param) and the
     // typed form 0x44adc0 (`ret 4`, dc 0x4efb8, 2 params). Both walk
     // the seven slots adding numTroops; the difference is only the
     // slot predicate.
-    int get_creature_total() const;
-    int get_creature_total(TCreatureType monType) const;
+    // Before normalization (function): armyGroup::get_creature_total.
+    int getCreatureTotal() const;
+    // Before normalization (function): armyGroup::get_creature_total.
+    int getCreatureTotal(TCreatureType monType) const;
     // Param 4 is a full int MODE in retail (dword load, sentinel
     // values 2 and 5) - the DC prototype's on_cursed_ground uchar
     // name does not survive the bytes; class forward-decls suffice
     // for the const pointers.
-    int GetLuck(const class hero* ownerHero, const class town* ownerTown,
+    // Before normalization (function): armyGroup::GetLuck.
+    int getLuck(const class hero* ownerHero, const class town* ownerTown,
                 const class hero* otherHero, const armyGroup* otherGroup,
-                unsigned char on_cursed_ground,
-                unsigned char apply_limits) const;
+                // Before normalization (locals): on_cursed_ground, apply_limits.
+                unsigned char onCursedGround,
+                unsigned char applyLimits) const;
     // SEVEN params in retail (GetArmyMorale's call site pushes seven;
     // the DC six-param prototype is wrong). Roles resolved by the
     // 0x44ae60 decode: 5 is the cursed-ground short circuit (a BYTE
     // load at 0x44ae63, not the dword an int would force), 6 gates the
     // alignment-grouping adjustment alone, 7 is the [-3,3] clamp.
     // group_alignments is a bootstrap name for the byte-proven gate.
-    int GetMorale(const class hero* ownerHero, const class town* ownerTown,
+    // Before normalization (function): armyGroup::GetMorale.
+    int getMorale(const class hero* ownerHero, const class town* ownerTown,
                   const class hero* otherHero, const armyGroup* otherGroup,
-                  unsigned char on_cursed_ground,
-                  unsigned char group_alignments,
-                  unsigned char apply_limits) const;
+                  // Before normalization (locals): on_cursed_ground, group_alignments,
+                  // apply_limits.
+                  unsigned char onCursedGround,
+                  unsigned char groupAlignments,
+                  unsigned char applyLimits) const;
     // SIX params in retail (ret 0x18; the DC five-param prototype is
     // wrong): mode int with sentinels, arg5 forwarded to GetMorale.
-    int GetArmyMorale(int index, const class hero* ownerHero,
+    // Before normalization (function): armyGroup::GetArmyMorale.
+    int getArmyMorale(int index, const class hero* ownerHero,
                       const class town* ownerTown, int mode,
                       unsigned char arg5,
-                      unsigned char apply_limits) const;
-    int GetArmyLuck(int index, const class hero* ownerHero,
+                      // Before normalization (locals): apply_limits.
+                      unsigned char applyLimits) const;
+    // Before normalization (function): armyGroup::GetArmyLuck.
+    int getArmyLuck(int index, const class hero* ownerHero,
                     const class town* ownerTown, int mode,
-                    unsigned char apply_limits) const;
+                    // Before normalization (locals): apply_limits.
+                    unsigned char applyLimits) const;
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >
-        get_morale_description(TCreatureType creature, int morale,
+        // Before normalization (function): armyGroup::get_morale_description.
+        getMoraleDescription(TCreatureType creature, int morale,
                                const class hero* ownerHero,
                                const class town* ownerTown,
                                const class hero* otherHero,
@@ -886,17 +962,24 @@ public:
     // parameter relative to the older Dreamcast prototype. The body indexes
     // creature traits from the first argument and returns with `ret 20h`.
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >
-        get_luck_description(TCreatureType creature, int luck,
+        // Before normalization (function): armyGroup::get_luck_description.
+        getLuckDescription(TCreatureType creature, int luck,
                              const class hero* ourHero,
                              const class town* ourTown,
                              const class hero* enemyHero,
                              const armyGroup* enemyGroup,
                              int magicTerrain) const;
-    int GetNumArmies() const;
-    int Add(int armyType, int newNumTroops, int newIndex);
-    static const char* GetArmySizeName(int howMany, int iNameSet);
-    void Swap(int srcIndex, armyGroup* destGroup, int destIndex);
-    void Dismiss(int whichIndex);
+    // Before normalization (function): armyGroup::GetNumArmies.
+    int getNumArmies() const;
+    // Before normalization (function): armyGroup::Add.
+    int add(int armyType, int newNumTroops, int newIndex);
+    // Before normalization (function): armyGroup::GetArmySizeName.
+    // Before normalization (locals): iNameSet.
+    static const char* getArmySizeName(int howMany, int nameSet);
+    // Before normalization (function): armyGroup::Swap.
+    void swap(int srcIndex, armyGroup* destGroup, int destIndex);
+    // Before normalization (function): armyGroup::Dismiss.
+    void dismiss(int whichIndex);
     int save(TAbstractFile* outfile);
     int load(TAbstractFile* infile);
 };
@@ -904,10 +987,13 @@ SIZE(armyGroup, 56);
 
 // Live prototypes (claimed armygrp.cpp bodies; ai_combat's spell-work
 // chain calls both).
-float get_spell_work_chance(SpellID spell, TCreatureType target_army_type,
-                            const class hero* casting_hero,
-                            const class hero* target_hero);            // 0x44a4d0
-long modify_spell_damage(long damage, SpellID spell, TCreatureType creature);  // 0x44b4b0
+// Before normalization (function): get_spell_work_chance.
+// Before normalization (locals): target_army_type, casting_hero, target_hero.
+float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType,
+                            const class hero* castingHero,
+                            const class hero* targetHero);            // 0x44a4d0
+// Before normalization (function): modify_spell_damage.
+long modifySpellDamage(long damage, SpellID spell, TCreatureType creature);  // 0x44b4b0
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\armygrp.cpp:82, dc 0x4db88) void SplitSliderCallback(int state, heroWindow* parent_window);

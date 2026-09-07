@@ -7,7 +7,8 @@
 
 #include "armygrp.h"
 
-TCreatureType get_elemental_type(SpellID spell);
+// Before normalization (function): get_elemental_type.
+TCreatureType getElementalType(SpellID spell);
 
 // DrawBolt's Chain Lightning arm is the one bolt colour shaded
 // PROCEDURALLY instead of from a span table: it steps red and green
@@ -25,9 +26,12 @@ enum EBoltSpanDepth {
 };
 
 // --- globals ---
-extern unsigned char gBoltGreenSpanColors[5][3];
-extern unsigned char gBoltWhiteSpanColors[5][3];
-extern unsigned char gBoltSpectrumColors[15][3];
+// Before normalization: gBoltGreenSpanColors.
+extern unsigned char g_boltGreenSpanColors[5][3];
+// Before normalization: gBoltWhiteSpanColors.
+extern unsigned char g_boltWhiteSpanColors[5][3];
+// Before normalization: gBoltSpectrumColors.
+extern unsigned char g_boltSpectrumColors[15][3];
 
 // CODEVIEW(E:\gamedcs\spells.cpp:1862, dc 0x151e94) int handle_sacrifice_beneficiary(message* msg);
 // CODEVIEW(E:\gamedcs\spells.cpp:1961, dc 0x15205c) int HandleCastSacrifice(message* msg);

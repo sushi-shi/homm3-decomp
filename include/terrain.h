@@ -105,15 +105,25 @@
 #include <bitset>
 
 // E:\gamedcs\terrain.h:70-79
-static std::bitset<10> kDirtMask = std::bitset<10>(1) << 0;          // eTerrainDirt
-static std::bitset<10> kSandMask = std::bitset<10>(1) << 1;          // eTerrainSand
-static std::bitset<10> kGrassMask = std::bitset<10>(1) << 2;         // eTerrainGrass
-static std::bitset<10> kSnowMask = std::bitset<10>(1) << 3;          // eTerrainSnow
-static std::bitset<10> kSwampMask = std::bitset<10>(1) << 4;         // eTerrainSwamp
-static std::bitset<10> kRoughMask = std::bitset<10>(1) << 5;         // eTerrainRough
-static std::bitset<10> kSubterraneanMask = std::bitset<10>(1) << 6;  // eTerrainSubterranean
-static std::bitset<10> kLavaMask = std::bitset<10>(1) << 7;          // eTerrainLava
-static std::bitset<10> kWaterMask = std::bitset<10>(1) << 8;         // eTerrainWater
-static std::bitset<10> kRockMask = std::bitset<10>(1) << 9;          // eTerrainRock
+// Before normalization: kDirtMask.
+static std::bitset<10> g_dirtMask = std::bitset<10>(1) << 0;          // eTerrainDirt
+// Before normalization: kSandMask.
+static std::bitset<10> g_sandMask = std::bitset<10>(1) << 1;          // eTerrainSand
+// Before normalization: kGrassMask.
+static std::bitset<10> g_grassMask = std::bitset<10>(1) << 2;         // eTerrainGrass
+// Before normalization: kSnowMask.
+static std::bitset<10> g_snowMask = std::bitset<10>(1) << 3;          // eTerrainSnow
+// Before normalization: kSwampMask.
+static std::bitset<10> g_swampMask = std::bitset<10>(1) << 4;         // eTerrainSwamp
+// Before normalization: kRoughMask.
+static std::bitset<10> g_roughMask = std::bitset<10>(1) << 5;         // eTerrainRough
+// Before normalization: kSubterraneanMask.
+static std::bitset<10> g_subterraneanMask = std::bitset<10>(1) << 6;  // eTerrainSubterranean
+// Before normalization: kLavaMask.
+static std::bitset<10> g_lavaMask = std::bitset<10>(1) << 7;          // eTerrainLava
+// Before normalization: kWaterMask.
+static std::bitset<10> g_waterMask = std::bitset<10>(1) << 8;         // eTerrainWater
+// Before normalization: kRockMask.
+static std::bitset<10> g_rockMask = std::bitset<10>(1) << 9;          // eTerrainRock
 
 #endif  // HOMM3_TERRAIN_H

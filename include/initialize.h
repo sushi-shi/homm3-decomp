@@ -14,6 +14,6 @@
 // CODEVIEW(E:\gamedcs\initialize.cpp:625, dc 0xdc614) void initialize_game_data();
 // 0x4eb730, and game::game (0x4cdf20) calls it once, between the
 // globalInfoFlags/cartographer band and the rumourState sweep.
-void initialize_game_data();
+void initializeGameData();
 
 #endif  /* HOMM3_INITIALIZE_H */

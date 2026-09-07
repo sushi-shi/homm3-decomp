@@ -20,19 +20,32 @@ class LossConditionStruct;
 // position fields remain split until a shared point type with an eight-byte
 // retail layout is admitted.
 struct type_dialog_icon {
-    EGameResource resource;
-    long qualifier;
-    std::string spriteName;
-    std::string text;
-    long spriteFrameIndex;
-    long spriteX;
-    long spriteY;
-    long spriteHeight;
-    long spriteWidth;
-    long textX;
-    long textY;
-    long textHeight;
-    long textWidth;
+    // Before normalization: resource.
+    EGameResource m_resource;
+    // Before normalization: qualifier.
+    long m_qualifier;
+    // Before normalization: spriteName.
+    std::string m_spriteName;
+    // Before normalization: text.
+    std::string m_text;
+    // Before normalization: spriteFrameIndex.
+    long m_spriteFrameIndex;
+    // Before normalization: spriteX.
+    long m_spriteX;
+    // Before normalization: spriteY.
+    long m_spriteY;
+    // Before normalization: spriteHeight.
+    long m_spriteHeight;
+    // Before normalization: spriteWidth.
+    long m_spriteWidth;
+    // Before normalization: textX.
+    long m_textX;
+    // Before normalization: textY.
+    long m_textY;
+    // Before normalization: textHeight.
+    long m_textHeight;
+    // Before normalization: textWidth.
+    long m_textWidth;
 
     void set(EGameResource resource, long qualifier);
 };
@@ -62,21 +75,38 @@ enum EMBType {
 // CodeView marks them compiler-generated, and retail expands this aggregate's
 // teardown while retaining type_dialog_icon's element destructor boundary.
 struct TNormalDialogInfo {
-    std::string dialog_text;
-    int x;
-    int y;
-    int width;
-    int height;
-    int text_widget_x;
-    int text_widget_y;
-    int text_widget_width;
-    int text_widget_height;
-    bool text_expansion;
-    char pad_31[3];
-    type_dialog_icon icons[8];
-    EMBType iMBType;
-    int iSpecial;
-    int timeout;
+    // Before normalization: dialog_text.
+    std::string m_dialogText;
+    // Before normalization: x.
+    int m_x;
+    // Before normalization: y.
+    int m_y;
+    // Before normalization: width.
+    int m_width;
+    // Before normalization: height.
+    int m_height;
+    // Before normalization: text_widget_x.
+    int m_textWidgetX;
+    // Before normalization: text_widget_y.
+    int m_textWidgetY;
+    // Before normalization: text_widget_width.
+    int m_textWidgetWidth;
+    // Before normalization: text_widget_height.
+    int m_textWidgetHeight;
+    // Before normalization: text_expansion.
+    bool m_textExpansion;
+    // Before normalization: pad_31.
+    // NH3API confirms the three-byte gap between text_expansion at
+    // +0x30 and icons at +0x34. Retail kb.cpp uses the one-byte flag.
+    char m_paddingBeforeIcons[3];
+    // Before normalization: icons.
+    type_dialog_icon m_icons[8];
+    // Before normalization: iMBType.
+    EMBType m_mbType;
+    // Before normalization: iSpecial.
+    int m_special;
+    // Before normalization: timeout.
+    int m_timeout;
 };
 SIZE(TNormalDialogInfo, 0x2a0);
 
@@ -85,13 +115,17 @@ SIZE(TNormalDialogInfo, 0x2a0);
 // and the two four-byte tail members.
 class type_normal_dialog_frame : public coloredBorderFrame {
 public:
-    EGameResource resource;
-    long qualifier;
+    // Before normalization: resource.
+    EGameResource m_resource;
+    // Before normalization: qualifier.
+    long m_qualifier;
 
     type_normal_dialog_frame(long x, long y, long w, long h, long id,
                              EGameResource resource, long qualifier);
-    virtual unsigned char handle_click(unsigned char down_click,
-                                       unsigned char right_click);
+    // Before normalization (function): type_normal_dialog_frame::handle_click.
+    // Before normalization (locals): down_click, right_click.
+    virtual unsigned char handleClick(unsigned char downClick,
+                                       unsigned char rightClick);
 };
 SIZE(type_normal_dialog_frame, 0x40);
 
@@ -184,11 +218,13 @@ enum ECongratsColumn {
     CONGRATS_COLUMN_COUNT = 5
 };
 
-extern unsigned long glTimers[10];
+// Before normalization: glTimers.
+extern unsigned long g_timers[10];
 
 // Retail .bss pointer cell used by both map-extra accessors. The complete
 // linearization is ((z * height + y) * width + x), with 16-bit elements.
-DATA(0x006989f8) extern unsigned short* gMapExtra;
+// Before normalization: gMapExtra.
+DATA(0x006989f8) extern unsigned short* g_mapExtra;
 
 // The shared fonts oldmain (0x4ee3e0) loads by name and ShutDown
 // (0x4f3690) releases through the resource vtable, in retail's own .bss
@@ -207,60 +243,90 @@ class font;
 // (retail .bss 0x6a7700 / 0x6a7704) and draws the latter with smallFont
 // (.bss 0x698a08, one of the three fonts ShutDown disposes). Their owning
 // compilands are not located yet.
-extern const char* Credits[];
-extern font* smallFont;
-DATA(0x00698a14) extern font* gpCalligraphicFont;
+// Before normalization: Credits.
+extern const char* g_credits[];
+// Before normalization: smallFont.
+extern font* g_smallFont;
+// Before normalization: gpCalligraphicFont.
 // The first cell of the same run: army::DrawToBuffer (0x43e140) draws
 // the troop-count box's number with it, which is the reader the note
 // above was waiting on.
-DATA(0x00698a04) extern font* gpTinyFont;
+// Before normalization: gpTinyFont.
+DATA(0x00698a14) extern font* g_calligraphicFont;
 // The third cell of the same canonical font run.  CWaitForReadyPlayersDlg
 // passes it to CAnimatedDlg::Setup.
-DATA(0x00698a0c) extern font* gpMediumFont;
+// Before normalization: gpMediumFont.
+DATA(0x00698a04) extern font* g_tinyFont;
 // The fourth cell of the run (bigfont.fnt): the lobby window's panel
 // titles (TSingleSelectionWindow::Update, 0x584550) draw with it.
-DATA(0x00698a10) extern font* gpBigFont;
+// Before normalization: gpBigFont.
+DATA(0x00698a0c) extern font* g_mediumFont;
+DATA(0x00698a10) extern font* g_bigFont;
 
 // Retail map-extra accessor used by the adventure-map adjacency scan.
-unsigned short GetMapExtra(int x, int y, int z);
-unsigned short* GetMapExtraPtr(int x, int y, int z);
+// Before normalization (function): GetMapExtra.
+unsigned short getMapExtra(int x, int y, int z);
+// Before normalization (function): GetMapExtraPtr.
+unsigned short* getMapExtraPtr(int x, int y, int z);
 
 // Live prototypes (claimed kb.cpp bodies; called from kbwin's
 // AppCommand and exec's DoDialog).
-void ShutDown(const char* cInExitMessage);               // 0x4f3690
+// Before normalization (function): ShutDown.
+// Before normalization (locals): cInExitMessage.
+void shutDown(const char* inExitMessage);               // 0x4f3690
 // DC ?bInShutDown@@3_NA, retail .bss 0x69958d: ShutDown's re-entry
 // guard (kb.cpp owns the definition).
-extern bool bInShutDown;
+// Before normalization: bInShutDown.
+extern bool g_inShutDown;
 // Dreamcast kb.cpp:4187 tears the CD/serial layer down; Complete's body
 // is EMPTY - executive::ShutDownSystem's call lands on the image-wide
 // `ret` at 0x5bc690 that /OPT:ICF folded every empty function onto.
-void EarlyShutDownSystem();
+// Before normalization (function): EarlyShutDownSystem.
+void earlyShutDownSystem();
 // DC kb.cpp:3954 names the owner; retail TransmitSaveGame calls it after a
 // failed _open and independently proves the const-character-buffer ABI.
 // 0x4f3a60, and NOT the 0x4f35f0 this line used to carry - that byte lies
 // inside game::ShowLuckInfo's row and is not a boundary on this image.
-void FileError(const char* cBuf);                        // 0x4f3a60
+// Before normalization (function): FileError.
+// Before normalization (locals): cBuf.
+void fileError(const char* buf);                        // 0x4f3a60
 // The five .rdata score multipliers game::get_map_score indexes with
 // setup.difficulty. Owning TU not located; extern only (the gTownSizeNames
 // pattern).
-extern const float gMapScoreDifficultyFactor[];          // 0x67f558
-int HandleAppSpecificMenuCommands(int idItem);           // 0x4f4350
-void CleanUpMenus();                                     // 0x4f4b50
-int GetNextHumanPlayer(int start);                       // 0x4f4ba0
-void NormalDialog(const char* cText, int iMBType, int x, int y,
-    int iResType1, int iResExtra1, int iResType2, int iResExtra2,
-    int iSpecial, int iTimeout, int iResType3, int iResExtra3);  // 0x4f6570
-void NormalDialogTimeOut(const char* cText, int iMBType, int timeOut,
-    int x, int y, int iResType1, int iResExtra1, int iResType2,
-    int iResExtra2, int iSpecial, int iResType3, int iResExtra3); // 0x4f6530
-void DoNormalDialog(TNormalDialogInfo dialog_info);              // 0x4f6990
+// Before normalization: gMapScoreDifficultyFactor.
+extern const float g_mapScoreDifficultyFactor[];          // 0x67f558
+// Before normalization (function): HandleAppSpecificMenuCommands.
+int handleAppSpecificMenuCommands(int idItem);           // 0x4f4350
+// Before normalization (function): CleanUpMenus.
+void cleanUpMenus();                                     // 0x4f4b50
+// Before normalization (function): GetNextHumanPlayer.
+int getNextHumanPlayer(int start);                       // 0x4f4ba0
+// Before normalization (function): NormalDialog.
+// Before normalization (locals): cText, iMBType, iResType1, iResExtra1, iResType2, iResExtra2,
+// iSpecial, iTimeout, iResType3, iResExtra3.
+void normalDialog(const char* text, int mbType, int x, int y,
+    int resType1, int resExtra1, int resType2, int resExtra2,
+    int special, int timeout, int resType3, int resExtra3);  // 0x4f6570
+// Before normalization (function): NormalDialogTimeOut.
+// Before normalization (locals): cText, iMBType, iResType1, iResExtra1, iResType2, iResExtra2,
+// iSpecial, iResType3, iResExtra3.
+void normalDialogTimeOut(const char* text, int mbType, int timeOut,
+    int x, int y, int resType1, int resExtra1, int resType2,
+    int resExtra2, int special, int resType3, int resExtra3); // 0x4f6530
+// Before normalization (function): DoNormalDialog.
+// Before normalization (locals): dialog_info.
+void doNormalDialog(TNormalDialogInfo dialogInfo);              // 0x4f6990
 // DC kb.cpp:5385 (dc 0xe5960); retail 0x4f5d80 (1,296 B), unclaimed.
 // NormalDialog sizes its info block through it before DoNormalDialog.
-void CalculateNormalDialogSize(TNormalDialogInfo* dialog_info);
+// Before normalization (function): CalculateNormalDialogSize.
+// Before normalization (locals): dialog_info.
+void calculateNormalDialogSize(TNormalDialogInfo* dialogInfo);
 // DC kb.cpp:2549 (dc 0xe206c); retail 0x4f0fc0, unclaimed. The dialog
 // handlers hand every message they do not consume to it.
-int EventWindowHandler(message* msg);
-void extended_dialog(const char* text,
+// Before normalization (function): EventWindowHandler.
+int eventWindowHandler(message* msg);
+// Before normalization (function): extended_dialog.
+void extendedDialog(const char* text,
     std::vector<type_dialog_resource>& resources,
     long x, long y, long timeout);                              // 0x4f7690
 // Dreamcast kb.cpp:5441 names this get_quickview_size. Retail independently
@@ -268,7 +334,8 @@ void extended_dialog(const char* text,
 // width in EDX and height on the stack to 0x4f62a0. The old 0x4f5f30 note
 // came from the contradicted external address map; that byte lies inside the
 // 0x4f5d80 function and is not a boundary on this image.
-void __fastcall get_quickview_size(const char* text, int* width,
+// Before normalization (function): get_quickview_size.
+void __fastcall getQuickviewSize(const char* text, int* width,
                                    int* height);                 // 0x4f62a0
 // Located kb.cpp bodies kbwin's WinMain / AppWndProc call (bodies not
 // yet reconstructed; the declarators match the kbwin call sites).
@@ -277,35 +344,51 @@ void __fastcall get_quickview_size(const char* text, int* width,
 // GetDesktopInfo, ReadPrefs/WritePrefs, ResourceManager::SetPath/Open and
 // then the whole LoadGameData table run - NOT InitMainClasses, whose own
 // body is the twelve manager `new`s at 0x4edb40.
-int EarlySetup();                                        // 0x4ed650
-void InitMainClasses();                                  // 0x4edb40
+// Before normalization (function): EarlySetup.
+int earlySetup();                                        // 0x4ed650
+// Before normalization (function): InitMainClasses.
+void initMainClasses();                                  // 0x4edb40
 int oldmain();                                           // 0x4ee3e0
 // Positive Dreamcast kb.cpp boundaries used by oldmain. Their retail
 // implementations are being admitted separately; keeping the declarations
 // here lets the caller preserve the recovered source shape in the meantime.
-void CreditsWait();
-void ShowCredits();
-void LostGame();
+// Before normalization (function): CreditsWait.
+void creditsWait();
+// Before normalization (function): ShowCredits.
+void showCredits();
+// Before normalization (function): LostGame.
+void lostGame();
 // Retail-only dword paired with the Dreamcast-named giHighMemBuffer in
 // oldmain's low-debug-memory defaults. No surviving source symbol names it.
-DATA(0x006994ec) extern int gUnnamed6994ec;
+// Before normalization: gUnnamed6994ec.
 // The image-wide allocation-failure handler: every `new` site that
 // null-checks its result calls it (67 B at 0x4f42c0, no args, sprintf
 // into gText then ShutDown). DC kb.obj MemError, dc 0xe44f0/64 B,
 // kb.cpp:4168 - arity and role both agree.
-void MemError();                                         // 0x4f42c0
+// Before normalization (function): MemError.
+DATA(0x006994ec) extern int g_unnamed6994ec;
+void memError();                                         // 0x4f42c0
 // 0x4f4c00, in kb's band. HandleNetMsg's game-transmit arm calls it with
 // the message's field_00 and a set byte when the transfer-gate dword at
 // +0x1c is up, which is exactly the Dreamcast's
 // HandleRemoteDeadPlayerExit(iDPGamePos, showMsg) - same arity, same
 // widths, and the body's RS_PLAYER_DEAD broadcast settles the role.
-void HandleRemoteDeadPlayerExit(int iDPGamePos, unsigned char showMsg);
-int GameUnsaved();                                       // 0x4f4310
-void CheckEndGame(int bForceWin);                        // 0x4f2ce0
-bool DisplayVCWinLoss(VictoryConditionStruct& victoryCondition,
-                      int& bGameWon, int& bGameLost, bool remoteCheck);
-unsigned char DisplayLCWinLoss(LossConditionStruct* lossCondition,
-                               int* bGameWon, int* bGameLost,
+// Before normalization (function): HandleRemoteDeadPlayerExit.
+// Before normalization (locals): iDPGamePos.
+void handleRemoteDeadPlayerExit(int dpGamePos, unsigned char showMsg);
+// Before normalization (function): GameUnsaved.
+int gameUnsaved();                                       // 0x4f4310
+// Before normalization (function): CheckEndGame.
+// Before normalization (locals): bForceWin.
+void checkEndGame(int forceWin);                        // 0x4f2ce0
+// Before normalization (function): DisplayVCWinLoss.
+bool displayVCWinLoss(VictoryConditionStruct& victoryCondition,
+                      // Before normalization (locals): bGameWon, bGameLost.
+                      int& gameWon, int& gameLost, bool remoteCheck);
+// Before normalization (function): DisplayLCWinLoss.
+unsigned char displayLCWinLoss(LossConditionStruct* lossCondition,
+                               // Before normalization (locals): bGameWon, bGameLost.
+                               int* gameWon, int* gameLost,
                                unsigned char remoteCheck);
 // Retail .bss 0x6972b8, an INT that every CheckEndGame caller which then
 // wants to keep touching the adventure UI reads immediately afterwards -
@@ -321,25 +404,29 @@ unsigned char DisplayLCWinLoss(LossConditionStruct* lossCondition,
 // round. So the standing note that plain externs are inert is wrong for
 // this consumer; kb.h reaches it and its include-set sensitivity counts
 // declarations of every kind. Measured both ways 2026-08-14.
-extern int gbGameOver;
+extern int g_gameOver;
 // PC-only zero-fill storage.  The command-line initialization path clears
 // this word and philAI::DoAI is its only reader; no source symbol survives,
 // so keep the address-ordinal spelling instead of inventing a role name.
-extern int gUnnamed6994f0;
+// Before normalization: gUnnamed6994f0.
+extern int g_unnamed6994f0;
 // The retail entry at 0x4f1190 is the five-byte public thunk used by
 // questlogwindow; the implementation body follows at 0x4f1820.
-int TrueFalseDialogHandler(message* msg);
+// Before normalization (function): TrueFalseDialogHandler.
+int trueFalseDialogHandler(message* msg);
 
 // kb.cpp's shared text scratch buffer (.bss 0x6973d8 in kb's band;
 // kbwin's WinMain sprintf's the already-running message into it,
 // strip's DrawIcons the troop counts).
-extern char gText[];
+// Before normalization: gText.
+extern char g_text[];
 
 // homm2 gbForegroundApp (KB.cpp) lineage: AppWndProc's WM_ACTIVATEAPP
 // arm stores the activation byte here. Retail address 0x6783d0 sits in
 // a .data band no claimed TU owns yet - PROVISIONAL owner kb.h until
 // the owning TU lands (kbwin is the only known writer).
-extern unsigned char bForegroundApp;
+// Before normalization: bForegroundApp.
+extern unsigned char g_foregroundApp;
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\kb.cpp:240, dc 0xdf160) void DrawProgressCount();
@@ -358,7 +445,9 @@ extern unsigned char bForegroundApp;
 // DECLARED, NOT CLAIMED: 0x4ed2a0 sits in a link-order gap this tree has
 // not attributed, and kb.cpp's own claims start at 0x4f42c0, so promoting
 // its DC_ONLY row in src/kb.cpp to a VA claim is left to a kb lane.
-void IncProgressBar(unsigned char bUpdate);
+// Before normalization (function): IncProgressBar.
+// Before normalization (locals): bUpdate.
+void incProgressBar(unsigned char update);
 // PROMOTED to a live declarator 2026-08-20 for advmgr.obj's Open, which
 // calls it once after the last resource batch. Retail body 0x4ed350,
 // 243 B, directly after IncProgressBar exactly where the DC kb.cpp
@@ -366,12 +455,15 @@ void IncProgressBar(unsigned char bUpdate);
 // zeroes the twenty-step counter at 0x699574, every call repaints.
 // DECLARED, NOT CLAIMED for the same link-order-gap reason as
 // IncProgressBar above.
-void ShowProgressBar();
+// Before normalization (function): ShowProgressBar.
+void showProgressBar();
 // The two rows around them, DC kb.cpp:240 / :292 - retail 0x4ed230 (the
 // bar-segment painter both IncProgressBar and ShowProgressBar expand) and
 // 0x4ed450 (the teardown oldmain reaches). Named from the DC roster.
-void DrawProgressCount();
-void UnloadProgressBar();
+// Before normalization (function): DrawProgressCount.
+void drawProgressCount();
+// Before normalization (function): UnloadProgressBar.
+void unloadProgressBar();
 // CODEVIEW(E:\gamedcs\kb.cpp:292, dc 0xdf2a4) void UnloadProgressBar();
 // CODEVIEW(E:\gamedcs\kb.cpp:318, dc 0xdf330) void PollSound();
 // CODEVIEW(E:\gamedcs\kb.cpp:431, dc 0xdf4e4) void InitMainClasses();

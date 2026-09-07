@@ -24,7 +24,8 @@ struct spell_level_order {
 // because townmgr.h rides in recruit.cpp's closure and one declarator there
 // costs recruitUnit::Update (the known include-set-sensitive row, and
 // recruit.cpp's own +0x1b0 note records the same trade).
-void DoEventGarrison(hero* inHero, garrison* thisGarrison);
+// Before normalization (function): DoEventGarrison.
+void doEventGarrison(hero* inHero, garrison* thisGarrison);
 
 // Retail .data 0x691208, the byte directly ahead of gUnnamed691209 (the
 // "gosolo" handed-to-AI byte advmgr.h declares and documents). DoCombat's
@@ -35,7 +36,8 @@ void DoEventGarrison(hero* inHero, garrison* thisGarrison);
 // advmgr.h rides in ~40 closures and events.h in two; DoCombat is the
 // first consumer, so events.h holds the claim until the producer is
 // decoded (the iCombatControlNetPos / command.h precedent).
-DATA(0x00691208) extern unsigned char gUnnamed691208;
+// Before normalization: gUnnamed691208.
+DATA(0x00691208) extern unsigned char g_unnamed691208;
 
 // DoCombat's two AI callees, declared HERE on the DoEventGarrison
 // precedent above: their owning headers cannot enter events.cpp's
@@ -70,10 +72,14 @@ public:
     ~CTurnDurationPause();
 };
 
-unsigned char AI_quick_combat(hero* attacking_hero, hero* defending_hero,
-                              armyGroup* defending_army, town* defending_town,
+// Before normalization (function): AI_quick_combat.
+// Before normalization (locals): attacking_hero, defending_hero, defending_army, defending_town.
+unsigned char aiQuickCombat(hero* attackingHero, hero* defendingHero,
+                              armyGroup* defendingArmy, town* defendingTown,
                               NewmapCell* cell);
-void split_armies(hero* current_hero, const hero* enemy_hero,
+// Before normalization (function): split_armies.
+// Before normalization (locals): current_hero, enemy_hero.
+void splitArmies(hero* currentHero, const hero* enemyHero,
                   const armyGroup* enemy);
 
 // Named indices into advevent.txt, the adventure-object text resource
@@ -549,7 +555,7 @@ enum EStablesResult {
 // adds under the SAME guard, i.e. the Stables building; and philai's
 // ValueOfStables (0x52aac0) appraises a visit as
 // `(8 - dayOfWeek) * this / 2`, the movement still to be had this week.
-DATA(0x00698a94) extern int gStablesMovementBonus;
+DATA(0x00698a94) extern int g_stablesMovementBonus;
 
 // Retail .bss 0x699540. DoCombat raises it across the whole interactive
 // battle (set to 1 right after the mouse pointer swap, cleared just
@@ -557,7 +563,8 @@ DATA(0x00698a94) extern int gStablesMovementBonus;
 // role. Name ordinal; DoCombat is the first consumer, so events.h holds
 // the claim until the band's producer is decoded (the gUnnamed691208
 // rationale above).
-DATA(0x00699540) extern int gUnnamed699540;
+// Before normalization: gUnnamed699540.
+DATA(0x00699540) extern int g_unnamed699540;
 
 // advManager::FizzleCenter's (0x4acbb0) sound selector, also the second
 // argument of advManager::HeroLoses. Retail lowers the two arms as a

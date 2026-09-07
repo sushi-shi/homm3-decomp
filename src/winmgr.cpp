@@ -16,6 +16,7 @@
 #include "wingraph.h"
 // Open answers a failed screen-bitmap allocation with MemError.
 #include "kb.h"
+#include "remote.h"
 
 #if 0  // @carcass
 
@@ -32,10 +33,14 @@ int heroWindowManager::Open(int newPriority)
 // They are read at exactly one site in the whole image - these four
 // instructions - and written at none, so nothing names them; the widths are
 // the ones `reference(int, int, int, unsigned short*)` imposes.
-DATA(0x006aac94) extern int gUnnamed6aac94;
-DATA(0x006aac98) extern int gUnnamed6aac98;
-DATA(0x006aac9c) extern int gUnnamed6aac9c;
-DATA(0x006aaca0) extern unsigned short* gUnnamed6aaca0;
+// Before normalization: gUnnamed6aac94.
+// Before normalization: gUnnamed6aac98.
+DATA(0x006aac94) extern int g_unnamed6aac94;
+// Before normalization: gUnnamed6aac9c.
+DATA(0x006aac98) extern int g_unnamed6aac98;
+// Before normalization: gUnnamed6aaca0.
+DATA(0x006aac9c) extern int g_unnamed6aac9c;
+DATA(0x006aaca0) extern unsigned short* g_unnamed6aaca0;
 
 // E:\gamedcs\winmgr.cpp:66-89; DC winmgr.obj:0x19a7ec.
 // Exact with the DC statement order: lastHover at line 84, dialogReturn
@@ -49,17 +54,17 @@ DATA(0x006aaca0) extern unsigned short* gUnnamed6aaca0;
 VA(0x00602170, 0x38)  // anchor-vtable 0x643d4c + anchor-callee ??0baseManager, dc order-map
 heroWindowManager::heroWindowManager()
 {
-    status = 0;
-    activeWindow = 0;
-    lastActive = 0;
-    tailWindow = 0;
-    headWindow = 0;
-    screenBitmap = 0;
-    colorCyclingOn = 0;
-    field_4C = 0;
-    lastHover = -1;
-    dialogReturn = -1;
-    isWaitingForFadeIn = 0;
+    m_status = 0;
+    m_activeWindow = 0;
+    m_lastActive = 0;
+    m_tailWindow = 0;
+    m_headWindow = 0;
+    m_screenBitmap = 0;
+    m_colorCyclingOn = 0;
+    m_bmpFizzleSource = 0;
+    m_lastHover = -1;
+    m_dialogReturn = -1;
+    m_isWaitingForFadeIn = 0;
 }
 
 // E:\gamedcs\winmgr.cpp:101 - slot 0, and the DC line program supplies the
@@ -71,32 +76,32 @@ heroWindowManager::heroWindowManager()
 // arguments back from another bitmap's Get* accessors, retail reads them
 // from the four .bss slots above.
 VA(0x006021b0, 0x114)  // dc order-map (ctor/Open/Close/Main), dc 0x19a840
-int heroWindowManager::Open(int newPriority)
+int heroWindowManager::open(int newPriority)
 {
-    InitVideo();
+    initVideo();
 
-    screenBitmap = new Bitmap16Bit(0, 0);
-    if (screenBitmap == 0)
-        MemError();
+    m_screenBitmap = new Bitmap16Bit(0, 0);
+    if (m_screenBitmap == 0)
+        memError();
 
-    screenBitmap->reference(gUnnamed6aac94, gUnnamed6aac98, gUnnamed6aac9c,
-                            gUnnamed6aaca0);
-    screenBitmap->FillRect(0, 0, 800, 600, 0);
+    m_screenBitmap->reference(g_unnamed6aac94, g_unnamed6aac98, g_unnamed6aac9c,
+                            g_unnamed6aaca0);
+    m_screenBitmap->fillRect(0, 0, 800, 600, 0);
 
     RECT tempRect;
     tempRect.left = 0;
     tempRect.top = 0;
     tempRect.right = 800;
     tempRect.bottom = 600;
-    RobAppBlit(&tempRect);
+    robAppBlit(&tempRect);
 
-    gpMouseManager->SetPointer(0, mouseManager::DEFAULT_SET);
-    gpMouseManager->ShowPointer(1);
+    g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
+    g_mouseManager->showPointer(1);
 
-    priority = newPriority;
-    id = 32;
-    status = STATUS_ACTIVE;
-    strcpy(cMgrName,
+    m_priority = newPriority;
+    m_id = 32;
+    m_status = STATUS_ACTIVE;
+    strcpy(m_mgrName,
            DATA_COMPGEN(0x0068d260, heroWindowManagerName,
                         "heroWindowManager"));
     return 0;
@@ -107,21 +112,21 @@ int heroWindowManager::Open(int newPriority)
 // RemoveWindow, because RemoveWindow unlinks the node it is handed), then
 // deletes both owned bitmaps through their virtual slot-0 + flag-1 tail.
 VA(0x006022d0, 0x46)  // anchor-callee (RemoveWindow) + dc order, dc 0x19a95c
-void heroWindowManager::Close()
+void heroWindowManager::close()
 {
-    if (status != STATUS_ACTIVE)
+    if (m_status != STATUS_ACTIVE)
         return;
-    heroWindow* w = tailWindow;
+    heroWindow* w = m_tailWindow;
     while (w) {
-        heroWindow* prev = w->prevWindow;
-        RemoveWindow(w);
+        heroWindow* prev = w->m_prevWindow;
+        removeWindow(w);
         w = prev;
     }
-    if (screenBitmap)
-        delete screenBitmap;
-    if (field_4C)
-        delete field_4C;
-    status = 0;
+    if (m_screenBitmap)
+        delete m_screenBitmap;
+    if (m_bmpFizzleSource)
+        delete m_bmpFizzleSource;
+    m_status = 0;
 }
 
 // E:\gamedcs\winmgr.cpp:181 - slot 2, the manager's message pump.
@@ -131,14 +136,14 @@ void heroWindowManager::Close()
 // returns. Sleeping windows (field_48 > 0) are skipped without
 // disturbing it.
 VA(0x00602320, 0x36)  // anchor-callee (heroWindow::BroadcastMessage), dc 0x19a9c0
-int heroWindowManager::Main(message& msg)
+int heroWindowManager::main(message& msg)
 {
     int result = 0;
 
-    for (heroWindow* w = tailWindow; w; w = w->prevWindow) {
-        if (w->field_48 > 0)
+    for (heroWindow* w = m_tailWindow; w; w = w->m_prevWindow) {
+        if (w->m_sleepCount > 0)
             continue;
-        result = w->BroadcastMessage(&msg);
+        result = w->broadcastMessage(&msg);
         if (result > 0 && result <= MESSAGE_DISPATCH_FORWARD)
             break;
     }
@@ -149,26 +154,26 @@ int heroWindowManager::Main(message& msg)
 // forwarding call; the DC name and message-reference signature fit it
 // store-for-store.
 VA(0x00602360, 0x10)  // byte-shape, dc 0x19aa08
-int heroWindowManager::ConvertToHover(message& msg)
+int heroWindowManager::convertToHover(message& msg)
 {
-    return Main(msg);
+    return main(msg);
 }
 
 // E:\gamedcs\winmgr.cpp:234
 VA(0x00602370, 0x3B)  // anchor-global, dc 0x19aa20
-int heroWindowManager::BroadcastMessage(int msgId, int msgCodeX, int msgCodeY, int msgExtra)
+int heroWindowManager::broadcastMessage(int msgId, int msgCodeX, int msgCodeY, int msgExtra)
 {
     message msg;
 
-    msg.qualifier = 0;
-    msg.mouseX = 0;
-    msg.mouseY = 0;
-    msg.window = 0;
-    msg.id = msgId;
-    msg.codeX = msgCodeX;
-    msg.codeY = msgCodeY;
-    msg.extra = msgExtra;
-    return Main(msg);
+    msg.m_qualifier = 0;
+    msg.m_mouseX = 0;
+    msg.m_mouseY = 0;
+    msg.m_window = 0;
+    msg.m_id = msgId;
+    msg.m_codeX = msgCodeX;
+    msg.m_codeY = msgCodeY;
+    msg.m_extra = msgExtra;
+    return main(msg);
 }
 
 // E:\gamedcs\winmgr.cpp:267. The priority list is ordered head->tail by
@@ -181,78 +186,78 @@ int heroWindowManager::BroadcastMessage(int msgId, int msgCodeX, int msgCodeY, i
 // from: everything after `if (newWindow->Open(...))` knows eax is zero,
 // which is why the null tests below compile to `cmp reg, eax`.
 VA(0x006023b0, 0xE7)  // anchor-callee (heroWindow::Open) + dc order, dc 0x19aa64
-void heroWindowManager::AddWindow(heroWindow* newWindow, int newPriority,
+void heroWindowManager::addWindow(heroWindow* newWindow, int newPriority,
                                   unsigned char update)
 {
-    heroWindow* at = tailWindow;
+    heroWindow* at = m_tailWindow;
 
-    if (newWindow->type & WINDOW_FLAG_FIXED_LAYER) {
+    if (newWindow->m_type & WINDOW_FLAG_FIXED_LAYER) {
         newPriority = 0;
     } else {
         if (newPriority == -1) {
-            if (!tailWindow)
+            if (!m_tailWindow)
                 newPriority = 0;
             else
-                newPriority = tailWindow->priority + 1;
+                newPriority = m_tailWindow->m_priority + 1;
         }
-        if (newPriority != 0 && !headWindow)
+        if (newPriority != 0 && !m_headWindow)
             return;
     }
 
-    if (newWindow->Open(newPriority, update))
+    if (newWindow->open(newPriority, update))
         return;
 
-    while (at && at->priority > newPriority)
-        at = at->prevWindow;
+    while (at && at->m_priority > newPriority)
+        at = at->m_prevWindow;
 
     if (!at) {
-        newWindow->nextWindow = headWindow;
-        newWindow->prevWindow = 0;
-        headWindow = newWindow;
-        if (!tailWindow)
-            tailWindow = newWindow;
-    } else if (!at->nextWindow) {
-        newWindow->prevWindow = tailWindow;
-        newWindow->nextWindow = 0;
-        tailWindow->nextWindow = newWindow;
-        tailWindow = newWindow;
+        newWindow->m_nextWindow = m_headWindow;
+        newWindow->m_prevWindow = 0;
+        m_headWindow = newWindow;
+        if (!m_tailWindow)
+            m_tailWindow = newWindow;
+    } else if (!at->m_nextWindow) {
+        newWindow->m_prevWindow = m_tailWindow;
+        newWindow->m_nextWindow = 0;
+        m_tailWindow->m_nextWindow = newWindow;
+        m_tailWindow = newWindow;
     } else {
-        newWindow->prevWindow = at;
-        newWindow->nextWindow = at->nextWindow;
-        at->nextWindow->prevWindow = newWindow;
-        at->nextWindow = newWindow;
+        newWindow->m_prevWindow = at;
+        newWindow->m_nextWindow = at->m_nextWindow;
+        at->m_nextWindow->m_prevWindow = newWindow;
+        at->m_nextWindow = newWindow;
     }
-    activeWindow = lastActive;
-    lastActive = newWindow;
+    m_activeWindow = m_lastActive;
+    m_lastActive = newWindow;
 }
 
 // E:\gamedcs\winmgr.cpp:387
 VA(0x006024a0, 0x78)  // dc-callgraph unique, dc 0x19ac14
-void heroWindowManager::RemoveWindow(heroWindow* killWindow)
+void heroWindowManager::removeWindow(heroWindow* killWindow)
 {
     if (!killWindow)
         return;
-    killWindow->Close(1);
-    if (killWindow == headWindow) {
-        headWindow = killWindow->nextWindow;
-        if (!headWindow)
-            tailWindow = 0;
+    killWindow->close(1);
+    if (killWindow == m_headWindow) {
+        m_headWindow = killWindow->m_nextWindow;
+        if (!m_headWindow)
+            m_tailWindow = 0;
         else
-            headWindow->prevWindow = 0;
-    } else if (killWindow == tailWindow) {
-        tailWindow = killWindow->prevWindow;
-        tailWindow->nextWindow = 0;
+            m_headWindow->m_prevWindow = 0;
+    } else if (killWindow == m_tailWindow) {
+        m_tailWindow = killWindow->m_prevWindow;
+        m_tailWindow->m_nextWindow = 0;
     } else {
-        heroWindow* prev = killWindow->prevWindow;
+        heroWindow* prev = killWindow->m_prevWindow;
         if (prev)
-            prev->nextWindow = killWindow->nextWindow;
-        heroWindow* next = killWindow->nextWindow;
+            prev->m_nextWindow = killWindow->m_nextWindow;
+        heroWindow* next = killWindow->m_nextWindow;
         if (next)
-            next->prevWindow = killWindow->prevWindow;
+            next->m_prevWindow = killWindow->m_prevWindow;
     }
-    if (activeWindow == killWindow)
-        activeWindow = 0;
-    lastActive = activeWindow ? activeWindow : tailWindow;
+    if (m_activeWindow == killWindow)
+        m_activeWindow = 0;
+    m_lastActive = m_activeWindow ? m_activeWindow : m_tailWindow;
 }
 
 // E:\gamedcs\winmgr.cpp:461
@@ -264,89 +269,90 @@ void heroWindowManager::RemoveWindow(heroWindow* killWindow)
 // nesting and where each try opens (the [ebp-4] walk 0/1/2/3 lands
 // exactly on those four boundaries).
 VA(0x00602520, 0x280)  // anchor-global, dc 0x19ad18
-int heroWindowManager::DoDialog(heroWindow* dialogWindow,
-                                TDialogHandler dialogFunction, int bFadeIn)
+int heroWindowManager::doDialog(heroWindow* dialogWindow,
+                                // Before normalization (locals): bFadeIn.
+                                TDialogHandler dialogFunction, int fadeIn)
 {
     heroWindow* w;
     message msg;
     int endFlag;
 
-    if (iDialogNestCount++ == 0)
-        SetNoDialogMenus(0);
+    if (g_dialogNestCount++ == 0)
+        setNoDialogMenus(0);
     try {
-        gbInDialog = 1;
+        g_inDialog = 1;
         try {
-            for (w = tailWindow; w; w = w->prevWindow)
-                w->SleepAllWidgets(1);
+            for (w = m_tailWindow; w; w = w->m_prevWindow)
+                w->sleepAllWidgets(1);
             try {
-                lastHover = -1;
+                m_lastHover = -1;
                 if (dialogWindow)
-                    AddWindow(dialogWindow, -1, 1);
+                    addWindow(dialogWindow, -1, 1);
                 try {
-                    if (bFadeIn)
-                        gpWindowManager->FadeScreen(0, 4, 0);
-                    gpInputManager->Flush();
-                    dialogReturn = -1;
+                    if (fadeIn)
+                        g_windowManager->fadeScreen(0, 4, 0);
+                    g_inputManager->flush();
+                    m_dialogReturn = -1;
                     endFlag = 0;
-                    msg.id = 0;
-                    msg.codeX = 0;
-                    msg.codeY = 0;
-                    msg.qualifier = 0;
-                    msg.mouseX = 0;
-                    msg.mouseY = 0;
-                    msg.extra = 0;
-                    msg.window = 0;
+                    msg.m_id = 0;
+                    msg.m_codeX = 0;
+                    msg.m_codeY = 0;
+                    msg.m_qualifier = 0;
+                    msg.m_mouseX = 0;
+                    msg.m_mouseY = 0;
+                    msg.m_extra = 0;
+                    msg.m_window = 0;
                     while (!endFlag) {
-                        PollSound();
-                        Process1WindowsMessage();
-                        msg = gpInputManager->GetEvent();
-                        msg.window = dialogWindow;
-                        gpMouseManager->Main(msg);
+                        pollSound();
+                        process1WindowsMessage();
+                        msg = g_inputManager->getEvent();
+                        msg.m_window = dialogWindow;
+                        g_mouseManager->main(msg);
                         if (dialogWindow
-                            && (msg.id != MESSAGE_MOUSE_MOVE
-                                || gbSendMouseMoveMessages)) {
-                            int result = dialogWindow->BroadcastMessage(&msg);
+                            && (msg.m_id != MESSAGE_MOUSE_MOVE
+                                || g_sendMouseMoveMessages)) {
+                            int result = dialogWindow->broadcastMessage(&msg);
                             if (result == MESSAGE_DISPATCH_CONSUME)
                                 continue;
                             if (result == MESSAGE_DISPATCH_FORWARD
-                                && msg.id == MESSAGE_WIDGET
-                                && msg.codeX == widget::WIDGET_END_DIALOG) {
-                                dialogReturn = msg.codeY;
+                                && msg.m_id == MESSAGE_WIDGET
+                                && msg.m_codeX == widget::WIDGET_END_DIALOG) {
+                                m_dialogReturn = msg.m_codeY;
                                 endFlag = 1;
                             }
                         }
-                        msg.window = dialogWindow;
+                        msg.m_window = dialogWindow;
                         if (dialogFunction(msg) == MESSAGE_DISPATCH_FORWARD
-                            && msg.id == MESSAGE_WIDGET
-                            && msg.codeX == widget::WIDGET_END_DIALOG)
+                            && msg.m_id == MESSAGE_WIDGET
+                            && msg.m_codeX == widget::WIDGET_END_DIALOG)
                             endFlag = 1;
                     }
                 } catch (...) {
                     if (dialogWindow)
-                        RemoveWindow(dialogWindow);
+                        removeWindow(dialogWindow);
                     throw;
                 }
                 if (dialogWindow)
-                    RemoveWindow(dialogWindow);
+                    removeWindow(dialogWindow);
             } catch (...) {
-                for (w = headWindow; w; w = w->nextWindow)
-                    w->SleepAllWidgets(0);
+                for (w = m_headWindow; w; w = w->m_nextWindow)
+                    w->sleepAllWidgets(0);
                 throw;
             }
-            for (w = headWindow; w; w = w->nextWindow)
-                w->SleepAllWidgets(0);
+            for (w = m_headWindow; w; w = w->m_nextWindow)
+                w->sleepAllWidgets(0);
         } catch (...) {
-            gbInDialog = 0;
+            g_inDialog = 0;
             throw;
         }
-        gbInDialog = 0;
+        g_inDialog = 0;
     } catch (...) {
-        if (--iDialogNestCount == 0)
-            SetNoDialogMenus(1);
+        if (--g_dialogNestCount == 0)
+            setNoDialogMenus(1);
         throw;
     }
-    if (--iDialogNestCount == 0)
-        SetNoDialogMenus(1);
+    if (--g_dialogNestCount == 0)
+        setNoDialogMenus(1);
     return 0;
 }
 
@@ -361,62 +367,63 @@ int heroWindowManager::DoDialog(heroWindow* dialogWindow,
 // while retail sinks it past the redraw arm behind a forward `je`,
 // which is exactly VC6's two-case switch layout.
 VA(0x006027a0, 0x29A)  // anchor-global, dc 0x19aef4
-int heroWindowManager::DoDialogDraw(heroWindow* dialogWindow,
+int heroWindowManager::doDialogDraw(heroWindow* dialogWindow,
                                     TDialogHandler dialogFunction,
                                     TDialogHandler dialogDrawFunction,
-                                    int bFadeIn)
+                                    // Before normalization (locals): bFadeIn.
+                                    int fadeIn)
 {
     heroWindow* w;
     message msg;
     int endFlag;
 
-    if (iDialogNestCount++ == 0)
-        SetNoDialogMenus(0);
+    if (g_dialogNestCount++ == 0)
+        setNoDialogMenus(0);
     try {
-        gbInDialog = 1;
+        g_inDialog = 1;
         try {
-            for (w = tailWindow; w; w = w->prevWindow)
-                w->SleepAllWidgets(1);
+            for (w = m_tailWindow; w; w = w->m_prevWindow)
+                w->sleepAllWidgets(1);
             try {
-                lastHover = -1;
+                m_lastHover = -1;
                 if (dialogWindow)
-                    AddWindow(dialogWindow, -1, 1);
+                    addWindow(dialogWindow, -1, 1);
                 try {
                     endFlag = 0;
-                    msg.id = 0;
-                    msg.codeX = 0;
-                    msg.codeY = 0;
-                    msg.qualifier = 0;
-                    msg.mouseX = 0;
-                    msg.mouseY = 0;
-                    msg.extra = 0;
-                    msg.window = 0;
+                    msg.m_id = 0;
+                    msg.m_codeX = 0;
+                    msg.m_codeY = 0;
+                    msg.m_qualifier = 0;
+                    msg.m_mouseX = 0;
+                    msg.m_mouseY = 0;
+                    msg.m_extra = 0;
+                    msg.m_window = 0;
                     dialogDrawFunction(msg);
-                    if (bFadeIn)
-                        gpWindowManager->FadeScreen(0, 4, 0);
-                    gpInputManager->Flush();
-                    dialogReturn = -1;
+                    if (fadeIn)
+                        g_windowManager->fadeScreen(0, 4, 0);
+                    g_inputManager->flush();
+                    m_dialogReturn = -1;
                     while (!endFlag) {
-                        PollSound();
-                        Process1WindowsMessage();
-                        msg = gpInputManager->GetEvent();
-                        msg.window = dialogWindow;
-                        gpMouseManager->Main(msg);
+                        pollSound();
+                        process1WindowsMessage();
+                        msg = g_inputManager->getEvent();
+                        msg.m_window = dialogWindow;
+                        g_mouseManager->main(msg);
                         if (dialogWindow
-                            && (msg.id != MESSAGE_MOUSE_MOVE
-                                || gbSendMouseMoveMessages)) {
-                            if (dialogWindow->BroadcastMessage(&msg)
+                            && (msg.m_id != MESSAGE_MOUSE_MOVE
+                                || g_sendMouseMoveMessages)) {
+                            if (dialogWindow->broadcastMessage(&msg)
                                     == MESSAGE_DISPATCH_FORWARD
-                                && msg.id == MESSAGE_WIDGET
-                                && msg.codeX == widget::WIDGET_END_DIALOG) {
-                                dialogReturn = msg.codeY;
+                                && msg.m_id == MESSAGE_WIDGET
+                                && msg.m_codeX == widget::WIDGET_END_DIALOG) {
+                                m_dialogReturn = msg.m_codeY;
                                 endFlag = 1;
                             }
                         }
-                        msg.window = dialogWindow;
+                        msg.m_window = dialogWindow;
                         if (dialogFunction(msg) == MESSAGE_DISPATCH_FORWARD
-                            && msg.id == MESSAGE_WIDGET) {
-                            switch (msg.codeX) {
+                            && msg.m_id == MESSAGE_WIDGET) {
+                            switch (msg.m_codeX) {
                             case widget::WIDGET_END_DIALOG:
                                 endFlag = 1;
                                 break;
@@ -428,31 +435,31 @@ int heroWindowManager::DoDialogDraw(heroWindow* dialogWindow,
                     }
                 } catch (...) {
                     if (dialogWindow)
-                        RemoveWindow(dialogWindow);
+                        removeWindow(dialogWindow);
                     throw;
                 }
                 if (dialogWindow)
-                    RemoveWindow(dialogWindow);
-                gpInputManager->Flush();
+                    removeWindow(dialogWindow);
+                g_inputManager->flush();
             } catch (...) {
-                for (w = headWindow; w; w = w->nextWindow)
-                    w->SleepAllWidgets(0);
+                for (w = m_headWindow; w; w = w->m_nextWindow)
+                    w->sleepAllWidgets(0);
                 throw;
             }
-            for (w = headWindow; w; w = w->nextWindow)
-                w->SleepAllWidgets(0);
+            for (w = m_headWindow; w; w = w->m_nextWindow)
+                w->sleepAllWidgets(0);
         } catch (...) {
-            gbInDialog = 0;
+            g_inDialog = 0;
             throw;
         }
-        gbInDialog = 0;
+        g_inDialog = 0;
     } catch (...) {
-        if (--iDialogNestCount == 0)
-            SetNoDialogMenus(1);
+        if (--g_dialogNestCount == 0)
+            setNoDialogMenus(1);
         throw;
     }
-    if (--iDialogNestCount == 0)
-        SetNoDialogMenus(1);
+    if (--g_dialogNestCount == 0)
+        setNoDialogMenus(1);
     return 0;
 }
 
@@ -470,32 +477,32 @@ int heroWindowManager::DoDialogDraw(heroWindow* dialogWindow,
 // 0x188, not the carve's 0x13a: the three funclets at 0x602b7a/b93/bb2
 // are local labels inside this one symbol (carve row corrected).
 VA(0x00602a40, 0x188)  // anchor-global, dc 0x19b0fc
-void heroWindowManager::DoQuickView(heroWindow* window)
+void heroWindowManager::doQuickView(heroWindow* window)
 {
     heroWindow* w;
 
-    gpMouseManager->HidePointer();
+    g_mouseManager->hidePointer();
     try {
-        for (w = tailWindow; w; w = w->prevWindow)
-            w->SleepAllWidgets(1);
+        for (w = m_tailWindow; w; w = w->m_prevWindow)
+            w->sleepAllWidgets(1);
         try {
             if (window)
-                AddWindow(window, -1, 1);
+                addWindow(window, -1, 1);
             try {
                 for (;;) {
-                    PollSound();
-                    Process1WindowsMessage();
-                    message msg = gpInputManager->GetEvent();
+                    pollSound();
+                    process1WindowsMessage();
+                    message msg = g_inputManager->getEvent();
                     unsigned char done =
-                        msg.id == MESSAGE_RIGHT_BUTTON_UP
-                        || msg.id == MESSAGE_LEFT_BUTTON_DOWN
-                        || msg.id == MESSAGE_LEFT_BUTTON_UP;
-                    if (bVideoPaused && gUnnamed69d808) {
-                        CUnnamed69d808_f0* pump =
-                            gUnnamed69d808->get_field_f0();
+                        msg.m_id == MESSAGE_RIGHT_BUTTON_UP
+                        || msg.m_id == MESSAGE_LEFT_BUTTON_DOWN
+                        || msg.m_id == MESSAGE_LEFT_BUTTON_UP;
+                    if (g_videoPaused && g_dPlay) {
+                        CNetMsgHandler* pump =
+                            g_dPlay->getNetMsgHandler();
                         if (pump) {
-                            pump->_vslot1(1, 0);
-                            if (pump->_vslot2())
+                            pump->checkHandleNet(1, 0);
+                            if (pump->getAbortPopupMsg())
                                 break;
                         }
                     }
@@ -504,37 +511,37 @@ void heroWindowManager::DoQuickView(heroWindow* window)
                 }
             } catch (...) {
                 if (window)
-                    RemoveWindow(window);
+                    removeWindow(window);
                 throw;
             }
             if (window)
-                RemoveWindow(window);
+                removeWindow(window);
         } catch (...) {
-            for (w = headWindow; w; w = w->nextWindow)
-                w->SleepAllWidgets(0);
+            for (w = m_headWindow; w; w = w->m_nextWindow)
+                w->sleepAllWidgets(0);
             throw;
         }
-        for (w = headWindow; w; w = w->nextWindow)
-            w->SleepAllWidgets(0);
+        for (w = m_headWindow; w; w = w->m_nextWindow)
+            w->sleepAllWidgets(0);
     } catch (...) {
-        gpMouseManager->ShowPointer(false);
+        g_mouseManager->showPointer(false);
         throw;
     }
-    gpMouseManager->ShowPointer(false);
+    g_mouseManager->showPointer(false);
 }
 
 #if 0  // @carcass
 
 // E:\gamedcs\winmgr.cpp:844
 DC_ONLY(0x19b1f0, 0x3E)
-void heroWindowManager::UpdateScreen()
+void heroWindowManager::updateScreen()
 {
     // @stub
 }
 
 // E:\gamedcs\winmgr.cpp:916
 DC_ONLY(0x19b328, 0x9C)
-void heroWindowManager::UpdateScreen(int x, int y, int width, int height, int dx, int dy)
+void heroWindowManager::updateScreen(int x, int y, int width, int height, int dx, int dy)
 {
     // @stub
 }
@@ -579,13 +586,13 @@ void heroWindowManager::BlitToScreenWithPointerX(int x, int y, int w, int h, int
 // all. A shrink-wrap residual is worth re-reading as a control-flow
 // question before it is treated as a register one.
 VA(0x00602bd0, 0x7C)  // anchor-caller (widget::Main), dc 0x19b230
-void heroWindowManager::UpdateScreen(int x, int y, int width, int height)
+void heroWindowManager::updateScreen(int x, int y, int width, int height)
 {
     RECT region;
 
-    if (isWaitingForFadeIn)
+    if (m_isWaitingForFadeIn)
         return;
-    PollSound();
+    pollSound();
     if (x < 0)
         x = 0;
     if (y < 0)
@@ -599,30 +606,31 @@ void heroWindowManager::UpdateScreen(int x, int y, int width, int height)
         region.top = y;
         region.right = x + width;
         region.bottom = y + height;
-        DDAppBlit(&region);
+        ddAppBlit(&region);
     }
-    PollSound();
+    pollSound();
 }
 
 
 // E:\gamedcs\winmgr.cpp:1007
+// Before normalization (locals): expect_fadein.
 VA(0x00602c50, 0x63)  // anchor-global, dc 0x19b428
-void heroWindowManager::FadeScreen(int inOut, int speed, unsigned char expect_fadein)
+void heroWindowManager::fadeScreen(int inOut, int speed, unsigned char expectFadein)
 {
     if (inOut == 1) {
-        if (expect_fadein)
-            gpMouseManager->HidePointer();
-        FadeToBlack(speed, expect_fadein);
-        if (expect_fadein)
-            isWaitingForFadeIn = 1;
+        if (expectFadein)
+            g_mouseManager->hidePointer();
+        fadeToBlack(speed, expectFadein);
+        if (expectFadein)
+            m_isWaitingForFadeIn = 1;
     } else {
-        FadeFromBlack(speed);
+        fadeFromBlack(speed);
         // The clear is OUTSIDE the guard: retail's `je` lands ON the
         // `mov byte [esi+0x48], 0`, not past it (the one byte that kept
         // this at 99.87%).
-        if (isWaitingForFadeIn)
-            gpMouseManager->ShowPointer(0);
-        isWaitingForFadeIn = 0;
+        if (m_isWaitingForFadeIn)
+            g_mouseManager->showPointer(0);
+        m_isWaitingForFadeIn = 0;
     }
 }
 
@@ -682,14 +690,14 @@ void heroWindowManager::FadeBlit(int sx, int sy, int sw, int sh, const Bitmap816
 
 // E:\gamedcs\Bitmap816.h:73
 DC_ONLY(0x19c5e8, 0x8)
-const TPalette16* Bitmap816::GetPalette()
+const TPalette16* Bitmap816::getPalette()
 {
     // @stub
 }
 
 // E:\gamedcs\Bitmap816.h:104
 DC_ONLY(0x19c5f0, 0xE)
-const unsigned char* Bitmap816::GetMap(int x, int y)
+const unsigned char* Bitmap816::getMap(int x, int y)
 {
     // @stub
 }
@@ -701,10 +709,10 @@ const unsigned char* Bitmap816::GetMap(int x, int y)
 // previous source bitmap is released, and a fresh one is grabbed straight out
 // of the manager's own screen surface.
 VA(0x00602cc0, 0xF2)  // anchor-callee + exhaustive tail order, dc 0x19b5c0
-void heroWindowManager::SaveFizzleSourceX(int startX, int startY, int width,
+void heroWindowManager::saveFizzleSourceX(int startX, int startY, int width,
                                           int height)
 {
-    if (gCompleteDrawEnabled) {
+    if (g_completeDrawEnabled) {
         if (startX < 0) {
             width += startX;
             startX = 0;
@@ -719,13 +727,13 @@ void heroWindowManager::SaveFizzleSourceX(int startX, int startY, int width,
             height = 600 - startY;
 
         if (width > 0 && height > 0) {
-            delete field_4C;
-            field_4C = new Bitmap16Bit(width, height);
-            field_4C->Grab(gpWindowManager->screenBitmap->map,
+            delete m_bmpFizzleSource;
+            m_bmpFizzleSource = new Bitmap16Bit(width, height);
+            m_bmpFizzleSource->grab(g_windowManager->m_screenBitmap->m_map,
                            startX, startY,
-                           gpWindowManager->screenBitmap->Width,
-                           gpWindowManager->screenBitmap->Height,
-                           gpWindowManager->screenBitmap->Pitch);
+                           g_windowManager->m_screenBitmap->m_width,
+                           g_windowManager->m_screenBitmap->m_height,
+                           g_windowManager->m_screenBitmap->m_pitch);
         }
     }
 }
@@ -794,10 +802,11 @@ void heroWindowManager::SaveFizzleSourceX(int startX, int startY, int width,
 // retail materialises it as the immediate 0x21, so it is constant-propagated
 // exactly like SetEnvironmentOrigin's MAX_RANGE and is not reachable.
 VA(0x00602dc0, 0x2F7)  // anchor-import + exhaustive tail order, dc 0x19b8fc
-void heroWindowManager::FizzleForwardX(int startX, int startY, int width,
-                                       int height, int iFadeTime)
+void heroWindowManager::fizzleForwardX(int startX, int startY, int width,
+                                       // Before normalization (locals): iFadeTime.
+                                       int height, int fadeTime)
 {
-    if (gCompleteDrawEnabled) {
+    if (g_completeDrawEnabled) {
         if (startX < 0) {
             width += startX;
             startX = 0;
@@ -812,39 +821,39 @@ void heroWindowManager::FizzleForwardX(int startX, int startY, int width,
             height = 600 - startY;
 
         if (width > 0 && height > 0) {
-            int savedColorCycling = colorCyclingOn;
-            colorCyclingOn = 0;
-            if (iFadeTime == -1)
-                iFadeTime = 33;
+            int savedColorCycling = m_colorCyclingOn;
+            m_colorCyclingOn = 0;
+            if (fadeTime == -1)
+                fadeTime = 33;
 
             RECT rect;
             Bitmap16Bit destination(width, height);
-            destination.Grab(screenBitmap->map, startX, startY,
-                             screenBitmap->Width, screenBitmap->Height,
-                             screenBitmap->Pitch);
+            destination.grab(m_screenBitmap->m_map, startX, startY,
+                             m_screenBitmap->m_width, m_screenBitmap->m_height,
+                             m_screenBitmap->m_pitch);
 
             for (int frame = 0; frame < 8; frame++) {
-                unsigned long deadline = GameTime::Get() + iFadeTime;
+                unsigned long deadline = GameTime::get() + fadeTime;
                 int alpha = (frame << 16) / 8;
 
                 Bitmap16MapPointer source;
-                source.pixels = field_4C->GetMap(0, 0);
+                source.m_pixels = m_bmpFizzleSource->getMap(0, 0);
                 Bitmap16MapPointer target;
-                target.pixels = destination.GetMap(0, 0);
+                target.m_pixels = destination.getMap(0, 0);
                 Bitmap16MapPointer screen;
-                screen.pixels = screenBitmap->GetMap(startX, startY);
+                screen.m_pixels = m_screenBitmap->getMap(startX, startY);
 
                 for (int row = 0; row < height; row++) {
-                    unsigned short* d = screen.pixels;
-                    const unsigned short* s = target.pixels;
-                    const unsigned short* od = source.pixels;
+                    unsigned short* d = screen.m_pixels;
+                    const unsigned short* s = target.m_pixels;
+                    const unsigned short* od = source.m_pixels;
                     for (int col = 0; col < width; col++) {
-                        int fromRed = *od & gColorMaskRed;
-                        int toRed = *s & gColorMaskRed;
-                        int fromGreen = *od & gColorMaskGreen;
-                        int toGreen = *s & gColorMaskGreen;
-                        int fromBlue = *od & gColorMaskBlue;
-                        int toBlue = *s & gColorMaskBlue;
+                        int fromRed = *od & g_colorMaskRed;
+                        int toRed = *s & g_colorMaskRed;
+                        int fromGreen = *od & g_colorMaskGreen;
+                        int toGreen = *s & g_colorMaskGreen;
+                        int fromBlue = *od & g_colorMaskBlue;
+                        int toBlue = *s & g_colorMaskBlue;
                         const int outRed =
                             ((toRed - fromRed) * alpha >> 16) + fromRed;
                         const int outGreen =
@@ -852,40 +861,40 @@ void heroWindowManager::FizzleForwardX(int startX, int startY, int width,
                         const int outBlue =
                             ((toBlue - fromBlue) * alpha >> 16) + fromBlue;
                         *d = static_cast<unsigned short>(
-                            (outRed & gColorMaskRed)
-                            | (outGreen & gColorMaskGreen)
-                            | (outBlue & gColorMaskBlue));
+                            (outRed & g_colorMaskRed)
+                            | (outGreen & g_colorMaskGreen)
+                            | (outBlue & g_colorMaskBlue));
                         d++;
                         s++;
                         od++;
                     }
-                    screen.bytes += screenBitmap->Pitch;
-                    target.bytes += destination.Pitch;
-                    source.bytes += field_4C->Pitch;
+                    screen.m_bytes += m_screenBitmap->m_pitch;
+                    target.m_bytes += destination.m_pitch;
+                    source.m_bytes += m_bmpFizzleSource->m_pitch;
                 }
 
-                PollSound();
+                pollSound();
                 rect.left = startX;
                 rect.right = startX + width;
                 rect.top = startY;
                 rect.bottom = startY + height;
-                RobAppBlit(&rect);
-                GameTime::DelayTil(deadline);
+                robAppBlit(&rect);
+                GameTime::delayTil(deadline);
             }
 
-            destination.Draw(0, 0, width, height, screenBitmap->map,
-                             startX, startY, screenBitmap->Width,
-                             screenBitmap->Height, screenBitmap->Pitch,
+            destination.draw(0, 0, width, height, m_screenBitmap->m_map,
+                             startX, startY, m_screenBitmap->m_width,
+                             m_screenBitmap->m_height, m_screenBitmap->m_pitch,
                              false);
             rect.left = startX;
             rect.top = startY;
             rect.right = startX + width;
             rect.bottom = startY + height;
-            RobAppBlit(&rect);
+            robAppBlit(&rect);
 
-            colorCyclingOn = savedColorCycling;
-            delete field_4C;
-            field_4C = 0;
+            m_colorCyclingOn = savedColorCycling;
+            delete m_bmpFizzleSource;
+            m_bmpFizzleSource = 0;
         }
     }
 }
@@ -895,11 +904,11 @@ void heroWindowManager::FizzleForwardX(int startX, int startY, int width,
 // owned bitmaps. Its only caller is 0x41aa20, the same body that calls
 // SaveFizzleSourceX (0x41a8d5) and FizzleForwardX (0x41aa13).
 VA(0x006030c0, 0x19)  // anchor-caller + dc order, dc 0x19bba8
-void heroWindowManager::ReleaseFizzleSource()
+void heroWindowManager::releaseFizzleSource()
 {
-    if (field_4C)
-        delete field_4C;
-    field_4C = 0;
+    if (m_bmpFizzleSource)
+        delete m_bmpFizzleSource;
+    m_bmpFizzleSource = 0;
 }
 
 // E:\gamedcs\winmgr.cpp:1707 - the fade-out. Located by anchor-caller:
@@ -1003,30 +1012,31 @@ void heroWindowManager::ReleaseFizzleSource()
 // walk paid +1.49); both together 88.2674 / 87.8765; red-first MASK
 // declaration order 88.2674 / 87.8765; `const unsigned int` masks byte-flat;
 // swapping the deadline/started GameTime::Get() pair 87.2965 / 86.8827.
+// Before normalization (locals): expect_fadein, pSrc, pDst.
 VA(0x006030e0, 0x1F9)  // anchor-caller, dc 0x19c1bc
-void heroWindowManager::FadeToBlack(int speed, unsigned char expect_fadein)
+void heroWindowManager::fadeToBlack(int speed, unsigned char expectFadein)
 {
-    unsigned long maskBlue = (gColorMaskBlue << 16) | gColorMaskBlue;
-    unsigned long maskGreen = (gColorMaskGreen << 16) | gColorMaskGreen;
-    unsigned long maskRed = (gColorMaskRed << 16) | gColorMaskRed;
+    unsigned long maskBlue = (g_colorMaskBlue << 16) | g_colorMaskBlue;
+    unsigned long maskGreen = (g_colorMaskGreen << 16) | g_colorMaskGreen;
+    unsigned long maskRed = (g_colorMaskRed << 16) | g_colorMaskRed;
     Bitmap16Bit fadeFrom(WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT);
     RECT screenRect;
 
-    fadeFrom.Grab(screenBitmap->map, 0, 0, screenBitmap->Width,
-        screenBitmap->Height, screenBitmap->Pitch);
+    fadeFrom.grab(m_screenBitmap->m_map, 0, 0, m_screenBitmap->m_width,
+        m_screenBitmap->m_height, m_screenBitmap->m_pitch);
 
     for (int shift = 0; shift < 3; shift++) {
-        unsigned long deadline = GameTime::Get() + 50;
-        unsigned long started = GameTime::Get();
-        unsigned char* pSrc = static_cast<unsigned char*>(
-            static_cast<void*>(fadeFrom.map));
-        unsigned char* pDst = static_cast<unsigned char*>(
-            static_cast<void*>(screenBitmap->map));
+        unsigned long deadline = GameTime::get() + 50;
+        unsigned long started = GameTime::get();
+        unsigned char* sourceBytes = static_cast<unsigned char*>(
+            static_cast<void*>(fadeFrom.m_map));
+        unsigned char* destinationBytes = static_cast<unsigned char*>(
+            static_cast<void*>(m_screenBitmap->m_map));
         for (int y = 0; y < WINDOW_SCREEN_HEIGHT; y++) {
             unsigned long* src = static_cast<unsigned long*>(
-                static_cast<void*>(pSrc));
+                static_cast<void*>(sourceBytes));
             unsigned long* dst = static_cast<unsigned long*>(
-                static_cast<void*>(pDst));
+                static_cast<void*>(destinationBytes));
             for (int x = 0; x < WINDOW_SCREEN_WIDTH / 2; x++) {
                 unsigned long pair = *src++;
                 unsigned long blue = (pair & maskBlue) >> shift;
@@ -1035,29 +1045,29 @@ void heroWindowManager::FadeToBlack(int speed, unsigned char expect_fadein)
                 dst[x] = (red & maskRed) | (green & maskGreen)
                     | (blue & maskBlue);
             }
-            pSrc += fadeFrom.Pitch;
-            pDst += screenBitmap->Pitch;
+            sourceBytes += fadeFrom.m_pitch;
+            destinationBytes += m_screenBitmap->m_pitch;
         }
         screenRect.left = 0;
         screenRect.top = 0;
         screenRect.right = WINDOW_SCREEN_WIDTH;
         screenRect.bottom = WINDOW_SCREEN_HEIGHT;
-        DDAppBlit(&screenRect);
-        if (GameTime::Get() - started > 50)
+        ddAppBlit(&screenRect);
+        if (GameTime::get() - started > 50)
             break;
-        GameTime::DelayTil(deadline);
+        GameTime::delayTil(deadline);
     }
 
-    screenBitmap->FillRect(0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT, 0);
+    m_screenBitmap->fillRect(0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT, 0);
     screenRect.left = 0;
     screenRect.top = 0;
     screenRect.right = WINDOW_SCREEN_WIDTH;
     screenRect.bottom = WINDOW_SCREEN_HEIGHT;
-    DDAppBlit(&screenRect);
-    if (expect_fadein) {
-        fadeFrom.Draw(0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT,
-            screenBitmap->map, 0, 0, screenBitmap->Width,
-            screenBitmap->Height, screenBitmap->Pitch, 0);
+    ddAppBlit(&screenRect);
+    if (expectFadein) {
+        fadeFrom.draw(0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT,
+            m_screenBitmap->m_map, 0, 0, m_screenBitmap->m_width,
+            m_screenBitmap->m_height, m_screenBitmap->m_pitch, 0);
     }
 }
 
@@ -1071,29 +1081,30 @@ void heroWindowManager::FadeToBlack(int speed, unsigned char expect_fadein)
 // corrected note there. It is a CONTROL-FLOW wall (rotated row loop,
 // one block short), not the register swap the first note claimed.
 VA(0x006032e0, 0x1E5)  // anchor-caller, dc 0x19c3b8
-void heroWindowManager::FadeFromBlack(int speed)
+void heroWindowManager::fadeFromBlack(int speed)
 {
-    unsigned long maskBlue = (gColorMaskBlue << 16) | gColorMaskBlue;
-    unsigned long maskGreen = (gColorMaskGreen << 16) | gColorMaskGreen;
-    unsigned long maskRed = (gColorMaskRed << 16) | gColorMaskRed;
+    unsigned long maskBlue = (g_colorMaskBlue << 16) | g_colorMaskBlue;
+    unsigned long maskGreen = (g_colorMaskGreen << 16) | g_colorMaskGreen;
+    unsigned long maskRed = (g_colorMaskRed << 16) | g_colorMaskRed;
     Bitmap16Bit fadeFrom(WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT);
     RECT screenRect;
 
-    fadeFrom.Grab(screenBitmap->map, 0, 0, screenBitmap->Width,
-        screenBitmap->Height, screenBitmap->Pitch);
+    fadeFrom.grab(m_screenBitmap->m_map, 0, 0, m_screenBitmap->m_width,
+        m_screenBitmap->m_height, m_screenBitmap->m_pitch);
 
     for (int shift = 2; shift > 0; shift--) {
-        unsigned long deadline = GameTime::Get() + 50;
-        unsigned long started = GameTime::Get();
-        unsigned char* pSrc = static_cast<unsigned char*>(
-            static_cast<void*>(fadeFrom.map));
-        unsigned char* pDst = static_cast<unsigned char*>(
-            static_cast<void*>(screenBitmap->map));
+        unsigned long deadline = GameTime::get() + 50;
+        unsigned long started = GameTime::get();
+        // Before normalization (locals): pSrc, pDst.
+        unsigned char* sourceBytes = static_cast<unsigned char*>(
+            static_cast<void*>(fadeFrom.m_map));
+        unsigned char* destinationBytes = static_cast<unsigned char*>(
+            static_cast<void*>(m_screenBitmap->m_map));
         for (int y = 0; y < WINDOW_SCREEN_HEIGHT; y++) {
             unsigned long* src = static_cast<unsigned long*>(
-                static_cast<void*>(pSrc));
+                static_cast<void*>(sourceBytes));
             unsigned long* dst = static_cast<unsigned long*>(
-                static_cast<void*>(pDst));
+                static_cast<void*>(destinationBytes));
             for (int x = 0; x < WINDOW_SCREEN_WIDTH / 2; x++) {
                 unsigned long pair = *src++;
                 unsigned long blue = (pair & maskBlue) >> shift;
@@ -1102,25 +1113,25 @@ void heroWindowManager::FadeFromBlack(int speed)
                 dst[x] = (red & maskRed) | (green & maskGreen)
                     | (blue & maskBlue);
             }
-            pSrc += fadeFrom.Pitch;
-            pDst += screenBitmap->Pitch;
+            sourceBytes += fadeFrom.m_pitch;
+            destinationBytes += m_screenBitmap->m_pitch;
         }
         screenRect.left = 0;
         screenRect.top = 0;
         screenRect.right = WINDOW_SCREEN_WIDTH;
         screenRect.bottom = WINDOW_SCREEN_HEIGHT;
-        DDAppBlit(&screenRect);
-        if (GameTime::Get() - started > 50)
+        ddAppBlit(&screenRect);
+        if (GameTime::get() - started > 50)
             break;
-        GameTime::DelayTil(deadline);
+        GameTime::delayTil(deadline);
     }
 
-    fadeFrom.Draw(0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT,
-        screenBitmap->map, 0, 0, screenBitmap->Width, screenBitmap->Height,
-        screenBitmap->Pitch, 0);
+    fadeFrom.draw(0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT,
+        m_screenBitmap->m_map, 0, 0, m_screenBitmap->m_width, m_screenBitmap->m_height,
+        m_screenBitmap->m_pitch, 0);
     screenRect.left = 0;
     screenRect.top = 0;
     screenRect.right = WINDOW_SCREEN_WIDTH;
     screenRect.bottom = WINDOW_SCREEN_HEIGHT;
-    DDAppBlit(&screenRect);
+    ddAppBlit(&screenRect);
 }

@@ -18,7 +18,7 @@ class type_university_window;
 // Shared three-entry Basic/Advanced/Expert display-name row. Its retail
 // storage is claimed by levelupwindow.cpp; the university purchase callback
 // reads the Basic entry when composing its skill dialog.
-extern const char* gSkillMasteryNames[3];
+extern const char* g_skillMasteryNames[3];
 
 // Retail's two inlined constructor sites prove the iconWidget base followed
 // by the byte click latch and dword skill at +0x48/+0x4c. Dreamcast preserves
@@ -26,15 +26,22 @@ extern const char* gSkillMasteryNames[3];
 // boundaries even though Complete inlines the constructor into this TU.
 class type_university_skill_button : public iconWidget {
 public:
-    unsigned char click;       // +0x48
-    TSecondarySkill skill;     // +0x4c
+    // Before normalization: click.
+    unsigned char m_click;       // +0x48
+    // Before normalization: skill.
+    TSecondarySkill m_skill;     // +0x4c
 
     type_university_skill_button(long x, long y, long width, long height,
-                                 long new_id, const char* image,
-                                 TSecondarySkill new_skill);
-    virtual unsigned char handle_click(unsigned char down_click,
-                                       unsigned char right_click);
-    void set_skill(TSecondarySkill new_skill, unsigned char new_click);
+                                 // Before normalization (locals): new_id, new_skill.
+                                 long newId, const char* image,
+                                 TSecondarySkill newSkill);
+    // Before normalization (function): type_university_skill_button::handle_click.
+    // Before normalization (locals): down_click, right_click.
+    virtual unsigned char handleClick(unsigned char downClick,
+                                       unsigned char rightClick);
+    // Before normalization (function): type_university_skill_button::set_skill.
+    // Before normalization (locals): new_skill, new_click.
+    void setSkill(TSecondarySkill newSkill, unsigned char newClick);
 };
 SIZE(type_university_skill_button, 0x50);
 
@@ -43,11 +50,16 @@ SIZE(type_university_skill_button, 0x50);
 // dwords, followed by the TSecondarySkill. Dreamcast proves the record's
 // identity and the containing window's four-plus-one arrangement.
 struct type_university_skill {
-    type_university_skill_button* button;
-    iconWidget* top_bar;
-    iconWidget* bottom_bar;
-    textWidget* text_widget;
-    TSecondarySkill skill;
+    // Before normalization: button.
+    type_university_skill_button* m_button;
+    // Before normalization: top_bar.
+    iconWidget* m_topBar;
+    // Before normalization: bottom_bar.
+    iconWidget* m_bottomBar;
+    // Before normalization: text_widget.
+    textWidget* m_textWidget;
+    // Before normalization: skill.
+    TSecondarySkill m_skill;
 };
 SIZE(type_university_skill, 0x14);
 
@@ -66,15 +78,24 @@ public:
     // Dreamcast names this member sequence at +0x58..+0xdc. Retail shifts it
     // by the byte-proven eight-byte CAdvPopup widening; the constructor and
     // modal/callback bodies independently corroborate every used offset.
-    hero* current_hero;                       // +0x60
-    class type_func_button* purchase_button; // +0x64
-    textWidget* purchase_title_widget;        // +0x68 (unused by Complete)
-    textWidget* purchase_text_widget;         // +0x6c
-    textWidget* rollover_widget;              // +0x70
-    type_university_skill skills[4];           // +0x74 .. +0xc3
-    type_university_skill selected_skill;      // +0xc4 .. +0xd7
-    std::vector<widget*> selection_widgets;    // +0xd8
-    std::vector<widget*> purchase_widgets;     // +0xe8
+    // Before normalization: current_hero.
+    hero* m_currentHero;                       // +0x60
+    // Before normalization: purchase_button.
+    class type_func_button* m_purchaseButton; // +0x64
+    // Before normalization: purchase_title_widget.
+    textWidget* m_purchaseTitleWidget;        // +0x68 (unused by Complete)
+    // Before normalization: purchase_text_widget.
+    textWidget* m_purchaseTextWidget;         // +0x6c
+    // Before normalization: rollover_widget.
+    textWidget* m_rolloverWidget;              // +0x70
+    // Before normalization: skills.
+    type_university_skill m_skills[4];           // +0x74 .. +0xc3
+    // Before normalization: selected_skill.
+    type_university_skill m_selectedSkill;      // +0xc4 .. +0xd7
+    // Before normalization: selection_widgets.
+    std::vector<widget*> m_selectionWidgets;    // +0xd8
+    // Before normalization: purchase_widgets.
+    std::vector<widget*> m_purchaseWidgets;     // +0xe8
 
     // Retail 0x5ef500. `bTownUniversity` is the retail-added third
     // parameter the Dreamcast pair does not have, and both image-wide
@@ -82,27 +103,39 @@ public:
     // the town building's page (0x5d2f26) passes 1, and the constructor
     // gates one extra 0x48-byte widget on it.
     type_university_window(hero* newHero, const type_university* university,
-                           unsigned char bTownUniversity);
+                           // Before normalization (locals): bTownUniversity.
+                           unsigned char townUniversity);
     // Retail 0x5f0a20 (dc 0x18f508); DispatchEvent's university arm and
     // townManager::DoUniversity both run the window through it. The DC
     // decorates it void; heroWindow's slot-6 virtual is int, so the
     // override keeps the base's return type (the sacrifice window's own
     // DoModal records the same adjustment).
-    virtual int DoModal(unsigned char bFade);  // slot 6
+    // Before normalization (function): type_university_window::DoModal.
+    // Before normalization (locals): bFade.
+    virtual int doModal(unsigned char fade);  // slot 6
 
-    virtual void handle_widget_hover(widget* current_widget);  // slot 4
-    virtual int ExitDialog(message* msg);  // slot 14
+    // Before normalization (function): type_university_window::handle_widget_hover.
+    // Before normalization (locals): current_widget.
+    virtual void handleWidgetHover(widget* currentWidget);  // slot 4
+    // Before normalization (function): type_university_window::ExitDialog.
+    virtual int exitDialog(message* msg);  // slot 14
 
     // Public in the Dreamcast field list. The derived skill button calls it
     // through widget::parentWindow; Complete keeps that exact relationship.
-    void skill_click(TSecondarySkill skill);
+    // Before normalization (function): type_university_window::skill_click.
+    void skillClick(TSecondarySkill skill);
 
 protected:
-    void set_selection_mode();
-    void update_skill_button(type_university_skill& skill);
-    static int cancel_click(message& msg);
-    static int exit_click(message& msg);
-    static int purchase_click(message& msg);
+    // Before normalization (function): type_university_window::set_selection_mode.
+    void setSelectionMode();
+    // Before normalization (function): type_university_window::update_skill_button.
+    void updateSkillButton(type_university_skill& skill);
+    // Before normalization (function): type_university_window::cancel_click.
+    static int cancelClick(message& msg);
+    // Before normalization (function): type_university_window::exit_click.
+    static int exitClick(message& msg);
+    // Before normalization (function): type_university_window::purchase_click.
+    static int purchaseClick(message& msg);
 };
 SIZE(type_university_window, 0xf8);
 

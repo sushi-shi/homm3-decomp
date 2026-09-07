@@ -19,58 +19,60 @@
 // Retail cursor.obj constants, read from the hash-verified image. Dreamcast
 // names startVals and its animate_move line table proves the two speed-table
 // lookups surrounding it.
-DATA(0x0063d6c8) static const int kWalkSpeedPixels[5] = { 2, 8, 10, 16, 32 };
-DATA(0x0063d6dc) static const int kScrollDelayValues[5] = { 100, 50, 50, 50, 100 };
+// Before normalization: kWalkSpeedPixels.
+// Before normalization: kScrollDelayValues.
+DATA(0x0063d6c8) static const int g_walkSpeedPixels[5] = { 2, 8, 10, 16, 32 };
+DATA(0x0063d6dc) static const int g_scrollDelayValues[5] = { 100, 50, 50, 50, 100 };
 
 // cursor.obj-owned byte latch; the surviving source name is not present in
 // either CodeView corpus, so keep it ordinal until stronger evidence lands.
-DATA(0x006968e8) unsigned char gUnnamed6968e8;
+DATA(0x006968e8) unsigned char g_unnamed6968e8;
 
 // E:\gamedcs\cursor.cpp:52
 DC_ONLY(0x79a48, 0x3C)
-void advManager::StartCursor(int direction)
+void advManager::startCursor(int direction)
 {
-    cursorDirection = direction;
+    m_cursorDirection = direction;
     switch (direction) {
     case MAP_DIRECTION_NORTH:
-        cursorSequence = hs_walk_n;
+        m_cursorSequence = hs_walk_n;
         break;
     case MAP_DIRECTION_NORTHEAST:
     case MAP_DIRECTION_NORTHWEST:
-        cursorSequence = hs_walk_ne;
+        m_cursorSequence = hs_walk_ne;
         break;
     case MAP_DIRECTION_EAST:
     case MAP_DIRECTION_WEST:
-        cursorSequence = hs_walk_e;
+        m_cursorSequence = hs_walk_e;
         break;
     case MAP_DIRECTION_SOUTHEAST:
     case MAP_DIRECTION_SOUTHWEST:
-        cursorSequence = hs_walk_se;
+        m_cursorSequence = hs_walk_se;
         break;
     case MAP_DIRECTION_SOUTH:
-        cursorSequence = hs_walk_s;
+        m_cursorSequence = hs_walk_s;
         break;
     }
 }
 
 // E:\gamedcs\cursor.cpp:85
 VA(0x0047f7d0, 0x82)  // exhaustive cursor order + ret 4/call set, dc 0x79a84
-void advManager::StopCursor(unsigned char standEnd)
+void advManager::stopCursor(unsigned char standEnd)
 {
     if (standEnd) {
-        hero* curr = gpGame->GetHero(gpCurrentPlayer->currHeroId);
+        hero* curr = g_game->getHero(g_currentPlayer->m_currHeroId);
         if (curr)
-            cursorSequence = curr->GetStandSequence();
+            m_cursorSequence = curr->getStandSequence();
         else
-            cursorSequence = 2;
+            m_cursorSequence = 2;
 
-        cursorFrameCount = 0;
-        if (gUnnamed6968e0)
-            gpSoundManager->StopSample(gUnnamed6968e0);
-        gUnnamed6968e0 = 0;
-        gUnnamed6968e4 = 0;
+        m_cursorFrameCount = 0;
+        if (g_unnamed6968e0)
+            g_soundManager->stopSample(g_unnamed6968e0);
+        g_unnamed6968e0 = 0;
+        g_unnamed6968e4 = 0;
     }
-    cursorTurning = 0;
+    m_cursorTurning = 0;
 }
 
 #if 0  // @carcass
@@ -95,52 +97,53 @@ void advManager::StopCursor(unsigned char standEnd)
 // Earlier raw-Y controls (Y assigned first, or no Y local) gave 80.31/78.96.
 // Caching GetHflip once gave 71.73%; Complete independently recomputes it
 // at every draw, so the older Dreamcast hflip local is not imposed here.
+// Before normalization (locals): CellX, CellY.
 VA(0x0047f860, 0x2D9)  // draw call set + ret 8, dc 0x79b0c
-void advManager::DrawCursor(int CellX, int CellY)
+void advManager::drawCursor(int cellX, int cellY)
 {
-    if (!gCompleteDrawEnabled)
+    if (!g_completeDrawEnabled)
         return;
-    if (bSpecialHideCursor)
+    if (g_specialHideCursor)
         return;
 
-    int refX = (CellX + 8) * 32;
-    int refY = CellY * 32 + 232;
+    int refX = (cellX + 8) * 32;
+    int refY = cellY * 32 + 232;
 
-    hero* curr = gpGame->GetCurrHero();
+    hero* curr = g_game->getCurrHero();
     if (curr) {
-        if (curr->flags & 0x40000) {
-            boat* currBoat = gpGame->GetHeroBoat(curr->id, 1);
+        if (curr->m_flags & 0x40000) {
+            boat* currBoat = g_game->getHeroBoat(curr->m_id, 1);
 
-            if (!GetCell(curr->get_location())->IsBeachBorder) {
-                boatFrothIcons[currBoat->type]->DrawHero(
-                    cursorSequence, cursorFrameCount,
-                    CellX * 32, CellY * 32, 32, 32,
-                    gpWindowManager->screenBitmap,
-                    refX, refY, curr->GetHflip());
+            if (!getCell(curr->getLocation())->m_isBeachBorder) {
+                m_boatFrothIcons[currBoat->m_type]->drawHero(
+                    m_cursorSequence, m_cursorFrameCount,
+                    cellX * 32, cellY * 32, 32, 32,
+                    g_windowManager->m_screenBitmap,
+                    refX, refY, curr->getHflip());
             }
-            boatFlagIcons[currBoat->type][currBoat->playerOwner]
-                ->DrawHero(
-                    cursorSequence,
-                    (animFrame + cursorFrameCount) % 8,
-                    CellX * 32, CellY * 32, 32, 32,
-                    gpWindowManager->screenBitmap,
-                    refX, refY, curr->GetHflip());
-            boatIcons[currBoat->type]->DrawHero(
-                cursorSequence, cursorFrameCount,
-                CellX * 32, CellY * 32, 32, 32,
-                gpWindowManager->screenBitmap,
-                refX, refY, curr->GetHflip());
+            m_boatFlagIcons[currBoat->m_type][currBoat->m_playerOwner]
+                ->drawHero(
+                    m_cursorSequence,
+                    (m_animCtr + m_cursorFrameCount) % 8,
+                    cellX * 32, cellY * 32, 32, 32,
+                    g_windowManager->m_screenBitmap,
+                    refX, refY, curr->getHflip());
+            m_boatIcons[currBoat->m_type]->drawHero(
+                m_cursorSequence, m_cursorFrameCount,
+                cellX * 32, cellY * 32, 32, 32,
+                g_windowManager->m_screenBitmap,
+                refX, refY, curr->getHflip());
         } else {
-            flagIcons[curr->owner]->DrawHero(
-                cursorSequence, (animFrame + cursorFrameCount) % 8,
-                CellX * 32, CellY * 32, 32, 32,
-                gpWindowManager->screenBitmap,
-                refX, refY, curr->GetHflip());
-            cursorIcons[curr->heroClass]->DrawHero(
-                cursorSequence, cursorFrameCount,
-                CellX * 32, CellY * 32, 32, 32,
-                gpWindowManager->screenBitmap,
-                refX, refY, curr->GetHflip());
+            m_flagIcons[curr->m_owner]->drawHero(
+                m_cursorSequence, (m_animCtr + m_cursorFrameCount) % 8,
+                cellX * 32, cellY * 32, 32, 32,
+                g_windowManager->m_screenBitmap,
+                refX, refY, curr->getHflip());
+            m_cursorIcons[curr->m_heroClass]->drawHero(
+                m_cursorSequence, m_cursorFrameCount,
+                cellX * 32, cellY * 32, 32, 32,
+                g_windowManager->m_screenBitmap,
+                refX, refY, curr->getHflip());
         }
     }
 }
@@ -155,42 +158,43 @@ void advManager::DrawCursor(int CellX, int CellY)
 // 72.5446%, with the locals in opposite homes. Restoring its screen meaning
 // gives 97.13%; restoring refX before refY closes the frame and both calls.
 // GetCurrHero and the early guards are independently byte-flat corrections.
+// Before normalization (locals): CellX, CellY.
 VA(0x0047fb40, 0x140)  // shadow draw call set + ret 8, dc 0x79ea8
-void advManager::DrawCursorShadow(int CellX, int CellY)
+void advManager::drawCursorShadow(int cellX, int cellY)
 {
-    if (!gCompleteDrawEnabled)
+    if (!g_completeDrawEnabled)
         return;
-    if (bSpecialHideCursor)
+    if (g_specialHideCursor)
         return;
 
-    int refX = (CellX + 8) * 32;
-    int refY = CellY * 32 + 232;
+    int refX = (cellX + 8) * 32;
+    int refY = cellY * 32 + 232;
 
-    hero* curr = gpGame->GetCurrHero();
+    hero* curr = g_game->getCurrHero();
     if (curr) {
-        if (curr->flags & 0x40000) {
-            boat* currBoat = gpGame->GetHeroBoat(curr->id, 1);
-            boatIcons[currBoat->type]->DrawHeroShadow(
-                cursorSequence, cursorFrameCount,
-                CellX * 32, CellY * 32, 32, 32,
-                gpWindowManager->screenBitmap,
-                refX, refY, curr->GetHflip());
+        if (curr->m_flags & 0x40000) {
+            boat* currBoat = g_game->getHeroBoat(curr->m_id, 1);
+            m_boatIcons[currBoat->m_type]->drawHeroShadow(
+                m_cursorSequence, m_cursorFrameCount,
+                cellX * 32, cellY * 32, 32, 32,
+                g_windowManager->m_screenBitmap,
+                refX, refY, curr->getHflip());
         } else {
-            cursorIcons[curr->heroClass]->DrawHeroShadow(
-                cursorSequence, cursorFrameCount,
-                CellX * 32, CellY * 32, 32, 32,
-                gpWindowManager->screenBitmap,
-                refX, refY, curr->GetHflip());
+            m_cursorIcons[curr->m_heroClass]->drawHeroShadow(
+                m_cursorSequence, m_cursorFrameCount,
+                cellX * 32, cellY * 32, 32, 32,
+                g_windowManager->m_screenBitmap,
+                refX, refY, curr->getHflip());
         }
     }
 }
 
 // E:\gamedcs\cursor.cpp:247
 VA(0x0047fc80, 0x35A)  // alpha draw/cursor animation call set, dc 0x7a024
-void advManager::DrawCursorAlpha()
+void advManager::drawCursorAlpha()
 {
-    if (gCompleteDrawEnabled) {
-        if (!bSpecialHideCursor) {
+    if (g_completeDrawEnabled) {
+        if (!g_specialHideCursor) {
             int refX = 256;
             int refY = 232;
             int clipx = 0;
@@ -198,59 +202,59 @@ void advManager::DrawCursorAlpha()
             int rightClip = 0;
             int bottomClip = 0;
 
-            if (radarOrigin.x + 8 < 0) {
-                clipx = abs((radarOrigin.x + 8) * 32) + scrollX;
+            if (m_radarOrigin.m_x + 8 < 0) {
+                clipx = abs((m_radarOrigin.m_x + 8) * 32) + m_scrollX;
                 refX += clipx;
             }
-            if (radarOrigin.x + 11 >= MAP_WIDTH)
-                rightClip = abs((MAP_WIDTH - radarOrigin.x - 11) * 32);
+            if (m_radarOrigin.m_x + 11 >= g_mapWidth)
+                rightClip = abs((g_mapWidth - m_radarOrigin.m_x - 11) * 32);
 
-            if (radarOrigin.y + 7 < 0) {
-                clipy = abs((radarOrigin.y + 7) * 32) + scrollY;
+            if (m_radarOrigin.m_y + 7 < 0) {
+                clipy = abs((m_radarOrigin.m_y + 7) * 32) + m_scrollY;
                 refY += clipy;
             }
-            if (radarOrigin.y + 9 >= MAP_HEIGHT)
-                bottomClip = abs((MAP_HEIGHT - radarOrigin.y - 9) * 32);
+            if (m_radarOrigin.m_y + 9 >= g_mapHeight)
+                bottomClip = abs((g_mapHeight - m_radarOrigin.m_y - 9) * 32);
 
-            hero* curr = gpGame->GetHero(gpCurrentPlayer->currHeroId);
+            hero* curr = g_game->getHero(g_currentPlayer->m_currHeroId);
 
-            if (curr->flags & 0x40000) {
-                boat* currBoat = gpGame->GetHeroBoat(curr->id, 1);
-                boatFlagIcons[currBoat->type][curr->owner]->DrawHeroAlpha(
-                    cursorSequence, (animFrame + cursorFrameCount) % 8,
+            if (curr->m_flags & 0x40000) {
+                boat* currBoat = g_game->getHeroBoat(curr->m_id, 1);
+                m_boatFlagIcons[currBoat->m_type][curr->m_owner]->drawHeroAlpha(
+                    m_cursorSequence, (m_animCtr + m_cursorFrameCount) % 8,
                     clipx, clipy, 96 - rightClip - clipx,
                     64 - bottomClip - clipy,
-                    gpWindowManager->screenBitmap, refX, refY,
-                    curr->GetHflip());
-                boatIcons[currBoat->type]->DrawHeroAlpha(
-                    cursorSequence, cursorFrameCount, clipx, clipy,
+                    g_windowManager->m_screenBitmap, refX, refY,
+                    curr->getHflip());
+                m_boatIcons[currBoat->m_type]->drawHeroAlpha(
+                    m_cursorSequence, m_cursorFrameCount, clipx, clipy,
                     96 - rightClip - clipx, 64 - bottomClip - clipy,
-                    gpWindowManager->screenBitmap, refX, refY,
-                    curr->GetHflip());
+                    g_windowManager->m_screenBitmap, refX, refY,
+                    curr->getHflip());
             } else {
-                flagIcons[curr->owner]->DrawHeroAlpha(
-                    cursorSequence, (animFrame + cursorFrameCount) % 8,
+                m_flagIcons[curr->m_owner]->drawHeroAlpha(
+                    m_cursorSequence, (m_animCtr + m_cursorFrameCount) % 8,
                     clipx, clipy, 96 - rightClip - clipx,
                     64 - bottomClip - clipy,
-                    gpWindowManager->screenBitmap, refX, refY,
-                    curr->GetHflip());
-                cursorIcons[curr->heroClass]->DrawHeroAlpha(
-                    cursorSequence, cursorFrameCount, clipx, clipy,
+                    g_windowManager->m_screenBitmap, refX, refY,
+                    curr->getHflip());
+                m_cursorIcons[curr->m_heroClass]->drawHeroAlpha(
+                    m_cursorSequence, m_cursorFrameCount, clipx, clipy,
                     96 - rightClip - clipx, 64 - bottomClip - clipy,
-                    gpWindowManager->screenBitmap, refX, refY,
-                    curr->GetHflip());
+                    g_windowManager->m_screenBitmap, refX, refY,
+                    curr->getHflip());
             }
 
-            if (bHeroMoving) {
-                cursorFrameCount = (cursorFrameCount + 1) % 8;
-                if (!cursorFrameCount && gUnnamed6968e4) {
-                    gpSoundManager->StopSample(gUnnamed6968e0);
-                    gUnnamed6968e0 =
-                        gpSoundManager->MemorySample(gUnnamed6968e4);
-                    gUnnamed6968e4 = 0;
+            if (m_heroMoving) {
+                m_cursorFrameCount = (m_cursorFrameCount + 1) % 8;
+                if (!m_cursorFrameCount && g_unnamed6968e4) {
+                    g_soundManager->stopSample(g_unnamed6968e0);
+                    g_unnamed6968e0 =
+                        g_soundManager->memorySample(g_unnamed6968e4);
+                    g_unnamed6968e4 = 0;
                 }
             } else {
-                cursorFrameCount = 0;
+                m_cursorFrameCount = 0;
             }
         }
     }
@@ -259,10 +263,10 @@ void advManager::DrawCursorAlpha()
 // E:\gamedcs\cursor.cpp:386
 
 VA(0x0047ffe0, 0x1A)  // DC roster order + exact cursor member stores, dc 0x7a428
-void advManager::TurnTo(int newDirection)
+void advManager::turnTo(int newDirection)
 {
-    cursorTurning = 0;
-    cursorDirection = newDirection;
+    m_cursorTurning = 0;
+    m_cursorDirection = newDirection;
 }
 
 #if 0  // @carcass
@@ -271,74 +275,76 @@ void advManager::TurnTo(int newDirection)
 #endif  // @carcass
 
 VA(0x00480000, 0x84)  // exhaustive cursor-tail order + ret 8, dc 0x7a45c
-int advManager::GetMoveShowIt(hero* currHero, int direction)
+int advManager::getMoveShowIt(hero* currHero, int direction)
 {
-    int xInc = normalDirTable[direction].x;
-    int yInc = normalDirTable[direction].y;
+    int xInc = g_normalDirTable[direction].m_x;
+    int yInc = g_normalDirTable[direction].m_y;
 
-    if ((gpCurrentPlayer->IsLocalHuman()
-         || !gUnnamed698758.blackoutComputer)
-        && (MapExtraPosAndAdjacentsSet(currHero->x, currHero->y,
-                                      currHero->z, gMapVisibilityBit)
-            || MapExtraPosAndAdjacentsSet(currHero->x + xInc,
-                                         currHero->y + yInc,
-                                         currHero->z,
-                                         gMapVisibilityBit)))
+    if ((g_currentPlayer->isLocalHuman()
+         || !g_unnamed698758.m_blackoutComputer)
+        && (mapExtraPosAndAdjacentsSet(currHero->m_x, currHero->m_y,
+                                      currHero->m_z, g_mapVisibilityBit)
+            || mapExtraPosAndAdjacentsSet(currHero->m_x + xInc,
+                                         currHero->m_y + yInc,
+                                         currHero->m_z,
+                                         g_mapVisibilityBit)))
         return 1;
     else
         return 0;
 }
 
 // E:\gamedcs\cursor.cpp:420
+// Before normalization (locals): bIsRemoteMove, iOrigX, iOrigY, bFoughtBattle.
 VA(0x00480090, 0x1A4)  // exhaustive cursor-tail order + ret 0x1c, dc 0x7a4d0
-NewmapCell* advManager::end_move_hero(hero* curr, NewmapCell* returnCell, unsigned char bIsRemoteMove, long iOrigX, long iOrigY, unsigned char standEnd, int* bFoughtBattle)
+NewmapCell* advManager::endMoveHero(hero* curr, NewmapCell* returnCell, unsigned char isRemoteMove, long origX, long origY, unsigned char standEnd, int* foughtBattle)
 {
-    UpdateRadar(1, 1, 0, 0, 0);
+    updateRadar(1, 1, 0, 0, 0);
 
-    if (!bIsRemoteMove
-        && (iOrigX != curr->x || iOrigY != curr->y)) {
-        if (!((curr->flags & 0x40000)
-              && returnCell && returnCell->type == ANCHOR_POINT)
-            && (GetMapExtra(curr->x, curr->y, curr->z) & 0x100)
-            && (!returnCell || returnCell->type != BOAT)) {
-            if (!curr->IsFlying(0) || standEnd
-                || curr->get_target() == curr->get_location())
-                CheckAdjacentMon(bFoughtBattle);
+    if (!isRemoteMove
+        && (origX != curr->m_x || origY != curr->m_y)) {
+        if (!((curr->m_flags & 0x40000)
+              && returnCell && returnCell->m_type == ANCHOR_POINT)
+            && (getMapExtra(curr->m_x, curr->m_y, curr->m_z) & 0x100)
+            && (!returnCell || returnCell->m_type != BOAT)) {
+            if (!curr->isFlying(0) || standEnd
+                || curr->getTarget() == curr->getLocation())
+                checkAdjacentMon(foughtBattle);
 
-            if (curr->owner != gNetLocalGamePos)
+            if (curr->m_owner != g_netLocalGamePos)
                 returnCell = 0;
         }
     }
 
-    if (gpCurrentPlayer->IsLocalHuman())
-        SetNoDialogMenus(1);
+    if (g_currentPlayer->isLocalHuman())
+        setNoDialogMenus(1);
     return returnCell;
 }
 
 // E:\gamedcs\cursor.cpp:458
+// Before normalization (locals): bIsRemoteMove, bFoughtBattle.
 VA(0x00480240, 0x131)  // exhaustive cursor-tail order + 305/304 B, dc 0x7a6c4
-NewmapCell* advManager::handle_stop_on_trigger(hero* curr, NewmapCell* destCell, unsigned char bIsRemoteMove, unsigned char standEnd, int* bFoughtBattle, long curMoveCost, long nextMoveMinCost)
+NewmapCell* advManager::handleStopOnTrigger(hero* curr, NewmapCell* destCell, unsigned char isRemoteMove, unsigned char standEnd, int* foughtBattle, long curMoveCost, long nextMoveMinCost)
 {
-    StopCursor(1);
+    stopCursor(1);
 
-    if (gCompleteDrawEnabled) {
-        radarOrigin.x = curr->x - 9;
-        radarOrigin.y = curr->y - 8;
-        radarOrigin.z = curr->z;
+    if (g_completeDrawEnabled) {
+        m_radarOrigin.m_x = curr->m_x - 9;
+        m_radarOrigin.m_y = curr->m_y - 8;
+        m_radarOrigin.m_z = curr->m_z;
     }
 
-    curr->pathTargetX = curr->pathTargetY = -1;
-    CompleteDraw(0);
-    UpdateScreen(0, 0);
+    curr->m_pathTargetX = curr->m_pathTargetY = -1;
+    completeDraw(0);
+    updateScreen(0, 0);
 
-    curr->movePoints -= curMoveCost;
-    if (curr->movePoints < nextMoveMinCost) {
-        curr->movePoints = 0;
+    curr->m_movePoints -= curMoveCost;
+    if (curr->m_movePoints < nextMoveMinCost) {
+        curr->m_movePoints = 0;
         standEnd = 1;
     }
 
-    return end_move_hero(curr, destCell, bIsRemoteMove,
-                         curr->x, curr->y, standEnd, bFoughtBattle);
+    return endMoveHero(curr, destCell, isRemoteMove,
+                         curr->m_x, curr->m_y, standEnd, foughtBattle);
 }
 
 // E:\gamedcs\cursor.cpp:490
@@ -351,62 +357,63 @@ NewmapCell* advManager::handle_stop_on_trigger(hero* curr, NewmapCell* destCell,
 // catalog mutations are flat or worse; the DC statement order (521 delay,
 // 522 pixels, then the 32/walk_speed divide) is already what this body has.
 VA(0x00480380, 0x25C)  // exhaustive order + timeGetTime call, dc 0x7a7f4
-void advManager::animate_move(hero* curr, int direction, int xInc, int yInc)
+void advManager::animateMove(hero* curr, int direction, int xInc, int yInc)
 {
-    scrollX = scrollY = 0;
-    StartCursor(direction);
-    bHeroMoving = 1;
+    m_scrollX = m_scrollY = 0;
+    startCursor(direction);
+    m_heroMoving = 1;
 
-    curr->x += xInc;
-    curr->y += yInc;
+    curr->m_x += xInc;
+    curr->m_y += yInc;
 
-    if (gCompleteDrawEnabled) {
-        int walk_speed;
-        walk_speed = (&gUnnamed698758.computerWalkSpeed)
-            [gpCurrentPlayer->IsLocalHuman()];
+    if (g_completeDrawEnabled) {
+        // Before normalization (locals): walk_speed, iScrollDelayValue, next_frame_time.
+        int walkSpeed;
+        walkSpeed = (&g_unnamed698758.m_computerWalkSpeed)
+            [g_currentPlayer->isLocalHuman()];
 
-        radarOrigin.x = curr->x - 9;
-        radarOrigin.y = curr->y - 8;
-        radarOrigin.z = curr->z;
-        gbForceCompleteDraw = 1;
+        m_radarOrigin.m_x = curr->m_x - 9;
+        m_radarOrigin.m_y = curr->m_y - 8;
+        m_radarOrigin.m_z = curr->m_z;
+        m_forceCompleteDraw = 1;
 
-        if (walk_speed == CURSOR_INSTANT_WALK_SPEED) {
-            CompleteDraw(0);
-            gpWindowManager->UpdateScreen(0, 8, 608, 544);
+        if (walkSpeed == CURSOR_INSTANT_WALK_SPEED) {
+            completeDraw(0);
+            g_windowManager->updateScreen(0, 8, 608, 544);
         } else {
             int iterations;
             DATA(0x0063d6f0)
             static const int startVals[3] = { -32, 0, 32 };
-            int iScrollDelayValue;
+            int scrollDelayValue;
 
-            iScrollDelayValue = kScrollDelayValues[walk_speed];
-            walk_speed = kWalkSpeedPixels[walk_speed];
-            iterations = CURSOR_TILE_PIXELS / walk_speed;
+            scrollDelayValue = g_scrollDelayValues[walkSpeed];
+            walkSpeed = g_walkSpeedPixels[walkSpeed];
+            iterations = CURSOR_TILE_PIXELS / walkSpeed;
 
-            scrollX = startVals[xInc + 1];
-            scrollY = startVals[yInc + 1];
+            m_scrollX = startVals[xInc + 1];
+            m_scrollY = startVals[yInc + 1];
 
             for (int i = 0; i < iterations; ++i) {
-                unsigned long next_frame_time;
-                next_frame_time = GameTime::Get() + iScrollDelayValue;
+                unsigned long nextFrameTime;
+                nextFrameTime = GameTime::get() + scrollDelayValue;
 
-                if (walk_speed == CURSOR_IRREGULAR_STEP_PIXELS && i == 1) {
-                    scrollX -= xInc * CURSOR_IRREGULAR_MIDDLE_STEP_PIXELS;
-                    scrollY -= yInc * CURSOR_IRREGULAR_MIDDLE_STEP_PIXELS;
+                if (walkSpeed == CURSOR_IRREGULAR_STEP_PIXELS && i == 1) {
+                    m_scrollX -= xInc * CURSOR_IRREGULAR_MIDDLE_STEP_PIXELS;
+                    m_scrollY -= yInc * CURSOR_IRREGULAR_MIDDLE_STEP_PIXELS;
                 } else {
-                    scrollX -= xInc * walk_speed;
-                    scrollY -= yInc * walk_speed;
+                    m_scrollX -= xInc * walkSpeed;
+                    m_scrollY -= yInc * walkSpeed;
                 }
 
-                CompleteDraw(0);
-                gpWindowManager->UpdateScreen(0, 8, 608, 544);
-                GameTime::DelayTil(next_frame_time);
+                completeDraw(0);
+                g_windowManager->updateScreen(0, 8, 608, 544);
+                GameTime::delayTil(nextFrameTime);
             }
         }
     }
 
-    bHeroMoving = 0;
-    gUnnamed6968e8 = 0;
+    m_heroMoving = 0;
+    g_unnamed6968e8 = 0;
 }
 
 // Residual (89.8315%, polish-45): calls now pair 81/81 with ONE target-only
@@ -424,50 +431,52 @@ void advManager::animate_move(hero* curr, int direction, int xInc, int yInc)
 // giving `oldBoat` the Dreamcast procedure scope it has at dc sp+0x34
 // (retained above - it is positive DC evidence and costs nothing).
 // E:\gamedcs\cursor.cpp:570
+// Before normalization (locals): trigger_point, bNoMove, bComputerMove, bFoughtBattle,
+// bIsRemoteMove, became_boat, iOrigX, iOrigY.
 VA(0x004805e0, 0x131C)  // ret 0x1c + caller arg order/call set, dc 0x7aa54
-NewmapCell* advManager::MoveHero(int direction, unsigned char standEnd, type_point* trigger_point, int* bNoMove, unsigned char bComputerMove, int* bFoughtBattle, unsigned char bIsRemoteMove)
+NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_point* triggerPoint, int* noMove, unsigned char computerMove, int* foughtBattle, unsigned char isRemoteMove)
 {
-    unsigned char became_boat = 0;
+    unsigned char becameBoat = 0;
     hero* curr;
     unsigned char enteredBoat;
     NewmapCell* returnCell;
     int nextMoveMinCost;
     int xInc;
-    int iOrigX;
+    int origX;
     int curMoveCost;
     int yInc;
-    int iOrigY;
+    int origY;
     boat* oldBoat;
 
-    if (gpCurrentPlayer->IsLocalHuman())
-        SetNoDialogMenus(0);
+    if (g_currentPlayer->isLocalHuman())
+        setNoDialogMenus(0);
 
-    gUnnamed69777c = 0;
-    *bFoughtBattle = 0;
-    *bNoMove = 0;
+    g_unnamed69777c = 0;
+    *foughtBattle = 0;
+    *noMove = 0;
     returnCell = 0;
 
-    curr = gpGame->GetHero(gpCurrentPlayer->currHeroId);
-    iOrigY = curr->y;
-    iOrigX = curr->x;
-    xInc = normalDirTable[direction].x;
-    yInc = normalDirTable[direction].y;
+    curr = g_game->getHero(g_currentPlayer->m_currHeroId);
+    origY = curr->m_y;
+    origX = curr->m_x;
+    xInc = g_normalDirTable[direction].m_x;
+    yInc = g_normalDirTable[direction].m_y;
 
-    trigger_point->x = curr->x + xInc;
-    trigger_point->y = curr->y + yInc;
-    trigger_point->z = curr->z;
+    triggerPoint->m_x = curr->m_x + xInc;
+    triggerPoint->m_y = curr->m_y + yInc;
+    triggerPoint->m_z = curr->m_z;
 
-    gCompleteDrawEnabled = GetMoveShowIt(curr, direction);
-    if (pNetMsgHandler && pNetMsgHandler->IsInPopup())
-        gCompleteDrawEnabled = 0;
+    g_completeDrawEnabled = getMoveShowIt(curr, direction);
+    if (m_netMsgHandler && m_netMsgHandler->isInPopup())
+        g_completeDrawEnabled = 0;
 
     // Dreamcast's two line groups preserve this source lookup separately
     // from the destination lookup even though its result is unused.
-    GetCell(curr->get_location());
-    NewmapCell* destCell = GetCell(*trigger_point);
+    getCell(curr->getLocation());
+    NewmapCell* destCell = getCell(*triggerPoint);
 
-    curMoveCost = GetTerrainCost(curr, curr->get_location(), direction,
-                                 curr->movePoints);
+    curMoveCost = getTerrainCost(curr, curr->getLocation(), direction,
+                                 curr->m_movePoints);
     // MEASURED AND REJECTED 2026-09-05 (89.5139 -> 86.4535):
     // naming `curr->skillLevel[0]` in an `int` local above this if/else.
     // Retail DOES read it once - `movsx edx,[esi+0xc9]` at 0x4805cf, right
@@ -476,162 +485,162 @@ NewmapCell* advManager::MoveHero(int direction, unsigned char standEnd, type_poi
     // arm; but the named local costs three points here, so the single read
     // is a scheduling consequence of something else in this frame, not the
     // local it looks like.
-    if (curr->flags & 0x40000) {
-        nextMoveMinCost = MinimumTerrainCost(
-            destCell, curr->movePoints - curMoveCost, curr->skillLevel[0],
+    if (curr->m_flags & 0x40000) {
+        nextMoveMinCost = minimumTerrainCost(
+            destCell, curr->m_movePoints - curMoveCost, curr->m_skillLevel[0],
             -1, -1,
-            curr->army.get_creature_total(CREATURE_NOMAD) > 0);
+            curr->m_army.getCreatureTotal(CREATURE_NOMAD) > 0);
     } else {
-        nextMoveMinCost = MinimumTerrainCost(
-            destCell, curr->movePoints - curMoveCost, curr->skillLevel[0],
-            curr->flightLevel, curr->waterWalkLevel,
-            curr->army.get_creature_total(CREATURE_NOMAD) > 0);
+        nextMoveMinCost = minimumTerrainCost(
+            destCell, curr->m_movePoints - curMoveCost, curr->m_skillLevel[0],
+            curr->m_flightLevel, curr->m_waterWalkLevel,
+            curr->m_army.getCreatureTotal(CREATURE_NOMAD) > 0);
     }
 
-    if (!bIsRemoteMove && curr->movePoints < curMoveCost) {
-        *bNoMove = 1;
-        curr->movePoints = 0;
-        StopCursor(1);
-        return end_move_hero(curr, 0, 0, iOrigX, iOrigY, standEnd,
-                             bFoughtBattle);
+    if (!isRemoteMove && curr->m_movePoints < curMoveCost) {
+        *noMove = 1;
+        curr->m_movePoints = 0;
+        stopCursor(1);
+        return endMoveHero(curr, 0, 0, origX, origY, standEnd,
+                             foughtBattle);
     }
 
-    MobilizeCurrHero(0, 0, 1);
-    if (gCompleteDrawEnabled)
-        drawCursor = 1;
-    if (cursorDirection != direction)
-        TurnTo(direction);
-    curr->facing = direction;
+    mobilizeCurrHero(0, 0, 1);
+    if (g_completeDrawEnabled)
+        m_drawCursor = 1;
+    if (m_cursorDirection != direction)
+        turnTo(direction);
+    curr->m_facing = direction;
 
-    if ((curr->flags & 0x40000) && destCell->type == ANCHOR_POINT) {
-        oldBoat = gpGame->GetHeroBoat(curr->id, 1);
-        GetCell(curr->get_location());
+    if ((curr->m_flags & 0x40000) && destCell->m_type == ANCHOR_POINT) {
+        oldBoat = g_game->getHeroBoat(curr->m_id, 1);
+        getCell(curr->getLocation());
 
-        if (gNetworkActive69954c && bIsRemoteMove) {
-            curr->restore_cell();
-            curr->flags &= ~0x40000;
+        if (g_networkActive69954c && isRemoteMove) {
+            curr->restoreCell();
+            curr->m_flags &= ~0x40000;
         }
 
-        gpGame->record_hide_hero(curr, curr->owner, 0);
-        gpGame->record_show_boat(oldBoat, curr->get_location());
-        gpGame->record_show_hero(curr, curr->owner, *trigger_point, 0);
+        g_game->recordHideHero(curr, curr->m_owner, 0);
+        g_game->recordShowBoat(oldBoat, curr->getLocation());
+        g_game->recordShowHero(curr, curr->m_owner, *triggerPoint, 0);
 
-        oldBoat->x = curr->x;
-        oldBoat->y = curr->y;
-        oldBoat->z = curr->z;
-        oldBoat->obscure_cell();
-        oldBoat->occupied = 0;
-        oldBoat->facing = curr->facing;
-        drawCursor = 0;
-        became_boat = 1;
-        StopCursor(1);
-        CompleteDraw(0);
-        UpdateScreen(0, 0);
+        oldBoat->m_x = curr->m_x;
+        oldBoat->m_y = curr->m_y;
+        oldBoat->m_z = curr->m_z;
+        oldBoat->obscureCell();
+        oldBoat->m_occupied = 0;
+        oldBoat->m_facing = curr->m_facing;
+        m_drawCursor = 0;
+        becameBoat = 1;
+        stopCursor(1);
+        completeDraw(0);
+        updateScreen(0, 0);
     }
 
-    if (bShowRoute)
-        *GetRouteArrayPtr(curr->x + xInc, curr->y + yInc, curr->z) = 0;
+    if (m_showRoute)
+        *getRouteArrayPtr(curr->m_x + xInc, curr->m_y + yInc, curr->m_z) = 0;
 
     enteredBoat = 0;
-    if ((!curr->IsFlying(0) || curr->get_target() == *trigger_point)
-        && destCell->is_trigger
-        && ValidMoveWithEvent(curr, direction)) {
-        switch (destCell->type) {
+    if ((!curr->isFlying(0) || curr->getTarget() == *triggerPoint)
+        && destCell->m_isTrigger
+        && validMoveWithEvent(curr, direction)) {
+        switch (destCell->m_type) {
         case BOAT:
-            if (curr->flags & 0x40000)
-                return end_move_hero(curr, 0, bIsRemoteMove,
-                                     iOrigX, iOrigY, standEnd,
-                                     bFoughtBattle);
+            if (curr->m_flags & 0x40000)
+                return endMoveHero(curr, 0, isRemoteMove,
+                                     origX, origY, standEnd,
+                                     foughtBattle);
             else {
-                boat* newBoat = &gpGame->boats[destCell->extraInfo];
-                gpGame->record_hide_hero(curr, curr->owner, 0);
-                gpGame->record_hide_boat(newBoat, 1, curr->id);
-                gpGame->record_show_hero(curr, curr->owner,
-                                         *trigger_point, 1);
-                became_boat = 1;
-                if (gNetworkActive69954c && bIsRemoteMove) {
-                    curr->restore_cell();
+                boat* newBoat = &g_game->m_boats[destCell->m_extraInfo];
+                g_game->recordHideHero(curr, curr->m_owner, 0);
+                g_game->recordHideBoat(newBoat, 1, curr->m_id);
+                g_game->recordShowHero(curr, curr->m_owner,
+                                         *triggerPoint, 1);
+                becameBoat = 1;
+                if (g_networkActive69954c && isRemoteMove) {
+                    curr->restoreCell();
                     enteredBoat = 1;
                 } else {
-                    StopCursor(1);
-                    drawCursor = 0;
-                    FizzleCenter(0);
+                    stopCursor(1);
+                    m_drawCursor = 0;
+                    fizzleCenter(0);
                 }
             }
             break;
 
         case HERO:
-            if (curr->flags & 0x40000) {
-                hero* other = gpGame->GetHero(destCell->extraInfo);
-                if (!(other->flags & 0x40000))
-                    return end_move_hero(curr, 0, bIsRemoteMove,
-                                         iOrigX, iOrigY, standEnd,
-                                         bFoughtBattle);
+            if (curr->m_flags & 0x40000) {
+                hero* other = g_game->getHero(destCell->m_extraInfo);
+                if (!(other->m_flags & 0x40000))
+                    return endMoveHero(curr, 0, isRemoteMove,
+                                         origX, origY, standEnd,
+                                         foughtBattle);
             }
-            if (!curr->IsFlying(0) || curr->can_land())
-                return handle_stop_on_trigger(
-                    curr, destCell, bIsRemoteMove, standEnd,
-                    bFoughtBattle, curMoveCost, nextMoveMinCost);
+            if (!curr->isFlying(0) || curr->canLand())
+                return handleStopOnTrigger(
+                    curr, destCell, isRemoteMove, standEnd,
+                    foughtBattle, curMoveCost, nextMoveMinCost);
             break;
 
         case TOWN: {
-            town* thisTown = gpGame->GetTown(destCell->extraInfo);
-            if (!gpGame->OnSameTeam(thisTown->owner, gNetLocalGamePos)
-                && thisTown->HasGarrison())
-                return handle_stop_on_trigger(
-                    curr, destCell, bIsRemoteMove, standEnd,
-                    bFoughtBattle, curMoveCost, nextMoveMinCost);
+            town* thisTown = g_game->getTown(destCell->m_extraInfo);
+            if (!g_game->onSameTeam(thisTown->m_owner, g_netLocalGamePos)
+                && thisTown->hasGarrison())
+                return handleStopOnTrigger(
+                    curr, destCell, isRemoteMove, standEnd,
+                    foughtBattle, curMoveCost, nextMoveMinCost);
             break;
         }
 
         case BORDER_GATE:
-            if (!(gpGame->borderTentVisitFlags[destCell->objectIndex]
-                  & gUnnamed69ccc4))
-                return handle_stop_on_trigger(
-                    curr, destCell, bIsRemoteMove, standEnd,
-                    bFoughtBattle, curMoveCost, nextMoveMinCost);
+            if (!(g_game->m_borderTentVisitFlags[destCell->m_objectIndex]
+                  & g_unnamed69ccc4))
+                return handleStopOnTrigger(
+                    curr, destCell, isRemoteMove, standEnd,
+                    foughtBattle, curMoveCost, nextMoveMinCost);
             break;
 
         default:
-            if (gAdventureObjectTraits[destCell->type][0]
-                && (!curr->IsFlying(0) || curr->can_land()))
-                return handle_stop_on_trigger(
-                    curr, destCell, bIsRemoteMove, standEnd,
-                    bFoughtBattle, curMoveCost, nextMoveMinCost);
+            if (g_adventureObjectTraits[destCell->m_type][0]
+                && (!curr->isFlying(0) || curr->canLand()))
+                return handleStopOnTrigger(
+                    curr, destCell, isRemoteMove, standEnd,
+                    foughtBattle, curMoveCost, nextMoveMinCost);
             break;
         }
     }
 
-    if (!bIsRemoteMove && !ValidMove(curr, direction, 0, 0)) {
-        if (bComputerMove)
-            curr->movePoints = 0;
-        return end_move_hero(curr, 0, 0, iOrigX, iOrigY, standEnd,
-                             bFoughtBattle);
+    if (!isRemoteMove && !validMove(curr, direction, 0, 0)) {
+        if (computerMove)
+            curr->m_movePoints = 0;
+        return endMoveHero(curr, 0, 0, origX, origY, standEnd,
+                             foughtBattle);
     }
 
-    CMCMoveHero msg(curr->id, direction, standEnd, curr->get_location());
-    SendMapChange(&msg);
+    CMCMoveHero msg(curr->m_id, direction, standEnd, curr->getLocation());
+    sendMapChange(&msg);
 
-    if (!became_boat)
-        gpGame->record_move(curr, direction, *trigger_point);
+    if (!becameBoat)
+        g_game->recordMove(curr, direction, *triggerPoint);
 
-    gpGame->SetVisibility(curr->x + xInc, curr->y + yInc, curr->z,
-                          curr->owner, curr->GetVisibility(),
-                          bIsRemoteMove);
+    g_game->setVisibility(curr->m_x + xInc, curr->m_y + yInc, curr->m_z,
+                          curr->m_owner, curr->getVisibility(),
+                          isRemoteMove);
 
-    if (gNetworkActive69954c && bIsRemoteMove
-        && (gpGame->GetTeamMask(curr->owner)
-            & (1 << gpGame->GetLocalPlayerGamePos())))
-        UpdateRadar(1, 1, 0, 0, 0);
+    if (g_networkActive69954c && isRemoteMove
+        && (g_game->getTeamMask(curr->m_owner)
+            & (1 << g_game->getLocalPlayerGamePos())))
+        updateRadar(1, 1, 0, 0, 0);
 
-    gbForceCompleteDraw = 1;
-    if (gNetworkActive69954c && !gbFollowPlayerMode
-        && !gpCurrentPlayer->IsLocalHuman() && bIsRemoteMove) {
-        curr->x += xInc;
-        curr->y += yInc;
+    m_forceCompleteDraw = 1;
+    if (g_networkActive69954c && !g_followPlayerMode
+        && !g_currentPlayer->isLocalHuman() && isRemoteMove) {
+        curr->m_x += xInc;
+        curr->m_y += yInc;
         if (enteredBoat)
-            DoEventBoat(curr, destCell);
-        DemobilizeCurrHero(0, 1);
+            doEventBoat(curr, destCell);
+        demobilizeCurrHero(0, 1);
         return 0;
     }
 
@@ -643,76 +652,76 @@ NewmapCell* advManager::MoveHero(int direction, unsigned char standEnd, type_poi
     // build. Moving it here pairs the last stray call (base-only
     // restore_cell at +0xa06 against retail's +0xb81) and raises
     // 89.5139 -> 89.8315.
-    if (bIsRemoteMove && !gbFollowPlayerMode)
-        curr->restore_cell();
+    if (isRemoteMove && !g_followPlayerMode)
+        curr->restoreCell();
 
-    animate_move(curr, direction, xInc, yInc);
+    animateMove(curr, direction, xInc, yInc);
 
-    curr->movePoints -= curMoveCost;
-    if (curr->movePoints < nextMoveMinCost) {
-        curr->movePoints = 0;
+    curr->m_movePoints -= curMoveCost;
+    if (curr->m_movePoints < nextMoveMinCost) {
+        curr->m_movePoints = 0;
         standEnd = 1;
     }
 
-    unsigned char hasEvent = !bIsRemoteMove && destCell->HasTriggerableEvent();
-    if (!bComputerMove && hasEvent)
+    unsigned char hasEvent = !isRemoteMove && destCell->hasTriggerableEvent();
+    if (!computerMove && hasEvent)
         standEnd = 1;
     if (standEnd)
-        StopCursor(1);
-    if (bComputerMove && standEnd && gCompleteDrawEnabled) {
-        CompleteDraw(0);
-        UpdateScreen(0, 0);
+        stopCursor(1);
+    if (computerMove && standEnd && g_completeDrawEnabled) {
+        completeDraw(0);
+        updateScreen(0, 0);
     }
 
-    type_point point(radarOrigin.x + 9, radarOrigin.y + 8, radarOrigin.z);
-    int ground = GetCell(point)->GroundSet;
-    if (ground != field_58) {
-        field_58 = ground;
-        gpSoundManager->SwitchAmbientMusic(gTerrainMusicIds[field_58]);
+    type_point point(m_radarOrigin.m_x + 9, m_radarOrigin.m_y + 8, m_radarOrigin.m_z);
+    int ground = getCell(point)->m_groundSet;
+    if (ground != m_lastTerrain) {
+        m_lastTerrain = ground;
+        g_soundManager->switchAmbientMusic(g_terrainMusicIds[m_lastTerrain]);
     }
 
-    sample* walkSample = heroSamples[
-        GetCell(curr->get_location())->GroundSet];
-    if (curr->IsFlying(0))
-        walkSample = heroSamples[10];
-    walkSample->field_30 = 0;
-    if (cursorFrameCount) {
-        gUnnamed6968e4 = walkSample;
+    sample* walkSample = m_heroSamples[
+        getCell(curr->getLocation())->m_groundSet];
+    if (curr->isFlying(0))
+        walkSample = m_heroSamples[10];
+    walkSample->m_memSample.m_memLooping = 0;
+    if (m_cursorFrameCount) {
+        g_unnamed6968e4 = walkSample;
     } else {
-        gUnnamed6968e4 = 0;
-        gpSoundManager->StopSample(gUnnamed6968e0);
-        gUnnamed6968e0 = gpSoundManager->MemorySample(walkSample);
+        g_unnamed6968e4 = 0;
+        g_soundManager->stopSample(g_unnamed6968e0);
+        g_unnamed6968e0 = g_soundManager->memorySample(walkSample);
     }
 
-    point = type_point(radarOrigin.x + 9, radarOrigin.y + 8,
-                       radarOrigin.z);
-    SetEnvironmentOrigin(point, 0);
-    scrollX = scrollY = 0;
+    point = type_point(m_radarOrigin.m_x + 9, m_radarOrigin.m_y + 8,
+                       m_radarOrigin.m_z);
+    setEnvironmentOrigin(point, 0);
+    m_scrollX = m_scrollY = 0;
 
-    NewmapCell* eventCell = GetCell(*trigger_point);
-    if (eventCell->is_trigger
-        || ((curr->flags & 0x40000)
-            && eventCell->type == ANCHOR_POINT)) {
-        if ((!curr->IsFlying(0)
-             || curr->get_target() == *trigger_point)
-            && (!gAdventureObjectTraits[eventCell->type][0]
-                || !curr->IsFlying(0) || curr->can_land()
-                || eventCell->type == BOAT))
+    NewmapCell* eventCell = getCell(*triggerPoint);
+    if (eventCell->m_isTrigger
+        || ((curr->m_flags & 0x40000)
+            && eventCell->m_type == ANCHOR_POINT)) {
+        if ((!curr->isFlying(0)
+             || curr->getTarget() == *triggerPoint)
+            && (!g_adventureObjectTraits[eventCell->m_type][0]
+                || !curr->isFlying(0) || curr->canLand()
+                || eventCell->m_type == BOAT))
             returnCell = eventCell;
 
-        switch (eventCell->type) {
+        switch (eventCell->m_type) {
         case GARRISON:
-            if (curr->get_target() != *trigger_point
-                && gpCurrentPlayer->IsHuman()
-                && gpGame->OnSameTeam(
-                    gpGame->garrisons[eventCell->extraInfo].playerOwner,
-                    gNetLocalGamePos))
+            if (curr->getTarget() != *triggerPoint
+                && g_currentPlayer->isHuman()
+                && g_game->onSameTeam(
+                    g_game->m_garrisons[eventCell->m_extraInfo].m_playerOwner,
+                    g_netLocalGamePos))
                 returnCell = 0;
             break;
 
         case BORDER_GATE:
-            if (curr->get_target() != *trigger_point
-                && gpCurrentPlayer->IsHuman())
+            if (curr->getTarget() != *triggerPoint
+                && g_currentPlayer->isHuman())
                 returnCell = 0;
             break;
 
@@ -738,12 +747,12 @@ NewmapCell* advManager::MoveHero(int direction, unsigned char standEnd, type_poi
         }
     }
 
-    returnCell = end_move_hero(curr, returnCell, bIsRemoteMove,
-                               iOrigX, iOrigY, standEnd, bFoughtBattle);
+    returnCell = endMoveHero(curr, returnCell, isRemoteMove,
+                               origX, origY, standEnd, foughtBattle);
     if (hasEvent) {
-        gUnnamed69777c = 1;
-        StopCursor(1);
-        HandleMapEvent(curr, destCell, *trigger_point, !bComputerMove);
+        g_unnamed69777c = 1;
+        stopCursor(1);
+        handleMapEvent(curr, destCell, *triggerPoint, !computerMove);
     }
     return returnCell;
 }
@@ -773,26 +782,27 @@ NewmapCell* advManager::MoveHero(int direction, unsigned char standEnd, type_poi
 // bytes below reaches 100.0000 with retail's own `jne` layout, so this is a
 // C2 block-ordering choice and not a source difference; every other block,
 // all nine calls and the whole call order already agree.
+// Before normalization (locals): bFoughtBattle.
 VA(0x00481900, 0x1C1)  // exhaustive cursor-tail order/call set, dc 0x7bbbc
-void advManager::CheckAdjacentMon(int* bFoughtBattle)
+void advManager::checkAdjacentMon(int* foughtBattle)
 {
-    hero* curr = gpGame->GetHero(gpCurrentPlayer->currHeroId);
-    type_point location = curr->get_location();
+    hero* curr = g_game->getHero(g_currentPlayer->m_currHeroId);
+    type_point location = curr->getLocation();
     type_point monster(0xff, 0xff, 0xff);
 
-    if (FindAdjacentMonster(location, &monster, monster)) {
-        StopCursor(1);
-        curr->pathTargetY = -1;
-        curr->pathTargetX = -1;
-        CompleteDraw(0);
-        UpdateScreen(0, 0);
+    if (findAdjacentMonster(location, &monster, monster)) {
+        stopCursor(1);
+        curr->m_pathTargetY = -1;
+        curr->m_pathTargetX = -1;
+        completeDraw(0);
+        updateScreen(0, 0);
 
-        NewmapCell* monsterCell = GetCell(monster);
-        GetCell(curr->get_location());
-        DoEventWanderingMonster(monsterCell, curr, monster,
-                                gpCurrentPlayer->IsLocalHuman()
-                                    && !gUnnamed691209);
-        *bFoughtBattle = 1;
+        NewmapCell* monsterCell = getCell(monster);
+        getCell(curr->getLocation());
+        doEventWanderingMonster(monsterCell, curr, monster,
+                                g_currentPlayer->isLocalHuman()
+                                    && !g_unnamed691209);
+        *foughtBattle = 1;
     }
 }
 
@@ -806,22 +816,22 @@ void advManager::CheckAdjacentMon(int* bFoughtBattle)
 // is what makes retail read `flags` off a null pointer on the empty-cell
 // path. That read is retail's own and is transcribed as written.
 VA(0x00481ad0, 0x10D)  // exhaustive order + sole ValidMove call, dc 0x7bdcc
-int advManager::ValidMoveWithEvent(hero* who, int direction)
+int advManager::validMoveWithEvent(hero* who, int direction)
 {
-    int destX = who->x + normalDirTable[direction].x;
-    int destY = who->y + normalDirTable[direction].y;
+    int destX = who->m_x + g_normalDirTable[direction].m_x;
+    int destY = who->m_y + g_normalDirTable[direction].m_y;
 
-    if (destX < 0 || destX > MAP_WIDTH - 1
-            || destY < 0 || destY > MAP_HEIGHT - 1)
+    if (destX < 0 || destX > g_mapWidth - 1
+            || destY < 0 || destY > g_mapHeight - 1)
         return 0;
 
-    NewmapCell* destCell = fullMap->cell(destX, destY, who->z);
-    if (destCell->type != HERO)
-        return ValidMove(who, direction, 1, 0);
+    NewmapCell* destCell = m_fullMap->cell(destX, destY, who->m_z);
+    if (destCell->m_type != HERO)
+        return validMove(who, direction, 1, 0);
 
-    if (who->flags & 0x40000) {
-        hero* occupant = gpGame->GetHero(destCell->extraInfo);
-        return (occupant->flags & 0x40000) ? 1 : 0;
+    if (who->m_flags & 0x40000) {
+        hero* occupant = g_game->getHero(destCell->m_extraInfo);
+        return (occupant->m_flags & 0x40000) ? 1 : 0;
     }
     return 1;
 }
@@ -844,277 +854,292 @@ int advManager::ValidMoveWithEvent(hero* who, int direction)
 // cursor.cpp statements. Complete independently preserves that exact shape:
 // the accessor's -1 arm, packed point construction/comparison, then calls to
 // SetHeroContext, MoveHero and DoAIEvent in the same order.
+// Before normalization (locals): bComputerMove, bLandOnly.
 VA(0x00481be0, 0x2ED)  // exhaustive order + ret 0x10/call set, dc 0x7bee4
-int advManager::ValidMove(hero* who, int direction, int bComputerMove,
-                          unsigned char bLandOnly)
+int advManager::validMove(hero* who, int direction, int computerMove,
+                          unsigned char landOnly)
 {
-    int stepX = normalDirTable[direction].x;
-    int srcX = who->x;
-    int stepY = normalDirTable[direction].y;
-    int srcY = who->y;
+    int stepX = g_normalDirTable[direction].m_x;
+    int srcX = who->m_x;
+    int stepY = g_normalDirTable[direction].m_y;
+    int srcY = who->m_y;
     int destX = srcX + stepX;
     int destY = srcY + stepY;
 
-    if (destX < 0 || destX >= MAP_WIDTH || destY < 0 || destY >= MAP_WIDTH)
+    if (destX < 0 || destX >= g_mapWidth || destY < 0 || destY >= g_mapWidth)
         return 0;
 
-    if (who->IsFlying(0) && !bLandOnly)
+    if (who->isFlying(0) && !landOnly)
         return 1;
 
-    NewmapCell* destCell = fullMap->cell(destX, destY, who->z);
-    NewmapCell* srcCell = fullMap->cell(srcX, srcY, who->z);
+    NewmapCell* destCell = m_fullMap->cell(destX, destY, who->m_z);
+    NewmapCell* srcCell = m_fullMap->cell(srcX, srcY, who->m_z);
 
-    if (destCell->IsBlocked)
+    if (destCell->m_isBlocked)
         return 0;
 
-    if (destCell->GroundSet == eTerrainWater) {
-        if (!(who->flags & 0x40000)
-                && !(who->CanWalkOnWater(0) && !bLandOnly)) {
-            if (!(destCell->type == BOAT && destCell->is_trigger)
-                    && !(destCell->type == SHIPWRECK
-                         && destCell->is_trigger))
+    if (destCell->m_groundSet == eTerrainWater) {
+        if (!(who->m_flags & 0x40000)
+                && !(who->canWalkOnWater(0) && !landOnly)) {
+            if (!(destCell->m_type == BOAT && destCell->m_isTrigger)
+                    && !(destCell->m_type == SHIPWRECK
+                         && destCell->m_isTrigger))
                 return 0;
         }
 
-        if (srcCell->GroundSet == eTerrainWater && stepX && stepY
-                && !(who->CanWalkOnWater(0) && !bLandOnly)) {
-            if (fullMap->cell(srcX + stepX, srcY, who->z)->GroundSet
+        if (srcCell->m_groundSet == eTerrainWater && stepX && stepY
+                && !(who->canWalkOnWater(0) && !landOnly)) {
+            if (m_fullMap->cell(srcX + stepX, srcY, who->m_z)->m_groundSet
                     != eTerrainWater)
                 return 0;
-            if (fullMap->cell(srcX, srcY + stepY, who->z)->GroundSet
+            if (m_fullMap->cell(srcX, srcY + stepY, who->m_z)->m_groundSet
                     != eTerrainWater)
                 return 0;
         }
     } else {
-        if ((who->flags & 0x40000) && destCell->type != ANCHOR_POINT)
+        if ((who->m_flags & 0x40000) && destCell->m_type != ANCHOR_POINT)
             return 0;
-        if ((who->flags & 0x40000) && destCell->type == ANCHOR_POINT)
+        if ((who->m_flags & 0x40000) && destCell->m_type == ANCHOR_POINT)
             return 1;
     }
 
     int dirMask = 1 << direction;
     int stepsSouth = dirMask & 0x38;
     if (dirMask & 0x83) {
-        if (srcCell->cell_is_trigger()
-                && !gAdventureObjectTraits[srcCell->get_map_object()][1])
+        if (srcCell->cellIsTrigger()
+                && !g_adventureObjectTraits[srcCell->getMapObject()][1])
             return 0;
     }
     if (stepsSouth) {
-        if (destCell->cell_is_trigger()
-                && !gAdventureObjectTraits[destCell->get_map_object()][1])
+        if (destCell->cellIsTrigger()
+                && !g_adventureObjectTraits[destCell->getMapObject()][1])
             return 0;
     }
 
-    if (destCell->type == HERO
-            && destCell->get_map_object() == SANCTUARY) {
-        hero* occupant = gpGame->GetHero(destCell->extraInfo);
-        if (occupant->owner != who->owner)
+    if (destCell->m_type == HERO
+            && destCell->getMapObject() == SANCTUARY) {
+        hero* occupant = g_game->getHero(destCell->m_extraInfo);
+        if (occupant->m_owner != who->m_owner)
             return 0;
     }
 
     return 1;
 }
 
+// Before normalization (locals): pMapChange, current_hero, trigger_point, event_cell.
 VA(0x00481ed0, 0xF9)  // exhaustive order + helper/call/CFG identity, dc 0x7c1d8
-void advManager::OnMoveHero(CMapChange* pMapChange)
+void advManager::onMoveHero(CMapChange* mapChange)
 {
-    CMCMoveHero* change = static_cast<CMCMoveHero*>(pMapChange);
+    CMCMoveHero* change = static_cast<CMCMoveHero*>(mapChange);
     int dummy1;
     int dummy2;
-    hero* current_hero = gpGame->GetHero(change->m_heroId);
-    if (current_hero->get_location() != change->m_point)
+    hero* currentHero = g_game->getHero(change->m_heroId);
+    if (currentHero->getLocation() != change->m_point)
         return;
 
-    gpAdvManager->SetHeroContext(change->m_heroId, 0, 0, 1);
-    type_point trigger_point;
-    NewmapCell* event_cell = MoveHero(
-        change->m_dir, change->m_standEnd != 0, &trigger_point, &dummy1,
+    g_advManager->setHeroContext(change->m_heroId, 0, 0, 1);
+    type_point triggerPoint;
+    NewmapCell* eventCell = moveHero(
+        change->m_dir, change->m_standEnd != 0, &triggerPoint, &dummy1,
         1, &dummy2, 1);
-    if (event_cell && (event_cell->type == ANCHOR_POINT
-                       || event_cell->type == BOAT))
-        DoAIEvent(event_cell, current_hero, trigger_point);
+    if (eventCell && (eventCell->m_type == ANCHOR_POINT
+                       || eventCell->m_type == BOAT))
+        doAIEvent(eventCell, currentHero, triggerPoint);
 }
 
 // E:\gamedcs\cursor.cpp:1158
+// Before normalization (locals): pMapChange, current_hero.
 DC_ONLY(0x7c2e0, 0x48)
-void advManager::OnTeleportHero(CMapChange* pMapChange)
+void advManager::onTeleportHero(CMapChange* mapChange)
 {
-    CMCTeleportHero* change = static_cast<CMCTeleportHero*>(pMapChange);
-    hero* current_hero = gpGame->GetHero(change->heroId);
-    TeleportTo(current_hero, change->point, 0, 1, 1, 0);
+    CMCTeleportHero* change = static_cast<CMCTeleportHero*>(mapChange);
+    hero* currentHero = g_game->getHero(change->m_heroId);
+    teleportTo(currentHero, change->m_point, 0, 1, 1, 0);
 }
 
 // E:\gamedcs\cursor.cpp:1167
+// Before normalization (locals): pMapChange.
 DC_ONLY(0x7c328, 0x68)
-void advManager::OnClaimMine(CMapChange* pMapChange)
+void advManager::onClaimMine(CMapChange* mapChange)
 {
-    CMCClaimMine* change = static_cast<CMCClaimMine*>(pMapChange);
-    gpGame->ClaimMine(change->mineId, change->playerPos,
+    CMCClaimMine* change = static_cast<CMCClaimMine*>(mapChange);
+    g_game->claimMine(change->m_mineId, change->m_playerPos,
                       const_remote_action);
-    CompleteDraw(0);
-    UpdateScreen(0, 0);
+    completeDraw(0);
+    updateScreen(0, 0);
 }
 
 // E:\gamedcs\cursor.cpp:1177
+// Before normalization (locals): pMapChange.
 DC_ONLY(0x7c390, 0x36)
-void advManager::OnClaimTown(CMapChange* pMapChange)
+void advManager::onClaimTown(CMapChange* mapChange)
 {
-    CMCClaimTown* change = static_cast<CMCClaimTown*>(pMapChange);
-    gpGame->ClaimTown(change->townId, change->playerPos, 1, 1);
-    CompleteDraw(0);
-    UpdateScreen(0, 0);
+    CMCClaimTown* change = static_cast<CMCClaimTown*>(mapChange);
+    g_game->claimTown(change->m_townId, change->m_playerPos, 1, 1);
+    completeDraw(0);
+    updateScreen(0, 0);
 }
 
 // E:\gamedcs\cursor.cpp:1186
+// Before normalization (locals): pMapChange.
 DC_ONLY(0x7c3c8, 0x58)
-void advManager::OnBuildBoat(CMapChange* pMapChange)
+void advManager::onBuildBoat(CMapChange* mapChange)
 {
-    CMCBuildBoat* change = static_cast<CMCBuildBoat*>(pMapChange);
-    gpGame->CreateBoat(change->point.x, change->point.y, change->point.z,
-                       change->playerPos, 1, 1);
-    CompleteDraw(0);
-    UpdateScreen(0, 0);
+    CMCBuildBoat* change = static_cast<CMCBuildBoat*>(mapChange);
+    g_game->createBoat(change->m_point.m_x, change->m_point.m_y, change->m_point.m_z,
+                       change->m_playerPos, 1, 1);
+    completeDraw(0);
+    updateScreen(0, 0);
 }
 
 // E:\gamedcs\cursor.cpp:1196
+// Before normalization (locals): pMapChange.
 DC_ONLY(0x7c420, 0x4E)
-void advManager::OnEraseObject(CMapChange* pMapChange)
+void advManager::onEraseObject(CMapChange* mapChange)
 {
-    CMCEraseObject* change = static_cast<CMCEraseObject*>(pMapChange);
-    NewmapCell* cell = GetCell(change->m_point);
-    EraseObj(cell, change->m_point, 0);
-    CompleteDraw(0);
-    UpdateScreen(0, 0);
+    CMCEraseObject* change = static_cast<CMCEraseObject*>(mapChange);
+    NewmapCell* cell = getCell(change->m_point);
+    eraseObj(cell, change->m_point, 0);
+    completeDraw(0);
+    updateScreen(0, 0);
 }
 
 // E:\gamedcs\cursor.cpp:1208
+// Before normalization (locals): pMapChange, current_hero.
 DC_ONLY(0x7c470, 0xAC)
-void advManager::OnDeadHero(CMapChange* pMapChange)
+void advManager::onDeadHero(CMapChange* mapChange)
 {
-    CMCDeadHero* change = static_cast<CMCDeadHero*>(pMapChange);
-    hero* current_hero = gpGame->GetHero(change->heroId);
-    if (current_hero->get_location() != change->point)
+    CMCDeadHero* change = static_cast<CMCDeadHero*>(mapChange);
+    hero* currentHero = g_game->getHero(change->m_heroId);
+    if (currentHero->getLocation() != change->m_point)
         return;
-    current_hero->Deallocate(1, 1);
-    CompleteDraw(0);
-    UpdateScreen(0, 0);
+    currentHero->deallocate(1, 1);
+    completeDraw(0);
+    updateScreen(0, 0);
 }
 
 // E:\gamedcs\cursor.cpp:1224
+// Before normalization (locals): pMapChange, current_hero.
 DC_ONLY(0x7c51c, 0x66)
-void advManager::OnRecruitHero(CMapChange* pMapChange)
+void advManager::onRecruitHero(CMapChange* mapChange)
 {
-    CMCRecruitHero* change = static_cast<CMCRecruitHero*>(pMapChange);
-    gpGame->get_cell(change->point);
+    CMCRecruitHero* change = static_cast<CMCRecruitHero*>(mapChange);
+    g_game->getCell(change->m_point);
     // OnRecruitHero -> game::GetHero: Dreamcast game.h:972-979 residue
     // proves the source-inline accessor. Complete retains this nested call
     // after expanding OnRecruitHero. Negative control without this site pin:
     // ProcessMapChangeNew 100.0000% -> 92.6034%, calls 30 -> 29.
 #pragma inline_depth(0)
-    hero* current_hero = gpGame->GetHero(change->heroId);
+    hero* currentHero = g_game->getHero(change->m_heroId);
 #pragma inline_depth()
-    current_hero->x = change->point.x;
-    current_hero->y = change->point.y;
-    current_hero->z = change->point.z;
-    current_hero->flags = 0;
-    current_hero->facing = hero::kFacingE;
-    current_hero->owner = static_cast<signed char>(change->playerPos);
-    current_hero->obscure_cell();
+    currentHero->m_x = change->m_point.m_x;
+    currentHero->m_y = change->m_point.m_y;
+    currentHero->m_z = change->m_point.m_z;
+    currentHero->m_flags = 0;
+    currentHero->m_facing = hero::kFacingE;
+    currentHero->m_owner = static_cast<signed char>(change->m_playerPos);
+    currentHero->obscureCell();
 }
 
 // E:\gamedcs\cursor.cpp:1245
+// Before normalization (locals): pMapChange.
 DC_ONLY(0x7c584, 0x5C)
-void advManager::OnDeadPlayer(CMapChange* pMapChange)
+void advManager::onDeadPlayer(CMapChange* mapChange)
 {
-    CMCDeadPlayer* change = static_cast<CMCDeadPlayer*>(pMapChange);
-    sprintf(gText, gpGeneralText->GetText(6),
-            gpGame->GetPlayerName(change->playerPos));
-    NormalDialog(gText, 1, -1, -1, 10, change->playerPos,
+    CMCDeadPlayer* change = static_cast<CMCDeadPlayer*>(mapChange);
+    sprintf(g_text, g_generalText->getText(6),
+            g_game->getPlayerName(change->m_playerPos));
+    normalDialog(g_text, 1, -1, -1, 10, change->m_playerPos,
                  -1, -1, -1, 5000, -1, 0);
 }
 
 // E:\gamedcs\cursor.cpp:1253
+// Before normalization (locals): pMapChange.
 DC_ONLY(0x7c5e0, 0x68)
-void advManager::OnClaimGenerator(CMapChange* pMapChange)
+void advManager::onClaimGenerator(CMapChange* mapChange)
 {
     CMCClaimGenerator* change =
-        static_cast<CMCClaimGenerator*>(pMapChange);
-    gpGame->ClaimGenerator(change->generatorId, change->playerPos);
+        static_cast<CMCClaimGenerator*>(mapChange);
+    g_game->claimGenerator(change->m_generatorId, change->m_playerPos);
 }
 
 // E:\gamedcs\cursor.cpp:1260
+// Before normalization (locals): pMapChange.
 DC_ONLY(0x7c648, 0x1A)
-void advManager::OnClaimGarrison(CMapChange* pMapChange)
+void advManager::onClaimGarrison(CMapChange* mapChange)
 {
     CMCClaimGarrison* change =
-        static_cast<CMCClaimGarrison*>(pMapChange);
-    gpGame->ClaimGarrison(change->garrisonId, change->playerPos);
+        static_cast<CMCClaimGarrison*>(mapChange);
+    g_game->claimGarrison(change->m_garrisonId, change->m_playerPos);
 }
 
 // E:\gamedcs\cursor.cpp:1267
+// Before normalization (locals): pMapChange.
 DC_ONLY(0x7c664, 0x24)
-void advManager::OnClaimShipYard(CMapChange* pMapChange)
+void advManager::onClaimShipYard(CMapChange* mapChange)
 {
     CMCClaimShipYard* change =
-        static_cast<CMCClaimShipYard*>(pMapChange);
-    gpGame->ClaimShipyard(change->point, change->playerPos);
+        static_cast<CMCClaimShipYard*>(mapChange);
+    g_game->claimShipyard(change->m_point, change->m_playerPos);
 }
 
 // E:\gamedcs\cursor.cpp:1274
+// Before normalization (locals): pMapChange, current_hero.
 VA(0x00481fd0, 0x32)  // call-site + exact GetHero/restore shape, dc 0x7c688
-void advManager::OnHideHero(CMapChange* pMapChange)
+void advManager::onHideHero(CMapChange* mapChange)
 {
-    CMCHideHero* change = static_cast<CMCHideHero*>(pMapChange);
-    hero* current_hero = gpGame->GetHero(change->heroId);
-    if (current_hero)
-        current_hero->restore_cell();
+    CMCHideHero* change = static_cast<CMCHideHero*>(mapChange);
+    hero* currentHero = g_game->getHero(change->m_heroId);
+    if (currentHero)
+        currentHero->restoreCell();
 }
 
 // E:\gamedcs\cursor.cpp:1286. Dreamcast line ownership proves every named
 // helper boundary below. Complete retains OnMoveHero and OnHideHero as calls,
 // expands the other handlers, and retains the nested type_point::operator!=.
+// Before normalization (locals): pMapChange.
 VA(0x00482010, 0x328)  // HandleNetMsg caller + exhaustive order, dc 0x7c6bc
-void advManager::ProcessMapChangeNew(CMapChange* pMapChange)
+void advManager::processMapChangeNew(CMapChange* mapChange)
 {
-    switch (pMapChange->subType) {
+    switch (mapChange->m_subType) {
     case RS_MOVE_HERO:
-        OnMoveHero(pMapChange);
+        onMoveHero(mapChange);
         break;
     case RS_TELEPORT_HERO:
-        OnTeleportHero(pMapChange);
+        onTeleportHero(mapChange);
         break;
     case RS_CLAIM_MINE:
-        OnClaimMine(pMapChange);
+        onClaimMine(mapChange);
         break;
     case RS_CLAIM_TOWN:
-        OnClaimTown(pMapChange);
+        onClaimTown(mapChange);
         break;
     case RS_BUILD_BOAT:
-        OnBuildBoat(pMapChange);
+        onBuildBoat(mapChange);
         break;
     case RS_ERASE_OBJECT:
-        OnEraseObject(pMapChange);
+        onEraseObject(mapChange);
         break;
     case RS_DEAD_HERO:
-        OnDeadHero(pMapChange);
+        onDeadHero(mapChange);
         break;
     case RS_RECRUIT_HERO:
-        OnRecruitHero(pMapChange);
+        onRecruitHero(mapChange);
         break;
     case RS_DEAD_PLAYER:
-        OnDeadPlayer(pMapChange);
+        onDeadPlayer(mapChange);
         break;
     case RS_CLAIM_GENERATOR:
-        OnClaimGenerator(pMapChange);
+        onClaimGenerator(mapChange);
         break;
     case RS_CLAIM_GARRISON:
-        OnClaimGarrison(pMapChange);
+        onClaimGarrison(mapChange);
         break;
     case RS_CLAIM_SHIPYARD:
-        OnClaimShipYard(pMapChange);
+        onClaimShipYard(mapChange);
         break;
     case RS_HIDE_HERO:
-        OnHideHero(pMapChange);
+        onHideHero(mapChange);
         break;
     }
 }
@@ -1130,9 +1155,10 @@ bool type_point::operator!=(const type_point& arg) const
 }
 #endif
 
+// Before normalization (locals): pMapChange.
 VA(0x00482390, 0x21)  // exact gate-and-transmit body, dc 0x7c9f8
-void SendMapChange(CMapChange* pMapChange)
+void sendMapChange(CMapChange* mapChange)
 {
-    if (gbThisNetGotAdventureControl && gNetworkActive69954c)
-        TransmitRemoteData(pMapChange, 0x7f, false, true);
+    if (g_thisNetGotAdventureControl && g_networkActive69954c)
+        transmitRemoteData(mapChange, 0x7f, false, true);
 }

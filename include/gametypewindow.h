@@ -13,10 +13,14 @@ class message;
 // Retail's fixed-address movsx loads prove four consecutive shorts and an
 // eight-byte stride.
 struct TGameTypeButtonRect {
-    short x;
-    short y;
-    short width;
-    short height;
+    // Before normalization: x.
+    short m_x;
+    // Before normalization: y.
+    short m_y;
+    // Before normalization: width.
+    short m_width;
+    // Before normalization: height.
+    short m_height;
 };
 SIZE(TGameTypeButtonRect, 0x8);
 
@@ -40,22 +44,27 @@ public:
 
     TGameTypeWindow(unsigned char loadGameMode);
     virtual ~TGameTypeWindow();
-    void DoModal();
+    // Before normalization (function): TGameTypeWindow::DoModal.
+    void doModal();
 
 private:
-    void Update(unsigned char loadGameMode);
-    int RolloverWidget;  // +0x4c retail (+68 DC)
+    // Before normalization (function): TGameTypeWindow::Update.
+    void update(unsigned char loadGameMode);
+    // Before normalization: RolloverWidget.
+    int m_rolloverWidget;  // +0x4c retail (+68 DC)
 };
 SIZE(TGameTypeWindow, 0x50);
 
 // Retail is /Gr fastcall: the reference travels in ECX, exactly as the body
 // consumes it.  The Dreamcast local record describes the same object as a
 // message pointer; reference vs pointer is ABI-identical at this boundary.
-int GameTypeWindowHandler(message& msg);
+// Before normalization (function): GameTypeWindowHandler.
+int gameTypeWindowHandler(message& msg);
 
 // Cross-TU menu-mode latch; oldmain owns the setup and both front-end menus
 // consume it.
-extern int gbNoCDRom;
+// Before normalization: gbNoCDRom.
+extern int g_noCdRom;
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\gametypewindow.cpp:138, dc 0xc9524) int GameTypeWindowHandler(message* msg);

@@ -8,16 +8,20 @@ public:
     int m_numBytes;
     int m_oldNumBytes;
     unsigned char m_copy;
-    unsigned char _pad[3];
+    // Before normalization: _pad.
+    // Dreamcast has two dwords and a byte; retail serializes a
+    // 12-byte header. These three bytes align the header extent.
+    unsigned char m_tailPadding[3];
 
     CDiffHeader(int numBytes, unsigned char copy, int oldNumBytes)
         : m_numBytes(numBytes), m_oldNumBytes(oldNumBytes), m_copy(copy)
     {
     }
 
-    unsigned char* GetData()
+    // Before normalization (function): CDiffHeader::GetData.
+    unsigned char* getData()
     {
-        return _pad + 3;
+        return m_tailPadding + 3;
     }
 };
 
@@ -32,17 +36,20 @@ public:
     unsigned int m_numBytes;
     unsigned char m_data[1];
 
-    unsigned char* GetData()
+    // Before normalization (function): CDiffFile::GetData.
+    unsigned char* getData()
     {
         return m_data;
     }
 
-    unsigned char* GetBase()
+    // Before normalization (function): CDiffFile::GetBase.
+    unsigned char* getBase()
     {
         return m_data - sizeof(m_numBytes);
     }
 
-    void* Apply(unsigned char* oldSaveGame, int oldSaveGameSize);
+    // Before normalization (function): CDiffFile::Apply.
+    void* apply(unsigned char* oldSaveGame, int oldSaveGameSize);
 };
 
 class CDiffMaker
@@ -57,7 +64,8 @@ public:
                unsigned char* newData, int newSize);
 
 protected:
-    int CountSameBytes(int oldOffset, int newOffset)
+    // Before normalization (function): CDiffMaker::CountSameBytes.
+    int countSameBytes(int oldOffset, int newOffset)
     {
         int count = 0;
         while (m_oldData[oldOffset + count] ==
@@ -68,11 +76,13 @@ protected:
         }
         return count;
     }
-    bool FindNextSame(int oldOffset, int newOffset,
+    // Before normalization (function): CDiffMaker::FindNextSame.
+    bool findNextSame(int oldOffset, int newOffset,
                       int& oldCount, int& newCount);
 
 public:
-    CDiffFile* MakeDiff(unsigned long& diffSize);
+    // Before normalization (function): CDiffMaker::MakeDiff.
+    CDiffFile* makeDiff(unsigned long& diffSize);
 };
 
 #endif  /* HOMM3_DIFF_H */

@@ -48,82 +48,85 @@
 // them.
 VA(0x005a9d20, 0x57)  // linkorder + body: 11-arg member spread, [this+0x2c]=-2, tail-calls DrawIcons(update,-1); `new strip` sites push 0x78; dc 0x158880
 strip::strip(int inX, int inY, int inPos, int newIcons, int newIconFrame,
-             long new_owner, hero* new_hero, armyGroup* groupToDraw,
+             // Before normalization (locals): new_owner, new_hero.
+             long newOwner, hero* newHero, armyGroup* groupToDraw,
              int firstId, unsigned char update, heroWindow* inWin)
 {
-    x = inX;
-    y = inY;
-    owner = new_owner;
-    thisHero = new_hero;
-    pos = inPos;
-    icons = newIcons;
-    iconFrame = newIconFrame;
-    group = groupToDraw;
-    current = -2;
-    win = inWin;
-    DrawIcons(update, CREATURE_NONE);
+    m_x = inX;
+    m_y = inY;
+    m_owner = newOwner;
+    m_thisHero = newHero;
+    m_pos = inPos;
+    m_icons = newIcons;
+    m_iconFrame = newIconFrame;
+    m_group = groupToDraw;
+    m_current = -2;
+    m_win = inWin;
+    drawIcons(update, CREATURE_NONE);
 }
 
 // E:\gamedcs\strip.cpp:75
+// Before normalization (locals): divide_creature.
 VA(0x005a9d80, 0x30)  // linkorder + body: DrawIcons(1, type) + UpdateScreen(x, y, 494, 64); dc 0x1588e8
-void strip::Draw(TCreatureType divide_creature)
+void strip::draw(TCreatureType divideCreature)
 {
-    DrawIcons(1, divide_creature);
-    gpWindowManager->UpdateScreen(x, y, 494, 64);
+    drawIcons(1, divideCreature);
+    g_windowManager->updateScreen(m_x, m_y, 494, 64);
 }
 
 // E:\gamedcs\strip.cpp:81
+// Before normalization (locals): divide_creature.
 VA(0x005a9db0, 0x2A2)  // linkorder + body: 7-slot armyGroup walk (types at +0, counts at +0x1c), "%d" 0x660a1c into gText, DrawWindow vslot 5 tail; dc 0x158910
-void strip::DrawIcons(unsigned char update, TCreatureType divide_creature)
+void strip::drawIcons(unsigned char update, TCreatureType divideCreature)
 {
     int i;
 
-    DrawOwner(iconFrame);
+    drawOwner(m_iconFrame);
     for (i = 0; i < 7; i++) {
-        if (group == 0) {
-            DrawMonster(i, 0);
+        if (m_group == 0) {
+            drawMonster(i, 0);
         } else {
-            int type = group->armies[i];
-            if (type != CREATURE_NONE && group->numTroops[i] > 0) {
-                DrawMonster(i, type + 2);
-                sprintf(gText, "%d", group->numTroops[i]);
-                DrawNumber(i);
-                if (divide_creature == type && i != current)
-                    DrawSelector(i + 1);
+            int type = m_group->m_armies[i];
+            if (type != CREATURE_NONE && m_group->m_numTroops[i] > 0) {
+                drawMonster(i, type + 2);
+                sprintf(g_text, "%d", m_group->m_numTroops[i]);
+                drawNumber(i);
+                if (divideCreature == type && i != m_current)
+                    drawSelector(i + 1);
             } else {
-                DrawMonster(i, 0);
-                if (divide_creature != CREATURE_NONE)
-                    DrawSelector(i + 1);
+                drawMonster(i, 0);
+                if (divideCreature != CREATURE_NONE)
+                    drawSelector(i + 1);
             }
         }
     }
-    if (divide_creature == CREATURE_NONE && current > -2)
-        DrawSelector(current + 1);
+    if (divideCreature == CREATURE_NONE && m_current > -2)
+        drawSelector(m_current + 1);
     if (update)
-        win->DrawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+        m_win->drawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
 }
 
 // E:\gamedcs\strip.cpp:124
 // No retail body: the single call site above is /Ob2-inlined into
 // DrawIcons (msg at its -0x28 slot); `inline` reproduces the absence.
-inline void strip::DrawNumber(int i)
+inline void strip::drawNumber(int i)
 {
     message msg;
-    msg.qualifier = 0;
-    msg.mouseX = 0;
-    msg.mouseY = 0;
-    msg.window = 0;
-    msg.id = MESSAGE_WIDGET;
-    msg.codeX = widget::WIDGET_SET_TEXT;
-    if (pos == 0)
-        msg.codeY = i + 108;
+    msg.m_qualifier = 0;
+    msg.m_mouseX = 0;
+    msg.m_mouseY = 0;
+    msg.m_window = 0;
+    msg.m_id = MESSAGE_WIDGET;
+    msg.m_codeX = widget::WIDGET_SET_TEXT;
+    if (m_pos == 0)
+        msg.m_codeY = i + 108;
     else
-        msg.codeY = i + 133;
-    msg.extraText = gText;
-    win->BroadcastMessage(&msg);
-    msg.codeX = widget::WIDGET_SET_STATUS;
-    msg.extra = widget::WIDGET_DRAWN;
-    win->BroadcastMessage(&msg);
+        msg.m_codeY = i + 133;
+    msg.m_extraText = g_text;
+    m_win->broadcastMessage(&msg);
+    msg.m_codeX = widget::WIDGET_SET_STATUS;
+    msg.m_extra = widget::WIDGET_DRAWN;
+    m_win->broadcastMessage(&msg);
 }
 
 // E:\gamedcs\strip.cpp:139
@@ -172,140 +175,140 @@ inline void strip::DrawNumber(int i)
 // distinct spelling. No source-level lever reaches the EDX choice
 // without emitting a store retail does not have.
 VA(0x005aa060, 0x1CE)  // linkorder + body: akHeroTraits[frame] portrait via WIDGET_SET_IMAGE, owner widgets 100/122/123 (pos==0) and 124/125; dc 0x158a80
-void strip::DrawOwner(int frame)
+void strip::drawOwner(int frame)
 {
     message msg;
-    msg.qualifier = 0;
-    msg.mouseX = 0;
-    msg.mouseY = 0;
-    msg.extra = 0;
-    msg.window = 0;
-    msg.id = MESSAGE_WIDGET;
-    if (pos == 0) {
-        if (iconFrame == -1) {
-            msg.codeX = widget::WIDGET_CLEAR_STATUS;
-            msg.extra = widget::WIDGET_DRAWN;
-            msg.codeY = 100;
-            win->BroadcastMessage(&msg);
-            msg.codeY = 122;
-            win->BroadcastMessage(&msg);
-        } else if (icons == STRIP_PORTRAIT_FRAME_SET) {
-            msg.codeY = 100;
-            msg.codeX = widget::WIDGET_SET_ICON_FRAME;
-            msg.extra = frame;
-            win->BroadcastMessage(&msg);
-            msg.codeX = widget::WIDGET_SET_STATUS;
-            msg.extra = widget::WIDGET_DRAWN;
-            win->BroadcastMessage(&msg);
-            msg.codeY = 122;
-            msg.codeX = widget::WIDGET_CLEAR_STATUS;
-            msg.extra = widget::WIDGET_DRAWN;
-            win->BroadcastMessage(&msg);
+    msg.m_qualifier = 0;
+    msg.m_mouseX = 0;
+    msg.m_mouseY = 0;
+    msg.m_extra = 0;
+    msg.m_window = 0;
+    msg.m_id = MESSAGE_WIDGET;
+    if (m_pos == 0) {
+        if (m_iconFrame == -1) {
+            msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+            msg.m_extra = widget::WIDGET_DRAWN;
+            msg.m_codeY = 100;
+            m_win->broadcastMessage(&msg);
+            msg.m_codeY = 122;
+            m_win->broadcastMessage(&msg);
+        } else if (m_icons == STRIP_PORTRAIT_FRAME_SET) {
+            msg.m_codeY = 100;
+            msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+            msg.m_extra = frame;
+            m_win->broadcastMessage(&msg);
+            msg.m_codeX = widget::WIDGET_SET_STATUS;
+            msg.m_extra = widget::WIDGET_DRAWN;
+            m_win->broadcastMessage(&msg);
+            msg.m_codeY = 122;
+            msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+            msg.m_extra = widget::WIDGET_DRAWN;
+            m_win->broadcastMessage(&msg);
         } else {
-            msg.codeY = 122;
-            msg.codeX = widget::WIDGET_SET_IMAGE;
-            msg.extraText = const_cast<char*>(akHeroTraits[frame].largePortraitName);
-            win->BroadcastMessage(&msg);
-            msg.codeX = widget::WIDGET_SET_STATUS;
-            msg.extra = widget::WIDGET_DRAWN;
-            win->BroadcastMessage(&msg);
-            msg.codeY = 100;
-            msg.codeX = widget::WIDGET_CLEAR_STATUS;
-            msg.extra = widget::WIDGET_DRAWN;
-            win->BroadcastMessage(&msg);
+            msg.m_codeY = 122;
+            msg.m_codeX = widget::WIDGET_SET_IMAGE;
+            msg.m_extraText = const_cast<char*>(g_heroTraits[frame].m_largePortraitName);
+            m_win->broadcastMessage(&msg);
+            msg.m_codeX = widget::WIDGET_SET_STATUS;
+            msg.m_extra = widget::WIDGET_DRAWN;
+            m_win->broadcastMessage(&msg);
+            msg.m_codeY = 100;
+            msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+            msg.m_extra = widget::WIDGET_DRAWN;
+            m_win->broadcastMessage(&msg);
         }
-        msg.codeY = 123;
-        msg.codeX = widget::WIDGET_CLEAR_STATUS;
-        msg.extra = widget::WIDGET_DRAWN;
-        win->BroadcastMessage(&msg);
+        msg.m_codeY = 123;
+        msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+        msg.m_extra = widget::WIDGET_DRAWN;
+        m_win->broadcastMessage(&msg);
         return;
     }
-    msg.codeY = 124;
-    if (iconFrame == -1) {
-        msg.codeX = widget::WIDGET_CLEAR_STATUS;
+    msg.m_codeY = 124;
+    if (m_iconFrame == -1) {
+        msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
     } else {
         // The portrait name is read into a local AHEAD of the codeX
         // store. It is what stops the cross-jump that merged this arm's
         // closing broadcast with the pos==0 arm's (see the residual note
         // above the claim).
-        const char* name = akHeroTraits[frame].largePortraitName;
-        msg.codeX = widget::WIDGET_SET_IMAGE;
-        msg.extraText = const_cast<char*>(name);
-        win->BroadcastMessage(&msg);
-        msg.codeX = widget::WIDGET_SET_STATUS;
+        const char* name = g_heroTraits[frame].m_largePortraitName;
+        msg.m_codeX = widget::WIDGET_SET_IMAGE;
+        msg.m_extraText = const_cast<char*>(name);
+        m_win->broadcastMessage(&msg);
+        msg.m_codeX = widget::WIDGET_SET_STATUS;
     }
-    msg.extra = widget::WIDGET_DRAWN;
-    win->BroadcastMessage(&msg);
-    msg.codeY = 125;
-    msg.codeX = widget::WIDGET_CLEAR_STATUS;
-    msg.extra = widget::WIDGET_DRAWN;
-    win->BroadcastMessage(&msg);
+    msg.m_extra = widget::WIDGET_DRAWN;
+    m_win->broadcastMessage(&msg);
+    msg.m_codeY = 125;
+    msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+    msg.m_extra = widget::WIDGET_DRAWN;
+    m_win->broadcastMessage(&msg);
 }
 
 // E:\gamedcs\strip.cpp:221
 VA(0x005aa230, 0xEE)  // linkorder + body: slot widgets 101+i/108+i/115+i (pos==0) and 126+i/133+i/140+i, frame==0 hides; dc 0x158c00
-void strip::DrawMonster(int i, int frame)
+void strip::drawMonster(int i, int frame)
 {
     message msg;
-    msg.qualifier = 0;
-    msg.mouseX = 0;
-    msg.mouseY = 0;
-    msg.window = 0;
-    msg.id = MESSAGE_WIDGET;
-    if (pos == 0)
-        msg.codeY = i + 101;
+    msg.m_qualifier = 0;
+    msg.m_mouseX = 0;
+    msg.m_mouseY = 0;
+    msg.m_window = 0;
+    msg.m_id = MESSAGE_WIDGET;
+    if (m_pos == 0)
+        msg.m_codeY = i + 101;
     else
-        msg.codeY = i + 126;
+        msg.m_codeY = i + 126;
     if (frame == 0) {
-        msg.codeX = widget::WIDGET_CLEAR_STATUS;
-        msg.extra = widget::WIDGET_DRAWN;
-        win->BroadcastMessage(&msg);
-        if (pos == 0)
-            msg.codeY = i + 108;
+        msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+        msg.m_extra = widget::WIDGET_DRAWN;
+        m_win->broadcastMessage(&msg);
+        if (m_pos == 0)
+            msg.m_codeY = i + 108;
         else
-            msg.codeY = i + 133;
-        win->BroadcastMessage(&msg);
+            msg.m_codeY = i + 133;
+        m_win->broadcastMessage(&msg);
     } else {
-        msg.codeX = widget::WIDGET_SET_ICON_FRAME;
-        msg.extra = frame;
-        win->BroadcastMessage(&msg);
-        msg.codeX = widget::WIDGET_SET_STATUS;
-        msg.extra = widget::WIDGET_DRAWN;
-        win->BroadcastMessage(&msg);
+        msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+        msg.m_extra = frame;
+        m_win->broadcastMessage(&msg);
+        msg.m_codeX = widget::WIDGET_SET_STATUS;
+        msg.m_extra = widget::WIDGET_DRAWN;
+        m_win->broadcastMessage(&msg);
     }
-    if (pos == 0)
-        msg.codeY = i + 115;
+    if (m_pos == 0)
+        msg.m_codeY = i + 115;
     else
-        msg.codeY = i + 140;
-    msg.codeX = widget::WIDGET_CLEAR_STATUS;
-    msg.extra = widget::WIDGET_DRAWN;
-    win->BroadcastMessage(&msg);
+        msg.m_codeY = i + 140;
+    msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+    msg.m_extra = widget::WIDGET_DRAWN;
+    m_win->broadcastMessage(&msg);
 }
 
 // E:\gamedcs\strip.cpp:253
 // No retail body: all three call sites are /Ob2-inlined into
 // DrawIcons; `inline` reproduces the absence. i counts 1..7 for army
 // slots and 0 for the owner's selector widget.
-inline void strip::DrawSelector(int i)
+inline void strip::drawSelector(int i)
 {
     message msg;
-    msg.qualifier = 0;
-    msg.mouseX = 0;
-    msg.mouseY = 0;
-    msg.window = 0;
-    msg.id = MESSAGE_WIDGET;
-    if (pos == 0) {
+    msg.m_qualifier = 0;
+    msg.m_mouseX = 0;
+    msg.m_mouseY = 0;
+    msg.m_window = 0;
+    msg.m_id = MESSAGE_WIDGET;
+    if (m_pos == 0) {
         if (i == 0)
-            msg.codeY = 123;
+            msg.m_codeY = 123;
         else
-            msg.codeY = i + 114;
+            msg.m_codeY = i + 114;
     } else {
         if (i == 0)
-            msg.codeY = 125;
+            msg.m_codeY = 125;
         else
-            msg.codeY = i + 139;
+            msg.m_codeY = i + 139;
     }
-    msg.codeX = widget::WIDGET_SET_STATUS;
-    msg.extra = widget::WIDGET_DRAWN;
-    win->BroadcastMessage(&msg);
+    msg.m_codeX = widget::WIDGET_SET_STATUS;
+    msg.m_extra = widget::WIDGET_DRAWN;
+    m_win->broadcastMessage(&msg);
 }

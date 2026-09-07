@@ -21,7 +21,7 @@
 // auto_ptr member's own scope exit, guarded by the flag at +0.
 inline force_feedback::t_enclosure::~t_enclosure()
 {
-    gImmEffectEntries.erase(m_enclosure.get());
+    g_immEffectEntries.erase(m_enclosure.get());
 }
 
 // The effect TAdventureMapWindow owns at +0x9c. Eight bytes with the same
@@ -55,7 +55,8 @@ public:
     // policy, the mouse device, the effect project read from H3Shad.ifr
     // (with a LOD fallback in its catch), and the three globals it
     // publishes.
-    TImmMouseRuntime(void* hInst, void* hwnd);
+    // Before normalization (locals): hInst.
+    TImmMouseRuntime(void* instance, void* hwnd);
     // Retail's atexit thunk at 0x4b6910 - the address InitImmMouse hands to
     // _atexit, 58 B - is this destructor EXPANDED, so it is defined inline
     // here.  It touches no member: the holder is the eight bytes at
@@ -68,9 +69,9 @@ public:
     // its control in build/test_ownerless_static_dtor.py.
     ~TImmMouseRuntime()
     {
-        gImmProject->Close();
-        delete gImmProject;
-        delete gImmDevice;
+        g_immProject->Close();
+        delete g_immProject;
+        delete g_immDevice;
     }
 };
 

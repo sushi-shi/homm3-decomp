@@ -14,14 +14,14 @@ VA(0x00558720, 0x4E)  // anchor-global, dc 0x120934
 resource::resource(const char* newName, EResourceType newType)
 {
     if (newName) {
-        strncpy(Name, newName, 12);
-        Name[12] = 0;
-        resType = newType;
-        ReferenceCount = 0;
+        strncpy(m_name, newName, 12);
+        m_name[12] = 0;
+        m_resType = newType;
+        m_referenceCount = 0;
     } else {
-        Name[0] = 0;
-        resType = RESOURCE_TYPE_NONE;
-        ReferenceCount = -1;
+        m_name[0] = 0;
+        m_resType = RESOURCE_TYPE_NONE;
+        m_referenceCount = -1;
     }
 }
 

@@ -22,14 +22,22 @@ public:
               char* backgroundIcon, int backgroundFrame, int id, int style,
               int readType, int insetX, int insetY);
     virtual ~CChatEdit();
-    virtual int OnKeyPress(message* msg);                       // slot 15
-    virtual unsigned char IgnoreKey(message* msg);              // slot 16
-    virtual void UpdateScreen();                                // slot 19
-    virtual int OnEnter(message msg);                            // slot 20
-    virtual int OnEscape(message msg);                           // slot 21
-    virtual int OnFunctionKey(message msg, int toWho);           // slot 22
-    virtual bool IsOpen();                                      // slot 23
-    virtual void SendChat(const char* text, int toWho) = 0;      // slot 24
+    // Before normalization (function): CChatEdit::OnKeyPress.
+    virtual int onKeyPress(message* msg);                       // slot 15
+    // Before normalization (function): CChatEdit::IgnoreKey.
+    virtual unsigned char ignoreKey(message* msg);              // slot 16
+    // Before normalization (function): CChatEdit::UpdateScreen.
+    virtual void updateScreen();                                // slot 19
+    // Before normalization (function): CChatEdit::OnEnter.
+    virtual int onEnter(message msg);                            // slot 20
+    // Before normalization (function): CChatEdit::OnEscape.
+    virtual int onEscape(message msg);                           // slot 21
+    // Before normalization (function): CChatEdit::OnFunctionKey.
+    virtual int onFunctionKey(message msg, int toWho);           // slot 22
+    // Before normalization (function): CChatEdit::IsOpen.
+    virtual bool isOpen();                                      // slot 23
+    // Before normalization (function): CChatEdit::SendChat.
+    virtual void sendChat(const char* text, int toWho) = 0;      // slot 24
 };
 
 // Dreamcast remote.h proves this intermediate class. Retail constructors for
@@ -42,13 +50,21 @@ public:
                   font::EJustify justification, char* backgroundIcon,
                   int backgroundFrame, int id, int style, int readType,
                   int insetX, int insetY);
-    virtual int OnKeyPress(message* msg);
-    virtual int OnEscape(message msg);
-    virtual void SendChatCleanup();
-    virtual void Activate();
+    // Before normalization (function): CGameChatEdit::OnKeyPress.
+    virtual int onKeyPress(message* msg);
+    // Before normalization (function): CGameChatEdit::OnEscape.
+    virtual int onEscape(message msg);
+    // Before normalization (function): CGameChatEdit::SendChatCleanup.
+    virtual void sendChatCleanup();
+    // Before normalization (function): CGameChatEdit::Activate.
+    virtual void activate();
 
-    unsigned char field_70;
-    char pad_71[3];
+    // Before normalization: field_70; Dreamcast CGameChatEdit::activated
+    // at +0x70. Retail activate/onEscape/sendChatCleanup set/clear it.
+    unsigned char m_activated;
+    // Before normalization: pad_71. Three trailing alignment bytes: DC
+    // has only the activation byte after CChatEdit and size 0x74.
+    char m_paddingAfterActivated[3];
 };
 
 // Dreamcast adventuremapwindow.cpp proves this final derived editor. Retail's
@@ -61,7 +77,8 @@ public:
         char* fontName, font::TColor color, font::EJustify justification,
         char* backgroundIcon, int backgroundFrame, int id, int style,
         int readType, int insetX, int insetY);
-    virtual void SendChat(const char* text, int toWho);
+    // Before normalization (function): CAdventurMapChatEdit::SendChat.
+    virtual void sendChat(const char* text, int toWho);
 };
 
 inline CGameChatEdit::CGameChatEdit(
@@ -73,7 +90,7 @@ inline CGameChatEdit::CGameChatEdit(
                 backgroundIcon, backgroundFrame, id, style, readType,
                 insetX, insetY)
 {
-    field_70 = 0;
+    m_activated = 0;
 }
 
 #endif  /* HOMM3_CHATEDIT_H */
