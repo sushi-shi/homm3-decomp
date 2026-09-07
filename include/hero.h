@@ -280,12 +280,9 @@ extern unsigned char g_combatFlag6985a3;
 // Before normalization: gCombatFlag697744.
 extern unsigned char g_combatFlag697744;
 
-// 0x485d90, a /Gr free helper in a compiland this tree has not admitted
-// yet: it reads a length-prefixed string off the stream and returns it BY
-// VALUE, so the hidden return pointer takes ECX and pushes `infile` out
-// to EDX - exactly the `lea ecx,[ebp-0x40] / mov edx,esi` pair
-// hero::load emits before the call. NAME INVENTED from the role; the row
-// is unclaimed and no DC or NH3API symbol covers it.
+// 0x485d90, a /Gr free helper claimed in customcampaign.cpp. The returned
+// string's hidden pointer takes ECX and infile takes EDX, as hero::load's
+// call proves. The semantic name is provisional; no Dreamcast symbol covers it.
 // Before normalization (function): ReadLengthPrefixedString.
 std::string readLengthPrefixedString(TAbstractFile* infile);
 
@@ -1956,7 +1953,7 @@ public:
     // Before normalization (function): THeroScreenWindow::WindowHandler.
     virtual int windowHandler(class message* msg);
     // Before normalization (function): THeroScreenWindow::update_slot.
-    void updateSlot(long slot);
+    void updateSlot(TArtifactSlot slot);
     // Before normalization (function): THeroScreenWindow::update_all_slots.
     void updateAllSlots();
     // 0x4db660, `ret 4`. The hero screen's rollover text. The DC dump

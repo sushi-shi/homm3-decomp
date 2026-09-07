@@ -2863,33 +2863,28 @@ TSecondarySkill getSkillAward(const hero* currentHero, TSkillMastery minLevel, T
 
 #endif  // @carcass
 
-// E:\gamedcs\hero.cpp:2340
-// No retail row: every one of its five call sites (four in update_slot,
-// one in UpdateBackpackItem) is /Ob2-inlined, so `inline` reproduces the
-// absence. The DC xref graph counts those five expansions and nothing
-// else references it. `artifact` is the raw slot id, kept `int` because
-// the record's member is an int and TArtifact's -1 sentinel is what the
-// gate tests.
-// Before normalization (function): update_artifact_slot.
+// E:\gamedcs\hero.cpp:2340. Ordinary update_artifact_slot(long, TArtifact)
+// helper: retail expands its four updateSlot calls. Absence of a retained
+// retail body is not evidence for an inline keyword. The message constructor
+// owns zero initialization; lines 2349/2358 set WIDGET_DRAWN inside each arm.
+// Keep both source stores and let VC6 decide which expansions share them.
+// Before normalization: update_artifact_slot.
 DC_ONLY(0xcd68c, 0x5C)
-inline void updateArtifactSlot(long id, int artifact)
+void updateArtifactSlot(long id, TArtifact artifact)
 {
     message msg;
-    msg.m_qualifier = 0;
-    msg.m_mouseX = 0;
-    msg.m_mouseY = 0;
-    msg.m_window = 0;
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeY = id;
     if (artifact == ARTIFACT_NONE) {
         msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+        msg.m_extra = widget::WIDGET_DRAWN;
     } else {
         msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
         msg.m_extra = artifact;
         g_heroScreenWindow->broadcastMessage(&msg);
         msg.m_codeX = widget::WIDGET_SET_STATUS;
+        msg.m_extra = widget::WIDGET_DRAWN;
     }
-    msg.m_extra = widget::WIDGET_DRAWN;
     g_heroScreenWindow->broadcastMessage(&msg);
 }
 
@@ -2897,80 +2892,54 @@ inline void updateArtifactSlot(long id, int artifact)
 
 #endif  // @carcass
 
-// E:\gamedcs\hero.cpp:2365
-// Pinned from BELOW: update_all_slots (0x004db1d0) is a 23-byte
-// `for (i = 0; i < 0x13; i++) <this>->call(i)` loop whose only callee is
-// this body, so this is the per-slot updater it drives.
-// Retail is 570 B against DC's 88 - update_artifact_slot is inlined FOUR
-// times (once per arm of the two paints), and so is the SoD
-// combination-artifact bookkeeping the DC roster has no rows for at all.
-// That bookkeeping is fully typed by artifact.h: `[0x660b64][8*slot+4]`
-// is akArtifactSlotTraits[slot].type, the 15-way allowable-slot class,
-// and `4*type + 0x693898` is aArtifactSlotMasks[type], one bitset<19>
-// per class. The walk counts how many of that class's physical slots are
-// still empty and, if the slot being painted is itself one of them,
-// paints the assembled-artifact frame 0x91.
-// `this` is dead - retail overwrites ECX with gpCurrentHero in the first
-// instruction and never reads the window again.
-// The reverse walk has NO exit test of its own: VC6 strength-reduced the
-// index to `8*i` and the surviving `cmp ecx,0x98 / jb` IS the bitset's
-// own `19 <= _P` bounds check, whose failing side calls _Xran. That is
-// what fixes the loop as `for (i = 18; ; i--)` and not a bounded for -
-// a real `i >= 0` condition would need an exit block, and there is none.
+// E:\gamedcs\hero.cpp:2365. update_all_slots (0x4db1d0) calls this per-slot
+// updater. Complete adds combination-artifact bookkeeping before DC's two
+// paints: slot traits select a bitset<19> mask and the occupied-slot count;
+// the reverse walk marks an assembled component with frame 0x91. The bitset
+// bounds check is the only terminal range guard, matching retail's CFG.
 //
-// Residual (81.7%): a callee-saved ROLE PERMUTATION plus the two-break
-// routing it drags along. Retail binds slot->EBX, 0->EDI, artifact->ESI;
-// we bind slot->EDI, 0->ESI, artifact->EBX, and every one of the four
-// inlined update_artifact_slot expansions then names the other register.
-// `why-reg --model` proves this is NOT source-addressable: the pseudo
-// DEFINITION SLOTS AND ORDER AGREE on both sides (ref ebx@5/edi@8/esi@9
-// against base edi@7/esi@8/ebx@9), only the bindings are permuted, which
-// is C1 front-end handle state; its one model-passing candidate moved
-// the distance by 0. `why-branch` puts the rest at D3/D12 - retail keeps
-// the two loop exits as two blocks that each reload `artifact` from its
-// home, our CL cross-jumps them into one - and its own catalog sweep
-// only offers semantically wrong mutations (`short i`, -2; `unsigned
-// char artifact`, -1), both of which contradict retail's 32-bit
-// `cmp i,slot`.
-// Tried and rejected, one compile each: hoisting the decrement to the
-// loop header as a statement (69.67) and as an explicit goto loop
-// (69.67 - both stop VC6 reusing the parameter slot [ebp+8] for the
-// strength-reduced index, which costs a frame slot); splitting the
-// `&& --remaining == 0` into nested ifs (81.70, byte-flat).
+// Exact: preserve getArtifact calls and the ordinary message helper's
+// constructor/branch stores. Those helper corrections raise 81.7 to 91.3;
+// accessor calls alone are byte-flat. Retail initializes the reverse index
+// to 19 and decrements before the mask test. Declare that index before a
+// while loop: this reaches 100 and restores EBX slot / EDI zero / ESI
+// artifact, including the two separate exit reloads. The equivalent for
+// form with a loop-scoped index gives 74.7688, whether decrement is a
+// statement or inside test(). The old C1 handle-state wall was incomplete
+// source structure. DC's TArtifactSlot/TArtifact interfaces preserve exact
+// bytes; Complete-only frame ordinals cross the enum boundary explicitly.
+// Before normalization: update_slot.
 VA(0x004daf90, 0x23A)  // anchor-caller, dc 0xcd6e8
-void THeroScreenWindow::updateSlot(long slot)
+void THeroScreenWindow::updateSlot(TArtifactSlot slot)
 {
-    int artifact = g_currentHero->m_equipped[slot].m_artifactId;
+    TArtifact artifact = TArtifact(g_currentHero->getArtifact(slot).m_artifactId);
     if (artifact == ARTIFACT_NONE) {
         int type = g_artifactSlotTraits[slot].m_type;
         unsigned int remaining = g_currentHero->m_artifactSlotCounts[type];
         if (remaining > 0) {
-            for (int i = ARTIFACT_SLOT_COUNT - 1; ; i--) {
+            int i = ARTIFACT_SLOT_COUNT;
+            while (true) {
+                --i;
                 if (!g_artifactSlotMasks[type].test(i))
                     continue;
                 if (i == slot) {
-                    artifact = 0x91;
+                    artifact = TArtifact(0x91);
                     break;
                 }
-                if (g_currentHero->m_equipped[i].m_artifactId == ARTIFACT_NONE
+                if (g_currentHero->getArtifact(i).m_artifactId == ARTIFACT_NONE
                     && --remaining == 0)
                     break;
             }
         }
     }
 
-    // This call used to be pinned at inline depth zero on the
-    // hero::initialize/GiveSS precedent: HeroFn_004E2840 then had exactly
-    // one call site in this compiland, and /Ob2 expands a single-call-site
-    // EXTERN regardless of size, which retail does not do here (it CALLS
-    // 0x4e2840). The note said the pin comes out when a second retail
-    // caller lands; handle_artifact_click is that caller, and both pins are
-    // byte-flat now (2026-09-06, polish lane 50).
+    // Complete calls heroFn004E2840 (0x4e2840) for the dragged artifact's
+    // eligibility; the older DC artifactAllowedInSlot call is superseded.
     if (g_heroScreenDraggedArtifact.m_artifactId != ARTIFACT_NONE
         && g_currentHero->heroFn004E2840(
                g_heroScreenDraggedArtifact.m_artifactId, slot)) {
         updateArtifactSlot(slot + 0x15, artifact);
-        updateArtifactSlot(slot + 2, 0x90);
+        updateArtifactSlot(slot + 2, TArtifact(0x90));
     } else {
         updateArtifactSlot(slot + 0x15, ARTIFACT_NONE);
         updateArtifactSlot(slot + 2, artifact);
@@ -2990,7 +2959,7 @@ void THeroScreenWindow::updateAllSlots()
 {
     for (long slot = ARTIFACT_SLOT_FIRST;
          slot < ARTIFACT_SLOT_COUNT; slot++)
-        updateSlot(slot);
+        updateSlot(TArtifactSlot(slot));
 }
 
 #if 0  // @carcass
@@ -3006,7 +2975,7 @@ DC_ONLY(0xcd76c, 0x22)
 inline void updateBackpackItem(int i)
 {
     updateArtifactSlot(i + 0x28,
-                         g_currentHero->m_backpack[i].m_artifactId);
+                       TArtifact(g_currentHero->m_backpack[i].m_artifactId));
 }
 
 // E:\gamedcs\hero.cpp:2399
@@ -4152,7 +4121,7 @@ static void handleArtifactClick(long code, unsigned char rightMouse)
                     g_currentHero->updateStats();
                     for (long i = THeroScreenWindow::ARTIFACT_SLOT_FIRST;
                          i < THeroScreenWindow::ARTIFACT_SLOT_COUNT; i++)
-                        g_heroScreenWindow->updateSlot(i);
+                        g_heroScreenWindow->updateSlot(TArtifactSlot(i));
                     g_heroScreenWindow->drawWindow(1, 0xffff0001,
                                                    0xffff);
                 }
@@ -4201,7 +4170,7 @@ static void handleArtifactClick(long code, unsigned char rightMouse)
                         g_currentHero->updateStats();
                         for (long i = THeroScreenWindow::ARTIFACT_SLOT_FIRST;
                              i < THeroScreenWindow::ARTIFACT_SLOT_COUNT; i++)
-                            g_heroScreenWindow->updateSlot(i);
+                            g_heroScreenWindow->updateSlot(TArtifactSlot(i));
                         g_heroScreenWindow->drawWindow(
                             1, 0xffff0001, 0xffff);
                     }
@@ -4265,7 +4234,7 @@ static void handleBackpackClick(long code, unsigned char rightMouse)
         g_heroScreenDraggedArtifact.m_artifactId = ARTIFACT_NONE;
         for (long i = THeroScreenWindow::ARTIFACT_SLOT_FIRST;
              i < THeroScreenWindow::ARTIFACT_SLOT_COUNT; i++)
-            g_heroScreenWindow->updateSlot(i);
+            g_heroScreenWindow->updateSlot(TArtifactSlot(i));
         g_heroScreenWindow->drawWindow(1, 0xffff0001, 0xffff);
         g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
         return;
@@ -4299,7 +4268,7 @@ static void handleBackpackClick(long code, unsigned char rightMouse)
     updateBackpack();
     for (long j = THeroScreenWindow::ARTIFACT_SLOT_FIRST;
          j < THeroScreenWindow::ARTIFACT_SLOT_COUNT; j++)
-        g_heroScreenWindow->updateSlot(j);
+        g_heroScreenWindow->updateSlot(TArtifactSlot(j));
     g_heroScreenWindow->drawWindow(1, 0xffff0001, 0xffff);
     g_mouseManager->setPointer(
         g_heroScreenDraggedArtifact.m_artifactId,
