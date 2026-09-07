@@ -13,6 +13,7 @@
 // needed by the painter interface.
 struct TRmgLinePatternTable;
 DATA(0x0069E5D0) extern TRmgLinePatternTable g_rmgRiverPatternTable;
+DATA(0x0069E650) extern TRmgLinePatternTable g_rmgRoadPatternTable;
 
 // Retail retains this tiny value constructor throughout the RMG pathfinding
 // cluster.  Its three stores and `ret 0xc` fix both the by-value ABI and the
@@ -61,6 +62,14 @@ TRmgRiverPainter::TRmgRiverPainter(
     : TRmgLinePainter(newAdapter),
       TRmgLineWalker(this, newRiverType, newStart)
 {
+}
+
+// Cinit 0x55f2f0 builds the seventeen-entry road pattern table from the ids
+// at 0x6411ac. The road painter's first virtual slot returns that table.
+VA(0x0055F320, 0x08)  // vtables 0x6411f0/0x64120c; Complete-only
+void* TRmgRoadLinePainter::getPattern(int)
+{
+    return &g_rmgRoadPatternTable;
 }
 
 // The road painter's empty derived destructor restores its distinct base
