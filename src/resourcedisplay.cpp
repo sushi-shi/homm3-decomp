@@ -15,8 +15,9 @@
 // Retail .rdata 0x641008, immediately before this class's vtable.
 // The seven dwords are byte-read as 0..6 and Update uses them to map
 // display slots onto playerData::resources.
+// Before normalization: resourceDisplayOrder.
 DATA(0x00641008)
-static const int resourceDisplayOrder[NUM_RESOURCES] = {
+static const int g_resourceDisplayOrder[NUM_RESOURCES] = {
     WOOD, MERCURY, ORE, SULFUR, CRYSTAL, GEMS, GOLD
 };
 
@@ -65,23 +66,24 @@ static const int resourceDisplayOrder[NUM_RESOURCES] = {
 // 52+0 on both), ruling out the compiler-generation family. The residual is
 // therefore a measured C1 front-end handle-order wall with no source-nameable
 // lever found; preserve this source shape.
+// Before normalization (locals): is_small.
 VA(0x00558ba0, 0x2A1)  // anchor-global, dc 0x120c54
-TResourceDisplay::TResourceDisplay(heroWindow* parent, unsigned char is_small)
-    : isSmall(is_small)
+TResourceDisplay::TResourceDisplay(heroWindow* parent, unsigned char isSmall)
+    : m_isSmall(isSmall)
 {
-    if (isSmall) {
+    if (m_isSmall) {
         initialize(7, 0x23f, 0x2e2, 0x16, parent);
-        resourceBackground = new bitmapBorder(
+        m_resourceBackground = new bitmapBorder(
             0, 0, 0x2e2, 0x16, 1000, "kresbar.pcx", 0x800);
     } else {
         initialize(3, 0x23f, 0x31a, 0x16, parent);
-        resourceBackground = new bitmapBorder(
+        m_resourceBackground = new bitmapBorder(
             0, 0, 0x31a, 0x16, 1000, "aresbar.pcx", 0x800);
     }
 
-    resourceBackground->SetPlayerPaletteColors(
-        gpGame->GetLocalPlayerGamePos());
-    AddWidget(resourceBackground, -1);
+    m_resourceBackground->setPlayerPaletteColors(
+        g_game->getLocalPlayerGamePos());
+    addWidget(m_resourceBackground, -1);
 
     int textX;
     int spacing;
@@ -89,7 +91,7 @@ TResourceDisplay::TResourceDisplay(heroWindow* parent, unsigned char is_small)
     // Retail reloads the original flag from [ebp+0xc] here and after the
     // loop. The former volatile view forced that allocation but did not model
     // mutable state; the ordinary source parameter is authoritative.
-    if (is_small) {
+    if (isSmall) {
         textX = 0x1d;
         spacing = 0x4c;
         borderWidth = 0x1a;
@@ -100,27 +102,27 @@ TResourceDisplay::TResourceDisplay(heroWindow* parent, unsigned char is_small)
     }
 
     for (int i = 0; i < NUM_RESOURCES; ++i) {
-        resourceWidgets[i] = new textWidget(
+        m_resourceWidgets[i] = new textWidget(
             textX, 3, 0x32, 0x12, 0, "smalfont.fnt", font::WHITE,
             0x3e9 + i, 0, 0, 8);
-        AddWidget(resourceWidgets[i], -1);
-        resourceBorders[i] = new border(
+        addWidget(m_resourceWidgets[i], -1);
+        m_resourceBorders[i] = new border(
             textX - borderWidth, 3, borderWidth, 0x12,
             0x3f1 + i, 1);
-        AddWidget(resourceBorders[i], -1);
+        addWidget(m_resourceBorders[i], -1);
         textX += spacing;
     }
 
-    if (is_small) {
-        statusWidget = new textWidget(
+    if (isSmall) {
+        m_statusWidget = new textWidget(
             0x22b, 3, 0xb2, 0x12, 0, "smalfont.fnt", font::WHITE,
             0x3f0, 1, 0, 8);
     } else {
-        statusWidget = new textWidget(
+        m_statusWidget = new textWidget(
             0x25f, 3, 0xb4, 0x12, 0, "smalfont.fnt", font::WHITE,
             0x3f0, 1, 0, 8);
     }
-    AddWidget(statusWidget, -1);
+    addWidget(m_statusWidget, -1);
 }
 
 // Retail places the canonical wrapper between ctor and dtor; its body
@@ -134,17 +136,17 @@ VA_COMPGEN(0x00558e50, 0x21, SCALAR_DELETING_DTOR, TResourceDisplay)
 VA(0x00558e80, 0x95)  // anchor-bracket, dc 0x120ee8
 TResourceDisplay::~TResourceDisplay()
 {
-    if (resourceBackground)
-        delete resourceBackground;
+    if (m_resourceBackground)
+        delete m_resourceBackground;
     for (int i = 0; i < NUM_RESOURCES; ++i) {
-        if (resourceWidgets[i])
-            delete resourceWidgets[i];
-        if (resourceBorders[i])
-            delete resourceBorders[i];
+        if (m_resourceWidgets[i])
+            delete m_resourceWidgets[i];
+        if (m_resourceBorders[i])
+            delete m_resourceBorders[i];
     }
-    if (statusWidget) {
-        delete statusWidget;
-        statusWidget = 0;
+    if (m_statusWidget) {
+        delete m_statusWidget;
+        m_statusWidget = 0;
     }
 }
 
@@ -161,28 +163,29 @@ TResourceDisplay::~TResourceDisplay()
 // `hide()` calls for each resource widget and the status widget. Retail's
 // exact five-block body contains neither guard nor call, proving this is a
 // Complete-revision deletion rather than a missing shared-source statement.
+// Before normalization (locals): draw.
 VA(0x00558f20, 0xF3)  // anchor-global, dc 0x120fa0
-void TResourceDisplay::Update(unsigned char draw, unsigned char update)
+void TResourceDisplay::update(unsigned char drawRequested, unsigned char update)
 {
-    int playerPos = gUnnamed69778c;
-    playerData* player = &gpGame->players[playerPos];
-    resourceBackground->SetPlayerPaletteColors(playerPos);
+    int playerPos = g_unnamed69778c;
+    playerData* player = &g_game->m_players[playerPos];
+    m_resourceBackground->setPlayerPaletteColors(playerPos);
     for (int i = 0; i < NUM_RESOURCES; ++i) {
-        sprintf(gText, "%d", player->resources[resourceDisplayOrder[i]]);
-        resourceWidgets[i]->SetText(gText);
+        sprintf(g_text, "%d", player->m_resources[g_resourceDisplayOrder[i]]);
+        m_resourceWidgets[i]->setText(g_text);
     }
 
-    TTextResource* labels = gpGeneralText;
-    sprintf(gText, "%s: %d, %s: %d, %s: %d",
-        labels->GetText(GENERAL_TEXT_RESOURCE_DISPLAY_0),
-        static_cast<unsigned short>(gpGame->field_1f642),
-        labels->GetText(GENERAL_TEXT_RESOURCE_DISPLAY_1),
-        static_cast<unsigned short>(gpGame->field_1f640),
-        labels->GetText(GENERAL_TEXT_RESOURCE_DISPLAY_2),
-        static_cast<unsigned short>(gpGame->field_1f63e));
-    statusWidget->SetText(gText);
-    if (draw)
-        Draw(update, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+    TTextResource* labels = g_generalText;
+    sprintf(g_text, "%s: %d, %s: %d, %s: %d",
+        labels->getText(GENERAL_TEXT_RESOURCE_DISPLAY_0),
+        static_cast<unsigned short>(g_game->m_month),
+        labels->getText(GENERAL_TEXT_RESOURCE_DISPLAY_1),
+        static_cast<unsigned short>(g_game->m_week),
+        labels->getText(GENERAL_TEXT_RESOURCE_DISPLAY_2),
+        static_cast<unsigned short>(g_game->m_day));
+    m_statusWidget->setText(g_text);
+    if (drawRequested)
+        draw(update, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
 }
 
 // E:\gamedcs\resourcedisplay.cpp:183
@@ -190,20 +193,20 @@ void TResourceDisplay::Update(unsigned char draw, unsigned char update)
 // status formatting and final Draw retain the DC statement order; retail's
 // three CFG blocks and source-labelled body remain exact.
 VA(0x00559020, 0xA4)  // anchor-global, dc 0x1210b4
-void TResourceDisplay::Clear()
+void TResourceDisplay::clear()
 {
-    resourceBackground->SetPlayerPaletteColors(gUnnamed69778c);
+    m_resourceBackground->setPlayerPaletteColors(g_unnamed69778c);
     for (int i = 0; i < NUM_RESOURCES; ++i)
-        resourceWidgets[i]->SetText("");
+        m_resourceWidgets[i]->setText("");
 
-    TTextResource* labels = gpGeneralText;
-    sprintf(gText, "%s: %d, %s: %d, %s: %d",
-        labels->GetText(GENERAL_TEXT_RESOURCE_DISPLAY_0),
-        static_cast<unsigned short>(gpGame->field_1f642),
-        labels->GetText(GENERAL_TEXT_RESOURCE_DISPLAY_1),
-        static_cast<unsigned short>(gpGame->field_1f640),
-        labels->GetText(GENERAL_TEXT_RESOURCE_DISPLAY_2),
-        static_cast<unsigned short>(gpGame->field_1f63e));
-    statusWidget->SetText(gText);
-    Draw(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+    TTextResource* labels = g_generalText;
+    sprintf(g_text, "%s: %d, %s: %d, %s: %d",
+        labels->getText(GENERAL_TEXT_RESOURCE_DISPLAY_0),
+        static_cast<unsigned short>(g_game->m_month),
+        labels->getText(GENERAL_TEXT_RESOURCE_DISPLAY_1),
+        static_cast<unsigned short>(g_game->m_week),
+        labels->getText(GENERAL_TEXT_RESOURCE_DISPLAY_2),
+        static_cast<unsigned short>(g_game->m_day));
+    m_statusWidget->setText(g_text);
+    draw(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
 }

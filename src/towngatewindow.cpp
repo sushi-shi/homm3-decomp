@@ -19,107 +19,111 @@
 
 // Every retail reference to this slot is in towngatewindow.obj. Dreamcast's
 // constructor line 41 is the matching source-private current-window store.
-DATA(0x006aa608) static TTownGateWindow* gpTownGateWindow;
+// Before normalization: gpTownGateWindow.
+DATA(0x006aa608) static TTownGateWindow* g_townGateWindow;
 
 // Dreamcast preserves the source statement groups, nested scopes, one message
 // local, and the GetNumAllies helper boundary. Complete keeps those semantics
 // while expanding the header helper and both vector reserves under VC6 /Ob2.
-static void TownGateSliderCallback(int state, heroWindow* parent_window);
+// Before normalization (function): TownGateSliderCallback.
+// Before normalization (locals): parent_window.
+static void townGateSliderCallback(int state, heroWindow* parentWindow);
 
 // E:\gamedcs\towngatewindow.cpp:40
+// Before normalization (locals): _adventure_spell.
 VA(0x005c1ab0, 0x882)  // vtable + full widget roster, dc 0x1690b0
-TTownGateWindow::TTownGateWindow(bool _adventure_spell)
+TTownGateWindow::TTownGateWindow(bool adventureSpell)
   : CAdvPopup(247, 65, 306, 469, 18),
-    topTown(0), selectedTown(-1), adventure_spell(_adventure_spell)
+    m_topTown(0), m_selectedTown(-1), m_adventureSpell(adventureSpell)
 {
-    gpTownGateWindow = this;
+    g_townGateWindow = this;
 
-    const char* title = adventure_spell
-        ? akSpellTraits[SPELL_TOWN_PORTAL].name : 0;
-    const char* selectTown = adventure_spell
-        ? gpGeneralText->GetText(687) : 0;
+    const char* title = m_adventureSpell
+        ? g_spellTraits[SPELL_TOWN_PORTAL].m_name : 0;
+    const char* selectTown = m_adventureSpell
+        ? g_generalText->getText(687) : 0;
 
-    Towns.reserve(72 * gpGame->GetNumAllies(gNetLocalGamePos));
-    Widgets.reserve(17);
+    m_towns.reserve(72 * g_game->getNumAllies(g_netLocalGamePos));
+    m_widgets.reserve(17);
 
-    Widgets.push_back(new bitmapBorder(
-        0, 0, width, height, BACKGROUND_ID, "TPGate.pcx", 0x800));
-    Widgets.push_back(new textWidget(
-        0, 15, width, 30, title, "bigfont.fnt", font::HEADING,
+    m_widgets.push_back(new bitmapBorder(
+        0, 0, m_width, m_height, BACKGROUND_ID, "TPGate.pcx", 0x800));
+    m_widgets.push_back(new textWidget(
+        0, 15, m_width, 30, title, "bigfont.fnt", font::HEADING,
         TITLE_TEXT_ID, 1, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         14, 125, 262, 20, selectTown, "smalfont.fnt", font::PRIMARY,
         SELECT_TEXT_ID, 1, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         14, 155, 262, 20, 0, "smalfont.fnt", font::PRIMARY,
         TOWN_0_ID, 1, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         14, 180, 262, 20, 0, "smalfont.fnt", font::PRIMARY,
         TOWN_1_ID, 1, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         14, 205, 262, 20, 0, "smalfont.fnt", font::PRIMARY,
         TOWN_2_ID, 1, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         14, 230, 262, 20, 0, "smalfont.fnt", font::PRIMARY,
         TOWN_3_ID, 1, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         14, 255, 262, 20, 0, "smalfont.fnt", font::PRIMARY,
         TOWN_4_ID, 1, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         14, 280, 262, 20, 0, "smalfont.fnt", font::PRIMARY,
         TOWN_5_ID, 1, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         14, 305, 262, 20, 0, "smalfont.fnt", font::PRIMARY,
         TOWN_6_ID, 1, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         14, 330, 262, 20, 0, "smalfont.fnt", font::PRIMARY,
         TOWN_7_ID, 1, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         14, 355, 262, 20, 0, "smalfont.fnt", font::PRIMARY,
         TOWN_8_ID, 1, 0, 8));
-    Widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new bitmapBorder(
         14, 151, 262, 24, SELECTOR_ID, "TPGateS.pcx", 0x800));
 
-    if (adventure_spell) {
-        Widgets.push_back(new iconWidget(
+    if (m_adventureSpell) {
+        m_widgets.push_back(new iconWidget(
             111, 44, 83, 61, ICON_ID, "SpellScr.def",
             9, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
     } else {
-        Widgets.push_back(new iconWidget(
+        m_widgets.push_back(new iconWidget(
             78, 40, 150, 70, ICON_ID, "hallinfr.def",
             22, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
     }
 
-    Widgets.push_back(new slider(
-        277, 120, 16, 258, SLIDER_ID, 10, TownGateSliderCallback,
+    m_widgets.push_back(new slider(
+        277, 120, 16, 258, SLIDER_ID, 10, townGateSliderCallback,
         slider::BROWN, NUM_TOWN_ENTRIES, 0));
-    Widgets.push_back(new button(
+    m_widgets.push_back(new button(
         15, 402, 64, 30, 0x7802, "iOkay.def", 0, 1, 0, 28, 2));
-    Widgets.push_back(new button(
+    m_widgets.push_back(new button(
         228, 402, 64, 30, 0x7801, "iCancel.def", 0, 1, 0, 1, 2));
 
-    for (std::vector<widget*>::iterator it = Widgets.begin();
-         it != Widgets.end(); ++it) {
+    for (std::vector<widget*>::iterator it = m_widgets.begin();
+         it != m_widgets.end(); ++it) {
         if (*it)
-            AddWidget(*it, -1);
+            addWidget(*it, -1);
         else
-            MemError();
+            memError();
     }
 
     message msg;
-    msg.id = MESSAGE_WIDGET;
-    msg.codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
-    msg.codeY = 0;
-    msg.extra = gpGame->GetLocalPlayerGamePos();
-    BroadcastMessage(&msg);
+    msg.m_id = MESSAGE_WIDGET;
+    msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
+    msg.m_codeY = 0;
+    msg.m_extra = g_game->getLocalPlayerGamePos();
+    broadcastMessage(&msg);
 
-    msg.id = MESSAGE_WIDGET;
-    msg.codeX = widget::WIDGET_CLEAR_STATUS;
-    msg.codeY = SELECTOR_ID;
-    msg.extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
-    BroadcastMessage(&msg);
+    msg.m_id = MESSAGE_WIDGET;
+    msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+    msg.m_codeY = SELECTOR_ID;
+    msg.m_extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
+    broadcastMessage(&msg);
 
-    exitCodeX = -1;
+    m_exitCommand = -1;
 }
 
 // Slot 0 of retail vtable 0x642e30; VC6 emits the deleting wrapper directly
@@ -130,7 +134,7 @@ VA_COMPGEN(0x005c2340, 0x21, SCALAR_DELETING_DTOR, TTownGateWindow)
 VA(0x005c2370, 0x8f)  // vtable + complete tail layout, dc 0x169824
 TTownGateWindow::~TTownGateWindow()
 {
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
@@ -148,10 +152,11 @@ TTownGateWindow::~TTownGateWindow()
 // own AddTown with the whole insert expanded into it, and the DC body is
 // 28 bytes - one statement.
 // E:\gamedcs\towngatewindow.cpp:110
+// Before normalization (locals): new_town.
 VA(0x005c2400, 0x1AF)  // dc 0x169890, promoted from DC_ONLY on body evidence
-void TTownGateWindow::AddTown(int new_town)
+void TTownGateWindow::addTown(int newTown)
 {
-    Towns.push_back(new_town);
+    m_towns.push_back(newTown);
 }
 
 // E:\gamedcs\towngatewindow.cpp:115
@@ -162,66 +167,66 @@ void TTownGateWindow::AddTown(int new_town)
 // a legal destination when it owns that building or the caller is the
 // Town Portal spell, and no hero is standing in it (visitingHeroId < 0).
 VA(0x005c25b0, 0x1B5)  // anchor-callee (DoModal/WindowHandler), dc 0x1698ac
-void TTownGateWindow::UpdateTownLocator(int i)
+void TTownGateWindow::updateTownLocator(int i)
 {
     message msg;
-    msg.id = MESSAGE_WIDGET;
-    msg.codeY = TOWN_0_ID + i;
-    msg.extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
+    msg.m_id = MESSAGE_WIDGET;
+    msg.m_codeY = TOWN_0_ID + i;
+    msg.m_extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
 
-    if (topTown + i >= Towns.size()) {
-        msg.codeX = widget::WIDGET_CLEAR_STATUS;
+    if (m_topTown + i >= m_towns.size()) {
+        msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
     } else {
-        msg.codeX = widget::WIDGET_SET_STATUS;
-        BroadcastMessage(&msg);
+        msg.m_codeX = widget::WIDGET_SET_STATUS;
+        broadcastMessage(&msg);
 
-        strcpy(gText, gpGame->GetTownName(Towns[topTown + i]));
-        msg.codeX = widget::WIDGET_SET_TEXT;
-        msg.extraText = gText;
-        BroadcastMessage(&msg);
+        strcpy(g_text, g_game->getTownName(m_towns[m_topTown + i]));
+        msg.m_codeX = widget::WIDGET_SET_TEXT;
+        msg.m_extraText = g_text;
+        broadcastMessage(&msg);
 
-        msg.codeX = widget::WIDGET_SET_COLOR;
-        const town* whichTown = gpGame->GetTown(Towns[topTown + i]);
-        if (((whichTown->active & bitNumber[EXTRA_1_ID]) != 0 || adventure_spell)
-            && whichTown->visitingHeroId < 0) {
-            msg.extra = font::PRIMARY;
-            if (topTown + i == selectedTown) {
-                BroadcastMessage(&msg);
-                msg.codeX = widget::WIDGET_SET_STATUS;
-                msg.codeY = SELECTOR_ID;
-                msg.extra = widget::WIDGET_DRAWN;
-                BroadcastMessage(&msg);
-                msg.codeX = widget::WIDGET_SET_Y;
-                msg.extra = 25 * i + 151;
+        msg.m_codeX = widget::WIDGET_SET_COLOR;
+        const town* whichTown = g_game->getTown(m_towns[m_topTown + i]);
+        if (((whichTown->m_active & g_bitNumber[EXTRA_1_ID]) != 0 || m_adventureSpell)
+            && whichTown->m_visitingHeroId < 0) {
+            msg.m_extra = font::PRIMARY;
+            if (m_topTown + i == m_selectedTown) {
+                broadcastMessage(&msg);
+                msg.m_codeX = widget::WIDGET_SET_STATUS;
+                msg.m_codeY = SELECTOR_ID;
+                msg.m_extra = widget::WIDGET_DRAWN;
+                broadcastMessage(&msg);
+                msg.m_codeX = widget::WIDGET_SET_Y;
+                msg.m_extra = 25 * i + 151;
             }
         } else {
-            msg.extra = font::PRIMARY_HIGHLIGHT;
-            BroadcastMessage(&msg);
-            msg.codeX = widget::WIDGET_CLEAR_STATUS;
-            msg.extra = widget::WIDGET_ACTIVE;
+            msg.m_extra = font::PRIMARY_HIGHLIGHT;
+            broadcastMessage(&msg);
+            msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+            msg.m_extra = widget::WIDGET_ACTIVE;
         }
     }
 
-    BroadcastMessage(&msg);
+    broadcastMessage(&msg);
 }
 
 // E:\gamedcs\towngatewindow.cpp:168
 // Complete has no retained body: VC6 expands this ordinary source helper in
 // DoModal, WindowHandler, and TownGateSliderCallback. Dreamcast preserves the
 // call boundary and one loop scope; both builds agree on every operation.
-void TTownGateWindow::UpdateTownLocators()
+void TTownGateWindow::updateTownLocators()
 {
     message msg;
-    msg.id = MESSAGE_WIDGET;
-    msg.codeX = widget::WIDGET_CLEAR_STATUS;
-    msg.codeY = SELECTOR_ID;
-    msg.extra = widget::WIDGET_DRAWN;
-    BroadcastMessage(&msg);
+    msg.m_id = MESSAGE_WIDGET;
+    msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+    msg.m_codeY = SELECTOR_ID;
+    msg.m_extra = widget::WIDGET_DRAWN;
+    broadcastMessage(&msg);
 
     for (int i = 0; i < NUM_TOWN_ENTRIES; ++i)
-        UpdateTownLocator(i);
+        updateTownLocator(i);
 
-    DrawWindow(1, 0xffff0001, 0xffff);
+    drawWindow(1, 0xffff0001, 0xffff);
 }
 
 // E:\gamedcs\towngatewindow.cpp:184
@@ -229,19 +234,19 @@ void TTownGateWindow::UpdateTownLocators()
 // at [ebp-0x40] is that helper's own local - and reaches heroWindow::DoModal
 // through an explicit qualification (a direct call, not the slot-6 dispatch).
 VA(0x005c2770, 0xC8)  // anchor-callee (UpdateTownLocator) + heroWindow::DoModal, dc 0x169a88
-void TTownGateWindow::DoModal()
+void TTownGateWindow::doModal()
 {
     message msg;
-    msg.id = MESSAGE_WIDGET;
-    msg.codeX = widget::WIDGET_SET_SLIDER_RESOLUTION;
-    msg.codeY = SLIDER_ID;
-    msg.extra = Towns.size() - (NUM_TOWN_ENTRIES - 1);
-    BroadcastMessage(&msg);
+    msg.m_id = MESSAGE_WIDGET;
+    msg.m_codeX = widget::WIDGET_SET_SLIDER_RESOLUTION;
+    msg.m_codeY = SLIDER_ID;
+    msg.m_extra = m_towns.size() - (NUM_TOWN_ENTRIES - 1);
+    broadcastMessage(&msg);
 
-    UpdateTownLocators();
+    updateTownLocators();
 
-    GetWidget(DIALOG_RETURN_OK)->enable(0);
-    heroWindow::DoModal(0);
+    getWidget(DIALOG_RETURN_OK)->enable(0);
+    heroWindow::doModal(0);
 }
 
 // E:\gamedcs\towngatewindow.cpp:208
@@ -262,33 +267,33 @@ void TTownGateWindow::DoModal()
 // into the OK arm expresses the same merge and is byte-flat with the
 // unduplicated form - only the duplicate moves it.
 VA(0x005c2840, 0x13B)  // anchor-vtable (slot 9) + CAdvPopup::WindowHandler, dc 0x169ae0
-int TTownGateWindow::WindowHandler(message* msg)
+int TTownGateWindow::windowHandler(message* msg)
 {
-    int handled = CAdvPopup::WindowHandler(msg);
+    int handled = CAdvPopup::windowHandler(msg);
     if (handled != 0)
         return handled;
 
-    if (msg->id == MESSAGE_WIDGET) {
-        switch (msg->codeX) {
+    if (msg->m_id == MESSAGE_WIDGET) {
+        switch (msg->m_codeX) {
         case widget::WIDGET_SELECT:
-            if (msg->codeY >= TOWN_0_ID && msg->codeY <= TOWN_8_ID) {
-                gpTownGateWindow->selectedTown =
-                    gpTownGateWindow->topTown + msg->codeY - TOWN_0_ID;
-                if (gpCurrentPlayer->IsLocalHuman())
-                    GetWidget(DIALOG_RETURN_OK)->enable(1);
-                gpTownGateWindow->UpdateTownLocators();
+            if (msg->m_codeY >= TOWN_0_ID && msg->m_codeY <= TOWN_8_ID) {
+                g_townGateWindow->m_selectedTown =
+                    g_townGateWindow->m_topTown + msg->m_codeY - TOWN_0_ID;
+                if (g_currentPlayer->isLocalHuman())
+                    getWidget(DIALOG_RETURN_OK)->enable(1);
+                g_townGateWindow->updateTownLocators();
             }
             break;
         case widget::WIDGET_DESELECT:
-            switch (msg->codeY) {
+            switch (msg->m_codeY) {
             case DIALOG_RETURN_CANCEL:
-                gpWindowManager->dialogReturn = -1;
-                msg->codeX = msg->codeY = widget::WIDGET_END_DIALOG;
+                g_windowManager->m_dialogReturn = -1;
+                msg->m_codeX = msg->m_codeY = widget::WIDGET_END_DIALOG;
                 return MESSAGE_DISPATCH_FORWARD;
             case DIALOG_RETURN_OK:
-                gpWindowManager->dialogReturn =
-                    gpTownGateWindow->Towns[gpTownGateWindow->selectedTown];
-                msg->codeX = msg->codeY = widget::WIDGET_END_DIALOG;
+                g_windowManager->m_dialogReturn =
+                    g_townGateWindow->m_towns[g_townGateWindow->m_selectedTown];
+                msg->m_codeX = msg->m_codeY = widget::WIDGET_END_DIALOG;
                 return MESSAGE_DISPATCH_FORWARD;
             default:
                 return MESSAGE_DISPATCH_CONSUME;
@@ -303,32 +308,32 @@ int TTownGateWindow::WindowHandler(message* msg)
 // Dreamcast retains UpdateTownLocators here; Complete expands it and then
 // keeps line 262's second DrawWindow call as a separate source statement.
 VA(0x005c2980, 0x89)  // source-private callback, dc 0x169ba8
-static void TownGateSliderCallback(int state, heroWindow* parent_window)
+static void townGateSliderCallback(int state, heroWindow* parentWindow)
 {
-    gpTownGateWindow->topTown = state;
-    gpTownGateWindow->UpdateTownLocators();
-    gpTownGateWindow->DrawWindow(1, 0xffff0001, 0xffff);
+    g_townGateWindow->m_topTown = state;
+    g_townGateWindow->updateTownLocators();
+    g_townGateWindow->drawWindow(1, 0xffff0001, 0xffff);
 }
 
 #if 0  // @carcass
 
 // E:\gamedcs\game.h:897
 DC_ONLY(0x169c0c, 0x54)
-unsigned char game::GetNumAllies(int playerNum)
+unsigned char game::getNumAllies(int playerNum)
 {
     // @stub
 }
 
 // E:\gamedcs\game.h:1022
 DC_ONLY(0x169c60, 0x1C)
-const town* game::GetTown(int which)
+const town* game::getTown(int which)
 {
     // @stub
 }
 
 // E:\gamedcs\game.h:1027
 DC_ONLY(0x169c7c, 0x1C)
-const char* game::GetTownName(int iTownId)
+const char* game::getTownName(int iTownId)
 {
     // @stub
 }

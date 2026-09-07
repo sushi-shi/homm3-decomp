@@ -12,7 +12,8 @@ class Bitmap816;
 
 // Dreamcast publishes the original name; retail scenarioinfo.obj passes this
 // exact 0x6a6ca0 table to CHeroWindowEx::SetHelpText.
-DATA(0x006a6ca0) extern THelpText gSingleSelectionHelp[];
+// Before normalization: gSingleSelectionHelp.
+DATA(0x006a6ca0) extern THelpText g_singleSelectionHelp[];
 
 // Retail's stack owner at 0x513740 reserves 0xb4 bytes for this object.
 // The vtable at 0x641710 has the inherited 15-slot CAdvPopup shape, with
@@ -37,20 +38,32 @@ public:
         SCENARIO_INFO_PLAYER_ROW_FIRST_ID = 390
     };
 
-    CSprite* VictoryIcon;              // +0x60
-    CSprite* LossIcon;                 // +0x64
-    CSprite* TownPix;                  // +0x68
-    CSprite* bonusSprite;              // +0x6c
-    Bitmap816* Panels[8];              // +0x70
-    Bitmap816* Flags[8];               // +0x90
-    CSprite* heroSpecificAbility;      // +0xb0
+    // Before normalization: VictoryIcon.
+    CSprite* m_victoryIcon;              // +0x60
+    // Before normalization: LossIcon.
+    CSprite* m_lossIcon;                 // +0x64
+    // Before normalization: TownPix.
+    CSprite* m_townPix;                  // +0x68
+    // Before normalization: bonusSprite.
+    CSprite* m_bonusSprite;              // +0x6c
+    // Before normalization: Panels.
+    Bitmap816* m_panels[8];              // +0x70
+    // Before normalization: Flags.
+    Bitmap816* m_flags[8];               // +0x90
+    // Before normalization: heroSpecificAbility.
+    CSprite* m_heroSpecificAbility;      // +0xb0
 
     CScenarioInfoDlg();
     virtual ~CScenarioInfoDlg();
-    virtual unsigned char ProcessRightSelect(int id);
-    virtual int OnWidgetDeselect(int id, unsigned char* bExitFlag);
-    void UpdateAllyEnemyFlags();
-    void SetDifficultyHiLite();
+    // Before normalization (function): CScenarioInfoDlg::ProcessRightSelect.
+    virtual unsigned char processRightSelect(int id);
+    // Before normalization (function): CScenarioInfoDlg::OnWidgetDeselect.
+    // Before normalization (locals): bExitFlag.
+    virtual int onWidgetDeselect(int id, unsigned char* exitFlag);
+    // Before normalization (function): CScenarioInfoDlg::UpdateAllyEnemyFlags.
+    void updateAllyEnemyFlags();
+    // Before normalization (function): CScenarioInfoDlg::SetDifficultyHiLite.
+    void setDifficultyHiLite();
 };
 SIZE(CScenarioInfoDlg, 0xb4);
 

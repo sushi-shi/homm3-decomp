@@ -48,8 +48,8 @@ public:
         m_position = 0;
     }
     virtual ~t_memory_file();
-    virtual int Read(void* data, int size);
-    virtual int Write(const void* data, int size);
+    virtual int read(void* data, int size);
+    virtual int write(const void* data, int size);
 
     unsigned char m_ownsBuffer;  // +0x04
     char* m_buffer;              // +0x08

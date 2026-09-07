@@ -24,20 +24,28 @@ enum {
 // landing veto and cursor/findpath read byte +1 - so the remaining flags
 // keep neutral spellings.
 struct TAdvObjectTraits {
-    unsigned char blocksLanding;  // +0x00
-    unsigned char trait1;         // +0x01
-    unsigned char trait2;         // +0x02
-    const char* name;             // +0x04
-    int nameRow;                  // +0x08
-    unsigned char trait3;         // +0x0c
+    // Before normalization: blocksLanding.
+    unsigned char m_blocksLanding;  // +0x00
+    // Before normalization: trait1.
+    unsigned char m_trait1;         // +0x01
+    // Before normalization: trait2.
+    unsigned char m_trait2;         // +0x02
+    // Before normalization: name.
+    const char* m_name;             // +0x04
+    // Before normalization: nameRow.
+    int m_nameRow;                  // +0x08
+    // Before normalization: trait3.
+    unsigned char m_trait3;         // +0x0c
 };
 SIZE(TAdvObjectTraits, 0x10);
 
 // One row of the loader's first .rdata override table: the object id and
 // the objnames.txt line its name comes from.
 struct TAdvObjectNameRow {
-    int objectType;
-    int nameRow;
+    // Before normalization: objectType.
+    int m_objectType;
+    // Before normalization: nameRow.
+    int m_nameRow;
 };
 
 // Scope guard around a text resource. Retail's unwind funclet for the
@@ -47,18 +55,21 @@ struct TAdvObjectNameRow {
 class TTextResourceGuard {
 public:
     TTextResourceGuard(TTextResource* resource)
-        : have(resource != 0), text(resource)
+        : m_have(resource != 0), m_text(resource)
     {
     }
     ~TTextResourceGuard();
 
-    bool have;
-    TTextResource* text;
+    // Before normalization: have.
+    bool m_have;
+    // Before normalization: text.
+    TTextResource* m_text;
 };
 SIZE(TTextResourceGuard, 8);
 
-extern TAdvObjectTraits gAdventureObjectTraitRows[ADVENTURE_OBJECT_TRAIT_COUNT];
+// Before normalization: gAdventureObjectTraitRows.
+extern TAdvObjectTraits g_adventureObjectTraitRows[ADVENTURE_OBJECT_TRAIT_COUNT];
 
-void InitializeAdventureObjectNames();
+void initializeAdventureObjectNames();
 
 #endif  /* HOMM3_OBJNAMES_H */

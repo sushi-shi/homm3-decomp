@@ -11,11 +11,14 @@ class hero;
 class message;
 
 struct TLevelUpSkillTraits {
-    const char* name;
-    const char* levelNames[3];
+    // Before normalization: name.
+    const char* m_name;
+    // Before normalization: levelNames.
+    const char* m_levelNames[3];
 };
 SIZE(TLevelUpSkillTraits, 0x10);
-extern const TLevelUpSkillTraits (&akLevelUpSkillTraits)[28];
+// Before normalization: akLevelUpSkillTraits.
+extern const TLevelUpSkillTraits (&g_levelUpSkillTraits)[28];
 
 // Retail's vtable at 0x63fe60 has the inherited CAdvPopup shape: slot 0 is
 // the scalar-deleting destructor at 0x4f9700 and slot 9 is WindowHandler at
@@ -48,15 +51,20 @@ public:
         LEVELUP_SELECT_RIGHT_KEY = 3
     };
 
-    TLevelUpWindow(hero* thisHero, int gained_skill,
-                   int first_choice, int second_choice);
+    // Before normalization (locals): gained_skill, first_choice, second_choice.
+    TLevelUpWindow(hero* thisHero, int gainedSkill,
+                   int firstChoice, int secondChoice);
     virtual ~TLevelUpWindow();
-    virtual int WindowHandler(message* msg); // slot 9
+    // Before normalization (function): TLevelUpWindow::WindowHandler.
+    virtual int windowHandler(message* msg); // slot 9
 
-    int left_skill;   // +0x60 retail (+0x58 DC)
-    int right_skill;  // +0x64 retail (+0x5c DC)
+    // Before normalization: left_skill.
+    int m_leftSkill;   // +0x60 retail (+0x58 DC)
+    // Before normalization: right_skill.
+    int m_rightSkill;  // +0x64 retail (+0x5c DC)
 private:
-    int Selected;     // +0x68 retail (+0x60 DC)
+    // Before normalization: Selected.
+    int m_selected;     // +0x68 retail (+0x60 DC)
 };
 SIZE(TLevelUpWindow, 0x6c);
 

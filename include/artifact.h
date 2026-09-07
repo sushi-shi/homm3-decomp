@@ -251,22 +251,34 @@ enum TArtifact {
 struct TArtifactTraits {
     // armyGroup::get_luck_description indexes artifact 0x55 at stride
     // 0x20 and passes +0 directly to format_string: the display name.
-    const char* name;           // +0x00
-    int cost;                   // +0x04
+    // Before normalization: name.
+    const char* m_name;           // +0x00
+    // Before normalization: cost.
+    int m_cost;                   // +0x04
     // Equipped-slot class. remove_artifact compares this between the
     // combination artifact and each component, then uses it to index the
     // hero's per-slot equipped counts.
-    int allowableSlotMask;      // +0x08
-    int artifactClass;          // +0x0c
-    const char* description;    // +0x10
+    // Before normalization: allowableSlotMask.
+    int m_allowableSlotMask;      // +0x08
+    // Before normalization: artifactClass.
+    int m_artifactClass;          // +0x0c
+    // Before normalization: description.
+    const char* m_description;    // +0x10
     // comboType is set on an assembled artifact; targetCombo is set on each
     // component. Both are indices into gCombinationArtifacts, or -1.
-    int comboType;              // +0x14
-    int targetCombo;            // +0x18
-    unsigned char disabled;     // +0x1c
+    // Before normalization: comboType.
+    int m_comboType;              // +0x14
+    // Before normalization: targetCombo.
+    int m_targetCombo;            // +0x18
+    // Before normalization: disabled.
+    unsigned char m_disabled;     // +0x1c
     // Removing this artifact requires rebuilding the available-spell list.
-    unsigned char givesSpells;      // +0x1d
-    char pad_1e[0x2];
+    // Before normalization: givesSpells.
+    unsigned char m_givesSpells;      // +0x1d
+    // Before normalization: pad_1e.
+    // Trailing alignment after the byte at +0x1d, rounding the proven
+    // 0x20-byte artifact stride. NH3API explicitly leaves these two bytes unnamed.
+    char m_paddingAfterGivesSpells[0x2];
 };
 SIZE(TArtifactTraits, 32);
 
@@ -275,8 +287,10 @@ SIZE(TArtifactTraits, 32);
 // Its 8-byte stride and both fields are written by 0x44cd50; the public name
 // is preserved by the retail symbol at 0x660b64.
 struct TArtifactSlotTraits {
-    const char* name;
-    int type;
+    // Before normalization: name.
+    const char* m_name;
+    // Before normalization: type.
+    int m_type;
 };
 SIZE(TArtifactSlotTraits, 8);
 
@@ -297,18 +311,22 @@ struct TCombinationArtifact {
     // bitset member is a hard C2440 for this compiler.
     TCombinationArtifact() {}
     TCombinationArtifact(int id, const std::bitset<144>& usedComponents)
-        : artifactId(id), components(usedComponents) {}
+        : m_artifactId(id), m_components(usedComponents) {}
 
-    int artifactId;             // +0x00
-    std::bitset<144> components;
+    // Before normalization: artifactId.
+    int m_artifactId;             // +0x00
+    // Before normalization: components.
+    std::bitset<144> m_components;
 };
 SIZE(TCombinationArtifact, 24);
 
 // Cinit-owned tables consumed by artifact.cpp's ordinary source body.
+// Before normalization: aArtifactSlotMasks.
 DATA(0x00693898)
-extern const std::bitset<19> aArtifactSlotMasks[15];
+extern const std::bitset<19> g_artifactSlotMasks[15];
+// Before normalization: aCombinationArtifacts.
 DATA(0x006938d8)
-extern const TCombinationArtifact aCombinationArtifacts[12];
+extern const TCombinationArtifact g_combinationArtifactTable[12];
 
 // Retail .data 0x660b68 and 0x660b6c, two adjacent storage cells retail
 // LOADS and then indexes (`mov eax,[0x660b68]` / `[esi + eax + 0x18]`)
@@ -322,23 +340,29 @@ extern const TCombinationArtifact aCombinationArtifacts[12];
 // Death addition); its name is INVENTED. artifact.obj owns both reference
 // cells and their underlying storage; the two excluded cinit tables remain a
 // separate source-initializer admission.
-extern const TArtifactTraits* akArtifactTraits;
-extern const TCombinationArtifact* gCombinationArtifacts;
-extern const TArtifactSlotTraits* akArtifactSlotTraits;
+// Before normalization: akArtifactTraits.
+extern const TArtifactTraits* g_artifactTraits;
+// Before normalization: gCombinationArtifacts.
+extern const TCombinationArtifact* g_combinationArtifacts;
+// Before normalization: akArtifactSlotTraits.
+extern const TArtifactSlotTraits* g_artifactSlotTraits;
 
 // Retail .data 0x6aa9f8, defined by townmgr.cpp and consumed by the AI
 // town-entry path. The record itself is completed by hero.h; an extern
 // array of unknown bound can retain that single owning declaration here.
 struct type_artifact;
-extern type_artifact gBlacksmithArtifacts[];
+// Before normalization: gBlacksmithArtifacts.
+extern type_artifact g_blacksmithArtifacts[];
 
 // Four signed primary-skill deltas per artifact. remove_artifact walks all
 // 144 rows when dismantling a combination; the adjacent address is a real
 // retail data symbol and is used as the pointer-loop bound.
+// Before normalization: gArtifactPrimarySkillBonuses.
 DATA(0x0063e758)
-extern const signed char gArtifactPrimarySkillBonuses[][4];
+extern const signed char g_artifactPrimarySkillBonuses[][4];
+// Before normalization: gArtifactPrimarySkillBonusesEnd.
 DATA(0x0063e998)
-extern const signed char gArtifactPrimarySkillBonusesEnd[];
+extern const signed char g_artifactPrimarySkillBonusesEnd[];
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\artifact.cpp:56, dc 0x4fec0) unsigned char InitializeArtifactTraitsTable();

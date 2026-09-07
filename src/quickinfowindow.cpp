@@ -18,11 +18,12 @@
 // creaturetype.h so this lane leaves the shared include closure alone;
 // promoting it is the follow-up, and armygrp's get_morale_description (x3) and
 // get_luck_description (x1) are the callers that would pay for it.
-static const char* GetArmyName(int type, int count)
+// Before normalization (function): GetArmyName.
+static const char* getArmyName(int type, int count)
 {
     return type >= 0 && type <= 150
-               ? (count == 1 ? akCreatureTypeTraits[type].m_name
-                             : akCreatureTypeTraits[type].m_plural_name)
+               ? (count == 1 ? g_creatureTypeTraits[type].m_name
+                             : g_creatureTypeTraits[type].m_pluralName)
                : "";
 }
 
@@ -57,8 +58,9 @@ static const char* GetArmyName(int type, int count)
 // flat at inline_depth 2/3/default across one, two and three call sites; by
 // value it costs 0.003-0.04; at depth 0 or 1 it holds push_back itself out of
 // line and collapses to 53-90. Only an EXTRA top-level call adds a site.
+// Before normalization (locals): view_level.
 VA(0x0052f8c0, 0x430)  // MonsterQuickView five-arg call + 0x54 allocation + twcrport.def, dc 0x11787c
-TQuickCreatureWindow::TQuickCreatureWindow(TViewLevel view_level,
+TQuickCreatureWindow::TQuickCreatureWindow(TViewLevel viewLevel,
     TCreatureType id, int count, TDisposition disposition, int cost)
     : TDialogBox(0, 0, 256, 256, 0x12)
 {
@@ -84,55 +86,55 @@ TQuickCreatureWindow::TQuickCreatureWindow(TViewLevel view_level,
     // and the frame is `sub esp,0xc` because the insert's widget temp homes in
     // the DEAD `cost` parameter slot [ebp+0x10]; that homing came back on its
     // own once the budget was right.
-    Widgets.reserve(Widgets.size() + 3);
+    m_widgets.reserve(m_widgets.size() + 3);
 
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         99, 26, 58, 64, 1000, "TwCrPort.def", id + 2, 0, 0, 0, 0x10));
-    AddWidget(Widgets.back(), -1);
+    addWidget(m_widgets.back(), -1);
 
-    if (view_level == ViewAll) {
+    if (viewLevel == ViewAll) {
         if (count < 1000) {
-            sprintf(gText, "%d %s", count, GetArmyName(id, count));
+            sprintf(g_text, "%d %s", count, getArmyName(id, count));
         } else {
-            sprintf(gText, "%dk %s", count / 1000,
-                    GetArmyName(id, count));
+            sprintf(g_text, "%dk %s", count / 1000,
+                    getArmyName(id, count));
         }
     } else {
-        sprintf(gText, "%s %s", armyGroup::GetArmySizeName(count, 1),
-                GetArmyName(id, 0));
+        sprintf(g_text, "%s %s", armyGroup::getArmySizeName(count, 1),
+                getArmyName(id, 0));
     }
 
-    Widgets.push_back(new textWidget(
-        16, 110, 224, 36, gText, "smalfont.fnt", font::PRIMARY,
+    m_widgets.push_back(new textWidget(
+        16, 110, 224, 36, g_text, "smalfont.fnt", font::PRIMARY,
         1001, 1, 0, 8));
-    AddWidget(Widgets.back(), -1);
+    addWidget(m_widgets.back(), -1);
 
-    if (view_level == ViewAll) {
+    if (viewLevel == ViewAll) {
         switch (disposition) {
         case Flee:
-            strcpy(gText,
-                   gpGeneralText->GetText(GENERAL_TEXT_QUICK_CREATURE_FLEE));
+            strcpy(g_text,
+                   g_generalText->getText(GENERAL_TEXT_QUICK_CREATURE_FLEE));
             break;
         case Attack:
-            strcpy(gText,
-                   gpGeneralText->GetText(GENERAL_TEXT_QUICK_CREATURE_ATTACK));
+            strcpy(g_text,
+                   g_generalText->getText(GENERAL_TEXT_QUICK_CREATURE_ATTACK));
             break;
         case Join:
-            strcpy(gText,
-                   gpGeneralText->GetText(GENERAL_TEXT_QUICK_CREATURE_JOIN));
+            strcpy(g_text,
+                   g_generalText->getText(GENERAL_TEXT_QUICK_CREATURE_JOIN));
             break;
         case JoinPrice:
-            sprintf(gText,
-                    gpGeneralText->GetText(
+            sprintf(g_text,
+                    g_generalText->getText(
                         GENERAL_TEXT_QUICK_CREATURE_JOIN_COST),
                     cost);
             break;
         }
 
-        Widgets.push_back(new textWidget(
-            16, 156, 224, 74, gText, "smalfont.fnt", font::PRIMARY,
+        m_widgets.push_back(new textWidget(
+            16, 156, 224, 74, g_text, "smalfont.fnt", font::PRIMARY,
             1001, 1, 0, 8));
-        AddWidget(Widgets.back(), -1);
+        addWidget(m_widgets.back(), -1);
     }
 }
 
@@ -153,7 +155,7 @@ TQuickCreatureWindow::~TQuickCreatureWindow()
 // the later quicktownwindow span.
 #if 0  // @carcass
 DC_ONLY(0x117b8c, 0x28)
-void TQuickCreatureWindow::QuickWindowWait()
+void TQuickCreatureWindow::quickWindowWait()
 {
     // @stub
 }

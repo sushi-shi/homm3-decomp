@@ -34,8 +34,9 @@
 // DC build keeps both). Identified by the CRT entry's WinMain call at
 // 0x61a2b4. The sprintf format at 0x67f958 carries no %s - the title
 // argument is dead, transcribed as retail pushes it.
+// Before normalization (locals): hInst, hPrev, szCmdLine.
 VA(0x004f7a30, 0x1CF)  // anchor-callee (CRT entry), dc 0xe7c90
-int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, LPSTR szCmdLine, int sw)
+int WINAPI WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR cmdLine, int sw)
 {
     WNDCLASSA appClass;
     RECT windowRect;
@@ -43,41 +44,41 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, LPSTR szCmdLine, int sw)
     DWORD windowExStyle;
     DWORD lastError;
 
-    ghInstance = hInst;
-    ghGameEvent = CreateEventA(0, 0, 0,
+    g_instance = instance;
+    g_gameEvent = CreateEventA(0, 0, 0,
         DATA_COMPGEN(0x0067f9ac, winMainEventName, "Heroes III"));
     lastError = GetLastError();
-    if (ghGameEvent == 0 || lastError == ERROR_ALREADY_EXISTS) {
-        sprintf(gText,
+    if (g_gameEvent == 0 || lastError == ERROR_ALREADY_EXISTS) {
+        sprintf(g_text,
             DATA_COMPGEN(0x0067f958, winMainAlreadyRunning,
                 "Heroes of Might and Magic III is already running."),
             DATA_COMPGEN(0x0067f98c, winMainTitleArg,
                 "Heroes of Might and Magic III"));
-        MessageBoxA(0, gText,
+        MessageBoxA(0, g_text,
             DATA_COMPGEN(0x0067f728, winMainStartupError, "Startup error"),
             MB_ICONHAND);
         return 0;
     }
-    memset(gcCommandLine, 0, 61);
-    strncpy(gcCommandLine, szCmdLine, 60);
+    memset(g_commandLine, 0, 61);
+    strncpy(g_commandLine, cmdLine, 60);
     timeBeginPeriod(1);
-    if (!EarlySetup())
+    if (!earlySetup())
         return 0;
-    if (!hPrev) {
+    if (!previousInstance) {
         appClass.hCursor = 0;
-        appClass.hIcon = LoadIconA(hInst, MAKEINTRESOURCEA(0x73));
+        appClass.hIcon = LoadIconA(instance, MAKEINTRESOURCEA(0x73));
         appClass.lpszMenuName = 0;
-        appClass.lpszClassName = szAppName;
+        appClass.lpszClassName = g_appName;
         appClass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-        appClass.hInstance = hInst;
+        appClass.hInstance = instance;
         appClass.style = CS_BYTEALIGNCLIENT | CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW;
-        appClass.lpfnWndProc = AppWndProc;
+        appClass.lpfnWndProc = appWndProc;
         appClass.cbWndExtra = 0;
         appClass.cbClsExtra = 0;
         if (!RegisterClassA(&appClass))
             return 0;
     }
-    if (bWindowedMode) {
+    if (g_windowedMode) {
         windowStyle = WS_POPUP | WS_VISIBLE;
         windowExStyle = WS_EX_TOPMOST;
     } else {
@@ -87,16 +88,16 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, LPSTR szCmdLine, int sw)
     windowRect.top = windowRect.left = 0;
     windowRect.right = 800;
     windowRect.bottom = 600;
-    AdjustWindowRect(&windowRect, windowStyle, bWindowedMode == 0);
-    hwndApp = CreateWindowExA(windowExStyle, szAppName, szTitle, windowStyle,
-        iWindowX, iWindowY,
+    AdjustWindowRect(&windowRect, windowStyle, g_windowedMode == 0);
+    g_hwndApp = CreateWindowExA(windowExStyle, g_appName, g_title, windowStyle,
+        g_windowX, g_windowY,
         windowRect.right - windowRect.left, windowRect.bottom - windowRect.top,
-        0, bWindowedMode ? 0 : dfltMenu, hInst, 0);
-    if (!hwndApp)
+        0, g_windowedMode ? 0 : g_dfltMenu, instance, 0);
+    if (!g_hwndApp)
         return 0;
-    InitGraphics();
+    initGraphics();
     SetCursor(LoadCursorA(0, IDC_ARROW));
-    InitImmMouse(ghInstance, hwndApp);
+    initImmMouse(g_instance, g_hwndApp);
     oldmain();
     return 0;
 }
@@ -133,7 +134,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, LPSTR szCmdLine, int sw)
 //      unconditional while the activate arm's `= 0` stays inside its
 //      guard. 99.98 -> 100.
 VA(0x004f7c00, 0x394)  // anchor-callee, dc 0xe7e38
-LRESULT CALLBACK AppWndProc(HWND window, UINT message, WPARAM messageParam, LPARAM messageData)
+LRESULT CALLBACK appWndProc(HWND window, UINT message, WPARAM messageParam, LPARAM messageData)
 {
     switch (message) {
         case WM_CREATE:
@@ -141,72 +142,73 @@ LRESULT CALLBACK AppWndProc(HWND window, UINT message, WPARAM messageParam, LPAR
             GdiSetBatchLimit(1);
             return 0;
         case WM_ACTIVATE:
-            if (window != hwndApp)
+            if (window != g_hwndApp)
                 break;
-            if (gpMouseManager) {
-                unsigned char fMinimized = HIWORD(messageParam) != 0;
-                if ((IsIconic(hwndApp) != 0) != fMinimized)
-                    gpMouseManager->Reset();
+            if (g_mouseManager) {
+                // Before normalization (locals): fMinimized, fActive.
+                unsigned char minimized = HIWORD(messageParam) != 0;
+                if ((IsIconic(g_hwndApp) != 0) != minimized)
+                    g_mouseManager->reset();
             }
             return 0;
         case WM_MOVE:
-            if (!hwndApp)
+            if (!g_hwndApp)
                 return 0;
-            lAppWindowStyle = GetWindowLongA(hwndApp, GWL_STYLE);
-            if (!(lAppWindowStyle & (WS_MINIMIZE | WS_MAXIMIZE)) && !bClosingApp) {
-                ImmMouseWindowMoved();
-                if (!bWindowedMode) {
-                    GetWindowRect(window, &rcAppWindow);
-                    iWindowX = rcAppWindow.left;
-                    iWindowY = rcAppWindow.top;
-                    WritePrefs();
+            g_appWindowStyle = GetWindowLongA(g_hwndApp, GWL_STYLE);
+            if (!(g_appWindowStyle & (WS_MINIMIZE | WS_MAXIMIZE)) && !g_closingApp) {
+                immMouseWindowMoved();
+                if (!g_windowedMode) {
+                    GetWindowRect(window, &g_rcAppWindow);
+                    g_windowX = g_rcAppWindow.left;
+                    g_windowY = g_rcAppWindow.top;
+                    writePrefs();
                 }
             }
             return 0;
         case WM_PAINT:
-            AppPaint(window, 0);
+            appPaint(window, 0);
             return 0;
         case WM_CLOSE:
-            if (window == hwndApp && GameUnsaved()) {
-                VideoPause();
-                NormalDialog(gpGeneralText->GetText(GENERAL_TEXT_QUIT), 2,
+            if (window == g_hwndApp && gameUnsaved()) {
+                videoPause();
+                normalDialog(g_generalText->getText(GENERAL_TEXT_QUIT), 2,
                     -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-                VideoResume();
-                if (gpWindowManager->dialogReturn == DIALOG_RETURN_ACCEPT)
+                videoResume();
+                if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT)
                     DestroyWindow(window);
                 return 0;
             }
         case WM_DESTROY:
-            bClosingApp = 1;
+            g_closingApp = 1;
             PostQuitMessage(0);
         case WM_QUIT:
-            if (!bShutDownDone)
-                ShutDown(0);
+            if (!g_shutDownDone)
+                shutDown(0);
             return 0;
         case WM_ACTIVATEAPP: {
-            if (window != hwndApp)
+            if (window != g_hwndApp)
                 break;
-            unsigned char fActive = messageParam != 0;
-            bForegroundApp = fActive;
-            if (fActive) {
-                if (bAppDeactivated) {
-                    bMusicWasPlaying = 0;
-                    gpSoundManager->ResumeStream();
-                    gpSoundManager->ResumeSamples();
-                    if (!bVideoPaused)
-                        VideoResume();
-                    gpMouseManager->ShowSystemCursor(0);
-                    bAppDeactivated = 0;
+            unsigned char active = messageParam != 0;
+            g_foregroundApp = active;
+            if (active) {
+                if (g_appDeactivated) {
+                    g_musicWasPlaying = 0;
+                    g_soundManager->resumeStream();
+                    g_soundManager->resumeSamples();
+                    if (!g_videoPaused)
+                        videoResume();
+                    g_mouseManager->showSystemCursor(0);
+                    g_appDeactivated = 0;
                 }
             } else {
-                if (gpSoundManager->MusicPlaying() || gpSoundManager->MP3Playing)
-                    bMusicWasPlaying = 1;
-                gpSoundManager->PauseSamples();
-                if (!bVideoPaused)
-                    VideoPause();
-                if (!bAppDeactivated)
-                    gpMouseManager->ShowSystemCursor(1);
-                bAppDeactivated = 1;
+                if (g_soundManager->musicPlaying() || g_soundManager->m_mp3Playing)
+                    g_musicWasPlaying = 1;
+                g_soundManager->pauseSamples();
+                if (!g_videoPaused)
+                    videoPause();
+                if (!g_appDeactivated)
+                    g_mouseManager->showSystemCursor(1);
+                g_appDeactivated = 1;
             }
             return 0;
         }
@@ -214,7 +216,7 @@ LRESULT CALLBACK AppWndProc(HWND window, UINT message, WPARAM messageParam, LPAR
             return 1;
         case WM_KEYDOWN:
         case WM_KEYUP:
-            if (KeyboardMessageHandler(window, message, messageParam, messageData) == 0)
+            if (keyboardMessageHandler(window, message, messageParam, messageData) == 0)
                 return 0;
             break;
         case WM_MOUSEMOVE:
@@ -224,11 +226,11 @@ LRESULT CALLBACK AppWndProc(HWND window, UINT message, WPARAM messageParam, LPAR
         case WM_RBUTTONDOWN:
         case WM_RBUTTONUP:
         case WM_RBUTTONDBLCLK:
-            if (MouseMessageHandler(window, message, messageParam, messageData) == 0)
+            if (mouseMessageHandler(window, message, messageParam, messageData) == 0)
                 return 0;
             break;
         case WM_COMMAND:
-            return AppCommand(window, message, messageParam, messageData);
+            return appCommand(window, message, messageParam, messageData);
         default:
             return DefWindowProcA(window, message, messageParam, messageData);
     }
@@ -239,10 +241,10 @@ LRESULT CALLBACK AppWndProc(HWND window, UINT message, WPARAM messageParam, LPAR
 // homm2 body order (buka kbwin.cpp:317); retail compiles the second
 // call as a tail jmp into kb.cpp's CleanUpMenus.
 VA(0x004f7fa0, 0xA)  // anchor-bracket, dc 0xe7fb8
-void AppExit()
+void appExit()
 {
-    CleanUpWinGraphics();
-    CleanUpMenus();
+    cleanUpWinGraphics();
+    cleanUpMenus();
 }
 
 // E:\gamedcs\kbwin.cpp:585
@@ -255,27 +257,27 @@ void AppExit()
 // and IsIconic stays a memory call. Branch targets 0x4f7ff4/0x4f8045
 // prove the pump re-enters the peek loop, not the exit.
 VA(0x004f7fb0, 0xAA)  // anchor-bracket, dc 0xe7fd0
-void Process1WindowsMessage()
+void process1WindowsMessage()
 {
     MSG message;
-    bInMessageLoop = 1;
+    g_inMessageLoop = 1;
 top:
     if (PeekMessageA(&message, 0, 0, 0, PM_REMOVE)) {
         TranslateMessage(&message);
         DispatchMessageA(&message);
         goto top;
     }
-    if (IsIconic(hwndApp) && !bVideoPaused) {
+    if (IsIconic(g_hwndApp) && !g_videoPaused) {
         do {
             if (GetMessageA(&message, 0, 0, 0)) {
                 TranslateMessage(&message);
                 DispatchMessageA(&message);
             }
-        } while (IsIconic(hwndApp) && !bVideoPaused);
+        } while (IsIconic(g_hwndApp) && !g_videoPaused);
         goto top;
     }
-    VideoNextFrame();
-    bInMessageLoop = 0;
+    videoNextFrame();
+    g_inMessageLoop = 0;
 }
 
 // E:\gamedcs\kbwin.cpp:648
@@ -288,34 +290,34 @@ top:
 // this definition and changes no other kbwin function.
 #pragma auto_inline(off)
 VA(0x004f8060, 0xD4)  // linkorder, dc 0xe8014
-LRESULT AppCommand(HWND window, UINT message, WPARAM messageParam, LPARAM messageData)
+LRESULT appCommand(HWND window, UINT message, WPARAM messageParam, LPARAM messageData)
 {
     int command;
 
     command = LOWORD(messageParam);
     switch (command) {
         case KBWIN_MENU_ABOUT:
-            gpMouseManager->ShowSystemCursor(1);
-            DialogBoxParamA(ghInstance, MAKEINTRESOURCEA(0x67), window,
-                (DLGPROC)AppAbout, 0);
-            gpMouseManager->ShowSystemCursor(0);
+            g_mouseManager->showSystemCursor(1);
+            DialogBoxParamA(g_instance, MAKEINTRESOURCEA(0x67), window,
+                (DLGPROC)appAbout, 0);
+            g_mouseManager->showSystemCursor(0);
             break;
         case KBWIN_MENU_HELP:
-            if (bWindowedMode)
+            if (g_windowedMode)
                 SetForegroundWindow(GetDesktopWindow());
-            WinHelpA(hwndApp,
+            WinHelpA(g_hwndApp,
                 DATA_COMPGEN(0x0067fa20, appCommandHelpFile, ".\\HEROES3.HLP"),
                 HELP_FINDER, 0);
             break;
         case KBWIN_MENU_FULLSCREEN:
-            if (!SetFullScreenStatus(1 - bWindowedMode))
-                NormalDialog(
+            if (!setFullScreenStatus(1 - g_windowedMode))
+                normalDialog(
                     DATA_COMPGEN(0x0067f9b8, appCommandColorModeText,
                         "This game runs in 65536 color mode. You must switch the desktop to this mode before playing the game."),
                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             break;
         default:
-            return HandleAppSpecificMenuCommands(command);
+            return handleAppSpecificMenuCommands(command);
     }
     return 0;
 }
@@ -328,7 +330,7 @@ LRESULT AppCommand(HWND window, UINT message, WPARAM messageParam, LPARAM messag
 // AppAbout lineage (buka kbwin.cpp 0x471883). Retail returns 1 from
 // the WM_COMMAND arm where homm2 fell through to PollSound.
 VA(0x004f8140, 0x37)  // linkorder, dc 0xe8018
-BOOL CALLBACK AppAbout(HWND dialog, UINT message, WPARAM messageParam, LPARAM messageData)
+BOOL CALLBACK appAbout(HWND dialog, UINT message, WPARAM messageParam, LPARAM messageData)
 {
     unsigned short command;
 
@@ -341,7 +343,7 @@ BOOL CALLBACK AppAbout(HWND dialog, UINT message, WPARAM messageParam, LPARAM me
                 EndDialog(dialog, 1);
             return 1;
     }
-    PollSound();
+    pollSound();
     return 0;
 }
 
@@ -351,21 +353,21 @@ BOOL CALLBACK AppAbout(HWND dialog, UINT message, WPARAM messageParam, LPARAM me
 
 // E:\gamedcs\kbwin.cpp:721
 VA(0x004f8180, 0x5C)  // anchor-global, dc 0xe801c
-void KBChangeMenu(HMENU newMenu)
+void kbChangeMenu(HMENU newMenu)
 {
     if (!newMenu)
-        newMenu = currMenu;
+        newMenu = g_currMenu;
     else
-        currMenu = newMenu;
-    activeMenu = newMenu;
-    if (!bWindowedMode) {
+        g_currMenu = newMenu;
+    g_activeMenu = newMenu;
+    if (!g_windowedMode) {
         if (newMenu) {
-            SetMenu(hwndApp, newMenu);
-            DrawMenuBar(hwndApp);
+            SetMenu(g_hwndApp, newMenu);
+            DrawMenuBar(g_hwndApp);
         }
     } else {
-        SetMenu(hwndApp, 0);
-        DrawMenuBar(hwndApp);
+        SetMenu(g_hwndApp, 0);
+        DrawMenuBar(g_hwndApp);
     }
 }
 
@@ -376,16 +378,16 @@ void KBChangeMenu(HMENU newMenu)
 // the homm2 trailing call (buka kbwin.cpp:494 SetMenus(hmnuApp,
 // menusEnabled)).
 VA(0x004f81e0, 0x31)  // anchor-global, dc 0xe8020
-void SetNoDialogMenus(int noMenus)
+void setNoDialogMenus(int noMenus)
 {
-    if (bMenusSuppressed && !noMenus)
+    if (g_menusSuppressed && !noMenus)
         return;
-    if (!bMenusSuppressed && noMenus)
+    if (!g_menusSuppressed && noMenus)
         return;
-    if (!activeMenu)
+    if (!g_activeMenu)
         return;
-    bMenusSuppressed = 1 - noMenus;
-    SetMenus(activeMenu, noMenus);
+    g_menusSuppressed = 1 - noMenus;
+    setMenus(g_activeMenu, noMenus);
 }
 
 // E:\gamedcs\kbwin.cpp:779
@@ -395,7 +397,7 @@ void SetNoDialogMenus(int noMenus)
 // the homm2 template (buka kbwin.cpp:498) minus the trailing
 // UpdateDfltMenu(menu) call, which retail dropped.
 VA(0x004f8220, 0xB2)  // linkorder+callee, dc 0xe8054
-void SetMenus(HMENU menu, int enabled)
+void setMenus(HMENU menu, int enabled)
 {
     int count;
     unsigned int commandId;
@@ -410,7 +412,7 @@ void SetMenus(HMENU menu, int enabled)
     for (index = 0; index < count; index++) {
         commandId = GetMenuItemID(menu, index);
         if (commandId == static_cast<unsigned int>(-1)) {
-            SetMenus(GetSubMenu(menu, index), enabled);
+            setMenus(GetSubMenu(menu, index), enabled);
             disableFlag = 0;
         } else {
             disableFlag = 0;
@@ -420,14 +422,14 @@ void SetMenus(HMENU menu, int enabled)
                 scanPosition = 0;
                 for (commandPosition = 0; commandPosition < KBWIN_MENU_ENTRY_COUNT;
                      commandPosition++) {
-                    if (gsMenuEnableStatus[commandPosition].command == commandId) {
+                    if (g_menuEnableStatus[commandPosition].m_command == commandId) {
                         scanPosition = commandPosition;
                     }
                 }
-                if (gbInSetupDialog)
-                    disableFlag = 1 - gsMenuEnableStatus[scanPosition].setupEnabled;
+                if (g_inSetupDialog)
+                    disableFlag = 1 - g_menuEnableStatus[scanPosition].m_setupEnabled;
                 else
-                    disableFlag = 1 - gsMenuEnableStatus[scanPosition].normalEnabled;
+                    disableFlag = 1 - g_menuEnableStatus[scanPosition].m_normalEnabled;
             }
         }
         if (disableFlag != 0) {
@@ -439,7 +441,7 @@ void SetMenus(HMENU menu, int enabled)
 // E:\gamedcs\kbwin.cpp:823
 // /Ob2 emits the out-of-line body as a bare tail jmp to the import.
 VA(0x004f82e0, 0x6)  // linkorder, dc 0xe8058
-unsigned long GameTime::Get()
+unsigned long GameTime::get()
 {
     return timeGetTime();
 }
@@ -450,11 +452,11 @@ unsigned long GameTime::Get()
 // while condition. Signed wrap-safe compare, DC prototype's unsigned
 // arg.
 VA(0x004f82f0, 0xCD)  // linkorder, dc 0xe806c
-void GameTime::DelayTil(unsigned long time)
+void GameTime::delayTil(unsigned long time)
 {
-    while (static_cast<int>(Get() - time) < 0) {
-        Process1WindowsMessage();
-        PollSound();
+    while (static_cast<int>(get() - time) < 0) {
+        process1WindowsMessage();
+        pollSound();
     }
 }
 
@@ -462,16 +464,16 @@ void GameTime::DelayTil(unsigned long time)
 // DelayTil inlines here in turn (DC keeps it a 26-byte call); the
 // timeGetTime import lands in ebx for the first two uses.
 VA(0x004f83c0, 0xD0)  // linkorder, dc 0xe8098
-void GameTime::Delay(int interval)
+void GameTime::delay(int interval)
 {
-    DelayTil(Get() + interval);
+    delayTil(get() + interval);
 }
 
 #if 0  // @carcass
 
 // E:\gamedcs\kbwin.cpp:851
 DC_ONLY(0xe80b4, 0x30)
-void InitVideo()
+void initVideo()
 {
     // @stub
 }
@@ -479,73 +481,73 @@ void InitVideo()
 #endif  // @carcass
 
 DATA(0x00699600)
-HWND hwndApp;
+HWND g_hwndApp;
 
 DATA(0x006995b4)
-HINSTANCE ghInstance;
+HINSTANCE g_instance;
 
 DATA(0x006995b8)
-unsigned char bInMessageLoop;
+unsigned char g_inMessageLoop;
 
 DATA(0x006995bc)
-HMENU currMenu;
+HMENU g_currMenu;
 
 DATA(0x00699604)
-HMENU activeMenu;
+HMENU g_activeMenu;
 
 DATA(0x00699618)
-int bMenusSuppressed;
+int g_menusSuppressed;
 
 DATA(0x006987b8)
-int bWindowedMode;
+int g_windowedMode;
 
 DATA(0x0069954c)
-int bVideoPaused;
+int g_videoPaused;
 
 DATA(0x006989d0)
-int gbInSetupDialog;
+int g_inSetupDialog;
 
 DATA(0x006989e4)
-HMENU dfltMenu;
+HMENU g_dfltMenu;
 
 DATA(0x006989e8)
-HMENU gameMenu;
+HMENU g_gameMenu;
 
 DATA(0x0067f820)
-char szAppName[] = "Heroes III";
+char g_appName[] = "Heroes III";
 
 DATA(0x0067f82c)
-char szTitle[] = "Heroes of Might and Magic III";
+char g_title[] = "Heroes of Might and Magic III";
 
 DATA(0x0069960c)
-HANDLE ghGameEvent;
+HANDLE g_gameEvent;
 
 DATA(0x006995c0)
-char gcCommandLine[61];
+char g_commandLine[61];
 
 DATA(0x006987b0)
-int iWindowX;
+int g_windowX;
 
 DATA(0x006987b4)
-int iWindowY;
+int g_windowY;
 
 DATA(0x006995a8)
-LONG lAppWindowStyle;
+LONG g_appWindowStyle;
 
 DATA(0x00699598)
-RECT rcAppWindow;
+RECT g_rcAppWindow;
 
 DATA(0x006989fc)
-int bClosingApp;
+int g_closingApp;
 
 DATA(0x00699608)
-unsigned char bShutDownDone;
+unsigned char g_shutDownDone;
 
 DATA(0x00699609)
-unsigned char bAppDeactivated;
+unsigned char g_appDeactivated;
 
 DATA(0x00699614)
-unsigned char bMusicWasPlaying;
+unsigned char g_musicWasPlaying;
 
 // Values read from the retail image (.data 0x67f930, stride 8): a
 // zero sentinel row - the scan's scanPosition=0 default - then the
@@ -553,7 +555,7 @@ unsigned char bMusicWasPlaying;
 // (AppCommand's default arm forwards it to kb.cpp's
 // HandleAppSpecificMenuCommands; unnamed until kb.cpp lands).
 DATA(0x0067f930)
-SMenuEnableStatus gsMenuEnableStatus[KBWIN_MENU_ENTRY_COUNT] = {
+SMenuEnableStatus g_menuEnableStatus[KBWIN_MENU_ENTRY_COUNT] = {
     { 0, 0, 0 },
     { KBWIN_MENU_FULLSCREEN, 1, 1 },
     { KBWIN_MENU_HELP, 1, 1 },

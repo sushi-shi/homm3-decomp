@@ -89,64 +89,64 @@ void type_bottom_view_window::animate()
 }
 
 // E:\gamedcs\bottomviewsubwindow.cpp:77
-DC_ONLY(0x5518c, 0x2BC)
 // RETAIL_LOCATED(0x00450dd0, 0x319)  // anchor-vtable + anchor-caller
+DC_ONLY(0x5518c, 0x2BC)
 void TBottomViewNewTurn::TBottomViewNewTurn(heroWindow* parent)
 {
     // @stub
 }
 
 // E:\gamedcs\bottomviewsubwindow.cpp:121
-DC_ONLY(0x55448, 0x64)
 // RETAIL_LOCATED(0x004511a0, 0x79)  // anchor-vtable + anchor-caller
+DC_ONLY(0x55448, 0x64)
 void TBottomViewNewTurn::animate()
 {
     // @stub
 }
 
 // E:\gamedcs\bottomviewsubwindow.cpp:146
-DC_ONLY(0x554ac, 0x2BC)
 // RETAIL_LOCATED(0x00451220, 0x393)  // anchor-vtable + anchor-caller
+DC_ONLY(0x554ac, 0x2BC)
 void TBottomViewResourceMessage::TBottomViewResourceMessage(heroWindow* parent, int res, int quantity, const std::basic_string<char,std::char_traits<char>,std::allocator<char>* message)
 {
     // @stub
 }
 
 // E:\gamedcs\bottomviewsubwindow.cpp:197
-DC_ONLY(0x55768, 0x140)
 // RETAIL_LOCATED(0x00451820, 0x1DC)  // anchor-vtable + anchor-caller
+DC_ONLY(0x55768, 0x140)
 void TBottomViewMessage::TBottomViewMessage(heroWindow* parent, const std::basic_string<char,std::char_traits<char>,std::allocator<char>* message)
 {
     // @stub
 }
 
 // E:\gamedcs\bottomviewsubwindow.cpp:222
-DC_ONLY(0x558a8, 0x54C)
 // RETAIL_LOCATED(0x00451ab0, 0x68A)  // anchor-vtable + anchor-caller
+DC_ONLY(0x558a8, 0x54C)
 void TBottomViewHero::TBottomViewHero(heroWindow* parent)
 {
     // @stub
 }
 
 // E:\gamedcs\bottomviewsubwindow.cpp:352
-DC_ONLY(0x55df4, 0x5C4)
 // RETAIL_LOCATED(0x004521f0, 0x8D4)  // anchor-vtable + anchor-caller
+DC_ONLY(0x55df4, 0x5C4)
 void TBottomViewTown::TBottomViewTown(heroWindow* parent)
 {
     // @stub
 }
 
 // E:\gamedcs\bottomviewsubwindow.cpp:515
-DC_ONLY(0x563b8, 0x4C8)
 // RETAIL_LOCATED(0x00452b80, 0x620)  // anchor-vtable + anchor-caller
+DC_ONLY(0x563b8, 0x4C8)
 void TBottomViewKingdom::TBottomViewKingdom(heroWindow* parent)
 {
     // @stub
 }
 
 // E:\gamedcs\bottomviewsubwindow.cpp:599
-DC_ONLY(0x56880, 0x33C)
 // RETAIL_LOCATED(0x00453250, 0x3EE)  // anchor-vtable + anchor-caller
+DC_ONLY(0x56880, 0x33C)
 void TBottomViewEnemyTurn::TBottomViewEnemyTurn(heroWindow* parent)
 {
     // @stub
@@ -154,14 +154,14 @@ void TBottomViewEnemyTurn::TBottomViewEnemyTurn(heroWindow* parent)
 
 // E:\gamedcs\bottomviewsubwindow.cpp:646
 DC_ONLY(0x56bbc, 0x58)
-long TBottomViewEnemyTurn::sum_mobility(long player_id)
+long TBottomViewEnemyTurn::sumMobility(long player_id)
 {
     // @stub
 }
 
 // E:\gamedcs\bottomviewsubwindow.cpp:661
-DC_ONLY(0x56c14, 0x1E4)
 // RETAIL_LOCATED(0x004536f0, 0x271)  // anchor-vtable + anchor-caller
+DC_ONLY(0x56c14, 0x1E4)
 void TBottomViewEnemyTurn::animate()
 {
     // @stub
@@ -169,7 +169,7 @@ void TBottomViewEnemyTurn::animate()
 
 // E:\gamedcs\Widget.h:263
 DC_ONLY(0x56df8, 0x28)
-void widget::set_visible(unsigned char arg)
+void widget::setVisible(unsigned char arg)
 {
     // @stub
 }
@@ -304,11 +304,11 @@ VA_COMPGEN(0x00450d20, 0x21, SCALAR_DELETING_DTOR, type_bottom_view_window)
 VA(0x00450d50, 0x78)  // vtable + widget-removal loop + TSubWindow dtor, dc 0x55114
 type_bottom_view_window::~type_bottom_view_window()
 {
-    for (std::vector<widget*>::iterator it = Widgets.begin();
-         it != Widgets.end(); ++it) {
+    for (std::vector<widget*>::iterator it = m_widgets.begin();
+         it != m_widgets.end(); ++it) {
         widget* item = *it;
         if (item) {
-            parentWindow->RemoveWidget(item);
+            m_parentWindow->removeWidget(item);
             delete item;
         }
     }
@@ -363,15 +363,17 @@ type_bottom_view_window::~type_bottom_view_window()
 // carries no claim. Its shape is read straight off every derived
 // constructor's first eighteen instructions: TSubWindow's default
 // constructor, then this class's vptr, then the one body statement.
-type_bottom_view_window::type_bottom_view_window(heroWindow* parent_window)
+// Before normalization (locals): parent_window.
+type_bottom_view_window::type_bottom_view_window(heroWindow* parentWindow)
 {
-    initialize(614, 400, 176, 166, parent_window);
+    initialize(614, 400, 176, 166, parentWindow);
 }
 
 // The four new-week announcement icons, indexed by the game's week number
 // 1..4; slot 0 is never read, which is why retail's dword there is null.
+// Before normalization: gNewWeekIcons.
 DATA(0x00660b9c)
-static const char* gNewWeekIcons[5] = {
+static const char* g_newWeekIcons[5] = {
     0, "NewWeek1.def", "NewWeek2.def", "NewWeek3.def", "NewWeek4.def"
 };
 
@@ -426,41 +428,41 @@ TBottomViewNewTurn::TBottomViewNewTurn(heroWindow* parent)
 {
     int id = BOTTOM_VIEW_BACKGROUND_ID;
 
-    Widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new bitmapBorder(
         0, 0, 176, 166, id++, "AdStatOt.pcx", 0x800));
 
-    frame = 0;
+    m_frame = 0;
 
     std::string text;
     const char* iconName;
-    if (gpGame->field_1f63e == 1
-        && !(gpGame->field_1f640 == 1 && gpGame->field_1f642 == 1)) {
-        iconName = gNewWeekIcons[
-            static_cast<unsigned short>(gpGame->field_1f640)];
-        text = format_string("%s %d", gpGeneralText->GetText(64),
-            static_cast<unsigned short>(gpGame->field_1f640));
+    if (g_game->m_day == 1
+        && !(g_game->m_week == 1 && g_game->m_month == 1)) {
+        iconName = g_newWeekIcons[
+            static_cast<unsigned short>(g_game->m_week)];
+        text = formatString("%s %d", g_generalText->getText(64),
+            static_cast<unsigned short>(g_game->m_week));
     } else {
         iconName = "NewDay.def";
-        text = format_string("%s %d", gpGeneralText->GetText(65),
-            static_cast<unsigned short>(gpGame->field_1f63e));
-        launch_sample("newday.wav", 30000, 3);
+        text = formatString("%s %d", g_generalText->getText(65),
+            static_cast<unsigned short>(g_game->m_day));
+        launchSample("newday.wav", 30000, 3);
     }
 
-    icon = new iconWidget(0, 0, 175, 166, id++, iconName, 0, 0, 0, 0, 0x10);
-    icon->SetIconFrame(0);
-    Widgets.push_back(icon);
+    m_icon = new iconWidget(0, 0, 175, 166, id++, iconName, 0, 0, 0, 0, 0x10);
+    m_icon->setIconFrame(0);
+    m_widgets.push_back(m_icon);
 
-    frameDelay = 100;
-    backdrop = new textWidget(10, 10, 148, 146, text.c_str(), "medfont.fnt",
+    m_frameDelay = 100;
+    m_backdrop = new textWidget(10, 10, 148, 146, text.c_str(), "medfont.fnt",
         font::WHITE, id++, 1, 0, 8);
-    Widgets.push_back(backdrop);
+    m_widgets.push_back(m_backdrop);
 
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
-            AddWidget(*it, -1);
+            addWidget(*it, -1);
     }
 
-    lastStepTime = GameTime::Get();
+    m_lastStepTime = GameTime::get();
 }
 
 // UNBLOCKED by the constructor above: it is the one image-wide reference
@@ -496,19 +498,19 @@ TBottomViewNewTurn::~TBottomViewNewTurn()
 VA(0x004511a0, 0x79)  // anchor-vtable (0x63bb0c slot 1), dc 0x55448
 void TBottomViewNewTurn::animate()
 {
-    if (frame == icon->Sprite->GetNumFrames(0) - 1)
+    if (m_frame == m_icon->m_sprite->getNumFrames(0) - 1)
         return;
 
-    unsigned long lastStep = lastStepTime;
-    if (static_cast<long>(GameTime::Get() - lastStep) < frameDelay)
+    unsigned long lastStep = m_lastStepTime;
+    if (static_cast<long>(GameTime::get() - lastStep) < m_frameDelay)
         return;
 
-    ++frame;
-    icon->SetIconFrame(frame);
-    icon->Draw();
-    backdrop->Draw();
-    icon->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_UPDATE);
-    lastStepTime = GameTime::Get();
+    ++m_frame;
+    m_icon->setIconFrame(m_frame);
+    m_icon->draw();
+    m_backdrop->draw();
+    m_icon->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_UPDATE);
+    m_lastStepTime = GameTime::get();
 }
 
 // E:\gamedcs\bottomviewsubwindow.cpp:146
@@ -578,39 +580,40 @@ TBottomViewResourceMessage::TBottomViewResourceMessage(
     const std::string* message)
     : type_bottom_view_window(parent)
 {
-    Widgets.reserve(5);
+    m_widgets.reserve(5);
 
-    Widgets.push_back(new bitmapBorder(0, 0, 176, 166,
+    m_widgets.push_back(new bitmapBorder(0, 0, 176, 166,
         BOTTOM_VIEW_BACKGROUND_ID, "AdStatOt.pcx", 0x800));
-    Widgets.push_back(new textWidget(10, 10, 156, 146,
+    m_widgets.push_back(new textWidget(10, 10, 156, 146,
         message->c_str(), "smalfont.fnt", font::WHITE, BOTTOM_VIEW_TEXT_ID,
         1, 0, 8));
 
     if (res >= 0) {
-        CSprite* sprite = ResourceManager::GetSprite("resour82.def");
+        CSprite* sprite = ResourceManager::getSprite("resour82.def");
 
-        Widgets.push_back(new iconWidget((width - sprite->Width) / 2, 50,
-            sprite->Width, sprite->Height, 0x837, "resour82.def", res,
+        m_widgets.push_back(new iconWidget((m_width - sprite->m_width) / 2, 50,
+            sprite->m_width, sprite->m_height, 0x837, "resour82.def", res,
             0, 0, 0, 0x10));
 
-        std::ostrstream quantity_text;
-        quantity_text << quantity << std::ends;
+        // Before normalization (locals): quantity_text.
+        std::ostrstream quantityText;
+        quantityText << quantity << std::ends;
 
-        int textWidth = gUnnamed698a08->LineWidth(quantity_text.str());
-        int fontHeight = gUnnamed698a08->fs.height;
+        int textWidth = g_unnamed698a08->lineWidth(quantityText.str());
+        int fontHeight = g_unnamed698a08->m_fs.m_height;
 
-        Widgets.push_back(new textWidget((width - textWidth) / 2,
-            sprite->Height + 55, textWidth, fontHeight,
-            quantity_text.str(), "smalfont.fnt", font::PRIMARY, 0x836,
+        m_widgets.push_back(new textWidget((m_width - textWidth) / 2,
+            sprite->m_height + 55, textWidth, fontHeight,
+            quantityText.str(), "smalfont.fnt", font::PRIMARY, 0x836,
             1, 0, 8));
 
-        quantity_text.freeze(false);
-        sprite->Dispose();
+        quantityText.freeze(false);
+        sprite->dispose();
     }
 
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
-            AddWidget(*it, -1);
+            addWidget(*it, -1);
     }
 }
 
@@ -689,17 +692,17 @@ TBottomViewMessage::TBottomViewMessage(heroWindow* parent,
                                        const std::string* message)
     : type_bottom_view_window(parent)
 {
-    Widgets.reserve(2);
+    m_widgets.reserve(2);
 
-    Widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new bitmapBorder(
         0, 0, 176, 166, BOTTOM_VIEW_BACKGROUND_ID, "AdStatOt.pcx", 0x800));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         10, 10, 148, 146, message->c_str(), "smalfont.fnt", font::WHITE,
         BOTTOM_VIEW_TEXT_ID, 1, 0, 8));
 
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
-            AddWidget(*it, -1);
+            addWidget(*it, -1);
     }
 }
 
@@ -716,16 +719,18 @@ TBottomViewMessage::~TBottomViewMessage()
 // right; the loop walks this table with an 8-byte step and tests its
 // own cursor against &[2] for the "power and knowledge floor at 1"
 // arm, which is what proves the row is a table and not four literals.
+// Before normalization: gHeroStatCoords.
 DATA(0x00660bb0)
-static const int gHeroStatCoords[4][2] = {
+static const int g_heroStatCoords[4][2] = {
     { 65, 51 }, { 92, 51 }, { 120, 51 }, { 148, 51 }
 };
 
 // The seven army-slot positions, three over four. Contiguous with the
 // table above in retail .data, but a separate object: the stat loop
 // stops at this table's first byte and the army loop starts there.
+// Before normalization: gHeroArmyCoords.
 DATA(0x00660bd0)
-static const int gHeroArmyCoords[7][2] = {
+static const int g_heroArmyCoords[7][2] = {
     { 36, 73 }, { 72, 73 }, { 108, 73 },
     { 18, 121 }, { 54, 121 }, { 90, 121 }, { 126, 121 }
 };
@@ -825,72 +830,72 @@ VA(0x00451ab0, 0x68A)  // anchor-vtable 0x63bb2c + advManager::UpdBottomViewHero
 TBottomViewHero::TBottomViewHero(heroWindow* parent)
     : type_bottom_view_window(parent)
 {
-    Widgets.reserve(25);
+    m_widgets.reserve(25);
 
-    Widgets.push_back(new bitmapBorder(0, 0, 176, 166,
+    m_widgets.push_back(new bitmapBorder(0, 0, 176, 166,
         BOTTOM_VIEW_BACKGROUND_ID, "AdStatHr.pcx", 0x800));
 
-    hero* who = gpGame->GetCurrHero();
+    hero* who = g_game->getCurrHero();
 
-    Widgets.push_back(new bitmapBorder(3, 2, 58, 64, 0x7d1,
-        akHeroTraits[who->portrait].largePortraitName, 0x800));
-    Widgets.push_back(new textWidget(66, 2, 107, 17, who->name,
+    m_widgets.push_back(new bitmapBorder(3, 2, 58, 64, 0x7d1,
+        g_heroTraits[who->m_portrait].m_largePortraitName, 0x800));
+    m_widgets.push_back(new textWidget(66, 2, 107, 17, who->m_name,
         "smalfont.fnt", font::WHITE, 0x7d2, 0, 0, 8));
 
     for (int i = 0; i < 4; i++) {
         int value;
-        if (who->stats[i] > 99)
+        if (who->m_stats[i] > 99)
             value = 99;
-        else if (who->stats[i] > 0)
-            value = who->stats[i];
+        else if (who->m_stats[i] > 0)
+            value = who->m_stats[i];
         else
             value = (i >= 2);
-        sprintf(gText, "%d", value);
-        Widgets.push_back(new textWidget(gHeroStatCoords[i][0],
-            gHeroStatCoords[i][1], 23, 16, gText, "smalfont.fnt",
+        sprintf(g_text, "%d", value);
+        m_widgets.push_back(new textWidget(g_heroStatCoords[i][0],
+            g_heroStatCoords[i][1], 23, 16, g_text, "smalfont.fnt",
             font::WHITE, 0x7d3 + i, 1, 0, 8));
     }
 
-    sprintf(gText, "%d", who->mana);
-    Widgets.push_back(new textWidget(145, 93, 27, 14, gText, "tiny.fnt",
+    sprintf(g_text, "%d", who->m_mana);
+    m_widgets.push_back(new textWidget(145, 93, 27, 14, g_text, "tiny.fnt",
         font::WHITE, 0x7da, 1, 0, 8));
 
-    Widgets.push_back(new iconWidget(5, 74, 22, 12, 0x7d8, "imrl22.def",
-        who->GetMorale(0, 0, 1) + 3, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(5, 91, 22, 12, 0x7d9, "ilck22.def",
-        who->GetLuck(0, 0, 1) + 3, 0, 0, 0, 0x10));
+    m_widgets.push_back(new iconWidget(5, 74, 22, 12, 0x7d8, "imrl22.def",
+        who->getMorale(0, 0, 1) + 3, 0, 0, 0, 0x10));
+    m_widgets.push_back(new iconWidget(5, 91, 22, 12, 0x7d9, "ilck22.def",
+        who->getLuck(0, 0, 1) + 3, 0, 0, 0, 0x10));
 
     int numStacks = 0;
     for (int n = 0; n < 7; n++) {
-        if (who->army.armies[n] != -1)
+        if (who->m_army.m_armies[n] != -1)
             numStacks++;
     }
 
     if (numStacks > 0) {
         int id = 0x7db;
         for (int j = 0; j < 7; j++) {
-            int type = who->army.armies[j];
+            int type = who->m_army.m_armies[j];
             if (type != -1) {
-                Widgets.push_back(new iconWidget(gHeroArmyCoords[j][0],
-                    gHeroArmyCoords[j][1], 32, 32, id++, "cprsmall.def",
+                m_widgets.push_back(new iconWidget(g_heroArmyCoords[j][0],
+                    g_heroArmyCoords[j][1], 32, 32, id++, "cprsmall.def",
                     type + 2, 0, 0, 0, 0x10));
 
                 std::string text;
-                if (who->army.numTroops[j] < 10000)
-                    text = format_string("%d", who->army.numTroops[j]);
+                if (who->m_army.m_numTroops[j] < 10000)
+                    text = formatString("%d", who->m_army.m_numTroops[j]);
                 else
-                    text = format_string("%dk", who->army.numTroops[j] / 1000);
+                    text = formatString("%dk", who->m_army.m_numTroops[j] / 1000);
 
-                Widgets.push_back(new textWidget(gHeroArmyCoords[j][0],
-                    gHeroArmyCoords[j][1] + 34, 32, 13, text.c_str(),
+                m_widgets.push_back(new textWidget(g_heroArmyCoords[j][0],
+                    g_heroArmyCoords[j][1] + 34, 32, 13, text.c_str(),
                     "tiny.fnt", font::WHITE, id++, 1, 0, 8));
             }
         }
     }
 
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
-            AddWidget(*it, -1);
+            addWidget(*it, -1);
     }
 }
 
@@ -909,8 +914,9 @@ TBottomViewHero::~TBottomViewHero()
 // CONTENT to gHeroArmyCoords above and immediately after it in retail
 // .data, but a separate object: the hero loop's cursor stops at this
 // table's first byte and this loop's cursor starts there.
+// Before normalization: gTownArmyCoords.
 DATA(0x00660c08)
-static const int gTownArmyCoords[7][2] = {
+static const int g_townArmyCoords[7][2] = {
     { 36, 73 }, { 72, 73 }, { 108, 73 },
     { 18, 121 }, { 54, 121 }, { 90, 121 }, { 126, 121 }
 };
@@ -1087,50 +1093,51 @@ VA(0x004521f0, 0x8D4)  // anchor-vtable 0x63bb34 + advManager::UpdBottomViewTown
 TBottomViewTown::TBottomViewTown(heroWindow* parent)
     : type_bottom_view_window(parent)
 {
-    Widgets.reserve(25);
+    m_widgets.reserve(25);
 
-    Widgets.push_back(new bitmapBorder(0, 0, 176, 166,
+    m_widgets.push_back(new bitmapBorder(0, 0, 176, 166,
         BOTTOM_VIEW_BACKGROUND_ID, "AdStatCs.pcx", 0x800));
 
-    town* which = gpGame->GetCurrTown();
+    town* which = g_game->getCurrTown();
 
-    Widgets.push_back(new iconWidget(3, 2, 58, 64, 0x7d1, "itpt.def",
-        which->GetPortraitFrame(false), 0, 0, 0, 0x10));
-    Widgets.push_back(new textWidget(66, 1, 107, 16, which->cName.c_str(),
+    m_widgets.push_back(new iconWidget(3, 2, 58, 64, 0x7d1, "itpt.def",
+        which->getPortraitFrame(false), 0, 0, 0, 0x10));
+    m_widgets.push_back(new textWidget(66, 1, 107, 16, which->m_name.c_str(),
         "smalfont.fnt", font::WHITE, 0x7d2, 0, 0, 8));
 
     int hallLevel = 0;
-    if (which->HasBuilding(HALL_TOWN_ID, 0))
+    if (which->hasBuilding(HALL_TOWN_ID, 0))
         hallLevel = 1;
-    else if (which->HasBuilding(HALL_CITY_ID, 0))
+    else if (which->hasBuilding(HALL_CITY_ID, 0))
         hallLevel = 2;
-    else if (which->HasBuilding(HALL_CAPITOL_ID, 0))
+    else if (which->hasBuilding(HALL_CAPITOL_ID, 0))
         hallLevel = 3;
 
-    std::string town_size_name = gTownSizeNames[hallLevel];
+    // Before normalization (locals): town_size_name, quantity_text.
+    std::string townSizeName = g_townSizeNames[hallLevel];
 
-    Widgets.push_back(new iconWidget(67, 31, 34, 34, 0x7d3, "itmtls.def",
+    m_widgets.push_back(new iconWidget(67, 31, 34, 34, 0x7d3, "itmtls.def",
         hallLevel, 0, 0, 0, 0x10));
 
     int fortLevel;
-    if (which->HasBuilding(CASTLE_FORT_ID, 0))
+    if (which->hasBuilding(CASTLE_FORT_ID, 0))
         fortLevel = 0;
-    else if (which->HasBuilding(CASTLE_CITADEL_ID, 0))
+    else if (which->hasBuilding(CASTLE_CITADEL_ID, 0))
         fortLevel = 1;
-    else if (which->HasBuilding(CASTLE_CASTLE_ID, 0))
+    else if (which->hasBuilding(CASTLE_CASTLE_ID, 0))
         fortLevel = 2;
     else
         fortLevel = 3;
 
-    Widgets.push_back(new iconWidget(105, 31, 34, 34, 0x7d4, "itmcls.def",
+    m_widgets.push_back(new iconWidget(105, 31, 34, 34, 0x7d4, "itmcls.def",
         fortLevel, 0, 0, 0, 0x10));
 
-    if (which->garrisonHeroId != -1)
-        Widgets.push_back(new bitmapBorder(149, 76, 22, 30, 0x7d8,
+    if (which->m_garrisonHeroId != -1)
+        m_widgets.push_back(new bitmapBorder(149, 76, 22, 30, 0x7d8,
             "townqkgh.pcx", 0x800));
 
-    if (which->HasBuilding(MARKETPLACE_SILO_ID, 1)) {
-        int* resource = which->get_silo_income();
+    if (which->hasBuilding(MARKETPLACE_SILO_ID, 1)) {
+        int* resource = which->getSiloIncome();
         int slots[2];
         int found = 0;
         for (int i = 0; i <= 6; i++) {
@@ -1138,50 +1145,50 @@ TBottomViewTown::TBottomViewTown(heroWindow* parent)
                 slots[found++] = i;
         }
         if (found == BOTTOM_VIEW_SILO_TWO_RESOURCES) {
-            Widgets.push_back(new iconWidget(6, 75, 20, 18, 0x7d7,
+            m_widgets.push_back(new iconWidget(6, 75, 20, 18, 0x7d7,
                 "smalres.def", slots[0], 0, 0, 0, 0x10));
-            Widgets.push_back(new iconWidget(6, 87, 20, 18, 0x7d7,
+            m_widgets.push_back(new iconWidget(6, 87, 20, 18, 0x7d7,
                 "smalres.def", slots[1], 0, 0, 0, 0x10));
         } else if (found == BOTTOM_VIEW_SILO_ONE_RESOURCE) {
-            Widgets.push_back(new iconWidget(6, 81, 20, 18, 0x7d7,
+            m_widgets.push_back(new iconWidget(6, 81, 20, 18, 0x7d7,
                 "smalres.def", slots[0], 0, 0, 0, 0x10));
         }
     }
 
-    sprintf(gText, "%d", which->get_gold_income(1));
-    Widgets.push_back(new textWidget(144, 54, 28, 12, gText, "tiny.fnt",
+    sprintf(g_text, "%d", which->getGoldIncome(1));
+    m_widgets.push_back(new textWidget(144, 54, 28, 12, g_text, "tiny.fnt",
         font::WHITE, 0x7d6, 1, 0, 8));
 
-    if (which->get_army().GetNumArmies() > 0) {
+    if (which->getArmy().getNumArmies() > 0) {
         int id = 0x7d9;
-        const int* coordinates = &gTownArmyCoords[0][0];
+        const int* coordinates = &g_townArmyCoords[0][0];
         for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
-            int creature = which->get_army().armies[i];
+            int creature = which->getArmy().m_armies[i];
             if (creature == -1)
                 continue;
 
-            Widgets.push_back(new iconWidget(coordinates[0], coordinates[1],
+            m_widgets.push_back(new iconWidget(coordinates[0], coordinates[1],
                 32, 32, id++, "cprsmall.def", creature + 2, 0, 0, 0, 0x10));
 
-            std::ostrstream quantity_text;
-            if (which->get_army().numTroops[i] < 10000)
-                quantity_text << which->get_army().numTroops[i] << std::ends;
+            std::ostrstream quantityText;
+            if (which->getArmy().m_numTroops[i] < 10000)
+                quantityText << which->getArmy().m_numTroops[i] << std::ends;
             else
-                quantity_text << which->get_army().numTroops[i] / 1000 << "k"
+                quantityText << which->getArmy().m_numTroops[i] / 1000 << "k"
                               << std::ends;
 
-            Widgets.push_back(new textWidget(coordinates[0],
-                coordinates[1] + 34, 32, 13, quantity_text.str(), "tiny.fnt",
+            m_widgets.push_back(new textWidget(coordinates[0],
+                coordinates[1] + 34, 32, 13, quantityText.str(), "tiny.fnt",
                 font::WHITE, id++, 1, 0, 8));
 
-            quantity_text.freeze(false);
+            quantityText.freeze(false);
             coordinates += 2;
         }
     }
 
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
-            AddWidget(*it, -1);
+            addWidget(*it, -1);
     }
 }
 
@@ -1273,67 +1280,68 @@ TBottomViewKingdom::TBottomViewKingdom(heroWindow* parent)
 {
     int i;
 
-    Widgets.reserve(8);
+    m_widgets.reserve(8);
 
     int id = BOTTOM_VIEW_BACKGROUND_ID;
-    Widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new bitmapBorder(
         0, 0, 176, 166, id++, "AdStatin.pcx", 0x800));
 
-    int town_count[4];
-    town_count[0] = 0;
-    town_count[1] = 0;
-    town_count[2] = 0;
-    town_count[3] = 0;
+    // Before normalization (locals): town_count.
+    int townCount[4];
+    townCount[0] = 0;
+    townCount[1] = 0;
+    townCount[2] = 0;
+    townCount[3] = 0;
 
-    for (i = 0; i < gpCurrentPlayer->numTowns; i++) {
-        town* which = gpGame->GetTown(gpCurrentPlayer->townIds[i]);
-        if (which->HasBuilding(HALL_CAPITOL_ID, 1))
-            town_count[3]++;
-        else if (which->HasBuilding(HALL_CITY_ID, 1))
-            town_count[2]++;
-        else if (which->HasBuilding(HALL_TOWN_ID, 1))
-            town_count[1]++;
+    for (i = 0; i < g_currentPlayer->m_numTowns; i++) {
+        town* which = g_game->getTown(g_currentPlayer->m_townIds[i]);
+        if (which->hasBuilding(HALL_CAPITOL_ID, 1))
+            townCount[3]++;
+        else if (which->hasBuilding(HALL_CITY_ID, 1))
+            townCount[2]++;
+        else if (which->hasBuilding(HALL_TOWN_ID, 1))
+            townCount[1]++;
         else
-            town_count[0]++;
+            townCount[0]++;
     }
 
     std::string text;
 
     for (i = 0; i < 4; i++) {
-        Widgets.push_back(new iconWidget(42 * i + 6, 11, 38, 38, id++,
+        m_widgets.push_back(new iconWidget(42 * i + 6, 11, 38, 38, id++,
             "itmtl.def", i, 0, 0, 0, 0x10));
-        if (town_count[i] > 0)
-            Widgets.push_back(new textWidget(42 * i + 7, 56, 37, 17,
-                format_string("%d", town_count[i]).c_str(), "smalfont.fnt",
+        if (townCount[i] > 0)
+            m_widgets.push_back(new textWidget(42 * i + 7, 56, 37, 17,
+                formatString("%d", townCount[i]).c_str(), "smalfont.fnt",
                 font::WHITE, -1, 1, 0, 8));
     }
 
-    text = format_string("%s:", gpGeneralText->GetText(391));
-    Widgets.push_back(new textWidget(10, 103, 57, 20, text.c_str(),
+    text = formatString("%s:", g_generalText->getText(391));
+    m_widgets.push_back(new textWidget(10, 103, 57, 20, text.c_str(),
         "smalfont.fnt", font::WHITE, -1, 0, 0, 8));
-    text = format_string("%s:", gpGeneralText->GetText(392));
-    Widgets.push_back(new textWidget(10, 134, 57, 20, text.c_str(),
+    text = formatString("%s:", g_generalText->getText(392));
+    m_widgets.push_back(new textWidget(10, 134, 57, 20, text.c_str(),
         "smalfont.fnt", font::WHITE, -1, 0, 0, 8));
 
     int allyX, enemyX;
     allyX = enemyX = 67;
     for (i = 0; i < 8; i++) {
-        if (!gpGame->playerDisabled[i]) {
-            if (gpGame->OnSameTeam(i, gUnnamed69778c)) {
-                Widgets.push_back(new iconWidget(allyX, 102, 15, 20, id++,
+        if (!g_game->m_playerDisabled[i]) {
+            if (g_game->onSameTeam(i, g_unnamed69778c)) {
+                m_widgets.push_back(new iconWidget(allyX, 102, 15, 20, id++,
                     "itgflags.def", i, 0, 0, 0, 0x10));
                 allyX += 15;
             } else {
-                Widgets.push_back(new iconWidget(enemyX, 133, 15, 20, id++,
+                m_widgets.push_back(new iconWidget(enemyX, 133, 15, 20, id++,
                     "itgflags.def", i, 0, 0, 0, 0x10));
                 enemyX += 15;
             }
         }
     }
 
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
-            AddWidget(*it, -1);
+            addWidget(*it, -1);
     }
 }
 
@@ -1379,48 +1387,48 @@ TBottomViewEnemyTurn::TBottomViewEnemyTurn(heroWindow* parent)
 {
     int id = BOTTOM_VIEW_ENEMY_TURN_ID;
 
-    Widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new bitmapBorder(
         0, 0, 176, 166, id++, "AdStatNx.pcx", 0x800));
 
-    crest = new iconWidget(20, 51, 58, 64, id++, "crest58.def",
-        gNetLocalGamePos, 0, 0, 0, 0x10);
-    Widgets.push_back(crest);
+    m_crest = new iconWidget(20, 51, 58, 64, id++, "crest58.def",
+        g_netLocalGamePos, 0, 0, 0, 0x10);
+    m_widgets.push_back(m_crest);
 
-    sand = new iconWidget(98, 51, 58, 64, id++, "HourSand.def",
+    m_sand = new iconWidget(98, 51, 58, 64, id++, "HourSand.def",
         0, 0, 0, 0, 0x10);
-    sand->SetIconFrame(0);
-    Widgets.push_back(sand);
+    m_sand->setIconFrame(0);
+    m_widgets.push_back(m_sand);
 
-    frame = 0;
-    frameDelay = 50;
+    m_frame = 0;
+    m_frameDelay = 50;
 
-    hourGlass = new iconWidget(98, 51, 58, 64, id++, "HourGlas.def",
+    m_hourGlass = new iconWidget(98, 51, 58, 64, id++, "HourGlas.def",
         0, 0, 0, 0, 0x10);
-    Widgets.push_back(hourGlass);
+    m_widgets.push_back(m_hourGlass);
 
-    step = 0;
-    lastPlayerPos = gNetLocalGamePos;
+    m_step = 0;
+    m_lastPlayerPos = g_netLocalGamePos;
 
     for (int i = 0; i < 8; i++) {
-        if (gpGame->playerDisabled[i] || gpGame->players[i].IsHuman())
-            mobility[i] = 0;
+        if (g_game->m_playerDisabled[i] || g_game->m_players[i].isHuman())
+            m_mobility[i] = 0;
         else
-            mobility[i] = sum_mobility(i);
+            m_mobility[i] = sumMobility(i);
     }
 
-    if (gpCurrentPlayer->IsHuman()) {
-        Widgets.push_back(new textWidget(0, 20, 176, 31,
-            gpGeneralText->GetText(631), "medfont.fnt", font::PRIMARY,
+    if (g_currentPlayer->isHuman()) {
+        m_widgets.push_back(new textWidget(0, 20, 176, 31,
+            g_generalText->getText(631), "medfont.fnt", font::PRIMARY,
             -1, 1, 0, 8));
-        Widgets.push_back(new textWidget(0, 123, 176, 31,
-            gpCurrentPlayer->cName, "medfont.fnt", font::PRIMARY,
+        m_widgets.push_back(new textWidget(0, 123, 176, 31,
+            g_currentPlayer->m_name, "medfont.fnt", font::PRIMARY,
             -1, 1, 0, 8));
     }
 
-    for (unsigned int w = 0; w < Widgets.size(); w++)
-        AddWidget(Widgets[w], -1);
+    for (unsigned int w = 0; w < m_widgets.size(); w++)
+        addWidget(m_widgets[w], -1);
 
-    lastStepTime = GameTime::Get();
+    m_lastStepTime = GameTime::get();
 }
 
 // UNBLOCKED by the constructor above - its 0x63bb44 store is the one
@@ -1450,12 +1458,13 @@ TBottomViewEnemyTurn::~TBottomViewEnemyTurn()
 // `gpGame->players[player_id]` twice instead, our CL re-derives both
 // addresses from gpGame every iteration. Same lever as the mouseX/mouseY
 // and glTimers hoists - the value has to be a statement before the call.
-long TBottomViewEnemyTurn::sum_mobility(long player_id)
+// Before normalization (locals): player_id.
+long TBottomViewEnemyTurn::sumMobility(long playerId)
 {
-    playerData* player = &gpGame->players[player_id];
+    playerData* player = &g_game->m_players[playerId];
     long total = 1000;
-    for (int i = 0; i < player->numHeroes; i++)
-        total += gpGame->GetHero(player->heroes[i])->GetMobility();
+    for (int i = 0; i < player->m_numHeroes; i++)
+        total += g_game->getHero(player->m_heroes[i])->getMobility();
     return total;
 }
 
@@ -1482,42 +1491,42 @@ long TBottomViewEnemyTurn::sum_mobility(long player_id)
 VA(0x004536f0, 0x271)  // anchor-vtable (0x63bb44 slot 1), dc 0x56c14
 void TBottomViewEnemyTurn::animate()
 {
-    unsigned long lastStep = lastStepTime;
-    if (static_cast<long>(GameTime::Get() - lastStep) < frameDelay)
+    unsigned long lastStep = m_lastStepTime;
+    if (static_cast<long>(GameTime::get() - lastStep) < m_frameDelay)
         return;
 
-    int numFrames = hourGlass->Sprite->GetNumFrames(0);
+    int numFrames = m_hourGlass->m_sprite->getNumFrames(0);
 
-    lastStepTime = GameTime::Get();
+    m_lastStepTime = GameTime::get();
 
-    if (lastPlayerPos != gNetLocalGamePos) {
-        lastPlayerPos = gNetLocalGamePos;
-        crest->SetIconFrame(gNetLocalGamePos);
-        crest->Draw();
-        crest->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_UPDATE);
-        if (gpCurrentPlayer->IsHuman()) {
-            hourGlass->send_message(widget::WIDGET_CLEAR_STATUS,
+    if (m_lastPlayerPos != g_netLocalGamePos) {
+        m_lastPlayerPos = g_netLocalGamePos;
+        m_crest->setIconFrame(g_netLocalGamePos);
+        m_crest->draw();
+        m_crest->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_UPDATE);
+        if (g_currentPlayer->isHuman()) {
+            m_hourGlass->sendMessage(widget::WIDGET_CLEAR_STATUS,
                                     widget::WIDGET_DRAWN);
-            sand->send_message(widget::WIDGET_CLEAR_STATUS,
+            m_sand->sendMessage(widget::WIDGET_CLEAR_STATUS,
                                widget::WIDGET_DRAWN);
             return;
         }
-        hourGlass->send_message(widget::WIDGET_SET_STATUS,
+        m_hourGlass->sendMessage(widget::WIDGET_SET_STATUS,
                                 widget::WIDGET_DRAWN);
-        sand->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
-        mobility[gNetLocalGamePos] = sum_mobility(gNetLocalGamePos);
-        step = 0;
+        m_sand->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
+        m_mobility[g_netLocalGamePos] = sumMobility(g_netLocalGamePos);
+        m_step = 0;
     }
 
-    if (gpCurrentPlayer->IsHuman())
+    if (g_currentPlayer->isHuman())
         return;
 
     int movePointsLeft = 0;
-    for (int i = 0; i < gpCurrentPlayer->numHeroes; i++)
+    for (int i = 0; i < g_currentPlayer->m_numHeroes; i++)
         movePointsLeft +=
-            gpGame->GetHero(gpCurrentPlayer->heroes[i])->movePoints;
+            g_game->getHero(g_currentPlayer->m_heroes[i])->m_movePoints;
 
-    int total = mobility[gNetLocalGamePos];
+    int total = m_mobility[g_netLocalGamePos];
     if (movePointsLeft > total)
         movePointsLeft = total;
 
@@ -1527,21 +1536,21 @@ void TBottomViewEnemyTurn::animate()
     else
         target = (total - movePointsLeft) * (numFrames - 1) / total;
 
-    if (step < target)
-        step++;
+    if (m_step < target)
+        m_step++;
 
-    frame++;
-    if (frame >= sand->Sprite->GetNumFrames(0))
-        frame = 0;
+    m_frame++;
+    if (m_frame >= m_sand->m_sprite->getNumFrames(0))
+        m_frame = 0;
 
-    hourGlass->SetIconFrame(step);
-    sand->SetIconFrame(frame);
-    sand->Draw();
-    hourGlass->Draw();
-    hourGlass->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_UPDATE);
-    crest->SetIconFrame(gNetLocalGamePos);
-    crest->Draw();
-    crest->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_UPDATE);
+    m_hourGlass->setIconFrame(m_step);
+    m_sand->setIconFrame(m_frame);
+    m_sand->draw();
+    m_hourGlass->draw();
+    m_hourGlass->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_UPDATE);
+    m_crest->setIconFrame(g_netLocalGamePos);
+    m_crest->draw();
+    m_crest->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_UPDATE);
 }
 
 // COMDAT pairing: basic_streambuf::1?$basic_streambuf, mnemonic agreement 1.000.

@@ -11,14 +11,14 @@ VA(0x004e7150, 0x20)  // anchor-global, dc 0xd60fc
 hexcell::hexcell()
 {
     int none = -1;
-    field_14 = none;
-    field_10 = 0;
-    armySide = none;
-    armySlot = none;
-    field_1a = none;
-    iBodiesInHex = 0;
-    field_4c = 0;
-    background_offset = none;
+    m_obstacleIndex = none;
+    m_attributes = 0;
+    m_armySide = none;
+    m_armySlot = none;
+    m_partOfDouble = none;
+    m_bodiesInHex = 0;
+    m_mouseShaded = 0;
+    m_backgroundOffset = none;
 }
 
 #if 0  // @carcass
@@ -27,20 +27,20 @@ hexcell::hexcell()
 
 // E:\gamedcs\hexcell.cpp:38
 VA(0x004e7170, 0x3C)  // anchor-global, dc 0xd6138
-army* hexcell::get_army() const
+army* hexcell::getArmy() const
 {
-    if (armySide >= 0)
-        return &gpCombatManager->armies[armySide][armySlot];
+    if (m_armySide >= 0)
+        return &g_combatManager->m_armies[m_armySide][m_armySlot];
     return 0;
 }
 
 // E:\gamedcs\hexcell.cpp:43
 VA(0x004e71b0, 0x4D)  // anchor-global, dc 0xd6178
-army* hexcell::get_dead_army(int i) const
+army* hexcell::getDeadArmy(int i) const
 {
-    if (deadArmySide[i] < 0)
+    if (m_deadArmySide[i] < 0)
         return 0;
-    return &gpCombatManager->armies[deadArmySide[i]][deadArmySlot[i]];
+    return &g_combatManager->m_armies[m_deadArmySide[i]][m_deadArmySlot[i]];
 }
 
 #if 0  // @carcass

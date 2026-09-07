@@ -13,14 +13,22 @@
 // +0x3c..+0x50. Member names are the Dreamcast field list verbatim
 // (type 0x1fe4/0x3d94, size 84 on both builds).
 struct SMonFrameInfo {
-    short iMissileOffset[6];     // +0x00
-    float fArrowAngle[12];       // +0x0c
-    int iExtraNumTroopsXOffset;  // +0x3c
-    int iAttackFrames;           // +0x40
-    int iFidgetFrequency;        // +0x44
-    int iWalkCycleTime;          // +0x48
-    int iAttackStartCycleTime;   // +0x4c
-    int iFlightPixelSpan;        // +0x50
+    // Before normalization: iMissileOffset.
+    short m_missileOffset[6];     // +0x00
+    // Before normalization: fArrowAngle.
+    float m_arrowAngle[12];       // +0x0c
+    // Before normalization: iExtraNumTroopsXOffset.
+    int m_extraNumTroopsXOffset;  // +0x3c
+    // Before normalization: iAttackFrames.
+    int m_attackFrames;           // +0x40
+    // Before normalization: iFidgetFrequency.
+    int m_fidgetFrequency;        // +0x44
+    // Before normalization: iWalkCycleTime.
+    int m_walkCycleTime;          // +0x48
+    // Before normalization: iAttackStartCycleTime.
+    int m_attackStartCycleTime;   // +0x4c
+    // Before normalization: iFlightPixelSpan.
+    int m_flightPixelSpan;        // +0x50
 };
 SIZE(SMonFrameInfo, 84);
 
@@ -29,7 +37,8 @@ SIZE(SMonFrameInfo, 84);
 // The DC bound is 122 (its RoE-era roster); retail's bss extent
 // 0x6998e0..0x69ca18 (mousemgr's latches) is exactly 150 * 0x54 -
 // Complete's creature capacity - so the retail bound is 150.
-extern const SMonFrameInfo (&gMonFrameInfo)[150];
+// Before normalization: gMonFrameInfo.
+extern const SMonFrameInfo (&g_monFrameInfo)[150];
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\monframeinfo.cpp:36, dc 0xfe598) unsigned char InitializeCreatureAnimationTraitsTable();

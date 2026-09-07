@@ -37,6 +37,8 @@ model cannot rot.
 |---|---|
 | `scripts/homm3/vc6/` | the area package (`homm3 vc6 <verb>`) |
 | `scripts/homm3/vc6/_toolchain.py` | hash-gated PE reader over the compiler binaries |
+| `scripts/homm3/vc6/disasm.py` | labeled C2 assembly and code references; inferred roles read from the owning evidence prose |
+| `scripts/homm3/vc6/register_trace.py` | `trace-registers UNIT --fn NAME`: verified temporary-binding snapshots with function and compiler-site labels; limited to two documented stores |
 | `scripts/homm3/vc6/argv.py` | CL spec-table decoder → per-pass argv model |
 | `scripts/homm3/vc6/passes.py` | run C1XX / C2 as separate steps (IL persistence) |
 | `scripts/homm3/vc6/oracle.py` | real-compiler ground-truth runners |
@@ -46,6 +48,7 @@ model cannot rot.
 | `scripts/homm3/vc6/_eh.py` | the EH cleanup transcript (`[ebp-4]` state stores) — object lifetimes, the one signal the three solvers do not read |
 | `scripts/homm3/vc6/census.py` | the gates (each with a negative control) |
 | `scripts/homm3/vc6/test_locator.py` | the `locator` gate's cases (`homm3 vc6 check --locator`) |
+| `scripts/homm3/vc6/test_disasm.py` | compiler label provenance, selector, byte identity and range controls (also in the `locator` gate) |
 | `scripts/homm3/vc6/test_report_resolution.py` | negative controls for shared public-symbol routing and unclaimed flat names |
 | `scripts/homm3/vc6/test_queue.py` | negative controls for MAX-first ordering and banked-exact dip exclusion |
 | `scripts/homm3/vc6/shim/` | the C2-slot pass-through/instrumentation DLL |
@@ -79,6 +82,15 @@ present on only one comparison side may not. `homm3 vc6 check --locator`
 includes the measured flat-label defect and the one-side-only case as negative
 controls, so the census cannot silently regress into treating missing source as
 a compiler wall.
+
+`homm3 sema diff --calls` and `--relocs` distinguish source-claimed retail
+labels from unclaimed, generated and local labels using the regenerated
+symbol inventory's provenance. A carcass `VA` already owns its retail name
+even while its compiled declaration uses a different mangled symbol. The
+report keeps that name difference visible and recommends checking the
+declaration/relocation identity, rather than asking for the same claim again.
+This annotation does not equate overloads, change reference pairing, or hide
+addends. The summary and JSON views carry the same categories.
 
 ## Status
 

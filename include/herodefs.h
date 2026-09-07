@@ -12,20 +12,23 @@ namespace {
 // Source-private owner used by all three retail trait-table loaders.
 class TAutoStrPtr {
 public:
-    TAutoStrPtr() : pStr(0) {}
-    ~TAutoStrPtr() { delete[] pStr; }
-    void set(char* value) { pStr = value; }
-    char* get() const { return pStr; }
+    TAutoStrPtr() : m_str(0) {}
+    ~TAutoStrPtr() { delete[] m_str; }
+    void set(char* value) { m_str = value; }
+    char* get() const { return m_str; }
 
 private:
-    char* pStr;
+    char* m_str;
 };
 
 }
 
-unsigned char InitializeHeroTraitsTable();
-unsigned char InitializeHeroClassTraitsTable();
-unsigned char InitializeSSkillTraitsTable();
+// Before normalization (function): InitializeHeroTraitsTable.
+unsigned char initializeHeroTraitsTable();
+// Before normalization (function): InitializeHeroClassTraitsTable.
+unsigned char initializeHeroClassTraitsTable();
+// Before normalization (function): InitializeSSkillTraitsTable.
+unsigned char initializeSSkillTraitsTable();
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\herodefs.cpp:204, dc 0xd5a40) unsigned char InitializeHeroTraitsTable();

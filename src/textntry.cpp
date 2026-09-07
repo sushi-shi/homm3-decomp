@@ -16,13 +16,13 @@
 // E:\gamedcs\textntry.cpp:44 (dc 0x163750). Inlined into
 // textEntryWidget::SaveBackground 0x5bba70, its only caller; `inline`
 // so no out-of-line body is emitted, which is what retail shows.
-inline void CTextEntrySave::Save(int saveX, int saveY)
+inline void CTextEntrySave::save(int saveX, int saveY)
 {
-    bSaved = 1;
-    Grab(gpWindowManager->screenBitmap->map, saveX, saveY,
-        gpWindowManager->screenBitmap->Width,
-        gpWindowManager->screenBitmap->Height,
-        gpWindowManager->screenBitmap->Pitch);
+    m_saved = 1;
+    grab(g_windowManager->m_screenBitmap->m_map, saveX, saveY,
+        g_windowManager->m_screenBitmap->m_width,
+        g_windowManager->m_screenBitmap->m_height,
+        g_windowManager->m_screenBitmap->m_pitch);
 }
 
 #if 0  // @carcass
@@ -49,33 +49,33 @@ textEntryWidget::textEntryWidget(int x, int y, int w, int h, int textSize,
     int id, int style, int readType, int insetX, int insetY)
     : textWidget(x, y, w, h, text, fontName, color, id, justification, 0, 0x100)
 {
-    cursorIndex = 0;
-    bAutoDraw = 0;
-    textBack = 0;
-    saveBack = 0;
+    m_cursorIndex = 0;
+    m_autoDraw = 0;
+    m_textBack = 0;
+    m_saveBack = 0;
     if (backgroundIcon)
-        textBack = ResourceManager::GetBitmap816(backgroundIcon);
-    displayStart = 0;
-    field_64 = 1;
-    maxLength = static_cast<unsigned short>(textSize);
-    Justify = justification;
-    bHasFocus = 0;
+        m_textBack = ResourceManager::getBitmap816(backgroundIcon);
+    m_displayStart = 0;
+    m_textLines = 1;
+    m_maxLength = static_cast<unsigned short>(textSize);
+    m_justify = justification;
+    m_hasFocus = 0;
     if (text)
-        Text = text;
+        m_text = text;
     if (readType == READ_TYPE_INSET) {
-        field_66 = 1;
-        boxX = static_cast<short>(this->x + insetX);
-        boxY = static_cast<short>(this->y + insetY);
-        boxWidth = static_cast<short>(this->width - insetX * 2);
-        boxHeight = static_cast<short>(this->height - insetY * 2);
+        m_attributes = 1;
+        m_boxX = static_cast<short>(this->m_x + insetX);
+        m_boxY = static_cast<short>(this->m_y + insetY);
+        m_boxWidth = static_cast<short>(this->m_width - insetX * 2);
+        m_boxHeight = static_cast<short>(this->m_height - insetY * 2);
     } else {
-        field_66 = 0;
-        boxX = this->x;
-        boxY = this->y;
-        boxWidth = this->width;
-        boxHeight = this->height;
+        m_attributes = 0;
+        m_boxX = this->m_x;
+        m_boxY = this->m_y;
+        m_boxWidth = this->m_width;
+        m_boxHeight = this->m_height;
     }
-    cursorIndex = static_cast<unsigned short>(Text.size());
+    m_cursorIndex = static_cast<unsigned short>(m_text.size());
 }
 
 // E:\gamedcs\textntry.cpp:71 - textEntryWidget::`scalar deleting
@@ -88,10 +88,10 @@ VA_COMPGEN(0x005ba8f0, 0x21, SCALAR_DELETING_DTOR, textEntryWidget)
 VA(0x005baae0, 0x62)  // anchor-global, dc 0x162af8
 textEntryWidget::~textEntryWidget()
 {
-    if (textBack)
-        textBack->Dispose();
-    if (saveBack)
-        delete saveBack;
+    if (m_textBack)
+        m_textBack->dispose();
+    if (m_saveBack)
+        delete m_saveBack;
 }
 
 #if 0  // @carcass
@@ -100,13 +100,13 @@ textEntryWidget::~textEntryWidget()
 
 // E:\gamedcs\textntry.cpp:170
 VA(0x005bab50, 0x49)  // linkorder, dc 0x162b50
-void textEntryWidget::SetFocus(unsigned char state)
+void textEntryWidget::setFocus(unsigned char state)
 {
-    bHasFocus = state;
-    if (bAutoDraw) {
-        Draw();
-        gpWindowManager->UpdateScreen(x + parentWindow->x, y + parentWindow->y,
-            width, height);
+    m_hasFocus = state;
+    if (m_autoDraw) {
+        draw();
+        g_windowManager->updateScreen(m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y,
+            m_width, m_height);
     }
 }
 
@@ -136,11 +136,11 @@ void textEntryWidget::SetFocus(unsigned char state)
 // S4) - which leaves the front end's candidacy cliff as the mechanism
 // and statement mass as its only input.
 VA(0x005baba0, 0xA4)  // anchor-global, dc 0x162bbc
-char textEntryWidget::GetCharPressed(message* msg)
+char textEntryWidget::getCharPressed(message* msg)
 {
     char pressed = 0;
 
-    if (msg->codeX >= 0x100) {
+    if (msg->m_codeX >= 0x100) {
         // The scan byte is the high byte of codeX's low word. Two
         // details are byte-forced (2026-08-08), not stylistic:
         //   - the `int code` copy lives INSIDE this block. It forces
@@ -160,7 +160,7 @@ char textEntryWidget::GetCharPressed(message* msg)
         //     `sar ecx,8; and ecx,0xff`, `(code & 0xFFFF) >> 8` for
         //     `and ecx,0xffff; shr ecx,8`, and dropping the `int code`
         //     copy turns it into a memory re-read `mov dl,[ecx+5]`.
-        int code = msg->codeX;
+        int code = msg->m_codeX;
         int scanCode = (code & 0xFF00) >> 8;
         switch (scanCode) {
             case KEYCODE_KP_0:  // numpad Ins
@@ -195,7 +195,7 @@ char textEntryWidget::GetCharPressed(message* msg)
                 break;
         }
     } else {
-        pressed = static_cast<char>(msg->codeX);
+        pressed = static_cast<char>(msg->m_codeX);
         if (pressed == '{' || pressed == '}')
             pressed = 0;
     }
@@ -267,7 +267,8 @@ void CTextEntrySave::~CTextEntrySave()
 // table, and its two neighbours 0x697784/0x697788 are already other
 // units' claims, so the cell is textntry.obj's own. Its role is not
 // recoverable: no body reads it.
-DATA(0x00697780) int gUnnamed697780;
+// Before normalization: gUnnamed697780.
+DATA(0x00697780) int g_unnamed697780;
 
 // E:\gamedcs\textntry.cpp:213 - the caret editor. The five named cases
 // come out of the dense jump table at 0x5bb128 (indices over codeX
@@ -280,78 +281,79 @@ DATA(0x00697780) int gUnnamed697780;
 // path), and the wrap check below it measures Text - the string BEFORE
 // the insert - rather than the freshly spliced cCore.
 VA(0x005bac50, 0x4FD)  // anchor-vtable slot 15, dc 0x162c2c
-int textEntryWidget::OnKeyPress(message* msg)
+int textEntryWidget::onKeyPress(message* msg)
 {
-    if (!bHasFocus)
+    if (!m_hasFocus)
         return 0;
-    if (IgnoreKey(msg))
+    if (ignoreKey(msg))
         return 0;
 
-    field_6C = 1;
-    short xLoc = x + parentWindow->x;
-    short yLoc = y + parentWindow->y;
-    char cCore[600];
-    char cTemp[600];
-    char cSave[600];
+    m_cursorFlashOn = 1;
+    short xLoc = m_x + m_parentWindow->m_x;
+    short yLoc = m_y + m_parentWindow->m_y;
+    // Before normalization (locals): cCore, cTemp, cSave, cPressed.
+    char core[600];
+    char temp[600];
+    char save[600];
 
-    strcpy(cCore, Text.c_str());
-    if (cursorIndex > strlen(cCore))
-        cursorIndex = static_cast<unsigned short>(strlen(cCore));
+    strcpy(core, m_text.c_str());
+    if (m_cursorIndex > strlen(core))
+        m_cursorIndex = static_cast<unsigned short>(strlen(core));
 
-    switch (msg->codeX) {
+    switch (msg->m_codeX) {
         case KEYCODE_KP_1:
-            cursorIndex = static_cast<unsigned short>(strlen(cCore));
+            m_cursorIndex = static_cast<unsigned short>(strlen(core));
             break;
 
         case KEYCODE_KP_7:
-            cursorIndex = 0;
+            m_cursorIndex = 0;
             break;
 
         case KEYCODE_KP_DECIMAL:
-            if (cursorIndex < strlen(cCore)) {
-                strcpy(cTemp, &cCore[cursorIndex + 1]);
-                strcpy(&cCore[cursorIndex], cTemp);
+            if (m_cursorIndex < strlen(core)) {
+                strcpy(temp, &core[m_cursorIndex + 1]);
+                strcpy(&core[m_cursorIndex], temp);
             }
             break;
 
         case KEYCODE_KP_4:
-            if (cursorIndex > 0) {
-                cursorIndex--;
-                if (cursorIndex < displayStart)
-                    displayStart = cursorIndex;
+            if (m_cursorIndex > 0) {
+                m_cursorIndex--;
+                if (m_cursorIndex < m_displayStart)
+                    m_displayStart = m_cursorIndex;
             }
             break;
 
         case KEYCODE_KP_6:
-            if (cursorIndex < strlen(cCore))
-                cursorIndex++;
+            if (m_cursorIndex < strlen(core))
+                m_cursorIndex++;
             break;
 
         default:
-            gpInputManager->AsciiConvert(msg);
-            if (msg->codeX == KEYCODE_ASCII_BACKSPACE) {
-                if (cursorIndex > 0) {
-                    strcpy(cTemp, &cCore[cursorIndex]);
-                    strcpy(&cCore[cursorIndex - 1], cTemp);
-                    cursorIndex--;
-                    if (cursorIndex < displayStart)
-                        displayStart = cursorIndex;
+            g_inputManager->asciiConvert(msg);
+            if (msg->m_codeX == KEYCODE_ASCII_BACKSPACE) {
+                if (m_cursorIndex > 0) {
+                    strcpy(temp, &core[m_cursorIndex]);
+                    strcpy(&core[m_cursorIndex - 1], temp);
+                    m_cursorIndex--;
+                    if (m_cursorIndex < m_displayStart)
+                        m_displayStart = m_cursorIndex;
                 }
-            } else if (strlen(cCore) + 1 < maxLength && msg->codeX) {
-                strcpy(cSave, cCore);
-                char cPressed = GetCharPressed(msg);
-                if (cPressed) {
-                    strcpy(cTemp, Text.c_str());
-                    Text = cCore;
-                    cTemp[cursorIndex] = cPressed;
-                    cTemp[cursorIndex + 1] = 0;
-                    strcat(cTemp, &cCore[cursorIndex]);
-                    strcpy(cCore, cTemp);
-                    cursorIndex++;
-                    if (field_68 != FIELD_68_SCROLLED) {
-                        if (Font->LineLength(Text.c_str(), boxWidth) > field_64) {
-                            strcpy(cCore, cSave);
-                            cursorIndex--;
+            } else if (strlen(core) + 1 < m_maxLength && msg->m_codeX) {
+                strcpy(save, core);
+                char pressed = getCharPressed(msg);
+                if (pressed) {
+                    strcpy(temp, m_text.c_str());
+                    m_text = core;
+                    temp[m_cursorIndex] = pressed;
+                    temp[m_cursorIndex + 1] = 0;
+                    strcat(temp, &core[m_cursorIndex]);
+                    strcpy(core, temp);
+                    m_cursorIndex++;
+                    if (m_type != FIELD_68_SCROLLED) {
+                        if (m_font->lineLength(m_text.c_str(), m_boxWidth) > m_textLines) {
+                            strcpy(core, save);
+                            m_cursorIndex--;
                         }
                     }
                 }
@@ -359,15 +361,15 @@ int textEntryWidget::OnKeyPress(message* msg)
             break;
     }
 
-    SetupDisplayString(cCore, cursorIndex);
-    if (bAutoDraw) {
-        Draw();
-        gpWindowManager->UpdateScreen(xLoc, yLoc, width, height);
+    setupDisplayString(core, m_cursorIndex);
+    if (m_autoDraw) {
+        draw();
+        g_windowManager->updateScreen(xLoc, yLoc, m_width, m_height);
     }
-    gUnnamed697780 = 0;
-    msg->id = MESSAGE_WIDGET;
-    msg->codeX = WIDGET_SELECT;
-    msg->codeY = id;
+    g_unnamed697780 = 0;
+    msg->m_id = MESSAGE_WIDGET;
+    msg->m_codeX = WIDGET_SELECT;
+    msg->m_codeY = m_id;
     return MESSAGE_DISPATCH_FORWARD;
 }
 
@@ -375,91 +377,92 @@ int textEntryWidget::OnKeyPress(message* msg)
 // runs in 16-bit arithmetic because both the local and every widget
 // bound are short; only the `x + width` sums promote.
 VA(0x005bb150, 0x2A6)  // anchor-vtable slot 2, dc 0x162f2c
-int textEntryWidget::Main(message* msg)
+int textEntryWidget::main(message* msg)
 {
-    if (field_2C > 0)
+    if (m_sleepCount > 0)
         return 0;
 
-    unsigned char bDisabled = 0;
-    if (status & WIDGET_DISABLED)
-        bDisabled = 1;
+    // Before normalization (locals): bDisabled.
+    unsigned char disabled = 0;
+    if (m_status & WIDGET_DISABLED)
+        disabled = 1;
 
-    switch (msg->id) {
+    switch (msg->m_id) {
         case MESSAGE_KEY_DOWN:
-            if (bDisabled)
+            if (disabled)
                 return 0;
-            if ((status & WIDGET_DRAWN) && !(status & WIDGET_DIMMED))
-                return OnKeyPress(msg);
+            if ((m_status & WIDGET_DRAWN) && !(m_status & WIDGET_DIMMED))
+                return onKeyPress(msg);
             break;
 
         case MESSAGE_LEFT_BUTTON_DOWN:
-            if (bDisabled)
+            if (disabled)
                 return 0;
             // fall through
         case MESSAGE_RIGHT_BUTTON_DOWN:
-            if (!(status & WIDGET_DRAWN))
+            if (!(m_status & WIDGET_DRAWN))
                 return 0;
             {
-                short hitX = msg->codeX - parentWindow->x;
-                short hitY = msg->codeY - parentWindow->y;
-                if (msg->id == MESSAGE_RIGHT_BUTTON_DOWN) {
-                    if (hitX >= x && hitY >= y && hitX < x + width
-                        && hitY < y + height) {
-                        msg->id = MESSAGE_WIDGET;
-                        msg->codeX = WIDGET_RIGHT_SELECT;
-                        msg->codeY = id;
-                        msg->qualifier = MESSAGE_MODIFIER_RIGHT;
+                short hitX = msg->m_codeX - m_parentWindow->m_x;
+                short hitY = msg->m_codeY - m_parentWindow->m_y;
+                if (msg->m_id == MESSAGE_RIGHT_BUTTON_DOWN) {
+                    if (hitX >= m_x && hitY >= m_y && hitX < m_x + m_width
+                        && hitY < m_y + m_height) {
+                        msg->m_id = MESSAGE_WIDGET;
+                        msg->m_codeX = WIDGET_RIGHT_SELECT;
+                        msg->m_codeY = m_id;
+                        msg->m_qualifier = MESSAGE_MODIFIER_RIGHT;
                         return MESSAGE_DISPATCH_FORWARD;
                     }
-                } else if (hitX >= x && hitY >= y && hitX < x + width
-                    && hitY < y + height) {
-                    if (!bHasFocus && parentWindow)
-                        parentWindow->SetFocus(id);
-                    msg->id = MESSAGE_WIDGET;
-                    msg->codeX = WIDGET_SELECT;
-                    msg->codeY = id;
+                } else if (hitX >= m_x && hitY >= m_y && hitX < m_x + m_width
+                    && hitY < m_y + m_height) {
+                    if (!m_hasFocus && m_parentWindow)
+                        m_parentWindow->setFocus(m_id);
+                    msg->m_id = MESSAGE_WIDGET;
+                    msg->m_codeX = WIDGET_SELECT;
+                    msg->m_codeY = m_id;
                     return MESSAGE_DISPATCH_FORWARD;
                 }
             }
             return 0;
 
         case MESSAGE_WIDGET:
-            switch (msg->codeX) {
+            switch (msg->m_codeX) {
                 case WIDGET_SET_TEXT_LEN:
-                    if (msg->codeY == id) {
-                        maxLength = static_cast<unsigned short>(msg->extra);
+                    if (msg->m_codeY == m_id) {
+                        m_maxLength = static_cast<unsigned short>(msg->m_extra);
                         return MESSAGE_DISPATCH_CONSUME;
                     }
                     break;
                 case WIDGET_SET_TEXT:
-                    if (msg->codeY == id) {
-                        SetText(msg->extraText);
+                    if (msg->m_codeY == m_id) {
+                        setText(msg->m_extraText);
                         return MESSAGE_DISPATCH_CONSUME;
                     }
                     break;
                 case WIDGET_GET_TEXT:
-                    if (msg->codeY == id) {
-                        msg->extraText = const_cast<char*>(Text.c_str());
+                    if (msg->m_codeY == m_id) {
+                        msg->m_extraText = const_cast<char*>(m_text.c_str());
                         return MESSAGE_DISPATCH_CONSUME;
                     }
                     break;
                 case WIDGET_SET_FOCUS:
-                    if (msg->codeY == id) {
-                        if (!bHasFocus)
-                            SetFocus(1);
-                    } else if (bHasFocus) {
-                        SetFocus(0);
+                    if (msg->m_codeY == m_id) {
+                        if (!m_hasFocus)
+                            setFocus(1);
+                    } else if (m_hasFocus) {
+                        setFocus(0);
                     }
                     return 0;
             }
             break;
 
         default:
-            if (bDisabled)
+            if (disabled)
                 return 0;
             break;
     }
-    return widget::Main(msg);
+    return widget::main(msg);
 }
 
 // E:\gamedcs\textntry.cpp:477 - the dimmed colour argument is where
@@ -468,53 +471,53 @@ int textEntryWidget::Main(message* msg)
 // threes are one CSE'd constant and font::PRIMARY_DIM is the spelling
 // that lands it.
 VA(0x005bb400, 0x254)  // anchor-vtable slot 4, dc 0x163150
-void textEntryWidget::Draw()
+void textEntryWidget::draw()
 {
-    if (!(status & WIDGET_DRAWN))
+    if (!(m_status & WIDGET_DRAWN))
         return;
 
-    if (textBack) {
-        textBack->Draw(0, 0, boxWidth, boxHeight,
-            gpWindowManager->screenBitmap,
-            x + parentWindow->x, y + parentWindow->y, 0);
-    } else if (saveBack) {
-        if (!saveBack->IsSaved())
-            SaveBackground();
+    if (m_textBack) {
+        m_textBack->draw(0, 0, m_boxWidth, m_boxHeight,
+            g_windowManager->m_screenBitmap,
+            m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, 0);
+    } else if (m_saveBack) {
+        if (!m_saveBack->isSaved())
+            saveBackground();
         else
-            saveBack->Draw(0, 0, boxWidth, boxHeight,
-                gpWindowManager->screenBitmap->map,
-                x + parentWindow->x, y + parentWindow->y,
-                gpWindowManager->screenBitmap->Width,
-                gpWindowManager->screenBitmap->Height,
-                gpWindowManager->screenBitmap->Pitch, 0);
+            m_saveBack->draw(0, 0, m_boxWidth, m_boxHeight,
+                g_windowManager->m_screenBitmap->m_map,
+                m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y,
+                g_windowManager->m_screenBitmap->m_width,
+                g_windowManager->m_screenBitmap->m_height,
+                g_windowManager->m_screenBitmap->m_pitch, 0);
     }
 
-    if (field_68 == FIELD_68_SCROLLED) {
+    if (m_type == FIELD_68_SCROLLED) {
         char shown[600];
-        strcpy(shown, Text.substr(displayStart).c_str());
+        strcpy(shown, m_text.substr(m_displayStart).c_str());
         int len = strlen(shown);
-        while (Font->LineWidth(shown) > boxWidth)
+        while (m_font->lineWidth(shown) > m_boxWidth)
             shown[--len] = 0;
-        if (bHasFocus)
-            Font->DrawBoundedString(shown, gpWindowManager->screenBitmap,
-                boxX + parentWindow->x, boxY + parentWindow->y,
-                boxWidth, boxHeight, Color, Justify, cursorIndex);
+        if (m_hasFocus)
+            m_font->drawBoundedString(shown, g_windowManager->m_screenBitmap,
+                m_boxX + m_parentWindow->m_x, m_boxY + m_parentWindow->m_y,
+                m_boxWidth, m_boxHeight, m_color, m_justify, m_cursorIndex);
         else
-            Font->DrawBoundedString(shown, gpWindowManager->screenBitmap,
-                boxX + parentWindow->x, boxY + parentWindow->y,
-                boxWidth, boxHeight, Color, Justify, -1);
-    } else if (bHasFocus) {
-        Font->DrawBoundedString(Text.c_str(), gpWindowManager->screenBitmap,
-            boxX + parentWindow->x, boxY + parentWindow->y,
-            boxWidth, boxHeight,
-            (status & WIDGET_DIMMED) ? font::PRIMARY_DIM : Color,
-            Justify, cursorIndex);
+            m_font->drawBoundedString(shown, g_windowManager->m_screenBitmap,
+                m_boxX + m_parentWindow->m_x, m_boxY + m_parentWindow->m_y,
+                m_boxWidth, m_boxHeight, m_color, m_justify, -1);
+    } else if (m_hasFocus) {
+        m_font->drawBoundedString(m_text.c_str(), g_windowManager->m_screenBitmap,
+            m_boxX + m_parentWindow->m_x, m_boxY + m_parentWindow->m_y,
+            m_boxWidth, m_boxHeight,
+            (m_status & WIDGET_DIMMED) ? font::PRIMARY_DIM : m_color,
+            m_justify, m_cursorIndex);
     } else {
-        Font->DrawBoundedString(Text.c_str(), gpWindowManager->screenBitmap,
-            boxX + parentWindow->x, boxY + parentWindow->y,
-            boxWidth, boxHeight,
-            (status & WIDGET_DIMMED) ? font::PRIMARY_DIM : Color,
-            Justify, -1);
+        m_font->drawBoundedString(m_text.c_str(), g_windowManager->m_screenBitmap,
+            m_boxX + m_parentWindow->m_x, m_boxY + m_parentWindow->m_y,
+            m_boxWidth, m_boxHeight,
+            (m_status & WIDGET_DIMMED) ? font::PRIMARY_DIM : m_color,
+            m_justify, -1);
     }
 }
 
@@ -529,37 +532,38 @@ void textEntryWidget::Draw()
 // inline, and the test is `sub eax, edi; js` on the SIGN of the
 // difference. glTimers is kb.h's claim; slot 0 is the same cell
 // recruit.cpp and advmgr.cpp drive.
+// Before normalization (locals): cCore.
 VA(0x005bb660, 0x2E7)  // linkorder, dc 0x1633d8
-void textEntryWidget::SetupDisplayString(char* cCore, unsigned short inCursorIndex)
+void textEntryWidget::setupDisplayString(char* core, unsigned short inCursorIndex)
 {
-    if (GameTime::IsPast(glTimers[0])) {
-        field_6C = static_cast<unsigned char>(1 - field_6C);
-        glTimers[0] = GameTime::Get() + 360;
+    if (GameTime::isPast(g_timers[0])) {
+        m_cursorFlashOn = static_cast<unsigned char>(1 - m_cursorFlashOn);
+        g_timers[0] = GameTime::get() + 360;
     }
 
     if (inCursorIndex > 0)
-        Text = std::string(cCore).substr(0, inCursorIndex);
+        m_text = std::string(core).substr(0, inCursorIndex);
     else
-        Text.erase();
+        m_text.erase();
 
-    if (strlen(cCore) > inCursorIndex)
-        Text.append(cCore + inCursorIndex);
+    if (strlen(core) > inCursorIndex)
+        m_text.append(core + inCursorIndex);
 
-    if (field_68 == FIELD_68_SCROLLED) {
+    if (m_type == FIELD_68_SCROLLED) {
         char shown[300];
         for (;;) {
-            strcpy(shown, Text.substr(displayStart).c_str());
-            if (Font->LineWidth(shown) <= boxWidth)
+            strcpy(shown, m_text.substr(m_displayStart).c_str());
+            if (m_font->lineWidth(shown) <= m_boxWidth)
                 break;
-            shown[inCursorIndex - displayStart + 1] = 0;
-            if (Font->LineWidth(shown) <= boxWidth)
+            shown[inCursorIndex - m_displayStart + 1] = 0;
+            if (m_font->lineWidth(shown) <= m_boxWidth)
                 break;
-            displayStart++;
+            m_displayStart++;
         }
-        if (displayStart > 0) {
-            strcpy(shown, Text.substr(displayStart - 1).c_str());
-            if (Font->LineWidth(shown) <= boxWidth)
-                displayStart--;
+        if (m_displayStart > 0) {
+            strcpy(shown, m_text.substr(m_displayStart - 1).c_str());
+            if (m_font->lineWidth(shown) <= m_boxWidth)
+                m_displayStart--;
         }
     }
 }
@@ -568,20 +572,21 @@ void textEntryWidget::SetupDisplayString(char* cCore, unsigned short inCursorInd
 // re-reads the string's length out of the object rather than reusing
 // the count the inlined assign already has in hand, which is what
 // duplicates the `[+0x58]` store into all three assign tails.
+// Before normalization (locals): new_text.
 VA(0x005bb950, 0xD0)  // anchor-vtable slot 13, dc 0x1635dc
-void textEntryWidget::SetText(const char* new_text)
+void textEntryWidget::setText(const char* newText)
 {
-    Text = new_text;
-    cursorIndex = static_cast<unsigned short>(Text.size());
+    m_text = newText;
+    m_cursorIndex = static_cast<unsigned short>(m_text.size());
 }
 
 // E:\gamedcs\textntry.cpp:635 - the three swallowed keys are scan
 // codes: 1 Esc, 15 Tab, 28 Enter. Retail's dec/sub/sub descent is the
 // switch lowering, not a `||` chain (that emits three cmps).
 VA(0x005bba20, 0x22)  // anchor-vtable slot 16, dc 0x163600
-unsigned char textEntryWidget::IgnoreKey(message* msg)
+unsigned char textEntryWidget::ignoreKey(message* msg)
 {
-    switch (msg->codeX) {
+    switch (msg->m_codeX) {
         case KEYCODE_ESCAPE:
         case KEYCODE_TAB:
         case KEYCODE_ENTER:
@@ -592,32 +597,32 @@ unsigned char textEntryWidget::IgnoreKey(message* msg)
 
 // E:\gamedcs\textntry.cpp:648
 VA(0x005bba50, 0x8)  // anchor-vtable slot 10, dc 0x163620
-void textEntryWidget::OnSetFocus()
+void textEntryWidget::onSetFocus()
 {
-    SetFocus(1);
+    setFocus(1);
 }
 
 // E:\gamedcs\textntry.cpp:653
 VA(0x005bba60, 0x8)  // anchor-vtable slot 11, dc 0x163638
-void textEntryWidget::OnKillFocus()
+void textEntryWidget::onKillFocus()
 {
-    SetFocus(0);
+    setFocus(0);
 }
 
 // E:\gamedcs\textntry.cpp:658
 VA(0x005bba70, 0x44)  // anchor-vtable slot 18, dc 0x163650
-void textEntryWidget::SaveBackground() const
+void textEntryWidget::saveBackground() const
 {
-    if (saveBack)
-        saveBack->Save(x + parentWindow->x, y + parentWindow->y);
+    if (m_saveBack)
+        m_saveBack->save(m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y);
 }
 
 // E:\gamedcs\textntry.cpp:666 - the fs:[0] frame is the new-expression's
 // own unwind funclet, not a source-level try.
 VA(0x005bbac0, 0x82)  // anchor-vtable slot 17, dc 0x16367c
-void textEntryWidget::SetAutoDraw(unsigned char b)
+void textEntryWidget::setAutoDraw(unsigned char b)
 {
-    bAutoDraw = b;
-    if (b && !textBack && !saveBack)
-        saveBack = new CTextEntrySave(boxWidth, boxHeight);
+    m_autoDraw = b;
+    if (b && !m_textBack && !m_saveBack)
+        m_saveBack = new CTextEntrySave(m_boxWidth, m_boxHeight);
 }

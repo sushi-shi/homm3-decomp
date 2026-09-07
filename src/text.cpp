@@ -21,271 +21,337 @@
 // and moving those claims would edit files this lane does not own.  The
 // owning site is named in the comment above each such definition.
 
+// Before normalization: ResourceNames.
 DATA(0x006a5328)
-TTextResource* ResourceNames;
+TTextResource* g_resourceNamesResource;
 
 // 0x006a5390 - datum claimed at include/game.h:2723 (gPrimarySkillNames)
-const char* gStatNames[4];
+const char* g_statNames[4];
 
+// Before normalization: MineNames.
 DATA(0x006a53d0)
-TTextResource* MineNames;
+TTextResource* g_mineNames;
 
 DATA(0x006a53d4)
-const char* gSpecialBuildingNames[10][11];
+const char* g_specialBuildingNames[10][11];
 
+// Before normalization: HeroBioText.
 DATA(0x006a57b8)
-TTextResource* HeroBioText;
+TTextResource* g_heroBioText;
 
+// Before normalization: custom_camp_rclick.
 DATA(0x006a58b8)
-const char* custom_camp_rclick[67];
+const char* g_customCampRclick[67];
 
+// Before normalization: CampaignRegionNames.
 DATA(0x006a5c24)
-TSpreadsheetResource* CampaignRegionNames;
+TSpreadsheetResource* g_campaignRegionNamesResource;
 
 // 0x006a5c28 - datum claimed at src/townmgr.cpp:9175
-const char* cCastleInfo[7];
+// Before normalization: cCastleInfo.
+const char* g_castleInfo[7];
 
+// Before normalization: cCampaignDialog.
 DATA(0x006a5cc0)
-const char* cCampaignDialog[24];
+const char* g_campaignDialog[24];
 
+// Before normalization: gAbbSecondarySkillLevels.
 DATA(0x006a5d4c)
-const char* gAbbSecondarySkillLevels[3];
+const char* g_abbSecondarySkillLevels[3];
 
 DATA(0x006a5d5c)
-TTextResource* gpGeneralText;
+TTextResource* g_generalText;
 
 // 0x006a5d84 - datum claimed at src/townmgr.cpp:421
-const char* cTownCommand[35];
+// Before normalization: cTownCommand.
+const char* g_townCommand[35];
 
 DATA(0x006a5e20)
-const char* gMineEventText[8];
+const char* g_mineEventText[8];
 
 // 0x006a5e40 - datum claimed at src/townmgr.cpp:385
-const char* cTavernInfo[8];
+const char* g_tavernInfo[8];
 
+// Before normalization: CampaignDialog.
 DATA(0x006a5e60)
-TSpreadsheetResource* CampaignDialog;
+TSpreadsheetResource* g_campaignDialogResource;
 
 // 0x006a5e64 - datum claimed at src/seerhut.cpp:290
-const char* gResourceNames[8];
+const char* g_resourceNames[8];
 
 DATA(0x006a5e84)
-const char* gTerrainNames[10];
+const char* g_terrainNames[10];
 
+// Before normalization: HallText.
 DATA(0x006a5eac)
-TTextResource* HallText;
+TTextResource* g_hallText;
 
 // 0x006a5ecc - datum claimed at src/hiscore.cpp:34 (gHighScoreDefaults0)
-char* gHighScoreCampaignDefault[11][4];
+// Before normalization: gHighScoreCampaignDefault.
+char* g_highScoreCampaignDefault[11][4];
 
+// Before normalization: mine_event_text.
 DATA(0x006a5f7c)
-TTextResource* mine_event_text;
+TTextResource* g_mineEventTextResource;
 
+// Before normalization: SpecialBuildingText.
 DATA(0x006a6040)
-TSpreadsheetResource* SpecialBuildingText;
+TSpreadsheetResource* g_specialBuildingText;
 
 // 0x006a6048 - datum claimed at src/game.cpp:10974
-const char* gTownNames[9][16];
+const char* g_townNames[9][16];
 
+// Before normalization: DwellingText.
 DATA(0x006a6288)
-TSpreadsheetResource* DwellingText;
+TSpreadsheetResource* g_dwellingText;
 
+// Before normalization: TentColorText.
 DATA(0x006a628c)
-TTextResource* TentColorText;
+TTextResource* g_tentColorText;
 
+// Before normalization: TownText.
 DATA(0x006a6290)
-TTextResource* TownText;
+TTextResource* g_townText;
 
+// Before normalization: gDwellingNames.
 DATA(0x006a62a8)
-const char* gDwellingNames[10][14];
+const char* g_dwellingNames[10][14];
 
+// Before normalization: gNeutralBuildingNames.
 DATA(0x006a64e4)
-const char* gNeutralBuildingNames[19];
+const char* g_neutralBuildingNames[19];
 
+// Before normalization: NeutralBuildingText.
 DATA(0x006a6568)
-TSpreadsheetResource* NeutralBuildingText;
+TSpreadsheetResource* g_neutralBuildingText;
 
 // 0x006a66d8 - datum claimed at src/hero.cpp:126 (gSharedHeroNames)
-const char* gHeroBio[163];
+// Before normalization: gHeroBio.
+const char* g_heroBio[163];
 
+// Before normalization: gDwellingInfo.
 DATA(0x006a69c4)
-const char* gDwellingInfo[10][14];
+const char* g_dwellingInfo[10][14];
 
+// Before normalization: PrimaryStatNames.
 DATA(0x006a6bf4)
-TTextResource* PrimaryStatNames;
+TTextResource* g_primaryStatNames;
 
+// Before normalization: AdvObjNames.
 DATA(0x006a6c48)
-TTextResource* AdvObjNames;
+TTextResource* g_advObjNames;
 
+// Before normalization: custom_camp_text.
 DATA(0x006a6c78)
-TTextResource* custom_camp_text;
+TTextResource* g_customCampText;
 
 // 0x006a7428 - datum claimed at src/castle.cpp:28
-const char* cHallInfo[10];
+const char* g_hallInfo[10];
 
+// Before normalization: CreditsText.
 DATA(0x006a7450)
-TTextResource* CreditsText;
+TTextResource* g_creditsText;
 
 DATA(0x006a74d0)
-const char* gMineDescriptions[8];
+const char* g_mineDescriptions[8];
 
+// Before normalization: PlayerColors.
 DATA(0x006a751c)
-TTextResource* PlayerColors;
+TTextResource* g_playerColors;
 
 DATA(0x006a7520)
-const char* gBorderColorNames[8];
+const char* g_borderColorNames[8];
 
+// Before normalization: OVText.
 DATA(0x006a7550)
-TTextResource* OVText;
+TTextResource* g_ovText;
 
 // 0x006a7570 - datum claimed at src/levelupwindow.cpp:46 (gSkillMasteryNames)
-const char* gSecondarySkillLevels[3];
+// Before normalization: gSecondarySkillLevels.
+const char* g_secondarySkillLevels[3];
 
 DATA(0x006a7700)
-const char* Credits[2];
+const char* g_credits[2];
 
+// Before normalization: CastleText.
 DATA(0x006a7708)
-TTextResource* CastleText;
+TTextResource* g_castleText;
 
+// Before normalization: TerrainNames.
 DATA(0x006a770c)
-TTextResource* TerrainNames;
+TTextResource* g_terrainNamesResource;
 
+// Before normalization: HeroText.
 DATA(0x006a77c8)
-TTextResource* HeroText;
+TTextResource* g_heroText;
 
+// Before normalization: HighScoreDefaults.
 DATA(0x006a77e8)
-TSpreadsheetResource* HighScoreDefaults;
+TSpreadsheetResource* g_highScoreDefaults;
 
+// Before normalization: gBuildingInfoSpecial.
 DATA(0x006a780c)
-const char* gBuildingInfoSpecial[10][11];
+const char* g_buildingInfoSpecial[10][11];
 
 DATA(0x006a79ec)
-const char* gQuickViewText[232];
+const char* g_quickViewText[232];
 
+// Before normalization: TownNameText.
 DATA(0x006a7d8c)
-TSpreadsheetResource* TownNameText;
+TSpreadsheetResource* g_townNameText;
 
+// Before normalization: TavernText.
 DATA(0x006a7d90)
-TTextResource* TavernText;
+TTextResource* g_tavernText;
 
+// Before normalization: gColors.
 DATA(0x006a7df8)
-const char* gColors[8];
+const char* g_colors[8];
 
+// Before normalization: cBuildingInfoNeutral.
 DATA(0x006a7e24)
-const char* cBuildingInfoNeutral[28];
+const char* g_buildingInfoNeutral[28];
 
 // 0x006a7ec0 - datum claimed at src/overview.cpp:71
-const char* cOverviewText[16];
+// Before normalization: cOverviewText.
+const char* g_overviewText[16];
 
+// Before normalization: SecondarySkillLevelNames.
 DATA(0x006a7f00)
-TTextResource* SecondarySkillLevelNames;
+TTextResource* g_secondarySkillLevelNames;
 
 // 0x006a7f08 - datum claimed at src/hiscore.cpp:35 (gHighScoreDefaults1)
-char* gHighScoreStandardDefault[11][4];
+// Before normalization: gHighScoreStandardDefault.
+char* g_highScoreStandardDefault[11][4];
 
+// Before normalization: gCampaignRegionNames.
 DATA(0x006a7fb8)
-const char* gCampaignRegionNames[23];
+const char* g_campaignRegionNames[23];
 
 // 0x006a8014 - datum claimed at src/hero.cpp:2961 (gHeroScreenText0)
-const char* cHeroScreen[33];
+// Before normalization: cHeroScreen.
+const char* g_heroScreen[33];
 // --- Help.txt's 23 THelpText tables (below), Dreamcast-named ---
 
 // 0x006a52d0 - datum claimed at src/spellbookwindow.cpp:52 (gSpellbookHelpText)
-THelpText gSpellbookHelp[11];
+// Before normalization: gSpellbookHelp.
+THelpText g_spellbookHelp[11];
 
 // 0x006a53a8 - datum claimed at src/tradpost.cpp:1341 (gGiveHelpText)
-THelpText gGiveResourceWindowHelp[5];
+// Before normalization: gGiveResourceWindowHelp.
+THelpText g_giveResourceWindowHelp[5];
 
 DATA(0x006a55a8)
-THelpText gCombatOptionsHelp[39];
+THelpText g_combatOptionsHelp[39];
 
 // 0x006a56e0 - datum claimed at src/adventuremapwindow.cpp:29
-THelpText gAdventureWindowHelp[27];
+THelpText g_adventureWindowHelp[27];
 
 // 0x006a5868 - datum claimed at src/tradpost.cpp:1342 (gMarketHelpText)
-THelpText gResourceWindowHelp[6];
+// Before normalization: gResourceWindowHelp.
+THelpText g_resourceWindowHelp[6];
 
 DATA(0x006a59c8)
-THelpText gCampaignBriefHelp[62];
+THelpText g_campaignBriefHelp[62];
 
+// Before normalization: gCampaignWindowHelp.
 DATA(0x006a5f80)
-THelpText gCampaignWindowHelp[24];
+THelpText g_campaignWindowHelp[24];
 
 // 0x006a6530 - datum claimed at src/adventureoptionswindow.cpp:20
-THelpText gAdventureOptionsHelp[7];
+THelpText g_adventureOptionsHelp[7];
 
+// Before normalization: gMultiSelectionHelp.
 DATA(0x006a6570)
-THelpText gMultiSelectionHelp[25];
+THelpText g_multiSelectionHelp[25];
 
+// Before normalization: gSacrificeWindowHelp2.
 DATA(0x006a6638)
-THelpText gSacrificeWindowHelp2[20];
+THelpText g_sacrificeWindowHelp2[20];
 
 // 0x006a6968 - datum claimed at src/combatcontrolsubwindow.cpp:28 (gCombatSubWindowHelp)
-THelpText gCombatWindowHelp[11];
+// Before normalization: gCombatWindowHelp.
+THelpText g_combatWindowHelp[11];
 
 DATA(0x006a6bf8)
-THelpText gNewGameHelp[5];
+THelpText g_newGameHelp[5];
 
 DATA(0x006a6c20)
-THelpText gMainMenuHelp[5];
+THelpText g_mainMenuHelp[5];
 
 // 0x006a6c50 - datum claimed at src/tradpost.cpp:1343 (gSellArtHelpText)
-THelpText gSellArtifactWindowHelp[5];
+// Before normalization: gSellArtifactWindowHelp.
+THelpText g_sellArtifactWindowHelp[5];
 
 DATA(0x006a6c80)
-THelpText gSingleSelectionHelp[245];
+THelpText g_singleSelectionHelp[245];
 
 // 0x006a7458 - datum claimed at src/viewarmywindow.cpp:156
-THelpText gViewArmyHelp[15];
+// Before normalization: gViewArmyHelp.
+THelpText g_viewArmyHelp[15];
 
+// Before normalization: HelpText.
 DATA(0x006a7518)
-TSpreadsheetResource* HelpText;
+TSpreadsheetResource* g_helpText;
 
 // 0x006a7558 - datum claimed at src/recruit.cpp:72 (gRecruitMaximumRolloverText)
-THelpText gRecruitHelp[3];
+// Before normalization: gRecruitHelp.
+THelpText g_recruitHelp[3];
 
 DATA(0x006a7580)
-THelpText gSystemOptionsHelp[48];
+THelpText g_systemOptionsHelp[48];
 
+// Before normalization: gMPHelp.
 DATA(0x006a7750)
-THelpText gMPHelp[8];
+THelpText g_mpHelp[8];
 
 DATA(0x006a77d0)
-THelpText gTransformerWindowHelp[3];
+THelpText g_transformerWindowHelp[3];
 
 // 0x006a7da8 - datum claimed at src/tradpost.cpp:1344 (gBuyArtHelpText)
-THelpText gBuyArtifactWindowHelp[5];
+// Before normalization: gBuyArtifactWindowHelp.
+THelpText g_buyArtifactWindowHelp[5];
 
 // 0x006a7dd8 - datum claimed at src/university_window.cpp:33 (gUniversityWindowHelp)
-THelpText gUniversityWindowHelp2[4];
+// Before normalization: gUniversityWindowHelp2.
+THelpText g_universityWindowHelp2[4];
 
 // 0x006a7e98 - datum claimed at src/tradpost.cpp:1345 (gSellCreaHelpText)
-THelpText gSellCreatureWindowHelp[5];
+// Before normalization: gSellCreatureWindowHelp.
+THelpText g_sellCreatureWindowHelp[5];
 // --- Arraytxt.txt's 24 destination tables (below), Dreamcast-named ---
 
 // 0x006a532c - datum claimed at src/viewarmywindow.cpp:168 (gLuckTexts)
-const char* cLuckInfo[25];
+// Before normalization: cLuckInfo.
+const char* g_luckInfo[25];
 
+// Before normalization: gLuckText.
 DATA(0x006a558c)
-const char* gLuckText[7];
+const char* g_luckText[7];
 
 // 0x006a57bc - datum claimed at src/viewarmywindow.cpp:167 (gMoraleTexts)
-const char* cMoraleInfo[42];
+// Before normalization: cMoraleInfo.
+const char* g_moraleInfo[42];
 
+// Before normalization: gOwnedByColor.
 DATA(0x006a5898)
-const char* gOwnedByColor[8];
+const char* g_ownedByColor[8];
 
+// Before normalization: gArmySizeNames.
 DATA(0x006a5bb8)
-const char* gArmySizeNames[9][3];
+const char* g_armySizeNames[9][3];
 
 // 0x006a5c48 - datum claimed at src/seerhut.cpp:296 (gQuestMonsterDirections)
-const char* cDirections[9];
+// Before normalization: cDirections.
+const char* g_directions[9];
 
+// Before normalization: gSpeedNames.
 DATA(0x006a5c6c)
-const char* gSpeedNames[21];
+const char* g_speedNames[21];
 
+// Before normalization: cRumourTerrainDescriptions.
 DATA(0x006a5d24)
-const char* cRumourTerrainDescriptions[10];
+const char* g_rumourTerrainDescriptions[10];
 
 // NOT gBorderGuardColors, however the Dreamcast public at dc 0x34f50
 // reads: that name arrived here by FILL POSITION, and retail's own bytes
@@ -298,55 +364,67 @@ const char* cRumourTerrainDescriptions[10];
 // invention (cmbtmgr.h declares the same datum under it), but it is the
 // role the retail bytes prove.
 DATA(0x006a5d60)
-const char* gMoatDamageMessages[9];
+const char* g_moatDamageMessages[9];
 
+// Before normalization: AGRText.
 DATA(0x006a5e14)
-const char* AGRText[3];
+const char* g_agrText[3];
 
+// Before normalization: gMoraleText.
 DATA(0x006a5eb0)
-const char* gMoraleText[7];
+const char* g_moraleText[7];
 
+// Before normalization: ArrayText.
 DATA(0x006a6044)
-TTextResource* ArrayText;
+TTextResource* g_arrayText;
 
 DATA(0x006a6294)
-const char* gTownSizeNames[4];
+const char* g_townSizeNames[4];
 
+// Before normalization: const_wise_tree_price_text.
 DATA(0x006a64d8)
-const char* const_wise_tree_price_text[3];
+const char* g_constWiseTreePriceText[3];
 
+// Before normalization: gTownTypeNames.
 DATA(0x006a74f0)
-const char* gTownTypeNames[10];
+const char* g_townTypeNames[10];
 
 // 0x006a7540 - datum claimed at src/hero.cpp:121 (gStatDesc)
-const char* gStatDesc[4];
+const char* g_statDesc[4];
 
 // 0x006a7710 - datum claimed at src/game.cpp:446
-const char* gWeekNames[15];
+const char* g_weekNames[15];
 
 // 0x006a7794 - datum claimed at src/townmgr.cpp:483 (gPersonalityNames)
-const char* cPersonality[4];
+// Before normalization: cPersonality.
+const char* g_personality[4];
 
 // 0x006a77a8 - datum claimed at src/game.cpp:447 (gLastDayWarningFormat)
-const char* cNewTurn[8];
+// Before normalization: cNewTurn.
+const char* g_newTurn[8];
 
+// Before normalization: cDifficulty.
 DATA(0x006a77ec)
-const char* cDifficulty[5];
+const char* g_difficulty[5];
 
+// Before normalization: HandiText.
 DATA(0x006a7800)
-const char* HandiText[3];
+const char* g_handiText[3];
 
 // 0x006a79c4 - datum claimed at src/game.cpp:445
-const char* gMonthNames[10];
+const char* g_monthNames[10];
 
+// Before normalization: cMapSize.
 DATA(0x006a7d94)
-const char* cMapSize[4];
+const char* g_mapSize[4];
 
+// Before normalization: HumanCPU.
 DATA(0x006a7e18)
-const char* HumanCPU[3];
+const char* g_humanCpu[3];
 
+// Before normalization: NewLoadSaveText.
 DATA(0x006a8098)
-const char* NewLoadSaveText[3];
+const char* g_newLoadSaveText[3];
 #if 0  // @carcass
 
 // E:\gamedcs\text.cpp:49
@@ -367,74 +445,74 @@ void CheckSpreadsheetResource()
 
 // E:\gamedcs\text.cpp:116
 VA(0x005b90f0, 0x19)  // genrltxt.txt literal + GetText call, dc 0x160ffc
-unsigned char InitializeGeneralText()
+unsigned char initializeGeneralText()
 {
-    gpGeneralText = ResourceManager::GetText(
+    g_generalText = ResourceManager::getText(
         DATA_COMPGEN(0x006885fc, generalTextName, "genrltxt.txt"));
-    return gpGeneralText != 0;
+    return g_generalText != 0;
 }
 
 // E:\gamedcs\text.cpp:125
 VA(0x005b9110, 0x3d)  // campbttn.txt literal + 67-row copy, dc 0x16101c
-unsigned char InitializeCustomCampaignText()
+unsigned char initializeCustomCampaignText()
 {
-    custom_camp_text = ResourceManager::GetText(
+    g_customCampText = ResourceManager::getText(
         DATA_COMPGEN(0x0068860c, campaignButtonTextName, "campbttn.txt"));
-    if (!custom_camp_text)
+    if (!g_customCampText)
         return 0;
     for (int i = 1; i <= 67; i++)
-        custom_camp_rclick[i - 1] = custom_camp_text->GetText(i);
+        g_customCampRclick[i - 1] = g_customCampText->getText(i);
     return 1;
 }
 
 // E:\gamedcs\text.cpp:143
 VA(0x005b9150, 0x30)  // mineevnt.txt literal + 8-row copy, dc 0x161068
-unsigned char InitializeMineEventText()
+unsigned char initializeMineEventText()
 {
-    mine_event_text = ResourceManager::GetText(
+    g_mineEventTextResource = ResourceManager::getText(
         DATA_COMPGEN(0x0068861c, mineEventTextName, "mineevnt.txt"));
-    if (!mine_event_text)
+    if (!g_mineEventTextResource)
         return 0;
     for (int i = 0; i < 8; i++)
-        gMineEventText[i] = mine_event_text->GetText(i);
+        g_mineEventText[i] = g_mineEventTextResource->getText(i);
     return 1;
 }
 
 // E:\gamedcs\text.cpp:160
 VA(0x005b9180, 0x43)  // regions.txt literal + 23-row column 0 copy, dc 0x16110c
-unsigned char InitializeCampaignRegionNames()
+unsigned char initializeCampaignRegionNames()
 {
-    CampaignRegionNames = ResourceManager::GetSpreadsheet(
+    g_campaignRegionNamesResource = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x0068862c, campaignRegionsName, "regions.txt"));
-    if (!CampaignRegionNames)
+    if (!g_campaignRegionNamesResource)
         return 0;
     for (int i = 0; i < 23; i++)
-        gCampaignRegionNames[i] = CampaignRegionNames->GetRow(i + 1)[0];
+        g_campaignRegionNames[i] = g_campaignRegionNamesResource->getRow(i + 1)[0];
     return 1;
 }
 
 // E:\gamedcs\text.cpp:179
 VA(0x005b91d0, 0xd0)  // CampHigh.txt literal + two 11x4 blocks, dc 0x16115c
-unsigned char InitializeHighScoreDefaults()
+unsigned char initializeHighScoreDefaults()
 {
-    HighScoreDefaults = ResourceManager::GetSpreadsheet(
+    g_highScoreDefaults = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x00688638, highScoreDefaultsName, "CampHigh.txt"));
-    if (!HighScoreDefaults)
+    if (!g_highScoreDefaults)
         return 0;
     int i;
     for (i = 0; i < 11; i++) {
-        gHighScoreStandardDefault[i][0] = HighScoreDefaults->GetRow(i + 1)[1];
-        gHighScoreStandardDefault[i][1] = HighScoreDefaults->GetRow(i + 1)[2];
-        gHighScoreStandardDefault[i][2] = HighScoreDefaults->GetRow(i + 1)[3];
-        gHighScoreStandardDefault[i][3] = HighScoreDefaults->GetRow(i + 1)[4];
+        g_highScoreStandardDefault[i][0] = g_highScoreDefaults->getRow(i + 1)[1];
+        g_highScoreStandardDefault[i][1] = g_highScoreDefaults->getRow(i + 1)[2];
+        g_highScoreStandardDefault[i][2] = g_highScoreDefaults->getRow(i + 1)[3];
+        g_highScoreStandardDefault[i][3] = g_highScoreDefaults->getRow(i + 1)[4];
     }
     for (i = 0; i < 11; i++) {
-        gHighScoreCampaignDefault[i][0] = HighScoreDefaults->GetRow(i + 13)[1];
-        gHighScoreCampaignDefault[i][1] = HighScoreDefaults->GetRow(i + 13)[2];
-        gHighScoreCampaignDefault[i][2] = HighScoreDefaults->GetRow(i + 13)[3];
-        gHighScoreCampaignDefault[i][3] = HighScoreDefaults->GetRow(i + 13)[4];
+        g_highScoreCampaignDefault[i][0] = g_highScoreDefaults->getRow(i + 13)[1];
+        g_highScoreCampaignDefault[i][1] = g_highScoreDefaults->getRow(i + 13)[2];
+        g_highScoreCampaignDefault[i][2] = g_highScoreDefaults->getRow(i + 13)[3];
+        g_highScoreCampaignDefault[i][3] = g_highScoreDefaults->getRow(i + 13)[4];
     }
-    gpHighScoreManager->ResetHighScores();
+    g_highScoreManager->resetHighScores();
     return 1;
 }
 // Residual (99.3846%): the FIRST loop's row load is `mov esi,[esi+ecx-4]`
@@ -450,143 +528,144 @@ unsigned char InitializeHighScoreDefaults()
 
 // E:\gamedcs\text.cpp:213
 VA(0x005b92a0, 0x30)  // terrname.txt literal + 10-row copy, dc 0x161230
-unsigned char InitializeTerrainNames()
+unsigned char initializeTerrainNames()
 {
-    TerrainNames = ResourceManager::GetText(
+    g_terrainNamesResource = ResourceManager::getText(
         DATA_COMPGEN(0x00688648, terrainNamesName, "terrname.txt"));
-    if (!TerrainNames)
+    if (!g_terrainNamesResource)
         return 0;
     for (int i = 0; i < 10; i++)
-        gTerrainNames[i] = TerrainNames->GetText(i);
+        g_terrainNames[i] = g_terrainNamesResource->getText(i);
     return 1;
 }
 
 // E:\gamedcs\text.cpp:231
 VA(0x005b92d0, 0x33)  // objnames.txt literal + 232-row copy, dc 0x16127c
-unsigned char InitializeAdvObjNames()
+unsigned char initializeAdvObjNames()
 {
-    AdvObjNames = ResourceManager::GetText(
+    g_advObjNames = ResourceManager::getText(
         DATA_COMPGEN(0x006604b4, advObjNamesName, "objnames.txt"));
-    if (!AdvObjNames)
+    if (!g_advObjNames)
         return 0;
     for (int i = 0; i < 232; i++)
-        gQuickViewText[i] = AdvObjNames->GetText(i);
+        g_quickViewText[i] = g_advObjNames->getText(i);
     return 1;
 }
 
 // E:\gamedcs\text.cpp:249
 VA(0x005b9310, 0x30)  // restypes.txt literal + 8-row copy, dc 0x1612c8
-unsigned char InitializeResourceNames()
+unsigned char initializeResourceNames()
 {
-    ResourceNames = ResourceManager::GetText(
+    g_resourceNamesResource = ResourceManager::getText(
         DATA_COMPGEN(0x00688658, resourceNamesName, "restypes.txt"));
-    if (!ResourceNames)
+    if (!g_resourceNamesResource)
         return 0;
     for (int i = 0; i < 8; i++)
-        gResourceNames[i] = ResourceNames->GetText(i);
+        g_resourceNames[i] = g_resourceNamesResource->getText(i);
     return 1;
 }
 
 // E:\gamedcs\text.cpp:267
 VA(0x005b9340, 0x30)  // minename.txt literal + 8-row copy, dc 0x161314
-unsigned char InitializeMineNames()
+unsigned char initializeMineNames()
 {
-    MineNames = ResourceManager::GetText(
+    g_mineNames = ResourceManager::getText(
         DATA_COMPGEN(0x00688668, mineNamesName, "minename.txt"));
-    if (!MineNames)
+    if (!g_mineNames)
         return 0;
     for (int i = 0; i < 8; i++)
-        gMineDescriptions[i] = MineNames->GetText(i);
+        g_mineDescriptions[i] = g_mineNames->getText(i);
     return 1;
 }
 
 // E:\gamedcs\text.cpp:285
 VA(0x005b9370, 0x48)  // plcolors.txt literal + toupper pass, dc 0x161360
-unsigned char InitializePlayerColors()
+unsigned char initializePlayerColors()
 {
-    PlayerColors = ResourceManager::GetText(
+    g_playerColors = ResourceManager::getText(
         DATA_COMPGEN(0x00688678, playerColorsName, "plcolors.txt"));
-    if (!PlayerColors)
+    if (!g_playerColors)
         return 0;
     for (int i = 0; i < 8; i++) {
-        char* pColor = const_cast<char*>(PlayerColors->GetText(i));
-        *pColor = static_cast<char>(toupper(*pColor));
-        gColors[i] = pColor;
+        // Before normalization (locals): pColor.
+        char* color = const_cast<char*>(g_playerColors->getText(i));
+        *color = static_cast<char>(toupper(*color));
+        g_colors[i] = color;
     }
     return 1;
 }
 
 // E:\gamedcs\text.cpp:308
 VA(0x005b93c0, 0x30)  // priskill.txt literal + 4-row copy, dc 0x161428
-unsigned char InitializePrimaryStatNames()
+unsigned char initializePrimaryStatNames()
 {
-    PrimaryStatNames = ResourceManager::GetText(
+    g_primaryStatNames = ResourceManager::getText(
         DATA_COMPGEN(0x00688688, primaryStatNamesName, "priskill.txt"));
-    if (!PrimaryStatNames)
+    if (!g_primaryStatNames)
         return 0;
     for (int i = 0; i < 4; i++)
-        gStatNames[i] = PrimaryStatNames->GetText(i);
+        g_statNames[i] = g_primaryStatNames->getText(i);
     return 1;
 }
 
 // E:\gamedcs\text.cpp:328
 VA(0x005b93f0, 0x55)  // skilllev.txt literal + full/abbreviated pair, dc 0x161474
-unsigned char InitializeSecondarySkillLevelNames()
+unsigned char initializeSecondarySkillLevelNames()
 {
-    SecondarySkillLevelNames = ResourceManager::GetText(
+    g_secondarySkillLevelNames = ResourceManager::getText(
         DATA_COMPGEN(0x00688698, skillLevelNamesName, "skilllev.txt"));
-    if (!SecondarySkillLevelNames)
+    if (!g_secondarySkillLevelNames)
         return 0;
     for (int i = 0; i < 3; i++)
-        gSecondarySkillLevels[i] = SecondarySkillLevelNames->GetText(i);
+        g_secondarySkillLevels[i] = g_secondarySkillLevelNames->getText(i);
     for (int j = 0; j < 3; j++)
-        gAbbSecondarySkillLevels[j] = SecondarySkillLevelNames->GetText(j + 3);
+        g_abbSecondarySkillLevels[j] = g_secondarySkillLevelNames->getText(j + 3);
     return 1;
 }
 
 // E:\gamedcs\text.cpp:353
 VA(0x005b9450, 0x8f)  // bldgneut.txt literal + 19/28 guarded columns, dc 0x1614e4
-unsigned char InitializeNeutralBuildingText()
+unsigned char initializeNeutralBuildingText()
 {
-    NeutralBuildingText = ResourceManager::GetSpreadsheet(
+    g_neutralBuildingText = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x006886a8, neutralBuildingTextName, "bldgneut.txt"));
-    if (!NeutralBuildingText)
+    if (!g_neutralBuildingText)
         return 0;
     for (int i = 0; i < 19; i++) {
-        if (static_cast<int>(NeutralBuildingText->GetRow(i).size()) > 1)
-            gNeutralBuildingNames[i] = NeutralBuildingText->GetRow(i)[0];
+        if (static_cast<int>(g_neutralBuildingText->getRow(i).size()) > 1)
+            g_neutralBuildingNames[i] = g_neutralBuildingText->getRow(i)[0];
         else
-            gNeutralBuildingNames[i] = DATA_COMPGEN(0x00691210, textEmptyText, "");
+            g_neutralBuildingNames[i] = DATA_COMPGEN(0x00691210, textEmptyText, "");
     }
     for (int j = 0; j < 28; j++) {
-        if (static_cast<int>(NeutralBuildingText->GetRow(j).size()) > 1)
-            cBuildingInfoNeutral[j] = NeutralBuildingText->GetRow(j)[1];
+        if (static_cast<int>(g_neutralBuildingText->getRow(j).size()) > 1)
+            g_buildingInfoNeutral[j] = g_neutralBuildingText->getRow(j)[1];
         else
-            cBuildingInfoNeutral[j] = DATA_COMPGEN(0x00691210, textEmptyText, "");
+            g_buildingInfoNeutral[j] = DATA_COMPGEN(0x00691210, textEmptyText, "");
     }
     return 1;
 }
 
 // E:\gamedcs\text.cpp:380
 VA(0x005b94e0, 0x8d)  // bldgspec.txt literal + 10x11 name/info pair, dc 0x16158c
-unsigned char InitializeSpecialBuildingText()
+unsigned char initializeSpecialBuildingText()
 {
-    SpecialBuildingText = ResourceManager::GetSpreadsheet(
+    g_specialBuildingText = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x006886b8, specialBuildingTextName, "bldgspec.txt"));
-    if (!SpecialBuildingText)
+    if (!g_specialBuildingText)
         return 0;
     int n = 0;
     for (int faction = 0; faction < 10; faction++) {
         for (int slot = 0; slot < 11; slot++) {
-            if (static_cast<int>(SpecialBuildingText->GetRow(n).size()) > 1) {
-                gSpecialBuildingNames[faction][slot] =
-                    SpecialBuildingText->GetRow(n)[0];
-                gBuildingInfoSpecial[faction][slot] =
-                    SpecialBuildingText->GetRow(n)[1];
+            if (static_cast<int>(g_specialBuildingText->getRow(n).size()) > 1) {
+                g_specialBuildingNames[faction][slot] =
+                    g_specialBuildingText->getRow(n)[0];
+                g_buildingInfoSpecial[faction][slot] =
+                    g_specialBuildingText->getRow(n)[1];
             } else {
-                gSpecialBuildingNames[faction][slot] =
+                g_specialBuildingNames[faction][slot] =
                     DATA_COMPGEN(0x00691210, textEmptyText, "");
-                gBuildingInfoSpecial[faction][slot] =
+                g_buildingInfoSpecial[faction][slot] =
                     DATA_COMPGEN(0x00691210, textEmptyText, "");
             }
             n++;
@@ -597,22 +676,22 @@ unsigned char InitializeSpecialBuildingText()
 
 // E:\gamedcs\text.cpp:411
 VA(0x005b9570, 0x90)  // dwelling.txt literal + 10x14 name/info pair, dc 0x161698
-unsigned char InitializeDwellingText()
+unsigned char initializeDwellingText()
 {
-    DwellingText = ResourceManager::GetSpreadsheet(
+    g_dwellingText = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x006886c8, dwellingTextName, "dwelling.txt"));
-    if (!DwellingText)
+    if (!g_dwellingText)
         return 0;
     int n = 0;
     for (int faction = 0; faction < 10; faction++) {
         for (int slot = 0; slot < 14; slot++) {
-            if (static_cast<int>(DwellingText->GetRow(n).size()) > 0) {
-                gDwellingNames[faction][slot] = DwellingText->GetRow(n)[0];
-                gDwellingInfo[faction][slot] = DwellingText->GetRow(n)[1];
+            if (static_cast<int>(g_dwellingText->getRow(n).size()) > 0) {
+                g_dwellingNames[faction][slot] = g_dwellingText->getRow(n)[0];
+                g_dwellingInfo[faction][slot] = g_dwellingText->getRow(n)[1];
             } else {
-                gDwellingNames[faction][slot] =
+                g_dwellingNames[faction][slot] =
                     DATA_COMPGEN(0x00691210, textEmptyText, "");
-                gDwellingInfo[faction][slot] =
+                g_dwellingInfo[faction][slot] =
                     DATA_COMPGEN(0x00691210, textEmptyText, "");
             }
             n++;
@@ -623,19 +702,19 @@ unsigned char InitializeDwellingText()
 
 // E:\gamedcs\text.cpp:441
 VA(0x005b9600, 0x73)  // townname.txt literal + 9x16 guarded copy, dc 0x161748
-unsigned char InitializeTownNameText()
+unsigned char initializeTownNameText()
 {
-    TownNameText = ResourceManager::GetSpreadsheet(
+    g_townNameText = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x006886d8, townNameTextName, "townname.txt"));
-    if (!TownNameText)
+    if (!g_townNameText)
         return 0;
     int n = 0;
     for (int faction = 0; faction < 9; faction++) {
         for (int slot = 0; slot < 16; slot++) {
-            if (static_cast<int>(TownNameText->GetRow(n).size()) > 0)
-                gTownNames[faction][slot] = TownNameText->GetRow(n)[0];
+            if (static_cast<int>(g_townNameText->getRow(n).size()) > 0)
+                g_townNames[faction][slot] = g_townNameText->getRow(n)[0];
             else
-                gTownNames[faction][slot] =
+                g_townNames[faction][slot] =
                     DATA_COMPGEN(0x00691210, textEmptyText, "");
             n++;
         }
@@ -645,118 +724,118 @@ unsigned char InitializeTownNameText()
 
 // E:\gamedcs\text.cpp:465
 VA(0x005b9680, 0x33)  // HeroBios.txt literal + 163-row copy, dc 0x1617d8
-unsigned char InitializeHeroBioText()
+unsigned char initializeHeroBioText()
 {
-    HeroBioText = ResourceManager::GetText(
+    g_heroBioText = ResourceManager::getText(
         DATA_COMPGEN(0x006886e8, heroBioTextName, "HeroBios.txt"));
-    if (!HeroBioText)
+    if (!g_heroBioText)
         return 0;
     for (int i = 0; i < 163; i++)
-        gHeroBio[i] = HeroBioText->GetText(i);
+        g_heroBio[i] = g_heroBioText->getText(i);
     return 1;
 }
 
 // E:\gamedcs\text.cpp:481
 VA(0x005b96c0, 0x30)  // CastInfo.txt literal + 7-row copy, dc 0x161824
-unsigned char InitializeCastleText()
+unsigned char initializeCastleText()
 {
-    CastleText = ResourceManager::GetText(
+    g_castleText = ResourceManager::getText(
         DATA_COMPGEN(0x006886f8, castleTextName, "CastInfo.txt"));
-    if (!CastleText)
+    if (!g_castleText)
         return 0;
     for (int i = 0; i < 7; i++)
-        cCastleInfo[i] = CastleText->GetText(i);
+        g_castleInfo[i] = g_castleText->getText(i);
     return 1;
 }
 
 // E:\gamedcs\text.cpp:496
 VA(0x005b96f0, 0x30)  // TvrnInfo.txt literal + 8-row copy, dc 0x161870
-unsigned char InitializeTavernText()
+unsigned char initializeTavernText()
 {
-    TavernText = ResourceManager::GetText(
+    g_tavernText = ResourceManager::getText(
         DATA_COMPGEN(0x00688708, tavernTextName, "TvrnInfo.txt"));
-    if (!TavernText)
+    if (!g_tavernText)
         return 0;
     for (int i = 0; i < 8; i++)
-        cTavernInfo[i] = TavernText->GetText(i);
+        g_tavernInfo[i] = g_tavernText->getText(i);
     return 1;
 }
 
 // E:\gamedcs\text.cpp:511
 VA(0x005b9720, 0x30)  // HallInfo.txt literal + 10-row copy, dc 0x1618bc
-unsigned char InitializeHallText()
+unsigned char initializeHallText()
 {
-    HallText = ResourceManager::GetText(
+    g_hallText = ResourceManager::getText(
         DATA_COMPGEN(0x00688718, hallTextName, "HallInfo.txt"));
-    if (!HallText)
+    if (!g_hallText)
         return 0;
     for (int i = 0; i < 10; i++)
-        cHallInfo[i] = HallText->GetText(i);
+        g_hallInfo[i] = g_hallText->getText(i);
     return 1;
 }
 
 // E:\gamedcs\text.cpp:526
 VA(0x005b9750, 0x33)  // TCommand.txt literal + 35-row copy, dc 0x16196c
-unsigned char InitializeTownText()
+unsigned char initializeTownText()
 {
-    TownText = ResourceManager::GetText(
+    g_townText = ResourceManager::getText(
         DATA_COMPGEN(0x00688728, townTextName, "TCommand.txt"));
-    if (!TownText)
+    if (!g_townText)
         return 0;
     for (int i = 0; i < 35; i++)
-        cTownCommand[i] = TownText->GetText(i);
+        g_townCommand[i] = g_townText->getText(i);
     return 1;
 }
 
 // E:\gamedcs\text.cpp:541
 VA(0x005b9790, 0x30)  // Overview.txt literal + 16-row copy, dc 0x1619b8
-unsigned char InitializeOverviewText()
+unsigned char initializeOverviewText()
 {
-    OVText = ResourceManager::GetText(
+    g_ovText = ResourceManager::getText(
         DATA_COMPGEN(0x00688738, overviewTextName, "Overview.txt"));
-    if (!OVText)
+    if (!g_ovText)
         return 0;
     for (int i = 0; i < 16; i++)
-        cOverviewText[i] = OVText->GetText(i);
+        g_overviewText[i] = g_ovText->getText(i);
     return 1;
 }
 
 // E:\gamedcs\text.cpp:556
 VA(0x005b97c0, 0x33)  // HeroScrn.txt literal + 33-row copy, dc 0x161a04
-unsigned char InitializeHeroText()
+unsigned char initializeHeroText()
 {
-    HeroText = ResourceManager::GetText(
+    g_heroText = ResourceManager::getText(
         DATA_COMPGEN(0x00688748, heroTextName, "HeroScrn.txt"));
-    if (!HeroText)
+    if (!g_heroText)
         return 0;
     for (int i = 0; i < 33; i++)
-        cHeroScreen[i] = HeroText->GetText(i);
+        g_heroScreen[i] = g_heroText->getText(i);
     return 1;
 }
 
 // E:\gamedcs\text.cpp:571
 VA(0x005b9800, 0x36)  // CampDiag.txt literal + 24-row column 1 copy, dc 0x161a50
-unsigned char InitializeCampaignDialogText()
+unsigned char initializeCampaignDialogText()
 {
-    CampaignDialog = ResourceManager::GetSpreadsheet(
+    g_campaignDialogResource = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x00688758, campaignDialogName, "CampDiag.txt"));
-    if (!CampaignDialog)
+    if (!g_campaignDialogResource)
         return 0;
     for (int i = 0; i < 24; i++)
-        cCampaignDialog[i] = CampaignDialog->GetRow(i)[1];
+        g_campaignDialog[i] = g_campaignDialogResource->getRow(i)[1];
     return 1;
 }
 
 // E:\gamedcs\text.cpp:590
 VA(0x005b9840, 0x31)  // Credits.txt literal + rows 1 and 2, dc 0x161aa4
-unsigned char InitializeCreditsText()
+unsigned char initializeCreditsText()
 {
-    CreditsText = ResourceManager::GetText(
+    g_creditsText = ResourceManager::getText(
         DATA_COMPGEN(0x00688768, creditsTextName, "Credits.txt"));
-    if (!CreditsText)
+    if (!g_creditsText)
         return 0;
-    Credits[0] = CreditsText->GetText(1);
-    Credits[1] = CreditsText->GetText(2);
+    g_credits[0] = g_creditsText->getText(1);
+    g_credits[1] = g_creditsText->getText(2);
     return 1;
 }
 
@@ -764,14 +843,14 @@ unsigned char InitializeCreditsText()
 // sits between InitializeCreditsText and InitializeHelpText, which is
 // what makes the text.obj order-map over this band exhaustive.
 VA(0x005b9880, 0x30)  // TentColr.txt literal + 8-row copy, retail-only
-unsigned char InitializeTentColorText()
+unsigned char initializeTentColorText()
 {
-    TentColorText = ResourceManager::GetText(
+    g_tentColorText = ResourceManager::getText(
         DATA_COMPGEN(0x00688774, tentColorTextName, "TentColr.txt"));
-    if (!TentColorText)
+    if (!g_tentColorText)
         return 0;
     for (int i = 0; i < 8; i++)
-        gBorderColorNames[i] = TentColorText->GetText(i);
+        g_borderColorNames[i] = g_tentColorText->getText(i);
     return 1;
 }
 
@@ -789,199 +868,199 @@ unsigned char InitializeTentColorText()
 
 // E:\gamedcs\text.cpp:641
 VA(0x005b98b0, 0x405)  // Help.txt literal + 23 THelpText tables, dc 0x161ae4
-unsigned char InitializeHelpText()
+unsigned char initializeHelpText()
 {
     int i;
     unsigned int j;
 
-    HelpText = ResourceManager::GetSpreadsheet(
+    g_helpText = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x00688784, helpTextName, "Help.txt"));
-    if (!HelpText)
+    if (!g_helpText)
         return 0;
 
     i = 3;
     for (j = 0; j < 5; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            HelpText->GetRow(i);
+            g_helpText->getRow(i);
 
-        gMainMenuHelp[j].text = row[0];
-        gMainMenuHelp[j].rclick = row[1];
+        g_mainMenuHelp[j].m_text = row[0];
+        g_mainMenuHelp[j].m_rclick = row[1];
     }
     i += 2;
     for (j = 0; j < 5; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            HelpText->GetRow(i);
+            g_helpText->getRow(i);
 
-        gNewGameHelp[j].text = row[0];
-        gNewGameHelp[j].rclick = row[1];
+        g_newGameHelp[j].m_text = row[0];
+        g_newGameHelp[j].m_rclick = row[1];
     }
     i += 2;
     for (j = 0; j < 245; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            HelpText->GetRow(i);
+            g_helpText->getRow(i);
 
-        gSingleSelectionHelp[j].text = row[0];
-        gSingleSelectionHelp[j].rclick = row[1];
+        g_singleSelectionHelp[j].m_text = row[0];
+        g_singleSelectionHelp[j].m_rclick = row[1];
     }
     i += 2;
     for (j = 0; j < 25; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            HelpText->GetRow(i);
+            g_helpText->getRow(i);
 
-        gMultiSelectionHelp[j].text = row[0];
-        gMultiSelectionHelp[j].rclick = row[1];
+        g_multiSelectionHelp[j].m_text = row[0];
+        g_multiSelectionHelp[j].m_rclick = row[1];
     }
     i += 2;
     for (j = 0; j < 27; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            HelpText->GetRow(i);
+            g_helpText->getRow(i);
 
-        gAdventureWindowHelp[j].text = row[0];
-        gAdventureWindowHelp[j].rclick = row[1];
+        g_adventureWindowHelp[j].m_text = row[0];
+        g_adventureWindowHelp[j].m_rclick = row[1];
     }
     i += 2;
     for (j = 0; j < 48; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            HelpText->GetRow(i);
+            g_helpText->getRow(i);
 
-        gSystemOptionsHelp[j].text = row[0];
-        gSystemOptionsHelp[j].rclick = row[1];
+        g_systemOptionsHelp[j].m_text = row[0];
+        g_systemOptionsHelp[j].m_rclick = row[1];
     }
     i += 2;
     for (j = 0; j < 7; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            HelpText->GetRow(i);
+            g_helpText->getRow(i);
 
-        gAdventureOptionsHelp[j].text = row[0];
-        gAdventureOptionsHelp[j].rclick = row[1];
+        g_adventureOptionsHelp[j].m_text = row[0];
+        g_adventureOptionsHelp[j].m_rclick = row[1];
     }
     i += 2;
     for (j = 0; j < 11; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            HelpText->GetRow(i);
+            g_helpText->getRow(i);
 
-        gCombatWindowHelp[j].text = row[0];
-        gCombatWindowHelp[j].rclick = row[1];
+        g_combatWindowHelp[j].m_text = row[0];
+        g_combatWindowHelp[j].m_rclick = row[1];
     }
     i += 2;
     for (j = 0; j < 39; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            HelpText->GetRow(i);
+            g_helpText->getRow(i);
 
-        gCombatOptionsHelp[j].text = row[0];
-        gCombatOptionsHelp[j].rclick = row[1];
+        g_combatOptionsHelp[j].m_text = row[0];
+        g_combatOptionsHelp[j].m_rclick = row[1];
     }
     i += 2;
     for (j = 0; j < 15; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            HelpText->GetRow(i);
+            g_helpText->getRow(i);
 
-        gViewArmyHelp[j].text = row[0];
-        gViewArmyHelp[j].rclick = row[1];
+        g_viewArmyHelp[j].m_text = row[0];
+        g_viewArmyHelp[j].m_rclick = row[1];
     }
     i += 2;
     for (j = 0; j < 11; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            HelpText->GetRow(i);
+            g_helpText->getRow(i);
 
-        gSpellbookHelp[j].text = row[0];
-        gSpellbookHelp[j].rclick = row[1];
+        g_spellbookHelp[j].m_text = row[0];
+        g_spellbookHelp[j].m_rclick = row[1];
     }
     i += 2;
     for (j = 0; j < 62; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            HelpText->GetRow(i);
+            g_helpText->getRow(i);
 
-        gCampaignBriefHelp[j].text = row[0];
-        gCampaignBriefHelp[j].rclick = row[1];
+        g_campaignBriefHelp[j].m_text = row[0];
+        g_campaignBriefHelp[j].m_rclick = row[1];
     }
     i += 2;
     for (j = 0; j < 24; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            HelpText->GetRow(i);
+            g_helpText->getRow(i);
 
-        gCampaignWindowHelp[j].text = row[0];
-        gCampaignWindowHelp[j].rclick = row[1];
+        g_campaignWindowHelp[j].m_text = row[0];
+        g_campaignWindowHelp[j].m_rclick = row[1];
     }
     i += 2;
     for (j = 0; j < 3; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            HelpText->GetRow(i);
+            g_helpText->getRow(i);
 
-        gRecruitHelp[j].text = row[0];
-        gRecruitHelp[j].rclick = row[1];
+        g_recruitHelp[j].m_text = row[0];
+        g_recruitHelp[j].m_rclick = row[1];
     }
     i += 2;
     for (j = 0; j < 8; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            HelpText->GetRow(i);
+            g_helpText->getRow(i);
 
-        gMPHelp[j].text = row[0];
-        gMPHelp[j].rclick = row[1];
+        g_mpHelp[j].m_text = row[0];
+        g_mpHelp[j].m_rclick = row[1];
     }
     i += 2;
     for (j = 0; j < 20; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            HelpText->GetRow(i);
+            g_helpText->getRow(i);
 
-        gSacrificeWindowHelp2[j].text = row[0];
-        gSacrificeWindowHelp2[j].rclick = row[1];
+        g_sacrificeWindowHelp2[j].m_text = row[0];
+        g_sacrificeWindowHelp2[j].m_rclick = row[1];
     }
     i += 2;
     for (j = 0; j < 3; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            HelpText->GetRow(i);
+            g_helpText->getRow(i);
 
-        gTransformerWindowHelp[j].text = row[0];
-        gTransformerWindowHelp[j].rclick = row[1];
+        g_transformerWindowHelp[j].m_text = row[0];
+        g_transformerWindowHelp[j].m_rclick = row[1];
     }
     i += 2;
     for (j = 0; j < 6; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            HelpText->GetRow(i);
+            g_helpText->getRow(i);
 
-        gResourceWindowHelp[j].text = row[0];
-        gResourceWindowHelp[j].rclick = row[1];
+        g_resourceWindowHelp[j].m_text = row[0];
+        g_resourceWindowHelp[j].m_rclick = row[1];
     }
     i += 2;
     for (j = 0; j < 5; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            HelpText->GetRow(i);
+            g_helpText->getRow(i);
 
-        gGiveResourceWindowHelp[j].text = row[0];
-        gGiveResourceWindowHelp[j].rclick = row[1];
+        g_giveResourceWindowHelp[j].m_text = row[0];
+        g_giveResourceWindowHelp[j].m_rclick = row[1];
     }
     i += 2;
     for (j = 0; j < 5; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            HelpText->GetRow(i);
+            g_helpText->getRow(i);
 
-        gBuyArtifactWindowHelp[j].text = row[0];
-        gBuyArtifactWindowHelp[j].rclick = row[1];
+        g_buyArtifactWindowHelp[j].m_text = row[0];
+        g_buyArtifactWindowHelp[j].m_rclick = row[1];
     }
     i += 2;
     for (j = 0; j < 5; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            HelpText->GetRow(i);
+            g_helpText->getRow(i);
 
-        gSellArtifactWindowHelp[j].text = row[0];
-        gSellArtifactWindowHelp[j].rclick = row[1];
+        g_sellArtifactWindowHelp[j].m_text = row[0];
+        g_sellArtifactWindowHelp[j].m_rclick = row[1];
     }
     i += 2;
     for (j = 0; j < 5; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            HelpText->GetRow(i);
+            g_helpText->getRow(i);
 
-        gSellCreatureWindowHelp[j].text = row[0];
-        gSellCreatureWindowHelp[j].rclick = row[1];
+        g_sellCreatureWindowHelp[j].m_text = row[0];
+        g_sellCreatureWindowHelp[j].m_rclick = row[1];
     }
     i += 2;
     for (j = 0; j < 4; j++, i++) {
         const TSpreadsheetResource::TStringVector& row =
-            HelpText->GetRow(i);
+            g_helpText->getRow(i);
 
-        gUniversityWindowHelp2[j].text = row[0];
-        gUniversityWindowHelp2[j].rclick = row[1];
+        g_universityWindowHelp2[j].m_text = row[0];
+        g_universityWindowHelp2[j].m_rclick = row[1];
     }
     return 1;
 }
@@ -1009,58 +1088,58 @@ unsigned char InitializeHelpText()
 
 // E:\gamedcs\text.cpp:1010
 VA(0x005b9cc0, 0x2BC)  // Arraytxt.txt literal + 24 tables, dc 0x162308
-unsigned char InitializeArrayText()
+unsigned char initializeArrayText()
 {
     int i;
     int j;
 
-    ArrayText = ResourceManager::GetText(
+    g_arrayText = ResourceManager::getText(
         DATA_COMPGEN(0x00688790, arrayTextName, "Arraytxt.txt"));
-    if (!ArrayText)
+    if (!g_arrayText)
         return 0;
 
     i = 2;
     for (j = 0; j < 4; j++, i++)
-        gStatDesc[j] = ArrayText->GetText(i);
+        g_statDesc[j] = g_arrayText->getText(i);
     i++;
     for (j = 0; j < 7; j++, i++)
-        gLuckText[j] = ArrayText->GetText(i);
+        g_luckText[j] = g_arrayText->getText(i);
     i++;
     for (j = 0; j < 7; j++, i++)
-        gMoraleText[j] = ArrayText->GetText(i);
+        g_moraleText[j] = g_arrayText->getText(i);
     i++;
     for (j = 0; j < 8; j++, i++)
-        gOwnedByColor[j] = ArrayText->GetText(i);
+        g_ownedByColor[j] = g_arrayText->getText(i);
     i++;
     for (j = 0; j < 10; j++, i++)
-        gMonthNames[j] = ArrayText->GetText(i);
+        g_monthNames[j] = g_arrayText->getText(i);
     i++;
     for (j = 0; j < 15; j++, i++)
-        gWeekNames[j] = ArrayText->GetText(i);
+        g_weekNames[j] = g_arrayText->getText(i);
     i++;
     for (j = 0; j < 25; j++, i++)
-        cLuckInfo[j] = ArrayText->GetText(i);
+        g_luckInfo[j] = g_arrayText->getText(i);
     i++;
     for (j = 0; j < 42; j++, i++)
-        cMoraleInfo[j] = ArrayText->GetText(i);
+        g_moraleInfo[j] = g_arrayText->getText(i);
     i++;
     for (j = 0; j < 8; j++, i++)
-        cNewTurn[j] = ArrayText->GetText(i);
+        g_newTurn[j] = g_arrayText->getText(i);
     i++;
     for (j = 0; j < 4; j++, i++)
-        cMapSize[j] = ArrayText->GetText(i);
+        g_mapSize[j] = g_arrayText->getText(i);
     i++;
     for (j = 0; j < 5; j++, i++)
-        cDifficulty[j] = ArrayText->GetText(i);
+        g_difficulty[j] = g_arrayText->getText(i);
     i++;
     for (j = 0; j < 9; j++, i++)
-        cDirections[j] = ArrayText->GetText(i);
+        g_directions[j] = g_arrayText->getText(i);
     i++;
     for (j = 0; j < 10; j++, i++)
-        cRumourTerrainDescriptions[j] = ArrayText->GetText(i);
+        g_rumourTerrainDescriptions[j] = g_arrayText->getText(i);
     i++;
     for (j = 0; j < 4; j++, i++)
-        cPersonality[j] = ArrayText->GetText(i);
+        g_personality[j] = g_arrayText->getText(i);
     i++;
     // The ONE nested run, and the one whose increment clause runs the other
     // way round.  Retail's inner body increments the running index BEFORE
@@ -1075,35 +1154,35 @@ unsigned char InitializeArrayText()
         int k;
 
         for (k = 0; k < 3; i++, k++)
-            gArmySizeNames[j][k] = ArrayText->GetText(i);
+            g_armySizeNames[j][k] = g_arrayText->getText(i);
     }
     i++;
     for (j = 0; j < 3; j++, i++)
-        const_wise_tree_price_text[j] = ArrayText->GetText(i);
+        g_constWiseTreePriceText[j] = g_arrayText->getText(i);
     i++;
     for (j = 0; j < 3; j++, i++)
-        HumanCPU[j] = ArrayText->GetText(i);
+        g_humanCpu[j] = g_arrayText->getText(i);
     i++;
     for (j = 0; j < 3; j++, i++)
-        HandiText[j] = ArrayText->GetText(i);
+        g_handiText[j] = g_arrayText->getText(i);
     i++;
     for (j = 0; j < 3; j++, i++)
-        AGRText[j] = ArrayText->GetText(i);
+        g_agrText[j] = g_arrayText->getText(i);
     i++;
     for (j = 0; j < 10; j++, i++)
-        gTownTypeNames[j] = ArrayText->GetText(i);
+        g_townTypeNames[j] = g_arrayText->getText(i);
     i++;
     for (j = 0; j < 3; j++, i++)
-        NewLoadSaveText[j] = ArrayText->GetText(i);
+        g_newLoadSaveText[j] = g_arrayText->getText(i);
     i++;
     for (j = 0; j < 21; j++, i++)
-        gSpeedNames[j] = ArrayText->GetText(i);
+        g_speedNames[j] = g_arrayText->getText(i);
     i++;
     for (j = 0; j < 4; j++, i++)
-        gTownSizeNames[j] = ArrayText->GetText(i);
+        g_townSizeNames[j] = g_arrayText->getText(i);
     i++;
     for (j = 0; j < 9; j++, i++)
-        gMoatDamageMessages[j] = ArrayText->GetText(i);
+        g_moatDamageMessages[j] = g_arrayText->getText(i);
     return 1;
 }
 
@@ -1118,7 +1197,7 @@ int TSpreadsheetResource::GetNumberOfColumns(int r)
 
 // E:\gamedcs\TextResource.h:120
 DC_ONLY(0x162934, 0x28)
-const char* TSpreadsheetResource::GetSpreadsheet(int r, int c)
+const char* TSpreadsheetResource::getSpreadsheet(int r, int c)
 {
     // @stub
 }

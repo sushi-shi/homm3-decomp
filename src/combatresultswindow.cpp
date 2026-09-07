@@ -24,7 +24,8 @@
 
 // Source-private in the Dreamcast compiland. Retail's destructor is the only
 // body in this admitted subset that touches the active-window slot.
-DATA(0x00694fbc) static TCombatResultsWindow* gpCombatResultsWindow;
+// Before normalization: gpCombatResultsWindow.
+DATA(0x00694fbc) static TCombatResultsWindow* g_combatResultsWindow;
 
 // Dreamcast line 307 calls the source-private `int min(int, int)` from
 // includes.h:114; its own body calls this const-reference `_cpp_min` from
@@ -33,9 +34,11 @@ DATA(0x00694fbc) static TCombatResultsWindow* gpCombatResultsWindow;
 // temps, then selects between their addresses with two LEAs. Keep the wrapper
 // instead of collapsing the proven call into the template.
 template <class _TYPE>
-inline const _TYPE& _cpp_min(const _TYPE& _X, const _TYPE& _Y)
+// Before normalization (function): _cpp_min.
+// Before normalization (locals): _X, _Y.
+inline const _TYPE& cppMin(const _TYPE& x, const _TYPE& y)
 {
-    return (_Y < _X ? _Y : _X);
+    return (y < x ? y : x);
 }
 
 #ifdef min
@@ -43,7 +46,7 @@ inline const _TYPE& _cpp_min(const _TYPE& _X, const _TYPE& _Y)
 #endif
 inline int min(int a, int b)
 {
-    return _cpp_min(a, b);
+    return cppMin(a, b);
 }
 
 // genrltxt.txt rows this dialog narrates itself with. They are consumed
@@ -171,46 +174,48 @@ inline int min(int a, int b)
 // permutation described above, not the inliner.
 VA(0x004702d0, 0x176D)  // CPResult.pcx + vtable/global stores, dc 0x68364
 TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
-    const hero* defender, int my_side, int winning_side,
-    unsigned char is_siege, int experience)
+    // Before normalization (locals): my_side, winning_side, is_siege, iDeadArmyTypes,
+    // iDeadArmyNumTroops, my_hero, iTtlDeadArmies, cText, cTemp, iMaxToShow.
+    const hero* defender, int mySide, int winningSide,
+    unsigned char isSiege, int experience)
     : heroWindow(165, 19, 470, 561, 0x10)
 {
-    gpCombatResultsWindow = this;
+    g_combatResultsWindow = this;
 
     long amount;
     TCreatureType type;
-    int iDeadArmyTypes[2][20];
-    int iDeadArmyNumTroops[2][20];
+    int deadArmyTypes[2][20];
+    int deadArmyNumTroops[2][20];
 
     // The hero whose result the window narrates.
-    const hero* const my_hero = my_side == 0 ? attacker : defender;
+    const hero* const myHero = mySide == 0 ? attacker : defender;
 
-    int iTtlDeadArmies[2];
-    char cText[100];
+    int ttlDeadArmies[2];
+    char text[100];
     int firstX;
 
-    Widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new bitmapBorder(
         0, 0, 470, 561, BACKGROUND_ID, "CPResult.pcx", 0x800));
-    static_cast<bitmapBorder*>(Widgets.back())->SetPlayerPaletteColors(
-        gpGame->GetLocalPlayerGamePos());
+    static_cast<bitmapBorder*>(m_widgets.back())->setPlayerPaletteColors(
+        g_game->getLocalPlayerGamePos());
 
-    Widgets.push_back(new textWidget(
-        0, 290, 466, 100, (*gpGeneralText)[408], "BigFont.fnt",
+    m_widgets.push_back(new textWidget(
+        0, 290, 466, 100, (*g_generalText)[408], "BigFont.fnt",
         font::HEADING_HIGHLIGHT, BACKGROUND_ID, 1, 0, 8));
-    Widgets.push_back(new textWidget(
-        0, 320, 466, 100, (*gpGeneralText)[409], "BigFont.fnt",
+    m_widgets.push_back(new textWidget(
+        0, 320, 466, 100, (*g_generalText)[409], "BigFont.fnt",
         font::WHITE, BACKGROUND_ID, 1, 0, 8));
-    Widgets.push_back(new textWidget(
-        0, 412, 466, 100, (*gpGeneralText)[410], "BigFont.fnt",
+    m_widgets.push_back(new textWidget(
+        0, 412, 466, 100, (*g_generalText)[410], "BigFont.fnt",
         font::WHITE, BACKGROUND_ID, 1, 0, 8));
 
     if (attacker) {
-        Widgets.push_back(new textWidget(
-            89, 37, 115, 20, attacker->name, "smalfont.fnt", font::WHITE,
+        m_widgets.push_back(new textWidget(
+            89, 37, 115, 20, attacker->m_name, "smalfont.fnt", font::WHITE,
             ATTACKER_NAME, 0, 0, 8));
-        Widgets.push_back(new bitmapBorder(
+        m_widgets.push_back(new bitmapBorder(
             21, 38, 58, 64, ATTACKER_PORTRAIT,
-            akHeroTraits[attacker->portrait].largePortraitName, 0x800));
+            g_heroTraits[attacker->m_portrait].m_largePortraitName, 0x800));
     } else {
         // No hero on this side: name the side's strongest surviving stack
         // instead, ranked by the embedded traits row's AI value, and say it
@@ -220,175 +225,175 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
         type = TCreatureType(0);
         int numMons = 0;
         for (int slot = 0; slot < 20; slot++) {
-            army& stack = gpCombatManager->armies[0][slot];
-            if (stack.creatureType != -1 &&
-                    stack.creatureType != CREATURE_ARROW_TOWER) {
+            army& stack = g_combatManager->m_armies[0][slot];
+            if (stack.m_creatureType != -1 &&
+                    stack.m_creatureType != CREATURE_ARROW_TOWER) {
                 numMons++;
-                int value = stack.sMonInfo.AI_value;
+                int value = stack.m_monInfo.m_aiValue;
                 if (value > amount) {
                     amount = value;
                     type = TCreatureType(slot);
                 }
             }
         }
-        Widgets.push_back(new textWidget(
+        m_widgets.push_back(new textWidget(
             89, 37, 115, 20,
             numMons > 1
-                ? gpCombatManager->armies[0][type].sMonInfo.m_plural_name
-                : gpCombatManager->armies[0][type].sMonInfo.m_name,
+                ? g_combatManager->m_armies[0][type].m_monInfo.m_pluralName
+                : g_combatManager->m_armies[0][type].m_monInfo.m_name,
             "smalfont.fnt", font::WHITE, ATTACKER_NAME, 0, 0, 8));
-        Widgets.push_back(new iconWidget(
+        m_widgets.push_back(new iconWidget(
             21, 38, 58, 64, ATTACKER_PORTRAIT, "TwCrPort.def",
             0, 0, 0, 0, 0x10));
-        static_cast<iconWidget*>(Widgets.back())->SetIconFrame(
-            gpCombatManager->armies[0][type].creatureType + 2);
+        static_cast<iconWidget*>(m_widgets.back())->setIconFrame(
+            g_combatManager->m_armies[0][type].m_creatureType + 2);
     }
 
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         83, 112, 65, 20, 0, "smalfont.fnt", font::WHITE,
         ATTACKER_STATUS, 2, 0, 8));
 
     if (defender) {
-        Widgets.push_back(new textWidget(
-            266, 37, 115, 20, defender->name, "smalfont.fnt", font::WHITE,
+        m_widgets.push_back(new textWidget(
+            266, 37, 115, 20, defender->m_name, "smalfont.fnt", font::WHITE,
             DEFENDER_NAME, 2, 0, 8));
-        Widgets.push_back(new bitmapBorder(
+        m_widgets.push_back(new bitmapBorder(
             392, 38, 58, 64, DEFENDER_PORTRAIT,
-            akHeroTraits[defender->portrait].largePortraitName, 0x800));
+            g_heroTraits[defender->m_portrait].m_largePortraitName, 0x800));
     } else {
         amount = 0;
         type = TCreatureType(0);
         int numMons = 0;
         for (int slot = 0; slot < 20; slot++) {
-            army& stack = gpCombatManager->armies[1][slot];
-            if (stack.creatureType != -1 &&
-                    stack.creatureType != CREATURE_ARROW_TOWER) {
+            army& stack = g_combatManager->m_armies[1][slot];
+            if (stack.m_creatureType != -1 &&
+                    stack.m_creatureType != CREATURE_ARROW_TOWER) {
                 numMons++;
-                int value = stack.sMonInfo.AI_value;
+                int value = stack.m_monInfo.m_aiValue;
                 if (value > amount) {
                     amount = value;
                     type = TCreatureType(slot);
                 }
             }
         }
-        Widgets.push_back(new textWidget(
+        m_widgets.push_back(new textWidget(
             266, 37, 115, 20,
             numMons > 1
-                ? gpCombatManager->armies[1][type].sMonInfo.m_plural_name
-                : gpCombatManager->armies[1][type].sMonInfo.m_name,
+                ? g_combatManager->m_armies[1][type].m_monInfo.m_pluralName
+                : g_combatManager->m_armies[1][type].m_monInfo.m_name,
             "smalfont.fnt", font::WHITE, DEFENDER_NAME, 2, 0, 8));
-        Widgets.push_back(new iconWidget(
+        m_widgets.push_back(new iconWidget(
             392, 38, 58, 64, DEFENDER_PORTRAIT, "TwCrPort.def",
             0, 0, 1, 0, 0x10));
-        static_cast<iconWidget*>(Widgets.back())->SetIconFrame(
-            gpCombatManager->armies[1][type].creatureType + 2);
+        static_cast<iconWidget*>(m_widgets.back())->setIconFrame(
+            g_combatManager->m_armies[1][type].m_creatureType + 2);
     }
 
     // Retail's defender status text repeats the defender NAME rectangle
     // rather than mirroring the attacker's (83, 112, 65, 20) - a retail
     // quirk, transcribed as the bytes have it.
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         266, 38, 115, 20, 0, "smalfont.fnt", font::WHITE,
         DEFENDER_STATUS, 0, 0, 8));
 
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         17, 116, 84, 20,
-        winning_side == 0 ? (*gpGeneralText)[411]
-                          : (*gpGeneralText)[412],
+        winningSide == 0 ? (*g_generalText)[411]
+                          : (*g_generalText)[412],
         "smalfont.fnt", font::PRIMARY, BACKGROUND_ID, 1, 0, 8));
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         367, 116, 84, 20,
-        winning_side == 1 ? (*gpGeneralText)[411]
-                          : (*gpGeneralText)[412],
+        winningSide == 1 ? (*g_generalText)[411]
+                          : (*g_generalText)[412],
         "smalfont.fnt", font::PRIMARY, BACKGROUND_ID, 1, 0, 8));
 
     int videoId;
-    if (my_side == winning_side) {
-        if (gCombatFlag697744)
-            strcpy(gText, (*gpGeneralText)[303]);
-        else if (gCombatFlag6985a3)
-            strcpy(gText, (*gpGeneralText)[304]);
+    if (mySide == winningSide) {
+        if (g_combatFlag697744)
+            strcpy(g_text, (*g_generalText)[303]);
+        else if (g_combatFlag6985a3)
+            strcpy(g_text, (*g_generalText)[304]);
         else
-            strcpy(gText, (*gpGeneralText)[305]);
-        if (my_hero) {
-            char cTemp[150];
-            sprintf(cTemp, (*gpGeneralText)[306],
-                my_hero->name, experience);
-            strcat(gText, cTemp);
+            strcpy(g_text, (*g_generalText)[305]);
+        if (myHero) {
+            char temp[150];
+            sprintf(temp, (*g_generalText)[306],
+                myHero->m_name, experience);
+            strcat(g_text, temp);
         }
-        if (is_siege && my_hero == defender) {
+        if (isSiege && myHero == defender) {
             videoId = 4;
-            gCombatResultFlag695014 = 2;
+            g_combatResultFlag695014 = 2;
         } else {
             videoId = 0;
-            gCombatResultFlag695014 = 0;
+            g_combatResultFlag695014 = 0;
         }
-    } else if (my_hero) {
-        if (gCombatFlag697744)
-            sprintf(gText, (*gpGeneralText)[307], my_hero->name);
-        else if (gCombatFlag6985a3)
-            sprintf(gText, (*gpGeneralText)[308], my_hero->name);
+    } else if (myHero) {
+        if (g_combatFlag697744)
+            sprintf(g_text, (*g_generalText)[307], myHero->m_name);
+        else if (g_combatFlag6985a3)
+            sprintf(g_text, (*g_generalText)[308], myHero->m_name);
         else
-            sprintf(gText, (*gpGeneralText)[309], my_hero->name);
-        if (is_siege && my_hero == defender) {
+            sprintf(g_text, (*g_generalText)[309], myHero->m_name);
+        if (isSiege && myHero == defender) {
             videoId = 1;
-            gCombatResultFlag695014 = 5;
-        } else if (gCombatFlag697744) {
+            g_combatResultFlag695014 = 5;
+        } else if (g_combatFlag697744) {
             videoId = 3;
-            gCombatResultFlag695014 = 4;
-        } else if (gCombatFlag6985a3) {
+            g_combatResultFlag695014 = 4;
+        } else if (g_combatFlag6985a3) {
             videoId = 2;
-            gCombatResultFlag695014 = 3;
+            g_combatResultFlag695014 = 3;
         } else {
             videoId = 5;
-            gCombatResultFlag695014 = 1;
+            g_combatResultFlag695014 = 1;
         }
     } else {
-        if (gCombatFlag697744)
-            strcpy(gText, (*gpGeneralText)[310]);
-        else if (gCombatFlag6985a3)
-            strcpy(gText, (*gpGeneralText)[311]);
+        if (g_combatFlag697744)
+            strcpy(g_text, (*g_generalText)[310]);
+        else if (g_combatFlag6985a3)
+            strcpy(g_text, (*g_generalText)[311]);
         else
-            strcpy(gText, (*gpGeneralText)[312]);
-        if (is_siege) {
+            strcpy(g_text, (*g_generalText)[312]);
+        if (isSiege) {
             videoId = 1;
-            gCombatResultFlag695014 = 5;
-        } else if (gCombatFlag697744) {
+            g_combatResultFlag695014 = 5;
+        } else if (g_combatFlag697744) {
             videoId = 3;
-            gCombatResultFlag695014 = 4;
-        } else if (gCombatFlag6985a3) {
+            g_combatResultFlag695014 = 4;
+        } else if (g_combatFlag6985a3) {
             videoId = 2;
-            gCombatResultFlag695014 = 3;
+            g_combatResultFlag695014 = 3;
         } else {
             videoId = 5;
-            gCombatResultFlag695014 = 1;
+            g_combatResultFlag695014 = 1;
         }
     }
 
-    Widgets.push_back(new textWidget(
-        68, 202, 332, 70, gText, "smalfont.fnt", font::WHITE,
+    m_widgets.push_back(new textWidget(
+        68, 202, 332, 70, g_text, "smalfont.fnt", font::WHITE,
         RESULTS, 5, 0, 8));
 
     // Losses, aggregated per side into (creature, count) rows: the display
     // is data-driven, so every icon and every count text it emits carries
     // BACKGROUND_ID rather than one of the Dreamcast-only LOSS ids.
     for (int side = 0; side < 2; side++) {
-        iTtlDeadArmies[side] = 0;
+        ttlDeadArmies[side] = 0;
         for (int slot = 0; slot < 20; slot++) {
-            int creature = gpCombatManager->armies[side][slot].creatureType;
-            int lost = gpCombatManager->armies[side][slot].origNumTroops
-                - gpCombatManager->armies[side][slot].numTroops;
+            int creature = g_combatManager->m_armies[side][slot].m_creatureType;
+            int lost = g_combatManager->m_armies[side][slot].m_origNumTroops
+                - g_combatManager->m_armies[side][slot].m_numTroops;
             if (creature != -1 && lost > 0) {
                 int row;
-                for (row = 0; row < iTtlDeadArmies[side]; row++)
-                    if (iDeadArmyTypes[side][row] == creature)
+                for (row = 0; row < ttlDeadArmies[side]; row++)
+                    if (deadArmyTypes[side][row] == creature)
                         break;
-                if (row < iTtlDeadArmies[side]) {
-                    iDeadArmyNumTroops[side][row] += lost;
+                if (row < ttlDeadArmies[side]) {
+                    deadArmyNumTroops[side][row] += lost;
                 } else {
-                    iDeadArmyTypes[side][row] = creature;
-                    iDeadArmyNumTroops[side][row] = lost;
-                    iTtlDeadArmies[side]++;
+                    deadArmyTypes[side][row] = creature;
+                    deadArmyNumTroops[side][row] = lost;
+                    ttlDeadArmies[side]++;
                 }
             }
         }
@@ -396,43 +401,43 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
 
     for (int lossSide = 0; lossSide < 2; lossSide++) {
         int rowY = lossSide ? 440 : 343;
-        if (iTtlDeadArmies[lossSide] <= 0)
-            Widgets.push_back(new textWidget(
-                42, rowY + 10, 384, 36, (*gpGeneralText)[32],
+        if (ttlDeadArmies[lossSide] <= 0)
+            m_widgets.push_back(new textWidget(
+                42, rowY + 10, 384, 36, (*g_generalText)[32],
                 "smalfont.fnt", font::PRIMARY, BACKGROUND_ID, 1, 0, 8));
-        int iMaxToShow = min(iTtlDeadArmies[lossSide], 7);
-        firstX = (468 - 42 * iMaxToShow) / 2 + 11;
-        for (int row = 0; row < iMaxToShow; row++) {
+        int maxToShow = min(ttlDeadArmies[lossSide], 7);
+        firstX = (468 - 42 * maxToShow) / 2 + 11;
+        for (int row = 0; row < maxToShow; row++) {
             int x = firstX + 42 * row;
-            Widgets.push_back(new iconWidget(
+            m_widgets.push_back(new iconWidget(
                 x, rowY, 32, 32, BACKGROUND_ID, "cprsmall.def",
-                iDeadArmyTypes[lossSide][row] + 2, 0, 0, 0, 0x10));
-            sprintf(cText, "%d", iDeadArmyNumTroops[lossSide][row]);
-            Widgets.push_back(new textWidget(
-                x - 5, rowY + 38, 32, 32, cText, "smalfont.fnt",
+                deadArmyTypes[lossSide][row] + 2, 0, 0, 0, 0x10));
+            sprintf(text, "%d", deadArmyNumTroops[lossSide][row]);
+            m_widgets.push_back(new textWidget(
+                x - 5, rowY + 38, 32, 32, text, "smalfont.fnt",
                 font::PRIMARY, BACKGROUND_ID, 1, 0, 8));
         }
     }
 
-    Widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new bitmapBorder(
         384, 506, 66, 32, BACKGROUND_ID, "Box64x30.pcx", 0x800));
 
     button* accept = 0;
     accept = new button(
         385, 507, 64, 30, DIALOG_RETURN_SPLIT_ACCEPT, "iOkay.def",
         0, 1, 0, 0, 2);
-    accept->set_hotkey(28);
-    accept->set_hotkey(1);
-    Widgets.push_back(accept);
+    accept->setHotkey(28);
+    accept->setHotkey(1);
+    m_widgets.push_back(accept);
 
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
-            AddWidget(*it, -1);
+            addWidget(*it, -1);
         else
-            MemError();
+            memError();
     }
 
-    VideoOpen(videoId, 272, 89, 0, 0, 1, 1, 1);
+    videoOpen(videoId, 272, 89, 0, 0, 1, 1, 1);
 }
 
 // Retail places the generated wrapper immediately after the constructor;
@@ -443,8 +448,8 @@ VA_COMPGEN(0x00471a40, 0x21, SCALAR_DELETING_DTOR, TCombatResultsWindow)
 VA(0x00471a70, 0x75)  // vtable/global/widget teardown, dc 0x69198
 TCombatResultsWindow::~TCombatResultsWindow()
 {
-    gpCombatResultsWindow = 0;
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    g_combatResultsWindow = 0;
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
@@ -452,61 +457,62 @@ TCombatResultsWindow::~TCombatResultsWindow()
 
 // E:\gamedcs\combatresultswindow.cpp:361
 VA(0x00471af0, 0x54)  // vtable slot 1 + video redraw tail, dc 0x69200
-int TCombatResultsWindow::Open(int newPriority, unsigned char update)
+int TCombatResultsWindow::open(int newPriority, unsigned char update)
 {
-    int result = heroWindow::Open(newPriority, 0);
-    DrawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-    VideoDrawCurrentFrame();
+    int result = heroWindow::open(newPriority, 0);
+    drawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+    videoDrawCurrentFrame();
     if (update)
-        gpWindowManager->UpdateScreen(
+        g_windowManager->updateScreen(
             0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT);
     return result;
 }
 
 // E:\gamedcs\combatresultswindow.cpp:379
 VA(0x00471b50, 0x1B)  // VideoClose + base Close, dc 0x69244
-void TCombatResultsWindow::Close(unsigned char update)
+void TCombatResultsWindow::close(unsigned char update)
 {
-    VideoClose();
-    heroWindow::Close(update);
+    videoClose();
+    heroWindow::close(update);
 }
 
 // E:\gamedcs\combatresultswindow.cpp:392
 VA(0x00471b70, 0x14)  // handler address-take, dc 0x69268
-void TCombatResultsWindow::DoModal()
+void TCombatResultsWindow::doModal()
 {
-    gpWindowManager->DoDialog(this, CombatResultsWindowHandler, 0);
+    g_windowManager->doDialog(this, combatResultsWindowHandler, 0);
 }
 
 // E:\gamedcs\combatresultswindow.cpp:417
 VA(0x00471b90, 0x84)  // DoModal address-take + full CFG, dc 0x692cc
-int CombatResultsWindowHandler(message& msg)
+int combatResultsWindowHandler(message& msg)
 {
-    unsigned char bExitFlag = 0;
+    // Before normalization (locals): bExitFlag.
+    unsigned char exitFlag = 0;
 
-    PollSound();
+    pollSound();
 
-    if (msg.id != MESSAGE_KEY_DOWN) {
-        if (msg.id == MESSAGE_WIDGET
-            && msg.codeX == widget::WIDGET_DESELECT
-            && msg.codeY == DIALOG_RETURN_SPLIT_ACCEPT)
-            bExitFlag = 1;
+    if (msg.m_id != MESSAGE_KEY_DOWN) {
+        if (msg.m_id == MESSAGE_WIDGET
+            && msg.m_codeX == widget::WIDGET_DESELECT
+            && msg.m_codeY == DIALOG_RETURN_SPLIT_ACCEPT)
+            exitFlag = 1;
     }
 
-    unsigned long deadline = gDialogDeadline697784;
+    unsigned long deadline = g_dialogDeadline697784;
     if (deadline > 0
-        && static_cast<long>(GameTime::Get() - deadline) >= 0) {
-        msg.codeY = DIALOG_RETURN_SPLIT_ACCEPT;
+        && static_cast<long>(GameTime::get() - deadline) >= 0) {
+        msg.m_codeY = DIALOG_RETURN_SPLIT_ACCEPT;
         goto exit_dialog;
     }
 
-    if (bExitFlag) {
+    if (exitFlag) {
 exit_dialog:
-        msg.id = MESSAGE_WIDGET;
-        gpWindowManager->dialogReturn = msg.codeY;
-        msg.codeY = widget::WIDGET_END_DIALOG;
-        msg.codeX = widget::WIDGET_END_DIALOG;
-        gDialogDeadline697784 = 0;
+        msg.m_id = MESSAGE_WIDGET;
+        g_windowManager->m_dialogReturn = msg.m_codeY;
+        msg.m_codeY = widget::WIDGET_END_DIALOG;
+        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        g_dialogDeadline697784 = 0;
         return MESSAGE_DISPATCH_FORWARD;
     }
 

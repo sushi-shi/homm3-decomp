@@ -17,8 +17,9 @@ namespace {
 // 150 * 116 == 0x43f8 bytes ending exactly there. Initialized by this
 // compiland's parser below; the source initializer for its zero state is a
 // separate admission, as it is for artifact.obj's own pair.
+// Before normalization: aCreatureTypeTraits.
 DATA(0x006703b8)
-TCreatureTypeTraits aCreatureTypeTraits[150];
+TCreatureTypeTraits g_creatureTypeTraitsStorage[150];
 
 }
 
@@ -26,7 +27,8 @@ TCreatureTypeTraits aCreatureTypeTraits[150];
 // parser is EXTERN (retail emits it out of line at 0x47b480 with a single
 // call site, and /Ob2 folds a single-call-site STATIC away regardless of
 // size), so the table function below reaches it by plain declaration.
-void InitializeCreatureTypeTraits(int id,
+// Before normalization (function): InitializeCreatureTypeTraits.
+void initializeCreatureTypeTraits(int id,
                                   const TSpreadsheetResource::TStringVector& values);
 
 #if 0  // @carcass
@@ -55,17 +57,17 @@ TCreatureType GetBaseCreature(TTownType townType, int baseCreatureNbr)
 // wrapper it is inlined into returns unsigned char, which is what truncates
 // the value at the call site.
 VA(0x0047b120, 0x5D)  // linkorder + anchor-callee (hill fort), dc 0x718fc
-int IsBaseCreature(TCreatureType monType)
+int isBaseCreature(TCreatureType monType)
 {
-    const TCreatureTypeTraits& traits = akCreatureTypeTraits[monType];
-    int townType = traits.townType;
+    const TCreatureTypeTraits& traits = g_creatureTypeTraits[monType];
+    int townType = traits.m_townType;
     if (townType == -1)
         return 0;
 
-    int creatureIndex = traits.level;
-    if (monType != gTownDwellingCreatures[townType * 14 + creatureIndex]) {
+    int creatureIndex = traits.m_level;
+    if (monType != g_townDwellingCreatures[townType * 14 + creatureIndex]) {
         creatureIndex += 7;
-        if (monType != gTownDwellingCreatures[townType * 14 + creatureIndex])
+        if (monType != g_townDwellingCreatures[townType * 14 + creatureIndex])
             return 0;
     }
     if (creatureIndex < 0 || creatureIndex >= 7)
@@ -75,7 +77,7 @@ int IsBaseCreature(TCreatureType monType)
 
 // E:\gamedcs\creaturetype.cpp:228
 VA(0x0047b180, 0x16)  // linkorder + exact war-machine range, dc 0x71934
-unsigned char IsSiegeWeapon(TCreatureType creature)
+unsigned char isSiegeWeapon(TCreatureType creature)
 {
     if (creature >= CREATURE_CATAPULT && creature <= CREATURE_AMMO_CART)
         return 1;
@@ -84,23 +86,23 @@ unsigned char IsSiegeWeapon(TCreatureType creature)
 
 // E:\gamedcs\creaturetype.cpp:246
 VA(0x0047b1a0, 0x71)  // wrapper-callee + trait/dwelling tables, dc 0x71948
-TCreatureType UpgradedCreatureType(TCreatureType type)
+TCreatureType upgradedCreatureType(TCreatureType type)
 {
-    const TCreatureTypeTraits& traits = akCreatureTypeTraits[type];
-    int townType = traits.townType;
+    const TCreatureTypeTraits& traits = g_creatureTypeTraits[type];
+    int townType = traits.m_townType;
     if (townType == -1)
         return CREATURE_NONE;
 
-    int creatureIndex = traits.level;
-    if (type != gTownDwellingCreatures[townType * 14 + creatureIndex]) {
+    int creatureIndex = traits.m_level;
+    if (type != g_townDwellingCreatures[townType * 14 + creatureIndex]) {
         creatureIndex += 7;
-        if (type != gTownDwellingCreatures[townType * 14 + creatureIndex])
+        if (type != g_townDwellingCreatures[townType * 14 + creatureIndex])
             return CREATURE_NONE;
     }
     if (creatureIndex < 0 || creatureIndex >= 7)
         return CREATURE_NONE;
-    return gTownDwellingCreatures[
-        akCreatureTypeTraits[type].townType * 14 + creatureIndex + 7];
+    return g_townDwellingCreatures[
+        g_creatureTypeTraits[type].m_townType * 14 + creatureIndex + 7];
 }
 
 // E:\gamedcs\creaturetype.cpp:259
@@ -114,67 +116,67 @@ TCreatureType UpgradedCreatureType(TCreatureType type)
 // counter. The row-count guard reads 179 even though the last row the walk
 // touches is 184; that is retail's own sanity check, transcribed as found.
 VA(0x0047b290, 0x1E9)  // dc-order-map + anchor-global crtraits.txt, dc 0x71968
-unsigned char InitializeCreatureTypeTraitsTable()
+unsigned char initializeCreatureTypeTraitsTable()
 {
-    TSpreadsheetResource* traitsSheet = ResourceManager::GetSpreadsheet(
+    TSpreadsheetResource* traitsSheet = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x00675514, creatureTraitsSpreadsheetName,
                      "crtraits.txt"));
     if (!traitsSheet)
         return 0;
-    if (traitsSheet->GetNumberOfRows() < 179) {
-        traitsSheet->Dispose();
+    if (traitsSheet->getNumberOfRows() < 179) {
+        traitsSheet->dispose();
         return 0;
     }
 
     int id = 0;
     int row = 2;
     for (; id < 14; id++, row++)
-        InitializeCreatureTypeTraits(id, traitsSheet->GetRow(row));
+        initializeCreatureTypeTraits(id, traitsSheet->getRow(row));
     row += 3;
     { for (int i = 0; i < 14; i++, id++, row++)
-            InitializeCreatureTypeTraits(id, traitsSheet->GetRow(row));
+            initializeCreatureTypeTraits(id, traitsSheet->getRow(row));
     }
     row += 3;
     { for (int i = 0; i < 14; i++, id++, row++)
-            InitializeCreatureTypeTraits(id, traitsSheet->GetRow(row));
+            initializeCreatureTypeTraits(id, traitsSheet->getRow(row));
     }
     row += 3;
     { for (int i = 0; i < 14; i++, id++, row++)
-            InitializeCreatureTypeTraits(id, traitsSheet->GetRow(row));
+            initializeCreatureTypeTraits(id, traitsSheet->getRow(row));
     }
     row += 3;
     { for (int i = 0; i < 14; i++, id++, row++)
-            InitializeCreatureTypeTraits(id, traitsSheet->GetRow(row));
+            initializeCreatureTypeTraits(id, traitsSheet->getRow(row));
     }
     row += 3;
     { for (int i = 0; i < 14; i++, id++, row++)
-            InitializeCreatureTypeTraits(id, traitsSheet->GetRow(row));
+            initializeCreatureTypeTraits(id, traitsSheet->getRow(row));
     }
     row += 3;
     { for (int i = 0; i < 14; i++, id++, row++)
-            InitializeCreatureTypeTraits(id, traitsSheet->GetRow(row));
+            initializeCreatureTypeTraits(id, traitsSheet->getRow(row));
     }
     row += 3;
     { for (int i = 0; i < 14; i++, id++, row++)
-            InitializeCreatureTypeTraits(id, traitsSheet->GetRow(row));
+            initializeCreatureTypeTraits(id, traitsSheet->getRow(row));
     }
     row += 3;
     { for (int i = 0; i < 6; i++, id++, row++)
-            InitializeCreatureTypeTraits(id, traitsSheet->GetRow(row));
+            initializeCreatureTypeTraits(id, traitsSheet->getRow(row));
     }
     row += 3;
     { for (int i = 0; i < 14; i++, id++, row++)
-            InitializeCreatureTypeTraits(id, traitsSheet->GetRow(row));
+            initializeCreatureTypeTraits(id, traitsSheet->getRow(row));
     }
     row += 3;
     { for (int i = 0; i < 13; i++, id++, row++)
-            InitializeCreatureTypeTraits(id, traitsSheet->GetRow(row));
+            initializeCreatureTypeTraits(id, traitsSheet->getRow(row));
     }
     row += 3;
     { for (int i = 0; i < 5; i++, id++, row++)
-            InitializeCreatureTypeTraits(id, traitsSheet->GetRow(row));
+            initializeCreatureTypeTraits(id, traitsSheet->getRow(row));
     }
-    traitsSheet->Dispose();
+    traitsSheet->dispose();
     return 1;
 }
 
@@ -189,10 +191,10 @@ unsigned char InitializeCreatureTypeTraitsTable()
 // its atoi result with `mov word ptr [esi+0x48], ax` where every
 // neighbouring column takes a dword.
 VA(0x0047b480, 0x322)  // dc-order-map (the row after the table loader), dc 0x71b40
-void InitializeCreatureTypeTraits(int id,
+void initializeCreatureTypeTraits(int id,
                                   const TSpreadsheetResource::TStringVector& values)
 {
-    TCreatureTypeTraits& traits = aCreatureTypeTraits[id];
+    TCreatureTypeTraits& traits = g_creatureTypeTraitsStorage[id];
 
     DATA_COMPGEN_GUARD(0x00696640, creatureTypeStringsGuard,
                        creatureTypeNames)
@@ -208,36 +210,36 @@ void InitializeCreatureTypeTraits(int id,
 
     creatureTypePluralNames[id].set(new char[strlen(values[1]) + 1]);
     strcpy(creatureTypePluralNames[id].get(), values[1]);
-    traits.m_plural_name = creatureTypePluralNames[id].get();
+    traits.m_pluralName = creatureTypePluralNames[id].get();
 
-    traits.cost[0] = atoi(values[2]);
-    traits.cost[1] = atoi(values[3]);
-    traits.cost[2] = atoi(values[4]);
-    traits.cost[3] = atoi(values[5]);
-    traits.cost[4] = atoi(values[6]);
-    traits.cost[5] = atoi(values[7]);
-    traits.cost[6] = atoi(values[8]);
-    traits.baseFightValue = atoi(values[9]);
-    traits.AI_value = atoi(values[10]);
-    traits.growthRate = atoi(values[11]);
-    traits.horde_growth_rate = atoi(values[12]);
-    traits.hitPoints = atoi(values[13]);
-    traits.speed = atoi(values[14]);
-    traits.attackSkill = atoi(values[15]);
-    traits.defenseSkill = atoi(values[16]);
-    traits.damageLowBound = atoi(values[17]);
-    traits.damageHighBound = atoi(values[18]);
-    traits.numShots = atoi(values[19]);
-    traits.hasSpell = atoi(values[20]);
-    traits.wanderingLow = atoi(values[21]);
-    traits.wanderingHigh = atoi(values[22]);
+    traits.m_cost[0] = atoi(values[2]);
+    traits.m_cost[1] = atoi(values[3]);
+    traits.m_cost[2] = atoi(values[4]);
+    traits.m_cost[3] = atoi(values[5]);
+    traits.m_cost[4] = atoi(values[6]);
+    traits.m_cost[5] = atoi(values[7]);
+    traits.m_cost[6] = atoi(values[8]);
+    traits.m_baseFightValue = atoi(values[9]);
+    traits.m_aiValue = atoi(values[10]);
+    traits.m_growthRate = atoi(values[11]);
+    traits.m_hordeGrowthRate = atoi(values[12]);
+    traits.m_hitPoints = atoi(values[13]);
+    traits.m_speed = atoi(values[14]);
+    traits.m_attackSkill = atoi(values[15]);
+    traits.m_defenseSkill = atoi(values[16]);
+    traits.m_damageLowBound = atoi(values[17]);
+    traits.m_damageHighBound = atoi(values[18]);
+    traits.m_numShots = atoi(values[19]);
+    traits.m_hasSpell = atoi(values[20]);
+    traits.m_wanderingLow = atoi(values[21]);
+    traits.m_wanderingHigh = atoi(values[22]);
 
     DATA(0x00696190)
     static TAutoStrPtr creatureTypeAbilities[150];
 
     creatureTypeAbilities[id].set(new char[strlen(values[23]) + 1]);
     strcpy(creatureTypeAbilities[id].get(), values[23]);
-    traits.special_ability = creatureTypeAbilities[id].get();
+    traits.m_specialAbility = creatureTypeAbilities[id].get();
 }
 
 #if 0  // @carcass

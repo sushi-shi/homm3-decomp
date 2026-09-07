@@ -16,28 +16,49 @@ class NewmapCell;
 class TResourceDisplay;
 
 union TPuzzleCoordinatePointer {
-    char* bytes;
-    short* values;
+    // Before normalization: bytes.
+    char* m_bytes;
+    // Before normalization: values.
+    short* m_values;
 };
 
 // Retail preserves the Dreamcast record's four packed allocation units:
 // a 10-bit object type, two signed four-bit object offsets, three terrain
 // descriptors, and the diggable/grail/visible flag trio.
+// Dreamcast's full 16-byte record and retail constructor masks agree:
+// object_type occupies bits 0..9 of the first dword; the two four-bit
+// coordinates share byte 4; terrain/river/road occupy bits 0..12 at +8;
+// diggable/has_grail/visible occupy bits 0..2 at +12. The remaining bits
+// and alignment bytes below have no semantic fields in the reference.
 struct type_AI_puzzle_tile {
-    int object_type : 10;
-    int pad_00 : 22;
-    signed char object_x : 4;
-    signed char object_y : 4;
-    char pad_05[3];
-    int terrain : 5;
-    int river : 4;
-    int road : 4;
-    int pad_08 : 19;
-    unsigned char diggable : 1;
-    unsigned char has_grail : 1;
-    unsigned char visible : 1;
-    unsigned char pad_0c : 5;
-    char pad_0d[3];
+    // Before normalization: object_type.
+    int m_objectType : 10;
+    // Before normalization: pad_00.
+    int m_paddingAfterObjectType : 22;
+    // Before normalization: object_x.
+    signed char m_objectX : 4;
+    // Before normalization: object_y.
+    signed char m_objectY : 4;
+    // Before normalization: pad_05.
+    char m_paddingBeforeTerrain[3];
+    // Before normalization: terrain.
+    int m_terrain : 5;
+    // Before normalization: river.
+    int m_river : 4;
+    // Before normalization: road.
+    int m_road : 4;
+    // Before normalization: pad_08.
+    int m_paddingAfterRoad : 19;
+    // Before normalization: diggable.
+    unsigned char m_diggable : 1;
+    // Before normalization: has_grail.
+    unsigned char m_hasGrail : 1;
+    // Before normalization: visible.
+    unsigned char m_visible : 1;
+    // Before normalization: pad_0c.
+    unsigned char m_paddingAfterVisible : 5;
+    // Before normalization: pad_0d.
+    char m_tailPadding[3];
 
     // Retail keeps NO out-of-line body for the default constructor - the
     // carve leaves three bytes of padding between UpdatePuzzle's end
@@ -51,14 +72,14 @@ struct type_AI_puzzle_tile {
     // (terrain -1, river and road 0), `and al,0xfb` + `or al,1`.
     type_AI_puzzle_tile()
     {
-        object_type = 0;
-        object_x = -1;
-        object_y = -1;
-        terrain = -1;
-        river = 0;
-        road = 0;
-        diggable = 1;
-        visible = 0;
+        m_objectType = 0;
+        m_objectX = -1;
+        m_objectY = -1;
+        m_terrain = -1;
+        m_river = 0;
+        m_road = 0;
+        m_diggable = 1;
+        m_visible = 0;
     }
     type_AI_puzzle_tile(NewmapCell* cell, type_point point);
     unsigned char operator==(const type_AI_puzzle_tile* arg) const;
@@ -83,40 +104,56 @@ public:
         PUZZLE_PIECE_COUNT = 48
     };
 
-    char numPieces;
-    char pad_61[3];
-    TResourceDisplay* puzzleResourceBar;
-    Bitmap816* puzzlePieces[48];
-    int puzWhich;
+    // Before normalization: numPieces.
+    char m_numPieces;
+    // Before normalization: pad_61.
+    // The preceding byte field and following four-byte field establish
+    // this alignment gap; the reference layout retains the same boundary.
+    char m_paddingBeforePuzzleResourceBar[3];
+    // Before normalization: puzzleResourceBar.
+    TResourceDisplay* m_puzzleResourceBar;
+    // Before normalization: puzzlePieces.
+    Bitmap816* m_puzzlePieces[48];
+    // Before normalization: puzWhich.
+    int m_puzWhich;
 
     TPuzzleWindow(int puzzlenum);
     virtual ~TPuzzleWindow();
-    virtual int WindowHandler(message* msg);
-    int UpdatePuzzle(int full);
+    // Before normalization (function): TPuzzleWindow::WindowHandler.
+    virtual int windowHandler(message* msg);
+    // Before normalization (function): TPuzzleWindow::UpdatePuzzle.
+    int updatePuzzle(int full);
 
 private:
     int convertID2HelpID(int id) const;
 };
 SIZE(TPuzzleWindow, 0x12c);
 
-extern std::bitset<48> puzzlePiecesRemoved;
-extern short puzzlePieceOrder[];
-extern char puzzlePieceX[];
-extern char puzzlePieceY[];
-extern const char* puzzleFilePrefixes[];
+// Before normalization: puzzlePiecesRemoved.
+extern std::bitset<48> g_puzzlePiecesRemoved;
+// Before normalization: puzzlePieceOrder.
+extern short g_puzzlePieceOrder[];
+// Before normalization: puzzlePieceX.
+extern char g_puzzlePieceX[];
+// Before normalization: puzzlePieceY.
+extern char g_puzzlePieceY[];
+// Before normalization: puzzleFilePrefixes.
+extern const char* g_puzzleFilePrefixes[];
 // 0x6822c8: five doubles - 1.1, 0.5, 0.25, 0.0, 0.0 - read from the
 // image, indexed by SGameSetupOptions::difficulty and compared against
 // the fraction of the puzzle the AI has uncovered. 1.1 on the easiest
 // setting is unreachable, i.e. that AI never guesses. NAME PROVISIONAL:
 // nothing attests it, the table sits immediately below this TU's string
 // pool and only AI_attempt_puzzle_guess reads it.
-extern double puzzleGuessThreshold[];
+// Before normalization: puzzleGuessThreshold.
+extern double g_puzzleGuessThreshold[];
 // 0x52cf10, 1460 B - bracketed puzzlewindow..questlogwindow and reached
 // only from AI_attempt_puzzle_guess, which hands it the hidden result
 // pointer in ECX and the player in EDX under /Gr. Declared, not defined:
 // VC6 cannot inline a body it cannot see, which is what retail's call
 // needs. dc 0x115be8.
-type_point match_puzzle(long player, type_AI_puzzle_tile (*puzzleMap)[17]);
+// Before normalization (function): match_puzzle.
+type_point matchPuzzle(long player, type_AI_puzzle_tile (*puzzleMap)[17]);
 // --- globals ---
 // CODEVIEW(E:\gamedcs\puzzlewindow.cpp:103, dc 0x114f14) Bitmap816* get_puzzle_bitmap(long puzzle, long piece);
 // CODEVIEW(E:\gamedcs\puzzlewindow.cpp:403, dc 0x115838) unsigned char mark_AI_puzzle(long player, unsigned char* visible);
@@ -127,7 +164,7 @@ type_point match_puzzle(long player, type_AI_puzzle_tile (*puzzleMap)[17]);
 // The explicit Dreamcast return-buffer marker is represented by C++'s normal
 // by-value return. Retail's call from playerData::guess_grail_location has the
 // same hidden-result-pointer-in-ECX / player-in-EDX convention.
-type_point AI_attempt_puzzle_guess(long player);
+type_point aiAttemptPuzzleGuess(long player);
 
 // --- Bitmap816 ---
 // CODEVIEW(E:\gamedcs\puzzlewindow.cpp:334, dc 0x11577c) void Bitmap816::mark_puzzle(unsigned char* visible, long dest_x, long dest_y);

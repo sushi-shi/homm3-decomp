@@ -29,7 +29,7 @@
 // family: the scale and sampling table feed every scaled blit, the two center
 // offsets form each destination origin, and the buffer/sprite pair are owned
 // by ViewWorld's setup/teardown path.
-DATA(0x0068c6bc) int giViewWorldScale;
+// Before normalization: giViewWorldScale.
 // THE VIEW-WORLD CHECKBOX STATE, hoisted here because VWDrawSymbols gates
 // each of its five arms on one of them. advManager::ViewWorld's Dreamcast
 // body keeps view_mines / view_heroes / view_towns as locals (S_REGREL32
@@ -42,32 +42,46 @@ DATA(0x0068c6bc) int giViewWorldScale;
 // 0x6aab78/0x6aab79) and mines < artifacts < towns < heroes ascends the
 // same way in both. That correspondence is what fixes the two addresses
 // this file had no reader for until now.
+DATA(0x0068c6bc) int g_viewWorldScale;
+// Before normalization: view_mines.
 DATA(0x006aab68)
-static unsigned char view_mines;
-DATA(0x006aab78) bool iVWTerrains;
+static unsigned char g_viewMines;
+// Before normalization: iVWTerrains.
+DATA(0x006aab78) bool g_vwTerrains;
+// Before normalization: view_resources.
 DATA(0x006aab79)
-static unsigned char view_resources;
+static unsigned char g_viewResources;
 // The half-extents init derives from the two viewable dimensions and the
 // three view-world readers below consume. Only viewwrld.obj references
 // either address (four dir32 sites each: init writes both, and
 // update_view_world / update_radar / WindowHandler read them), which is
 // what makes them file statics rather than shared globals. The names are
 // role-based house placeholders; neither CodeView corpus spells them.
+// Before normalization: view_half_height.
 DATA(0x006aab7c)
-static int view_half_height;
+static int g_viewHalfHeight;
+// Before normalization: view_half_width.
 DATA(0x006aab80)
-static int view_half_width;
-DATA(0x006aab84) int scaleLine[32];
+static int g_viewHalfWidth;
+// Before normalization: scaleLine.
+DATA(0x006aab84) int g_scaleLine[32];
+// Before normalization: view_artifacts.
 DATA(0x006aac08)
-static unsigned char view_artifacts;
+static unsigned char g_viewArtifacts;
+// Before normalization: view_towns.
 DATA(0x006aac14)
-static unsigned char view_towns;
-DATA(0x006aac18) int iVWCenterOffsetW;
-DATA(0x006aac1c) int iVWCenterOffsetH;
-DATA(0x006aac20) CSprite* csVWIcons;
-DATA(0x006aac28) Bitmap16Bit* memoryBuffer;
+static unsigned char g_viewTowns;
+// Before normalization: iVWCenterOffsetW.
+// Before normalization: iVWCenterOffsetH.
+DATA(0x006aac18) int g_vwCenterOffsetW;
+// Before normalization: csVWIcons.
+DATA(0x006aac1c) int g_vwCenterOffsetH;
+// Before normalization: memoryBuffer.
+DATA(0x006aac20) CSprite* g_csVwIcons;
+DATA(0x006aac28) Bitmap16Bit* g_memoryBuffer;
+// Before normalization: view_heroes.
 DATA(0x006aac30)
-static unsigned char view_heroes;
+static unsigned char g_viewHeroes;
 
 // VC6's own <xutility> reference-returning min/max, in the by-value form
 // this tree has byte-proven three times over (ai_combat.cpp, ai_tactical.cpp,
@@ -77,15 +91,17 @@ static unsigned char view_heroes;
 // stack temps, then the ADDRESS selected between them - is what a by-value
 // parameter returned by const reference emits.
 template <class _TYPE>
-inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
+// Before normalization (locals): _X, _Y.
+inline const _TYPE& cppMin(_TYPE x, _TYPE y)
 {
-    return (_Y < _X ? _Y : _X);
+    return (y < x ? y : x);
 }
 
 template <class _TYPE>
-inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
+// Before normalization (locals): _X, _Y.
+inline const _TYPE& cppMax(_TYPE x, _TYPE y)
 {
-    return (_X < _Y ? _Y : _X);
+    return (x < y ? y : x);
 }
 
 // E:\gamedcs\viewwrld.cpp:100
@@ -104,18 +120,22 @@ DC_ONLY(0x192ee8, 0x62)
 static long ftol(double d)
 {
     union {
-        double whole;
-        long low;
+        // Before normalization: whole.
+        double m_whole;
+        // Before normalization: low.
+        long m_low;
     } bits;
     union {
-        float value;
-        long raw;
+        // Before normalization: value.
+        float m_value;
+        // Before normalization: raw.
+        long m_raw;
     } magic;
 
-    magic.raw = 0x59c00000;
-    bits.whole = d;
-    bits.whole = magic.value + bits.whole;
-    return bits.low;
+    magic.m_raw = 0x59c00000;
+    bits.m_whole = d;
+    bits.m_whole = magic.m_value + bits.m_whole;
+    return bits.m_low;
 }
 
 // E:\gamedcs\viewwrld.cpp:110
@@ -133,10 +153,11 @@ static long ftol(double d)
 // leave a separate copy of the origin untouched, which retail proves by
 // keeping x and y live in ESI/EDI across the whole clip block and pushing
 // those, never the clamped copies.
+// Before normalization (function): VWDrawSprite.
 VA(0x005f73b0, 0x14D)  // exhaustive dc-order-map inside the VWDrawAdvObj bracket, dc 0x192f4c
-void VWDrawSprite(CSprite* srcIcon, NewmapCell* thisCell, int frame, int x, int y, int z)
+void vwDrawSprite(CSprite* srcIcon, NewmapCell* thisCell, int frame, int x, int y, int z)
 {
-    int offset = (32.0f - gUnnamed68c6b8) / 2.0f;
+    int offset = (32.0f - g_unnamed68c6b8) / 2.0f;
     x -= offset;
     y -= offset;
 
@@ -165,10 +186,10 @@ void VWDrawSprite(CSprite* srcIcon, NewmapCell* thisCell, int frame, int x, int 
         return;
 
     int owner = -1;
-    if (thisCell->type == HERO)
-        owner = gpGame->GetHero(thisCell->extraInfo)->owner;
-    else if (hasFlag(thisCell->type))
-        owner = GetFlaggedObjectOwner(thisCell);
+    if (thisCell->m_type == HERO)
+        owner = g_game->getHero(thisCell->m_extraInfo)->m_owner;
+    else if (hasFlag(thisCell->m_type))
+        owner = getFlaggedObjectOwner(thisCell);
 
     int framenum;
     if (owner >= 0)
@@ -176,8 +197,8 @@ void VWDrawSprite(CSprite* srcIcon, NewmapCell* thisCell, int frame, int x, int 
     else
         framenum = frame + 8 * 19;
 
-    srcIcon->Draw(0, framenum, tilex, tiley, tilew, tileh,
-                  gpWindowManager->screenBitmap, x, y, false, true);
+    srcIcon->draw(0, framenum, tilex, tiley, tilew, tileh,
+                  g_windowManager->m_screenBitmap, x, y, false, true);
 }
 
 // E:\gamedcs\viewwrld.cpp:166
@@ -236,15 +257,16 @@ void VWDrawSprite(CSprite* srcIcon, NewmapCell* thisCell, int frame, int x, int 
 // These real source relationships recover the boundary with no tail carrier.
 // The restored GetNumFrames/DrawAdvObj helper calls initially left Underlay
 // at 38.5458 with six GetMap calls; restoring the upper clamps now closes it.
-inline void VWClipScaleToScreenBuffer(int destX, int destY)
+inline void vwClipScaleToScreenBuffer(int destX, int destY)
 {
-    if (destX + giViewWorldScale < 8 || destX >= 600)
+    if (destX + g_viewWorldScale < 8 || destX >= 600)
         return;
-    if (destY + giViewWorldScale < 8 || destY >= 552)
+    if (destY + g_viewWorldScale < 8 || destY >= 552)
         return;
 
-    int Mwidth = memoryBuffer->GetWidth();
-    int Swidth = gpWindowManager->screenBitmap->GetWidth();
+    // Before normalization (locals): Mwidth, Swidth.
+    int mwidth = g_memoryBuffer->getWidth();
+    int swidth = g_windowManager->m_screenBitmap->getWidth();
 
     int screenX = destX;
     int screenY = destY;
@@ -258,26 +280,26 @@ inline void VWClipScaleToScreenBuffer(int destX, int destY)
         screenY = 552;
 
     unsigned short* screenBufferLineStart =
-        gpWindowManager->screenBitmap->GetMap(screenX, screenY);
-    unsigned short* sourceBufferLineStart = memoryBuffer->GetMap(0, 0);
+        g_windowManager->m_screenBitmap->getMap(screenX, screenY);
+    unsigned short* sourceBufferLineStart = g_memoryBuffer->getMap(0, 0);
 
-    for (int y = 0; y < giViewWorldScale; ++y) {
+    for (int y = 0; y < g_viewWorldScale; ++y) {
         if (destY + y < 8 || destY + y >= 552)
             continue;
 
         unsigned short* screenBuffer = screenBufferLineStart;
-        for (int x = 0; x < giViewWorldScale; ++x) {
+        for (int x = 0; x < g_viewWorldScale; ++x) {
             if (destX + x >= 8 && destX + x < 600) {
                 unsigned short* sourcePixel =
-                    sourceBufferLineStart + scaleLine[x];
+                    sourceBufferLineStart + g_scaleLine[x];
                 if (*sourcePixel)
                     *screenBuffer = *sourcePixel;
                 ++screenBuffer;
             }
         }
         sourceBufferLineStart =
-            memoryBuffer->GetMap(0, 0) + Mwidth * scaleLine[y];
-        screenBufferLineStart += Swidth;
+            g_memoryBuffer->getMap(0, 0) + mwidth * g_scaleLine[y];
+        screenBufferLineStart += swidth;
     }
 }
 
@@ -285,31 +307,33 @@ inline void VWClipScaleToScreenBuffer(int destX, int destY)
 // This is the caller-facing half of the same source boundary. Retail expands
 // it into VWDrawAdvObj, including the nested clipped helper above; keeping the
 // real helpers visible lets VC6 make that decision without a synthetic gate.
-inline void VWScaleToScreenBuffer(int destX, int destY)
+// Before normalization (function): VWScaleToScreenBuffer.
+inline void vwScaleToScreenBuffer(int destX, int destY)
 {
-    if (destX < 8 || destX + giViewWorldScale >= 600
-        || destY < 8 || destY + giViewWorldScale >= 552) {
-        VWClipScaleToScreenBuffer(destX, destY);
+    if (destX < 8 || destX + g_viewWorldScale >= 600
+        || destY < 8 || destY + g_viewWorldScale >= 552) {
+        vwClipScaleToScreenBuffer(destX, destY);
         return;
     }
 
-    int Mwidth = memoryBuffer->GetWidth();
-    int Swidth = gpWindowManager->screenBitmap->GetWidth();
+    // Before normalization (locals): Mwidth, Swidth.
+    int mwidth = g_memoryBuffer->getWidth();
+    int swidth = g_windowManager->m_screenBitmap->getWidth();
     unsigned short* screenBufferLineStart =
-        gpWindowManager->screenBitmap->GetMap(destX, destY);
-    unsigned short* sourceBufferLineStart = memoryBuffer->GetMap(0, 0);
+        g_windowManager->m_screenBitmap->getMap(destX, destY);
+    unsigned short* sourceBufferLineStart = g_memoryBuffer->getMap(0, 0);
 
-    for (int y = 0; y < giViewWorldScale; ++y) {
+    for (int y = 0; y < g_viewWorldScale; ++y) {
         unsigned short* screenBuffer = screenBufferLineStart;
-        for (int x = 0; x < giViewWorldScale; ++x) {
-            unsigned short* sourcePixel = sourceBufferLineStart + scaleLine[x];
+        for (int x = 0; x < g_viewWorldScale; ++x) {
+            unsigned short* sourcePixel = sourceBufferLineStart + g_scaleLine[x];
             if (*sourcePixel)
                 *screenBuffer = *sourcePixel;
             ++screenBuffer;
         }
         sourceBufferLineStart =
-            memoryBuffer->GetMap(0, 0) + Mwidth * scaleLine[y];
-        screenBufferLineStart += Swidth;
+            g_memoryBuffer->getMap(0, 0) + mwidth * g_scaleLine[y];
+        screenBufferLineStart += swidth;
     }
 }
 
@@ -330,123 +354,125 @@ inline void VWScaleToScreenBuffer(int destX, int destY)
 // 98.1467; hoisting heroX/heroY coordinates costs 75.1244. Keep the proven
 // caller shape and the header expression; see docs/vc6/regalloc.md 6f.
 VA(0x005f7500, 0x3F7)  // exhaustive dc-order-map inside the VWDrawAdvObj bracket, dc 0x19308c
-void advManager::VWDrawHeroPart(int part, TDrawParts& heroParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
+void advManager::vwDrawHeroPart(int part, TDrawParts& heroParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
 {
-    hero* currHero = gpGame->GetHero(heroParts.id);
+    hero* currHero = g_game->getHero(heroParts.m_id);
 
-    int HeroCellY = part % 3;
-    int HeroCellX = part / 3;
+    // Before normalization (locals): HeroCellY, HeroCellX.
+    int heroCellY = part % 3;
+    int heroCellX = part / 3;
 
-    if (currHero->flags & 0x40000) {
-        boat* currBoat = gpGame->GetHeroBoat(currHero->id, true);
-        NewmapCell* heroCell = GetCell(currHero->get_location());
+    if (currHero->m_flags & 0x40000) {
+        boat* currBoat = g_game->getHeroBoat(currHero->m_id, true);
+        NewmapCell* heroCell = getCell(currHero->getLocation());
 
-        if (!(heroCell->flags_00_11 & 0x200)) {
-            boatFrothIcons[currBoat->type]->DrawHero(
-                currHero->GetStandSequence(),
-                animFrame
-                    % boatFrothIcons[currBoat->type]->GetNumFrames(hs_stand_n),
-                tilex + (2 - HeroCellY) * 32,
-                tiley - HeroCellX * 32 + 32, tilew, tileh,
-                memoryBuffer, 0, 0,
-                currHero->GetHflip());
+        if (!(heroCell->m_flags0011 & 0x200)) {
+            m_boatFrothIcons[currBoat->m_type]->drawHero(
+                currHero->getStandSequence(),
+                m_animCtr
+                    % m_boatFrothIcons[currBoat->m_type]->getNumFrames(hs_stand_n),
+                tilex + (2 - heroCellY) * 32,
+                tiley - heroCellX * 32 + 32, tilew, tileh,
+                g_memoryBuffer, 0, 0,
+                currHero->getHflip());
         }
 
-        boatFlagIcons[currBoat->type][currBoat->playerOwner]->DrawHero(
-            currHero->GetStandSequence(),
-            animFrame % boatFlagIcons[currBoat->type][currBoat->playerOwner]
-                                ->GetNumFrames(hs_stand_n),
-            tilex + (2 - HeroCellY) * 32,
-            tiley - HeroCellX * 32 + 32, tilew, tileh,
-            memoryBuffer, 0, 0,
-            currHero->GetHflip());
+        m_boatFlagIcons[currBoat->m_type][currBoat->m_playerOwner]->drawHero(
+            currHero->getStandSequence(),
+            m_animCtr % m_boatFlagIcons[currBoat->m_type][currBoat->m_playerOwner]
+                                ->getNumFrames(hs_stand_n),
+            tilex + (2 - heroCellY) * 32,
+            tiley - heroCellX * 32 + 32, tilew, tileh,
+            g_memoryBuffer, 0, 0,
+            currHero->getHflip());
 
-        boatIcons[currBoat->type]->DrawHero(
-            currHero->GetStandSequence(),
-            animFrame
-                % boatIcons[currBoat->type]->GetNumFrames(hs_stand_n),
-            tilex + (2 - HeroCellY) * 32,
-            tiley - HeroCellX * 32 + 32, tilew, tileh,
-            memoryBuffer, 0, 0,
-            currHero->GetHflip());
+        m_boatIcons[currBoat->m_type]->drawHero(
+            currHero->getStandSequence(),
+            m_animCtr
+                % m_boatIcons[currBoat->m_type]->getNumFrames(hs_stand_n),
+            tilex + (2 - heroCellY) * 32,
+            tiley - heroCellX * 32 + 32, tilew, tileh,
+            g_memoryBuffer, 0, 0,
+            currHero->getHflip());
     } else {
-        flagIcons[currHero->owner]->DrawHero(
-            currHero->GetStandSequence(),
-            animFrame % flagIcons[currHero->owner]->GetNumFrames(hs_stand_n),
-            tilex + (2 - HeroCellY) * 32,
-            tiley - HeroCellX * 32 + 32, tilew, tileh,
-            memoryBuffer, 0, 0,
-            currHero->GetHflip());
+        m_flagIcons[currHero->m_owner]->drawHero(
+            currHero->getStandSequence(),
+            m_animCtr % m_flagIcons[currHero->m_owner]->getNumFrames(hs_stand_n),
+            tilex + (2 - heroCellY) * 32,
+            tiley - heroCellX * 32 + 32, tilew, tileh,
+            g_memoryBuffer, 0, 0,
+            currHero->getHflip());
 
-        cursorIcons[currHero->heroClass]->DrawHero(
-            currHero->GetStandSequence(),
-            animFrame
-                % cursorIcons[currHero->heroClass]->GetNumFrames(hs_stand_n),
-            tilex + (2 - HeroCellY) * 32,
-            tiley - HeroCellX * 32 + 32, tilew, tileh,
-            memoryBuffer, 0, 0,
-            currHero->GetHflip());
+        m_cursorIcons[currHero->m_heroClass]->drawHero(
+            currHero->getStandSequence(),
+            m_animCtr
+                % m_cursorIcons[currHero->m_heroClass]->getNumFrames(hs_stand_n),
+            tilex + (2 - heroCellY) * 32,
+            tiley - heroCellX * 32 + 32, tilew, tileh,
+            g_memoryBuffer, 0, 0,
+            currHero->getHflip());
     }
 }
 
 // E:\gamedcs\viewwrld.cpp:346
 VA(0x005f7900, 0x3F7)  // exhaustive dc-order-map inside the VWDrawAdvObj bracket, dc 0x1933d8
-void advManager::VWDrawHeroPartShadow(int part, TDrawParts& heroParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
+void advManager::vwDrawHeroPartShadow(int part, TDrawParts& heroParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
 {
-    hero* currHero = gpGame->GetHero(heroParts.id);
+    hero* currHero = g_game->getHero(heroParts.m_id);
 
-    int HeroCellY = part % 3;
-    int HeroCellX = part / 3;
+    // Before normalization (locals): HeroCellY, HeroCellX.
+    int heroCellY = part % 3;
+    int heroCellX = part / 3;
 
-    if (currHero->flags & 0x40000) {
-        boat* currBoat = gpGame->GetHeroBoat(currHero->id, true);
-        NewmapCell* heroCell = GetCell(currHero->get_location());
+    if (currHero->m_flags & 0x40000) {
+        boat* currBoat = g_game->getHeroBoat(currHero->m_id, true);
+        NewmapCell* heroCell = getCell(currHero->getLocation());
 
-        if (!(heroCell->flags_00_11 & 0x200)) {
-            boatFrothIcons[currBoat->type]->DrawHeroShadow(
-                currHero->GetStandSequence(),
-                animFrame
-                    % boatFrothIcons[currBoat->type]->GetNumFrames(hs_stand_n),
-                tilex + (2 - HeroCellY) * 32,
-                tiley - HeroCellX * 32 + 32, tilew, tileh,
-                memoryBuffer, 0, 0,
-                currHero->GetHflip());
+        if (!(heroCell->m_flags0011 & 0x200)) {
+            m_boatFrothIcons[currBoat->m_type]->drawHeroShadow(
+                currHero->getStandSequence(),
+                m_animCtr
+                    % m_boatFrothIcons[currBoat->m_type]->getNumFrames(hs_stand_n),
+                tilex + (2 - heroCellY) * 32,
+                tiley - heroCellX * 32 + 32, tilew, tileh,
+                g_memoryBuffer, 0, 0,
+                currHero->getHflip());
         }
 
-        boatFlagIcons[currBoat->type][currBoat->playerOwner]->DrawHeroShadow(
-            currHero->GetStandSequence(),
-            animFrame % boatFlagIcons[currBoat->type][currBoat->playerOwner]
-                                ->GetNumFrames(hs_stand_n),
-            tilex + (2 - HeroCellY) * 32,
-            tiley - HeroCellX * 32 + 32, tilew, tileh,
-            memoryBuffer, 0, 0,
-            currHero->GetHflip());
+        m_boatFlagIcons[currBoat->m_type][currBoat->m_playerOwner]->drawHeroShadow(
+            currHero->getStandSequence(),
+            m_animCtr % m_boatFlagIcons[currBoat->m_type][currBoat->m_playerOwner]
+                                ->getNumFrames(hs_stand_n),
+            tilex + (2 - heroCellY) * 32,
+            tiley - heroCellX * 32 + 32, tilew, tileh,
+            g_memoryBuffer, 0, 0,
+            currHero->getHflip());
 
-        boatIcons[currBoat->type]->DrawHeroShadow(
-            currHero->GetStandSequence(),
-            animFrame
-                % boatIcons[currBoat->type]->GetNumFrames(hs_stand_n),
-            tilex + (2 - HeroCellY) * 32,
-            tiley - HeroCellX * 32 + 32, tilew, tileh,
-            memoryBuffer, 0, 0,
-            currHero->GetHflip());
+        m_boatIcons[currBoat->m_type]->drawHeroShadow(
+            currHero->getStandSequence(),
+            m_animCtr
+                % m_boatIcons[currBoat->m_type]->getNumFrames(hs_stand_n),
+            tilex + (2 - heroCellY) * 32,
+            tiley - heroCellX * 32 + 32, tilew, tileh,
+            g_memoryBuffer, 0, 0,
+            currHero->getHflip());
     } else {
-        flagIcons[currHero->owner]->DrawHeroShadow(
-            currHero->GetStandSequence(),
-            animFrame % flagIcons[currHero->owner]->GetNumFrames(hs_stand_n),
-            tilex + (2 - HeroCellY) * 32,
-            tiley - HeroCellX * 32 + 32, tilew, tileh,
-            memoryBuffer, 0, 0,
-            currHero->GetHflip());
+        m_flagIcons[currHero->m_owner]->drawHeroShadow(
+            currHero->getStandSequence(),
+            m_animCtr % m_flagIcons[currHero->m_owner]->getNumFrames(hs_stand_n),
+            tilex + (2 - heroCellY) * 32,
+            tiley - heroCellX * 32 + 32, tilew, tileh,
+            g_memoryBuffer, 0, 0,
+            currHero->getHflip());
 
-        cursorIcons[currHero->heroClass]->DrawHeroShadow(
-            currHero->GetStandSequence(),
-            animFrame
-                % cursorIcons[currHero->heroClass]->GetNumFrames(hs_stand_n),
-            tilex + (2 - HeroCellY) * 32,
-            tiley - HeroCellX * 32 + 32, tilew, tileh,
-            memoryBuffer, 0, 0,
-            currHero->GetHflip());
+        m_cursorIcons[currHero->m_heroClass]->drawHeroShadow(
+            currHero->getStandSequence(),
+            m_animCtr
+                % m_cursorIcons[currHero->m_heroClass]->getNumFrames(hs_stand_n),
+            tilex + (2 - heroCellY) * 32,
+            tiley - heroCellX * 32 + 32, tilew, tileh,
+            g_memoryBuffer, 0, 0,
+            currHero->getHflip());
     }
 }
 
@@ -456,62 +482,64 @@ void advManager::VWDrawHeroPartShadow(int part, TDrawParts& heroParts, int baseX
 // (0,0), through CSprite's Bitmap16Bit DrawHero wrapper, so baseX/baseY go
 // unread - and the cell lookup, which goes straight through GetCell here.
 VA(0x005f7d00, 0x1E1)  // exhaustive dc-order-map inside the VWDrawAdvObj bracket, dc 0x193724
-void advManager::VWDrawBoatPart(int part, TDrawParts& boatParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
+void advManager::vwDrawBoatPart(int part, TDrawParts& boatParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
 {
-    boat* currBoat = &gpGame->boats[boatParts.id];
-    int BoatCellY = part % 3;
-    int BoatCellX = part / 3;
-    NewmapCell* boatCell = GetCell(
-        type_point(currBoat->x, currBoat->y, currBoat->z));
+    boat* currBoat = &g_game->m_boats[boatParts.m_id];
+    // Before normalization (locals): BoatCellY, BoatCellX.
+    int boatCellY = part % 3;
+    int boatCellX = part / 3;
+    NewmapCell* boatCell = getCell(
+        type_point(currBoat->m_x, currBoat->m_y, currBoat->m_z));
 
-    if (!(boatCell->flags_00_11 & 0x200)) {
-        boatFrothIcons[currBoat->type]->DrawHero(
-            currBoat->GetStandSequence(),
-            animFrame
-                % boatFrothIcons[currBoat->type]->GetNumFrames(hs_stand_n),
-            tilex + (2 - BoatCellY) * 32,
-            tiley - BoatCellX * 32 + 32, tilew, tileh,
-            memoryBuffer, 0, 0,
-            currBoat->facing > hero::kFacingS);
+    if (!(boatCell->m_flags0011 & 0x200)) {
+        m_boatFrothIcons[currBoat->m_type]->drawHero(
+            currBoat->getStandSequence(),
+            m_animCtr
+                % m_boatFrothIcons[currBoat->m_type]->getNumFrames(hs_stand_n),
+            tilex + (2 - boatCellY) * 32,
+            tiley - boatCellX * 32 + 32, tilew, tileh,
+            g_memoryBuffer, 0, 0,
+            currBoat->m_facing > hero::kFacingS);
     }
 
-    boatIcons[currBoat->type]->DrawHero(
-        currBoat->GetStandSequence(),
-        animFrame % boatIcons[currBoat->type]->GetNumFrames(hs_stand_n),
-        tilex + (2 - BoatCellY) * 32,
-        tiley - BoatCellX * 32 + 32, tilew, tileh,
-        memoryBuffer, 0, 0,
-        currBoat->facing > hero::kFacingS);
+    m_boatIcons[currBoat->m_type]->drawHero(
+        currBoat->getStandSequence(),
+        m_animCtr % m_boatIcons[currBoat->m_type]->getNumFrames(hs_stand_n),
+        tilex + (2 - boatCellY) * 32,
+        tiley - boatCellX * 32 + 32, tilew, tileh,
+        g_memoryBuffer, 0, 0,
+        currBoat->m_facing > hero::kFacingS);
 }
 
 // E:\gamedcs\viewwrld.cpp:464
 VA(0x005f7ef0, 0x1E1)  // exhaustive dc-order-map inside the VWDrawAdvObj bracket, dc 0x1938cc
-void advManager::VWDrawBoatPartShadow(int part, TDrawParts& boatParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
+void advManager::vwDrawBoatPartShadow(int part, TDrawParts& boatParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
 {
-    boat* currBoat = &gpGame->boats[boatParts.id];
-    int BoatCellY = part % 3;
-    int BoatCellX = part / 3;
-    NewmapCell* boatCell = GetCell(
-        type_point(currBoat->x, currBoat->y, currBoat->z));
+    boat* currBoat = &g_game->m_boats[boatParts.m_id];
+    // Before normalization (locals): BoatCellY, BoatCellX.
+    int boatCellY = part % 3;
+    int boatCellX = part / 3;
+    NewmapCell* boatCell = getCell(
+        type_point(currBoat->m_x, currBoat->m_y, currBoat->m_z));
 
-    if (!(boatCell->flags_00_11 & 0x200)) {
-        boatFrothIcons[currBoat->type]->DrawHeroShadow(
-            currBoat->GetStandSequence(),
-            animFrame
-                % boatFrothIcons[currBoat->type]->GetNumFrames(hs_stand_n),
-            tilex + (2 - BoatCellY) * 32,
-            tiley - BoatCellX * 32 + 32, tilew, tileh,
-            memoryBuffer, 0, 0,
-            currBoat->facing > hero::kFacingS);
+    if (!(boatCell->m_flags0011 & 0x200)) {
+        m_boatFrothIcons[currBoat->m_type]->drawHeroShadow(
+            currBoat->getStandSequence(),
+            m_animCtr
+                % m_boatFrothIcons[currBoat->m_type]->getNumFrames(hs_stand_n),
+            tilex + (2 - boatCellY) * 32,
+            tiley - boatCellX * 32 + 32, tilew, tileh,
+            g_memoryBuffer, 0, 0,
+            currBoat->m_facing > hero::kFacingS);
     }
 
-    boatIcons[currBoat->type]->DrawHeroShadow(
-        currBoat->GetStandSequence(),
-        animFrame % boatIcons[currBoat->type]->GetNumFrames(hs_stand_n),
-        tilex + (2 - BoatCellY) * 32,
-        tiley - BoatCellX * 32 + 32, tilew, tileh,
-        memoryBuffer, 0, 0,
-        currBoat->facing > hero::kFacingS);
+    m_boatIcons[currBoat->m_type]->drawHeroShadow(
+        currBoat->getStandSequence(),
+        m_animCtr % m_boatIcons[currBoat->m_type]->getNumFrames(hs_stand_n),
+        tilex + (2 - boatCellY) * 32,
+        tiley - boatCellX * 32 + 32, tilew, tileh,
+        g_memoryBuffer, 0, 0,
+        currBoat->m_facing > hero::kFacingS);
 }
 
 // E:\gamedcs\viewwrld.cpp:510
@@ -527,52 +555,52 @@ void advManager::VWDrawBoatPartShadow(int part, TDrawParts& boatParts, int baseX
 // The dispatch is a jump table, so the emitted arm order IS the source case
 // order.
 VA(0x005f80e0, 0x1F6)  // exhaustive dc-order-map (the row before VWDrawAdvObj) + VWCompleteDraw call order, dc 0x193a74
-void advManager::VWDrawSymbols(int srcX, int srcY, int z, int destX, int destY)
+void advManager::vwDrawSymbols(int srcX, int srcY, int z, int destX, int destY)
 {
-    if (srcX < 0 || srcY < 0 || srcX >= MAP_WIDTH || srcY >= MAP_HEIGHT)
+    if (srcX < 0 || srcY < 0 || srcX >= g_mapWidth || srcY >= g_mapHeight)
         return;
 
-    NewmapCell* thisCell = GetCell(type_point(srcX, srcY, z));
+    NewmapCell* thisCell = getCell(type_point(srcX, srcY, z));
 
-    if (!thisCell->is_trigger)
+    if (!thisCell->m_isTrigger)
         return;
 
     unsigned char explored =
-        (GetMapExtra(srcX, srcY, z) & gMapVisibilityBit) != 0;
+        (getMapExtra(srcX, srcY, z) & g_mapVisibilityBit) != 0;
 
-    int baseX = destX * giViewWorldScale + iVWCenterOffsetW;
-    int baseY = destY * giViewWorldScale + iVWCenterOffsetH;
+    int baseX = destX * g_viewWorldScale + g_vwCenterOffsetW;
+    int baseY = destY * g_viewWorldScale + g_vwCenterOffsetH;
 
-    switch (thisCell->type) {
+    switch (thisCell->m_type) {
     case ARTIFACT:
     case RANDOM_ARTIFACT:
     case RANDOM_ARTIFACT_1:
     case RANDOM_ARTIFACT_2:
     case RANDOM_ARTIFACT_3:
     case RANDOM_ARTIFACT_4:
-        if (view_artifacts || explored)
-            VWDrawSprite(csVWIcons, thisCell, 2, baseX, baseY + 8, z);
+        if (g_viewArtifacts || explored)
+            vwDrawSprite(g_csVwIcons, thisCell, 2, baseX, baseY + 8, z);
         break;
     case HERO:
     case RANDOM_HERO:
-        if (view_heroes || explored)
-            VWDrawSprite(csVWIcons, thisCell, 1, baseX, baseY + 8, z);
+        if (g_viewHeroes || explored)
+            vwDrawSprite(g_csVwIcons, thisCell, 1, baseX, baseY + 8, z);
         break;
     case MINE:
-        if (view_mines || explored)
-            VWDrawSprite(csVWIcons, thisCell, thisCell->objectIndex + 5,
+        if (g_viewMines || explored)
+            vwDrawSprite(g_csVwIcons, thisCell, thisCell->m_objectIndex + 5,
                          baseX, baseY + 8, z);
         break;
     case RANDOM_RESOURCE:
     case RESOURCE:
-        if (view_resources || explored)
-            VWDrawSprite(csVWIcons, thisCell, thisCell->objectIndex + 12,
+        if (g_viewResources || explored)
+            vwDrawSprite(g_csVwIcons, thisCell, thisCell->m_objectIndex + 12,
                          baseX, baseY + 8, z);
         break;
     case RANDOM_TOWN:
     case TOWN:
-        if (view_towns || explored)
-            VWDrawSprite(csVWIcons, thisCell, 0, baseX, baseY + 8, z);
+        if (g_viewTowns || explored)
+            vwDrawSprite(g_csVwIcons, thisCell, 0, baseX, baseY + 8, z);
         break;
     }
 }
@@ -582,88 +610,89 @@ void advManager::VWDrawSymbols(int srcX, int srcY, int z, int destX, int destY)
 // same six-layer object walk, separate hero/boat part scopes, flagged-object
 // path, cursor cases, and final scaled-buffer helper expansion.
 VA(0x005f82e0, 0x8F1)  // link order + signature/callee/CFG corroboration, dc 0x193c74
-void advManager::VWDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
+void advManager::vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 {
-    if (srcX < 0 || srcY < 0 || srcX >= MAP_WIDTH || srcY >= MAP_HEIGHT)
+    if (srcX < 0 || srcY < 0 || srcX >= g_mapWidth || srcY >= g_mapHeight)
         return;
 
-    NewmapCell* thisCell = GetCell(type_point(srcX, srcY, z));
-    int playerBit = 1 << gpGame->GetLocalPlayerGamePos();
-    playerBit &= GetMapExtra(srcX, srcY, z);
+    NewmapCell* thisCell = getCell(type_point(srcX, srcY, z));
+    int playerBit = 1 << g_game->getLocalPlayerGamePos();
+    playerBit &= getMapExtra(srcX, srcY, z);
 
-    int baseX = destX * giViewWorldScale + iVWCenterOffsetW,
-        baseY = destY * giViewWorldScale + iVWCenterOffsetH;
+    int baseX = destX * g_viewWorldScale + g_vwCenterOffsetW,
+        baseY = destY * g_viewWorldScale + g_vwCenterOffsetH;
 
     TDrawParts heroParts[6];
     TDrawParts boatParts[6];
     unsigned char foundHero =
-        ScanForHeroOrBoat(srcX, srcY, z, HERO, heroParts);
+        scanForHeroOrBoat(srcX, srcY, z, HERO, heroParts);
     unsigned char foundBoat =
-        ScanForHeroOrBoat(srcX, srcY, z, BOAT, boatParts);
+        scanForHeroOrBoat(srcX, srcY, z, BOAT, boatParts);
 
-    memset(memoryBuffer->GetMap(0, 0), 0,
-           memoryBuffer->GetHeight() * memoryBuffer->GetPitch());
+    memset(g_memoryBuffer->getMap(0, 0), 0,
+           g_memoryBuffer->getHeight() * g_memoryBuffer->getPitch());
     int drewSomething = 0;
 
-    if (thisCell->objects.size() > 0) {
+    if (thisCell->m_objects.size() > 0) {
         for (unsigned row = 0; row < 6; ++row) {
-            for (int numObj = 0; numObj < thisCell->objects.size();
+            for (int numObj = 0; numObj < thisCell->m_objects.size();
                  ++numObj) {
                 NewmapCell::TObjectCell* objCell =
-                    &thisCell->objects[numObj];
-                if (objCell->Height != row)
+                    &thisCell->m_objects[numObj];
+                if (objCell->m_height != row)
                     continue;
 
                 CObjectType* objType =
-                    &fullMap->objectTypes[
-                        fullMap->objects[objCell->ObjectIndex].typeIndex];
-                CSprite* SprPtr = fullMap->sprites[
-                    fullMap->objects[objCell->ObjectIndex].typeIndex];
+                    &m_fullMap->m_objectTypes[
+                        m_fullMap->m_objects[objCell->m_objectIndexAlias].m_typeIndex];
+                // Before normalization (locals): SprPtr.
+                CSprite* sprPtr = m_fullMap->m_sprites[
+                    m_fullMap->m_objects[objCell->m_objectIndexAlias].m_typeIndex];
                 // Dreamcast line 620 performs this third CObject lookup as a
                 // standalone source statement. Its value is optimized out of
                 // Complete, but the statement is part of the original shape.
                 unsigned short objectTypeIndex =
-                    fullMap->objects[objCell->ObjectIndex].typeIndex;
+                    m_fullMap->m_objects[objCell->m_objectIndexAlias].m_typeIndex;
 
                 if (!playerBit
-                    && (!iVWTerrains
-                        || !gAdventureObjectLandBlocked
-                                [objType->objectType][12]))
+                    && (!g_vwTerrains
+                        || !g_adventureObjectLandBlocked
+                                [objType->m_objectType][12]))
                     continue;
 
-                if (!objType->drawCells[
-                        CObjectType::_getBitPos(objCell->CellX,
-                                                objCell->CellY)]
-                    || objType->suppressDraw)
+                if (!objType->m_drawCells[
+                        CObjectType::getBitPos(objCell->m_cellX,
+                                                objCell->m_cellY)]
+                    || objType->m_suppressDraw)
                     continue;
 
                 drewSomething = 1;
-                if (hasFlag(objType->objectType)) {
+                if (hasFlag(objType->m_objectType)) {
                     int triggerX;
                     int triggerY;
-                    fullMap->objects[objCell->ObjectIndex].FindTrigger(
+                    m_fullMap->m_objects[objCell->m_objectIndexAlias].findTrigger(
                         triggerX, triggerY);
-                    int owner = GetFlaggedObjectOwner(
-                        GetCell(type_point(triggerX, triggerY, z)));
+                    int owner = getFlaggedObjectOwner(
+                        getCell(type_point(triggerX, triggerY, z)));
 
-                    SprPtr->DrawAdvObjWithFlag(
-                        (animFrame
-                         + fullMap->objects[objCell->ObjectIndex]
-                               .animationOffset)
-                            % SprPtr->GetNumFrames(0),
-                        (objType->width - objCell->CellX - 1) * 32,
-                        (objType->height - objCell->CellY - 1) * 32,
-                        32, 32, memoryBuffer, 0, 0,
-                        gUnnamed6aacb0->playerColors[owner], false);
+                    sprPtr->drawAdvObjWithFlag(
+                        (m_animCtr
+                         + m_fullMap->m_objects[objCell->m_objectIndexAlias]
+                               .m_animationOffset)
+                            % sprPtr->getNumFrames(0),
+                        (objType->m_width - objCell->m_cellX - 1) * 32,
+                        (objType->m_height - objCell->m_cellY - 1) * 32,
+                        32, 32, g_memoryBuffer, 0, 0,
+                        g_unnamed6aacb0->m_data[64 + owner], false);
                 } else {
-                    SprPtr->DrawAdvObj(
-                        (animFrame
-                         + fullMap->objects[objCell->ObjectIndex]
-                               .animationOffset)
-                            % SprPtr->GetNumFrames(0),
-                        (objType->width - objCell->CellX - 1) * 32,
-                        (objType->height - objCell->CellY - 1) * 32,
-                        32, 32, memoryBuffer, 0, 0, false);
+                    sprPtr->drawAdvObj(
+                        (m_animCtr
+                         + m_fullMap->m_objects[objCell->m_objectIndexAlias]
+                               .m_animationOffset)
+                            % sprPtr->getNumFrames(0),
+                        (objType->m_width - objCell->m_cellX - 1) * 32,
+                        (objType->m_height - objCell->m_cellY - 1) * 32,
+                        32, 32, g_memoryBuffer, 0, 0, false);
                 }
             }
 
@@ -682,9 +711,9 @@ void advManager::VWDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                 }
 
                 for (part = partLow; part <= partHigh; ++part) {
-                    if (heroParts[part].IsValid) {
+                    if (heroParts[part].m_isValid) {
                         drewSomething = 1;
-                        VWDrawHeroPart(part, heroParts[part], baseX, baseY,
+                        vwDrawHeroPart(part, heroParts[part], baseX, baseY,
                                        0, 0, 32, 32);
                     }
                 }
@@ -706,9 +735,9 @@ void advManager::VWDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 
                 for (boatPart = boatPartLow; boatPart <= boatPartHigh;
                      ++boatPart) {
-                    if (boatParts[boatPart].IsValid) {
+                    if (boatParts[boatPart].m_isValid) {
                         drewSomething = 1;
-                        VWDrawBoatPart(boatPart, boatParts[boatPart], baseX, baseY,
+                        vwDrawBoatPart(boatPart, boatParts[boatPart], baseX, baseY,
                                        0, 0, 32, 32);
                     }
                 }
@@ -716,23 +745,23 @@ void advManager::VWDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 
             if (row == OBJECT_DRAW_LAYER_HERO_BACK
                 && destY == CURSOR_DEST_Y0
-                && this->drawCursor && !::gUnnamed6989f4) {
+                && this->m_drawCursor && !::g_unnamed6989f4) {
                 if (destX == CURSOR_DEST_X0) {
-                    this->DrawCursor(0, 0);
+                    this->drawCursor(0, 0);
                 } else if (destX == CURSOR_DEST_X1) {
-                    this->DrawCursor(1, 0);
+                    this->drawCursor(1, 0);
                 } else if (destX == CURSOR_DEST_X2) {
-                    this->DrawCursor(2, 0);
+                    this->drawCursor(2, 0);
                 }
             } else if (row == OBJECT_DRAW_LAYER_HERO_FRONT
                        && destY == CURSOR_DEST_Y1
-                       && this->drawCursor && !::gUnnamed6989f4) {
+                       && this->m_drawCursor && !::g_unnamed6989f4) {
                 if (destX == CURSOR_DEST_X0) {
-                    this->DrawCursor(0, 1);
+                    this->drawCursor(0, 1);
                 } else if (destX == CURSOR_DEST_X1) {
-                    this->DrawCursor(1, 1);
+                    this->drawCursor(1, 1);
                 } else if (destX == CURSOR_DEST_X2) {
-                    this->DrawCursor(2, 1);
+                    this->drawCursor(2, 1);
                 }
             }
         }
@@ -741,9 +770,9 @@ void advManager::VWDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
             int fallbackHeroPart;
             for (fallbackHeroPart = 0; fallbackHeroPart <= 5;
                  ++fallbackHeroPart) {
-                if (heroParts[fallbackHeroPart].IsValid) {
+                if (heroParts[fallbackHeroPart].m_isValid) {
                     drewSomething = 1;
-                    VWDrawHeroPart(fallbackHeroPart,
+                    vwDrawHeroPart(fallbackHeroPart,
                                    heroParts[fallbackHeroPart],
                                    baseX, baseY, 0, 0, 32, 32);
                 }
@@ -754,36 +783,36 @@ void advManager::VWDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
             int fallbackBoatPart;
             for (fallbackBoatPart = 0; fallbackBoatPart <= 5;
                  ++fallbackBoatPart) {
-                if (boatParts[fallbackBoatPart].IsValid) {
+                if (boatParts[fallbackBoatPart].m_isValid) {
                     drewSomething = 1;
-                    VWDrawBoatPart(fallbackBoatPart,
+                    vwDrawBoatPart(fallbackBoatPart,
                                    boatParts[fallbackBoatPart],
                                    baseX, baseY, 0, 0, 32, 32);
                 }
             }
         }
 
-        if (destY == CURSOR_DEST_Y0 && this->drawCursor && playerBit) {
+        if (destY == CURSOR_DEST_Y0 && this->m_drawCursor && playerBit) {
             if (destX == CURSOR_DEST_X0) {
-                this->DrawCursor(0, 0);
+                this->drawCursor(0, 0);
             } else if (destX == CURSOR_DEST_X1) {
-                this->DrawCursor(1, 0);
+                this->drawCursor(1, 0);
             } else if (destX == CURSOR_DEST_X2) {
-                this->DrawCursor(2, 0);
+                this->drawCursor(2, 0);
             }
-        } else if (destY == CURSOR_DEST_Y1 && this->drawCursor && playerBit) {
+        } else if (destY == CURSOR_DEST_Y1 && this->m_drawCursor && playerBit) {
             if (destX == CURSOR_DEST_X0) {
-                this->DrawCursor(0, 1);
+                this->drawCursor(0, 1);
             } else if (destX == CURSOR_DEST_X1) {
-                this->DrawCursor(1, 1);
+                this->drawCursor(1, 1);
             } else if (destX == CURSOR_DEST_X2) {
-                this->DrawCursor(2, 1);
+                this->drawCursor(2, 1);
             }
         }
     }
 
     if (drewSomething)
-        VWScaleToScreenBuffer(baseX, baseY + 8);
+        vwScaleToScreenBuffer(baseX, baseY + 8);
 }
 
 // E:\gamedcs\viewwrld.cpp:822
@@ -810,83 +839,84 @@ void advManager::VWDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 // under-inlined `memoryBuffer->GetMap(0,0)` inside VWScaleToScreenBuffer's
 // row loop, which retail folds to `mov ebx,[memoryBuffer] / mov ebx,[ebx+0x30]`.
 VA(0x005f8be0, 0x636)  // exhaustive dc-order-map + VWCompleteDraw call order (5th layer), dc 0x1943ec
-void advManager::VWDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int destY)
+void advManager::vwDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int destY)
 {
-    if (srcX < 0 || srcY < 0 || srcX >= MAP_WIDTH || srcY >= MAP_HEIGHT)
+    if (srcX < 0 || srcY < 0 || srcX >= g_mapWidth || srcY >= g_mapHeight)
         return;
 
-    NewmapCell* thisCell = GetCell(type_point(srcX, srcY, z));
-    int playerBit = (1 << gpGame->GetLocalPlayerGamePos())
-        & GetMapExtra(srcX, srcY, z);
+    NewmapCell* thisCell = getCell(type_point(srcX, srcY, z));
+    int playerBit = (1 << g_game->getLocalPlayerGamePos())
+        & getMapExtra(srcX, srcY, z);
 
-    int baseY = destY * giViewWorldScale + iVWCenterOffsetH,
-        baseX = destX * giViewWorldScale + iVWCenterOffsetW;
+    int baseY = destY * g_viewWorldScale + g_vwCenterOffsetH,
+        baseX = destX * g_viewWorldScale + g_vwCenterOffsetW;
 
     TDrawParts heroParts[6];
     TDrawParts boatParts[6];
     unsigned char foundHero =
-        ScanForHeroOrBoat(srcX, srcY, z, HERO, heroParts);
+        scanForHeroOrBoat(srcX, srcY, z, HERO, heroParts);
     unsigned char foundBoat =
-        ScanForHeroOrBoat(srcX, srcY, z, BOAT, boatParts);
+        scanForHeroOrBoat(srcX, srcY, z, BOAT, boatParts);
 
     int drewSomething = 0;
-    memset(memoryBuffer->GetMap(0, 0), 0,
-           memoryBuffer->GetHeight() * memoryBuffer->GetPitch());
+    memset(g_memoryBuffer->getMap(0, 0), 0,
+           g_memoryBuffer->getHeight() * g_memoryBuffer->getPitch());
 
-    for (int numObj = 0; numObj < thisCell->objects.size(); ++numObj) {
-        NewmapCell::TObjectCell* objCell = &thisCell->objects[numObj];
+    for (int numObj = 0; numObj < thisCell->m_objects.size(); ++numObj) {
+        NewmapCell::TObjectCell* objCell = &thisCell->m_objects[numObj];
 
         CObjectType* objType =
-            &fullMap->objectTypes[
-                fullMap->objects[objCell->ObjectIndex].typeIndex];
-        CSprite* SprPtr = fullMap->sprites[
-            fullMap->objects[objCell->ObjectIndex].typeIndex];
+            &m_fullMap->m_objectTypes[
+                m_fullMap->m_objects[objCell->m_objectIndexAlias].m_typeIndex];
+        // Before normalization (locals): SprPtr.
+        CSprite* sprPtr = m_fullMap->m_sprites[
+            m_fullMap->m_objects[objCell->m_objectIndexAlias].m_typeIndex];
 
         if (!playerBit
-            && (!iVWTerrains
-                || !gAdventureObjectLandBlocked[objType->objectType][12]))
+            && (!g_vwTerrains
+                || !g_adventureObjectLandBlocked[objType->m_objectType][12]))
             continue;
 
-        if (!objType->drawCells[
-                CObjectType::_getBitPos(objCell->CellX, objCell->CellY)]
-            || objType->suppressDraw)
+        if (!objType->m_drawCells[
+                CObjectType::getBitPos(objCell->m_cellX, objCell->m_cellY)]
+            || objType->m_suppressDraw)
             continue;
 
         drewSomething = 1;
-        SprPtr->DrawAdvObjShadow(
-            (animFrame
-             + fullMap->objects[objCell->ObjectIndex].animationOffset)
-                % SprPtr->GetNumFrames(0),
-            (objType->width - objCell->CellX - 1) * 32,
-            (objType->height - objCell->CellY - 1) * 32,
-            32, 32, memoryBuffer, 0, 0, false);
+        sprPtr->drawAdvObjShadow(
+            (m_animCtr
+             + m_fullMap->m_objects[objCell->m_objectIndexAlias].m_animationOffset)
+                % sprPtr->getNumFrames(0),
+            (objType->m_width - objCell->m_cellX - 1) * 32,
+            (objType->m_height - objCell->m_cellY - 1) * 32,
+            32, 32, g_memoryBuffer, 0, 0, false);
     }
 
     if (destY == CURSOR_DEST_Y0) {
-        if (drawCursor && playerBit) {
+        if (m_drawCursor && playerBit) {
             if (destX == CURSOR_DEST_X0)
-                DrawCursorShadow(0, 0);
+                drawCursorShadow(0, 0);
             else if (destX == CURSOR_DEST_X1)
-                DrawCursorShadow(1, 0);
+                drawCursorShadow(1, 0);
             else if (destX == CURSOR_DEST_X2)
-                DrawCursorShadow(2, 0);
+                drawCursorShadow(2, 0);
         }
     } else if (destY == CURSOR_DEST_Y1) {
-        if (drawCursor && playerBit) {
+        if (m_drawCursor && playerBit) {
             if (destX == CURSOR_DEST_X0)
-                DrawCursorShadow(0, 1);
+                drawCursorShadow(0, 1);
             else if (destX == CURSOR_DEST_X1)
-                DrawCursorShadow(1, 1);
+                drawCursorShadow(1, 1);
             else if (destX == CURSOR_DEST_X2)
-                DrawCursorShadow(2, 1);
+                drawCursorShadow(2, 1);
         }
     }
 
     if (foundHero && playerBit) {
         for (int part = 0; part <= 5; ++part) {
-            if (heroParts[part].IsValid) {
+            if (heroParts[part].m_isValid) {
                 drewSomething = 1;
-                VWDrawHeroPartShadow(part, heroParts[part], baseX, baseY,
+                vwDrawHeroPartShadow(part, heroParts[part], baseX, baseY,
                                      0, 0, 32, 32);
             }
         }
@@ -894,16 +924,16 @@ void advManager::VWDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int de
 
     if (foundBoat && playerBit) {
         for (int boatPart = 0; boatPart <= 5; ++boatPart) {
-            if (boatParts[boatPart].IsValid) {
+            if (boatParts[boatPart].m_isValid) {
                 drewSomething = 1;
-                VWDrawBoatPartShadow(boatPart, boatParts[boatPart],
+                vwDrawBoatPartShadow(boatPart, boatParts[boatPart],
                                      baseX, baseY, 0, 0, 32, 32);
             }
         }
     }
 
     if (drewSomething)
-        VWScaleToScreenBuffer(baseX, baseY + 8);
+        vwScaleToScreenBuffer(baseX, baseY + 8);
 }
 
 // E:\gamedcs\viewwrld.cpp:946
@@ -914,33 +944,33 @@ void advManager::VWDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int de
 // pair, the inlined clear of the scratch buffer and the DrawTile through
 // riverTileset. advmgr.cpp's full-size DrawRiver is the unscaled twin.
 VA(0x005f9220, 0x38A)  // exhaustive dc-order-map + VWCompleteDraw call order (2nd layer), dc 0x194850
-void advManager::VWDrawRiver(int srcX, int srcY, int z, int destX, int destY)
+void advManager::vwDrawRiver(int srcX, int srcY, int z, int destX, int destY)
 {
-    if (srcX < 0 || srcY < 0 || srcX >= MAP_WIDTH || srcY >= MAP_HEIGHT)
+    if (srcX < 0 || srcY < 0 || srcX >= g_mapWidth || srcY >= g_mapHeight)
         return;
 
-    NewmapCell* thisCell = GetCell(type_point(srcX, srcY, z));
+    NewmapCell* thisCell = getCell(type_point(srcX, srcY, z));
 
-    int playerBit = 1 << gpGame->GetLocalPlayerGamePos();
+    int playerBit = 1 << g_game->getLocalPlayerGamePos();
 
-    if (!(playerBit & GetMapExtra(srcX, srcY, z)) && !iVWTerrains)
+    if (!(playerBit & getMapExtra(srcX, srcY, z)) && !g_vwTerrains)
         return;
 
-    if (!thisCell->RiverSet)
+    if (!thisCell->m_riverSet)
         return;
 
-    int baseX = destX * giViewWorldScale + iVWCenterOffsetW;
-    int baseY = destY * giViewWorldScale + iVWCenterOffsetH;
+    int baseX = destX * g_viewWorldScale + g_vwCenterOffsetW;
+    int baseY = destY * g_viewWorldScale + g_vwCenterOffsetH;
 
-    memset(memoryBuffer->GetMap(0, 0), 0,
-           memoryBuffer->GetHeight() * memoryBuffer->GetPitch());
+    memset(g_memoryBuffer->getMap(0, 0), 0,
+           g_memoryBuffer->getHeight() * g_memoryBuffer->getPitch());
 
-    riverTileset[thisCell->RiverSet]->DrawTile(
-        thisCell->RiverIndex, 0, 0, 32, 32, memoryBuffer, 0, 0,
-        (thisCell->flags_00_11 >> 2) & 1,
-        (thisCell->flags_00_11 >> 3) & 1);
+    m_riverTileset[thisCell->m_riverSet]->drawTile(
+        thisCell->m_riverIndex, 0, 0, 32, 32, g_memoryBuffer, 0, 0,
+        (thisCell->m_flags0011 >> 2) & 1,
+        (thisCell->m_flags0011 >> 3) & 1);
 
-    VWScaleToScreenBuffer(baseX, baseY + 8);
+    vwScaleToScreenBuffer(baseX, baseY + 8);
 }
 
 // E:\gamedcs\viewwrld.cpp:985
@@ -950,33 +980,33 @@ void advManager::VWDrawRiver(int srcX, int srcY, int z, int destX, int destY)
 // 3). Retail's identical instruction stream either side of those four
 // differences is what pairs the two.
 VA(0x005f95b0, 0x38B)  // exhaustive dc-order-map + VWCompleteDraw call order (3rd layer), dc 0x1949cc
-void advManager::VWDrawRoad(int srcX, int srcY, int z, int destX, int destY)
+void advManager::vwDrawRoad(int srcX, int srcY, int z, int destX, int destY)
 {
-    if (srcX < 0 || srcY < 0 || srcX >= MAP_WIDTH || srcY >= MAP_HEIGHT)
+    if (srcX < 0 || srcY < 0 || srcX >= g_mapWidth || srcY >= g_mapHeight)
         return;
 
-    NewmapCell* thisCell = GetCell(type_point(srcX, srcY, z));
+    NewmapCell* thisCell = getCell(type_point(srcX, srcY, z));
 
-    int playerBit = 1 << gpGame->GetLocalPlayerGamePos();
+    int playerBit = 1 << g_game->getLocalPlayerGamePos();
 
-    if (!(playerBit & GetMapExtra(srcX, srcY, z)) && !iVWTerrains)
+    if (!(playerBit & getMapExtra(srcX, srcY, z)) && !g_vwTerrains)
         return;
 
-    if (!thisCell->RoadSet)
+    if (!thisCell->m_roadSet)
         return;
 
-    int baseX = destX * giViewWorldScale + iVWCenterOffsetW;
-    int baseY = destY * giViewWorldScale + iVWCenterOffsetH;
+    int baseX = destX * g_viewWorldScale + g_vwCenterOffsetW;
+    int baseY = destY * g_viewWorldScale + g_vwCenterOffsetH;
 
-    memset(memoryBuffer->GetMap(0, 0), 0,
-           memoryBuffer->GetHeight() * memoryBuffer->GetPitch());
+    memset(g_memoryBuffer->getMap(0, 0), 0,
+           g_memoryBuffer->getHeight() * g_memoryBuffer->getPitch());
 
-    roadTileset[thisCell->RoadSet]->DrawTile(
-        thisCell->RoadIndex, 0, 0, 32, 32, memoryBuffer, 0, 0,
-        (thisCell->flags_00_11 >> 4) & 1,
-        (thisCell->flags_00_11 >> 5) & 1);
+    m_roadTileset[thisCell->m_roadSet]->drawTile(
+        thisCell->m_roadIndex, 0, 0, 32, 32, g_memoryBuffer, 0, 0,
+        (thisCell->m_flags0011 >> 4) & 1,
+        (thisCell->m_flags0011 >> 5) & 1);
 
-    VWScaleToScreenBuffer(baseX, baseY + 8);
+    vwScaleToScreenBuffer(baseX, baseY + 8);
 }
 
 // E:\gamedcs\viewwrld.cpp:1026
@@ -1001,44 +1031,45 @@ void advManager::VWDrawRoad(int srcX, int srcY, int z, int destX, int destY)
 // GetMap in the star expansion, which is a per-site /Ob2 decision inside
 // the helper and not a statement of this function.
 VA(0x005f9940, 0x44A)  // exhaustive dc-order-map + VWCompleteDraw call order (the iVWTerrains-gated layer), dc 0x194b48
-void advManager::VWDrawShroud(int srcX, int srcY, int z, int destX, int destY)
+void advManager::vwDrawShroud(int srcX, int srcY, int z, int destX, int destY)
 {
-    if (srcX < 0 || srcY < 0 || srcX >= MAP_WIDTH)
+    if (srcX < 0 || srcY < 0 || srcX >= g_mapWidth)
         return;
-    if (srcY >= MAP_HEIGHT && !gCompleteDrawAllCells)
-        return;
-
-    GetCell(type_point(srcX, srcY, z));
-
-    int playerBit = 1 << gpGame->GetLocalPlayerGamePos();
-
-    if (!(playerBit & GetMapExtra(srcX, srcY, z)) && !iVWTerrains)
+    if (srcY >= g_mapHeight && !g_completeDrawAllCells)
         return;
 
-    int baseX = destX * giViewWorldScale + iVWCenterOffsetW;
-    int baseY = destY * giViewWorldScale + iVWCenterOffsetH;
+    getCell(type_point(srcX, srcY, z));
+
+    int playerBit = 1 << g_game->getLocalPlayerGamePos();
+
+    if (!(playerBit & getMapExtra(srcX, srcY, z)) && !g_vwTerrains)
+        return;
+
+    int baseX = destX * g_viewWorldScale + g_vwCenterOffsetW;
+    int baseY = destY * g_viewWorldScale + g_vwCenterOffsetH;
 
     int lookup = 0;
     unsigned char hflip = false;
-    unsigned char bDrawShroud;
+    // Before normalization (locals): bDrawShroud.
+    unsigned char drawShroud;
 
-    if (!gCompleteDrawAllCells
-        && ((GetMapExtra(srcX, srcY, z) & gMapVisibilityBit)
-            || gUnnamed6989f4)) {
-        bDrawShroud = false;
+    if (!g_completeDrawAllCells
+        && ((getMapExtra(srcX, srcY, z) & g_mapVisibilityBit)
+            || g_unnamed6989f4)) {
+        drawShroud = false;
         goto draw_shroud;
     }
 
-    bDrawShroud = true;
-    if (!gCompleteDrawAllCells)
-        lookup = GetCloudLookup(srcX, srcY, z);
+    drawShroud = true;
+    if (!g_completeDrawAllCells)
+        lookup = getCloudLookup(srcX, srcY, z);
     if (!lookup) {
-        memset(memoryBuffer->GetMap(0, 0), 0,
-               memoryBuffer->GetHeight() * memoryBuffer->GetPitch());
-        starTileset->DrawShroudTile(
-            ((srcX * 85 ^ srcY * 85) / 64) & 3, 0, 0, 32, 32, memoryBuffer,
+        memset(g_memoryBuffer->getMap(0, 0), 0,
+               g_memoryBuffer->getHeight() * g_memoryBuffer->getPitch());
+        m_starTileset->drawShroudTile(
+            ((srcX * 85 ^ srcY * 85) / 64) & 3, 0, 0, 32, 32, g_memoryBuffer,
             0, 0, false, false);
-        VWScaleToScreenBuffer(baseX, baseY + 8);
+        vwScaleToScreenBuffer(baseX, baseY + 8);
         return;
     }
 
@@ -1053,16 +1084,16 @@ void advManager::VWDrawShroud(int srcX, int srcY, int z, int destX, int destY)
         lookup = CLOUD_DRAW_FRAME_4;
 
 draw_shroud:
-    if (gUnnamed6989f4)
+    if (g_unnamed6989f4)
         return;
-    if (!bDrawShroud)
+    if (!drawShroud)
         return;
 
-    memset(memoryBuffer->GetMap(0, 0), 0,
-           memoryBuffer->GetHeight() * memoryBuffer->GetPitch());
-    cloudIcons->DrawShroudTile(
-        lookup - 1, 0, 0, 32, 32, memoryBuffer, 0, 0, hflip, false);
-    VWScaleToScreenBuffer(baseX, baseY + 8);
+    memset(g_memoryBuffer->getMap(0, 0), 0,
+           g_memoryBuffer->getHeight() * g_memoryBuffer->getPitch());
+    m_cloudIcons->drawShroudTile(
+        lookup - 1, 0, 0, 32, 32, g_memoryBuffer, 0, 0, hflip, false);
+    vwScaleToScreenBuffer(baseX, baseY + 8);
 }
 
 // Retail keeps an OUT-OF-LINE copy of the clipped scaler here: VC6 emits a
@@ -1072,7 +1103,7 @@ draw_shroud:
 // other VA in this file and so out of increasing order), so a
 // RE-DECLARATION carries it at the address's own place in link order.
 VA(0x005f9d90, 0x13C)  // linkorder (between VWDrawShroud and VWDrawUnderlay), dc 0x1968d0
-void VWClipScaleToScreenBuffer(int destX, int destY);
+void vwClipScaleToScreenBuffer(int destX, int destY);
 
 // E:\gamedcs\viewwrld.cpp:1114
 // The scaled underlay layer. Same head as the river/road layers, then one
@@ -1084,53 +1115,54 @@ void VWClipScaleToScreenBuffer(int destX, int destY);
 // Exact after restoring the shared clipped scaler's DC upper clamps; the
 // draw loop itself is unchanged. See that helper for the negative control.
 VA(0x005f9ed0, 0x310)  // exhaustive dc-order-map + VWCompleteDraw call order (4th layer), dc 0x194dcc
-void advManager::VWDrawUnderlay(int srcX, int srcY, int z, int destX, int destY)
+void advManager::vwDrawUnderlay(int srcX, int srcY, int z, int destX, int destY)
 {
-    if (srcX < 0 || srcY < 0 || srcX >= MAP_WIDTH || srcY >= MAP_HEIGHT)
+    if (srcX < 0 || srcY < 0 || srcX >= g_mapWidth || srcY >= g_mapHeight)
         return;
 
-    NewmapCell* thisCell = GetCell(type_point(srcX, srcY, z));
+    NewmapCell* thisCell = getCell(type_point(srcX, srcY, z));
 
-    int playerBit = 1 << gpGame->GetLocalPlayerGamePos();
+    int playerBit = 1 << g_game->getLocalPlayerGamePos();
 
-    if (!(playerBit & GetMapExtra(srcX, srcY, z)) && !iVWTerrains)
+    if (!(playerBit & getMapExtra(srcX, srcY, z)) && !g_vwTerrains)
         return;
 
-    int baseX = destX * giViewWorldScale + iVWCenterOffsetW;
-    int baseY = destY * giViewWorldScale + iVWCenterOffsetH;
+    int baseX = destX * g_viewWorldScale + g_vwCenterOffsetW;
+    int baseY = destY * g_viewWorldScale + g_vwCenterOffsetH;
 
-    memset(memoryBuffer->GetMap(0, 0), 0,
-           memoryBuffer->GetHeight() * memoryBuffer->GetPitch());
+    memset(g_memoryBuffer->getMap(0, 0), 0,
+           g_memoryBuffer->getHeight() * g_memoryBuffer->getPitch());
 
     int drewSomething = 0;
 
-    if (thisCell->objects.size() > 0) {
-        for (int numObj = 0; numObj < thisCell->objects.size(); ++numObj) {
-            NewmapCell::TObjectCell* objCell = &thisCell->objects[numObj];
+    if (thisCell->m_objects.size() > 0) {
+        for (int numObj = 0; numObj < thisCell->m_objects.size(); ++numObj) {
+            NewmapCell::TObjectCell* objCell = &thisCell->m_objects[numObj];
 
             CObjectType* objType =
-                &fullMap->objectTypes[
-                    fullMap->objects[objCell->ObjectIndex].typeIndex];
-            CSprite* SprPtr = fullMap->sprites[
-                fullMap->objects[objCell->ObjectIndex].typeIndex];
+                &m_fullMap->m_objectTypes[
+                    m_fullMap->m_objects[objCell->m_objectIndexAlias].m_typeIndex];
+            // Before normalization (locals): SprPtr.
+            CSprite* sprPtr = m_fullMap->m_sprites[
+                m_fullMap->m_objects[objCell->m_objectIndexAlias].m_typeIndex];
 
-            if (objType->suppressDraw) {
+            if (objType->m_suppressDraw) {
                 drewSomething = 1;
 
-                SprPtr->DrawAdvObj(
-                    (animFrame
-                     + fullMap->objects[objCell->ObjectIndex]
-                           .animationOffset)
-                        % SprPtr->GetNumFrames(0),
-                    (objType->width - objCell->CellX - 1) * 32,
-                    (objType->height - objCell->CellY - 1) * 32,
-                    32, 32, memoryBuffer, 0, 0, false);
+                sprPtr->drawAdvObj(
+                    (m_animCtr
+                     + m_fullMap->m_objects[objCell->m_objectIndexAlias]
+                           .m_animationOffset)
+                        % sprPtr->getNumFrames(0),
+                    (objType->m_width - objCell->m_cellX - 1) * 32,
+                    (objType->m_height - objCell->m_cellY - 1) * 32,
+                    32, 32, g_memoryBuffer, 0, 0, false);
             }
         }
     }
 
     if (drewSomething)
-        VWScaleToScreenBuffer(baseX, baseY + 8);
+        vwScaleToScreenBuffer(baseX, baseY + 8);
 }
 
 // E:\gamedcs\viewwrld.cpp:1174
@@ -1149,66 +1181,66 @@ void advManager::VWDrawUnderlay(int srcX, int srcY, int z, int destX, int destY)
 // else; that order removes the last GetMap call and closes all 64 blocks.
 // The inverted in-bounds-first/early-return spelling is the 96.8937 control.
 VA(0x005fa1e0, 0x41F)  // exhaustive dc-order-map (the row before the ctor) + VWCompleteDraw call order (1st layer), dc 0x194fb0
-void advManager::VWDrawGround(int srcX, int srcY, int z, int destX, int destY)
+void advManager::vwDrawGround(int srcX, int srcY, int z, int destX, int destY)
 {
-    if (srcX < 0 || srcY < 0 || srcX >= MAP_WIDTH || srcY >= MAP_HEIGHT)
+    if (srcX < 0 || srcY < 0 || srcX >= g_mapWidth || srcY >= g_mapHeight)
         return;
 
-    NewmapCell* thisCell = GetCell(type_point(srcX, srcY, z));
+    NewmapCell* thisCell = getCell(type_point(srcX, srcY, z));
 
-    int playerBit = 1 << gpGame->GetLocalPlayerGamePos();
+    int playerBit = 1 << g_game->getLocalPlayerGamePos();
 
-    if (!(playerBit & GetMapExtra(srcX, srcY, z)) && !iVWTerrains)
+    if (!(playerBit & getMapExtra(srcX, srcY, z)) && !g_vwTerrains)
         return;
 
-    int baseX = destX * giViewWorldScale + iVWCenterOffsetW;
-    int baseY = destY * giViewWorldScale + iVWCenterOffsetH;
+    int baseX = destX * g_viewWorldScale + g_vwCenterOffsetW;
+    int baseY = destY * g_viewWorldScale + g_vwCenterOffsetH;
 
-    if (srcX < 0 || srcY < 0 || srcX >= MAP_WIDTH
-        || srcY >= MAP_HEIGHT) {
+    if (srcX < 0 || srcY < 0 || srcX >= g_mapWidth
+        || srcY >= g_mapHeight) {
         int frame = -1;
         if (srcX == -1) {
             if (srcY == -1)
                 frame = 16;
-            else if (srcY == MAP_HEIGHT)
+            else if (srcY == g_mapHeight)
                 frame = 19;
-            else if (srcY >= 0 && srcY < MAP_HEIGHT)
+            else if (srcY >= 0 && srcY < g_mapHeight)
                 frame = 32 + (srcY & 3);
-        } else if (srcX == MAP_WIDTH) {
+        } else if (srcX == g_mapWidth) {
             if (srcY == -1)
                 frame = 17;
-            else if (srcY == MAP_HEIGHT)
+            else if (srcY == g_mapHeight)
                 frame = 18;
-            else if (srcY >= 0 && srcY < MAP_HEIGHT)
+            else if (srcY >= 0 && srcY < g_mapHeight)
                 frame = 24 + (srcY & 3);
         } else if (srcY == -1) {
-            if (srcX >= 0 && srcX < MAP_WIDTH)
+            if (srcX >= 0 && srcX < g_mapWidth)
                 frame = 20 + (srcX & 3);
-        } else if (srcY == MAP_HEIGHT) {
-            if (srcX >= 0 && srcX < MAP_HEIGHT)
+        } else if (srcY == g_mapHeight) {
+            if (srcX >= 0 && srcX < g_mapHeight)
                 frame = 28 + (srcX & 3);
         }
 
         if (frame == -1)
             frame = (srcX + 16) % 4 + 4 * ((srcY + 16) % 4);
 
-        memset(memoryBuffer->GetMap(0, 0), 0,
-               memoryBuffer->GetHeight() * memoryBuffer->GetPitch());
+        memset(g_memoryBuffer->getMap(0, 0), 0,
+               g_memoryBuffer->getHeight() * g_memoryBuffer->getPitch());
 
-        borderTileset->DrawTile(
-            frame, 0, 0, 32, 32, memoryBuffer, 0, 0, false, false);
+        m_borderTileset->drawTile(
+            frame, 0, 0, 32, 32, g_memoryBuffer, 0, 0, false, false);
 
-        VWScaleToScreenBuffer(baseX, baseY + 8);
+        vwScaleToScreenBuffer(baseX, baseY + 8);
     } else {
-        memset(memoryBuffer->GetMap(0, 0), 0,
-               memoryBuffer->GetHeight() * memoryBuffer->GetPitch());
+        memset(g_memoryBuffer->getMap(0, 0), 0,
+               g_memoryBuffer->getHeight() * g_memoryBuffer->getPitch());
 
-        groundTileset[thisCell->GroundSet]->DrawTile(
-            thisCell->GroundIndex, 0, 0, 32, 32, memoryBuffer, 0, 0,
-            thisCell->flags_00_11 & 1,
-            (thisCell->flags_00_11 >> 1) & 1);
+        m_groundTileset[thisCell->m_groundSet]->drawTile(
+            thisCell->m_groundIndex, 0, 0, 32, 32, g_memoryBuffer, 0, 0,
+            thisCell->m_flags0011 & 1,
+            (thisCell->m_flags0011 >> 1) & 1);
 
-        VWScaleToScreenBuffer(baseX, baseY + 8);
+        vwScaleToScreenBuffer(baseX, baseY + 8);
     }
 }
 
@@ -1239,111 +1271,111 @@ VA(0x005fa600, 0x1726)  // caller stack extent + vtable 0x643c54, dc 0x1952b8
 TViewWorldWindow::TViewWorldWindow()
     : CAdvPopup(0, 0, 800, 600, 0)
 {
-    x = 0;
-    y = 0;
-    width = 800;
-    height = 600;
+    m_x = 0;
+    m_y = 0;
+    m_width = 800;
+    m_height = 600;
 
-    Widgets.reserve(NWIDGETS);
+    m_widgets.reserve(NWIDGETS);
 
-    Widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new bitmapBorder(
         607, 195, 190, 381, 14, "VWorld.pcx", 0x800));
-    Widgets.push_back(new border(630, 26, 144, 144, 20, 1));
-    Widgets.push_back(new textWidget(
-        608, 194, 188, 49, (*gpGeneralText)[612], "bigfont.fnt",
+    m_widgets.push_back(new border(630, 26, 144, 144, 20, 1));
+    m_widgets.push_back(new textWidget(
+        608, 194, 188, 49, (*g_generalText)[612], "bigfont.fnt",
         font::HEADING, 15, 1, 0, 8));
 
-    int firstFrame = gpGame->GetLocalPlayerGamePos() * 19;
-    Widgets.push_back(new iconWidget(
+    int firstFrame = g_game->getLocalPlayerGamePos() * 19;
+    m_widgets.push_back(new iconWidget(
         612, 254, 32, 32, 21, "VWsymbol.def", firstFrame, 0, 0, 0, 16));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         612, 274, 32, 32, 21, "VWsymbol.def", firstFrame + 1, 0, 0, 0, 16));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         612, 294, 32, 32, 21, "VWsymbol.def", firstFrame + 2, 0, 0, 0, 16));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         612, 314, 32, 32, 21, "VWsymbol.def", firstFrame + 3, 0, 0, 0, 16));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         612, 334, 32, 32, 21, "VWsymbol.def", firstFrame + 4, 0, 0, 0, 16));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         612, 378, 32, 32, 21, "VWsymbol.def", firstFrame + 5, 0, 0, 0, 16));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         612, 398, 32, 32, 21, "VWsymbol.def", firstFrame + 6, 0, 0, 0, 16));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         612, 418, 32, 32, 21, "VWsymbol.def", firstFrame + 7, 0, 0, 0, 16));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         612, 438, 32, 32, 21, "VWsymbol.def", firstFrame + 8, 0, 0, 0, 16));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         612, 458, 32, 32, 21, "VWsymbol.def", firstFrame + 9, 0, 0, 0, 16));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         612, 478, 32, 32, 21, "VWsymbol.def", firstFrame + 10, 0, 0, 0, 16));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         612, 498, 32, 32, 21, "VWsymbol.def", firstFrame + 11, 0, 0, 0, 16));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         761, 378, 32, 32, 21, "VWsymbol.def", firstFrame + 12, 0, 0, 0, 16));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         761, 398, 32, 32, 21, "VWsymbol.def", firstFrame + 13, 0, 0, 0, 16));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         761, 418, 32, 32, 21, "VWsymbol.def", firstFrame + 14, 0, 0, 0, 16));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         761, 438, 32, 32, 21, "VWsymbol.def", firstFrame + 15, 0, 0, 0, 16));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         761, 458, 32, 32, 21, "VWsymbol.def", firstFrame + 16, 0, 0, 0, 16));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         761, 478, 32, 32, 21, "VWsymbol.def", firstFrame + 17, 0, 0, 0, 16));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         761, 498, 32, 32, 21, "VWsymbol.def", firstFrame + 18, 0, 0, 0, 16));
 
-    Widgets.push_back(new textWidget(
-        650, 260, 130, 20, (*gpGeneralText)[613], "Calli10R.fnt",
+    m_widgets.push_back(new textWidget(
+        650, 260, 130, 20, (*g_generalText)[613], "Calli10R.fnt",
         font::PRIMARY, 0, 4, 0, 8));
-    Widgets.push_back(new textWidget(
-        650, 280, 130, 20, (*gpGeneralText)[614], "Calli10R.fnt",
+    m_widgets.push_back(new textWidget(
+        650, 280, 130, 20, (*g_generalText)[614], "Calli10R.fnt",
         font::PRIMARY, 1, 4, 0, 8));
-    Widgets.push_back(new textWidget(
-        650, 300, 130, 20, (*gpGeneralText)[615], "Calli10R.fnt",
+    m_widgets.push_back(new textWidget(
+        650, 300, 130, 20, (*g_generalText)[615], "Calli10R.fnt",
         font::PRIMARY, 2, 4, 0, 8));
-    Widgets.push_back(new textWidget(
-        650, 320, 130, 20, (*gpGeneralText)[616], "Calli10R.fnt",
+    m_widgets.push_back(new textWidget(
+        650, 320, 130, 20, (*g_generalText)[616], "Calli10R.fnt",
         font::PRIMARY, 3, 4, 0, 8));
-    Widgets.push_back(new textWidget(
-        650, 340, 130, 20, (*gpGeneralText)[617], "Calli10R.fnt",
+    m_widgets.push_back(new textWidget(
+        650, 340, 130, 20, (*g_generalText)[617], "Calli10R.fnt",
         font::PRIMARY, 4, 4, 0, 8));
-    Widgets.push_back(new textWidget(
-        614, 368, 60, 18, (*gpGeneralText)[618], "Calli10R.fnt",
+    m_widgets.push_back(new textWidget(
+        614, 368, 60, 18, (*g_generalText)[618], "Calli10R.fnt",
         font::PRIMARY, 12, 0, 0, 8));
-    Widgets.push_back(new textWidget(
-        722, 368, 70, 18, (*gpGeneralText)[619], "Calli10R.fnt",
+    m_widgets.push_back(new textWidget(
+        722, 368, 70, 18, (*g_generalText)[619], "Calli10R.fnt",
         font::PRIMARY, 13, 2, 0, 8));
-    Widgets.push_back(new textWidget(
-        648, 384, 120, 20, (*gpGeneralText)[620], "Calli10R.fnt",
+    m_widgets.push_back(new textWidget(
+        648, 384, 120, 20, (*g_generalText)[620], "Calli10R.fnt",
         font::PRIMARY, 6, 5, 0, 8));
-    Widgets.push_back(new textWidget(
-        648, 404, 120, 20, (*gpGeneralText)[621], "Calli10R.fnt",
+    m_widgets.push_back(new textWidget(
+        648, 404, 120, 20, (*g_generalText)[621], "Calli10R.fnt",
         font::PRIMARY, 7, 5, 0, 8));
-    Widgets.push_back(new textWidget(
-        648, 424, 120, 20, (*gpGeneralText)[622], "Calli10R.fnt",
+    m_widgets.push_back(new textWidget(
+        648, 424, 120, 20, (*g_generalText)[622], "Calli10R.fnt",
         font::PRIMARY, 8, 5, 0, 8));
-    Widgets.push_back(new textWidget(
-        648, 444, 120, 20, (*gpGeneralText)[623], "Calli10R.fnt",
+    m_widgets.push_back(new textWidget(
+        648, 444, 120, 20, (*g_generalText)[623], "Calli10R.fnt",
         font::PRIMARY, 9, 5, 0, 8));
-    Widgets.push_back(new textWidget(
-        648, 464, 120, 20, (*gpGeneralText)[624], "Calli10R.fnt",
+    m_widgets.push_back(new textWidget(
+        648, 464, 120, 20, (*g_generalText)[624], "Calli10R.fnt",
         font::PRIMARY, 10, 5, 0, 8));
-    Widgets.push_back(new textWidget(
-        648, 484, 120, 20, (*gpGeneralText)[625], "Calli10R.fnt",
+    m_widgets.push_back(new textWidget(
+        648, 484, 120, 20, (*g_generalText)[625], "Calli10R.fnt",
         font::PRIMARY, 11, 5, 0, 8));
-    Widgets.push_back(new textWidget(
-        648, 504, 120, 20, (*gpGeneralText)[626], "Calli10R.fnt",
+    m_widgets.push_back(new textWidget(
+        648, 504, 120, 20, (*g_generalText)[626], "Calli10R.fnt",
         font::PRIMARY, 5, 5, 0, 8));
 
-    Widgets.push_back(new button(
+    m_widgets.push_back(new button(
         608, 218, 60, 32, 16, "VWMag1.def", 0, 1, 0, 2, 2));
-    Widgets.push_back(new button(
+    m_widgets.push_back(new button(
         671, 218, 60, 32, 17, "VWMag2.def", 0, 1, 0, 3, 2));
-    Widgets.push_back(new button(
+    m_widgets.push_back(new button(
         735, 218, 60, 32, 18, "VWMag4.def", 0, 1, 0, 5, 2));
 
-    Widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new bitmapBorder(
         611, 537, 68, 34, -1, "box66x32.pcx", 0x800));
     // INLINE BOUNDARY: TViewWorldWindow::TViewWorldWindow ->
     // vector<widget*>::insert. Dreamcast 0x1952b8 proves the ordered widget
@@ -1352,16 +1384,16 @@ TViewWorldWindow::TViewWorldWindow()
     // insert and its nested STL helpers, producing the 88.42% / 247-block
     // constructor instead of retail's 215-block shape.
 #pragma inline_depth(0)
-    Widgets.push_back(new button(
+    m_widgets.push_back(new button(
         612, 538, 66, 32, 19, "VWPuz.def", 0, 1, 0, 25, 2));
 #pragma inline_depth()
 
-    UndergroundButton = new type_func_button(
+    m_undergroundButton = new type_func_button(
         686, 538, 32, 32, -1, "iam010.def",
-        ViewWorldUndergroundHandler, 0, 1);
-    SurfaceButton = new type_func_button(
+        viewWorldUndergroundHandler, 0, 1);
+    m_surfaceButton = new type_func_button(
         686, 538, 32, 32, -1, "iam003.def",
-        ViewWorldSurfaceHandler, 0, 1);
+        viewWorldSurfaceHandler, 0, 1);
     // INLINE BOUNDARY: TViewWorldWindow::TViewWorldWindow ->
     // vector<widget*>::insert. These level controls are Complete-only, while
     // Dreamcast 0x1952b8 proves their surrounding append order. Retail keeps
@@ -1369,9 +1401,9 @@ TViewWorldWindow::TViewWorldWindow()
     // append immediately after it. Negative control: ordinary depth expands
     // both sites and contributes the second surplus STL reallocation body.
 #pragma inline_depth(0)
-    Widgets.push_back(UndergroundButton);
+    m_widgets.push_back(m_undergroundButton);
 #pragma inline_depth()
-    Widgets.push_back(SurfaceButton);
+    m_widgets.push_back(m_surfaceButton);
 
     // DEPTH LADDER (docs/vc6/inliner.md 6b): this ONE append is spelled
     // `insert(end(), x)`; the other forty-four in this constructor stay
@@ -1382,39 +1414,39 @@ TViewWorldWindow::TViewWorldWindow()
     // at the surface-button append), the next best is the `ok` append at
     // 96.5179, and #43 PLUS `ok` together fall back to 96.4869 - so the rung
     // is worth exactly one site here.
-    std::vector<widget*>& widgets = Widgets;
+    std::vector<widget*>& widgets = m_widgets;
     widgets.insert(widgets.end(), new bitmapBorder(
         725, 537, 68, 34, -1, "box66x32.pcx", 0x800));
     button* ok = new button(
         726, 538, 66, 32, 0x7802, "iOkay32.def", 0, 1, 0, 1, 2);
-    ok->set_hotkey(28);
-    Widgets.push_back(ok);
+    ok->setHotkey(28);
+    m_widgets.push_back(ok);
 
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
-            AddWidget(*it, -1);
+            addWidget(*it, -1);
         else
-            MemError();
+            memError();
     }
 
     message msg;
-    msg.id = MESSAGE_WIDGET;
-    msg.codeY = 17;
-    msg.codeX = 5;
-    msg.extra = 16;
-    BroadcastMessage(&msg);
+    msg.m_id = MESSAGE_WIDGET;
+    msg.m_codeY = 17;
+    msg.m_codeX = 5;
+    msg.m_extra = 16;
+    broadcastMessage(&msg);
 
-    UndergroundButton->send_message(
+    m_undergroundButton->sendMessage(
         widget::WIDGET_SET_PLAYER_PALETTE_COLORS,
-        gpGame->GetLocalPlayerGamePos());
-    SurfaceButton->send_message(
+        g_game->getLocalPlayerGamePos());
+    m_surfaceButton->sendMessage(
         widget::WIDGET_SET_PLAYER_PALETTE_COLORS,
-        gpGame->GetLocalPlayerGamePos());
+        g_game->getLocalPlayerGamePos());
 
-    if (origin.z == 1 || gpGame->GetNumMapLevels() == 1)
-        UndergroundButton->send_message(widget::WIDGET_CLEAR_STATUS, 6);
-    if (origin.z == 0)
-        SurfaceButton->send_message(widget::WIDGET_CLEAR_STATUS, 6);
+    if (m_origin.m_z == 1 || g_game->getNumMapLevels() == 1)
+        m_undergroundButton->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
+    if (m_origin.m_z == 0)
+        m_surfaceButton->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
 }
 
 // Slot 0 of retail vtable 0x643c54. VC6 emits this wrapper from the virtual
@@ -1425,10 +1457,10 @@ VA_COMPGEN(0x005fbd30, 0x21, SCALAR_DELETING_DTOR, TViewWorldWindow)
 VA(0x005fbd60, 0x86)  // vtable + owned-resource teardown, dc 0x195ac4
 TViewWorldWindow::~TViewWorldWindow()
 {
-    delete memoryBuffer;
-    csVWIcons->Dispose();
+    delete g_memoryBuffer;
+    g_csVwIcons->dispose();
 
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
@@ -1436,7 +1468,8 @@ TViewWorldWindow::~TViewWorldWindow()
 
 // The type_func_button click code both callbacks answer, the same 13
 // TViewArmyWindow's cast-spell callback tests (viewarmywindow.cpp).
-static const int kLevelButtonClick = 13;
+// Before normalization: kLevelButtonClick.
+static const int g_levelButtonClick = 13;
 
 // Complete-only address-taken callback. The constructor passes this entry to
 // the iAm003 surface button; the body clears origin.z and redraws the map.
@@ -1445,44 +1478,44 @@ static const int kLevelButtonClick = 13;
 // the released one, repaint the world and the radar, and flip the
 // whole screen.
 VA(0x005fbdf0, 0xC6)  // address-taken at ctor+0x1033, retail-only
-int ViewWorldSurfaceHandler(message& msg)
+int viewWorldSurfaceHandler(message& msg)
 {
-    if (msg.codeX != kLevelButtonClick
-        || (msg.qualifier & MESSAGE_MODIFIER_RIGHT))
+    if (msg.m_codeX != g_levelButtonClick
+        || (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT))
         return 0;
-    TViewWorldWindow* window = static_cast<TViewWorldWindow*>(msg.window);
-    window->origin.z = 0;
-    window->SurfaceButton->send_message(widget::WIDGET_CLEAR_STATUS, 6);
-    window->UndergroundButton->send_message(widget::WIDGET_SET_STATUS, 6);
-    window->UndergroundButton->Draw();
-    gpAdvManager->VWCompleteDraw(window->origin.x, window->origin.y,
-                                 window->origin.z, window->viewable_width,
-                                 window->viewable_height);
-    gpAdvManager->UpdateRadar(window->origin, 1, 1, view_mines, view_heroes,
-                              view_towns);
-    gpWindowManager->UpdateScreen(0, 0, 800, 600);
+    TViewWorldWindow* window = static_cast<TViewWorldWindow*>(msg.m_window);
+    window->m_origin.m_z = 0;
+    window->m_surfaceButton->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
+    window->m_undergroundButton->sendMessage(widget::WIDGET_SET_STATUS, 6);
+    window->m_undergroundButton->draw();
+    g_advManager->vwCompleteDraw(window->m_origin.m_x, window->m_origin.m_y,
+                                 window->m_origin.m_z, window->m_viewableWidth,
+                                 window->m_viewableHeight);
+    g_advManager->updateRadar(window->m_origin, 1, 1, g_viewMines, g_viewHeroes,
+                              g_viewTowns);
+    g_windowManager->updateScreen(0, 0, 800, 600);
     return 1;
 }
 
 // Complete-only address-taken callback. The constructor passes this entry to
 // the iAm010 underground button; the body sets origin.z and redraws the map.
 VA(0x005fbec0, 0xD0)  // address-taken at ctor+0xFEE, retail-only
-int ViewWorldUndergroundHandler(message& msg)
+int viewWorldUndergroundHandler(message& msg)
 {
-    if (msg.codeX != kLevelButtonClick
-        || (msg.qualifier & MESSAGE_MODIFIER_RIGHT))
+    if (msg.m_codeX != g_levelButtonClick
+        || (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT))
         return 0;
-    TViewWorldWindow* window = static_cast<TViewWorldWindow*>(msg.window);
-    window->origin.z = 1;
-    window->SurfaceButton->send_message(widget::WIDGET_SET_STATUS, 6);
-    window->UndergroundButton->send_message(widget::WIDGET_CLEAR_STATUS, 6);
-    window->SurfaceButton->Draw();
-    gpAdvManager->VWCompleteDraw(window->origin.x, window->origin.y,
-                                 window->origin.z, window->viewable_width,
-                                 window->viewable_height);
-    gpAdvManager->UpdateRadar(window->origin, 1, 1, view_mines, view_heroes,
-                              view_towns);
-    gpWindowManager->UpdateScreen(0, 0, 800, 600);
+    TViewWorldWindow* window = static_cast<TViewWorldWindow*>(msg.m_window);
+    window->m_origin.m_z = 1;
+    window->m_surfaceButton->sendMessage(widget::WIDGET_SET_STATUS, 6);
+    window->m_undergroundButton->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
+    window->m_surfaceButton->draw();
+    g_advManager->vwCompleteDraw(window->m_origin.m_x, window->m_origin.m_y,
+                                 window->m_origin.m_z, window->m_viewableWidth,
+                                 window->m_viewableHeight);
+    g_advManager->updateRadar(window->m_origin, 1, 1, g_viewMines, g_viewHeroes,
+                              g_viewTowns);
+    g_windowManager->updateScreen(0, 0, 800, 600);
     return 1;
 }
 
@@ -1507,79 +1540,80 @@ int ViewWorldUndergroundHandler(message& msg)
 // parameters are what make every bitfield extraction SIXTEEN bit
 // (`sar dx,6` / `sar cx,6` / `sar ax,0xc`) where a field-to-field copy
 // stays 32-bit and folds z in place.
+// Before normalization (locals): iWhatToDraw, view_world_window, map_center.
 VA(0x005fbf90, 0x2A3)  // anchor-callee init + VWCompleteDraw, "VWsymbol.def", dc 0x195b48
-void advManager::ViewWorld(int iWhatToDraw, int level)
+void advManager::viewWorld(int whatToDraw, int level)
 {
-    gUnnamed6aac3c = 1;
-    view_artifacts = 0;
-    view_towns = 0;
-    view_heroes = 0;
-    view_resources = 0;
-    iVWTerrains = 0;
-    view_mines = 0;
+    g_unnamed6aac3c = 1;
+    g_viewArtifacts = 0;
+    g_viewTowns = 0;
+    g_viewHeroes = 0;
+    g_viewResources = 0;
+    g_vwTerrains = 0;
+    g_viewMines = 0;
 
-    switch (iWhatToDraw) {
+    switch (whatToDraw) {
     case SPELL_VIEW_EARTH:
         switch (level) {
         case eMasteryAdvanced:
-            view_mines = 1;
-            view_resources = 1;
+            g_viewMines = 1;
+            g_viewResources = 1;
             break;
         case eMasteryExpert:
-            iVWTerrains = 1;
-            view_mines = 1;
-            view_resources = 1;
+            g_vwTerrains = 1;
+            g_viewMines = 1;
+            g_viewResources = 1;
             break;
         default:
-            view_resources = 1;
+            g_viewResources = 1;
             break;
         }
         break;
     case SPELL_VIEW_AIR:
         switch (level) {
         case eMasteryAdvanced:
-            view_heroes = 1;
-            view_artifacts = 1;
+            g_viewHeroes = 1;
+            g_viewArtifacts = 1;
             break;
         case eMasteryExpert:
-            view_towns = 1;
-            view_heroes = 1;
-            view_artifacts = 1;
+            g_viewTowns = 1;
+            g_viewHeroes = 1;
+            g_viewArtifacts = 1;
             break;
         default:
-            view_artifacts = 1;
+            g_viewArtifacts = 1;
             break;
         }
         break;
     }
 
-    gUnnamed68c6b8 = VIEW_WORLD_TILE_SCALE_MID;
-    giViewWorldScale = 11;
-    csVWIcons = ResourceManager::GetSprite("VWsymbol.def");
-    memoryBuffer = new Bitmap16Bit(64, 64);
-    gpAdvManager->DemobilizeCurrHero(0, 1);
-    gpWindowManager->colorCyclingOn = 0;
-    gCombatActive698a18 = 2;
+    g_unnamed68c6b8 = VIEW_WORLD_TILE_SCALE_MID;
+    g_viewWorldScale = 11;
+    g_csVwIcons = ResourceManager::getSprite("VWsymbol.def");
+    g_memoryBuffer = new Bitmap16Bit(64, 64);
+    g_advManager->demobilizeCurrHero(0, 1);
+    g_windowManager->m_colorCyclingOn = 0;
+    g_combatActive698a18 = 2;
     {
-        TViewWorldWindow view_world_window;
-        type_point map_center(radarOrigin.x + 9, radarOrigin.y + 8,
-                              radarOrigin.z);
+        TViewWorldWindow viewWorldWindow;
+        type_point mapCenter(m_radarOrigin.m_x + 9, m_radarOrigin.m_y + 8,
+                              m_radarOrigin.m_z);
 
-        view_world_window.init(map_center, 0);
-        gpAdvManager->VWCompleteDraw(view_world_window.origin.x,
-                                     view_world_window.origin.y,
-                                     view_world_window.origin.z,
-                                     view_world_window.viewable_width,
-                                     view_world_window.viewable_height);
-        gpWindowManager->colorCyclingOn = 1;
-        view_world_window.DoModal(0);
+        viewWorldWindow.init(mapCenter, 0);
+        g_advManager->vwCompleteDraw(viewWorldWindow.m_origin.m_x,
+                                     viewWorldWindow.m_origin.m_y,
+                                     viewWorldWindow.m_origin.m_z,
+                                     viewWorldWindow.m_viewableWidth,
+                                     viewWorldWindow.m_viewableHeight);
+        g_windowManager->m_colorCyclingOn = 1;
+        viewWorldWindow.doModal(0);
     }
-    gUnnamed6aac3c = 0;
-    UpdateRadar(0, 1, view_mines, view_heroes, view_towns);
-    gpWindowManager->colorCyclingOn = 0;
-    RedrawAdvScreen(1, 0);
-    gCombatActive698a18 = 0;
-    gpWindowManager->colorCyclingOn = 1;
+    g_unnamed6aac3c = 0;
+    updateRadar(0, 1, g_viewMines, g_viewHeroes, g_viewTowns);
+    g_windowManager->m_colorCyclingOn = 0;
+    redrawAdvScreen(1, 0);
+    g_combatActive698a18 = 0;
+    g_windowManager->m_colorCyclingOn = 1;
 }
 
 // E:\gamedcs\viewwrld.cpp:1496
@@ -1608,54 +1642,55 @@ void advManager::ViewWorld(int iWhatToDraw, int level)
 // a CSE rather than a named local (92.54); hoisting the iSkipLevel
 // declaration into the top block and assigning later (98.89, byte-flat);
 // naming the ftol argument as a `double scaled` inside the loop (98.90).
+// Before normalization (locals): new_center, iSkipLevel.
 VA(0x005fc240, 0x274)  // anchor-caller ViewWorld, anchor-callee UpdateRadar, dc 0x195d30
-void TViewWorldWindow::init(type_point new_center, unsigned char updateFlag)
+void TViewWorldWindow::init(type_point newCenter, unsigned char updateFlag)
 {
     int i;
 
-    viewable_width = 608 / giViewWorldScale;
-    viewable_height = 544 / giViewWorldScale;
-    float iSkipLevel = 32.0f / gUnnamed68c6b8;
-    for (i = 0; i < giViewWorldScale; i++)
-        scaleLine[i] = ftol(static_cast<float>(i) * iSkipLevel);
+    m_viewableWidth = 608 / g_viewWorldScale;
+    m_viewableHeight = 544 / g_viewWorldScale;
+    float skipLevel = 32.0f / g_unnamed68c6b8;
+    for (i = 0; i < g_viewWorldScale; i++)
+        g_scaleLine[i] = ftol(static_cast<float>(i) * skipLevel);
 
-    if (viewable_width > MAP_WIDTH)
-        viewable_width = MAP_WIDTH;
-    if (viewable_height > MAP_HEIGHT)
-        viewable_height = MAP_HEIGHT;
-    view_half_width = viewable_width >> 1;
-    view_half_height = viewable_height >> 1;
+    if (m_viewableWidth > g_mapWidth)
+        m_viewableWidth = g_mapWidth;
+    if (m_viewableHeight > g_mapHeight)
+        m_viewableHeight = g_mapHeight;
+    g_viewHalfWidth = m_viewableWidth >> 1;
+    g_viewHalfHeight = m_viewableHeight >> 1;
 
-    origin.y = 0;
-    origin.x = 0;
-    origin.z = new_center.z;
-    if (viewable_width != MAP_WIDTH) {
-        origin.x = new_center.x - (viewable_width >> 1);
-        if (origin.x < 0)
-            origin.x = 0;
-        if (origin.x + viewable_width >= MAP_WIDTH)
-            origin.x = MAP_WIDTH - viewable_width;
+    m_origin.m_y = 0;
+    m_origin.m_x = 0;
+    m_origin.m_z = newCenter.m_z;
+    if (m_viewableWidth != g_mapWidth) {
+        m_origin.m_x = newCenter.m_x - (m_viewableWidth >> 1);
+        if (m_origin.m_x < 0)
+            m_origin.m_x = 0;
+        if (m_origin.m_x + m_viewableWidth >= g_mapWidth)
+            m_origin.m_x = g_mapWidth - m_viewableWidth;
     }
-    if (viewable_height != MAP_HEIGHT) {
-        origin.y = new_center.y - (viewable_height >> 1);
-        if (origin.y < 0)
-            origin.y = 0;
-        if (origin.y + viewable_height >= MAP_HEIGHT)
-            origin.y = MAP_HEIGHT - viewable_height;
+    if (m_viewableHeight != g_mapHeight) {
+        m_origin.m_y = newCenter.m_y - (m_viewableHeight >> 1);
+        if (m_origin.m_y < 0)
+            m_origin.m_y = 0;
+        if (m_origin.m_y + m_viewableHeight >= g_mapHeight)
+            m_origin.m_y = g_mapHeight - m_viewableHeight;
     }
 
-    iVWCenterOffsetW = (608 - viewable_width * giViewWorldScale) >> 1;
-    iVWCenterOffsetH = (544 - viewable_height * giViewWorldScale) >> 1;
-    gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
-    gpAdvManager->UpdateRadar(origin, updateFlag, 1, view_mines, view_heroes,
-                              view_towns);
-    if (gpGame->worldMap.GetNumLevels() > 1) {
-        if (origin.z == 1) {
-            UndergroundButton->send_message(widget::WIDGET_CLEAR_STATUS, 6);
-            SurfaceButton->send_message(widget::WIDGET_SET_STATUS, 6);
+    g_vwCenterOffsetW = (608 - m_viewableWidth * g_viewWorldScale) >> 1;
+    g_vwCenterOffsetH = (544 - m_viewableHeight * g_viewWorldScale) >> 1;
+    g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+    g_advManager->updateRadar(m_origin, updateFlag, 1, g_viewMines, g_viewHeroes,
+                              g_viewTowns);
+    if (g_game->m_worldMap.getNumLevels() > 1) {
+        if (m_origin.m_z == 1) {
+            m_undergroundButton->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
+            m_surfaceButton->sendMessage(widget::WIDGET_SET_STATUS, 6);
         } else {
-            SurfaceButton->send_message(widget::WIDGET_CLEAR_STATUS, 6);
-            UndergroundButton->send_message(widget::WIDGET_SET_STATUS, 6);
+            m_surfaceButton->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
+            m_undergroundButton->sendMessage(widget::WIDGET_SET_STATUS, 6);
         }
     }
 }
@@ -1666,48 +1701,48 @@ void TViewWorldWindow::init(type_point new_center, unsigned char updateFlag)
 // shroud unless the terrain-only view is on, then the symbols); Complete
 // fixes the 8,8 / 592x544 clear and the closing gem redraw.
 VA(0x005fc4c0, 0x2E0)  // anchor-callers ViewWorldSurfaceHandler / ViewWorldUndergroundHandler, dc 0x196040
-void advManager::VWCompleteDraw(int startX, int startY, int z, int drawwidth,
+void advManager::vwCompleteDraw(int startX, int startY, int z, int drawwidth,
                                 int drawheight)
 {
     int row;
     int col;
 
-    gpWindowManager->screenBitmap->FillRect(8, 8, 592, 544, 0);
+    g_windowManager->m_screenBitmap->fillRect(8, 8, 592, 544, 0);
     for (row = -1; row <= drawheight; row++) {
         for (col = -1; col <= drawwidth; col++)
-            VWDrawGround(startX + col, startY + row, z, col, row);
+            vwDrawGround(startX + col, startY + row, z, col, row);
     }
     for (row = -1; row <= drawheight; row++) {
         for (col = -1; col <= drawwidth; col++)
-            VWDrawRiver(startX + col, startY + row, z, col, row);
+            vwDrawRiver(startX + col, startY + row, z, col, row);
     }
     for (row = -1; row <= drawheight; row++) {
         for (col = -1; col <= drawwidth; col++)
-            VWDrawRoad(startX + col, startY + row, z, col, row);
+            vwDrawRoad(startX + col, startY + row, z, col, row);
     }
     for (row = -1; row <= drawheight; row++) {
         for (col = -1; col <= drawwidth; col++)
-            VWDrawUnderlay(startX + col, startY + row, z, col, row);
+            vwDrawUnderlay(startX + col, startY + row, z, col, row);
     }
     for (row = -1; row <= drawheight; row++) {
         for (col = -1; col <= drawwidth; col++)
-            VWDrawAdvObjShadow(startX + col, startY + row, z, col, row);
+            vwDrawAdvObjShadow(startX + col, startY + row, z, col, row);
     }
     for (row = -1; row <= drawheight; row++) {
         for (col = -1; col <= drawwidth; col++)
-            VWDrawAdvObj(startX + col, startY + row, z, col, row);
+            vwDrawAdvObj(startX + col, startY + row, z, col, row);
     }
-    if (!iVWTerrains) {
+    if (!g_vwTerrains) {
         for (row = -1; row <= drawheight; row++) {
             for (col = -1; col <= drawwidth; col++)
-                VWDrawShroud(startX + col, startY + row, z, col, row);
+                vwDrawShroud(startX + col, startY + row, z, col, row);
         }
     }
     for (row = -1; row <= drawheight; row++) {
         for (col = -1; col <= drawwidth; col++)
-            VWDrawSymbols(startX + col, startY + row, z, col, row);
+            vwDrawSymbols(startX + col, startY + row, z, col, row);
     }
-    DrawAdventureMapGems();
+    drawAdventureMapGems();
 }
 
 // E:\gamedcs\viewwrld.cpp:1646
@@ -1724,32 +1759,32 @@ void advManager::VWCompleteDraw(int startX, int startY, int z, int drawwidth,
 // All six assignment orders were measured (best 79.15) and none reaches
 // the merge.
 VA(0x005fc7a0, 0x147)  // anchor-callee init + VWCompleteDraw, anchor-caller WindowHandler, dc 0x196228
-void TViewWorldWindow::update_view_world(message* msg)
+void TViewWorldWindow::updateViewWorld(message* msg)
 {
     message msg2;
     int i;
 
     for (i = 0; i < 3; i++) {
-        msg2.id = MESSAGE_WIDGET;
-        msg2.codeY = i + 16;
-        msg2.codeX = 6;
-        msg2.extra = 16;
-        BroadcastMessage(&msg2);
+        msg2.m_id = MESSAGE_WIDGET;
+        msg2.m_codeY = i + 16;
+        msg2.m_codeX = 6;
+        msg2.m_extra = 16;
+        broadcastMessage(&msg2);
     }
-    msg2.id = MESSAGE_WIDGET;
-    msg2.codeY = msg->codeY;
-    msg2.codeX = 5;
-    msg2.extra = 16;
-    BroadcastMessage(&msg2);
+    msg2.m_id = MESSAGE_WIDGET;
+    msg2.m_codeY = msg->m_codeY;
+    msg2.m_codeX = 5;
+    msg2.m_extra = 16;
+    broadcastMessage(&msg2);
 
-    type_point center(origin.x + view_half_width,
-                      origin.y + view_half_height, origin.z);
+    type_point center(m_origin.m_x + g_viewHalfWidth,
+                      m_origin.m_y + g_viewHalfHeight, m_origin.m_z);
 
     init(center, 1);
-    gpAdvManager->VWCompleteDraw(origin.x, origin.y, origin.z, viewable_width,
-                                 viewable_height);
-    DrawWindow(1, 0xffff0001, 0xffff);
-    gpWindowManager->UpdateScreen(0, 0, 800, 600);
+    g_advManager->vwCompleteDraw(m_origin.m_x, m_origin.m_y, m_origin.m_z, m_viewableWidth,
+                                 m_viewableHeight);
+    drawWindow(1, 0xffff0001, 0xffff);
+    g_windowManager->updateScreen(0, 0, 800, 600);
 }
 
 // E:\gamedcs\viewwrld.cpp:1675
@@ -1774,38 +1809,39 @@ void TViewWorldWindow::update_view_world(message* msg)
 // an explicit `<int>` template argument, `origin.x + 0`, a
 // `static_cast<int>` around the RESULT and a `long` domain throughout are
 // all byte-flat, and naming the two reads in int locals costs 6.93.
+// Before normalization (locals): fRadarDivisor.
 VA(0x005fc8f0, 0x213)  // anchor-callee UpdateRadar + VWCompleteDraw, anchor-caller WindowHandler, dc 0x1962fc
-void TViewWorldWindow::update_radar(int mrx, int mry, float fRadarDivisor)
+void TViewWorldWindow::updateRadar(int mrx, int mry, float radarDivisor)
 {
-    widget* radar = gpAdvManager->advWindow->RadarWidget;
-    int rx = radar->x;
-    int ry = radar->y;
-    int rw = radar->width;
-    int rh = radar->height;
+    widget* radar = g_advManager->m_advWindow->m_radarWidget;
+    int rx = radar->m_x;
+    int ry = radar->m_y;
+    int rw = radar->m_width;
+    int rh = radar->m_height;
 
     if (mrx < rx)
         mrx = rx;
     if (mrx >= rx + rw)
-        mrx = rx + MAP_WIDTH * 2 - 1;
+        mrx = rx + g_mapWidth * 2 - 1;
     if (mry < ry)
         mry = ry;
     if (mry >= ry + rh)
-        mry = ry + MAP_HEIGHT * 2 - 1;
+        mry = ry + g_mapHeight * 2 - 1;
 
-    origin.x = static_cast<int>((mrx - rx) / fRadarDivisor) - view_half_width;
-    origin.y = static_cast<int>((mry - ry) / fRadarDivisor) - view_half_height;
-    origin.x = _cpp_max(static_cast<int>(origin.x), 0);
-    origin.y = _cpp_max(static_cast<int>(origin.y), 0);
-    origin.x = _cpp_min(static_cast<int>(origin.x),
-                        MAP_WIDTH - viewable_width);
-    origin.y = _cpp_min(static_cast<int>(origin.y),
-                        MAP_HEIGHT - viewable_height);
+    m_origin.m_x = static_cast<int>((mrx - rx) / radarDivisor) - g_viewHalfWidth;
+    m_origin.m_y = static_cast<int>((mry - ry) / radarDivisor) - g_viewHalfHeight;
+    m_origin.m_x = cppMax(static_cast<int>(m_origin.m_x), 0);
+    m_origin.m_y = cppMax(static_cast<int>(m_origin.m_y), 0);
+    m_origin.m_x = cppMin(static_cast<int>(m_origin.m_x),
+                        g_mapWidth - m_viewableWidth);
+    m_origin.m_y = cppMin(static_cast<int>(m_origin.m_y),
+                        g_mapHeight - m_viewableHeight);
 
-    gpAdvManager->UpdateRadar(origin, 1, 1, view_mines, view_heroes,
-                              view_towns);
-    gpAdvManager->VWCompleteDraw(origin.x, origin.y, origin.z, viewable_width,
-                                 viewable_height);
-    gpWindowManager->UpdateScreen(8, 8, 592, 544);
+    g_advManager->updateRadar(m_origin, 1, 1, g_viewMines, g_viewHeroes,
+                              g_viewTowns);
+    g_advManager->vwCompleteDraw(m_origin.m_x, m_origin.m_y, m_origin.m_z, m_viewableWidth,
+                                 m_viewableHeight);
+    g_windowManager->updateScreen(8, 8, 592, 544);
 }
 
 // E:\gamedcs\viewwrld.cpp:1710
@@ -1819,101 +1855,102 @@ void TViewWorldWindow::update_radar(int mrx, int mry, float fRadarDivisor)
 // The radar drag is a pump: hold the button, keep the LAST mouse-move
 // seen, and re-centre once per outer pass until the button comes up.
 VA(0x005fcb10, 0x37F)  // vtable slot 9 + anchor-callee update_view_world/update_radar, dc 0x1964dc
-int TViewWorldWindow::WindowHandler(message* msg)
+int TViewWorldWindow::windowHandler(message* msg)
 {
     message rMsg;
     message rSaveMsg;
     type_point center;
-    float fRadarDivisor;
+    // Before normalization (locals): fRadarDivisor.
+    float radarDivisor;
     int handled;
 
-    handled = CAdvPopup::WindowHandler(msg);
+    handled = CAdvPopup::windowHandler(msg);
     if (handled)
         return handled;
 
-    if (!gpSoundManager->MusicPlaying())
-        gpSoundManager->SwitchAmbientMusic(
-            gTerrainMusicIds[gpAdvManager->field_58]);
+    if (!g_soundManager->musicPlaying())
+        g_soundManager->switchAmbientMusic(
+            g_terrainMusicIds[g_advManager->m_lastTerrain]);
 
-    if (msg->id == MESSAGE_KEY_DOWN) {
-        switch (msg->codeX) {
+    if (msg->m_id == MESSAGE_KEY_DOWN) {
+        switch (msg->m_codeX) {
         case KEYCODE_ESCAPE:
         case KEYCODE_ENTER:
-            gpWindowManager->dialogReturn = msg->codeY;
-            msg->codeX = msg->codeY = widget::WIDGET_END_DIALOG;
+            g_windowManager->m_dialogReturn = msg->m_codeY;
+            msg->m_codeX = msg->m_codeY = widget::WIDGET_END_DIALOG;
             return MESSAGE_DISPATCH_FORWARD;
         }
-    } else if (msg->id == MESSAGE_WIDGET) {
-        switch (msg->codeX) {
+    } else if (msg->m_id == MESSAGE_WIDGET) {
+        switch (msg->m_codeX) {
         case widget::WIDGET_SELECT:
-            if (msg->codeY != RADAR_ID)
+            if (msg->m_codeY != RADAR_ID)
                 break;
-            if (viewable_width == MAP_WIDTH && viewable_height == MAP_HEIGHT)
+            if (m_viewableWidth == g_mapWidth && m_viewableHeight == g_mapHeight)
                 break;
-            switch (MAP_HEIGHT) {
+            switch (g_mapHeight) {
             case MAP_DIMENSION_SMALL:
-                fRadarDivisor = 4.0f;
+                radarDivisor = 4.0f;
                 break;
             case MAP_DIMENSION_MEDIUM:
-                fRadarDivisor = 2.0f;
+                radarDivisor = 2.0f;
                 break;
             case MAP_DIMENSION_LARGE:
-                fRadarDivisor = 1.3333f;
+                radarDivisor = 1.3333f;
                 break;
             default:
-                fRadarDivisor = 1.0f;
+                radarDivisor = 1.0f;
                 break;
             }
-            update_radar(msg->mouseX, msg->mouseY, fRadarDivisor);
+            updateRadar(msg->m_mouseX, msg->m_mouseY, radarDivisor);
             do {
-                Process1WindowsMessage();
-                rSaveMsg = rMsg = gpInputManager->GetEvent();
-                while (rMsg.id != MESSAGE_LEFT_BUTTON_UP
-                       && rMsg.id != MESSAGE_NONE) {
-                    if (rMsg.id == MESSAGE_MOUSE_MOVE)
+                process1WindowsMessage();
+                rSaveMsg = rMsg = g_inputManager->getEvent();
+                while (rMsg.m_id != MESSAGE_LEFT_BUTTON_UP
+                       && rMsg.m_id != MESSAGE_NONE) {
+                    if (rMsg.m_id == MESSAGE_MOUSE_MOVE)
                         rSaveMsg = rMsg;
-                    Process1WindowsMessage();
-                    rMsg = gpInputManager->GetEvent();
+                    process1WindowsMessage();
+                    rMsg = g_inputManager->getEvent();
                 }
-                if (rSaveMsg.id == MESSAGE_MOUSE_MOVE)
-                    update_radar(rSaveMsg.codeX, rSaveMsg.codeY,
-                                 fRadarDivisor);
-            } while (rMsg.id != MESSAGE_LEFT_BUTTON_UP);
+                if (rSaveMsg.m_id == MESSAGE_MOUSE_MOVE)
+                    updateRadar(rSaveMsg.m_codeX, rSaveMsg.m_codeY,
+                                 radarDivisor);
+            } while (rMsg.m_id != MESSAGE_LEFT_BUTTON_UP);
             break;
         case widget::WIDGET_DESELECT:
-            switch (msg->codeY) {
+            switch (msg->m_codeY) {
             case MAGNIFY_FAR_ID:
-                gUnnamed68c6b8 = VIEW_WORLD_TILE_SCALE_FAR;
-                giViewWorldScale = 7;
-                update_view_world(msg);
+                g_unnamed68c6b8 = VIEW_WORLD_TILE_SCALE_FAR;
+                g_viewWorldScale = 7;
+                updateViewWorld(msg);
                 return MESSAGE_DISPATCH_CONSUME;
             case MAGNIFY_MID_ID:
-                gUnnamed68c6b8 = VIEW_WORLD_TILE_SCALE_MID;
-                giViewWorldScale = 11;
-                update_view_world(msg);
+                g_unnamed68c6b8 = VIEW_WORLD_TILE_SCALE_MID;
+                g_viewWorldScale = 11;
+                updateViewWorld(msg);
                 return MESSAGE_DISPATCH_CONSUME;
             case MAGNIFY_FULL_ID:
-                gUnnamed68c6b8 = VIEW_WORLD_TILE_SCALE_FULL;
-                giViewWorldScale = 16;
-                update_view_world(msg);
+                g_unnamed68c6b8 = VIEW_WORLD_TILE_SCALE_FULL;
+                g_viewWorldScale = 16;
+                updateViewWorld(msg);
                 return MESSAGE_DISPATCH_CONSUME;
             case PUZZLE_ID:
-                gpWindowManager->FadeScreen(1, 4, 0);
-                gpAdvManager->ViewPuzzle();
-                gpWindowManager->FadeScreen(1, 4, 0);
-                gpAdvManager->RedrawAdvScreen(0, 0);
-                DrawWindow(0, 0xffff0001, 0xffff);
-                center = type_point(origin.x + view_half_width,
-                                    origin.y + view_half_height, origin.z);
+                g_windowManager->fadeScreen(1, 4, 0);
+                g_advManager->viewPuzzle();
+                g_windowManager->fadeScreen(1, 4, 0);
+                g_advManager->redrawAdvScreen(0, 0);
+                drawWindow(0, 0xffff0001, 0xffff);
+                center = type_point(m_origin.m_x + g_viewHalfWidth,
+                                    m_origin.m_y + g_viewHalfHeight, m_origin.m_z);
                 init(center, 0);
-                gpAdvManager->VWCompleteDraw(origin.x, origin.y, origin.z,
-                                             viewable_width,
-                                             viewable_height);
-                gpWindowManager->UpdateScreen(0, 0, 800, 600);
+                g_advManager->vwCompleteDraw(m_origin.m_x, m_origin.m_y, m_origin.m_z,
+                                             m_viewableWidth,
+                                             m_viewableHeight);
+                g_windowManager->updateScreen(0, 0, 800, 600);
                 return MESSAGE_DISPATCH_CONSUME;
             case ACCEPT_ID:
-                gpWindowManager->dialogReturn = msg->codeY;
-                msg->codeX = msg->codeY = widget::WIDGET_END_DIALOG;
+                g_windowManager->m_dialogReturn = msg->m_codeY;
+                msg->m_codeX = msg->m_codeY = widget::WIDGET_END_DIALOG;
                 return MESSAGE_DISPATCH_FORWARD;
             }
             break;
@@ -1926,7 +1963,7 @@ int TViewWorldWindow::WindowHandler(message* msg)
 
 // E:\gamedcs\viewwrld.cpp:1549
 DC_ONLY(0x195ffc, 0x42)
-void TViewWorldWindow::draw_window()
+void TViewWorldWindow::drawWindow()
 {
     // @stub
 }

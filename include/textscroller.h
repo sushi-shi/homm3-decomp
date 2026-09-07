@@ -23,17 +23,19 @@
 // slots and overrides only slot 16, the state-change hook, at 0x5b9fa0.
 class type_text_slider : public slider {
 public:
-    type_text_scroller* owner;  // +0x68
+    // Before normalization: owner.
+    type_text_scroller* m_owner;  // +0x68
 
     type_text_slider(int x, int y, int w, int h, int id, int num,
                      TSliderFunction func, EGraphics graphics, int page,
                      unsigned char hotKey, type_text_scroller* scroller)
         : slider(x, y, w, h, id, num, func, graphics, page, hotKey)
     {
-        owner = scroller;
+        m_owner = scroller;
     }
 
-    virtual void Close();  // slot 16, retail 0x5b9fa0
+    // Before normalization (function): type_text_slider::Close.
+    virtual void close();  // slot 16, retail 0x5b9fa0
 };
 SIZE(type_text_slider, 0x6c);
 

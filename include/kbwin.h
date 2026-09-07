@@ -11,9 +11,12 @@
 // kbwin.cpp lines 823-839).
 class GameTime {
 public:
-    static unsigned long Get();             // 0x4f82e0
-    static void DelayTil(unsigned long time);  // 0x4f82f0
-    static void Delay(int interval);        // 0x4f83c0
+    // Before normalization (function): GameTime::Get.
+    static unsigned long get();             // 0x4f82e0
+    // Before normalization (function): GameTime::DelayTil.
+    static void delayTil(unsigned long time);  // 0x4f82f0
+    // Before normalization (function): GameTime::Delay.
+    static void delay(int interval);        // 0x4f83c0
     // DC struct.h:438 (dc 0x4c994, 44 B on SH4) - the frame-pacing
     // step, and a HEADER INLINE: no retail out-of-line body exists,
     // /Ob2 expands it at every site. army::Fly (0x4b4a40) is the
@@ -26,13 +29,15 @@ public:
     // because this tree already carries the rest of GameTime here and
     // moving the class would put struct.h's type_point into every one
     // of kbwin.h's nineteen consumers.
-    static unsigned long NextFrameTime(unsigned long this_frame,
+    // Before normalization (function): GameTime::NextFrameTime.
+    // Before normalization (locals): this_frame.
+    static unsigned long nextFrameTime(unsigned long thisFrame,
                                        long interval)
     {
-        long lag = static_cast<long>(Get() - this_frame);
+        long lag = static_cast<long>(get() - thisFrame);
         if (interval > lag)
             lag = interval;
-        return this_frame + lag;
+        return thisFrame + lag;
     }
     // DC struct.h:411 / :419 (dc 0x1eed4, 0x1ef04) - the other two
     // header inlines of the same family; no retail out-of-line body
@@ -42,29 +47,39 @@ public:
     // argument evaluated ahead of its guard), and the result is tested
     // with `sub eax, edi; js`, i.e. the SIGN of the difference - not
     // the unsigned `cmp` a hand-spelled `Get() >= deadline` emits.
-    static long ElapsedSince(unsigned long time)
+    // Before normalization (function): GameTime::ElapsedSince.
+    static long elapsedSince(unsigned long time)
     {
-        return static_cast<long>(Get() - time);
+        return static_cast<long>(get() - time);
     }
-    static unsigned char IsPast(unsigned long time)
+    // Before normalization (function): GameTime::IsPast.
+    static unsigned char isPast(unsigned long time)
     {
-        return ElapsedSince(time) >= 0;
+        return elapsedSince(time) >= 0;
     }
 };
 
 // Live prototypes (homm2 kbwin lineage; retail bodies noted).
-void AppExit();                         // 0x4f7fa0
-void Process1WindowsMessage();          // 0x4f7fb0
-void KBChangeMenu(HMENU newMenu);       // 0x4f8180, fastcall under /Gr
-void SetNoDialogMenus(int noMenus);     // 0x4f81e0, fastcall under /Gr
-void SetMenus(HMENU menu, int enabled); // 0x4f8220, fastcall under /Gr;
+// Before normalization (function): AppExit.
+void appExit();                         // 0x4f7fa0
+// Before normalization (function): Process1WindowsMessage.
+void process1WindowsMessage();          // 0x4f7fb0
+// Before normalization (function): KBChangeMenu.
+void kbChangeMenu(HMENU newMenu);       // 0x4f8180, fastcall under /Gr
+// Before normalization (function): SetNoDialogMenus.
+void setNoDialogMenus(int noMenus);     // 0x4f81e0, fastcall under /Gr
+// Before normalization (function): SetMenus.
+void setMenus(HMENU menu, int enabled); // 0x4f8220, fastcall under /Gr;
                                         // homm2 signature - the DC row is a
                                         // 4-byte WinCE stub
-BOOL CALLBACK AppAbout(HWND dialog, UINT message, WPARAM messageParam,
+// Before normalization (function): AppAbout.
+BOOL CALLBACK appAbout(HWND dialog, UINT message, WPARAM messageParam,
     LPARAM messageData);                // 0x4f8140
-LRESULT AppCommand(HWND window, UINT message, WPARAM messageParam,
+// Before normalization (function): AppCommand.
+LRESULT appCommand(HWND window, UINT message, WPARAM messageParam,
     LPARAM messageData);                // 0x4f8060, fastcall under /Gr
-LRESULT CALLBACK AppWndProc(HWND window, UINT message,
+// Before normalization (function): AppWndProc.
+LRESULT CALLBACK appWndProc(HWND window, UINT message,
     WPARAM messageParam, LPARAM messageData);  // 0x4f7c00
 
 // The three surviving menu commands (homm2 kbwin.h values; homm3
@@ -80,9 +95,12 @@ enum KbWinMenuCommand {
 // byte: retail's SetMenus scales the table index by 8 and reads the
 // enable bytes at +4/+5, so the homm3 struct is naturally aligned.
 struct SMenuEnableStatus {
-    unsigned int command;
-    unsigned char normalEnabled;
-    unsigned char setupEnabled;
+    // Before normalization: command.
+    unsigned int m_command;
+    // Before normalization: normalEnabled.
+    unsigned char m_normalEnabled;
+    // Before normalization: setupEnabled.
+    unsigned char m_setupEnabled;
 };
 
 // Retail table 0x67f930..0x67f958 = 5 entries (homm2's
@@ -92,45 +110,69 @@ enum { KBWIN_MENU_ENTRY_COUNT = 5 };
 
 // kbwin globals (DC attests hwndApp; the rest are retail-only .bss
 // slots named for their role - provisional).
-extern HWND hwndApp;                    // 0x699600
-extern HINSTANCE ghInstance;            // 0x6995b4
-extern unsigned char bInMessageLoop;    // 0x6995b8
-extern HMENU currMenu;                  // 0x6995bc
-extern HMENU activeMenu;                // 0x699604
-extern int bMenusSuppressed;            // 0x699618
-extern int bWindowedMode;               // 0x6987b8
-extern int bVideoPaused;                // 0x69954c
-extern HMENU dfltMenu;                  // 0x6989e4 (CallManager's resume
+// Before normalization: hwndApp.
+extern HWND g_hwndApp;                    // 0x699600
+// Before normalization: ghInstance.
+extern HINSTANCE g_instance;            // 0x6995b4
+// Before normalization: bInMessageLoop.
+extern unsigned char g_inMessageLoop;    // 0x6995b8
+// Before normalization: currMenu.
+extern HMENU g_currMenu;                  // 0x6995bc
+// Before normalization: activeMenu.
+extern HMENU g_activeMenu;                // 0x699604
+// Before normalization: bMenusSuppressed.
+extern int g_menusSuppressed;            // 0x699618
+// Before normalization: bWindowedMode.
+extern int g_windowedMode;               // 0x6987b8
+extern int g_videoPaused;                // 0x69954c
+// Before normalization: dfltMenu.
+extern HMENU g_dfltMenu;                  // 0x6989e4 (CallManager's resume
                                         // arm restores it; name provisional)
 // .bss 0x698a34, the single-player menu gate advmgr's Open tests: when
 // clear, the non-multiplayer LoadMenu pair (0x6f/0x71) is skipped
 // entirely. Role wider than that is unattested; ordinal name.
-extern int gUnnamed698a34;
-extern HMENU gameMenu;                  // 0x6989e8 (dfltMenu's .bss
+// Before normalization: gUnnamed698a34.
+extern int g_unnamed698a34;
+// Before normalization: gameMenu.
+extern HMENU g_gameMenu;                  // 0x6989e8 (dfltMenu's .bss
                                         // neighbour: kb's InitMainClasses
                                         // loads the pair, kb's CleanUpMenus
                                         // destroys the pair, and
                                         // advManager::Open /
                                         // combatManager::Open install it.
                                         // Name provisional)
-extern int gbInSetupDialog;             // 0x6989d0 (homm2 name; selects the
+// Before normalization: gbInSetupDialog.
+extern int g_inSetupDialog;             // 0x6989d0 (homm2 name; selects the
                                         // setupEnabled column in SetMenus)
-extern char szAppName[];                // 0x67f820 "Heroes III" (homm2 name)
-extern char szTitle[];                  // 0x67f82c (homm2 name)
-extern HANDLE ghGameEvent;              // 0x69960c (single-instance event)
-extern char gcCommandLine[61];          // 0x6995c0 (homm2 gcCommandLine)
-extern int iWindowX;                    // 0x6987b0 (windowed x, saved on move)
-extern int iWindowY;                    // 0x6987b4
-extern LONG lAppWindowStyle;            // 0x6995a8 (WM_MOVE style snapshot)
-extern RECT rcAppWindow;                // 0x699598
-extern int bClosingApp;                 // 0x6989fc (homm2 gbClosingApp)
-extern unsigned char bShutDownDone;     // 0x699608 (WM_QUIT ShutDown guard;
+// Before normalization: szAppName.
+extern char g_appName[];                // 0x67f820 "Heroes III" (homm2 name)
+// Before normalization: szTitle.
+extern char g_title[];                  // 0x67f82c (homm2 name)
+// Before normalization: ghGameEvent.
+extern HANDLE g_gameEvent;              // 0x69960c (single-instance event)
+// Before normalization: gcCommandLine.
+extern char g_commandLine[61];          // 0x6995c0 (homm2 gcCommandLine)
+// Before normalization: iWindowX.
+extern int g_windowX;                    // 0x6987b0 (windowed x, saved on move)
+// Before normalization: iWindowY.
+extern int g_windowY;                    // 0x6987b4
+// Before normalization: lAppWindowStyle.
+extern LONG g_appWindowStyle;            // 0x6995a8 (WM_MOVE style snapshot)
+// Before normalization: rcAppWindow.
+extern RECT g_rcAppWindow;                // 0x699598
+// Before normalization: bClosingApp.
+extern int g_closingApp;                 // 0x6989fc (homm2 gbClosingApp)
+// Before normalization: bShutDownDone.
+extern unsigned char g_shutDownDone;     // 0x699608 (WM_QUIT ShutDown guard;
                                         // name provisional)
-extern unsigned char bAppDeactivated;   // 0x699609 (system cursor shown while
+// Before normalization: bAppDeactivated.
+extern unsigned char g_appDeactivated;   // 0x699609 (system cursor shown while
                                         // switched away; name provisional)
-extern unsigned char bMusicWasPlaying;  // 0x699614 (deactivate latch; name
+// Before normalization: bMusicWasPlaying.
+extern unsigned char g_musicWasPlaying;  // 0x699614 (deactivate latch; name
                                         // provisional)
-extern SMenuEnableStatus gsMenuEnableStatus[KBWIN_MENU_ENTRY_COUNT];
+// Before normalization: gsMenuEnableStatus.
+extern SMenuEnableStatus g_menuEnableStatus[KBWIN_MENU_ENTRY_COUNT];
                                         // 0x67f930 (.data; homm2 kept the
                                         // table in KB.cpp - homm3 owner TU
                                         // unproven, defined in kbwin.cpp as
@@ -152,7 +194,8 @@ extern SMenuEnableStatus gsMenuEnableStatus[KBWIN_MENU_ENTRY_COUNT];
 // image's shared one-byte `ret` - but the CALL survives in
 // heroWindowManager::Open, which is what makes the declarator needed here
 // rather than only in the CODEVIEW roster below.
-void InitVideo();                                        // 0x5bc690 (ICF)
+// Before normalization (function): InitVideo.
+void initVideo();                                        // 0x5bc690 (ICF)
 
 // CODEVIEW(E:\gamedcs\kbwin.cpp:851, dc 0xe80b4) void InitVideo();
 

@@ -34,8 +34,10 @@ enum TEncodingMethod {
 // and retain only its low half. The union makes both retail widths explicit
 // without introducing cast debt into the source tree.
 union TBlendMask {
-    unsigned short word;
-    unsigned int dword;
+    // Before normalization: word.
+    unsigned short m_word;
+    // Before normalization: dword.
+    unsigned int m_dword;
 };
 
 // General-RLE control values consumed by the specialized frame renderers.
@@ -72,20 +74,33 @@ enum TRawRowUnrollEntry {
 
 class CSpriteFrame : public resource {
 public:
-    static TBlendMask div2mask;
-    static unsigned short div4mask;
+    // Before normalization: div2mask.
+    static TBlendMask s_div2mask;
+    // Before normalization: div4mask.
+    static unsigned short s_div4mask;
 
-    int DataSize;
-    int ImageSize;
-    TEncodingMethod EncodingMethod;
-    int Width;
-    int Height;
-    int CroppedWidth;
-    int CroppedHeight;
-    int CroppedX;
-    int CroppedY;
-    int Pitch;
-    unsigned char* map;
+    // Before normalization: DataSize.
+    int m_dataSize;
+    // Before normalization: ImageSize.
+    int m_imageSize;
+    // Before normalization: EncodingMethod.
+    TEncodingMethod m_encodingMethod;
+    // Before normalization: Width.
+    int m_width;
+    // Before normalization: Height.
+    int m_height;
+    // Before normalization: CroppedWidth.
+    int m_croppedWidth;
+    // Before normalization: CroppedHeight.
+    int m_croppedHeight;
+    // Before normalization: CroppedX.
+    int m_croppedX;
+    // Before normalization: CroppedY.
+    int m_croppedY;
+    // Before normalization: Pitch.
+    int m_pitch;
+    // Before normalization: map.
+    unsigned char* m_map;
 
     CSpriteFrame(const char* name, int w, int h, unsigned char* data,
                  int csize, TEncodingMethod encoding);
@@ -94,59 +109,74 @@ public:
                  int cw, int ch, int cx, int cy);
 
     virtual ~CSpriteFrame();
-    virtual unsigned int GetSize() const;
+    // Before normalization (function): CSpriteFrame::GetSize.
+    virtual unsigned int getSize() const;
 
     // CSpriteFrame.h:87-90.  DC emits standalone copies, while retail's
     // consumers expand these one-field accessors in place.
-    int GetCroppedWidth() const { return CroppedWidth; }
-    int GetCroppedHeight() const { return CroppedHeight; }
-    int GetCroppedX() const { return CroppedX; }
-    int GetCroppedY() const { return CroppedY; }
+    // Before normalization (function): CSpriteFrame::GetCroppedWidth.
+    int getCroppedWidth() const { return m_croppedWidth; }
+    // Before normalization (function): CSpriteFrame::GetCroppedHeight.
+    int getCroppedHeight() const { return m_croppedHeight; }
+    // Before normalization (function): CSpriteFrame::GetCroppedX.
+    int getCroppedX() const { return m_croppedX; }
+    // Before normalization (function): CSpriteFrame::GetCroppedY.
+    int getCroppedY() const { return m_croppedY; }
 
-    void Clip(int& sx, int& sy, int& sw, int& sh, int& dx, int& dy,
+    // Before normalization (function): CSpriteFrame::Clip.
+    void clip(int& sx, int& sy, int& sw, int& sh, int& dx, int& dy,
               int dw, int dh, unsigned char hflip,
               unsigned char vflip) const;
-    void Draw(int sx, int sy, int sw, int sh, unsigned short* dst,
+    // Before normalization (function): CSpriteFrame::Draw.
+    void draw(int sx, int sy, int sw, int sh, unsigned short* dst,
               int dx, int dy, int dw, int dh, int dpitch,
               TPalette16& pal, unsigned char hflip,
               unsigned char tblit) const;
-    void DrawCreatureImpl(int sx, int sy, int sw, int sh,
+    // Before normalization (function): CSpriteFrame::DrawCreatureImpl.
+    void drawCreatureImpl(int sx, int sy, int sw, int sh,
                           unsigned short* dst, int dx, int dy, int dw,
                           int dh, int dpitch, TPalette16& pal,
                           unsigned char hflip, unsigned short outcolor,
                           unsigned char alpha) const;
     // CSpriteFrame.h:147-148. Dreamcast emits this header wrapper as a
     // standalone function; retail inlines its fixed zero-alpha forwarding.
-    void DrawCreature(int sx, int sy, int sw, int sh,
+    // Before normalization (function): CSpriteFrame::DrawCreature.
+    void drawCreature(int sx, int sy, int sw, int sh,
                       unsigned short* dst, int dx, int dy, int dw, int dh,
                       int dpitch, TPalette16& pal, unsigned char hflip,
                       unsigned short outcolor) const
     {
-        DrawCreatureImpl(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch,
+        drawCreatureImpl(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch,
                          pal, hflip, outcolor, 0);
     }
-    void DrawAdvObjImpl(int sx, int sy, int sw, int sh,
+    // Before normalization (function): CSpriteFrame::DrawAdvObjImpl.
+    void drawAdvObjImpl(int sx, int sy, int sw, int sh,
                         unsigned short* dst, int dx, int dy, int dw, int dh,
                         int dpitch, TPalette16& pal, unsigned char hflip,
                         unsigned short flagcolor) const;
-    void DrawAdvObjWithFlagAlpha(int sx, int sy, int sw, int sh,
+    // Before normalization (function): CSpriteFrame::DrawAdvObjWithFlagAlpha.
+    void drawAdvObjWithFlagAlpha(int sx, int sy, int sw, int sh,
                                  unsigned short* dst, int dx, int dy,
                                  int dw, int dh, int dpitch, TPalette16& pal,
                                  unsigned short flagcolor,
                                  unsigned char hflip) const;
-    void DrawAdvObjShadowImpl(int sx, int sy, int sw, int sh,
+    // Before normalization (function): CSpriteFrame::DrawAdvObjShadowImpl.
+    void drawAdvObjShadowImpl(int sx, int sy, int sw, int sh,
                               unsigned short* dst, int dx, int dy, int dw,
                               int dh, int dpitch, TPalette16& pal,
                               unsigned char hflip) const;
-    void DrawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
+    // Before normalization (function): CSpriteFrame::DrawTile.
+    void drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                   int dx, int dy, int dw, int dh, int dpitch,
                   TPalette16& pal, unsigned char hflip,
                   unsigned char vflip) const;
-    void DrawTileShadow(int sx, int sy, int sw, int sh, unsigned short* dst,
+    // Before normalization (function): CSpriteFrame::DrawTileShadow.
+    void drawTileShadow(int sx, int sy, int sw, int sh, unsigned short* dst,
                         int dx, int dy, int dw, int dh, int dpitch,
                         TPalette16& pal, unsigned char hflip,
                         unsigned char vflip) const;
-    void DrawSpellEffect(int sx, int sy, int sw, int sh,
+    // Before normalization (function): CSpriteFrame::DrawSpellEffect.
+    void drawSpellEffect(int sx, int sy, int sw, int sh,
                          unsigned short* dst, int dx, int dy, int dw, int dh,
                          int dpitch, TPalette16& pal, unsigned char hflip,
                          unsigned char alpha) const;
@@ -154,7 +184,8 @@ public:
     // Static: retail takes rmask/gmask in ecx/edx with bmask on the
     // stack and never touches a `this`, which under /Gr is exactly a
     // free/static three-argument fastcall.
-    static void SetPixelFormat(unsigned rmask, unsigned gmask,
+    // Before normalization (function): CSpriteFrame::SetPixelFormat.
+    static void setPixelFormat(unsigned rmask, unsigned gmask,
                                unsigned bmask);
 };
 SIZE(CSpriteFrame, 0x48);

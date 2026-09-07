@@ -23,22 +23,29 @@
 // and read back by the two six-byte accessors below. No retail or Dreamcast
 // symbol attests storage names, so these remain house-ordinal placeholders
 // in their owning TU.
+// Before normalization: gUnnamed68c870.
 DATA(0x0068c870)
-static int gUnnamed68c870;
+static int g_unnamed68c870;
+// Before normalization: gUnnamed68c874.
 DATA(0x0068c874)
-static int gUnnamed68c874;
+static int g_unnamed68c874;
+// Before normalization: gUnnamed68c878.
 DATA(0x0068c878)
-static int gUnnamed68c878;
+static int g_unnamed68c878;
 
 // DirectDraw's lifecycle cells. The primary/back surfaces are public because
 // the blitters consume them; the DirectDraw and clipper interfaces remain
 // private to this compiland.
-DATA(0x006aacb8) static IDirectDraw* gpDirectDraw;
-DATA(0x006aacbc) IDirectDrawSurface* gpDDSPrimary;
-DATA(0x006aacc0) IDirectDrawSurface* gpDDSBack;
-DATA(0x006aacd0) static IDirectDrawClipper* gpDDClipper;
-DATA(0x006aacb4) static int gWinGraphBusy;
-DATA(0x006aacd4) static unsigned char gInDirectDrawError;
+// Before normalization: gpDirectDraw.
+DATA(0x006aacb8) static IDirectDraw* g_directDraw;
+DATA(0x006aacbc) IDirectDrawSurface* g_ddsPrimary;
+// Before normalization: gpDDClipper.
+DATA(0x006aacc0) IDirectDrawSurface* g_ddsBack;
+// Before normalization: gWinGraphBusy.
+DATA(0x006aacd0) static IDirectDrawClipper* g_ddClipper;
+// Before normalization: gInDirectDrawError.
+DATA(0x006aacb4) static int g_winGraphBusy;
+DATA(0x006aacd4) static unsigned char g_inDirectDrawError;
 
 // wingraph's own Bitmap16Bit VIEW of the locked back surface, referenced
 // (never owned) at every DDCreateSurface and re-referenced after each
@@ -46,12 +53,14 @@ DATA(0x006aacd4) static unsigned char gInDirectDrawError;
 // places and all four are rows in this compiland (0x1ffdf5 - the dynamic
 // initializer that constructs it 0x0-by-0x0 - 0x1ffe11, 0x2001a9, 0x2006c2).
 // NAME provisional: no roster attests it.
-DATA(0x006aac70) static Bitmap16Bit gDDSurfaceBitmap(0, 0);
+// Before normalization: gDDSurfaceBitmap.
+DATA(0x006aac70) static Bitmap16Bit g_ddSurfaceBitmap(0, 0);
 
 // The first 16 bytes of the old DirectDraw pixel-format record. Its three
 // live channel masks are separately owned at 0x68c860..68 by mousemgr.cpp,
 // whose renderer consumes them. The split avoids overlapping DATA claims.
-DATA(0x0068c850) static TPixelFormatPrefix gPixelFormatPrefix = {
+// Before normalization: gPixelFormatPrefix.
+DATA(0x0068c850) static TPixelFormatPrefix g_pixelFormatPrefix = {
     sizeof(DDPIXELFORMAT), DDPF_RGB
 };
 
@@ -59,14 +68,14 @@ DATA(0x0068c850) static TPixelFormatPrefix gPixelFormatPrefix = {
 
 // E:\gamedcs\wingraph.cpp:72
 DC_ONLY(0x198af4, 0x26)
-void SetPlayerPaletteColors(unsigned short* pPalette, int whichPlayer)
+void setPlayerPaletteColors(unsigned short* pPalette, int whichPlayer)
 {
     // @stub
 }
 
 // E:\gamedcs\wingraph.cpp:83
 DC_ONLY(0x198b1c, 0x2A)
-void SetPlayerPaletteColors(TPalette24* pal, int whichPlayer)
+void setPlayerPaletteColors(TPalette24* pal, int whichPlayer)
 {
     // @stub
 }
@@ -87,21 +96,21 @@ void DDSetupClipper()
 
 // E:\gamedcs\wingraph.cpp:156
 DC_ONLY(0x198bcc, 0x190)
-void DDInitGraphics(int Mode, unsigned char reinit)
+void ddInitGraphics(int Mode, unsigned char reinit)
 {
     // @stub
 }
 
 // E:\gamedcs\wingraph.cpp:260
 DC_ONLY(0x198d5c, 0x2D0)
-void RobAppBlit(tagRECT* comb_rect)
+void robAppBlit(tagRECT* comb_rect)
 {
     // @stub
 }
 
 // E:\gamedcs\wingraph.cpp:370
 DC_ONLY(0x19902c, 0x26)
-void DDAppBlit(const tagRECT* mregion)
+void ddAppBlit(const tagRECT* mregion)
 {
     // @stub
 }
@@ -129,14 +138,14 @@ void DDBlitFromFront()
 
 // E:\gamedcs\wingraph.cpp:931
 DC_ONLY(0x199170, 0x140)
-void DDBlit(IDirectDrawSurface4* dst_surface, const tagRECT* udst_rect, IDirectDrawSurface4* src_surface, const tagRECT* usrc_rect, unsigned long flags)
+void ddBlit(IDirectDrawSurface4* dst_surface, const tagRECT* udst_rect, IDirectDrawSurface4* src_surface, const tagRECT* usrc_rect, unsigned long flags)
 {
     // @stub
 }
 
 // E:\gamedcs\wingraph.cpp:1013
 DC_ONLY(0x1992b0, 0x1E0)
-IDirectDrawSurface4* DDCreateSurface(unsigned long width, unsigned long height, int bPrimary, IDirectDrawSurface4** oldsurface)
+IDirectDrawSurface4* ddCreateSurface(unsigned long width, unsigned long height, int bPrimary, IDirectDrawSurface4** oldsurface)
 {
     // @stub
 }
@@ -164,7 +173,7 @@ void DDReleaseMouseSurfaces()
 
 // E:\gamedcs\wingraph.cpp:1476
 DC_ONLY(0x19a09c, 0x76)
-void DDCleanUpWinGraphics()
+void ddCleanUpWinGraphics()
 {
     // @stub
 }
@@ -178,7 +187,7 @@ void ResizeWindow()
 
 // E:\gamedcs\wingraph.cpp:1712
 DC_ONLY(0x19a234, 0x1AC)
-unsigned char DDSetFullScreenStatus(int iNewStatus)
+unsigned char ddSetFullScreenStatus(int iNewStatus)
 {
     // @stub
 }
@@ -195,17 +204,17 @@ unsigned char DDSetFullScreenStatus(int iNewStatus)
 // first colour in each layout.
 // E:\gamedcs\wingraph.cpp:72
 VA(0x005ffe20, 0x1E)  // anchor-caller(bitmapBorder/button::SetPlayerPaletteColors) + dc-order-map, dc 0x198af4
-void SetPlayerPaletteColors(palette* pal, int whichPlayer)
+void setPlayerPaletteColors(palette* pal, int whichPlayer)
 {
-    memcpy(&pal->data[224], &gPlayerPalette->data[whichPlayer * 32],
+    memcpy(&pal->m_data[224], &g_playerPalette->m_data[whichPlayer * 32],
            32 * sizeof(unsigned short));
 }
 
 // E:\gamedcs\wingraph.cpp:83
 VA(0x005ffe40, 0x22)  // anchor-caller(bitmapBorder::SetPlayerPaletteColors) + dc-order-map, dc 0x198b1c
-void SetPlayerPaletteColors(TPalette24* pal, int whichPlayer)
+void setPlayerPaletteColors(TPalette24* pal, int whichPlayer)
 {
-    memcpy(pal->colors.data[224], gPlayerPalette24->colors.data[whichPlayer * 32],
+    memcpy(pal->m_colors.m_data[224], g_playerPalette24->m_colors.m_data[whichPlayer * 32],
            32 * 3);
 }
 
@@ -217,101 +226,102 @@ void SetPlayerPaletteColors(TPalette24* pal, int whichPlayer)
 // the body; the empty spin on the mouse manager's busy word is retail's, and
 // VC6 hoists its load out so the wait is one self-jump.
 // E:\gamedcs\wingraph.cpp:260
+// Before normalization (locals): comb_rect.
 VA(0x005ffe70, 0x35C)  // anchor-caller(AppPaint, winmgr's five UpdateScreen/fade sites) + wingraph statics, dc 0x198d5c
-void RobAppBlit(tagRECT* comb_rect)
+void robAppBlit(tagRECT* combRect)
 {
-    if (IsIconic(hwndApp))
+    if (IsIconic(g_hwndApp))
         return;
-    if (!gpDirectDraw)
+    if (!g_directDraw)
         return;
-    if (comb_rect->right <= comb_rect->left)
+    if (combRect->right <= combRect->left)
         return;
-    if (comb_rect->bottom <= comb_rect->top)
+    if (combRect->bottom <= combRect->top)
         return;
 
-    HRESULT result = gpDDSBack->Unlock(0);
+    HRESULT result = g_ddsBack->Unlock(0);
     if (result != DD_OK)
-        DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+        ddsd(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
                      "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0xdf);
 
     POINT origin;
     origin.x = 0;
     origin.y = 0;
-    RECT screenRect = *comb_rect;
-    ClientToScreen(hwndApp, &origin);
+    RECT screenRect = *combRect;
+    ClientToScreen(g_hwndApp, &origin);
     OffsetRect(&screenRect, origin.x, origin.y);
 
-    if (gpMouseManager->savedRect.right > comb_rect->left
-        && comb_rect->right > gpMouseManager->savedRect.left
-        && gpMouseManager->savedRect.bottom > comb_rect->top
-        && comb_rect->bottom > gpMouseManager->savedRect.top) {
+    if (g_mouseManager->m_savedRect.right > combRect->left
+        && combRect->right > g_mouseManager->m_savedRect.left
+        && g_mouseManager->m_savedRect.bottom > combRect->top
+        && combRect->bottom > g_mouseManager->m_savedRect.top) {
         RECT pointerRect;
         RECT sourceRect;
-        if (gpMouseManager) {
-            while (gpMouseManager->field_74)
+        if (g_mouseManager) {
+            while (g_mouseManager->m_busy)
                 ;
-            IntersectRect(&pointerRect, comb_rect,
-                          &gpMouseManager->savedRect);
+            IntersectRect(&pointerRect, combRect,
+                          &g_mouseManager->m_savedRect);
             sourceRect = pointerRect;
-            OffsetRect(&sourceRect, -gpMouseManager->savedRect.left,
-                       -gpMouseManager->savedRect.top);
-            DDBlit(gpDDSMouseSaveSurface, &sourceRect, static_cast<IDirectDrawSurface4*>(static_cast<void*>(gpDDSBack)),
+            OffsetRect(&sourceRect, -g_mouseManager->m_savedRect.left,
+                       -g_mouseManager->m_savedRect.top);
+            ddBlit(g_ddsMouseSaveSurface, &sourceRect, static_cast<IDirectDrawSurface4*>(static_cast<void*>(g_ddsBack)),
                    &pointerRect, DDBLT_WAIT);
-            if (gpMouseManager->field_68 == 0 && gpMouseManager->field_54
-                && gpMouseManager->field_50 >= 0) {
+            if (g_mouseManager->m_hideCount == 0 && g_mouseManager->m_sprite
+                && g_mouseManager->m_frame >= 0) {
                 DDSURFACEDESC surfaceDesc;
                 memset(&surfaceDesc, 0, sizeof(surfaceDesc));
                 surfaceDesc.dwSize = sizeof(surfaceDesc);
-                result = gpDDSBack->Lock(0, &surfaceDesc, DDLOCK_WAIT, 0);
+                result = g_ddsBack->Lock(0, &surfaceDesc, DDLOCK_WAIT, 0);
                 if (result != DD_OK)
-                    DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                    ddsd(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
                      "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x119);
-                gpMouseManager->field_54->Draw(0, gpMouseManager->field_50,
-                    pointerRect.left - gpMouseManager->field_58,
-                    pointerRect.top - gpMouseManager->field_5c,
+                g_mouseManager->m_sprite->draw(0, g_mouseManager->m_frame,
+                    pointerRect.left - g_mouseManager->m_imageX,
+                    pointerRect.top - g_mouseManager->m_imageY,
                     pointerRect.right - pointerRect.left,
                     pointerRect.bottom - pointerRect.top,
                     static_cast<unsigned short*>(surfaceDesc.lpSurface),
                     pointerRect.left, pointerRect.top,
                     surfaceDesc.dwWidth, surfaceDesc.dwHeight,
                     surfaceDesc.lPitch, 0, 1);
-                result = gpDDSBack->Unlock(0);
+                result = g_ddsBack->Unlock(0);
                 if (result != DD_OK)
-                    DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                    ddsd(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
                      "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x124);
             }
         }
 
-        DDBlit(static_cast<IDirectDrawSurface4*>(static_cast<void*>(gpDDSPrimary)), &screenRect, static_cast<IDirectDrawSurface4*>(static_cast<void*>(gpDDSBack)), comb_rect, DDBLT_WAIT);
+        ddBlit(static_cast<IDirectDrawSurface4*>(static_cast<void*>(g_ddsPrimary)), &screenRect, static_cast<IDirectDrawSurface4*>(static_cast<void*>(g_ddsBack)), combRect, DDBLT_WAIT);
 
-        if (gpMouseManager && gpMouseManager->field_68 == 0
-            && gpMouseManager->field_54 && gpMouseManager->field_50 >= 0) {
-            DDBlit(static_cast<IDirectDrawSurface4*>(static_cast<void*>(gpDDSBack)), &pointerRect, gpDDSMouseSaveSurface,
+        if (g_mouseManager && g_mouseManager->m_hideCount == 0
+            && g_mouseManager->m_sprite && g_mouseManager->m_frame >= 0) {
+            ddBlit(static_cast<IDirectDrawSurface4*>(static_cast<void*>(g_ddsBack)), &pointerRect, g_ddsMouseSaveSurface,
                    &sourceRect, DDBLT_WAIT);
         }
     } else {
-        DDBlit(static_cast<IDirectDrawSurface4*>(static_cast<void*>(gpDDSPrimary)), &screenRect, static_cast<IDirectDrawSurface4*>(static_cast<void*>(gpDDSBack)), comb_rect, DDBLT_WAIT);
+        ddBlit(static_cast<IDirectDrawSurface4*>(static_cast<void*>(g_ddsPrimary)), &screenRect, static_cast<IDirectDrawSurface4*>(static_cast<void*>(g_ddsBack)), combRect, DDBLT_WAIT);
     }
 
     DDSURFACEDESC surfaceDesc;
     memset(&surfaceDesc, 0, sizeof(surfaceDesc));
     surfaceDesc.dwSize = sizeof(surfaceDesc);
-    result = gpDDSBack->Lock(0, &surfaceDesc, DDLOCK_WAIT, 0);
+    result = g_ddsBack->Lock(0, &surfaceDesc, DDLOCK_WAIT, 0);
     if (result != DD_OK)
-        DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+        ddsd(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
                      "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x13e);
 
-    if (gpWindowManager->screenBitmap) {
-        gpWindowManager->screenBitmap->reference(
+    if (g_windowManager->m_screenBitmap) {
+        g_windowManager->m_screenBitmap->reference(
             surfaceDesc.dwWidth, surfaceDesc.dwHeight, surfaceDesc.lPitch,
             static_cast<unsigned short*>(surfaceDesc.lpSurface));
     }
-    gDDSurfaceBitmap.reference(
+    g_ddSurfaceBitmap.reference(
         surfaceDesc.dwWidth, surfaceDesc.dwHeight, surfaceDesc.lPitch,
         static_cast<unsigned short*>(surfaceDesc.lpSurface));
 
     if (result != DD_OK)
-        DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+        ddsd(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
                      "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x14a);
 }
 
@@ -348,7 +358,7 @@ void RobAppBlit(tagRECT* comb_rect)
 // 75.97.
 // E:\gamedcs\wingraph.cpp:931
 VA(0x006001d0, 0x1E1)  // anchor-caller(mousemgr, six sites) + header identification, dc 0x199170
-void DDBlit(IDirectDrawSurface4* dstSurface, const tagRECT* dstRect,
+void ddBlit(IDirectDrawSurface4* dstSurface, const tagRECT* dstRect,
             IDirectDrawSurface4* srcSurface, const tagRECT* srcRect,
             unsigned long flags)
 {
@@ -357,29 +367,29 @@ void DDBlit(IDirectDrawSurface4* dstSurface, const tagRECT* dstRect,
 
     if (dstSurface
         == static_cast<IDirectDrawSurface4*>(
-               static_cast<void*>(gpDDSPrimary))) {
+               static_cast<void*>(g_ddsPrimary))) {
         RECT region = *dstRect;
-        GameTime::Get();
+        GameTime::get();
         while (1) {
-            if (gpDDSPrimary->Blt(&region,
+            if (g_ddsPrimary->Blt(&region,
                     static_cast<IDirectDrawSurface*>(
                         static_cast<void*>(srcSurface)),
                     const_cast<RECT*>(srcRect), flags, 0)
                 != DDERR_SURFACELOST) {
                 goto done;
             }
-            if (gpDDSPrimary->IsLost() == DDERR_SURFACELOST) {
-                HRESULT result = gpDDSPrimary->Restore();
+            if (g_ddsPrimary->IsLost() == DDERR_SURFACELOST) {
+                HRESULT result = g_ddsPrimary->Restore();
                 if (result == DDERR_WRONGMODE)
-                    DDResetDisplayMode(&region);
+                    ddResetDisplayMode(&region);
                 else if (result != DD_OK)
-                    DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                    ddsd(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
                                   "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x1b4);
             }
             if (srcSurface->IsLost() == DDERR_SURFACELOST) {
-                HRESULT result = DDRestoreSurfaces();
+                HRESULT result = ddRestoreSurfaces();
                 if (result != DD_OK)
-                    DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                    ddsd(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
                                   "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x1bb);
             }
         }
@@ -387,35 +397,35 @@ void DDBlit(IDirectDrawSurface4* dstSurface, const tagRECT* dstRect,
 
     if (srcSurface
         == static_cast<IDirectDrawSurface4*>(
-               static_cast<void*>(gpDDSPrimary))) {
+               static_cast<void*>(g_ddsPrimary))) {
         RECT region = *srcRect;
-        GameTime::Get();
+        GameTime::get();
         while (1) {
             if (dstSurface->Blt(const_cast<RECT*>(dstRect),
                     static_cast<IDirectDrawSurface4*>(
-                        static_cast<void*>(gpDDSPrimary)),
+                        static_cast<void*>(g_ddsPrimary)),
                     &region, flags, 0)
                 != DDERR_SURFACELOST) {
                 goto done;
             }
-            if (gpDDSPrimary->IsLost() == DDERR_SURFACELOST) {
-                HRESULT result = gpDDSPrimary->Restore();
+            if (g_ddsPrimary->IsLost() == DDERR_SURFACELOST) {
+                HRESULT result = g_ddsPrimary->Restore();
                 if (result == DDERR_WRONGMODE)
-                    DDResetDisplayMode(&region);
+                    ddResetDisplayMode(&region);
                 else if (result != DD_OK)
-                    DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                    ddsd(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
                                   "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x1ef);
             }
             if (dstSurface->IsLost() == DDERR_SURFACELOST) {
-                HRESULT result = DDRestoreSurfaces();
+                HRESULT result = ddRestoreSurfaces();
                 if (result != DD_OK)
-                    DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                    ddsd(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
                                   "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x1f6);
             }
         }
     }
 
-    GameTime::Get();
+    GameTime::get();
     while (1) {
         if (dstSurface->Blt(const_cast<RECT*>(dstRect), srcSurface,
                 const_cast<RECT*>(srcRect), flags, 0)
@@ -423,9 +433,9 @@ void DDBlit(IDirectDrawSurface4* dstSurface, const tagRECT* dstRect,
             goto done;
         }
         {
-            HRESULT result = DDRestoreSurfaces();
+            HRESULT result = ddRestoreSurfaces();
             if (result != DD_OK)
-                DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+                ddsd(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
                                   "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x233);
         }
     }
@@ -449,66 +459,66 @@ done:
 // leaves the emitted copy for the other callers.
 // E:\gamedcs\wingraph.cpp
 VA(0x006003c0, 0x22D)  // anchor-caller(DDBlit, both primary retry loops), retail-only
-void DDResetDisplayMode(tagRECT* region)
+void ddResetDisplayMode(tagRECT* region)
 {
-    if (bWindowedMode) {
-        HRESULT result = gpDirectDraw->SetCooperativeLevel(
-            hwndApp, DDSCL_EXCLUSIVE | DDSCL_FULLSCREEN | DDSCL_ALLOWREBOOT);
+    if (g_windowedMode) {
+        HRESULT result = g_directDraw->SetCooperativeLevel(
+            g_hwndApp, DDSCL_EXCLUSIVE | DDSCL_FULLSCREEN | DDSCL_ALLOWREBOOT);
         if (result != DD_OK)
-            DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+            ddsd(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
                               "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x157);
-        result = gpDirectDraw->SetDisplayMode(800, 600, 16);
+        result = g_directDraw->SetDisplayMode(800, 600, 16);
         if (result != DD_OK)
-            DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+            ddsd(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
                               "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x15b);
-        result = gpDDSPrimary->Restore();
+        result = g_ddsPrimary->Restore();
         if (result != DD_OK)
-            DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+            ddsd(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
                               "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x15f);
         return;
     }
 
-    unsigned char desktopIsHighColor = GetDesktopInfo();
+    unsigned char desktopIsHighColor = getDesktopInfo();
 
-    HRESULT result = gpDDSPrimary->SetClipper(0);
+    HRESULT result = g_ddsPrimary->SetClipper(0);
     if (result != DD_OK)
-        DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+        ddsd(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
                               "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x168);
-    gpDDSPrimary->Release();
-    gpDDSPrimary = 0;
+    g_ddsPrimary->Release();
+    g_ddsPrimary = 0;
 
     if (!desktopIsHighColor) {
         POINT origin;
         origin.x = 0;
         origin.y = 0;
-        ScreenToClient(hwndApp, &origin);
+        ScreenToClient(g_hwndApp, &origin);
         OffsetRect(region, origin.x, origin.y);
-        gpDDClipper->Release();
-        gpDDClipper = 0;
-        bWindowedMode = 1;
-        SetWindowLongA(hwndApp, GWL_STYLE, WS_POPUP | WS_VISIBLE);
-        SetWindowLongA(hwndApp, GWL_EXSTYLE, WS_EX_TOPMOST);
-        KBChangeMenu(0);
-        result = gpDirectDraw->SetCooperativeLevel(
-            hwndApp, DDSCL_EXCLUSIVE | DDSCL_FULLSCREEN | DDSCL_ALLOWREBOOT);
+        g_ddClipper->Release();
+        g_ddClipper = 0;
+        g_windowedMode = 1;
+        SetWindowLongA(g_hwndApp, GWL_STYLE, WS_POPUP | WS_VISIBLE);
+        SetWindowLongA(g_hwndApp, GWL_EXSTYLE, WS_EX_TOPMOST);
+        kbChangeMenu(0);
+        result = g_directDraw->SetCooperativeLevel(
+            g_hwndApp, DDSCL_EXCLUSIVE | DDSCL_FULLSCREEN | DDSCL_ALLOWREBOOT);
         if (result != DD_OK)
-            DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+            ddsd(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
                               "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x17e);
-        result = gpDirectDraw->SetDisplayMode(800, 600, 16);
+        result = g_directDraw->SetDisplayMode(800, 600, 16);
         if (result != DD_OK)
-            DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+            ddsd(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
                               "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x182);
     }
 
-    gpDDSPrimary = DDCreateSurface(800, 600, 1);
+    g_ddsPrimary = ddCreateSurface(800, 600, 1);
 
-    if (!bWindowedMode) {
-        result = gpDDSPrimary->SetClipper(gpDDClipper);
+    if (!g_windowedMode) {
+        result = g_ddsPrimary->SetClipper(g_ddClipper);
         if (result != DD_OK)
-            DDSD(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
+            ddsd(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
                               "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x18c);
     } else {
-        WritePrefs();
+        writePrefs();
     }
 }
 
@@ -521,15 +531,16 @@ void DDResetDisplayMode(tagRECT* region)
 // is why the flag is cached in a register before the call.
 // E:\gamedcs\wingraph.cpp:1013
 VA(0x006005f0, 0xE4)  // anchor-caller(DDInitGraphics, both surfaces) + header identification, dc 0x1992b0
-IDirectDrawSurface* DDCreateSurface(unsigned long width, unsigned long height,
-                                    int bPrimary)
+IDirectDrawSurface* ddCreateSurface(unsigned long width, unsigned long height,
+                                    // Before normalization (locals): bPrimary.
+                                    int primary)
 {
     DDSURFACEDESC surfaceDesc;
     IDirectDrawSurface* surface;
 
     memset(&surfaceDesc, 0, sizeof(surfaceDesc));
     surfaceDesc.dwSize = sizeof(surfaceDesc);
-    if (bPrimary) {
+    if (primary) {
         surfaceDesc.dwFlags = DDSD_CAPS;
         surfaceDesc.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE;
     } else {
@@ -540,27 +551,27 @@ IDirectDrawSurface* DDCreateSurface(unsigned long width, unsigned long height,
         surfaceDesc.dwWidth = width;
     }
 
-    HRESULT result = gpDirectDraw->CreateSurface(&surfaceDesc, &surface, 0);
+    HRESULT result = g_directDraw->CreateSurface(&surfaceDesc, &surface, 0);
     if (result != DD_OK)
-        DDSD(result,
+        ddsd(result,
              DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
                           "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"),
              0x263);
 
-    if (!bPrimary) {
+    if (!primary) {
         result = surface->Lock(0, &surfaceDesc, DDLOCK_WAIT, 0);
         if (result != DD_OK)
-            DDSD(result,
+            ddsd(result,
                  DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
                               "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"),
                  0x26a);
 
-        if (gpWindowManager->screenBitmap) {
-            gpWindowManager->screenBitmap->reference(
+        if (g_windowManager->m_screenBitmap) {
+            g_windowManager->m_screenBitmap->reference(
                 surfaceDesc.dwWidth, surfaceDesc.dwHeight, surfaceDesc.lPitch,
                 static_cast<unsigned short*>(surfaceDesc.lpSurface));
         }
-        gDDSurfaceBitmap.reference(
+        g_ddSurfaceBitmap.reference(
             surfaceDesc.dwWidth, surfaceDesc.dwHeight, surfaceDesc.lPitch,
             static_cast<unsigned short*>(surfaceDesc.lpSurface));
     }
@@ -574,550 +585,551 @@ IDirectDrawSurface* DDCreateSurface(unsigned long width, unsigned long height,
 // cTemp extent, every HRESULT case, one MessageBeep, the low-word error code
 // passed to wsprintfA, and the final guard reset.  The shared HoMM2 DDSD body
 // supplies the source lineage; its smaller error roster is not copied blindly.
+// Before normalization (locals): iDDErr, cFile, iLine, cTemp.
 VA(0x006006E0, 0xCBF)  // DC DDSD identity + retail literals/CFG + HoMM2 lineage
-void DDSD(int iDDErr, char* cFile, int iLine)
+void ddsd(int ddErr, char* file, int line)
 {
-    char cTemp[200];
+    char temp[200];
 
-    if (gInDirectDrawError)
+    if (g_inDirectDrawError)
         return;
 
-    gInDirectDrawError = 1;
-    if (gpDirectDraw)
-        gpDirectDraw->RestoreDisplayMode();
+    g_inDirectDrawError = 1;
+    if (g_directDraw)
+        g_directDraw->RestoreDisplayMode();
 
-    switch (iDDErr) {
+    switch (ddErr) {
     case DD_OK:
         return;
     case DDERR_OUTOFMEMORY:
-        strcpy(cTemp, DATA_COMPGEN(0x0068D248, ddsd_DDERR_OUTOFMEMORY,
+        strcpy(temp, DATA_COMPGEN(0x0068D248, ddsd_DDERR_OUTOFMEMORY,
                                    "DDERR_OUTOFMEMORY"));
         break;
     case DDERR_GENERIC:
-        strcpy(cTemp, DATA_COMPGEN(0x0068D238, ddsd_DDERR_GENERIC,
+        strcpy(temp, DATA_COMPGEN(0x0068D238, ddsd_DDERR_GENERIC,
                                    "DDERR_GENERIC"));
         break;
     case DDERR_UNSUPPORTED:
-        strcpy(cTemp, DATA_COMPGEN(0x0068D224, ddsd_DDERR_UNSUPPORTED,
+        strcpy(temp, DATA_COMPGEN(0x0068D224, ddsd_DDERR_UNSUPPORTED,
                                    "DDERR_UNSUPPORTED"));
         break;
     case DDERR_INVALIDPARAMS:
-        strcpy(cTemp, DATA_COMPGEN(0x0068D210, ddsd_DDERR_INVALIDPARAMS,
+        strcpy(temp, DATA_COMPGEN(0x0068D210, ddsd_DDERR_INVALIDPARAMS,
                                    "DDERR_INVALIDPARAMS"));
         break;
     case DDERR_CANNOTATTACHSURFACE:
-        strcpy(cTemp, DATA_COMPGEN(0x0068D1F4,
+        strcpy(temp, DATA_COMPGEN(0x0068D1F4,
                                    ddsd_DDERR_CANNOTATTACHSURFACE,
                                    "DDERR_CANNOTATTACHSURFACE"));
         break;
     case DDERR_ALREADYINITIALIZED:
-        strcpy(cTemp, DATA_COMPGEN(0x0068D1D8,
+        strcpy(temp, DATA_COMPGEN(0x0068D1D8,
                                    ddsd_DDERR_ALREADYINITIALIZED,
                                    "DDERR_ALREADYINITIALIZED"));
         break;
     case DDERR_CANNOTDETACHSURFACE:
-        strcpy(cTemp, DATA_COMPGEN(0x0068D1BC,
+        strcpy(temp, DATA_COMPGEN(0x0068D1BC,
                                    ddsd_DDERR_CANNOTDETACHSURFACE,
                                    "DDERR_CANNOTDETACHSURFACE"));
         break;
     case DDERR_CURRENTLYNOTAVAIL:
-        strcpy(cTemp, DATA_COMPGEN(0x0068D1A4,
+        strcpy(temp, DATA_COMPGEN(0x0068D1A4,
                                    ddsd_DDERR_CURRENTLYNOTAVAIL,
                                    "DDERR_CURRENTLYNOTAVAIL"));
         break;
     case DDERR_EXCEPTION:
-        strcpy(cTemp, DATA_COMPGEN(0x0068D194, ddsd_DDERR_EXCEPTION,
+        strcpy(temp, DATA_COMPGEN(0x0068D194, ddsd_DDERR_EXCEPTION,
                                    "DDERR_EXCEPTION"));
         break;
     case DDERR_HEIGHTALIGN:
-        strcpy(cTemp, DATA_COMPGEN(0x0068D180, ddsd_DDERR_HEIGHTALIGN,
+        strcpy(temp, DATA_COMPGEN(0x0068D180, ddsd_DDERR_HEIGHTALIGN,
                                    "DDERR_HEIGHTALIGN"));
         break;
     case DDERR_INCOMPATIBLEPRIMARY:
-        strcpy(cTemp, DATA_COMPGEN(0x0068D164,
+        strcpy(temp, DATA_COMPGEN(0x0068D164,
                                    ddsd_DDERR_INCOMPATIBLEPRIMARY,
                                    "DDERR_INCOMPATIBLEPRIMARY"));
         break;
     case DDERR_INVALIDCAPS:
-        strcpy(cTemp, DATA_COMPGEN(0x0068D150, ddsd_DDERR_INVALIDCAPS,
+        strcpy(temp, DATA_COMPGEN(0x0068D150, ddsd_DDERR_INVALIDCAPS,
                                    "DDERR_INVALIDCAPS"));
         break;
     case DDERR_INVALIDCLIPLIST:
-        strcpy(cTemp, DATA_COMPGEN(0x0068D138,
+        strcpy(temp, DATA_COMPGEN(0x0068D138,
                                    ddsd_DDERR_INVALIDCLIPLIST,
                                    "DDERR_INVALIDCLIPLIST"));
         break;
     case DDERR_INVALIDMODE:
-        strcpy(cTemp, DATA_COMPGEN(0x0068D124, ddsd_DDERR_INVALIDMODE,
+        strcpy(temp, DATA_COMPGEN(0x0068D124, ddsd_DDERR_INVALIDMODE,
                                    "DDERR_INVALIDMODE"));
         break;
     case DDERR_INVALIDOBJECT:
-        strcpy(cTemp, DATA_COMPGEN(0x0068D110,
+        strcpy(temp, DATA_COMPGEN(0x0068D110,
                                    ddsd_DDERR_INVALIDOBJECT,
                                    "DDERR_INVALIDOBJECT"));
         break;
     case DDERR_INVALIDPIXELFORMAT:
-        strcpy(cTemp, DATA_COMPGEN(0x0068D0F4,
+        strcpy(temp, DATA_COMPGEN(0x0068D0F4,
                                    ddsd_DDERR_INVALIDPIXELFORMAT,
                                    "DDERR_INVALIDPIXELFORMAT"));
         break;
     case DDERR_INVALIDRECT:
-        strcpy(cTemp, DATA_COMPGEN(0x0068D0E0, ddsd_DDERR_INVALIDRECT,
+        strcpy(temp, DATA_COMPGEN(0x0068D0E0, ddsd_DDERR_INVALIDRECT,
                                    "DDERR_INVALIDRECT"));
         break;
     case DDERR_LOCKEDSURFACES:
-        strcpy(cTemp, DATA_COMPGEN(0x0068D0C8,
+        strcpy(temp, DATA_COMPGEN(0x0068D0C8,
                                    ddsd_DDERR_LOCKEDSURFACES,
                                    "DDERR_LOCKEDSURFACES"));
         break;
     case DDERR_NO3D:
-        strcpy(cTemp, DATA_COMPGEN(0x0068D0BC, ddsd_DDERR_NO3D,
+        strcpy(temp, DATA_COMPGEN(0x0068D0BC, ddsd_DDERR_NO3D,
                                    "DDERR_NO3D"));
         break;
     case DDERR_NOALPHAHW:
-        strcpy(cTemp, DATA_COMPGEN(0x0068D0AC, ddsd_DDERR_NOALPHAHW,
+        strcpy(temp, DATA_COMPGEN(0x0068D0AC, ddsd_DDERR_NOALPHAHW,
                                    "DDERR_NOALPHAHW"));
         break;
     case DDERR_NOCLIPLIST:
-        strcpy(cTemp, DATA_COMPGEN(0x0068D098, ddsd_DDERR_NOCLIPLIST,
+        strcpy(temp, DATA_COMPGEN(0x0068D098, ddsd_DDERR_NOCLIPLIST,
                                    "DDERR_NOCLIPLIST"));
         break;
     case DDERR_NOCOLORCONVHW:
-        strcpy(cTemp, DATA_COMPGEN(0x0068D084,
+        strcpy(temp, DATA_COMPGEN(0x0068D084,
                                    ddsd_DDERR_NOCOLORCONVHW,
                                    "DDERR_NOCOLORCONVHW"));
         break;
     case DDERR_NOCOOPERATIVELEVELSET:
-        strcpy(cTemp, DATA_COMPGEN(0x0068D068,
+        strcpy(temp, DATA_COMPGEN(0x0068D068,
                                    ddsd_DDERR_NOCOOPERATIVELEVELSET,
                                    "DDERR_NOCOOPERATIVELEVELSET"));
         break;
     case DDERR_NOCOLORKEY:
-        strcpy(cTemp, DATA_COMPGEN(0x0068D054, ddsd_DDERR_NOCOLORKEY,
+        strcpy(temp, DATA_COMPGEN(0x0068D054, ddsd_DDERR_NOCOLORKEY,
                                    "DDERR_NOCOLORKEY"));
         break;
     case DDERR_NOCOLORKEYHW:
-        strcpy(cTemp, DATA_COMPGEN(0x0068D040,
+        strcpy(temp, DATA_COMPGEN(0x0068D040,
                                    ddsd_DDERR_NOCOLORKEYHW,
                                    "DDERR_NOCOLORKEYHW"));
         break;
     case DDERR_NODIRECTDRAWSUPPORT:
-        strcpy(cTemp, DATA_COMPGEN(0x0068D024,
+        strcpy(temp, DATA_COMPGEN(0x0068D024,
                                    ddsd_DDERR_NODIRECTDRAWSUPPORT,
                                    "DDERR_NODIRECTDRAWSUPPORT"));
         break;
     case DDERR_NOEXCLUSIVEMODE:
-        strcpy(cTemp, DATA_COMPGEN(0x0068D00C,
+        strcpy(temp, DATA_COMPGEN(0x0068D00C,
                                    ddsd_DDERR_NOEXCLUSIVEMODE,
                                    "DDERR_NOEXCLUSIVEMODE"));
         break;
     case DDERR_NOFLIPHW:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CFFC, ddsd_DDERR_NOFLIPHW,
+        strcpy(temp, DATA_COMPGEN(0x0068CFFC, ddsd_DDERR_NOFLIPHW,
                                    "DDERR_NOFLIPHW"));
         break;
     case DDERR_NOGDI:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CFF0, ddsd_DDERR_NOGDI,
+        strcpy(temp, DATA_COMPGEN(0x0068CFF0, ddsd_DDERR_NOGDI,
                                    "DDERR_NOGDI"));
         break;
     case DDERR_NOMIRRORHW:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CFDC, ddsd_DDERR_NOMIRRORHW,
+        strcpy(temp, DATA_COMPGEN(0x0068CFDC, ddsd_DDERR_NOMIRRORHW,
                                    "DDERR_NOMIRRORHW"));
         break;
     case DDERR_NOTFOUND:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CFCC, ddsd_DDERR_NOTFOUND,
+        strcpy(temp, DATA_COMPGEN(0x0068CFCC, ddsd_DDERR_NOTFOUND,
                                    "DDERR_NOTFOUND"));
         break;
     case DDERR_NOOVERLAYHW:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CFB8, ddsd_DDERR_NOOVERLAYHW,
+        strcpy(temp, DATA_COMPGEN(0x0068CFB8, ddsd_DDERR_NOOVERLAYHW,
                                    "DDERR_NOOVERLAYHW"));
         break;
     case DDERR_OVERLAPPINGRECTS:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CFA0,
+        strcpy(temp, DATA_COMPGEN(0x0068CFA0,
                                    ddsd_DDERR_OVERLAPPINGRECTS,
                                    "DDERR_OVERLAPPINGRECTS"));
         break;
     case DDERR_NORASTEROPHW:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CF8C,
+        strcpy(temp, DATA_COMPGEN(0x0068CF8C,
                                    ddsd_DDERR_NORASTEROPHW,
                                    "DDERR_NORASTEROPHW"));
         break;
     case DDERR_NOROTATIONHW:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CF78,
+        strcpy(temp, DATA_COMPGEN(0x0068CF78,
                                    ddsd_DDERR_NOROTATIONHW,
                                    "DDERR_NOROTATIONHW"));
         break;
     case DDERR_NOSTRETCHHW:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CF64,
+        strcpy(temp, DATA_COMPGEN(0x0068CF64,
                                    ddsd_DDERR_NOSTRETCHHW,
                                    "DDERR_NOSTRETCHHW"));
         break;
     case DDERR_NOT4BITCOLOR:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CF50,
+        strcpy(temp, DATA_COMPGEN(0x0068CF50,
                                    ddsd_DDERR_NOT4BITCOLOR,
                                    "DDERR_NOT4BITCOLOR"));
         break;
     case DDERR_NOT4BITCOLORINDEX:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CF38,
+        strcpy(temp, DATA_COMPGEN(0x0068CF38,
                                    ddsd_DDERR_NOT4BITCOLORINDEX,
                                    "DDERR_NOT4BITCOLORINDEX"));
         break;
     case DDERR_NOT8BITCOLOR:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CF24,
+        strcpy(temp, DATA_COMPGEN(0x0068CF24,
                                    ddsd_DDERR_NOT8BITCOLOR,
                                    "DDERR_NOT8BITCOLOR"));
         break;
     case DDERR_NOTEXTUREHW:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CF10,
+        strcpy(temp, DATA_COMPGEN(0x0068CF10,
                                    ddsd_DDERR_NOTEXTUREHW,
                                    "DDERR_NOTEXTUREHW"));
         break;
     case DDERR_NOVSYNCHW:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CF00, ddsd_DDERR_NOVSYNCHW,
+        strcpy(temp, DATA_COMPGEN(0x0068CF00, ddsd_DDERR_NOVSYNCHW,
                                    "DDERR_NOVSYNCHW"));
         break;
     case DDERR_NOZBUFFERHW:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CEEC,
+        strcpy(temp, DATA_COMPGEN(0x0068CEEC,
                                    ddsd_DDERR_NOZBUFFERHW,
                                    "DDERR_NOZBUFFERHW"));
         break;
     case DDERR_NOZOVERLAYHW:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CED8,
+        strcpy(temp, DATA_COMPGEN(0x0068CED8,
                                    ddsd_DDERR_NOZOVERLAYHW,
                                    "DDERR_NOZOVERLAYHW"));
         break;
     case DDERR_OUTOFCAPS:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CEC8, ddsd_DDERR_OUTOFCAPS,
+        strcpy(temp, DATA_COMPGEN(0x0068CEC8, ddsd_DDERR_OUTOFCAPS,
                                    "DDERR_OUTOFCAPS"));
         break;
     case DDERR_OUTOFVIDEOMEMORY:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CEB0,
+        strcpy(temp, DATA_COMPGEN(0x0068CEB0,
                                    ddsd_DDERR_OUTOFVIDEOMEMORY,
                                    "DDERR_OUTOFVIDEOMEMORY"));
         break;
     case DDERR_OVERLAYCANTCLIP:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CE98,
+        strcpy(temp, DATA_COMPGEN(0x0068CE98,
                                    ddsd_DDERR_OVERLAYCANTCLIP,
                                    "DDERR_OVERLAYCANTCLIP"));
         break;
     case DDERR_OVERLAYCOLORKEYONLYONEACTIVE:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CE74,
+        strcpy(temp, DATA_COMPGEN(0x0068CE74,
                                    ddsd_DDERR_OVERLAYCOLORKEYONLYONEACTIVE,
                                    "DDERR_OVERLAYCOLORKEYONLYONEACTIVE"));
         break;
     case DDERR_PALETTEBUSY:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CE60, ddsd_DDERR_PALETTEBUSY,
+        strcpy(temp, DATA_COMPGEN(0x0068CE60, ddsd_DDERR_PALETTEBUSY,
                                    "DDERR_PALETTEBUSY"));
         break;
     case DDERR_COLORKEYNOTSET:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CE48,
+        strcpy(temp, DATA_COMPGEN(0x0068CE48,
                                    ddsd_DDERR_COLORKEYNOTSET,
                                    "DDERR_COLORKEYNOTSET"));
         break;
     case DDERR_SURFACEALREADYATTACHED:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CE28,
+        strcpy(temp, DATA_COMPGEN(0x0068CE28,
                                    ddsd_DDERR_SURFACEALREADYATTACHED,
                                    "DDERR_SURFACEALREADYATTACHED"));
         break;
     case DDERR_SURFACEALREADYDEPENDENT:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CE08,
+        strcpy(temp, DATA_COMPGEN(0x0068CE08,
                                    ddsd_DDERR_SURFACEALREADYDEPENDENT,
                                    "DDERR_SURFACEALREADYDEPENDENT"));
         break;
     case DDERR_SURFACEBUSY:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CDF4, ddsd_DDERR_SURFACEBUSY,
+        strcpy(temp, DATA_COMPGEN(0x0068CDF4, ddsd_DDERR_SURFACEBUSY,
                                    "DDERR_SURFACEBUSY"));
         break;
     case DDERR_CANTLOCKSURFACE:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CDDC,
+        strcpy(temp, DATA_COMPGEN(0x0068CDDC,
                                    ddsd_DDERR_CANTLOCKSURFACE,
                                    "DDERR_CANTLOCKSURFACE"));
         break;
     case DDERR_SURFACEISOBSCURED:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CDC4,
+        strcpy(temp, DATA_COMPGEN(0x0068CDC4,
                                    ddsd_DDERR_SURFACEISOBSCURED,
                                    "DDERR_SURFACEISOBSCURED"));
         break;
     case DDERR_SURFACELOST:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CDB0, ddsd_DDERR_SURFACELOST,
+        strcpy(temp, DATA_COMPGEN(0x0068CDB0, ddsd_DDERR_SURFACELOST,
                                    "DDERR_SURFACELOST"));
         break;
     case DDERR_SURFACENOTATTACHED:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CD94,
+        strcpy(temp, DATA_COMPGEN(0x0068CD94,
                                    ddsd_DDERR_SURFACENOTATTACHED,
                                    "DDERR_SURFACENOTATTACHED"));
         break;
     case DDERR_TOOBIGHEIGHT:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CD80,
+        strcpy(temp, DATA_COMPGEN(0x0068CD80,
                                    ddsd_DDERR_TOOBIGHEIGHT,
                                    "DDERR_TOOBIGHEIGHT"));
         break;
     case DDERR_TOOBIGSIZE:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CD6C, ddsd_DDERR_TOOBIGSIZE,
+        strcpy(temp, DATA_COMPGEN(0x0068CD6C, ddsd_DDERR_TOOBIGSIZE,
                                    "DDERR_TOOBIGSIZE"));
         break;
     case DDERR_TOOBIGWIDTH:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CD58,
+        strcpy(temp, DATA_COMPGEN(0x0068CD58,
                                    ddsd_DDERR_TOOBIGWIDTH,
                                    "DDERR_TOOBIGWIDTH"));
         break;
     case DDERR_UNSUPPORTEDFORMAT:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CD40,
+        strcpy(temp, DATA_COMPGEN(0x0068CD40,
                                    ddsd_DDERR_UNSUPPORTEDFORMAT,
                                    "DDERR_UNSUPPORTEDFORMAT"));
         break;
     case DDERR_UNSUPPORTEDMASK:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CD28,
+        strcpy(temp, DATA_COMPGEN(0x0068CD28,
                                    ddsd_DDERR_UNSUPPORTEDMASK,
                                    "DDERR_UNSUPPORTEDMASK"));
         break;
     case DDERR_INVALIDSTREAM:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CD14,
+        strcpy(temp, DATA_COMPGEN(0x0068CD14,
                                    ddsd_DDERR_INVALIDSTREAM,
                                    "DDERR_INVALIDSTREAM"));
         break;
     case DDERR_VERTICALBLANKINPROGRESS:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CCF4,
+        strcpy(temp, DATA_COMPGEN(0x0068CCF4,
                                    ddsd_DDERR_VERTICALBLANKINPROGRESS,
                                    "DDERR_VERTICALBLANKINPROGRESS"));
         break;
     case DDERR_WASSTILLDRAWING:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CCDC,
+        strcpy(temp, DATA_COMPGEN(0x0068CCDC,
                                    ddsd_DDERR_WASSTILLDRAWING,
                                    "DDERR_WASSTILLDRAWING"));
         break;
     case DDERR_XALIGN:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CCCC, ddsd_DDERR_XALIGN,
+        strcpy(temp, DATA_COMPGEN(0x0068CCCC, ddsd_DDERR_XALIGN,
                                    "DDERR_XALIGN"));
         break;
     case DDERR_INVALIDDIRECTDRAWGUID:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CCB0,
+        strcpy(temp, DATA_COMPGEN(0x0068CCB0,
                                    ddsd_DDERR_INVALIDDIRECTDRAWGUID,
                                    "DDERR_INVALIDDIRECTDRAWGUID"));
         break;
     case DDERR_DIRECTDRAWALREADYCREATED:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CC90,
+        strcpy(temp, DATA_COMPGEN(0x0068CC90,
                                    ddsd_DDERR_DIRECTDRAWALREADYCREATED,
                                    "DDERR_DIRECTDRAWALREADYCREATED"));
         break;
     case DDERR_NODIRECTDRAWHW:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CC78,
+        strcpy(temp, DATA_COMPGEN(0x0068CC78,
                                    ddsd_DDERR_NODIRECTDRAWHW,
                                    "DDERR_NODIRECTDRAWHW"));
         break;
     case DDERR_PRIMARYSURFACEALREADYEXISTS:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CC54,
+        strcpy(temp, DATA_COMPGEN(0x0068CC54,
                                    ddsd_DDERR_PRIMARYSURFACEALREADYEXISTS,
                                    "DDERR_PRIMARYSURFACEALREADYEXISTS"));
         break;
     case DDERR_NOEMULATION:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CC40, ddsd_DDERR_NOEMULATION,
+        strcpy(temp, DATA_COMPGEN(0x0068CC40, ddsd_DDERR_NOEMULATION,
                                    "DDERR_NOEMULATION"));
         break;
     case DDERR_REGIONTOOSMALL:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CC28,
+        strcpy(temp, DATA_COMPGEN(0x0068CC28,
                                    ddsd_DDERR_REGIONTOOSMALL,
                                    "DDERR_REGIONTOOSMALL"));
         break;
     case DDERR_CLIPPERISUSINGHWND:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CC0C,
+        strcpy(temp, DATA_COMPGEN(0x0068CC0C,
                                    ddsd_DDERR_CLIPPERISUSINGHWND,
                                    "DDERR_CLIPPERISUSINGHWND"));
         break;
     case DDERR_NOCLIPPERATTACHED:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CBF4,
+        strcpy(temp, DATA_COMPGEN(0x0068CBF4,
                                    ddsd_DDERR_NOCLIPPERATTACHED,
                                    "DDERR_NOCLIPPERATTACHED"));
         break;
     case DDERR_NOHWND:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CBE4, ddsd_DDERR_NOHWND,
+        strcpy(temp, DATA_COMPGEN(0x0068CBE4, ddsd_DDERR_NOHWND,
                                    "DDERR_NOHWND"));
         break;
     case DDERR_HWNDSUBCLASSED:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CBCC,
+        strcpy(temp, DATA_COMPGEN(0x0068CBCC,
                                    ddsd_DDERR_HWNDSUBCLASSED,
                                    "DDERR_HWNDSUBCLASSED"));
         break;
     case DDERR_HWNDALREADYSET:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CBB4,
+        strcpy(temp, DATA_COMPGEN(0x0068CBB4,
                                    ddsd_DDERR_HWNDALREADYSET,
                                    "DDERR_HWNDALREADYSET"));
         break;
     case DDERR_NOPALETTEATTACHED:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CB9C,
+        strcpy(temp, DATA_COMPGEN(0x0068CB9C,
                                    ddsd_DDERR_NOPALETTEATTACHED,
                                    "DDERR_NOPALETTEATTACHED"));
         break;
     case DDERR_NOPALETTEHW:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CB88,
+        strcpy(temp, DATA_COMPGEN(0x0068CB88,
                                    ddsd_DDERR_NOPALETTEHW,
                                    "DDERR_NOPALETTEHW"));
         break;
     case DDERR_BLTFASTCANTCLIP:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CB70,
+        strcpy(temp, DATA_COMPGEN(0x0068CB70,
                                    ddsd_DDERR_BLTFASTCANTCLIP,
                                    "DDERR_BLTFASTCANTCLIP"));
         break;
     case DDERR_NOBLTHW:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CB60, ddsd_DDERR_NOBLTHW,
+        strcpy(temp, DATA_COMPGEN(0x0068CB60, ddsd_DDERR_NOBLTHW,
                                    "DDERR_NOBLTHW"));
         break;
     case DDERR_NODDROPSHW:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CB4C,
+        strcpy(temp, DATA_COMPGEN(0x0068CB4C,
                                    ddsd_DDERR_NODDROPSHW,
                                    "DDERR_NODDROPSHW"));
         break;
     case DDERR_OVERLAYNOTVISIBLE:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CB34,
+        strcpy(temp, DATA_COMPGEN(0x0068CB34,
                                    ddsd_DDERR_OVERLAYNOTVISIBLE,
                                    "DDERR_OVERLAYNOTVISIBLE"));
         break;
     case DDERR_NOOVERLAYDEST:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CB20,
+        strcpy(temp, DATA_COMPGEN(0x0068CB20,
                                    ddsd_DDERR_NOOVERLAYDEST,
                                    "DDERR_NOOVERLAYDEST"));
         break;
     case DDERR_INVALIDPOSITION:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CB08,
+        strcpy(temp, DATA_COMPGEN(0x0068CB08,
                                    ddsd_DDERR_INVALIDPOSITION,
                                    "DDERR_INVALIDPOSITION"));
         break;
     case DDERR_NOTAOVERLAYSURFACE:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CAEC,
+        strcpy(temp, DATA_COMPGEN(0x0068CAEC,
                                    ddsd_DDERR_NOTAOVERLAYSURFACE,
                                    "DDERR_NOTAOVERLAYSURFACE"));
         break;
     case DDERR_EXCLUSIVEMODEALREADYSET:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CACC,
+        strcpy(temp, DATA_COMPGEN(0x0068CACC,
                                    ddsd_DDERR_EXCLUSIVEMODEALREADYSET,
                                    "DDERR_EXCLUSIVEMODEALREADYSET"));
         break;
     case DDERR_NOTFLIPPABLE:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CAB8,
+        strcpy(temp, DATA_COMPGEN(0x0068CAB8,
                                    ddsd_DDERR_NOTFLIPPABLE,
                                    "DDERR_NOTFLIPPABLE"));
         break;
     case DDERR_CANTDUPLICATE:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CAA4,
+        strcpy(temp, DATA_COMPGEN(0x0068CAA4,
                                    ddsd_DDERR_CANTDUPLICATE,
                                    "DDERR_CANTDUPLICATE"));
         break;
     case DDERR_NOTLOCKED:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CA94, ddsd_DDERR_NOTLOCKED,
+        strcpy(temp, DATA_COMPGEN(0x0068CA94, ddsd_DDERR_NOTLOCKED,
                                    "DDERR_NOTLOCKED"));
         break;
     case DDERR_CANTCREATEDC:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CA80,
+        strcpy(temp, DATA_COMPGEN(0x0068CA80,
                                    ddsd_DDERR_CANTCREATEDC,
                                    "DDERR_CANTCREATEDC"));
         break;
     case DDERR_NODC:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CA74, ddsd_DDERR_NODC,
+        strcpy(temp, DATA_COMPGEN(0x0068CA74, ddsd_DDERR_NODC,
                                    "DDERR_NODC"));
         break;
     case DDERR_WRONGMODE:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CA64, ddsd_DDERR_WRONGMODE,
+        strcpy(temp, DATA_COMPGEN(0x0068CA64, ddsd_DDERR_WRONGMODE,
                                    "DDERR_WRONGMODE"));
         break;
     case DDERR_IMPLICITLYCREATED:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CA4C,
+        strcpy(temp, DATA_COMPGEN(0x0068CA4C,
                                    ddsd_DDERR_IMPLICITLYCREATED,
                                    "DDERR_IMPLICITLYCREATED"));
         break;
     case DDERR_NOTPALETTIZED:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CA38,
+        strcpy(temp, DATA_COMPGEN(0x0068CA38,
                                    ddsd_DDERR_NOTPALETTIZED,
                                    "DDERR_NOTPALETTIZED"));
         break;
     case DDERR_UNSUPPORTEDMODE:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CA20,
+        strcpy(temp, DATA_COMPGEN(0x0068CA20,
                                    ddsd_DDERR_UNSUPPORTEDMODE,
                                    "DDERR_UNSUPPORTEDMODE"));
         break;
     case DDERR_NOMIPMAPHW:
-        strcpy(cTemp, DATA_COMPGEN(0x0068CA0C,
+        strcpy(temp, DATA_COMPGEN(0x0068CA0C,
                                    ddsd_DDERR_NOMIPMAPHW,
                                    "DDERR_NOMIPMAPHW"));
         break;
     case DDERR_INVALIDSURFACETYPE:
-        strcpy(cTemp, DATA_COMPGEN(0x0068C9F0,
+        strcpy(temp, DATA_COMPGEN(0x0068C9F0,
                                    ddsd_DDERR_INVALIDSURFACETYPE,
                                    "DDERR_INVALIDSURFACETYPE"));
         break;
     case DDERR_NOOPTIMIZEHW:
-        strcpy(cTemp, DATA_COMPGEN(0x0068C9DC,
+        strcpy(temp, DATA_COMPGEN(0x0068C9DC,
                                    ddsd_DDERR_NOOPTIMIZEHW,
                                    "DDERR_NOOPTIMIZEHW"));
         break;
     case DDERR_NOTLOADED:
-        strcpy(cTemp, DATA_COMPGEN(0x0068C9CC, ddsd_DDERR_NOTLOADED,
+        strcpy(temp, DATA_COMPGEN(0x0068C9CC, ddsd_DDERR_NOTLOADED,
                                    "DDERR_NOTLOADED"));
         break;
     case DDERR_NOFOCUSWINDOW:
-        strcpy(cTemp, DATA_COMPGEN(0x0068C9B8,
+        strcpy(temp, DATA_COMPGEN(0x0068C9B8,
                                    ddsd_DDERR_NOFOCUSWINDOW,
                                    "DDERR_NOFOCUSWINDOW"));
         break;
     case DDERR_DCALREADYCREATED:
-        strcpy(cTemp, DATA_COMPGEN(0x0068C9A0,
+        strcpy(temp, DATA_COMPGEN(0x0068C9A0,
                                    ddsd_DDERR_DCALREADYCREATED,
                                    "DDERR_DCALREADYCREATED"));
         break;
     case DDERR_NONONLOCALVIDMEM:
-        strcpy(cTemp, DATA_COMPGEN(0x0068C988,
+        strcpy(temp, DATA_COMPGEN(0x0068C988,
                                    ddsd_DDERR_NONONLOCALVIDMEM,
                                    "DDERR_NONONLOCALVIDMEM"));
         break;
     case DDERR_CANTPAGELOCK:
-        strcpy(cTemp, DATA_COMPGEN(0x0068C974,
+        strcpy(temp, DATA_COMPGEN(0x0068C974,
                                    ddsd_DDERR_CANTPAGELOCK,
                                    "DDERR_CANTPAGELOCK"));
         break;
     case DDERR_CANTPAGEUNLOCK:
-        strcpy(cTemp, DATA_COMPGEN(0x0068C95C,
+        strcpy(temp, DATA_COMPGEN(0x0068C95C,
                                    ddsd_DDERR_CANTPAGEUNLOCK,
                                    "DDERR_CANTPAGEUNLOCK"));
         break;
     case DDERR_NOTPAGELOCKED:
-        strcpy(cTemp, DATA_COMPGEN(0x0068C948,
+        strcpy(temp, DATA_COMPGEN(0x0068C948,
                                    ddsd_DDERR_NOTPAGELOCKED,
                                    "DDERR_NOTPAGELOCKED"));
         break;
     case DDERR_MOREDATA:
-        strcpy(cTemp, DATA_COMPGEN(0x0068C938, ddsd_DDERR_MOREDATA,
+        strcpy(temp, DATA_COMPGEN(0x0068C938, ddsd_DDERR_MOREDATA,
                                    "DDERR_MOREDATA"));
         break;
     case DDERR_EXPIRED:
-        strcpy(cTemp, DATA_COMPGEN(0x0068C928, ddsd_DDERR_EXPIRED,
+        strcpy(temp, DATA_COMPGEN(0x0068C928, ddsd_DDERR_EXPIRED,
                                    "DDERR_EXPIRED"));
         break;
     case DDERR_DEVICEDOESNTOWNSURFACE:
-        strcpy(cTemp, DATA_COMPGEN(0x0068C8F4,
+        strcpy(temp, DATA_COMPGEN(0x0068C8F4,
                                    ddsd_DDERR_DEVICEDOESNTOWNSURFACE,
                                    "DDERR_DEVICEDOESNTOWNSURFACE"));
         break;
     case DDERR_VIDEONOTACTIVE:
-        strcpy(cTemp, DATA_COMPGEN(0x0068C8DC,
+        strcpy(temp, DATA_COMPGEN(0x0068C8DC,
                                    ddsd_DDERR_VIDEONOTACTIVE,
                                    "DDERR_VIDEONOTACTIVE"));
         break;
     default:
-        strcpy(cTemp, DATA_COMPGEN(0x0068C914, ddsdUnknownError,
+        strcpy(temp, DATA_COMPGEN(0x0068C914, ddsdUnknownError,
                                    "Error type unknown"));
         break;
     }
 
     MessageBeep(0);
-    wsprintfA(gText,
+    wsprintfA(g_text,
               DATA_COMPGEN(
                   0x0068C8A4,
                   ddsdErrorFormat,
                   "DirectDraw Error (%d):\n\n  '%s'\n\n  File: '%s'\n  Line: %d"),
-              iDDErr & 0xffff,
-              cTemp,
-              cFile,
-              iLine);
-    ShutDown(gText);
-    gInDirectDrawError = 0;
+              ddErr & 0xffff,
+              temp,
+              file,
+              line);
+    shutDown(g_text);
+    g_inDirectDrawError = 0;
 }
 
 // E:\gamedcs\wingraph.cpp:1627
@@ -1132,35 +1144,35 @@ void DDSD(int iDDErr, char* cFile, int iLine)
 // Retail RE-READS each global for the Restore call rather than keeping the
 // IsLost receiver live, which is what the separate-statement spelling gives.
 VA(0x006013a0, 0xC0)  // dc-order-map (the row before GetDesktopInfo) + IsLost/Restore pairs, dc 0x19a114
-long DDRestoreSurfaces()
+long ddRestoreSurfaces()
 {
     long result;
 
-    if (gpDDSPrimary && gpDDSPrimary->IsLost() == DDERR_SURFACELOST) {
-        result = gpDDSPrimary->Restore();
+    if (g_ddsPrimary && g_ddsPrimary->IsLost() == DDERR_SURFACELOST) {
+        result = g_ddsPrimary->Restore();
         if (result)
             return result;
     }
-    if (gpDDSBack && gpDDSBack->IsLost() == DDERR_SURFACELOST) {
-        result = gpDDSBack->Restore();
+    if (g_ddsBack && g_ddsBack->IsLost() == DDERR_SURFACELOST) {
+        result = g_ddsBack->Restore();
         if (result)
             return result;
     }
-    if (gpDDSMouseSurface
-        && gpDDSMouseSurface->IsLost() == DDERR_SURFACELOST) {
-        result = gpDDSMouseSurface->Restore();
+    if (g_ddsMouseSurface
+        && g_ddsMouseSurface->IsLost() == DDERR_SURFACELOST) {
+        result = g_ddsMouseSurface->Restore();
         if (result)
             return result;
     }
-    if (gpDDSMouseSaveSurface
-        && gpDDSMouseSaveSurface->IsLost() == DDERR_SURFACELOST) {
-        result = gpDDSMouseSaveSurface->Restore();
+    if (g_ddsMouseSaveSurface
+        && g_ddsMouseSaveSurface->IsLost() == DDERR_SURFACELOST) {
+        result = g_ddsMouseSaveSurface->Restore();
         if (result)
             return result;
     }
-    if (gpDDSMouseScratchSurface
-        && gpDDSMouseScratchSurface->IsLost() == DDERR_SURFACELOST) {
-        result = gpDDSMouseScratchSurface->Restore();
+    if (g_ddsMouseScratchSurface
+        && g_ddsMouseScratchSurface->IsLost() == DDERR_SURFACELOST) {
+        result = g_ddsMouseScratchSurface->Restore();
         if (result)
             return result;
     }
@@ -1172,30 +1184,31 @@ long DDRestoreSurfaces()
 // bytes: it fills the desktop-metric triple the two accessors below read,
 // which pins the identity independently of the roster order.
 VA(0x00601460, 0x52)  // anchor-global (the 0x68c870 triple), dc 0x19a418
-unsigned char GetDesktopInfo()
+unsigned char getDesktopInfo()
 {
-    HDC hDesktopDC = GetDC(0);
-    if (hDesktopDC) {
-        gUnnamed68c870 = GetDeviceCaps(hDesktopDC, BITSPIXEL);
-        gUnnamed68c874 = GetDeviceCaps(hDesktopDC, HORZRES);
-        gUnnamed68c878 = GetDeviceCaps(hDesktopDC, VERTRES);
-        ReleaseDC(0, hDesktopDC);
-        return gUnnamed68c870 == DESKTOP_REQUIRED_BITS_PER_PIXEL;
+    // Before normalization (locals): hDesktopDC.
+    HDC desktopDC = GetDC(0);
+    if (desktopDC) {
+        g_unnamed68c870 = GetDeviceCaps(desktopDC, BITSPIXEL);
+        g_unnamed68c874 = GetDeviceCaps(desktopDC, HORZRES);
+        g_unnamed68c878 = GetDeviceCaps(desktopDC, VERTRES);
+        ReleaseDC(0, desktopDC);
+        return g_unnamed68c870 == DESKTOP_REQUIRED_BITS_PER_PIXEL;
     }
     return 0;
 }
 
 VA(0x006014c0, 0x6)  // exact load of giDesktopWidth, dc 0x19a41c
-int GetDesktopWidth()
+int getDesktopWidth()
 {
-    return gUnnamed68c874;
+    return g_unnamed68c874;
 }
 
 // E:\gamedcs\wingraph.cpp:1870
 VA(0x006014d0, 0x6)  // exact load of giDesktopHeight, dc 0x19a424
-int GetDesktopHeight()
+int getDesktopHeight()
 {
-    return gUnnamed68c878;
+    return g_unnamed68c878;
 }
 
 #if 0  // @carcass
@@ -1206,9 +1219,9 @@ int GetDesktopHeight()
 #endif  // @carcass
 
 VA(0x006014e0, 0x5)  // anchor-callee, dc 0x19a42c
-void InitGraphics()
+void initGraphics()
 {
-    DDInitGraphics();
+    ddInitGraphics();
 }
 
 // Retail's DirectDraw setup is the Win32 expansion of DC's DDInitGraphics:
@@ -1218,82 +1231,82 @@ void InitGraphics()
 // dimensions, caps and diagnostic line numbers are all direct retail bytes.
 // E:\gamedcs\wingraph.cpp:156
 VA(0x006014f0, 0x32F)  // wrapper tail-jump + DirectDrawCreate lifecycle
-void DDInitGraphics()
+void ddInitGraphics()
 {
-    if (gWinGraphBusy)
+    if (g_winGraphBusy)
         return;
 
-    HRESULT result = DirectDrawCreate(0, &gpDirectDraw, 0);
+    HRESULT result = DirectDrawCreate(0, &g_directDraw, 0);
     if (result != DD_OK)
-        DDSD(result,
+        ddsd(result,
              DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
                           "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"),
              0x9a);
 
-    if (bWindowedMode) {
-        result = gpDirectDraw->SetCooperativeLevel(
-            hwndApp, DDSCL_EXCLUSIVE | DDSCL_FULLSCREEN | DDSCL_ALLOWREBOOT);
+    if (g_windowedMode) {
+        result = g_directDraw->SetCooperativeLevel(
+            g_hwndApp, DDSCL_EXCLUSIVE | DDSCL_FULLSCREEN | DDSCL_ALLOWREBOOT);
         if (result != DD_OK)
-            DDSD(result,
+            ddsd(result,
                  DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
                               "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"),
                  0xa0);
-        result = gpDirectDraw->SetDisplayMode(800, 600, 16);
+        result = g_directDraw->SetDisplayMode(800, 600, 16);
         if (result != DD_OK)
-            DDSD(result,
+            ddsd(result,
                  DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
                               "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"),
                  0xa4);
     } else {
-        result = gpDirectDraw->SetCooperativeLevel(hwndApp, DDSCL_NORMAL);
+        result = g_directDraw->SetCooperativeLevel(g_hwndApp, DDSCL_NORMAL);
         if (result != DD_OK)
-            DDSD(result,
+            ddsd(result,
                  DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
                               "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"),
                  0xaa);
     }
 
-    gpDDSPrimary = DDCreateSurface(800, 600, 1);
-    if (gpDDClipper) {
-        result = gpDDSPrimary->SetClipper(0);
+    g_ddsPrimary = ddCreateSurface(800, 600, 1);
+    if (g_ddClipper) {
+        result = g_ddsPrimary->SetClipper(0);
         if (result != DD_OK && result != DDERR_NOCLIPPERATTACHED)
-            DDSD(result,
+            ddsd(result,
                  DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
                               "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"),
                  0x6e);
-        gpDDClipper->Release();
-        gpDDClipper = 0;
+        g_ddClipper->Release();
+        g_ddClipper = 0;
     }
-    gpDDSPrimary->GetPixelFormat(
-        static_cast<DDPIXELFORMAT*>(static_cast<void*>(&gPixelFormatPrefix)));
+    g_ddsPrimary->GetPixelFormat(
+        static_cast<DDPIXELFORMAT*>(static_cast<void*>(&g_pixelFormatPrefix)));
 
-    ResourceManager::SetPixelFormat(
-        gColorMask68c860, gColorMask68c864, gColorMask68c868);
-    SmackManager::SetPixelFormat(
-        gColorMask68c860, gColorMask68c864, gColorMask68c868);
+    ResourceManager::setPixelFormat(
+        g_colorMask68c860, g_colorMask68c864, g_colorMask68c868);
+    SmackManager::setPixelFormat(
+        g_colorMask68c860, g_colorMask68c864, g_colorMask68c868);
 
-    if (!bWindowedMode) {
-        result = gpDirectDraw->CreateClipper(0, &gpDDClipper, 0);
+    if (!g_windowedMode) {
+        result = g_directDraw->CreateClipper(0, &g_ddClipper, 0);
         if (result != DD_OK)
-            DDSD(result,
+            ddsd(result,
                  DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
                               "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"),
                  0x81);
-        result = gpDDClipper->SetHWnd(0, hwndApp);
+        result = g_ddClipper->SetHWnd(0, g_hwndApp);
         if (result != DD_OK)
-            DDSD(result,
+            ddsd(result,
                  DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
                               "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"),
                  0x86);
-        result = gpDDSPrimary->SetClipper(gpDDClipper);
+        result = g_ddsPrimary->SetClipper(g_ddClipper);
         if (result != DD_OK)
-            DDSD(result,
+            ddsd(result,
                  DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
                               "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"),
                  0x8b);
     }
 
-    gpDDSBack = DDCreateSurface(800, 600, 0);
+    g_ddsBack = ddCreateSurface(800, 600, 0);
 
     DDSURFACEDESC surfaceDesc;
     memset(&surfaceDesc, 0, sizeof(surfaceDesc));
@@ -1303,22 +1316,22 @@ void DDInitGraphics()
         DDSCAPS_OFFSCREENPLAIN | DDSCAPS_SYSTEMMEMORY;
     surfaceDesc.dwHeight = 64;
     surfaceDesc.dwWidth = 64;
-    result = gpDirectDraw->CreateSurface(
+    result = g_directDraw->CreateSurface(
         &surfaceDesc,
         static_cast<IDirectDrawSurface**>(
-            static_cast<void*>(&gpDDSMouseSurface)),
+            static_cast<void*>(&g_ddsMouseSurface)),
         0);
     if (result != DD_OK)
-        DDSD(result,
+        ddsd(result,
              DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
                           "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"),
              0x28b);
 
     DDCOLORKEY colorKey;
-    unsigned long color = RGBto16(0, 255, 255);
+    unsigned long color = rgBto16(0, 255, 255);
     colorKey.dwColorSpaceLowValue = color;
     colorKey.dwColorSpaceHighValue = color;
-    gpDDSMouseSurface->SetColorKey(DDCKEY_SRCBLT, &colorKey);
+    g_ddsMouseSurface->SetColorKey(DDCKEY_SRCBLT, &colorKey);
 
     memset(&surfaceDesc, 0, sizeof(surfaceDesc));
     surfaceDesc.dwSize = sizeof(surfaceDesc);
@@ -1327,13 +1340,13 @@ void DDInitGraphics()
         DDSCAPS_OFFSCREENPLAIN | DDSCAPS_SYSTEMMEMORY;
     surfaceDesc.dwHeight = 64;
     surfaceDesc.dwWidth = 64;
-    result = gpDirectDraw->CreateSurface(
+    result = g_directDraw->CreateSurface(
         &surfaceDesc,
         static_cast<IDirectDrawSurface**>(
-            static_cast<void*>(&gpDDSMouseSaveSurface)),
+            static_cast<void*>(&g_ddsMouseSaveSurface)),
         0);
     if (result != DD_OK)
-        DDSD(result,
+        ddsd(result,
              DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
                           "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"),
              0x29c);
@@ -1345,13 +1358,13 @@ void DDInitGraphics()
         DDSCAPS_OFFSCREENPLAIN | DDSCAPS_SYSTEMMEMORY;
     surfaceDesc.dwHeight = 128;
     surfaceDesc.dwWidth = 128;
-    result = gpDirectDraw->CreateSurface(
+    result = g_directDraw->CreateSurface(
         &surfaceDesc,
         static_cast<IDirectDrawSurface**>(
-            static_cast<void*>(&gpDDSMouseScratchSurface)),
+            static_cast<void*>(&g_ddsMouseScratchSurface)),
         0);
     if (result != DD_OK)
-        DDSD(result,
+        ddsd(result,
              DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
                           "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"),
              0x2aa);
@@ -1363,7 +1376,7 @@ void DDInitGraphics()
 // update rectangle from BeginPaint is widened to the whole client area
 // before the blit, and the blit is skipped on a degenerate rectangle.
 VA(0x00601820, 0x70)  // anchor-callee (AppWndProc WM_PAINT), dc 0x19a440
-int AppPaint(void* hwnd, void* hdc)
+int appPaint(void* hwnd, void* hdc)
 {
     PAINTSTRUCT ps;
     RECT clientRect;
@@ -1376,7 +1389,7 @@ int AppPaint(void* hwnd, void* hdc)
     }
     if (ps.rcPaint.right - ps.rcPaint.left > 0
         && ps.rcPaint.bottom - ps.rcPaint.top > 0)
-        RobAppBlit(&ps.rcPaint);
+        robAppBlit(&ps.rcPaint);
     EndPaint(window, &ps);
     return 1;
 }
@@ -1386,9 +1399,9 @@ int AppPaint(void* hwnd, void* hdc)
 // body is a 5-byte tail jmp into 0x6018a0 - the WING arm of homm2's
 // wrapper is gone, only the DD path survives.
 VA(0x00601890, 0x5)  // anchor-callee, dc 0x19a444
-void CleanUpWinGraphics()
+void cleanUpWinGraphics()
 {
-    DDCleanUpWinGraphics();
+    ddCleanUpWinGraphics();
 }
 
 // The cleanup worker follows the same DirectDraw lifecycle as the mature
@@ -1397,54 +1410,54 @@ void CleanUpWinGraphics()
 // RestoreDisplayMode/SetCooperativeLevel and IDirectDrawSurface::SetClipper.
 // E:\gamedcs\wingraph.cpp:1476
 VA(0x006018a0, 0x100)  // wrapper tail-jump + DirectDraw release chain
-void DDCleanUpWinGraphics()
+void ddCleanUpWinGraphics()
 {
-    if (gpDirectDraw) {
-        gpDirectDraw->RestoreDisplayMode();
+    if (g_directDraw) {
+        g_directDraw->RestoreDisplayMode();
 
-        if (gpDDClipper) {
-            if (gpDDSPrimary) {
-                HRESULT result = gpDDSPrimary->SetClipper(0);
+        if (g_ddClipper) {
+            if (g_ddsPrimary) {
+                HRESULT result = g_ddsPrimary->SetClipper(0);
                 if (result != DD_OK && result != DDERR_NOCLIPPERATTACHED)
-                    DDSD(result,
+                    ddsd(result,
                          DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
                                       "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"),
                          0x378);
             }
-            gpDDClipper->Release();
-            gpDDClipper = 0;
+            g_ddClipper->Release();
+            g_ddClipper = 0;
         }
 
-        if (gpDDSPrimary) {
-            gpDDSPrimary->Release();
-            gpDDSPrimary = 0;
+        if (g_ddsPrimary) {
+            g_ddsPrimary->Release();
+            g_ddsPrimary = 0;
         }
-        if (gpDDSBack) {
-            gpDDSBack->Release();
-            gpDDSBack = 0;
+        if (g_ddsBack) {
+            g_ddsBack->Release();
+            g_ddsBack = 0;
         }
-        if (gpDDSMouseSurface) {
-            gpDDSMouseSurface->Release();
-            gpDDSMouseSurface = 0;
+        if (g_ddsMouseSurface) {
+            g_ddsMouseSurface->Release();
+            g_ddsMouseSurface = 0;
         }
-        if (gpDDSMouseSaveSurface) {
-            gpDDSMouseSaveSurface->Release();
-            gpDDSMouseSaveSurface = 0;
+        if (g_ddsMouseSaveSurface) {
+            g_ddsMouseSaveSurface->Release();
+            g_ddsMouseSaveSurface = 0;
         }
-        if (gpDDSMouseScratchSurface) {
-            gpDDSMouseScratchSurface->Release();
-            gpDDSMouseScratchSurface = 0;
+        if (g_ddsMouseScratchSurface) {
+            g_ddsMouseScratchSurface->Release();
+            g_ddsMouseScratchSurface = 0;
         }
 
-        HRESULT result = gpDirectDraw->SetCooperativeLevel(
-            hwndApp, DDSCL_NORMAL);
+        HRESULT result = g_directDraw->SetCooperativeLevel(
+            g_hwndApp, DDSCL_NORMAL);
         if (result != DD_OK)
-            DDSD(result,
+            ddsd(result,
                  DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
                               "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"),
                  0x396);
-        gpDirectDraw->Release();
-        gpDirectDraw = 0;
+        g_directDraw->Release();
+        g_directDraw = 0;
     }
 }
 
@@ -1454,20 +1467,21 @@ void DDCleanUpWinGraphics()
 // adjacent static DDSetFullScreenStatus (0x601a00) and
 // gpWindowManager->UpdateScreen(0,0,800,600); sole caller is AppCommand's
 // KBWIN_MENU_FULLSCREEN arm (homm2 lineage).
+// Before normalization (locals): bFullScreenOn, bChanged.
 VA(0x006019a0, 0x5a)  // anchor-callee, dc 0x19a454
-unsigned char SetFullScreenStatus(int bFullScreenOn)
+unsigned char setFullScreenStatus(int fullScreenOn)
 {
-    if (gUnnamed6989d4)
+    if (g_unnamed6989d4)
         return 0;
-    if (bFullScreenOn == bWindowedMode)
+    if (fullScreenOn == g_windowedMode)
         return 1;
 
-    unsigned char bChanged = DDSetFullScreenStatus(bFullScreenOn);
-    gpWindowManager->UpdateScreen(0, 0, 800, 600);
-    if (bFullScreenOn)
-        gpMouseManager->Update(1);
-    WritePrefs();
-    return bChanged;
+    unsigned char changed = ddSetFullScreenStatus(fullScreenOn);
+    g_windowManager->updateScreen(0, 0, 800, 600);
+    if (fullScreenOn)
+        g_mouseManager->update(1);
+    writePrefs();
+    return changed;
 }
 
 // E:\gamedcs\wingraph.cpp:1712 - the mode change itself, emitted straight
@@ -1497,94 +1511,95 @@ unsigned char SetFullScreenStatus(int bFullScreenOn)
 // iWindowX/iWindowY into locals ABOVE the `if (!bWindowedMode)`, which is
 // where retail loads them (91.8567 -> 94.5813); and declaring the three
 // saved masks blue/green/red rather than red/green/blue, worth 0.0036.
+// Before normalization (locals): iNewStatus, iStatus, bChanged, bDesktopOk.
 VA(0x00601a00, 0x31C)  // anchor-caller (SetFullScreenStatus) + dc order, dc 0x19a234
-unsigned char DDSetFullScreenStatus(int iNewStatus)
+unsigned char ddSetFullScreenStatus(int newStatus)
 {
-    int iStatus = iNewStatus;
+    int status = newStatus;
     Bitmap16Bit savedScreen(800, 600);
 
-    if (bWindowedMode == iNewStatus)
+    if (g_windowedMode == newStatus)
         return 1;
-    if (gWinGraphBusy)
+    if (g_winGraphBusy)
         return 0;
 
-    unsigned char bChanged = 1;
-    gWinGraphBusy = 1;
-    if (gMP3Stream)
-        AIL_pause_stream(gMP3Stream, 1);
-    VideoPause();
+    unsigned char changed = 1;
+    g_winGraphBusy = 1;
+    if (g_mp3Stream)
+        AIL_pause_stream(g_mp3Stream, 1);
+    videoPause();
     Sleep(100);
 
     unsigned long savedBlue = 0;
     unsigned long savedGreen = 0;
     unsigned long savedRed = 0;
-    if (!bClosingApp) {
-        Bitmap16Bit* screen = gpWindowManager->screenBitmap;
-        savedScreen.Grab(screen->map, 0, 0, screen->Width, screen->Height,
-                         screen->Pitch);
-        savedBlue = gColorMaskBlue;
-        savedGreen = gColorMaskGreen;
-        savedRed = gColorMaskRed;
+    if (!g_closingApp) {
+        Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
+        savedScreen.grab(screen->m_map, 0, 0, screen->m_width, screen->m_height,
+                         screen->m_pitch);
+        savedBlue = g_colorMaskBlue;
+        savedGreen = g_colorMaskGreen;
+        savedRed = g_colorMaskRed;
     }
 
-    DDCleanUpWinGraphics();
-    gWinGraphBusy = 0;
+    ddCleanUpWinGraphics();
+    g_winGraphBusy = 0;
 
-    unsigned char bDesktopOk = GetDesktopInfo();
-    if (iStatus == 0 && !bDesktopOk) {
-        iStatus = 1;
-        bChanged = 0;
+    unsigned char desktopOk = getDesktopInfo();
+    if (status == 0 && !desktopOk) {
+        status = 1;
+        changed = 0;
     }
-    bWindowedMode = iStatus;
+    g_windowedMode = status;
 
-    if (bWindowedMode) {
-        SetWindowLong(hwndApp, GWL_STYLE, WS_POPUP | WS_VISIBLE);
-        SetWindowLong(hwndApp, GWL_EXSTYLE, WS_EX_TOPMOST);
+    if (g_windowedMode) {
+        SetWindowLong(g_hwndApp, GWL_STYLE, WS_POPUP | WS_VISIBLE);
+        SetWindowLong(g_hwndApp, GWL_EXSTYLE, WS_EX_TOPMOST);
     } else {
-        SetWindowLong(hwndApp, GWL_STYLE, WINDOWED_WINDOW_STYLE);
-        SetWindowLong(hwndApp, GWL_EXSTYLE, 0);
+        SetWindowLong(g_hwndApp, GWL_STYLE, WINDOWED_WINDOW_STYLE);
+        SetWindowLong(g_hwndApp, GWL_EXSTYLE, 0);
     }
 
-    DDInitGraphics();
-    gWinGraphBusy = 1;
+    ddInitGraphics();
+    g_winGraphBusy = 1;
 
-    if (!bClosingApp) {
-        if (savedBlue != gColorMaskBlue || savedGreen != gColorMaskGreen
-            || savedRed != gColorMaskRed) {
-            savedScreen.Remap(savedGreen == GREEN_MASK_565
+    if (!g_closingApp) {
+        if (savedBlue != g_colorMaskBlue || savedGreen != g_colorMaskGreen
+            || savedRed != g_colorMaskRed) {
+            savedScreen.remap(savedGreen == GREEN_MASK_565
                                   ? BITMAP_GREEN_BITS_565
                                   : BITMAP_GREEN_BITS_1555);
-            ResourceManager::RemapGraphics();
+            ResourceManager::remapGraphics();
         }
-        Bitmap16Bit* screen = gpWindowManager->screenBitmap;
-        savedScreen.Draw(0, 0, 800, 600, screen->map, 0, 0, screen->Width,
-                         screen->Height, screen->Pitch, false);
+        Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
+        savedScreen.draw(0, 0, 800, 600, screen->m_map, 0, 0, screen->m_width,
+                         screen->m_height, screen->m_pitch, false);
     }
 
-    gpMouseManager->Reset();
-    gpMouseManager->LoadFrame(gpMouseManager->field_50);
+    g_mouseManager->reset();
+    g_mouseManager->loadFrame(g_mouseManager->m_frame);
 
-    int windowX = iWindowX;
-    int windowY = iWindowY;
-    if (!bWindowedMode) {
+    int windowX = g_windowX;
+    int windowY = g_windowY;
+    if (!g_windowedMode) {
         RECT windowRect;
         windowRect.left = 0;
         windowRect.top = 0;
         windowRect.right = 800;
         windowRect.bottom = 600;
         AdjustWindowRectEx(&windowRect, WINDOWED_WINDOW_STYLE, 1, 0);
-        MoveWindow(hwndApp, windowX, windowY,
+        MoveWindow(g_hwndApp, windowX, windowY,
                    windowRect.right - windowRect.left,
                    windowRect.bottom - windowRect.top, 1);
-        WritePrefs();
+        writePrefs();
     }
 
-    KBChangeMenu(0);
-    VideoRealignBuffers();
-    if (gMP3Stream)
-        AIL_pause_stream(gMP3Stream, 0);
-    VideoResume();
+    kbChangeMenu(0);
+    videoRealignBuffers();
+    if (g_mp3Stream)
+        AIL_pause_stream(g_mp3Stream, 0);
+    videoResume();
     Sleep(100);
-    gWinGraphBusy = 0;
-    return bChanged;
+    g_winGraphBusy = 0;
+    return changed;
 }

@@ -36,7 +36,8 @@ public:
         BOTTOM_VIEW_SILO_TWO_RESOURCES = 2
     };
 
-    type_bottom_view_window(heroWindow* parent_window);
+    // Before normalization (locals): parent_window.
+    type_bottom_view_window(heroWindow* parentWindow);
     virtual ~type_bottom_view_window();
     virtual void animate();
 };
@@ -78,21 +79,30 @@ public:
     // +0x34, 'crest58.def' at (20,51). Its FRAME is the acting player's
     // game position, and animate re-frames it whenever that position
     // changes - which is what pairs it with lastPlayerPos below.
-    iconWidget* crest;
+    // Before normalization: crest.
+    iconWidget* m_crest;
     // +0x38 / +0x3c, the two halves of the hourglass at (98,51):
     // 'HourGlas.def' is the animated one (animate reads ITS sprite's
     // sequence-0 frame count) and 'HourSand.def' the level indicator.
-    iconWidget* hourGlass;
-    iconWidget* sand;
-    unsigned long lastStepTime;  // +0x40, GameTime::Get at the last step
+    // Before normalization: hourGlass.
+    iconWidget* m_hourGlass;
+    // Before normalization: sand.
+    iconWidget* m_sand;
+    // Before normalization: lastStepTime.
+    unsigned long m_lastStepTime;  // +0x40, GameTime::Get at the last step
     // +0x44. One entry per player, filled here and refreshed by animate
     // through the SAME sum_mobility below, which is why the two bodies
     // carry the identical inlined loop.
-    long mobility[8];
-    int lastPlayerPos;           // +0x64
-    int frame;                   // +0x68
-    int frameDelay;              // +0x6c, 50 ticks
-    int step;                    // +0x70
+    // Before normalization: mobility.
+    long m_mobility[8];
+    // Before normalization: lastPlayerPos.
+    int m_lastPlayerPos;           // +0x64
+    // Before normalization: frame.
+    int m_frame;                   // +0x68
+    // Before normalization: frameDelay.
+    int m_frameDelay;              // +0x6c, 50 ticks
+    // Before normalization: step.
+    int m_step;                    // +0x70
 
     TBottomViewEnemyTurn(heroWindow* parent);
     virtual ~TBottomViewEnemyTurn();
@@ -100,7 +110,9 @@ public:
 
     // dc 0x56bbc, :646. No retail body: /Ob2 expands it into both of
     // its call sites and the unreferenced copy is dropped.
-    long sum_mobility(long player_id);
+    // Before normalization (function): TBottomViewEnemyTurn::sum_mobility.
+    // Before normalization (locals): player_id.
+    long sumMobility(long playerId);
 };
 SIZE(TBottomViewEnemyTurn, 0x74);
 
@@ -120,13 +132,18 @@ public:
     // handing it to Widgets.push_back, and only a textWidget*->widget*
     // conversion makes that temporary exist - a plain widget* member is
     // passed by address (`lea ecx,[esi+0x34]`).
-    textWidget* backdrop;
+    // Before normalization: backdrop.
+    textWidget* m_backdrop;
     // +0x38. An iconWidget: animate calls SetIconFrame and send_message
     // on it and reads Sprite->GetNumFrames(0) through it.
-    iconWidget* icon;
-    int frame;                   // +0x3c, the current sequence-0 frame
-    int frameDelay;              // +0x40, ticks between steps
-    unsigned long lastStepTime;  // +0x44, GameTime::Get at the last step
+    // Before normalization: icon.
+    iconWidget* m_icon;
+    // Before normalization: frame.
+    int m_frame;                   // +0x3c, the current sequence-0 frame
+    // Before normalization: frameDelay.
+    int m_frameDelay;              // +0x40, ticks between steps
+    // Before normalization: lastStepTime.
+    unsigned long m_lastStepTime;  // +0x44, GameTime::Get at the last step
 
     TBottomViewNewTurn(heroWindow* parent);
     virtual ~TBottomViewNewTurn();

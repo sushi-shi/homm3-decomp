@@ -37,40 +37,64 @@
 #define HOMM3_PCX_H
 
 struct PcxData {
-    int PCXvers;
-    unsigned int width;
-    unsigned int length;
-    int BPPixel;
-    int Nplanes;
-    int BytesPerLine;
-    int PalInt;
-    int vbitcount;
+    // Before normalization: PCXvers.
+    int m_pcXvers;
+    // Before normalization: width.
+    unsigned int m_width;
+    // Before normalization: length.
+    unsigned int m_length;
+    // Before normalization: BPPixel.
+    int m_bpPixel;
+    // Before normalization: Nplanes.
+    int m_nplanes;
+    // Before normalization: BytesPerLine.
+    int m_bytesPerLine;
+    // Before normalization: PalInt.
+    int m_palInt;
+    // Before normalization: vbitcount.
+    int m_vbitcount;
 };
 
 struct RGBQUAD {
-    unsigned char rgbBlue;
-    unsigned char rgbGreen;
-    unsigned char rgbRed;
-    unsigned char rgbReserved;
+    // Before normalization: rgbBlue.
+    unsigned char m_rgbBlue;
+    // Before normalization: rgbGreen.
+    unsigned char m_rgbGreen;
+    // Before normalization: rgbRed.
+    unsigned char m_rgbRed;
+    // Before normalization: rgbReserved.
+    unsigned char m_rgbReserved;
 };
 
 struct imgdes {
-    unsigned char* ibuff;
-    unsigned int stx;
-    unsigned int sty;
-    unsigned int endx;
-    unsigned int endy;
-    unsigned int buffwidth;
-    RGBQUAD* palette;
-    int colors;
-    int imgtype;
-    void* bmh;
-    void* hBitmap;
+    // Before normalization: ibuff.
+    unsigned char* m_ibuff;
+    // Before normalization: stx.
+    unsigned int m_stx;
+    // Before normalization: sty.
+    unsigned int m_sty;
+    // Before normalization: endx.
+    unsigned int m_endx;
+    // Before normalization: endy.
+    unsigned int m_endy;
+    // Before normalization: buffwidth.
+    unsigned int m_buffwidth;
+    // Before normalization: palette.
+    RGBQUAD* m_palette;
+    // Before normalization: colors.
+    int m_colors;
+    // Before normalization: imgtype.
+    int m_imgtype;
+    // Before normalization: bmh.
+    void* m_bmh;
+    // Before normalization: hBitmap.
+    void* m_bitmap;
 };
 
 int __stdcall pcxinfo(const char* filename, PcxData* data);
 int __stdcall allocimage(imgdes* image, int width, int height,
-                         int bits_per_pixel);
+                         // Before normalization (locals): bits_per_pixel.
+                         int bitsPerPixel);
 int __stdcall loadpcx(const char* filename, imgdes* image);
 int __stdcall flipimage(imgdes* source, imgdes* destination);
 void __stdcall freeimage(imgdes* image);

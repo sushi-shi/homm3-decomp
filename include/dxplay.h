@@ -21,16 +21,19 @@ class CDPlayMsg;
 // news one per enumerated player and expands it there.
 class CDPlayPlayer {
 public:
-    CDPlayPlayer(char* sName, unsigned long dpid)
+    // Before normalization (locals): sName.
+    CDPlayPlayer(char* name, unsigned long dpid)
     {
-        strcpy(m_sName, sName);
+        strcpy(m_name, name);
         m_dpid = dpid;
     }
-    char* GetName() { return m_sName; }         // DC dxplay.h:210
-    unsigned long GetId() { return m_dpid; }    // DC dxplay.h:211
+    // Before normalization (function): CDPlayPlayer::GetName.
+    char* getName() { return m_name; }         // DC dxplay.h:210
+    // Before normalization (function): CDPlayPlayer::GetId.
+    unsigned long getId() { return m_dpid; }    // DC dxplay.h:211
 
 protected:
-    char m_sName[0x100];      // +0x00
+    char m_name[0x100];      // +0x00
     unsigned long m_dpid;     // +0x100
 };
 SIZE(CDPlayPlayer, 0x104);
@@ -56,51 +59,80 @@ struct DPMSG_STARTSESSION;
 // layouts are published in the Dreamcast CodeView stream and independently
 // fixed on PC by the field loads in LobbyLaunchConnect.
 struct DPNAME {
-    unsigned long dwSize;
-    unsigned long dwFlags;
+    // Before normalization: dwSize.
+    unsigned long m_size;
+    // Before normalization: dwFlags.
+    unsigned long m_flags;
     union {
-        unsigned short* lpszShortName;
-        char* lpszShortNameA;
+        // Before normalization: lpszShortName.
+        unsigned short* m_shortName;
+        // Before normalization: lpszShortNameA.
+        char* m_shortNameA;
     };
     union {
-        unsigned short* lpszLongName;
-        char* lpszLongNameA;
+        // Before normalization: lpszLongName.
+        unsigned short* m_longName;
+        // Before normalization: lpszLongNameA.
+        char* m_longNameA;
     };
 };
 SIZE(DPNAME, 0x10);
 
 struct DPSESSIONDESC2 {
-    unsigned long dwSize;
-    unsigned long dwFlags;
-    GUID guidInstance;
-    GUID guidApplication;
-    unsigned long dwMaxPlayers;
-    unsigned long dwCurrentPlayers;
+    // Before normalization: dwSize.
+    unsigned long m_size;
+    // Before normalization: dwFlags.
+    unsigned long m_flags;
+    // Before normalization: guidInstance.
+    GUID m_guidInstance;
+    // Before normalization: guidApplication.
+    GUID m_guidApplication;
+    // Before normalization: dwMaxPlayers.
+    unsigned long m_maxPlayers;
+    // Before normalization: dwCurrentPlayers.
+    unsigned long m_currentPlayers;
     union {
-        unsigned short* lpszSessionName;
-        char* lpszSessionNameA;
+        // Before normalization: lpszSessionName.
+        unsigned short* m_sessionName;
+        // Before normalization: lpszSessionNameA.
+        char* m_sessionNameA;
     };
     union {
-        unsigned short* lpszPassword;
-        char* lpszPasswordA;
+        // Before normalization: lpszPassword.
+        unsigned short* m_password;
+        // Before normalization: lpszPasswordA.
+        char* m_passwordA;
     };
-    unsigned long dwReserved1;
-    unsigned long dwReserved2;
-    unsigned long dwUser1;
-    unsigned long dwUser2;
-    unsigned long dwUser3;
-    unsigned long dwUser4;
+    // Before normalization: dwReserved1.
+    unsigned long m_reserved1;
+    // Before normalization: dwReserved2.
+    unsigned long m_reserved2;
+    // Before normalization: dwUser1.
+    unsigned long m_user1;
+    // Before normalization: dwUser2.
+    unsigned long m_user2;
+    // Before normalization: dwUser3.
+    unsigned long m_user3;
+    // Before normalization: dwUser4.
+    unsigned long m_user4;
 };
 SIZE(DPSESSIONDESC2, 0x50);
 
 struct DPLCONNECTION {
-    unsigned long dwSize;
-    unsigned long dwFlags;
-    DPSESSIONDESC2* lpSessionDesc;
-    DPNAME* lpPlayerName;
-    GUID guidSP;
-    void* lpAddress;
-    unsigned long dwAddressSize;
+    // Before normalization: dwSize.
+    unsigned long m_size;
+    // Before normalization: dwFlags.
+    unsigned long m_flags;
+    // Before normalization: lpSessionDesc.
+    DPSESSIONDESC2* m_sessionDesc;
+    // Before normalization: lpPlayerName.
+    DPNAME* m_playerName;
+    // Before normalization: guidSP.
+    GUID m_guidSp;
+    // Before normalization: lpAddress.
+    void* m_address;
+    // Before normalization: dwAddressSize.
+    unsigned long m_addressSize;
 };
 SIZE(DPLCONNECTION, 0x28);
 
@@ -109,16 +141,26 @@ SIZE(DPLCONNECTION, 0x28);
 // id of the station that left, which is what fixes them at +4 and +8; the
 // tail follows dplay.h's published record so the struct is not a fake.
 struct DPMSG_DESTROYPLAYERORGROUP {
-    unsigned long dwType;
-    unsigned long dwPlayerType;
-    unsigned long dpId;
-    void* lpLocalData;
-    unsigned long dwLocalDataSize;
-    void* lpRemoteData;
-    unsigned long dwRemoteDataSize;
-    DPNAME dpnName;
-    unsigned long dpIdParent;
-    unsigned long dwFlags;
+    // Before normalization: dwType.
+    unsigned long m_type;
+    // Before normalization: dwPlayerType.
+    unsigned long m_playerType;
+    // Before normalization: dpId.
+    unsigned long m_dpId;
+    // Before normalization: lpLocalData.
+    void* m_localData;
+    // Before normalization: dwLocalDataSize.
+    unsigned long m_localDataSize;
+    // Before normalization: lpRemoteData.
+    void* m_remoteData;
+    // Before normalization: dwRemoteDataSize.
+    unsigned long m_remoteDataSize;
+    // Before normalization: dpnName.
+    DPNAME m_dpnName;
+    // Before normalization: dpIdParent.
+    unsigned long m_dpIdParent;
+    // Before normalization: dwFlags.
+    unsigned long m_flags;
 };
 
 // dplay.h's DPPLAYERTYPE_ pair, the domain of the field above.
@@ -159,123 +201,185 @@ class CDPlay {
 public:
     CDPlay();
     virtual ~CDPlay();
-    virtual unsigned char Init();
-    virtual unsigned char InitConnection(CDPlayConnection* connection);
-    virtual unsigned char HostSession(char* sessionName,
+    // Before normalization (function): CDPlay::Init.
+    virtual unsigned char init();
+    // Before normalization (function): CDPlay::InitConnection.
+    virtual unsigned char initConnection(CDPlayConnection* connection);
+    // Before normalization (function): CDPlay::HostSession.
+    virtual unsigned char hostSession(char* sessionName,
         unsigned long flags, unsigned long maxPlayers, char* password);
-    virtual unsigned char JoinSession(GUID* sessionGuid, char* password);
-    virtual unsigned char StartSession(unsigned long groupId);
-    virtual unsigned char CloseSession();
-    virtual unsigned long CreatePlayer(char* playerName, void* data,
+    // Before normalization (function): CDPlay::JoinSession.
+    virtual unsigned char joinSession(GUID* sessionGuid, char* password);
+    // Before normalization (function): CDPlay::StartSession.
+    virtual unsigned char startSession(unsigned long groupId);
+    // Before normalization (function): CDPlay::CloseSession.
+    virtual unsigned char closeSession();
+    // Before normalization (function): CDPlay::CreatePlayer.
+    virtual unsigned long createPlayer(char* playerName, void* data,
         unsigned long size, void* eventHandle);
-    virtual unsigned char DestroyPlayer(unsigned long playerId);
-    virtual unsigned long CreateGroup(char* groupName, void* data,
+    // Before normalization (function): CDPlay::DestroyPlayer.
+    virtual unsigned char destroyPlayer(unsigned long playerId);
+    // Before normalization (function): CDPlay::CreateGroup.
+    virtual unsigned long createGroup(char* groupName, void* data,
         unsigned long size, unsigned char stagingArea);
-    virtual unsigned char DestroyGroup(unsigned long groupId);
-    virtual unsigned char DeleteGroupFromGroup(unsigned long parentId,
+    // Before normalization (function): CDPlay::DestroyGroup.
+    virtual unsigned char destroyGroup(unsigned long groupId);
+    // Before normalization (function): CDPlay::DeleteGroupFromGroup.
+    virtual unsigned char deleteGroupFromGroup(unsigned long parentId,
         unsigned long groupId);
-    virtual unsigned char SetGroupName(unsigned long groupId, char* shortName,
+    // Before normalization (function): CDPlay::SetGroupName.
+    virtual unsigned char setGroupName(unsigned long groupId, char* shortName,
         char* longName, unsigned long flags);
-    virtual unsigned char SetGroupData(unsigned long groupId, void* data,
+    // Before normalization (function): CDPlay::SetGroupData.
+    virtual unsigned char setGroupData(unsigned long groupId, void* data,
         unsigned long size, unsigned long flags);
-    virtual unsigned char SetPlayerName(unsigned long playerId,
+    // Before normalization (function): CDPlay::SetPlayerName.
+    virtual unsigned char setPlayerName(unsigned long playerId,
         char* shortName, char* longName, unsigned long flags);
-    virtual unsigned char SetPlayerData(unsigned long playerId, void* data,
+    // Before normalization (function): CDPlay::SetPlayerData.
+    virtual unsigned char setPlayerData(unsigned long playerId, void* data,
         unsigned long size, unsigned long flags);
-    virtual void* GetGroupData(unsigned long groupId, unsigned long* size,
+    // Before normalization (function): CDPlay::GetGroupData.
+    virtual void* getGroupData(unsigned long groupId, unsigned long* size,
         unsigned long flags);
-    virtual unsigned char GetGroupName(unsigned long groupId, char* shortName,
+    // Before normalization (function): CDPlay::GetGroupName.
+    virtual unsigned char getGroupName(unsigned long groupId, char* shortName,
         int maxShort, char* longName, int maxLong);
-    virtual void* GetPlayerData(unsigned long playerId, unsigned long* size,
+    // Before normalization (function): CDPlay::GetPlayerData.
+    virtual void* getPlayerData(unsigned long playerId, unsigned long* size,
         unsigned long flags);
-    virtual unsigned char GetPlayerName(unsigned long playerId,
+    // Before normalization (function): CDPlay::GetPlayerName.
+    virtual unsigned char getPlayerName(unsigned long playerId,
         char* shortName, int maxShort, char* longName, int maxLong);
-    virtual unsigned long CreateGroupInGroup(unsigned long parentId,
+    // Before normalization (function): CDPlay::CreateGroupInGroup.
+    virtual unsigned long createGroupInGroup(unsigned long parentId,
         char* groupName, void* data, unsigned long size,
         unsigned char stagingArea);
-    virtual unsigned char AddPlayerToGroup(unsigned long groupId,
+    // Before normalization (function): CDPlay::AddPlayerToGroup.
+    virtual unsigned char addPlayerToGroup(unsigned long groupId,
         unsigned long playerId);
-    virtual unsigned char DeletePlayerFromGroup(unsigned long groupId,
+    // Before normalization (function): CDPlay::DeletePlayerFromGroup.
+    virtual unsigned char deletePlayerFromGroup(unsigned long groupId,
         unsigned long playerId);
-    virtual unsigned char UpdateSessionDesc(DPSESSIONDESC2* session);
-    virtual DPSESSIONDESC2* GetCurrSession();
-    virtual unsigned char EnumConnections(
+    // Before normalization (function): CDPlay::UpdateSessionDesc.
+    virtual unsigned char updateSessionDesc(DPSESSIONDESC2* session);
+    // Before normalization (function): CDPlay::GetCurrSession.
+    virtual DPSESSIONDESC2* getCurrSession();
+    // Before normalization (function): CDPlay::EnumConnections.
+    virtual unsigned char enumConnections(
         CAutoArray<CDPlayConnection>* connections);
-    virtual unsigned char EnumSessions(CAutoArray<CDPlaySession>* sessions,
+    // Before normalization (function): CDPlay::EnumSessions.
+    virtual unsigned char enumSessions(CAutoArray<CDPlaySession>* sessions,
         unsigned long timeout, unsigned long flags);
-    virtual unsigned char EnumGroups(CAutoArray<CDPlayGroup>* groups,
+    // Before normalization (function): CDPlay::EnumGroups.
+    virtual unsigned char enumGroups(CAutoArray<CDPlayGroup>* groups,
         GUID* instance, unsigned long flags);
-    virtual unsigned char EnumPlayers(CAutoArray<CDPlayPlayer>* players,
+    // Before normalization (function): CDPlay::EnumPlayers.
+    virtual unsigned char enumPlayers(CAutoArray<CDPlayPlayer>* players,
         GUID* instance, unsigned long flags);
-    virtual unsigned char EnumGroupPlayers(CAutoArray<CDPlayPlayer>* players,
+    // Before normalization (function): CDPlay::EnumGroupPlayers.
+    virtual unsigned char enumGroupPlayers(CAutoArray<CDPlayPlayer>* players,
         unsigned long groupId, GUID* instance, unsigned long flags);
-    virtual void SetGuid(GUID guid);
-    virtual GUID* GetGuid();
-    virtual unsigned char Send(void* data, unsigned long size,
+    // Before normalization (function): CDPlay::SetGuid.
+    virtual void setGuid(GUID guid);
+    // Before normalization (function): CDPlay::GetGuid.
+    virtual GUID* getGuid();
+    // Before normalization (function): CDPlay::Send.
+    virtual unsigned char send(void* data, unsigned long size,
         unsigned long fromId, unsigned long toId, unsigned char guaranteed);
-    virtual unsigned char SendChat(char* message, unsigned long fromId,
+    // Before normalization (function): CDPlay::SendChat.
+    virtual unsigned char sendChat(char* message, unsigned long fromId,
         unsigned long toId);
-    virtual unsigned char Receive(unsigned long* fromId, unsigned long* toId,
+    // Before normalization (function): CDPlay::Receive.
+    virtual unsigned char receive(unsigned long* fromId, unsigned long* toId,
         CDPlayMsg* message, unsigned long flags);
-    virtual void GetErrorDesc(long error, char* description);
-    virtual unsigned char IsHost();
-    virtual unsigned char FlushReceiveQueue();
-    virtual unsigned char* GetPlayerAddress(
+    // Before normalization (function): CDPlay::GetErrorDesc.
+    virtual void getErrorDesc(long error, char* description);
+    // Before normalization (function): CDPlay::IsHost.
+    virtual unsigned char isHost();
+    // Before normalization (function): CDPlay::FlushReceiveQueue.
+    virtual unsigned char flushReceiveQueue();
+    // Before normalization (function): CDPlay::GetPlayerAddress.
+    virtual unsigned char* getPlayerAddress(
         unsigned long playerId, unsigned long* size);
-    virtual unsigned char GetCaps(DPCAPS* caps, unsigned char guaranteed);
-    virtual unsigned char GetSendQueueSize(
+    // Before normalization (function): CDPlay::GetCaps.
+    virtual unsigned char getCaps(DPCAPS* caps, unsigned char guaranteed);
+    // Before normalization (function): CDPlay::GetSendQueueSize.
+    virtual unsigned char getSendQueueSize(
         unsigned long fromId, unsigned long toId,
         unsigned long* numMessages, unsigned long* numBytes);
-    virtual unsigned char GetReceiveQueueSize(
+    // Before normalization (function): CDPlay::GetReceiveQueueSize.
+    virtual unsigned char getReceiveQueueSize(
         unsigned long fromId, unsigned long toId,
         unsigned long* numMessages, unsigned long* numBytes);
 
-    long GetLastError() { return m_hRes; }
+    // Before normalization (function): CDPlay::GetLastError.
+    long getLastError() { return m_res; }
 
 protected:
-    virtual unsigned char ReceiveMsg(
+    // Before normalization (function): CDPlay::ReceiveMsg.
+    virtual unsigned char receiveMsg(
         unsigned long fromId, unsigned long toId, CDPlayMsg* message);
-    virtual unsigned char ReceiveSystemMsg(
+    // Before normalization (function): CDPlay::ReceiveSystemMsg.
+    virtual unsigned char receiveSystemMsg(
         unsigned long toId, CDPlayMsg* message);
-    virtual unsigned char SysMsgAddGroupToGroup(
+    // Before normalization (function): CDPlay::SysMsgAddGroupToGroup.
+    virtual unsigned char sysMsgAddGroupToGroup(
         DPMSG_ADDGROUPTOGROUP* message, unsigned long toId);
-    virtual unsigned char SysMsgAddPlayerToGroup(
+    // Before normalization (function): CDPlay::SysMsgAddPlayerToGroup.
+    virtual unsigned char sysMsgAddPlayerToGroup(
         DPMSG_ADDPLAYERTOGROUP* message, unsigned long toId);
-    virtual unsigned char SysMsgChat(
+    // Before normalization (function): CDPlay::SysMsgChat.
+    virtual unsigned char sysMsgChat(
         DPMSG_CHAT* message, unsigned long toId);
-    virtual unsigned char SysMsgDeleteGroupFromGroup(
+    // Before normalization (function): CDPlay::SysMsgDeleteGroupFromGroup.
+    virtual unsigned char sysMsgDeleteGroupFromGroup(
         DPMSG_ADDGROUPTOGROUP* message, unsigned long toId);
-    virtual unsigned char SysMsgDeletePlayerFromGroup(
+    // Before normalization (function): CDPlay::SysMsgDeletePlayerFromGroup.
+    virtual unsigned char sysMsgDeletePlayerFromGroup(
         DPMSG_ADDPLAYERTOGROUP* message, unsigned long toId);
-    virtual unsigned char SysMsgSecureMessage(
+    // Before normalization (function): CDPlay::SysMsgSecureMessage.
+    virtual unsigned char sysMsgSecureMessage(
         DPMSG_SECUREMESSAGE* message, unsigned long toId);
-    virtual unsigned char SysMsgSessionLost(
+    // Before normalization (function): CDPlay::SysMsgSessionLost.
+    virtual unsigned char sysMsgSessionLost(
         DPMSG_GENERIC* message, unsigned long toId);
-    virtual unsigned char SysMsgSetPlayerOrGroupData(
+    // Before normalization (function): CDPlay::SysMsgSetPlayerOrGroupData.
+    virtual unsigned char sysMsgSetPlayerOrGroupData(
         DPMSG_SETPLAYERORGROUPDATA* message, unsigned long toId);
-    virtual unsigned char SysMsgSetPlayerOrGroupName(
+    // Before normalization (function): CDPlay::SysMsgSetPlayerOrGroupName.
+    virtual unsigned char sysMsgSetPlayerOrGroupName(
         DPMSG_SETPLAYERORGROUPNAME* message, unsigned long toId);
-    virtual unsigned char SysMsgSetSessionDesc(
+    // Before normalization (function): CDPlay::SysMsgSetSessionDesc.
+    virtual unsigned char sysMsgSetSessionDesc(
         DPMSG_SETSESSIONDESC* message, unsigned long toId);
-    virtual unsigned char SysMsgStartSession(
+    // Before normalization (function): CDPlay::SysMsgStartSession.
+    virtual unsigned char sysMsgStartSession(
         DPMSG_STARTSESSION* message, unsigned long toId);
-    virtual unsigned char SysMsgHost(
+    // Before normalization (function): CDPlay::SysMsgHost.
+    virtual unsigned char sysMsgHost(
         DPMSG_GENERIC* message, unsigned long toId);
-    virtual unsigned char SysMsgCreatePlayerOrGroup(
+    // Before normalization (function): CDPlay::SysMsgCreatePlayerOrGroup.
+    virtual unsigned char sysMsgCreatePlayerOrGroup(
         DPMSG_CREATEPLAYERORGROUP* message, unsigned long toId);
-    virtual unsigned char SysMsgDestroyPlayerOrGroup(
+    // Before normalization (function): CDPlay::SysMsgDestroyPlayerOrGroup.
+    virtual unsigned char sysMsgDestroyPlayerOrGroup(
         DPMSG_DESTROYPLAYERORGROUP* message, unsigned long toId);
 public:
     // The DirectPlay enum trampolines are file-scope callbacks that forward to
     // these virtuals through the lpContext object; keep them reachable without
     // reordering (vtable slots 58-61 are unchanged).
-    virtual unsigned char AddGroupEnum(
+    // Before normalization (function): CDPlay::AddGroupEnum.
+    virtual unsigned char addGroupEnum(
         unsigned long groupId, const DPNAME* name, unsigned long flags);
-    virtual unsigned char AddPlayerEnum(
+    // Before normalization (function): CDPlay::AddPlayerEnum.
+    virtual unsigned char addPlayerEnum(
         unsigned long playerId, const DPNAME* name, unsigned long flags);
-    virtual unsigned char AddSessionEnum(
+    // Before normalization (function): CDPlay::AddSessionEnum.
+    virtual unsigned char addSessionEnum(
         const DPSESSIONDESC2* session, unsigned long flags);
-    virtual unsigned char AddConnectionEnum(
+    // Before normalization (function): CDPlay::AddConnectionEnum.
+    virtual unsigned char addConnectionEnum(
         const GUID* serviceProvider, void* connection,
         unsigned long connectionSize, const DPNAME* name,
         unsigned long flags);
@@ -287,17 +391,26 @@ protected:
     // offsets. The intervening names are Dreamcast CodeView's and agree
     // with the PC methods; DPCAPS stays opaque until a retail body needs it.
     char m_caps[0x28];                  // +0x04
-    void* m_lpDP;                       // +0x2c
+    // Before normalization: m_lpDP.
+    void* m_dp;                       // +0x2c
     GUID m_guid;                        // +0x30
-    long m_hRes;                        // +0x40, DC long / SDK HRESULT
-    CAutoArray<CDPlaySession>* m_pSessionArray;       // +0x44
-    CAutoArray<CDPlayConnection>* m_pConnectionArray; // +0x48
-    CAutoArray<CDPlayGroup>* m_pGroupArray;           // +0x4c
-    CAutoArray<CDPlayPlayer>* m_pPlayerArray;          // +0x50
+    long m_res;                        // +0x40, DC long / SDK HRESULT
+    // Before normalization: m_pSessionArray.
+    CAutoArray<CDPlaySession>* m_sessionArray;       // +0x44
+    // Before normalization: m_pConnectionArray.
+    CAutoArray<CDPlayConnection>* m_connectionArray; // +0x48
+    // Before normalization: m_pGroupArray.
+    CAutoArray<CDPlayGroup>* m_groupArray;           // +0x4c
+    // Before normalization: m_pPlayerArray.
+    CAutoArray<CDPlayPlayer>* m_playerArray;          // +0x50
     unsigned char m_connected;          // +0x54
     unsigned char m_inSession;          // +0x55
     unsigned char m_isHost;             // +0x56
-    char pad_57;
+    // Before normalization: pad_57.
+    // Dreamcast CDPlay ends with connected/inSession/isHost at
+    // 84/85/86. Retail retains the same bytes and 0x58-byte size;
+    // this last byte aligns the complete object.
+    char m_tailPadding;
 };
 SIZE(CDPlay, 0x58);
 
@@ -308,56 +421,78 @@ class CDPlayLobby : public CDPlay {
 public:
     CDPlayLobby();
     virtual ~CDPlayLobby();
-    virtual unsigned char Init();
-    virtual unsigned char RegisterApp(
+    // Before normalization (function): CDPlayLobby::Init.
+    virtual unsigned char init();
+    // Before normalization (function): CDPlayLobby::RegisterApp.
+    virtual unsigned char registerApp(
         char* appName, char* fileName, char* commandLine,
         GUID appGuid, char* executableName);
-    CDPlayConnection* CreateTCPIPConnection(
+    // Before normalization (function): CDPlayLobby::CreateTCPIPConnection.
+    CDPlayConnection* createTCPIPConnection(
         char* ipAddress, char* name, CDPlayConnection* append);
-    CDPlayConnection* CreateIPXConnection(
+    // Before normalization (function): CDPlayLobby::CreateIPXConnection.
+    CDPlayConnection* createIPXConnection(
         char* name, CDPlayConnection* append);
-    CDPlayConnection* CreateModemConnection(
+    // Before normalization (function): CDPlayLobby::CreateModemConnection.
+    CDPlayConnection* createModemConnection(
         char* name, char* phoneNumber, char* modemString);
-    CDPlayConnection* CreateSerialConnection(
+    // Before normalization (function): CDPlayLobby::CreateSerialConnection.
+    CDPlayConnection* createSerialConnection(
         char* name, struct _DPCOMPORTADDRESS* comportInfo);
-    unsigned char TestLobbied();
-    DPLCONNECTION* GetConnectionSettings(
+    // Before normalization (function): CDPlayLobby::TestLobbied.
+    unsigned char testLobbied();
+    // Before normalization (function): CDPlayLobby::GetConnectionSettings.
+    DPLCONNECTION* getConnectionSettings(
         unsigned long appId, unsigned long* size);
-    unsigned char SetConnectionSettings(
+    // Before normalization (function): CDPlayLobby::SetConnectionSettings.
+    unsigned char setConnectionSettings(
         unsigned long appId, DPLCONNECTION* connection);
-    unsigned char Connect();
-    virtual unsigned char EnumLobbyConnections(
+    // Before normalization (function): CDPlayLobby::Connect.
+    unsigned char connect();
+    // Before normalization (function): CDPlayLobby::EnumLobbyConnections.
+    virtual unsigned char enumLobbyConnections(
         CAutoArray<CDPlayConnection>* connections);
-    virtual unsigned char SetGroupConnectionSettings(
+    // Before normalization (function): CDPlayLobby::SetGroupConnectionSettings.
+    virtual unsigned char setGroupConnectionSettings(
         unsigned long groupId, DPLCONNECTION* connection);
-    virtual DPLCONNECTION* GetGroupConnectionSettings(
+    // Before normalization (function): CDPlayLobby::GetGroupConnectionSettings.
+    virtual DPLCONNECTION* getGroupConnectionSettings(
         unsigned long groupId);
-    virtual unsigned char EnumGroupsInGroup(
+    // Before normalization (function): CDPlayLobby::EnumGroupsInGroup.
+    virtual unsigned char enumGroupsInGroup(
         CAutoArray<CDPlayGroup>* groups,
         unsigned long parentId, unsigned long flags);
-    virtual unsigned char EnumGroupPlayers(
+    // Before normalization (function): CDPlayLobby::EnumGroupPlayers.
+    virtual unsigned char enumGroupPlayers(
         CAutoArray<CDPlayPlayer>* players,
         unsigned long groupId, unsigned long flags);
-    virtual unsigned char EnumGroupPlayersRemote(
+    // Before normalization (function): CDPlayLobby::EnumGroupPlayersRemote.
+    virtual unsigned char enumGroupPlayersRemote(
         CAutoArray<CDPlayPlayer>* players, unsigned long groupId,
         GUID* instance, unsigned long flags);
-    virtual unsigned char EnumAddress(
+    // Before normalization (function): CDPlayLobby::EnumAddress.
+    virtual unsigned char enumAddress(
         void* connection, unsigned long size,
         CAutoArray<CDPlayAddressElement>* addresses);
-    virtual unsigned char GetIPAddress(
+    // Before normalization (function): CDPlayLobby::GetIPAddress.
+    virtual unsigned char getIPAddress(
         unsigned long playerId, char* ipAddress);
 
 protected:
-    virtual unsigned char HandleSystemLobbyMsg(
+    // Before normalization (function): CDPlayLobby::HandleSystemLobbyMsg.
+    virtual unsigned char handleSystemLobbyMsg(
         unsigned long appId, CDPlayMsg* message);
 public:
     // Reachable by the EnumAddress file-scope callback (vtable slot unchanged).
-    virtual unsigned char AddAddressEnum(
+    // Before normalization (function): CDPlayLobby::AddAddressEnum.
+    virtual unsigned char addAddressEnum(
         const GUID* type, unsigned long size, const void* data);
 
 private:
-    void* m_lpLobby;                         // +0x58
-    CAutoArray<CDPlayAddressElement>* m_pAddressArray; // +0x5c
+    // Before normalization: m_lpLobby.
+    void* m_lobby;                         // +0x58
+    // Before normalization: m_pAddressArray.
+    CAutoArray<CDPlayAddressElement>* m_addressArray; // +0x5c
 };
 SIZE(CDPlayLobby, 0x60);
 
@@ -368,17 +503,21 @@ SIZE(CDPlayLobby, 0x60);
 class CDPlayMsg {
 public:
     CDPlayMsg();
-    unsigned char AllocSize(unsigned long dSize);
-    unsigned char Destroy();
+    // Before normalization (function): CDPlayMsg::AllocSize.
+    unsigned char allocSize(unsigned long dSize);
+    // Before normalization (function): CDPlayMsg::Destroy.
+    unsigned char destroy();
 
     // CODEVIEW(E:\gamedcs\dxplay.h:145, dc 0x8bdb4)
     ~CDPlayMsg()
     {
-        Destroy();
+        destroy();
     }
 
-    unsigned char* pData;
-    unsigned long dataSize;
+    // Before normalization: pData.
+    unsigned char* m_data;
+    // Before normalization: dataSize.
+    unsigned long m_dataSize;
 };
 SIZE(CDPlayMsg, 0x08);
 
@@ -387,32 +526,32 @@ SIZE(CDPlayMsg, 0x08);
 // Complete folds the helper into its callers while preserving both stores.
 inline CDPlayMsg::CDPlayMsg()
 {
-    pData = 0;
-    dataSize = 0;
+    m_data = 0;
+    m_dataSize = 0;
 }
 
 // CODEVIEW(E:\gamedcs\dxplay.h:150, dc 0x8bdcc).  Dreamcast proves the
 // early size guard, conditional delete, allocation, and size store; retail's
 // inlined cmp/jb fixes this equivalent operand order.
-inline unsigned char CDPlayMsg::AllocSize(unsigned long dSize)
+inline unsigned char CDPlayMsg::allocSize(unsigned long dSize)
 {
-    if (dSize < dataSize)
+    if (dSize < m_dataSize)
         return 1;
-    if (pData)
-        delete pData;
-    pData = new unsigned char[dSize];
-    dataSize = dSize;
+    if (m_data)
+        delete m_data;
+    m_data = new unsigned char[dSize];
+    m_dataSize = dSize;
     return 1;
 }
 
 // CODEVIEW(E:\gamedcs\dxplay.h:164, dc 0x8be0c)
-inline unsigned char CDPlayMsg::Destroy()
+inline unsigned char CDPlayMsg::destroy()
 {
-    if (!pData)
+    if (!m_data)
         return 0;
-    delete pData;
-    pData = 0;
-    dataSize = 0;
+    delete m_data;
+    m_data = 0;
+    m_dataSize = 0;
     return 1;
 }
 
@@ -421,25 +560,30 @@ inline unsigned char CDPlayMsg::Destroy()
 // owned connection buffer at +0x10 and the trivial non-virtual destructor.
 class CDPlayConnection {
 public:
-    CDPlayConnection(const GUID* lpGuid, unsigned long connSize, void* lpConn,
+    // Before normalization (locals): lpGuid, lpConn.
+    CDPlayConnection(const GUID* guid, unsigned long connSize, void* conn,
         char* name)
     {
-        guidSP = *lpGuid;
-        size = connSize;
-        pConnection = new unsigned char[connSize];
-        memcpy(pConnection, lpConn, size);
-        strcpy(sName, name);
+        m_guidSp = *guid;
+        m_size = connSize;
+        m_connection = new unsigned char[connSize];
+        memcpy(m_connection, conn, m_size);
+        strcpy(m_name, name);
     }
 
     ~CDPlayConnection()
     {
-        delete [] pConnection;
+        delete [] m_connection;
     }
 
-    GUID guidSP;                       // +0x00
-    unsigned char* pConnection;        // +0x10
-    char sName[128];                   // +0x14
-    unsigned long size;                // +0x94
+    // Before normalization: guidSP.
+    GUID m_guidSp;                       // +0x00
+    // Before normalization: pConnection.
+    unsigned char* m_connection;        // +0x10
+    // Before normalization: sName.
+    char m_name[128];                   // +0x14
+    // Before normalization: size.
+    unsigned long m_size;                // +0x94
 };
 SIZE(CDPlayConnection, 0x98);
 
@@ -453,38 +597,53 @@ SIZE(CDPlayConnection, 0x98);
 // layout and disjoint member sets, and this is the union.
 class CDPlaySession {
 public:
-    CDPlaySession(const DPSESSIONDESC2* lpSession);
+    // Before normalization (locals): lpSession.
+    CDPlaySession(const DPSESSIONDESC2* session);
 
-    unsigned long dwFlags;      // +0x00
-    GUID guidInstance;          // +0x04
-    GUID guidApp;               // +0x14
-    unsigned long maxPlayers;   // +0x24
-    unsigned long playerCount;  // +0x28
-    char sessionName[128];      // +0x2c
-    char password[80];          // +0xac
-    unsigned long dwUser1;      // +0xfc
-    unsigned long dwUser2;      // +0x100
-    unsigned long dwUser3;      // +0x104
-    unsigned long dwUser4;      // +0x108
+    // Before normalization: dwFlags.
+    unsigned long m_flags;      // +0x00
+    // Before normalization: guidInstance.
+    GUID m_guidInstance;          // +0x04
+    // Before normalization: guidApp.
+    GUID m_guidApp;               // +0x14
+    // Before normalization: maxPlayers.
+    unsigned long m_maxPlayers;   // +0x24
+    // Before normalization: playerCount.
+    unsigned long m_playerCount;  // +0x28
+    // Before normalization: sessionName.
+    char m_sessionName[128];      // +0x2c
+    // Before normalization: password.
+    char m_password[80];          // +0xac
+    // Before normalization: dwUser1.
+    unsigned long m_user1;      // +0xfc
+    // Before normalization: dwUser2.
+    unsigned long m_user2;      // +0x100
+    // Before normalization: dwUser3.
+    unsigned long m_user3;      // +0x104
+    // Before normalization: dwUser4.
+    unsigned long m_user4;      // +0x108
 
-    unsigned char IsJoinDisabled()
+    // Before normalization (function): CDPlaySession::IsJoinDisabled.
+    unsigned char isJoinDisabled()
     {
-        if (dwFlags & 0x20)
+        if (m_flags & 0x20)
             return 1;
-        if (dwFlags & 1)
+        if (m_flags & 1)
             return 1;
-        unsigned char disabled = playerCount == maxPlayers;
+        unsigned char disabled = m_playerCount == m_maxPlayers;
         return disabled;
     }
 
-    bool IsJoinDisabledInline()
+    // Before normalization (function): CDPlaySession::IsJoinDisabledInline.
+    bool isJoinDisabledInline()
     {
-        return (dwFlags & 0x21) || playerCount == maxPlayers;
+        return (m_flags & 0x21) || m_playerCount == m_maxPlayers;
     }
 
-    unsigned char IsPasswordProtected()
+    // Before normalization (function): CDPlaySession::IsPasswordProtected.
+    unsigned char isPasswordProtected()
     {
-        if (dwFlags & 0x400)
+        if (m_flags & 0x400)
             return 1;
         return 0;
     }

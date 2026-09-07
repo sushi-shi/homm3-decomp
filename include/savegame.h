@@ -44,10 +44,13 @@ public:
 
     TGzFile(const char* path, const char* mode);
     ~TGzFile();
-    virtual int Read(void* data, int size);
-    virtual int Write(const void* data, int size);
+    // Before normalization (function): TGzFile::Read.
+    virtual int read(void* data, int size);
+    // Before normalization (function): TGzFile::Write.
+    virtual int write(const void* data, int size);
 
-    void* file;  // +0x04, the gzFile handle gzopen returned
+    // Before normalization: file.
+    void* m_file;  // +0x04, the gzFile handle gzopen returned
 };
 
 // Retail .bss 0x699274. game::SaveGame formats it into "%s.GM%d" for an
@@ -56,6 +59,7 @@ public:
 // selector. NAME UNATTESTED, address-ordinal placeholder in the
 // gUnnamed69ccc4 style; eighteen .text sites read it and none of them is
 // modelled yet, so nothing constrains the role further.
-extern int gUnnamed699274;
+// Before normalization: gUnnamed699274.
+extern int g_unnamed699274;
 
 #endif  /* HOMM3_SAVEGAME_H */

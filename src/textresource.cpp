@@ -14,24 +14,24 @@ VA(0x005bbba0, 0x227)  // base ctor + TTextResource vtable + CR-delimited parser
 TTextResource::TTextResource(const char* name, int size, const char* data)
     : resource(name, RESOURCE_TYPE_TEXT)
 {
-    Data = new char[size];
-    if (!Data)
+    m_data = new char[size];
+    if (!m_data)
         return;
-    memcpy(Data, data, size);
+    memcpy(m_data, data, size);
 
     int numStrings = 0;
     int bytesLeft = size;
-    char* scan = Data;
+    char* scan = m_data;
     while (bytesLeft > 0) {
         if (*scan == '\r')
             ++numStrings;
         ++scan;
         --bytesLeft;
     }
-    Text.resize(numStrings, 0);
+    m_text.resize(numStrings, 0);
 
-    char* next = Data;
-    for (TTextArray::iterator it = Text.begin(); it != Text.end(); ++it) {
+    char* next = m_data;
+    for (TTextArray::iterator it = m_text.begin(); it != m_text.end(); ++it) {
         char* end;
         if (*next != '"') {
             *it = next;
@@ -71,14 +71,14 @@ TTextResource::TTextResource(const char* name, int size, const char* data)
 VA(0x005bbdd0, 0x4D)  // TTextResource vtable + Data/vector/base teardown, dc 0x1639a4
 TTextResource::~TTextResource()
 {
-    if (Data)
-        delete Data;
+    if (m_data)
+        delete m_data;
 }
 
 VA(0x005bbe20, 0x1B)  // TTextResource vtable slot 2 + vector-size arithmetic, retail header inline
-unsigned int TTextResource::GetSize() const
+unsigned int TTextResource::getSize() const
 {
-    return sizeof(*this) + Text.size();
+    return sizeof(*this) + m_text.size();
 }
 
 // Retail emits the spreadsheet wrapper ahead of its constructor as well.
@@ -90,26 +90,26 @@ TSpreadsheetResource::TSpreadsheetResource(const char* name, int size,
                                             const char* data)
     : resource(name, RESOURCE_TYPE_TEXT)
 {
-    DataSize = size;
-    Data = new char[size];
-    if (!Data)
+    m_dataSize = size;
+    m_data = new char[size];
+    if (!m_data)
         return;
-    memcpy(Data, data, size);
+    memcpy(m_data, data, size);
 
     int numRows = 0;
     int bytesLeft = size;
-    char* scan = Data;
+    char* scan = m_data;
     while (bytesLeft > 0) {
         if (*scan == '\r')
             ++numRows;
         ++scan;
         --bytesLeft;
     }
-    Spreadsheet.resize(numRows, 0);
+    m_spreadsheet.resize(numRows, 0);
 
-    char* next = Data;
-    for (TArray::iterator rowIt = Spreadsheet.begin();
-         rowIt != Spreadsheet.end(); ++rowIt) {
+    char* next = m_data;
+    for (TArray::iterator rowIt = m_spreadsheet.begin();
+         rowIt != m_spreadsheet.end(); ++rowIt) {
         TStringVector* row = new TStringVector;
         *rowIt = row;
 
@@ -155,22 +155,22 @@ TSpreadsheetResource::TSpreadsheetResource(const char* name, int size,
 }
 
 VA(0x005bc160, 0x7)  // TSpreadsheetResource vtable slot 2 + DataSize, retail header inline
-unsigned int TSpreadsheetResource::GetSize() const
+unsigned int TSpreadsheetResource::getSize() const
 {
-    return sizeof(*this) + DataSize;
+    return sizeof(*this) + m_dataSize;
 }
 
 // E:\gamedcs\textresource.cpp:292
 VA(0x005bc170, 0x7F)  // row-vector/Data/outer-vector/base teardown, dc 0x163c30
 TSpreadsheetResource::~TSpreadsheetResource()
 {
-    for (TStringVector** it = Spreadsheet.begin(); it != Spreadsheet.end();
+    for (TStringVector** it = m_spreadsheet.begin(); it != m_spreadsheet.end();
          ++it) {
         if (*it)
             delete *it;
     }
-    if (Data)
-        delete Data;
+    if (m_data)
+        delete m_data;
 }
 
 // The default constructors have no retail entries in the bounded contribution;

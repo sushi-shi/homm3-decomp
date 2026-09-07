@@ -28,27 +28,30 @@
 // Shared absolute deadline used by retail dialogs. Its timer role is proven
 // by this handler and the other dialog handlers that compare GameTime::Get()
 // against it before synthesizing WIDGET_END_DIALOG.
-DATA(0x00697784) extern unsigned long gDialogDeadline697784;
+DATA(0x00697784) extern unsigned long g_dialogDeadline697784;
 
 // Both are source-private in the DC levelupwindow compiland. Retail's ctor
 // stores its object through the first, and this handler is the only consumer
 // of the second.
-DATA(0x00699634) static TLevelUpWindow* gpLevelUpWindow;
-DATA(0x0067fa34) static int lastIMHoverID = -1;
+// Before normalization: gpLevelUpWindow.
+// Before normalization: lastIMHoverID.
+DATA(0x00699634) static TLevelUpWindow* g_levelUpWindow;
+DATA(0x0067fa34) static int g_lastImHoverId = -1;
 
 // Retail's packed table is four pointers per secondary skill: the generic
 // name followed by its basic/advanced/expert display strings. The encoded
 // choice is 3*skill+level, with skill zero represented by values 3..5.
-DATA(0x0067dcf0) extern const TLevelUpSkillTraits (&akLevelUpSkillTraits)[28];
+DATA(0x0067dcf0) extern const TLevelUpSkillTraits (&g_levelUpSkillTraits)[28];
 
 // Text tables read directly by the retail constructor. The shared four-entry
 // primary-skill table is declared with the other game-wide data in game.h.
-DATA(0x006a7570) extern const char* gSkillMasteryNames[3];
+DATA(0x006a7570) extern const char* g_skillMasteryNames[3];
 
-static const char* LevelUpSkillName(int encodedSkill)
+// Before normalization (function): LevelUpSkillName.
+static const char* levelUpSkillName(int encodedSkill)
 {
-    return akLevelUpSkillTraits[encodedSkill / 3 - 1]
-        .levelNames[encodedSkill % 3];
+    return g_levelUpSkillTraits[encodedSkill / 3 - 1]
+        .m_levelNames[encodedSkill % 3];
 }
 
 // E:\gamedcs\levelupwindow.cpp:48
@@ -93,11 +96,12 @@ static const char* LevelUpSkillName(int encodedSkill)
 // it is what emits retail's `mov eax,[eax-4]; mov ecx,eax` where the fused
 // `Widgets.back()->send_message(...)` emitted one `mov ecx,[eax-4]`
 // (98.6141 -> 98.8241).
+// Before normalization (locals): gained_skill, first_choice, second_choice.
 VA(0x004f8880, 0xE7E)  // linkorder+caller+vtable sequence, dc 0xe8344
-TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gained_skill,
-                               int first_choice, int second_choice)
+TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gainedSkill,
+                               int firstChoice, int secondChoice)
     : CAdvPopup(205, 65, 385, 470, 0x12),
-      left_skill(first_choice), right_skill(second_choice), Selected(0)
+      m_leftSkill(firstChoice), m_rightSkill(secondChoice), m_selected(0)
 {
     HOMM3_LEVELUP_RELEASE_DIAGNOSTIC();
     HOMM3_LEVELUP_RELEASE_DIAGNOSTIC();
@@ -206,152 +210,152 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gained_skill,
     // get_morale_description case of a different function - the Dreamcast
     // source is simply tighter than retail's by about the mass the titration is
     // asking for, and the census measures the Dreamcast source.
-    Widgets.reserve(25);
+    m_widgets.reserve(25);
 
-    gpLevelUpWindow = this;
-    if (gNetworkActive69954c && !gpCurrentPlayer->IsLocalHuman())
-        gDialogDeadline697784 = GameTime::Get() + 15000;
-    gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+    g_levelUpWindow = this;
+    if (g_networkActive69954c && !g_currentPlayer->isLocalHuman())
+        g_dialogDeadline697784 = GameTime::get() + 15000;
+    g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
 
     bitmapBorder* background = new bitmapBorder(
         0, 0, 385, 470, BACKGROUND_ID, "lvlupbkg.pcx", 0x800);
-    background->SetPlayerPaletteColors(thisHero->owner);
-    Widgets.push_back(background);
+    background->setPlayerPaletteColors(thisHero->m_owner);
+    m_widgets.push_back(background);
 
     bitmapBorder* portrait = new bitmapBorder(
         171, 66, 58, 64, PORTRAIT_ID,
-        akHeroTraits[thisHero->portrait].largePortraitName, 0x800);
-    Widgets.push_back(portrait);
+        g_heroTraits[thisHero->m_portrait].m_largePortraitName, 0x800);
+    m_widgets.push_back(portrait);
 
-    sprintf(gText, gpGeneralText->GetText(GENERAL_TEXT_LEVEL_UP_TITLE_FORMAT),
-            thisHero->name);
+    sprintf(g_text, g_generalText->getText(GENERAL_TEXT_LEVEL_UP_TITLE_FORMAT),
+            thisHero->m_name);
     textWidget* titleText = new textWidget(
-        23, 22, 339, 23, gText, "medfont.fnt", font::PRIMARY,
+        23, 22, 339, 23, g_text, "medfont.fnt", font::PRIMARY,
         TEXT1_ID, 5, 0, 8);
-    Widgets.push_back(titleText);
+    m_widgets.push_back(titleText);
 
     const char* heroFormat =
-        gpGeneralText->GetText(GENERAL_TEXT_LEVEL_UP_HERO_FORMAT);
-    sprintf(gText, heroFormat,
-            thisHero->name, thisHero->level, thisHero->HeroFn_004D8F70());
+        g_generalText->getText(GENERAL_TEXT_LEVEL_UP_HERO_FORMAT);
+    sprintf(g_text, heroFormat,
+            thisHero->m_name, thisHero->m_level, thisHero->heroFn004D8F70());
     textWidget* heroText = new textWidget(
-        23, 151, 339, 23, gText, "medfont.fnt", font::PRIMARY,
+        23, 151, 339, 23, g_text, "medfont.fnt", font::PRIMARY,
         TEXT2_ID, 5, 0, 8);
-    Widgets.push_back(heroText);
+    m_widgets.push_back(heroText);
 
-    sprintf(gText, "%s +1", gPrimarySkillNames[gained_skill]);
+    sprintf(g_text, "%s +1", g_primarySkillNames[gainedSkill]);
     textWidget* gainedText = new textWidget(
-        23, 242, 339, 23, gText, "medfont.fnt", font::PRIMARY,
+        23, 242, 339, 23, g_text, "medfont.fnt", font::PRIMARY,
         TEXT3_ID, 5, 0, 8);
-    Widgets.push_back(gainedText);
+    m_widgets.push_back(gainedText);
     iconWidget* gainedIcon = new iconWidget(
-        174, 190, 42, 42, PRISKILL_ID, "pskil42.def", gained_skill,
+        174, 190, 42, 42, PRISKILL_ID, "pskil42.def", gainedSkill,
         0, 0, 0, 0x10);
-    Widgets.push_back(gainedIcon);
+    m_widgets.push_back(gainedIcon);
 
-    if (second_choice != -1) {
+    if (secondChoice != -1) {
         const char* choiceFormat =
-            gpGeneralText->GetText(GENERAL_TEXT_LEVEL_UP_CHOICE);
-        sprintf(gText, choiceFormat,
-                gSkillMasteryNames[first_choice % 3],
-                akLevelUpSkillTraits[first_choice / 3 - 1].name,
-                gSkillMasteryNames[second_choice % 3],
-                akLevelUpSkillTraits[second_choice / 3 - 1].name);
+            g_generalText->getText(GENERAL_TEXT_LEVEL_UP_CHOICE);
+        sprintf(g_text, choiceFormat,
+                g_skillMasteryNames[firstChoice % 3],
+                g_levelUpSkillTraits[firstChoice / 3 - 1].m_name,
+                g_skillMasteryNames[secondChoice % 3],
+                g_levelUpSkillTraits[secondChoice / 3 - 1].m_name);
         textWidget* choiceText = new textWidget(
-            23, 270, 339, 52, gText, "medfont.fnt", font::PRIMARY,
+            23, 270, 339, 52, g_text, "medfont.fnt", font::PRIMARY,
             TEXT4_ID, 1, 0, 8);
-        Widgets.push_back(choiceText);
+        m_widgets.push_back(choiceText);
         textWidget* orText = new textWidget(
             169, 325, 50, 46,
-            gpGeneralText->GetText(GENERAL_TEXT_LEVEL_UP_OR),
+            g_generalText->getText(GENERAL_TEXT_LEVEL_UP_OR),
             "medfont.fnt", font::PRIMARY, TEXT5_ID, 5, 0, 8);
-        Widgets.push_back(orText);
+        m_widgets.push_back(orText);
 
         coloredBorderFrame* leftBorder = new coloredBorderFrame(
             122, 325, 47, 46, SKILLBORDER_1_ID,
-            gUnnamed6aacb0->levelUpSelectionColor, 0x400);
-        Widgets.push_back(leftBorder);
-        widget* addedLeft = Widgets.back();
-        addedLeft->send_message(widget::WIDGET_CLEAR_STATUS,
+            g_unnamed6aacb0->m_data[45], 0x400);
+        m_widgets.push_back(leftBorder);
+        widget* addedLeft = m_widgets.back();
+        addedLeft->sendMessage(widget::WIDGET_CLEAR_STATUS,
                                 widget::WIDGET_DRAWN);
 
         coloredBorderFrame* rightBorder = new coloredBorderFrame(
             220, 325, 47, 46, SKILLBORDER_2_ID,
-            gUnnamed6aacb0->levelUpSelectionColor, 0x400);
-        Widgets.push_back(rightBorder);
-        widget* addedRight = Widgets.back();
-        addedRight->send_message(widget::WIDGET_CLEAR_STATUS,
+            g_unnamed6aacb0->m_data[45], 0x400);
+        m_widgets.push_back(rightBorder);
+        widget* addedRight = m_widgets.back();
+        addedRight->sendMessage(widget::WIDGET_CLEAR_STATUS,
                                  widget::WIDGET_DRAWN);
 
         iconWidget* leftIcon = new iconWidget(
             124, 326, 44, 44, SKILLICON_1_ID, "secskill.def",
-            first_choice, 0, 0, 0, 0x10);
-        Widgets.push_back(leftIcon);
+            firstChoice, 0, 0, 0, 0x10);
+        m_widgets.push_back(leftIcon);
         iconWidget* rightIcon = new iconWidget(
             222, 326, 44, 44, SKILLICON_2_ID, "secskill.def",
-            second_choice, 0, 0, 0, 0x10);
-        Widgets.push_back(rightIcon);
+            secondChoice, 0, 0, 0, 0x10);
+        m_widgets.push_back(rightIcon);
 
-        sprintf(gText, "%s\n%s", gSkillMasteryNames[first_choice % 3],
-                akLevelUpSkillTraits[first_choice / 3 - 1].name);
+        sprintf(g_text, "%s\n%s", g_skillMasteryNames[firstChoice % 3],
+                g_levelUpSkillTraits[firstChoice / 3 - 1].m_name);
         textWidget* leftLabel = new textWidget(
-            102, 375, 87, 40, gText, "smalfont.fnt", font::PRIMARY,
+            102, 375, 87, 40, g_text, "smalfont.fnt", font::PRIMARY,
             TEXT6_ID, 5, 0, 8);
-        Widgets.push_back(leftLabel);
-        sprintf(gText, "%s\n%s", gSkillMasteryNames[second_choice % 3],
-                akLevelUpSkillTraits[second_choice / 3 - 1].name);
+        m_widgets.push_back(leftLabel);
+        sprintf(g_text, "%s\n%s", g_skillMasteryNames[secondChoice % 3],
+                g_levelUpSkillTraits[secondChoice / 3 - 1].m_name);
         textWidget* rightLabel = new textWidget(
-            200, 375, 87, 40, gText, "smalfont.fnt", font::PRIMARY,
+            200, 375, 87, 40, g_text, "smalfont.fnt", font::PRIMARY,
             TEXT7_ID, 5, 0, 8);
-        Widgets.push_back(rightLabel);
-    } else if (first_choice != -1) {
+        m_widgets.push_back(rightLabel);
+    } else if (firstChoice != -1) {
         const char* singleChoiceFormat =
-            gpGeneralText->GetText(GENERAL_TEXT_LEVEL_UP_SINGLE_CHOICE);
-        sprintf(gText, singleChoiceFormat,
-                gSkillMasteryNames[first_choice % 3],
-                akLevelUpSkillTraits[first_choice / 3 - 1].name);
+            g_generalText->getText(GENERAL_TEXT_LEVEL_UP_SINGLE_CHOICE);
+        sprintf(g_text, singleChoiceFormat,
+                g_skillMasteryNames[firstChoice % 3],
+                g_levelUpSkillTraits[firstChoice / 3 - 1].m_name);
         textWidget* soleText = new textWidget(
-            23, 270, 339, 52, gText, "medfont.fnt", font::PRIMARY,
+            23, 270, 339, 52, g_text, "medfont.fnt", font::PRIMARY,
             TEXT4_ID, 1, 0, 8);
-        Widgets.push_back(soleText);
+        m_widgets.push_back(soleText);
         coloredBorderFrame* soleBorder = new coloredBorderFrame(
             169, 325, 47, 46, SKILLBORDER_1_ID,
-            gUnnamed6aacb0->levelUpSelectionColor, 0x400);
-        Widgets.push_back(soleBorder);
+            g_unnamed6aacb0->m_data[45], 0x400);
+        m_widgets.push_back(soleBorder);
         iconWidget* soleIcon = new iconWidget(
             170, 326, 44, 44, SKILLICON_1_ID, "secskill.def",
-            first_choice, 0, 0, 0, 0x10);
-        Widgets.push_back(soleIcon);
-        sprintf(gText, "%s\n%s", gSkillMasteryNames[first_choice % 3],
-                akLevelUpSkillTraits[first_choice / 3 - 1].name);
+            firstChoice, 0, 0, 0, 0x10);
+        m_widgets.push_back(soleIcon);
+        sprintf(g_text, "%s\n%s", g_skillMasteryNames[firstChoice % 3],
+                g_levelUpSkillTraits[firstChoice / 3 - 1].m_name);
         textWidget* soleLabel = new textWidget(
-            149, 375, 87, 40, gText, "smalfont.fnt", font::PRIMARY,
+            149, 375, 87, 40, g_text, "smalfont.fnt", font::PRIMARY,
             TEXT6_ID, 5, 0, 8);
-        Widgets.push_back(soleLabel);
-        Selected = SKILLICON_1_ID;
+        m_widgets.push_back(soleLabel);
+        m_selected = SKILLICON_1_ID;
     }
 
     button* accept = new button(
         296, 413, 64, 30, LEVELUP_ACCEPT_ID, "iokay.def",
         0, 1, 0, 0, 2);
-    accept->hotKeyCodes.push_back(1);
-    accept->hotKeyCodes.push_back(28);
-    accept->enable(first_choice == -1 || second_choice == -1);
-    Widgets.push_back(accept);
+    accept->m_hotKeyCodes.push_back(1);
+    accept->m_hotKeyCodes.push_back(28);
+    accept->enable(firstChoice == -1 || secondChoice == -1);
+    m_widgets.push_back(accept);
 
-    widget** first = Widgets.begin();
-    if (first != Widgets.end()) {
-        for (widget** it = first; it != Widgets.end(); ++it) {
+    widget** first = m_widgets.begin();
+    if (first != m_widgets.end()) {
+        for (widget** it = first; it != m_widgets.end(); ++it) {
             if (*it)
-                AddWidget(*it, -1);
+                addWidget(*it, -1);
         }
     }
 
-    if (gTurnDuration69d630.IsOn()
-            && gTurnDuration69d630.IsClose(15000))
-        gDialogDeadline697784 = GameTime::Get() + 15000;
-    if (gbUnk691209)
-        gDialogDeadline697784 = GameTime::Get() + 2000;
+    if (g_turnDuration69d630.isOn()
+            && g_turnDuration69d630.isClose(15000))
+        g_dialogDeadline697784 = GameTime::get() + 15000;
+    if (g_unk691209)
+        g_dialogDeadline697784 = GameTime::get() + 2000;
 }
 
 // Retail places the generated wrapper immediately after the constructor;
@@ -362,7 +366,7 @@ VA_COMPGEN(0x004f9700, 0x21, SCALAR_DELETING_DTOR, TLevelUpWindow)
 VA(0x004f9730, 0x4E)  // body+vtable-proven, dc 0xe8c2c
 TLevelUpWindow::~TLevelUpWindow()
 {
-    delete_widgets();
+    deleteWidgets();
 }
 
 // E:\gamedcs\levelupwindow.cpp:170
@@ -413,136 +417,136 @@ TLevelUpWindow::~TLevelUpWindow()
 // seven duplicated epilogues AND made VC6 cross-jump the four
 // enable/DrawWindow/`return 1` tails that retail keeps separate.
 VA(0x004f9780, 0x440)  // vtable slot 9+linkorder, dc 0xe8c64
-int TLevelUpWindow::WindowHandler(message* msg)
+int TLevelUpWindow::windowHandler(message* msg)
 {
-    if (!gDialogDeadline697784) {
-        int result = CAdvPopup::WindowHandler(msg);
+    if (!g_dialogDeadline697784) {
+        int result = CAdvPopup::windowHandler(msg);
         if (result) {
-            if (gTurnDuration69d630.IsExpired())
-                gpWindowManager->dialogReturn = 9999;
+            if (g_turnDuration69d630.isExpired())
+                g_windowManager->m_dialogReturn = 9999;
             return result;
         }
     }
 
-    PollSound();
+    pollSound();
 
-    unsigned long deadline = gDialogDeadline697784;
-    if (deadline && GameTime::IsPast(deadline)) {
-        msg->id = MESSAGE_WIDGET;
-        gpWindowManager->dialogReturn = 9999;
-        msg->codeY = widget::WIDGET_END_DIALOG;
-        msg->codeX = widget::WIDGET_END_DIALOG;
-        gDialogDeadline697784 = 0;
+    unsigned long deadline = g_dialogDeadline697784;
+    if (deadline && GameTime::isPast(deadline)) {
+        msg->m_id = MESSAGE_WIDGET;
+        g_windowManager->m_dialogReturn = 9999;
+        msg->m_codeY = widget::WIDGET_END_DIALOG;
+        msg->m_codeX = widget::WIDGET_END_DIALOG;
+        g_dialogDeadline697784 = 0;
         return MESSAGE_DISPATCH_FORWARD;
     }
 
-    if (msg->id == MESSAGE_KEY_DOWN) {
-        switch (msg->codeX) {
+    if (msg->m_id == MESSAGE_KEY_DOWN) {
+        switch (msg->m_codeX) {
         case LEVELUP_SELECT_RIGHT_KEY: {
-            if (gpLevelUpWindow->right_skill == -1)
+            if (g_levelUpWindow->m_rightSkill == -1)
                 break;
-            widget* leftBorder = gpLevelUpWindow->GetWidget(SKILLBORDER_1_ID);
-            leftBorder->send_message(
+            widget* leftBorder = g_levelUpWindow->getWidget(SKILLBORDER_1_ID);
+            leftBorder->sendMessage(
                 widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
-            widget* rightBorder = gpLevelUpWindow->GetWidget(SKILLBORDER_2_ID);
-            rightBorder->send_message(
+            widget* rightBorder = g_levelUpWindow->getWidget(SKILLBORDER_2_ID);
+            rightBorder->sendMessage(
                 widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
-            gpLevelUpWindow->Selected = SKILLICON_2_ID;
-            widget* accept = gpLevelUpWindow->GetWidget(LEVELUP_ACCEPT_ID);
+            g_levelUpWindow->m_selected = SKILLICON_2_ID;
+            widget* accept = g_levelUpWindow->getWidget(LEVELUP_ACCEPT_ID);
             accept->enable(1);
-            gpLevelUpWindow->DrawWindow(1, 0xffff0001, 0xffff);
+            g_levelUpWindow->drawWindow(1, 0xffff0001, 0xffff);
             return MESSAGE_DISPATCH_CONSUME;
         }
 
         case LEVELUP_SELECT_LEFT_KEY: {
-            if (gpLevelUpWindow->left_skill == -1)
+            if (g_levelUpWindow->m_leftSkill == -1)
                 break;
-            widget* leftBorder = gpLevelUpWindow->GetWidget(SKILLBORDER_1_ID);
-            leftBorder->send_message(
+            widget* leftBorder = g_levelUpWindow->getWidget(SKILLBORDER_1_ID);
+            leftBorder->sendMessage(
                 widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
-            if (gpLevelUpWindow->right_skill != -1) {
+            if (g_levelUpWindow->m_rightSkill != -1) {
                 widget* rightBorder =
-                    gpLevelUpWindow->GetWidget(SKILLBORDER_2_ID);
-                rightBorder->send_message(
+                    g_levelUpWindow->getWidget(SKILLBORDER_2_ID);
+                rightBorder->sendMessage(
                     widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
             }
-            gpLevelUpWindow->Selected = SKILLICON_1_ID;
-            widget* accept = gpLevelUpWindow->GetWidget(LEVELUP_ACCEPT_ID);
+            g_levelUpWindow->m_selected = SKILLICON_1_ID;
+            widget* accept = g_levelUpWindow->getWidget(LEVELUP_ACCEPT_ID);
             accept->enable(1);
-            gpLevelUpWindow->DrawWindow(1, 0xffff0001, 0xffff);
+            g_levelUpWindow->drawWindow(1, 0xffff0001, 0xffff);
             return MESSAGE_DISPATCH_CONSUME;
         }
         }
-    } else if (msg->id == MESSAGE_MOUSE_MOVE) {
-        int hoverID = gpLevelUpWindow->findWidget(msg->mouseX, msg->mouseY);
-        if (hoverID != lastIMHoverID) {
-            lastIMHoverID = hoverID;
+    } else if (msg->m_id == MESSAGE_MOUSE_MOVE) {
+        int hoverID = g_levelUpWindow->findWidget(msg->m_mouseX, msg->m_mouseY);
+        if (hoverID != g_lastImHoverId) {
+            g_lastImHoverId = hoverID;
             if (hoverID != -1)
-                gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+                g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
         }
-    } else if (msg->id == MESSAGE_WIDGET) {
-        switch (msg->codeX) {
+    } else if (msg->m_id == MESSAGE_WIDGET) {
+        switch (msg->m_codeX) {
         case widget::WIDGET_RIGHT_SELECT:
-            switch (msg->codeY) {
+            switch (msg->m_codeY) {
             case SKILLICON_1_ID:
             case SKILLBORDER_1_ID:
-                NormalDialog(LevelUpSkillName(gpLevelUpWindow->left_skill),
+                normalDialog(levelUpSkillName(g_levelUpWindow->m_leftSkill),
                     4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 break;
             case SKILLICON_2_ID:
             case SKILLBORDER_2_ID:
-                NormalDialog(LevelUpSkillName(gpLevelUpWindow->right_skill),
+                normalDialog(levelUpSkillName(g_levelUpWindow->m_rightSkill),
                     4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 break;
             }
             // The right-click arm shares the selection tail below.
         case widget::WIDGET_DESELECT:
-            if (msg->qualifier & MESSAGE_MODIFIER_RIGHT)
+            if (msg->m_qualifier & MESSAGE_MODIFIER_RIGHT)
                 break;
 
-            switch (msg->codeY) {
+            switch (msg->m_codeY) {
             case SKILLICON_1_ID:
             case SKILLBORDER_1_ID: {
                 widget* rightBorder =
-                    gpLevelUpWindow->GetWidget(SKILLBORDER_2_ID);
+                    g_levelUpWindow->getWidget(SKILLBORDER_2_ID);
                 widget* leftBorder =
-                    gpLevelUpWindow->GetWidget(SKILLBORDER_1_ID);
-                leftBorder->send_message(
+                    g_levelUpWindow->getWidget(SKILLBORDER_1_ID);
+                leftBorder->sendMessage(
                     widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
                 if (rightBorder)
-                    rightBorder->send_message(
+                    rightBorder->sendMessage(
                         widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
-                gpLevelUpWindow->Selected = SKILLICON_1_ID;
+                g_levelUpWindow->m_selected = SKILLICON_1_ID;
                 widget* accept =
-                    gpLevelUpWindow->GetWidget(LEVELUP_ACCEPT_ID);
+                    g_levelUpWindow->getWidget(LEVELUP_ACCEPT_ID);
                 accept->enable(1);
-                gpLevelUpWindow->DrawWindow(1, 0xffff0001, 0xffff);
+                g_levelUpWindow->drawWindow(1, 0xffff0001, 0xffff);
                 return MESSAGE_DISPATCH_CONSUME;
             }
 
             case SKILLICON_2_ID:
             case SKILLBORDER_2_ID: {
                 widget* leftBorder =
-                    gpLevelUpWindow->GetWidget(SKILLBORDER_1_ID);
-                leftBorder->send_message(
+                    g_levelUpWindow->getWidget(SKILLBORDER_1_ID);
+                leftBorder->sendMessage(
                     widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
                 widget* rightBorder =
-                    gpLevelUpWindow->GetWidget(SKILLBORDER_2_ID);
-                rightBorder->send_message(
+                    g_levelUpWindow->getWidget(SKILLBORDER_2_ID);
+                rightBorder->sendMessage(
                     widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
-                gpLevelUpWindow->Selected = SKILLICON_2_ID;
+                g_levelUpWindow->m_selected = SKILLICON_2_ID;
                 widget* accept =
-                    gpLevelUpWindow->GetWidget(LEVELUP_ACCEPT_ID);
+                    g_levelUpWindow->getWidget(LEVELUP_ACCEPT_ID);
                 accept->enable(1);
-                gpLevelUpWindow->DrawWindow(1, 0xffff0001, 0xffff);
+                g_levelUpWindow->drawWindow(1, 0xffff0001, 0xffff);
                 return MESSAGE_DISPATCH_CONSUME;
             }
 
             case LEVELUP_ACCEPT_ID:
-                msg->id = MESSAGE_WIDGET;
-                gpWindowManager->dialogReturn = gpLevelUpWindow->Selected;
-                msg->codeY = widget::WIDGET_END_DIALOG;
-                msg->codeX = widget::WIDGET_END_DIALOG;
+                msg->m_id = MESSAGE_WIDGET;
+                g_windowManager->m_dialogReturn = g_levelUpWindow->m_selected;
+                msg->m_codeY = widget::WIDGET_END_DIALOG;
+                msg->m_codeX = widget::WIDGET_END_DIALOG;
                 return MESSAGE_DISPATCH_FORWARD;
             }
             return 0;

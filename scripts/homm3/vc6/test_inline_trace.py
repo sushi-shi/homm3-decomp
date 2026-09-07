@@ -39,6 +39,20 @@ class InlineTraceTests(unittest.TestCase):
             with self.subTest(line=line), self.assertRaises(ValueError):
                 inline_trace.parse_trace(ROOT + '\n' + line, 'CreateRiver')
 
+    def test_canonical_overlay_records(self):
+        records = ("sym 0x1 CreateRiver\nsym 0x2 _Destroy\nmain 0x1 cb=1530\n"
+                   "site root=0x1 owner=0x1 callee=0x2 cb=49 budget=68 "
+                   "depth=2 remain=2 running=1800")
+        report = inline_trace.parse_trace(records, "CreateRiver")
+        self.assertEqual(report["caller"]["initial_budget"], 3060)
+        self.assertEqual(report["sites"][0]["symbol"], "_Destroy")
+        self.assertTrue(report["sites"][0]["budget_allows"])
+        for bad in (records.replace("root=0x1", "root=0x3"),
+                    records.replace("remain=2", "remain=0"),
+                    records + "\nmain 0x1 cb=1530"):
+            with self.assertRaises(ValueError):
+                inline_trace.parse_trace(bad, "CreateRiver")
+
     def test_identity_gate_accepts_only_timestamp_changes(self):
         original = struct.pack('<HHIIIHH', 0x14c, 1, 1, 0, 0, 0, 0) + b'\x55\x8b\xec\xc3'
         stamped = original[:4] + b'\xff' * 4 + original[8:]
@@ -72,7 +86,7 @@ class LiveInlineTraceTests(unittest.TestCase):
             original_compile = build.compile_shim
             try:
                 with patch.object(build, 'compile_shim',
-                                  side_effect=lambda: original_compile(negative=True)):
+                                  side_effect=lambda **kwargs: original_compile(negative=True) if kwargs.get("inlineTrace") else original_compile()):
                     with self.assertRaisesRegex(ValueError, 'changed the captured-IL object'):
                         inline_trace.capture(build.SAMPLE, build.GATE_FLAGS, symbol,
                                              expected, workdir=directory / 'negative')

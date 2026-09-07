@@ -14,16 +14,20 @@
 // source boundary rather than a TU-local facsimile.  Retail DrawBolt fixes
 // their order as R/G/B: its green ramp selects only 0x68c864, while Chain
 // Lightning keeps 0x68c868 saturated as its other two components fade.
-extern unsigned long gColorMask68c860;
-extern unsigned long gColorMask68c864;
-extern unsigned long gColorMask68c868;
+// Before normalization: gColorMask68c860.
+extern unsigned long g_colorMask68c860;
+// Before normalization: gColorMask68c864.
+extern unsigned long g_colorMask68c864;
+// Before normalization: gColorMask68c868.
+extern unsigned long g_colorMask68c868;
 
-inline unsigned RGBto16(int r, int g, int b)
+// Before normalization (function): RGBto16.
+inline unsigned rgBto16(int r, int g, int b)
 {
     unsigned color;
-    color = (r * gColorMask68c860 / 255) & gColorMask68c860;
-    color |= (g * gColorMask68c864 / 255) & gColorMask68c864;
-    color |= (b * gColorMask68c868 / 255) & gColorMask68c868;
+    color = (r * g_colorMask68c860 / 255) & g_colorMask68c860;
+    color |= (g * g_colorMask68c864 / 255) & g_colorMask68c864;
+    color |= (b * g_colorMask68c868 / 255) & g_colorMask68c868;
 
     return color;
 }
@@ -32,47 +36,69 @@ inline unsigned RGBto16(int r, int g, int b)
 // The three channel masks immediately following it are declared above with
 // their recovered helper; mousemgr.cpp owns their reviewed DATA definitions.
 struct TPixelFormatPrefix {
-    unsigned long size;
-    unsigned long flags;
-    char pad_08[8];
+    // Before normalization: size.
+    unsigned long m_size;
+    // Before normalization: flags.
+    unsigned long m_flags;
+    // Former pad_08: the VC6 DirectDraw SDK's DDPIXELFORMAT declares
+    // dwFourCC at +8 and its dwRGBBitCount union arm at +0xc. Retail's
+    // DDPF_RGB prefix is passed to GetPixelFormat; the RGB masks follow
+    // at +0x10. These are output fields, not padding.
+    unsigned long m_fourCc;
+    unsigned long m_rgbBitCount;
 };
 SIZE(TPixelFormatPrefix, 0x10);
 
 // Live prototypes (claimed wingraph.cpp bodies; called from kbwin's
 // AppCommand fullscreen arm, AppExit, WM_PAINT and WinMain).
-unsigned char SetFullScreenStatus(int bFullScreenOn);    // 0x6019a0
-void CleanUpWinGraphics();                               // 0x601890
-int AppPaint(void* hwnd, void* hdc);                     // 0x601820
-void InitGraphics();                                     // 0x6014e0
+// Before normalization (function): SetFullScreenStatus.
+// Before normalization (locals): bFullScreenOn.
+unsigned char setFullScreenStatus(int fullScreenOn);    // 0x6019a0
+// Before normalization (function): CleanUpWinGraphics.
+void cleanUpWinGraphics();                               // 0x601890
+// Before normalization (function): AppPaint.
+int appPaint(void* hwnd, void* hdc);                     // 0x601820
+// Before normalization (function): InitGraphics.
+void initGraphics();                                     // 0x6014e0
 // Retail's wrapper tail-jumps to this zero-argument DirectDraw initializer;
 // the Dreamcast port's same-named routine instead takes mode/reinit args.
-void DDInitGraphics();                                   // 0x6014f0
+// Before normalization (function): DDInitGraphics.
+void ddInitGraphics();                                   // 0x6014f0
 // The two DirectDraw bodies the wrappers above delegate to. Each is
 // referenced from exactly one site in the image (0x601890's tail jmp and
 // SetFullScreenStatus's single call), so retail's own linkage is not
 // observable; they are declared extern here because a used-but-undefined
 // static is a VC6 hard error and the call/jmp bytes are identical either way.
-void DDCleanUpWinGraphics();                             // 0x6018a0
-unsigned char DDSetFullScreenStatus(int iNewStatus);     // 0x601a00
-void DDSD(int iDDErr, char* cFile, int iLine);           // 0x6006e0
-int GetDesktopWidth();                                   // 0x6014c0
-int GetDesktopHeight();                                  // 0x6014d0
+// Before normalization (function): DDCleanUpWinGraphics.
+void ddCleanUpWinGraphics();                             // 0x6018a0
+// Before normalization (function): DDSetFullScreenStatus.
+// Before normalization (locals): iNewStatus.
+unsigned char ddSetFullScreenStatus(int newStatus);     // 0x601a00
+// Before normalization (function): DDSD.
+// Before normalization (locals): iDDErr, cFile, iLine.
+void ddsd(int ddErr, char* file, int line);           // 0x6006e0
+// Before normalization (function): GetDesktopWidth.
+int getDesktopWidth();                                   // 0x6014c0
+// Before normalization (function): GetDesktopHeight.
+int getDesktopHeight();                                  // 0x6014d0
 // GetDesktopInfo's verdict: the engine's 16-bit surfaces need a desktop
 // already at 16bpp, so the GetDeviceCaps(BITSPIXEL) reading is compared
 // against this depth and the result is the function's return value.
 enum { DESKTOP_REQUIRED_BITS_PER_PIXEL = 16 };
-unsigned char GetDesktopInfo();                          // 0x601460
+// Before normalization (function): GetDesktopInfo.
+unsigned char getDesktopInfo();                          // 0x601460
 // The surface-restore sweep DDBlit's retry loops call; defined in this TU
 // below its two callers, so it needs the declaration here.
-long DDRestoreSurfaces();                                // 0x6013a0
+// Before normalization (function): DDRestoreSurfaces.
+long ddRestoreSurfaces();                                // 0x6013a0
 
 // The two DirectDraw workers the wrappers above hand off to. Retail emits
 // each immediately after its own wrapper (0x6018a0 follows
 // CleanUpWinGraphics, 0x601a00 follows SetFullScreenStatus) - the
 // file-static emission pattern - so they are declared, not defined, until
 // their bodies are reconstructed.
-void DDCleanUpWinGraphics();                             // 0x6018a0
-unsigned char DDSetFullScreenStatus(int iNewStatus);     // 0x601a00
+void ddCleanUpWinGraphics();                             // 0x6018a0
+unsigned char ddSetFullScreenStatus(int newStatus);     // 0x601a00
 
 // The windowed frame DDSetFullScreenStatus restores, and the 565 green
 // mask it tests the rebuilt surface against. Both are written as raw
@@ -90,7 +116,9 @@ enum {
 // The blitter AppPaint hands its damaged rectangle to; the wingraph roster's
 // RobAppBlit slot (fastcall, one tagRECT* in ecx).
 struct tagRECT;
-void RobAppBlit(tagRECT* comb_rect);                     // 0x5ffe70
+// Before normalization (function): RobAppBlit.
+// Before normalization (locals): comb_rect.
+void robAppBlit(tagRECT* combRect);                     // 0x5ffe70
 
 // The adventure-map complete-redraw latch, read by winmgr's fizzle pair
 // (heroWindowManager::SaveFizzleSourceX / ::FizzleForwardX) before they touch
@@ -99,22 +127,26 @@ void RobAppBlit(tagRECT* comb_rect);                     // 0x5ffe70
 // delink time. Declared here rather than in winmgr.h because this header has
 // eight includers against winmgr.h's seventy, and a declarator's cost is
 // paid by every TU in the closure.
-extern int gCompleteDrawEnabled;                         // .bss 0x6989c0
+extern int g_completeDrawEnabled;                         // .bss 0x6989c0
 
 // Fullscreen-toggle inhibitor read by SetFullScreenStatus's leading test.
 // That test is the ONLY reference to .bss 0x6989d4 anywhere in the image (a
 // whole-image scan for the absolute operand returns exactly one hit), so no
 // writer attests an owning TU; the extern stays with its one consumer and
 // the name is a house ordinal.
-extern int gUnnamed6989d4;                               // .bss 0x6989d4
+// Before normalization: gUnnamed6989d4.
+extern int g_unnamed6989d4;                               // .bss 0x6989d4
 
 struct IDirectDrawSurface4;
 struct IDirectDrawSurface;
 struct tagRECT;
-IDirectDrawSurface* DDCreateSurface(unsigned long width,
+// Before normalization (function): DDCreateSurface.
+IDirectDrawSurface* ddCreateSurface(unsigned long width,
                                    unsigned long height,
-                                   int bPrimary);         // 0x6005f0
-void DDBlit(IDirectDrawSurface4* dstSurface, const tagRECT* dstRect,
+                                   // Before normalization (locals): bPrimary.
+                                   int primary);         // 0x6005f0
+// Before normalization (function): DDBlit.
+void ddBlit(IDirectDrawSurface4* dstSurface, const tagRECT* dstRect,
             IDirectDrawSurface4* srcSurface, const tagRECT* srcRect,
             unsigned long flags);                        // 0x6001d0
 // The DDERR_WRONGMODE arm of DDBlit's two primary-surface retry loops, and
@@ -122,7 +154,8 @@ void DDBlit(IDirectDrawSurface4* dstSurface, const tagRECT* dstRect,
 // mode changed under us, taking the blit's own working rectangle so the
 // windowed path can re-origin it against the moved client area. Complete
 // only; the Dreamcast roster has no row for it and the NAME is provisional.
-void DDResetDisplayMode(tagRECT* region);                // 0x6003c0
+// Before normalization (function): DDResetDisplayMode.
+void ddResetDisplayMode(tagRECT* region);                // 0x6003c0
 // The screen blit winmgr hands a rectangle to: heroWindowManager's
 // UpdateScreen (0x602bd0) and both fades (0x6030e0 / 0x6032e0) call
 // 0x5ffe70 with `lea ecx, <rect>` and nothing else, i.e. the /Gr
@@ -131,7 +164,8 @@ void DDResetDisplayMode(tagRECT* region);                // 0x6003c0
 // RobAppBlit(tagRECT*) and has winmgr call the wrapper; the retail row
 // is 860 B, so the pair is merged there. PROTOTYPE ONLY - the row is
 // wingraph.obj's to carve and claim.
-void DDAppBlit(const tagRECT* region);                   // 0x5ffe70
+// Before normalization (function): DDAppBlit.
+void ddAppBlit(const tagRECT* region);                   // 0x5ffe70
 
 // The DirectDraw surface pair (Blt target and game draw surface).
 // Owner attribution: the DD lifecycle (DDCreatePrimary/DDCreateSurface
@@ -139,8 +173,10 @@ void DDAppBlit(const tagRECT* region);                   // 0x5ffe70
 // here; the .bss addresses stay extern-only until the owning TU's
 // claims land. The forward declaration keeps <ddraw.h> out of
 // includers that never touch DirectDraw.
-extern IDirectDrawSurface* gpDDSPrimary;  // .bss 0x6aacbc
-extern IDirectDrawSurface* gpDDSBack;     // .bss 0x6aacc0
+// Before normalization: gpDDSPrimary.
+extern IDirectDrawSurface* g_ddsPrimary;  // .bss 0x6aacbc
+// Before normalization: gpDDSBack.
+extern IDirectDrawSurface* g_ddsBack;     // .bss 0x6aacc0
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\WinGraph.h:55, dc 0xff780) unsigned RGBto16(int r, int g, int b);

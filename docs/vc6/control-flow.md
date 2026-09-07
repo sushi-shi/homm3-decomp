@@ -49,12 +49,23 @@ Their retail callers test `al`; an `int` declaration instead makes those
 callers test `eax`. Verify callers before treating an exact retained body as
 proof of its return type.
 
-Likewise, `HasSeparatedNeighbours` (`0x5b6810`) can agree in every line of
-address-masked assembly while differing in three short-branch operands. Both
-versions contain two identical false-return epilogues, but three candidate
-branches select `+0x64` where retail selects `+0x44`. Its 99.7458% checkpoint
-is still partial. Use symbolic branch targets or resolved raw bytes to check
-this distinction; equal instruction and return counts do not settle it.
+Likewise, `rmgTerrainPainter::hasSeparatedNeighbours` (`0x5b6810`, prior role
+`HasSeparatedNeighbours`) agreed in every line of address-masked assembly at
+99.7458% while differing in three short-branch operands. Both versions contain
+two identical false-return epilogues, but the branches at `+0x20`, `+0x52`,
+and `+0x72` selected `+0x64` where retail selects `+0x44`. Native bool and
+true/false literals did not change those destinations.
+
+A shared `noSeparation` return inside the first empty-run scan closes all 132
+raw bytes, including the mask-builder call. The initial full-ring failure and
+the later wrap checks explicitly enter this block. Declare the unsigned
+`direction` local without initialization before the initial scan, then assign
+it before use; this makes the first jump legal without bypassing an initialized
+declaration. VC6 still duplicates the zero epilogue at `+0x64` for the later
+loop's fallthrough exit. The fix therefore preserves the two return blocks
+while recovering their incoming edges. `paintPoint` stays at 99.5570% and both
+worklist destructors remain exact. Compare resolved targets: equal instruction
+and return counts do not establish this control-flow match.
 
 ## A byte-returning accessor can preserve bitfield extraction
 

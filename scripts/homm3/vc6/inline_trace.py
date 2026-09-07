@@ -12,12 +12,11 @@ import hashlib
 import json
 from pathlib import Path
 import re
-import shutil
 import sys
 
 from homm3.build.canonicalize_data_symbols import CoffObject, FUNCTION_TYPE
 from homm3.core import cc_wrap
-from homm3.vc6 import _common, _toolchain, il
+from homm3.vc6 import _common, _toolchain
 from homm3.vc6.shim import build
 
 _ROOT = re.compile(r"^# inline ROOT (\d+) sym=([0-9a-f]+) cb=(-?\d+) "
@@ -28,6 +27,8 @@ _SITE = re.compile(r"^# inline SITE (\d+) depth=(\d+) budget=(-?\d+) "
 
 
 def parse_trace(text: str, symbol: str) -> dict:
+    if any(line.startswith(("sym ", "main ", "site ")) for line in text.splitlines()):
+        return _parse_overlay_trace(text, symbol)
     caller = None
     sites = []
     for line in text.splitlines():
@@ -53,6 +54,41 @@ def parse_trace(text: str, symbol: str) -> dict:
                               budget_allows=cb <= 40 or budget >= cb))
         elif line.startswith("# inline"):
             raise ValueError(f"unreadable inline trace record: {line}")
+    if caller is None:
+        raise ValueError(f"C2 did not trace {symbol}")
+    return dict(caller=caller, sites=sites)
+
+
+def _parse_overlay_trace(text: str, symbol: str) -> dict:
+    """Consume the canonical shim records, retaining strict root identity."""
+    lines = text.splitlines()
+    names = {}
+    for line in lines:
+        if line.startswith("sym "):
+            _, address, name = line.split(" ", 2)
+            names[address] = name
+    caller, sites = None, []
+    for line in lines:
+        if line.startswith("main "):
+            _, address, estimate = line.split()
+            if caller is not None or names.get(address) != symbol:
+                raise ValueError("trace does not identify exactly one selected function")
+            cb = int(estimate.removeprefix("cb="))
+            caller = dict(id=address, symbol=symbol, cb=cb,
+                          initial_budget=min(35000, max(1000, 2 * cb)))
+        elif line.startswith("site "):
+            fields = dict(word.split("=", 1) for word in line.split()[1:])
+            if caller is None or fields["root"] != caller["id"]:
+                raise ValueError("inline site has no matching caller")
+            depth, budget, remaining, cb = (int(fields[key]) for key in
+                                            ("depth", "budget", "remain", "cb"))
+            if depth < 1 or remaining < 1 or fields["callee"] not in names:
+                raise ValueError("invalid or unresolved inline site")
+            sites.append(dict(depth=depth, budget=budget, remaining=remaining,
+                              cb=cb, symbol=names[fields["callee"]],
+                              owner=names.get(fields["owner"], fields["owner"]),
+                              running=int(fields["running"]),
+                              budget_allows=cb <= 40 or budget >= cb))
     if caller is None:
         raise ValueError(f"C2 did not trace {symbol}")
     return dict(caller=caller, sites=sites)
@@ -90,6 +126,8 @@ def function_bytes(data: bytes, symbol: str) -> bytes:
 def capture(source: Path, flags: list[str], symbol: str, expected_object: Path,
             *, workdir: Path | None = None) -> dict:
     """Trace current source with its exact profile; refuse non-identical output."""
+    if not symbol or len(symbol.encode("utf-8")) >= 256:
+        raise ValueError("inline trace needs a nonempty symbol under 256 bytes")
     source = source.resolve()
     expected_object = expected_object.resolve()
     if not source.is_file() or not expected_object.is_file():
@@ -102,47 +140,30 @@ def capture(source: Path, flags: list[str], symbol: str, expected_object: Path,
     for subject in ("CL.EXE", "C1.DLL", "C1XX.DLL", "C2.DLL"):
         _toolchain.resolve(subject)
     build._ensure_wine_env()
-    # Always install our clean shim: an interrupted negative-control run must
-    # never silently become the next trace's compiler.
     with contextlib.redirect_stdout(sys.stderr):
         build.build_overlay()
-        build.compile_shim()
-    real = cc_wrap.msvc_dir()
-    include = ";".join(cc_wrap.winepath_w(p) for p in
-                       [real / "include", _common.REPO / "include",
-                        _common.REPO / cc_wrap.ZLIB_INC] if p.is_dir())
-    w = cc_wrap.winepath_w
-    cwd = expected_object.parent
-    capdir, feeddir = workdir / "capture", workdir / "feed"
-    capdir.mkdir(exist_ok=True)
-    feeddir.mkdir(exist_ok=True)
-    streams = ("in", "gl", "sy", "ex")
-    for ext in streams:
-        (capdir / f"il{ext}").unlink(missing_ok=True)
-    proc = build._wine(cc_wrap.find_ci(real / "bin", "cl.exe"),
-                       [*flags, "/d1il" + w(capdir / "il"),
-                        "/Fo" + w(workdir / "never.obj"), w(source)],
-                       cwd, {"INCLUDE": include})
-    if il._real_errors(proc) or not all((capdir / f"il{s}").is_file() for s in streams):
-        raise ValueError("inline trace front-end capture failed:\n" + build._tail(proc))
-    log = workdir / "trace.log"
-    log.unlink(missing_ok=True)
     reference, traced = workdir / "reference.obj", workdir / "traced.obj"
-    for compiler, obj, extra in (
-        (real, reference, {}),
-        (build.OVERLAY_MSVC, traced,
-         {"HOMM3_VC6_INLINE_TRACE": "1", "HOMM3_VC6_TRACE_FN": symbol,
-          "HOMM3_VC6_SHIM_LOG": w(log)}),
-    ):
-        for ext in streams:
-            shutil.copyfile(capdir / f"il{ext}", feeddir / f"il{ext}")
-        obj.unlink(missing_ok=True)
-        proc = build._wine(cc_wrap.find_ci(compiler / "bin", "cl.exe"),
-                           [*flags, "/d2il" + w(feeddir / "il"),
-                            "/Fo" + w(obj), w(source)], cwd,
-                           {"INCLUDE": include, **extra})
-        if proc.returncode or not obj.is_file():
-            raise ValueError("inline trace C2 replay failed:\n" + build._tail(proc))
+    compiled = workdir / "compiled.obj"
+    log = workdir / "trace.log"
+    log.write_text("")
+    streams = build._traceCapture(source, flags, workdir)
+    try:
+        for instrumented, destination in ((False, reference), (True, traced)):
+            extra = None
+            if instrumented:
+                with contextlib.redirect_stdout(sys.stderr):
+                    build.compile_shim(inlineTrace=True)
+                extra = {"MSVC_DIR": str(build.OVERLAY_MSVC),
+                         "HOMM3_VC6_INLINE_TRACE": symbol,
+                         "HOMM3_VC6_SHIM_LOG": cc_wrap.winepath_w(log)}
+            compiled.unlink(missing_ok=True)
+            proc = build._traceReplay(compiled, source, flags, streams, extra)
+            if proc.returncode or not compiled.is_file():
+                raise ValueError("inline trace C2 replay failed:\n" + build._tail(proc))
+            destination.write_bytes(compiled.read_bytes())
+    finally:
+        with contextlib.redirect_stdout(sys.stderr):
+            build.compile_shim()
     reference_data, traced_data = reference.read_bytes(), traced.read_bytes()
     oracle = verify_identity(reference_data, traced_data)
     body = function_bytes(reference_data, symbol)

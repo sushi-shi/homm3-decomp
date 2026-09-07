@@ -10,7 +10,8 @@
 // ShowScenInfo consumes the campaign dialog's 111 reply and translates it
 // into the shared main-loop quit command stored at 0x6976d8. The storage is
 // claimed by advmgr.cpp; this is the owning new-game consumer declaration.
-extern int gGameCommand;
+// Before normalization: gGameCommand.
+extern int g_gameCommand;
 
 enum ENewGameDialogCommand {
     NEWGAME_CAMPAIGN_BRIEF_EXIT = 111,
@@ -19,14 +20,20 @@ enum ENewGameDialogCommand {
 
 // Retail widened Dreamcast's eight-town byte mask to hold the ninth Conflux
 // bit. Both helper entries consume the full ECX value without a byte mask.
-long get_alignment_count(int legal_alignments);
-TTownType pick_alignment(int legal_alignments,
+// Before normalization (function): get_alignment_count.
+// Before normalization (locals): legal_alignments.
+long getAlignmentCount(int legalAlignments);
+// Before normalization (function): pick_alignment.
+// Before normalization (locals): legal_alignments.
+TTownType pickAlignment(int legalAlignments,
                          unsigned char getFirstAvail);
 
 // Dreamcast keeps these two tiny helpers out of line. Complete widens the
 // alignment mask for Conflux; VC6 expands both helpers into the advanced-
 // options click handler, where the complete nine-town loops are visible.
-inline TTownType pick_prev_alignment(int legal_alignments, TTownType type)
+// Before normalization (function): pick_prev_alignment.
+// Before normalization (locals): legal_alignments.
+inline TTownType pickPrevAlignment(int legalAlignments, TTownType type)
 {
     do {
         type = static_cast<TTownType>(type - 1) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
@@ -34,28 +41,30 @@ inline TTownType pick_prev_alignment(int legal_alignments, TTownType type)
             type = TOWN_CONFLUX;
         else if (type == -1)
             break;
-    } while (!(legal_alignments & (1 << type)));
+    } while (!(legalAlignments & (1 << type)));
     return type;
 }
 
-inline TTownType pick_next_alignment(int legal_alignments, TTownType type)
+// Before normalization (function): pick_next_alignment.
+// Before normalization (locals): legal_alignments.
+inline TTownType pickNextAlignment(int legalAlignments, TTownType type)
 {
     do {
         type = static_cast<TTownType>(type + 1) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
         if (type > TOWN_CONFLUX)
             type = static_cast<TTownType>(-1) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
-    } while (type != -1 && !(legal_alignments & (1 << type)));
+    } while (type != -1 && !(legalAlignments & (1 << type)));
     return type;
 }
 
 // The seven resource names (retail 0x6a5e64, DATA-claimed by seerhut.cpp);
 // GetVictoryConditionText's resource arm formats one. Consumer-side plain
 // extern, the advmgr.h / ai_player.h pattern.
-extern const char* gResourceNames[7];
+extern const char* g_resourceNames[7];
 // The nine map-region names (retail 0x6a5c48, DATA-claimed by seerhut.cpp;
 // game.h exposes them only to its own view). The defeat-monster arm of
 // GetVictoryConditionText indexes them by the map-third direction.
-extern const char* gQuestMonsterDirections[9];
+extern const char* g_questMonsterDirections[9];
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\newgame.cpp:191, dc 0x103494) long get_alignment_count(unsigned char legal_alignments);

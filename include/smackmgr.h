@@ -6,8 +6,10 @@
 #define HOMM3_SMACKMGR_H
 
 namespace SmackManager {
-void CloseSmacker();                                     // 0x599050
-void SetPixelFormat(unsigned long redMask, unsigned long greenMask,
+// Before normalization (function): SmackManager::CloseSmacker.
+void closeSmacker();                                     // 0x599050
+// Before normalization (function): SmackManager::SetPixelFormat.
+void setPixelFormat(unsigned long redMask, unsigned long greenMask,
                     unsigned long blueMask);             // 0x598a40
 }
 
@@ -20,31 +22,66 @@ void SetPixelFormat(unsigned long redMask, unsigned long greenMask,
 // seeks to the dword at +0x28: a 40-byte name followed by the file offset,
 // with the sound record carrying a size behind it.
 struct SoundHeaderStruct {
-    char name[40];
-    unsigned long offset;
-    unsigned long size;
+    // Before normalization: name.
+    char m_name[40];
+    // Before normalization: offset.
+    unsigned long m_offset;
+    // Before normalization: size.
+    unsigned long m_size;
 };
 struct VideoHeaderStruct {
-    char name[40];
-    unsigned long offset;
+    // Before normalization: name.
+    char m_name[40];
+    // Before normalization: offset.
+    unsigned long m_offset;
 };
 
-// Partial byte-proven view of the Smacker handle (radlib SmackTag);
-// only the members the smackmgr wrappers touch are modeled. Width/
-// Height are unsigned (VideoPlay centers with shr); the LastRect
+// Partial view of the Smacker handle using the Dreamcast SmackTag prefix.
+// Retail confirms unsigned Width/Height (VideoPlay centers with shr);
+// the LastRect
 // quartet compares signed in VideoDrawRects (jge/jle).
 struct Smack {
-    unsigned long Version;   // +0x000
-    unsigned long Width;     // +0x004
-    unsigned long Height;    // +0x008
-    unsigned long Frames;    // +0x00c
-    char pad_10[0x364];      // +0x010..0x373 (unmodeled header/palette)
-    unsigned long FrameNum;  // +0x374
-    char pad_378[8];         // +0x378..0x37f
-    long LastRectx;          // +0x380
-    long LastRecty;          // +0x384
-    long LastRectw;          // +0x388
-    long LastRecth;          // +0x38c
+    // Before normalization: Version.
+    unsigned long m_version;   // +0x000
+    // Before normalization: Width.
+    unsigned long m_width;     // +0x004
+    // Before normalization: Height.
+    unsigned long m_height;    // +0x008
+    // Before normalization: Frames.
+    unsigned long m_frames;    // +0x00c
+    // Dreamcast SmackTag, type 0x474e, supplies this contiguous prefix.
+    // Retail VideoPlay/VideoDrawRects confirm Frames +0x0c, FrameNum
+    // +0x374 and the signed LastRect quartet +0x380..+0x38c.
+    // Original spellings: MSPerFrame, SmackerType, LargestInTrack,
+    // tablesize, codesize, absize, detailsize, typesize, TrackType, extra,
+    // NewPalette, Palette, PalType. Replaces synthetic pad_10.
+    unsigned long m_msPerFrame;       // +0x010
+    unsigned long m_smackerType;      // +0x014
+    unsigned long m_largestInTrack[7];// +0x018
+    unsigned long m_tableSize;        // +0x034
+    unsigned long m_codeSize;         // +0x038
+    unsigned long m_abSize;           // +0x03c
+    unsigned long m_detailSize;       // +0x040
+    unsigned long m_typeSize;         // +0x044
+    unsigned long m_trackType[7];     // +0x048
+    unsigned long m_extra;            // +0x064
+    unsigned long m_newPalette;       // +0x068
+    unsigned char m_palette[772];     // +0x06c (original array extent)
+    unsigned long m_palType;          // +0x370
+    // Before normalization: FrameNum.
+    unsigned long m_frameNum;  // +0x374
+    // Dreamcast original FrameSize/SndSize, between retail-confirmed
+    // FrameNum and LastRectx. Replaces synthetic pad_378.
+    unsigned long m_frameSize; // +0x378
+    unsigned long m_sndSize;   // +0x37c
+    // Before normalization: LastRectx.
+    long m_lastRectx;          // +0x380
+    // Before normalization: LastRecty.
+    long m_lastRecty;          // +0x384
+    // Before normalization: LastRectw.
+    long m_lastRectw;          // +0x388
+    // Before normalization: LastRecth.
+    long m_lastRecth;          // +0x38c
 };
 
 // The smackw32 import surface (retail IAT: __imp___SmackToBuffer@28 -
@@ -75,27 +112,44 @@ __declspec(dllimport) void __stdcall _SmackVolumePan(Smack* smk, unsigned long t
 // owning TU unknown - declared with its known consumer until the
 // owner's TU lands.
 struct SVideoDescriptor {
-    const char* smkStem;        // +0   video track archive stem
-    const char* smkAudioStem;   // +4   audio-only track ("" = none)
-    unsigned char useBink;      // +8
-    unsigned char field_9;      // +9
-    unsigned char fadeOnAbort;  // +0x0a
-    unsigned char field_b;      // +0x0b
-    char pad_c[8];              // 20-byte stride
+    // Before normalization: smkStem.
+    const char* m_smkStem;        // +0   video track archive stem
+    // Before normalization: smkAudioStem.
+    const char* m_smkAudioStem;   // +4   audio-only track ("" = none)
+    // Before normalization: useBink.
+    unsigned char m_useBink;      // +8
+    // Role-derived: both frame pumps decode the second track and call
+    // fadeScreen(0, 4, 0) when this byte is set at the track transition.
+    // Before normalization: field_9.
+    unsigned char m_fadeInSecondTrack;      // +9
+    // Before normalization: fadeOnAbort.
+    unsigned char m_fadeOnAbort;  // +0x0a
+    // Role-derived: the Bink opener maps this byte to BINKNOSKIP
+    // (0x00400000), proven by vendor/bink-0.5a/orig/bink.h.
+    // The parallel Smacker opener maps the same policy to bit 0x200.
+    // Before normalization: field_b.
+    unsigned char m_noFrameSkip;      // +0x0b
+    // Before normalization: pad_c.
+    char m_padC[8];              // 20-byte stride
 };
-extern SVideoDescriptor gVideoDescriptors[];   // .data 0x6839c0
+// Before normalization: gVideoDescriptors.
+extern SVideoDescriptor g_videoDescriptors[];   // .data 0x6839c0
 
 // The two Smacker track handles smackmgr.obj defines. Declared here for the
 // campaign prologue player, which watches gSmackVideo/gSmackVideo2 to decide
 // when the video half of its wait has finished. Definitions and DATA claims
 // stay in src/smackmgr.cpp.
-extern Smack* gSmackVideo;
-extern Smack* gSmackVideo2;
+// Before normalization: gSmackVideo.
+extern Smack* g_smackVideo;
+// Before normalization: gSmackVideo2.
+extern Smack* g_smackVideo2;
 
 // Foreign globals without an owning header yet (all provisional):
-extern int* gpVideoGameState;    // .bss 0x69923c - the forced-bink state pair
-extern int gbVideoNoSkip;        // .bss 0x699524 - nonzero blocks the user abort
-extern int gUnnamed699290;       // .bss 0x699290 - nonzero suppresses the video sound tracks
+extern int* g_videoGameState;    // .bss 0x69923c - the forced-bink state pair
+// Before normalization: gbVideoNoSkip.
+extern int g_videoNoSkip;        // .bss 0x699524 - nonzero blocks the user abort
+// Before normalization: gUnnamed699290.
+extern int g_unnamed699290;       // .bss 0x699290 - nonzero suppresses the video sound tracks
 
 // Video ids as the wrappers dispatch them. Names are bootstrap ROLE
 // inventions (no DC/NH3API roster survives for the numeric ids): ids
@@ -132,25 +186,39 @@ enum EVideoPixelFormat {
 // Live prototypes (all 14 retail bodies reconstructed 2026-08-07).
 // VideoOpen's DC stub is a plain void(); the retail body takes eight
 // args and forwards them to ShowVideo / the bink opener.
-void VideoSoundOnOff(int on);  // 0x5971b0; Complete carries an unused flag
-void VideoRealignBuffers();    // 0x5971f0
-int VideoPlay(int id, int x, int y, int w, int h);   // 0x5972d0
-void VideoOpen(int id, int x, int y, int w, int h, int a6, int a7, int a8);  // 0x597570
-void VideoClose();             // 0x5975f0
-void VideoNextFrame();         // 0x5976e0
-void VideoDrawCurrentFrame();  // 0x597740
-void VideoPause();             // 0x5977a0
-void VideoResume();            // 0x597850
-void VideoRestart();           // 0x597900
-unsigned char VideoNeedsUpdate();  // 0x597930
-unsigned char VideoPlaying();      // 0x597990
-void VideoDrawRects();         // 0x5979d0
-void VideoShutDown();          // 0x597c70
-void DeleteSoundHeaders();     // 0x5986e0
+// Before normalization (function): VideoSoundOnOff.
+void videoSoundOnOff(int on);  // 0x5971b0; Complete carries an unused flag
+// Before normalization (function): VideoRealignBuffers.
+void videoRealignBuffers();    // 0x5971f0
+// Before normalization (function): VideoPlay.
+int videoPlay(int id, int x, int y, int w, int h);   // 0x5972d0
+// Before normalization (function): VideoOpen.
+void videoOpen(int id, int x, int y, int w, int h, int a6, int a7, int a8);  // 0x597570
+// Before normalization (function): VideoClose.
+void videoClose();             // 0x5975f0
+// Before normalization (function): VideoNextFrame.
+void videoNextFrame();         // 0x5976e0
+// Before normalization (function): VideoDrawCurrentFrame.
+void videoDrawCurrentFrame();  // 0x597740
+void videoPause();             // 0x5977a0
+void videoResume();            // 0x597850
+// Before normalization (function): VideoRestart.
+void videoRestart();           // 0x597900
+// Before normalization (function): VideoNeedsUpdate.
+unsigned char videoNeedsUpdate();  // 0x597930
+// Before normalization (function): VideoPlaying.
+unsigned char videoPlaying();      // 0x597990
+// Before normalization (function): VideoDrawRects.
+void videoDrawRects();         // 0x5979d0
+// Before normalization (function): VideoShutDown.
+void videoShutDown();          // 0x597c70
+// Before normalization (function): DeleteSoundHeaders.
+void deleteSoundHeaders();     // 0x5986e0
 // Complete frees three header lists where the Dreamcast frees AnimHeader
 // and VideoHeader (.bss 0x69fe2c, 0x69fde0, 0x69fe28 - unmodelled);
 // ShutDown calls it right before DeleteSoundHeaders.
-void DeleteAnimHeaders();      // 0x598440
+// Before normalization (function): DeleteAnimHeaders.
+void deleteAnimHeaders();      // 0x598440
 
 // The video-archive directory record. LoadAnimHeaders (0x598210) sizes its
 // allocation `new VideoHeaderStruct[count + 2]` as (11*count + 22) * 4 and
@@ -165,26 +233,36 @@ SIZE(VideoHeaderStruct, 0x2c);
 // smackmgr.cpp owns the DATA claims on the three directory pointers; this
 // is the third of them plus the shared entry count EarlySetup and the
 // loader both read.
-DATA(0x0069fe2c) extern VideoHeaderStruct* gVideoHeader3;
-DATA(0x0069fe3c) extern int gVideoHeaderCount;
+// Before normalization: gVideoHeader3.
+// Before normalization: gVideoHeaderCount.
+DATA(0x0069fe2c) extern VideoHeaderStruct* g_videoHeader3;
+DATA(0x0069fe3c) extern int g_videoHeaderCount;
 
 // ...and the other two thirds of the same trio, plus the three archive
 // handles they index. binkmanager.obj's GetBinkFilePtr (0x44d5a0) is the
 // second reader of all nine: it is OpenSmackerTrack's twin and walks the
 // identical directory priority order with '.bik' in place of '.smk'.
 // Definitions and DATA claims stay in src/smackmgr.cpp.
-extern VideoHeaderStruct* gVideoHeader1;
-extern VideoHeaderStruct* gVideoHeader2;
-extern int gVideoCount1;
-extern int gVideoCount2;
-extern int gVideoCount3;
+// Before normalization: gVideoHeader1.
+extern VideoHeaderStruct* g_videoHeader1;
+// Before normalization: gVideoHeader2.
+extern VideoHeaderStruct* g_videoHeader2;
+// Before normalization: gVideoCount1.
+extern int g_videoCount1;
+// Before normalization: gVideoCount2.
+extern int g_videoCount2;
+// Before normalization: gVideoCount3.
+extern int g_videoCount3;
 // Spelt `void*` and not `HANDLE`: this header pulls in no windows.h of its
 // own and several of its sixteen consumers include it first. HANDLE is a
 // typedef of void* either side of winnt.h's STRICT switch, so the definitions
 // in src/smackmgr.cpp keep their HANDLE spelling and the types agree.
-extern void* gVideoFile1;
-extern void* gVideoFile2;
-extern void* gVideoFile3;
+// Before normalization: gVideoFile1.
+extern void* g_videoFile1;
+// Before normalization: gVideoFile2.
+extern void* g_videoFile2;
+// Before normalization: gVideoFile3.
+extern void* g_videoFile3;
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\smackmgr.cpp:75, dc 0x14ac30) void VideoSoundOnOff();

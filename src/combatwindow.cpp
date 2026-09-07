@@ -25,7 +25,8 @@
 // Retail .bss 0x695000. The constructor publishes itself here for the chat
 // edit callbacks and the destructor clears the slot. The Dreamcast image has
 // the corresponding compiland-local pointer at 0x1bf12c.
-static TCombatWindow* gpCombatWindow;
+// Before normalization: gpCombatWindow.
+static TCombatWindow* g_combatWindow;
 
 // E:\gamedcs\combatwindow.cpp:42. SendChat is the sole retail caller;
 // Dreamcast supplies the reference ABI, local TCheatCode and statement map.
@@ -35,38 +36,38 @@ static TCombatWindow* gpCombatWindow;
 // are byte-flat, so keep the natural source rather than model string internals.
 // E:\gamedcs\combatwindow.cpp:42
 VA(0x00472010, 0x1C0)
-void CheckCombatCheatCode(std::string& chatString)
+void checkCombatCheatCode(std::string& chatString)
 {
     hero* currentHero =
-        gpCombatManager->heroes[gpCombatManager->currentSide];
+        g_combatManager->m_heroes[g_combatManager->m_currentSide];
     std::string* chat = &chatString;
     TCheatCode code(chat->c_str());
 
     if (code.compare(DATA_COMPGEN(
             0x0063d490, combatCheatBluePill, "ajpoyhrcvyy"))) {
-        gpCombatManager->Unnamed4693a0(gpCombatManager->currentSide);
+        g_combatManager->unnamed4693a0(g_combatManager->m_currentSide);
     } else if (code.compare(DATA_COMPGEN(
                    0x0063d49c, combatCheatRedPill, "ajperqcvyy"))) {
-        gpCombatManager->Unnamed4693a0(1 - gpCombatManager->currentSide);
+        g_combatManager->unnamed4693a0(1 - g_combatManager->m_currentSide);
     } else if (code.compare(DATA_COMPGEN(
                    0x0063d4a8, combatCheatAllSpells,
                    "ajpgurervfabfcbba"))
                && currentHero) {
-        currentHero->mana = 999;
-        if (!currentHero->IsWieldingArtifact(ARTIFACT_SPELLBOOK)) {
+        currentHero->m_mana = 999;
+        if (!currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
             type_artifact spellbook(ARTIFACT_SPELLBOOK, -1);
-            currentHero->GiveArtifact(&spellbook, 1, 1);
+            currentHero->giveArtifact(&spellbook, 1, 1);
         }
         for (int spell = 0; spell < hero::NUM_SPELLS; spell++)
-            currentHero->AddSpell(spell);
+            currentHero->addSpell(spell);
     } else {
         return;
     }
 
-    *chat = (*gpGeneralText)[261];
-    gpGame->field_1f69c = 1;
-    if (gbUnk69774c)
-        gpGame->campaign.isCheater = 1;
+    *chat = (*g_generalText)[261];
+    g_game->m_isCheater = 1;
+    if (g_unk69774c)
+        g_game->m_campaign.m_isCheater = 1;
 }
 
 // Retail inlines this compiland-private forwarding constructor into its sole
@@ -79,7 +80,7 @@ inline CCombatChatEdit::CCombatChatEdit(
     : CChatEdit(x, y, w, h, textSize, text, fontName, color, justification,
                 backgroundIcon, backgroundFrame, id, style, readType,
                 insetX, insetY),
-      field_70(0)
+      m_activated(0)
 {
 }
 
@@ -89,84 +90,85 @@ inline CCombatChatEdit::CCombatChatEdit(
 // order; Dreamcast independently supplies the constructor identity and call
 // graph.
 // E:\gamedcs\combatwindow.cpp:221
+// Before normalization (locals): do_placement.
 VA(0x004721d0, 0x42A)  // body + sole caller + medfont.fnt, dc 0x69850
-TCombatWindow::TCombatWindow(unsigned char do_placement)
+TCombatWindow::TCombatWindow(unsigned char doPlacement)
     : heroWindow(0, 0, 800, 600, 1)
 {
-    gpCombatWindow = this;
-    chatWidget = 0;
-    chatEdit = 0;
+    g_combatWindow = this;
+    m_chatWidget = 0;
+    m_chatEdit = 0;
 
-    Widgets.reserve(3);
-    Widgets.push_back(new border(0, 0, 800, 556, 0, 1));
+    m_widgets.reserve(3);
+    m_widgets.push_back(new border(0, 0, 800, 556, 0, 1));
 
-    chatWidget = new textWidget(
+    m_chatWidget = new textWidget(
         75, 100, 520, 440, 0,
         DATA_COMPGEN(0x0065f2ec, combatWindowMedfont, "medfont.fnt"),
         font::CHAT, 1, font::BOTTOM_JUSTIFIED, 0, 8);
-    chatEdit = new CCombatChatEdit(
+    m_chatEdit = new CCombatChatEdit(
         214, 563, 400, 32, 127,
         DATA_COMPGEN(0x00691210, combatChatEmptyText, ""),
         DATA_COMPGEN(0x0065f2f8, combatChatSmallFont, "smalfont.fnt"),
         font::WHITE, font::LEFT_JUSTIFIED,
         DATA_COMPGEN(0x00670020, combatChatBackground, "cRollovr.pcx"),
         0, 2, 0x100, textEntryWidget::READ_TYPE_INSET, 3, 0);
-    Widgets.push_back(chatEdit);
-    Widgets.push_back(chatWidget);
+    m_widgets.push_back(m_chatEdit);
+    m_widgets.push_back(m_chatWidget);
 
-    for (std::vector<widget*>::iterator it = Widgets.begin();
-         it != Widgets.end(); ++it) {
+    for (std::vector<widget*>::iterator it = m_widgets.begin();
+         it != m_widgets.end(); ++it) {
         if (*it)
-            AddWidget(*it, -1);
+            addWidget(*it, -1);
         else
-            MemError();
+            memError();
     }
 
-    if (do_placement) {
-        controlSubWindow = new TCombatPlacementSubWindow(this);
-        WidgetSetStatus(COMBAT_RIGHT_COMMAND_0_ID, 8);
-        WidgetSetStatus(COMBAT_RIGHT_COMMAND_1_ID, 8);
-        WidgetSetStatus(COMBAT_RIGHT_COMMAND_2_ID, 8);
+    if (doPlacement) {
+        m_controlSubWindow = new TCombatPlacementSubWindow(this);
+        widgetSetStatus(COMBAT_RIGHT_COMMAND_0_ID, 8);
+        widgetSetStatus(COMBAT_RIGHT_COMMAND_1_ID, 8);
+        widgetSetStatus(COMBAT_RIGHT_COMMAND_2_ID, 8);
     } else {
-        controlSubWindow = new TCombatControlSubWindow(this);
+        m_controlSubWindow = new TCombatControlSubWindow(this);
     }
 
-    heroSubWindows[0] = new TCombatHeroSubWindow(1, 135, 78, 202, this);
-    heroSubWindows[1] = new TCombatHeroSubWindow(721, 135, 78, 202, this);
-    creatureSubWindows[0] =
+    m_heroSubWindows[0] = new TCombatHeroSubWindow(1, 135, 78, 202, this);
+    m_heroSubWindows[1] = new TCombatHeroSubWindow(721, 135, 78, 202, this);
+    m_creatureSubWindows[0] =
         new TCombatCreatureSubWindow(1, 267, 78, 288, this, 1);
-    creatureSubWindows[1] =
+    m_creatureSubWindows[1] =
         new TCombatCreatureSubWindow(721, 267, 78, 288, this, 1);
-    creatureSubWindows[2] =
+    m_creatureSubWindows[2] =
         new TCombatCreatureSubWindow(1, 429, 78, 126, this, 2);
-    creatureSubWindows[3] =
+    m_creatureSubWindows[3] =
         new TCombatCreatureSubWindow(721, 429, 78, 126, this, 2);
 
-    combatMessageCount = 0;
-    combatMessageStart = 0;
+    m_combatMessageCount = 0;
+    m_combatMessageStart = 0;
 }
 
 // Vtable 0x63d4bc slot 15. The inactive editor consumes only the activation
 // key; once active it delegates the complete editor key path to CChatEdit.
 // E:\gamedcs\combatwindow.cpp:143
 VA(0x00472600, 0xA5)  // vtable slot + activation-state body, dc 0x6a484
-int CCombatChatEdit::OnKeyPress(message* msg)
+int CCombatChatEdit::onKeyPress(message* msg)
 {
-    if (field_70)
-        return CChatEdit::OnKeyPress(msg);
+    if (m_activated)
+        return CChatEdit::onKeyPress(msg);
 
-    if (GetCharPressed(msg) == KEYCODE_TAB) {
-        if (gpCombatWindow->controlSubWindow
-            && gpCombatWindow->controlSubWindow->rolloverWidget) {
-            gpCombatWindow->controlSubWindow->rolloverWidget->send_message(
+    if (getCharPressed(msg) == KEYCODE_TAB) {
+        if (g_combatWindow->m_controlSubWindow
+            && g_combatWindow->m_controlSubWindow->m_rolloverWidget) {
+            g_combatWindow->m_controlSubWindow->m_rolloverWidget->sendMessage(
                 widget::WIDGET_CLEAR_STATUS, widget::WIDGET_CLEAR_STATUS);
         }
-        field_70 = 1;
-        SetFocus(1);
-        parentWindow->SetFocus(id);
-        Draw();
-        gpWindowManager->UpdateScreen(
-            x + parentWindow->x, y + parentWindow->y, width, height);
+        m_activated = 1;
+        setFocus(1);
+        m_parentWindow->setFocus(m_id);
+        draw();
+        g_windowManager->updateScreen(
+            m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);
         return 1;
     }
     return 0;
@@ -184,26 +186,27 @@ int CCombatChatEdit::OnKeyPress(message* msg)
 // default construction then `assign(sChat, strlen(sChat))` (77.57) - both
 // assign forms lose the whole construction shape, the opposite of what the
 // adventuremapwindow twin's note reports for ITS body.
+// Before normalization (locals): sChat.
 VA(0x004726b0, 0x131)  // vtable slot + SendChat/IsMultiplayer, dc 0x6a488
-void CCombatChatEdit::SendChat(const char* sChat, int toWho)
+void CCombatChatEdit::sendChat(const char* chat, int toWho)
 {
-    std::string chatString(sChat);
-    if (!gpGame->IsMultiplayer())
-        CheckCombatCheatCode(chatString);
+    std::string chatString(chat);
+    if (!g_game->isMultiplayer())
+        checkCombatCheatCode(chatString);
 
-    field_70 = 0;
-    ::SendChat(chatString.c_str(), toWho);
-    parentWindow->SetFocus(-1);
-    SetFocus(0);
+    m_activated = 0;
+    ::sendChat(chatString.c_str(), toWho);
+    m_parentWindow->setFocus(-1);
+    setFocus(0);
 
     type_combat_sub_window*& combatSubWindow =
-        gpCombatWindow->controlSubWindow;
+        g_combatWindow->m_controlSubWindow;
     if (combatSubWindow) {
-        if (combatSubWindow->rolloverWidget) {
-            combatSubWindow->rolloverWidget->send_message(
+        if (combatSubWindow->m_rolloverWidget) {
+            combatSubWindow->m_rolloverWidget->sendMessage(
                 widget::WIDGET_SET_STATUS, widget::WIDGET_CLEAR_STATUS);
         }
-        combatSubWindow->Draw(1, -0xffff, 0xffff);
+        combatSubWindow->draw(1, -0xffff, 0xffff);
     }
 }
 
@@ -211,21 +214,21 @@ void CCombatChatEdit::SendChat(const char* sChat, int toWho)
 // its rectangle, and restores the control-bar rollover line.
 // E:\gamedcs\combatwindow.cpp:193
 VA(0x004727f0, 0x5E)  // vtable slot + control-bar redraw, dc 0x6a540
-int CCombatChatEdit::OnEscape(message msg)
+int CCombatChatEdit::onEscape(message msg)
 {
-    field_70 = 0;
-    parentWindow->SetFocus(-1);
-    SetFocus(0);
-    Draw();
+    m_activated = 0;
+    m_parentWindow->setFocus(-1);
+    setFocus(0);
+    draw();
 
     type_combat_sub_window*& combatSubWindow =
-        gpCombatWindow->controlSubWindow;
+        g_combatWindow->m_controlSubWindow;
     if (combatSubWindow) {
-        if (combatSubWindow->rolloverWidget) {
-            combatSubWindow->rolloverWidget->send_message(
+        if (combatSubWindow->m_rolloverWidget) {
+            combatSubWindow->m_rolloverWidget->sendMessage(
                 widget::WIDGET_SET_STATUS, widget::WIDGET_CLEAR_STATUS);
         }
-        combatSubWindow->Draw(1, -0xffff, 0xffff);
+        combatSubWindow->draw(1, -0xffff, 0xffff);
     }
     return 1;
 }
@@ -234,12 +237,12 @@ int CCombatChatEdit::OnEscape(message msg)
 // drawing; activation makes this the ordinary draw-and-post rectangle path.
 // E:\gamedcs\combatwindow.cpp:207
 VA(0x00472850, 0x3D)  // vtable slot + field_70 guard, dc 0x6a590
-void CCombatChatEdit::UpdateScreen()
+void CCombatChatEdit::updateScreen()
 {
-    if (field_70) {
-        Draw();
-        gpWindowManager->UpdateScreen(
-            x + parentWindow->x, y + parentWindow->y, width, height);
+    if (m_activated) {
+        draw();
+        g_windowManager->updateScreen(
+            m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);
     }
 }
 
@@ -252,13 +255,13 @@ VA_COMPGEN(0x004728a0, 0x21, SCALAR_DELETING_DTOR, TCombatWindow)
 
 // E:\gamedcs\combatwindow.cpp:281
 VA(0x004728d0, 0x2A)  // vtable 0x63d528 slot 2 + heroWindow::Close, dc 0x69b2c
-void TCombatWindow::Close(unsigned char update)
+void TCombatWindow::close(unsigned char update)
 {
-    if (controlSubWindow) {
-        delete controlSubWindow;
-        controlSubWindow = 0;
+    if (m_controlSubWindow) {
+        delete m_controlSubWindow;
+        m_controlSubWindow = 0;
     }
-    heroWindow::Close(update);
+    heroWindow::close(update);
 }
 
 // EXACT: E:\gamedcs\combatwindow.cpp:293-313. Retail extends the DC teardown with
@@ -268,24 +271,24 @@ void TCombatWindow::Close(unsigned char update)
 VA(0x00472900, 0x14E)
 TCombatWindow::~TCombatWindow()
 {
-    if (controlSubWindow)
-        delete controlSubWindow;
+    if (m_controlSubWindow)
+        delete m_controlSubWindow;
 
-    for (std::vector<widget*>::iterator it = Widgets.begin();
-         it != Widgets.end(); ++it)
+    for (std::vector<widget*>::iterator it = m_widgets.begin();
+         it != m_widgets.end(); ++it)
         delete *it;
 
-    for (unsigned int i = 0; i < combatMessages.size(); ++i)
-        delete combatMessages[i];
+    for (unsigned int i = 0; i < m_combatMessages.size(); ++i)
+        delete m_combatMessages[i];
 
-    delete heroSubWindows[0];
-    delete heroSubWindows[1];
-    delete creatureSubWindows[0];
-    delete creatureSubWindows[1];
-    delete creatureSubWindows[2];
-    delete creatureSubWindows[3];
+    delete m_heroSubWindows[0];
+    delete m_heroSubWindows[1];
+    delete m_creatureSubWindows[0];
+    delete m_creatureSubWindows[1];
+    delete m_creatureSubWindows[2];
+    delete m_creatureSubWindows[3];
 
-    gpCombatWindow = 0;
+    g_combatWindow = 0;
 }
 
 // Retail folds the DC helper at combatwindow.cpp:322-346 into its only caller.
@@ -316,17 +319,17 @@ inline int TCombatWindow::convertID2HelpID(int id)
 // selects the right-click column of the shared eleven-row help table, sizes
 // the text, and centers a type-4 dialog in the 800x600 combat window.
 VA(0x00472a50, 0x124)
-unsigned char TCombatWindow::ProcessRightSelect(const message* msg)
+unsigned char TCombatWindow::processRightSelect(const message* msg)
 {
-    int helpID = convertID2HelpID(msg->codeY);
+    int helpID = convertID2HelpID(msg->m_codeY);
     if (helpID < 0)
         return 0;
 
-    const char* text = gCombatSubWindowHelp[helpID].rclick;
+    const char* text = g_combatSubWindowHelp[helpID].m_rclick;
     int width;
     int height;
-    get_quickview_size(text, &width, &height);
-    NormalDialog(text, 4, (WINDOW_SCREEN_WIDTH - width) / 2,
+    getQuickviewSize(text, &width, &height);
+    normalDialog(text, 4, (WINDOW_SCREEN_WIDTH - width) / 2,
         (WINDOW_SCREEN_HEIGHT - height) / 2,
         -1, 0, -1, 0, -1, 0, -1, 0);
     return 1;
@@ -335,29 +338,31 @@ unsigned char TCombatWindow::ProcessRightSelect(const message* msg)
 // Dreamcast keeps this source helper out of line; retail /Ob2 folds both call
 // sites in handle_widget_hover. The control-bar vtable and the chat editor's
 // +0x6d focus byte independently prove the two member types.
-inline void TCombatWindow::set_rollover(const char* new_text)
+// Before normalization (locals): new_text.
+inline void TCombatWindow::setRollover(const char* newText)
 {
-    if (controlSubWindow && !chatEdit->bHasFocus)
-        controlSubWindow->set_rollover(new_text);
+    if (m_controlSubWindow && !m_chatEdit->m_hasFocus)
+        m_controlSubWindow->setRollover(newText);
 }
 
 // EXACT: E:\gamedcs\combatwindow.cpp:393-407. Retail vtable 0x63d528 slot 4
 // points here; the DC source-line blocks preserve the accessor, early-return
 // condition, and the null/non-null rollover arms.
+// Before normalization (locals): current_widget, new_text.
 VA(0x00472b80, 0x67)
-void TCombatWindow::handle_widget_hover(widget* current_widget)
+void TCombatWindow::handleWidgetHover(widget* currentWidget)
 {
-    const char* new_text = current_widget->RollOver;
-    if (combatMessageCount > 0
-        && (!new_text || current_widget->id == COMBAT_LOG_SCROLL_UP_ID
-            || current_widget->id == COMBAT_LOG_SCROLL_DOWN_ID))
+    const char* newText = currentWidget->m_rollOver;
+    if (m_combatMessageCount > 0
+        && (!newText || currentWidget->m_id == COMBAT_LOG_SCROLL_UP_ID
+            || currentWidget->m_id == COMBAT_LOG_SCROLL_DOWN_ID))
         return;
 
-    if (!new_text)
-        set_rollover(DATA_COMPGEN(
+    if (!newText)
+        setRollover(DATA_COMPGEN(
             0x00691210, combatHoverRolloverEmptyText, ""));
     else
-        set_rollover(new_text);
+        setRollover(newText);
 }
 
 // EXACT: the timed message clear is the retail 0x472bf0 body.  The Dreamcast row
@@ -365,12 +370,12 @@ void TCombatWindow::handle_widget_hover(widget* current_widget)
 // retail's sole combatManager::RightClick call, the +0x64 message count and
 // +0x6c GameTime stamp, and its call to combat_message prove the identity.
 VA(0x00472bf0, 0x36)
-void TCombatWindow::ClearCombatMessages()
+void TCombatWindow::clearCombatMessages()
 {
-    if (combatMessageCount
-        && GameTime::ElapsedSince(combatMessageTime) >= 3000) {
-        combatMessageCount = 0;
-        combat_message(
+    if (m_combatMessageCount
+        && GameTime::elapsedSince(m_combatMessageTime) >= 3000) {
+        m_combatMessageCount = 0;
+        combatMessage(
             DATA_COMPGEN(0x00691210, combatRolloverEmptyText, ""), 0, 0);
     }
 }
@@ -379,21 +384,21 @@ void TCombatWindow::ClearCombatMessages()
 // two-message string assembly and the control-bar range update; retail fixes
 // the message-vector offsets, the +0x68 selected row, and the +0x6c clock.
 VA(0x00472c30, 0x173)
-void TCombatWindow::show_messages(long start)
+void TCombatWindow::showMessages(long start)
 {
-    if (start < combatMessages.size()) {
+    if (start < m_combatMessages.size()) {
         std::string result;
-        combatMessageStart = start;
-        result = *combatMessages[start];
-        if (start + 1 < combatMessages.size()) {
+        m_combatMessageStart = start;
+        result = *m_combatMessages[start];
+        if (start + 1 < m_combatMessages.size()) {
             result += '\n';
-            result += *combatMessages[start + 1];
+            result += *m_combatMessages[start + 1];
         }
-        if (controlSubWindow)
-            controlSubWindow->set_rollover_buttons(
-                start, combatMessages.size());
-        set_rollover(result.c_str());
-        combatMessageTime = GameTime::Get();
+        if (m_controlSubWindow)
+            m_controlSubWindow->setRolloverButtons(
+                start, m_combatMessages.size());
+        setRollover(result.c_str());
+        m_combatMessageTime = GameTime::get();
     }
 }
 
@@ -401,17 +406,17 @@ void TCombatWindow::show_messages(long start)
 // +0x68 current line establish the retail row; DC's source lines preserve
 // the size-minus-two upper clamp, zero lower clamp, and show_messages call.
 VA(0x00472db0, 0x40)
-void TCombatWindow::scroll_rollover(long delta)
+void TCombatWindow::scrollRollover(long delta)
 {
-    if (controlSubWindow) {
-        long start = combatMessageStart;
-        long last = combatMessages.size() - 2;
+    if (m_controlSubWindow) {
+        long start = m_combatMessageStart;
+        long last = m_combatMessages.size() - 2;
         start += delta;
         if (start > last)
             start = last;
         if (start < 0)
             start = 0;
-        show_messages(start);
+        showMessages(start);
     }
 }
 
@@ -420,11 +425,11 @@ void TCombatWindow::scroll_rollover(long delta)
 // so the old entry carver missed this static member in the 0x472df0 gap.
 // Retail expands scroll_rollover here and adjusts the selected row by -1.
 VA(0x00472df0, 0x50)  // address-take + dc public, dc 0x69f6c
-int TCombatWindow::scroll_up(message& msg)
+int TCombatWindow::scrollUp(message& msg)
 {
-    if (msg.codeX == widget::WIDGET_DESELECT
-        && !(msg.qualifier & MESSAGE_MODIFIER_RIGHT)) {
-        static_cast<TCombatWindow*>(msg.window)->scroll_rollover(-1);
+    if (msg.m_codeX == widget::WIDGET_DESELECT
+        && !(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
+        static_cast<TCombatWindow*>(msg.m_window)->scrollRollover(-1);
         return 1;
     }
     return 0;
@@ -433,11 +438,11 @@ int TCombatWindow::scroll_up(message& msg)
 // E:\gamedcs\combatwindow.cpp:491
 // The byte-identical down-arrow twin, apart from incrementing the row.
 VA(0x00472e40, 0x50)  // address-take + dc public, dc 0x69f94
-int TCombatWindow::scroll_down(message& msg)
+int TCombatWindow::scrollDown(message& msg)
 {
-    if (msg.codeX == widget::WIDGET_DESELECT
-        && !(msg.qualifier & MESSAGE_MODIFIER_RIGHT)) {
-        static_cast<TCombatWindow*>(msg.window)->scroll_rollover(1);
+    if (msg.m_codeX == widget::WIDGET_DESELECT
+        && !(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
+        static_cast<TCombatWindow*>(msg.m_window)->scrollRollover(1);
         return 1;
     }
     return 0;
@@ -447,69 +452,70 @@ int TCombatWindow::scroll_down(message& msg)
 // transient-versus-kept arms, newline split, two-line cap, and final visible
 // range. Retail fixes the live combat-manager guards and the +0x54 message
 // vector shared with show_messages and the destructor.
+// Before normalization (locals): new_text, cTemp.
 VA(0x00472e90, 0x35E)
-void TCombatWindow::combat_message(const char* new_text,
+void TCombatWindow::combatMessage(const char* newText,
                                    unsigned char keep,
                                    unsigned char priority)
 {
-    if (gpCombatManager->IsQuickCombat())
+    if (g_combatManager->isQuickCombat())
         return;
-    if (!controlSubWindow->rolloverWidget)
+    if (!m_controlSubWindow->m_rolloverWidget)
         return;
-    if (!gpCombatManager->field_13300)
+    if (!g_combatManager->m_combatShowIt)
         return;
-    if (gpCombatManager->field_132f8)
+    if (g_combatManager->m_battleOver)
         return;
 
     if (!keep) {
-        if (combatMessageCount > 0
-                && GameTime::ElapsedSince(combatMessageTime) < 3000
+        if (m_combatMessageCount > 0
+                && GameTime::elapsedSince(m_combatMessageTime) < 3000
                 && !priority)
             return;
-        set_rollover(new_text);
+        setRollover(newText);
         return;
     }
 
-    std::string cTemp(new_text);
-    unsigned int split = cTemp.find('\n');
-    combatMessageTime = GameTime::Get();
-    combatMessageCount++;
+    std::string temp(newText);
+    unsigned int split = temp.find('\n');
+    m_combatMessageTime = GameTime::get();
+    m_combatMessageCount++;
 
     if (split == std::string::npos) {
-        combatMessages.push_back(new std::string(cTemp));
+        m_combatMessages.push_back(new std::string(temp));
     } else {
-        cTemp[split] = ' ';
-        if (gUnnamed698a08->LineLength(
-                cTemp.c_str(), controlSubWindow->rolloverWidget->width) < 2) {
-            combatMessages.push_back(new std::string(cTemp));
+        temp[split] = ' ';
+        if (g_unnamed698a08->lineLength(
+                temp.c_str(), m_controlSubWindow->m_rolloverWidget->m_width) < 2) {
+            m_combatMessages.push_back(new std::string(temp));
         } else {
-            combatMessageCount++;
-            combatMessages.push_back(new std::string(cTemp.substr(0, split)));
-            combatMessages.push_back(new std::string(
-                cTemp.substr(split + 1, std::string::npos)));
+            m_combatMessageCount++;
+            m_combatMessages.push_back(new std::string(temp.substr(0, split)));
+            m_combatMessages.push_back(new std::string(
+                temp.substr(split + 1, std::string::npos)));
         }
     }
 
-    if (combatMessageCount > 2)
-        combatMessageCount = 2;
-    if (!controlSubWindow)
+    if (m_combatMessageCount > 2)
+        m_combatMessageCount = 2;
+    if (!m_controlSubWindow)
         return;
-    show_messages(combatMessages.size() - combatMessageCount);
+    showMessages(m_combatMessages.size() - m_combatMessageCount);
 }
 
 // EXACT: E:\gamedcs\combatwindow.cpp:583-594. The DC statement map and retail both
 // replace the placement bar with the ordinary control bar, redraw the entire
 // window through vslot 5, and post the full 800x600 screen.
 VA(0x004731f0, 0x99)
-void TCombatWindow::EndPlacementPhase()
+void TCombatWindow::endPlacementPhase()
 {
-    if (controlSubWindow) {
-        delete controlSubWindow;
-        controlSubWindow = 0;
+    if (m_controlSubWindow) {
+        delete m_controlSubWindow;
+        m_controlSubWindow = 0;
     }
-    controlSubWindow = new TCombatControlSubWindow(this);
-    DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-    gpWindowManager->UpdateScreen(
+    m_controlSubWindow = new TCombatControlSubWindow(this);
+    drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+    g_windowManager->updateScreen(
         0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT);
 }
 
@@ -517,15 +523,15 @@ void TCombatWindow::EndPlacementPhase()
 // text widget from chatMan, draw it, and optionally post exactly its rectangle.
 // E:\gamedcs\combatwindow.cpp:603
 VA(0x00473290, 0x52)  // DrawFrame caller + DC callee set, dc 0x6a264
-void TCombatWindow::DrawChatText(unsigned char update)
+void TCombatWindow::drawChatText(unsigned char update)
 {
-    if (chatWidget) {
-        chatMan.UpdateWidget(chatWidget, 1, 20);
-        chatWidget->Draw();
+    if (m_chatWidget) {
+        g_chatMan.updateWidget(m_chatWidget, 1, 20);
+        m_chatWidget->draw();
         if (update) {
-            gpWindowManager->UpdateScreen(
-                chatWidget->x, chatWidget->y,
-                chatWidget->width, chatWidget->height);
+            g_windowManager->updateScreen(
+                m_chatWidget->m_x, m_chatWidget->m_y,
+                m_chatWidget->m_width, m_chatWidget->m_height);
         }
     }
 }
@@ -534,15 +540,15 @@ void TCombatWindow::DrawChatText(unsigned char update)
 // proves the identity. VC6 inlines DrawChatEdit: draw the focused editor and,
 // when requested, post exactly its widget rectangle after the base painter.
 VA(0x004732f0, 0x59)
-void TCombatWindow::DrawWindow(unsigned char update, int low, int high)
+void TCombatWindow::drawWindow(unsigned char update, int low, int high)
 {
-    heroWindow::DrawWindow(update, low, high);
-    if (chatEdit && chatEdit->bHasFocus) {
-        chatEdit->Draw();
+    heroWindow::drawWindow(update, low, high);
+    if (m_chatEdit && m_chatEdit->m_hasFocus) {
+        m_chatEdit->draw();
         if (update) {
-            gpWindowManager->UpdateScreen(
-                chatEdit->x, chatEdit->y,
-                chatEdit->width, chatEdit->height);
+            g_windowManager->updateScreen(
+                m_chatEdit->m_x, m_chatEdit->m_y,
+                m_chatEdit->m_width, m_chatEdit->m_height);
         }
     }
 }
@@ -551,63 +557,63 @@ void TCombatWindow::DrawWindow(unsigned char update, int low, int high)
 
 // E:\gamedcs\combatwindow.cpp:382
 DC_ONLY(0x69d5c, 0x4C)
-void TCombatWindow::set_rollover(const char* new_text)
+void TCombatWindow::setRollover(const char* new_text)
 {
     // @stub
 }
 
 // E:\gamedcs\combatwindow.cpp:393
 DC_ONLY(0x69da8, 0x56)
-void TCombatWindow::handle_widget_hover(widget* current_widget)
+void TCombatWindow::handleWidgetHover(widget* current_widget)
 {
     // @stub
 }
 
 // E:\gamedcs\combatwindow.cpp:417
 DC_ONLY(0x69e00, 0x3A)
-void TCombatWindow::ClearCombatMessages()
+void TCombatWindow::clearCombatMessages()
 {
     // @stub
 }
 
 // E:\gamedcs\combatwindow.cpp:431
 DC_ONLY(0x69e3c, 0xE8)
-void TCombatWindow::show_messages(long start)
+void TCombatWindow::showMessages(long start)
 {
     // @stub
 }
 
 // E:\gamedcs\combatwindow.cpp:456
 DC_ONLY(0x69f24, 0x46)
-void TCombatWindow::scroll_rollover(long delta)
+void TCombatWindow::scrollRollover(long delta)
 {
     // @stub
 }
 
 // E:\gamedcs\combatwindow.cpp:475
 DC_ONLY(0x69f6c, 0x26)
-int TCombatWindow::scroll_up(message* msg)
+int TCombatWindow::scrollUp(message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\combatwindow.cpp:491
 DC_ONLY(0x69f94, 0x26)
-int TCombatWindow::scroll_down(message* msg)
+int TCombatWindow::scrollDown(message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\combatwindow.cpp:583
 DC_ONLY(0x6a200, 0x62)
-void TCombatWindow::EndPlacementPhase()
+void TCombatWindow::endPlacementPhase()
 {
     // @stub
 }
 
 // E:\gamedcs\combatwindow.cpp:603
 DC_ONLY(0x6a264, 0x5C)
-void TCombatWindow::DrawChatText(unsigned char update)
+void TCombatWindow::drawChatText(unsigned char update)
 {
     // @stub
 }
@@ -621,21 +627,21 @@ void TCombatWindow::DrawChatEdit(unsigned char update)
 
 // E:\gamedcs\combatwindow.cpp:633
 DC_ONLY(0x6a310, 0xB0)
-void TCombatWindow::OnChatActivate(unsigned char active)
+void TCombatWindow::OnChatActivate(unsigned char m_active)
 {
     // @stub
 }
 
 // E:\gamedcs\combatwindow.cpp:652
 DC_ONLY(0x6a3c0, 0x28)
-void TCombatWindow::DrawWindow(unsigned char update, int low, int high)
+void TCombatWindow::drawWindow(unsigned char update, int low, int high)
 {
     // @stub
 }
 
 // E:\gamedcs\widget.h:231
 DC_ONLY(0x6a3e8, 0x4)
-const char* widget::get_help_text()
+const char* widget::getHelpText()
 {
     // @stub
 }

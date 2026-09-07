@@ -9,14 +9,15 @@
 #include "resource.h"
 #include "textresource.h"
 
-static void InitializeSpellTraits(
+// Before normalization (function): InitializeSpellTraits.
+static void initializeSpellTraits(
     int id, const std::vector<char*>& resource);
 
 // E:\gamedcs\spelldefs.cpp:215
 VA(0x0059e060, 0x30)  // caller+traits stride/flags, dc 0x14e278
-unsigned char SpellTargetsASingleArmy(int spell, int sslevel)
+unsigned char spellTargetsASingleArmy(int spell, int sslevel)
 {
-    unsigned int flags = akSpellTraits[spell].field_c;
+    unsigned int flags = g_spellTraits[spell].m_flags;
     unsigned int result;
     if ((flags & SPELL_TARGET_ALWAYS_SINGLE)
         || ((flags & SPELL_TARGET_MASS_AT_EXPERT) && sslevel <= 2)
@@ -29,28 +30,28 @@ unsigned char SpellTargetsASingleArmy(int spell, int sslevel)
 
 // E:\gamedcs\spelldefs.cpp:230
 VA(0x0059e090, 0xB7)  // sptraits.txt + helper calls, dc 0x14e2c8
-unsigned char InitializeSpellTraitsTable()
+unsigned char initializeSpellTraitsTable()
 {
-    TSpreadsheetResource* resource = ResourceManager::GetSpreadsheet(
+    TSpreadsheetResource* resource = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x0068830c, spellTraitsSpreadsheetName,
                      "sptraits.txt"));
     if (!resource)
         return 0;
 
-    if (resource->GetNumberOfRows() < 92) {
-        resource->Dispose();
+    if (resource->getNumberOfRows() < 92) {
+        resource->dispose();
         return 0;
     }
 
     int spell = 0;
     int row = 5;
     for (; spell < 10; ++spell, ++row)
-        InitializeSpellTraits(spell, resource->GetRow(row));
+        initializeSpellTraits(spell, resource->getRow(row));
 
     row += 3;
     int count = 60;
     while (count--) {
-        InitializeSpellTraits(spell, resource->GetRow(row));
+        initializeSpellTraits(spell, resource->getRow(row));
         ++spell;
         ++row;
     }
@@ -58,21 +59,21 @@ unsigned char InitializeSpellTraitsTable()
     row += 3;
     count = 11;
     while (count--) {
-        InitializeSpellTraits(spell, resource->GetRow(row));
+        initializeSpellTraits(spell, resource->getRow(row));
         ++spell;
         ++row;
     }
 
-    resource->Dispose();
+    resource->dispose();
     return 1;
 }
 
 // E:\gamedcs\spelldefs.cpp:335
 VA(0x0059e150, 0x35F)  // table stride + lazy string arrays, dc 0x14e39c
-static void InitializeSpellTraits(
+static void initializeSpellTraits(
     int id, const std::vector<char*>& resource)
 {
-    SSpellTraits& traits = aSpellTraitsImp[id];
+    SSpellTraits& traits = g_spellTraitsImp[id];
 
     DATA_COMPGEN_GUARD(0x006a3650, spellStringsGuard, spellNames)
     DATA(0x006a350c)
@@ -80,47 +81,47 @@ static void InitializeSpellTraits(
 
     spellNames[id].set(new char[strlen(resource[0]) + 1]);
     strcpy(spellNames[id].get(), resource[0]);
-    traits.name = spellNames[id].get();
+    traits.m_name = spellNames[id].get();
 
     DATA(0x006a3654)
     static TAutoStrPtr abbreviatedSpellNames[81];
 
     abbreviatedSpellNames[id].set(new char[strlen(resource[1]) + 1]);
     strcpy(abbreviatedSpellNames[id].get(), resource[1]);
-    traits.abbreviated_name = abbreviatedSpellNames[id].get();
+    traits.m_abbreviatedName = abbreviatedSpellNames[id].get();
 
-    traits.level = atoi(resource[2]);
-    traits.schoolBits = 0;
+    traits.m_level = atoi(resource[2]);
+    traits.m_schoolBits = 0;
     if (resource[3][0] && resource[3][0] != ' ')
-        traits.schoolBits |= 8;
+        traits.m_schoolBits |= 8;
     if (resource[4][0] && resource[4][0] != ' ')
-        traits.schoolBits |= 4;
+        traits.m_schoolBits |= 4;
     if (resource[5][0] && resource[5][0] != ' ')
-        traits.schoolBits |= 2;
+        traits.m_schoolBits |= 2;
     if (resource[6][0] && resource[6][0] != ' ')
-        traits.schoolBits |= 1;
+        traits.m_schoolBits |= 1;
 
     int column = 7;
     int i;
     for (i = 0; i < 4; ++i) {
-        traits.mana_cost[i] = atoi(resource[column]);
+        traits.m_manaCost[i] = atoi(resource[column]);
         ++column;
     }
 
-    traits.power_factor = atoi(resource[column++]);
+    traits.m_powerFactor = atoi(resource[column++]);
 
     for (i = 0; i < 4; ++i) {
-        traits.mastery_bonus[i] = atoi(resource[column]);
+        traits.m_masteryBonus[i] = atoi(resource[column]);
         ++column;
     }
 
     for (i = 0; i < 9; ++i) {
-        traits.townProbability[i] = atoi(resource[column]);
+        traits.m_townProbability[i] = atoi(resource[column]);
         ++column;
     }
 
     for (i = 0; i < 4; ++i) {
-        traits.mastery_values[i] = atoi(resource[column]);
+        traits.m_masteryValues[i] = atoi(resource[column]);
         ++column;
     }
 
@@ -131,7 +132,7 @@ static void InitializeSpellTraits(
         spellDescriptions[id][i].set(
             new char[strlen(resource[column]) + 1]);
         strcpy(spellDescriptions[id][i].get(), resource[column]);
-        traits.levelDescriptions[i] = spellDescriptions[id][i].get();
+        traits.m_levelDescriptions[i] = spellDescriptions[id][i].get();
         ++column;
     }
 }

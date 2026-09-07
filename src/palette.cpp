@@ -8,13 +8,17 @@
 #include "palette.h"
 
 union TFloatLongBits {
-    unsigned long bits;
-    float value;
+    // Before normalization: bits.
+    unsigned long m_bits;
+    // Before normalization: value.
+    float m_value;
 };
 
 union TDoubleLongBits {
-    double value;
-    long words[2];
+    // Before normalization: value.
+    double m_value;
+    // Before normalization: words.
+    long m_words[2];
 };
 
 // Dreamcast exposes this original helper boundary and its sole named local.
@@ -22,12 +26,13 @@ union TDoubleLongBits {
 static __forceinline long ftol(double d)
 {
     const unsigned long magic = 0x59c00000;
-    TFloatLongBits magic_value;
+    // Before normalization (locals): magic_value.
+    TFloatLongBits magicValue;
     TDoubleLongBits result;
-    result.value = d;
-    magic_value.bits = magic;
-    result.value += magic_value.value;
-    return result.words[0];
+    result.m_value = d;
+    magicValue.m_bits = magic;
+    result.m_value += magicValue.m_value;
+    return result.m_words[0];
 }
 
 #if 0  // @carcass
@@ -106,7 +111,7 @@ VA(0x005226a0, 0x2D)  // dc-order-map + exact 0x200-byte payload copy, dc 0x10a2
 TPalette16::TPalette16(const unsigned short* newData)
     : resource(0, RESOURCE_TYPE_NONE)
 {
-    memcpy(data, newData, sizeof(data));
+    memcpy(m_data, newData, sizeof(m_data));
 }
 
 // The two six-bit-field constructors, and DC's own Convert24to16 boundary
@@ -115,11 +120,11 @@ TPalette16::TPalette16(const unsigned short* newData)
 // are 157 and 159 bytes rather than a call apiece. The pair differs only in
 // the resource base - the second names the palette and passes
 // RESOURCE_TYPE_PALETTE - so it is a free in-compile A/B on one loop.
-void TPalette16::Convert24to16(const unsigned char* p24, int rbits, int rshift,
+void TPalette16::convert24to16(const unsigned char* p24, int rbits, int rshift,
                                int gbits, int gshift, int bbits, int bshift)
 {
     for (int index = 0; index < 256; ++index) {
-        data[index] = static_cast<unsigned short>(
+        m_data[index] = static_cast<unsigned short>(
             ((p24[3 * index] >> (8 - rbits))
              << rshift)
             | ((p24[3 * index + 1] >> (8 - gbits))
@@ -154,7 +159,7 @@ TPalette16::TPalette16(const TPalette24* p24, int rbits, int rshift,
                        int gbits, int gshift, int bbits, int bshift)
     : resource(0, RESOURCE_TYPE_NONE)
 {
-    Convert24to16(p24->colors.data[0], rbits, rshift, gbits, gshift,
+    convert24to16(p24->m_colors.m_data[0], rbits, rshift, gbits, gshift,
                   bbits, bshift);
 }
 
@@ -164,7 +169,7 @@ TPalette16::TPalette16(const char* name, const TPalette24* p24,
                        int bbits, int bshift)
     : resource(name, RESOURCE_TYPE_PALETTE)
 {
-    Convert24to16(p24->colors.data[0], rbits, rshift, gbits, gshift,
+    convert24to16(p24->m_colors.m_data[0], rbits, rshift, gbits, gshift,
                   bbits, bshift);
 }
 
@@ -203,16 +208,17 @@ VA(0x00522810, 0xC6)  // dc-order-map + the three TPalette16 mask statics, dc 0x
 TPalette16::TPalette16(const TPalette24* p24)
     : resource(0, RESOURCE_TYPE_NONE)
 {
-    unsigned int red_scale = (red_mask + red_mask) & ~red_mask;
-    unsigned int green_scale = (green_mask + green_mask) & ~green_mask;
-    unsigned int blue_scale = (blue_mask + blue_mask) & ~blue_mask;
-    unsigned short* dst = data;
-    const unsigned char* src = p24->colors.data[0];
+    // Before normalization (locals): red_scale, green_scale, blue_scale.
+    unsigned int redScale = (s_redMask + s_redMask) & ~s_redMask;
+    unsigned int greenScale = (s_greenMask + s_greenMask) & ~s_greenMask;
+    unsigned int blueScale = (s_blueMask + s_blueMask) & ~s_blueMask;
+    unsigned short* dst = m_data;
+    const unsigned char* src = p24->m_colors.m_data[0];
     for (int index = 0; index < 256; ++index) {
         *dst = static_cast<unsigned short>(
-            (((src[2] * blue_scale) >> 8) & blue_mask)
-            | (((src[0] * red_scale) >> 8) & red_mask)
-            | (((src[1] * green_scale) >> 8) & green_mask));
+            (((src[2] * blueScale) >> 8) & s_blueMask)
+            | (((src[0] * redScale) >> 8) & s_redMask)
+            | (((src[1] * greenScale) >> 8) & s_greenMask));
         ++dst;
         src += 3;
     }
@@ -225,14 +231,14 @@ VA(0x005228e0, 0x30)  // dc-order-map + exact payload extent, dc 0x10a854
 TPalette16::TPalette16(const TPalette16* copy)
     : resource(0, RESOURCE_TYPE_NONE)
 {
-    memcpy(data, copy->data, sizeof(data));
+    memcpy(m_data, copy->m_data, sizeof(m_data));
 }
 
 VA(0x00522910, 0x21)  // dc-order-map + payload-only assignment, dc 0x10a8a0
 TPalette16* TPalette16::operator=(const TPalette16* from)
 {
     if (this != from)
-        memcpy(data, from->data, sizeof(data));
+        memcpy(m_data, from->m_data, sizeof(m_data));
     return this;
 }
 
@@ -246,21 +252,21 @@ TPalette16::~TPalette16()
 // inclusive [begin,end] range and preserves the source step count as a
 // countdown in both arms.
 VA(0x00522950, 0xBE)  // anchor-global, dc 0x10aa98
-void TPalette16::Cycle(int begin, int end, int step)
+void TPalette16::cycle(int begin, int end, int step)
 {
     if (step > 0) {
         for (int i = 0; i < step; ++i) {
-            unsigned short saved = data[begin];
-            memmove(&data[begin], &data[begin + 1],
-                    (end - begin) * sizeof(data[0]));
-            data[end] = saved;
+            unsigned short saved = m_data[begin];
+            memmove(&m_data[begin], &m_data[begin + 1],
+                    (end - begin) * sizeof(m_data[0]));
+            m_data[end] = saved;
         }
     } else {
         for (int i = 0; i < -step; ++i) {
-            unsigned short saved = data[end];
-            memmove(&data[begin + 1], &data[begin],
-                    (end - begin) * sizeof(data[0]));
-            data[begin] = saved;
+            unsigned short saved = m_data[end];
+            memmove(&m_data[begin + 1], &m_data[begin],
+                    (end - begin) * sizeof(m_data[0]));
+            m_data[begin] = saved;
         }
     }
 }
@@ -270,24 +276,25 @@ void TPalette16::Cycle(int begin, int end, int step)
 // Retail corroborates that shared shape and fixes the Complete palette range
 // at entries 10..255.
 VA(0x00522a10, 0x122)  // anchor-global, dc 0x10b1ec
-void TPalette16::AdjustSaturation(float amount)
+void TPalette16::adjustSaturation(float amount)
 {
-    const unsigned int red_norm =
-        std::numeric_limits<int>::max() / red_mask;
-    const unsigned int green_norm =
-        std::numeric_limits<int>::max() / green_mask;
-    const unsigned int blue_norm =
-        std::numeric_limits<int>::max() / blue_mask;
+    // Before normalization (locals): red_norm, green_norm, blue_norm.
+    const unsigned int redNorm =
+        std::numeric_limits<int>::max() / s_redMask;
+    const unsigned int greenNorm =
+        std::numeric_limits<int>::max() / s_greenMask;
+    const unsigned int blueNorm =
+        std::numeric_limits<int>::max() / s_blueMask;
 
     for (int i = 10; i < 256; ++i) {
-        unsigned int r = (data[i] & red_mask) * red_norm;
-        unsigned int g = (data[i] & green_mask) * green_norm;
-        unsigned int b = (data[i] & blue_mask) * blue_norm;
+        unsigned int r = (m_data[i] & s_redMask) * redNorm;
+        unsigned int g = (m_data[i] & s_greenMask) * greenNorm;
+        unsigned int b = (m_data[i] & s_blueMask) * blueNorm;
 
         float h;
         float s;
         float v;
-        RGBToHSV(r, g, b, &h, &s, &v);
+        rgbToHSV(r, g, b, &h, &s, &v);
 
         if (amount <= 1.0f) {
             s *= amount;
@@ -295,12 +302,12 @@ void TPalette16::AdjustSaturation(float amount)
             s = 1.0f - (1.0f - s) / amount;
         }
 
-        HSVToRGB(h, s, v, &r, &g, &b);
+        hsvToRGB(h, s, v, &r, &g, &b);
 
-        data[i] = static_cast<unsigned short>(
-            ((r / red_norm) & red_mask) |
-            ((g / green_norm) & green_mask) |
-            ((b / blue_norm) & blue_mask));
+        m_data[i] = static_cast<unsigned short>(
+            ((r / redNorm) & s_redMask) |
+            ((g / greenNorm) & s_greenMask) |
+            ((b / blueNorm) & s_blueMask));
     }
 }
 
@@ -322,14 +329,14 @@ void TPalette16::ConvertRGBQUADto16(const tagRGBQUAD* quad, int rbits, int rshif
 
 // E:\gamedcs\palette.cpp:288
 // Retail body reconstructed above at 0x00522950; dc 0x10aa98.
-void TPalette16::Cycle(int begin, int end, int step)
+void TPalette16::cycle(int begin, int end, int step)
 {
     // @stub
 }
 
 // E:\gamedcs\palette.cpp:315
 DC_ONLY(0x10ab44, 0x416)
-void TPalette16::Colorize(float hue, float saturation)
+void TPalette16::colorize(float hue, float saturation)
 {
     // @stub
 }
@@ -343,7 +350,7 @@ void TPalette16::AdjustHue(float hue, float amount)
 
 // E:\gamedcs\palette.cpp:412
 // Retail body reconstructed above at 0x00522a10; dc 0x10b1ec.
-void TPalette16::AdjustSaturation(float amount)
+void TPalette16::adjustSaturation(float amount)
 {
     // @stub
 }
@@ -360,7 +367,7 @@ void TPalette16::AdjustValue(float amount)
 #endif  // @carcass
 
 VA(0x00522b40, 0x6)  // TPalette16 vtable 0x640368 slot 2
-unsigned int TPalette16::GetSize() const
+unsigned int TPalette16::getSize() const
 {
     return sizeof(*this);
 }
@@ -371,35 +378,37 @@ unsigned int TPalette16::GetSize() const
 // palette range at entries 10..255. The hue arm interpolates toward the
 // requested hue, then chooses the shorter circular path when the unwrapped
 // distance crosses half of the unit hue interval.
+// Before normalization (locals): hue_adjust, saturation_adjust, value_adjust, red_norm,
+// green_norm, blue_norm.
 VA(0x00522b50, 0x1F5)  // anchor-global, dc 0x10b484
-void TPalette16::AdjustHSV(float hue, float hue_adjust,
-                           float saturation_adjust, float value_adjust)
+void TPalette16::adjustHSV(float hue, float hueAdjust,
+                           float saturationAdjust, float valueAdjust)
 {
-    const unsigned int red_norm =
-        std::numeric_limits<int>::max() / red_mask;
-    const unsigned int green_norm =
-        std::numeric_limits<int>::max() / green_mask;
-    const unsigned int blue_norm =
-        std::numeric_limits<int>::max() / blue_mask;
+    const unsigned int redNorm =
+        std::numeric_limits<int>::max() / s_redMask;
+    const unsigned int greenNorm =
+        std::numeric_limits<int>::max() / s_greenMask;
+    const unsigned int blueNorm =
+        std::numeric_limits<int>::max() / s_blueMask;
 
     for (int i = 10; i < 256; ++i) {
-        unsigned int r = (data[i] & red_mask) * red_norm;
-        unsigned int g = (data[i] & green_mask) * green_norm;
-        unsigned int b = (data[i] & blue_mask) * blue_norm;
+        unsigned int r = (m_data[i] & s_redMask) * redNorm;
+        unsigned int g = (m_data[i] & s_greenMask) * greenNorm;
+        unsigned int b = (m_data[i] & s_blueMask) * blueNorm;
 
         float h;
         float s;
         float v;
-        RGBToHSV(r, g, b, &h, &s, &v);
+        rgbToHSV(r, g, b, &h, &s, &v);
 
-        if (hue_adjust >= 0.0f) {
+        if (hueAdjust >= 0.0f) {
             float delta = hue - h;
-            h += delta * hue_adjust;
+            h += delta * hueAdjust;
             if (fabs(delta) > 0.5) {
                 if (delta > 0.0) {
-                    h += 1.0f - hue_adjust;
+                    h += 1.0f - hueAdjust;
                 } else {
-                    h += hue_adjust;
+                    h += hueAdjust;
                 }
                 if (h >= 1.0) {
                     h -= 1.0;
@@ -407,28 +416,28 @@ void TPalette16::AdjustHSV(float hue, float hue_adjust,
             }
         }
 
-        if (saturation_adjust >= 0.0f) {
-            if (saturation_adjust <= 1.0f) {
-                s *= saturation_adjust;
+        if (saturationAdjust >= 0.0f) {
+            if (saturationAdjust <= 1.0f) {
+                s *= saturationAdjust;
             } else {
-                s = 1.0f - (1.0f - s) / saturation_adjust;
+                s = 1.0f - (1.0f - s) / saturationAdjust;
             }
         }
 
-        if (value_adjust >= 0.0) {
-            if (value_adjust <= 1.0f) {
-                v *= value_adjust;
+        if (valueAdjust >= 0.0) {
+            if (valueAdjust <= 1.0f) {
+                v *= valueAdjust;
             } else {
-                v = 1.0f - (1.0f - v) / value_adjust;
+                v = 1.0f - (1.0f - v) / valueAdjust;
             }
         }
 
-        HSVToRGB(h, s, v, &r, &g, &b);
+        hsvToRGB(h, s, v, &r, &g, &b);
 
-        data[i] = static_cast<unsigned short>(
-            ((r / red_norm) & red_mask) |
-            ((g / green_norm) & green_mask) |
-            ((b / blue_norm) & blue_mask));
+        m_data[i] = static_cast<unsigned short>(
+            ((r / redNorm) & s_redMask) |
+            ((g / greenNorm) & s_greenMask) |
+            ((b / blueNorm) & s_blueMask));
     }
 }
 
@@ -441,27 +450,28 @@ void TPalette16::AdjustHSV(float hue, float hue_adjust,
 // the minimal TU restores it only after the three numeric_limits::max calls
 // and removes it immediately after the reconstructed body.
 VA(0x00522d50, 0xD6)  // anchor-global, dc 0x10b7ac
-void TPalette16::Gray()
+void TPalette16::gray()
 {
-    const unsigned int red_norm =
-        std::numeric_limits<int>::max() / red_mask;
-    const unsigned int green_norm =
-        std::numeric_limits<int>::max() / green_mask;
-    const unsigned int blue_norm =
-        std::numeric_limits<int>::max() / blue_mask;
+    // Before normalization (locals): red_norm, green_norm, blue_norm.
+    const unsigned int redNorm =
+        std::numeric_limits<int>::max() / s_redMask;
+    const unsigned int greenNorm =
+        std::numeric_limits<int>::max() / s_greenMask;
+    const unsigned int blueNorm =
+        std::numeric_limits<int>::max() / s_blueMask;
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
     for (int i = 10; i < 256; ++i) {
-        unsigned int red = (data[i] & red_mask) * red_norm;
-        unsigned int green = (data[i] & green_mask) * green_norm;
-        unsigned int blue = (data[i] & blue_mask) * blue_norm;
+        unsigned int red = (m_data[i] & s_redMask) * redNorm;
+        unsigned int green = (m_data[i] & s_greenMask) * greenNorm;
+        unsigned int blue = (m_data[i] & s_blueMask) * blueNorm;
 
         unsigned int gray = max(max(red, green), blue);
 
-        data[i] = static_cast<unsigned short>(
-            ((gray / red_norm) & red_mask) |
-            ((gray / green_norm) & green_mask) |
-            ((gray / blue_norm) & blue_mask));
+        m_data[i] = static_cast<unsigned short>(
+            ((gray / redNorm) & s_redMask) |
+            ((gray / greenNorm) & s_greenMask) |
+            ((gray / blueNorm) & s_blueMask));
     }
 }
 #undef max
@@ -482,7 +492,7 @@ VA(0x00522e80, 0x2D)  // exact 0x300-byte payload copy, dc 0x10b904
 TPalette24::TPalette24(const unsigned char* data)
     : resource(0, RESOURCE_TYPE_NONE)
 {
-    memcpy(&colors, data, sizeof(colors));
+    memcpy(&m_colors, data, sizeof(m_colors));
 }
 
 // Retail walks 256 four-byte RGBA records and copies RGB into the packed
@@ -498,9 +508,9 @@ TPalette24::TPalette24(const TRGBA* rgba)
     : resource(0, RESOURCE_TYPE_NONE)
 {
     for (int index = 0; index < 256; ++index) {
-        colors.data[index][0] = rgba->Red;
-        colors.data[index][1] = rgba->Green;
-        colors.data[index][2] = rgba->Blue;
+        m_colors.m_data[index][0] = rgba->m_red;
+        m_colors.m_data[index][1] = rgba->m_green;
+        m_colors.m_data[index][2] = rgba->m_blue;
         ++rgba;
     }
 }
@@ -512,14 +522,14 @@ VA(0x00522f00, 0x30)  // dc-bracket + exact payload extent, dc 0x10ba3c
 TPalette24::TPalette24(const TPalette24* copy)
     : resource(0, RESOURCE_TYPE_NONE)
 {
-    memcpy(&colors, &copy->colors, sizeof(colors));
+    memcpy(&m_colors, &copy->m_colors, sizeof(m_colors));
 }
 
 VA(0x00522f30, 0x21)  // payload-only assignment; resource identity retained
 TPalette24& TPalette24::operator=(const TPalette24& from)
 {
     if (this != &from)
-        memcpy(&colors, &from.colors, sizeof(colors));
+        memcpy(&m_colors, &from.m_colors, sizeof(m_colors));
     return *this;
 }
 
@@ -529,7 +539,7 @@ TPalette24::~TPalette24() throw()
 }
 
 VA(0x00522f70, 0x06)  // TPalette24 vtable 0x640374 slot 2
-unsigned int TPalette24::GetSize() const
+unsigned int TPalette24::getSize() const
 {
     return sizeof(*this);
 }
@@ -538,35 +548,37 @@ unsigned int TPalette24::GetSize() const
 // r/g/b and h/s/v lifetimes, both conversion helpers, and every nested
 // adjustment scope. Retail corroborates the special dark/high-value
 // saturation scaling arm after the ordinary value adjustment.
+// Before normalization (locals): hue_adjust, saturation_adjust, value_adjust, red_norm,
+// green_norm, blue_norm.
 VA(0x00522f80, 0x20E)  // anchor-global, dc 0x10bfd4
-void TPalette24::AdjustHSV(float hue, float hue_adjust,
-                           float saturation_adjust, float value_adjust)
+void TPalette24::adjustHSV(float hue, float hueAdjust,
+                           float saturationAdjust, float valueAdjust)
 {
-    const unsigned int red_norm =
+    const unsigned int redNorm =
         std::numeric_limits<int>::max() / 255;
-    const unsigned int green_norm =
+    const unsigned int greenNorm =
         std::numeric_limits<int>::max() / 255;
-    const unsigned int blue_norm =
+    const unsigned int blueNorm =
         std::numeric_limits<int>::max() / 255;
 
     for (int i = 10; i < 256; ++i) {
-        unsigned int r = colors.data[i][0] * red_norm;
-        unsigned int g = colors.data[i][1] * green_norm;
-        unsigned int b = colors.data[i][2] * blue_norm;
+        unsigned int r = m_colors.m_data[i][0] * redNorm;
+        unsigned int g = m_colors.m_data[i][1] * greenNorm;
+        unsigned int b = m_colors.m_data[i][2] * blueNorm;
 
         float h;
         float s;
         float v;
-        RGBToHSV(r, g, b, &h, &s, &v);
+        rgbToHSV(r, g, b, &h, &s, &v);
 
-        if (hue_adjust >= 0.0f) {
+        if (hueAdjust >= 0.0f) {
             float delta = hue - h;
-            h += delta * hue_adjust;
+            h += delta * hueAdjust;
             if (fabs(delta) > 0.5) {
                 if (delta > 0.0) {
-                    h += 1.0f - hue_adjust;
+                    h += 1.0f - hueAdjust;
                 } else {
-                    h += hue_adjust;
+                    h += hueAdjust;
                 }
                 if (h >= 1.0) {
                     h -= 1.0;
@@ -574,29 +586,29 @@ void TPalette24::AdjustHSV(float hue, float hue_adjust,
             }
         }
 
-        if (value_adjust >= 0.0) {
-            if (value_adjust <= 1.0f) {
-                v *= value_adjust;
+        if (valueAdjust >= 0.0) {
+            if (valueAdjust <= 1.0f) {
+                v *= valueAdjust;
             } else {
-                v = 1.0f - (1.0f - v) / value_adjust;
+                v = 1.0f - (1.0f - v) / valueAdjust;
             }
         }
 
-        if (saturation_adjust >= 0.0f) {
-            if (saturation_adjust <= 1.0f) {
-                s *= saturation_adjust;
+        if (saturationAdjust >= 0.0f) {
+            if (saturationAdjust <= 1.0f) {
+                s *= saturationAdjust;
             } else if (v > 0.75 && s < 0.25) {
-                s = (1.0f - v) * s * saturation_adjust * 4.0f;
+                s = (1.0f - v) * s * saturationAdjust * 4.0f;
             } else {
-                s = 1.0f - (1.0f - s) / saturation_adjust;
+                s = 1.0f - (1.0f - s) / saturationAdjust;
             }
         }
 
-        HSVToRGB(h, s, v, &r, &g, &b);
+        hsvToRGB(h, s, v, &r, &g, &b);
 
-        colors.data[i][0] = static_cast<unsigned char>(r / red_norm);
-        colors.data[i][1] = static_cast<unsigned char>(g / green_norm);
-        colors.data[i][2] = static_cast<unsigned char>(b / blue_norm);
+        m_colors.m_data[i][0] = static_cast<unsigned char>(r / redNorm);
+        m_colors.m_data[i][1] = static_cast<unsigned char>(g / greenNorm);
+        m_colors.m_data[i][2] = static_cast<unsigned char>(b / blueNorm);
     }
 }
 
@@ -606,10 +618,11 @@ void TPalette24::AdjustHSV(float hue, float hue_adjust,
 // The explicit zero offset in the red sector is source-significant: both SH4
 // and x86 retain its floating-point addition.
 VA(0x00523190, 0x160)  // anchor-bracket, dc 0x10c370
-void RGBToHSV(unsigned int r, unsigned int g, unsigned int b,
+void rgbToHSV(unsigned int r, unsigned int g, unsigned int b,
               float* h, float* s, float* v)
 {
-    static const float red_hue = 0.0f;
+    // Before normalization (locals): red_hue.
+    static const float redHue = 0.0f;
 
     const unsigned int max =
         (r > g ? r : g) > b ? (r > g ? r : g) : b;
@@ -630,7 +643,7 @@ void RGBToHSV(unsigned int r, unsigned int g, unsigned int b,
                    static_cast<float>(max - min);
 
         if (r == max) {
-            *h = (bc - gc) / 6.0f + red_hue;
+            *h = (bc - gc) / 6.0f + redHue;
         } else if (g == max) {
             *h = (rc - bc) / 6.0f + 1.0f / 3.0f;
         } else {
@@ -650,7 +663,7 @@ void RGBToHSV(unsigned int r, unsigned int g, unsigned int b,
 // containing all six hue sectors. Retail corroborates p/q/t evaluation order,
 // the exact sector mapping, and the single right-associated grayscale write.
 VA(0x005232f0, 0x2EC)  // anchor-bracket, dc 0x10c564
-void HSVToRGB(float h, float s, float v,
+void hsvToRGB(float h, float s, float v,
               unsigned int* r, unsigned int* g, unsigned int* b)
 {
     if (s != 0.0f) {
@@ -703,14 +716,14 @@ void HSVToRGB(float h, float s, float v,
 
 // E:\gamedcs\palette.cpp:496
 // Retail body reconstructed above at 0x00522b50; dc 0x10b484.
-void TPalette16::AdjustHSV(float hue, float hue_adjust, float saturation_adjust, float value_adjust)
+void TPalette16::adjustHSV(float hue, float hue_adjust, float saturation_adjust, float value_adjust)
 {
     // @stub
 }
 
 // E:\gamedcs\palette.cpp:571
 // Retail body reconstructed above at 0x00522d50; dc 0x10b7ac.
-void TPalette16::Gray()
+void TPalette16::gray()
 {
     // @stub
 }
@@ -766,42 +779,42 @@ void TPalette24::~TPalette24()
 
 // E:\gamedcs\palette.cpp:655
 DC_ONLY(0x10baf0, 0x102)
-void TPalette24::Cycle(int begin, int end, int step)
+void TPalette24::cycle(int begin, int end, int step)
 {
     // @stub
 }
 
 // E:\gamedcs\palette.cpp:685
 DC_ONLY(0x10bbf4, 0x364)
-void TPalette24::Colorize(float hue, float saturation)
+void TPalette24::colorize(float hue, float saturation)
 {
     // @stub
 }
 
 // E:\gamedcs\palette.cpp:723
 DC_ONLY(0x10bf58, 0x7A)
-void TPalette24::Gray()
+void TPalette24::gray()
 {
     // @stub
 }
 
 // E:\gamedcs\palette.cpp:740
 // Retail body reconstructed above at 0x00522f80; dc 0x10bfd4.
-void TPalette24::AdjustHSV(float hue, float hue_adjust, float saturation_adjust, float value_adjust)
+void TPalette24::adjustHSV(float hue, float hue_adjust, float saturation_adjust, float value_adjust)
 {
     // @stub
 }
 
 // E:\gamedcs\palette.cpp:827
 // Retail body reconstructed above at 0x00523190; dc 0x10c370.
-void RGBToHSV(unsigned r, unsigned g, unsigned b, float* h, float* s, float* v)
+void rgbToHSV(unsigned r, unsigned g, unsigned b, float* h, float* s, float* v)
 {
     // @stub
 }
 
 // E:\gamedcs\palette.cpp:862
 // Retail body reconstructed above at 0x005232f0; dc 0x10c564.
-void HSVToRGB(float h, float s, float v, unsigned* r, unsigned* g, unsigned* b)
+void hsvToRGB(float h, float s, float v, unsigned* r, unsigned* g, unsigned* b)
 {
     // @stub
 }

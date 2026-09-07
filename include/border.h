@@ -27,15 +27,19 @@ public:
     // DC emitted it out of line (dc 0x5433c) because the port compiled
     // border.cpp without /Ob2.
     border() {}
-    virtual int Main(message* msg);  // slot 2, retail 0x44ff60
+    // Before normalization (function): border::Main.
+    virtual int main(message* msg);  // slot 2, retail 0x44ff60
     virtual void zBufferDraw(unsigned short* zBuffer, int id);
-    virtual void Draw();             // slot 4
+    // Before normalization (function): border::Draw.
+    virtual void draw();             // slot 4
     // Slot 13, appended past widget's twelve-plus-_vslot12 exactly as
     // iconWidget appends its own twin (see iconwdgt.h). Main dispatches
     // it through `call [vptr+0x34]`, i.e. 13*4, which is what fixes the
     // index; the 4-byte `return 0` body ICF-folded onto iconWidget's.
-    virtual unsigned char handle_click(unsigned char down_click,
-                                       unsigned char right_click);
+    // Before normalization (function): border::handle_click.
+    // Before normalization (locals): down_click, right_click.
+    virtual unsigned char handleClick(unsigned char downClick,
+                                       unsigned char rightClick);
     virtual ~border();  // retail 0x44ff50
 };
 
@@ -55,15 +59,24 @@ class coloredBorderFrame : public border {
 public:
     // Retail's constructor at 0x450130 stores these directly after the
     // 0x30-byte widget/border head.  Dreamcast gives the same member names.
-    int color;
-    unsigned char colorize;
-    char pad_35[3];
+    // Before normalization: color.
+    int m_color;
+    // Before normalization: colorize.
+    unsigned char m_colorize;
+    // Before normalization: pad_35.
+    // Dreamcast ends this class with the one-byte colorize flag and
+    // three alignment bytes. Retail constructor 0x450130 preserves that tail
+    // after its smaller base, ending at 0x38.
+    char m_paddingAfterColorize[3];
 
     coloredBorderFrame(int x, int y, int w, int h, int id,
-                       int color_, int style);
+                       // Before normalization (locals): color_.
+                       int color, int style);
     virtual ~coloredBorderFrame();  // retail 0x4501d0
-    virtual int Main(message* msg);  // slot 2, retail 0x450240
-    virtual void Draw();             // slot 4, retail 0x4501e0
+    // Before normalization (function): coloredBorderFrame::Main.
+    virtual int main(message* msg);  // slot 2, retail 0x450240
+    // Before normalization (function): coloredBorderFrame::Draw.
+    virtual void draw();             // slot 4, retail 0x4501e0
 };
 SIZE(coloredBorderFrame, 0x38);
 
@@ -74,22 +87,31 @@ class Bitmap816;
 // through ResourceManager::GetBitmap816).
 class bitmapBorder : public border {
 public:
-    Bitmap816* image;
+    // Before normalization: image.
+    Bitmap816* m_image;
 
     // Retail dropped DC's final focusable argument; the 0x4502d0 body
     // consumes seven stack arguments and returns with `ret 0x1c`.
     // `image_` trails an underscore for the same reason `color_` does one
     // class up: the member it feeds shares the DC parameter's name.
     bitmapBorder(int x, int y, int w, int h, int id,
-                 const char* image_, int style);
+                 // Before normalization (locals): image_.
+                 const char* image, int style);
     virtual ~bitmapBorder();
-    virtual void Draw();          // slot 4, retail 0x450450
-    virtual int GetRealHeight();  // slot 5, retail 0x4504b0
-    virtual int GetRealWidth();   // slot 6, retail 0x4504a0
+    // Before normalization (function): bitmapBorder::Draw.
+    virtual void draw();          // slot 4, retail 0x450450
+    // Before normalization (function): bitmapBorder::GetRealHeight.
+    virtual int getRealHeight();  // slot 5, retail 0x4504b0
+    // Before normalization (function): bitmapBorder::GetRealWidth.
+    virtual int getRealWidth();   // slot 6, retail 0x4504a0
     virtual void zBufferDraw(unsigned short* zBuffer, int id);
-    void SetImage(const char* bitmap_name);
-    void SetPlayerPaletteColors(int whichPlayer);
-    virtual int Main(message* msg);  // slot 2, retail 0x450550
+    // Before normalization (function): bitmapBorder::SetImage.
+    // Before normalization (locals): bitmap_name.
+    void setImage(const char* bitmapName);
+    // Before normalization (function): bitmapBorder::SetPlayerPaletteColors.
+    void setPlayerPaletteColors(int whichPlayer);
+    // Before normalization (function): bitmapBorder::Main.
+    virtual int main(message* msg);  // slot 2, retail 0x450550
 };
 
 class Bitmap16Bit;
@@ -98,20 +120,27 @@ class Bitmap16Bit;
 // Dispose vcall (0x450750).
 class bitmapBorder16 : public border {
 public:
-    Bitmap16Bit* image;
+    // Before normalization: image.
+    Bitmap16Bit* m_image;
 
     bitmapBorder16(int x, int y, int w, int h, int id,
-                   const char* image_, int style);
+                   // Before normalization (locals): image_.
+                   const char* image, int style);
     virtual ~bitmapBorder16();
     virtual void zBufferDraw(unsigned short* zBuffer, int id);
-    virtual void Draw();  // slot 4, retail 0x4507b0
-    void Draw2();
+    // Before normalization (function): bitmapBorder16::Draw.
+    virtual void draw();  // slot 4, retail 0x4507b0
+    // Before normalization (function): bitmapBorder16::Draw2.
+    void draw2();
     // DC dc 0x54c6c. Retail has NO row for it: Main below is its only call
     // site, /Ob2 expanded it there and /OPT:REF then dropped the orphaned
     // COMDAT. Its inlined `return` is what gives Main retail's single
     // `return 1` tail rather than a duplicated epilogue.
-    void SetImage(const char* bitmap_name);
-    virtual int Main(message* msg);  // slot 2, retail 0x450860
+    // Before normalization (function): bitmapBorder16::SetImage.
+    // Before normalization (locals): bitmap_name.
+    void setImage(const char* bitmapName);
+    // Before normalization (function): bitmapBorder16::Main.
+    virtual int main(message* msg);  // slot 2, retail 0x450860
 };
 
 // The free palette painters (declared for button.cpp in button.h;
@@ -119,9 +148,12 @@ public:
 class palette;
 class paletteHiColor;
 class TPalette24;
-void SetPlayerPaletteColors(palette* pal, int whichPlayer);
-void SetPlayerPaletteColors(paletteHiColor* pal, int whichPlayer);
-void SetPlayerPaletteColors(TPalette24* pal, int whichPlayer);
+// Before normalization (function): SetPlayerPaletteColors.
+void setPlayerPaletteColors(palette* pal, int whichPlayer);
+// Before normalization (function): SetPlayerPaletteColors.
+void setPlayerPaletteColors(paletteHiColor* pal, int whichPlayer);
+// Before normalization (function): SetPlayerPaletteColors.
+void setPlayerPaletteColors(TPalette24* pal, int whichPlayer);
 
 // --- bitmapBorder ---
 // CODEVIEW(E:\gamedcs\border.cpp:280, dc 0x547c0) void bitmapBorder::bitmapBorder(int x, int y, int w, int h, int id, const char* image, int style, unsigned char focusable);

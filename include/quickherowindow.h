@@ -46,9 +46,10 @@ public:
 
     enum { NWIDGETS = 25 };
 
-    TQuickHeroWindow(hero* thisHero, TViewLevel view_level);
+    // Before normalization (locals): view_level.
+    TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel);
     virtual ~TQuickHeroWindow();
-    void QuickWindowWait();
+    void quickWindowWait();
 };
 SIZE(TQuickHeroWindow, 0x4c);
 

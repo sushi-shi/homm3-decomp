@@ -17,11 +17,16 @@
 // proven AI_resource_cost(const int*) call type-correct. The three alignment
 // bytes before artifacts stay implicit so generated copies skip them.
 struct type_creature_bank {
-    armyGroup guards;
-    int resources[7];
-    TCreatureType reward_creature;
-    signed char reward_creatures;
-    std::vector<TArtifact> artifacts;
+    // Before normalization: guards.
+    armyGroup m_guards;
+    // Before normalization: resources.
+    int m_resources[7];
+    // Before normalization: reward_creature.
+    TCreatureType m_rewardCreature;
+    // Before normalization: reward_creatures.
+    signed char m_rewardCreatures;
+    // Before normalization: artifacts.
+    std::vector<TArtifact> m_artifacts;
     ~type_creature_bank();
     unsigned char load(void* infile);
 };

@@ -9,13 +9,13 @@
 // E:\gamedcs\basemgr.cpp:24
 VA(0x0044d530, 0x45)  // anchor-global, dc 0x50a28
 baseManager::baseManager()
-    : nextManager(0),
-      prevManager(0)
+    : m_nextManager(0),
+      m_prevManager(0)
 {
-    priority = -1;
-    id = -1;
-    status = 0;
-    strcpy(cMgrName, "Unknown");
+    m_priority = -1;
+    m_id = -1;
+    m_status = 0;
+    strcpy(m_mgrName, "Unknown");
 }
 
 
