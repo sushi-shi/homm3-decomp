@@ -1551,3 +1551,21 @@ reaches 100%: VC6 merges the repeated guards while preserving the machine-arm
 return blocks. The canonical `getControllingSide()` call replaces the flattened
 hypnotize expression without changing the exact bytes. Neither individual
 score dip disproved the recovered source structure.
+
+
+### Constructor return temporaries can remove a false register-allocation wall
+
+`game::getUndergroundGateExit` (0x4cde40) stopped at 81.4103% with invalid
+coordinates assigned into its result local before returning. That kept the
+result's high word live across map indexing, introduced another saved register,
+and reused the cached word where retail reloads an invalid-result temporary.
+
+Dreamcast game.cpp:11666/11675 instead returns a three-coordinate `type_point`
+constructor. Restoring those two returns alone reaches 100%. Retail's masks
+prove the arguments are 255, not -1, despite the signed packed fields.
+Restoring the remaining copy initialization, const `NewfullMap::cell(x,y,z)`
+call through its private `zCell` helper, const game signature and separate
+hero-trigger early return preserves the exact bytes. The recovered zCell
+expression `cellData + x + y * size + z * size * size` and the factored
+indexing form emit identical caller bytes. A combined hero/gate condition
+is byte-identical as well.

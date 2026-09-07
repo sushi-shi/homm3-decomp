@@ -359,6 +359,18 @@ public:
         return &m_cellData[(z * m_size + y) * m_size + x];
     }
 #endif
+private:
+    // DC MapCell.h:847, dc 0xbc8dc: canonical const map-index helper.
+    const NewmapCell* zCell(int x, int y, int z) const
+    {
+        return m_cellData + x + y * m_size + z * m_size * m_size;
+    }
+public:
+    // DC MapCell.h:889, dc 0xbc930: forwards to the private zCell helper.
+    const NewmapCell* cell(int x, int y, int z) const
+    {
+        return zCell(x, y, z);
+    }
     NewmapCell* cell(type_point point)
     {
         return cell(point.m_x, point.m_y, point.m_z);
@@ -2822,7 +2834,8 @@ public:
     // Before normalization (function): game::get_random_whirlpool.
     unsigned char getRandomWhirlpool(long excluded, type_point* result);
     // Before normalization (function): game::get_underground_gate_exit.
-    type_point getUndergroundGateExit(const NewmapCell* cell);
+    // DC game.cpp:11662, get_underground_gate_exit: const game accessor.
+    type_point getUndergroundGateExit(const NewmapCell* cell) const;
     // Before normalization (function): game::IsHuman.
     bool isHuman(int gamePos) const;             // 0x4ce940
     // Before normalization (function): game::IsHumanTeam.

@@ -13007,60 +13007,35 @@ unsigned char game::getRandomWhirlpool(long excluded, type_point* result)
     return getRandomLith(&m_whirlpools, result, 0x6f, excluded);
 }
 
-// E:\gamedcs\game.cpp:11662
-// The two vectors form the matched subterranean-gate table: cell extraInfo
-// selects a gate-pair index, which selects the destination point. A hero is
-// accepted at the destination only while it is itself the trigger object;
+// E:\gamedcs\game.cpp:11662. cell extraInfo selects a gate-pair index,
+// then the exit point. A hero is accepted only when it is the trigger;
 // an exposed underground gate is accepted directly.
-// The invalid point is 255, NOT -1, and that is what the old "unfused
-// load/mask/or/store" note was really seeing. type_point is
-// `short x:10, y:10, z:4`; assigning -1 saturates every bit of each
-// field, so VC6 folds the whole thing to `or word,0x3ff` / `or
-// word,0x3fff` with no masking. Retail instead emits `and ah,-4` +
-// `or eax,0x3cff` - it CLEARS bits 8..9 of the 10-bit fields and sets
-// bits 0..7, i.e. it stores 0x0ff into x and y and 0xf into z. That is
-// an unsigned-char -1 widened into the bitfields, and writing 0xff
-// reproduces the first invalid block byte for byte.
-// The gate test then needs its condition NEGATED with the stores
-// inside it: `!(A || B)` gives retail's branch senses exactly
-// (jne / jne to the shared exit, then je to it) and leaves the invalid
-// block as the fall-through. The invalid block keeps its OWN `return`
-// - retail tail-duplicates the epilogue and has THREE rets, and
-// merging the last two costs 3.35.
-// Residual (81.4103%): register allocation only. Retail carries the
-// point in edi and the map stride in esi and needs two callee-saved
-// registers; our CL keeps the high word live across the index
-// computation, spends a third register (ebx) on a copy it does not
-// need, and register-homes the invalid stores where retail re-reads
-// them from the frame. Known register-homing class - no spelling
-// tried moved it. Measured: -1 stores + shared exit 70.69; 0xff stores
-// 68.86 (the register churn masks the gain); 0xff + negated gate
-// 78.06; + own return in the invalid block 81.41.
+// Exact: DC lines 11666/11675 return type_point(255, 255, 255), while
+// line 11668 copy-initializes exit_point and line 11669 calls the const
+// NewfullMap::cell(x, y, z) -> private zCell helper. Retail invalid coordinates clear
+// bits 8..9 of x/y and set z's four bits, proving 255 rather than -1.
+// Restoring the two constructor returns alone raises 81.4103 to 100:
+// their temporaries stop the old result's high word living across the
+// map lookup and restore the EDI point / ESI stride allocation. The
+// canonical calls, copy initialization, separate hero return and const
+// signatures preserve those exact bytes; merging the hero/gate condition
+// is also byte-identical. No register-allocation workaround is needed.
+// Before normalization: get_underground_gate_exit, exit_gate, exit_point,
+// exit_cell.
 VA(0x004cde40, 0xE0)  // anchor-global, dc 0xbb490
-type_point game::getUndergroundGateExit(const NewmapCell* cell)
+type_point game::getUndergroundGateExit(const NewmapCell* cell) const
 {
-    int exitIndex;
-    type_point result;
-    memcpy(&exitIndex, &m_undergroundGatePairs[cell->m_extraInfo],
-           sizeof(exitIndex));
-    if (exitIndex < 0) {
-        result.m_x = 0xff;
-        result.m_y = 0xff;
-        result.m_z = 0xff;
-        return result;
-    }
+    long exitGate = m_undergroundGatePairs[cell->m_extraInfo];
+    if (exitGate < 0)
+        return type_point(0xff, 0xff, 0xff);
 
-    result = m_undergroundGateExits[exitIndex];
-    NewmapCell* exitCell = &m_worldMap.m_cellData[
-        (result.m_z * m_worldMap.m_size + result.m_y) * m_worldMap.m_size + result.m_x];
-    if (!((exitCell->m_type == HERO && exitCell->m_isTrigger)
-          || exitCell->m_type == UNDERGROUND_GATE)) {
-        result.m_x = 0xff;
-        result.m_y = 0xff;
-        result.m_z = 0xff;
-        return result;
-    }
-    return result;
+    type_point exitPoint = m_undergroundGateExits[exitGate];
+    const NewmapCell* exitCell = m_worldMap.cell(exitPoint.m_x, exitPoint.m_y, exitPoint.m_z);
+    if (exitCell->m_type == HERO && exitCell->m_isTrigger)
+        return exitPoint;
+    if (exitCell->m_type != UNDERGROUND_GATE)
+        return type_point(0xff, 0xff, 0xff);
+    return exitPoint;
 }
 
 // E:\gamedcs\game.cpp:11684
