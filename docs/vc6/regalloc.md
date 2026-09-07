@@ -836,15 +836,47 @@ the reversal at `0xd008` (reported EIP `0xd00b`). This is the source-list sort i
 <!-- c2-role: function 0xe12f compareOperandRanks -->
 
 The comparator orders the packed unsigned value at operand offset `+0xc`.
-In this trace, width has `0x01020060` and the local row has `0x00016660`;
-sorting puts the row first. `FUN_1070d19e` combines an expression-demand value
-in the top byte, a recursive cost component in the next byte, and the low 16 bits
-from `FUN_1070d25d`. Thus changing only a symbol's low-bit hash cannot reverse
-this particular ordering while the higher components remain unchanged. This
-does not exclude source or TU changes that alter the expressions themselves.
+`FUN_1070d19e` combines an expression-demand value in the top byte, a recursive
+cost component in the next byte, and the low 16 bits from `FUN_1070d25d`.
+The earlier phase snapshot had width at `0x01020060` and row at `0x00016660`,
+but those are **not** the two ranks compared by the sort. A later passive
+watch on the width rank catches instruction `0xcf2a` (reported EIP `0xcf2d`)
+recomputing it to `0x00010007` before the source-list reversal. At the actual
+`0xd008` write, both residual products have row `0x00016660` first and width
+`0x00010007` second. `0xe12f` returns positive when the left rank is smaller;
+the list sort puts the larger rank first. The cost components therefore tie,
+and the low hash bits decide this ordering. The earlier conclusion that
+changing those low bits could not matter was based on a stale phase rank.
+
+The rank/definition trace and the rank-plus-list watch both preserve complete
+object identity outside the COFF timestamp; their runner restores the normal
+shim. Working artifacts are `build/rmg-multiply-rank-origin/`. The row's field
+symbol has generated handle `0x333` at this checkpoint, while its original
+eight-byte local has a different handle. Runtime pointers remain only guarded
+selectors for these observations, not stable compiler identities.
+
+The hash cases are directly readable in the pinned table at `0xdf00` /
+`0xdee0` and the labeled `hashOperand` listing. Kinds 1–3 enter `0xd305`;
+the row's category-4 field symbol uses the handle at symbol `+0x1c`, folds
+its two 16-bit halves, and rotates that result left by five bits. Handle
+`0x333` therefore gives `0x6660`. Kinds 5–6 enter `0xd2c9`: they combine the
+folded displacement at operand `+0x24`, opcode minus `0x145`, and the base
+operand hash shifted left by eight, retaining the low 16 bits.
+
+Here the width base is a kind-2 operand with a category-3 symbol, handle
+`0x41c`, and no definition link at the observation point. The category-3
+case at `0xd365` hashes that handle shifted left by six. With width opcode
+`0x14c` and zero displacement in this IR representation, its final hash is
+`(7 + (0x41c << 14)) & 0xffff`, namely `7`. The corresponding values for
+base handles ending in 1, 2 or 3 modulo four would be `0x4007`, `0x8007` or
+`0xc007`. These formulas describe C2 symbol identities, not source names or
+machine register numbers. They do not authorize manufacturing declarations
+or changing compiler state to force a match. The remaining source question
+is how the natural expression/temporary creation order produces those handles.
 
 <!-- c2-role: function 0xd19e computeOperandRank -->
 <!-- c2-role: function 0xd25d hashOperand -->
+<!-- c2-role: site 0xcf2a storeRecomputedOperandRank -->
 
 The distinction develops before that sort. After inlining, the two row reads
 are indirect operands (kind 6). A later passive snapshot at `FUN_1070f1f0`
