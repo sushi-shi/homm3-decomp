@@ -815,6 +815,56 @@ changes the distance-wrapper expansion and gives 98.5986%. Restoring the
 remaining differences. The operand-class observation therefore does not justify
 changing the canonical point interface or adding an inlining control.
 
+The next passive trace locates the actual ordering decision. A hook at the
+driver's phase checkpoint, C2 RVA `0x9ab4`, snapshots the generic multiplication
+nodes between optimization passes. Immediately before the second
+`FUN_1070f349(body, 2)` call, both residual products have width first and the
+local row second. Hardware write watchpoints on their source-list heads catch
+the reversal at `0xd008` (reported EIP `0xd00b`). This is the source-list sort in
+`FUN_1070cee1`, using `FUN_1070e725` and comparator `FUN_1070e12f`.
+
+The comparator orders the packed unsigned value at operand offset `+0xc`.
+In this trace, width has `0x01020060` and the local row has `0x00016660`;
+sorting puts the row first. `FUN_1070d19e` combines an expression-demand value
+in the top byte, a recursive cost component in the next byte, and the low 16 bits
+from `FUN_1070d25d`. Thus changing only a symbol's low-bit hash cannot reverse
+this particular ordering while the higher components remain unchanged. This
+does not exclude source or TU changes that alter the expressions themselves.
+
+The distinction develops before that sort. After inlining, the two row reads
+are indirect operands (kind 6). After the first `FUN_1070f349` call and its
+`FUN_1070f1f0` follow-up they are kind 2; the current snapshots do not separate
+those two calls. The later pass `FUN_107261bf` changes those to kind 1. Their
+width operands remain indirect. These observations describe candidate C2
+state, not the retail compiler's input or recovered point declarations.
+
+A separate opcode write watchpoint finds the generic multiplication-to-native
+rewrite at `0x2873b` (reported EIP `0x2873e`) in `FUN_10728610`. Its variable
+32-bit multiplication arm selects `_imul2` without reversing the source list.
+The later operand-constraint routine therefore receives the already ordered
+operands. These phase and write-watchpoint traces each pass whole-object
+identity against an unmodified compile outside the COFF timestamp. The Wine
+watchpoints use a vectored single-step handler and two four-byte write slots;
+the handler preserves last-error state and clears handled debug status. The
+source-list watch disables each slot after native lowering replaces its list.
+Scratch runners restore the normal compiler shim in `finally`.
+
+A **modified-compiler counterfactual**, kept outside matching, swaps only those
+two source lists after expression optimization and before native lowering.
+That produces all 1483 retail bytes, with all 61 named relocations independently
+resolved. Compared with its unmodified control, the only section-data changes
+are the eight `paintPoint` bytes; the corresponding COFF section-definition
+checksum also changes. This proves that the two operand decisions suffice to
+explain the residual. It does **not** establish a source reconstruction, and
+the ordinary compiler's result remains 99.9204%, with eight raw differences.
+
+Working artifacts are `build/rmg-multiply-phases/`,
+`build/rmg-multiply-commute-watch/`, `build/rmg-multiply-watch/`, and the explicitly
+separate `build/rmg-multiply-counterfactual/`. The first opcode-watch run selected
+the entry variable product and a constant scale product; the later source-list
+watch selects both residual products. Runtime addresses and ordinal positions
+are observations of this checkpoint, not stable compiler interfaces.
+
 ## 7. Files
 
 | path | role |

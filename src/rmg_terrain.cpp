@@ -443,6 +443,11 @@ void rmgTerrainPainter::paintRectangle(
 // the cache calculation disturb translation/backedge registers. Both were
 // reverted. The restored rectangle caller supplies an independent instance
 // of the retail width-first product without changing this caller's bytes.
+// Passive C2 write watchpoints locate both operand reversals in its second
+// expression pass, before native lowering. A diagnostic-only compiler swap
+// of those two source lists reproduces all 1483 retail bytes; ordinary VC6
+// still leaves the eight-byte residual. See docs/vc6/regalloc.md section 6n
+// for the operand ranking, identity controls, and limits of that experiment.
 VA(0x005B4B20, 0x5CB) // anchor-callee 0x5b4960, 0x5b5440; thiscall, ret 4
 void rmgTerrainPainter::paintPoint(const TRmgGridPoint& point)
 {
