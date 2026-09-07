@@ -1556,24 +1556,33 @@ void type_artifact_quest::doProposalDialog(hero* currentHero)
 
 // Slot 5 uses extended-dialog artifact pictures: class 8 and the artifact id
 // as qualifier, one row per element in the quest payload.
-// Residual (75.2353%): the same returned-string lifetime/register-allocation
-// class as the skill twin above; all twelve CFG blocks agree. The natural
-// source-compatible variants were exhausted there and this one retains the
-// lifetime-extending const reference for the same reason.
+// Residual (89.8471%): an inner resource-vector scope removes its three
+// post-delete zero stores and restores retail's ESI/EDI saves and ECX zero,
+// raising 75.2353% without changing destruction order. All twelve CFG blocks
+// still agree. Flattening the scope restores the old bytes. Named mutable
+// or const strings, aggregate resource initialization, and single-element
+// insert(end(), resource) are byte-identical with the scope. Moving the
+// resource outside the loop is byte-identical without it; counted insert
+// instead expands to 25 blocks and is rejected. Keep canonical push_back.
+// Remaining: c_str reloads the return slot rather than dereferencing EAX;
+// insert argument scheduling and string cleanup registers differ. This
+// Complete quest has no Dreamcast counterpart to settle its source scopes.
 // E:\gamedcs\seerhut.cpp
 VA(0x0056fbc0, 0xE6)  // anchor-vtable 0x641878 slot 5 + artifact picture class, retail-only
 void type_artifact_quest::doProgressDialog()
 {
     const std::string& text = getProgressDialogText();
     const char* textPointer = text.c_str();
-    std::vector<type_dialog_resource> dialogResources;
-    for (unsigned i = 0; i < m_artifacts.size(); ++i) {
-        type_dialog_resource resource;
-        resource.m_resource = 8;
-        resource.m_qualifier = m_artifacts[i];
-        dialogResources.push_back(resource);
+    {
+        std::vector<type_dialog_resource> dialogResources;
+        for (unsigned i = 0; i < m_artifacts.size(); ++i) {
+            type_dialog_resource resource;
+            resource.m_resource = 8;
+            resource.m_qualifier = m_artifacts[i];
+            dialogResources.push_back(resource);
+        }
+        extendedDialog(textPointer, dialogResources, -1, -1, 0);
     }
-    extendedDialog(textPointer, dialogResources, -1, -1, 0);
 }
 // The two container leaves' deserializers, and the mirror of their own
 // slot 13: a BYTE count and then one element per trip, appended through

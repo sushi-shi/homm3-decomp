@@ -1262,6 +1262,54 @@ data operand agrees. A lower intermediate score therefore did not refute
 the corrected call boundary, and the old named-return result did not survive
 that change in compiler state.
 
+### Neighbour lifetimes and dimension accessors affect an earlier vector fill
+
+`paintTransitions` (0x5b5a70) constructs scoped neighbour coordinates from
+the current x/y values, then uses the canonical `operator+=` with a `TPoint`
+offset. This restores retail's retained vector `_Ufill` call and raises
+74.7320% to 81.5196%. Returning a translated point expression introduces
+retained copy/translation calls absent from retail (74.9229%); constructing
+each local through the point copy constructor gives 78.6334%.
+
+Reading the painter's dimensions through ordinary `getWidth`/`getHeight`
+accessors then reaches 84.0645%, with 68 blocks against retail's 66. The
+unused-definition control is byte-identical to 81.5196%, so the accessor
+calls, rather than additional declarations, explain the improvement.
+The private TU build reproduces the successful 2240-byte probe body exactly.
+These are provisional retail-derived interface names; this RMG compiland
+has no Dreamcast counterpart.
+
+The passive trace records caller cost 1907 and initial budget 3814. One
+cache decision remains different: the right-edge southwest read gives the
+cost-90 `getPackedCell` 104 units and expands it. The following bottom-edge
+reads receive 127 and 145. The trace reproduces all 58,504 object bytes
+outside the timestamp; source spelling and codegen for the remaining
+decision are still unresolved.
+
+### Restore the outer helper before diagnosing a nested inline limit
+
+`considerHiring` (0x431800) had copied `totalArtifactValue`'s two loops into
+its body and pinned the equipped-slot valuation. Restoring the existing
+ordinary helper call, proved by Dreamcast ai_player.cpp:4483, removes the pin
+and raises 75.3838% to 89.7071%. The backpack valuation expands but its
+`game::getHero` stays out of line; the equipped-slot valuation remains a call.
+The old flattened body could not reproduce those contextual decisions.
+
+The final 100% source also preserves Dreamcast's player reference and named
+creature-cost row (int-width in retail), initializes the best-town pointer
+before the search object, and uses one best-value variable for both the
+initial threshold and town search. From the single-best-value form at
+95.8822%, omitting early best-town initialization gives 98.4815%; omitting
+the named cost row gives 97.4007%. These source controls matter after the
+helper boundary is restored, even where earlier flattened-body probes failed.
+
+The pinned VC6 passive trace reproduces all 156,794 object bytes outside the
+timestamp. The exact caller costs 559 with budget 1118. `totalArtifactValue`
+costs 141 at depth 1. Its first cost-133 artifact valuation receives 244 at
+depth 2 and expands, while nested cost-41 `getHero` receives 27 at depth 3
+and remains a call. The equipped valuation receives 111 and remains a call.
+All 41 retail blocks agree, with no remaining call-target differences.
+
 ## 7. Using it
 
 ```sh

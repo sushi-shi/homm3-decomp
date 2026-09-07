@@ -2742,8 +2742,8 @@ void unnamed526d20(int playerId, int* costs, int flag)
 // Dreamcast fixes the negative artifact guard, four scalar assignments and
 // helper call. Complete additionally expands GetPrimarySkill/GetMaxMana and
 // therefore exposes the byte-proven 1..99 clamps before the helper body.
-// Residual (64.3119%): instructions are exact through the entire seven-slot
-// scan and the 12-call multiset agrees. Inside std::sort, retail calls the
+// Residual (64.3242%): control flow agrees through the entire seven-slot
+// scan. Inside std::sort, retail calls the
 // short-path _Insertion_sort_1 and expands the long-path copy; VC6 makes the
 // opposite per-site choice (39 versus 37 blocks, one extra branch). Moving
 // the helper back to its DC lexical position and adding explicit `inline`
@@ -2754,6 +2754,12 @@ void unnamed526d20(int playerId, int* costs, int flag)
 // records. That type control leaves this constructor byte-flat.
 // The early-return probe is not retained: the scope rows do not distinguish
 // it from an else arm. The original sort helper and comparator stay canonical.
+// Dreamcast philai.cpp:1344..1347 and retail +0x372 clear power, duration,
+// mana, then stack value. Restoring that order raised 64.3119 -> 64.3242%.
+// The verified C2 trace locates the sort frontier: _Insertion_sort_1 costs
+// 112, receives 115 at the short-path depth-five site and 88 at the later
+// long-path site. The first expansion spends the budget needed by the
+// second. This is a per-site budget mismatch, not a comparator-count error.
 // Before normalization (locals): new_hero.
 VA(0x00526d40, 0x393)  // anchor-global, dc 0x10f37c
 type_spellvalue::type_spellvalue(const hero* newHero)
@@ -2763,10 +2769,10 @@ type_spellvalue::type_spellvalue(const hero* newHero)
             ARTIFACT_SPELLBOOK)
         || const_cast<hero*>(m_ourHero)->isWieldingArtifact(
             ARTIFACT_ORB_OF_INHIBITION)) {
-        m_stackValue = 0;
         m_power = 0;
         m_duration = 0;
         m_mana = 0;
+        m_stackValue = 0;
     } else {
         m_stackValue = m_ourHero->m_army.getAIValue();
         m_power = m_ourHero->getPrimarySkill(2);

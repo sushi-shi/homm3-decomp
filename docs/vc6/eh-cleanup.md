@@ -103,6 +103,23 @@ function. One side having no frame must still report the difference. Its
 negative control uses the builders' old no-frame shape against retail's
 catch transcript and verifies that EH evidence precedes inline suggestions.
 
+## A nested scope can remove cleanup stores without changing the EH transcript
+
+In `type_artifact_quest::doProgressDialog` (0x56fbc0), the returned string
+outlives the resource vector. Enclosing only the vector, its population loop,
+and the dialog call in a nested block removes three vector-field zero stores
+after deletion. VC6 also stops reserving EBX for zero and restores retail's
+ESI/EDI saves. The active TU build reproduces the probe body exactly and raises
+MAX from 75.2353% to 89.8471%; all twelve CFG blocks retain their branch targets.
+
+Flattening that scope is the negative control and restores the old bytes.
+The order of construction and destruction, string lifetime, and emitted EH
+state transitions remain unchanged. Named mutable/const strings and aggregate
+resource initialization are byte-identical controls within the nested scope.
+Thus matching the EH transcript alone does not settle the lexical scopes.
+The Complete quest has no Dreamcast counterpart; the nested scope is a
+retail-supported hypothesis, not a recovered source fact.
+
 ## Reading a divergence
 
 `diagnose` reports two kinds.

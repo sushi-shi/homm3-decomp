@@ -6005,6 +6005,13 @@ void NewfullMap::newfullMapFn00505F20(CObject* object, int objectType,
 // takes unsigned x/y (MapCell.h:565). A fixed-grid do/while is only 57.67%.
 // The prior 62.35% remains banked; these controls do not settle the missing
 // per-site compiler state.
+// Mixed read subscripts also fail: draw/passable [] with shadow/trigger
+// .test is 40.45%; the inverse is 38.82% (both 576 bytes). Neither recovers
+// retail's pair of retained test calls; keep all four source reads as .test.
+// A const input view with all four [] reads is 38.28% (608 bytes): the
+// byte-verified trace admits every depth-two test (cost 58, budgets
+// 63/67/74/88). Direct .test likewise admits all four at depth one, with
+// budgets 956/814/672/465. Const access alone does not explain the frontier.
 //
 // The image name, sizes, four masks, recommended-terrain mask, type, subtype
 // and underlay flag cross here. hasTrigger, triggerCell, slotCategory and

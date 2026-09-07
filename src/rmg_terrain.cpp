@@ -286,6 +286,16 @@ int rmgTerrainPainter::getTerrain(const TRmgGridPoint& point)
     return getPackedCell(point)->getTerrain();
 }
 
+unsigned int rmgTerrainPainter::getWidth() const
+{
+    return m_width;
+}
+
+unsigned int rmgTerrainPainter::getHeight() const
+{
+    return m_height;
+}
+
 // The base-frame paths in PaintPoint and PaintTransitions first compute
 // strength, then load the selected rule's virtual receiver. Keep that shared
 // evaluation boundary and the captured terrain index across the first call.
@@ -771,71 +781,111 @@ void rmgTerrainPainter::repairTerrainPoint(const TRmgGridPoint& point)
 // reversed dimension product, explicit vector fill, postfix edge increments,
 // function-scope terrain, transition initializer, and earlier tile declaration
 // are byte-flat. These do not establish the missing source/helper state.
+// Scoped neighbour coordinates followed by the canonical += translation
+// restore the retained vector _Ufill call and reach 81.5196%. A value-returning
+// point + offset instead introduces 11 copy-ctor and six += calls (74.9229%);
+// copying the point into each scoped local rather than constructing from its
+// coordinates is 78.6334%. Translating the three left-edge neighbours is
+// byte-identical to the retained direct-coordinate form.
+// Dimension accessor calls then reach 84.0645% (2240 bytes, 68/66 blocks).
+// Unused accessor definitions leave the 81.5196% body unchanged. Only the
+// right-edge southwest cache read still over-inlines: getPackedCell costs
+// 90 and receives 104; the following bottom-edge reads receive 127/145.
+// A shared index helper and both comparison/guard-return terrain predicates
+// are byte-identical at this checkpoint; none is retained as extra interface.
 VA(0x005B5A70, 0x8A7)  // caller cluster reaches Complete RMG; retail-only
 void rmgTerrainPainter::paintTransitions()
 {
-    std::vector<unsigned char> edgeCounts(m_width * m_height);
+    std::vector<unsigned char> edgeCounts(getWidth() * getHeight());
     TRmgGridPoint point;
 
-    for (point.m_y = 0; point.m_y < m_height - 1; ++point.m_y) {
+    for (point.m_y = 0; point.m_y < getHeight() - 1; ++point.m_y) {
         int terrain = getTerrain(TRmgGridPoint(0, point.m_y));
 
         if (getTerrain(TRmgGridPoint(1, point.m_y)) != terrain) {
-            ++edgeCounts[point.m_y * m_width];
-            ++edgeCounts[point.m_y * m_width + 1];
+            ++edgeCounts[point.m_y * getWidth()];
+            ++edgeCounts[point.m_y * getWidth() + 1];
         }
         if (getTerrain(TRmgGridPoint(1, point.m_y + 1)) != terrain) {
-            ++edgeCounts[point.m_y * m_width];
-            ++edgeCounts[(point.m_y + 1) * m_width + 1];
+            ++edgeCounts[point.m_y * getWidth()];
+            ++edgeCounts[(point.m_y + 1) * getWidth() + 1];
         }
         if (getTerrain(TRmgGridPoint(0, point.m_y + 1)) != terrain) {
-            ++edgeCounts[point.m_y * m_width];
-            ++edgeCounts[(point.m_y + 1) * m_width];
+            ++edgeCounts[point.m_y * getWidth()];
+            ++edgeCounts[(point.m_y + 1) * getWidth()];
         }
 
-        for (point.m_x = 1; point.m_x < m_width - 1; ++point.m_x) {
+        for (point.m_x = 1; point.m_x < getWidth() - 1; ++point.m_x) {
             terrain = getTerrain(point);
 
-            if (getTerrain(TRmgGridPoint(point.m_x + 1, point.m_y)) != terrain) {
-                ++edgeCounts[point.m_y * m_width + point.m_x];
-                ++edgeCounts[point.m_y * m_width + point.m_x + 1];
+            {
+                TRmgGridPoint nearby(point.m_x, point.m_y);
+                nearby += TPoint(1, 0);
+                if (getTerrain(nearby) != terrain) {
+                    ++edgeCounts[point.m_y * getWidth() + point.m_x];
+                    ++edgeCounts[point.m_y * getWidth() + point.m_x + 1];
+                }
             }
-            if (getTerrain(TRmgGridPoint(point.m_x + 1, point.m_y + 1)) != terrain) {
-                ++edgeCounts[point.m_y * m_width + point.m_x];
-                ++edgeCounts[(point.m_y + 1) * m_width + point.m_x + 1];
+            {
+                TRmgGridPoint nearby(point.m_x, point.m_y);
+                nearby += TPoint(1, 1);
+                if (getTerrain(nearby) != terrain) {
+                    ++edgeCounts[point.m_y * getWidth() + point.m_x];
+                    ++edgeCounts[(point.m_y + 1) * getWidth() + point.m_x + 1];
+                }
             }
-            if (getTerrain(TRmgGridPoint(point.m_x, point.m_y + 1)) != terrain) {
-                ++edgeCounts[point.m_y * m_width + point.m_x];
-                ++edgeCounts[(point.m_y + 1) * m_width + point.m_x];
+            {
+                TRmgGridPoint nearby(point.m_x, point.m_y);
+                nearby += TPoint(0, 1);
+                if (getTerrain(nearby) != terrain) {
+                    ++edgeCounts[point.m_y * getWidth() + point.m_x];
+                    ++edgeCounts[(point.m_y + 1) * getWidth() + point.m_x];
+                }
             }
-            if (getTerrain(TRmgGridPoint(point.m_x - 1, point.m_y + 1)) != terrain) {
-                ++edgeCounts[point.m_y * m_width + point.m_x];
-                ++edgeCounts[(point.m_y + 1) * m_width + point.m_x - 1];
+            {
+                TRmgGridPoint nearby(point.m_x, point.m_y);
+                nearby += TPoint(-1, 1);
+                if (getTerrain(nearby) != terrain) {
+                    ++edgeCounts[point.m_y * getWidth() + point.m_x];
+                    ++edgeCounts[(point.m_y + 1) * getWidth() + point.m_x - 1];
+                }
             }
         }
 
         terrain = getTerrain(point);
-        if (getTerrain(TRmgGridPoint(point.m_x, point.m_y + 1)) != terrain) {
-            ++edgeCounts[point.m_y * m_width + point.m_x];
-            ++edgeCounts[(point.m_y + 1) * m_width + point.m_x];
+        {
+            TRmgGridPoint nearby(point.m_x, point.m_y);
+            nearby += TPoint(0, 1);
+            if (getTerrain(nearby) != terrain) {
+                ++edgeCounts[point.m_y * getWidth() + point.m_x];
+                ++edgeCounts[(point.m_y + 1) * getWidth() + point.m_x];
+            }
         }
-        if (getTerrain(TRmgGridPoint(point.m_x - 1, point.m_y + 1)) != terrain) {
-            ++edgeCounts[point.m_y * m_width + point.m_x];
-            ++edgeCounts[(point.m_y + 1) * m_width + point.m_x - 1];
+        {
+            TRmgGridPoint nearby(point.m_x, point.m_y);
+            nearby += TPoint(-1, 1);
+            if (getTerrain(nearby) != terrain) {
+                ++edgeCounts[point.m_y * getWidth() + point.m_x];
+                ++edgeCounts[(point.m_y + 1) * getWidth() + point.m_x - 1];
+            }
         }
     }
 
-    for (point.m_x = 0; point.m_x < m_width - 1; ++point.m_x) {
+    for (point.m_x = 0; point.m_x < getWidth() - 1; ++point.m_x) {
         int terrain = getTerrain(point);
-        if (getTerrain(TRmgGridPoint(point.m_x + 1, point.m_y)) != terrain) {
-            ++edgeCounts[point.m_y * m_width + point.m_x];
-            ++edgeCounts[point.m_y * m_width + point.m_x + 1];
+        {
+            TRmgGridPoint nearby(point.m_x, point.m_y);
+            nearby += TPoint(1, 0);
+            if (getTerrain(nearby) != terrain) {
+                ++edgeCounts[point.m_y * getWidth() + point.m_x];
+                ++edgeCounts[point.m_y * getWidth() + point.m_x + 1];
+            }
         }
     }
 
-    for (point.m_y = 0; point.m_y < m_height; ++point.m_y) {
-        for (point.m_x = 0; point.m_x < m_width; ++point.m_x) {
-            unsigned int index = point.m_y * m_width + point.m_x;
+    for (point.m_y = 0; point.m_y < getHeight(); ++point.m_y) {
+        for (point.m_x = 0; point.m_x < getWidth(); ++point.m_x) {
+            unsigned int index = point.m_y * getWidth() + point.m_x;
 
             if (edgeCounts[index] > 0) {
                 int neighbours[8];
