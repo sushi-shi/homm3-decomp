@@ -905,7 +905,7 @@ struct TRmgMapItem {
 // one base identity. The painting coordinates are the unsigned grid type.
 class TRmgMapInterface {
 public:
-    virtual ~TRmgMapInterface() {}
+    virtual ~TRmgMapInterface();
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile) = 0;
     virtual void setOverlay(const TRmgGridPoint& point, int value) = 0;

@@ -318,6 +318,15 @@ TRmgMapAdapterInterface::~TRmgMapAdapterInterface()
 {
 }
 
+// Complete-only base of the owned map view, exact on the first scored
+// candidate. The derived deleting destructor at 0x5324e0 and two CreateRiver
+// cleanup paths call this retained vptr restoration; Dreamcast has no RMG
+// compiland.
+VA(0x00532510, 0x07)
+TRmgMapInterface::~TRmgMapInterface()
+{
+}
+
 // The boundary coordinator constructs both a temporary zone and owned
 // water zones through this same retained body. The final three members are
 // vectors; 0x53d9ae/0x53da0d prove signed-short connection distances.
