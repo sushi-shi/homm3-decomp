@@ -8,7 +8,7 @@
 // consumer rather than substituting an opaque pure-virtual placeholder.
 class TAbstractFile {
 public:
-    virtual ~TAbstractFile() {}
+    virtual ~TAbstractFile();
     virtual int read(void* data, int size) = 0;
     virtual int write(const void* data, int size) = 0;
 };

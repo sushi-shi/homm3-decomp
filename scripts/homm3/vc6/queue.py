@@ -4,6 +4,8 @@
 Banked-exact functions stay out even if their current score dips. Size breaks
 score ties; recoverable bytes weight the remaining distance to 100%.
 `--admission` explicitly lists functions without compiled source bodies.
+`--smallest` combines both populations, orders them by retail size, and
+omits RVAs recorded in the simple-match parked ledger.
 `--diagnose` adds a full solver-routing census to the otherwise cheap ranking.
 Both modes write generated evidence, compile nothing, and never edit source.
 """
@@ -18,6 +20,9 @@ HEADER = ("class", "recoverable", "max_fuzzy", "current_fuzzy", "size",
           "unit", "fn", "route", "knob")
 ADMISSION_HEADER = ("state", "size", "rva", "relation", "owner",
                     "candidates", "label", "action")
+SMALLEST_HEADER = ("state", "size", "va", "current_fuzzy", "max_fuzzy",
+                   "hist_fuzzy", "owner", "candidates", "label",
+                   "relation", "action")
 EXACT = 100.0 - 1e-6
 
 
@@ -32,6 +37,82 @@ def _load_maxima(path=None):
     from homm3.match.status import load_baseline
     path = path or (_common.REPO / "config/match_baseline.tsv")
     return {key: row.best for key, row in load_baseline(path).items()}
+
+
+def _parked_rvas_from_text(text):
+    """Read the hand-maintained simple-campaign ledger."""
+    header = None
+    parked = set()
+    for line in text.splitlines():
+        if line.startswith("#") or not line.strip():
+            continue
+        fields = line.split("\t")
+        if header is None:
+            header = fields
+            if "rva" not in header:
+                raise ValueError("simple-match parked ledger lacks an rva column")
+            continue
+        row = dict(zip(header, fields))
+        try:
+            parked.add(int(row["rva"], 16))
+        except (KeyError, ValueError) as error:
+            raise ValueError(f"invalid parked-ledger row: {line}") from error
+    return parked
+
+
+def _smallest_rows_from_parts(data, baseline, admission_rows, category,
+                              sizes, compiled, parked):
+    """Combine admitted and unadmitted targets into one RVA-owned queue."""
+    peaks = {}
+    for row in baseline.values():
+        if row.rva is None:
+            continue
+        maximum, historical = peaks.get(row.rva, (0.0, 0.0))
+        peaks[row.rva] = max(maximum, row.max), max(historical, row.hist)
+
+    rows = {}
+    for unit_data in data.get("units", []):
+        unit = (unit_data.get("name") or unit_data.get("id") or "").split("/")[-1]
+        for fn in unit_data.get("functions", []):
+            name = fn.get("name", "")
+            key = unit, name
+            if key not in compiled:
+                continue
+            checkpoint = baseline.get(key)
+            if checkpoint is None or checkpoint.rva is None:
+                raise ValueError(f"compiled report row lacks checkpoint RVA: {unit}:{name}")
+            rva = checkpoint.rva
+            if category.get(rva) not in ("target", "zlib") or rva in parked:
+                continue
+            maximum, historical = peaks.get(rva, (checkpoint.max, checkpoint.hist))
+            if maximum >= EXACT:
+                continue
+            current = fn.get("fuzzy_match_percent")
+            candidate = {
+                "state": "compiled", "size": sizes[rva], "rva": rva,
+                "current": float(current) if current is not None else None,
+                "maximum": maximum, "historical": historical,
+                "owner": unit, "candidates": unit, "label": name,
+                "relation": "admitted",
+                "action": "run the evidence pass and iterate up to five scored candidates",
+            }
+            previous = rows.get(rva)
+            if previous is None or (candidate["current"] or 0) > (previous["current"] or 0):
+                rows[rva] = candidate
+
+    for admission in admission_rows:
+        rva = admission["rva"]
+        maximum, _ = peaks.get(rva, (0.0, 0.0))
+        if rva in rows or rva in parked or maximum >= EXACT:
+            continue
+        rows[rva] = {
+            **admission, "current": None, "maximum": 0.0,
+            "historical": 0.0,
+        }
+
+    out = list(rows.values())
+    out.sort(key=lambda row: (row["size"], row["rva"]))
+    return out
 
 
 def _compiled_functions(data):
@@ -222,6 +303,64 @@ def _run_admission(args) -> int:
     return 0
 
 
+def _run_smallest(args) -> int:
+    from homm3.match import status, universe
+
+    report_path = _common.REPO / "build/objdiff/report.json"
+    baseline_path = _common.REPO / "config/match_baseline.tsv"
+    links_path = _common.REPO / "evidence/link-order/functions.tsv"
+    parked_path = _common.REPO / "config/simple-match-parked.tsv"
+    if not report_path.is_file():
+        _common.die("no build/objdiff/report.json - run `homm3 build` first")
+
+    data = json.loads(report_path.read_text())
+    baseline = status.load_baseline(baseline_path)
+    categories, sizes = universe.classify()
+    admission = _admission_rows_from_text(
+        data, baseline_path.read_text(),
+        links_path.read_text() if links_path.is_file() else "",
+        categories, sizes)
+    parked = _parked_rvas_from_text(
+        parked_path.read_text() if parked_path.is_file() else "")
+    rows = _smallest_rows_from_parts(
+        data, baseline, admission, categories, sizes,
+        _compiled_functions(data), parked)
+
+    only = set(filter(None, (args.unit or "").split(",")))
+    if only:
+        rows = [row for row in rows if row["owner"] in only or
+                any(candidate in only for candidate in
+                    row["candidates"].split(",") if candidate)]
+
+    out = _common.REPO / "evidence/smallest-match-queue.tsv"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    with out.open("w") as stream:
+        stream.write("# GENERATED: homm3 vc6 queue --smallest - regenerate, never hand-edit.\n")
+        stream.write("# Independent retail targets, smallest first; parked RVAs omitted.\n")
+        stream.write("\t".join(SMALLEST_HEADER) + "\n")
+        for row in rows:
+            stream.write("\t".join((
+                row["state"], str(row["size"]),
+                f"0x{row['rva'] + 0x400000:08x}",
+                f"{row['current']:.4f}" if row["current"] is not None else "-",
+                f"{row['maximum']:.4f}", f"{row['historical']:.4f}",
+                row["owner"], row["candidates"], row["label"],
+                row["relation"], row["action"].replace("\t", " "),
+            )) + "\n")
+
+    print(f"[queue] {len(rows)} active unmatched target(s), smallest first; "
+          f"{len(parked)} parked")
+    for row in rows[:getattr(args, "limit", 20) or None]:
+        score = (f"MAX {row['maximum']:7.4f}%" if row["state"] == "compiled"
+                 else "unadmitted  ")
+        identity = row["label"] or "(unnamed)"
+        owner = row["owner"] or row["candidates"] or "?"
+        print(f"  {row['size']:6d} B  0x{row['rva'] + 0x400000:08x}  "
+              f"{score}  {row['state']:<19} {owner}:{identity[:64]}")
+    print(f"\nwrote {out.relative_to(_common.REPO)}")
+    return 0
+
+
 def _run_polish(args) -> int:
     only = set(filter(None, (args.unit or "").split(",")))
     rows, failed = [], []
@@ -316,4 +455,8 @@ def run(args) -> int:
         _common.die("--limit must be >= 0")
     if getattr(args, "admission", False):
         return _run_admission(args)
+    if getattr(args, "smallest", False):
+        if getattr(args, "diagnose", False):
+            _common.die("--diagnose is only available for the polish queue")
+        return _run_smallest(args)
     return _run_polish(args)

@@ -14,6 +14,11 @@
 #include "resourcemanager.h"
 #include "textresource.h"
 
+// Retail retains bitset<19>::_Tidy for the first slot-mask initializer.  An
+// explicit class instantiation before this TU's first bitset use makes VC6
+// emit that canonical Dinkumware COMDAT; the linker may discard the other
+// unreferenced members independently.
+template class std::bitset<19>;
 namespace {
 
 // Column 2 of artraits.txt names the final physical slot, while column 20

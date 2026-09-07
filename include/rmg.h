@@ -10,11 +10,32 @@
 
 class TAbstractFile;
 class TSpreadsheetResource;
+class type_random_map_generator;
 struct TRmgTownSlot;
 struct TRmgZone;
 struct rmgTerrainTile;
 struct TPoint;
 struct TObjectType;
+
+// The abstract progress sink driven by Complete's random-map generator.
+// Retail constructor 0x530e20 stores vtable 0x6409c0, the step total at +4,
+// and zero at +8. The vtable holds a scalar deleting destructor at 0x530e40,
+// SetTotal at 0x530e80, and _purecall in the Advance slot.
+class TProgressSink {
+public:
+    // Before normalization: steps.
+    int m_steps;
+    // Before normalization: done.
+    int m_done;
+
+    TProgressSink(int totalSteps);
+    virtual ~TProgressSink();
+    // Before normalization (function): TProgressSink::SetTotal.
+    virtual void setTotal(int totalSteps);
+    // Before normalization (function): TProgressSink::Advance.
+    virtual void advance(int amount) = 0;
+};
+SIZE(TProgressSink, 0xc);
 
 // Complete's random-map object factories share this five-dword prefix.  The
 // constructor at 0x534160 writes the four fields, while vtable 0x640b64 proves
@@ -815,6 +836,21 @@ public:
     virtual void write(TAbstractFile* outfile, int parameter);
 };
 
+// Factory 0x5348d0 allocates this 0x2c-byte derived object after reserving a
+// hero. Vtable 0x640b14 slot 1 releases that reservation through the generator
+// at +0x1c; the original Complete-only class spelling is unavailable.
+class rmgHeroObject : public type_object {
+public:
+    type_random_map_generator* m_generator; // +0x1c
+    int m_objectId;                         // +0x20
+    int m_heroIndex;                        // +0x24
+    int m_unknown28;                        // +0x28
+
+    virtual void unknownOperation();
+    virtual void write(TAbstractFile* outfile, int parameter);
+};
+SIZE(rmgHeroObject, 0x2c);
+
 struct TRmgMapItem {
     // Before normalization: objects.
     std::vector<type_object*> m_objects;    // +0x00
@@ -830,6 +866,8 @@ struct TRmgMapItem {
     TRmgGroundTileData m_tileData;          // +0x28
     // Before normalization: connection.
     TRmgConnectionDecoration m_connection;  // +0x2c
+
+    void clear();
 
     // CreateRiver's predicate reads shift the high tile bits and test a
     // byte result. These queries recover that boundary; direct field tests
@@ -885,7 +923,7 @@ struct TRmgMapItem {
 // one base identity. The painting coordinates are the unsigned grid type.
 class TRmgMapInterface {
 public:
-    virtual ~TRmgMapInterface() {}
+    virtual ~TRmgMapInterface();
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile) = 0;
     virtual void setOverlay(const TRmgGridPoint& point, int value) = 0;
@@ -897,7 +935,22 @@ public:
 
 class TRmgMapAdapterInterface {
 public:
-    virtual ~TRmgMapAdapterInterface() {}
+    virtual ~TRmgMapAdapterInterface();
+    virtual void setTile(
+        const TRmgGridPoint& point, const rmgTerrainTile& tile) = 0;
+    virtual void setOverlay(const TRmgGridPoint& point, int value) = 0;
+    virtual TRmgGridPoint getSize() = 0;
+    virtual rmgTerrainTile getTile(const TRmgGridPoint& point) = 0;
+    virtual int getLand(const TRmgGridPoint& point) = 0;
+    virtual int getOverlay(const TRmgGridPoint& point) = 0;
+};
+
+// The road-decoration adapter has the same seven-slot shape but a distinct
+// abstract vtable at 0x640a20. Its concrete subclass writes the packed road
+// fields through the bodies beginning at 0x532360.
+class TRmgRoadMapAdapterInterface {
+public:
+    virtual ~TRmgRoadMapAdapterInterface();
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile) = 0;
     virtual void setOverlay(const TRmgGridPoint& point, int value) = 0;
@@ -955,6 +1008,8 @@ public:
     virtual int getLand(const TRmgGridPoint& point);
     virtual int getOverlay(const TRmgGridPoint& point);
 
+    void clear();
+
     TRmgMapItem* getMapItem(int x, int y);
     // Before normalization (function): type_random_map::GetMapItem.
     inline TRmgMapItem* getMapItem(int x, int y, int z)
@@ -992,6 +1047,21 @@ public:
     virtual int getOverlay(const TRmgGridPoint& point);
 };
 
+// Cinit 0x55ed70/0x55f2f0 passes a pattern count and a source int array to
+// the retained constructor at 0x4f9be0. That constructor allocates the copied
+// pattern ids, then records the first index and occurrence count for each of
+// the nine pattern values.
+struct TRmgLinePatternTable {
+    int m_patternCount;
+    int* m_patterns;
+    int m_firstIndex[9];
+    int m_valueCount[9];
+
+    TRmgLinePatternTable(int patternCount, const int* patterns);
+    ~TRmgLinePatternTable();
+};
+SIZE(TRmgLinePatternTable, 0x50);
+
 class TRmgLinePainter {
 public:
     // Before normalization: size.
@@ -1007,13 +1077,12 @@ public:
 
     // Before normalization (function): TRmgLinePainter::GetPattern.
     virtual void* getPattern(int value);
-    // Before normalization (function): TRmgLinePainter::PaintTile.
-    virtual void paintTile(int value, const TRmgMapPosition& tile);
-    // Before normalization (function): TRmgLinePainter::PaintOverlay.
-    virtual void paintOverlay(int value, const TRmgMapPosition& tile);
+    virtual void setTile(
+        const TRmgGridPoint& point, const rmgTerrainTile& tile);
+    virtual void setOverlay(const TRmgGridPoint& point, int value);
     virtual int canPaint(const TRmgGridPoint& point);
-    virtual void paintNeighbour(int value, const TRmgMapPosition& tile);
-    virtual int paintPoint(const TRmgGridPoint& point);
+    virtual rmgTerrainTile getTile(const TRmgGridPoint& point);
+    virtual int getLand(const TRmgGridPoint& point);
 };
 
 class TRmgLineWalker {
@@ -1038,6 +1107,39 @@ public:
         int newRiverType,
         const TRmgGridPoint& start);
     virtual ~TRmgRiverPainter();
+};
+
+// The road-building cluster at 0x548040 uses a parallel painter hierarchy.
+// Its base and derived vtables at 0x6411f0/0x64120c differ from the river
+// hierarchy's 0x641174/0x641190 tables, while retaining the same line-painting
+// interface shape. Original Complete-only class spellings are unavailable.
+class TRmgRoadLinePainter {
+public:
+    TRmgGridPoint m_size;
+    TRmgMapAdapterInterface* m_adapter;
+
+    inline TRmgRoadLinePainter(TRmgMapAdapterInterface* newAdapter)
+        : m_size(newAdapter->getSize()), m_adapter(newAdapter)
+    {
+    }
+    ~TRmgRoadLinePainter() {}
+
+    virtual void* getPattern(int value);
+    virtual void setTile(
+        const TRmgGridPoint& point, const rmgTerrainTile& tile);
+    virtual void setOverlay(const TRmgGridPoint& point, int value);
+    virtual int canPaint(const TRmgGridPoint& point);
+    virtual rmgTerrainTile getTile(const TRmgGridPoint& point);
+    virtual int getLand(const TRmgGridPoint& point);
+};
+
+class TRmgRoadPainter : public TRmgRoadLinePainter, public TRmgLineWalker {
+public:
+    TRmgRoadPainter(
+        TRmgMapAdapterInterface* newAdapter,
+        int newRoadType,
+        const TRmgGridPoint& start);
+    virtual ~TRmgRoadPainter();
 };
 
 // A generated zone owns both its template metadata and the Complete-only
@@ -1369,6 +1471,7 @@ SIZE(TRmgMapItem, 0x30);
 SIZE(type_random_map, 0x18);
 SIZE(TRmgMapInterface, 0x04);
 SIZE(TRmgMapAdapterInterface, 0x04);
+SIZE(TRmgRoadMapAdapterInterface, 0x04);
 SIZE(TRmgMapAdapter, 0x08);
 SIZE(TRmgLinePainter, 0x10);
 SIZE(TRmgLineWalker, 0x10);

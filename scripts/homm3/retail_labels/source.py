@@ -253,6 +253,7 @@ CHAR_STREAM_MEMBERS = (
     ("?pbackfail@?$basic_stringbuf@D", None, "stringbuf_pbackfail"),
     ("?underflow@?$basic_stringbuf@D", None, "stringbuf_underflow"),
     ("?substr@?$basic_string@D", None, "basic_string_substr"),
+    ("?max_size@?$basic_string@D", "QBEIXZ", "basic_string_max_size"),
     ("?_Grow@?$basic_string@D", None, "basic_string_grow"),
     ("?append@?$basic_string@D", "@ABV12@II@Z", "basic_string_append_str"),
     ("?append@?$basic_string@D", "@PBDI@Z", "basic_string_append_ptr"),
@@ -423,6 +424,7 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "BITSET_TIDY", "BITSET_CTOR",
                  "BITSET_SUBSCRIPT", "BITSET_REFERENCE_ASSIGN",
                  "BITSET_ITERATOR_DEREF",
+                 "BITSET_AND_ASSIGN",
                  "BITSET_FLIP",
                  "BITSET_COUNT", "BITSET_ANY", "BITSET_SET",
                  "BITSET_TEST", "BITSET_XRAN", "BITSET_XINV",
@@ -450,10 +452,13 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "DEQUE_CONST_ITERATOR_CTOR",
                  "DEQUE_CONST_ITERATOR_CTOR_NODE",
                  "TREE_CONST_ITERATOR_CTOR",
-                 "TREE_ITERATOR_EQUAL", "TREE_LOWER_BOUND",
+                 "TREE_ITERATOR_EQUAL", "TREE_LOWER_BOUND", "TREE_UPPER_BOUND",
+                 "TREE_EQUAL_RANGE", "MAP_INSERT",
                  "STREAMBUF_XSPUTN",
                  "PAIR_CONST_INT_DTOR", "PAIR_CTOR",
                  "STD_CONSTRUCT", "STD_COPY",
+                 "STD_DISTANCE", "STD_DISTANCE_TAGGED",
+                 "LOCAL_STATIC_DTOR",
                  "CLASS_CTOR",
                  "IMPLICIT_COPY_CTOR", "IMPLICIT_COPY_ASSIGN",
                  "IMPLICIT_DTOR"}
@@ -1050,6 +1055,15 @@ def _demangle_key(mangled: str):
     `Class_operator_equal` / `Class_operator_not_equal` spellings. The four
     arithmetic operators keep their operation and simple qualified owner;
     other special operators return None."""
+    # VC6 gives a function-local static's registered teardown a named `$A`
+    # function symbol derived from the datum and its containing function.
+    # Keep the datum name as the semantic owner; the ordinary STATIC_DTOR
+    # path is reserved for anonymous `$E<n>` compiler thunks.
+    local_static_dtor = re.match(
+        r"^\?([A-Za-z_]\w*)@\?1\?\?.+@\$[A-Z]V", mangled)
+    if local_static_dtor:
+        return f"{local_static_dtor.group(1).lower()}@local_static_dtor"
+
     tree_value = re.search(
         r"\?\$_Tree@H(?:V|U)\?\$pair@\$\$CBH(?:V|U)([A-Za-z_]\w*)@",
         mangled)
@@ -1104,6 +1118,12 @@ def _demangle_key(mangled: str):
     # in retail, which the size oracle can read only when both are claimed.
     if mangled.startswith("?lower_bound@?$_Tree@") and tree_owner:
         return f"{tree_owner.lower()}@tree_lower_bound"
+    if mangled.startswith("?upper_bound@?$_Tree@") and tree_owner:
+        return f"{tree_owner.lower()}@tree_upper_bound"
+    if mangled.startswith("?equal_range@?$_Tree@") and tree_owner:
+        return f"{tree_owner.lower()}@tree_equal_range"
+    if mangled.startswith("?insert@?$map@V?$basic_string@D"):
+        return "string@map_insert"
     # _Tree's two _Copy overloads and its node eraser. `_Copy` is
     # overloaded on the SAME class, so the two arms are separate kinds
     # rather than one two-member group: the node form is the one whose
@@ -1136,6 +1156,16 @@ def _demangle_key(mangled: str):
         return f"{tree_owner.lower()}@tree_init"
     if mangled.startswith("??4?$_Tree@") and tree_owner:
         return f"{tree_owner.lower()}@tree_copy_assign"
+    # Dinkumware's bidirectional `distance` path retains both the public
+    # three-argument wrapper and the tag-dispatched overload.  They have the
+    # same algorithm and tree owner, but the extra iterator-category argument
+    # removes one otherwise-redundant parameter store in VC6, so keep separate
+    # keys rather than relying on link order to identify the 43/40-byte pair.
+    if mangled.startswith("?_Distance@std@@") and tree_owner:
+        member = ("std_distance_tagged"
+                  if "Ubidirectional_iterator_tag@" in mangled
+                  else "std_distance")
+        return f"{tree_owner.lower()}@{member}"
     # The two bound searches. Same class, same 73-byte shape, and they
     # differ only in which way round the key compare runs, so they are
     # separate kinds for the same reason `_Copy` and `erase` are: a
@@ -1261,6 +1291,8 @@ def _demangle_key(mangled: str):
             return f"bitset{bitset_width}@bitset_subscript"
         if mangled.startswith("??4reference@?$bitset@"):
             return f"bitset{bitset_width}@bitset_reference_assign"
+        if mangled.startswith("??_4?$bitset@"):
+            return f"bitset{bitset_width}@bitset_and_assign"
         for member in (
                 "_Tidy", "_Xran", "_Xinv", "flip", "count", "any", "set",
                 "test"):
@@ -2113,7 +2145,7 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             claim_keys.setdefault(f"{owner}@bitset_tidy", []).append(row)
             continue
         bitset_member = next((member for member in (
-            "ctor", "subscript", "reference_assign", "flip", "count",
+            "ctor", "subscript", "reference_assign", "and_assign", "flip", "count",
             "any", "set", "test", "xran", "xinv")
             if f"$bitset_{member}$" in row["name"]), None)
         if bitset_member is not None:
@@ -2210,7 +2242,8 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             (kind for kind in ("std_sort_0", "std_sort", "std_median",
                                "std_unguarded_partition",
                                "std_unguarded_insert",
-                               "std_copy_backward", "std_fill")
+                               "std_copy_backward", "std_fill",
+                               "std_distance", "std_distance_tagged")
              if f"${kind}$" in row["name"]), None)
         if algorithm is not None:
             owner = row["name"].rsplit("$", 1)[1].lower()
@@ -2222,6 +2255,7 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                                "tree_init", "tree_copy_assign",
                                "tree_const_iterator_ctor",
                                "tree_iterator_equal", "tree_lower_bound",
+                               "tree_upper_bound", "tree_equal_range",
                                "deque_const_iterator_ctor_node",
                                "deque_const_iterator_ctor",
                                "deque_erase")
@@ -2229,6 +2263,10 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
         if tree_or_deque is not None:
             owner = row["name"].rsplit("$", 1)[1].lower()
             claim_keys.setdefault(f"{owner}@{tree_or_deque}", []).append(row)
+            continue
+        if "$map_insert$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}@map_insert", []).append(row)
             continue
         char_member = next(
             (member for _p, _s, member in CHAR_STREAM_MEMBERS
@@ -2258,6 +2296,11 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
         if "$std_copy$" in row["name"]:
             owner = row["name"].rsplit("$", 1)[1].lower()
             claim_keys.setdefault(f"{owner}@std_copy", []).append(row)
+            continue
+        if "$local_static_dtor$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(
+                f"{owner}@local_static_dtor", []).append(row)
             continue
         if "$class_ctor$" in row["name"]:
             owner = row["name"].rsplit("$", 1)[1].lower()
@@ -2830,6 +2873,8 @@ def selftest() -> list[str]:
             "bitset145@bitset_iterator_deref",
         "??4reference@?$bitset@$04@std@@QAEAAV012@_N@Z":
             "bitset5@bitset_reference_assign",
+        "??_4?$bitset@$03@std@@QAEAAV01@ABV01@@Z":
+            "bitset4@bitset_and_assign",
         "?flip@?$bitset@$0BM@@std@@QAEAAV12@XZ":
             "bitset28@bitset_flip",
         "?count@?$bitset@$0BM@@std@@QBEIXZ": "bitset28@bitset_count",
@@ -2906,6 +2951,10 @@ def selftest() -> list[str]:
         "U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@"
         "QAE?AViterator@12@ABQAVCImmEnclosure@@@Z":
             "cimmenclosure@tree_lower_bound",
+        "?upper_bound@?$_Tree@PAVCImmEnclosure@@"
+        "U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@"
+        "QAE?AViterator@12@ABQAVCImmEnclosure@@@Z":
+            "cimmenclosure@tree_upper_bound",
         # ...and the same three over a map keyed by VALUE, to prove the
         # owner is read and not hardcoded to the pointer arm.
         "??0const_iterator@?$_Tree@HU?$pair@$$CBH"

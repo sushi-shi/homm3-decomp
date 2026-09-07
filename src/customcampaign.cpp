@@ -1858,9 +1858,21 @@ void TCampaignBrief::ScenarioStruct::loadMapHeader(
     mapHeader->read(&file, which);
 }
 
-// TAbstractFile's deleting destructor; retail keeps this object's copy
-// (the vftable 0x63dac0 slot 0), being the first in link order to
-// instantiate the class.
+// TAbstractFile's ordinary destructor is visible here: retail retains its
+// seven-byte body and expands the same vftable store into the deleting thunk.
+// The body and all 19 retail callers restore vftable 0x63dac0; no
+// TAbstractFile procedure exists in the Dreamcast CodeView corpus. Keeping
+// the body inline, either in or after the class, emits no candidate symbol;
+// this ordinary boundary is exact on its first scored candidate. A full
+// dependent rebuild changes call/inline decisions in eight previously exact
+// TAbstractFile consumers; their historical MAX remains banked.
+VA(0x00487e00, 0x07)
+TAbstractFile::~TAbstractFile()
+{
+}
+
+// Retail keeps this object's deleting-destructor copy (vftable 0x63dac0
+// slot 0), being the first in link order to instantiate the class.
 VA_COMPGEN(0x00487dd0, 0x23, SCALAR_DELETING_DTOR, TAbstractFile)
 
 // Complete-only. PruneCrossoverHeroes' first pass calls this on every
@@ -1905,6 +1917,18 @@ void TCampaignBrief::ScenarioStruct::markCrossoverHeroes(unsigned char* wanted)
 // The indexed-loop negative control loses that two-field end test. An older
 // set/test probe was 28.45%; the retained reference idiom is independently
 // supported by retail's reference::operator=(bool) calls at all three widths.
+// Retail keeps the destination iterator dereference at 0x48eb40 out of line:
+// it copies the iterator's bitset pointer and position directly into the
+// returned bitset<144>::reference. The generic header body is the matching
+// source operation; this specialization records the retained customcampaign
+// boundary immediately before its only caller.
+template<>
+std::bitset<144>::reference bitset_iterator<144>::operator*() const
+{
+    return (*m_bits)[m_position];
+}
+VA_COMPGEN(0x0048eb40, 0x14, BITSET_ITERATOR_DEREF, Bitset144)
+
 // The serialization and prerequisite-insert inline boundaries remain unfinished.
 // Retail puts each absent-text arm first and retains the allocated MapTextStruct
 // in EDI across all three reads. Null-first branches raise 70.55 -> 73.36%; the
@@ -3579,6 +3603,11 @@ VA_COMPGEN(0x0048d8d0, 0x38, VECTOR_UCOPY, type_artifact_vector)
 
 // COMDAT pairing: hero::copy_backward, mnemonic agreement 0.918.
 VA_COMPGEN(0x0048e880, 0x3B, STD_COPY_BACKWARD, hero)
+
+// The adjacent hero fill walks the same 0x492-byte records forward and
+// invokes hero::operator= once per element.  Its sole non-loop relocation
+// and all 42 bytes identify the specialization independently of link order.
+VA_COMPGEN(0x0048e850, 0x2A, STD_FILL, hero)
 
 // COMDAT pairing: hero::_Ufill, mnemonic agreement 0.913.
 VA_COMPGEN(0x0048d970, 0x2C, VECTOR_UFILL, hero)

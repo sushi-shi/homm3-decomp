@@ -195,6 +195,11 @@ inline std::vector<TObjectType::TImageInfo>& getObjectImageCache()
     return imageCache;
 }
 
+// The accessor registers this function-local vector teardown with atexit.
+// Retail frees imageCache's allocation and clears its three pointer fields;
+// the named cache relocation distinguishes the 42-byte static destructor.
+VA_COMPGEN(0x00514930, 0x2A, LOCAL_STATIC_DTOR, imageCache)
+
 // Retail 0x514610, TObjectType::setImageName - the .msk cache loader and
 // the registry's growth path. Two function-local statics with SEPARATE
 // guard bytes: the image-name registry at 0x69cb80 (guard 0x69cb64, which
@@ -280,6 +285,7 @@ inline std::vector<TObjectType::TImageInfo>& getObjectImageCache()
 // grows from 20 to 39 bytes and replaces rep movsd with six individual
 // load/store pairs. Coordinate constructors taking values or references
 // are neutral when the empty point is initialized before the row count.
+VA_COMPGEN(0x00517b50, 0x14, STD_CONSTRUCT, TImageInfo)
 //
 // Further boundary controls do not close the residual: an ordinary free
 // GetIndex is neutral; a separate registry-append helper changes nested
@@ -840,6 +846,9 @@ VA_COMPGEN(0x0051a120, 0xCC, CLASS_CTOR, basic_string)
 // COMDAT pairing: _Tree<string,...>::insert(const value_type&), agreement
 // 0.969, and the pair<iterator,bool> constructor it returns through,
 // agreement 1.000 - the latter is 0x51af50's only call into this span.
+// setImageName retains map<string,int>::insert as a thin hidden-return
+// wrapper around the tree insertion below.
+VA_COMPGEN(0x00517B70, 0x2C, MAP_INSERT, string)
 VA_COMPGEN(0x0051af50, 0x156, TREE_INSERT, string)
 VA_COMPGEN(0x0051b150, 0x18, CLASS_CTOR, pair)
 
@@ -1101,3 +1110,8 @@ VA_COMPGEN(0x00515260, 0xF, IMPLICIT_DTOR, basic_istream)
 // carve, not the codegen.
 VA_COMPGEN(0x00515270, 0x207, ISTREAM_EXTRACT_INT, char)
 VA_COMPGEN(0x00517830, 0x2BE, ISTREAM_EXTRACT_STRING, char)
+
+// TObjectTypeTable::load calls this specialization twice, and the RMG object
+// table supplies the third retail call. The signed magic division by the
+// proven 0x4c TObjectType stride distinguishes it from every pointer vector.
+VA_COMPGEN(0x0054C910, 0x21, VECTOR_SIZE, TObjectType)

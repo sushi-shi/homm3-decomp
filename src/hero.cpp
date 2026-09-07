@@ -8352,6 +8352,13 @@ std::bitset<48,unsigned* std::bitset<48,unsigned long>::reference::operator=(uns
 // it is the honest minimum: no vendored headers, no `#define private
 // public`, no explicit instantiation.
 // ---------------------------------------------------------------------
+// Retail 0x48d940 is the shared vector<int>::_Ufill COMDAT: its guarded
+// dword-fill loop is called by vector<int> users across the image, including
+// button::setHotkey and hero's vector<int>::push_back.  The retail link does
+// not identify one owning compiland, while hero.obj naturally emits the exact
+// specialization from its recovered source uses.
+VA_COMPGEN(0x0048d940, 0x26, VECTOR_UFILL, int)
+
 #pragma inline_depth(0)
 // Before normalization (function): h3_stl_comdat_anchor.
 void h3StlComdatAnchor(std::vector<int>& v, const int& value,

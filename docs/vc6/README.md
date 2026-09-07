@@ -72,6 +72,13 @@ dips. The census records recoverable bytes as remaining work. `--diagnose`
 adds solver routing; `--admission` explicitly lists functions without compiled
 bodies. Both modes write generated evidence.
 
+`homm3 vc6 queue --smallest` is the bounded quick-match campaign view. It
+combines admitted residuals and unadmitted retail targets by RVA, sorts them by
+retail byte size, and omits RVAs recorded in `config/simple-match-parked.tsv`.
+It uses the current implementation's MAX for exactness and keeps HIST visible
+as lost-peak evidence. Its generated output is
+`evidence/smallest-match-queue.tsv`.
+
 Before invoking disassembly, the router requires a unique emitted function
 shared by the compiled and delinked objects. File-static functions qualify;
 undefined symbols and local assembly labels do not. A missing comparison body
