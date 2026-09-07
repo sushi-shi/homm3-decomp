@@ -77,6 +77,10 @@ def _build_parser() -> argparse.ArgumentParser:
     pi.add_argument("--fn")
     pi.add_argument("--json", action="store_true")
 
+    pl = ss.add_parser("il-locals", help="candidate local symbols from recorded function-body offsets")
+    pl.add_argument("unit", help="unit in config/units.toml")
+    pl.add_argument("--fn", required=True, help="exact mangled name or unique function-name substring")
+
     pp = ss.add_parser("predict-inline", help="inline-structure divergence "
                        "(which callees retail inlines vs we do)")
     _solver_arguments(pp)
@@ -94,7 +98,7 @@ def _build_parser() -> argparse.ArgumentParser:
     pw.add_argument("--tries", type=int, default=1,
                     help="v2: model-proposed candidates to compile (default 1)")
     pw.add_argument("--il-order", action="store_true",
-                    help="v2: derive pseudo order from the captured IL handles")
+                    help="v2: show candidate front-end local-handle order")
 
     pw.add_argument("--json", action="store_true")
 
@@ -173,6 +177,7 @@ def _build_parser() -> argparse.ArgumentParser:
 _TOOLS = {
     "argv": ("argv", "run"),
     "il-diff": ("il", "run_diff"),
+    "il-locals": ("il", "run_locals"),
     "predict-inline": ("inline_model", "run_predict"),
     "why-reg": ("reg_model", "run_why"),
     "trace-registers": ("register_trace", "run"),

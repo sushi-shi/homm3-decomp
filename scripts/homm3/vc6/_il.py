@@ -118,8 +118,9 @@ def scan_names(data: bytes, highwater: int | None = None,
 
       symbol    ``<u16 handle> 00 <name>`` (0e/01-opcode records) -
                 handle at o-3.
-      local     ``01 <scope> <u16 handle> 02 00 00 <name>`` - the rich-TU
-                ``sy`` form emitted by the pinned C1XX.
+      local     ``01 <tag> <u16 handle> 00 <name>`` (observed tags
+                00/01/02/04/05), or the rich-TU form
+                ``01 <tag> <u16 handle> 02 00 00 <name>``.
       embedded  ``<00> <u16 handle> <name>`` - no separator; when both
                 handle bytes are printable they head the run itself
                 (initialize.cpp: ``02 00  49 27  '$kTown0Buildings'`` =
@@ -157,7 +158,8 @@ def scan_names(data: bytes, highwater: int | None = None,
         if i >= 4 and data[i - 4] == 0x0E:
             strong = (i - 3, u16(data, i - 3))
         elif (i >= 5 and data[i - 5:i - 3] in
-              (b"\x01\x00", b"\x01\x01")):
+              (b"\x01\x00", b"\x01\x01", b"\x01\x02",
+               b"\x01\x04", b"\x01\x05")):
             strong = (i - 3, u16(data, i - 3))
         elif (i >= 7 and data[i - 7] == 0x01
               and data[i - 3:i] == b"\x02\x00\x00"):
@@ -185,6 +187,64 @@ def scan_names(data: bytes, highwater: int | None = None,
                     break
         i = j + 1
     return out
+
+
+def read_signed_offset(data: bytes, off: int) -> tuple[int, int]:
+    """C2 reader 0x1ca09: signed byte, or 80 followed by signed LE dword.
+
+    Return (value, next byte). Truncated fields are errors, never zero.
+    The function-symbol reader uses two successive fields for EX and SY
+    starts (stores at 0x1d22d and 0x1d235); see docs/vc6/il-format.md.
+    """
+    if off < 0 or off >= len(data):
+        raise ValueError("missing IL offset")
+    if data[off] != 0x80:
+        return struct.unpack_from("b", data, off)[0], off + 1
+    if off + 5 > len(data):
+        raise ValueError("truncated extended IL offset")
+    return struct.unpack_from("<i", data, off + 1)[0], off + 5
+
+
+def fn_body_offsets(gl: bytes, names: list[dict], ex_size: int,
+                    sy_size: int) -> list[dict]:
+    """Observed function records with paired EX/SY starts.
+
+    This remains an overlay: only the strongly framed 0e named form and
+    the observed attribute-tail marker are supported. A unique, bounded
+    pair is required; ambiguous pairs fail instead of choosing one. SY
+    starts identify bodies, unlike the function's declaration-time handle.
+    """
+    out = []
+    for k, rec in enumerate(names):
+        off, name = rec["off"], rec["name"]
+        if (off < 1 or gl[off - 1] != 0x0e
+                or not name.startswith("?")
+                or gl[off + 2:off + 3] != b"\0"):
+            continue
+        start = off + 3 + len(name) + 1
+        end = names[k + 1]["off"] if k + 1 < len(names) else len(gl)
+        tail = gl[start:min(end, start + 96)]
+        pairs = []
+        p = tail.find(FN_EXOFF_MARKER)
+        while p >= 0:
+            next_search = p + 1
+            try:
+                ex, cursor = read_signed_offset(tail, p + 2)
+                sy, cursor = read_signed_offset(tail, cursor)
+            except ValueError:
+                pass
+            else:
+                if 0 < ex < ex_size and 0 <= sy < sy_size:
+                    pairs.append((ex, sy))
+                    # The high zero bytes of EX followed by SY's 80 can
+                    # resemble another marker inside this same pair.
+                    next_search = cursor
+            p = tail.find(FN_EXOFF_MARKER, next_search)
+        if len(pairs) > 1:
+            raise ValueError(f"ambiguous EX/SY offsets for {name}")
+        if pairs:
+            out.append({**rec, "ex": pairs[0][0], "sy": pairs[0][1]})
+    return sorted(out, key=lambda r: r["sy"])
 
 
 def fn_ex_offsets(gl: bytes, names: list[dict], ex_size: int) -> list[tuple[int, str]]:
