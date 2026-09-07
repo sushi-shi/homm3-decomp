@@ -2871,6 +2871,13 @@ VA_COMPGEN(0x004347A0, 0x32E, VECTOR_INSERT, TRmgMapPosition)
 // ICF-identical; this TU naturally emits the TRmgMapPosition specialization.
 VA_COMPGEN(0x0054DD60, 0x15, STD_CONSTRUCT, TRmgMapPosition)
 
+// Retail vector<TRmgObjectPlacementRule>::insert at 0x54c730 retains its
+// 41-byte _Ufill loop at 0x54d8f0 and the 260-byte _Construct body at
+// 0x54dd80.  The current insert expands that loop while still calling
+// _Construct at each site; its much larger caller body confirms this is an
+// unresolved nested-inliner boundary.  Recover the insert before claiming
+// _Ufill rather than manufacturing an unrelated ODR use.
+
 // ReadObjectPlacementRules retains the allocator-taking int-vector ctor;
 // its two local vector grids also take the default-constructor closure's
 // address. Resolved retail bodies are 27/27 and 24/24 bytes respectively.
