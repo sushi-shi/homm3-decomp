@@ -28,8 +28,8 @@ Subcommands
         and the catch funclet addresses. A body where retail has a try and
         we have none is a target, not an inliner wall.
   state-sweep [--trials 30] [--jobs 4] [--bank]
-        Compile transient declaration forests once per affected TU, score all
-        rows with CUR < HIST together, reproduce improvements, and bank MAX.
+        Place transient forests beside each affected function, compile them once
+        per TU, score CUR < HIST rows together, reproduce gains, and bank MAX.
   check [--argv|--il|--inline|--reg|--locator|--all]
         The gates (each ships a negative control).
 
@@ -168,7 +168,7 @@ def _build_parser() -> argparse.ArgumentParser:
     ps = ss.add_parser("state-sweep", help="batch transient TU-state search for "
                        "all CUR < HIST rows")
     ps.add_argument("--trials", type=int, default=30,
-                    help="deterministic declaration forests per TU (default 30)")
+                    help="target-local grouped forest trials per TU (default 30)")
     ps.add_argument("--seed", type=int, default=20260906)
     ps.add_argument("--jobs", type=int, default=4,
                     help="parallel VC6 compiles (default 4)")
