@@ -3287,6 +3287,7 @@ rmg	?_Inc@const_iterator@?$_Tree@UTPoint@@U1@U_Kfn@?$set@UTPoint@@U?$less@UTPoin
 rmg	?_Ucopy@?$vector@UTRmgNoiseRegion@@V?$allocator@UTRmgNoiseRegion@@@std@@@std@@IAEPAUTRmgNoiseRegion@@PBU3@0PAU3@@Z	100.0000	100.0000	100.0000	0x14d960	-
 rmg	?_Ufill@?$vector@UTRmgNoiseRegion@@V?$allocator@UTRmgNoiseRegion@@@std@@@std@@IAEXPAUTRmgNoiseRegion@@IABU3@@Z	100.0000	100.0000	100.0000	0x14d9a0	-
 rmg	?appendZonePositions@type_random_map_generator@@QAEXPAUTRmgZone@@0AAV?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@std@@@Z	83.4857	83.4857	83.4857	0x13ae80	7eb6d3efae14
+rmg	?assembleTreasureGroup@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgTreasureGroup@@EHH@Z	72.3188	72.3188	72.3188	0x1466e0	486f40d3e1c5
 rmg	?assignRmgTeams@@YIXHHHPBEPAD@Z	100.0000	100.0000	100.0000	0x14ab40	252158e80300
 rmg	?buildOutline@TRmgObjectPropertiesRef@@QAEXXZ	100.0000	100.0000	100.0000	0x132c80	f14838d15aff
 rmg	?buildOverlapPriorities@TRmgObjectPropertiesRef@@QAEXXZ	100.0000	100.0000	100.0000	0x132e40	dee98657ed05
@@ -3449,6 +3450,8 @@ rmg	?writeMap@type_random_map_generator@@QAEEPAVTAbstractFile@@@Z	95.5071	95.507
 rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	93.2864	93.2864	95.7066	0x149cb0	cea479ed55a5
 rmg	?writeRmgObjectPrototype@@YIXPAVTAbstractFile@@PAUTObjectType@@@Z	94.9532	94.9532	94.9532	0x14ae30	effc9f7f30cb
 rmg	TRmgGeneratorBase_decorateMapCell	0.0000	0.0000	0.0000	0x1373a0	b61b573f5494
+rmg	TRmgTreasureGroup_addGuard	0.0000	0.0000	0.0000	0x135110	70498bcabc05
+rmg	TRmgTreasureGroup_traceOutline	0.0000	0.0000	0.0000	0x135ee0	df9df363ff53
 rmg	TRmgZone_chooseTerrain	0.0000	0.0000	0.0000	0x132ab0	9c889de3a9a1
 rmg	__h3cg$rmg$static_ctor$g_rmgRiverPatternTable	100.0000	100.0000	100.0000	0x15ed70	-
 rmg	__h3cg$rmg$static_ctor$g_rmgRoadPatternTable	100.0000	100.0000	100.0000	0x15f2f0	-
@@ -3458,9 +3461,9 @@ rmg	__h3cg$rmg$vector_destroy$TRmgObjectPlacementRule	0.0000	100.0000	100.0000	0
 rmg	__h3cg$rmg$vector_insert_single$TRmgObjectPlacementRule	0.0000	100.0000	100.0000	0x14c730	-
 rmg	__h3cg$rmg$vector_ucopy$TRmgObjectPlacementRule	0.0000	100.0000	100.0000	0x14d8b0	-
 rmg	__h3cg$rmg$vector_ufill$TRmgObjectPlacementRule	0.0000	100.0000	100.0000	0x14d8f0	-
-rmg	type_random_map_generator_assembleTreasureGroup	0.0000	0.0000	0.0000	0x1466e0	e4bc5a463ac1
 rmg	type_random_map_generator_canPlaceTreasureGroup	0.0000	0.0000	0.0000	0x146c70	e6807dbb4201
 rmg	type_random_map_generator_commitTreasureGroup	0.0000	0.0000	0.0000	0x1469b0	0d47c2224963
+rmg	type_random_map_generator_fillTreasureGroup	0.0000	0.0000	0.0000	0x146520	de7ee8c5a819
 rmg_support	??0TRmgBoundaryVertex@@QAE@UTPoint@@PAUTRmgZone@@01@Z	100.0000	100.0000	100.0000	0x1fcef0	cf2bb081468e
 rmg_support	??0TRmgLinePatternTable@@QAE@IPBH@Z	100.0000	100.0000	100.0000	0xf9be0	0265024cf345
 rmg_support	??0TRmgMapPosition@@QAE@HHH@Z	100.0000	100.0000	100.0000	0x1355c0	7d51c45007f5
@@ -3946,7 +3949,7 @@ singleselectionwindow	?onGameHeaderInfoMsg@TSingleSelectionWindow@@QAEEPAVCNetMs
 singleselectionwindow	?onGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x189b20	8e4147210f6f
 singleselectionwindow	?onKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0	7c981f53347e
 singleselectionwindow	?onKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	f183438c0b88
-singleselectionwindow	?onKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0	19df4c126528
+singleselectionwindow	?onKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0	19df4c126528
 singleselectionwindow	?onMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2193	90.2193	90.2193	0x189710	7126e292297e
 singleselectionwindow	?onNameClick@TSingleSelectionWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x18b620	ba916481d9d5
 singleselectionwindow	?onNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18b510	5ecad9defc70
