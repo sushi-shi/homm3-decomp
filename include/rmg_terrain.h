@@ -151,6 +151,11 @@ struct TRmgTerrainPatternEntry {
 // Fixed table at retail 0x6424a8; the Complete-only source name is unknown.
 extern const TRmgTerrainPatternEntry g_rmgTerrainPatterns[];
 
+// The table constructor at 0x5b3940 builds 116 first/count pairs from the
+// fixed pattern records. The stateless table rule consumes the first pair.
+DATA(0x006A4158)
+extern TRmgTerrainPatternRange g_rmgTerrainPatternRanges[116];
+
 // Constructor 0x5b3780 copies its entry array and builds 58 first/count
 // ranges at +0x14. This data-backed rule supplies vtable 0x642c98; its
 // original Complete-only class name is unavailable.

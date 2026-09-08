@@ -9531,6 +9531,10 @@ VA_COMPGEN(0x00434680, 0x4D, VECTOR_ERASE, type_creature_source)
 // 0x434c70 - four dwords, `add ecx,0x10` - which is claimed there and exact.
 VA_COMPGEN(0x00434ba0, 0x43, VECTOR_UCOPY, type_creature_source)
 
+// The retained uninitialized fill copies the three dwords of each
+// type_creature_source record.  The emitted loop agrees with all 58 bytes.
+VA_COMPGEN(0x0054d580, 0x3A, VECTOR_UFILL, type_creature_source)
+
 // COMDAT pairing: vector<pathCell>::_Ucopy, agreement 0.952; the
 // type_creature_source arm scores 0.531 at operand level.
 VA_COMPGEN(0x00434bf0, 0x3D, VECTOR_UCOPY, pathCell)

@@ -321,6 +321,47 @@ int TRmgPatternTerrainRule::getEntry(int index)
     return m_entries[index].m_frame;
 }
 
+// The base-frame selector keeps a zero-tagged old entry. Otherwise it picks
+// the secondary range with the rule's strength-scaled percentage, falling
+// back to the primary range, then chooses uniformly within that range.
+VA(0x005B3890, 0x58)
+int TRmgPatternTerrainRule::selectBaseFrame(int value, int oldFrame)
+{
+    if (oldFrame == -1 || m_entries[oldFrame].m_frame != 0) {
+        TRmgTerrainPatternRange* range;
+        if (m_ranges[1].m_count > 0) {
+            unsigned int chance =
+                static_cast<unsigned int>(m_defaultFrame * value) / 8;
+            if (static_cast<unsigned int>(rand() % 100) < chance)
+                range = &m_ranges[1];
+            else
+                range = &m_ranges[0];
+        } else {
+            range = &m_ranges[0];
+        }
+        oldFrame = rand() % range->m_count + range->m_firstIndex;
+    }
+    return oldFrame;
+}
+
+// Transition ranges are stored as two first/count pairs per transition.
+// This selector uses the first pair and preserves an old frame whose entry
+// already names the requested transition; the requested flip is copied out.
+VA(0x005B38F0, 0x41)
+int TRmgPatternTerrainRule::selectTransitionFrame(
+    int transition,
+    TRmgTerrainFlip requestedFlip,
+    TRmgTerrainFlip& selectedFlip,
+    int oldFrame)
+{
+    if (oldFrame == -1 || m_entries[oldFrame].m_frame != transition) {
+        TRmgTerrainPatternRange& range = m_ranges[transition * 2];
+        oldFrame = rand() % range.m_count + range.m_firstIndex;
+    }
+    selectedFlip = requestedFlip;
+    return oldFrame;
+}
+
 // The sole caller is the static initializer at 0x5b3da0. Retail clears the
 // two inherited rule flags and installs vtable 0x642cb0.
 VA(0x005B3A20, 0x11)  // Complete-only table terrain rule
@@ -350,6 +391,20 @@ VA(0x005B3A80, 0x11)
 int TRmgTableTerrainRule::getEntry(int index)
 {
     return g_rmgTerrainPatterns[index].m_frame;
+}
+
+// Slot 4 chooses from the first generated range when there is no old frame or
+// the old pattern has a nonzero frame tag. A zero-tagged pattern preserves the
+// caller's old index; keeping that index in EAX gives retail's shared return.
+VA(0x005B3AA0, 0x31)  // vtable 0x642cb0 slot 4; Complete-only table rule
+int TRmgTableTerrainRule::selectBaseFrame(int, int oldFrame)
+{
+    if (oldFrame == -1
+        || g_rmgTerrainPatterns[oldFrame].m_frame != 0) {
+        oldFrame = rand() % g_rmgTerrainPatternRanges[0].m_count
+            + g_rmgTerrainPatternRanges[0].m_firstIndex;
+    }
+    return oldFrame;
 }
 
 // Provisional role spelling. The fastcall ABI and two-byte output are fixed
@@ -1683,12 +1738,24 @@ rmgTerrainPainter::~rmgTerrainPainter()
 // reference. The retained two-store body is 24 bytes including ret 8.
 VA_COMPGEN(0x005B76B0, 0x18, CLASS_CTOR, TRmgGridPoint)
 
+// The terrain painter constructor erases a range of packed two-byte cells.
+// The naturally emitted specialization agrees with all 53 retail bytes.
+VA_COMPGEN(0x005B8020, 0x35, VECTOR_ERASE, TRmgPackedTerrainCell)
+
 // PaintPoint and TRmgTerrainBrush::changeTerrain retain this one-dword
 // iterator wrapper around the tree's raw-node lower bound.
 VA_COMPGEN(0x005B85A0, 0x17, TREE_LOWER_BOUND, TRmgGridPoint)
 // PaintPoint retains the two-bound wrapper returning its iterator pair.
 VA_COMPGEN(0x005B85C0, 0x2C, TREE_EQUAL_RANGE, TRmgGridPoint)
 VA_COMPGEN(0x005B8A20, 0x17, TREE_UPPER_BOUND, TRmgGridPoint)
+
+// The retained public wrappers above delegate to these raw-node searches.
+VA_COMPGEN(0x005B8A40, 0x59, TREE_LBOUND, TRmgGridPoint)
+VA_COMPGEN(0x005B8B60, 0x59, TREE_UBOUND, TRmgGridPoint)
+
+// The painter owns std::set<TRmgGridPoint> work queues. Their retained tree
+// teardown, allocator release, and VC6 lock scope identify this destructor.
+VA_COMPGEN(0x005B4860, 0x6E, IMPLICIT_DTOR, set)
 
 // erase(key) in TRmgTerrainBrush::changeTerrain retains Dinkumware's
 // public distance wrapper and its category-dispatched overload. The wrapper
