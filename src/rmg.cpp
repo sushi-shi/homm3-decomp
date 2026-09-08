@@ -3259,6 +3259,16 @@ unsigned char type_random_map_generator::canPlaceZone(TRmgZone* zone)
     return 1;
 }
 
+// Candidate selector 0x53b970 passes an existing center, the zone being
+// placed and its 12-byte position vector. Retail samples offsets around
+// the center and appends positions accepted by canPlaceZone. Provisional
+// role name; Complete-only, no Dreamcast counterpart.
+#if 0 // @carcass
+VA(0x0053AE80, 0x36A) // anchor-callee 0x53bab9/0x53bb23; thiscall, ret 0xc
+void type_random_map_generator::appendZonePositions(TRmgZone* center,
+    TRmgZone* zone, std::vector<TRmgMapPosition>& candidates) {} // @stub
+#endif
+
 // Both connection-count passes in FilterZonePositions retain the same
 // vector-size and CanConnect calls. Keep the shared operation as one
 // ordinary helper; its source name/boundary remain retail hypotheses.
@@ -3391,6 +3401,51 @@ void type_random_map_generator::filterZonePositions(
         if (bestSize < candidateSize)
             candidates.erase(candidates.begin() + candidate);
     }
+}
+
+// Complete-only zone-position selector. The first zone starts at the
+// origin on either eligible level; later zones sample template neighbors,
+// falling back to all placed zones before applying the shared filter.
+// Retail retains the candidate append/filter calls and chooses an unsigned
+// vector index with rand() % size(). Role-derived name, no DC counterpart.
+// Residual (96.8731%): preserving the destination slot pointer restores
+// the connection-loop CFG (89.72 -> 92.86%); separate count/index locals
+// restore the entire final random-selection sequence. The remaining real
+// delta is the two single-element vector insert calls: VC6 expands their
+// wrapper and calls count-insert, whereas retail retains the 540-byte
+// single-insert body at 0x54c3f0. Keep the original vector interface.
+VA(0x0053B970, 0x232) // anchor-callee 0x53bde2/0x53be39; thiscall, ret 8
+void type_random_map_generator::positionZone(TRmgZone* zone, int mapSize)
+{
+    std::vector<TRmgMapPosition> candidates;
+    if (m_zones.size() == 0) {
+        zone->m_levelPosition.m_y = 0;
+        zone->m_levelPosition.m_z = 0;
+        zone->m_levelPosition.m_x = 0;
+        candidates.insert(candidates.end(), zone->getLevelPosition());
+        if (m_map.m_numberLevels > 1) {
+            zone->m_levelPosition.m_x = 0;
+            zone->m_levelPosition.m_y = 0;
+            zone->m_levelPosition.m_z = 1;
+            if (canPlaceZone(zone))
+                candidates.insert(candidates.end(), zone->getLevelPosition());
+        }
+    } else {
+        TRmgTownSlot* slot = zone->m_slot;
+        for (int connection = 0; connection < slot->m_connections.size(); ++connection) {
+            TRmgTownSlot* destination = slot->m_connections[connection].m_destination;
+            if (destination->m_zoneIndex < m_zones.size())
+                appendZonePositions(m_zones[destination->m_zoneIndex], zone, candidates);
+        }
+        if (candidates.size() == 0) {
+            for (int other = 0; other < m_zones.size(); ++other)
+                appendZonePositions(m_zones[other], zone, candidates);
+        }
+        filterZonePositions(zone, candidates, mapSize);
+    }
+    unsigned int count = candidates.size();
+    unsigned int selected = rand() % count;
+    zone->setLevelPosition(candidates[selected]);
 }
 
 // Retained by generation coordinator 0x549930; retail-only role/ABI.
