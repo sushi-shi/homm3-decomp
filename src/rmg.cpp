@@ -579,11 +579,27 @@ unsigned char type_random_map::canPlaceObject(
     return result;
 }
 
-// The neighboring setTile slot remains parked. Its generic tile input carries
-// land, river, and road kinds, whereas m_landType is currently an enum bitfield.
-// Recover that storage/interface boundary before assigning the integer input
-// through an enum cast. Direct writes scored 39.38%; packed and retail-order
-// snapshots scored 52.10%; captured-input and pointer forms peaked at 69.21%.
+// Terrain vtable 0x6409cc slot 1 stores the generic adapter's integer
+// kind and frame, then its two flip bytes. Retail's mask/sign-extension
+// pair proves signed integer storage; the same generic interface also
+// carries road and river kinds. Preserve that domain through selection and
+// terrain-copy locals rather than introducing an int-to-enum conversion.
+// Exact: a 97-candidate input-order/binding batch found 24 exact forms.
+// Capture both flip bytes before the frame: the prior flipY/frame/flipX
+// order gives 69.2143%, with the same one-block CFG and no call differences.
+VA(0x00532190, 0x6D) // anchor-vtable + packed-field writes; retail-only
+void type_random_map::setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile)
+{
+    TRmgMapItem& item = m_mapItems[point.m_y * m_mapWidth + point.m_x];
+    unsigned char flipY = tile.m_flipY;
+    unsigned char flipX = tile.m_flipX;
+    int frame = tile.m_frame;
+    int terrain = tile.m_terrain;
+    item.m_tile.m_landType = terrain;
+    item.m_tile.m_terrainFrame = frame;
+    item.m_tileData.m_terrainFlipX = flipX;
+    item.m_tileData.m_terrainFlipY = flipY;
+}
 
 // Slot 2 updates only the packed eight-bit terrain frame.
 VA(0x00532200, 0x3C)
@@ -3108,11 +3124,11 @@ VA(0x0053FCB0, 0x5EC) // anchor-callee 0x544a31; thiscall, ret 0; retail-only
 void type_random_map_generator::repairWaterZoneBorders()
 {
     TRmgMapItem* current = m_map.m_mapItems;
-    TTerrainType terrain;
+    int terrain;
     TRmgMapPosition position;
     TRmgMapPosition nearby;
     std::vector<TRmgMapPosition> positions;
-    std::vector<TTerrainType> terrains;
+    std::vector<int> terrains;
     for (position.m_z = 0; position.m_z < m_map.m_numberLevels; ++position.m_z) {
         for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y) {
             for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x, ++current) {
@@ -3207,7 +3223,7 @@ void type_random_map_generator::repairWaterZoneBorders()
                 m_progress->advance(20);
         }
         if (positions.size()) {
-            TTerrainType lastTerrain = terrains[0];
+            int lastTerrain = terrains[0];
             type_random_map levelMap(m_map.getMapItem(0, 0, position.m_z),
                 m_map.m_mapWidth, m_map.m_mapHeight);
             TRmgTerrainBrush brush(&levelMap, lastTerrain, 4);
@@ -3703,7 +3719,7 @@ unsigned char type_random_map_generator::canPlaceShipyard(TRmgMapPosition positi
         if (nearby.m_x < 0 || nearby.m_x >= m_map.m_mapWidth)
             continue;
         TRmgMapItem* item = m_map.getMapItem(nearby);
-        TTerrainType terrain = item->m_tile.m_landType;
+        int terrain = item->m_tile.m_landType;
         if (terrain == eTerrainWater && item->hasSubterraneanGate())
             break;
     }
@@ -3716,7 +3732,7 @@ unsigned char type_random_map_generator::canPlaceShipyard(TRmgMapPosition positi
         nearby.m_x -= 3;
     if (nearby.m_x < 0 || nearby.m_x >= m_map.m_mapWidth)
         return 0;
-    TTerrainType terrain = m_map.getMapItem(nearby)->m_tile.m_landType;
+    int terrain = m_map.getMapItem(nearby)->m_tile.m_landType;
     return terrain != eTerrainWater;
 }
 
@@ -4369,7 +4385,7 @@ int getRmgGuardValue(int value, int strength)
 // the leading source's register/CFG combination; the existing source stays put.
 VA(0x00546040, 0x141) // anchor-callee openConnectionPath; thiscall, ret 0x0c
 TRmgObjectPropertiesRef* type_random_map_generator::selectObjectPrototype(
-    TTerrainType terrain, int objectType, int subtype)
+    int terrain, int objectType, int subtype)
 {
     std::vector<TRmgObjectPropertiesRef*> candidates;
     for (unsigned int index = 0; index < m_objectPrototypes[objectType].size(); ++index) {
@@ -4397,7 +4413,7 @@ TRmgObjectPropertiesRef* type_random_map_generator::selectObjectPrototype(
 // role name; both the cell owner and this retained helper boundary are proven.
 // Exact: the four canonical bitfield assignments reproduce all 73 bytes.
 VA(0x00546940, 0x49) // anchor-callers + packed cell fields; thiscall ret 0x10
-void TRmgMapItem::setTerrain(TTerrainType terrain, int frame,
+void TRmgMapItem::setTerrain(int terrain, int frame,
     unsigned char flipX, unsigned char flipY)
 {
     m_tile.m_landType = terrain;
@@ -4958,7 +4974,7 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
         int deltaIndex = sourceIsSnow
             ? g_snowRiverDeltaIndex[direction]
             : g_landRiverDeltaIndex[direction];
-        TTerrainType landType = mapItem->m_tile.m_landType;
+        int landType = mapItem->m_tile.m_landType;
         int prototypeIndex = 0;
         for (; prototypeIndex < m_objectPrototypes[TERRAIN_RIVER_DELTA].size();
              ++prototypeIndex) {
