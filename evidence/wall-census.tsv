@@ -90,7 +90,6 @@ not diagnosed	109	83.2252	83.2252	0.0000	83.2252	652	seerhut	?doProposalDialog@t
 not diagnosed	305	83.3598	83.3598	0.0000	83.3598	1834	combatoptionswindow	?combatOptionsWindowHandler@@YIHAAVmessage@@@Z	diagnose	-
 not diagnosed	144	83.4857	83.4857	0.0000	83.4857	874	rmg	?appendZonePositions@type_random_map_generator@@QAEXPAUTRmgZone@@0AAV?$vector@UTRmgMapPosition@@V?$allocator@UTRmgMapPosition@@@std@@@std@@@Z	diagnose	-
 not diagnosed	51	83.5794	83.5794	0.0000	83.5794	313	bitmap16	?draw@Bitmap16Bit@@QBEXHHHHPAGHHHHH_N@Z	diagnose	-
-not diagnosed	96	83.6191	83.6191	0.0000	83.6191	585	ai_player	?splitArmies@@YIXPAVhero@@PBV1@PBVarmyGroup@@@Z	diagnose	-
 not diagnosed	321	83.7153	83.7153	0.0000	83.7153	1972	rmg	?buildRoadCostMap@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	diagnose	-
 not diagnosed	542	83.8044	85.0958	1.2914	83.8044	3348	game	?transmitSaveGame@game@@QAEHHHEE@Z	diagnose	-
 not diagnosed	120	83.8710	96.9556	13.0846	83.8710	747	game	?viewArmy@game@@QAEXAAVarmyGroup@@HPBVhero@@PBVtown@@HHEE@Z	diagnose	-
@@ -519,6 +518,7 @@ not diagnosed	10	97.6434	97.6434	0.0000	97.6434	408	command	?checkSetMouseDirect
 not diagnosed	19	97.6539	97.6539	0.0000	97.6539	815	search	?enterLith@searchArray@@QAEXPBVhero@@PBV?$vector@Utype_point@@V?$allocator@Utype_point@@@std@@@std@@JJPAUpathCell@@JW4type_search_type@@@Z	diagnose	-
 not diagnosed	34	97.6611	97.6611	0.0000	97.6611	1451	command	?main@combatManager@@UAEHAAVmessage@@@Z	diagnose	-
 not diagnosed	5	97.7093	97.7093	0.0000	97.7093	201	bitmap16	?grab@Bitmap16Bit@@QAEXPBGHHHHH@Z	diagnose	-
+not diagnosed	13	97.7143	97.7143	0.0000	97.7143	585	ai_player	?splitArmies@@YIXPAVhero@@PBV1@ABVarmyGroup@@@Z	diagnose	-
 not diagnosed	14	97.7237	97.7237	0.0000	97.7237	604	cursor	?animateMove@advManager@@QAEXPAVhero@@HHH@Z	diagnose	-
 not diagnosed	37	97.7675	97.7675	0.0000	97.7675	1674	bottomviewsubwindow	??0TBottomViewHero@@QAE@PAVheroWindow@@@Z	diagnose	-
 not diagnosed	13	97.7688	97.7688	0.0000	97.7688	602	townmgr	?setRolloverText@TCastleWindow@@QAEXPAVmessage@@@Z	diagnose	-
