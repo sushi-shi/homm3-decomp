@@ -201,6 +201,20 @@ in gzfile, netmsg and customcampaign. Inspect emitted copies across the
 consuming TUs before treating a missing inline symbol in one TU as evidence
 against the declaration.
 
+`TQuickHeroWindow` demonstrates why caller shrinkage must preserve recovered
+source ownership. Dreamcast places its disguise scans in constructor scopes;
+an unclaimed helper introduced solely to lower the constructor's inline cost
+made VC6 retain `basic_ostream` instead of the nested `basic_ios::init`.
+Restoring those scopes naturally emits the 71-byte initializer at `0x52f440`
+with all three retail calls and relocations exact. An eight-state hypothesis
+batch also established that ordinary quantity-widget `push_back` raises the
+constructor to 94.1662%, and removing the old mana inline-depth pin is flat.
+Its remaining mana-string cleanup expansion is documented beside the caller.
+The `BASIC_IOS_INIT` claim accepts the complete protected char-stream,
+two-argument signature; overload, stream-type, traits, access and qualifier
+negative controls prevent it from claiming an enclosing constructor or a
+different initializer.
+
 ## Status
 
 Phase 0 (driver ground truth + probe rig) is in progress. Reusable compiler
