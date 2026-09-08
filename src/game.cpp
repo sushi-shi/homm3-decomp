@@ -5937,24 +5937,31 @@ static __forceinline void randomizeTreasure(NewmapCell* cell)
     }
 }
 
-// E:\gamedcs\game.cpp:4745. These two helpers are expanded into
-// RandomizeEvents. Their packed writes remain calls because the corresponding
-// ExtraInfoUnion methods have retail rows immediately after RandomizeEvents.
+// E:\gamedcs\game.cpp:4654, dc 0xabda8: ordinary static helper,
+// with int i and branch-local TArtifact artifact. Line 4662 passes both
+// Random expressions directly to SetWagon; retail +0x11e2..+0x123e
+// evaluates the amount before the resource, as VC6 does for this call.
+// RandomizeEvents expands this helper but retains both SetWagon overloads
+// at +0x120f and +0x123e. Our CL still expands both packed setters.
+// Negative control: the old forced-inline helper with separate amount and
+// resource locals scored 87.0102%; restoring this declaration, nested call
+// and artifact scope scored 86.43% with the old setter depth pin. Removing
+// that pin scores 86.3856% and additionally expands SetWagon(artifact).
+// Keep the recovered source boundary; the setter frontier remains open.
 // Before normalization (function): randomize_wagon.
-static __forceinline void randomizeWagon(NewmapCell* cell)
+static void randomizeWagon(NewmapCell* cell)
 {
     ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
         static_cast<void*>(&cell->m_extraInfo));
-    int chance = random(0, 99);
-    short amount = static_cast<short>(random(2, 5));
-    EGameResource resource = gameResourceFromInt(random(0, 5));
-    info->setWagon(resource, amount);
-    if (chance < 10)
+    int i = random(0, 99);
+    info->setWagon(gameResourceFromInt(random(0, 5)),
+        static_cast<short>(random(2, 5)));
+    if (i < 10)
         info->emptyWagon();
-    else if (chance < 50)
-#pragma inline_depth(0)
-        info->setWagon(g_game->getRandomArtifactId(6));
-#pragma inline_depth()
+    else if (i < 50) {
+        TArtifact artifact = g_game->getRandomArtifactId(6);
+        info->setWagon(artifact);
+    }
 }
 
 // E:\gamedcs\game.cpp:4761. The vector local and its teardown belong to the
