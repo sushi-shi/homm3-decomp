@@ -42,17 +42,17 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-typedef int (__stdcall *PFN_INVOKE)(int, char **, int);
-typedef int (__stdcall *PFN_ABORT)(int);
+typedef int (__stdcall *invokeCompilerPassFunction)(int, char **, int);
+typedef int (__stdcall *abortCompilerPassFunction)(int);
 
-static HMODULE    s_real;    /* C2_real.dll, loaded once per process */
-static PFN_INVOKE s_invoke;
-static PFN_ABORT  s_abort;
-static LONG       s_calls;
+static HMODULE    g_real;    /* C2_real.dll, loaded once per process */
+static invokeCompilerPassFunction g_invoke;
+static abortCompilerPassFunction  g_abort;
+static LONG       g_calls;
 
 /* ---- tiny CRT-free logging helpers ------------------------------------ */
 
-static HANDLE log_open(void)
+static HANDLE logOpen(void)
 {
     static char path[520];
     HANDLE h;
@@ -67,7 +67,7 @@ static HANDLE log_open(void)
     return h;
 }
 
-static void wr_str(HANDLE h, const char *s)
+static void writeString(HANDLE h, const char *s)
 {
     DWORD n;
     if (h == INVALID_HANDLE_VALUE)
@@ -77,7 +77,7 @@ static void wr_str(HANDLE h, const char *s)
     WriteFile(h, s, (DWORD)lstrlenA(s), &n, 0);
 }
 
-static void wr_dec(HANDLE h, unsigned long v)
+static void writeDecimal(HANDLE h, unsigned long v)
 {
     char buf[16];
     int i = 16;
@@ -91,17 +91,17 @@ static void wr_dec(HANDLE h, unsigned long v)
     WriteFile(h, buf + i, (DWORD)(16 - i), &n, 0);
 }
 
-static void wr_sdec(HANDLE h, long v)
+static void writeSignedDecimal(HANDLE h, long v)
 {
     if (v < 0) {
-        wr_str(h, "-");
-        wr_dec(h, (unsigned long)(-v));
+        writeString(h, "-");
+        writeDecimal(h, (unsigned long)(-v));
     } else {
-        wr_dec(h, (unsigned long)v);
+        writeDecimal(h, (unsigned long)v);
     }
 }
 
-static void wr_pad2(HANDLE h, unsigned v)
+static void writePaddedTwo(HANDLE h, unsigned v)
 {
     char b[2];
     DWORD n;
@@ -112,31 +112,31 @@ static void wr_pad2(HANDLE h, unsigned v)
     WriteFile(h, b, 2, &n, 0);
 }
 
-static void wr_stamp(HANDLE h)
+static void writeTimestamp(HANDLE h)
 {
     SYSTEMTIME st;
     GetSystemTime(&st);
-    wr_str(h, " utc=");
-    wr_dec(h, st.wYear);  wr_str(h, "-");
-    wr_pad2(h, st.wMonth); wr_str(h, "-");
-    wr_pad2(h, st.wDay);   wr_str(h, "T");
-    wr_pad2(h, st.wHour);  wr_str(h, ":");
-    wr_pad2(h, st.wMinute); wr_str(h, ":");
-    wr_pad2(h, st.wSecond);
-    wr_str(h, " tick=");
-    wr_dec(h, GetTickCount());
+    writeString(h, " utc=");
+    writeDecimal(h, st.wYear);  writeString(h, "-");
+    writePaddedTwo(h, st.wMonth); writeString(h, "-");
+    writePaddedTwo(h, st.wDay);   writeString(h, "T");
+    writePaddedTwo(h, st.wHour);  writeString(h, ":");
+    writePaddedTwo(h, st.wMinute); writeString(h, ":");
+    writePaddedTwo(h, st.wSecond);
+    writeString(h, " tick=");
+    writeDecimal(h, GetTickCount());
 }
 
 /* ---- locate the real back end ----------------------------------------- */
 
-static int resolve_real(void)
+static int resolveReal(void)
 {
     static char path[MAX_PATH + 16];
     DWORD n;
     int i, cut;
     HMODULE self;
 
-    if (s_invoke != 0 && s_abort != 0)
+    if (g_invoke != 0 && g_abort != 0)
         return 1;
     /* our own module was loaded as ...\c2.dll; swap the basename */
     self = GetModuleHandleA("C2.DLL");
@@ -147,16 +147,22 @@ static int resolve_real(void)
             cut = i;
     if (cut >= 0) {
         lstrcpyA(path + cut + 1, "C2_real.dll");
-        s_real = LoadLibraryA(path);
+        g_real = LoadLibraryA(path);
     }
-    if (s_real == 0)  /* fall back to the normal search order (exe dir first) */
-        s_real = LoadLibraryA("C2_real.dll");
-    if (s_real == 0)
+    if (g_real == 0)  /* fall back to the normal search order (exe dir first) */
+        g_real = LoadLibraryA("C2_real.dll");
+    if (g_real == 0)
         return 0;
-    s_invoke = (PFN_INVOKE)GetProcAddress(s_real, "_InvokeCompilerPass@12");
-    s_abort  = (PFN_ABORT)GetProcAddress(s_real, "_AbortCompilerPass@4");
-    return (s_invoke != 0 && s_abort != 0);
+    g_invoke = (invokeCompilerPassFunction)GetProcAddress(g_real, "_InvokeCompilerPass@12");
+    g_abort  = (abortCompilerPassFunction)GetProcAddress(g_real, "_AbortCompilerPass@4");
+    return (g_invoke != 0 && g_abort != 0);
 }
+
+#ifdef SHIM_INLINE_TRACE
+#include "inline_trace.c"
+#elif defined(SHIM_REGISTER_TRACE)
+#include "register_trace.c"
+#endif
 
 /* ---- the two exported entry points (names via passthru.def) ----------- */
 
@@ -166,26 +172,26 @@ int __stdcall InvokeCompilerPass(int argc, char **argv, int fLastTU)
     LONG call;
     int i, ret;
 
-    call = InterlockedIncrement(&s_calls);
-    h = log_open();
+    call = InterlockedIncrement(&g_calls);
+    h = logOpen();
     if (h != INVALID_HANDLE_VALUE) {
-        wr_str(h, "# c2shim call=");
-        wr_dec(h, (unsigned long)call);
-        wr_str(h, " export=InvokeCompilerPass fLastTU=");
-        wr_sdec(h, fLastTU);
-        wr_str(h, " argc=");
-        wr_sdec(h, argc);
-        wr_stamp(h);
+        writeString(h, "# c2shim call=");
+        writeDecimal(h, (unsigned long)call);
+        writeString(h, " export=InvokeCompilerPass fLastTU=");
+        writeSignedDecimal(h, fLastTU);
+        writeString(h, " argc=");
+        writeSignedDecimal(h, argc);
+        writeTimestamp(h);
 #ifdef SHIM_NEGATIVE_CONTROL
-        wr_str(h, " NEGATIVE-CONTROL(drops -Gy)");
+        writeString(h, " NEGATIVE-CONTROL(drops -Gy)");
 #endif
-        wr_str(h, "\n");
+        writeString(h, "\n");
         for (i = 0; i < argc; ++i) {
             if (i)
-                wr_str(h, " ");
-            wr_str(h, argv[i]);
+                writeString(h, " ");
+            writeString(h, argv[i]);
         }
-        wr_str(h, "\n");
+        writeString(h, "\n");
         CloseHandle(h);
     }
 
@@ -202,24 +208,43 @@ int __stdcall InvokeCompilerPass(int argc, char **argv, int fLastTU)
     }
 #endif
 
-    if (!resolve_real()) {
-        h = log_open();
+    if (!resolveReal()) {
+        h = logOpen();
         if (h != INVALID_HANDLE_VALUE) {
-            wr_str(h, "# c2shim call=");
-            wr_dec(h, (unsigned long)call);
-            wr_str(h, " ERROR C2_real.dll or its exports unresolved\n");
+            writeString(h, "# c2shim call=");
+            writeDecimal(h, (unsigned long)call);
+            writeString(h, " ERROR C2_real.dll or its exports unresolved\n");
             CloseHandle(h);
         }
         return 2;  /* driver treats nonzero as pass failure */
     }
-    ret = s_invoke(argc, argv, fLastTU);
-    h = log_open();
+#ifdef SHIM_INLINE_TRACE
+    if (!installInlineTrace()) {
+        h = logOpen();
+        if (h != INVALID_HANDLE_VALUE) {
+            writeString(h, "# inline trace instruction guard failed\n");
+            CloseHandle(h);
+        }
+        return 3;
+    }
+#elif defined(SHIM_REGISTER_TRACE)
+    if (!installRegisterTrace()) {
+        h = logOpen();
+        if (h != INVALID_HANDLE_VALUE) {
+            writeString(h, "# register trace instruction guard failed\n");
+            CloseHandle(h);
+        }
+        return 3;
+    }
+#endif
+    ret = g_invoke(argc, argv, fLastTU);
+    h = logOpen();
     if (h != INVALID_HANDLE_VALUE) {
-        wr_str(h, "# c2shim call=");
-        wr_dec(h, (unsigned long)call);
-        wr_str(h, " ret=");
-        wr_sdec(h, ret);
-        wr_str(h, "\n");
+        writeString(h, "# c2shim call=");
+        writeDecimal(h, (unsigned long)call);
+        writeString(h, " ret=");
+        writeSignedDecimal(h, ret);
+        writeString(h, "\n");
         CloseHandle(h);
     }
     return ret;
@@ -231,27 +256,27 @@ int __stdcall AbortCompilerPass(int code)
     LONG call;
     int ret;
 
-    call = InterlockedIncrement(&s_calls);
-    h = log_open();
+    call = InterlockedIncrement(&g_calls);
+    h = logOpen();
     if (h != INVALID_HANDLE_VALUE) {
-        wr_str(h, "# c2shim call=");
-        wr_dec(h, (unsigned long)call);
-        wr_str(h, " export=AbortCompilerPass code=");
-        wr_sdec(h, code);
-        wr_stamp(h);
-        wr_str(h, "\n");
+        writeString(h, "# c2shim call=");
+        writeDecimal(h, (unsigned long)call);
+        writeString(h, " export=AbortCompilerPass code=");
+        writeSignedDecimal(h, code);
+        writeTimestamp(h);
+        writeString(h, "\n");
         CloseHandle(h);
     }
-    if (!resolve_real())
+    if (!resolveReal())
         return 0;
-    ret = s_abort(code);
-    h = log_open();
+    ret = g_abort(code);
+    h = logOpen();
     if (h != INVALID_HANDLE_VALUE) {
-        wr_str(h, "# c2shim call=");
-        wr_dec(h, (unsigned long)call);
-        wr_str(h, " ret=");
-        wr_sdec(h, ret);
-        wr_str(h, "\n");
+        writeString(h, "# c2shim call=");
+        writeDecimal(h, (unsigned long)call);
+        writeString(h, " ret=");
+        writeSignedDecimal(h, ret);
+        writeString(h, "\n");
         CloseHandle(h);
     }
     return ret;

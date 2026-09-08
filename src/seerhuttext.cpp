@@ -43,25 +43,25 @@ VA_COMPGEN(0x0056bf30, 0xF4, IMPLICIT_DTOR, TSeerHutQuestText)
 // expansions of the same statement already agree, so this is the bounded
 // B18 class, not a source fact.
 VA(0x0056c120, 0x2A3)  // anchor-string(seerhut.txt caller 0x56c3e0) + anchor-callee(basic_string::assign) + retail-only
-void LoadSeerHutTextColumn(TSpreadsheetResource* sheet,
+void loadSeerHutTextColumn(TSpreadsheetResource* sheet,
                            TSeerHutTextColumn* column, int col)
 {
-    column->name = sheet->GetRow(1)[col];
+    column->m_name = sheet->getRow(1)[col];
 
     for (int q = 1; q < 10; ++q) {
-        column->quest[q].text0 = sheet->GetRow(5 * q - 3)[col];
-        column->quest[q].text1 = sheet->GetRow(5 * q - 2)[col];
-        column->quest[q].text2 = sheet->GetRow(5 * q - 1)[col];
-        column->quest[q].text3 = sheet->GetRow(5 * q)[col];
-        column->quest[q].text4 = sheet->GetRow(5 * q + 1)[col];
+        column->m_quest[q].m_text0 = sheet->getRow(5 * q - 3)[col];
+        column->m_quest[q].m_text1 = sheet->getRow(5 * q - 2)[col];
+        column->m_quest[q].m_text2 = sheet->getRow(5 * q - 1)[col];
+        column->m_quest[q].m_text3 = sheet->getRow(5 * q)[col];
+        column->m_quest[q].m_text4 = sheet->getRow(5 * q + 1)[col];
     }
 
-    column->completion = sheet->GetRow(47)[col];
+    column->m_completion = sheet->getRow(47)[col];
 }
 
-DATA(0x0069e728) TSeerHutTextColumn gSeerHutTextA[3];
-DATA(0x0069f0e8) TSeerHutTextColumn gSeerHutTextB[3];
-DATA(0x0069faa8) std::vector<std::string> gSeerHutNames;
+DATA(0x0069e728) TSeerHutTextColumn g_seerHutTextA[3];
+DATA(0x0069f0e8) TSeerHutTextColumn g_seerHutTextB[3];
+DATA(0x0069faa8) std::vector<std::string> g_seerHutNames;
 
 // Retail 0x56c960. Join a string vector into one localized list: every entry
 // after the first is preceded by ", " except the last, which takes general
@@ -78,14 +78,14 @@ DATA(0x0069faa8) std::vector<std::string> gSeerHutNames;
 // EXACT on the first spelling: 32 of 32 blocks, 18 of 18 branches, both
 // returns.
 VA(0x0056c960, 0x216)  // anchor-string(", " 0x66032c) + anchor-callee(basic_string::_Grow/_Eos) + bracket(seerhut.obj caller 0x16dfa0), retail-only
-std::string JoinTextList(const std::vector<std::string>& items)
+std::string joinTextList(const std::vector<std::string>& items)
 {
     std::string result;
 
     for (int i = 0; i < items.size(); ++i) {
         if (i > 0) {
             if (i == items.size() - 1)
-                result += gpGeneralText->GetText(142);
+                result += g_generalText->getText(142);
             else
                 result += DATA_COMPGEN(0x0066032c, seerHutListSeparator, ", ");
         }

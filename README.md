@@ -12,17 +12,17 @@ the game, supply your own legally obtained retail `HEROES3.EXE` and Dreamcast `H
 
 <!-- match-score:start -->
 
-**Executable matched: 90.54%** — fuzzy-weighted bytes over all 1,998,803 unfiltered bytes.
+**Executable matched: 92.04%** — fuzzy-weighted bytes over all 1,998,803 unfiltered bytes.
 
-**Match score** — 3,730 / 4,764 functions exact (78.3%) across the full engine (4370 in linked units).
+**Match score** — 3,855 / 4,763 functions exact (80.9%) across the full engine (4488 in linked units).
 
-**Function exact MAX** — 3,759 / 4,764 functions (78.9%) have reached 100%.
+**Function exact MAX** — 3,860 / 4,763 current implementations (81.0%) have reached 100%.
 
 | Module        | Units |     Functions exact |  Function exact MAX |   Fuzzy | Fuzzy Max |
 | :------------ | ----: | ------------------: | ------------------: | ------: | --------: |
-| `game`        |   132 | 3661 / 4301 (85.1%) | 3690 / 4301 (85.8%) |  96.08% |    96.70% |
+| `game`        |   132 | 3786 / 4419 (85.7%) | 3791 / 4419 (85.8%) |  96.33% |    96.35% |
 | `zlib-1.1.3`  |    14 |    69 / 69 (100.0%) |    69 / 69 (100.0%) | 100.00% |   100.00% |
-| `(unmatched)` |     — |      0 / 394 (0.0%) |      0 / 394 (0.0%) |    0.0% |      0.0% |
+| `(unmatched)` |     — |      0 / 275 (0.0%) |      0 / 275 (0.0%) |    0.0% |      0.0% |
 
 _Excluded from the % above — generated/library code, not independent reconstruction targets:_
 
@@ -34,6 +34,13 @@ _Excluded from the % above — generated/library code, not independent reconstru
 | `import thunks`       |        27 |      162 | FF 25 jumps through the IAT                                        |
 
 <!-- match-score:end -->
+
+The score ledger always keeps `CUR <= MAX <= HIST`. CUR is the latest full
+build; MAX is the best score observed for the function's current source hash;
+HIST is its all-time peak across source revisions. Tooling prioritizes MAX.
+Unrelated CUR dips keep MAX and are silent. A function's own hash change resets
+MAX to its new CUR; a lower MAX is reported, but is not a build failure.
+`HIST > MAX` identifies historical peaks worth investigating.
 
 ## Pinned target
 

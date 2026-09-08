@@ -25,20 +25,54 @@ class UpdateRowsTest(unittest.TestCase):
         self.assertNotIn(("unit", "flat_name"), rows)
         self.assertEqual(stats["migrated"], 1)
 
-    def test_dip_never_lowers_checkpoint_or_history(self):
+    def test_same_source_dip_never_lowers_max_or_history(self):
         key = ("unit", "function")
-        old = {key: MatchRow(98.0, 98.0, 99.0, 0x5678)}
-        rows, stats = update_rows({key: 80.0}, old, {key: 0x5678})
+        old = {key: MatchRow(98.0, 98.0, 99.0, 0x5678, "same")}
+        rows, stats = update_rows(
+            {key: 80.0}, old, {key: 0x5678}, {key: "same"})
         self.assertEqual((rows[key].cur, rows[key].max, rows[key].hist),
                          (80.0, 98.0, 99.0))
-        self.assertNotIn("lowered", stats)
+        self.assertEqual(stats["reset"], 0)
 
-    def test_unaccepted_drop_keeps_max(self):
+    def test_source_edit_resets_max_but_never_history(self):
         key = ("unit", "function")
-        old = {key: MatchRow(98.0, 98.0, 98.0, 0x5678)}
-        rows, _stats = update_rows({key: 80.0}, old, {key: 0x5678})
+        old = {key: MatchRow(80.0, 98.0, 99.0, 0x5678, "old")}
+        rows, stats = update_rows(
+            {key: 85.0}, old, {key: 0x5678}, {key: "new"})
         self.assertEqual((rows[key].cur, rows[key].max, rows[key].hist),
-                         (80.0, 98.0, 98.0))
+                         (85.0, 85.0, 99.0))
+        self.assertEqual(stats["reset"], 1)
+
+    def test_unknown_hash_cannot_reset_max(self):
+        key = ("unit", "function")
+        old = {key: MatchRow(80.0, 98.0, 99.0, 0x5678, "known")}
+        rows, stats = update_rows({key: 70.0}, old, {key: 0x5678}, {})
+        self.assertEqual((rows[key].cur, rows[key].max, rows[key].hist),
+                         (70.0, 98.0, 99.0))
+        self.assertEqual(stats["reset"], 0)
+
+    def test_renamed_source_edit_reports_the_same_rva_max_reset(self):
+        old_key, new_key = ("old_unit", "old_name"), ("new_unit", "new_name")
+        previous = {old_key: MatchRow(80, 98, 100, 0x1234, "old")}
+        current, hashes, rvas = {new_key: 85}, {new_key: "new"}, {new_key: 0x1234}
+        updated, _ = update_rows(current, previous, rvas, hashes)
+        self.assertEqual(updated[new_key].max, 85)
+        self.assertEqual(checkpoint_drops(current, hashes, previous, rvas),
+                         [(new_key, 98, 100, 85)])
+        self.assertEqual(checkpoint_drops(
+            current, {new_key: "old"}, previous, rvas), [])
+
+    def test_reused_label_for_another_rva_does_not_report_a_drop(self):
+        key = ("unit", "name")
+        previous = {key: MatchRow(80, 98, 100, 0x1234, "old")}
+        self.assertEqual(checkpoint_drops(
+            {key: 70}, {key: "new"}, previous, {key: 0x5678}), [])
+
+    def test_row_rejects_cur_max_hist_invariant_violations(self):
+        with self.assertRaisesRegex(ValueError, "CUR .* exceeds MAX"):
+            MatchRow(91.0, 90.0, 100.0)
+        with self.assertRaisesRegex(ValueError, "MAX .* exceeds HIST"):
+            MatchRow(90.0, 100.0, 99.0)
 
     def test_unchanged_below_max_function_is_not_a_drop(self):
         key = ("unit", "function")
@@ -46,16 +80,16 @@ class UpdateRowsTest(unittest.TestCase):
         self.assertEqual(
             checkpoint_drops({key: 80.0}, {key: "same"}, rows), [])
 
-    def test_changed_function_is_reported_only_when_current_score_falls(self):
-        # A changed function is reported wherever it sits relative to its
-        # banked MAX: 80 -> 75 below a MAX of 98 is the editor's own drop.
+    def test_changed_function_is_reported_when_new_max_falls(self):
+        # The new implementation resets MAX to its current score. It is a MAX
+        # drop even if CUR improved from the previous 80% snapshot.
         key = ("unit", "function")
         rows = {key: MatchRow(80.0, 98.0, 99.0, 0x5678, "old")}
         self.assertEqual(
-            checkpoint_drops({key: 85.0}, {key: "new"}, rows), [])
-        self.assertEqual(
-            checkpoint_drops({key: 75.0}, {key: "new"}, rows),
-            [(key, 80.0, 98.0, 75.0)])
+            checkpoint_drops({key: 85.0}, {key: "new"}, rows),
+            [(key, 98.0, 99.0, 85.0)])
+        self.assertEqual(checkpoint_drops(
+            {key: 99.0}, {key: "new"}, rows), [])
 
     def test_unchanged_holdout_below_banked_max_is_never_reported(self):
         # NEGATIVE CONTROL for the standing order "we chase MAX, not cur":
@@ -98,10 +132,10 @@ class UpdateRowsTest(unittest.TestCase):
 
         self.assertEqual(previous[unrelated].max, 98.0)
         self.assertNotIn("unrelated.obj collateral", output.getvalue())
-        self.assertIn("unchanged-source rows below their banked MAX",
+        self.assertIn("unchanged-source CUR dips are never reported",
                       output.getvalue())
 
-    def test_changed_regression_is_reported_with_held_max(self):
+    def test_changed_regression_reports_max_drop_and_held_history(self):
         key = ("unit", "function")
         report = {"units": [{"name": "unit", "functions": [{
             "name": "function", "fuzzy_match_percent": 75.0,
@@ -114,7 +148,8 @@ class UpdateRowsTest(unittest.TestCase):
                             return_value={key: "new"}), \
                 contextlib.redirect_stdout(output):
             self.assertEqual(cmd_check(report), 0)
-        self.assertIn("80.00% -> 75.00% (MAX held at 98.00%)",
+        self.assertIn("MAX DROP unit function: 98.00% -> 75.00% "
+                      "(HIST held at 99.00%)",
                       output.getvalue())
 
     def test_unknown_fingerprint_is_not_mistaken_for_an_edit(self):
@@ -165,6 +200,13 @@ class UpdateRowsTest(unittest.TestCase):
         rows, recovered = seed_historical_maxima(
             {key: MatchRow(80.0, 80.0, 80.0, 0x1234)}, {key: 100.0})
         self.assertEqual(rows[key], MatchRow(80.0, 80.0, 100.0, 0x1234))
+        self.assertEqual(recovered, 1)
+
+    def test_git_peak_seeds_history_by_rva_across_a_rename(self):
+        key = ("unit", "new_name")
+        rows, recovered = seed_historical_maxima(
+            {key: MatchRow(80.0, 80.0, 80.0, 0x1234)}, {0x1234: 99.0})
+        self.assertEqual(rows[key], MatchRow(80.0, 80.0, 99.0, 0x1234))
         self.assertEqual(recovered, 1)
 
 

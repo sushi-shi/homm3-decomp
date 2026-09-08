@@ -10,22 +10,33 @@
 #include "includes.h"
 
 // Live prototypes (claimed misc.cpp bodies).
-int SafeRandom(int min, int max);   // 0x50b1d0
-int Random(int min, int max);       // 0x50b230
-void SRand(int iSeed);              // 0x50c5f0
+// Before normalization (function): SafeRandom.
+int safeRandom(int min, int max);   // 0x50b1d0
+int random(int min, int max);       // 0x50b230
+// Before normalization (function): SRand.
+// Before normalization (locals): iSeed.
+void sRand(int seed);              // 0x50c5f0
 // Original SRandom, defined once in misc.cpp (DC source line 796).
 int sRandom(int lower, int upper);
-void CheckConfigFile();             // 0x50b260
-void SetGameDefaults();             // 0x50b4d0
-void SetDefaultSystemOptions();     // inlined away - no retail body
-void SetDefaultCombatOptions();     // 0x50b700
-void ReadPrefsFromRegistry();       // 0x50b7b0
+void checkConfigFile();             // 0x50b260
+// Before normalization (function): SetGameDefaults.
+void setGameDefaults();             // 0x50b4d0
+// Before normalization (function): SetDefaultSystemOptions.
+void setDefaultSystemOptions();     // inlined away - no retail body
+// Before normalization (function): SetDefaultCombatOptions.
+void setDefaultCombatOptions();     // 0x50b700
+// Before normalization (function): ReadPrefsFromRegistry.
+void readPrefsFromRegistry();       // 0x50b7b0
 // AppWndProc's WM_MOVE callee: retail 0x50c1b0 is a 5-byte tail jmp
 // into WritePrefsToRegistry.
-void WritePrefsToRegistry();        // 0x50be10
-void WritePrefs();                  // 0x50c1b0
-std::string format_string(const char* format, ...);  // 0x50c600
-unsigned long get_available_disk_space();            // 0x50c7a0
+// Before normalization (function): WritePrefsToRegistry.
+void writePrefsToRegistry();        // 0x50be10
+// Before normalization (function): WritePrefs.
+void writePrefs();                  // 0x50c1b0
+// Before normalization (function): format_string.
+std::string formatString(const char* format, ...);  // 0x50c600
+// Before normalization (function): get_available_disk_space.
+unsigned long getAvailableDiskSpace();            // 0x50c7a0
 
 // SetupCDDrive result domain. Retail proves all six non-default arms in
 // oldmain's inlined SetupCDRom and separately singles out 5/6 in the main
@@ -43,9 +54,12 @@ enum ECDDriveNumber {
 // Registry-path state owned by misc.cpp. AppPath's 351-byte extent is
 // byte-proven by SetGameDefaults' _getcwd bound; registry reads cap both
 // paths at 350 bytes, which also proves CDDrive's extent.
-extern char gcRegAppPath[351];       // .bss 0x6985c4
-extern char gcRegCDRomPath[350];     // .bss 0x698838
-extern int giShowIntro;              // .bss 0x6993c0
+// Before normalization: gcRegAppPath.
+extern char g_regAppPath[351];       // .bss 0x6985c4
+// Before normalization: gcRegCDRomPath.
+extern char g_regCdRomPath[350];     // .bss 0x698838
+// Before normalization: giShowIntro.
+extern int g_showIntro;              // .bss 0x6993c0
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\misc.cpp:41, dc 0xfd81c) int SafeRandom(int min, int max);
@@ -62,7 +76,8 @@ extern int giShowIntro;              // .bss 0x6993c0
 // CODEVIEW(E:\gamedcs\misc.cpp:603, dc 0xfe060) int IsCDDrive(int drive);
 // CODEVIEW(E:\gamedcs\misc.cpp:634, dc 0xfe064) int SetupCDDrive();
 // CODEVIEW(E:\gamedcs\misc.cpp:764, dc 0xfe068) long FileSize(char* filename);
-long FileSize(char* filename);
+// Before normalization (function): FileSize.
+long fileSize(char* filename);
 // CODEVIEW(E:\gamedcs\misc.cpp:784, dc 0xfe0b8) void SRand(int iSeed);
 // CODEVIEW(E:\gamedcs\misc.cpp:796, dc 0xfe0d0) int SRandom(int iLower, int iUpper);
 // CODEVIEW(E:\gamedcs\misc.cpp:820, dc 0xfe10c) std::basic_string<char,std::char_traits<char>,std::allocator<char> format_string(__$ReturnUdt, const char* format);

@@ -15,44 +15,50 @@ public:
     // consumer that proves this trivial header boundary at GlobalTimer+13.
     void enable()
     {
-        enabled = 1;
+        m_enabled = 1;
     }
 
-    CTimer(unsigned char _enabled)
-        : startTime(0), stopTime(0), elapsedTime(0),
-          _IsRunning(0), enabled(_enabled)
+    CTimer(unsigned char enabled)
+        : m_startTime(0), m_stopTime(0), m_elapsedTime(0),
+          m_isRunning(0), m_enabled(enabled)
     {
     }
 
     void start()
     {
-        if (enabled) {
-            startTime = timeGetTime();
-            _IsRunning = 1;
+        if (m_enabled) {
+            m_startTime = timeGetTime();
+            m_isRunning = 1;
         }
     }
 
     void stop()
     {
-        if (_IsRunning && enabled) {
-            stopTime = timeGetTime();
-            _IsRunning = 0;
-            if (stopTime > startTime)
-                elapsedTime = stopTime - startTime;
+        if (m_isRunning && m_enabled) {
+            m_stopTime = timeGetTime();
+            m_isRunning = 0;
+            if (m_stopTime > m_startTime)
+                m_elapsedTime = m_stopTime - m_startTime;
             else
-                elapsedTime = 0;
+                m_elapsedTime = 0;
         }
     }
 
 private:
-    unsigned long startTime;
-    unsigned long stopTime;
-    unsigned long elapsedTime;
-    unsigned char _IsRunning;
-    unsigned char enabled;
+    // Before normalization: startTime.
+    unsigned long m_startTime;
+    // Before normalization: stopTime.
+    unsigned long m_stopTime;
+    // Before normalization: elapsedTime.
+    unsigned long m_elapsedTime;
+    // Before normalization: _IsRunning.
+    unsigned char m_isRunning;
+    // Before normalization: enabled.
+    unsigned char m_enabled;
 };
 SIZE(CTimer, 16);
 
-extern CTimer GlobalTimer;
+// Before normalization: GlobalTimer.
+extern CTimer g_globalTimer;
 
 #endif  // HOMM3_TIMER_H

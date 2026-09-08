@@ -20,17 +20,28 @@ struct type_artifact;
 
 // Five-entry AI hero caps indexed by game difficulty. Dreamcast names both
 // compiland statics; retail hire_heroes proves these corresponding addresses.
-DATA(0x00660518) extern int hero_limits[5];
-DATA(0x0066052c) extern int global_limits[5];
+// Before normalization: hero_limits.
+// Before normalization: global_limits.
+DATA(0x00660518) extern int g_heroLimits[5];
+DATA(0x0066052c) extern int g_globalLimits[5];
 
-long AI_get_value_of_artifact(type_artifact artifact, const hero* owner,
+// Before normalization (function): AI_get_value_of_artifact.
+long aiGetValueOfArtifact(type_artifact artifact, const hero* owner,
                               unsigned char equipped, unsigned char exact);
-void AI_swap_artifacts(hero* source, hero* destination);
-long AI_get_equip_value(type_artifact artifact, const hero* our_hero,
+// Before normalization (function): AI_swap_artifacts.
+void aiSwapArtifacts(hero* source, hero* destination);
+// Before normalization (function): AI_get_equip_value.
+// Before normalization (locals): our_hero.
+long aiGetEquipValue(type_artifact artifact, const hero* ourHero,
                         unsigned char exact);
-long get_full_value(const hero* our_hero);
-long remove_negative_artifacts(hero* our_hero);
-long AI_get_ship_cost(const hero* our_hero, type_point point);
+// Before normalization (function): get_full_value.
+// Before normalization (locals): our_hero.
+long getFullValue(const hero* ourHero);
+// Before normalization (function): remove_negative_artifacts.
+// Before normalization (locals): our_hero.
+long removeNegativeArtifacts(hero* ourHero);
+// Before normalization (locals): our_hero.
+long aiGetShipCost(const hero* ourHero, type_point point);
 
 
 
@@ -51,79 +62,83 @@ long AI_get_ship_cost(const hero* our_hero, type_point point);
 // order. They are DEFINED by philai.cpp, not here.
 class type_AI_player {
 public:
-    short team;
-    long magus_hut_value;
-    long reserved_funds[7];
-    long resource_supply[7];
-    long resource_demand[7];
-    double resource_value[7];
+    short m_team;
+    long m_magusHutValue;
+    long m_reservedFunds[7];
+    long m_resourceSupply[7];
+    long m_resourceDemand[7];
+    double m_resourceValue[7];
 
     // DC ai_player.h:263 (dc 0x37dec). Complete inlines the helper into
     // AI_initialize; retail leaves exactly the team-word store.
-    void init(short new_team) { team = new_team; }
-    long get_magus_hut_value() const { return magus_hut_value; }
-    static float get_attack_bonus(short player);  // 0x428710
+    void init(short newTeam) { m_team = newTeam; }
+    long getMagusHutValue() const { return m_magusHutValue; }
+    static float getAttackBonus(short player);  // 0x428710
     // DC ai_player.h:278 (dc 0x37df8, ?...@@QBANW4EGameResource@@@Z);
     // inlined into type_income_artifact::get_value, whose by-value double
     // return temp at [ebp-8] is what the retail bytes home under /Op.
-    double get_resource_value(enum EGameResource resource) const
+    double getResourceValue(enum EGameResource resource) const
     {
-        return resource_value[resource];
+        return m_resourceValue[resource];
     }
-    static void set_attack_bonuses(float computer_bonus,
-                                   float human_bonus)
+    static void setAttackBonuses(float computerBonus,
+                                   float humanBonus)
     {
-        attack_computer_bonus = computer_bonus;
-        attack_human_bonus = human_bonus;
+        s_attackComputerBonus = computerBonus;
+        s_attackHumanBonus = humanBonus;
     }
-    void calculate_demand();                      // 0x428740
-    void end_turn();                              // 0x428dd0
-    void make_gift(long player_id);               // 0x429110
-    void start_turn();                            // 0x4297c0
-    void reset_magus_hut_value();                 // 0x429ab0
-    void calculate_reserve();                     // 0x429ad0
-    long get_total_value(long basic_value, int* cost);  // 0x42a150
-    void buy_creatures(hero* current_hero, town* current_town);  // 0x42ba60
-    void buy_mage_guild(hero* current_hero, town* current_town); // 0x42beb0
-    unsigned char purchase_buildings(unsigned char* prohibited_creatures);
+    void calculateDemand();                      // 0x428740
+    void endTurn();                              // 0x428dd0
+    void makeGift(long playerId);               // 0x429110
+    void startTurn();                            // 0x4297c0
+    void resetMagusHutValue();                 // 0x429ab0
+    void calculateReserve();                     // 0x429ad0
+    long getTotalValue(long basicValue, int* cost);  // 0x42a150
+    void buyCreatures(hero* currentHero, town* currentTown);  // 0x42ba60
+    void buyMageGuild(hero* currentHero, town* currentTown); // 0x42beb0
+    unsigned char purchaseBuildings(unsigned char* prohibitedCreatures);
     // DC LF_ONEMETHOD protected; retail 0x42ae00 (the per-town pricing
     // pass purchase_buildings drives).
-    unsigned char purchase_building(unsigned char* prohibited_creatures);
-    bool hire_heroes();
-    bool check_trade_supply(const int* cost, long number, int* supply,
-                            std::vector<long>& trade_qty);
-    bool can_trade_resources(const int* cost, int* supply,
-                             std::vector<long>& trade_qty);
-    void trade_resources(const int* cost, long number);
-    bool build_markets(int* supply);
-    void do_resource_trade(int* supply);
+    unsigned char purchaseBuilding(unsigned char* prohibitedCreatures);
+    bool hireHeroes();
+    bool checkTradeSupply(const int* cost, long number, int* supply,
+                            std::vector<long>& tradeQty);
+    bool canTradeResources(const int* cost, int* supply,
+                             std::vector<long>& tradeQty);
+    void tradeResources(const int* cost, long number);
+    bool buildMarkets(int* supply);
+    void doResourceTrade(int* supply);
 
 private:
-    static float attack_computer_bonus;
-    static float attack_human_bonus;
+    static float s_attackComputerBonus;
+    static float s_attackHumanBonus;
 };
 
 // Retail .bss 0x692950, eight adjacent 152-byte AI records. make_gift
 // recalculates the recipient's demand through this array before giving
 // resources to another computer player. Owner TU remains unlocated.
-extern type_AI_player gAIPlayers[8];
+extern type_AI_player g_aiPlayers[8];
 
 // Dreamcast records this exact 12-byte value object, and retail's
 // constructor at 0x4286b0 writes the same four fields at 0/4/8/10.
 struct type_creature_source {
-    TCreatureType type;
-    short* ptr;
-    short number;
-    unsigned char is_free;
+    // Before normalization: type.
+    TCreatureType m_type;
+    // Before normalization: ptr.
+    short* m_ptr;
+    // Before normalization: number.
+    short m_number;
+    // Before normalization: is_free.
+    unsigned char m_isFree;
 
     // ai_player.h:299 initializes these three fields; line 300 copies
     // the pointed-to amount. The decorated DC public retains bool (_N).
     VA(0x004286b0, 0x21)  // DC signature/layout + retail stores; dc 0x37e08
-    type_creature_source(TCreatureType new_type, short* new_amount,
-                         bool _is_free)
-        : type(new_type), ptr(new_amount), is_free(_is_free)
+    type_creature_source(TCreatureType newType, short* newAmount,
+                         bool isFree)
+        : m_type(newType), m_ptr(newAmount), m_isFree(isFree)
     {
-        number = *new_amount;
+        m_number = *newAmount;
     }
 };
 SIZE(type_creature_source, 12);
@@ -136,101 +151,158 @@ SIZE(type_creature_source, 12);
 // base's tail are ordinary VC6 alignment and remain implicit.
 class type_AI_creature_swapper {
 protected:
-    armyGroup* army;
-    armyGroup* adjacent_army;
-    unsigned char has_angelic_alliance;
-    short morale;
-    short alignment_count;
-    unsigned char alignments[10];
-    long army_value_increase;
-    short improvement;
+    // Before normalization: army.
+    armyGroup* m_army;
+    // Before normalization: adjacent_army.
+    armyGroup* m_adjacentArmy;
+    // Before normalization: has_angelic_alliance.
+    unsigned char m_hasAngelicAlliance;
+    // Before normalization: morale.
+    short m_morale;
+    // Before normalization: alignment_count.
+    short m_alignmentCount;
+    // Before normalization: alignments.
+    unsigned char m_alignments[10];
+    // Before normalization: army_value_increase.
+    long m_armyValueIncrease;
+    // Before normalization: improvement.
+    short m_improvement;
 
-    void get_alignments();
-    void add_creatures(TCreatureType type, short amount, short slot);
-    long do_best_swap(bool can_take_all);
-    void dump_extra_creature();
-    long choose_weakest_army(bool is_shooter, bool check_alignments);
-    long value_of_adding_army(TCreatureType type, short count,
-                              short& slot, bool must_replace_creature);
+    // Before normalization (function): type_AI_creature_swapper::get_alignments.
+    void getAlignments();
+    // Before normalization (function): type_AI_creature_swapper::add_creatures.
+    void addCreatures(TCreatureType type, short amount, short slot);
+    // Before normalization (function): type_AI_creature_swapper::do_best_swap.
+    // Before normalization (locals): can_take_all.
+    long doBestSwap(bool canTakeAll);
+    // Before normalization (function): type_AI_creature_swapper::dump_extra_creature.
+    void dumpExtraCreature();
+    // Before normalization (function): type_AI_creature_swapper::choose_weakest_army.
+    // Before normalization (locals): is_shooter, check_alignments.
+    long chooseWeakestArmy(bool isShooter, bool checkAlignments);
+    // Before normalization (function): type_AI_creature_swapper::value_of_adding_army.
+    long valueOfAddingArmy(TCreatureType type, short count,
+                              // Before normalization (locals): must_replace_creature.
+                              short& slot, bool mustReplaceCreature);
 
 public:
     type_AI_creature_swapper();
-    void do_swap(hero* current_hero, armyGroup* source_army,
-                 hero* second_hero,
-                 unsigned char new_has_angelic_alliance);
-    long get_swap_value(const hero* current_hero,
-                        const armyGroup* source_army,
-                        const hero* second_hero,
-                        unsigned char new_has_angelic_alliance);
-    long get_army_value_increase() const { return army_value_increase; }
+    // Before normalization (function): type_AI_creature_swapper::do_swap.
+    // Before normalization (locals): current_hero, source_army, second_hero,
+    // new_has_angelic_alliance.
+    void doSwap(hero* currentHero, armyGroup* sourceArmy,
+                 hero* secondHero,
+                 unsigned char newHasAngelicAlliance);
+    // Before normalization (function): type_AI_creature_swapper::get_swap_value.
+    // Before normalization (locals): current_hero, source_army, second_hero,
+    // new_has_angelic_alliance.
+    long getSwapValue(const hero* currentHero,
+                        const armyGroup* sourceArmy,
+                        const hero* secondHero,
+                        unsigned char newHasAngelicAlliance);
+    // Before normalization (function): type_AI_creature_swapper::get_army_value_increase.
+    long getArmyValueIncrease() const { return m_armyValueIncrease; }
 };
 SIZE(type_AI_creature_swapper, 0x20);
 
 class type_AI_creature_purchaser : public type_AI_creature_swapper {
 protected:
-    long player_id;
-    long* funds;
-    unsigned char subtract_cost_mode;
-    std::vector<type_creature_source> creatures;
+    // Before normalization: player_id.
+    long m_playerId;
+    // Before normalization: funds.
+    long* m_funds;
+    // Before normalization: subtract_cost_mode.
+    unsigned char m_subtractCostMode;
+    // Before normalization: creatures.
+    std::vector<type_creature_source> m_creatures;
 
-    long do_best_purchase(unsigned char trade_allowed);
+    // Before normalization (function): type_AI_creature_purchaser::do_best_purchase.
+    // Before normalization (locals): trade_allowed.
+    long doBestPurchase(unsigned char tradeAllowed);
 
 public:
     type_AI_creature_purchaser(long player,
-                               generator* current_generator);
-    type_AI_creature_purchaser(long player, town* current_town);
+                               // Before normalization (locals): current_generator, current_town,
+                               // is_free.
+                               generator* currentGenerator);
+    type_AI_creature_purchaser(long player, town* currentTown);
     type_AI_creature_purchaser(long player, TCreatureType type,
-                               short* amount, bool is_free);
-    void set(town* current_town);
+                               short* amount, bool isFree);
+    // Before normalization (locals): current_town, new_type, new_amount.
+    void set(town* currentTown);
     // DC 0x31ffc (ai_player.cpp:2524): the single-candidate overload.
     // No retail out-of-line body (set(town) ends 0x42d418, next row
     // 0x42d420); every caller inlines its clear + one push_back.
-    void set(TCreatureType new_type, short* new_amount);
-    void do_purchase(armyGroup* new_army, short new_morale,
-                     armyGroup* new_adjacent_army, long* new_funds,
-                     unsigned char allow_trade,
-                     unsigned char new_has_angelic_alliance);
-    long get_purchase_value(const armyGroup* new_army, short new_morale,
-                            const armyGroup* new_adjacent_army,
-                            const long* new_funds,
-                            unsigned char new_has_angelic_alliance);
+    void set(TCreatureType newType, short* newAmount);
+    // Before normalization (function): type_AI_creature_purchaser::do_purchase.
+    // Before normalization (locals): new_army, new_morale, new_adjacent_army, new_funds,
+    // allow_trade, new_has_angelic_alliance.
+    void doPurchase(armyGroup* newArmy, short newMorale,
+                     armyGroup* newAdjacentArmy, long* newFunds,
+                     unsigned char allowTrade,
+                     unsigned char newHasAngelicAlliance);
+    // Before normalization (function): type_AI_creature_purchaser::get_purchase_value.
+    // Before normalization (locals): new_army, new_morale, new_adjacent_army, new_funds,
+    // new_has_angelic_alliance.
+    long getPurchaseValue(const armyGroup* newArmy, short newMorale,
+                            const armyGroup* newAdjacentArmy,
+                            const long* newFunds,
+                            unsigned char newHasAngelicAlliance);
 
-    void set_subtract_mode(unsigned char arg) { subtract_cost_mode = arg; }
+    // Before normalization (function): type_AI_creature_purchaser::set_subtract_mode.
+    void setSubtractMode(unsigned char arg) { m_subtractCostMode = arg; }
 };
 SIZE(type_AI_creature_purchaser, 0x3c);
 
-void AI_consolidate_army(armyGroup* current_army);
+// Before normalization (function): AI_consolidate_army.
+// Before normalization (locals): current_army.
+void aiConsolidateArmy(armyGroup* currentArmy);
 // 0x42d8e0 - do_swap's tail call (0x42c485), also reached from
 // buy_creatures (0x42bbae), split_armies (0x42dd47/5b) and 0x431d9d.
-void AI_arrange_army(armyGroup* current_army);
+// Before normalization (function): AI_arrange_army.
+// Before normalization (locals): current_army.
+void aiArrangeArmy(armyGroup* currentArmy);
 
 
 // DC classes.csv: 16 B - point, value(+4), move_cost(+8), is_nearby(+12),
 // is_critical(+13). net_value_of_location (0x42f980) adjusts move_cost and
 // sets is_critical; find_all_destinations vectors these records.
 struct HeroDestination {
-    type_point point;
-    long value;
-    long move_cost;
-    unsigned char is_nearby;
-    unsigned char is_critical;
+    // Before normalization: point.
+    type_point m_point;
+    // Before normalization: value.
+    long m_value;
+    // Before normalization: move_cost.
+    long m_moveCost;
+    // Before normalization: is_nearby.
+    unsigned char m_isNearby;
+    // Before normalization: is_critical.
+    unsigned char m_isCritical;
     // CodeView dc 0x380f0 marks this default constructor compiler-generated
     // (compgenx). The type_point member supplies its implicit construction.
 };
 
-long find_all_destinations(hero* current_hero, searchArray* search_array,
+// Before normalization (function): find_all_destinations.
+// Before normalization (locals): current_hero, search_array, max_distance, hiring_hero,
+// allow_spells, explore_mode.
+long findAllDestinations(hero* currentHero, searchArray* currentSearchArray,
                            std::vector<HeroDestination>* destinations,
-                           long max_distance, unsigned char hiring_hero,
-                           unsigned char allow_spells,
-                           unsigned char explore_mode);
-int net_value_of_location(hero* current_hero, HeroDestination* destination,
-                          long* strategic_map, struct pathCell* path_cell,
-                          searchArray* search_array);
-int AI_choose_destination(hero* current_hero, long max_distance,
-                          HeroDestination& best_point,
-                          long& best_raw_value,
-                          unsigned char allow_spells,
-                          unsigned char explore_mode);
+                           long maxDistance, unsigned char hiringHero,
+                           unsigned char allowSpells,
+                           unsigned char exploreMode);
+// Before normalization (function): net_value_of_location.
+// Before normalization (locals): current_hero, strategic_map, path_cell, search_array.
+int netValueOfLocation(hero* currentHero, HeroDestination* destination,
+                          long* strategicMap, struct pathCell* currentPathCell,
+                          searchArray* currentSearchArray);
+// Before normalization (function): AI_choose_destination.
+// Before normalization (locals): current_hero, max_distance, best_point, best_raw_value,
+// allow_spells, explore_mode.
+int aiChooseDestination(hero* currentHero, long maxDistance,
+                          HeroDestination& bestPoint,
+                          long& bestRawValue,
+                          unsigned char allowSpells,
+                          unsigned char exploreMode);
 
 
 
@@ -240,12 +312,18 @@ int AI_choose_destination(hero* current_hero, long max_distance,
 // inlines away a local one with a single call site - either would erase
 // the retail slot we are matching. The linkage difference is invisible
 // to the code bytes.
-unsigned char can_take_town(const hero* attacking_hero, const town* defending_town);
-long find_magus_hut_value(long player_id, unsigned char explore_mode);
-void fill_prohibited_array(playerData* player, unsigned char* prohibited);
+// Before normalization (function): can_take_town.
+// Before normalization (locals): attacking_hero, defending_town.
+unsigned char canTakeTown(const hero* attackingHero, const town* defendingTown);
+// Before normalization (function): find_magus_hut_value.
+// Before normalization (locals): player_id, explore_mode.
+long findMagusHutValue(long playerId, unsigned char exploreMode);
+// Before normalization (function): fill_prohibited_array.
+void fillProhibitedArray(playerData* player, unsigned char* prohibited);
 
-extern const char* gResourceNames[7];
-extern char gAIResourceWarningFormat[];
+extern const char* g_resourceNames[7];
+// Before normalization: gAIResourceWarningFormat.
+extern char g_aiResourceWarningFormat[];
 
 // Retail .bss 0x693718, one byte per TAdventureObjectType.
 // find_all_destinations tests it for each trigger destination and, when
@@ -253,20 +331,24 @@ extern char gAIResourceWarningFormat[];
 // cheaply - a "wait for backup" class of objects. No DC symbol reaches
 // it; named in the gUnnamed69ccc4 style. ai_player.obj is the nearest
 // admitted consumer.
+// Before normalization: gUnnamed693718.
 DATA(0x00693718)
-extern unsigned char gUnnamed693718[];
+extern unsigned char g_unnamed693718[];
 
 // Dreamcast publishes this object-value table by name. Retail's
 // AI_value_of_observatory indexes the same dword array with the trigger
 // cell's adventure-object type.
+// Before normalization: AI_event_visibility_values.
 DATA(0x006925ac)
-extern long AI_event_visibility_values[];
+extern long g_aiEventVisibilityValues[];
 
 // 0x432220 - find_magus_hut_value's only callee, reached with
 // (point, player_id, 10). /Gr leaves the 4-byte struct on the stack and
 // puts the two longs in ECX/EDX, which is exactly the register split
 // retail emits, so the DC's argument ORDER survives the bytes.
-long AI_value_of_observatory(struct type_point origin, long player_id, long range);
+// Before normalization (function): AI_value_of_observatory.
+// Before normalization (locals): player_id.
+long aiValueOfObservatory(struct type_point origin, long playerId, long range);
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\ai_player.cpp:69, dc 0x2dc00) unsigned char can_take_town(const hero* attacking_hero, const town* defending_town);
@@ -732,13 +814,15 @@ class type_artifact_effect {
 public:
     type_artifact_effect();
     virtual ~type_artifact_effect();
-    virtual long get_value(const hero* owner, unsigned char equipped,
+    // Before normalization (function): type_artifact_effect::get_value.
+    virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 };
 
 // Dreamcast names this table `const_artifact_effects`; retail indexes the
 // 144 vector objects directly with a 16-byte stride.
-extern std::vector<type_artifact_effect*> const_artifact_effects[144];
+// Before normalization: const_artifact_effects.
+extern std::vector<type_artifact_effect*> g_constArtifactEffects[144];
 
 // Complete's 0x63ac7c sentinel stream selects the concrete effect class
 // created for each artifact. The numeric order is retail's jump table at
@@ -770,138 +854,176 @@ enum EArtifactEffectKind {
     ARTIFACT_EFFECT_STATUE_OF_LEGION
 };
 
-extern const int gAIArtifactEffectDefinitions[];
+// Before normalization: gAIArtifactEffectDefinitions.
+extern const int g_aiArtifactEffectDefinitions[];
 
 class type_scouting_artifact : public type_artifact_effect {
 public:
-    type_scouting_artifact(long new_bonus);
-    virtual long get_value(const hero* owner, unsigned char equipped,
+    // Before normalization (locals): new_bonus.
+    type_scouting_artifact(long newBonus);
+    // Before normalization (function): type_scouting_artifact::get_value.
+    virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 
-    long bonus;
+    // Before normalization: bonus.
+    long m_bonus;
 };
 
 class type_combat_artifact : public type_artifact_effect {
 public:
-    type_combat_artifact(long new_bonus);
-    virtual long get_value(const hero* owner, unsigned char equipped,
+    // Before normalization (locals): new_bonus.
+    type_combat_artifact(long newBonus);
+    // Before normalization (function): type_combat_artifact::get_value.
+    virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 
-    long bonus;
+    // Before normalization: bonus.
+    long m_bonus;
 };
 
 class type_might_artifact : public type_combat_artifact {
 public:
-    type_might_artifact(long new_bonus);
-    virtual long get_value(const hero* owner, unsigned char equipped,
+    // Before normalization (locals): new_bonus.
+    type_might_artifact(long newBonus);
+    // Before normalization (function): type_might_artifact::get_value.
+    virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 };
 
 class type_power_artifact : public type_combat_artifact {
 public:
-    type_power_artifact(long new_bonus);
-    virtual long get_value(const hero* owner, unsigned char equipped,
+    // Before normalization (locals): new_bonus.
+    type_power_artifact(long newBonus);
+    // Before normalization (function): type_power_artifact::get_value.
+    virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 };
 
 class type_knowledge_artifact : public type_combat_artifact {
 public:
-    type_knowledge_artifact(long new_bonus);
-    virtual long get_value(const hero* owner, unsigned char equipped,
+    // Before normalization (locals): new_bonus.
+    type_knowledge_artifact(long newBonus);
+    // Before normalization (function): type_knowledge_artifact::get_value.
+    virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 };
 
 class type_necromancy_artifact : public type_combat_artifact {
 public:
-    type_necromancy_artifact(long new_bonus);
-    virtual long get_value(const hero* owner, unsigned char equipped,
+    // Before normalization (locals): new_bonus.
+    type_necromancy_artifact(long newBonus);
+    // Before normalization (function): type_necromancy_artifact::get_value.
+    virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 };
 
 class type_movement_artifact : public type_combat_artifact {
 public:
-    type_movement_artifact(long new_bonus);
-    virtual long get_value(const hero* owner, unsigned char equipped,
+    // Before normalization (locals): new_bonus.
+    type_movement_artifact(long newBonus);
+    // Before normalization (function): type_movement_artifact::get_value.
+    virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 };
 
 class type_spellcaster_artifact : public type_combat_artifact {
 public:
-    type_spellcaster_artifact(long new_bonus);
-    virtual long get_value(const hero* owner, unsigned char equipped,
+    // Before normalization (locals): new_bonus.
+    type_spellcaster_artifact(long newBonus);
+    // Before normalization (function): type_spellcaster_artifact::get_value.
+    virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 };
 
 class type_morale_artifact : public type_combat_artifact {
 public:
-    type_morale_artifact(long new_bonus);
-    virtual long get_value(const hero* owner, unsigned char equipped,
+    // Before normalization (locals): new_bonus.
+    type_morale_artifact(long newBonus);
+    // Before normalization (function): type_morale_artifact::get_value.
+    virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 };
 
 class type_luck_artifact : public type_combat_artifact {
 public:
-    type_luck_artifact(long new_bonus);
-    virtual long get_value(const hero* owner, unsigned char equipped,
+    // Before normalization (locals): new_bonus.
+    type_luck_artifact(long newBonus);
+    // Before normalization (function): type_luck_artifact::get_value.
+    virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 };
 
 class type_antimorale_artifact : public type_artifact_effect {
 public:
     type_antimorale_artifact();
-    virtual long get_value(const hero* owner, unsigned char equipped,
+    // Before normalization (function): type_antimorale_artifact::get_value.
+    virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 };
 
 class type_antiluck_artifact : public type_artifact_effect {
 public:
     type_antiluck_artifact();
-    virtual long get_value(const hero* owner, unsigned char equipped,
+    // Before normalization (function): type_antiluck_artifact::get_value.
+    virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 };
 
 class type_creature_growth_artifact : public type_artifact_effect {
 public:
-    type_creature_growth_artifact(long new_level, long new_bonus);
-    virtual long get_value(const hero* owner, unsigned char equipped,
+    // Before normalization (locals): new_level, new_bonus.
+    type_creature_growth_artifact(long newLevel, long newBonus);
+    // Before normalization (function): type_creature_growth_artifact::get_value.
+    virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 
     // This concrete type's +4 word is its dwelling level; its growth bonus
     // is the second constructor argument stored at +8.
-    long bonus;
-    long growthBonus;
+    // Before normalization: bonus.
+    long m_bonus;
+    // Before normalization: growthBonus.
+    long m_growthBonus;
 };
 
 class type_undead_king_cloak_artifact : public type_necromancy_artifact {
 public:
     type_undead_king_cloak_artifact();
-    virtual long get_value(const hero* owner, unsigned char equipped,
+    // Before normalization (function): type_undead_king_cloak_artifact::get_value.
+    virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 };
 
 class type_duration_artifact : public type_power_artifact {
 public:
-    type_duration_artifact(long new_bonus);
-    virtual long get_value(const hero* owner, unsigned char equipped,
+    // Before normalization (locals): new_bonus.
+    type_duration_artifact(long newBonus);
+    // Before normalization (function): type_duration_artifact::get_value.
+    virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 };
 
 class type_school_artifact : public type_power_artifact {
 public:
-    type_school_artifact(TSpellSchool new_school, long new_bonus);
-    virtual long get_value(const hero* owner, unsigned char equipped,
+    // Before normalization (locals): new_school, new_bonus.
+    type_school_artifact(TSpellSchool newSchool, long newBonus);
+    // Before normalization (function): type_school_artifact::get_value.
+    virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 
-    TSpellSchool school;
+    // Before normalization: school.
+    TSpellSchool m_school;
 };
 
 class type_antimagic_artifact : public type_artifact_effect {
 public:
-    type_antimagic_artifact(long max_level);
-    virtual long get_value(const hero* owner, unsigned char equipped,
+    // Before normalization (locals): max_level.
+    type_antimagic_artifact(long maxLevel);
+    // Before normalization (function): type_antimagic_artifact::get_value.
+    virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 
-    long bonus;
+    // Before normalization: bonus.
+    long m_bonus;
 };
 
 // Retail's vtable at 0x63b74c identifies the concrete spell-granting
@@ -910,48 +1032,59 @@ public:
 // concrete branch, as in the Dreamcast/NH3API hierarchy.
 class type_spell_artifact : public type_artifact_effect {
 public:
-    type_spell_artifact(SpellID new_spell);
-    virtual long get_value(const hero* owner, unsigned char equipped,
+    // Before normalization (locals): new_spell.
+    type_spell_artifact(SpellID newSpell);
+    // Before normalization (function): type_spell_artifact::get_value.
+    virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 
-    SpellID spell;
+    // Before normalization: spell.
+    SpellID m_spell;
 };
 
 class type_shooter_bonus_artifact : public type_combat_artifact {
 public:
-    type_shooter_bonus_artifact(long new_bonus);
-    virtual long get_value(const hero* owner, unsigned char equipped,
+    // Before normalization (locals): new_bonus.
+    type_shooter_bonus_artifact(long newBonus);
+    // Before normalization (function): type_shooter_bonus_artifact::get_value.
+    virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 };
 
 class type_angelic_alliance_artifact : public type_might_artifact {
 public:
     type_angelic_alliance_artifact();
-    virtual long get_value(const hero* owner, unsigned char equipped,
+    // Before normalization (function): type_angelic_alliance_artifact::get_value.
+    virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 };
 
 class type_elixir_of_life_artifact : public type_artifact_effect {
 public:
     type_elixir_of_life_artifact();
-    virtual long get_value(const hero* owner, unsigned char equipped,
+    // Before normalization (function): type_elixir_of_life_artifact::get_value.
+    virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 };
 
 class type_statue_of_legion_artifact : public type_artifact_effect {
 public:
     type_statue_of_legion_artifact();
-    virtual long get_value(const hero* owner, unsigned char equipped,
+    // Before normalization (function): type_statue_of_legion_artifact::get_value.
+    virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 };
 
 class type_tome_artifact : public type_combat_artifact {
 public:
-    type_tome_artifact(TSpellSchool new_school);
-    virtual long get_value(const hero* owner, unsigned char equipped,
+    // Before normalization (locals): new_school.
+    type_tome_artifact(TSpellSchool newSchool);
+    // Before normalization (function): type_tome_artifact::get_value.
+    virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 
-    TSpellSchool school;
+    // Before normalization: school.
+    TSpellSchool m_school;
 };
 
 // Retail get_value (0x432d20) prices amount * the owning AI player's
@@ -961,12 +1094,16 @@ public:
 // every consumer includes ai_player.h before town.h.
 class type_income_artifact : public type_artifact_effect {
 public:
-    type_income_artifact(long new_amount, enum EGameResource new_resource);
-    virtual long get_value(const hero* owner, unsigned char equipped,
+    // Before normalization (locals): new_amount, new_resource.
+    type_income_artifact(long newAmount, enum EGameResource newResource);
+    // Before normalization (function): type_income_artifact::get_value.
+    virtual long getValue(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 
-    long amount;
-    enum EGameResource resource;
+    // Before normalization: amount.
+    long m_amount;
+    // Before normalization: resource.
+    enum EGameResource m_resource;
 };
 
 // --- type_artifact_effect ---

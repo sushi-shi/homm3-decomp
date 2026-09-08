@@ -21,14 +21,16 @@ enum ESpellTargetFlags {
     SPELL_TARGET_MARK_AREA = 0x280
 };
 
-unsigned char SpellTargetsASingleArmy(int spell, int sslevel);
-unsigned char InitializeSpellTraitsTable();
+unsigned char spellTargetsASingleArmy(int spell, int sslevel);
+// Before normalization (function): InitializeSpellTraitsTable.
+unsigned char initializeSpellTraitsTable();
 
 // Mutable implementation storage filled from sptraits.txt. The public
 // akSpellTraits pointer/reference cell is at 0x687f58; retail writes this
 // adjacent 81*136-byte backing array directly. Name is provisional because
 // only the public DC array name survives.
-extern SSpellTraits aSpellTraitsImp[81];
+// Before normalization: aSpellTraitsImp.
+extern SSpellTraits g_spellTraitsImp[81];
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\spelldefs.cpp:335, dc 0x14e39c) void InitializeSpellTraits(int id, const std::vector<char* resource);

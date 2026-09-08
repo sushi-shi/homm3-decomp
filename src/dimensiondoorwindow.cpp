@@ -31,14 +31,14 @@ void TDimensionDoorWindow::~TDimensionDoorWindow()
 
 // E:\gamedcs\dimensiondoorwindow.cpp:100
 DC_ONLY(0x829a0, 0x1E2)
-int TDimensionDoorWindow::WindowHandler(message* msg)
+int TDimensionDoorWindow::windowHandler(message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\dimensiondoorwindow.cpp:208
 DC_ONLY(0x82b84, 0x16)
-int TDimensionDoorWindow::ExitDialog(message* msg)
+int TDimensionDoorWindow::exitDialog(message* msg)
 {
     // @stub
 }
@@ -59,7 +59,7 @@ void TSkuttleBoatWindow::~TSkuttleBoatWindow()
 
 // E:\gamedcs\dimensiondoorwindow.cpp:280
 DC_ONLY(0x82d14, 0x1BC)
-int TSkuttleBoatWindow::WindowHandler(message* msg)
+int TSkuttleBoatWindow::windowHandler(message* msg)
 {
     // @stub
 }
@@ -115,17 +115,17 @@ VA(0x004916f0, 0x164)  // vtable 0x63db9c + source order, dc 0x827f8
 TDimensionDoorWindow::TDimensionDoorWindow()
     : CAdvPopup(0, 0, 800, 600, 1)
 {
-    Widgets.reserve(2);
+    m_widgets.reserve(2);
 
-    widget* mapWidget = gpAdvManager->advWindow->MapWidget;
-    Widgets.push_back(new border(mapWidget->x, mapWidget->y,
-        mapWidget->width, mapWidget->height, 0, 1));
+    widget* mapWidget = g_advManager->m_advWindow->m_mapWidget;
+    m_widgets.push_back(new border(mapWidget->m_x, mapWidget->m_y,
+        mapWidget->m_width, mapWidget->m_height, 0, 1));
 
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
-            AddWidget(*it, -1);
+            addWidget(*it, -1);
         else
-            MemError();
+            memError();
     }
 }
 
@@ -136,7 +136,7 @@ VA_COMPGEN(0x00491860, 0x21, SCALAR_DELETING_DTOR, TDimensionDoorWindow)
 VA(0x00491890, 0x6B)  // vtable 0x63db9c + CAdvPopup dtor callee, dc 0x82938
 TDimensionDoorWindow::~TDimensionDoorWindow()
 {
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
@@ -185,76 +185,76 @@ TDimensionDoorWindow::~TDimensionDoorWindow()
 
 // E:\gamedcs\dimensiondoorwindow.cpp:100
 VA(0x00491900, 0x1B9)  // vtable slot 9 + source order, dc 0x829a0
-int TDimensionDoorWindow::WindowHandler(message* msg)
+int TDimensionDoorWindow::windowHandler(message* msg)
 {
-    int result = CAdvPopup::WindowHandler(msg);
+    int result = CAdvPopup::windowHandler(msg);
     if (result)
         return result;
 
-    unsigned long lastFrame = glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
-    if (static_cast<long>(GameTime::Get() - lastFrame) > 0) {
-        gpAdvManager->CompleteDraw(0);
-        gpAdvManager->UpdateScreen(0, 0);
+    unsigned long lastFrame = g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
+    if (static_cast<long>(GameTime::get() - lastFrame) > 0) {
+        g_advManager->completeDraw(0);
+        g_advManager->updateScreen(0, 0);
     }
 
-    int mouseX = msg->mouseX;
-    int mouseY = msg->mouseY;
+    int mouseX = msg->m_mouseX;
+    int mouseY = msg->m_mouseY;
 
-    switch (msg->id) {
+    switch (msg->m_id) {
     case MESSAGE_KEY_DOWN:
-        if (msg->codeX == DIALOG_CLOSE_KEY) {
-            gpWindowManager->dialogReturn = 0;
-            goto endDialog;
+        if (msg->m_codeX == DIALOG_CLOSE_KEY) {
+            g_windowManager->m_dialogReturn = 0;
+            goto m_endDialog;
         }
         break;
 
     case MESSAGE_MOUSE_MOVE:
-        if (gpAdvManager->InMapArea(mouseX, mouseY)) {
+        if (g_advManager->inMapArea(mouseX, mouseY)) {
             int cellX = mouseX / 32;
             int cellY = mouseY / 32;
-            if (gpAdvManager->lastHoverX != cellX
-                || gpAdvManager->lastHoverY != cellY) {
-                gpAdvManager->lastHoverX = cellX;
-                gpAdvManager->lastHoverY = cellY;
-                NewmapCell* cell = gpAdvManager->GetCell(
-                    gpAdvManager->get_mouse_map_point());
-                if (!(cell->flags_00_11 & 0x100) && !cell->is_trigger) {
-                    gpWindowManager->dialogReturn = 1;
-                    gpMouseManager->SetPointer(ADV_DIMENSION_DOOR_POINTER,
+            if (g_advManager->m_lastHoverX != cellX
+                || g_advManager->m_lastHoverY != cellY) {
+                g_advManager->m_lastHoverX = cellX;
+                g_advManager->m_lastHoverY = cellY;
+                NewmapCell* cell = g_advManager->getCell(
+                    g_advManager->get_mouse_map_point());
+                if (!(cell->m_flags0011 & 0x100) && !cell->m_isTrigger) {
+                    g_windowManager->m_dialogReturn = 1;
+                    g_mouseManager->setPointer(ADV_DIMENSION_DOOR_POINTER,
                         mouseManager::ADVENTURE_SET);
                 } else {
-                    gpWindowManager->dialogReturn = 0;
-                    gpMouseManager->SetPointer(ADV_ARROW_POINTER,
+                    g_windowManager->m_dialogReturn = 0;
+                    g_mouseManager->setPointer(ADV_ARROW_POINTER,
                         mouseManager::ADVENTURE_SET);
                 }
             }
         } else {
-            gpWindowManager->dialogReturn = 0;
-            gpMouseManager->SetPointer(ADV_ARROW_POINTER,
+            g_windowManager->m_dialogReturn = 0;
+            g_mouseManager->setPointer(ADV_ARROW_POINTER,
                 mouseManager::ADVENTURE_SET);
         }
         break;
 
     case MESSAGE_WIDGET:
-        switch (msg->codeX) {
+        switch (msg->m_codeX) {
         case widget::WIDGET_SELECT:
-            if (msg->codeY != 0)
+            if (msg->m_codeY != 0)
                 break;
-            if (gpWindowManager->dialogReturn != 1)
+            if (g_windowManager->m_dialogReturn != 1)
                 break;
-            msg->id = MESSAGE_WIDGET;
-            msg->codeX = msg->codeY = widget::WIDGET_END_DIALOG;
+            msg->m_id = MESSAGE_WIDGET;
+            msg->m_codeX = msg->m_codeY = widget::WIDGET_END_DIALOG;
             return MESSAGE_DISPATCH_FORWARD;
         case widget::WIDGET_DESELECT:
-            if (msg->codeY == DIALOG_RETURN_CANCEL) {
-                gpWindowManager->dialogReturn = 0;
-                goto endDialog;
+            if (msg->m_codeY == DIALOG_RETURN_CANCEL) {
+                g_windowManager->m_dialogReturn = 0;
+                goto m_endDialog;
             }
             break;
         case widget::WIDGET_RIGHT_SELECT:
-            if (msg->codeY == 0) {
-                gpWindowManager->dialogReturn = 0;
-                goto endDialog;
+            if (msg->m_codeY == 0) {
+                g_windowManager->m_dialogReturn = 0;
+                goto m_endDialog;
             }
             break;
         }
@@ -262,9 +262,9 @@ int TDimensionDoorWindow::WindowHandler(message* msg)
     }
     return MESSAGE_DISPATCH_CONSUME;
 
-endDialog:
-    msg->id = MESSAGE_WIDGET;
-    msg->codeX = msg->codeY = widget::WIDGET_END_DIALOG;
+m_endDialog:
+    msg->m_id = MESSAGE_WIDGET;
+    msg->m_codeX = msg->m_codeY = widget::WIDGET_END_DIALOG;
     return MESSAGE_DISPATCH_FORWARD;
 }
 
@@ -274,11 +274,11 @@ endDialog:
 
 // E:\gamedcs\dimensiondoorwindow.cpp:208
 VA(0x00491ac0, 0x2C)  // vtable slot 14 + source order, dc 0x82b84
-int TDimensionDoorWindow::ExitDialog(message* msg)
+int TDimensionDoorWindow::exitDialog(message* msg)
 {
-    msg->id = MESSAGE_WIDGET;
-    msg->codeX = msg->codeY = 10;
-    gpWindowManager->dialogReturn = 0;
+    msg->m_id = MESSAGE_WIDGET;
+    msg->m_codeX = msg->m_codeY = 10;
+    g_windowManager->m_dialogReturn = 0;
     return MESSAGE_DISPATCH_FORWARD;
 }
 
@@ -287,17 +287,17 @@ VA(0x00491af0, 0x164)  // vtable 0x63dbd8 + source order, dc 0x82b9c
 TSkuttleBoatWindow::TSkuttleBoatWindow()
     : CAdvPopup(0, 0, 800, 600, 1)
 {
-    Widgets.reserve(2);
+    m_widgets.reserve(2);
 
-    widget* mapWidget = gpAdvManager->advWindow->MapWidget;
-    Widgets.push_back(new border(mapWidget->x, mapWidget->y,
-        mapWidget->width, mapWidget->height, 0, 1));
+    widget* mapWidget = g_advManager->m_advWindow->m_mapWidget;
+    m_widgets.push_back(new border(mapWidget->m_x, mapWidget->m_y,
+        mapWidget->m_width, mapWidget->m_height, 0, 1));
 
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
-            AddWidget(*it, -1);
+            addWidget(*it, -1);
         else
-            MemError();
+            memError();
     }
 }
 
@@ -308,7 +308,7 @@ VA_COMPGEN(0x00491c60, 0x21, SCALAR_DELETING_DTOR, TSkuttleBoatWindow)
 VA(0x00491c90, 0x6B)  // vtable 0x63dbd8 + CAdvPopup dtor callee, dc 0x82cb0
 TSkuttleBoatWindow::~TSkuttleBoatWindow()
 {
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
@@ -316,70 +316,70 @@ TSkuttleBoatWindow::~TSkuttleBoatWindow()
 
 // E:\gamedcs\dimensiondoorwindow.cpp:280
 VA(0x00491d00, 0x1A9)  // vtable slot 9 + source order, dc 0x82d14
-int TSkuttleBoatWindow::WindowHandler(message* msg)
+int TSkuttleBoatWindow::windowHandler(message* msg)
 {
-    int result = CAdvPopup::WindowHandler(msg);
+    int result = CAdvPopup::windowHandler(msg);
     if (result)
         return result;
 
-    unsigned long lastFrame = glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
-    if (static_cast<long>(GameTime::Get() - lastFrame) > 0) {
-        gpAdvManager->CompleteDraw(0);
-        gpAdvManager->UpdateScreen(0, 0);
+    unsigned long lastFrame = g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
+    if (static_cast<long>(GameTime::get() - lastFrame) > 0) {
+        g_advManager->completeDraw(0);
+        g_advManager->updateScreen(0, 0);
     }
 
-    int mouseX = msg->mouseX;
-    int mouseY = msg->mouseY;
+    int mouseX = msg->m_mouseX;
+    int mouseY = msg->m_mouseY;
 
-    switch (msg->id) {
+    switch (msg->m_id) {
     case MESSAGE_KEY_DOWN:
-        if (msg->codeX == DIALOG_CLOSE_KEY) {
-            gpWindowManager->dialogReturn = 0;
-            goto endDialog;
+        if (msg->m_codeX == DIALOG_CLOSE_KEY) {
+            g_windowManager->m_dialogReturn = 0;
+            goto m_endDialog;
         }
         break;
 
     case MESSAGE_MOUSE_MOVE:
-        if (gpAdvManager->InMapArea(mouseX, mouseY)) {
+        if (g_advManager->inMapArea(mouseX, mouseY)) {
             int cellX = mouseX / 32;
             int cellY = mouseY / 32;
-            if (gpAdvManager->lastHoverX != cellX
-                || gpAdvManager->lastHoverY != cellY) {
-                gpAdvManager->lastHoverX = cellX;
-                gpAdvManager->lastHoverY = cellY;
-                NewmapCell* cell = gpAdvManager->GetCell(
-                    gpAdvManager->get_mouse_map_point());
-                if (cell->type == BOAT && cell->is_trigger) {
-                    gpWindowManager->dialogReturn = 1;
-                    gpMouseManager->SetPointer(ADV_SKUTTLE_BOAT_POINTER,
+            if (g_advManager->m_lastHoverX != cellX
+                || g_advManager->m_lastHoverY != cellY) {
+                g_advManager->m_lastHoverX = cellX;
+                g_advManager->m_lastHoverY = cellY;
+                NewmapCell* cell = g_advManager->getCell(
+                    g_advManager->get_mouse_map_point());
+                if (cell->m_type == BOAT && cell->m_isTrigger) {
+                    g_windowManager->m_dialogReturn = 1;
+                    g_mouseManager->setPointer(ADV_SKUTTLE_BOAT_POINTER,
                         mouseManager::ADVENTURE_SET);
                 } else {
-                    gpWindowManager->dialogReturn = 0;
-                    gpMouseManager->SetPointer(ADV_ARROW_POINTER,
+                    g_windowManager->m_dialogReturn = 0;
+                    g_mouseManager->setPointer(ADV_ARROW_POINTER,
                         mouseManager::ADVENTURE_SET);
                 }
             }
         } else {
-            gpWindowManager->dialogReturn = 0;
-            gpMouseManager->SetPointer(ADV_ARROW_POINTER,
+            g_windowManager->m_dialogReturn = 0;
+            g_mouseManager->setPointer(ADV_ARROW_POINTER,
                 mouseManager::ADVENTURE_SET);
         }
         break;
 
     case MESSAGE_WIDGET:
-        switch (msg->codeX) {
+        switch (msg->m_codeX) {
         case widget::WIDGET_SELECT:
-            if (msg->codeY != 0)
+            if (msg->m_codeY != 0)
                 break;
-            if (gpWindowManager->dialogReturn != 1)
+            if (g_windowManager->m_dialogReturn != 1)
                 break;
-            msg->id = MESSAGE_WIDGET;
-            msg->codeX = msg->codeY = widget::WIDGET_END_DIALOG;
+            msg->m_id = MESSAGE_WIDGET;
+            msg->m_codeX = msg->m_codeY = widget::WIDGET_END_DIALOG;
             return MESSAGE_DISPATCH_FORWARD;
         case widget::WIDGET_RIGHT_SELECT:
-            if (msg->codeY == 0) {
-                gpWindowManager->dialogReturn = 0;
-                goto endDialog;
+            if (msg->m_codeY == 0) {
+                g_windowManager->m_dialogReturn = 0;
+                goto m_endDialog;
             }
             break;
         }
@@ -387,19 +387,19 @@ int TSkuttleBoatWindow::WindowHandler(message* msg)
     }
     return MESSAGE_DISPATCH_CONSUME;
 
-endDialog:
-    msg->id = MESSAGE_WIDGET;
-    msg->codeX = msg->codeY = widget::WIDGET_END_DIALOG;
+m_endDialog:
+    msg->m_id = MESSAGE_WIDGET;
+    msg->m_codeX = msg->m_codeY = widget::WIDGET_END_DIALOG;
     return MESSAGE_DISPATCH_FORWARD;
 }
 
 // E:\gamedcs\dimensiondoorwindow.cpp:395
 VA(0x00491eb0, 0x2c)  // vtable slot 14 + source order, dc 0x82ed0
-int TSkuttleBoatWindow::ExitDialog(message* msg)
+int TSkuttleBoatWindow::exitDialog(message* msg)
 {
-    msg->id = MESSAGE_WIDGET;
-    msg->codeX = msg->codeY = 10;
-    gpWindowManager->dialogReturn = 0;
+    msg->m_id = MESSAGE_WIDGET;
+    msg->m_codeX = msg->m_codeY = 10;
+    g_windowManager->m_dialogReturn = 0;
     return MESSAGE_DISPATCH_FORWARD;
 }
 

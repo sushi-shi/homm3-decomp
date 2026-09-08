@@ -5,6 +5,6 @@
 #include "struct.h"
 
 // Network-layer singleton defined by remote.cpp.
-extern CNetPlayerInfo gsThisNetPlayerInfo;
+extern CNetPlayerInfo g_thisNetPlayerInfo;
 
 #endif

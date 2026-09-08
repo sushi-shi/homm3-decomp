@@ -72,19 +72,21 @@
 // singleselectionwindow.h so this compiland's include closure does
 // not widen; townManager::ChangeTown, which DoTownGate expands
 // inline, is the only consumer here.
-void StartMouseThread();
-void StopMouseThread();
+void startMouseThread();
+void stopMouseThread();
 // ai_combat.h owns this pair, but that header belongs to another lane's
 // closure and this compiland needs nothing else out of it.
 // SetupThievesGuild and GetCategoryStats rank heroes with it.
-long AI_approximate_strength(const hero* current_hero);
-long AI_approximate_strength(const hero* current_hero,
-                             const armyGroup* current_army);
+// Before normalization (locals): current_hero, current_army.
+long aiApproximateStrength(const hero* currentHero);
+// Before normalization (function): AI_approximate_strength.
+long aiApproximateStrength(const hero* currentHero,
+                             const armyGroup* currentArmy);
 // The scoreboard's statistics pair, defined (with their claims) after
 // SetupThievesGuild in link order; declared here so the builder above
 // them can call both.
-void GetCategoryStats(int whichCat, long* value, signed char* index);
-void SortStats(long* value, signed char* index);
+void getCategoryStats(int whichCat, long* value, signed char* index);
+void sortStats(long* value, signed char* index);
 
 
 
@@ -99,24 +101,29 @@ void SortStats(long* value, signed char* index);
 // because retail passes is_legal_building a plain loop counter
 // (`mov edx,[ebp-4]; push edx` - no table, no conversion), so the
 // retail source contained the identical conversion.
-inline TCreatureType creature_type_from_int(int value)
+inline TCreatureType creatureTypeFromInt(int value)
 {
     union {
-        int value;
-        TCreatureType creature;
+        // Before normalization: value.
+        int m_value;
+        // Before normalization: creature.
+        TCreatureType m_creature;
     } storage;
-    storage.value = value;
-    return storage.creature;
+    storage.m_value = value;
+    return storage.m_creature;
 }
 
-inline type_building_id building_id_from_int(int value)
+// Before normalization (function): building_id_from_int.
+inline type_building_id buildingIdFromInt(int value)
 {
     union {
-        int value;
-        type_building_id building;
+        // Before normalization: value.
+        int m_value;
+        // Before normalization: building.
+        type_building_id m_building;
     } storage;
-    storage.value = value;
-    return storage.building;
+    storage.m_value = value;
+    return storage.m_building;
 }
 
 // resourcemanager.h's two entry points this compiland needs, declared
@@ -126,16 +133,18 @@ inline type_building_id building_id_from_int(int value)
 // file (the initialize_game_data precedent).
 class CSprite;
 namespace ResourceManager {
-CSprite* GetSprite(const char* name);
-Bitmap816* GetBitmap816(const char* name);
+CSprite* getSprite(const char* name);
+Bitmap816* getBitmap816(const char* name);
 }
 
 
 // Shared state of the tavern chooser. DoTavern selects a recruit into the
 // hero pointer; the flag distinguishes map-object hiring from town hiring.
 // Roles and storage are retail-byte-proven; names are provisional.
-DATA(0x006aa628) hero* gTavernHero;
-DATA(0x006aaa48) int gMapTavern;
+// Before normalization: gTavernHero.
+// Before normalization: gMapTavern.
+DATA(0x006aa628) hero* g_tavernHero;
+DATA(0x006aaa48) int g_mapTavern;
 
 // Two more words the manager constructor clears. An image-wide scan of
 // the two absolute addresses separates them: every one of the seventeen
@@ -145,7 +154,6 @@ DATA(0x006aaa48) int gMapTavern;
 // 0x4dd9f1, 0x4dda8d, 0x4e1bad, 0x4e1c13) and so belongs to a compiland
 // outside the admitted surface - declared here the way town::View's
 // globals are. Roles are unattested, so the names stay neutral.
-DATA(0x006aa9d8) extern int gUnnamed6aa9d8;
 // The "nwczion" cheat's toggle, and this is a NAME rather than an
 // ordinal because the retail bytes prove the semantics twice over. The
 // image has exactly four references: the game-start reset at 0x4cece9
@@ -155,20 +163,24 @@ DATA(0x006aa9d8) extern int gUnnamed6aa9d8;
 // "spoon" and "ajpcuvfurecevpr" -> "nwcphisherprice"), and
 // SetupExtraStuff below reads it. Owner TU outside the admitted
 // surface, so it is declared rather than claimed.
-DATA(0x006aaa5c) extern unsigned char gBuildAllBuildings;
+DATA(0x006aa9d8) extern int g_unnamed6aa9d8;
 // A third, on the same evidence: all seven references to 0x6aa9e8 land
 // inside townmgr's bracket (townObject::Draw 0x5c328e, townManager::Open
 // 0x5c651a, 0x5c77ee/0x5c77fb, ::Main 0x5d34b2, ::CycleOutline 0x5d692e
 // and ::BuildObj 0x5d6e7b), so it is this compiland's file-static too.
 // CycleOutline publishes the objId of the object it is animating into
 // it and townObject::Draw reads it back, which is the whole role.
-DATA(0x006aa9e8) static int gUnnamed6aa9e8;
-DATA(0x006aa9ec) static heroWindow* gUnnamed6aa9ec;
+// Before normalization: gUnnamed6aa9e8.
+DATA(0x006aaa5c) extern unsigned char g_buildAllBuildings;
+// Before normalization: gUnnamed6aa9ec.
+DATA(0x006aa9e8) static int g_unnamed6aa9e8;
+DATA(0x006aa9ec) static heroWindow* g_unnamed6aa9ec;
 
 // The eight resource icons of the town screen's bottom bar, as x/y
 // pairs; the constructor's one loop walks them. Its single image-wide
 // reference is that loop, so this compiland owns it.
-DATA(0x006436e0) static const int gResourceIconPos[8][2] = {
+// Before normalization: gResourceIconPos.
+DATA(0x006436e0) static const int g_resourceIconPos[8][2] = {
     { 22, 459 }, { 77, 459 }, { 132, 459 }, { 187, 459 },
     { 22, 507 }, { 77, 507 }, { 132, 507 }, { 187, 507 }
 };
@@ -177,7 +189,7 @@ DATA(0x006436e0) static const int gResourceIconPos[8][2] = {
 // publishes the shared name townBuildingSpriteNames; retail's two local
 // readers plus type_dialog_icon::set in kb.obj prove townmgr.obj ownership
 // and cross-TU linkage.
-DATA(0x0067f578) const char* townBuildingSpriteNames[9] = {
+DATA(0x0067f578) const char* g_townBuildingSpriteNames[9] = {
     "HALLCSTL.def", "HALLRAMP.def", "HALLtowr.def", "HALLINFR.def",
     "HALLNECR.def", "HALLDUNG.def", "HALLSTRN.def", "HALLFORT.def",
     "HALLelem.def"
@@ -189,7 +201,8 @@ DATA(0x0067f578) const char* townBuildingSpriteNames[9] = {
 // which is what proves the extra leading element rather than a
 // nine-long table read one short. Ten pointers close exactly on
 // gMageGuildDefNames below. Both references are this compiland's.
-DATA(0x0068a2f4) static const char* const gTownCastleDefNames[10] = {
+// Before normalization: gTownCastleDefNames.
+DATA(0x0068a2f4) static const char* const g_townCastleDefNames[10] = {
     "TPCasNeu.pcx", "TPCasCas.pcx", "TPCasRam.pcx", "TPCasTow.pcx",
     "TPCasInf.pcx", "TPCasNec.pcx", "TPCasDun.pcx", "TPCasStr.pcx",
     "TPCasFor.pcx", "TPCasEle.pcx"
@@ -198,7 +211,8 @@ DATA(0x0068a2f4) static const char* const gTownCastleDefNames[10] = {
 // The mage guild background for each town type, indexed by town::type.
 // The table's ONE image-wide reference is the load inside
 // TMageGuildWindow's constructor, so this compiland owns it.
-DATA(0x0068a31c) static const char* const gMageGuildDefNames[9] = {
+// Before normalization: gMageGuildDefNames.
+DATA(0x0068a31c) static const char* const g_mageGuildDefNames[9] = {
     "TPMageCs.pcx", "TPMageRm.pcx", "TPMageTw.pcx", "TPMageIn.pcx",
     "TPMageNc.pcx", "TPMageDn.pcx", "TPMageSt.pcx", "TPMageFr.pcx",
     "TPMageEl.pcx"
@@ -208,10 +222,11 @@ DATA(0x0068a31c) static const char* const gMageGuildDefNames[9] = {
 // type; the five towns with no boat of their own share the empty
 // rollover string. The table's ONE image-wide reference is the load
 // inside TShipWindow's constructor, so this compiland owns it.
-DATA(0x0068a340) static const char* const gBoatDefNames[9] = {
-    "AB02_.def",       emptyRolloverText, emptyRolloverText,
-    emptyRolloverText, "AB01_.def",       emptyRolloverText,
-    emptyRolloverText, "AB03_.def",       "AB01_.def"
+// Before normalization: gBoatDefNames.
+DATA(0x0068a340) static const char* const g_boatDefNames[9] = {
+    "AB02_.def",       g_emptyRolloverText, g_emptyRolloverText,
+    g_emptyRolloverText, "AB01_.def",       g_emptyRolloverText,
+    g_emptyRolloverText, "AB03_.def",       "AB01_.def"
 };
 
 // The war machine each town's blacksmith sells, as a creature type
@@ -227,10 +242,11 @@ DATA(0x0068a340) static const char* const gBoatDefNames[9] = {
 // SetRightClickText 0x5d1aa0 copies both dwords of a row into an 8-byte
 // local and calls type_artifact::get_description on it, which is the
 // artifact record's own member. The pair spelling was a placeholder.
-DATA(0x00642e90) static const int gBlacksmithMachines[9] = {
+// Before normalization: gBlacksmithMachines.
+DATA(0x00642e90) static const int g_blacksmithMachines[9] = {
     146, 147, 148, 148, 147, 146, 148, 147, 146
 };
-DATA(0x006aa9f8) type_artifact gBlacksmithArtifacts[9];
+DATA(0x006aa9f8) type_artifact g_blacksmithArtifacts[9];
 
 // window.obj's text setter, retail 0x5ffa30: a free function, so /Gr
 // makes it fastcall (heroWindow* in ecx, the text id in edx) - which is
@@ -238,7 +254,7 @@ DATA(0x006aa9f8) type_artifact gBlacksmithArtifacts[9];
 // Name follows the Dreamcast window.cpp roster's SetWinText (dc
 // 0x198130); declared here rather than in window.h because townmgr is
 // the only claimed consumer so far.
-void SetWinText(heroWindow* win, int which);
+void setWinText(heroWindow* win, int which);
 
 // The shipyard price gate, a single-call-site static: /Ob2 expands it
 // unconditionally and emits no out-of-line body, so it costs nothing in
@@ -260,23 +276,27 @@ void SetWinText(heroWindow* win, int which);
 // site's `remaining / sites-still-to-come` share enough for
 // vector::size to expand inline - which retail does not do here (it
 // does in TBuyBuildWindow, whose site count differs). 98.12% -> 100%.
-static bool SmithAffordable(int cost)
+// Before normalization (function): SmithAffordable.
+static bool smithAffordable(int cost)
 {
-    return gpGame->players[gpGame->GetLocalPlayerGamePos()].resources[6] >= cost;
+    return g_game->m_players[g_game->getLocalPlayerGamePos()].m_resources[6] >= cost;
 }
 
-static bool ShipyardAffordable()
+// Before normalization (function): ShipyardAffordable.
+static bool shipyardAffordable()
 {
-    return gpGame->players[gpGame->GetLocalPlayerGamePos()].resources[6] >= 1000
-        && gpGame->players[gpGame->GetLocalPlayerGamePos()].resources[0] >= 10;
+    return g_game->m_players[g_game->getLocalPlayerGamePos()].m_resources[6] >= 1000
+        && g_game->m_players[g_game->getLocalPlayerGamePos()].m_resources[0] >= 10;
 }
 
 // The compiland's building-description formatter, retail 0x5d2a40 (DC
 // makes it static in this source file). Declared here because the
 // dialogs that display a description call it; the body is not
 // reconstructed yet.
-char* GetBuildingInfo(const town* this_town, int buildingId,
-                      unsigned char bIncludeTitle, unsigned char extended);
+// Before normalization (function): GetBuildingInfo.
+// Before normalization (locals): this_town, bIncludeTitle.
+char* getBuildingInfo(const town* thisTown, int buildingId,
+                      unsigned char includeTitle, unsigned char extended);
 
 
 // The two unclaimed rows behind it, screened 2026-08-14 by CALLSITE.
@@ -316,29 +336,34 @@ char* GetBuildingInfo(const town* this_town, int buildingId,
 // every one inside townmgr's bracket, so this compiland owns it; only
 // the read in UpdateTownLocator is reconstructed, so the name stays
 // neutral.
-DATA(0x006aaa50) static int gUnnamed6aaa50;
+// Before normalization: gUnnamed6aaa50.
+DATA(0x006aaa50) static int g_unnamed6aaa50;
 
 // The recruit dialog the fort page runs modally. All sixteen image-wide
 // references sit inside townmgr's bracket, so this compiland owns it;
 // the name follows recruit.h's own gp<Type> convention.
-DATA(0x006aaa54) static recruitUnit* gpRecruitUnit;
+// Before normalization: gpRecruitUnit.
+DATA(0x006aaa54) static recruitUnit* g_recruitUnit;
 
 // The shipyard dialog. Six image-wide references, three in DoShipyard
 // 0x5d2720 and three in townManager::Main, so this compiland owns it
 // too; same naming convention.
-DATA(0x006aa9b0) static TShipWindow* gpShipWindow;
+// Before normalization: gpShipWindow.
+DATA(0x006aa9b0) static TShipWindow* g_shipWindow;
 
 // The blacksmith's, on the same evidence: all three image-wide
 // references to 0x6aa620 are DoBlacksmith's own new/DoModal/delete
 // trio, so this compiland owns the cell.
-DATA(0x006aa620) static TBlacksmithWindow* gpBlacksmithWindow;
+// Before normalization: gpBlacksmithWindow.
+DATA(0x006aa620) static TBlacksmithWindow* g_blacksmithWindow;
 
 // The thieves' guild page the tavern puts up, on the same evidence
 // again: every image-wide reference to 0x6aa62c is one of the four this
 // compiland's tavern handler makes (new / MemError / DoModal / delete),
 // so the cell is this compiland's file-static and the name follows the
 // same gp<Type> convention.
-DATA(0x006aa62c) static TThievesGuildWindow* gpThievesGuildWindow;
+// Before normalization: gpThievesGuildWindow.
+DATA(0x006aa62c) static TThievesGuildWindow* g_thievesGuildWindow;
 
 // The tavern page's eight text lines, DC public `?cTavernInfo@@3PAPBDA`
 // (a `const char*` row). The extent is fixed from the reader side: the
@@ -351,28 +376,32 @@ DATA(0x006aa62c) static TThievesGuildWindow* gpThievesGuildWindow;
 // eight-hero cap (takes the cap as a vararg), 2 the town square is
 // occupied, 3 the selected recruit's name and class, 4 a portrait's
 // name, 5 the thieves' guild button, 6 the rumour panel, 7 cancel.
-DATA(0x006a5e40) extern const char* cTavernInfo[8];
+// Before normalization: cTavernInfo.
+DATA(0x006a5e40) extern const char* g_tavernInfo[8];
 
 
 // The line DoPortalOfSummoning prints when the map has nothing left for
 // the portal to summon. ONE image-wide reference and no writer in the
 // admitted surface, so it is declared rather than claimed - the same
 // standing this page's other unowned .bss text cells have.
-DATA(0x006a5dfc) extern const char* gUnnamed6a5dfc;
+// Before normalization: gUnnamed6a5dfc.
 // DoBlacksmith's two, on the same standing. 0x6a5e00 is the cell
 // immediately after the one above and is the FORMAT of the "you bought
 // it" line; 0x6a6524 is the one vararg the "nobody is here to buy"
 // line takes. Each has exactly ONE image-wide reference - this page's -
 // and no writer anywhere in the image, so both are declared rather than
 // claimed and both keep neutral names.
-DATA(0x006a5e00) extern const char* gUnnamed6a5e00;
+// Before normalization: gUnnamed6a5e00.
+DATA(0x006a5dfc) extern const char* g_unnamed6a5dfc;
 // select_army's five, on the same standing again: every image-wide
 // reference to each lands inside this compiland's bracket (the four
 // formats in SetCommandAndText 0x5c77a0 and in select_army 0x5c8080,
 // the "nothing here" line in both), and nothing in the image writes
 // them, so they are declared and keep neutral names.
-DATA(0x006a5db0) extern const char* gUnnamed6a5db0;
-DATA(0x006a5db4) extern const char* gUnnamed6a5db4;
+// Before normalization: gUnnamed6a5db0.
+DATA(0x006a5e00) extern const char* g_unnamed6a5e00;
+// Before normalization: gUnnamed6a5db4.
+DATA(0x006a5db0) extern const char* g_unnamed6a5db0;
 // SetHeroCommand's four, on the same standing once more. Every
 // image-wide reference to each lands inside this compiland's bracket -
 // SetHeroCommand 0x5c7250, SetArmyCommand 0x5c7400 and SetCommandAndText
@@ -387,26 +416,37 @@ DATA(0x006a5db4) extern const char* gUnnamed6a5db4;
 // selected, and 0x6a5da4 the cancel button's. Every image-wide reference
 // to each lands inside this compiland's bracket and nothing in the image
 // writes them.
-DATA(0x006a5d84) extern const char* gUnnamed6a5d84;
-DATA(0x006a5d90) extern const char* gUnnamed6a5d90;
-DATA(0x006a5da4) extern const char* gUnnamed6a5da4;
-DATA(0x006a5d94) extern const char* gUnnamed6a5d94;
-DATA(0x006a5d9c) extern const char* gUnnamed6a5d9c;
-DATA(0x006a5da0) extern const char* gUnnamed6a5da0;
-DATA(0x006a5da8) extern const char* gUnnamed6a5da8;
+// Before normalization: gUnnamed6a5d84.
+DATA(0x006a5db4) extern const char* g_unnamed6a5db4;
+// Before normalization: gUnnamed6a5d90.
+DATA(0x006a5d84) extern const char* g_unnamed6a5d84;
+// Before normalization: gUnnamed6a5da4.
+DATA(0x006a5d90) extern const char* g_unnamed6a5d90;
+// Before normalization: gUnnamed6a5d94.
+DATA(0x006a5da4) extern const char* g_unnamed6a5da4;
+// Before normalization: gUnnamed6a5d9c.
+DATA(0x006a5d94) extern const char* g_unnamed6a5d94;
+// Before normalization: gUnnamed6a5da0.
+DATA(0x006a5d9c) extern const char* g_unnamed6a5d9c;
+// Before normalization: gUnnamed6a5da8.
+DATA(0x006a5da0) extern const char* g_unnamed6a5da0;
 // SetArmyCommand's own status formats, on the same standing (sole reader
 // is SetArmyCommand 0x5c7400, nothing in the image writes them): 0x6a5d88
 // and 0x6a5d98 are the two nothing-changed refusal lines it strcpy's when
 // the divide flag is up, and 0x6a5d8c the "divide this stack" one-name
 // format its own-owner else-arm takes the creature name into.
-DATA(0x006a5d88) extern const char* gUnnamed6a5d88;
-DATA(0x006a5d8c) extern const char* gUnnamed6a5d8c;
-DATA(0x006a5d98) extern const char* gUnnamed6a5d98;
+// Before normalization: gUnnamed6a5d88.
+DATA(0x006a5da8) extern const char* g_unnamed6a5da8;
+// Before normalization: gUnnamed6a5d8c.
+DATA(0x006a5d88) extern const char* g_unnamed6a5d88;
+// Before normalization: gUnnamed6a5d98.
+DATA(0x006a5d8c) extern const char* g_unnamed6a5d8c;
 // The build-cheat latch at retail .data 0x67832c: townManager::Main
 // drains it every pass (-1 = empty, 100 = build everything, else one
 // building id), and nothing in the admitted surface writes it - the
 // cheat console's TU is unlocated. Declared, not defined.
-DATA(0x0067832c) extern int gUnnamed67832c;
+// Before normalization: gUnnamed67832c.
+DATA(0x006a5d98) extern const char* g_unnamed6a5d98;
 // SetCommandAndText's rollover pool, on the same standing as the four
 // above: one .bss text cell per town-screen thing under the cursor,
 // every image-wide reference landing in this compiland's bracket and
@@ -416,21 +456,36 @@ DATA(0x0067832c) extern int gUnnamed67832c;
 // 14 -> dec, 15 -> df0, 7 -> df4, 8 -> df8; dd8 is the one-name
 // dwelling FORMAT the creature arms sprintf a plural name into; de8 is
 // the widget-50 arm's line; e04 the visiting-portrait exchange format.
-DATA(0x006a5dbc) extern const char* gUnnamed6a5dbc;
-DATA(0x006a5dc4) extern const char* gUnnamed6a5dc4;
-DATA(0x006a5dc8) extern const char* gUnnamed6a5dc8;
-DATA(0x006a5dcc) extern const char* gUnnamed6a5dcc;
-DATA(0x006a5dd0) extern const char* gUnnamed6a5dd0;
-DATA(0x006a5dd4) extern const char* gUnnamed6a5dd4;
-DATA(0x006a5dd8) extern const char* gUnnamed6a5dd8;
-DATA(0x006a5ddc) extern const char* gUnnamed6a5ddc;
-DATA(0x006a5de0) extern const char* gUnnamed6a5de0;
-DATA(0x006a5de4) extern const char* gUnnamed6a5de4;
-DATA(0x006a5de8) extern const char* gUnnamed6a5de8;
-DATA(0x006a5dec) extern const char* gUnnamed6a5dec;
-DATA(0x006a5df0) extern const char* gUnnamed6a5df0;
-DATA(0x006a5df4) extern const char* gUnnamed6a5df4;
-DATA(0x006a5df8) extern const char* gUnnamed6a5df8;
+// Before normalization: gUnnamed6a5dbc.
+DATA(0x0067832c) extern int g_unnamed67832c;
+// Before normalization: gUnnamed6a5dc4.
+DATA(0x006a5dbc) extern const char* g_unnamed6a5dbc;
+// Before normalization: gUnnamed6a5dc8.
+DATA(0x006a5dc4) extern const char* g_unnamed6a5dc4;
+// Before normalization: gUnnamed6a5dcc.
+DATA(0x006a5dc8) extern const char* g_unnamed6a5dc8;
+// Before normalization: gUnnamed6a5dd0.
+DATA(0x006a5dcc) extern const char* g_unnamed6a5dcc;
+// Before normalization: gUnnamed6a5dd4.
+DATA(0x006a5dd0) extern const char* g_unnamed6a5dd0;
+// Before normalization: gUnnamed6a5dd8.
+DATA(0x006a5dd4) extern const char* g_unnamed6a5dd4;
+// Before normalization: gUnnamed6a5ddc.
+DATA(0x006a5dd8) extern const char* g_unnamed6a5dd8;
+// Before normalization: gUnnamed6a5de0.
+DATA(0x006a5ddc) extern const char* g_unnamed6a5ddc;
+// Before normalization: gUnnamed6a5de4.
+DATA(0x006a5de0) extern const char* g_unnamed6a5de0;
+// Before normalization: gUnnamed6a5de8.
+DATA(0x006a5de4) extern const char* g_unnamed6a5de4;
+// Before normalization: gUnnamed6a5dec.
+DATA(0x006a5de8) extern const char* g_unnamed6a5de8;
+// Before normalization: gUnnamed6a5df0.
+DATA(0x006a5dec) extern const char* g_unnamed6a5dec;
+// Before normalization: gUnnamed6a5df4.
+DATA(0x006a5df0) extern const char* g_unnamed6a5df0;
+// Before normalization: gUnnamed6a5df8.
+DATA(0x006a5df4) extern const char* g_unnamed6a5df4;
 // (0x6a5e04, the exchange format, is already declared with select_army's
 // pool a few lines below.)
 // Retail .data 0x68a364 / 0x68a378: per-town-type dwelling slots for
@@ -441,23 +496,33 @@ DATA(0x006a5df8) extern const char* gUnnamed6a5df8;
 // dendroids 4/11, and so on. SetCommandAndText's HORDE arms fold the
 // -HORDE_ID bias into the relocation (0x68a352 / 0x68a360). Names
 // INVENTED (no DC symbol); owner TU unlocated - declared, not defined.
-DATA(0x0068a364) extern const unsigned char gHordeDwellingSlot[TOWN_TYPE_COUNT][2];
-DATA(0x0068a378) extern const unsigned char gHorde2DwellingSlot[TOWN_TYPE_COUNT][2];
+// Before normalization: gHordeDwellingSlot.
+DATA(0x006a5df8) extern const char* g_unnamed6a5df8;
+// Before normalization: gHorde2DwellingSlot.
+DATA(0x0068a364) extern const unsigned char g_hordeDwellingSlot[TOWN_TYPE_COUNT][2];
 // SetupThievesGuild's two name tables, on the rollover pool's
 // standing (readers only, no writer in the admitted surface):
 // 0x68a2d4 holds the eight per-player crest sprite names
 // (PRRed.pcx .. PRRose.pcx, read from the image) and 0x6a7794 the
 // personality display names playerData::personality indexes.
-DATA(0x0068a2d4) extern const char* const gPlayerFlagSprites[8];
-DATA(0x006a7794) extern const char* gPersonalityNames[];
+// Before normalization: gPlayerFlagSprites.
+DATA(0x0068a378) extern const unsigned char g_horde2DwellingSlot[TOWN_TYPE_COUNT][2];
+// Before normalization: gPersonalityNames.
+DATA(0x0068a2d4) extern const char* const g_playerFlagSprites[8];
 // adventuremapwindow.obj owns this eight-byte rollover/right-click record;
 // Dreamcast supplies the public name and THelpText type. The fort page and
 // SetCommandAndText select its two columns through the shared building map.
-DATA(0x00642e70) extern const int gUnnamed642e70[8];
-DATA(0x006a5e04) extern const char* gUnnamed6a5e04;
-DATA(0x006a5e08) extern const char* gUnnamed6a5e08;
-DATA(0x006a5e0c) extern const char* gUnnamed6a5e0c;
-DATA(0x006a6524) extern const char* gUnnamed6a6524;
+// Before normalization: gUnnamed642e70.
+DATA(0x006a7794) extern const char* g_personalityNames[];
+// Before normalization: gUnnamed6a5e04.
+DATA(0x00642e70) extern const int g_unnamed642e70[8];
+// Before normalization: gUnnamed6a5e08.
+DATA(0x006a5e04) extern const char* g_unnamed6a5e04;
+// Before normalization: gUnnamed6a5e0c.
+DATA(0x006a5e08) extern const char* g_unnamed6a5e08;
+// Before normalization: gUnnamed6a6524.
+DATA(0x006a5e0c) extern const char* g_unnamed6a5e0c;
+DATA(0x006a6524) extern const char* g_unnamed6a6524;
 
 #if 0  // @carcass
 
@@ -493,8 +558,10 @@ void townObject::DrawHotspot()
 // constructor reads the SECOND and THIRD of them - the first is read
 // nowhere in the image (the only two references to either table are the
 // constructor's own). Names are provisional; nothing attests them.
-DATA(0x0068a38c) extern const char* const gTownObjectNames[];
-DATA(0x0068a9bc) extern const short gTownObjectPositions[][3];
+// Before normalization: gTownObjectNames.
+// Before normalization: gTownObjectPositions.
+DATA(0x0068a38c) extern const char* const g_townObjectNames[];
+DATA(0x0068a9bc) extern const short g_townObjectPositions[][3];
 
 // The town screen's network dispatch. HandleGiftMsg (0x5c66b0) forwards
 // to the adventure handler's TRADE path with the same `this` - a direct,
@@ -519,7 +586,7 @@ public:
     // Original: CTownNetMsgHandler::SetResourceDisplay; townmgr.cpp:1836, dc 0x181468.
     void setResourceDisplay(TResourceDisplay* display)
     { m_resourceDisplay = display; }
-    void HandleGiftMsg(CNetMsg* pNetMsg);
+    void handleGiftMsg(CNetMsg* netMsg);
 };
 SIZE(CTownNetMsgHandler, 0x10);
 
@@ -531,46 +598,47 @@ SIZE(CTownNetMsgHandler, 0x10);
 // character overwritten - TOxxxxxx.pcx for the outline, TZxxxxxx.pcx for
 // the hotspot, which is what the lone `mov byte ptr [ebp-0x1b], 0x5a`
 // spells.
+// Before normalization (locals): iTownType, iObjPos, maskName_.
 VA(0x005c2ea0, 0x147)  // anchor-global 0x68a9bc positions + 0x68a38c names; anchor-callee border(6); dc 0x16a0b0
-townObject::townObject(int iTownType, int iObjPos, const char* basename)
+townObject::townObject(int townType, int objPos, const char* basename)
 {
     char defName[16];
     char maskName[16];
 
-    currFrame = 0;
-    objIcon = 0;
-    objBorder = 0;
-    visible = 1;
+    m_currFrame = 0;
+    m_objIcon = 0;
+    m_objBorder = 0;
+    m_visible = 1;
 
-    int slot = iObjPos + TOWN_BUILDING_SLOTS * iTownType;
-    x = gTownObjectPositions[slot][1];
-    y = gTownObjectPositions[slot][2];
-    objId = iObjPos;
+    int slot = objPos + TOWN_BUILDING_SLOTS * townType;
+    m_x = g_townObjectPositions[slot][1];
+    m_y = g_townObjectPositions[slot][2];
+    m_objId = objPos;
 
     sprintf(defName, DATA_COMPGEN(0x0068c1c4, townObjectSpriteFormat,
                                   "%s.def"), basename);
-    objIcon = ResourceManager::GetSprite(defName);
-    numFrames = objIcon->GetNumFrames(0);
-    w = objIcon->GetWidth();
-    h = objIcon->GetHeight();
+    m_objIcon = ResourceManager::getSprite(defName);
+    m_numFrames = m_objIcon->getNumFrames(0);
+    m_w = m_objIcon->getWidth();
+    m_h = m_objIcon->getHeight();
 
-    if (iObjPos != -1) {
-        objBorder = new border(x, y, w, h, iObjPos, 1);
-        if (!objBorder)
-            MemError();
+    if (objPos != -1) {
+        m_objBorder = new border(m_x, m_y, m_w, m_h, objPos, 1);
+        if (!m_objBorder)
+            memError();
     }
 
-    const char* maskName_ =
-        gTownObjectNames[iObjPos + TOWN_BUILDING_SLOTS * iTownType];
-    if (maskName_[0] != 0) {
+    const char* maskFileName =
+        g_townObjectNames[objPos + TOWN_BUILDING_SLOTS * townType];
+    if (maskFileName[0] != 0) {
         sprintf(maskName, DATA_COMPGEN(0x0068c1bc, townObjectMaskFormat,
-                                       "%s.pcx"), maskName_);
-        objOutline = ResourceManager::GetBitmap816(maskName);
+                                       "%s.pcx"), maskFileName);
+        m_objOutline = ResourceManager::getBitmap816(maskName);
         maskName[1] = 'Z';
-        objHotspot = ResourceManager::GetBitmap816(maskName);
+        m_objHotspot = ResourceManager::getBitmap816(maskName);
     } else {
-        objOutline = 0;
-        objHotspot = 0;
+        m_objOutline = 0;
+        m_objHotspot = 0;
     }
 }
 
@@ -592,58 +660,58 @@ townObject::townObject(int iTownType, int iObjPos, const char* basename)
 // order; the sprite's own Width and Height are RE-READ through objIcon
 // at each site, which is why the pointer is reloaded into ecx per call.
 VA(0x005c2ff0, 0x31F)  // anchor-global 0x698784 ("Town Outlines") + anchor-callee CSprite::Draw/Bitmap816::Draw, dc 0x16a2b0
-void townObject::Draw(int incFrame, unsigned char drawHotspots)
+void townObject::draw(int incFrame, unsigned char drawHotspots)
 {
-    if (visible) {
-        town* currTown = gpTownManager->townToView;
-        if (currTown->type == TOWN_DUNGEON && objId == EXTRA_0_ID) {
-            if (currTown->HasBuilding(MAGE_GUILD5_ID, 0)) {
-                objIcon->Draw(0, GUILD_LIT_FIRST_FRAME, 0, 0,
-                              objIcon->GetWidth(), objIcon->GetHeight(),
-                              gpWindowManager->screenBitmap, x, y, 0, 1);
-                if (currFrame != GUILD_LIT_FIRST_FRAME)
-                    objIcon->Draw(0, currFrame, 0, 0, objIcon->GetWidth(),
-                                  objIcon->GetHeight(),
-                                  gpWindowManager->screenBitmap, x, y, 0, 1);
+    if (m_visible) {
+        town* currTown = g_townManager->m_townToView;
+        if (currTown->m_type == TOWN_DUNGEON && m_objId == EXTRA_0_ID) {
+            if (currTown->hasBuilding(MAGE_GUILD5_ID, 0)) {
+                m_objIcon->draw(0, GUILD_LIT_FIRST_FRAME, 0, 0,
+                              m_objIcon->getWidth(), m_objIcon->getHeight(),
+                              g_windowManager->m_screenBitmap, m_x, m_y, 0, 1);
+                if (m_currFrame != GUILD_LIT_FIRST_FRAME)
+                    m_objIcon->draw(0, m_currFrame, 0, 0, m_objIcon->getWidth(),
+                                  m_objIcon->getHeight(),
+                                  g_windowManager->m_screenBitmap, m_x, m_y, 0, 1);
                 if (incFrame == 1) {
-                    currFrame++;
-                    if (currFrame == GUILD_LIT_FRAME_END)
-                        currFrame = GUILD_LIT_FIRST_FRAME;
+                    m_currFrame++;
+                    if (m_currFrame == GUILD_LIT_FRAME_END)
+                        m_currFrame = GUILD_LIT_FIRST_FRAME;
                 }
             } else {
-                objIcon->Draw(0, 0, 0, 0, objIcon->GetWidth(),
-                              objIcon->GetHeight(),
-                              gpWindowManager->screenBitmap, x, y, 0, 1);
-                if (currFrame != 0)
-                    objIcon->Draw(0, currFrame, 0, 0, objIcon->GetWidth(),
-                                  objIcon->GetHeight(),
-                                  gpWindowManager->screenBitmap, x, y, 0, 1);
+                m_objIcon->draw(0, 0, 0, 0, m_objIcon->getWidth(),
+                              m_objIcon->getHeight(),
+                              g_windowManager->m_screenBitmap, m_x, m_y, 0, 1);
+                if (m_currFrame != 0)
+                    m_objIcon->draw(0, m_currFrame, 0, 0, m_objIcon->getWidth(),
+                                  m_objIcon->getHeight(),
+                                  g_windowManager->m_screenBitmap, m_x, m_y, 0, 1);
                 if (incFrame == 1) {
-                    currFrame++;
-                    if (currFrame == GUILD_LIT_FIRST_FRAME)
-                        currFrame = 0;
+                    m_currFrame++;
+                    if (m_currFrame == GUILD_LIT_FIRST_FRAME)
+                        m_currFrame = 0;
                 }
             }
         } else {
-            if (currTown->type == TOWN_CASTLE
-                && (objId == DOCK_ID || objId == DOCK_WITH_BOAT_ID)) {
-                if (currTown->HasBuilding(CASTLE_CITADEL_ID, 1))
-                    currFrame = 1;
+            if (currTown->m_type == TOWN_CASTLE
+                && (m_objId == DOCK_ID || m_objId == DOCK_WITH_BOAT_ID)) {
+                if (currTown->hasBuilding(CASTLE_CITADEL_ID, 1))
+                    m_currFrame = 1;
                 else
-                    currFrame = 0;
+                    m_currFrame = 0;
             }
-            if (numFrames > 2) {
-                objIcon->Draw(0, 0, 0, 0, objIcon->GetWidth(),
-                              objIcon->GetHeight(),
-                              gpWindowManager->screenBitmap, x, y, 0, 1);
-                if (currFrame != 0)
-                    objIcon->Draw(0, currFrame, 0, 0, objIcon->GetWidth(),
-                                  objIcon->GetHeight(),
-                                  gpWindowManager->screenBitmap, x, y, 0, 1);
+            if (m_numFrames > 2) {
+                m_objIcon->draw(0, 0, 0, 0, m_objIcon->getWidth(),
+                              m_objIcon->getHeight(),
+                              g_windowManager->m_screenBitmap, m_x, m_y, 0, 1);
+                if (m_currFrame != 0)
+                    m_objIcon->draw(0, m_currFrame, 0, 0, m_objIcon->getWidth(),
+                                  m_objIcon->getHeight(),
+                                  g_windowManager->m_screenBitmap, m_x, m_y, 0, 1);
                 if (incFrame == 1) {
-                    currFrame++;
-                    if (currFrame == numFrames)
-                        currFrame = 0;
+                    m_currFrame++;
+                    if (m_currFrame == m_numFrames)
+                        m_currFrame = 0;
                 }
             } else {
                 // Residual (95.55%): retail defers this select to the push
@@ -654,20 +722,20 @@ void townObject::Draw(int incFrame, unsigned char drawHotspots)
                 // SOURCE (94.88 written `numFrames ? currFrame : 0`, 95.55
                 // this way round); the sinking is not reachable from the
                 // arm order, and `!numFrames` is byte-identical to `== 0`.
-                objIcon->Draw(0, numFrames == 0 ? 0 : currFrame, 0, 0,
-                              objIcon->GetWidth(), objIcon->GetHeight(),
-                              gpWindowManager->screenBitmap, x, y, 0, 1);
+                m_objIcon->draw(0, m_numFrames == 0 ? 0 : m_currFrame, 0, 0,
+                              m_objIcon->getWidth(), m_objIcon->getHeight(),
+                              g_windowManager->m_screenBitmap, m_x, m_y, 0, 1);
             }
         }
-        if (gUnnamed6aa9e8 == objId && objOutline && gbTownOutlines)
-            objOutline->Draw(0, 0, w, h, gpWindowManager->screenBitmap, x, y,
+        if (g_unnamed6aa9e8 == m_objId && m_objOutline && g_townOutlines)
+            m_objOutline->draw(0, 0, m_w, m_h, g_windowManager->m_screenBitmap, m_x, m_y,
                              1);
-        if (drawHotspots && objHotspot)
-            objHotspot->zBufferDraw(
-                0, 0, w, h,
-                static_cast<TTownScreenWindow*>(gpTownManager->TownWindow)
-                    ->zBuffer,
-                x, y, objId + 1);
+        if (drawHotspots && m_objHotspot)
+            m_objHotspot->zBufferDraw(
+                0, 0, m_w, m_h,
+                static_cast<TTownScreenWindow*>(g_townManager->m_townWindow)
+                    ->m_zBuffer,
+                m_x, m_y, m_objId + 1);
     }
 }
 
@@ -679,41 +747,52 @@ void townObject::Draw(int incFrame, unsigned char drawHotspots)
 // here exactly once, which is what fixes the layout: two arrays cleared
 // by inline memset (seven object slots at +0x40, forty-four strip slots
 // at +0x5c), the -1 sentinels, and the two file-scope words.
+//
+// Manual HIST recovery (2026-09-07): candidate and retail are one 50-
+// instruction block with the same call, return and extent. Retail delays the
+// upper-dword zero stores for canBuyMask/canBuildMask; the clean build emits
+// them beside the lower stores and scores 99.0800%. All 511 positions of
+// Gruntz's stride-one typedef-handle phase were byte-flat. All 24 orders of
+// the four adjacent mask/count/type assignments were also measured: moving
+// the two scalar stores first reaches 99.32%, but contradicts the recovered
+// Dreamcast statement order and is rejected. Dreamcast public `castleOpen`
+// supports the future data rename g_castleOpen; that rename is byte-flat here.
+// No probe or score-only assignment order is retained.
 
 // E:\gamedcs\townmgr.cpp:1999
 VA(0x005c3310, 0xDF)  // anchor-vtable 0x643720 + baseManager base ctor, dc 0x16a59c
 townManager::townManager()
 {
-    townToView = 0;
-    hallWindow = 0;
-    field_114 = 0;
-    field_1b8 = -1;
-    gUnnamed6aa9d8 = 0;
-    pResourceDisplay = 0;
-    dialogResourceDisplay = 0;
-    field_1c0 = 0;
-    gUnnamed6aa9ec = 0;
-    netMsgHandler = 0;
-    field_1b4 = 0;
-    field_3c = 0;
-    memset(MonPix, 0, sizeof(MonPix));
-    memset(TownObjects, 0, sizeof(TownObjects));
-    canBuyMask = 0;
-    canBuildMask = 0;
-    TownObjectCount = 0;
-    field_110 = -1;
-    TownWindow = 0;
-    field_11c = 0;
-    field_120 = 0;
-    selectedStrip = 0;
-    field_128 = -1;
-    field_12c = 0;
-    field_130 = -1;
-    field_134 = 0;
-    field_138 = -1;
-    lastHover = -1;
-    lastQualifier = -1;
-    field_19c = -1;
+    m_townToView = 0;
+    m_hallWindow = 0;
+    m_saveWin = 0;
+    m_objToBuild = -1;
+    g_unnamed6aa9d8 = 0;
+    m_resourceDisplay = 0;
+    m_dialogResourceDisplay = 0;
+    m_multiWin = 0;
+    g_unnamed6aa9ec = 0;
+    m_netMsgHandler = 0;
+    m_netMsgHandlerSave = 0;
+    m_panorama = 0;
+    memset(m_monPix, 0, sizeof(m_monPix));
+    memset(m_townObjects, 0, sizeof(m_townObjects));
+    m_canBuyMask = 0;
+    m_canBuildMask = 0;
+    m_townObjectCount = 0;
+    m_loadedTownType = -1;
+    m_townWindow = 0;
+    m_garrisonStrip = 0;
+    m_heroStrip = 0;
+    m_currStrip = 0;
+    m_currIndex = -1;
+    m_srcStrip = 0;
+    m_srcIndex = -1;
+    m_destStrip = 0;
+    m_destIndex = -1;
+    m_lastHover = -1;
+    m_lastQualifier = -1;
+    m_command = -1;
 }
 
 // The town's free buildings, and the compiland's only reader of the
@@ -730,25 +809,25 @@ townManager::townManager()
 
 // E:\gamedcs\townmgr.cpp:2047
 VA(0x005c33f0, 0xDC)  // anchor-bracket + anchor-callee(town::BuildBuilding/create_building) + arity(bare ret), dc 0x16a644
-void townManager::SetupExtraStuff()
+void townManager::setupExtraStuff()
 {
-    if (gBuildAllBuildings) {
+    if (g_buildAllBuildings) {
         for (int i = 0; i < MAX_BUILDING_TYPE; i++) {
-            if (!(townToView->active & bitNumber[i])
-                && (gTownEligibleBuildMask[townToView->type] & bitNumber[i]))
-                townToView->BuildBuilding(i, 0, 1);
+            if (!(m_townToView->m_active & g_bitNumber[i])
+                && (g_townEligibleBuildMask[m_townToView->m_type] & g_bitNumber[i]))
+                m_townToView->buildBuilding(i, 0, 1);
         }
     } else {
-        switch (townToView->type) {
+        switch (m_townToView->m_type) {
         case TOWN_CASTLE:
         case TOWN_FORTRESS:
-            townToView->create_building(EXTRA_2_ID);
+            m_townToView->createBuilding(EXTRA_2_ID);
             break;
         case TOWN_STRONGHOLD:
-            townToView->create_building(EXTRA_3_ID);
+            m_townToView->createBuilding(EXTRA_3_ID);
             break;
         case TOWN_CONFLUX:
-            townToView->create_building(EXTRA_1_ID);
+            m_townToView->createBuilding(EXTRA_1_ID);
             break;
         }
     }
@@ -842,172 +921,172 @@ VA(0x005c34d0, 0x23D2)  // anchor-vtable 0x64372c + anchor-string townscrn.pcx +
 TTownScreenWindow::TTownScreenWindow()
     : heroWindow(0, 0, 800, 600, 1)
 {
-    field_4c = gpGame->GetLocalPlayer()->FindTown(gpTownManager->townToView->id) - 1;
-    if (field_4c > gpGame->GetLocalPlayer()->numTowns - 3)
-        field_4c = gpGame->GetLocalPlayer()->numTowns - 3;
-    if (field_4c < 0)
-        field_4c = 0;
+    m_topTown = g_game->getLocalPlayer()->findTown(g_townManager->m_townToView->m_id) - 1;
+    if (m_topTown > g_game->getLocalPlayer()->m_numTowns - 3)
+        m_topTown = g_game->getLocalPlayer()->m_numTowns - 3;
+    if (m_topTown < 0)
+        m_topTown = 0;
 
-    zBuffer = new unsigned short[height * width];
-    memset(zBuffer, 0, height * width * 2);
+    m_zBuffer = new unsigned short[m_height * m_width];
+    memset(m_zBuffer, 0, m_height * m_width * 2);
 
-    Widgets.reserve(96);
+    m_widgets.reserve(96);
 
-    Widgets.push_back(new border(0, 0, 800, 375, 147, 1));
-    Widgets.push_back(new bitmapBorder(0, 374, 800, 226, 148,
+    m_widgets.push_back(new border(0, 0, 800, 375, 147, 1));
+    m_widgets.push_back(new bitmapBorder(0, 374, 800, 226, 148,
                                        "townscrn.pcx", 0x800));
 
-    Widgets.push_back(new iconWidget(241, 387, 58, 64, 100, "crest58.def",
+    m_widgets.push_back(new iconWidget(241, 387, 58, 64, 100, "crest58.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new bitmapBorder(241, 387, 58, 64, 122, 0, 0x800));
-    Widgets.push_back(new iconWidget(241, 387, 58, 64, 123, "twcrport.def",
+    m_widgets.push_back(new bitmapBorder(241, 387, 58, 64, 122, 0, 0x800));
+    m_widgets.push_back(new iconWidget(241, 387, 58, 64, 123, "twcrport.def",
                                      1, 0, 0, 0, 0x10));
-    Widgets.push_back(new bitmapBorder(241, 483, 58, 64, 124, 0, 0x800));
-    Widgets.push_back(new iconWidget(241, 483, 58, 64, 125, "twcrport.def",
-                                     1, 0, 0, 0, 0x10));
-
-    Widgets.push_back(new iconWidget(744, 430, 48, 32, 155, "ITPA.def",
-                                     0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(744, 462, 48, 32, 156, "ITPA.def",
-                                     0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(744, 494, 48, 32, 157, "ITPA.def",
-                                     0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(744, 494, 48, 32, 163, "ITPA.def",
+    m_widgets.push_back(new bitmapBorder(241, 483, 58, 64, 124, 0, 0x800));
+    m_widgets.push_back(new iconWidget(241, 483, 58, 64, 125, "twcrport.def",
                                      1, 0, 0, 0, 0x10));
 
-    Widgets.push_back(new iconWidget(15, 387, 58, 64, 150, "itpt.def",
+    m_widgets.push_back(new iconWidget(744, 430, 48, 32, 155, "ITPA.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(80, 413, 38, 38, 158, "itmtl.def",
+    m_widgets.push_back(new iconWidget(744, 462, 48, 32, 156, "ITPA.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(122, 413, 38, 38, 159, "itmcl.def",
+    m_widgets.push_back(new iconWidget(744, 494, 48, 32, 157, "ITPA.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new textWidget(163, 434, 64, 18, 0, "smalfont.fnt",
+    m_widgets.push_back(new iconWidget(744, 494, 48, 32, 163, "ITPA.def",
+                                     1, 0, 0, 0, 0x10));
+
+    m_widgets.push_back(new iconWidget(15, 387, 58, 64, 150, "itpt.def",
+                                     0, 0, 0, 0, 0x10));
+    m_widgets.push_back(new iconWidget(80, 413, 38, 38, 158, "itmtl.def",
+                                     0, 0, 0, 0, 0x10));
+    m_widgets.push_back(new iconWidget(122, 413, 38, 38, 159, "itmcl.def",
+                                     0, 0, 0, 0, 0x10));
+    m_widgets.push_back(new textWidget(163, 434, 64, 18, 0, "smalfont.fnt",
                                      font::PRIMARY, 160, 5, 0, 8));
 
     for (int i = 0; i < 8; i++) {
-        growth_bonus_icon[i] = new iconWidget(
-            gResourceIconPos[i][0], gResourceIconPos[i][1], 32, 32, 164 + i,
+        m_growthBonusIcon[i] = new iconWidget(
+            g_resourceIconPos[i][0], g_resourceIconPos[i][1], 32, 32, 164 + i,
             "cprsmall.def", 0, 0, 0, 0, 0x10);
-        Widgets.push_back(growth_bonus_icon[i]);
-        growth_bonus_text[i] = new textWidget(
-            gResourceIconPos[i][0], gResourceIconPos[i][1] + 32, 32, 20,
-            emptyRolloverText, "smalfont.fnt", font::WHITE, 172 + i, 1, 0, 8);
-        Widgets.push_back(growth_bonus_text[i]);
+        m_widgets.push_back(m_growthBonusIcon[i]);
+        m_growthBonusText[i] = new textWidget(
+            g_resourceIconPos[i][0], g_resourceIconPos[i][1] + 32, 32, 20,
+            g_emptyRolloverText, "smalfont.fnt", font::WHITE, 172 + i, 1, 0, 8);
+        m_widgets.push_back(m_growthBonusText[i]);
     }
 
-    Widgets.push_back(new iconWidget(305, 387, 58, 64, 101, "twcrport.def",
+    m_widgets.push_back(new iconWidget(305, 387, 58, 64, 101, "twcrport.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(367, 387, 58, 64, 102, "twcrport.def",
+    m_widgets.push_back(new iconWidget(367, 387, 58, 64, 102, "twcrport.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(429, 387, 58, 64, 103, "twcrport.def",
+    m_widgets.push_back(new iconWidget(429, 387, 58, 64, 103, "twcrport.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(491, 387, 58, 64, 104, "twcrport.def",
+    m_widgets.push_back(new iconWidget(491, 387, 58, 64, 104, "twcrport.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(553, 387, 58, 64, 105, "twcrport.def",
+    m_widgets.push_back(new iconWidget(553, 387, 58, 64, 105, "twcrport.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(615, 387, 58, 64, 106, "twcrport.def",
+    m_widgets.push_back(new iconWidget(615, 387, 58, 64, 106, "twcrport.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(677, 387, 58, 64, 107, "twcrport.def",
+    m_widgets.push_back(new iconWidget(677, 387, 58, 64, 107, "twcrport.def",
                                      0, 0, 0, 0, 0x10));
 
-    Widgets.push_back(new textWidget(305, 436, 58, 20, "0", "Verd10B.fnt",
+    m_widgets.push_back(new textWidget(305, 436, 58, 20, "0", "Verd10B.fnt",
                                      font::WHITE, 108, 2, 0, 8));
-    Widgets.push_back(new textWidget(367, 436, 58, 20, "0", "Verd10B.fnt",
+    m_widgets.push_back(new textWidget(367, 436, 58, 20, "0", "Verd10B.fnt",
                                      font::WHITE, 109, 2, 0, 8));
-    Widgets.push_back(new textWidget(429, 436, 58, 20, "0", "Verd10B.fnt",
+    m_widgets.push_back(new textWidget(429, 436, 58, 20, "0", "Verd10B.fnt",
                                      font::WHITE, 110, 2, 0, 8));
-    Widgets.push_back(new textWidget(491, 436, 58, 20, "0", "Verd10B.fnt",
+    m_widgets.push_back(new textWidget(491, 436, 58, 20, "0", "Verd10B.fnt",
                                      font::WHITE, 111, 2, 0, 8));
-    Widgets.push_back(new textWidget(553, 436, 58, 20, "0", "Verd10B.fnt",
+    m_widgets.push_back(new textWidget(553, 436, 58, 20, "0", "Verd10B.fnt",
                                      font::WHITE, 112, 2, 0, 8));
-    Widgets.push_back(new textWidget(615, 436, 58, 20, "0", "Verd10B.fnt",
+    m_widgets.push_back(new textWidget(615, 436, 58, 20, "0", "Verd10B.fnt",
                                      font::WHITE, 113, 2, 0, 8));
-    Widgets.push_back(new textWidget(677, 436, 58, 20, "0", "Verd10B.fnt",
+    m_widgets.push_back(new textWidget(677, 436, 58, 20, "0", "Verd10B.fnt",
                                      font::WHITE, 114, 2, 0, 8));
 
-    Widgets.push_back(new iconWidget(305, 387, 58, 64, 115, "twcrport.def",
+    m_widgets.push_back(new iconWidget(305, 387, 58, 64, 115, "twcrport.def",
                                      1, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(367, 387, 58, 64, 116, "twcrport.def",
+    m_widgets.push_back(new iconWidget(367, 387, 58, 64, 116, "twcrport.def",
                                      1, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(429, 387, 58, 64, 117, "twcrport.def",
+    m_widgets.push_back(new iconWidget(429, 387, 58, 64, 117, "twcrport.def",
                                      1, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(491, 387, 58, 64, 118, "twcrport.def",
+    m_widgets.push_back(new iconWidget(491, 387, 58, 64, 118, "twcrport.def",
                                      1, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(553, 387, 58, 64, 119, "twcrport.def",
+    m_widgets.push_back(new iconWidget(553, 387, 58, 64, 119, "twcrport.def",
                                      1, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(615, 387, 58, 64, 120, "twcrport.def",
+    m_widgets.push_back(new iconWidget(615, 387, 58, 64, 120, "twcrport.def",
                                      1, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(677, 387, 58, 64, 121, "twcrport.def",
+    m_widgets.push_back(new iconWidget(677, 387, 58, 64, 121, "twcrport.def",
                                      1, 0, 0, 0, 0x10));
 
-    Widgets.push_back(new iconWidget(305, 483, 58, 64, 126, "twcrport.def",
+    m_widgets.push_back(new iconWidget(305, 483, 58, 64, 126, "twcrport.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(367, 483, 58, 64, 127, "twcrport.def",
+    m_widgets.push_back(new iconWidget(367, 483, 58, 64, 127, "twcrport.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(429, 483, 58, 64, 128, "twcrport.def",
+    m_widgets.push_back(new iconWidget(429, 483, 58, 64, 128, "twcrport.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(491, 483, 58, 64, 129, "twcrport.def",
+    m_widgets.push_back(new iconWidget(491, 483, 58, 64, 129, "twcrport.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(553, 483, 58, 64, 130, "twcrport.def",
+    m_widgets.push_back(new iconWidget(553, 483, 58, 64, 130, "twcrport.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(615, 483, 58, 64, 131, "twcrport.def",
+    m_widgets.push_back(new iconWidget(615, 483, 58, 64, 131, "twcrport.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(677, 483, 58, 64, 132, "twcrport.def",
+    m_widgets.push_back(new iconWidget(677, 483, 58, 64, 132, "twcrport.def",
                                      0, 0, 0, 0, 0x10));
 
-    Widgets.push_back(new textWidget(305, 532, 58, 20, "0", "Verd10B.fnt",
+    m_widgets.push_back(new textWidget(305, 532, 58, 20, "0", "Verd10B.fnt",
                                      font::WHITE, 133, 2, 0, 8));
-    Widgets.push_back(new textWidget(367, 532, 58, 20, "0", "Verd10B.fnt",
+    m_widgets.push_back(new textWidget(367, 532, 58, 20, "0", "Verd10B.fnt",
                                      font::WHITE, 134, 2, 0, 8));
-    Widgets.push_back(new textWidget(429, 532, 58, 20, "0", "Verd10B.fnt",
+    m_widgets.push_back(new textWidget(429, 532, 58, 20, "0", "Verd10B.fnt",
                                      font::WHITE, 135, 2, 0, 8));
-    Widgets.push_back(new textWidget(491, 532, 58, 20, "0", "Verd10B.fnt",
+    m_widgets.push_back(new textWidget(491, 532, 58, 20, "0", "Verd10B.fnt",
                                      font::WHITE, 136, 2, 0, 8));
-    Widgets.push_back(new textWidget(553, 532, 58, 20, "0", "Verd10B.fnt",
+    m_widgets.push_back(new textWidget(553, 532, 58, 20, "0", "Verd10B.fnt",
                                      font::WHITE, 137, 2, 0, 8));
-    Widgets.push_back(new textWidget(615, 532, 58, 20, "0", "Verd10B.fnt",
+    m_widgets.push_back(new textWidget(615, 532, 58, 20, "0", "Verd10B.fnt",
                                      font::WHITE, 138, 2, 0, 8));
-    Widgets.push_back(new textWidget(677, 532, 58, 20, "0", "Verd10B.fnt",
+    m_widgets.push_back(new textWidget(677, 532, 58, 20, "0", "Verd10B.fnt",
                                      font::WHITE, 139, 2, 0, 8));
 
-    Widgets.push_back(new iconWidget(305, 483, 58, 64, 140, "twcrport.def",
+    m_widgets.push_back(new iconWidget(305, 483, 58, 64, 140, "twcrport.def",
                                      1, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(367, 483, 58, 64, 141, "twcrport.def",
+    m_widgets.push_back(new iconWidget(367, 483, 58, 64, 141, "twcrport.def",
                                      1, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(429, 483, 58, 64, 142, "twcrport.def",
+    m_widgets.push_back(new iconWidget(429, 483, 58, 64, 142, "twcrport.def",
                                      1, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(491, 483, 58, 64, 143, "twcrport.def",
+    m_widgets.push_back(new iconWidget(491, 483, 58, 64, 143, "twcrport.def",
                                      1, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(553, 483, 58, 64, 144, "twcrport.def",
+    m_widgets.push_back(new iconWidget(553, 483, 58, 64, 144, "twcrport.def",
                                      1, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(615, 483, 58, 64, 145, "twcrport.def",
+    m_widgets.push_back(new iconWidget(615, 483, 58, 64, 145, "twcrport.def",
                                      1, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(677, 483, 58, 64, 146, "twcrport.def",
+    m_widgets.push_back(new iconWidget(677, 483, 58, 64, 146, "twcrport.def",
                                      1, 0, 0, 0, 0x10));
 
-    Widgets.push_back(new button(744, 414, 48, 16, 152, "iam014.def",
+    m_widgets.push_back(new button(744, 414, 48, 16, 152, "iam014.def",
                                  0, 1, 0, 0, 2));
-    Widgets.push_back(new button(744, 526, 48, 16, 153, "iam015.def",
+    m_widgets.push_back(new button(744, 526, 48, 16, 153, "iam015.def",
                                  0, 1, 0, 0, 2));
-    Widgets.push_back(new button(744, 382, 48, 30, 154, "tsbtns.def",
+    m_widgets.push_back(new button(744, 382, 48, 30, 154, "tsbtns.def",
                                  0, 1, 0, 32, 2));
-    Widgets.push_back(new button(744, 544, 48, 30, EXIT_BUTTON_ID,
+    m_widgets.push_back(new button(744, 544, 48, 30, EXIT_BUTTON_ID,
                                  "tsbtns.def", 4, 5, 1, 28, 2));
 
-    Widgets.push_back(new bitmapBackedTextWidget(7, 555, 734, 19, 0,
+    m_widgets.push_back(new bitmapBackedTextWidget(7, 555, 734, 19, 0,
                                                 "smalfont.fnt", "TStatBar.pcx",
                                                 font::PRIMARY, 151, 1, 0));
-    Widgets.push_back(new textWidget(85, 387, 147, 20, 0, "medfont.fnt",
+    m_widgets.push_back(new textWidget(85, 387, 147, 20, 0, "medfont.fnt",
                                      font::PRIMARY, 149, 0, 0, 8));
 
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
-            AddWidget(*it, -1);
+            addWidget(*it, -1);
         else
-            MemError();
+            memError();
     }
     HOMM3_TTOWN_SCREEN_RELEASE_DIAGNOSTIC("TTownScreenWindow widgets: %u\n",
-                                          Widgets.size());
+                                          m_widgets.size());
 }
 
 #undef HOMM3_TTOWN_SCREEN_RELEASE_DIAGNOSTIC
@@ -1018,7 +1097,7 @@ VA_COMPGEN(0x005c58b0, 0x21, SCALAR_DELETING_DTOR, TTownScreenWindow)
 VA(0x005c58e0, 0x82)  // anchor-vtable 0x64372c + ??_G call edge, dc 0x16adf0
 TTownScreenWindow::~TTownScreenWindow()
 {
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
@@ -1026,9 +1105,9 @@ TTownScreenWindow::~TTownScreenWindow()
     // with no destructor, so VC6's own `delete` emits no null test - the
     // `test eax,eax` in front of it is an explicit source-level if, and
     // the clear sits inside it.
-    if (zBuffer) {
-        delete zBuffer;
-        zBuffer = 0;
+    if (m_zBuffer) {
+        delete m_zBuffer;
+        m_zBuffer = 0;
     }
 }
 
@@ -1052,52 +1131,52 @@ TTownScreenWindow::~TTownScreenWindow()
 
 // E:\gamedcs\townmgr.cpp:2460
 VA(0x005c5970, 0x124)  // anchor-bracket + UpdateTownLocators call edge, dc 0x16ae68
-void TTownScreenWindow::UpdateTownLocator(int i)
+void TTownScreenWindow::updateTownLocator(int i)
 {
     message msg;
-    msg.codeX = 0;
-    msg.codeY = 0;
-    msg.qualifier = 0;
-    msg.mouseX = 0;
-    msg.mouseY = 0;
-    msg.extra = 0;
-    msg.window = 0;
-    msg.id = MESSAGE_WIDGET;
+    msg.m_codeX = 0;
+    msg.m_codeY = 0;
+    msg.m_qualifier = 0;
+    msg.m_mouseX = 0;
+    msg.m_mouseY = 0;
+    msg.m_extra = 0;
+    msg.m_window = 0;
+    msg.m_id = MESSAGE_WIDGET;
 
-    playerData* player = gpGame->GetLocalPlayer();
-    msg.codeY = i + 0x9b;
-    if (i >= player->numTowns) {
-        msg.codeX = widget::WIDGET_SET_ICON_FRAME;
-        msg.extra = 0;
-        BroadcastMessage(&msg);
-        msg.codeX = widget::WIDGET_CLEAR_STATUS;
-        msg.extra = widget::WIDGET_ACTIVE;
-        BroadcastMessage(&msg);
+    playerData* player = g_game->getLocalPlayer();
+    msg.m_codeY = i + 0x9b;
+    if (i >= player->m_numTowns) {
+        msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+        msg.m_extra = 0;
+        broadcastMessage(&msg);
+        msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+        msg.m_extra = widget::WIDGET_ACTIVE;
+        broadcastMessage(&msg);
         return;
     }
 
     // `i + field_4c`, not the other way round: retail folds i into the
     // player pointer and leaves the scroll offset as the index.
-    int townId = player->townIds[i + field_4c];
-    msg.codeX = widget::WIDGET_SET_STATUS;
-    msg.extra = widget::WIDGET_ACTIVE;
-    BroadcastMessage(&msg);
+    int townId = player->m_townIds[i + m_topTown];
+    msg.m_codeX = widget::WIDGET_SET_STATUS;
+    msg.m_extra = widget::WIDGET_ACTIVE;
+    broadcastMessage(&msg);
 
-    msg.codeX = widget::WIDGET_SET_ICON_FRAME;
-    msg.extra = gpGame->GetTown(townId)->GetPortraitFrame(true);
-    BroadcastMessage(&msg);
+    msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+    msg.m_extra = g_game->getTown(townId)->getPortraitFrame(true);
+    broadcastMessage(&msg);
 
-    if (i + field_4c != gUnnamed6aaa50)
+    if (i + m_topTown != g_unnamed6aaa50)
         return;
 
-    msg.codeX = widget::WIDGET_SET_STATUS;
-    msg.codeY = 0xa3;
-    msg.extra = widget::WIDGET_DRAWN;
-    BroadcastMessage(&msg);
+    msg.m_codeX = widget::WIDGET_SET_STATUS;
+    msg.m_codeY = 0xa3;
+    msg.m_extra = widget::WIDGET_DRAWN;
+    broadcastMessage(&msg);
 
-    msg.codeX = 0x35;
-    msg.extra = (i << 5) + 0x1ae;
-    BroadcastMessage(&msg);
+    msg.m_codeX = 0x35;
+    msg.m_extra = (i << 5) + 0x1ae;
+    broadcastMessage(&msg);
 }
 
 // The town-screen locator row, immediately behind its own destructor in
@@ -1109,27 +1188,27 @@ void TTownScreenWindow::UpdateTownLocator(int i)
 
 // E:\gamedcs\townmgr.cpp:2506
 VA(0x005c5aa0, 0x95)  // anchor-bracket + UpdateTownLocator call edge, dc 0x16af58
-void TTownScreenWindow::UpdateTownLocators()
+void TTownScreenWindow::updateTownLocators()
 {
-    BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xa3,
+    broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xa3,
                      widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
     for (int i = 0; i < 3; ++i)
-        UpdateTownLocator(i);
+        updateTownLocator(i);
 
-    if (field_4c == 0)
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS, 0x98,
+    if (m_topTown == 0)
+        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS, 0x98,
                          widget::WIDGET_DIMMED_NODRAW);
     else
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0x98,
+        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0x98,
                          widget::WIDGET_DIMMED_NODRAW);
 
-    if (field_4c >= gpGame->GetLocalPlayer()->numTowns - 3)
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS, 0x99,
+    if (m_topTown >= g_game->getLocalPlayer()->m_numTowns - 3)
+        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS, 0x99,
                          widget::WIDGET_DIMMED_NODRAW);
     else
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0x99,
+        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0x99,
                          widget::WIDGET_DIMMED_NODRAW);
-    DrawWindow(0, 0x9b, 0xa3);
+    drawWindow(0, 0x9b, 0xa3);
 }
 
 // The bonus-display formatter: one growth-bonus slot per built dwelling
@@ -1160,66 +1239,68 @@ void TTownScreenWindow::UpdateTownLocators()
 // spelling reached the EBX/EDI tie-break.
 // E:\gamedcs\townmgr.cpp:2562
 VA(0x005c5b40, 0x878)  // order-map(UpdateTownLocators 0x5c5aa0 .. HandleGiftMsg 0x5c66b0) + body(get_growth_rate/get_castle_growth_bonus/GetBuildingName/format_string) + arity(ret 4, town*), dc 0x16b0e8
-void TTownScreenWindow::set_bonus_display(town* currTown)
+void TTownScreenWindow::setBonusDisplay(town* currTown)
 {
     int count = 0;
-    std::string help_text;
-    std::string right_text;
+    // Before normalization (locals): help_text, right_text, iOffsetToMon, building_name,
+    // legion_bonus, generator_bonus, horde_building.
+    std::string helpText;
+    std::string rightText;
     TCreatureType creature;
 
     for (int j = 0; j < 8; j++)
-        bonus_creatures[j] = CREATURE_NONE;
+        m_bonusCreatures[j] = CREATURE_NONE;
 
     for (int i = 0; i < TOWN_DWELLING_COUNT; i++) {
-        if (currTown->HasBuilding(DWELLING_0_ID + i, 1)) {
+        if (currTown->hasBuilding(DWELLING_0_ID + i, 1)) {
             int slot = i;
-            if (currTown->HasBuilding(DWELLING_0_UPG_ID + i, 1))
+            if (currTown->hasBuilding(DWELLING_0_UPG_ID + i, 1))
                 slot = i + TOWN_DWELLING_COUNT;
 
-            creature = gTownDwellingCreatures[
-                currTown->type * (2 * TOWN_DWELLING_COUNT) + slot];
-            long growth = akCreatureTypeTraits[creature].growthRate;
-            int iOffsetToMon = currTown->get_growth_rate(slot) - growth;
+            creature = g_townDwellingCreatures[
+                currTown->m_type * (2 * TOWN_DWELLING_COUNT) + slot];
+            long growth = g_creatureTypeTraits[creature].m_growthRate;
+            int offsetToMon = currTown->getGrowthRate(slot) - growth;
             const char* name;
             if (creature >= 0 && creature <= 0x96)
-                name = akCreatureTypeTraits[creature].m_name;
+                name = g_creatureTypeTraits[creature].m_name;
             else
-                name = emptyRolloverText;
+                name = g_emptyRolloverText;
 
-            help_text = format_string(gpGeneralText->GetText(589), name);
-            right_text = format_string(gpGeneralText->GetText(590), name,
-                                       iOffsetToMon + growth);
-            if (iOffsetToMon > 0)
-                right_text += format_string(gpGeneralText->GetText(591),
+            helpText = formatString(g_generalText->getText(589), name);
+            rightText = formatString(g_generalText->getText(590), name,
+                                       offsetToMon + growth);
+            if (offsetToMon > 0)
+                rightText += formatString(g_generalText->getText(591),
                                             growth);
 
-            if (currTown->get_castle_growth_bonus(creature) > 0) {
+            if (currTown->getCastleGrowthBonus(creature) > 0) {
                 int building;
-                if (currTown->HasBuilding(CASTLE_CASTLE_ID, 0))
+                if (currTown->hasBuilding(CASTLE_CASTLE_ID, 0))
                     building = CASTLE_CASTLE_ID;
-                else if (currTown->HasBuilding(CASTLE_CITADEL_ID, 0))
+                else if (currTown->hasBuilding(CASTLE_CITADEL_ID, 0))
                     building = CASTLE_CITADEL_ID;
                 else
                     building = CASTLE_FORT_ID;
-                const char* building_name =
-                    GetBuildingName(currTown->type, building);
-                right_text += format_string(
+                const char* buildingName =
+                    getBuildingName(currTown->m_type, building);
+                rightText += formatString(
                     DATA_COMPGEN(0x0068c1f0, signedBonusFormat, "\n%s %+d"),
-                    building_name,
-                    currTown->get_castle_growth_bonus(creature));
-                iOffsetToMon -= currTown->get_castle_growth_bonus(creature);
+                    buildingName,
+                    currTown->getCastleGrowthBonus(creature));
+                offsetToMon -= currTown->getCastleGrowthBonus(creature);
             }
 
-            if (currTown->owner >= 0) {
-                long legion_bonus = currTown->get_legion_bonus(slot);
-                if (legion_bonus > 0) {
-                    right_text += format_string(
+            if (currTown->m_owner >= 0) {
+                long legionBonus = currTown->getLegionBonus(slot);
+                if (legionBonus > 0) {
+                    rightText += formatString(
                         DATA_COMPGEN(0x0068c1e8, plusBonusFormat, "\n%s +%d"),
-                        akArtifactTraits[0x85].name, legion_bonus);
-                    iOffsetToMon -= legion_bonus;
+                        g_artifactTraits[0x85].m_name, legionBonus);
+                    offsetToMon -= legionBonus;
                 }
-                long generator_bonus = currTown->TownFn_005BF900(slot);
-                if (generator_bonus > 0) {
+                long generatorBonus = currTown->townFn005BF900(slot);
+                if (generatorBonus > 0) {
                     // Tier n's growth artifact, eArtifactLegsOfLegion
                     // (0x76) .. eArtifactHeadOfLegion (0x7a) in DC
                     // enum order. The dispatch domain is the dwelling
@@ -1247,159 +1328,159 @@ void TTownScreenWindow::set_bonus_display(town* currTown)
                         artifact = 0x7a;
                         break;
                     }
-                    right_text += format_string(
+                    rightText += formatString(
                         DATA_COMPGEN(0x0068c1e8, plusBonusFormat, "\n%s +%d"),
-                        akArtifactTraits[artifact].name, generator_bonus);
-                    iOffsetToMon -= generator_bonus;
+                        g_artifactTraits[artifact].m_name, generatorBonus);
+                    offsetToMon -= generatorBonus;
                 }
             }
 
-            if (currTown->get_horde_bonus(slot) > 0) {
-                int horde_building = currTown->get_horde(slot);
-                right_text += format_string(
+            if (currTown->getHordeBonus(slot) > 0) {
+                int hordeBuilding = currTown->getHorde(slot);
+                rightText += formatString(
                     DATA_COMPGEN(0x0068c1e8, plusBonusFormat, "\n%s +%d"),
-                    GetBuildingName(currTown->type, horde_building),
-                    currTown->get_horde_bonus(slot));
-                iOffsetToMon -= currTown->get_horde_bonus(slot);
+                    getBuildingName(currTown->m_type, hordeBuilding),
+                    currTown->getHordeBonus(slot));
+                offsetToMon -= currTown->getHordeBonus(slot);
             }
 
-            if (currTown->generatorBonus[slot] > 0) {
-                right_text += format_string(gpGeneralText->GetText(592),
-                                            currTown->generatorBonus[slot]);
-                iOffsetToMon -= currTown->generatorBonus[slot];
+            if (currTown->m_generatorBonus[slot] > 0) {
+                rightText += formatString(g_generalText->getText(592),
+                                            currTown->m_generatorBonus[slot]);
+                offsetToMon -= currTown->m_generatorBonus[slot];
             }
 
-            if (iOffsetToMon > 0 && currTown->HasBuilding(HOLY_GRAIL_ID, 1))
-                right_text += format_string(
+            if (offsetToMon > 0 && currTown->hasBuilding(HOLY_GRAIL_ID, 1))
+                rightText += formatString(
                     DATA_COMPGEN(0x0068c1f0, signedBonusFormat, "\n%s %+d"),
-                    GetBuildingName(currTown->type, HOLY_GRAIL_ID),
-                    iOffsetToMon);
+                    getBuildingName(currTown->m_type, HOLY_GRAIL_ID),
+                    offsetToMon);
 
-            growth_bonus_icon[count]->SetIconFrame(creature + 2);
-            growth_bonus_icon[count]->set_help_text(help_text.c_str(),
-                                                    right_text.c_str(), 1);
-            growth_bonus_icon[count]->set_visible(1);
-            sprintf(gText, DATA_COMPGEN(0x006817c0, plusDecimalFormat, "+%d"),
-                    currTown->get_growth_rate(slot));
-            growth_bonus_text[count]->SetText(gText);
-            growth_bonus_text[count]->set_help_text(help_text.c_str(),
-                                                    right_text.c_str(), 1);
-            growth_bonus_text[count]->set_visible(1);
-            bonus_creatures[count] = creature;
+            m_growthBonusIcon[count]->setIconFrame(creature + 2);
+            m_growthBonusIcon[count]->setHelpText(helpText.c_str(),
+                                                    rightText.c_str(), 1);
+            m_growthBonusIcon[count]->setVisible(1);
+            sprintf(g_text, DATA_COMPGEN(0x006817c0, plusDecimalFormat, "+%d"),
+                    currTown->getGrowthRate(slot));
+            m_growthBonusText[count]->setText(g_text);
+            m_growthBonusText[count]->setHelpText(helpText.c_str(),
+                                                    rightText.c_str(), 1);
+            m_growthBonusText[count]->setVisible(1);
+            m_bonusCreatures[count] = creature;
             count++;
         }
     }
 
-    if (currTown->type == TOWN_DUNGEON
-        && currTown->HasBuilding(EXTRA_1_ID, 0)) {
-        if (currTown->summoningType == CREATURE_NONE)
-            currTown->SetSummoningGenerator();
-        if (currTown->summoningType != CREATURE_NONE) {
+    if (currTown->m_type == TOWN_DUNGEON
+        && currTown->hasBuilding(EXTRA_1_ID, 0)) {
+        if (currTown->m_summoningType == CREATURE_NONE)
+            currTown->setSummoningGenerator();
+        if (currTown->m_summoningType != CREATURE_NONE) {
             const char* name;
-            if (currTown->summoningType >= 0
-                && currTown->summoningType <= 0x96)
-                name = akCreatureTypeTraits[currTown->summoningType].m_name;
+            if (currTown->m_summoningType >= 0
+                && currTown->m_summoningType <= 0x96)
+                name = g_creatureTypeTraits[currTown->m_summoningType].m_name;
             else
-                name = emptyRolloverText;
+                name = g_emptyRolloverText;
 
-            help_text = format_string(gpGeneralText->GetText(589), name);
-            right_text = format_string(gpGeneralText->GetText(590), name, 0);
+            helpText = formatString(g_generalText->getText(589), name);
+            rightText = formatString(g_generalText->getText(590), name, 0);
 
-            growth_bonus_icon[count]->SetIconFrame(
-                currTown->summoningType + 2);
-            growth_bonus_icon[count]->set_help_text(help_text.c_str(),
-                                                    right_text.c_str(), 1);
-            growth_bonus_icon[count]->set_visible(1);
-            growth_bonus_text[count]->SetText(
+            m_growthBonusIcon[count]->setIconFrame(
+                currTown->m_summoningType + 2);
+            m_growthBonusIcon[count]->setHelpText(helpText.c_str(),
+                                                    rightText.c_str(), 1);
+            m_growthBonusIcon[count]->setVisible(1);
+            m_growthBonusText[count]->setText(
                 DATA_COMPGEN(0x006817bc, plusZeroText, "+0"));
-            growth_bonus_text[count]->set_help_text(help_text.c_str(),
-                                                    right_text.c_str(), 1);
-            growth_bonus_text[count]->set_visible(1);
-            bonus_creatures[count] = currTown->summoningType;
+            m_growthBonusText[count]->setHelpText(helpText.c_str(),
+                                                    rightText.c_str(), 1);
+            m_growthBonusText[count]->setVisible(1);
+            m_bonusCreatures[count] = currTown->m_summoningType;
             count++;
         }
     }
 
     for (i = count; i < 8; i++) {
-        growth_bonus_icon[i]->set_visible(0);
-        growth_bonus_icon[i]->set_help_text(emptyRolloverText,
-                                            emptyRolloverText, 1);
-        growth_bonus_text[i]->set_visible(0);
-        growth_bonus_text[i]->set_help_text(emptyRolloverText,
-                                            emptyRolloverText, 1);
+        m_growthBonusIcon[i]->setVisible(0);
+        m_growthBonusIcon[i]->setHelpText(g_emptyRolloverText,
+                                            g_emptyRolloverText, 1);
+        m_growthBonusText[i]->setVisible(0);
+        m_growthBonusText[i]->setHelpText(g_emptyRolloverText,
+                                            g_emptyRolloverText, 1);
     }
 }
 
 // E:\gamedcs\townmgr.cpp:2716
 VA(0x005c63c0, 0x2E1)  // anchor-caller(the three pure managers Open/Close/Main) + order-map + arity(ret 4, int), dc 0x16b718
-int townManager::Open(int newPriority)
+int townManager::open(int newPriority)
 {
-    gpInputManager->Flush();
-    StartMouseThread();
-    gpGame->CheckHeroConsistency();
-    PollSound();
+    g_inputManager->flush();
+    startMouseThread();
+    g_game->checkHeroConsistency();
+    pollSound();
 
-    TownWindow = new TTownScreenWindow;
-    if (!TownWindow)
-        MemError();
+    m_townWindow = new TTownScreenWindow;
+    if (!m_townWindow)
+        memError();
 
-    glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] = GameTime::Get() + 150;
-    field_1b8 = -1;
-    hallWindow = 0;
-    pResourceDisplay = 0;
-    dialogResourceDisplay = 0;
-    field_1c0 = 0;
-    gUnnamed6aa9ec = 0;
-    netMsgHandler = 0;
-    field_1b4 = 0;
-    memset(MonPix, 0, sizeof(MonPix));
-    memset(TownObjects, 0, sizeof(TownObjects));
-    field_128 = -1;
-    field_130 = -1;
-    field_138 = -1;
-    field_19c = -1;
-    field_110 = -1;
-    gUnnamed6aa9d8 = 0;
-    lastHover = -1;
-    lastQualifier = 0;
-    TownObjectCount = 0;
-    field_114 = 0;
-    field_11c = 0;
-    field_120 = 0;
-    selectedStrip = 0;
-    field_12c = 0;
-    field_134 = 0;
-    field_3c = 0;
-    field_1c4 = 0;
-    strcpy(statusText, emptyRolloverText);
-    gUnnamed6aa9e8 = -1;
+    g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] = GameTime::get() + 150;
+    m_objToBuild = -1;
+    m_hallWindow = 0;
+    m_resourceDisplay = 0;
+    m_dialogResourceDisplay = 0;
+    m_multiWin = 0;
+    g_unnamed6aa9ec = 0;
+    m_netMsgHandler = 0;
+    m_netMsgHandlerSave = 0;
+    memset(m_monPix, 0, sizeof(m_monPix));
+    memset(m_townObjects, 0, sizeof(m_townObjects));
+    m_currIndex = -1;
+    m_srcIndex = -1;
+    m_destIndex = -1;
+    m_command = -1;
+    m_loadedTownType = -1;
+    g_unnamed6aa9d8 = 0;
+    m_lastHover = -1;
+    m_lastQualifier = 0;
+    m_townObjectCount = 0;
+    m_saveWin = 0;
+    m_garrisonStrip = 0;
+    m_heroStrip = 0;
+    m_currStrip = 0;
+    m_srcStrip = 0;
+    m_destStrip = 0;
+    m_panorama = 0;
+    m_divideStatus = 0;
+    strcpy(m_statusText, g_emptyRolloverText);
+    g_unnamed6aa9e8 = -1;
 
-    gUnnamed6aaa50 = gpGame->GetLocalPlayer()->FindTown(townToView->id);
-    SetupExtraStuff();
+    g_unnamed6aaa50 = g_game->getLocalPlayer()->findTown(m_townToView->m_id);
+    setupExtraStuff();
 
-    pResourceDisplay = new TResourceDisplay(TownWindow, 0);
-    SetupTown(1);
-    StopMouseThread();
+    m_resourceDisplay = new TResourceDisplay(m_townWindow, 0);
+    setupTown(1);
+    stopMouseThread();
 
-    status = STATUS_ACTIVE;
-    id = 0x800;
-    priority = newPriority;
-    strcpy(cMgrName, "townManager");
-    gpInputManager->Flush();
+    m_status = STATUS_ACTIVE;
+    m_id = 0x800;
+    m_priority = newPriority;
+    strcpy(m_mgrName, "townManager");
+    g_inputManager->flush();
 
-    if (townToView->garrisonHeroId != -1)
-        townToView->ApplySpecialBuildingEffect(
-            gpGame->GetHero(townToView->garrisonHeroId));
-    if (townToView->visitingHeroId != -1)
-        townToView->ApplySpecialBuildingEffect(
-            gpGame->GetHero(townToView->visitingHeroId));
+    if (m_townToView->m_garrisonHeroId != -1)
+        m_townToView->applySpecialBuildingEffect(
+            g_game->getHero(m_townToView->m_garrisonHeroId));
+    if (m_townToView->m_visitingHeroId != -1)
+        m_townToView->applySpecialBuildingEffect(
+            g_game->getHero(m_townToView->m_visitingHeroId));
 
-    if (gNetworkActive69954c) {
+    if (g_networkActive69954c) {
         CTownNetMsgHandler* handler =
-            new CTownNetMsgHandler(pResourceDisplay);
-        netMsgHandler = handler;
-        field_1b4 = pDPlay->GetNetMsgHandler();
-        pDPlay->SetNetMsgHandler(netMsgHandler);
+            new CTownNetMsgHandler(m_resourceDisplay);
+        m_netMsgHandler = handler;
+        m_netMsgHandlerSave = g_dPlay->getNetMsgHandler();
+        g_dPlay->setNetMsgHandler(m_netMsgHandler);
     }
 
     return 0;
@@ -1412,11 +1493,12 @@ int townManager::Open(int newPriority)
 // this same object.
 
 // E:\gamedcs\townmgr.cpp:1844
+// Before normalization (locals): pNetMsg.
 VA(0x005c66b0, 0x20)  // anchor-callee(CAdvMgrNetMsgHandler::HandleTradeRequestMsg + TResourceDisplay::Update) + arity, dc 0x18146c
-void CTownNetMsgHandler::HandleGiftMsg(CNetMsg* pNetMsg)
+void CTownNetMsgHandler::handleGiftMsg(CNetMsg* netMsg)
 {
-    CAdvMgrNetMsgHandler::HandleTradeRequestMsg(pNetMsg);
-    m_resourceDisplay->Update(1, 1);
+    CAdvMgrNetMsgHandler::handleTradeRequestMsg(netMsg);
+    m_resourceDisplay->update(1, 1);
 }
 
 // The town page's bottom info row: the hall icon, the fort icon and the
@@ -1437,49 +1519,49 @@ void CTownNetMsgHandler::HandleGiftMsg(CNetMsg* pNetMsg)
 
 // E:\gamedcs\townmgr.cpp
 VA(0x005c66d0, 0x199)  // anchor-caller(RedrawTownScreen 0x5d5410, its only caller image-wide) + order-map + arity(bare ret), dc 0x16ba90
-void townManager::UpdateTownInfo()
+void townManager::updateTownInfo()
 {
     message msg;
-    msg.codeX = 0;
-    msg.codeY = 0;
-    msg.qualifier = 0;
-    msg.mouseX = 0;
-    msg.mouseY = 0;
-    msg.extra = 0;
-    msg.window = 0;
-    msg.id = MESSAGE_WIDGET;
+    msg.m_codeX = 0;
+    msg.m_codeY = 0;
+    msg.m_qualifier = 0;
+    msg.m_mouseX = 0;
+    msg.m_mouseY = 0;
+    msg.m_extra = 0;
+    msg.m_window = 0;
+    msg.m_id = MESSAGE_WIDGET;
 
     int frame = 0;
-    if (townToView->built & bitNumber[HALL_TOWN_ID])
+    if (m_townToView->m_built & g_bitNumber[HALL_TOWN_ID])
         frame = 1;
-    else if (townToView->built & bitNumber[HALL_CITY_ID])
+    else if (m_townToView->m_built & g_bitNumber[HALL_CITY_ID])
         frame = 2;
-    else if (townToView->built & bitNumber[HALL_CAPITOL_ID])
+    else if (m_townToView->m_built & g_bitNumber[HALL_CAPITOL_ID])
         frame = 3;
-    msg.extra = frame;
-    msg.codeX = widget::WIDGET_SET_ICON_FRAME;
-    msg.codeY = 0x9e;
-    TownWindow->BroadcastMessage(&msg);
+    msg.m_extra = frame;
+    msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+    msg.m_codeY = 0x9e;
+    m_townWindow->broadcastMessage(&msg);
 
     frame = 3;
-    if (townToView->built & bitNumber[CASTLE_FORT_ID])
+    if (m_townToView->m_built & g_bitNumber[CASTLE_FORT_ID])
         frame = 0;
-    else if (townToView->built & bitNumber[CASTLE_CITADEL_ID])
+    else if (m_townToView->m_built & g_bitNumber[CASTLE_CITADEL_ID])
         frame = 1;
-    else if (townToView->built & bitNumber[CASTLE_CASTLE_ID])
+    else if (m_townToView->m_built & g_bitNumber[CASTLE_CASTLE_ID])
         frame = 2;
-    msg.extra = frame;
-    msg.codeY = 0x9f;
-    TownWindow->BroadcastMessage(&msg);
+    msg.m_extra = frame;
+    msg.m_codeY = 0x9f;
+    m_townWindow->broadcastMessage(&msg);
 
-    sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
-            townToView->get_gold_income(1));
-    msg.codeX = widget::WIDGET_SET_TEXT;
-    msg.codeY = 0xa0;
-    msg.extraText = gText;
-    TownWindow->BroadcastMessage(&msg);
+    sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+            m_townToView->getGoldIncome(1));
+    msg.m_codeX = widget::WIDGET_SET_TEXT;
+    msg.m_codeY = 0xa0;
+    msg.m_extraText = g_text;
+    m_townWindow->broadcastMessage(&msg);
 
-    static_cast<TTownScreenWindow*>(TownWindow)->set_bonus_display(townToView);
+    static_cast<TTownScreenWindow*>(m_townWindow)->setBonusDisplay(m_townToView);
 }
 
 // The panorama object's destructor, INLINE: retail emits no out-of-line
@@ -1500,12 +1582,12 @@ void townManager::UpdateTownInfo()
 // E:\gamedcs\townmgr.cpp:1900
 inline townObject::~townObject()
 {
-    delete objBorder;
-    objIcon->Dispose();
-    if (objOutline)
-        objOutline->Dispose();
-    if (objHotspot)
-        objHotspot->Dispose();
+    delete m_objBorder;
+    m_objIcon->dispose();
+    if (m_objOutline)
+        m_objOutline->dispose();
+    if (m_objHotspot)
+        m_objHotspot->dispose();
 }
 
 // Putting a town on the screen. The page's five text/icon widgets are
@@ -1567,139 +1649,139 @@ inline townObject::~townObject()
 // `mov eax,-2` and `lea edi,[ebx+0x40]` above the three `esi` stores where
 // this compile issues them after; the instruction multiset is identical.
 VA(0x005c6870, 0x59F)  // anchor-caller(Open 0x5c63c0 + Main) + anchor-callee(UnloadTown/NewStrips/RedrawTownScreen) + anchor-string %sBack.pcx, dc 0x16bba4
-void townManager::SetupTown(unsigned char fade)
+void townManager::setupTown(unsigned char fade)
 {
     message msg;
-    msg.codeX = 0;
-    msg.codeY = 0;
-    msg.qualifier = 0;
-    msg.mouseX = 0;
-    msg.mouseY = 0;
-    msg.extra = 0;
-    msg.window = 0;
-    msg.id = MESSAGE_WIDGET;
+    msg.m_codeX = 0;
+    msg.m_codeY = 0;
+    msg.m_qualifier = 0;
+    msg.m_mouseX = 0;
+    msg.m_mouseY = 0;
+    msg.m_extra = 0;
+    msg.m_window = 0;
+    msg.m_id = MESSAGE_WIDGET;
 
-    gTurnDuration69d630.Pause();
-    townToView->update_shipyard();
+    g_turnDuration69d630.pause();
+    m_townToView->updateShipyard();
 
-    sprintf(gText, gpGame->GetTownName(townToView->id));
-    msg.codeX = widget::WIDGET_SET_TEXT;
-    msg.codeY = 149;
-    msg.extraText = gText;
-    TownWindow->BroadcastMessage(&msg);
+    sprintf(g_text, g_game->getTownName(m_townToView->m_id));
+    msg.m_codeX = widget::WIDGET_SET_TEXT;
+    msg.m_codeY = 149;
+    msg.m_extraText = g_text;
+    m_townWindow->broadcastMessage(&msg);
 
-    strcpy(gText, gpGeneralText->GetText(51));
-    msg.codeY = 151;
-    msg.extraText = gText;
-    TownWindow->BroadcastMessage(&msg);
+    strcpy(g_text, g_generalText->getText(51));
+    msg.m_codeY = 151;
+    msg.m_extraText = g_text;
+    m_townWindow->broadcastMessage(&msg);
 
-    msg.codeX = widget::WIDGET_SET_ICON_FRAME;
-    msg.codeY = 150;
-    msg.extra = townToView->GetPortraitFrame(false);
-    TownWindow->BroadcastMessage(&msg);
+    msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+    msg.m_codeY = 150;
+    msg.m_extra = m_townToView->getPortraitFrame(false);
+    m_townWindow->broadcastMessage(&msg);
 
-    msg.codeX = widget::WIDGET_SET_STATUS;
-    msg.extra = widget::WIDGET_DIMMED_NODRAW;
-    msg.codeY = 154;
-    TownWindow->BroadcastMessage(&msg);
+    msg.m_codeX = widget::WIDGET_SET_STATUS;
+    msg.m_extra = widget::WIDGET_DIMMED_NODRAW;
+    msg.m_codeY = 154;
+    m_townWindow->broadcastMessage(&msg);
 
-    gpGame->GetLocalPlayer();
-    msg.codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
-    msg.codeY = 148;
-    msg.extra = gpGame->GetLocalPlayerGamePos();
-    TownWindow->BroadcastMessage(&msg);
+    g_game->getLocalPlayer();
+    msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
+    msg.m_codeY = 148;
+    msg.m_extra = g_game->getLocalPlayerGamePos();
+    m_townWindow->broadcastMessage(&msg);
 
     if (!fade)
-        TownWindow->DrawWindow(0, 148, 150);
+        m_townWindow->drawWindow(0, 148, 150);
 
-    if (field_110 != townToView->type) {
-        if (field_110 != -1)
-            UnloadTown();
+    if (m_loadedTownType != m_townToView->m_type) {
+        if (m_loadedTownType != -1)
+            unloadTown();
 
-        pResourceDisplay->Update(1, 0);
-        sprintf(gText, "%sBack.pcx", gTownBackgroundPrefix[townToView->type]);
-        field_3c = new bitmapBorder16(0, 0, 800, 374, 147, gText, 0x800);
-        TownObjectCount = 0;
+        m_resourceDisplay->update(1, 0);
+        sprintf(g_text, "%sBack.pcx", g_townBackgroundPrefix[m_townToView->m_type]);
+        m_panorama = new bitmapBorder16(0, 0, 800, 374, 147, g_text, 0x800);
+        m_townObjectCount = 0;
         for (int i = 0; i < MAX_BUILDING_TYPE; i++) {
-            int objId = gTownBuildOrder[townToView->type][i];
+            int objId = g_townBuildOrder[m_townToView->m_type][i];
             if (objId != -1) {
-                TownObjects[TownObjectCount] = new townObject(
-                    townToView->type, objId,
-                    gTownBuildingSprites[townToView->type][objId]);
-                if (!TownObjects[TownObjectCount])
-                    MemError();
-                if (TownObjects[TownObjectCount]->objBorder) {
-                    if (!(townToView->built & bitNumber[objId])) {
-                        TownObjects[TownObjectCount]->objBorder->status
+                m_townObjects[m_townObjectCount] = new townObject(
+                    m_townToView->m_type, objId,
+                    g_townBuildingSprites[m_townToView->m_type][objId]);
+                if (!m_townObjects[m_townObjectCount])
+                    memError();
+                if (m_townObjects[m_townObjectCount]->m_objBorder) {
+                    if (!(m_townToView->m_built & g_bitNumber[objId])) {
+                        m_townObjects[m_townObjectCount]->m_objBorder->m_status
                             &= ~widget::WIDGET_ACTIVE;
-                        TownObjects[TownObjectCount]->visible = 0;
+                        m_townObjects[m_townObjectCount]->m_visible = 0;
                     }
-                    TownWindow->AddWidget(
-                        TownObjects[TownObjectCount]->objBorder, -1);
+                    m_townWindow->addWidget(
+                        m_townObjects[m_townObjectCount]->m_objBorder, -1);
                 }
-                TownObjectCount++;
+                m_townObjectCount++;
             }
         }
-        if (fade && !gpWindowManager->isWaitingForFadeIn)
-            gpWindowManager->FadeScreen(1, 4, 1);
-        gpWindowManager->AddWindow(TownWindow, 0, 1);
+        if (fade && !g_windowManager->m_isWaitingForFadeIn)
+            g_windowManager->fadeScreen(1, 4, 1);
+        g_windowManager->addWindow(m_townWindow, 0, 1);
     } else {
-        TownObjectCount = 0;
+        m_townObjectCount = 0;
         for (int i = 0; i < MAX_BUILDING_TYPE; i++) {
-            int objId = gTownBuildOrder[townToView->type][i];
+            int objId = g_townBuildOrder[m_townToView->m_type][i];
             if (objId != -1) {
-                if (TownObjects[TownObjectCount]->objBorder) {
-                    if (!(townToView->built & bitNumber[objId])) {
-                        TownObjects[TownObjectCount]->objBorder->status
+                if (m_townObjects[m_townObjectCount]->m_objBorder) {
+                    if (!(m_townToView->m_built & g_bitNumber[objId])) {
+                        m_townObjects[m_townObjectCount]->m_objBorder->m_status
                             &= ~widget::WIDGET_ACTIVE;
-                        TownObjects[TownObjectCount]->visible = 0;
+                        m_townObjects[m_townObjectCount]->m_visible = 0;
                     } else {
-                        TownObjects[TownObjectCount]->objBorder->status
+                        m_townObjects[m_townObjectCount]->m_objBorder->m_status
                             |= widget::WIDGET_ACTIVE;
-                        TownObjects[TownObjectCount]->visible = 1;
+                        m_townObjects[m_townObjectCount]->m_visible = 1;
                     }
                 }
-                TownObjects[TownObjectCount]->currFrame = 0;
-                TownObjectCount++;
+                m_townObjects[m_townObjectCount]->m_currFrame = 0;
+                m_townObjectCount++;
             }
         }
-        if (fade && !gpWindowManager->isWaitingForFadeIn)
-            gpWindowManager->FadeScreen(1, 4, 1);
-        delete field_120;
-        field_120 = 0;
-        delete field_11c;
-        field_11c = 0;
+        if (fade && !g_windowManager->m_isWaitingForFadeIn)
+            g_windowManager->fadeScreen(1, 4, 1);
+        delete m_heroStrip;
+        m_heroStrip = 0;
+        delete m_garrisonStrip;
+        m_garrisonStrip = 0;
     }
 
-    static_cast<TTownScreenWindow*>(TownWindow)->UpdateTownLocators();
-    gpSoundManager->StartMP3(gTownMusic[townToView->type], 0, 1);
-    NewStrips();
+    static_cast<TTownScreenWindow*>(m_townWindow)->updateTownLocators();
+    g_soundManager->startMP3(g_townMusic[m_townToView->m_type], 0, 1);
+    newStrips();
 
-    field_134 = 0;
-    field_12c = 0;
-    selectedStrip = 0;
-    field_110 = townToView->type;
-    field_138 = -2;
-    field_130 = -2;
-    field_128 = -2;
+    m_destStrip = 0;
+    m_srcStrip = 0;
+    m_currStrip = 0;
+    m_loadedTownType = m_townToView->m_type;
+    m_destIndex = -2;
+    m_srcIndex = -2;
+    m_currIndex = -2;
 
     for (int slot = 0; slot < TOWN_DWELLING_COUNT; slot++) {
-        if (townToView->active & bitNumber[DWELLING_0_UPG_ID + slot])
-            currentDwellingIDOff[slot] = slot + TOWN_DWELLING_COUNT;
+        if (m_townToView->m_active & g_bitNumber[DWELLING_0_UPG_ID + slot])
+            m_currentDwellingIdOff[slot] = slot + TOWN_DWELLING_COUNT;
         else
-            currentDwellingIDOff[slot] = slot;
-        MonPix[slot] = ResourceManager::GetSprite(
-            akCreatureTypeTraits[gTownDwellingCreatures
-                                     [townToView->type * 2
+            m_currentDwellingIdOff[slot] = slot;
+        m_monPix[slot] = ResourceManager::getSprite(
+            g_creatureTypeTraits[g_townDwellingCreatures
+                                     [m_townToView->m_type * 2
                                           * TOWN_DWELLING_COUNT
-                                      + currentDwellingIDOff[slot]]]
-                .m_sprite_name);
+                                      + m_currentDwellingIdOff[slot]]]
+                .m_spriteName);
     }
 
-    RedrawTownScreen();
+    redrawTownScreen();
     if (fade)
-        gpWindowManager->FadeScreen(0, 4, 0);
-    gTurnDuration69d630.Resume();
+        g_windowManager->fadeScreen(0, 4, 0);
+    g_turnDuration69d630.resume();
 }
 
 // The town page's two troop strips, rebuilt from scratch. The top strip
@@ -1728,52 +1810,52 @@ void townManager::SetupTown(unsigned char fade)
 
 // E:\gamedcs\townmgr.cpp
 VA(0x005c6e10, 0x29B)  // anchor-callee(strip ctor x4 + town::get_army/GiveSpells) + anchor-caller(SwapHeroes/MoveHeroFromGarrison tails) + arity(bare ret), dc 0x16c0e4
-void townManager::NewStrips()
+void townManager::newStrips()
 {
-    if (townToView->garrisonHeroId != -1) {
-        hero* garrisonHero = gpGame->GetHero(townToView->garrisonHeroId);
-        field_11c = new strip(
+    if (m_townToView->m_garrisonHeroId != -1) {
+        hero* garrisonHero = g_game->getHero(m_townToView->m_garrisonHeroId);
+        m_garrisonStrip = new strip(
             0xf1, 0x183, 0, 0xa2,
-            gpGame->GetHero(townToView->garrisonHeroId)->portrait,
-            townToView->owner,
-            garrisonHero, &garrisonHero->army,
-            0x64, 0, TownWindow);
-        if (!field_11c)
-            MemError();
+            g_game->getHero(m_townToView->m_garrisonHeroId)->m_portrait,
+            m_townToView->m_owner,
+            garrisonHero, &garrisonHero->m_army,
+            0x64, 0, m_townWindow);
+        if (!m_garrisonStrip)
+            memError();
     } else {
-        field_11c = new strip(
+        m_garrisonStrip = new strip(
             0xf1, 0x183, 0, 0xa1,
-            townToView->owner, townToView->owner, 0,
+            m_townToView->m_owner, m_townToView->m_owner, 0,
             const_cast<armyGroup*>(
-                &static_cast<const town*>(townToView)->get_army()),
-            0x64, 0, TownWindow);
-        if (!field_11c)
-            MemError();
+                &static_cast<const town*>(m_townToView)->getArmy()),
+            0x64, 0, m_townWindow);
+        if (!m_garrisonStrip)
+            memError();
     }
 
-    if (townToView->visitingHeroId != -1) {
-        hero* visitingHero = gpGame->GetHero(townToView->visitingHeroId);
-        field_120 = new strip(
+    if (m_townToView->m_visitingHeroId != -1) {
+        hero* visitingHero = g_game->getHero(m_townToView->m_visitingHeroId);
+        m_heroStrip = new strip(
             0xf1, 0x1e3, 1, 0xa2,
-            visitingHero->portrait, visitingHero->owner,
-            visitingHero, &visitingHero->army,
-            0x7c, 0, TownWindow);
-        if (!field_120)
-            MemError();
-        if (townToView->active & bitNumber[MAGE_GUILD_ID])
-            townToView->GiveSpells(0);
+            visitingHero->m_portrait, visitingHero->m_owner,
+            visitingHero, &visitingHero->m_army,
+            0x7c, 0, m_townWindow);
+        if (!m_heroStrip)
+            memError();
+        if (m_townToView->m_active & g_bitNumber[MAGE_GUILD_ID])
+            m_townToView->giveSpells(0);
     } else {
-        field_120 = new strip(
+        m_heroStrip = new strip(
             0xf1, 0x1e3, 1, 0xa2, -1,
-            gpGame->GetLocalPlayerGamePos(), 0, 0, -1, 0, TownWindow);
-        if (!field_120)
-            MemError();
+            g_game->getLocalPlayerGamePos(), 0, 0, -1, 0, m_townWindow);
+        if (!m_heroStrip)
+            memError();
     }
 
-    field_134 = 0;
-    field_12c = 0;
-    field_138 = -1;
-    field_130 = -1;
+    m_destStrip = 0;
+    m_srcStrip = 0;
+    m_destIndex = -1;
+    m_srcIndex = -1;
 }
 
 // Dropping the town the manager is showing, without dropping the
@@ -1794,29 +1876,29 @@ void townManager::NewStrips()
 
 // E:\gamedcs\townmgr.cpp:3143
 VA(0x005c70b0, 0xFA)  // anchor-caller(Close 0x5c71b0 + SetupTown) + arity(bare ret), dc 0x16c2d8
-void townManager::UnloadTown()
+void townManager::unloadTown()
 {
     int i;
 
     for (i = 0; i < 7; i++) {
-        if (MonPix[i])
-            MonPix[i]->Dispose();
+        if (m_monPix[i])
+            m_monPix[i]->dispose();
     }
 
-    delete field_120;
-    field_120 = 0;
-    delete field_11c;
-    field_11c = 0;
+    delete m_heroStrip;
+    m_heroStrip = 0;
+    delete m_garrisonStrip;
+    m_garrisonStrip = 0;
 
-    for (i = 0; i < TownObjectCount; i++) {
-        TownWindow->RemoveWidget(TownObjects[i]->objBorder);
-        delete TownObjects[i];
-        TownObjects[i] = 0;
+    for (i = 0; i < m_townObjectCount; i++) {
+        m_townWindow->removeWidget(m_townObjects[i]->m_objBorder);
+        delete m_townObjects[i];
+        m_townObjects[i] = 0;
     }
 
-    if (field_3c) {
-        delete field_3c;
-        field_3c = 0;
+    if (m_panorama) {
+        delete m_panorama;
+        m_panorama = 0;
     }
 }
 
@@ -1828,25 +1910,25 @@ void townManager::UnloadTown()
 
 // E:\gamedcs\townmgr.cpp:3175
 VA(0x005c71b0, 0x9C)  // anchor-vtable 0x643720 slot 1, dc 0x16c3e8
-void townManager::Close()
+void townManager::close()
 {
-    UnloadTown();
-    if (TownWindow) {
-        gpWindowManager->RemoveWindow(TownWindow);
-        delete TownWindow;
+    unloadTown();
+    if (m_townWindow) {
+        g_windowManager->removeWindow(m_townWindow);
+        delete m_townWindow;
     }
-    TownWindow = 0;
-    if (pResourceDisplay) {
-        delete pResourceDisplay;
-        pResourceDisplay = 0;
+    m_townWindow = 0;
+    if (m_resourceDisplay) {
+        delete m_resourceDisplay;
+        m_resourceDisplay = 0;
     }
-    gpWindowManager->FadeScreen(1, 4, 1);
-    if (gNetworkActive69954c && netMsgHandler) {
-        pDPlay->SetNetMsgHandler(field_1b4);
-        delete netMsgHandler;
-        netMsgHandler = 0;
+    g_windowManager->fadeScreen(1, 4, 1);
+    if (g_networkActive69954c && m_netMsgHandler) {
+        g_dPlay->setNetMsgHandler(m_netMsgHandlerSave);
+        delete m_netMsgHandler;
+        m_netMsgHandler = 0;
     }
-    status = 0;
+    m_status = 0;
 }
 
 // The status line for a hero-to-hero drag on the town page, and the
@@ -1870,51 +1952,51 @@ void townManager::Close()
 
 // E:\gamedcs\townmgr.cpp:3213
 VA(0x005c7250, 0x1AB)  // order-map(between Close and SetArmyCommand) + arity(bare ret) + statusText edge, dc 0x16c518
-void townManager::SetHeroCommand()
+void townManager::setHeroCommand()
 {
-    if (!field_12c)
+    if (!m_srcStrip)
         return;
-    if (!field_134)
+    if (!m_destStrip)
         return;
 
-    hero* visitingHero = gpGame->GetHero(townToView->visitingHeroId);
-    hero* garrisonHero = gpGame->GetHero(townToView->garrisonHeroId);
+    hero* visitingHero = g_game->getHero(m_townToView->m_visitingHeroId);
+    hero* garrisonHero = g_game->getHero(m_townToView->m_garrisonHeroId);
 
-    if (field_12c == field_134) {
+    if (m_srcStrip == m_destStrip) {
         hero* clickedHero = garrisonHero;
-        if (field_12c->pos)
+        if (m_srcStrip->m_pos)
             clickedHero = visitingHero;
-        sprintf(statusText, gUnnamed6a5d94, clickedHero->name);
-        field_19c = 4;
+        sprintf(m_statusText, g_unnamed6a5d94, clickedHero->m_name);
+        m_command = 4;
         return;
     }
 
-    if (!field_12c->pos) {
-        if (townToView->visitingHeroId == -1) {
-            sprintf(statusText, gUnnamed6a5d9c, garrisonHero->name);
-            field_19c = 8;
+    if (!m_srcStrip->m_pos) {
+        if (m_townToView->m_visitingHeroId == -1) {
+            sprintf(m_statusText, g_unnamed6a5d9c, garrisonHero->m_name);
+            m_command = 8;
             return;
         }
-        if (garrisonHero->owner == visitingHero->owner) {
-            sprintf(statusText, gUnnamed6a5da0, garrisonHero->name,
-                    visitingHero->name);
-            field_19c = 9;
+        if (garrisonHero->m_owner == visitingHero->m_owner) {
+            sprintf(m_statusText, g_unnamed6a5da0, garrisonHero->m_name,
+                    visitingHero->m_name);
+            m_command = 9;
             return;
         }
     } else {
-        if (visitingHero->owner == townToView->owner) {
-            if (townToView->garrisonHeroId == -1) {
-                sprintf(statusText, gUnnamed6a5d9c, visitingHero->name);
-                field_19c = 7;
+        if (visitingHero->m_owner == m_townToView->m_owner) {
+            if (m_townToView->m_garrisonHeroId == -1) {
+                sprintf(m_statusText, g_unnamed6a5d9c, visitingHero->m_name);
+                m_command = 7;
                 return;
             }
-            sprintf(statusText, gUnnamed6a5da0, visitingHero->name,
-                    garrisonHero->name);
-            field_19c = 9;
+            sprintf(m_statusText, g_unnamed6a5da0, visitingHero->m_name,
+                    garrisonHero->m_name);
+            m_command = 9;
             return;
         }
     }
-    strcpy(statusText, gUnnamed6a5da8);
+    strcpy(m_statusText, g_unnamed6a5da8);
 }
 
 // The army-strip counterpart of SetHeroCommand: given the anchor cell
@@ -1927,64 +2009,65 @@ void townManager::SetHeroCommand()
 // name is materialised inline through akCreatureTypeTraits with retail's own
 // `id in 0..150 ? .name/.plural : emptyRolloverText` guard.
 // E:\gamedcs\townmgr.cpp:3274
+// Before normalization (locals): join_dialog.
 VA(0x005c7400, 0x391)  // order-map(SetHeroCommand 0x5c7250 .. select_army 0x5c8080) + anchor-callee(select_army 0x5c8080 + GetNumArmies) + arity(ret 8, 2 args), dc 0x16c6a8
-void townManager::SetArmyCommand(int splitEnabled, unsigned char join_dialog)
+void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
 {
     char flag = 0;
-    field_19c = -1;
-    if (field_12c->group->GetNumArmies() == 1) {
-        if (townToView) {
-            if (field_12c == field_120 || townToView->garrisonHeroId != -1) {
-                if (field_134 != field_12c)
+    m_command = -1;
+    if (m_srcStrip->m_group->getNumArmies() == 1) {
+        if (m_townToView) {
+            if (m_srcStrip == m_heroStrip || m_townToView->m_garrisonHeroId != -1) {
+                if (m_destStrip != m_srcStrip)
                     flag = 1;
             }
-        } else if (field_12c == field_120 && field_134 != field_12c) {
+        } else if (m_srcStrip == m_heroStrip && m_destStrip != m_srcStrip) {
             flag = 1;
         }
     }
 
-    if (field_12c == field_134 && field_130 == field_138) {
-        int id = field_12c->group->armies[field_130];
+    if (m_srcStrip == m_destStrip && m_srcIndex == m_destIndex) {
+        int id = m_srcStrip->m_group->m_armies[m_srcIndex];
         const char* name;
         if (id >= 0 && id <= 150)
-            name = akCreatureTypeTraits[id].m_plural_name;
+            name = g_creatureTypeTraits[id].m_pluralName;
         else
-            name = emptyRolloverText;
-        sprintf(statusText, gUnnamed6a5d94, name);
-        field_19c = 1;
+            name = g_emptyRolloverText;
+        sprintf(m_statusText, g_unnamed6a5d94, name);
+        m_command = 1;
         return;
     }
 
-    long selOwner = field_12c->owner;
-    if (selOwner != gNetLocalGamePos) {
-        select_army(field_134, field_138, join_dialog);
+    long selOwner = m_srcStrip->m_owner;
+    if (selOwner != g_netLocalGamePos) {
+        selectArmy(m_destStrip, m_destIndex, joinDialog);
         return;
     }
 
-    int anchorId = field_134->group->armies[field_138];
-    int selId = field_12c->group->armies[field_130];
-    if (anchorId == selId && selOwner == field_134->owner) {
+    int anchorId = m_destStrip->m_group->m_armies[m_destIndex];
+    int selId = m_srcStrip->m_group->m_armies[m_srcIndex];
+    if (anchorId == selId && selOwner == m_destStrip->m_owner) {
         if (splitEnabled) {
             const char* name;
             if (selId >= 0 && selId <= 150)
-                name = akCreatureTypeTraits[selId].m_name;
+                name = g_creatureTypeTraits[selId].m_name;
             else
-                name = emptyRolloverText;
-            sprintf(statusText, gUnnamed6a5d84, name);
-            field_19c = 5;
+                name = g_emptyRolloverText;
+            sprintf(m_statusText, g_unnamed6a5d84, name);
+            m_command = 5;
             return;
         }
         if (flag) {
-            strcpy(statusText, gUnnamed6a5d88);
+            strcpy(m_statusText, g_unnamed6a5d88);
             return;
         }
         const char* name;
         if (selId >= 0 && selId <= 150)
-            name = akCreatureTypeTraits[selId].m_name;
+            name = g_creatureTypeTraits[selId].m_name;
         else
-            name = emptyRolloverText;
-        sprintf(statusText, gUnnamed6a5d8c, name);
-        field_19c = 2;
+            name = g_emptyRolloverText;
+        sprintf(m_statusText, g_unnamed6a5d8c, name);
+        m_command = 2;
         return;
     }
 
@@ -1992,46 +2075,46 @@ void townManager::SetArmyCommand(int splitEnabled, unsigned char join_dialog)
         if (anchorId == -1) {
             const char* name;
             if (selId >= 0 && selId <= 150)
-                name = akCreatureTypeTraits[selId].m_name;
+                name = g_creatureTypeTraits[selId].m_name;
             else
-                name = emptyRolloverText;
-            sprintf(statusText, gUnnamed6a5d90, name);
-            field_19c = 5;
+                name = g_emptyRolloverText;
+            sprintf(m_statusText, g_unnamed6a5d90, name);
+            m_command = 5;
             return;
         }
     } else {
         if (anchorId == -1) {
             if (flag) {
-                strcpy(statusText, gUnnamed6a5d98);
+                strcpy(m_statusText, g_unnamed6a5d98);
                 return;
             }
             const char* name;
             if (selId >= 0 && selId <= 150)
-                name = akCreatureTypeTraits[selId].m_plural_name;
+                name = g_creatureTypeTraits[selId].m_pluralName;
             else
-                name = emptyRolloverText;
-            sprintf(statusText, gUnnamed6a5d9c, name);
-            field_19c = 3;
+                name = g_emptyRolloverText;
+            sprintf(m_statusText, g_unnamed6a5d9c, name);
+            m_command = 3;
             return;
         }
     }
 
-    if (field_134->owner != selOwner) {
-        select_army(field_134, field_138, join_dialog);
+    if (m_destStrip->m_owner != selOwner) {
+        selectArmy(m_destStrip, m_destIndex, joinDialog);
         return;
     }
     const char* nameAnchor;
     if (anchorId >= 0 && anchorId <= 150)
-        nameAnchor = akCreatureTypeTraits[anchorId].m_plural_name;
+        nameAnchor = g_creatureTypeTraits[anchorId].m_pluralName;
     else
-        nameAnchor = emptyRolloverText;
+        nameAnchor = g_emptyRolloverText;
     const char* nameSel;
     if (selId >= 0 && selId <= 150)
-        nameSel = akCreatureTypeTraits[selId].m_plural_name;
+        nameSel = g_creatureTypeTraits[selId].m_pluralName;
     else
-        nameSel = emptyRolloverText;
-    sprintf(statusText, gUnnamed6a5da0, nameSel, nameAnchor);
-    field_19c = 3;
+        nameSel = g_emptyRolloverText;
+    sprintf(m_statusText, g_unnamed6a5da0, nameSel, nameAnchor);
+    m_command = 3;
 }
 
 // The town page's rollover-and-command line: one arm per thing under
@@ -2065,77 +2148,77 @@ void townManager::SetArmyCommand(int splitEnabled, unsigned char join_dialog)
 // sprintfs, and the shared `field_19c = 0` after both (+1.68).
 // E:\gamedcs\townmgr.cpp:3383
 VA(0x005c77a0, 0x8DD)  // order-map + anchor-callee(SetHeroCommand 0x5c7250) + arity(ret 4, message*), dc 0x16c940
-void townManager::SetCommandAndText(message* msg)
+void townManager::setCommandAndText(message* msg)
 {
-    int code = msg->codeY;
+    int code = msg->m_codeY;
     if (code >= 0 && code <= DWELLING_6_UPG_ID
-        && (code = static_cast<TTownScreenWindow*>(TownWindow)
-                       ->zBuffer[msg->mouseY * 800 + msg->mouseX] - 1) >= 0
+        && (code = static_cast<TTownScreenWindow*>(m_townWindow)
+                       ->m_zBuffer[msg->m_mouseY * 800 + msg->m_mouseX] - 1) >= 0
         && code <= DWELLING_6_UPG_ID) {
-        gUnnamed6aa9e8 = code;
+        g_unnamed6aa9e8 = code;
         PlayImmEffect(DATA_COMPGEN(0x0068c210, guiPopEffectName, "GuiPop"), 1);
     } else {
-        gUnnamed6aa9e8 = -1;
+        g_unnamed6aa9e8 = -1;
     }
 
-    field_19c = -2;
+    m_command = -2;
     switch (code) {
     case MAGE_GUILD_ID:
     case MAGE_GUILD2_ID:
     case MAGE_GUILD3_ID:
     case MAGE_GUILD4_ID:
     case MAGE_GUILD5_ID:
-        strcpy(statusText, gUnnamed6a5dbc);
+        strcpy(m_statusText, g_unnamed6a5dbc);
         break;
     case TAVERN_ID:
-        strcpy(statusText, gUnnamed6a5dc4);
+        strcpy(m_statusText, g_unnamed6a5dc4);
         break;
     case DOCK_ID:
     case DOCK_WITH_BOAT_ID:
-        strcpy(statusText, gUnnamed6a5dc8);
+        strcpy(m_statusText, g_unnamed6a5dc8);
         break;
     case CASTLE_CASTLE_ID:
-        strcpy(statusText, gUnnamed6a5dcc);
+        strcpy(m_statusText, g_unnamed6a5dcc);
         break;
     case BLACKSMITH_ID:
-        strcpy(statusText, gUnnamed6a5dd0);
+        strcpy(m_statusText, g_unnamed6a5dd0);
         break;
     case HALL_CITY_ID:
-        strcpy(statusText, gUnnamed6a5de0);
+        strcpy(m_statusText, g_unnamed6a5de0);
         break;
     case HALL_CAPITOL_ID:
-        strcpy(statusText, gUnnamed6a5de4);
+        strcpy(m_statusText, g_unnamed6a5de4);
         break;
     case MARKETPLACE_ID:
-        strcpy(statusText, gUnnamed6a5dec);
+        strcpy(m_statusText, g_unnamed6a5dec);
         break;
     case MARKETPLACE_SILO_ID:
-        strcpy(statusText, gUnnamed6a5df0);
+        strcpy(m_statusText, g_unnamed6a5df0);
         break;
     case HORDE_ID:
     case HORDE_UPG_ID: {
-        TCreatureType creature = gTownDwellingCreatures[
-            townToView->type * TOWN_DWELLING_SLOTS
-            + gHordeDwellingSlot[townToView->type][code - HORDE_ID]];
+        TCreatureType creature = g_townDwellingCreatures[
+            m_townToView->m_type * TOWN_DWELLING_SLOTS
+            + g_hordeDwellingSlot[m_townToView->m_type][code - HORDE_ID]];
         const char* name;
         if (creature >= 0 && creature <= 0x96)
-            name = akCreatureTypeTraits[creature].m_plural_name;
+            name = g_creatureTypeTraits[creature].m_pluralName;
         else
-            name = emptyRolloverText;
-        sprintf(statusText, gUnnamed6a5dd8, name);
+            name = g_emptyRolloverText;
+        sprintf(m_statusText, g_unnamed6a5dd8, name);
         break;
     }
     case HORDE_2_ID:
     case HORDE_2_UPG_ID: {
-        TCreatureType creature = gTownDwellingCreatures[
-            townToView->type * TOWN_DWELLING_SLOTS
-            + gHorde2DwellingSlot[townToView->type][code - HORDE_2_ID]];
+        TCreatureType creature = g_townDwellingCreatures[
+            m_townToView->m_type * TOWN_DWELLING_SLOTS
+            + g_horde2DwellingSlot[m_townToView->m_type][code - HORDE_2_ID]];
         const char* name;
         if (creature >= 0 && creature <= 0x96)
-            name = akCreatureTypeTraits[creature].m_plural_name;
+            name = g_creatureTypeTraits[creature].m_pluralName;
         else
-            name = emptyRolloverText;
-        sprintf(statusText, gUnnamed6a5dd8, name);
+            name = g_emptyRolloverText;
+        sprintf(m_statusText, g_unnamed6a5dd8, name);
         break;
     }
     case SPECIAL_BUILDING_ID:
@@ -2143,26 +2226,26 @@ void townManager::SetCommandAndText(message* msg)
     case EXTRA_1_ID:
     case EXTRA_2_ID:
     case HOLY_GRAIL_ID:
-        strcpy(statusText,
-               gBuildingNamesTown[townToView->type * 11 + code]);
+        strcpy(m_statusText,
+               g_buildingNamesTown[m_townToView->m_type * 11 + code]);
         break;
     case TTownScreenWindow::CREST_ID:
     case TTownScreenWindow::GARRISON_PORTRAIT_ID:
     case TTownScreenWindow::GARRISON_PORTRAIT_SELECTOR_ID:
-        if (field_130 == -1) {
-            field_138 = -1;
-            field_134 = field_11c;
-            SetHeroCommand();
+        if (m_srcIndex == -1) {
+            m_destIndex = -1;
+            m_destStrip = m_garrisonStrip;
+            setHeroCommand();
         } else {
-            field_128 = -1;
-            selectedStrip = field_11c;
-            if (townToView->garrisonHeroId == -1) {
-                strcpy(statusText, gUnnamed6a5db0);
-                field_19c = -2;
+            m_currIndex = -1;
+            m_currStrip = m_garrisonStrip;
+            if (m_townToView->m_garrisonHeroId == -1) {
+                strcpy(m_statusText, g_unnamed6a5db0);
+                m_command = -2;
             } else {
-                hero* garrison = &gpGame->heroes[townToView->garrisonHeroId];
-                sprintf(statusText, gUnnamed6a5db4, garrison->name);
-                field_19c = 0;
+                hero* garrison = &g_game->m_heroes[m_townToView->m_garrisonHeroId];
+                sprintf(m_statusText, g_unnamed6a5db4, garrison->m_name);
+                m_command = 0;
             }
         }
         break;
@@ -2173,40 +2256,40 @@ void townManager::SetCommandAndText(message* msg)
     case TTownScreenWindow::TOWN_GARRISON_4_SELECTOR_ID:
     case TTownScreenWindow::TOWN_GARRISON_5_SELECTOR_ID:
     case TTownScreenWindow::TOWN_GARRISON_6_SELECTOR_ID: {
-        int shift = msg->qualifier & 3;
+        int shift = msg->m_qualifier & 3;
         int slot = code - TTownScreenWindow::TOWN_GARRISON_0_SELECTOR_ID;
-        if (field_11c->group) {
-            if (field_130 < 0 || field_12c->owner != gNetLocalGamePos) {
-                select_army(field_11c, slot, 0);
+        if (m_garrisonStrip->m_group) {
+            if (m_srcIndex < 0 || m_srcStrip->m_owner != g_netLocalGamePos) {
+                selectArmy(m_garrisonStrip, slot, 0);
             } else {
-                field_134 = field_11c;
-                field_138 = slot;
-                if (field_1c4 == 0 && shift == 0)
-                    SetArmyCommand(0, 0);
+                m_destStrip = m_garrisonStrip;
+                m_destIndex = slot;
+                if (m_divideStatus == 0 && shift == 0)
+                    setArmyCommand(0, 0);
                 else
-                    SetArmyCommand(1, 0);
+                    setArmyCommand(1, 0);
             }
         }
         break;
     }
     case TTownScreenWindow::PORTRAIT_ID:
     case TTownScreenWindow::VISITING_PORTRAIT_SELECTOR_ID:
-        if (field_130 == -1
-            && field_120->owner == gpGame->GetLocalPlayerGamePos()) {
-            field_134 = field_120;
-            field_138 = -1;
-            SetHeroCommand();
-        } else if (townToView->visitingHeroId == -1) {
-            strcpy(statusText, gUnnamed6a5db0);
+        if (m_srcIndex == -1
+            && m_heroStrip->m_owner == g_game->getLocalPlayerGamePos()) {
+            m_destStrip = m_heroStrip;
+            m_destIndex = -1;
+            setHeroCommand();
+        } else if (m_townToView->m_visitingHeroId == -1) {
+            strcpy(m_statusText, g_unnamed6a5db0);
         } else {
             hero* visiting;
-            field_128 = -1;
-            selectedStrip = field_120;
-            visiting = (townToView->visitingHeroId == -1)
+            m_currIndex = -1;
+            m_currStrip = m_heroStrip;
+            visiting = (m_townToView->m_visitingHeroId == -1)
                            ? 0
-                           : &gpGame->heroes[townToView->visitingHeroId];
-            sprintf(statusText, gUnnamed6a5e04, visiting->name);
-            field_19c = 0;
+                           : &g_game->m_heroes[m_townToView->m_visitingHeroId];
+            sprintf(m_statusText, g_unnamed6a5e04, visiting->m_name);
+            m_command = 0;
         }
         break;
     case TTownScreenWindow::HERO_ARMY_0_SELECTOR_ID:
@@ -2216,36 +2299,36 @@ void townManager::SetCommandAndText(message* msg)
     case TTownScreenWindow::HERO_ARMY_4_SELECTOR_ID:
     case TTownScreenWindow::HERO_ARMY_5_SELECTOR_ID:
     case TTownScreenWindow::HERO_ARMY_6_SELECTOR_ID: {
-        int shift = msg->qualifier & 3;
+        int shift = msg->m_qualifier & 3;
         int slot = code - TTownScreenWindow::HERO_ARMY_0_SELECTOR_ID;
-        if (field_120->group) {
-            if (field_130 < 0 || field_12c->owner != gNetLocalGamePos) {
-                select_army(field_120, slot, 0);
+        if (m_heroStrip->m_group) {
+            if (m_srcIndex < 0 || m_srcStrip->m_owner != g_netLocalGamePos) {
+                selectArmy(m_heroStrip, slot, 0);
             } else {
-                field_134 = field_120;
-                field_138 = slot;
-                if (field_1c4 == 0 && shift == 0)
-                    SetArmyCommand(0, 0);
+                m_destStrip = m_heroStrip;
+                m_destIndex = slot;
+                if (m_divideStatus == 0 && shift == 0)
+                    setArmyCommand(0, 0);
                 else
-                    SetArmyCommand(1, 0);
+                    setArmyCommand(1, 0);
             }
         }
         break;
     }
     case TTownScreenWindow::TOWN_WIDGET_50_ID:
-        strcpy(statusText, gUnnamed6a5de8);
+        strcpy(m_statusText, g_unnamed6a5de8);
         break;
     case TTownScreenWindow::DIVIDE_ID:
-        if (field_130 == -2 || field_130 < 0) {
-            strcpy(statusText, gUnnamed6a5d90);
+        if (m_srcIndex == -2 || m_srcIndex < 0) {
+            strcpy(m_statusText, g_unnamed6a5d90);
         } else {
-            int id = field_12c->group->armies[field_130];
+            int id = m_srcStrip->m_group->m_armies[m_srcIndex];
             const char* name;
             if (id >= 0 && id <= 0x96)
-                name = akCreatureTypeTraits[id].m_plural_name;
+                name = g_creatureTypeTraits[id].m_pluralName;
             else
-                name = emptyRolloverText;
-            sprintf(statusText, gUnnamed6a5d84, name);
+                name = g_emptyRolloverText;
+            sprintf(m_statusText, g_unnamed6a5d84, name);
         }
         break;
     case DWELLING_0_ID:
@@ -2262,24 +2345,24 @@ void townManager::SetCommandAndText(message* msg)
     case DWELLING_4_UPG_ID:
     case DWELLING_5_UPG_ID:
     case DWELLING_6_UPG_ID: {
-        TCreatureType creature = gTownDwellingCreatures[
-            townToView->type * TOWN_DWELLING_SLOTS + code - DWELLING_0_ID];
+        TCreatureType creature = g_townDwellingCreatures[
+            m_townToView->m_type * TOWN_DWELLING_SLOTS + code - DWELLING_0_ID];
         const char* name;
         if (creature >= 0 && creature <= 0x96)
-            name = akCreatureTypeTraits[creature].m_plural_name;
+            name = g_creatureTypeTraits[creature].m_pluralName;
         else
-            name = emptyRolloverText;
-        sprintf(statusText, gUnnamed6a5dd8, name);
+            name = g_emptyRolloverText;
+        sprintf(m_statusText, g_unnamed6a5dd8, name);
         break;
     }
     case TTownScreenWindow::TOWN_0_ID:
     case TTownScreenWindow::TOWN_1_ID:
     case TTownScreenWindow::TOWN_2_ID: {
-        playerData* player = gpGame->GetLocalPlayer();
-        sprintf(statusText, gUnnamed6a5d94,
-                gpGame->towns[player->townIds[
-                    static_cast<TTownScreenWindow*>(TownWindow)->field_4c
-                    + code - TTownScreenWindow::TOWN_0_ID]].cName.c_str());
+        playerData* player = g_game->getLocalPlayer();
+        sprintf(m_statusText, g_unnamed6a5d94,
+                g_game->m_towns[player->m_townIds[
+                    static_cast<TTownScreenWindow*>(m_townWindow)->m_topTown
+                    + code - TTownScreenWindow::TOWN_0_ID]].m_name.c_str());
         break;
     }
     case TTownScreenWindow::BONUS_0_ID:
@@ -2289,39 +2372,39 @@ void townManager::SetCommandAndText(message* msg)
     case TTownScreenWindow::BONUS_4_ID:
     case TTownScreenWindow::BONUS_5_ID:
     case TTownScreenWindow::BONUS_6_ID:
-        strcpy(statusText,
-               static_cast<TTownScreenWindow*>(TownWindow)
-                   ->growth_bonus_icon[code - TTownScreenWindow::BONUS_0_ID]
-                   ->get_help_text());
+        strcpy(m_statusText,
+               static_cast<TTownScreenWindow*>(m_townWindow)
+                   ->m_growthBonusIcon[code - TTownScreenWindow::BONUS_0_ID]
+                   ->getHelpText());
         break;
     case TTownScreenWindow::HALL_ICON_ID:
-        if (townToView->HasBuilding(HALL_VILLAGE_ID, 0)) {
+        if (m_townToView->hasBuilding(HALL_VILLAGE_ID, 0)) {
     case HALL_VILLAGE_ID:
-            strcpy(statusText, gUnnamed6a5dd4);
-        } else if (townToView->HasBuilding(HALL_TOWN_ID, 0)) {
+            strcpy(m_statusText, g_unnamed6a5dd4);
+        } else if (m_townToView->hasBuilding(HALL_TOWN_ID, 0)) {
     case HALL_TOWN_ID:
-            strcpy(statusText, gUnnamed6a5ddc);
-        } else if (townToView->HasBuilding(HALL_CITY_ID, 0)) {
-            strcpy(statusText, gUnnamed6a5de0);
+            strcpy(m_statusText, g_unnamed6a5ddc);
+        } else if (m_townToView->hasBuilding(HALL_CITY_ID, 0)) {
+            strcpy(m_statusText, g_unnamed6a5de0);
         } else {
-            strcpy(statusText, gUnnamed6a5de4);
+            strcpy(m_statusText, g_unnamed6a5de4);
         }
         break;
     case TTownScreenWindow::CASTLE_ICON_ID:
-        if (townToView->HasBuilding(CASTLE_FORT_ID, 0)) {
+        if (m_townToView->hasBuilding(CASTLE_FORT_ID, 0)) {
     case CASTLE_FORT_ID:
-            strcpy(statusText, gUnnamed6a5df4);
-        } else if (townToView->HasBuilding(CASTLE_CITADEL_ID, 0)) {
+            strcpy(m_statusText, g_unnamed6a5df4);
+        } else if (m_townToView->hasBuilding(CASTLE_CITADEL_ID, 0)) {
     case CASTLE_CITADEL_ID:
-            strcpy(statusText, gUnnamed6a5df8);
-        } else if (townToView->HasBuilding(CASTLE_CASTLE_ID, 0)) {
-            strcpy(statusText, gUnnamed6a5dcc);
+            strcpy(m_statusText, g_unnamed6a5df8);
+        } else if (m_townToView->hasBuilding(CASTLE_CASTLE_ID, 0)) {
+            strcpy(m_statusText, g_unnamed6a5dcc);
         } else {
-            strcpy(statusText, emptyRolloverText);
+            strcpy(m_statusText, g_emptyRolloverText);
         }
         break;
     case TTownScreenWindow::INCOME_TEXT_ID:
-        strcpy(statusText, gpGeneralText->GetText(256));
+        strcpy(m_statusText, g_generalText->getText(256));
         break;
     case TTownScreenWindow::BONUS_0_TEXT_ID:
     case TTownScreenWindow::BONUS_1_TEXT_ID:
@@ -2330,11 +2413,11 @@ void townManager::SetCommandAndText(message* msg)
     case TTownScreenWindow::BONUS_4_TEXT_ID:
     case TTownScreenWindow::BONUS_5_TEXT_ID:
     case TTownScreenWindow::BONUS_6_TEXT_ID:
-        strcpy(statusText,
-               static_cast<TTownScreenWindow*>(TownWindow)
-                   ->growth_bonus_icon[code
+        strcpy(m_statusText,
+               static_cast<TTownScreenWindow*>(m_townWindow)
+                   ->m_growthBonusIcon[code
                                        - TTownScreenWindow::BONUS_0_TEXT_ID]
-                   ->get_help_text());
+                   ->getHelpText());
         break;
     case TResourceDisplay::RESOURCE_TEXT_0_ID:
     case TResourceDisplay::RESOURCE_TEXT_1_ID:
@@ -2344,9 +2427,9 @@ void townManager::SetCommandAndText(message* msg)
     case TResourceDisplay::RESOURCE_TEXT_5_ID:
     case TResourceDisplay::RESOURCE_TEXT_6_ID:
     case TResourceDisplay::RESOURCE_TEXT_7_ID:
-        strcpy(statusText,
-               gAdventureWindowHelp[gUnnamed642e70[
-                   code - TResourceDisplay::RESOURCE_TEXT_0_ID]].text);
+        strcpy(m_statusText,
+               g_adventureWindowHelp[g_unnamed642e70[
+                   code - TResourceDisplay::RESOURCE_TEXT_0_ID]].m_text);
         break;
     case TResourceDisplay::RESOURCE_BORDER_0_ID:
     case TResourceDisplay::RESOURCE_BORDER_1_ID:
@@ -2355,27 +2438,27 @@ void townManager::SetCommandAndText(message* msg)
     case TResourceDisplay::RESOURCE_BORDER_4_ID:
     case TResourceDisplay::RESOURCE_BORDER_5_ID:
     case TResourceDisplay::RESOURCE_BORDER_6_ID:
-        strcpy(statusText,
-               gAdventureWindowHelp[gUnnamed642e70[
-                   code - TResourceDisplay::RESOURCE_BORDER_0_ID]].text);
+        strcpy(m_statusText,
+               g_adventureWindowHelp[g_unnamed642e70[
+                   code - TResourceDisplay::RESOURCE_BORDER_0_ID]].m_text);
         break;
     case TTownScreenWindow::TOWN_HOTSPOT_NONE:
     default:
-        strcpy(statusText, emptyRolloverText);
+        strcpy(m_statusText, g_emptyRolloverText);
         break;
     case TTownScreenWindow::EXIT_BUTTON_ID:
-        strcpy(statusText, gUnnamed6a5da4);
+        strcpy(m_statusText, g_unnamed6a5da4);
         break;
     }
 
     message textMessage;
-    textMessage.id = MESSAGE_WIDGET;
-    textMessage.codeX = widget::WIDGET_SET_TEXT;
-    textMessage.codeY = 0x97;
-    textMessage.extraText = statusText;
-    TownWindow->BroadcastMessage(&textMessage);
-    TownWindow->DrawWindow(0, 0x97, 0x97);
-    gpWindowManager->UpdateScreen(7, 0x22b, 0x2de, 0x13);
+    textMessage.m_id = MESSAGE_WIDGET;
+    textMessage.m_codeX = widget::WIDGET_SET_TEXT;
+    textMessage.m_codeY = 0x97;
+    textMessage.m_extraText = m_statusText;
+    m_townWindow->broadcastMessage(&textMessage);
+    m_townWindow->drawWindow(0, 0x97, 0x97);
+    g_windowManager->updateScreen(7, 0x22b, 0x2de, 0x13);
 }
 
 // The thieves' guild scoreboard, the widest dialog in the compiland: a
@@ -2398,125 +2481,126 @@ void townManager::SetCommandAndText(message* msg)
 
 // E:\gamedcs\townmgr.cpp:3787
 VA(0x005c8080, 0x108)  // order-map(last row before the thieves' guild) + arity(ret 0xc, 3 args) + statusText edge, dc 0x16d0dc
-void townManager::select_army(strip* fromStrip, int slot,
+void townManager::selectArmy(strip* fromStrip, int slot,
                               unsigned char isOwnerCell)
 {
-    selectedStrip = fromStrip;
-    field_128 = slot;
+    m_currStrip = fromStrip;
+    m_currIndex = slot;
 
-    if (!fromStrip->group || fromStrip->group->armies[slot] < 0) {
-        strcpy(statusText, gUnnamed6a5db0);
-        field_19c = -2;
+    if (!fromStrip->m_group || fromStrip->m_group->m_armies[slot] < 0) {
+        strcpy(m_statusText, g_unnamed6a5db0);
+        m_command = -2;
         return;
     }
 
     const char* name;
-    if (fromStrip->group->armies[slot] <= 150) {
-        if (fromStrip->group->numTroops[slot] == 1)
-            name = akCreatureTypeTraits[fromStrip->group->armies[slot]].m_name;
+    if (fromStrip->m_group->m_armies[slot] <= 150) {
+        if (fromStrip->m_group->m_numTroops[slot] == 1)
+            name = g_creatureTypeTraits[fromStrip->m_group->m_armies[slot]].m_name;
         else
-            name = akCreatureTypeTraits[fromStrip->group->armies[slot]]
-                       .m_plural_name;
+            name = g_creatureTypeTraits[fromStrip->m_group->m_armies[slot]]
+                       .m_pluralName;
     } else {
-        name = emptyRolloverText;
+        name = g_emptyRolloverText;
     }
 
     if (isOwnerCell) {
-        if (!fromStrip->pos)
-            sprintf(statusText, gUnnamed6a5e08, name);
+        if (!fromStrip->m_pos)
+            sprintf(m_statusText, g_unnamed6a5e08, name);
         else
-            sprintf(statusText, gUnnamed6a5e0c, name);
+            sprintf(m_statusText, g_unnamed6a5e0c, name);
     } else {
-        if (!fromStrip->pos)
-            sprintf(statusText, gUnnamed6a5db4, name);
+        if (!fromStrip->m_pos)
+            sprintf(m_statusText, g_unnamed6a5db4, name);
         else
-            sprintf(statusText, gUnnamed6a5e04, name);
+            sprintf(m_statusText, g_unnamed6a5e04, name);
     }
-    field_19c = 0;
+    m_command = 0;
 }
 
 // E:\gamedcs\townmgr.cpp:3859
+// Before normalization (locals): num_guilds.
 VA(0x005c8190, 0x14C8)  // anchor-vtable 0x643764 + anchor-string TPRank.pcx + arity, dc 0x16d298
-TThievesGuildWindow::TThievesGuildWindow(int num_guilds)
+TThievesGuildWindow::TThievesGuildWindow(int numGuilds)
     : CAdvPopup(0, 0, 800, 600, 2)
 {
-    Widgets.reserve(30);
+    m_widgets.reserve(30);
 
     bitmapBorder* background = new bitmapBorder(0, 0, 800, 600, 0,
                                                 "TPRank.pcx", 0x800);
-    background->SetPlayerPaletteColors(gpGame->GetLocalPlayerGamePos());
-    Widgets.push_back(background);
+    background->setPlayerPaletteColors(g_game->getLocalPlayerGamePos());
+    m_widgets.push_back(background);
 
-    Widgets.push_back(new iconWidget(317, 7, 66, 540, 700, "PRStrips.def",
+    m_widgets.push_back(new iconWidget(317, 7, 66, 540, 700, "PRStrips.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(383, 7, 66, 540, 701, "PRStrips.def",
+    m_widgets.push_back(new iconWidget(383, 7, 66, 540, 701, "PRStrips.def",
                                      1, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(449, 7, 66, 540, 702, "PRStrips.def",
+    m_widgets.push_back(new iconWidget(449, 7, 66, 540, 702, "PRStrips.def",
                                      2, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(515, 7, 66, 540, 703, "PRStrips.def",
+    m_widgets.push_back(new iconWidget(515, 7, 66, 540, 703, "PRStrips.def",
                                      3, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(581, 7, 66, 540, 704, "PRStrips.def",
+    m_widgets.push_back(new iconWidget(581, 7, 66, 540, 704, "PRStrips.def",
                                      4, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(647, 7, 66, 540, 705, "PRStrips.def",
+    m_widgets.push_back(new iconWidget(647, 7, 66, 540, 705, "PRStrips.def",
                                      5, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(713, 7, 66, 540, 706, "PRStrips.def",
+    m_widgets.push_back(new iconWidget(713, 7, 66, 540, 706, "PRStrips.def",
                                      6, 0, 0, 0, 0x10));
 
-    Widgets.push_back(new bitmapBorder(253, 334, 62, 109, 900, "PRRed.pcx", 0x800));
-    Widgets.push_back(new bitmapBorder(319, 334, 62, 109, 901, "PRRed.pcx", 0x800));
-    Widgets.push_back(new bitmapBorder(385, 334, 62, 109, 902, "PRRed.pcx", 0x800));
-    Widgets.push_back(new bitmapBorder(451, 334, 62, 109, 903, "PRRed.pcx", 0x800));
-    Widgets.push_back(new bitmapBorder(517, 334, 62, 109, 904, "PRRed.pcx", 0x800));
-    Widgets.push_back(new bitmapBorder(583, 334, 62, 109, 905, "PRRed.pcx", 0x800));
-    Widgets.push_back(new bitmapBorder(649, 334, 62, 109, 906, "PRRed.pcx", 0x800));
-    Widgets.push_back(new bitmapBorder(715, 334, 62, 109, 907, "PRRed.pcx", 0x800));
+    m_widgets.push_back(new bitmapBorder(253, 334, 62, 109, 900, "PRRed.pcx", 0x800));
+    m_widgets.push_back(new bitmapBorder(319, 334, 62, 109, 901, "PRRed.pcx", 0x800));
+    m_widgets.push_back(new bitmapBorder(385, 334, 62, 109, 902, "PRRed.pcx", 0x800));
+    m_widgets.push_back(new bitmapBorder(451, 334, 62, 109, 903, "PRRed.pcx", 0x800));
+    m_widgets.push_back(new bitmapBorder(517, 334, 62, 109, 904, "PRRed.pcx", 0x800));
+    m_widgets.push_back(new bitmapBorder(583, 334, 62, 109, 905, "PRRed.pcx", 0x800));
+    m_widgets.push_back(new bitmapBorder(649, 334, 62, 109, 906, "PRRed.pcx", 0x800));
+    m_widgets.push_back(new bitmapBorder(715, 334, 62, 109, 907, "PRRed.pcx", 0x800));
 
-    Widgets.push_back(new textWidget(253, 12, 62, 30, 0, "bigfont.fnt",
+    m_widgets.push_back(new textWidget(253, 12, 62, 30, 0, "bigfont.fnt",
                                      font::HEADING, 800, 1, 0, 8));
-    Widgets.push_back(new textWidget(319, 12, 62, 30, 0, "bigfont.fnt",
+    m_widgets.push_back(new textWidget(319, 12, 62, 30, 0, "bigfont.fnt",
                                      font::HEADING, 801, 1, 0, 8));
-    Widgets.push_back(new textWidget(385, 12, 62, 30, 0, "bigfont.fnt",
+    m_widgets.push_back(new textWidget(385, 12, 62, 30, 0, "bigfont.fnt",
                                      font::HEADING, 802, 1, 0, 8));
-    Widgets.push_back(new textWidget(451, 12, 62, 30, 0, "bigfont.fnt",
+    m_widgets.push_back(new textWidget(451, 12, 62, 30, 0, "bigfont.fnt",
                                      font::HEADING, 803, 1, 0, 8));
-    Widgets.push_back(new textWidget(517, 12, 62, 30, 0, "bigfont.fnt",
+    m_widgets.push_back(new textWidget(517, 12, 62, 30, 0, "bigfont.fnt",
                                      font::HEADING, 804, 1, 0, 8));
-    Widgets.push_back(new textWidget(583, 12, 62, 30, 0, "bigfont.fnt",
+    m_widgets.push_back(new textWidget(583, 12, 62, 30, 0, "bigfont.fnt",
                                      font::HEADING, 805, 1, 0, 8));
-    Widgets.push_back(new textWidget(649, 12, 62, 30, 0, "bigfont.fnt",
+    m_widgets.push_back(new textWidget(649, 12, 62, 30, 0, "bigfont.fnt",
                                      font::HEADING, 806, 1, 0, 8));
-    Widgets.push_back(new textWidget(715, 12, 62, 30, 0, "bigfont.fnt",
+    m_widgets.push_back(new textWidget(715, 12, 62, 30, 0, "bigfont.fnt",
                                      font::HEADING, 807, 1, 0, 8));
 
-    Widgets.push_back(new textWidget(26, 42, 224, 30, 0, "medfont.fnt",
+    m_widgets.push_back(new textWidget(26, 42, 224, 30, 0, "medfont.fnt",
                                      font::HEADING, 604, 1, 0, 8));
-    Widgets.push_back(new textWidget(26, 74, 224, 30, 0, "medfont.fnt",
+    m_widgets.push_back(new textWidget(26, 74, 224, 30, 0, "medfont.fnt",
                                      font::HEADING, 605, 1, 0, 8));
-    Widgets.push_back(new textWidget(26, 106, 224, 30, 0, "medfont.fnt",
+    m_widgets.push_back(new textWidget(26, 106, 224, 30, 0, "medfont.fnt",
                                      font::HEADING, 606, 1, 0, 8));
-    Widgets.push_back(new textWidget(26, 138, 224, 30, 0, "medfont.fnt",
+    m_widgets.push_back(new textWidget(26, 138, 224, 30, 0, "medfont.fnt",
                                      font::HEADING, 607, 1, 0, 8));
-    Widgets.push_back(new textWidget(26, 170, 224, 30, 0, "medfont.fnt",
+    m_widgets.push_back(new textWidget(26, 170, 224, 30, 0, "medfont.fnt",
                                      font::HEADING, 608, 1, 0, 8));
-    Widgets.push_back(new textWidget(26, 202, 224, 30, 0, "medfont.fnt",
+    m_widgets.push_back(new textWidget(26, 202, 224, 30, 0, "medfont.fnt",
                                      font::HEADING, 609, 1, 0, 8));
-    Widgets.push_back(new textWidget(26, 234, 224, 30, 0, "medfont.fnt",
+    m_widgets.push_back(new textWidget(26, 234, 224, 30, 0, "medfont.fnt",
                                      font::HEADING, 610, 1, 0, 8));
-    Widgets.push_back(new textWidget(26, 266, 224, 30, 0, "medfont.fnt",
+    m_widgets.push_back(new textWidget(26, 266, 224, 30, 0, "medfont.fnt",
                                      font::HEADING, 611, 1, 0, 8));
-    Widgets.push_back(new textWidget(26, 299, 224, 30, 0, "medfont.fnt",
+    m_widgets.push_back(new textWidget(26, 299, 224, 30, 0, "medfont.fnt",
                                      font::HEADING, 612, 1, 0, 8));
 
-    Widgets.push_back(new textWidget(26, 392, 224, 30, 0, "medfont.fnt",
+    m_widgets.push_back(new textWidget(26, 392, 224, 30, 0, "medfont.fnt",
                                      font::HEADING, 620, 1, 0, 8));
-    Widgets.push_back(new textWidget(26, 450, 224, 30, 0, "medfont.fnt",
+    m_widgets.push_back(new textWidget(26, 450, 224, 30, 0, "medfont.fnt",
                                      font::HEADING, 621, 1, 0, 8));
-    Widgets.push_back(new textWidget(26, 500, 224, 30, 0, "medfont.fnt",
+    m_widgets.push_back(new textWidget(26, 500, 224, 30, 0, "medfont.fnt",
                                      font::HEADING, 622, 1, 0, 8));
 
-    Widgets.push_back(new bitmapBorder(9, 556, 734, 18, 40,
+    m_widgets.push_back(new bitmapBorder(9, 556, 734, 18, 40,
                                        "TStatBar.pcx", 0x800));
-    Widgets.push_back(new textWidget(9, 556, 734, 18, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(9, 556, 734, 18, 0, "smalfont.fnt",
                                      font::PRIMARY, 41, 1, 0, 8));
 
     // The second hotkey, spelled as the vector operation rather than
@@ -2530,18 +2614,18 @@ TThievesGuildWindow::TThievesGuildWindow(int num_guilds)
     // combatresultswindow's residual, seen there from the other side.
     button* mageButton = new button(747, 556, 48, 40, EXIT_BUTTON_ID,
                                     "TPMage1.def", 0, 1, 1, 28, 2);
-    mageButton->hotKeyCodes.push_back(1);
-    Widgets.push_back(mageButton);
+    mageButton->m_hotKeyCodes.push_back(1);
+    m_widgets.push_back(mageButton);
 
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
-            AddWidget(*it, -1);
+            addWidget(*it, -1);
         else
-            MemError();
+            memError();
     }
 
-    SetWinText(this, 14);
-    SetupThievesGuild(num_guilds);
+    setWinText(this, 14);
+    setupThievesGuild(numGuilds);
 }
 
 VA_COMPGEN(0x005c9660, 0x21, SCALAR_DELETING_DTOR, TThievesGuildWindow)
@@ -2550,8 +2634,8 @@ VA_COMPGEN(0x005c9660, 0x21, SCALAR_DELETING_DTOR, TThievesGuildWindow)
 VA(0x005c9690, 0x7B)  // anchor-vtable 0x643764 + ??_G call edge, dc 0x16de90
 TThievesGuildWindow::~TThievesGuildWindow()
 {
-    delete field_80;
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    delete m_resourceDisplay;
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
@@ -2564,11 +2648,14 @@ TThievesGuildWindow::~TThievesGuildWindow()
 // the 14-wide row table that together turn a creature-portrait widget into an
 // akCreatureTypeTraits[] index. Owned outside this compiland (SetupThievesGuild
 // fills them); declared here as the two consumers' externs.
-DATA(0x006a9e00) extern int heroWidgetMap[];
-DATA(0x006a98ec) extern int creatureWidgetMap1[];
+// Before normalization: heroWidgetMap.
+// Before normalization: creatureWidgetMap1.
+DATA(0x006a9e00) extern int g_heroWidgetMap[];
 // One armyGroup per player column: SetRolloverText reads a single slot out of a
 // row, WindowHandler hands a whole row to game::ViewArmy.
-DATA(0x006aa660) extern armyGroup creatureArmies[];
+// Before normalization: creatureArmies.
+DATA(0x006a98ec) extern int g_creatureWidgetMap1[];
+DATA(0x006aa660) extern armyGroup g_creatureArmies[];
 
 // Located, not reconstructed: the thieves' guild rollover-text setter and
 // its message handler. show_side (dc 0x16df0c) has no distinct retail carve
@@ -2626,58 +2713,58 @@ DATA(0x006aa660) extern armyGroup creatureArmies[];
 // the delinker folds the table into the function symbol, VC6 emits a $L label.
 // E:\gamedcs\townmgr.cpp:4070
 VA(0x005c9710, 0x21F)  // anchor-caller(WindowHandler 0x5c9930 hover arm) + body(sprintf rollover text + adventureRolloverEmptyText) + arity(ret 4), dc 0x16e2f4
-void TThievesGuildWindow::SetRolloverText(int codeY)
+void TThievesGuildWindow::setRolloverText(int codeY)
 {
     if (codeY <= 37) {
         if (codeY < 30) {
             switch (codeY) {
             case RANK_A0: case RANK_A1: case RANK_A2: case RANK_A3:
             case RANK_A4: case RANK_A5: case RANK_A6: case RANK_A7:
-                sprintf(gText, gPrimarySkillNames[0]);
+                sprintf(g_text, g_primarySkillNames[0]);
                 break;
             case RANK_B0: case RANK_B1: case RANK_B2: case RANK_B3:
             case RANK_B4: case RANK_B5: case RANK_B6: case RANK_B7:
-                sprintf(gText, gPrimarySkillNames[1]);
+                sprintf(g_text, g_primarySkillNames[1]);
                 break;
             case RANK_C0: case RANK_C1: case RANK_C2: case RANK_C3:
             case RANK_C4: case RANK_C5: case RANK_C6: case RANK_C7:
-                sprintf(gText, gPrimarySkillNames[2]);
+                sprintf(g_text, g_primarySkillNames[2]);
                 break;
             default:
-                strcpy(gText, emptyRolloverText);
+                strcpy(g_text, g_emptyRolloverText);
                 break;
             }
         } else {
-            sprintf(gText, gPrimarySkillNames[3]);
+            sprintf(g_text, g_primarySkillNames[3]);
         }
     } else if (codeY <= 0x359) {
         if (codeY < 0x352) {
             if (codeY >= 0x2ee && codeY <= 0x2f5) {
-                int heroId = heroWidgetMap[codeY];
-                hero* h = (heroId == -1) ? 0 : &gpGame->heroes[heroId];
-                strcpy(gText, h->name);
+                int heroId = g_heroWidgetMap[codeY];
+                hero* h = (heroId == -1) ? 0 : &g_game->m_heroes[heroId];
+                strcpy(g_text, h->m_name);
             } else {
-                strcpy(gText, emptyRolloverText);
+                strcpy(g_text, g_emptyRolloverText);
             }
         } else {
-            int slot = creatureArmies[codeY - 0x352].armies[creatureWidgetMap1[codeY]];
+            int slot = g_creatureArmies[codeY - 0x352].m_armies[g_creatureWidgetMap1[codeY]];
             if (slot >= 0 && slot <= 0x96)
-                strcpy(gText, akCreatureTypeTraits[slot].m_plural_name);
+                strcpy(g_text, g_creatureTypeTraits[slot].m_pluralName);
             else
-                strcpy(gText, emptyRolloverText);
+                strcpy(g_text, g_emptyRolloverText);
         }
     } else if (codeY != EXIT_BUTTON_ID) {
-        strcpy(gText, emptyRolloverText);
+        strcpy(g_text, g_emptyRolloverText);
     } else {
-        strcpy(gText, gpGeneralText->GetText(601));
+        strcpy(g_text, g_generalText->getText(601));
     }
 
     message textMessage;
-    textMessage.extraText = gText;
-    BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 0x29,
-                     textMessage.extra);
-    DrawWindow(0, 0x28, 0x29);
-    gpWindowManager->UpdateScreen(x + 8, y + 0x22c, 0x2e0, 0x12);
+    textMessage.m_extraText = g_text;
+    broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 0x29,
+                     textMessage.m_extra);
+    drawWindow(0, 0x28, 0x29);
+    g_windowManager->updateScreen(m_x + 8, m_y + 0x22c, 0x2e0, 0x12);
 }
 
 // The thieves' guild's message handler, reconstructed 2026-08-25 from the
@@ -2691,53 +2778,53 @@ void TThievesGuildWindow::SetRolloverText(int codeY)
 // 0x6aa660 storage SetRolloverText reads one slot from.
 // E:\gamedcs\townmgr.cpp:4154
 VA(0x005c9930, 0x2AC)  // anchor-vtable 0x643764 slot 9 + anchor-callee(SetRolloverText 0x5c9710 + ViewArmy/HeroView/ConvertToHover) + arity(ret 4), dc 0x16e43c
-int TThievesGuildWindow::WindowHandler(message* msg)
+int TThievesGuildWindow::windowHandler(message* msg)
 {
-    int result = CAdvPopup::WindowHandler(msg);
+    int result = CAdvPopup::windowHandler(msg);
     if (result)
         return result;
 
-    switch (msg->id) {
+    switch (msg->m_id) {
     case MESSAGE_WIDGET:
-        if (msg->codeX == widget::WIDGET_RIGHT_SELECT) {
-            if (msg->codeY <= 37) {
-                if (msg->codeY < 30) {
-                    switch (msg->codeY) {
+        if (msg->m_codeX == widget::WIDGET_RIGHT_SELECT) {
+            if (msg->m_codeY <= 37) {
+                if (msg->m_codeY < 30) {
+                    switch (msg->m_codeY) {
                     case RANK_A0: case RANK_A1: case RANK_A2: case RANK_A3:
                     case RANK_A4: case RANK_A5: case RANK_A6: case RANK_A7:
-                        NormalDialog(gStatDesc[0], 4, -1, -1, -1, 0,
+                        normalDialog(g_statDesc[0], 4, -1, -1, -1, 0,
                                      -1, 0, -1, 0, -1, 0);
                         return MESSAGE_DISPATCH_CONSUME;
                     case RANK_B0: case RANK_B1: case RANK_B2: case RANK_B3:
                     case RANK_B4: case RANK_B5: case RANK_B6: case RANK_B7:
-                        NormalDialog(gStatDesc[1], 4, -1, -1, -1, 0,
+                        normalDialog(g_statDesc[1], 4, -1, -1, -1, 0,
                                      -1, 0, -1, 0, -1, 0);
                         return MESSAGE_DISPATCH_CONSUME;
                     case RANK_C0: case RANK_C1: case RANK_C2: case RANK_C3:
                     case RANK_C4: case RANK_C5: case RANK_C6: case RANK_C7:
-                        NormalDialog(gStatDesc[2], 4, -1, -1, -1, 0,
+                        normalDialog(g_statDesc[2], 4, -1, -1, -1, 0,
                                      -1, 0, -1, 0, -1, 0);
                         return MESSAGE_DISPATCH_CONSUME;
                     }
                 } else {
-                    NormalDialog(gStatDesc[3], 4, -1, -1, -1, 0,
+                    normalDialog(g_statDesc[3], 4, -1, -1, -1, 0,
                                  -1, 0, -1, 0, -1, 0);
                     return MESSAGE_DISPATCH_CONSUME;
                 }
             } else {
-                switch (msg->codeY) {
+                switch (msg->m_codeY) {
                 case HERO_P0: case HERO_P1: case HERO_P2: case HERO_P3:
                 case HERO_P4: case HERO_P5: case HERO_P6: case HERO_P7:
-                    if (gpGame->GetLocalPlayerGamePos() == owners[msg->codeY - HERO_P0])
-                        HeroView(heroWidgetMap[msg->codeY], 1, 0, 1);
+                    if (g_game->getLocalPlayerGamePos() == m_owners[msg->m_codeY - HERO_P0])
+                        heroView(g_heroWidgetMap[msg->m_codeY], 1, 0, 1);
                     return MESSAGE_DISPATCH_CONSUME;
                 case CREATURE_P0: case CREATURE_P1: case CREATURE_P2:
                 case CREATURE_P3: case CREATURE_P4: case CREATURE_P5:
                 case CREATURE_P6: case CREATURE_P7:
-                    if (gpGame->GetLocalPlayerGamePos() == owners[msg->codeY - CREATURE_P0]) {
-                        int player = msg->codeY - CREATURE_P0;
-                        gpGame->ViewArmy(creatureArmies[player],
-                                         creatureWidgetMap1[player + CREATURE_P0],
+                    if (g_game->getLocalPlayerGamePos() == m_owners[msg->m_codeY - CREATURE_P0]) {
+                        int player = msg->m_codeY - CREATURE_P0;
+                        g_game->viewArmy(g_creatureArmies[player],
+                                         g_creatureWidgetMap1[player + CREATURE_P0],
                                          0, 0, 0x77, 0x14, 0, 1);
                     }
                     return MESSAGE_DISPATCH_CONSUME;
@@ -2747,10 +2834,10 @@ int TThievesGuildWindow::WindowHandler(message* msg)
         break;
 
     case MESSAGE_MOUSE_MOVE:
-        gpWindowManager->ConvertToHover(*msg);
-        if (msg->codeY != gpWindowManager->lastHover) {
-            gpWindowManager->lastHover = msg->codeY;
-            SetRolloverText(msg->codeY);
+        g_windowManager->convertToHover(*msg);
+        if (msg->m_codeY != g_windowManager->m_lastHover) {
+            g_windowManager->m_lastHover = msg->m_codeY;
+            setRolloverText(msg->m_codeY);
         }
         break;
     }
@@ -3173,192 +3260,192 @@ THallWindow::THallWindow(int which)
 
     int i;
 
-    Widgets.reserve(77);
+    m_widgets.reserve(77);
 
     switch (which) {
     case TOWN_CASTLE:
-        Widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
+        m_widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
                                           "TPTHBkCs.pcx", 0x800));
         for (i = 0; i < 16; i++) {
-            Widgets.push_back(new iconWidget(
+            m_widgets.push_back(new iconWidget(
                 slotX[hallX[0][i]] - 1, slotY[hallY[0][i]] + 71, 150, 17,
                 400 + i, "TPTHBar.def", 0, 0, 0, 0, 0x10));
-            Widgets.push_back(new textWidget(
+            m_widgets.push_back(new textWidget(
                 slotX[hallX[0][i]], slotY[hallY[0][i]] + 71, 150, 17, 0,
                 "smalfont.fnt", font::PRIMARY, 600 + i, 1, 0, 8));
-            Widgets.push_back(new iconWidget(
+            m_widgets.push_back(new iconWidget(
                 slotX[hallX[0][i]], slotY[hallY[0][i]], 150, 70,
                 700 + i, "hallcstl.def", 0, 0, 0, 0, 0x10));
-            Widgets.push_back(new iconWidget(
+            m_widgets.push_back(new iconWidget(
                 slotX[hallX[0][i]] + 135, slotY[hallY[0][i]] + 54, 16, 16,
                 800 + i, "TPTHChk.def", 0, 0, 0, 0, 0x10));
         }
         break;
     case TOWN_RAMPART:
-        Widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
+        m_widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
                                           "TPTHBkRm.pcx", 0x800));
         for (i = 0; i < 17; i++) {
-            Widgets.push_back(new iconWidget(
+            m_widgets.push_back(new iconWidget(
                 slotX[hallX[1][i]] - 1, slotY[hallY[1][i]] + 71, 150, 17,
                 400 + i, "TPTHBar.def", 0, 0, 0, 0, 0x10));
-            Widgets.push_back(new textWidget(
+            m_widgets.push_back(new textWidget(
                 slotX[hallX[1][i]] - 1, slotY[hallY[1][i]] + 71, 150, 17, 0,
                 "smalfont.fnt", font::PRIMARY, 600 + i, 1, 0, 8));
-            Widgets.push_back(new iconWidget(
+            m_widgets.push_back(new iconWidget(
                 slotX[hallX[1][i]], slotY[hallY[1][i]], 150, 70,
                 700 + i, "hallramp.def", 0, 0, 0, 0, 0x10));
-            Widgets.push_back(new iconWidget(
+            m_widgets.push_back(new iconWidget(
                 slotX[hallX[1][i]] + 135, slotY[hallY[1][i]] + 54, 16, 16,
                 800 + i, "TPTHChk.def", 0, 0, 0, 0, 0x10));
         }
         break;
     case TOWN_TOWER:
-        Widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
+        m_widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
                                           "TPTHBkTw.pcx", 0x800));
         for (i = 0; i < 18; i++) {
-            Widgets.push_back(new iconWidget(
+            m_widgets.push_back(new iconWidget(
                 slotX[hallX[2][i]] - 1, slotY[hallY[2][i]] + 71, 150, 17,
                 400 + i, "TPTHBar.def", 0, 0, 0, 0, 0x10));
-            Widgets.push_back(new textWidget(
+            m_widgets.push_back(new textWidget(
                 slotX[hallX[2][i]] - 1, slotY[hallY[2][i]] + 71, 150, 17, 0,
                 "smalfont.fnt", font::PRIMARY, 600 + i, 1, 0, 8));
-            Widgets.push_back(new iconWidget(
+            m_widgets.push_back(new iconWidget(
                 slotX[hallX[2][i]], slotY[hallY[2][i]], 150, 70,
                 700 + i, "halltowr.def", 0, 0, 0, 0, 0x10));
-            Widgets.push_back(new iconWidget(
+            m_widgets.push_back(new iconWidget(
                 slotX[hallX[2][i]] + 135, slotY[hallY[2][i]] + 54, 16, 16,
                 800 + i, "TPTHChk.def", 0, 0, 0, 0, 0x10));
         }
         break;
     case TOWN_INFERNO:
-        Widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
+        m_widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
                                           "TPTHBkTw.pcx", 0x800));
         for (i = 0; i < 18; i++) {
-            Widgets.push_back(new iconWidget(
+            m_widgets.push_back(new iconWidget(
                 slotX[hallX[3][i]] - 1, slotY[hallY[3][i]] + 71, 150, 17,
                 400 + i, "TPTHBar.def", 0, 0, 0, 0, 0x10));
-            Widgets.push_back(new textWidget(
+            m_widgets.push_back(new textWidget(
                 slotX[hallX[3][i]] - 1, slotY[hallY[3][i]] + 71, 150, 17, 0,
                 "smalfont.fnt", font::PRIMARY, 600 + i, 1, 0, 8));
-            Widgets.push_back(new iconWidget(
+            m_widgets.push_back(new iconWidget(
                 slotX[hallX[3][i]], slotY[hallY[3][i]], 150, 70,
                 700 + i, "hallinfr.def", 0, 0, 0, 0, 0x10));
-            Widgets.push_back(new iconWidget(
+            m_widgets.push_back(new iconWidget(
                 slotX[hallX[3][i]] + 135, slotY[hallY[3][i]] + 54, 16, 16,
                 800 + i, "TPTHChk.def", 0, 0, 0, 0, 0x10));
         }
         break;
     case TOWN_NECROPOLIS:
-        Widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
+        m_widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
                                           "TPTHBkTw.pcx", 0x800));
         for (i = 0; i < 18; i++) {
-            Widgets.push_back(new iconWidget(
+            m_widgets.push_back(new iconWidget(
                 slotX[hallX[4][i]] - 1, slotY[hallY[4][i]] + 71, 150, 17,
                 400 + i, "TPTHBar.def", 0, 0, 0, 0, 0x10));
-            Widgets.push_back(new textWidget(
+            m_widgets.push_back(new textWidget(
                 slotX[hallX[4][i]] - 1, slotY[hallY[4][i]] + 71, 150, 17, 0,
                 "smalfont.fnt", font::PRIMARY, 600 + i, 1, 0, 8));
-            Widgets.push_back(new iconWidget(
+            m_widgets.push_back(new iconWidget(
                 slotX[hallX[4][i]], slotY[hallY[4][i]], 150, 70,
                 700 + i, "hallnecr.def", 0, 0, 0, 0, 0x10));
-            Widgets.push_back(new iconWidget(
+            m_widgets.push_back(new iconWidget(
                 slotX[hallX[4][i]] + 135, slotY[hallY[4][i]] + 54, 16, 16,
                 800 + i, "TPTHChk.def", 0, 0, 0, 0, 0x10));
         }
         break;
     case TOWN_DUNGEON:
-        Widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
+        m_widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
                                           "TPTHBkTw.pcx", 0x800));
         for (i = 0; i < 18; i++) {
-            Widgets.push_back(new iconWidget(
+            m_widgets.push_back(new iconWidget(
                 slotX[hallX[5][i]] - 1, slotY[hallY[5][i]] + 71, 150, 17,
                 400 + i, "TPTHBar.def", 0, 0, 0, 0, 0x10));
-            Widgets.push_back(new textWidget(
+            m_widgets.push_back(new textWidget(
                 slotX[hallX[5][i]] - 1, slotY[hallY[5][i]] + 71, 150, 17, 0,
                 "smalfont.fnt", font::PRIMARY, 600 + i, 1, 0, 8));
-            Widgets.push_back(new iconWidget(
+            m_widgets.push_back(new iconWidget(
                 slotX[hallX[5][i]], slotY[hallY[5][i]], 150, 70,
                 700 + i, "halldung.def", 0, 0, 0, 0, 0x10));
-            Widgets.push_back(new iconWidget(
+            m_widgets.push_back(new iconWidget(
                 slotX[hallX[5][i]] + 135, slotY[hallY[5][i]] + 54, 16, 16,
                 800 + i, "TPTHChk.def", 0, 0, 0, 0, 0x10));
         }
         break;
     case TOWN_STRONGHOLD:
-        Widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
+        m_widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
                                           "TPTHBkTw.pcx", 0x800));
         for (i = 0; i < 18; i++) {
-            Widgets.push_back(new iconWidget(
+            m_widgets.push_back(new iconWidget(
                 slotX[hallX[6][i]] - 1, slotY[hallY[6][i]] + 71, 150, 17,
                 400 + i, "TPTHBar.def", 0, 0, 0, 0, 0x10));
-            Widgets.push_back(new textWidget(
+            m_widgets.push_back(new textWidget(
                 slotX[hallX[6][i]] - 1, slotY[hallY[6][i]] + 71, 150, 17, 0,
                 "smalfont.fnt", font::PRIMARY, 600 + i, 1, 0, 8));
-            Widgets.push_back(new iconWidget(
+            m_widgets.push_back(new iconWidget(
                 slotX[hallX[6][i]], slotY[hallY[6][i]], 150, 70,
                 700 + i, "hallstrn.def", 0, 0, 0, 0, 0x10));
-            Widgets.push_back(new iconWidget(
+            m_widgets.push_back(new iconWidget(
                 slotX[hallX[6][i]] + 135, slotY[hallY[6][i]] + 54, 16, 16,
                 800 + i, "TPTHChk.def", 0, 0, 0, 0, 0x10));
         }
         break;
     case TOWN_FORTRESS:
-        Widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
+        m_widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
                                           "TPTHBkRm.pcx", 0x800));
         for (i = 0; i < 17; i++) {
-            Widgets.push_back(new iconWidget(
+            m_widgets.push_back(new iconWidget(
                 slotX[hallX[7][i]] - 1, slotY[hallY[7][i]] + 71, 150, 17,
                 400 + i, "TPTHBar.def", 0, 0, 0, 0, 0x10));
-            Widgets.push_back(new textWidget(
+            m_widgets.push_back(new textWidget(
                 slotX[hallX[7][i]] - 1, slotY[hallY[7][i]] + 71, 150, 17, 0,
                 "smalfont.fnt", font::PRIMARY, 600 + i, 1, 0, 8));
-            Widgets.push_back(new iconWidget(
+            m_widgets.push_back(new iconWidget(
                 slotX[hallX[7][i]], slotY[hallY[7][i]], 150, 70,
                 700 + i, "hallfort.def", 0, 0, 0, 0, 0x10));
-            Widgets.push_back(new iconWidget(
+            m_widgets.push_back(new iconWidget(
                 slotX[hallX[7][i]] + 135, slotY[hallY[7][i]] + 54, 16, 16,
                 800 + i, "TPTHChk.def", 0, 0, 0, 0, 0x10));
         }
         break;
     case TOWN_CONFLUX:
-        Widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
+        m_widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
                                           "TPTHBkRm.pcx", 0x800));
         for (i = 0; i < 17; i++) {
-            Widgets.push_back(new iconWidget(
+            m_widgets.push_back(new iconWidget(
                 slotX[hallX[8][i]] - 1, slotY[hallY[8][i]] + 71, 150, 17,
                 400 + i, "TPTHBar.def", 0, 0, 0, 0, 0x10));
-            Widgets.push_back(new textWidget(
+            m_widgets.push_back(new textWidget(
                 slotX[hallX[8][i]] - 1, slotY[hallY[8][i]] + 71, 150, 17, 0,
                 "smalfont.fnt", font::PRIMARY, 600 + i, 1, 0, 8));
-            Widgets.push_back(new iconWidget(
+            m_widgets.push_back(new iconWidget(
                 slotX[hallX[8][i]], slotY[hallY[8][i]], 150, 70,
                 700 + i, "hallelem.def", 0, 0, 0, 0, 0x10));
-            Widgets.push_back(new iconWidget(
+            m_widgets.push_back(new iconWidget(
                 slotX[hallX[8][i]] + 135, slotY[hallY[8][i]] + 54, 16, 16,
                 800 + i, "TPTHChk.def", 0, 0, 0, 0, 0x10));
         }
         break;
     }
 
-    Widgets.push_back(new bitmapBorder(3, 555, 741, 18, 501,
+    m_widgets.push_back(new bitmapBorder(3, 555, 741, 18, 501,
                                        "TStatBar.pcx", 0x800));
-    Widgets.push_back(new textWidget(3, 555, 741, 18, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(3, 555, 741, 18, 0, "smalfont.fnt",
                                      font::PRIMARY, 502, 1, 0, 8));
-    Widgets.push_back(new textWidget(0, 0, 800, 30,
-                                     gpGeneralText->GetText(593),
+    m_widgets.push_back(new textWidget(0, 0, 800, 30,
+                                     g_generalText->getText(593),
                                      "bigfont.fnt", font::PRIMARY, 503, 1,
                                      0, 8));
 
     button* exitButton = new button(748, 556, 48, 40, EXIT_BUTTON_ID,
                                     "TPMage1.def", 0, 1, 1, 28, 2);
-    exitButton->set_hotkey(1);
-    Widgets.push_back(exitButton);
+    exitButton->setHotkey(1);
+    m_widgets.push_back(exitButton);
 
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
-            AddWidget(*it, -1);
+            addWidget(*it, -1);
         else
-            MemError();
+            memError();
     }
 }
 
@@ -3385,7 +3472,7 @@ VA_COMPGEN(0x005cc8e0, 0x21, SCALAR_DELETING_DTOR, THallWindow)
 VA(0x005cc910, 0x6B)  // anchor-vtable 0x6437a0 + ??_G call edge, dc 0x1700c0
 THallWindow::~THallWindow()
 {
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
@@ -3403,105 +3490,105 @@ VA(0x005cc980, 0x179F)  // anchor-vtable 0x6437dc + anchor-string TPMage.pcx + a
 TMageGuildWindow::TMageGuildWindow()
     : CAdvPopup(0, 0, 800, 600, 0)
 {
-    Widgets.reserve(77);
+    m_widgets.reserve(77);
 
-    Widgets.push_back(new bitmapBorder16(0, 0, 800, 600, 0,
+    m_widgets.push_back(new bitmapBorder16(0, 0, 800, 600, 0,
                                          "TPMage.pcx", 0x800));
-    Widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new bitmapBorder(
         332, 76, 141, 217, 1,
-        gMageGuildDefNames[gpTownManager->townToView->type], 0x800));
+        g_mageGuildDefNames[g_townManager->m_townToView->m_type], 0x800));
 
-    Widgets.push_back(new iconWidget(222, 445, 83, 61, 10, "TPMageS.def",
+    m_widgets.push_back(new iconWidget(222, 445, 83, 61, 10, "TPMageS.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(312, 445, 83, 61, 11, "TPMageS.def",
+    m_widgets.push_back(new iconWidget(312, 445, 83, 61, 11, "TPMageS.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(402, 445, 83, 61, 12, "TPMageS.def",
+    m_widgets.push_back(new iconWidget(402, 445, 83, 61, 12, "TPMageS.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(520, 445, 83, 61, 13, "TPMageS.def",
+    m_widgets.push_back(new iconWidget(520, 445, 83, 61, 13, "TPMageS.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(610, 445, 83, 61, 14, "TPMageS.def",
+    m_widgets.push_back(new iconWidget(610, 445, 83, 61, 14, "TPMageS.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(700, 445, 83, 61, 15, "TPMageS.def",
+    m_widgets.push_back(new iconWidget(700, 445, 83, 61, 15, "TPMageS.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(48, 53, 83, 61, 16, "TPMageS.def",
+    m_widgets.push_back(new iconWidget(48, 53, 83, 61, 16, "TPMageS.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(48, 147, 83, 61, 17, "TPMageS.def",
+    m_widgets.push_back(new iconWidget(48, 147, 83, 61, 17, "TPMageS.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(48, 241, 83, 61, 18, "TPMageS.def",
+    m_widgets.push_back(new iconWidget(48, 241, 83, 61, 18, "TPMageS.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(48, 335, 83, 61, 19, "TPMageS.def",
+    m_widgets.push_back(new iconWidget(48, 335, 83, 61, 19, "TPMageS.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(48, 429, 83, 61, 20, "TPMageS.def",
-                                     0, 0, 0, 0, 0x10));
-
-    Widgets.push_back(new iconWidget(570, 82, 83, 61, 22, "TPMageS.def",
-                                     0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(672, 82, 83, 61, 23, "TPMageS.def",
-                                     0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(570, 157, 83, 61, 24, "TPMageS.def",
-                                     0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(672, 157, 83, 61, 25, "TPMageS.def",
+    m_widgets.push_back(new iconWidget(48, 429, 83, 61, 20, "TPMageS.def",
                                      0, 0, 0, 0, 0x10));
 
-    Widgets.push_back(new iconWidget(183, 42, 83, 61, 28, "TPMageS.def",
+    m_widgets.push_back(new iconWidget(570, 82, 83, 61, 22, "TPMageS.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(183, 148, 83, 61, 29, "TPMageS.def",
+    m_widgets.push_back(new iconWidget(672, 82, 83, 61, 23, "TPMageS.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(183, 253, 83, 61, 30, "TPMageS.def",
+    m_widgets.push_back(new iconWidget(570, 157, 83, 61, 24, "TPMageS.def",
                                      0, 0, 0, 0, 0x10));
-
-    Widgets.push_back(new iconWidget(491, 325, 83, 61, 34, "TPMageS.def",
-                                     0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(591, 325, 83, 61, 35, "TPMageS.def",
+    m_widgets.push_back(new iconWidget(672, 157, 83, 61, 25, "TPMageS.def",
                                      0, 0, 0, 0, 0x10));
 
-    Widgets.push_back(new iconWidget(222, 445, 83, 61, 40, "spellscr.def",
+    m_widgets.push_back(new iconWidget(183, 42, 83, 61, 28, "TPMageS.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(312, 445, 83, 61, 41, "spellscr.def",
+    m_widgets.push_back(new iconWidget(183, 148, 83, 61, 29, "TPMageS.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(402, 445, 83, 61, 42, "spellscr.def",
-                                     0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(520, 445, 83, 61, 43, "spellscr.def",
-                                     0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(610, 445, 83, 61, 44, "spellscr.def",
-                                     0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(700, 445, 83, 61, 45, "spellscr.def",
-                                     0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(48, 53, 83, 61, 46, "spellscr.def",
-                                     0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(48, 147, 83, 61, 47, "spellscr.def",
-                                     0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(48, 241, 83, 61, 48, "spellscr.def",
-                                     0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(48, 335, 83, 61, 49, "spellscr.def",
-                                     0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(48, 429, 83, 61, 50, "spellscr.def",
+    m_widgets.push_back(new iconWidget(183, 253, 83, 61, 30, "TPMageS.def",
                                      0, 0, 0, 0, 0x10));
 
-    Widgets.push_back(new iconWidget(570, 82, 83, 61, 52, "spellscr.def",
+    m_widgets.push_back(new iconWidget(491, 325, 83, 61, 34, "TPMageS.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(672, 82, 83, 61, 53, "spellscr.def",
-                                     0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(570, 157, 83, 61, 54, "spellscr.def",
-                                     0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(672, 157, 83, 61, 55, "spellscr.def",
+    m_widgets.push_back(new iconWidget(591, 325, 83, 61, 35, "TPMageS.def",
                                      0, 0, 0, 0, 0x10));
 
-    Widgets.push_back(new iconWidget(183, 42, 83, 61, 58, "spellscr.def",
+    m_widgets.push_back(new iconWidget(222, 445, 83, 61, 40, "spellscr.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(183, 148, 83, 61, 59, "spellscr.def",
+    m_widgets.push_back(new iconWidget(312, 445, 83, 61, 41, "spellscr.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(183, 253, 83, 61, 60, "spellscr.def",
+    m_widgets.push_back(new iconWidget(402, 445, 83, 61, 42, "spellscr.def",
+                                     0, 0, 0, 0, 0x10));
+    m_widgets.push_back(new iconWidget(520, 445, 83, 61, 43, "spellscr.def",
+                                     0, 0, 0, 0, 0x10));
+    m_widgets.push_back(new iconWidget(610, 445, 83, 61, 44, "spellscr.def",
+                                     0, 0, 0, 0, 0x10));
+    m_widgets.push_back(new iconWidget(700, 445, 83, 61, 45, "spellscr.def",
+                                     0, 0, 0, 0, 0x10));
+    m_widgets.push_back(new iconWidget(48, 53, 83, 61, 46, "spellscr.def",
+                                     0, 0, 0, 0, 0x10));
+    m_widgets.push_back(new iconWidget(48, 147, 83, 61, 47, "spellscr.def",
+                                     0, 0, 0, 0, 0x10));
+    m_widgets.push_back(new iconWidget(48, 241, 83, 61, 48, "spellscr.def",
+                                     0, 0, 0, 0, 0x10));
+    m_widgets.push_back(new iconWidget(48, 335, 83, 61, 49, "spellscr.def",
+                                     0, 0, 0, 0, 0x10));
+    m_widgets.push_back(new iconWidget(48, 429, 83, 61, 50, "spellscr.def",
                                      0, 0, 0, 0, 0x10));
 
-    Widgets.push_back(new iconWidget(491, 325, 83, 61, 64, "spellscr.def",
+    m_widgets.push_back(new iconWidget(570, 82, 83, 61, 52, "spellscr.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(591, 325, 83, 61, 65, "spellscr.def",
+    m_widgets.push_back(new iconWidget(672, 82, 83, 61, 53, "spellscr.def",
+                                     0, 0, 0, 0, 0x10));
+    m_widgets.push_back(new iconWidget(570, 157, 83, 61, 54, "spellscr.def",
+                                     0, 0, 0, 0, 0x10));
+    m_widgets.push_back(new iconWidget(672, 157, 83, 61, 55, "spellscr.def",
                                      0, 0, 0, 0, 0x10));
 
-    Widgets.push_back(new bitmapBorder(9, 556, 734, 18, 2,
+    m_widgets.push_back(new iconWidget(183, 42, 83, 61, 58, "spellscr.def",
+                                     0, 0, 0, 0, 0x10));
+    m_widgets.push_back(new iconWidget(183, 148, 83, 61, 59, "spellscr.def",
+                                     0, 0, 0, 0, 0x10));
+    m_widgets.push_back(new iconWidget(183, 253, 83, 61, 60, "spellscr.def",
+                                     0, 0, 0, 0, 0x10));
+
+    m_widgets.push_back(new iconWidget(491, 325, 83, 61, 64, "spellscr.def",
+                                     0, 0, 0, 0, 0x10));
+    m_widgets.push_back(new iconWidget(591, 325, 83, 61, 65, "spellscr.def",
+                                     0, 0, 0, 0, 0x10));
+
+    m_widgets.push_back(new bitmapBorder(9, 556, 734, 18, 2,
                                        "TStatBar.pcx", 0x800));
-    Widgets.push_back(new textWidget(8, 556, 736, 18, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(8, 556, 736, 18, 0, "smalfont.fnt",
                                      font::PRIMARY, 3, 1, 0, 8));
 
     // The vector spelling rather than button::set_hotkey, for the reason
@@ -3513,14 +3600,14 @@ TMageGuildWindow::TMageGuildWindow()
     // in retail's slots rotated by one (98.49% -> 100%).
     button* exitButton = new button(747, 556, 48, 40, EXIT_BUTTON_ID,
                                     "TPMage1.def", 0, 1, 1, 28, 2);
-    exitButton->hotKeyCodes.push_back(1);
-    Widgets.push_back(exitButton);
+    exitButton->m_hotKeyCodes.push_back(1);
+    m_widgets.push_back(exitButton);
 
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
-            AddWidget(*it, -1);
+            addWidget(*it, -1);
         else
-            MemError();
+            memError();
     }
 }
 
@@ -3530,7 +3617,7 @@ VA_COMPGEN(0x005ce120, 0x21, SCALAR_DELETING_DTOR, TMageGuildWindow)
 VA(0x005ce150, 0x6B)  // anchor-vtable 0x6437dc + ??_G call edge, dc 0x170fb8
 TMageGuildWindow::~TMageGuildWindow()
 {
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
@@ -3566,7 +3653,7 @@ TMageGuildWindow::~TMageGuildWindow()
 
 // E:\gamedcs\townmgr.cpp:4617
 VA(0x005ce1c0, 0x1AB)  // order-map(between ~TMageGuildWindow and its handler) + arity(ret 4) + sole caller 0x5ce370, dc 0x171020
-void TMageGuildWindow::SetRolloverText(int codeY)
+void TMageGuildWindow::setRolloverText(int codeY)
 {
     int cell = -1;
     if (codeY >= 10 && codeY < 36)
@@ -3575,31 +3662,31 @@ void TMageGuildWindow::SetRolloverText(int codeY)
         cell = codeY - 40;
 
     if (cell != -1) {
-        town* thisTown = gpTownManager->townToView;
+        town* thisTown = g_townManager->m_townToView;
         int level = cell / 6;
         int slot = cell % 6;
-        if (thisTown->type == TOWN_CONFLUX
-            && (thisTown->active & bitNumber[HOLY_GRAIL_ID])) {
-            sprintf(gText, gpGeneralText->GetText(715),
-                    GetBuildingName(TOWN_CONFLUX, HOLY_GRAIL_ID));
-        } else if (slot >= thisTown->mageGuildSpellCounts[level]) {
-            strcpy(gText, emptyRolloverText);
+        if (thisTown->m_type == TOWN_CONFLUX
+            && (thisTown->m_active & g_bitNumber[HOLY_GRAIL_ID])) {
+            sprintf(g_text, g_generalText->getText(715),
+                    getBuildingName(TOWN_CONFLUX, HOLY_GRAIL_ID));
+        } else if (slot >= thisTown->m_mageGuildSpellCounts[level]) {
+            strcpy(g_text, g_emptyRolloverText);
         } else {
-            strcpy(gText,
-                   akSpellTraits[thisTown->mageGuildSpells[level][slot]].name);
+            strcpy(g_text,
+                   g_spellTraits[thisTown->m_mageGuildSpells[level][slot]].m_name);
         }
     } else if (codeY == EXIT_BUTTON_ID) {
-        strcpy(gText, gpGeneralText->GetText(594));
+        strcpy(g_text, g_generalText->getText(594));
     } else {
-        strcpy(gText, emptyRolloverText);
+        strcpy(g_text, g_emptyRolloverText);
     }
 
     message textMessage;
-    textMessage.extraText = gText;
-    BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 3,
-                     textMessage.extra);
-    DrawWindow(0, 2, 3);
-    gpWindowManager->UpdateScreen(8, 0x22c, 0x2e0, 0x12);
+    textMessage.m_extraText = g_text;
+    broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 3,
+                     textMessage.m_extra);
+    drawWindow(0, 2, 3);
+    g_windowManager->updateScreen(8, 0x22c, 0x2e0, 0x12);
 }
 
 // The mage guild page's handler. The click arm folds the page's TWO
@@ -3629,27 +3716,27 @@ void TMageGuildWindow::SetRolloverText(int codeY)
 // which is the B18 class and not source-addressable). The Holy Grail text
 // row is corrected to 715 above; the remaining bytes are those two.
 VA(0x005ce370, 0x1F0)  // anchor-vtable 0x6437dc slot 9 + anchor-callee(SetRolloverText 0x5ce1c0, whose sole caller this is) + arity(ret 4), dc 0x171118
-int TMageGuildWindow::WindowHandler(message* msg)
+int TMageGuildWindow::windowHandler(message* msg)
 {
-    int result = CAdvPopup::WindowHandler(msg);
+    int result = CAdvPopup::windowHandler(msg);
     if (result)
         return result;
 
-    switch (msg->id) {
+    switch (msg->m_id) {
     case MESSAGE_MOUSE_MOVE:
-        gpWindowManager->ConvertToHover(*msg);
-        if (msg->codeY != gpWindowManager->lastHover) {
-            gpWindowManager->lastHover = msg->codeY;
-            SetRolloverText(msg->codeY);
+        g_windowManager->convertToHover(*msg);
+        if (msg->m_codeY != g_windowManager->m_lastHover) {
+            g_windowManager->m_lastHover = msg->m_codeY;
+            setRolloverText(msg->m_codeY);
         }
         break;
 
     case MESSAGE_WIDGET:
-        switch (msg->codeX) {
+        switch (msg->m_codeX) {
         case widget::WIDGET_SELECT:
         case widget::WIDGET_RIGHT_SELECT: {
-            int qualifier = msg->qualifier & MESSAGE_MODIFIER_RIGHT;
-            int id = msg->codeY;
+            int qualifier = msg->m_qualifier & MESSAGE_MODIFIER_RIGHT;
+            int id = msg->m_codeY;
             // The frame run (10..35) and the scroll run (40..65), thirty
             // slots each and the same thirty spells; anything else
             // leaves the slot at the sentinel and the arm does nothing.
@@ -3659,23 +3746,23 @@ int TMageGuildWindow::WindowHandler(message* msg)
             if (id >= 40 && id < 66)
                 slot = id - 40;
             if (slot != -1) {
-                town* thisTown = gpTownManager->townToView;
+                town* thisTown = g_townManager->m_townToView;
                 int level = slot / 6;
                 int column = slot % 6;
-                if (thisTown->type == TOWN_CONFLUX
-                    && (thisTown->active & bitNumber[HOLY_GRAIL_ID])) {
-                    NormalDialog(
-                        format_string(
+                if (thisTown->m_type == TOWN_CONFLUX
+                    && (thisTown->m_active & g_bitNumber[HOLY_GRAIL_ID])) {
+                    normalDialog(
+                        formatString(
                             // Row 715, byte-proven: the inlined lookup
                             // reads [rows + 0xb2c] = 715*4, not 707*4.
-                            gpGeneralText->GetText(715),
-                            GetBuildingName(TOWN_CONFLUX, HOLY_GRAIL_ID))
+                            g_generalText->getText(715),
+                            getBuildingName(TOWN_CONFLUX, HOLY_GRAIL_ID))
                             .c_str(),
                         qualifier ? 4 : 1, -1, -1, -1, 0, -1, 0, -1, 0,
                         -1, 0);
-                } else if (column < thisTown->mageGuildSpellCounts[level]) {
-                    int spell = thisTown->mageGuildSpells[level][column];
-                    NormalDialog(akSpellTraits[spell].levelDescriptions[0],
+                } else if (column < thisTown->m_mageGuildSpellCounts[level]) {
+                    int spell = thisTown->m_mageGuildSpells[level][column];
+                    normalDialog(g_spellTraits[spell].m_levelDescriptions[0],
                                  qualifier ? 4 : 1, -1, -1, 9, spell,
                                  -1, 0, -1, 0, -1, 0);
                 }
@@ -3722,65 +3809,66 @@ int TMageGuildWindow::WindowHandler(message* msg)
 // guard away and leaves the garrison arm's real `je`, matching retail's
 // `cmp ecx,-1 / je <arm>` at both sites.
 VA(0x005ce560, 0x2CC)  // anchor-callee(TMageGuildWindow ctor 0x5cc980 + SetupMage 0x5d6ef0) + anchor-caller(Main 0x5d3240) + arity(bare ret), dc 0x171320
-void townManager::handle_mage_guild_click()
+void townManager::handleMageGuildClick()
 {
-    hero* pHero;
-    if (townToView->visitingHeroId != -1)
-        pHero = gpGame->GetHero(townToView->visitingHeroId);
+    // Before normalization (locals): pHero.
+    hero* currentHero;
+    if (m_townToView->m_visitingHeroId != -1)
+        currentHero = g_game->getHero(m_townToView->m_visitingHeroId);
     else
-        pHero = gpGame->GetHero(townToView->garrisonHeroId);
+        currentHero = g_game->getHero(m_townToView->m_garrisonHeroId);
 
-    if (pHero && !pHero->HasArtifact(0) && gpCurrentPlayer->IsLocalHuman()) {
-        if (gbUnk69774c
-            && pHero->id == hero::LEVEL_UP_OVERRIDE_HERO_ID
-            && gpGame->campaign.currentCampaign
+    if (currentHero && !currentHero->hasArtifact(0) && g_currentPlayer->isLocalHuman()) {
+        if (g_unk69774c
+            && currentHero->m_id == hero::LEVEL_UP_OVERRIDE_HERO_ID
+            && g_game->m_campaign.m_currentCampaign
                    == hero::LEVEL_UP_CAMPAIGN_OVERRIDE) {
-            NormalDialog(gpGeneralText->GetText(737), 1, -1, -1, -1, 0,
+            normalDialog(g_generalText->getText(737), 1, -1, -1, -1, 0,
                          -1, 0, -1, 0, -1, 0);
             return;
         }
-        if (gpCurrentPlayer->resources[GOLD] < 500) {
+        if (g_currentPlayer->m_resources[GOLD] < 500) {
             // Slots 4/5 are retail's: the icon selector is the FIFTH
             // argument (`push 8` is the third-from-last push), not the
             // fourth - same shape every other NormalDialog site uses.
-            NormalDialog(gpGeneralText->GetText(214), 1, -1, -1, 8, 0,
+            normalDialog(g_generalText->getText(214), 1, -1, -1, 8, 0,
                          -1, 0, -1, 0, -1, 0);
             return;
         }
-        NormalDialog(gpGeneralText->GetText(215), 2, -1, -1, 8, 0,
+        normalDialog(g_generalText->getText(215), 2, -1, -1, 8, 0,
                      -1, 0, -1, 0, -1, 0);
-        if (gpWindowManager->dialogReturn == DIALOG_RETURN_DECLINE)
+        if (g_windowManager->m_dialogReturn == DIALOG_RETURN_DECLINE)
             return;
         type_artifact spellbook(0, -1);
-        pHero->GiveArtifact(&spellbook, 1, 1);
-        gpCurrentPlayer->resources[GOLD] -= 500;
+        currentHero->giveArtifact(&spellbook, 1, 1);
+        g_currentPlayer->m_resources[GOLD] -= 500;
     }
 
-    hallWindow = new TMageGuildWindow();
-    if (!hallWindow)
-        MemError();
-    SetupMage(hallWindow);
+    m_hallWindow = new TMageGuildWindow();
+    if (!m_hallWindow)
+        memError();
+    setupMage(m_hallWindow);
 
-    heroWindow* guildPage = hallWindow;
-    if (dialogResourceDisplay) {
-        delete dialogResourceDisplay;
-        dialogResourceDisplay = 0;
+    heroWindow* guildPage = m_hallWindow;
+    if (m_dialogResourceDisplay) {
+        delete m_dialogResourceDisplay;
+        m_dialogResourceDisplay = 0;
     }
-    dialogResourceDisplay = new TResourceDisplay(guildPage, 1);
-    dialogResourceDisplay->Update(1, 0);
-    if (netMsgHandler)
-        netMsgHandler->setResourceDisplay(dialogResourceDisplay);
+    m_dialogResourceDisplay = new TResourceDisplay(guildPage, 1);
+    m_dialogResourceDisplay->update(1, 0);
+    if (m_netMsgHandler)
+        m_netMsgHandler->setResourceDisplay(m_dialogResourceDisplay);
 
-    hallWindow->DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-    gpWindowManager->UpdateScreen(0, 0, WINDOW_SCREEN_WIDTH,
+    m_hallWindow->drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+    g_windowManager->updateScreen(0, 0, WINDOW_SCREEN_WIDTH,
                                   WINDOW_SCREEN_HEIGHT);
-    hallWindow->DoModal(0);
+    m_hallWindow->doModal(0);
 
-    if (netMsgHandler)
-        netMsgHandler->setResourceDisplay(pResourceDisplay);
-    delete dialogResourceDisplay;
-    dialogResourceDisplay = 0;
-    delete hallWindow;
+    if (m_netMsgHandler)
+        m_netMsgHandler->setResourceDisplay(m_resourceDisplay);
+    delete m_dialogResourceDisplay;
+    m_dialogResourceDisplay = 0;
+    delete m_hallWindow;
 }
 
 // Residual (98.29%): one /Ob2 candidate-call-site short, and the cost of
@@ -3869,116 +3957,118 @@ void townManager::handle_mage_guild_click()
 // _Destroy surplus and 32 the _Ufill one.
 VA(0x005ce830, 0x1D20)  // anchor-vtable 0x643818 + anchor-string garrison.pcx + arity, dc 0x171554
 type_garrison_base_window::type_garrison_base_window(hero* inHero,
-                                                     int garrison_owner,
-                                                     armyGroup* garrison_army)
+                                                     // Before normalization (locals):
+                                                     // garrison_owner, garrison_army.
+                                                     int garrisonOwner,
+                                                     armyGroup* garrisonArmy)
     : CAdvPopup(125, 102, 549, 392, 0x12)
 {
-    field_60 = inHero;
-    field_6c = 0;
-    Widgets.reserve(51);
+    m_thisHero = inHero;
+    m_isJoinDialog = 0;
+    m_widgets.reserve(51);
 
-    Widgets.push_back(new bitmapBorder(0, 0, width, height, 148,
+    m_widgets.push_back(new bitmapBorder(0, 0, m_width, m_height, 148,
                                        "garrison.pcx", 0x800));
 
-    Widgets.push_back(new iconWidget(28, 126, 58, 64, 100, "crest58.def",
+    m_widgets.push_back(new iconWidget(28, 126, 58, 64, 100, "crest58.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new bitmapBorder(28, 222, 58, 64, 124, 0, 0x800));
+    m_widgets.push_back(new bitmapBorder(28, 222, 58, 64, 124, 0, 0x800));
 
-    Widgets.push_back(new iconWidget(92, 126, 58, 64, 101, "twcrport.def",
+    m_widgets.push_back(new iconWidget(92, 126, 58, 64, 101, "twcrport.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(154, 126, 58, 64, 102, "twcrport.def",
+    m_widgets.push_back(new iconWidget(154, 126, 58, 64, 102, "twcrport.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(216, 126, 58, 64, 103, "twcrport.def",
+    m_widgets.push_back(new iconWidget(216, 126, 58, 64, 103, "twcrport.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(278, 126, 58, 64, 104, "twcrport.def",
+    m_widgets.push_back(new iconWidget(278, 126, 58, 64, 104, "twcrport.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(340, 126, 58, 64, 105, "twcrport.def",
+    m_widgets.push_back(new iconWidget(340, 126, 58, 64, 105, "twcrport.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(402, 126, 58, 64, 106, "twcrport.def",
+    m_widgets.push_back(new iconWidget(402, 126, 58, 64, 106, "twcrport.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(464, 126, 58, 64, 107, "twcrport.def",
+    m_widgets.push_back(new iconWidget(464, 126, 58, 64, 107, "twcrport.def",
                                      0, 0, 0, 0, 0x10));
 
-    Widgets.push_back(new textWidget(92, 175, 58, 20, emptyRolloverText,
+    m_widgets.push_back(new textWidget(92, 175, 58, 20, g_emptyRolloverText,
                                      "Verd10B.fnt", font::WHITE, 108, 2, 0, 8));
-    Widgets.push_back(new textWidget(154, 175, 58, 20, emptyRolloverText,
+    m_widgets.push_back(new textWidget(154, 175, 58, 20, g_emptyRolloverText,
                                      "Verd10B.fnt", font::WHITE, 109, 2, 0, 8));
-    Widgets.push_back(new textWidget(216, 175, 58, 20, emptyRolloverText,
+    m_widgets.push_back(new textWidget(216, 175, 58, 20, g_emptyRolloverText,
                                      "Verd10B.fnt", font::WHITE, 110, 2, 0, 8));
-    Widgets.push_back(new textWidget(278, 175, 58, 20, emptyRolloverText,
+    m_widgets.push_back(new textWidget(278, 175, 58, 20, g_emptyRolloverText,
                                      "Verd10B.fnt", font::WHITE, 111, 2, 0, 8));
-    Widgets.push_back(new textWidget(340, 175, 58, 20, emptyRolloverText,
+    m_widgets.push_back(new textWidget(340, 175, 58, 20, g_emptyRolloverText,
                                      "Verd10B.fnt", font::WHITE, 112, 2, 0, 8));
-    Widgets.push_back(new textWidget(402, 175, 58, 20, emptyRolloverText,
+    m_widgets.push_back(new textWidget(402, 175, 58, 20, g_emptyRolloverText,
                                      "Verd10B.fnt", font::WHITE, 113, 2, 0, 8));
-    Widgets.push_back(new textWidget(464, 175, 58, 20, emptyRolloverText,
+    m_widgets.push_back(new textWidget(464, 175, 58, 20, g_emptyRolloverText,
                                      "Verd10B.fnt", font::WHITE, 114, 2, 0, 8));
 
-    Widgets.push_back(new iconWidget(92, 126, 58, 64, 115, "twcrport.def",
+    m_widgets.push_back(new iconWidget(92, 126, 58, 64, 115, "twcrport.def",
                                      1, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(154, 126, 58, 64, 116, "twcrport.def",
+    m_widgets.push_back(new iconWidget(154, 126, 58, 64, 116, "twcrport.def",
                                      1, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(216, 126, 58, 64, 117, "twcrport.def",
+    m_widgets.push_back(new iconWidget(216, 126, 58, 64, 117, "twcrport.def",
                                      1, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(278, 126, 58, 64, 118, "twcrport.def",
+    m_widgets.push_back(new iconWidget(278, 126, 58, 64, 118, "twcrport.def",
                                      1, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(340, 126, 58, 64, 119, "twcrport.def",
+    m_widgets.push_back(new iconWidget(340, 126, 58, 64, 119, "twcrport.def",
                                      1, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(402, 126, 58, 64, 120, "twcrport.def",
+    m_widgets.push_back(new iconWidget(402, 126, 58, 64, 120, "twcrport.def",
                                      1, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(464, 126, 58, 64, 121, "twcrport.def",
+    m_widgets.push_back(new iconWidget(464, 126, 58, 64, 121, "twcrport.def",
                                      1, 0, 0, 0, 0x10));
 
-    Widgets.push_back(new iconWidget(92, 222, 58, 64, 126, "twcrport.def",
+    m_widgets.push_back(new iconWidget(92, 222, 58, 64, 126, "twcrport.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(154, 222, 58, 64, 127, "twcrport.def",
+    m_widgets.push_back(new iconWidget(154, 222, 58, 64, 127, "twcrport.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(216, 222, 58, 64, 128, "twcrport.def",
+    m_widgets.push_back(new iconWidget(216, 222, 58, 64, 128, "twcrport.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(278, 222, 58, 64, 129, "twcrport.def",
+    m_widgets.push_back(new iconWidget(278, 222, 58, 64, 129, "twcrport.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(340, 222, 58, 64, 130, "twcrport.def",
+    m_widgets.push_back(new iconWidget(340, 222, 58, 64, 130, "twcrport.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(402, 222, 58, 64, 131, "twcrport.def",
+    m_widgets.push_back(new iconWidget(402, 222, 58, 64, 131, "twcrport.def",
                                      0, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(464, 222, 58, 64, 132, "twcrport.def",
+    m_widgets.push_back(new iconWidget(464, 222, 58, 64, 132, "twcrport.def",
                                      0, 0, 0, 0, 0x10));
 
-    Widgets.push_back(new textWidget(92, 271, 58, 20, emptyRolloverText,
+    m_widgets.push_back(new textWidget(92, 271, 58, 20, g_emptyRolloverText,
                                      "Verd10B.fnt", font::WHITE, 133, 2, 0, 8));
-    Widgets.push_back(new textWidget(154, 271, 58, 20, emptyRolloverText,
+    m_widgets.push_back(new textWidget(154, 271, 58, 20, g_emptyRolloverText,
                                      "Verd10B.fnt", font::WHITE, 134, 2, 0, 8));
-    Widgets.push_back(new textWidget(216, 271, 58, 20, emptyRolloverText,
+    m_widgets.push_back(new textWidget(216, 271, 58, 20, g_emptyRolloverText,
                                      "Verd10B.fnt", font::WHITE, 135, 2, 0, 8));
-    Widgets.push_back(new textWidget(278, 271, 58, 20, emptyRolloverText,
+    m_widgets.push_back(new textWidget(278, 271, 58, 20, g_emptyRolloverText,
                                      "Verd10B.fnt", font::WHITE, 136, 2, 0, 8));
-    Widgets.push_back(new textWidget(340, 271, 58, 20, emptyRolloverText,
+    m_widgets.push_back(new textWidget(340, 271, 58, 20, g_emptyRolloverText,
                                      "Verd10B.fnt", font::WHITE, 137, 2, 0, 8));
-    Widgets.push_back(new textWidget(402, 271, 58, 20, emptyRolloverText,
+    m_widgets.push_back(new textWidget(402, 271, 58, 20, g_emptyRolloverText,
                                      "Verd10B.fnt", font::WHITE, 138, 2, 0, 8));
-    Widgets.push_back(new textWidget(464, 271, 58, 20, emptyRolloverText,
+    m_widgets.push_back(new textWidget(464, 271, 58, 20, g_emptyRolloverText,
                                      "Verd10B.fnt", font::WHITE, 139, 2, 0, 8));
 
-    Widgets.push_back(new iconWidget(92, 222, 58, 64, 140, "twcrport.def",
+    m_widgets.push_back(new iconWidget(92, 222, 58, 64, 140, "twcrport.def",
                                      1, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(154, 222, 58, 64, 141, "twcrport.def",
+    m_widgets.push_back(new iconWidget(154, 222, 58, 64, 141, "twcrport.def",
                                      1, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(216, 222, 58, 64, 142, "twcrport.def",
+    m_widgets.push_back(new iconWidget(216, 222, 58, 64, 142, "twcrport.def",
                                      1, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(278, 222, 58, 64, 143, "twcrport.def",
+    m_widgets.push_back(new iconWidget(278, 222, 58, 64, 143, "twcrport.def",
                                      1, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(340, 222, 58, 64, 144, "twcrport.def",
+    m_widgets.push_back(new iconWidget(340, 222, 58, 64, 144, "twcrport.def",
                                      1, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(402, 222, 58, 64, 145, "twcrport.def",
+    m_widgets.push_back(new iconWidget(402, 222, 58, 64, 145, "twcrport.def",
                                      1, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(464, 222, 58, 64, 146, "twcrport.def",
+    m_widgets.push_back(new iconWidget(464, 222, 58, 64, 146, "twcrport.def",
                                      1, 0, 0, 0, 0x10));
 
-    Widgets.push_back(new bitmapBorder(7, 369, 535, 19, 200,
+    m_widgets.push_back(new bitmapBorder(7, 369, 535, 19, 200,
                                        "TStatBar.pcx", 0x800));
-    Widgets.push_back(new textWidget(0, 369, 549, 19, emptyRolloverText,
+    m_widgets.push_back(new textWidget(0, 369, 549, 19, g_emptyRolloverText,
                                      "smalfont.fnt", font::WHITE, 201, 1, 0, 8));
-    Widgets.push_back(new button(88, 314, 64, 32, DIVIDE_BUTTON_ID,
+    m_widgets.push_back(new button(88, 314, 64, 32, DIVIDE_BUTTON_ID,
                                  "iDv6432.def", 0, 1, 0, 32, 2));
 
     button* okButton = new button(399, 314, 64, 30, OK_BUTTON_ID,
@@ -3989,52 +4079,52 @@ type_garrison_base_window::type_garrison_base_window(hero* inHero,
     // push_back spelling is worth 93.8825 -> 100.0000 (docs/vc6/inliner.md
     // 6b - the rung's sign is per-site, and a site's sign moves when
     // anything upstream in the body does).
-    okButton->hotKeyCodes.push_back(1);
-    Widgets.push_back(okButton);
+    okButton->m_hotKeyCodes.push_back(1);
+    m_widgets.push_back(okButton);
 
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
-            AddWidget(*it, -1);
+            addWidget(*it, -1);
         else
-            MemError();
+            memError();
     }
 
     message msg;
-    msg.qualifier = 0;
-    msg.mouseX = 0;
-    msg.mouseY = 0;
-    msg.extra = 0;
-    msg.window = 0;
-    msg.id = MESSAGE_WIDGET;
-    msg.codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
-    msg.codeY = BACKGROUND_ID;
-    msg.extra = gpGame->GetLocalPlayerGamePos();
-    BroadcastMessage(&msg);
+    msg.m_qualifier = 0;
+    msg.m_mouseX = 0;
+    msg.m_mouseY = 0;
+    msg.m_extra = 0;
+    msg.m_window = 0;
+    msg.m_id = MESSAGE_WIDGET;
+    msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
+    msg.m_codeY = BACKGROUND_ID;
+    msg.m_extra = g_game->getLocalPlayerGamePos();
+    broadcastMessage(&msg);
 
-    gpTownManager->field_1c4 = 0;
-    msg.codeX = widget::WIDGET_SET_STATUS;
-    msg.extra = widget::WIDGET_DIMMED_NODRAW;
-    msg.codeY = DIVIDE_BUTTON_ID;
-    BroadcastMessage(&msg);
+    g_townManager->m_divideStatus = 0;
+    msg.m_codeX = widget::WIDGET_SET_STATUS;
+    msg.m_extra = widget::WIDGET_DIMMED_NODRAW;
+    msg.m_codeY = DIVIDE_BUTTON_ID;
+    broadcastMessage(&msg);
 
-    gpTownManager->field_11c = new strip(x + 28, y + 126, 0, 161,
-                                         garrison_owner, garrison_owner, 0,
-                                         garrison_army, 100, 0, this);
-    if (!gpTownManager->field_11c)
-        MemError();
-    gpTownManager->field_120 = new strip(x + 28, y + 222, 1, 162,
-                                         inHero->portrait, inHero->owner,
-                                         inHero, &inHero->army, 124, 0, this);
-    if (!gpTownManager->field_120)
-        MemError();
+    g_townManager->m_garrisonStrip = new strip(m_x + 28, m_y + 126, 0, 161,
+                                         garrisonOwner, garrisonOwner, 0,
+                                         garrisonArmy, 100, 0, this);
+    if (!g_townManager->m_garrisonStrip)
+        memError();
+    g_townManager->m_heroStrip = new strip(m_x + 28, m_y + 222, 1, 162,
+                                         inHero->m_portrait, inHero->m_owner,
+                                         inHero, &inHero->m_army, 124, 0, this);
+    if (!g_townManager->m_heroStrip)
+        memError();
 
-    gpTownManager->townToView = 0;
-    gpTownManager->field_134 = 0;
-    gpTownManager->field_12c = 0;
-    gpTownManager->selectedStrip = 0;
-    gpTownManager->field_138 = -2;
-    gpTownManager->field_130 = -2;
-    gpTownManager->field_128 = -2;
+    g_townManager->m_townToView = 0;
+    g_townManager->m_destStrip = 0;
+    g_townManager->m_srcStrip = 0;
+    g_townManager->m_currStrip = 0;
+    g_townManager->m_destIndex = -2;
+    g_townManager->m_srcIndex = -2;
+    g_townManager->m_currIndex = -2;
 }
 
 VA_COMPGEN(0x005d0550, 0x21, SCALAR_DELETING_DTOR, type_garrison_base_window)
@@ -4043,7 +4133,7 @@ VA_COMPGEN(0x005d0550, 0x21, SCALAR_DELETING_DTOR, type_garrison_base_window)
 VA(0x005d0580, 0x6B)  // anchor-vtable 0x643818 + ??_G call edge, dc 0x172a84
 type_garrison_base_window::~type_garrison_base_window()
 {
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
@@ -4082,11 +4172,11 @@ type_garrison_base_window::~type_garrison_base_window()
 // not what selects this pair. The `field_19c` sentinel store and the
 // isOwnerCell spill also sit one slot earlier than retail schedules them.
 VA(0x005d05f0, 0x31B)  // anchor-caller(the page's WindowHandler 0x5d0910, its only caller) + anchor-callee(SetArmyCommand/select_army) + arity(ret 4), dc 0x172af0
-void type_garrison_base_window::SetCommandAndText(message* msg)
+void type_garrison_base_window::setCommandAndText(message* msg)
 {
-    gpTownManager->field_19c = -2;
+    g_townManager->m_command = -2;
 
-    switch (msg->codeY) {
+    switch (msg->m_codeY) {
     case TOP_SLOT_FIRST_ID + 0:
     case TOP_SLOT_FIRST_ID + 1:
     case TOP_SLOT_FIRST_ID + 2:
@@ -4094,33 +4184,33 @@ void type_garrison_base_window::SetCommandAndText(message* msg)
     case TOP_SLOT_FIRST_ID + 4:
     case TOP_SLOT_FIRST_ID + 5:
     case TOP_SLOT_FIRST_ID + 6: {
-        unsigned char isOwnerCell = field_6c;
-        int slot = msg->codeY - TOP_SLOT_FIRST_ID;
-        int qualifier = msg->qualifier & MESSAGE_MODIFIER_SHIFT_KEYS;
-        townManager* mgr = gpTownManager;
-        strip* thisStrip = mgr->field_11c;
-        if (thisStrip->group) {
-            if (mgr->field_130 >= 0
-                && mgr->field_12c->owner == gNetLocalGamePos) {
-                mgr->field_134 = thisStrip;
-                mgr->field_138 = slot;
+        unsigned char isOwnerCell = m_isJoinDialog;
+        int slot = msg->m_codeY - TOP_SLOT_FIRST_ID;
+        int qualifier = msg->m_qualifier & MESSAGE_MODIFIER_SHIFT_KEYS;
+        townManager* mgr = g_townManager;
+        strip* thisStrip = mgr->m_garrisonStrip;
+        if (thisStrip->m_group) {
+            if (mgr->m_srcIndex >= 0
+                && mgr->m_srcStrip->m_owner == g_netLocalGamePos) {
+                mgr->m_destStrip = thisStrip;
+                mgr->m_destIndex = slot;
                 // ONE call site: retail materialises the flag in EAX
                 // (`xor eax,eax` in one arm, `mov eax,1` in the other) and
                 // pushes the register, which is tail DUPLICATION of a single
                 // computed argument - two written call sites push the
                 // immediates instead.
-                mgr->SetArmyCommand(mgr->field_1c4 || qualifier, isOwnerCell);
+                mgr->setArmyCommand(mgr->m_divideStatus || qualifier, isOwnerCell);
             } else {
-                mgr->select_army(thisStrip, slot, isOwnerCell);
+                mgr->selectArmy(thisStrip, slot, isOwnerCell);
             }
         }
         break;
     }
 
     case BOTTOM_OWNER_ID:
-        gpTownManager->field_134 = gpTownManager->field_120;
-        gpTownManager->field_138 = -1;
-        gpTownManager->field_19c = TOWN_COMMAND_VIEW_HERO;
+        g_townManager->m_destStrip = g_townManager->m_heroStrip;
+        g_townManager->m_destIndex = -1;
+        g_townManager->m_command = TOWN_COMMAND_VIEW_HERO;
         break;
 
     case BOTTOM_SLOT_FIRST_ID + 0:
@@ -4130,68 +4220,68 @@ void type_garrison_base_window::SetCommandAndText(message* msg)
     case BOTTOM_SLOT_FIRST_ID + 4:
     case BOTTOM_SLOT_FIRST_ID + 5:
     case BOTTOM_SLOT_FIRST_ID + 6: {
-        unsigned char isOwnerCell = field_6c;
-        int slot = msg->codeY - BOTTOM_SLOT_FIRST_ID;
-        int qualifier = msg->qualifier & MESSAGE_MODIFIER_SHIFT_KEYS;
-        townManager* mgr = gpTownManager;
-        strip* thisStrip = mgr->field_120;
-        if (thisStrip->group) {
-            if (mgr->field_130 >= 0
-                && mgr->field_12c->owner == gNetLocalGamePos) {
-                mgr->field_134 = thisStrip;
-                mgr->field_138 = slot;
+        unsigned char isOwnerCell = m_isJoinDialog;
+        int slot = msg->m_codeY - BOTTOM_SLOT_FIRST_ID;
+        int qualifier = msg->m_qualifier & MESSAGE_MODIFIER_SHIFT_KEYS;
+        townManager* mgr = g_townManager;
+        strip* thisStrip = mgr->m_heroStrip;
+        if (thisStrip->m_group) {
+            if (mgr->m_srcIndex >= 0
+                && mgr->m_srcStrip->m_owner == g_netLocalGamePos) {
+                mgr->m_destStrip = thisStrip;
+                mgr->m_destIndex = slot;
                 // ONE call site: retail materialises the flag in EAX
                 // (`xor eax,eax` in one arm, `mov eax,1` in the other) and
                 // pushes the register, which is tail DUPLICATION of a single
                 // computed argument - two written call sites push the
                 // immediates instead.
-                mgr->SetArmyCommand(mgr->field_1c4 || qualifier, isOwnerCell);
+                mgr->setArmyCommand(mgr->m_divideStatus || qualifier, isOwnerCell);
             } else {
-                mgr->select_army(thisStrip, slot, isOwnerCell);
+                mgr->selectArmy(thisStrip, slot, isOwnerCell);
             }
         }
         break;
     }
 
     case DIVIDE_BUTTON_ID: {
-        townManager* mgr = gpTownManager;
-        if (mgr->field_130 == -2) {
-            strcpy(mgr->statusText, gUnnamed6a5d90);
+        townManager* mgr = g_townManager;
+        if (mgr->m_srcIndex == -2) {
+            strcpy(mgr->m_statusText, g_unnamed6a5d90);
         } else {
-            int creature = mgr->field_12c->group->armies[mgr->field_130];
+            int creature = mgr->m_srcStrip->m_group->m_armies[mgr->m_srcIndex];
             // The traits row's own bound, spelled as the literal
             // retail compares against: armygrp.h's ARMY_CREATURE_LAST
             // is a member of `army`, which this compiland's include
             // closure does not define and must not grow to.
-            sprintf(mgr->statusText, gUnnamed6a5d84,
+            sprintf(mgr->m_statusText, g_unnamed6a5d84,
                     creature >= 0 && creature <= 0x96
-                        ? akCreatureTypeTraits[creature].m_name
-                        : emptyRolloverText);
+                        ? g_creatureTypeTraits[creature].m_name
+                        : g_emptyRolloverText);
         }
         break;
     }
 
     case CANCEL_BUTTON_ID:
-        strcpy(gpTownManager->statusText, gUnnamed6a5da4);
+        strcpy(g_townManager->m_statusText, g_unnamed6a5da4);
         break;
 
     default:
-        strcpy(gpTownManager->statusText, emptyRolloverText);
+        strcpy(g_townManager->m_statusText, g_emptyRolloverText);
         break;
     }
 
     message textMessage;
-    textMessage.extraText = gpTownManager->statusText;
-    textMessage.qualifier = 0;
-    textMessage.mouseX = 0;
-    textMessage.mouseY = 0;
-    textMessage.window = 0;
-    textMessage.id = MESSAGE_WIDGET;
-    textMessage.codeX = widget::WIDGET_SET_TEXT;
-    textMessage.codeY = 0xc9;
-    BroadcastMessage(&textMessage);
-    DrawWindow(0, 0xc8, 0xc9);
-    gpWindowManager->UpdateScreen(x + 7, y + 0x171, 0x217, 0x13);
+    textMessage.m_extraText = g_townManager->m_statusText;
+    textMessage.m_qualifier = 0;
+    textMessage.m_mouseX = 0;
+    textMessage.m_mouseY = 0;
+    textMessage.m_window = 0;
+    textMessage.m_id = MESSAGE_WIDGET;
+    textMessage.m_codeX = widget::WIDGET_SET_TEXT;
+    textMessage.m_codeY = 0xc9;
+    broadcastMessage(&textMessage);
+    drawWindow(0, 0xc8, 0xc9);
+    g_windowManager->updateScreen(m_x + 7, m_y + 0x171, 0x217, 0x13);
 }
 
 // The garrison dialog's handler. It reads its window out of the MESSAGE
@@ -4226,20 +4316,20 @@ void type_garrison_base_window::SetCommandAndText(message* msg)
 // selectedStrip/slot reads and the DIVIDE arm's two Draw calls) plus the
 // jump-table and byte-table reloc addends, which cost nothing.
 VA(0x005d0910, 0x228)  // anchor-vtable 0x643818 slot 9 + anchor-callee(SetCommandAndText 0x5d05f0 + DoCommand) + arity(ret 4), dc 0x172cf4
-int type_garrison_base_window::WindowHandler(message* msg)
+int type_garrison_base_window::windowHandler(message* msg)
 {
-    int result = CAdvPopup::WindowHandler(msg);
+    int result = CAdvPopup::windowHandler(msg);
     if (result)
         return result;
 
     type_garrison_base_window* win =
-        static_cast<type_garrison_base_window*>(msg->window);
+        static_cast<type_garrison_base_window*>(msg->m_window);
 
-    switch (msg->id) {
+    switch (msg->m_id) {
     case MESSAGE_WIDGET:
-        switch (msg->codeX) {
+        switch (msg->m_codeX) {
         case widget::WIDGET_SELECT:
-            switch (msg->codeY) {
+            switch (msg->m_codeY) {
             case TOP_SLOT_FIRST_ID + 0:
             case TOP_SLOT_FIRST_ID + 1:
             case TOP_SLOT_FIRST_ID + 2:
@@ -4254,14 +4344,14 @@ int type_garrison_base_window::WindowHandler(message* msg)
             case BOTTOM_SLOT_FIRST_ID + 4:
             case BOTTOM_SLOT_FIRST_ID + 5:
             case BOTTOM_SLOT_FIRST_ID + 6:
-                gpTownManager->DoCommand(gpTownManager->field_19c, 1, win);
-                win->SetCommandAndText(msg);
+                g_townManager->doCommand(g_townManager->m_command, 1, win);
+                win->setCommandAndText(msg);
                 return 1;
             }
             break;
 
         case widget::WIDGET_RIGHT_SELECT:
-            switch (msg->codeY) {
+            switch (msg->m_codeY) {
             case TOP_SLOT_FIRST_ID + 0:
             case TOP_SLOT_FIRST_ID + 1:
             case TOP_SLOT_FIRST_ID + 2:
@@ -4269,8 +4359,8 @@ int type_garrison_base_window::WindowHandler(message* msg)
             case TOP_SLOT_FIRST_ID + 4:
             case TOP_SLOT_FIRST_ID + 5:
             case TOP_SLOT_FIRST_ID + 6:
-                gpTownManager->selectedStrip = gpTownManager->field_11c;
-                gpTownManager->field_128 = msg->codeY - TOP_SLOT_FIRST_ID;
+                g_townManager->m_currStrip = g_townManager->m_garrisonStrip;
+                g_townManager->m_currIndex = msg->m_codeY - TOP_SLOT_FIRST_ID;
                 break;
 
             case BOTTOM_SLOT_FIRST_ID + 0:
@@ -4280,33 +4370,33 @@ int type_garrison_base_window::WindowHandler(message* msg)
             case BOTTOM_SLOT_FIRST_ID + 4:
             case BOTTOM_SLOT_FIRST_ID + 5:
             case BOTTOM_SLOT_FIRST_ID + 6:
-                gpTownManager->selectedStrip = gpTownManager->field_120;
-                gpTownManager->field_128 = msg->codeY - BOTTOM_SLOT_FIRST_ID;
+                g_townManager->m_currStrip = g_townManager->m_heroStrip;
+                g_townManager->m_currIndex = msg->m_codeY - BOTTOM_SLOT_FIRST_ID;
                 break;
 
             default:
                 return 1;
             }
             {
-                townManager* mgr = gpTownManager;
-                strip* thisStrip = mgr->selectedStrip;
-                int slot = mgr->field_128;
-                armyGroup* group = thisStrip->group;
-                if (group->armies[slot] != -1) {
-                    gpGame->ViewArmy(*group, slot, thisStrip->thisHero, 0,
+                townManager* mgr = g_townManager;
+                strip* thisStrip = mgr->m_currStrip;
+                int slot = mgr->m_currIndex;
+                armyGroup* group = thisStrip->m_group;
+                if (group->m_armies[slot] != -1) {
+                    g_game->viewArmy(*group, slot, thisStrip->m_thisHero, 0,
                                      0x77, 0x14, 0, 1);
                 }
             }
             return 1;
 
         case widget::WIDGET_DESELECT:
-            if (msg->codeY == DIVIDE_BUTTON_ID) {
-                townManager* mgr = gpTownManager;
-                enum TCreatureType creature = creature_type_from_int(
-                    mgr->field_12c->group->armies[mgr->field_130]);
-                mgr->field_1c4 = 1;
-                gpTownManager->field_11c->Draw(creature);
-                gpTownManager->field_120->Draw(creature);
+            if (msg->m_codeY == DIVIDE_BUTTON_ID) {
+                townManager* mgr = g_townManager;
+                enum TCreatureType creature = creatureTypeFromInt(
+                    mgr->m_srcStrip->m_group->m_armies[mgr->m_srcIndex]);
+                mgr->m_divideStatus = 1;
+                g_townManager->m_garrisonStrip->draw(creature);
+                g_townManager->m_heroStrip->draw(creature);
                 return 1;
             }
             break;
@@ -4314,12 +4404,12 @@ int type_garrison_base_window::WindowHandler(message* msg)
         break;
 
     case MESSAGE_MOUSE_MOVE:
-        gpWindowManager->ConvertToHover(*msg);
-        if (msg->codeY != win->lastHover
-            || msg->qualifier != win->lastQualifier) {
-            win->lastHover = msg->codeY;
-            win->lastQualifier = msg->qualifier;
-            win->SetCommandAndText(msg);
+        g_windowManager->convertToHover(*msg);
+        if (msg->m_codeY != win->m_lastHover
+            || msg->m_qualifier != win->m_lastQualifier) {
+            win->m_lastHover = msg->m_codeY;
+            win->m_lastQualifier = msg->m_qualifier;
+            win->setCommandAndText(msg);
         }
         return 1;
     }
@@ -4362,35 +4452,35 @@ VA(0x005d0b40, 0x21F)  // anchor-vtable 0x643854 + ??_G call edge + arity, dc 0x
 type_monster_join_window::type_monster_join_window(hero* inHero,
                                                    armyGroup* monsters,
                                                    unsigned char flags)
-    : type_garrison_base_window(inHero, inHero->owner, monsters)
+    : type_garrison_base_window(inHero, inHero->m_owner, monsters)
 {
     std::string title;
-    field_6c = 1;
+    m_isJoinDialog = 1;
     if (flags) {
-        title = gpGeneralText->GetText(710);
+        title = g_generalText->getText(710);
     } else {
         int i = 0;
-        while (monsters->armies[i] == CREATURE_NONE) {
+        while (monsters->m_armies[i] == CREATURE_NONE) {
             if (++i >= 7)
                 break;
         }
 
         const char* name;
-        int type = monsters->armies[i];
+        int type = monsters->m_armies[i];
         if (type < 0 || type > 150)
-            name = emptyRolloverText;
-        else if (monsters->numTroops[i] == 1)
-            name = akCreatureTypeTraits[type].m_name;
+            name = g_emptyRolloverText;
+        else if (monsters->m_numTroops[i] == 1)
+            name = g_creatureTypeTraits[type].m_name;
         else
-            name = akCreatureTypeTraits[type].m_plural_name;
-        title = format_string(gpGeneralText->GetText(36), name);
+            name = g_creatureTypeTraits[type].m_pluralName;
+        title = formatString(g_generalText->getText(36), name);
     }
 
-    widget* newWidget = new textWidget(0, 20, width, 30, title.c_str(),
+    widget* newWidget = new textWidget(0, 20, m_width, 30, title.c_str(),
                                        "medfont.fnt", font::HEADING,
                                        203, 1, 0, 8);
-    Widgets.push_back(newWidget);
-    AddWidget(newWidget, -1);
+    m_widgets.push_back(newWidget);
+    addWidget(newWidget, -1);
 }
 
 VA_COMPGEN(0x005d0d60, 0x21, SCALAR_DELETING_DTOR, type_monster_join_window)
@@ -4416,22 +4506,23 @@ VA_COMPGEN(0x005d0d90, 0x6B, IMPLICIT_DTOR, type_monster_join_window)
 // proved, here running the other way.
 
 // E:\gamedcs\townmgr.cpp:5164
+// Before normalization (locals): garrison_owner, garrison_army.
 VA(0x005d0e00, 0x28C)  // anchor-vtable 0x643890 + ??_G call edge + arity, dc 0x1730b8
-TGarrisonWindow::TGarrisonWindow(hero* inHero, int garrison_owner,
-                                 armyGroup* garrison_army)
-    : type_garrison_base_window(inHero, garrison_owner, garrison_army)
+TGarrisonWindow::TGarrisonWindow(hero* inHero, int garrisonOwner,
+                                 armyGroup* garrisonArmy)
+    : type_garrison_base_window(inHero, garrisonOwner, garrisonArmy)
 {
-    widget* newWidget = new textWidget(0, 20, width, 30,
-                                       gpGeneralText->GetText(595),
+    widget* newWidget = new textWidget(0, 20, m_width, 30,
+                                       g_generalText->getText(595),
                                        "bigfont.fnt", font::HEADING,
                                        203, 1, 0, 8);
-    Widgets.push_back(newWidget);
-    AddWidget(newWidget, -1);
+    m_widgets.push_back(newWidget);
+    addWidget(newWidget, -1);
 
     newWidget = new iconWidget(190, 50, 128, 64, 202, "AVCgar10.def",
                                0, 0, 0, 0, 0x10);
-    Widgets.push_back(newWidget);
-    AddWidget(newWidget, -1);
+    m_widgets.push_back(newWidget);
+    addWidget(newWidget, -1);
 }
 
 VA_COMPGEN(0x005d1090, 0x21, SCALAR_DELETING_DTOR, TGarrisonWindow)
@@ -4448,37 +4539,37 @@ VA_COMPGEN(0x005d10c0, 0x6B, IMPLICIT_DTOR, TGarrisonWindow)
 
 // E:\gamedcs\townmgr.cpp:5180
 VA(0x005d1130, 0x96)  // anchor-callee 0x5d0e00 TGarrisonWindow ctor, dc 0x17320c
-void DoEventGarrison(hero* inHero, garrison* thisGarrison)
+void doEventGarrison(hero* inHero, garrison* thisGarrison)
 {
-    int owner = thisGarrison->playerOwner;
-    if (!thisGarrison->removableTroops)
+    int owner = thisGarrison->m_playerOwner;
+    if (!thisGarrison->m_removableTroops)
         owner = -1;
-    TGarrisonWindow garrisonWindow(inHero, owner, &thisGarrison->garrisonArmy);
-    garrisonWindow.DoModal(0);
+    TGarrisonWindow garrisonWindow(inHero, owner, &thisGarrison->m_garrisonArmy);
+    garrisonWindow.doModal(0);
 }
 
 // E:\gamedcs\townmgr.cpp:5187
 VA(0x005d11d0, 0xDA)  // anchor-callee 0x5d0b40 join-window ctor + arity, dc 0x173238
-void do_monster_join_dialog(hero* inHero, TCreatureType type, int amount)
+void doMonsterJoinDialog(hero* inHero, TCreatureType type, int amount)
 {
     armyGroup monsters;
-    monsters.Initialize();
-    monsters.Add(type, amount, -1);
+    monsters.initialize();
+    monsters.add(type, amount, -1);
 
     type_monster_join_window joinWindow(inHero, &monsters, 0);
-    gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
-    gpMouseManager->ShowPointer(true);
-    joinWindow.DoModal(0);
+    g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+    g_mouseManager->showPointer(true);
+    joinWindow.doModal(0);
 }
 
 // E:\gamedcs\townmgr.cpp:5201
 VA(0x005d12b0, 0xA5)  // anchor-callee 0x5d0b40 join-window ctor + arity, dc 0x1732a8
-void do_monster_join_dialog(hero* inHero, armyGroup* monsters, int flags)
+void doMonsterJoinDialog(hero* inHero, armyGroup* monsters, int flags)
 {
     type_monster_join_window joinWindow(inHero, monsters, flags);
-    gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
-    gpMouseManager->ShowPointer(true);
-    joinWindow.DoModal(0);
+    g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+    g_mouseManager->showPointer(true);
+    joinWindow.doModal(0);
 }
 
 // The blacksmith. Same recipe again, with the compiland's first use of a
@@ -4496,79 +4587,79 @@ VA(0x005d1360, 0x69A)  // anchor-vtable 0x6438cc + anchor-string TPSmith.pcx + a
 TBlacksmithWindow::TBlacksmithWindow(int heroID, int inTownType)
     : CAdvPopup(235, 106, 329, 388, 0x12)
 {
-    int cost = akCreatureTypeTraits[gBlacksmithMachines[inTownType]].cost[6];
-    townType = inTownType;
-    Widgets.reserve(12);
+    int cost = g_creatureTypeTraits[g_blacksmithMachines[inTownType]].m_cost[6];
+    m_townType = inTownType;
+    m_widgets.reserve(12);
 
-    Widgets.push_back(new bitmapBorder(0, 0, width, height, 0,
+    m_widgets.push_back(new bitmapBorder(0, 0, m_width, m_height, 0,
                                        "TPSmith.pcx", 0x800));
 
-    sprintf(gText, gpGeneralText->GetText(275),
-            akCreatureTypeTraits[gBlacksmithMachines[townType]].m_name);
-    Widgets.push_back(new textWidget(0, 15, width, 30, gText, "bigfont.fnt",
+    sprintf(g_text, g_generalText->getText(275),
+            g_creatureTypeTraits[g_blacksmithMachines[m_townType]].m_name);
+    m_widgets.push_back(new textWidget(0, 15, m_width, 30, g_text, "bigfont.fnt",
                                      font::HEADING, 1, 1, 0, 8));
-    Widgets.push_back(new textWidget(0, 210, width, 30, 0, "medfont.fnt",
+    m_widgets.push_back(new textWidget(0, 210, m_width, 30, 0, "medfont.fnt",
                                      font::PRIMARY, 2, 1, 0, 8));
-    Widgets.push_back(new textWidget(129, 284, 69, 17,
-                                     format_string("%d", cost).c_str(),
+    m_widgets.push_back(new textWidget(129, 284, 69, 17,
+                                     formatString("%d", cost).c_str(),
                                      "smalfont.fnt", font::PRIMARY, 3, 5, 0, 8));
-    Widgets.push_back(new iconWidget(147, 244, 32, 32, 4, "resource.def",
+    m_widgets.push_back(new iconWidget(147, 244, 32, 32, 4, "resource.def",
                                      6, 0, 0, 0, 0x10));
 
-    Widgets.push_back(new bitmapBorder(64, 50, 200, 150, 5,
+    m_widgets.push_back(new bitmapBorder(64, 50, 200, 150, 5,
                                        "tpsmitbk.pcx", 0x800));
-    machineIcon = new iconWidget(
+    m_machineIcon = new iconWidget(
         64, 50, 200, 150, 6,
-        akCreatureTypeTraits[gBlacksmithMachines[townType]].m_sprite_name,
+        g_creatureTypeTraits[g_blacksmithMachines[m_townType]].m_spriteName,
         0, 2, 0, 0, 0x12);
-    Widgets.push_back(machineIcon);
+    m_widgets.push_back(m_machineIcon);
 
-    Widgets.push_back(new bitmapBorder(8, 363, 312, 17, 7,
+    m_widgets.push_back(new bitmapBorder(8, 363, 312, 17, 7,
                                        "StatBar.pcx", 0x800));
-    Widgets.push_back(new textWidget(8, 363, 312, 17, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(8, 363, 312, 17, 0, "smalfont.fnt",
                                      font::PRIMARY, 8, 1, 0, 8));
-    Widgets.push_back(new button(42, 312, 64, 30, BUY_BUTTON_ID,
+    m_widgets.push_back(new button(42, 312, 64, 30, BUY_BUTTON_ID,
                                  "iBUY30.def", 0, 1, 1, 28, 2));
-    Widgets.push_back(new button(224, 312, 64, 30, CANCEL_BUTTON_ID,
+    m_widgets.push_back(new button(224, 312, 64, 30, CANCEL_BUTTON_ID,
                                  "iCancel.def", 0, 1, 1, 1, 2));
 
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
-            AddWidget(*it, -1);
+            addWidget(*it, -1);
         else
-            MemError();
+            memError();
     }
 
-    if (!gpCurrentPlayer->IsLocalHuman())
-        GetWidget(BUY_BUTTON_ID)->enable(0);
-    SetWinText(this, 25);
+    if (!g_currentPlayer->isLocalHuman())
+        getWidget(BUY_BUTTON_ID)->enable(0);
+    setWinText(this, 25);
 
     message msg;
-    msg.qualifier = 0;
-    msg.mouseX = 0;
-    msg.mouseY = 0;
-    msg.extra = 0;
-    msg.window = 0;
-    msg.id = MESSAGE_WIDGET;
-    msg.codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
-    msg.codeY = 0;
-    msg.extra = gpGame->GetLocalPlayerGamePos();
-    BroadcastMessage(&msg);
+    msg.m_qualifier = 0;
+    msg.m_mouseX = 0;
+    msg.m_mouseY = 0;
+    msg.m_extra = 0;
+    msg.m_window = 0;
+    msg.m_id = MESSAGE_WIDGET;
+    msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
+    msg.m_codeY = 0;
+    msg.m_extra = g_game->getLocalPlayerGamePos();
+    broadcastMessage(&msg);
 
-    hero* visitor = gpGame->GetHero(gpTownManager->townToView->visitingHeroId);
-    if (!SmithAffordable(cost)
-        || visitor->HasArtifact(gBlacksmithArtifacts[townType].artifactId)) {
-        msg.codeX = widget::WIDGET_SET_STATUS;
-        msg.codeY = BUY_BUTTON_ID;
-        msg.extra = widget::WIDGET_DIMMED_NODRAW;
-        BroadcastMessage(&msg);
-        msg.codeX = widget::WIDGET_CLEAR_STATUS;
-        msg.extra = widget::WIDGET_ACTIVE;
-        BroadcastMessage(&msg);
+    hero* visitor = g_game->getHero(g_townManager->m_townToView->m_visitingHeroId);
+    if (!smithAffordable(cost)
+        || visitor->hasArtifact(g_blacksmithArtifacts[m_townType].m_artifactId)) {
+        msg.m_codeX = widget::WIDGET_SET_STATUS;
+        msg.m_codeY = BUY_BUTTON_ID;
+        msg.m_extra = widget::WIDGET_DIMMED_NODRAW;
+        broadcastMessage(&msg);
+        msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+        msg.m_extra = widget::WIDGET_ACTIVE;
+        broadcastMessage(&msg);
     }
 
-    field_68 = 0;
-    glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] = GameTime::Get() + 100;
+    m_field68 = 0;
+    g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] = GameTime::get() + 100;
 }
 
 VA_COMPGEN(0x005d1a00, 0x21, SCALAR_DELETING_DTOR, TBlacksmithWindow)
@@ -4577,7 +4668,7 @@ VA_COMPGEN(0x005d1a00, 0x21, SCALAR_DELETING_DTOR, TBlacksmithWindow)
 VA(0x005d1a30, 0x6B)  // anchor-vtable 0x6438cc + ??_G call edge, dc 0x173a1c
 TBlacksmithWindow::~TBlacksmithWindow()
 {
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
@@ -4592,10 +4683,10 @@ TBlacksmithWindow::~TBlacksmithWindow()
 
 // E:\gamedcs\townmgr.cpp:5296
 VA(0x005d1aa0, 0xB3)  // anchor-bracket + arity(ret 4) + the handler's call edge, dc 0x173a88
-void TBlacksmithWindow::SetRightClickText(int id)
+void TBlacksmithWindow::setRightClickText(int id)
 {
-    type_artifact machine = gBlacksmithArtifacts[townType];
-    NormalDialog(machine.get_description().c_str(), 4, -1, 28,
+    type_artifact machine = g_blacksmithArtifacts[m_townType];
+    normalDialog(machine.getDescription().c_str(), 4, -1, 28,
                  -1, 0, -1, 0, -1, 0, -1, 0);
 }
 
@@ -4606,27 +4697,27 @@ void TBlacksmithWindow::SetRightClickText(int id)
 
 // E:\gamedcs\townmgr.cpp:5302
 VA(0x005d1b60, 0xF6)  // anchor-bracket + arity(ret 4) + the handler's call edge, dc 0x173b00
-void TBlacksmithWindow::SetRolloverText(int id)
+void TBlacksmithWindow::setRolloverText(int id)
 {
     switch (id) {
     case CANCEL_BUTTON_ID:
-        sprintf(gText, gpGeneralText->GetText(597),
-                akCreatureTypeTraits[gBlacksmithMachines[townType]].m_name);
+        sprintf(g_text, g_generalText->getText(597),
+                g_creatureTypeTraits[g_blacksmithMachines[m_townType]].m_name);
         break;
     case BUY_BUTTON_ID:
-        sprintf(gText, gpGeneralText->GetText(596),
-                akCreatureTypeTraits[gBlacksmithMachines[townType]].m_name);
+        sprintf(g_text, g_generalText->getText(596),
+                g_creatureTypeTraits[g_blacksmithMachines[m_townType]].m_name);
         break;
     default:
-        strcpy(gText, emptyRolloverText);
+        strcpy(g_text, g_emptyRolloverText);
         break;
     }
     message textMessage;
-    textMessage.extraText = gText;
-    BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 8,
-                     textMessage.extra);
-    DrawWindow(0, 7, 8);
-    gpWindowManager->UpdateScreen(x + 8, y + 0x16b, 0x138, 0x11);
+    textMessage.m_extraText = g_text;
+    broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 8,
+                     textMessage.m_extra);
+    drawWindow(0, 7, 8);
+    g_windowManager->updateScreen(m_x + 8, m_y + 0x16b, 0x138, 0x11);
 }
 
 // The blacksmith's handler, and the third member of the compiland's
@@ -4640,34 +4731,34 @@ void TBlacksmithWindow::SetRolloverText(int id)
 
 // E:\gamedcs\townmgr.cpp:5323
 VA(0x005d1c60, 0xC2)  // anchor-vtable 0x6438cc slot 9 + arity + the two text call edges, dc 0x173bc8
-int TBlacksmithWindow::WindowHandler(message* msg)
+int TBlacksmithWindow::windowHandler(message* msg)
 {
-    int result = CAdvPopup::WindowHandler(msg);
+    int result = CAdvPopup::windowHandler(msg);
     if (result)
         return result;
 
-    switch (msg->id) {
+    switch (msg->m_id) {
     case MESSAGE_MOUSE_MOVE:
-        gpWindowManager->ConvertToHover(*msg);
-        if (msg->codeY != lastHover) {
-            lastHover = msg->codeY;
-            SetRolloverText(msg->codeY);
+        g_windowManager->convertToHover(*msg);
+        if (msg->m_codeY != m_lastHover) {
+            m_lastHover = msg->m_codeY;
+            setRolloverText(msg->m_codeY);
         }
         return 1;
 
     case MESSAGE_WIDGET:
-        if (msg->codeX == widget::WIDGET_RIGHT_SELECT)
-            SetRightClickText(msg->codeY);
+        if (msg->m_codeX == widget::WIDGET_RIGHT_SELECT)
+            setRightClickText(msg->m_codeY);
         break;
     }
 
-    long elapsed = GameTime::Get()
-                   - glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
+    long elapsed = GameTime::get()
+                   - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
     if (elapsed >= 0) {
-        glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
-            _cpp_max(100L, elapsed);
-        machineIcon->SetIconFrame(machineIcon->Frame + 1);
-        DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+        g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
+            cppMax(100L, elapsed);
+        m_machineIcon->setIconFrame(m_machineIcon->m_frame + 1);
+        drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
     }
     return 1;
 }
@@ -4705,33 +4796,34 @@ int TBlacksmithWindow::WindowHandler(message* msg)
 // it away, byte-flat); the un-hoisted cost expression (65.92%).
 
 // E:\gamedcs\townmgr.cpp:5361
+// Before normalization (function): DoBlacksmith.
 VA(0x005d1d30, 0x1BE)  // anchor-callee(TBlacksmithWindow ctor 0x5d1360) + arity, dc 0x173ce0
-void DoBlacksmith(int heroId, int townType)
+void doBlacksmith(int heroId, int townType)
 {
     if (heroId == -1) {
-        sprintf(gText, gpGeneralText->GetText(274), gUnnamed6a6524);
-        NormalDialog(gText, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        sprintf(g_text, g_generalText->getText(274), g_unnamed6a6524);
+        normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return;
     }
 
-    gpBlacksmithWindow = new TBlacksmithWindow(heroId, townType);
-    if (!gpBlacksmithWindow)
-        MemError();
-    gpBlacksmithWindow->DoModal(0);
-    delete gpBlacksmithWindow;
+    g_blacksmithWindow = new TBlacksmithWindow(heroId, townType);
+    if (!g_blacksmithWindow)
+        memError();
+    g_blacksmithWindow->doModal(0);
+    delete g_blacksmithWindow;
 
-    if (gpCurrentPlayer->IsLocalHuman()
-        && gpWindowManager->dialogReturn
+    if (g_currentPlayer->isLocalHuman()
+        && g_windowManager->m_dialogReturn
                == TBlacksmithWindow::BUY_BUTTON_ID) {
-        gpGame->heroes[heroId].GiveArtifact(&gBlacksmithArtifacts[townType],
+        g_game->m_heroes[heroId].giveArtifact(&g_blacksmithArtifacts[townType],
                                             1, 1);
         const int* cost =
-            akCreatureTypeTraits[gBlacksmithMachines[townType]].cost;
+            g_creatureTypeTraits[g_blacksmithMachines[townType]].m_cost;
         for (int i = 0; i < 7; i++)
-            gpCurrentPlayer->resources[6] -= cost[i];
-        sprintf(gText, gUnnamed6a5e00,
-                akCreatureTypeTraits[gBlacksmithMachines[townType]].m_name);
-        NormalDialog(gText, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+            g_currentPlayer->m_resources[6] -= cost[i];
+        sprintf(g_text, g_unnamed6a5e00,
+                g_creatureTypeTraits[g_blacksmithMachines[townType]].m_name);
+        normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     }
 }
 
@@ -4746,72 +4838,72 @@ VA(0x005d1ef0, 0x60C)  // anchor-vtable 0x643908 + anchor-string TPShip.pcx, dc 
 TShipWindow::TShipWindow(int type)
     : CAdvPopup(235, 106, 329, 388, 0x12)
 {
-    boatFrame = 0;
-    Widgets.reserve(12);
+    m_boatFrame = 0;
+    m_widgets.reserve(12);
 
-    bitmapBorder* background = new bitmapBorder(0, 0, width, height, 0,
+    bitmapBorder* background = new bitmapBorder(0, 0, m_width, m_height, 0,
                                                 "TPShip.pcx", 0x800);
-    background->SetPlayerPaletteColors(gpGame->GetLocalPlayerGamePos());
-    Widgets.push_back(background);
+    background->setPlayerPaletteColors(g_game->getLocalPlayerGamePos());
+    m_widgets.push_back(background);
 
-    Widgets.push_back(new textWidget(0, 15, width, 30, 0, "bigfont.fnt",
+    m_widgets.push_back(new textWidget(0, 15, m_width, 30, 0, "bigfont.fnt",
                                      font::HEADING, 1, 1, 0, 8));
-    Widgets.push_back(new textWidget(0, 210, width, 30, 0, "medfont.fnt",
+    m_widgets.push_back(new textWidget(0, 210, m_width, 30, 0, "medfont.fnt",
                                      font::PRIMARY, 2, 1, 0, 8));
-    Widgets.push_back(new textWidget(84, 285, 66, 20, "1000", "smalfont.fnt",
+    m_widgets.push_back(new textWidget(84, 285, 66, 20, "1000", "smalfont.fnt",
                                      font::PRIMARY, 3, 1, 0, 8));
-    Widgets.push_back(new textWidget(179, 285, 66, 20, "10", "smalfont.fnt",
+    m_widgets.push_back(new textWidget(179, 285, 66, 20, "10", "smalfont.fnt",
                                      font::PRIMARY, 4, 1, 0, 8));
-    Widgets.push_back(new iconWidget(101, 245, 32, 32, -1, "resource.def",
+    m_widgets.push_back(new iconWidget(101, 245, 32, 32, -1, "resource.def",
                                      6, 0, 0, 0, 0x10));
-    Widgets.push_back(new iconWidget(196, 245, 32, 32, -1, "resource.def",
+    m_widgets.push_back(new iconWidget(196, 245, 32, 32, -1, "resource.def",
                                      0, 0, 0, 0, 0x10));
 
-    Widgets.push_back(new bitmapBorder(100, 69, 128, 96, 5,
+    m_widgets.push_back(new bitmapBorder(100, 69, 128, 96, 5,
                                        "tpshipbk.pcx", 0x800));
-    boatIcon = new iconWidget(116, 85, 96, 64, 6, gBoatDefNames[type],
+    m_boatIcon = new iconWidget(116, 85, 96, 64, 6, g_boatDefNames[type],
                               0, 7, 0, 0, 0x10);
-    Widgets.push_back(boatIcon);
+    m_widgets.push_back(m_boatIcon);
 
-    Widgets.push_back(new bitmapBorder(8, 363, 312, 17, 7,
+    m_widgets.push_back(new bitmapBorder(8, 363, 312, 17, 7,
                                        "StatBar.pcx", 0x800));
-    Widgets.push_back(new textWidget(8, 363, 312, 17, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(8, 363, 312, 17, 0, "smalfont.fnt",
                                      font::PRIMARY, 8, 1, 0, 8));
-    Widgets.push_back(new button(42, 312, 64, 30, BUY_BUTTON_ID,
+    m_widgets.push_back(new button(42, 312, 64, 30, BUY_BUTTON_ID,
                                  "iBUY30.def", 0, 1, 1, 28, 2));
-    Widgets.push_back(new button(224, 312, 64, 30, CANCEL_BUTTON_ID,
+    m_widgets.push_back(new button(224, 312, 64, 30, CANCEL_BUTTON_ID,
                                  "iCancel.def", 0, 1, 1, 1, 2));
 
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
-            AddWidget(*it, -1);
+            addWidget(*it, -1);
         else
-            MemError();
+            memError();
     }
 
-    if (!gpCurrentPlayer->IsLocalHuman())
-        GetWidget(BUY_BUTTON_ID)->enable(0);
-    SetWinText(this, 12);
+    if (!g_currentPlayer->isLocalHuman())
+        getWidget(BUY_BUTTON_ID)->enable(0);
+    setWinText(this, 12);
 
-    if (!ShipyardAffordable()) {
+    if (!shipyardAffordable()) {
         // Not the heroWindow::Widget*Status pair: those live in
         // window.obj and VC6 cannot inline across a TU, while retail
         // emits both message builds inline here and shares one record
         // between them - only codeX and extra are re-stored for the
         // second broadcast.
         message msg;
-        msg.qualifier = 0;
-        msg.mouseX = 0;
-        msg.mouseY = 0;
-        msg.window = 0;
-        msg.id = MESSAGE_WIDGET;
-        msg.codeX = widget::WIDGET_SET_STATUS;
-        msg.codeY = BUY_BUTTON_ID;
-        msg.extra = widget::WIDGET_DIMMED_NODRAW;
-        BroadcastMessage(&msg);
-        msg.codeX = widget::WIDGET_CLEAR_STATUS;
-        msg.extra = widget::WIDGET_ACTIVE;
-        BroadcastMessage(&msg);
+        msg.m_qualifier = 0;
+        msg.m_mouseX = 0;
+        msg.m_mouseY = 0;
+        msg.m_window = 0;
+        msg.m_id = MESSAGE_WIDGET;
+        msg.m_codeX = widget::WIDGET_SET_STATUS;
+        msg.m_codeY = BUY_BUTTON_ID;
+        msg.m_extra = widget::WIDGET_DIMMED_NODRAW;
+        broadcastMessage(&msg);
+        msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+        msg.m_extra = widget::WIDGET_ACTIVE;
+        broadcastMessage(&msg);
     }
 }
 
@@ -4821,7 +4913,7 @@ VA_COMPGEN(0x005d2500, 0x21, SCALAR_DELETING_DTOR, TShipWindow)
 VA(0x005d2530, 0x6B)  // anchor-vtable 0x643908 + ??_G call edge, dc 0x1745e8
 TShipWindow::~TShipWindow()
 {
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
@@ -4851,18 +4943,18 @@ TShipWindow::~TShipWindow()
 
 // E:\gamedcs\townmgr.cpp:5486
 VA(0x005d25a0, 0x17A)  // anchor-vtable 0x643908 slot 9 + arity + boatIcon/boatFrame edges, dc 0x1746dc
-int TShipWindow::WindowHandler(message* msg)
+int TShipWindow::windowHandler(message* msg)
 {
-    int result = CAdvPopup::WindowHandler(msg);
+    int result = CAdvPopup::windowHandler(msg);
     if (result)
         return result;
 
-    switch (msg->id) {
+    switch (msg->m_id) {
     case MESSAGE_MOUSE_MOVE:
-        gpWindowManager->ConvertToHover(*msg);
-        if (msg->codeY != gpWindowManager->lastHover) {
-            gpWindowManager->lastHover = msg->codeY;
-            switch (msg->codeY) {
+        g_windowManager->convertToHover(*msg);
+        if (msg->m_codeY != g_windowManager->m_lastHover) {
+            g_windowManager->m_lastHover = msg->m_codeY;
+            switch (msg->m_codeY) {
             // The text-to-button pairing is retail's, traced through the
             // dispatch rather than assumed: `sub esi,0x7801 / je L1` sends
             // CANCEL to the block that reads [rows + 0x960] = row 600, and
@@ -4871,35 +4963,35 @@ int TShipWindow::WindowHandler(message* msg)
             // is this sunk-body switch's own convention and not a source
             // order - swapping the two case labels is byte-flat.
             case CANCEL_BUTTON_ID:
-                strcpy(gText, gpGeneralText->GetText(600));
+                strcpy(g_text, g_generalText->getText(600));
                 break;
             case BUY_BUTTON_ID:
-                strcpy(gText, gpGeneralText->GetText(599));
+                strcpy(g_text, g_generalText->getText(599));
                 break;
             default:
-                strcpy(gText, emptyRolloverText);
+                strcpy(g_text, g_emptyRolloverText);
                 break;
             }
             message textMessage;
-            textMessage.extraText = gText;
-            BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 8,
-                             textMessage.extra);
-            DrawWindow(0, 7, 8);
-            gpWindowManager->UpdateScreen(x + 8, y + 0x16b, 0x138, 0x11);
+            textMessage.m_extraText = g_text;
+            broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 8,
+                             textMessage.m_extra);
+            drawWindow(0, 7, 8);
+            g_windowManager->updateScreen(m_x + 8, m_y + 0x16b, 0x138, 0x11);
         }
         return 1;
     }
 
-    long elapsed = GameTime::Get()
-                   - glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
+    long elapsed = GameTime::get()
+                   - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
     if (elapsed >= 0) {
-        glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
-            _cpp_max(100L, elapsed);
-        boatFrame++;
-        if (boatFrame >= boatIcon->Sprite->GetNumFrames(7))
-            boatFrame = 0;
-        boatIcon->SetIconFrame(boatFrame);
-        DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+        g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
+            cppMax(100L, elapsed);
+        m_boatFrame++;
+        if (m_boatFrame >= m_boatIcon->m_sprite->getNumFrames(7))
+            m_boatFrame = 0;
+        m_boatIcon->setIconFrame(m_boatFrame);
+        drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
     }
     return 1;
 }
@@ -4916,13 +5008,13 @@ int TShipWindow::WindowHandler(message* msg)
 
 // E:\gamedcs\townmgr.cpp:5530
 VA(0x005d2720, 0x84)  // anchor-callee(TShipWindow ctor 0x5d1ef0) + arity(bare ret), dc 0x1747fc
-void DoShipyard(int type)
+void doShipyard(int type)
 {
-    gpShipWindow = new TShipWindow(type);
-    if (!gpShipWindow)
-        MemError();
-    gpShipWindow->DoModal(0);
-    delete gpShipWindow;
+    g_shipWindow = new TShipWindow(type);
+    if (!g_shipWindow)
+        memError();
+    g_shipWindow->doModal(0);
+    delete g_shipWindow;
 }
 
 // The town hall page. It is the compiland's fullest modal run, and the
@@ -4958,40 +5050,40 @@ void DoShipyard(int type)
 
 // E:\gamedcs\townmgr.cpp:5540
 VA(0x005d27b0, 0x195)  // anchor-callee(THallWindow ctor 0x5c9be0 + SetupCastle) + arity(bare ret), dc 0x17484c
-void townManager::DoHall()
+void townManager::doHall()
 {
-    hallWindow = new THallWindow(townToView->type);
-    if (!hallWindow)
-        MemError();
-    SetupCastle(hallWindow, 0);
+    m_hallWindow = new THallWindow(m_townToView->m_type);
+    if (!m_hallWindow)
+        memError();
+    setupCastle(m_hallWindow, 0);
 
-    heroWindow* page = hallWindow;
-    if (dialogResourceDisplay) {
-        delete dialogResourceDisplay;
-        dialogResourceDisplay = 0;
+    heroWindow* page = m_hallWindow;
+    if (m_dialogResourceDisplay) {
+        delete m_dialogResourceDisplay;
+        m_dialogResourceDisplay = 0;
     }
-    dialogResourceDisplay = new TResourceDisplay(page, 1);
-    dialogResourceDisplay->Update(1, 0);
-    if (netMsgHandler)
-        netMsgHandler->setResourceDisplay(dialogResourceDisplay);
+    m_dialogResourceDisplay = new TResourceDisplay(page, 1);
+    m_dialogResourceDisplay->update(1, 0);
+    if (m_netMsgHandler)
+        m_netMsgHandler->setResourceDisplay(m_dialogResourceDisplay);
 
 
-    hallWindow->DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-    gpWindowManager->UpdateScreen(0, 0, WINDOW_SCREEN_WIDTH,
+    m_hallWindow->drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+    g_windowManager->updateScreen(0, 0, WINDOW_SCREEN_WIDTH,
                                   WINDOW_SCREEN_HEIGHT);
-    hallWindow->DoModal(0);
+    m_hallWindow->doModal(0);
 
-    delete hallWindow;
-    delete dialogResourceDisplay;
-    dialogResourceDisplay = 0;
-    if (netMsgHandler)
-        netMsgHandler->setResourceDisplay(pResourceDisplay);
+    delete m_hallWindow;
+    delete m_dialogResourceDisplay;
+    m_dialogResourceDisplay = 0;
+    if (m_netMsgHandler)
+        m_netMsgHandler->setResourceDisplay(m_resourceDisplay);
 
-    RedrawTownScreen();
-    if (field_1b8 != -1)
-        BuildObj(field_1b8);
-    static_cast<TTownScreenWindow*>(TownWindow)->UpdateTownLocators();
-    RedrawTownScreen();
+    redrawTownScreen();
+    if (m_objToBuild != -1)
+        buildObj(m_objToBuild);
+    static_cast<TTownScreenWindow*>(m_townWindow)->updateTownLocators();
+    redrawTownScreen();
 }
 
 // The Portal of Summoning: Dungeon's external dwelling. The generator is
@@ -5007,32 +5099,34 @@ void townManager::DoHall()
 // expanded the info string's destructor helper where retail calls it);
 // shrinking caller_cb and nesting the expansion puts it back out of
 // line. Single call site, inlined straight back, no new symbol.
-static void university_info_dialog(town* current_town)
+// Before normalization (function): university_info_dialog.
+// Before normalization (locals): current_town.
+static void universityInfoDialog(town* currentTown)
 {
-    std::string info(GetBuildingInfo(current_town, EXTRA_0_ID, 1, 1));
-    NormalDialog(info.c_str(), 1, -1, -1, current_town->type + 0x16,
+    std::string info(getBuildingInfo(currentTown, EXTRA_0_ID, 1, 1));
+    normalDialog(info.c_str(), 1, -1, -1, currentTown->m_type + 0x16,
                  EXTRA_0_ID, -1, 0, -1, 0, -1, 0);
 }
 
 // E:\gamedcs\townmgr.cpp:5685
 VA(0x005d2950, 0xEF)  // anchor-callee(SetSummoningGenerator 0x5bd750 + recruitUnit ctor) + arity, dc 0x174bfc
-void townManager::DoPortalOfSummoning()
+void townManager::doPortalOfSummoning()
 {
-    if (townToView->summoningType == CREATURE_NONE)
-        townToView->SetSummoningGenerator();
+    if (m_townToView->m_summoningType == CREATURE_NONE)
+        m_townToView->setSummoningGenerator();
 
-    if (townToView->summoningType != CREATURE_NONE) {
-        gpRecruitUnit = new recruitUnit(&townToView->get_army(), 1,
-                                        townToView->summoningType,
-                                        &townToView->summoningPopulation,
+    if (m_townToView->m_summoningType != CREATURE_NONE) {
+        g_recruitUnit = new recruitUnit(&m_townToView->getArmy(), 1,
+                                        m_townToView->m_summoningType,
+                                        &m_townToView->m_summoningPopulation,
                                         CREATURE_NONE, 0, CREATURE_NONE, 0,
                                         CREATURE_NONE, 0);
-        if (!gpRecruitUnit)
-            MemError();
-        gpExecutive->DoDialog(gpRecruitUnit);
-        delete gpRecruitUnit;
+        if (!g_recruitUnit)
+            memError();
+        g_executive->doDialog(g_recruitUnit);
+        delete g_recruitUnit;
     } else {
-        NormalDialog(gUnnamed6a5dfc, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        normalDialog(g_unnamed6a5dfc, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     }
 }
 
@@ -5085,53 +5179,53 @@ void townManager::DoPortalOfSummoning()
 // spills the COW _Ptr to a second slot and changes the whole custom-text arm.
 // E:\gamedcs\townmgr.cpp:5586
 VA(0x005d2a40, 0x335)  // anchor-global(retail symbol GetBuildingInfo) + anchor-callee(GetBuildingName/format_string) + arity(ret 8, 4 args, /Gr fastcall), dc 0x174f78
-char* GetBuildingInfo(const town* this_town, int buildingId, unsigned char bIncludeTitle, unsigned char extended)
+char* getBuildingInfo(const town* thisTown, int buildingId, unsigned char includeTitle, unsigned char extended)
 {
     char buffer[400];
-    int type = this_town->type;
+    int type = thisTown->m_type;
 
     if (buildingId < SPECIAL_BUILDING_ID) {
         if (buildingId == BLACKSMITH_ID)
-            strcpy(buffer, gBuildingDescBlacksmith[type]);
+            strcpy(buffer, g_buildingDescBlacksmith[type]);
         else if (buildingId == MARKETPLACE_SILO_ID)
-            strcpy(buffer, gBuildingDescDwelling[type * 11]);
+            strcpy(buffer, g_buildingDescDwelling[type * 11]);
         else
-            strcpy(buffer, gBuildingDescCommon[buildingId]);
+            strcpy(buffer, g_buildingDescCommon[buildingId]);
     } else if (buildingId < DWELLING_0_ID) {
-        strcpy(buffer, gBuildingDescTown[type * 11 + buildingId]);
+        strcpy(buffer, g_buildingDescTown[type * 11 + buildingId]);
         if (type == 1 && extended) {
             if (buildingId == EXTRA_0_ID) {
                 strcat(buffer, DATA_COMPGEN(0x006603b0, quickInfoSeparator, "\n\n"));
-                strcat(buffer, gRampartExtraDesc);
+                strcat(buffer, g_rampartExtraDesc);
                 goto emit_custom;
             }
             if (buildingId == SPECIAL_BUILDING_ID) {
             emit_custom:
                 strcat(buffer, DATA_COMPGEN(0x006603b0, quickInfoSeparator, "\n\n"));
-                if (this_town->field_34 == 0) {
-                    strcat(buffer, gpGeneralText->GetText(678));
+                if (thisTown->m_pondAmount == 0) {
+                    strcat(buffer, g_generalText->getText(678));
                 } else {
-                    strcat(buffer, format_string(
-                                       gpGeneralText->GetText(679),
-                                       this_town->field_34,
-                                       gRampartCustomText[this_town->field_38])
+                    strcat(buffer, formatString(
+                                       g_generalText->getText(679),
+                                       thisTown->m_pondAmount,
+                                       g_rampartCustomText[thisTown->m_pondResource])
                                        .c_str());
                 }
             }
         }
     } else {
-        strcpy(gInfoText, gBuildingDescUpgrade[buildingId + type * 14]);
-        return gInfoText;
+        strcpy(g_infoText, g_buildingDescUpgrade[buildingId + type * 14]);
+        return g_infoText;
     }
 
-    if (bIncludeTitle) {
-        sprintf(gInfoText, DATA_COMPGEN(0x0068c3b8, buildingTitleFormat, "{%s}\n\n"),
-                GetBuildingName(type, buildingId));
-        strcat(gInfoText, buffer);
+    if (includeTitle) {
+        sprintf(g_infoText, DATA_COMPGEN(0x0068c3b8, buildingTitleFormat, "{%s}\n\n"),
+                getBuildingName(type, buildingId));
+        strcat(g_infoText, buffer);
     } else {
-        strcpy(gInfoText, buffer);
+        strcpy(g_infoText, buffer);
     }
-    return gInfoText;
+    return g_infoText;
 }
 
 // The university record's default set, and this compiland owns the body.
@@ -5170,30 +5264,30 @@ char* GetBuildingInfo(const town* this_town, int buildingId, unsigned char bIncl
 VA(0x005d2d80, 0x1E)  // anchor-bracket(between GetBuildingInfo 0x5d2a40 and DoUniversity 0x5d2da0) + body(the four elemental magic schools) + arity(bare ret, thiscall), retail-only
 type_university::type_university()
 {
-    skills[0] = eSecSkillSchoolOfFireMagic;
-    skills[1] = eSecSkillSchoolOfAirMagic;
-    skills[2] = eSecSkillSchoolOfWaterMagic;
-    skills[3] = eSecSkillSchoolOfEarthMagic;
+    m_skills[0] = eSecSkillSchoolOfFireMagic;
+    m_skills[1] = eSecSkillSchoolOfAirMagic;
+    m_skills[2] = eSecSkillSchoolOfWaterMagic;
+    m_skills[3] = eSecSkillSchoolOfEarthMagic;
 }
 
 VA(0x005d2da0, 0x1E8)  // anchor-callee(GetBuildingInfo 0x5d2a40 + university window 0x5ef500) + anchor-caller(Main 0x5d3af1) + arity(bare ret), retail-only
-void townManager::DoUniversity()
+void townManager::doUniversity()
 {
     hero* townHero = 0;
-    if (townToView->visitingHeroId >= 0)
-        townHero = gpGame->GetHero(townToView->visitingHeroId);
-    else if (townToView->garrisonHeroId >= 0)
-        townHero = gpGame->GetHero(townToView->garrisonHeroId);
+    if (m_townToView->m_visitingHeroId >= 0)
+        townHero = g_game->getHero(m_townToView->m_visitingHeroId);
+    else if (m_townToView->m_garrisonHeroId >= 0)
+        townHero = g_game->getHero(m_townToView->m_garrisonHeroId);
 
-    if (field_12c && field_12c == field_11c && townToView->garrisonHeroId >= 0)
-        townHero = gpGame->GetHero(townToView->garrisonHeroId);
+    if (m_srcStrip && m_srcStrip == m_garrisonStrip && m_townToView->m_garrisonHeroId >= 0)
+        townHero = g_game->getHero(m_townToView->m_garrisonHeroId);
 
     if (!townHero) {
-        university_info_dialog(townToView);
+        universityInfoDialog(m_townToView);
     } else {
         type_university townUniversity;
         type_university_window universityWin(townHero, &townUniversity, 1);
-        universityWin.DoModal(0);
+        universityWin.doModal(0);
     }
 }
 
@@ -5239,38 +5333,38 @@ void townManager::DoUniversity()
 
 // E:\gamedcs\townmgr.cpp:5705
 VA(0x005d2f90, 0x132)  // order-map(between DoPortalOfSummoning and handle_hall_click) + type_skeleton_window ctor/dtor edges, dc 0x174d1c
-void townManager::DoSkeletonTransformer()
+void townManager::doSkeletonTransformer()
 {
     armyGroup* transformGroup;
-    if (townToView->visitingHeroId >= 0)
-        transformGroup = &gpGame->GetHero(townToView->visitingHeroId)->army;
+    if (m_townToView->m_visitingHeroId >= 0)
+        transformGroup = &g_game->getHero(m_townToView->m_visitingHeroId)->m_army;
     else
-        transformGroup = &townToView->get_army();
+        transformGroup = &m_townToView->getArmy();
 
-    if (field_12c && field_12c == field_11c)
-        transformGroup = &townToView->get_army();
+    if (m_srcStrip && m_srcStrip == m_garrisonStrip)
+        transformGroup = &m_townToView->getArmy();
 
     {
         type_skeleton_window skeletonWin(transformGroup);
-        skeletonWin.DoModal(0);
+        skeletonWin.doModal(0);
     }
 
-    if (field_12c)
-        field_12c->current = -2;
-    if (field_134)
-        field_134->current = -2;
-    field_1c4 = 0;
-    field_120->Draw(CREATURE_NONE);
-    field_11c->Draw(CREATURE_NONE);
-    field_134 = 0;
-    field_12c = 0;
-    field_138 = -2;
-    field_130 = -2;
-    gpWindowManager->BroadcastMessage(MESSAGE_WIDGET,
+    if (m_srcStrip)
+        m_srcStrip->m_current = -2;
+    if (m_destStrip)
+        m_destStrip->m_current = -2;
+    m_divideStatus = 0;
+    m_heroStrip->draw(CREATURE_NONE);
+    m_garrisonStrip->draw(CREATURE_NONE);
+    m_destStrip = 0;
+    m_srcStrip = 0;
+    m_destIndex = -2;
+    m_srcIndex = -2;
+    g_windowManager->broadcastMessage(MESSAGE_WIDGET,
                                       widget::WIDGET_SET_STATUS, 0x9a,
                                       widget::WIDGET_UPDATE
                                           | widget::WIDGET_DIMMED);
-    RedrawTownScreen();
+    redrawTownScreen();
 }
 
 // The town hall button, and the Grail offer that stands in front of it.
@@ -5308,34 +5402,34 @@ void townManager::DoSkeletonTransformer()
 
 // E:\gamedcs\townmgr.cpp:5733
 VA(0x005d30d0, 0x168)  // order-map(between DoSkeletonTransformer and Main) + DoHall/BuildObj call edges + arity(bare ret), dc 0x174da0
-void townManager::handle_hall_click()
+void townManager::handleHallClick()
 {
     hero* townHero;
-    if (townToView->visitingHeroId != -1)
-        townHero = gpGame->GetHero(townToView->visitingHeroId);
+    if (m_townToView->m_visitingHeroId != -1)
+        townHero = g_game->getHero(m_townToView->m_visitingHeroId);
     else
-        townHero = gpGame->GetHero(townToView->garrisonHeroId);
+        townHero = g_game->getHero(m_townToView->m_garrisonHeroId);
 
-    if (townHero && townHero->HasArtifact(ARTIFACT_HOLY_GRAIL)
-        && !(townToView->built & bitNumber[HOLY_GRAIL_ID])
-        && gpCurrentPlayer->IsLocalHuman()) {
-        if (townToView->is_legal_building(HOLY_GRAIL_ID)) {
-            NormalDialog(gpGeneralText->GetText(598), 2, -1, -1, -1, 0, -1, 0,
+    if (townHero && townHero->hasArtifact(ARTIFACT_HOLY_GRAIL)
+        && !(m_townToView->m_built & g_bitNumber[HOLY_GRAIL_ID])
+        && g_currentPlayer->isLocalHuman()) {
+        if (m_townToView->isLegalBuilding(HOLY_GRAIL_ID)) {
+            normalDialog(g_generalText->getText(598), 2, -1, -1, -1, 0, -1, 0,
                          -1, 0, -1, 0);
-            if (gpWindowManager->dialogReturn == DIALOG_RETURN_ACCEPT) {
-                townHero->remove_artifact(ARTIFACT_HOLY_GRAIL);
-                BuildObj(HOLY_GRAIL_ID);
-                if (gpGame->mapHeader.victoryCondition.CheckForGrailBuildingWin())
-                    CheckEndGame(0);
+            if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT) {
+                townHero->removeArtifact(ARTIFACT_HOLY_GRAIL);
+                buildObj(HOLY_GRAIL_ID);
+                if (g_game->m_mapHeader.m_victoryCondition.checkForGrailBuildingWin())
+                    checkEndGame(0);
                 return;
             }
-        } else if (!gpGame->field_90) {
-            NormalDialog(gpGeneralText->GetText(674), 1, -1, -1, -1, 0, -1, 0,
+        } else if (!g_game->m_grailAsked) {
+            normalDialog(g_generalText->getText(674), 1, -1, -1, -1, 0, -1, 0,
                          -1, 0, -1, 0);
-            gpGame->field_90 = 1;
+            g_game->m_grailAsked = 1;
         }
     }
-    DoHall();
+    doHall();
 }
 
 // The town page's command dispatch, and a DENSE ten-entry jump table -
@@ -5371,17 +5465,18 @@ void townManager::handle_hall_click()
 // four separate `mov edx,[eax+0x6c]` reloads in the merge tail are.
 
 // E:\gamedcs\townmgr.cpp:6792
-static void MoveHeroToGarrison(townManager* mgr)
+// Before normalization (function): MoveHeroToGarrison.
+static void moveHeroToGarrison(townManager* mgr)
 {
-    if (!gpCurrentPlayer->IsLocalHuman())
+    if (!g_currentPlayer->isLocalHuman())
         return;
 
-    mgr->townToView->SwapHeroes();
-    delete mgr->field_120;
-    mgr->field_120 = 0;
-    delete mgr->field_11c;
-    mgr->field_11c = 0;
-    mgr->NewStrips();
+    mgr->m_townToView->swapHeroes();
+    delete mgr->m_heroStrip;
+    mgr->m_heroStrip = 0;
+    delete mgr->m_garrisonStrip;
+    mgr->m_garrisonStrip = 0;
+    mgr->newStrips();
 }
 
 // Three more DC-proven helpers Main calls and /Ob2 folds away. None has
@@ -5400,15 +5495,16 @@ static void MoveHeroToGarrison(townManager* mgr)
 // up site shows. UpdateTownLocators is the CALLER's statement (the DC
 // body has none). N is 3 in retail against the DC's 2.
 // E:\gamedcs\townmgr.cpp:2526
-static void DoTownKnob(TTownScreenWindow* win, unsigned char up)
+// Before normalization (function): DoTownKnob.
+static void doTownKnob(TTownScreenWindow* win, unsigned char up)
 {
-    playerData* player = gpGame->GetLocalPlayer();
+    playerData* player = g_game->getLocalPlayer();
     if (up) {
-        if (win->field_4c > 0)
-            win->field_4c--;
+        if (win->m_topTown > 0)
+            win->m_topTown--;
     } else {
-        if (win->field_4c < player->numTowns - 3)
-            win->field_4c++;
+        if (win->m_topTown < player->m_numTowns - 3)
+            win->m_topTown++;
     }
 }
 
@@ -5416,15 +5512,16 @@ static void DoTownKnob(TTownScreenWindow* win, unsigned char up)
 // the growth-bonus popup, keyed by the BONUS INDEX (0..7), which is why
 // both the icon and the text row subtract their own first id.
 // E:\gamedcs\townmgr.cpp:2547
-static void bonus_right_click(TTownScreenWindow* win, long id)
+// Before normalization (function): bonus_right_click.
+static void bonusRightClick(TTownScreenWindow* win, long id)
 {
-    int creature = win->bonus_creatures[id];
+    int creature = win->m_bonusCreatures[id];
     if (creature != -1) {
-        widget* w = win->growth_bonus_icon[id];
-        const char* popupText = w->RightClick;
+        widget* w = win->m_growthBonusIcon[id];
+        const char* popupText = w->m_rightClick;
         if (!popupText)
-            popupText = w->RollOver;
-        NormalDialog(popupText, 4, w->x + w->width, w->y, 0x15, creature,
+            popupText = w->m_rollOver;
+        normalDialog(popupText, 4, w->m_x + w->m_width, w->m_y, 0x15, creature,
                      -1, 0, -1, 0, -1, 0);
     }
 }
@@ -5437,20 +5534,21 @@ static void bonus_right_click(TTownScreenWindow* win, long id)
 // RedrawTownScreen (0x5d5410, exact) is the (0, 1, 1) expansion written
 // longhand; Main's pacing tick is (1, 1, 0).
 // E:\gamedcs\townmgr.cpp:6931
-static void DrawTown(townManager* mgr, int update, int incFrame,
+// Before normalization (function): DrawTown.
+static void drawTown(townManager* mgr, int update, int incFrame,
                      unsigned char drawHotspots)
 {
     if (drawHotspots)
-        memset(static_cast<TTownScreenWindow*>(mgr->TownWindow)->zBuffer, 0,
+        memset(static_cast<TTownScreenWindow*>(mgr->m_townWindow)->m_zBuffer, 0,
                WINDOW_SCREEN_WIDTH * WINDOW_SCREEN_HEIGHT * 2);
-    mgr->field_3c->Draw2();
-    PollSound();
-    for (int i = 0; i < mgr->TownObjectCount; i++) {
-        mgr->TownObjects[i]->Draw(incFrame, drawHotspots);
-        PollSound();
+    mgr->m_panorama->draw2();
+    pollSound();
+    for (int i = 0; i < mgr->m_townObjectCount; i++) {
+        mgr->m_townObjects[i]->draw(incFrame, drawHotspots);
+        pollSound();
     }
     if (update)
-        gpWindowManager->UpdateScreen(0, 0, 800, 374);
+        g_windowManager->updateScreen(0, 0, 800, 374);
 }
 
 // The turn-expiry / network-abort exit shared by both head checks of
@@ -5461,12 +5559,13 @@ static void DrawTown(townManager* mgr, int update, int incFrame,
 // head, where the cross-jumper merged the two expansions into the one
 // return-2 block at 0x5d32c3.
 // E:\gamedcs\townmgr.cpp:5778
-static int ExitTownManager(message& msg)
+// Before normalization (function): ExitTownManager.
+static int exitTownManager(message& msg)
 {
-    gpWindowManager->dialogReturn = TTownScreenWindow::EXIT_BUTTON_ID;
-    msg.id = MESSAGE_EXECUTIVE;
-    msg.codeX = 1;
-    msg.codeY = 0xa;
+    g_windowManager->m_dialogReturn = TTownScreenWindow::EXIT_BUTTON_ID;
+    msg.m_id = MESSAGE_EXECUTIVE;
+    msg.m_codeX = 1;
+    msg.m_codeY = 0xa;
     return 2;
 }
 
@@ -5507,63 +5606,63 @@ static int ExitTownManager(message& msg)
 // locator and keypad arms share.
 // E:\gamedcs\townmgr.cpp:5854
 VA(0x005d3240, 0x19CF)  // anchor-caller(the three pure managers Open/Close/Main) + order-map(handle_hall_click 0x5d30d0 .. DoCommand 0x5d4c10) + anchor-callee(serviceSounds/IsExpired/GetLocalPlayer) + arity(ret 4, message*), dc 0x175160
-int townManager::Main(message& msg)
+int townManager::main(message& msg)
 {
     int exitFlag = 0;
     char text[400];
-    playerData* player = gpGame->GetLocalPlayer();
+    playerData* player = g_game->getLocalPlayer();
     unsigned char netMsgSeen;
 
-    gpSoundManager->serviceSounds();
-    if (gTurnDuration69d630.IsExpired())
-        return ExitTownManager(msg);
-    if (gNetworkActive69954c) {
+    g_soundManager->serviceSounds();
+    if (g_turnDuration69d630.isExpired())
+        return exitTownManager(msg);
+    if (g_networkActive69954c) {
         netMsgSeen = 0;
-        CNetMsgHandler* handler = pDPlay->GetNetMsgHandler();
+        CNetMsgHandler* handler = g_dPlay->getNetMsgHandler();
         if (handler) {
-            handler->CheckHandleNet(1, &netMsgSeen);
+            handler->checkHandleNet(1, &netMsgSeen);
             if (netMsgSeen) {
-                if (handler->GetAbortPopupMsg())
-                    return ExitTownManager(msg);
+                if (handler->getAbortPopupMsg())
+                    return exitTownManager(msg);
             }
         }
     }
 
-    int rclick = (msg.qualifier & 0x200) != 0;
-    int build = gUnnamed67832c;
+    int rclick = (msg.m_qualifier & 0x200) != 0;
+    int build = g_unnamed67832c;
     if (build != -1) {
-        gUnnamed67832c = -1;
+        g_unnamed67832c = -1;
         if (build == TTownScreenWindow::TOWN_CHEAT_BUILD_ALL) {
             for (build = 0; build < 0x2c; build++) {
-                if ((gTownEligibleBuildMask[townToView->type]
+                if ((g_townEligibleBuildMask[m_townToView->m_type]
                      & (1 << build))
                     || build == TTownScreenWindow::TOWN_CHEAT_BUILD_EXTRA)
-                    BuildObj(build);
+                    buildObj(build);
             }
-        } else if ((gTownEligibleBuildMask[townToView->type]
+        } else if ((g_townEligibleBuildMask[m_townToView->m_type]
                     & (1 << build))
                    || build == TTownScreenWindow::TOWN_CHEAT_BUILD_EXTRA) {
-            BuildObj(build);
+            buildObj(build);
         }
     }
 
     {
-        int delta = GameTime::Get() - gCombatStamp698998;
+        int delta = GameTime::get() - g_combatStamp698998;
         if (delta >= 0) {
-            gCombatStamp698998 += _cpp_min(delta, 150);
-            DrawTown(this, 1, 1, 0);
+            g_combatStamp698998 += cppMin(delta, 150);
+            drawTown(this, 1, 1, 0);
         }
     }
 
-    switch (msg.id) {
+    switch (msg.m_id) {
     case MESSAGE_WIDGET:
-        switch (msg.codeX) {
+        switch (msg.m_codeX) {
         case widget::WIDGET_SELECT:
         case widget::WIDGET_RIGHT_SELECT: {
-            int code = msg.codeY;
+            int code = msg.m_codeY;
             if (code >= 0 && code <= DWELLING_6_UPG_ID)
-                code = static_cast<TTownScreenWindow*>(TownWindow)
-                           ->zBuffer[msg.mouseY * 800 + msg.mouseX] - 1;
+                code = static_cast<TTownScreenWindow*>(m_townWindow)
+                           ->m_zBuffer[msg.m_mouseY * 800 + msg.m_mouseX] - 1;
             switch (code) {
             case DWELLING_0_ID:
             case DWELLING_1_ID:
@@ -5580,55 +5679,55 @@ int townManager::Main(message& msg)
             case DWELLING_5_UPG_ID:
             case DWELLING_6_UPG_ID:
                 if (rclick) {
-                    QuickViewRecruit(townToView, code - DWELLING_0_ID);
+                    quickViewRecruit(m_townToView, code - DWELLING_0_ID);
                 } else {
-                    gpRecruitUnit = new recruitUnit(
-                        townToView, code - DWELLING_0_ID, 1);
-                    if (!gpRecruitUnit)
-                        MemError();
-                    gpExecutive->DoDialog(gpRecruitUnit);
-                    delete gpRecruitUnit;
-                    RedrawTownScreen();
+                    g_recruitUnit = new recruitUnit(
+                        m_townToView, code - DWELLING_0_ID, 1);
+                    if (!g_recruitUnit)
+                        memError();
+                    g_executive->doDialog(g_recruitUnit);
+                    delete g_recruitUnit;
+                    redrawTownScreen();
                 }
                 break;
             case HORDE_ID:
             case HORDE_UPG_ID:
                 if (rclick) {
-                    QuickViewRecruit(
-                        townToView,
-                        gHordeDwellingSlot[townToView->type]
+                    quickViewRecruit(
+                        m_townToView,
+                        g_hordeDwellingSlot[m_townToView->m_type]
                                           [code - HORDE_ID]);
                 } else {
-                    gpRecruitUnit = new recruitUnit(
-                        townToView,
-                        gHordeDwellingSlot[townToView->type]
+                    g_recruitUnit = new recruitUnit(
+                        m_townToView,
+                        g_hordeDwellingSlot[m_townToView->m_type]
                                           [code - HORDE_ID],
                         1);
-                    if (!gpRecruitUnit)
-                        MemError();
-                    gpExecutive->DoDialog(gpRecruitUnit);
-                    delete gpRecruitUnit;
-                    RedrawTownScreen();
+                    if (!g_recruitUnit)
+                        memError();
+                    g_executive->doDialog(g_recruitUnit);
+                    delete g_recruitUnit;
+                    redrawTownScreen();
                 }
                 break;
             case HORDE_2_ID:
             case HORDE_2_UPG_ID:
                 if (rclick) {
-                    QuickViewRecruit(
-                        townToView,
-                        gHorde2DwellingSlot[townToView->type]
+                    quickViewRecruit(
+                        m_townToView,
+                        g_horde2DwellingSlot[m_townToView->m_type]
                                            [code - HORDE_2_ID]);
                 } else {
-                    gpRecruitUnit = new recruitUnit(
-                        townToView,
-                        gHorde2DwellingSlot[townToView->type]
+                    g_recruitUnit = new recruitUnit(
+                        m_townToView,
+                        g_horde2DwellingSlot[m_townToView->m_type]
                                            [code - HORDE_2_ID],
                         1);
-                    if (!gpRecruitUnit)
-                        MemError();
-                    gpExecutive->DoDialog(gpRecruitUnit);
-                    delete gpRecruitUnit;
-                    RedrawTownScreen();
+                    if (!g_recruitUnit)
+                        memError();
+                    g_executive->doDialog(g_recruitUnit);
+                    delete g_recruitUnit;
+                    redrawTownScreen();
                 }
                 break;
             case HALL_VILLAGE_ID:
@@ -5638,7 +5737,7 @@ int townManager::Main(message& msg)
                 if (rclick)
                     goto building_popup;
                 else {
-                    handle_hall_click();
+                    handleHallClick();
                 }
                 break;
             case MAGE_GUILD_ID:
@@ -5649,9 +5748,9 @@ int townManager::Main(message& msg)
                 if (rclick)
                     goto building_popup;
                 else {
-                    handle_mage_guild_click();
-                    townToView->GiveSpells(0);
-                    RedrawTownScreen();
+                    handleMageGuildClick();
+                    m_townToView->giveSpells(0);
+                    redrawTownScreen();
                 }
                 break;
             case CASTLE_FORT_ID:
@@ -5662,71 +5761,71 @@ int townManager::Main(message& msg)
                 else {
                     TCastleWindow* castleWin = new TCastleWindow;
                     if (!castleWin)
-                        MemError();
-                    SetupWell(castleWin);
-                    castleWin->CastleBank =
+                        memError();
+                    setupWell(castleWin);
+                    castleWin->m_castleBank =
                         new TResourceDisplay(castleWin, 1);
-                    castleWin->CastleBank->Update(1, 0);
-                    castleWin->DrawWindow(1, WINDOW_ALL_WIDGETS_LOW,
+                    castleWin->m_castleBank->update(1, 0);
+                    castleWin->drawWindow(1, WINDOW_ALL_WIDGETS_LOW,
                                           WINDOW_ALL_WIDGETS_HIGH);
-                    gCombatStamp698998 = GameTime::Get() + 100;
-                    if (netMsgHandler)
-                        netMsgHandler->setResourceDisplay(
-                            castleWin->CastleBank);
-                    castleWin->DoModal(0);
-                    if (netMsgHandler)
-                        netMsgHandler->setResourceDisplay(pResourceDisplay);
-                    if (castleWin->CastleBank)
-                        delete castleWin->CastleBank;
+                    g_combatStamp698998 = GameTime::get() + 100;
+                    if (m_netMsgHandler)
+                        m_netMsgHandler->setResourceDisplay(
+                            castleWin->m_castleBank);
+                    castleWin->doModal(0);
+                    if (m_netMsgHandler)
+                        m_netMsgHandler->setResourceDisplay(m_resourceDisplay);
+                    if (castleWin->m_castleBank)
+                        delete castleWin->m_castleBank;
                     delete castleWin;
-                    RedrawTownScreen();
+                    redrawTownScreen();
                 }
                 break;
             case TAVERN_ID:
                 if (rclick)
                     goto building_popup;
                 else {
-                    DoTownTavern();
-                    RedrawTownScreen();
+                    doTownTavern();
+                    redrawTownScreen();
                 }
                 break;
             case DOCK_ID:
                 if (rclick)
                     goto building_popup;
                 else {
-                    gpWindowManager->BroadcastMessage(
+                    g_windowManager->broadcastMessage(
                         MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
                         TTownScreenWindow::EXIT_BUTTON_ID, 0x4008);
-                    if (gpGame->GetBoatsBuilt() < 0x40) {
-                        gpShipWindow = new TShipWindow(townToView->type);
-                        if (!gpShipWindow)
-                            MemError();
-                        gpShipWindow->DoModal(0);
-                        delete gpShipWindow;
-                        pResourceDisplay->Update(1, 1);
-                        if (gpWindowManager->dialogReturn
+                    if (g_game->getBoatsBuilt() < 0x40) {
+                        g_shipWindow = new TShipWindow(m_townToView->m_type);
+                        if (!g_shipWindow)
+                            memError();
+                        g_shipWindow->doModal(0);
+                        delete g_shipWindow;
+                        m_resourceDisplay->update(1, 1);
+                        if (g_windowManager->m_dialogReturn
                             == TShipWindow::BUY_BUTTON_ID) {
-                            if (gpGame->CreateBoat(
-                                    townToView->dockSite,
-                                    townToView->dockSiteY,
-                                    townToView->mapZ,
-                                    gpGame->GetLocalPlayerGamePos(), 0, 1)
+                            if (g_game->createBoat(
+                                    m_townToView->m_dockSite,
+                                    m_townToView->m_dockSiteY,
+                                    m_townToView->m_mapZ,
+                                    g_game->getLocalPlayerGamePos(), 0, 1)
                                 != -1) {
-                                BuildObj(DOCK_WITH_BOAT_ID);
-                                gpGame->players[
-                                    gpGame->GetLocalPlayerGamePos()]
-                                    .resources[6] -= 1000;
-                                gpGame->players[
-                                    gpGame->GetLocalPlayerGamePos()]
-                                    .resources[0] -= 10;
-                                pResourceDisplay->Update(1, 1);
+                                buildObj(DOCK_WITH_BOAT_ID);
+                                g_game->m_players[
+                                    g_game->getLocalPlayerGamePos()]
+                                    .m_resources[6] -= 1000;
+                                g_game->m_players[
+                                    g_game->getLocalPlayerGamePos()]
+                                    .m_resources[0] -= 10;
+                                m_resourceDisplay->update(1, 1);
                             }
                         }
                     } else {
-                        NormalDialog(gpGeneralText->GetText(52), 1, 208, 40,
+                        normalDialog(g_generalText->getText(52), 1, 208, 40,
                                      -1, 0, -1, 0, -1, 0, -1, 0);
                     }
-                    gpWindowManager->BroadcastMessage(
+                    g_windowManager->broadcastMessage(
                         MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
                         TTownScreenWindow::EXIT_BUTTON_ID, 0x4008);
                 }
@@ -5736,11 +5835,11 @@ int townManager::Main(message& msg)
             case MARKETPLACE_ID:
                 if (rclick)
                     goto building_popup;
-                else if (gpCurrentPlayer->IsLocalHuman()
-                           && townToView->owner == gNetLocalGamePos) {
-                    DoMarketplace();
-                    pResourceDisplay->Update(1, 1);
-                    ResetStrips();
+                else if (g_currentPlayer->isLocalHuman()
+                           && m_townToView->m_owner == g_netLocalGamePos) {
+                    doMarketplace();
+                    m_resourceDisplay->update(1, 1);
+                    resetStrips();
                 }
                 break;
             case MARKETPLACE_SILO_ID:
@@ -5748,9 +5847,9 @@ int townManager::Main(message& msg)
                     goto building_popup;
                 else {
                     sprintf(text,
-                            GetBuildingInfo(townToView, MARKETPLACE_SILO_ID,
+                            getBuildingInfo(m_townToView, MARKETPLACE_SILO_ID,
                                             1, 1));
-                    NormalDialog(text, 1, -1, -1, townToView->type + 0x16,
+                    normalDialog(text, 1, -1, -1, m_townToView->m_type + 0x16,
                                  MARKETPLACE_SILO_ID, -1, 0, -1, 0, -1, 0);
                 }
                 break;
@@ -5758,33 +5857,33 @@ int townManager::Main(message& msg)
                 if (rclick)
                     goto building_popup;
                 else {
-                    DoBlacksmith(townToView->visitingHeroId,
-                                 townToView->type);
-                    pResourceDisplay->Update(1, 1);
+                    doBlacksmith(m_townToView->m_visitingHeroId,
+                                 m_townToView->m_type);
+                    m_resourceDisplay->update(1, 1);
                 }
                 break;
             case EXTRA_0_ID:
                 if (rclick) {
                     std::string info(
-                        GetBuildingInfo(townToView, EXTRA_0_ID, 1, 1));
-                    NormalDialog(info.c_str(), 4, -1, -1,
-                                 townToView->type + 0x16, EXTRA_0_ID,
+                        getBuildingInfo(m_townToView, EXTRA_0_ID, 1, 1));
+                    normalDialog(info.c_str(), 4, -1, -1,
+                                 m_townToView->m_type + 0x16, EXTRA_0_ID,
                                  -1, 0, -1, 0, -1, 0);
-                } else switch (townToView->type) {
+                } else switch (m_townToView->m_type) {
                 case TOWN_STRONGHOLD:
-                    DoFreelancersGuild(townToView);
-                    pResourceDisplay->Update(1, 1);
-                    ResetStrips();
+                    doFreelancersGuild(m_townToView);
+                    m_resourceDisplay->update(1, 1);
+                    resetStrips();
                     break;
                 case TOWN_CONFLUX:
-                    DoUniversity();
-                    pResourceDisplay->Update(1, 1);
+                    doUniversity();
+                    m_resourceDisplay->update(1, 1);
                     break;
                 default: {
                     std::string info(
-                        GetBuildingInfo(townToView, EXTRA_0_ID, 1, 1));
-                    NormalDialog(info.c_str(), 1, -1, -1,
-                                 townToView->type + 0x16, EXTRA_0_ID,
+                        getBuildingInfo(m_townToView, EXTRA_0_ID, 1, 1));
+                    normalDialog(info.c_str(), 1, -1, -1,
+                                 m_townToView->m_type + 0x16, EXTRA_0_ID,
                                  -1, 0, -1, 0, -1, 0);
                     break;
                 }
@@ -5794,43 +5893,43 @@ int townManager::Main(message& msg)
                 if (rclick)
                     goto building_popup;
                 else {
-                    switch (townToView->type) {
+                    switch (m_townToView->m_type) {
                     case TOWN_CASTLE:
-                        DoTownTavern();
-                        RedrawTownScreen();
+                        doTownTavern();
+                        redrawTownScreen();
                         break;
                     case TOWN_INFERNO:
-                        if (townToView->visitingHeroId == -1)
-                            NormalDialog(gpGeneralText->GetText(127), 1,
+                        if (m_townToView->m_visitingHeroId == -1)
+                            normalDialog(g_generalText->getText(127), 1,
                                          -1, -1, -1, 0, -1, 0, -1, 0,
                                          -1, 0);
                         else
-                            DoTownGate();
+                            doTownGate();
                         break;
                     case TOWN_STRONGHOLD:
-                        DoBlacksmith(townToView->visitingHeroId, 0);
-                        pResourceDisplay->Update(1, 1);
+                        doBlacksmith(m_townToView->m_visitingHeroId, 0);
+                        m_resourceDisplay->update(1, 1);
                         break;
                     case TOWN_NECROPOLIS:
-                        DoSkeletonTransformer();
+                        doSkeletonTransformer();
                         break;
                     case TOWN_DUNGEON:
-                        DoPortalOfSummoning();
-                        RedrawTownScreen();
+                        doPortalOfSummoning();
+                        redrawTownScreen();
                         break;
                     default:
                         strcpy(text,
-                               GetBuildingInfo(townToView, EXTRA_1_ID,
+                               getBuildingInfo(m_townToView, EXTRA_1_ID,
                                                1, 1));
-                        NormalDialog(text, 1, -1, -1,
-                                     townToView->type + 0x16, EXTRA_1_ID,
+                        normalDialog(text, 1, -1, -1,
+                                     m_townToView->m_type + 0x16, EXTRA_1_ID,
                                      -1, 0, -1, 0, -1, 0);
                         break;
                     }
                 }
                 break;
             case EXTRA_2_ID:
-                switch (townToView->type) {
+                switch (m_townToView->m_type) {
                 case TOWN_TOWER:
                 case TOWN_INFERNO:
                 case TOWN_DUNGEON:
@@ -5839,10 +5938,10 @@ int townManager::Main(message& msg)
                         goto building_popup;
                     else {
                         strcpy(text,
-                               GetBuildingInfo(townToView, EXTRA_2_ID,
+                               getBuildingInfo(m_townToView, EXTRA_2_ID,
                                                1, 1));
-                        NormalDialog(text, 1, -1, -1,
-                                     townToView->type + 0x16, EXTRA_2_ID,
+                        normalDialog(text, 1, -1, -1,
+                                     m_townToView->m_type + 0x16, EXTRA_2_ID,
                                      -1, 0, -1, 0, -1, 0);
                     }
                     break;
@@ -5851,29 +5950,29 @@ int townManager::Main(message& msg)
             case SPECIAL_BUILDING_ID:
                 if (rclick)
                     goto building_popup;
-                else if (townToView->type == TOWN_TOWER
-                         || townToView->type == TOWN_DUNGEON
-                         || townToView->type == TOWN_CONFLUX) {
-                    DoArtifactMerchants();
-                    pResourceDisplay->Update(1, 1);
-                    ResetStrips();
+                else if (m_townToView->m_type == TOWN_TOWER
+                         || m_townToView->m_type == TOWN_DUNGEON
+                         || m_townToView->m_type == TOWN_CONFLUX) {
+                    doArtifactMerchants();
+                    m_resourceDisplay->update(1, 1);
+                    resetStrips();
                 } else {
                     strcpy(text,
-                           GetBuildingInfo(townToView, SPECIAL_BUILDING_ID,
+                           getBuildingInfo(m_townToView, SPECIAL_BUILDING_ID,
                                            1, 1));
-                    NormalDialog(text, 1, -1, -1, townToView->type + 0x16,
+                    normalDialog(text, 1, -1, -1, m_townToView->m_type + 0x16,
                                  SPECIAL_BUILDING_ID, -1, 0, -1, 0, -1, 0);
                 }
                 break;
             case HOLY_GRAIL_ID:
                 if (rclick) {
 building_popup:
-                    strcpy(text, GetBuildingInfo(townToView, code, 1, 1));
-                    NormalDialog(text, 4, -1, -1, townToView->type + 0x16,
+                    strcpy(text, getBuildingInfo(m_townToView, code, 1, 1));
+                    normalDialog(text, 4, -1, -1, m_townToView->m_type + 0x16,
                                  code, -1, 0, -1, 0, -1, 0);
                 } else {
-                    strcpy(text, GetBuildingInfo(townToView, code, 1, 1));
-                    NormalDialog(text, 1, -1, -1, townToView->type + 0x16,
+                    strcpy(text, getBuildingInfo(m_townToView, code, 1, 1));
+                    normalDialog(text, 1, -1, -1, m_townToView->m_type + 0x16,
                                  code, -1, 0, -1, 0, -1, 0);
                 }
                 break;
@@ -5881,33 +5980,33 @@ building_popup:
             case TTownScreenWindow::TOWN_1_ID:
             case TTownScreenWindow::TOWN_2_ID:
                 if (rclick) {
-                    int id = gpCurrentPlayer->townIds[
-                        static_cast<TTownScreenWindow*>(TownWindow)
-                            ->field_4c
-                        + msg.codeY - TTownScreenWindow::TOWN_0_ID];
-                    town* t = gpGame->GetTown(id);
+                    int id = g_currentPlayer->m_townIds[
+                        static_cast<TTownScreenWindow*>(m_townWindow)
+                            ->m_topTown
+                        + msg.m_codeY - TTownScreenWindow::TOWN_0_ID];
+                    town* t = g_game->getTown(id);
                     TQuickTownWindow quickTown(
                         t, TQuickTownWindow::ViewAll);
-                    quickTown.x = 0x208;
-                    quickTown.y = 0x172;
-                    quickTown.QuickWindowWait();
+                    quickTown.m_x = 0x208;
+                    quickTown.m_y = 0x172;
+                    quickTown.quickWindowWait();
                 } else {
                     int index =
-                        static_cast<TTownScreenWindow*>(TownWindow)
-                            ->field_4c
-                        + msg.codeY - TTownScreenWindow::TOWN_0_ID;
-                    if (gUnnamed6aaa50 != index) {
-                        gUnnamed6aaa50 = index;
-                        int id = player->townIds[index];
-                        townToView = gpGame->GetTown(id);
-                        StartMouseThread();
-                        SetupExtraStuff();
-                        SetupTown(1);
+                        static_cast<TTownScreenWindow*>(m_townWindow)
+                            ->m_topTown
+                        + msg.m_codeY - TTownScreenWindow::TOWN_0_ID;
+                    if (g_unnamed6aaa50 != index) {
+                        g_unnamed6aaa50 = index;
+                        int id = player->m_townIds[index];
+                        m_townToView = g_game->getTown(id);
+                        startMouseThread();
+                        setupExtraStuff();
+                        setupTown(1);
                         message textMessage;
-                        textMessage.id = MESSAGE_WIDGET;
-                        textMessage.codeY = -1;
-                        SetCommandAndText(&textMessage);
-                        StopMouseThread();
+                        textMessage.m_id = MESSAGE_WIDGET;
+                        textMessage.m_codeY = -1;
+                        setCommandAndText(&textMessage);
+                        stopMouseThread();
                     }
                 }
                 break;
@@ -5919,19 +6018,19 @@ building_popup:
             case TTownScreenWindow::BONUS_5_ID:
             case TTownScreenWindow::BONUS_6_ID:
                 if (rclick)
-                    bonus_right_click(
-                        static_cast<TTownScreenWindow*>(TownWindow),
+                    bonusRightClick(
+                        static_cast<TTownScreenWindow*>(m_townWindow),
                         code - TTownScreenWindow::BONUS_0_ID);
                 break;
             case TTownScreenWindow::TOWN_UP_ARROW_ID:
             case TTownScreenWindow::TOWN_DOWN_ARROW_ID:
                 strcpy(text,
-                       gAdventureWindowHelp[code - 0x89].rclick);
+                       g_adventureWindowHelp[code - 0x89].m_rclick);
                 if (rclick)
-                    NormalDialog(text, 4, -1, -1, -1, 0, -1, 0, -1, 0,
+                    normalDialog(text, 4, -1, -1, -1, 0, -1, 0, -1, 0,
                                  -1, 0);
                 else
-                    NormalDialog(text, 1, -1, -1, -1, 0, -1, 0, -1, 0,
+                    normalDialog(text, 1, -1, -1, -1, 0, -1, 0, -1, 0,
                                  -1, 0);
                 break;
             case TResourceDisplay::RESOURCE_TEXT_0_ID:
@@ -5943,15 +6042,15 @@ building_popup:
             case TResourceDisplay::RESOURCE_TEXT_6_ID:
             case TResourceDisplay::RESOURCE_TEXT_7_ID:
                 strcpy(text,
-                       gAdventureWindowHelp[
-                           gUnnamed642e70[
+                       g_adventureWindowHelp[
+                           g_unnamed642e70[
                                code
-                               - TResourceDisplay::RESOURCE_TEXT_0_ID]].rclick);
+                               - TResourceDisplay::RESOURCE_TEXT_0_ID]].m_rclick);
                 if (rclick)
-                    NormalDialog(text, 4, -1, -1, -1, 0, -1, 0, -1, 0,
+                    normalDialog(text, 4, -1, -1, -1, 0, -1, 0, -1, 0,
                                  -1, 0);
                 else
-                    NormalDialog(text, 1, -1, -1, -1, 0, -1, 0, -1, 0,
+                    normalDialog(text, 1, -1, -1, -1, 0, -1, 0, -1, 0,
                                  -1, 0);
                 break;
             case TResourceDisplay::RESOURCE_BORDER_0_ID:
@@ -5962,59 +6061,59 @@ building_popup:
             case TResourceDisplay::RESOURCE_BORDER_5_ID:
             case TResourceDisplay::RESOURCE_BORDER_6_ID:
                 strcpy(text,
-                       gAdventureWindowHelp[
-                           gUnnamed642e70[
+                       g_adventureWindowHelp[
+                           g_unnamed642e70[
                                code
                                - TResourceDisplay::
-                                     RESOURCE_BORDER_0_ID]].rclick);
+                                     RESOURCE_BORDER_0_ID]].m_rclick);
                 if (rclick)
-                    NormalDialog(text, 4, -1, -1, -1, 0, -1, 0, -1, 0,
+                    normalDialog(text, 4, -1, -1, -1, 0, -1, 0, -1, 0,
                                  -1, 0);
                 else
-                    NormalDialog(text, 1, -1, -1, -1, 0, -1, 0, -1, 0,
+                    normalDialog(text, 1, -1, -1, -1, 0, -1, 0, -1, 0,
                                  -1, 0);
                 break;
             case TTownScreenWindow::HALL_ICON_ID:
                 if (rclick) {
                     int building;
-                    if (townToView->HasBuilding(HALL_VILLAGE_ID, 0))
+                    if (m_townToView->hasBuilding(HALL_VILLAGE_ID, 0))
                         building = HALL_VILLAGE_ID;
-                    else if (townToView->HasBuilding(HALL_TOWN_ID, 0))
+                    else if (m_townToView->hasBuilding(HALL_TOWN_ID, 0))
                         building = HALL_TOWN_ID;
-                    else if (townToView->HasBuilding(HALL_CITY_ID, 0))
+                    else if (m_townToView->hasBuilding(HALL_CITY_ID, 0))
                         building = HALL_CITY_ID;
                     else
                         building = HALL_CAPITOL_ID;
                     strcpy(text,
-                           GetBuildingInfo(townToView, building, 1, 1));
-                    NormalDialog(text, 4, -1, -1, townToView->type + 0x16,
+                           getBuildingInfo(m_townToView, building, 1, 1));
+                    normalDialog(text, 4, -1, -1, m_townToView->m_type + 0x16,
                                  building, -1, 0, -1, 0, -1, 0);
                 }
                 break;
             case TTownScreenWindow::CASTLE_ICON_ID:
                 if (rclick) {
-                    if (townToView->HasBuilding(CASTLE_FORT_ID, 0)) {
-                        strcpy(text, GetBuildingInfo(townToView,
+                    if (m_townToView->hasBuilding(CASTLE_FORT_ID, 0)) {
+                        strcpy(text, getBuildingInfo(m_townToView,
                                                      CASTLE_FORT_ID, 1, 1));
-                        NormalDialog(text, 4, -1, -1,
-                                     townToView->type + 0x16,
+                        normalDialog(text, 4, -1, -1,
+                                     m_townToView->m_type + 0x16,
                                      CASTLE_FORT_ID, -1, 0, -1, 0, -1, 0);
-                    } else if (townToView->HasBuilding(CASTLE_CITADEL_ID,
+                    } else if (m_townToView->hasBuilding(CASTLE_CITADEL_ID,
                                                        0)) {
                         strcpy(text,
-                               GetBuildingInfo(townToView,
+                               getBuildingInfo(m_townToView,
                                                CASTLE_CITADEL_ID, 1, 1));
-                        NormalDialog(text, 4, -1, -1,
-                                     townToView->type + 0x16,
+                        normalDialog(text, 4, -1, -1,
+                                     m_townToView->m_type + 0x16,
                                      CASTLE_CITADEL_ID, -1, 0, -1, 0,
                                      -1, 0);
-                    } else if (townToView->HasBuilding(CASTLE_CASTLE_ID,
+                    } else if (m_townToView->hasBuilding(CASTLE_CASTLE_ID,
                                                        0)) {
                         strcpy(text,
-                               GetBuildingInfo(townToView,
+                               getBuildingInfo(m_townToView,
                                                CASTLE_CASTLE_ID, 1, 1));
-                        NormalDialog(text, 4, -1, -1,
-                                     townToView->type + 0x16,
+                        normalDialog(text, 4, -1, -1,
+                                     m_townToView->m_type + 0x16,
                                      CASTLE_CASTLE_ID, -1, 0, -1, 0,
                                      -1, 0);
                     }
@@ -6028,8 +6127,8 @@ building_popup:
             case TTownScreenWindow::BONUS_5_TEXT_ID:
             case TTownScreenWindow::BONUS_6_TEXT_ID:
                 if (rclick)
-                    bonus_right_click(
-                        static_cast<TTownScreenWindow*>(TownWindow),
+                    bonusRightClick(
+                        static_cast<TTownScreenWindow*>(m_townWindow),
                         code - TTownScreenWindow::BONUS_0_TEXT_ID);
                 break;
             case TTownScreenWindow::TOWN_GARRISON_0_SELECTOR_ID:
@@ -6050,92 +6149,92 @@ building_popup:
             case TTownScreenWindow::HERO_ARMY_5_SELECTOR_ID:
             case TTownScreenWindow::HERO_ARMY_6_SELECTOR_ID:
                 if (rclick) {
-                    if (msg.codeY
+                    if (msg.m_codeY
                             == TTownScreenWindow::
                                    VISITING_PORTRAIT_SELECTOR_ID
-                        && townToView->visitingHeroId != -1) {
+                        && m_townToView->m_visitingHeroId != -1) {
                         hero* h =
-                            gpGame->GetHero(townToView->visitingHeroId);
+                            g_game->getHero(m_townToView->m_visitingHeroId);
                         TQuickHeroWindow quickHero(
                             h, TQuickHeroWindow::ViewAll);
-                        quickHero.x = 0x140;
-                        quickHero.y = 0x172;
-                        quickHero.QuickWindowWait();
-                    } else if (msg.codeY
+                        quickHero.m_x = 0x140;
+                        quickHero.m_y = 0x172;
+                        quickHero.quickWindowWait();
+                    } else if (msg.m_codeY
                                    == TTownScreenWindow::
                                           GARRISON_PORTRAIT_SELECTOR_ID
-                               && townToView->garrisonHeroId != -1) {
+                               && m_townToView->m_garrisonHeroId != -1) {
                         hero* h =
-                            gpGame->GetHero(townToView->garrisonHeroId);
+                            g_game->getHero(m_townToView->m_garrisonHeroId);
                         TQuickHeroWindow quickHero(
                             h, TQuickHeroWindow::ViewAll);
-                        quickHero.x = 0x140;
-                        quickHero.y = 0x172;
-                        quickHero.QuickWindowWait();
+                        quickHero.m_x = 0x140;
+                        quickHero.m_y = 0x172;
+                        quickHero.quickWindowWait();
                     } else {
                         int found = 0;
-                        if (msg.codeY >= TTownScreenWindow::
+                        if (msg.m_codeY >= TTownScreenWindow::
                                               TOWN_GARRISON_0_SELECTOR_ID
-                            && msg.codeY <= TTownScreenWindow::
+                            && msg.m_codeY <= TTownScreenWindow::
                                                  TOWN_GARRISON_6_SELECTOR_ID) {
-                            selectedStrip = field_11c;
-                            field_128 =
-                                msg.codeY
+                            m_currStrip = m_garrisonStrip;
+                            m_currIndex =
+                                msg.m_codeY
                                 - TTownScreenWindow::
                                       TOWN_GARRISON_0_SELECTOR_ID;
                             found = 1;
                         }
-                        if (msg.codeY >= TTownScreenWindow::
+                        if (msg.m_codeY >= TTownScreenWindow::
                                               HERO_ARMY_0_SELECTOR_ID
-                            && msg.codeY <= TTownScreenWindow::
+                            && msg.m_codeY <= TTownScreenWindow::
                                                  HERO_ARMY_6_SELECTOR_ID) {
-                            selectedStrip = field_120;
-                            field_128 =
-                                msg.codeY
+                            m_currStrip = m_heroStrip;
+                            m_currIndex =
+                                msg.m_codeY
                                 - TTownScreenWindow::HERO_ARMY_0_SELECTOR_ID;
                         } else if (!found) {
                             break;
                         }
-                        if (selectedStrip->group
-                            && selectedStrip->group->armies[field_128]
+                        if (m_currStrip->m_group
+                            && m_currStrip->m_group->m_armies[m_currIndex]
                                    != -1) {
-                            gpGame->ViewArmy(*selectedStrip->group,
-                                             field_128,
-                                             selectedStrip->thisHero,
-                                             townToView, 0x77, 0x14, 0, 1);
+                            g_game->viewArmy(*m_currStrip->m_group,
+                                             m_currIndex,
+                                             m_currStrip->m_thisHero,
+                                             m_townToView, 0x77, 0x14, 0, 1);
                         }
                     }
                 } else {
-                    DoCommand(field_19c, 0, 0);
-                    SetCommandAndText(&msg);
+                    doCommand(m_command, 0, 0);
+                    setCommandAndText(&msg);
                 }
                 break;
             }
             break;
         }
         case widget::WIDGET_DESELECT:
-            switch (msg.codeY) {
+            switch (msg.m_codeY) {
             case TTownScreenWindow::TOWN_DOWN_ARROW_ID: {
                 TTownScreenWindow* win =
-                    static_cast<TTownScreenWindow*>(TownWindow);
-                DoTownKnob(win, 0);
-                win->UpdateTownLocators();
-                RedrawTownScreen();
+                    static_cast<TTownScreenWindow*>(m_townWindow);
+                doTownKnob(win, 0);
+                win->updateTownLocators();
+                redrawTownScreen();
                 break;
             }
             case TTownScreenWindow::TOWN_UP_ARROW_ID: {
                 TTownScreenWindow* win =
-                    static_cast<TTownScreenWindow*>(TownWindow);
-                DoTownKnob(win, 1);
-                win->UpdateTownLocators();
-                RedrawTownScreen();
+                    static_cast<TTownScreenWindow*>(m_townWindow);
+                doTownKnob(win, 1);
+                win->updateTownLocators();
+                redrawTownScreen();
                 break;
             }
             case TTownScreenWindow::DIVIDE_ID: {
-                enum TCreatureType id = creature_type_from_int(
-                    field_12c->group->armies[field_130]);
-                field_11c->Draw(id);
-                field_120->Draw(id);
+                enum TCreatureType id = creatureTypeFromInt(
+                    m_srcStrip->m_group->m_armies[m_srcIndex]);
+                m_garrisonStrip->draw(id);
+                m_heroStrip->draw(id);
                 break;
             }
             case TTownScreenWindow::EXIT_BUTTON_ID:
@@ -6150,70 +6249,70 @@ building_popup:
         }
         break;
     case MESSAGE_MOUSE_MOVE: {
-        gpWindowManager->ConvertToHover(msg);
-        int hover = msg.codeY;
+        g_windowManager->convertToHover(msg);
+        int hover = msg.m_codeY;
         if (hover >= 0 && hover <= DWELLING_6_UPG_ID)
-            hover = static_cast<TTownScreenWindow*>(TownWindow)
-                        ->zBuffer[msg.mouseY * 800 + msg.mouseX] - 1;
-        if (hover != lastHover || msg.qualifier != lastQualifier) {
-            lastHover = hover;
-            lastQualifier = msg.qualifier;
-            SetCommandAndText(&msg);
+            hover = static_cast<TTownScreenWindow*>(m_townWindow)
+                        ->m_zBuffer[msg.m_mouseY * 800 + msg.m_mouseX] - 1;
+        if (hover != m_lastHover || msg.m_qualifier != m_lastQualifier) {
+            m_lastHover = hover;
+            m_lastQualifier = msg.m_qualifier;
+            setCommandAndText(&msg);
         }
         break;
     }
     case MESSAGE_KEY_UP:
-        switch (msg.codeX) {
+        switch (msg.m_codeX) {
         case KEYCODE_SPACE:
-            if (townToView->visitingHeroId != -1
-                && townToView->garrisonHeroId != -1)
-                DoCommand(9, 0, 0);
+            if (m_townToView->m_visitingHeroId != -1
+                && m_townToView->m_garrisonHeroId != -1)
+                doCommand(9, 0, 0);
             break;
         case KEYCODE_KP_2:
-            if (gUnnamed6aaa50
-                < gpGame->GetLocalPlayer()->numTowns - 1) {
+            if (g_unnamed6aaa50
+                < g_game->getLocalPlayer()->m_numTowns - 1) {
                 TTownScreenWindow* win =
-                    static_cast<TTownScreenWindow*>(TownWindow);
-                DoTownKnob(win, 0);
-                win->UpdateTownLocators();
-                gUnnamed6aaa50++;
-                int id = player->townIds[gUnnamed6aaa50];
-                townToView = gpGame->GetTown(id);
-                StartMouseThread();
-                SetupExtraStuff();
-                SetupTown(1);
+                    static_cast<TTownScreenWindow*>(m_townWindow);
+                doTownKnob(win, 0);
+                win->updateTownLocators();
+                g_unnamed6aaa50++;
+                int id = player->m_townIds[g_unnamed6aaa50];
+                m_townToView = g_game->getTown(id);
+                startMouseThread();
+                setupExtraStuff();
+                setupTown(1);
                 message textMessage;
-                textMessage.id = MESSAGE_WIDGET;
-                textMessage.codeY = -1;
-                SetCommandAndText(&textMessage);
-                StopMouseThread();
+                textMessage.m_id = MESSAGE_WIDGET;
+                textMessage.m_codeY = -1;
+                setCommandAndText(&textMessage);
+                stopMouseThread();
             }
             break;
         case KEYCODE_KP_8:
-            if (gUnnamed6aaa50 > 0) {
+            if (g_unnamed6aaa50 > 0) {
                 TTownScreenWindow* win =
-                    static_cast<TTownScreenWindow*>(TownWindow);
-                DoTownKnob(win, 1);
-                win->UpdateTownLocators();
-                gUnnamed6aaa50--;
-                int id = player->townIds[gUnnamed6aaa50];
-                townToView = gpGame->GetTown(id);
-                StartMouseThread();
-                SetupExtraStuff();
-                SetupTown(1);
+                    static_cast<TTownScreenWindow*>(m_townWindow);
+                doTownKnob(win, 1);
+                win->updateTownLocators();
+                g_unnamed6aaa50--;
+                int id = player->m_townIds[g_unnamed6aaa50];
+                m_townToView = g_game->getTown(id);
+                startMouseThread();
+                setupExtraStuff();
+                setupTown(1);
                 message textMessage;
-                textMessage.id = MESSAGE_WIDGET;
-                textMessage.codeY = -1;
-                SetCommandAndText(&textMessage);
-                StopMouseThread();
+                textMessage.m_id = MESSAGE_WIDGET;
+                textMessage.m_codeY = -1;
+                setCommandAndText(&textMessage);
+                stopMouseThread();
             }
             break;
         }
         break;
     }
     if (exitFlag == 1) {
-        msg.id = MESSAGE_EXECUTIVE;
-        msg.codeX = 1;
+        msg.m_id = MESSAGE_EXECUTIVE;
+        msg.m_codeX = 1;
         return 2;
     }
     return 1;
@@ -6221,112 +6320,112 @@ building_popup:
 
 // E:\gamedcs\townmgr.cpp:6598
 VA(0x005d4c10, 0x53C)  // anchor-caller(Main 0x5d420a/0x5d4a9f + the garrison window's handler 0x5d0a8c) + anchor-callee(SwapHeroes/MoveHeroFromGarrison) + arity(ret 0xc, 3 args), dc 0x176634
-void townManager::DoCommand(int inCommand, unsigned char isGarrison,
+void townManager::doCommand(int inCommand, unsigned char isGarrison,
                             type_garrison_base_window* garrisonWindow)
 {
     switch (inCommand) {
     case TOWN_COMMAND_SELECT_SLOT:
-        if (!selectedStrip)
+        if (!m_currStrip)
             return;
-        field_12c = selectedStrip;
-        field_130 = field_128;
-        field_11c->current = -2;
-        field_120->current = -2;
-        field_12c->current = field_130;
-        field_11c->Draw(CREATURE_NONE);
-        field_120->Draw(CREATURE_NONE);
-        if (field_12c->owner == gNetLocalGamePos && field_128 > -1)
-            gpWindowManager->BroadcastMessage(
+        m_srcStrip = m_currStrip;
+        m_srcIndex = m_currIndex;
+        m_garrisonStrip->m_current = -2;
+        m_heroStrip->m_current = -2;
+        m_srcStrip->m_current = m_srcIndex;
+        m_garrisonStrip->draw(CREATURE_NONE);
+        m_heroStrip->draw(CREATURE_NONE);
+        if (m_srcStrip->m_owner == g_netLocalGamePos && m_currIndex > -1)
+            g_windowManager->broadcastMessage(
                 MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0x9a,
                 widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
         else
-            gpWindowManager->BroadcastMessage(
+            g_windowManager->broadcastMessage(
                 MESSAGE_WIDGET, widget::WIDGET_SET_STATUS, 0x9a,
                 widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
         break;
 
     case TOWN_COMMAND_VIEW_ARMY:
-        if (!field_134)
+        if (!m_destStrip)
             return;
         if (isGarrison) {
-            gpGame->ViewArmy(*field_134->group, field_138,
-                             field_134->thisHero, 0, 0x77, 0x14,
-                             !gUnnamed6aa9d8
-                                 && (field_134 != field_120
-                                     || field_134->group->GetNumArmies() > 1),
+            g_game->viewArmy(*m_destStrip->m_group, m_destIndex,
+                             m_destStrip->m_thisHero, 0, 0x77, 0x14,
+                             !g_unnamed6aa9d8
+                                 && (m_destStrip != m_heroStrip
+                                     || m_destStrip->m_group->getNumArmies() > 1),
                              0);
         } else {
-            gpGame->ViewArmy(*field_134->group, field_138,
-                             field_134->thisHero, townToView, 0x77, 0x14,
-                             !gUnnamed6aa9d8
-                                 && (!field_134->thisHero
-                                     || field_134->group->GetNumArmies() > 1),
+            g_game->viewArmy(*m_destStrip->m_group, m_destIndex,
+                             m_destStrip->m_thisHero, m_townToView, 0x77, 0x14,
+                             !g_unnamed6aa9d8
+                                 && (!m_destStrip->m_thisHero
+                                     || m_destStrip->m_group->getNumArmies() > 1),
                              0);
-            pResourceDisplay->Update(1, 1);
+            m_resourceDisplay->update(1, 1);
         }
-        ResetStrips();
+        resetStrips();
         break;
 
     case TOWN_COMMAND_MERGE_ARMY:
-        if (!field_12c)
+        if (!m_srcStrip)
             return;
-        if (!field_134)
+        if (!m_destStrip)
             return;
-        if (gpCurrentPlayer->IsLocalHuman()) {
-            if (field_134 != field_12c) {
-                armyGroup* destGroup = field_134->group;
-                int creature = field_12c->group->armies[field_130];
-                if (destGroup->armies[field_138] != creature) {
+        if (g_currentPlayer->isLocalHuman()) {
+            if (m_destStrip != m_srcStrip) {
+                armyGroup* destGroup = m_destStrip->m_group;
+                int creature = m_srcStrip->m_group->m_armies[m_srcIndex];
+                if (destGroup->m_armies[m_destIndex] != creature) {
                     int i;
                     for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
-                        if (destGroup->armies[i] == creature)
+                        if (destGroup->m_armies[i] == creature)
                             break;
                     }
                     if (i < armyGroup::ARMY_GROUP_SLOT_COUNT)
-                        field_138 = i;
+                        m_destIndex = i;
                 }
             }
-            field_134->group->numTroops[field_138]
-                += field_12c->group->numTroops[field_130];
-            field_12c->group->armies[field_130] = -1;
-            field_12c->group->numTroops[field_130] = 0;
-            ResetStrips();
+            m_destStrip->m_group->m_numTroops[m_destIndex]
+                += m_srcStrip->m_group->m_numTroops[m_srcIndex];
+            m_srcStrip->m_group->m_armies[m_srcIndex] = -1;
+            m_srcStrip->m_group->m_numTroops[m_srcIndex] = 0;
+            resetStrips();
         }
         break;
 
     case TOWN_COMMAND_SWAP_ARMY:
-        if (gpCurrentPlayer->IsLocalHuman()) {
-            field_12c->group->Swap(field_130, field_134->group, field_138);
-            ResetStrips();
+        if (g_currentPlayer->isLocalHuman()) {
+            m_srcStrip->m_group->swap(m_srcIndex, m_destStrip->m_group, m_destIndex);
+            resetStrips();
         }
         break;
 
     case TOWN_COMMAND_VIEW_HERO:
         if (isGarrison) {
-            HeroView(field_134->thisHero->id, 1, 0, 0);
-            gpAdvManager->RedrawAdvScreen(0, 0);
-            garrisonWindow->DrawWindow(0, WINDOW_ALL_WIDGETS_LOW,
+            heroView(m_destStrip->m_thisHero->m_id, 1, 0, 0);
+            g_advManager->redrawAdvScreen(0, 0);
+            garrisonWindow->drawWindow(0, WINDOW_ALL_WIDGETS_LOW,
                                        WINDOW_ALL_WIDGETS_HIGH);
-            gpWindowManager->UpdateScreen(0, 0, WINDOW_SCREEN_WIDTH,
+            g_windowManager->updateScreen(0, 0, WINDOW_SCREEN_WIDTH,
                                           WINDOW_SCREEN_HEIGHT);
-        } else if (!field_12c->pos) {
-            HeroView(townToView->garrisonHeroId, 1, 0, 0);
+        } else if (!m_srcStrip->m_pos) {
+            heroView(m_townToView->m_garrisonHeroId, 1, 0, 0);
         } else {
-            HeroView(townToView->visitingHeroId, 1, 0, 0);
+            heroView(m_townToView->m_visitingHeroId, 1, 0, 0);
         }
-        ResetStrips();
+        resetStrips();
         break;
 
     case TOWN_COMMAND_SPLIT_ARMY:
-        if (gpCurrentPlayer->IsLocalHuman()) {
-            field_1c4 = 0;
-            field_12c->group->SplitArmy(
-                field_130, field_134->group, field_138,
-                field_12c != field_11c
-                    || (townToView && townToView->garrisonHeroId != -1),
-                field_134 != field_11c
-                    || (townToView && townToView->garrisonHeroId != -1));
-            ResetStrips();
+        if (g_currentPlayer->isLocalHuman()) {
+            m_divideStatus = 0;
+            m_srcStrip->m_group->splitArmy(
+                m_srcIndex, m_destStrip->m_group, m_destIndex,
+                m_srcStrip != m_garrisonStrip
+                    || (m_townToView && m_townToView->m_garrisonHeroId != -1),
+                m_destStrip != m_garrisonStrip
+                    || (m_townToView && m_townToView->m_garrisonHeroId != -1));
+            resetStrips();
         }
         break;
 
@@ -6334,27 +6433,27 @@ void townManager::DoCommand(int inCommand, unsigned char isGarrison,
     // not: imposing that older source order takes this retail-exact body
     // to 89.26039%.  The exact Complete ordering is SWAP / FROM / TO.
     case TOWN_COMMAND_SWAP_HEROES:
-        if (gpCurrentPlayer->IsLocalHuman()) {
-            SwapHeroes();
-            ResetStrips();
+        if (g_currentPlayer->isLocalHuman()) {
+            swapHeroes();
+            resetStrips();
         }
         break;
 
     case TOWN_COMMAND_MOVE_HERO_FROM_GARRISON:
-        if (gpCurrentPlayer->IsLocalHuman()) {
-            MoveHeroFromGarrison();
-            ResetStrips();
+        if (g_currentPlayer->isLocalHuman()) {
+            moveHeroFromGarrison();
+            resetStrips();
         }
         break;
 
     case TOWN_COMMAND_MOVE_HERO_TO_GARRISON:
-        if (gpCurrentPlayer->IsLocalHuman()) {
-            MoveHeroToGarrison(this);
-            ResetStrips();
+        if (g_currentPlayer->isLocalHuman()) {
+            moveHeroToGarrison(this);
+            resetStrips();
         }
         break;
     }
-    lastHover = -1;
+    m_lastHover = -1;
 }
 
 // Moving the town's visiting hero into the garrison. Only the local
@@ -6375,27 +6474,27 @@ void townManager::DoCommand(int inCommand, unsigned char isGarrison,
 
 // E:\gamedcs\townmgr.cpp:6778
 VA(0x005d5150, 0xC2)  // anchor-callee(add_garrison_hero 0x4b9fc0) + strip teardown + arity(bare ret), dc 0x176b88
-void townManager::SwapHeroes()
+void townManager::swapHeroes()
 {
-    playerData* player = &gpGame->players[townToView->owner];
+    playerData* player = &g_game->m_players[m_townToView->m_owner];
 
-    if (!gpCurrentPlayer->IsLocalHuman())
+    if (!g_currentPlayer->isLocalHuman())
         return;
 
-    if (!player->add_garrison_hero(townToView)) {
+    if (!player->addGarrisonHero(m_townToView)) {
         // General text 276 - the refusal this page prints when the
         // garrison will not take the hero. Spelled as the bare index,
         // as the other unnamed general-text consumers in the tree are.
-        NormalDialog(gpGeneralText->GetText(276), 1, -1, -1, -1, 0,
+        normalDialog(g_generalText->getText(276), 1, -1, -1, -1, 0,
                      -1, 0, -1, 0, -1, 0);
         return;
     }
 
-    delete field_120;
-    field_120 = 0;
-    delete field_11c;
-    field_11c = 0;
-    NewStrips();
+    delete m_heroStrip;
+    m_heroStrip = 0;
+    delete m_garrisonStrip;
+    m_garrisonStrip = 0;
+    newStrips();
 }
 
 // SwapHeroes' mirror image, and the row DoCommand's arm 8 reaches: the
@@ -6418,32 +6517,32 @@ void townManager::SwapHeroes()
 
 // E:\gamedcs\townmgr.cpp
 VA(0x005d5220, 0x1E7)  // anchor-caller(DoCommand 0x5d4c10, its only caller image-wide) + anchor-callee(town::remove_garrison_hero 0x5be390) + arity(bare ret), dc 0x176cf8
-void townManager::MoveHeroFromGarrison()
+void townManager::moveHeroFromGarrison()
 {
-    playerData* player = &gpGame->players[townToView->owner];
+    playerData* player = &g_game->m_players[m_townToView->m_owner];
 
-    if (!gpCurrentPlayer->IsLocalHuman())
+    if (!g_currentPlayer->isLocalHuman())
         return;
 
-    if (player->numHeroes >= playerData::HERO_SLOT_COUNT) {
+    if (player->m_numHeroes >= playerData::HERO_SLOT_COUNT) {
         std::string text;
-        text = format_string(gpGeneralText->GetText(19), player->numHeroes);
-        NormalDialog(text.c_str(), 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        text = formatString(g_generalText->getText(19), player->m_numHeroes);
+        normalDialog(text.c_str(), 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return;
     }
 
-    if (townToView->get_army().GetNumArmies() == 0) {
-        NormalDialog(gpGeneralText->GetText(20), 1, -1, -1, -1, 0,
+    if (m_townToView->getArmy().getNumArmies() == 0) {
+        normalDialog(g_generalText->getText(20), 1, -1, -1, -1, 0,
                      -1, 0, -1, 0, -1, 0);
         return;
     }
 
-    townToView->remove_garrison_hero();
-    delete field_120;
-    field_120 = 0;
-    delete field_11c;
-    field_11c = 0;
-    NewStrips();
+    m_townToView->removeGarrisonHero();
+    delete m_heroStrip;
+    m_heroStrip = 0;
+    delete m_garrisonStrip;
+    m_garrisonStrip = 0;
+    newStrips();
 }
 
 // The town page repaint. It clears the window's own 800x600 16-bit
@@ -6456,44 +6555,44 @@ void townManager::MoveHeroFromGarrison()
 
 // E:\gamedcs\townmgr.cpp:6843
 VA(0x005d5410, 0x11C)  // anchor-caller(DoHall/BuildObj tails) + order-map ahead of ResetStrips, dc 0x176eb0
-void townManager::RedrawTownScreen()
+void townManager::redrawTownScreen()
 {
-    memset(static_cast<TTownScreenWindow*>(TownWindow)->zBuffer, 0,
+    memset(static_cast<TTownScreenWindow*>(m_townWindow)->m_zBuffer, 0,
            WINDOW_SCREEN_WIDTH * WINDOW_SCREEN_HEIGHT * 2);
-    static_cast<bitmapBorder16*>(field_3c)->Draw2();
-    PollSound();
-    for (int i = 0; i < TownObjectCount; i++) {
-        TownObjects[i]->Draw(1, 1);
-        PollSound();
+    static_cast<bitmapBorder16*>(m_panorama)->draw2();
+    pollSound();
+    for (int i = 0; i < m_townObjectCount; i++) {
+        m_townObjects[i]->draw(1, 1);
+        pollSound();
     }
 
     message msg;
-    msg.qualifier = 0;
-    msg.mouseX = 0;
-    msg.mouseY = 0;
-    msg.extra = 0;
-    msg.window = 0;
-    msg.id = MESSAGE_WIDGET;
-    msg.codeX = widget::WIDGET_SET_TEXT;
-    msg.codeY = 0x97;
-    msg.extraText = statusText;
-    TownWindow->BroadcastMessage(&msg);
+    msg.m_qualifier = 0;
+    msg.m_mouseX = 0;
+    msg.m_mouseY = 0;
+    msg.m_extra = 0;
+    msg.m_window = 0;
+    msg.m_id = MESSAGE_WIDGET;
+    msg.m_codeX = widget::WIDGET_SET_TEXT;
+    msg.m_codeY = 0x97;
+    msg.m_extraText = m_statusText;
+    m_townWindow->broadcastMessage(&msg);
 
     // armyGroup::armies is int by armygrp.h's own design (it keeps the
     // int-typed slot writes cast-free) while strip::DrawIcons takes the
     // Dreamcast's TCreatureType, so the domain edge is crossed through
     // the file's representation bridge rather than through a cast.
     TCreatureType creature = CREATURE_NONE;
-    if (field_1c4)
-        creature = creature_type_from_int(
-            field_12c->group->armies[field_130]);
-    pResourceDisplay->Update(1, 0);
-    field_11c->DrawIcons(0, creature);
-    field_120->DrawIcons(0, creature);
-    UpdateTownInfo();
-    TownWindow->DrawWindow(0, WINDOW_ALL_WIDGETS_LOW,
+    if (m_divideStatus)
+        creature = creatureTypeFromInt(
+            m_srcStrip->m_group->m_armies[m_srcIndex]);
+    m_resourceDisplay->update(1, 0);
+    m_garrisonStrip->drawIcons(0, creature);
+    m_heroStrip->drawIcons(0, creature);
+    updateTownInfo();
+    m_townWindow->drawWindow(0, WINDOW_ALL_WIDGETS_LOW,
                            WINDOW_ALL_WIDGETS_HIGH);
-    gpWindowManager->UpdateScreen(0, 0, WINDOW_SCREEN_WIDTH,
+    g_windowManager->updateScreen(0, 0, WINDOW_SCREEN_WIDTH,
                                   WINDOW_SCREEN_HEIGHT);
 }
 
@@ -6506,20 +6605,20 @@ void townManager::RedrawTownScreen()
 
 // E:\gamedcs\townmgr.cpp:6866
 VA(0x005d5530, 0x86)  // anchor-bracket + strip::Draw call edge, dc 0x176f24
-void townManager::ResetStrips()
+void townManager::resetStrips()
 {
-    if (field_12c)
-        field_12c->current = -2;
-    if (field_134)
-        field_134->current = -2;
-    field_1c4 = 0;
-    field_120->Draw(CREATURE_NONE);
-    field_11c->Draw(CREATURE_NONE);
-    field_134 = 0;
-    field_12c = 0;
-    field_138 = -2;
-    field_130 = -2;
-    gpWindowManager->BroadcastMessage(
+    if (m_srcStrip)
+        m_srcStrip->m_current = -2;
+    if (m_destStrip)
+        m_destStrip->m_current = -2;
+    m_divideStatus = 0;
+    m_heroStrip->draw(CREATURE_NONE);
+    m_garrisonStrip->draw(CREATURE_NONE);
+    m_destStrip = 0;
+    m_srcStrip = 0;
+    m_destIndex = -2;
+    m_srcIndex = -2;
+    g_windowManager->broadcastMessage(
         MESSAGE_WIDGET, widget::WIDGET_SET_STATUS, 0x9a,
         widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
 }
@@ -6535,59 +6634,60 @@ void townManager::ResetStrips()
 // only three-int constructor in the block; `ret 0xc` agrees.
 
 // E:\gamedcs\townmgr.cpp:7210
+// Before normalization (locals): Id.
 VA(0x005d55c0, 0x578)  // anchor-string TPuBuild.pcx + arity + ??_G class, dc 0x178ab8
-TBuyBuildWindow::TBuyBuildWindow(int x2, int y2, int Id)
+TBuyBuildWindow::TBuyBuildWindow(int x2, int y2, int id)
     : CAdvPopup(x2, y2, 0x18b, 0x208, 0x12)
 {
-    buildingId = Id;
-    Widgets.reserve(18);
+    m_buildingId = id;
+    m_widgets.reserve(18);
 
-    Widgets.push_back(new bitmapBorder(0, 0, width, height, 1,
+    m_widgets.push_back(new bitmapBorder(0, 0, m_width, m_height, 1,
                                        "TPuBuild.pcx", 0x800));
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         124, 49, 150, 70, 2,
-        townBuildingSpriteNames[gpTownManager->townToView->type], buildingId,
+        g_townBuildingSpriteNames[g_townManager->m_townToView->m_type], m_buildingId,
         0, 0, 0, 0x10));
 
-    sprintf(gText, gpGeneralText->GetText(596),
-            GetBuildingName(gpTownManager->townToView->type, buildingId));
-    Widgets.push_back(new textWidget(0, 20, width, 30, gText,
+    sprintf(g_text, g_generalText->getText(596),
+            getBuildingName(g_townManager->m_townToView->m_type, m_buildingId));
+    m_widgets.push_back(new textWidget(0, 20, m_width, 30, g_text,
                                      "bigfont.fnt", font::HEADING, 3, 1, 0, 8));
 
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         32, 134, 332, 70,
-        GetBuildingInfo(gpTownManager->townToView, buildingId, 0, 0),
+        getBuildingInfo(g_townManager->m_townToView, m_buildingId, 0, 0),
         "medfont.fnt", font::PRIMARY, 4, 5, 0, 8));
-    rolloverText = new textWidget(32, 215, 332, 70, emptyRolloverText,
+    m_rolloverText = new textWidget(32, 215, 332, 70, g_emptyRolloverText,
                                   "smalfont.fnt", font::PRIMARY, 5, 5, 0, 8);
-    Widgets.push_back(rolloverText);
+    m_widgets.push_back(m_rolloverText);
 
-    Widgets.push_back(new bitmapBorder(7, 494, 381, 19, 6,
+    m_widgets.push_back(new bitmapBorder(7, 494, 381, 19, 6,
                                        "StatBar.pcx", 0x800));
-    Widgets.push_back(new textWidget(7, 494, 381, 19, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(7, 494, 381, 19, 0, "smalfont.fnt",
                                      font::PRIMARY, 7, 1, 0, 8));
 
-    Widgets.push_back(new bitmapBorder(44, 445, 66, 32, 8,
+    m_widgets.push_back(new bitmapBorder(44, 445, 66, 32, 8,
                                        "Box64x30.pcx", 0x800));
-    Widgets.push_back(new button(45, 446, 64, 30, BUY_BUTTON_ID,
+    m_widgets.push_back(new button(45, 446, 64, 30, BUY_BUTTON_ID,
                                  "iBUY30.def", 0, 1, 1, 28, 2));
-    Widgets.push_back(new bitmapBorder(289, 445, 66, 32, 9,
+    m_widgets.push_back(new bitmapBorder(289, 445, 66, 32, 9,
                                        "Box64x30.pcx", 0x800));
-    Widgets.push_back(new button(290, 446, 64, 30, CANCEL_BUTTON_ID,
+    m_widgets.push_back(new button(290, 446, 64, 30, CANCEL_BUTTON_ID,
                                  "iCancel.def", 0, 1, 1, 1, 2));
 
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
-            AddWidget(*it, -1);
+            addWidget(*it, -1);
         else
-            MemError();
+            memError();
     }
 
-    if (gNetworkActive69954c && !gpCurrentPlayer->IsLocalHuman()
-        || gpTownManager->townToView->owner != gNetLocalGamePos)
-        GetWidget(BUY_BUTTON_ID)->enable(0);
+    if (g_networkActive69954c && !g_currentPlayer->isLocalHuman()
+        || g_townManager->m_townToView->m_owner != g_netLocalGamePos)
+        getWidget(BUY_BUTTON_ID)->enable(0);
 
-    set_prerequisite_text(gpTownManager->townToView, buildingId);
+    setPrerequisiteText(g_townManager->m_townToView, m_buildingId);
 }
 
 VA_COMPGEN(0x005d5b40, 0x21, SCALAR_DELETING_DTOR, TBuyBuildWindow)
@@ -6596,7 +6696,7 @@ VA_COMPGEN(0x005d5b40, 0x21, SCALAR_DELETING_DTOR, TBuyBuildWindow)
 VA(0x005d5b70, 0x6B)  // anchor-vtable 0x643944 + ??_G call edge, dc 0x179024
 TBuyBuildWindow::~TBuyBuildWindow()
 {
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
@@ -6687,36 +6787,38 @@ TBuyBuildWindow::~TBuyBuildWindow()
 // retail's and wants a leaner spelling); this is the numerator lever
 // applied in that direction. Single call site, so /Ob2 inlines it back
 // and townmgr.obj defines no extra symbol.
-static void set_buybuild_palette(TBuyBuildWindow* window, message& msg)
+// Before normalization (function): set_buybuild_palette.
+static void setBuybuildPalette(TBuyBuildWindow* window, message& msg)
 {
-    msg.qualifier = 0;
-    msg.mouseX = 0;
-    msg.mouseY = 0;
-    msg.extra = 0;
-    msg.window = 0;
-    msg.id = MESSAGE_WIDGET;
-    msg.codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
-    msg.codeY = 1;
-    msg.extra = gpGame->GetLocalPlayerGamePos();
-    window->BroadcastMessage(&msg);
+    msg.m_qualifier = 0;
+    msg.m_mouseX = 0;
+    msg.m_mouseY = 0;
+    msg.m_extra = 0;
+    msg.m_window = 0;
+    msg.m_id = MESSAGE_WIDGET;
+    msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
+    msg.m_codeY = 1;
+    msg.m_extra = g_game->getLocalPlayerGamePos();
+    window->broadcastMessage(&msg);
 }
 
 // Second dose of the same device: the quick-view button-clearing
 // broadcasts, single call site.
-static void clear_buybuild_buttons(TBuyBuildWindow* window, message& msg)
+// Before normalization (function): clear_buybuild_buttons.
+static void clearBuybuildButtons(TBuyBuildWindow* window, message& msg)
 {
-    msg.codeX = widget::WIDGET_CLEAR_STATUS;
-    msg.extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
-    msg.codeY = TBuyBuildWindow::BUY_BUTTON_ID;
-    window->BroadcastMessage(&msg);
-    msg.codeY = 8;
-    window->BroadcastMessage(&msg);
-    msg.codeY = TBuyBuildWindow::CANCEL_BUTTON_ID;
-    window->BroadcastMessage(&msg);
-    msg.codeY = 9;
-    window->BroadcastMessage(&msg);
-    msg.codeY = 0;
-    window->BroadcastMessage(&msg);
+    msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+    msg.m_extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
+    msg.m_codeY = TBuyBuildWindow::BUY_BUTTON_ID;
+    window->broadcastMessage(&msg);
+    msg.m_codeY = 8;
+    window->broadcastMessage(&msg);
+    msg.m_codeY = TBuyBuildWindow::CANCEL_BUTTON_ID;
+    window->broadcastMessage(&msg);
+    msg.m_codeY = 9;
+    window->broadcastMessage(&msg);
+    msg.m_codeY = 0;
+    window->broadcastMessage(&msg);
 }
 
 // The buy-build window's prerequisite-text formatter. It starts from the
@@ -6750,42 +6852,43 @@ static void clear_buybuild_buttons(TBuyBuildWindow* window, message& msg)
 // `lineStart = gText` in the count==0 arm (87.42 -> 80.04); reversing the
 // lineStart/namePos decl order (byte-flat).
 // E:\gamedcs\townmgr.cpp:7272
+// Before normalization (locals): current_town, pFont.
 VA(0x005d5be0, 0x34C)  // order-map(~TBuyBuildWindow 0x5d5b70 .. BuyBuild 0x5d5f30) + anchor-callee(get_string_width/GetBuildingName) + arity(ret 8, 2 args), dc 0x179090
-void TBuyBuildWindow::set_prerequisite_text(const town* current_town, int building)
+void TBuyBuildWindow::setPrerequisiteText(const town* currentTown, int building)
 {
     int count = 0;
-    __int64 mask = gHierarchyMask[current_town->type][building];
+    __int64 mask = g_hierarchyMask[currentTown->m_type][building];
 
-    if (gpGame->field_1f69d && building == DWELLING_2_ID && current_town->type == 0)
-        mask &= ~bitNumber[BLACKSMITH_ID];
+    if (g_game->m_isTutorial && building == DWELLING_2_ID && currentTown->m_type == 0)
+        mask &= ~g_bitNumber[BLACKSMITH_ID];
 
-    mask &= ~current_town->active;
+    mask &= ~currentTown->m_active;
 
     for (int i = 0; i < MAX_BUILDING_TYPE; ++i) {
-        if ((bitNumber[i] & mask) != 0 && i != HORDE_ID && i != HORDE_2_ID)
-            mask &= ~town::included_buildings[current_town->type][i];
+        if ((g_bitNumber[i] & mask) != 0 && i != HORDE_ID && i != HORDE_2_ID)
+            mask &= ~town::s_includedBuildings[currentTown->m_type][i];
     }
 
-    char* lineStart = gText;
-    char* namePos = gText;
-    font* pFont = rolloverText->Font;
+    char* lineStart = g_text;
+    char* namePos = g_text;
+    font* currentFont = m_rolloverText->m_font;
     for (int j = 0; j < MAX_BUILDING_TYPE; ++j) {
-        if ((bitNumber[j] & mask) != 0) {
+        if ((g_bitNumber[j] & mask) != 0) {
             if (count == 0) {
-                strcpy(gText, gpGeneralText->GetText(53));
-                strcat(gText, DATA_COMPGEN(0x006603bc, quickInfoNewLine, "\n"));
+                strcpy(g_text, g_generalText->getText(53));
+                strcat(g_text, DATA_COMPGEN(0x006603bc, quickInfoNewLine, "\n"));
             } else {
-                strcat(gText, DATA_COMPGEN(0x00660db4, commaText, ","));
-                if (pFont->get_string_width(lineStart) > rolloverText->width) {
+                strcat(g_text, DATA_COMPGEN(0x00660db4, commaText, ","));
+                if (currentFont->getStringWidth(lineStart) > m_rolloverText->m_width) {
                     namePos[-1] = '\n';
                     lineStart = namePos;
                 }
-                strcat(gText, DATA_COMPGEN(0x0068c3d0, doubleSpaceText, "  "));
+                strcat(g_text, DATA_COMPGEN(0x0068c3d0, doubleSpaceText, "  "));
             }
             ++count;
             namePos = lineStart + strlen(lineStart);
-            strcat(gText, GetBuildingName(current_town->type, j));
-            if (pFont->get_string_width(lineStart) > rolloverText->width) {
+            strcat(g_text, getBuildingName(currentTown->m_type, j));
+            if (currentFont->getStringWidth(lineStart) > m_rolloverText->m_width) {
                 namePos[-1] = '\n';
                 lineStart = namePos;
             }
@@ -6793,31 +6896,32 @@ void TBuyBuildWindow::set_prerequisite_text(const town* current_town, int buildi
     }
 
     if (building == HALL_CAPITOL_ID) {
-        if (gpGame->players[current_town->owner].HasCapitol()) {
-            rolloverText->SetText(cHallInfo[0]);
+        if (g_game->m_players[currentTown->m_owner].hasCapitol()) {
+            m_rolloverText->setText(g_hallInfo[0]);
             return;
         }
     } else if (building == DOCK_ID) {
-        if (!gpTownManager->townToView->CanBuildDock()) {
-            rolloverText->SetText(cHallInfo[1]);
+        if (!g_townManager->m_townToView->canBuildDock()) {
+            m_rolloverText->setText(g_hallInfo[1]);
             return;
         }
     }
 
-    if (!gpTownManager->townToView->can_ever_build(building)) {
-        rolloverText->SetText(cHallInfo[2]);
+    if (!g_townManager->m_townToView->canEverBuild(building)) {
+        m_rolloverText->setText(g_hallInfo[2]);
         return;
     }
 
     if (count != 0)
-        rolloverText->SetText(gText);
+        m_rolloverText->setText(g_text);
     else
-        rolloverText->SetText(gpGeneralText->GetText(220));
+        m_rolloverText->setText(g_generalText->getText(220));
 }
 
 // E:\gamedcs\townmgr.cpp:7354
+// Before normalization (locals): bQuickView.
 VA(0x005d5f30, 0x8DA)  // arity(ret 0xc, 3 args) + anchor-callee TBuyBuildWindow ctor, dc 0x1793b4
-int townManager::BuyBuild(int buildingId, int infoOnly, int bQuickView)
+int townManager::buyBuild(int buildingId, int infoOnly, int quickView)
 {
     int resourceX[7][7] = {
         { 164,   0,   0,   0,   0,   0,   0 },
@@ -6837,67 +6941,67 @@ int townManager::BuyBuild(int buildingId, int infoOnly, int bQuickView)
         { 303, 303, 303, 377, 377, 377,   0 },
         { 303, 303, 303, 303, 377, 377, 377 }
     };
-    int types[7];
+    EGameResource types[7];
     int amounts[7];
     message msg;
     int i;
 
-    int numResources = townToView->get_build_cost(
+    int numResources = m_townToView->getBuildCost(
         (type_building_id)buildingId, types, amounts);
 
     TBuyBuildWindow* window = new TBuyBuildWindow(0xca, 0x28, buildingId);
     if (window == 0)
-        MemError();
+        memError();
 
-    set_buybuild_palette(window, msg);
+    setBuybuildPalette(window, msg);
 
-    CSprite* icons = ResourceManager::GetSprite("Resource.def");
-    int iconWidth = icons->Width;
+    CSprite* icons = ResourceManager::getSprite("Resource.def");
+    int iconWidth = icons->m_width;
     for (i = 0; i < numResources; i++) {
-        sprintf(gText, "%d", amounts[i]);
+        sprintf(g_text, "%d", amounts[i]);
         textWidget* amountText = new textWidget(
             resourceX[numResources - 1][i],
-            resourceY[numResources - 1][i] + 40, 68, 20, gText,
+            resourceY[numResources - 1][i] + 40, 68, 20, g_text,
             "smalfont.fnt", font::PRIMARY, -1, 1, 0, 8);
         if (amountText == 0)
-            MemError();
-        window->Widgets.push_back(amountText);
-        window->AddWidget(amountText, -1);
+            memError();
+        window->m_widgets.push_back(amountText);
+        window->addWidget(amountText, -1);
 
         iconWidget* icon = new iconWidget(
             resourceX[numResources - 1][i] + 18,
             resourceY[numResources - 1][i], iconWidth, 32, -1,
             "Resource.def", types[i], 0, 0, 0, 0x10);
         if (icon == 0)
-            MemError();
-        window->Widgets.push_back(icon);
-        window->AddWidget(icon, -1);
+            memError();
+        window->m_widgets.push_back(icon);
+        window->addWidget(icon, -1);
     }
-    icons->Dispose();
+    icons->dispose();
 
-    field_1b8 = -1;
-    if (bQuickView) {
-        clear_buybuild_buttons(window, msg);
-        gpWindowManager->DoQuickView(window);
+    m_objToBuild = -1;
+    if (quickView) {
+        clearBuybuildButtons(window, msg);
+        g_windowManager->doQuickView(window);
     } else {
         if (infoOnly) {
-            msg.codeX = widget::WIDGET_SET_STATUS;
-            msg.codeY = TBuyBuildWindow::BUY_BUTTON_ID;
-            msg.extra = widget::WIDGET_DIMMED_NODRAW;
-            window->BroadcastMessage(&msg);
+            msg.m_codeX = widget::WIDGET_SET_STATUS;
+            msg.m_codeY = TBuyBuildWindow::BUY_BUTTON_ID;
+            msg.m_extra = widget::WIDGET_DIMMED_NODRAW;
+            window->broadcastMessage(&msg);
         }
-        window->DoModal(0);
-        if (gpWindowManager->dialogReturn == TBuyBuildWindow::BUY_BUTTON_ID) {
-            field_1b8 = buildingId;
+        window->doModal(0);
+        if (g_windowManager->m_dialogReturn == TBuyBuildWindow::BUY_BUTTON_ID) {
+            m_objToBuild = buildingId;
             for (i = 0; i < numResources; i++)
-                gpCurrentPlayer->resources[types[i]] -= amounts[i];
+                g_currentPlayer->m_resources[types[i]] -= amounts[i];
         }
     }
 
     delete window;
-    if (bQuickView)
+    if (quickView)
         return 0;
-    return gpWindowManager->dialogReturn == TBuyBuildWindow::BUY_BUTTON_ID;
+    return g_windowManager->m_dialogReturn == TBuyBuildWindow::BUY_BUTTON_ID;
 }
 
 // The buy-a-building panel's handler, and the compiland's cleanest
@@ -6939,38 +7043,38 @@ int townManager::BuyBuild(int buildingId, int infoOnly, int bQuickView)
 
 // E:\gamedcs\townmgr.cpp:7513
 VA(0x005d6810, 0xFB)  // anchor-vtable 0x643944 slot 9 + arity, dc 0x1799bc
-int TBuyBuildWindow::WindowHandler(message* msg)
+int TBuyBuildWindow::windowHandler(message* msg)
 {
-    int result = CAdvPopup::WindowHandler(msg);
+    int result = CAdvPopup::windowHandler(msg);
     if (result)
         return result;
 
-    if (msg->id == MESSAGE_MOUSE_MOVE) {
-        gpWindowManager->ConvertToHover(*msg);
-        if (msg->codeY != gpWindowManager->lastHover) {
-            gpWindowManager->lastHover = msg->codeY;
+    if (msg->m_id == MESSAGE_MOUSE_MOVE) {
+        g_windowManager->convertToHover(*msg);
+        if (msg->m_codeY != g_windowManager->m_lastHover) {
+            g_windowManager->m_lastHover = msg->m_codeY;
 
-            switch (msg->codeY) {
+            switch (msg->m_codeY) {
             case BUY_BUTTON_ID:
-                sprintf(gText, gpGeneralText->GetText(596),
-                        GetBuildingName(gpTownManager->townToView->type,
-                                        buildingId));
+                sprintf(g_text, g_generalText->getText(596),
+                        getBuildingName(g_townManager->m_townToView->m_type,
+                                        m_buildingId));
                 break;
             case CANCEL_BUTTON_ID:
-                sprintf(gText, gpGeneralText->GetText(597),
-                        GetBuildingName(gpTownManager->townToView->type,
-                                        buildingId));
+                sprintf(g_text, g_generalText->getText(597),
+                        getBuildingName(g_townManager->m_townToView->m_type,
+                                        m_buildingId));
                 break;
             default:
-                strcpy(gText, emptyRolloverText);
+                strcpy(g_text, g_emptyRolloverText);
                 break;
             }
 
             message textMessage;
-            textMessage.extraText = gText;
-            BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 7,
-                             textMessage.extra);
-            DrawWindow(1, 6, 7);
+            textMessage.m_extraText = g_text;
+            broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 7,
+                             textMessage.m_extra);
+            drawWindow(1, 6, 7);
         }
     }
     return 1;
@@ -7000,42 +7104,42 @@ int TBuyBuildWindow::WindowHandler(message* msg)
 
 // E:\gamedcs\townmgr.cpp:7539
 VA(0x005d6910, 0x16E)  // linkorder(dc row after TBuyBuildWindow::WindowHandler) + arity(ret 0x14, 5 args), dc 0x179a64
-void townManager::CycleOutline(int objectIndex, int x, int y, int w, int h)
+void townManager::cycleOutline(int objectIndex, int x, int y, int w, int h)
 {
-    gUnnamed6aa9e8 = TownObjects[objectIndex]->objId;
-    TPalette16& pal = TownObjects[objectIndex]->objOutline->p16;
-    unsigned short saved = pal.data[96];
+    g_unnamed6aa9e8 = m_townObjects[objectIndex]->m_objId;
+    TPalette16& pal = m_townObjects[objectIndex]->m_objOutline->m_p16;
+    unsigned short saved = pal.m_data[96];
 
     for (int i = 128; i < 135; i++) {
-        unsigned long nextFrame = GameTime::Get() + 100;
-        pal.data[96] = gSystemPalette->data[i];
+        unsigned long nextFrame = GameTime::get() + 100;
+        pal.m_data[96] = g_systemPalette->m_data[i];
 
-        memset(static_cast<TTownScreenWindow*>(TownWindow)->zBuffer, 0,
+        memset(static_cast<TTownScreenWindow*>(m_townWindow)->m_zBuffer, 0,
                800 * 600 * 2);
-        static_cast<bitmapBorder16*>(field_3c)->Draw2();
-        PollSound();
-        for (int j = 0; j < TownObjectCount; j++) {
-            TownObjects[j]->Draw(1, 1);
-            PollSound();
+        static_cast<bitmapBorder16*>(m_panorama)->draw2();
+        pollSound();
+        for (int j = 0; j < m_townObjectCount; j++) {
+            m_townObjects[j]->draw(1, 1);
+            pollSound();
         }
 
-        gpWindowManager->UpdateScreen(x, y, w, h);
-        PollSound();
-        GameTime::DelayTil(nextFrame);
+        g_windowManager->updateScreen(x, y, w, h);
+        pollSound();
+        GameTime::delayTil(nextFrame);
     }
 
-    pal.data[96] = saved;
+    pal.m_data[96] = saved;
 
-    memset(static_cast<TTownScreenWindow*>(TownWindow)->zBuffer, 0,
+    memset(static_cast<TTownScreenWindow*>(m_townWindow)->m_zBuffer, 0,
            800 * 600 * 2);
-    static_cast<bitmapBorder16*>(field_3c)->Draw2();
-    PollSound();
-    for (int k = 0; k < TownObjectCount; k++) {
-        TownObjects[k]->Draw(1, 1);
-        PollSound();
+    static_cast<bitmapBorder16*>(m_panorama)->draw2();
+    pollSound();
+    for (int k = 0; k < m_townObjectCount; k++) {
+        m_townObjects[k]->draw(1, 1);
+        pollSound();
     }
 
-    gpWindowManager->UpdateScreen(x, y, w, h);
+    g_windowManager->updateScreen(x, y, w, h);
 }
 
 // Commits a purchase to the town. It repaints the page once without
@@ -7077,40 +7181,40 @@ void townManager::CycleOutline(int objectIndex, int x, int y, int w, int h)
 
 // E:\gamedcs\townmgr.cpp:7564
 VA(0x005d6a80, 0x46F)  // linkorder(dc row after CycleOutline) + arity(ret 4) + BuildBuilding/CycleOutline edges, dc 0x179b28
-void townManager::BuildObj(int buildingId)
+void townManager::buildObj(int buildingId)
 {
-    if (townToView->active & bitNumber[buildingId])
+    if (m_townToView->m_active & g_bitNumber[buildingId])
         return;
 
-    static_cast<bitmapBorder16*>(field_3c)->Draw2();
-    PollSound();
-    for (int i = 0; i < TownObjectCount; i++) {
-        TownObjects[i]->Draw(1, 0);
-        PollSound();
+    static_cast<bitmapBorder16*>(m_panorama)->draw2();
+    pollSound();
+    for (int i = 0; i < m_townObjectCount; i++) {
+        m_townObjects[i]->draw(1, 0);
+        pollSound();
     }
-    gpWindowManager->UpdateScreen(0, 0, 800, 374);
+    g_windowManager->updateScreen(0, 0, 800, 374);
 
-    type_building_id newBuilding = townToView->BuildBuilding(buildingId, 1, 1);
+    type_building_id newBuilding = m_townToView->buildBuilding(buildingId, 1, 1);
 
-    for (int j = 0; j < TownObjectCount; j++) {
-        if (townToView->built & bitNumber[TownObjects[j]->objId]) {
-            TownObjects[j]->visible = 1;
-            TownObjects[j]->objBorder->status |= widget::WIDGET_ACTIVE;
+    for (int j = 0; j < m_townObjectCount; j++) {
+        if (m_townToView->m_built & g_bitNumber[m_townObjects[j]->m_objId]) {
+            m_townObjects[j]->m_visible = 1;
+            m_townObjects[j]->m_objBorder->m_status |= widget::WIDGET_ACTIVE;
         } else {
-            TownObjects[j]->visible = 0;
-            TownObjects[j]->objBorder->status &= ~widget::WIDGET_ACTIVE;
+            m_townObjects[j]->m_visible = 0;
+            m_townObjects[j]->m_objBorder->m_status &= ~widget::WIDGET_ACTIVE;
         }
     }
 
     int builtIndex = -1;
-    for (int k = 0; k < TownObjectCount; k++) {
-        if (TownObjects[k]->objId == newBuilding)
+    for (int k = 0; k < m_townObjectCount; k++) {
+        if (m_townObjects[k]->m_objId == newBuilding)
             builtIndex = k;
     }
 
     SAMPLE2 sample;
-    if ((townToView->type == TOWN_RAMPART
-         || townToView->type == TOWN_NECROPOLIS)
+    if ((m_townToView->m_type == TOWN_RAMPART
+         || m_townToView->m_type == TOWN_NECROPOLIS)
         && buildingId > HALL_VILLAGE_ID && buildingId <= HALL_CAPITOL_ID) {
         int extraIndex = -1;
         int extraId = -1;
@@ -7125,82 +7229,82 @@ void townManager::BuildObj(int buildingId)
             extraId = EXTRA_5_ID;
             break;
         }
-        for (int m = 0; m < TownObjectCount; m++) {
-            if (TownObjects[m]->objId == extraId)
+        for (int m = 0; m < m_townObjectCount; m++) {
+            if (m_townObjects[m]->m_objId == extraId)
                 extraIndex = m;
         }
 
-        townObject* hall = TownObjects[builtIndex];
-        townObject* extra = TownObjects[extraIndex];
-        int boxX = _cpp_min(hall->x, extra->x);
-        int boxY = _cpp_min(hall->y, extra->y);
-        int boxW = _cpp_max(hall->x + hall->w, extra->x + extra->w) - boxX;
-        int boxH = _cpp_max(hall->y + hall->h, extra->y + extra->h) - boxY;
-        gpWindowManager->SaveFizzleSourceX(boxX, boxY, boxW, boxH);
+        townObject* hall = m_townObjects[builtIndex];
+        townObject* extra = m_townObjects[extraIndex];
+        int boxX = cppMin(hall->m_x, extra->m_x);
+        int boxY = cppMin(hall->m_y, extra->m_y);
+        int boxW = cppMax(hall->m_x + hall->m_w, extra->m_x + extra->m_w) - boxX;
+        int boxH = cppMax(hall->m_y + hall->m_h, extra->m_y + extra->m_h) - boxY;
+        g_windowManager->saveFizzleSourceX(boxX, boxY, boxW, boxH);
 
-        memset(static_cast<TTownScreenWindow*>(TownWindow)->zBuffer, 0,
+        memset(static_cast<TTownScreenWindow*>(m_townWindow)->m_zBuffer, 0,
                800 * 600 * 2);
-        static_cast<bitmapBorder16*>(field_3c)->Draw2();
-        PollSound();
-        for (int n = 0; n < TownObjectCount; n++) {
-            TownObjects[n]->Draw(1, 1);
-            PollSound();
+        static_cast<bitmapBorder16*>(m_panorama)->draw2();
+        pollSound();
+        for (int n = 0; n < m_townObjectCount; n++) {
+            m_townObjects[n]->draw(1, 1);
+            pollSound();
         }
 
-        sample = LoadPlaySample("buildtwn.82M");
-        gpWindowManager->FizzleForwardX(boxX, boxY, boxW, boxH, -1);
-        CycleOutline(builtIndex, boxX, boxY, boxW, boxH);
+        sample = loadPlaySample("buildtwn.82M");
+        g_windowManager->fizzleForwardX(boxX, boxY, boxW, boxH, -1);
+        cycleOutline(builtIndex, boxX, boxY, boxW, boxH);
     } else {
         // Dungeon's Mage Guild 5 raises the Portal of Summoning's own
         // object by ten frames once that extra is standing.
-        if (townToView->type == TOWN_DUNGEON
+        if (m_townToView->m_type == TOWN_DUNGEON
             && newBuilding == MAGE_GUILD5_ID
-            && (townToView->built & bitNumber[EXTRA_0_ID]))
-            TownObjects[19]->currFrame += 10;
+            && (m_townToView->m_built & g_bitNumber[EXTRA_0_ID]))
+            m_townObjects[19]->m_currFrame += 10;
 
-        gpWindowManager->SaveFizzleSourceX(TownObjects[builtIndex]->x,
-                                           TownObjects[builtIndex]->y,
-                                           TownObjects[builtIndex]->w,
-                                           TownObjects[builtIndex]->h);
+        g_windowManager->saveFizzleSourceX(m_townObjects[builtIndex]->m_x,
+                                           m_townObjects[builtIndex]->m_y,
+                                           m_townObjects[builtIndex]->m_w,
+                                           m_townObjects[builtIndex]->m_h);
 
-        memset(static_cast<TTownScreenWindow*>(TownWindow)->zBuffer, 0,
+        memset(static_cast<TTownScreenWindow*>(m_townWindow)->m_zBuffer, 0,
                800 * 600 * 2);
-        static_cast<bitmapBorder16*>(field_3c)->Draw2();
-        PollSound();
-        for (int p = 0; p < TownObjectCount; p++) {
-            TownObjects[p]->Draw(1, 1);
-            PollSound();
+        static_cast<bitmapBorder16*>(m_panorama)->draw2();
+        pollSound();
+        for (int p = 0; p < m_townObjectCount; p++) {
+            m_townObjects[p]->draw(1, 1);
+            pollSound();
         }
 
-        sample = LoadPlaySample("buildtwn.82M");
-        gpWindowManager->FizzleForwardX(TownObjects[builtIndex]->x,
-                                        TownObjects[builtIndex]->y,
-                                        TownObjects[builtIndex]->w,
-                                        TownObjects[builtIndex]->h, 0x42);
-        CycleOutline(builtIndex, TownObjects[builtIndex]->x,
-                     TownObjects[builtIndex]->y, TownObjects[builtIndex]->w,
-                     TownObjects[builtIndex]->h);
+        sample = loadPlaySample("buildtwn.82M");
+        g_windowManager->fizzleForwardX(m_townObjects[builtIndex]->m_x,
+                                        m_townObjects[builtIndex]->m_y,
+                                        m_townObjects[builtIndex]->m_w,
+                                        m_townObjects[builtIndex]->m_h, 0x42);
+        cycleOutline(builtIndex, m_townObjects[builtIndex]->m_x,
+                     m_townObjects[builtIndex]->m_y, m_townObjects[builtIndex]->m_w,
+                     m_townObjects[builtIndex]->m_h);
     }
 
-    WaitEndSample(sample, -1);
-    PollSound();
-    gUnnamed6aa9e8 = -1;
-    field_1b8 = -1;
-    gpWindowManager->BroadcastMessage(MESSAGE_WIDGET,
+    waitEndSample(sample, -1);
+    pollSound();
+    g_unnamed6aa9e8 = -1;
+    m_objToBuild = -1;
+    g_windowManager->broadcastMessage(MESSAGE_WIDGET,
                                       widget::WIDGET_CLEAR_STATUS,
                                       TTownScreenWindow::EXIT_BUTTON_ID,
                                       widget::WIDGET_UPDATE
                                           | widget::WIDGET_DIMMED);
 
     for (int q = 0; q < TOWN_DWELLING_COUNT; q++) {
-        if (townToView->active
-            & bitNumber[DWELLING_0_ID + TOWN_DWELLING_COUNT + q])
-            currentDwellingIDOff[q] = q + TOWN_DWELLING_COUNT;
+        if (m_townToView->m_active
+            & g_bitNumber[DWELLING_0_ID + TOWN_DWELLING_COUNT + q])
+            m_currentDwellingIdOff[q] = q + TOWN_DWELLING_COUNT;
         else
-            currentDwellingIDOff[q] = q;
+            m_currentDwellingIdOff[q] = q;
     }
 
-    RedrawTownScreen();
+    redrawTownScreen();
 }
 
 // Fills the mage guild page. The dialog carries two parallel widget
@@ -7228,21 +7332,21 @@ void townManager::BuildObj(int buildingId)
 
 // E:\gamedcs\townmgr.cpp:7693
 VA(0x005d6ef0, 0x1BD)  // linkorder(dc row after BuildObj) + arity(ret 4) + is_legal_building edge, dc 0x179e74
-void townManager::SetupMage(heroWindow* mageWin)
+void townManager::setupMage(heroWindow* mageWin)
 {
     message msg;
 
-    msg.id = MESSAGE_WIDGET;
-    msg.codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
-    msg.codeY = 0;
-    msg.extra = gpGame->GetLocalPlayerGamePos();
-    mageWin->BroadcastMessage(&msg);
+    msg.m_id = MESSAGE_WIDGET;
+    msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
+    msg.m_codeY = 0;
+    msg.m_extra = g_game->getLocalPlayerGamePos();
+    mageWin->broadcastMessage(&msg);
 
     for (int level = 0; level < 5; level++) {
         for (int slot = 0; slot < 6; slot++) {
-            int state = gMageGuildBaseSpellCounts[level];
-            if (townToView->type == TOWN_TOWER
-                && (townToView->active & bitNumber[EXTRA_1_ID]))
+            int state = g_mageGuildBaseSpellCounts[level];
+            if (m_townToView->m_type == TOWN_TOWER
+                && (m_townToView->m_active & g_bitNumber[EXTRA_1_ID]))
                 state++;
             // The int-to-enum edge retail's own source crossed here:
             // the argument is a plain loop counter (`mov edx,[ebp-4];
@@ -7250,41 +7354,41 @@ void townManager::SetupMage(heroWindow* mageWin)
             // the file's representation bridge, which is what took the
             // board's `casts to enum types` floor back to 0 - this site
             // is the one that raised it to 1 in the first place.
-            if (!townToView->is_legal_building(building_id_from_int(level)))
+            if (!m_townToView->isLegalBuilding(buildingIdFromInt(level)))
                 state = 0;
-            if (slot < townToView->mageGuildSpellCounts[level])
+            if (slot < m_townToView->m_mageGuildSpellCounts[level])
                 state = 0;
             else
                 state = slot < state ? MAGE_SLOT_EMPTY : MAGE_SLOT_ABSENT;
 
-            msg.codeX = state == MAGE_SLOT_ABSENT
+            msg.m_codeX = state == MAGE_SLOT_ABSENT
                             ? widget::WIDGET_CLEAR_STATUS
                             : widget::WIDGET_SET_STATUS;
-            msg.codeY = 10 + level * 6 + slot;
-            msg.extra = widget::WIDGET_DRAWN;
-            mageWin->BroadcastMessage(&msg);
+            msg.m_codeY = 10 + level * 6 + slot;
+            msg.m_extra = widget::WIDGET_DRAWN;
+            mageWin->broadcastMessage(&msg);
 
             if (state == MAGE_SLOT_EMPTY) {
-                msg.codeX = widget::WIDGET_SET_ICON_FRAME;
-                msg.codeY = 10 + level * 6 + slot;
-                msg.extra = state;
-                mageWin->BroadcastMessage(&msg);
+                msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+                msg.m_codeY = 10 + level * 6 + slot;
+                msg.m_extra = state;
+                mageWin->broadcastMessage(&msg);
             }
 
             if (state) {
-                msg.codeX = widget::WIDGET_CLEAR_STATUS;
-                msg.extra = widget::WIDGET_DRAWN;
-                msg.codeY = 40 + level * 6 + slot;
-                mageWin->BroadcastMessage(&msg);
+                msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+                msg.m_extra = widget::WIDGET_DRAWN;
+                msg.m_codeY = 40 + level * 6 + slot;
+                mageWin->broadcastMessage(&msg);
             } else {
-                msg.codeY = 40 + level * 6 + slot;
-                msg.codeX = widget::WIDGET_SET_ICON_FRAME;
-                if (townToView->type == TOWN_CONFLUX
-                    && (townToView->active & bitNumber[HOLY_GRAIL_ID]))
-                    msg.extra = 70;
+                msg.m_codeY = 40 + level * 6 + slot;
+                msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+                if (m_townToView->m_type == TOWN_CONFLUX
+                    && (m_townToView->m_active & g_bitNumber[HOLY_GRAIL_ID]))
+                    msg.m_extra = 70;
                 else
-                    msg.extra = townToView->mageGuildSpells[level][slot];
-                mageWin->BroadcastMessage(&msg);
+                    msg.m_extra = m_townToView->m_mageGuildSpells[level][slot];
+                mageWin->broadcastMessage(&msg);
             }
         }
     }
@@ -7302,49 +7406,49 @@ VA(0x005d70b0, 0x7C8)  // anchor-vtable 0x643980 + anchor-string TPTavern.pcx + 
 TTavernWindow::TTavernWindow(int x2, int y2)
     : CAdvPopup(x2, y2, 0x18b, 0x1f8, 0x12)
 {
-    field_60 = 0;
-    Widgets.reserve(18);
+    m_selectedRecruit = 0;
+    m_widgets.reserve(18);
 
-    Widgets.push_back(new bitmapBorder(0, 0, width, height, 0,
+    m_widgets.push_back(new bitmapBorder(0, 0, m_width, m_height, 0,
                                        "TPTavern.pcx", 0x800));
-    Widgets.push_back(new bitmapBorder(29, 372, 234, 36, 10,
+    m_widgets.push_back(new bitmapBorder(29, 372, 234, 36, 10,
                                        "TPTavDes.pcx", 0x800));
-    Widgets.push_back(new bitmapBorder(7, 478, 381, 19, 13,
+    m_widgets.push_back(new bitmapBorder(7, 478, 381, 19, 13,
                                        "TPTavRol.pcx", 0x800));
-    Widgets.push_back(new bitmapBorder(70, 297, 62, 68, 8,
+    m_widgets.push_back(new bitmapBorder(70, 297, 62, 68, 8,
                                        "TPTavSel.pcx", 0x800));
-    Widgets.push_back(new bitmapBorder(160, 297, 62, 68, 9,
+    m_widgets.push_back(new bitmapBorder(160, 297, 62, 68, 9,
                                        "TPTavSel.pcx", 0x800));
 
-    Widgets.push_back(new textWidget(0, 20, width, 30, 0, "bigfont.fnt",
+    m_widgets.push_back(new textWidget(0, 20, m_width, 30, 0, "bigfont.fnt",
                                      font::HEADING, 1, 1, 0, 8));
-    Widgets.push_back(new textWidget(35, 188, 326, 80, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(35, 188, 326, 80, 0, "smalfont.fnt",
                                      font::PRIMARY, 2, 1, 0, 8));
-    Widgets.push_back(new textWidget(29, 271, 233, 30, 0, "bigfont.fnt",
+    m_widgets.push_back(new textWidget(29, 271, 233, 30, 0, "bigfont.fnt",
                                      font::HEADING, 3, 1, 0, 8));
-    Widgets.push_back(new textWidget(273, 320, 94, 20, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(273, 320, 94, 20, 0, "smalfont.fnt",
                                      font::PRIMARY, 4, 1, 0, 8));
-    Widgets.push_back(new textWidget(29, 372, 234, 40, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(29, 372, 234, 40, 0, "smalfont.fnt",
                                      font::PRIMARY, 7, 1, 0, 8));
-    rolloverText = new textWidget(7, 478, 381, 20, 0, "smalfont.fnt",
+    m_rolloverText = new textWidget(7, 478, 381, 20, 0, "smalfont.fnt",
                                   font::PRIMARY, 14, 1, 0, 8);
-    Widgets.push_back(rolloverText);
+    m_widgets.push_back(m_rolloverText);
 
-    Widgets.push_back(new bitmapBorder(72, 299, 58, 64, 5, 0, 0x800));
-    Widgets.push_back(new bitmapBorder(162, 299, 58, 64, 6, 0, 0x800));
-    Widgets.push_back(new border(272, 285, 96, 54, 15, 1));
-    Widgets.push_back(new button(272, 355, 96, 54, 12, "TPTav01.def",
+    m_widgets.push_back(new bitmapBorder(72, 299, 58, 64, 5, 0, 0x800));
+    m_widgets.push_back(new bitmapBorder(162, 299, 58, 64, 6, 0, 0x800));
+    m_widgets.push_back(new border(272, 285, 96, 54, 15, 1));
+    m_widgets.push_back(new button(272, 355, 96, 54, 12, "TPTav01.def",
                                  0, 1, 0, 28, 2));
-    Widgets.push_back(new button(22, 428, 64, 30, 11, "TPTav02.def",
+    m_widgets.push_back(new button(22, 428, 64, 30, 11, "TPTav02.def",
                                  0, 1, 0, 20, 2));
-    Widgets.push_back(new button(310, 428, 64, 30, CANCEL_BUTTON_ID,
+    m_widgets.push_back(new button(310, 428, 64, 30, CANCEL_BUTTON_ID,
                                  "iCancel.def", 0, 1, 1, 1, 2));
 
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
-            AddWidget(*it, -1);
+            addWidget(*it, -1);
         else
-            MemError();
+            memError();
     }
 }
 
@@ -7354,106 +7458,84 @@ VA_COMPGEN(0x005d7880, 0x21, SCALAR_DELETING_DTOR, TTavernWindow)
 VA(0x005d78b0, 0x6B)  // anchor-vtable 0x643980 + ??_G call edge, dc 0x17a734
 TTavernWindow::~TTavernWindow()
 {
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
 }
 
-// The tavern's status line. Six widget ids answer - the two recruit
-// portraits (5, 6), the thieves' guild button (11), the hire button
-// (12), the rumour panel (15) and the cancel button (0x7800) - and
-// everything else gets the shared empty line. The dispatch is a
-// BINARY-SEARCH lowering (cmp/jg then cmp/je, not the dense dec/je
-// chain), which is what a sparse `switch` compiles to on this CL.
+// E:\gamedcs\townmgr.cpp:7847. Six widget ids provide rollover text;
+// hire refusals test gold, the hero cap, then town occupancy. Refusals read
+// g_currentPlayer, while Complete's recruit lookup uses the local player.
 //
-// The hire button is the only arm that reasons: it refuses in the order
-// the bytes have it - not enough gold, the cap of eight heroes already
-// reached, the town's own square already occupied - and only then
-// describes the hero the page has selected. Every one of those refusals
-// reads gpCurrentPlayer, while the hero lookup reads the LOCAL player,
-// which is why both pointers are live in the frame at once.
+// Exact: DC lines 7865/7870/7877/7879 prove game::GetHero calls. Restoring
+// the portrait getter alone raises 81.4136 to 100 and restores retail's
+// split hero/name address as well as its gold/rumour/default strcpy join.
+// The hire getter preserves those bytes. The old claim that the split and
+// copy joins were unreachable VC6 behavior was caused by the flattened
+// accessor, not a compiler-generation difference.
 //
-// The empty answer is a bare `gText[0] = 0`, not a strcpy of the empty
-// string: retail stores a single zero byte at the absolute address.
-//
-// The five copies of the line are five `strcpy` intrinsics; VC6
-// cross-jumps two of them onto a shared expansion and leaves the tail
-// (`and ecx,3 / rep movsb`) shared by all of them. That merge is the
-// compiler's, not a source shape.
-//
-// Residual (81.4136%): calls (6/6), branches (14/14), returns (1/1) and
-// blocks (28/28) agree; base has 161 instructions against retail's 162.
-// Both emit four full intrinsic copy bodies and one shared `rep movsb` tail,
-// but C2 chooses different representatives for one full-copy join: retail
-// shares gold/rumour/default and leaves town-occupied open, while this compile
-// shares town-occupied/rumour/default and leaves gold open. An explicit join
-// over retail's predecessor set raises fuzzy to 83.6975 only by collapsing all
-// four copies to one (139 instructions), so that structurally wrong family is
-// rejected. One-call inline wrappers at either the gold or town site are
-// byte-flat. A named `hero*` for the RECRUIT arm's own sprintf is
-// byte-flat too (2026-08-21) even though retail splits that address as
-// `lea eax,[... + 0x21620] / add eax,0x23` where this compile folds a single
-// `lea ... + 0x21643` - VC6 re-folds the offset back through the named
-// pointer, so the split is not source-reachable here. Removing the DC-unattested named `recruit` pointer regresses to
-// 76.8086; the remaining scratch-register swaps follow the same block-choice
-// tie. This is the merged-block/compiler-generation class.
-
-// E:\gamedcs\townmgr.cpp
+// Retain the named hire recruit across Complete's heroFn004D8F70 call:
+// retail saves one hero pointer in ESI across that call. Repeating GetHero
+// as in the older DC direct class-table expression retains two pointer
+// calculations and null branches before the call (91.6049). Complete calls rollover
+// slot 13 directly and drawWindow(0,13,14), whereas DC broadcasts text and
+// draws with 1; retain the retail call sequence and arguments.
+// Before normalization: SetRolloverText, codeY, GetHero.
 VA(0x005d7920, 0x20A)  // anchor-caller(TTavernWindow::WindowHandler 0x5d7b30 hover arm) + anchor-callee(rolloverText slot 13) + arity(ret 4), dc 0x17a7a0
-void TTavernWindow::SetRolloverText(int id)
+void TTavernWindow::setRolloverText(int codeY)
 {
-    playerData* player = gpGame->GetLocalPlayer();
+    playerData* player = g_game->getLocalPlayer();
 
-    switch (id) {
+    switch (codeY) {
     case RECRUIT_0_ID:
     case RECRUIT_1_ID:
-        if (player->recruits[id - RECRUIT_0_ID] == -1)
-            gText[0] = 0;
+        if (player->m_recruits[codeY - RECRUIT_0_ID] == -1)
+            g_text[0] = 0;
         else
-            sprintf(gText, cTavernInfo[4],
-                    gpGame->heroes[player->recruits[id - RECRUIT_0_ID]].name);
+            sprintf(g_text, g_tavernInfo[4],
+                    g_game->getHero(player->m_recruits[codeY - RECRUIT_0_ID])->m_name);
         break;
 
     case THIEVES_GUILD_BUTTON_ID:
-        strcpy(gText, cTavernInfo[5]);
+        strcpy(g_text, g_tavernInfo[5]);
         break;
 
     case HIRE_BUTTON_ID:
-        if (gpCurrentPlayer->IsLocalHuman()) {
-            if (gpCurrentPlayer->resources[GOLD] < gHeroGoldCost) {
-                strcpy(gText, cTavernInfo[0]);
-            } else if (gpCurrentPlayer->numHeroes
+        if (g_currentPlayer->isLocalHuman()) {
+            if (g_currentPlayer->m_resources[GOLD] < g_heroGoldCost) {
+                strcpy(g_text, g_tavernInfo[0]);
+            } else if (g_currentPlayer->m_numHeroes
                        == playerData::HERO_SLOT_COUNT) {
-                sprintf(gText, cTavernInfo[1], playerData::HERO_SLOT_COUNT);
-            } else if (!gMapTavern
-                       && gpTownManager->townToView->visitingHeroId != -1) {
-                strcpy(gText, cTavernInfo[2]);
-            } else if (player->recruits[field_60] == -1) {
-                gText[0] = 0;
+                sprintf(g_text, g_tavernInfo[1], playerData::HERO_SLOT_COUNT);
+            } else if (!g_mapTavern
+                       && g_townManager->m_townToView->m_visitingHeroId != -1) {
+                strcpy(g_text, g_tavernInfo[2]);
+            } else if (player->m_recruits[m_selectedRecruit] == -1) {
+                g_text[0] = 0;
             } else {
-                hero* recruit = &gpGame->heroes[player->recruits[field_60]];
-                sprintf(gText, cTavernInfo[3], recruit->name,
-                        recruit->HeroFn_004D8F70());
+                hero* recruit = g_game->getHero(player->m_recruits[m_selectedRecruit]);
+                sprintf(g_text, g_tavernInfo[3], recruit->m_name,
+                        recruit->heroFn004D8F70());
             }
         }
         break;
 
     case RUMOR_PANEL_ID:
-        strcpy(gText, cTavernInfo[6]);
+        strcpy(g_text, g_tavernInfo[6]);
         break;
 
     case CANCEL_BUTTON_ID:
-        strcpy(gText, cTavernInfo[7]);
+        strcpy(g_text, g_tavernInfo[7]);
         break;
 
     default:
-        strcpy(gText, emptyRolloverText);
+        strcpy(g_text, g_emptyRolloverText);
         break;
     }
 
-    rolloverText->SetText(gText);
-    DrawWindow(0, 13, 14);
+    m_rolloverText->setText(g_text);
+    drawWindow(0, 13, 14);
 }
 
 // The tavern's handler. Three jobs, in the compiland's usual order:
@@ -7491,86 +7573,86 @@ void TTavernWindow::SetRolloverText(int id)
 // spelling reached it: the value is a call result, so why-reg's
 // creation-order lever does not apply.
 VA(0x005d7b30, 0x2E1)  // anchor-vtable 0x643980 slot 9 + anchor-callee(SetRolloverText 0x5d7920 + TThievesGuildWindow ctor) + arity(ret 4), dc 0x17aa28
-int TTavernWindow::WindowHandler(message* msg)
+int TTavernWindow::windowHandler(message* msg)
 {
-    int result = CAdvPopup::WindowHandler(msg);
+    int result = CAdvPopup::windowHandler(msg);
     if (result)
         return result;
 
-    playerData* player = gpGame->GetLocalPlayer();
+    playerData* player = g_game->getLocalPlayer();
 
-    switch (msg->id) {
+    switch (msg->m_id) {
     case MESSAGE_MOUSE_MOVE:
-        gpWindowManager->ConvertToHover(*msg);
-        if (msg->codeY != lastHover || msg->qualifier != lastQualifier) {
-            lastHover = msg->codeY;
-            lastQualifier = msg->qualifier;
-            SetRolloverText(msg->codeY);
+        g_windowManager->convertToHover(*msg);
+        if (msg->m_codeY != m_lastHover || msg->m_qualifier != m_lastQualifier) {
+            m_lastHover = msg->m_codeY;
+            m_lastQualifier = msg->m_qualifier;
+            setRolloverText(msg->m_codeY);
         }
         break;
 
     case MESSAGE_WIDGET:
-        switch (msg->codeX) {
+        switch (msg->m_codeX) {
         case widget::WIDGET_DESELECT:
-            switch (msg->codeY) {
+            switch (msg->m_codeY) {
             case THIEVES_GUILD_BUTTON_ID:
-                gpThievesGuildWindow = new TThievesGuildWindow(-1);
-                if (!gpThievesGuildWindow)
-                    MemError();
-                VideoPause();
-                gpThievesGuildWindow->DoModal(0);
-                VideoResume();
-                delete gpThievesGuildWindow;
+                g_thievesGuildWindow = new TThievesGuildWindow(-1);
+                if (!g_thievesGuildWindow)
+                    memError();
+                videoPause();
+                g_thievesGuildWindow->doModal(0);
+                videoResume();
+                delete g_thievesGuildWindow;
                 break;
 
             case HIRE_BUTTON_ID:
             case CANCEL_BUTTON_ID:
-                gpWindowManager->dialogReturn = msg->codeY;
-                msg->codeX = msg->codeY = widget::WIDGET_END_DIALOG;
+                g_windowManager->m_dialogReturn = msg->m_codeY;
+                msg->m_codeX = msg->m_codeY = widget::WIDGET_END_DIALOG;
                 return MESSAGE_DISPATCH_FORWARD;
             }
             break;
 
         case widget::WIDGET_SELECT:
         case widget::WIDGET_RIGHT_SELECT:
-            if (msg->codeY >= RECRUIT_0_ID && msg->codeY <= RECRUIT_1_ID) {
-                field_60 = msg->codeY - RECRUIT_0_ID;
-                if (player->recruits[field_60] != -1) {
-                    msg->codeX = widget::WIDGET_SET_STATUS;
-                    msg->codeY = field_60 + 8;
-                    msg->extra = widget::WIDGET_DRAWN;
-                    BroadcastMessage(msg);
+            if (msg->m_codeY >= RECRUIT_0_ID && msg->m_codeY <= RECRUIT_1_ID) {
+                m_selectedRecruit = msg->m_codeY - RECRUIT_0_ID;
+                if (player->m_recruits[m_selectedRecruit] != -1) {
+                    msg->m_codeX = widget::WIDGET_SET_STATUS;
+                    msg->m_codeY = m_selectedRecruit + 8;
+                    msg->m_extra = widget::WIDGET_DRAWN;
+                    broadcastMessage(msg);
 
-                    msg->codeX = widget::WIDGET_CLEAR_STATUS;
-                    msg->codeY = 9 - field_60;
-                    BroadcastMessage(msg);
+                    msg->m_codeX = widget::WIDGET_CLEAR_STATUS;
+                    msg->m_codeY = 9 - m_selectedRecruit;
+                    broadcastMessage(msg);
 
-                    gTavernHero = &gpGame->heroes[player->recruits[field_60]];
-                    long artifacts = gTavernHero->get_number_in_backpack(0)
-                                     + gTavernHero->get_equipped_artifacts(0);
-                    sprintf(gText, gpGeneralText->GetText(216),
-                            gTavernHero->name, gTavernHero->level,
-                            gTavernHero->HeroFn_004D8F70(), artifacts);
+                    g_tavernHero = &g_game->m_heroes[player->m_recruits[m_selectedRecruit]];
+                    long artifacts = g_tavernHero->getNumberInBackpack(0)
+                                     + g_tavernHero->getEquippedArtifacts(0);
+                    sprintf(g_text, g_generalText->getText(216),
+                            g_tavernHero->m_name, g_tavernHero->m_level,
+                            g_tavernHero->heroFn004D8F70(), artifacts);
                     if (artifacts == 1) {
-                        int end = strlen(gText);
-                        gText[end - 2] = '.';
-                        gText[end - 1] = 0;
+                        int end = strlen(g_text);
+                        g_text[end - 2] = '.';
+                        g_text[end - 1] = 0;
                     }
 
-                    msg->codeX = widget::WIDGET_SET_TEXT;
-                    msg->codeY = 7;
-                    msg->extraText = gText;
-                    BroadcastMessage(msg);
+                    msg->m_codeX = widget::WIDGET_SET_TEXT;
+                    msg->m_codeY = 7;
+                    msg->m_extraText = g_text;
+                    broadcastMessage(msg);
 
-                    if (msg->qualifier & MESSAGE_MODIFIER_RIGHT) {
-                        VideoPause();
-                        HeroView(player->recruits[field_60], 1, 0, 1);
-                        VideoResume();
+                    if (msg->m_qualifier & MESSAGE_MODIFIER_RIGHT) {
+                        videoPause();
+                        heroView(player->m_recruits[m_selectedRecruit], 1, 0, 1);
+                        videoResume();
                     }
                 }
-                if (!VideoPlaying())
-                    VideoOpen(6, 0x110, 0x68, 0, 0, 1, 1, 1);
-                DrawWindow(1, WINDOW_ALL_WIDGETS_LOW,
+                if (!videoPlaying())
+                    videoOpen(6, 0x110, 0x68, 0, 0, 1, 1, 1);
+                drawWindow(1, WINDOW_ALL_WIDGETS_LOW,
                            WINDOW_ALL_WIDGETS_HIGH);
             }
             break;
@@ -7591,35 +7673,35 @@ void TTownScreenWindow::TTownScreenWindow()
 
 // E:\gamedcs\townmgr.cpp:2460
 DC_ONLY(0x16ae68, 0xF0)
-void TTownScreenWindow::UpdateTownLocator(int i)
+void TTownScreenWindow::updateTownLocator(int i)
 {
     // @stub
 }
 
 // E:\gamedcs\townmgr.cpp:2506
 DC_ONLY(0x16af58, 0xD8)
-void TTownScreenWindow::UpdateTownLocators()
+void TTownScreenWindow::updateTownLocators()
 {
     // @stub
 }
 
 // E:\gamedcs\townmgr.cpp:2526
 DC_ONLY(0x16b030, 0x52)
-void TTownScreenWindow::DoTownKnob(unsigned char up)
+void TTownScreenWindow::doTownKnob(unsigned char up)
 {
     // @stub
 }
 
 // E:\gamedcs\townmgr.cpp:2547
 DC_ONLY(0x16b084, 0x62)
-void TTownScreenWindow::bonus_right_click(long id)
+void TTownScreenWindow::bonusRightClick(long id)
 {
     // @stub
 }
 
 // E:\gamedcs\townmgr.cpp:2562
 DC_ONLY(0x16b0e8, 0x630)
-void TTownScreenWindow::set_bonus_display(town* currTown)
+void TTownScreenWindow::setBonusDisplay(town* currTown)
 {
     // @stub
 }
@@ -7640,28 +7722,28 @@ void townManager::ChangeTown(unsigned char fade)
 
 // E:\gamedcs\townmgr.cpp:2855
 DC_ONLY(0x16ba90, 0x114)
-void townManager::UpdateTownInfo()
+void townManager::updateTownInfo()
 {
     // @stub
 }
 
 // E:\gamedcs\townmgr.cpp:2897
 DC_ONLY(0x16bba4, 0x540)
-void townManager::SetupTown(unsigned char fade)
+void townManager::setupTown(unsigned char fade)
 {
     // @stub
 }
 
 // E:\gamedcs\townmgr.cpp:3062
 DC_ONLY(0x16c0e4, 0x1F4)
-void townManager::NewStrips()
+void townManager::newStrips()
 {
     // @stub
 }
 
 // E:\gamedcs\townmgr.cpp:3143
 DC_ONLY(0x16c2d8, 0x110)
-void townManager::UnloadTown()
+void townManager::unloadTown()
 {
     // @stub
 }
@@ -7676,7 +7758,7 @@ void townManager::Close()
 // E:\gamedcs\townmgr.cpp:3213
 // E:\gamedcs\townmgr.cpp:3274
 DC_ONLY(0x16c6a8, 0x296)
-void townManager::SetArmyCommand(int splitEnabled, unsigned char join_dialog)
+void townManager::setArmyCommand(int splitEnabled, unsigned char join_dialog)
 {
     // @stub
 }
@@ -7735,7 +7817,7 @@ void townManager::SetArmyCommand(int splitEnabled, unsigned char join_dialog)
 
 // E:\gamedcs\townmgr.cpp:3383
 DC_ONLY(0x16c940, 0x572)
-void townManager::SetCommandAndText(message* msg)
+void townManager::setCommandAndText(message* msg)
 {
     // @stub
 }
@@ -7749,7 +7831,7 @@ void townManager::SetCommandAndText2(message* msg)
 
 // E:\gamedcs\townmgr.cpp:3787
 DC_ONLY(0x16d0dc, 0x104)
-void townManager::select_army(strip* whichStrip, long i, unsigned char join_dialog)
+void townManager::selectArmy(strip* whichStrip, long i, unsigned char join_dialog)
 {
     // @stub
 }
@@ -7784,14 +7866,14 @@ void TThievesGuildWindow::show_side()
 
 // E:\gamedcs\townmgr.cpp:4070
 DC_ONLY(0x16e2f4, 0x148)
-void TThievesGuildWindow::SetRolloverText(int codeY)
+void TThievesGuildWindow::setRolloverText(int codeY)
 {
     // @stub
 }
 
 // E:\gamedcs\townmgr.cpp:4154
 DC_ONLY(0x16e43c, 0x28E)
-int TThievesGuildWindow::WindowHandler(message* msg)
+int TThievesGuildWindow::windowHandler(message* msg)
 {
     // @stub
 }
@@ -7812,7 +7894,7 @@ void TMageGuildWindow::TMageGuildWindow()
 
 // E:\gamedcs\townmgr.cpp:4617
 DC_ONLY(0x171020, 0xF8)
-void TMageGuildWindow::SetRolloverText(int codeY)
+void TMageGuildWindow::setRolloverText(int codeY)
 {
     // @stub
 }
@@ -7833,7 +7915,7 @@ void type_garrison_base_window::type_garrison_base_window(hero* inHero, int garr
 
 // E:\gamedcs\townmgr.cpp:4940
 DC_ONLY(0x172af0, 0x178)
-void type_garrison_base_window::SetCommandAndText(message* msg)
+void type_garrison_base_window::setCommandAndText(message* msg)
 {
     // @stub
 }
@@ -7847,14 +7929,14 @@ void type_garrison_base_window::ShowText()
 
 // E:\gamedcs\townmgr.cpp:5012
 DC_ONLY(0x172ca0, 0x52)
-void type_garrison_base_window::ViewArmy()
+void type_garrison_base_window::viewArmy()
 {
     // @stub
 }
 
 // E:\gamedcs\townmgr.cpp:5027
 DC_ONLY(0x172cf4, 0x240)
-int type_garrison_base_window::WindowHandler(message* msg)
+int type_garrison_base_window::windowHandler(message* msg)
 {
     // @stub
 }
@@ -7875,21 +7957,21 @@ void TGarrisonWindow::TGarrisonWindow(hero* inHero, int garrison_owner, armyGrou
 
 // E:\gamedcs\townmgr.cpp:5180
 DC_ONLY(0x17320c, 0x2C)
-void DoEventGarrison(hero* inHero, garrison* thisGarrison)
+void doEventGarrison(hero* inHero, garrison* thisGarrison)
 {
     // @stub
 }
 
 // E:\gamedcs\townmgr.cpp:5187
 DC_ONLY(0x173238, 0x70)
-void do_monster_join_dialog(hero* inHero, TCreatureType type, int amount)
+void doMonsterJoinDialog(hero* inHero, TCreatureType type, int amount)
 {
     // @stub
 }
 
 // E:\gamedcs\townmgr.cpp:5201
 DC_ONLY(0x1732a8, 0x3E)
-void do_monster_join_dialog(hero* inHero, armyGroup* monsters)
+void doMonsterJoinDialog(hero* inHero, armyGroup* monsters)
 {
     // @stub
 }
@@ -7903,28 +7985,28 @@ void TBlacksmithWindow::TBlacksmithWindow(int heroID, int townType)
 
 // E:\gamedcs\townmgr.cpp:5296
 DC_ONLY(0x173a88, 0x78)
-void TBlacksmithWindow::SetRightClickText(int codeY)
+void TBlacksmithWindow::setRightClickText(int codeY)
 {
     // @stub
 }
 
 // E:\gamedcs\townmgr.cpp:5302
 DC_ONLY(0x173b00, 0xC8)
-void TBlacksmithWindow::SetRolloverText(int codeY)
+void TBlacksmithWindow::setRolloverText(int codeY)
 {
     // @stub
 }
 
 // E:\gamedcs\townmgr.cpp:5323
 DC_ONLY(0x173bc8, 0x116)
-int TBlacksmithWindow::WindowHandler(message* msg)
+int TBlacksmithWindow::windowHandler(message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\townmgr.cpp:5361
 DC_ONLY(0x173ce0, 0x202)
-void DoBlacksmith(int heroID, int type)
+void doBlacksmith(int heroID, int type)
 {
     // @stub
 }
@@ -7938,35 +8020,35 @@ void TShipWindow::TShipWindow(int townType)
 
 // E:\gamedcs\townmgr.cpp:5461
 DC_ONLY(0x174654, 0x4)
-void TShipWindow::SetRightClickText()
+void TShipWindow::setRightClickText()
 {
     // @stub
 }
 
 // E:\gamedcs\townmgr.cpp:5465
 DC_ONLY(0x174658, 0x84)
-void TShipWindow::SetRolloverText(int codeY)
+void TShipWindow::setRolloverText(int codeY)
 {
     // @stub
 }
 
 // E:\gamedcs\townmgr.cpp:5486
 DC_ONLY(0x1746dc, 0x11E)
-int TShipWindow::WindowHandler(message* msg)
+int TShipWindow::windowHandler(message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\townmgr.cpp:5530
 DC_ONLY(0x1747fc, 0x4E)
-void DoShipyard(int type)
+void doShipyard(int type)
 {
     // @stub
 }
 
 // E:\gamedcs\townmgr.cpp:5540
 DC_ONLY(0x17484c, 0x144)
-void townManager::DoHall()
+void townManager::doHall()
 {
     // @stub
 }
@@ -7980,7 +8062,7 @@ void townManager::show_hall_side()
 
 // E:\gamedcs\townmgr.cpp:5685
 DC_ONLY(0x174bfc, 0x120)
-void townManager::DoPortalOfSummoning()
+void townManager::doPortalOfSummoning()
 {
     // @stub
 }
@@ -7989,7 +8071,7 @@ void townManager::DoPortalOfSummoning()
 // E:\gamedcs\townmgr.cpp:5733
 // E:\gamedcs\townmgr.cpp:5778
 DC_ONLY(0x174f60, 0x18)
-int ExitTownManager(message* msg)
+int exitTownManager(message* msg)
 {
     // @stub
 }
@@ -7997,56 +8079,56 @@ int ExitTownManager(message* msg)
 // E:\gamedcs\townmgr.cpp:5789
 // RETAIL_LOCATED(0x005d2a40, 0x335): anchor-global, not reconstructed.
 DC_ONLY(0x174f78, 0x335)
-char* GetBuildingInfo(const town* this_town, int buildingId, unsigned char bIncludeTitle, unsigned char extended)
+char* getBuildingInfo(const town* this_town, int buildingId, unsigned char bIncludeTitle, unsigned char extended)
 {
     // @stub
 }
 
 // E:\gamedcs\townmgr.cpp:5854
 DC_ONLY(0x175160, 0x14D2)
-int townManager::Main(message* msg)
+int townManager::main(message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\townmgr.cpp:6598
 DC_ONLY(0x176634, 0x552)
-void townManager::DoCommand(int inCommand, unsigned char isGarrison, type_garrison_base_window* garrisonWindow)
+void townManager::doCommand(int inCommand, unsigned char isGarrison, type_garrison_base_window* garrisonWindow)
 {
     // @stub
 }
 
 // E:\gamedcs\townmgr.cpp:6778
 DC_ONLY(0x176b88, 0x66)
-void townManager::SwapHeroes()
+void townManager::swapHeroes()
 {
     // @stub
 }
 
 // E:\gamedcs\townmgr.cpp:6792
 DC_ONLY(0x176bf0, 0x108)
-void townManager::MoveHeroToGarrison()
+void townManager::moveHeroToGarrison()
 {
     // @stub
 }
 
 // E:\gamedcs\townmgr.cpp:6813
 DC_ONLY(0x176cf8, 0x1B8)
-void townManager::MoveHeroFromGarrison()
+void townManager::moveHeroFromGarrison()
 {
     // @stub
 }
 
 // E:\gamedcs\townmgr.cpp:6866
 DC_ONLY(0x176f24, 0x120)
-void townManager::ResetStrips()
+void townManager::resetStrips()
 {
     // @stub
 }
 
 // E:\gamedcs\townmgr.cpp:6931
 DC_ONLY(0x177044, 0x76)
-void townManager::DrawTown(int update, int incFrame, unsigned char drawHotspots)
+void townManager::drawTown(int update, int incFrame, unsigned char drawHotspots)
 {
     // @stub
 }
@@ -8067,7 +8149,7 @@ void TTownMenu::~TTownMenu()
 
 // E:\gamedcs\townmgr.cpp:7048
 DC_ONLY(0x178638, 0x128)
-int TTownMenu::WindowHandler(message* msg)
+int TTownMenu::windowHandler(message* msg)
 {
     // @stub
 }
@@ -8081,7 +8163,7 @@ void TTownMenu::SetupStrips()
 
 // E:\gamedcs\townmgr.cpp:7133
 DC_ONLY(0x1787e0, 0x2D8)
-void TTownMenu::NewStrips()
+void TTownMenu::newStrips()
 {
     // @stub
 }
@@ -8095,7 +8177,7 @@ void TBuyBuildWindow::TBuyBuildWindow(int x2, int y2, int Id)
 
 // E:\gamedcs\townmgr.cpp:7272
 DC_ONLY(0x179090, 0x324)
-void TBuyBuildWindow::set_prerequisite_text(const town* current_town, type_building_id buildingId)
+void TBuyBuildWindow::setPrerequisiteText(const town* current_town, type_building_id buildingId)
 {
     // @stub
 }
@@ -8127,49 +8209,49 @@ void TBuyBuildWindow::set_prerequisite_text(const town* current_town, type_build
 // the widget vector a stack argument; both are wrong - the vector is a
 // MEMBER of the constructed window at +0x30.
 DC_ONLY(0x1793b4, 0x54A)
-int townManager::BuyBuild(int buildingId, int infoOnly, int bQuickView)
+int townManager::buyBuild(int buildingId, int infoOnly, int bQuickView)
 {
     // @stub
 }
 
 // E:\gamedcs\townmgr.cpp:7489
 DC_ONLY(0x179900, 0xB6)
-void TBuyBuildWindow::SetRolloverText(int codeY)
+void TBuyBuildWindow::setRolloverText(int codeY)
 {
     // @stub
 }
 
 // E:\gamedcs\townmgr.cpp:7509
 DC_ONLY(0x1799b8, 0x4)
-void TBuyBuildWindow::SetRightClickText()
+void TBuyBuildWindow::setRightClickText()
 {
     // @stub
 }
 
 // E:\gamedcs\townmgr.cpp:7513
 DC_ONLY(0x1799bc, 0xA8)
-int TBuyBuildWindow::WindowHandler(message* msg)
+int TBuyBuildWindow::windowHandler(message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\townmgr.cpp:7539
 DC_ONLY(0x179a64, 0xC4)
-void townManager::CycleOutline(const int objectIndex, const int x, const int y, const int w, const int h)
+void townManager::cycleOutline(const int objectIndex, const int x, const int y, const int w, const int h)
 {
     // @stub
 }
 
 // E:\gamedcs\townmgr.cpp:7564
 DC_ONLY(0x179b28, 0x34A)
-void townManager::BuildObj(int buildingId)
+void townManager::buildObj(int buildingId)
 {
     // @stub
 }
 
 // E:\gamedcs\townmgr.cpp:7693
 DC_ONLY(0x179e74, 0x1A8)
-void townManager::SetupMage(heroWindow* mageWin)
+void townManager::setupMage(heroWindow* mageWin)
 {
     // @stub
 }
@@ -8183,14 +8265,14 @@ void TTavernWindow::TTavernWindow(int x2, int y2)
 
 // E:\gamedcs\townmgr.cpp:7847
 DC_ONLY(0x17a7a0, 0x288)
-void TTavernWindow::SetRolloverText(int codeY)
+void TTavernWindow::setRolloverText(int codeY)
 {
     // @stub
 }
 
 // E:\gamedcs\townmgr.cpp:7903
 DC_ONLY(0x17aa28, 0x314)
-int TTavernWindow::WindowHandler(message* msg)
+int TTavernWindow::windowHandler(message* msg)
 {
     // @stub
 }
@@ -8206,28 +8288,28 @@ int TTavernWindow::WindowHandler(message* msg)
 
 // E:\gamedcs\townmgr.cpp:8037
 VA(0x005d7e20, 0x42)  // anchor-vtable 0x643980 slot 1 + arity screen, dc 0x17ad3c
-int TTavernWindow::Open(int zOrder, unsigned char update)
+int TTavernWindow::open(int zOrder, unsigned char update)
 {
-    VideoOpen(6, 0x110, 0x68, 0, 0, 1, 1, 1);
-    int result = heroWindow::Open(zOrder, update);
+    videoOpen(6, 0x110, 0x68, 0, 0, 1, 1, 1);
+    int result = heroWindow::open(zOrder, update);
     if (result)
-        VideoClose();
+        videoClose();
     return result;
 }
 
 // E:\gamedcs\townmgr.cpp:8048
 VA(0x005d7e70, 0x1B)  // anchor-vtable 0x643980 slot 2 + arity screen, dc 0x17ad78
-void TTavernWindow::Close(unsigned char update)
+void TTavernWindow::close(unsigned char update)
 {
-    VideoClose();
-    heroWindow::Close(update);
+    videoClose();
+    heroWindow::close(update);
 }
 
 #if 0  // @carcass
 
 // E:\gamedcs\townmgr.cpp:8055
 DC_ONLY(0x17ad8c, 0x35A)
-unsigned char DoTavern()
+unsigned char doTavern()
 {
     // @stub
 }
@@ -8236,11 +8318,11 @@ unsigned char DoTavern()
 #endif  // @carcass
 
 VA(0x005d7e90, 0x30)  // event caller + body + DoTavern edge, dc 0x17b0e8
-void DoMapTavern(type_point point)
+void doMapTavern(type_point point)
 {
-    gMapTavern = 1;
-    if (DoTavern())
-        gTavernHero->hire(gNetLocalGamePos, point);
+    g_mapTavern = 1;
+    if (doTavern())
+        g_tavernHero->hire(g_netLocalGamePos, point);
 }
 
 // The town's own tavern. Same chooser as the map object's - the flag the
@@ -8274,130 +8356,130 @@ void DoMapTavern(type_point point)
 // gText[len-2] off the end pointer rather than off gText's base.
 // E:\gamedcs\townmgr.cpp:8055
 VA(0x005d7ec0, 0x3EA)  // anchor-caller(DoMapTavern 0x5d7e90) + anchor-callee(TTavernWindow ctor 0x5d70b0 + BroadcastMessage) + arity(bare ret), dc 0x17ad8c
-unsigned char DoTavern()
+unsigned char doTavern()
 {
-    gUnnamed6aa9d8 = 1;
-    gUnnamed6aa9ec = new TTavernWindow(0xca, 0x30);
-    if (!gUnnamed6aa9ec)
-        MemError();
-    SetWinText(gUnnamed6aa9ec, 0x16);
+    g_unnamed6aa9d8 = 1;
+    g_unnamed6aa9ec = new TTavernWindow(0xca, 0x30);
+    if (!g_unnamed6aa9ec)
+        memError();
+    setWinText(g_unnamed6aa9ec, 0x16);
 
     message msg;
-    msg.qualifier = 0;
-    msg.mouseX = 0;
-    msg.mouseY = 0;
-    msg.extra = 0;
-    msg.window = 0;
-    msg.id = MESSAGE_WIDGET;
-    msg.codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
-    msg.codeY = 0;
-    msg.extra = gpGame->GetLocalPlayerGamePos();
-    gUnnamed6aa9ec->BroadcastMessage(&msg);
+    msg.m_qualifier = 0;
+    msg.m_mouseX = 0;
+    msg.m_mouseY = 0;
+    msg.m_extra = 0;
+    msg.m_window = 0;
+    msg.m_id = MESSAGE_WIDGET;
+    msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
+    msg.m_codeY = 0;
+    msg.m_extra = g_game->getLocalPlayerGamePos();
+    g_unnamed6aa9ec->broadcastMessage(&msg);
 
-    msg.extraText = gText;
-    if (gpCurrentPlayer->IsLocalHuman()) {
-        sprintf(gText, gpGeneralText->GetText(217), gpGame->currentRumour);
-        msg.codeX = widget::WIDGET_SET_TEXT;
-        msg.codeY = 2;
-        gUnnamed6aa9ec->BroadcastMessage(&msg);
+    msg.m_extraText = g_text;
+    if (g_currentPlayer->isLocalHuman()) {
+        sprintf(g_text, g_generalText->getText(217), g_game->m_currentRumour);
+        msg.m_codeX = widget::WIDGET_SET_TEXT;
+        msg.m_codeY = 2;
+        g_unnamed6aa9ec->broadcastMessage(&msg);
     }
 
-    playerData* player = gpGame->GetLocalPlayer();
-    sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"), gHeroGoldCost);
-    msg.codeY = 4;
-    gUnnamed6aa9ec->BroadcastMessage(&msg);
+    playerData* player = g_game->getLocalPlayer();
+    sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"), g_heroGoldCost);
+    msg.m_codeY = 4;
+    g_unnamed6aa9ec->broadcastMessage(&msg);
 
-    if (player->recruits[0] == -1) {
-        gTavernHero = 0;
-        gUnnamed6aa9ec->WidgetClearStatus(8, widget::WIDGET_DRAWN);
+    if (player->m_recruits[0] == -1) {
+        g_tavernHero = 0;
+        g_unnamed6aa9ec->widgetClearStatus(8, widget::WIDGET_DRAWN);
     } else {
-        gTavernHero = &gpGame->heroes[player->recruits[0]];
-        gUnnamed6aa9ec->WidgetClearStatus(9, widget::WIDGET_DRAWN);
-        msg.codeX = widget::WIDGET_SET_IMAGE;
-        msg.codeY = 5;
-        msg.extraText =
-            akHeroTraits[gpGame->GetHero(player->recruits[0])->portrait]
-                .largePortraitName;
-        gUnnamed6aa9ec->BroadcastMessage(&msg);
+        g_tavernHero = &g_game->m_heroes[player->m_recruits[0]];
+        g_unnamed6aa9ec->widgetClearStatus(9, widget::WIDGET_DRAWN);
+        msg.m_codeX = widget::WIDGET_SET_IMAGE;
+        msg.m_codeY = 5;
+        msg.m_extraText =
+            g_heroTraits[g_game->getHero(player->m_recruits[0])->m_portrait]
+                .m_largePortraitName;
+        g_unnamed6aa9ec->broadcastMessage(&msg);
     }
 
-    if (player->recruits[1] == -1) {
-        gUnnamed6aa9ec->WidgetClearStatus(9, widget::WIDGET_DRAWN);
+    if (player->m_recruits[1] == -1) {
+        g_unnamed6aa9ec->widgetClearStatus(9, widget::WIDGET_DRAWN);
     } else {
-        msg.codeY = 6;
-        msg.extraText =
-            akHeroTraits[gpGame->GetHero(player->recruits[1])->portrait]
-                .largePortraitName;
-        gUnnamed6aa9ec->BroadcastMessage(&msg);
-        if (gTavernHero == 0)
-            gTavernHero = &gpGame->heroes[player->recruits[1]];
+        msg.m_codeY = 6;
+        msg.m_extraText =
+            g_heroTraits[g_game->getHero(player->m_recruits[1])->m_portrait]
+                .m_largePortraitName;
+        g_unnamed6aa9ec->broadcastMessage(&msg);
+        if (g_tavernHero == 0)
+            g_tavernHero = &g_game->m_heroes[player->m_recruits[1]];
     }
 
-    if (gTavernHero) {
-        int total = gTavernHero->get_number_in_backpack(0)
-                  + gTavernHero->get_equipped_artifacts(0);
-        sprintf(gText, gpGeneralText->GetText(216), gTavernHero->name,
-                gTavernHero->level, gTavernHero->HeroFn_004D8F70(), total);
+    if (g_tavernHero) {
+        int total = g_tavernHero->getNumberInBackpack(0)
+                  + g_tavernHero->getEquippedArtifacts(0);
+        sprintf(g_text, g_generalText->getText(216), g_tavernHero->m_name,
+                g_tavernHero->m_level, g_tavernHero->heroFn004D8F70(), total);
         if (total == 1) {
-            int len = strlen(gText);
-            gText[len - 2] = '.';
-            gText[len - 1] = 0;
+            int len = strlen(g_text);
+            g_text[len - 2] = '.';
+            g_text[len - 1] = 0;
         }
-        msg.codeX = widget::WIDGET_SET_TEXT;
-        msg.codeY = 7;
-        msg.extraText = gText;
-        gUnnamed6aa9ec->BroadcastMessage(&msg);
+        msg.m_codeX = widget::WIDGET_SET_TEXT;
+        msg.m_codeY = 7;
+        msg.m_extraText = g_text;
+        g_unnamed6aa9ec->broadcastMessage(&msg);
     }
 
-    if (player->resources[6] < gHeroGoldCost || gTavernHero == 0
-        || player->numHeroes >= 8
-        || (gMapTavern == 0
-            && gpTownManager->townToView->visitingHeroId != -1)) {
-        msg.codeX = widget::WIDGET_SET_STATUS;
-        msg.codeY = TTavernWindow::HIRE_BUTTON_ID;
-        msg.extra = widget::WIDGET_DIMMED_NODRAW;
-        gUnnamed6aa9ec->BroadcastMessage(&msg);
+    if (player->m_resources[6] < g_heroGoldCost || g_tavernHero == 0
+        || player->m_numHeroes >= 8
+        || (g_mapTavern == 0
+            && g_townManager->m_townToView->m_visitingHeroId != -1)) {
+        msg.m_codeX = widget::WIDGET_SET_STATUS;
+        msg.m_codeY = TTavernWindow::HIRE_BUTTON_ID;
+        msg.m_extra = widget::WIDGET_DIMMED_NODRAW;
+        g_unnamed6aa9ec->broadcastMessage(&msg);
     }
 
-    if (gpCurrentPlayer->IsLocalHuman())
-        gUnnamed6aa9ec->GetWidget(TTavernWindow::HIRE_BUTTON_ID)->enable(0);
-    gUnnamed6aa9ec->DoModal(0);
-    delete gUnnamed6aa9ec;
-    gUnnamed6aa9d8 = 0;
-    return gpWindowManager->dialogReturn == TTavernWindow::HIRE_BUTTON_ID;
+    if (g_currentPlayer->isLocalHuman())
+        g_unnamed6aa9ec->getWidget(TTavernWindow::HIRE_BUTTON_ID)->enable(0);
+    g_unnamed6aa9ec->doModal(0);
+    delete g_unnamed6aa9ec;
+    g_unnamed6aa9d8 = 0;
+    return g_windowManager->m_dialogReturn == TTavernWindow::HIRE_BUTTON_ID;
 }
 
 // E:\gamedcs\townmgr.cpp:8164
 VA(0x005d82b0, 0x1D0)  // order-map(after DoMapTavern) + DoTavern/RedrawTownScreen edges + arity(bare ret), dc 0x17b154
-void townManager::DoTownTavern()
+void townManager::doTownTavern()
 {
-    gMapTavern = 0;
-    if (!DoTavern())
+    g_mapTavern = 0;
+    if (!doTavern())
         return;
 
-    townToView->hire(gTavernHero, gpGame->GetLocalPlayerGamePos());
-    RedrawTownScreen();
-    gpWindowManager->SaveFizzleSourceX(0xf1, 0x1e3, 0x1ee, 0x40);
+    m_townToView->hire(g_tavernHero, g_game->getLocalPlayerGamePos());
+    redrawTownScreen();
+    g_windowManager->saveFizzleSourceX(0xf1, 0x1e3, 0x1ee, 0x40);
 
-    if (field_120)
-        delete field_120;
-    field_120 = new strip(0xf1, 0x1e3, 1, 0xa2,
-                          gpGame->GetHero(townToView->visitingHeroId)->portrait,
-                          gpGame->GetLocalPlayerGamePos(), gTavernHero,
-                          &gTavernHero->army, 0x7c, 0, TownWindow);
-    if (!field_120)
-        MemError();
+    if (m_heroStrip)
+        delete m_heroStrip;
+    m_heroStrip = new strip(0xf1, 0x1e3, 1, 0xa2,
+                          g_game->getHero(m_townToView->m_visitingHeroId)->m_portrait,
+                          g_game->getLocalPlayerGamePos(), g_tavernHero,
+                          &g_tavernHero->m_army, 0x7c, 0, m_townWindow);
+    if (!m_heroStrip)
+        memError();
 
-    SAMPLE2 sample = LoadPlaySample("buildtwn.82M");
-    field_1c4 = 0;
-    TownWindow->DrawWindow(0, WINDOW_ALL_WIDGETS_LOW,
+    SAMPLE2 sample = loadPlaySample("buildtwn.82M");
+    m_divideStatus = 0;
+    m_townWindow->drawWindow(0, WINDOW_ALL_WIDGETS_LOW,
                            WINDOW_ALL_WIDGETS_HIGH);
-    field_11c->DrawIcons(0, CREATURE_NONE);
-    field_120->DrawIcons(0, CREATURE_NONE);
-    gpWindowManager->FizzleForwardX(0xf1, 0x1e3, 0x1ee, 0x40, -1);
-    WaitEndSample(sample, -1);
-    townToView->ApplySpecialBuildingEffect(
-        gpGame->GetHero(townToView->visitingHeroId));
+    m_garrisonStrip->drawIcons(0, CREATURE_NONE);
+    m_heroStrip->drawIcons(0, CREATURE_NONE);
+    g_windowManager->fizzleForwardX(0xf1, 0x1e3, 0x1ee, 0x40, -1);
+    waitEndSample(sample, -1);
+    m_townToView->applySpecialBuildingEffect(
+        g_game->getHero(m_townToView->m_visitingHeroId));
 }
 
 // Inferno's Castle Gate: pick another Inferno town of the player's that
@@ -8502,57 +8584,57 @@ void townManager::DoTownTavern()
 
 // E:\gamedcs\townmgr.cpp:8203
 VA(0x005d8480, 0x261)  // anchor-callee TTownGateWindow ctor/AddTown/DoModal + arity(bare ret), dc 0x17b318
-void townManager::DoTownGate()
+void townManager::doTownGate()
 {
     TTownGateWindow* gateWindow = new TTownGateWindow(0);
     if (gateWindow == 0)
-        MemError();
+        memError();
 
-    playerData* player = gpGame->GetLocalPlayer();
-    SetWinText(gateWindow, 24);
+    playerData* player = g_game->getLocalPlayer();
+    setWinText(gateWindow, 24);
 
     int i;
-    for (i = 0; i < player->numTowns; i++) {
-        int townId = player->townIds[i];
-        town* otherTown = gpGame->GetTown(townId);
-        if (otherTown != townToView && otherTown->type == TOWN_INFERNO
-            && (otherTown->active & bitNumber[EXTRA_1_ID])
-            && otherTown->visitingHeroId < 0)
-            gateWindow->AddTown(townId);
+    for (i = 0; i < player->m_numTowns; i++) {
+        int townId = player->m_townIds[i];
+        town* otherTown = g_game->getTown(townId);
+        if (otherTown != m_townToView && otherTown->m_type == TOWN_INFERNO
+            && (otherTown->m_active & g_bitNumber[EXTRA_1_ID])
+            && otherTown->m_visitingHeroId < 0)
+            gateWindow->addTown(townId);
     }
 
-    gateWindow->DoModal();
+    gateWindow->doModal();
     delete gateWindow;
 
-    if (gpWindowManager->dialogReturn != -1) {
-        int selectedTown = gpWindowManager->dialogReturn;
-        town* fromTown = townToView;
-        town* toTown = gpGame->GetTown(selectedTown);
-        townToView = toTown;
-        hero* movingHero = gpGame->GetHero(fromTown->visitingHeroId);
-        gpAdvManager->TeleportTo(movingHero, toTown->get_location(),
+    if (g_windowManager->m_dialogReturn != -1) {
+        int selectedTown = g_windowManager->m_dialogReturn;
+        town* fromTown = m_townToView;
+        town* toTown = g_game->getTown(selectedTown);
+        m_townToView = toTown;
+        hero* movingHero = g_game->getHero(fromTown->m_visitingHeroId);
+        g_advManager->teleportTo(movingHero, toTown->getLocation(),
                                  0, 0, 0, 0);
-        toTown->GiveSpells(0);
+        toTown->giveSpells(0);
 
-        StartMouseThread();
-        SetupExtraStuff();
-        SetupTown(1);
+        startMouseThread();
+        setupExtraStuff();
+        setupTown(1);
         message msg;
-        msg.codeX = 0;
-        msg.qualifier = 0;
-        msg.mouseX = 0;
-        msg.mouseY = 0;
-        msg.extra = 0;
-        msg.window = 0;
-        msg.id = MESSAGE_WIDGET;
-        msg.codeY = -1;
-        SetCommandAndText(&msg);
-        StopMouseThread();
+        msg.m_codeX = 0;
+        msg.m_qualifier = 0;
+        msg.m_mouseX = 0;
+        msg.m_mouseY = 0;
+        msg.m_extra = 0;
+        msg.m_window = 0;
+        msg.m_id = MESSAGE_WIDGET;
+        msg.m_codeY = -1;
+        setCommandAndText(&msg);
+        stopMouseThread();
 
-        townToView->ApplySpecialBuildingEffect(
-            gpGame->GetHero(townToView->visitingHeroId));
+        m_townToView->applySpecialBuildingEffect(
+            g_game->getHero(m_townToView->m_visitingHeroId));
     } else {
-        RedrawTownScreen();
+        redrawTownScreen();
     }
 }
 
@@ -8560,7 +8642,7 @@ void townManager::DoTownGate()
 
 // E:\gamedcs\townmgr.cpp:8243
 DC_ONLY(0x17b428, 0x62)
-void townManager::MoveHero(town* fromTown, town* toTown)
+void townManager::moveHero(town* fromTown, town* toTown)
 {
     // @stub
 }
@@ -8581,28 +8663,28 @@ void TCastleWindow::ShowText()
 
 // E:\gamedcs\townmgr.cpp:8776
 DC_ONLY(0x17f54c, 0x19C)
-void TCastleWindow::SetRolloverText(message* msg)
+void TCastleWindow::setRolloverText(message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\townmgr.cpp:8833
 DC_ONLY(0x17f6e8, 0x130)
-void TCastleWindow::Recruit(int i)
+void TCastleWindow::recruit(int i)
 {
     // @stub
 }
 
 // E:\gamedcs\townmgr.cpp:8851
 DC_ONLY(0x17f818, 0x4F0)
-int TCastleWindow::WindowHandler(message* msg)
+int TCastleWindow::windowHandler(message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\townmgr.cpp:9067
 DC_ONLY(0x17fd08, 0x4FA)
-void townManager::SetupWell(TCastleWindow* wellWin)
+void townManager::setupWell(TCastleWindow* wellWin)
 {
     // @stub
 }
@@ -8637,49 +8719,49 @@ void townManager::SetupWell(TCastleWindow* wellWin)
 // this compiler - but it is NOT what THallWindow is short of; that pair
 // already spells all 18 columns and emits no `rep stosd` on either side.
 DC_ONLY(0x180204, 0xEAA)
-void TThievesGuildWindow::SetupThievesGuild(int iThievesGuilds)
+void TThievesGuildWindow::setupThievesGuild(int iThievesGuilds)
 {
     // @stub
 }
 
 // E:\gamedcs\townmgr.cpp:9597
 DC_ONLY(0x1810b0, 0x29E)
-void GetCategoryStats(int whichCat, long* value, signed char* index)
+void getCategoryStats(int whichCat, long* value, signed char* index)
 {
     // @stub
 }
 
 // E:\gamedcs\townmgr.cpp:9698
 DC_ONLY(0x181350, 0xB4)
-void SortStats(long* value, signed char* index)
+void sortStats(long* value, signed char* index)
 {
     // @stub
 }
 
 // E:\gamedcs\town.h:305
 DC_ONLY(0x181404, 0x12)
-long town::get_generator_bonus(long dwelling)
+long town::getGeneratorBonus(long dwelling)
 {
     // @stub
 }
 
 // E:\gamedcs\townmgr.cpp:1830
 DC_ONLY(0x181418, 0x50)
-void CTownNetMsgHandler::CTownNetMsgHandler(TResourceDisplay* pResourceDisplay)
+void CTownNetMsgHandler::CTownNetMsgHandler(TResourceDisplay* m_resourceDisplay)
 {
     // @stub
 }
 
 // E:\gamedcs\townmgr.cpp:1836
 DC_ONLY(0x181468, 0x4)
-void CTownNetMsgHandler::SetResourceDisplay(TResourceDisplay* pResourceDisplay)
+void CTownNetMsgHandler::setResourceDisplay(TResourceDisplay* m_resourceDisplay)
 {
     // @stub
 }
 
 // E:\gamedcs\townmgr.cpp:1844
 DC_ONLY(0x18146c, 0x2C)
-void CTownNetMsgHandler::HandleGiftMsg(CNetMsg* pNetMsg)
+void CTownNetMsgHandler::handleGiftMsg(CNetMsg* pNetMsg)
 {
     // @stub
 }
@@ -8747,515 +8829,515 @@ TCastleWindow::TCastleWindow()
     : CAdvPopup(0, 0, 800, 600, 0)
 {
     // Conventional release expansion of VERIFY(Widgets.size() == 0).
-    static_cast<void>(Widgets.size() == 0);
-    Widgets.reserve(156);
+    static_cast<void>(m_widgets.size() == 0);
+    m_widgets.reserve(156);
 
-    if (gpTownManager->townToView->type == TOWN_DUNGEON
-        && (gpTownManager->townToView->built & bitNumber[EXTRA_1_ID])
-        && gpTownManager->townToView->summoningType == -1)
-        gpTownManager->townToView->SetSummoningGenerator();
+    if (g_townManager->m_townToView->m_type == TOWN_DUNGEON
+        && (g_townManager->m_townToView->m_built & g_bitNumber[EXTRA_1_ID])
+        && g_townManager->m_townToView->m_summoningType == -1)
+        g_townManager->m_townToView->setSummoningGenerator();
 
-    if (gpTownManager->townToView->type == TOWN_DUNGEON
-        && (gpTownManager->townToView->built & bitNumber[EXTRA_1_ID])
-        && gpTownManager->townToView->summoningType != -1) {
-        Widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0, "TPCastl8.pcx", 0x800));
-        use8 = 1;
+    if (g_townManager->m_townToView->m_type == TOWN_DUNGEON
+        && (g_townManager->m_townToView->m_built & g_bitNumber[EXTRA_1_ID])
+        && g_townManager->m_townToView->m_summoningType != -1) {
+        m_widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0, "TPCastl8.pcx", 0x800));
+        m_use8 = 1;
     } else {
-        Widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0, "TPCastl7.pcx", 0x800));
-        use8 = 0;
+        m_widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0, "TPCastl7.pcx", 0x800));
+        m_use8 = 0;
     }
 
-    if (gpTownManager->townToView->HasBuilding(CASTLE_FORT_ID, 0))
-        castleType = CASTLE_FORT_ID;
-    else if (gpTownManager->townToView->HasBuilding(CASTLE_CITADEL_ID, 0))
-        castleType = CASTLE_CITADEL_ID;
+    if (g_townManager->m_townToView->hasBuilding(CASTLE_FORT_ID, 0))
+        m_castleType = CASTLE_FORT_ID;
+    else if (g_townManager->m_townToView->hasBuilding(CASTLE_CITADEL_ID, 0))
+        m_castleType = CASTLE_CITADEL_ID;
     else
-        castleType = CASTLE_CASTLE_ID;
+        m_castleType = CASTLE_CASTLE_ID;
 
-    Widgets.push_back(new textWidget(0, 0, 800, 30, gBuildingNamesCommon[castleType],
+    m_widgets.push_back(new textWidget(0, 0, 800, 30, g_buildingNamesCommon[m_castleType],
                                  "bigfont.fnt", font::PRIMARY, 0, 1, 0, 8));
 
-    Widgets.push_back(new bitmapBorder(271, 25, 23, 121, -1, "TPCaInfo.pcx",
+    m_widgets.push_back(new bitmapBorder(271, 25, 23, 121, -1, "TPCaInfo.pcx",
                                        0x800));
-    Widgets.push_back(new bitmapBorder(665, 25, 23, 121, -1, "TPCaInfo.pcx",
+    m_widgets.push_back(new bitmapBorder(665, 25, 23, 121, -1, "TPCaInfo.pcx",
                                        0x800));
-    Widgets.push_back(new bitmapBorder(271, 158, 23, 121, -1, "TPCaInfo.pcx",
+    m_widgets.push_back(new bitmapBorder(271, 158, 23, 121, -1, "TPCaInfo.pcx",
                                        0x800));
-    Widgets.push_back(new bitmapBorder(665, 158, 23, 121, -1, "TPCaInfo.pcx",
+    m_widgets.push_back(new bitmapBorder(665, 158, 23, 121, -1, "TPCaInfo.pcx",
                                        0x800));
-    Widgets.push_back(new bitmapBorder(271, 291, 23, 121, -1, "TPCaInfo.pcx",
+    m_widgets.push_back(new bitmapBorder(271, 291, 23, 121, -1, "TPCaInfo.pcx",
                                        0x800));
-    Widgets.push_back(new bitmapBorder(665, 291, 23, 121, -1, "TPCaInfo.pcx",
+    m_widgets.push_back(new bitmapBorder(665, 291, 23, 121, -1, "TPCaInfo.pcx",
                                        0x800));
-    if (use8) {
-        Widgets.push_back(new bitmapBorder(271, 424, 23, 121, -1, "TPCaInfo.pcx",
+    if (m_use8) {
+        m_widgets.push_back(new bitmapBorder(271, 424, 23, 121, -1, "TPCaInfo.pcx",
                                        0x800));
-        Widgets.push_back(new bitmapBorder(665, 424, 23, 121, -1, "TPCaInfo.pcx",
+        m_widgets.push_back(new bitmapBorder(665, 424, 23, 121, -1, "TPCaInfo.pcx",
                                        0x800));
     } else {
-        Widgets.push_back(new bitmapBorder(467, 424, 23, 121, -1, "TPCaInfo.pcx",
+        m_widgets.push_back(new bitmapBorder(467, 424, 23, 121, -1, "TPCaInfo.pcx",
                                        0x800));
     }
 
-    int whichTown = gpTownManager->townToView->type;
-    strcpy(gText, gTownCastleDefNames[whichTown + 1]);
+    int whichTown = g_townManager->m_townToView->m_type;
+    strcpy(g_text, g_townCastleDefNames[whichTown + 1]);
 
-    Widgets.push_back(new bitmapBorder(169, 26, 100, 120, -1, gText, 0x800));
-    Widgets.push_back(new bitmapBorder(563, 26, 100, 120, -1, gText, 0x800));
-    Widgets.push_back(new bitmapBorder(169, 159, 100, 120, -1, gText, 0x800));
-    Widgets.push_back(new bitmapBorder(563, 159, 100, 120, -1, gText, 0x800));
-    Widgets.push_back(new bitmapBorder(169, 292, 100, 120, -1, gText, 0x800));
-    Widgets.push_back(new bitmapBorder(563, 292, 100, 120, -1, gText, 0x800));
-    if (use8) {
-        Widgets.push_back(new bitmapBorder(169, 425, 100, 120, -1, gText, 0x800));
-        int summoned = gpTownManager->townToView->summoningType;
-        strcpy(gText, gTownCastleDefNames[
-                   ((!gpGame->f_1f698
+    m_widgets.push_back(new bitmapBorder(169, 26, 100, 120, -1, g_text, 0x800));
+    m_widgets.push_back(new bitmapBorder(563, 26, 100, 120, -1, g_text, 0x800));
+    m_widgets.push_back(new bitmapBorder(169, 159, 100, 120, -1, g_text, 0x800));
+    m_widgets.push_back(new bitmapBorder(563, 159, 100, 120, -1, g_text, 0x800));
+    m_widgets.push_back(new bitmapBorder(169, 292, 100, 120, -1, g_text, 0x800));
+    m_widgets.push_back(new bitmapBorder(563, 292, 100, 120, -1, g_text, 0x800));
+    if (m_use8) {
+        m_widgets.push_back(new bitmapBorder(169, 425, 100, 120, -1, g_text, 0x800));
+        int summoned = g_townManager->m_townToView->m_summoningType;
+        strcpy(g_text, g_townCastleDefNames[
+                   ((!g_game->m_f1f698
                      && (summoned == CREATURE_AIR_ELEMENTAL
                          || summoned == CREATURE_EARTH_ELEMENTAL
                          || summoned == CREATURE_FIRE_ELEMENTAL
                          || summoned == CREATURE_WATER_ELEMENTAL))
                         ? -1
-                        : akCreatureTypeTraits[summoned].townType)
+                        : g_creatureTypeTraits[summoned].m_townType)
                    + 1]);
-        Widgets.push_back(new bitmapBorder(563, 425, 100, 120, -1, gText, 0x800));
+        m_widgets.push_back(new bitmapBorder(563, 425, 100, 120, -1, g_text, 0x800));
     } else {
-        Widgets.push_back(new bitmapBorder(365, 425, 100, 120, -1, gText, 0x800));
+        m_widgets.push_back(new bitmapBorder(365, 425, 100, 120, -1, g_text, 0x800));
     }
 
-    Widgets.push_back(new textWidget(14, 115, 150, 20, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(14, 115, 150, 20, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x9, 1, 0, 8));
-    Widgets.push_back(new textWidget(408, 115, 150, 20, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(408, 115, 150, 20, 0, "smalfont.fnt",
                                      font::PRIMARY, 0xa, 1, 0, 8));
-    Widgets.push_back(new textWidget(14, 248, 150, 20, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(14, 248, 150, 20, 0, "smalfont.fnt",
                                      font::PRIMARY, 0xb, 1, 0, 8));
-    Widgets.push_back(new textWidget(408, 248, 150, 20, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(408, 248, 150, 20, 0, "smalfont.fnt",
                                      font::PRIMARY, 0xc, 1, 0, 8));
-    Widgets.push_back(new textWidget(14, 381, 150, 20, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(14, 381, 150, 20, 0, "smalfont.fnt",
                                      font::PRIMARY, 0xd, 1, 0, 8));
-    Widgets.push_back(new textWidget(408, 381, 150, 20, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(408, 381, 150, 20, 0, "smalfont.fnt",
                                      font::PRIMARY, 0xe, 1, 0, 8));
-    if (use8) {
-        Widgets.push_back(new textWidget(14, 514, 150, 20, 0, "smalfont.fnt",
+    if (m_use8) {
+        m_widgets.push_back(new textWidget(14, 514, 150, 20, 0, "smalfont.fnt",
                                      font::PRIMARY, 0xf, 1, 0, 8));
-        Widgets.push_back(new textWidget(408, 514, 150, 20, GetBuildingName(TOWN_DUNGEON, EXTRA_1_ID), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(408, 514, 150, 20, getBuildingName(TOWN_DUNGEON, EXTRA_1_ID), "smalfont.fnt",
                                      font::PRIMARY, 0x10, 1, 0, 8));
     } else {
-        Widgets.push_back(new textWidget(210, 514, 150, 20, 0, "smalfont.fnt",
+        m_widgets.push_back(new textWidget(210, 514, 150, 20, 0, "smalfont.fnt",
                                      font::PRIMARY, 0xf, 1, 0, 8));
     }
 
-    Widgets.push_back(new textWidget(14, 133, 150, 20, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(14, 133, 150, 20, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x21, 1, 0, 8));
-    Widgets.push_back(new textWidget(408, 133, 150, 20, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(408, 133, 150, 20, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x22, 1, 0, 8));
-    Widgets.push_back(new textWidget(14, 266, 150, 20, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(14, 266, 150, 20, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x23, 1, 0, 8));
-    Widgets.push_back(new textWidget(408, 266, 150, 20, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(408, 266, 150, 20, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x24, 1, 0, 8));
-    Widgets.push_back(new textWidget(14, 399, 150, 20, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(14, 399, 150, 20, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x25, 1, 0, 8));
-    Widgets.push_back(new textWidget(408, 399, 150, 20, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(408, 399, 150, 20, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x26, 1, 0, 8));
-    if (use8) {
-        Widgets.push_back(new textWidget(14, 532, 150, 20, 0, "smalfont.fnt",
+    if (m_use8) {
+        m_widgets.push_back(new textWidget(14, 532, 150, 20, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x27, 1, 0, 8));
-        Widgets.push_back(new textWidget(408, 532, 150, 20, 0, "smalfont.fnt",
+        m_widgets.push_back(new textWidget(408, 532, 150, 20, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x28, 1, 0, 8));
     } else {
-        Widgets.push_back(new textWidget(210, 532, 150, 20, 0, "smalfont.fnt",
+        m_widgets.push_back(new textWidget(210, 532, 150, 20, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x27, 1, 0, 8));
     }
 
-    strcpy(gText, townBuildingSpriteNames[whichTown]);
+    strcpy(g_text, g_townBuildingSpriteNames[whichTown]);
 
-    Widgets.push_back(new iconWidget(14, 43, 150, 70, 1, gText, 0, 0, 0, 0,
+    m_widgets.push_back(new iconWidget(14, 43, 150, 70, 1, g_text, 0, 0, 0, 0,
                                      0x10));
-    Widgets.push_back(new iconWidget(408, 43, 150, 70, 2, gText, 0, 0, 0, 0,
+    m_widgets.push_back(new iconWidget(408, 43, 150, 70, 2, g_text, 0, 0, 0, 0,
                                      0x10));
-    Widgets.push_back(new iconWidget(14, 176, 150, 70, 3, gText, 0, 0, 0, 0,
+    m_widgets.push_back(new iconWidget(14, 176, 150, 70, 3, g_text, 0, 0, 0, 0,
                                      0x10));
-    Widgets.push_back(new iconWidget(408, 176, 150, 70, 4, gText, 0, 0, 0, 0,
+    m_widgets.push_back(new iconWidget(408, 176, 150, 70, 4, g_text, 0, 0, 0, 0,
                                      0x10));
-    Widgets.push_back(new iconWidget(14, 309, 150, 70, 5, gText, 0, 0, 0, 0,
+    m_widgets.push_back(new iconWidget(14, 309, 150, 70, 5, g_text, 0, 0, 0, 0,
                                      0x10));
-    Widgets.push_back(new iconWidget(408, 309, 150, 70, 6, gText, 0, 0, 0, 0,
+    m_widgets.push_back(new iconWidget(408, 309, 150, 70, 6, g_text, 0, 0, 0, 0,
                                      0x10));
-    if (use8) {
-        Widgets.push_back(new iconWidget(14, 442, 150, 70, 7, gText, 0, 0, 0, 0,
+    if (m_use8) {
+        m_widgets.push_back(new iconWidget(14, 442, 150, 70, 7, g_text, 0, 0, 0, 0,
                                      0x10));
-        Widgets.push_back(new iconWidget(408, 442, 150, 70, 8, gText, EXTRA_1_ID, 0, 0, 0,
+        m_widgets.push_back(new iconWidget(408, 442, 150, 70, 8, g_text, EXTRA_1_ID, 0, 0, 0,
                                      0x10));
     } else {
-        Widgets.push_back(new iconWidget(210, 442, 150, 70, 7, gText, 0, 0, 0, 0,
+        m_widgets.push_back(new iconWidget(210, 442, 150, 70, 7, g_text, 0, 0, 0, 0,
                                      0x10));
     }
 
-    SpriteWidget[0] = new iconWidget(169, 26, 99, 119, -1,
-                                     akCreatureTypeTraits[gTownDwellingCreatures[
-                         gpTownManager->currentDwellingIDOff[0]
-                         + whichTown * TOWN_DWELLING_SLOTS]].m_sprite_name,
+    m_spriteWidget[0] = new iconWidget(169, 26, 99, 119, -1,
+                                     g_creatureTypeTraits[g_townDwellingCreatures[
+                         g_townManager->m_currentDwellingIdOff[0]
+                         + whichTown * TOWN_DWELLING_SLOTS]].m_spriteName,
                                      0, 2, 0, 0, 0x12);
-    SpriteWidget[1] = new iconWidget(563, 26, 99, 119, -1,
-                                     akCreatureTypeTraits[gTownDwellingCreatures[
-                         gpTownManager->currentDwellingIDOff[1]
-                         + whichTown * TOWN_DWELLING_SLOTS]].m_sprite_name,
+    m_spriteWidget[1] = new iconWidget(563, 26, 99, 119, -1,
+                                     g_creatureTypeTraits[g_townDwellingCreatures[
+                         g_townManager->m_currentDwellingIdOff[1]
+                         + whichTown * TOWN_DWELLING_SLOTS]].m_spriteName,
                                      0, 2, 0, 0, 0x12);
-    SpriteWidget[2] = new iconWidget(169, 159, 99, 119, -1,
-                                     akCreatureTypeTraits[gTownDwellingCreatures[
-                         gpTownManager->currentDwellingIDOff[2]
-                         + whichTown * TOWN_DWELLING_SLOTS]].m_sprite_name,
+    m_spriteWidget[2] = new iconWidget(169, 159, 99, 119, -1,
+                                     g_creatureTypeTraits[g_townDwellingCreatures[
+                         g_townManager->m_currentDwellingIdOff[2]
+                         + whichTown * TOWN_DWELLING_SLOTS]].m_spriteName,
                                      0, 2, 0, 0, 0x12);
-    SpriteWidget[3] = new iconWidget(563, 159, 99, 119, -1,
-                                     akCreatureTypeTraits[gTownDwellingCreatures[
-                         gpTownManager->currentDwellingIDOff[3]
-                         + whichTown * TOWN_DWELLING_SLOTS]].m_sprite_name,
+    m_spriteWidget[3] = new iconWidget(563, 159, 99, 119, -1,
+                                     g_creatureTypeTraits[g_townDwellingCreatures[
+                         g_townManager->m_currentDwellingIdOff[3]
+                         + whichTown * TOWN_DWELLING_SLOTS]].m_spriteName,
                                      0, 2, 0, 0, 0x12);
-    SpriteWidget[4] = new iconWidget(169, 292, 99, 119, -1,
-                                     akCreatureTypeTraits[gTownDwellingCreatures[
-                         gpTownManager->currentDwellingIDOff[4]
-                         + whichTown * TOWN_DWELLING_SLOTS]].m_sprite_name,
+    m_spriteWidget[4] = new iconWidget(169, 292, 99, 119, -1,
+                                     g_creatureTypeTraits[g_townDwellingCreatures[
+                         g_townManager->m_currentDwellingIdOff[4]
+                         + whichTown * TOWN_DWELLING_SLOTS]].m_spriteName,
                                      0, 2, 0, 0, 0x12);
-    SpriteWidget[5] = new iconWidget(563, 292, 99, 119, -1,
-                                     akCreatureTypeTraits[gTownDwellingCreatures[
-                         gpTownManager->currentDwellingIDOff[5]
-                         + whichTown * TOWN_DWELLING_SLOTS]].m_sprite_name,
+    m_spriteWidget[5] = new iconWidget(563, 292, 99, 119, -1,
+                                     g_creatureTypeTraits[g_townDwellingCreatures[
+                         g_townManager->m_currentDwellingIdOff[5]
+                         + whichTown * TOWN_DWELLING_SLOTS]].m_spriteName,
                                      0, 2, 0, 0, 0x12);
-    if (use8) {
-        SpriteWidget[6] = new iconWidget(169, 425, 99, 119, -1,
-                                     akCreatureTypeTraits[gTownDwellingCreatures[
-                         gpTownManager->currentDwellingIDOff[6]
-                         + whichTown * TOWN_DWELLING_SLOTS]].m_sprite_name,
+    if (m_use8) {
+        m_spriteWidget[6] = new iconWidget(169, 425, 99, 119, -1,
+                                     g_creatureTypeTraits[g_townDwellingCreatures[
+                         g_townManager->m_currentDwellingIdOff[6]
+                         + whichTown * TOWN_DWELLING_SLOTS]].m_spriteName,
                                      0, 2, 0, 0, 0x12);
-        SpriteWidget[7] = new iconWidget(563, 425, 99, 119, -1,
-                                     akCreatureTypeTraits[
-                     gpTownManager->townToView->summoningType].m_sprite_name,
+        m_spriteWidget[7] = new iconWidget(563, 425, 99, 119, -1,
+                                     g_creatureTypeTraits[
+                     g_townManager->m_townToView->m_summoningType].m_spriteName,
                                      0, 2, 0, 0, 0x12);
-        Widgets.push_back(SpriteWidget[7]);
+        m_widgets.push_back(m_spriteWidget[7]);
     } else {
-        SpriteWidget[6] = new iconWidget(365, 425, 99, 119, -1,
-                                     akCreatureTypeTraits[gTownDwellingCreatures[
-                         gpTownManager->currentDwellingIDOff[6]
-                         + whichTown * TOWN_DWELLING_SLOTS]].m_sprite_name,
+        m_spriteWidget[6] = new iconWidget(365, 425, 99, 119, -1,
+                                     g_creatureTypeTraits[g_townDwellingCreatures[
+                         g_townManager->m_currentDwellingIdOff[6]
+                         + whichTown * TOWN_DWELLING_SLOTS]].m_spriteName,
                                      0, 2, 0, 0, 0x12);
     }
 
     for (int i = 0; i < TOWN_DWELLING_COUNT; ++i)
-        Widgets.push_back(SpriteWidget[i]);
+        m_widgets.push_back(m_spriteWidget[i]);
 
-    Widgets.push_back(new textWidget(14, 24, 150, 20, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(14, 24, 150, 20, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x19, 1, 0, 8));
-    Widgets.push_back(new textWidget(408, 24, 150, 20, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(408, 24, 150, 20, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x1a, 1, 0, 8));
-    Widgets.push_back(new textWidget(14, 157, 150, 20, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(14, 157, 150, 20, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x1b, 1, 0, 8));
-    Widgets.push_back(new textWidget(408, 157, 150, 20, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(408, 157, 150, 20, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x1c, 1, 0, 8));
-    Widgets.push_back(new textWidget(14, 290, 150, 20, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(14, 290, 150, 20, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x1d, 1, 0, 8));
-    Widgets.push_back(new textWidget(408, 290, 150, 20, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(408, 290, 150, 20, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x1e, 1, 0, 8));
-    if (use8) {
-        Widgets.push_back(new textWidget(14, 423, 150, 20, 0, "smalfont.fnt",
+    if (m_use8) {
+        m_widgets.push_back(new textWidget(14, 423, 150, 20, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x1f, 1, 0, 8));
-        Widgets.push_back(new textWidget(408, 423, 150, 20, 0, "smalfont.fnt",
+        m_widgets.push_back(new textWidget(408, 423, 150, 20, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x20, 1, 0, 8));
     } else {
-        Widgets.push_back(new textWidget(210, 423, 150, 20, 0, "smalfont.fnt",
+        m_widgets.push_back(new textWidget(210, 423, 150, 20, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x1f, 1, 0, 8));
     }
 
-    Widgets.push_back(new border(10, 22, 386, 126, 0x11, 1));
-    Widgets.push_back(new border(404, 22, 386, 126, 0x12, 1));
-    Widgets.push_back(new border(10, 155, 386, 126, 0x13, 1));
-    Widgets.push_back(new border(404, 155, 386, 126, 0x14, 1));
-    Widgets.push_back(new border(10, 288, 386, 126, 0x15, 1));
-    Widgets.push_back(new border(404, 288, 386, 126, 0x16, 1));
-    if (use8) {
-        Widgets.push_back(new border(10, 421, 386, 126, 0x17, 1));
-        Widgets.push_back(new border(404, 421, 386, 126, 0x18, 1));
+    m_widgets.push_back(new border(10, 22, 386, 126, 0x11, 1));
+    m_widgets.push_back(new border(404, 22, 386, 126, 0x12, 1));
+    m_widgets.push_back(new border(10, 155, 386, 126, 0x13, 1));
+    m_widgets.push_back(new border(404, 155, 386, 126, 0x14, 1));
+    m_widgets.push_back(new border(10, 288, 386, 126, 0x15, 1));
+    m_widgets.push_back(new border(404, 288, 386, 126, 0x16, 1));
+    if (m_use8) {
+        m_widgets.push_back(new border(10, 421, 386, 126, 0x17, 1));
+        m_widgets.push_back(new border(404, 421, 386, 126, 0x18, 1));
     } else {
-        Widgets.push_back(new border(206, 421, 386, 126, 0x17, 1));
+        m_widgets.push_back(new border(206, 421, 386, 126, 0x17, 1));
     }
 
-    Widgets.push_back(new textWidget(300, 26, 91, 30, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 26, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x29, 2, 0, 8));
-    Widgets.push_back(new textWidget(694, 26, 91, 30, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 26, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x2a, 2, 0, 8));
-    Widgets.push_back(new textWidget(300, 159, 91, 30, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 159, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x2b, 2, 0, 8));
-    Widgets.push_back(new textWidget(694, 159, 91, 30, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 159, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x2c, 2, 0, 8));
-    Widgets.push_back(new textWidget(300, 292, 91, 30, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 292, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x2d, 2, 0, 8));
-    Widgets.push_back(new textWidget(694, 292, 91, 30, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 292, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x2e, 2, 0, 8));
-    if (use8) {
-        Widgets.push_back(new textWidget(300, 425, 91, 30, 0, "smalfont.fnt",
+    if (m_use8) {
+        m_widgets.push_back(new textWidget(300, 425, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x2f, 2, 0, 8));
-        Widgets.push_back(new textWidget(694, 425, 91, 30, 0, "smalfont.fnt",
+        m_widgets.push_back(new textWidget(694, 425, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x30, 2, 0, 8));
     } else {
-        Widgets.push_back(new textWidget(496, 425, 91, 30, 0, "smalfont.fnt",
+        m_widgets.push_back(new textWidget(496, 425, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x2f, 2, 0, 8));
     }
 
-    Widgets.push_back(new textWidget(300, 46, 91, 30, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 46, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x31, 2, 0, 8));
-    Widgets.push_back(new textWidget(694, 46, 91, 30, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 46, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x32, 2, 0, 8));
-    Widgets.push_back(new textWidget(300, 179, 91, 30, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 179, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x33, 2, 0, 8));
-    Widgets.push_back(new textWidget(694, 179, 91, 30, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 179, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x34, 2, 0, 8));
-    Widgets.push_back(new textWidget(300, 312, 91, 30, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 312, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x35, 2, 0, 8));
-    Widgets.push_back(new textWidget(694, 312, 91, 30, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 312, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x36, 2, 0, 8));
-    if (use8) {
-        Widgets.push_back(new textWidget(300, 445, 91, 30, 0, "smalfont.fnt",
+    if (m_use8) {
+        m_widgets.push_back(new textWidget(300, 445, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x37, 2, 0, 8));
-        Widgets.push_back(new textWidget(694, 445, 91, 30, 0, "smalfont.fnt",
+        m_widgets.push_back(new textWidget(694, 445, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x38, 2, 0, 8));
     } else {
-        Widgets.push_back(new textWidget(496, 445, 91, 30, 0, "smalfont.fnt",
+        m_widgets.push_back(new textWidget(496, 445, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x37, 2, 0, 8));
     }
 
-    Widgets.push_back(new textWidget(300, 67, 91, 30, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 67, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x69, 2, 0, 8));
-    Widgets.push_back(new textWidget(694, 67, 91, 30, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 67, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x6a, 2, 0, 8));
-    Widgets.push_back(new textWidget(300, 200, 91, 30, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 200, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x6b, 2, 0, 8));
-    Widgets.push_back(new textWidget(694, 200, 91, 30, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 200, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x6c, 2, 0, 8));
-    Widgets.push_back(new textWidget(300, 333, 91, 30, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 333, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x6d, 2, 0, 8));
-    Widgets.push_back(new textWidget(694, 333, 91, 30, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 333, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x6e, 2, 0, 8));
-    if (use8) {
-        Widgets.push_back(new textWidget(300, 466, 91, 30, 0, "smalfont.fnt",
+    if (m_use8) {
+        m_widgets.push_back(new textWidget(300, 466, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x6f, 2, 0, 8));
-        Widgets.push_back(new textWidget(694, 466, 91, 30, 0, "smalfont.fnt",
+        m_widgets.push_back(new textWidget(694, 466, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x70, 2, 0, 8));
     } else {
-        Widgets.push_back(new textWidget(496, 466, 91, 30, 0, "smalfont.fnt",
+        m_widgets.push_back(new textWidget(496, 466, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x6f, 2, 0, 8));
     }
 
-    Widgets.push_back(new textWidget(300, 87, 91, 30, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 87, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x71, 2, 0, 8));
-    Widgets.push_back(new textWidget(694, 87, 91, 30, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 87, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x72, 2, 0, 8));
-    Widgets.push_back(new textWidget(300, 220, 91, 30, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 220, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x73, 2, 0, 8));
-    Widgets.push_back(new textWidget(694, 220, 91, 30, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 220, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x74, 2, 0, 8));
-    Widgets.push_back(new textWidget(300, 353, 91, 30, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 353, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x75, 2, 0, 8));
-    Widgets.push_back(new textWidget(694, 353, 91, 30, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 353, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x76, 2, 0, 8));
-    if (use8) {
-        Widgets.push_back(new textWidget(300, 486, 91, 30, 0, "smalfont.fnt",
+    if (m_use8) {
+        m_widgets.push_back(new textWidget(300, 486, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x77, 2, 0, 8));
-        Widgets.push_back(new textWidget(694, 486, 91, 30, 0, "smalfont.fnt",
+        m_widgets.push_back(new textWidget(694, 486, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x78, 2, 0, 8));
     } else {
-        Widgets.push_back(new textWidget(496, 486, 91, 30, 0, "smalfont.fnt",
+        m_widgets.push_back(new textWidget(496, 486, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x77, 2, 0, 8));
     }
 
-    Widgets.push_back(new textWidget(300, 108, 91, 30, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 108, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x79, 2, 0, 8));
-    Widgets.push_back(new textWidget(694, 108, 91, 30, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 108, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x7a, 2, 0, 8));
-    Widgets.push_back(new textWidget(300, 241, 91, 30, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 241, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x7b, 2, 0, 8));
-    Widgets.push_back(new textWidget(694, 241, 91, 30, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 241, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x7c, 2, 0, 8));
-    Widgets.push_back(new textWidget(300, 374, 91, 30, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 374, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x7d, 2, 0, 8));
-    Widgets.push_back(new textWidget(694, 374, 91, 30, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 374, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x7e, 2, 0, 8));
-    if (use8) {
-        Widgets.push_back(new textWidget(300, 507, 91, 30, 0, "smalfont.fnt",
+    if (m_use8) {
+        m_widgets.push_back(new textWidget(300, 507, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x7f, 2, 0, 8));
-        Widgets.push_back(new textWidget(694, 507, 91, 30, 0, "smalfont.fnt",
+        m_widgets.push_back(new textWidget(694, 507, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x80, 2, 0, 8));
     } else {
-        Widgets.push_back(new textWidget(496, 507, 91, 30, 0, "smalfont.fnt",
+        m_widgets.push_back(new textWidget(496, 507, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x7f, 2, 0, 8));
     }
 
-    Widgets.push_back(new textWidget(300, 128, 91, 30, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 128, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x81, 2, 0, 8));
-    Widgets.push_back(new textWidget(694, 128, 91, 30, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 128, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x82, 2, 0, 8));
-    Widgets.push_back(new textWidget(300, 261, 91, 30, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 261, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x83, 2, 0, 8));
-    Widgets.push_back(new textWidget(694, 261, 91, 30, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 261, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x84, 2, 0, 8));
-    Widgets.push_back(new textWidget(300, 394, 91, 30, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 394, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x85, 2, 0, 8));
-    Widgets.push_back(new textWidget(694, 394, 91, 30, 0, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 394, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x86, 2, 0, 8));
-    if (use8) {
-        Widgets.push_back(new textWidget(300, 527, 91, 30, 0, "smalfont.fnt",
+    if (m_use8) {
+        m_widgets.push_back(new textWidget(300, 527, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x87, 2, 0, 8));
-        Widgets.push_back(new textWidget(694, 527, 91, 30, "0", "smalfont.fnt",
+        m_widgets.push_back(new textWidget(694, 527, 91, 30, "0", "smalfont.fnt",
                                      font::PRIMARY, 0x88, 2, 0, 8));
     } else {
-        Widgets.push_back(new textWidget(496, 527, 91, 30, 0, "smalfont.fnt",
+        m_widgets.push_back(new textWidget(496, 527, 91, 30, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x87, 2, 0, 8));
     }
 
-    Widgets.push_back(new textWidget(300, 26, 91, 30, gpGeneralText->GetText(191), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 26, 91, 30, g_generalText->getText(191), "smalfont.fnt",
                                      font::PRIMARY, 0x39, 0, 0, 8));
-    Widgets.push_back(new textWidget(694, 26, 91, 30, gpGeneralText->GetText(191), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 26, 91, 30, g_generalText->getText(191), "smalfont.fnt",
                                      font::PRIMARY, 0x3a, 0, 0, 8));
-    Widgets.push_back(new textWidget(300, 159, 91, 30, gpGeneralText->GetText(191), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 159, 91, 30, g_generalText->getText(191), "smalfont.fnt",
                                      font::PRIMARY, 0x3b, 0, 0, 8));
-    Widgets.push_back(new textWidget(694, 159, 91, 30, gpGeneralText->GetText(191), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 159, 91, 30, g_generalText->getText(191), "smalfont.fnt",
                                      font::PRIMARY, 0x3c, 0, 0, 8));
-    Widgets.push_back(new textWidget(300, 292, 91, 30, gpGeneralText->GetText(191), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 292, 91, 30, g_generalText->getText(191), "smalfont.fnt",
                                      font::PRIMARY, 0x3d, 0, 0, 8));
-    Widgets.push_back(new textWidget(694, 292, 91, 30, gpGeneralText->GetText(191), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 292, 91, 30, g_generalText->getText(191), "smalfont.fnt",
                                      font::PRIMARY, 0x3e, 0, 0, 8));
-    if (use8) {
-        Widgets.push_back(new textWidget(300, 425, 91, 30, gpGeneralText->GetText(191), "smalfont.fnt",
+    if (m_use8) {
+        m_widgets.push_back(new textWidget(300, 425, 91, 30, g_generalText->getText(191), "smalfont.fnt",
                                      font::PRIMARY, 0x3f, 0, 0, 8));
-        Widgets.push_back(new textWidget(694, 425, 91, 30, gpGeneralText->GetText(191), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(694, 425, 91, 30, g_generalText->getText(191), "smalfont.fnt",
                                      font::PRIMARY, 0x40, 0, 0, 8));
     } else {
-        Widgets.push_back(new textWidget(496, 425, 91, 30, gpGeneralText->GetText(191), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(496, 425, 91, 30, g_generalText->getText(191), "smalfont.fnt",
                                      font::PRIMARY, 0x3f, 0, 0, 8));
     }
 
-    Widgets.push_back(new textWidget(300, 46, 91, 30, gpGeneralText->GetText(192), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 46, 91, 30, g_generalText->getText(192), "smalfont.fnt",
                                      font::PRIMARY, 0x41, 0, 0, 8));
-    Widgets.push_back(new textWidget(694, 46, 91, 30, gpGeneralText->GetText(192), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 46, 91, 30, g_generalText->getText(192), "smalfont.fnt",
                                      font::PRIMARY, 0x42, 0, 0, 8));
-    Widgets.push_back(new textWidget(300, 179, 91, 30, gpGeneralText->GetText(192), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 179, 91, 30, g_generalText->getText(192), "smalfont.fnt",
                                      font::PRIMARY, 0x43, 0, 0, 8));
-    Widgets.push_back(new textWidget(694, 179, 91, 30, gpGeneralText->GetText(192), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 179, 91, 30, g_generalText->getText(192), "smalfont.fnt",
                                      font::PRIMARY, 0x44, 0, 0, 8));
-    Widgets.push_back(new textWidget(300, 312, 91, 30, gpGeneralText->GetText(192), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 312, 91, 30, g_generalText->getText(192), "smalfont.fnt",
                                      font::PRIMARY, 0x45, 0, 0, 8));
-    Widgets.push_back(new textWidget(694, 312, 91, 30, gpGeneralText->GetText(192), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 312, 91, 30, g_generalText->getText(192), "smalfont.fnt",
                                      font::PRIMARY, 0x46, 0, 0, 8));
-    if (use8) {
-        Widgets.push_back(new textWidget(300, 445, 91, 30, gpGeneralText->GetText(192), "smalfont.fnt",
+    if (m_use8) {
+        m_widgets.push_back(new textWidget(300, 445, 91, 30, g_generalText->getText(192), "smalfont.fnt",
                                      font::PRIMARY, 0x47, 0, 0, 8));
-        Widgets.push_back(new textWidget(694, 445, 91, 30, gpGeneralText->GetText(192), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(694, 445, 91, 30, g_generalText->getText(192), "smalfont.fnt",
                                      font::PRIMARY, 0x48, 0, 0, 8));
     } else {
-        Widgets.push_back(new textWidget(496, 445, 91, 30, gpGeneralText->GetText(192), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(496, 445, 91, 30, g_generalText->getText(192), "smalfont.fnt",
                                      font::PRIMARY, 0x47, 0, 0, 8));
     }
 
-    Widgets.push_back(new textWidget(300, 67, 91, 30, gpGeneralText->GetText(200), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 67, 91, 30, g_generalText->getText(200), "smalfont.fnt",
                                      font::PRIMARY, 0x49, 0, 0, 8));
-    Widgets.push_back(new textWidget(694, 67, 91, 30, gpGeneralText->GetText(200), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 67, 91, 30, g_generalText->getText(200), "smalfont.fnt",
                                      font::PRIMARY, 0x4a, 0, 0, 8));
-    Widgets.push_back(new textWidget(300, 200, 91, 30, gpGeneralText->GetText(200), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 200, 91, 30, g_generalText->getText(200), "smalfont.fnt",
                                      font::PRIMARY, 0x4b, 0, 0, 8));
-    Widgets.push_back(new textWidget(694, 200, 91, 30, gpGeneralText->GetText(200), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 200, 91, 30, g_generalText->getText(200), "smalfont.fnt",
                                      font::PRIMARY, 0x4c, 0, 0, 8));
-    Widgets.push_back(new textWidget(300, 333, 91, 30, gpGeneralText->GetText(200), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 333, 91, 30, g_generalText->getText(200), "smalfont.fnt",
                                      font::PRIMARY, 0x4d, 0, 0, 8));
-    Widgets.push_back(new textWidget(694, 333, 91, 30, gpGeneralText->GetText(200), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 333, 91, 30, g_generalText->getText(200), "smalfont.fnt",
                                      font::PRIMARY, 0x4e, 0, 0, 8));
-    if (use8) {
-        Widgets.push_back(new textWidget(300, 466, 91, 30, gpGeneralText->GetText(200), "smalfont.fnt",
+    if (m_use8) {
+        m_widgets.push_back(new textWidget(300, 466, 91, 30, g_generalText->getText(200), "smalfont.fnt",
                                      font::PRIMARY, 0x4f, 0, 0, 8));
-        Widgets.push_back(new textWidget(694, 466, 91, 30, gpGeneralText->GetText(200), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(694, 466, 91, 30, g_generalText->getText(200), "smalfont.fnt",
                                      font::PRIMARY, 0x50, 0, 0, 8));
     } else {
-        Widgets.push_back(new textWidget(496, 466, 91, 30, gpGeneralText->GetText(200), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(496, 466, 91, 30, g_generalText->getText(200), "smalfont.fnt",
                                      font::PRIMARY, 0x4f, 0, 0, 8));
     }
 
-    Widgets.push_back(new textWidget(300, 87, 91, 30, gpGeneralText->GetText(389), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 87, 91, 30, g_generalText->getText(389), "smalfont.fnt",
                                      font::PRIMARY, 0x51, 0, 0, 8));
-    Widgets.push_back(new textWidget(694, 87, 91, 30, gpGeneralText->GetText(389), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 87, 91, 30, g_generalText->getText(389), "smalfont.fnt",
                                      font::PRIMARY, 0x52, 0, 0, 8));
-    Widgets.push_back(new textWidget(300, 220, 91, 30, gpGeneralText->GetText(389), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 220, 91, 30, g_generalText->getText(389), "smalfont.fnt",
                                      font::PRIMARY, 0x53, 0, 0, 8));
-    Widgets.push_back(new textWidget(694, 220, 91, 30, gpGeneralText->GetText(389), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 220, 91, 30, g_generalText->getText(389), "smalfont.fnt",
                                      font::PRIMARY, 0x54, 0, 0, 8));
-    Widgets.push_back(new textWidget(300, 353, 91, 30, gpGeneralText->GetText(389), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 353, 91, 30, g_generalText->getText(389), "smalfont.fnt",
                                      font::PRIMARY, 0x55, 0, 0, 8));
-    Widgets.push_back(new textWidget(694, 353, 91, 30, gpGeneralText->GetText(389), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 353, 91, 30, g_generalText->getText(389), "smalfont.fnt",
                                      font::PRIMARY, 0x56, 0, 0, 8));
-    if (use8) {
-        Widgets.push_back(new textWidget(300, 486, 91, 30, gpGeneralText->GetText(389), "smalfont.fnt",
+    if (m_use8) {
+        m_widgets.push_back(new textWidget(300, 486, 91, 30, g_generalText->getText(389), "smalfont.fnt",
                                      font::PRIMARY, 0x57, 0, 0, 8));
-        Widgets.push_back(new textWidget(694, 486, 91, 30, gpGeneralText->GetText(389), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(694, 486, 91, 30, g_generalText->getText(389), "smalfont.fnt",
                                      font::PRIMARY, 0x58, 0, 0, 8));
     } else {
-        Widgets.push_back(new textWidget(496, 486, 91, 30, gpGeneralText->GetText(389), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(496, 486, 91, 30, g_generalText->getText(389), "smalfont.fnt",
                                      font::PRIMARY, 0x57, 0, 0, 8));
     }
 
-    Widgets.push_back(new textWidget(300, 108, 91, 30, gpGeneralText->GetText(194), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 108, 91, 30, g_generalText->getText(194), "smalfont.fnt",
                                      font::PRIMARY, 0x59, 0, 0, 8));
-    Widgets.push_back(new textWidget(694, 108, 91, 30, gpGeneralText->GetText(194), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 108, 91, 30, g_generalText->getText(194), "smalfont.fnt",
                                      font::PRIMARY, 0x5a, 0, 0, 8));
-    Widgets.push_back(new textWidget(300, 241, 91, 30, gpGeneralText->GetText(194), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 241, 91, 30, g_generalText->getText(194), "smalfont.fnt",
                                      font::PRIMARY, 0x5b, 0, 0, 8));
-    Widgets.push_back(new textWidget(694, 241, 91, 30, gpGeneralText->GetText(194), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 241, 91, 30, g_generalText->getText(194), "smalfont.fnt",
                                      font::PRIMARY, 0x5c, 0, 0, 8));
-    Widgets.push_back(new textWidget(300, 374, 91, 30, gpGeneralText->GetText(194), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 374, 91, 30, g_generalText->getText(194), "smalfont.fnt",
                                      font::PRIMARY, 0x5d, 0, 0, 8));
-    Widgets.push_back(new textWidget(694, 374, 91, 30, gpGeneralText->GetText(194), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 374, 91, 30, g_generalText->getText(194), "smalfont.fnt",
                                      font::PRIMARY, 0x5e, 0, 0, 8));
-    if (use8) {
-        Widgets.push_back(new textWidget(300, 507, 91, 30, gpGeneralText->GetText(194), "smalfont.fnt",
+    if (m_use8) {
+        m_widgets.push_back(new textWidget(300, 507, 91, 30, g_generalText->getText(194), "smalfont.fnt",
                                      font::PRIMARY, 0x5f, 0, 0, 8));
-        Widgets.push_back(new textWidget(694, 507, 91, 30, gpGeneralText->GetText(194), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(694, 507, 91, 30, g_generalText->getText(194), "smalfont.fnt",
                                      font::PRIMARY, 0x60, 0, 0, 8));
     } else {
-        Widgets.push_back(new textWidget(496, 507, 91, 30, gpGeneralText->GetText(194), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(496, 507, 91, 30, g_generalText->getText(194), "smalfont.fnt",
                                      font::PRIMARY, 0x5f, 0, 0, 8));
     }
 
-    Widgets.push_back(new textWidget(300, 128, 91, 30, gpGeneralText->GetText(195), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 128, 91, 30, g_generalText->getText(195), "smalfont.fnt",
                                      font::PRIMARY, 0x61, 0, 0, 8));
-    Widgets.push_back(new textWidget(694, 128, 91, 30, gpGeneralText->GetText(195), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 128, 91, 30, g_generalText->getText(195), "smalfont.fnt",
                                      font::PRIMARY, 0x62, 0, 0, 8));
-    Widgets.push_back(new textWidget(300, 261, 91, 30, gpGeneralText->GetText(195), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 261, 91, 30, g_generalText->getText(195), "smalfont.fnt",
                                      font::PRIMARY, 0x63, 0, 0, 8));
-    Widgets.push_back(new textWidget(694, 261, 91, 30, gpGeneralText->GetText(195), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 261, 91, 30, g_generalText->getText(195), "smalfont.fnt",
                                      font::PRIMARY, 0x64, 0, 0, 8));
-    Widgets.push_back(new textWidget(300, 394, 91, 30, gpGeneralText->GetText(195), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 394, 91, 30, g_generalText->getText(195), "smalfont.fnt",
                                      font::PRIMARY, 0x65, 0, 0, 8));
-    Widgets.push_back(new textWidget(694, 394, 91, 30, gpGeneralText->GetText(195), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 394, 91, 30, g_generalText->getText(195), "smalfont.fnt",
                                      font::PRIMARY, 0x66, 0, 0, 8));
-    if (use8) {
-        Widgets.push_back(new textWidget(300, 527, 91, 30, gpGeneralText->GetText(195), "smalfont.fnt",
+    if (m_use8) {
+        m_widgets.push_back(new textWidget(300, 527, 91, 30, g_generalText->getText(195), "smalfont.fnt",
                                      font::PRIMARY, 0x67, 0, 0, 8));
-        Widgets.push_back(new textWidget(694, 527, 91, 30, gpGeneralText->GetText(195), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(694, 527, 91, 30, g_generalText->getText(195), "smalfont.fnt",
                                      font::PRIMARY, 0x68, 0, 0, 8));
     } else {
-        Widgets.push_back(new textWidget(496, 527, 91, 30, gpGeneralText->GetText(195), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(496, 527, 91, 30, g_generalText->getText(195), "smalfont.fnt",
                                      font::PRIMARY, 0x67, 0, 0, 8));
     }
 
-    Widgets.push_back(new bitmapBorder(3, 555, 741, 18, 0x89, "TStatBar.pcx", 0x800));
-    Widgets.push_back(new textWidget(3, 555, 741, 18, 0, "smalfont.fnt",
+    m_widgets.push_back(new bitmapBorder(3, 555, 741, 18, 0x89, "TStatBar.pcx", 0x800));
+    m_widgets.push_back(new textWidget(3, 555, 741, 18, 0, "smalfont.fnt",
                                      font::PRIMARY, 0x8a, 1, 0, 8));
 
     button* exitButton = new button(748, 556, 48, 40, EXIT_BUTTON_ID,
                                     "TPMage1.def", 0, 1, 1, 28, 2);
-    exitButton->set_hotkey(1);
-    Widgets.push_back(exitButton);
+    exitButton->setHotkey(1);
+    m_widgets.push_back(exitButton);
 
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
-            AddWidget(*it, -1);
+            addWidget(*it, -1);
         else
-            MemError();
+            memError();
     }
 }
 
@@ -9265,7 +9347,7 @@ VA_COMPGEN(0x005dcb50, 0x21, SCALAR_DELETING_DTOR, TCastleWindow)
 VA(0x005dcb80, 0x6B)  // anchor-vtable 0x6439bc + ??_G call edge, dc 0x17f0f4
 TCastleWindow::~TCastleWindow()
 {
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
@@ -9337,11 +9419,13 @@ TCastleWindow::~TCastleWindow()
 //             ever read here, which is why the row is modelled as that
 //             column - `[2 * id]` IS the same address arithmetic - and
 //             the second column stays unmodelled.
-DATA(0x006a5c28) extern const char* gUnnamed6a5c28[6];
-DATA(0x006a5c40) extern const char* gUnnamed6a5c40;
+// Before normalization: gUnnamed6a5c28.
+// Before normalization: gUnnamed6a5c40.
+DATA(0x006a5c28) extern const char* g_unnamed6a5c28[6];
 // gAdventureWindowHelp / gUnnamed642e70 are declared with the status-line
 // pool near the top of the file: townManager::SetCommandAndText reads
 // both long before this page does.
+DATA(0x006a5c40) extern const char* g_unnamed6a5c40;
 
 // E:\gamedcs\townmgr.cpp:8776
 // The fort page's rollover line. `msg->codeY` is the widget under the
@@ -9387,53 +9471,53 @@ DATA(0x006a5c40) extern const char* gUnnamed6a5c40;
 // it resolves to TMageGuildWindow::SetRolloverText, the file's other row
 // of that name.)
 VA(0x005dcbf0, 0x25A)  // anchor-bracket + `ret 4` arity + ShowText tail, dc 0x17f54c
-void TCastleWindow::SetRolloverText(message* msg)
+void TCastleWindow::setRolloverText(message* msg)
 {
-    int code = msg->codeY;
+    int code = msg->m_codeY;
     if (code > 0x38 && code < 0x69) {
-        strcpy(gText, gUnnamed6a5c28[(code - 0x39) / 8]);
+        strcpy(g_text, g_unnamed6a5c28[(code - 0x39) / 8]);
     } else if (code >= 0x11 && code <= 0x17) {
-        int dwelling = gpTownManager->currentDwellingIDOff[code - 0x11];
-        if (gpTownManager->townToView->active & bitNumber[DWELLING_0_ID + dwelling]) {
+        int dwelling = g_townManager->m_currentDwellingIdOff[code - 0x11];
+        if (g_townManager->m_townToView->m_active & g_bitNumber[DWELLING_0_ID + dwelling]) {
             TCreatureType rowCreature =
-                gTownDwellingCreatures[gpTownManager->townToView->type
+                g_townDwellingCreatures[g_townManager->m_townToView->m_type
                                        * TOWN_DWELLING_SLOTS + dwelling];
             const char* creatureName;
             if (rowCreature >= 0 && rowCreature <= 150)
-                creatureName = akCreatureTypeTraits[rowCreature].m_plural_name;
+                creatureName = g_creatureTypeTraits[rowCreature].m_pluralName;
             else
                 creatureName = "";
-            sprintf(gText, "%s %s", gpGeneralText->GetText(0x11), creatureName);
+            sprintf(g_text, "%s %s", g_generalText->getText(0x11), creatureName);
         } else {
-            strcpy(gText, "");
+            strcpy(g_text, "");
         }
     } else if (code <= 0x3f7) {
         if (code < 0x3f1) {
             if (code >= 0x3e9 && code <= 0x3f0)
-                strcpy(gText,
-                       gAdventureWindowHelp[
-                           gUnnamed642e70[code - 0x3e9]].text);
+                strcpy(g_text,
+                       g_adventureWindowHelp[
+                           g_unnamed642e70[code - 0x3e9]].m_text);
             else
-                strcpy(gText, "");
+                strcpy(g_text, "");
         } else {
-            strcpy(gText,
-                   gAdventureWindowHelp[
-                       gUnnamed642e70[code - 0x3f1]].text);
+            strcpy(g_text,
+                   g_adventureWindowHelp[
+                       g_unnamed642e70[code - 0x3f1]].m_text);
         }
     } else if (code != EXIT_BUTTON_ID) {
-        strcpy(gText, "");
+        strcpy(g_text, "");
     } else {
-        sprintf(gText, gUnnamed6a5c40, gBuildingNamesCommon[castleType]);
+        sprintf(g_text, g_unnamed6a5c40, g_buildingNamesCommon[m_castleType]);
     }
 
     message textMessage;
-    textMessage.id = MESSAGE_WIDGET;
-    textMessage.codeX = widget::WIDGET_SET_TEXT;
-    textMessage.codeY = 0x8a;
-    textMessage.extraText = gText;
-    BroadcastMessage(&textMessage);
-    DrawWindow(0, 0x89, 0x8a);
-    gpWindowManager->UpdateScreen(10, 0x22c, 0x2d6, 0x13);
+    textMessage.m_id = MESSAGE_WIDGET;
+    textMessage.m_codeX = widget::WIDGET_SET_TEXT;
+    textMessage.m_codeY = 0x8a;
+    textMessage.m_extraText = g_text;
+    broadcastMessage(&textMessage);
+    drawWindow(0, 0x89, 0x8a);
+    g_windowManager->updateScreen(10, 0x22c, 0x2d6, 0x13);
 }
 
 // E:\gamedcs\townmgr.cpp:8833
@@ -9458,22 +9542,22 @@ void TCastleWindow::SetRolloverText(message* msg)
 // so the DoDialog argument needs no upcast; and a 0..4 type-definition
 // probe ahead of the body (inert - this is not the include-set knob).
 VA(0x005dce50, 0x126)  // anchor-callee(recruitUnit ctor 0x551560) + arity, dc 0x17f6e8
-void TCastleWindow::Recruit(int i)
+void TCastleWindow::recruit(int i)
 {
-    int dwelling = gpTownManager->currentDwellingIDOff[i];
-    if (gpTownManager->townToView->active & bitNumber[DWELLING_0_ID + dwelling]) {
-        gpRecruitUnit = new recruitUnit(gpTownManager->townToView, dwelling, 1);
-        if (!gpRecruitUnit)
-            MemError();
-        gpExecutive->DoDialog(gpRecruitUnit);
-        delete gpRecruitUnit;
-        CastleBank->Update(1, 1);
+    int dwelling = g_townManager->m_currentDwellingIdOff[i];
+    if (g_townManager->m_townToView->m_active & g_bitNumber[DWELLING_0_ID + dwelling]) {
+        g_recruitUnit = new recruitUnit(g_townManager->m_townToView, dwelling, 1);
+        if (!g_recruitUnit)
+            memError();
+        g_executive->doDialog(g_recruitUnit);
+        delete g_recruitUnit;
+        m_castleBank->update(1, 1);
         message textMessage;
-        textMessage.extraText = gText;
-        sprintf(gText, "%s %d", gpGeneralText->GetText(218),
-                gpTownManager->townToView->population[dwelling]);
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, i + 0x21,
-                         textMessage.extra);
+        textMessage.m_extraText = g_text;
+        sprintf(g_text, "%s %d", g_generalText->getText(218),
+                g_townManager->m_townToView->m_population[dwelling]);
+        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, i + 0x21,
+                         textMessage.m_extra);
     }
 }
 
@@ -9523,27 +9607,27 @@ void TCastleWindow::Recruit(int i)
 
 // E:\gamedcs\townmgr.cpp:8851
 VA(0x005dcf80, 0x401)  // anchor-vtable 0x6439bc slot 9 + arity, dc 0x17f818
-int TCastleWindow::WindowHandler(message* msg)
+int TCastleWindow::windowHandler(message* msg)
 {
-    int result = CAdvPopup::WindowHandler(msg);
+    int result = CAdvPopup::windowHandler(msg);
     if (result)
         return result;
 
-    switch (msg->id) {
+    switch (msg->m_id) {
     case MESSAGE_MOUSE_MOVE:
-        gpWindowManager->ConvertToHover(*msg);
-        if (msg->codeY != gpTownManager->lastHover
-            || msg->qualifier != gpTownManager->lastQualifier) {
-            gpTownManager->lastHover = msg->codeY;
-            gpTownManager->lastQualifier = msg->qualifier;
-            SetRolloverText(msg);
+        g_windowManager->convertToHover(*msg);
+        if (msg->m_codeY != g_townManager->m_lastHover
+            || msg->m_qualifier != g_townManager->m_lastQualifier) {
+            g_townManager->m_lastHover = msg->m_codeY;
+            g_townManager->m_lastQualifier = msg->m_qualifier;
+            setRolloverText(msg);
         }
         return 1;
 
     case MESSAGE_WIDGET:
-        if (msg->codeX == widget::WIDGET_SELECT
-            || msg->codeX == widget::WIDGET_RIGHT_SELECT) {
-            switch (msg->codeY) {
+        if (msg->m_codeX == widget::WIDGET_SELECT
+            || msg->m_codeX == widget::WIDGET_RIGHT_SELECT) {
+            switch (msg->m_codeY) {
             case ROW_FRAME_ID:
             case ROW_FRAME_ID + 1:
             case ROW_FRAME_ID + 2:
@@ -9551,7 +9635,7 @@ int TCastleWindow::WindowHandler(message* msg)
             case ROW_FRAME_ID + 4:
             case ROW_FRAME_ID + 5:
             case ROW_FRAME_ID + 6:
-                Recruit(msg->codeY - ROW_FRAME_ID);
+                recruit(msg->m_codeY - ROW_FRAME_ID);
                 break;
 
             case ROW_STAT_LABEL_1_ID:
@@ -9561,7 +9645,7 @@ int TCastleWindow::WindowHandler(message* msg)
             case ROW_STAT_LABEL_1_ID + 4:
             case ROW_STAT_LABEL_1_ID + 5:
             case ROW_STAT_LABEL_1_ID + 6:
-                Recruit(msg->codeY - ROW_STAT_LABEL_1_ID);
+                recruit(msg->m_codeY - ROW_STAT_LABEL_1_ID);
                 break;
 
             case ROW_STAT_LABEL_2_ID:
@@ -9571,7 +9655,7 @@ int TCastleWindow::WindowHandler(message* msg)
             case ROW_STAT_LABEL_2_ID + 4:
             case ROW_STAT_LABEL_2_ID + 5:
             case ROW_STAT_LABEL_2_ID + 6:
-                Recruit(msg->codeY - ROW_STAT_LABEL_2_ID);
+                recruit(msg->m_codeY - ROW_STAT_LABEL_2_ID);
                 break;
 
             case ROW_STAT_LABEL_3_ID:
@@ -9581,7 +9665,7 @@ int TCastleWindow::WindowHandler(message* msg)
             case ROW_STAT_LABEL_3_ID + 4:
             case ROW_STAT_LABEL_3_ID + 5:
             case ROW_STAT_LABEL_3_ID + 6:
-                Recruit(msg->codeY - ROW_STAT_LABEL_3_ID);
+                recruit(msg->m_codeY - ROW_STAT_LABEL_3_ID);
                 break;
 
             case ROW_STAT_LABEL_4_ID:
@@ -9591,7 +9675,7 @@ int TCastleWindow::WindowHandler(message* msg)
             case ROW_STAT_LABEL_4_ID + 4:
             case ROW_STAT_LABEL_4_ID + 5:
             case ROW_STAT_LABEL_4_ID + 6:
-                Recruit(msg->codeY - ROW_STAT_LABEL_4_ID);
+                recruit(msg->m_codeY - ROW_STAT_LABEL_4_ID);
                 break;
 
             case ROW_STAT_LABEL_5_ID:
@@ -9601,7 +9685,7 @@ int TCastleWindow::WindowHandler(message* msg)
             case ROW_STAT_LABEL_5_ID + 4:
             case ROW_STAT_LABEL_5_ID + 5:
             case ROW_STAT_LABEL_5_ID + 6:
-                Recruit(msg->codeY - ROW_STAT_LABEL_5_ID);
+                recruit(msg->m_codeY - ROW_STAT_LABEL_5_ID);
                 break;
 
             case ROW_STAT_LABEL_6_ID:
@@ -9611,7 +9695,7 @@ int TCastleWindow::WindowHandler(message* msg)
             case ROW_STAT_LABEL_6_ID + 4:
             case ROW_STAT_LABEL_6_ID + 5:
             case ROW_STAT_LABEL_6_ID + 6:
-                Recruit(msg->codeY - ROW_STAT_LABEL_6_ID);
+                recruit(msg->m_codeY - ROW_STAT_LABEL_6_ID);
                 break;
 
             case ROW_FRAME_ID + ROW_SUMMONING_OFFSET:
@@ -9621,23 +9705,23 @@ int TCastleWindow::WindowHandler(message* msg)
             case ROW_STAT_LABEL_4_ID + ROW_SUMMONING_OFFSET:
             case ROW_STAT_LABEL_5_ID + ROW_SUMMONING_OFFSET:
             case ROW_STAT_LABEL_6_ID + ROW_SUMMONING_OFFSET:
-                gpRecruitUnit = new recruitUnit(
-                    &gpTownManager->townToView->get_army(), 1,
-                    gpTownManager->townToView->summoningType,
-                    &gpTownManager->townToView->summoningPopulation,
+                g_recruitUnit = new recruitUnit(
+                    &g_townManager->m_townToView->getArmy(), 1,
+                    g_townManager->m_townToView->m_summoningType,
+                    &g_townManager->m_townToView->m_summoningPopulation,
                     CREATURE_NONE, 0, CREATURE_NONE, 0, CREATURE_NONE, 0);
-                if (!gpRecruitUnit)
-                    MemError();
-                gpExecutive->DoDialog(gpRecruitUnit);
-                delete gpRecruitUnit;
-                CastleBank->Update(1, 1);
+                if (!g_recruitUnit)
+                    memError();
+                g_executive->doDialog(g_recruitUnit);
+                delete g_recruitUnit;
+                m_castleBank->update(1, 1);
                 {
                     message textMessage;
-                    textMessage.extraText = gText;
-                    sprintf(gText, "%s %d", gpGeneralText->GetText(218),
-                            gpTownManager->townToView->summoningPopulation);
-                    BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
-                                     0x28, textMessage.extra);
+                    textMessage.m_extraText = g_text;
+                    sprintf(g_text, "%s %d", g_generalText->getText(218),
+                            g_townManager->m_townToView->m_summoningPopulation);
+                    broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
+                                     0x28, textMessage.m_extra);
                 }
                 break;
 
@@ -9649,13 +9733,13 @@ int TCastleWindow::WindowHandler(message* msg)
             case RESOURCE_TEXT_ID + 5:
             case RESOURCE_TEXT_ID + 6:
             case RESOURCE_TEXT_ID + 7:
-                strcpy(gText, gAdventureWindowHelp[
-                           gUnnamed642e70[
-                               msg->codeY - RESOURCE_TEXT_ID]].rclick);
-                if (msg->codeX == widget::WIDGET_RIGHT_SELECT)
-                    NormalDialog(gText, 4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                strcpy(g_text, g_adventureWindowHelp[
+                           g_unnamed642e70[
+                               msg->m_codeY - RESOURCE_TEXT_ID]].m_rclick);
+                if (msg->m_codeX == widget::WIDGET_RIGHT_SELECT)
+                    normalDialog(g_text, 4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 else
-                    NormalDialog(gText, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                    normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 break;
 
             case RESOURCE_BORDER_ID:
@@ -9665,29 +9749,29 @@ int TCastleWindow::WindowHandler(message* msg)
             case RESOURCE_BORDER_ID + 4:
             case RESOURCE_BORDER_ID + 5:
             case RESOURCE_BORDER_ID + 6:
-                strcpy(gText, gAdventureWindowHelp[
-                           gUnnamed642e70[
-                               msg->codeY - RESOURCE_BORDER_ID]].rclick);
-                if (msg->codeX == widget::WIDGET_RIGHT_SELECT)
-                    NormalDialog(gText, 4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                strcpy(g_text, g_adventureWindowHelp[
+                           g_unnamed642e70[
+                               msg->m_codeY - RESOURCE_BORDER_ID]].m_rclick);
+                if (msg->m_codeX == widget::WIDGET_RIGHT_SELECT)
+                    normalDialog(g_text, 4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 else
-                    NormalDialog(gText, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                    normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 break;
             }
         }
         break;
     }
 
-    long elapsed = GameTime::Get()
-                   - glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
+    long elapsed = GameTime::get()
+                   - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
     if (elapsed >= 0) {
-        glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
-            _cpp_max(100L, elapsed);
+        g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
+            cppMax(100L, elapsed);
         for (int i = 0; i < TOWN_DWELLING_COUNT; i++)
-            SpriteWidget[i]->NextRandomFrame();
-        if (use8)
-            SpriteWidget[TOWN_DWELLING_COUNT]->NextRandomFrame();
-        DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+            m_spriteWidget[i]->nextRandomFrame();
+        if (m_use8)
+            m_spriteWidget[TOWN_DWELLING_COUNT]->nextRandomFrame();
+        drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
     }
     return 1;
 }
@@ -9725,149 +9809,149 @@ int TCastleWindow::WindowHandler(message* msg)
 // 98.58 exactly. The five remaining rows are relocation ADDENDS
 // (bitNumber reached at +0x128 / +0xf0), which the scorer does not count.
 VA(0x005dd390, 0x67E)  // anchor-bracket + arity + townManager thiscall, dc 0x17fd08
-void townManager::SetupWell(TCastleWindow* wellWin)
+void townManager::setupWell(TCastleWindow* wellWin)
 {
     message msg;
     message textMessage;
 
-    gUnnamed6aa9d8 = 1;
-    msg.id = MESSAGE_WIDGET;
-    msg.codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
-    msg.codeY = 0;
-    msg.extra = gpGame->GetLocalPlayerGamePos();
-    wellWin->BroadcastMessage(&msg);
+    g_unnamed6aa9d8 = 1;
+    msg.m_id = MESSAGE_WIDGET;
+    msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
+    msg.m_codeY = 0;
+    msg.m_extra = g_game->getLocalPlayerGamePos();
+    wellWin->broadcastMessage(&msg);
 
     int i;
     for (i = 0; i < TOWN_DWELLING_COUNT; i++) {
-        if (townToView->active
-            & bitNumber[DWELLING_0_ID + TOWN_DWELLING_COUNT + i])
-            currentDwellingIDOff[i] = i + TOWN_DWELLING_COUNT;
+        if (m_townToView->m_active
+            & g_bitNumber[DWELLING_0_ID + TOWN_DWELLING_COUNT + i])
+            m_currentDwellingIdOff[i] = i + TOWN_DWELLING_COUNT;
         else
-            currentDwellingIDOff[i] = i;
-        msg.codeX = widget::WIDGET_SET_ICON_FRAME;
-        msg.codeY = i + 1;
-        msg.extra = DWELLING_0_ID + currentDwellingIDOff[i];
-        wellWin->BroadcastMessage(&msg);
+            m_currentDwellingIdOff[i] = i;
+        msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+        msg.m_codeY = i + 1;
+        msg.m_extra = DWELLING_0_ID + m_currentDwellingIdOff[i];
+        wellWin->broadcastMessage(&msg);
     }
 
-    msg.id = MESSAGE_WIDGET;
-    msg.codeX = widget::WIDGET_SET_TEXT;
+    msg.m_id = MESSAGE_WIDGET;
+    msg.m_codeX = widget::WIDGET_SET_TEXT;
     for (i = 0; i < TOWN_DWELLING_COUNT; i++) {
-        sprintf(gText, GetBuildingName(townToView->type,
-                                       DWELLING_0_ID + currentDwellingIDOff[i]));
-        msg.codeY = i + 9;
-        msg.extraText = gText;
-        wellWin->BroadcastMessage(&msg);
-        if (townToView->active
-            & bitNumber[DWELLING_0_ID + currentDwellingIDOff[i]]) {
-            sprintf(gText, "%s %d", gpGeneralText->GetText(0xda),
-                    townToView->population[currentDwellingIDOff[i]]);
-            msg.codeY = i + 0x21;
-            msg.extraText = gText;
-            wellWin->BroadcastMessage(&msg);
+        sprintf(g_text, getBuildingName(m_townToView->m_type,
+                                       DWELLING_0_ID + m_currentDwellingIdOff[i]));
+        msg.m_codeY = i + 9;
+        msg.m_extraText = g_text;
+        wellWin->broadcastMessage(&msg);
+        if (m_townToView->m_active
+            & g_bitNumber[DWELLING_0_ID + m_currentDwellingIdOff[i]]) {
+            sprintf(g_text, "%s %d", g_generalText->getText(0xda),
+                    m_townToView->m_population[m_currentDwellingIdOff[i]]);
+            msg.m_codeY = i + 0x21;
+            msg.m_extraText = g_text;
+            wellWin->broadcastMessage(&msg);
         }
-        msg.codeY = i + 0x19;
+        msg.m_codeY = i + 0x19;
         TCreatureType rowCreature =
-            gTownDwellingCreatures[townToView->type * TOWN_DWELLING_SLOTS
-                                   + currentDwellingIDOff[i]];
+            g_townDwellingCreatures[m_townToView->m_type * TOWN_DWELLING_SLOTS
+                                   + m_currentDwellingIdOff[i]];
         const char* creatureName;
         if (rowCreature >= 0 && rowCreature <= 150)
-            creatureName = akCreatureTypeTraits[rowCreature].m_plural_name;
+            creatureName = g_creatureTypeTraits[rowCreature].m_pluralName;
         else
             creatureName = "";
-        strcpy(gText, creatureName);
-        msg.extraText = gText;
-        wellWin->BroadcastMessage(&msg);
+        strcpy(g_text, creatureName);
+        msg.m_extraText = g_text;
+        wellWin->broadcastMessage(&msg);
     }
 
-    if (wellWin->use8) {
-        sprintf(gText, "%s %d", gpGeneralText->GetText(0xda),
-                gpTownManager->townToView->summoningPopulation);
-        msg.codeY = 0x28;
-        msg.extraText = gText;
-        wellWin->BroadcastMessage(&msg);
+    if (wellWin->m_use8) {
+        sprintf(g_text, "%s %d", g_generalText->getText(0xda),
+                g_townManager->m_townToView->m_summoningPopulation);
+        msg.m_codeY = 0x28;
+        msg.m_extraText = g_text;
+        wellWin->broadcastMessage(&msg);
 
-        msg.codeY = 0x20;
+        msg.m_codeY = 0x20;
         const char* summonName;
-        if (gpTownManager->townToView->summoningType >= 0
-            && gpTownManager->townToView->summoningType <= 150)
+        if (g_townManager->m_townToView->m_summoningType >= 0
+            && g_townManager->m_townToView->m_summoningType <= 150)
             summonName =
-                akCreatureTypeTraits[gpTownManager->townToView->summoningType].m_plural_name;
+                g_creatureTypeTraits[g_townManager->m_townToView->m_summoningType].m_pluralName;
         else
             summonName = "";
-        strcpy(gText, summonName);
-        msg.extraText = gText;
-        wellWin->BroadcastMessage(&msg);
+        strcpy(g_text, summonName);
+        msg.m_extraText = g_text;
+        wellWin->broadcastMessage(&msg);
     }
 
     for (i = 0; i < TOWN_DWELLING_COUNT; i++) {
         TCreatureTypeTraits monInfo =
-            akCreatureTypeTraits[gTownDwellingCreatures[
-                townToView->type * TOWN_DWELLING_SLOTS
-                + currentDwellingIDOff[i]]];
-        sprintf(gText, "%d", monInfo.attackSkill);
-        textMessage.extraText = gText;
-        wellWin->BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
-                                  i + 0x29, textMessage.extra);
-        sprintf(gText, "%d", monInfo.defenseSkill);
-        textMessage.extraText = gText;
-        wellWin->BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
-                                  i + 0x31, textMessage.extra);
-        sprintf(gText, "%d", monInfo.damageLowBound);
-        if (monInfo.damageLowBound != monInfo.damageHighBound) {
+            g_creatureTypeTraits[g_townDwellingCreatures[
+                m_townToView->m_type * TOWN_DWELLING_SLOTS
+                + m_currentDwellingIdOff[i]]];
+        sprintf(g_text, "%d", monInfo.m_attackSkill);
+        textMessage.m_extraText = g_text;
+        wellWin->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
+                                  i + 0x29, textMessage.m_extra);
+        sprintf(g_text, "%d", monInfo.m_defenseSkill);
+        textMessage.m_extraText = g_text;
+        wellWin->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
+                                  i + 0x31, textMessage.m_extra);
+        sprintf(g_text, "%d", monInfo.m_damageLowBound);
+        if (monInfo.m_damageLowBound != monInfo.m_damageHighBound) {
             char damageText[40];
-            sprintf(damageText, "-%d", monInfo.damageHighBound);
-            strcat(gText, damageText);
+            sprintf(damageText, "-%d", monInfo.m_damageHighBound);
+            strcat(g_text, damageText);
         }
-        textMessage.extraText = gText;
-        wellWin->BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
-                                  i + 0x69, textMessage.extra);
-        sprintf(gText, "%d", monInfo.hitPoints);
-        textMessage.extraText = gText;
-        wellWin->BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
-                                  i + 0x71, textMessage.extra);
-        sprintf(gText, "%d", monInfo.speed);
-        textMessage.extraText = gText;
-        wellWin->BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
-                                  i + 0x79, textMessage.extra);
-        if (townToView->active
-            & bitNumber[DWELLING_0_ID + currentDwellingIDOff[i]]) {
-            sprintf(gText, "%d",
-                    townToView->get_growth_rate(currentDwellingIDOff[i]));
-            textMessage.extraText = gText;
-            wellWin->BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
-                                      i + 0x81, textMessage.extra);
+        textMessage.m_extraText = g_text;
+        wellWin->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
+                                  i + 0x69, textMessage.m_extra);
+        sprintf(g_text, "%d", monInfo.m_hitPoints);
+        textMessage.m_extraText = g_text;
+        wellWin->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
+                                  i + 0x71, textMessage.m_extra);
+        sprintf(g_text, "%d", monInfo.m_speed);
+        textMessage.m_extraText = g_text;
+        wellWin->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
+                                  i + 0x79, textMessage.m_extra);
+        if (m_townToView->m_active
+            & g_bitNumber[DWELLING_0_ID + m_currentDwellingIdOff[i]]) {
+            sprintf(g_text, "%d",
+                    m_townToView->getGrowthRate(m_currentDwellingIdOff[i]));
+            textMessage.m_extraText = g_text;
+            wellWin->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
+                                      i + 0x81, textMessage.m_extra);
         }
     }
 
-    if (wellWin->use8) {
+    if (wellWin->m_use8) {
         TCreatureTypeTraits monInfo =
-            akCreatureTypeTraits[gpTownManager->townToView->summoningType];
-        sprintf(gText, "%d", monInfo.attackSkill);
-        textMessage.extraText = gText;
-        wellWin->BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 0x30,
-                                  textMessage.extra);
-        sprintf(gText, "%d", monInfo.defenseSkill);
-        textMessage.extraText = gText;
-        wellWin->BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 0x38,
-                                  textMessage.extra);
-        sprintf(gText, "%d", monInfo.damageLowBound);
-        if (monInfo.damageLowBound != monInfo.damageHighBound) {
+            g_creatureTypeTraits[g_townManager->m_townToView->m_summoningType];
+        sprintf(g_text, "%d", monInfo.m_attackSkill);
+        textMessage.m_extraText = g_text;
+        wellWin->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 0x30,
+                                  textMessage.m_extra);
+        sprintf(g_text, "%d", monInfo.m_defenseSkill);
+        textMessage.m_extraText = g_text;
+        wellWin->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 0x38,
+                                  textMessage.m_extra);
+        sprintf(g_text, "%d", monInfo.m_damageLowBound);
+        if (monInfo.m_damageLowBound != monInfo.m_damageHighBound) {
             char damageText[40];
-            sprintf(damageText, "-%d", monInfo.damageHighBound);
-            strcat(gText, damageText);
+            sprintf(damageText, "-%d", monInfo.m_damageHighBound);
+            strcat(g_text, damageText);
         }
-        textMessage.extraText = gText;
-        wellWin->BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 0x70,
-                                  textMessage.extra);
-        sprintf(gText, "%d", monInfo.hitPoints);
-        textMessage.extraText = gText;
-        wellWin->BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 0x78,
-                                  textMessage.extra);
-        sprintf(gText, "%d", monInfo.speed);
-        textMessage.extraText = gText;
-        wellWin->BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 0x80,
-                                  textMessage.extra);
+        textMessage.m_extraText = g_text;
+        wellWin->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 0x70,
+                                  textMessage.m_extra);
+        sprintf(g_text, "%d", monInfo.m_hitPoints);
+        textMessage.m_extraText = g_text;
+        wellWin->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 0x78,
+                                  textMessage.m_extra);
+        sprintf(g_text, "%d", monInfo.m_speed);
+        textMessage.m_extraText = g_text;
+        wellWin->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 0x80,
+                                  textMessage.m_extra);
     }
 }
 
@@ -9907,8 +9991,9 @@ void townManager::SetupWell(TCastleWindow* wellWin)
 // LOOP-COUNTER SIGNEDNESS (docs/vc6/behavior-catalog.md D23): three of the
 // six zero-initialised counters here are `unsigned int`.  94.0399 -> 95.5153,
 // greedily; the other three fall back.
+// Before normalization (locals): iThievesGuilds, player_index.
 VA(0x005dda10, 0x145F)  // order-map(SetupWell 0x5dd390 .. GetCategoryStats 0x5dee70) + anchor-callee(GetNumThievesGuilds/GetLocalPlayerGamePos) + arity(ret 4), dc 0x180204
-void TThievesGuildWindow::SetupThievesGuild(int iThievesGuilds)
+void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
 {
     int flagX[8][8] = {
         { 18, 0, 0, 0, 0, 0, 0, 0 },
@@ -9931,67 +10016,67 @@ void TThievesGuildWindow::SetupThievesGuild(int iThievesGuilds)
         { 1, 1, 1, 1, 5, 5, 5, 5 }
     };
 
-    int gamePos = gpGame->GetLocalPlayerGamePos();
-    if (iThievesGuilds == -1)
-        iThievesGuilds = gpGame->GetNumThievesGuilds(gamePos);
+    int gamePos = g_game->getLocalPlayerGamePos();
+    if (thievesGuilds == -1)
+        thievesGuilds = g_game->getNumThievesGuilds(gamePos);
 
     int numCategories;
-    if (iThievesGuilds >= 5)
+    if (thievesGuilds >= 5)
         numCategories = 9;
-    else if (iThievesGuilds == TTownScreenWindow::GUILD_COUNT_4)
+    else if (thievesGuilds == TTownScreenWindow::GUILD_COUNT_4)
         numCategories = 8;
-    else if (iThievesGuilds == TTownScreenWindow::GUILD_COUNT_3)
+    else if (thievesGuilds == TTownScreenWindow::GUILD_COUNT_3)
         numCategories = 6;
     else
         numCategories =
-            (iThievesGuilds == TTownScreenWindow::GUILD_COUNT_2) ? 4 : 2;
+            (thievesGuilds == TTownScreenWindow::GUILD_COUNT_2) ? 4 : 2;
 
     int numDisabled = 0;
     for (int k = 0; k < 8; k++) {
-        if (gpGame->playerDisabled[k])
+        if (g_game->m_playerDisabled[k])
             numDisabled++;
     }
 
     for (k = 7 - numDisabled; k < 7; k++)
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
+        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
                          0x2bc + k, widget::WIDGET_DRAWN);
     for (k = 8 - numDisabled; k < 8; k++) {
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
+        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
                          0x2bc + k + 0x64, widget::WIDGET_DRAWN);
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
+        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
                          0x2bc + k + 0xc8, widget::WIDGET_DRAWN);
     }
 
     for (int category = 0; category < numCategories; category++) {
         long value[8];
         signed char index[8];
-        GetCategoryStats(category, value, index);
-        SortStats(value, index);
+        getCategoryStats(category, value, index);
+        sortStats(value, index);
 
         int start = 0;
         int last = 0;
         int x = 0x103;
         while (1) {
             if (start
-                == gpGame->field_1f634 - numDisabled)
+                == g_game->m_numPlayers - numDisabled)
                 break;
             int group = 1;
-            for (k = last + 1; k < gpGame->field_1f634; k++) {
+            for (k = last + 1; k < g_game->m_numPlayers; k++) {
                 if (value[last + 1] != value[last])
                     break;
-                if (gpGame->playerDisabled[index[k]])
+                if (g_game->m_playerDisabled[index[k]])
                     break;
                 group++;
                 last++;
             }
             for (int m = start; m <= last; m++) {
-                Widgets.push_back(new iconWidget(
+                m_widgets.push_back(new iconWidget(
                     flagX[group - 1][m - start] + x,
                     flagY[group - 1][m - start] + 32 * category + 0x28,
                     0xf, 0x14, -1,
                     DATA_COMPGEN(0x00660d18, itgFlagsSprite, "itgflags.def"),
                     index[m], 0, 0, 0, 0x10));
-                AddWidget(Widgets.back(), -1);
+                addWidget(m_widgets.back(), -1);
             }
             last++;
             x += 0x42;
@@ -10001,157 +10086,157 @@ void TThievesGuildWindow::SetupThievesGuild(int iThievesGuilds)
         }
     }
 
-    int player_index = 0;
+    int playerIndex = 0;
     for (unsigned int column = 0; column < 8; column++) {
-        int who = player_index;
-        while (who < 8 && gpGame->playerDisabled[who])
+        int who = playerIndex;
+        while (who < 8 && g_game->m_playerDisabled[who])
             who++;
         if (who == TTownScreenWindow::GUILD_PLAYER_COLUMNS)
             break;
-        player_index = who;
+        playerIndex = who;
 
-        owners[column] = who;
-        strcpy(gText, gPlayerFlagSprites[who]);
+        m_owners[column] = who;
+        strcpy(g_text, g_playerFlagSprites[who]);
         message textMessage;
-        textMessage.extraText = gText;
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_NAME,
-                         column + 0x384, textMessage.extra);
+        textMessage.m_extraText = g_text;
+        broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_NAME,
+                         column + 0x384, textMessage.m_extra);
 
         hero* bestHero = 0;
-        if (iThievesGuilds >= 1) {
+        if (thievesGuilds >= 1) {
             long bestStrength = 0;
-            for (k = 0; k < gpGame->players[who].numHeroes; k++) {
-                int id = gpGame->players[who].heroes[k];
-                hero* h = gpGame->GetHero(id);
-                long strength = AI_approximate_strength(h);
+            for (k = 0; k < g_game->m_players[who].m_numHeroes; k++) {
+                int id = g_game->m_players[who].m_heroes[k];
+                hero* h = g_game->getHero(id);
+                long strength = aiApproximateStrength(h);
                 if (strength > bestStrength) {
                     bestStrength = strength;
                     bestHero = h;
                 }
             }
             if (bestHero) {
-                heroWidgetMap[HERO_P0 + column] = bestHero->id;
+                g_heroWidgetMap[HERO_P0 + column] = bestHero->m_id;
                 // DEPTH LADDER: this ONE append is `insert(end(), x)`;
                 // the other eight in this body stay push_back.  93.3762 ->
                 // 94.0399 (site #0 is 93.6631, #2..#4 are 93.90 each) and a
                 // greedy second round finds nothing.
-                Widgets.insert(Widgets.end(), new bitmapBorder(
+                m_widgets.insert(m_widgets.end(), new bitmapBorder(
                     66 * column + 0x104, 0x168, 0x30, 0x20,
                     column + HERO_P0,
-                    akHeroTraits[bestHero->portrait].smallPortraitName,
+                    g_heroTraits[bestHero->m_portrait].m_smallPortraitName,
                     0x800));
-                AddWidget(Widgets.back(), -1);
+                addWidget(m_widgets.back(), -1);
             }
-            if (iThievesGuilds >= 2) {
+            if (thievesGuilds >= 2) {
                 if (bestHero) {
-                    Widgets.push_back(new textWidget(
+                    m_widgets.push_back(new textWidget(
                         66 * column + 0x102, 0x18c, 0x35, 0x2c,
-                        gpGeneralText->GetText(185),
+                        g_generalText->getText(185),
                         DATA_COMPGEN(0x00660cb4, tinyFontName, "tiny.fnt"),
                         font::PRIMARY, -1, 0, 0, 8));
-                    AddWidget(Widgets.back(), -1);
+                    addWidget(m_widgets.back(), -1);
 
-                    sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
-                            bestHero->GetPrimarySkill(0));
-                    Widgets.push_back(new textWidget(
-                        66 * column + 0x102, 0x18c, 0x35, 0x14, gText,
+                    sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                            bestHero->getPrimarySkill(0));
+                    m_widgets.push_back(new textWidget(
+                        66 * column + 0x102, 0x18c, 0x35, 0x14, g_text,
                         DATA_COMPGEN(0x00660cb4, tinyFontName, "tiny.fnt"),
                         font::PRIMARY, column + RANK_A0, 2, 0, 8));
-                    AddWidget(Widgets.back(), -1);
+                    addWidget(m_widgets.back(), -1);
 
-                    sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
-                            bestHero->GetPrimarySkill(1));
-                    Widgets.push_back(new textWidget(
-                        66 * column + 0x102, 0x197, 0x35, 0x14, gText,
+                    sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                            bestHero->getPrimarySkill(1));
+                    m_widgets.push_back(new textWidget(
+                        66 * column + 0x102, 0x197, 0x35, 0x14, g_text,
                         DATA_COMPGEN(0x00660cb4, tinyFontName, "tiny.fnt"),
                         font::PRIMARY, column + RANK_B0, 2, 0, 8));
-                    AddWidget(Widgets.back(), -1);
+                    addWidget(m_widgets.back(), -1);
 
-                    sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
-                            bestHero->GetPrimarySkill(2));
-                    Widgets.push_back(new textWidget(
-                        66 * column + 0x102, 0x1a2, 0x35, 0x14, gText,
+                    sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                            bestHero->getPrimarySkill(2));
+                    m_widgets.push_back(new textWidget(
+                        66 * column + 0x102, 0x1a2, 0x35, 0x14, g_text,
                         DATA_COMPGEN(0x00660cb4, tinyFontName, "tiny.fnt"),
                         font::PRIMARY, column + RANK_C0, 2, 0, 8));
-                    AddWidget(Widgets.back(), -1);
+                    addWidget(m_widgets.back(), -1);
 
-                    sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
-                            bestHero->GetPrimarySkill(3));
-                    Widgets.push_back(new textWidget(
-                        66 * column + 0x102, 0x1ad, 0x35, 0x14, gText,
+                    sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                            bestHero->getPrimarySkill(3));
+                    m_widgets.push_back(new textWidget(
+                        66 * column + 0x102, 0x1ad, 0x35, 0x14, g_text,
                         DATA_COMPGEN(0x00660cb4, tinyFontName, "tiny.fnt"),
                         font::PRIMARY, column + 30, 2, 0, 8));
-                    AddWidget(Widgets.back(), -1);
+                    addWidget(m_widgets.back(), -1);
                 }
-                if (iThievesGuilds >= 3) {
-                    strcpy(gText,
-                           gPersonalityNames[gpGame->players[who].personality]);
-                    Widgets.push_back(new textWidget(
-                        66 * column + 0xfb, 0x1c4, 0x42, 0x14, gText,
+                if (thievesGuilds >= 3) {
+                    strcpy(g_text,
+                           g_personalityNames[g_game->m_players[who].m_personality]);
+                    m_widgets.push_back(new textWidget(
+                        66 * column + 0xfb, 0x1c4, 0x42, 0x14, g_text,
                         DATA_COMPGEN(0x0065f2f8, combatChatSmallFont,
                                      "smalfont.fnt"),
                         font::PRIMARY, -1, 1, 0, 8));
-                    AddWidget(Widgets.back(), -1);
-                    if (iThievesGuilds >= 4) {
+                    addWidget(m_widgets.back(), -1);
+                    if (thievesGuilds >= 4) {
                         int bestCreature = -1;
                         long bestValue = 0;
-                        for (unsigned int n = 0; n < gpGame->players[who].numTowns; n++) {
-                            int id = gpGame->players[who].townIds[n];
-                            const town* t = gpGame->GetTown(id);
+                        for (unsigned int n = 0; n < g_game->m_players[who].m_numTowns; n++) {
+                            int id = g_game->m_players[who].m_townIds[n];
+                            const town* t = g_game->getTown(id);
                             for (unsigned int slot = 0; slot < TOWN_DWELLING_COUNT; slot++) {
-                                if (t->get_army().armies[slot] != -1
-                                    && t->get_army().numTroops[slot] > 0
-                                    && akCreatureTypeTraits[t->get_army().armies[slot]]
-                                               .AI_value
+                                if (t->getArmy().m_armies[slot] != -1
+                                    && t->getArmy().m_numTroops[slot] > 0
+                                    && g_creatureTypeTraits[t->getArmy().m_armies[slot]]
+                                               .m_aiValue
                                            > bestValue) {
-                                    bestCreature = t->get_army().armies[slot];
-                                    bestValue = akCreatureTypeTraits[
-                                        t->get_army().armies[slot]].AI_value;
-                                    creatureArmies[column] = t->get_army();
-                                    creatureWidgetMap1[CREATURE_P0 + column] = slot;
+                                    bestCreature = t->getArmy().m_armies[slot];
+                                    bestValue = g_creatureTypeTraits[
+                                        t->getArmy().m_armies[slot]].m_aiValue;
+                                    g_creatureArmies[column] = t->getArmy();
+                                    g_creatureWidgetMap1[CREATURE_P0 + column] = slot;
                                 }
                             }
                         }
-                        for (k = 0; k < gpGame->players[who].numHeroes; k++) {
-                            int id = gpGame->players[who].heroes[k];
-                            hero* h = gpGame->GetHero(id);
+                        for (k = 0; k < g_game->m_players[who].m_numHeroes; k++) {
+                            int id = g_game->m_players[who].m_heroes[k];
+                            hero* h = g_game->getHero(id);
                             for (int slot = 0; slot < TOWN_DWELLING_COUNT; slot++) {
-                                if (h->army.armies[slot] != -1
-                                    && h->army.numTroops[slot] > 0
-                                    && akCreatureTypeTraits[h->army.armies[slot]]
-                                               .AI_value
+                                if (h->m_army.m_armies[slot] != -1
+                                    && h->m_army.m_numTroops[slot] > 0
+                                    && g_creatureTypeTraits[h->m_army.m_armies[slot]]
+                                               .m_aiValue
                                            > bestValue) {
-                                    bestCreature = h->army.armies[slot];
-                                    bestValue = akCreatureTypeTraits[
-                                        h->army.armies[slot]].AI_value;
-                                    creatureArmies[column] = h->army;
-                                    creatureWidgetMap1[CREATURE_P0 + column] = slot;
+                                    bestCreature = h->m_army.m_armies[slot];
+                                    bestValue = g_creatureTypeTraits[
+                                        h->m_army.m_armies[slot]].m_aiValue;
+                                    g_creatureArmies[column] = h->m_army;
+                                    g_creatureWidgetMap1[CREATURE_P0 + column] = slot;
                                 }
                             }
                         }
                         if (bestCreature != -1) {
-                            Widgets.push_back(new iconWidget(
+                            m_widgets.push_back(new iconWidget(
                                 66 * column + 0xff, 0x1de, 0x3a, 0x40,
                                 column + CREATURE_P0,
                                 DATA_COMPGEN(0x006601e0, townCreaturePortraitSprite,
                                              "twcrport.def"),
                                 bestCreature + 2, 2, 0, 0, 0x11));
-                            AddWidget(Widgets.back(), -1);
+                            addWidget(m_widgets.back(), -1);
                         }
                     }
                 }
             }
         }
-        player_index++;
+        playerIndex++;
     }
 
-    field_80 = new TResourceDisplay(this, 1);
-    field_80->Update(0, 0);
+    m_resourceDisplay = new TResourceDisplay(this, 1);
+    m_resourceDisplay->update(0, 0);
 }
 
 // 0x4baba0 (claimed in src/game.cpp), which has no header declaration of
 // its own; this is the file-local fallback the header discipline allows.
-int GetNumObelisks(int whichPlayer);
+int getNumObelisks(int whichPlayer);
 
 // E:\gamedcs\townmgr.cpp:9597
 // One column of the thieves' guild table: for every player position in
@@ -10179,67 +10264,67 @@ int GetNumObelisks(int whichPlayer);
 // lets the `_First == 0` arm fold straight into the loop exit); casting
 // it to int scored 93.36 with an extra induction slot.
 VA(0x005dee70, 0x2F0)  // anchor-callee(SortStats pair) + arity, dc 0x1810b0
-void GetCategoryStats(int whichCat, long* value, signed char* index)
+void getCategoryStats(int whichCat, long* value, signed char* index)
 {
-    for (int i = 0; i < static_cast<signed char>(gpGame->field_1f634); i++) {
+    for (int i = 0; i < static_cast<signed char>(g_game->m_numPlayers); i++) {
         long total = 0;
         index[i] = static_cast<signed char>(i);
-        if (gpGame->playerDisabled[i]) {
+        if (g_game->m_playerDisabled[i]) {
             value[i] = -1;
         } else {
             switch (whichCat) {
             case TG_STAT_TOWNS: {
-                for (unsigned int t = 0; t < gpGame->towns.size(); t++) {
-                    if (gpGame->towns[t].owner == i)
+                for (unsigned int t = 0; t < g_game->m_towns.size(); t++) {
+                    if (g_game->m_towns[t].m_owner == i)
                         total++;
                 }
                 value[i] = total;
                 break;
             }
             case TG_STAT_HEROES:
-                value[i] = gpGame->players[i].numHeroes;
+                value[i] = g_game->m_players[i].m_numHeroes;
                 break;
             case TG_STAT_GOLD:
-                value[i] = gpGame->players[i].resources[GOLD];
+                value[i] = g_game->m_players[i].m_resources[GOLD];
                 break;
             case TG_STAT_WOOD_ORE:
-                value[i] = gpGame->players[i].resources[ORE]
-                         + gpGame->players[i].resources[WOOD];
+                value[i] = g_game->m_players[i].m_resources[ORE]
+                         + g_game->m_players[i].m_resources[WOOD];
                 break;
             case TG_STAT_RARE_RESOURCES:
-                value[i] = gpGame->players[i].resources[GEMS]
-                         + gpGame->players[i].resources[CRYSTAL]
-                         + gpGame->players[i].resources[SULFUR]
-                         + gpGame->players[i].resources[MERCURY];
+                value[i] = g_game->m_players[i].m_resources[GEMS]
+                         + g_game->m_players[i].m_resources[CRYSTAL]
+                         + g_game->m_players[i].m_resources[SULFUR]
+                         + g_game->m_players[i].m_resources[MERCURY];
                 break;
             case TG_STAT_OBELISKS:
-                value[i] = GetNumObelisks(i);
+                value[i] = getNumObelisks(i);
                 break;
             case TG_STAT_ARTIFACTS: {
                 value[i] = 0;
-                for (int h = 0; h < gpGame->players[i].numHeroes; h++) {
-                    hero* thisHero = gpGame->GetHero(gpGame->players[i].heroes[h]);
-                    value[i] += thisHero->get_number_in_backpack(1)
-                              + thisHero->get_equipped_artifacts(1);
+                for (int h = 0; h < g_game->m_players[i].m_numHeroes; h++) {
+                    hero* thisHero = g_game->getHero(g_game->m_players[i].m_heroes[h]);
+                    value[i] += thisHero->getNumberInBackpack(1)
+                              + thisHero->getEquippedArtifacts(1);
                 }
                 break;
             }
             case TG_STAT_ARMY_STRENGTH: {
                 long strength = 0;
-                for (int h = 0; h < gpGame->players[i].numHeroes; h++) {
-                    strength += AI_approximate_strength(
-                        gpGame->GetHero(gpGame->players[i].heroes[h]));
+                for (int h = 0; h < g_game->m_players[i].m_numHeroes; h++) {
+                    strength += aiApproximateStrength(
+                        g_game->getHero(g_game->m_players[i].m_heroes[h]));
                 }
-                for (int t = 0; t < gpGame->players[i].numTowns; t++) {
-                    town* thisTown = gpGame->GetTown(gpGame->players[i].townIds[t]);
-                    if (thisTown->HasGarrison())
-                        strength += AI_approximate_strength(0, &thisTown->get_army());
+                for (int t = 0; t < g_game->m_players[i].m_numTowns; t++) {
+                    town* thisTown = g_game->getTown(g_game->m_players[i].m_townIds[t]);
+                    if (thisTown->hasGarrison())
+                        strength += aiApproximateStrength(0, &thisTown->getArmy());
                 }
                 value[i] = strength;
                 break;
             }
             case TG_STAT_INCOME:
-                value[i] = gpGame->ComputeDailyGold(i, 1);
+                value[i] = g_game->computeDailyGold(i, 1);
                 break;
             }
         }
@@ -10259,10 +10344,10 @@ void GetCategoryStats(int whichCat, long* value, signed char* index)
 
 // E:\gamedcs\townmgr.cpp:9698
 VA(0x005df160, 0x9F)  // anchor-bracket tail + arity screen, dc 0x181350
-void SortStats(long* value, signed char* index)
+void sortStats(long* value, signed char* index)
 {
-    for (int i = 0; i < static_cast<signed char>(gpGame->field_1f634) - 1; ++i) {
-        for (int j = i + 1; j < static_cast<signed char>(gpGame->field_1f634); ++j) {
+    for (int i = 0; i < static_cast<signed char>(g_game->m_numPlayers) - 1; ++i) {
+        for (int j = i + 1; j < static_cast<signed char>(g_game->m_numPlayers); ++j) {
             if (value[j] > value[i]) {
                 long swapValue = value[i];
                 value[i] = value[j];

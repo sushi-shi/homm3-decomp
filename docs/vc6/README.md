@@ -37,15 +37,20 @@ model cannot rot.
 |---|---|
 | `scripts/homm3/vc6/` | the area package (`homm3 vc6 <verb>`) |
 | `scripts/homm3/vc6/_toolchain.py` | hash-gated PE reader over the compiler binaries |
+| `scripts/homm3/vc6/disasm.py` | labeled C2 assembly and code references; inferred roles read from the owning evidence prose |
+| `scripts/homm3/vc6/register_trace.py` | `trace-registers UNIT --fn NAME`: verified temporary-binding snapshots with function and compiler-site labels; limited to two documented stores |
 | `scripts/homm3/vc6/argv.py` | CL spec-table decoder → per-pass argv model |
 | `scripts/homm3/vc6/passes.py` | run C1XX / C2 as separate steps (IL persistence) |
 | `scripts/homm3/vc6/oracle.py` | real-compiler ground-truth runners |
 | `scripts/homm3/vc6/{inline_model,reg_model,il}.py` | the predictors + solvers |
+| `homm3 vc6 il-locals UNIT --fn NAME` | candidate local handles from GL-recorded SY body offsets, using the canonical source/profile; named-symbol overlay, not optimizer register order |
 | `scripts/homm3/vc6/{diagnose,report,queue}.py` | one-function routing, plateau report, and recoverable-byte wall census |
+| `scripts/homm3/vc6/tu_state_sweep.py` | resumable random-include search once per TU with `MAX < HIST` rows, recording all function scores |
 | `scripts/homm3/vc6/_source.py` | the solvers' source-body locator (demangle + definition grammar + `#if 0` masking) |
 | `scripts/homm3/vc6/_eh.py` | the EH cleanup transcript (`[ebp-4]` state stores) — object lifetimes, the one signal the three solvers do not read |
 | `scripts/homm3/vc6/census.py` | the gates (each with a negative control) |
 | `scripts/homm3/vc6/test_locator.py` | the `locator` gate's cases (`homm3 vc6 check --locator`) |
+| `scripts/homm3/vc6/test_disasm.py` | compiler label provenance, selector, byte identity and range controls (also in the `locator` gate) |
 | `scripts/homm3/vc6/test_report_resolution.py` | negative controls for shared public-symbol routing and unclaimed flat names |
 | `scripts/homm3/vc6/test_queue.py` | negative controls for MAX-first ordering and banked-exact dip exclusion |
 | `scripts/homm3/vc6/shim/` | the C2-slot pass-through/instrumentation DLL |
@@ -55,17 +60,41 @@ model cannot rot.
 | `docs/vc6/driver-passes.md` | the CL spec-table mini-language + argv model |
 | `docs/vc6/{inliner,regalloc,il-format,c2-atlas}.md` | one model doc per subsystem |
 | `docs/vc6/eh-cleanup.md` | the EH cleanup-count rule + the tree-wide transcript divergences |
+| `docs/vc6/debug-lines.md` | classic COFF source-line encoding and verified `/Z7` controls |
 | `evidence/vc6/*.tsv` | generated tables (regenerate, never hand-edit) |
 | `build/re/vc6/` | the Ghidra project (gitignored scratch) |
 
 ## Residual-routing contract
 
-`homm3 vc6 queue` ranks existing compiled functions by ascending banked
-MAX/history, with retail size breaking ties. Current scores do not change the
-order, and functions that have reached 100% stay excluded through current-score
-dips. The census records recoverable bytes as remaining work. `--diagnose`
+`homm3 vc6 queue` ranks existing compiled functions by ascending banked MAX for
+their current source implementation, with retail size breaking ties. Current
+scores do not change the order while the source hash is unchanged. A source
+edit resets MAX while HIST preserves the old peak, so `HIST > MAX` exposes
+known recoverable headroom instead of hiding it from the queue. The census
+records recoverable bytes as remaining work. `--diagnose`
 adds solver routing; `--admission` explicitly lists functions without compiled
 bodies. Both modes write generated evidence.
+
+`homm3 vc6 queue --smallest` is the bounded quick-match campaign view. It
+combines admitted residuals and unadmitted retail targets by RVA, sorts them by
+retail byte size, and omits RVAs recorded in `config/simple-match-parked.tsv`.
+It uses the current implementation's MAX for exactness and keeps HIST visible
+as lost-peak evidence. Its generated output is
+`evidence/smallest-match-queue.tsv`.
+
+`homm3 vc6 state-sweep --trials 30 --jobs 8 --bank` groups every numeric
+`MAX < HIST` row by TU. Each trial adds one shuffled set of five to ten project
+headers absent from that TU's transitive project-header closure, then scores
+every compiled function in the TU from that single object. Per-trial records
+capture the selected order and every function score, while the summary lists
+every score movement, including drops. Results are cached by source, retail
+target, header contents, compiler/profile, normalization code and inputs,
+generator version, and seed. A higher observation
+is compiled a second time before it can raise MAX; the clean CUR is never
+replaced. Authored source and function hashes must remain unchanged for the
+whole run. See [tu-state-sweep.md](tu-state-sweep.md) for the audit contract.
+Manual follow-up for rows that remain below HIST is recorded in
+[manual-hist-recovery.md](manual-hist-recovery.md).
 
 Before invoking disassembly, the router requires a unique emitted function
 shared by the compiled and delinked objects. File-static functions qualify;
@@ -79,6 +108,15 @@ present on only one comparison side may not. `homm3 vc6 check --locator`
 includes the measured flat-label defect and the one-side-only case as negative
 controls, so the census cannot silently regress into treating missing source as
 a compiler wall.
+
+`homm3 sema diff --calls` and `--relocs` distinguish source-claimed retail
+labels from unclaimed, generated and local labels using the regenerated
+symbol inventory's provenance. A carcass `VA` already owns its retail name
+even while its compiled declaration uses a different mangled symbol. The
+report keeps that name difference visible and recommends checking the
+declaration/relocation identity, rather than asking for the same claim again.
+This annotation does not equate overloads, change reference pairing, or hide
+addends. The summary and JSON views carry the same categories.
 
 ## Status
 

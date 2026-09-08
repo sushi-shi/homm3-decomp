@@ -35,51 +35,51 @@
 // remote.cpp's CHourGlass wrapper expands these two singleselectionwindow
 // helpers at each use. They stay file-local declarations because this is the
 // only remote consumer and widening the shared header would perturb its TUs.
-void StartMouseThread();
-void StopMouseThread();
+void startMouseThread();
+void stopMouseThread();
 
-DATA(0x0069d648) CLogFile logFile(
+DATA(0x0069d648) CLogFile g_logFile(
     DATA_COMPGEN(0x00682a3c, remoteGameLogName, "game.log"));
 // The global constructor consists solely of the inlined strcpy above;
 // retail 0x552260 is the same 0x2a-byte _$E body.
-VA_COMPGEN(0x00552260, 0x2A, STATIC_CTOR, logFile)
+VA_COMPGEN(0x00552260, 0x2A, STATIC_CTOR, g_logFile)
 
-DATA(0x0063dc18) const GUID GUID_Heroes3 = {
+DATA(0x0063dc18) const GUID guidHeroes3 = {
     0x8b743aa0, 0x53b2, 0x11d2,
     { 0x80, 0x8a, 0x00, 0x60, 0x08, 0x95, 0xfb, 0x43 }
 };
 
 // DPSD's recursion guard. Dreamcast publishes this compiland-local byte as
 // `__inside__`; retail's two inlined error paths fix it at 0x69d814.
-DATA(0x0069d814) static unsigned char __inside__;
+DATA(0x0069d814) static unsigned char g_inside;
 
 // E:\gamedcs\remote.cpp:102 - Dreamcast retains this as an out-of-line
 // helper; VC6 /Ob2 expands both retail call sites into InitConnection. The
 // three beeps, 200-byte local error buffer and recursion guard are visible in
 // both byte-identical expansions.
-inline void DPSD(int iDPErr, char* cFile, int iLine)
+inline void dpsd(int dpErr, char* file, int line)
 {
-    if (__inside__)
+    if (g_inside)
         return;
 
-    __inside__ = 1;
-    char sError[200];
-    if (!pDPlay)
-        strcpy(sError,
+    g_inside = 1;
+    char errorText[200];
+    if (!g_dPlay)
+        strcpy(errorText,
                DATA_COMPGEN(0x0067f5fc, remoteInitializationFailed,
                             "Initialization failed!"));
     else
-        pDPlay->GetErrorDesc(pDPlay->GetLastError(), sError);
+        g_dPlay->getErrorDesc(g_dPlay->getLastError(), errorText);
 
     MessageBeep(0);
     MessageBeep(0);
     MessageBeep(0);
-    sprintf(gText,
+    sprintf(g_text,
             DATA_COMPGEN(0x00682a48, remoteDirectPlayError,
                          "DirectPlay Error:\n\n'%s'\n\n  File:'%s'\n Line# %d"),
-            sError, cFile, iLine);
-    ShutDown(gText);
-    __inside__ = 0;
+            errorText, file, line);
+    shutDown(g_text);
+    g_inside = 0;
 }
 
 // E:\gamedcs\remote.cpp:129 - the whole-buffer checksum game.obj's
@@ -89,7 +89,7 @@ inline void DPSD(int iDPErr, char* cFile, int iLine)
 // remote.h: nothing in the reconstructed tree calls it yet, and a header
 // declarator would perturb every TU in that closure for no consumer.
 VA(0x005522d0, 0x1E)  // dc order-map (DPSD, calc_crc_long, CDPlayHeroes::CDPlayHeroes) + anchor-callee @crc32@12 twice, dc 0x11b940
-unsigned long calc_crc_long(const unsigned char* buf, unsigned len)
+unsigned long calcCrcLong(const unsigned char* buf, unsigned len)
 {
     unsigned long seed = crc32(0, 0, 0);
     return crc32(seed, buf, len);
@@ -107,9 +107,9 @@ VA_COMPGEN(0x005522f0, 0x21, SCALAR_DELETING_DTOR, CDPlayHeroes)
 // initialized: retail likewise leaves +0xec untouched.
 inline CDPlayHeroes::CDPlayHeroes()
 {
-    sLocalIPAddress[0] = 0;
-    confirmId = 0;
-    m_pNetMsgHandler = 0;
+    m_localIpAddress[0] = 0;
+    m_confirmId = 0;
+    m_netMsgHandler = 0;
 }
 
 // E:\gamedcs\remote.cpp:155,160 - retail folds DestroyMsgQueue into the
@@ -119,19 +119,20 @@ inline CDPlayHeroes::CDPlayHeroes()
 // destructor is the decisive inline-budget input: with that complete base
 // contract, the original named helper call expands to the exact 0x205-byte
 // retail body (both deque walks included).
-inline void CDPlayHeroes::DestroyMsgQueue()
+inline void CDPlayHeroes::destroyMsgQueue()
 {
-    while (!msgQueue.empty()) {
-        CNetMsg* pNetMsg = msgQueue.front();
-        delete pNetMsg;
-        msgQueue.pop_front();
+    while (!m_msgQueue.empty()) {
+        // Before normalization (locals): pNetMsg.
+        CNetMsg* netMsg = m_msgQueue.front();
+        delete netMsg;
+        m_msgQueue.pop_front();
     }
 }
 
 VA(0x00552320, 0x205)  // anchor-vtable + dc-order-map, dc 0x11ba38
 CDPlayHeroes::~CDPlayHeroes()
 {
-    DestroyMsgQueue();
+    destroyMsgQueue();
 }
 
 // E:\gamedcs\remote.cpp:179. The host-migration notification: DirectPlay
@@ -141,15 +142,15 @@ CDPlayHeroes::~CDPlayHeroes()
 // `size` member into a constant `operator new(0x14)` and a five-dword copy -
 // and so is the whole Dinkumware deque push_back behind it.
 VA(0x00552530, 0x20E)  // anchor-callee(CDPlay::SysMsgHost base call) + dc-order-map, dc 0x11bad8
-unsigned char CDPlayHeroes::SysMsgHost(DPMSG_GENERIC* message,
+unsigned char CDPlayHeroes::sysMsgHost(DPMSG_GENERIC* message,
                                        unsigned long toId)
 {
-    unsigned char wasHost = IsHost();
-    if (!CDPlay::SysMsgHost(message, toId))
+    unsigned char wasHost = isHost();
+    if (!CDPlay::sysMsgHost(message, toId))
         return 0;
     if (!wasHost) {
         CNetMsg msg(RS_SET_AS_HOST, sizeof(CNetMsg));
-        QueueMsg(&msg);
+        queueMsg(&msg);
     }
     return 1;
 }
@@ -158,11 +159,11 @@ unsigned char CDPlayHeroes::SysMsgHost(DPMSG_GENERIC* message,
 // and answer handled. Retail does NOT chain to the base slot here, unlike
 // the host handler above.
 VA(0x00552740, 0x1DE)  // dc-order-map (between SysMsgHost and SysMsgDestroyPlayerOrGroup), dc 0x11bb20
-unsigned char CDPlayHeroes::SysMsgSessionLost(DPMSG_GENERIC* message,
+unsigned char CDPlayHeroes::sysMsgSessionLost(DPMSG_GENERIC* message,
                                               unsigned long toId)
 {
     CNetMsg msg(RS_SESSION_LOST, sizeof(CNetMsg));
-    QueueMsg(&msg);
+    queueMsg(&msg);
     return 1;
 }
 
@@ -171,26 +172,26 @@ unsigned char CDPlayHeroes::SysMsgSessionLost(DPMSG_GENERIC* message,
 // same format string HandlePlayerDrop uses before the drop notification is
 // queued for the higher-level dispatchers.
 VA(0x00552920, 0x216)  // anchor-string(playerDroppedLog) + dc-order-map, dc 0x11bb40
-unsigned char CDPlayHeroes::SysMsgDestroyPlayerOrGroup(
+unsigned char CDPlayHeroes::sysMsgDestroyPlayerOrGroup(
     DPMSG_DESTROYPLAYERORGROUP* message, unsigned long toId)
 {
-    if (message->dwPlayerType == DPPLAYERTYPE_PLAYER) {
-        unsigned long dpid = message->dpId;
-        logFile.Log(DATA_COMPGEN(0x00682a78, playerDroppedLog,
+    if (message->m_playerType == DPPLAYERTYPE_PLAYER) {
+        unsigned long dpid = message->m_dpId;
+        g_logFile.log(DATA_COMPGEN(0x00682a78, playerDroppedLog,
                                 "********Player dropped---->[%d]"),
                     dpid);
         CPlayerDropMsg msg(dpid);
-        QueueMsg(&msg);
+        queueMsg(&msg);
     }
     return 1;
 }
 
 // E:\gamedcs\remote.cpp:214 - derived slot 56 forwards to the base handler.
 VA(0x00552b40, 0x14)
-unsigned char CDPlayHeroes::SysMsgCreatePlayerOrGroup(
+unsigned char CDPlayHeroes::sysMsgCreatePlayerOrGroup(
     DPMSG_CREATEPLAYERORGROUP* message, unsigned long toId)
 {
-    return CDPlay::SysMsgCreatePlayerOrGroup(message, toId);
+    return CDPlay::sysMsgCreatePlayerOrGroup(message, toId);
 }
 
 // E:\gamedcs\remote.cpp:222. The receive drain: pull every pending
@@ -229,29 +230,30 @@ unsigned char CDPlayHeroes::SysMsgCreatePlayerOrGroup(
 // the same DC rows attest - costs 43.95 / 53.73, because the tail read is
 // CSE'd with the loop's.
 VA(0x00552b60, 0x24B)  // anchor-string(DPlay Receive error) + anchor-callee(HandleLowLevelMsg) + dc-order-map, dc 0x11bb9c
-bool CDPlayHeroes::PollRemote()
+bool CDPlayHeroes::pollRemote()
 {
     unsigned long fromId;
     unsigned long toId;
 
     while (1) {
-        if (!Receive(&fromId, &toId, &dpMsg, 1))
+        if (!receive(&fromId, &toId, &m_dpMsg, 1))
             break;
-        if (fromId == gsThisNetPlayerInfo.dpid)
+        if (fromId == g_thisNetPlayerInfo.m_dpid)
             continue;
         if (!fromId)
             continue;
-        CNetMsg* pNetMsg =
-            static_cast<CNetMsg*>(static_cast<void*>(dpMsg.pData));
-        if (HandleLowLevelMsg(pNetMsg))
+        // Before normalization (locals): pNetMsg.
+        CNetMsg* netMsg =
+            static_cast<CNetMsg*>(static_cast<void*>(m_dpMsg.m_data));
+        if (handleLowLevelMsg(netMsg))
             continue;
-        QueueMsg(pNetMsg);
+        queueMsg(netMsg);
     }
 
-    if (m_hRes != DPLAY_RECEIVE_ERROR_NO_MESSAGES) {
+    if (m_res != DPLAY_RECEIVE_ERROR_NO_MESSAGES) {
         char description[256];
-        GetErrorDesc(m_hRes, description);
-        logFile.Log(DATA_COMPGEN(0x00682a98, dplayReceiveErrorLog,
+        getErrorDesc(m_res, description);
+        g_logFile.log(DATA_COMPGEN(0x00682a98, dplayReceiveErrorLog,
                                 "DPlay Receive error [%s]"),
                     description);
         return false;
@@ -262,42 +264,44 @@ bool CDPlayHeroes::PollRemote()
 // DC names the network singleton pDPlay; retail references at 0x69d808 and
 // the adjacent readiness byte are rooted throughout the remote/front-end
 // call graph.
-DATA(0x0069d808) CDPlayHeroes* pDPlay;
-DATA(0x0069d80c) unsigned char gbDPlayReady;
-// The adjacent PC bytes are the packed counterparts of Dreamcast's
-// gbMPlayer/gbMPlayerHost pair.  TestIfLobbyLaunched and
-// HandleMPlayerLaunch independently distinguish their roles.
-DATA(0x00699550) unsigned char gbMPlayer;
-DATA(0x00699551) unsigned char gbMPlayerHost;
+DATA(0x0069d808) CDPlayHeroes* g_dPlay;
+// The adjacent PC bytes are the packed counterparts of Dreamcast's bool
+// gbMPlayer/gbMPlayerHost pair. TestIfLobbyLaunched and HandleMPlayerLaunch
+// independently distinguish their roles.
+DATA(0x0069d80c) unsigned char g_dPlayReady;
+DATA(0x00699550) bool g_mPlayer;
 // Dreamcast publishes `bDefeatedAllPlayers` as a bool in remote.obj. Retail's
 // win/loss handlers independently locate the PC cell and store full dwords,
 // so the PC representation is int even though the role and owner transfer.
-DATA(0x00699510) int bDefeatedAllPlayers;
-DATA(0x00699274) extern int gUnnamed699274;
+DATA(0x00699551) bool g_mPlayerHost;
+DATA(0x00699510) int g_defeatedAllPlayers;
 // Dreamcast publishes gcTCPAddress as char[21]; retail's client launch arm
 // passes this exact cell both to the log formatter and InitConnection.
-DATA(0x00697758) char gcTCPAddress[21];
+DATA(0x00699274) extern int g_unnamed699274;
 // The PC layout is crossed from the HD build through whole-function operand
 // correspondence; the names and types are the Dreamcast CodeView globals.
-DATA(0x0069d804) unsigned char GameMode;
+// Before normalization: GameMode.
+DATA(0x00697758) char g_tcpAddress[21];
 // Retail-only byte armed when player-drop recovery resumes through
 // game::NextPlayer. No surviving symbol attests a semantic name.
-DATA(0x0069d80d) unsigned char gUnnamed69d80d;
+DATA(0x0069d804) unsigned char g_gameMode;
+DATA(0x0069d80d) unsigned char g_unnamed69d80d;
 DATA(0x0069d80e) unsigned char g_weMoved;
-DATA(0x0069d608) CNetPlayerInfo gsThisNetPlayerInfo;
-DATA(0x006989f0) eNetGameType iMPNetProtocol;
-DATA(0x00682a38) unsigned char gbFollowPlayerMode;
+DATA(0x0069d608) CNetPlayerInfo g_thisNetPlayerInfo;
+DATA(0x006989f0) eNetGameType g_mpNetProtocol;
 // Dreamcast publishes gMapName as char[260]. LobbyLaunchConnect copies the
 // selected setup filename here before refreshing the scenario header; the
 // next retail cell at 0x6994e4 independently proves the 0x104-byte extent.
-DATA(0x006993e0) char gMapName[260];
+DATA(0x00682a38) unsigned char g_followPlayerMode;
 // Dreamcast's remote.obj static-global roster names this timestamp;
 // retail's PollRemote fixes its address and unsigned-long type.
-DATA(0x0069d818) static unsigned long lastActiveUpdate;
+DATA(0x006993e0) char g_mapName[260];
+DATA(0x0069d818) static unsigned long g_lastActiveUpdate;
 
 
 
-static const long PLAYER_ACTIVE_UPDATE_INTERVAL = 600000;
+// Before normalization: PLAYER_ACTIVE_UPDATE_INTERVAL.
+static const long g_playerActiveUpdateInterval = 600000;
 
 // Unimplemented carcass rows remain available to the claim/label scanners but
 // stay outside compilation as this large TU is admitted incrementally.
@@ -305,14 +309,14 @@ static const long PLAYER_ACTIVE_UPDATE_INTERVAL = 600000;
 
 // E:\gamedcs\remote.cpp:102
 DC_ONLY(0x11b8c4, 0x7A)
-void DPSD(int iDPErr, char* cFile, int iLine)
+void dpsd(int iDPErr, char* cFile, int iLine)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:129
 DC_ONLY(0x11b940, 0x2A)
-int calc_crc_long(unsigned char* buffer, int len)
+int calcCrcLong(unsigned char* buffer, int len)
 {
     // @stub
 }
@@ -333,70 +337,70 @@ void CDPlayHeroes::~CDPlayHeroes()
 
 // E:\gamedcs\remote.cpp:160
 DC_ONLY(0x11ba80, 0x58)
-void CDPlayHeroes::DestroyMsgQueue()
+void CDPlayHeroes::destroyMsgQueue()
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:179
 DC_ONLY(0x11bad8, 0x48)
-unsigned char CDPlayHeroes::SysMsgHost(DPMSG_GENERIC* pSysMsg, unsigned long toID)
+unsigned char CDPlayHeroes::sysMsgHost(DPMSG_GENERIC* pSysMsg, unsigned long toID)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:192
 DC_ONLY(0x11bb20, 0x20)
-unsigned char CDPlayHeroes::SysMsgSessionLost(DPMSG_GENERIC* pSysMsg, unsigned long toID)
+unsigned char CDPlayHeroes::sysMsgSessionLost(DPMSG_GENERIC* pSysMsg, unsigned long toID)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:204
 DC_ONLY(0x11bb40, 0x20)
-unsigned char CDPlayHeroes::SysMsgDestroyPlayerOrGroup(DPMSG_DESTROYPLAYERORGROUP* pSysMsg, unsigned long toID)
+unsigned char CDPlayHeroes::sysMsgDestroyPlayerOrGroup(DPMSG_DESTROYPLAYERORGROUP* pSysMsg, unsigned long toID)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:214
 DC_ONLY(0x11bb60, 0x3A)
-unsigned char CDPlayHeroes::SysMsgCreatePlayerOrGroup(DPMSG_CREATEPLAYERORGROUP* pSysMsg, unsigned long toID)
+unsigned char CDPlayHeroes::sysMsgCreatePlayerOrGroup(DPMSG_CREATEPLAYERORGROUP* pSysMsg, unsigned long toID)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:222
 DC_ONLY(0x11bb9c, 0xEC)
-unsigned char CDPlayHeroes::PollRemote()
+unsigned char CDPlayHeroes::pollRemote()
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:304
 DC_ONLY(0x11bc88, 0xD2)
-unsigned char CDPlayHeroes::HandleLowLevelMsg(CNetMsg* pNetMsg)
+unsigned char CDPlayHeroes::handleLowLevelMsg(CNetMsg* pNetMsg)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:350
 DC_ONLY(0x11bd5c, 0xF4)
-CNetMsg* CDPlayHeroes::GetRemoteData(unsigned char removeFromQueue, unsigned char* wasCompressed)
+CNetMsg* CDPlayHeroes::getRemoteData(unsigned char removeFromQueue, unsigned char* wasCompressed)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:407
 DC_ONLY(0x11be50, 0x44)
-unsigned char CDPlayHeroes::TransmitRemoteData(CNetMsg* pMsg, int toWho, unsigned char compressMsg, unsigned char guaranteed)
+unsigned char CDPlayHeroes::transmitRemoteData(CNetMsg* pMsg, int toWho, unsigned char compressMsg, unsigned char guaranteed)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:425
 DC_ONLY(0x11be94, 0xAA)
-CNetMsg* CDPlayHeroes::CompressMsg(CNetMsg* pNetMsg)
+CNetMsg* CDPlayHeroes::compressMsg(CNetMsg* pNetMsg)
 {
     // @stub
 }
@@ -410,14 +414,14 @@ CNetMsg* CDPlayHeroes::UncompressMsg(CNetMsg* pNetMsg)
 
 // E:\gamedcs\remote.cpp:496
 DC_ONLY(0x11bfec, 0x60)
-unsigned char CDPlayHeroes::TransmitRemoteDataDPID(CNetMsg* pMsg, unsigned long dpidTo, unsigned char compressMsg, unsigned char guaranteed)
+unsigned char CDPlayHeroes::transmitRemoteDataDPID(CNetMsg* pMsg, unsigned long dpidTo, unsigned char compressMsg, unsigned char guaranteed)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:578
 DC_ONLY(0x11c04c, 0x18A)
-unsigned char CDPlayHeroes::SendIt(CNetMsg* pMsg, unsigned long dpidTo, unsigned char guaranteed)
+unsigned char CDPlayHeroes::sendIt(CNetMsg* pMsg, unsigned long dpidTo, unsigned char guaranteed)
 {
     // @stub
 }
@@ -431,7 +435,7 @@ void CDPlayHeroes::HandleHostXFer()
 
 // E:\gamedcs\remote.cpp:690
 DC_ONLY(0x11c1f8, 0x30)
-void CDPlayHeroes::HandlePlayerDrop(unsigned long dpid)
+void CDPlayHeroes::handlePlayerDrop(unsigned long dpid)
 {
     // @stub
 }
@@ -445,21 +449,21 @@ void CDPlayHeroes::HandleNewPlayer()
 
 // E:\gamedcs\remote.cpp:702
 DC_ONLY(0x11c22c, 0x3A)
-void CDPlayHeroes::QueueMsg(CNetMsg* pNetMsg)
+void CDPlayHeroes::queueMsg(CNetMsg* pNetMsg)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:783
 DC_ONLY(0x11c268, 0x28)
-void CDPlayHeroes::SetNetMsgHandler(CNetMsgHandler* pNetMsgHandler)
+void CDPlayHeroes::setNetMsgHandler(CNetMsgHandler* pNetMsgHandler)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:793
 DC_ONLY(0x11c290, 0x6)
-CNetMsgHandler* CDPlayHeroes::GetNetMsgHandler()
+CNetMsgHandler* CDPlayHeroes::getNetMsgHandler()
 {
     // @stub
 }
@@ -480,49 +484,49 @@ void CChatManager::~CChatManager()
 
 // E:\gamedcs\remote.cpp:835
 DC_ONLY(0x11c330, 0x42)
-void CChatManager::Init()
+void CChatManager::init()
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:844
 DC_ONLY(0x11c374, 0x34)
-void CChatManager::ShutDown()
+void CChatManager::shutDown()
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:857
 DC_ONLY(0x11c3a8, 0x104)
-void CChatManager::AddChat(const char* cChatMsg)
+void CChatManager::addChat(const char* cChatMsg)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:904
 DC_ONLY(0x11c4ac, 0xAA)
-void CChatManager::TurnDurationMsg(const char* cChatMsg)
+void CChatManager::turnDurationMsg(const char* cChatMsg)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:947
 DC_ONLY(0x11c558, 0x64)
-void CChatManager::SystemMsg(const char* cChatMsg)
+void CChatManager::systemMsg(const char* cChatMsg)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:968
 DC_ONLY(0x11c5bc, 0x9C)
-void CChatManager::PlayerDropMsg(const char* cChatMsg)
+void CChatManager::playerDropMsg(const char* cChatMsg)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:990
 DC_ONLY(0x11c658, 0x64)
-void CChatManager::PlayerEnterMsg(const char* cChatMsg)
+void CChatManager::playerEnterMsg(const char* cChatMsg)
 {
     // @stub
 }
@@ -561,45 +565,46 @@ void CChatManager::PlayerEnterMsg(const char* cChatMsg)
 //   stack/frame operands are the entire 99.9543% residual. The temporary
 //   restores all ten. Taking its address is accepted by the retail VC6
 //   dialect; the object lives through TransmitRemoteDataDPID's full expression.
+// Before normalization (locals): pNetMsg, sTemp.
 VA(0x00552db0, 0x28F)  // anchor-caller(PollRemote 0x552b60) + anchor-callee(SendIt/AddChat/ShutDown) + dc-order-map, dc 0x11bc88
-unsigned char CDPlayHeroes::HandleLowLevelMsg(CNetMsg* pNetMsg)
+unsigned char CDPlayHeroes::handleLowLevelMsg(CNetMsg* netMsg)
 {
-    switch (pNetMsg->subType) {
+    switch (netMsg->m_subType) {
     case RS_PING:
         {
-            TransmitRemoteDataDPID(
+            transmitRemoteDataDPID(
                 &CPingResponseMsg(
-                    static_cast<CPingMsg*>(pNetMsg)->m_pingTime, RS_PING_REPLY),
-                pNetMsg->field_04, false, false);
+                    static_cast<CPingMsg*>(netMsg)->m_pingTime, RS_PING_REPLY),
+                netMsg->m_dpidFrom, false, false);
         }
         break;
 
     case RS_PING_REPLY:
         {
-            char sTemp[256];
-            sprintf(sTemp,
-                    gpGeneralText->GetText(
+            char tempText[256];
+            sprintf(tempText,
+                    g_generalText->getText(
                         GENERAL_TEXT_CHAT_PING_RESULT_FORMAT),
-                    GameTime::ElapsedSince(
-                        static_cast<CPingMsg*>(pNetMsg)->m_pingTime));
-            ReceiveChat(sTemp, pNetMsg->field_00);
+                    GameTime::elapsedSince(
+                        static_cast<CPingMsg*>(netMsg)->m_pingTime));
+            receiveChat(tempText, netMsg->m_from);
         }
         break;
 
     case RS_DESTROY_PLAYER:
         {
             unsigned long dpid =
-                static_cast<CDestroyPlayerMsg*>(pNetMsg)->m_dpid;
-            if (dpid == gsThisNetPlayerInfo.dpid) {
-                RemoteCleanup();
-                NormalDialog(
-                    gpGeneralText->GetText(
+                static_cast<CDestroyPlayerMsg*>(netMsg)->m_dpid;
+            if (dpid == g_thisNetPlayerInfo.m_dpid) {
+                remoteCleanup();
+                normalDialog(
+                    g_generalText->getText(
                         GENERAL_TEXT_REMOTE_SESSION_DESTROYED),
                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-                ShutDown(0);
+                shutDown(0);
             }
             else {
-                HandlePlayerDrop(dpid);
+                handlePlayerDrop(dpid);
             }
         }
         break;
@@ -636,54 +641,55 @@ unsigned char CDPlayHeroes::HandleLowLevelMsg(CNetMsg* pNetMsg)
 // expansion takes it, inside Dinkumware's own template body which this TU
 // may not pin into.
 VA(0x00553040, 0x1D1)  // anchor-caller(the free GetRemoteData wrapper, CheckHandleNet) + dc-order-map, dc 0x11bd5c
-CNetMsg* CDPlayHeroes::GetRemoteData(unsigned char removeFromQueue,
+CNetMsg* CDPlayHeroes::getRemoteData(unsigned char removeFromQueue,
                                      unsigned char* wasCompressed)
 {
     if (wasCompressed)
         *wasCompressed = 0;
-    if (!bVideoPaused)
+    if (!g_videoPaused)
         return 0;
-    if (!msgQueue.size())
+    if (!m_msgQueue.size())
         return 0;
 
-    CNetMsg* pNetMsg = msgQueue.front();
-    if (pNetMsg) {
+    // Before normalization (locals): pNetMsg.
+    CNetMsg* netMsg = m_msgQueue.front();
+    if (netMsg) {
         if (removeFromQueue)
-            msgQueue.pop_front();
+            m_msgQueue.pop_front();
 
-        if (pNetMsg->field_10 && pNetMsg->field_10 != pNetMsg->size) {
+        if (netMsg->m_uncompressedSize && netMsg->m_uncompressedSize != netMsg->m_size) {
             unsigned long uncompressedSize =
-                pNetMsg->field_10 + sizeof(CNetMsg);
+                netMsg->m_uncompressedSize + sizeof(CNetMsg);
             void* storage = ::operator new(uncompressedSize);
             CNetMsg* uncompressedMsg = static_cast<CNetMsg*>(storage);
-            memcpy(uncompressedMsg, pNetMsg, sizeof(CNetMsg));
+            memcpy(uncompressedMsg, netMsg, sizeof(CNetMsg));
 
             uncompressedSize -= sizeof(CNetMsg);
             if (uncompress(
                     static_cast<unsigned char*>(storage) + sizeof(CNetMsg),
                     &uncompressedSize,
                     static_cast<const unsigned char*>(
-                        static_cast<const void*>(pNetMsg)) + sizeof(CNetMsg),
-                    pNetMsg->size - sizeof(CNetMsg))) {
+                        static_cast<const void*>(netMsg)) + sizeof(CNetMsg),
+                    netMsg->m_size - sizeof(CNetMsg))) {
                 ::operator delete(storage);
-                ::operator delete(pNetMsg);
+                ::operator delete(netMsg);
                 return 0;
             }
 
-            uncompressedMsg->size = uncompressedSize + sizeof(CNetMsg);
+            uncompressedMsg->m_size = uncompressedSize + sizeof(CNetMsg);
             if (!uncompressedMsg) {
-                ::operator delete(pNetMsg);
+                ::operator delete(netMsg);
                 return 0;
             }
 
             if (removeFromQueue)
-                ::operator delete(pNetMsg);
+                ::operator delete(netMsg);
             if (wasCompressed)
                 *wasCompressed = 1;
-            pNetMsg = uncompressedMsg;
+            netMsg = uncompressedMsg;
         }
     }
-    return pNetMsg;
+    return netMsg;
 }
 
 // E:\gamedcs\remote.cpp:407
@@ -691,19 +697,20 @@ CNetMsg* CDPlayHeroes::GetRemoteData(unsigned char removeFromQueue,
 // Dreamcast class record supplies the public member name and bool signature.
 // Recipient 0x7f is broadcast id zero, while a player without a DPID is an
 // already-successful no-op.
+// Before normalization (locals): pMsg.
 VA(0x00553220, 0x89)  // hd-crossbuild + dc-order-map
-bool CDPlayHeroes::TransmitRemoteData(CNetMsg* pMsg, int toWho,
+bool CDPlayHeroes::transmitRemoteData(CNetMsg* msg, int toWho,
                                       bool compressMsg, bool guaranteed)
 {
     unsigned long dpidTo = 0;
     if (toWho != NET_MESSAGE_RECIPIENT_ALL) {
-        dpidTo = gpGame->players[toWho].dpid;
+        dpidTo = g_game->m_players[toWho].m_dpid;
         if (!dpidTo)
             return true;
     }
 
-    return TransmitRemoteDataDPID(
-        pMsg, dpidTo, compressMsg, guaranteed);
+    return transmitRemoteDataDPID(
+        msg, dpidTo, compressMsg, guaranteed);
 }
 
 // E:\gamedcs\remote.cpp:425. Dreamcast supplies the protected member
@@ -711,30 +718,31 @@ bool CDPlayHeroes::TransmitRemoteData(CNetMsg* pMsg, int toWho,
 // headroom, level-6 compression and the rule that a non-shrinking result is
 // discarded rather than transmitted.
 #pragma auto_inline(off)
+// Before normalization (locals): pNetMsg.
 VA(0x005532b0, 0xB9)  // anchor-callers + zlib-edge + dc-order-map
-CNetMsg* CDPlayHeroes::CompressMsg(CNetMsg* pNetMsg)
+CNetMsg* CDPlayHeroes::compressMsg(CNetMsg* netMsg)
 {
     unsigned long compressedSize =
-        static_cast<unsigned long>(pNetMsg->size * 1.2) + 12;
+        static_cast<unsigned long>(netMsg->m_size * 1.2) + 12;
     void* storage = ::operator new(compressedSize);
     CNetMsg* compressedMsg = static_cast<CNetMsg*>(storage);
-    memcpy(compressedMsg, pNetMsg, sizeof(CNetMsg));
+    memcpy(compressedMsg, netMsg, sizeof(CNetMsg));
 
     compressedSize -= sizeof(CNetMsg);
     if (compress2(
             static_cast<unsigned char*>(storage) + sizeof(CNetMsg),
             &compressedSize,
             static_cast<const unsigned char*>(
-                static_cast<const void*>(pNetMsg)) + sizeof(CNetMsg),
-            pNetMsg->size - sizeof(CNetMsg), 6)) {
+                static_cast<const void*>(netMsg)) + sizeof(CNetMsg),
+            netMsg->m_size - sizeof(CNetMsg), 6)) {
         ::operator delete(storage);
         return 0;
     }
 
-    compressedMsg->size = compressedSize + sizeof(CNetMsg);
-    unsigned long originalSize = pNetMsg->size;
-    compressedMsg->field_10 = originalSize;
-    if (compressedMsg->size >= originalSize) {
+    compressedMsg->m_size = compressedSize + sizeof(CNetMsg);
+    unsigned long originalSize = netMsg->m_size;
+    compressedMsg->m_uncompressedSize = originalSize;
+    if (compressedMsg->m_size >= originalSize) {
         ::operator delete(storage);
         return 0;
     }
@@ -746,21 +754,22 @@ CNetMsg* CDPlayHeroes::CompressMsg(CNetMsg* pNetMsg)
 // The DPID form is the same send pipeline without recipient lookup. HD
 // 0x553770 maps bijectively to retail 0x553370 and the DC roster fixes its
 // position between UncompressMsg and SendIt.
+// Before normalization (locals): pMsg.
 VA(0x00553370, 0x5C)  // hd-crossbuild + dc-order-map
-bool CDPlayHeroes::TransmitRemoteDataDPID(CNetMsg* pMsg,
+bool CDPlayHeroes::transmitRemoteDataDPID(CNetMsg* msg,
                                           unsigned long dpidTo,
                                           bool compressMsg, bool guaranteed)
 {
-    pMsg->field_00 = gLocalGamePos;
+    msg->m_from = g_localGamePos;
     CNetMsg* compressedMsg = 0;
-    pMsg->field_04 = gsThisNetPlayerInfo.dpid;
+    msg->m_dpidFrom = g_thisNetPlayerInfo.m_dpid;
     if (compressMsg) {
-        compressedMsg = CompressMsg(pMsg);
+        compressedMsg = this->compressMsg(msg);
         if (compressedMsg)
-            pMsg = compressedMsg;
+            msg = compressedMsg;
     }
 
-    bool result = SendIt(pMsg, dpidTo, guaranteed);
+    bool result = sendIt(msg, dpidTo, guaranteed);
     if (compressedMsg)
         delete compressedMsg;
     return result;
@@ -801,45 +810,46 @@ bool CDPlayHeroes::TransmitRemoteDataDPID(CNetMsg* pMsg,
 // CONSEQUENCE of the rotation, not an independent merge to spell.
 // Polish 49 adds the third loop form to that list: `int retries = 0;
 // while (retries <= 5) { ...; ++retries; }` is byte-identical at 88.8550.
+// Before normalization (locals): pMsg.
 VA(0x005533d0, 0x1AB)  // anchor-strings + virtual-slots + dc-order-map
-bool CDPlayHeroes::SendIt(CNetMsg* pMsg, unsigned long dpidTo,
+bool CDPlayHeroes::sendIt(CNetMsg* msg, unsigned long dpidTo,
                           bool guaranteed)
 {
     char errorDescription[256];
     int retries;
     for (retries = 0; retries <= 5; ++retries) {
-        unsigned char sent = Send(pMsg, pMsg->size, gsThisNetPlayerInfo.dpid,
+        unsigned char sent = send(msg, msg->m_size, g_thisNetPlayerInfo.m_dpid,
                                   dpidTo, guaranteed);
         if ((!sent
-             && GetLastError() == DPLAY_SEND_ERROR_INVALID_PLAYER)
-            || GetLastError() == DPLAY_SEND_ERROR_INVALID_PARAMETER) {
-            GetErrorDesc(GetLastError(), errorDescription);
-            logFile.Log(DATA_COMPGEN(0x00682adc, dplaySendErrorLog,
+             && getLastError() == DPLAY_SEND_ERROR_INVALID_PLAYER)
+            || getLastError() == DPLAY_SEND_ERROR_INVALID_PARAMETER) {
+            getErrorDesc(getLastError(), errorDescription);
+            g_logFile.log(DATA_COMPGEN(0x00682adc, dplaySendErrorLog,
                                     "DPlay Send error [%s]"),
                         errorDescription);
-            logFile.Log(DATA_COMPGEN(0x00682abc, invalidSendPlayerLog,
+            g_logFile.log(DATA_COMPGEN(0x00682abc, invalidSendPlayerLog,
                                     "Sending to invalid player? [%d]"),
                         dpidTo);
-            if (GetLastError() == DPLAY_SEND_ERROR_INVALID_PLAYER) {
-                DestroyPlayer(dpidTo);
-                HandlePlayerDrop(dpidTo);
+            if (getLastError() == DPLAY_SEND_ERROR_INVALID_PLAYER) {
+                destroyPlayer(dpidTo);
+                handlePlayerDrop(dpidTo);
             }
             return true;
         }
 
         if (!sent) {
-            GetErrorDesc(GetLastError(), errorDescription);
-            logFile.Log(DATA_COMPGEN(0x00682adc, dplaySendErrorLog,
+            getErrorDesc(getLastError(), errorDescription);
+            g_logFile.log(DATA_COMPGEN(0x00682adc, dplaySendErrorLog,
                                     "DPlay Send error [%s]"),
                         errorDescription);
-            GameTime::Delay(200);
+            GameTime::delay(200);
 
             if (retries >= 5) {
-                NormalDialogTimeOut(
-                    gpGeneralText->GetText(GENERAL_TEXT_DPLAY_SEND_RETRY),
+                normalDialogTimeOut(
+                    g_generalText->getText(GENERAL_TEXT_DPLAY_SEND_RETRY),
                     2, 15000, -1, -1, -1, 0, -1, 0, -1, -1, 0);
-                if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT) {
-                    ShutDown(0);
+                if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT) {
+                    shutDown(0);
                     return false;
                 }
                 retries = -1;
@@ -856,24 +866,25 @@ bool CDPlayHeroes::SendIt(CNetMsg* pMsg, unsigned long dpidTo,
 // it destroys no game state itself, but logs and enqueues a 0x18-byte
 // CPlayerDropMsg for the higher-level dispatchers.
 VA(0x00553580, 0x1F0)  // anchor-string + SendIt-inline + dc-order-map
-void CDPlayHeroes::HandlePlayerDrop(unsigned long dpid)
+void CDPlayHeroes::handlePlayerDrop(unsigned long dpid)
 {
-    logFile.Log(DATA_COMPGEN(0x00682a78, playerDroppedLog,
+    g_logFile.log(DATA_COMPGEN(0x00682a78, playerDroppedLog,
                             "********Player dropped---->[%d]"),
                 dpid);
     CPlayerDropMsg msg(dpid);
-    QueueMsg(&msg);
+    queueMsg(&msg);
 }
 
 // E:\gamedcs\remote.cpp:702. Retail keeps no standalone copy. /Ob2 expands
 // allocation/copy into both member drop paths; the standalone handler also
 // expands Dinkumware's push_back internals, while SendIt's nested occurrence
 // stops at that template boundary.
-void CDPlayHeroes::QueueMsg(CNetMsg* pNetMsg)
+// Before normalization (locals): pNetMsg.
+void CDPlayHeroes::queueMsg(CNetMsg* netMsg)
 {
-    void* storage = ::operator new(pNetMsg->size);
-    memcpy(storage, pNetMsg, pNetMsg->size);
-    msgQueue.push_back(static_cast<CNetMsg*>(storage));
+    void* storage = ::operator new(netMsg->m_size);
+    memcpy(storage, netMsg, netMsg->m_size);
+    m_msgQueue.push_back(static_cast<CNetMsg*>(storage));
 }
 
 // E:\gamedcs\remote.cpp:783 - install a handler and hand it whatever state
@@ -889,19 +900,20 @@ void CDPlayHeroes::QueueMsg(CNetMsg* pNetMsg)
 // 2026-08-13; that measurement was a real semantic dependency, not the
 // include-set class, and this is its resolution.
 // E:\gamedcs\remote.cpp:783
+// Before normalization (locals): pNetMsgHandler, pOld.
 VA(0x00553770, 0x30)  // anchor-callee (Copy 0x555150 inlined), dc 0x11c268
-void CDPlayHeroes::SetNetMsgHandler(CNetMsgHandler* pNetMsgHandler)
+void CDPlayHeroes::setNetMsgHandler(CNetMsgHandler* netMsgHandler)
 {
-    CNetMsgHandler* pOld = m_pNetMsgHandler;
-    m_pNetMsgHandler = pNetMsgHandler;
+    CNetMsgHandler* old = m_netMsgHandler;
+    m_netMsgHandler = netMsgHandler;
     // Dreamcast remote.cpp:788-790 carries two nested scopes and reloads
     // the installed member for the inner test and Copy receiver. Keep those
     // member reads after the store: substituting pNetMsgHandler is exact in
     // this standalone body but loses retail's pOld stack home in the base
     // destructor (100% -> 41.875%) and its deleting wrapper (100% -> 78.125%).
-    if (pOld) {
-        if (m_pNetMsgHandler) {
-            m_pNetMsgHandler->Copy(pOld);
+    if (old) {
+        if (m_netMsgHandler) {
+            m_netMsgHandler->copy(old);
         }
     }
 }
@@ -910,9 +922,9 @@ void CDPlayHeroes::SetNetMsgHandler(CNetMsgHandler* pNetMsgHandler)
 // advmgr's CAdvPopup constructor is exact with a CALL here.
 // E:\gamedcs\remote.cpp:793
 VA(0x005537a0, 0x7)  // anchor-caller (advmgr.cpp:4838), dc 0x11c290
-CNetMsgHandler* CDPlayHeroes::GetNetMsgHandler()
+CNetMsgHandler* CDPlayHeroes::getNetMsgHandler()
 {
-    return m_pNetMsgHandler;
+    return m_netMsgHandler;
 }
 
 // E:\gamedcs\remote.cpp:835
@@ -920,17 +932,17 @@ CNetMsgHandler* CDPlayHeroes::GetNetMsgHandler()
 // fixes this as Init: it loads exactly the five sample resources that the
 // following ShutDown releases. Retail also proves the PC-only +8 tail shift.
 VA(0x005537b0, 0x46)  // anchor-callee + arity/order-map, dc 0x11c330
-void CChatManager::Init()
+void CChatManager::init()
 {
-    g_chatSample = ResourceManager::GetSample(
+    m_chatSample = ResourceManager::getSample(
         DATA_COMPGEN(0x00682b30, chatSampleName, "chat.wav"));
-    g_playerDropSample = ResourceManager::GetSample(
+    m_playerDropSample = ResourceManager::getSample(
         DATA_COMPGEN(0x00682b20, playerDropSampleName, "playexit.wav"));
-    g_sysMsgSample = ResourceManager::GetSample(
+    m_sysMsgSample = ResourceManager::getSample(
         DATA_COMPGEN(0x00682b14, systemMessageSampleName, "sysmsg.wav"));
-    g_turnDurSample = ResourceManager::GetSample(
+    m_turnDurSample = ResourceManager::getSample(
         DATA_COMPGEN(0x00682b04, turnDurationSampleName, "timeover.wav"));
-    g_playerEnterSample = ResourceManager::GetSample(
+    m_playerEnterSample = ResourceManager::getSample(
         DATA_COMPGEN(0x00682af4, playerEnterSampleName, "playcome.wav"));
 }
 
@@ -938,14 +950,14 @@ void CChatManager::Init()
 // If the first load succeeded, retail assumes the five-resource set is
 // complete and releases each through resource vtable slot 1.
 VA(0x00553800, 0x31)  // anchor-callee + arity/order-map, dc 0x11c374
-void CChatManager::ShutDown()
+void CChatManager::shutDown()
 {
-    if (g_chatSample) {
-        g_chatSample->Dispose();
-        g_playerDropSample->Dispose();
-        g_sysMsgSample->Dispose();
-        g_turnDurSample->Dispose();
-        g_playerEnterSample->Dispose();
+    if (m_chatSample) {
+        m_chatSample->dispose();
+        m_playerDropSample->dispose();
+        m_sysMsgSample->dispose();
+        m_turnDurSample->dispose();
+        m_playerEnterSample->dispose();
     }
 }
 
@@ -963,7 +975,7 @@ void CChatManager::ShutDown()
 // match retail and classifies the residual after them as an address-folding
 // schedule, not a source-nameable allocation lever.
 VA(0x00553840, 0x11B)  // anchor-callees + arity/order-map, dc 0x11c3a8
-void __cdecl AddChat(CChatManager* manager, const char* format, ...)
+void __cdecl addChat(CChatManager* manager, const char* format, ...)
 {
     char chatText[1024];
     va_list args;
@@ -971,39 +983,39 @@ void __cdecl AddChat(CChatManager* manager, const char* format, ...)
     vsprintf(chatText, format, args);
 
     bool atNewestMessage = false;
-    if (manager->position == manager->msgCount - 1)
+    if (manager->m_position == manager->m_msgCount - 1)
         atNewestMessage = true;
 
-    if (manager->msgCount >= 20) {
-        manager->msgArray[manager->currMsg].killTime = 0;
-        manager->currMsg = (manager->currMsg + 1) % manager->maxLines;
-        --manager->msgCount;
+    if (manager->m_msgCount >= 20) {
+        manager->m_msgArray[manager->m_currMsg].m_killTime = 0;
+        manager->m_currMsg = (manager->m_currMsg + 1) % manager->m_maxLines;
+        --manager->m_msgCount;
     }
 
     // Complete changed DC's member formatter into this free function, so its
     // private GetNextFreeMsgNbr call necessarily became the proven equivalent
     // expression when `manager` became explicit.
-    int msgNbr = (manager->currMsg + manager->msgCount) % manager->maxLines;
-    strncpy(manager->msgArray[msgNbr].sText, chatText, 127);
-    manager->msgArray[msgNbr].killTime = 0;
-    manager->msgArray[msgNbr].isSystem = manager->isSysMsg;
-    ++manager->msgCount;
+    int msgNbr = (manager->m_currMsg + manager->m_msgCount) % manager->m_maxLines;
+    strncpy(manager->m_msgArray[msgNbr].m_text, chatText, 127);
+    manager->m_msgArray[msgNbr].m_killTime = 0;
+    manager->m_msgArray[msgNbr].m_isSystem = manager->m_isSysMsg;
+    ++manager->m_msgCount;
     if (atNewestMessage)
-        manager->position = manager->msgCount - 1;
-    manager->changed = 1;
+        manager->m_position = manager->m_msgCount - 1;
+    manager->m_changed = 1;
 
-    if (!manager->isSysMsg) {
-        if (manager->g_chatMemSample
-            && gpSoundManager->GetSampleInfo(
-                manager->g_chatMemSample, AIL_SAMPLE_PLAYING))
+    if (!manager->m_isSysMsg) {
+        if (manager->m_chatMemSample
+            && g_soundManager->getSampleInfo(
+                manager->m_chatMemSample, AIL_SAMPLE_PLAYING))
             return;
-        sample* chatSample = manager->g_chatSample;
+        sample* chatSample = manager->m_chatSample;
         if (chatSample) {
-            int soundWasEnabled = gpSoundManager->field_84;
-            gpSoundManager->field_84 = 1;
-            manager->g_chatMemSample =
-                gpSoundManager->MemorySample(chatSample);
-            gpSoundManager->field_84 = soundWasEnabled;
+            int soundWasEnabled = g_soundManager->m_playSounds;
+            g_soundManager->m_playSounds = 1;
+            manager->m_chatMemSample =
+                g_soundManager->memorySample(chatSample);
+            g_soundManager->m_playSounds = soundWasEnabled;
         }
     }
 }
@@ -1014,7 +1026,7 @@ void __cdecl AddChat(CChatManager* manager, const char* format, ...)
 // adventure-suspended and popup checks; the sound tail prefers timeover.wav
 // and falls back to chat.wav.
 VA(0x00553960, 0x136)  // anchor-callees + arity/order-map, dc 0x11c4ac
-void __cdecl TurnDurationMsg(CChatManager* manager, const char* format, ...)
+void __cdecl turnDurationMsg(CChatManager* manager, const char* format, ...)
 {
     char chatText[1024];
     char finalText[1024];
@@ -1023,48 +1035,48 @@ void __cdecl TurnDurationMsg(CChatManager* manager, const char* format, ...)
     vsprintf(chatText, format, args);
 
     unsigned char canDisplay = 1;
-    if (gpAdvManager
-        && gpAdvManager->status == baseManager::STATUS_SUSPENDED)
+    if (g_advManager
+        && g_advManager->m_status == baseManager::STATUS_SUSPENDED)
         canDisplay = 0;
 
-    if (pDPlay) {
-        CNetMsgHandler* handler = pDPlay->GetNetMsgHandler();
-        if (handler && handler->IsInPopup())
+    if (g_dPlay) {
+        CNetMsgHandler* handler = g_dPlay->getNetMsgHandler();
+        if (handler && handler->isInPopup())
             canDisplay = 0;
     }
 
-    if (gTurnDuration69d630.m_currDuration != 0
-        && !gbUnk69774c
-        && gTurnDuration69d630.m_turnStartTime != 0
-        && gTurnDuration69d630.m_pauseTime == 0
-        && GameTime::Get() + 59000
-               > gTurnDuration69d630.m_turnStartTime
-                     + gTurnDuration69d630.m_currDuration
+    if (g_turnDuration69d630.m_currDuration != 0
+        && !g_unk69774c
+        && g_turnDuration69d630.m_turnStartTime != 0
+        && g_turnDuration69d630.m_pauseTime == 0
+        && GameTime::get() + 59000
+               > g_turnDuration69d630.m_turnStartTime
+                     + g_turnDuration69d630.m_currDuration
         && !canDisplay)
         goto skipMessage;
 
     sprintf(
         finalText,
         DATA_COMPGEN(0x00660358, turnDurationLineFormat, "%s%s"),
-        gpGeneralText->GetText(GENERAL_TEXT_TURN_DURATION_PREFIX),
+        g_generalText->getText(GENERAL_TEXT_TURN_DURATION_PREFIX),
         chatText);
-    manager->isSysMsg = 1;
-    AddChat(manager, finalText);
-    manager->isSysMsg = 0;
+    manager->m_isSysMsg = 1;
+    addChat(manager, finalText);
+    manager->m_isSysMsg = 0;
 
 skipMessage:
-    sample* sampleToPlay = manager->g_turnDurSample;
-    if (manager->g_chatMemSample
-        && gpSoundManager->GetSampleInfo(
-            manager->g_chatMemSample, AIL_SAMPLE_PLAYING))
+    sample* sampleToPlay = manager->m_turnDurSample;
+    if (manager->m_chatMemSample
+        && g_soundManager->getSampleInfo(
+            manager->m_chatMemSample, AIL_SAMPLE_PLAYING))
         return;
     if (!sampleToPlay)
-        sampleToPlay = manager->g_chatSample;
+        sampleToPlay = manager->m_chatSample;
     if (sampleToPlay) {
-        int soundWasEnabled = gpSoundManager->field_84;
-        gpSoundManager->field_84 = 1;
-        manager->g_chatMemSample = gpSoundManager->MemorySample(sampleToPlay);
-        gpSoundManager->field_84 = soundWasEnabled;
+        int soundWasEnabled = g_soundManager->m_playSounds;
+        g_soundManager->m_playSounds = 1;
+        manager->m_chatMemSample = g_soundManager->memorySample(sampleToPlay);
+        g_soundManager->m_playSounds = soundWasEnabled;
     }
 }
 
@@ -1072,7 +1084,7 @@ skipMessage:
 // The system-message twin of TurnDurationMsg has no timer/popup guard and
 // selects sysmsg.wav before the common chat.wav fallback.
 VA(0x00553aa0, 0xC0)  // anchor-callees + arity/order-map, dc 0x11c558
-void __cdecl SystemMsg(CChatManager* manager, const char* format, ...)
+void __cdecl systemMsg(CChatManager* manager, const char* format, ...)
 {
     char chatText[1024];
     char finalText[1024];
@@ -1082,25 +1094,25 @@ void __cdecl SystemMsg(CChatManager* manager, const char* format, ...)
     sprintf(
         finalText,
         DATA_COMPGEN(0x00660358, turnDurationLineFormat, "%s%s"),
-        gpGeneralText->GetText(GENERAL_TEXT_TURN_DURATION_PREFIX),
+        g_generalText->getText(GENERAL_TEXT_TURN_DURATION_PREFIX),
         chatText);
 
-    manager->isSysMsg = 1;
-    AddChat(manager, finalText);
-    sample* sampleToPlay = manager->g_sysMsgSample;
-    manager->isSysMsg = 0;
+    manager->m_isSysMsg = 1;
+    addChat(manager, finalText);
+    sample* sampleToPlay = manager->m_sysMsgSample;
+    manager->m_isSysMsg = 0;
 
-    if (manager->g_chatMemSample
-        && gpSoundManager->GetSampleInfo(
-            manager->g_chatMemSample, AIL_SAMPLE_PLAYING))
+    if (manager->m_chatMemSample
+        && g_soundManager->getSampleInfo(
+            manager->m_chatMemSample, AIL_SAMPLE_PLAYING))
         return;
     if (!sampleToPlay)
-        sampleToPlay = manager->g_chatSample;
+        sampleToPlay = manager->m_chatSample;
     if (sampleToPlay) {
-        int soundWasEnabled = gpSoundManager->field_84;
-        gpSoundManager->field_84 = 1;
-        manager->g_chatMemSample = gpSoundManager->MemorySample(sampleToPlay);
-        gpSoundManager->field_84 = soundWasEnabled;
+        int soundWasEnabled = g_soundManager->m_playSounds;
+        g_soundManager->m_playSounds = 1;
+        manager->m_chatMemSample = g_soundManager->memorySample(sampleToPlay);
+        g_soundManager->m_playSounds = soundWasEnabled;
     }
 }
 
@@ -1108,7 +1120,7 @@ void __cdecl SystemMsg(CChatManager* manager, const char* format, ...)
 // Same formatter/ring path, with playexit.wav and a deliberately late
 // isSysMsg clear shared by every sound-path exit.
 VA(0x00553b60, 0xCA)  // anchor-callees + arity/order-map, dc 0x11c5bc
-void __cdecl PlayerDropMsg(CChatManager* manager, const char* format, ...)
+void __cdecl playerDropMsg(CChatManager* manager, const char* format, ...)
 {
     char chatText[1024];
     char finalText[1024];
@@ -1118,33 +1130,33 @@ void __cdecl PlayerDropMsg(CChatManager* manager, const char* format, ...)
     sprintf(
         finalText,
         DATA_COMPGEN(0x00660358, turnDurationLineFormat, "%s%s"),
-        gpGeneralText->GetText(GENERAL_TEXT_TURN_DURATION_PREFIX),
+        g_generalText->getText(GENERAL_TEXT_TURN_DURATION_PREFIX),
         chatText);
 
-    manager->isSysMsg = 1;
-    AddChat(manager, finalText);
-    sample* sampleToPlay = manager->g_playerDropSample;
+    manager->m_isSysMsg = 1;
+    addChat(manager, finalText);
+    sample* sampleToPlay = manager->m_playerDropSample;
 
-    if (!(manager->g_chatMemSample
-          && gpSoundManager->GetSampleInfo(
-              manager->g_chatMemSample, AIL_SAMPLE_PLAYING))) {
+    if (!(manager->m_chatMemSample
+          && g_soundManager->getSampleInfo(
+              manager->m_chatMemSample, AIL_SAMPLE_PLAYING))) {
         if (!sampleToPlay)
-            sampleToPlay = manager->g_chatSample;
+            sampleToPlay = manager->m_chatSample;
         if (sampleToPlay) {
-            int soundWasEnabled = gpSoundManager->field_84;
-            gpSoundManager->field_84 = 1;
-            manager->g_chatMemSample =
-                gpSoundManager->MemorySample(sampleToPlay);
-            gpSoundManager->field_84 = soundWasEnabled;
+            int soundWasEnabled = g_soundManager->m_playSounds;
+            g_soundManager->m_playSounds = 1;
+            manager->m_chatMemSample =
+                g_soundManager->memorySample(sampleToPlay);
+            g_soundManager->m_playSounds = soundWasEnabled;
         }
     }
-    manager->isSysMsg = 0;
+    manager->m_isSysMsg = 0;
 }
 
 // E:\gamedcs\remote.cpp:990
 // The byte-identical structural twin selects playcome.wav instead.
 VA(0x00553c30, 0xCA)  // anchor-callees + arity/order-map, dc 0x11c658
-void __cdecl PlayerEnterMsg(CChatManager* manager, const char* format, ...)
+void __cdecl playerEnterMsg(CChatManager* manager, const char* format, ...)
 {
     char chatText[1024];
     char finalText[1024];
@@ -1154,62 +1166,62 @@ void __cdecl PlayerEnterMsg(CChatManager* manager, const char* format, ...)
     sprintf(
         finalText,
         DATA_COMPGEN(0x00660358, turnDurationLineFormat, "%s%s"),
-        gpGeneralText->GetText(GENERAL_TEXT_TURN_DURATION_PREFIX),
+        g_generalText->getText(GENERAL_TEXT_TURN_DURATION_PREFIX),
         chatText);
 
-    manager->isSysMsg = 1;
-    AddChat(manager, finalText);
-    sample* sampleToPlay = manager->g_playerEnterSample;
+    manager->m_isSysMsg = 1;
+    addChat(manager, finalText);
+    sample* sampleToPlay = manager->m_playerEnterSample;
 
-    if (!(manager->g_chatMemSample
-          && gpSoundManager->GetSampleInfo(
-              manager->g_chatMemSample, AIL_SAMPLE_PLAYING))) {
+    if (!(manager->m_chatMemSample
+          && g_soundManager->getSampleInfo(
+              manager->m_chatMemSample, AIL_SAMPLE_PLAYING))) {
         if (!sampleToPlay)
-            sampleToPlay = manager->g_chatSample;
+            sampleToPlay = manager->m_chatSample;
         if (sampleToPlay) {
-            int soundWasEnabled = gpSoundManager->field_84;
-            gpSoundManager->field_84 = 1;
-            manager->g_chatMemSample =
-                gpSoundManager->MemorySample(sampleToPlay);
-            gpSoundManager->field_84 = soundWasEnabled;
+            int soundWasEnabled = g_soundManager->m_playSounds;
+            g_soundManager->m_playSounds = 1;
+            manager->m_chatMemSample =
+                g_soundManager->memorySample(sampleToPlay);
+            g_soundManager->m_playSounds = soundWasEnabled;
         }
     }
-    manager->isSysMsg = 0;
+    manager->m_isSysMsg = 0;
 }
 
 // E:\gamedcs\remote.cpp:1033
 VA(0x00553d00, 0xA1)  // anchor-global, dc 0x11c6bc
-void CChatManager::UpdateWidget(textWidget* widget, unsigned char killOld, int numLines)
+void CChatManager::updateWidget(textWidget* widget, unsigned char killOld, int numLines)
 {
-    if (pauseTime == 0) {
-        int msgNbr = currMsg;
-        for (int i = 0; i < msgCount; i++) {
-            if (msgArray[msgNbr].killTime == 0)
-                msgArray[msgNbr].killTime = GameTime::Get();
-            msgNbr = (msgNbr + 1) % maxLines;
+    if (m_pauseTime == 0) {
+        int msgNbr = m_currMsg;
+        for (int i = 0; i < m_msgCount; i++) {
+            if (m_msgArray[msgNbr].m_killTime == 0)
+                m_msgArray[msgNbr].m_killTime = GameTime::get();
+            msgNbr = (msgNbr + 1) % m_maxLines;
         }
         if (killOld)
-            KillOldChat();
+            killOldChat();
     }
-    if (changed || widget != lastWidget) {
-        lastWidget = widget;
-        UpdateWidgetText(numLines, widget);
-        widget->SetText(widgetText);
-        changed = 0;
+    if (m_changed || widget != m_lastWidget) {
+        m_lastWidget = widget;
+        updateWidgetText(numLines, widget);
+        widget->setText(m_widgetText);
+        m_changed = 0;
     }
 }
 
 // E:\gamedcs\remote.cpp:1060
 #if 0  // @carcass
 DC_ONLY(0x11c71c, 0x1A)
-int CChatManager::GetNextFreeMsgNbr()
+int CChatManager::getNextFreeMsgNbr()
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:1065
 DC_ONLY(0x11c738, 0x1A)
-int CChatManager::GetNextMsgNbr(int msgNbr)
+int CChatManager::getNextMsgNbr(int msgNbr)
 {
     // @stub
 }
@@ -1220,24 +1232,24 @@ int CChatManager::GetNextMsgNbr(int msgNbr)
 // E:\gamedcs\remote.cpp:1060/1065. DC records these named source helpers.
 // Complete's free AddChat retains the first one's equivalent expression;
 // retail /Ob2 expands the second at both surviving KillOldChat call sites.
-inline int CChatManager::GetNextFreeMsgNbr()
+inline int CChatManager::getNextFreeMsgNbr()
 {
-    return (currMsg + msgCount) % maxLines;
+    return (m_currMsg + m_msgCount) % m_maxLines;
 }
 
-inline int CChatManager::GetNextMsgNbr(int msgNbr)
+inline int CChatManager::getNextMsgNbr(int msgNbr)
 {
-    return (msgNbr + 1) % maxLines;
+    return (msgNbr + 1) % m_maxLines;
 }
 
 // E:\gamedcs\remote.cpp:1070
 VA(0x00553db0, 0x33)  // anchor-global, dc 0x11c754
-unsigned char CChatManager::HasOldChat()
+unsigned char CChatManager::hasOldChat()
 {
-    if (msgCount == 0)
+    if (m_msgCount == 0)
         return 0;
-    unsigned long killTime = msgArray[currMsg].killTime;
-    return static_cast<long>(GameTime::Get() - killTime) > 20000;
+    unsigned long killTime = m_msgArray[m_currMsg].m_killTime;
+    return static_cast<long>(GameTime::get() - killTime) > 20000;
 }
 
 // E:\gamedcs\remote.cpp:1080
@@ -1248,42 +1260,42 @@ unsigned char CChatManager::HasOldChat()
 // restored; retail's unsigned first timeout test requires the explicit cast
 // around ElapsedSince. DC's 1096..1099 line gap places `i` after the five state
 // updates; restoring that scope is byte-flat but preserves the positive fact.
-// Splitting killTime's declaration is also flat. why-reg v2 measures distance
-// 28, identifies identical definition slots but different C1 handle state,
-// and its only legal control (swapping changed/chatKilled stores) worsens the
-// distance to 32.
+// Splitting killTime's declaration is also flat. The remaining C1 role swap
+// was the order of the two loop locals: declaring msgNbr before i assigns the
+// timestamp/count lane to EBX and the zero/counter lane to EDI exactly as
+// retail does. Swapping changed/chatKilled instead worsens the distance to 32.
 // E:\gamedcs\remote.cpp:1080
 VA(0x00553df0, 0xE4)  // anchor-global, dc 0x11c7b0
-void CChatManager::KillOldChat()
+void CChatManager::killOldChat()
 {
-    chatKilled = 0;
-    if (msgCount != 0) {
-        GameTime::Get();
-        unsigned long killTime = msgArray[currMsg].killTime;
+    m_chatKilled = 0;
+    if (m_msgCount != 0) {
+        GameTime::get();
+        unsigned long killTime = m_msgArray[m_currMsg].m_killTime;
         // Retail's jbe proves the Complete comparison remained unsigned even
         // though DC names the signed ElapsedSince helper at this source row.
-        if (static_cast<unsigned long>(GameTime::ElapsedSince(killTime))
+        if (static_cast<unsigned long>(GameTime::elapsedSince(killTime))
                 > 20000) {
-            msgArray[currMsg].killTime = 0;
-            currMsg = GetNextMsgNbr(currMsg);
-            --msgCount;
-            changed = 1;
-            chatKilled = 1;
+            m_msgArray[m_currMsg].m_killTime = 0;
+            m_currMsg = getNextMsgNbr(m_currMsg);
+            --m_msgCount;
+            m_changed = 1;
+            m_chatKilled = 1;
 
+            int msgNbr = m_currMsg;
             int i = 0;
-            int msgNbr = currMsg;
-            while (i < msgCount - 1) {
-                unsigned long nextKillTime = msgArray[msgNbr].killTime;
-                long elapsed = GameTime::ElapsedSince(nextKillTime);
+            while (i < m_msgCount - 1) {
+                unsigned long nextKillTime = m_msgArray[msgNbr].m_killTime;
+                long elapsed = GameTime::elapsedSince(nextKillTime);
                 if (elapsed <= 20000)
                     break;
-                if (!msgArray[msgNbr].isSystem)
-                    msgArray[msgNbr].killTime += 10000;
-                msgNbr = GetNextMsgNbr(msgNbr);
+                if (!m_msgArray[msgNbr].m_isSystem)
+                    m_msgArray[msgNbr].m_killTime += 10000;
+                msgNbr = getNextMsgNbr(msgNbr);
                 i++;
             }
         }
-        position = msgCount - 1;
+        m_position = m_msgCount - 1;
     }
 }
 
@@ -1316,29 +1328,29 @@ void CChatManager::UpdateNewChat()
 // which is what makes `totalLines > numLines` the trim condition.
 // E:\gamedcs\remote.cpp:1128
 VA(0x00553ee0, 0x163)  // anchor-global, dc 0x11c8d0
-void CChatManager::UpdateWidgetText(int numLines, textWidget* widget)
+void CChatManager::updateWidgetText(int numLines, textWidget* widget)
 {
     int lineCounts[20];
 
-    widgetText[0] = 0;
-    if (msgCount == 0)
+    m_widgetText[0] = 0;
+    if (m_msgCount == 0)
         return;
-    if (position == -1)
-        position = msgCount - 1;
+    if (m_position == -1)
+        m_position = m_msgCount - 1;
 
-    int lastMsg = position;
-    int firstMsg = position - numLines + 1;
+    int lastMsg = m_position;
+    int firstMsg = m_position - numLines + 1;
     if (firstMsg < 0)
         firstMsg = 0;
 
-    int msgNbr = (firstMsg + currMsg) % maxLines;
+    int msgNbr = (firstMsg + m_currMsg) % m_maxLines;
     int totalLines = 0;
     int lineNbr = 0;
     int i;
     for (i = firstMsg; i <= lastMsg; i++) {
         lineCounts[lineNbr] =
-            widget->Font->LineLength(msgArray[msgNbr].sText, widget->width);
-        msgNbr = (msgNbr + 1) % maxLines;
+            widget->m_font->lineLength(m_msgArray[msgNbr].m_text, widget->m_width);
+        msgNbr = (msgNbr + 1) % m_maxLines;
         totalLines += lineCounts[lineNbr];
         lineNbr++;
     }
@@ -1350,14 +1362,14 @@ void CChatManager::UpdateWidgetText(int numLines, textWidget* widget)
         lineNbr++;
     }
 
-    msgNbr = (firstMsg + currMsg) % maxLines;
+    msgNbr = (firstMsg + m_currMsg) % m_maxLines;
     for (i = firstMsg; i <= lastMsg;) {
-        strcat(widgetText, msgArray[msgNbr].sText);
+        strcat(m_widgetText, m_msgArray[msgNbr].m_text);
         if (i < lastMsg)
-            strcat(widgetText, DATA_COMPGEN(0x006603bc, chatLineBreak, "\n"));
+            strcat(m_widgetText, DATA_COMPGEN(0x006603bc, chatLineBreak, "\n"));
         i++;
-        msgNbr = (msgNbr + 1) % maxLines;
-        if (msgNbr == currMsg)
+        msgNbr = (msgNbr + 1) % m_maxLines;
+        if (msgNbr == m_currMsg)
             break;
     }
 }
@@ -1366,23 +1378,23 @@ void CChatManager::UpdateWidgetText(int numLines, textWidget* widget)
 
 // E:\gamedcs\remote.cpp:1195
 VA(0x00554050, 0xD)  // anchor-global, dc 0x11c9fc
-void CChatManager::PauseTimeOuts()
+void CChatManager::pauseTimeOuts()
 {
-    pauseTime = GameTime::Get();
+    m_pauseTime = GameTime::get();
 }
 
 // E:\gamedcs\remote.cpp:1200
 VA(0x00554060, 0x4B)  // anchor-global, dc 0x11ca14
-void CChatManager::ResumeTimeOuts()
+void CChatManager::resumeTimeOuts()
 {
     for (int i = 0; i < 20; i++) {
-        if (msgArray[i].killTime > 0) {
-            unsigned long pausedAt = pauseTime;
-            unsigned long elapsed = GameTime::Get() - pausedAt;
-            msgArray[i].killTime += elapsed;
+        if (m_msgArray[i].m_killTime > 0) {
+            unsigned long pausedAt = m_pauseTime;
+            unsigned long elapsed = GameTime::get() - pausedAt;
+            m_msgArray[i].m_killTime += elapsed;
         }
     }
-    pauseTime = 0;
+    m_pauseTime = 0;
 }
 
 // E:\gamedcs\remote.cpp:1213
@@ -1398,37 +1410,37 @@ unsigned char CChatManager::HasChat()
 
 // E:\gamedcs\remote.cpp:1221
 VA(0x005540b0, 0x20)  // anchor-bracket, dc 0x11ca70
-void CChatManager::ClearChat()
+void CChatManager::clearChat()
 {
-    msgCount = 0;
-    changed = 1;
+    m_msgCount = 0;
+    m_changed = 1;
     for (int i = 0; i < 20; i++)
-        msgArray[i].killTime = 0;
+        m_msgArray[i].m_killTime = 0;
 }
 
 // E:\gamedcs\remote.cpp:1231
 VA(0x005540d0, 0x9C)  // anchor-global, dc 0x11cabc
-void CChatManager::SetMaxLines(int maxChatLines)
+void CChatManager::setMaxLines(int maxChatLines)
 {
-    if (widgetText)
-        delete[] widgetText;
-    if (msgArray)
-        delete[] msgArray;
-    widgetText = new char[maxLines * 127];
-    msgArray = new CChatStr[maxLines];
-    ClearChat();
+    if (m_widgetText)
+        delete[] m_widgetText;
+    if (m_msgArray)
+        delete[] m_msgArray;
+    m_widgetText = new char[m_maxLines * 127];
+    m_msgArray = new CChatStr[m_maxLines];
+    clearChat();
 }
 
 // E:\gamedcs\remote.cpp:1245
 VA(0x00554170, 0x23)  // anchor-global, dc 0x11cb24
-void CChatManager::SetPosition(int newPos)
+void CChatManager::setPosition(int newPos)
 {
     if (newPos < 0)
-        newPos = msgCount - 1;
-    if (newPos >= msgCount)
-        newPos = msgCount - 1;
-    position = newPos;
-    changed = 1;
+        newPos = m_msgCount - 1;
+    if (newPos >= m_msgCount)
+        newPos = m_msgCount - 1;
+    m_position = newPos;
+    m_changed = 1;
 }
 
 // E:\gamedcs\remote.cpp:1293
@@ -1449,11 +1461,11 @@ CChatEdit::CChatEdit(int x, int y, int w, int h, int textSize, char* text,
 // Vtable 0x640e30 slot 19. Draw first, then update this widget's rectangle
 // in screen coordinates using its parent window origin.
 VA(0x00554200, 0x36)  // anchor-vtable, dc 0x11cbf4
-void CChatEdit::UpdateScreen()
+void CChatEdit::updateScreen()
 {
-    Draw();
-    gpWindowManager->UpdateScreen(
-        x + parentWindow->x, y + parentWindow->y, width, height);
+    draw();
+    g_windowManager->updateScreen(
+        m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);
 }
 
 // E:\gamedcs\remote.cpp:1303
@@ -1461,14 +1473,14 @@ void CChatEdit::UpdateScreen()
 // and the contiguous F1..F8 band to the three introduced action slots; all
 // other keys use textEntryWidget's editor and then redraw.
 VA(0x00554240, 0xEA)  // anchor-vtable, dc 0x11cc2c
-int CChatEdit::OnKeyPress(message* msg)
+int CChatEdit::onKeyPress(message* msg)
 {
-    int key = GetCharPressed(msg);
+    int key = getCharPressed(msg);
     switch (key) {
         case KEYCODE_ENTER:
-            return OnEnter(*msg);
+            return onEnter(*msg);
         case KEYCODE_ESCAPE:
-            return OnEscape(*msg);
+            return onEscape(*msg);
         case KEYCODE_F1:
         case KEYCODE_F2:
         case KEYCODE_F3:
@@ -1477,11 +1489,11 @@ int CChatEdit::OnKeyPress(message* msg)
         case KEYCODE_F6:
         case KEYCODE_F7:
         case KEYCODE_F8:
-            return OnFunctionKey(*msg, key - KEYCODE_F1);
+            return onFunctionKey(*msg, key - KEYCODE_F1);
     }
 
-    int result = textEntryWidget::OnKeyPress(msg);
-    UpdateScreen();
+    int result = textEntryWidget::onKeyPress(msg);
+    updateScreen();
     return result;
 }
 
@@ -1489,13 +1501,13 @@ int CChatEdit::OnKeyPress(message* msg)
 // Vtable 0x640e30 slot 22. This is the destination-selecting twin of
 // OnEnter: forward the explicit recipient, then clear and redraw.
 VA(0x00554330, 0x44)  // anchor-vtable, dc 0x11cd14
-int CChatEdit::OnFunctionKey(message msg, int toWho)
+int CChatEdit::onFunctionKey(message msg, int toWho)
 {
-    if (Text.size() > 0)
-        SendChat(Text.c_str(), toWho);
-    SetupDisplayString(
+    if (m_text.size() > 0)
+        sendChat(m_text.c_str(), toWho);
+    setupDisplayString(
         DATA_COMPGEN(0x00691210, chatEditEmptyText, ""), 0);
-    UpdateScreen();
+    updateScreen();
     return 1;
 }
 
@@ -1503,13 +1515,13 @@ int CChatEdit::OnFunctionKey(message msg, int toWho)
 // Vtable 0x640e30 slot 20. A nonempty edit is sent to every player (0x7f),
 // then the common clear/redraw tail consumes the by-value message.
 VA(0x00554380, 0x3E)  // anchor-vtable, dc 0x11cd64
-int CChatEdit::OnEnter(message msg)
+int CChatEdit::onEnter(message msg)
 {
-    if (Text.size() > 0)
-        SendChat(Text.c_str(), NET_MESSAGE_RECIPIENT_ALL);
-    SetupDisplayString(
+    if (m_text.size() > 0)
+        sendChat(m_text.c_str(), NET_MESSAGE_RECIPIENT_ALL);
+    setupDisplayString(
         DATA_COMPGEN(0x00691210, chatEditEmptyText, ""), 0);
-    UpdateScreen();
+    updateScreen();
     return 1;
 }
 
@@ -1518,11 +1530,11 @@ int CChatEdit::OnEnter(message msg)
 // retail clears the inherited edit string, dispatches UpdateScreen through
 // slot 19, and consumes the key with return code 1.
 VA(0x005543c0, 0x1F)  // anchor-vtable, dc 0x11cdb0
-int CChatEdit::OnEscape(message msg)
+int CChatEdit::onEscape(message msg)
 {
-    SetupDisplayString(
+    setupDisplayString(
         DATA_COMPGEN(0x00691210, chatEditEmptyText, ""), 0);
-    UpdateScreen();
+    updateScreen();
     return 1;
 }
 
@@ -1530,9 +1542,9 @@ int CChatEdit::OnEscape(message msg)
 // Vtable 0x640e30 slot 23. The dword at +0x38 is VC6 std::string's length
 // lane for textWidget::Text at +0x30.
 VA(0x005543e0, 0x9)  // anchor-vtable, dc 0x11cddc
-bool CChatEdit::IsOpen()
+bool CChatEdit::isOpen()
 {
-    if (Text.size() > 0)
+    if (m_text.size() > 0)
         return true;
     return false;
 }
@@ -1541,7 +1553,7 @@ bool CChatEdit::IsOpen()
 // Vtable 0x640e30 slot 16. Dreamcast names the override and retail's entire
 // body is the constant false result plus thiscall argument pop.
 VA(0x005543f0, 0x5)  // anchor-vtable, dc 0x11cdf8
-unsigned char CChatEdit::IgnoreKey(message* msg)
+unsigned char CChatEdit::ignoreKey(message* msg)
 {
     return 0;
 }
@@ -1554,10 +1566,10 @@ unsigned char CChatEdit::IgnoreKey(message* msg)
 // the removeFromQueue flag.
 // E:\gamedcs\remote.cpp:1384
 VA(0x00554400, 0xF)  // anchor-callee (CDPlayHeroes::GetRemoteData 0x553040), dc 0x11cdfc
-CNetMsg* GetRemoteData(unsigned char removeFromQueue,
+CNetMsg* getRemoteData(unsigned char removeFromQueue,
                        unsigned char* wasCompressed)
 {
-    return pDPlay->GetRemoteData(removeFromQueue, 0);
+    return g_dPlay->getRemoteData(removeFromQueue, 0);
 }
 
 // E:\gamedcs\remote.cpp:1390
@@ -1565,25 +1577,27 @@ CNetMsg* GetRemoteData(unsigned char removeFromQueue,
 // Dreamcast roster supplies the function and global names; retail widens
 // CNetPlayerInfo to its proved 32-byte PC layout and records the game-version
 // dword from the current video/game-state cell.
+// Before normalization (function): InitRemote.
+// Before normalization (locals): iMPType, sUserName.
 VA(0x00554410, 0x93)  // hd-crossbuild + dc-order-map
-unsigned char InitRemote(eNetGameType iMPType, const char* sUserName)
+unsigned char initRemote(eNetGameType mpType, const char* userName)
 {
     CNetPlayerInfo playerInfo;
 
-    GameMode = static_cast<unsigned char>(iMPType);
-    gbFollowPlayerMode = 0;
+    g_gameMode = static_cast<unsigned char>(mpType);
+    g_followPlayerMode = 0;
     g_weMoved = 0;
 
-    playerInfo.dpid = 0;
-    playerInfo.sName[0] = 0;
-    playerInfo.version = *gpVideoGameState;
-    gsThisNetPlayerInfo = playerInfo;
+    playerInfo.m_dpid = 0;
+    playerInfo.m_name[0] = 0;
+    playerInfo.m_version = *g_videoGameState;
+    g_thisNetPlayerInfo = playerInfo;
 
-    strcpy(gUnnamed698758.networkDefaultName, sUserName);
-    strcpy(gsThisNetPlayerInfo.sName,
-           gUnnamed698758.networkDefaultName);
-    WritePrefs();
-    gNetworkActive69954c = 1;
+    strcpy(g_unnamed698758.m_networkDefaultName, userName);
+    strcpy(g_thisNetPlayerInfo.m_name,
+           g_unnamed698758.m_networkDefaultName);
+    writePrefs();
+    g_networkActive69954c = 1;
     return 1;
 }
 
@@ -1596,28 +1610,28 @@ unsigned char InitRemote(eNetGameType iMPType, const char* sUserName)
 // LobbyLaunchConnect and HandlePlayerDead exact. HandleMPlayerLaunch's current
 // score drops to 84.5139% with the canonical call; its 100% MAX remains banked.
 VA(0x005544b0, 0xAA)  // hd-crossbuild + dc-order-map
-void RemoteCleanup()
+void remoteCleanup()
 {
-    GameMode = 0;
-    iMPNetProtocol = MP_SINGLE;
-    chatMan.ClearChat();
+    g_gameMode = 0;
+    g_mpNetProtocol = MP_SINGLE;
+    g_chatMan.clearChat();
 
-    if (gNetworkActive69954c) {
-        if (pDPlay) {
-            if (gsThisNetPlayerInfo.dpid)
-                pDPlay->DestroyPlayer(gsThisNetPlayerInfo.dpid);
-            pDPlay->CloseSession();
-            delete pDPlay;
-            pDPlay = 0;
+    if (g_networkActive69954c) {
+        if (g_dPlay) {
+            if (g_thisNetPlayerInfo.m_dpid)
+                g_dPlay->destroyPlayer(g_thisNetPlayerInfo.m_dpid);
+            g_dPlay->closeSession();
+            delete g_dPlay;
+            g_dPlay = 0;
         }
 
-        gNetworkActive69954c = 0;
+        g_networkActive69954c = 0;
         {
             CNetPlayerInfo playerInfo;
-            playerInfo.dpid = 0;
-            playerInfo.sName[0] = 0;
-            playerInfo.version = *gpVideoGameState;
-            gsThisNetPlayerInfo = playerInfo;
+            playerInfo.m_dpid = 0;
+            playerInfo.m_name[0] = 0;
+            playerInfo.m_version = *g_videoGameState;
+            g_thisNetPlayerInfo = playerInfo;
         }
     }
 }
@@ -1627,13 +1641,14 @@ void RemoteCleanup()
 // Retail stamps the local game position and DPID into every outgoing message,
 // optionally substitutes CompressMsg's allocation, then frees that temporary
 // after the common SendIt path returns.
+// Before normalization (locals): pMsg.
 VA(0x00554560, 0x82)  // anchor-callee + dc-order-map
-int TransmitRemoteDataDPID(CNetMsg* pMsg, unsigned long dpidTo,
+int transmitRemoteDataDPID(CNetMsg* msg, unsigned long dpidTo,
                            bool compressMsg, bool guaranteed)
 {
-    if (gNetworkActive69954c && pDPlay)
-        return pDPlay->TransmitRemoteDataDPID(
-            pMsg, dpidTo, compressMsg, guaranteed);
+    if (g_networkActive69954c && g_dPlay)
+        return g_dPlay->transmitRemoteDataDPID(
+            msg, dpidTo, compressMsg, guaranteed);
     return 0;
 }
 
@@ -1641,13 +1656,14 @@ int TransmitRemoteDataDPID(CNetMsg* pMsg, unsigned long dpidTo,
 // A recipient of 0x7f is DirectPlay's broadcast id zero. Other recipients
 // index the proved 360-byte playerData array and an absent DPID is already a
 // successful no-op, exactly as the retail early return shows.
+// Before normalization (locals): pMsg.
 VA(0x005545f0, 0xBA)  // anchor-callee + dc-order-map
-int TransmitRemoteData(CNetMsg* pMsg, int toWho,
+int transmitRemoteData(CNetMsg* msg, int toWho,
                        bool compressMsg, bool guaranteed)
 {
-    if (gNetworkActive69954c && pDPlay)
-        return pDPlay->TransmitRemoteData(
-            pMsg, toWho, compressMsg, guaranteed);
+    if (g_networkActive69954c && g_dPlay)
+        return g_dPlay->transmitRemoteData(
+            msg, toWho, compressMsg, guaranteed);
     return 0;
 }
 
@@ -1657,25 +1673,25 @@ int TransmitRemoteData(CNetMsg* pMsg, int toWho,
 // human periodically broadcasts the base RS_PLAYER_ACTIVE message, while
 // every live network pass finishes by polling DirectPlay.
 VA(0x005546b0, 0x103)  // hd-crossbuild + dc-order-map
-void PollRemote()
+void pollRemote()
 {
-    if (gbGameOver || !gNetworkActive69954c || !pDPlay)
+    if (g_gameOver || !g_networkActive69954c || !g_dPlay)
         return;
 
-    if (gpCurrentPlayer && gpCurrentPlayer->IsLocalHuman()) {
-        if (lastActiveUpdate == 0) {
-            lastActiveUpdate = GameTime::Get();
-        } else if (GameTime::ElapsedSince(lastActiveUpdate)
-                   > PLAYER_ACTIVE_UPDATE_INTERVAL) {
-            lastActiveUpdate = GameTime::Get();
+    if (g_currentPlayer && g_currentPlayer->isLocalHuman()) {
+        if (g_lastActiveUpdate == 0) {
+            g_lastActiveUpdate = GameTime::get();
+        } else if (GameTime::elapsedSince(g_lastActiveUpdate)
+                   > g_playerActiveUpdateInterval) {
+            g_lastActiveUpdate = GameTime::get();
             CNetMsg msg(RS_PLAYER_ACTIVE, sizeof(CNetMsg));
-            TransmitRemoteDataDPID(&msg, 0, false, false);
+            transmitRemoteDataDPID(&msg, 0, false, false);
         }
     } else {
-        lastActiveUpdate = 0;
+        g_lastActiveUpdate = 0;
     }
 
-    pDPlay->PollRemote();
+    g_dPlay->pollRemote();
 }
 
 // E:\gamedcs\remote.cpp:1490
@@ -1684,22 +1700,22 @@ void PollRemote()
 // echoed locally and, for a non-human recipient, tagged both in the local
 // line and in the wire text before CChatMsg fixes its variable wire extent.
 VA(0x005547c0, 0x25A)  // hd-crossbuild + dc-order-map, dc 0x11d020
-void SendChat(const char* chatString, int toWho)
+void sendChat(const char* chatString, int toWho)
 {
     if (_strcmpi(chatString,
-                 gpGeneralText->GetText(GENERAL_TEXT_CHAT_PING_COMMAND)) == 0) {
+                 g_generalText->getText(GENERAL_TEXT_CHAT_PING_COMMAND)) == 0) {
         if (toWho == NET_MESSAGE_RECIPIENT_ALL) {
-            SystemMsg(&chatMan,
-                      gpGeneralText->GetText(GENERAL_TEXT_CHAT_PING_ALL));
+            systemMsg(&g_chatMan,
+                      g_generalText->getText(GENERAL_TEXT_CHAT_PING_ALL));
         } else {
-            SystemMsg(
-                &chatMan,
-                gpGeneralText->GetText(GENERAL_TEXT_CHAT_PING_PLAYER_FORMAT),
-                gpGame->GetPlayerName(toWho));
+            systemMsg(
+                &g_chatMan,
+                g_generalText->getText(GENERAL_TEXT_CHAT_PING_PLAYER_FORMAT),
+                g_game->getPlayerName(toWho));
         }
 
-        CPingMsg msg(GameTime::Get(), RS_PING);
-        TransmitRemoteData(&msg, toWho, false, false);
+        CPingMsg msg(GameTime::get(), RS_PING);
+        transmitRemoteData(&msg, toWho, false, false);
         return;
     }
 
@@ -1707,36 +1723,36 @@ void SendChat(const char* chatString, int toWho)
     const char* outgoingChat = chatString;
 
     if (toWho != NET_MESSAGE_RECIPIENT_ALL) {
-        playerData* recipient = &gpGame->players[toWho];
-        char* recipientName = recipient->cName;
-        if (!recipient->IsHuman())
+        playerData* recipient = &g_game->m_players[toWho];
+        char* recipientName = recipient->m_name;
+        if (!recipient->isHuman())
             recipientName = DATA_COMPGEN(
                 0x00682b54, chatUnknownRecipient, "???");
 
-        AddChat(
-            &chatMan,
+        addChat(
+            &g_chatMan,
             DATA_COMPGEN(0x00682b44, chatNonHumanLineFormat,
                          "%s: (%s:%s) %s"),
-            gpGame->GetPlayerName(gpGame->GetLocalPlayerGamePos()),
-            gpGeneralText->GetText(GENERAL_TEXT_CHAT_NONHUMAN_LINE_TAG),
+            g_game->getPlayerName(g_game->getLocalPlayerGamePos()),
+            g_generalText->getText(GENERAL_TEXT_CHAT_NONHUMAN_LINE_TAG),
             recipientName,
             chatString);
         sprintf(
             transformedChat,
             DATA_COMPGEN(0x00682b3c, chatNonHumanWireFormat, "(%s) %s"),
-            gpGeneralText->GetText(GENERAL_TEXT_CHAT_NONHUMAN_WIRE_TAG),
+            g_generalText->getText(GENERAL_TEXT_CHAT_NONHUMAN_WIRE_TAG),
             chatString);
         outgoingChat = transformedChat;
     } else {
-        AddChat(
-            &chatMan,
+        addChat(
+            &g_chatMan,
             DATA_COMPGEN(0x00682ab4, chatPlayerLineFormat, "%s: %s"),
-            gpGame->GetPlayerName(gpGame->GetLocalPlayerGamePos()),
+            g_game->getPlayerName(g_game->getLocalPlayerGamePos()),
             chatString);
     }
 
     CChatMsg msg(outgoingChat);
-    TransmitRemoteData(&msg, toWho, false, false);
+    transmitRemoteData(&msg, toWho, false, false);
 }
 
 // E:\gamedcs\remote.cpp:1529 - the inbound half of the chat pair. Fastcall
@@ -1745,10 +1761,10 @@ void SendChat(const char* chatString, int toWho)
 // GetPlayerName call and pushes it first.
 // E:\gamedcs\remote.cpp:1529
 VA(0x00554a20, 0x21)  // anchor-callee (AddChat 0x553840), dc 0x11d1c8
-void ReceiveChat(char* chatString, int fromPlayer)
+void receiveChat(char* chatString, int fromPlayer)
 {
-    AddChat(&chatMan, DATA_COMPGEN(0x00682ab4, chatPlayerLineFormat, "%s: %s"),
-        gpGame->GetPlayerName(fromPlayer), chatString);
+    addChat(&g_chatMan, DATA_COMPGEN(0x00682ab4, chatPlayerLineFormat, "%s: %s"),
+        g_game->getPlayerName(fromPlayer), chatString);
 }
 
 // E:\gamedcs\remote.cpp:1539 - CAnimatedDlg's constructor, and the row
@@ -1770,7 +1786,7 @@ VA(0x00554a50, 0x22)  // anchor-vtable 0x640e94, dc 0x11d1ec
 CAnimatedDlg::CAnimatedDlg()
     : CTextDialog(0x12)
 {
-    m_pSprite = 0;
+    m_sprite = 0;
     m_spriteFrame = 0;
     m_lastTick = 0;
     m_palUpdated = 0;
@@ -1791,8 +1807,8 @@ VA_COMPGEN(0x00554a80, 0x21, SCALAR_DELETING_DTOR, CAnimatedDlg)
 VA(0x00554ab0, 0x55)  // anchor-vtable + dc-order-map, dc 0x11d250
 CAnimatedDlg::~CAnimatedDlg()
 {
-    if (m_pSprite)
-        m_pSprite->Dispose();
+    if (m_sprite)
+        m_sprite->dispose();
 }
 #pragma auto_inline(on)
 
@@ -1800,12 +1816,12 @@ CAnimatedDlg::~CAnimatedDlg()
 // Slot 13 records the animation resource/sequence and delegates the text and
 // font pair to CTextDialog's Setup override unchanged.
 VA(0x00554b10, 0x20)  // anchor-vtable + dc-order-map, dc 0x11d290
-unsigned char CAnimatedDlg::Setup(
+unsigned char CAnimatedDlg::setup(
     const char* text, font* textFont, const char* spriteName, int sequence)
 {
-    m_sSprite = spriteName;
+    m_spriteName = spriteName;
     m_seq = sequence;
-    return CTextDialog::Setup(text, textFont);
+    return CTextDialog::setup(text, textFont);
 }
 
 // E:\gamedcs\remote.cpp:1563
@@ -1813,7 +1829,7 @@ unsigned char CAnimatedDlg::Setup(
 // the lowest relative x/y and highest cropped right/bottom edges, then
 // returns the enclosing width/height together with the minimum y.
 VA(0x00554b30, 0xF5)  // anchor-layout + dc-order-map, dc 0x11d2b0
-void CAnimatedDlg::CalcSpriteDimensions(
+void CAnimatedDlg::calcSpriteDimensions(
     CSprite* sprite, int& maxWidth, int& maxHeight, int& minY)
 {
     minY = 999;
@@ -1821,17 +1837,17 @@ void CAnimatedDlg::CalcSpriteDimensions(
     int width = 0;
     int height = 0;
 
-    int numFrames = sprite->GetNumFrames(m_seq);
-    CSpriteFrame* firstFrame = sprite->s[m_seq]->f[0];
-    int baseX = firstFrame->CroppedX;
-    int baseY = firstFrame->CroppedY;
+    int numFrames = sprite->getNumFrames(m_seq);
+    CSpriteFrame* firstFrame = sprite->m_s[m_seq]->m_f[0];
+    int baseX = firstFrame->m_croppedX;
+    int baseY = firstFrame->m_croppedY;
 
     for (int i = 0; i < numFrames; ++i) {
-        CSpriteFrame* frame = sprite->s[m_seq]->f[i];
-        int frameHeight = frame->CroppedHeight;
-        int frameWidth = frame->CroppedWidth;
-        int frameX = frame->CroppedX - baseX;
-        int frameY = frame->CroppedY - baseY;
+        CSpriteFrame* frame = sprite->m_s[m_seq]->m_f[i];
+        int frameHeight = frame->m_croppedHeight;
+        int frameWidth = frame->m_croppedWidth;
+        int frameX = frame->m_croppedX - baseX;
+        int frameY = frame->m_croppedY - baseY;
         if (frameX < minX)
             minX = frameX;
         if (frameY < minY)
@@ -1851,18 +1867,18 @@ void CAnimatedDlg::CalcSpriteDimensions(
 // VC6 reuses the now-dead font/width/height parameter homes for the three
 // CalcSpriteDimensions outputs, exactly as retail's caller frame shows.
 VA(0x00554c30, 0xB8)  // anchor-callee + dc-order-map, dc 0x11d394
-void CAnimatedDlg::CalcDimensions(
+void CAnimatedDlg::calcDimensions(
     const char* text, font* textFont, int& winX, int& winY,
     int& winWidth, int& winHeight)
 {
-    CTextDialog::CalcDimensions(
+    CTextDialog::calcDimensions(
         text, textFont, winX, winY, winWidth, winHeight);
 
-    m_pSprite = ResourceManager::GetSprite(m_sSprite);
+    m_sprite = ResourceManager::getSprite(m_spriteName);
     int spriteWidth;
     int spriteHeight;
     int minY;
-    CalcSpriteDimensions(m_pSprite, spriteWidth, spriteHeight, minY);
+    calcSpriteDimensions(m_sprite, spriteWidth, spriteHeight, minY);
 
     if (spriteWidth > winWidth) {
         winWidth = spriteWidth + 40;
@@ -1884,17 +1900,17 @@ void CAnimatedDlg::CalcDimensions(
 // left.  The latter is why CroppedY and the two frame indices occupy the
 // three temporary homes in retail's otherwise leaf-like frame.
 VA(0x00554cf0, 0x94)  // anchor-callee + dc-order-map, dc 0x11d490
-void CAnimatedDlg::DrawSprite()
+void CAnimatedDlg::drawSprite()
 {
-    int s0x = m_pSprite->GetCroppedX(m_seq, m_spriteFrame);
-    int s0y = m_pSprite->GetCroppedY(m_seq, m_spriteFrame);
-    int sw = m_pSprite->GetCroppedWidth(m_seq, m_spriteFrame);
-    int sh = m_pSprite->GetCroppedHeight(m_seq, m_spriteFrame);
-    int dx = x + m_spriteX + s0x - m_pSprite->GetCroppedX(m_seq, 0);
-    int dy = y + m_spriteY + s0y - m_pSprite->GetCroppedY(m_seq, 0);
-    m_pSprite->DrawCreature(
+    int s0x = m_sprite->getCroppedX(m_seq, m_spriteFrame);
+    int s0y = m_sprite->getCroppedY(m_seq, m_spriteFrame);
+    int sw = m_sprite->getCroppedWidth(m_seq, m_spriteFrame);
+    int sh = m_sprite->getCroppedHeight(m_seq, m_spriteFrame);
+    int dx = m_x + m_spriteX + s0x - m_sprite->getCroppedX(m_seq, 0);
+    int dy = m_y + m_spriteY + s0y - m_sprite->getCroppedY(m_seq, 0);
+    m_sprite->drawCreature(
         m_seq, m_spriteFrame, s0x, s0y, sw, sh,
-        gpWindowManager->screenBitmap, dx, dy, 0, 0);
+        g_windowManager->m_screenBitmap, dx, dy, 0, 0);
 }
 
 // E:\gamedcs\remote.cpp:1651
@@ -1902,9 +1918,9 @@ void CAnimatedDlg::DrawSprite()
 // dialog's animation clock.  /Ob2 expands TickAnimation here in full; the
 // only bytes this wrapper adds are the zero result and `ret 4`.
 VA(0x00554d90, 0x80)  // anchor-vtable + dc-order-map, dc 0x11d558
-int CAnimatedDlg::handle_message(message& msg)
+int CAnimatedDlg::handleMessage(message& msg)
 {
-    TickAnimation();
+    tickAnimation();
     return 0;
 }
 
@@ -1913,16 +1929,16 @@ int CAnimatedDlg::handle_message(message& msg)
 // a second sample for the elapsed-time test.  That two-Get form is visible
 // in both this body and the copy inlined into handle_message above.
 VA(0x00554e10, 0x7C)  // anchor-callee + dc-order-map, dc 0x11d56c
-void CAnimatedDlg::TickAnimation()
+void CAnimatedDlg::tickAnimation()
 {
-    unsigned long currentTime = GameTime::Get();
+    unsigned long currentTime = GameTime::get();
     unsigned long lastTick = m_lastTick;
-    if (static_cast<long>(GameTime::Get() - lastTick) >= 200) {
+    if (static_cast<long>(GameTime::get() - lastTick) >= 200) {
         m_spriteFrame = (m_spriteFrame + 1)
-                      % m_pSprite->GetNumFrames(m_seq);
+                      % m_sprite->getNumFrames(m_seq);
         m_lastTick = currentTime;
-        DrawWindow(0, 0xffff0001, 0xffff);
-        gpWindowManager->UpdateScreen(x, y, width, height);
+        drawWindow(0, 0xffff0001, 0xffff);
+        g_windowManager->updateScreen(m_x, m_y, m_width, m_height);
     }
 }
 
@@ -1931,22 +1947,23 @@ void CAnimatedDlg::TickAnimation()
 // tests the player only once but deliberately asks for the local game
 // position on every broadcast.  The double base draw is present verbatim
 // in the image, followed by the animation sprite overlay.
+// Before normalization (locals): iLowID, iHighID.
 VA(0x00554e90, 0x7D)  // anchor-vtable + dc-order-map, dc 0x11d5dc
-void CAnimatedDlg::DrawWindow(unsigned char update, int iLowID, int iHighID)
+void CAnimatedDlg::drawWindow(unsigned char update, int lowID, int highID)
 {
     if (!m_palUpdated) {
-        if (gpGame->GetLocalPlayer()) {
-            for (int id = beginID; id <= endID; ++id)
-                BroadcastMessage(
+        if (g_game->getLocalPlayer()) {
+            for (int id = m_beginId; id <= m_endId; ++id)
+                broadcastMessage(
                     0x200, widget::WIDGET_SET_PLAYER_PALETTE_COLORS,
-                    id, gpGame->GetLocalPlayerGamePos());
+                    id, g_game->getLocalPlayerGamePos());
         }
         m_palUpdated = 1;
     }
 
-    heroWindow::DrawWindow(update, iLowID, iHighID);
-    heroWindow::DrawWindow(update, iLowID, iHighID);
-    DrawSprite();
+    heroWindow::drawWindow(update, lowID, highID);
+    heroWindow::drawWindow(update, lowID, highID);
+    drawSprite();
 }
 
 // E:\gamedcs\remote.cpp:1708. The order is byte-proven by the constructor's
@@ -1954,41 +1971,41 @@ void CAnimatedDlg::DrawWindow(unsigned char update, int iLowID, int iHighID)
 // the timestamps. Dreamcast independently gives the member identities.
 CWaitForReadyPlayersDlg::CWaitForReadyPlayersDlg()
 {
-    memset(playerReady, 0, sizeof(playerReady));
-    playerReady[gLocalGamePos] = 1;
-    startTime = 0;
-    lastMsg = 0;
+    memset(m_playerReady, 0, sizeof(m_playerReady));
+    m_playerReady[g_localGamePos] = 1;
+    m_startTime = 0;
+    m_lastMsg = 0;
 }
 
 // E:\gamedcs\remote.cpp:1718
-void CWaitForReadyPlayersDlg::Wait()
+void CWaitForReadyPlayersDlg::wait()
 {
-    startTime = GameTime::Get();
-    SRand(startTime);
+    m_startTime = GameTime::get();
+    sRand(m_startTime);
 
     int creature;
     do {
-        creature = Random(0, 111);
+        creature = random(0, 111);
     } while (creature == CREATURE_ARCH_DEVIL
              || creature == CREATURE_DEVIL);
 
-    Setup(gpGeneralText->GetText(328), gpMediumFont,
-          akCreatureTypeTraits[creature].m_sprite_name, 0);
-    DoModal(0);
+    setup(g_generalText->getText(328), g_mediumFont,
+          g_creatureTypeTraits[creature].m_spriteName, 0);
+    doModal(0);
 
-    if (pDPlay->IsHost()) {
+    if (g_dPlay->isHost()) {
         CAllReadyToPlayMsg msg;
-        if (gNetworkActive69954c && pDPlay)
-            pDPlay->TransmitRemoteData(&msg, 127, 0, 1);
+        if (g_networkActive69954c && g_dPlay)
+            g_dPlay->transmitRemoteData(&msg, 127, 0, 1);
     }
 }
 
 // E:\gamedcs\remote.cpp:1798. Dreamcast's `_N` return mangling proves bool;
 // retail independently proves the eight-entry human/ready scan when inlined.
-bool CWaitForReadyPlayersDlg::AllPlayersReady()
+bool CWaitForReadyPlayersDlg::allPlayersReady()
 {
     for (int i = 0; i < 8; ++i) {
-        if (gpGame->IsHuman(i) && !playerReady[i])
+        if (g_game->isHuman(i) && !m_playerReady[i])
             return 0;
     }
     return 1;
@@ -1996,13 +2013,14 @@ bool CWaitForReadyPlayersDlg::AllPlayersReady()
 
 // E:\gamedcs\remote.cpp:1813 - forget the dropped player's DirectPlay
 // identity and close only once every remaining human has checked in.
-int CWaitForReadyPlayersDlg::OnPlayerDrop(CNetMsg* pNetMsg, message& msg)
+// Before normalization (locals): pNetMsg.
+int CWaitForReadyPlayersDlg::onPlayerDrop(CNetMsg* netMsg, message& msg)
 {
-    int gamePos = gpGame->GetGamePosFromDPID(pNetMsg->field_04);
+    int gamePos = g_game->getGamePosFromDPID(netMsg->m_dpidFrom);
     if (gamePos != -1)
-        gpGame->players[gamePos].ClearNetInfo();
-    if (AllPlayersReady())
-        return ExitDialog(msg);
+        g_game->m_players[gamePos].clearNetInfo();
+    if (allPlayersReady())
+        return exitDialog(msg);
     return 0;
 }
 
@@ -2021,13 +2039,13 @@ int CWaitForReadyPlayersDlg::OnPlayerDrop(CNetMsg* pNetMsg, message& msg)
 // derived destructor compgenx, ruling out an explicit source destructor as a
 // routing device.
 VA(0x00554f10, 0x23A)  // anchor-vtable + dc-order-map, dc 0x11d6c8
-void WaitForReadyToPlayMsg()
+void waitForReadyToPlayMsg()
 {
     CWaitForReadyPlayersDlg dlg;
-    if (dlg.AllPlayersReady()) {
+    if (dlg.allPlayersReady()) {
         return;
     }
-    dlg.Wait();
+    dlg.wait();
 }
 
 // E:\gamedcs\remote.h:632 - the canonical body lives with its accessors
@@ -2042,50 +2060,51 @@ void WaitForReadyToPlayMsg()
 // the host this player is ready, then dispatch at most one queued handshake
 // message after the initial three-second grace period.
 VA(0x00555190, 0x319)  // anchor-vtable + dc-order-map, dc 0x11f9f0
-int CWaitForReadyPlayersDlg::handle_message(message& msg)
+int CWaitForReadyPlayersDlg::handleMessage(message& msg)
 {
-    CAnimatedDlg::handle_message(msg);
-    PollSound();
+    CAnimatedDlg::handleMessage(msg);
+    pollSound();
 
-    if (GameTime::ElapsedSince(lastMsg) > 1000) {
-        if (!pDPlay->IsHost()) {
+    if (GameTime::elapsedSince(m_lastMsg) > 1000) {
+        if (!g_dPlay->isHost()) {
             CReadyToPlayMsg readyMsg;
-            TransmitRemoteData(&readyMsg, 127, false, true);
-            lastMsg = GameTime::Get();
+            transmitRemoteData(&readyMsg, 127, false, true);
+            m_lastMsg = GameTime::get();
         }
     }
 
-    if (GameTime::ElapsedSince(startTime) >= 3000) {
-        CNetMsg* pNetMsg = GetRemoteData(1, 0);
-        if (pNetMsg) {
-            CMessageKill killMsg(pNetMsg);
-            switch (pNetMsg->subType) {
+    if (GameTime::elapsedSince(m_startTime) >= 3000) {
+        // Before normalization (locals): pNetMsg.
+        CNetMsg* netMsg = getRemoteData(1, 0);
+        if (netMsg) {
+            CMessageKill killMsg(netMsg);
+            switch (netMsg->m_subType) {
                 case RS_PLAYER_DROPPED:
-                    return OnPlayerDrop(pNetMsg, msg);
+                    return onPlayerDrop(netMsg, msg);
 
                 case RS_SET_AS_HOST:
-                    SystemMsg(&chatMan, gpGeneralText->GetText(471));
+                    systemMsg(&g_chatMan, g_generalText->getText(471));
                     break;
 
                 case RS_SESSION_LOST:
-                    NormalDialog(gpGeneralText->GetText(329),
+                    normalDialog(g_generalText->getText(329),
                                  1, -1, -1, -1, 0, -1, 0,
                                  -1, 0, -1, 0);
-                    ShutDown(0);
+                    shutDown(0);
                     break;
 
                 case RS_READY_TO_PLAY:
-                    playerReady[pNetMsg->field_00] = 1;
-                    if (AllPlayersReady() && pDPlay->IsHost())
-                        return ExitDialog(msg);
+                    m_playerReady[netMsg->m_from] = 1;
+                    if (allPlayersReady() && g_dPlay->isHost())
+                        return exitDialog(msg);
                     break;
 
                 case RS_ALL_READY_TO_PLAY:
-                    return ExitDialog(msg);
+                    return exitDialog(msg);
 
                 case RS_CHAT_MSG:
-                    ReceiveChat(static_cast<CChatMsg*>(pNetMsg)->m_text,
-                                pNetMsg->field_00);
+                    receiveChat(static_cast<CChatMsg*>(netMsg)->m_text,
+                                netMsg->m_from);
                     break;
             }
         }
@@ -2114,18 +2133,19 @@ VA_COMPGEN(0x005554e0, 0xC9, IMPLICIT_DTOR, CWaitForReadyPlayersDlg)
 // CLogFile::Log call.  The constructor expansion above accounts for every
 // store from +0x60 through +0xf0, including the allocator temporary byte
 // copied into deque's empty base at +0x68.
+// Before normalization (function): CreateDPlayObject.
 VA(0x005555b0, 0x126)  // anchor-global + vtable + dc-order-map, dc 0x11d708
-unsigned char CreateDPlayObject()
+unsigned char createDPlayObject()
 {
-    if (pDPlay)
+    if (g_dPlay)
         return 1;
 
-    pDPlay = new CDPlayHeroes;
-    if (!pDPlay->Init())
+    g_dPlay = new CDPlayHeroes;
+    if (!g_dPlay->init())
         return 0;
 
-    pDPlay->SetGuid(GUID_Heroes3);
-    logFile.Log(DATA_COMPGEN(0x00682b58, remoteDPlayInitialized,
+    g_dPlay->setGuid(guidHeroes3);
+    g_logFile.log(DATA_COMPGEN(0x00682b58, remoteDPlayInitialized,
                              "DPlay initialized"));
     return 1;
 }
@@ -2137,29 +2157,31 @@ unsigned char CreateDPlayObject()
 // the two fully inlined DPSD/delete paths. MP_HOTSEAT deliberately falls
 // through the switch without a connection and therefore takes the second
 // diagnostic path.
+// Before normalization (function): InitConnection.
+// Before normalization (locals): IpAddressOrPhoneNbr, pConnection.
 VA(0x005556e0, 0x224)  // anchor-callees + dc-xref/order-map, dc 0x11d770
-unsigned char InitConnection(char* IpAddressOrPhoneNbr,
+unsigned char initConnection(char* ipAddressOrPhoneNbr,
                              _DPCOMPORTADDRESS* comportInfo)
 {
-    if (!CreateDPlayObject()) {
-        DPSD(0,
+    if (!createDPlayObject()) {
+        dpsd(0,
              DATA_COMPGEN(0x00682bb8, remoteSourceFile,
                           "C:\\Dev\\Heroes 3 Exp 2\\Game\\Remote.cpp"),
              1867);
         return 0;
     }
 
-    CDPlayConnection* pConnection = 0;
-    switch (iMPNetProtocol) {
+    CDPlayConnection* connection = 0;
+    switch (g_mpNetProtocol) {
         case MP_TCP:
-            if (IpAddressOrPhoneNbr)
-                pConnection = pDPlay->CreateTCPIPConnection(
-                    IpAddressOrPhoneNbr,
+            if (ipAddressOrPhoneNbr)
+                connection = g_dPlay->createTCPIPConnection(
+                    ipAddressOrPhoneNbr,
                     DATA_COMPGEN(0x00682ba4, remoteTCPIPConnection,
                                  "TCP/IP Connection"),
                     0);
             else
-                pConnection = pDPlay->CreateTCPIPConnection(
+                connection = g_dPlay->createTCPIPConnection(
                     "",
                     DATA_COMPGEN(0x00682ba4, remoteTCPIPConnection,
                                  "TCP/IP Connection"),
@@ -2167,52 +2189,53 @@ unsigned char InitConnection(char* IpAddressOrPhoneNbr,
             break;
 
         case MP_IPX:
-            pConnection = pDPlay->CreateIPXConnection(
+            connection = g_dPlay->createIPXConnection(
                 DATA_COMPGEN(0x00682b94, remoteIPXConnection,
                              "IPX Connection"),
                 0);
             break;
 
         case MP_MODEM:
-            pConnection = pDPlay->CreateModemConnection(
+            connection = g_dPlay->createModemConnection(
                 DATA_COMPGEN(0x00682b80, remoteModemConnection,
                              "Modem Connection"),
-                IpAddressOrPhoneNbr,
+                ipAddressOrPhoneNbr,
                 0);
             break;
 
         case MP_SERIAL:
-            pConnection = pDPlay->CreateSerialConnection(
+            connection = g_dPlay->createSerialConnection(
                 DATA_COMPGEN(0x00682b6c, remoteSerialConnection,
                              "Serial Connection"),
                 comportInfo);
             break;
     }
 
-    if (!pConnection) {
-        DPSD(0,
+    if (!connection) {
+        dpsd(0,
              DATA_COMPGEN(0x00682bb8, remoteSourceFile,
                           "C:\\Dev\\Heroes 3 Exp 2\\Game\\Remote.cpp"),
              1898);
         return 0;
     }
 
-    if (!pDPlay->InitConnection(pConnection)) {
-        delete pConnection;
+    if (!g_dPlay->initConnection(connection)) {
+        delete connection;
         return 0;
     }
 
-    delete pConnection;
+    delete connection;
     return 1;
 }
 
 // E:\gamedcs\remote.cpp:1908 - the base message is non-polymorphic and has
 // no owned members, so retail reduces this fastcall wrapper to operator
 // delete plus return.
+// Before normalization (locals): pNetMsg.
 VA(0x00555910, 0x08)  // dc-order-map, dc 0x11d8ec
-void DestroyMsg(CNetMsg* pNetMsg)
+void destroyMsg(CNetMsg* netMsg)
 {
-    delete pNetMsg;
+    delete netMsg;
 }
 
 // E:\gamedcs\remote.cpp:1916 - the lobby probe first tests the public launch
@@ -2221,7 +2244,7 @@ void DestroyMsg(CNetMsg* pNetMsg)
 // retail's +0xf8 virtual call independently fixes RegisterApp as CDPlayLobby's
 // first introduced slot after CDPlay's 62-entry base table.
 VA(0x00555920, 0x171)  // anchor-IAT + dc-xref/order-map, dc 0x11d900
-unsigned char TestIfLobbyLaunched()
+unsigned char testIfLobbyLaunched()
 {
     HKEY key;
     char appName[256];
@@ -2229,11 +2252,11 @@ unsigned char TestIfLobbyLaunched()
     char commandLine[256];
     char executableName[256];
 
-    if (gbMPlayer)
+    if (g_mPlayer)
         return 1;
-    if (!CreateDPlayObject())
+    if (!createDPlayObject())
         return 0;
-    if (!pDPlay)
+    if (!g_dPlay)
         return 0;
 
     char* registryKey = DATA_COMPGEN(
@@ -2242,7 +2265,7 @@ unsigned char TestIfLobbyLaunched()
     if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, registryKey, 0, KEY_READ, &key)
         == ERROR_SUCCESS) {
         RegCloseKey(key);
-        return pDPlay->TestLobbied();
+        return g_dPlay->testLobbied();
     }
 
     char* appNameStart = strrchr(registryKey, '\\');
@@ -2255,10 +2278,10 @@ unsigned char TestIfLobbyLaunched()
            DATA_COMPGEN(0x00640cf8, remoteDPlayExecutableName,
                         "Heroes3.exe"));
 
-    pDPlay->RegisterApp(
-        appName, fileName, commandLine, GUID_Heroes3,
+    g_dPlay->registerApp(
+        appName, fileName, commandLine, guidHeroes3,
         executableName[0] ? executableName : 0);
-    return pDPlay->TestLobbied();
+    return g_dPlay->testLobbied();
 }
 
 // E:\gamedcs\remote.cpp:1960 - the retail PC path adds the MPlayer host/client
@@ -2276,43 +2299,44 @@ unsigned char TestIfLobbyLaunched()
 // the redundant Destroy(1) call after failed JoinSession, match retail and
 // forbid changing the class lifetime merely to erase this one compiler
 // artifact.
+// Before normalization (function): HandleMPlayerLaunch.
 VA(0x00555aa0, 0x443)  // anchor-IAT/vtable/data + dc-xref/order-map, dc 0x11d9ac
-unsigned char HandleMPlayerLaunch()
+unsigned char handleMPlayerLaunch()
 {
-    logFile.Log(DATA_COMPGEN(0x00682c50, remoteMPlayerDetected,
+    g_logFile.log(DATA_COMPGEN(0x00682c50, remoteMPlayerDetected,
                             "Detected MPlayer launch."));
 
-    DATA(0x006994e4) extern int gUnnamed6994e4;
-    gUnnamed699274 = 1;
-    gUnnamed6994e4 = 1;
-    iMPNetProtocol = MP_TCP;
+    DATA(0x006994e4) extern int g_unnamed6994e4;
+    g_unnamed699274 = 1;
+    g_unnamed6994e4 = 1;
+    g_mpNetProtocol = MP_TCP;
 
-    if (gbMPlayerHost) {
-        logFile.Log(DATA_COMPGEN(0x00682c34, remoteMPlayerHost,
+    if (g_mPlayerHost) {
+        g_logFile.log(DATA_COMPGEN(0x00682c34, remoteMPlayerHost,
                                 "We are the MPlayer host."));
-        if (!InitConnection(
+        if (!initConnection(
                 DATA_COMPGEN(0x00691210, remoteMPlayerEmptyAddress, ""), 0))
             return 0;
-        if (!pDPlay->HostSession(
+        if (!g_dPlay->hostSession(
                 DATA_COMPGEN(0x00682c24, remoteMPlayerSession,
                              "MPlayer Session"),
                 4, 8, 0))
             return 0;
     } else {
-        logFile.Log(DATA_COMPGEN(0x00682c00, remoteMPlayerClient,
+        g_logFile.log(DATA_COMPGEN(0x00682c00, remoteMPlayerClient,
                                 "We are a MPlayer client. Host IP=%s"),
-                    gcTCPAddress);
-        if (!InitConnection(gcTCPAddress, 0))
+                    g_tcpAddress);
+        if (!initConnection(g_tcpAddress, 0))
             return 0;
 
         bool connected = false;
         CAutoArray<CDPlaySession> sessions;
         for (int attempt = 0; attempt < 3; ++attempt) {
-            if (pDPlay->EnumSessions(&sessions, 0, 2)
-                && sessions.GetCount() > 0) {
-                if (!pDPlay->JoinSession(
-                        &sessions.Get(0)->guidInstance, 0)) {
-                    sessions.Destroy(1);
+            if (g_dPlay->enumSessions(&sessions, 0, 2)
+                && sessions.getCount() > 0) {
+                if (!g_dPlay->joinSession(
+                        &sessions.get(0)->m_guidInstance, 0)) {
+                    sessions.destroy(1);
                     return 0;
                 }
                 connected = true;
@@ -2320,29 +2344,29 @@ unsigned char HandleMPlayerLaunch()
             }
             Sleep(1000);
         }
-        sessions.Destroy(1);
+        sessions.destroy(1);
 
         if (!connected) {
-            NormalDialog(gpGeneralText->GetText(468), 1,
+            normalDialog(g_generalText->getText(468), 1,
                          -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-            RemoteCleanup();
+            remoteCleanup();
             return 0;
         }
     }
 
-    InitRemote(MP_TCP, gUnnamed698758.networkDefaultName);
+    initRemote(MP_TCP, g_unnamed698758.m_networkDefaultName);
 
-    int version = *gpVideoGameState;
-    gsThisNetPlayerInfo.dpid = pDPlay->CreatePlayer(
-        gUnnamed698758.networkDefaultName, &version, sizeof(version), 0);
-    if (!gsThisNetPlayerInfo.dpid)
+    int version = *g_videoGameState;
+    g_thisNetPlayerInfo.m_dpid = g_dPlay->createPlayer(
+        g_unnamed698758.m_networkDefaultName, &version, sizeof(version), 0);
+    if (!g_thisNetPlayerInfo.m_dpid)
         return 0;
 
-    gsThisNetPlayerInfo.version = version;
-    logFile.Log(DATA_COMPGEN(0x00682be0, remoteMPlayerConnected,
+    g_thisNetPlayerInfo.m_version = version;
+    g_logFile.log(DATA_COMPGEN(0x00682be0, remoteMPlayerConnected,
                             "Successful MPlayer connection."));
-    strcpy(gsThisNetPlayerInfo.sName,
-           gUnnamed698758.networkDefaultName);
+    strcpy(g_thisNetPlayerInfo.m_name,
+           g_unnamed698758.m_networkDefaultName);
     return 1;
 }
 
@@ -2350,94 +2374,96 @@ unsigned char HandleMPlayerLaunch()
 // lifetime; retail independently fixes the PC DirectPlayLobby structures,
 // HRESULT/log paths and the inlined InitRemote/RemoteCleanup boundaries.
 VA(0x00555ef0, 0x3E4)  // anchor-strings + lobby-callees + dc-order-map
-unsigned char LobbyLaunchConnect()
+unsigned char lobbyLaunchConnect()
 {
-    strcpy(gMapName, gpGame->setup.filename);
-    gpGame->mapHeader.Get(
-        gpGame->setup.path, gpGame->setup.filename, 0);
+    strcpy(g_mapName, g_game->m_setup.m_filename);
+    g_game->m_mapHeader.get(
+        g_game->m_setup.m_path, g_game->m_setup.m_filename, 0);
 
-    if (gbMPlayer) {
-        if (HandleMPlayerLaunch())
+    if (g_mPlayer) {
+        if (handleMPlayerLaunch())
             return 1;
-        RemoteCleanup();
+        remoteCleanup();
         return 0;
     }
 
-    logFile.Log(DATA_COMPGEN(0x00682d7c, lobbyGettingSettings,
+    g_logFile.log(DATA_COMPGEN(0x00682d7c, lobbyGettingSettings,
                             "Getting connection settings..."));
     DPLCONNECTION* connection =
-        pDPlay->GetConnectionSettings(0, 0);
+        g_dPlay->getConnectionSettings(0, 0);
     if (!connection)
         return 0;
 
-    if (connection->dwFlags & DPLAY_CONNECTION_CREATE_SESSION) {
-        connection->lpSessionDesc->dwFlags |=
+    if (connection->m_flags & DPLAY_CONNECTION_CREATE_SESSION) {
+        connection->m_sessionDesc->m_flags |=
             DPLAY_SESSION_MIGRATE_HOST | DPLAY_SESSION_KEEP_ALIVE;
-        logFile.Log(DATA_COMPGEN(0x00682d68, lobbyIsHost,
+        g_logFile.log(DATA_COMPGEN(0x00682d68, lobbyIsHost,
                                 "We are the host...."));
     } else {
-        logFile.Log(DATA_COMPGEN(0x00682d54, lobbyIsGuest,
+        g_logFile.log(DATA_COMPGEN(0x00682d54, lobbyIsGuest,
                                 "We are a guest...."));
     }
-    logFile.Log(DATA_COMPGEN(0x00682d2c, lobbyMaxPlayers,
+    g_logFile.log(DATA_COMPGEN(0x00682d2c, lobbyMaxPlayers,
                             "CDPlayLobby::Connect - MaxPlayers: %d"),
-                connection->lpSessionDesc->dwMaxPlayers);
-    logFile.Log(DATA_COMPGEN(0x00682d00, lobbyCurrentPlayers,
+                connection->m_sessionDesc->m_maxPlayers);
+    g_logFile.log(DATA_COMPGEN(0x00682d00, lobbyCurrentPlayers,
                             "CDPlayLobby::Connect - CurrentPlayers: %d"),
-                connection->lpSessionDesc->dwCurrentPlayers);
+                connection->m_sessionDesc->m_currentPlayers);
 
-    if (!pDPlay->SetConnectionSettings(0, connection)) {
-        logFile.Log(DATA_COMPGEN(0x00682cdc, lobbySetSettingsError,
+    if (!g_dPlay->setConnectionSettings(0, connection)) {
+        g_logFile.log(DATA_COMPGEN(0x00682cdc, lobbySetSettingsError,
                                 "Error setting connection settings!"));
         delete connection;
         return 0;
     }
 
     CHourGlass hourGlass(1);
-    logFile.Log(DATA_COMPGEN(0x00682cc4, lobbyAttemptingConnect,
+    g_logFile.log(DATA_COMPGEN(0x00682cc4, lobbyAttemptingConnect,
                             "Attempting connect..."));
-    if (!pDPlay->Connect()) {
-        logFile.Log(DATA_COMPGEN(0x00682ca0, lobbyConnectError,
+    if (!g_dPlay->connect()) {
+        g_logFile.log(DATA_COMPGEN(0x00682ca0, lobbyConnectError,
                                 "Error connecting to lobby session!"));
-        char sDesc[256];
-        pDPlay->GetErrorDesc(pDPlay->GetLastError(), sDesc);
-        logFile.Log(DATA_COMPGEN(0x00682c90, lobbyLastError,
-                                "Last error=[%s]"), sDesc);
+        // Before normalization (locals): sDesc.
+        char description[256];
+        g_dPlay->getErrorDesc(g_dPlay->getLastError(), description);
+        g_logFile.log(DATA_COMPGEN(0x00682c90, lobbyLastError,
+                                "Last error=[%s]"), description);
         delete connection;
         return 0;
     }
 
-    logFile.Log(DATA_COMPGEN(0x00682c7c, lobbyConnected,
+    g_logFile.log(DATA_COMPGEN(0x00682c7c, lobbyConnected,
                             "Successful connect!"));
-    strncpy(gUnnamed698758.networkDefaultName,
-            connection->lpPlayerName->lpszShortNameA, 21);
+    strncpy(g_unnamed698758.m_networkDefaultName,
+            connection->m_playerName->m_shortNameA, 21);
     delete connection;
     // Retail preserves this original one-past terminator store.
-    gUnnamed698758.networkDefaultName[21] = 0;
-    logFile.Log(DATA_COMPGEN(0x00682c6c, lobbyUserName,
+    g_unnamed698758.m_networkDefaultName[21] = 0;
+    g_logFile.log(DATA_COMPGEN(0x00682c6c, lobbyUserName,
                             "Username=[%s]"),
-                gUnnamed698758.networkDefaultName);
+                g_unnamed698758.m_networkDefaultName);
 
-    iMPNetProtocol = MP_TCP;
-    gUnnamed699274 = 1;
-    gUnnamed6994e4 = 1;
-    InitRemote(MP_TCP, gUnnamed698758.networkDefaultName);
-    int version = *gpVideoGameState;
-    gsThisNetPlayerInfo.dpid = pDPlay->CreatePlayer(
-        gUnnamed698758.networkDefaultName, &version, sizeof(version), 0);
-    if (!gsThisNetPlayerInfo.dpid)
+    g_mpNetProtocol = MP_TCP;
+    g_unnamed699274 = 1;
+    g_unnamed6994e4 = 1;
+    initRemote(MP_TCP, g_unnamed698758.m_networkDefaultName);
+    int version = *g_videoGameState;
+    g_thisNetPlayerInfo.m_dpid = g_dPlay->createPlayer(
+        g_unnamed698758.m_networkDefaultName, &version, sizeof(version), 0);
+    if (!g_thisNetPlayerInfo.m_dpid)
         return 0;
-    gsThisNetPlayerInfo.version = version;
+    g_thisNetPlayerInfo.m_version = version;
     return 1;
 }
 
 // E:\gamedcs\remote.cpp:2150. Retail has no surviving out-of-line copy:
 // HandlePlayerDrop expands the eight-player DPID search and consumes -1 as
 // its not-found sentinel.
-int GetPlayerPos(unsigned long dpid)
+// Before normalization (function): GetPlayerPos.
+int getPlayerPos(unsigned long dpid)
 {
     for (int i = 0; i < 8; ++i) {
-        if (gpGame->players[i].dpid == dpid)
+        if (g_game->m_players[i].m_dpid == dpid)
             return i;
     }
     return -1;
@@ -2446,24 +2472,26 @@ int GetPlayerPos(unsigned long dpid)
 // E:\gamedcs\remote.cpp:2161. Retail has no surviving out-of-line copy:
 // both HandleNewHost expansions keep the candidate in a register, wrap at
 // zero and ask game::IsHuman until they find the prior human seat.
-int GetPriorPlayer(int gamePos)
+// Before normalization (function): GetPriorPlayer.
+int getPriorPlayer(int gamePos)
 {
     do {
         --gamePos;
         if (gamePos < 0)
             gamePos = 7;
-    } while (!gpGame->IsHuman(gamePos));
+    } while (!g_game->isHuman(gamePos));
     return gamePos;
 }
 
 // E:\gamedcs\remote.cpp:2174. DC supplies this source boundary and the
 // CDPlayPlayer member names. Retail expands it into UpdateCurrentPlayers:
 // virtual GetCount/Get calls remain, while GetId becomes the +0x100 load.
-static __forceinline unsigned char IsValidHuman(
+// Before normalization (function): IsValidHuman.
+static __forceinline unsigned char isValidHuman(
     CAutoArray<CDPlayPlayer>& playerArray, unsigned long dpid)
 {
-    for (unsigned long i = 0; i < playerArray.GetCount(); ++i) {
-        if (playerArray.Get(i)->GetId() == dpid)
+    for (unsigned long i = 0; i < playerArray.getCount(); ++i) {
+        if (playerArray.get(i)->getId() == dpid)
             return 1;
     }
     return 0;
@@ -2472,29 +2500,30 @@ static __forceinline unsigned char IsValidHuman(
 // E:\gamedcs\remote.cpp:2187. The DC roster supplies the identity and local
 // array role. Retail proves the eight 0x168-byte player records, their net
 // fields, general-text row 469 and the final live-player count publication.
+// Before normalization (function): UpdateCurrentPlayers.
 VA(0x005562e0, 0x14E)  // anchor-callers + dc-order-map, dc 0x11df10
-void UpdateCurrentPlayers()
+void updateCurrentPlayers()
 {
     CAutoArray<CDPlayPlayer> playerArray;
-    pDPlay->EnumPlayers(&playerArray, 0, 0);
+    g_dPlay->enumPlayers(&playerArray, 0, 0);
 
     for (int i = 0; i < 8; ++i) {
-        if (gpGame->players[i].dpid
-            && IsValidHuman(playerArray, gpGame->players[i].dpid))
+        if (g_game->m_players[i].m_dpid
+            && isValidHuman(playerArray, g_game->m_players[i].m_dpid))
             continue;
 
-        gpGame->players[i].dpid = 0;
-        gpGame->players[i].isHuman = 0;
-        gpGame->players[i].isLocal = 0;
-        strcpy(gpGame->players[i].cName,
-               gpGeneralText->GetText(GENERAL_TEXT_DEFAULT_PLAYER_NAME));
+        g_game->m_players[i].m_dpid = 0;
+        g_game->m_players[i].m_isHuman = 0;
+        g_game->m_players[i].m_isLocal = 0;
+        strcpy(g_game->m_players[i].m_name,
+               g_generalText->getText(GENERAL_TEXT_DEFAULT_PLAYER_NAME));
     }
 
-    gUnnamed699274 = playerArray.GetCount();
+    g_unnamed699274 = playerArray.getCount();
     // Retail spells the normal-exit cleanup as this explicit source call.
     // VC6 then proves the following implicit destructor is a no-op, omitting
     // its otherwise surviving EH-state and vptr stores.
-    playerArray.Destroy(1);
+    playerArray.destroy(1);
 }
 
 // E:\gamedcs\remote.cpp:2227. The DC roster supplies the public identity,
@@ -2502,41 +2531,41 @@ void UpdateCurrentPlayers()
 // eight-player DPID search, dropped-player chat, active-player handoff and
 // host-only recovery update.
 VA(0x00556430, 0x1A1)  // anchor-callers + strings + dc-order-map, dc 0x11e01c
-void HandlePlayerDrop(unsigned long dpid)
+void handlePlayerDrop(unsigned long dpid)
 {
-    int playerPos = GetPlayerPos(dpid);
+    int playerPos = getPlayerPos(dpid);
     if (playerPos == -1)
         return;
 
-    logFile.Log(DATA_COMPGEN(0x00682df8, handlingPlayerDropLog,
+    g_logFile.log(DATA_COMPGEN(0x00682df8, handlingPlayerDropLog,
                             "Handling player drop [%d]"),
                 dpid);
-    PlayerDropMsg(&chatMan,
-                  gpGeneralText->GetText(GENERAL_TEXT_PLAYER_DROPPED),
-                  gpGame->players[playerPos].cName);
-    UpdateCurrentPlayers();
+    playerDropMsg(&g_chatMan,
+                  g_generalText->getText(GENERAL_TEXT_PLAYER_DROPPED),
+                  g_game->m_players[playerPos].m_name);
+    updateCurrentPlayers();
 
-    if (gUnnamed69d810 == playerPos
-        && !gpGame->playerDisabled[playerPos]) {
-        int priorPlayer = GetPriorPlayer(gUnnamed69d810);
-        gNetLocalGamePos = priorPlayer;
-        gUnnamed69d810 = priorPlayer;
+    if (g_unnamed69d810 == playerPos
+        && !g_game->m_playerDisabled[playerPos]) {
+        int priorPlayer = getPriorPlayer(g_unnamed69d810);
+        g_netLocalGamePos = priorPlayer;
+        g_unnamed69d810 = priorPlayer;
 
-        if (pDPlay->IsHost()) {
-            if (gNetLocalGamePos == gpGame->GetLocalPlayerGamePos()) {
-                logFile.Log(DATA_COMPGEN(
+        if (g_dPlay->isHost()) {
+            if (g_netLocalGamePos == g_game->getLocalPlayerGamePos()) {
+                g_logFile.log(DATA_COMPGEN(
                                 0x00682dc8, hostWasLastPlayerLog,
                                 "Host [%d] was last player... time to recover..."),
-                            gsThisNetPlayerInfo.dpid);
-                OnPlayerDropUpdateMsg(dpid);
+                            g_thisNetPlayerInfo.m_dpid);
+                onPlayerDropUpdateMsg(dpid);
             } else {
-                logFile.Log(DATA_COMPGEN(
+                g_logFile.log(DATA_COMPGEN(
                                 0x00682d9c, playerWasLastPlayerLog,
                                 "%d was last player... time to recover..."),
                             dpid);
                 CPlayerDropUpdateMsg msg(dpid);
-                TransmitRemoteData(
-                    &msg, gUnnamed69d810, false, true);
+                transmitRemoteData(
+                    &msg, g_unnamed69d810, false, true);
             }
         }
     }
@@ -2546,25 +2575,26 @@ void HandlePlayerDrop(unsigned long dpid)
 // both call edges; retail /Ob2 expands it into CLevelPickWaitDlg's dispatcher
 // and CNetMsgHandler::HandleNetMsg, leaving no standalone body. The two PC
 // copies agree on every global, message field, and call.
-void HandleNewHost()
+// Before normalization (function): HandleNewHost.
+void handleNewHost()
 {
-    logFile.Log(DATA_COMPGEN(0x00682e14, handleNewHostLog,
+    g_logFile.log(DATA_COMPGEN(0x00682e14, handleNewHostLog,
                             "HandleNewHost"));
-    if (!gpGame->IsHuman(gUnnamed69d810)) {
-        gNetLocalGamePos = GetPriorPlayer(gNetLocalGamePos);
-        if (gNetLocalGamePos == gpGame->GetLocalPlayerGamePos()) {
-            OnPlayerDropUpdateMsg(-1);
+    if (!g_game->isHuman(g_unnamed69d810)) {
+        g_netLocalGamePos = getPriorPlayer(g_netLocalGamePos);
+        if (g_netLocalGamePos == g_game->getLocalPlayerGamePos()) {
+            onPlayerDropUpdateMsg(-1);
         } else {
             CPlayerDropUpdateMsg msg(-1);
-            if (gNetworkActive69954c && pDPlay) {
+            if (g_networkActive69954c && g_dPlay) {
 #pragma inline_depth(0)
-                pDPlay->TransmitRemoteData(
-                    &msg, gNetLocalGamePos, false, true);
+                g_dPlay->transmitRemoteData(
+                    &msg, g_netLocalGamePos, false, true);
 #pragma inline_depth()
             }
         }
     }
-    SystemMsg(&chatMan, gpGeneralText->GetText(471));
+    systemMsg(&g_chatMan, g_generalText->getText(471));
 }
 
 // E:\gamedcs\remote.cpp:2317. Dreamcast supplies the public boundary and
@@ -2580,48 +2610,48 @@ void HandleNewHost()
 // one instruction smaller); predict-inline independently isolates that same
 // TDialogBox cleanup as the sole real over-inline call boundary.
 VA(0x005565e0, 0x19E)  // anchor-string + callgraph + dc-order-map, dc 0x11e1cc
-void OnPlayerDropUpdateMsg(unsigned long dpid)
+void onPlayerDropUpdateMsg(unsigned long dpid)
 {
-    logFile.Log(DATA_COMPGEN(0x00682e24, playerDropUpdateLog,
+    g_logFile.log(DATA_COMPGEN(0x00682e24, playerDropUpdateLog,
                             "OnPlayerDropUpdateMsg (%d)"),
                 dpid);
 
-    gpMouseManager->SetPointer(1, mouseManager::ADVENTURE_SET);
+    g_mouseManager->setPointer(1, mouseManager::ADVENTURE_SET);
     CTextDialog dlg(0x12);
-    dlg.Setup(gpGeneralText->GetText(GENERAL_TEXT_PLAYER_DROP_RELOAD),
-              gpMediumFont);
-    dlg.Open(0, 1);
-    gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+    dlg.setup(g_generalText->getText(GENERAL_TEXT_PLAYER_DROP_RELOAD),
+              g_mediumFont);
+    dlg.open(0, 1);
+    g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
 
     CHourGlass hourGlass(1);
-    if (!gpGame->LoadGame(gUnnamed698758.scFile, 0, 0))
-        gpGame->LoadGame(gUnnamed698758.rcFile, 0, 0);
+    if (!g_game->loadGame(g_unnamed698758.m_scFile, 0, 0))
+        g_game->loadGame(g_unnamed698758.m_rcFile, 0, 0);
 
-    dlg.Close(1);
-    hourGlass.Stop();
-    UpdateCurrentPlayers();
+    dlg.close(1);
+    hourGlass.stop();
+    updateCurrentPlayers();
 
-    int playerPos = gpGame->GetGamePosFromDPID(dpid);
+    int playerPos = g_game->getGamePosFromDPID(dpid);
     if (playerPos != -1)
-        gpGame->players[playerPos].ClearNetInfo();
+        g_game->m_players[playerPos].clearNetInfo();
 
     // Retail keeps this gpGame read live across the two local-seat queries.
-    game* currentGame = gpGame;
-    int localPlayer = currentGame->GetLocalPlayerGamePos();
-    gNetLocalGamePos = localPlayer;
-    gUnnamed69d810 = localPlayer;
-    gpCurrentPlayer = &gpGame->players[localPlayer];
-    gUnnamed69ccc4 = 1 << localPlayer;
+    game* currentGame = g_game;
+    int localPlayer = currentGame->getLocalPlayerGamePos();
+    g_netLocalGamePos = localPlayer;
+    g_unnamed69d810 = localPlayer;
+    g_currentPlayer = &g_game->m_players[localPlayer];
+    g_unnamed69ccc4 = 1 << localPlayer;
 
-    int visiblePlayer = currentGame->GetLocalPlayerGamePos();
-    gUnnamed69778c = visiblePlayer;
-    gMapVisibilityBit = 1 << visiblePlayer;
+    int visiblePlayer = currentGame->getLocalPlayerGamePos();
+    g_unnamed69778c = visiblePlayer;
+    g_mapVisibilityBit = 1 << visiblePlayer;
 
     if (g_weMoved) {
-        gUnnamed69d80d = 1;
-        gpGame->NextPlayer();
+        g_unnamed69d80d = 1;
+        g_game->nextPlayer();
     } else {
-        gpAdvManager->StartLocalPlayerTurn();
+        g_advManager->startLocalPlayerTurn();
     }
 }
 
@@ -2632,34 +2662,34 @@ void OnPlayerDropUpdateMsg(unsigned long dpid)
 // EXACT. Assigning gpCurrentPlayer before the two seat globals gives VC6 the
 // retail address-calculation schedule at the recovered-host tail.
 VA(0x00556780, 0x1C0)  // anchor-dispatch + dc-order-map, dc 0x11e39c
-void HandlePlayerDead(int deadGuy, unsigned char showMsg)
+void handlePlayerDead(int deadGuy, unsigned char showMsg)
 {
-    gpGame->playerDisabled[deadGuy] = 1;
+    g_game->m_playerDisabled[deadGuy] = 1;
 
-    if (deadGuy == gLocalGamePos) {
-        RemoteCleanup();
+    if (deadGuy == g_localGamePos) {
+        remoteCleanup();
 
         if (showMsg) {
-            strcpy(gText, gpGeneralText->GetText(96));
-            NormalDialog(gText, 1, -1, -1, -1, 0, -1, 0,
+            strcpy(g_text, g_generalText->getText(96));
+            normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0,
                          -1, 0, -1, 0);
         }
 
-        bDefeatedAllPlayers = 0;
-        gbGameOver = 1;
+        g_defeatedAllPlayers = 0;
+        g_gameOver = 1;
     } else {
-        if (!gbUnk691209 && showMsg) {
-            sprintf(gText, gpGeneralText->GetText(6),
-                    gpGame->GetPlayerName(deadGuy));
-            NormalDialog(gText, 1, -1, -1, 10, deadGuy, -1, -1,
+        if (!g_unk691209 && showMsg) {
+            sprintf(g_text, g_generalText->getText(6),
+                    g_game->getPlayerName(deadGuy));
+            normalDialog(g_text, 1, -1, -1, 10, deadGuy, -1, -1,
                          -1, 5000, -1, 0);
         }
 
-        if (deadGuy == gUnnamed69d810) {
-            int nextPlayer = GetNextHumanPlayer(deadGuy);
-            gpCurrentPlayer = &gpGame->players[nextPlayer];
-            gNetLocalGamePos = nextPlayer;
-            gUnnamed69d810 = nextPlayer;
+        if (deadGuy == g_unnamed69d810) {
+            int nextPlayer = getNextHumanPlayer(deadGuy);
+            g_currentPlayer = &g_game->m_players[nextPlayer];
+            g_netLocalGamePos = nextPlayer;
+            g_unnamed69d810 = nextPlayer;
         }
     }
 }
@@ -2671,43 +2701,45 @@ void HandlePlayerDead(int deadGuy, unsigned char showMsg)
 // variable roles; separate declarations followed by bGameWon/bGameLost
 // assignments preserve retail's reverse zero-store order.
 // E:\gamedcs\remote.cpp:2419
+// Before normalization (locals): pNetMsg, bGameLost, bGameWon.
 VA(0x00556940, 0x5E)  // anchor-dispatch RS_PLAYER_WON, dc 0x11e494
-void HandlePlayerWon(CNetMsg* pNetMsg)
+void handlePlayerWon(CNetMsg* netMsg)
 {
-    CPlayerWonMsg* message = static_cast<CPlayerWonMsg*>(pNetMsg);
-    gpGame->mapHeader.victoryCondition = message->victoryCondition;
+    CPlayerWonMsg* message = static_cast<CPlayerWonMsg*>(netMsg);
+    g_game->m_mapHeader.m_victoryCondition = message->m_victoryCondition;
 
-    int bGameLost;
-    int bGameWon;
-    bGameWon = 0;
-    bGameLost = 0;
-    gbGameOver = 1;
-    DisplayVCWinLoss(message->victoryCondition,
-                     bGameWon, bGameLost, true);
-    if (bGameLost)
-        bDefeatedAllPlayers = 0;
-    if (bGameWon)
-        bDefeatedAllPlayers = 1;
+    int gameLost;
+    int gameWon;
+    gameWon = 0;
+    gameLost = 0;
+    g_gameOver = 1;
+    displayVCWinLoss(message->m_victoryCondition,
+                     gameWon, gameLost, true);
+    if (gameLost)
+        g_defeatedAllPlayers = 0;
+    if (gameWon)
+        g_defeatedAllPlayers = 1;
 }
 
 // EXACT. The loss twin consumes the 0x24-byte payload at the same +0x18
 // offset but does not replace gpGame's map-header record. It uses the same
 // retail-proven reverse zero-store order as the win handler.
 // E:\gamedcs\remote.cpp:2441
+// Before normalization (locals): pNetMsg, bGameLost, bGameWon.
 VA(0x005569a0, 0x4B)  // anchor-dispatch RS_PLAYER_LOST, dc 0x11e500
-void HandlePlayerLost(CNetMsg* pNetMsg)
+void handlePlayerLost(CNetMsg* netMsg)
 {
-    CPlayerLostMsg* message = static_cast<CPlayerLostMsg*>(pNetMsg);
-    int bGameLost;
-    int bGameWon;
-    bGameWon = 0;
-    bGameLost = 0;
-    DisplayLCWinLoss(&message->lossCondition,
-                     &bGameWon, &bGameLost, 1);
-    if (bGameLost)
-        bDefeatedAllPlayers = 0;
-    if (bGameWon)
-        bDefeatedAllPlayers = 1;
+    CPlayerLostMsg* message = static_cast<CPlayerLostMsg*>(netMsg);
+    int gameLost;
+    int gameWon;
+    gameWon = 0;
+    gameLost = 0;
+    displayLCWinLoss(message->m_lossCondition,
+                     gameWon, gameLost, 1);
+    if (gameLost)
+        g_defeatedAllPlayers = 0;
+    if (gameWon)
+        g_defeatedAllPlayers = 1;
 }
 
 // E:\gamedcs\remote.cpp:2458. The sole RS_NORMAL_WIN dispatcher call and
@@ -2716,22 +2748,23 @@ void HandlePlayerLost(CNetMsg* pNetMsg)
 // Retail sets the game-over latch, compares the sender's team with the local
 // network player, then shows general-text row 660 or 661. A same-team win also
 // raises the adjacent one-byte session latch.
+// Before normalization (locals): pNetMsg.
 VA(0x005569f0, 0xB4)  // anchor-dispatch RS_NORMAL_WIN, dc 0x11e598
-void HandleNormalWinMsg(CNetMsg* pNetMsg)
+void handleNormalWinMsg(CNetMsg* netMsg)
 {
-    CNormalWinMsg* message = static_cast<CNormalWinMsg*>(pNetMsg);
-    gbGameOver = 1;
-    int localPlayer = gpGame->GetLocalPlayerGamePos();
+    CNormalWinMsg* message = static_cast<CNormalWinMsg*>(netMsg);
+    g_gameOver = 1;
+    int localPlayer = g_game->getLocalPlayerGamePos();
 
-    if (gpGame->OnSameTeam(message->gamePos, localPlayer)) {
-        NormalDialog(gpGeneralText->GetText(660), 1, -1, -1,
+    if (g_game->onSameTeam(message->m_gamePos, localPlayer)) {
+        normalDialog(g_generalText->getText(660), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
-        bDefeatedAllPlayers = 1;
-        gUnnamed69951c = 1;
+        g_defeatedAllPlayers = 1;
+        g_unnamed69951c = 1;
     } else {
-        NormalDialog(gpGeneralText->GetText(661), 1, -1, -1,
+        normalDialog(g_generalText->getText(661), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
-        bDefeatedAllPlayers = 0;
+        g_defeatedAllPlayers = 0;
     }
 }
 
@@ -2765,20 +2798,20 @@ CLevelPickWaitDlg::CLevelPickWaitDlg()
 // independently fixes m_sprite_name; the two rejected ids are Devil and
 // Arch Devil (54/55).
 VA(0x00556ba0, 0x72)  // dc-order-map + retail member/table accesses, dc 0x11e6a4
-void CLevelPickWaitDlg::WaitForLevels(int fromWho)
+void CLevelPickWaitDlg::waitForLevels(int fromWho)
 {
     m_fromWho = fromWho;
-    SRand(GameTime::Get());
+    sRand(GameTime::get());
 
     int creature;
     do {
-        creature = Random(0, 111);
+        creature = random(0, 111);
     } while (creature == CREATURE_ARCH_DEVIL
              || creature == CREATURE_DEVIL);
 
-    Setup(gpGeneralText->GetText(472), gpMediumFont,
-          akCreatureTypeTraits[creature].m_sprite_name, 0);
-    DoModal(0);
+    setup(g_generalText->getText(472), g_mediumFont,
+          g_creatureTypeTraits[creature].m_spriteName, 0);
+    doModal(0);
 }
 
 // E:\gamedcs\remote.cpp:2482 - CLevelPickWaitDlg::`scalar deleting
@@ -2791,36 +2824,37 @@ VA_COMPGEN(0x00556b70, 0x21, SCALAR_DELETING_DTOR, CLevelPickWaitDlg)
 // byte dispatch table (subtypes 1004, 1011, 1014, 1015 and 1076); DC supplies
 // the class/helper names and the same call graph.
 VA(0x00556c20, 0x2F5)  // anchor-vtable + dc-order-map, dc 0x11e718
-int CLevelPickWaitDlg::handle_message(message& msg)
+int CLevelPickWaitDlg::handleMessage(message& msg)
 {
-    CAnimatedDlg::handle_message(msg);
-    PollSound();
+    CAnimatedDlg::handleMessage(msg);
+    pollSound();
 
-    CNetMsg* pNetMsg = GetRemoteData(1, 0);
-    if (pNetMsg) {
-        CMessageKill msgKill(pNetMsg);
-        switch (pNetMsg->subType) {
+    // Before normalization (locals): pNetMsg.
+    CNetMsg* netMsg = getRemoteData(1, 0);
+    if (netMsg) {
+        CMessageKill msgKill(netMsg);
+        switch (netMsg->m_subType) {
             case RS_HERO_LEVEL_UPDATE:
-                OnHeroLevelUpdate(pNetMsg);
-                return ExitDialog(msg);
+                onHeroLevelUpdate(netMsg);
+                return exitDialog(msg);
 
             case RS_PLAYER_DROPPED:
-                return OnPlayerDrop(pNetMsg, msg);
+                return onPlayerDrop(netMsg, msg);
 
             case RS_SET_AS_HOST:
-                HandleNewHost();
+                handleNewHost();
                 break;
 
             case RS_SESSION_LOST:
-                NormalDialog(gpGeneralText->GetText(329),
+                normalDialog(g_generalText->getText(329),
                              1, -1, -1, -1, 0, -1, 0,
                              -1, 0, -1, 0);
-                ShutDown(0);
+                shutDown(0);
                 break;
 
             case RS_CHAT_MSG:
-                ReceiveChat(static_cast<CChatMsg*>(pNetMsg)->m_text,
-                            pNetMsg->field_00);
+                receiveChat(static_cast<CChatMsg*>(netMsg)->m_text,
+                            netMsg->m_from);
                 break;
         }
     }
@@ -2830,32 +2864,34 @@ int CLevelPickWaitDlg::handle_message(message& msg)
 // E:\gamedcs\remote.cpp:2546. Retail expands this source boundary into the
 // dispatcher. A drop from the player whose level choice is pending marks the
 // modal and closes it; every other drop is still handed to the global handler.
-int CLevelPickWaitDlg::OnPlayerDrop(CNetMsg* pNetMsg, message& msg)
+// Before normalization (locals): pNetMsg.
+int CLevelPickWaitDlg::onPlayerDrop(CNetMsg* netMsg, message& msg)
 {
-    int gamePos = gpGame->GetGamePosFromDPID(pNetMsg->field_04);
+    int gamePos = g_game->getGamePosFromDPID(netMsg->m_dpidFrom);
     if (gamePos == m_fromWho) {
         m_playerDropped = 1;
-        HandlePlayerDrop(pNetMsg->field_04);
-        return ExitDialog(msg);
+        handlePlayerDrop(netMsg->m_dpidFrom);
+        return exitDialog(msg);
     }
-    HandlePlayerDrop(pNetMsg->field_04);
+    handlePlayerDrop(netMsg->m_dpidFrom);
     return 0;
 }
 
 // E:\gamedcs\remote.cpp:2567. DC names the message fields; retail proves
 // their offsets by copying the 28 secondary-skill levels and four primary
 // stats into the selected hero before replacing the secondary-skill count.
-void CLevelPickWaitDlg::OnHeroLevelUpdate(CNetMsg* pNetMsg)
+// Before normalization (locals): pNetMsg.
+void CLevelPickWaitDlg::onHeroLevelUpdate(CNetMsg* netMsg)
 {
     CHeroLevelUpdateMsg* levelMsg =
-        static_cast<CHeroLevelUpdateMsg*>(pNetMsg);
-    hero* targetHero = gpGame->GetHero(levelMsg->m_hero);
+        static_cast<CHeroLevelUpdateMsg*>(netMsg);
+    hero* targetHero = g_game->getHero(levelMsg->m_hero);
     if (targetHero) {
-        memcpy(targetHero->skillLevel, levelMsg->m_ssLevel,
+        memcpy(targetHero->m_skillLevel, levelMsg->m_ssLevel,
                sizeof(levelMsg->m_ssLevel));
-        memcpy(targetHero->stats, levelMsg->m_stats,
+        memcpy(targetHero->m_stats, levelMsg->m_stats,
                sizeof(levelMsg->m_stats));
-        targetHero->skillCount = levelMsg->m_numSSs;
+        targetHero->m_skillCount = levelMsg->m_numSSs;
     }
 }
 
@@ -2881,13 +2917,13 @@ VA_COMPGEN(0x00557060, 0x21, SCALAR_DELETING_DTOR,
 // Retail proves the four deliberate differences: no clock seeding, no
 // Devil/Arch Devil retry, general-text row 473, and animation sequence 12.
 VA(0x00557090, 0x5C)  // vtable/field/table accesses + dc order, dc 0x11e948
-void CWaitForRemoteBattleDlg::Wait(int playerPos)
+void CWaitForRemoteBattleDlg::wait(int playerPos)
 {
     m_playerPos = playerPos;
-    int creature = Random(0, 111);
-    Setup(gpGeneralText->GetText(473), gpMediumFont,
-          akCreatureTypeTraits[creature].m_sprite_name, 12);
-    DoModal(0);
+    int creature = random(0, 111);
+    setup(g_generalText->getText(473), g_mediumFont,
+          g_creatureTypeTraits[creature].m_spriteName, 12);
+    doModal(0);
 }
 
 // E:\gamedcs\remote.cpp:2613. Vtable 0x640f78 slot 3 and the adjacent DC
@@ -2896,40 +2932,41 @@ void CWaitForRemoteBattleDlg::Wait(int playerPos)
 // RS_COMBAT_INIT is deserialized into the dialog, so CMessageKill must not
 // release that packet on the return path.
 VA(0x005570f0, 0x1E9)  // anchor-vtable + dc-order-map, dc 0x11e9a0
-int CWaitForRemoteBattleDlg::handle_message(message& msg)
+int CWaitForRemoteBattleDlg::handleMessage(message& msg)
 {
-    CAnimatedDlg::handle_message(msg);
-    PollSound();
+    CAnimatedDlg::handleMessage(msg);
+    pollSound();
 
-    CNetMsg* pNetMsg = GetRemoteData(1, 0);
-    if (pNetMsg) {
+    // Before normalization (locals): pNetMsg.
+    CNetMsg* netMsg = getRemoteData(1, 0);
+    if (netMsg) {
         CMessageKill killMsg(0);
-        if (pNetMsg->subType != RS_COMBAT_INIT)
-            killMsg.SetMessage(pNetMsg);
+        if (netMsg->m_subType != RS_COMBAT_INIT)
+            killMsg.setMessage(netMsg);
 
-        switch (pNetMsg->subType) {
+        switch (netMsg->m_subType) {
             case RS_PLAYER_DROPPED:
-                return OnPlayerDrop(pNetMsg, msg);
+                return onPlayerDrop(netMsg, msg);
 
             case RS_SET_AS_HOST:
-                SystemMsg(&chatMan, gpGeneralText->GetText(471));
+                systemMsg(&g_chatMan, g_generalText->getText(471));
                 break;
 
             case RS_SESSION_LOST:
-                NormalDialog(gpGeneralText->GetText(329),
+                normalDialog(g_generalText->getText(329),
                              1, -1, -1, -1, 0, -1, 0,
                              -1, 0, -1, 0);
-                ShutDown(0);
+                shutDown(0);
                 break;
 
             case RS_COMBAT_INIT:
-                m_combatInitMsg.RemoteFn_00512E00(pNetMsg);
+                m_combatInitMsg.remoteFn00512E00(netMsg);
                 m_combatInitMsgReceived = 1;
-                return ExitDialog(msg);
+                return exitDialog(msg);
 
             case RS_CHAT_MSG:
-                ReceiveChat(static_cast<CChatMsg*>(pNetMsg)->m_text,
-                            pNetMsg->field_00);
+                receiveChat(static_cast<CChatMsg*>(netMsg)->m_text,
+                            netMsg->m_from);
                 break;
         }
     }
@@ -2939,12 +2976,13 @@ int CWaitForRemoteBattleDlg::handle_message(message& msg)
 // E:\gamedcs\remote.cpp:2660. Retail expands the helper into the dispatcher:
 // it resolves and processes every dropped DPID, but closes this modal only
 // when the dropped player is the combat peer it is waiting for.
-int CWaitForRemoteBattleDlg::OnPlayerDrop(CNetMsg* pNetMsg, message& msg)
+// Before normalization (locals): pNetMsg.
+int CWaitForRemoteBattleDlg::onPlayerDrop(CNetMsg* netMsg, message& msg)
 {
-    int gamePos = gpGame->GetGamePosFromDPID(pNetMsg->field_04);
-    HandlePlayerDrop(pNetMsg->field_04);
+    int gamePos = g_game->getGamePosFromDPID(netMsg->m_dpidFrom);
+    handlePlayerDrop(netMsg->m_dpidFrom);
     if (gamePos == m_playerPos)
-        return ExitDialog(msg);
+        return exitDialog(msg);
     return 0;
 }
 
@@ -2964,7 +3002,7 @@ VA(0x005572e0, 0x2D)  // anchor-vtable 0x640fb0, dc 0x11eb40
 CSaveScreen::CSaveScreen(int w, int h)
     : Bitmap16Bit(w, h)
 {
-    screenSaved = 0;
+    m_screenSaved = 0;
     m_x = 0;
     m_y = 0;
 }
@@ -2985,15 +3023,15 @@ VA_COMPGEN(0x00557340, 0x05, IMPLICIT_DTOR, CSaveScreen)
 // geometry, so all four screen fields come off the same screenBitmap.
 // E:\gamedcs\remote.cpp:2680
 VA(0x00557350, 0x3A)  // anchor-callee (Bitmap16Bit::Grab), dc 0x11eb9c
-void CSaveScreen::Save(int x, int y)
+void CSaveScreen::save(int x, int y)
 {
     m_x = x;
     m_y = y;
-    screenSaved = 1;
-    Grab(gpWindowManager->screenBitmap->map, x, y,
-        gpWindowManager->screenBitmap->Width,
-        gpWindowManager->screenBitmap->Height,
-        gpWindowManager->screenBitmap->Pitch);
+    m_screenSaved = 1;
+    grab(g_windowManager->m_screenBitmap->m_map, x, y,
+        g_windowManager->m_screenBitmap->m_width,
+        g_windowManager->m_screenBitmap->m_height,
+        g_windowManager->m_screenBitmap->m_pitch);
 }
 
 // E:\gamedcs\remote.cpp:2689 - blit the saved rectangle back, and only
@@ -3002,23 +3040,23 @@ void CSaveScreen::Save(int x, int y)
 // UpdateScreen call too.
 // E:\gamedcs\remote.cpp:2689
 VA(0x00557390, 0x69)  // anchor-callee (Bitmap16Bit::Draw), dc 0x11ebc8
-void CSaveScreen::Restore(unsigned char update)
+void CSaveScreen::restore(unsigned char update)
 {
-    if (screenSaved) {
-        Draw(0, 0, Width, Height, gpWindowManager->screenBitmap->map,
-            m_x, m_y, gpWindowManager->screenBitmap->Width,
-            gpWindowManager->screenBitmap->Height,
-            gpWindowManager->screenBitmap->Pitch, 0);
+    if (m_screenSaved) {
+        draw(0, 0, m_width, m_height, g_windowManager->m_screenBitmap->m_map,
+            m_x, m_y, g_windowManager->m_screenBitmap->m_width,
+            g_windowManager->m_screenBitmap->m_height,
+            g_windowManager->m_screenBitmap->m_pitch, 0);
         if (update)
-            gpWindowManager->UpdateScreen(m_x, m_y, Width, Height);
+            g_windowManager->updateScreen(m_x, m_y, m_width, m_height);
     }
 }
 
 // E:\gamedcs\remote.cpp:2701
 VA(0x00557400, 0x4)  // anchor-bracket (screenSaved at 0x38), dc 0x11ec5c
-unsigned char CSaveScreen::IsSaved()
+unsigned char CSaveScreen::isSaved()
 {
-    return screenSaved;
+    return m_screenSaved;
 }
 
 // The two video entry points in the 0x198xxx compiland that sorts right
@@ -3030,8 +3068,9 @@ unsigned char CSaveScreen::IsSaved()
 // Smacker handles through __imp__SmackClose@4 and clears the five globals
 // smackmgr.cpp already names (0x69fdf8, 0x69fdfc, 0x69fe18, 0x69fe5c,
 // 0x69fdf5). Name provisional, in ShowVideo's lineage.
-void ShowVideo(int id, int x, int y, int w, int h, int a6, int a7, int a8);
-void CloseVideo();  // 0x599050
+void showVideo(int id, int x, int y, int w, int h, int a6, int a7, int a8);
+// Before normalization (function): CloseVideo.
+void closeVideo();  // 0x599050
 
 // E:\gamedcs\remote.cpp:2713 - CGameTransferSmack's constructor. It is also
 // inlined whole into CGameTransferDlg's constructor below (/Ob2 auto-inline
@@ -3061,7 +3100,7 @@ CGameTransferSmack::CGameTransferSmack()
 VA(0x00557430, 0x22)  // anchor-callee (Stop 0x5575e0 inlined), dc 0x11ec88
 CGameTransferSmack::~CGameTransferSmack()
 {
-    Stop();
+    stop();
     delete m_saveScreen;
 }
 
@@ -3071,7 +3110,7 @@ CGameTransferSmack::~CGameTransferSmack()
 // bytes straight into 0x0d and 0x0e.
 // E:\gamedcs\remote.cpp:2733
 VA(0x00557460, 0x1E)  // anchor-bracket (CGameTransferSmack members), dc 0x11ecbc
-void CGameTransferSmack::Setup(int x, int y, unsigned char sending,
+void CGameTransferSmack::setup(int x, int y, unsigned char sending,
                                unsigned char drawText)
 {
     m_x = x;
@@ -3088,10 +3127,10 @@ void CGameTransferSmack::Setup(int x, int y, unsigned char sending,
 // ordering constraint against them.
 // E:\gamedcs\remote.cpp:2741
 VA(0x00557480, 0x25)  // anchor-callee (ShowVideo 0x598af0), dc 0x11ecd8
-void CGameTransferSmack::Start()
+void CGameTransferSmack::start()
 {
     m_started = 1;
-    ShowVideo(0x3f, m_x, m_y, 160, 160, 0, 0, 0);
+    showVideo(0x3f, m_x, m_y, 160, 160, 0, 0, 0);
 }
 
 // E:\gamedcs\remote.cpp:2747. The two 256-byte locals and the source names
@@ -3100,29 +3139,30 @@ void CGameTransferSmack::Start()
 // DrawCurrentFrame is defined in remote.cpp:2784 in DC; the Windows
 // helper below calls the current-handle video wrapper at 0x598e80.
 VA(0x005574b0, 0x12D)  // order/call graph + DC identity, dc 0x11ece4
-void CGameTransferSmack::SetPercentage(float pct)
+void CGameTransferSmack::setPercentage(float pct)
 {
     m_lastFrame = static_cast<int>(pct * 20.0f);
-    SetCurrentSmackFrame(m_lastFrame);
+    setCurrentSmackFrame(m_lastFrame);
     drawCurrentFrame();
 
-    char cText[256];
-    char sPct[256];
+    // Before normalization (locals): cText, sPct.
+    char text[256];
+    char percentageText[256];
     if (m_sending)
-        strcpy(cText, gpGeneralText->GetText(99));
+        strcpy(text, g_generalText->getText(99));
     else
-        strcpy(cText, gpGeneralText->GetText(100));
-    sprintf(sPct,
+        strcpy(text, g_generalText->getText(100));
+    sprintf(percentageText,
             DATA_COMPGEN(0x00682e40, transferPercentageFormat, "\n%0.0f%%"),
             pct * 100.0f);
-    strcat(cText, sPct);
+    strcat(text, percentageText);
 
     if (m_drawText) {
-        gpMediumFont->DrawBoundedString(
-            cText, gpWindowManager->screenBitmap, m_x, m_y, 160, 160,
+        g_mediumFont->drawBoundedString(
+            text, g_windowManager->m_screenBitmap, m_x, m_y, 160, 160,
             font::PRIMARY, 5, -1);
     }
-    gpWindowManager->UpdateScreen(m_x, m_y, 160, 160);
+    g_windowManager->updateScreen(m_x, m_y, 160, 160);
 }
 
 // Original: CGameTransferSmack::DrawCurrentFrame; remote.cpp:2784, dc 0x11ede8.
@@ -3130,7 +3170,7 @@ void CGameTransferSmack::SetPercentage(float pct)
 // Windows video draw wrapper through this source helper.
 inline void CGameTransferSmack::drawCurrentFrame()
 {
-    DrawCurrentSmackFrame();
+    drawCurrentSmackFrame();
 }
 
 // E:\gamedcs\remote.cpp:2789 - the guard-and-clear half of the destructor,
@@ -3138,10 +3178,10 @@ inline void CGameTransferSmack::drawCurrentFrame()
 // clear the byte.
 // E:\gamedcs\remote.cpp:2789
 VA(0x005575e0, 0x15)  // anchor-callee (CloseVideo 0x599050), dc 0x11edec
-void CGameTransferSmack::Stop()
+void CGameTransferSmack::stop()
 {
     if (m_started) {
-        CloseVideo();
+        closeVideo();
         m_started = 0;
     }
 }
@@ -3159,11 +3199,11 @@ void CGameTransferSmack::Stop()
 // this tree's exact rows carry one.
 // E:\gamedcs\remote.cpp:2799
 VA(0x00557600, 0xAB)  // anchor-callee (Bitmap16Bit::Grab 0x44e3f0), dc 0x11ee04
-void CGameTransferSmack::SaveScreen()
+void CGameTransferSmack::saveScreen()
 {
     if (!m_saveScreen)
         m_saveScreen = new CSaveScreen(160, 160);
-    m_saveScreen->Save(m_x, m_y);
+    m_saveScreen->save(m_x, m_y);
 }
 
 // E:\gamedcs\remote.cpp:2807 - and put it back. CSaveScreen::Restore
@@ -3172,10 +3212,10 @@ void CGameTransferSmack::SaveScreen()
 // branches on it; the outer `je` is this file's own null check.
 // E:\gamedcs\remote.cpp:2807
 VA(0x005576b0, 0x61)  // anchor-callee (Bitmap16Bit::Draw 0x44e2b0), dc 0x11ee3c
-void CGameTransferSmack::RestoreScreen()
+void CGameTransferSmack::restoreScreen()
 {
     if (m_saveScreen)
-        m_saveScreen->Restore(1);
+        m_saveScreen->restore(1);
 }
 
 // E:\gamedcs\remote.cpp:2816 - CGameTransferDlg's constructor, the third
@@ -3212,8 +3252,9 @@ VA_COMPGEN(0x00557760, 0x21, SCALAR_DELETING_DTOR, CGameTransferDlg)
 //::Setup inlines into the four member stores at the tail. cText and pFont
 // are dead here, as retail leaves them.
 // E:\gamedcs\remote.cpp:2821
+// Before normalization (locals): cText, pFont.
 VA(0x00557790, 0x51)  // anchor-vtable (slot 12 of 0x640fbc), dc 0x11eed8
-void CGameTransferDlg::CalcDimensions(const char* cText, font* pFont,
+void CGameTransferDlg::calcDimensions(const char* text, font* currentFont,
                                       int& winX, int& winY,
                                       int& winWidth, int& winHeight)
 {
@@ -3221,7 +3262,7 @@ void CGameTransferDlg::CalcDimensions(const char* cText, font* pFont,
     winWidth = 160;
     winX = 320;
     winY = (600 - winHeight) / 2;
-    smack.Setup(winX + 15, winY + 15, m_sending, 1);
+    m_smack.setup(winX + 15, winY + 15, m_sending, 1);
 }
 
 // E:\gamedcs\remote.cpp:1293
@@ -3234,105 +3275,105 @@ void CChatEdit::CChatEdit(int textWidgetX, int textWidgetY, int textWidgetWidth,
 
 // E:\gamedcs\remote.cpp:1297
 DC_ONLY(0x11cbf4, 0x38)
-void CChatEdit::UpdateScreen()
+void CChatEdit::updateScreen()
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:1303
 DC_ONLY(0x11cc2c, 0xE6)
-int CChatEdit::OnKeyPress(message* msg)
+int CChatEdit::onKeyPress(message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:1331
 DC_ONLY(0x11cd14, 0x50)
-int CChatEdit::OnFunctionKey(message msg, int toWho)
+int CChatEdit::onFunctionKey(message msg, int toWho)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:1345
 DC_ONLY(0x11cd64, 0x4A)
-int CChatEdit::OnEnter(message msg)
+int CChatEdit::onEnter(message msg)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:1359
 DC_ONLY(0x11cdb0, 0x2A)
-int CChatEdit::OnEscape(message msg)
+int CChatEdit::onEscape(message msg)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:1367
 DC_ONLY(0x11cddc, 0x1A)
-unsigned char CChatEdit::IsOpen()
+unsigned char CChatEdit::isOpen()
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:1375
 DC_ONLY(0x11cdf8, 0x4)
-unsigned char CChatEdit::IgnoreKey(message* msg)
+unsigned char CChatEdit::ignoreKey(message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:1384
 DC_ONLY(0x11cdfc, 0x18)
-CNetMsg* GetRemoteData(unsigned char bRemoveFromBuffer, unsigned char* wasCompressed)
+CNetMsg* getRemoteData(unsigned char bRemoveFromBuffer, unsigned char* wasCompressed)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:1390
 DC_ONLY(0x11ce14, 0x54)
-unsigned char InitRemote(eNetGameType iMPType, const char* sUserName)
+unsigned char initRemote(eNetGameType iMPType, const char* sUserName)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:1411
 DC_ONLY(0x11ce68, 0xCC)
-void RemoteCleanup()
+void remoteCleanup()
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:1438
 DC_ONLY(0x11cf34, 0x30)
-int TransmitRemoteDataDPID(CNetMsg* pMsg, unsigned long dpidTo, unsigned char compressMsg, unsigned char guaranteed)
+int transmitRemoteDataDPID(CNetMsg* pMsg, unsigned long dpidTo, unsigned char compressMsg, unsigned char guaranteed)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:1446
 DC_ONLY(0x11cf64, 0x30)
-int TransmitRemoteData(CNetMsg* pMsg, int toWho, unsigned char compressMsg, unsigned char guaranteed)
+int transmitRemoteData(CNetMsg* pMsg, int toWho, unsigned char compressMsg, unsigned char guaranteed)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:1454
 DC_ONLY(0x11cf94, 0x8A)
-void PollRemote()
+void pollRemote()
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:1490
 DC_ONLY(0x11d020, 0x1A6)
-void SendChat(const char* cChat, int toWho)
+void sendChat(const char* cChat, int toWho)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:1529
 DC_ONLY(0x11d1c8, 0x22)
-void ReceiveChat(char* cChat, int fromWho)
+void receiveChat(char* cChat, int fromWho)
 {
     // @stub
 }
@@ -3353,175 +3394,175 @@ void CAnimatedDlg::~CAnimatedDlg()
 
 // E:\gamedcs\remote.cpp:1553
 DC_ONLY(0x11d290, 0x20)
-unsigned char CAnimatedDlg::Setup(const char* cText, font* pFont, const char* sSprite, int seq)
+unsigned char CAnimatedDlg::setup(const char* cText, font* pFont, const char* sSprite, int seq)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:1563
 DC_ONLY(0x11d2b0, 0xE2)
-void CAnimatedDlg::CalcSpriteDimensions(CSprite* pSprite, int* maxWidth, int* maxHeight, int* minY)
+void CAnimatedDlg::calcSpriteDimensions(CSprite* pSprite, int* maxWidth, int* maxHeight, int* minY)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:1606
 DC_ONLY(0x11d394, 0xFC)
-void CAnimatedDlg::CalcDimensions(const char* cText, font* pFont, int* winX, int* winY, int* winWidth, int* winHeight)
+void CAnimatedDlg::calcDimensions(const char* cText, font* pFont, int* winX, int* winY, int* winWidth, int* winHeight)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:1634
 DC_ONLY(0x11d490, 0xC8)
-void CAnimatedDlg::DrawSprite()
+void CAnimatedDlg::drawSprite()
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:1651
 DC_ONLY(0x11d558, 0x12)
-int CAnimatedDlg::handle_message(message* msg)
+int CAnimatedDlg::handleMessage(message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:1658
 DC_ONLY(0x11d56c, 0x70)
-void CAnimatedDlg::TickAnimation()
+void CAnimatedDlg::tickAnimation()
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:1673
 DC_ONLY(0x11d5dc, 0xEC)
-void CAnimatedDlg::DrawWindow(unsigned char update, int iLowID, int iHighIDtrue)
+void CAnimatedDlg::drawWindow(unsigned char update, int iLowID, int iHighIDtrue)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:1829
 DC_ONLY(0x11d6c8, 0x40)
-void WaitForReadyToPlayMsg()
+void waitForReadyToPlayMsg()
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:1841
 DC_ONLY(0x11d708, 0x68)
-unsigned char CreateDPlayObject()
+unsigned char createDPlayObject()
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:1858
 DC_ONLY(0x11d770, 0x17C)
-unsigned char InitConnection(char* IpAddressOrPhoneNbr, _DPCOMPORTADDRESS* comportInfo)
+unsigned char initConnection(char* IpAddressOrPhoneNbr, _DPCOMPORTADDRESS* comportInfo)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:1908
 DC_ONLY(0x11d8ec, 0x12)
-void DestroyMsg(CNetMsg* pNetMsg)
+void destroyMsg(CNetMsg* pNetMsg)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:1916
 DC_ONLY(0x11d900, 0xAC)
-unsigned char TestIfLobbyLaunched()
+unsigned char testIfLobbyLaunched()
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:1960
 DC_ONLY(0x11d9ac, 0x210)
-unsigned char HandleMPlayerLaunch()
+unsigned char handleMPlayerLaunch()
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:2045
 DC_ONLY(0x11dbbc, 0x22C)
-unsigned char LobbyLaunchConnect()
+unsigned char lobbyLaunchConnect()
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:2150
 DC_ONLY(0x11dde8, 0xB4)
-int GetPlayerPos(unsigned long dpid)
+int getPlayerPos(unsigned long dpid)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:2161
 DC_ONLY(0x11de9c, 0x2C)
-int GetPriorPlayer(int gamePos)
+int getPriorPlayer(int gamePos)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:2174
 DC_ONLY(0x11dec8, 0x48)
-unsigned char IsValidHuman(CAutoArray<CDPlayPlayer>* playerArray, unsigned long dpid)
+unsigned char isValidHuman(CAutoArray<CDPlayPlayer>* playerArray, unsigned long dpid)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:2187
 DC_ONLY(0x11df10, 0x10C)
-void UpdateCurrentPlayers()
+void updateCurrentPlayers()
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:2227
 DC_ONLY(0x11e01c, 0xD6)
-void HandlePlayerDrop(unsigned long dpid)
+void handlePlayerDrop(unsigned long dpid)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:2289
 DC_ONLY(0x11e0f4, 0xD8)
-void HandleNewHost()
+void handleNewHost()
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:2317
 DC_ONLY(0x11e1cc, 0x1D0)
-void OnPlayerDropUpdateMsg(unsigned long dpid)
+void onPlayerDropUpdateMsg(unsigned long dpid)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:2375
 DC_ONLY(0x11e39c, 0xF6)
-void HandlePlayerDead(int deadGuy, unsigned char showMsg)
+void handlePlayerDead(int deadGuy, unsigned char showMsg)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:2419
 DC_ONLY(0x11e494, 0x6A)
-void HandlePlayerWon(CNetMsg* pNetMsg)
+void handlePlayerWon(CNetMsg* pNetMsg)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:2441
 DC_ONLY(0x11e500, 0x98)
-void HandlePlayerLost(CNetMsg* pNetMsg)
+void handlePlayerLost(CNetMsg* pNetMsg)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:2458
 DC_ONLY(0x11e598, 0x96)
-void HandleNormalWinMsg(CNetMsg* pNetMsg)
+void handleNormalWinMsg(CNetMsg* pNetMsg)
 {
     // @stub
 }
@@ -3535,28 +3576,28 @@ void CLevelPickWaitDlg::CLevelPickWaitDlg()
 
 // E:\gamedcs\remote.cpp:2485
 DC_ONLY(0x11e6a4, 0x74)
-void CLevelPickWaitDlg::WaitForLevels(int fromWho)
+void CLevelPickWaitDlg::waitForLevels(int fromWho)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:2503
 DC_ONLY(0x11e718, 0x130)
-int CLevelPickWaitDlg::handle_message(message* msg)
+int CLevelPickWaitDlg::handleMessage(message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:2546
 DC_ONLY(0x11e848, 0x4C)
-int CLevelPickWaitDlg::OnPlayerDrop(CNetMsg* pNetMsg, message* msg)
+int CLevelPickWaitDlg::onPlayerDrop(CNetMsg* pNetMsg, message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:2567
 DC_ONLY(0x11e894, 0x4A)
-void CLevelPickWaitDlg::OnHeroLevelUpdate(CNetMsg* pNetMsg)
+void CLevelPickWaitDlg::onHeroLevelUpdate(CNetMsg* pNetMsg)
 {
     // @stub
 }
@@ -3570,21 +3611,21 @@ void CWaitForRemoteBattleDlg::CWaitForRemoteBattleDlg()
 
 // E:\gamedcs\remote.cpp:2600
 DC_ONLY(0x11e948, 0x56)
-void CWaitForRemoteBattleDlg::Wait(int playerPos)
+void CWaitForRemoteBattleDlg::wait(int playerPos)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:2613
 DC_ONLY(0x11e9a0, 0x158)
-int CWaitForRemoteBattleDlg::handle_message(message* msg)
+int CWaitForRemoteBattleDlg::handleMessage(message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:2660
 DC_ONLY(0x11eaf8, 0x46)
-int CWaitForRemoteBattleDlg::OnPlayerDrop(CNetMsg* pNetMsg, message* msg)
+int CWaitForRemoteBattleDlg::onPlayerDrop(CNetMsg* pNetMsg, message* msg)
 {
     // @stub
 }
@@ -3598,21 +3639,21 @@ void CSaveScreen::CSaveScreen(int w, int h)
 
 // E:\gamedcs\remote.cpp:2680
 DC_ONLY(0x11eb9c, 0x2C)
-void CSaveScreen::Save(int x, int y)
+void CSaveScreen::save(int x, int y)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:2689
 DC_ONLY(0x11ebc8, 0x92)
-void CSaveScreen::Restore(unsigned char updateScreen)
+void CSaveScreen::restore(unsigned char updateScreen)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:2701
 DC_ONLY(0x11ec5c, 0x8)
-unsigned char CSaveScreen::IsSaved()
+unsigned char CSaveScreen::isSaved()
 {
     // @stub
 }
@@ -3633,7 +3674,7 @@ void CGameTransferSmack::~CGameTransferSmack()
 
 // E:\gamedcs\remote.cpp:2733
 DC_ONLY(0x11ecbc, 0x1C)
-void CGameTransferSmack::Setup(int x, int y, unsigned char sending, unsigned char drawText)
+void CGameTransferSmack::setup(int x, int y, unsigned char sending, unsigned char drawText)
 {
     // @stub
 }
@@ -3647,14 +3688,14 @@ void CGameTransferSmack::Start()
 
 // E:\gamedcs\remote.cpp:2747
 DC_ONLY(0x11ece4, 0x102)
-void CGameTransferSmack::SetPercentage(float pct)
+void CGameTransferSmack::setPercentage(float pct)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:2784
 DC_ONLY(0x11ede8, 0x4)
-void CGameTransferSmack::DrawCurrentFrame()
+void CGameTransferSmack::drawCurrentFrame()
 {
     // @stub
 }
@@ -3668,14 +3709,14 @@ void CGameTransferSmack::Stop()
 
 // E:\gamedcs\remote.cpp:2799
 DC_ONLY(0x11ee04, 0x38)
-void CGameTransferSmack::SaveScreen()
+void CGameTransferSmack::saveScreen()
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:2807
 DC_ONLY(0x11ee3c, 0x16)
-void CGameTransferSmack::RestoreScreen()
+void CGameTransferSmack::restoreScreen()
 {
     // @stub
 }
@@ -3689,7 +3730,7 @@ void CGameTransferDlg::CGameTransferDlg(unsigned char sending)
 
 // E:\gamedcs\remote.cpp:2821
 DC_ONLY(0x11eed8, 0x5C)
-void CGameTransferDlg::CalcDimensions(const char* cText, font* pFont, int* winX, int* winY, int* winWidth, int* winHeight)
+void CGameTransferDlg::calcDimensions(const char* cText, font* pFont, int* winX, int* winY, int* winWidth, int* winHeight)
 {
     // @stub
 }
@@ -3703,21 +3744,21 @@ void CNetMsgHandler::CNetMsgHandler()
 
 // E:\gamedcs\remote.cpp:2840
 DC_ONLY(0x11ef60, 0x6C)
-CNetMsg* CNetMsgHandler::CheckHandleNet(unsigned char inPopup, unsigned char* msgReceived)
+CNetMsg* CNetMsgHandler::checkHandleNet(unsigned char inPopup, unsigned char* msgReceived)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:2875
 DC_ONLY(0x11efcc, 0x4)
-void CNetMsgHandler::SetAbortPopupMsg(CNetMsg* pNetMsg)
+void CNetMsgHandler::setAbortPopupMsg(CNetMsg* pNetMsg)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:2882
 DC_ONLY(0x11efd0, 0x8E)
-CNetMsg* CNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
+CNetMsg* CNetMsgHandler::handleNetMsg(CNetMsg* pNetMsg)
 {
     // @stub
 }
@@ -3740,7 +3781,7 @@ VA(0x005577f0, 0x11)  // anchor-vtable 0x640f14, dc 0x11ef34
 CNetMsgHandler::CNetMsgHandler()
 {
     m_inPopup = 0;
-    m_pAbortPopupMsg = 0;
+    m_abortPopupMsg = 0;
 }
 
 // Complete's CNetMsgHandler::`scalar deleting destructor', slot 0 of
@@ -3763,27 +3804,28 @@ VA_COMPGEN(0x00557810, 0x45, SCALAR_DELETING_DTOR, CNetMsgHandler)
 // through the singleton with the literal pair (1, 0).
 // E:\gamedcs\remote.cpp:2840
 VA(0x00557860, 0x70)  // anchor-vtable (slot 1 of 0x640f14), dc 0x11ef60
-CNetMsg* CNetMsgHandler::CheckHandleNet(unsigned char inPopup,
+CNetMsg* CNetMsgHandler::checkHandleNet(unsigned char inPopup,
                                         unsigned char* msgReceived)
 {
     if (msgReceived)
         *msgReceived = 0;
     m_inPopup = inPopup;
-    if (m_pAbortPopupMsg) {
+    if (m_abortPopupMsg) {
         if (inPopup) {
             *msgReceived = 1;
             return 0;
         }
-        CNetMsg* pAbortMsg = m_pAbortPopupMsg;
-        m_pAbortPopupMsg = 0;
-        return HandleNetMsg(pAbortMsg);
+        // Before normalization (locals): pAbortMsg, pNetMsg.
+        CNetMsg* abortMsg = m_abortPopupMsg;
+        m_abortPopupMsg = 0;
+        return handleNetMsg(abortMsg);
     }
-    CNetMsg* pNetMsg = pDPlay->GetRemoteData(1, 0);
-    if (pNetMsg == 0)
+    CNetMsg* netMsg = g_dPlay->getRemoteData(1, 0);
+    if (netMsg == 0)
         return 0;
     if (msgReceived)
         *msgReceived = 1;
-    return HandleNetMsg(pNetMsg);
+    return handleNetMsg(netMsg);
 }
 
 // Complete's virtual base destructor unhooks itself from the network
@@ -3804,16 +3846,17 @@ CNetMsg* CNetMsgHandler::CheckHandleNet(unsigned char inPopup,
 VA(0x005578d0, 0x30)  // anchor-vtable: slot 0 chain of 0x640f14; Complete-only
 CNetMsgHandler::~CNetMsgHandler()
 {
-    if (pDPlay && pDPlay->GetNetMsgHandler() == this)
-        pDPlay->SetNetMsgHandler(0);
+    if (g_dPlay && g_dPlay->getNetMsgHandler() == this)
+        g_dPlay->setNetMsgHandler(0);
 }
 
 
 // E:\gamedcs\remote.cpp:2875
+// Before normalization (locals): pNetMsg.
 VA(0x00557910, 0xD)  // anchor-bracket (m_pAbortPopupMsg at 8), dc 0x11efcc
-void CNetMsgHandler::SetAbortPopupMsg(CNetMsg* pNetMsg)
+void CNetMsgHandler::setAbortPopupMsg(CNetMsg* netMsg)
 {
-    m_pAbortPopupMsg = pNetMsg;
+    m_abortPopupMsg = netMsg;
 }
 
 // E:\gamedcs\remote.cpp:2882. Retail keeps HandleNetMsg pure in vtable slot
@@ -3821,51 +3864,52 @@ void CNetMsgHandler::SetAbortPopupMsg(CNetMsg* pNetMsg)
 // The sparse two-case dispatch either defers a host handoff during a popup,
 // expands HandleNewHost, or reports a lost session; every consumed message
 // is then released by the base handler itself.
+// Before normalization (locals): pNetMsg.
 VA(0x00557920, 0x157)  // direct base calls + dc identity/order, dc 0x11efd0
-CNetMsg* CNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
+CNetMsg* CNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
 {
-    switch (pNetMsg->subType) {
+    switch (netMsg->m_subType) {
     case RS_SET_AS_HOST:
         if (m_inPopup) {
-            m_pAbortPopupMsg = pNetMsg;
+            m_abortPopupMsg = netMsg;
             return 0;
         }
-        HandleNewHost();
+        handleNewHost();
         break;
 
     case RS_SESSION_LOST:
-        NormalDialog(gpGeneralText->GetText(329), 1, -1, -1,
+        normalDialog(g_generalText->getText(329), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
-        ShutDown(0);
+        shutDown(0);
         break;
     }
 
-    if (pNetMsg)
-        DestroyMsg(pNetMsg);
+    if (netMsg)
+        destroyMsg(netMsg);
     return 0;
 }
 
 // E:\gamedcs\remote.cpp:2920
 VA(0x00557a80, 0x15)  // anchor-global, dc 0x11f070
-unsigned char CTurnDuration::IsOn()
+unsigned char CTurnDuration::isOn()
 {
     if (m_currDuration == 0)
         return 0;
-    unsigned char on = !gbUnk69774c;
+    unsigned char on = !g_unk69774c;
     return on;
 }
 
 // E:\gamedcs\remote.cpp:2931
 VA(0x00557aa0, 0x4D)  // anchor-global, dc 0x11f090
-unsigned char CTurnDuration::IsExpired()
+unsigned char CTurnDuration::isExpired()
 {
-    if ((!gpCurrentPlayer || gpCurrentPlayer->IsLocalHuman())
+    if ((!g_currentPlayer || g_currentPlayer->isLocalHuman())
             && m_currDuration != 0
-            && !gbUnk69774c
+            && !g_unk69774c
             && m_pauseTime <= 0) {
         unsigned long startTime = m_turnStartTime;
         if (startTime > 0
-                && GameTime::Get() - startTime > m_currDuration)
+                && GameTime::get() - startTime > m_currDuration)
             return 1;
     }
     return 0;
@@ -3901,11 +3945,11 @@ unsigned char CTurnDuration::IsExpired()
 // for the m_lastWarned store and prices the gap with the second.
 // E:\gamedcs\remote.cpp:2950
 VA(0x00557af0, 0x208)  // anchor-global, dc 0x11f108
-void CTurnDuration::CheckForWarning()
+void CTurnDuration::checkForWarning()
 {
     if (m_currDuration == 0)
         return;
-    if (gbUnk69774c)
+    if (g_unk69774c)
         return;
     if (m_nextWarning == 0)
         return;
@@ -3913,16 +3957,16 @@ void CTurnDuration::CheckForWarning()
         return;
     if (m_lastWarned == 0)
         return;
-    if (gpCurrentPlayer == 0)
+    if (g_currentPlayer == 0)
         return;
-    if (!gpCurrentPlayer->IsLocalHuman())
+    if (!g_currentPlayer->isLocalHuman())
         return;
     if (m_pauseTime > 0)
         return;
 
-    unsigned long currTime = GameTime::Get();
+    unsigned long currTime = GameTime::get();
     unsigned long lastWarned = m_lastWarned;
-    if (GameTime::Get() - lastWarned < m_nextWarning)
+    if (GameTime::get() - lastWarned < m_nextWarning)
         return;
 
     long timeLeft = m_turnStartTime - currTime + m_currDuration;
@@ -3934,9 +3978,9 @@ void CTurnDuration::CheckForWarning()
     if (timeLeft > 60000) {
         float minutes = timeLeft / 60000.0f;
         if (minutes >= 0.8 && minutes <= 1.2)
-            TurnDurationMsg(&chatMan, gpGeneralText->GetText(629));
+            turnDurationMsg(&g_chatMan, g_generalText->getText(629));
         else
-            TurnDurationMsg(&chatMan, gpGeneralText->GetText(630), minutes);
+            turnDurationMsg(&g_chatMan, g_generalText->getText(630), minutes);
     } else {
         // A 29-second remainder is announced as the 30-second mark. The
         // bound is spelled as a named local rather than an enumerator on
@@ -3948,9 +3992,9 @@ void CTurnDuration::CheckForWarning()
         if (seconds == roundUpSeconds)
             seconds = 30;
         if (seconds == 1)
-            TurnDurationMsg(&chatMan, gpGeneralText->GetText(627));
+            turnDurationMsg(&g_chatMan, g_generalText->getText(627));
         else
-            TurnDurationMsg(&chatMan, gpGeneralText->GetText(628), seconds);
+            turnDurationMsg(&g_chatMan, g_generalText->getText(628), seconds);
     }
 
     m_lastWarned = currTime;
@@ -3970,29 +4014,29 @@ void CTurnDuration::CheckForWarning()
 
 // E:\gamedcs\remote.cpp:3020
 VA(0x00557d00, 0x55)  // anchor-global, dc 0x11f2fc
-unsigned char CTurnDuration::IsClose(unsigned long howClose)
+unsigned char CTurnDuration::isClose(unsigned long howClose)
 {
-    if (!IsOnInline())
+    if (!isOnInline())
         return 0;
     if (m_turnStartTime == 0)
         return 0;
     if (m_pauseTime != 0)
         return 0;
-    unsigned char close = GameTime::Get() + howClose
+    unsigned char close = GameTime::get() + howClose
                           > m_turnStartTime + m_currDuration;
     return close;
 }
 
 // E:\gamedcs\remote.cpp:3037
 VA(0x00557d60, 0xB)  // anchor-global, dc 0x11f39c
-void CTurnDuration::Clear()
+void CTurnDuration::clear()
 {
     m_nextWarning = m_lastWarned = m_turnStartTime = 0;
 }
 
 // E:\gamedcs\remote.cpp:3044
 VA(0x00557d70, 0x14)  // anchor-global, dc 0x11f3a8
-void CTurnDuration::SetDuration(unsigned long ms)
+void CTurnDuration::setDuration(unsigned long ms)
 {
     m_turnStartTime = 0;
     m_currDuration = ms;
@@ -4000,10 +4044,10 @@ void CTurnDuration::SetDuration(unsigned long ms)
 
 // E:\gamedcs\remote.cpp:3050
 VA(0x00557d90, 0x3D)  // anchor-global, dc 0x11f3b0
-void CTurnDuration::Start()
+void CTurnDuration::start()
 {
-    if (m_currDuration != 0 && !gbUnk69774c) {
-        m_lastWarned = m_turnStartTime = GameTime::Get();
+    if (m_currDuration != 0 && !g_unk69774c) {
+        m_lastWarned = m_turnStartTime = GameTime::get();
         m_nextWarning = 0;
         if (m_currDuration > 60000)
             m_nextWarning = m_currDuration / 4;
@@ -4025,19 +4069,19 @@ void CTurnDuration::AddTime(unsigned long howMuch)
 
 // E:\gamedcs\remote.cpp:3076
 VA(0x00557dd0, 0x14)  // anchor-global, dc 0x11f3fc
-void CTurnDuration::Pause()
+void CTurnDuration::pause()
 {
     if (m_turnStartTime != 0)
-        m_pauseTime = GameTime::Get();
+        m_pauseTime = GameTime::get();
 }
 
 // E:\gamedcs\remote.cpp:3084
 VA(0x00557df0, 0x31)  // anchor-global, dc 0x11f41c
-void CTurnDuration::Resume()
+void CTurnDuration::resume()
 {
     unsigned long pausedAt = m_pauseTime;
     if (pausedAt != 0 && m_turnStartTime != 0) {
-        unsigned long pausedFor = GameTime::Get() - pausedAt;
+        unsigned long pausedFor = GameTime::get() - pausedAt;
         m_pauseTime = 0;
         m_turnStartTime += pausedFor;
         m_lastWarned += pausedFor;
@@ -4053,9 +4097,9 @@ void CTurnDuration::Resume()
 VA(0x00557e30, 0x7A)  // anchor-vtable 0x640f04, dc 0x11f448
 CNetMsgHandlerPause::CNetMsgHandlerPause()
 {
-    if (pDPlay) {
-        m_pNetMsgHandlerSave = pDPlay->GetNetMsgHandler();
-        pDPlay->SetNetMsgHandler(this);
+    if (g_dPlay) {
+        m_netMsgHandlerSave = g_dPlay->getNetMsgHandler();
+        g_dPlay->setNetMsgHandler(this);
     }
 }
 
@@ -4106,8 +4150,8 @@ VA_COMPGEN(0x00558500, 0x142, DEQUE_BUYBACK, CNetMsg)
 VA(0x00557ee0, 0x91)  // anchor-vtable 0x640f04, dc 0x11f498
 CNetMsgHandlerPause::~CNetMsgHandlerPause()
 {
-    if (pDPlay)
-        pDPlay->SetNetMsgHandler(m_pNetMsgHandlerSave);
+    if (g_dPlay)
+        g_dPlay->setNetMsgHandler(m_netMsgHandlerSave);
 }
 
 // E:\gamedcs\remote.cpp:3114, dc 0x11f4d0. The busy-cursor guard: with a
@@ -4121,7 +4165,7 @@ VA(0x00557f80, 0x31)  // anchor-callee(StartMouseThread/SetPointer), dc 0x11f4d0
 CHourGlass::CHourGlass(unsigned char thread)
     : m_thread(thread)
 {
-    Start();
+    start();
 }
 
 // E:\gamedcs\remote.cpp:3120, dc 0x11f4e8. The mirror, and retail TAIL-JUMPS
@@ -4130,7 +4174,7 @@ CHourGlass::CHourGlass(unsigned char thread)
 VA(0x00557fc0, 0x1A)  // anchor-callee(StopMouseThread/SetPointer), dc 0x11f4e8
 CHourGlass::~CHourGlass()
 {
-    Stop();
+    stop();
 }
 
 // E:\gamedcs\remote.cpp:3125..3134. Start and Stop have no standalone
@@ -4146,20 +4190,20 @@ CHourGlass::~CHourGlass()
 // bodies at all. Both halves were wrong: 0x557f80 and 0x557fc0 are those
 // bodies, and each carries the else arm - `SetPointer(1, ADVENTURE_SET)`
 // on the way in, `SetPointer(0, ADVENTURE_SET)` on the way out.
-inline void CHourGlass::Stop()
+inline void CHourGlass::stop()
 {
     if (m_thread)
-        StopMouseThread();
+        stopMouseThread();
     else
-        gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+        g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
 }
 
-inline void CHourGlass::Start()
+inline void CHourGlass::start()
 {
     if (m_thread)
-        StartMouseThread();
+        startMouseThread();
     else
-        gpMouseManager->SetPointer(1, mouseManager::ADVENTURE_SET);
+        g_mouseManager->setPointer(1, mouseManager::ADVENTURE_SET);
 }
 
 // COMDAT pairing: deque<CNetMsg*>'s own destructor, 160 B against
@@ -4186,7 +4230,7 @@ std::deque<CNetMsg*>::~deque()
 #if 0  // @carcass: claim-only - the definition lives in array.h
 
 VA(0x00558410, 0x7C)  // COMDAT pairing (ICF-folded CAutoArray<T>::Add)
-unsigned char CAutoArray<CDPlayPlayer>::Add(CDPlayPlayer* element)
+unsigned char CAutoArray<CDPlayPlayer>::add(CDPlayPlayer* element)
 {
     // @stub
 }
@@ -4252,7 +4296,7 @@ void CChatMsg::CChatMsg(const char* sMsg)
 
 // E:\gamedcs\netmsg.h:411
 DC_ONLY(0x11f690, 0x18)
-unsigned long CChatMsg::GetSize()
+unsigned long CChatMsg::getSize()
 {
     // @stub
 }
@@ -4308,7 +4352,7 @@ void CSessionLostMsg::CSessionLostMsg()
 
 // E:\gamedcs\dxplay.h:211
 DC_ONLY(0x11f7ac, 0x8)
-unsigned long CDPlayPlayer::GetId()
+unsigned long CDPlayPlayer::getId()
 {
     // @stub
 }
@@ -4329,21 +4373,21 @@ void CChatManager::CChatStr::CChatStr()
 
 // E:\gamedcs\remote.h:632
 DC_ONLY(0x11f7e0, 0x2C)
-void CNetMsgHandler::Copy(CNetMsgHandler* pOtherNetMsgHandler)
+void CNetMsgHandler::copy(CNetMsgHandler* pOtherNetMsgHandler)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.h:658
 DC_ONLY(0x11f80c, 0x4)
-CNetMsg* CNetMsgHandlerPause::CheckHandleNet(unsigned char inPopup, unsigned char* msgReceived)
+CNetMsg* CNetMsgHandlerPause::checkHandleNet(unsigned char inPopup, unsigned char* msgReceived)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.h:659
 DC_ONLY(0x11f810, 0x4)
-CNetMsg* CNetMsgHandlerPause::HandleNetMsg(CNetMsg* pNetMsg)
+CNetMsg* CNetMsgHandlerPause::handleNetMsg(CNetMsg* pNetMsg)
 {
     // @stub
 }
@@ -4378,28 +4422,28 @@ void CWaitForReadyPlayersDlg::CWaitForReadyPlayersDlg()
 
 // E:\gamedcs\remote.cpp:1718
 DC_ONLY(0x11f928, 0xC8)
-void CWaitForReadyPlayersDlg::Wait()
+void CWaitForReadyPlayersDlg::wait()
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:1738
 DC_ONLY(0x11f9f0, 0x200)
-int CWaitForReadyPlayersDlg::handle_message(message* msg)
+int CWaitForReadyPlayersDlg::handleMessage(message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:1798
 DC_ONLY(0x11fbf0, 0x4C)
-unsigned char CWaitForReadyPlayersDlg::AllPlayersReady()
+unsigned char CWaitForReadyPlayersDlg::allPlayersReady()
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:1813
 DC_ONLY(0x11fc3c, 0x70)
-int CWaitForReadyPlayersDlg::OnPlayerDrop(CNetMsg* pNetMsg, message* msg)
+int CWaitForReadyPlayersDlg::onPlayerDrop(CNetMsg* pNetMsg, message* msg)
 {
     // @stub
 }
@@ -4539,21 +4583,21 @@ void CAutoArray<CDPlayPlayer>::~CAutoArray<CDPlayPlayer>()
 
 // E:\gamedcs\array.h:73
 DC_ONLY(0x11ff9c, 0x68)
-unsigned char CAutoArray<CDPlayPlayer>::Add(CDPlayPlayer* element)
+unsigned char CAutoArray<CDPlayPlayer>::add(CDPlayPlayer* element)
 {
     // @stub
 }
 
 // E:\gamedcs\array.h:95
 DC_ONLY(0x120004, 0x14)
-CDPlayPlayer* CAutoArray<CDPlayPlayer>::Get(unsigned long elementNbr)
+CDPlayPlayer* CAutoArray<CDPlayPlayer>::get(unsigned long elementNbr)
 {
     // @stub
 }
 
 // E:\gamedcs\array.h:103
 DC_ONLY(0x120018, 0x16)
-unsigned char CAutoArray<CDPlayPlayer>::Put(unsigned long elementNbr, CDPlayPlayer* element)
+unsigned char CAutoArray<CDPlayPlayer>::put(unsigned long elementNbr, CDPlayPlayer* element)
 {
     // @stub
 }
@@ -4567,14 +4611,14 @@ unsigned char CAutoArray<CDPlayPlayer>::Delete(unsigned long elementNbr)
 
 // E:\gamedcs\array.h:127
 DC_ONLY(0x12006c, 0x6E)
-unsigned char CAutoArray<CDPlayPlayer>::Insert(unsigned long nextElementNbr, CDPlayPlayer* element)
+unsigned char CAutoArray<CDPlayPlayer>::insert(unsigned long nextElementNbr, CDPlayPlayer* element)
 {
     // @stub
 }
 
 // E:\gamedcs\array.h:144
 DC_ONLY(0x1200dc, 0x4)
-unsigned long CAutoArray<CDPlayPlayer>::GetCount()
+unsigned long CAutoArray<CDPlayPlayer>::getCount()
 {
     // @stub
 }

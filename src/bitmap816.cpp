@@ -41,12 +41,12 @@ VA(0x0044f800, 0xCA)  // order-map(DC bitmap816.obj, the compiland's first survi
 Bitmap816::Bitmap816(const char* name, int w, int h, unsigned char* data,
                      TPalette16* palette16, int dataSize)
     : resource(name, RESOURCE_TYPE_BITMAP),
-      ImageSize(w * h), Width(w), Height(h), Pitch(w), p16(palette16)
+      m_imageSize(w * h), m_width(w), m_height(h), m_pitch(w), m_p16(palette16)
 {
-    DataSize = dataSize ? dataSize : ImageSize;
-    map = new unsigned char[DataSize];
-    if (map)
-        memcpy(map, data, DataSize);
+    m_dataSize = dataSize ? dataSize : m_imageSize;
+    m_map = new unsigned char[m_dataSize];
+    if (m_map)
+        memcpy(m_map, data, m_dataSize);
 }
 
 // E:\gamedcs\bitmap816.cpp:133. The load-from-disk constructor: an empty
@@ -58,7 +58,7 @@ Bitmap816::Bitmap816(const char* name, const char* path,
                      int rbits, int rshift, int gbits, int gshift,
                      int bbits, int bshift)
     : resource(name, RESOURCE_TYPE_BITMAP),
-      DataSize(0), ImageSize(0), Width(0), Height(0), Pitch(0), map(0)
+      m_dataSize(0), m_imageSize(0), m_width(0), m_height(0), m_pitch(0), m_map(0)
 {
     // 264, not MAX_PATH: retail's frame is 0x10c with the `this` copy
     // taking four of it and the buffer starting at [ebp-0x118].
@@ -73,8 +73,8 @@ Bitmap816::Bitmap816(const char* name, const char* path,
 VA(0x0044f9d0, 0x70)  // anchor-global, dc 0x53ba4
 Bitmap816::~Bitmap816()
 {
-    if (map)
-        delete[] map;
+    if (m_map)
+        delete[] m_map;
 }
 // The initial EH state (retail 1, ours was 2) was a CLEANUP-COUNT fact, not
 // a spelling. Retail's unwind map for this body has exactly two entries and
@@ -121,14 +121,14 @@ void Bitmap816::zBufferDraw(int sx, int sy, int sw, int sh, unsigned short* dst,
 
 // E:\gamedcs\bitmap816.cpp:400
 DC_ONLY(0x540a8, 0x108)
-void Bitmap816::Draw(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char tblit)
+void Bitmap816::draw(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char tblit)
 {
     // @stub
 }
 
 // E:\gamedcs\bitmap816.cpp:494
 DC_ONLY(0x541b0, 0x7A)
-void Bitmap816::Draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx, int dy, unsigned char tblit)
+void Bitmap816::draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx, int dy, unsigned char tblit)
 {
     // @stub
 }
@@ -156,32 +156,32 @@ int Bitmap816::importPCXFile(const char* filename, int rbits, int rshift,
     if (error)
         return 1;
 
-    Width = pdat.width;
-    Height = pdat.length;
-    Pitch = Width;
-    ImageSize = Width * Height;
-    DataSize = ImageSize;
-    map = new unsigned char[ImageSize];
-    if (!map)
+    m_width = pdat.m_width;
+    m_height = pdat.m_length;
+    m_pitch = m_width;
+    m_imageSize = m_width * m_height;
+    m_dataSize = m_imageSize;
+    m_map = new unsigned char[m_imageSize];
+    if (!m_map)
         return 2;
 
-    allocimage(&pcxfile, pdat.width, pdat.length,
-               pdat.BPPixel * pdat.Nplanes);
+    allocimage(&pcxfile, pdat.m_width, pdat.m_length,
+               pdat.m_bpPixel * pdat.m_nplanes);
     loadpcx(filename, &pcxfile);
     flipimage(&pcxfile, &pcxfile);
 
-    for (int y = 0; y < Height; ++y) {
-        memcpy(map + y * Pitch,
-               pcxfile.ibuff + y * pcxfile.buffwidth,
-               Width);
+    for (int y = 0; y < m_height; ++y) {
+        memcpy(m_map + y * m_pitch,
+               pcxfile.m_ibuff + y * pcxfile.m_buffwidth,
+               m_width);
     }
 
     for (int i = 0; i < 256; ++i) {
-        p16.data[i] =
+        m_p16.m_data[i] =
             static_cast<unsigned short>(
-                ((pcxfile.palette[i].rgbRed >> (8 - rbits)) << rshift) |
-                ((pcxfile.palette[i].rgbGreen >> (8 - gbits)) << gshift) |
-                ((pcxfile.palette[i].rgbBlue >> (8 - bbits)) << bshift));
+                ((pcxfile.m_palette[i].m_rgbRed >> (8 - rbits)) << rshift) |
+                ((pcxfile.m_palette[i].m_rgbGreen >> (8 - gbits)) << gshift) |
+                ((pcxfile.m_palette[i].m_rgbBlue >> (8 - bbits)) << bshift));
     }
 
     freeimage(&pcxfile);
@@ -212,7 +212,7 @@ void Bitmap816::zBufferDraw(int sx, int sy, int sw, int sh,
         sh = dh - dy;
 
     if (sw > 0 && sh > 0) {
-        unsigned char* src = map + sy * Pitch + sx;
+        unsigned char* src = m_map + sy * m_pitch + sx;
         dst = static_cast<unsigned short*>(static_cast<void*>(
             static_cast<unsigned char*>(static_cast<void*>(dst))
             + dy * dpitch + dx * 2));
@@ -228,14 +228,14 @@ void Bitmap816::zBufferDraw(int sx, int sy, int sw, int sh,
             dst = static_cast<unsigned short*>(static_cast<void*>(
                 static_cast<unsigned char*>(static_cast<void*>(dst))
                 + dpitch));
-            src += Pitch;
+            src += m_pitch;
         }
     }
 }
 
 // E:\gamedcs\bitmap816.cpp:400
 VA(0x0044fc70, 0x136)  // exact, source order; dc 0x540a8
-void Bitmap816::Draw(int sx, int sy, int sw, int sh, unsigned short* dst,
+void Bitmap816::draw(int sx, int sy, int sw, int sh, unsigned short* dst,
                      int dx, int dy, int dw, int dh, int dpitch,
                      bool tblit) const
 {
@@ -255,7 +255,7 @@ void Bitmap816::Draw(int sx, int sy, int sw, int sh, unsigned short* dst,
         sh = dh - dy;
 
     if (sw > 0 && sh > 0) {
-        unsigned char* src = map + sy * Pitch + sx;
+        unsigned char* src = m_map + sy * m_pitch + sx;
         dst = static_cast<unsigned short*>(static_cast<void*>(
             static_cast<unsigned char*>(static_cast<void*>(dst))
             + dy * dpitch + dx * 2));
@@ -266,25 +266,25 @@ void Bitmap816::Draw(int sx, int sy, int sw, int sh, unsigned short* dst,
                 for (int x = 0; x < sw; ++x) {
                     unsigned char pixel = *in++;
                     if (pixel)
-                        *out = p16.data[pixel];
+                        *out = m_p16.m_data[pixel];
                     ++out;
                 }
                 dst = static_cast<unsigned short*>(static_cast<void*>(
                     static_cast<unsigned char*>(static_cast<void*>(dst))
                     + dpitch));
-                src += Pitch;
+                src += m_pitch;
             }
         } else {
             for (int y = 0; y < sh; ++y) {
                 unsigned short* out = dst;
                 unsigned char* in = src;
                 for (int x = 0; x < sw; ++x) {
-                    *out++ = p16.data[*in++];
+                    *out++ = m_p16.m_data[*in++];
                 }
                 dst = static_cast<unsigned short*>(static_cast<void*>(
                     static_cast<unsigned char*>(static_cast<void*>(dst))
                     + dpitch));
-                src += Pitch;
+                src += m_pitch;
             }
         }
     }
@@ -293,11 +293,11 @@ void Bitmap816::Draw(int sx, int sy, int sw, int sh, unsigned short* dst,
 // The const high-level blitter expands Bitmap16Bit's retail-proven layout
 // into the eleven-argument pixel primitive below it in the same compiland.
 VA(0x0044fdb0, 0x3B)  // hd-crossbuild; dc 0x541b0
-void Bitmap816::Draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst,
+void Bitmap816::draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst,
                      int dx, int dy, bool tblit) const
 {
-    Draw(sx, sy, sw, sh, dst->map, dx, dy,
-         dst->Width, dst->Height, dst->Pitch, tblit);
+    draw(sx, sy, sw, sh, dst->m_map, dx, dy,
+         dst->m_width, dst->m_height, dst->m_pitch, tblit);
 }
 
 // Retail vtable 0x63ba14 slot 3. The screen z-buffer wrapper supplies the
@@ -313,29 +313,29 @@ void Bitmap816::zBufferDraw(int sx, int sy, int sw, int sh,
 // Retail vtable 0x63ba14 slot 2. Complete adds this resource virtual;
 // DC Bitmap816 type 0x105e / fields 0x244e has no GetSize member.
 VA(0x0044fe30, 0x09)
-unsigned int Bitmap816::GetSize() const
+unsigned int Bitmap816::getSize() const
 {
-    return DataSize + sizeof(*this);
+    return m_dataSize + sizeof(*this);
 }
 
 // E:\gamedcs\bitmap816.cpp:506
 VA(0x0044fe40, 0x18)  // source order + exact 0x200-byte p16 payload copy
-void Bitmap816::SetPalette(const unsigned short* pal)
+void Bitmap816::setPalette(const unsigned short* pal)
 {
-    memcpy(p16.data, pal, sizeof(p16.data));
+    memcpy(m_p16.m_data, pal, sizeof(m_p16.m_data));
 }
 
 // E:\gamedcs\bitmap816.cpp:511
 VA(0x0044fe60, 0x16)  // source order + TPalette24::operator= call, dc 0x54294
-void Bitmap816::SetPalette(TPalette24* pal24)
+void Bitmap816::setPalette(TPalette24* pal24)
 {
-    p24 = *pal24;
+    m_p24 = *pal24;
 }
 
 // E:\gamedcs\bitmap816.cpp:516
 VA(0x0044fe80, 0x40)  // anchor-global, dc 0x5429c
-void Bitmap816::ResetPalette()
+void Bitmap816::resetPalette()
 {
-    TPalette16 converted(&p24);
-    p16.colors = converted.colors;
+    TPalette16 converted(&m_p24);
+    m_p16.m_colors = converted.m_colors;
 }

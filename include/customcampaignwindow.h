@@ -4,6 +4,7 @@
 
 #include "customcampaign.h"
 #include "campaignbrief.h"
+#include "campaignmusic.h"
 #include "window.h"
 
 class slider;
@@ -25,30 +26,30 @@ public:
         CAMPAIGN_LIST_ROWS = 18
     };
 
-    textWidget* nameWidgets[CAMPAIGN_LIST_ROWS];   // +0x50
-    textWidget* countWidgets[CAMPAIGN_LIST_ROWS];  // +0x98
-    textWidget* selectedName;         // +0xe0
-    type_text_scroller* description;  // +0xe4
-    slider* campaignSlider;           // +0xe8
-    int firstVisible;                 // +0xec
-    int selected;                     // +0xf0
-    unsigned long lastClickTime;      // +0xf4
+    textWidget* m_nameWidgets[CAMPAIGN_LIST_ROWS];   // +0x50
+    textWidget* m_countWidgets[CAMPAIGN_LIST_ROWS];  // +0x98
+    textWidget* m_selectedName;         // +0xe0
+    type_text_scroller* m_description;  // +0xe4
+    slider* m_campaignSlider;           // +0xe8
+    int m_firstVisible;                 // +0xec
+    int m_selected;                     // +0xf0
+    unsigned long m_lastClickTime;      // +0xf4
     // LoadCampaignList binds insert's const T& straight to its
     // CampaignHeaderStruct* local (address-taken, memory-homed), which a
     // void* element would have copied through a temporary first.
-    std::vector<TCampaignBrief::CampaignHeaderStruct*> campaignHeaders;  // +0xf8
+    std::vector<TCampaignBrief::CampaignHeaderStruct*> m_campaignHeaders;  // +0xf8
 
     TCustomCampaignWindow();
     virtual ~TCustomCampaignWindow();
     // Slot 12 of vtable 0x63d6fc (retail 0x4835c0): the one override the
     // window adds over CHeroWindowEx; a row click selects, a second click
     // inside 400 ms accepts.
-    virtual int OnWidgetDeselect(int id, unsigned char* bExitFlag);
-    void LoadCampaignList();
-    void UpdateList();
+    virtual int onWidgetDeselect(int id, unsigned char* exitFlag);
+    void loadCampaignList();
+    void updateList();
     // Retail 0x483670 (name provisional): hands the selected header's
     // file name to gpGame->campaign.select_campaign(20, ...).
-    bool AcceptSelection();
+    bool acceptSelection();
 };
 SIZE(TCustomCampaignWindow, 0x108);
 

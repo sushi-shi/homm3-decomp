@@ -24,9 +24,9 @@ class paletteHiColor;
 class TPalette24;
 class sample;
 
-void SetPlayerPaletteColors(palette* pal, int whichPlayer);
-void SetPlayerPaletteColors(paletteHiColor* pal, int whichPlayer);
-void SetPlayerPaletteColors(TPalette24* pal, int whichPlayer);
+void setPlayerPaletteColors(palette* pal, int whichPlayer);
+void setPlayerPaletteColors(paletteHiColor* pal, int whichPlayer);
+void setPlayerPaletteColors(TPalette24* pal, int whichPlayer);
 
 
 // The widget base lives in widget.h (owner: widget.obj). Button's
@@ -50,14 +50,22 @@ void SetPlayerPaletteColors(TPalette24* pal, int whichPlayer);
 // No SIZE assert: the clang arm's host STL sizes differ.
 class button : public widget {
 public:
-    CSprite* buttonIcon;
-    int normalFrame;
-    int selectedFrame;
-    int disabled_frame;
-    int field_40;
-    unsigned char endDialog;
-    std::vector<int> hotKeyCodes;
-    std::string Text;
+    // Before normalization: buttonIcon.
+    CSprite* m_buttonIcon;
+    // Before normalization: normalFrame.
+    int m_normalFrame;
+    // Before normalization: selectedFrame.
+    int m_selectedFrame;
+    // Before normalization: disabled_frame.
+    int m_disabledFrame;
+    // Before normalization: field_40; reference member button::highlightedFrame.
+    int m_highlightedFrame;
+    // Before normalization: endDialog.
+    unsigned char m_endDialog;
+    // Before normalization: hotKeyCodes.
+    std::vector<int> m_hotKeyCodes;
+    // Before normalization: Text.
+    std::string m_text;
 
     // homm2 BUTTON.cpp's REPEAT_DELAY_TICKS, verbatim value.
     enum EButtonConstants {
@@ -66,23 +74,29 @@ public:
 
     // Dreamcast ?click_sample@button@@2PAVsample@@A; retail .bss
     // 0x694da4 (defined in button.cpp).
-    static sample* click_sample;
+    // Before normalization: click_sample.
+    static sample* s_clickSample;
 
     button();
     button(int x, int y, int w, int h, int id, const char* image, int normal, int selected, unsigned char end, int hotkey, int style);
-    int Select(message* msg);
-    int DeselectSelected(message* msg);
+    // Before normalization (function): button::Select.
+    int select(message* msg);
+    // Before normalization (function): button::DeselectSelected.
+    int deselectSelected(message* msg);
 
     // Dreamcast homes SetText and set_hotkey in Button.h itself; the
     // wrapper is inlined at its retail call sites. The old 0x404200 mapping
     // was disproven by that body's `ret 0xc`: it is the three-argument
     // vector<int>::insert implementation, not this one-argument member.
-    void SetText(const char* new_text) { Text = new_text; }
+    // Before normalization (function): button::SetText.
+    // Before normalization (locals): new_text.
+    void setText(const char* newText) { m_text = newText; }
     // Dreamcast button.h:99 (dc 0x669f4, 6 B SH4: one store). A free
     // /Ob2 candidate site wherever a caller uses it - see
     // TSingleSelectionWindow::CreateFilterWidgets, whose insert-expansion
     // sequence is reproduced only with this setter in its six loops.
-    void set_disabled_frame(long frame) { disabled_frame = frame; }
+    // Before normalization (function): button::set_disabled_frame.
+    void setDisabledFrame(long frame) { m_disabledFrame = frame; }
     // The pointer local is load-bearing, and every caller's whole
     // register allocation hangs off it. Retail materialises the inlined
     // `this` for the insert BEFORE the const-ref argument temp - `lea
@@ -99,32 +113,42 @@ public:
     // ??0TAdventureOptionsWindow 89.57% -> 95.12%, create_dismiss_widget
     // and create_upgrade_widget 88.11% -> 89.88% in one build.
     VA(0x004e1370, 0x1AF)
-    void set_hotkey(int code)
+    void setHotkey(int code)
     {
         // Dreamcast button.h:105 is a single vector<int>::push_back call.
         // Retail corroborates that body in hero.obj's retained COMDAT and
-        // in the exact SetSleepImage and marketplace-caller expansions.
-        hotKeyCodes.push_back(code);
+        // in SetSleepImage and the marketplace-caller expansions.
+        m_hotKeyCodes.push_back(code);
     }
+    // Dreamcast button.h:120-122: the separate vector<int>::clear wrapper.
+    // TAdvMenu::SetSleepImage retains this call in its source line table.
+    // Before normalization (function): button::clear_hotkeys.
+    void clearHotkeys() { m_hotKeyCodes.clear(); }
+
     // Complete-only, like field_40 itself (the hover/highlight frame,
     // button.cpp:393). Provisional name. Evidence is the /Ob2 budget
     // arithmetic of CreateFilterWidgets: retail's 12-call/7-expansion
     // vector<widget*>::insert sequence needs exactly two free candidate
     // sites per loop iteration, and the loop body has exactly two stores.
-    void set_highlight_frame(long frame) { field_40 = frame; }
+    // Before normalization (function): button::set_highlight_frame.
+    void setHighlightFrame(long frame) { m_highlightedFrame = frame; }
 
-    virtual int Main(message* msg);  // slot 2, retail 0x456190
+    // Before normalization (function): button::Main.
+    virtual int main(message* msg);  // slot 2, retail 0x456190
 
     virtual void zBufferDraw(unsigned short* zBuffer, int id); // slot 3
-    virtual void Draw();  // slot 4, retail 0x456940
+    // Before normalization (function): button::Draw.
+    virtual void draw();  // slot 4, retail 0x456940
 
     virtual ~button();  // retail 0x4560f0
 
     // widget slot 12, overridden at 0x456a10 - the only override of it
     // in the image. Placeholder name inherited from widget.h.
-    virtual void _vslot12(int on);  // slot 12, retail 0x456a10
+    // Before normalization (function): button::_vslot12.
+    virtual void vslot12(int on);  // slot 12, retail 0x456a10
 
-    void SetPlayerPaletteColors(int whichPlayer);
+    // Before normalization (function): button::SetPlayerPaletteColors.
+    void setPlayerPaletteColors(int whichPlayer);
 };
 
 // Dreamcast roster: Font@96, textColor@100 (font::TColor) - retail
@@ -132,12 +156,16 @@ public:
 // [this+0x68]). Total 112.
 class textButton : public button {
 public:
-    font* Font;
-    int textColor;
+    // Before normalization: Font.
+    font* m_font;
+    // Before normalization: textColor.
+    int m_textColor;
 
-    textButton(int x, int y, int w, int h, int id, const char* image, const char* text_, const char* font_name, int normal, int selected, unsigned char end, int hotkey, int style, int new_color);
+    // Before normalization (locals): text_, font_name, new_color.
+    textButton(int x, int y, int w, int h, int id, const char* image, const char* text, const char* fontName, int normal, int selected, unsigned char end, int hotkey, int style, int newColor);
 
-    virtual void Draw();    // slot 4, retail 0x456ca0
+    // Before normalization (function): textButton::Draw.
+    virtual void draw();    // slot 4, retail 0x456ca0
 
     virtual ~textButton();  // retail 0x456bf0
 };
@@ -148,12 +176,14 @@ public:
 class type_func_button : public button {
 public:
     typedef int (*handler_type)(message& msg);
-    handler_type handler;
+    // Before normalization: handler.
+    handler_type m_handler;
 
     type_func_button(long x, long y, long w, long h, long id,
                      const char* image, handler_type newHandler,
                      int normal, int selected);
-    virtual int Main(message* msg);  // slot 2, retail 0x456e50
+    // Before normalization (function): type_func_button::Main.
+    virtual int main(message* msg);  // slot 2, retail 0x456e50
 
     virtual ~type_func_button();  // retail 0x456db0
 };

@@ -15,17 +15,17 @@ class town;
 
 class VictoryConditionStruct {
 public:
-    signed char Type;
-    signed char AllowNormalVictory;
-    signed char AppliesToComputer;
-    char pad_03;
+    signed char m_type;
+    signed char m_allowNormalVictory;
+    signed char m_appliesToComputer;
+    char m_paddingBeforeArtifact;
     // CheckForArtifactTransportWin and AI_get_value_of_artifact both read
     // the full retail dword at +4 as the requested artifact ordinal.
     // Dreamcast CodeView carries the source enum type; value_of_town is the
     // first retail consumer whose register schedule distinguishes the typed
     // member from an int-to-enum bridge. Storage remains the same dword;
     // game.cpp's loaders cross the map-format ordinal into it.
-    TArtifact ArtifactNum;
+    TArtifact m_artifactNum;
     // The Dreamcast field list (dump 0x3e34) orders ArtifactNum,
     // CreatureType, NumCreatures between AppliesToComputer and
     // ResourceType; retail widens the trailing pair to ints.
@@ -38,13 +38,13 @@ public:
     // checker needs the enum type for its armyGroup call; display-only
     // consumers use the same proven representation without pulling the enum
     // through fragile include cycles.
-    TCreatureType CreatureType;
-    int NumCreatures;
-    int ResourceType;
-    int ResourceAmount;
-    int TownX;
-    int TownY;
-    int TownZ;
+    TCreatureType m_creatureType;
+    int m_numCreatures;
+    int m_resourceType;
+    int m_resourceAmount;
+    int m_townX;
+    int m_townY;
+    int m_townZ;
     // CheckForUpgradedTown (0x5f1d40) dispatches both of its switches
     // with `movsx` BYTE reads at +0x24/+0x25 - retail kept the DC pair
     // HallLevel/CastleLevel char-sized where it widened the neighbours.
@@ -52,64 +52,64 @@ public:
     // value_of_hall reads HallLevel + HALL_TOWN_ID as its victory bar,
     // value_of_castle_upgrade indexes bitNumber[CASTLE_FORT_ID +
     // CastleLevel].
-    signed char HallLevel;
-    signed char CastleLevel;
-    char pad_26[2];
+    signed char m_hallLevel;
+    signed char m_castleLevel;
+    char m_paddingBeforeHeroPosition[2];
     // ValidateVictoryLossConditions constructs a type_point from these
     // three dwords at +0x28/+0x2c/+0x30 before resolving HeroID.  They are
     // the retail-widened form of the DC HeroX/HeroY/HeroZ trio.
-    int HeroX;
-    int HeroY;
-    int HeroZ;
-    int HeroID;
+    int m_heroX;
+    int m_heroY;
+    int m_heroZ;
+    int m_heroId;
     // CheckForDefeatedMonsterWin (0x5f2390) packs the words at
     // +0x38/+0x3c and the byte at +0x40 into a type_point - the DC
     // MonsterX/MonsterY/MonsterZ trio, int-widened like the town trio.
-    int MonsterX;
-    int MonsterY;
-    int MonsterZ;
+    int m_monsterX;
+    int m_monsterY;
+    int m_monsterZ;
     // CheckForTimeSurvival (0x5f2810) compares the computed absolute day
     // against the full dword at +0x44.
-    int NumDays;
-    unsigned char GameWon;
-    signed char playerWinner;
-    char pad_4a[2];
+    int m_numDays;
+    unsigned char m_gameWon;
+    signed char m_playerWinner;
+    char m_paddingAfterWinner[2];
 
     VA(0x004bc340, 0xE)  // anchor-caller (SavedGameHeader ctor), dc 0xbccdc
     VictoryConditionStruct()
-      : Type(-1), GameWon(0), playerWinner(-1) {}
+      : m_type(-1), m_gameWon(0), m_playerWinner(-1) {}
 
-    int applies_to_player(long playerId) const;
-    unsigned char CheckForTotalResources();
+    int appliesToPlayer(long playerId) const;
+    unsigned char checkForTotalResources();
     // 0x5f1d40 (dc 0x190038), reconstructed in the owning TU. Kept out
     // of the EVENTS view so events.obj's declarator count is untouched;
     // town.obj joins for BuildBuilding's post-build check (2026-08-20).
-    unsigned char CheckForUpgradedTown();
+    unsigned char checkForUpgradedTown();
     // 0x5f1b10, CheckForTotalResources' twin. advManager::DoEvent
     // (0x4aaaa0) calls the pair back to back on the same
     // `gpGame->mapHeader.victoryCondition`, each followed by its own
     // CheckEndGame(0).
-    unsigned char CheckForTotalCreatures();
+    unsigned char checkForTotalCreatures();
     // 0x5f2390. The Dreamcast decoration
     // `?CheckForDefeatedMonsterWin@VictoryConditionStruct@@QAA_NPBVhero@@
     // Utype_point@@@Z` fixes the whole signature - public, bool, a const
     // hero and a type_point BY VALUE - and retail's `ret 8` agrees.
     // Gated for the same reason as its neighbour above.
-    bool CheckForDefeatedMonsterWin(const hero* thisHero,
-                                    type_point monster_loc);
+    bool checkForDefeatedMonsterWin(const hero* thisHero,
+                                    type_point monsterLoc);
     // 0x5f2860, and the Dreamcast decoration gives it
     // CheckForDefeatedMonsterWin's exact shape - a const hero and a
     // type_point BY VALUE - which retail's `ret 8` corroborates.
     // advManager::TownEvent asks it on both of its capture paths.
-    unsigned char CheckForArtifactTransportWin(const hero* thisHero,
-                                               type_point town_loc);
-    bool CheckForHeroDefeatWin(int winningPlayer, const hero* loser);
-    unsigned char IsGrailTarget(town* thisTown);
-    bool IsTownCaptureTarget(town* thisTown);
-    unsigned char CheckForTownCaptureWin();
-    unsigned char CheckForFlaggedGeneratorWin();
-    unsigned char CheckForFlaggedMineWin();
-    unsigned char CheckForTimeSurvival();
+    unsigned char checkForArtifactTransportWin(const hero* thisHero,
+                                               type_point townLoc);
+    bool checkForHeroDefeatWin(int winningPlayer, const hero* loser);
+    unsigned char isGrailTarget(town* thisTown);
+    bool isTownCaptureTarget(town* thisTown);
+    unsigned char checkForTownCaptureWin();
+    unsigned char checkForFlaggedGeneratorWin();
+    unsigned char checkForFlaggedMineWin();
+    unsigned char checkForTimeSurvival();
     // Retail 0x5f1ef0 (dc 0x190124), reached as
     // `gpGame->mapHeader.victoryCondition.CheckForGrailBuildingWin()`,
     // which is exactly the `lea ecx,[gpGame+0x1f89c]` retail emits:
@@ -118,7 +118,7 @@ public:
     // in the admitted surface and this header's declarator count is
     // load-bearing for every unit that includes it.
 
-    unsigned char CheckForGrailBuildingWin();
+    unsigned char checkForGrailBuildingWin();
     // Retail 0x5f1610 (dc 0x18fdf8), thiscall, no arguments.
     // hero::GiveArtifact asks it as
     // `gpGame->mapHeader.victoryCondition.CheckForArtifactWin()` - the
@@ -127,34 +127,34 @@ public:
     // reason that one is: this header's declarator count is load-bearing
     // for every unit that includes it.
 
-    unsigned char CheckForArtifactWin();
+    unsigned char checkForArtifactWin();
 };
 SIZE(VictoryConditionStruct, 0x4C);
 
 class LossConditionStruct {
 public:
-    signed char Type;
-    char pad_01[3];
-    int TownX;
-    int TownY;
-    int TownZ;
-    int HeroX;
-    int HeroY;
-    int HeroZ;
-    int HeroID;
-    short NumDays;
-    unsigned char GameLost;
-    signed char playerLoser;
+    signed char m_type;
+    char m_paddingBeforeTownPosition[3];
+    int m_townX;
+    int m_townY;
+    int m_townZ;
+    int m_heroX;
+    int m_heroY;
+    int m_heroZ;
+    int m_heroId;
+    short m_numDays;
+    unsigned char m_gameLost;
+    signed char m_playerLoser;
 
     VA(0x0045bac0, 0xE)  // retained retail body; formerly enrolled by CLASS_CTOR
     LossConditionStruct()
-      : Type(-1), GameLost(0), playerLoser(-1) {}
+      : m_type(-1), m_gameLost(0), m_playerLoser(-1) {}
 
-    unsigned char CheckForDefeatedHeroLoss(const hero* loser);
-    unsigned char HeroKilled(const hero* loser);
-    unsigned char CheckForDefeatedTownLoss(int old_owner,
-                                           const town* lost_town);
-    unsigned char CheckForTimeLimitExpired();
+    unsigned char checkForDefeatedHeroLoss(const hero* loser);
+    unsigned char heroKilled(const hero* loser);
+    unsigned char checkForDefeatedTownLoss(int oldOwner,
+                                           const town* lostTown);
+    unsigned char checkForTimeLimitExpired();
 };
 SIZE(LossConditionStruct, 0x24);
 

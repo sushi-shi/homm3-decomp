@@ -168,6 +168,19 @@ def family_name(name: str) -> str:
     return name
 
 
+def procedure_name(name: str) -> str:
+    """Compare ordinary operation spellings across the documented naming pass.
+
+    Containing types and operators keep their identity. Case/underscore changes
+    on an ordinary function do not waive signatures, source owners or order.
+    """
+    family = family_name(name)
+    scope, separator, operation = family.rpartition('::')
+    if operation.startswith(('operator', '~')) or (separator and operation == scope.rsplit('::', 1)[-1]):
+        return family
+    return scope + separator + operation.replace('_', '').lower()
+
+
 def type_identity(name: str) -> str:
     """Ignore elaborated-type syntax, preserving typedefs and qualifiers."""
     return re.sub(r'\s+', '', re.sub(r'\b(?:class|struct|enum|union)\s+', '', name))
@@ -441,7 +454,7 @@ def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
         if not o.declaration_only:
             dc_keys.add(key)
         if key not in dc_only:
-            by_name[family_name(o.name)].append(o)
+            by_name[procedure_name(o.name)].append(o)
     errors = [f'FILTER stale dc_only.tsv entry {key}' for key in dc_only if key not in dc_keys]
     used_win = set()
     matches = []
@@ -450,7 +463,7 @@ def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
     for d in definitions:
         where = f'{d.file}:{d.line} {d.name}'
         key = (d.file, d.name, d.signature)
-        candidates = by_name.get(family_name(d.name), [])
+        candidates = by_name.get(procedure_name(d.name), [])
         explicit_identity = False
         if d.dc_offset:
             bridged = [o for o in origins if o.offset == d.dc_offset

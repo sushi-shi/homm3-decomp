@@ -22,8 +22,9 @@
 // 0x68c838 bounds the array independently.  SetWinText's +0/+2/+4 loads and
 // 8-byte stride prove the layout, and the values below are the pinned retail
 // initializer rather than an inferred enumeration.
+// Before normalization: gWinSetup.
 DATA(0x0068c710)
-static SWinSetup gWinSetup[37] = {
+static SWinSetup g_winSetup[37] = {
     { 0x06, 0x0067, 0 }, { 0x06, 0x0068, 0 },
     { 0x06, 0x0069, 0 }, { 0x06, 0x006a, 0 },
     { 0x06, 0x006b, 0 }, { 0x06, 0x006c, 0 },
@@ -48,24 +49,24 @@ static SWinSetup gWinSetup[37] = {
 // E:\gamedcs\window.cpp:48
 VA(0x005fe9f0, 0x5E)  // anchor-global, dc 0x197138
 heroWindow::heroWindow(int winX, int winY, int winWidth, int winHeight, unsigned winType)
-    : field_48(0)
+    : m_sleepCount(0)
 {
     // Store order is byte-forced (2026-08-08): VC6 hoists the five
     // argument copies above every constant store, so the retail order
     // `[+0xc],[+8],[+4]` needs the link pair written BEFORE priority -
     // yet the -1 must still be the first constant in the body, or the
     // shuttle register flips esi->edx and the whole tail moves (40.18).
-    nextWindow = prevWindow = 0;
-    priority = -1;
-    x = winX;
-    y = winY;
-    width = winWidth;
-    height = winHeight;
-    type = winType;
-    status = 0;
-    headWidget = tailWidget = 0;
-    background = 0;
-    focusId = -1;
+    m_nextWindow = m_prevWindow = 0;
+    m_priority = -1;
+    m_x = winX;
+    m_y = winY;
+    m_width = winWidth;
+    m_height = winHeight;
+    m_type = winType;
+    m_status = 0;
+    m_headWidget = m_tailWidget = 0;
+    m_background = 0;
+    m_focusId = -1;
 }
 
 // E:\gamedcs\window.cpp:68 - heroWindow::`scalar deleting destructor'
@@ -82,8 +83,8 @@ VA_COMPGEN(0x005fea50, 0x21, SCALAR_DELETING_DTOR, heroWindow)
 VA(0x005fea80, 0x60)  // anchor-global, dc 0x1971d0
 heroWindow::~heroWindow()
 {
-    if (background)
-        delete background;
+    if (m_background)
+        delete m_background;
 }
 
 // E:\gamedcs\window.cpp:94
@@ -92,64 +93,64 @@ heroWindow::~heroWindow()
 // the update flag passes to DrawWindow and the current frame is not
 // re-blitted.
 VA(0x005feae0, 0x17A)  // vtable-slot 1 of heroWindow (0x243cc4), dc 0x19721c
-int heroWindow::Open(int newPriority, unsigned char update)
+int heroWindow::open(int newPriority, unsigned char update)
 {
-    if (status & WINDOW_STATE_OPEN)
+    if (m_status & WINDOW_STATE_OPEN)
         return 3;
-    if (type & WINDOW_FLAG_SAVE_BACKGROUND) {
-        if (SaveBackground())
+    if (m_type & WINDOW_FLAG_SAVE_BACKGROUND) {
+        if (saveBackground())
             return 3;
     }
-    priority = newPriority;
-    if (type & WINDOW_FLAG_SHADOWED) {
-        gpWindowManager->screenBitmap->Darken(x + width, y + 9, 7, height - 9);
-        gpWindowManager->screenBitmap->Darken(x + width, y + 8, 8, height - 8);
-        gpWindowManager->screenBitmap->Darken(x + 9, y + height, width - 2, 7);
-        gpWindowManager->screenBitmap->Darken(x + 8, y + height, width, 8);
+    m_priority = newPriority;
+    if (m_type & WINDOW_FLAG_SHADOWED) {
+        g_windowManager->m_screenBitmap->darken(m_x + m_width, m_y + 9, 7, m_height - 9);
+        g_windowManager->m_screenBitmap->darken(m_x + m_width, m_y + 8, 8, m_height - 8);
+        g_windowManager->m_screenBitmap->darken(m_x + 9, m_y + m_height, m_width - 2, 7);
+        g_windowManager->m_screenBitmap->darken(m_x + 8, m_y + m_height, m_width, 8);
     }
-    if (VideoPlaying()) {
-        DrawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-        VideoDrawCurrentFrame();
-        if (update && !(type & WINDOW_FLAG_FIXED_LAYER)) {
-            if (type & WINDOW_FLAG_SHADOWED)
-                gpWindowManager->UpdateScreen(x, y, width + 8, height + 8);
+    if (videoPlaying()) {
+        drawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+        videoDrawCurrentFrame();
+        if (update && !(m_type & WINDOW_FLAG_FIXED_LAYER)) {
+            if (m_type & WINDOW_FLAG_SHADOWED)
+                g_windowManager->updateScreen(m_x, m_y, m_width + 8, m_height + 8);
             else
-                gpWindowManager->UpdateScreen(x, y, width, height);
+                g_windowManager->updateScreen(m_x, m_y, m_width, m_height);
         }
     } else {
-        DrawWindow(update, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+        drawWindow(update, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
     }
-    status = WINDOW_STATE_OPEN;
+    m_status = WINDOW_STATE_OPEN;
     return 0;
 }
 
 // E:\gamedcs\window.cpp:165
 VA(0x005fec60, 0x49)  // vtable-slot 2 of heroWindow (0x243cc4), dc 0x1972e0
-void heroWindow::Close(unsigned char update)
+void heroWindow::close(unsigned char update)
 {
-    if ((type & WINDOW_FLAG_SAVE_BACKGROUND) && (status & WINDOW_STATE_OPEN))
-        RestoreBackground(update);
-    widget* current = tailWidget;
+    if ((m_type & WINDOW_FLAG_SAVE_BACKGROUND) && (m_status & WINDOW_STATE_OPEN))
+        restoreBackground(update);
+    widget* current = m_tailWidget;
     while (current) {
-        widget* prev = current->prevWidget;
-        RemoveWidget(current);
+        widget* prev = current->m_prevWidget;
+        removeWidget(current);
         current = prev;
     }
-    status = 0;
+    m_status = 0;
 }
 
 #if 0  // @carcass
 
 // E:\gamedcs\window.cpp:194
 DC_ONLY(0x19731c, 0x4)
-int heroWindow::handle_message(message* msg)
+int heroWindow::handleMessage(message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\window.cpp:202
 DC_ONLY(0x197320, 0x4)
-void heroWindow::handle_widget_hover()
+void heroWindow::handleWidgetHover()
 {
     // @stub
 }
@@ -161,35 +162,35 @@ void heroWindow::handle_widget_hover()
 // inserts after the stop point. The head-insert arm leaves the old
 // head's prev stale - reproduced faithfully.
 VA(0x005fecb0, 0xA5)  // anchor-global, dc 0x197324
-void heroWindow::AddWidget(widget* newWidget, int newPriority)
+void heroWindow::addWidget(widget* newWidget, int newPriority)
 {
-    widget* current = tailWidget;
+    widget* current = m_tailWidget;
     if (newPriority == -1) {
         if (!current)
             newPriority = 0;
         else
-            newPriority = current->priority + 1;
+            newPriority = current->m_priority + 1;
     }
-    if (newWidget->Open(newPriority, this))
+    if (newWidget->open(newPriority, this))
         return;
-    while (current && current->priority > newPriority)
-        current = current->prevWidget;
+    while (current && current->m_priority > newPriority)
+        current = current->m_prevWidget;
     if (!current) {
-        newWidget->nextWidget = headWidget;
-        newWidget->prevWidget = 0;
-        headWidget = newWidget;
-        if (!tailWidget)
-            tailWidget = newWidget;
-    } else if (!current->nextWidget) {
-        newWidget->prevWidget = tailWidget;
-        newWidget->nextWidget = 0;
-        tailWidget->nextWidget = newWidget;
-        tailWidget = newWidget;
+        newWidget->m_nextWidget = m_headWidget;
+        newWidget->m_prevWidget = 0;
+        m_headWidget = newWidget;
+        if (!m_tailWidget)
+            m_tailWidget = newWidget;
+    } else if (!current->m_nextWidget) {
+        newWidget->m_prevWidget = m_tailWidget;
+        newWidget->m_nextWidget = 0;
+        m_tailWidget->m_nextWidget = newWidget;
+        m_tailWidget = newWidget;
     } else {
-        newWidget->prevWidget = current;
-        newWidget->nextWidget = current->nextWidget;
-        current->nextWidget->prevWidget = newWidget;
-        current->nextWidget = newWidget;
+        newWidget->m_prevWidget = current;
+        newWidget->m_nextWidget = current->m_nextWidget;
+        current->m_nextWidget->m_prevWidget = newWidget;
+        current->m_nextWidget = newWidget;
     }
 }
 
@@ -198,34 +199,34 @@ void heroWindow::AddWidget(widget* newWidget, int newPriority)
 // second phase re-unlinks unconditionally (prev-oriented in h3 where
 // h2 was next-oriented).
 VA(0x005fed60, 0x7A)  // anchor-global, dc 0x1973b4
-void heroWindow::RemoveWidget(widget* killWidget)
+void heroWindow::removeWidget(widget* killWidget)
 {
     if (!killWidget)
         return;
-    killWidget->Close();
-    if (killWidget == headWidget) {
-        widget* next = killWidget->nextWidget;
-        headWidget = next;
+    killWidget->close();
+    if (killWidget == m_headWidget) {
+        widget* next = killWidget->m_nextWidget;
+        m_headWidget = next;
         if (!next)
-            tailWidget = 0;
+            m_tailWidget = 0;
         else
-            next->prevWidget = 0;
-    } else if (killWidget == tailWidget) {
-        widget* prev = killWidget->prevWidget;
-        tailWidget = prev;
-        prev->nextWidget = 0;
+            next->m_prevWidget = 0;
+    } else if (killWidget == m_tailWidget) {
+        widget* prev = killWidget->m_prevWidget;
+        m_tailWidget = prev;
+        prev->m_nextWidget = 0;
     } else {
-        killWidget->prevWidget->nextWidget = killWidget->nextWidget;
-        killWidget->nextWidget->prevWidget = killWidget->prevWidget;
+        killWidget->m_prevWidget->m_nextWidget = killWidget->m_nextWidget;
+        killWidget->m_nextWidget->m_prevWidget = killWidget->m_prevWidget;
     }
-    widget* prev = killWidget->prevWidget;
+    widget* prev = killWidget->m_prevWidget;
     if (!prev) {
-        headWidget = tailWidget = 0;
+        m_headWidget = m_tailWidget = 0;
     } else {
-        widget* next = killWidget->nextWidget;
-        prev->nextWidget = next;
+        widget* next = killWidget->m_nextWidget;
+        prev->m_nextWidget = next;
         if (next)
-            next->prevWidget = prev;
+            next->m_prevWidget = prev;
     }
 }
 
@@ -246,118 +247,119 @@ void heroWindow::RemoveAndDeleteWidget(int inID)
 // still serves the external callers - auto-inlining with
 // unconditional emission (see the profile note in units.toml).
 VA(0x005fede0, 0x5E)  // linkorder bracket; widget Main-slot calls byte-proven, dc 0x197480
-int heroWindow::BroadcastMessage(message* msg)
+int heroWindow::broadcastMessage(message* msg)
 {
     int result = 0;
-    widget* current = tailWidget;
-    if (focusId != -1) {
-        widget* focused = tailWidget;
-        while (focused && focused->id != focusId)
-            focused = focused->prevWidget;
+    widget* current = m_tailWidget;
+    if (m_focusId != -1) {
+        widget* focused = m_tailWidget;
+        while (focused && focused->m_id != m_focusId)
+            focused = focused->m_prevWidget;
         if (focused) {
-            result = focused->Main(msg);
+            result = focused->main(msg);
             if (result)
                 return result;
         }
     }
     while (current) {
-        result = current->Main(msg);
+        result = current->main(msg);
         if (result > 0 && result <= 2)
             return result;
-        current = current->prevWidget;
+        current = current->m_prevWidget;
     }
     return result;
 }
 
 // E:\gamedcs\window.cpp:448
 VA(0x005fee40, 0x8C)  // linkorder bracket; inlined message*-overload, dc 0x197530
-int heroWindow::BroadcastMessage(int id, int codeX, int codeY, int extra)
+int heroWindow::broadcastMessage(int id, int codeX, int codeY, int extra)
 {
     message msg;
-    msg.id = id;
-    msg.codeX = codeX;
-    msg.codeY = codeY;
-    msg.qualifier = 0;
-    msg.mouseX = 0;
-    msg.mouseY = 0;
-    msg.extra = extra;
-    msg.window = 0;
-    return BroadcastMessage(&msg);
+    msg.m_id = id;
+    msg.m_codeX = codeX;
+    msg.m_codeY = codeY;
+    msg.m_qualifier = 0;
+    msg.m_mouseX = 0;
+    msg.m_mouseY = 0;
+    msg.m_extra = extra;
+    msg.m_window = 0;
+    return broadcastMessage(&msg);
 }
 
 // E:\gamedcs\window.cpp:466
 VA(0x005feed0, 0x8E)  // anchor-global, dc 0x197570
-int heroWindow::WidgetSetStatus(int id, int status)
+int heroWindow::widgetSetStatus(int id, int status)
 {
     message msg;
-    msg.codeY = id;
-    msg.qualifier = 0;
-    msg.mouseX = 0;
-    msg.mouseY = 0;
-    msg.extra = status;
-    msg.window = 0;
-    msg.id = MESSAGE_WIDGET;
-    msg.codeX = widget::WIDGET_SET_STATUS;
-    return BroadcastMessage(&msg);
+    msg.m_codeY = id;
+    msg.m_qualifier = 0;
+    msg.m_mouseX = 0;
+    msg.m_mouseY = 0;
+    msg.m_extra = status;
+    msg.m_window = 0;
+    msg.m_id = MESSAGE_WIDGET;
+    msg.m_codeX = widget::WIDGET_SET_STATUS;
+    return broadcastMessage(&msg);
 }
 
 // E:\gamedcs\window.cpp:477
 VA(0x005fef60, 0x8E)  // anchor-global, dc 0x19758c
-int heroWindow::WidgetClearStatus(int id, int status)
+int heroWindow::widgetClearStatus(int id, int status)
 {
     message msg;
-    msg.codeY = id;
-    msg.qualifier = 0;
-    msg.mouseX = 0;
-    msg.mouseY = 0;
-    msg.extra = status;
-    msg.window = 0;
-    msg.id = MESSAGE_WIDGET;
-    msg.codeX = widget::WIDGET_CLEAR_STATUS;
-    return BroadcastMessage(&msg);
+    msg.m_codeY = id;
+    msg.m_qualifier = 0;
+    msg.m_mouseX = 0;
+    msg.m_mouseY = 0;
+    msg.m_extra = status;
+    msg.m_window = 0;
+    msg.m_id = MESSAGE_WIDGET;
+    msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
+    return broadcastMessage(&msg);
 }
 
 // E:\gamedcs\window.cpp:489
 VA(0x005feff0, 0x22)  // anchor-global, dc 0x1975a8
-widget* heroWindow::GetWidget(int id)
+widget* heroWindow::getWidget(int id)
 {
-    widget* current = tailWidget;
+    widget* current = m_tailWidget;
     while (current) {
-        if (current->id == id)
+        if (current->m_id == id)
             return current;
-        current = current->prevWidget;
+        current = current->m_prevWidget;
     }
     return 0;
 }
 
 // E:\gamedcs\window.cpp:516
+// Before normalization (locals): iLowID, iHighID.
 VA(0x005ff020, 0xDE)  // vtable-slot 5 of heroWindow (0x243cc4), dc 0x1975d8
-void heroWindow::DrawWindow(unsigned char update, int iLowID, int iHighID)
+void heroWindow::drawWindow(unsigned char update, int lowID, int highID)
 {
     message msg;
-    msg.codeY = 0;
-    msg.qualifier = 0;
-    msg.mouseX = 0;
-    msg.mouseY = 0;
-    msg.extra = 0;
-    msg.window = 0;
-    msg.id = MESSAGE_WIDGET;
-    msg.codeX = widget::WIDGET_DRAW;
-    widget* current = headWidget;
+    msg.m_codeY = 0;
+    msg.m_qualifier = 0;
+    msg.m_mouseX = 0;
+    msg.m_mouseY = 0;
+    msg.m_extra = 0;
+    msg.m_window = 0;
+    msg.m_id = MESSAGE_WIDGET;
+    msg.m_codeX = widget::WIDGET_DRAW;
+    widget* current = m_headWidget;
     while (current) {
-        PollSound();
-        if (iLowID == WINDOW_ALL_WIDGETS_LOW && iHighID == WINDOW_ALL_WIDGETS_HIGH)
-            current->Main(&msg);
-        else if (iLowID <= current->id && current->id <= iHighID)
-            current->Main(&msg);
-        current = current->nextWidget;
+        pollSound();
+        if (lowID == WINDOW_ALL_WIDGETS_LOW && highID == WINDOW_ALL_WIDGETS_HIGH)
+            current->main(&msg);
+        else if (lowID <= current->m_id && current->m_id <= highID)
+            current->main(&msg);
+        current = current->m_nextWidget;
     }
-    if (update && !(type & WINDOW_FLAG_FIXED_LAYER)) {
-        VideoDrawCurrentFrame();
-        if (type & WINDOW_FLAG_SHADOWED)
-            gpWindowManager->UpdateScreen(x, y, width + 8, height + 8);
+    if (update && !(m_type & WINDOW_FLAG_FIXED_LAYER)) {
+        videoDrawCurrentFrame();
+        if (m_type & WINDOW_FLAG_SHADOWED)
+            g_windowManager->updateScreen(m_x, m_y, m_width + 8, m_height + 8);
         else
-            gpWindowManager->UpdateScreen(x, y, width, height);
+            g_windowManager->updateScreen(m_x, m_y, m_width, m_height);
     }
 }
 
@@ -376,34 +378,34 @@ void heroWindow::DrawWindowX(unsigned char update, int iLowID, int iHighID)
 // Retail runs the grab UNCHECKED after VC6's non-throwing new (a null
 // background would fault inside Grab) - reproduced faithfully.
 VA(0x005ff100, 0xBD)  // anchor-global, dc 0x19776c
-int heroWindow::SaveBackground()
+int heroWindow::saveBackground()
 {
-    if (type & WINDOW_FLAG_SHADOWED)
-        background = new Bitmap16Bit(width + 8, height + 8);
+    if (m_type & WINDOW_FLAG_SHADOWED)
+        m_background = new Bitmap16Bit(m_width + 8, m_height + 8);
     else
-        background = new Bitmap16Bit(width, height);
-    background->Grab(gpWindowManager->screenBitmap->map, x, y,
-                     gpWindowManager->screenBitmap->Width,
-                     gpWindowManager->screenBitmap->Height,
-                     gpWindowManager->screenBitmap->Pitch);
+        m_background = new Bitmap16Bit(m_width, m_height);
+    m_background->grab(g_windowManager->m_screenBitmap->m_map, m_x, m_y,
+                     g_windowManager->m_screenBitmap->m_width,
+                     g_windowManager->m_screenBitmap->m_height,
+                     g_windowManager->m_screenBitmap->m_pitch);
     return 0;
 }
 
 // E:\gamedcs\window.cpp:664
 VA(0x005ff1c0, 0x7E)  // anchor-global, dc 0x1977dc
-void heroWindow::RestoreBackground(unsigned char update)
+void heroWindow::restoreBackground(unsigned char update)
 {
-    if (!background)
+    if (!m_background)
         return;
-    background->Draw(0, 0, background->Width, background->Height,
-                     gpWindowManager->screenBitmap->map, x, y,
-                     gpWindowManager->screenBitmap->Width,
-                     gpWindowManager->screenBitmap->Height,
-                     gpWindowManager->screenBitmap->Pitch, 0);
+    m_background->draw(0, 0, m_background->m_width, m_background->m_height,
+                     g_windowManager->m_screenBitmap->m_map, m_x, m_y,
+                     g_windowManager->m_screenBitmap->m_width,
+                     g_windowManager->m_screenBitmap->m_height,
+                     g_windowManager->m_screenBitmap->m_pitch, 0);
     if (update)
-        gpWindowManager->UpdateScreen(x, y, background->Width, background->Height);
-    delete background;
-    background = 0;
+        g_windowManager->updateScreen(m_x, m_y, m_background->m_width, m_background->m_height);
+    delete m_background;
+    m_background = 0;
 }
 
 #if 0  // @carcass
@@ -495,48 +497,48 @@ void heroWindow::MoveWindow(int deltaX, int deltaY)
 // absent from the DC roster; adjacent-declaration proposals leave 77/81.
 // Thus no evidence-compatible source handle remains.
 VA(0x005ff240, 0x162)  // anchor-global, dc 0x19797c
-void heroWindow::CenterWindow(int centerX, int centerY)
+void heroWindow::centerWindow(int centerX, int centerY)
 {
-    int startX = x;
-    int startY = y;
-    int startW = width;
-    int startH = height;
+    int startX = m_x;
+    int startY = m_y;
+    int startW = m_width;
+    int startH = m_height;
     if (centerX == -1)
-        centerX = (WINDOW_SCREEN_WIDTH - width) / 2;
+        centerX = (WINDOW_SCREEN_WIDTH - m_width) / 2;
     if (centerY == -1)
-        centerY = (WINDOW_SCREEN_HEIGHT - height) / 2;
+        centerY = (WINDOW_SCREEN_HEIGHT - m_height) / 2;
     if (centerX < 0)
         centerX = 0;
     if (centerY < 0)
         centerY = 0;
-    if (width + centerX > WINDOW_SCREEN_WIDTH)
-        centerX = WINDOW_SCREEN_WIDTH - width;
-    if (height + centerY > WINDOW_SCREEN_HEIGHT)
-        centerY = WINDOW_SCREEN_HEIGHT - height;
-    if (!background) {
-        y = centerY;
-        x = centerX;
+    if (m_width + centerX > WINDOW_SCREEN_WIDTH)
+        centerX = WINDOW_SCREEN_WIDTH - m_width;
+    if (m_height + centerY > WINDOW_SCREEN_HEIGHT)
+        centerY = WINDOW_SCREEN_HEIGHT - m_height;
+    if (!m_background) {
+        m_y = centerY;
+        m_x = centerX;
         return;
     }
-    background->Draw(0, 0, background->Width, background->Height,
-                     gpWindowManager->screenBitmap->map, x, y,
-                     gpWindowManager->screenBitmap->Width,
-                     gpWindowManager->screenBitmap->Height,
-                     gpWindowManager->screenBitmap->Pitch, 0);
-    x = centerX;
-    y = centerY;
-    background->Grab(gpWindowManager->screenBitmap->map, x, y,
-                     gpWindowManager->screenBitmap->Width,
-                     gpWindowManager->screenBitmap->Height,
-                     gpWindowManager->screenBitmap->Pitch);
-    DrawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-    startW += abs(x - startX);
-    startH += abs(y - startY);
-    if (x < startX)
-        startX = x;
-    if (y < startY)
-        startY = y;
-    gpWindowManager->UpdateScreen(startX, startY, startW, startH);
+    m_background->draw(0, 0, m_background->m_width, m_background->m_height,
+                     g_windowManager->m_screenBitmap->m_map, m_x, m_y,
+                     g_windowManager->m_screenBitmap->m_width,
+                     g_windowManager->m_screenBitmap->m_height,
+                     g_windowManager->m_screenBitmap->m_pitch, 0);
+    m_x = centerX;
+    m_y = centerY;
+    m_background->grab(g_windowManager->m_screenBitmap->m_map, m_x, m_y,
+                     g_windowManager->m_screenBitmap->m_width,
+                     g_windowManager->m_screenBitmap->m_height,
+                     g_windowManager->m_screenBitmap->m_pitch);
+    drawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+    startW += abs(m_x - startX);
+    startH += abs(m_y - startY);
+    if (m_x < startX)
+        startX = m_x;
+    if (m_y < startY)
+        startY = m_y;
+    g_windowManager->updateScreen(startX, startY, startW, startH);
 }
 
 // E:\gamedcs\window.cpp:855
@@ -545,7 +547,7 @@ int heroWindow::findWidget(int mx, int my) const
 {
     widget* found = findWidgetPtr(mx, my);
     if (found)
-        return found->id;
+        return found->m_id;
     return -1;
 }
 
@@ -555,16 +557,16 @@ int heroWindow::findWidget(int mx, int my) const
 VA(0x005ff3e0, 0x7D)  // anchor-global, dc 0x197aec
 widget* heroWindow::findWidgetPtr(int mx, int my) const
 {
-    mx -= x;
-    my -= y;
-    for (widget* const* it = Widgets.end(); it != Widgets.begin(); --it) {
+    mx -= m_x;
+    my -= m_y;
+    for (widget* const* it = m_widgets.end(); it != m_widgets.begin(); --it) {
         widget* found = it[-1];
-        if (mx >= found->x && my >= found->y
-            && mx < found->x + found->width
-            && my < found->y + found->height
-            && (found->status & widget::WIDGET_ACTIVE)
-            && !(found->status & widget::WIDGET_DIMMED)
-            && !(found->status & widget::WIDGET_DIMMED_NODRAW))
+        if (mx >= found->m_x && my >= found->m_y
+            && mx < found->m_x + found->m_width
+            && my < found->m_y + found->m_height
+            && (found->m_status & widget::WIDGET_ACTIVE)
+            && !(found->m_status & widget::WIDGET_DIMMED)
+            && !(found->m_status & widget::WIDGET_DIMMED_NODRAW))
             return found;
     }
     return 0;
@@ -590,28 +592,28 @@ void heroWindow::EnableAllWidgets(unsigned char enable)
 // address-take requires. DoDialog is thiscall on gpWindowManager with
 // the three stack arguments.
 VA(0x005ff460, 0x21)  // anchor-vtable (slot 6 of 0x243cc4), dc 0x197c08
-int heroWindow::DoModal(unsigned char fadeIn)
+int heroWindow::doModal(unsigned char fadeIn)
 {
-    return gpWindowManager->DoDialog(this, HeroWindowHandler, fadeIn);
+    return g_windowManager->doDialog(this, heroWindowHandler, fadeIn);
 }
 
 // E:\gamedcs\window.cpp:909
 // Confirms the widget roster tail: the old holder gets OnKillFocus
 // ([vptr+0x2c], slot 11), the new one OnSetFocus ([vptr+0x28], slot 10).
 VA(0x005ff490, 0x6C)  // anchor-global, dc 0x197c24
-void heroWindow::SetFocus(int id)
+void heroWindow::setFocus(int id)
 {
-    if (focusId != -1) {
-        widget* current = GetWidget(focusId);
-        focusId = -1;
+    if (m_focusId != -1) {
+        widget* current = getWidget(m_focusId);
+        m_focusId = -1;
         if (current)
-            current->OnKillFocus();
+            current->onKillFocus();
     }
-    focusId = id;
+    m_focusId = id;
     if (id != -1) {
-        widget* current = GetWidget(id);
+        widget* current = getWidget(id);
         if (current)
-            current->OnSetFocus();
+            current->onSetFocus();
     }
 }
 
@@ -628,20 +630,20 @@ void heroWindow::SetFocus(int id)
 // vtable slot 3, which independently corroborates handle_message's
 // slot in the roster in window.h. Defined here so that DoModal's
 // address-take resolves; that claim is what scores the pair.
-int heroWindow::HeroWindowHandler(message& msg)
+int heroWindow::heroWindowHandler(message& msg)
 {
-    return msg.window->handle_message(msg);
+    return msg.m_window->handleMessage(msg);
 }
 
 // E:\gamedcs\window.cpp:942
 VA(0x005ff510, 0x60)  // anchor-global, dc 0x197c8c
-void heroWindow::delete_widgets()
+void heroWindow::deleteWidgets()
 {
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
-    Widgets.erase(Widgets.begin(), Widgets.end());
+    m_widgets.erase(m_widgets.begin(), m_widgets.end());
 }
 
 // E:\gamedcs\window.cpp:949
@@ -654,13 +656,13 @@ void heroWindow::delete_widgets()
 // retail-only sleep pair, exactly where the DC roster puts
 // AddWidgetsToMessageStream (dc 0x197cd4, :949).
 VA(0x005ff570, 0x32)  // linkorder + body, dc 0x197cd4
-void heroWindow::AddWidgetsToMessageStream()
+void heroWindow::addWidgetsToMessageStream()
 {
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
-            AddWidget(*it, -1);
+            addWidget(*it, -1);
         else
-            MemError();
+            memError();
     }
 }
 
@@ -669,14 +671,14 @@ void heroWindow::AddWidgetsToMessageStream()
 // window. First sleep and last wake dispatch the vslot. Placed after
 // delete_widgets to keep the file's VA order = retail link order.
 VA(0x005ff5b0, 0x33)  // anchor-callee, callers byte-proven
-void heroWindow::SleepAllWidgets(unsigned char sleep)
+void heroWindow::sleepAllWidgets(unsigned char sleep)
 {
     if (sleep) {
-        if (field_48++ == 0)
-            _vslot8(1);
+        if (m_sleepCount++ == 0)
+            vslot8(1);
     } else {
-        if (--field_48 == 0)
-            _vslot8(0);
+        if (--m_sleepCount == 0)
+            vslot8(0);
     }
 }
 
@@ -687,9 +689,9 @@ void heroWindow::SleepAllWidgets(unsigned char sleep)
 // widget+0x2c plus the widget slot-12 edge hook, and which /Ob2
 // expands in full here (its only call site in the image).
 VA(0x005ff5f0, 0x4F)  // anchor-vtable (slot 8 of 0x243cc4), retail-only
-void heroWindow::_vslot8(unsigned char on)
+void heroWindow::vslot8(unsigned char on)
 {
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it)
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it)
         (*it)->sleep(on);
 }
 
@@ -702,7 +704,7 @@ CHeroWindowEx::CHeroWindowEx(int winX, int winY, int winWidth, int winHeight,
                              unsigned winType)
     : heroWindow(winX, winY, winWidth, winHeight, winType)
 {
-    rolloverId = -1;
+    m_rolloverId = -1;
 }
 
 // E:\gamedcs\window.cpp:969 - CHeroWindowEx::`scalar deleting
@@ -724,38 +726,38 @@ VA_COMPGEN(0x005ff6b0, 0x21, SCALAR_DELETING_DTOR, CHeroWindowEx)
 // rosters at once: CHeroWindowEx slot 13 (GetRolloverWidget),
 // textWidget slot 13 (SetText) and heroWindow slot 5 (DrawWindow).
 VA(0x005ff6e0, 0xAE)  // anchor-vtable (slot 10 of 0x243ce8), dc 0x197d9c
-unsigned char CHeroWindowEx::ProcessHover(int mouseX, int mouseY)
+unsigned char CHeroWindowEx::processHover(int mouseX, int mouseY)
 {
-    textWidget* rollover = GetRolloverWidget();
+    textWidget* rollover = getRolloverWidget();
     if (!rollover)
         return 0;
     widget* hit = findWidgetPtr(mouseX, mouseY);
     int id = -1;
     if (hit)
-        id = hit->id;
+        id = hit->m_id;
     // The id-unchanged early-out shares the function's own `return 1`
     // tail in retail, so the guard is the NEGATED block form, not
     // `if (id == rolloverId) return 1;` - that spelling duplicates the
     // four-instruction exit and costs 7.7 points (92.33).
-    if (id != rolloverId) {
-        rolloverId = id;
+    if (id != m_rolloverId) {
+        m_rolloverId = id;
         // Retail materialises the SAME literal address twice (`mov ebx,
         // offset` on both arms), so it is one allocation, not two
         // pooled copies - hence the single claim through a local.
-        const char* emptyText = emptyRolloverText;
+        const char* emptyText = g_emptyRolloverText;
         const char* text = emptyText;
         if (hit) {
-            text = hit->RollOver;
+            text = hit->m_rollOver;
             if (!text)
                 text = emptyText;
-            gpMouseManager->SetPointer(1, mouseManager::DEFAULT_SET);
+            g_mouseManager->setPointer(1, mouseManager::DEFAULT_SET);
         } else {
-            gpMouseManager->SetPointer(0, mouseManager::DEFAULT_SET);
+            g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
         }
-        rollover->SetText(text);
-        DrawWindow(0, rollover->id, rollover->id);
-        gpWindowManager->UpdateScreen(rollover->x + x, rollover->y + y,
-                                      rollover->width, rollover->height);
+        rollover->setText(text);
+        drawWindow(0, rollover->m_id, rollover->m_id);
+        g_windowManager->updateScreen(rollover->m_x + m_x, rollover->m_y + m_y,
+                                      rollover->m_width, rollover->m_height);
     }
     return 1;
 }
@@ -768,20 +770,20 @@ unsigned char CHeroWindowEx::ProcessHover(int mouseX, int mouseY)
 // inline `repne scasb` strlen, and the eleven-argument NormalDialog
 // call passes iMBType = 4 in edx with every other slot -1/0.
 VA(0x005ff790, 0x82)  // anchor-vtable (slot 11 of 0x243ce8), dc 0x197e58
-unsigned char CHeroWindowEx::ProcessRightSelect(int id)
+unsigned char CHeroWindowEx::processRightSelect(int id)
 {
-    widget* current = GetWidget(id);
+    widget* current = getWidget(id);
     if (!current)
         return 0;
-    const char* text = current->RightClick;
+    const char* text = current->m_rightClick;
     if (!text) {
-        text = current->RollOver;
+        text = current->m_rollOver;
         if (!text)
             return 0;
     }
     if (strlen(text) == 0)
         return 0;
-    NormalDialog(text, 4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+    normalDialog(text, 4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     return 1;
 }
 
@@ -791,28 +793,29 @@ unsigned char CHeroWindowEx::ProcessRightSelect(int id)
 // order), and the no-match arm returns 0 WITHOUT re-testing the exit
 // flag - retail jumps straight to the shared `xor eax,eax` tail.
 VA(0x005ff820, 0xA5)  // anchor-vtable (slot 9 of 0x243ce8), dc 0x197eb4
-int CHeroWindowEx::WindowHandler(message* msg)
+int CHeroWindowEx::windowHandler(message* msg)
 {
-    unsigned char bExitFlag = 0;
+    // Before normalization (locals): bExitFlag.
+    unsigned char exitFlag = 0;
 
-    if ((msg->qualifier & MESSAGE_MODIFIER_RIGHT)
-        && (msg->codeX == widget::WIDGET_SELECT
-            || msg->codeX == widget::WIDGET_RIGHT_SELECT)) {
-        if (ProcessRightSelect(msg->codeY))
+    if ((msg->m_qualifier & MESSAGE_MODIFIER_RIGHT)
+        && (msg->m_codeX == widget::WIDGET_SELECT
+            || msg->m_codeX == widget::WIDGET_RIGHT_SELECT)) {
+        if (processRightSelect(msg->m_codeY))
             return 1;
-    } else if (msg->id == MESSAGE_MOUSE_MOVE) {
-        if (ProcessHover(msg->mouseX, msg->mouseY))
+    } else if (msg->m_id == MESSAGE_MOUSE_MOVE) {
+        if (processHover(msg->m_mouseX, msg->m_mouseY))
             return 1;
-    } else if (msg->id == MESSAGE_WIDGET
-               && msg->codeX == widget::WIDGET_DESELECT) {
-        OnWidgetDeselect(msg->codeY, &bExitFlag);
+    } else if (msg->m_id == MESSAGE_WIDGET
+               && msg->m_codeX == widget::WIDGET_DESELECT) {
+        onWidgetDeselect(msg->m_codeY, &exitFlag);
     } else {
         return 0;
     }
-    if (bExitFlag) {
-        msg->id = MESSAGE_WIDGET;
-        msg->codeY = widget::WIDGET_END_DIALOG;
-        msg->codeX = widget::WIDGET_END_DIALOG;
+    if (exitFlag) {
+        msg->m_id = MESSAGE_WIDGET;
+        msg->m_codeY = widget::WIDGET_END_DIALOG;
+        msg->m_codeX = widget::WIDGET_END_DIALOG;
         return 2;
     }
     return 0;
@@ -821,14 +824,14 @@ int CHeroWindowEx::WindowHandler(message* msg)
 // Original: CHeroWindowEx::OnWidgetDeselect; window.cpp:1122, dc 0x197f48.
 // Retail folds this ordinary empty virtual body onto 0x559140. The absence
 // of a separate window.obj address does not imply a header source owner.
-int CHeroWindowEx::OnWidgetDeselect(int id, unsigned char* exitFlag)
+int CHeroWindowEx::onWidgetDeselect(int id, unsigned char* exitFlag)
 {
     return 0;
 }
 
 // E:\gamedcs\window.cpp:1128 - vtable 0x243ce8 slot 13.
 VA(0x005ff8d0, 0x3)  // anchor-vtable (slot 13 of 0x243ce8), dc 0x197f4c
-textWidget* CHeroWindowEx::GetRolloverWidget()
+textWidget* CHeroWindowEx::getRolloverWidget()
 {
     return 0;
 }
@@ -837,15 +840,16 @@ textWidget* CHeroWindowEx::GetRolloverWidget()
 // GetWidget's tailWidget/prevWidget walk is /Ob2-inlined into the
 // loop; the row index is (i - start), not i, which is why retail keeps
 // both `start*8` and `i*8` live in edi/esi and subtracts.
+// Before normalization (locals): pHelpText.
 VA(0x005ff8e0, 0x75)  // anchor-global, dc 0x197f50
-void CHeroWindowEx::SetHelpText(THelpText* pHelpText, int start, int stop,
+void CHeroWindowEx::setHelpText(THelpText* helpText, int start, int stop,
                                 unsigned char copyText)
 {
     for (int i = start; i < stop; i++) {
-        widget* current = GetWidget(i);
+        widget* current = getWidget(i);
         if (current)
-            current->set_help_text(pHelpText[i - start].text,
-                                   pHelpText[i - start].rclick, copyText);
+            current->setHelpText(helpText[i - start].m_text,
+                                   helpText[i - start].m_rclick, copyText);
     }
 }
 
@@ -857,9 +861,9 @@ void CHeroWindowEx::SetHelpText(THelpText* pHelpText, int start, int stop,
 // skipped text rows reproduce the DC line/scope order; Complete reduced each
 // group's row count by one (37 destinations versus DC's 44).
 VA(0x005ff960, 0xC3)  // link-order + jktext/table body, dc 0x197fd8
-unsigned char InitializeWinSetupText()
+unsigned char initializeWinSetupText()
 {
-    TTextResource* textResource = ResourceManager::GetText(
+    TTextResource* textResource = ResourceManager::getText(
         DATA_COMPGEN(0x0068c838, winSetupTextName, "jktext.txt"));
     if (!textResource)
         return 0;
@@ -870,37 +874,37 @@ unsigned char InitializeWinSetupText()
 
     ++textLine;
     for (i = 0; i < 9; ++i, ++textLine, ++setup) {
-        gWinSetup[setup].text = textResource->GetText(textLine);
+        g_winSetup[setup].m_text = textResource->getText(textLine);
     }
 
     ++textLine;
     for (i = 0; i < 1; ++i, ++textLine, ++setup) {
-        gWinSetup[setup].text = textResource->GetText(textLine);
+        g_winSetup[setup].m_text = textResource->getText(textLine);
     }
 
     ++textLine;
     for (i = 0; i < 2; ++i, ++textLine, ++setup) {
-        gWinSetup[setup].text = textResource->GetText(textLine);
+        g_winSetup[setup].m_text = textResource->getText(textLine);
     }
 
     ++textLine;
     for (i = 0; i < 20; ++i, ++textLine, ++setup) {
-        gWinSetup[setup].text = textResource->GetText(textLine);
+        g_winSetup[setup].m_text = textResource->getText(textLine);
     }
 
     ++textLine;
     for (i = 0; i < 2; ++i, ++textLine, ++setup) {
-        gWinSetup[setup].text = textResource->GetText(textLine);
+        g_winSetup[setup].m_text = textResource->getText(textLine);
     }
 
     ++textLine;
     for (i = 0; i < 2; ++i, ++textLine, ++setup) {
-        gWinSetup[setup].text = textResource->GetText(textLine);
+        g_winSetup[setup].m_text = textResource->getText(textLine);
     }
 
     ++textLine;
     for (i = 0; i < 1; ++i, ++textLine, ++setup) {
-        gWinSetup[setup].text = textResource->GetText(textLine);
+        g_winSetup[setup].m_text = textResource->getText(textLine);
     }
 
     return 1;
@@ -913,7 +917,7 @@ unsigned char InitializeWinSetupText()
 // heroWindow::BroadcastMessage.  That body and DC's ctor/loop/call dossier
 // jointly exclude the neighbouring winfile methods and compiler funclets.
 VA(0x005ffa30, 0xC1)  // link-order + text-table/BroadcastMessage body, dc 0x198130
-void SetWinText(heroWindow* win, int winId)
+void setWinText(heroWindow* win, int winId)
 {
     // DC names the default-constructor boundary here.  The project still
     // keeps message POD in the canonical header, so spell that constructor's
@@ -921,21 +925,21 @@ void SetWinText(heroWindow* win, int winId)
     // cleanliness-forbidden per-TU header view.  Retail likewise emits eight
     // consecutive stores rather than aggregate-init's `rep stosd`.
     message msg;
-    msg.id = 0;
-    msg.codeX = 0;
-    msg.codeY = 0;
-    msg.qualifier = 0;
-    msg.mouseX = 0;
-    msg.mouseY = 0;
-    msg.extra = 0;
-    msg.window = 0;
+    msg.m_id = 0;
+    msg.m_codeX = 0;
+    msg.m_codeY = 0;
+    msg.m_qualifier = 0;
+    msg.m_mouseX = 0;
+    msg.m_mouseY = 0;
+    msg.m_extra = 0;
+    msg.m_window = 0;
     for (unsigned i = 0; i < 37; ++i) {
-        if (gWinSetup[i].windowId == winId) {
-            msg.id = MESSAGE_WIDGET;
-            msg.codeX = widget::WIDGET_SET_TEXT;
-            msg.codeY = gWinSetup[i].widgetId;
-            msg.extraText = gWinSetup[i].text;
-            win->BroadcastMessage(&msg);
+        if (g_winSetup[i].m_windowId == winId) {
+            msg.m_id = MESSAGE_WIDGET;
+            msg.m_codeX = widget::WIDGET_SET_TEXT;
+            msg.m_codeY = g_winSetup[i].m_widgetId;
+            msg.m_extraText = g_winSetup[i].m_text;
+            win->broadcastMessage(&msg);
         }
     }
 }

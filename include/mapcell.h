@@ -232,93 +232,149 @@ enum TAdventureObjectType {
 // canonical declarations even though only mapcell.obj converts serialized
 // legacy dwords.
 struct LegacyArtifactInfo {
-    signed long price : 4;
-    signed long guard : 8;
-    signed long resource_price : 4;
-    unsigned long guard_qty : 15;
-    unsigned long custom : 1;
+    // Before normalization: price.
+    signed long m_price : 4;
+    // Before normalization: guard.
+    signed long m_guard : 8;
+    // Before normalization: resource_price.
+    signed long m_resourcePrice : 4;
+    // Before normalization: guard_qty.
+    unsigned long m_guardQty : 15;
+    // Before normalization: custom.
+    unsigned long m_custom : 1;
 };
 
 struct CurrentArtifactInfo {
-    signed long price : 4;
-    signed long guard : 9;
-    signed long resource_price : 4;
-    unsigned long guard_qty : 14;
-    unsigned long custom : 1;
+    // Before normalization: price.
+    signed long m_price : 4;
+    // Before normalization: guard.
+    signed long m_guard : 9;
+    // Before normalization: resource_price.
+    signed long m_resourcePrice : 4;
+    // Before normalization: guard_qty.
+    unsigned long m_guardQty : 14;
+    // Before normalization: custom.
+    unsigned long m_custom : 1;
 };
 
 struct LegacySkeletonInfo {
-    unsigned long id : 5;
-    unsigned long unused : 1;
-    unsigned long artifact : 7;
-    unsigned long has_treasure : 1;
-    unsigned long tail : 18;
+    // Before normalization: id.
+    unsigned long m_id : 5;
+    // Before normalization: unused.
+    unsigned long m_unused : 1;
+    // Before normalization: artifact.
+    unsigned long m_artifact : 7;
+    // Before normalization: has_treasure.
+    unsigned long m_hasTreasure : 1;
+    // Before normalization: tail.
+    unsigned long m_tail : 18;
 };
 
 struct LegacyMonsterInfo {
-    unsigned long qty : 12;
-    signed long disposition : 5;
-    unsigned long never_flee : 1;
-    unsigned long dont_grow : 1;
-    unsigned long index : 12;
-    unsigned long custom : 1;
+    // Before normalization: qty.
+    unsigned long m_qty : 12;
+    // Before normalization: disposition.
+    signed long m_disposition : 5;
+    // Before normalization: never_flee.
+    unsigned long m_neverFlee : 1;
+    // Before normalization: dont_grow.
+    unsigned long m_dontGrow : 1;
+    // Before normalization: index.
+    unsigned long m_index : 12;
+    // Before normalization: custom.
+    unsigned long m_custom : 1;
 };
 
 struct LegacyPyramidInfo {
-    unsigned long guarded : 1;
-    unsigned long unused : 3;
-    unsigned long visited_bits : 8;
-    signed long spell : 8;
-    unsigned long tail : 12;
+    // Before normalization: guarded.
+    unsigned long m_guarded : 1;
+    // Before normalization: unused.
+    unsigned long m_unused : 3;
+    // Before normalization: visited_bits.
+    unsigned long m_visitedBits : 8;
+    // Before normalization: spell.
+    signed long m_spell : 8;
+    // Before normalization: tail.
+    unsigned long m_tail : 12;
 };
 
 struct LegacyTreasureInfo {
-    signed long artifact : 8;
-    unsigned long is_artifact : 1;
-    unsigned long gold_amount : 4;
-    unsigned long tail : 19;
+    // Before normalization: artifact.
+    signed long m_artifact : 8;
+    // Before normalization: is_artifact.
+    unsigned long m_isArtifact : 1;
+    // Before normalization: gold_amount.
+    unsigned long m_goldAmount : 4;
+    // Before normalization: tail.
+    unsigned long m_tail : 19;
 };
 
 struct LegacyWagonInfo {
-    unsigned long resource_amount : 5;
-    unsigned long visited_bits : 8;
-    unsigned long full : 1;
-    unsigned long has_artifact : 1;
-    signed long artifact : 8;
-    signed long resource : 4;
-    unsigned long tail : 5;
+    // Before normalization: resource_amount.
+    unsigned long m_resourceAmount : 5;
+    // Before normalization: visited_bits.
+    unsigned long m_visitedBits : 8;
+    // Before normalization: full.
+    unsigned long m_full : 1;
+    // Before normalization: has_artifact.
+    unsigned long m_hasArtifact : 1;
+    // Before normalization: artifact.
+    signed long m_artifact : 8;
+    // Before normalization: resource.
+    signed long m_resource : 4;
+    // Before normalization: tail.
+    unsigned long m_tail : 5;
 };
 
 struct CurrentUpgradeWagonInfo {
-    unsigned long resource_amount : 5;
-    unsigned long visited_bits : 8;
-    unsigned long full : 1;
-    unsigned long has_artifact : 1;
-    signed long artifact : 10;
-    signed long resource : 4;
-    unsigned long tail : 3;
+    // Before normalization: resource_amount.
+    unsigned long m_resourceAmount : 5;
+    // Before normalization: visited_bits.
+    unsigned long m_visitedBits : 8;
+    // Before normalization: full.
+    unsigned long m_full : 1;
+    // Before normalization: has_artifact.
+    unsigned long m_hasArtifact : 1;
+    // Before normalization: artifact.
+    signed long m_artifact : 10;
+    // Before normalization: resource.
+    signed long m_resource : 4;
+    // Before normalization: tail.
+    unsigned long m_tail : 3;
 };
 
 struct LegacyTombInfo {
-    unsigned long full : 1;
-    unsigned long unused : 4;
-    unsigned long visited_bits : 8;
-    signed long artifact : 8;
-    unsigned long tail : 11;
+    // Before normalization: full.
+    unsigned long m_full : 1;
+    // Before normalization: unused.
+    unsigned long m_unused : 4;
+    // Before normalization: visited_bits.
+    unsigned long m_visitedBits : 8;
+    // Before normalization: artifact.
+    signed long m_artifact : 8;
+    // Before normalization: tail.
+    unsigned long m_tail : 11;
 };
 
 struct CurrentVisitedInfo {
-    unsigned long head : 5;
-    unsigned long visited_bits : 8;
-    unsigned long tail : 19;
+    // Before normalization: head.
+    unsigned long m_head : 5;
+    // Before normalization: visited_bits.
+    unsigned long m_visitedBits : 8;
+    // Before normalization: tail.
+    unsigned long m_tail : 19;
 };
 
 struct ShipyardInfo {
     enum { NO_BOAT = 0xff };
-    signed int owner : 8;
-    unsigned int boatX : 8;
-    unsigned int boatY : 8;
-    unsigned int unused : 8;
+    // Before normalization: owner.
+    signed int m_owner : 8;
+    // Before normalization: boatX.
+    unsigned int m_boatX : 8;
+    // Before normalization: boatY.
+    unsigned int m_boatY : 8;
+    // Before normalization: unused.
+    unsigned int m_unused : 8;
 };
 SIZE(ShipyardInfo, 4);
 
@@ -339,13 +395,20 @@ SIZE(ShipyardInfo, 4);
 // include closure - see the cellFlags note inside the class for what an
 // ungated one costs there.
 struct MonsterInfo {
-    unsigned long qty : 12;
-    signed long disposition : 5;
-    unsigned long never_flee : 1;
-    unsigned long dont_grow : 1;
-    unsigned long index : 8;
-    unsigned long unused_27 : 4;
-    unsigned long custom : 1;
+    // Before normalization: qty.
+    unsigned long m_qty : 12;
+    // Before normalization: disposition.
+    signed long m_disposition : 5;
+    // Before normalization: never_flee.
+    unsigned long m_neverFlee : 1;
+    // Before normalization: dont_grow.
+    unsigned long m_dontGrow : 1;
+    // Before normalization: index.
+    unsigned long m_index : 8;
+    // Before normalization: unused_27.
+    unsigned long m_unused27 : 4;
+    // Before normalization: custom.
+    unsigned long m_custom : 1;
 };
 SIZE(MonsterInfo, 4);
 
@@ -357,8 +420,10 @@ SIZE(MonsterInfo, 4);
 // `short` return, not of a sixteen-bit signed bitfield, which would have
 // been `shl / sar`. GATED for MonsterInfo's reason.
 struct CampfireInfo {
-    unsigned long resource : 4;
-    unsigned long size : 28;
+    // Before normalization: resource.
+    unsigned long m_resource : 4;
+    // Before normalization: size.
+    unsigned long m_size : 28;
 };
 SIZE(CampfireInfo, 4);
 
@@ -369,10 +434,14 @@ SIZE(CampfireInfo, 4);
 // (`shr eax,0xb / and eax,0xf`) in units of 500. GATED for MonsterInfo's
 // reason.
 struct TreasureInfo {
-    signed long artifact : 10;
-    unsigned long has_artifact : 1;
-    unsigned long gold : 4;
-    unsigned long tail : 17;
+    // Before normalization: artifact.
+    signed long m_artifact : 10;
+    // Before normalization: has_artifact.
+    unsigned long m_hasArtifact : 1;
+    // Before normalization: gold.
+    unsigned long m_gold : 4;
+    // Before normalization: tail.
+    unsigned long m_tail : 17;
 };
 SIZE(TreasureInfo, 4);
 
@@ -404,11 +473,16 @@ enum ScholarAwards {
 };
 
 struct ScholarInfo {
-    signed long award : 3;
-    signed long primary : 3;
-    signed long secondary : 7;
-    signed long spell : 10;
-    unsigned long tail : 9;
+    // Before normalization: award.
+    signed long m_award : 3;
+    // Before normalization: primary.
+    signed long m_primary : 3;
+    // Before normalization: secondary.
+    signed long m_secondary : 7;
+    // Before normalization: spell.
+    signed long m_spell : 10;
+    // Before normalization: tail.
+    unsigned long m_tail : 9;
 };
 SIZE(ScholarInfo, 4);
 
@@ -421,9 +495,12 @@ SIZE(ScholarInfo, 4);
 // the two objects share a lane, not a record. GATED to the one view that
 // deserializes it, for the reason the ScholarInfo note gives.
 struct ShrineInfo {
-    unsigned long head : 13;
-    signed long spell : 10;
-    unsigned long tail : 9;
+    // Before normalization: head.
+    unsigned long m_head : 13;
+    // Before normalization: spell.
+    signed long m_spell : 10;
+    // Before normalization: tail.
+    unsigned long m_tail : 9;
 };
 SIZE(ShrineInfo, 4);
 
@@ -450,8 +527,8 @@ enum ArtifactPrices {
 // again with `and al,0xe0` after paying - an UNSIGNED five-bit count of
 // 500-gold units.
 struct type_water_wheel_info {
-    unsigned long gold : 5;
-    unsigned long tail : 27;
+    unsigned long m_gold : 5;
+    unsigned long m_tail : 27;
 };
 SIZE(type_water_wheel_info, 4);
 
@@ -460,10 +537,10 @@ SIZE(type_water_wheel_info, 4);
 // amount at bits 13..16 (`shr esi,0xd / and esi,0xf`); the payout
 // clears both with `and eax,0xfffe1ff0` and re-inserts the resource.
 struct type_windmill_info {
-    EGameResource resource : 4;
-    unsigned long unused : 9;
-    unsigned long amount : 4;
-    unsigned long tail : 15;
+    EGameResource m_resource : 4;
+    unsigned long m_unused : 9;
+    unsigned long m_amount : 4;
+    unsigned long m_tail : 15;
 };
 SIZE(type_windmill_info, 4);
 
@@ -474,11 +551,11 @@ SIZE(type_windmill_info, 4);
 // once - `and eax,0xffffc020 / or eax,id` - which is what pins bit 5 as
 // nobody's and puts the tail at 14.
 struct type_lean_to_info {
-    unsigned long id : 5;
-    unsigned long unused : 1;
-    unsigned long amount : 4;
-    unsigned long resource : 4;
-    unsigned long tail : 18;
+    unsigned long m_id : 5;
+    unsigned long m_unused : 1;
+    unsigned long m_amount : 4;
+    unsigned long m_resource : 4;
+    unsigned long m_tail : 18;
 };
 SIZE(type_lean_to_info, 4);
 
@@ -486,10 +563,10 @@ SIZE(type_lean_to_info, 4);
 // "still full" bit at 6 (`shr eax,6 / test al,1`); drinking clears it
 // alone (`and dword ptr [cell], 0xffffffbf`).
 struct type_magic_spring_info {
-    unsigned long id : 5;
-    unsigned long unused : 1;
-    unsigned long full : 1;
-    unsigned long tail : 25;
+    unsigned long m_id : 5;
+    unsigned long m_unused : 1;
+    unsigned long m_full : 1;
+    unsigned long m_tail : 25;
 };
 SIZE(type_magic_spring_info, 4);
 
@@ -498,11 +575,11 @@ SIZE(type_magic_spring_info, 4);
 // one-bit "still full" flag at bit 10 (`shr eax,0xa / test al,1`);
 // emptying it clears that bit alone (`and ah,0xfb`).
 struct type_garden_info {
-    unsigned long id : 5;
-    unsigned long unused : 1;
-    EGameResource resource : 4;
-    unsigned long full : 1;
-    unsigned long tail : 21;
+    unsigned long m_id : 5;
+    unsigned long m_unused : 1;
+    EGameResource m_resource : 4;
+    unsigned long m_full : 1;
+    unsigned long m_tail : 21;
 };
 SIZE(type_garden_info, 4);
 
@@ -512,10 +589,10 @@ SIZE(type_garden_info, 4);
 // alone (`and al,0xfe` over the whole dword), so the two lanes are
 // separate fields rather than one packed value.
 struct type_tomb_info {
-    unsigned long has_artifact : 1;
-    unsigned long unused : 12;
-    signed long artifact : 10;
-    unsigned long tail : 9;
+    unsigned long m_hasArtifact : 1;
+    unsigned long m_unused : 12;
+    signed long m_artifact : 10;
+    unsigned long m_tail : 9;
 };
 SIZE(type_tomb_info, 4);
 
@@ -524,9 +601,9 @@ SIZE(type_tomb_info, 4);
 // -1 - the all-ones encoding this header already names
 // WitchHutNoSkillMask (0x000fe000), i.e. exactly these seven bits.
 struct type_witch_hut_info {
-    unsigned long unused : 13;
-    signed long skill : 7;
-    unsigned long tail : 12;
+    unsigned long m_unused : 13;
+    signed long m_skill : 7;
+    unsigned long m_tail : 12;
 };
 SIZE(type_witch_hut_info, 4);
 
@@ -536,9 +613,9 @@ SIZE(type_witch_hut_info, 4);
 // bitfield at bit 13, and the range check that guards the jump table is
 // `lea eax,[luck+1] / cmp eax,4 / ja`, i.e. a dense -1..3 domain.
 struct type_fountain_info {
-    unsigned long unused : 13;
-    signed long luck : 4;
-    unsigned long tail : 15;
+    unsigned long m_unused : 13;
+    signed long m_luck : 4;
+    unsigned long m_tail : 15;
 };
 SIZE(type_fountain_info, 4);
 
@@ -547,9 +624,9 @@ SIZE(type_fountain_info, 4);
 // narrows the AND to one byte (`mov ecx,[cell] / shr ecx,5 / test cl,al`),
 // which is only legal because the field is exactly eight bits wide.
 struct type_cell_visited_info {
-    unsigned long unused : 5;
-    unsigned long visited : 8;
-    unsigned long tail : 19;
+    unsigned long m_unused : 5;
+    unsigned long m_visited : 8;
+    unsigned long m_tail : 19;
 };
 SIZE(type_cell_visited_info, 4);
 
@@ -557,10 +634,10 @@ SIZE(type_cell_visited_info, 4);
 // bits 13..20. Retail's out-of-line set_pyramid merges the two bitfield
 // assignments into one dword read-modify-write.
 struct type_pyramid_info {
-    unsigned long guarded : 1;
-    unsigned long unused : 12;
-    signed long spell : 8;
-    unsigned long tail : 11;
+    unsigned long m_guarded : 1;
+    unsigned long m_unused : 12;
+    signed long m_spell : 8;
+    unsigned long m_tail : 11;
 };
 SIZE(type_pyramid_info, 4);
 
@@ -598,11 +675,11 @@ SIZE(WagonInfo, 4);
 // that spares bit 5 while clearing the id lane and bit 16, and an OR
 // rather than a masked insert because the artifact is set to -1.
 struct type_skeleton_info {
-    unsigned long id : 5;
-    unsigned long unused : 1;
-    signed long artifact : 10;
-    unsigned long has_treasure : 1;
-    unsigned long tail : 15;
+    unsigned long m_id : 5;
+    unsigned long m_unused : 1;
+    signed long m_artifact : 10;
+    unsigned long m_hasTreasure : 1;
+    unsigned long m_tail : 15;
 };
 SIZE(type_skeleton_info, 4);
 
@@ -612,11 +689,11 @@ SIZE(type_skeleton_info, 4);
 // resulting retail positions directly: signed price 0..3, signed guard
 // 4..12, signed resource 13..16, a 14-bit guard count, and custom at bit 31.
 struct MapArtifactInfo {
-    ArtifactPrices price : 4;
-    TCreatureType guard : 9;
-    EGameResource resource_price : 4;
-    unsigned long guard_qty : 14;
-    unsigned long custom : 1;
+    ArtifactPrices m_price : 4;
+    TCreatureType m_guard : 9;
+    EGameResource m_resourcePrice : 4;
+    unsigned long m_guardQty : 14;
+    unsigned long m_custom : 1;
 };
 SIZE(MapArtifactInfo, 4);
 
@@ -625,9 +702,9 @@ SIZE(MapArtifactInfo, 4);
 // says at events.cpp:3454 - and adds a SIGNED three-bit price selector at
 // bits 13..15 (`shl eax,0x10 / sar eax,0x1d`).
 struct type_tree_info {
-    unsigned long unused : 13;
-    signed long price : 3;
-    unsigned long tail : 16;
+    unsigned long m_unused : 13;
+    signed long m_price : 3;
+    unsigned long m_tail : 16;
 };
 SIZE(type_tree_info, 4);
 
@@ -635,85 +712,85 @@ SIZE(type_tree_info, 4);
 // bits 13..24 as a pool index; Dreamcast supplies the arm and field names.
 // The other DC arms remain unmodelled until a retail consumer needs them.
 struct type_creature_bank_info {
-    unsigned long unused : 13;
-    unsigned long index : 12;
-    unsigned long tail : 7;
+    unsigned long m_unused : 13;
+    unsigned long m_index : 12;
+    unsigned long m_tail : 7;
 };
 SIZE(type_creature_bank_info, 4);
 
 struct type_university_info {
-    unsigned long unused : 13;
-    unsigned long index : 12;
-    unsigned long tail : 7;
+    unsigned long m_unused : 13;
+    unsigned long m_index : 12;
+    unsigned long m_tail : 7;
 };
 SIZE(type_university_info, 4);
 
 union ExtraInfoUnion {
-    unsigned long value;
-    MapArtifactInfo artifact_info;
-    type_water_wheel_info water_wheel_info;
-    type_windmill_info windmill_info;
-    type_lean_to_info lean_to_info;
-    type_magic_spring_info magic_spring_info;
-    type_garden_info garden_info;
-    type_tomb_info tomb_info;
-    type_witch_hut_info witch_hut_info;
-    type_fountain_info fountain_info;
-    type_cell_visited_info cell_visited_info;
-    type_pyramid_info pyramid_info;
+    unsigned long m_value;
+    MapArtifactInfo m_artifactInfo;
+    type_water_wheel_info m_waterWheelInfo;
+    type_windmill_info m_windmillInfo;
+    type_lean_to_info m_leanToInfo;
+    type_magic_spring_info m_magicSpringInfo;
+    type_garden_info m_gardenInfo;
+    type_tomb_info m_tombInfo;
+    type_witch_hut_info m_witchHutInfo;
+    type_fountain_info m_fountainInfo;
+    type_cell_visited_info m_cellVisitedInfo;
+    type_pyramid_info m_pyramidInfo;
     WagonInfo m_wagonInfo;
-    type_skeleton_info skeleton_info;
-    type_tree_info tree_info;
-    ShrineInfo shrine_info;
-    type_creature_bank_info creature_bank_info;
-    type_university_info university_info;
+    type_skeleton_info m_skeletonInfo;
+    type_tree_info m_treeInfo;
+    ShrineInfo m_shrineInfo;
+    type_creature_bank_info m_creatureBankInfo;
+    type_university_info m_universityInfo;
 
-    void SetCellVisited(short player);
-    bool PlayerKnowsCell(short player) const;
-    bool IsCustomized() const;
-    TCreatureType GetArtifactDefender() const;
-    ArtifactPrices GetArtifactPrice() const;
-    enum EGameResource GetArtifactResourceCost() const;
-    bool IsDefendedArtifact() const;
-    void clear_visited_bits();
-    short GetItemId() const;
-    void SetLeanTo(short id, short amount, int resource);
-    short GetLeanToAmount() const;
-    int GetLeanToResource() const;
-    unsigned char MagicSpringIsFull() const;
-    void FillMagicSpring(unsigned char full);
-    unsigned char GardenIsFull() const;
-    enum EGameResource GetGardenResource() const;
-    void SetGardenEmpty();
-    void setPyramid(bool guards, int new_spell);
-    bool SkeletonHasTreasure() const;
-    int GetSkeletonArtifact() const;
-    void SetSkeleton(int id, bool has_treasure, short artifact);
-    SpellID GetShrineSpell() const;
-    int GetTreePrice() const;
-    void EmptyWagon();
-    short GetWagonAmount() const;
-    int GetWagonArtifact() const;
-    enum EGameResource GetWagonResource() const;
-    bool WagonHasArtifact() const;
-    bool WagonIsFull() const;
+    void setCellVisited(short player);
+    bool playerKnowsCell(short player) const;
+    bool isCustomized() const;
+    TCreatureType getArtifactDefender() const;
+    ArtifactPrices getArtifactPrice() const;
+    enum EGameResource getArtifactResourceCost() const;
+    bool isDefendedArtifact() const;
+    void clearVisitedBits();
+    short getItemId() const;
+    void setLeanTo(short id, short amount, int resource);
+    short getLeanToAmount() const;
+    int getLeanToResource() const;
+    unsigned char magicSpringIsFull() const;
+    void fillMagicSpring(unsigned char full);
+    unsigned char gardenIsFull() const;
+    enum EGameResource getGardenResource() const;
+    void setGardenEmpty();
+    void setPyramid(bool guards, int newSpell);
+    bool skeletonHasTreasure() const;
+    int getSkeletonArtifact() const;
+    void setSkeleton(int id, bool hasTreasure, short artifact);
+    SpellID getShrineSpell() const;
+    int getTreePrice() const;
+    void emptyWagon();
+    short getWagonAmount() const;
+    int getWagonArtifact() const;
+    enum EGameResource getWagonResource() const;
+    bool wagonHasArtifact() const;
+    bool wagonIsFull() const;
     void setWagon(EGameResource resource, short amount);
     void setWagon(int artifact);
-    void empty_tomb();
-    int get_tomb_artifact() const;
-    unsigned char tomb_is_full() const;
+    void emptyTomb();
+    int getTombArtifact() const;
+    unsigned char tombIsFull() const;
     void setTomb(TArtifact artifact);
-    short get_wheel_gold() const;
-    void set_wheel_gold(short amount);
-    short get_windmill_amount() const;
-    enum EGameResource get_windmill_resource() const;
-    void set_windmill(enum EGameResource resource, short amount);
-    int get_witch_skill() const;
+    short getWheelGold() const;
+    void setWheelGold(short amount);
+    short getWindmillAmount() const;
+    enum EGameResource getWindmillResource() const;
+    void setWindmill(enum EGameResource resource, short amount);
+    int getWitchSkill() const;
     void setWitchSkill(int skill);
 
-    BlackBoxData* get_black_box() const;
-    type_creature_bank& get_creature_bank() const;
-    type_university* get_university() const;
+    BlackBoxData* getBlackBox() const;
+    type_creature_bank& getCreatureBank() const;
+    type_university* getUniversity() const;
 };
 SIZE(ExtraInfoUnion, 4);
 
@@ -725,12 +802,12 @@ SIZE(ExtraInfoUnion, 4);
 // bytes before Guardians stay implicit so generated copies skip them.
 class TreasureData {
 public:
-    std::basic_string<char, std::char_traits<char>, std::allocator<char> > Message;
-    unsigned char HasCustomGuardians;
-    armyGroup Guardians;
+    std::basic_string<char, std::char_traits<char>, std::allocator<char> > m_message;
+    unsigned char m_hasCustomGuardians;
+    armyGroup m_guardians;
 
     // Original: TreasureData::TreasureData; MapCell.h:333, dc 0xf4790.
-    TreasureData() : HasCustomGuardians(0) {}
+    TreasureData() : m_hasCustomGuardians(0) {}
 };
 SIZE(TreasureData, 0x4c);
 
@@ -743,33 +820,33 @@ SIZE(TreasureData, 0x4c);
 // an enum here would put a cast into an enum domain on every load. The DC
 // declarators' types survive in the member names.
 struct SecondarySkillData {
-    int type;
-    int level;
+    int m_type;
+    int m_level;
 };
 SIZE(SecondarySkillData, 8);
 
 class BlackBoxData : public TreasureData {
 public:
-    unsigned char HasCustomTreasure;       // +0x4c
-    int ExperienceBonus;                   // +0x50
-    int ManaBonus;                         // +0x54
-    signed char MoraleBonus;               // +0x58
-    signed char LuckBonus;                 // +0x59
-    int ResQty[7];                         // +0x5c
-    signed char PrimarySkillBonus[4];      // +0x78
-    std::vector<SecondarySkillData> SecondarySkills; // +0x7c
+    unsigned char m_hasCustomTreasure;       // +0x4c
+    int m_experienceBonus;                   // +0x50
+    int m_manaBonus;                         // +0x54
+    signed char m_moraleBonus;               // +0x58
+    signed char m_luckBonus;                 // +0x59
+    int m_resQty[7];                         // +0x5c
+    signed char m_primarySkillBonus[4];      // +0x78
+    std::vector<SecondarySkillData> m_secondarySkills; // +0x7c
     // Element type int for SecondarySkillData's reason - loadBlackBox
     // writes a widened stream byte into each slot. DC: vector<TArtifact>
     // and vector<SpellID>, preserved in the member names.
-    std::vector<int> Artifacts;             // +0x8c
-    std::vector<int> Spells;                // +0x9c
-    armyGroup Creatures;                    // +0xac
+    std::vector<int> m_artifacts;             // +0x8c
+    std::vector<int> m_spells;                // +0x9c
+    armyGroup m_creatures;                    // +0xac
 
     // loadBlackBoxList's resize temp proves the constructor: after the
     // TreasureData base and the three vectors have run their own, the only
     // remaining store is a zero into +0x4c.
     // Original: BlackBoxData::BlackBoxData; MapCell.h:364, dc 0xf47cc.
-    BlackBoxData() : HasCustomTreasure(0) {}
+    BlackBoxData() : m_hasCustomTreasure(0) {}
     // Implicit destructor; CodeView dc 0xf4bfc compgenx.
 };
 SIZE(BlackBoxData, 0xe4);
@@ -784,19 +861,19 @@ class TAbstractFile;
 // makes VC6's generated copies treat retail padding as a real member.
 class TTimedEvent {
 public:
-    std::basic_string<char, std::char_traits<char>, std::allocator<char> > Message;
-    int ResQty[7];
-    unsigned char PlayerFlags;
-    unsigned char ApplyToHuman;
-    unsigned char ApplyToComputer;
-    unsigned short FirstTime;
-    unsigned short Interval;
+    std::basic_string<char, std::char_traits<char>, std::allocator<char> > m_message;
+    int m_resQty[7];
+    unsigned char m_playerFlags;
+    unsigned char m_applyToHuman;
+    unsigned char m_applyToComputer;
+    unsigned short m_firstTime;
+    unsigned short m_interval;
 
     // `ret 8`: the save version is a second argument, gating the
     // apply-to-human flag at 28 exactly as LoadGarrisonPool does.
-    int Read(TAbstractFile* infile, int saveVersion);
-    int Save(TAbstractFile* outfile);
-    int Load(TAbstractFile* infile, int saveVersion);
+    int read(TAbstractFile* infile, int saveVersion);
+    int save(TAbstractFile* outfile);
+    int load(TAbstractFile* infile, int saveVersion);
 };
 SIZE(TTimedEvent, 0x34);
 
@@ -807,22 +884,22 @@ SIZE(TTimedEvent, 0x34);
 // implicit so generated copies do not copy padding bytes.
 class TTownEvent : public TTimedEvent {
 public:
-    signed char TownNum;
-    __int64 BuildBuildings;
-    unsigned short generatorBonuses[7];
+    signed char m_townNum;
+    __int64 m_buildBuildings;
+    unsigned short m_generatorBonuses[7];
 
     // MapCell.h:400 in the DC roster - a header-inline default constructor.
     // loadTownEventList's resize temp proves its whole body: after the base
     // string is tidied it zeroes the eight bytes of BuildBuildings and
     // nothing else, TownNum and the generator band staying uninitialized.
     // Original: TTownEvent::TTownEvent; MapCell.h:400, dc 0xf48d8.
-    TTownEvent() { BuildBuildings = 0; }
+    TTownEvent() { m_buildBuildings = 0; }
 };
 SIZE(TTownEvent, 0x50);
 
 struct TObjectType;
 // Canonical Random declaration needed by CObject's inline construction.
-int __fastcall Random(int minimum, int maximum);
+int __fastcall random(int minimum, int maximum);
 
 class CObjectType {
 public:
@@ -846,21 +923,21 @@ public:
     // string from 12 to 16 bytes and every offset after it moves by four,
     // which saveObjectType then confirms one Write at a time.
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >
-        ImageName;
+        m_imageName;
     // Dreamcast field list 0x309c records Width/Height as T_RCHAR.
-    char width;
-    char height;
+    char m_width;
+    char m_height;
     // +0x12..+0x13 is alignment before the first bitset.  Keep it implicit:
     // retail's generated assignment skips these bytes.
-    std::bitset<48> drawCells;
+    std::bitset<48> m_drawCells;
     // +0x1c, sliced out of the old pad: saveObjectType packs FOUR masks,
     // not three, and this is the second of them. DC name PassableMask; the
     // spelling follows its three siblings here rather than the DC's.
-    std::bitset<48> passableCells;
-    std::bitset<48> shadowCells;
+    std::bitset<48> m_passableCells;
+    std::bitset<48> m_shadowCells;
     // Fourth 48-cell mask, byte-proven at +0x2c by FindTrigger. The prior
     // padding spelling incorrectly conflated it with shadowCells at +0x24.
-    std::bitset<48> triggerCells;
+    std::bitset<48> m_triggerCells;
     // +0x34, FOUR bytes and unchanged in layout, but not padding: the
     // default constructor CObjectType's `resize` temporary runs calls SIX
     // sub-constructors, and the sixth targets this slot through
@@ -875,20 +952,20 @@ public:
     // The mask's MEANING is unproven and its name is deliberately ordinal:
     // no serializer in this compiland reads or writes it, readObjectType
     // included.
-    std::bitset<10> mask_34;
+    std::bitset<10> m_mask34;
     // loadObjectType stores the serialized type as a full dword. Keep one
     // instance declarator here: retail copies +0x38 exactly once.
     // The former unused objectTypeValue static existed only to perturb
     // compiler declaration state and has been removed.
     union {
-        TAdventureObjectType objectType;
+        TAdventureObjectType m_objectType;
     };
-    int extra;
-    unsigned char suppressDraw;
+    int m_extra;
+    unsigned char m_suppressDraw;
     // +0x41 remains implicit alignment, but retail's generated assignment
     // explicitly copies a word at +0x42; the old pad_41[3] hid that real
     // field and also made VC6 copy the otherwise-skipped +0x41 byte.
-    unsigned short field_42;
+    unsigned short m_objectTypeIndex;
 };
 SIZE(CObjectType, 0x44);
 
@@ -907,18 +984,18 @@ public:
     // reads off the CELL - the same encoding, because the object's dword is
     // what ends up in NewmapCell::extraInfo.
     union {
-        unsigned long extraInfo;
-        ScholarInfo scholar_info;
-        ShipyardInfo shipyard_info;
-        ShrineInfo shrine_info;
+        unsigned long m_extraInfo;
+        ScholarInfo m_scholarInfo;
+        ShipyardInfo m_shipyardInfo;
+        ShrineInfo m_shrineInfo;
     };
-    unsigned char x;
-    unsigned char y;
-    unsigned char z;
-    unsigned char pad_07;
-    unsigned short typeIndex;
-    unsigned char animationOffset;
-    unsigned char pad_0b;
+    unsigned char m_x;
+    unsigned char m_y;
+    unsigned char m_z;
+    unsigned char m_paddingBeforeTypeId;
+    unsigned short m_typeIndex;
+    unsigned char m_animationOffset;
+    unsigned char m_paddingAfterFrameOffset;
 
     // MapCell.h:595. game::InsertObject byte-proves this header body: the
     // coordinates narrow to bytes, type starts at zero, extra info remains a
@@ -935,21 +1012,21 @@ public:
             unsigned char newZ = 0xff, unsigned short newType = 0xffff,
             unsigned long newExtraInfo = 0xffffffff)
     {
-        x = newX;
-        y = newY;
-        z = newZ;
-        typeIndex = newType;
-        extraInfo = newExtraInfo;
-        animationOffset = static_cast<unsigned char>(Random(0, 255));
+        m_x = newX;
+        m_y = newY;
+        m_z = newZ;
+        m_typeIndex = newType;
+        m_extraInfo = newExtraInfo;
+        m_animationOffset = static_cast<unsigned char>(random(0, 255));
     }
 
-    CObjectType* get_object_type_ptr() const;
-    TAdventureObjectType get_type() const;
+    CObjectType* getObjectTypePtr() const;
+    TAdventureObjectType getType() const;
     // MapCell.cpp:1119/1131. Dreamcast publishes both members as const;
     // FindTrigger's AAH parameters are references, and get_trigger is the
     // source helper which retail expands into get_trigger_cell.
-    type_point get_trigger() const;
-    void FindTrigger(int& resultX, int& resultY) const;
+    type_point getTrigger() const;
+    void findTrigger(int& resultX, int& resultY) const;
 };
 SIZE(CObject, 0xc);
 
@@ -964,9 +1041,12 @@ SIZE(CObject, 0xc);
 
 
 struct SeaChestInfo {
-    signed long reward : 3;
-    signed long artifact : 10;
-    unsigned long tail : 19;
+    // Before normalization: reward.
+    signed long m_reward : 3;
+    // Before normalization: artifact.
+    signed long m_artifact : 10;
+    // Before normalization: tail.
+    unsigned long m_tail : 19;
 };
 SIZE(SeaChestInfo, 4);
 
@@ -978,10 +1058,14 @@ SIZE(SeaChestInfo, 4);
 // edx,0xffe01ffe / or edx,(spell & 0xff) << 0xd`, and that mask names the
 // two lanes and nothing between them. GATED for MonsterInfo's reason.
 struct PyramidInfo {
-    unsigned long guarded : 1;
-    unsigned long unused : 12;
-    signed long spell : 8;
-    unsigned long tail : 11;
+    // Before normalization: guarded.
+    unsigned long m_guarded : 1;
+    // Before normalization: unused.
+    unsigned long m_unused : 12;
+    // Before normalization: spell.
+    signed long m_spell : 8;
+    // Before normalization: tail.
+    unsigned long m_tail : 11;
 };
 SIZE(PyramidInfo, 4);
 
@@ -1015,14 +1099,22 @@ public:
     // as advmgr_objects.h's CObject arm - the object's dword is what ends
     // up here.
     union {
-        unsigned long extraInfo;
-        MonsterInfo monster_info;
-        CampfireInfo campfire_info;
-        TreasureInfo treasure_info;
-        ScholarInfo scholar_info;
-        SeaChestInfo sea_chest_info;
-        PyramidInfo pyramid_info;
-        ShipyardInfo shipyard_info;
+        // Before normalization: extraInfo.
+        unsigned long m_extraInfo;
+        // Before normalization: monster_info.
+        MonsterInfo m_monsterInfo;
+        // Before normalization: campfire_info.
+        CampfireInfo m_campfireInfo;
+        // Before normalization: treasure_info.
+        TreasureInfo m_treasureInfo;
+        // Before normalization: scholar_info.
+        ScholarInfo m_scholarInfo;
+        // Before normalization: sea_chest_info.
+        SeaChestInfo m_seaChestInfo;
+        // Before normalization: pyramid_info.
+        PyramidInfo m_pyramidInfo;
+        // Before normalization: shipyard_info.
+        ShipyardInfo m_shipyardInfo;
     };
     // +0x04 and +0x08: two int allocation units of SIGNED 8-BIT
     // BITFIELDS, sliced 2026-08-08 out of the old `unsigned char
@@ -1049,13 +1141,23 @@ public:
     // compare through the bitfield (measured, still exact): VC6 folds
     // `field == small_constant` on a byte-aligned 8-bit field into
     // `cmp byte ptr`, so the slice costs nothing there.
-    int GroundSet : 8;
-    int GroundIndex : 8;
-    int RiverSet : 8;
-    int RiverIndex : 8;
-    int RoadSet : 8;
-    int RoadIndex : 8;
-    int pad_0a : 16;
+    // Before normalization: GroundSet.
+    int m_groundSet : 8;
+    // Before normalization: GroundIndex.
+    int m_groundIndex : 8;
+    // Before normalization: RiverSet.
+    int m_riverSet : 8;
+    // Before normalization: RiverIndex.
+    int m_riverIndex : 8;
+    // Before normalization: RoadSet.
+    int m_roadSet : 8;
+    // Before normalization: RoadIndex.
+    int m_roadIndex : 8;
+    // Before normalization: pad_0a.
+    // Dreamcast gives RoadSet/RoadIndex eight bits each in the unit
+    // at +8, then starts cellFlags at +0xc. NH3API confirms that +0xa
+    // and +0xb are unused. Retain the retail-proven int allocation unit.
+    int m_paddingAfterRoadIndex : 16;
     // +0x0c is the DC's cellFlags word. find_magus_hut_value tests bit
     // 12 of it (`test byte ptr [cell + 0xd], 0x10`); the DC's flag list
     // for this word has is_trigger thirteenth, so that is the name used
@@ -1089,9 +1191,12 @@ public:
     // the canonical overlay of the same proven flag word, not a cast/view.
     union {
         struct {
-            unsigned short flags_00_11 : 12;
-            unsigned short is_trigger : 1;
-            unsigned short flags_13_15 : 3;
+            // Before normalization: flags_00_11.
+            unsigned short m_flags0011 : 12;
+            // Before normalization: is_trigger.
+            unsigned short m_isTrigger : 1;
+            // Before normalization: flags_13_15.
+            unsigned short m_flags1315 : 3;
         };
         // readMapLayer needs the low ten bits as individual declarators: it
         // writes the six map-format flip flags ONE BIT AT A TIME (VC6 merges
@@ -1108,21 +1213,35 @@ public:
         // mark_shipyards/clear_shipyards pair reaches bit 11 directly, so
         // the DC `can_build_ship` name is now admitted as well.
         struct {
-            unsigned short GroundFlippedHorizontal : 1;
-            unsigned short GroundFlippedVertical : 1;
-            unsigned short RiverFlippedHorizontal : 1;
-            unsigned short RiverFlippedVertical : 1;
-            unsigned short RoadFlippedHorizontal : 1;
-            unsigned short RoadFlippedVertical : 1;
-            unsigned short Passable : 1;
-            unsigned short Animated : 1;
-            unsigned short IsBlocked : 1;
-            unsigned short IsBeachBorder : 1;
-            unsigned short unused_bit : 1;
-            unsigned short can_build_ship : 1;
-            unsigned short flags_12_15 : 4;
+            // Before normalization: GroundFlippedHorizontal.
+            unsigned short m_groundFlippedHorizontal : 1;
+            // Before normalization: GroundFlippedVertical.
+            unsigned short m_groundFlippedVertical : 1;
+            // Before normalization: RiverFlippedHorizontal.
+            unsigned short m_riverFlippedHorizontal : 1;
+            // Before normalization: RiverFlippedVertical.
+            unsigned short m_riverFlippedVertical : 1;
+            // Before normalization: RoadFlippedHorizontal.
+            unsigned short m_roadFlippedHorizontal : 1;
+            // Before normalization: RoadFlippedVertical.
+            unsigned short m_roadFlippedVertical : 1;
+            // Before normalization: Passable.
+            unsigned short m_passable : 1;
+            // Before normalization: Animated.
+            unsigned short m_animated : 1;
+            // Before normalization: IsBlocked.
+            unsigned short m_isBlocked : 1;
+            // Before normalization: IsBeachBorder.
+            unsigned short m_isBeachBorder : 1;
+            // Before normalization: unused_bit.
+            unsigned short m_unusedBit : 1;
+            // Before normalization: can_build_ship.
+            unsigned short m_canBuildShip : 1;
+            // Before normalization: flags_12_15.
+            unsigned short m_flags1215 : 4;
         };
-        unsigned short cellFlags;
+        // Before normalization: cellFlags.
+        unsigned short m_cellFlags;
     };
     // Retail mapcell.obj constructs and destroys a Dinkumware vector here.
     // Its empty allocator occupies +0x0e..+0x11 and its first/last/end
@@ -1136,24 +1255,33 @@ public:
     // all in that one body.
     struct TObjectCell {
         union {
-            unsigned short objectIndex;
-            unsigned short ObjectIndex;
+            // Before normalization: objectIndex.
+            unsigned short m_objectIndex;
+            // Before normalization: ObjectIndex.
+            unsigned short m_objectIndexAlias;
         };
         union {
-            unsigned char offsets;
+            // Before normalization: offsets.
+            unsigned char m_offsets;
             struct {
-                signed char CellX : 4;
-                signed char CellY : 4;
+                // Before normalization: CellX.
+                signed char m_cellX : 4;
+                // Before normalization: CellY.
+                signed char m_cellY : 4;
             };
         };
         union {
-            signed char layer;
-            signed char Height;
+            // Before normalization: layer.
+            signed char m_layer;
+            // Before normalization: Height.
+            signed char m_height;
         };
 
-        CObject* get_object() const;
+        // Before normalization (function): NewmapCell::TObjectCell::get_object.
+        CObject* getObject() const;
     };
-    std::vector<TObjectCell> objects;
+    // Before normalization: objects.
+    std::vector<TObjectCell> m_objects;
     // loadMapLayer stores the serialized object type as a FULL DWORD: the
     // stream carries two bytes and retail widens them into all four of
     // +0x1e..+0x21 (`mov ecx, dword; and ecx, 0xffff; mov dword [cell+0x1e],
@@ -1162,11 +1290,15 @@ public:
     // same way and for the same reason, and a cast here would be the tree's
     // first cast into an enum.
     union {
-        TAdventureObjectType type;  // +0x1e
-        unsigned long type_value;
+        // Before normalization: type.
+        TAdventureObjectType m_type;  // +0x1e
+        // Before normalization: type_value.
+        unsigned long m_typeValue;
     };
-    short objectIndex;          // +0x22
-    short object_type_index;    // +0x24
+    // Before normalization: objectIndex.
+    short m_objectIndex;          // +0x22
+    // Before normalization: object_type_index.
+    short m_objectTypeIndex;    // +0x24
 
     // Original: NewmapCell::NewmapCell; MapCell.h:685, dc 0xf49a4.
     // The retained vector-construction callback belongs to this header body;
@@ -1174,31 +1306,37 @@ public:
     VA(0x004fd650, 0x3E)  // order-map: address-taken by Init 0xfd4f0 for `vector ctor iterator'; inits packed NewmapCell incl. vector<TObjectCell> at +0xe, dc 0xf49a4
     NewmapCell()
     {
-        GroundSet = 0;
-        GroundIndex = 0;
-        RiverSet = 0;
-        RiverIndex = 0;
-        RoadSet = 0;
-        RoadIndex = 0;
-        flags_00_11 = 0;
-        is_trigger = 0;
-        flags_13_15 = 0;
-        type = NOTHING;
-        objectIndex = -1;
-        extraInfo = 0;
-        object_type_index = -1;
+        m_groundSet = 0;
+        m_groundIndex = 0;
+        m_riverSet = 0;
+        m_riverIndex = 0;
+        m_roadSet = 0;
+        m_roadIndex = 0;
+        m_flags0011 = 0;
+        m_isTrigger = 0;
+        m_flags1315 = 0;
+        m_type = NOTHING;
+        m_objectIndex = -1;
+        m_extraInfo = 0;
+        m_objectTypeIndex = -1;
     }
     // Implicit destructor; CodeView dc 0xf4bdc compgenx.
-    const unsigned char HasTriggerableEvent();
+    const unsigned char hasTriggerableEvent();
 
     // 0x4fce20, exact in src/mapcell.cpp. Declared here because findpath's
     // CalcTerrainCost calls it with the const cell in ECX.
-    TAdventureObjectType get_special_terrain() const;
-    int get_magic_terrain_type();
-    TAdventureObjectType get_map_object();
-    unsigned long get_map_extraInfo();
-    unsigned char cell_is_trigger();
-    unsigned char is_diggable();
+    // Before normalization (function): NewmapCell::get_special_terrain.
+    TAdventureObjectType getSpecialTerrain() const;
+    // Before normalization (function): NewmapCell::get_magic_terrain_type.
+    int getMagicTerrainType();
+    // Before normalization (function): NewmapCell::get_map_object.
+    TAdventureObjectType getMapObject();
+    // Before normalization (function): NewmapCell::get_map_extraInfo.
+    unsigned long getMapExtraInfo();
+    // Before normalization (function): NewmapCell::cell_is_trigger.
+    unsigned char cellIsTrigger();
+    // Before normalization (function): NewmapCell::is_diggable.
+    unsigned char isDiggable();
     // The visibility lane is EIGHT BITS WIDE and the mask is byte-load-bearing
     // at every inlined site: both operands stay dword (`mov eax,1 /
     // shl eax,cl` and `mov ecx,[cell] / shr ecx,5`) and retail then tests only
@@ -1210,11 +1348,12 @@ public:
     // truncating the whole AND (`unsigned char known = ...`) also narrows the
     // shift to `shl dl,cl` where retail keeps it dword, and a static_cast on
     // either operand is evaluated FIRST and flips retail's operand order.
-    unsigned char PlayerKnowsCell(short player) const
+    // Before normalization (function): NewmapCell::PlayerKnowsCell.
+    unsigned char playerKnowsCell(short player) const
     {
         if (player < 0 || player >= 8)
             return 0;
-        return (((extraInfo >> 5) & 0xff) & (1UL << player)) != 0;
+        return (((m_extraInfo >> 5) & 0xff) & (1UL << player)) != 0;
     }
     // MapCell.h:923 in the DC roster, `?IsCustomized@ExtraInfoUnion@@QBA_NXZ`
     // - a const, no-argument, BOOL-returning accessor for the top bit.
@@ -1228,8 +1367,9 @@ public:
     // value-returning accessor produces - measured both ways, and the fold
     // also frees EDX, which is what pushed the whole entry block's
     // register assignment off retail's.
-    bool IsCustomized() const { return monster_info.custom != 0; }
-    int GetArtifactIndex() const;
+    // Before normalization (function): NewmapCell::IsCustomized.
+    bool isCustomized() const { return m_monsterInfo.m_custom != 0; }
+    int getArtifactIndex() const;
 
     // The campfire's pair, `?GetCampfireSize@ExtraInfoUnion@@QBAFXZ` and
     // `?GetCampfireResource@ExtraInfoUnion@@QBA?AW4EGameResource@@XZ` in
@@ -1240,8 +1380,10 @@ public:
     // 0x4a1136; the resource is spelled `int` for GetLeanToResource's
     // reason - the field is read UNSIGNED and an enum bitfield
     // sign-extends under VC6.
-    short GetCampfireSize() const { return campfire_info.size; }
-    int GetCampfireResource() const { return campfire_info.resource; }
+    // Before normalization (function): NewmapCell::GetCampfireSize.
+    short getCampfireSize() const { return m_campfireInfo.m_size; }
+    // Before normalization (function): NewmapCell::GetCampfireResource.
+    int getCampfireResource() const { return m_campfireInfo.m_resource; }
 
     // The treasure chest's trio, named and decorated by the Dreamcast line
     // table over DoEventTreasure (dc 0x963d8): TreasureIsArtifact is `_N`,
@@ -1252,9 +1394,12 @@ public:
     // the product with `movsx eax,dx` even though 15*500 provably fits in a
     // short. The artifact getter is spelled `int` for get_tomb_artifact's
     // reason.
-    bool TreasureIsArtifact() const { return treasure_info.has_artifact; }
-    int GetTreasureArtifact() const { return treasure_info.artifact; }
-    short GetTreasureSize() const { return treasure_info.gold * 500; }
+    // Before normalization (function): NewmapCell::TreasureIsArtifact.
+    bool treasureIsArtifact() const { return m_treasureInfo.m_hasArtifact; }
+    // Before normalization (function): NewmapCell::GetTreasureArtifact.
+    int getTreasureArtifact() const { return m_treasureInfo.m_artifact; }
+    // Before normalization (function): NewmapCell::GetTreasureSize.
+    short getTreasureSize() const { return m_treasureInfo.m_gold * 500; }
 
     // The scholar's four accessors, all published by the Dreamcast
     // (MapCell.h:1063/1068/1073/1078) with their own enum return types -
@@ -1264,16 +1409,22 @@ public:
     // VC6, and the WIDTH is what the bytes constrain. Scoped to NewmapCell
     // for the campfire's reason - the handler hands the whole cell to
     // EraseAndFizzle.
-    int GetScholarAward() const { return scholar_info.award; }
-    int GetScholarPrimarySkill() const { return scholar_info.primary; }
-    int GetScholarSecondarySkill() const { return scholar_info.secondary; }
-    int GetScholarSpell() const { return scholar_info.spell; }
+    // Before normalization (function): NewmapCell::GetScholarAward.
+    int getScholarAward() const { return m_scholarInfo.m_award; }
+    // Before normalization (function): NewmapCell::GetScholarPrimarySkill.
+    int getScholarPrimarySkill() const { return m_scholarInfo.m_primary; }
+    // Before normalization (function): NewmapCell::GetScholarSecondarySkill.
+    int getScholarSecondarySkill() const { return m_scholarInfo.m_secondary; }
+    // Before normalization (function): NewmapCell::GetScholarSpell.
+    int getScholarSpell() const { return m_scholarInfo.m_spell; }
 
     // The sea chest's pair, both Dreamcast-published with their own enum
     // returns (SeaChestRewardTypes and TArtifact) and both spelled `int`
     // for get_tomb_artifact's reason.
-    int GetSeaChestReward() const { return sea_chest_info.reward; }
-    int GetSeaChestArtifact() const { return sea_chest_info.artifact; }
+    // Before normalization (function): NewmapCell::GetSeaChestReward.
+    int getSeaChestReward() const { return m_seaChestInfo.m_reward; }
+    // Before normalization (function): NewmapCell::GetSeaChestArtifact.
+    int getSeaChestArtifact() const { return m_seaChestInfo.m_artifact; }
 
     // The pyramid's trio, all three Dreamcast-published over
     // do_event_pyramid (dc 0x949e0): pyramid_is_guarded is `_N`,
@@ -1281,12 +1432,16 @@ public:
     // `void (bool, SpellID)` - MapCell.h:1056, which this file's carcass
     // already carried. The spell getter is spelled `int` for
     // get_tomb_artifact's reason.
-    bool pyramid_is_guarded() const { return pyramid_info.guarded; }
-    int get_pyramid_spell() const { return pyramid_info.spell; }
-    void setPyramid(bool guards, int new_spell)
+    // Before normalization (function): NewmapCell::pyramid_is_guarded.
+    bool pyramidIsGuarded() const { return m_pyramidInfo.m_guarded; }
+    // Before normalization (function): NewmapCell::get_pyramid_spell.
+    int getPyramidSpell() const { return m_pyramidInfo.m_spell; }
+    // Before normalization (function): NewmapCell::set_pyramid.
+    // Before normalization (locals): new_spell.
+    void setPyramid(bool guards, int newSpell)
     {
-        pyramid_info.guarded = guards;
-        pyramid_info.spell = new_spell;
+        m_pyramidInfo.m_guarded = guards;
+        m_pyramidInfo.m_spell = newSpell;
     }
 
     // `?get_black_box@ExtraInfoUnion@@QBEPAVBlackBoxData@@XZ` (0x405de0),
@@ -1299,7 +1454,8 @@ public:
     // name is not scored. Do NOT confuse it with advManager's
     // same-named member (0x4a0c20, reconstructed in src/events.cpp), which
     // takes the cell as an argument and indexes fullMap->blackBoxes.
-    class BlackBoxData* get_black_box() const;
+    // Before normalization (function): NewmapCell::get_black_box.
+    class BlackBoxData* getBlackBox() const;
 
     // mapcell.cpp:46 in the DC roster, and the SAME inherited member
     // IsCustomized is: retail's do_event_dragon_city (0x4a2140) passes the
@@ -1317,8 +1473,10 @@ public:
     // never anything but the +0x00 dword keep taking ExtraInfoUnion*
     // directly and call the real member; this one cannot, because the same
     // pointer also goes to CreatureBankEvent as a NewmapCell*.
-    void SetCellVisited(short player);
-    NewmapCell* get_trigger_cell();
+    // Before normalization (function): NewmapCell::SetCellVisited.
+    void setCellVisited(short player);
+    // Before normalization (function): NewmapCell::get_trigger_cell.
+    NewmapCell* getTriggerCell();
 };
 #pragma pack(pop)
 
@@ -1340,14 +1498,14 @@ enum EMonsterQuantityPreset {
 
 class MonsterData {
 public:
-    std::basic_string<char, std::char_traits<char>, std::allocator<char> > Message;
-    int ResQty[7];
+    std::basic_string<char, std::char_traits<char>, std::allocator<char> > m_message;
+    int m_resQty[7];
     // Spelled int, not TArtifact, for the reason armyGroup::armies is
     // spelled int: readMonsterData deserializes it from a one- or two-byte
     // stream field and saveMonsterData narrows it back to a byte, so an
     // enum here would put a cast on every crossing.  ARTIFACT_NONE still
     // assigns.  The Dreamcast declarator's enum is preserved in the name.
-    int Artifact;
+    int m_artifact;
 
     // loadMonsterList's resize temp proves a header-inline constructor: the
     // default argument `_Ty()` that Dinkumware's resize materializes stores
@@ -1356,7 +1514,7 @@ public:
     // single store, so the assignment it used to spell by hand is this
     // constructor's and has been removed there.
     // Original: MonsterData::MonsterData; MapCell.h:735, dc 0xf4a50.
-    MonsterData() { Artifact = ARTIFACT_NONE; }
+    MonsterData() { m_artifact = ARTIFACT_NONE; }
 };
 SIZE(MonsterData, 0x30);
 
@@ -1370,13 +1528,15 @@ SIZE(MonsterData, 0x30);
 //
 // A free function, so /Gr makes it __fastcall - which is what retail emits:
 // the cell in ECX, the save version in EDX.
-void upgrade_cell_extra_info(NewmapCell* cell, int saveVersion);
+// Before normalization (function): upgrade_cell_extra_info.
+void upgradeCellExtraInfo(NewmapCell* cell, int saveVersion);
 
 // Retail .rdata 0x660428 stores a pointer to sixteen bytes per adventure-
 // object type. can_land proves byte zero as the trigger-object landing veto;
 // the remaining bytes stay opaque.
+// Before normalization: gAdventureObjectLandBlocked.
 DATA(0x00660428)
-extern const unsigned char (*gAdventureObjectLandBlocked)[16];
+extern const unsigned char (*g_adventureObjectLandBlocked)[16];
 
 // --- BlackBoxData ---
 // CODEVIEW(E:\gamedcs\MapCell.h:364, dc 0xf47cc) void BlackBoxData::BlackBoxData();
@@ -2020,10 +2180,10 @@ public:
     // +0x14 and objectTypes with a SIXTY-EIGHT-byte one out of +0x04, which
     // is sizeof(CObject) and sizeof(CObjectType) exactly; the three vectors
     // fill the same 0x30 the pad did.
-    std::vector<CObjectType> objectTypes;      // +0x00, first at +0x04
-    std::vector<CObject> objects;              // +0x10, first at +0x14
-    std::vector<CSprite*> sprites;             // +0x20
-    std::vector<TreasureData> customTreasure; // +0x30, first at +0x34
+    std::vector<CObjectType> m_objectTypes;      // +0x00, first at +0x04
+    std::vector<CObject> m_objects;              // +0x10, first at +0x14
+    std::vector<CSprite*> m_sprites;             // +0x20
+    std::vector<TreasureData> m_customTreasure; // +0x30, first at +0x34
     // +0x40, first at +0x44. DoWanderingMonsterResult indexes it with the
     // cell's eight-bit custom-record field and a 48-byte stride, which is
     // exactly sizeof(MonsterData) once the Dinkumware string is 16 wide;
@@ -2031,21 +2191,21 @@ public:
     // DC roster names the member CustomMonsterList and carries the
     // matching std::vector<MonsterData> operator[]/begin rows in
     // events.obj.
-    std::vector<MonsterData> CustomMonsterList;
-    std::vector<BlackBoxData> blackBoxes;      // +0x50, first at +0x54
-    std::vector<TSeerHut> SeerHutList;         // +0x60
-    std::vector<TQuestGuard> QuestGuardList;   // +0x70
-    std::vector<TTimedEvent> TimedEventList;   // +0x80
-    std::vector<TTownEvent> TownEventList;     // +0x90
+    std::vector<MonsterData> m_customMonsterList;
+    std::vector<BlackBoxData> m_blackBoxes;      // +0x50, first at +0x54
+    std::vector<TSeerHut> m_seerHutList;         // +0x60
+    std::vector<TQuestGuard> m_questGuardList;   // +0x70
+    std::vector<TTimedEvent> m_timedEventList;   // +0x80
+    std::vector<TTownEvent> m_townEventList;     // +0x90
     // +0xa0 and +0xc0, sliced by readObject: it appends a sixteen-byte
     // record to each through push_back's `insert(_Last, 1, x)`, reading
     // _Last at +0xa8 and +0xc8.
-    std::vector<HeroPlaceholderData> heroPlaceholders;
-    std::vector<CMapObjectData*> mapObjectData; // +0xb0
-    std::vector<RandomDwellingData> randomDwellings; // +0xc0
-    NewmapCell* cellData;
-    int Size;
-    unsigned char HasTwoLevels;
+    std::vector<HeroPlaceholderData> m_heroPlaceholders;
+    std::vector<CMapObjectData*> m_mapObjectData; // +0xb0
+    std::vector<RandomDwellingData> m_randomDwellings; // +0xc0
+    NewmapCell* m_cellData;
+    int m_size;
+    unsigned char m_hasTwoLevels;
     // +0xdc, and it is a MEMBER, not the pad `game` used to carry after
     // worldMap: NewfullMap::NewfullMap (0x4fd060) hands `this+0xdc` to the
     // `vector constructor iterator' with count 0xe8 and stride 0x10, and
@@ -2058,17 +2218,21 @@ public:
     // 232 is one past the largest TAdventureObjectType (ROCKLANDS = 231);
     // NewfullMapFn_00505EA0 subscripts it as `this+0xdc+16*objectType`.
     // Layout-neutral: the 0xe80 it occupies came out of game's pad_1fc4c.
-    std::vector<CObjectType> objectTypeIndex[232];
-    int GetNumLevels();
+    std::vector<CObjectType> m_objectTypeIndex[232];
+    int getNumLevels();
+private:
+    const NewmapCell* zCell(int x, int y, int z) const;
+public:
+    const NewmapCell* cell(int x, int y, int z) const;
     NewmapCell* cell(int x, int y, int z);
     NewmapCell* cell(type_point point);
-    int Load(TAbstractFile* infile, int size, unsigned char twoLayers,
+    int load(TAbstractFile* infile, int size, unsigned char twoLayers,
              int saveVersion);
-    int Save(TAbstractFile* outfile, int size, unsigned char twoLayers);
+    int save(TAbstractFile* outfile, int size, unsigned char twoLayers);
     // `ret 0x10`: FOUR arguments, one more than Save's three. The fourth is
     // the map version, and Read forwards it verbatim to readMapObjects and
     // readTimedEventList and reads it nowhere else.
-    int Read(TAbstractFile* infile, int size, unsigned char twoLayers,
+    int read(TAbstractFile* infile, int size, unsigned char twoLayers,
              int mapVersion);
     int readMapObjects(TAbstractFile* infile, int mapVersion);
     // `ret 4`: ONE argument, unlike readMapObjects' two - the save stream
@@ -2077,7 +2241,7 @@ public:
     // 0x4fd950, `ret 8`. One of the four retail-only rows this compiland's
     // span audit already flags as having no Dreamcast counterpart; Load
     // reaches it, and only when the save version is at least 25.
-    void NewfullMapFn_004FD950(TAbstractFile* infile, int saveVersion);
+    void newfullMapFn004FD950(TAbstractFile* infile, int saveVersion);
     // 0x5042c0, nullary. Reached by BOTH readMapObjects and loadMapObjects,
     // right after the object-type list is deserialized. It rebuilds the
     // per-class object-type index: the 232-entry array of vectors at
@@ -2085,7 +2249,7 @@ public:
     // address on NewfullMapFn_00505F20's precedent - the Dreamcast mapcell
     // roster runs loadObjectType -> $E482..$E485 -> readMapObjects with
     // nothing between, so no surviving symbol names it.
-    void NewfullMapFn_005042C0();
+    void newfullMapFn005042C0();
     // Two retail-only members with no Dreamcast counterpart, both reached
     // only from Read's tail. Independently byte-identical HD twins supply
     // their names only after the retail bodies and call sites prove them.
@@ -2096,9 +2260,9 @@ public:
     //     `[this+0xd8]`, HasTwoLevels, which is what proves it is a member.
     //     Each trigger shipyard receives the first adjacent usable water
     //     square, propagated across all three horizontal object cells.
-    void SoD_transformRandomDwellings();
-    void LoadShipyards();
-    void Init(int size, unsigned char twoLayers);
+    void soDTransformRandomDwellings();
+    void loadShipyards();
+    void init(int size, unsigned char twoLayers);
     int loadObject(TAbstractFile* infile, CObject* object);
     int saveObject(TAbstractFile* outfile, CObject* object);
     int saveObjectType(TAbstractFile* outfile, CObjectType* objectType);
@@ -2161,10 +2325,10 @@ public:
     int readAbandonedMineData(TAbstractFile* infile, CObject* object);
     int readSignData(TAbstractFile* infile, CObject* object);
     int loadTreasureList(TAbstractFile* infile);
-    void calc_cell_extra(NewmapCell* cell, unsigned char setExtraInfo);
+    void calcCellExtra(NewmapCell* cell, unsigned char setExtraInfo);
     // 0x505a10. advManager::EraseObj re-derives every touched cell's extra
     // info through it once the object's entry has been spliced out.
-    void CalculateCellExtra(NewmapCell* cell, unsigned char setExtraInfo);
+    void calculateCellExtra(NewmapCell* cell, unsigned char setExtraInfo);
     // Retail-only helper at 0x505d20, the +0x24-slot twin of 0x505d60
     // below: same walk over the +0xb0 CMapObjectData vector, same two
     // stack arguments (ret 8), but broadcasting virtual slot +0x24 and
@@ -2173,7 +2337,7 @@ public:
     // for whichever hero left the map; mapcell.cpp holds the body claim
     // (its carcass note used to read BLOCKED on this declarator).
     // Declared 2026-08-27 for DoCombat's reconstruction.
-    void NewfullMapFn_00505D20(int heroId, int player);
+    void newfullMapFn00505D20(int heroId, int player);
     // Retail-only helper at 0x505d60, and RETAIL-ONLY IS LITERAL HERE: it
     // walks the +0xb0 vector of CMapObjectData pointers - the member the
     // Dreamcast's NewfullMap does not have at all, its nine STLport
@@ -2186,15 +2350,15 @@ public:
     // monsters_flee, monsters_join, monsters_sell_out - and DoCombat.
     // No surviving symbol names it, so the address-bearing spelling
     // follows NewfullMapFn_00505F20's precedent below.
-    void NewfullMapFn_00505D60(type_point point, int player);
+    void newfullMapFn00505D60(type_point point, int player);
     // Retail-only startup loader at 0x505da0. Its declaration stays beside
     // the canonical TObjectType support it consumes.
-    void NewfullMapFn_00505DA0();
+    void newfullMapFn00505DA0();
     // Retail-only helper at 0x505f20. Its behavior selects or appends the
     // matching object-type/sprite pair and writes the resulting type index.
     // No surviving symbol names it, so the address-bearing spelling remains
     // provisional until a source identity is proven.
-    void NewfullMapFn_00505F20(CObject* object, int objectType,
+    void newfullMapFn00505F20(CObject* object, int objectType,
                                int objectIndex, int terrain);
     // Retail-only helper at 0x505ea0, reached only by game::ConvertObject.
     // It scans the per-object-type vector at this+0xdc+16*objectType
@@ -2203,13 +2367,13 @@ public:
     // never touches it directly - so only the declarator is needed and no
     // layout moves. No surviving symbol names it; the address-bearing
     // spelling follows NewfullMapFn_00505F20's precedent above.
-    CObjectType* NewfullMapFn_00505EA0(int objectType, int extra);
-    int PlaceObject(int objectIndex, unsigned char setExtraInfo);
+    CObjectType* newfullMapFn00505EA0(int objectType, int extra);
+    int placeObject(int objectIndex, unsigned char setExtraInfo);
     // The second parameter is the 8x6 byte grid the object's draw pass
     // stamps: retail zeroes exactly 48 bytes through it and walks it with a
     // row stride of six, so the width index is the OUTER one.
-    void GenerateHeightMap(const CObject* object, signed char heightMap[8][6]);
-    void StampObject(NewmapCell* cell, NewmapCell::TObjectCell* objectCell);
+    void generateHeightMap(const CObject* object, signed char heightMap[8][6]);
+    void stampObject(NewmapCell* cell, NewmapCell::TObjectCell* objectCell);
 
     // Both are real retail rows (0x4fd060 / 0x4fd1e0) reconstructed in
     // mapcell.cpp; declaring them here is what stops VC6 synthesising its
@@ -2228,7 +2392,20 @@ public:
 // compilation personalities whose call sites prove the expansion
 // (victorylossconditions' z bound in CheckForDefeatedMonsterWin is
 // the same movzx/inc shape, 2026-08-20).
-inline int NewfullMap::GetNumLevels() { return HasTwoLevels + 1; }
+inline int NewfullMap::getNumLevels() { return m_hasTwoLevels + 1; }
+
+// Original: NewfullMap::zCell; MapCell.h:847, dc 0xbc8dc.
+// Const route lookup retains the recovered helper and level arithmetic.
+inline const NewmapCell* NewfullMap::zCell(int x, int y, int z) const
+{
+    return m_cellData + x + y * m_size + z * m_size * m_size;
+}
+
+// Original: NewfullMap::cell; MapCell.h:889, dc 0xbc930.
+inline const NewmapCell* NewfullMap::cell(int x, int y, int z) const
+{
+    return zCell(x, y, z);
+}
 
 // THE TWO MAP-SQUARE ACCESSORS (DC MapCell.h:895/906).
 //
@@ -2252,12 +2429,12 @@ inline int NewfullMap::GetNumLevels() { return HasTwoLevels + 1; }
 VA(0x00408770, 0x31)  // anchor-callee, dc 0x1f9c8
 inline NewmapCell* NewfullMap::cell(int x, int y, int z)
 {
-    return &cellData[(z * Size + y) * Size + x];
+    return &m_cellData[(z * m_size + y) * m_size + x];
 }
 
 inline NewmapCell* NewfullMap::cell(type_point point)
 {
-    return cell(point.x, point.y, point.z);
+    return cell(point.m_x, point.m_y, point.m_z);
 }
 
 // The five further MapCell.h accessors the tomb and witch-hut
@@ -2275,41 +2452,41 @@ inline NewmapCell* NewfullMap::cell(type_point point)
 // which is what lets do_event_witch_hut compare the raw skill with
 // `cmp esi,-1` and index the trait table without a `movsx`.
 VA(0x00529690, 0x33)  // hd-crossbuild + anchor-callee x3, dc 0x1fa40
-inline bool ExtraInfoUnion::PlayerKnowsCell(short player) const
+inline bool ExtraInfoUnion::playerKnowsCell(short player) const
 {
     if (player < 0 || player >= 8)
         return 0;
-    return (cell_visited_info.visited & (1 << player)) != 0;
+    return (m_cellVisitedInfo.m_visited & (1 << player)) != 0;
 }
 
 // MapCell.h:923-945. These are source-real accessors, not convenience
 // wrappers: Dreamcast publishes their decorated signatures and bodies,
 // while Complete inlines them into the artifact event/appraisal paths.
-inline bool ExtraInfoUnion::IsCustomized() const { return artifact_info.custom != 0; }
+inline bool ExtraInfoUnion::isCustomized() const { return m_artifactInfo.m_custom != 0; }
 
-inline TCreatureType ExtraInfoUnion::GetArtifactDefender() const { return artifact_info.guard; }
+inline TCreatureType ExtraInfoUnion::getArtifactDefender() const { return m_artifactInfo.m_guard; }
 
-inline ArtifactPrices ExtraInfoUnion::GetArtifactPrice() const { return artifact_info.price; }
+inline ArtifactPrices ExtraInfoUnion::getArtifactPrice() const { return m_artifactInfo.m_price; }
 
-inline enum EGameResource ExtraInfoUnion::GetArtifactResourceCost() const
+inline enum EGameResource ExtraInfoUnion::getArtifactResourceCost() const
 {
-    return artifact_info.resource_price;
+    return m_artifactInfo.m_resourcePrice;
 }
 
-inline bool ExtraInfoUnion::IsDefendedArtifact() const
+inline bool ExtraInfoUnion::isDefendedArtifact() const
 {
-    return artifact_info.price == const_artifact_defended;
+    return m_artifactInfo.m_price == const_artifact_defended;
 }
 
-inline void ExtraInfoUnion::clear_visited_bits() { cell_visited_info.visited = 0; }
+inline void ExtraInfoUnion::clearVisitedBits() { m_cellVisitedInfo.m_visited = 0; }
 
-inline short ExtraInfoUnion::GetItemId() const { return skeleton_info.id; }
+inline short ExtraInfoUnion::getItemId() const { return m_skeletonInfo.m_id; }
 
-inline void ExtraInfoUnion::SetLeanTo(short id, short amount, int resource)
+inline void ExtraInfoUnion::setLeanTo(short id, short amount, int resource)
 {
-    lean_to_info.id = id;
-    lean_to_info.amount = amount;
-    lean_to_info.resource = resource;
+    m_leanToInfo.m_id = id;
+    m_leanToInfo.m_amount = amount;
+    m_leanToInfo.m_resource = resource;
 }
 
 // The lean-to trio, all three DC-published (MapCell.h:985/992/997).
@@ -2321,34 +2498,34 @@ inline void ExtraInfoUnion::SetLeanTo(short id, short amount, int resource)
 // what the bytes constrain and an enum return is int-wide anyway, so
 // no truncation barrier is lost. The id has no DC accessor and is
 // read off the arm directly.
-inline short ExtraInfoUnion::GetLeanToAmount() const { return lean_to_info.amount; }
+inline short ExtraInfoUnion::getLeanToAmount() const { return m_leanToInfo.m_amount; }
 
-inline int ExtraInfoUnion::GetLeanToResource() const { return lean_to_info.resource; }
+inline int ExtraInfoUnion::getLeanToResource() const { return m_leanToInfo.m_resource; }
 
 // The magic-spring pair (MapCell.h:1002/1007). The setter takes the
 // new state rather than clearing unconditionally, which is what the
 // DC decoration `void (unsigned char)` says and what makes the
 // drink-it write a plain bit clear at the one site that passes 0.
-inline unsigned char ExtraInfoUnion::MagicSpringIsFull() const { return magic_spring_info.full; }
+inline unsigned char ExtraInfoUnion::magicSpringIsFull() const { return m_magicSpringInfo.m_full; }
 
-inline void ExtraInfoUnion::FillMagicSpring(unsigned char full) { magic_spring_info.full = full; }
+inline void ExtraInfoUnion::fillMagicSpring(unsigned char full) { m_magicSpringInfo.m_full = full; }
 
 // The mystical-garden trio (MapCell.h:1018/1023/1035). GardenIsFull
 // is `unsigned char () const` and its `(value >> 10) & 1` shape is
 // what retail inlines; a direct bitfield test would fold to a byte
 // `test` on cell+1 instead.
-inline unsigned char ExtraInfoUnion::GardenIsFull() const { return garden_info.full; }
+inline unsigned char ExtraInfoUnion::gardenIsFull() const { return m_gardenInfo.m_full; }
 
-inline enum EGameResource ExtraInfoUnion::GetGardenResource() const { return garden_info.resource; }
+inline enum EGameResource ExtraInfoUnion::getGardenResource() const { return m_gardenInfo.m_resource; }
 
-inline void ExtraInfoUnion::SetGardenEmpty() { garden_info.full = 0; }
+inline void ExtraInfoUnion::setGardenEmpty() { m_gardenInfo.m_full = 0; }
 
 // Original: ExtraInfoUnion::set_pyramid; MapCell.h:1056, dc 0x9c878.
 VA(0x004c2330, 0x27)
-inline void ExtraInfoUnion::setPyramid(bool guards, int new_spell)
+inline void ExtraInfoUnion::setPyramid(bool guards, int newSpell)
 {
-    pyramid_info.guarded = guards;
-    pyramid_info.spell = new_spell;
+    m_pyramidInfo.m_guarded = guards;
+    m_pyramidInfo.m_spell = newSpell;
 }
 
 // The corpse's four MapCell.h accessors, named and decorated by the
@@ -2370,36 +2547,36 @@ inline void ExtraInfoUnion::setPyramid(bool guards, int new_spell)
 // measured against the retail bytes and exactly one is exact - short
 // getter, int setter parameter (100.0, against 99.53 / 99.49 / 90.96),
 // so the width is byte-determined, not a guess.
-inline bool ExtraInfoUnion::SkeletonHasTreasure() const { return skeleton_info.has_treasure; }
+inline bool ExtraInfoUnion::skeletonHasTreasure() const { return m_skeletonInfo.m_hasTreasure; }
 
-inline int ExtraInfoUnion::GetSkeletonArtifact() const { return skeleton_info.artifact; }
+inline int ExtraInfoUnion::getSkeletonArtifact() const { return m_skeletonInfo.m_artifact; }
 
-inline void ExtraInfoUnion::SetSkeleton(int id, bool has_treasure, short artifact)
+inline void ExtraInfoUnion::setSkeleton(int id, bool hasTreasure, short artifact)
 {
-    skeleton_info.id = id;
-    skeleton_info.artifact = artifact;
-    skeleton_info.has_treasure = has_treasure;
+    m_skeletonInfo.m_id = id;
+    m_skeletonInfo.m_artifact = artifact;
+    m_skeletonInfo.m_hasTreasure = hasTreasure;
 }
 
-inline SpellID ExtraInfoUnion::GetShrineSpell() const
+inline SpellID ExtraInfoUnion::getShrineSpell() const
 {
-    return shrine_info.spell;
+    return m_shrineInfo.m_spell;
 }
 
 // `?GetTreePrice@ExtraInfoUnion@@QBA?AW4WiseTreePrices@@XZ`, named by
 // the Dreamcast line table over DoEventTreeOfKnowledge (dc 0x964c4)
 // and spelled `int` for get_tomb_artifact's reason.
-inline int ExtraInfoUnion::GetTreePrice() const { return tree_info.price; }
+inline int ExtraInfoUnion::getTreePrice() const { return m_treeInfo.m_price; }
 
-inline void ExtraInfoUnion::EmptyWagon() { m_wagonInfo.m_full = 0; }
+inline void ExtraInfoUnion::emptyWagon() { m_wagonInfo.m_full = 0; }
 
-inline short ExtraInfoUnion::GetWagonAmount() const { return m_wagonInfo.m_resourceAmount; }
+inline short ExtraInfoUnion::getWagonAmount() const { return m_wagonInfo.m_resourceAmount; }
 
-inline int ExtraInfoUnion::GetWagonArtifact() const { return m_wagonInfo.m_artifact; }
+inline int ExtraInfoUnion::getWagonArtifact() const { return m_wagonInfo.m_artifact; }
 
-inline enum EGameResource ExtraInfoUnion::GetWagonResource() const { return m_wagonInfo.m_resource; }
+inline enum EGameResource ExtraInfoUnion::getWagonResource() const { return m_wagonInfo.m_resource; }
 
-inline bool ExtraInfoUnion::WagonHasArtifact() const { return m_wagonInfo.m_hasArtifact; }
+inline bool ExtraInfoUnion::wagonHasArtifact() const { return m_wagonInfo.m_hasArtifact; }
 
 // The wagon's six MapCell.h accessors, all six named and decorated by
 // the Dreamcast line table over DoEventWagon (dc 0x96784):
@@ -2410,7 +2587,7 @@ inline bool ExtraInfoUnion::WagonHasArtifact() const { return m_wagonInfo.m_hasA
 // EmptyWagon `void ()`. GetWagonArtifact is spelled `int` for the
 // same reason get_tomb_artifact is: TArtifact has no modelled
 // definition here and an enum return is int-wide under VC6 anyway.
-inline bool ExtraInfoUnion::WagonIsFull() const { return m_wagonInfo.m_full; }
+inline bool ExtraInfoUnion::wagonIsFull() const { return m_wagonInfo.m_full; }
 
 // Original: ExtraInfoUnion::SetWagon; MapCell.h:1176, dc 0xbcac8.
 // DC 1177..1181 writes resource, amount, full, has_artifact, visited_bits.
@@ -2431,24 +2608,24 @@ inline void ExtraInfoUnion::setWagon(EGameResource resource, short amount)
 VA(0x004c2390, 0x21)
 inline void ExtraInfoUnion::setWagon(int artifact)
 {
-    value = (value & 0xfe00601f)
+    m_value = (m_value & 0xfe00601f)
         | ((artifact & 0x3ff) << 15) | 0x6000;
 }
 
-inline void ExtraInfoUnion::empty_tomb() { tomb_info.has_artifact = 0; }
+inline void ExtraInfoUnion::emptyTomb() { m_tombInfo.m_hasArtifact = 0; }
 
-inline int ExtraInfoUnion::get_tomb_artifact() const { return tomb_info.artifact; }
+inline int ExtraInfoUnion::getTombArtifact() const { return m_tombInfo.m_artifact; }
 
-inline unsigned char ExtraInfoUnion::tomb_is_full() const { return tomb_info.has_artifact; }
+inline unsigned char ExtraInfoUnion::tombIsFull() const { return m_tombInfo.m_hasArtifact; }
 
 // Original: ExtraInfoUnion::set_tomb; MapCell.h:1208, dc 0xbcb94.
 // DC 1209..1211 writes artifact, fullness, visit bits. Complete widens
 // the artifact to ten bits; RandomizeEvents expands all three stores.
 inline void ExtraInfoUnion::setTomb(TArtifact artifact)
 {
-    tomb_info.artifact = artifact;
-    tomb_info.has_artifact = 1;
-    cell_visited_info.visited = 0;
+    m_tombInfo.m_artifact = artifact;
+    m_tombInfo.m_hasArtifact = 1;
+    m_cellVisitedInfo.m_visited = 0;
 }
 
 // The five MapCell.h accessors the two mill handlers inline. The
@@ -2462,27 +2639,27 @@ inline void ExtraInfoUnion::setTomb(TArtifact artifact)
 //   * set_windmill writes BOTH fields, which is why the payout tail
 //     is a single `and eax,0xfffe1ff0 / xor eax,edi` on the dword
 //     instead of two read-modify-writes.
-inline short ExtraInfoUnion::get_wheel_gold() const { return water_wheel_info.gold * 500; }
+inline short ExtraInfoUnion::getWheelGold() const { return m_waterWheelInfo.m_gold * 500; }
 
-inline void ExtraInfoUnion::set_wheel_gold(short amount) { water_wheel_info.gold = amount / 500; }
+inline void ExtraInfoUnion::setWheelGold(short amount) { m_waterWheelInfo.m_gold = amount / 500; }
 
-inline short ExtraInfoUnion::get_windmill_amount() const { return windmill_info.amount; }
+inline short ExtraInfoUnion::getWindmillAmount() const { return m_windmillInfo.m_amount; }
 
-inline enum EGameResource ExtraInfoUnion::get_windmill_resource() const { return windmill_info.resource; }
+inline enum EGameResource ExtraInfoUnion::getWindmillResource() const { return m_windmillInfo.m_resource; }
 
-inline void ExtraInfoUnion::set_windmill(enum EGameResource resource, short amount)
+inline void ExtraInfoUnion::setWindmill(enum EGameResource resource, short amount)
 {
-    windmill_info.resource = resource;
-    windmill_info.amount = amount;
+    m_windmillInfo.m_resource = resource;
+    m_windmillInfo.m_amount = amount;
 }
 
-inline int ExtraInfoUnion::get_witch_skill() const { return witch_hut_info.skill; }
+inline int ExtraInfoUnion::getWitchSkill() const { return m_witchHutInfo.m_skill; }
 
 // Original: ExtraInfoUnion::set_witch_skill; MapCell.h:1251, dc 0xbcbdc.
 VA(0x004c23c0, 0x1c)
 inline void ExtraInfoUnion::setWitchSkill(int skill)
 {
-    value = (value & 0xfff0001f) | ((skill & 0x7f) << 13);
+    m_value = (m_value & 0xfff0001f) | ((skill & 0x7f) << 13);
 }
 
 // MapCell.h:1260. Dreamcast returns TArtifact; this foundational header
@@ -2491,13 +2668,13 @@ inline void ExtraInfoUnion::setWitchSkill(int skill)
 // cross into the enum domain explicitly. Dreamcast masks the older
 // seven-bit object index; Complete's inlined artifact readers load the
 // full signed word, proving that the later accessor no longer masks it.
-inline int NewmapCell::GetArtifactIndex() const { return objectIndex; }
+inline int NewmapCell::getArtifactIndex() const { return m_objectIndex; }
 
 // E:\gamedcs\MapCell.h:1269 (dc 0xf4a78). Dreamcast retains an out-of-line
 // copy, while retail /Ob2 expands this header helper at its callers.
-inline TAdventureObjectType CObject::get_type() const
+inline TAdventureObjectType CObject::getType() const
 {
-    return get_object_type_ptr()->objectType;
+    return getObjectTypePtr()->m_objectType;
 }
 
 #endif  /* HOMM3_MAPCELL_H */

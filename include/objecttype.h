@@ -21,10 +21,13 @@
 //          allocates 0x24-byte nodes, i.e. a tree header plus
 //          pair<const string, int>;
 //   +0x10  a 16-byte vector whose elements are FOUR bytes wide.
-// The 4-byte element is the map's own ITERATOR: GetImageName reads
-// `rows[i]` and adds 0x0c to reach the key string, and setImageName reads
-// +0x1c from the same pointer to reach the mapped index - node+0x0c and
-// node+0x1c are exactly `->first` and `->second` of that pair. The
+// The 4-byte element carries a map node address, modeled here with the
+// map's iterator. GetImageName reads `rows[i]` and adds 0x0c to reach the
+// key string; setImageName reads +0x1c to reach the mapped index. These
+// are exactly the iterator's `->first` and `->second` accesses. A probe
+// using the pinned STL's raw node-pointer type instead reproduces both
+// setImageName record-order checkpoints byte for byte, so these bytes
+// do not distinguish the two source representations. The
 // registry's growth path in setImageName confirms it from the other side:
 // it inserts into the tree and then push_backs the RETURNED ITERATOR.
 //
@@ -34,42 +37,36 @@ class TObjectImageNameTable {
 public:
     typedef std::map<std::string, int> TNameIndex;
 
-    TNameIndex nameIndex;
-    std::vector<TNameIndex::iterator> rows;
+    // Before normalization: nameIndex.
+    TNameIndex m_nameIndex;
+    // Before normalization: rows.
+    std::vector<TNameIndex::iterator> m_rows;
 
     // Provisional name and boundary inferred from retail setImageName:
     // its first rows.size() expands, but this insertion path calls size,
     // the pair constructor and row insert. Flattening this lookup into
     // the caller expands the pair constructor and scores 47.77 vs 54.77.
-    int GetIndex(const std::string& name)
+    // Keep the returned entry distinct from the iterator passed by reference
+    // to vector::insert. In setImageName this preserves retail's existing-
+    // entry EAX path and reloads only after insertion (fn+0xe8). With the
+    // ordinary registry accessor, returning the mapped value by value also
+    // restores the caller's scratch allocation; see setImageName's controls.
+    int getIndex(const std::string& name)
     {
-        TNameIndex::iterator found = nameIndex.find(name);
-        if (found == nameIndex.end()) {
+        TNameIndex::iterator found = m_nameIndex.find(name);
+        TNameIndex::iterator result = found;
+        if (found == m_nameIndex.end()) {
             // Retail copies both returned fields, including the unused
             // bool into a stack home. Extracting .first directly drops it.
-            std::pair<TNameIndex::iterator, bool> inserted = nameIndex.insert(
-                TNameIndex::value_type(name, rows.size()));
+            std::pair<TNameIndex::iterator, bool> inserted = m_nameIndex.insert(
+                TNameIndex::value_type(name, m_rows.size()));
             found = inserted.first;
-            rows.insert(rows.end(), found);
+            m_rows.insert(m_rows.end(), found);
+            result = found;
         }
-        return found->second;
+        return result->second;
     }
 };
-
-// The registry is a function-local static of an INLINE ACCESSOR, not of
-// either consumer, and retail's guard bytes prove it: GetImageName (0x514960)
-// and setImageName (0x514610) each test 0x69cb64 with mask 1 for the same
-// object, while GetImageName's own empty-name static gets a SECOND byte
-// (0x69cb70), also with mask 1. Two statics declared in one body share a
-// single guard byte with masks 1 and 2, which is what a shared accessor rules
-// out. NAME PROVISIONAL - nothing attests it; only the guard-byte layout and
-// the shared 0x69cb80 object are retail-proven.
-inline TObjectImageNameTable& GetObjectImageNames()
-{
-    static TObjectImageNameTable imageNames;
-    return imageNames;
-}
-
 
 // --- the object-type filter family -----------------------------------------
 //
@@ -87,7 +84,10 @@ inline TObjectImageNameTable& GetObjectImageNames()
 class TObjectTypeFilter {
 public:
     virtual ~TObjectTypeFilter();
-    virtual int Accepts(const TObjectType* objectType) const = 0;
+    // Retail 0x5141bd returns its literal zero through AL. The native-terrain
+    // override is exact with this byte result and a direct logical tail.
+    // Before normalization (function): TObjectTypeFilter::Accepts.
+    virtual unsigned char accepts(const TObjectType* objectType) const = 0;
 };
 
 // Retail 0x5141b0. The terrain id lands at +4 and the predicate reads
@@ -98,7 +98,8 @@ public:
 class TNativeTerrainObjectFilter : public TObjectTypeFilter {
 public:
     explicit TNativeTerrainObjectFilter(int terrain);
-    virtual int Accepts(const TObjectType* objectType) const;
+    // Before normalization (function): TNativeTerrainObjectFilter::Accepts.
+    virtual unsigned char accepts(const TObjectType* objectType) const;
 
     int m_terrain;
 };
@@ -109,7 +110,8 @@ public:
 class TAnyTerrainObjectFilter : public TObjectTypeFilter {
 public:
     TAnyTerrainObjectFilter();
-    virtual int Accepts(const TObjectType* objectType) const;
+    // Before normalization (function): TAnyTerrainObjectFilter::Accepts.
+    virtual unsigned char accepts(const TObjectType* objectType) const;
 };
 
 // Retail 0x514260, the whole body a `sete` on one compare: the object's
@@ -117,7 +119,8 @@ public:
 class TSlotCategoryObjectFilter : public TObjectTypeFilter {
 public:
     explicit TSlotCategoryObjectFilter(int slotCategory);
-    virtual int Accepts(const TObjectType* objectType) const;
+    // Before normalization (function): TSlotCategoryObjectFilter::Accepts.
+    virtual unsigned char accepts(const TObjectType* objectType) const;
 
     int m_slotCategory;
 };
@@ -126,7 +129,8 @@ enum EObjectTypeFilterConstants {
     OBJECT_TYPE_FILTER_COUNT = 15
 };
 
-extern TObjectTypeFilter* const gObjectTypeFilters[OBJECT_TYPE_FILTER_COUNT];
+// Before normalization: gObjectTypeFilters.
+extern TObjectTypeFilter* const g_objectTypeFilters[OBJECT_TYPE_FILTER_COUNT];
 
 // The per-row parser TObjectTypeTable::load runs over each objects.txt
 // line, retail 0x514b80. Free and therefore __fastcall under /Gr: the

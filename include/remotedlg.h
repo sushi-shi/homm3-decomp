@@ -27,8 +27,10 @@ class CSprite;
 // forwards its fastcall frame argument to SmackGoto on the current handle;
 // the second decodes that handle's current frame when playback is active.
 // Their wider ownership and original names remain unattested.
-void __fastcall SetCurrentSmackFrame(int frame);
-void DrawCurrentSmackFrame();
+// Before normalization (function): SetCurrentSmackFrame.
+void __fastcall setCurrentSmackFrame(int frame);
+// Before normalization (function): DrawCurrentSmackFrame.
+void drawCurrentSmackFrame();
 
 // CNetMsgHandlerPause is defined in remote.h beside its base class.
 
@@ -58,28 +60,39 @@ class CAnimatedDlg : public CTextDialog {
 public:
     CAnimatedDlg();
     virtual ~CAnimatedDlg();
-    virtual unsigned char Setup(const char* cText, font* pFont,
-                                const char* sSprite, int seq);  // slot 13
-    virtual void CalcDimensions(const char* cText, font* pFont,
+    // Before normalization (function): CAnimatedDlg::Setup.
+    // Before normalization (locals): cText, pFont, sSprite.
+    virtual unsigned char setup(const char* text, font* currentFont,
+                                const char* spriteName, int seq);  // slot 13
+    // Before normalization (function): CAnimatedDlg::CalcDimensions.
+    // Before normalization (locals): cText, pFont.
+    virtual void calcDimensions(const char* text, font* currentFont,
                                 int& winX, int& winY,
                                 int& winWidth, int& winHeight);  // slot 12
-    virtual int handle_message(message& msg);                    // slot 3
-    virtual void DrawWindow(unsigned char update, int iLowID,
-                            int iHighID);                        // slot 5
+    // Before normalization (function): CAnimatedDlg::handle_message.
+    virtual int handleMessage(message& msg);                    // slot 3
+    // Before normalization (function): CAnimatedDlg::DrawWindow.
+    // Before normalization (locals): iLowID, iHighID.
+    virtual void drawWindow(unsigned char update, int lowID,
+                            int highID);                        // slot 5
 
 protected:
-    void CalcSpriteDimensions(CSprite* sprite, int& maxWidth,
+    // Before normalization (function): CAnimatedDlg::CalcSpriteDimensions.
+    void calcSpriteDimensions(CSprite* sprite, int& maxWidth,
                               int& maxHeight, int& minY);
-    void DrawSprite();
-    void TickAnimation();
+    // Before normalization (function): CAnimatedDlg::DrawSprite.
+    void drawSprite();
+    // Before normalization (function): CAnimatedDlg::TickAnimation.
+    void tickAnimation();
     unsigned long m_lastTick;    // +0x58
     int m_spriteX;               // +0x5c
     int m_spriteY;               // +0x60
     int m_spriteFrame;           // +0x64
     int m_seq;                   // +0x68
-    const char* m_sSprite;       // +0x6c
+    const char* m_spriteName;       // +0x6c
     unsigned char m_palUpdated;  // +0x70
-    CSprite* m_pSprite;          // +0x74
+    // Before normalization: m_pSprite.
+    CSprite* m_sprite;          // +0x74
 };
 SIZE(CAnimatedDlg, 0x78);
 
@@ -92,17 +105,25 @@ SIZE(CAnimatedDlg, 0x78);
 class CWaitForReadyPlayersDlg : public CAnimatedDlg {
 public:
     CWaitForReadyPlayersDlg();
-    void Wait();
-    bool AllPlayersReady();
-    virtual int handle_message(message& msg);  // slot 3
+    // Before normalization (function): CWaitForReadyPlayersDlg::Wait.
+    void wait();
+    // Before normalization (function): CWaitForReadyPlayersDlg::AllPlayersReady.
+    bool allPlayersReady();
+    // Before normalization (function): CWaitForReadyPlayersDlg::handle_message.
+    virtual int handleMessage(message& msg);  // slot 3
 
 protected:
-    int OnPlayerDrop(CNetMsg* pNetMsg, message& msg);
+    // Before normalization (function): CWaitForReadyPlayersDlg::OnPlayerDrop.
+    // Before normalization (locals): pNetMsg.
+    int onPlayerDrop(CNetMsg* netMsg, message& msg);
 
-    unsigned long startTime;             // +0x78
-    unsigned long lastMsg;               // +0x7c
+    // Before normalization: startTime.
+    unsigned long m_startTime;             // +0x78
+    // Before normalization: lastMsg.
+    unsigned long m_lastMsg;               // +0x7c
     CNetMsgHandlerPause m_netMsgHandler;  // +0x80
-    unsigned char playerReady[8];         // +0x90
+    // Before normalization: playerReady.
+    unsigned char m_playerReady[8];         // +0x90
 };
 SIZE(CWaitForReadyPlayersDlg, 0x98);
 
@@ -132,12 +153,18 @@ SIZE(CWaitForReadyPlayersDlg, 0x98);
 class CLevelPickWaitDlg : public CAnimatedDlg {
 public:
     CLevelPickWaitDlg();
-    void WaitForLevels(int fromWho);
-    virtual int handle_message(message& msg);  // slot 3
+    // Before normalization (function): CLevelPickWaitDlg::WaitForLevels.
+    void waitForLevels(int fromWho);
+    // Before normalization (function): CLevelPickWaitDlg::handle_message.
+    virtual int handleMessage(message& msg);  // slot 3
 
 protected:
-    int OnPlayerDrop(CNetMsg* pNetMsg, message& msg);
-    void OnHeroLevelUpdate(CNetMsg* pNetMsg);
+    // Before normalization (function): CLevelPickWaitDlg::OnPlayerDrop.
+    // Before normalization (locals): pNetMsg.
+    int onPlayerDrop(CNetMsg* netMsg, message& msg);
+    // Before normalization (function): CLevelPickWaitDlg::OnHeroLevelUpdate.
+    // Before normalization (locals): pNetMsg.
+    void onHeroLevelUpdate(CNetMsg* netMsg);
 
     int m_fromWho;                        // +0x78
     CNetMsgHandlerPause m_netMsgHandler;  // +0x7c
@@ -167,14 +194,19 @@ public:
     // not the user-defined one. Declaring it here scored that row 28.9125;
     // leaving it implicit scores 100.0000 (see the note in events.cpp).
     // The destructor stays virtual through CAnimatedDlg's.
-    void Wait(int playerPos);
-    virtual int handle_message(message& msg);  // slot 3
+    // Before normalization (function): CWaitForRemoteBattleDlg::Wait.
+    void wait(int playerPos);
+    // Before normalization (function): CWaitForRemoteBattleDlg::handle_message.
+    virtual int handleMessage(message& msg);  // slot 3
 
 protected:
-    int OnPlayerDrop(CNetMsg* pNetMsg, message& msg);
+    // Before normalization (function): CWaitForRemoteBattleDlg::OnPlayerDrop.
+    // Before normalization (locals): pNetMsg.
+    int onPlayerDrop(CNetMsg* netMsg, message& msg);
 
     int m_playerPos;                         // +0x78
-    CCombatInitMsg* m_pCombatInitMsg;        // +0x7c (DC name)
+    // Before normalization: m_pCombatInitMsg.
+    CCombatInitMsg* m_combatInitMsgPointer;        // +0x7c (DC name)
 
     // Public tail: advManager::DoCombat reads the received flag and
     // hands the payload message straight to ReceiveHeroTownData.
@@ -206,12 +238,16 @@ SIZE(CWaitForRemoteBattleDlg, 0xbd8);
 class CSaveScreen : public Bitmap16Bit {
 public:
     CSaveScreen(int w, int h);
-    void Save(int x, int y);
-    void Restore(unsigned char update);
-    unsigned char IsSaved();
+    // Before normalization (function): CSaveScreen::Save.
+    void save(int x, int y);
+    // Before normalization (function): CSaveScreen::Restore.
+    void restore(unsigned char update);
+    // Before normalization (function): CSaveScreen::IsSaved.
+    unsigned char isSaved();
 
 protected:
-    unsigned char screenSaved;  // +0x38
+    // Before normalization: screenSaved.
+    unsigned char m_screenSaved;  // +0x38
     int m_x;                    // +0x3c
     int m_y;                    // +0x40
 };
@@ -233,13 +269,18 @@ class CGameTransferSmack {
 public:
     CGameTransferSmack();
     ~CGameTransferSmack();
-    void Setup(int x, int y, unsigned char sending, unsigned char drawText);
-    void Start();
-    void SetPercentage(float pct);
+    // Before normalization (function): CGameTransferSmack::Setup.
+    void setup(int x, int y, unsigned char sending, unsigned char drawText);
+    // Before normalization (function): CGameTransferSmack::Start.
+    void start();
+    // Before normalization (function): CGameTransferSmack::SetPercentage.
+    void setPercentage(float pct);
     void drawCurrentFrame();
-    void Stop();
-    void SaveScreen();
-    void RestoreScreen();
+    void stop();
+    // Before normalization (function): CGameTransferSmack::SaveScreen.
+    void saveScreen();
+    // Before normalization (function): CGameTransferSmack::RestoreScreen.
+    void restoreScreen();
 
 protected:
     int m_x;                     // +0x00
@@ -268,12 +309,15 @@ SIZE(CGameTransferSmack, 0x14);
 class CGameTransferDlg : public CTextDialog {
 public:
     CGameTransferDlg(unsigned char sending);
-    virtual void CalcDimensions(const char* cText, font* pFont,
+    // Before normalization (function): CGameTransferDlg::CalcDimensions.
+    // Before normalization (locals): cText, pFont.
+    virtual void calcDimensions(const char* text, font* currentFont,
                                 int& winX, int& winY,
                                 int& winWidth, int& winHeight);  // slot 12
     // Public in DC field list 0x4e47; TransmitSaveGame selects this member
     // when the progress window, rather than the adventure view, owns it.
-    CGameTransferSmack smack;    // +0x58
+    // Before normalization: smack.
+    CGameTransferSmack m_smack;    // +0x58
 
 protected:
     unsigned char m_sending;     // +0x6c

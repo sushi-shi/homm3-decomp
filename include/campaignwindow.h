@@ -8,6 +8,7 @@
 #include "window.h"
 
 class message;
+class Bitmap816;
 
 // Complete-only campaign-set chooser used by kb.cpp's DoCampaignWindow.
 // Retail constructor 0x456ec0 derives heroWindow directly and the caller's
@@ -57,8 +58,10 @@ public:
     virtual ~TCampaignSetWindow();
     // Slot 3 of vtable 0x63bc08 (0x4574d0): the hover sweep that lights
     // the plate under the mouse and repaints the plate band.
-    virtual int handle_message(message& msg);
-    void DoModal();
+    // Before normalization (function): TCampaignSetWindow::handle_message.
+    virtual int handleMessage(message& msg);
+    // Before normalization (function): TCampaignSetWindow::DoModal.
+    void doModal();
 };
 SIZE(TCampaignSetWindow, 0x4c);
 
@@ -127,42 +130,66 @@ public:
     };
 
     // +0x4c/+0x50: the constructor seeds 0 and -1 into them before any
-    // other derived store and nothing else in this TU reads them, so they
-    // stay unnamed. +0x54..+0x5f is untouched by every body carved here.
-    int field_4c;
-    int field_50;
-    char pad_54[0xc];
+    // other derived store. Dreamcast names these two retained words;
+    // +0x54..+0x5f is untouched by every body carved here.
+    // Before normalization: field_4c.
+    // Dreamcast lastActive at +0x44 maps to PC +0x4c. Both constructors
+    // clear it before the campaign state; no further retail use is reconstructed.
+    int m_lastActive;
+    // Before normalization: field_50.
+    // Dreamcast currentCampVideo at +0x48 maps to PC +0x50. Both
+    // constructors initialize it to -1 in the same statement order.
+    int m_currentCampVideo;
+    // Dreamcast's three-member tail follows currentCampVideo at +0x48:
+    // saveVideoFile (+0x4c, void*), CheckMark (+0x50, Bitmap816*), and
+    // RolloverWidget (+0x54, const widget*). The retained PC members
+    // above shift by +8, leaving exactly this tail before the new
+    // campaignAvailable array at +0x60. No retail uses of this tail are
+    // located; declarations follow source/layout evidence.
+    // Replaces synthetic pad_54; original spellings retained above.
+    void* m_saveVideoFile;               // +0x54
+    Bitmap816* m_checkMark;              // +0x58
+    const widget* m_rolloverWidget;      // +0x5c
     // +0x60. One byte per campaign row, cleared as a single inlined
     // 21-byte memset (five dwords plus a byte) and then filled by the
     // constructor's three-way switch; the widget loop walks 0..19 and the
     // page switch writes as high as index 19, so the block is the same
     // 21 wide as SCampaign::campaignCompleted, which every gate reads.
-    unsigned char campaignAvailable[21];
-    char pad_75[3];
+    // Before normalization: campaignAvailable.
+    unsigned char m_campaignAvailable[21];
+    // Before normalization: pad_75.
+    // The PC constructor clears 21 campaign bytes at +0x60, then
+    // stores firstCampaign at +0x78. These three bytes align the dword.
+    char m_paddingBeforeFirstCampaign[3];
     // +0x78. The handler subtracts it (plus 7) from a campaign id to reach
     // that campaign's preview widget, so it is the ordinal of the first
     // campaign the current page shows; the constructor seeds 0, 7 or 13.
-    int firstCampaign;
+    // Before normalization: firstCampaign.
+    int m_firstCampaign;
 
     // Complete added the leading new-game selector to Dreamcast's
     // one-argument constructor; oldmain and the retail body prove both slots.
     TCampaignWindow(unsigned char newGame, int newCampaign);
     virtual ~TCampaignWindow();
-    void DoModal();
+    // Before normalization (function): TCampaignWindow::DoModal.
+    void doModal();
     // Retail 0x45e7c0, thiscall with the campaign ordinal. Complete-only
     // (no Dreamcast counterpart): it opens the row's preview movie through
     // VideoOpen, snapshots the Bink state into the row's +0x20 block and
     // pushes the row's bitmapBorder16 still. Not reconstructed here; the
     // constructor is its only caller. Provisional name.
-    void OpenPreview(int campaignIndex);
+    // Before normalization (function): TCampaignWindow::OpenPreview.
+    void openPreview(int campaignIndex);
     // Retail emits no out-of-line body: every caller expands it under /Ob2,
     // and the expansion is register-visible - the hoisted `this` is the EBX
     // the handler's two preview sweeps share (see campaignwindow.cpp).
-    void HideText();
+    // Before normalization (function): TCampaignWindow::HideText.
+    void hideText();
 };
 
 // Retail /Gr passes the message in ECX, as DoDialog's TDialogHandler does.
-int CampaignWindowHandler(message& msg);
+// Before normalization (function): CampaignWindowHandler.
+int campaignWindowHandler(message& msg);
 
 // Complete-only initialized campaign-preview table at retail 0x66c498:
 // twenty 0x50-byte rows, one per campaign, indexed by `id -
@@ -176,32 +203,35 @@ int CampaignWindowHandler(message& msg);
 // the consecutive Bink state beginning at gBinkVideo, written by
 // OpenPreview and restored by the destructor and the hover handler.
 struct SCampaignPreview {
-    int video;
-    int x;
-    int y;
-    int textX;
-    int textY;
-    int textWidth;
-    const char* image;
-    int widgetId;
-    int binkState[12];
+    // Before normalization: video.
+    int m_video;
+    // Before normalization: x.
+    int m_x;
+    // Before normalization: y.
+    int m_y;
+    // Before normalization: textX.
+    int m_textX;
+    // Before normalization: textY.
+    int m_textY;
+    // Before normalization: textWidth.
+    int m_textWidth;
+    // Before normalization: image.
+    const char* m_image;
+    // Before normalization: widgetId.
+    int m_widgetId;
+    // Before normalization: binkState.
+    int m_binkState[12];
 };
 SIZE(SCampaignPreview, 0x50);
-extern SCampaignPreview gCampaignPreviews[20];
+// Before normalization: gCampaignPreviews.
+extern SCampaignPreview g_campaignPreviews[20];
 
-// The per-row caption rows at retail 0x6a5f88, eight bytes apart. The
-// constructor is the ONLY code reference to the block in the whole image
-// (config/retail-reloc-evidence.tsv has one site, 0x5ef70) and the bytes
-// are zero-filled, so the first word - the string it hands to the row's
-// textWidget - is all retail proves; the second stays unnamed. Left
-// without a DATA claim for the same reason gCampaignPreviews is: nothing
-// carves the block's extent.
-struct SCampaignCaption {
-    const char* text;
-    char pad_04[4];
-};
-SIZE(SCampaignCaption, 8);
-extern SCampaignCaption gCampaignCaptions[20];
+// Retail 0x45ef6d's caption base 0x6a5f88 is row 1 of this table.
+// initializeHelpText at 0x5b9ad1..0x5b9af7 loads 24 eight-byte pairs
+// at 0x6a5f80: spreadsheet column 0 is text, column 1 right-click help.
+// The former SCampaignCaption::pad_04 was that second pointer, not padding.
+// Dreamcast THelpText names the members Rollover and RightClick.
+extern THelpText g_campaignWindowHelp[24];
 
 // The twenty campaign data-file names the handler hands to
 // SCampaign::select_campaign. Retail addresses them as
@@ -209,7 +239,8 @@ extern SCampaignCaption gCampaignCaptions[20];
 // id - CAMPAIGN_FIRST_ID - the constant-folded form of a twenty-entry
 // table that starts immediately after the 0x66cad8 hover latch. No DATA
 // claim yet: the fold means the table's own extent is not carved.
-extern const char* gCampaignFileNames[20];
+// Before normalization: gCampaignFileNames.
+extern const char* g_campaignFileNames[20];
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\campaignwindow.cpp:291, dc 0x5bd94) int CampaignWindowHandler(message* msg);

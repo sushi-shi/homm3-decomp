@@ -17,6 +17,26 @@ def origin(name='Widget::draw', file='widget.h', line=100):
 
 
 class OwnershipTest(unittest.TestCase):
+    def test_normalized_operation_keeps_owner_signature_and_duplicate_checks(self):
+        from dataclasses import replace
+        d = definition(name='Widget::getValue')
+        o = replace(origin(name='Widget::Get_Value'), argument_types=())
+        self.assertEqual(compare([d], [o], {}, {})[0], [])
+        wrong_owner = replace(d, file='include/other.h')
+        self.assertTrue(compare([wrong_owner], [o], {}, {})[0][0].startswith('OWNER '))
+        wrong_signature = replace(d, parameters=1, argument_types=('int',))
+        self.assertTrue(compare([wrong_signature], [o], {}, {})[0][0].startswith('SIGNATURE '))
+        duplicate = replace(d, line=30, offset=30, name='Widget::get_value')
+        self.assertTrue(any(e.startswith('DUPLICATE ') for e in compare([d, duplicate], [o], {}, {})[0]))
+        distinct_type = replace(d, name='widget::getValue')
+        self.assertTrue(compare([distinct_type], [o], {}, {})[0][0].startswith('WIN_ONLY '))
+
+    def test_normalized_name_collision_requires_source_identity(self):
+        d = definition(name='Widget::getValue')
+        errors, _ = compare([d], [origin(name='Widget::GetValue'),
+                                   origin(name='Widget::get_value', line=200)], {}, {})
+        self.assertTrue(any(e.startswith('AMBIGUOUS ') for e in errors))
+
     def test_source_location_accepts_comma_without_crossing_a_body(self):
         from homm3.match.source_ownership import origin_hint
         for suffix in (', dc 0xa8b74. PC adds the version.', '. PC adds the version.', ''):

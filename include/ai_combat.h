@@ -22,7 +22,8 @@ class NewmapCell;
 // operator delete was visible as nothrow. Declaring it so here is what
 // makes those two byte-exact; the retail target is the 11-byte free
 // thunk at 0x60ab30, which indeed cannot throw.
-__declspec(nothrow) void __cdecl operator delete(void* _P);
+// Before normalization (locals): _P.
+__declspec(nothrow) void __cdecl operator delete(void* p);
 
 // The AI's quick-combat speed bands. Retail compares the band against
 // type_monster_data::catagory as a plain signed int (get_attack
@@ -63,42 +64,73 @@ enum type_speed_catagory {
 //                       (0x426498); get_spell_damage caps raw damage
 //                       through +0x30 (0x423e71).
 //   +0x38 catagory    - get_attack's speed-band gate (0x4263d0).
-//   +0x3c hit_points  - take_damage's per-creature divisor (0x423ec9).
-//   +0x40 total_hit_points - the stack's remaining life.
+//   +0x3c value       - take_damage's per-creature divisor (0x423ec9).
+//   +0x40 total_value - the stack's remaining combat value.
+// Original names from Dreamcast 0x5d4f, corroborated by NH3API:
+// index, type, number, original_number, speed, melee_modifier,
+// final_melee_modifier, ranged_modifier, combat_value_per_hit, catagory,
+// value, total_value. The old hit_points names were misleading: the
+// population code computes value from baseFightValue and forceModifier.
 struct type_monster_data {
-    long slot;                     // +0x00
-    TCreatureType creature;        // +0x04
-    long count;                    // +0x08
-    long original_count;           // +0x0c
-    long speed;                    // +0x10
-    long field_14;                 // +0x14
-    double melee_value;            // +0x18
-    double final_melee_value;      // +0x20
-    double ranged_value;           // +0x28
-    double damage_modifier;        // +0x30
-    type_speed_catagory catagory;  // +0x38
-    long hit_points;               // +0x3c
-    long total_hit_points;         // +0x40
-    long field_44;                 // +0x44
+    // Before normalization: slot.
+    long m_index;                     // +0x00
+    // Before normalization: creature.
+    TCreatureType m_type;        // +0x04
+    // Before normalization: count.
+    long m_number;                    // +0x08
+    // Before normalization: original_count.
+    long m_originalNumber;           // +0x0c
+    // Before normalization: speed.
+    long m_speed;                    // +0x10
+    // Synthetic field_14 was alignment: Dreamcast type 0x5d4f and
+    // NH3API both place the first double at +0x18 after speed at +0x10.
+    // The four-byte gap is implicit under the proven eight-byte alignment.
+    // Before normalization: melee_value.
+    double m_meleeModifier;            // +0x18
+    // Before normalization: final_melee_value.
+    double m_finalMeleeModifier;      // +0x20
+    // Before normalization: ranged_value.
+    double m_rangedModifier;           // +0x28
+    // Before normalization: damage_modifier.
+    double m_combatValuePerHit;        // +0x30
+    // Before normalization: catagory.
+    type_speed_catagory m_catagory;  // +0x38
+    // Before normalization: hit_points.
+    long m_value;               // +0x3c
+    // Before normalization: total_hit_points.
+    long m_totalValue;         // +0x40
+    // Synthetic field_44 was tail alignment: total_value ends at +0x44,
+    // and the double-containing record has retail/DC stride 0x48.
 
-    long get_enchantment_value(type_spell_choice& choice,
-                               const hero* casting_hero,
-                               const hero* target_hero) const;
-    long get_resurrection_value(type_spell_choice& choice,
-                                const hero* casting_hero) const;
-    void cast_resurrection(type_spell_choice& choice,
-                           const hero* casting_hero);
-    long get_spell_damage(SpellID spell, const hero* casting_hero,
-                          const hero* target_hero, long damage) const;
-    long take_damage(long damage);
+    // Before normalization (function): type_monster_data::get_enchantment_value.
+    long getEnchantmentValue(type_spell_choice& choice,
+                               // Before normalization (locals): casting_hero, target_hero.
+                               const hero* castingHero,
+                               const hero* targetHero) const;
+    // Before normalization (function): type_monster_data::get_resurrection_value.
+    long getResurrectionValue(type_spell_choice& choice,
+                                // Before normalization (locals): casting_hero.
+                                const hero* castingHero) const;
+    // Before normalization (function): type_monster_data::cast_resurrection.
+    void castResurrection(type_spell_choice& choice,
+                           // Before normalization (locals): casting_hero.
+                           const hero* castingHero);
+    // Before normalization (function): type_monster_data::get_spell_damage.
+    // Before normalization (locals): casting_hero, target_hero.
+    long getSpellDamage(SpellID spell, const hero* castingHero,
+                          const hero* targetHero, long damage) const;
+    // Before normalization (function): type_monster_data::take_damage.
+    long takeDamage(long damage);
     bool operator<(const type_monster_data& arg) const
     {
-        return hit_points < arg.hit_points;
+        return m_value < arg.m_value;
     }
     // No retail row of its own - /Ob2 inlined every call site and
     // OPT:REF dropped the out-of-line COMDAT, so ai_combat.cpp defines
     // it `inline` (see the note there).
-    void cast_enchantment(long spell_value, unsigned char increase);
+    // Before normalization (function): type_monster_data::cast_enchantment.
+    // Before normalization (locals): spell_value.
+    void castEnchantment(long spellValue, unsigned char increase);
 };
 SIZE(type_monster_data, 0x48);
 
@@ -152,11 +184,16 @@ SIZE(type_monster_vector, 0x10);
 //                     check_wall_archery_penalty's only outputs.
 class type_AI_combat_data {
 public:
-    type_monster_vector monsters;    // +0x00
-    long terrain;                    // +0x10
-    long mana;                       // +0x14
-    unsigned char can_cast;          // +0x18, natural padding to +0x1c
-    long total_hit_points;           // +0x1c
+    // Before normalization: monsters.
+    type_monster_vector m_monsters;    // +0x00
+    // Before normalization: terrain.
+    long m_terrain;                    // +0x10
+    // Before normalization: mana.
+    long m_mana;                       // +0x14
+    // Before normalization: can_cast.
+    unsigned char m_canCast;          // +0x18, natural padding to +0x1c
+    // Before normalization: total_hit_points.
+    long m_totalHitPoints;           // +0x1c
     // The attacker's Tactics edge over the defender. A REAL FIELD, not
     // padding: initialize_creatures (0x424120) seeds it with 0, then
     // `movsx edx, byte [my_hero+0xdc]` (secondary-skill slot 19 =
@@ -168,48 +205,83 @@ public:
     // carries after `monsters` because VC6's std::vector is 16 B where
     // the DC's STLport is 12), and the semantics above corroborate it
     // independently.
-    long tactics_advantage;          // +0x20
-    hero* my_hero;                   // +0x24
-    armyGroup* my_army;              // +0x28
-    hero* enemy_hero;                // +0x2c
-    unsigned char wall_penalty;      // +0x30, natural padding at +0x31
-    short penalty_distance;          // +0x32
+    // Before normalization: tactics_advantage.
+    long m_tacticsAdvantage;          // +0x20
+    // Before normalization: my_hero.
+    hero* m_myHero;                   // +0x24
+    // Before normalization: my_army.
+    armyGroup* m_myArmy;              // +0x28
+    // Before normalization: enemy_hero.
+    hero* m_enemyHero;                // +0x2c
+    // Before normalization: wall_penalty.
+    unsigned char m_wallPenalty;      // +0x30, natural padding at +0x31
+    // Before normalization: penalty_distance.
+    short m_penaltyDistance;          // +0x32
 
-    type_AI_combat_data(const hero* new_hero, const armyGroup* new_army,
-                        double base_modifier, const hero* _enemy_hero,
-                        const town* enemy_town, NewmapCell* map_cell);
+    // Before normalization (locals): new_hero, new_army, base_modifier, _enemy_hero, enemy_town,
+    // map_cell.
+    type_AI_combat_data(const hero* newHero, const armyGroup* newArmy,
+                        double baseModifier, const hero* enemyHero,
+                        const town* enemyTown, NewmapCell* mapCell);
     type_AI_combat_data(const type_AI_combat_data& other);
-    void initialize_creatures(double base_modifier, const hero* enemy_hero);
-    void check_wall_archery_penalty(const town* enemy_town);
-    type_speed_catagory get_catagory(TCreatureType creature, long speed);
-    void adjust_army(unsigned char dismiss_hero);
-    long get_fastest_speed() const;
-    long get_next_chain_lightning_target(long excluded,
+    // Before normalization (function): type_AI_combat_data::initialize_creatures.
+    // Before normalization (locals): base_modifier, enemy_hero.
+    void initializeCreatures(double baseModifier, const hero* enemyHero);
+    // Before normalization (function): type_AI_combat_data::check_wall_archery_penalty.
+    // Before normalization (locals): enemy_town.
+    void checkWallArcheryPenalty(const town* enemyTown);
+    // Before normalization (function): type_AI_combat_data::get_catagory.
+    type_speed_catagory getCatagory(TCreatureType creature, long speed);
+    // Before normalization (function): type_AI_combat_data::adjust_army.
+    // Before normalization (locals): dismiss_hero.
+    void adjustArmy(unsigned char dismissHero);
+    // Before normalization (function): type_AI_combat_data::get_fastest_speed.
+    long getFastestSpeed() const;
+    // Before normalization (function): type_AI_combat_data::get_next_chain_lightning_target.
+    long getNextChainLightningTarget(long excluded,
                                          const type_AI_combat_data& defender,
                                          long start, long damage) const;
-    void get_chain_lightning_value(type_spell_choice& choice,
+    // Before normalization (function): type_AI_combat_data::get_chain_lightning_value.
+    void getChainLightningValue(type_spell_choice& choice,
                                    const type_AI_combat_data& defender,
                                    long damage) const;
-    void get_area_value(type_spell_choice& choice,
+    // Before normalization (function): type_AI_combat_data::get_area_value.
+    void getAreaValue(type_spell_choice& choice,
                         const type_AI_combat_data& defender,
-                        long damage, long extra_targets) const;
-    void get_damage_spell_value(type_spell_choice& choice,
+                        // Before normalization (locals): extra_targets.
+                        long damage, long extraTargets) const;
+    // Before normalization (function): type_AI_combat_data::get_damage_spell_value.
+    void getDamageSpellValue(type_spell_choice& choice,
                                 const type_AI_combat_data& defender) const;
-    long get_mass_damage_value(type_spell_choice& choice,
-                               const hero* casting_hero) const;
-    void get_mass_damage_value(type_spell_choice& choice,
+    // Before normalization (function): type_AI_combat_data::get_mass_damage_value.
+    long getMassDamageValue(type_spell_choice& choice,
+                               // Before normalization (locals): casting_hero.
+                               const hero* castingHero) const;
+    // Before normalization (function): type_AI_combat_data::get_mass_damage_value.
+    void getMassDamageValue(type_spell_choice& choice,
                                type_AI_combat_data& defender);
-    void cast_mass_damage_spell(type_spell_choice& choice,
-                                const hero* casting_hero);
-    void cast_mass_damage_spell_with_damage_call(
-        type_spell_choice& choice, const hero* casting_hero);
-    long inflict_melee_damage(long damage, long start, long speed_limit);
+    // Before normalization (function): type_AI_combat_data::cast_mass_damage_spell.
+    void castMassDamageSpell(type_spell_choice& choice,
+                                // Before normalization (locals): casting_hero.
+                                const hero* castingHero);
+    // Before normalization (function): type_AI_combat_data::cast_mass_damage_spell_with_damage_call.
+    void castMassDamageSpellWithDamageCall(
+        // Before normalization (locals): casting_hero.
+        type_spell_choice& choice, const hero* castingHero);
+    // Before normalization (function): type_AI_combat_data::inflict_melee_damage.
+    // Before normalization (locals): speed_limit.
+    long inflictMeleeDamage(long damage, long start, long speedLimit);
     void kill();
-    void inflict_damage(long damage, long blocker_speed);
-    long get_attack(type_speed_catagory speed_limit,
-                    unsigned char shooters_blocked) const;
-    long get_final_melee_value() const;
-    armyGroup* get_army() const { return my_army; }
+    // Before normalization (function): type_AI_combat_data::inflict_damage.
+    // Before normalization (locals): blocker_speed.
+    void inflictDamage(long damage, long blockerSpeed);
+    // Before normalization (function): type_AI_combat_data::get_attack.
+    // Before normalization (locals): speed_limit, shooters_blocked.
+    long getAttack(type_speed_catagory speedLimit,
+                    unsigned char shootersBlocked) const;
+    // Before normalization (function): type_AI_combat_data::get_final_melee_value.
+    long getFinalMeleeValue() const;
+    armyGroup* getArmy() const { return m_myArmy; }
     // E:\gamedcs\ai_combat.h:255
     // EXACT 2026-08-08 (83.6 -> 100.0) by the THREE-OPERAND SELECTOR: the
     // null test is a `?:` on the return expression, not an early-out `if`.
@@ -232,52 +304,79 @@ public:
     // dropping the unsigned cast - all four leave the split-if shape and
     // score 83.57 unchanged.
     VA(0x00427750, 0x21)  // anchor-global, dc 0x2c6ac
-    long get_total() const
+    long getTotal() const
     {
-        type_monster_data* first = monsters._First;
-        return first == 0 ? 0 : (unsigned)(monsters._Last - first);
+        type_monster_data* first = m_monsters._First;
+        return first == 0 ? 0 : (unsigned)(m_monsters._Last - first);
     }
-    hero* get_hero() const { return my_hero; }
-    void cast_chain_lightning(type_spell_choice& choice,
+    hero* getHero() const { return m_myHero; }
+    void castChainLightning(type_spell_choice& choice,
                               type_AI_combat_data& defender, long damage) const;
-    void cast_area_effect(type_spell_choice& choice, type_AI_combat_data& defender,
-                          long damage, long extra_targets) const;
-    void cast_damage_spell(type_spell_choice& choice,
+    // Before normalization (function): type_AI_combat_data::cast_area_effect.
+    void castAreaEffect(type_spell_choice& choice, type_AI_combat_data& defender,
+                          // Before normalization (locals): extra_targets.
+                          long damage, long extraTargets) const;
+    // Before normalization (function): type_AI_combat_data::cast_damage_spell.
+    void castDamageSpell(type_spell_choice& choice,
                            type_AI_combat_data& defender) const;
-    void get_enchantment_value(type_spell_choice& choice,
-                               const hero* casting_hero);
-    void get_enchantment_value(type_spell_choice& choice,
+    // Before normalization (function): type_AI_combat_data::get_enchantment_value.
+    void getEnchantmentValue(type_spell_choice& choice,
+                               // Before normalization (locals): casting_hero.
+                               const hero* castingHero);
+    // Before normalization (function): type_AI_combat_data::get_enchantment_value.
+    void getEnchantmentValue(type_spell_choice& choice,
                                type_AI_combat_data& defender);
-    void cast_enchantment(type_spell_choice& choice, const hero* casting_hero,
+    // Before normalization (function): type_AI_combat_data::cast_enchantment.
+    // Before normalization (locals): casting_hero.
+    void castEnchantment(type_spell_choice& choice, const hero* castingHero,
                           unsigned char increase);
-    void cast_enchantment(type_spell_choice& choice, type_AI_combat_data& defender);
-    void cast_spell(type_AI_combat_data& defender, type_speed_catagory round);
-    void cast_spells(type_AI_combat_data& defender, type_speed_catagory round);
-    bool choose_melee(const type_AI_combat_data& enemy,
-                      type_speed_catagory current_round) const;
-    void do_ranged_combat(type_AI_combat_data& defender);
-    void do_melee_combat(type_speed_catagory attacker_speed,
+    // Before normalization (function): type_AI_combat_data::cast_enchantment.
+    void castEnchantment(type_spell_choice& choice, type_AI_combat_data& defender);
+    // Before normalization (function): type_AI_combat_data::cast_spell.
+    void castSpell(type_AI_combat_data& defender, type_speed_catagory round);
+    // Before normalization (function): type_AI_combat_data::cast_spells.
+    void castSpells(type_AI_combat_data& defender, type_speed_catagory round);
+    // Before normalization (function): type_AI_combat_data::choose_melee.
+    bool chooseMelee(const type_AI_combat_data& enemy,
+                      // Before normalization (locals): current_round.
+                      type_speed_catagory currentRound) const;
+    // Before normalization (function): type_AI_combat_data::do_ranged_combat.
+    void doRangedCombat(type_AI_combat_data& defender);
+    // Before normalization (function): type_AI_combat_data::do_melee_combat.
+    // Before normalization (locals): attacker_speed.
+    void doMeleeCombat(type_speed_catagory attackerSpeed,
                          type_AI_combat_data& defender);
-    void do_melee_combat(type_AI_combat_data& defender);
-    void do_general_melee(type_AI_combat_data& defender);
-    void simulate_combat(type_AI_combat_data& defender);
-    void do_aftermath(type_AI_combat_data* defender, const town* enemy_town);
+    // Before normalization (function): type_AI_combat_data::do_melee_combat.
+    void doMeleeCombat(type_AI_combat_data& defender);
+    // Before normalization (function): type_AI_combat_data::do_general_melee.
+    void doGeneralMelee(type_AI_combat_data& defender);
+    // Before normalization (function): type_AI_combat_data::simulate_combat.
+    void simulateCombat(type_AI_combat_data& defender);
+    // Before normalization (function): type_AI_combat_data::do_aftermath.
+    // Before normalization (locals): enemy_town.
+    void doAftermath(type_AI_combat_data* defender, const town* enemyTown);
 };
 
-unsigned char AI_quick_combat(hero* attacking_hero, hero* defending_hero,
-                              armyGroup* defending_army, town* defending_town,
+// Before normalization (locals): attacking_hero, defending_hero, defending_army, defending_town.
+unsigned char aiQuickCombat(hero* attackingHero, hero* defendingHero,
+                              armyGroup* defendingArmy, town* defendingTown,
                               NewmapCell* cell);
-void AI_auto_combat(hero* attacking_hero, hero* defending_hero,
-                    armyGroup* attacking_army, armyGroup* defending_army,
-                    const town* defending_town, NewmapCell* cell);
-long AI_value_of_combat(const hero* attacking_hero,
-                        const hero* defending_hero,
-                        const armyGroup& defending_army,
-                        const town* defending_town,
+// Before normalization (locals): attacking_hero, defending_hero, attacking_army, defending_army,
+// defending_town.
+void aiAutoCombat(hero* attackingHero, hero* defendingHero,
+                    armyGroup* attackingArmy, armyGroup* defendingArmy,
+                    const town* defendingTown, NewmapCell* cell);
+// Before normalization (function): AI_value_of_combat.
+// Before normalization (locals): attacking_hero, defending_hero, defending_army, defending_town.
+long aiValueOfCombat(const hero* attackingHero,
+                        const hero* defendingHero,
+                        const armyGroup& defendingArmy,
+                        const town* defendingTown,
                         NewmapCell* cell);
 
-long AI_approximate_strength(const hero* current_hero);
-long AI_approximate_strength(const hero* current_hero, const armyGroup* current_army);
+// Before normalization (locals): current_hero, current_army.
+long aiApproximateStrength(const hero* currentHero);
+long aiApproximateStrength(const hero* currentHero, const armyGroup* currentArmy);
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\ai_combat.cpp:1398, dc 0x2bcd8) void do_eagle_eye(hero* winner, hero* loser);

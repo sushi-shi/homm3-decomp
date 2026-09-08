@@ -17,20 +17,20 @@
 // copies, then dereferences the selector's returned argument address.
 inline int max(int left, int right)
 {
-    return _cpp_max(left, right);
+    return cppMax(left, right);
 }
 
 // E:\gamedcs\includes.h:114, dc 0x2da4.
 inline int min(int left, int right)
 {
-    return _cpp_min(left, right);
+    return cppMin(left, right);
 }
 
 // E:\gamedcs\includes.h:124, dc 0x20d2c. CodeView types all three
 // parameters and the return as const references. Retail expands this helper
 // through the by-value limit wrapper in the adventure and small-window TUs.
 template <class T>
-inline const T& t_limit(const T& minimum, const T& value,
+inline const T& tLimit(const T& minimum, const T& value,
                                const T& maximum)
 {
     return value < minimum ? minimum
@@ -40,7 +40,7 @@ inline const T& t_limit(const T& minimum, const T& value,
 // E:\gamedcs\includes.h:134
 inline int limit(int minimum, int value, int maximum)
 {
-    return t_limit(minimum, value, maximum);
+    return tLimit(minimum, value, maximum);
 }
 
 

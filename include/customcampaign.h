@@ -7,6 +7,7 @@
 #include <vector>
 #include <string.h>
 #include "hero.h"
+#include "campaignmusic.h"
 
 // The two 0x10-byte sub-objects SCampaign carries at +0x3c and +0x4c.
 // TCampaignWindow's constructor is the proof: `gpGame->campaign =
@@ -31,14 +32,14 @@
 // four-byte tail fields complete the same cross-build record instead of
 // leaving source-visible state as anonymous padding.
 struct CampaignScenarioInfo {
-    bool completed;
-    int days;
-    int score;
-    int index;
-    int complete_order;
+    bool m_completed;
+    int m_days;
+    int m_score;
+    int m_index;
+    int m_completeOrder;
 
     CampaignScenarioInfo()
-        : completed(false), days(0), score(0), index(-1), complete_order(0)
+        : m_completed(false), m_days(0), m_score(0), m_index(-1), m_completeOrder(0)
     {
     }
 };
@@ -66,39 +67,39 @@ public:
     // as a typedef it still gives VC6 the authoritative global element type.
     typedef CampaignScenarioInfo MapScore;
 
-    unsigned char isCheater;
-    unsigned char secretActive;
-    signed char currentMap;
+    unsigned char m_isCheater;
+    unsigned char m_secretActive;
+    signed char m_currentMap;
     // The alignment gaps after currentMap, crossoverArrayIndex and
     // campaignCompleted are deliberately IMPLICIT. Retail's generated
     // assignment does not copy them; naming them as char members created two
     // extra byte-copy loops in TCampaignWindow's constructor.
-    int currentCampaign;
-    int numMapRegions;
-    signed char crossoverArrayIndex;
-    int briefingChoice;
+    int m_currentCampaign;
+    int m_numMapRegions;
+    signed char m_crossoverArrayIndex;
+    int m_briefingChoice;
     // +0x14, and a std::string rather than the char[0x10] this was: the
     // memberwise assignment in TCampaignWindow's constructor drives the
     // slot through basic_string::assign(that, 0, npos) (0x404860, with the
     // npos word at 0x63a60c) and the temporary's teardown ends on
     // basic_string::_Tidy(true) against it. Same 0x10 width, so nothing
     // after it moves.
-    std::string campaignFilename;
+    std::string m_campaignFilename;
     // Retail campaignbrief.obj retains this by-value accessor at 0x45a3e0;
     // its body copies the string at +0x14 into the hidden return object.
-    std::string GetCampaignFileName() const;
-    unsigned char campaignCompleted[21];
+    std::string getCampaignFileName() const;
+    unsigned char m_campaignCompleted[21];
     // +0x3c / +0x4c: the carry-over hero pools and the artifact pools
     // (proved by the two out-of-line operator=/destructor pairs above).
-    std::vector<std::vector<hero> > carryOverHeroes;
-    std::vector<std::vector<type_artifact> > field_4c;
-    std::vector<MapScore> mapScores;
+    std::vector<std::vector<hero> > m_carryOverHeroes;
+    std::vector<std::vector<type_artifact> > m_carryoverArtifact;
+    std::vector<MapScore> m_mapScores;
     // +0x6c, the fourth assignable sub-object. Its operator= is the
     // four-byte-element vector::operator= at 0x50ac00 and its teardown is
     // INLINE in the same constructor - _Destroy over [_First, _Last),
     // operator delete on _First, then all three words zeroed - so the slot
     // is a std::vector over a 4-byte element whose identity is unproven.
-    std::vector<int> field_6c;
+    std::vector<int> m_assignedCarryover;
 
     // Retail's copy assignment and destructor are COMPILER-GENERATED, and
     // the image proves it from both sides of the /Ob2 split:
@@ -156,14 +157,14 @@ public:
     VA(0x00489500, 0x88)  // TCampaignWindow ctor callee + member stores, dc 0xbcd90
     SCampaign()
     {
-        isCheater = 0;
-        secretActive = 0;
-        currentMap = -1;
-        numMapRegions = -1;
-        briefingChoice = -1;
-        crossoverArrayIndex = -1;
-        currentCampaign = CAMPAIGN_NONE;
-        memset(campaignCompleted, 0, sizeof(campaignCompleted));
+        m_isCheater = 0;
+        m_secretActive = 0;
+        m_currentMap = -1;
+        m_numMapRegions = -1;
+        m_briefingChoice = -1;
+        m_crossoverArrayIndex = -1;
+        m_currentCampaign = CAMPAIGN_NONE;
+        memset(m_campaignCompleted, 0, sizeof(m_campaignCompleted));
     }
     // The destructor is compiler-generated. Retail expands it member by
     // member in ~SavedGameHeader and retains the same COMDAT for callers.
@@ -172,12 +173,12 @@ public:
     // Retail 0x489590, thiscall on gpGame->campaign with the selected
     // campaign's ordinal and its data-file name; CampaignWindowHandler's
     // deselect arm is the caller that proves the shape. Provisional name.
-    void select_campaign(int campaignIndex, const char* filename);
+    void selectCampaign(int campaignIndex, const char* filename);
     // Complete's campaign-brief handler supplies an opaque campaign-header
     // record here.  The pointee is nested in TCampaignBrief, which is not
     // nameable before the campaign-brief declarations; the receiver,
     // one-pointer ABI and prologue-video role are retail-byte proven.
-    void PlayScenarioPrologue(void* campaignHeader);
+    void playScenarioPrologue(void* campaignHeader);
     // Retail 0x48a2a0, the prologue player's twin on the scenario's
     // epilogue record; oldmain's end-of-campaign arm calls the two
     // Complete-only members below on gpGame->campaign, 0x489820 before
@@ -185,58 +186,54 @@ public:
     // call. Same opaque campaign-header parameter and the same reason,
     // and all three names are role-based and provisional: the Dreamcast
     // customcampaign.obj roster stops before them.
-    void CompleteCurrentMap(void* campaignHeader);
-    void PruneCrossoverHeroes(void* campaignHeader);
-    void PlayScenarioEpilogue(void* campaignHeader);
+    void completeCurrentMap(void* campaignHeader);
+    void pruneCrossoverHeroes(void* campaignHeader);
+    void playScenarioEpilogue(void* campaignHeader);
     // Retail 0x48b2e0 banks the selected starting option and applies the
     // campaign-specific setup overrides before the scenario stream is read.
-    void ApplyBriefingChoice(int option);
+    void applyBriefingChoice(int option);
     // DC CustomCampaign.h:212 (dc 0xe6ef8); retail 0x4897d0 in
     // customcampaign.obj.
     // Original: SCampaign::CampaignComplete; CustomCampaign.h:212, dc 0xe6ef8.
     VA(0x004897d0, 0x43)  // mapScores walk on the 0x14 stride, dc 0xe6ef8
     unsigned char campaignComplete()
     {
-        for (unsigned int i = 0; i < mapScores.size(); ++i) {
-            if (!mapScores[i].completed)
+        for (unsigned int i = 0; i < m_mapScores.size(); ++i) {
+            if (!m_mapScores[i].m_completed)
                 return 0;
         }
         return 1;
     }
-    int get_score() const;
-    int get_total_time() const;
+    int getScore() const;
+    int getTotalTime() const;
     // Retail 0x486440 is the 325-byte counterpart of the DC 328-byte
     // CustomCampaign.cpp row and is called on gpGame->campaign here.
-    void DoPreLoadCustomization();
+    void doPreLoadCustomization();
     // Provisional name; PlaceCrossoverHeroes retains this lookup's nested
     // vector::size calls while expanding the ordinary member itself.
-    hero* FindCrossoverHero(int heroId);
-    void Save(TAbstractFile* outfile);
+    hero* findCrossoverHero(int heroId);
+    void save(TAbstractFile* outfile);
     // Retail-only load surface at 0x48a310; SavedGameHeader::Load passes the
     // stream and save version and the callee reads both.
-    void Load(TAbstractFile* infile, int saveVersion);
+    void load(TAbstractFile* infile, int saveVersion);
     // Complete-only header accessor selected into singleselectionwindow.obj
     // at 0x57c780. Retail sign-extends currentMap, indexes the +0x5c vector's
     // first pointer with the 0x14 CampaignScenarioInfo stride, and returns it.
     VA(0x0057C780, 0x0E)  // hd-crossbuild masked identity + sole retail caller
-    CampaignScenarioInfo* GetCurrentScenario()
+    CampaignScenarioInfo* getCurrentScenario()
     {
-        return &mapScores[currentMap];
+        return &m_mapScores[m_currentMap];
     }
 };
 SIZE(SCampaign, 0x7c);
 
-// The campaign music table retail reaches through the reference cell at
-// .data 0x66c218 (the akHeroTraits pattern; customcampaign.cpp carries
-// the DATA claim). The table at 0x66c090 holds eight-byte rows: the MP3
-// base name ("CampainMusic01".."06") and a dword that is zero in the
-// image. CampaignHeaderStruct::StartMusic indexes it by campaign_music.
-// Names INVENTED.
-struct TCampaignMusicTraits {
-    const char* name;
-    int field_04;
-};
-extern const TCampaignMusicTraits* akCampaignMusicTraits;
+// Retail's reference cell at 0x66c218 contains 0x66c090, the same
+// SCampaignMusicCue table populated by initializeCampaignMusicTable.
+// The former TCampaignMusicTraits::field_04 was its track pointer, not an
+// integer: the loader at 0x45e250 stores pooled CmpMusic.txt strings there.
+// Keep the canonical record from campaignmusic.h for both readers/writer.
+// Before normalization: akCampaignMusicTraits.
+extern const SCampaignMusicCue* g_campaignMusicTraits;
 
 // The ordering both of SCampaign::PruneCrossoverHeroes' std::sort calls
 // instantiate: strongest crossover hero first, by primary skills plus the 28
@@ -267,7 +264,8 @@ struct HeroPlaceholderStronger {
 // bare `ret`), which the sort's own helpers CALL while the standalone
 // operator() expands it twice. Retail-only, name provisional - no Dreamcast
 // row covers it.
-int GetCrossoverHeroValue(hero* candidate);
+// Before normalization (function): GetCrossoverHeroValue.
+int getCrossoverHeroValue(hero* candidate);
 
 // The eight campaign start bonuses. THE HIERARCHY IS BYTE-PROVEN by the
 // bonus-list reader at 0x485190, which switches a type byte 0..7 and
@@ -296,26 +294,38 @@ public:
     // class carried its own copy and the linker folded the seven `false`
     // bodies onto one address; one out-of-line definition here produces
     // that one address.
-    virtual bool IsBuildingBonus() const;
-    virtual const char* GetIconDefName() const = 0;
-    virtual int GetIconIndex() const = 0;
-    virtual std::string GetText() const = 0;
-    virtual void Apply(int whichPlayer) const = 0;
-    virtual void Read(TAbstractFile* file) = 0;
+    // Before normalization (function): TCampaignBonus::IsBuildingBonus.
+    virtual bool isBuildingBonus() const;
+    // Before normalization (function): TCampaignBonus::GetIconDefName.
+    virtual const char* getIconDefName() const = 0;
+    // Before normalization (function): TCampaignBonus::GetIconIndex.
+    virtual int getIconIndex() const = 0;
+    // Before normalization (function): TCampaignBonus::GetText.
+    virtual std::string getText() const = 0;
+    // Before normalization (function): TCampaignBonus::Apply.
+    virtual void apply(int whichPlayer) const = 0;
+    // Before normalization (function): TCampaignBonus::Read.
+    virtual void read(TAbstractFile* file) = 0;
     // 0x485d80, `ret 4`. Only the building bonus overrides it (0x4847e0),
     // where the town remaps the building index.
-    virtual void SetTown(int town);
+    // Before normalization (function): TCampaignBonus::SetTown.
+    virtual void setTown(int town);
 };
 
 // Spell: the hero id it is granted to and the spell. Read takes a SIGNED
 // word then an unsigned byte (0x484050).
 class TCampaignSpellBonus : public TCampaignBonus {
 public:
-    virtual const char* GetIconDefName() const;
-    virtual int GetIconIndex() const { return m_spell; }
-    virtual std::string GetText() const;
-    virtual void Apply(int whichPlayer) const;
-    virtual void Read(TAbstractFile* file);
+    // Before normalization (function): TCampaignSpellBonus::GetIconDefName.
+    virtual const char* getIconDefName() const;
+    // Before normalization (function): TCampaignSpellBonus::GetIconIndex.
+    virtual int getIconIndex() const { return m_spell; }
+    // Before normalization (function): TCampaignSpellBonus::GetText.
+    virtual std::string getText() const;
+    // Before normalization (function): TCampaignSpellBonus::Apply.
+    virtual void apply(int whichPlayer) const;
+    // Before normalization (function): TCampaignSpellBonus::Read.
+    virtual void read(TAbstractFile* file);
 
     int m_hero;
     int m_spell;
@@ -327,19 +337,26 @@ public:
 // three-byte getter).
 class TCampaignSpellScrollBonus : public TCampaignSpellBonus {
 public:
-    virtual std::string GetText() const;
-    virtual void Apply(int whichPlayer) const;
+    // Before normalization (function): TCampaignSpellScrollBonus::GetText.
+    virtual std::string getText() const;
+    // Before normalization (function): TCampaignSpellScrollBonus::Apply.
+    virtual void apply(int whichPlayer) const;
 };
 
 // Creature: hero, creature type and count, all three read as words
 // (0x4844f0) - the first two signed, the count unsigned.
 class TCampaignCreatureBonus : public TCampaignBonus {
 public:
-    virtual const char* GetIconDefName() const;
-    virtual int GetIconIndex() const;
-    virtual std::string GetText() const;
-    virtual void Apply(int whichPlayer) const;
-    virtual void Read(TAbstractFile* file);
+    // Before normalization (function): TCampaignCreatureBonus::GetIconDefName.
+    virtual const char* getIconDefName() const;
+    // Before normalization (function): TCampaignCreatureBonus::GetIconIndex.
+    virtual int getIconIndex() const;
+    // Before normalization (function): TCampaignCreatureBonus::GetText.
+    virtual std::string getText() const;
+    // Before normalization (function): TCampaignCreatureBonus::Apply.
+    virtual void apply(int whichPlayer) const;
+    // Before normalization (function): TCampaignCreatureBonus::Read.
+    virtual void read(TAbstractFile* file);
 
     int m_hero;
     int m_creature;
@@ -351,13 +368,20 @@ public:
 // SetTown, which is also where the building index is remapped.
 class TCampaignBuildingBonus : public TCampaignBonus {
 public:
-    virtual bool IsBuildingBonus() const;
-    virtual const char* GetIconDefName() const;
-    virtual int GetIconIndex() const { return 0; }
-    virtual std::string GetText() const;
-    virtual void Apply(int whichPlayer) const;
-    virtual void Read(TAbstractFile* file);
-    virtual void SetTown(int town);
+    // Before normalization (function): TCampaignBuildingBonus::IsBuildingBonus.
+    virtual bool isBuildingBonus() const;
+    // Before normalization (function): TCampaignBuildingBonus::GetIconDefName.
+    virtual const char* getIconDefName() const;
+    // Before normalization (function): TCampaignBuildingBonus::GetIconIndex.
+    virtual int getIconIndex() const { return 0; }
+    // Before normalization (function): TCampaignBuildingBonus::GetText.
+    virtual std::string getText() const;
+    // Before normalization (function): TCampaignBuildingBonus::Apply.
+    virtual void apply(int whichPlayer) const;
+    // Before normalization (function): TCampaignBuildingBonus::Read.
+    virtual void read(TAbstractFile* file);
+    // Before normalization (function): TCampaignBuildingBonus::SetTown.
+    virtual void setTown(int town);
 
     int m_town;
     int m_building;
@@ -366,11 +390,16 @@ public:
 // Artifact: hero and artifact, both signed words (0x4848a0).
 class TCampaignArtifactBonus : public TCampaignBonus {
 public:
-    virtual const char* GetIconDefName() const;
-    virtual int GetIconIndex() const { return m_artifact; }
-    virtual std::string GetText() const;
-    virtual void Apply(int whichPlayer) const;
-    virtual void Read(TAbstractFile* file);
+    // Before normalization (function): TCampaignArtifactBonus::GetIconDefName.
+    virtual const char* getIconDefName() const;
+    // Before normalization (function): TCampaignArtifactBonus::GetIconIndex.
+    virtual int getIconIndex() const { return m_artifact; }
+    // Before normalization (function): TCampaignArtifactBonus::GetText.
+    virtual std::string getText() const;
+    // Before normalization (function): TCampaignArtifactBonus::Apply.
+    virtual void apply(int whichPlayer) const;
+    // Before normalization (function): TCampaignArtifactBonus::Read.
+    virtual void read(TAbstractFile* file);
 
     int m_hero;
     int m_artifact;
@@ -382,11 +411,16 @@ public:
 // four ints).
 class TCampaignPrimarySkillBonus : public TCampaignBonus {
 public:
-    virtual const char* GetIconDefName() const;
-    virtual int GetIconIndex() const;
-    virtual std::string GetText() const;
-    virtual void Apply(int whichPlayer) const;
-    virtual void Read(TAbstractFile* file);
+    // Before normalization (function): TCampaignPrimarySkillBonus::GetIconDefName.
+    virtual const char* getIconDefName() const;
+    // Before normalization (function): TCampaignPrimarySkillBonus::GetIconIndex.
+    virtual int getIconIndex() const;
+    // Before normalization (function): TCampaignPrimarySkillBonus::GetText.
+    virtual std::string getText() const;
+    // Before normalization (function): TCampaignPrimarySkillBonus::Apply.
+    virtual void apply(int whichPlayer) const;
+    // Before normalization (function): TCampaignPrimarySkillBonus::Read.
+    virtual void read(TAbstractFile* file);
 
     int m_hero;
     char m_skills[4];
@@ -396,11 +430,16 @@ public:
 // as unsigned bytes (0x484cf0).
 class TCampaignSecondarySkillBonus : public TCampaignBonus {
 public:
-    virtual const char* GetIconDefName() const;
-    virtual int GetIconIndex() const;
-    virtual std::string GetText() const;
-    virtual void Apply(int whichPlayer) const;
-    virtual void Read(TAbstractFile* file);
+    // Before normalization (function): TCampaignSecondarySkillBonus::GetIconDefName.
+    virtual const char* getIconDefName() const;
+    // Before normalization (function): TCampaignSecondarySkillBonus::GetIconIndex.
+    virtual int getIconIndex() const;
+    // Before normalization (function): TCampaignSecondarySkillBonus::GetText.
+    virtual std::string getText() const;
+    // Before normalization (function): TCampaignSecondarySkillBonus::Apply.
+    virtual void apply(int whichPlayer) const;
+    // Before normalization (function): TCampaignSecondarySkillBonus::Read.
+    virtual void read(TAbstractFile* file);
 
     int m_hero;
     int m_skill;
@@ -412,11 +451,16 @@ public:
 // 7 and 8 (0x484d70).
 class TCampaignResourceBonus : public TCampaignBonus {
 public:
-    virtual const char* GetIconDefName() const;
-    virtual int GetIconIndex() const;
-    virtual std::string GetText() const;
-    virtual void Apply(int whichPlayer) const;
-    virtual void Read(TAbstractFile* file);
+    // Before normalization (function): TCampaignResourceBonus::GetIconDefName.
+    virtual const char* getIconDefName() const;
+    // Before normalization (function): TCampaignResourceBonus::GetIconIndex.
+    virtual int getIconIndex() const;
+    // Before normalization (function): TCampaignResourceBonus::GetText.
+    virtual std::string getText() const;
+    // Before normalization (function): TCampaignResourceBonus::Apply.
+    virtual void apply(int whichPlayer) const;
+    // Before normalization (function): TCampaignResourceBonus::Read.
+    virtual void read(TAbstractFile* file);
 
     int m_resource;
     int m_amount;
@@ -436,78 +480,64 @@ enum ECampaignBonusType {
     CAMPAIGN_BONUS_RESOURCE = 7
 };
 
-// The scenario's "starting options" chooser, and it is a HIERARCHY: three
-// concrete 13-slot vftables (0x63d98c, 0x63dad8, 0x63db0c) sit under an
-// abstract root at 0x63d958 whose nine unimplemented slots are __purecall
-// and whose slots 5, 7 and 12 carry real shared bodies (0x484f80,
-// 0x485090, 0x485000). The SLOT ROLES read straight off 0x63d98c, the
-// start-BONUS option, whose every override is a one-line forward to one
-// element of a std::vector<TCampaignBonus*> at this+8:
-//   slot 1 -> the element's building predicate (TCampaignBonus+0x04)
-//   slot 2 -> the element COUNT, `(_Last - _First) / 4`
-//   slot 3 -> the element's icon .def name (TCampaignBonus+0x08)
-//   slot 4 -> the element's icon frame  (TCampaignBonus+0x0c)
-//   slot 6 -> the element's description (TCampaignBonus+0x10)
-//   slot 9 -> the list reader (the type byte 0..7 switch)
-//   slot 10 -> Apply on the element campaign.briefingChoice selects
-//   slot 11 -> SetTown from the map header's own main-town type
-// and the player the whole list belongs to is the dword at +4, byte-proven
-// three ways: the reader stores the FIRST byte it reads there, slot 10
-// hands it to TCampaignBonus::Apply as `whichPlayer`, and slot 11 indexes
-// `header->playerSlotAttributes[+4]` with the 0x44 stride.
-// Names are role inventions: no RTTI descriptor names these added classes.
-// Dreamcast does have customcampaign.obj, but its SCampaign uses fixed
-// TCustomCampaignTraits[8][32] and hero[2][8] carry-over pools; it has none
-// of this polymorphic starting-option family. Slots 5, 7 and 12 keep
-// ordinal-derived names because only their bodies, not their callers, are
-// decoded; their first parameter is the same opaque per-scenario record in
-// all three (it carries a byte vector at +0x18, an int row at +0x4c, a
-// vector at +0x70 and a five-dword bit block at +0x90).
 class TCampaignStartOption {
 public:
+    // UpdateBonusIcons centres the frames when there are two choices.
+    enum EChoiceCount {
+        CHOICE_COUNT_PAIR = 2
+    };
     // 0x484f40, and it is the DESTRUCTOR, not a constructor: the body is
     // one vptr store with no `mov eax,ecx`, which no VC6 constructor emits.
     // Defined out of line in the .cpp so the plain body is emitted at all;
     // 0x484f50, the root's `??_G`, then inlines it, as does every derived
     // destructor.
     virtual ~TCampaignStartOption();
-    virtual bool IsBuildingBonus(int which) const = 0;
-    virtual int GetCount() const = 0;
-    virtual const char* GetIconDefName(void* scenario, int which) const = 0;
-    virtual int GetIconIndex(int which) const = 0;
+    virtual bool isBuildingBonus(int which) const = 0;
+    virtual int getCount() const = 0;
+    virtual const char* getIconDefName(void* scenario, int which) const = 0;
+    virtual int getIconIndex(int which) const = 0;
     // 0x484f80, inherited by the bonus and the third option: sums the
     // 5-dword bit block through the nibble table at 0x67729c and answers
     // the campaign's crossover index.
-    virtual int _slot5(void* scenario, int which) const;
-    virtual std::string GetText(void* scenario, int which) const = 0;
+    virtual int slot5(void* scenario, int which) const;
+    virtual std::string getText(void* scenario, int which) const = 0;
     // 0x485090, `or eax,-1 / ret 4` - inherited unchanged by ALL THREE
     // concrete classes, so the root is where the -1 lives.
-    virtual int _slot7(int which) const;
-    virtual int GetPlayer(int which) const = 0;
-    virtual void Read(TAbstractFile* file) = 0;
+    virtual int slot7(int which) const;
+    virtual int getPlayer(int which) const = 0;
+    virtual void read(TAbstractFile* file) = 0;
     // `ret 4`: the slot takes one argument this option never reads, and
     // both sibling options answer it with the shared do-nothing at
     // 0x485d80.
-    virtual void Apply(void* scenario) = 0;
-    virtual void SetTown(CMapHeaderData* header) = 0;
+    virtual void apply(void* scenario) = 0;
+    virtual void setTown(CMapHeaderData* header) = 0;
     // 0x485000: every prerequisite scenario the record marks must already
     // be completed in gpGame->campaign.mapScores.
-    virtual bool _slot12(void* scenario, int value) const;
+    virtual bool slot12(void* scenario, int value) const;
 };
 
 // Vftable 0x63d98c, 0x18 bytes: the player at +4 and the bonus list at +8.
 class TCampaignStartBonusOption : public TCampaignStartOption {
 public:
     virtual ~TCampaignStartBonusOption();
-    virtual bool IsBuildingBonus(int which) const;
-    virtual int GetCount() const;
-    virtual const char* GetIconDefName(void* scenario, int which) const;
-    virtual int GetIconIndex(int which) const;
-    virtual std::string GetText(void* scenario, int which) const;
-    virtual int GetPlayer(int which) const;
-    virtual void Read(TAbstractFile* file);
-    virtual void Apply(void* scenario);
-    virtual void SetTown(CMapHeaderData* header);
+    // Before normalization (function): TCampaignStartBonusOption::IsBuildingBonus.
+    virtual bool isBuildingBonus(int which) const;
+    // Before normalization (function): TCampaignStartBonusOption::GetCount.
+    virtual int getCount() const;
+    // Before normalization (function): TCampaignStartBonusOption::GetIconDefName.
+    virtual const char* getIconDefName(void* scenario, int which) const;
+    // Before normalization (function): TCampaignStartBonusOption::GetIconIndex.
+    virtual int getIconIndex(int which) const;
+    // Before normalization (function): TCampaignStartBonusOption::GetText.
+    virtual std::string getText(void* scenario, int which) const;
+    // Before normalization (function): TCampaignStartBonusOption::GetPlayer.
+    virtual int getPlayer(int which) const;
+    // Before normalization (function): TCampaignStartBonusOption::Read.
+    virtual void read(TAbstractFile* file);
+    // Before normalization (function): TCampaignStartBonusOption::Apply.
+    virtual void apply(void* scenario);
+    // Before normalization (function): TCampaignStartBonusOption::SetTown.
+    virtual void setTown(CMapHeaderData* header);
 
     int m_player;
     std::vector<TCampaignBonus*> m_bonuses;
@@ -532,25 +562,38 @@ SIZE(TCampaignStartBonusOption, 0x18);
 // to, and the scenario whose mapScores row names that pool. Both are one
 // byte in the file and every consumer sign-extends them (`movsx`).
 struct TCampaignCrossoverChoice {
-    signed char player;
-    signed char scenario;
+    // Before normalization: player.
+    signed char m_player;
+    // Before normalization: scenario.
+    signed char m_scenario;
 };
 
 // Vftable 0x63dad8. Its implicit constructor is inlined at ScenarioStruct::
 // Read's `new` site, so no declarator is needed here.
 class TCampaignStartCrossoverOption : public TCampaignStartOption {
 public:
-    virtual bool IsBuildingBonus(int which) const;
-    virtual int GetCount() const;
-    virtual const char* GetIconDefName(void* campaign, int which) const;
-    virtual int GetIconIndex(int which) const { return 0; }
-    virtual int _slot5(void* scenario, int which) const;
-    virtual std::string GetText(void* campaign, int which) const;
-    virtual int GetPlayer(int which) const;
-    virtual void Read(TAbstractFile* file);
-    virtual void Apply(void* scenario) {}
-    virtual void SetTown(CMapHeaderData* header) {}
-    virtual bool _slot12(void* scenario, int value) const;
+    // Before normalization (function): TCampaignStartCrossoverOption::IsBuildingBonus.
+    virtual bool isBuildingBonus(int which) const;
+    // Before normalization (function): TCampaignStartCrossoverOption::GetCount.
+    virtual int getCount() const;
+    // Before normalization (function): TCampaignStartCrossoverOption::GetIconDefName.
+    virtual const char* getIconDefName(void* campaign, int which) const;
+    // Before normalization (function): TCampaignStartCrossoverOption::GetIconIndex.
+    virtual int getIconIndex(int which) const { return 0; }
+    // Before normalization (function): TCampaignStartCrossoverOption::_slot5.
+    virtual int slot5(void* scenario, int which) const;
+    // Before normalization (function): TCampaignStartCrossoverOption::GetText.
+    virtual std::string getText(void* campaign, int which) const;
+    // Before normalization (function): TCampaignStartCrossoverOption::GetPlayer.
+    virtual int getPlayer(int which) const;
+    // Before normalization (function): TCampaignStartCrossoverOption::Read.
+    virtual void read(TAbstractFile* file);
+    // Before normalization (function): TCampaignStartCrossoverOption::Apply.
+    virtual void apply(void* scenario) {}
+    // Before normalization (function): TCampaignStartCrossoverOption::SetTown.
+    virtual void setTown(CMapHeaderData* header) {}
+    // Before normalization (function): TCampaignStartCrossoverOption::_slot12.
+    virtual bool slot12(void* scenario, int value) const;
 
     std::vector<TCampaignCrossoverChoice> m_choices;
 };
@@ -560,8 +603,10 @@ SIZE(TCampaignStartCrossoverOption, 0x14);
 // as a signed byte and a signed word but held as ints - GetPlayer reads the
 // element at stride 8 and slot 7 the dword behind it.
 struct TCampaignHeroChoice {
-    int player;
-    int hero;
+    // Before normalization: player.
+    int m_player;
+    // Before normalization: hero.
+    int m_hero;
 };
 
 // Vftable 0x63db0c. ScenarioStruct::Read calls the retained default
@@ -572,16 +617,26 @@ struct TCampaignHeroChoice {
 class TCampaignStartHeroOption : public TCampaignStartOption {
 public:
     TCampaignStartHeroOption();
-    virtual bool IsBuildingBonus(int which) const;
-    virtual int GetCount() const;
-    virtual const char* GetIconDefName(void* campaign, int which) const;
-    virtual int GetIconIndex(int which) const { return 0; }
-    virtual std::string GetText(void* campaign, int which) const;
-    virtual int _slot7(int which) const;
-    virtual int GetPlayer(int which) const;
-    virtual void Read(TAbstractFile* file);
-    virtual void Apply(void* scenario) {}
-    virtual void SetTown(CMapHeaderData* header) {}
+    // Before normalization (function): TCampaignStartHeroOption::IsBuildingBonus.
+    virtual bool isBuildingBonus(int which) const;
+    // Before normalization (function): TCampaignStartHeroOption::GetCount.
+    virtual int getCount() const;
+    // Before normalization (function): TCampaignStartHeroOption::GetIconDefName.
+    virtual const char* getIconDefName(void* campaign, int which) const;
+    // Before normalization (function): TCampaignStartHeroOption::GetIconIndex.
+    virtual int getIconIndex(int which) const { return 0; }
+    // Before normalization (function): TCampaignStartHeroOption::GetText.
+    virtual std::string getText(void* campaign, int which) const;
+    // Before normalization (function): TCampaignStartHeroOption::_slot7.
+    virtual int slot7(int which) const;
+    // Before normalization (function): TCampaignStartHeroOption::GetPlayer.
+    virtual int getPlayer(int which) const;
+    // Before normalization (function): TCampaignStartHeroOption::Read.
+    virtual void read(TAbstractFile* file);
+    // Before normalization (function): TCampaignStartHeroOption::Apply.
+    virtual void apply(void* scenario) {}
+    // Before normalization (function): TCampaignStartHeroOption::SetTown.
+    virtual void setTown(CMapHeaderData* header) {}
 
     std::vector<TCampaignHeroChoice> m_choices;
 };
@@ -602,8 +657,10 @@ enum ECampaignStartOptionType {
 // town's 44 building slots and 0x6888c0 remaps a bonus's building index
 // when the town is set (41 rows a town). Neither table is claimed yet, so
 // the outer bound is left open rather than invented.
-extern const char* gCampaignBuildingIconNames[][44];
-extern const int gCampaignBuildingRemap[][41];
+// Before normalization: gCampaignBuildingIconNames.
+extern const char* g_campaignBuildingIconNames[][44];
+// Before normalization: gCampaignBuildingRemap.
+extern const int g_campaignBuildingRemap[][41];
 
 // The two mixed resource selectors a resource bonus can carry beside the
 // seven EGameResource rows, byte-read off the ten-entry jump tables the
@@ -619,7 +676,7 @@ enum ECampaignBonusResource {
 // newgame.h / tradpost_widgets.h already declare them; the resource
 // bonus's description indexes the same table and this is the cheaper
 // include-set edge.
-extern const char* gResourceNames[7];
+extern const char* g_resourceNames[7];
 
 // The three sentinel hero selectors a campaign bonus can carry, byte-read
 // off the picker's own jump chain at 0x4840d0 (`cmp ecx,-3 / -2 / -1`
@@ -636,7 +693,8 @@ enum ECampaignBonusHero {
 // plus secondary-skill levels, -2 is "the player's first hero" and -1 is
 // none - and any other value is a hero id that only answers when the hero
 // already belongs to that player. Retail-only, name provisional.
-hero* GetCampaignBonusHero(int heroSelector, int whichPlayer);
+// Before normalization (function): GetCampaignBonusHero.
+hero* getCampaignBonusHero(int heroSelector, int whichPlayer);
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\customcampaign.cpp:70, dc 0x7cd4c) void InitCampaignMapTraits([]* map_traits);

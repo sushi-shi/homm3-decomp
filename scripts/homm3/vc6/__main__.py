@@ -27,6 +27,9 @@ Subcommands
         block's [tryLow, tryHigh] state range, the type each arm catches
         and the catch funclet addresses. A body where retail has a try and
         we have none is a target, not an inliner wall.
+  state-sweep [--trials 30] [--jobs 4] [--bank]
+        Add 5-10 unused headers once per TU, score every function in TUs with
+        MAX < HIST rows, reproduce gains, and optionally bank MAX.
   check [--argv|--il|--inline|--reg|--locator|--all]
         The gates (each ships a negative control).
 
@@ -77,10 +80,16 @@ def _build_parser() -> argparse.ArgumentParser:
     pi.add_argument("--fn")
     pi.add_argument("--json", action="store_true")
 
+    pl = ss.add_parser("il-locals", help="candidate local symbols from recorded function-body offsets")
+    pl.add_argument("unit", help="unit in config/units.toml")
+    pl.add_argument("--fn", required=True, help="exact mangled name or unique function-name substring")
+
     pp = ss.add_parser("predict-inline", help="inline-structure divergence "
                        "(which callees retail inlines vs we do)")
     _solver_arguments(pp)
     pp.add_argument("--json", action="store_true")
+    pp.add_argument("--trace", action="store_true",
+                    help="capture live C2 inline budgets with a byte-identity gate")
     pp.add_argument("--no-build", action="store_true",
                     help="use the last built manifest object without a source/header refresh")
 
@@ -92,8 +101,13 @@ def _build_parser() -> argparse.ArgumentParser:
     pw.add_argument("--tries", type=int, default=1,
                     help="v2: model-proposed candidates to compile (default 1)")
     pw.add_argument("--il-order", action="store_true",
-                    help="v2: derive pseudo order from the captured IL handles")
+                    help="v2: show candidate front-end local-handle order")
+
     pw.add_argument("--json", action="store_true")
+
+    pr = ss.add_parser("trace-registers", help="passive temporary-register stores, gated by object identity")
+    pr.add_argument("unit", help="unit in config/units.toml")
+    pr.add_argument("--fn", required=True, help="function-name substring")
 
     pb = ss.add_parser("why-branch", help="which control-flow spelling "
                        "reproduces retail's jumps")
@@ -108,6 +122,12 @@ def _build_parser() -> argparse.ArgumentParser:
 
     pt = ss.add_parser("atlas", help="headless-Ghidra C2 map -> evidence/vc6")
     pt.add_argument("--regen", action="store_true")
+
+    pa = ss.add_parser("disasm", help="labeled pinned C2.DLL assembly and references")
+    pa.add_argument("target", help="C2 RVA, VA, Ghidra name, or documented role")
+    pa.add_argument("--range", help="end-exclusive offsets from target, e.g. +0:+0x80")
+    pa.add_argument("--refs", action="store_true", help="show incoming code references")
+    pa.add_argument("--verbose", action="store_true", help="include instruction bytes")
 
     pab = ss.add_parser("ab", help="RTM-vs-SP3 generation A/B (Track R): "
                         "build-rtm | build-rtm-fe | verify [--gen ...] | "
@@ -137,11 +157,24 @@ def _build_parser() -> argparse.ArgumentParser:
                       help="polish existing compiled functions (the default)")
     mode.add_argument("--admission", action="store_true",
                       help="list functions without compiled bodies, largest first")
+    mode.add_argument("--smallest", action="store_true",
+                      help="combine every unmatched target, smallest first")
     pq.add_argument("--diagnose", action="store_true",
                     help="also diagnose every polish target (slower)")
     pq.add_argument("--quiet", action="store_true")
     pq.add_argument("--limit", type=int, default=20, metavar="N",
                     help="maximum ranked functions to display (default 20; 0 = all)")
+
+    ps = ss.add_parser("state-sweep", help="batch transient TU-state search for "
+                       "all MAX < HIST rows")
+    ps.add_argument("--trials", type=int, default=30,
+                    help="random include-set trials per TU (default 30)")
+    ps.add_argument("--seed", type=int, default=20260906)
+    ps.add_argument("--jobs", type=int, default=4,
+                    help="parallel VC6 compiles (default 4)")
+    ps.add_argument("--unit", help="optional comma-separated affected TU filter")
+    ps.add_argument("--bank", action="store_true",
+                    help="write reproduced improvements to MAX/HIST")
 
     ss.add_parser("tryblocks", help="retail's catch-scope census: every "
                   "FuncInfo with nTryBlocks > 0, its try extents, catch "
@@ -160,14 +193,18 @@ def _build_parser() -> argparse.ArgumentParser:
 _TOOLS = {
     "argv": ("argv", "run"),
     "il-diff": ("il", "run_diff"),
+    "il-locals": ("il", "run_locals"),
     "predict-inline": ("inline_model", "run_predict"),
     "why-reg": ("reg_model", "run_why"),
+    "trace-registers": ("register_trace", "run"),
     "why-branch": ("flow_model", "run_why"),
     "oracle": ("oracle", "run"),
     "diagnose": ("diagnose", "run"),
     "atlas": ("atlas", "run"),
+    "disasm": ("disasm", "run"),
     "report": ("report", "run"),
     "queue": ("queue", "run"),
+    "state-sweep": ("tu_state_sweep", "run"),
     "tryblocks": ("tryblocks", "run"),
     "check": ("census", "run_check"),
 }

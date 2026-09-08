@@ -23,23 +23,36 @@ public:
                          font::EJustify justification, char* backgroundIcon,
                          int backgroundFrame, int id, int style,
                          int readType, int insetX, int insetY);
-    virtual void SendChat(const char* text, int toWho) OVERRIDE;
+    // Before normalization (function): CSwapManagerChatEdit::SendChat.
+    virtual void sendChat(const char* text, int toWho) OVERRIDE;
 };
 
 // Dreamcast proves the direct heroWindow base and contributes no additional
 // virtuals. Retail's destructor walks the inherited Widgets vector verbatim.
 class TSwapWindow : public heroWindow {
 public:
-    textWidget* field_4c;  // +0x4c  chat transcript consumed by CChatManager
-    CSwapManagerChatEdit* field_50;  // +0x50, rollover suppressed while focused
-    bitmapBorder* field_54;  // +0x54  left-army count arrow
-    bitmapBorder* field_58;  // +0x58  right-army count arrow
-    button* field_5c;        // +0x5c  transfer control
-    int field_60;       // +0x60  Complete-only tail (allocation extent proof)
+    // Role-derived names: ctor 0x5aaa80 creates the transcript/edit controls,
+    // trarrowl/trarrowr bitmaps, and kSwapReceiveFromAlly button. updateArrows
+    // 0x5ae430 switches the arrows; the manager feeds chatText to CChatManager.
+    // Before normalization: field_4c.
+    textWidget* m_chatText;  // +0x4c  chat transcript consumed by CChatManager
+    // Before normalization: field_50.
+    CSwapManagerChatEdit* m_chatEdit;  // +0x50, rollover suppressed while focused
+    // Before normalization: field_54.
+    bitmapBorder* m_leftArrow;  // +0x54  left-army count arrow
+    // Before normalization: field_58.
+    bitmapBorder* m_rightArrow;  // +0x58  right-army count arrow
+    // Before normalization: field_5c. Role-derived name: constructor
+    // 0x5ae500 sets this for a network trade between distinct human owners;
+    // sendHeroUpdate and canModHero use it for the two-player handshake.
+    button* m_receiveButton;        // +0x5c  transfer control
+    // Before normalization: field_60.
+    int m_field60;       // +0x60  Complete-only tail (allocation extent proof)
 
     TSwapWindow(hero** heroes);
     virtual ~TSwapWindow();
-    void UpdateArrows();
+    // Before normalization (function): TSwapWindow::UpdateArrows.
+    void updateArrows();
 };
 SIZE(TSwapWindow, 0x64);
 
@@ -219,8 +232,10 @@ public:
 
 class CHeroUpdateMsg : public CNetMsg {
 public:
-    hero leftHero;
-    hero rightHero;
+    // Before normalization: leftHero.
+    hero m_leftHero;
+    // Before normalization: rightHero.
+    hero m_rightHero;
 
     CHeroUpdateMsg(hero* left, hero* right);
 };
@@ -233,56 +248,118 @@ SIZE(CHeroUpdateMsg, 0x938);
 
 class swapManager : public baseManager {
 public:
-    TSwapWindow* parent;     // +0x38
-    Bitmap816* border;       // +0x3c
-    hero* heroes[2];         // +0x40 / +0x44
-    int field_48;            // +0x48  selection state (all -1 at construction)
-    int field_4c;            // +0x4c
-    int field_50;            // +0x50
-    int field_54;            // +0x54
-    int field_58;            // +0x58
-    unsigned char field_5c;  // +0x5c  two-human cross-owner network trade
-    unsigned char field_5d;  // +0x5d  default 1; otherwise local-player side
+    // Before normalization: parent.
+    TSwapWindow* m_parent;     // +0x38
+    // Before normalization: border.
+    Bitmap816* m_border;       // +0x3c
+    // Before normalization: heroes.
+    hero* m_heroes[2];         // +0x40 / +0x44
+    // Two-stage army selection. swapMons 0x5b0da0 indexes the source and
+    // destination heroes and their respective army slots with these four
+    // words, then combines or swaps the stacks. Role-derived names.
+    // Before normalization: field_48.
+    int m_sourceHeroIndex;            // +0x48  selection state (all -1 at construction)
+    // Before normalization: field_4c.
+    int m_destinationHeroIndex;            // +0x4c
+    // Before normalization: field_50.
+    int m_sourceArmySlot;            // +0x50
+    // Before normalization: field_54.
+    int m_destinationArmySlot;            // +0x54
+    // Role-derived; original name unknown. Before normalization: field_58.
+    // Ctor 0x5ae530 and reset 0x5ae5c6 store -1 (awaiting source stack).
+    // handleMonster tests it at 0x5af2fc, clears it at 0x5af3af when the
+    // source is selected, and then accepts the destination at 0x5af40b.
+    // drawSelector paints the selected stack only when this word is zero.
+    int m_armySelectionPending;            // +0x58
+    // Before normalization: field_5c. Role-derived name: constructor
+    // 0x5ae500 sets this for a network trade between distinct human owners;
+    // sendHeroUpdate and canModHero use it for the two-player handshake.
+    unsigned char m_humanPlayerTrade;  // +0x5c  two-human cross-owner network trade
+    // Before normalization: field_5d. Role-derived name: receive-from-ally
+    // clears this, GiveMeStuff sets it. updateArrows points away from our
+    // hero while set; canModHero prevents editing during the receiving phase.
+    unsigned char m_givingToAlly;  // +0x5d  default 1; giver/receiver phase in a human trade
     // +0x5e, +0x5f pad
-    CNetMsgHandler* field_60;  // +0x60  saved previous handler (restored by Close)
-    CNetMsgHandler* field_64;  // +0x64  owned handler (deleted by Close)
+    // Before normalization: field_60.
+    // Open saves the installed handler before allocating CSwapMgrNetMsgHandler;
+    // Close restores it and deletes the owned handler below.
+    CNetMsgHandler* m_previousNetMsgHandler;  // +0x60
+    // Before normalization: field_64.
+    CNetMsgHandler* m_netMsgHandler;  // +0x64  owned handler (deleted by Close)
     // Retail continues past +0x64; only the ctor-touched prefix is modelled.
     // Do not rely on sizeof(swapManager).
 
     swapManager(hero* leftHero, hero* rightHero);
-    void Reset();
-    virtual int Open(int newPriority);  // baseManager vtable slot 0
-    virtual void Close();               // slot 1
-    virtual int Main(message& msg);     // slot 2
-    int DrawSwapWin();
-    inline bool IsLeftHero();
-    inline unsigned char IsRightHero();
-    inline hero* GetOtherHero();
-    void DrawSelector();
-    void SendHeroUpdate();
-    int ExitSwapManager(message& msg);
-    void swap_side();
-    void OnChatUpdate();
-    void update_artifact_widget(long id, TArtifact artifact);
-    void UpdateSlot(int iHero, TArtifactSlot slot);
-    void update_all_slots();
-    void UpdateBackpackItem(int iHero, int i);
-    void UpdateBackpack(int iHero);
-    void HandleMonster(int iHero, int iMonster, int bRightMouse,
-                       unsigned char bShift);
-    void handle_artifact_click(long side, long id,
-                               unsigned char right_click);
-    void handle_backpack_click(long side, long id,
-                               unsigned char right_click);
-    void SwapMons();
-    void ViewMon();
-    void SetRolloverText(int codeY);
-    void Update();
-    void HandleHeroUpdateMsg(CNetMsg* pNetMsg);
-    void OnWidgetDeselect(message& msg, int& exitFlag);
-    void OnReceiveFromAlly();
-    void OnGiveMeStuffMsg();
-    bool CanModHero(int hero);
+    // Before normalization (function): swapManager::Reset.
+    void reset();
+    // Before normalization (function): swapManager::Open.
+    virtual int open(int newPriority);  // baseManager vtable slot 0
+    // Before normalization (function): swapManager::Close.
+    virtual void close();               // slot 1
+    // Before normalization (function): swapManager::Main.
+    virtual int main(message& msg);     // slot 2
+    // Before normalization (function): swapManager::DrawSwapWin.
+    int drawSwapWin();
+    // Before normalization (function): swapManager::IsLeftHero.
+    inline bool isLeftHero();
+    // Before normalization (function): swapManager::IsRightHero.
+    inline unsigned char isRightHero();
+    // Before normalization (function): swapManager::GetOtherHero.
+    inline hero* getOtherHero();
+    // Before normalization (function): swapManager::DrawSelector.
+    void drawSelector();
+    // Before normalization (function): swapManager::SendHeroUpdate.
+    void sendHeroUpdate();
+    // Before normalization (function): swapManager::ExitSwapManager.
+    int exitSwapManager(message& msg);
+    // Before normalization (function): swapManager::swap_side.
+    void swapSide();
+    // Before normalization (function): swapManager::OnChatUpdate.
+    void onChatUpdate();
+    // Before normalization (function): swapManager::update_artifact_widget.
+    void updateArtifactWidget(long id, TArtifact artifact);
+    // Before normalization (function): swapManager::UpdateSlot.
+    // Before normalization (locals): iHero.
+    void updateSlot(int hero, TArtifactSlot slot);
+    // Before normalization (function): swapManager::update_all_slots.
+    void updateAllSlots();
+    // Before normalization (function): swapManager::UpdateBackpackItem.
+    // Before normalization (locals): iHero.
+    void updateBackpackItem(int hero, int i);
+    // Before normalization (function): swapManager::UpdateBackpack.
+    // Before normalization (locals): iHero.
+    void updateBackpack(int hero);
+    // Before normalization (function): swapManager::HandleMonster.
+    // Before normalization (locals): iHero, iMonster, bRightMouse, bShift.
+    void handleMonster(int hero, int monster, int rightMouse,
+                       unsigned char shift);
+    // Before normalization (function): swapManager::handle_artifact_click.
+    void handleArtifactClick(long side, long id,
+                               // Before normalization (locals): right_click.
+                               unsigned char rightClick);
+    // Before normalization (function): swapManager::handle_backpack_click.
+    void handleBackpackClick(long side, long id,
+                               // Before normalization (locals): right_click.
+                               unsigned char rightClick);
+    // Before normalization (function): swapManager::SwapMons.
+    void swapMons();
+    // Before normalization (function): swapManager::ViewMon.
+    void viewMon();
+    // Before normalization (function): swapManager::SetRolloverText.
+    void setRolloverText(int codeY);
+    // Before normalization (function): swapManager::Update.
+    void update();
+    // Before normalization (function): swapManager::HandleHeroUpdateMsg.
+    // Before normalization (locals): pNetMsg.
+    void handleHeroUpdateMsg(CNetMsg* netMsg);
+    // Before normalization (function): swapManager::OnWidgetDeselect.
+    void onWidgetDeselect(message& msg, int& exitFlag);
+    // Before normalization (function): swapManager::OnReceiveFromAlly.
+    void onReceiveFromAlly();
+    // Before normalization (function): swapManager::OnGiveMeStuffMsg.
+    void onGiveMeStuffMsg();
+    // Before normalization (function): swapManager::CanModHero.
+    bool canModHero(int hero);
 };
 
 // --- CGiveMeStuffMsg ---

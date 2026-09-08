@@ -62,8 +62,17 @@ def open_program(reimport: bool = False, heap: str = "2G"):
 
     import pyghidra
     if not pyghidra.started():
+        PROJ_DIR.mkdir(parents=True, exist_ok=True)
         launcher = pyghidra.HeadlessPyGhidraLauncher()
-        launcher.add_vmargs(f"-Xmx{heap}")
+        # Use the active JDK (including Nix's resolved java executable) and
+        # keep Ghidra's writable state with this worktree's analysis project.
+        java = shutil.which("java")
+        if java:
+            launcher.java_home = Path(java).resolve().parent.parent
+        launcher.add_vmargs(
+            f"-Xmx{heap}", "-Djava.awt.headless=true",
+            f"-Dapplication.settingsdir={PROJ_DIR / 'settings'}",
+            f"-Dapplication.cachedir={PROJ_DIR / 'cache'}")
         launcher.start()
     from pyghidra.core import _setup_project, _analyze_program
     from ghidra.program.flatapi import FlatProgramAPI
@@ -78,7 +87,7 @@ def open_program(reimport: bool = False, heap: str = "2G"):
     # pinned bytes (Ghidra records the import-time sha256 on the program).
     want_sha = _toolchain.PINNED["C2.DLL"][0]
     got_sha = str(program.getExecutableSHA256() or "").lower()
-    if got_sha and got_sha != want_sha:
+    if got_sha != want_sha:
         gproject.close()
         _common.die(f"{PROJ_NAME}: cached program sha256 {got_sha} is not the "
                     f"pinned C2.DLL ({want_sha}) - rerun with --reimport")

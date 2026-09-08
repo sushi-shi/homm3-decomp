@@ -11,34 +11,40 @@ ledger: docs/vc6/regalloc.md; byte evidence measured 2026-08-10):
   the byte-width exclusion drops exactly {7,8,6} = the three GPRs without
   an 8-bit subregister (regasg.c rva 0x8c1dc).
 
-* ONE allocation preference order for every GPR pseudo: the 0-terminated
+* The fallback allocation preference order is the 0-terminated
   dword table {1,2,3,7,8,4,6} = EAX ECX EDX ESI EDI EBX EBP (const copy
   .rdata rva 0xa09f0 with a begin/end pointer pair at 0xa0a14; runtime
   copy .databe rva 0xadff4).  regasg.c walks it FIRST-FIT: 0x8be6c
   (re-bind walk over DAT_107adff4/DAT_107adff8 with the per-register
   binding array .bssbe 0x9d6ec and per-register conflict sets 0x9d6c8)
   and 0x8c1dc (candidate set = the table; first-fit pick at the loop
-  head).  There is no per-class order - the classes fall out of
-  exclusions:
+  head). The selector at 0x33273 can first honor a preferred register or
+  rotate through EAX/ECX/EDX using the cursor at 0x9d710 when 0xac0b0 is
+  enabled. A byte-verified objecttype trace demonstrates both paths;
+  docs/vc6/regalloc.md section 3a records the evidence. The minimum
+  call-crossing slice below excludes those volatile registers:
     - byte-sized pseudo        -> minus {ESI, EDI, EBP}   (0x8c1dc)
     - crosses a call           -> minus {EAX, ECX, EDX}   (clobbered)
     - ESP(5)                   never allocatable (regasg.c region checks
                                ``reg && reg < 9 && reg != 5``)
     - EBP(6)                   only when the function is frameless (/Oy)
 
-* Pseudos receive their register at their DEFINITION, in stream order;
-  for named locals that order follows the front end's symbol-handle
-  creation order (the IL ``sy`` stream, docs/vc6/il-format.md).  Measured
+* The minimum model uses definition order, correlated with the front
+  end's symbol-handle creation order in small probes (the IL ``sy``
+  stream, docs/vc6/il-format.md). Measured
   (2026-08-10, pinned SP3 CL, game profile): three call-crossing locals
   a,b,c created in that order take ESI, EDI, EBX; a fourth is homed to
   the frame; swapping two values' creation order swaps ESI/EDI exactly -
-  the catalog's B1 signature.
+  the catalog's B1 signature. This is not the full global allocator:
+  byte-verified real-TU traces show priority ordering, interference sets
+  and per-register costs at C2 RVA 0x245c3 (regalloc.md section 3b).
 
 The model is deliberately a MINIMUM SLICE for B1 (+ the B8/B14 corners
 the same walk explains): given call-crossing GPR pseudos in creation
 order it predicts which lands in ESI/EDI/EBX.  It does NOT model spill
-cost, coalescing, or live-range splitting - a prediction is a hypothesis
-and the Wine VC6 compile stays the verdict.
+cost, global assignment priorities/costs, coalescing, volatile-register
+rotation, or live-range splitting - a
+prediction is a hypothesis and the Wine VC6 compile stays the verdict.
 """
 from __future__ import annotations
 

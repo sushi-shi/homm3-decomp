@@ -9,17 +9,17 @@
 // The DC decorated comparison publics encode bool (_N), despite their
 // unsigned-byte debug storage records (ai_creature_value.h:29/35).
 struct type_creature_value {
-    TCreatureType type;
-    long value;
-    short amount;
+    TCreatureType m_type;
+    long m_value;
+    short m_amount;
 
     bool operator<(const type_creature_value& arg) const
     {
-        return value < arg.value;
+        return m_value < arg.m_value;
     }
     bool operator>(const type_creature_value& arg) const
     {
-        return value > arg.value;
+        return m_value > arg.m_value;
     }
 };
 

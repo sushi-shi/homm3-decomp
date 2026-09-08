@@ -16,8 +16,10 @@ class NewmapCell;
 class TResourceDisplay;
 
 union TPuzzleCoordinatePointer {
-    char* bytes;
-    short* values;
+    // Before normalization: bytes.
+    char* m_bytes;
+    // Before normalization: values.
+    short* m_values;
 };
 
 
@@ -40,34 +42,49 @@ public:
         PUZZLE_PIECE_COUNT = 48
     };
 
-    char numPieces;
-    char pad_61[3];
-    TResourceDisplay* puzzleResourceBar;
-    Bitmap816* puzzlePieces[48];
-    int puzWhich;
+    // Before normalization: numPieces.
+    char m_numPieces;
+    // Before normalization: pad_61.
+    // The preceding byte field and following four-byte field establish
+    // this alignment gap; the reference layout retains the same boundary.
+    char m_paddingBeforePuzzleResourceBar[3];
+    // Before normalization: puzzleResourceBar.
+    TResourceDisplay* m_puzzleResourceBar;
+    // Before normalization: puzzlePieces.
+    Bitmap816* m_puzzlePieces[48];
+    // Before normalization: puzWhich.
+    int m_puzWhich;
 
     TPuzzleWindow(int puzzlenum);
     virtual ~TPuzzleWindow();
-    virtual int WindowHandler(message* msg);
-    int UpdatePuzzle(int full);
+    // Before normalization (function): TPuzzleWindow::WindowHandler.
+    virtual int windowHandler(message* msg);
+    // Before normalization (function): TPuzzleWindow::UpdatePuzzle.
+    int updatePuzzle(int full);
 
 private:
     int convertID2HelpID(int id) const;
 };
 SIZE(TPuzzleWindow, 0x12c);
 
-extern std::bitset<48> puzzlePiecesRemoved;
-extern short puzzlePieceOrder[];
-extern char puzzlePieceX[];
-extern char puzzlePieceY[];
-extern const char* puzzleFilePrefixes[];
+// Before normalization: puzzlePiecesRemoved.
+extern std::bitset<48> g_puzzlePiecesRemoved;
+// Before normalization: puzzlePieceOrder.
+extern short g_puzzlePieceOrder[];
+// Before normalization: puzzlePieceX.
+extern char g_puzzlePieceX[];
+// Before normalization: puzzlePieceY.
+extern char g_puzzlePieceY[];
+// Before normalization: puzzleFilePrefixes.
+extern const char* g_puzzleFilePrefixes[];
 // 0x6822c8: five doubles - 1.1, 0.5, 0.25, 0.0, 0.0 - read from the
 // image, indexed by SGameSetupOptions::difficulty and compared against
 // the fraction of the puzzle the AI has uncovered. 1.1 on the easiest
 // setting is unreachable, i.e. that AI never guesses. NAME PROVISIONAL:
 // nothing attests it, the table sits immediately below this TU's string
 // pool and only AI_attempt_puzzle_guess reads it.
-extern double puzzleGuessThreshold[];
+// Before normalization: puzzleGuessThreshold.
+extern double g_puzzleGuessThreshold[];
 // --- globals ---
 // CODEVIEW(E:\gamedcs\puzzlewindow.cpp:103, dc 0x114f14) Bitmap816* get_puzzle_bitmap(long puzzle, long piece);
 // CODEVIEW(E:\gamedcs\puzzlewindow.cpp:403, dc 0x115838) unsigned char mark_AI_puzzle(long player, unsigned char* visible);
@@ -78,7 +95,7 @@ extern double puzzleGuessThreshold[];
 // The explicit Dreamcast return-buffer marker is represented by C++'s normal
 // by-value return. Retail's call from playerData::guess_grail_location has the
 // same hidden-result-pointer-in-ECX / player-in-EDX convention.
-type_point AI_attempt_puzzle_guess(long player);
+type_point aiAttemptPuzzleGuess(long player);
 
 // --- Bitmap816 ---
 // CODEVIEW(E:\gamedcs\puzzlewindow.cpp:334, dc 0x11577c) void Bitmap816::mark_puzzle(unsigned char* visible, long dest_x, long dest_y);

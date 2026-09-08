@@ -49,15 +49,24 @@ public:
         READ_TYPE_INSET = 4
     };
 
-    Bitmap816* textBack;         // 0x50, ResourceManager::GetBitmap816
-    CTextEntrySave* saveBack;    // 0x54
-    unsigned short cursorIndex;  // 0x58, = Text.size() after every edit
-    unsigned short maxLength;    // 0x5a, the ctor's textStringSize
-    short boxWidth;              // 0x5c, the inset text box
-    short boxHeight;             // 0x5e
-    short boxX;                  // 0x60
-    short boxY;                  // 0x62
-    short field_64;              // 0x64, ctor stores 1. OnKeyPress
+    // Before normalization: textBack.
+    Bitmap816* m_textBack;         // 0x50, ResourceManager::GetBitmap816
+    // Before normalization: saveBack.
+    CTextEntrySave* m_saveBack;    // 0x54
+    // Before normalization: cursorIndex.
+    unsigned short m_cursorIndex;  // 0x58, = Text.size() after every edit
+    // Before normalization: maxLength.
+    unsigned short m_maxLength;    // 0x5a, the ctor's textStringSize
+    // Before normalization: boxWidth.
+    short m_boxWidth;              // 0x5c, the inset text box
+    // Before normalization: boxHeight.
+    short m_boxHeight;             // 0x5e
+    // Before normalization: boxX.
+    short m_boxX;                  // 0x60
+    // Before normalization: boxY.
+    short m_boxY;                  // 0x62
+    // Before normalization: field_64; reference member textEntryWidget::textLines.
+    short m_textLines;              // 0x64, ctor stores 1. OnKeyPress
                                  // compares it against
                                  // Font->LineLength(Text, boxWidth) and
                                  // rolls the edit back when the typed
@@ -66,24 +75,32 @@ public:
                                  // ordinal placeholder: 1 is the only
                                  // value attested and only the ctor
                                  // writes it.
-    short field_66;              // 0x66, ctor stores the inset flag
-    short field_68;              // 0x68, compared against 3 by Draw /
+    // Before normalization: field_66; reference member textEntryWidget::attributes.
+    short m_attributes;              // 0x66, ctor stores the inset flag
+    // Before normalization: field_68; reference member textEntryWidget::type.
+    short m_type;              // 0x68, compared against 3 by Draw /
                                  // SetupDisplayString / OnKeyPress. NO
                                  // retail body anywhere in the image
                                  // writes it - scanned every 8/16/32-bit
                                  // store form at this displacement.
-    short displayStart;          // 0x6a, first shown character
-    unsigned char field_6C;      // 0x6c, the caret blink phase: OnKeyPress
+    // Before normalization: displayStart.
+    short m_displayStart;          // 0x6a, first shown character
+    // Before normalization: field_6C; reference member textEntryWidget::cursorFlashOn.
+    unsigned char m_cursorFlashOn;      // 0x6c, the caret blink phase: OnKeyPress
                                  // forces it to 1 on every keystroke and
                                  // SetupDisplayString toggles it
                                  // (`1 - field_6C`) every 360 ticks off
                                  // glTimers[0]. Nothing in the image
-                                 // READS it, so the renderer that would
-                                 // name it is outside this class -
-                                 // ordinal placeholder kept.
-    unsigned char bHasFocus;     // 0x6d, stored by SetFocus 0x5bab50
-    unsigned char bAutoDraw;     // 0x6e, gates SetFocus's redraw
-    char pad_6F[1];
+                                 // READS it in this class; Dreamcast
+                                 // independently supplies its name.
+    // Before normalization: bHasFocus.
+    unsigned char m_hasFocus;     // 0x6d, stored by SetFocus 0x5bab50
+    // Before normalization: bAutoDraw.
+    unsigned char m_autoDraw;     // 0x6e, gates SetFocus's redraw
+    // Before normalization: pad_6F.
+    // Dreamcast ends the 0x70-byte editor with autoDraw at +0x6e.
+    // NH3API confirms that the last byte is alignment in the PC object.
+    char m_paddingAfterAutoDraw[1];
 
     // Retail drops two of the sixteen on the floor: backgroundFrame is
     // never read (GetBitmap816 takes the name alone) and style never
@@ -95,19 +112,33 @@ public:
                     const char* backgroundIcon, int backgroundFrame, int id,
                     int style, int readType, int insetX, int insetY);
     virtual ~textEntryWidget();  // retail 0x5baae0
-    virtual int Main(message* msg);              // slot 2, retail 0x5bb150
-    virtual void Draw();                         // slot 4, retail 0x5bb400
-    virtual void OnSetFocus();                   // slot 10, retail 0x5bba50
-    virtual void OnKillFocus();                  // slot 11, retail 0x5bba60
-    virtual void SetText(const char* new_text);  // slot 13, retail 0x5bb950
-    virtual void SetFocus(unsigned char state);  // slot 14, retail 0x5bab50
-    virtual int OnKeyPress(message* msg);        // slot 15, retail 0x5bac50
-    virtual unsigned char IgnoreKey(message* msg);  // slot 16, retail 0x5bba20
-    virtual void SetAutoDraw(unsigned char b);   // slot 17, retail 0x5bbac0
-    char GetCharPressed(message* msg);
-    void SetupDisplayString(char* cCore, unsigned short inCursorIndex);
+    // Before normalization (function): textEntryWidget::Main.
+    virtual int main(message* msg);              // slot 2, retail 0x5bb150
+    // Before normalization (function): textEntryWidget::Draw.
+    virtual void draw();                         // slot 4, retail 0x5bb400
+    // Before normalization (function): textEntryWidget::OnSetFocus.
+    virtual void onSetFocus();                   // slot 10, retail 0x5bba50
+    // Before normalization (function): textEntryWidget::OnKillFocus.
+    virtual void onKillFocus();                  // slot 11, retail 0x5bba60
+    // Before normalization (function): textEntryWidget::SetText.
+    // Before normalization (locals): new_text.
+    virtual void setText(const char* newText);  // slot 13, retail 0x5bb950
+    // Before normalization (function): textEntryWidget::SetFocus.
+    virtual void setFocus(unsigned char state);  // slot 14, retail 0x5bab50
+    // Before normalization (function): textEntryWidget::OnKeyPress.
+    virtual int onKeyPress(message* msg);        // slot 15, retail 0x5bac50
+    // Before normalization (function): textEntryWidget::IgnoreKey.
+    virtual unsigned char ignoreKey(message* msg);  // slot 16, retail 0x5bba20
+    // Before normalization (function): textEntryWidget::SetAutoDraw.
+    virtual void setAutoDraw(unsigned char b);   // slot 17, retail 0x5bbac0
+    // Before normalization (function): textEntryWidget::GetCharPressed.
+    char getCharPressed(message* msg);
+    // Before normalization (function): textEntryWidget::SetupDisplayString.
+    // Before normalization (locals): cCore.
+    void setupDisplayString(char* core, unsigned short inCursorIndex);
 protected:
-    virtual void SaveBackground() const;         // slot 18, retail 0x5bba70
+    // Before normalization (function): textEntryWidget::SaveBackground.
+    virtual void saveBackground() const;         // slot 18, retail 0x5bba70
 };
 // No SIZE() assert: the class rides std::string, whose extent differs
 // between the VC6 arm (0x10, giving textWidget 0x50 and this 0x70) and

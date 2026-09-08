@@ -47,38 +47,40 @@
 // text selection: Rampart/Tower/Inferno/Dungeon have dedicated resource
 // strings, Conflux shares Inferno's mercury strings, and every other town
 // uses the generic pair.
-inline const char* GetResourceBonusCaption(int townType)
+// Before normalization (function): GetResourceBonusCaption.
+inline const char* getResourceBonusCaption(int townType)
 {
     switch (townType) {
     case TOWN_RAMPART:
-        return gpGeneralText->GetText(693);
+        return g_generalText->getText(693);
     case TOWN_TOWER:
-        return gpGeneralText->GetText(694);
+        return g_generalText->getText(694);
     case TOWN_INFERNO:
     case TOWN_CONFLUX:
-        return gpGeneralText->GetText(695);
+        return g_generalText->getText(695);
     case TOWN_DUNGEON:
-        return gpGeneralText->GetText(696);
+        return g_generalText->getText(696);
     default:
-        return gpGeneralText->GetText(90);
+        return g_generalText->getText(90);
     }
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:187
-inline const char* GetResourceBonusDescription(int townType)
+// Before normalization (function): GetResourceBonusDescription.
+inline const char* getResourceBonusDescription(int townType)
 {
     switch (townType) {
     case TOWN_RAMPART:
-        return gpGeneralText->GetText(689);
+        return g_generalText->getText(689);
     case TOWN_TOWER:
-        return gpGeneralText->GetText(690);
+        return g_generalText->getText(690);
     case TOWN_INFERNO:
     case TOWN_CONFLUX:
-        return gpGeneralText->GetText(691);
+        return g_generalText->getText(691);
     case TOWN_DUNGEON:
-        return gpGeneralText->GetText(692);
+        return g_generalText->getText(692);
     default:
-        return gpGeneralText->GetText(94);
+        return g_generalText->getText(94);
     }
 }
 
@@ -119,13 +121,14 @@ std::vector<hero>* std::copy(std::vector<hero>* first,
 // extension onto - the same cell CSaveGameEdit::OnKeyPress screens).
 // The "." / "%s%s" literals pool onto advmgr's claimed copies.
 // E:\gamedcs\singleselectionwindow.cpp:230
+// Before normalization (function): SaveValid.
 VA(0x00577360, 0x1C5)  // anchor-callee WindowHandler's Enter arm calls it fastcall on saveGameEdit's text; body owns '%s%s'+'games'+'NEWGAME.gm1' literals, size 1.3x dc 0x15c, dc 0x12f86c
-unsigned char SaveValid(const char* filename)
+unsigned char saveValid(const char* filename)
 {
     unsigned char valid = 0;
 
-    if (get_available_disk_space() < 0x100000) {
-        NormalDialog(gpGeneralText->GetText(709), 1, -1, -1,
+    if (getAvailableDiskSpace() < 0x100000) {
+        normalDialog(g_generalText->getText(709), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         return 0;
     }
@@ -135,25 +138,25 @@ unsigned char SaveValid(const char* filename)
     strtok(name, ".");
     if (strlen(name) != 0) {
         char path[100];
-        gpWindowManager->dialogReturn = DIALOG_RETURN_ACCEPT;
-        sprintf(path, "%s%s", name, gUnnamed691268);
+        g_windowManager->m_dialogReturn = DIALOG_RETURN_ACCEPT;
+        sprintf(path, "%s%s", name, g_unnamed691268);
         _chdir("games");
         int file = _open(path, 0);
         _chdir("..");
         if (file != -1) {
             _close(file);
-            sprintf(gText, gpGeneralText->GetText(494), name);
-            NormalDialog(gText, 2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+            sprintf(g_text, g_generalText->getText(494), name);
+            normalDialog(g_text, 2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
-        if (gpWindowManager->dialogReturn == DIALOG_RETURN_ACCEPT) {
+        if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT) {
             valid = 1;
-            strcpy(gUnnamed69fc2c, name);
+            strcpy(g_unnamed69fc2c, name);
             strcpy(DATA_COMPGEN(0x0068333c, defaultNewGameFileName,
                                 "NEWGAME.gm1"),
                    name);
             strcat(DATA_COMPGEN(0x0068333c, defaultNewGameFileName,
                                 "NEWGAME.gm1"),
-                   gUnnamed691268);
+                   g_unnamed691268);
         }
     }
     return valid;
@@ -162,76 +165,82 @@ unsigned char SaveValid(const char* filename)
 // E:\gamedcs\singleselectionwindow.cpp:268
 // Dreamcast publishes this original helper boundary.  Complete retains it
 // at 0x577530 and passes its first two game pointers in ECX/EDX under /Gr.
-DATA(0x0069fb0c) int saveCurPlayer;
+// Before normalization: saveCurPlayer.
+DATA(0x0069fb0c) int g_saveCurPlayer;
 
+// Before normalization (function): BackupGameHeaders.
 VA(0x00577530, 0x20C)
-void BackupGameHeaders(game* dest, game* src)
+void backupGameHeaders(game* dest, game* src)
 {
     // Dreamcast's older lowering uses this local for the eight-player copy.
     // Complete instead emits Dinkumware's std::copy iterator loop exactly;
     // the dead local is still a positive source fact and costs no retail code.
     int i;
 
-    dest->mapHeader = src->mapHeader;
-    dest->setup = src->setup;
-    dest->campaign = src->campaign;
-    dest->field_1f4d4 = src->field_1f4d4;
-    dest->difficultyRating = src->difficultyRating;
-    dest->field_1f635 = src->field_1f635;
+    dest->m_mapHeader = src->m_mapHeader;
+    dest->m_setup = src->m_setup;
+    dest->m_campaign = src->m_campaign;
+    dest->m_newCampaignStarted = src->m_newCampaignStarted;
+    dest->m_difficultyRating = src->m_difficultyRating;
+    dest->m_numDeadPlayers = src->m_numDeadPlayers;
 
-    if (src == gpGame) {
-        saveCurPlayer = gNetLocalGamePos;
+    if (src == g_game) {
+        g_saveCurPlayer = g_netLocalGamePos;
     } else {
-        gNetLocalGamePos = saveCurPlayer;
+        g_netLocalGamePos = g_saveCurPlayer;
     }
 
     // RETAIL-ONLY source revision: this exact std::copy retains the same
     // playerData::operator= boundary Dreamcast calls from its explicit loop.
-    std::copy(src->players, src->players + 8, dest->players);
+    std::copy(src->m_players, src->m_players + 8, dest->m_players);
 
-    std::copy(src->heroAvailability,
-              src->heroAvailability + sizeof(src->heroAvailability),
-              dest->heroAvailability);
-    std::copy(src->saveFileName,
-              src->saveFileName + sizeof(src->saveFileName),
-              dest->saveFileName);
-    std::copy(src->playerDisabled,
-              src->playerDisabled + sizeof(src->playerDisabled),
-              dest->playerDisabled);
+    std::copy(src->m_heroAvailability,
+              src->m_heroAvailability + sizeof(src->m_heroAvailability),
+              dest->m_heroAvailability);
+    std::copy(src->m_saveFileName,
+              src->m_saveFileName + sizeof(src->m_saveFileName),
+              dest->m_saveFileName);
+    std::copy(src->m_playerDisabled,
+              src->m_playerDisabled + sizeof(src->m_playerDisabled),
+              dest->m_playerDisabled);
 }
 
 // Dreamcast names both globals in this TU. Retail independently fixes their
 // addresses through every CreateEvent/_beginthreadex and stop-path reference.
-DATA(0x0069fdcc) HANDLE hMouseThread;
-DATA(0x0069fdd0) HANDLE hEndMouseThreadEvent;
+// Before normalization: hMouseThread.
+// Before normalization: hEndMouseThreadEvent.
+DATA(0x0069fdcc) HANDLE g_mouseThread;
+DATA(0x0069fdd0) HANDLE g_endMouseThreadEvent;
 
 // E:\gamedcs\singleselectionwindow.cpp:299
+// Before normalization (function): ProcessMouse.
 VA(0x00577740, 0x4E)  // exact physical row between SaveValid and StartMouseThread; callback xref + dc 0x12fd68
-unsigned __stdcall ProcessMouse(void* nothing)
+unsigned __stdcall processMouse(void* nothing)
 {
-    while (WaitForSingleObject(hEndMouseThreadEvent, 41) == WAIT_TIMEOUT &&
-           !bShutDownDone)
-        gpMouseManager->CheckUpdate();
+    while (WaitForSingleObject(g_endMouseThreadEvent, 41) == WAIT_TIMEOUT &&
+           !g_shutDownDone)
+        g_mouseManager->checkUpdate();
     _endthreadex(0);
     return 0;
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:314
+// Before normalization (function): StartMouseThread.
 VA(0x00577790, 0x7B)  // beginthreadex callback/global/callee proof, dc 0x12fdb8
-void StartMouseThread()
+void startMouseThread()
 {
     unsigned threadId;
 
-    if (!hMouseThread) {
-        gpMouseManager->SetPointer(1, mouseManager::ADVENTURE_SET);
-        hEndMouseThreadEvent = CreateEvent(0, TRUE, FALSE, 0);
-        if (hEndMouseThreadEvent) {
-            gpSoundManager->serviceSounds();
-            hMouseThread = (HANDLE)_beginthreadex(
-                0, 0, ProcessMouse, 0, 0, &threadId);
-            if (!hMouseThread) {
-                CloseHandle(hEndMouseThreadEvent);
-                hEndMouseThreadEvent = 0;
+    if (!g_mouseThread) {
+        g_mouseManager->setPointer(1, mouseManager::ADVENTURE_SET);
+        g_endMouseThreadEvent = CreateEvent(0, TRUE, FALSE, 0);
+        if (g_endMouseThreadEvent) {
+            g_soundManager->serviceSounds();
+            g_mouseThread = (HANDLE)_beginthreadex(
+                0, 0, processMouse, 0, 0, &threadId);
+            if (!g_mouseThread) {
+                CloseHandle(g_endMouseThreadEvent);
+                g_endMouseThreadEvent = 0;
             }
         }
     }
@@ -243,17 +252,18 @@ void StartMouseThread()
 // non-inlinable preserves the Dreamcast-proven helper boundary and that
 // asymmetric retail lowering without changing either function's source order.
 #pragma auto_inline(off)
+// Before normalization (function): StopMouseThread.
 VA(0x00577810, 0x61)  // event/handle teardown and pointer restore, dc 0x12fdd4
-void StopMouseThread()
+void stopMouseThread()
 {
-    if (hMouseThread) {
-        SetEvent(hEndMouseThreadEvent);
-        WaitForSingleObject(hMouseThread, INFINITE);
-        CloseHandle(hMouseThread);
-        hMouseThread = 0;
-        CloseHandle(hEndMouseThreadEvent);
-        hEndMouseThreadEvent = 0;
-        gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+    if (g_mouseThread) {
+        SetEvent(g_endMouseThreadEvent);
+        WaitForSingleObject(g_mouseThread, INFINITE);
+        CloseHandle(g_mouseThread);
+        g_mouseThread = 0;
+        CloseHandle(g_endMouseThreadEvent);
+        g_endMouseThreadEvent = 0;
+        g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
     }
 }
 #pragma auto_inline(on)
@@ -262,31 +272,33 @@ void StopMouseThread()
 // window constructor: the retail body has the same executable-path buffer,
 // TFileVersionInfo lifetime, ProductVersion query and empty-string fallback.
 // E:\gamedcs\singleselectionwindow.cpp:368
-static inline void GetGameVersion(char* version)
+static inline void getGameVersion(char* version)
 {
     char filename[351];
     GetModuleFileNameA(0, filename, sizeof(filename));
     TFileVersionInfo fileInfo(filename);
     std::string value;
-    if (fileInfo.GetProductVersion(&value))
+    if (fileInfo.getProductVersion(&value))
         strcpy(version, value.c_str());
     else
         version[0] = 0;
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:382
-inline unsigned char HasNonRandomHero(int gamePos)
+// Before normalization (function): HasNonRandomHero.
+inline unsigned char hasNonRandomHero(int gamePos)
 {
-    return gpGame->mapHeader.playerSlotAttributes[gamePos].nonRandomHeroId
+    return g_game->m_mapHeader.m_playerSlotAttributes[gamePos].m_nonRandomHeroId
         != -1;
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:390
-inline unsigned char HasRandomHero(int gamePos)
+// Before normalization (function): HasRandomHero.
+inline unsigned char hasRandomHero(int gamePos)
 {
     CMapHeaderData::TPlayerSlotAttributes& slot =
-        gpGame->mapHeader.playerSlotAttributes[gamePos];
-    return slot.hasRandomHero || slot.GenerateHero;
+        g_game->m_mapHeader.m_playerSlotAttributes[gamePos];
+    return slot.m_hasRandomHero || slot.m_generateHero;
 }
 
 // Complete changes Dreamcast's CGameHeaderInfoMsg into a complex stream
@@ -299,23 +311,23 @@ unsigned char CGameHeaderInfoMsg::read(TAbstractFile* infile)
 {
     {
         unsigned char flag;
-        infile->Read(&flag, 1);
+        infile->read(&flag, 1);
         m_flag = flag != 0;
     }
     {
         int number;
-        infile->Read(&number, 4);
+        infile->read(&number, 4);
         m_number = number;
     }
     GameSelectionHeadersStruct& header = m_header;
-    header.header.Load(infile, 42);
-    infile->Read(&header.setup, sizeof(header.setup));
-    infile->Read(&header.field_4d0, sizeof(header.field_4d0));
-    infile->Read(&header.heroAvailability, sizeof(header.heroAvailability));
-    infile->Read(&header.title, sizeof(header.title));
-    infile->Read(&header.description, sizeof(header.description));
-    infile->Read(&header.fileTime, sizeof(header.fileTime));
-    return !header.saved.Load(infile);
+    header.m_header.load(infile, 42);
+    infile->read(&header.m_setup, sizeof(header.m_setup));
+    infile->read(&header.m_wasHuman, sizeof(header.m_wasHuman));
+    infile->read(&header.m_heroAvailability, sizeof(header.m_heroAvailability));
+    infile->read(&header.m_title, sizeof(header.m_title));
+    infile->read(&header.m_description, sizeof(header.m_description));
+    infile->read(&header.m_fileTime, sizeof(header.m_fileTime));
+    return !header.m_saved.load(infile);
 }
 
 VA(0x00577950, 0xBE)  // anchor-vtable 0x641b20 slot1 + NewSMapHeader/SavedGameHeader save boundaries, retail-only
@@ -323,22 +335,22 @@ unsigned char CGameHeaderInfoMsg::write(TAbstractFile* outfile) const
 {
     {
         unsigned char flag = m_flag;
-        outfile->Write(&flag, 1);
+        outfile->write(&flag, 1);
     }
     {
         int number = m_number;
-        outfile->Write(&number, 4);
+        outfile->write(&number, 4);
     }
     GameSelectionHeadersStruct& header =
         const_cast<GameSelectionHeadersStruct&>(m_header);
-    header.header.Save(outfile);
-    outfile->Write(&header.setup, sizeof(header.setup));
-    outfile->Write(&header.field_4d0, sizeof(header.field_4d0));
-    outfile->Write(&header.heroAvailability, sizeof(header.heroAvailability));
-    outfile->Write(&header.title, sizeof(header.title));
-    outfile->Write(&header.description, sizeof(header.description));
-    outfile->Write(&header.fileTime, sizeof(header.fileTime));
-    return !header.saved.Save(outfile);
+    header.m_header.save(outfile);
+    outfile->write(&header.m_setup, sizeof(header.m_setup));
+    outfile->write(&header.m_wasHuman, sizeof(header.m_wasHuman));
+    outfile->write(&header.m_heroAvailability, sizeof(header.m_heroAvailability));
+    outfile->write(&header.m_title, sizeof(header.m_title));
+    outfile->write(&header.m_description, sizeof(header.m_description));
+    outfile->write(&header.m_fileTime, sizeof(header.m_fileTime));
+    return !header.m_saved.save(outfile);
 }
 
 // DC 0x147c28/0x149654 proves CNewMapHeaderInfoMsg owns exactly one
@@ -347,19 +359,19 @@ unsigned char CGameHeaderInfoMsg::write(TAbstractFile* outfile) const
 VA(0x00577A10, 0x1A)  // anchor-vtable 0x641d30 slot0 + sole NewSMapHeader::Load call, dc class 0x147c28
 unsigned char CNewMapHeaderInfoMsg::read(TAbstractFile* infile)
 {
-    return !m_header.Load(infile, 42);
+    return !m_header.load(infile, 42);
 }
 
 VA(0x00577A30, 0x18)  // anchor-vtable 0x641d30 slot1 + sole NewSMapHeader::Save call, dc class 0x147c28
 unsigned char CNewMapHeaderInfoMsg::write(TAbstractFile* outfile) const
 {
-    return !const_cast<NewSMapHeader&>(m_header).Save(outfile);
+    return !const_cast<NewSMapHeader&>(m_header).save(outfile);
 }
 
 #if 0  // @carcass
 // E:\gamedcs\singleselectionwindow.cpp:368
 DC_ONLY(0x12fdf0, 0x92)
-void GetGameVersion(char* version)
+void getGameVersion(char* version)
 {
     // @stub
 }
@@ -374,31 +386,31 @@ class CHostWaitDlg : public CAnimatedDlg {
 public:
     CHostWaitDlg()
     {
-        m_pMsg = 0;
+        m_msg = 0;
         m_forWho = 0;
     }
-    virtual int handle_message(message& msg);  // slot 3
+    virtual int handleMessage(message& msg);  // slot 3
 
     // DC Wait takes the dpid alone; retail's two expansions differ only
     // in the general-text row, so the text rides as a parameter here
     // (provisional widening). Inline - both HandleNetMsg arms expand it,
     // and the virtual Setup/DoModal calls stay virtual because they go
     // through the inlined body's `this`.
-    void Wait(unsigned long forWho, const char* cText)
+    void wait(unsigned long forWho, const char* text)
     {
         m_forWho = forWho;
-        SRand(GameTime::Get());
+        sRand(GameTime::get());
         int creature;
         do {
-            creature = Random(0, 111);
+            creature = random(0, 111);
         } while (creature == WAIT_CREATURE_ARCH_DEVIL
                  || creature == WAIT_CREATURE_DEVIL);
-        Setup(cText, gpMediumFont,
-              akCreatureTypeTraits[creature].m_sprite_name, 0);
-        DoModal(0);
+        setup(text, g_mediumFont,
+              g_creatureTypeTraits[creature].m_spriteName, 0);
+        doModal(0);
     }
 
-    CNetMsg* m_pMsg;         // +0x78
+    CNetMsg* m_msg;         // +0x78
     unsigned long m_forWho;  // +0x7c
 };
 
@@ -427,7 +439,7 @@ class CGameHeaderInfoInitMsg : public CNetMsg {
 public:
     unsigned long m_numMaps;   // +0x14
     unsigned char m_netGame;   // +0x18
-    char pad_19[3];
+    char m_tailPadding[3];
 
     CGameHeaderInfoInitMsg(unsigned long numMaps,
                            unsigned char loadGameMode,
@@ -480,10 +492,11 @@ CScrollMsg::CScrollMsg(int map, int index)
 // pointer-taking constructor and NewSMapHeader assignment; retail's 1028
 // dispatch and wire pair prove the Complete complex-message base.
 inline CNewMapHeaderInfoMsg::CNewMapHeaderInfoMsg(
-    NewSMapHeader* pMapHeader)
+    // Before normalization (locals): pMapHeader.
+    NewSMapHeader* mapHeader)
     : t_complex_net_message(RS_NEW_MAP_HEADER_INFO)
 {
-    m_header = *pMapHeader;
+    m_header = *mapHeader;
 }
 
 
@@ -505,7 +518,7 @@ inline CNewMapHeaderInfoMsg::CNewMapHeaderInfoMsg(
 class CMapFileNameMsg : public CNetMsg {
 public:
     unsigned char m_flag;         // +0x14
-    char pad_15[3];
+    char m_paddingBeforeNumber[3];
     int m_number;                 // +0x18
     char m_fileName[0x40];        // +0x1c
     int m_townTypes[8];           // +0x5c
@@ -529,7 +542,7 @@ public:
 class CMapHeaderRequestMsg : public CNetMsg {
 public:
     unsigned char m_flag;  // +0x14
-    char pad_15[3];
+    char m_paddingBeforeNumber[3];
     int m_number;          // +0x18
 
     // Retail widened the DC (nbr) ctor with the list-select flag; both
@@ -658,8 +671,8 @@ public:
     CNetPlayerHandlerPlayer m_compPlayer[8];  // +0x3f4
 
     // E:\gamedcs\singleselectionwindow.cpp:717
-    CUpdatePlayerPosMsg(CNetPlayerHandlerPlayer* pNetPlayers,
-                        CNetPlayerHandlerPlayer* pCompPlayers);
+    CUpdatePlayerPosMsg(CNetPlayerHandlerPlayer* netPlayers,
+                        CNetPlayerHandlerPlayer* compPlayers);
 };
 
 
@@ -694,11 +707,12 @@ public:
 // E:\gamedcs\singleselectionwindow.cpp:758. The ctor boundary is expanded
 // into SetupNewGameMode, but its CNetPlayerInfo member's default constructor
 // remains the public Complete COMDAT at 0x57f720.
-inline CNewPlayerMsg::CNewPlayerMsg(CNetPlayerInfo* pPlayerInfo,
+// Before normalization (locals): pPlayerInfo.
+inline CNewPlayerMsg::CNewPlayerMsg(CNetPlayerInfo* playerInfo,
                                     char* version)
     : CNetMsg(RS_NEW_PLAYER, sizeof(CNewPlayerMsg))
 {
-    m_playerInfo = *pPlayerInfo;
+    m_playerInfo = *playerInfo;
     strncpy(m_version, version, sizeof(m_version));
 }
 
@@ -708,71 +722,91 @@ inline CNewPlayerMsg::CNewPlayerMsg(CNetPlayerInfo* pPlayerInfo,
 // variable runs the byte offset from 4 and stores through (array - 4), and
 // retail reloads Text._First every iteration because the store could alias
 // it. Array base = store displacement + 4 (the events precedent).
-DATA(0x0069fc28) static TTextResource* gpVictoryConditionText;
-DATA(0x0069fb70) static char* gVictoryConditionDesc[14];
-DATA(0x0069fbf4) static TTextResource* gpLossConditionText;
-DATA(0x0069fc18) static char* gLossConditionDesc[4];
-DATA(0x0069fb14) static TTextResource* gpTurnDurationText;
+// Before normalization: gpVictoryConditionText.
+// Before normalization: gVictoryConditionDesc.
+DATA(0x0069fc28) static TTextResource* g_victoryConditionText;
+// Before normalization: gpLossConditionText.
+DATA(0x0069fb70) static char* g_victoryConditionDesc[14];
+// Before normalization: gLossConditionDesc.
+DATA(0x0069fbf4) static TTextResource* g_lossConditionText;
+// Before normalization: gpTurnDurationText.
+DATA(0x0069fc18) static char* g_lossConditionDesc[4];
 // External linkage is retail-proven: scenarioinfo.obj reads the same table
 // while constructing CScenarioInfoDlg.
-DATA(0x0069fb44) char* gTurnDurationText[11];
-DATA(0x00641ae8) static const int gTurnDurationMinutes[10] = {
+DATA(0x0069fb14) static TTextResource* g_turnDurationTextResource;
+// Before normalization: gTurnDurationMinutes.
+DATA(0x0069fb44) char* g_turnDurationText[11];
+DATA(0x00641ae8) static const int g_turnDurationMinutes[10] = {
     1, 2, 4, 6, 8, 10, 15, 20, 25, 30
 };
 
 // kb.cpp owns these two located bodies. Keeping their declarations local
 // avoids perturbing the public include closure for this one consumer.
-void ShowProgressBar();
-void UnloadProgressBar();
+void showProgressBar();
+void unloadProgressBar();
 // misc.cpp owns the located body (0x50c1b0); same local-declaration rule.
-void WritePrefs();
+void writePrefs();
 // kb.cpp owns the located body (0x4ed490); same rule.
-void PollSound();
+void pollSound();
 // kb.cpp owns the located 0x4f3690 fatal-exit body; misc.cpp owns the
 // PRNG pair; remote.cpp owns the session teardown. Same rule.
-void ShutDown(const char* cInExitMessage);
-int Random(int min, int max);
-void SRand(int iSeed);
-void RemoteCleanup();
+// Before normalization (locals): cInExitMessage.
+void shutDown(const char* inExitMessage);
+int random(int min, int max);
+// Before normalization (locals): iSeed.
+void sRand(int seed);
+void remoteCleanup();
 // This TU's own file-scope save-name validator; its definition sits in
 // the carcass under the 0x577360 claim until reconstructed.
-unsigned char SaveValid(const char* filename);
-static void SliderChatWindow(int state, heroWindow* parent_window);
-static void SliderDuration(int state, heroWindow* parent_window);
-static void SliderFileMenu(int state, heroWindow* parent_window);
+unsigned char saveValid(const char* filename);
+// Before normalization (function): SliderChatWindow.
+// Before normalization (locals): parent_window.
+static void sliderChatWindow(int state, heroWindow* parentWindow);
+// Before normalization (function): SliderDuration.
+// Before normalization (locals): parent_window.
+static void sliderDuration(int state, heroWindow* parentWindow);
+// Before normalization (function): SliderFileMenu.
+// Before normalization (locals): parent_window.
+static void sliderFileMenu(int state, heroWindow* parentWindow);
 
 // The live TSingleSelectionWindow (set for the dialog's lifetime; every
 // widget callback and net handler reaches the window through it). All 35
 // retail references sit inside this TU's span, so the cell is file-static.
 // No name is attested anywhere readable - house unnamed-cell spelling.
-DATA(0x0069fbe8) static TSingleSelectionWindow* gUnnamed69fbe8;
+// Before normalization: gUnnamed69fbe8.
+DATA(0x0069fbe8) static TSingleSelectionWindow* g_unnamed69fbe8;
 
 // Two more file-static lobby cells (all retail references in-span).
 // DC names the one-shot empty-save-list notice flag `notifyNoSaved`.
 // WindowHandler tests and clears it before showing general-text row 686.
-DATA(0x0069fda0) static unsigned char notifyNoSaved;
+// Before normalization: notifyNoSaved.
 // 0x69fda4: the eight-seat join-order table SetHumanSlot consults in
 // net-new-game mode before the plain unassigned fill.
-DATA(0x0069fda4) static int g_wasHuman[8];
+DATA(0x0069fda0) static unsigned char g_notifyNoSaved;
 // DC's `campaignMode` byte survives as a TU-local Complete cell.  The
 // selected campaign row forces the unlimited (10) duration after transfer.
-DATA(0x0069fd90) static bool campaignMode;
-DATA(0x0069fdc8) static int gUnnamed69fdc8;
+// Before normalization: campaignMode.
+DATA(0x0069fda4) static int g_wasHuman[8];
+// Before normalization: gUnnamed69fdc8.
+DATA(0x0069fd90) static bool g_selectionCampaignMode;
 // DC-attested static name (globals.csv lastIMHoverID, this TU); the
 // WindowHandler mouse arm highlights the hero-face row under the cursor
 // through it.
-DATA(0x00683470) static int lastIMHoverID = -1;
+// Before normalization: lastIMHoverID.
+DATA(0x0069fdc8) static int g_unnamed69fdc8;
+DATA(0x00683470) static int g_lastImHoverId = -1;
 
 // The five per-difficulty score ratings DrawBasicMapInfo formats as
 // "%d%%" - .data (non-const in retail), values read from the image.
 // External linkage is retail-proven by scenarioinfo.obj's rating label.
-DATA(0x00683440) int gDifficultyRatingPercent[5] = {
+DATA(0x00683440) int g_difficultyRatingPercent[5] = {
     80, 100, 130, 160, 200
 };
 
 // The disk-list pattern table selected by GetFileSpecNbr. The declaration
 // order explains the reverse literal run at 0x683474..0x683494.
-DATA(0x00683458) static const char* const fileSpec[5] = {
+// Before normalization: fileSpec.
+DATA(0x00683458) static const char* const g_fileSpec[5] = {
     DATA_COMPGEN(0x00683494, mapFileSpec, "*.h3m"),
     DATA_COMPGEN(0x0068348c, savedGameFileSpec, "*.gm?"),
     DATA_COMPGEN(0x00683484, campaignGameFileSpec, "*.cgm"),
@@ -806,41 +840,44 @@ public:
 
 
 // E:\gamedcs\singleselectionwindow.cpp:821
+// Before normalization (function): InitializeVCDescriptions.
 VA(0x00577a50, 0x30)  // anchor-callee ResourceManager::GetText + vcdesc resource key (data_2834ac) + 0x38-byte copy loop, ret0, dc 0x12ff40
-unsigned char InitializeVCDescriptions()
+unsigned char initializeVCDescriptions()
 {
-    gpVictoryConditionText = ResourceManager::GetText(
+    g_victoryConditionText = ResourceManager::getText(
         DATA_COMPGEN(0x006834ac, victoryConditionTextName, "vcdesc.txt"));
-    if (!gpVictoryConditionText)
+    if (!g_victoryConditionText)
         return 0;
     for (int i = 0; i < 14; i++)
-        gVictoryConditionDesc[i] = gpVictoryConditionText->Text[i];
+        g_victoryConditionDesc[i] = g_victoryConditionText->m_text[i];
     return 1;
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:841
+// Before normalization (function): InitializeLCDescriptions.
 VA(0x00577a80, 0x30)  // anchor-callee ResourceManager::GetText + lcdesc resource key (data_2834b8) + 0x10-byte copy loop, ret0, dc 0x12ffa4
-unsigned char InitializeLCDescriptions()
+unsigned char initializeLCDescriptions()
 {
-    gpLossConditionText = ResourceManager::GetText(
+    g_lossConditionText = ResourceManager::getText(
         DATA_COMPGEN(0x006834b8, lossConditionTextName, "lcdesc.txt"));
-    if (!gpLossConditionText)
+    if (!g_lossConditionText)
         return 0;
     for (int i = 0; i < 4; i++)
-        gLossConditionDesc[i] = gpLossConditionText->Text[i];
+        g_lossConditionDesc[i] = g_lossConditionText->m_text[i];
     return 1;
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:867
+// Before normalization (function): InitializeTurnDurationText.
 VA(0x00577ab0, 0x30)  // anchor-callee ResourceManager::GetText + turndur resource key (data_2834c4) + 0x2c-byte copy loop, ret0, dc 0x130008
-unsigned char InitializeTurnDurationText()
+unsigned char initializeTurnDurationText()
 {
-    gpTurnDurationText = ResourceManager::GetText(
+    g_turnDurationTextResource = ResourceManager::getText(
         DATA_COMPGEN(0x006834c4, turnDurationTextName, "turndur.txt"));
-    if (!gpTurnDurationText)
+    if (!g_turnDurationTextResource)
         return 0;
     for (int i = 0; i < 11; i++)
-        gTurnDurationText[i] = gpTurnDurationText->Text[i];
+        g_turnDurationText[i] = g_turnDurationTextResource->m_text[i];
     return 1;
 }
 
@@ -890,21 +927,21 @@ int alphaCompare(const void* arg1, const void* arg2)
 
 // E:\gamedcs\singleselectionwindow.cpp:985
 DC_ONLY(0x13035c, 0x1E)
-void SliderChatWindow(int state, heroWindow* parent_window)
+void sliderChatWindow(int state, heroWindow* parent_window)
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:989
 DC_ONLY(0x13037c, 0x60)
-void SliderDuration(int state, heroWindow* parent_window)
+void sliderDuration(int state, heroWindow* parent_window)
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:994
 DC_ONLY(0x1303dc, 0x1E)
-void SliderFileMenu(int state, heroWindow* parent_window)
+void sliderFileMenu(int state, heroWindow* parent_window)
 {
     // @stub
 }
@@ -926,13 +963,13 @@ void CNetPlayerHandler::CNetPlayerHandler()
 // (0x579a2e..0x579a9a), which is where its statements sit in retail.
 CNetPlayerHandler::CNetPlayerHandler()
 {
-    playerPos = -1;
-    playersCount = 0;
-    unused = -1;
-    assignedPos = -1;
+    m_playerPos = -1;
+    m_playersCount = 0;
+    m_unused = -1;
+    m_assignedPos = -1;
     for (int i = 0; i < MAX_PLAYERS; ++i) {
-        computerPlayers[i].color = i;
-        strcpy(computerPlayers[i].sName, gpGeneralText->GetText(469));
+        m_computerPlayers[i].m_color = i;
+        strcpy(m_computerPlayers[i].m_name, g_generalText->getText(469));
     }
 }
 
@@ -940,42 +977,43 @@ CNetPlayerHandler::CNetPlayerHandler()
 // source helper and returns from the successful arm.  Flattening that helper
 // into a reversed dpid==0 loop produced the former 96.24% / 13-branch shape.
 VA(0x00577ae0, 0xd0)
-unsigned char CNetPlayerHandler::SetNextPlayer(int pos)
+unsigned char CNetPlayerHandler::setNextPlayer(int pos)
 {
-    CNetPlayerHandlerPlayer* pPlayer = GetPlayerInPos(pos);
+    // Before normalization (locals): pPlayer.
+    CNetPlayerHandlerPlayer* player = getPlayerInPos(pos);
 
-    int start = GetUnassignedPlayerPos();
+    int start = getUnassignedPlayerPos();
     if (start == -1)
         start = 0;
 
-    if (pPlayer) {
-        start = pPlayer->color + 1;
-        pPlayer->playerPos = -1;
+    if (player) {
+        start = player->m_color + 1;
+        player->m_playerPos = -1;
     }
 
-    if (pos == playerPos) {
-        if (assignedPos != -1) {
-            pPlayer->playerPos = assignedPos;
-            assignedPos = -1;
+    if (pos == m_playerPos) {
+        if (m_assignedPos != -1) {
+            player->m_playerPos = m_assignedPos;
+            m_assignedPos = -1;
         }
     } else {
-        playerPos = pos;
-        unused = -1;
-        assignedPos = -1;
+        m_playerPos = pos;
+        m_unused = -1;
+        m_assignedPos = -1;
     }
 
     if (start >= MAX_PLAYERS) {
-        pPlayer->playerPos = -1;
+        player->m_playerPos = -1;
         return 1;
     }
 
     int i = start;
     while (i < MAX_PLAYERS) {
-        if (humanPlayers[i].IsHuman()) {
-            assignedPos = humanPlayers[i].playerPos;
-            humanPlayers[i].playerPos = pos;
-            humanPlayers[i].heroIndex = -1;
-            humanPlayers[i].townIndex = -1;
+        if (m_humanPlayers[i].isHuman()) {
+            m_assignedPos = m_humanPlayers[i].m_playerPos;
+            m_humanPlayers[i].m_playerPos = pos;
+            m_humanPlayers[i].m_heroIndex = -1;
+            m_humanPlayers[i].m_townIndex = -1;
             return 1;
         }
         ++i;
@@ -985,11 +1023,11 @@ unsigned char CNetPlayerHandler::SetNextPlayer(int pos)
 
 // E:\gamedcs\singleselectionwindow.cpp:1078
 VA(0x00577bb0, 0x2f)  // arity ret4; scans field [slot+0x70]==pos over 8 stride-0x7c slots, returns slot* (no computer filter), dc 0x130604
-CNetPlayerHandlerPlayer* CNetPlayerHandler::GetPlayerInPos(int pos)
+CNetPlayerHandlerPlayer* CNetPlayerHandler::getPlayerInPos(int pos)
 {
     for (int i = 0; i < MAX_PLAYERS; ++i)
-        if (humanPlayers[i].playerPos == pos)
-            return &humanPlayers[i];
+        if (m_humanPlayers[i].m_playerPos == pos)
+            return &m_humanPlayers[i];
     return 0;
 }
 
@@ -1005,19 +1043,20 @@ CNetPlayerHandlerPlayer* CNetPlayerHandler::getCompPlayerInPos(int pos)
 #endif  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:1095
+// Before normalization (locals): pNetPlayer.
 VA(0x00577be0, 0xaf)  // arity ret4; 8-slot stride-0x7c dpid scan + max-count [this+0x7c4]==8, inits new slot fields 0x70/0x24/0x20 (mirror of DeletePlayer), dc 0x130670
-unsigned char CNetPlayerHandler::AddNewPlayer(CNetPlayerInfo* pNetPlayer)
+unsigned char CNetPlayerHandler::addNewPlayer(CNetPlayerInfo* netPlayer)
 {
-    if (playersCount >= MAX_PLAYERS)
+    if (m_playersCount >= MAX_PLAYERS)
         return 0;
-    if (getNetPos(pNetPlayer->dpid) != -1)
+    if (getNetPos(netPlayer->m_dpid) != -1)
         return 1;
     for (int i = 0; i < MAX_PLAYERS; ++i) {
-        if (humanPlayers[i].dpid == 0) {
-            humanPlayers[i].Clear();
-            strcpy(humanPlayers[i].sName, pNetPlayer->sName);
-            humanPlayers[i].dpid = pNetPlayer->dpid;
-            humanPlayers[i].version = pNetPlayer->version;
+        if (m_humanPlayers[i].m_dpid == 0) {
+            m_humanPlayers[i].clear();
+            strcpy(m_humanPlayers[i].m_name, netPlayer->m_name);
+            m_humanPlayers[i].m_dpid = netPlayer->m_dpid;
+            m_humanPlayers[i].m_version = netPlayer->m_version;
             return 1;
         }
     }
@@ -1030,13 +1069,13 @@ unsigned char CNetPlayerHandler::AddNewPlayer(CNetPlayerInfo* pNetPlayer)
 // header.  Both tiny methods inline under the retail /Ob2 profile.
 // E:\gamedcs\singleselectionwindow.cpp:1125
 VA(0x00577c90, 0x4d)
-bool CNetPlayerHandler::DeletePlayer(unsigned long dpid)
+bool CNetPlayerHandler::deletePlayer(unsigned long dpid)
 {
     int pos = getNetPos(dpid);
     if (pos == -1)
         return false;
 
-    humanPlayers[pos].Clear();
+    m_humanPlayers[pos].clear();
     return true;
 }
 
@@ -1060,23 +1099,24 @@ unsigned char CNetPlayerHandler::PlayerExists(unsigned long dpid)
 
 // E:\gamedcs\singleselectionwindow.cpp:1156
 VA(0x00577ce0, 0x2e)  // arity ret4; 8-slot stride-0x7c dpid scan then shl-5 (x0x7c) pointer compute (returns player*), dc 0x1307dc
-CNetPlayerHandlerPlayer* CNetPlayerHandler::GetPlayer(unsigned long dpid)
+CNetPlayerHandlerPlayer* CNetPlayerHandler::getPlayer(unsigned long dpid)
 {
     for (int i = 0; i < MAX_PLAYERS; ++i)
-        if (humanPlayers[i].dpid == dpid)
-            return &humanPlayers[i];
+        if (m_humanPlayers[i].m_dpid == dpid)
+            return &m_humanPlayers[i];
     return 0;
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:1167
 VA(0x00577d10, 0x5a)  // arity ret8 (this+2); stride-0x7c scan + checks face field [slot+0x2c], dc 0x130828
-unsigned char CNetPlayerHandler::IsFaceTaken(int face, int exclude)
+unsigned char CNetPlayerHandler::isFaceTaken(int face, int exclude)
 {
     for (int i = 0; i < MAX_PLAYERS; ++i) {
         if (i != exclude) {
-            CNetPlayerHandlerPlayer* pPlayer = GetPlayerInPos(i);
-            if (pPlayer && pPlayer->heroIndex != -1 &&
-                pPlayer->availableHeroes[pPlayer->heroIndex] == face)
+            // Before normalization (locals): pPlayer.
+            CNetPlayerHandlerPlayer* player = getPlayerInPos(i);
+            if (player && player->m_heroIndex != -1 &&
+                player->m_availableHeroes[player->m_heroIndex] == face)
                 return 1;
         }
     }
@@ -1106,7 +1146,7 @@ unsigned char CNetPlayerHandler::SetComputer(int pos)
 // Original: CNetPlayerHandler::GetCompPlayerInPos; singleselectionwindow.cpp:1089, dc 0x130654.
 inline CNetPlayerHandlerPlayer* CNetPlayerHandler::getCompPlayerInPos(int pos)
 {
-    return &computerPlayers[pos];
+    return &m_computerPlayers[pos];
 }
 
 // DC GetGamePos (dc 0x130778): the netPos local, an early `return -1`
@@ -1119,23 +1159,23 @@ inline int CNetPlayerHandler::getGamePos(unsigned long dpid)
     int netPos = getNetPos(dpid);
     if (netPos == -1)
         return -1;
-    return humanPlayers[netPos].playerPos;
+    return m_humanPlayers[netPos].m_playerPos;
 }
 
 // Original: CNetPlayerHandler::GetNetPos; singleselectionwindow.cpp:1193, dc 0x130898.
 inline int CNetPlayerHandler::getNetPos(unsigned long dpid)
 {
     for (int i = 0; i < MAX_PLAYERS; ++i)
-        if (humanPlayers[i].dpid == dpid)
+        if (m_humanPlayers[i].m_dpid == dpid)
             return i;
     return -1;
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:1214
-int CNetPlayerHandler::GetUnassignedPlayerPos()
+int CNetPlayerHandler::getUnassignedPlayerPos()
 {
     for (int i = 0; i < MAX_PLAYERS; ++i) {
-        if (humanPlayers[i].dpid != 0 && humanPlayers[i].playerPos == -1)
+        if (m_humanPlayers[i].m_dpid != 0 && m_humanPlayers[i].m_playerPos == -1)
             return i;
     }
     return -1;
@@ -1145,7 +1185,7 @@ int CNetPlayerHandler::GetUnassignedPlayerPos()
 
 // E:\gamedcs\singleselectionwindow.cpp:1225
 DC_ONLY(0x130968, 0x88)
-int CNetPlayerHandler::GetPlayerCount(unsigned char assignedOnly)
+int CNetPlayerHandler::getPlayerCount(unsigned char assignedOnly)
 {
     // @stub
 }
@@ -1157,12 +1197,12 @@ int CNetPlayerHandler::GetPlayerCount(unsigned char assignedOnly)
 // headers will follow.
 // E:\gamedcs\singleselectionwindow.cpp:1272
 VA(0x00577d70, 0x6C)  // anchor-vtable t_map_list_update vtbl 0x641d38 slot0; Complete-only 0x43b header-count msg from the +0x1044/+0x1048 pair
-void t_map_list_update::Go()
+void t_map_list_update::go()
 {
-    TSingleSelectionWindow* win = gUnnamed69fbe8;
+    TSingleSelectionWindow* win = g_unnamed69fbe8;
     CTransferHeaderInfoInitMsg msg(
-        win->TransferHeaders.size());
-    TransmitRemoteDataDPID(&msg, m_dpid, false, true);
+        win->m_transferHeaders.size());
+    transmitRemoteDataDPID(&msg, m_dpid, false, true);
 }
 
 // Original: CNewPlayerUpdateProc::CNewPlayerUpdateProc; singleselectionwindow.cpp:1262, dc 0x14808c.
@@ -1178,12 +1218,12 @@ inline CNewPlayerUpdateProc::CNewPlayerUpdateProc(unsigned long dpid)
 // base-Tick call sites; the separate 0x578010 HandleRequests body and derived
 // Tick consume the same boundary.
 // E:\gamedcs\singleselectionwindow.cpp:1369
-inline void CNewPlayerUpdateProc::RequestConfirmation()
+inline void CNewPlayerUpdateProc::requestConfirmation()
 {
-    logFile.Log(DATA_COMPGEN(0x006834d0, requestingConfirmLog,
+    g_logFile.log(DATA_COMPGEN(0x006834d0, requestingConfirmLog,
                     "Requesting confirmation: %d"));
     CReqHeaderConfirmMsg msg;
-    TransmitRemoteDataDPID(&msg, m_dpid, false, true);
+    transmitRemoteDataDPID(&msg, m_dpid, false, true);
 }
 
 // Stream up to five header rows per throttle window at the joining
@@ -1206,33 +1246,33 @@ inline void CNewPlayerUpdateProc::RequestConfirmation()
 // mutable char* parameter are all byte-flat. Earlier loop-layout failures
 // were measured before these helper and exhausted-list corrections.
 VA(0x00577DE0, 0x228)  // anchor-vtable vtbl 0x641d38 slot1 - the slot WindowHandler's inlined Man::Tick dispatches; Complete-only override shaped from the Dreamcast base Tick at 0x148130
-void t_map_list_update::Tick()
+void t_map_list_update::tick()
 {
-    if (GameTime::ElapsedSince(m_lastSendTime) < 75)
+    if (GameTime::elapsedSince(m_lastSendTime) < 75)
         return;
 
-    if (m_nextHeader < gUnnamed69fbe8->TransferHeaders.size()) {
+    if (m_nextHeader < g_unnamed69fbe8->m_transferHeaders.size()) {
         for (int k = 0; k < 5; ++k) {
             CMapFileNameMsg msg(
                 1, m_nextHeader,
-                gUnnamed69fbe8->TransferHeaders[m_nextHeader].setup.filename,
-                gUnnamed69fbe8->TransferHeaders[m_nextHeader].setup.alignment,
-                gUnnamed69fbe8->TransferHeaders[m_nextHeader].fileTime);
-            TransmitRemoteDataDPID(&msg, m_dpid, true, false);
+                g_unnamed69fbe8->m_transferHeaders[m_nextHeader].m_setup.m_filename,
+                g_unnamed69fbe8->m_transferHeaders[m_nextHeader].m_setup.m_alignment,
+                g_unnamed69fbe8->m_transferHeaders[m_nextHeader].m_fileTime);
+            transmitRemoteDataDPID(&msg, m_dpid, true, false);
             ++m_nextHeader;
             if (static_cast<int>(m_requests.size()) != 0)
-                HandleRequests();
-            if (m_nextHeader >= gUnnamed69fbe8->TransferHeaders.size()) {
-                RequestConfirmation();
+                handleRequests();
+            if (m_nextHeader >= g_unnamed69fbe8->m_transferHeaders.size()) {
+                requestConfirmation();
                 break;
             }
         }
     } else if (static_cast<int>(m_requests.size()) != 0) {
-        HandleRequests();
-        RequestConfirmation();
+        handleRequests();
+        requestConfirmation();
     }
 
-    m_lastSendTime = GameTime::Get();
+    m_lastSendTime = GameTime::get();
 }
 
 #if 0  // @carcass
@@ -1254,7 +1294,7 @@ void t_map_list_update::Tick()
 // counterindication.
 // E:\gamedcs\singleselectionwindow.cpp:1375
 VA(0x00578010, 0x272)  // anchor-callee Tick drains the m_requests vector through it at both of its non-empty checks, dc 0x1483f8
-inline void CNewPlayerUpdateProc::HandleRequests()
+inline void CNewPlayerUpdateProc::handleRequests()
 {
     int count = m_requests.size();
     if (count == 0)
@@ -1262,12 +1302,12 @@ inline void CNewPlayerUpdateProc::HandleRequests()
     for (int i = 0; i < count; ++i) {
         GameSelectionHeadersStruct* row;
         if (m_requests[i].m_flag)
-            row = &gUnnamed69fbe8->TransferHeaders[m_requests[i].m_number];
+            row = &g_unnamed69fbe8->m_transferHeaders[m_requests[i].m_number];
         else
-            row = &gUnnamed69fbe8->HeadersA[m_requests[i].m_number];
+            row = &g_unnamed69fbe8->m_headersA[m_requests[i].m_number];
         CGameHeaderInfoMsg msg(m_requests[i].m_flag,
                                m_requests[i].m_number, row);
-        msg.RemoteFn_00512C80(m_dpid, 1, 1);
+        msg.remoteFn00512C80(m_dpid, 1, 1);
     }
     m_requests.clear();
 }
@@ -1300,17 +1340,17 @@ VA_COMPGEN(0x00578760, 0x1CE, IMPLICIT_DTOR, CGameHeaderInfoMsg)
 // before setup/pane/roster synchronization.  Retail proves that exact subset:
 // 0x401 end, 0x408 filter and 0x403 scroll messages, all guaranteed to m_dpid.
 VA(0x00578930, 0xB2)  // anchor-vtable t_map_list_update vtbl 0x641d38 slot2; retail-only subset of dc base Finish 0x1484c8
-void t_map_list_update::Finish()
+void t_map_list_update::finish()
 {
     CGameHeaderInfoEndMsg endMsg;
-    TransmitRemoteDataDPID(&endMsg, m_dpid, false, true);
+    transmitRemoteDataDPID(&endMsg, m_dpid, false, true);
 
-    CSetFilterMsg filterMsg(gUnnamed69fbe8->mapSizeFilter);
-    TransmitRemoteDataDPID(&filterMsg, m_dpid, false, true);
+    CSetFilterMsg filterMsg(g_unnamed69fbe8->m_mapSizeFilter);
+    transmitRemoteDataDPID(&filterMsg, m_dpid, false, true);
 
-    CScrollMsg scrollMsg(gUnnamed69fbe8->currentMap,
-                         gUnnamed69fbe8->currentIndex);
-    TransmitRemoteDataDPID(&scrollMsg, m_dpid, false, true);
+    CScrollMsg scrollMsg(g_unnamed69fbe8->m_currentMap,
+                         g_unnamed69fbe8->m_currentIndex);
+    transmitRemoteDataDPID(&scrollMsg, m_dpid, false, true);
 }
 
 // DC CNewPlayerUpdateProc::Go and its message constructors survive here as
@@ -1320,13 +1360,13 @@ void t_map_list_update::Finish()
 // gameVersion source, 0x30 message layout, dpid destination and send flags.
 // E:\gamedcs\singleselectionwindow.cpp:1272
 VA(0x005789F0, 0x9E)  // anchor-vtable CNewPlayerUpdateProc vtbl 0x641d44 slot0, dc 0x1480cc
-void CNewPlayerUpdateProc::Go()
+void CNewPlayerUpdateProc::go()
 {
     CGameHeaderInfoInitMsgEx initMsg(
-        gUnnamed69fbe8->gameVersion,
-        gUnnamed69fbe8->HeadersA.size(),
-        gUnnamed69fbe8->m_flag64);
-    TransmitRemoteDataDPID(&initMsg, m_dpid, false, true);
+        g_unnamed69fbe8->m_gameVersion,
+        g_unnamed69fbe8->m_headersA.size(),
+        g_unnamed69fbe8->m_flag64);
+    transmitRemoteDataDPID(&initMsg, m_dpid, false, true);
 }
 
 // The original 1024 header stream. Dreamcast CodeView proves the i local,
@@ -1342,41 +1382,41 @@ void CNewPlayerUpdateProc::Go()
 // tested and rejected: DC lists only i/msg/msg and it lowered the score.
 // E:\gamedcs\singleselectionwindow.cpp:1282
 VA(0x00578A90, 0x370)  // anchor-vtable CNewPlayerUpdateProc vtbl 0x641d44 slot1, dc 0x148130
-void CNewPlayerUpdateProc::Tick()
+void CNewPlayerUpdateProc::tick()
 {
-    if (GameTime::ElapsedSince(m_lastSendTime) < 75)
+    if (GameTime::elapsedSince(m_lastSendTime) < 75)
         return;
 
-    if (m_nextHeader < gUnnamed69fbe8->HeadersA.size()) {
+    if (m_nextHeader < g_unnamed69fbe8->m_headersA.size()) {
         for (int i = 0; i < 5; ++i) {
-            if (gUnnamed69fbe8->m_flag64) {
+            if (g_unnamed69fbe8->m_flag64) {
                 CGameHeaderInfoMsg msg(
                     0, m_nextHeader,
-                    &gUnnamed69fbe8->HeadersA[m_nextHeader]);
-                msg.RemoteFn_00512C80(m_dpid, 1, 1);
+                    &g_unnamed69fbe8->m_headersA[m_nextHeader]);
+                msg.remoteFn00512C80(m_dpid, 1, 1);
             } else {
                 CMapFileNameMsg msg(
                     0, m_nextHeader,
-                    gUnnamed69fbe8->HeadersA[m_nextHeader].setup.filename,
-                    gUnnamed69fbe8->HeadersA[m_nextHeader].setup.alignment,
-                    gUnnamed69fbe8->HeadersA[m_nextHeader].fileTime);
-                TransmitRemoteDataDPID(&msg, m_dpid, true, false);
+                    g_unnamed69fbe8->m_headersA[m_nextHeader].m_setup.m_filename,
+                    g_unnamed69fbe8->m_headersA[m_nextHeader].m_setup.m_alignment,
+                    g_unnamed69fbe8->m_headersA[m_nextHeader].m_fileTime);
+                transmitRemoteDataDPID(&msg, m_dpid, true, false);
             }
 
             ++m_nextHeader;
             if (static_cast<int>(m_requests.size()) != 0)
-                HandleRequests();
-            if (m_nextHeader >= gUnnamed69fbe8->HeadersA.size()) {
-                RequestConfirmation();
+                handleRequests();
+            if (m_nextHeader >= g_unnamed69fbe8->m_headersA.size()) {
+                requestConfirmation();
                 break;
             }
         }
     } else if (static_cast<int>(m_requests.size()) != 0) {
-        HandleRequests();
-        RequestConfirmation();
+        handleRequests();
+        requestConfirmation();
     }
 
-    m_lastSendTime = GameTime::Get();
+    m_lastSendTime = GameTime::get();
 }
 
 
@@ -1400,12 +1440,13 @@ void CNewPlayerUpdateProc::Tick()
 // GameSelectionHeadersStruct assignment is retail's retained 0x578440 body.
 VA(0x00579060, 0x251)  // DC header-row constructor + Complete list flag, dc 0x147940
 CGameHeaderInfoMsg::CGameHeaderInfoMsg(
-    unsigned char flag, int number, GameSelectionHeadersStruct* pHeader)
+    // Before normalization (locals): pHeader.
+    unsigned char flag, int number, GameSelectionHeadersStruct* header)
     : t_complex_net_message(RS_GAME_HEADER_INFO)
 {
     m_flag = flag;
     m_number = number;
-    m_header = *pHeader;
+    m_header = *header;
 }
 
 // Complete retains SavedGameHeader's implicit memberwise assignment for the
@@ -1436,12 +1477,12 @@ CNewPlayerUpdateMan::~CNewPlayerUpdateMan()
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:1466
-void CNewPlayerUpdateMan::Tick()
+void CNewPlayerUpdateMan::tick()
 {
     for (int i = 0; i < 8; ++i) {
         if (m_procs[i]) {
-            m_procs[i]->Tick();
-            if (m_procs[i]->IsFinished()) {
+            m_procs[i]->tick();
+            if (m_procs[i]->isFinished()) {
                 delete m_procs[i];
                 m_procs[i] = 0;
             }
@@ -1493,8 +1534,8 @@ public:
     {
     }
 
-    virtual void SetResolution(int num);  // slot 13
-    virtual void SetState(int state);     // slot 14
+    virtual void setResolution(int num);  // slot 13
+    virtual void setState(int state);     // slot 14
 };
 
 // E:\gamedcs\singleselectionwindow.cpp:1618
@@ -1506,9 +1547,9 @@ class CChatWidget : public textWidget {
 public:
     class CChatSave : public Bitmap16Bit {
     public:
-        unsigned char bSaved;  // +0x38
-        CChatSave(int w, int h) : Bitmap16Bit(w, h), bSaved(0) {}
-        unsigned char IsSaved() const { return bSaved; }
+        unsigned char m_saved;  // +0x38
+        CChatSave(int w, int h) : Bitmap16Bit(w, h), m_saved(0) {}
+        unsigned char isSaved() const { return m_saved; }
     };
 
     CChatWidget(int x, int y, int w, int h, const char* text,
@@ -1521,7 +1562,7 @@ public:
     }
 
     virtual ~CChatWidget();
-    virtual void Draw();  // slot 4
+    virtual void draw();  // slot 4
 
     CChatSave* m_save;  // +0x50
 };
@@ -1544,8 +1585,8 @@ public:
     {
     }
 
-    virtual void SendChat(const char* text, int toWho);
-    virtual unsigned char IgnoreKey(message* msg);
+    virtual void sendChat(const char* text, int toWho);
+    virtual unsigned char ignoreKey(message* msg);
 };
 
 // E:\gamedcs\singleselectionwindow.cpp:1805
@@ -1567,9 +1608,9 @@ public:
     {
     }
 
-    virtual void OnKillFocus();            // slot 11
-    virtual int OnKeyPress(message* msg);  // slot 15
-    int OnEnter();
+    virtual void onKillFocus();            // slot 11
+    virtual int onKeyPress(message* msg);  // slot 15
+    int onEnter();
 };
 
 // The shared name-commit helper both CEnterNameEdit overrides expand. DC
@@ -1580,22 +1621,22 @@ public:
 // (id pos+345). player->sName on the not-found path is address arithmetic
 // only, exactly as retail compiles it.
 // Original: CEnterNameEdit::OnEnter; singleselectionwindow.cpp:1820, dc 0x149238.
-inline int CEnterNameEdit::OnEnter()
+inline int CEnterNameEdit::onEnter()
 {
-    int pos = id - 353;
-    send_message(WIDGET_CLEAR_STATUS, WIDGET_ACTIVE | WIDGET_DRAWN);
-    const char* text = Text.c_str();
-    TSingleSelectionWindow* win = gUnnamed69fbe8;
-    CNetPlayerHandlerPlayer* player = win->m_players.GetPlayerInPos(pos);
-    win->SetFocus(-1);
+    int pos = m_id - 353;
+    sendMessage(WIDGET_CLEAR_STATUS, WIDGET_ACTIVE | WIDGET_DRAWN);
+    const char* text = m_text.c_str();
+    TSingleSelectionWindow* win = g_unnamed69fbe8;
+    CNetPlayerHandlerPlayer* player = win->m_players.getPlayerInPos(pos);
+    win->setFocus(-1);
     if (player) {
-        strcpy(player->sName, text);
-        strcpy(gLocalPlayerName, text);
-        WritePrefs();
+        strcpy(player->m_name, text);
+        strcpy(g_localPlayerName, text);
+        writePrefs();
     }
-    static_cast<textWidget*>(win->GetWidget(pos + 345))
-        ->SetText(player->sName);
-    win->DrawHeroAdvancedOption(pos, 1, -1);
+    static_cast<textWidget*>(win->getWidget(pos + 345))
+        ->setText(player->m_name);
+    win->drawHeroAdvancedOption(pos, 1, -1);
     return 1;
 }
 
@@ -1615,8 +1656,8 @@ public:
     {
     }
 
-    virtual int OnKeyPress(message* msg);           // slot 15
-    virtual unsigned char IgnoreKey(message* msg);  // slot 16
+    virtual int onKeyPress(message* msg);           // slot 15
+    virtual unsigned char ignoreKey(message* msg);  // slot 16
 };
 
 
@@ -1634,38 +1675,38 @@ public:
 // nesting the else scope and inline_depth(1) were byte-flat.
 // E:\gamedcs\singleselectionwindow.cpp:1393
 VA(0x005795A0, 0x2CA)  // anchor-vtable CNewPlayerUpdateProc vtbl 0x641d44 slot2, dc 0x1484c8
-void CNewPlayerUpdateProc::Finish()
+void CNewPlayerUpdateProc::finish()
 {
     CGameHeaderInfoEndMsg endMsg;
-    TransmitRemoteDataDPID(&endMsg, m_dpid, false, true);
+    transmitRemoteDataDPID(&endMsg, m_dpid, false, true);
 
-    CSetFilterMsg filterMsg(gUnnamed69fbe8->mapSizeFilter);
-    TransmitRemoteDataDPID(&filterMsg, m_dpid, false, true);
+    CSetFilterMsg filterMsg(g_unnamed69fbe8->m_mapSizeFilter);
+    transmitRemoteDataDPID(&filterMsg, m_dpid, false, true);
 
-    CScrollMsg scrollMsg(gUnnamed69fbe8->currentMap,
-                         gUnnamed69fbe8->currentIndex);
-    TransmitRemoteDataDPID(&scrollMsg, m_dpid, false, true);
+    CScrollMsg scrollMsg(g_unnamed69fbe8->m_currentMap,
+                         g_unnamed69fbe8->m_currentIndex);
+    transmitRemoteDataDPID(&scrollMsg, m_dpid, false, true);
 
-    gUnnamed69fbe8->SendSetupInfo(m_dpid);
+    g_unnamed69fbe8->sendSetupInfo(m_dpid);
 
-    if (gUnnamed69fbe8->inAdvancedOptions) {
+    if (g_unnamed69fbe8->m_inAdvancedOptions) {
         CClickMsg clickMsg(129);
-        TransmitRemoteDataDPID(&clickMsg, m_dpid, false, true);
+        transmitRemoteDataDPID(&clickMsg, m_dpid, false, true);
     } else {
-        if (gUnnamed69fbe8->inScenarioOptions) {
+        if (g_unnamed69fbe8->m_inScenarioOptions) {
             CClickMsg clickMsg(128);
-            TransmitRemoteDataDPID(&clickMsg, m_dpid, false, true);
-        } else if (gUnnamed69fbe8->inFilterOptions) {
+            transmitRemoteDataDPID(&clickMsg, m_dpid, false, true);
+        } else if (g_unnamed69fbe8->m_inFilterOptions) {
             CClickMsg clickMsg(130);
-            TransmitRemoteDataDPID(&clickMsg, m_dpid, false, true);
+            transmitRemoteDataDPID(&clickMsg, m_dpid, false, true);
         }
     }
 
-    CClickMsg clickMsg(gpGame->setup.difficulty + 107);
-    TransmitRemoteDataDPID(&clickMsg, m_dpid, false, true);
-    gUnnamed69fbe8->SendPlayerPositions(m_dpid);
-    gUnnamed69fbe8->CheckFaces();
-    gUnnamed69fbe8->SendPlayerFaces();
+    CClickMsg clickMsg(g_game->m_setup.m_difficulty + 107);
+    transmitRemoteDataDPID(&clickMsg, m_dpid, false, true);
+    g_unnamed69fbe8->sendPlayerPositions(m_dpid);
+    g_unnamed69fbe8->checkFaces();
+    g_unnamed69fbe8->sendPlayerFaces();
 }
 
 
@@ -1685,12 +1726,13 @@ void CNewPlayerUpdateProc::Finish()
 // E:\gamedcs\singleselectionwindow.cpp:717
 VA(0x00579870, 0xEA)  // anchor-subtype 0x40f/size 0x7d4 + exact two-array DC constructor shape, dc 0x147ea4
 CUpdatePlayerPosMsg::CUpdatePlayerPosMsg(
-    CNetPlayerHandlerPlayer* pNetPlayers,
-    CNetPlayerHandlerPlayer* pCompPlayers)
+    // Before normalization (locals): pNetPlayers, pCompPlayers.
+    CNetPlayerHandlerPlayer* netPlayers,
+    CNetPlayerHandlerPlayer* compPlayers)
     : CNetMsg(RS_UPDATE_PLAYER_POS, sizeof(CUpdatePlayerPosMsg))
 {
-    memcpy(m_netPlayer, pNetPlayers, sizeof(m_netPlayer));
-    memcpy(m_compPlayer, pCompPlayers, sizeof(m_compPlayer));
+    memcpy(m_netPlayer, netPlayers, sizeof(m_netPlayer));
+    memcpy(m_compPlayer, compPlayers, sizeof(m_compPlayer));
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:1953
@@ -1764,167 +1806,167 @@ VA(0x00579960, 0x2d63)  // anchor-callee CAdvPopup base ctor + embedded header/p
 TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     : CAdvPopup(0, 0, 800, 600, 0)
 {
-    StartMouseThread();
+    startMouseThread();
 
-    campaignMode = (gpWindowManager->dialogReturn
+    g_selectionCampaignMode = (g_windowManager->m_dialogReturn
                         == SINGLE_SELECTION_LAUNCHED_FROM_CAMPAIGN
-                    || gUnnamed69774c != 0);
-    gUnnamed69fbe8 = this;
+                    || g_unnamed69774c != 0);
+    g_unnamed69fbe8 = this;
     m_flag65 = 0;
     m_flag64 = 0;
     m_flag66 = 0;
-    gUnnamed69fdc8 = 18;
+    g_unnamed69fdc8 = 18;
 
-    field_1898 = *gpVideoGameState;
-    field_189c = 341;
-    if (*gpVideoGameState == SINGLE_SELECTION_CONTEXT_1
-        || *gpVideoGameState == SINGLE_SELECTION_CONTEXT_3)
-        field_189c = 342;
+    m_commonGameVersion = *g_videoGameState;
+    m_townHeadingId = 341;
+    if (*g_videoGameState == SINGLE_SELECTION_CONTEXT_1
+        || *g_videoGameState == SINGLE_SELECTION_CONTEXT_3)
+        m_townHeadingId = 342;
 
     if (gameMode == SINGLE_SELECTION_LOAD_GAME) {
         m_flag64 = 1;
     } else if (gameMode == SINGLE_SELECTION_SAVE_GAME) {
         m_flag65 = 1;
-        field_68 = -1;
-        memset(gUnnamed69fc2c, 0, 351);
-        saveHeader = new game;
-        BackupGameHeaders(saveHeader, gpGame);
-        gUnnamed69fdc8 = 16;
+        m_textIndex = -1;
+        memset(g_unnamed69fc2c, 0, 351);
+        g_saveHeader = new game;
+        backupGameHeaders(g_saveHeader, g_game);
+        g_unnamed69fdc8 = 16;
     }
 
-    if (!m_flag64 && !m_flag65 && bVideoPaused && pDPlay)
-        pDPlay->SetNetMsgHandler(&netMsgHandler);
+    if (!m_flag64 && !m_flag65 && g_videoPaused && g_dPlay)
+        g_dPlay->setNetMsgHandler(&m_netMsgHandler);
 
-    logFile.Log(
+    g_logFile.log(
         DATA_COMPGEN(0x00683688, selectionWindowIsHostLog,
                      "TSingleSelectionWindow::IsHost()=%d"),
-        IsHost());
+        isHost());
 
-    notifyNoSaved = 0;
-    receivedMaps = 0;
-    chatWidget = 0;
-    nameList1 = 0;
-    nameList2 = 0;
-    mapChanged = 1;
-    chatEdit = 0;
-    sortDirection = 0;
-    sortWhich = 0;
-    mapSizeFilter = 0;
-    pNewPlayerUpdateMan = 0;
-    chatShowing = 0;
-    receivingMaps = 0;
-    saveGameEdit = 0;
-    durationSlider = 0;
-    durationIndex = gpGame->setup.turnDuration;
+    g_notifyNoSaved = 0;
+    m_receivedMaps = 0;
+    m_chatWidget = 0;
+    m_nameList1 = 0;
+    m_nameList2 = 0;
+    m_mapChanged = 1;
+    m_chatEdit = 0;
+    m_sortDirection = 0;
+    m_sortWhich = 0;
+    m_mapSizeFilter = 0;
+    m_newPlayerUpdateMan = 0;
+    m_chatShowing = 0;
+    m_receivingMaps = 0;
+    m_saveGameEdit = 0;
+    m_durationSlider = 0;
+    m_durationIndex = g_game->m_setup.m_turnDuration;
 
-    flagBack = new CSaveScreen(310, 25);
-    GetGameVersion(gameVersion);
+    m_flagBack = new CSaveScreen(310, 25);
+    getGameVersion(m_gameVersion);
 
-    inAdvancedOptions = 0;
-    scenarioOptionsStarted = 0;
-    inScenarioOptions = 0;
-    inFilterOptions = 0;
-    field_37F = 0;
-    clickTime = GameTime::Get();
+    m_inAdvancedOptions = 0;
+    m_scenarioOptionsStarted = 0;
+    m_inScenarioOptions = 0;
+    m_inFilterOptions = 0;
+    m_randomMapSelected = 0;
+    m_clickTime = GameTime::get();
 
     if (!m_flag65) {
         for (int i = 0; i < 8; ++i)
-            gpGame->players[i].Init();
+            g_game->m_players[i].init();
     }
 
-    Widgets.reserve(111);
+    m_widgets.reserve(111);
 
-    sprintf(gText, "gamselb%d.pcx", Random(0, 50));
+    sprintf(g_text, "gamselb%d.pcx", random(0, 50));
     bitmapBorder16* tempBack = new bitmapBorder16(
-        0, 0, 800, 600, 100, gText, 0x800);
-    Widgets.push_back(tempBack);
-    tempBack->image->Draw(0, 0, tempBack->image->GetWidth(),
-        tempBack->image->GetHeight(), gpWindowManager->screenBitmap,
-        tempBack->x + x, tempBack->y + y, 0);
+        0, 0, 800, 600, 100, g_text, 0x800);
+    m_widgets.push_back(tempBack);
+    tempBack->m_image->draw(0, 0, tempBack->m_image->getWidth(),
+        tempBack->m_image->getHeight(), g_windowManager->m_screenBitmap,
+        tempBack->m_x + m_x, tempBack->m_y + m_y, 0);
 
     bitmapBorder* w = new bitmapBorder(
         396, 6, 370, 585, 100, "GSelPop1.pcx", 0x800);
     // DEPTH LADDER: this ONE append is `insert(end(), w)`; all 24 others in
     // this constructor stay `push_back`.  95.7079 -> 95.8142; every other site
     // measured singly is flat or a loss, and the next best (#18) is 95.7325.
-    Widgets.insert(Widgets.end(), w);
-    w->image->Draw(0, 0, w->image->GetWidth(), w->image->GetHeight(),
-        gpWindowManager->screenBitmap, w->x + x, w->y + y, 0);
+    m_widgets.insert(m_widgets.end(), w);
+    w->m_image->draw(0, 0, w->m_image->getWidth(), w->m_image->getHeight(),
+        g_windowManager->m_screenBitmap, w->m_x + m_x, w->m_y + m_y, 0);
 
     w = new bitmapBorder(3, 6, 575, 585, 101,
                          "SCSelBck.pcx", 0x800);
     w->hide();
-    Widgets.push_back(w);
+    m_widgets.push_back(w);
 
-    Widgets.push_back(new textWidget(
-        25, 23, 367, 23, gUnnamed6a8098[m_flag65 ? 2 : (m_flag64 ? 1 : 0)],
+    m_widgets.push_back(new textWidget(
+        25, 23, 367, 23, g_unnamed6a8098[m_flag65 ? 2 : (m_flag64 ? 1 : 0)],
         "medfont.fnt", font::HEADING_HIGHLIGHT, 361, 5, 0, 8));
 
-    if ((!m_flag64 && !m_flag65) || (m_flag64 && IsMultiPlayer())) {
+    if ((!m_flag64 && !m_flag65) || (m_flag64 && isMultiPlayer())) {
         w = new bitmapBorder(3, 6, 557, 585, 102,
                              "AdvOptBk.pcx", 0x800);
         w->hide();
-        Widgets.push_back(w);
+        m_widgets.push_back(w);
 
         w = new bitmapBorder(3, 6, 557, 585, 103,
                              "RanMapBk.pcx", 0x800);
         w->hide();
-        Widgets.push_back(w);
+        m_widgets.push_back(w);
     }
 
-    sprintf(gText, "%s:", gpGeneralText->GetText(493));
-    Widgets.push_back(new textWidget(
-        414, 435, 334, 19, gText, "smalfont.fnt", font::PRIMARY_HIGHLIGHT,
+    sprintf(g_text, "%s:", g_generalText->getText(493));
+    m_widgets.push_back(new textWidget(
+        414, 435, 334, 19, g_text, "smalfont.fnt", font::PRIMARY_HIGHLIGHT,
         132, font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-    sprintf(gText, "%s:", gpGeneralText->GetText(219));
-    Widgets.push_back(new textWidget(
-        665, 435, 84, 19, gText, "smalfont.fnt", font::PRIMARY_HIGHLIGHT,
+    sprintf(g_text, "%s:", g_generalText->getText(219));
+    m_widgets.push_back(new textWidget(
+        665, 435, 84, 19, g_text, "smalfont.fnt", font::PRIMARY_HIGHLIGHT,
         133, font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-    Widgets.push_back(new textWidget(
-        414, 435, 90, 19, gpGeneralText->GetText(495), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(
+        414, 435, 90, 19, g_generalText->getText(495), "smalfont.fnt",
         font::PRIMARY_HIGHLIGHT, 134,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-    Widgets.push_back(new textWidget(
-        422, 27, 278, 18, gpGeneralText->GetText(496), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(
+        422, 27, 278, 18, g_generalText->getText(496), "smalfont.fnt",
         font::PRIMARY_HIGHLIGHT, 100, font::VERT_CENTER_JUSTIFIED, 0, 8));
-    Widgets.push_back(new textWidget(
-        422, 137, 278, 18, gpGeneralText->GetText(497), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(
+        422, 137, 278, 18, g_generalText->getText(497), "smalfont.fnt",
         font::PRIMARY_HIGHLIGHT, 105, font::VERT_CENTER_JUSTIFIED, 0, 8));
 
-    field_196c = new CScrollTextWidget(
-        emptyRolloverText, 422, 155, 319, 115, "smalfont.fnt",
+    m_descriptionWidget = new CScrollTextWidget(
+        g_emptyRolloverText, 422, 155, 319, 115, "smalfont.fnt",
         font::WHITE, slider::BLUE);
-    Widgets.push_back(field_196c);
+    m_widgets.push_back(m_descriptionWidget);
 
-    Widgets.push_back(new textWidget(
-        422, 288, 278, 18, gpGeneralText->GetText(498), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(
+        422, 288, 278, 18, g_generalText->getText(498), "smalfont.fnt",
         font::PRIMARY_HIGHLIGHT, 100, font::VERT_CENTER_JUSTIFIED, 0, 8));
-    Widgets.push_back(new textWidget(
-        422, 344, 278, 18, gpGeneralText->GetText(499), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(
+        422, 344, 278, 18, g_generalText->getText(499), "smalfont.fnt",
         font::PRIMARY_HIGHLIGHT, 100, font::VERT_CENTER_JUSTIFIED, 0, 8));
 
-    if (bVideoPaused && !m_flag65) {
-        chatToggle = new textButton(
-            622, 81, 128, 20, 131, "gspbut2.def", emptyRolloverText,
+    if (g_videoPaused && !m_flag65) {
+        m_chatToggle = new textButton(
+            622, 81, 128, 20, 131, "gspbut2.def", g_emptyRolloverText,
             "smalfont.fnt", 0, 1, 0, 15, 2, font::WHITE);
-        Widgets.push_back(chatToggle);
+        m_widgets.push_back(m_chatToggle);
     }
 
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         714, 28, 29, 23, 189, "scnrmpsz.def", 0, 0, 0, 0,
         iconWidget::ICON_STYLE_PLAIN));
-    sprintf(gText, "%s:", gpGeneralText->GetText(391));
+    sprintf(g_text, "%s:", g_generalText->getText(391));
     textWidget* t = new textWidget(
-        414, 403, 44, 23, gText, "smalfont.fnt", font::WHITE, 100,
+        414, 403, 44, 23, g_text, "smalfont.fnt", font::WHITE, 100,
         font::VERT_CENTER_JUSTIFIED | font::RIGHT_JUSTIFIED, 0, 8);
-    Widgets.push_back(t);
-    sprintf(gText, "%s:", gpGeneralText->GetText(392));
+    m_widgets.push_back(t);
+    sprintf(g_text, "%s:", g_generalText->getText(392));
     textWidget* t2 = new textWidget(
-        579, 403, 58, 23, gText, "smalfont.fnt", font::WHITE, 386,
+        579, 403, 58, 23, g_text, "smalfont.fnt", font::WHITE, 386,
         font::VERT_CENTER_JUSTIFIED | font::RIGHT_JUSTIFIED, 0, 8);
-    Widgets.push_back(t2);
+    m_widgets.push_back(t2);
 
-    if (m_flag65 || (m_flag64 && !IsMultiPlayer())) {
+    if (m_flag65 || (m_flag64 && !isMultiPlayer())) {
         t->hide();
         t2->hide();
     }
@@ -1935,65 +1977,65 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
                 460 + i * 15, 405, 15, 20, 112 + i, "itgflags.def",
                 0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
             flag->hide();
-            Widgets.push_back(flag);
+            m_widgets.push_back(flag);
 
             flag = new iconWidget(
                 640 + i * 15, 405, 15, 20, 120 + i, "itgflags.def",
                 0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
             flag->hide();
-            Widgets.push_back(flag);
+            m_widgets.push_back(flag);
         }
     }
 
-    if (!m_flag65 && (!m_flag64 || IsMultiPlayer()))
-        Widgets.push_back(new CHotspotWidget(456, 402, 310, 25, 387));
+    if (!m_flag65 && (!m_flag64 || isMultiPlayer()))
+        m_widgets.push_back(new CHotspotWidget(456, 402, 310, 25, 387));
 
-    for (int i = 0; i < gUnnamed69fdc8; ++i) {
+    for (int i = 0; i < g_unnamed69fdc8; ++i) {
         textWidget* row = new textWidget(
-            57, 122 + i * 25, 314, 25, emptyRolloverText,
+            57, 122 + i * 25, 314, 25, g_emptyRolloverText,
             "smalfont.fnt", font::WHITE, 142 + i,
             font::CENTER_JUSTIFIED, 0, 8);
         row->hide();
-        Widgets.push_back(row);
+        m_widgets.push_back(row);
     }
 
     if (m_flag65) {
-        Widgets.push_back(new bitmapBorder(
-            3, 520 - y, 399, 65, 388, "gsstrip.pcx", 0x800));
+        m_widgets.push_back(new bitmapBorder(
+            3, 520 - m_y, 399, 65, 388, "gsstrip.pcx", 0x800));
         strtok(DATA_COMPGEN(0x0068333c, defaultNewGameFileName,
                             "NEWGAME.gm1"),
                DATA_COMPGEN(0x006603ec, saveExtensionDot, "."));
-        saveGameEdit = new CSaveGameEdit(
+        m_saveGameEdit = new CSaveGameEdit(
             35, 542, 342, 21, 61,
             DATA_COMPGEN(0x0068333c, defaultNewGameFileName,
                          "NEWGAME.gm1"),
             "smalfont.fnt", font::WHITE, font::CENTER_JUSTIFIED,
             0, 0, 160, 0x100, 0, 7, 5);
-        Widgets.push_back(saveGameEdit);
+        m_widgets.push_back(m_saveGameEdit);
     }
 
-    Widgets.push_back(new button(
+    m_widgets.push_back(new button(
         161, 52, 44, 33, 137, "scsmbut.def", 0, 1, 0, 0, 2));
-    Widgets.push_back(new button(
+    m_widgets.push_back(new button(
         208, 52, 44, 33, 138, "scmdbut.def", 0, 1, 0, 0, 2));
-    Widgets.push_back(new button(
+    m_widgets.push_back(new button(
         255, 52, 44, 33, 139, "sclgbut.def", 0, 1, 0, 0, 2));
-    Widgets.push_back(new button(
+    m_widgets.push_back(new button(
         302, 52, 44, 33, 140, "scxlbut.def", 0, 1, 0, 0, 2));
-    Widgets.push_back(new button(
+    m_widgets.push_back(new button(
         349, 52, 44, 33, 141, "scalbut.def", 0, 1, 0, 0, 2));
 
-    Widgets.push_back(new button(
+    m_widgets.push_back(new button(
         26, 92, 31, 28, 190, "scbutt1.def", 0, 1, 0, 0, 2));
-    Widgets.push_back(new button(
+    m_widgets.push_back(new button(
         58, 92, 32, 28, 191, "scbutt2.def", 0, 1, 0, 0, 2));
-    Widgets.push_back(new button(
+    m_widgets.push_back(new button(
         91, 92, 32, 28, 192, "ScButCp.def", 0, 1, 0, 0, 2));
-    Widgets.push_back(new button(
+    m_widgets.push_back(new button(
         124, 92, 184, 33, 193, "scbutt3.def", 0, 1, 0, 0, 2));
-    Widgets.push_back(new button(
+    m_widgets.push_back(new button(
         309, 92, 32, 28, 194, "scbutt4.def", 0, 1, 0, 0, 2));
-    Widgets.push_back(new button(
+    m_widgets.push_back(new button(
         342, 92, 32, 28, 195, "scbutt5.def", 0, 1, 0, 0, 2));
 
     // Retail loads 480 unconditionally and overwrites it under m_flag65
@@ -2002,187 +2044,188 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     int sliderHeight = 480;
     if (m_flag65)
         sliderHeight = 428;
-    fileSlider = new slider(
-        375, 92, 16, sliderHeight, 337, 10, SliderFileMenu,
-        slider::BLUE, gUnnamed69fdc8, 0);
-    fileSlider->hide();
-    Widgets.push_back(fileSlider);
+    m_fileSlider = new slider(
+        375, 92, 16, sliderHeight, 337, 10, sliderFileMenu,
+        slider::BLUE, g_unnamed69fdc8, 0);
+    m_fileSlider->hide();
+    m_widgets.push_back(m_fileSlider);
 
     char flagColors[] = "RBYGOPTS";
-    if ((!m_flag64 && !m_flag65) || (m_flag64 && IsMultiPlayer())) {
-        durationSlider = new slider(
-            58, 557, 194, 16, 338, 11, SliderDuration,
+    if ((!m_flag64 && !m_flag65) || (m_flag64 && isMultiPlayer())) {
+        m_durationSlider = new slider(
+            58, 557, 194, 16, 338, 11, sliderDuration,
             slider::BLUE, 0, 0);
-        durationSlider->hide();
-        Widgets.push_back(durationSlider);
+        m_durationSlider->hide();
+        m_widgets.push_back(m_durationSlider);
 
         char flagName[256];
-        char temp_str[256];
+        // Before normalization (locals): temp_str.
+        char tempStr[256];
         for (int i = 0; i < 8; ++i) {
             int rowY = 133 + i * 50;
             sprintf(flagName, "AOFLGB%c.DEF", flagColors[i]);
-            Widgets.push_back(new button(
-                14 - x, rowY - y - 3, 42, 50, 263 + i,
+            m_widgets.push_back(new button(
+                14 - m_x, rowY - m_y - 3, 42, 50, 263 + i,
                 flagName, 0, 1, 0, 0, 2));
 
-            Widgets.push_back(new textWidget(
-                62, rowY + 18, 46, 24, gpGeneralText->GetText(500),
+            m_widgets.push_back(new textWidget(
+                62, rowY + 18, 46, 24, g_generalText->getText(500),
                 "tiny.fnt", font::WHITE, 199 + i,
                 font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED,
                 0, 8));
 
-            sprintf(temp_str, "adopb2%c.def", "rbygopts"[i]);
+            sprintf(tempStr, "adopb2%c.def", "rbygopts"[i]);
             widget* handicapButton;
-            if (IsMultiPlayer()) {
+            if (isMultiPlayer()) {
                 handicapButton = new textButton(
                     110, rowY + 18, 50, 24, 207 + i,
-                    temp_str, gUnnamed6a7800[0], "tiny.fnt",
+                    tempStr, g_unnamed6a7800[0], "tiny.fnt",
                     0, 1, 0, 0, 2, font::WHITE);
             } else {
                 handicapButton = new button(
                     110, rowY + 18, 50, 24, 207 + i,
-                    temp_str, 0, 1, 0, 0, 2);
+                    tempStr, 0, 1, 0, 0, 2);
             }
-            Widgets.push_back(handicapButton);
+            m_widgets.push_back(handicapButton);
 
-            Widgets.push_back(new button(
+            m_widgets.push_back(new button(
                 164, rowY, 11, 24, 215 + i,
                 "adoplfa.def", 0, 1, 0, 0, 2));
-            Widgets.push_back(new button(
+            m_widgets.push_back(new button(
                 225, rowY, 11, 24, 223 + i,
                 "adoprta.def", 1, 0, 0, 0, 2));
-            Widgets.push_back(new button(
+            m_widgets.push_back(new button(
                 240, rowY, 11, 24, 231 + i,
                 "adoplfa.def", 0, 1, 0, 0, 2));
-            Widgets.push_back(new button(
+            m_widgets.push_back(new button(
                 301, rowY, 11, 24, 239 + i,
                 "adoprta.def", 1, 0, 0, 0, 2));
-            Widgets.push_back(new button(
+            m_widgets.push_back(new button(
                 316, rowY, 11, 24, 247 + i,
                 "adoplfa.def", 0, 1, 0, 0, 2));
-            Widgets.push_back(new button(
+            m_widgets.push_back(new button(
                 377, rowY, 11, 24, 255 + i,
                 "adoprta.def", 1, 0, 0, 0, 2));
 
-            Widgets.push_back(new textWidget(
-                62, rowY - 3, 97, 17, gpGeneralText->GetText(469),
+            m_widgets.push_back(new textWidget(
+                62, rowY - 3, 97, 17, g_generalText->getText(469),
                 "smalfont.fnt", font::PRIMARY, 345 + i,
                 font::CENTER_JUSTIFIED, 0, 8));
-            Widgets.push_back(new CHotspotWidget(
+            m_widgets.push_back(new CHotspotWidget(
                 252, rowY - 3, 48, 32, 362 + i));
-            Widgets.push_back(new CHotspotWidget(
+            m_widgets.push_back(new CHotspotWidget(
                 176, rowY - 3, 48, 32, 370 + i));
-            Widgets.push_back(new CHotspotWidget(
+            m_widgets.push_back(new CHotspotWidget(
                 328, rowY - 3, 48, 32, 378 + i));
 
-            if (!IsMultiPlayer()) {
+            if (!isMultiPlayer()) {
                 CEnterNameEdit* edit = new CEnterNameEdit(
-                    62, rowY - 3, 97, 17, 21, emptyRolloverText,
+                    62, rowY - 3, 97, 17, 21, g_emptyRolloverText,
                     "smalfont.fnt", font::PRIMARY, font::LEFT_JUSTIFIED,
                     0, 0, 353 + i, 0x100, 0, 7, 5);
                 edit->hide();
-                edit->SetAutoDraw(1);
-                Widgets.push_back(edit);
+                edit->setAutoDraw(1);
+                m_widgets.push_back(edit);
             }
         }
 
-        Widgets.push_back(new textWidget(
-            58, 90, 104, 36, gpGeneralText->GetText(518),
+        m_widgets.push_back(new textWidget(
+            58, 90, 104, 36, g_generalText->getText(518),
             "smalfont.fnt", font::PRIMARY_HIGHLIGHT, 339,
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-        Widgets.push_back(new textWidget(
-            163, 90, 75, 36, gpGeneralText->GetText(519),
-            "smalfont.fnt", font::PRIMARY_HIGHLIGHT, field_189c,
+        m_widgets.push_back(new textWidget(
+            163, 90, 75, 36, g_generalText->getText(519),
+            "smalfont.fnt", font::PRIMARY_HIGHLIGHT, m_townHeadingId,
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-        Widgets.push_back(new textWidget(
-            239, 90, 75, 36, gpGeneralText->GetText(520),
+        m_widgets.push_back(new textWidget(
+            239, 90, 75, 36, g_generalText->getText(520),
             "smalfont.fnt", font::PRIMARY_HIGHLIGHT, 343,
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-        Widgets.push_back(new textWidget(
-            315, 90, 75, 36, gpGeneralText->GetText(521),
+        m_widgets.push_back(new textWidget(
+            315, 90, 75, 36, g_generalText->getText(521),
             "smalfont.fnt", font::PRIMARY_HIGHLIGHT, 344,
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-        Widgets.push_back(new textWidget(
-            58, 534, 334, 20, gpGeneralText->GetText(522),
+        m_widgets.push_back(new textWidget(
+            58, 534, 334, 20, g_generalText->getText(522),
             "smalfont.fnt", font::PRIMARY_HIGHLIGHT, 340,
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
 
-        if (bVideoPaused && !m_flag65) {
-            chatWidget = new CChatWidget(
-                416, 131, 315, 128, emptyRolloverText,
+        if (g_videoPaused && !m_flag65) {
+            m_chatWidget = new CChatWidget(
+                416, 131, 315, 128, g_emptyRolloverText,
                 "smalfont.fnt", font::CHAT, 179,
                 font::BOTTOM_JUSTIFIED, 0, 8);
-            chatSlider = new CChatSlider(
-                733, 133, 16, 126, 336, 0, SliderChatWindow,
+            m_chatSlider = new CChatSlider(
+                733, 133, 16, 126, 336, 0, sliderChatWindow,
                 slider::BLUE, 0);
-            chatSlider->SetResolution(0);
-            chatSlider->SetState(0);
-            chatMan.UpdateWidget(chatWidget, 0, 5);
-            chatMan.SetPosition(-1);
+            m_chatSlider->setResolution(0);
+            m_chatSlider->setState(0);
+            g_chatMan.updateWidget(m_chatWidget, 0, 5);
+            g_chatMan.setPosition(-1);
 
             CSingleSelectionChatEdit* edit =
                 new CSingleSelectionChatEdit(
-                    415, 259, 334, 16, 127, emptyRolloverText,
+                    415, 259, 334, 16, 127, g_emptyRolloverText,
                     "smalfont.fnt", font::WHITE, font::LEFT_JUSTIFIED,
                     "ircentry.pcx", 0, 180, 0x100, 0, 7, 5);
-            chatEdit = edit;
+            m_chatEdit = edit;
             bitmapBorder* chatBack = new bitmapBorder(
                 412, 282, 340, 114, 181, "CHATPLUG.pcx", 0x800);
-            nameList1 = new textWidget(
-                419, 287, 156, 103, emptyRolloverText,
+            m_nameList1 = new textWidget(
+                419, 287, 156, 103, g_emptyRolloverText,
                 "smalfont.fnt", font::PRIMARY, 182,
                 font::LEFT_JUSTIFIED, 0, 8);
-            nameList2 = new textWidget(
-                584, 287, 156, 103, emptyRolloverText,
+            m_nameList2 = new textWidget(
+                584, 287, 156, 103, g_emptyRolloverText,
                 "smalfont.fnt", font::PRIMARY, 182,
                 font::LEFT_JUSTIFIED, 0, 8);
 
-            Widgets.push_back(chatBack);
-            Widgets.push_back(new bitmapBorder(
+            m_widgets.push_back(chatBack);
+            m_widgets.push_back(new bitmapBorder(
                 730, 133, 19, 126, 389, "selslide.pcx", 0x800));
-            Widgets.push_back(chatSlider);
-            Widgets.push_back(chatWidget);
-            Widgets.push_back(chatEdit);
-            Widgets.push_back(nameList1);
-            Widgets.push_back(nameList2);
-            chatEdit->SetFocus(1);
+            m_widgets.push_back(m_chatSlider);
+            m_widgets.push_back(m_chatWidget);
+            m_widgets.push_back(m_chatEdit);
+            m_widgets.push_back(m_nameList1);
+            m_widgets.push_back(m_nameList2);
+            m_chatEdit->setFocus(1);
         }
     }
 
-    if ((!m_flag64 && !m_flag65) || (m_flag64 && IsMultiPlayer())) {
-        CreateFilterWidgets();
+    if ((!m_flag64 && !m_flag65) || (m_flag64 && isMultiPlayer())) {
+        createFilterWidgets();
         if (m_flag64)
-            Widgets.push_back(new textButton(
+            m_widgets.push_back(new textButton(
                 414, 81, 200, 20, 128, "gspbutt.def",
-                gpGeneralText->GetText(656), "smalfont.fnt",
+                g_generalText->getText(656), "smalfont.fnt",
                 0, 1, 0, 31, 2, font::WHITE));
         else
-            Widgets.push_back(new textButton(
+            m_widgets.push_back(new textButton(
                 414, 81, 200, 20, 128, "gspbutt.def",
-                gpGeneralText->GetText(501), "smalfont.fnt",
+                g_generalText->getText(501), "smalfont.fnt",
                 0, 1, 0, 31, 2, font::WHITE));
-        Widgets.push_back(new textButton(
+        m_widgets.push_back(new textButton(
             414, 509, 200, 20, 129, "gspbutt.def",
-            gpGeneralText->GetText(502), "smalfont.fnt",
+            g_generalText->getText(502), "smalfont.fnt",
             0, 1, 0, 30, 2, font::WHITE));
-        if (*gpVideoGameState == SINGLE_SELECTION_CONTEXT_1
-            || *gpVideoGameState == SINGLE_SELECTION_CONTEXT_3) {
-            Widgets.push_back(new textButton(
+        if (*g_videoGameState == SINGLE_SELECTION_CONTEXT_1
+            || *g_videoGameState == SINGLE_SELECTION_CONTEXT_3) {
+            m_widgets.push_back(new textButton(
                 414, 105, 200, 20, 130, "gspbutt.def",
-                gpGeneralText->GetText(760), "smalfont.fnt",
+                g_generalText->getText(760), "smalfont.fnt",
                 0, 1, 0, 19, 2, font::WHITE));
         }
     }
 
-    Widgets.push_back(new button(
+    m_widgets.push_back(new button(
         506, 456, 30, 46, 107, "gspbut3.def", 0, 1, 0, 0, 2));
-    Widgets.push_back(new button(
+    m_widgets.push_back(new button(
         538, 456, 30, 46, 108, "gspbut4.def", 0, 1, 0, 0, 2));
-    Widgets.push_back(new button(
+    m_widgets.push_back(new button(
         570, 456, 30, 46, 109, "gspbut5.def", 0, 1, 0, 0, 2));
-    Widgets.push_back(new button(
+    m_widgets.push_back(new button(
         602, 456, 30, 46, 110, "gspbut6.def", 0, 1, 0, 0, 2));
-    Widgets.push_back(new button(
+    m_widgets.push_back(new button(
         634, 456, 30, 46, 111, "gspbut7.def", 0, 1, 0, 0, 2));
 
     const char* beginButtonName = "scnrbeg.def";
@@ -2198,101 +2241,101 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
         414, 535, 166, 40, 186, beginButtonName,
         0, 1, 0, key, 2);
     if (m_flag64)
-        b->set_hotkey(28);
-    Widgets.push_back(b);
+        b->setHotkey(28);
+    m_widgets.push_back(b);
 
     // Complete campaign saves may only return from an unfinished scenario.
     // Retail proves both the GetCurrentScenario boundary and this duplicated
     // button-construction source family. Keep the header accessor inline:
     // this large caller naturally retains the call and emits its exact COMDAT.
-    if (gUnnamed69774c) {
-        if (!gpGame->campaign.GetCurrentScenario()->completed) {
-            Widgets.push_back(new button(
+    if (g_unnamed69774c) {
+        if (!g_game->m_campaign.getCurrentScenario()->m_completed) {
+            m_widgets.push_back(new button(
                 584, 535, 166, 40, 188, "scnrback.def",
                 0, 1, 0, 1, 2));
         }
     } else {
-        Widgets.push_back(new button(
+        m_widgets.push_back(new button(
             584, 535, 166, 40, 188, "scnrback.def",
             0, 1, 0, 1, 2));
     }
 
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
-            AddWidget(*it, -1);
+            addWidget(*it, -1);
         else
-            MemError();
+            memError();
     }
 
-    VersionIcon = ResourceManager::GetSprite("ScSelC.def");
-    VictoryIcon = ResourceManager::GetSprite("scnrvict.def");
-    LossIcon = ResourceManager::GetSprite("scnrloss.def");
-    TownPix = ResourceManager::GetSprite("itpa.def");
-    heroSpecificAbility = ResourceManager::GetSprite("un44.def");
+    m_versionIcon = ResourceManager::getSprite("ScSelC.def");
+    m_victoryIcon = ResourceManager::getSprite("scnrvict.def");
+    m_lossIcon = ResourceManager::getSprite("scnrloss.def");
+    m_townPix = ResourceManager::getSprite("itpa.def");
+    m_heroSpecificAbility = ResourceManager::getSprite("un44.def");
     for (i = 0; i < 163; ++i)
-        HeroPix[i] = ResourceManager::GetBitmap816(
-            akHeroTraits[i].smallPortraitName);
-    HeroPix[163] = ResourceManager::GetBitmap816("hpsrand.pcx");
-    Resource = ResourceManager::GetSprite("ScnrStar.def");
+        m_heroPix[i] = ResourceManager::getBitmap816(
+            g_heroTraits[i].m_smallPortraitName);
+    m_heroPix[163] = ResourceManager::getBitmap816("hpsrand.pcx");
+    m_resource = ResourceManager::getSprite("ScnrStar.def");
 
     const char* colorChars = "rbygopts";
     char tempName[100];
     for (i = 0; i < 8; ++i) {
         sprintf(tempName, "adop%cpnl.pcx", colorChars[i]);
-        Panels[i] = ResourceManager::GetBitmap816(tempName);
+        m_panels[i] = ResourceManager::getBitmap816(tempName);
         sprintf(tempName, "adopflg%c.pcx", colorChars[i]);
-        Flags[i] = ResourceManager::GetBitmap816(tempName);
+        m_flags[i] = ResourceManager::getBitmap816(tempName);
     }
-    randomTownBmp = ResourceManager::GetBitmap816("hpsrand0.pcx");
-    randomHeroBmp = ResourceManager::GetBitmap816("hpsrand1.pcx");
-    noHeroBmp = ResourceManager::GetBitmap816("hpsrand6.pcx");
-    currentIndex = 0;
-    currentMap = 0;
+    m_randomTownBmp = ResourceManager::getBitmap816("hpsrand0.pcx");
+    m_randomHeroBmp = ResourceManager::getBitmap816("hpsrand1.pcx");
+    m_noHeroBmp = ResourceManager::getBitmap816("hpsrand6.pcx");
+    m_currentIndex = 0;
+    m_currentMap = 0;
 
     if (m_flag64)
-        SetupLoadGameMode();
+        setupLoadGameMode();
     else if (!m_flag65)
-        SetupNewGameMode();
-    StopMouseThread();
+        setupNewGameMode();
+    stopMouseThread();
 
-    if (SelectionHeaders.size() > 0 || m_flag65)
-        SetDifficultyHiLite();
-    SetHumanSlot();
+    if (m_selectionHeaders.size() > 0 || m_flag65)
+        setDifficultyHiLite();
+    setHumanSlot();
 
-    if (bVideoPaused && !m_flag65)
-        pNewPlayerUpdateMan = new CNewPlayerUpdateMan;
+    if (g_videoPaused && !m_flag65)
+        m_newPlayerUpdateMan = new CNewPlayerUpdateMan;
 
-    if ((m_flag64 && !bVideoPaused) || m_flag65) {
-        SetupScenarioOptions(0);
+    if ((m_flag64 && !g_videoPaused) || m_flag65) {
+        setupScenarioOptions(0);
     } else {
-        TurnOffFilterOptions();
-        TurnOffScenarioOptions();
-        TurnOffAdvancedOptions();
+        turnOffFilterOptions();
+        turnOffScenarioOptions();
+        turnOffAdvancedOptions();
     }
-    UpdateMainWindow();
+    updateMainWindow();
 
-    if (bVideoPaused && !m_flag65) {
-        TurnChatOn(0);
-        if (!IsHost())
-            GetWidget(186)->enable(0);
+    if (g_videoPaused && !m_flag65) {
+        turnChatOn(0);
+        if (!isHost())
+            getWidget(186)->enable(0);
     }
 
-    SetHelpText(gSingleSelectionHelp, 104, 345, 0);
+    setHelpText(g_singleSelectionHelp, 104, 345, 0);
     for (i = 0; i < 8; ++i) {
-        gUnnamed69fb24[i] = -1;
-        gNewMapStartingBonus[i] = 3;
+        g_unnamed69fb24[i] = -1;
+        g_newMapStartingBonus[i] = 3;
     }
 
     if (m_flag65) {
-        SetFocus(160);
-        saveGameEdit->SetAutoDraw(1);
-        if (SelectionHeaders.size() == 0)
-            SetCurrentMap(-1, 0);
-        UpdateAllyEnemyFlags(0);
+        setFocus(160);
+        m_saveGameEdit->setAutoDraw(1);
+        if (m_selectionHeaders.size() == 0)
+            setCurrentMap(-1, 0);
+        updateAllyEnemyFlags(0);
     }
     if (m_flag65 || m_flag64) {
         for (i = 107; i <= 111; ++i)
-            GetWidget(i)->enable(0);
+            getWidget(i)->enable(0);
     }
 }
 
@@ -2315,26 +2358,26 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
 
 // E:\gamedcs\singleselectionwindow.cpp:985
 VA(0x0057C7D0, 0x1B)  // anchor-reloc constructor chat-slider callback + exact DC call edge, dc 0x13035c
-static void SliderChatWindow(int state, heroWindow*)
+static void sliderChatWindow(int state, heroWindow*)
 {
-    gUnnamed69fbe8->OnChatWindowSlider(state);
+    g_unnamed69fbe8->onChatWindowSlider(state);
 }
 
 
 // E:\gamedcs\singleselectionwindow.cpp:989
 VA(0x0057C7F0, 0x194)  // anchor-reloc constructor duration-slider callback + retail setup-message copy, dc 0x13037c
-static void SliderDuration(int state, heroWindow*)
+static void sliderDuration(int state, heroWindow*)
 {
-    gUnnamed69fbe8->OnDurationSlider(state);
+    g_unnamed69fbe8->onDurationSlider(state);
 }
 
 
 // The file-list slider callback is a genuine Complete function boundary.
 // E:\gamedcs\singleselectionwindow.cpp:994
 VA(0x0057C990, 0x1C)  // anchor-reloc constructor slider callback + exact DC call edge, dc 0x1303dc
-static void SliderFileMenu(int state, heroWindow*)
+static void sliderFileMenu(int state, heroWindow*)
 {
-    gUnnamed69fbe8->OnFileMenuSlider(state);
+    g_unnamed69fbe8->onFileMenuSlider(state);
 }
 
 // Dreamcast's original eight-slot initialization loop survives as this
@@ -2360,33 +2403,33 @@ CNewPlayerUpdateMan::CNewPlayerUpdateMan()
 
 // E:\gamedcs\singleselectionwindow.cpp:1575
 VA(0x0057c9d0, 0x2A)  // anchor-vtable CChatSlider vtbl 0x241b8c slot13 (SetResolution override), dc 0x148ad8
-void CChatSlider::SetResolution(int num)
+void CChatSlider::setResolution(int num)
 {
     if (num > 0)
-        numStates = num;
+        m_numStates = num;
     else
-        numStates = 1;
-    if (numStates < currentState) {
-        currentState = numStates;
-        oldState = numStates;
+        m_numStates = 1;
+    if (m_numStates < m_currentState) {
+        m_currentState = m_numStates;
+        m_oldState = m_numStates;
     }
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:1589
 VA(0x0057ca00, 0x43)  // anchor-vtable CChatSlider vtbl 0x241b8c slot14 (SetState override), dc 0x148b1c
-void CChatSlider::SetState(int state)
+void CChatSlider::setState(int state)
 {
-    int n = numStates;
+    int n = m_numStates;
     if (state >= n)
         state = n - 1;
     if (state < 0)
         state = 0;
-    currentState = state;
-    oldState = state;
+    m_currentState = state;
+    m_oldState = state;
     if (n <= 1)
-        knobPos = 0x10;
+        m_knobPos = 0x10;
     else
-        knobPos = knobRange * state / (n - 1) + 0x10;
+        m_knobPos = m_knobRange * state / (n - 1) + 0x10;
 }
 
 // Dreamcast emits the conventional destructor/delete wrapper and a distinct
@@ -2398,30 +2441,30 @@ VA_COMPGEN(0x0057ca80, 0x05, IMPLICIT_DTOR, CChatSlider)
 
 // E:\gamedcs\singleselectionwindow.cpp:1675
 VA(0x0057ca90, 0xA9)  // anchor-vtable CChatWidget vtbl 0x241bdc slot4 (Draw override vs textWidget base), dc 0x148df4
-void CChatWidget::Draw()
+void CChatWidget::draw()
 {
     CChatSave* save = m_save;
-    if (!save->IsSaved()) {
+    if (!save->isSaved()) {
         if (save) {
-            int py = y + parentWindow->y;
-            int px = x + parentWindow->x;
-            save->bSaved = 1;
-            save->Grab(gpWindowManager->screenBitmap->map, px, py,
-                       gpWindowManager->screenBitmap->Width,
-                       gpWindowManager->screenBitmap->Height,
-                       gpWindowManager->screenBitmap->Pitch);
-            textWidget::Draw();
+            int py = m_y + m_parentWindow->m_y;
+            int px = m_x + m_parentWindow->m_x;
+            save->m_saved = 1;
+            save->grab(g_windowManager->m_screenBitmap->m_map, px, py,
+                       g_windowManager->m_screenBitmap->m_width,
+                       g_windowManager->m_screenBitmap->m_height,
+                       g_windowManager->m_screenBitmap->m_pitch);
+            textWidget::draw();
             return;
         }
     } else {
-        save->Draw(0, 0, width, height,
-                   gpWindowManager->screenBitmap->map,
-                   x + parentWindow->x, y + parentWindow->y,
-                   gpWindowManager->screenBitmap->Width,
-                   gpWindowManager->screenBitmap->Height,
-                   gpWindowManager->screenBitmap->Pitch, 0);
+        save->draw(0, 0, m_width, m_height,
+                   g_windowManager->m_screenBitmap->m_map,
+                   m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y,
+                   g_windowManager->m_screenBitmap->m_width,
+                   g_windowManager->m_screenBitmap->m_height,
+                   g_windowManager->m_screenBitmap->m_pitch, 0);
     }
-    textWidget::Draw();
+    textWidget::draw();
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:1696
@@ -2451,19 +2494,20 @@ CChatWidget::~CChatWidget()
 // CChatEdit's vtable slot 24. Dreamcast proves the helper call and that the
 // recipient argument is ignored; retail expands the helper with dpid zero.
 // E:\gamedcs\singleselectionwindow.cpp:1746
+// Before normalization (locals): sChat.
 VA(0x0057CC00, 0xF5)  // anchor-vtable 0x641b28 slot24 + inlined DC SendChat helper, dc 0x149054
-void CSingleSelectionChatEdit::SendChat(const char* sChat, int)
+void CSingleSelectionChatEdit::sendChat(const char* chat, int)
 {
-    gUnnamed69fbe8->SendChat(0, sChat);
+    g_unnamed69fbe8->sendChat(0, chat);
 }
 
 // The DC source switch names precisely the five keys retail routes to its
 // return-one leaf; the x86 jump table sends every other scan code to zero.
 // E:\gamedcs\singleselectionwindow.cpp:1752
 VA(0x0057CD00, 0x85)  // anchor-vtable 0x641b28 slot16 + exact retail jump table, dc 0x149080
-unsigned char CSingleSelectionChatEdit::IgnoreKey(message* msg)
+unsigned char CSingleSelectionChatEdit::ignoreKey(message* msg)
 {
-    switch (msg->codeX) {
+    switch (msg->m_codeX) {
     case KEYCODE_ESCAPE:
     case KEYCODE_KP_8:
     case KEYCODE_KP_9:
@@ -2485,11 +2529,11 @@ VA_COMPGEN(0x0057cd90, 0x21, SCALAR_DELETING_DTOR,
 
 // E:\gamedcs\singleselectionwindow.cpp:1810
 VA(0x0057cdc0, 0x11D)  // anchor-vtable CEnterNameEdit vtbl 0x241c14 slot15 (OnKeyPress override vs textEntryWidget base), dc 0x1491e0
-int CEnterNameEdit::OnKeyPress(message* msg)
+int CEnterNameEdit::onKeyPress(message* msg)
 {
-    if (GetCharPressed(msg) == KEYCODE_ENTER)
-        return OnEnter();
-    return textEntryWidget::OnKeyPress(msg);
+    if (getCharPressed(msg) == KEYCODE_ENTER)
+        return onEnter();
+    return textEntryWidget::onKeyPress(msg);
 }
 
 
@@ -2509,12 +2553,21 @@ int CEnterNameEdit::OnKeyPress(message* msg)
 // contract, not a lane edit).
 
 
+// Field-recovery collateral: 99.8710% after the mine/sign declarations
+// changed in game.h. The inlined onEnter has its two saved-local stack
+// slots exchanged and the independent ESI/EDI reloads after writePrefs
+// reversed; the 10 blocks and call sequence still agree. A disposable
+// Gruntz forest probe (seed 20260906, baseline + 16 variants) found two
+// islands; nine variants reproduced the relocation-masked retail bytes.
+// No probe noise is retained. Explicit `this->onEnter()` and qualified
+// `CEnterNameEdit::onEnter()` calls are byte-flat negative controls. DC
+// 0x149290 proves the two calls below.
 // E:\gamedcs\singleselectionwindow.cpp:1830
 VA(0x0057cee0, 0xFD)  // anchor-vtable CEnterNameEdit vtbl 0x241c14 slot11 (OnKillFocus override), dc 0x149290
-void CEnterNameEdit::OnKillFocus()
+void CEnterNameEdit::onKillFocus()
 {
-    OnEnter();
-    textEntryWidget::OnKillFocus();
+    onEnter();
+    textEntryWidget::onKillFocus();
 }
 
 // The filename-charset filter. A jump-table switch (source arm order is
@@ -2525,9 +2578,9 @@ void CEnterNameEdit::OnKillFocus()
 // GetKeyState call is live and the duplication is source-faithful.
 // E:\gamedcs\singleselectionwindow.cpp:1892
 VA(0x0057cfe0, 0xCF)  // anchor-vtable CSaveGameEdit vtbl 0x241c60 slot16 (IgnoreKey override vs textEntryWidget base), dc 0x1493c8
-unsigned char CSaveGameEdit::IgnoreKey(message* msg)
+unsigned char CSaveGameEdit::ignoreKey(message* msg)
 {
-    switch (msg->codeX) {
+    switch (msg->m_codeX) {
     case KEYCODE_KP_DECIMAL:
         if (HIWORD(GetKeyState(VK_CONTROL)))
             return 1;
@@ -2565,14 +2618,14 @@ unsigned char CSaveGameEdit::IgnoreKey(message* msg)
 // highlighted file so the new name saves fresh.
 // E:\gamedcs\singleselectionwindow.cpp:1931
 VA(0x0057d0b0, 0x50)  // anchor-vtable CSaveGameEdit vtbl 0x241c60 slot15 (OnKeyPress override), dc 0x149514
-int CSaveGameEdit::OnKeyPress(message* msg)
+int CSaveGameEdit::onKeyPress(message* msg)
 {
-    int ret = textEntryWidget::OnKeyPress(msg);
-    if (_strcmpi(Text.c_str(),
+    int ret = textEntryWidget::onKeyPress(msg);
+    if (_strcmpi(m_text.c_str(),
                  DATA_COMPGEN(0x0068333c, defaultNewGameFileName,
                               "NEWGAME.gm1")) != 0
-            && gUnnamed69fbe8->currentMap != -1)
-        gUnnamed69fbe8->SetCurrentMap(-1, 1);
+            && g_unnamed69fbe8->m_currentMap != -1)
+        g_unnamed69fbe8->setCurrentMap(-1, 1);
     return ret;
 }
 
@@ -2598,174 +2651,174 @@ VA_COMPGEN(0x0057d100, 0x21, SCALAR_DELETING_DTOR, CEnterNameEdit)
 // Dreamcast button.h:99; set_highlight_frame is the Complete-only twin).
 // One setter per loop measured 84.90; two gave every one of the 366 blocks.
 VA(0x0057D170, 0x1DF7)
-void TSingleSelectionWindow::CreateFilterWidgets()
+void TSingleSelectionWindow::createFilterWidgets()
 {
-    field_18A0[0] = MAP_DIMENSION_MEDIUM;
-    field_18A0[1] = 2;
-    field_18A0[2] = -1;
-    field_18A0[3] = -1;
-    field_18A0[4] = 0;
-    field_18A0[5] = -1;
-    field_18A0[6] = SCENARIO_FILTER_CATEGORY_ANY;
-    field_18A0[7] = -1;
+    m_randomMapOptions[0] = MAP_DIMENSION_MEDIUM;
+    m_randomMapOptions[1] = 2;
+    m_randomMapOptions[2] = -1;
+    m_randomMapOptions[3] = -1;
+    m_randomMapOptions[4] = 0;
+    m_randomMapOptions[5] = -1;
+    m_randomMapOptions[6] = SCENARIO_FILTER_CATEGORY_ANY;
+    m_randomMapOptions[7] = -1;
 
-    Widgets.push_back(new textWidget(
-        58, 82, 99, 31, gpGeneralText->GetText(753), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(
+        58, 82, 99, 31, g_generalText->getText(753), "smalfont.fnt",
         font::PRIMARY, 0x118,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
-    Widgets.push_back(new button(
+    m_widgets.push_back(new button(
         161, 81, 44, 33, 0x119, "RanSizS.def", 0, 1, 0, 0, 2));
-    Widgets.push_back(new button(
+    m_widgets.push_back(new button(
         208, 81, 44, 33, 0x11a, "RanSizM.def", 0, 1, 0, 0, 2));
-    Widgets.push_back(new button(
+    m_widgets.push_back(new button(
         255, 81, 44, 33, 0x11b, "RanSizL.def", 0, 1, 0, 0, 2));
-    Widgets.push_back(new button(
+    m_widgets.push_back(new button(
         302, 81, 44, 33, 0x11c, "RanSizX.def", 0, 1, 0, 0, 2));
-    Widgets.push_back(new button(
+    m_widgets.push_back(new button(
         349, 81, 44, 33, 0x11d, "RanUndr.def", 0, 1, 0, 0, 2));
 
-    Widgets.push_back(new textWidget(
-        71, 133, 250, 16, gpGeneralText->GetText(754), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(
+        71, 133, 250, 16, g_generalText->getText(754), "smalfont.fnt",
         font::PRIMARY, 0x11e, font::LEFT_JUSTIFIED, 0, 8));
-    filterCountAButtons[0] = new button(
+    m_filterCountAButtons[0] = new button(
         70, 153, 30, 32, 0x11f, "RanNum1.def", 0, 1, 0, 0, 2);
-    filterCountAButtons[1] = new button(
+    m_filterCountAButtons[1] = new button(
         102, 153, 30, 32, 0x120, "RanNum2.def", 0, 1, 0, 0, 2);
-    filterCountAButtons[2] = new button(
+    m_filterCountAButtons[2] = new button(
         134, 153, 30, 32, 0x121, "RanNum3.def", 0, 1, 0, 0, 2);
-    filterCountAButtons[3] = new button(
+    m_filterCountAButtons[3] = new button(
         166, 153, 30, 32, 0x122, "RanNum4.def", 0, 1, 0, 0, 2);
-    filterCountAButtons[4] = new button(
+    m_filterCountAButtons[4] = new button(
         198, 153, 30, 32, 0x123, "RanNum5.def", 0, 1, 0, 0, 2);
-    filterCountAButtons[5] = new button(
+    m_filterCountAButtons[5] = new button(
         230, 153, 30, 32, 0x124, "RanNum6.def", 0, 1, 0, 0, 2);
-    filterCountAButtons[6] = new button(
+    m_filterCountAButtons[6] = new button(
         262, 153, 30, 32, 0x125, "RanNum7.def", 0, 1, 0, 0, 2);
-    filterCountAButtons[7] = new button(
+    m_filterCountAButtons[7] = new button(
         294, 153, 30, 32, 0x126, "RanNum8.def", 0, 1, 0, 0, 2);
-    filterCountAButtons[8] = new button(
+    m_filterCountAButtons[8] = new button(
         326, 153, 55, 32, 0x127, "RanRand.def", 0, 1, 0, 0, 2);
     int i;
     for (i = 0; i < 9; ++i) {
-        filterCountAButtons[i]->set_highlight_frame(2);
-        filterCountAButtons[i]->set_disabled_frame(1);
-        Widgets.push_back(filterCountAButtons[i]);
+        m_filterCountAButtons[i]->setHighlightFrame(2);
+        m_filterCountAButtons[i]->setDisabledFrame(1);
+        m_widgets.push_back(m_filterCountAButtons[i]);
     }
 
-    Widgets.push_back(new textWidget(
-        71, 199, 250, 16, gpGeneralText->GetText(755), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(
+        71, 199, 250, 16, g_generalText->getText(755), "smalfont.fnt",
         font::PRIMARY, 0x128, font::LEFT_JUSTIFIED, 0, 8));
-    filterCountBButtons[0] = new button(
+    m_filterCountBButtons[0] = new button(
         70, 219, 30, 32, 0x129, "RanNum0.def", 0, 1, 0, 0, 2);
-    filterCountBButtons[1] = new button(
+    m_filterCountBButtons[1] = new button(
         102, 219, 30, 24, 0x12a, "RanNum1.def", 0, 1, 0, 0, 2);
-    filterCountBButtons[2] = new button(
+    m_filterCountBButtons[2] = new button(
         134, 219, 30, 24, 0x12b, "RanNum2.def", 0, 1, 0, 0, 2);
-    filterCountBButtons[3] = new button(
+    m_filterCountBButtons[3] = new button(
         166, 219, 30, 32, 0x12c, "RanNum3.def", 0, 1, 0, 0, 2);
-    filterCountBButtons[4] = new button(
+    m_filterCountBButtons[4] = new button(
         198, 219, 30, 32, 0x12d, "RanNum4.def", 0, 1, 0, 0, 2);
-    filterCountBButtons[5] = new button(
+    m_filterCountBButtons[5] = new button(
         230, 219, 30, 32, 0x12e, "RanNum5.def", 0, 1, 0, 0, 2);
-    filterCountBButtons[6] = new button(
+    m_filterCountBButtons[6] = new button(
         262, 219, 30, 32, 0x12f, "RanNum6.def", 0, 1, 0, 0, 2);
-    filterCountBButtons[7] = new button(
+    m_filterCountBButtons[7] = new button(
         294, 219, 30, 32, 0x130, "RanNum7.def", 0, 1, 0, 0, 2);
-    filterCountBButtons[8] = new button(
+    m_filterCountBButtons[8] = new button(
         326, 219, 55, 32, 0x131, "RanRand.def", 0, 1, 0, 0, 2);
     for (i = 0; i < 9; ++i) {
-        filterCountBButtons[i]->set_highlight_frame(2);
-        filterCountBButtons[i]->set_disabled_frame(1);
-        Widgets.push_back(filterCountBButtons[i]);
+        m_filterCountBButtons[i]->setHighlightFrame(2);
+        m_filterCountBButtons[i]->setDisabledFrame(1);
+        m_widgets.push_back(m_filterCountBButtons[i]);
     }
 
-    Widgets.push_back(new textWidget(
-        71, 265, 250, 16, gpGeneralText->GetText(756), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(
+        71, 265, 250, 16, g_generalText->getText(756), "smalfont.fnt",
         font::PRIMARY, 0x132, font::LEFT_JUSTIFIED, 0, 8));
-    filterCountCButtons[0] = new button(
+    m_filterCountCButtons[0] = new button(
         70, 285, 30, 32, 0x133, "RanNum0.def", 0, 1, 0, 0, 2);
-    filterCountCButtons[1] = new button(
+    m_filterCountCButtons[1] = new button(
         102, 285, 30, 32, 0x134, "RanNum1.def", 0, 1, 0, 0, 2);
-    filterCountCButtons[2] = new button(
+    m_filterCountCButtons[2] = new button(
         134, 285, 30, 32, 0x135, "RanNum2.def", 0, 1, 0, 0, 2);
-    filterCountCButtons[3] = new button(
+    m_filterCountCButtons[3] = new button(
         166, 285, 30, 32, 0x136, "RanNum3.def", 0, 1, 0, 0, 2);
-    filterCountCButtons[4] = new button(
+    m_filterCountCButtons[4] = new button(
         198, 285, 30, 32, 0x137, "RanNum4.def", 0, 1, 0, 0, 2);
-    filterCountCButtons[5] = new button(
+    m_filterCountCButtons[5] = new button(
         230, 285, 30, 32, 0x138, "RanNum5.def", 0, 1, 0, 0, 2);
-    filterCountCButtons[6] = new button(
+    m_filterCountCButtons[6] = new button(
         262, 285, 30, 32, 0x139, "RanNum6.def", 0, 1, 0, 0, 2);
-    filterCountCButtons[7] = new button(
+    m_filterCountCButtons[7] = new button(
         294, 285, 30, 32, 0x13a, "RanNum7.def", 0, 1, 0, 0, 2);
-    filterCountCButtons[8] = new button(
+    m_filterCountCButtons[8] = new button(
         326, 285, 55, 32, 0x13b, "RanRand.def", 0, 1, 0, 0, 2);
     for (i = 0; i < 9; ++i) {
-        filterCountCButtons[i]->set_highlight_frame(2);
-        filterCountCButtons[i]->set_disabled_frame(1);
-        Widgets.push_back(filterCountCButtons[i]);
+        m_filterCountCButtons[i]->setHighlightFrame(2);
+        m_filterCountCButtons[i]->setDisabledFrame(1);
+        m_widgets.push_back(m_filterCountCButtons[i]);
     }
 
-    Widgets.push_back(new textWidget(
-        71, 331, 250, 16, gpGeneralText->GetText(757), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(
+        71, 331, 250, 16, g_generalText->getText(757), "smalfont.fnt",
         font::PRIMARY, 0x13c, font::LEFT_JUSTIFIED, 0, 8));
-    filterCountDButtons[0] = new button(
+    m_filterCountDButtons[0] = new button(
         70, 351, 30, 32, 0x13d, "RanNum0.def", 0, 1, 0, 0, 2);
-    filterCountDButtons[1] = new button(
+    m_filterCountDButtons[1] = new button(
         102, 351, 30, 32, 0x13e, "RanNum1.def", 0, 1, 0, 0, 2);
-    filterCountDButtons[2] = new button(
+    m_filterCountDButtons[2] = new button(
         134, 351, 30, 32, 0x13f, "RanNum2.def", 0, 1, 0, 0, 2);
-    filterCountDButtons[3] = new button(
+    m_filterCountDButtons[3] = new button(
         166, 351, 30, 32, 0x140, "RanNum3.def", 0, 1, 0, 0, 2);
-    filterCountDButtons[4] = new button(
+    m_filterCountDButtons[4] = new button(
         198, 351, 30, 32, 0x141, "RanNum4.def", 0, 1, 0, 0, 2);
-    filterCountDButtons[5] = new button(
+    m_filterCountDButtons[5] = new button(
         230, 351, 30, 32, 0x142, "RanNum5.def", 0, 1, 0, 0, 2);
-    filterCountDButtons[6] = new button(
+    m_filterCountDButtons[6] = new button(
         262, 351, 30, 32, 0x143, "RanNum6.def", 0, 1, 0, 0, 2);
-    filterCountDButtons[7] = new button(
+    m_filterCountDButtons[7] = new button(
         326, 351, 55, 32, 0x144, "RanRand.def", 0, 1, 0, 0, 2);
     for (i = 0; i < 8; ++i) {
-        filterCountDButtons[i]->set_highlight_frame(2);
-        filterCountDButtons[i]->set_disabled_frame(1);
-        Widgets.push_back(filterCountDButtons[i]);
+        m_filterCountDButtons[i]->setHighlightFrame(2);
+        m_filterCountDButtons[i]->setDisabledFrame(1);
+        m_widgets.push_back(m_filterCountDButtons[i]);
     }
 
-    Widgets.push_back(new textWidget(
-        71, 398, 105, 16, gpGeneralText->GetText(758), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(
+        71, 398, 105, 16, g_generalText->getText(758), "smalfont.fnt",
         font::PRIMARY, 0x145, font::LEFT_JUSTIFIED, 0, 8));
-    filterWaterButtons[0] = new button(
+    m_filterWaterButtons[0] = new button(
         70, 419, 83, 32, 0x146, "RanNone.def", 0, 1, 0, 0, 2);
-    filterWaterButtons[1] = new button(
+    m_filterWaterButtons[1] = new button(
         155, 419, 83, 32, 0x147, "RanNorm.def", 0, 1, 0, 0, 2);
-    filterWaterButtons[2] = new button(
+    m_filterWaterButtons[2] = new button(
         240, 419, 83, 32, 0x148, "RanIsld.def", 0, 1, 0, 0, 2);
-    filterWaterButtons[3] = new button(
+    m_filterWaterButtons[3] = new button(
         326, 419, 55, 32, 0x149, "RanRand.def", 0, 1, 0, 0, 2);
     for (i = 0; i < 4; ++i) {
-        filterWaterButtons[i]->set_highlight_frame(2);
-        filterWaterButtons[i]->set_disabled_frame(1);
-        Widgets.push_back(filterWaterButtons[i]);
+        m_filterWaterButtons[i]->setHighlightFrame(2);
+        m_filterWaterButtons[i]->setDisabledFrame(1);
+        m_widgets.push_back(m_filterWaterButtons[i]);
     }
 
-    Widgets.push_back(new textWidget(
-        71, 465, 105, 16, gpGeneralText->GetText(759), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(
+        71, 465, 105, 16, g_generalText->getText(759), "smalfont.fnt",
         font::PRIMARY, 0x14a, font::LEFT_JUSTIFIED, 0, 8));
-    filterStrengthButtons[0] = new button(
+    m_filterStrengthButtons[0] = new button(
         70, 485, 83, 32, 0x14b, "RanWeak.def", 0, 1, 0, 0, 2);
-    filterStrengthButtons[1] = new button(
+    m_filterStrengthButtons[1] = new button(
         155, 485, 83, 32, 0x14c, "RanNorm.def", 0, 1, 0, 0, 2);
-    filterStrengthButtons[2] = new button(
+    m_filterStrengthButtons[2] = new button(
         240, 485, 83, 32, 0x14d, "RanStrg.def", 0, 1, 0, 0, 2);
-    filterStrengthButtons[3] = new button(
+    m_filterStrengthButtons[3] = new button(
         326, 485, 55, 32, 0x14e, "RanRand.def", 0, 1, 0, 0, 2);
     for (i = 0; i < 4; ++i) {
-        filterStrengthButtons[i]->set_highlight_frame(2);
-        filterStrengthButtons[i]->set_disabled_frame(1);
-        Widgets.push_back(filterStrengthButtons[i]);
+        m_filterStrengthButtons[i]->setHighlightFrame(2);
+        m_filterStrengthButtons[i]->setDisabledFrame(1);
+        m_widgets.push_back(m_filterStrengthButtons[i]);
     }
 
-    Widgets.push_back(new button(
+    m_widgets.push_back(new button(
         57, 535, 337, 40, 0x14f, "RanShow.def", 0, 1, 0, 0, 2));
 }
 
@@ -2774,33 +2827,33 @@ void TSingleSelectionWindow::CreateFilterWidgets()
 // 0x11d, 0x11f..0x127, 0x129..0x131) setting/clearing status from the
 // field_18A0 filter block, gated on inFilterOptions.
 VA(0x0057ef70, 0x3B9)  // anchor-callee Update's inFilterOptions arm calls it (no-arg, this) after the 739/740 title pair; body reads field_18A0[0..3] and dispatches a size switch over 0x24/0x48/0x6c, retail-only
-void TSingleSelectionWindow::UpdateFilterWidgets()
+void TSingleSelectionWindow::updateFilterWidgets()
 {
-    if (!inFilterOptions)
+    if (!m_inFilterOptions)
         return;
     int i;
     for (i = 0x119; i <= 0x11c; ++i)
-        WidgetClearStatus(i, 0x10);
-    switch (field_18A0[0]) {
+        widgetClearStatus(i, 0x10);
+    switch (m_randomMapOptions[0]) {
     case MAP_DIMENSION_SMALL:
-        WidgetSetStatus(0x119, 0x10);
+        widgetSetStatus(0x119, 0x10);
         break;
     case MAP_DIMENSION_MEDIUM:
-        WidgetSetStatus(0x11a, 0x10);
+        widgetSetStatus(0x11a, 0x10);
         break;
     case MAP_DIMENSION_LARGE:
-        WidgetSetStatus(0x11b, 0x10);
+        widgetSetStatus(0x11b, 0x10);
         break;
     case MAP_DIMENSION_EXTRA_LARGE:
-        WidgetSetStatus(0x11c, 0x10);
+        widgetSetStatus(0x11c, 0x10);
         break;
     }
-    if (field_18A0[1] == 1)
-        WidgetClearStatus(0x11d, 0x10);
+    if (m_randomMapOptions[1] == 1)
+        widgetClearStatus(0x11d, 0x10);
     else
-        WidgetSetStatus(0x11d, 0x10);
+        widgetSetStatus(0x11d, 0x10);
     for (i = 0x11f; i <= 0x127; ++i)
-        WidgetClearStatus(i, 0x10);
+        widgetClearStatus(i, 0x10);
     // EXACT 2026-09-06.  Two facts closed the last 4.5 points, both read
     // straight off the emitted temporaries:
     //   * each filter field is read ONCE into a local - retail's
@@ -2820,65 +2873,65 @@ void TSingleSelectionWindow::UpdateFilterWidgets()
     // MEASURED AND REJECTED, byte-flat at 95.5228: static_cast<int> on both
     // _cpp_min operands, and landing the result in a named `int` local;
     // `short lo/hi` does not compile (C2782, ambiguous _Ty).
-    int lo = field_18A0[2];
-    int hi = field_18A0[2];
-    if (field_18A0[2] == -1) {
+    int lo = m_randomMapOptions[2];
+    int hi = m_randomMapOptions[2];
+    if (m_randomMapOptions[2] == -1) {
         lo = 1;
         hi = 8;
     }
-    if (field_18A0[2] == -1)
-        WidgetSetStatus(0x127, 0x10);
+    if (m_randomMapOptions[2] == -1)
+        widgetSetStatus(0x127, 0x10);
     else
-        WidgetSetStatus(field_18A0[2] + 0x11e, 0x10);
+        widgetSetStatus(m_randomMapOptions[2] + 0x11e, 0x10);
     for (i = 0x129; i <= 0x131; ++i)
-        WidgetClearStatus(i, 0x10);
+        widgetClearStatus(i, 0x10);
     for (i = 0x12a; i < hi + 0x129; ++i)
-        WidgetClearStatus(i, 0x1000);
+        widgetClearStatus(i, 0x1000);
     for (; i <= 0x130; ++i)
-        WidgetSetStatus(i, 0x1000);
-    int lastFilter = field_18A0[3];
+        widgetSetStatus(i, 0x1000);
+    int lastFilter = m_randomMapOptions[3];
     if (lastFilter == -1)
-        WidgetSetStatus(0x131, 0x10);
+        widgetSetStatus(0x131, 0x10);
     else
-        WidgetSetStatus(std::_cpp_min<long>(hi, lastFilter) + 0x129,
+        widgetSetStatus(std::_cpp_min<long>(hi, lastFilter) + 0x129,
                         0x10);
     for (i = 0x133; i <= 0x13b; ++i)
-        WidgetClearStatus(i, 0x10);
+        widgetClearStatus(i, 0x10);
     for (i = 0x134; i <= 0x13b - lo; ++i)
-        WidgetClearStatus(i, 0x1000);
+        widgetClearStatus(i, 0x1000);
     for (; i <= 0x13a; ++i)
-        WidgetSetStatus(i, 0x1000);
-    int aiFilter = field_18A0[4];
+        widgetSetStatus(i, 0x1000);
+    int aiFilter = m_randomMapOptions[4];
     int n = std::_cpp_min(8 - lo, aiFilter);
     if (aiFilter == -1) {
         n = 8 - lo;
-        WidgetSetStatus(0x13b, 0x10);
+        widgetSetStatus(0x13b, 0x10);
     } else {
-        WidgetSetStatus(n + 0x133, 0x10);
+        widgetSetStatus(n + 0x133, 0x10);
     }
     for (i = 0x13d; i <= 0x144; ++i)
-        WidgetClearStatus(i, 0x10);
+        widgetClearStatus(i, 0x10);
     for (i = 0x13e; i < n + 0x13d; ++i)
-        WidgetClearStatus(i, 0x1000);
+        widgetClearStatus(i, 0x1000);
     for (; i <= 0x143; ++i)
-        WidgetSetStatus(i, 0x1000);
-    int humanFilter = field_18A0[5];
+        widgetSetStatus(i, 0x1000);
+    int humanFilter = m_randomMapOptions[5];
     if (humanFilter == -1)
-        WidgetSetStatus(0x144, 0x10);
+        widgetSetStatus(0x144, 0x10);
     else
-        WidgetSetStatus(std::_cpp_min<long>(n, humanFilter) + 0x13d, 0x10);
+        widgetSetStatus(std::_cpp_min<long>(n, humanFilter) + 0x13d, 0x10);
     for (i = 0x146; i <= 0x149; ++i)
-        WidgetClearStatus(i, 0x10);
-    if (field_18A0[6] == SCENARIO_FILTER_CATEGORY_ANY)
-        WidgetSetStatus(0x149, 0x10);
+        widgetClearStatus(i, 0x10);
+    if (m_randomMapOptions[6] == SCENARIO_FILTER_CATEGORY_ANY)
+        widgetSetStatus(0x149, 0x10);
     else
-        WidgetSetStatus(field_18A0[6] + 0x146, 0x10);
+        widgetSetStatus(m_randomMapOptions[6] + 0x146, 0x10);
     for (i = 0x14b; i <= 0x14e; ++i)
-        WidgetClearStatus(i, 0x10);
-    if (field_18A0[7] == -1)
-        WidgetSetStatus(0x14e, 0x10);
+        widgetClearStatus(i, 0x10);
+    if (m_randomMapOptions[7] == -1)
+        widgetSetStatus(0x14e, 0x10);
     else
-        WidgetSetStatus(field_18A0[7] + 0x14b, 0x10);
+        widgetSetStatus(m_randomMapOptions[7] + 0x14b, 0x10);
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:2635
@@ -2887,62 +2940,62 @@ void TSingleSelectionWindow::UpdateFilterWidgets()
 // Complete widens the older AddNewPlayer(dpid) calls to SetNewPlayerSlot with
 // the full CNetPlayerInfo record. Retail adds the final slider disable.
 VA(0x0057F330, 0x3E3)  // anchor-callee the 11.6KB ctor calls it at +0x2bc4, back-to-back with its DC neighbor below - the DC adjacency; size 1.13x, SH4 size 0x348, dc 0x13575c
-void TSingleSelectionWindow::SetupLoadGameMode()
+void TSingleSelectionWindow::setupLoadGameMode()
 {
-    durationIndex = gpGame->setup.turnDuration;
+    m_durationIndex = g_game->m_setup.m_turnDuration;
 
-    if (bVideoPaused) {
-        GetWidget(105)->hide();
-        if (IsHost()) {
-            SetNewPlayerSlot(&gsThisNetPlayerInfo);
+    if (g_videoPaused) {
+        getWidget(105)->hide();
+        if (isHost()) {
+            setNewPlayerSlot(&g_thisNetPlayerInfo);
         } else {
-            gpGame->SetupOrigData();
-            scenarioOptionsStarted = 1;
-            if (chatShowing)
-                GetWidget(179)->hide();
+            g_game->setupOrigData();
+            m_scenarioOptionsStarted = 1;
+            if (m_chatShowing)
+                getWidget(179)->hide();
 
-            CNewPlayerMsg msg(&gsThisNetPlayerInfo, gameVersion);
-            TransmitRemoteDataDPID(&msg, 0, false, true);
+            CNewPlayerMsg msg(&g_thisNetPlayerInfo, m_gameVersion);
+            transmitRemoteDataDPID(&msg, 0, false, true);
 
             CAutoArray<CDPlayPlayer> playerArray;
-            pDPlay->EnumPlayers(&playerArray, 0, 0);
-            for (int i = 0; i < playerArray.GetCount(); ++i) {
-                CDPlayPlayer* curr = playerArray.Get(i);
+            g_dPlay->enumPlayers(&playerArray, 0, 0);
+            for (int i = 0; i < playerArray.getCount(); ++i) {
+                CDPlayPlayer* curr = playerArray.get(i);
                 TAutoPtr<int> version(static_cast<int*>(
-                    pDPlay->GetPlayerData(curr->GetId(), 0, 0)));
+                    g_dPlay->getPlayerData(curr->getId(), 0, 0)));
                 if (!version.get())
                     continue;
-                CNetPlayerInfo player(curr->GetName(), curr->GetId());
-                SetNewPlayerSlot(&player);
+                CNetPlayerInfo player(curr->getName(), curr->getId());
+                setNewPlayerSlot(&player);
             }
         }
-    } else if (iMPNetProtocol == MP_HOTSEAT) {
-        for (int i = 0; i < gpHotSeatMan->playerCount; ++i) {
-            CNetPlayerInfo player(gpHotSeatMan->GetName(i), i + 1);
-            SetNewPlayerSlot(&player);
+    } else if (g_mpNetProtocol == MP_HOTSEAT) {
+        for (int i = 0; i < g_hotSeatMan->m_playerCount; ++i) {
+            CNetPlayerInfo player(g_hotSeatMan->getName(i), i + 1);
+            setNewPlayerSlot(&player);
         }
-        gsThisNetPlayerInfo.dpid = 1;
-        strcpy(gsThisNetPlayerInfo.sName, gpGame->players[0].cName);
-        gsThisNetPlayerInfo.version = *gpVideoGameState;
-        delete gpHotSeatMan;
-        gpHotSeatMan = 0;
+        g_thisNetPlayerInfo.m_dpid = 1;
+        strcpy(g_thisNetPlayerInfo.m_name, g_game->m_players[0].m_name);
+        g_thisNetPlayerInfo.m_version = *g_videoGameState;
+        delete g_hotSeatMan;
+        g_hotSeatMan = 0;
     } else {
-        gsThisNetPlayerInfo.dpid = 1;
-        strcpy(gsThisNetPlayerInfo.sName, gLocalPlayerName);
-        gsThisNetPlayerInfo.version = *gpVideoGameState;
-        SetNewPlayerSlot(&gsThisNetPlayerInfo);
+        g_thisNetPlayerInfo.m_dpid = 1;
+        strcpy(g_thisNetPlayerInfo.m_name, g_localPlayerName);
+        g_thisNetPlayerInfo.m_version = *g_videoGameState;
+        setNewPlayerSlot(&g_thisNetPlayerInfo);
     }
 
-    if (IsHost()) {
-        GetHeaders(&HeadersA);
-        scenarioOptionsStarted = 1;
-        HighlightFile(DATA_COMPGEN(0x0068333c, defaultNewGameFileName,
+    if (isHost()) {
+        getHeaders(&m_headersA);
+        m_scenarioOptionsStarted = 1;
+        highlightFile(DATA_COMPGEN(0x0068333c, defaultNewGameFileName,
                                    "NEWGAME.gm1"));
-        SetCurrentMap(currentMap, false);
+        setCurrentMap(m_currentMap, false);
     }
 
-    if (durationSlider)
-        durationSlider->enable(false);
+    if (m_durationSlider)
+        m_durationSlider->enable(false);
 }
 
 // The inline constructor is defined ahead of all consumers above. VC6 emits
@@ -2951,59 +3004,59 @@ void TSingleSelectionWindow::SetupLoadGameMode()
 
 // E:\gamedcs\singleselectionwindow.cpp:2727
 VA(0x0057F740, 0x3D5)  // 100.0000%: 981/981 bytes; anchor-callee ctor call site +0x2bd4, adjacent pair with SetupLoadGameMode above; default CNetPlayerInfo ctor 0x57f720; dc 0x135aa4, 0x304 B SH4
-void TSingleSelectionWindow::SetupNewGameMode()
+void TSingleSelectionWindow::setupNewGameMode()
 {
-    gpGame->setup.turnDuration = 10;
-    durationIndex = 10;
+    g_game->m_setup.m_turnDuration = 10;
+    m_durationIndex = 10;
 
-    if (bVideoPaused) {
-        GetWidget(105)->hide();
-        if (IsHost()) {
-            SetNewPlayerSlot(&gsThisNetPlayerInfo);
+    if (g_videoPaused) {
+        getWidget(105)->hide();
+        if (isHost()) {
+            setNewPlayerSlot(&g_thisNetPlayerInfo);
         } else {
-            gpGame->SetupOrigData();
-            scenarioOptionsStarted = 1;
-            if (chatShowing)
-                GetWidget(179)->hide();
+            g_game->setupOrigData();
+            m_scenarioOptionsStarted = 1;
+            if (m_chatShowing)
+                getWidget(179)->hide();
 
-            CNewPlayerMsg msg(&gsThisNetPlayerInfo, gameVersion);
-            TransmitRemoteDataDPID(&msg, 0, false, true);
+            CNewPlayerMsg msg(&g_thisNetPlayerInfo, m_gameVersion);
+            transmitRemoteDataDPID(&msg, 0, false, true);
 
             CAutoArray<CDPlayPlayer> playerArray;
-            pDPlay->EnumPlayers(&playerArray, 0, 0);
-            for (int i = 0; i < playerArray.GetCount(); ++i) {
-                CDPlayPlayer* curr = playerArray.Get(i);
+            g_dPlay->enumPlayers(&playerArray, 0, 0);
+            for (int i = 0; i < playerArray.getCount(); ++i) {
+                CDPlayPlayer* curr = playerArray.get(i);
                 TAutoPtr<int> version(static_cast<int*>(
-                    pDPlay->GetPlayerData(curr->GetId(), 0, 0)));
+                    g_dPlay->getPlayerData(curr->getId(), 0, 0)));
                 if (!version.get())
                     continue;
-                CNetPlayerInfo player(curr->GetName(), curr->GetId());
-                SetNewPlayerSlot(&player);
+                CNetPlayerInfo player(curr->getName(), curr->getId());
+                setNewPlayerSlot(&player);
             }
         }
-    } else if (iMPNetProtocol == MP_HOTSEAT) {
-        for (int i = 0; i < gpHotSeatMan->playerCount; ++i) {
-            CNetPlayerInfo player(gpHotSeatMan->GetName(i), i + 1);
-            SetNewPlayerSlot(&player);
+    } else if (g_mpNetProtocol == MP_HOTSEAT) {
+        for (int i = 0; i < g_hotSeatMan->m_playerCount; ++i) {
+            CNetPlayerInfo player(g_hotSeatMan->getName(i), i + 1);
+            setNewPlayerSlot(&player);
         }
-        gsThisNetPlayerInfo.dpid = 1;
-        strcpy(gsThisNetPlayerInfo.sName, gpGame->players[0].cName);
-        gsThisNetPlayerInfo.version = *gpVideoGameState;
-        delete gpHotSeatMan;
-        gpHotSeatMan = 0;
+        g_thisNetPlayerInfo.m_dpid = 1;
+        strcpy(g_thisNetPlayerInfo.m_name, g_game->m_players[0].m_name);
+        g_thisNetPlayerInfo.m_version = *g_videoGameState;
+        delete g_hotSeatMan;
+        g_hotSeatMan = 0;
     } else {
-        gsThisNetPlayerInfo.dpid = 1;
-        strcpy(gsThisNetPlayerInfo.sName, gLocalPlayerName);
-        gsThisNetPlayerInfo.version = *gpVideoGameState;
-        SetNewPlayerSlot(&gsThisNetPlayerInfo);
+        g_thisNetPlayerInfo.m_dpid = 1;
+        strcpy(g_thisNetPlayerInfo.m_name, g_localPlayerName);
+        g_thisNetPlayerInfo.m_version = *g_videoGameState;
+        setNewPlayerSlot(&g_thisNetPlayerInfo);
     }
 
-    if (IsHost()) {
-        GetHeaders(&HeadersA);
-        scenarioOptionsStarted = 1;
-        HighlightFile(DATA_COMPGEN(0x00683238, defaultMapFileName,
+    if (isHost()) {
+        getHeaders(&m_headersA);
+        m_scenarioOptionsStarted = 1;
+        highlightFile(DATA_COMPGEN(0x00683238, defaultMapFileName,
                                    "Arrogance.h3m"));
-        SetCurrentMap(currentMap, false);
+        setCurrentMap(m_currentMap, false);
     }
 }
 
@@ -3012,13 +3065,14 @@ void TSingleSelectionWindow::SetupNewGameMode()
 // IsHost helper inside the enable expression. Complete expands IsHost but
 // retains the m_flag65 override visible in retail's final short-circuit arm.
 VA(0x0057FB20, 0x66)  // 100.0000%: 102/102 bytes, 7/7 blocks, 4/4 branches; anchor-callee OnSetAsHostMsg 0x58b120 is its only caller (ShowWidget(0xba) before the empty-list disable), size 0.47x dc 0xD8, dc 0x135da8
-void TSingleSelectionWindow::ShowWidget(int id)
+void TSingleSelectionWindow::showWidget(int id)
 {
-    widget* pWidget = GetWidget(id);
-    if (!pWidget)
+    // Before normalization (locals): pWidget.
+    widget* currentWidget = getWidget(id);
+    if (!currentWidget)
         return;
-    pWidget->show();
-    pWidget->enable(IsHost() || m_flag65);
+    currentWidget->show();
+    currentWidget->enable(isHost() || m_flag65);
 }
 
 // Re-arm the eight lobby buttons plus the chat toggle through the
@@ -3029,20 +3083,20 @@ void TSingleSelectionWindow::ShowWidget(int id)
 // when the load-game mode has no headers to show.
 // E:\gamedcs\singleselectionwindow.cpp:2821
 VA(0x0057FB90, 0x31C)  // Complete-expanded DC UpdateMainWindow, dc 0x135e80
-void TSingleSelectionWindow::UpdateMainWindow()
+void TSingleSelectionWindow::updateMainWindow()
 {
-    ShowWidget(128);
-    ShowWidget(129);
-    if (gGameContextFeatures[*gpVideoGameState].test(1))
-        ShowWidget(130);
-    ShowWidget(107);
-    ShowWidget(108);
-    ShowWidget(109);
-    ShowWidget(110);
-    ShowWidget(111);
-    ShowWidget(186);
-    if (SelectionHeaders.size() == 0 && m_flag64)
-        GetWidget(186)->enable(0);
+    showWidget(128);
+    showWidget(129);
+    if (g_gameContextFeatures[*g_videoGameState].test(1))
+        showWidget(130);
+    showWidget(107);
+    showWidget(108);
+    showWidget(109);
+    showWidget(110);
+    showWidget(111);
+    showWidget(186);
+    if (m_selectionHeaders.size() == 0 && m_flag64)
+        getWidget(186)->enable(0);
 }
 
 // The exact mirror of TurnOffFilterOptions above: the same 57 widget ids
@@ -3052,82 +3106,82 @@ void TSingleSelectionWindow::UpdateMainWindow()
 // one. The trailing field_37F latch runs the filtered rebuild exactly once
 // per window.
 VA(0x0057FEB0, 0x57A)  // Complete-only filter-option control builder
-void TSingleSelectionWindow::SetupFilterOptions()
+void TSingleSelectionWindow::setupFilterOptions()
 {
     if (m_flag64 || m_flag65)
         return;
 
-    if (inFilterOptions) {
-        TurnOffFilterOptions();
+    if (m_inFilterOptions) {
+        turnOffFilterOptions();
         return;
     }
 
-    TurnOffScenarioOptions();
-    TurnOffAdvancedOptions();
+    turnOffScenarioOptions();
+    turnOffAdvancedOptions();
 
-    GetWidget(103)->show();
-    GetWidget(280)->show();
-    GetWidget(281)->show();
-    GetWidget(282)->show();
-    GetWidget(283)->show();
-    GetWidget(284)->show();
-    GetWidget(285)->show();
-    GetWidget(286)->show();
-    GetWidget(287)->show();
-    GetWidget(288)->show();
-    GetWidget(289)->show();
-    GetWidget(290)->show();
-    GetWidget(291)->show();
-    GetWidget(292)->show();
-    GetWidget(293)->show();
-    GetWidget(294)->show();
-    GetWidget(295)->show();
-    GetWidget(296)->show();
-    GetWidget(297)->show();
-    GetWidget(298)->show();
-    GetWidget(299)->show();
-    GetWidget(300)->show();
-    GetWidget(301)->show();
-    GetWidget(302)->show();
-    GetWidget(303)->show();
-    GetWidget(304)->show();
-    GetWidget(305)->show();
-    GetWidget(306)->show();
-    GetWidget(307)->show();
-    GetWidget(308)->show();
-    GetWidget(309)->show();
-    GetWidget(310)->show();
-    GetWidget(311)->show();
-    GetWidget(312)->show();
-    GetWidget(313)->show();
-    GetWidget(314)->show();
-    GetWidget(315)->show();
-    GetWidget(316)->show();
-    GetWidget(317)->show();
-    GetWidget(318)->show();
-    GetWidget(319)->show();
-    GetWidget(320)->show();
-    GetWidget(321)->show();
-    GetWidget(322)->show();
-    GetWidget(323)->show();
-    GetWidget(324)->show();
-    GetWidget(325)->show();
-    GetWidget(326)->show();
-    GetWidget(327)->show();
-    GetWidget(328)->show();
-    GetWidget(329)->show();
-    GetWidget(330)->show();
-    GetWidget(331)->show();
-    GetWidget(332)->show();
-    GetWidget(333)->show();
-    GetWidget(334)->show();
-    GetWidget(335)->show();
+    getWidget(103)->show();
+    getWidget(280)->show();
+    getWidget(281)->show();
+    getWidget(282)->show();
+    getWidget(283)->show();
+    getWidget(284)->show();
+    getWidget(285)->show();
+    getWidget(286)->show();
+    getWidget(287)->show();
+    getWidget(288)->show();
+    getWidget(289)->show();
+    getWidget(290)->show();
+    getWidget(291)->show();
+    getWidget(292)->show();
+    getWidget(293)->show();
+    getWidget(294)->show();
+    getWidget(295)->show();
+    getWidget(296)->show();
+    getWidget(297)->show();
+    getWidget(298)->show();
+    getWidget(299)->show();
+    getWidget(300)->show();
+    getWidget(301)->show();
+    getWidget(302)->show();
+    getWidget(303)->show();
+    getWidget(304)->show();
+    getWidget(305)->show();
+    getWidget(306)->show();
+    getWidget(307)->show();
+    getWidget(308)->show();
+    getWidget(309)->show();
+    getWidget(310)->show();
+    getWidget(311)->show();
+    getWidget(312)->show();
+    getWidget(313)->show();
+    getWidget(314)->show();
+    getWidget(315)->show();
+    getWidget(316)->show();
+    getWidget(317)->show();
+    getWidget(318)->show();
+    getWidget(319)->show();
+    getWidget(320)->show();
+    getWidget(321)->show();
+    getWidget(322)->show();
+    getWidget(323)->show();
+    getWidget(324)->show();
+    getWidget(325)->show();
+    getWidget(326)->show();
+    getWidget(327)->show();
+    getWidget(328)->show();
+    getWidget(329)->show();
+    getWidget(330)->show();
+    getWidget(331)->show();
+    getWidget(332)->show();
+    getWidget(333)->show();
+    getWidget(334)->show();
+    getWidget(335)->show();
 
-    UpdateGameVars();
-    inFilterOptions = 1;
-    if (!field_37F) {
-        field_37F = 1;
-        RebuildFilteredPlayerSetup();
+    updateGameVars();
+    m_inFilterOptions = 1;
+    if (!m_randomMapSelected) {
+        m_randomMapSelected = 1;
+        rebuildFilteredPlayerSetup();
     }
 }
 
@@ -3140,123 +3194,105 @@ void TSingleSelectionWindow::SetupFilterOptions()
 // every seat's hero/town choice, redraws, and mirrors the new positions to
 // the other machines through SendPlayerPositions.
 //
-// Residual (71.54%): every statement is present and the call streams agree
-// on 20 of 22 real sites; what is left is three /Ob2 decisions in the same
-// body, all of them budget rather than spelling. (1) Retail CALLS
-// basic_string::basic_string(const allocator&) for BOTH of the local
-// header's strings; we expand the first (it becomes an inline _Tidy). (2)
-// Inside AssignData retail expands operator=(const char*) at both sites -
-// one down to assign(), one a level further to _Grow - while game.h's
-// former inline_depth(1) left us calling operator= outright.
-// MEASURED 2026-09-05 by deleting that pragma and re-diffing three of its
-// callers in one compile: this row 71.5355 -> 81.0800, OnBeginGame 78.7597
-// -> 77.2700, UpdateGameVars 67.9099 -> 38.0800. So the pragma is NOT inert
-// (contra "only N=0 bites"), it is worth +9.5 here and -29.8 there, and the
-// split requires the original per-site compiler state. Both AssignData pins
-// were removed on 2026-09-06; this row now scores 81.0847%, with its 81.7345%
-// historical peak preserved. (3) The
-// SendPlayerPositions expansion: retail CALLS ??0CNetPlayerHandlerPlayer
-// for m_netPlayer[8] and only ??0CNetPlayerInfo for m_compPlayer[8], while
-// our budget expands both loops in full - the same per-site split
-// singleselectionwindow.h:165 records for the two other CUpdatePlayerPosMsg
-// sites. The frame is 8 B short for exactly this reason: retail's two extra
-// dword temps hold the char* operands live across its expanded operator=.
-// DOSE for (3), measured 2026-09-06 (throwaway probes, none shipped): six
-// lines - the four-store seat-reset loop - out of `caller_cb` restores BOTH
-// constructor calls, 71.5355 -> 81.2220, at which point the call streams
-// agree at report level with zero one-sided sites on either side and the
-// skeleton closes from 40-vs-36 blocks to 35-vs-36. Six more (the host
-// widget block) add 0.51 (81.7278). Overshoot again is real: the eight-seat
-// header loop instead of the reset loop gives 77.15, both together 69.43,
-// and the player-count block 72.88. So (3) is worth ~10 points and the dose
-// is small - what is wanted is the real construct that carries it.
-// Tried and rejected: field_18A0[4] + field_18A0[2] operand order
-// (byte-flat). Fixed here: the version ternary is `== CONTEXT_1 ? 21 : 14`
-// (retail's `and al,-7 / add eax,0x15`), not the other way round.
+// Residual (81.8719%; former history 81.7345%): retain a reference to the
+// local row from its header assignment through AssignData/SetText. Retail
+// reuses EBX for that row and saves the window separately. Binding before
+// the title/description copies scores 73.73684%; a pointer is byte-identical
+// there. Per-seat references score 79.17162%, per-slot references 80.97941%.
+// Swapping the independent playable/difficulty stores and the count-sum
+// operands leaves the score unchanged. Keep the original statement order.
+// Remaining boundaries: retail calls both local string constructors,
+// expands only the second AssignData string assignment through _Grow, and
+// calls the first message-array seat constructor while expanding the second
+// down to CNetPlayerInfo. Our trace expands the first string constructor,
+// both assignments through _Grow, and both seat constructors. The message
+// helper and header constructor retain their Dreamcast-proven operations;
+// this Complete-only caller supplies no DC source for a missing boundary.
 VA(0x00580430, 0x63B)  // Complete-only filtered player/setup rebuild
-void TSingleSelectionWindow::RebuildFilteredPlayerSetup()
+void TSingleSelectionWindow::rebuildFilteredPlayerSetup()
 {
-    gpGame->SetupOrigData();
+    g_game->setupOrigData();
 
     NewSMapHeader header;
-    header.lossCondition.Type = -1;
-    header.victoryCondition.Type = -1;
-    header.isPlayable = 1;
-    header.difficulty = 1;
-    header.HasTwoLayers = field_18A0[1] > 1;
-    if (field_1898 == SINGLE_SELECTION_CONTEXT_2
-            || field_1898 == SINGLE_SELECTION_CONTEXT_3)
-        header.version = 28;
+    header.m_lossCondition.m_type = -1;
+    header.m_victoryCondition.m_type = -1;
+    header.m_isPlayable = 1;
+    header.m_difficulty = 1;
+    header.m_hasTwoLayers = m_randomMapOptions[1] > 1;
+    if (m_commonGameVersion == SINGLE_SELECTION_CONTEXT_2
+            || m_commonGameVersion == SINGLE_SELECTION_CONTEXT_3)
+        header.m_version = 28;
     else
-        header.version = field_1898 == SINGLE_SELECTION_CONTEXT_1 ? 21 : 14;
-    header.minNumHumanPlayers = 1;
-    if (field_18A0[2] == -1)
-        header.maxNumHumanPlayers = 8;
+        header.m_version = m_commonGameVersion == SINGLE_SELECTION_CONTEXT_1 ? 21 : 14;
+    header.m_minNumHumanPlayers = 1;
+    if (m_randomMapOptions[2] == -1)
+        header.m_maxNumHumanPlayers = 8;
     else
-        header.maxNumHumanPlayers =
-            static_cast<unsigned char>(field_18A0[2]);
-    if (field_18A0[2] == -1 || field_18A0[4] == -1)
-        header.numPlayers = 8;
+        header.m_maxNumHumanPlayers =
+            static_cast<unsigned char>(m_randomMapOptions[2]);
+    if (m_randomMapOptions[2] == -1 || m_randomMapOptions[4] == -1)
+        header.m_numPlayers = 8;
     else
-        header.numPlayers =
-            static_cast<unsigned char>(field_18A0[2] + field_18A0[4]);
+        header.m_numPlayers =
+            static_cast<unsigned char>(m_randomMapOptions[2] + m_randomMapOptions[4]);
 
     for (int i = 0; i < 8; ++i) {
-        header.teamInfo[i] = static_cast<signed char>(i);
-        header.playerSlotAttributes[i].legalAlignments = 0x1ff;
-        header.playerSlotAttributes[i].CanBeHuman =
-            i < header.maxNumHumanPlayers;
-        header.playerSlotAttributes[i].HasRandomAlignment = 1;
-        header.playerSlotAttributes[i].GenerateHero = 1;
-        header.playerSlotAttributes[i].nonRandomHeroId = -1;
-        if (i < header.numPlayers)
-            header.playerSlotAttributes[i].CanBeComputer = 1;
+        header.m_teamInfo[i] = static_cast<signed char>(i);
+        header.m_playerSlotAttributes[i].m_legalAlignments = 0x1ff;
+        header.m_playerSlotAttributes[i].m_canBeHuman =
+            i < header.m_maxNumHumanPlayers;
+        header.m_playerSlotAttributes[i].m_hasRandomAlignment = 1;
+        header.m_playerSlotAttributes[i].m_generateHero = 1;
+        header.m_playerSlotAttributes[i].m_nonRandomHeroId = -1;
+        if (i < header.m_numPlayers)
+            header.m_playerSlotAttributes[i].m_canBeComputer = 1;
         else
-            header.playerSlotAttributes[i].CanBeComputer = 0;
+            header.m_playerSlotAttributes[i].m_canBeComputer = 0;
     }
-    header.Size = field_18A0[0];
-    header.numTeams = 0;
+    header.m_size = m_randomMapOptions[0];
+    header.m_numTeams = 0;
 
-    memset(m_localHeader.heroAvailability, -1,
-           sizeof(m_localHeader.heroAvailability));
-    strcpy(m_localHeader.title, gpGeneralText->GetText(741));
-    strcpy(m_localHeader.description, gpGeneralText->GetText(742));
-    m_localHeader.header = header;
+    memset(m_localHeader.m_heroAvailability, -1,
+           sizeof(m_localHeader.m_heroAvailability));
+    strcpy(m_localHeader.m_title, g_generalText->getText(741));
+    strcpy(m_localHeader.m_description, g_generalText->getText(742));
+    GameSelectionHeadersStruct& localHeader = m_localHeader;
+    localHeader.m_header = header;
 
-    gpGame->InitNewGame(gpGame->setup.difficulty, 0, &header, 0);
-    m_localHeader.setup = gpGame->setup;
-    pCurrentHeader = &m_localHeader;
+    g_game->initNewGame(g_game->m_setup.m_difficulty, 0, &header, 0);
+    localHeader.m_setup = g_game->m_setup;
+    m_currentHeader = &localHeader;
 
-    gpGame->setup = m_localHeader.setup;
-    memcpy(gpGame->heroAvailability, m_localHeader.heroAvailability,
-           sizeof(m_localHeader.heroAvailability));
-    gpGame->mapHeader.AssignData(&m_localHeader.header, m_localHeader.title,
-                                 m_localHeader.description);
-    gpGame->setup.turnDuration = static_cast<signed char>(durationIndex);
-    gpGame->setup.difficulty = static_cast<signed char>(lastDiff);
-    static_cast<CScrollTextWidget*>(field_196c)
-        ->SetText(m_localHeader.description);
+    g_game->m_setup = localHeader.m_setup;
+    memcpy(g_game->m_heroAvailability, localHeader.m_heroAvailability,
+           sizeof(localHeader.m_heroAvailability));
+    g_game->m_mapHeader.assignData(&localHeader.m_header, localHeader.m_title,
+                                 localHeader.m_description);
+    g_game->m_setup.m_turnDuration = static_cast<signed char>(m_durationIndex);
+    g_game->m_setup.m_difficulty = static_cast<signed char>(g_lastDiff);
+    static_cast<CScrollTextWidget*>(m_descriptionWidget)
+        ->setText(localHeader.m_description);
 
     for (int j = 0; j < CNetPlayerHandler::MAX_PLAYERS; ++j) {
-        m_players.humanPlayers[j].heroIndex = -1;
-        m_players.humanPlayers[j].townIndex = -1;
-        m_players.computerPlayers[j].heroIndex = -1;
-        m_players.computerPlayers[j].townIndex = -1;
+        m_players.m_humanPlayers[j].m_heroIndex = -1;
+        m_players.m_humanPlayers[j].m_townIndex = -1;
+        m_players.m_computerPlayers[j].m_heroIndex = -1;
+        m_players.m_computerPlayers[j].m_townIndex = -1;
     }
-    SetHumanSlot();
-    MakeHeroFilter();
+    setHumanSlot();
+    makeHeroFilter();
 
-    if (IsHost()) {
-        UpdateAllyEnemyFlags(1);
-        widget* w = GetWidget(186);
+    if (isHost()) {
+        updateAllyEnemyFlags(1);
+        widget* w = getWidget(186);
         w->enable(1);
-        w->Draw();
+        w->draw();
     }
-    DrawWindow(0, 0xffff0001, 0xffff);
-    Update();
+    drawWindow(0, 0xffff0001, 0xffff);
+    update();
 
-    if (bVideoPaused && pDPlay->IsHost())
-        SendPlayerPositions(0);
+    if (g_videoPaused && g_dPlay->isHost())
+        sendPlayerPositions(0);
 }
 
 // Dreamcast fixes the early TurnOffScenarioOptions return, the following
@@ -3272,152 +3308,164 @@ void TSingleSelectionWindow::RebuildFilteredPlayerSetup()
 // ShowWidget(137..141, 190..195) scenario group below.
 // E:\gamedcs\singleselectionwindow.cpp:2838
 VA(0x00580A70, 0x68B)  // anchor-callee OnSetAsHostMsg calls it (0) exactly where DC's calls SetupScenarioOptions; head is the inScenarioOptions early-out into TurnOffScenarioOptions 0x5819a0; retail widened with the random-maps byte it compares/stores at m_flag66, size 1.45x, SH4 size 0x484, dc 0x135f04
-void TSingleSelectionWindow::SetupScenarioOptions(unsigned char randomMaps)
+void TSingleSelectionWindow::setupScenarioOptions(unsigned char randomMaps)
 {
-    if (inScenarioOptions) {
-        TurnOffScenarioOptions();
+    if (m_inScenarioOptions) {
+        turnOffScenarioOptions();
         return;
     }
 
-    TurnOffFilterOptions();
-    TurnOffAdvancedOptions();
-    field_37F = 0;
+    turnOffFilterOptions();
+    turnOffAdvancedOptions();
+    m_randomMapSelected = 0;
 
     if (m_flag66 != randomMaps) {
         m_flag66 = randomMaps;
         if (randomMaps) {
-            if (TransferHeaders.size() == 0) {
-                if (bVideoPaused && !pDPlay->IsHost()) {
+            if (m_transferHeaders.size() == 0) {
+                if (g_videoPaused && !g_dPlay->isHost()) {
                     CNetMsg msg(RS_HEADERS_REQUEST, sizeof(CNetMsg));
-                    TransmitRemoteDataDPID(&msg, 0, false, true);
+                    transmitRemoteDataDPID(&msg, 0, false, true);
                 } else {
-                    GetHeaders(&TransferHeaders);
+                    getHeaders(&m_transferHeaders);
                 }
             }
         }
-        SortMaps(2, false, false);
+        sortMaps(2, false, false);
     }
 
-    GetWidget(101)->show();
-    GetWidget(361)->show();
-    for (int i = 0; i < gUnnamed69fdc8; ++i)
-        ShowWidget(i + 142);
+    getWidget(101)->show();
+    getWidget(361)->show();
+    for (int i = 0; i < g_unnamed69fdc8; ++i)
+        showWidget(i + 142);
 
-    fileSlider->show();
-    fileSlider->SetResolution(
-        SelectionHeaders.size() - gUnnamed69fdc8 + 1);
+    m_fileSlider->show();
+    m_fileSlider->setResolution(
+        m_selectionHeaders.size() - g_unnamed69fdc8 + 1);
     // Complete reuses its added random-map byte after the list-selection arm;
     // retail writes the enable result back to the incoming [ebp+8] slot before
     // passing it to the slider.  Dreamcast's no-argument predecessor has only
     // the corresponding host-dependent enable statement.
-    if (!bVideoPaused)
+    if (!g_videoPaused)
         randomMaps = true;
     else
-        randomMaps = pDPlay->IsHost();
-    fileSlider->enable(randomMaps);
-    fileSlider->SetState(currentIndex);
+        randomMaps = g_dPlay->isHost();
+    m_fileSlider->enable(randomMaps);
+    m_fileSlider->setState(m_currentIndex);
 
-    ShowWidget(137);
-    ShowWidget(138);
-    ShowWidget(139);
-    ShowWidget(140);
-    ShowWidget(141);
-    ShowWidget(190);
-    ShowWidget(191);
-    ShowWidget(192);
-    ShowWidget(193);
-    ShowWidget(194);
-    ShowWidget(195);
+    showWidget(137);
+    showWidget(138);
+    showWidget(139);
+    showWidget(140);
+    showWidget(141);
+    showWidget(190);
+    showWidget(191);
+    showWidget(192);
+    showWidget(193);
+    showWidget(194);
+    showWidget(195);
 
-    if (!scenarioOptionsStarted) {
-        StartMouseThread();
-        DrawWindow(0, 0xffff0001, 0xffff);
-        gUnnamed698a08->DrawBoundedString(
-            gpGeneralText->GetText(503), gpWindowManager->screenBitmap,
+    if (!m_scenarioOptionsStarted) {
+        startMouseThread();
+        drawWindow(0, 0xffff0001, 0xffff);
+        g_unnamed698a08->drawBoundedString(
+            g_generalText->getText(503), g_windowManager->m_screenBitmap,
             123, 122, 184, 25, 4, 5, -1);
-        Update();
-        inScenarioOptions = 1;
-        if (bVideoPaused && !pDPlay->IsHost() && !m_flag65)
-            gpGame->SetupOrigData();
+        this->update();
+        m_inScenarioOptions = 1;
+        if (g_videoPaused && !g_dPlay->isHost() && !m_flag65)
+            g_game->setupOrigData();
         else
-            GetHeaders(&HeadersA);
-        scenarioOptionsStarted = 1;
-        StopMouseThread();
+            getHeaders(&m_headersA);
+        m_scenarioOptionsStarted = 1;
+        stopMouseThread();
     }
-    inScenarioOptions = 1;
+    m_inScenarioOptions = 1;
 }
 
 // Raw NB11 places the main-loop i and nextColor at procedure scope, in that
 // order; the other i belongs to the nested mapChanged reset loop. It also
 // opens a dedicated lexical block around the four town/hero icon pointers and
 // closes it after their y assignments. Both facts are source shape even though
-// they are byte-flat at the current 99.3846% checkpoint. All 101 retail blocks
+// they are byte-flat. All 101 retail blocks
 // and all 56 symbolic branches agree. Initializing the outer i at declaration
 // was tested as a separate lowering and rejected at 96.1750%.
+// 2026-09-07: naming the two Complete-only compatibility-message pointers
+// symmetrically fixes both hidden string-return-buffer schedules and raises
+// 99.3846 -> 99.8030 (14 instruction rows remain). Naming only the first falls
+// to 99.11, so the paired lifetimes are load-bearing. Moving the ten main-loop
+// widget declarations into the loop, or moving the adjacent `i, nextColor`
+// pair below those declarations, is byte-flat; retain their current scope.
+// The residual is a four-home rotation among nextColor, playerType, nameEdit,
+// and an induction temporary. Naming the duration isHost result and declaring
+// compatibilityMessage before gameType symmetrically are byte-flat. why-reg's
+// seven catalog mutations were flat or worse; none reduced the divergence.
 // E:\gamedcs\singleselectionwindow.cpp:2933
 VA(0x00581100, 0x897)  // anchor-callee OnWidgetDeselect 0x5865b0 calls it (site 0x586d43) - the DC edge; size 1.02x dc 0x86C, dc 0x136388
-void TSingleSelectionWindow::SetupAdvancedOptions()
+void TSingleSelectionWindow::setupAdvancedOptions()
 {
-    if (m_flag64 && !IsMultiPlayer())
+    if (m_flag64 && !isMultiPlayer())
         return;
     if (m_flag65)
         return;
-    if (inAdvancedOptions) {
-        TurnOffAdvancedOptions();
+    if (m_inAdvancedOptions) {
+        turnOffAdvancedOptions();
         return;
     }
 
-    if (bVideoPaused) {
+    if (g_videoPaused) {
         if (m_flag64) {
             int gameVersionClass;
-            if (pCurrentHeader->saved.gameVersion == GAME_VERSION_SOD)
+            if (m_currentHeader->m_saved.m_gameVersion == GAME_VERSION_SOD)
                 gameVersionClass = GAME_VERSION_SOD;
             else
                 gameVersionClass =
-                    pCurrentHeader->saved.gameVersion == GAME_VERSION_AB;
+                    m_currentHeader->m_saved.m_gameVersion == GAME_VERSION_AB;
 
             if (!static_cast<const std::bitset<4>&>(
-                    gGameContextFeatures[field_1898])[gameVersionClass]) {
-                if (bVideoPaused && !pDPlay->IsHost())
+                    g_gameContextFeatures[m_commonGameVersion])[gameVersionClass]) {
+                if (g_videoPaused && !g_dPlay->isHost())
                     return;
                 char** text;
                 const char* gameType;
-                if (*gpVideoGameState == 1) {
-                    text = gpGeneralText->Text.begin();
+                if (*g_videoGameState == 1) {
+                    text = g_generalText->m_text.begin();
                     gameType = text[746];
                 } else {
-                    text = gpGeneralText->Text.begin();
+                    text = g_generalText->m_text.begin();
                     gameType = text[747];
                 }
-                NormalDialog(
-                    format_string(
-                        text[744],
+                const char* compatibilityMessage = text[744];
+                normalDialog(
+                    formatString(
+                        compatibilityMessage,
                         gameType).c_str(),
                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 return;
             }
-        } else if (!field_37F) {
+        } else if (!m_randomMapSelected) {
             int mapVersionClass;
-            if (gpGame->mapHeader.version > 21)
+            if (g_game->m_mapHeader.m_version > 21)
                 mapVersionClass = 2;
             else
-                mapVersionClass = gpGame->mapHeader.version > 14;
+                mapVersionClass = g_game->m_mapHeader.m_version > 14;
 
-            if (field_1898 < mapVersionClass) {
-                if (!pDPlay->IsHost())
+            if (m_commonGameVersion < mapVersionClass) {
+                if (!g_dPlay->isHost())
                     return;
                 char** text;
                 const char* gameType;
-                if (*gpVideoGameState == 1) {
-                    text = gpGeneralText->Text.begin();
+                if (*g_videoGameState == 1) {
+                    text = g_generalText->m_text.begin();
                     gameType = text[746];
                 } else {
-                    text = gpGeneralText->Text.begin();
+                    text = g_generalText->m_text.begin();
                     gameType = text[747];
                 }
-                NormalDialog(
-                    format_string(
-                        text[745],
+                const char* compatibilityMessage = text[745];
+                normalDialog(
+                    formatString(
+                        compatibilityMessage,
                         gameType).c_str(),
                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 return;
@@ -3425,28 +3473,28 @@ void TSingleSelectionWindow::SetupAdvancedOptions()
         }
     }
 
-    TurnOffScenarioOptions();
-    TurnOffFilterOptions();
+    turnOffScenarioOptions();
+    turnOffFilterOptions();
 
-    durationSlider->show();
+    m_durationSlider->show();
     if (!m_flag64)
-        durationSlider->enable(IsHost());
-    GetWidget(102)->show();
-    GetWidget(339)->show();
-    GetWidget(340)->show();
-    GetWidget(field_189c)->show();
-    GetWidget(343)->show();
-    GetWidget(344)->show();
-    durationSlider->SetState(durationIndex);
-    durationSlider->SetState(durationIndex);
+        m_durationSlider->enable(isHost());
+    getWidget(102)->show();
+    getWidget(339)->show();
+    getWidget(340)->show();
+    getWidget(m_townHeadingId)->show();
+    getWidget(343)->show();
+    getWidget(344)->show();
+    m_durationSlider->setState(m_durationIndex);
+    m_durationSlider->setState(m_durationIndex);
 
-    if (mapChanged) {
+    if (m_mapChanged) {
         for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
-            m_players.humanPlayers[i].ResetAdvancedOptions();
-            m_players.computerPlayers[i].ResetAdvancedOptions();
+            m_players.m_humanPlayers[i].resetAdvancedOptions();
+            m_players.m_computerPlayers[i].resetAdvancedOptions();
         }
-        SetHumanSlot();
-        mapChanged = 0;
+        setHumanSlot();
+        m_mapChanged = 0;
     }
 
     int i;
@@ -3461,55 +3509,55 @@ void TSingleSelectionWindow::SetupAdvancedOptions()
     textEntryWidget* nameEdit;
     widget* bonusLeft;
     widget* bonusRight;
-    UpdateGameVars();
+    updateGameVars();
     for (i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
         int strNbr = 0;
-        if (gpGame->setup.playerPos[i] < 0)
+        if (g_game->m_setup.m_playerPos[i] < 0)
             continue;
-        if (m_flag64 && gpGame->playerDisabled[i])
+        if (m_flag64 && g_game->m_playerDisabled[i])
             continue;
 
-        playerName = GetWidget(i + 199);
-        playerType = GetWidget(i + 207);
-        playerFlag = GetWidget(i + 345);
-        townButton = GetWidget(i + 263);
-        townLeft = GetWidget(i + 362);
-        townRight = GetWidget(i + 370);
-        heroButton = GetWidget(i + 378);
-        if (!IsMultiPlayer())
-            nameEdit = static_cast<textEntryWidget*>(GetWidget(i + 353));
-        bonusLeft = GetWidget(i + 215);
-        bonusRight = GetWidget(i + 223);
+        playerName = getWidget(i + 199);
+        playerType = getWidget(i + 207);
+        playerFlag = getWidget(i + 345);
+        townButton = getWidget(i + 263);
+        townLeft = getWidget(i + 362);
+        townRight = getWidget(i + 370);
+        heroButton = getWidget(i + 378);
+        if (!isMultiPlayer())
+            nameEdit = static_cast<textEntryWidget*>(getWidget(i + 353));
+        bonusLeft = getWidget(i + 215);
+        bonusRight = getWidget(i + 223);
 
-        bonusLeft->y = nextColor * 50 + 133;
-        bonusRight->y = nextColor * 50 + 133;
-        townButton->y = nextColor * 50 - y + 130;
+        bonusLeft->m_y = nextColor * 50 + 133;
+        bonusRight->m_y = nextColor * 50 + 133;
+        townButton->m_y = nextColor * 50 - m_y + 130;
 
         {
-            widget* townIcon = GetWidget(i + 231);
-            widget* heroIcon = GetWidget(i + 247);
-            widget* heroLeft = GetWidget(i + 239);
-            widget* heroRight = GetWidget(i + 255);
-            townIcon->y = nextColor * 50 + 133;
-            heroIcon->y = nextColor * 50 + 133;
-            heroLeft->y = nextColor * 50 + 133;
-            heroRight->y = nextColor * 50 + 133;
+            widget* townIcon = getWidget(i + 231);
+            widget* heroIcon = getWidget(i + 247);
+            widget* heroLeft = getWidget(i + 239);
+            widget* heroRight = getWidget(i + 255);
+            townIcon->m_y = nextColor * 50 + 133;
+            heroIcon->m_y = nextColor * 50 + 133;
+            heroLeft->m_y = nextColor * 50 + 133;
+            heroRight->m_y = nextColor * 50 + 133;
         }
 
-        playerName->y = nextColor * 50 + 151;
-        playerType->y = nextColor * 50 + 151;
-        playerFlag->y = nextColor * 50 + 130;
-        heroButton->y = nextColor * 50 + 130;
-        townLeft->y = nextColor * 50 + 130;
-        townRight->y = nextColor * 50 + 130;
-        if (!IsMultiPlayer()) {
-            nameEdit->y = nextColor * 50 + 130;
-            nameEdit->boxY = nextColor * 50 + 130;
+        playerName->m_y = nextColor * 50 + 151;
+        playerType->m_y = nextColor * 50 + 151;
+        playerFlag->m_y = nextColor * 50 + 130;
+        heroButton->m_y = nextColor * 50 + 130;
+        townLeft->m_y = nextColor * 50 + 130;
+        townRight->m_y = nextColor * 50 + 130;
+        if (!isMultiPlayer()) {
+            nameEdit->m_y = nextColor * 50 + 130;
+            nameEdit->m_boxY = nextColor * 50 + 130;
         }
 
-        if (gpGame->mapHeader.playerSlotAttributes[i].CanBeHuman) {
+        if (g_game->m_mapHeader.m_playerSlotAttributes[i].m_canBeHuman) {
             townButton->show();
-            townButton->enable(IsHost());
+            townButton->enable(isHost());
         }
         playerName->show();
         playerType->show();
@@ -3518,37 +3566,37 @@ void TSingleSelectionWindow::SetupAdvancedOptions()
         townLeft->show();
         heroButton->show();
 
-        if (!IsMultiPlayer()) {
-            playerType->send_message(widget::WIDGET_CLEAR_STATUS,
+        if (!isMultiPlayer()) {
+            playerType->sendMessage(widget::WIDGET_CLEAR_STATUS,
                                      widget::WIDGET_ACTIVE);
             nameEdit->hide();
-        } else if (!IsHost()) {
-            playerType->send_message(widget::WIDGET_CLEAR_STATUS,
+        } else if (!isHost()) {
+            playerType->sendMessage(widget::WIDGET_CLEAR_STATUS,
                                      widget::WIDGET_ACTIVE);
         }
         if (m_flag64)
-            playerType->send_message(widget::WIDGET_CLEAR_STATUS,
+            playerType->sendMessage(widget::WIDGET_CLEAR_STATUS,
                                      widget::WIDGET_ACTIVE);
 
-        if (gpGame->mapHeader.playerSlotAttributes[i].CanBeHuman
-            && gpGame->mapHeader.playerSlotAttributes[i].CanBeComputer)
+        if (g_game->m_mapHeader.m_playerSlotAttributes[i].m_canBeHuman
+            && g_game->m_mapHeader.m_playerSlotAttributes[i].m_canBeComputer)
             strNbr = 0;
-        else if (gpGame->mapHeader.playerSlotAttributes[i].CanBeHuman)
+        else if (g_game->m_mapHeader.m_playerSlotAttributes[i].m_canBeHuman)
             strNbr = 1;
         else
             strNbr = 2;
-        static_cast<textWidget*>(playerName)->SetText(
-            gUnnamed6a7e18[strNbr]);
+        static_cast<textWidget*>(playerName)->setText(
+            g_unnamed6a7e18[strNbr]);
         ++nextColor;
     }
 
-    MakeHeroFilter();
-    CheckFaces();
+    makeHeroFilter();
+    checkFaces();
 
-    if (bVideoPaused && IsHost()) {
-        SendPlayerPositions(0);
+    if (g_videoPaused && isHost()) {
+        sendPlayerPositions(0);
     }
-    inAdvancedOptions = 1;
+    m_inAdvancedOptions = 1;
 }
 
 // Drop the scenario-options pane: the two title widgets, one hide per
@@ -3557,25 +3605,25 @@ void TSingleSelectionWindow::SetupAdvancedOptions()
 // column headers, the six filter widgets, then clear the mode byte.
 // E:\gamedcs\singleselectionwindow.cpp:3126
 VA(0x005819a0, 0x171)  // anchor-callee OnNewHostMsg + ctor call it no-arg back-to-back with its DC neighbor below (adjacent rows = the DC adjacency), pure GetWidget/send_message body, dc 0x136bf4
-void TSingleSelectionWindow::TurnOffScenarioOptions()
+void TSingleSelectionWindow::turnOffScenarioOptions()
 {
-    GetWidget(101)->hide();
-    GetWidget(361)->hide();
-    for (int i = 0; i < gUnnamed69fdc8; ++i)
-        GetWidget(i + 142)->hide();
-    fileSlider->hide();
-    GetWidget(137)->hide();
-    GetWidget(138)->hide();
-    GetWidget(139)->hide();
-    GetWidget(140)->hide();
-    GetWidget(141)->hide();
-    GetWidget(190)->hide();
-    GetWidget(191)->hide();
-    GetWidget(192)->hide();
-    GetWidget(193)->hide();
-    GetWidget(194)->hide();
-    GetWidget(195)->hide();
-    inScenarioOptions = 0;
+    getWidget(101)->hide();
+    getWidget(361)->hide();
+    for (int i = 0; i < g_unnamed69fdc8; ++i)
+        getWidget(i + 142)->hide();
+    m_fileSlider->hide();
+    getWidget(137)->hide();
+    getWidget(138)->hide();
+    getWidget(139)->hide();
+    getWidget(140)->hide();
+    getWidget(141)->hide();
+    getWidget(190)->hide();
+    getWidget(191)->hide();
+    getWidget(192)->hide();
+    getWidget(193)->hide();
+    getWidget(194)->hide();
+    getWidget(195)->hide();
+    m_inScenarioOptions = 0;
 }
 
 // Drop the advanced-options pane. The double net-mode guard brackets
@@ -3585,41 +3633,41 @@ void TSingleSelectionWindow::TurnOffScenarioOptions()
 // handler's seat cursor and the mode byte reset.
 // E:\gamedcs\singleselectionwindow.cpp:3166
 VA(0x00581b20, 0x253)  // anchor-callee adjacent pair with 0x5819a0 (DC-adjacent TurnOff pair); adds the SetFocus clear, dc 0x136e94
-void TSingleSelectionWindow::TurnOffAdvancedOptions()
+void TSingleSelectionWindow::turnOffAdvancedOptions()
 {
-    if (m_flag64 && !bVideoPaused
-            && gUnnamed6989f0 != WINDOW_MODE_6989F0_3)
+    if (m_flag64 && !g_videoPaused
+            && g_unnamed6989f0 != WINDOW_MODE_6989F0_3)
         return;
     if (m_flag65)
         return;
-    if (!bVideoPaused && gUnnamed6989f0 != WINDOW_MODE_6989F0_3)
-        SetFocus(-1);
-    GetWidget(102)->hide();
-    durationSlider->hide();
+    if (!g_videoPaused && g_unnamed6989f0 != WINDOW_MODE_6989F0_3)
+        setFocus(-1);
+    getWidget(102)->hide();
+    m_durationSlider->hide();
     for (int i = 0; i < 8; ++i) {
-        GetWidget(i + 199)->hide();
-        GetWidget(i + 207)->hide();
-        GetWidget(i + 345)->hide();
-        GetWidget(i + 263)->hide();
-        if (!bVideoPaused && gUnnamed6989f0 != WINDOW_MODE_6989F0_3)
-            GetWidget(i + 353)->hide();
-        GetWidget(i + 215)->hide();
-        GetWidget(i + 223)->hide();
-        GetWidget(i + 231)->hide();
-        GetWidget(i + 239)->hide();
-        GetWidget(i + 247)->hide();
-        GetWidget(i + 255)->hide();
-        GetWidget(i + 362)->hide();
-        GetWidget(i + 370)->hide();
-        GetWidget(i + 378)->hide();
+        getWidget(i + 199)->hide();
+        getWidget(i + 207)->hide();
+        getWidget(i + 345)->hide();
+        getWidget(i + 263)->hide();
+        if (!g_videoPaused && g_unnamed6989f0 != WINDOW_MODE_6989F0_3)
+            getWidget(i + 353)->hide();
+        getWidget(i + 215)->hide();
+        getWidget(i + 223)->hide();
+        getWidget(i + 231)->hide();
+        getWidget(i + 239)->hide();
+        getWidget(i + 247)->hide();
+        getWidget(i + 255)->hide();
+        getWidget(i + 362)->hide();
+        getWidget(i + 370)->hide();
+        getWidget(i + 378)->hide();
     }
-    GetWidget(339)->hide();
-    GetWidget(340)->hide();
-    GetWidget(field_189c)->hide();
-    GetWidget(343)->hide();
-    GetWidget(344)->hide();
-    m_players.playerPos = -1;
-    inAdvancedOptions = 0;
+    getWidget(339)->hide();
+    getWidget(340)->hide();
+    getWidget(m_townHeadingId)->hide();
+    getWidget(343)->hide();
+    getWidget(344)->hide();
+    m_players.m_playerPos = -1;
+    m_inAdvancedOptions = 0;
 }
 
 // Complete split the filter-pane teardown out of SetupAdvancedOptions:
@@ -3629,75 +3677,75 @@ void TSingleSelectionWindow::TurnOffAdvancedOptions()
 // The source name is provisional because the older Dreamcast revision keeps
 // this statement group inside SetupAdvancedOptions.
 VA(0x00581D80, 0x550)  // anchor-callee SetupAdvancedOptions + ctor; retail-only extracted helper
-void TSingleSelectionWindow::TurnOffFilterOptions()
+void TSingleSelectionWindow::turnOffFilterOptions()
 {
-    if (m_flag65 || (m_flag64 && !bVideoPaused
-                     && gUnnamed6989f0 != WINDOW_MODE_6989F0_3))
+    if (m_flag65 || (m_flag64 && !g_videoPaused
+                     && g_unnamed6989f0 != WINDOW_MODE_6989F0_3))
         return;
 
-    GetWidget(103)->hide();
-    GetWidget(280)->hide();
-    GetWidget(281)->hide();
-    GetWidget(282)->hide();
-    GetWidget(283)->hide();
-    GetWidget(284)->hide();
-    GetWidget(285)->hide();
-    GetWidget(286)->hide();
-    GetWidget(287)->hide();
-    GetWidget(288)->hide();
-    GetWidget(289)->hide();
-    GetWidget(290)->hide();
-    GetWidget(291)->hide();
-    GetWidget(292)->hide();
-    GetWidget(293)->hide();
-    GetWidget(294)->hide();
-    GetWidget(295)->hide();
-    GetWidget(296)->hide();
-    GetWidget(297)->hide();
-    GetWidget(298)->hide();
-    GetWidget(299)->hide();
-    GetWidget(300)->hide();
-    GetWidget(301)->hide();
-    GetWidget(302)->hide();
-    GetWidget(303)->hide();
-    GetWidget(304)->hide();
-    GetWidget(305)->hide();
-    GetWidget(306)->hide();
-    GetWidget(307)->hide();
-    GetWidget(308)->hide();
-    GetWidget(309)->hide();
-    GetWidget(310)->hide();
-    GetWidget(311)->hide();
-    GetWidget(312)->hide();
-    GetWidget(313)->hide();
-    GetWidget(314)->hide();
-    GetWidget(315)->hide();
-    GetWidget(316)->hide();
-    GetWidget(317)->hide();
-    GetWidget(318)->hide();
-    GetWidget(319)->hide();
-    GetWidget(320)->hide();
-    GetWidget(321)->hide();
-    GetWidget(322)->hide();
-    GetWidget(323)->hide();
-    GetWidget(324)->hide();
-    GetWidget(325)->hide();
-    GetWidget(326)->hide();
-    GetWidget(327)->hide();
-    GetWidget(328)->hide();
-    GetWidget(329)->hide();
-    GetWidget(330)->hide();
-    GetWidget(331)->hide();
-    GetWidget(332)->hide();
-    GetWidget(333)->hide();
-    GetWidget(334)->hide();
-    GetWidget(335)->hide();
-    inFilterOptions = 0;
+    getWidget(103)->hide();
+    getWidget(280)->hide();
+    getWidget(281)->hide();
+    getWidget(282)->hide();
+    getWidget(283)->hide();
+    getWidget(284)->hide();
+    getWidget(285)->hide();
+    getWidget(286)->hide();
+    getWidget(287)->hide();
+    getWidget(288)->hide();
+    getWidget(289)->hide();
+    getWidget(290)->hide();
+    getWidget(291)->hide();
+    getWidget(292)->hide();
+    getWidget(293)->hide();
+    getWidget(294)->hide();
+    getWidget(295)->hide();
+    getWidget(296)->hide();
+    getWidget(297)->hide();
+    getWidget(298)->hide();
+    getWidget(299)->hide();
+    getWidget(300)->hide();
+    getWidget(301)->hide();
+    getWidget(302)->hide();
+    getWidget(303)->hide();
+    getWidget(304)->hide();
+    getWidget(305)->hide();
+    getWidget(306)->hide();
+    getWidget(307)->hide();
+    getWidget(308)->hide();
+    getWidget(309)->hide();
+    getWidget(310)->hide();
+    getWidget(311)->hide();
+    getWidget(312)->hide();
+    getWidget(313)->hide();
+    getWidget(314)->hide();
+    getWidget(315)->hide();
+    getWidget(316)->hide();
+    getWidget(317)->hide();
+    getWidget(318)->hide();
+    getWidget(319)->hide();
+    getWidget(320)->hide();
+    getWidget(321)->hide();
+    getWidget(322)->hide();
+    getWidget(323)->hide();
+    getWidget(324)->hide();
+    getWidget(325)->hide();
+    getWidget(326)->hide();
+    getWidget(327)->hide();
+    getWidget(328)->hide();
+    getWidget(329)->hide();
+    getWidget(330)->hide();
+    getWidget(331)->hide();
+    getWidget(332)->hide();
+    getWidget(333)->hide();
+    getWidget(334)->hide();
+    getWidget(335)->hide();
+    m_inFilterOptions = 0;
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:3219
 VA(0x005822d0, 0x868)  // anchor-vtable TSingleSelectionWindow vtbl 0x241cac slot11 (ProcessRightSelect override; cf sibling THeroScreenWindow slot11 ProcessRightSelect@CHeroWindowEx), dc 0x1371fc
-unsigned char TSingleSelectionWindow::ProcessRightSelect(int id)
+unsigned char TSingleSelectionWindow::processRightSelect(int id)
 {
     // File rows consume right clicks without opening a popup. Dreamcast's
     // first two source rows prove this guard precedes the detail dispatch.
@@ -3716,57 +3764,58 @@ unsigned char TSingleSelectionWindow::ProcessRightSelect(int id)
     case SSW_HERO_DETAIL_LAST: {
         int gamePos = nbr;
         if (m_flag64) {
-            int heroId = gpGame->setup.startingHero[gamePos];
-            int displayFace = GetDisplayFace(gamePos);
-            const char* faceName = GetHeroName(gamePos);
+            int heroId = g_game->m_setup.m_startingHero[gamePos];
+            int displayFace = getDisplayFace(gamePos);
+            const char* faceName = getHeroName(gamePos);
             if (displayFace != -1) {
-                hero* theHero = &gpGame->heroes[heroId];
+                hero* theHero = &g_game->m_heroes[heroId];
                 CHeroDlg dlg(!m_flag65 && !m_flag64);
-                dlg.CreateWin(HeroPix[displayFace], faceName,
-                              heroSpecificAbility, heroId,
-                              theHero->GetSpecificAbilityTextShort(),
-                              theHero->HeroFn_004D8F70());
-                dlg.DoModal(0);
+                dlg.createWin(m_heroPix[displayFace], faceName,
+                              m_heroSpecificAbility, heroId,
+                              theHero->getSpecificAbilityTextShort(),
+                              theHero->heroFn004D8F70());
+                dlg.doModal(0);
             }
         } else {
-            CNetPlayerHandlerPlayer* pPlayer =
-                m_players.GetPlayerInPos(gamePos);
-            if (!pPlayer)
-                pPlayer = m_players.getCompPlayerInPos(gamePos);
-            if (!pPlayer)
+            // Before normalization (locals): pPlayer.
+            CNetPlayerHandlerPlayer* player =
+                m_players.getPlayerInPos(gamePos);
+            if (!player)
+                player = m_players.getCompPlayerInPos(gamePos);
+            if (!player)
                 break;
 
             unsigned char noHero =
-                pPlayer->heroIndex == -1
-                && !HasRandomHero(gamePos)
-                && !HasNonRandomHero(gamePos);
+                player->m_heroIndex == -1
+                && !hasRandomHero(gamePos)
+                && !hasNonRandomHero(gamePos);
             if (noHero)
                 break;
 
-            int displayFace = GetDisplayFace(gamePos);
-            if (pPlayer->heroIndex == -1 && displayFace == -1) {
+            int displayFace = getDisplayFace(gamePos);
+            if (player->m_heroIndex == -1 && displayFace == -1) {
                 CBonusDlg dlg(!m_flag65 && !m_flag64);
-                dlg.CreateWin(gpGeneralText->GetText(102), randomHeroBmp,
-                              gpGeneralText->GetText(523),
-                              gpGeneralText->GetText(103));
-                dlg.DoModal(0);
+                dlg.createWin(g_generalText->getText(102), m_randomHeroBmp,
+                              g_generalText->getText(523),
+                              g_generalText->getText(103));
+                dlg.doModal(0);
             } else {
-                int heroId = GetHeroInPos(gamePos);
+                int heroId = getHeroInPos(gamePos);
                 if (heroId != -1) {
-                    hero* theHero = &gpGame->heroes[heroId];
+                    hero* theHero = &g_game->m_heroes[heroId];
                     CHeroDlg dlg(!m_flag65 && !m_flag64);
-                    dlg.CreateWin(HeroPix[displayFace],
-                                  GetHeroName(gamePos),
-                                  heroSpecificAbility, heroId,
-                                  theHero->GetSpecificAbilityTextShort(),
-                                  theHero->HeroFn_004D8F70());
-                    dlg.DoModal(0);
+                    dlg.createWin(m_heroPix[displayFace],
+                                  getHeroName(gamePos),
+                                  m_heroSpecificAbility, heroId,
+                                  theHero->getSpecificAbilityTextShort(),
+                                  theHero->heroFn004D8F70());
+                    dlg.doModal(0);
                 }
             }
         }
-        DisplayChat();
-        DrawWindow(0, 0xffff0001, 0xffff);
-        Update();
+        displayChat();
+        drawWindow(0, 0xffff0001, 0xffff);
+        this->update();
         break;
     }
 
@@ -3782,26 +3831,26 @@ unsigned char TSingleSelectionWindow::ProcessRightSelect(int id)
             nbr - (SSW_TOWN_DETAIL_FIRST - SSW_HERO_DETAIL_FIRST);
         int townType;
         if (m_flag64)
-            townType = gpGame->setup.alignment[gamePos];
+            townType = g_game->m_setup.m_alignment[gamePos];
         else {
-            townType = GetDisplayTown(gamePos);
+            townType = getDisplayTown(gamePos);
         }
 
         if (townType == -1) {
             CBonusDlg dlg(!m_flag65 && !m_flag64);
-            dlg.CreateWin(gpGeneralText->GetText(104), randomTownBmp,
-                          gpGeneralText->GetText(523),
-                          gpGeneralText->GetText(105));
-            dlg.DoModal(0);
+            dlg.createWin(g_generalText->getText(104), m_randomTownBmp,
+                          g_generalText->getText(523),
+                          g_generalText->getText(105));
+            dlg.doModal(0);
         } else {
             CTownDlg dlg(!m_flag65 && !m_flag64);
-            dlg.CreateWin(TownPix, townType * 2 + 2,
+            dlg.createWin(m_townPix, townType * 2 + 2,
                           static_cast<TTownType>(townType) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
-            dlg.DoModal(0);
+            dlg.doModal(0);
         }
-        DisplayChat();
-        DrawWindow(0, 0xffff0001, 0xffff);
-        Update();
+        displayChat();
+        drawWindow(0, 0xffff0001, 0xffff);
+        this->update();
         break;
     }
 
@@ -3824,71 +3873,71 @@ unsigned char TSingleSelectionWindow::ProcessRightSelect(int id)
         const char* bonusEx = "";
 
         if (m_flag64) {
-            bonus = gpGame->setup.startingBonus[gamePos];
-            townType = gpGame->setup.alignment[gamePos];
+            bonus = g_game->m_setup.m_startingBonus[gamePos];
+            townType = g_game->m_setup.m_alignment[gamePos];
         } else {
-            CNetPlayerHandlerPlayer* pPlayer =
-                m_players.GetPlayerInPos(gamePos);
-            if (!pPlayer)
-                pPlayer = m_players.getCompPlayerInPos(gamePos);
-            if (!pPlayer)
+            CNetPlayerHandlerPlayer* player =
+                m_players.getPlayerInPos(gamePos);
+            if (!player)
+                player = m_players.getCompPlayerInPos(gamePos);
+            if (!player)
                 break;
-            bonus = pPlayer->startBonusIndex;
-            townType = GetDisplayTown(gamePos);
+            bonus = player->m_startBonusIndex;
+            townType = getDisplayTown(gamePos);
         }
 
         switch (bonus) {
         case NEW_MAP_BONUS_ARTIFACT:
-            header = gpGeneralText->GetText(84);
-            desc = gpGeneralText->GetText(91);
+            header = g_generalText->getText(84);
+            desc = g_generalText->getText(91);
             break;
         case NEW_MAP_BONUS_GOLD:
-            header = gpGeneralText->GetText(85);
+            header = g_generalText->getText(85);
             sprite = 8;
-            bonusEx = gpGeneralText->GetText(88);
-            desc = gpGeneralText->GetText(93);
+            bonusEx = g_generalText->getText(88);
+            desc = g_generalText->getText(93);
             break;
         case NEW_MAP_BONUS_RESOURCE:
-            header = gpGeneralText->GetText(86);
+            header = g_generalText->getText(86);
             sprite = townType;
             if (sprite == TOWN_CONFLUX)
                 sprite = TOWN_INFERNO;
-            bonusEx = GetResourceBonusCaption(townType);
-            desc = GetResourceBonusDescription(townType);
+            bonusEx = getResourceBonusCaption(townType);
+            desc = getResourceBonusDescription(townType);
             if (sprite == -1)
                 sprite = 0;
             break;
         case NEW_MAP_BONUS_RANDOM:
-            header = gpGeneralText->GetText(87);
+            header = g_generalText->getText(87);
             sprite = 10;
-            desc = gpGeneralText->GetText(95);
+            desc = g_generalText->getText(95);
             break;
         }
 
-        dlg.CreateWin(header, Resource, sprite, bonusEx, desc);
-        dlg.DoModal(0);
-        DisplayChat();
-        DrawWindow(0, 0xffff0001, 0xffff);
-        Update();
+        dlg.createWin(header, m_resource, sprite, bonusEx, desc);
+        dlg.doModal(0);
+        displayChat();
+        drawWindow(0, 0xffff0001, 0xffff);
+        this->update();
         break;
     }
 
     case SSW_TEAM_ALIGNMENT: {
         CTeamAlignmentDlg dlg(!m_flag65 && !m_flag64);
-        dlg.CreateWin();
-        dlg.DoModal(0);
-        DisplayChat();
-        DrawWindow(0, 0xffff0001, 0xffff);
-        Update();
+        dlg.createWin();
+        dlg.doModal(0);
+        displayChat();
+        drawWindow(0, 0xffff0001, 0xffff);
+        this->update();
         break;
     }
 
     default:
-        if (!CHeroWindowEx::ProcessRightSelect(id))
+        if (!CHeroWindowEx::processRightSelect(id))
             break;
-        DisplayChat();
-        DrawWindow(0, 0xffff0001, 0xffff);
-        Update();
+        displayChat();
+        drawWindow(0, 0xffff0001, 0xffff);
+        this->update();
         break;
     }
 
@@ -3900,14 +3949,14 @@ unsigned char TSingleSelectionWindow::ProcessRightSelect(int id)
 // E:\gamedcs\singleselectionwindow.cpp:3461
 #endif  // @carcass
 
-int TSingleSelectionWindow::GetFileSpecNbr()
+int TSingleSelectionWindow::getFileSpecNbr()
 {
-    if (gpGame->field_1f69d) {
+    if (g_game->m_isTutorial) {
         if (!m_flag64 && !m_flag65)
             return 3;
         return 4;
     }
-    return (m_flag64 || m_flag65) + campaignMode;
+    return (m_flag64 || m_flag65) + g_selectionCampaignMode;
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:3475
@@ -3927,46 +3976,48 @@ int TSingleSelectionWindow::GetFileSpecNbr()
 // over-inline direction means this caller presents a LARGER front-end cb or
 // fewer candidate sites than retail's, so the levers are caller mass and site
 // count - not a `clear()`/`erase()` spelling and not a pragma.
+// Before normalization (function): TSingleSelectionWindow::GetHeaders.
 VA(0x00582B40, 0x345)  // anchor-global dir ternary m_flag66/64/65 over "random_maps"(0x6836ac)/"maps"(0x6772d0)/"games"(0x677d70) + _chdir - the directory-scan opener; order-map GetHeaders..MakeHeroFilter onto 0x582b40..0x583890 (GetFileSpecNbr excluded by arity below), size 0.36x dc 0x916, dc 0x137da8
-void TSingleSelectionWindow::GetHeaders(
-    std::vector<GameSelectionHeadersStruct>* pHeaders)
+void TSingleSelectionWindow::getHeaders(
+    // Before normalization (locals): pHeaders, hFind, pszDir.
+    std::vector<GameSelectionHeadersStruct>* headers)
 {
     _finddata_t* mapNames = new _finddata_t[5000];
     int count = 0;
-    long hFind;
-    char* pszDir;
+    long findHandle;
+    char* dir;
     int gameFileProblem;
     int x;
     _chdir(m_flag66 ? DATA_COMPGEN(0x006836ac, randomMapsDir, "random_maps")
                     : (m_flag64 || m_flag65
                            ? DATA_COMPGEN(0x00677d70, gamesDir, "games")
                            : DATA_COMPGEN(0x006772d0, mapsDir, "maps")));
-    hFind = _findfirst(fileSpec[GetFileSpecNbr()], mapNames);
-    if (hFind != -1) {
+    findHandle = _findfirst(g_fileSpec[getFileSpecNbr()], mapNames);
+    if (findHandle != -1) {
         count = 1;
-        while (_findnext(hFind, &mapNames[count]) == 0)
+        while (_findnext(findHandle, &mapNames[count]) == 0)
             ++count;
-        _findclose(hFind);
+        _findclose(findHandle);
     }
     _chdir(DATA_COMPGEN(0x006755a0, parentDirectory, ".."));
 
-    pHeaders->clear();
+    headers->clear();
     GameSelectionHeadersStruct temp;
-    pszDir = m_flag66
+    dir = m_flag66
         ? DATA_COMPGEN(0x006836ac, randomMapsDir, "random_maps")
         : (m_flag64 || m_flag65
                ? DATA_COMPGEN(0x00677d70, gamesDir, "games")
                : DATA_COMPGEN(0x006772d0, mapsDir, "maps"));
     for (x = 0; x < count; ++x) {
-        gameFileProblem = GetHeader(pszDir, mapNames[x].name, &temp);
+        gameFileProblem = getHeader(dir, mapNames[x].name, &temp);
         if (!gameFileProblem) {
-            if (!IsMultiPlayer()
-                    || temp.header.maxNumHumanPlayers >= 2)
-                pHeaders->push_back(temp);
+            if (!isMultiPlayer()
+                    || temp.m_header.m_maxNumHumanPlayers >= 2)
+                headers->push_back(temp);
         }
     }
     delete[] mapNames;
-    WindowFn_00582e90(pHeaders);
+    windowFn00582e90(headers);
 }
 
 // Retail-only list mirror: assigns SelectionHeaders (+0x1050,
@@ -3974,122 +4025,125 @@ void TSingleSelectionWindow::GetHeaders(
 // 0xCA4 magic divide) from a header-vector argument. Complete split this
 // tail out of Dreamcast GetHeaders: the following sort/highlight/selection
 // helper sequence is preserved in the same source order.
+// Before normalization (function): TSingleSelectionWindow::WindowFn_00582e90.
 VA(0x00582E90, 0x2DB)  // retail-only; anchor-callee calls the header lists' own element-copy COMDAT 0x58f160
-void TSingleSelectionWindow::WindowFn_00582e90(
-    std::vector<GameSelectionHeadersStruct>* pList)
+void TSingleSelectionWindow::windowFn00582e90(
+    // Before normalization (locals): pList.
+    std::vector<GameSelectionHeadersStruct>* list)
 {
     unsigned char b;
 
-    SelectionHeaders = *pList;
-    currentMap = 0;
-    if (SelectionHeaders.size() == 0 && m_flag64)
-        notifyNoSaved = 1;
+    m_selectionHeaders = *list;
+    m_currentMap = 0;
+    if (m_selectionHeaders.size() == 0 && m_flag64)
+        g_notifyNoSaved = 1;
 
-    sortDirection = 0;
-    sortWhich = 1;
-    SortMaps(2, false, false);
+    m_sortDirection = 0;
+    m_sortWhich = 1;
+    sortMaps(2, false, false);
 
-    if (SelectionHeaders.size()) {
-        fileSlider->SetResolution(
-            SelectionHeaders.size() - gUnnamed69fdc8 + 1);
+    if (m_selectionHeaders.size()) {
+        m_fileSlider->setResolution(
+            m_selectionHeaders.size() - g_unnamed69fdc8 + 1);
         if (m_flag65 || m_flag64)
-            b = HighlightFile(
+            b = highlightFile(
                 DATA_COMPGEN(0x0068333c, defaultNewGameFileName,
                              "NEWGAME.gm1"));
         else
-            b = HighlightFile(
+            b = highlightFile(
                 DATA_COMPGEN(0x00683238, defaultMapFileName,
                              "Arrogance.h3m"));
         if (m_flag65 && !b) {
-            currentMap = -1;
-            BackupGameHeaders(gpGame, saveHeader);
+            m_currentMap = -1;
+            backupGameHeaders(g_game, g_saveHeader);
         } else {
-            SetCurrentMap(currentMap, false);
-            lastDiff = SelectionHeaders[currentMap].setup.difficulty;
-            UpdateGameVars();
+            setCurrentMap(m_currentMap, false);
+            g_lastDiff = m_selectionHeaders[m_currentMap].m_setup.m_difficulty;
+            updateGameVars();
         }
     }
-    receivedMaps = 1;
+    m_receivedMaps = 1;
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:3739
+// Before normalization (locals): cFilename, pHeader, hFile.
 VA(0x00583170, 0x40E)  // anchor-callee OnMapFileNameMsg 0x589710 calls it (dir, msg->fileName, &hdrTemp) behind its _access gate; body fills the temp (??0NewSMapHeader 0x457cb0, SavedGameHeader::Load at +0x700, GetFileTime -> +0x6f8) - DC's (cFilename, pHeader) widened with dir, size 0.41x dc 0x9D0, dc 0x1386c0
-int TSingleSelectionWindow::GetHeader(char* dir, char* cFilename, GameSelectionHeadersStruct* pHeader)
+int TSingleSelectionWindow::getHeader(char* dir, char* filename, GameSelectionHeadersStruct* header)
 {
     // Dreamcast records this result local. Complete replaces the older
     // GetSaveGameHeaders/VMU path with SavedGameHeader::Load, but retains
     // the same failure convention and header-transfer join.
     int gameFileProblem = 0;
 
-    strcpy(gpGame->setup.path, dir);
-    strcpy(gpGame->setup.filename, cFilename);
-    gpGame->setup.fileInitialized = 0;
+    strcpy(g_game->m_setup.m_path, dir);
+    strcpy(g_game->m_setup.m_filename, filename);
+    g_game->m_setup.m_fileInitialized = 0;
 
     if (!m_flag65)
-        gpGame->SetupOrigData();
+        g_game->setupOrigData();
 
     const SGameSetupOptions* setup;
     if (!m_flag64 && !m_flag65) {
-        gpGame->InitNewGame(1, 0, 0, 0);
-        if (!gpGame->setup.fileInitialized)
+        g_game->initNewGame(1, 0, 0, 0);
+        if (!g_game->m_setup.m_fileInitialized)
             return 1;
-        pHeader->header = gpGame->mapHeader;
-        setup = &gpGame->setup;
+        header->m_header = g_game->m_mapHeader;
+        setup = &g_game->m_setup;
     } else {
-        gameFileProblem = pHeader->saved.Load(0);
+        gameFileProblem = header->m_saved.load(0);
         if (gameFileProblem)
             return 1;
-        pHeader->header = pHeader->saved.mapHeader;
-        setup = &pHeader->saved.mapSetup;
+        header->m_header = header->m_saved.m_mapHeader;
+        setup = &header->m_saved.m_mapSetup;
     }
 
-    pHeader->setup = *setup;
-    memcpy(pHeader->heroAvailability, gpGame->heroAvailability,
-           sizeof(pHeader->heroAvailability));
-    strncpy(pHeader->title, pHeader->header.mapName.c_str(),
-            sizeof(pHeader->title) - 1);
-    strncpy(pHeader->description, pHeader->header.mapDescription.c_str(),
-            sizeof(pHeader->description) - 1);
+    header->m_setup = *setup;
+    memcpy(header->m_heroAvailability, g_game->m_heroAvailability,
+           sizeof(header->m_heroAvailability));
+    strncpy(header->m_title, header->m_header.m_mapName.c_str(),
+            sizeof(header->m_title) - 1);
+    strncpy(header->m_description, header->m_header.m_mapDescription.c_str(),
+            sizeof(header->m_description) - 1);
 
     if (dir[0])
         _chdir(dir);
-    HANDLE hFile = CreateFileA(
-        cFilename, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING,
+    HANDLE fileHandle = CreateFileA(
+        filename, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING,
         FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, 0);
-    if (hFile != INVALID_HANDLE_VALUE) {
-        GetFileTime(hFile, 0, 0, &pHeader->fileTime);
-        CloseHandle(hFile);
+    if (fileHandle != INVALID_HANDLE_VALUE) {
+        GetFileTime(fileHandle, 0, 0, &header->m_fileTime);
+        CloseHandle(fileHandle);
     }
     if (dir[0])
         _chdir("..");
 
     if (!m_flag64 && !m_flag65) {
-        if (pHeader->header.version == MAP_FORMAT_SHADOW_OF_DEATH
-            || pHeader->header.version == MAP_FORMAT_RESTORATION_OF_ERATHIA
-            || pHeader->header.version == MAP_FORMAT_ARMAGEDDONS_BLADE) {
-            if (pHeader->header.isPlayable)
+        if (header->m_header.m_version == MAP_FORMAT_SHADOW_OF_DEATH
+            || header->m_header.m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA
+            || header->m_header.m_version == MAP_FORMAT_ARMAGEDDONS_BLADE) {
+            if (header->m_header.m_isPlayable)
                 return gameFileProblem;
-            strcpy(pHeader->description, gpGeneralText->GetText(507));
+            strcpy(header->m_description, g_generalText->getText(507));
         } else {
-            pHeader->header.lossCondition.Type = -1;
-            pHeader->header.victoryCondition.Type = -1;
-            pHeader->header.difficulty = 0;
-            strcpy(pHeader->title, gpGeneralText->GetText(431));
-            strcpy(pHeader->description, gpGeneralText->GetText(506));
+            header->m_header.m_lossCondition.m_type = -1;
+            header->m_header.m_victoryCondition.m_type = -1;
+            header->m_header.m_difficulty = 0;
+            strcpy(header->m_title, g_generalText->getText(431));
+            strcpy(header->m_description, g_generalText->getText(506));
         }
         return gameFileProblem;
     }
 
-    if (pHeader->saved.version < 25
-        && (pHeader->saved.version < 16
-            || pHeader->saved.version > 18)) {
-        strcpy(pHeader->title, gpGeneralText->GetText(431));
-        strcpy(pHeader->description, gpGeneralText->GetText(505));
+    if (header->m_saved.m_version < 25
+        && (header->m_saved.m_version < 16
+            || header->m_saved.m_version > 18)) {
+        strcpy(header->m_title, g_generalText->getText(431));
+        strcpy(header->m_description, g_generalText->getText(505));
     }
 
-    if (_strnicmp(pHeader->setup.filename, gpGeneralText->GetText(77),
-                  strlen(gpGeneralText->GetText(77))) == 0)
-        strcpy(pHeader->title, gpGeneralText->GetText(77));
+    if (_strnicmp(header->m_setup.m_filename, g_generalText->getText(77),
+                  strlen(g_generalText->getText(77))) == 0)
+        strcpy(header->m_title, g_generalText->getText(77));
     return gameFileProblem;
 }
 
@@ -4109,66 +4163,73 @@ int TSingleSelectionWindow::GetHeader(char* dir, char* cFilename, GameSelectionH
 // header pointer follows retail's materialized base across the copy bands
 // (34.0405% versus 34.1577% with direct member expressions); no guessed
 // assertion or synthetic helper is used to steer these remaining boundaries.
+// The verified trace gives the second base assignment cost 315 and budget
+// 325. Expanding it leaves only 10 for the two string operators. Resolving
+// the row separately for setup/availability, then retaining only its
+// description through AssignData/SetText, reaches 58.8784% (976 bytes) but
+// reloads currentMap and SelectionHeaders between the copy bands; retail
+// retains one row address there. Moving the selected reference after those
+// two copies also fails (0.0%, 1040 bytes, confirmed symbol pairing).
 // E:\gamedcs\singleselectionwindow.cpp:3871
 VA(0x00583580, 0x30C)  // anchor-global copies the selected header's planes into gpGame (+0x1f6a0 header band, +0x4df18 setup band) off the SelectionHeaders row - the DC UpdateGameVars body shape; size 0.76x dc 0x408, dc 0x139090
-void TSingleSelectionWindow::UpdateGameVars()
+void TSingleSelectionWindow::updateGameVars()
 {
-    if (SelectionHeaders.size() == 0)
+    if (m_selectionHeaders.size() == 0)
         return;
 
     // Complete's setup-local header has no Dreamcast counterpart.  Retail
     // duplicates the complete transfer here and returns before the original
     // currentMap path rather than sharing a lowered tail.
-    if (field_37F) {
+    if (m_randomMapSelected) {
         GameSelectionHeadersStruct* localHeader = &m_localHeader;
-        gpGame->setup = localHeader->setup;
-        memcpy(gpGame->heroAvailability, localHeader->heroAvailability,
-               sizeof(localHeader->heroAvailability));
-        gpGame->mapHeader.AssignData(&localHeader->header,
-                                     localHeader->title,
-                                     localHeader->description);
-        gpGame->setup.turnDuration = static_cast<signed char>(durationIndex);
-        gpGame->setup.difficulty = static_cast<signed char>(lastDiff);
-        static_cast<CScrollTextWidget*>(field_196c)
-            ->SetText(localHeader->description);
+        g_game->m_setup = localHeader->m_setup;
+        memcpy(g_game->m_heroAvailability, localHeader->m_heroAvailability,
+               sizeof(localHeader->m_heroAvailability));
+        g_game->m_mapHeader.assignData(&localHeader->m_header,
+                                     localHeader->m_title,
+                                     localHeader->m_description);
+        g_game->m_setup.m_turnDuration = static_cast<signed char>(m_durationIndex);
+        g_game->m_setup.m_difficulty = static_cast<signed char>(g_lastDiff);
+        static_cast<CScrollTextWidget*>(m_descriptionWidget)
+            ->setText(localHeader->m_description);
         return;
     }
 
-    if (currentMap == -1) {
+    if (m_currentMap == -1) {
         if (m_flag65) {
-            BackupGameHeaders(gpGame, saveHeader);
-            durationIndex = gpGame->setup.turnDuration;
-            lastDiff = gpGame->setup.difficulty;
+            backupGameHeaders(g_game, g_saveHeader);
+            m_durationIndex = g_game->m_setup.m_turnDuration;
+            g_lastDiff = g_game->m_setup.m_difficulty;
         }
         return;
     }
 
     // Complete's x86 guard is the strict size < index spelling (cmp/jb),
     // unlike the conventional >= form; DC independently proves the guard.
-    if (SelectionHeaders.size() < static_cast<unsigned int>(currentMap))
+    if (m_selectionHeaders.size() < static_cast<unsigned int>(m_currentMap))
         return;
 
-    GameSelectionHeadersStruct& selected = SelectionHeaders[currentMap];
-    gpGame->setup = selected.setup;
-    memcpy(gpGame->heroAvailability, selected.heroAvailability,
-           sizeof(selected.heroAvailability));
-    gpGame->mapHeader.AssignData(&selected.header, selected.title,
-                                 selected.description);
-    gpGame->setup.turnDuration = static_cast<signed char>(durationIndex);
-    gpGame->setup.difficulty = static_cast<signed char>(lastDiff);
-    static_cast<CScrollTextWidget*>(field_196c)->SetText(selected.description);
+    GameSelectionHeadersStruct& selected = m_selectionHeaders[m_currentMap];
+    g_game->m_setup = selected.m_setup;
+    memcpy(g_game->m_heroAvailability, selected.m_heroAvailability,
+           sizeof(selected.m_heroAvailability));
+    g_game->m_mapHeader.assignData(&selected.m_header, selected.m_title,
+                                 selected.m_description);
+    g_game->m_setup.m_turnDuration = static_cast<signed char>(m_durationIndex);
+    g_game->m_setup.m_difficulty = static_cast<signed char>(g_lastDiff);
+    static_cast<CScrollTextWidget*>(m_descriptionWidget)->setText(selected.m_description);
 
-    if (campaignMode)
-        gpGame->setup.turnDuration = 10;
+    if (g_selectionCampaignMode)
+        g_game->m_setup.m_turnDuration = 10;
 
     if (m_flag64) {
         // SetText can run widget code; retail resolves this row afterwards.
         GameSelectionHeadersStruct& savedSelection =
-            SelectionHeaders[currentMap];
-        memcpy(gpGame->playerDisabled, savedSelection.saved.deadPlayer,
-               sizeof(savedSelection.saved.deadPlayer));
-        memcpy(g_wasHuman, savedSelection.saved.humanPlayer,
-               sizeof(savedSelection.saved.humanPlayer));
+            m_selectionHeaders[m_currentMap];
+        memcpy(g_game->m_playerDisabled, savedSelection.m_saved.m_deadPlayer,
+               sizeof(savedSelection.m_saved.m_deadPlayer));
+        memcpy(g_wasHuman, savedSelection.m_saved.m_humanPlayer,
+               sizeof(savedSelection.m_saved.m_humanPlayer));
     }
 }
 
@@ -4191,30 +4252,30 @@ void TSingleSelectionWindow::UpdateGameVars()
 // LOOP-COUNTER SIGNEDNESS (docs/vc6/behavior-catalog.md D23): the 156-hero
 // scan counter is `unsigned int`.  87.5476 -> 88.9857.
 VA(0x00583890, 0x2B0)  // anchor-callee UpdateTown calls it no-arg right after the town commit - the DC call edge; size 1.2x dc 0x23e, dc 0x139498
-void TSingleSelectionWindow::MakeHeroFilter()
+void TSingleSelectionWindow::makeHeroFilter()
 {
     if (m_flag65)
         return;
     for (int i = 0; i < 8; ++i) {
-        if (gpGame->setup.playerPos[i] < 0)
+        if (g_game->m_setup.m_playerPos[i] < 0)
             continue;
-        if (m_flag64 && gpGame->playerDisabled[i])
+        if (m_flag64 && g_game->m_playerDisabled[i])
             continue;
-        CNetPlayerHandlerPlayer* p = m_players.GetPlayerInPos(i);
+        CNetPlayerHandlerPlayer* p = m_players.getPlayerInPos(i);
         if (!p)
             continue;
-        CNetPlayerHandlerPlayer* shown = m_players.GetPlayerInPos(i);
+        CNetPlayerHandlerPlayer* shown = m_players.getPlayerInPos(i);
         if (!shown)
             shown = m_players.getCompPlayerInPos(i);
         CMapHeaderData::TPlayerSlotAttributes* slot =
-            &gpGame->mapHeader.playerSlotAttributes[i];
+            &g_game->m_mapHeader.m_playerSlotAttributes[i];
         int town;
 #pragma inline_depth(0)
-        if (slot->HasRandomAlignment || HasMultipleTowns(i))
-            town = shown->townIndex;
+        if (slot->m_hasRandomAlignment || hasMultipleTowns(i))
+            town = shown->m_townIndex;
         else
-            town = pick_alignment(
-                static_cast<unsigned short>(slot->legalAlignments), 1);
+            town = pickAlignment(
+                static_cast<unsigned short>(slot->m_legalAlignments), 1);
 #pragma inline_depth()
         if (town == -1)
             continue;
@@ -4262,22 +4323,22 @@ void TSingleSelectionWindow::MakeHeroFilter()
             classB = eClassCleric;
             break;
         }
-        p->availableHeroesCount = 0;
+        p->m_availableHeroesCount = 0;
         for (unsigned int h = 0; h < 156; ++h) {
-            if (gpGame->heroAvailability[h] != -1)
+            if (g_game->m_heroAvailability[h] != -1)
                 continue;
-            if (akHeroTraits[h].heroClass != classA
-                    && akHeroTraits[h].heroClass != classB)
+            if (g_heroTraits[h].m_heroClass != classA
+                    && g_heroTraits[h].m_heroClass != classB)
                 continue;
             std::map<int, type_map_hero_info>::iterator it =
-                gpGame->mapHeader.heroPlayerSetups.find(h);
-            if (it != gpGame->mapHeader.heroPlayerSetups.end()) {
-                if (!it->second.field_14[i])
+                g_game->m_mapHeader.m_heroPlayerSetups.find(h);
+            if (it != g_game->m_mapHeader.m_heroPlayerSetups.end()) {
+                if (!it->second.m_players[i])
                     continue;
             }
-            p->availableHeroes[p->availableHeroesCount] = h;
-            ++p->availableHeroesCount;
-            if (p->availableHeroesCount >= 16)
+            p->m_availableHeroes[p->m_availableHeroesCount] = h;
+            ++p->m_availableHeroesCount;
+            if (p->m_availableHeroesCount >= 16)
                 break;
         }
     }
@@ -4326,43 +4387,43 @@ CNewPlayerUpdateTask::~CNewPlayerUpdateTask()
 
 // E:\gamedcs\singleselectionwindow.cpp:4074
 VA(0x00583f20, 0xEF)  // anchor-callee DrawBasicMapInfo 0x5840f0 selects it over GetMapName on m_flag64/m_flag65; body owns the header +0x33d fileName / +0x58c title reads and the general-text 508/509 fallbacks, size 1.03x dc 0xE6, dc 0x139a20
-const char* TSingleSelectionWindow::GetFileName(int which)
+const char* TSingleSelectionWindow::getFileName(int which)
 {
     if (which == -1)
-        return gpGame->mapHeader.mapName.c_str();
+        return g_game->m_mapHeader.m_mapName.c_str();
     if (m_flag64 == 0 && m_flag65 == 0)
-        return SelectionHeaders[which].setup.filename;
+        return m_selectionHeaders[which].m_setup.m_filename;
     const char* name;
-    if (GetMapCount() != 0
-            && GetMapCount() > static_cast<unsigned int>(which))
-        name = SelectionHeaders[which].title;
+    if (getMapCount() != 0
+            && getMapCount() > static_cast<unsigned int>(which))
+        name = m_selectionHeaders[which].m_title;
     else
-        name = gpGeneralText->GetText(508);
+        name = g_generalText->getText(508);
     if (strlen(name) == 0)
-        name = gpGeneralText->GetText(509);
+        name = g_generalText->getText(509);
     return name;
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:4099
-VA(0x00584010, 0xDF)  // anchor-callee Update's row loop + DrawBasicMapInfo's plain arm call it (index); body reads field_37F->general-text 741, -1->setup.filename, else header +0x58c/+0x33d, size 0.49x dc 0x10A, dc 0x139b08
-const char* TSingleSelectionWindow::GetMapName(int which)
+VA(0x00584010, 0xDF)  // anchor-callee Update's row loop + DrawBasicMapInfo's plain arm call it (index); body reads field_37F->general-text 741, -1->m_setup.filename, else header +0x58c/+0x33d, size 0.49x dc 0x10A, dc 0x139b08
+const char* TSingleSelectionWindow::getMapName(int which)
 {
-    if (field_37F != 0)
-        return gpGeneralText->GetText(741);
+    if (m_randomMapSelected != 0)
+        return g_generalText->getText(741);
     if (which == -1)
-        return gpGame->setup.filename;
+        return g_game->m_setup.m_filename;
     if (m_flag64 == 0 && m_flag65 == 0) {
         const char* name;
         if (which >= 0
-                && GetMapCount() > static_cast<unsigned int>(which))
-            name = SelectionHeaders[which].title;
+                && getMapCount() > static_cast<unsigned int>(which))
+            name = m_selectionHeaders[which].m_title;
         else
-            name = gpGeneralText->GetText(508);
+            name = g_generalText->getText(508);
         if (strlen(name) == 0)
-            name = gpGeneralText->GetText(509);
+            name = g_generalText->getText(509);
         return name;
     }
-    return SelectionHeaders[which].setup.filename;
+    return m_selectionHeaders[which].m_setup.m_filename;
 }
 
 #if 0  // @carcass
@@ -4392,43 +4453,43 @@ void GetLCText(LossConditionStruct* lc, char* sText)
 // stub). The rest is the same masked-cosmetic drift as the row's
 // neighbors.
 VA(0x005840f0, 0x45C)  // anchor-callee Update's first body call (no-arg, this); selects GetMapName/GetFileName by mode for the title at (0x1a6,0x2d) and owns the save-date format literal (flat name game_d_d_d_d_02d), size 0.71x dc 0x62A, dc 0x139ccc
-void TSingleSelectionWindow::DrawBasicMapInfo()
+void TSingleSelectionWindow::drawBasicMapInfo()
 {
-    if (GetMapCount() == 0 && m_flag65 == 0)
+    if (getMapCount() == 0 && m_flag65 == 0)
         return;
-    NewSMapHeader* hdr = &gpGame->mapHeader;
-    VictoryConditionStruct* vc = &gpGame->mapHeader.victoryCondition;
-    LossConditionStruct* lc = &gpGame->mapHeader.lossCondition;
+    NewSMapHeader* hdr = &g_game->m_mapHeader;
+    VictoryConditionStruct* vc = &g_game->m_mapHeader.m_victoryCondition;
+    LossConditionStruct* lc = &g_game->m_mapHeader.m_lossCondition;
     const char* name;
     if (m_flag64 == 0 && m_flag65 == 0)
-        name = GetMapName(currentMap);
+        name = getMapName(m_currentMap);
     else
-        name = GetFileName(currentMap);
-    gpBigFont->DrawBoundedString(name, gpWindowManager->screenBitmap,
+        name = getFileName(m_currentMap);
+    g_bigFont->drawBoundedString(name, g_windowManager->m_screenBitmap,
                                  422, 45, 324, 30, 8, 0, -1);
-    if (currentMap != -1
+    if (m_currentMap != -1
             && (m_flag64 != 0 || m_flag65 != 0 || m_flag66 != 0)) {
         _FILETIME localTime;
         _SYSTEMTIME st;
         char dateBuf[100];
-        FileTimeToLocalFileTime(&HeadersA[currentMap].fileTime,
+        FileTimeToLocalFileTime(&m_headersA[m_currentMap].m_fileTime,
                                 &localTime);
         FileTimeToSystemTime(&localTime, &st);
         sprintf(dateBuf,
                 DATA_COMPGEN(0x006837c0, saveDateFormat,
                              "%d/%d/%d - %d:%02d"),
                 st.wMonth, st.wDay, st.wYear, st.wHour, st.wMinute);
-        gUnnamed698a08->DrawBoundedString(dateBuf,
-            gpWindowManager->screenBitmap, 422, 27, 278, 18, 4, 6, -1);
+        g_unnamed698a08->drawBoundedString(dateBuf,
+            g_windowManager->m_screenBitmap, 422, 27, 278, 18, 4, 6, -1);
     }
-    gUnnamed698a08->DrawBoundedString(gUnnamed6a77ec[hdr->difficulty],
-        gpWindowManager->screenBitmap, 414, 454, 89, 48, 4, 5, -1);
+    g_unnamed698a08->drawBoundedString(g_unnamed6a77ec[hdr->m_difficulty],
+        g_windowManager->m_screenBitmap, 414, 454, 89, 48, 4, 5, -1);
     char ratingBuf[256];
     sprintf(ratingBuf, DATA_COMPGEN(0x006831e4, percentFormat, "%d%%"),
-            gDifficultyRatingPercent[gpGame->setup.difficulty]);
-    gUnnamed698a08->DrawBoundedString(ratingBuf,
-        gpWindowManager->screenBitmap, 666, 454, 83, 48, 4, 5, -1);
-    if (chatShowing != 0)
+            g_difficultyRatingPercent[g_game->m_setup.m_difficulty]);
+    g_unnamed698a08->drawBoundedString(ratingBuf,
+        g_windowManager->m_screenBitmap, 666, 454, 83, 48, 4, 5, -1);
+    if (m_chatShowing != 0)
         return;
     // The victory line copies the description TWICE, and retail proves it:
     // 0x5840f0+0xfb0 runs the inlined strcpy unconditionally, then BOTH
@@ -4438,38 +4499,38 @@ void TSingleSelectionWindow::DrawBasicMapInfo()
     // row is EXACT (95.5200 -> 100.0000); without it the two edges fall into
     // the shared tail and the block count is one short.
     char vcText[256];
-    signed char vcType = vc->Type;
-    const char* desc = gVictoryConditionDesc[vcType + 1];
+    signed char vcType = vc->m_type;
+    const char* desc = g_victoryConditionDesc[vcType + 1];
     strcpy(vcText, desc);
-    if (vcType != -1 && vc->AllowNormalVictory != 0)
+    if (vcType != -1 && vc->m_allowNormalVictory != 0)
         sprintf(vcText,
                 DATA_COMPGEN(0x006837b4, vcOrFormat, "%s %s %s"),
-                desc, gpGeneralText->GetText(5),
-                gVictoryConditionDesc[0]);
+                desc, g_generalText->getText(5),
+                g_victoryConditionDesc[0]);
     else
         strcpy(vcText, desc);
     char lcText[256];
-    strcpy(lcText, gLossConditionDesc[lc->Type + 1]);
-    gUnnamed698a08->DrawBoundedString(vcText,
-        gpWindowManager->screenBitmap, 456, 305, 288, 32, 4, 4, -1);
-    gUnnamed698a08->DrawBoundedString(lcText,
-        gpWindowManager->screenBitmap, 456, 364, 288, 32, 4, 4, -1);
-    if (vc->Type >= 0 && vc->Type <= 11)
-        VictoryIcon->Draw(0, vc->Type, 0, 0,
-            VictoryIcon->Width, VictoryIcon->Height,
-            gpWindowManager->screenBitmap, 420, 308, 0, 1);
+    strcpy(lcText, g_lossConditionDesc[lc->m_type + 1]);
+    g_unnamed698a08->drawBoundedString(vcText,
+        g_windowManager->m_screenBitmap, 456, 305, 288, 32, 4, 4, -1);
+    g_unnamed698a08->drawBoundedString(lcText,
+        g_windowManager->m_screenBitmap, 456, 364, 288, 32, 4, 4, -1);
+    if (vc->m_type >= 0 && vc->m_type <= 11)
+        m_victoryIcon->draw(0, vc->m_type, 0, 0,
+            m_victoryIcon->m_width, m_victoryIcon->m_height,
+            g_windowManager->m_screenBitmap, 420, 308, 0, 1);
     else
-        VictoryIcon->Draw(0, 11, 0, 0,
-            VictoryIcon->Width, VictoryIcon->Height,
-            gpWindowManager->screenBitmap, 420, 308, 0, 1);
-    if (lc->Type >= 0)
-        LossIcon->Draw(0, lc->Type, 0, 0,
-            LossIcon->Width, LossIcon->Height,
-            gpWindowManager->screenBitmap, 420, 365, 0, 1);
+        m_victoryIcon->draw(0, 11, 0, 0,
+            m_victoryIcon->m_width, m_victoryIcon->m_height,
+            g_windowManager->m_screenBitmap, 420, 308, 0, 1);
+    if (lc->m_type >= 0)
+        m_lossIcon->draw(0, lc->m_type, 0, 0,
+            m_lossIcon->m_width, m_lossIcon->m_height,
+            g_windowManager->m_screenBitmap, 420, 365, 0, 1);
     else
-        LossIcon->Draw(0, 3, 0, 0,
-            LossIcon->Width, LossIcon->Height,
-            gpWindowManager->screenBitmap, 420, 365, 0, 1);
+        m_lossIcon->draw(0, 3, 0, 0,
+            m_lossIcon->m_width, m_lossIcon->m_height,
+            g_windowManager->m_screenBitmap, 420, 365, 0, 1);
 }
 
 #if 0  // @carcass
@@ -4490,9 +4551,9 @@ int TSingleSelectionWindow::MaxPlayers()
 // magic-multiply fixes the element stride. Small consumers expand it;
 // the big bodies call retail's out-of-line size() COMDAT (0x58eab0),
 // exactly as /Ob2's budget decides per caller.
-inline unsigned int TSingleSelectionWindow::GetMapCount() const
+inline unsigned int TSingleSelectionWindow::getMapCount() const
 {
-    return SelectionHeaders.size();
+    return m_selectionHeaders.size();
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:4239. Retail dropped the message
@@ -4519,36 +4580,36 @@ inline unsigned int TSingleSelectionWindow::GetMapCount() const
 // switch-with-ternary-default for the version icon, if/else over two
 // SetText calls, GetWidget receiver named before the argument.
 VA(0x00584550, 0x698)  // anchor-callee OnGameTransmitInitMsg (0x589b20) calls it no-arg after DrawWindow; owns the '%d/%d' literal; also tailed by SliderDuration 0x57c7f0 + WindowHandler, size 0.49x dc 0xd84, dc 0x13a380
-int TSingleSelectionWindow::Update()
+int TSingleSelectionWindow::update()
 {
-    if (receivedMaps == 0) {
-        if (bVideoPaused == 0)
+    if (m_receivedMaps == 0) {
+        if (g_videoPaused == 0)
             return 1;
-        if (pDPlay->IsHost())
+        if (g_dPlay->isHost())
             return 1;
-        gUnnamed698a08->DrawBoundedString(
-            gpGeneralText->GetText(510), gpWindowManager->screenBitmap,
+        g_unnamed698a08->drawBoundedString(
+            g_generalText->getText(510), g_windowManager->m_screenBitmap,
             433, 46, 210, 23, 4, 4, -1);
     } else {
-        DrawBasicMapInfo();
-        if (inScenarioOptions) {
-            int rows = gUnnamed69fdc8;
-            if (GetMapCount() < static_cast<unsigned int>(rows))
-                rows = GetMapCount();
-            gUnnamed698a08->DrawBoundedString(
-                gpGeneralText->GetText(511), gpWindowManager->screenBitmap,
+        drawBasicMapInfo();
+        if (m_inScenarioOptions) {
+            int rows = g_unnamed69fdc8;
+            if (getMapCount() < static_cast<unsigned int>(rows))
+                rows = getMapCount();
+            g_unnamed698a08->drawBoundedString(
+                g_generalText->getText(511), g_windowManager->m_screenBitmap,
                 25, 52, 132, 32, 2, 5, -1);
             int i = 0;
             if (rows > 0) {
                 int y = 123;
                 do {
-                    int color = currentMap == currentIndex + i ? 5 : 4;
-                    if (GetMapCount()
-                            > static_cast<unsigned int>(currentIndex + i)) {
+                    int color = m_currentMap == m_currentIndex + i ? 5 : 4;
+                    if (getMapCount()
+                            > static_cast<unsigned int>(m_currentIndex + i)) {
                         GameSelectionHeadersStruct* hdr =
-                            &SelectionHeaders[currentIndex + i];
+                            &m_selectionHeaders[m_currentIndex + i];
                         int frame;
-                        switch (hdr->header.version) {
+                        switch (hdr->m_header.m_version) {
                         case MAP_FORMAT_RESTORATION_OF_ERATHIA:
                             frame = 0;
                             break;
@@ -4556,13 +4617,13 @@ int TSingleSelectionWindow::Update()
                             frame = 1;
                             break;
                         default:
-                            frame = hdr->header.version == MAP_FORMAT_SHADOW_OF_DEATH
+                            frame = hdr->m_header.m_version == MAP_FORMAT_SHADOW_OF_DEATH
                                 ? 2 : -1;
                             break;
                         }
                         if ((m_flag65 != 0 || m_flag64 != 0)
-                                && hdr->saved.campaignGame != 0) {
-                            switch (hdr->saved.campaign.currentCampaign) {
+                                && hdr->m_saved.m_campaignGame != 0) {
+                            switch (hdr->m_saved.m_campaign.m_currentCampaign) {
                             case CAMPAIGN_ROE_0:
                             case CAMPAIGN_ROE_1:
                             case CAMPAIGN_ROE_2:
@@ -4595,100 +4656,100 @@ int TSingleSelectionWindow::Update()
                         sprintf(text,
                                 DATA_COMPGEN(0x00679dc8, mapPlayersFormat,
                                              "%d/%d"),
-                                hdr->header.numPlayers, hdr->header.maxNumHumanPlayers);
-                        gUnnamed698a08->DrawBoundedString(
-                            text, gpWindowManager->screenBitmap,
+                                hdr->m_header.m_numPlayers, hdr->m_header.m_maxNumHumanPlayers);
+                        g_unnamed698a08->drawBoundedString(
+                            text, g_windowManager->m_screenBitmap,
                             26, y - 1, 30, 25, color, 5, -1);
                         const char* sizeText;
-                        if (hdr->header.Size == MAP_DIMENSION_SMALL)
-                            sizeText = gpGeneralText->GetText(512);
-                        else if (hdr->header.Size == MAP_DIMENSION_MEDIUM)
-                            sizeText = gpGeneralText->GetText(513);
-                        else if (hdr->header.Size == MAP_DIMENSION_LARGE)
-                            sizeText = gpGeneralText->GetText(514);
+                        if (hdr->m_header.m_size == MAP_DIMENSION_SMALL)
+                            sizeText = g_generalText->getText(512);
+                        else if (hdr->m_header.m_size == MAP_DIMENSION_MEDIUM)
+                            sizeText = g_generalText->getText(513);
+                        else if (hdr->m_header.m_size == MAP_DIMENSION_LARGE)
+                            sizeText = g_generalText->getText(514);
                         else
-                            sizeText = gpGeneralText->GetText(515);
+                            sizeText = g_generalText->getText(515);
                         strcpy(text, sizeText);
-                        gUnnamed698a08->DrawBoundedString(
-                            text, gpWindowManager->screenBitmap,
+                        g_unnamed698a08->drawBoundedString(
+                            text, g_windowManager->m_screenBitmap,
                             59, y - 1, 30, 25, color, 5, -1);
                         if (frame >= 0)
-                            VersionIcon->Draw(0, frame, 0, 0,
-                                VersionIcon->Width, VersionIcon->Height,
-                                gpWindowManager->screenBitmap, 91, y, 0, 1);
-                        gUnnamed698a08->DrawBoundedString(
-                            GetMapName(currentIndex + i),
-                            gpWindowManager->screenBitmap,
+                            m_versionIcon->draw(0, frame, 0, 0,
+                                m_versionIcon->m_width, m_versionIcon->m_height,
+                                g_windowManager->m_screenBitmap, 91, y, 0, 1);
+                        g_unnamed698a08->drawBoundedString(
+                            getMapName(m_currentIndex + i),
+                            g_windowManager->m_screenBitmap,
                             125, y - 1, 184, 25, color, 5, -1);
-                        if (hdr->header.victoryCondition.Type >= 0
-                                && hdr->header.victoryCondition.Type <= 11)
-                            VictoryIcon->Draw(0,
-                                hdr->header.victoryCondition.Type, 0, 0,
-                                VictoryIcon->Width,
-                                VictoryIcon->Height,
-                                gpWindowManager->screenBitmap, 309, y, 0, 1);
+                        if (hdr->m_header.m_victoryCondition.m_type >= 0
+                                && hdr->m_header.m_victoryCondition.m_type <= 11)
+                            m_victoryIcon->draw(0,
+                                hdr->m_header.m_victoryCondition.m_type, 0, 0,
+                                m_victoryIcon->m_width,
+                                m_victoryIcon->m_height,
+                                g_windowManager->m_screenBitmap, 309, y, 0, 1);
                         else
-                            VictoryIcon->Draw(0, 11, 0, 0,
-                                VictoryIcon->Width,
-                                VictoryIcon->Height,
-                                gpWindowManager->screenBitmap, 309, y, 0, 1);
-                        if (hdr->header.lossCondition.Type >= 0)
-                            LossIcon->Draw(0,
-                                hdr->header.lossCondition.Type, 0, 0,
-                                LossIcon->Width,
-                                LossIcon->Height,
-                                gpWindowManager->screenBitmap, 342, y, 0, 1);
+                            m_victoryIcon->draw(0, 11, 0, 0,
+                                m_victoryIcon->m_width,
+                                m_victoryIcon->m_height,
+                                g_windowManager->m_screenBitmap, 309, y, 0, 1);
+                        if (hdr->m_header.m_lossCondition.m_type >= 0)
+                            m_lossIcon->draw(0,
+                                hdr->m_header.m_lossCondition.m_type, 0, 0,
+                                m_lossIcon->m_width,
+                                m_lossIcon->m_height,
+                                g_windowManager->m_screenBitmap, 342, y, 0, 1);
                         else
-                            LossIcon->Draw(0, 3, 0, 0,
-                                LossIcon->Width,
-                                LossIcon->Height,
-                                gpWindowManager->screenBitmap, 342, y, 0, 1);
+                            m_lossIcon->draw(0, 3, 0, 0,
+                                m_lossIcon->m_width,
+                                m_lossIcon->m_height,
+                                g_windowManager->m_screenBitmap, 342, y, 0, 1);
                     }
                     ++i;
                     y += 25;
                 } while (i < rows);
             }
         }
-        if (inAdvancedOptions) {
+        if (m_inAdvancedOptions) {
             int pos;
             for (pos = 0; pos < 8; ++pos) {
-                CNetPlayerHandlerPlayer* p = m_players.GetPlayerInPos(pos);
+                CNetPlayerHandlerPlayer* p = m_players.getPlayerInPos(pos);
                 textWidget* w =
-                    static_cast<textWidget*>(GetWidget(pos + 345));
+                    static_cast<textWidget*>(getWidget(pos + 345));
                 if (p == 0)
-                    w->SetText(gpGeneralText->GetText(469));
+                    w->setText(g_generalText->getText(469));
                 else
-                    w->SetText(p->sName);
+                    w->setText(p->m_name);
             }
-            gpBigFont->DrawBoundedString(
-                gpGeneralText->GetText(516), gpWindowManager->screenBitmap,
+            g_bigFont->drawBoundedString(
+                g_generalText->getText(516), g_windowManager->m_screenBitmap,
                 58, 24, 334, 25, 8, 1, -1);
-            gUnnamed698a08->DrawBoundedString(
-                gpGeneralText->GetText(517), gpWindowManager->screenBitmap,
+            g_unnamed698a08->drawBoundedString(
+                g_generalText->getText(517), g_windowManager->m_screenBitmap,
                 58, 48, 334, 34, 4, 1, -1);
-            gUnnamed698a08->DrawBoundedString(
-                gTurnDurationText[gpGame->setup.turnDuration],
-                gpWindowManager->screenBitmap, 256, 556, 134, 18, 4, 5, -1);
+            g_unnamed698a08->drawBoundedString(
+                g_turnDurationText[g_game->m_setup.m_turnDuration],
+                g_windowManager->m_screenBitmap, 256, 556, 134, 18, 4, 5, -1);
             pos = 0;
             for (int i = 0; i < 8; ++i) {
-                if (gpGame->setup.playerPos[i] >= 0
+                if (g_game->m_setup.m_playerPos[i] >= 0
                         && (m_flag64 == 0
-                            || gpGame->playerDisabled[i] == 0))
-                    DrawHeroAdvancedOption(i, 0, pos);
+                            || g_game->m_playerDisabled[i] == 0))
+                    drawHeroAdvancedOption(i, 0, pos);
                 ++pos;
             }
         }
-        if (inFilterOptions) {
-            gpBigFont->DrawBoundedString(
-                gpGeneralText->GetText(739), gpWindowManager->screenBitmap,
+        if (m_inFilterOptions) {
+            g_bigFont->drawBoundedString(
+                g_generalText->getText(739), g_windowManager->m_screenBitmap,
                 58, 24, 334, 25, 8, 1, -1);
-            gUnnamed698a08->DrawBoundedString(
-                gpGeneralText->GetText(740), gpWindowManager->screenBitmap,
+            g_unnamed698a08->drawBoundedString(
+                g_generalText->getText(740), g_windowManager->m_screenBitmap,
                 58, 48, 334, 34, 4, 1, -1);
-            UpdateFilterWidgets();
+            updateFilterWidgets();
         }
     }
-    gpWindowManager->UpdateScreen(0, 0, 800, 600);
+    g_windowManager->updateScreen(0, 0, 800, 600);
     return 1;
 }
 
@@ -4697,29 +4758,29 @@ int TSingleSelectionWindow::Update()
 // through DoDialogDraw with HeroWindowHandler + the free Update pump.
 // E:\gamedcs\singleselectionwindow.cpp:4420
 VA(0x00584bf0, 0x50)  // anchor-vtable vtbl 0x241cac slot6 (DoModal override; cf sibling THeroScreenWindow slot6 DoModal@heroWindow), dc 0x13b104
-int TSingleSelectionWindow::DoModal(unsigned char fade)
+int TSingleSelectionWindow::doModal(unsigned char fade)
 {
     if ((m_flag64 == 0 && m_flag65 == 0)
             || (m_flag64 != 0
-                && (bVideoPaused != 0
-                    || gUnnamed6989f0 == WINDOW_MODE_6989F0_3)))
-        durationSlider->SetState(11);
-    return gpWindowManager->DoDialogDraw(this,
-        heroWindow::HeroWindowHandler, ::Update, 0);
+                && (g_videoPaused != 0
+                    || g_unnamed6989f0 == WINDOW_MODE_6989F0_3)))
+        m_durationSlider->setState(11);
+    return g_windowManager->doDialogDraw(this,
+        heroWindow::heroWindowHandler, ::update, 0);
 }
 
 #if 0  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:4446
 DC_ONLY(0x13b178, 0xB4)
-unsigned char TSingleSelectionWindow::SetNewPlayerSlot(unsigned long dpid)
+unsigned char TSingleSelectionWindow::setNewPlayerSlot(unsigned long dpid)
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:4621
 DC_ONLY(0x13b704, 0x7C)
-void TSingleSelectionWindow::OnSortMaps(int how)
+void TSingleSelectionWindow::onSortMaps(int how)
 {
     // @stub
 }
@@ -4743,7 +4804,7 @@ void TSingleSelectionWindow::OnSortMaps(int how)
 // ASSERT/TRACE audit: DC has no leading zero-emission line here, and the tested
 // carrier doses were byte-flat. No release-VERIFY carrier is evidenced.
 VA(0x00584C40, 0x40D)  // anchor-callee OnNewPlayerMsg 0x589fa0 + SetCurrentMap call it no-arg; head calls UpdateGameVars 0x583580; body is DC SetHumanSlot's seat walk verbatim, size 0.84x dc 0x4D8, dc 0x13b22c
-void TSingleSelectionWindow::SetHumanSlot()
+void TSingleSelectionWindow::setHumanSlot()
 {
     CNetPlayerHandlerPlayer* player;
     int i;
@@ -4751,42 +4812,43 @@ void TSingleSelectionWindow::SetHumanSlot()
 
     if (m_flag65)
         return;
-    UpdateGameVars();
-    mp = &gpGame->mapHeader;
+    updateGameVars();
+    mp = &g_game->m_mapHeader;
     for (i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
-        m_players.humanPlayers[i].playerPos = -1;
-        if (m_flag64 && gpGame->playerDisabled[i])
-            mp->playerSlotAttributes[i].CanBeHuman = 0;
+        m_players.m_humanPlayers[i].m_playerPos = -1;
+        if (m_flag64 && g_game->m_playerDisabled[i])
+            mp->m_playerSlotAttributes[i].m_canBeHuman = 0;
     }
-    if (IsMultiPlayer()) {
+    if (isMultiPlayer()) {
         if (m_flag64) {
             int i;
             for (i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
                 if (g_wasHuman[i]
-                        && mp->playerSlotAttributes[i].CanBeHuman) {
-                    int iFreePlayer = m_players.GetUnassignedPlayerPos();
-                    if (iFreePlayer == -1)
+                        && mp->m_playerSlotAttributes[i].m_canBeHuman) {
+                    // Before normalization (locals): iFreePlayer.
+                    int freePlayer = m_players.getUnassignedPlayerPos();
+                    if (freePlayer == -1)
                         break;
-                    m_players.humanPlayers[iFreePlayer].playerPos = i;
+                    m_players.m_humanPlayers[freePlayer].m_playerPos = i;
                 }
             }
             for (i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
-                if (mp->playerSlotAttributes[i].CanBeHuman
-                        && !m_players.GetPlayerInPos(i)) {
-                    int iFreePlayer = m_players.GetUnassignedPlayerPos();
-                    if (iFreePlayer == -1)
+                if (mp->m_playerSlotAttributes[i].m_canBeHuman
+                        && !m_players.getPlayerInPos(i)) {
+                    int freePlayer = m_players.getUnassignedPlayerPos();
+                    if (freePlayer == -1)
                         return;
-                    m_players.humanPlayers[iFreePlayer].playerPos = i;
+                    m_players.m_humanPlayers[freePlayer].m_playerPos = i;
                 }
             }
         } else {
             int i;
             for (i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
-                if (mp->playerSlotAttributes[i].CanBeHuman) {
-                    int iFreePlayer = m_players.GetUnassignedPlayerPos();
-                    if (iFreePlayer == -1)
+                if (mp->m_playerSlotAttributes[i].m_canBeHuman) {
+                    int freePlayer = m_players.getUnassignedPlayerPos();
+                    if (freePlayer == -1)
                         return;
-                    m_players.humanPlayers[iFreePlayer].playerPos = i;
+                    m_players.m_humanPlayers[freePlayer].m_playerPos = i;
                 }
             }
         }
@@ -4794,83 +4856,83 @@ void TSingleSelectionWindow::SetHumanSlot()
     } else {
         int x;
         for (x = 0; x < CNetPlayerHandler::MAX_PLAYERS; ++x) {
-            if (mp->playerSlotAttributes[x].CanBeHuman
-                    && !mp->playerSlotAttributes[x].CanBeComputer)
+            if (mp->m_playerSlotAttributes[x].m_canBeHuman
+                    && !mp->m_playerSlotAttributes[x].m_canBeComputer)
                 break;
         }
         if (x < CNetPlayerHandler::MAX_PLAYERS) {
-            if (!IsMultiPlayer()) {
+            if (!isMultiPlayer()) {
                 for (int q = x; q < CNetPlayerHandler::MAX_PLAYERS; ++q) {
-                    mp->playerSlotAttributes[q].CanBeHuman = 0;
-                    mp->playerSlotAttributes[q].CanBeComputer = 1;
+                    mp->m_playerSlotAttributes[q].m_canBeHuman = 0;
+                    mp->m_playerSlotAttributes[q].m_canBeComputer = 1;
                 }
             }
-            if (IsHost() && SelectionHeaders.size() > 0) {
+            if (isHost() && m_selectionHeaders.size() > 0) {
                 CNetPlayerHandlerPlayer* player;
-                player = GetThisPlayer();
+                player = getThisPlayer();
                 if (player) {
-                    if (field_37F) {
-                        player->playerPos = x;
-                        player->townIndex = m_localHeader.setup.alignment[x];
+                    if (m_randomMapSelected) {
+                        player->m_playerPos = x;
+                        player->m_townIndex = m_localHeader.m_setup.m_alignment[x];
                     } else {
-                        player->playerPos = x;
-                        player->townIndex =
-                            SelectionHeaders[currentMap].setup.alignment[x];
+                        player->m_playerPos = x;
+                        player->m_townIndex =
+                            m_selectionHeaders[m_currentMap].m_setup.m_alignment[x];
                     }
                 }
             }
             return;
         }
         for (x = 0; x < CNetPlayerHandler::MAX_PLAYERS; ++x) {
-            if (mp->playerSlotAttributes[x].CanBeHuman)
+            if (mp->m_playerSlotAttributes[x].m_canBeHuman)
                 break;
         }
         if (x < CNetPlayerHandler::MAX_PLAYERS) {
-            if (IsHost()) {
+            if (isHost()) {
                 CNetPlayerHandlerPlayer* player;
-                player = GetThisPlayer();
+                player = getThisPlayer();
                 if (player)
-                    player->playerPos = x;
+                    player->m_playerPos = x;
             }
             return;
         }
         for (x = 0; x < CNetPlayerHandler::MAX_PLAYERS; ++x) {
-            if (mp->playerSlotAttributes[x].CanBeHuman
-                    || mp->playerSlotAttributes[x].CanBeComputer)
+            if (mp->m_playerSlotAttributes[x].m_canBeHuman
+                    || mp->m_playerSlotAttributes[x].m_canBeComputer)
                 break;
         }
         if (x < CNetPlayerHandler::MAX_PLAYERS) {
-            mp->playerSlotAttributes[x].CanBeComputer = 0;
-            if (IsHost()) {
+            mp->m_playerSlotAttributes[x].m_canBeComputer = 0;
+            if (isHost()) {
                 CNetPlayerHandlerPlayer* player;
-                player = GetThisPlayer();
+                player = getThisPlayer();
                 if (player)
-                    player->playerPos = x;
+                    player->m_playerPos = x;
             }
             return;
         }
     }
-    player = GetThisPlayer();
+    player = getThisPlayer();
     if (player)
-        player->playerPos = -1;
+        player->m_playerPos = -1;
 }
 
 
 // Dreamcast preserves this helper. Complete expands it into the six sort
 // button arms: active header transfers suppress sorting, a repeated column
 // flips direction, and a new column resets it before sorting and reselection.
-inline void TSingleSelectionWindow::OnSortMaps(int how)
+inline void TSingleSelectionWindow::onSortMaps(int how)
 {
-    if (pNewPlayerUpdateMan && pNewPlayerUpdateMan->isSendingHeaders())
+    if (m_newPlayerUpdateMan && m_newPlayerUpdateMan->isSendingHeaders())
         return;
-    if (sortWhich == how)
-        sortDirection ^= 1;
+    if (m_sortWhich == how)
+        m_sortDirection ^= 1;
     else {
-        sortDirection = 0;
-        sortWhich = how;
+        m_sortDirection = 0;
+        m_sortWhich = how;
     }
-    SortMaps(how, 1, 1);
-    SetCurrentMap(0, 1);
+    sortMaps(how, 1, 1);
+    setCurrentMap(0, 1);
 }
 
 // Sort the source list (TransferHeaders in transfer mode, HeadersA
@@ -4881,71 +4943,72 @@ inline void TSingleSelectionWindow::OnSortMaps(int how)
 // _Destroy retail keeps out of line.
 // E:\gamedcs\singleselectionwindow.cpp:4646
 VA(0x00585050, 0x2A8)  // anchor-callee HandleNetMsg's RS_SORT_MAPS arm calls it (how, 1, 1) - the DC 3-arg signature; size 1.07x dc 0x27a, dc 0x13b780
-void TSingleSelectionWindow::SortMaps(int how, unsigned char sendSortMsg,
-                                      unsigned char bUpdate)
+void TSingleSelectionWindow::sortMaps(int how, unsigned char sendSortMsg,
+                                      // Before normalization (locals): bUpdate.
+                                      unsigned char update)
 {
     std::vector<GameSelectionHeadersStruct>* src;
     if (m_flag66 != 0)
-        src = &TransferHeaders;
+        src = &m_transferHeaders;
     else
-        src = &HeadersA;
-    currentIndex = 0;
-    currentMap = 0;
+        src = &m_headersA;
+    m_currentIndex = 0;
+    m_currentMap = 0;
     switch (how) {
     case SORT_MAPS_BY_NAME: {
         int isNet = (m_flag65 != 0 || m_flag64 != 0) ? 1 : 0;
         std::sort(src->begin(), src->end(),
-                  TSortMapsByName(sortDirection, isNet));
+                  TSortMapsByName(m_sortDirection, isNet));
         break;
     }
     case SORT_MAPS_BY_PLAYERS:
         std::sort(src->begin(), src->end(),
-                  TSortMapsByPlayers(sortDirection));
+                  TSortMapsByPlayers(m_sortDirection));
         break;
     case SORT_MAPS_BY_VERSION: {
         int isNet = (m_flag65 != 0 || m_flag64 != 0) ? 1 : 0;
         std::sort(src->begin(), src->end(),
-                  TSortMapsByVersion(sortDirection, isNet));
+                  TSortMapsByVersion(m_sortDirection, isNet));
         break;
     }
     case SORT_MAPS_BY_SIZE:
         std::sort(src->begin(), src->end(),
-                  TSortMapsBySize(sortDirection));
+                  TSortMapsBySize(m_sortDirection));
         break;
     case SORT_MAPS_BY_VICTORY:
         std::sort(src->begin(), src->end(),
-                  TSortMapsByVictory(sortDirection));
+                  TSortMapsByVictory(m_sortDirection));
         break;
     case SORT_MAPS_BY_LOSS:
         std::sort(src->begin(), src->end(),
-                  TSortMapsByLoss(sortDirection));
+                  TSortMapsByLoss(m_sortDirection));
         break;
     }
-    SelectionHeaders.clear();
+    m_selectionHeaders.clear();
     for (unsigned int i = 0; i < src->size(); ++i) {
-        if (mapSizeFilter == 0 || mapSizeFilter == (*src)[i].header.Size) {
+        if (m_mapSizeFilter == 0 || m_mapSizeFilter == (*src)[i].m_header.m_size) {
             // Retail calls the insert COMDAT (0x58ebe0) while keeping
             // end() and the element address inline - the pin imposes
             // the refusal and the named locals hoist what stays inline
             // out of the pinned statement.
             std::vector<GameSelectionHeadersStruct>::iterator w =
-                SelectionHeaders.end();
+                m_selectionHeaders.end();
             const GameSelectionHeadersStruct& v = (*src)[i];
 #pragma inline_depth(0)
-            SelectionHeaders.insert(w, 1, v);
+            m_selectionHeaders.insert(w, 1, v);
 #pragma inline_depth()
         }
     }
-    if (bVideoPaused != 0 && pDPlay->IsHost() && sendSortMsg != 0) {
-        CSortMapsMsg msg(how, sortDirection);
-        TransmitRemoteDataDPID(&msg, 0, false, true);
+    if (g_videoPaused != 0 && g_dPlay->isHost() && sendSortMsg != 0) {
+        CSortMapsMsg msg(how, m_sortDirection);
+        transmitRemoteDataDPID(&msg, 0, false, true);
     }
-    if (GetMapCount() != 0)
-        UpdateGameVars();
-    fileSlider->SetState(currentIndex);
-    if (bUpdate) {
-        DrawWindow(0, 0xffff0001, 0xffff);
-        Update();
+    if (getMapCount() != 0)
+        updateGameVars();
+    m_fileSlider->setState(m_currentIndex);
+    if (update) {
+        drawWindow(0, 0xffff0001, 0xffff);
+        this->update();
     }
 }
 
@@ -4953,65 +5016,66 @@ void TSingleSelectionWindow::SortMaps(int how, unsigned char sendSortMsg,
 
 
 VA(0x00585300, 0x1FA)  // anchor-callee cross-module fingerprint w4.07 (CChatManager 0x157350/0x157390/0x157400 refs) + monotone order + size 0.84x, dc 0x13b9fc
-void TSingleSelectionWindow::UpdateAllyEnemyFlags(unsigned char update)
+void TSingleSelectionWindow::updateAllyEnemyFlags(unsigned char update)
 {
-    int ally_count = 0;
-    int enemy_count = 0;
+    // Before normalization (locals): ally_count, enemy_count.
+    int allyCount = 0;
+    int enemyCount = 0;
     int playerPos;
     CNetPlayerHandlerPlayer* player;
 
     if (m_flag65
-        || (m_flag64 && !bVideoPaused
-            && gUnnamed6989f0 != WINDOW_MODE_6989F0_3))
+        || (m_flag64 && !g_videoPaused
+            && g_unnamed6989f0 != WINDOW_MODE_6989F0_3))
         return;
 
-    if (!flagBack->IsSaved())
-        flagBack->Save(456, 402);
+    if (!m_flagBack->isSaved())
+        m_flagBack->save(456, 402);
     else if (update)
-        flagBack->Restore(0);
+        m_flagBack->restore(0);
 
     if (m_flag65) {
-        playerPos = gpGame->GetLocalPlayerGamePos();
+        playerPos = g_game->getLocalPlayerGamePos();
     } else {
-        player = GetThisPlayer();
+        player = getThisPlayer();
         if (!player)
             return;
-        playerPos = player->playerPos;
+        playerPos = player->m_playerPos;
     }
 
     widget* flag;
     for (int i = 0; i < 8; ++i) {
-        flag = GetWidget(i + 120);
-        flag->send_message(widget::WIDGET_CLEAR_STATUS,
+        flag = getWidget(i + 120);
+        flag->sendMessage(widget::WIDGET_CLEAR_STATUS,
                            widget::WIDGET_CLEAR_STATUS);
-        flag = GetWidget(i + 112);
-        flag->send_message(widget::WIDGET_CLEAR_STATUS,
+        flag = getWidget(i + 112);
+        flag->sendMessage(widget::WIDGET_CLEAR_STATUS,
                            widget::WIDGET_CLEAR_STATUS);
 
-        if (gpGame->setup.playerPos[i] < 0)
+        if (g_game->m_setup.m_playerPos[i] < 0)
             continue;
 
-        if (gpGame->OnSameTeam(i, playerPos)) {
-            flag = GetWidget(ally_count + 112);
-            flag->send_message(widget::WIDGET_SET_STATUS,
+        if (g_game->onSameTeam(i, playerPos)) {
+            flag = getWidget(allyCount + 112);
+            flag->sendMessage(widget::WIDGET_SET_STATUS,
                                widget::WIDGET_CLEAR_STATUS);
-            GetWidget(ally_count + 112)->send_message(
+            getWidget(allyCount + 112)->sendMessage(
                 widget::WIDGET_SET_ICON_FRAME, i);
-            ++ally_count;
+            ++allyCount;
         } else {
-            flag = GetWidget(enemy_count + 120);
-            flag->send_message(widget::WIDGET_SET_STATUS,
+            flag = getWidget(enemyCount + 120);
+            flag->sendMessage(widget::WIDGET_SET_STATUS,
                                widget::WIDGET_CLEAR_STATUS);
-            GetWidget(enemy_count + 120)->send_message(
+            getWidget(enemyCount + 120)->sendMessage(
                 widget::WIDGET_SET_ICON_FRAME, i);
-            ++enemy_count;
+            ++enemyCount;
         }
     }
 
     if (update) {
-        DrawWindow(0, 112, 127);
-        DrawWindow(0, 386, 386);
-        gpWindowManager->UpdateScreen(456, 402, 290, 25);
+        drawWindow(0, 112, 127);
+        drawWindow(0, 386, 386);
+        g_windowManager->updateScreen(456, 402, 290, 25);
     }
 }
 
@@ -5023,180 +5087,181 @@ void TSingleSelectionWindow::UpdateAllyEnemyFlags(unsigned char update)
 // the row really moved). The version compares run SoD/RoE/AB - the
 // source || order.
 // E:\gamedcs\singleselectionwindow.cpp:4773
+// Before normalization (locals): bUpdate.
 VA(0x00585500, 0x889)  // anchor-callee CSaveGameEdit::OnKeyPress calls it (-1, 1) behind the currentMap!=-1 guard; body owns the 'NEWGAME.gm1'+'Arrogance.h3m' defaults (the mode scratch buffers), size 1.09x dc 0x7d2, dc 0x13bc60
-void TSingleSelectionWindow::SetCurrentMap(int map, unsigned char bUpdate)
+void TSingleSelectionWindow::setCurrentMap(int map, unsigned char update)
 {
     int i;
-    if (map >= static_cast<int>(GetMapCount()))
+    if (map >= static_cast<int>(getMapCount()))
         return;
     message msg;
-    msg.id = 0;
-    msg.codeX = 0;
-    msg.codeY = 0;
-    msg.qualifier = 0;
-    msg.mouseX = 0;
-    msg.mouseY = 0;
-    msg.extra = 0;
-    msg.window = 0;
-    mapChanged = currentMap != map || m_flag65;
-    currentMap = map;
-    if (map == -1 && !field_37F) {
+    msg.m_id = 0;
+    msg.m_codeX = 0;
+    msg.m_codeY = 0;
+    msg.m_qualifier = 0;
+    msg.m_mouseX = 0;
+    msg.m_mouseY = 0;
+    msg.m_extra = 0;
+    msg.m_window = 0;
+    m_mapChanged = m_currentMap != map || m_flag65;
+    m_currentMap = map;
+    if (map == -1 && !m_randomMapSelected) {
         if (m_flag65) {
-            UpdateGameVars();
-            msg.id = 0x200;
-            msg.codeY = 189;
-            msg.codeX = 4;
-            switch (gpGame->mapHeader.Size) {
+            updateGameVars();
+            msg.m_id = 0x200;
+            msg.m_codeY = 189;
+            msg.m_codeX = 4;
+            switch (g_game->m_mapHeader.m_size) {
             case MAP_DIMENSION_SMALL:
-                msg.extra = 0;
+                msg.m_extra = 0;
                 break;
             case MAP_DIMENSION_MEDIUM:
-                msg.extra = 1;
+                msg.m_extra = 1;
                 break;
             case MAP_DIMENSION_LARGE:
-                msg.extra = 2;
+                msg.m_extra = 2;
                 break;
             case MAP_DIMENSION_EXTRA_LARGE:
-                msg.extra = 3;
+                msg.m_extra = 3;
                 break;
             default:
-                msg.extra = 4;
+                msg.m_extra = 4;
                 break;
             }
-            BroadcastMessage(&msg);
-            static_cast<CScrollTextWidget*>(field_196c)
-                ->SetText(gpGame->mapHeader.mapDescription.c_str());
+            broadcastMessage(&msg);
+            static_cast<CScrollTextWidget*>(m_descriptionWidget)
+                ->setText(g_game->m_mapHeader.m_mapDescription.c_str());
         } else {
-            static_cast<CScrollTextWidget*>(field_196c)->SetText("");
+            static_cast<CScrollTextWidget*>(m_descriptionWidget)->setText("");
         }
     } else {
-        if (field_37F)
-            pCurrentHeader = &m_localHeader;
+        if (m_randomMapSelected)
+            m_currentHeader = &m_localHeader;
         else
-            pCurrentHeader = &SelectionHeaders[map];
+            m_currentHeader = &m_selectionHeaders[map];
         if (m_flag65) {
             strcpy(DATA_COMPGEN(0x0068333c, defaultNewGameFileName,
                                 "NEWGAME.gm1"),
-                   pCurrentHeader->setup.filename);
+                   m_currentHeader->m_setup.m_filename);
             strtok(DATA_COMPGEN(0x0068333c, defaultNewGameFileName,
                                 "NEWGAME.gm1"),
                    DATA_COMPGEN(0x006603ec, saveExtensionDot, "."));
-            lastDiff = pCurrentHeader->setup.difficulty;
+            g_lastDiff = m_currentHeader->m_setup.m_difficulty;
         } else if (m_flag64) {
             strcpy(DATA_COMPGEN(0x0068333c, defaultNewGameFileName,
                                 "NEWGAME.gm1"),
-                   pCurrentHeader->setup.filename);
-            lastDiff = pCurrentHeader->setup.difficulty;
-            durationIndex = pCurrentHeader->setup.turnDuration;
-            if (durationSlider)
-                durationSlider->SetState(durationIndex);
+                   m_currentHeader->m_setup.m_filename);
+            g_lastDiff = m_currentHeader->m_setup.m_difficulty;
+            m_durationIndex = m_currentHeader->m_setup.m_turnDuration;
+            if (m_durationSlider)
+                m_durationSlider->setState(m_durationIndex);
         } else {
             strcpy(DATA_COMPGEN(0x00683238, defaultMapFileName,
                                 "Arrogance.h3m"),
-                   pCurrentHeader->setup.filename);
+                   m_currentHeader->m_setup.m_filename);
         }
-        UpdateGameVars();
+        updateGameVars();
         for (i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
-            m_players.humanPlayers[i].heroIndex = -1;
-            m_players.humanPlayers[i].townIndex = -1;
-            m_players.computerPlayers[i].heroIndex = -1;
-            m_players.computerPlayers[i].townIndex = -1;
+            m_players.m_humanPlayers[i].m_heroIndex = -1;
+            m_players.m_humanPlayers[i].m_townIndex = -1;
+            m_players.m_computerPlayers[i].m_heroIndex = -1;
+            m_players.m_computerPlayers[i].m_townIndex = -1;
         }
-        SetHumanSlot();
-        MakeHeroFilter();
+        setHumanSlot();
+        makeHeroFilter();
         if (m_flag65) {
-            saveGameEdit->SetText(DATA_COMPGEN(0x0068333c,
+            m_saveGameEdit->setText(DATA_COMPGEN(0x0068333c,
                                                defaultNewGameFileName,
                                                "NEWGAME.gm1"));
-            saveGameEdit->Draw();
+            m_saveGameEdit->draw();
         }
-        msg.id = 0x200;
-        msg.codeY = 189;
-        msg.codeX = 4;
-        switch (pCurrentHeader->header.Size) {
+        msg.m_id = 0x200;
+        msg.m_codeY = 189;
+        msg.m_codeX = 4;
+        switch (m_currentHeader->m_header.m_size) {
         case MAP_DIMENSION_SMALL:
-            msg.extra = 0;
+            msg.m_extra = 0;
             break;
         case MAP_DIMENSION_MEDIUM:
-            msg.extra = 1;
+            msg.m_extra = 1;
             break;
         case MAP_DIMENSION_LARGE:
-            msg.extra = 2;
+            msg.m_extra = 2;
             break;
         case MAP_DIMENSION_EXTRA_LARGE:
-            msg.extra = 3;
+            msg.m_extra = 3;
             break;
         default:
-            msg.extra = 4;
+            msg.m_extra = 4;
             break;
         }
-        BroadcastMessage(&msg);
-        if (!bVideoPaused || pDPlay->IsHost())
-            UpdateAllyEnemyFlags(bUpdate);
-        if (bVideoPaused && !m_flag65 && pDPlay->IsHost()
-                && !field_37F) {
-            CScrollMsg scrollMsg(currentMap, currentIndex);
-            TransmitRemoteDataDPID(&scrollMsg, 0, false, true);
+        broadcastMessage(&msg);
+        if (!g_videoPaused || g_dPlay->isHost())
+            updateAllyEnemyFlags(update);
+        if (g_videoPaused && !m_flag65 && g_dPlay->isHost()
+                && !m_randomMapSelected) {
+            CScrollMsg scrollMsg(m_currentMap, m_currentIndex);
+            transmitRemoteDataDPID(&scrollMsg, 0, false, true);
         }
     }
-    if (!bVideoPaused || pDPlay->IsHost()) {
-        widget* w = GetWidget(186);
+    if (!g_videoPaused || g_dPlay->isHost()) {
+        widget* w = getWidget(186);
         if (w) {
             if (!m_flag64 && !m_flag65
-                    && gpGame->mapHeader.version
+                    && g_game->m_mapHeader.m_version
                            != MAP_FORMAT_SHADOW_OF_DEATH
-                    && gpGame->mapHeader.version
+                    && g_game->m_mapHeader.m_version
                            != MAP_FORMAT_RESTORATION_OF_ERATHIA
-                    && gpGame->mapHeader.version
+                    && g_game->m_mapHeader.m_version
                            != MAP_FORMAT_ARMAGEDDONS_BLADE)
                 w->enable(0);
-            else if (m_flag64 && HeadersA.size() == 0)
+            else if (m_flag64 && m_headersA.size() == 0)
                 w->enable(0);
             else
                 w->enable(1);
-            w->Draw();
+            w->draw();
         }
     }
     if (m_flag64 || m_flag65) {
         message deselect;
-        deselect.id = 0x200;
-        deselect.qualifier = 0;
-        deselect.mouseX = 0;
-        deselect.mouseY = 0;
-        deselect.window = 0;
-        deselect.codeX = 6;
-        deselect.extra = 0x10;
+        deselect.m_id = 0x200;
+        deselect.m_qualifier = 0;
+        deselect.m_mouseX = 0;
+        deselect.m_mouseY = 0;
+        deselect.m_window = 0;
+        deselect.m_codeX = 6;
+        deselect.m_extra = 0x10;
         for (i = 107; i <= 111; ++i) {
-            deselect.codeY = i;
-            GetWidget(i)->Main(&deselect);
+            deselect.m_codeY = i;
+            getWidget(i)->main(&deselect);
         }
-        deselect.codeX = 5;
-        deselect.codeY = 107 + gpGame->setup.difficulty;
-        BroadcastMessage(&deselect);
+        deselect.m_codeX = 5;
+        deselect.m_codeY = 107 + g_game->m_setup.m_difficulty;
+        broadcastMessage(&deselect);
     }
-    if (bUpdate) {
-        if (mapChanged) {
-            DrawWindow(0, 0xffff0001, 0xffff);
+    if (update) {
+        if (m_mapChanged) {
+            drawWindow(0, 0xffff0001, 0xffff);
         } else {
-            widget* temp = GetWidget(101);
-            if (temp->status & widget::WIDGET_ACTIVE) {
-                temp->Draw();
-                GetWidget(361)->Draw();
-                DrawWindow(0, 137, 141);
-                DrawWindow(0, 190, 195);
-                DrawWindow(0, fileSlider->id, fileSlider->id);
+            widget* temp = getWidget(101);
+            if (temp->m_status & widget::WIDGET_ACTIVE) {
+                temp->draw();
+                getWidget(361)->draw();
+                drawWindow(0, 137, 141);
+                drawWindow(0, 190, 195);
+                drawWindow(0, m_fileSlider->m_id, m_fileSlider->m_id);
             }
             if (m_flag65) {
-                GetWidget(388)->Draw();
-                saveGameEdit->Draw();
+                getWidget(388)->draw();
+                m_saveGameEdit->draw();
             }
         }
-        Update();
+        this->update();
     }
     if (m_flag64) {
         for (i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
             CNetPlayerHandlerPlayer* player =
-                m_players.GetPlayerInPos(i);
+                m_players.getPlayerInPos(i);
             if (!player)
                 player = m_players.getCompPlayerInPos(i);
             // Residual (99.987404): the sole code difference is a
@@ -5205,19 +5270,19 @@ void TSingleSelectionWindow::SetCurrentMap(int map, unsigned char bUpdate)
             // chooses the reverse fields. Array-index, pointer-add, named
             // pointer, named game-pointer and named loaded-value spellings are
             // byte-flat.
-            player->handicap = gpGame->setup.handicap[i];
-            widget* w = GetWidget(207 + i);
+            player->m_handicap = g_game->m_setup.m_handicap[i];
+            widget* w = getWidget(207 + i);
             if (w) {
-                int saveStatus = w->status;
-                w->status |= widget::WIDGET_ACTIVE;
-                w->send_message(widget::WIDGET_SET_TEXT,
-                                int(gUnnamed6a7800[player->handicap]));
-                w->status = saveStatus;
+                int saveStatus = w->m_status;
+                w->m_status |= widget::WIDGET_ACTIVE;
+                w->sendMessage(widget::WIDGET_SET_TEXT,
+                                int(g_unnamed6a7800[player->m_handicap]));
+                w->m_status = saveStatus;
             }
         }
     }
-    if (bVideoPaused && pDPlay->IsHost() && mapChanged) {
-        SendPlayerPositions(0);
+    if (g_videoPaused && g_dPlay->isHost() && m_mapChanged) {
+        sendPlayerPositions(0);
     }
 }
 
@@ -5227,20 +5292,20 @@ void TSingleSelectionWindow::SetCurrentMap(int map, unsigned char bUpdate)
 // broadcast the pick when hosting.
 // E:\gamedcs\singleselectionwindow.cpp:5000
 VA(0x00585d90, 0x2C5)  // anchor-callee HandleNetMsg's RS_SET_FILTER arm forwards the msg size to it; also called from OnWidgetDeselect 0x5865b0 per xref; size 1.16x dc 0x262, dc 0x13c434
-void TSingleSelectionWindow::SetFilter(int size)
+void TSingleSelectionWindow::setFilter(int size)
 {
     std::vector<GameSelectionHeadersStruct>* src;
     if (m_flag66 != 0)
-        src = &TransferHeaders;
+        src = &m_transferHeaders;
     else
-        src = &HeadersA;
-    mapSizeFilter = size;
-    currentIndex = 0;
-    currentMap = 0;
-    std::vector<GameSelectionHeadersStruct>& dst = SelectionHeaders;
+        src = &m_headersA;
+    m_mapSizeFilter = size;
+    m_currentIndex = 0;
+    m_currentMap = 0;
+    std::vector<GameSelectionHeadersStruct>& dst = m_selectionHeaders;
     dst.clear();
     for (unsigned int i = 0; i < src->size(); ++i) {
-        if (mapSizeFilter == 0 || mapSizeFilter == (*src)[i].header.Size) {
+        if (m_mapSizeFilter == 0 || m_mapSizeFilter == (*src)[i].m_header.m_size) {
             std::vector<GameSelectionHeadersStruct>::iterator w =
                 dst.end();
             const GameSelectionHeadersStruct& v = (*src)[i];
@@ -5251,43 +5316,43 @@ void TSingleSelectionWindow::SetFilter(int size)
 #pragma inline_depth()
         }
     }
-    if (GetMapCount() != 0) {
-        pCurrentHeader = SelectionHeaders.begin();
-        UpdateGameVars();
+    if (getMapCount() != 0) {
+        m_currentHeader = m_selectionHeaders.begin();
+        updateGameVars();
     }
     message msg;
-    msg.qualifier = 0;
-    msg.mouseX = 0;
-    msg.mouseY = 0;
-    msg.window = 0;
-    msg.id = 0x200;
-    msg.codeY = 189;
-    msg.codeX = 4;
-    switch (mapSizeFilter) {
+    msg.m_qualifier = 0;
+    msg.m_mouseX = 0;
+    msg.m_mouseY = 0;
+    msg.m_window = 0;
+    msg.m_id = 0x200;
+    msg.m_codeY = 189;
+    msg.m_codeX = 4;
+    switch (m_mapSizeFilter) {
     case MAP_DIMENSION_SMALL:
-        msg.extra = 0;
+        msg.m_extra = 0;
         break;
     case MAP_DIMENSION_MEDIUM:
-        msg.extra = 1;
+        msg.m_extra = 1;
         break;
     case MAP_DIMENSION_LARGE:
-        msg.extra = 2;
+        msg.m_extra = 2;
         break;
     case MAP_DIMENSION_EXTRA_LARGE:
-        msg.extra = 3;
+        msg.m_extra = 3;
         break;
     default:
-        msg.extra = 4;
+        msg.m_extra = 4;
         break;
     }
-    BroadcastMessage(&msg);
-    fileSlider->SetResolution(GetMapCount() - gUnnamed69fdc8 + 1);
-    SetCurrentMap(GetMapCount() > 0 ? 0 : -1, 0);
-    DrawWindow(0, 0xffff0001, 0xffff);
-    Update();
-    if (bVideoPaused != 0 && pDPlay->IsHost()) {
+    broadcastMessage(&msg);
+    m_fileSlider->setResolution(getMapCount() - g_unnamed69fdc8 + 1);
+    setCurrentMap(getMapCount() > 0 ? 0 : -1, 0);
+    drawWindow(0, 0xffff0001, 0xffff);
+    update();
+    if (g_videoPaused != 0 && g_dPlay->isHost()) {
         CSetFilterMsg filterMsg(size);
-        TransmitRemoteDataDPID(&filterMsg, 0, false, true);
+        transmitRemoteDataDPID(&filterMsg, 0, false, true);
     }
 }
 
@@ -5296,23 +5361,23 @@ void TSingleSelectionWindow::SetFilter(int size)
 // buttons, select the current rung, broadcast.
 // E:\gamedcs\singleselectionwindow.cpp:5064
 VA(0x00586060, 0x79)  // anchor-callee difficulty-selection path + exact DC statement/loop shape, dc 0x13c698
-void TSingleSelectionWindow::SetDifficultyHiLite()
+void TSingleSelectionWindow::setDifficultyHiLite()
 {
     message select;
-    select.qualifier = 0;
-    select.mouseX = 0;
-    select.mouseY = 0;
-    select.window = 0;
-    select.id = 0x200;
-    select.codeX = widget::WIDGET_CLEAR_STATUS;
-    select.extra = widget::WIDGET_HIGHLIGHTED;
+    select.m_qualifier = 0;
+    select.m_mouseX = 0;
+    select.m_mouseY = 0;
+    select.m_window = 0;
+    select.m_id = 0x200;
+    select.m_codeX = widget::WIDGET_CLEAR_STATUS;
+    select.m_extra = widget::WIDGET_HIGHLIGHTED;
     for (int i = SSW_DIFFICULTY_FIRST; i <= SSW_DIFFICULTY_LAST; ++i) {
-        select.codeY = i;
-        GetWidget(i)->Main(&select);
+        select.m_codeY = i;
+        getWidget(i)->main(&select);
     }
-    select.codeX = widget::WIDGET_SET_STATUS;
-    select.codeY = SSW_DIFFICULTY_FIRST + gpGame->setup.difficulty;
-    BroadcastMessage(&select);
+    select.m_codeX = widget::WIDGET_SET_STATUS;
+    select.m_codeY = SSW_DIFFICULTY_FIRST + g_game->m_setup.m_difficulty;
+    broadcastMessage(&select);
 }
 
 // Generates a map after resolving any random filter rungs. Its single
@@ -5336,114 +5401,118 @@ void TSingleSelectionWindow::SetDifficultyHiLite()
 // which retail proves by destroying them once before StopMouseThread rather
 // than per switch arm - worth 80.8024 -> 91.9718 on the brace alone.
 VA(0x005860E0, 0x4CC)
-unsigned char TSingleSelectionWindow::GenerateRandomMap(const char* name)
+unsigned char TSingleSelectionWindow::generateRandomMap(const char* name)
 {
-    int players = field_18A0[2];
-    int humans = field_18A0[3];
-    int teams = field_18A0[4];
-    int alliances = field_18A0[5];
+    // Former locals players/humans/teams/alliances/monsters/water were
+    // misleading: the request-to-generator bridge 0x54bf60 proves the
+    // following player/team counts and water/monster option identities.
+    int humanPlayerCount = m_randomMapOptions[2];
+    int humanTeamCount = m_randomMapOptions[3];
+    int computerPlayerCount = m_randomMapOptions[4];
+    int computerTeamCount = m_randomMapOptions[5];
 
-    if (players == -1) {
+    if (humanPlayerCount == -1) {
         int seated = 0;
         for (int j = 0; j < CNetPlayerHandler::MAX_PLAYERS; ++j) {
-            CNetPlayerHandlerPlayer* p = m_players.GetPlayerInPos(j);
-            if (p && p->dpid != 0)
+            CNetPlayerHandlerPlayer* p = m_players.getPlayerInPos(j);
+            if (p && p->m_dpid != 0)
                 ++seated;
         }
-        players = seated + rand() % (9 - seated);
+        humanPlayerCount = seated + rand() % (9 - seated);
     }
 
-    if (humans == -1)
-        humans = rand() % players + 1;
-    if (humans == 0 || humans > players)
-        humans = players;
+    if (humanTeamCount == -1)
+        humanTeamCount = rand() % humanPlayerCount + 1;
+    if (humanTeamCount == 0 || humanTeamCount > humanPlayerCount)
+        humanTeamCount = humanPlayerCount;
 
-    if (players == CNetPlayerHandler::MAX_PLAYERS) {
-        teams = 0;
-        alliances = 0;
+    if (humanPlayerCount == CNetPlayerHandler::MAX_PLAYERS) {
+        computerPlayerCount = 0;
+        computerTeamCount = 0;
     } else {
-        if (teams == -1)
-            teams = rand() % (9 - players);
-        if (teams + players > 8)
-            teams = 8 - players;
-        if (teams == 0) {
-            alliances = teams;
+        if (computerPlayerCount == -1)
+            computerPlayerCount = rand() % (9 - humanPlayerCount);
+        if (computerPlayerCount + humanPlayerCount > 8)
+            computerPlayerCount = 8 - humanPlayerCount;
+        if (computerPlayerCount == 0) {
+            computerTeamCount = computerPlayerCount;
         } else {
-            if (alliances == -1)
-                alliances = rand() % teams + 1;
-            if (alliances == 0)
-                alliances = teams;
-            else if (alliances > teams)
-                alliances = players;
+            if (computerTeamCount == -1)
+                computerTeamCount = rand() % computerPlayerCount + 1;
+            if (computerTeamCount == 0)
+                computerTeamCount = computerPlayerCount;
+            else if (computerTeamCount > computerPlayerCount)
+                computerTeamCount = humanPlayerCount;
         }
     }
 
-    int monsters = field_18A0[6];
-    int water = field_18A0[7] - 1;
-    if (water == -2)
-        water = rand() % 3 - 1;
+    int waterContent = m_randomMapOptions[6];
+    int monsterStrength = m_randomMapOptions[7] - 1;
+    if (monsterStrength == -2)
+        monsterStrength = rand() % 3 - 1;
 
     int mapVersion;
-    if (field_1898 == SINGLE_SELECTION_CONTEXT_2
-            || field_1898 == SINGLE_SELECTION_CONTEXT_3)
+    if (m_commonGameVersion == SINGLE_SELECTION_CONTEXT_2
+            || m_commonGameVersion == SINGLE_SELECTION_CONTEXT_3)
         mapVersion = GAME_VERSION_SOD;
     else
-        mapVersion = field_1898 == SINGLE_SELECTION_CONTEXT_1
+        mapVersion = m_commonGameVersion == SINGLE_SELECTION_CONTEXT_1
             ? GAME_VERSION_AB
             : GAME_VERSION_ROE;
 
-    gpMouseManager->SetPointer(1, mouseManager::ADVENTURE_SET);
-    StartMouseThread();
+    g_mouseManager->setPointer(1, mouseManager::ADVENTURE_SET);
+    startMouseThread();
 
     int result;
     {
-        TRandomMapRequest request(field_18A0[0], field_18A0[0],
-                                  field_18A0[1]);
+        TRandomMapRequest request(m_randomMapOptions[0], m_randomMapOptions[0],
+                                  m_randomMapOptions[1]);
         TRandomMapProgress progress(1);
 
-        request.field_34 = players;
-        request.field_38 = humans;
-        request.field_3C = teams;
-        request.field_40 = alliances;
-        request.field_44 = monsters;
-        request.field_48 = water;
-        request.mapVersion = mapVersion;
+        request.m_humanPlayerCount = humanPlayerCount;
+        request.m_humanTeamCount = humanTeamCount;
+        request.m_computerPlayerCount = computerPlayerCount;
+        request.m_computerTeamCount = computerTeamCount;
+        request.m_waterContent = waterContent;
+        request.m_monsterStrength = monsterStrength;
+        request.m_mapVersion = mapVersion;
 
         for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
-            CNetPlayerHandlerPlayer* pPlayer = m_players.GetPlayerInPos(i);
-            if (!pPlayer)
-                pPlayer = m_players.getCompPlayerInPos(i);
-            if (pPlayer->dpid != 0)
-                request.isHumanSeat[i] = 1;
-            request.townType[i] = pPlayer->townIndex;
+            // Before normalization (locals): pPlayer.
+            CNetPlayerHandlerPlayer* player = m_players.getPlayerInPos(i);
+            if (!player)
+                player = m_players.getCompPlayerInPos(i);
+            if (player->m_dpid != 0)
+                request.m_isHumanSeat[i] = 1;
+            request.m_townType[i] = player->m_townIndex;
         }
 
         std::string path(DATA_COMPGEN(0x006837d4, randomMapsPrefix,
                                       "random_maps\\"));
         path += name;
 
-        result = request.Generate(path.c_str(), &progress);
-        progress.done = std::_cpp_min<long>(progress.done + 1,
-                                            progress.steps);
-        progress.LoadProgFn_00577180();
+        result = request.generate(path.c_str(), &progress);
+        progress.m_done = std::_cpp_min<long>(progress.m_done + 1,
+                                            progress.m_steps);
+        progress.loadProgFn00577180();
     }
 
-    StopMouseThread();
-    gpMouseManager->SetPointer(0, mouseManager::DEFAULT_SET);
+    stopMouseThread();
+    g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
 
     switch (result) {
     case RANDOM_MAP_OK:
         return 1;
     case RANDOM_MAP_FAILED_1:
-        NormalDialog(gpGeneralText->GetText(750), 1, -1, -1, -1, 0, -1, 0, -1,
+        normalDialog(g_generalText->getText(750), 1, -1, -1, -1, 0, -1, 0, -1,
                      0, -1, 0);
         break;
     case RANDOM_MAP_FAILED_2:
-        NormalDialog(gpGeneralText->GetText(751), 1, -1, -1, -1, 0, -1, 0, -1,
+        normalDialog(g_generalText->getText(751), 1, -1, -1, -1, 0, -1, 0, -1,
                      0, -1, 0);
         break;
     case RANDOM_MAP_FAILED_3:
-        NormalDialog(gpGeneralText->GetText(752), 1, -1, -1, -1, 0, -1, 0, -1,
+        normalDialog(g_generalText->getText(752), 1, -1, -1, -1, 0, -1, 0, -1,
                      0, -1, 0);
         break;
     }
@@ -5491,12 +5560,14 @@ unsigned char TSingleSelectionWindow::OnClickMsg(CNetMsg* pNetMsg)
 // encoding and costs 0.25 overall, so it stays.
 // E:\gamedcs\singleselectionwindow.cpp:5100
 VA(0x005865b0, 0x13EA)  // anchor-callee WindowHandler's id==0x200/codeX==13 arm calls it (msg, &redraw, 0) - the DC signature exactly; size 0.57x dc 0x22d4, dc 0x13c79c
-int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
-                                              unsigned char* bExitFlag,
+int TSingleSelectionWindow::onWidgetDeselect(message* msg,
+                                              // Before normalization (locals): bExitFlag,
+                                              // pThisPlayer.
+                                              unsigned char* exitFlag,
                                               unsigned char remoteClick)
 {
-    if (bVideoPaused && !m_flag65 && IsHost()) {
-        switch (msg->codeY) {
+    if (g_videoPaused && !m_flag65 && isHost()) {
+        switch (msg->m_codeY) {
         case SSW_DIFFICULTY_FIRST:
         case SSW_DIFFICULTY_FIRST + 1:
         case SSW_DIFFICULTY_FIRST + 2:
@@ -5557,30 +5628,30 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
         case SSW_FILTER_DURATION_LAST:
         case SSW_FILTER_DURATION_ANY:
         case SSW_RANDOM_MAPS: {
-            CClickMsg netMsg(msg->codeY);
-            TransmitRemoteDataDPID(&netMsg, 0, false, true);
+            CClickMsg netMsg(msg->m_codeY);
+            transmitRemoteDataDPID(&netMsg, 0, false, true);
             break;
         }
         }
     }
 
-    switch (msg->codeY) {
+    switch (msg->m_codeY) {
     case SSW_BACK:
-        msg->codeY = 0x7801;
-        *bExitFlag = 1;
-        if (IsMultiPlayer() && !m_flag65)
-            RemoteCleanup();
+        msg->m_codeY = 0x7801;
+        *exitFlag = 1;
+        if (isMultiPlayer() && !m_flag65)
+            remoteCleanup();
         if (m_flag65)
-            memset(gUnnamed69fc2c, 0, 351);
+            memset(g_unnamed69fc2c, 0, 351);
         break;
 
     case SSW_BEGIN:
         if (m_flag65) {
-            *bExitFlag = SaveValid(saveGameEdit->GetText());
-            if (*bExitFlag)
-                gpMouseManager->SetPointer(1, mouseManager::ADVENTURE_SET);
+            *exitFlag = saveValid(m_saveGameEdit->getText());
+            if (*exitFlag)
+                g_mouseManager->setPointer(1, mouseManager::ADVENTURE_SET);
         } else {
-            *bExitFlag = OnBeginGame();
+            *exitFlag = onBeginGame();
         }
         break;
 
@@ -5597,23 +5668,23 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
     case SSW_TOWN_PREV_FIRST + 5:
     case SSW_TOWN_PREV_FIRST + 6:
     case SSW_TOWN_PREV_LAST: {
-        int i = msg->codeY - SSW_TOWN_PREV_FIRST;
-        CNetPlayerHandlerPlayer* pThisPlayer = m_players.GetPlayerInPos(i);
-        if (!pThisPlayer)
-            pThisPlayer = m_players.getCompPlayerInPos(i);
-        if (pThisPlayer) {
-            pThisPlayer->heroIndex = -1;
-            TTownType townType = GetDisplayTown(i);
+        int i = msg->m_codeY - SSW_TOWN_PREV_FIRST;
+        CNetPlayerHandlerPlayer* thisPlayer = m_players.getPlayerInPos(i);
+        if (!thisPlayer)
+            thisPlayer = m_players.getCompPlayerInPos(i);
+        if (thisPlayer) {
+            thisPlayer->m_heroIndex = -1;
+            TTownType townType = getDisplayTown(i);
             unsigned short legal = static_cast<unsigned short>(
-                gpGame->mapHeader.playerSlotAttributes[i].legalAlignments);
-            if (!field_1898)
+                g_game->m_mapHeader.m_playerSlotAttributes[i].m_legalAlignments);
+            if (!m_commonGameVersion)
                 legal &= ~0x100;
-            townType = pick_prev_alignment(legal, townType);
-            pThisPlayer->townIndex = townType;
+            townType = pickPrevAlignment(legal, townType);
+            thisPlayer->m_townIndex = townType;
             CTownUpdateMsg netMsg(i, townType);
-            TransmitRemoteDataDPID(&netMsg, 0, false, true);
-            UpdateTown(i,
-                       static_cast<TTownType>(pThisPlayer->townIndex) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */,
+            transmitRemoteDataDPID(&netMsg, 0, false, true);
+            updateTown(i,
+                       static_cast<TTownType>(thisPlayer->m_townIndex) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */,
                        0);
         }
         break;
@@ -5626,23 +5697,23 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
     case SSW_TOWN_NEXT_FIRST + 5:
     case SSW_TOWN_NEXT_FIRST + 6:
     case SSW_TOWN_NEXT_LAST: {
-        int i = msg->codeY - SSW_TOWN_NEXT_FIRST;
-        CNetPlayerHandlerPlayer* pThisPlayer = m_players.GetPlayerInPos(i);
-        if (!pThisPlayer)
-            pThisPlayer = m_players.getCompPlayerInPos(i);
-        if (pThisPlayer) {
-            pThisPlayer->heroIndex = -1;
-            TTownType townType = GetDisplayTown(i);
+        int i = msg->m_codeY - SSW_TOWN_NEXT_FIRST;
+        CNetPlayerHandlerPlayer* thisPlayer = m_players.getPlayerInPos(i);
+        if (!thisPlayer)
+            thisPlayer = m_players.getCompPlayerInPos(i);
+        if (thisPlayer) {
+            thisPlayer->m_heroIndex = -1;
+            TTownType townType = getDisplayTown(i);
             unsigned short legal = static_cast<unsigned short>(
-                gpGame->mapHeader.playerSlotAttributes[i].legalAlignments);
-            if (!field_1898)
+                g_game->m_mapHeader.m_playerSlotAttributes[i].m_legalAlignments);
+            if (!m_commonGameVersion)
                 legal &= ~0x100;
-            townType = pick_next_alignment(legal, townType);
-            pThisPlayer->townIndex = townType;
+            townType = pickNextAlignment(legal, townType);
+            thisPlayer->m_townIndex = townType;
             CTownUpdateMsg netMsg(i, townType);
-            TransmitRemoteDataDPID(&netMsg, 0, false, true);
-            UpdateTown(i,
-                       static_cast<TTownType>(pThisPlayer->townIndex) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */,
+            transmitRemoteDataDPID(&netMsg, 0, false, true);
+            updateTown(i,
+                       static_cast<TTownType>(thisPlayer->m_townIndex) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */,
                        0);
         }
         break;
@@ -5656,19 +5727,19 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
     case SSW_HERO_PREV_FIRST + 5:
     case SSW_HERO_PREV_FIRST + 6:
     case SSW_HERO_PREV_LAST: {
-        if (!IsHost()) {
+        if (!isHost()) {
             CRequestHeroFaceMsg netMsg(-1);
-            TransmitRemoteDataDPID(&netMsg, 0, false, true);
+            transmitRemoteDataDPID(&netMsg, 0, false, true);
         } else {
-            int clickPos = msg->codeY - SSW_HERO_PREV_FIRST;
-            CNetPlayerHandlerPlayer* pThisPlayer =
-                m_players.GetPlayerInPos(clickPos);
-            if (pThisPlayer) {
-                GetHeroFace(-1, pThisPlayer);
+            int clickPos = msg->m_codeY - SSW_HERO_PREV_FIRST;
+            CNetPlayerHandlerPlayer* thisPlayer =
+                m_players.getPlayerInPos(clickPos);
+            if (thisPlayer) {
+                getHeroFace(-1, thisPlayer);
                 CRequestHeroFaceReplyMsg netMsg(
-                    pThisPlayer->playerPos, pThisPlayer->heroIndex);
-                TransmitRemoteDataDPID(&netMsg, 0, false, true);
-                DrawHeroAdvancedOption(clickPos, 1, -1);
+                    thisPlayer->m_playerPos, thisPlayer->m_heroIndex);
+                transmitRemoteDataDPID(&netMsg, 0, false, true);
+                drawHeroAdvancedOption(clickPos, 1, -1);
             }
         }
         break;
@@ -5681,19 +5752,19 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
     case SSW_HERO_NEXT_FIRST + 5:
     case SSW_HERO_NEXT_FIRST + 6:
     case SSW_HERO_NEXT_LAST: {
-        if (!IsHost()) {
+        if (!isHost()) {
             CRequestHeroFaceMsg netMsg(1);
-            TransmitRemoteDataDPID(&netMsg, 0, false, true);
+            transmitRemoteDataDPID(&netMsg, 0, false, true);
         } else {
-            int clickPos = msg->codeY - SSW_HERO_NEXT_FIRST;
-            CNetPlayerHandlerPlayer* pThisPlayer =
-                m_players.GetPlayerInPos(clickPos);
-            if (pThisPlayer) {
-                GetHeroFace(1, pThisPlayer);
+            int clickPos = msg->m_codeY - SSW_HERO_NEXT_FIRST;
+            CNetPlayerHandlerPlayer* thisPlayer =
+                m_players.getPlayerInPos(clickPos);
+            if (thisPlayer) {
+                getHeroFace(1, thisPlayer);
                 CRequestHeroFaceReplyMsg netMsg(
-                    pThisPlayer->playerPos, pThisPlayer->heroIndex);
-                TransmitRemoteDataDPID(&netMsg, 0, false, true);
-                DrawHeroAdvancedOption(clickPos, 1, -1);
+                    thisPlayer->m_playerPos, thisPlayer->m_heroIndex);
+                transmitRemoteDataDPID(&netMsg, 0, false, true);
+                drawHeroAdvancedOption(clickPos, 1, -1);
             }
         }
         break;
@@ -5704,30 +5775,30 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
     case SSW_DIFFICULTY_FIRST + 2:
     case SSW_DIFFICULTY_FIRST + 3:
     case SSW_DIFFICULTY_LAST:
-        gpGame->setup.difficulty =
-            static_cast<signed char>(msg->codeY - SSW_DIFFICULTY_FIRST);
-        lastDiff = gpGame->setup.difficulty;
-        SetDifficultyHiLite();
-        SendSetupInfo(0);
-        DrawWindow(0, 0xffff0001, 0xffff);
-        Update();
+        g_game->m_setup.m_difficulty =
+            static_cast<signed char>(msg->m_codeY - SSW_DIFFICULTY_FIRST);
+        g_lastDiff = g_game->m_setup.m_difficulty;
+        setDifficultyHiLite();
+        sendSetupInfo(0);
+        drawWindow(0, 0xffff0001, 0xffff);
+        this->update();
         break;
 
     case SSW_SCENARIO_OPTIONS:
-        SetupScenarioOptions(0);
-        DrawWindow(0, 0xffff0001, 0xffff);
-        Update();
+        setupScenarioOptions(0);
+        drawWindow(0, 0xffff0001, 0xffff);
+        this->update();
         break;
     case SSW_ADVANCED_OPTIONS:
-        SetupAdvancedOptions();
-        DrawWindow(0, 0xffff0001, 0xffff);
-        Update();
+        setupAdvancedOptions();
+        drawWindow(0, 0xffff0001, 0xffff);
+        this->update();
         break;
     case SSW_FILTER_OPTIONS:
-        SetupFilterOptions();
-        UpdateFilterWidgets();
-        DrawWindow(0, 0xffff0001, 0xffff);
-        Update();
+        setupFilterOptions();
+        updateFilterWidgets();
+        drawWindow(0, 0xffff0001, 0xffff);
+        this->update();
         break;
 
     case SSW_GENERATE_RANDOM_MAP: {
@@ -5741,41 +5812,41 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
         // statement order here is already retail's: the temporary is torn
         // down BEFORE the `test bl,bl`, so only the expansion differs. Both
         // want a caller-shrink or a site pin and neither is available.
-        if (GenerateRandomMap(GetRandomMapName().c_str()))
-            NormalDialog(gpGeneralText->GetText(749),
+        if (generateRandomMap(getRandomMapName().c_str()))
+            normalDialog(g_generalText->getText(749),
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         break;
     }
 
     case SSW_FILTER_MAP_SMALL:
-        field_18A0[0] = MAP_DIMENSION_SMALL;
-        UpdateFilterWidgets();
-        DrawWindow(0, 0xffff0001, 0xffff);
-        Update();
+        m_randomMapOptions[0] = MAP_DIMENSION_SMALL;
+        updateFilterWidgets();
+        drawWindow(0, 0xffff0001, 0xffff);
+        this->update();
         break;
     case SSW_FILTER_MAP_MEDIUM:
-        field_18A0[0] = MAP_DIMENSION_MEDIUM;
-        UpdateFilterWidgets();
-        DrawWindow(0, 0xffff0001, 0xffff);
-        Update();
+        m_randomMapOptions[0] = MAP_DIMENSION_MEDIUM;
+        updateFilterWidgets();
+        drawWindow(0, 0xffff0001, 0xffff);
+        this->update();
         break;
     case SSW_FILTER_MAP_LARGE:
-        field_18A0[0] = MAP_DIMENSION_LARGE;
-        UpdateFilterWidgets();
-        DrawWindow(0, 0xffff0001, 0xffff);
-        Update();
+        m_randomMapOptions[0] = MAP_DIMENSION_LARGE;
+        updateFilterWidgets();
+        drawWindow(0, 0xffff0001, 0xffff);
+        this->update();
         break;
     case SSW_FILTER_MAP_XLARGE:
-        field_18A0[0] = MAP_DIMENSION_EXTRA_LARGE;
-        UpdateFilterWidgets();
-        DrawWindow(0, 0xffff0001, 0xffff);
-        Update();
+        m_randomMapOptions[0] = MAP_DIMENSION_EXTRA_LARGE;
+        updateFilterWidgets();
+        drawWindow(0, 0xffff0001, 0xffff);
+        this->update();
         break;
     case SSW_FILTER_MAP_ALL:
-        field_18A0[1] = SCENARIO_FILTER_CATEGORY_ANY - field_18A0[1];
-        UpdateFilterWidgets();
-        DrawWindow(0, 0xffff0001, 0xffff);
-        Update();
+        m_randomMapOptions[1] = SCENARIO_FILTER_CATEGORY_ANY - m_randomMapOptions[1];
+        updateFilterWidgets();
+        drawWindow(0, 0xffff0001, 0xffff);
+        this->update();
         break;
 
     case SSW_FILTER_PLAYERS_FIRST:
@@ -5786,18 +5857,18 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
     case SSW_FILTER_PLAYERS_FIRST + 5:
     case SSW_FILTER_PLAYERS_FIRST + 6:
     case SSW_FILTER_PLAYERS_LAST:
-        field_18A0[2] = msg->codeY - SSW_FILTER_PLAYERS_FIRST + 1;
-        UpdateFilterWidgets();
-        DrawWindow(0, 0xffff0001, 0xffff);
-        Update();
-        RebuildFilteredPlayerSetup();
+        m_randomMapOptions[2] = msg->m_codeY - SSW_FILTER_PLAYERS_FIRST + 1;
+        updateFilterWidgets();
+        drawWindow(0, 0xffff0001, 0xffff);
+        this->update();
+        rebuildFilteredPlayerSetup();
         break;
     case SSW_FILTER_PLAYERS_ANY:
-        field_18A0[2] = -1;
-        UpdateFilterWidgets();
-        DrawWindow(0, 0xffff0001, 0xffff);
-        Update();
-        RebuildFilteredPlayerSetup();
+        m_randomMapOptions[2] = -1;
+        updateFilterWidgets();
+        drawWindow(0, 0xffff0001, 0xffff);
+        this->update();
+        rebuildFilteredPlayerSetup();
         break;
     case SSW_FILTER_HUMANS_FIRST:
     case SSW_FILTER_HUMANS_FIRST + 1:
@@ -5807,17 +5878,17 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
     case SSW_FILTER_HUMANS_FIRST + 5:
     case SSW_FILTER_HUMANS_FIRST + 6:
     case SSW_FILTER_HUMANS_LAST:
-        field_18A0[3] = msg->codeY - SSW_FILTER_HUMANS_FIRST;
-        UpdateFilterWidgets();
-        DrawWindow(0, 0xffff0001, 0xffff);
-        Update();
-        RebuildFilteredPlayerSetup();
+        m_randomMapOptions[3] = msg->m_codeY - SSW_FILTER_HUMANS_FIRST;
+        updateFilterWidgets();
+        drawWindow(0, 0xffff0001, 0xffff);
+        this->update();
+        rebuildFilteredPlayerSetup();
         break;
     case SSW_FILTER_HUMANS_ANY:
-        field_18A0[3] = -1;
-        UpdateFilterWidgets();
-        DrawWindow(0, 0xffff0001, 0xffff);
-        Update();
+        m_randomMapOptions[3] = -1;
+        updateFilterWidgets();
+        drawWindow(0, 0xffff0001, 0xffff);
+        this->update();
         break;
     case SSW_FILTER_TEAMS_FIRST:
     case SSW_FILTER_TEAMS_FIRST + 1:
@@ -5827,18 +5898,18 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
     case SSW_FILTER_TEAMS_FIRST + 5:
     case SSW_FILTER_TEAMS_FIRST + 6:
     case SSW_FILTER_TEAMS_LAST:
-        field_18A0[4] = msg->codeY - SSW_FILTER_TEAMS_FIRST;
-        UpdateFilterWidgets();
-        DrawWindow(0, 0xffff0001, 0xffff);
-        Update();
-        RebuildFilteredPlayerSetup();
+        m_randomMapOptions[4] = msg->m_codeY - SSW_FILTER_TEAMS_FIRST;
+        updateFilterWidgets();
+        drawWindow(0, 0xffff0001, 0xffff);
+        this->update();
+        rebuildFilteredPlayerSetup();
         break;
     case SSW_FILTER_TEAMS_ANY:
-        field_18A0[4] = -1;
-        UpdateFilterWidgets();
-        DrawWindow(0, 0xffff0001, 0xffff);
-        Update();
-        RebuildFilteredPlayerSetup();
+        m_randomMapOptions[4] = -1;
+        updateFilterWidgets();
+        drawWindow(0, 0xffff0001, 0xffff);
+        this->update();
+        rebuildFilteredPlayerSetup();
         break;
     case SSW_FILTER_VERSION_FIRST:
     case SSW_FILTER_VERSION_FIRST + 1:
@@ -5847,52 +5918,52 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
     case SSW_FILTER_VERSION_FIRST + 4:
     case SSW_FILTER_VERSION_FIRST + 5:
     case SSW_FILTER_VERSION_LAST:
-        field_18A0[5] = msg->codeY - SSW_FILTER_VERSION_FIRST;
-        UpdateFilterWidgets();
-        DrawWindow(0, 0xffff0001, 0xffff);
-        Update();
+        m_randomMapOptions[5] = msg->m_codeY - SSW_FILTER_VERSION_FIRST;
+        updateFilterWidgets();
+        drawWindow(0, 0xffff0001, 0xffff);
+        this->update();
         break;
     case SSW_FILTER_VERSION_ANY:
-        field_18A0[5] = -1;
-        UpdateFilterWidgets();
-        DrawWindow(0, 0xffff0001, 0xffff);
-        Update();
+        m_randomMapOptions[5] = -1;
+        updateFilterWidgets();
+        drawWindow(0, 0xffff0001, 0xffff);
+        this->update();
         break;
     case SSW_FILTER_CATEGORY_FIRST:
     case SSW_FILTER_CATEGORY_FIRST + 1:
     case SSW_FILTER_CATEGORY_FIRST + 2:
     case SSW_FILTER_CATEGORY_LAST:
-        field_18A0[6] = msg->codeY - SSW_FILTER_CATEGORY_FIRST;
-        UpdateFilterWidgets();
-        DrawWindow(0, 0xffff0001, 0xffff);
-        Update();
+        m_randomMapOptions[6] = msg->m_codeY - SSW_FILTER_CATEGORY_FIRST;
+        updateFilterWidgets();
+        drawWindow(0, 0xffff0001, 0xffff);
+        this->update();
         break;
     case SSW_FILTER_DURATION_FIRST:
     case SSW_FILTER_DURATION_FIRST + 1:
     case SSW_FILTER_DURATION_LAST:
-        field_18A0[7] = msg->codeY - SSW_FILTER_DURATION_FIRST;
-        UpdateFilterWidgets();
-        DrawWindow(0, 0xffff0001, 0xffff);
-        Update();
+        m_randomMapOptions[7] = msg->m_codeY - SSW_FILTER_DURATION_FIRST;
+        updateFilterWidgets();
+        drawWindow(0, 0xffff0001, 0xffff);
+        this->update();
         break;
     case SSW_FILTER_DURATION_ANY:
-        field_18A0[7] = -1;
-        UpdateFilterWidgets();
-        DrawWindow(0, 0xffff0001, 0xffff);
-        Update();
+        m_randomMapOptions[7] = -1;
+        updateFilterWidgets();
+        drawWindow(0, 0xffff0001, 0xffff);
+        this->update();
         break;
     case SSW_RANDOM_MAPS:
-        SetupScenarioOptions(1);
-        DrawWindow(0, 0xffff0001, 0xffff);
-        Update();
+        setupScenarioOptions(1);
+        drawWindow(0, 0xffff0001, 0xffff);
+        this->update();
         break;
 
     case SSW_CHAT_TOGGLE:
-        if (bVideoPaused && !receivingMaps) {
-            if (chatShowing)
-                TurnChatOff(1);
+        if (g_videoPaused && !m_receivingMaps) {
+            if (m_chatShowing)
+                turnChatOff(1);
             else
-                TurnChatOn(1);
+                turnChatOn(1);
         }
         break;
 
@@ -5904,23 +5975,23 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
     case SSW_HANDICAP_FIRST + 5:
     case SSW_HANDICAP_FIRST + 6:
     case SSW_HANDICAP_LAST: {
-        if (!bVideoPaused || IsHost() || remoteClick) {
-            int pos = msg->codeY - SSW_HANDICAP_FIRST;
-            CNetPlayerHandlerPlayer* player = m_players.GetPlayerInPos(pos);
+        if (!g_videoPaused || isHost() || remoteClick) {
+            int pos = msg->m_codeY - SSW_HANDICAP_FIRST;
+            CNetPlayerHandlerPlayer* player = m_players.getPlayerInPos(pos);
             if (!player)
                 player = m_players.getCompPlayerInPos(pos);
             if (player) {
-                player->handicap =
-                    static_cast<signed char>((player->handicap + 1) % 3);
-                widget* w = GetWidget(msg->codeY);
+                player->m_handicap =
+                    static_cast<signed char>((player->m_handicap + 1) % 3);
+                widget* w = getWidget(msg->m_codeY);
                 if (w) {
-                    int saveStatus = w->status;
-                    w->status |= widget::WIDGET_ACTIVE;
-                    w->send_message(widget::WIDGET_SET_TEXT,
-                                    int(gUnnamed6a7800[player->handicap]));
-                    w->status = saveStatus;
+                    int saveStatus = w->m_status;
+                    w->m_status |= widget::WIDGET_ACTIVE;
+                    w->sendMessage(widget::WIDGET_SET_TEXT,
+                                    int(g_unnamed6a7800[player->m_handicap]));
+                    w->m_status = saveStatus;
                 }
-                DrawHeroAdvancedOption(pos, 1, -1);
+                drawHeroAdvancedOption(pos, 1, -1);
             }
         }
         break;
@@ -5934,7 +6005,7 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
     case SSW_NAME_FIRST + 5:
     case SSW_NAME_FIRST + 6:
     case SSW_NAME_LAST:
-        OnNameClick(msg->codeY - SSW_NAME_FIRST);
+        onNameClick(msg->m_codeY - SSW_NAME_FIRST);
         break;
 
     case SSW_PLAYER_POS_FIRST:
@@ -5945,27 +6016,27 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
     case SSW_PLAYER_POS_FIRST + 5:
     case SSW_PLAYER_POS_FIRST + 6:
     case SSW_PLAYER_POS_LAST:
-        OnPlayerPosClick(msg->codeY - SSW_PLAYER_POS_FIRST);
-        Update();
+        onPlayerPosClick(msg->m_codeY - SSW_PLAYER_POS_FIRST);
+        this->update();
         break;
 
     case SSW_SORT_NAME:
-        OnSortMaps(SORT_MAPS_BY_NAME);
+        onSortMaps(SORT_MAPS_BY_NAME);
         break;
     case SSW_SORT_SIZE:
-        OnSortMaps(SORT_MAPS_BY_SIZE);
+        onSortMaps(SORT_MAPS_BY_SIZE);
         break;
     case SSW_SORT_VERSION:
-        OnSortMaps(SORT_MAPS_BY_VERSION);
+        onSortMaps(SORT_MAPS_BY_VERSION);
         break;
     case SSW_SORT_PLAYERS:
-        OnSortMaps(SORT_MAPS_BY_PLAYERS);
+        onSortMaps(SORT_MAPS_BY_PLAYERS);
         break;
     case SSW_SORT_VICTORY:
-        OnSortMaps(SORT_MAPS_BY_VICTORY);
+        onSortMaps(SORT_MAPS_BY_VICTORY);
         break;
     case SSW_SORT_LOSS:
-        OnSortMaps(SORT_MAPS_BY_LOSS);
+        onSortMaps(SORT_MAPS_BY_LOSS);
         break;
 
     case SSW_FILE_ROW_FIRST:
@@ -5989,22 +6060,22 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
         // Measured negative (2026-09-01): repeating this expression because
         // DC does not expose the local drops 91.15 -> 89.04; CodeView locals
         // are a lower bound and retail carries one computed map index.
-        unsigned int map = msg->codeY - SSW_FILE_ROW_FIRST + currentIndex;
+        unsigned int map = msg->m_codeY - SSW_FILE_ROW_FIRST + m_currentIndex;
         if (m_flag65) {
-            field_68 = msg->codeY - SSW_FILE_ROW_FIRST;
-            SetCurrentMap(map, 1);
-        } else if (map < SelectionHeaders.size()) {
-            unsigned long lastClick = clickTime;
-            if (static_cast<int>(GameTime::Get() - lastClick) < 400) {
-                *bExitFlag = OnBeginGame();
+            m_textIndex = msg->m_codeY - SSW_FILE_ROW_FIRST;
+            setCurrentMap(map, 1);
+        } else if (map < m_selectionHeaders.size()) {
+            unsigned long lastClick = m_clickTime;
+            if (static_cast<int>(GameTime::get() - lastClick) < 400) {
+                *exitFlag = onBeginGame();
             } else {
-                clickTime = GameTime::Get();
+                m_clickTime = GameTime::get();
                 // Retail's second guard reads size() > map (`cmp edx,edi /
                 // jbe`), the first map < size() (`cmp edi,edx / jae`), and
                 // neither carries a separate size() != 0 test.
-                if (SelectionHeaders.size() > map
-                        && (!bVideoPaused || IsHost()))
-                    SetCurrentMap(map, 1);
+                if (m_selectionHeaders.size() > map
+                        && (!g_videoPaused || isHost()))
+                    setCurrentMap(map, 1);
             }
         }
         break;
@@ -6018,27 +6089,27 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
     case SSW_BONUS_PREV_FIRST + 5:
     case SSW_BONUS_PREV_FIRST + 6:
     case SSW_BONUS_PREV_LAST: {
-        int i = msg->codeY - SSW_BONUS_PREV_FIRST;
-        CNetPlayerHandlerPlayer* pThisPlayer = m_players.GetPlayerInPos(i);
-        if (!pThisPlayer)
-            pThisPlayer = m_players.getCompPlayerInPos(i);
-        if (pThisPlayer) {
+        int i = msg->m_codeY - SSW_BONUS_PREV_FIRST;
+        CNetPlayerHandlerPlayer* thisPlayer = m_players.getPlayerInPos(i);
+        if (!thisPlayer)
+            thisPlayer = m_players.getCompPlayerInPos(i);
+        if (thisPlayer) {
             unsigned char noHero = 0;
-            if (pThisPlayer->heroIndex == -1 && !HasRandomHero(i)
-                    && !HasNonRandomHero(i))
+            if (thisPlayer->m_heroIndex == -1 && !hasRandomHero(i)
+                    && !hasNonRandomHero(i))
                 noHero = 1;
-            --pThisPlayer->startBonusIndex;
-            if (pThisPlayer->startBonusIndex < 0
-                    || (pThisPlayer->startBonusIndex == 0 && noHero))
-                pThisPlayer->startBonusIndex = NEW_MAP_BONUS_RANDOM;
-            if (GetDisplayTown(i) == -1
-                    && pThisPlayer->startBonusIndex == NEW_MAP_BONUS_RESOURCE)
-                pThisPlayer->startBonusIndex = NEW_MAP_BONUS_GOLD;
-            if (bVideoPaused) {
-                CSetAGRMsg msg(i, pThisPlayer->startBonusIndex);
-                TransmitRemoteDataDPID(&msg, 0, false, true);
+            --thisPlayer->m_startBonusIndex;
+            if (thisPlayer->m_startBonusIndex < 0
+                    || (thisPlayer->m_startBonusIndex == 0 && noHero))
+                thisPlayer->m_startBonusIndex = NEW_MAP_BONUS_RANDOM;
+            if (getDisplayTown(i) == -1
+                    && thisPlayer->m_startBonusIndex == NEW_MAP_BONUS_RESOURCE)
+                thisPlayer->m_startBonusIndex = NEW_MAP_BONUS_GOLD;
+            if (g_videoPaused) {
+                CSetAGRMsg msg(i, thisPlayer->m_startBonusIndex);
+                transmitRemoteDataDPID(&msg, 0, false, true);
             }
-            DrawHeroAdvancedOption(i, 1, -1);
+            drawHeroAdvancedOption(i, 1, -1);
         }
         break;
     }
@@ -6050,45 +6121,45 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
     case SSW_BONUS_NEXT_FIRST + 5:
     case SSW_BONUS_NEXT_FIRST + 6:
     case SSW_BONUS_NEXT_LAST: {
-        int i = msg->codeY - SSW_BONUS_NEXT_FIRST;
-        CNetPlayerHandlerPlayer* pThisPlayer = m_players.GetPlayerInPos(i);
-        if (!pThisPlayer)
-            pThisPlayer = m_players.getCompPlayerInPos(i);
-        if (pThisPlayer) {
+        int i = msg->m_codeY - SSW_BONUS_NEXT_FIRST;
+        CNetPlayerHandlerPlayer* thisPlayer = m_players.getPlayerInPos(i);
+        if (!thisPlayer)
+            thisPlayer = m_players.getCompPlayerInPos(i);
+        if (thisPlayer) {
             unsigned char noHero = 0;
-            if (pThisPlayer->heroIndex == -1 && !HasRandomHero(i)
-                    && !HasNonRandomHero(i))
+            if (thisPlayer->m_heroIndex == -1 && !hasRandomHero(i)
+                    && !hasNonRandomHero(i))
                 noHero = 1;
-            pThisPlayer->startBonusIndex =
-                (pThisPlayer->startBonusIndex + 1) % 4;
-            if (pThisPlayer->startBonusIndex == 0 && noHero)
-                pThisPlayer->startBonusIndex = NEW_MAP_BONUS_GOLD;
-            if (GetDisplayTown(i) == -1
-                    && pThisPlayer->startBonusIndex == NEW_MAP_BONUS_RESOURCE)
-                pThisPlayer->startBonusIndex = NEW_MAP_BONUS_RANDOM;
-            if (bVideoPaused) {
-                CSetAGRMsg msg(i, pThisPlayer->startBonusIndex);
-                TransmitRemoteDataDPID(&msg, 0, false, true);
+            thisPlayer->m_startBonusIndex =
+                (thisPlayer->m_startBonusIndex + 1) % 4;
+            if (thisPlayer->m_startBonusIndex == 0 && noHero)
+                thisPlayer->m_startBonusIndex = NEW_MAP_BONUS_GOLD;
+            if (getDisplayTown(i) == -1
+                    && thisPlayer->m_startBonusIndex == NEW_MAP_BONUS_RESOURCE)
+                thisPlayer->m_startBonusIndex = NEW_MAP_BONUS_RANDOM;
+            if (g_videoPaused) {
+                CSetAGRMsg msg(i, thisPlayer->m_startBonusIndex);
+                transmitRemoteDataDPID(&msg, 0, false, true);
             }
-            DrawHeroAdvancedOption(i, 1, -1);
+            drawHeroAdvancedOption(i, 1, -1);
         }
         break;
     }
 
     case SSW_SIZE_FILTER_SMALL:
-        SetFilter(MAP_DIMENSION_SMALL);
+        setFilter(MAP_DIMENSION_SMALL);
         break;
     case SSW_SIZE_FILTER_MEDIUM:
-        SetFilter(MAP_DIMENSION_MEDIUM);
+        setFilter(MAP_DIMENSION_MEDIUM);
         break;
     case SSW_SIZE_FILTER_LARGE:
-        SetFilter(MAP_DIMENSION_LARGE);
+        setFilter(MAP_DIMENSION_LARGE);
         break;
     case SSW_SIZE_FILTER_XLARGE:
-        SetFilter(MAP_DIMENSION_EXTRA_LARGE);
+        setFilter(MAP_DIMENSION_EXTRA_LARGE);
         break;
     case SSW_SIZE_FILTER_ALL:
-        SetFilter(0);
+        setFilter(0);
         break;
 
     }
@@ -6116,9 +6187,11 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg,
 // docs/vc6 records for the prologue-counter lever is WORSE, measured
 // 2026-09-06: `i = 0;` before the memset 98.9548 (with `for (; ...)` and
 // with a `while` alike), and moving the memset BELOW the sprintf loop
-// 89.1584.
+// 89.1584. An unsigned counter flips the loop branch signedness and falls to
+// 99.15%. why-reg tested five additional catalog mutations; three were flat,
+// one worse, one invalid, and none moved the EAX/EDX divergence.
 VA(0x005879A0, 0x219)
-std::string GetRandomMapName()
+std::string getRandomMapName()
 {
     char names[15][30];
     int times[15];
@@ -6126,9 +6199,10 @@ std::string GetRandomMapName()
     int i;
 
     _chdir(DATA_COMPGEN(0x006836ac, randomMapsDir, "random_maps"));
-    long hFind = _findfirst(DATA_COMPGEN(0x00683494, mapFileSpec, "*.h3m"),
+    // Before normalization (locals): hFind.
+    long findHandle = _findfirst(DATA_COMPGEN(0x00683494, mapFileSpec, "*.h3m"),
                             &fileinfo);
-    if (hFind == -1) {
+    if (findHandle == -1) {
         _chdir(DATA_COMPGEN(0x006755a0, parentDirectory, ".."));
         return DATA_COMPGEN(0x006837f8, firstRandomMapName,
                             "random_map_1.h3m");
@@ -6148,10 +6222,10 @@ std::string GetRandomMapName()
                 break;
             }
         }
-    } while (_findnext(hFind, &fileinfo) == 0);
+    } while (_findnext(findHandle, &fileinfo) == 0);
 
     _chdir(DATA_COMPGEN(0x006755a0, parentDirectory, ".."));
-    _findclose(hFind);
+    _findclose(findHandle);
 
     int oldest = times[0];
     int which = 0;
@@ -6171,37 +6245,37 @@ std::string GetRandomMapName()
 // the shared end-dialog command exactly as the tradpost handlers do.
 // E:\gamedcs\singleselectionwindow.cpp:5933
 VA(0x00587bc0, 0x138)  // anchor-vtable vtbl 0x241cac slot14 (ExitDialog override; cf sibling THeroScreenWindow slot14 ExitDialog); label "starting_multiplayer_game", dc 0x13ea70
-int TSingleSelectionWindow::ExitDialog(message* msg)
+int TSingleSelectionWindow::exitDialog(message* msg)
 {
     if (!m_flag64 && !m_flag65) {
-        if (bVideoPaused)
-            pDPlay->SetNetMsgHandler(0);
+        if (g_videoPaused)
+            g_dPlay->setNetMsgHandler(0);
     }
 
-    if (bVideoPaused && !m_flag65) {
-        chatMan.ClearChat();
-        logFile.Log(DATA_COMPGEN(0x0068385c, exitLobbyLog,
+    if (g_videoPaused && !m_flag65) {
+        g_chatMan.clearChat();
+        g_logFile.log(DATA_COMPGEN(0x0068385c, exitLobbyLog,
             "Starting multiplayer game!!! Or maybe exiting??"));
         for (int i = 0; i < 8; ++i) {
-            CNetPlayerHandlerPlayer* player = m_players.GetPlayerInPos(i);
+            CNetPlayerHandlerPlayer* player = m_players.getPlayerInPos(i);
             if (player)
-                logFile.Log(DATA_COMPGEN(0x00683840, exitLobbySeatLog,
+                g_logFile.log(DATA_COMPGEN(0x00683840, exitLobbySeatLog,
                                 "Player[%d]=[%s],dpid=[%d]"),
-                            i, player->sName, player->dpid);
+                            i, player->m_name, player->m_dpid);
         }
-        CNetPlayerHandlerPlayer* player = GetThisPlayer();
+        CNetPlayerHandlerPlayer* player = getThisPlayer();
         if (player)
-            logFile.Log(DATA_COMPGEN(0x00683828, exitLobbySelfLog,
+            g_logFile.log(DATA_COMPGEN(0x00683828, exitLobbySelfLog,
                             "THis player is at [%d]"),
-                        player->playerPos);
+                        player->m_playerPos);
         else
-            logFile.Log(DATA_COMPGEN(0x0068380c, exitLobbyNoSelfLog,
+            g_logFile.log(DATA_COMPGEN(0x0068380c, exitLobbyNoSelfLog,
                             "This player was not found"));
     }
 
-    msg->id = 0x200;
-    gpWindowManager->dialogReturn = msg->codeY;
-    msg->codeX = msg->codeY = 10;
+    msg->m_id = 0x200;
+    g_windowManager->m_dialogReturn = msg->m_codeY;
+    msg->m_codeX = msg->m_codeY = 10;
     return 2;
 }
 
@@ -6226,141 +6300,142 @@ int TSingleSelectionWindow::ExitDialog(message* msg)
 // vs inline respelling of the KP_8 arm measured byte-flat (90.02 both).
 // E:\gamedcs\singleselectionwindow.cpp:5976
 VA(0x00587d00, 0x624)  // anchor-vtable vtbl 0x241cac slot9 (WindowHandler override; cf sibling THeroScreenWindow slot9 WindowHandler) + fingerprint w2.43, dc 0x13ebc0
-int TSingleSelectionWindow::WindowHandler(message* msg)
+int TSingleSelectionWindow::windowHandler(message* msg)
 {
     unsigned char redraw = 0;
-    PollSound();
+    pollSound();
 
-    if (m_flag64 && notifyNoSaved) {
-        notifyNoSaved = 0;
-        NormalDialog(gpGeneralText->GetText(686), 1, -1, -1,
+    if (m_flag64 && g_notifyNoSaved) {
+        g_notifyNoSaved = 0;
+        normalDialog(g_generalText->getText(686), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
-        GetWidget(186)->enable(0);
-        DrawWindow(0, 0xffff0001, 0xffff);
-        Update();
+        getWidget(186)->enable(0);
+        drawWindow(0, 0xffff0001, 0xffff);
+        this->update();
     }
 
     if (m_flag65) {
-        int ret = CAdvPopup::WindowHandler(msg);
+        int ret = CAdvPopup::windowHandler(msg);
         if (ret)
             return ret;
     } else {
-        int ret = CHeroWindowEx::WindowHandler(msg);
+        int ret = CHeroWindowEx::windowHandler(msg);
         if (ret)
             return ret;
 
-        if (pNewPlayerUpdateMan)
-            pNewPlayerUpdateMan->Tick();
+        if (m_newPlayerUpdateMan)
+            m_newPlayerUpdateMan->tick();
 
-        CNetMsg* pMsg = GetRemoteData(1, 0);
+        // Before normalization (locals): pMsg.
+        CNetMsg* networkMsg = getRemoteData(1, 0);
         unsigned char cancel = 0;
-        if (pMsg) {
-            redraw = HandleNetMsg(pMsg, &cancel);
+        if (networkMsg) {
+            redraw = handleNetMsg(networkMsg, &cancel);
             if (redraw && cancel)
-                msg->codeY = 0x7801;
+                msg->m_codeY = 0x7801;
         }
     }
 
-    if (!redraw && msg->id != MESSAGE_NONE) {
-        if (msg->id == MESSAGE_KEY_DOWN) {
-            switch (msg->codeX) {
+    if (!redraw && msg->m_id != MESSAGE_NONE) {
+        if (msg->m_id == MESSAGE_KEY_DOWN) {
+            switch (msg->m_codeX) {
             case KEYCODE_KP_DECIMAL:
-                OnDeleteFile();
+                onDeleteFile();
                 break;
             case KEYCODE_KP_8:
-                if (inScenarioOptions && currentMap != 0 && !m_flag65) {
-                    int newMap = currentMap - 1;
-                    if (newMap < currentIndex) {
-                        currentIndex = newMap;
-                        fileSlider->SetState(newMap);
+                if (m_inScenarioOptions && m_currentMap != 0 && !m_flag65) {
+                    int newMap = m_currentMap - 1;
+                    if (newMap < m_currentIndex) {
+                        m_currentIndex = newMap;
+                        m_fileSlider->setState(newMap);
                     }
-                    DrawWindow(0, 0xffff0001, 0xffff);
-                    SetCurrentMap(newMap, 1);
+                    drawWindow(0, 0xffff0001, 0xffff);
+                    setCurrentMap(newMap, 1);
                 }
                 break;
             case KEYCODE_KP_2:
-                if (inScenarioOptions
-                        && currentMap < GetMapCount() - 1
+                if (m_inScenarioOptions
+                        && m_currentMap < getMapCount() - 1
                         && !m_flag65) {
-                    int newMap = currentMap + 1;
-                    if (newMap > currentIndex + gUnnamed69fdc8 - 1) {
-                        ++currentIndex;
-                        if (currentIndex
-                                > GetMapCount() - gUnnamed69fdc8)
-                            currentIndex =
-                                GetMapCount() - gUnnamed69fdc8;
-                        fileSlider->SetState(currentIndex);
+                    int newMap = m_currentMap + 1;
+                    if (newMap > m_currentIndex + g_unnamed69fdc8 - 1) {
+                        ++m_currentIndex;
+                        if (m_currentIndex
+                                > getMapCount() - g_unnamed69fdc8)
+                            m_currentIndex =
+                                getMapCount() - g_unnamed69fdc8;
+                        m_fileSlider->setState(m_currentIndex);
                     }
-                    DrawWindow(0, 0xffff0001, 0xffff);
-                    SetCurrentMap(newMap, 1);
+                    drawWindow(0, 0xffff0001, 0xffff);
+                    setCurrentMap(newMap, 1);
                 }
                 break;
             case KEYCODE_KP_9:
-                if (inScenarioOptions) {
-                    int offset = currentMap - currentIndex;
-                    int newTop = currentIndex - gUnnamed69fdc8 + 1;
+                if (m_inScenarioOptions) {
+                    int offset = m_currentMap - m_currentIndex;
+                    int newTop = m_currentIndex - g_unnamed69fdc8 + 1;
                     if (newTop < 0)
                         newTop = 0;
-                    currentIndex = newTop;
-                    fileSlider->SetState(newTop);
-                    DrawWindow(0, 0xffff0001, 0xffff);
-                    SetCurrentMap(currentIndex + offset, 1);
+                    m_currentIndex = newTop;
+                    m_fileSlider->setState(newTop);
+                    drawWindow(0, 0xffff0001, 0xffff);
+                    setCurrentMap(m_currentIndex + offset, 1);
                 }
                 break;
             case KEYCODE_KP_3:
-                if (inScenarioOptions) {
-                    int offset = currentMap - currentIndex;
-                    int newTop = currentIndex + gUnnamed69fdc8 - 1;
-                    if (GetMapCount() > static_cast<unsigned int>(gUnnamed69fdc8)) {
-                        if (newTop > GetMapCount() - gUnnamed69fdc8)
-                            newTop = GetMapCount() - gUnnamed69fdc8;
-                        currentIndex = newTop;
-                        fileSlider->SetState(newTop);
-                        DrawWindow(0, 0xffff0001, 0xffff);
-                        SetCurrentMap(currentIndex + offset, 1);
+                if (m_inScenarioOptions) {
+                    int offset = m_currentMap - m_currentIndex;
+                    int newTop = m_currentIndex + g_unnamed69fdc8 - 1;
+                    if (getMapCount() > static_cast<unsigned int>(g_unnamed69fdc8)) {
+                        if (newTop > getMapCount() - g_unnamed69fdc8)
+                            newTop = getMapCount() - g_unnamed69fdc8;
+                        m_currentIndex = newTop;
+                        m_fileSlider->setState(newTop);
+                        drawWindow(0, 0xffff0001, 0xffff);
+                        setCurrentMap(m_currentIndex + offset, 1);
                     }
                 }
                 break;
             case KEYCODE_ENTER:
                 if (m_flag65)
-                    redraw = SaveValid(saveGameEdit->Text.c_str());
+                    redraw = saveValid(m_saveGameEdit->m_text.c_str());
                 break;
             }
-        } else if (msg->id == MESSAGE_WIDGET) {
-            if (msg->codeX == widget::WIDGET_DESELECT)
-                OnWidgetDeselect(msg, &redraw, 0);
-        } else if (msg->id == MESSAGE_MOUSE_MOVE) {
-            int id = findWidget(msg->mouseX, msg->mouseY);
-            if (id != lastIMHoverID) {
+        } else if (msg->m_id == MESSAGE_WIDGET) {
+            if (msg->m_codeX == widget::WIDGET_DESELECT)
+                onWidgetDeselect(msg, &redraw, 0);
+        } else if (msg->m_id == MESSAGE_MOUSE_MOVE) {
+            int id = findWidget(msg->m_mouseX, msg->m_mouseY);
+            if (id != g_lastImHoverId) {
                 if (id >= 0x107 && id <= 0x10e) {
-                    if (lastIMHoverID != -1) {
-                        widget* previous = GetWidget(lastIMHoverID);
-                        previous->send_message(
+                    if (g_lastImHoverId != -1) {
+                        widget* previous = getWidget(g_lastImHoverId);
+                        previous->sendMessage(
                             widget::WIDGET_CLEAR_STATUS, 0x10);
-                        DrawHeroAdvancedOption(
-                            lastIMHoverID - 0x107, 1, -1);
+                        drawHeroAdvancedOption(
+                            g_lastImHoverId - 0x107, 1, -1);
                     }
-                    if (!bVideoPaused || pDPlay->IsHost()) {
-                        widget* hovered = GetWidget(id);
-                        hovered->send_message(
+                    if (!g_videoPaused || g_dPlay->isHost()) {
+                        widget* hovered = getWidget(id);
+                        hovered->sendMessage(
                             widget::WIDGET_SET_STATUS, 0x10);
-                        DrawHeroAdvancedOption(id - 0x107, 1, -1);
+                        drawHeroAdvancedOption(id - 0x107, 1, -1);
                     }
-                    lastIMHoverID = id;
-                } else if (lastIMHoverID != -1) {
-                    widget* previous = GetWidget(lastIMHoverID);
-                    previous->send_message(
+                    g_lastImHoverId = id;
+                } else if (g_lastImHoverId != -1) {
+                    widget* previous = getWidget(g_lastImHoverId);
+                    previous->sendMessage(
                         widget::WIDGET_CLEAR_STATUS, 0x10);
-                    DrawHeroAdvancedOption(lastIMHoverID - 0x107, 1, -1);
-                    lastIMHoverID = -1;
+                    drawHeroAdvancedOption(g_lastImHoverId - 0x107, 1, -1);
+                    g_lastImHoverId = -1;
                 }
             }
         }
     }
 
     if (redraw)
-        return ExitDialog(msg);
-    msg->id = 0;
+        return exitDialog(msg);
+    msg->m_id = 0;
     return 1;
 }
 
@@ -6368,7 +6443,7 @@ int TSingleSelectionWindow::WindowHandler(message* msg)
 
 // E:\gamedcs\singleselectionwindow.cpp:6296
 DC_ONLY(0x13f748, 0x28)
-int TSingleSelectionWindow::GetThisPlayerGamePos()
+int TSingleSelectionWindow::getThisPlayerGamePos()
 {
     // @stub
 }
@@ -6379,9 +6454,9 @@ int TSingleSelectionWindow::GetThisPlayerGamePos()
 
 // Like GetThisPlayer above: retail keeps no out-of-line copy (the
 // DC_ONLY row below stays), every caller expands the GetGamePos chain.
-inline int TSingleSelectionWindow::GetThisPlayerGamePos()
+inline int TSingleSelectionWindow::getThisPlayerGamePos()
 {
-    return m_players.getGamePos(gsThisNetPlayerInfo.dpid);
+    return m_players.getGamePos(g_thisNetPlayerInfo.m_dpid);
 }
 
 // MATCHING (2026-09-04): 70.46 -> 98.49 on the DC line-table shape
@@ -6392,10 +6467,11 @@ inline int TSingleSelectionWindow::GetThisPlayerGamePos()
 // `if (IsHost() && updateCurPlayer)`, and both stores of the final
 // mode-3 if/else in each arm. The GetGamePos arm order in the header
 // (early `return -1`, playerPos as the fall-through) is what places the
-// found path in line at 0x588458. Residual: the seat loop's counter
-// lives at [ebp-0x8] here and [ebp-0xc] in retail (slot order only);
-// flipping the commit loop's strcpy/comp arms measured 84.52 and is
-// rejected.
+// found path in line at 0x588458. The final 99.6198 -> 100 step restores
+// DC rows 6382/6385 as separate `if (player)` / `if (!player)` statements;
+// spelling the second condition as `else` removes retail's `mov eax, ebx`
+// before the null test. Flipping the commit loop's strcpy/comp arms measured
+// 84.52 and is rejected.
 // Rebuilds the per-seat game state from the lobby roster: clears the
 // non-host players' local/human flags, assigns or clears each seat's
 // net identity (with the hotseat mode-3 special), commits the roster's
@@ -6403,89 +6479,90 @@ inline int TSingleSelectionWindow::GetThisPlayerGamePos()
 // re-derives the acting-player globals and the visibility mask.
 // E:\gamedcs\singleselectionwindow.cpp:6301
 VA(0x00588330, 0x462)  // anchor-callee mutual call-graph: OnGameTransmitInitMsg(0x589b20) calls this per DC edge; fingerprint w4.14 + monotone, dc 0x13f770
-void TSingleSelectionWindow::UpdatePlayerPositions(unsigned char updateCurPlayer)
+void TSingleSelectionWindow::updatePlayerPositions(unsigned char updateCurPlayer)
 {
-    gUnnamed699274 = 0;
+    g_unnamed699274 = 0;
     for (int i = 0; i < 8; ++i) {
-        gpGame->players[i].isLocal = 0;
-        gpGame->players[i].isHuman = 0;
+        g_game->m_players[i].m_isLocal = 0;
+        g_game->m_players[i].m_isHuman = 0;
     }
 
-    if (IsMultiPlayer()) {
+    if (isMultiPlayer()) {
         for (int i = 0; i < 8; ++i) {
-            CNetPlayerHandlerPlayer* pPlayer = m_players.GetPlayerInPos(i);
-            if (!pPlayer)
-                pPlayer = m_players.getCompPlayerInPos(i);
-            if (pPlayer && pPlayer->IsHuman()) {
-                gpGame->players[i].AssignNetInfo(pPlayer);
-                if (gUnnamed6989f0 == WINDOW_MODE_6989F0_3) {
-                    gpGame->players[i].isLocal = 1;
-                    gpGame->players[i].isHuman = 1;
+            // Before normalization (locals): pPlayer.
+            CNetPlayerHandlerPlayer* player = m_players.getPlayerInPos(i);
+            if (!player)
+                player = m_players.getCompPlayerInPos(i);
+            if (player && player->isHuman()) {
+                g_game->m_players[i].assignNetInfo(player);
+                if (g_unnamed6989f0 == WINDOW_MODE_6989F0_3) {
+                    g_game->m_players[i].m_isLocal = 1;
+                    g_game->m_players[i].m_isHuman = 1;
                 }
-                ++gUnnamed699274;
+                ++g_unnamed699274;
             } else {
-                gpGame->players[i].ClearNetInfo();
+                g_game->m_players[i].clearNetInfo();
             }
         }
-        if (gUnnamed6989f0 != WINDOW_MODE_6989F0_3) {
-            gLocalGamePos = GetThisPlayerGamePos();
-            if (gLocalGamePos != -1) {
-                gpGame->players[gLocalGamePos].isLocal = 1;
-                gpGame->players[gLocalGamePos].isHuman = 1;
+        if (g_unnamed6989f0 != WINDOW_MODE_6989F0_3) {
+            g_localGamePos = getThisPlayerGamePos();
+            if (g_localGamePos != -1) {
+                g_game->m_players[g_localGamePos].m_isLocal = 1;
+                g_game->m_players[g_localGamePos].m_isHuman = 1;
             }
-            if (IsHost() && updateCurPlayer)
-                gNetLocalGamePos = gLocalGamePos;
+            if (isHost() && updateCurPlayer)
+                g_netLocalGamePos = g_localGamePos;
         }
     } else {
-        gUnnamed699274 = 0;
-        CNetPlayerHandlerPlayer* pPlayer = GetThisPlayer();
-        if (pPlayer) {
-            gLocalGamePos = pPlayer->playerPos;
-            gpGame->players[gLocalGamePos].isHuman = 1;
-            gpGame->players[gLocalGamePos].isLocal = 1;
-            gUnnamed699274 = 1;
+        g_unnamed699274 = 0;
+        CNetPlayerHandlerPlayer* player = getThisPlayer();
+        if (player) {
+            g_localGamePos = player->m_playerPos;
+            g_game->m_players[g_localGamePos].m_isHuman = 1;
+            g_game->m_players[g_localGamePos].m_isLocal = 1;
+            g_unnamed699274 = 1;
         }
     }
 
     for (i = 0; i < 8; ++i) {
-        strcpy(gpGame->players[i].cName, gpGeneralText->GetText(469));
-        CNetPlayerHandlerPlayer* pPlayer = m_players.GetPlayerInPos(i);
-        if (pPlayer)
-            strcpy(gpGame->players[i].cName, pPlayer->sName);
-        else
-            pPlayer = m_players.getCompPlayerInPos(i);
-        if (pPlayer) {
-            gNewMapStartingBonus[i] = pPlayer->startBonusIndex;
+        strcpy(g_game->m_players[i].m_name, g_generalText->getText(469));
+        CNetPlayerHandlerPlayer* player = m_players.getPlayerInPos(i);
+        if (player)
+            strcpy(g_game->m_players[i].m_name, player->m_name);
+        if (!player)
+            player = m_players.getCompPlayerInPos(i);
+        if (player) {
+            g_newMapStartingBonus[i] = player->m_startBonusIndex;
             if (!m_flag64) {
-                gpGame->setup.startingBonus[i] =
-                    static_cast<signed char>(pPlayer->startBonusIndex);
-                gpGame->setup.startingHero[i] = -1;
-                if (pPlayer->townIndex != -1)
-                    gpGame->setup.alignment[i] = pPlayer->townIndex;
-                else if (pPlayer->IsHuman())
-                    gpGame->setup.alignment[i] =
-                        pCurrentHeader->setup.alignment[i];
-                else if (gpGame->setup.playerPos[i] >= 0)
-                    gpGame->setup.alignment[i] = pick_alignment(
-                        gpGame->mapHeader.playerSlotAttributes[i]
-                            .legalAlignments, 0);
+                g_game->m_setup.m_startingBonus[i] =
+                    static_cast<signed char>(player->m_startBonusIndex);
+                g_game->m_setup.m_startingHero[i] = -1;
+                if (player->m_townIndex != -1)
+                    g_game->m_setup.m_alignment[i] = player->m_townIndex;
+                else if (player->isHuman())
+                    g_game->m_setup.m_alignment[i] =
+                        m_currentHeader->m_setup.m_alignment[i];
+                else if (g_game->m_setup.m_playerPos[i] >= 0)
+                    g_game->m_setup.m_alignment[i] = pickAlignment(
+                        g_game->m_mapHeader.m_playerSlotAttributes[i]
+                            .m_legalAlignments, 0);
             }
             if (!m_flag64)
-                gpGame->setup.handicap[i] = pPlayer->handicap;
+                g_game->m_setup.m_handicap[i] = player->m_handicap;
         }
     }
 
     if (updateCurPlayer)
-        gpGame->SetupFirstPlayer();
+        g_game->setupFirstPlayer();
 
-    if (gUnnamed6989f0 == WINDOW_MODE_6989F0_3) {
-        gUnnamed69778c = gNetLocalGamePos;
-        gMapVisibilityBit = 1 << gNetLocalGamePos;
+    if (g_unnamed6989f0 == WINDOW_MODE_6989F0_3) {
+        g_unnamed69778c = g_netLocalGamePos;
+        g_mapVisibilityBit = 1 << g_netLocalGamePos;
     } else {
-        gUnnamed69778c = gLocalGamePos;
-        gMapVisibilityBit = 1 << gLocalGamePos;
+        g_unnamed69778c = g_localGamePos;
+        g_mapVisibilityBit = 1 << g_localGamePos;
     }
-    gCompleteDrawEnabled = gpGame->IsLocalHuman(gNetLocalGamePos);
+    g_completeDrawEnabled = g_game->isLocalHuman(g_netLocalGamePos);
 }
 
 #if 0  // @carcass
@@ -6500,11 +6577,12 @@ void TSingleSelectionWindow::UpdatePlayerPositions(unsigned char updateCurPlayer
 // the dialog down (transmit-init handled, session lost, bad version,
 // failed header init); every path destroys the message.
 // E:\gamedcs\singleselectionwindow.cpp:6443 - relocated for RVA order.
+// Before normalization (locals): pNetMsg, pMsg, bExitFlag.
 VA(0x005887a0, 0x9ED)  // anchor-callee WindowHandler's net pump calls it (pMsg, &cancel) right after GetRemoteData(1,0) - the DC signature; size 1.5x dc 0x6a0, dc 0x13fd74
-unsigned char TSingleSelectionWindow::HandleNetMsg(CNetMsg* pNetMsg, unsigned char* cancel)
+unsigned char TSingleSelectionWindow::handleNetMsg(CNetMsg* netMsg, unsigned char* cancel)
 {
-    if (!receivedMaps) {
-        switch (pNetMsg->subType) {
+    if (!m_receivedMaps) {
+        switch (netMsg->m_subType) {
         case RS_GAME_TRANSMIT_INIT:
         case RS_CHAT_MSG:
         case RS_PLAYER_DROPPED:
@@ -6525,25 +6603,25 @@ unsigned char TSingleSelectionWindow::HandleNetMsg(CNetMsg* pNetMsg, unsigned ch
         case RS_HEADERS_REQUEST:
             break;
         default:
-            DestroyMsg(pNetMsg);
+            destroyMsg(netMsg);
             return 0;
         }
     }
 
-    switch (pNetMsg->subType) {
+    switch (netMsg->m_subType) {
     case RS_UPDATE_PLAYER_POS:
-        OnUpdatePlayerPosMsg(pNetMsg);
+        onUpdatePlayerPosMsg(netMsg);
         break;
     case RS_NEW_SETUP_INFO:
-        OnNewSetupInfoMsg(pNetMsg);
+        onNewSetupInfoMsg(netMsg);
         break;
     case RS_NEW_PLAYER:
-        OnNewPlayerMsg(pNetMsg);
+        onNewPlayerMsg(netMsg);
         break;
     case RS_HEADERS_REQUEST:
-        if (!bVideoPaused || pDPlay->IsHost()) {
-            unsigned long dpid = pNetMsg->field_04;
-            CNewPlayerUpdateMan* man = pNewPlayerUpdateMan;
+        if (!g_videoPaused || g_dPlay->isHost()) {
+            unsigned long dpid = netMsg->m_dpidFrom;
+            CNewPlayerUpdateMan* man = m_newPlayerUpdateMan;
             int slot = man->getFirstAvailable();
             if (slot != -1) {
                 // Retail calls the 0x641d38 t_map_list_update ctor at
@@ -6553,77 +6631,77 @@ unsigned char TSingleSelectionWindow::HandleNetMsg(CNetMsg* pNetMsg, unsigned ch
                 t_map_list_update* proc = new t_map_list_update(dpid);
 #pragma inline_depth()
                 man->m_procs[slot] = proc;
-                proc->Go();
+                proc->go();
             }
         }
         break;
     case RS_GAME_TRANSMIT_INIT: {
-        receivedMaps = 1;
+        m_receivedMaps = 1;
         // GetThisPlayer open-coded twice: this caller keeps the inner
         // GetPlayer OUT of line (budget) while ExitDialog's expansions
         // inline it - a per-site split the shared inline cannot spell.
         CNetPlayerHandlerPlayer* p;
-        if (gUnnamed6989f0 == WINDOW_MODE_6989F0_3)
-            p = &m_players.humanPlayers[0];
+        if (g_unnamed6989f0 == WINDOW_MODE_6989F0_3)
+            p = &m_players.m_humanPlayers[0];
         else {
 #pragma inline_depth(0)
-            p = m_players.GetPlayer(gsThisNetPlayerInfo.dpid);
+            p = m_players.getPlayer(g_thisNetPlayerInfo.m_dpid);
 #pragma inline_depth()
         }
         if (p) {
-            if (gUnnamed6989f0 == WINDOW_MODE_6989F0_3)
-                p = &m_players.humanPlayers[0];
+            if (g_unnamed6989f0 == WINDOW_MODE_6989F0_3)
+                p = &m_players.m_humanPlayers[0];
             else {
 #pragma inline_depth(0)
-                p = m_players.GetPlayer(gsThisNetPlayerInfo.dpid);
+                p = m_players.getPlayer(g_thisNetPlayerInfo.m_dpid);
 #pragma inline_depth()
             }
-            if (p->playerPos == -1) {
-                DestroyMsg(pNetMsg);
-                RemoteCleanup();
+            if (p->m_playerPos == -1) {
+                destroyMsg(netMsg);
+                remoteCleanup();
                 *cancel = 1;
-                NormalDialog(gpGeneralText->GetText(525), 1, -1, -1,
+                normalDialog(g_generalText->getText(525), 1, -1, -1,
                              -1, 0, -1, 0, -1, 0, -1, 0);
                 return 1;
             }
         }
-        if (OnGameTransmitInitMsg(pNetMsg)) {
-            DestroyMsg(pNetMsg);
+        if (onGameTransmitInitMsg(netMsg)) {
+            destroyMsg(netMsg);
             return 1;
         }
     }
         // fall through - a failed transfer is a lost session
     case RS_SESSION_LOST:
-        NormalDialog(gpGeneralText->GetText(329), 1, -1, -1,
+        normalDialog(g_generalText->getText(329), 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
-        ShutDown(0);
+        shutDown(0);
         break;
     case RS_PLAYER_DROPPED: {
 #pragma inline_depth(0)
         CNetPlayerHandlerPlayer* p =
-            m_players.GetPlayer(pNetMsg->field_04);
-        m_players.DeletePlayer(pNetMsg->field_04);
-        field_1898 = GetPlayerCount();
-        pNewPlayerUpdateMan->PlayerDropped(pNetMsg->field_04);
+            m_players.getPlayer(netMsg->m_dpidFrom);
+        m_players.deletePlayer(netMsg->m_dpidFrom);
+        m_commonGameVersion = getCommonGameVersion();
+        m_newPlayerUpdateMan->playerDropped(netMsg->m_dpidFrom);
 #pragma inline_depth()
         if (p)
-            PlayerDropMsg(&chatMan, gpGeneralText->GetText(527),
-                          p->sName);
-        UpdateNameLists();
-        DisplayChat();
-        DrawWindow(0, 0xffff0001, 0xffff);
-        Update();
+            playerDropMsg(&g_chatMan, g_generalText->getText(527),
+                          p->m_name);
+        updateNameLists();
+        displayChat();
+        drawWindow(0, 0xffff0001, 0xffff);
+        this->update();
         break;
     }
     case RS_SET_AS_HOST:
-        if (gbNoCDRom) {
-            RemoteCleanup();
-            NormalDialog(gpGeneralText->GetText(655), 1, -1, -1,
+        if (g_noCdRom) {
+            remoteCleanup();
+            normalDialog(g_generalText->getText(655), 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             *cancel = 1;
             return 1;
         }
-        OnSetAsHostMsg(pNetMsg);
+        onSetAsHostMsg(netMsg);
         break;
     case RS_NEW_MAP_HEADER_INFO: {
         // Residual: retail wraps this header in an 0x18-byte stream-reader
@@ -6634,198 +6712,198 @@ unsigned char TSingleSelectionWindow::HandleNetMsg(CNetMsg* pNetMsg, unsigned ch
 #pragma inline_depth(0)
         NewSMapHeader header;
 #pragma inline_depth()
-        gpGame->SetupOrigData();
+        g_game->setupOrigData();
         break;
     }
     case RS_GAME_HEADER_INFO:
-        OnGameHeaderInfoMsg(pNetMsg);
+        onGameHeaderInfoMsg(netMsg);
         break;
     case RS_GAME_HEADER_INFO_END:
-        receivedMaps = 1;
-        currentIndex = 0;
-        currentMap = 0;
-        receivingMaps = 0;
-        if (chatShowing)
-            GetWidget(179)->send_message(
+        m_receivedMaps = 1;
+        m_currentIndex = 0;
+        m_currentMap = 0;
+        m_receivingMaps = 0;
+        if (m_chatShowing)
+            getWidget(179)->sendMessage(
                 widget::WIDGET_SET_STATUS,
                 widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        fileSlider->SetResolution(
-            GetMapCount() - gUnnamed69fdc8 + 1);
+        m_fileSlider->setResolution(
+            getMapCount() - g_unnamed69fdc8 + 1);
         // Retail calls the size() COMDAT here (0x588b8d) while
         // expanding it at the slider-resolution site above - the
         // statement pin imposes the split.
 #pragma inline_depth(0)
-        if (SelectionHeaders.size() > 0)
-            UpdateGameVars();
+        if (m_selectionHeaders.size() > 0)
+            updateGameVars();
 #pragma inline_depth()
-        DrawWindow(0, 0xffff0001, 0xffff);
-        Update();
+        drawWindow(0, 0xffff0001, 0xffff);
+        this->update();
         break;
     case RS_SCROLL: {
-        CScrollMsg* pMsg = static_cast<CScrollMsg*>(pNetMsg);
-        currentIndex = pMsg->m_index;
-        fileSlider->SetState(pMsg->m_index);
-        SetCurrentMap(pMsg->m_map, 1);
+        CScrollMsg* msg = static_cast<CScrollMsg*>(netMsg);
+        m_currentIndex = msg->m_index;
+        m_fileSlider->setState(msg->m_index);
+        setCurrentMap(msg->m_map, 1);
         break;
     }
     case RS_GAME_HEADER_INFO_INIT:
-        if (!OnGameHeaderInfoInitMsg(pNetMsg)) {
+        if (!onGameHeaderInfoInitMsg(netMsg)) {
             *cancel = 1;
-            DestroyMsg(pNetMsg);
+            destroyMsg(netMsg);
             return 1;
         }
         break;
     case RS_GAME_HEADER_INFO_INIT_EX:
-        OnGameHeaderInfoInitMsgEx(pNetMsg);
+        onGameHeaderInfoInitMsgEx(netMsg);
         break;
     case RS_SORT_MAPS: {
-        CSortMapsMsg* pMsg = static_cast<CSortMapsMsg*>(pNetMsg);
-        sortDirection = pMsg->m_direction != 0;
-        SortMaps(pMsg->m_how, 1, 1);
+        CSortMapsMsg* msg = static_cast<CSortMapsMsg*>(netMsg);
+        m_sortDirection = msg->m_direction != 0;
+        sortMaps(msg->m_how, 1, 1);
         break;
     }
     case RS_SET_FILTER:
-        SetFilter(static_cast<CSetFilterMsg*>(pNetMsg)->m_size);
+        setFilter(static_cast<CSetFilterMsg*>(netMsg)->m_size);
         break;
     case RS_REQUEST_HERO_FACE:
-        if (!bVideoPaused || pDPlay->IsHost()) {
+        if (!g_videoPaused || g_dPlay->isHost()) {
 #pragma inline_depth(0)
             CNetPlayerHandlerPlayer* p =
-                m_players.GetPlayer(pNetMsg->field_04);
+                m_players.getPlayer(netMsg->m_dpidFrom);
 #pragma inline_depth()
-            if (p && p->playerPos != -1) {
-                GetHeroFace(
-                    static_cast<CRequestHeroFaceMsg*>(pNetMsg)->m_which,
+            if (p && p->m_playerPos != -1) {
+                getHeroFace(
+                    static_cast<CRequestHeroFaceMsg*>(netMsg)->m_which,
                     p);
-                CRequestHeroFaceReplyMsg reply(p->playerPos,
-                                               p->heroIndex);
-                TransmitRemoteDataDPID(&reply, 0, false, true);
+                CRequestHeroFaceReplyMsg reply(p->m_playerPos,
+                                               p->m_heroIndex);
+                transmitRemoteDataDPID(&reply, 0, false, true);
 #pragma inline_depth(0)
-                OnRequestHeroFaceReplyMsg(&reply, 0);
+                onRequestHeroFaceReplyMsg(&reply, 0);
 #pragma inline_depth()
             }
         }
         break;
     case RS_REQUEST_HERO_FACE_REPLY: {
-        CRequestHeroFaceReplyMsg* pMsg =
-            static_cast<CRequestHeroFaceReplyMsg*>(pNetMsg);
+        CRequestHeroFaceReplyMsg* msg =
+            static_cast<CRequestHeroFaceReplyMsg*>(netMsg);
 #pragma inline_depth(0)
         CNetPlayerHandlerPlayer* p =
-            m_players.GetPlayerInPos(pMsg->m_pos);
+            m_players.getPlayerInPos(msg->m_pos);
 #pragma inline_depth()
         if (p) {
-            p->heroIndex = pMsg->m_face;
-            DrawWindow(0, 0xffff0001, 0xffff);
-            Update();
+            p->m_heroIndex = msg->m_face;
+            drawWindow(0, 0xffff0001, 0xffff);
+            this->update();
         }
         break;
     }
     case RS_SETAGR: {
-        CSetAGRMsg* pMsg = static_cast<CSetAGRMsg*>(pNetMsg);
+        CSetAGRMsg* msg = static_cast<CSetAGRMsg*>(netMsg);
 #pragma inline_depth(0)
         CNetPlayerHandlerPlayer* p =
-            m_players.GetPlayerInPos(pMsg->m_gamePos);
+            m_players.getPlayerInPos(msg->m_gamePos);
 #pragma inline_depth()
         if (!p)
-            p = &m_players.computerPlayers[pMsg->m_gamePos];
+            p = &m_players.m_computerPlayers[msg->m_gamePos];
         if (p) {
-            p->startBonusIndex = pMsg->m_agr;
-            DrawHeroAdvancedOption(pMsg->m_gamePos, 1, -1);
+            p->m_startBonusIndex = msg->m_agr;
+            drawHeroAdvancedOption(msg->m_gamePos, 1, -1);
         }
         break;
     }
     case RS_NEW_HOST:
-        OnNewHostMsg(pNetMsg);
+        onNewHostMsg(netMsg);
         break;
     case RS_CHAT_MSG: {
 #pragma inline_depth(0)
         CNetPlayerHandlerPlayer* p =
-            m_players.GetPlayer(pNetMsg->field_04);
+            m_players.getPlayer(netMsg->m_dpidFrom);
 #pragma inline_depth()
         if (p) {
-            AddChat(&chatMan,
+            addChat(&g_chatMan,
                     DATA_COMPGEN(0x00682ab4, chatPlayerLineFormat,
                                  "%s: %s"),
-                    p->sName,
-                    static_cast<CChatMsg*>(pNetMsg)->m_text);
-            DisplayChat();
+                    p->m_name,
+                    static_cast<CChatMsg*>(netMsg)->m_text);
+            displayChat();
         }
         break;
     }
     case RS_MAP_FILE_NAME:
-        OnMapFileNameMsg(pNetMsg);
+        onMapFileNameMsg(netMsg);
         break;
     case RS_HEADER_CONFIRM:
-        pNewPlayerUpdateMan->HeaderConfirmed(pNetMsg->field_04);
-        logFile.Log(DATA_COMPGEN(0x006838c0, headerConfirmedLog,
+        m_newPlayerUpdateMan->headerConfirmed(netMsg->m_dpidFrom);
+        g_logFile.log(DATA_COMPGEN(0x006838c0, headerConfirmedLog,
                         "Header confirmed [%d]"),
-                    pNetMsg->field_04);
+                    netMsg->m_dpidFrom);
         break;
     case RS_REQ_HEADER_CONFIRM:
-        if (!CheckMissingHeaders(pNetMsg->field_04)) {
-            logFile.Log(DATA_COMPGEN(0x006838ac, noMissingHeadersLog,
+        if (!checkMissingHeaders(netMsg->m_dpidFrom)) {
+            g_logFile.log(DATA_COMPGEN(0x006838ac, noMissingHeadersLog,
                             "No Missing Headers"));
             CHeaderConfirmMsg confirm;
-            TransmitRemoteDataDPID(&confirm, pNetMsg->field_04,
+            transmitRemoteDataDPID(&confirm, netMsg->m_dpidFrom,
                                    false, true);
         }
         break;
     case RS_MAP_HEADER_REQUEST: {
-        CMapHeaderRequestMsg* pMsg =
-            static_cast<CMapHeaderRequestMsg*>(pNetMsg);
-        pNewPlayerUpdateMan->HeaderRequested(pNetMsg->field_04,
-                                             pMsg->m_flag,
-                                             pMsg->m_number);
-        logFile.Log(DATA_COMPGEN(0x0068388c, headerRequestedLog,
+        CMapHeaderRequestMsg* msg =
+            static_cast<CMapHeaderRequestMsg*>(netMsg);
+        m_newPlayerUpdateMan->headerRequested(netMsg->m_dpidFrom,
+                                             msg->m_flag,
+                                             msg->m_number);
+        g_logFile.log(DATA_COMPGEN(0x0068388c, headerRequestedLog,
                         "Header requested [%d] [%d] [%d]"),
-                    pNetMsg->field_04, pMsg->m_flag, pMsg->m_number);
+                    netMsg->m_dpidFrom, msg->m_flag, msg->m_number);
         break;
     }
     case RS_CLICK: {
         lobby_message m;
-        unsigned char bExitFlag;
-        m.codeY = static_cast<CClickMsg*>(pNetMsg)->m_widgetId;
-        OnWidgetDeselect(&m, &bExitFlag, 1);
+        unsigned char exitFlag;
+        m.m_codeY = static_cast<CClickMsg*>(netMsg)->m_widgetId;
+        onWidgetDeselect(&m, &exitFlag, 1);
         break;
     }
     case RS_TOWN_UPDATE: {
-        CTownUpdateMsg* pMsg = static_cast<CTownUpdateMsg*>(pNetMsg);
+        CTownUpdateMsg* msg = static_cast<CTownUpdateMsg*>(netMsg);
 #pragma inline_depth(0)
-        UpdateTown(pMsg->m_gamePos, pMsg->m_town, 0);
+        updateTown(msg->m_gamePos, msg->m_town, 0);
 #pragma inline_depth()
         break;
     }
     case RS_LAUNCHING_GAME: {
         CHostWaitDlg dlg;
-        dlg.Wait(pNetMsg->field_04, gpGeneralText->GetText(731));
-        HandleNetMsg(dlg.m_pMsg, cancel);
+        dlg.wait(netMsg->m_dpidFrom, g_generalText->getText(731));
+        handleNetMsg(dlg.m_msg, cancel);
         break;
     }
     case RS_GAME_TRANSMIT_PENDING: {
         CHostWaitDlg dlg;
-        dlg.Wait(pNetMsg->field_04, gpGeneralText->GetText(534));
-        HandleNetMsg(dlg.m_pMsg, cancel);
+        dlg.wait(netMsg->m_dpidFrom, g_generalText->getText(534));
+        handleNetMsg(dlg.m_msg, cancel);
         break;
     }
     case RS_BAD_VERSION:
 #pragma inline_depth(0)
-        OnBadVersionMsg(pNetMsg);
+        onBadVersionMsg(netMsg);
 #pragma inline_depth()
         *cancel = 1;
         return 1;
     case RS_SETUP_PING:
 #pragma inline_depth(0)
-        OnPingMsg(pNetMsg);
+        onPingMsg(netMsg);
 #pragma inline_depth()
         break;
     case RS_SETUP_PING_RESPONSE:
 #pragma inline_depth(0)
-        OnPingResponseMsg(pNetMsg, 0);
+        onPingResponseMsg(netMsg, 0);
 #pragma inline_depth()
         break;
     }
 
-    DestroyMsg(pNetMsg);
+    destroyMsg(netMsg);
     return 0;
 }
 
@@ -6835,14 +6913,14 @@ unsigned char TSingleSelectionWindow::HandleNetMsg(CNetMsg* pNetMsg, unsigned ch
 VA(0x00589190, 0x1C)  // anchor-callee the RS_CLICK arm's out-of-line ctor call on its stack message, dc 0x145128
 lobby_message::lobby_message()
 {
-    id = 0;
-    codeX = 0;
-    codeY = 0;
-    qualifier = 0;
-    mouseX = 0;
-    mouseY = 0;
-    extra = 0;
-    window = 0;
+    m_id = 0;
+    m_codeX = 0;
+    m_codeY = 0;
+    m_qualifier = 0;
+    m_mouseX = 0;
+    m_mouseY = 0;
+    m_extra = 0;
+    m_window = 0;
 }
 
 #if 0  // @carcass
@@ -6852,12 +6930,12 @@ lobby_message::lobby_message()
 // CHostWaitDlg (CAnimatedDlg subclass) - relocated here for RVA order.
 // E:\gamedcs\singleselectionwindow.cpp:454
 VA(0x005891b0, 0x45)  // anchor-vtable CHostWaitDlg vtbl 0x241cf8 slot3 (handle_message override vs CAnimatedDlg base 0x240e94) + fingerprint w2.25, dc 0x1477b0
-int CHostWaitDlg::handle_message(message& msg)
+int CHostWaitDlg::handleMessage(message& msg)
 {
-    int ret = CAnimatedDlg::handle_message(msg);
-    m_pMsg = GetRemoteData(1, 0);
-    if (m_pMsg && m_pMsg->field_04 == m_forWho)
-        return ExitDialog(msg);
+    int ret = CAnimatedDlg::handleMessage(msg);
+    m_msg = getRemoteData(1, 0);
+    if (m_msg && m_msg->m_dpidFrom == m_forWho)
+        return exitDialog(msg);
     return ret;
 }
 
@@ -6884,12 +6962,12 @@ t_map_list_update::t_map_list_update(unsigned long dpid)
 
 // E:\gamedcs\singleselectionwindow.cpp:1484
 VA(0x00589270, 0x3E)  // anchor-callee HandleNetMsg's RS_HEADER_CONFIRM arm calls it with the sender dpid before its 'Header confirmed' log line, dc 0x148838
-void CNewPlayerUpdateMan::HeaderConfirmed(unsigned long dpid)
+void CNewPlayerUpdateMan::headerConfirmed(unsigned long dpid)
 {
     CNewPlayerUpdateTask* proc = getProc(dpid);
     if (proc) {
         proc->m_finished = 1;
-        proc->Finish();
+        proc->finish();
     }
 }
 
@@ -6908,7 +6986,7 @@ void CNewPlayerUpdateMan::HeaderConfirmed(unsigned long dpid)
 #pragma auto_inline(off)
 // E:\gamedcs\singleselectionwindow.cpp:1492
 VA(0x005892b0, 0x1C1)  // anchor-callee HandleNetMsg's RS_MAP_HEADER_REQUEST arm forwards (dpid, flag, number) to it on the update manager, dc 0x14886c
-void CNewPlayerUpdateMan::HeaderRequested(unsigned long dpid, unsigned char flag, int number)
+void CNewPlayerUpdateMan::headerRequested(unsigned long dpid, unsigned char flag, int number)
 {
     CNewPlayerUpdateTask* proc = getProc(dpid);
     if (proc) {
@@ -6922,7 +7000,7 @@ void CNewPlayerUpdateMan::HeaderRequested(unsigned long dpid, unsigned char flag
 
 // E:\gamedcs\singleselectionwindow.cpp:1500
 VA(0x00589480, 0x44)  // anchor-callee calls ~CNewPlayerUpdateProc 0x583ef0 inside an 8-slot dpid scan-and-reap - the DC PlayerDropped shape, dc 0x1488a4
-void CNewPlayerUpdateMan::PlayerDropped(unsigned long dpid)
+void CNewPlayerUpdateMan::playerDropped(unsigned long dpid)
 {
     for (int i = 0; i < 8; ++i) {
         if (m_procs[i] && m_procs[i]->m_dpid == dpid) {
@@ -6935,12 +7013,13 @@ void CNewPlayerUpdateMan::PlayerDropped(unsigned long dpid)
 // Bounce the setup ping straight back at its sender, echoing the
 // timestamp (netmsg.h's CPingMsg shape, 0x18 bytes).
 // E:\gamedcs\singleselectionwindow.cpp:6649
+// Before normalization (locals): pNetMsg.
 VA(0x005894D0, 0x40)  // anchor-callee HandleNetMsg's RS_SETUP_PING arm forwards the msg here; body builds the 0x418 echo and returns it to pNetMsg->field_04, dc 0x140414
-void TSingleSelectionWindow::OnPingMsg(CNetMsg* pNetMsg)
+void TSingleSelectionWindow::onPingMsg(CNetMsg* netMsg)
 {
-    CPingMsg response(static_cast<CPingMsg*>(pNetMsg)->m_pingTime,
+    CPingMsg response(static_cast<CPingMsg*>(netMsg)->m_pingTime,
                       RS_SETUP_PING_RESPONSE);
-    TransmitRemoteDataDPID(&response, pNetMsg->field_04, false, true);
+    transmitRemoteDataDPID(&response, netMsg->m_dpidFrom, false, true);
 }
 
 // Post the measured round-trip into the chat pane.
@@ -6948,14 +7027,15 @@ void TSingleSelectionWindow::OnPingMsg(CNetMsg* pNetMsg)
 // Residual (88.8): retail spills `this` to [ebp-4] and keeps the msg in
 // esi through the sprintf; ours keeps this in ebx - the register-homing
 // family. Tried: pre-named CPingMsg local (flat).
+// Before normalization (locals): pNetMsg, pMsg.
 VA(0x00589510, 0xA3)  // anchor-callee HandleNetMsg's RS_SETUP_PING_RESPONSE arm calls it (pNetMsg, 0); calls timeGetTime per label, dc 0x140450
-void TSingleSelectionWindow::OnPingResponseMsg(CNetMsg* pNetMsg, unsigned char inPopup)
+void TSingleSelectionWindow::onPingResponseMsg(CNetMsg* netMsg, unsigned char inPopup)
 {
-    CPingMsg* pMsg = static_cast<CPingMsg*>(pNetMsg);
+    CPingMsg* msg = static_cast<CPingMsg*>(netMsg);
     char text[0x100];
-    sprintf(text, gpGeneralText->GetText(67),
-            GameTime::ElapsedSince(pMsg->m_pingTime));
-    ReceiveChat(pMsg->field_04, text, inPopup);
+    sprintf(text, g_generalText->getText(67),
+            GameTime::elapsedSince(msg->m_pingTime));
+    receiveChat(msg->m_dpidFrom, text, inPopup);
 }
 
 #if 0  // @carcass
@@ -6966,25 +7046,25 @@ void TSingleSelectionWindow::OnPingResponseMsg(CNetMsg* pNetMsg, unsigned char i
 // is still clear; reports whether anything is outstanding.
 // E:\gamedcs\singleselectionwindow.cpp:6689
 VA(0x005895C0, 0x14F)  // anchor-callee HandleNetMsg's RS_REQ_HEADER_CONFIRM arm gates its confirm reply on this; owns the 'Missing Header [%d]' log line, dc 0x140588
-unsigned char TSingleSelectionWindow::CheckMissingHeaders(unsigned long dpidHost)
+unsigned char TSingleSelectionWindow::checkMissingHeaders(unsigned long dpidHost)
 {
     unsigned char missing = 0;
     unsigned int i;
-    for (i = 0; i < HeadersA.size(); ++i) {
-        if (HeadersA[i].setup.fileInitialized == 0) {
+    for (i = 0; i < m_headersA.size(); ++i) {
+        if (m_headersA[i].m_setup.m_fileInitialized == 0) {
             CMapHeaderRequestMsg msg(0, i);
-            TransmitRemoteDataDPID(&msg, dpidHost, false, true);
-            logFile.Log(DATA_COMPGEN(0x006838d8, missingHeaderLog,
+            transmitRemoteDataDPID(&msg, dpidHost, false, true);
+            g_logFile.log(DATA_COMPGEN(0x006838d8, missingHeaderLog,
                             "Missing Header [%d]"),
                         i);
             missing = 1;
         }
     }
-    for (i = 0; i < TransferHeaders.size(); ++i) {
-        if (TransferHeaders[i].setup.fileInitialized == 0) {
+    for (i = 0; i < m_transferHeaders.size(); ++i) {
+        if (m_transferHeaders[i].m_setup.m_fileInitialized == 0) {
             CMapHeaderRequestMsg msg(1, i);
-            TransmitRemoteDataDPID(&msg, dpidHost, false, true);
-            logFile.Log(DATA_COMPGEN(0x006838d8, missingHeaderLog,
+            transmitRemoteDataDPID(&msg, dpidHost, false, true);
+            g_logFile.log(DATA_COMPGEN(0x006838d8, missingHeaderLog,
                             "Missing Header [%d]"),
                         i);
             missing = 1;
@@ -7014,48 +7094,49 @@ unsigned char TSingleSelectionWindow::CheckMissingHeaders(unsigned long dpidHost
 // 0x5792c0.
 // E:\gamedcs\singleselectionwindow.cpp:6723. The 6-byte DC body is the
 // VMU stub; retail's is the real one (owns the random_maps path).
+// Before normalization (locals): pNetMsg, pMsg.
 VA(0x00589710, 0x40F)  // anchor-callee HandleNetMsg's RS_MAP_FILE_NAME arm forwards the msg, dc 0x140664
-unsigned char TSingleSelectionWindow::OnMapFileNameMsg(CNetMsg* pNetMsg)
+unsigned char TSingleSelectionWindow::onMapFileNameMsg(CNetMsg* netMsg)
 {
-    if (HeadersA.size() == 0)
+    if (m_headersA.size() == 0)
         return 1;
-    if (!receivingMaps)
+    if (!m_receivingMaps)
         return 1;
     _chdir(m_flag66 ? DATA_COMPGEN(0x006836ac, randomMapsDir, "random_maps")
                     : (m_flag64 || m_flag65
                            ? DATA_COMPGEN(0x00677d70, gamesDir, "games")
                            : DATA_COMPGEN(0x006772d0, mapsDir, "maps")));
-    CMapFileNameMsg* pMsg = static_cast<CMapFileNameMsg*>(pNetMsg);
-    if (_access(pMsg->m_fileName, 0) == 0) {
+    CMapFileNameMsg* mapFileNameMsg = static_cast<CMapFileNameMsg*>(netMsg);
+    if (_access(mapFileNameMsg->m_fileName, 0) == 0) {
         _chdir("..");
         GameSelectionHeadersStruct temp;
-        GetHeader(m_flag66
+        getHeader(m_flag66
                       ? DATA_COMPGEN(0x006836ac, randomMapsDir, "random_maps")
                       : (m_flag64 || m_flag65
                              ? DATA_COMPGEN(0x00677d70, gamesDir, "games")
                              : DATA_COMPGEN(0x006772d0, mapsDir, "maps")),
-                  pMsg->m_fileName, &temp);
-        if (memcmp(&temp.fileTime, &pMsg->m_fileTime, 8) == 0) {
-            memcpy(temp.setup.alignment, pMsg->m_townTypes,
-                   sizeof(pMsg->m_townTypes));
-            if (pMsg->m_flag)
-                TransferHeaders[pMsg->m_number] = temp;
+                  mapFileNameMsg->m_fileName, &temp);
+        if (memcmp(&temp.m_fileTime, &mapFileNameMsg->m_fileTime, 8) == 0) {
+            memcpy(temp.m_setup.m_alignment, mapFileNameMsg->m_townTypes,
+                   sizeof(mapFileNameMsg->m_townTypes));
+            if (mapFileNameMsg->m_flag)
+                m_transferHeaders[mapFileNameMsg->m_number] = temp;
             else
-                HeadersA[pMsg->m_number] = temp;
+                m_headersA[mapFileNameMsg->m_number] = temp;
             GameSelectionHeadersStruct& sel =
-                SelectionHeaders[pMsg->m_number];
+                m_selectionHeaders[mapFileNameMsg->m_number];
 #pragma inline_depth(0)
             sel = temp;
 #pragma inline_depth()
         } else {
-            CMapHeaderRequestMsg msg(pMsg->m_flag, pMsg->m_number);
-            TransmitRemoteDataDPID(&msg, pNetMsg->field_04, false, true);
+            CMapHeaderRequestMsg msg(mapFileNameMsg->m_flag, mapFileNameMsg->m_number);
+            transmitRemoteDataDPID(&msg, netMsg->m_dpidFrom, false, true);
         }
         return 1;
     }
     _chdir("..");
-    CMapHeaderRequestMsg msg(pMsg->m_flag, pMsg->m_number);
-    TransmitRemoteDataDPID(&msg, pNetMsg->field_04, false, true);
+    CMapHeaderRequestMsg msg(mapFileNameMsg->m_flag, mapFileNameMsg->m_number);
+    transmitRemoteDataDPID(&msg, netMsg->m_dpidFrom, false, true);
     return 1;
 }
 
@@ -7098,7 +7179,7 @@ unsigned char TSingleSelectionWindow::OnNewMapHeaderInfo(CNetMsg* pNetMsg)
 
 // E:\gamedcs\singleselectionwindow.cpp:6980
 DC_ONLY(0x140d74, 0x48)
-unsigned char TSingleSelectionWindow::SendPlayerPositions(unsigned long dpidTo)
+unsigned char TSingleSelectionWindow::sendPlayerPositions(unsigned long dpidTo)
 {
     // @stub
 }
@@ -7112,7 +7193,7 @@ unsigned char TSingleSelectionWindow::SendGameHeaders(unsigned long dpidTo)
 
 // E:\gamedcs\singleselectionwindow.cpp:7009
 DC_ONLY(0x140ee4, 0x40)
-unsigned char TSingleSelectionWindow::SendSetupInfo(unsigned long dpid)
+unsigned char TSingleSelectionWindow::sendSetupInfo(unsigned long dpid)
 {
     // @stub
 }
@@ -7133,7 +7214,7 @@ unsigned char TSingleSelectionWindow::OnScrollMsg(CNetMsg* pNetMsg)
 
 // E:\gamedcs\singleselectionwindow.cpp:7131
 DC_ONLY(0x141410, 0x38)
-unsigned char TSingleSelectionWindow::IsHost()
+unsigned char TSingleSelectionWindow::isHost()
 {
     // @stub
 }
@@ -7147,126 +7228,126 @@ void TSingleSelectionWindow::OnNameSlider(int newIndex)
 
 // E:\gamedcs\singleselectionwindow.cpp:7143
 DC_ONLY(0x141450, 0x68)
-void TSingleSelectionWindow::OnChatWindowSlider(int newIndex)
+void TSingleSelectionWindow::onChatWindowSlider(int newIndex)
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:7149
 DC_ONLY(0x1414b8, 0x2A)
-void TSingleSelectionWindow::OnFileMenuSlider(int newIndex)
+void TSingleSelectionWindow::onFileMenuSlider(int newIndex)
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:7156
 DC_ONLY(0x1414e4, 0xC4)
-void TSingleSelectionWindow::OnDurationSlider(int newIndex)
+void TSingleSelectionWindow::onDurationSlider(int newIndex)
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:7178
 DC_ONLY(0x1415a8, 0xF4)
-void TSingleSelectionWindow::SendChat(unsigned long dpid, const char* cChat)
+void TSingleSelectionWindow::sendChat(unsigned long dpid, const char* cChat)
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:7212
 DC_ONLY(0x14169c, 0x56)
-void TSingleSelectionWindow::ReceiveChat(unsigned long dpid, char* cChat, unsigned char inPopup)
+void TSingleSelectionWindow::receiveChat(unsigned long dpid, char* cChat, unsigned char inPopup)
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:7298
 DC_ONLY(0x14196c, 0xA8)
-void TSingleSelectionWindow::OnRequestHeroFaceMsg(CNetMsg* pNetMsg, unsigned char inPopup)
+void TSingleSelectionWindow::onRequestHeroFaceMsg(CNetMsg* pNetMsg, unsigned char inPopup)
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:7323
 DC_ONLY(0x141a14, 0x60)
-CNetPlayerHandlerPlayer* TSingleSelectionWindow::GetThisPlayer()
+CNetPlayerHandlerPlayer* TSingleSelectionWindow::getThisPlayer()
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:7356
 DC_ONLY(0x141af0, 0xA8)
-void TSingleSelectionWindow::OnSetAGRMsg(CNetMsg* pNetMsg, unsigned char inPopup)
+void TSingleSelectionWindow::onSetAGRMsg(CNetMsg* pNetMsg, unsigned char inPopup)
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:7455
 DC_ONLY(0x141e9c, 0x18C)
-void TSingleSelectionWindow::OnNameClick(int pos)
+void TSingleSelectionWindow::onNameClick(int pos)
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:7512
 DC_ONLY(0x142028, 0x180)
-void TSingleSelectionWindow::OnPlayerPosClick(int pos)
+void TSingleSelectionWindow::onPlayerPosClick(int pos)
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:7682
 DC_ONLY(0x1425f0, 0x84)
-void TSingleSelectionWindow::SendPlayerFaces()
+void TSingleSelectionWindow::sendPlayerFaces()
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:7698
 DC_ONLY(0x142674, 0x1FC)
-unsigned char TSingleSelectionWindow::OnBeginGame()
+unsigned char TSingleSelectionWindow::onBeginGame()
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:7756
 DC_ONLY(0x142870, 0x176)
-unsigned char TSingleSelectionWindow::BeginSavedGame()
+unsigned char TSingleSelectionWindow::beginSavedGame()
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:7822
 DC_ONLY(0x1429e8, 0x2B4)
-unsigned char TSingleSelectionWindow::BeginNewGame()
+unsigned char TSingleSelectionWindow::beginNewGame()
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:7889
 DC_ONLY(0x142c9c, 0x22)
-unsigned char TSingleSelectionWindow::IsMultiPlayer()
+unsigned char TSingleSelectionWindow::isMultiPlayer()
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:7990
 DC_ONLY(0x1430cc, 0x6C)
-void TSingleSelectionWindow::OnTownUpdateMsg(CNetMsg* pNetMsg, unsigned char inPopup)
+void TSingleSelectionWindow::onTownUpdateMsg(CNetMsg* pNetMsg, unsigned char inPopup)
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:8143
 DC_ONLY(0x143548, 0xB0)
-THeroID TSingleSelectionWindow::GetHeroInPos(int gamePos)
+THeroID TSingleSelectionWindow::getHeroInPos(int gamePos)
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:8166
 DC_ONLY(0x1435f8, 0xBC)
-TTownType TSingleSelectionWindow::GetDisplayTown(int gamePos)
+TTownType TSingleSelectionWindow::getDisplayTown(int gamePos)
 {
     // @stub
 }
@@ -7287,14 +7368,14 @@ void TSingleSelectionWindow::UpdateNames()
 
 // E:\gamedcs\singleselectionwindow.cpp:8643
 DC_ONLY(0x145008, 0xA0)
-int TSingleSelectionWindow::CalcPosition(int playerPos)
+int TSingleSelectionWindow::calcPosition(int playerPos)
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:8749
 DC_ONLY(0x145128, 0x22)
-int Update(message* msg)
+int update(message* msg)
 {
     // @stub
 }
@@ -7311,10 +7392,11 @@ void CSingleSelectionNetMsgHandler::CSingleSelectionNetMsgHandler()
 // E:\gamedcs\singleselectionwindow.cpp:6773. The DC build retains this
 // helper out of line; Complete expands its sole operation at all three known
 // call sites and has no corresponding x86 function row.
-static inline void UpdateTurnDuration()
+// Before normalization (function): UpdateTurnDuration.
+static inline void updateTurnDuration()
 {
-    gTurnDuration69d630.SetDuration(
-        gTurnDurationMinutes[gpGame->setup.turnDuration] * 60000);
+    g_turnDuration69d630.setDuration(
+        g_turnDurationMinutes[g_game->m_setup.m_turnDuration] * 60000);
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:6778
@@ -7326,46 +7408,48 @@ static inline void UpdateTurnDuration()
 // globals, reproduce all three retail CFG blocks and every instruction.
 // Closure: 100.0000% after the statement-order repair; the former 99.6237%
 // tail used the opposite eax/edx allocation and a one-byte-longer store.
+// Before normalization (locals): pNetMsg, pMsg, iReturn, iMonthType, iMonthTypeExtra, iWeekType,
+// iWeekTypeExtra.
 VA(0x00589b20, 0x13C)  // ReceiveSaveGame + UpdatePlayerPositions + dc 0x1406ec
-unsigned char TSingleSelectionWindow::OnGameTransmitInitMsg(CNetMsg* pNetMsg)
+unsigned char TSingleSelectionWindow::onGameTransmitInitMsg(CNetMsg* netMsg)
 {
-    CGameTransmitInitMsg* pMsg =
-        static_cast<CGameTransmitInitMsg*>(pNetMsg);
+    CGameTransmitInitMsg* msg =
+        static_cast<CGameTransmitInitMsg*>(netMsg);
 
-    ShowProgressBar();
-    gNetLocalGamePos = pMsg->field_00;
-    gpCurrentPlayer = &gpGame->players[gNetLocalGamePos];
-    UpdatePlayerPositions(0);
+    showProgressBar();
+    g_netLocalGamePos = msg->m_from;
+    g_currentPlayer = &g_game->m_players[g_netLocalGamePos];
+    updatePlayerPositions(0);
 
-    int iReturn = gpGame->ReceiveSaveGame(
-        pMsg->m_fileSize, pMsg->m_fullGameCRC, pMsg->field_00,
-        0, pMsg->m_isDiff);
-    if (!iReturn) {
-        UnloadProgressBar();
-        DrawWindow(1, 0xffff0001, 0xffff);
-        Update();
+    int returnValue = g_game->receiveSaveGame(
+        msg->m_fileSize, msg->m_fullGameCrc, msg->m_from,
+        0, msg->m_isDiff);
+    if (!returnValue) {
+        unloadProgressBar();
+        drawWindow(1, 0xffff0001, 0xffff);
+        this->update();
         return 0;
     }
 
-    int iMonthType = giMonthType;
-    int iMonthTypeExtra = giMonthTypeExtra;
-    int iWeekType = giWeekType;
-    int iWeekTypeExtra = giWeekTypeExtra;
+    int monthType = g_monthType;
+    int monthTypeExtra = g_monthTypeExtra;
+    int weekType = g_weekType;
+    int weekTypeExtra = g_weekTypeExtra;
 
-    gpGame->LoadGame(
+    g_game->loadGame(
         DATA_COMPGEN(0x00660410, remoteOriginalSaveName, "orig.dat"), 0, 1);
-    gpGame->SaveGame(
+    g_game->saveGame(
         DATA_COMPGEN(0x00660410, remoteOriginalSaveName, "orig.dat"),
         0, 0, 0, 1);
 
-    giMonthType = iMonthType;
-    giMonthTypeExtra = iMonthTypeExtra;
-    giWeekType = iWeekType;
-    giWeekTypeExtra = iWeekTypeExtra;
-    gUnnamed69778c = gLocalGamePos;
-    gMapVisibilityBit = 1 << gLocalGamePos;
-    gUnnamed69d810 = gNetLocalGamePos;
-    UpdateTurnDuration();
+    g_monthType = monthType;
+    g_monthTypeExtra = monthTypeExtra;
+    g_weekType = weekType;
+    g_weekTypeExtra = weekTypeExtra;
+    g_unnamed69778c = g_localGamePos;
+    g_mapVisibilityBit = 1 << g_localGamePos;
+    g_unnamed69d810 = g_netLocalGamePos;
+    updateTurnDuration();
     return 1;
 }
 
@@ -7377,24 +7461,25 @@ unsigned char TSingleSelectionWindow::OnGameTransmitInitMsg(CNetMsg* pNetMsg)
 // The host's full setup snapshot lands: copy it over gpGame->setup,
 // mirror the extras, and re-seat the duration slider.
 // E:\gamedcs\singleselectionwindow.cpp:6837
+// Before normalization (locals): pNetMsg, pMsg.
 VA(0x00589C60, 0xCE)  // anchor-callee RS_NEW_SETUP_INFO arm, size 0.66x dc 0x13a, dc 0x140898
-unsigned char TSingleSelectionWindow::OnNewSetupInfoMsg(CNetMsg* pNetMsg)
+unsigned char TSingleSelectionWindow::onNewSetupInfoMsg(CNetMsg* netMsg)
 {
-    CNewSetupInfoMsg* pMsg = static_cast<CNewSetupInfoMsg*>(pNetMsg);
-    gpGame->setup = pMsg->m_setup;
-    field_37F = pMsg->m_flag;
-    field_18A0[0] = pMsg->m_extras[0];
-    field_18A0[1] = pMsg->m_extras[1];
-    field_18A0[2] = pMsg->m_extras[2];
-    field_18A0[3] = pMsg->m_extras[3];
-    field_18A0[4] = pMsg->m_extras[4];
-    field_18A0[5] = pMsg->m_extras[5];
-    field_18A0[6] = pMsg->m_extras[6];
-    field_18A0[7] = pMsg->m_extras[7];
-    durationIndex = gpGame->setup.turnDuration;
-    durationSlider->SetState(durationIndex);
-    DrawWindow(0, 0xffff0001, 0xffff);
-    Update();
+    CNewSetupInfoMsg* msg = static_cast<CNewSetupInfoMsg*>(netMsg);
+    g_game->m_setup = msg->m_setup;
+    m_randomMapSelected = msg->m_flag;
+    m_randomMapOptions[0] = msg->m_extras[0];
+    m_randomMapOptions[1] = msg->m_extras[1];
+    m_randomMapOptions[2] = msg->m_extras[2];
+    m_randomMapOptions[3] = msg->m_extras[3];
+    m_randomMapOptions[4] = msg->m_extras[4];
+    m_randomMapOptions[5] = msg->m_extras[5];
+    m_randomMapOptions[6] = msg->m_extras[6];
+    m_randomMapOptions[7] = msg->m_extras[7];
+    m_durationIndex = g_game->m_setup.m_turnDuration;
+    m_durationSlider->setState(m_durationIndex);
+    drawWindow(0, 0xffff0001, 0xffff);
+    update();
     return 1;
 }
 
@@ -7406,20 +7491,20 @@ unsigned char TSingleSelectionWindow::OnNewSetupInfoMsg(CNetMsg* pNetMsg)
 // call, the case-exact compares are the strcmp intrinsic.
 // E:\gamedcs\singleselectionwindow.cpp:6861
 VA(0x00589D30, 0x265)  // anchor-callee called (version) by OnNewPlayerMsg 0x589fa0 + both header-info-init arms - the DC edges; owns the 1.0/1.3/1.4/3.1/3.2/4.0 version pool, size 2.4x dc 0xA0, dc 0x1409d4
-unsigned char TSingleSelectionWindow::IsVersionCompatible(const char* otherVersion)
+unsigned char TSingleSelectionWindow::isVersionCompatible(const char* otherVersion)
 {
-    if (_strcmpi(gameVersion,
+    if (_strcmpi(m_gameVersion,
                  DATA_COMPGEN(0x00683900, defaultRemoteVersion, "1.0"))
             < 0)
         return 1;
-    if (_strcmpi(gameVersion, otherVersion) == 0)
+    if (_strcmpi(m_gameVersion, otherVersion) == 0)
         return 1;
-    if (strcmp(gameVersion,
+    if (strcmp(m_gameVersion,
                DATA_COMPGEN(0x006838fc, versionComplete14, "1.4")) == 0
-            || strcmp(gameVersion,
+            || strcmp(m_gameVersion,
                       DATA_COMPGEN(0x006838f8, versionComplete32, "3.2"))
                 == 0
-            || strcmp(gameVersion,
+            || strcmp(m_gameVersion,
                       DATA_COMPGEN(0x006838f4, versionComplete40, "4.0"))
                 == 0) {
         if (strcmp(otherVersion, "1.4") == 0
@@ -7427,9 +7512,9 @@ unsigned char TSingleSelectionWindow::IsVersionCompatible(const char* otherVersi
                 || strcmp(otherVersion, "4.0") == 0)
             return 1;
     }
-    if (strcmp(gameVersion,
+    if (strcmp(m_gameVersion,
                DATA_COMPGEN(0x006838f0, versionClassic13, "1.3")) == 0
-            || strcmp(gameVersion,
+            || strcmp(m_gameVersion,
                       DATA_COMPGEN(0x006838ec, versionClassic31, "3.1"))
                 == 0) {
         if (strcmp(otherVersion, "1.3") == 0
@@ -7452,57 +7537,58 @@ unsigned char TSingleSelectionWindow::IsVersionCompatible(const char* otherVersi
 // compile emits the equivalent call-per-element loop. The other tail delta is
 // register naming around PlayerEnterMsg's gpGeneralText reload.
 // E:\gamedcs\singleselectionwindow.cpp:6884
+// Before normalization (locals): pNetMsg, pMsg.
 VA(0x00589FA0, 0x2D9)  // anchor-callee RS_NEW_PLAYER arm; owns the 'OnNewPlayerMsg %d' log line, size 1.37x dc 0x214, dc 0x140a74
-unsigned char TSingleSelectionWindow::OnNewPlayerMsg(CNetMsg* pNetMsg)
+unsigned char TSingleSelectionWindow::onNewPlayerMsg(CNetMsg* netMsg)
 {
-    CNewPlayerMsg* pMsg = static_cast<CNewPlayerMsg*>(pNetMsg);
-    logFile.Log(DATA_COMPGEN(0x0068392c, onNewPlayerLog,
+    CNewPlayerMsg* msg = static_cast<CNewPlayerMsg*>(netMsg);
+    g_logFile.log(DATA_COMPGEN(0x0068392c, onNewPlayerLog,
                              "OnNewPlayerMsg (%d)"),
-                pMsg->m_playerInfo.dpid);
-    if (!bVideoPaused || pDPlay->IsHost()) {
-        if (!IsVersionCompatible(pMsg->m_version)) {
-            logFile.Log(
+                msg->m_playerInfo.m_dpid);
+    if (!g_videoPaused || g_dPlay->isHost()) {
+        if (!isVersionCompatible(msg->m_version)) {
+            g_logFile.log(
                 DATA_COMPGEN(0x00683904, incompatibleVersionLog,
                              "New Player has incompatible version #%s"),
-                pMsg->m_version);
-            const char* errText = gpGeneralText->GetText(666);
-            CBadVersionMsg reply(gameVersion, errText);
-            TransmitRemoteDataDPID(&reply, pNetMsg->field_04, 0, 1);
+                msg->m_version);
+            const char* errText = g_generalText->getText(666);
+            CBadVersionMsg reply(m_gameVersion, errText);
+            transmitRemoteDataDPID(&reply, netMsg->m_dpidFrom, 0, 1);
             return 1;
         }
     }
-    if (!m_players.GetPlayer(pMsg->m_playerInfo.dpid))
-        SetNewPlayerSlot(&pMsg->m_playerInfo);
-    if (chatShowing)
-        TurnChatOn(1);
-    if (!bVideoPaused || pDPlay->IsHost()) {
-        pNewPlayerUpdateMan->NewPlayer(pNetMsg->field_04);
-        if (inAdvancedOptions) {
+    if (!m_players.getPlayer(msg->m_playerInfo.m_dpid))
+        setNewPlayerSlot(&msg->m_playerInfo);
+    if (m_chatShowing)
+        turnChatOn(1);
+    if (!g_videoPaused || g_dPlay->isHost()) {
+        m_newPlayerUpdateMan->newPlayer(netMsg->m_dpidFrom);
+        if (m_inAdvancedOptions) {
             CNetPlayerHandlerPlayer* p =
-                m_players.GetPlayer(pNetMsg->field_04);
+                m_players.getPlayer(netMsg->m_dpidFrom);
             if (p) {
                 for (int pos = 0; pos < 8; ++pos) {
-                    if (m_players.GetPlayerInPos(pos))
+                    if (m_players.getPlayerInPos(pos))
                         continue;
-                    if (!gpGame->mapHeader.playerSlotAttributes[pos]
-                             .CanBeHuman)
+                    if (!g_game->m_mapHeader.m_playerSlotAttributes[pos]
+                             .m_canBeHuman)
                         continue;
-                    if (m_flag64 && gpGame->playerDisabled[pos])
+                    if (m_flag64 && g_game->m_playerDisabled[pos])
                         continue;
-                    p->playerPos = pos;
-                    DrawWindow(0, 0xffff0001, 0xffff);
-                    Update();
+                    p->m_playerPos = pos;
+                    drawWindow(0, 0xffff0001, 0xffff);
+                    this->update();
                     break;
                 }
             }
         } else {
-            SetHumanSlot();
+            setHumanSlot();
         }
-        SendPlayerPositions(0);
+        sendPlayerPositions(0);
     }
-    PlayerEnterMsg(&chatMan, gpGeneralText->GetText(526),
-                   pMsg->m_playerInfo.sName);
-    DisplayChat();
+    playerEnterMsg(&g_chatMan, g_generalText->getText(526),
+                   msg->m_playerInfo.m_name);
+    displayChat();
     return 1;
 }
 
@@ -7515,12 +7601,12 @@ unsigned char TSingleSelectionWindow::OnNewPlayerMsg(CNetMsg* pNetMsg)
 // field-initializing body. The derived t_map_list_update constructor at
 // 0x589240 performs the same base work and installs 0x641d38 last.
 VA(0x0058A280, 0x7B)  // anchor-callee OnNewPlayerMsg calls it (dpid) on pNewPlayerUpdateMan; body news the 0x24-byte proc + vcalls slot 0 (Go), size 0.93x dc 0x84, dc 0x14870c
-void CNewPlayerUpdateMan::NewPlayer(unsigned long dpid)
+void CNewPlayerUpdateMan::newPlayer(unsigned long dpid)
 {
     int index = getFirstAvailable();
     if (index != -1) {
         m_procs[index] = new CNewPlayerUpdateProc(dpid);
-        m_procs[index]->Go();
+        m_procs[index]->go();
     }
 }
 
@@ -7535,12 +7621,12 @@ VA_COMPGEN(0x0058A300, 0x13F, IMPLICIT_DTOR, CNewMapHeaderInfoMsg)
 // options call sites. Keep the original cpp boundaries visible while allowing
 // the retail TU to reproduce that lowering.
 // E:\gamedcs\singleselectionwindow.cpp:6980
-inline unsigned char TSingleSelectionWindow::SendPlayerPositions(
+inline unsigned char TSingleSelectionWindow::sendPlayerPositions(
     unsigned long dpidTo)
 {
-    CUpdatePlayerPosMsg msg(m_players.humanPlayers,
-                            m_players.computerPlayers);
-    TransmitRemoteDataDPID(&msg, dpidTo, true, true);
+    CUpdatePlayerPosMsg msg(m_players.m_humanPlayers,
+                            m_players.m_computerPlayers);
+    transmitRemoteDataDPID(&msg, dpidTo, true, true);
     return 1;
 }
 
@@ -7548,20 +7634,20 @@ inline unsigned char TSingleSelectionWindow::SendPlayerPositions(
 // adds the window's mode byte and eight filter dwords; VC6 expands this call
 // into Finish while retaining the CNewSetupInfoMsg constructor boundary.
 // E:\gamedcs\singleselectionwindow.cpp:7009
-inline unsigned char TSingleSelectionWindow::SendSetupInfo(
+inline unsigned char TSingleSelectionWindow::sendSetupInfo(
     unsigned long dpid)
 {
-    CNewSetupInfoMsg msg(&gpGame->setup);
-    msg.m_flag = field_37F;
-    msg.m_extras[0] = field_18A0[0];
-    msg.m_extras[1] = field_18A0[1];
-    msg.m_extras[2] = field_18A0[2];
-    msg.m_extras[3] = field_18A0[3];
-    msg.m_extras[4] = field_18A0[4];
-    msg.m_extras[5] = field_18A0[5];
-    msg.m_extras[6] = field_18A0[6];
-    msg.m_extras[7] = field_18A0[7];
-    TransmitRemoteDataDPID(&msg, dpid, false, true);
+    CNewSetupInfoMsg msg(&g_game->m_setup);
+    msg.m_flag = m_randomMapSelected;
+    msg.m_extras[0] = m_randomMapOptions[0];
+    msg.m_extras[1] = m_randomMapOptions[1];
+    msg.m_extras[2] = m_randomMapOptions[2];
+    msg.m_extras[3] = m_randomMapOptions[3];
+    msg.m_extras[4] = m_randomMapOptions[4];
+    msg.m_extras[5] = m_randomMapOptions[5];
+    msg.m_extras[6] = m_randomMapOptions[6];
+    msg.m_extras[7] = m_randomMapOptions[7];
+    transmitRemoteDataDPID(&msg, dpid, false, true);
     return 1;
 }
 
@@ -7583,31 +7669,29 @@ inline unsigned char TSingleSelectionWindow::SendSetupInfo(
 // retail uses eax and pushes immediates.
 // E:\gamedcs\singleselectionwindow.cpp:7017
 VA(0x0058A440, 0x33E)  // anchor-callee RS_GAME_HEADER_INFO_INIT (1024) arm calls it and cancels on failure, size 1.65x dc 0x1f8, dc 0x140f24
-unsigned char TSingleSelectionWindow::OnGameHeaderInfoInitMsg(CNetMsg* pNetMsg)
+unsigned char TSingleSelectionWindow::onGameHeaderInfoInitMsg(CNetMsg* netMsg)
 {
-    CGameHeaderInfoInitMsgEx* pMsg =
-        static_cast<CGameHeaderInfoInitMsgEx*>(pNetMsg);
-    const char* version =
+    CGameHeaderInfoInitMsgEx* msg =
+        static_cast<CGameHeaderInfoInitMsgEx*>(netMsg);
+    const char* hostVersion =
         DATA_COMPGEN(0x00683900, defaultRemoteVersion, "1.0");
-    if (pMsg->size == sizeof(CGameHeaderInfoInitMsgEx))
-        version = pMsg->m_version;
-    if (!IsVersionCompatible(version)) {
-        CBadVersionMsg reply(version, gpGeneralText->GetText(666));
-        RemoteCleanup();
-        sprintf(gText, reply.m_errText, gameVersion, reply.m_version);
-        NormalDialog(gText, 1, 20000, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+    if (msg->m_size == sizeof(CGameHeaderInfoInitMsgEx))
+        hostVersion = msg->m_version;
+    if (!isVersionCompatible(hostVersion)) {
+        CBadVersionMsg badMsg(hostVersion, (*g_generalText)[666]);
+        onBadVersionMsg(&badMsg);
         return 0;
     }
-    receivedMaps = 0;
-    receivingMaps = 1;
-    m_flag64 = pMsg->m_netGame;
-    int count = pMsg->m_numMaps;
-    HeadersA.clear();
-    HeadersA.resize(count);
-    SelectionHeaders.clear();
-    SelectionHeaders.resize(count);
+    m_receivedMaps = 0;
+    m_receivingMaps = 1;
+    int count = msg->m_numMaps;
+    m_flag64 = msg->m_netGame;
+    m_headersA.clear();
+    m_headersA.resize(count);
+    m_selectionHeaders.clear();
+    m_selectionHeaders.resize(count);
     for (int i = 0; i < count; ++i)
-        HeadersA[i].setup.fileInitialized = 0;
+        m_headersA[i].m_setup.m_fileInitialized = 0;
     return 1;
 }
 
@@ -7616,20 +7700,21 @@ unsigned char TSingleSelectionWindow::OnGameHeaderInfoInitMsg(CNetMsg* pNetMsg)
 // version-less twin of the 1024 opener working on TransferHeaders -
 // no gate, no net-mode store, same clear/resize pair and the same
 // received-flag sweep. Shares the 1024 body's residual classes.
+// Before normalization (locals): pNetMsg, pMsg.
 VA(0x0058A780, 0x2BA)  // anchor-callee the 1083 arm's single call
-void TSingleSelectionWindow::OnGameHeaderInfoInitMsgEx(CNetMsg* pNetMsg)
+void TSingleSelectionWindow::onGameHeaderInfoInitMsgEx(CNetMsg* netMsg)
 {
-    CTransferHeaderInfoInitMsg* pMsg =
-        static_cast<CTransferHeaderInfoInitMsg*>(pNetMsg);
-    receivedMaps = 0;
-    receivingMaps = 1;
-    int count = pMsg->m_numMaps;
-    TransferHeaders.clear();
-    TransferHeaders.resize(count);
-    SelectionHeaders.clear();
-    SelectionHeaders.resize(count);
+    CTransferHeaderInfoInitMsg* msg =
+        static_cast<CTransferHeaderInfoInitMsg*>(netMsg);
+    m_receivedMaps = 0;
+    m_receivingMaps = 1;
+    int count = msg->m_numMaps;
+    m_transferHeaders.clear();
+    m_transferHeaders.resize(count);
+    m_selectionHeaders.clear();
+    m_selectionHeaders.resize(count);
     for (int i = 0; i < count; ++i)
-        TransferHeaders[i].setup.fileInitialized = 0;
+        m_transferHeaders[i].m_setup.m_fileInitialized = 0;
 }
 
 // One received header row: deserialize the wire message, log the row
@@ -7646,104 +7731,106 @@ void TSingleSelectionWindow::OnGameHeaderInfoInitMsgEx(CNetMsg* pNetMsg)
 // exits (retail destroys the message shallowly on the failure path
 // and leaf-deep on success; ours picks one shape).
 // E:\gamedcs\singleselectionwindow.cpp:7077
+// Before normalization (locals): pNetMsg.
 VA(0x0058AA40, 0x3AE)  // anchor-callee RS_GAME_HEADER_INFO arm; owns the "rec'd game header %d" log line, size 1.96x dc 0x1e0, dc 0x14111c
-unsigned char TSingleSelectionWindow::OnGameHeaderInfoMsg(CNetMsg* pNetMsg)
+unsigned char TSingleSelectionWindow::onGameHeaderInfoMsg(CNetMsg* netMsg)
 {
     CGameHeaderInfoMsg msg;
-    msg.RemoteFn_00512E00(pNetMsg);
-    logFile.Log(DATA_COMPGEN(0x00683940, recvGameHeaderLog,
+    msg.remoteFn00512E00(netMsg);
+    g_logFile.log(DATA_COMPGEN(0x00683940, recvGameHeaderLog,
                              "Rec'd game header [%d]"),
                 msg.m_number);
     if (msg.m_flag) {
         if (static_cast<unsigned int>(msg.m_number)
-                >= TransferHeaders.size())
+                >= m_transferHeaders.size())
             return 0;
-        TransferHeaders[msg.m_number] = msg.m_header;
+        m_transferHeaders[msg.m_number] = msg.m_header;
     } else {
-        if (static_cast<unsigned int>(msg.m_number) >= HeadersA.size())
+        if (static_cast<unsigned int>(msg.m_number) >= m_headersA.size())
             return 0;
-        HeadersA[msg.m_number] = msg.m_header;
+        m_headersA[msg.m_number] = msg.m_header;
     }
     if (static_cast<unsigned int>(msg.m_number)
-            < SelectionHeaders.size())
-        SelectionHeaders[msg.m_number] = msg.m_header;
+            < m_selectionHeaders.size())
+        m_selectionHeaders[msg.m_number] = msg.m_header;
     return 1;
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:7131
 VA(0x0058ADF0, 0x1A)  // exact bVideoPaused guard + tail vcall pDPlay->IsHost, dc 0x141410
-unsigned char TSingleSelectionWindow::IsHost()
+unsigned char TSingleSelectionWindow::isHost()
 {
-    if (!bVideoPaused)
+    if (!g_videoPaused)
         return 1;
-    return pDPlay->IsHost();
+    return g_dPlay->isHost();
 }
 
 
 // Dreamcast retains this member boundary; Complete expands it into the chat
 // slider wrapper below.
-inline void TSingleSelectionWindow::OnChatWindowSlider(int newIndex)
+inline void TSingleSelectionWindow::onChatWindowSlider(int newIndex)
 {
-    chatMan.SetPosition(newIndex);
-    DisplayChat();
+    g_chatMan.setPosition(newIndex);
+    displayChat();
 }
 
 // Dreamcast retains this member boundary. Complete expands it into the tiny
 // file-slider callback below, whose bytes prove the same store/call pair.
-inline void TSingleSelectionWindow::OnFileMenuSlider(int newIndex)
+inline void TSingleSelectionWindow::onFileMenuSlider(int newIndex)
 {
-    currentIndex = newIndex;
-    SetCurrentMap(currentMap, 1);
+    m_currentIndex = newIndex;
+    setCurrentMap(m_currentMap, 1);
 }
 
 // Complete expands this Dreamcast member boundary into SliderDuration.  Its
 // older `message` local disappeared in retail; the x86 body instead proves a
 // host setup broadcast followed by the full-window redraw and duration-clock
 // refresh.
-inline void TSingleSelectionWindow::OnDurationSlider(int newIndex)
+inline void TSingleSelectionWindow::onDurationSlider(int newIndex)
 {
-    durationIndex = newIndex;
-    gpGame->setup.turnDuration = static_cast<signed char>(durationIndex);
-    if (bVideoPaused && IsHost())
-        SendSetupInfo(0);
-    DrawWindow(0, 0xffff0001, 0xffff);
-    Update();
+    m_durationIndex = newIndex;
+    g_game->m_setup.m_turnDuration = static_cast<signed char>(m_durationIndex);
+    if (g_videoPaused && isHost())
+        sendSetupInfo(0);
+    drawWindow(0, 0xffff0001, 0xffff);
+    update();
 }
 
 // Dreamcast retains this source helper (dc 0x1415a8); Complete expands it
 // into CSingleSelectionChatEdit::SendChat below. Retail independently proves
 // the setup-ping special case, the local player's formatted chat line, the
 // repaint, and the final guaranteed chat broadcast in exactly this order.
-inline void TSingleSelectionWindow::SendChat(
-    unsigned long dpid, const char* cChat)
+inline void TSingleSelectionWindow::sendChat(
+    unsigned long dpid, const char* chat)
 {
-    if (_strcmpi(cChat,
-                 gpGeneralText->GetText(GENERAL_TEXT_CHAT_PING_COMMAND)) == 0) {
-        CPingMsg msg(GameTime::Get(), RS_SETUP_PING);
-        TransmitRemoteDataDPID(&msg, dpid, false, false);
+    if (_strcmpi(chat,
+                 g_generalText->getText(GENERAL_TEXT_CHAT_PING_COMMAND)) == 0) {
+        CPingMsg msg(GameTime::get(), RS_SETUP_PING);
+        transmitRemoteDataDPID(&msg, dpid, false, false);
         return;
     }
 
-    AddChat(&chatMan,
+    addChat(&g_chatMan,
             DATA_COMPGEN(0x00682ab4, chatPlayerLineFormat, "%s: %s"),
-            gsThisNetPlayerInfo.sName, cChat);
-    DisplayChat();
-    CChatMsg msg(cChat);
-    TransmitRemoteDataDPID(&msg, dpid, false, true);
+            g_thisNetPlayerInfo.m_name, chat);
+    displayChat();
+    CChatMsg msg(chat);
+    transmitRemoteDataDPID(&msg, dpid, false, true);
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:7212
 VA(0x0058AE10, 0x63)  // DC helper boundary; retail caller also keeps it out of line, dc 0x14169c
-void TSingleSelectionWindow::ReceiveChat(
-    unsigned long dpid, char* cChat, unsigned char inPopup)
+void TSingleSelectionWindow::receiveChat(
+    // Before normalization (locals): cChat.
+    unsigned long dpid, char* chat, unsigned char inPopup)
 {
-    CNetPlayerHandlerPlayer* p = m_players.GetPlayer(dpid);
+    CNetPlayerHandlerPlayer* p = m_players.getPlayer(dpid);
     if (p) {
-        AddChat(&chatMan,
+        addChat(&g_chatMan,
                 DATA_COMPGEN(0x00682ab4, chatPlayerLineFormat, "%s: %s"),
-                p->sName, cChat);
+                p->m_name, chat);
         if (!inPopup)
-            DisplayChat();
+            displayChat();
     }
 }
 
@@ -7751,17 +7838,17 @@ void TSingleSelectionWindow::ReceiveChat(
 // re-seat the chat slider, then draw both when the pane is showing.
 // E:\gamedcs\singleselectionwindow.cpp:7226
 VA(0x0058AE80, 0x93)  // anchor-callee called by SendChat 0x57cc00, the RS_CHAT_MSG arm and the drop arm right after AddChat, size 0.49x dc 0x12e, dc 0x1416f4
-void TSingleSelectionWindow::DisplayChat()
+void TSingleSelectionWindow::displayChat()
 {
-    if (bVideoPaused) {
-        chatMan.UpdateWidget(chatWidget, 0, 8);
-        chatSlider->SetResolution(chatMan.msgCount);
-        chatSlider->SetState(chatMan.position);
-        if (chatShowing) {
-            chatWidget->Draw();
-            chatSlider->Draw();
-            DrawWindow(1, chatWidget->id, chatWidget->id);
-            DrawWindow(1, chatSlider->id, chatSlider->id);
+    if (g_videoPaused) {
+        g_chatMan.updateWidget(m_chatWidget, 0, 8);
+        m_chatSlider->setResolution(g_chatMan.m_msgCount);
+        m_chatSlider->setState(g_chatMan.m_position);
+        if (m_chatShowing) {
+            m_chatWidget->draw();
+            m_chatSlider->draw();
+            drawWindow(1, m_chatWidget->m_id, m_chatWidget->m_id);
+            drawWindow(1, m_chatSlider->m_id, m_chatSlider->m_id);
         }
     }
 }
@@ -7770,65 +7857,64 @@ void TSingleSelectionWindow::DisplayChat()
 
 #endif  // @carcass
 
-// Residual (86.44, from 65.70 on the header's DC GetGamePos arm order):
-// branch census agrees 27=27 and every arm offset lines up; retail keeps
-// the walking index in ecx, re-reads pPlayer from its arg slot and
-// defers the callee-saved pushes past the count==0 early return; ours
-// pushes first and spills the index into that slot - register homing.
+// Exact: DC's sole named local is currFace.  Keeping each exhausted walk in
+// that local and joining both signs at the final player assignment reproduces
+// retail's deferred callee-save prologue and the second isFaceTaken loop tail.
 // Step the player's face selection backward or forward (by the sign of
 // `which`), wrapping an unset index and giving up with -1 once the
 // walk returns to its start, skipping every face another seat holds.
 // E:\gamedcs\singleselectionwindow.cpp:7245
+// Before normalization (locals): pPlayer.
 VA(0x0058AF20, 0x182)  // anchor-callee RS_REQUEST_HERO_FACE arm calls it (which, pPlayer) - the DC signature, size 1.18x dc 0x146, dc 0x141824
-void TSingleSelectionWindow::GetHeroFace(int which, CNetPlayerHandlerPlayer* pPlayer)
+void TSingleSelectionWindow::getHeroFace(int which, CNetPlayerHandlerPlayer* player)
 {
-    int count = pPlayer->availableHeroesCount;
-    int idx = pPlayer->heroIndex;
-    if (count == 0)
+    int currFace = player->m_heroIndex;
+    if (player->m_availableHeroesCount == 0)
         return;
     if (which < 0) {
         do {
-            if (idx > 0)
-                --idx;
-            else if (idx == -1)
-                idx = count - 1;
+            if (currFace > 0)
+                --currFace;
+            else if (currFace == -1)
+                currFace = player->m_availableHeroesCount - 1;
             else {
-                pPlayer->heroIndex = -1;
-                return;
+                currFace = -1;
+                break;
             }
-        } while (m_players.IsFaceTaken(
-                     pPlayer->availableHeroes[idx],
-                     m_players.getGamePos(pPlayer->dpid)));
+        } while (m_players.isFaceTaken(
+                     player->m_availableHeroes[currFace],
+                     m_players.getGamePos(player->m_dpid)));
     } else {
         do {
-            if (idx < count - 1 && idx >= 0)
-                ++idx;
-            else if (idx == -1)
-                idx = 0;
+            if (currFace < player->m_availableHeroesCount - 1 && currFace >= 0)
+                ++currFace;
+            else if (currFace == -1)
+                currFace = 0;
             else {
-                pPlayer->heroIndex = -1;
-                return;
+                currFace = -1;
+                break;
             }
-        } while (m_players.IsFaceTaken(
-                     pPlayer->availableHeroes[idx],
-                     m_players.getGamePos(pPlayer->dpid)));
+        } while (m_players.isFaceTaken(
+                     player->m_availableHeroes[currFace],
+                     m_players.getGamePos(player->m_dpid)));
     }
-    pPlayer->heroIndex = idx;
+    player->m_heroIndex = currFace;
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:7298
-inline void TSingleSelectionWindow::OnRequestHeroFaceMsg(
-        CNetMsg* pNetMsg, unsigned char inPopup)
+inline void TSingleSelectionWindow::onRequestHeroFaceMsg(
+        // Before normalization (locals): pNetMsg.
+        CNetMsg* netMsg, unsigned char inPopup)
 {
-    if (!bVideoPaused || pDPlay->IsHost()) {
+    if (!g_videoPaused || g_dPlay->isHost()) {
         CNetPlayerHandlerPlayer* p =
-            m_players.GetPlayer(pNetMsg->field_04);
-        if (p && p->playerPos != -1) {
-            GetHeroFace(
-                static_cast<CRequestHeroFaceMsg*>(pNetMsg)->m_which, p);
-            CRequestHeroFaceReplyMsg reply(p->playerPos, p->heroIndex);
-            TransmitRemoteDataDPID(&reply, 0, false, true);
-            OnRequestHeroFaceReplyMsg(&reply, inPopup);
+            m_players.getPlayer(netMsg->m_dpidFrom);
+        if (p && p->m_playerPos != -1) {
+            getHeroFace(
+                static_cast<CRequestHeroFaceMsg*>(netMsg)->m_which, p);
+            CRequestHeroFaceReplyMsg reply(p->m_playerPos, p->m_heroIndex);
+            transmitRemoteDataDPID(&reply, 0, false, true);
+            onRequestHeroFaceReplyMsg(&reply, inPopup);
         }
     }
 }
@@ -7847,44 +7933,46 @@ inline void TSingleSelectionWindow::OnRequestHeroFaceMsg(
 // let VC6 jump-thread GetPlayer's NULL arm straight to the caller's exit
 // (UpdateAllyEnemyFlags 100 -> 32.65, ExitDialog 100 -> 68.05); the
 // early-return form keeps retail's `xor eax,eax / test eax,eax` join.
-CNetPlayerHandlerPlayer* TSingleSelectionWindow::GetThisPlayer()
+CNetPlayerHandlerPlayer* TSingleSelectionWindow::getThisPlayer()
 {
-    CNetPlayerHandlerPlayer* pPlayer;
-    if (gUnnamed6989f0 == WINDOW_MODE_6989F0_3)
-        return &m_players.humanPlayers[0];
-    pPlayer = m_players.GetPlayer(gsThisNetPlayerInfo.dpid);
-    return pPlayer;
+    CNetPlayerHandlerPlayer* player;
+    if (g_unnamed6989f0 == WINDOW_MODE_6989F0_3)
+        return &m_players.m_humanPlayers[0];
+    player = m_players.getPlayer(g_thisNetPlayerInfo.m_dpid);
+    return player;
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:7337
+// Before normalization (locals): pNetMsg, pMsg.
 VA(0x0058B0B0, 0x67)  // anchor-callee RS_REQUEST_HERO_FACE arm applies its own reply through it (msg, 0), size 0.83x dc 0x7c, dc 0x141a74
-void TSingleSelectionWindow::OnRequestHeroFaceReplyMsg(CNetMsg* pNetMsg, unsigned char inPopup)
+void TSingleSelectionWindow::onRequestHeroFaceReplyMsg(CNetMsg* netMsg, unsigned char inPopup)
 {
-    CRequestHeroFaceReplyMsg* pMsg =
-        static_cast<CRequestHeroFaceReplyMsg*>(pNetMsg);
-    CNetPlayerHandlerPlayer* p = m_players.GetPlayerInPos(pMsg->m_pos);
+    CRequestHeroFaceReplyMsg* msg =
+        static_cast<CRequestHeroFaceReplyMsg*>(netMsg);
+    CNetPlayerHandlerPlayer* p = m_players.getPlayerInPos(msg->m_pos);
     if (p) {
-        p->heroIndex = pMsg->m_face;
+        p->m_heroIndex = msg->m_face;
         if (!inPopup) {
-            DrawWindow(0, 0xffff0001, 0xffff);
-            Update();
+            drawWindow(0, 0xffff0001, 0xffff);
+            this->update();
         }
     }
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:7356
-inline void TSingleSelectionWindow::OnSetAGRMsg(
-        CNetMsg* pNetMsg, unsigned char inPopup)
+inline void TSingleSelectionWindow::onSetAGRMsg(
+        // Before normalization (locals): pNetMsg, pMsg.
+        CNetMsg* netMsg, unsigned char inPopup)
 {
-    CSetAGRMsg* pMsg = static_cast<CSetAGRMsg*>(pNetMsg);
+    CSetAGRMsg* msg = static_cast<CSetAGRMsg*>(netMsg);
     CNetPlayerHandlerPlayer* p =
-        m_players.GetPlayerInPos(pMsg->m_gamePos);
+        m_players.getPlayerInPos(msg->m_gamePos);
     if (!p)
-        p = m_players.getCompPlayerInPos(pMsg->m_gamePos);
+        p = m_players.getCompPlayerInPos(msg->m_gamePos);
     if (p) {
-        p->startBonusIndex = pMsg->m_agr;
+        p->m_startBonusIndex = msg->m_agr;
         if (!inPopup)
-            DrawHeroAdvancedOption(pMsg->m_gamePos, 1, -1);
+            drawHeroAdvancedOption(msg->m_gamePos, 1, -1);
     }
 }
 
@@ -7896,126 +7984,128 @@ inline void TSingleSelectionWindow::OnSetAGRMsg(
 // feature bit) and the chat toggle. The DrawWindow(1,...)+Update tail
 // is DC's UpdateMainWindow spelled inline (no retail row fits it).
 // E:\gamedcs\singleselectionwindow.cpp:7377
+// Before normalization (locals): pNetMsg.
 VA(0x0058B120, 0x3E8)  // anchor-callee RS_SET_AS_HOST arm calls it behind the gbNoCDRom gate, size 2.2x dc 0x1c4, dc 0x141b98
-unsigned char TSingleSelectionWindow::OnSetAsHostMsg(CNetMsg* pNetMsg)
+unsigned char TSingleSelectionWindow::onSetAsHostMsg(CNetMsg* netMsg)
 {
-    SystemMsg(&chatMan, gpGeneralText->GetText(471));
-    DisplayChat();
-    CNewHostMsg msg(gsThisNetPlayerInfo.dpid);
-    TransmitRemoteDataDPID(&msg, 0, false, true);
-    scenarioOptionsStarted = 0;
-    inScenarioOptions = 0;
-    notifyNoSaved = 0;
-    SetupScenarioOptions(0);
-    currentIndex = 0;
-    durationIndex = gpGame->setup.turnDuration;
-    SetCurrentMap(0, 0);
-    fileSlider->SetResolution(GetMapCount() - gUnnamed69fdc8 + 1);
+    systemMsg(&g_chatMan, g_generalText->getText(471));
+    displayChat();
+    CNewHostMsg msg(g_thisNetPlayerInfo.m_dpid);
+    transmitRemoteDataDPID(&msg, 0, false, true);
+    m_scenarioOptionsStarted = 0;
+    m_inScenarioOptions = 0;
+    g_notifyNoSaved = 0;
+    setupScenarioOptions(0);
+    m_currentIndex = 0;
+    m_durationIndex = g_game->m_setup.m_turnDuration;
+    setCurrentMap(0, 0);
+    m_fileSlider->setResolution(getMapCount() - g_unnamed69fdc8 + 1);
     for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
-        if (m_players.humanPlayers[i].dpid != 0
-                && m_players.humanPlayers[i].dpid
-                       != gsThisNetPlayerInfo.dpid)
-            pNewPlayerUpdateMan->NewPlayer(m_players.humanPlayers[i].dpid);
+        if (m_players.m_humanPlayers[i].m_dpid != 0
+                && m_players.m_humanPlayers[i].m_dpid
+                       != g_thisNetPlayerInfo.m_dpid)
+            m_newPlayerUpdateMan->newPlayer(m_players.m_humanPlayers[i].m_dpid);
     }
-    widget* w = GetWidget(128);
+    widget* w = getWidget(128);
     if (w) {
-        w->send_message(widget::WIDGET_SET_STATUS,
+        w->sendMessage(widget::WIDGET_SET_STATUS,
                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        w->enable(!bVideoPaused || pDPlay->IsHost() || m_flag65);
+        w->enable(!g_videoPaused || g_dPlay->isHost() || m_flag65);
     }
-    w = GetWidget(129);
+    w = getWidget(129);
     if (w) {
-        w->send_message(widget::WIDGET_SET_STATUS,
+        w->sendMessage(widget::WIDGET_SET_STATUS,
                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        w->enable(!bVideoPaused || pDPlay->IsHost() || m_flag65);
+        w->enable(!g_videoPaused || g_dPlay->isHost() || m_flag65);
     }
-    if (gGameContextFeatures[*gpVideoGameState].test(1)) {
-        w = GetWidget(130);
+    if (g_gameContextFeatures[*g_videoGameState].test(1)) {
+        w = getWidget(130);
         if (w) {
-            w->send_message(widget::WIDGET_SET_STATUS,
+            w->sendMessage(widget::WIDGET_SET_STATUS,
                             widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-            w->enable(!bVideoPaused || pDPlay->IsHost() || m_flag65);
+            w->enable(!g_videoPaused || g_dPlay->isHost() || m_flag65);
         }
     }
-    w = GetWidget(107);
+    w = getWidget(107);
     if (w) {
-        w->send_message(widget::WIDGET_SET_STATUS,
+        w->sendMessage(widget::WIDGET_SET_STATUS,
                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        w->enable(!bVideoPaused || pDPlay->IsHost() || m_flag65);
+        w->enable(!g_videoPaused || g_dPlay->isHost() || m_flag65);
     }
-    w = GetWidget(108);
+    w = getWidget(108);
     if (w) {
-        w->send_message(widget::WIDGET_SET_STATUS,
+        w->sendMessage(widget::WIDGET_SET_STATUS,
                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        w->enable(!bVideoPaused || pDPlay->IsHost() || m_flag65);
+        w->enable(!g_videoPaused || g_dPlay->isHost() || m_flag65);
     }
-    w = GetWidget(109);
+    w = getWidget(109);
     if (w) {
-        w->send_message(widget::WIDGET_SET_STATUS,
+        w->sendMessage(widget::WIDGET_SET_STATUS,
                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        w->enable(!bVideoPaused || pDPlay->IsHost() || m_flag65);
+        w->enable(!g_videoPaused || g_dPlay->isHost() || m_flag65);
     }
-    w = GetWidget(110);
+    w = getWidget(110);
     if (w) {
-        w->send_message(widget::WIDGET_SET_STATUS,
+        w->sendMessage(widget::WIDGET_SET_STATUS,
                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        w->enable(!bVideoPaused || pDPlay->IsHost() || m_flag65);
+        w->enable(!g_videoPaused || g_dPlay->isHost() || m_flag65);
     }
-    w = GetWidget(111);
+    w = getWidget(111);
     if (w) {
-        w->send_message(widget::WIDGET_SET_STATUS,
+        w->sendMessage(widget::WIDGET_SET_STATUS,
                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        w->enable(!bVideoPaused || pDPlay->IsHost() || m_flag65);
+        w->enable(!g_videoPaused || g_dPlay->isHost() || m_flag65);
     }
     // Retail keeps the Dreamcast-proven ShowWidget helper out of line here,
     // even though this VC6 TU otherwise chooses to expand its small body.
 #pragma inline_depth(0)
-    ShowWidget(186);
+    showWidget(186);
 #pragma inline_depth()
     // Retail calls the out-of-line size() COMDAT (0x58eab0) here while
     // expanding it at the SetResolution site above - the condition-only
     // pin reproduces the split.
 #pragma inline_depth(0)
-    if (SelectionHeaders.size() == 0 && m_flag64)
+    if (m_selectionHeaders.size() == 0 && m_flag64)
 #pragma inline_depth()
-        GetWidget(186)->enable(0);
-    DrawWindow(1, 0xffff0001, 0xffff);
-    Update();
+        getWidget(186)->enable(0);
+    drawWindow(1, 0xffff0001, 0xffff);
+    update();
     return 1;
 }
 
 // Host handover: reset the transfer/list state, drop the scenario and
 // advanced panes, force chat on, and announce the new host.
 // E:\gamedcs\singleselectionwindow.cpp:7417
+// Before normalization (locals): pNetMsg.
 VA(0x0058B510, 0x10D)  // anchor-callee RS_NEW_HOST arm's single call, size 0.85x dc 0x13e, dc 0x141d5c
-void TSingleSelectionWindow::OnNewHostMsg(CNetMsg* pNetMsg)
+void TSingleSelectionWindow::onNewHostMsg(CNetMsg* netMsg)
 {
-    receivedMaps = 0;
-    receivingMaps = 1;
-    if (chatShowing) {
-        widget* chatWidget = GetWidget(179);
-        chatWidget->send_message(widget::WIDGET_CLEAR_STATUS,
+    m_receivedMaps = 0;
+    m_receivingMaps = 1;
+    if (m_chatShowing) {
+        widget* chatWidget = getWidget(179);
+        chatWidget->sendMessage(widget::WIDGET_CLEAR_STATUS,
                                  widget::WIDGET_ACTIVE
                                      | widget::WIDGET_DRAWN);
     }
-    currentIndex = 0;
-    currentMap = 0;
-    sortDirection = 1;
-    sortWhich = 0;
-    TurnOffScenarioOptions();
-    TurnOffAdvancedOptions();
-    TurnChatOn(1);
+    m_currentIndex = 0;
+    m_currentMap = 0;
+    m_sortDirection = 1;
+    m_sortWhich = 0;
+    turnOffScenarioOptions();
+    turnOffAdvancedOptions();
+    turnChatOn(1);
     char text[0x100];
     CNetPlayerHandlerPlayer* p =
-        m_players.GetPlayer(static_cast<CNewHostMsg*>(pNetMsg)->m_dpidNewHost);
+        m_players.getPlayer(static_cast<CNewHostMsg*>(netMsg)->m_dpidNewHost);
     if (p)
-        sprintf(text, gpGeneralText->GetText(529), p->sName);
+        sprintf(text, g_generalText->getText(529), p->m_name);
     else
-        sprintf(text, gpGeneralText->GetText(529),
+        sprintf(text, g_generalText->getText(529),
                 DATA_COMPGEN(0x00683958, unknownHostName, "????????????"));
-    SystemMsg(&chatMan, text);
-    DrawWindow(0, 0xffff0001, 0xffff);
-    Update();
+    systemMsg(&g_chatMan, text);
+    drawWindow(0, 0xffff0001, 0xffff);
+    update();
 }
 
 // The PC lobby replaces Dreamcast's VRKeyboard name-entry scope with its two
@@ -8027,31 +8117,31 @@ void TSingleSelectionWindow::OnNewHostMsg(CNetMsg* pNetMsg)
 // or widget sequence is therefore not a defensible codegen treatment.
 // E:\gamedcs\singleselectionwindow.cpp:7455
 VA(0x0058B620, 0x16F)  // decoded Complete desktop replacement, dc 0x141e9c
-void TSingleSelectionWindow::OnNameClick(int pos)
+void TSingleSelectionWindow::onNameClick(int pos)
 {
-    if (IsMultiPlayer())
+    if (isMultiPlayer())
         return;
-    SetFocus(-1);
-    CNetPlayerHandlerPlayer* player = GetThisPlayer();
-    if (player->playerPos != pos)
+    setFocus(-1);
+    CNetPlayerHandlerPlayer* player = getThisPlayer();
+    if (player->m_playerPos != pos)
         return;
 
-    textWidget* w = static_cast<textWidget*>(GetWidget(pos + 353));
-    int colorPos = CalcPosition(pos);
+    textWidget* w = static_cast<textWidget*>(getWidget(pos + 353));
+    int colorPos = calcPosition(pos);
     if (w) {
-        Panels[pos]->Draw(w->x - 57, w->y - 128 - colorPos * 50,
-                          w->width, w->height,
-                          gpWindowManager->screenBitmap, 57,
+        m_panels[pos]->draw(w->m_x - 57, w->m_y - 128 - colorPos * 50,
+                          w->m_width, w->m_height,
+                          g_windowManager->m_screenBitmap, 57,
                           128 + colorPos * 50, true);
-        w->SetText(player->sName);
-        w->send_message(widget::WIDGET_SET_STATUS,
+        w->setText(player->m_name);
+        w->sendMessage(widget::WIDGET_SET_STATUS,
                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        w = static_cast<textWidget*>(GetWidget(pos + 345));
+        w = static_cast<textWidget*>(getWidget(pos + 345));
         if (w)
-            w->send_message(widget::WIDGET_CLEAR_STATUS,
+            w->sendMessage(widget::WIDGET_CLEAR_STATUS,
                             widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        w->SetText(player->sName);
-        SetFocus(pos + 353);
+        w->setText(player->m_name);
+        setFocus(pos + 353);
     }
 }
 
@@ -8065,83 +8155,84 @@ void TSingleSelectionWindow::OnNameClick(int pos)
 // DC's line-7574 widget* b local/statement group; keep the positive DC shape.
 // E:\gamedcs\singleselectionwindow.cpp:7512
 VA(0x0058B790, 0x2A3)  // shared helper sequence + Complete seat data, dc 0x142028
-void TSingleSelectionWindow::OnPlayerPosClick(int pos)
+void TSingleSelectionWindow::onPlayerPosClick(int pos)
 {
-    if (!IsHost())
+    if (!isHost())
         return;
-    SGameSetupOptions* setup = &gpGame->setup;
-    NewSMapHeader* mp = &gpGame->mapHeader;
-    if (IsMultiPlayer()) {
-        if (mp->playerSlotAttributes[pos].CanBeHuman) {
-            m_players.SetNextPlayer(pos);
-            MakeHeroFilter();
-            if (bVideoPaused) {
-                SendPlayerPositions(0);
-                CheckFaces();
-                SendPlayerFaces();
+    SGameSetupOptions* setup = &g_game->m_setup;
+    NewSMapHeader* mp = &g_game->m_mapHeader;
+    if (isMultiPlayer()) {
+        if (mp->m_playerSlotAttributes[pos].m_canBeHuman) {
+            m_players.setNextPlayer(pos);
+            makeHeroFilter();
+            if (g_videoPaused) {
+                sendPlayerPositions(0);
+                checkFaces();
+                sendPlayerFaces();
             }
         }
     } else {
-        SetFocus(-1);
-        CNetPlayerHandlerPlayer* player = GetThisPlayer();
-        if (mp->playerSlotAttributes[pos].CanBeHuman
-                && player->playerPos != pos) {
-            if (player->playerPos != -1) {
-                widget* b = GetWidget(player->playerPos + 263);
-                b->send_message(
+        setFocus(-1);
+        CNetPlayerHandlerPlayer* player = getThisPlayer();
+        if (mp->m_playerSlotAttributes[pos].m_canBeHuman
+                && player->m_playerPos != pos) {
+            if (player->m_playerPos != -1) {
+                widget* b = getWidget(player->m_playerPos + 263);
+                b->sendMessage(
                     widget::WIDGET_CLEAR_STATUS,
                     widget::WIDGET_HIGHLIGHTED);
             }
-            setup->playerPos[player->playerPos] = setup->playerPos[pos];
-            setup->playerPos[pos] = pos;
-            player->playerPos = pos;
-            player->heroIndex = -1;
-            player->townIndex = -1;
-            MakeHeroFilter();
+            setup->m_playerPos[player->m_playerPos] = setup->m_playerPos[pos];
+            setup->m_playerPos[pos] = pos;
+            player->m_playerPos = pos;
+            player->m_heroIndex = -1;
+            player->m_townIndex = -1;
+            makeHeroFilter();
         }
     }
-    UpdateAllyEnemyFlags(1);
+    updateAllyEnemyFlags(1);
 }
 
 // The host's authoritative roster lands: clear every seat, merge each
 // live human record (creating seats for newcomers), take the computer
 // block wholesale, then retitle the handicap labels and redraw.
+// Before normalization (locals): pNetMsg, pMsg.
 VA(0x0058BA40, 0x175)  // anchor-callee RS_UPDATE_PLAYER_POS arm's single call, size 0.41x dc 0x38c, dc 0x1421a8
-void TSingleSelectionWindow::OnUpdatePlayerPosMsg(CNetMsg* pNetMsg)
+void TSingleSelectionWindow::onUpdatePlayerPosMsg(CNetMsg* netMsg)
 {
-    UpdateNameLists();
+    updateNameLists();
     for (int i = 0; i < 8; ++i)
-        m_players.humanPlayers[i].playerPos = -1;
-    CUpdatePlayerPosMsg* pMsg = static_cast<CUpdatePlayerPosMsg*>(pNetMsg);
+        m_players.m_humanPlayers[i].m_playerPos = -1;
+    CUpdatePlayerPosMsg* msg = static_cast<CUpdatePlayerPosMsg*>(netMsg);
     for (i = 0; i < 8; ++i) {
-        CNetPlayerHandlerPlayer* rec = &pMsg->m_netPlayer[i];
-        if (rec->dpid != 0) {
-            CNetPlayerHandlerPlayer* p = m_players.GetPlayer(rec->dpid);
+        CNetPlayerHandlerPlayer* rec = &msg->m_netPlayer[i];
+        if (rec->m_dpid != 0) {
+            CNetPlayerHandlerPlayer* p = m_players.getPlayer(rec->m_dpid);
             if (!p) {
-                SetNewPlayerSlot(rec);
-                UpdateNameLists();
-                p = m_players.GetPlayer(rec->dpid);
+                setNewPlayerSlot(rec);
+                updateNameLists();
+                p = m_players.getPlayer(rec->m_dpid);
             }
             if (p)
                 *p = *rec;
         }
     }
-    memcpy(m_players.computerPlayers, pMsg->m_compPlayer,
-           sizeof(m_players.computerPlayers));
+    memcpy(m_players.m_computerPlayers, msg->m_compPlayer,
+           sizeof(m_players.m_computerPlayers));
     for (i = 0; i < 8; ++i) {
-        CNetPlayerHandlerPlayer* p = m_players.GetPlayerInPos(i);
+        CNetPlayerHandlerPlayer* p = m_players.getPlayerInPos(i);
         if (!p)
-            p = &m_players.computerPlayers[i];
+            p = &m_players.m_computerPlayers[i];
         if (p) {
-            GetWidget(p->playerPos + 207)->send_message(
-                widget::WIDGET_SET_TEXT, int(gUnnamed6a7800[p->handicap]));
+            getWidget(p->m_playerPos + 207)->sendMessage(
+                widget::WIDGET_SET_TEXT, int(g_unnamed6a7800[p->m_handicap]));
         }
     }
-    if (!receivingMaps) {
-        MakeHeroFilter();
-        UpdateAllyEnemyFlags(0);
-        DrawWindow(0, 0xffff0001, 0xffff);
-        Update();
+    if (!m_receivingMaps) {
+        makeHeroFilter();
+        updateAllyEnemyFlags(0);
+        drawWindow(0, 0xffff0001, 0xffff);
+        this->update();
     }
 }
 
@@ -8149,14 +8240,14 @@ void TSingleSelectionWindow::OnUpdatePlayerPosMsg(CNetMsg* pNetMsg)
 // line; Complete both expands hot calls and retains this out-of-line copy.
 // E:\gamedcs\singleselectionwindow.cpp:7665
 VA(0x0058BBC0, 0xAC)  // exact descending seat scan + DC helper/call order, dc 0x142534
-void TSingleSelectionWindow::CheckFaces()
+void TSingleSelectionWindow::checkFaces()
 {
     for (int i = 7; i >= 0; --i) {
-        CNetPlayerHandlerPlayer* p = m_players.GetPlayerInPos(i);
-        if (p && p->heroIndex != -1
-                && m_players.IsFaceTaken(
-                       p->availableHeroes[p->heroIndex], i))
-            GetHeroFace(1, p);
+        CNetPlayerHandlerPlayer* p = m_players.getPlayerInPos(i);
+        if (p && p->m_heroIndex != -1
+                && m_players.isFaceTaken(
+                       p->m_availableHeroes[p->m_heroIndex], i))
+            getHeroFace(1, p);
     }
 }
 
@@ -8166,14 +8257,15 @@ void TSingleSelectionWindow::CheckFaces()
 // selected hero index directly.
 // E:\gamedcs\singleselectionwindow.cpp:7682
 VA(0x0058BC70, 0x66)  // anchor-callee CNewPlayerUpdateProc::Finish final call, dc 0x1425f0
-void TSingleSelectionWindow::SendPlayerFaces()
+void TSingleSelectionWindow::sendPlayerFaces()
 {
     for (int i = 1; i < 8; ++i) {
-        CNetPlayerHandlerPlayer* pPlayer = &m_players.humanPlayers[i];
-        if (pPlayer->IsHuman() && pPlayer->playerPos != -1) {
-            CRequestHeroFaceReplyMsg msg(pPlayer->playerPos,
-                                         pPlayer->heroIndex);
-            TransmitRemoteDataDPID(&msg, 0, false, true);
+        // Before normalization (locals): pPlayer.
+        CNetPlayerHandlerPlayer* player = &m_players.m_humanPlayers[i];
+        if (player->isHuman() && player->m_playerPos != -1) {
+            CRequestHeroFaceReplyMsg msg(player->m_playerPos,
+                                         player->m_heroIndex);
+            transmitRemoteDataDPID(&msg, 0, false, true);
         }
     }
 }
@@ -8187,153 +8279,146 @@ void TSingleSelectionWindow::SendPlayerFaces()
 // two seated players in a network game - before the pointer/session/progress
 // preamble hands off to BeginSavedGame or BeginNewGame.
 //
-// Residual (78.76%): 1433 emitted bytes against retail's 1455, every
-// statement present, and the whole gap is ONE sequential /Ob2 budget
-// difference. Retail EXPANDS AssignData's two operator=(const char*) sites
-// (down to assign(), the same pair RebuildFilteredPlayerSetup shows) and,
-// having spent that budget early, CALLS bitset<4>::_Xran at the
-// game-context test; we call operator= and therefore still have budget to
-// expand the whole _Xran throw path (basic_string ctor + out_of_range ctor
-// + _CxxThrowException, ~50 B) inline, which also costs the EBX/EDX
-// binding around the bit test and two extra epilogues. The knob is
-// game.h's AssignData. Its two pins were removed on 2026-09-06: this row
-// now scores 77.2669%, with its 78.7597% MAX preserved. Fixed here: naming
-// `GameSelectionHeadersStruct* pHeader = &m_localHeader;` (+0.55 - retail
-// spills `this` at entry and repurposes the callee-saved register for the
-// row) and adopting SetupScenarioOptions' proven
-// `static_cast<const std::bitset<4>&>(...)[class]` + `Text.begin()` dialog
-// idiom over `.test()` + `GetText()` (+0.52).
+// Residual (78.9055% MAX, 2026-09-07): retail computes the local-header
+// address after successful generation. Separating the two failure checks
+// and declaring header between them raises 77.2669% to 78.9055%; the two
+// candidate cleanup exits remain separate where retail shares one. Controls
+// retaining a shared condition and naming header after it score 76.9959%;
+// assigning header in getHeader's argument scores 77.2669%.
+// Passive C2 trace corrects the old diagnosis: both AssignData string
+// operator= sites expand. Its first assign(ptr, size), cb 69, receives budget
+// 65 and remains a call, as in retail; the second receives 131 and expands
+// too far. bitset<4>::_Xran, cb 65, receives 84 and likewise expands where
+// retail calls it. The verified candidate is 1552 padded bytes with a 0x50
+// frame versus retail's 0x30. Preserve the canonical helper operations;
+// restoring removed pins would conceal these remaining inline decisions.
+// Earlier controls: removing the const bitset cast was byte-flat; .test()
+// scored 76.71% against the then-current 78.76% candidate.
 // E:\gamedcs\singleselectionwindow.cpp:7698
-// MEASURED AND REJECTED (polish 29): the context-feature membership test
-// spelled without the const cast (byte-flat) and as `.test(gameVersionClass)`
-// (76.71 against 78.76). The remaining throw-path divergence is one inline
-// level short of retail - retail CALLS `bitset<4>::_Xran()` where we expand
-// it down to the string and out_of_range construction - and the same
-// GiveCrossoverArtifacts lever that bought one level here has no deeper
-// spelling to give.
 VA(0x0058BCE0, 0x5AF)  // begin-button caller and DC source shape, dc 0x142674
-unsigned char TSingleSelectionWindow::OnBeginGame()
+unsigned char TSingleSelectionWindow::onBeginGame()
 {
-    if (field_37F) {
-        std::string name = GetRandomMapName();
-        if (bVideoPaused) {
+    if (m_randomMapSelected) {
+        std::string name = getRandomMapName();
+        if (g_videoPaused) {
             CNetMsg msg(RS_GAME_TRANSMIT_PENDING, sizeof(CNetMsg));
-            TransmitRemoteDataDPID(&msg, 0, false, true);
+            transmitRemoteDataDPID(&msg, 0, false, true);
         }
-        GameSelectionHeadersStruct* pHeader = &m_localHeader;
-        if (!GenerateRandomMap(name.c_str())
-                || GetHeader(DATA_COMPGEN(0x006836ac, randomMapsDir,
-                                          "random_maps"),
-                             const_cast<char*>(name.c_str()), pHeader))
+        // Before normalization (locals): pHeader, pSessionDesc.
+        if (!generateRandomMap(name.c_str()))
             return 0;
-        gpGame->setup = pHeader->setup;
-        memcpy(gpGame->heroAvailability, pHeader->heroAvailability,
-               sizeof(pHeader->heroAvailability));
-        gpGame->mapHeader.AssignData(&pHeader->header, pHeader->title,
-                                     pHeader->description);
-        gpGame->setup.turnDuration = static_cast<signed char>(durationIndex);
-        gpGame->setup.difficulty = static_cast<signed char>(lastDiff);
-        static_cast<CScrollTextWidget*>(field_196c)
-            ->SetText(pHeader->description);
+        GameSelectionHeadersStruct* header = &m_localHeader;
+        if (getHeader(DATA_COMPGEN(0x006836ac, randomMapsDir, "random_maps"),
+                      const_cast<char*>(name.c_str()), header))
+            return 0;
+        g_game->m_setup = header->m_setup;
+        memcpy(g_game->m_heroAvailability, header->m_heroAvailability,
+               sizeof(header->m_heroAvailability));
+        g_game->m_mapHeader.assignData(&header->m_header, header->m_title,
+                                     header->m_description);
+        g_game->m_setup.m_turnDuration = static_cast<signed char>(m_durationIndex);
+        g_game->m_setup.m_difficulty = static_cast<signed char>(g_lastDiff);
+        static_cast<CScrollTextWidget*>(m_descriptionWidget)
+            ->setText(header->m_description);
     }
 
-    if (!m_flag64 && gpGame->mapHeader.version != MAP_FORMAT_SHADOW_OF_DEATH
-            && gpGame->mapHeader.version != MAP_FORMAT_RESTORATION_OF_ERATHIA
-            && gpGame->mapHeader.version != MAP_FORMAT_ARMAGEDDONS_BLADE)
+    if (!m_flag64 && g_game->m_mapHeader.m_version != MAP_FORMAT_SHADOW_OF_DEATH
+            && g_game->m_mapHeader.m_version != MAP_FORMAT_RESTORATION_OF_ERATHIA
+            && g_game->m_mapHeader.m_version != MAP_FORMAT_ARMAGEDDONS_BLADE)
         return 0;
 
     if (m_flag64) {
         int gameVersionClass;
-        if (pCurrentHeader->saved.gameVersion == GAME_VERSION_SOD)
+        if (m_currentHeader->m_saved.m_gameVersion == GAME_VERSION_SOD)
             gameVersionClass = GAME_VERSION_SOD;
         else
             gameVersionClass =
-                pCurrentHeader->saved.gameVersion == GAME_VERSION_AB;
+                m_currentHeader->m_saved.m_gameVersion == GAME_VERSION_AB;
 
         if (!static_cast<const std::bitset<4>&>(
-                gGameContextFeatures[field_1898])[gameVersionClass]) {
+                g_gameContextFeatures[m_commonGameVersion])[gameVersionClass]) {
             char** text;
             const char* gameType;
-            if (*gpVideoGameState == SINGLE_SELECTION_CONTEXT_1) {
-                text = gpGeneralText->Text.begin();
+            if (*g_videoGameState == SINGLE_SELECTION_CONTEXT_1) {
+                text = g_generalText->m_text.begin();
                 gameType = text[746];
             } else {
-                text = gpGeneralText->Text.begin();
+                text = g_generalText->m_text.begin();
                 gameType = text[747];
             }
-            NormalDialog(format_string(text[744], gameType).c_str(), 1, -1, -1,
+            normalDialog(formatString(text[744], gameType).c_str(), 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             return 0;
         }
     } else {
         int mapVersionClass;
-        if (gpGame->mapHeader.version > MAP_FORMAT_ARMAGEDDONS_BLADE)
+        if (g_game->m_mapHeader.m_version > MAP_FORMAT_ARMAGEDDONS_BLADE)
             mapVersionClass = GAME_VERSION_SOD;
         else
-            mapVersionClass = gpGame->mapHeader.version
+            mapVersionClass = g_game->m_mapHeader.m_version
                 > MAP_FORMAT_RESTORATION_OF_ERATHIA;
 
-        if (field_1898 < mapVersionClass) {
+        if (m_commonGameVersion < mapVersionClass) {
             char** text;
             const char* gameType;
-            if (*gpVideoGameState == SINGLE_SELECTION_CONTEXT_1) {
-                text = gpGeneralText->Text.begin();
+            if (*g_videoGameState == SINGLE_SELECTION_CONTEXT_1) {
+                text = g_generalText->m_text.begin();
                 gameType = text[746];
             } else {
-                text = gpGeneralText->Text.begin();
+                text = g_generalText->m_text.begin();
                 gameType = text[747];
             }
-            NormalDialog(format_string(text[745], gameType).c_str(), 1, -1, -1,
+            normalDialog(formatString(text[745], gameType).c_str(), 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             return 0;
         }
     }
 
-    widget* beginButton = GetWidget(186);
-    if (beginButton && (beginButton->status & widget::WIDGET_DISABLED))
+    widget* beginButton = getWidget(186);
+    if (beginButton && (beginButton->m_status & widget::WIDGET_DISABLED))
         return 0;
 
-    if (SelectionHeaders.size() == 0 && !field_37F) {
-        NormalDialog(gpGeneralText->GetText(530), 1, -1, -1, -1, 0, -1, 0, -1,
+    if (m_selectionHeaders.size() == 0 && !m_randomMapSelected) {
+        normalDialog(g_generalText->getText(530), 1, -1, -1, -1, 0, -1, 0, -1,
                      0, -1, 0);
         return 0;
     }
 
-    CNetPlayerHandlerPlayer* player = GetThisPlayer();
-    if (!m_flag64 && player->playerPos == -1) {
-        NormalDialog(gpGeneralText->GetText(531), 1, -1, -1, -1, 0, -1, 0, -1,
+    CNetPlayerHandlerPlayer* player = getThisPlayer();
+    if (!m_flag64 && player->m_playerPos == -1) {
+        normalDialog(g_generalText->getText(531), 1, -1, -1, -1, 0, -1, 0, -1,
                      0, -1, 0);
         return 0;
     }
 
-    if (bVideoPaused || gUnnamed6989f0 == WINDOW_MODE_6989F0_3) {
+    if (g_videoPaused || g_unnamed6989f0 == WINDOW_MODE_6989F0_3) {
         int seated = 0;
         for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
-            if (m_players.humanPlayers[i].dpid != 0
-                    && m_players.humanPlayers[i].playerPos != -1)
+            if (m_players.m_humanPlayers[i].m_dpid != 0
+                    && m_players.m_humanPlayers[i].m_playerPos != -1)
                 ++seated;
         }
         if (seated < 2) {
-            NormalDialog(gpGeneralText->GetText(83), 1, -1, -1, -1, 0, -1, 0,
+            normalDialog(g_generalText->getText(83), 1, -1, -1, -1, 0, -1, 0,
                          -1, 0, -1, 0);
             return 0;
         }
     }
 
-    gpMouseManager->SetPointer(1, mouseManager::ADVENTURE_SET);
+    g_mouseManager->setPointer(1, mouseManager::ADVENTURE_SET);
 
-    if (bVideoPaused) {
-        DPSESSIONDESC2* pSessionDesc = pDPlay->GetCurrSession();
-        pSessionDesc->dwFlags |= 0x21;
-        pDPlay->UpdateSessionDesc(pSessionDesc);
-        ::operator delete(pSessionDesc);
+    if (g_videoPaused) {
+        DPSESSIONDESC2* sessionDesc = g_dPlay->getCurrSession();
+        sessionDesc->m_flags |= 0x21;
+        g_dPlay->updateSessionDesc(sessionDesc);
+        ::operator delete(sessionDesc);
     }
 
-    ShowProgressBar();
+    showProgressBar();
 
     if (m_flag64)
-        return BeginSavedGame();
-    return BeginNewGame();
+        return beginSavedGame();
+    return beginNewGame();
 }
 
 // Load the selected save while retaining the lobby's calendar state. DC
@@ -8343,58 +8428,59 @@ unsigned char TSingleSelectionWindow::OnBeginGame()
 // expands IsMultiPlayer, UpdateTurnDuration, and SendPlayerPositions.
 // E:\gamedcs\singleselectionwindow.cpp:7756
 VA(0x0058C290, 0x2D2)  // OnBeginGame saved arm + complete DC call/CFG order, dc 0x142870
-unsigned char TSingleSelectionWindow::BeginSavedGame()
+unsigned char TSingleSelectionWindow::beginSavedGame()
 {
-    IncProgressBar(1);
-    UpdateTurnDuration();
+    incProgressBar(1);
+    updateTurnDuration();
 
-    if (!IsMultiPlayer()) {
-        SetHumanSlot();
+    if (!isMultiPlayer()) {
+        setHumanSlot();
     }
 
-    IncProgressBar(1);
+    incProgressBar(1);
 
-    if (bVideoPaused) {
+    if (g_videoPaused) {
         CLaunchingGameMsg msg;
-        TransmitRemoteDataDPID(&msg, 0, false, true);
+        transmitRemoteDataDPID(&msg, 0, false, true);
     }
 
-    int iMonthType = giMonthType;
-    int iMonthTypeExtra = giMonthTypeExtra;
-    int iWeekType = giWeekType;
-    int iWeekTypeExtra = giWeekTypeExtra;
+    // Before normalization (locals): iMonthType, iMonthTypeExtra, iWeekType, iWeekTypeExtra.
+    int monthType = g_monthType;
+    int monthTypeExtra = g_monthTypeExtra;
+    int weekType = g_weekType;
+    int weekTypeExtra = g_weekTypeExtra;
 
-    gpGame->LoadGame(gpGame->setup.filename, 0, 0);
+    g_game->loadGame(g_game->m_setup.m_filename, 0, 0);
 
-    giMonthType = iMonthType;
-    giMonthTypeExtra = iMonthTypeExtra;
-    giWeekType = iWeekType;
-    giWeekTypeExtra = iWeekTypeExtra;
-    gUnnamed69d810 = gNetLocalGamePos;
+    g_monthType = monthType;
+    g_monthTypeExtra = monthTypeExtra;
+    g_weekType = weekType;
+    g_weekTypeExtra = weekTypeExtra;
+    g_unnamed69d810 = g_netLocalGamePos;
 
-    IncProgressBar(1);
+    incProgressBar(1);
 
-    if (!IsMultiPlayer()) {
-        CNetPlayerHandlerPlayer* player = m_players.GetPlayer(1);
-        player->playerPos = gNetLocalGamePos;
+    if (!isMultiPlayer()) {
+        CNetPlayerHandlerPlayer* player = m_players.getPlayer(1);
+        player->m_playerPos = g_netLocalGamePos;
     }
 
-    if (!IsMultiPlayer()) {
-        CNetPlayerHandlerPlayer* player = m_players.GetPlayer(1);
-        player->playerPos = gNetLocalGamePos;
+    if (!isMultiPlayer()) {
+        CNetPlayerHandlerPlayer* player = m_players.getPlayer(1);
+        player->m_playerPos = g_netLocalGamePos;
     }
 
-    UpdatePlayerPositions(0);
+    updatePlayerPositions(0);
 
-    if (bVideoPaused) {
-        SendPlayerPositions(0);
-        gUnnamed69d810 = gNetLocalGamePos;
-        if (!gpGame->TransmitSaveGame(0x7f, 0, 0, 1)) {
+    if (g_videoPaused) {
+        sendPlayerPositions(0);
+        g_unnamed69d810 = g_netLocalGamePos;
+        if (!g_game->transmitSaveGame(0x7f, 0, 0, 1)) {
             return 0;
         }
     }
 
-    IncProgressBar(1);
+    incProgressBar(1);
     return 1;
 }
 
@@ -8420,61 +8506,62 @@ unsigned char TSingleSelectionWindow::BeginSavedGame()
 // boundaries; the guard recovers this caller's decision with one shared body.
 // E:\gamedcs\singleselectionwindow.cpp:7822
 VA(0x0058C570, 0x3E7)  // OnBeginGame new arm, dc 0x1429e8
-bool TSingleSelectionWindow::BeginNewGame()
+bool TSingleSelectionWindow::beginNewGame()
 {
     int gameVersionClass;
-    if (field_1898 == SINGLE_SELECTION_CONTEXT_2
-            || field_1898 == SINGLE_SELECTION_CONTEXT_3)
+    if (m_commonGameVersion == SINGLE_SELECTION_CONTEXT_2
+            || m_commonGameVersion == SINGLE_SELECTION_CONTEXT_3)
         gameVersionClass = GAME_VERSION_SOD;
     else
-        gameVersionClass = field_1898 == SINGLE_SELECTION_CONTEXT_1;
+        gameVersionClass = m_commonGameVersion == SINGLE_SELECTION_CONTEXT_1;
 
-    gpGame->SetMapSize(gpGame->mapHeader.Size, gpGame->mapHeader.Size);
-    UpdateTurnDuration();
-    UpdatePlayerPositions(1);
-    IncProgressBar(1);
+    g_game->setMapSize(g_game->m_mapHeader.m_size, g_game->m_mapHeader.m_size);
+    updateTurnDuration();
+    updatePlayerPositions(1);
+    incProgressBar(1);
 
-    if (bVideoPaused) {
+    if (g_videoPaused) {
         CLaunchingGameMsg msg;
-        TransmitRemoteDataDPID(&msg, 0, false, true);
+        transmitRemoteDataDPID(&msg, 0, false, true);
     }
 
-    gpGame->SetupOrigData();
-    IncProgressBar(1);
+    g_game->setupOrigData();
+    incProgressBar(1);
 
-    strcpy(gMapName, gpGame->setup.filename);
-    memset(gUnnamed69fb24, -1, sizeof(gUnnamed69fb24));
+    strcpy(g_mapName, g_game->m_setup.m_filename);
+    memset(g_unnamed69fb24, -1, sizeof(g_unnamed69fb24));
     for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
-        CNetPlayerHandlerPlayer* pPlayer = &m_players.humanPlayers[i];
-        if (pPlayer->playerPos != -1 && pPlayer->heroIndex != -1)
-            gUnnamed69fb24[pPlayer->playerPos] =
-                pPlayer->availableHeroes[pPlayer->heroIndex];
+        // Before normalization (locals): pPlayer, iReturn.
+        CNetPlayerHandlerPlayer* player = &m_players.m_humanPlayers[i];
+        if (player->m_playerPos != -1 && player->m_heroIndex != -1)
+            g_unnamed69fb24[player->m_playerPos] =
+                player->m_availableHeroes[player->m_heroIndex];
     }
-    gpGame->NewMap(gpGame->setup.path, gMapName, gUnnamed69fb24,
+    g_game->newMap(g_game->m_setup.m_path, g_mapName, g_unnamed69fb24,
                    gameVersionClass);
-    IncProgressBar(1);
+    incProgressBar(1);
 
-    if (bVideoPaused) {
-        CNewMapHeaderInfoMsg mapHeaderMsg(&gpGame->mapHeader);
-        int iReturn = mapHeaderMsg.RemoteFn_00512D40(0, 0, 1);
-        if (!SendPlayerPositions(0))
+    if (g_videoPaused) {
+        CNewMapHeaderInfoMsg mapHeaderMsg(&g_game->m_mapHeader);
+        int returnValue = mapHeaderMsg.remoteFn00512D40(0, 0, 1);
+        if (!sendPlayerPositions(0))
             return 0;
-        gUnnamed69d810 = gNetLocalGamePos;
-        if (!gpGame->TransmitSaveGame(0x7f, 0, 0, 1) && !gUnnamed69d80d)
+        g_unnamed69d810 = g_netLocalGamePos;
+        if (!g_game->transmitSaveGame(0x7f, 0, 0, 1) && !g_unnamed69d80d)
             return 0;
     }
 
-    IncProgressBar(1);
+    incProgressBar(1);
     return 1;
 }
 
 
 // E:\gamedcs\singleselectionwindow.cpp:7889
-unsigned char TSingleSelectionWindow::IsMultiPlayer()
+unsigned char TSingleSelectionWindow::isMultiPlayer()
 {
-    if (bVideoPaused)
+    if (g_videoPaused)
         return 1;
-    if (gUnnamed6989f0 == WINDOW_MODE_6989F0_3)
+    if (g_unnamed6989f0 == WINDOW_MODE_6989F0_3)
         return 1;
     return 0;
 }
@@ -8486,7 +8573,7 @@ unsigned char TSingleSelectionWindow::IsMultiPlayer()
 // [ebp-4] under the inlined strcat's register pressure.
 // E:\gamedcs\singleselectionwindow.cpp:7900
 VA(0x0058C960, 0x11C)  // anchor-callee called by the RS_PLAYER_DROPPED arm before DisplayChat and twice by OnUpdatePlayerPosMsg - the DC call edges; size 0.75x dc 0x17c, dc 0x142cc0
-void TSingleSelectionWindow::UpdateNameLists()
+void TSingleSelectionWindow::updateNameLists()
 {
     char names[256];
     char line[256];
@@ -8494,20 +8581,20 @@ void TSingleSelectionWindow::UpdateNameLists()
 
     names[0] = 0;
     for (i = 0; i < 4; ++i) {
-        if (m_players.humanPlayers[i].dpid != 0) {
-            sprintf(line, "%s\n", m_players.humanPlayers[i].sName);
+        if (m_players.m_humanPlayers[i].m_dpid != 0) {
+            sprintf(line, "%s\n", m_players.m_humanPlayers[i].m_name);
             strcat(names, line);
         }
     }
-    nameList1->SetText(names);
+    m_nameList1->setText(names);
     names[0] = 0;
     for (i = 4; i < 8; ++i) {
-        if (m_players.humanPlayers[i].dpid != 0) {
-            sprintf(line, "%s\n", m_players.humanPlayers[i].sName);
+        if (m_players.m_humanPlayers[i].m_dpid != 0) {
+            sprintf(line, "%s\n", m_players.m_humanPlayers[i].m_name);
             strcat(names, line);
         }
     }
-    nameList2->SetText(names);
+    m_nameList2->setText(names);
 }
 
 // Swap the right pane to chat: relabel the toggle from general-text
@@ -8517,24 +8604,24 @@ void TSingleSelectionWindow::UpdateNameLists()
 // the DC body CALLS widget::show x6 / hide x1 out of line.
 // E:\gamedcs\singleselectionwindow.cpp:7935
 VA(0x0058ca80, 0x162)  // anchor-callee OnNewHostMsg calls it (1) on host handover; adjacent pair with TurnChatOff mirrors the DC adjacency, dc 0x142e3c
-void TSingleSelectionWindow::TurnChatOn(unsigned char update)
+void TSingleSelectionWindow::turnChatOn(unsigned char update)
 {
-    chatToggle->SetText(gpGeneralText->GetText(532));
-    GetWidget(105)->hide();
-    field_196c->hide();
-    GetWidget(181)->show();
-    GetWidget(180)->show();
-    GetWidget(336)->show();
-    GetWidget(179)->show();
-    GetWidget(389)->show();
-    UpdateNameLists();
-    nameList1->show();
-    nameList2->show();
-    chatShowing = 1;
-    SetFocus(chatEdit->id);
+    m_chatToggle->setText(g_generalText->getText(532));
+    getWidget(105)->hide();
+    m_descriptionWidget->hide();
+    getWidget(181)->show();
+    getWidget(180)->show();
+    getWidget(336)->show();
+    getWidget(179)->show();
+    getWidget(389)->show();
+    updateNameLists();
+    m_nameList1->show();
+    m_nameList2->show();
+    m_chatShowing = 1;
+    setFocus(m_chatEdit->m_id);
     if (update) {
-        DrawWindow(0, 0xffff0001, 0xffff);
-        Update();
+        drawWindow(0, 0xffff0001, 0xffff);
+        this->update();
     }
 }
 
@@ -8542,66 +8629,67 @@ void TSingleSelectionWindow::TurnChatOn(unsigned char update)
 // hide the chat set, drop the focus. No name-list rebuild on the way
 // out. E:\gamedcs\singleselectionwindow.cpp:7964
 VA(0x0058cbf0, 0x152)  // anchor-callee adjacent pair with TurnChatOn 0x58ca80 (DC-adjacent), dc 0x142fac
-void TSingleSelectionWindow::TurnChatOff(unsigned char update)
+void TSingleSelectionWindow::turnChatOff(unsigned char update)
 {
-    chatToggle->SetText(gpGeneralText->GetText(533));
-    GetWidget(105)->show();
-    field_196c->show();
-    GetWidget(181)->hide();
-    GetWidget(180)->hide();
-    GetWidget(336)->hide();
-    GetWidget(179)->hide();
-    GetWidget(389)->hide();
-    nameList1->hide();
-    nameList2->hide();
-    SetFocus(-1);
-    chatShowing = 0;
+    m_chatToggle->setText(g_generalText->getText(533));
+    getWidget(105)->show();
+    m_descriptionWidget->show();
+    getWidget(181)->hide();
+    getWidget(180)->hide();
+    getWidget(336)->hide();
+    getWidget(179)->hide();
+    getWidget(389)->hide();
+    m_nameList1->hide();
+    m_nameList2->hide();
+    setFocus(-1);
+    m_chatShowing = 0;
     if (update) {
-        DrawWindow(0, 0xffff0001, 0xffff);
-        Update();
+        drawWindow(0, 0xffff0001, 0xffff);
+        this->update();
     }
 }
 
 
 
 // E:\gamedcs\singleselectionwindow.cpp:7990
-inline void TSingleSelectionWindow::OnTownUpdateMsg(
-        CNetMsg* pNetMsg, unsigned char inPopup)
+inline void TSingleSelectionWindow::onTownUpdateMsg(
+        // Before normalization (locals): pNetMsg, pMsg.
+        CNetMsg* netMsg, unsigned char inPopup)
 {
-    CTownUpdateMsg* pMsg = static_cast<CTownUpdateMsg*>(pNetMsg);
-    UpdateTown(pMsg->m_gamePos, pMsg->m_town, inPopup);
+    CTownUpdateMsg* msg = static_cast<CTownUpdateMsg*>(netMsg);
+    updateTown(msg->m_gamePos, msg->m_town, inPopup);
 }
 
 // Commit a seat's town pick, rebuild the hero filter, re-validate every
 // face, and redraw the row.
 // E:\gamedcs\singleselectionwindow.cpp:7997
 VA(0x0058CD50, 0x119)  // anchor-callee RS_TOWN_UPDATE arm calls it (pos, town, 0) - the DC 3-arg signature; also calls DrawHeroAdvancedOption per xref, size 2.1x dc 0x84, dc 0x143138
-void TSingleSelectionWindow::UpdateTown(
+void TSingleSelectionWindow::updateTown(
         int pos, TTownType town, unsigned char inPopup)
 {
-    CNetPlayerHandlerPlayer* p = m_players.GetPlayerInPos(pos);
+    CNetPlayerHandlerPlayer* p = m_players.getPlayerInPos(pos);
     if (!p)
         p = m_players.getCompPlayerInPos(pos);
     if (p) {
-        p->townIndex = town;
-        p->heroIndex = -1;
-        MakeHeroFilter();
-        CheckFaces();
+        p->m_townIndex = town;
+        p->m_heroIndex = -1;
+        makeHeroFilter();
+        checkFaces();
         if (!inPopup)
-            DrawHeroAdvancedOption(pos, 1, -1);
+            drawHeroAdvancedOption(pos, 1, -1);
     }
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:8018
-VA(0x0058CE70, 0x40)  // anchor-callee DrawHeroAdvancedOption's town pick ORs it with slot.HasRandomAlignment; body reads the same playerSlotAttributes row (+0xa0 band off gpGame->mapHeader), size 0.73x dc 0x58, dc 0x1431bc
-unsigned char TSingleSelectionWindow::HasMultipleTowns(int gamePos)
+VA(0x0058CE70, 0x40)  // anchor-callee DrawHeroAdvancedOption's town pick ORs it with slot.HasRandomAlignment; body reads the same playerSlotAttributes row (+0xa0 band off gpGame->m_mapHeader), size 0.73x dc 0x58, dc 0x1431bc
+unsigned char TSingleSelectionWindow::hasMultipleTowns(int gamePos)
 {
     CMapHeaderData::TPlayerSlotAttributes* slot =
-        &gpGame->mapHeader.playerSlotAttributes[gamePos];
-    if (slot->HasRandomAlignment)
+        &g_game->m_mapHeader.m_playerSlotAttributes[gamePos];
+    if (slot->m_hasRandomAlignment)
         return 0;
-    long alignmentCount = get_alignment_count(
-        static_cast<unsigned short>(slot->legalAlignments));
+    long alignmentCount = getAlignmentCount(
+        static_cast<unsigned short>(slot->m_legalAlignments));
     if (alignmentCount > 1)
         return 1;
     return 0;
@@ -8617,26 +8705,26 @@ unsigned char TSingleSelectionWindow::HasMultipleTowns(int gamePos)
 // DC's two final return groups differ from Complete's merged boolean return.
 // E:\gamedcs\singleselectionwindow.cpp:8034
 VA(0x0058CEB0, 0xF7)  // anchor-callee DrawHeroAdvancedOption gates the town arrows (0xd7/0xdf ids) and the bonus arrows on it; head tests m_flag64 first, size 0.88x dc 0x116, dc 0x143214
-unsigned char TSingleSelectionWindow::CanChooseTown(int gamePos)
+unsigned char TSingleSelectionWindow::canChooseTown(int gamePos)
 {
     if (m_flag64)
         return 0;
-    CMapHeaderData* mp = &gpGame->mapHeader;
+    CMapHeaderData* mp = &g_game->m_mapHeader;
     CMapHeaderData::TPlayerSlotAttributes* slotAtt =
-        &mp->playerSlotAttributes[gamePos];
-    CNetPlayerHandlerPlayer* player = m_players.GetPlayerInPos(gamePos);
+        &mp->m_playerSlotAttributes[gamePos];
+    CNetPlayerHandlerPlayer* player = m_players.getPlayerInPos(gamePos);
     unsigned char isHotSeat =
-        gUnnamed6989f0 == WINDOW_MODE_6989F0_3;
+        g_unnamed6989f0 == WINDOW_MODE_6989F0_3;
     if (!player)
         player = m_players.getCompPlayerInPos(gamePos);
     if (!isHotSeat) {
-        if (player->IsHuman()
-                && player->dpid != gsThisNetPlayerInfo.dpid)
+        if (player->isHuman()
+                && player->m_dpid != g_thisNetPlayerInfo.m_dpid)
             return 0;
-        if (!player->IsHuman() && !IsHost())
+        if (!player->isHuman() && !isHost())
             return 0;
     }
-    return slotAtt->HasRandomAlignment || HasMultipleTowns(gamePos);
+    return slotAtt->m_hasRandomAlignment || hasMultipleTowns(gamePos);
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:8067
@@ -8644,28 +8732,28 @@ unsigned char TSingleSelectionWindow::CanChooseTown(int gamePos)
 // calls and the GetDisplayTown boundary. The shared HasMultipleTowns
 // alignmentCount local preserves retail's direct signed comparison here.
 VA(0x0058CFB0, 0x129)  // anchor-callee DrawHeroAdvancedOption gates the hero arrows (0xe7/0xef ids) on it; same m_flag64 head as its town sibling, size 1.06x dc 0x116, dc 0x14332c
-unsigned char TSingleSelectionWindow::CanChooseHero(int gamePos)
+unsigned char TSingleSelectionWindow::canChooseHero(int gamePos)
 {
     if (m_flag64)
         return 0;
-    CMapHeaderData* mp = &gpGame->mapHeader;
+    CMapHeaderData* mp = &g_game->m_mapHeader;
     CMapHeaderData::TPlayerSlotAttributes* slotAtt =
-        &mp->playerSlotAttributes[gamePos];
-    CNetPlayerHandlerPlayer* player = m_players.GetPlayerInPos(gamePos);
+        &mp->m_playerSlotAttributes[gamePos];
+    CNetPlayerHandlerPlayer* player = m_players.getPlayerInPos(gamePos);
     if (!player)
         player = m_players.getCompPlayerInPos(gamePos);
     unsigned char isHotSeat =
-        gUnnamed6989f0 == WINDOW_MODE_6989F0_3;
-    if (!isHotSeat && player->IsHuman()
-            && player->dpid != gsThisNetPlayerInfo.dpid)
+        g_unnamed6989f0 == WINDOW_MODE_6989F0_3;
+    if (!isHotSeat && player->isHuman()
+            && player->m_dpid != g_thisNetPlayerInfo.m_dpid)
         return 0;
-    if (GetDisplayTown(gamePos) == -1)
+    if (getDisplayTown(gamePos) == -1)
         return 0;
-    if (!player->IsHuman())
+    if (!player->isHuman())
         return 0;
-    if (slotAtt->GenerateHero)
+    if (slotAtt->m_generateHero)
         return 1;
-    unsigned char randomHero = slotAtt->hasRandomHero != 0;
+    unsigned char randomHero = slotAtt->m_hasRandomHero != 0;
     return randomHero;
 }
 
@@ -8690,59 +8778,60 @@ unsigned char TSingleSelectionWindow::CanChooseHero(int gamePos)
 // named `setups` reference for the map (+0.74; retail holds its address in
 // ESI across the whole tail).
 VA(0x0058D0E0, 0x10A)  // anchor-callee DrawHeroAdvancedOption calls it (gamePos) in both mode arms and indexes the heroFaces plates with the result (-1 = the random/none plates); head is the GetPlayerInPos scan, size 1.02x dc 0x104, dc 0x143444
-int TSingleSelectionWindow::GetDisplayFace(int gamePos)
+int TSingleSelectionWindow::getDisplayFace(int gamePos)
 {
-    CNetPlayerHandlerPlayer* p = m_players.GetPlayerInPos(gamePos);
+    CNetPlayerHandlerPlayer* p = m_players.getPlayerInPos(gamePos);
     if (!p)
         p = m_players.getCompPlayerInPos(gamePos);
     CMapHeaderData::TPlayerSlotAttributes* slot =
-        &gpGame->mapHeader.playerSlotAttributes[gamePos];
+        &g_game->m_mapHeader.m_playerSlotAttributes[gamePos];
     int heroId;
     if (m_flag64) {
-        if (slot->nonRandomHeroCustomPortrait != -1)
-            return slot->nonRandomHeroCustomPortrait;
-        heroId = gpGame->setup.startingHero[gamePos];
-    } else if (slot->GenerateHero || slot->hasRandomHero) {
-        if (p->heroIndex == -1)
+        if (slot->m_nonRandomHeroCustomPortrait != -1)
+            return slot->m_nonRandomHeroCustomPortrait;
+        heroId = g_game->m_setup.m_startingHero[gamePos];
+    } else if (slot->m_generateHero || slot->m_hasRandomHero) {
+        if (p->m_heroIndex == -1)
             return -1;
-        heroId = p->availableHeroes[p->heroIndex];
+        heroId = p->m_availableHeroes[p->m_heroIndex];
     } else {
-        if (slot->nonRandomHeroCustomPortrait != -1)
-            return slot->nonRandomHeroCustomPortrait;
-        heroId = slot->nonRandomHeroCustomPortrait;
+        if (slot->m_nonRandomHeroCustomPortrait != -1)
+            return slot->m_nonRandomHeroCustomPortrait;
+        heroId = slot->m_nonRandomHeroCustomPortrait;
     }
     std::map<int, type_map_hero_info>& setups =
-        gpGame->mapHeader.heroPlayerSetups;
+        g_game->m_mapHeader.m_heroPlayerSetups;
     std::map<int, type_map_hero_info>::iterator it = setups.find(heroId);
-    if (it != setups.end() && it->second.field_00 != -1)
-        heroId = it->second.field_00;
+    if (it != setups.end() && it->second.m_portrait != -1)
+        heroId = it->second.m_portrait;
     return heroId;
 }
 
 // Dreamcast preserves this helper boundary and ProcessRightSelect calls it
-// in source. Complete expands the body at that site, so there is no separate
-// retail row: select the scenario-fixed hero when present, otherwise the
-// seat's chosen entry from its filtered hero list.
+// in source. Complete expands it in getHeroName, selecting the hero without
+// the portrait remapping performed by DC getHeroName's GetDisplayFace call.
+// Keep DC's early-return order: generated/random hero first, then the fixed
+// hero and finally the selected available hero (lines 8151..8162).
+// In getHeroName, the old assignment/else chain gave nested getPlayerInPos
+// budget 73 against cost 75 and left a call. Restoring these returns expands
+// that scan naturally (64.6117% -> 88.12766% before fixing name accesses).
 // E:\gamedcs\singleselectionwindow.cpp:8143
-inline int TSingleSelectionWindow::GetHeroInPos(int gamePos)
+inline int TSingleSelectionWindow::getHeroInPos(int gamePos)
 {
-    CNetPlayerHandlerPlayer* pPlayer = m_players.GetPlayerInPos(gamePos);
-    if (!pPlayer)
-        pPlayer = m_players.getCompPlayerInPos(gamePos);
+    // Before normalization (locals): pPlayer.
+    CNetPlayerHandlerPlayer* player = m_players.getPlayerInPos(gamePos);
+    if (!player)
+        player = m_players.getCompPlayerInPos(gamePos);
     CMapHeaderData::TPlayerSlotAttributes* slotAtt =
-        &gpGame->mapHeader.playerSlotAttributes[gamePos];
-    int heroId;
-    if (!slotAtt->GenerateHero && !slotAtt->hasRandomHero) {
-        if (slotAtt->nonRandomHeroId != -1)
-            heroId = slotAtt->nonRandomHeroId;
-        else
-            heroId = pPlayer->availableHeroes[pPlayer->heroIndex];
-    } else if (pPlayer->heroIndex != -1) {
-        heroId = pPlayer->availableHeroes[pPlayer->heroIndex];
-    } else {
-        heroId = -1;
+        &g_game->m_mapHeader.m_playerSlotAttributes[gamePos];
+    if (slotAtt->m_generateHero || slotAtt->m_hasRandomHero) {
+        if (player->m_heroIndex == -1)
+            return -1;
+        return player->m_availableHeroes[player->m_heroIndex];
     }
-    return heroId;
+    if (slotAtt->m_nonRandomHeroId != -1)
+        return slotAtt->m_nonRandomHeroId;
+    return player->m_availableHeroes[player->m_heroIndex];
 }
 
 // The selected seat's town. Dreamcast falls back to pick_alignment when a
@@ -8750,82 +8839,69 @@ inline int TSingleSelectionWindow::GetHeroInPos(int gamePos)
 // directly proves that its shared helper returns the -1 instead. The named
 // boundary and its HasMultipleTowns call remain common source facts.
 // E:\gamedcs\singleselectionwindow.cpp:8166
-inline TTownType TSingleSelectionWindow::GetDisplayTown(int gamePos)
+inline TTownType TSingleSelectionWindow::getDisplayTown(int gamePos)
 {
-    CNetPlayerHandlerPlayer* player = m_players.GetPlayerInPos(gamePos);
+    CNetPlayerHandlerPlayer* player = m_players.getPlayerInPos(gamePos);
     if (!player)
         player = m_players.getCompPlayerInPos(gamePos);
     CMapHeaderData::TPlayerSlotAttributes* slotAtt =
-        &gpGame->mapHeader.playerSlotAttributes[gamePos];
-    if (slotAtt->HasRandomAlignment || HasMultipleTowns(gamePos))
-        return static_cast<TTownType>(player->townIndex) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
-    return pick_alignment(
-        static_cast<unsigned short>(slotAtt->legalAlignments), 1);
+        &g_game->m_mapHeader.m_playerSlotAttributes[gamePos];
+    if (slotAtt->m_hasRandomAlignment || hasMultipleTowns(gamePos))
+        return static_cast<TTownType>(player->m_townIndex) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
+    return pickAlignment(
+        static_cast<unsigned short>(slotAtt->m_legalAlignments), 1);
 }
 
-// Retail 0x58d1f0's 1.4x growth over the DC row absorbs GetHeroInPos
-// (dc 0xB0, no retail row of its own). The network arm's heroId is a
-// [ebp-4] local; the local arm's recycles the spent gamePos slot -
-// two block-scoped locals, not one. general-text 524 is the no-hero
-// row; the setup-pool name wins over the static hero table when the
-// map carries one.
-// Residual (80.5): retail CALLS map::find (0x58eb60) at both sites;
-// our CL calls it at site 1 and expands it at site 2 (the lower_bound
-// call inside is the tell), and the two heroId locals swap homes
-// ([ebp-4] vs the recycled [ebp+8]) behind that. The find boundary is
-// the same /Ob2 collector class as GetDisplayFace above. A function-
-// scoped iterator vs two block-scoped ones is byte-flat.
-// E:\gamedcs\singleselectionwindow.cpp:8201
+// E:\gamedcs\singleselectionwindow.cpp:8201, dc 0x1436b4.
+// Complete selects the hero through getHeroInPos rather than DC's portrait
+// accessor. Keep the network heroId inside its arm and the local heroId
+// after that returning arm; retail homes them at EBP-4 and EBP+8 respectively.
+// Named map references preserve their addresses across the two retained finds.
+// Retail 0x58d294/0x58d3b4 indexes the hero-name array directly after lookup;
+// getHero() adds an absent -1 test and produces 88.12766%. Changing only the
+// first fallback gives 94.11702%; both direct accesses reach 100%.
+// Controls before restoring the helper's early returns: its call alone is
+// 61.893616%, corrected hero/iterator scopes 61.76064%, named maps 61.207447%,
+// and DC's fall-through scope 64.6117%. Iterator-local scopes and empty()
+// spelling are byte-neutral there. No inlining override is needed.
 VA(0x0058D1F0, 0x1E7)  // anchor-callee DrawHeroAdvancedOption pushes its return as the hero-name text in both mode arms; head reads the same playerSlotAttributes band, size 1.4x dc 0x15C, dc 0x1436b4
-const char* TSingleSelectionWindow::GetHeroName(int gamePos)
+const char* TSingleSelectionWindow::getHeroName(int gamePos)
 {
-    std::map<int, type_map_hero_info>::iterator it;
-    int heroId;
     CMapHeaderData::TPlayerSlotAttributes* slot =
-        &gpGame->mapHeader.playerSlotAttributes[gamePos];
+        &g_game->m_mapHeader.m_playerSlotAttributes[gamePos];
     if (m_flag64) {
-        if (slot->nonRandomHeroId != -1) {
-            if (strlen(slot->nonRandomHeroCustomName) != 0)
-                return slot->nonRandomHeroCustomName;
+        if (slot->m_nonRandomHeroId != -1) {
+            if (strlen(slot->m_nonRandomHeroCustomName) != 0)
+                return slot->m_nonRandomHeroCustomName;
         }
-        heroId = gpGame->setup.startingHero[gamePos];
+        int heroId = g_game->m_setup.m_startingHero[gamePos];
         if (heroId == -1)
-            return gpGeneralText->GetText(524);
-        it = gpGame->mapHeader.heroPlayerSetups.find(heroId);
-        if (it != gpGame->mapHeader.heroPlayerSetups.end()
-                && it->second.field_04.size() != 0)
-            return it->second.field_04.c_str();
-        return gpGame->GetHero(heroId)->name;
-    } else {
-        CNetPlayerHandlerPlayer* p = m_players.GetPlayerInPos(gamePos);
-        if (!p)
-            p = m_players.getCompPlayerInPos(gamePos);
-        int heroId;
-        if (!slot->GenerateHero && !slot->hasRandomHero) {
-            if (slot->nonRandomHeroId != -1)
-                heroId = slot->nonRandomHeroId;
-            else
-                heroId = p->availableHeroes[p->heroIndex];
-        } else if (p->heroIndex != -1) {
-            heroId = p->availableHeroes[p->heroIndex];
-        } else {
-            heroId = -1;
-        }
-        if (heroId == -1)
-            return gpGeneralText->GetText(524);
-        if (slot->nonRandomHeroId != -1) {
-            if (strlen(slot->nonRandomHeroCustomName) != 0)
-                return slot->nonRandomHeroCustomName;
-        }
-        if (slot->nonRandomHeroId != -1 && !slot->GenerateHero
-                && !slot->hasRandomHero)
-            heroId = slot->nonRandomHeroId;
-        it = gpGame->mapHeader.heroPlayerSetups.find(heroId);
-        if (it != gpGame->mapHeader.heroPlayerSetups.end()
-                && it->second.field_04.size() != 0)
-            return it->second.field_04.c_str();
-        return gpGame->GetHero(heroId)->name;
+            return g_generalText->getText(524);
+        std::map<int, type_map_hero_info>& setups =
+            g_game->m_mapHeader.m_heroPlayerSetups;
+        std::map<int, type_map_hero_info>::iterator it = setups.find(heroId);
+        if (it != setups.end()
+                && it->second.m_name.size() != 0)
+            return it->second.m_name.c_str();
+        return g_game->m_heroes[heroId].m_name;
     }
+    int heroId = getHeroInPos(gamePos);
+    if (heroId == -1)
+        return g_generalText->getText(524);
+    if (slot->m_nonRandomHeroId != -1) {
+        if (strlen(slot->m_nonRandomHeroCustomName) != 0)
+            return slot->m_nonRandomHeroCustomName;
+    }
+    if (slot->m_nonRandomHeroId != -1 && !slot->m_generateHero
+            && !slot->m_hasRandomHero)
+        heroId = slot->m_nonRandomHeroId;
+    std::map<int, type_map_hero_info>& setups =
+        g_game->m_mapHeader.m_heroPlayerSetups;
+    std::map<int, type_map_hero_info>::iterator it = setups.find(heroId);
+    if (it != setups.end()
+            && it->second.m_name.size() != 0)
+        return it->second.m_name.c_str();
+    return g_game->m_heroes[heroId].m_name;
 }
 
 // Case-blind prefix search over the filtered list; on a hit the row
@@ -8833,20 +8909,20 @@ const char* TSingleSelectionWindow::GetHeroName(int gamePos)
 // stays visible, and the slider follows.
 // E:\gamedcs\singleselectionwindow.cpp:8273
 VA(0x0058D3E0, 0x122)  // arity ret4 on a char* it strlens at entry (the flat carve name records the 0x57f330 SetupNewGameMode-band caller); monotone slot between GetHeroName and DrawHeroAdvancedOption, size 0.98x dc 0x128, dc 0x143954
-unsigned char TSingleSelectionWindow::HighlightFile(char* filename)
+unsigned char TSingleSelectionWindow::highlightFile(char* filename)
 {
     int len = strlen(filename);
     int i = 0;
-    while (static_cast<unsigned int>(i) < GetMapCount()) {
-        if (_strnicmp(filename, SelectionHeaders[i].setup.filename, len)
+    while (static_cast<unsigned int>(i) < getMapCount()) {
+        if (_strnicmp(filename, m_selectionHeaders[i].m_setup.m_filename, len)
                 == 0) {
-            currentIndex = i;
-            currentMap = i;
-            if (i + gUnnamed69fdc8 > GetMapCount())
-                currentIndex = GetMapCount() - gUnnamed69fdc8;
-            if (currentIndex < 0)
-                currentIndex = 0;
-            fileSlider->SetState(currentIndex);
+            m_currentIndex = i;
+            m_currentMap = i;
+            if (i + g_unnamed69fdc8 > getMapCount())
+                m_currentIndex = getMapCount() - g_unnamed69fdc8;
+            if (m_currentIndex < 0)
+                m_currentIndex = 0;
+            m_fileSlider->setState(m_currentIndex);
             return 1;
         }
         ++i;
@@ -8881,26 +8957,26 @@ unsigned char TSingleSelectionWindow::HighlightFile(char* filename)
 // the [ebp+0x10] home retail has).
 // E:\gamedcs\singleselectionwindow.cpp:8297
 VA(0x0058d510, 0xA40)  // anchor-callee both CEnterNameEdit overrides call it (pos, 1, -1) after the name commit, matching DC OnNameChange->DrawHeroAdvancedOption; also called from WindowHandler per DC edge; size 0.48x dc 0x158a, dc 0x143a7c
-void TSingleSelectionWindow::DrawHeroAdvancedOption(int playerPos,
+void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
                                                     unsigned char update,
                                                     int position)
 {
     if (position == -1) {
         position = 0;
         for (int i = 0; i != playerPos; ++i)
-            if (gpGame->setup.playerPos[i] >= 0
-                    && (m_flag64 == 0 || gpGame->playerDisabled[i] == 0))
+            if (g_game->m_setup.m_playerPos[i] >= 0
+                    && (m_flag64 == 0 || g_game->m_playerDisabled[i] == 0))
                 ++position;
     }
-    GetWidget(playerPos + 263)->Draw();
+    getWidget(playerPos + 263)->draw();
     int rowY = position * 50;
-    Panels[playerPos]->Draw(0, 0, Panels[0]->Width,
-                                 Panels[0]->Height,
-                                 gpWindowManager->screenBitmap, 57,
+    m_panels[playerPos]->draw(0, 0, m_panels[0]->m_width,
+                                 m_panels[0]->m_height,
+                                 g_windowManager->m_screenBitmap, 57,
                                  rowY + 128, 1);
-    GetWidget(playerPos + 199)->Draw();
-    GetWidget(playerPos + 207)->Draw();
-    CNetPlayerHandlerPlayer* p = m_players.GetPlayerInPos(playerPos);
+    getWidget(playerPos + 199)->draw();
+    getWidget(playerPos + 207)->draw();
+    CNetPlayerHandlerPlayer* p = m_players.getPlayerInPos(playerPos);
     if (p == 0)
         p = m_players.getCompPlayerInPos(playerPos);
     if (m_flag64 != 0) {
@@ -8908,32 +8984,32 @@ void TSingleSelectionWindow::DrawHeroAdvancedOption(int playerPos,
         // parameter (retail homes it in [ebp+0x10], the dead third-arg
         // slot, and the resource-bonus arm's self-store below only
         // exists against that memory home).
-        position = gpGame->setup.alignment[playerPos];
+        position = g_game->m_setup.m_alignment[playerPos];
         int iconY = rowY + 130;
-        TownPix->Draw(0, position * 2 + 2, 0, 0, TownPix->Width,
-                        TownPix->Height, gpWindowManager->screenBitmap,
+        m_townPix->draw(0, position * 2 + 2, 0, 0, m_townPix->m_width,
+                        m_townPix->m_height, g_windowManager->m_screenBitmap,
                         176, iconY, 0, 1);
         int textY = rowY + 162;
         // (textY/iconY keep retail's dead-slot homes)
-        gpTinyFont->DrawBoundedString(gUnnamed6a74f4[position],
-            gpWindowManager->screenBitmap, 164, textY, 71, 16, 4, 5, -1);
-        int face = GetDisplayFace(playerPos);
+        g_tinyFont->drawBoundedString(g_unnamed6a74f4[position],
+            g_windowManager->m_screenBitmap, 164, textY, 71, 16, 4, 5, -1);
+        int face = getDisplayFace(playerPos);
         if (face != -1) {
-            HeroPix[face]->Draw(0, 0, HeroPix[0]->Width,
-                HeroPix[0]->Height, gpWindowManager->screenBitmap,
+            m_heroPix[face]->draw(0, 0, m_heroPix[0]->m_width,
+                m_heroPix[0]->m_height, g_windowManager->m_screenBitmap,
                 252, iconY, 0);
-            const char* name = GetHeroName(playerPos);
-            gpTinyFont->DrawBoundedString(name,
-                gpWindowManager->screenBitmap, 240, textY, 71, 16, 4, 5,
+            const char* name = getHeroName(playerPos);
+            g_tinyFont->drawBoundedString(name,
+                g_windowManager->m_screenBitmap, 240, textY, 71, 16, 4, 5,
                 -1);
         } else {
-            noHeroBmp->Draw(0, 0, noHeroBmp->Width, noHeroBmp->Height,
-                gpWindowManager->screenBitmap, 252, iconY, 0);
-            gpTinyFont->DrawBoundedString(gpGeneralText->GetText(524),
-                gpWindowManager->screenBitmap, 240, textY, 71, 16, 4, 5,
+            m_noHeroBmp->draw(0, 0, m_noHeroBmp->m_width, m_noHeroBmp->m_height,
+                g_windowManager->m_screenBitmap, 252, iconY, 0);
+            g_tinyFont->drawBoundedString(g_generalText->getText(524),
+                g_windowManager->m_screenBitmap, 240, textY, 71, 16, 4, 5,
                 -1);
         }
-        int bonus = gpGame->setup.startingBonus[playerPos];
+        int bonus = g_game->m_setup.m_startingBonus[playerPos];
         switch (bonus) {
         case NEW_MAP_BONUS_ARTIFACT:
             position = 9;
@@ -8948,123 +9024,123 @@ void TSingleSelectionWindow::DrawHeroAdvancedOption(int playerPos,
             position = 10;
             break;
         }
-        Resource->Draw(0, position, 0, 0, Resource->Width,
-                         Resource->Height,
-                         gpWindowManager->screenBitmap, 328, iconY, 0, 1);
+        m_resource->draw(0, position, 0, 0, m_resource->m_width,
+                         m_resource->m_height,
+                         g_windowManager->m_screenBitmap, 328, iconY, 0, 1);
         if (bonus == NEW_MAP_BONUS_RANDOM)
-            gpTinyFont->DrawBoundedString(gpGeneralText->GetText(523),
-                gpWindowManager->screenBitmap, 316, textY, 71, 16, 4, 5,
+            g_tinyFont->drawBoundedString(g_generalText->getText(523),
+                g_windowManager->m_screenBitmap, 316, textY, 71, 16, 4, 5,
                 -1);
         else
-            gpTinyFont->DrawBoundedString(gUnnamed6a5e14[bonus],
-                gpWindowManager->screenBitmap, 316, textY, 71, 16, 4, 5,
+            g_tinyFont->drawBoundedString(g_unnamed6a5e14[bonus],
+                g_windowManager->m_screenBitmap, 316, textY, 71, 16, 4, 5,
                 -1);
     } else {
-        CNetPlayerHandlerPlayer* q = m_players.GetPlayerInPos(playerPos);
+        CNetPlayerHandlerPlayer* q = m_players.getPlayerInPos(playerPos);
         if (q == 0)
             q = m_players.getCompPlayerInPos(playerPos);
         int town;
         {
             CMapHeaderData::TPlayerSlotAttributes* slot =
-                &gpGame->mapHeader.playerSlotAttributes[playerPos];
+                &g_game->m_mapHeader.m_playerSlotAttributes[playerPos];
 #pragma inline_depth(0)
-            if (slot->HasRandomAlignment != 0
-                    || HasMultipleTowns(playerPos))
-                town = q->townIndex;
+            if (slot->m_hasRandomAlignment != 0
+                    || hasMultipleTowns(playerPos))
+                town = q->m_townIndex;
             else
-                town = pick_alignment(
-                    static_cast<unsigned short>(slot->legalAlignments),
+                town = pickAlignment(
+                    static_cast<unsigned short>(slot->m_legalAlignments),
                     1);
 #pragma inline_depth()
         }
-        widget* townLeft = GetWidget(playerPos + 215);
-        widget* townRight = GetWidget(playerPos + 223);
-        if (CanChooseTown(playerPos)) {
+        widget* townLeft = getWidget(playerPos + 215);
+        widget* townRight = getWidget(playerPos + 223);
+        if (canChooseTown(playerPos)) {
             townLeft->enable(1);
             townRight->enable(1);
-            townLeft->send_message(widget::WIDGET_SET_STATUS, 6);
-            townRight->send_message(widget::WIDGET_SET_STATUS, 6);
-            townLeft->Draw();
-            townRight->Draw();
+            townLeft->sendMessage(widget::WIDGET_SET_STATUS, 6);
+            townRight->sendMessage(widget::WIDGET_SET_STATUS, 6);
+            townLeft->draw();
+            townRight->draw();
         } else {
             townLeft->enable(0);
             townRight->enable(0);
-            townLeft->send_message(widget::WIDGET_CLEAR_STATUS, 6);
-            townRight->send_message(widget::WIDGET_CLEAR_STATUS, 6);
+            townLeft->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
+            townRight->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
         }
         if (town == -1) {
-            randomTownBmp->Draw(0, 0, randomHeroBmp->Width,
-                randomHeroBmp->Height, gpWindowManager->screenBitmap,
+            m_randomTownBmp->draw(0, 0, m_randomHeroBmp->m_width,
+                m_randomHeroBmp->m_height, g_windowManager->m_screenBitmap,
                 176, rowY + 130, 0);
-            gpTinyFont->DrawBoundedString(gpGeneralText->GetText(523),
-                gpWindowManager->screenBitmap, 164, rowY + 162, 71, 16,
+            g_tinyFont->drawBoundedString(g_generalText->getText(523),
+                g_windowManager->m_screenBitmap, 164, rowY + 162, 71, 16,
                 4, 5, -1);
         } else {
-            TownPix->Draw(0, town * 2 + 2, 0, 0, TownPix->Width,
-                TownPix->Height, gpWindowManager->screenBitmap, 176,
+            m_townPix->draw(0, town * 2 + 2, 0, 0, m_townPix->m_width,
+                m_townPix->m_height, g_windowManager->m_screenBitmap, 176,
                 rowY + 130, 0, 1);
-            gpTinyFont->DrawBoundedString(gUnnamed6a74f4[town],
-                gpWindowManager->screenBitmap, 164, rowY + 162, 71, 16,
+            g_tinyFont->drawBoundedString(g_unnamed6a74f4[town],
+                g_windowManager->m_screenBitmap, 164, rowY + 162, 71, 16,
                 4, 5, -1);
         }
-        int face = GetDisplayFace(playerPos);
-        widget* heroLeft = GetWidget(playerPos + 231);
-        widget* heroRight = GetWidget(playerPos + 239);
-        unsigned char canChooseHero = CanChooseHero(playerPos);
+        int face = getDisplayFace(playerPos);
+        widget* heroLeft = getWidget(playerPos + 231);
+        widget* heroRight = getWidget(playerPos + 239);
+        unsigned char canChooseHero = this->canChooseHero(playerPos);
         if (canChooseHero) {
             heroLeft->enable(1);
             heroRight->enable(1);
-            heroLeft->send_message(widget::WIDGET_SET_STATUS, 6);
-            heroRight->send_message(widget::WIDGET_SET_STATUS, 6);
-            heroLeft->Draw();
-            heroRight->Draw();
+            heroLeft->sendMessage(widget::WIDGET_SET_STATUS, 6);
+            heroRight->sendMessage(widget::WIDGET_SET_STATUS, 6);
+            heroLeft->draw();
+            heroRight->draw();
         } else {
             heroLeft->enable(0);
             heroRight->enable(0);
-            heroLeft->send_message(widget::WIDGET_CLEAR_STATUS, 6);
-            heroRight->send_message(widget::WIDGET_CLEAR_STATUS, 6);
+            heroLeft->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
+            heroRight->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
         }
         unsigned char noHero = 0;
         if (face == -1) {
-            if (gpGame->mapHeader.playerSlotAttributes[playerPos]
-                        .hasRandomHero == 0
-                    && gpGame->mapHeader.playerSlotAttributes[playerPos]
-                           .GenerateHero == 0
-                    && gpGame->mapHeader.playerSlotAttributes[playerPos]
-                           .nonRandomHeroId == -1)
+            if (g_game->m_mapHeader.m_playerSlotAttributes[playerPos]
+                        .m_hasRandomHero == 0
+                    && g_game->m_mapHeader.m_playerSlotAttributes[playerPos]
+                           .m_generateHero == 0
+                    && g_game->m_mapHeader.m_playerSlotAttributes[playerPos]
+                           .m_nonRandomHeroId == -1)
                 noHero = 1;
             if (canChooseHero == 0 && (town != -1 || noHero != 0)
-                    && gpGame->mapHeader.playerSlotAttributes[playerPos]
-                           .hasRandomHero == 0
-                    && gpGame->mapHeader.playerSlotAttributes[playerPos]
-                           .GenerateHero == 0) {
-                noHeroBmp->Draw(0, 0, noHeroBmp->Width, noHeroBmp->Height,
-                    gpWindowManager->screenBitmap, 252, rowY + 130, 0);
-                gpTinyFont->DrawBoundedString(
-                    gpGeneralText->GetText(524),
-                    gpWindowManager->screenBitmap, 240, rowY + 162, 71,
+                    && g_game->m_mapHeader.m_playerSlotAttributes[playerPos]
+                           .m_hasRandomHero == 0
+                    && g_game->m_mapHeader.m_playerSlotAttributes[playerPos]
+                           .m_generateHero == 0) {
+                m_noHeroBmp->draw(0, 0, m_noHeroBmp->m_width, m_noHeroBmp->m_height,
+                    g_windowManager->m_screenBitmap, 252, rowY + 130, 0);
+                g_tinyFont->drawBoundedString(
+                    g_generalText->getText(524),
+                    g_windowManager->m_screenBitmap, 240, rowY + 162, 71,
                     16, 4, 5, -1);
             } else {
-                randomHeroBmp->Draw(0, 0, randomHeroBmp->Width,
-                    randomHeroBmp->Height,
-                    gpWindowManager->screenBitmap, 252, rowY + 130, 0);
-                gpTinyFont->DrawBoundedString(
-                    gpGeneralText->GetText(523),
-                    gpWindowManager->screenBitmap, 240, rowY + 162, 71,
+                m_randomHeroBmp->draw(0, 0, m_randomHeroBmp->m_width,
+                    m_randomHeroBmp->m_height,
+                    g_windowManager->m_screenBitmap, 252, rowY + 130, 0);
+                g_tinyFont->drawBoundedString(
+                    g_generalText->getText(523),
+                    g_windowManager->m_screenBitmap, 240, rowY + 162, 71,
                     16, 4, 5, -1);
             }
         } else {
-            const char* name = GetHeroName(playerPos);
-            HeroPix[face]->Draw(0, 0, HeroPix[0]->Width,
-                HeroPix[0]->Height, gpWindowManager->screenBitmap,
+            const char* name = getHeroName(playerPos);
+            m_heroPix[face]->draw(0, 0, m_heroPix[0]->m_width,
+                m_heroPix[0]->m_height, g_windowManager->m_screenBitmap,
                 252, rowY + 130, 0);
-            gpTinyFont->DrawBoundedString(name,
-                gpWindowManager->screenBitmap, 240, rowY + 162, 71, 16,
+            g_tinyFont->drawBoundedString(name,
+                g_windowManager->m_screenBitmap, 240, rowY + 162, 71, 16,
                 4, 5, -1);
         }
-        widget* bonusLeft = GetWidget(playerPos + 247);
-        widget* bonusRight = GetWidget(playerPos + 255);
-        int bonus = p->startBonusIndex;
+        widget* bonusLeft = getWidget(playerPos + 247);
+        widget* bonusRight = getWidget(playerPos + 255);
+        int bonus = p->m_startBonusIndex;
         int frame;
         switch (bonus) {
         case NEW_MAP_BONUS_ARTIFACT:
@@ -9082,21 +9158,21 @@ void TSingleSelectionWindow::DrawHeroAdvancedOption(int playerPos,
                 frame = town;
                 break;
             }
-            p->startBonusIndex = NEW_MAP_BONUS_RANDOM;
+            p->m_startBonusIndex = NEW_MAP_BONUS_RANDOM;
         case NEW_MAP_BONUS_RANDOM:
             frame = 10;
             break;
         }
         if (bonus == NEW_MAP_BONUS_RANDOM)
-            gpTinyFont->DrawBoundedString(gpGeneralText->GetText(523),
-                gpWindowManager->screenBitmap, 316, rowY + 162, 71, 16,
+            g_tinyFont->drawBoundedString(g_generalText->getText(523),
+                g_windowManager->m_screenBitmap, 316, rowY + 162, 71, 16,
                 4, 5, -1);
         else
-            gpTinyFont->DrawBoundedString(gUnnamed6a5e14[bonus],
-                gpWindowManager->screenBitmap, 316, rowY + 162, 71, 16,
+            g_tinyFont->drawBoundedString(g_unnamed6a5e14[bonus],
+                g_windowManager->m_screenBitmap, 316, rowY + 162, 71, 16,
                 4, 5, -1);
-        Resource->Draw(0, frame, 0, 0, Resource->Width,
-            Resource->Height, gpWindowManager->screenBitmap, 328,
+        m_resource->draw(0, frame, 0, 0, m_resource->m_width,
+            m_resource->m_height, g_windowManager->m_screenBitmap, 328,
             rowY + 130, 0, 1);
         unsigned char townChosen = 1;
         if (town == -1)
@@ -9106,32 +9182,32 @@ void TSingleSelectionWindow::DrawHeroAdvancedOption(int playerPos,
         // the host test rather than inside it: retail's `!IsHost` and
         // `dpid != 0` arms both jump to the gUnnamed6989f0 compare, not
         // past it (branch topology clean at 49/49 once written this way).
-        if (GetThisPlayerGamePos() == playerPos
-                || ((bVideoPaused == 0 || pDPlay->IsHost())
-                    && p->dpid == 0
-                    && (CanChooseTown(playerPos) || townChosen != 0))
-                || gUnnamed6989f0 == WINDOW_MODE_6989F0_3) {
+        if (getThisPlayerGamePos() == playerPos
+                || ((g_videoPaused == 0 || g_dPlay->isHost())
+                    && p->m_dpid == 0
+                    && (canChooseTown(playerPos) || townChosen != 0))
+                || g_unnamed6989f0 == WINDOW_MODE_6989F0_3) {
             bonusLeft->enable(1);
             bonusRight->enable(1);
-            bonusLeft->send_message(widget::WIDGET_SET_STATUS, 6);
-            bonusRight->send_message(widget::WIDGET_SET_STATUS, 6);
-            bonusLeft->Draw();
-            bonusRight->Draw();
+            bonusLeft->sendMessage(widget::WIDGET_SET_STATUS, 6);
+            bonusRight->sendMessage(widget::WIDGET_SET_STATUS, 6);
+            bonusLeft->draw();
+            bonusRight->draw();
         } else {
             bonusLeft->enable(0);
             bonusRight->enable(0);
-            bonusLeft->send_message(widget::WIDGET_CLEAR_STATUS, 6);
-            bonusRight->send_message(widget::WIDGET_CLEAR_STATUS, 6);
+            bonusLeft->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
+            bonusRight->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
         }
     }
-    widget* nameText = GetWidget(playerPos + 345);
-    nameText->send_message(widget::WIDGET_SET_STATUS, 6);
-    nameText->Draw();
-    if (bVideoPaused == 0
-            && gUnnamed6989f0 != WINDOW_MODE_6989F0_3)
-        GetWidget(playerPos + 353)->Draw();
+    widget* nameText = getWidget(playerPos + 345);
+    nameText->sendMessage(widget::WIDGET_SET_STATUS, 6);
+    nameText->draw();
+    if (g_videoPaused == 0
+            && g_unnamed6989f0 != WINDOW_MODE_6989F0_3)
+        getWidget(playerPos + 353)->draw();
     if (update)
-        gpWindowManager->UpdateScreen(13, rowY + 127, 382, 54);
+        g_windowManager->updateScreen(13, rowY + 127, 382, 54);
 }
 
 
@@ -9140,13 +9216,13 @@ void TSingleSelectionWindow::DrawHeroAdvancedOption(int playerPos,
 // first byte is setup.playerPos; the second PC-only veto is the game's
 // per-seat disabled byte when the network header mode is active.
 // E:\gamedcs\singleselectionwindow.cpp:8643
-inline int TSingleSelectionWindow::CalcPosition(int playerPos)
+inline int TSingleSelectionWindow::calcPosition(int playerPos)
 {
     int nextColor = 0;
     for (int i = 0; i < playerPos; ++i) {
-        if (gpGame->setup.playerPos[i] < 0)
+        if (g_game->m_setup.m_playerPos[i] < 0)
             continue;
-        if (m_flag64 && gpGame->playerDisabled[i])
+        if (m_flag64 && g_game->m_playerDisabled[i])
             continue;
         ++nextColor;
     }
@@ -9156,13 +9232,14 @@ inline int TSingleSelectionWindow::CalcPosition(int playerPos)
 // Version mismatch: tear the session down and show the offender's
 // message formatted with both version strings.
 // E:\gamedcs\singleselectionwindow.cpp:8662
+// Before normalization (locals): pNetMsg, pMsg.
 VA(0x0058DF50, 0x57)  // anchor-callee RS_BAD_VERSION arm calls it then cancels, size 0.74x dc 0x76, dc 0x1450a8
-unsigned char TSingleSelectionWindow::OnBadVersionMsg(CNetMsg* pNetMsg)
+unsigned char TSingleSelectionWindow::onBadVersionMsg(CNetMsg* netMsg)
 {
-    CBadVersionMsg* pMsg = static_cast<CBadVersionMsg*>(pNetMsg);
-    RemoteCleanup();
-    sprintf(gText, pMsg->m_errText, gameVersion, pMsg->m_version);
-    NormalDialog(gText, 1, 20000, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+    CBadVersionMsg* msg = static_cast<CBadVersionMsg*>(netMsg);
+    remoteCleanup();
+    sprintf(g_text, msg->m_errText, m_gameVersion, msg->m_version);
+    normalDialog(g_text, 1, 20000, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     return 1;
 }
 
@@ -9175,37 +9252,37 @@ unsigned char TSingleSelectionWindow::OnBadVersionMsg(CNetMsg* pNetMsg)
 // filename scan - and rewire the slider/selection (empty list drops to
 // the -1 selection with a full redraw; otherwise re-sort by version).
 VA(0x0058dfb0, 0x320)  // anchor-callee WindowHandler key arm 5 calls it no-arg; anchor-import DeleteFileA + 'games' literal, dc 0x145120
-void TSingleSelectionWindow::OnDeleteFile()
+void TSingleSelectionWindow::onDeleteFile()
 {
-    if (GetMapCount() == 0)
+    if (getMapCount() == 0)
         return;
-    if (bVideoPaused && !m_flag65)
+    if (g_videoPaused && !m_flag65)
         return;
     if (!m_flag64 && !m_flag65)
         return;
-    char* fileName = SelectionHeaders[currentMap].setup.filename;
-    sprintf(gText, gpGeneralText->GetText(688), fileName);
-    NormalDialog(gText, 2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-    if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT)
+    char* fileName = m_selectionHeaders[m_currentMap].m_setup.m_filename;
+    sprintf(g_text, g_generalText->getText(688), fileName);
+    normalDialog(g_text, 2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+    if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT)
         return;
     _chdir("games");
     DeleteFileA(fileName);
     _chdir("..");
     int i = 0;
-    while (static_cast<unsigned int>(i) < HeadersA.size()) {
-        if (strcmp(HeadersA[i].setup.filename, fileName) == 0)
+    while (static_cast<unsigned int>(i) < m_headersA.size()) {
+        if (strcmp(m_headersA[i].m_setup.m_filename, fileName) == 0)
             break;
         ++i;
     }
-    SelectionHeaders.erase(SelectionHeaders.begin() + currentMap);
-    HeadersA.erase(HeadersA.begin() + i);
-    fileSlider->SetResolution(GetMapCount() - gUnnamed69fdc8 + 1);
-    if (GetMapCount() != 0) {
-        SortMaps(SORT_MAPS_BY_VERSION, 1, 1);
-        SetCurrentMap(0, 1);
+    m_selectionHeaders.erase(m_selectionHeaders.begin() + m_currentMap);
+    m_headersA.erase(m_headersA.begin() + i);
+    m_fileSlider->setResolution(getMapCount() - g_unnamed69fdc8 + 1);
+    if (getMapCount() != 0) {
+        sortMaps(SORT_MAPS_BY_VERSION, 1, 1);
+        setCurrentMap(0, 1);
     } else {
-        DrawWindow(0, 0xffff0001, 0xffff);
-        SetCurrentMap(-1, 1);
+        drawWindow(0, 0xffff0001, 0xffff);
+        setCurrentMap(-1, 1);
     }
 }
 
@@ -9235,12 +9312,13 @@ VA_COMPGEN(0x0058e2e0, 0x21, SCALAR_DELETING_DTOR,
 
 // E:\gamedcs\singleselectionwindow.cpp:8764
 VA(0x0058e310, 0x21)  // anchor-vtable CSingleSelectionNetMsgHandler vtbl 0x241ce8 slot1 (CheckHandleNet; cf CNetMsgHandler layout), dc 0x1451a0
-CNetMsg* CSingleSelectionNetMsgHandler::CheckHandleNet(unsigned char inPopup, unsigned char* msgReceived)
+CNetMsg* CSingleSelectionNetMsgHandler::checkHandleNet(unsigned char inPopup, unsigned char* msgReceived)
 {
-    CNetMsg* pMsg = GetRemoteData(0, &m_wasCompressed);
-    if (!pMsg)
+    // Before normalization (locals): pMsg.
+    CNetMsg* msg = getRemoteData(0, &m_wasCompressed);
+    if (!msg)
         return 0;
-    return HandleNetMsg(pMsg);
+    return handleNetMsg(msg);
 }
 
 #if 0  // @carcass
@@ -9248,50 +9326,51 @@ CNetMsg* CSingleSelectionNetMsgHandler::CheckHandleNet(unsigned char inPopup, un
 #endif  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:8775
+// Before normalization (locals): pNetMsg, pMsg.
 VA(0x0058e340, 0x379)  // anchor-vtable vtbl 0x241ce8 slot3 (HandleNetMsg; cf CNetMsgHandler layout) + fingerprint w0.75, dc 0x1451e8
-CNetMsg* CSingleSelectionNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
+CNetMsg* CSingleSelectionNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
 {
-    CNetMsg* pMsg;
-    switch (pNetMsg->subType) {
+    CNetMsg* msg;
+    switch (netMsg->m_subType) {
     case RS_REQUEST_HERO_FACE:
-        gUnnamed69fbe8->OnRequestHeroFaceMsg(pNetMsg, 1);
-        pMsg = GetRemoteData(1, 0);
-        DestroyMsg(pMsg);
+        g_unnamed69fbe8->onRequestHeroFaceMsg(netMsg, 1);
+        msg = getRemoteData(1, 0);
+        destroyMsg(msg);
         return 0;
     case RS_TOWN_UPDATE:
-        gUnnamed69fbe8->OnTownUpdateMsg(pNetMsg, 1);
-        pMsg = GetRemoteData(1, 0);
-        DestroyMsg(pMsg);
+        g_unnamed69fbe8->onTownUpdateMsg(netMsg, 1);
+        msg = getRemoteData(1, 0);
+        destroyMsg(msg);
         return 0;
     case RS_SETAGR:
-        gUnnamed69fbe8->OnSetAGRMsg(pNetMsg, 1);
-        pMsg = GetRemoteData(1, 0);
-        DestroyMsg(pMsg);
+        g_unnamed69fbe8->onSetAGRMsg(netMsg, 1);
+        msg = getRemoteData(1, 0);
+        destroyMsg(msg);
         return 0;
     case RS_REQUEST_HERO_FACE_REPLY:
-        gUnnamed69fbe8->OnRequestHeroFaceReplyMsg(pNetMsg, 1);
-        pMsg = GetRemoteData(1, 0);
-        DestroyMsg(pMsg);
+        g_unnamed69fbe8->onRequestHeroFaceReplyMsg(netMsg, 1);
+        msg = getRemoteData(1, 0);
+        destroyMsg(msg);
         return 0;
     case RS_CHAT_MSG:
-        gUnnamed69fbe8->ReceiveChat(
-            pNetMsg->field_04, static_cast<CChatMsg*>(pNetMsg)->m_text, 1);
-        pMsg = GetRemoteData(1, 0);
-        DestroyMsg(pMsg);
+        g_unnamed69fbe8->receiveChat(
+            netMsg->m_dpidFrom, static_cast<CChatMsg*>(netMsg)->m_text, 1);
+        msg = getRemoteData(1, 0);
+        destroyMsg(msg);
         return 0;
     case RS_SETUP_PING:
-        gUnnamed69fbe8->OnPingMsg(pNetMsg);
-        pMsg = GetRemoteData(1, 0);
-        DestroyMsg(pMsg);
+        g_unnamed69fbe8->onPingMsg(netMsg);
+        msg = getRemoteData(1, 0);
+        destroyMsg(msg);
         return 0;
     case RS_SETUP_PING_RESPONSE:
-        gUnnamed69fbe8->OnPingResponseMsg(pNetMsg, 1);
-        pMsg = GetRemoteData(1, 0);
-        DestroyMsg(pMsg);
+        g_unnamed69fbe8->onPingResponseMsg(netMsg, 1);
+        msg = getRemoteData(1, 0);
+        destroyMsg(msg);
         return 0;
     default:
         if (m_wasCompressed)
-            DestroyMsg(pNetMsg);
+            destroyMsg(netMsg);
         return 0;
     }
 }
@@ -9307,7 +9386,7 @@ int EnumMapleDevicesCallback(const MAPLEDEVICEINSTANCE* pmdi, void* pvContext)
 
 // E:\gamedcs\singleselectionwindow.cpp:8878
 DC_ONLY(0x14549c, 0x860)
-unsigned char VMSaveFile(char* FileName, unsigned char* buffer, unsigned long lenBuffer, unsigned long start)
+unsigned char VMSaveFile(char* m_fileName, unsigned char* buffer, unsigned long lenBuffer, unsigned long start)
 {
     // @stub
 }
@@ -9342,21 +9421,21 @@ unsigned char TSingleSelectionWindow::GetDeviceDesc(unsigned char save)
 
 // E:\gamedcs\singleselectionwindow.cpp:9328
 DC_ONLY(0x146564, 0x2AE)
-unsigned char VMLoadFile(char* FileName, Buffer* buf)
+unsigned char VMLoadFile(char* m_fileName, Buffer* buf)
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:9420
 DC_ONLY(0x146814, 0x180)
-unsigned char VMDeleteFile(char* FileName)
+unsigned char VMDeleteFile(char* m_fileName)
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:9465
 DC_ONLY(0x146994, 0x268)
-unsigned char VMSaveHiscore(char* FileName, void* buffer, unsigned long lenBuffer, unsigned long start)
+unsigned char VMSaveHiscore(char* m_fileName, void* buffer, unsigned long lenBuffer, unsigned long start)
 {
     // @stub
 }
@@ -9398,42 +9477,42 @@ void CNetPlayerInfo::CNetPlayerInfo(char* _sName, unsigned long _dpid)
 
 // E:\gamedcs\TextWdgt.h:64
 DC_ONLY(0x1473f8, 0x24)
-void textWidget::SetText(const char* new_text)
+void textWidget::setText(const char* new_text)
 {
     // @stub
 }
 
 // E:\gamedcs\game.h:311
 DC_ONLY(0x14741c, 0x50)
-void NewSMapHeader::AssignData(CMapHeaderData* pData, char* sName, char* sDesc)
+void NewSMapHeader::assignData(CMapHeaderData* pData, char* sName, char* sDesc)
 {
     // @stub
 }
 
 // E:\gamedcs\dxplay.h:210
 DC_ONLY(0x14746c, 0xA)
-char* CDPlayPlayer::GetName()
+char* CDPlayPlayer::getName()
 {
     // @stub
 }
 
 // E:\gamedcs\remote.h:207
 DC_ONLY(0x147478, 0x28)
-char* CHotSeatMan::GetName(int player)
+char* CHotSeatMan::getName(int player)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.h:320
 DC_ONLY(0x1474a0, 0xC)
-int CChatManager::GetCount()
+int CChatManager::getCount()
 {
     // @stub
 }
 
 // E:\gamedcs\remote.h:321
 DC_ONLY(0x1474ac, 0xC)
-int CChatManager::GetPosition()
+int CChatManager::getPosition()
 {
     // @stub
 }
@@ -9454,35 +9533,35 @@ void CNetPlayerHandlerPlayer::CNetPlayerHandlerPlayer()
 
 // E:\gamedcs\SingleSelectionWindow.h:122
 DC_ONLY(0x1475dc, 0x12)
-unsigned char CNetPlayerHandlerPlayer::IsHuman()
+unsigned char CNetPlayerHandlerPlayer::isHuman()
 {
     // @stub
 }
 
 // E:\gamedcs\SingleSelectionWindow.h:130
 DC_ONLY(0x1475f0, 0x20)
-void CNetPlayerHandlerPlayer::Clear()
+void CNetPlayerHandlerPlayer::clear()
 {
     // @stub
 }
 
 // E:\gamedcs\SingleSelectionWindow.h:138
 DC_ONLY(0x147610, 0x1A)
-void CNetPlayerHandlerPlayer::ResetAdvancedOptions()
+void CNetPlayerHandlerPlayer::resetAdvancedOptions()
 {
     // @stub
 }
 
 // E:\gamedcs\Button.h:136
 DC_ONLY(0x14762c, 0x24)
-void textButton::SetText(const char* new_text)
+void textButton::setText(const char* new_text)
 {
     // @stub
 }
 
 // E:\gamedcs\u2dvers.h:149
 DC_ONLY(0x147650, 0x2C)
-unsigned char TFileVersionInfo::GetProductVersion(std::basic_string<char,std::char_traits<char>,std::allocator<char>* product_version)
+unsigned char TFileVersionInfo::getProductVersion(std::basic_string<char,std::char_traits<char>,std::allocator<char>* product_version)
 {
     // @stub
 }
@@ -9496,7 +9575,7 @@ void CHostWaitDlg::CHostWaitDlg()
 
 // E:\gamedcs\singleselectionwindow.cpp:437
 DC_ONLY(0x1476dc, 0xD4)
-void CHostWaitDlg::Wait(unsigned long forWho)
+void CHostWaitDlg::wait(unsigned long forWho)
 {
     // @stub
 }
@@ -9655,13 +9734,6 @@ void CNewPlayerMsg::CNewPlayerMsg(CNetPlayerInfo* pPlayerInfo, char* version)
     // @stub
 }
 
-// E:\gamedcs\singleselectionwindow.cpp:773
-DC_ONLY(0x148038, 0x54)
-void CBadVersionMsg::CBadVersionMsg(const char* version, const char* errText)
-{
-    // @stub
-}
-
 // E:\gamedcs\singleselectionwindow.cpp:1262
 DC_ONLY(0x14808c, 0x40)
 void CNewPlayerUpdateProc::CNewPlayerUpdateProc(unsigned long dpid)
@@ -9671,56 +9743,56 @@ void CNewPlayerUpdateProc::CNewPlayerUpdateProc(unsigned long dpid)
 
 // E:\gamedcs\singleselectionwindow.cpp:1272
 DC_ONLY(0x1480cc, 0x64)
-void CNewPlayerUpdateProc::Go()
+void CNewPlayerUpdateProc::go()
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:1282
 DC_ONLY(0x148130, 0x208)
-void CNewPlayerUpdateProc::Tick()
+void CNewPlayerUpdateProc::tick()
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:1341
 DC_ONLY(0x148338, 0x10)
-unsigned char CNewPlayerUpdateProc::IsFinished()
+unsigned char CNewPlayerUpdateProc::isFinished()
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:1346
 DC_ONLY(0x148348, 0x3C)
-void CNewPlayerUpdateProc::HeaderRequested(int headerNbr)
+void CNewPlayerUpdateProc::headerRequested(int headerNbr)
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:1355
 DC_ONLY(0x148384, 0x24)
-void CNewPlayerUpdateProc::HeaderConfirmed()
+void CNewPlayerUpdateProc::headerConfirmed()
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:1369
 DC_ONLY(0x1483a8, 0x50)
-void CNewPlayerUpdateProc::RequestConfirmation()
+void CNewPlayerUpdateProc::requestConfirmation()
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:1375
 DC_ONLY(0x1483f8, 0xD0)
-void CNewPlayerUpdateProc::HandleRequests()
+void CNewPlayerUpdateProc::handleRequests()
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:1393
 DC_ONLY(0x1484c8, 0x1B0)
-void CNewPlayerUpdateProc::Finish()
+void CNewPlayerUpdateProc::finish()
 {
     // @stub
 }
@@ -9741,21 +9813,21 @@ void CNewPlayerUpdateMan::~CNewPlayerUpdateMan()
 
 // E:\gamedcs\singleselectionwindow.cpp:1452
 DC_ONLY(0x14870c, 0x84)
-void CNewPlayerUpdateMan::NewPlayer(unsigned long dpid)
+void CNewPlayerUpdateMan::newPlayer(unsigned long dpid)
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:1466
 DC_ONLY(0x148790, 0xA8)
-void CNewPlayerUpdateMan::Tick()
+void CNewPlayerUpdateMan::tick()
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:1500
 DC_ONLY(0x1488a4, 0x84)
-void CNewPlayerUpdateMan::PlayerDropped(unsigned long dpid)
+void CNewPlayerUpdateMan::playerDropped(unsigned long dpid)
 {
     // @stub
 }
@@ -9825,14 +9897,14 @@ void CChatWidget::CChatSave::CChatSave(int w, int h)
 
 // E:\gamedcs\singleselectionwindow.cpp:1625
 DC_ONLY(0x148c50, 0x3C)
-void CChatWidget::CChatSave::Save(int x, int y)
+void CChatWidget::CChatSave::save(int x, int y)
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:1631
 DC_ONLY(0x148c8c, 0x12)
-unsigned char CChatWidget::CChatSave::IsSaved()
+unsigned char CChatWidget::CChatSave::isSaved()
 {
     // @stub
 }
@@ -9853,14 +9925,14 @@ void CChatWidget::~CChatWidget()
 
 // E:\gamedcs\singleselectionwindow.cpp:1685
 DC_ONLY(0x148e48, 0x50)
-void CChatWidget::SaveBackground()
+void CChatWidget::saveBackground()
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:1693
 DC_ONLY(0x148e98, 0x74)
-void CChatWidget::RestoreBackground()
+void CChatWidget::restoreBackground()
 {
     // @stub
 }
@@ -9895,14 +9967,14 @@ void CSingleSelectionChatEdit::CSingleSelectionChatEdit(int textWidgetX, int tex
 
 // E:\gamedcs\singleselectionwindow.cpp:1746
 DC_ONLY(0x149054, 0x2C)
-void CSingleSelectionChatEdit::SendChat(const char* sChat, int toWho)
+void CSingleSelectionChatEdit::sendChat(const char* sChat, int toWho)
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:1752
 DC_ONLY(0x149080, 0x50)
-unsigned char CSingleSelectionChatEdit::IgnoreKey(message* msg)
+unsigned char CSingleSelectionChatEdit::ignoreKey(message* msg)
 {
     // @stub
 }
@@ -9930,7 +10002,7 @@ void CEnterNameEdit::CEnterNameEdit(int textWidgetX, int textWidgetY, int textWi
 
 // E:\gamedcs\singleselectionwindow.cpp:1820
 DC_ONLY(0x149238, 0x58)
-int CEnterNameEdit::OnEnter()
+int CEnterNameEdit::onEnter()
 {
     // @stub
 }
@@ -9981,47 +10053,47 @@ TSingleSelectionWindow::~TSingleSelectionWindow()
 {
     int i;
 
-    if (!m_flag64 && !m_flag65 && bVideoPaused && pDPlay)
-        pDPlay->SetNetMsgHandler(0);
+    if (!m_flag64 && !m_flag65 && g_videoPaused && g_dPlay)
+        g_dPlay->setNetMsgHandler(0);
 
-    delete flagBack;
+    delete m_flagBack;
 
     for (i = 0; i < 8; ++i) {
-        ResourceManager::Dispose(Panels[i]);
-        ResourceManager::Dispose(Flags[i]);
+        ResourceManager::dispose(m_panels[i]);
+        ResourceManager::dispose(m_flags[i]);
     }
 
-    ResourceManager::Dispose(Resource);
+    ResourceManager::dispose(m_resource);
     for (i = 0; i < 164; ++i) {
-        if (HeroPix[i])
-            ResourceManager::Dispose(HeroPix[i]);
+        if (m_heroPix[i])
+            ResourceManager::dispose(m_heroPix[i]);
     }
 
-    ResourceManager::Dispose(TownPix);
-    ResourceManager::Dispose(LossIcon);
-    ResourceManager::Dispose(VictoryIcon);
-    ResourceManager::Dispose(VersionIcon);
-    ResourceManager::Dispose(randomTownBmp);
-    ResourceManager::Dispose(randomHeroBmp);
-    ResourceManager::Dispose(noHeroBmp);
-    ResourceManager::Dispose(heroSpecificAbility);
+    ResourceManager::dispose(m_townPix);
+    ResourceManager::dispose(m_lossIcon);
+    ResourceManager::dispose(m_victoryIcon);
+    ResourceManager::dispose(m_versionIcon);
+    ResourceManager::dispose(m_randomTownBmp);
+    ResourceManager::dispose(m_randomHeroBmp);
+    ResourceManager::dispose(m_noHeroBmp);
+    ResourceManager::dispose(m_heroSpecificAbility);
 
-    if (pNewPlayerUpdateMan) {
-        delete pNewPlayerUpdateMan;
-        pNewPlayerUpdateMan = 0;
+    if (m_newPlayerUpdateMan) {
+        delete m_newPlayerUpdateMan;
+        m_newPlayerUpdateMan = 0;
     }
 
-    gUnnamed69fbe8 = 0;
-    for (std::vector<widget*>::iterator it = Widgets.begin();
-         it != Widgets.end(); ++it) {
+    g_unnamed69fbe8 = 0;
+    for (std::vector<widget*>::iterator it = m_widgets.begin();
+         it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
 
     if (m_flag65) {
-        BackupGameHeaders(gpGame, saveHeader);
-        delete saveHeader;
-        saveHeader = 0;
+        backupGameHeaders(g_game, g_saveHeader);
+        delete g_saveHeader;
+        g_saveHeader = 0;
     }
 
     // DC line 4069 owns this guard. Complete folds the helper to zero bytes,
@@ -10030,7 +10102,7 @@ TSingleSelectionWindow::~TSingleSelectionWindow()
     // while this spelling expands that outer boundary, retains the nested
     // SavedGameHeader destructor, and matches retail at 100%, 34/34.
     if (!m_flag65)
-        ResourceManager::del_Spr_from_Cache();
+        ResourceManager::delSprFromCache();
 }
 
 // TSingleSelectionWindow vtable 0x241cac slot 0. E:\gamedcs\singleselectionwindow.cpp:2632
@@ -10065,72 +10137,72 @@ VA_COMPGEN(0x0057d130, 0x21, SCALAR_DELETING_DTOR, TSingleSelectionWindow)  // d
 // level-change scope vs the early return are byte-flat controls. Restoring
 // UpdateTown's GetCompPlayerInPos call is also byte-flat, including its
 // independently exact retained body.
+// Before normalization (locals): pPlayer.
 VA(0x0058e700, 0x2F9)  // header-declared identity + anchor-callee AddNewPlayer/TurnOffAdvancedOptions, retail-only
-void TSingleSelectionWindow::SetNewPlayerSlot(CNetPlayerInfo* pPlayer)
+void TSingleSelectionWindow::setNewPlayerSlot(CNetPlayerInfo* playerInfo)
 {
-    m_players.AddNewPlayer(pPlayer);
+    m_players.addNewPlayer(playerInfo);
 
-    int level = GetPlayerCount();
-    if (level == field_1898)
+    int level = getCommonGameVersion();
+    if (level == m_commonGameVersion)
         return;
 
-    unsigned char rebuild = field_37F;
-    field_1898 = level;
+    unsigned char rebuild = m_randomMapSelected;
+    m_commonGameVersion = level;
     if (rebuild)
-        RebuildFilteredPlayerSetup();
-    if (!inAdvancedOptions)
+        rebuildFilteredPlayerSetup();
+    if (!m_inAdvancedOptions)
         return;
 
     if (m_flag64) {
-        int gameVersion = pCurrentHeader->saved.gameVersion;
+        int gameVersion = m_currentHeader->m_saved.m_gameVersion;
         int required = gameVersion == GAME_VERSION_SOD
                        ? 2 : gameVersion == GAME_VERSION_AB;
-        if (!gGameContextFeatures[field_1898][required])
-            TurnOffAdvancedOptions();
+        if (!g_gameContextFeatures[m_commonGameVersion][required])
+            turnOffAdvancedOptions();
         return;
     }
 
-    if (!field_37F) {
-        int mapVersion = gpGame->mapHeader.version;
+    if (!m_randomMapSelected) {
+        int mapVersion = g_game->m_mapHeader.m_version;
         int required = mapVersion > MAP_FORMAT_ARMAGEDDONS_BLADE
                        ? 2 : mapVersion > MAP_FORMAT_RESTORATION_OF_ERATHIA;
-        if (!gGameContextFeatures[field_1898][required])
-            TurnOffAdvancedOptions();
+        if (!g_gameContextFeatures[m_commonGameVersion][required])
+            turnOffAdvancedOptions();
     }
-    if (!inAdvancedOptions)
+    if (!m_inAdvancedOptions)
         return;
-    if (field_1898 != 0)
+    if (m_commonGameVersion != 0)
         return;
 
     { for (int pos = 0; pos < CNetPlayerHandler::MAX_PLAYERS; pos++) {
-            if (gpGame->setup.playerPos[pos] >= 0) {
-                CNetPlayerHandlerPlayer* player = m_players.GetPlayerInPos(pos);
+            if (g_game->m_setup.m_playerPos[pos] >= 0) {
+                CNetPlayerHandlerPlayer* player = m_players.getPlayerInPos(pos);
                 if (!player)
                     player = m_players.getCompPlayerInPos(pos);
-                if (player && GetDisplayTown(pos) == TOWN_CONFLUX) {
-                    player->townIndex = eTownNeutral;
-                    UpdateTown(pos, eTownNeutral, 0);
+                if (player && getDisplayTown(pos) == TOWN_CONFLUX) {
+                    player->m_townIndex = eTownNeutral;
+                    updateTown(pos, eTownNeutral, 0);
                 }
             }
         }
     }
 }
 
-// Retail 0x58ea00, the row this header already declared as GetPlayerCount
-// (the DC name; retail's takes no filter byte). It is NOT a player count:
-// the walk intersects the game-context feature bitsets of every seated
-// human and answers the HIGHEST feature index all of them share, which is
-// what the +0x1898 cache holds and what gates the advanced options.
+// Retail 0x58ea00 intersects the game-version feature bitsets of every
+// seated human and returns their highest common version. The +0x1898
+// cache gates the advanced options. Previous bootstrap name GetPlayerCount
+// confused this PC-only helper with CNetPlayerHandler's DC-attested count.
 // `test` expands with its bounds check in line and keeps the _Xran call on
 // the throw path.
 VA(0x0058ea00, 0x6E)  // header-declared identity + anchor-caller (the +0x1898 cache), retail-only
-int TSingleSelectionWindow::GetPlayerCount()
+int TSingleSelectionWindow::getCommonGameVersion()
 {
     std::bitset<4> features = ~std::bitset<4>();
-    CNetPlayerHandlerPlayer* player = m_players.humanPlayers;
+    CNetPlayerHandlerPlayer* player = m_players.m_humanPlayers;
     { for (int i = CNetPlayerHandler::MAX_PLAYERS; i != 0; i--, player++) {
-            if (player->dpid)
-                features &= gGameContextFeatures[player->version];
+            if (player->m_dpid)
+                features &= g_gameContextFeatures[player->m_version];
         }
     }
 
@@ -10172,28 +10244,28 @@ void CAutoArray<int>::~CAutoArray<int>()
 
 // E:\gamedcs\array.h:51
 DC_ONLY(0x149718, 0x88)
-void CAutoArray<int>::Destroy(unsigned char deleteData)
+void CAutoArray<int>::destroy(unsigned char deleteData)
 {
     // @stub
 }
 
 // E:\gamedcs\array.h:73
 DC_ONLY(0x1497a0, 0xB0)
-unsigned char CAutoArray<int>::Add(int* element)
+unsigned char CAutoArray<int>::add(int* element)
 {
     // @stub
 }
 
 // E:\gamedcs\array.h:95
 DC_ONLY(0x149850, 0x26)
-int* CAutoArray<int>::Get(unsigned long elementNbr)
+int* CAutoArray<int>::get(unsigned long elementNbr)
 {
     // @stub
 }
 
 // E:\gamedcs\array.h:103
 DC_ONLY(0x149878, 0x2A)
-unsigned char CAutoArray<int>::Put(unsigned long elementNbr, int* element)
+unsigned char CAutoArray<int>::put(unsigned long elementNbr, int* element)
 {
     // @stub
 }
@@ -10207,14 +10279,14 @@ unsigned char CAutoArray<int>::Delete(unsigned long elementNbr)
 
 // E:\gamedcs\array.h:127
 DC_ONLY(0x149908, 0xA2)
-unsigned char CAutoArray<int>::Insert(unsigned long nextElementNbr, int* element)
+unsigned char CAutoArray<int>::insert(unsigned long nextElementNbr, int* element)
 {
     // @stub
 }
 
 // E:\gamedcs\array.h:144
 DC_ONLY(0x1499ac, 0xC)
-unsigned long CAutoArray<int>::GetCount()
+unsigned long CAutoArray<int>::getCount()
 {
     // @stub
 }
@@ -10287,14 +10359,13 @@ void* CAutoArray<int>::`scalar deleting destructor'(unsigned __flags)
 // 0x7c-stride walk masking against gGameContextFeatures is GetPlayerCount,
 // reconstructed above.
 
-// NOT CLAIMED, and recorded so no later lane re-derives it: 0x58eb50 (15 B)
-// is this compiland's `char_traits<char>::assign` on content - a unique
-// 15-byte match at mnemonic agreement 1.000, against a 20 B `_Eos` as the
-// only other candidate - but the declarator form is the only claim form the
-// join has for it (no compgen kind builds the flat char_traits key), and
-// campaignbrief already owns that lexical name at 0x45dc90. The label
-// authority refuses a duplicate proven name across two retail rows, so this
-// row needs a char_traits kind before it can be claimed.
+// NOT CLAIMED: retail call semantics identify 0x58eb50 as
+// map<int,type_map_hero_info>::end(), not the same-size char_traits::assign
+// candidate once proposed from mnemonic agreement. Its callers pass the map
+// in ECX and a hidden iterator result on the stack; the body copies `_Head`
+// from this+4. This TU inlines every end() and emits no standalone COMDAT, so
+// the boundary remains parked with its two caller inlining residuals rather
+// than being assigned to an unrelated emitted symbol.
 #if 0  // @carcass: Dinkumware instantiations emitted by this compiland
 
 VA(0x0058fe80, 0x66)  // COMDAT pairing (unique 102 B in this obj)
@@ -10315,14 +10386,14 @@ VA_COMPGEN(0x005903b0, 0x13D, FUNCTOR_CALL, TSortMapsByName)  // anchor-callee _
 inline bool TSortMapsByName::operator()(const GameSelectionHeadersStruct& a,
                                  const GameSelectionHeadersStruct& b) const
 {
-    const char* sa = a.title;
-    const char* sb = b.title;
+    const char* sa = a.m_title;
+    const char* sb = b.m_title;
     char nameA[256] = " ";
     char nameB[256] = " ";
 
-    if (isNet) {
-        sa = a.setup.filename;
-        sb = b.setup.filename;
+    if (m_isNet) {
+        sa = a.m_setup.m_filename;
+        sb = b.m_setup.m_filename;
         if (_strnicmp(sa, DATA_COMPGEN(0x00683968, autosavePrefix,
                                        "AUTOSAVE."), 9) == 0) {
             strcat(nameA, sa);
@@ -10335,7 +10406,7 @@ inline bool TSortMapsByName::operator()(const GameSelectionHeadersStruct& a,
         }
     }
 
-    if (direction)
+    if (m_direction)
         return _strcmpi(sb, sa) < 0;
     return _strcmpi(sa, sb) < 0;
 }
@@ -10346,10 +10417,10 @@ VA_COMPGEN(0x00590e00, 0x4F, FUNCTOR_CALL, TSortMapsByPlayers)  // anchor-callee
 bool TSortMapsByPlayers::operator()(const GameSelectionHeadersStruct& a,
                                     const GameSelectionHeadersStruct& b) const
 {
-    int rankA = a.header.numPlayers * 10 + a.header.maxNumHumanPlayers;
-    int rankB = b.header.numPlayers * 10 + b.header.maxNumHumanPlayers;
+    int rankA = a.m_header.m_numPlayers * 10 + a.m_header.m_maxNumHumanPlayers;
+    int rankB = b.m_header.m_numPlayers * 10 + b.m_header.m_maxNumHumanPlayers;
 
-    if (direction)
+    if (m_direction)
         return rankB < rankA;
     return rankA < rankB;
 }
@@ -10372,12 +10443,12 @@ VA_COMPGEN(0x00591190, 0x180, FUNCTOR_CALL, TSortMapsByVersion)  // anchor-calle
 bool TSortMapsByVersion::operator()(const GameSelectionHeadersStruct& a,
                                     const GameSelectionHeadersStruct& b) const
 {
-    if (a.header.version == b.header.version)
+    if (a.m_header.m_version == b.m_header.m_version)
         return TSortMapsByName::operator()(a, b);
 
-    if (direction)
-        return b.header.version < a.header.version;
-    return a.header.version < b.header.version;
+    if (m_direction)
+        return b.m_header.m_version < a.m_header.m_version;
+    return a.m_header.m_version < b.m_header.m_version;
 }
 
 // BY_SIZE has NO out-of-line row: retail expands `header.Size` (+0x18) at
@@ -10385,9 +10456,9 @@ bool TSortMapsByVersion::operator()(const GameSelectionHeadersStruct& a,
 bool TSortMapsBySize::operator()(const GameSelectionHeadersStruct& a,
                                  const GameSelectionHeadersStruct& b) const
 {
-    if (direction)
-        return b.header.Size < a.header.Size;
-    return a.header.Size < b.header.Size;
+    if (m_direction)
+        return b.m_header.m_size < a.m_header.m_size;
+    return a.m_header.m_size < b.m_header.m_size;
 }
 
 // The condition bytes: victory at CMapHeaderData +0x30, loss at +0x7c (the
@@ -10396,10 +10467,10 @@ VA_COMPGEN(0x00591cb0, 0x33, FUNCTOR_CALL, TSortMapsByVictory)  // anchor-callee
 bool TSortMapsByVictory::operator()(const GameSelectionHeadersStruct& a,
                                     const GameSelectionHeadersStruct& b) const
 {
-    int typeA = a.header.victoryCondition.Type;
-    int typeB = b.header.victoryCondition.Type;
+    int typeA = a.m_header.m_victoryCondition.m_type;
+    int typeB = b.m_header.m_victoryCondition.m_type;
 
-    if (direction)
+    if (m_direction)
         return typeB < typeA;
     return typeA < typeB;
 }
@@ -10408,10 +10479,10 @@ VA_COMPGEN(0x00592030, 0x33, FUNCTOR_CALL, TSortMapsByLoss)  // anchor-callee _S
 bool TSortMapsByLoss::operator()(const GameSelectionHeadersStruct& a,
                                  const GameSelectionHeadersStruct& b) const
 {
-    int typeA = a.header.lossCondition.Type;
-    int typeB = b.header.lossCondition.Type;
+    int typeA = a.m_header.m_lossCondition.m_type;
+    int typeB = b.m_header.m_lossCondition.m_type;
 
-    if (direction)
+    if (m_direction)
         return typeB < typeA;
     return typeA < typeB;
 }
@@ -10659,16 +10730,22 @@ VA_COMPGEN(0x00595e10, 0x204, STD_UNGUARDED_PARTITION,
 // singleselectionwindow.obj's emitted template instantiations (capstone
 // mnemonic agreement 1.000 at equal length in each case).
 //
+//   0x515480  20 B  bitset<4>::operator&=      - ICF-shared with bitset<10>
 //   0x58eae0  14 B  bitset<4>::flip()          - the only 4-bit bitset here
 //   0x58eaf0  21 B  bitset<4>::_Tidy(unsigned long)
 //   0x58eb60  75 B  _Tree<int,type_map_hero_info>::find
 //   0x58f0f0  23 B  _Tree<...>::lower_bound
 //   0x58f110  73 B  _Tree<...>::_Lbound
 //
-// The two bitset rows are the LAST two of the four-bit instantiation the
+// The 0x515480 row has two retail callers: TObjectType's bitset<10>
+// terrain intersection and setNewPlayerSlot's bitset<4> feature intersection.
+// Their one-word operator&= bodies are ICF-identical; this TU naturally emits
+// the exact bitset<4> public, while objecttype expands its bitset<10> call.
+// The other two bitset rows are the LAST two of the four-bit instantiation the
 // campaign-selection filter carries; the three tree rows complete the
 // map<int,type_map_hero_info> surface whose _Init / _Copy / _Erase /
 // operator= halves this file already claims.
+VA_COMPGEN(0x00515480, 0x14, BITSET_AND_ASSIGN, Bitset4)
 VA_COMPGEN(0x0058eae0, 0xE, BITSET_FLIP, Bitset4)
 VA_COMPGEN(0x0058eaf0, 0x15, BITSET_TIDY, Bitset4)
 VA_COMPGEN(0x0058eb60, 0x4B, TREE_FIND, type_map_hero_info)

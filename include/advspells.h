@@ -30,7 +30,8 @@
 // is declared HERE, in advspells.obj's own narrow header, rather than in
 // advmgr.h - which twenty-odd translation units include. Name is a role
 // description; nothing attests a spelling.
-DATA(0x00691250) extern SLimitData gAdvMapViewLimits;
+// Before normalization: gAdvMapViewLimits.
+DATA(0x00691250) extern SLimitData g_advMapViewLimits;
 
 // The world extents advManager::SummonBoat's eight-neighbour scan clamps
 // against before asking for a cell. DECLARATIONS ONLY - game.h owns the
@@ -38,8 +39,8 @@ DATA(0x00691250) extern SLimitData gAdvMapViewLimits;
 // fatal duplicate at delink time. Declared here rather than by including
 // game.h, whose closure advspells.obj does not otherwise need; this is
 // exactly what event_record.h does with the same pair.
-extern int MAP_WIDTH;
-extern int MAP_HEIGHT;
+extern int g_mapWidth;
+extern int g_mapHeight;
 
 // --- CMCTeleportHero ---
 // CODEVIEW(E:\gamedcs\netmsg.h:563, dc 0x23170) void CMCTeleportHero::CMCTeleportHero(signed char heroId, type_point point);

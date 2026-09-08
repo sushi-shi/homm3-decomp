@@ -33,14 +33,20 @@ struct GameSelectionHeadersStruct;
 // Shared selection/scenario presentation tables. Retail scenarioinfo.obj
 // references the same addresses initialized and owned by
 // singleselectionwindow.obj, which proves external rather than file linkage.
-extern char* gTurnDurationText[11];
-extern int gDifficultyRatingPercent[5];
-extern const char* gUnnamed6a77ec[];
-extern const char* gUnnamed6a7800[3];
-extern const char* gUnnamed6a7e18[];
+// Before normalization: gTurnDurationText.
+extern char* g_turnDurationText[11];
+// Before normalization: gDifficultyRatingPercent.
+extern int g_difficultyRatingPercent[5];
+// Before normalization: gUnnamed6a77ec.
+extern const char* g_unnamed6a77ec[];
+// Before normalization: gUnnamed6a7800.
+extern const char* g_unnamed6a7800[3];
+// Before normalization: gUnnamed6a7e18.
+extern const char* g_unnamed6a7e18[];
 // Starting-bonus labels shared by the selection window and the Complete-only
 // scenario-info row renderer. No source symbol survives for the retail table.
-extern const char* gUnnamed6a5e14[];
+// Before normalization: gUnnamed6a5e14.
+extern const char* g_unnamed6a5e14[];
 
 enum ESingleSelectionGameContext {
     SINGLE_SELECTION_CONTEXT_1 = 1,
@@ -74,27 +80,45 @@ class TRandomMapRequest {
 public:
     // Set to 1 for every seat the lobby has a live player record for; the
     // constructor zeroes both dwords.
-    unsigned char isHumanSeat[8];   // +0x00
+    // Before normalization: isHumanSeat.
+    unsigned char m_isHumanSeat[8];   // +0x00
     // The eight seats' chosen town, -1 for random (constructor fill).
-    int townType[8];                // +0x08
-    int width;                      // +0x28
-    int height;                     // +0x2c
-    int levels;                     // +0x30
-    int field_34;                   // +0x34
-    int field_38;                   // +0x38
-    int field_3C;                   // +0x3c
-    int field_40;                   // +0x40
-    int field_44;                   // +0x44
-    int field_48;                   // +0x48
+    // Before normalization: townType.
+    int m_townType[8];                // +0x08
+    // Before normalization: width.
+    int m_width;                      // +0x28
+    // Before normalization: height.
+    int m_height;                     // +0x2c
+    // Before normalization: levels.
+    int m_levels;                     // +0x30
+    // Retail 0x54bf60 passes these six slots to generator ctor 0x537b10:
+    // +34/+38/+3c/+40 become +f48/+f4c/+f50/+f54 (player/team counts);
+    // +44 becomes +10b8 (waterContent), and clamp(+48+3,1,5) becomes
+    // +10bc (monsterStrength). Generator consumers corroborate these roles.
+    // Semantic names follow the generator; original request names unknown.
+    // Before normalization: field_34.
+    int m_humanPlayerCount;                   // +0x34
+    // Before normalization: field_38.
+    int m_humanTeamCount;                   // +0x38
+    // Before normalization: field_3C.
+    int m_computerPlayerCount;                   // +0x3c
+    // Before normalization: field_40.
+    int m_computerTeamCount;                   // +0x40
+    // Before normalization: field_44.
+    int m_waterContent;                   // +0x44
+    // Before normalization: field_48.
+    int m_monsterStrength;                   // +0x48
     // 0/1/2 - the map-format class the running game context implies (the
     // same ordinals EGameVersion carries).
-    int mapVersion;                 // +0x4c
+    // Before normalization: mapVersion.
+    int m_mapVersion;                 // +0x4c
 
     TRandomMapRequest(int width, int height, int levels);
     // Retail 0x54c090: opens the target file through TGzFile in write mode
     // and runs the generator into it, returning the result code the caller
     // switches on.
-    int Generate(const char* fileName, void* progress);
+    // Before normalization (function): TRandomMapRequest::Generate.
+    int generate(const char* fileName, void* progress);
 };
 SIZE(TRandomMapRequest, 0x50);
 
@@ -105,7 +129,8 @@ SIZE(TRandomMapRequest, 0x50);
 // Complete-only random-map filename chooser. Retail 0x5879a0 receives the
 // hidden std::string result in ECX under /Gr; it is a free function, not a
 // TSingleSelectionWindow member.
-std::string GetRandomMapName();
+// Before normalization (function): GetRandomMapName.
+std::string getRandomMapName();
 
 // One cached map/save header row of the file list. Only the stride is
 // modeled: 0xCA4 is fixed by the size() magic-multiply in every
@@ -127,31 +152,42 @@ struct GameSelectionHeadersStruct {
     // setup.fileInitialized, isCampaign +0xbe0 = saved.campaignGame and
     // campaignIndex +0xbe8 = saved.campaign.currentCampaign. 0xCA4 =
     // 0x304 + 0x1cc + 0xbc + 0x3d + 0x12d + 2 + 8 + 0x5a4 exactly.
-    NewSMapHeader header;             // +0x000
-    SGameSetupOptions setup;          // +0x304
-    // The synthesized operator='s copy shapes split this band: a
-    // dword loop copies eight ints at +0x4d0, a byte loop the 0x9c
-    // band after them. Roles unexercised - ordinal placeholders.
-    int field_4d0[8];                 // +0x4d0
+    // Before normalization: header.
+    NewSMapHeader m_header;             // +0x000
+    // Before normalization: setup.
+    SGameSetupOptions m_setup;          // +0x304
+    // Retail's synthesized copies establish eight ints at +0x4d0.
+    // Role inferred from the older header's eight-int band at DC +0x55c:
+    // GetHeader 0x138b76 copies 32 bytes from original g_wasHuman into
+    // it; the header ctor 0x14752c zeros the same band. Complete relocates
+    // the band and uses SavedGameHeader::humanPlayer for the live restore
+    // path. No Complete producer of this legacy band has been located.
+    // Before normalization: field_4d0; semantic reference g_wasHuman.
+    int m_wasHuman[8];                 // +0x4d0
     // The selected row copies this complete 156-byte band to the game's
     // per-hero availability array before assigning the map header.
-    unsigned char heroAvailability[156];  // +0x4f0
+    // Before normalization: heroAvailability.
+    unsigned char m_heroAvailability[156];  // +0x4f0
     // The row's display title: the name getters return it for the
     // single-player list and the net-mode selected panel, and the name
     // comparator ranks it against the "autosave" prefix rule. Extent =
     // the ctor's first zero-fill.
-    char title[0x5c9 - 0x58c];        // +0x58c
+    // Before normalization: title.
+    char m_title[0x5c9 - 0x58c];        // +0x58c
     // Second ctor-zeroed text band (extent = the second fill); role
     // unexercised by reconstructed bodies - provisional name.
-    char description[0x6f6 - 0x5c9];  // +0x5c9
+    // Before normalization: description.
+    char m_description[0x6f6 - 0x5c9];  // +0x5c9
     // +0x6f6..+0x6f8 is an UNNAMED alignment hole: retail's synthesized
     // operator= copies description's 0x12d bytes then stores fileTime's
     // two dwords directly (OnMapFileNameMsg's two expansions) - a named
     // pad array here adds a fourth byte-copy loop retail lacks.
     // The row's file stamp - a real FILETIME: DrawBasicMapInfo hands
     // its address to FileTimeToLocalFileTime.
-    _FILETIME fileTime;               // +0x6f8
-    SavedGameHeader saved;            // +0x700
+    // Before normalization: fileTime.
+    _FILETIME m_fileTime;               // +0x6f8
+    // Before normalization: saved.
+    SavedGameHeader m_saved;            // +0x700
 
     // Dreamcast CodeView places this source-declared constructor in
     // SingleSelectionWindow.h:73. Complete's wider record keeps the same
@@ -159,9 +195,9 @@ struct GameSelectionHeadersStruct {
     VA(0x00578E00, 0x25F)  // retained retail body; formerly enrolled by CLASS_CTOR
     GameSelectionHeadersStruct()
     {
-        memset(title, 0, sizeof(title));
-        memset(description, 0, sizeof(description));
-        setup.difficulty = 1;
+        memset(m_title, 0, sizeof(m_title));
+        memset(m_description, 0, sizeof(m_description));
+        m_setup.m_difficulty = 1;
     }
     // Both the copy ctor and operator= are IMPLICIT: the synthesized
     // memberwise bodies are retail's 0x5904f0 and 0x578440 COMDATs, and
@@ -183,21 +219,32 @@ SIZE(GameSelectionHeadersStruct, 0xCA4);
 // TSingleSelectionWindow because that window embeds one at +0x1064.
 // The ctor below seeds version from the game-context cell
 // (resourcemanager.cpp owns the claim).
-extern int* gpVideoGameState;
+extern int* g_videoGameState;
 
 class CNetPlayerHandlerPlayer : public CNetPlayerInfo {
 public:
-    int heroIndex;             // +0x20
-    int townIndex;             // +0x24
-    int availableHeroesCount;  // +0x28
-    int availableHeroes[16];   // +0x2c
-    int startBonusIndex;       // +0x6c
-    int playerPos;             // +0x70
-    int color;                 // +0x74
+    // Before normalization: heroIndex.
+    int m_heroIndex;             // +0x20
+    // Before normalization: townIndex.
+    int m_townIndex;             // +0x24
+    // Before normalization: availableHeroesCount.
+    int m_availableHeroesCount;  // +0x28
+    // Before normalization: availableHeroes.
+    int m_availableHeroes[16];   // +0x2c
+    // Before normalization: startBonusIndex.
+    int m_startBonusIndex;       // +0x6c
+    // Before normalization: playerPos.
+    int m_playerPos;             // +0x70
+    // Before normalization: color.
+    int m_color;                 // +0x74
     // A byte in retail: the ctor 0x57c790 stores it with a byte mov and
     // OnUpdatePlayerPosMsg re-reads it movsx.
-    signed char handicap;      // +0x78
-    char pad_79[3];
+    // Before normalization: handicap.
+    signed char m_handicap;      // +0x78
+    // Before normalization: pad_79.
+    // Retail constructor 0x57c790 writes handicap as a byte at +0x78.
+    // The 0x7c-byte player-record stride leaves three bytes of tail alignment.
+    char m_tailPadding[3];
 
 
 
@@ -205,31 +252,32 @@ public:
     VA(0x0057C790, 0x40)  // anchor-global reads *gpVideoGameState (0x69923c) into +0x1c and presets the 0x7c record exactly as both CUpdatePlayerPosMsg expansions do; called per element by OnNewPlayerMsg's init loop + address-taken by its ??_L call
     CNetPlayerHandlerPlayer()
     {
-        heroIndex = -1;
-        townIndex = -1;
-        availableHeroesCount = 0;
-        startBonusIndex = 3;
-        playerPos = -1;
-        color = -1;
-        handicap = 0;
-        memset(availableHeroes, 0, sizeof(availableHeroes));
+        m_heroIndex = -1;
+        m_townIndex = -1;
+        m_availableHeroesCount = 0;
+        m_startBonusIndex = 3;
+        m_playerPos = -1;
+        m_color = -1;
+        m_handicap = 0;
+        memset(m_availableHeroes, 0, sizeof(m_availableHeroes));
     }
 
     // E:\gamedcs\SingleSelectionWindow.h:122
-    unsigned char IsHuman()
+    // Before normalization (function): CNetPlayerHandlerPlayer::IsHuman.
+    unsigned char isHuman()
     {
-        if (dpid)
+        if (m_dpid)
             return 1;
         return 0;
     }
 
     // E:\gamedcs\SingleSelectionWindow.h:130
-    void Clear()
+    void clear()
     {
-        dpid = 0;
-        playerPos = -1;
-        townIndex = -1;
-        heroIndex = -1;
+        m_dpid = 0;
+        m_playerPos = -1;
+        m_townIndex = -1;
+        m_heroIndex = -1;
     }
 
 
@@ -238,11 +286,12 @@ public:
     // helper but expands both calls in SetupAdvancedOptions.  Retail x86
     // directly proves that Complete changed the three independent stores
     // from DC's hero/player/town statement order to town/player/hero.
-    void ResetAdvancedOptions()
+    // Before normalization (function): CNetPlayerHandlerPlayer::ResetAdvancedOptions.
+    void resetAdvancedOptions()
     {
-        townIndex = -1;
-        playerPos = -1;
-        heroIndex = -1;
+        m_townIndex = -1;
+        m_playerPos = -1;
+        m_heroIndex = -1;
     }
 };
 SIZE(CNetPlayerHandlerPlayer, 0x7c);
@@ -251,12 +300,18 @@ class CNetPlayerHandler {
 public:
     enum { MAX_PLAYERS = 8 };
 
-    CNetPlayerHandlerPlayer humanPlayers[MAX_PLAYERS];       // +0x000
-    CNetPlayerHandlerPlayer computerPlayers[MAX_PLAYERS];    // +0x3e0
-    int playerPos;                                           // +0x7c0
-    int playersCount;                                        // +0x7c4
-    int unused;                                              // +0x7c8
-    int assignedPos;                                         // +0x7cc
+    // Before normalization: humanPlayers.
+    CNetPlayerHandlerPlayer m_humanPlayers[MAX_PLAYERS];       // +0x000
+    // Before normalization: computerPlayers.
+    CNetPlayerHandlerPlayer m_computerPlayers[MAX_PLAYERS];    // +0x3e0
+    // Before normalization: playerPos.
+    int m_playerPos;                                           // +0x7c0
+    // Before normalization: playersCount.
+    int m_playersCount;                                        // +0x7c4
+    // Before normalization: unused.
+    int m_unused;                                              // +0x7c8
+    // Before normalization: assignedPos.
+    int m_assignedPos;                                         // +0x7cc
 
     // Dreamcast singleselectionwindow.cpp:1005 (dc 0x1303fc); retail
     // expands it into the window constructor's member initialisation.
@@ -265,14 +320,21 @@ public:
 
     int getGamePos(unsigned long dpid);
 
-    bool DeletePlayer(unsigned long dpid);
-    CNetPlayerHandlerPlayer* GetPlayerInPos(int pos);
+    // Before normalization (function): CNetPlayerHandler::DeletePlayer.
+    bool deletePlayer(unsigned long dpid);
+    // Before normalization (function): CNetPlayerHandler::GetPlayerInPos.
+    CNetPlayerHandlerPlayer* getPlayerInPos(int pos);
     CNetPlayerHandlerPlayer* getCompPlayerInPos(int pos);
-    CNetPlayerHandlerPlayer* GetPlayer(unsigned long dpid);
-    unsigned char IsFaceTaken(int face, int exclude);
-    unsigned char AddNewPlayer(CNetPlayerInfo* pNetPlayer);
-    unsigned char SetNextPlayer(int pos);
-    int GetUnassignedPlayerPos();
+    CNetPlayerHandlerPlayer* getPlayer(unsigned long dpid);
+    // Before normalization (function): CNetPlayerHandler::IsFaceTaken.
+    unsigned char isFaceTaken(int face, int exclude);
+    // Before normalization (function): CNetPlayerHandler::AddNewPlayer.
+    // Before normalization (locals): pNetPlayer.
+    unsigned char addNewPlayer(CNetPlayerInfo* netPlayer);
+    // Before normalization (function): CNetPlayerHandler::SetNextPlayer.
+    unsigned char setNextPlayer(int pos);
+    // Before normalization (function): CNetPlayerHandler::GetUnassignedPlayerPos.
+    int getUnassignedPlayerPos();
 };
 SIZE(CNetPlayerHandler, 0x7d0);
 
@@ -284,9 +346,11 @@ SIZE(CNetPlayerHandler, 0x7d0);
 class CSingleSelectionNetMsgHandler : public CAdvMgrNetMsgHandler {
 public:
     CSingleSelectionNetMsgHandler();
-    virtual CNetMsg* CheckHandleNet(unsigned char inPopup,
+    virtual CNetMsg* checkHandleNet(unsigned char inPopup,
                                     unsigned char* msgReceived);  // slot 1
-    virtual CNetMsg* HandleNetMsg(CNetMsg* pNetMsg);              // slot 3
+    // Before normalization (function): CSingleSelectionNetMsgHandler::HandleNetMsg.
+    // Before normalization (locals): pNetMsg.
+    virtual CNetMsg* handleNetMsg(CNetMsg* netMsg);              // slot 3
 
     unsigned char m_wasCompressed;  // +0x0c
 };
@@ -306,22 +370,32 @@ class TSingleSelectionWindow : public CAdvPopup {
 public:
     // DC names the constructor's timeGetTime snapshot clickTime; retail
     // places it at the first derived dword.
-    unsigned long clickTime;            // 0x60
+    // Before normalization: clickTime.
+    unsigned long m_clickTime;            // 0x60
     unsigned char m_flag64;            // 0x64
     unsigned char m_flag65;            // 0x65
     // Third mode byte of the run: SortMaps (0x585050) sorts and refills
     // from TransferHeaders when it is set, HeadersA otherwise.
     unsigned char m_flag66;            // 0x66
-    char pad_67;
-    int field_68;                      // 0x68, selected/start row sentinel
+    // Before normalization: pad_67.
+    // The three PC mode bytes end at +0x67; textIndex starts at the
+    // next dword boundary, +0x68. This byte aligns the integer.
+    char m_paddingBeforeTextIndex;
+    // Before normalization: field_68.
+    // Original Dreamcast textIndex follows the load/save mode bytes.
+    // Retail initializes -1 and stores the clicked file-row index here.
+    int m_textIndex;                      // 0x68, selected/start row sentinel
     // The scenario list's three icon strips, byte-proven by Update
     // (0x584550): each is the receiver of a CSprite::Draw at columns
     // 91/309/342 with its own Width/Height re-read off the same load -
     // map format (frames 0..2), victory condition (0..11) and loss
     // condition (0..3).
-    CSprite* VersionIcon;              // 0x6c, Complete-only format strip
-    CSprite* VictoryIcon;              // 0x70, DC name
-    CSprite* LossIcon;                 // 0x74, DC name
+    // Before normalization: VersionIcon.
+    CSprite* m_versionIcon;              // 0x6c, Complete-only format strip
+    // Before normalization: VictoryIcon.
+    CSprite* m_victoryIcon;              // 0x70, DC name
+    // Before normalization: LossIcon.
+    CSprite* m_lossIcon;                 // 0x74, DC name
     // The advanced-options row art, all byte-proven by
     // DrawHeroAdvancedOption (0x58d510): the town strip (frames
     // 2*town+2 at column 0xb0), the bonus strip (frames 3/8/9/10/town
@@ -332,22 +406,38 @@ public:
     // plates - random town (drawn with the random-hero plate's
     // extent, exactly as retail does), random hero, and the locked
     // no-hero plate.
-    CSprite* TownPix;                  // 0x78, DC name
-    CSprite* Resource;                 // 0x7c, DC name
-    CSprite* heroSpecificAbility;      // 0x80, DC name
-    char pad_84[0x88 - 0x84];
-    Bitmap816* Flags[8];               // 0x88, DC name; adopflg%c.pcx
-    Bitmap816* Panels[8];              // 0xa8, DC name; adop_cpnl.pcx
+    // Before normalization: TownPix.
+    CSprite* m_townPix;                  // 0x78, DC name
+    // Before normalization: Resource.
+    CSprite* m_resource;                 // 0x7c, DC name
+    // Before normalization: heroSpecificAbility.
+    CSprite* m_heroSpecificAbility;      // 0x80, DC name
+    // Before normalization: pad_84; reference member TSingleSelectionWindow::GoldBox.
+    char m_goldBox[0x88 - 0x84];
+    // Before normalization: Flags.
+    Bitmap816* m_flags[8];               // 0x88, DC name; adopflg%c.pcx
+    // Before normalization: Panels.
+    Bitmap816* m_panels[8];              // 0xa8, DC name; adop_cpnl.pcx
     // Dreamcast's 130-entry HeroPix field is a single array. Complete widens
     // the same destructor walk to 164 pointers at +0xc8..+0x357; the former
     // +0x354 `GoldBox` split was a model artifact (DC's real GoldBox precedes
     // Flags and has no Complete counterpart at this offset).
-    Bitmap816* HeroPix[164];           // 0xc8..0x357, expanded retail roster
-    char pad_358[0x35c - 0x358];
-    Bitmap816* randomTownBmp;          // 0x35c
-    Bitmap816* randomHeroBmp;          // 0x360
-    char pad_364[0x368 - 0x364];
-    Bitmap816* noHeroBmp;              // 0x368
+    // Before normalization: HeroPix.
+    Bitmap816* m_heroPix[164];           // 0xc8..0x357, expanded retail roster
+    // Before normalization: pad_358.
+    char m_pad358[0x35c - 0x358];
+    // Before normalization: randomTownBmp.
+    Bitmap816* m_randomTownBmp;          // 0x35c
+    // Before normalization: randomHeroBmp.
+    Bitmap816* m_randomHeroBmp;          // 0x360
+    // Dreamcast noDice is Bitmap816* between randomHero and noHero
+    // (+0x350/+0x354/+0x358). Retail's adjacent bitmap pointers are
+    // +0x360/+0x368, preserving the +0x10 shift and intervening slot.
+    // Source/layout recovery; no retail access to this member located.
+    // Replaces synthetic pad_364; original spelling: noDice.
+    Bitmap816* m_noDice;                // 0x364
+    // Before normalization: noHeroBmp.
+    Bitmap816* m_noHeroBmp;              // 0x368
     // The DC currentIndex/currentMap/durationIndex run (dc offsets
     // 864/868/872) followed by the two option-mode bytes, the save-name
     // editor and the update-proc manager (dc 876/877/880/888) - the whole
@@ -358,26 +448,48 @@ public:
     // stores its state to +0x378 alongside gpGame->setup.turnDuration,
     // WindowHandler's Enter arm reads the editor's text through +0x380,
     // and its net pump ticks the manager at +0x388.
-    unsigned char sortDirection;       // 0x36c (DC sortDirection, a byte here)
-    char pad_36d[0x370 - 0x36d];
-    int currentIndex;                  // 0x370, top visible file row
-    int currentMap;                    // 0x374
-    int durationIndex;                 // 0x378
-    unsigned char inAdvancedOptions;   // 0x37c
-    unsigned char inScenarioOptions;   // 0x37d
+    // Before normalization: sortDirection.
+    unsigned char m_sortDirection;       // 0x36c (DC sortDirection, a byte here)
+    // Before normalization: pad_36d. Retail ctor 0x579d06, sorting
+    // 0x5850ae and direction toggles 0x587188/0x5871c5 all access
+    // sortDirection as one byte, unlike Dreamcast's int. These three
+    // bytes align currentIndex at +0x370. The dword access at 0x57a2a6
+    // belongs to gGeneralText's string table, not this window.
+    char m_paddingBeforeCurrentIndex[0x370 - 0x36d];
+    // Before normalization: currentIndex.
+    int m_currentIndex;                  // 0x370, top visible file row
+    // Before normalization: currentMap.
+    int m_currentMap;                    // 0x374
+    // Before normalization: durationIndex.
+    int m_durationIndex;                 // 0x378
+    // Before normalization: inAdvancedOptions.
+    unsigned char m_inAdvancedOptions;   // 0x37c
+    // Before normalization: inScenarioOptions.
+    unsigned char m_inScenarioOptions;   // 0x37d
     // The third right-panel mode byte of the run: the scenario-filter
     // panel (retail-only - no DC counterpart). Update gates the
     // general-text 739/740 title pair and the filter-widget refresh
     // (0x57ef70) on it.
-    unsigned char inFilterOptions;     // 0x37e
+    // Before normalization: inFilterOptions.
+    unsigned char m_inFilterOptions;     // 0x37e
     // 0x37f: a setup byte the duration slider snapshots into
     // CNewSetupInfoMsg and OnNewSetupInfoMsg writes back. Role
     // unattested - ordinal placeholder.
-    unsigned char field_37F;
+    // Before normalization: field_37F.
+    // Role-derived: entering random-map options sets this flag;
+    // updateGameVars uses the synthesized localHeader when it is set.
+    unsigned char m_randomMapSelected;
 
-    textEntryWidget* saveGameEdit;     // 0x380
-    char pad_384[0x388 - 0x384];
-    CNewPlayerUpdateMan* pNewPlayerUpdateMan;  // 0x388
+    // Before normalization: saveGameEdit.
+    textEntryWidget* m_saveGameEdit;     // 0x380
+    // Dreamcast mode is a byte at +0x374 between saveGameEdit (+0x370)
+    // and pNewPlayerUpdateMan (+0x378). Both retail pointer anchors shift
+    // by +0x10, preserving this slot. No retail mode access located.
+    // Replaces synthetic pad_384; original spelling: mode.
+    unsigned char m_mode;              // 0x384
+    // +0x385..0x387: alignment before the update-manager pointer.
+    // Before normalization: pNewPlayerUpdateMan.
+    CNewPlayerUpdateMan* m_newPlayerUpdateMan;  // 0x388
     // The window's own scratch header row - 0x38c..0x1030 is exactly one
     // 0xCA4 element. The 11.6KB ctor constructs it in place (the
     // SavedGameHeader member ctor at this+0x38c+0x700 on its claim), and
@@ -398,25 +510,38 @@ public:
     // the transfer path walks it. SortMaps sorts one of the two by
     // m_flag66 and refills SelectionHeaders from it through the
     // mapSizeFilter.
-    std::vector<GameSelectionHeadersStruct> HeadersA;         // 0x1030
-    std::vector<GameSelectionHeadersStruct> TransferHeaders;  // 0x1040
-    std::vector<GameSelectionHeadersStruct> SelectionHeaders; // 0x1050
+    // Before normalization: HeadersA.
+    std::vector<GameSelectionHeadersStruct> m_headersA;         // 0x1030
+    // Before normalization: TransferHeaders.
+    std::vector<GameSelectionHeadersStruct> m_transferHeaders;  // 0x1040
+    // Before normalization: SelectionHeaders.
+    std::vector<GameSelectionHeadersStruct> m_selectionHeaders; // 0x1050
     // The header row of the currently selected map/save;
     // UpdatePlayerPositions reads the per-slot alignments through it.
-    GameSelectionHeadersStruct* pCurrentHeader;         // 0x1060
+    // Before normalization: pCurrentHeader.
+    GameSelectionHeadersStruct* m_currentHeader;         // 0x1060
     CNetPlayerHandler m_players;       // 0x1064
-    unsigned char receivedMaps;        // 0x1834 (DC receivedMaps)
-    char pad_1835[0x1838 - 0x1835];
+    // Before normalization: receivedMaps.
+    unsigned char m_receivedMaps;        // 0x1834 (DC receivedMaps)
+    // Before normalization: pad_1835.
+    // Dreamcast receivedMaps is one byte, followed by aligned chatSlider.
+    // Retail retains that boundary at +0x1834 and +0x1838.
+    char m_paddingBeforeChatSlider[0x1838 - 0x1835];
     // The DC chatSlider/fileSlider/durationSlider/nameSlider run (dc
     // 2832..2844). fileSlider is the one the WindowHandler scroll arms
     // SetState through (+0x183c); +0x1840 - previously misfiled as the
     // file slider - is the DURATION slider DoModal resets to state 11
     // (the unlimited-turn index) on teardown.
-    slider* chatSlider;                // 0x1838
-    slider* fileSlider;                // 0x183c
-    slider* durationSlider;            // 0x1840
-    slider* nameSlider;                // 0x1844
-    CChatWidget* chatWidget;           // 0x1848 (DC chatWidget)
+    // Before normalization: chatSlider.
+    slider* m_chatSlider;                // 0x1838
+    // Before normalization: fileSlider.
+    slider* m_fileSlider;                // 0x183c
+    // Before normalization: durationSlider.
+    slider* m_durationSlider;            // 0x1840
+    // Before normalization: nameSlider.
+    slider* m_nameSlider;                // 0x1844
+    // Before normalization: chatWidget.
+    CChatWidget* m_chatWidget;           // 0x1848 (DC chatWidget)
     // The DC chatWidget..flagBack member run (dc 2848..2888) maps onto
     // retail 0x1848..0x1870 LINEARLY (constant delta 3368, every
     // already-proven anchor agrees: chatShowing 2877->0x1865, chatToggle
@@ -424,168 +549,300 @@ public:
     // The two 4-seat name columns: UpdateNameLists (0x58c960) rebuilds
     // their text (virtual SetText, slot 13) and the TurnChat pair
     // shows/hides them.
-    textWidget* nameList1;             // 0x184c (DC nameList1)
-    textWidget* nameList2;             // 0x1850 (DC nameList2)
+    // Before normalization: nameList1.
+    textWidget* m_nameList1;             // 0x184c (DC nameList1)
+    // Before normalization: nameList2.
+    textWidget* m_nameList2;             // 0x1850 (DC nameList2)
     // DC mapChanged/readingMaps; no reconstructed body exercises them
     // yet - position is the linear-run proof above.
-    unsigned char mapChanged;          // 0x1854
-    unsigned char readingMaps;         // 0x1855
-    char pad_1856[0x1858 - 0x1856];
+    // Before normalization: mapChanged.
+    unsigned char m_mapChanged;          // 0x1854
+    // Before normalization: readingMaps.
+    unsigned char m_readingMaps;         // 0x1855
+    // Before normalization: pad_1856.
+    // Dreamcast mapChanged/readingMaps are bytes preceding chatEdit;
+    // retail retains two alignment bytes before the pointer at +0x1858.
+    char m_paddingBeforeChatEdit[0x1858 - 0x1856];
     // DC chatEdit (a CCombatChatEdit there): TurnChatOn (0x58ca80)
     // focuses its id on chat-open. Base-typed until its widget lands.
-    textEntryWidget* chatEdit;         // 0x1858
+    // Before normalization: chatEdit.
+    textEntryWidget* m_chatEdit;         // 0x1858
     // DC sortWhich - the linear run puts IT at 0x185c, not chatEdit as
     // an earlier note here claimed; OnNewHostMsg resets it on the host
     // handover (the dword store 0x58b510+0xd5 the old model read as a
     // chatEdit null).
-    int sortWhich;                     // 0x185c
+    // Before normalization: sortWhich.
+    int m_sortWhich;                     // 0x185c
     // The scenario size filter (0 = all, else an EMapDimension):
     // SortMaps admits a row into SelectionHeaders only when it is clear
     // or equal to the row's Size; SetFilter stores it.
-    int mapSizeFilter;                 // 0x1860
+    // Before normalization: mapSizeFilter.
+    int m_mapSizeFilter;                 // 0x1860
     // DC scenarioOptionsStarted (2876 on the linear run); cleared by
     // the host-handover reset before SetupScenarioOptions(0).
-    unsigned char scenarioOptionsStarted;  // 0x1864
-    unsigned char chatShowing;         // 0x1865 (DC chatShowing), gates the 179 widget show
-    char pad_1866[0x1868 - 0x1866];
+    // Before normalization: scenarioOptionsStarted.
+    unsigned char m_scenarioOptionsStarted;  // 0x1864
+    // Before normalization: chatShowing.
+    unsigned char m_chatShowing;         // 0x1865 (DC chatShowing), gates the 179 widget show
+    // Before normalization: pad_1866.
+    // Dreamcast scenarioOptionsStarted/chatShowing are bytes before
+    // chatToggle; retail preserves two alignment bytes at +0x1866.
+    char m_paddingBeforeChatToggle[0x1868 - 0x1866];
     // DC chatToggle: the show/hide-chat textButton whose label the
     // TurnChat pair rewrites from general-text rows 532/533.
-    textButton* chatToggle;            // 0x1868
-    unsigned char receivingMaps;       // 0x186c (DC receivingMaps), cleared on header-end
-    char pad_186d[0x1870 - 0x186d];
-    CSaveScreen* flagBack;             // 0x1870, DC-attested name
+    // Before normalization: chatToggle.
+    textButton* m_chatToggle;            // 0x1868
+    // Before normalization: receivingMaps.
+    unsigned char m_receivingMaps;       // 0x186c (DC receivingMaps), cleared on header-end
+    // Before normalization: pad_186d.
+    // Dreamcast receivingMaps is one byte followed by aligned flagBack;
+    // retail preserves this three-byte pointer-alignment gap.
+    char m_paddingBeforeFlagBack[0x1870 - 0x186d];
+    // Before normalization: flagBack.
+    CSaveScreen* m_flagBack;             // 0x1870, DC-attested name
     // DC gameVersion (a 20-byte TFileVersionInfo product string there);
     // OnBadVersionMsg formats it against the offender's.
-    char gameVersion[20];              // 0x1874
+    // Before normalization: gameVersion.
+    char m_gameVersion[20];              // 0x1874
     // DC's last window member. Retail constructs it in place with the
     // CNetMsgHandler base ctor, the 0x641ce8 derived vtable and a zero byte at
     // +0x0c before installing TSingleSelectionWindow's own vtable. The public
     // include view keeps the same proven extent without importing remote.h.
-    CSingleSelectionNetMsgHandler netMsgHandler;  // 0x1888
-    int field_1898;                    // 0x1898, player count cached on drop
-    // A widget id the advanced pane records: TurnOffAdvancedOptions
-    // hides GetWidget(field_189c) between the 340 and 343 titles.
-    // Ordinal placeholder.
-    int field_189c;                    // 0x189c
+    // Before normalization: netMsgHandler.
+    CSingleSelectionNetMsgHandler m_netMsgHandler;  // 0x1888
+    // Previously field_1898. Retail 0x58ea00 intersects the seated humans'
+    // version feature sets and returns their highest common version.
+    // Construction seeds this from the local version; join/drop refresh it.
+    // PC-only role-derived name; not a player count or the product string.
+    int m_commonGameVersion;             // +0x1898
+    // Role-derived: the constructor creates the general-text 519 heading
+    // above the town controls (x=163, width=75), with ID 341 or 342 by
+    // game context. Advanced-options open/close shows/hides this same ID;
+    // the player-position renderer places town controls in that column.
+    // Before normalization: field_189c.
+    int m_townHeadingId;                 // +0x189c
     // Eight setup dwords CNewSetupInfoMsg carries behind the
-    // SGameSetupOptions copy; the duration slider reads them back out.
-    // Role unattested - ordinal placeholder.
-    int field_18A0[8];                 // 0x18a0
+    // SGameSetupOptions copy; the random-map controls read them back out.
+    // Before normalization: field_18A0.
+    // Role-derived: generateRandomMap (0x5860e0) consumes these eight
+    // options for dimensions, layers, player/team counts, monsters and water.
+    // CNewSetupInfoMsg transmits this same option array to the other peers.
+    int m_randomMapOptions[8];                 // 0x18a0
     // Complete-only random-map filter controls. CreateFilterWidgets constructs
     // each family explicitly, then walks these contiguous pointer arrays to
     // select the disabled/highlight frames and register them with the window.
     // The six loop bases and counts in retail prove every boundary below; the
     // ordinal names avoid claiming meanings not present in the older DC UI.
-    button* filterCountAButtons[9];     // 0x18c0, ids 0x11f..0x127
-    button* filterCountBButtons[9];     // 0x18e4, ids 0x129..0x131
-    button* filterCountCButtons[9];     // 0x1908, ids 0x133..0x13b
-    button* filterCountDButtons[8];     // 0x192c, ids 0x13d..0x144
-    button* filterWaterButtons[4];      // 0x194c, ids 0x146..0x149
-    button* filterStrengthButtons[4];   // 0x195c, ids 0x14b..0x14e
+    // Before normalization: filterCountAButtons.
+    button* m_filterCountAButtons[9];     // 0x18c0, ids 0x11f..0x127
+    // Before normalization: filterCountBButtons.
+    button* m_filterCountBButtons[9];     // 0x18e4, ids 0x129..0x131
+    // Before normalization: filterCountCButtons.
+    button* m_filterCountCButtons[9];     // 0x1908, ids 0x133..0x13b
+    // Before normalization: filterCountDButtons.
+    button* m_filterCountDButtons[8];     // 0x192c, ids 0x13d..0x144
+    // Before normalization: filterWaterButtons.
+    button* m_filterWaterButtons[4];      // 0x194c, ids 0x146..0x149
+    // Before normalization: filterStrengthButtons.
+    button* m_filterStrengthButtons[4];   // 0x195c, ids 0x14b..0x14e
     // Retail-only tail member (no DC counterpart - DC's roster ends at
     // netMsgHandler): the widget the TurnChat pair shows with widget 105
     // when chat is OFF and hides when it is ON, always addressed
-    // directly, never through GetWidget. Ordinal placeholder.
-    widget* field_196c;                // 0x196c
+    // directly, never through GetWidget.
+    // Before normalization: field_196c.
+    // Role-derived: construction creates a CScrollTextWidget here;
+    // updateGameVars (0x583580) fills it from the selected map description.
+    widget* m_descriptionWidget;                // 0x196c
 
     TSingleSelectionWindow(int gameMode);
     virtual ~TSingleSelectionWindow();
-    virtual int DoModal(unsigned char fadeIn);
-    virtual int WindowHandler(message* msg);  // slot 9
-    virtual unsigned char ProcessRightSelect(int id);  // slot 11
-    virtual int ExitDialog(message* msg);   // slot 14
-    void UpdateAllyEnemyFlags(unsigned char update);
-    void OnFileMenuSlider(int newIndex);
-    void OnDurationSlider(int newIndex);
-    void OnChatWindowSlider(int newIndex);
-    void UpdatePlayerPositions(unsigned char updateCurPlayer);
-    int Update();
-    unsigned char OnGameTransmitInitMsg(CNetMsg* pNetMsg);
+    // Before normalization (function): TSingleSelectionWindow::DoModal.
+    virtual int doModal(unsigned char fadeIn);
+    // Before normalization (function): TSingleSelectionWindow::WindowHandler.
+    virtual int windowHandler(message* msg);  // slot 9
+    // Before normalization (function): TSingleSelectionWindow::ProcessRightSelect.
+    virtual unsigned char processRightSelect(int id);  // slot 11
+    // Before normalization (function): TSingleSelectionWindow::ExitDialog.
+    virtual int exitDialog(message* msg);   // slot 14
+    // Before normalization (function): TSingleSelectionWindow::UpdateAllyEnemyFlags.
+    void updateAllyEnemyFlags(unsigned char update);
+    // Before normalization (function): TSingleSelectionWindow::OnFileMenuSlider.
+    void onFileMenuSlider(int newIndex);
+    // Before normalization (function): TSingleSelectionWindow::OnDurationSlider.
+    void onDurationSlider(int newIndex);
+    // Before normalization (function): TSingleSelectionWindow::OnChatWindowSlider.
+    void onChatWindowSlider(int newIndex);
+    // Before normalization (function): TSingleSelectionWindow::UpdatePlayerPositions.
+    void updatePlayerPositions(unsigned char updateCurPlayer);
+    // Before normalization (function): TSingleSelectionWindow::Update.
+    int update();
+    // Before normalization (function): TSingleSelectionWindow::OnGameTransmitInitMsg.
+    // Before normalization (locals): pNetMsg.
+    unsigned char onGameTransmitInitMsg(CNetMsg* netMsg);
     // DC-named row-name getters (dc 0x139a20/0x139b08) and the selected-
     // scenario info panel painter (dc 0x139ccc); retail 0x583f20 /
     // 0x584010 / 0x5840f0, all three called by Update.
-    const char* GetFileName(int which);
-    const char* GetMapName(int which);
-    void DrawBasicMapInfo();
+    // Before normalization (function): TSingleSelectionWindow::GetFileName.
+    const char* getFileName(int which);
+    // Before normalization (function): TSingleSelectionWindow::GetMapName.
+    const char* getMapName(int which);
+    // Before normalization (function): TSingleSelectionWindow::DrawBasicMapInfo.
+    void drawBasicMapInfo();
     // Retail-only (no DC row): refreshes the filter panel's widget
     // statuses from field_18A0; Update calls it under inFilterOptions.
-    void UpdateFilterWidgets();
+    // Before normalization (function): TSingleSelectionWindow::UpdateFilterWidgets.
+    void updateFilterWidgets();
     // Retail 0x584c40 (no DC row proven): the post-join roster
     // re-seat OnNewPlayerMsg's non-advanced arm runs. Ordinal name.
     // DC SetHumanSlot (dc 0x13b22c, 0.84x): re-seat the human players
     // against the refreshed slot attributes.
-    void SetHumanSlot();
+    // Before normalization (function): TSingleSelectionWindow::SetHumanSlot.
+    void setHumanSlot();
     // The advanced-options row accessors (DC names; retail
     // 0x58ce70/0x58ceb0/0x58cfb0/0x58d0e0/0x58d1f0). DC returns
     // THeroID from GetDisplayFace; spelled int so the public closure
     // needs no hero enums - retype when the body lands.
-    unsigned char HasMultipleTowns(int gamePos);
-    unsigned char CanChooseTown(int gamePos);
-    unsigned char CanChooseHero(int gamePos);
-    int GetDisplayFace(int gamePos);
-    int GetHeroInPos(int gamePos);
+    // Before normalization (function): TSingleSelectionWindow::HasMultipleTowns.
+    unsigned char hasMultipleTowns(int gamePos);
+    // Before normalization (function): TSingleSelectionWindow::CanChooseTown.
+    unsigned char canChooseTown(int gamePos);
+    // Before normalization (function): TSingleSelectionWindow::CanChooseHero.
+    unsigned char canChooseHero(int gamePos);
+    // Before normalization (function): TSingleSelectionWindow::GetDisplayFace.
+    int getDisplayFace(int gamePos);
+    // Before normalization (function): TSingleSelectionWindow::GetHeroInPos.
+    int getHeroInPos(int gamePos);
     // Dreamcast names the enum return, and Complete's inlined nine-town
     // callers retain that enum-typed local and mask lowering.
-    TTownType GetDisplayTown(int gamePos);
-    const char* GetHeroName(int gamePos);
-    int GetThisPlayerGamePos();
-    unsigned char HighlightFile(char* filename);
+    // Before normalization (function): TSingleSelectionWindow::GetDisplayTown.
+    TTownType getDisplayTown(int gamePos);
+    // Before normalization (function): TSingleSelectionWindow::GetHeroName.
+    const char* getHeroName(int gamePos);
+    // Before normalization (function): TSingleSelectionWindow::GetThisPlayerGamePos.
+    int getThisPlayerGamePos();
+    // Before normalization (function): TSingleSelectionWindow::HighlightFile.
+    unsigned char highlightFile(char* filename);
     // DC name; retail 0x589d30 (located round 2 - the version matrix
     // the transfer opener and OnNewPlayerMsg gate on).
-    unsigned char IsVersionCompatible(const char* otherVersion);
-    unsigned char HandleNetMsg(CNetMsg* pNetMsg, unsigned char* cancel);
-    int OnWidgetDeselect(message* msg, unsigned char* bExitFlag,
+    // Before normalization (function): TSingleSelectionWindow::IsVersionCompatible.
+    unsigned char isVersionCompatible(const char* otherVersion);
+    // Before normalization (function): TSingleSelectionWindow::HandleNetMsg.
+    // Before normalization (locals): pNetMsg.
+    unsigned char handleNetMsg(CNetMsg* netMsg, unsigned char* cancel);
+    // Before normalization (function): TSingleSelectionWindow::OnWidgetDeselect.
+    // Before normalization (locals): bExitFlag.
+    int onWidgetDeselect(message* msg, unsigned char* exitFlag,
                          unsigned char remoteClick);
-    void SetDifficultyHiLite();
-    void OnSortMaps(int how);
-    void OnNameClick(int pos);
-    void OnPlayerPosClick(int pos);
-    unsigned char OnBeginGame();
+    // Before normalization (function): TSingleSelectionWindow::SetDifficultyHiLite.
+    void setDifficultyHiLite();
+    // Before normalization (function): TSingleSelectionWindow::OnSortMaps.
+    void onSortMaps(int how);
+    // Before normalization (function): TSingleSelectionWindow::OnNameClick.
+    void onNameClick(int pos);
+    // Before normalization (function): TSingleSelectionWindow::OnPlayerPosClick.
+    void onPlayerPosClick(int pos);
+    // Before normalization (function): TSingleSelectionWindow::OnBeginGame.
+    unsigned char onBeginGame();
     // Complete-only random-map helpers at 0x5879a0 and 0x5860e0. Their
     // provisional role names describe the byte-decoded caller contract.
-    unsigned char GenerateRandomMap(const char* name);
-    void OnDeleteFile();
-    void SetCurrentMap(int map, unsigned char bUpdate);
-    void DrawHeroAdvancedOption(int playerPos, unsigned char update,
+    // Before normalization (function): TSingleSelectionWindow::GenerateRandomMap.
+    unsigned char generateRandomMap(const char* name);
+    // Before normalization (function): TSingleSelectionWindow::OnDeleteFile.
+    void onDeleteFile();
+    // Before normalization (function): TSingleSelectionWindow::SetCurrentMap.
+    // Before normalization (locals): bUpdate.
+    void setCurrentMap(int map, unsigned char update);
+    // Before normalization (function): TSingleSelectionWindow::DrawHeroAdvancedOption.
+    void drawHeroAdvancedOption(int playerPos, unsigned char update,
                                 int position);
-    unsigned int GetMapCount() const;
-    unsigned char OnNewSetupInfoMsg(CNetMsg* pNetMsg);
-    unsigned char OnNewPlayerMsg(CNetMsg* pNetMsg);
-    unsigned char OnGameHeaderInfoInitMsg(CNetMsg* pNetMsg);
+    // Before normalization (function): TSingleSelectionWindow::GetMapCount.
+    unsigned int getMapCount() const;
+    // Before normalization (function): TSingleSelectionWindow::OnNewSetupInfoMsg.
+    // Before normalization (locals): pNetMsg.
+    unsigned char onNewSetupInfoMsg(CNetMsg* netMsg);
+    // Before normalization (function): TSingleSelectionWindow::OnNewPlayerMsg.
+    // Before normalization (locals): pNetMsg.
+    unsigned char onNewPlayerMsg(CNetMsg* netMsg);
+    // Before normalization (function): TSingleSelectionWindow::OnGameHeaderInfoInitMsg.
+    // Before normalization (locals): pNetMsg.
+    unsigned char onGameHeaderInfoInitMsg(CNetMsg* netMsg);
     // Provisional spelling: the SoD-only 0x43b init arm's handler; DC has
     // a single OnGameHeaderInfoInitMsg.
-    void OnGameHeaderInfoInitMsgEx(CNetMsg* pNetMsg);
+    // Before normalization (function): TSingleSelectionWindow::OnGameHeaderInfoInitMsgEx.
+    // Before normalization (locals): pNetMsg.
+    void onGameHeaderInfoInitMsgEx(CNetMsg* netMsg);
     // Returns 0 when the row number is out of range (retail sets al).
-    unsigned char OnGameHeaderInfoMsg(CNetMsg* pNetMsg);
+    // Before normalization (function): TSingleSelectionWindow::OnGameHeaderInfoMsg.
+    // Before normalization (locals): pNetMsg.
+    unsigned char onGameHeaderInfoMsg(CNetMsg* netMsg);
     // Always returns 1 (retail sets al on every exit); DC agrees.
-    unsigned char OnMapFileNameMsg(CNetMsg* pNetMsg);
-    void OnNewHostMsg(CNetMsg* pNetMsg);
-    void OnUpdatePlayerPosMsg(CNetMsg* pNetMsg);
-    unsigned char OnSetAsHostMsg(CNetMsg* pNetMsg);
-    unsigned char OnBadVersionMsg(CNetMsg* pNetMsg);
-    void OnPingMsg(CNetMsg* pNetMsg);
-    void OnPingResponseMsg(CNetMsg* pNetMsg, unsigned char inPopup);
-    void SendChat(unsigned long dpid, const char* cChat);
-    void ReceiveChat(unsigned long dpid, char* cChat,
+    // Before normalization (function): TSingleSelectionWindow::OnMapFileNameMsg.
+    // Before normalization (locals): pNetMsg.
+    unsigned char onMapFileNameMsg(CNetMsg* netMsg);
+    // Before normalization (function): TSingleSelectionWindow::OnNewHostMsg.
+    // Before normalization (locals): pNetMsg.
+    void onNewHostMsg(CNetMsg* netMsg);
+    // Before normalization (function): TSingleSelectionWindow::OnUpdatePlayerPosMsg.
+    // Before normalization (locals): pNetMsg.
+    void onUpdatePlayerPosMsg(CNetMsg* netMsg);
+    // Before normalization (function): TSingleSelectionWindow::OnSetAsHostMsg.
+    // Before normalization (locals): pNetMsg.
+    unsigned char onSetAsHostMsg(CNetMsg* netMsg);
+    // Before normalization (function): TSingleSelectionWindow::OnBadVersionMsg.
+    // Before normalization (locals): pNetMsg.
+    unsigned char onBadVersionMsg(CNetMsg* netMsg);
+    // Before normalization (function): TSingleSelectionWindow::OnPingMsg.
+    // Before normalization (locals): pNetMsg.
+    void onPingMsg(CNetMsg* netMsg);
+    // Before normalization (function): TSingleSelectionWindow::OnPingResponseMsg.
+    // Before normalization (locals): pNetMsg.
+    void onPingResponseMsg(CNetMsg* netMsg, unsigned char inPopup);
+    // Before normalization (function): TSingleSelectionWindow::SendChat.
+    // Before normalization (locals): cChat.
+    void sendChat(unsigned long dpid, const char* chat);
+    // Before normalization (function): TSingleSelectionWindow::ReceiveChat.
+    // Before normalization (locals): cChat.
+    void receiveChat(unsigned long dpid, char* chat,
                      unsigned char inPopup);
-    void OnRequestHeroFaceMsg(CNetMsg* pNetMsg,
+    // Before normalization (function): TSingleSelectionWindow::OnRequestHeroFaceMsg.
+    // Before normalization (locals): pNetMsg.
+    void onRequestHeroFaceMsg(CNetMsg* netMsg,
                               unsigned char inPopup);
-    void OnRequestHeroFaceReplyMsg(CNetMsg* pNetMsg,
+    // Before normalization (function): TSingleSelectionWindow::OnRequestHeroFaceReplyMsg.
+    // Before normalization (locals): pNetMsg.
+    void onRequestHeroFaceReplyMsg(CNetMsg* netMsg,
                                    unsigned char inPopup);
-    void OnSetAGRMsg(CNetMsg* pNetMsg, unsigned char inPopup);
-    void OnTownUpdateMsg(CNetMsg* pNetMsg, unsigned char inPopup);
-    unsigned char CheckMissingHeaders(unsigned long dpidHost);
-    void SortMaps(int how, unsigned char sendSortMsg,
-                  unsigned char bUpdate);
-    void SetFilter(int size);
-    void DisplayChat();
-    void GetHeroFace(int which, CNetPlayerHandlerPlayer* pPlayer);
-    void MakeHeroFilter();
-    void CheckFaces();
-    void TurnOffScenarioOptions();
-    void TurnOffAdvancedOptions();
-    void TurnChatOn(unsigned char update);
-    void TurnChatOff(unsigned char update);
+    // Before normalization (function): TSingleSelectionWindow::OnSetAGRMsg.
+    // Before normalization (locals): pNetMsg.
+    void onSetAGRMsg(CNetMsg* netMsg, unsigned char inPopup);
+    // Before normalization (function): TSingleSelectionWindow::OnTownUpdateMsg.
+    // Before normalization (locals): pNetMsg.
+    void onTownUpdateMsg(CNetMsg* netMsg, unsigned char inPopup);
+    // Before normalization (function): TSingleSelectionWindow::CheckMissingHeaders.
+    unsigned char checkMissingHeaders(unsigned long dpidHost);
+    // Before normalization (function): TSingleSelectionWindow::SortMaps.
+    void sortMaps(int how, unsigned char sendSortMsg,
+                  // Before normalization (locals): bUpdate.
+                  unsigned char update);
+    // Before normalization (function): TSingleSelectionWindow::SetFilter.
+    void setFilter(int size);
+    // Before normalization (function): TSingleSelectionWindow::DisplayChat.
+    void displayChat();
+    // Before normalization (function): TSingleSelectionWindow::GetHeroFace.
+    // Before normalization (locals): pPlayer.
+    void getHeroFace(int which, CNetPlayerHandlerPlayer* player);
+    // Before normalization (function): TSingleSelectionWindow::MakeHeroFilter.
+    void makeHeroFilter();
+    // Before normalization (function): TSingleSelectionWindow::CheckFaces.
+    void checkFaces();
+    // Before normalization (function): TSingleSelectionWindow::TurnOffScenarioOptions.
+    void turnOffScenarioOptions();
+    // Before normalization (function): TSingleSelectionWindow::TurnOffAdvancedOptions.
+    void turnOffAdvancedOptions();
+    // Before normalization (function): TSingleSelectionWindow::TurnChatOn.
+    void turnChatOn(unsigned char update);
+    // Before normalization (function): TSingleSelectionWindow::TurnChatOff.
+    void turnChatOff(unsigned char update);
     // Retail 0x58e700 (past the stale span end) hands the whole incoming
     // record to the seat assigner; DC's SetNewPlayerSlot takes the dpid
     // alone. Provisional widening.
@@ -596,74 +853,105 @@ public:
     // ...and it returns nothing: the retail body sets no result on any of
     // its four exits, and every one of its nine call sites discards the
     // value. DC's is `unsigned char`.
-    void SetNewPlayerSlot(CNetPlayerInfo* pPlayer);
+    // Before normalization (function): TSingleSelectionWindow::SetNewPlayerSlot.
+    // Before normalization (locals): pPlayer.
+    void setNewPlayerSlot(CNetPlayerInfo* playerInfo);
     // Dreamcast and Complete both retain the source-level town enum here.
-    void UpdateTown(int pos, TTownType town, unsigned char inPopup);
-    void UpdateNameLists();
-    void SetupLoadGameMode();
-    void SetupNewGameMode();
-    // Retail 0x58ea00 (past the stale span end) - the no-arg count the
-    // drop arm caches at +0x1898. DC's GetPlayerCount takes a filter
-    // byte; retail's takes none. Provisional.
-    int GetPlayerCount();
+    // Before normalization (function): TSingleSelectionWindow::UpdateTown.
+    void updateTown(int pos, TTownType town, unsigned char inPopup);
+    // Before normalization (function): TSingleSelectionWindow::UpdateNameLists.
+    void updateNameLists();
+    // Before normalization (function): TSingleSelectionWindow::SetupLoadGameMode.
+    void setupLoadGameMode();
+    // Before normalization (function): TSingleSelectionWindow::SetupNewGameMode.
+    void setupNewGameMode();
+    // Retail 0x58ea00: highest common version from intersected feature sets.
+    // Previous bootstrap spelling: GetPlayerCount. Dreamcast's filtered
+    // GetPlayerCount belongs to CNetPlayerHandler, not this PC-only helper.
+    int getCommonGameVersion();
     // Retail 0x583580: copies the selected header's planes into
     // gpGame (+0x1f6a0 header band, +0x4df18 setup band) - the DC
     // UpdateGameVars role (dc 0x139090, void()). Called after the
     // header transfer completes.
-    void UpdateGameVars();
+    // Before normalization (function): TSingleSelectionWindow::UpdateGameVars.
+    void updateGameVars();
     // DC singleselectionwindow.cpp:2821 (dc 0x135e80); retail 0x57fb90 is
     // the constructor's out-of-line callee at +0x2c72.
-    void UpdateMainWindow();
+    // Before normalization (function): TSingleSelectionWindow::UpdateMainWindow.
+    void updateMainWindow();
     // Dreamcast source method; Complete retail 0x58c290. Only the owning TU
     // calls it (from OnBeginGame), so keep this declaration with that TU's
     // existing private lobby-message/vector view.
-    unsigned char BeginSavedGame();
+    // Before normalization (function): TSingleSelectionWindow::BeginSavedGame.
+    unsigned char beginSavedGame();
     // Retail 0x58c570, DC singleselectionwindow.cpp:7822. OnBeginGame's
     // other launch arm, likewise private to the owning TU.
-    bool BeginNewGame();
+    // Before normalization (function): TSingleSelectionWindow::BeginNewGame.
+    bool beginNewGame();
     // The disk header reader family around it, visible only to the
     // owning TU (the vectors gate): GetHeaders scans the picked
     // directory ("random_maps"/"games"/"maps" by mode) into the lists;
     // GetHeader fills one row's header temp from (dir, filename) -
     // retail widened DC's (cFilename, pHeader) with the dir argument
     // its chdir dance needs.
-    int GetFileSpecNbr();
-    void GetHeaders(std::vector<GameSelectionHeadersStruct>* pHeaders);
-    void WindowFn_00582e90(
-        std::vector<GameSelectionHeadersStruct>* pHeaders);
-    int GetHeader(char* dir, char* cFilename,
-                  GameSelectionHeadersStruct* pHeader);
+    // Before normalization (function): TSingleSelectionWindow::GetFileSpecNbr.
+    int getFileSpecNbr();
+    // Before normalization (function): TSingleSelectionWindow::GetHeaders.
+    // Before normalization (locals): pHeaders.
+    void getHeaders(std::vector<GameSelectionHeadersStruct>* headers);
+    // Before normalization (function): TSingleSelectionWindow::WindowFn_00582e90.
+    void windowFn00582e90(
+        // Before normalization (locals): pHeaders.
+        std::vector<GameSelectionHeadersStruct>* headers);
+    // Before normalization (function): TSingleSelectionWindow::GetHeader.
+    // Before normalization (locals): cFilename, pHeader.
+    int getHeader(char* dir, char* filename,
+                  GameSelectionHeadersStruct* header);
     // Retail 0x580a70 widened DC's no-arg SetupScenarioOptions with the
     // random-maps mode byte (the body compares it to m_flag66 and
     // stores it there). ShowWidget = retail 0x57fb20; its only caller is
     // OnSetAsHostMsg, where retail preserves the out-of-line boundary.
-    void SetupScenarioOptions(unsigned char randomMaps);
-    void SetupAdvancedOptions();
+    // Before normalization (function): TSingleSelectionWindow::SetupScenarioOptions.
+    void setupScenarioOptions(unsigned char randomMaps);
+    // Before normalization (function): TSingleSelectionWindow::SetupAdvancedOptions.
+    void setupAdvancedOptions();
     // Complete-only counterpart to the two shared setup panes. Retail calls
     // 0x57feb0 before refreshing the filter widgets.
-    void SetupFilterOptions();
+    // Before normalization (function): TSingleSelectionWindow::SetupFilterOptions.
+    void setupFilterOptions();
     // Complete-only constructor helper at 0x57d170. It creates the filter
     // panel controls and seeds the eight filter slots. The role spelling is
     // provisional because this method is absent from the older DC build.
-    void CreateFilterWidgets();
+    // Before normalization (function): TSingleSelectionWindow::CreateFilterWidgets.
+    void createFilterWidgets();
     // Complete-only member at 0x580430. Its body rebuilds the map header and
     // player slots from field_18A0, redraws, and broadcasts the resulting
     // setup. The role name remains provisional until its body is claimed.
-    void RebuildFilteredPlayerSetup();
-    unsigned char SendPlayerPositions(unsigned long dpidTo);
-    unsigned char SendSetupInfo(unsigned long dpid);
-    void SendPlayerFaces();
-    unsigned char IsHost();
-    unsigned char IsMultiPlayer();
-    void ShowWidget(int id);
+    // Before normalization (function): TSingleSelectionWindow::RebuildFilteredPlayerSetup.
+    void rebuildFilteredPlayerSetup();
+    // Before normalization (function): TSingleSelectionWindow::SendPlayerPositions.
+    unsigned char sendPlayerPositions(unsigned long dpidTo);
+    // Before normalization (function): TSingleSelectionWindow::SendSetupInfo.
+    unsigned char sendSetupInfo(unsigned long dpid);
+    // Before normalization (function): TSingleSelectionWindow::SendPlayerFaces.
+    void sendPlayerFaces();
+    // Before normalization (function): TSingleSelectionWindow::IsHost.
+    unsigned char isHost();
+    // Before normalization (function): TSingleSelectionWindow::IsMultiPlayer.
+    unsigned char isMultiPlayer();
+    // Before normalization (function): TSingleSelectionWindow::ShowWidget.
+    void showWidget(int id);
     // Complete-only pane helper at retail 0x581d80. The name is
     // provisional; its caller and body prove the out-of-line member
     // boundary, the filter-widget range, and the cleared mode byte.
-    void TurnOffFilterOptions();
+    // Before normalization (function): TSingleSelectionWindow::TurnOffFilterOptions.
+    void turnOffFilterOptions();
 
 private:
-    CNetPlayerHandlerPlayer* GetThisPlayer();
-    int CalcPosition(int playerPos);
+    // Before normalization (function): TSingleSelectionWindow::GetThisPlayer.
+    CNetPlayerHandlerPlayer* getThisPlayer();
+    // Before normalization (function): TSingleSelectionWindow::CalcPosition.
+    int calcPosition(int playerPos);
 };
 SIZE(TSingleSelectionWindow, 0x1970);
 
@@ -674,10 +962,14 @@ SIZE(TSingleSelectionWindow, 0x1970);
 //   0x691268  the extension scratch SaveGame sprintf's (.GM%d / .CGM)
 //   0x69774c  campaign-game byte: picks the .CGM extension
 //   0x697774  set to 1 the moment a save filename is committed
-extern char gUnnamed69fc2c[];
-extern char gUnnamed691268[];
-extern unsigned char gUnnamed69774c;
-extern int gUnnamed697774;
+// Before normalization: gUnnamed69fc2c.
+extern char g_unnamed69fc2c[];
+// Before normalization: gUnnamed691268.
+extern char g_unnamed691268[];
+// Before normalization: gUnnamed69774c.
+extern unsigned char g_unnamed69774c;
+// Before normalization: gUnnamed697774.
+extern int g_unnamed697774;
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\singleselectionwindow.cpp:164, dc 0x12f6d4) const char* GetResourceBonusCaption(int townType);

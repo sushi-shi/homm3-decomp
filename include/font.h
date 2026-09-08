@@ -37,29 +37,47 @@ public:
         // because other lanes' sources already spell them that way; the
         // identity is recorded rather than renamed.
         struct myABC {
-            int field_0;
-            int field_4;
-            int field_8;
+            // Before normalization: field_0; reference member font::TFontSpec::myABC::abcA.
+            int m_abcA;
+            // Before normalization: field_4; reference member font::TFontSpec::myABC::abcB.
+            int m_abcB;
+            // Before normalization: field_8; reference member font::TFontSpec::myABC::abcC.
+            int m_abcC;
         };
 
-        unsigned char first;
-        unsigned char last;
-        unsigned char depth;
-        char xspace;
-        char yspace;
+        // Before normalization: first.
+        unsigned char m_first;
+        // Before normalization: last.
+        unsigned char m_last;
+        // Before normalization: depth.
+        unsigned char m_depth;
+        // Before normalization: xspace.
+        char m_xspace;
+        // Before normalization: yspace.
+        char m_yspace;
         // Glyph row count (DrawCharacter's outer loop bound).
-        unsigned char height;
+        // Before normalization: height.
+        unsigned char m_height;
         // The signed vertical bearing DrawStringExecute adds to `y`
         // before clipping - retail reads it with
         // `movsx eax, byte ptr [esi+0x22]`.
-        char baseyoffset;
-        char pad;
-        unsigned long numpal;
-        unsigned short* pal[5];
-        myABC abc[256];
+        // Before normalization: baseyoffset.
+        char m_baseyoffset;
+        // Original Dreamcast TFontSpec::pad at +7 is explicitly named.
+        // It aligns numpal at +8 after seven byte fields; retain the
+        // original spelling, normalized only with the instance prefix.
+        // Before normalization: pad.
+        char m_pad;
+        // Before normalization: numpal.
+        unsigned long m_numpal;
+        // Before normalization: pal.
+        unsigned short* m_pal[5];
+        // Before normalization: abc.
+        myABC m_abc[256];
         // Per-character offsets into `data` (DrawCharacter indexes this
         // at font+0xc3c).
-        unsigned long Offset[256];
+        // Before normalization: Offset.
+        unsigned long m_offset[256];
     };
     SIZE(TFontSpec, 0x1020);
 
@@ -109,19 +127,23 @@ public:
     };
 
     // DC LF_MEMBER `fs`, offset 28.
-    TFontSpec fs;
+    // Before normalization: fs.
+    TFontSpec m_fs;
     // DC LF_MEMBER `Palette`, offset 4156 = 0x103c, held BY VALUE - the
     // retail constructor 0x4b5070 runs TPalette16's default constructor
     // on this+0x103c as a member initializer (unwind state 1, funclet
     // 0x62b4d8 destroys exactly this subobject).
-    TPalette16 palette;
+    // Before normalization: palette.
+    TPalette16 m_palette;
     // DC LF_MEMBER `Data`.
-    void* data;
+    // Before normalization: data.
+    void* m_data;
     // The glyph payload's byte count, byte-proven by GetSize below: the
     // whole class is 0x1260 and the only member past `data` is the dword
     // at 0x125c that the size query adds to it. DC has no such member -
     // its port left the resource size query on a different slot shape.
-    int DataSize;
+    // Before normalization: DataSize.
+    int m_dataSize;
 
     font(const char* name, const TFontSpec& fontspec, int dsize,
          unsigned char* d);  // retail 0x4b5070
@@ -129,24 +151,40 @@ public:
     // Slot 2 of vtable 0x63e5f4 (the resource size query, pure at the
     // base). Retail 0x4b5250 - the twelve-byte
     // `mov eax,[ecx+0x125c]; add eax,0x1260; ret`.
-    virtual unsigned int GetSize() const;
+    // Before normalization (function): font::GetSize.
+    virtual unsigned int getSize() const;
 
-    void DrawStringExecute(const char* text, int count, Bitmap16Bit* bitmap, int x, int y, int color_scheme, int clipX, int clipY, int clipWidth, int clipHeight, int cursorPos);
-    void DrawBoundedString(const char* str, Bitmap16Bit* bitmap, int x, int y, int boxWidth, int boxHeight, int color_scheme, unsigned justification, int cursorPos);
-    int GetCharacterWidth(unsigned char currChar);
-    void SetPalette(const TPalette16* new_palette);
-    void DrawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color);
-    long get_string_width(const char* arg);
-    int LineLength(const char* str, int boxWidth);
-    int LongestWrappedLineWidth(const char* str, int boxWidth);
-    int LineWidth(const char* text);
-    int LongestLineWidth(const char* str);
-    int longest_word_length(const char* str);
+    // Before normalization (function): font::DrawStringExecute.
+    // Before normalization (locals): color_scheme.
+    void drawStringExecute(const char* text, int count, Bitmap16Bit* bitmap, int x, int y, int colorScheme, int clipX, int clipY, int clipWidth, int clipHeight, int cursorPos);
+    // Before normalization (function): font::DrawBoundedString.
+    // Before normalization (locals): color_scheme.
+    void drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x, int y, int boxWidth, int boxHeight, int colorScheme, unsigned justification, int cursorPos);
+    // Before normalization (function): font::GetCharacterWidth.
+    int getCharacterWidth(unsigned char currChar);
+    // Before normalization (function): font::SetPalette.
+    // Before normalization (locals): new_palette.
+    void setPalette(const TPalette16* newPalette);
+    // Before normalization (function): font::DrawCharacter.
+    void drawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color);
+    // Before normalization (function): font::get_string_width.
+    long getStringWidth(const char* arg);
+    // Before normalization (function): font::LineLength.
+    int lineLength(const char* str, int boxWidth);
+    // Before normalization (function): font::LongestWrappedLineWidth.
+    int longestWrappedLineWidth(const char* str, int boxWidth);
+    // Before normalization (function): font::LineWidth.
+    int lineWidth(const char* text);
+    // Before normalization (function): font::LongestLineWidth.
+    int longestLineWidth(const char* str);
+    // Before normalization (function): font::longest_word_length.
+    int longestWordLength(const char* str);
     // Retail 0x4b5b90, font.obj's tail. The `fs.abc[' ']` triple it reads
     // at this+0x1bc/0x1c0/0x1c4 is what types the receiver as a font and
     // the second parameter as a pixel box width; NH3API corroborates the
     // name and the three-parameter shape only.
-    void FillLinesVector(const char* str, int boxWidth,
+    // Before normalization (function): font::FillLinesVector.
+    void fillLinesVector(const char* str, int boxWidth,
                          std::vector<std::string>& result);
 };
 
@@ -159,7 +197,8 @@ public:
 // (the Dreamcast dump carries only `medFont`), which is why this keeps
 // the house ordinal placeholder. Owner TU unlocated - extern only, no
 // DATA claim (the gpWindowManager / gTownSizeNames pattern).
-extern font* gUnnamed698a08;
+// Before normalization: gUnnamed698a08.
+extern font* g_unnamed698a08;
 
 // --- font ---
 // CODEVIEW(E:\gamedcs\font.cpp:33, dc 0xa1ba8) void font::font();

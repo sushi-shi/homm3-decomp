@@ -63,8 +63,10 @@ it. A lower similarity score is insufficient. Preserve proven classes, interface
 helpers, and scopes through temporary score dips, including header/TU collateral;
 measure that collateral and keep prior peaks in max/history. Score dips are
 observational, not build failures. `homm3 status check` attributes a regression
-only when a function's own source changed and its score fell from the preceding
-current checkpoint; MAX remains monotone.
+only when a function's own source hash changed and its new MAX fell below the
+preceding MAX. The invariant is CUR <= MAX <= HIST: MAX is monotone for an
+unchanged function hash, a proven edit resets MAX to CUR, and HIST retains the
+all-time peak. Tooling prioritizes MAX; HIST is a lead for recovering lost peaks.
 
 ## Helper boundaries and inlining
 
@@ -98,6 +100,19 @@ Record function-specific failed probes beside the function and reusable compiler
 findings under [docs/vc6/](docs/vc6/README.md), without a separate chronological log.
 
 ## Matching data ownership
+
+Preserve original semantic names where evidence exists, preferring Dreamcast
+source names and using NH3API as a fallback. Drop Hungarian type prefixes and
+normalize the semantic part of project-owned identifiers to lowerCamelCase.
+Use scope prefixes consistently: `m_` for instance data members, `s_` for static
+data members, and `g_` for globals (including file-static globals). Locals,
+parameters, and ordinary functions use lowerCamelCase without these prefixes.
+For instance fields, `bShowTroopCount` becomes `m_showTroopCount`,
+`disabled_frame` becomes `m_disabledFrame`, and `Text` becomes `m_text`.
+Apply the convention throughout the code, updating declarations, definitions,
+and uses together. Retain the
+original spelling in the owning source's evidence comment so reference lookup
+remains possible. Preserve required external ABI spellings at their boundaries.
 
 Source annotations own names; build regenerates labels. Do not maintain a second
 symbol ledger. `config/` contains hand-admitted retail inventories and manifests;

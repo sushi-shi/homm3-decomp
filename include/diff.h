@@ -11,14 +11,16 @@ public:
     unsigned int m_numBytes;
     unsigned char m_data[1];
 
-    unsigned char* GetData();
+    unsigned char* getData();
 
-    unsigned char* GetBase()
+    // Before normalization (function): CDiffFile::GetBase.
+    unsigned char* getBase()
     {
         return m_data - sizeof(m_numBytes);
     }
 
-    void* Apply(unsigned char* oldSaveGame, int oldSaveGameSize);
+    // Before normalization (function): CDiffFile::Apply.
+    void* apply(unsigned char* oldSaveGame, int oldSaveGameSize);
 };
 
 class CDiffMaker
@@ -33,12 +35,13 @@ public:
                unsigned char* newData, int newSize);
 
 protected:
-    int CountSameBytes(int oldOffset, int newOffset);
-    bool FindNextSame(int oldOffset, int newOffset,
+    int countSameBytes(int oldOffset, int newOffset);
+    bool findNextSame(int oldOffset, int newOffset,
                       int& oldCount, int& newCount);
 
 public:
-    CDiffFile* MakeDiff(unsigned long& diffSize);
+    // Before normalization (function): CDiffMaker::MakeDiff.
+    CDiffFile* makeDiff(unsigned long& diffSize);
 };
 
 #endif  /* HOMM3_DIFF_H */

@@ -22,11 +22,12 @@
 #include "winmgr.h"
 
 // E:\gamedcs\puzzlewindow.cpp:103
-static Bitmap816* get_puzzle_bitmap(long puzzle, long piece)
+// Before normalization (function): get_puzzle_bitmap.
+static Bitmap816* getPuzzleBitmap(long puzzle, long piece)
 {
     char pieceName[40];
-    sprintf(pieceName, "puz%s%02d.pcx", puzzleFilePrefixes[puzzle], piece);
-    return ResourceManager::GetBitmap816(pieceName);
+    sprintf(pieceName, "puz%s%02d.pcx", g_puzzleFilePrefixes[puzzle], piece);
+    return ResourceManager::getBitmap816(pieceName);
 }
 
 // E:\gamedcs\puzzlewindow.cpp:115
@@ -40,52 +41,52 @@ VA(0x0052c1e0, 0x388)  // puzzle.pcx anchor + vtable + complete widget graph, dc
 TPuzzleWindow::TPuzzleWindow(int puzzlenum)
     : CAdvPopup(0, 0, 800, 600, 0)
 {
-    x = 0;
-    y = 0;
-    width = 800;
-    height = 600;
-    puzWhich = puzzlenum;
+    m_x = 0;
+    m_y = 0;
+    m_width = 800;
+    m_height = 600;
+    m_puzWhich = puzzlenum;
 
-    Widgets.reserve(NWIDGETS);
+    m_widgets.reserve(NWIDGETS);
 
     bitmapBorder* background =
         new bitmapBorder(0, 0, 800, 600, BACKGROUND_ID,
                          "puzzle.pcx", 0x800);
-    background->SetPlayerPaletteColors(gpGame->GetLocalPlayerGamePos());
-    Widgets.push_back(background);
+    background->setPlayerPaletteColors(g_game->getLocalPlayerGamePos());
+    m_widgets.push_back(background);
 
-    Widgets.push_back(new bitmapBorder(607, 3, 190, 71, -1,
+    m_widgets.push_back(new bitmapBorder(607, 3, 190, 71, -1,
                                        "puzzlogo.pcx", 0x800));
 
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         607, 73, 190, 40,
-        gpGeneralText->GetText(GENERAL_TEXT_PUZZLE_WINDOW),
+        g_generalText->getText(GENERAL_TEXT_PUZZLE_WINDOW),
         "Bigfont.fnt", font::HEADING, -1,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
 
-    Widgets.push_back(new bitmapBorder(669, 537, 68, 34, -1,
+    m_widgets.push_back(new bitmapBorder(669, 537, 68, 34, -1,
                                        "box66x32.pcx", 0x800));
 
     button* accept = new button(670, 538, 66, 32, ACCEPT_ID,
                                 "iOkay32.def", 0, 1, 0, 28, 2);
-    accept->set_hotkey(1);
-    Widgets.push_back(accept);
+    accept->setHotkey(1);
+    m_widgets.push_back(accept);
 
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
-            AddWidget(*it, -1);
+            addWidget(*it, -1);
         else
-            MemError();
+            memError();
     }
 
-    gpSoundManager->StopAllSamples(1);
+    g_soundManager->stopAllSamples(1);
 
     for (int i = 0; i < 48; ++i) {
-        puzzlePieces[i] = get_puzzle_bitmap(puzWhich, i);
+        m_puzzlePieces[i] = getPuzzleBitmap(m_puzWhich, i);
     }
 
-    puzzleResourceBar = new TResourceDisplay(this, 0);
-    DrawWindow(0, -65535, 65535);
+    m_puzzleResourceBar = new TResourceDisplay(this, 0);
+    drawWindow(0, -65535, 65535);
 }
 
 // Retail vtable 0x640600 slot 0.
@@ -96,16 +97,16 @@ VA(0x0052c5a0, 0x96)  // vtable + 48 bitmap disposals, dc 0x115268
 TPuzzleWindow::~TPuzzleWindow()
 {
     for (int i = 0; i < 48; ++i)
-        puzzlePieces[i]->Dispose();
+        m_puzzlePieces[i]->dispose();
 
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
 
-    if (puzzleResourceBar) {
-        delete puzzleResourceBar;
-        puzzleResourceBar = 0;
+    if (m_puzzleResourceBar) {
+        delete m_puzzleResourceBar;
+        m_puzzleResourceBar = 0;
     }
 }
 
@@ -120,60 +121,60 @@ int TPuzzleWindow::convertID2HelpID(int id)
 
 // E:\gamedcs\puzzlewindow.cpp:203
 VA(0x0052c640, 0x78)  // vtable slot 9 + CAdvPopup delegation, dc 0x115328
-int TPuzzleWindow::WindowHandler(message* msg)
+int TPuzzleWindow::windowHandler(message* msg)
 {
-    int result = CAdvPopup::WindowHandler(msg);
+    int result = CAdvPopup::windowHandler(msg);
     if (result)
         return result;
 
-    PollSound();
-    if (msg->id == MESSAGE_KEY_DOWN) {
-        switch (msg->codeX) {
+    pollSound();
+    if (msg->m_id == MESSAGE_KEY_DOWN) {
+        switch (msg->m_codeX) {
         case DIALOG_CLOSE_KEY:
         case DIALOG_ACCEPT_KEY:
-            msg->codeY = ACCEPT_ID;
+            msg->m_codeY = ACCEPT_ID;
             break;
         default:
             return MESSAGE_DISPATCH_CONSUME;
         }
-    } else if (msg->id != MESSAGE_WIDGET ||
-               msg->codeX != widget::WIDGET_DESELECT ||
-               msg->codeY != ACCEPT_ID) {
+    } else if (msg->m_id != MESSAGE_WIDGET ||
+               msg->m_codeX != widget::WIDGET_DESELECT ||
+               msg->m_codeY != ACCEPT_ID) {
         return MESSAGE_DISPATCH_CONSUME;
     }
 
-    msg->id = MESSAGE_WIDGET;
-    gpWindowManager->dialogReturn = msg->codeY;
-    msg->codeY = widget::WIDGET_END_DIALOG;
-    msg->codeX = widget::WIDGET_END_DIALOG;
+    msg->m_id = MESSAGE_WIDGET;
+    g_windowManager->m_dialogReturn = msg->m_codeY;
+    msg->m_codeY = widget::WIDGET_END_DIALOG;
+    msg->m_codeX = widget::WIDGET_END_DIALOG;
     return MESSAGE_DISPATCH_FORWARD;
 }
 
 // E:\gamedcs\puzzlewindow.cpp:255
 VA(0x0052c6c0, 0xAD)  // puzzle-mask table + resource bar update, dc 0x1153a8
-int TPuzzleWindow::UpdatePuzzle(int full)
+int TPuzzleWindow::updatePuzzle(int full)
 {
     int piecesNotFound = 0;
 
     for (int i = 0; i < 48; ++i) {
-        if (full || !puzzlePiecesRemoved.test(i)) {
-            int piece = puzzlePieceOrder[puzWhich * 48 + i];
-            Bitmap816* bitmap = puzzlePieces[piece];
-            int position = puzWhich * 96 + piece;
+        if (full || !g_puzzlePiecesRemoved.test(i)) {
+            int piece = g_puzzlePieceOrder[m_puzWhich * 48 + i];
+            Bitmap816* bitmap = m_puzzlePieces[piece];
+            int position = m_puzWhich * 96 + piece;
             position <<= 1;
             TPuzzleCoordinatePointer xCoordinate;
             TPuzzleCoordinatePointer yCoordinate;
-            xCoordinate.bytes = puzzlePieceX + position;
-            yCoordinate.bytes = puzzlePieceY + position;
+            xCoordinate.m_bytes = g_puzzlePieceX + position;
+            yCoordinate.m_bytes = g_puzzlePieceY + position;
 
-            bitmap->Draw(0, 0, bitmap->Width, bitmap->Height,
-                         gpWindowManager->screenBitmap,
-                         xCoordinate.values[0], yCoordinate.values[0], 1);
+            bitmap->draw(0, 0, bitmap->m_width, bitmap->m_height,
+                         g_windowManager->m_screenBitmap,
+                         xCoordinate.m_values[0], yCoordinate.m_values[0], 1);
             ++piecesNotFound;
         }
     }
 
-    puzzleResourceBar->Update(1, 0);
+    m_puzzleResourceBar->update(1, 0);
     return piecesNotFound;
 }
 
@@ -181,40 +182,40 @@ int TPuzzleWindow::UpdatePuzzle(int full)
 // a 10-bit object type, two signed four-bit object offsets, three terrain
 // descriptors, and the diggable/grail/visible flag trio.
 struct type_AI_puzzle_tile {
-    int object_type : 10;
-    int pad_00 : 22;
-    signed char object_x : 4;
-    signed char object_y : 4;
-    char pad_05[3];
-    int terrain : 5;
-    int river : 4;
-    int road : 4;
-    int pad_08 : 19;
-    unsigned char diggable : 1;
-    unsigned char has_grail : 1;
-    unsigned char visible : 1;
-    unsigned char pad_0c : 5;
-    char pad_0d[3];
+    int m_objectType : 10;
+    int m_paddingAfterObjectType : 22;
+    signed char m_objectX : 4;
+    signed char m_objectY : 4;
+    char m_paddingBeforeTerrain[3];
+    int m_terrain : 5;
+    int m_river : 4;
+    int m_road : 4;
+    int m_paddingAfterRoad : 19;
+    unsigned char m_diggable : 1;
+    unsigned char m_hasGrail : 1;
+    unsigned char m_visible : 1;
+    unsigned char m_paddingAfterVisible : 5;
+    char m_tailPadding[3];
 
     // Original: type_AI_puzzle_tile::type_AI_puzzle_tile; puzzlewindow.cpp:279, dc 0x1154c4.
     // Retail expands these stores in AI_attempt_puzzle_guess's array loop.
     type_AI_puzzle_tile()
     {
-        object_type = 0;
-        object_x = -1;
-        object_y = -1;
-        terrain = -1;
-        river = 0;
-        road = 0;
-        diggable = 1;
-        visible = 0;
+        m_objectType = 0;
+        m_objectX = -1;
+        m_objectY = -1;
+        m_terrain = -1;
+        m_river = 0;
+        m_road = 0;
+        m_diggable = 1;
+        m_visible = 0;
     }
     type_AI_puzzle_tile(NewmapCell* cell, type_point point);
     unsigned char operator==(const type_AI_puzzle_tile* arg) const;
 };
 SIZE(type_AI_puzzle_tile, 0x10);
 
-type_point match_puzzle(long player, type_AI_puzzle_tile (*puzzleMap)[17]);
+type_point matchPuzzle(long player, type_AI_puzzle_tile (*puzzleMap)[17]);
 
 // E:\gamedcs\puzzlewindow.cpp:294
 // Residual (99.444%): naming the source field by const reference makes VC6
@@ -228,26 +229,27 @@ type_point match_puzzle(long player, type_AI_puzzle_tile (*puzzleMap)[17]);
 VA(0x0052c770, 0x140)  // link-order + cell/object callees, dc 0x115538
 type_AI_puzzle_tile::type_AI_puzzle_tile(NewmapCell* cell, type_point point)
 {
-    object_type = 0;
-    visible = 1;
-    object_x = -1;
-    object_y = -1;
+    m_objectType = 0;
+    m_visible = 1;
+    m_objectX = -1;
+    m_objectY = -1;
 
-    terrain = cell->GroundSet;
-    river = cell->RiverSet;
-    road = cell->RoadSet;
-    diggable = cell->is_diggable();
+    m_terrain = cell->m_groundSet;
+    m_river = cell->m_riverSet;
+    m_road = cell->m_roadSet;
+    m_diggable = cell->isDiggable();
 
-    has_grail = point.x == gpGame->ultimateArtifactX &&
-                point.y == gpGame->ultimateArtifactY &&
-                point.z == gpGame->ultimateArtifactZ;
+    m_hasGrail = point.m_x == g_game->m_ultimateArtifactX &&
+                point.m_y == g_game->m_ultimateArtifactY &&
+                point.m_z == g_game->m_ultimateArtifactZ;
 
-    if (cell->object_type_index >= 0) {
-        CObject* cell_object =
-            &gpGame->worldMap.objects[cell->object_type_index];
-        object_type = cell_object->get_type();
-        object_x = cell_object->x - point.x;
-        object_y = cell_object->y - point.y;
+    if (cell->m_objectTypeIndex >= 0) {
+        // Before normalization (locals): cell_object.
+        CObject* cellObject =
+            &g_game->m_worldMap.m_objects[cell->m_objectTypeIndex];
+        m_objectType = cellObject->getType();
+        m_objectX = cellObject->m_x - point.m_x;
+        m_objectY = cellObject->m_y - point.m_y;
     }
 }
 
@@ -262,40 +264,41 @@ DC_ONLY(0x1156bc, 0xC0)
 unsigned char type_AI_puzzle_tile::operator==(
     const type_AI_puzzle_tile* arg) const
 {
-    return object_type == arg->object_type
-        && object_x == arg->object_x
-        && object_y == arg->object_y
-        && terrain == arg->terrain
-        && river == arg->river
-        && road == arg->road
-        && diggable == arg->diggable;
+    return m_objectType == arg->m_objectType
+        && m_objectX == arg->m_objectX
+        && m_objectY == arg->m_objectY
+        && m_terrain == arg->m_terrain
+        && m_river == arg->m_river
+        && m_road == arg->m_road
+        && m_diggable == arg->m_diggable;
 }
 
 // E:\gamedcs\puzzlewindow.cpp:334
+// Before normalization (locals): dest_x, dest_y, offset_x, offset_y.
 VA(0x0052c8b0, 0xFC)  // bracketed between tile ctor and AI attempt, dc 0x11577c
-void Bitmap816::mark_puzzle(unsigned char* visible, long dest_x, long dest_y)
+void Bitmap816::markPuzzle(unsigned char* visible, long destX, long destY)
 {
-    int offset_x = (-16 - dest_x) & 31;
-    int offset_y = (-16 - dest_y) & 31;
-    int width = Width - offset_x;
-    int height = Height - offset_y;
+    int offsetX = (-16 - destX) & 31;
+    int offsetY = (-16 - destY) & 31;
+    int width = m_width - offsetX;
+    int height = m_height - offsetY;
 
-    dest_x += offset_x;
-    dest_y += offset_y;
+    destX += offsetX;
+    destY += offsetY;
 
-    if (dest_x + width > 608)
-        width = 608 - dest_x;
-    if (dest_y + height > 544)
-        height = 544 - dest_y;
+    if (destX + width > 608)
+        width = 608 - destX;
+    if (destY + height > 544)
+        height = 544 - destY;
 
     if (width <= 0 || height <= 0)
         return;
 
-    unsigned char* source = map + Pitch * offset_y + offset_x;
-    int row = dest_y / 32;
+    unsigned char* source = m_map + m_pitch * offsetY + offsetX;
+    int row = destY / 32;
     unsigned char* destination = visible + 18 * row;
     destination += row;
-    destination += dest_x / 32;
+    destination += destX / 32;
 
     for (int y = 0; y < height; y += 32) {
         unsigned char* destinationBlock = destination;
@@ -309,7 +312,7 @@ void Bitmap816::mark_puzzle(unsigned char* visible, long dest_x, long dest_y)
         }
 
         destination += 19;
-        source += Pitch * 32;
+        source += m_pitch * 32;
     }
 }
 
@@ -353,57 +356,57 @@ void create_AI_puzzle_map(long player, unsigned char* visible, long puzzle_x, lo
 // the constructor directly (95.3630 - and the frame stayed 0x15d8, so the
 // named local is not the surplus either).
 VA(0x0052c9b0, 0x55B)  // anchor-caller, dc 0x115f64
-type_point AI_attempt_puzzle_guess(long player)
+type_point aiAttemptPuzzleGuess(long player)
 {
     type_point result;
 
-    int found = gpGame->SetupPuzzlePieces(player, 1);
+    int found = g_game->setupPuzzlePieces(player, 1);
     double uncovered =
         found / static_cast<double>(TPuzzleWindow::PUZZLE_PIECE_COUNT);
-    if (puzzleGuessThreshold[gpGame->setup.difficulty] <= uncovered) {
+    if (g_puzzleGuessThreshold[g_game->m_setup.m_difficulty] <= uncovered) {
         long puzzle;
-        if (player < 0 || (puzzle = gpGame->setup.alignment[player]) == -1)
+        if (player < 0 || (puzzle = g_game->m_setup.m_alignment[player]) == -1)
             puzzle = 0;
 
-        if (gpGame->ultimateArtifactX >= 0 &&
-            gpGame->ultimateArtifactPresent &&
-            gpGame->SetupPuzzlePieces(player, 0)) {
+        if (g_game->m_ultimateArtifactX >= 0 &&
+            g_game->m_ultimateArtifactPresent &&
+            g_game->setupPuzzlePieces(player, 0)) {
             unsigned char visible[17][19];
             memset(visible, 1, sizeof(visible));
 
             for (int i = 0; i < 48; ++i) {
 #pragma inline_depth(0)
-                if (puzzlePiecesRemoved.test(i))
+                if (g_puzzlePiecesRemoved.test(i))
                     continue;
 #pragma inline_depth()
-                int piece = puzzlePieceOrder[puzzle * 48 + i];
-                Bitmap816* bitmap = get_puzzle_bitmap(puzzle, piece);
+                int piece = g_puzzlePieceOrder[puzzle * 48 + i];
+                Bitmap816* bitmap = getPuzzleBitmap(puzzle, piece);
                 int position = puzzle * 96 + piece;
                 position <<= 1;
                 TPuzzleCoordinatePointer xCoordinate;
                 TPuzzleCoordinatePointer yCoordinate;
-                xCoordinate.bytes = puzzlePieceX + position;
-                yCoordinate.bytes = puzzlePieceY + position;
+                xCoordinate.m_bytes = g_puzzlePieceX + position;
+                yCoordinate.m_bytes = g_puzzlePieceY + position;
 
-                bitmap->mark_puzzle(visible[0], xCoordinate.values[0] - 8,
-                                    yCoordinate.values[0] - 8);
-                bitmap->Dispose();
+                bitmap->markPuzzle(visible[0], xCoordinate.m_values[0] - 8,
+                                    yCoordinate.m_values[0] - 8);
+                bitmap->dispose();
             }
 
-            type_point origin = gpGame->get_puzzle_origin();
+            type_point origin = g_game->getPuzzleOrigin();
             type_AI_puzzle_tile puzzleMap[19][17];
 
             type_point point;
-            point.z = gpGame->ultimateArtifactZ;
+            point.m_z = g_game->m_ultimateArtifactZ;
 
             for (int row = 0; row < 17; ++row) {
-                point.y = origin.y + row;
+                point.m_y = origin.m_y + row;
                 for (int col = 0; col < 19; ++col) {
-                    point.x = origin.x + col;
-                    if (point.is_valid() && visible[row][col]) {
+                    point.m_x = origin.m_x + col;
+                    if (point.isValid() && visible[row][col]) {
 #pragma inline_depth(0)
-                        NewmapCell* mapCell = gpGame->worldMap.cell(
-                            point.x, point.y, point.z);
+                        NewmapCell* mapCell = g_game->m_worldMap.cell(
+                            point.m_x, point.m_y, point.m_z);
 #pragma inline_depth()
                         puzzleMap[col][row] =
                             type_AI_puzzle_tile(mapCell, point);
@@ -411,37 +414,37 @@ type_point AI_attempt_puzzle_guess(long player)
                 }
             }
 
-            type_point guess = match_puzzle(player, puzzleMap);
-            if (guess.x < 0)
+            type_point guess = matchPuzzle(player, puzzleMap);
+            if (guess.m_x < 0)
                 return guess;
 
-            result.x = -1;
-            result.y = -1;
-            result.z = -1;
+            result.m_x = -1;
+            result.m_y = -1;
+            result.m_z = -1;
 
             int best = 0x7fff;
             type_point current;
-            current.z = guess.z;
-            for (current.x = guess.x - 2; current.x <= guess.x + 2;
-                 ++current.x) {
-                for (current.y = guess.y - 2; current.y <= guess.y + 2;
-                     ++current.y) {
-                    if (!current.is_valid())
+            current.m_z = guess.m_z;
+            for (current.m_x = guess.m_x - 2; current.m_x <= guess.m_x + 2;
+                 ++current.m_x) {
+                for (current.m_y = guess.m_y - 2; current.m_y <= guess.m_y + 2;
+                     ++current.m_y) {
+                    if (!current.isValid())
                         continue;
-                    if (!gpGame->worldMap.cell(current)->is_diggable())
+                    if (!g_game->m_worldMap.cell(current)->isDiggable())
                         continue;
 
                     type_point index;
-                    index.x = current.x - guess.x + 9;
-                    index.y = current.y - guess.y + 8;
+                    index.m_x = current.m_x - guess.m_x + 9;
+                    index.m_y = current.m_y - guess.m_y + 8;
 
-                    if (puzzleMap[index.x][index.y].terrain >= 0) {
-                        if (puzzleMap[index.x][index.y].has_grail)
+                    if (puzzleMap[index.m_x][index.m_y].m_terrain >= 0) {
+                        if (puzzleMap[index.m_x][index.m_y].m_hasGrail)
                             return current;
                     } else {
-                        int distance = abs(guess.y - current.y)
-                                       + abs(guess.x - current.x);
-                        if (result.x < 0 || distance < best) {
+                        int distance = abs(guess.m_y - current.m_y)
+                                       + abs(guess.m_x - current.m_x);
+                        if (result.m_x < 0 || distance < best) {
                             best = distance;
                             result = current;
                         }
@@ -453,9 +456,9 @@ type_point AI_attempt_puzzle_guess(long player)
         }
     }
 
-    result.x = -1;
-    result.y = -1;
-    result.z = -1;
+    result.m_x = -1;
+    result.m_y = -1;
+    result.m_z = -1;
     return result;
 }
 
@@ -468,31 +471,33 @@ type_point AI_attempt_puzzle_guess(long player)
 // `first_x` restarts at zero. A single mismatched tile answers zero
 // immediately, which is why retail's failure edge jumps straight past the
 // caller's score test.
+// Before normalization (function): check_match.
+// Before normalization (locals): first_x, first_y, puzzle_map.
 DC_ONLY(0x115a70, 0x176)
-static long check_match(long player, long first_x, long first_y,
+static long checkMatch(long player, long firstX, long firstY,
                         type_point origin,
-                        type_AI_puzzle_tile (*puzzle_map)[17])
+                        type_AI_puzzle_tile (*puzzleMap)[17])
 {
     long playerMask = 1 << player;
-    origin.x = origin.x - first_x;
-    origin.y = origin.y - first_y;
+    origin.m_x = origin.m_x - firstX;
+    origin.m_y = origin.m_y - firstY;
     long matches = 0;
 
     type_point point;
-    point.z = origin.z;
-    for (; first_y < 17; ++first_y) {
-        point.y = origin.y + first_y;
-        for (first_x = 0; first_x < 19; ++first_x) {
-            point.x = origin.x + first_x;
-            if (!point.is_valid())
+    point.m_z = origin.m_z;
+    for (; firstY < 17; ++firstY) {
+        point.m_y = origin.m_y + firstY;
+        for (firstX = 0; firstX < 19; ++firstX) {
+            point.m_x = origin.m_x + firstX;
+            if (!point.isValid())
                 continue;
-            if (!puzzle_map[first_x][first_y].visible)
+            if (!puzzleMap[firstX][firstY].m_visible)
                 continue;
-            if (!(GetMapExtra(point.x, point.y, point.z) & playerMask))
+            if (!(getMapExtra(point.m_x, point.m_y, point.m_z) & playerMask))
                 continue;
             type_AI_puzzle_tile tile(
-                gpGame->worldMap.cell(point.x, point.y, point.z), point);
-            if (puzzle_map[first_x][first_y] == &tile)
+                g_game->m_worldMap.cell(point.m_x, point.m_y, point.m_z), point);
+            if (puzzleMap[firstX][firstY] == &tile)
                 ++matches;
             else
                 return 0;
@@ -572,38 +577,40 @@ static long check_match(long player, long first_x, long first_y,
 // frame is 0x80 against our 0x84 and it memory-homes `min_x` at [ebp-0x80],
 // re-reading it per iteration, where we spread the copies over four slots and keep
 // min_x in ESI. Our frame is 0x84 against retail's 0x80 for that reason.
+// Before normalization (locals): puzzle_map, first_x, first_y, min_x, max_x, min_y, max_y,
+// cur_x, cur_y, span_x, start_x, limit_x, end_x, span_y, start_y, limit_y, end_y.
 VA(0x0052cf10, 0x5B4)  // anchor-caller AI_attempt_puzzle_guess +0x39d, dc 0x115be8
-type_point match_puzzle(long player, type_AI_puzzle_tile (*puzzle_map)[17])
+type_point matchPuzzle(long player, type_AI_puzzle_tile (*puzzleMap)[17])
 {
     type_point result;
-    result.x = -1;
-    result.y = -1;
-    result.z = -1;
+    result.m_x = -1;
+    result.m_y = -1;
+    result.m_z = -1;
 
     unsigned char found = 0;
-    int first_x;
-    int first_y;
-    int min_x = 19;
-    int max_x = 0;
-    int min_y = 17;
-    int max_y = 0;
+    int firstX;
+    int firstY;
+    int minX = 19;
+    int maxX = 0;
+    int minY = 17;
+    int maxY = 0;
 
     // MAX 92.4725 was measured with `x != 19` - an unnamed domain compare
     // that fails the cleanliness floor (docs/vc6/behavior-catalog.md D24).
     for (int x = 0; x < 19; ++x) {
         for (int y = 0; y < 17; ++y) {
-            if (puzzle_map[x][y].visible) {
+            if (puzzleMap[x][y].m_visible) {
                 if (!found) {
-                    first_x = x;
-                    first_y = y;
+                    firstX = x;
+                    firstY = y;
                     found = 1;
                 }
-                int cur_x = x;
-                int cur_y = y;
-                min_x = std::_cpp_min<long>(min_x, cur_x);
-                min_y = std::_cpp_min<long>(min_y, cur_y);
-                max_x = std::_cpp_max<long>(max_x, cur_x + 1);
-                max_y = std::_cpp_max<long>(max_y, cur_y + 1);
+                int curX = x;
+                int curY = y;
+                minX = std::_cpp_min<long>(minX, curX);
+                minY = std::_cpp_min<long>(minY, curY);
+                maxX = std::_cpp_max<long>(maxX, curX + 1);
+                maxY = std::_cpp_max<long>(maxY, curY + 1);
             }
         }
     }
@@ -614,32 +621,32 @@ type_point match_puzzle(long player, type_AI_puzzle_tile (*puzzle_map)[17])
     int ties = 0;
     int best = 0;
 
-    int span_x = std::_cpp_max<long>(first_x - 9, first_x - min_x);
-    int start_x = std::_cpp_max<long>(span_x, 0);
-    int limit_x = std::_cpp_min<long>(MAP_WIDTH - max_x + first_x,
-                                MAP_WIDTH + first_x - 9);
-    int end_x = std::_cpp_min<long>(MAP_WIDTH, limit_x);
-    int span_y = std::_cpp_max<long>(first_y - 8, first_y - min_y);
-    int start_y = std::_cpp_max<long>(span_y, 0);
-    int limit_y = std::_cpp_min<long>(MAP_WIDTH - max_y + first_y,
-                                MAP_HEIGHT + first_y - 8);
-    int end_y = std::_cpp_min<long>(MAP_HEIGHT, limit_y);
+    int spanX = std::_cpp_max<long>(firstX - 9, firstX - minX);
+    int startX = std::_cpp_max<long>(spanX, 0);
+    int limitX = std::_cpp_min<long>(g_mapWidth - maxX + firstX,
+                                g_mapWidth + firstX - 9);
+    int endX = std::_cpp_min<long>(g_mapWidth, limitX);
+    int spanY = std::_cpp_max<long>(firstY - 8, firstY - minY);
+    int startY = std::_cpp_max<long>(spanY, 0);
+    int limitY = std::_cpp_min<long>(g_mapWidth - maxY + firstY,
+                                g_mapHeight + firstY - 8);
+    int endY = std::_cpp_min<long>(g_mapHeight, limitY);
 
     type_point scan;
-    for (scan.z = 0; scan.z < gpGame->worldMap.GetNumLevels(); ++scan.z) {
-        for (scan.y = start_y; scan.y < end_y; ++scan.y) {
-            for (scan.x = start_x; scan.x < end_x; ++scan.x) {
+    for (scan.m_z = 0; scan.m_z < g_game->m_worldMap.getNumLevels(); ++scan.m_z) {
+        for (scan.m_y = startY; scan.m_y < endY; ++scan.m_y) {
+            for (scan.m_x = startX; scan.m_x < endX; ++scan.m_x) {
                 int count =
-                    check_match(player, first_x, first_y, scan, puzzle_map);
+                    checkMatch(player, firstX, firstY, scan, puzzleMap);
                 if (count != 0 && count >= best && count * 2 >= best) {
                     ++ties;
                     if (count > best) {
                         if (count > best * 2)
                             ties = 1;
                         best = count;
-                        result.x = scan.x - first_x + 9;
-                        result.y = scan.y - first_y + 8;
-                        result.z = scan.z;
+                        result.m_x = scan.m_x - firstX + 9;
+                        result.m_y = scan.m_y - firstY + 8;
+                        result.m_z = scan.m_z;
                     }
                 }
             }
@@ -648,9 +655,9 @@ type_point match_puzzle(long player, type_AI_puzzle_tile (*puzzle_map)[17])
 
     if (ties > 2) {
         type_point ambiguous;
-        ambiguous.x = -1;
-        ambiguous.y = -1;
-        ambiguous.z = -1;
+        ambiguous.m_x = -1;
+        ambiguous.m_y = -1;
+        ambiguous.m_z = -1;
         return ambiguous;
     }
     return result;

@@ -84,6 +84,28 @@ class CodeViewLinesTest(unittest.TestCase):
         self.assertEqual(result[("func", 1)].begin_line, 20)
         self.assertEqual(second, b"\x91\xc3")
 
+    def test_return_to_begin_line_uses_7fff_without_reanchoring(self):
+        payload = bytearray(_fixture())
+        line_offset = struct.unpack_from("<I", payload, 20 + 28)[0]
+        struct.pack_into("<H", payload, line_offset + 3 * 6 + 4, 0x7fff)
+        with tempfile.TemporaryDirectory() as directory:
+            path = self._write(bytes(payload), directory)
+            result = codeview.parse_lines(path)[("func", 0)]
+        self.assertEqual([(row.offset, row.line) for row in result.lines],
+                         [(0, 11), (0, 12), (1, 10)])
+        self.assertEqual(result.code, b"\x90\xc3")
+
+    def test_large_relative_lines_are_not_masked_or_clamped(self):
+        for stored in (0x7ffe, 0x8000, 0xffff):
+            with self.subTest(stored=stored):
+                payload = bytearray(_fixture())
+                line_offset = struct.unpack_from("<I", payload, 20 + 28)[0]
+                struct.pack_into("<H", payload, line_offset + 3 * 6 + 4, stored)
+                with tempfile.TemporaryDirectory() as directory:
+                    path = self._write(bytes(payload), directory)
+                    result = codeview.parse_lines(path)[("func", 0)]
+                self.assertEqual(result.lines[-1].line, 10 + stored)
+
     def test_truncated_line_table_is_rejected(self):
         payload = bytearray(_fixture())
         struct.pack_into("<I", payload, 20 + 28, len(payload) + 0x100)

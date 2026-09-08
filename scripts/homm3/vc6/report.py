@@ -55,14 +55,9 @@ def _plateaus(lo: float, unit_filter: str | None):
 
 
 def _inline_div(base_text, ref_text):
-    """'N under-inline, M over-inline' if out-of-line CALL multisets differ.
-
-    Callee names retail spells with a synth label pair off by count first -
-    see inline_model.divergence for why comparing by name alone double-books
-    one call as both an under- and an over-inline."""
+    """Unmatched calls and named target changes after ordered alignment."""
     from homm3.vc6 import inline_model
-    return inline_model.divergence_note(inline_model._called(base_text),
-                                        inline_model._called(ref_text))
+    return inline_model.ordered_divergence_note(base_text, ref_text)
 
 
 # combined wall class from the diagnoses -> the catalog knob to reach for
@@ -74,9 +69,10 @@ def _route(reg_dist, reg_findings, flow_dist, flow_findings, inline_div=None):
     flow_struct = flow_dist and any(
         "STRUCT" in f.get("kind", "").upper() or "block" in f.get("detail", "")
         for f in flow_findings)
-    if inline_div:  # inline structure is upstream of blocks + registers
-        return "inliner (predict-inline)", (
-            "callee expanded on one side only (A8/A9/A12): " + inline_div)
+    if inline_div:  # resolve call boundaries before downstream registers
+        cls = ("inliner" if "under-inline" in inline_div or "over-inline" in inline_div
+               else "call-targets")
+        return f"{cls} (predict-inline)", "inspect retained calls: " + inline_div
     if flow_struct or any(k.startswith("D") for k in cats):
         cls = "control-flow (why-branch)"
         knob = "loop-form / merged-return placement / case order (D1-D9)"

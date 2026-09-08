@@ -50,11 +50,13 @@ enum ECombatGridDimensions {
 // before it starts. Definition and DATA claim are src/drawing.cpp's;
 // declared here because fly.obj resets the extent through it once per
 // flight frame.
-extern TDrawbridgeBounds gCombatAreaLimits;
+// Before normalization: gCombatAreaLimits.
+extern TDrawbridgeBounds g_combatAreaLimits;
 // DC names the 58,86..740,557 clip rectangle GridAreaLimits. Retail's
 // initializer at 0x462640 and UpdateGrid's four clamps prove the aggregate;
 // its storage belongs to cmbtmgr.obj and this TU only references it.
-DATA(0x00694ec8) extern SLimitData gCombatGridAreaLimits;
+// Before normalization: gCombatGridAreaLimits.
+DATA(0x00694ec8) extern SLimitData g_combatGridAreaLimits;
 
 // The three combat animation speed multipliers at .rdata 0x63cf7c -
 // 1.0f, 0.63f and 0.4f exactly - indexed by gUnnamed698758.combatSpeed.
@@ -64,7 +66,8 @@ DATA(0x00694ec8) extern SLimitData gCombatGridAreaLimits;
 // header, the way winmgr.h carries DoDialog's three unowned dialog
 // globals. The NAME is a source-facing invention; the address, extent
 // and contents are read straight from the hash-verified image.
-extern const float gCombatSpeedFactors[3];
+// Before normalization: gCombatSpeedFactors.
+extern const float g_combatSpeedFactors[3];
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\drawing.cpp:47, dc 0x831b4) void get_creature_spell_message(char* buffer, const army* current_army, long current_hex);

@@ -14,7 +14,7 @@
 // belong to includes.h; returning a reference to parameter copies here was
 // an incorrect conflation of those two boundaries.
 template<class T>
-inline const T& _cpp_max(const T& left, const T& right)
+inline const T& cppMax(const T& left, const T& right)
 {
     return left < right ? right : left;
 }
@@ -35,7 +35,7 @@ inline const T& _cpp_max(const T& left, const T& right)
 // page against 100. Their operand-address selection is at 0x5d6c4a..55.
 // Preserve those negative controls while recovering callers' real boundaries.
 template<class T>
-inline const T& _cpp_min(const T& left, const T& right)
+inline const T& cppMin(const T& left, const T& right)
 {
     return right < left ? right : left;
 }

@@ -233,6 +233,102 @@ class NestedFrontier(unittest.TestCase):
         calls = {"?outer@@YAXXZ": Counter({"?other@@YAXXZ": 1})}
         self.assertEqual(im.nested_frontiers(under, over, calls), ())
 
+    def test_aligned_target_change_requires_a_real_nested_call(self):
+        rows = [{"base_callee": "?outer@@Z", "retail_callee": "?inner@@Z"}]
+        self.assertEqual(im.aligned_nested_frontiers(rows, {}), ())
+        self.assertEqual(im.aligned_nested_frontiers(
+            rows, {"?outer@@Z": Counter({"?inner@@Z": 1})}),
+            (("?outer@@Z", "?inner@@Z", 1),))
+
+
+def _call_listing(*names):
+    lines = ["00000000 <caller>:"]
+    for i, name in enumerate(names):
+        lines += [f"{5*i:08x}: e8 00 00 00 00\tcall\t0x0",
+                  f"{5*i+1:08x}: IMAGE_REL_I386_REL32\t{name}"]
+    lines.append(f"{5*len(names):08x}: c3\tret")
+    return "\n".join(lines) + "\n"
+
+
+class OrderedDivergence(unittest.TestCase):
+    def compare(self, base, retail):
+        return im.ordered_divergence(_call_listing(*base), _call_listing(*retail))
+
+    def test_river_inserts_do_not_donate_synth_pairs_to_cleanup(self):
+        insert, cleanup = "?insert@PositionVector@@Z", "??1PositionVector@@Z"
+        base = [insert, "_rand", insert, "_malloc", insert, "_free", insert, cleanup]
+        retail = ["game_insert", "_rand", "game_insert", "_malloc",
+                  "game_insert", "_free", "game_insert", "??3@YAXPAX@Z"]
+        rows = self.compare(base, retail)
+        self.assertEqual(rows["under"], [])
+        self.assertEqual(rows["over"], [])
+        self.assertEqual(rows["paired"], 4)
+        self.assertIn((insert, 4, 0), rows["paired_rows"])
+        self.assertNotIn((cleanup, 1, 0), rows["paired_rows"])
+        self.assertEqual([(r["base_callee"], r["retail_callee"])
+                          for r in rows["target_changes"]], [(cleanup, "??3@YAXPAX@Z")])
+
+    def test_missing_destroy_calls_keep_their_identity_and_direction(self):
+        base = ["?insert@@Z", "??3@YAXPAX@Z", "??3@YAXPAX@Z", "?paint@@Z"]
+        retail = ["game_insert", "?_Destroy@@Z", "??3@YAXPAX@Z",
+                  "?_Destroy@@Z", "??3@YAXPAX@Z", "?paint@@Z"]
+        rows = self.compare(base, retail)
+        self.assertEqual(rows["under"], [])
+        self.assertEqual(rows["over"], [("?_Destroy@@Z", 0, 2)])
+        self.assertEqual(rows["paired"], 1)
+
+    def test_mangled_target_change_is_not_assumed_to_be_an_alias(self):
+        rows = self.compare(["?erase@IntVector@@Z"], ["?erase@ArmyVector@@Z"])
+        self.assertEqual(rows["paired"], 0)
+        self.assertEqual(rows["under"], [])
+        self.assertEqual(rows["over"], [])
+        self.assertEqual(len(rows["target_changes"]), 1)
+        note = im.ordered_divergence_note(_call_listing("?a@@Z"), _call_listing("?b@@Z"))
+        self.assertEqual(note, "1 aligned call-target difference(s)")
+
+    def test_shared_call_surplus_remains_visible(self):
+        rows = self.compare(["?_Tidy@@Z", "_rand", "?_Tidy@@Z"],
+                            ["?_Tidy@@Z", "_rand"])
+        self.assertEqual(rows["under"], [("?_Tidy@@Z", 1, 0)])
+        self.assertEqual(rows["paired"], 0)
+
+    def test_unpaired_candidate_surplus_survives_synth_alignment(self):
+        rows = self.compare(["?insert@@Z", "_rand", "?insert@@Z"],
+                            ["game_insert", "_rand"])
+        self.assertEqual(rows["under"], [("?insert@@Z", 1, 0)])
+        self.assertEqual(rows["paired"], 1)
+
+    def test_unpaired_retail_label_surplus_survives_alignment(self):
+        rows = self.compare(["?insert@@Z", "_rand"],
+                            ["game_insert", "_rand", "game_insert"])
+        self.assertEqual(rows["unknown_over"], [("game_insert", 0, 1)])
+        self.assertEqual(rows["paired"], 1)
+
+    def test_reordered_calls_do_not_invent_an_inline_change(self):
+        rows = self.compare(["?a@@Z", "?b@@Z"], ["?b@@Z", "?a@@Z"])
+        self.assertEqual(rows["under"], [])
+        self.assertEqual(rows["over"], [])
+
+    def test_erase_alias_does_not_consume_a_missing_destroy(self):
+        base = ["?erase@PositionVector@@Z", "??3@YAXPAX@Z", "??3@YAXPAX@Z"]
+        retail = ["?erase@CreatureVector@@Z", "?_Destroy@ArtifactVector@@Z",
+                  "??3@YAXPAX@Z", "?_Destroy@ArtifactVector@@Z", "??3@YAXPAX@Z"]
+        rows = self.compare(base, retail)
+        self.assertEqual(rows["over"], [("?_Destroy@ArtifactVector@@Z", 0, 2)])
+        self.assertEqual(rows["under"], [])
+        self.assertEqual(rows["target_changes"][0]["retail_callee"], retail[0])
+
+    def test_external_count_partition_uses_actual_shared_names(self):
+        rows = [("_sprintf", 0, 1)]
+        inline, counts = im.partition_external_count_rows(
+            rows, set(), shared_symbols={"_sprintf"})
+        self.assertEqual((inline, counts), ([], rows))
+        # A paired target replacement cannot invent a candidate _Destroy call.
+        inline, counts = im.partition_external_count_rows(
+            [("?_Destroy@@Z", 0, 1)], set(), shared_symbols={"_sprintf"})
+        self.assertEqual(counts, [])
+        self.assertEqual(inline, [("?_Destroy@@Z", 0, 1)])
+
 
 if __name__ == "__main__":
     unittest.main()

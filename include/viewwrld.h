@@ -45,17 +45,25 @@ private:
     // CodeView type 0x1A89 is pointer-to-const-widget, not a button pointer.
     // Like the dimension-door twin, this inherited source member is not
     // initialized by the constructor.
-    const widget* RolloverWidget;
-    type_func_button* SurfaceButton;
-    type_func_button* UndergroundButton;
-    type_point origin;
-    int viewable_width;
-    int viewable_height;
+    // Before normalization: RolloverWidget.
+    const widget* m_rolloverWidget;
+    // Before normalization: SurfaceButton.
+    type_func_button* m_surfaceButton;
+    // Before normalization: UndergroundButton.
+    type_func_button* m_undergroundButton;
+    // Before normalization: origin.
+    type_point m_origin;
+    // Before normalization: viewable_width.
+    int m_viewableWidth;
+    // Before normalization: viewable_height.
+    int m_viewableHeight;
     // Complete's two level callbacks (0x5fbdf0 / 0x5fbec0) are free
     // functions the constructor hands to the level buttons; they read
     // and write origin and the extents directly.
-    friend int ViewWorldSurfaceHandler(message& msg);
-    friend int ViewWorldUndergroundHandler(message& msg);
+    // Before normalization (function): ViewWorldSurfaceHandler.
+    friend int viewWorldSurfaceHandler(message& msg);
+    // Before normalization (function): ViewWorldUndergroundHandler.
+    friend int viewWorldUndergroundHandler(message& msg);
     // advManager::ViewWorld reads origin and both extents straight out of
     // its stack-constructed window to feed VWCompleteDraw's five
     // arguments, so the owner of that entry sees the same private tail the
@@ -65,22 +73,29 @@ private:
 public:
     TViewWorldWindow();
     virtual ~TViewWorldWindow();
-    void init(type_point new_center, unsigned char updateFlag);
-    void draw_window();
-    virtual int WindowHandler(message* msg);
+    // Before normalization (locals): new_center.
+    void init(type_point newCenter, unsigned char updateFlag);
+    // Before normalization (function): TViewWorldWindow::draw_window.
+    using CAdvPopup::drawWindow;
+    void drawWindow();
+    // Before normalization (function): TViewWorldWindow::WindowHandler.
+    virtual int windowHandler(message* msg);
 
 private:
     int convertID2HelpID(int id) const;
-    void update_radar(int mrx, int mry, float fRadarDivisor);
-    void update_view_world(message* msg);
+    // Before normalization (function): TViewWorldWindow::update_radar.
+    // Before normalization (locals): fRadarDivisor.
+    void updateRadar(int mrx, int mry, float radarDivisor);
+    // Before normalization (function): TViewWorldWindow::update_view_world.
+    void updateViewWorld(message* msg);
 };
 SIZE(TViewWorldWindow, 0x78);
 
 // Complete-only, address-taken handlers passed to the two level buttons.
 // Their names are role-based because the older Dreamcast source has neither
 // button; their exact retail entries are claimed in viewwrld.cpp.
-int ViewWorldSurfaceHandler(message& msg);
-int ViewWorldUndergroundHandler(message& msg);
+int viewWorldSurfaceHandler(message& msg);
+int viewWorldUndergroundHandler(message& msg);
 
 // The "adventure repaint suppressed" latch whose DATA claim advmgr.cpp
 // holds (src/advmgr.cpp:6277), recorded there as having no located writer.
@@ -89,12 +104,13 @@ int ViewWorldUndergroundHandler(message& msg);
 // viewwrld.obj's own .bss run (0x6aab68 .. 0x6aac3c), so this compiland
 // owns the definition. The claim is left where it stands rather than moved
 // across lanes; this is the declaration its writer compiles against.
-extern int gUnnamed6aac3c;
+// Before normalization: gUnnamed6aac3c.
+extern int g_unnamed6aac3c;
 // cmbtmgr.h's modal-screen latch (retail .bss 0x698a18). ViewWorld parks
 // it at 2 for the life of the view-world dialog, which is what kb.cpp's
 // fast-cycle guard tests. Declared here rather than by pulling cmbtmgr.h
 // into a TU that has no other use for it.
-extern int gCombatActive698a18;
+extern int g_combatActive698a18;
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\viewwrld.cpp:100, dc 0x192ee8) long ftol(double d);

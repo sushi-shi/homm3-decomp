@@ -13,7 +13,8 @@
 // base alone - which is the shape a nothrow-visible operator delete gives,
 // since the first throwing point then IS the palette destructor, by which
 // time the palette is already being destroyed.
-__declspec(nothrow) void __cdecl operator delete(void* _P);
+// Before normalization (locals): _P.
+__declspec(nothrow) void __cdecl operator delete(void* p);
 
 #if 0  // @carcass
 
@@ -65,12 +66,12 @@ VA_COMPGEN(0x004b5040, 0x21, SCALAR_DELETING_DTOR, font)
 VA(0x004b5070, 0x9B)  // anchor-global, dc 0xa1c04
 font::font(const char* name, const TFontSpec& fontspec, int dsize,
            unsigned char* d)
-    : resource(name, RESOURCE_TYPE_FONT), fs(fontspec)
+    : resource(name, RESOURCE_TYPE_FONT), m_fs(fontspec)
 {
-    data = new unsigned char[dsize];
-    DataSize = dsize;
-    if (data)
-        memcpy(data, d, dsize);
+    m_data = new unsigned char[dsize];
+    m_dataSize = dsize;
+    if (m_data)
+        memcpy(m_data, d, dsize);
 }
 
 // EXACT 2026-08-11, re-derived 2026-08-14 when the palette became a real
@@ -85,8 +86,8 @@ font::font(const char* name, const TFontSpec& fontspec, int dsize,
 VA(0x004b5110, 0x67)  // anchor-global, dc 0xa1c94
 font::~font()
 {
-    if (data)
-        delete data;
+    if (m_data)
+        delete m_data;
 }
 
 #if 0  // @carcass
@@ -101,10 +102,11 @@ int font::GetColor(font::TColor color_scheme, unsigned char highlighted)
 #endif  // @carcass
 
 // E:\gamedcs\font.cpp:81
+// Before normalization (locals): new_palette.
 VA(0x004b5180, 0x16)  // anchor-global, dc 0xa1d14
-void font::SetPalette(const TPalette16* new_palette)
+void font::setPalette(const TPalette16* newPalette)
 {
-    palette = new_palette;
+    m_palette = newPalette;
 }
 
 // E:\gamedcs\font.cpp:86
@@ -115,31 +117,31 @@ void font::SetPalette(const TPalette16* new_palette)
 // homes width/height in the dead c/x parameter slots, eliminating the
 // former extra frame slot and the ESI/EDI mirror cascade (78.2623 -> 100).
 VA(0x004b51a0, 0xA9)  // anchor-global, dc 0xa1d58
-void font::DrawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color)
+void font::drawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color)
 {
     if (c < 0)
         return;
     if (c >= 256)
         return;
-    int width = fs.abc[c].field_4;
-    int height = fs.height;
-    unsigned char* src = static_cast<unsigned char*>(data) + fs.Offset[c];
+    int width = m_fs.m_abc[c].m_abcB;
+    int height = m_fs.m_height;
+    unsigned char* src = static_cast<unsigned char*>(m_data) + m_fs.m_offset[c];
     unsigned char* dst = static_cast<unsigned char*>(
-                             static_cast<void*>(bmp->GetMap(0, 0)))
-                         + y * bmp->GetPitch() + 2 * (x + fs.abc[c].field_0);
+                             static_cast<void*>(bmp->getMap(0, 0)))
+                         + y * bmp->getPitch() + 2 * (x + m_fs.m_abc[c].m_abcA);
     for (int row = 0; row < height; row++) {
         unsigned short* out = static_cast<unsigned short*>(static_cast<void*>(dst));
         for (int col = 0; col < width; col++) {
             unsigned char pix = *src++;
             if (pix != 0) {
                 if (pix == GLYPH_PIXEL_SOLID)
-                    *out = palette.data[color];
+                    *out = m_palette.m_data[color];
                 else
-                    *out = palette.data[32];
+                    *out = m_palette.m_data[32];
             }
             out++;
         }
-        dst += bmp->GetPitch();
+        dst += bmp->getPitch();
     }
 }
 
@@ -151,9 +153,9 @@ void font::DrawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color)
 // glyph payload's own byte count. DC files no such row for font because
 // its port left the query on a different slot shape.
 VA(0x004b5250, 0xC)  // anchor-vtable (slot 2 of 0x63e5f4), retail-only
-unsigned int font::GetSize() const
+unsigned int font::getSize() const
 {
-    return DataSize + sizeof(font);
+    return m_dataSize + sizeof(font);
 }
 
 #if 0  // @carcass
@@ -167,7 +169,7 @@ unsigned int font::GetSize() const
 // underscore draw directly, exactly as the already-exact
 // DrawBoundedString does. Kept as a carcass note, not reconstructed.
 DC_ONLY(0xa1e30, 0x2C)
-void font::DrawCursor(Bitmap16Bit* bitmap, int x, int y, int color, int clipX, int clipY, int clipWidth, int clipHeight, unsigned char highlighted)
+void font::drawCursor(Bitmap16Bit* bitmap, int x, int y, int color, int clipX, int clipY, int clipWidth, int clipHeight, unsigned char highlighted)
 {
     // @stub
 }
@@ -299,8 +301,9 @@ void font::DrawCursor(Bitmap16Bit* bitmap, int x, int y, int color, int clipX, i
 // `xx_nop()` candidate sites, 16 cells) is likewise flat here and on
 // DrawCharacter.
 VA(0x004b5260, 0x22E)  // anchor-global, dc 0xa1e5c
-void font::DrawStringExecute(const char* text, int count, Bitmap16Bit* bitmap,
-                             int x, int y, int color_scheme, int clipX,
+void font::drawStringExecute(const char* text, int count, Bitmap16Bit* bitmap,
+                             // Before normalization (locals): color_scheme.
+                             int x, int y, int colorScheme, int clipX,
                              int clipY, int clipWidth, int clipHeight,
                              int cursorPos)
 {
@@ -309,30 +312,30 @@ void font::DrawStringExecute(const char* text, int count, Bitmap16Bit* bitmap,
     unsigned char highlighted;
     unsigned char c;
 
-    y += fs.baseyoffset;
-    if (*text && fs.abc[static_cast<unsigned char>(*text)].field_0 < 0)
-        x -= fs.abc[static_cast<unsigned char>(*text)].field_0;
+    y += m_fs.m_baseyoffset;
+    if (*text && m_fs.m_abc[static_cast<unsigned char>(*text)].m_abcA < 0)
+        x -= m_fs.m_abc[static_cast<unsigned char>(*text)].m_abcA;
 
     if (y < clipY)
         return;
-    if (y + fs.height > clipY + clipHeight)
+    if (y + m_fs.m_height > clipY + clipHeight)
         return;
 
     while (count > 0) {
-        if (x + fs.abc[static_cast<unsigned char>(*text)].field_0 >= clipX)
+        if (x + m_fs.m_abc[static_cast<unsigned char>(*text)].m_abcA >= clipX)
             break;
-        x += GetCharacterWidth(*text);
+        x += getCharacterWidth(*text);
         text++;
         count--;
     }
 
-    if (!(color_scheme & CUSTOM_COLOR))
-        drawColor = color_scheme + 9;
+    if (!(colorScheme & CUSTOM_COLOR))
+        drawColor = colorScheme + 9;
     else
-        drawColor = color_scheme & ~CUSTOM_COLOR;
+        drawColor = colorScheme & ~CUSTOM_COLOR;
 
     if (count == 0 && cursorPos != -1) {
-        DrawCharacter('_', bitmap, x, y, drawColor);
+        drawCharacter('_', bitmap, x, y, drawColor);
         return;
     }
 
@@ -345,24 +348,24 @@ void font::DrawStringExecute(const char* text, int count, Bitmap16Bit* bitmap,
         } else if (c == '}') {
             highlighted = 0;
         } else {
-            if (x + GetCharacterWidth(c) > clipX + clipWidth)
+            if (x + getCharacterWidth(c) > clipX + clipWidth)
                 break;
-            switch (color_scheme) {
+            switch (colorScheme) {
             case PRIMARY:
             case WHITE:
             case HEADING:
             case WHITE_PLAYER:
-                DrawCharacter(c, bitmap, x, y, drawColor + highlighted);
+                drawCharacter(c, bitmap, x, y, drawColor + highlighted);
                 if (cursorPos == index)
-                    DrawCharacter('_', bitmap, x, y, drawColor);
+                    drawCharacter('_', bitmap, x, y, drawColor);
                 break;
             default:
-                DrawCharacter(c, bitmap, x, y, drawColor + highlighted);
+                drawCharacter(c, bitmap, x, y, drawColor + highlighted);
                 if (cursorPos == index)
-                    DrawCharacter('_', bitmap, x, y, drawColor);
+                    drawCharacter('_', bitmap, x, y, drawColor);
                 break;
             }
-            x += GetCharacterWidth(c);
+            x += getCharacterWidth(c);
         }
         text++;
         count--;
@@ -370,7 +373,7 @@ void font::DrawStringExecute(const char* text, int count, Bitmap16Bit* bitmap,
     }
 
     if (cursorPos == index)
-        DrawCharacter('_', bitmap, x, y, drawColor + highlighted);
+        drawCharacter('_', bitmap, x, y, drawColor + highlighted);
 }
 
 #if 0  // @carcass
@@ -444,9 +447,11 @@ void font::DrawString(const char* text, Bitmap16Bit* bitmap, int x, int y, font:
 // every first definition). The /Ob2 two-axis probe (mass 0..32 x 0..8
 // tail candidate sites) is flat in all sixteen cells.
 VA(0x004b5490, 0x308)  // anchor-global, dc 0xa2108
-void font::DrawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
+void font::drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
                              int y, int boxWidth, int boxHeight,
-                             int color_scheme, unsigned justification,
+                             // Before normalization (locals): color_scheme, iOrigPixelWidth,
+                             // iHeight.
+                             int colorScheme, unsigned justification,
                              int cursorPos)
 {
     int pos = 0;
@@ -454,8 +459,8 @@ void font::DrawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
     int currY;
     int lineStart;
     int okWidthIndex;
-    int iOrigPixelWidth;
-    int iHeight;
+    int origPixelWidth;
+    int height;
     int width;
 
     if (!str)
@@ -464,11 +469,11 @@ void font::DrawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
     limit = strlen(str);
     if (limit == 0) {
         if (cursorPos != -1) {
-            if (!(color_scheme & CUSTOM_COLOR))
-                color_scheme += 9;
+            if (!(colorScheme & CUSTOM_COLOR))
+                colorScheme += 9;
             else
-                color_scheme &= ~CUSTOM_COLOR;
-            DrawCharacter('_', bitmap, x, y, color_scheme);
+                colorScheme &= ~CUSTOM_COLOR;
+            drawCharacter('_', bitmap, x, y, colorScheme);
         }
         return;
     }
@@ -477,18 +482,18 @@ void font::DrawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
         int total;
 
         justification &= ~VERT_CENTER_JUSTIFIED;
-        iHeight = fs.height;
-        total = LineLength(str, boxWidth) * iHeight;
+        height = m_fs.m_height;
+        total = lineLength(str, boxWidth) * height;
         if (total < boxHeight)
             currY = (boxHeight - total) / 2;
-        else if (boxHeight < iHeight * 2)
-            currY = (boxHeight - iHeight) / 2;
+        else if (boxHeight < height * 2)
+            currY = (boxHeight - height) / 2;
     }
     if (justification & BOTTOM_JUSTIFIED) {
         int total;
 
         justification &= ~BOTTOM_JUSTIFIED;
-        total = LineLength(str, boxWidth) * fs.height;
+        total = lineLength(str, boxWidth) * m_fs.m_height;
         if (total < boxHeight)
             currY = boxHeight - total;
     }
@@ -501,31 +506,31 @@ void font::DrawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
 
         if (str[pos] == 0)
             return;
-        iHeight = fs.height;
-        if (currY + iHeight > boxHeight && currY != 0)
+        height = m_fs.m_height;
+        if (currY + height > boxHeight && currY != 0)
             return;
         width = 0;
         lineStart = pos;
         while (str[pos] == '{' || str[pos] == '}')
             ++pos;
         if (str[pos] != 0
-            && fs.abc[static_cast<unsigned char>(str[pos])].field_0 < 0)
-            width = -fs.abc[str[pos]].field_0;
+            && m_fs.m_abc[static_cast<unsigned char>(str[pos])].m_abcA < 0)
+            width = -m_fs.m_abc[str[pos]].m_abcA;
         while (str[pos] != 0 && str[pos] != '\n' && width <= boxWidth) {
             if (str[pos] != '{' && str[pos] != '}')
-                width += GetCharacterWidth(str[pos]);
+                width += getCharacterWidth(str[pos]);
             ++pos;
         }
         k = pos - 1;
         while ((str[k] == '{' || str[k] == '}') && k > lineStart)
             --k;
-        if (pos > 0 && fs.abc[static_cast<unsigned char>(str[k])].field_8 < 0)
-            width -= fs.abc[static_cast<unsigned char>(str[k])].field_8;
+        if (pos > 0 && m_fs.m_abc[static_cast<unsigned char>(str[k])].m_abcC < 0)
+            width -= m_fs.m_abc[static_cast<unsigned char>(str[k])].m_abcC;
         if (width > boxWidth) {
-            iOrigPixelWidth = width;
+            origPixelWidth = width;
             okWidthIndex = 0;
-            if (fs.abc[static_cast<unsigned char>(str[k])].field_8 < 0)
-                width += fs.abc[str[k]].field_8;
+            if (m_fs.m_abc[static_cast<unsigned char>(str[k])].m_abcC < 0)
+                width += m_fs.m_abc[str[k]].m_abcC;
             pos = k;
             for (;;) {
                 if (str[pos] == ' ')
@@ -533,8 +538,8 @@ void font::DrawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
                 if (pos < lineStart)
                     break;
                 if (str[pos] != '{' && str[pos] != '}') {
-                    width -= GetCharacterWidth(str[pos]);
-                    if (iHeight * 2 + currY > boxHeight && width < boxWidth)
+                    width -= getCharacterWidth(str[pos]);
+                    if (height * 2 + currY > boxHeight && width < boxWidth)
                         break;
                     if (okWidthIndex == 0 && width < boxWidth)
                         okWidthIndex = pos;
@@ -543,10 +548,10 @@ void font::DrawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
             }
             if (pos <= lineStart) {
                 pos = okWidthIndex;
-                width = iOrigPixelWidth;
+                width = origPixelWidth;
             }
             if (str[pos] == ' ')
-                width -= GetCharacterWidth(' ');
+                width -= getCharacterWidth(' ');
         }
         xOff = 0;
         switch (justification) {
@@ -560,10 +565,10 @@ void font::DrawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
             xOff = boxWidth - width;
             break;
         }
-        DrawStringExecute(str + lineStart, pos - lineStart, bitmap, x + xOff,
-                          y + currY, color_scheme, x, y, boxWidth, boxHeight,
+        drawStringExecute(str + lineStart, pos - lineStart, bitmap, x + xOff,
+                          y + currY, colorScheme, x, y, boxWidth, boxHeight,
                           cursorPos);
-        currY += fs.height;
+        currY += m_fs.m_height;
         ++pos;
     }
 }
@@ -575,21 +580,21 @@ void font::DrawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
 #endif  // @carcass
 
 VA(0x004b57a0, 0x25)  // linkorder, dc 0xa2420
-int font::GetCharacterWidth(unsigned char currChar)
+int font::getCharacterWidth(unsigned char currChar)
 {
-    const TFontSpec::myABC* record = &fs.abc[currChar];
-    return record->field_4 + record->field_8 + record->field_0;
+    const TFontSpec::myABC* record = &m_fs.m_abc[currChar];
+    return record->m_abcB + record->m_abcC + record->m_abcA;
 }
 
 // E:\gamedcs\font.cpp:420
 // GetCharacterWidth inlines here (defined just above, all three
 // glyph fields summed); no newline or color-marker handling.
 VA(0x004b57d0, 0x44)  // linkorder, dc 0xa2438
-long font::get_string_width(const char* arg)
+long font::getStringWidth(const char* arg)
 {
     long width = 0;
     for (const char* p = arg; *p;)
-        width += GetCharacterWidth(*p++);
+        width += getCharacterWidth(*p++);
     return width;
 }
 
@@ -676,7 +681,7 @@ long font::get_string_width(const char* arg)
 // Next lever would be a loop-optimizer solver that can express "split
 // this pseudo's live range across the inner region", not a spelling.
 VA(0x004b5820, 0xF2)  // anchor-global, dc 0xa246c
-int font::LineLength(const char* str, int boxWidth)
+int font::lineLength(const char* str, int boxWidth)
 {
     int limit = strlen(str);
     int count = 0;
@@ -690,7 +695,7 @@ int font::LineLength(const char* str, int boxWidth)
             if (width > boxWidth)
                 break;
             if (str[pos] != '{' && str[pos] != '}')
-                width += GetCharacterWidth(str[pos]);
+                width += getCharacterWidth(str[pos]);
             pos++;
         }
         if (width > boxWidth) {
@@ -707,7 +712,7 @@ int font::LineLength(const char* str, int boxWidth)
                     break;
                 }
                 if (str[pos] != '{' && str[pos] != '}') {
-                    width -= GetCharacterWidth(str[pos]);
+                    width -= getCharacterWidth(str[pos]);
                     if (candidate == 0 && width < boxWidth)
                         candidate = pos;
                 }
@@ -724,7 +729,7 @@ int font::LineLength(const char* str, int boxWidth)
 // The homm2 nested-loop shape survives verbatim; retail adds the
 // {}-color-marker skip and inlines GetCharacterWidth.
 VA(0x004b5920, 0x64)  // anchor-global, dc 0xa2554
-int font::LineWidth(const char* text)
+int font::lineWidth(const char* text)
 {
     int len = strlen(text);
     int idx = 0;
@@ -732,7 +737,7 @@ int font::LineWidth(const char* text)
     while (idx < len && text[idx] != 0) {
         while (text[idx] != 0 && text[idx] != '\n') {
             if (text[idx] != '{' && text[idx] != '}')
-                width += GetCharacterWidth(text[idx]);
+                width += getCharacterWidth(text[idx]);
             idx++;
         }
     }
@@ -741,7 +746,7 @@ int font::LineWidth(const char* text)
 
 // E:\gamedcs\font.cpp:535
 VA(0x004b5990, 0x76)  // anchor-global, dc 0xa25c8
-int font::LongestLineWidth(const char* str)
+int font::longestLineWidth(const char* str)
 {
     int len = strlen(str);
     int best = 0;
@@ -750,7 +755,7 @@ int font::LongestLineWidth(const char* str)
         int lineWidth = 0;
         while (str[pos] != 0 && str[pos] != '\n') {
             if (str[pos] != '{' && str[pos] != '}')
-                lineWidth += GetCharacterWidth(str[pos]);
+                lineWidth += getCharacterWidth(str[pos]);
             pos++;
         }
         if (lineWidth > best)
@@ -762,7 +767,7 @@ int font::LongestLineWidth(const char* str)
 
 // E:\gamedcs\font.cpp:572
 VA(0x004b5a10, 0x6F)  // anchor-global, dc 0xa2650
-int font::longest_word_length(const char* str)
+int font::longestWordLength(const char* str)
 {
     int best = 0;
     const char* p = str;
@@ -773,7 +778,7 @@ int font::longest_word_length(const char* str)
                 p++;
             while (*p != 0 && *p != ' ' && *p != '\n') {
                 if (*p != '{' && *p != '}')
-                    wordWidth += GetCharacterWidth(*p);
+                    wordWidth += getCharacterWidth(*p);
                 p++;
             }
             if (wordWidth > best)
@@ -793,7 +798,7 @@ int font::longest_word_length(const char* str)
 // placed after the loop, where spelling a `pos = candidate` inside
 // each exit duplicates the block (94.6%).
 VA(0x004b5a80, 0x110)  // anchor-global, dc 0xa26d4
-int font::LongestWrappedLineWidth(const char* str, int boxWidth)
+int font::longestWrappedLineWidth(const char* str, int boxWidth)
 {
     int len = strlen(str);
     int maxWidth = 0;
@@ -807,7 +812,7 @@ int font::LongestWrappedLineWidth(const char* str, int boxWidth)
             if (width > boxWidth)
                 break;
             if (str[pos] != '{' && str[pos] != '}')
-                width += GetCharacterWidth(str[pos]);
+                width += getCharacterWidth(str[pos]);
             pos++;
         }
         if (width > boxWidth) {
@@ -819,7 +824,7 @@ int font::LongestWrappedLineWidth(const char* str, int boxWidth)
                 if (pos < lineStart)
                     break;
                 if (str[pos] != '{' && str[pos] != '}') {
-                    width -= GetCharacterWidth(str[pos]);
+                    width -= getCharacterWidth(str[pos]);
                     if (candidate == 0 && width < boxWidth)
                         candidate = pos;
                 }
@@ -828,7 +833,7 @@ int font::LongestWrappedLineWidth(const char* str, int boxWidth)
             if (pos <= lineStart)
                 pos = candidate;
             if (str[pos] == ' ')
-                width -= GetCharacterWidth(' ');
+                width -= getCharacterWidth(' ');
         }
         if (width > maxWidth)
             maxWidth = width;
@@ -866,7 +871,7 @@ int font::LongestWrappedLineWidth(const char* str, int boxWidth)
 // scope (byte-flat), `iSpace < spaceCount` for the append loop (87.81), and
 // declaring blankWidth ahead of the two counters (86.72).
 VA(0x004b5b90, 0x3A5)  // anchor-member (fs.abc[' '] at this+0x1bc), retail-only
-void font::FillLinesVector(const char* str, int boxWidth,
+void font::fillLinesVector(const char* str, int boxWidth,
                            std::vector<std::string>& result)
 {
     int lineWidth = 0;
@@ -876,7 +881,7 @@ void font::FillLinesVector(const char* str, int boxWidth,
     while (*p != 0) {
         int spaceWidth = 0;
         int spaceCount = 0;
-        int blankWidth = GetCharacterWidth(' ');
+        int blankWidth = getCharacterWidth(' ');
         while (*p == ' ' || *p == '\n') {
             if (*p == '\n') {
                 result.push_back(line);
@@ -893,7 +898,7 @@ void font::FillLinesVector(const char* str, int boxWidth,
         int wordWidth = 0;
         const char* wordEnd = p;
         while (*wordEnd != 0 && *wordEnd != ' ' && *wordEnd != '\n') {
-            wordWidth += GetCharacterWidth(*wordEnd);
+            wordWidth += getCharacterWidth(*wordEnd);
             wordEnd++;
         }
         if (spaceWidth + wordWidth + lineWidth > boxWidth) {
@@ -906,7 +911,7 @@ void font::FillLinesVector(const char* str, int boxWidth,
             spaceWidth = 0;
             while (wordWidth > boxWidth) {
                 while (*p != 0 && *p != ' ' && *p != '\n') {
-                    int charWidth = GetCharacterWidth(*p);
+                    int charWidth = getCharacterWidth(*p);
                     if (lineWidth + charWidth > boxWidth)
                         break;
                     line += *p;
@@ -919,7 +924,8 @@ void font::FillLinesVector(const char* str, int boxWidth,
                 lineWidth = 0;
             }
         }
-        for (int iSpace = 0; iSpace != spaceCount; iSpace++)
+        // Before normalization (locals): iSpace.
+        for (int space = 0; space != spaceCount; space++)
             line += ' ';
         lineWidth += spaceWidth;
         while (p != wordEnd) {

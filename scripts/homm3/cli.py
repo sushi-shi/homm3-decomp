@@ -50,7 +50,8 @@ Subcommands
   status [functions [FILTER...]|update|check]
         Scoreboard (homm3.match.status): per-unit table; `functions` shows
         cur/max/hist; `update` regenerates config/match_baseline.tsv; `check`
-        reports functions below their high-water checkpoint without gating.
+        reports source edits whose new MAX falls below the prior MAX without
+        gating. Unrelated CUR dips are silent; HIST preserves older peaks.
 
   sema <xref|diff|disasm|rva|strings|data|candidates|compare> ...
         Read-only navigation over the retail image (homm3.sema): caller
@@ -100,7 +101,8 @@ def log(msg: str) -> None:
 
 
 def run(*command: str) -> int:
-    return subprocess.run(list(command), cwd=ROOT).returncode
+    from homm3.core.usage import run_process
+    return run_process(list(command), cwd=ROOT)
 
 
 def run_module(module: str, *args: str) -> int:
@@ -216,8 +218,7 @@ def cmd_clean(args) -> int:
     return 0
 
 
-def main(argv: list[str] | None = None) -> int:
-    argv = list(sys.argv[1:] if argv is None else argv)
+def _dispatch(argv: list[str]) -> int:
     # argparse does not reliably pass option-looking tokens through a
     # REMAINDER positional (notably ``homm3 dreamcast --help``).  Dreamcast is
     # a complete nested CLI, so hand it its argv before the umbrella parser
@@ -308,6 +309,20 @@ def main(argv: list[str] | None = None) -> int:
         ap.print_help()
         return 0
     return args.fn(args)
+
+
+def main(argv: list[str] | None = None) -> int:
+    from homm3.core import usage
+    import shlex
+    argv = list(sys.argv[1:] if argv is None else argv)
+    # Analysis rc=1 means an answered difference. Build/init and the other
+    # pipeline commands use rc=1 for failure.
+    failure_rc = 2 if argv and argv[0] in {"sema", "vc6", "dreamcast"} else 1
+    return usage.run_logged(
+        _dispatch, argv,
+        lambda rc, **meta: usage.append(ROOT / "build/homm3_usage.log",
+                                       shlex.join(["homm3", *argv]), rc, **meta),
+        failure_rc=failure_rc, scope="cli")
 
 
 if __name__ == "__main__":

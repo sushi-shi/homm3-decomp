@@ -107,47 +107,65 @@ class inputBufferMessage : public message {
 public:
     inputBufferMessage()
     {
-        id = 0;
-        codeX = 0;
-        codeY = 0;
-        qualifier = 0;
-        mouseX = 0;
-        mouseY = 0;
-        extra = 0;
-        window = 0;
+        m_id = 0;
+        m_codeX = 0;
+        m_codeY = 0;
+        m_qualifier = 0;
+        m_mouseX = 0;
+        m_mouseY = 0;
+        m_extra = 0;
+        m_window = 0;
     }
 };
 SIZE(inputBufferMessage, 32);
 
 class inputManager : public baseManager {
 public:
-    inputBufferMessage iBuffer[64];
-    int iHead;
-    int iTail;
-    int bufferBusy;
-    int mouseInstalled;
+    // Before normalization: iBuffer.
+    inputBufferMessage m_buffer[64];
+    // Before normalization: iHead.
+    int m_head;
+    // Before normalization: iTail.
+    int m_tail;
+    // Before normalization: bufferBusy.
+    int m_bufferBusy;
+    // Before normalization: mouseInstalled.
+    int m_mouseInstalled;
     // 128 SHORTS, not 256 bytes: AsciiConvert indexes it
     // `[ecx + 2*codeX + 0x848]` and reads the function-key band with
     // `movsx ...word ptr`, everything else with the low byte only.
     // The 0x848..0x947 span is unchanged.
-    short scanCodeTable[128];
-    int keyboardInstalled;
-    int keyboardFilter;
-    int keyCodeType;
-    int extendFlag;
-    int currWidgetID;
-    int prevDialog;
+    // Before normalization: scanCodeTable.
+    short m_scanCodeTable[128];
+    // Before normalization: keyboardInstalled.
+    int m_keyboardInstalled;
+    // Before normalization: keyboardFilter.
+    int m_keyboardFilter;
+    // Before normalization: keyCodeType.
+    int m_keyCodeType;
+    // Before normalization: extendFlag.
+    int m_extendFlag;
+    // Before normalization: currWidgetID.
+    int m_currWidgetId;
+    // Before normalization: prevDialog.
+    int m_prevDialog;
 
     inputManager();
-    message GetEvent();
+    // Before normalization (function): inputManager::GetEvent.
+    message getEvent();
     // Retail 0x4ec640, GetEvent's twin one row over: same queue head,
     // same AsciiConvert hook, but it normalises iHead instead of
     // advancing it (`and eax,0x8000003f` on the UN-incremented index).
-    message PeekEvent();
-    void Flush();
-    void ForceMouseMove();
-    void AsciiConvert(message* msg);
-    void MakeScanCodeTable();
+    // Before normalization (function): inputManager::PeekEvent.
+    message peekEvent();
+    // Before normalization (function): inputManager::Flush.
+    void flush();
+    // Before normalization (function): inputManager::ForceMouseMove.
+    void forceMouseMove();
+    // Before normalization (function): inputManager::AsciiConvert.
+    void asciiConvert(message* msg);
+    // Before normalization (function): inputManager::MakeScanCodeTable.
+    void makeScanCodeTable();
 
     // Located 2026-08-06 by homm3.analysis.dc_bracket (link-order
     // bracket, gap of 3 between the ctor and Flush) and verified by
@@ -161,18 +179,27 @@ public:
     // `message&` slot and so appended a seventh entry. DC spells it
     // ?Main@inputManager@@UAAHAAUmessage@@@Z - a reference - and
     // inputManager's retail table is three slots, exactly these.
-    virtual int Open(int kFilter);        // slot 0, 0x4ec4d0
-    virtual void Close();                 // slot 1, 0x4ec540
-    virtual int Main(message& msg);       // slot 2, 0x4ec560
+    // Before normalization (function): inputManager::Open.
+    // Before normalization (locals): kFilter.
+    virtual int open(int keyboardFilter);        // slot 0, 0x4ec4d0
+    // Before normalization (function): inputManager::Close.
+    virtual void close();                 // slot 1, 0x4ec540
+    // Before normalization (function): inputManager::Main.
+    virtual int main(message& msg);       // slot 2, 0x4ec560
 };
 
 // Retail .bss 0x6994e0 (DC ?gpInputManager@@3PAVinputManager@@A).
-extern inputManager* gpInputManager;
+// Before normalization: gpInputManager.
+extern inputManager* g_inputManager;
 
 // The Windows-message bridges (inputmgr.cpp bodies; kbwin's
 // AppWndProc forwards the keyboard/mouse arms through them).
-int KeyboardMessageHandler(void* hwnd, unsigned winMsg, unsigned wParam, long lParam);  // 0x4ec0e0
-int MouseMessageHandler(void* hwnd, unsigned winMsg, unsigned wParam, long lParam);     // 0x4ec290
+// Before normalization (function): KeyboardMessageHandler.
+// Before normalization (locals): wParam, lParam.
+int keyboardMessageHandler(void* hwnd, unsigned winMsg, unsigned wordParam, long longParam);  // 0x4ec0e0
+// Before normalization (function): MouseMessageHandler.
+// Before normalization (locals): wParam, lParam.
+int mouseMessageHandler(void* hwnd, unsigned winMsg, unsigned wordParam, long longParam);     // 0x4ec290
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\inputmgr.cpp:48, dc 0xdc894) int KeyboardMessageHandler(void* hwnd, unsigned winMsg, unsigned wParam, long lParam);

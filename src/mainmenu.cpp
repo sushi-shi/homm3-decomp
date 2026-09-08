@@ -25,26 +25,33 @@
 #include "widget.h"
 #include "winmgr.h"
 
-DATA(0x00699660) static TMainMenu* gpMainMenu;
+// Before normalization: gpMainMenu.
 // Set after the one-time missing-CD notice has been shown. The constructor
 // uses it only as the persistent suppression latch; the disk-space check has
 // its own DC-named static below.
-DATA(0x00699674) static unsigned char cdMessageShown;
-DATA(0x00699678) static unsigned long last_disk_space_check;
+// Before normalization: cdMessageShown.
+DATA(0x00699660) static TMainMenu* g_mainMenu;
+// Before normalization: last_disk_space_check.
+DATA(0x00699674) static unsigned char g_cdMessageShown;
+DATA(0x00699678) static unsigned long g_lastDiskSpaceCheck;
 
-DATA(0x0067fa60) static int lastIMHoverID = -1;
-DATA(0x0067fa64) static unsigned char check_disk_space = 1;
+// Before normalization: lastIMHoverID.
+// Before normalization: check_disk_space.
+DATA(0x0067fa60) static int g_lastImHoverId = -1;
+DATA(0x0067fa64) static unsigned char g_checkDiskSpace = 1;
 
 // SetupCDDrive's result is stored by kb.obj's startup path and consumed here
 // to select the localized missing-CD wording. No public DC name survives.
-DATA(0x0069957c) extern int gCDDriveNumber;
+DATA(0x0069957c) extern int g_cdDriveNumber;
 
 // DC public gMainMenuHelp; InitializeHelpText fills the same five retail
 // THelpText rows at this address.
-DATA(0x006a6c24) extern THelpText gMainMenuHelp[5];
+// Before normalization: gMainMenuHelp.
+DATA(0x006a6c24) extern THelpText g_mainMenuHelp[5];
 
+// Before normalization: mainMenuButtonRects.
 DATA(0x0063ff28)
-static const TMainMenuButtonRect mainMenuButtonRects[5] = {
+static const TMainMenuButtonRect g_mainMenuButtonRects[5] = {
     {540,  10, 207, 121},
     {532, 132, 226, 120},
     {524, 251, 239, 106},
@@ -510,47 +517,47 @@ VA(0x004fb2a0, 0x385)  // order-map: heroWindow(0,0,800,600) base + 5 button cto
 TMainMenu::TMainMenu()
     : heroWindow(0, 0, 800, 600, 0)
 {
-    gpMainMenu = this;
-    bShowCDMessage = gbNoCDRom && !cdMessageShown;
+    g_mainMenu = this;
+    m_showCdMessage = g_noCdRom && !g_cdMessageShown;
 
-    std::vector<widget*>* widgets = &Widgets;
+    std::vector<widget*>* widgets = &m_widgets;
     widgets->reserve(NWIDGETS);
     widgets->insert(widgets->end(), new button(
-        mainMenuButtonRects[0].x, mainMenuButtonRects[0].y,
-        mainMenuButtonRects[0].width, mainMenuButtonRects[0].height,
+        g_mainMenuButtonRects[0].m_x, g_mainMenuButtonRects[0].m_y,
+        g_mainMenuButtonRects[0].m_width, g_mainMenuButtonRects[0].m_height,
         NEW_GAME_ID, "mmenung.def", 0, 1, 0, 49, 2));
     widgets->insert(widgets->end(), new button(
-        mainMenuButtonRects[1].x, mainMenuButtonRects[1].y,
-        mainMenuButtonRects[1].width, mainMenuButtonRects[1].height,
+        g_mainMenuButtonRects[1].m_x, g_mainMenuButtonRects[1].m_y,
+        g_mainMenuButtonRects[1].m_width, g_mainMenuButtonRects[1].m_height,
         LOAD_GAME_ID, "mmenulg.def", 0, 1, 0, 38, 2));
     widgets->insert(widgets->end(), new button(
-        mainMenuButtonRects[2].x, mainMenuButtonRects[2].y,
-        mainMenuButtonRects[2].width, mainMenuButtonRects[2].height,
+        g_mainMenuButtonRects[2].m_x, g_mainMenuButtonRects[2].m_y,
+        g_mainMenuButtonRects[2].m_width, g_mainMenuButtonRects[2].m_height,
         HIGH_SCORE_ID, "mmenuhs.def", 0, 1, 0, 35, 2));
     widgets->insert(widgets->end(), new button(
-        mainMenuButtonRects[3].x, mainMenuButtonRects[3].y,
-        mainMenuButtonRects[3].width, mainMenuButtonRects[3].height,
+        g_mainMenuButtonRects[3].m_x, g_mainMenuButtonRects[3].m_y,
+        g_mainMenuButtonRects[3].m_width, g_mainMenuButtonRects[3].m_height,
         CREDITS_ID, "mmenucr.def", 0, 1, 0, 46, 2));
     widgets->insert(widgets->end(), new button(
-        mainMenuButtonRects[4].x, mainMenuButtonRects[4].y,
-        mainMenuButtonRects[4].width, mainMenuButtonRects[4].height,
+        g_mainMenuButtonRects[4].m_x, g_mainMenuButtonRects[4].m_y,
+        g_mainMenuButtonRects[4].m_width, g_mainMenuButtonRects[4].m_height,
         QUIT_ID, "mmenuqt.def", 0, 1, 0, 1, 2));
 
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
-            AddWidget(*it, -1);
+            addWidget(*it, -1);
         else
-            MemError();
+            memError();
     }
 
-    if (gbDPlayReady) {
-        if (pDPlay && pDPlay->IsHost()) {
-            widget* disabledWidget = GetWidget(HIGH_SCORE_ID);
-            disabledWidget->send_message(widget::WIDGET_CLEAR_STATUS, 6);
-            disabledWidget = GetWidget(CREDITS_ID);
-            disabledWidget->send_message(widget::WIDGET_CLEAR_STATUS, 6);
+    if (g_dPlayReady) {
+        if (g_dPlay && g_dPlay->isHost()) {
+            widget* disabledWidget = getWidget(HIGH_SCORE_ID);
+            disabledWidget->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
+            disabledWidget = getWidget(CREDITS_ID);
+            disabledWidget->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
         }
-        last_disk_space_check = GameTime::Get();
+        g_lastDiskSpaceCheck = GameTime::get();
     }
 }
 
@@ -560,8 +567,8 @@ VA_COMPGEN(0x004fb630, 0x21, SCALAR_DELETING_DTOR, TMainMenu)
 VA(0x004fb660, 0x75)
 TMainMenu::~TMainMenu()
 {
-    gpMainMenu = 0;
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    g_mainMenu = 0;
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
@@ -569,10 +576,10 @@ TMainMenu::~TMainMenu()
 
 // E:\gamedcs\mainmenu.cpp:122
 VA(0x004fb6e0, 0x2C)  // order-map: StartMP3("MainMenu"), passes MainMenuHandler 0x4fb710 to the winManager modal loop; called by oldmain, dc 0xea5ec
-void TMainMenu::DoModal()
+void TMainMenu::doModal()
 {
-    gpSoundManager->StartMP3("MainMenu", 0, 1);
-    gpWindowManager->DoDialog(this, MainMenuHandler, 0);
+    g_soundManager->startMP3("MainMenu", 0, 1);
+    g_windowManager->doDialog(this, mainMenuHandler, 0);
 }
 
 // E:\gamedcs\mainmenu.cpp:135
@@ -590,57 +597,57 @@ void TMainMenu::DoModal()
 // rejected: two named string values (90.0704), two const-reference bindings
 // (90.2141), and data() in place of c_str() (byte-identical at 93.1606).
 VA(0x004fb710, 0x484)  // admitted row includes the jump table/padding; decoded body ends at +0x46d, dc 0xea618
-int MainMenuHandler(message& msg)
+int mainMenuHandler(message& msg)
 {
     unsigned char updatePlease = 0;
     unsigned char hoverChanged = 0;
 
-    if (check_disk_space) {
-        if (get_available_disk_space() < 5 * 1024 * 1024) {
-            NormalDialog(gpGeneralText->Text[GENERAL_TEXT_MAIN_MENU_LOW_DISK],
+    if (g_checkDiskSpace) {
+        if (getAvailableDiskSpace() < 5 * 1024 * 1024) {
+            normalDialog(g_generalText->m_text[GENERAL_TEXT_MAIN_MENU_LOW_DISK],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             updatePlease = 1;
-            gpWindowManager->dialogReturn = TMainMenu::QUIT_ID;
+            g_windowManager->m_dialogReturn = TMainMenu::QUIT_ID;
         }
-        check_disk_space = 0;
+        g_checkDiskSpace = 0;
     }
 
-    if (gpMainMenu->bShowCDMessage && !updatePlease) {
-        const char* fill = gpGeneralText->GetText(
+    if (g_mainMenu->m_showCdMessage && !updatePlease) {
+        const char* fill = g_generalText->getText(
             GENERAL_TEXT_MAIN_MENU_CD_DEFAULT_ARGUMENT);
 
-        gpMainMenu->DrawWindow(1, WINDOW_ALL_WIDGETS_LOW,
+        g_mainMenu->drawWindow(1, WINDOW_ALL_WIDGETS_LOW,
                                WINDOW_ALL_WIDGETS_HIGH);
-        if (gCDDriveNumber == CD_DRIVE_NUMBER_5 ||
-            gCDDriveNumber == CD_DRIVE_NUMBER_6) {
-            const char* drive = gCDDriveNumber == CD_DRIVE_NUMBER_5
-                ? gpGeneralText->GetText(GENERAL_TEXT_MAIN_MENU_CD_DRIVE_5)
-                : gpGeneralText->GetText(GENERAL_TEXT_MAIN_MENU_CD_DRIVE_6);
-            NormalDialog(format_string(
-                gpGeneralText->GetText(
+        if (g_cdDriveNumber == CD_DRIVE_NUMBER_5 ||
+            g_cdDriveNumber == CD_DRIVE_NUMBER_6) {
+            const char* drive = g_cdDriveNumber == CD_DRIVE_NUMBER_5
+                ? g_generalText->getText(GENERAL_TEXT_MAIN_MENU_CD_DRIVE_5)
+                : g_generalText->getText(GENERAL_TEXT_MAIN_MENU_CD_DRIVE_6);
+            normalDialog(formatString(
+                g_generalText->getText(
                     GENERAL_TEXT_MAIN_MENU_CD_DRIVE_FORMAT),
                 drive, fill, fill, fill, fill).c_str(),
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         } else {
-            NormalDialog(format_string(
-                gpGeneralText->GetText(
+            normalDialog(formatString(
+                g_generalText->getText(
                     GENERAL_TEXT_MAIN_MENU_CD_GENERIC_FORMAT),
                 fill, fill, fill, fill).c_str(),
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
-        cdMessageShown = 1;
-        gpMainMenu->bShowCDMessage = 0;
+        g_cdMessageShown = 1;
+        g_mainMenu->m_showCdMessage = 0;
     }
 
-    PollSound();
-    if (gpWindowManager->isWaitingForFadeIn)
-        gpWindowManager->FadeScreen(0, 4, 0);
+    pollSound();
+    if (g_windowManager->m_isWaitingForFadeIn)
+        g_windowManager->fadeScreen(0, 4, 0);
 
-    if (msg.qualifier & MESSAGE_MODIFIER_RIGHT) {
-        if ((msg.codeX == widget::WIDGET_SELECT ||
-             msg.codeX == widget::WIDGET_RIGHT_SELECT)) {
+    if (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT) {
+        if ((msg.m_codeX == widget::WIDGET_SELECT ||
+             msg.m_codeX == widget::WIDGET_RIGHT_SELECT)) {
             int helpID;
-            switch (msg.codeY) {
+            switch (msg.m_codeY) {
             case TMainMenu::NEW_GAME_ID:  helpID = 0; break;
             case TMainMenu::LOAD_GAME_ID: helpID = 1; break;
             case TMainMenu::HIGH_SCORE_ID: helpID = 2; break;
@@ -648,64 +655,64 @@ int MainMenuHandler(message& msg)
             case TMainMenu::QUIT_ID: helpID = 4; break;
             default: goto draw_update;
             }
-            if (!gbDPlayReady)
-                NormalDialog(gMainMenuHelp[helpID].text, 4, -1, -1,
+            if (!g_dPlayReady)
+                normalDialog(g_mainMenuHelp[helpID].m_text, 4, -1, -1,
                              -1, 0, -1, 0, -1, 0, -1, 0);
         }
-    } else if (msg.id == MESSAGE_WIDGET) {
-        if (msg.codeY < TMainMenu::NEW_GAME_ID ||
-            msg.codeY > TMainMenu::QUIT_ID)
+    } else if (msg.m_id == MESSAGE_WIDGET) {
+        if (msg.m_codeY < TMainMenu::NEW_GAME_ID ||
+            msg.m_codeY > TMainMenu::QUIT_ID)
             return 0;
 
-        if (msg.codeX == widget::WIDGET_DESELECT) {
-            if (msg.codeY == TMainMenu::QUIT_ID) {
-                VideoPause();
-                if (!gbDPlayReady) {
-                    NormalDialog(gpGeneralText->GetText(GENERAL_TEXT_QUIT),
+        if (msg.m_codeX == widget::WIDGET_DESELECT) {
+            if (msg.m_codeY == TMainMenu::QUIT_ID) {
+                videoPause();
+                if (!g_dPlayReady) {
+                    normalDialog(g_generalText->getText(GENERAL_TEXT_QUIT),
                                  2, -1, -1, -1, 0, -1, 0,
                                  -1, 0, -1, 0);
-                    VideoResume();
-                    if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT) {
+                    videoResume();
+                    if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT) {
                         updatePlease = 0;
                         goto draw_update;
                     }
                 }
             }
             updatePlease = 1;
-            gpWindowManager->dialogReturn = msg.codeY;
+            g_windowManager->m_dialogReturn = msg.m_codeY;
         }
-    } else if (msg.id == MESSAGE_MOUSE_MOVE) {
-        int hoverID = gpMainMenu->findWidget(msg.mouseY, msg.mouseX);
-        if (hoverID != lastIMHoverID) {
+    } else if (msg.m_id == MESSAGE_MOUSE_MOVE) {
+        int hoverID = g_mainMenu->findWidget(msg.m_mouseY, msg.m_mouseX);
+        if (hoverID != g_lastImHoverId) {
             hoverChanged = 1;
-            lastIMHoverID = hoverID;
+            g_lastImHoverId = hoverID;
             for (int id = TMainMenu::NEW_GAME_ID;
                  id <= TMainMenu::QUIT_ID; ++id) {
-                widget* w = gpMainMenu->GetWidget(id);
+                widget* w = g_mainMenu->getWidget(id);
                 if (w)
-                    w->send_message(widget::WIDGET_CLEAR_STATUS,
+                    w->sendMessage(widget::WIDGET_CLEAR_STATUS,
                                     widget::WIDGET_HIGHLIGHTED);
             }
             if (hoverID != -1) {
-                gpMainMenu->GetWidget(hoverID)->send_message(
+                g_mainMenu->getWidget(hoverID)->sendMessage(
                     widget::WIDGET_SET_STATUS, widget::WIDGET_HIGHLIGHTED);
             }
         }
     }
 
 draw_update:
-    if (VideoNeedsUpdate() || hoverChanged) {
-        gpMainMenu->DrawWindow(0, TMainMenu::NEW_GAME_ID,
+    if (videoNeedsUpdate() || hoverChanged) {
+        g_mainMenu->drawWindow(0, TMainMenu::NEW_GAME_ID,
                                TMainMenu::QUIT_ID);
-        gpWindowManager->UpdateScreen(520, 4, 250, 567);
-        VideoDrawRects();
+        g_windowManager->updateScreen(520, 4, 250, 567);
+        videoDrawRects();
     }
 
     if (!updatePlease) {
-        if (gbDPlayReady) {
-            unsigned long lastCheck = last_disk_space_check;
-            if (static_cast<long>(GameTime::Get() - lastCheck) > 10000)
-                gpWindowManager->dialogReturn = TMainMenu::NEW_GAME_ID;
+        if (g_dPlayReady) {
+            unsigned long lastCheck = g_lastDiskSpaceCheck;
+            if (static_cast<long>(GameTime::get() - lastCheck) > 10000)
+                g_windowManager->m_dialogReturn = TMainMenu::NEW_GAME_ID;
             else
                 return MESSAGE_DISPATCH_CONSUME;
         } else {
@@ -713,9 +720,9 @@ draw_update:
         }
     }
 
-    msg.id = MESSAGE_WIDGET;
-    msg.codeY = widget::WIDGET_END_DIALOG;
-    msg.codeX = widget::WIDGET_END_DIALOG;
+    msg.m_id = MESSAGE_WIDGET;
+    msg.m_codeY = widget::WIDGET_END_DIALOG;
+    msg.m_codeX = widget::WIDGET_END_DIALOG;
     return MESSAGE_DISPATCH_FORWARD;
 }
 
@@ -744,7 +751,7 @@ void VideomodeChoice::Test()
 
 // E:\gamedcs\mainmenu.cpp:410
 DC_ONLY(0xeb248, 0xF4)
-int VideomodeChoice::WindowHandler(message* msg)
+int VideomodeChoice::windowHandler(message* msg)
 {
     // @stub
 }

@@ -71,6 +71,10 @@ Two physical definitions cannot bind the same unambiguous written CodeView
 function. This is a fatal `DUPLICATE`, including when a same-arity adapter
 overload borrows another helper's identity. Repeated DC emissions count as one
 source identity; distinct formal overloads retain separate identities.
+The documented naming pass changes ordinary operation case and underscores.
+The audit compares those spellings while retaining containing-type identity,
+formal signatures, owner checks, duplicate checks and source-order checks.
+Colliding normalized operations still require an unambiguous source identity.
 The inventory also reads named methods from full CodeView class field lists,
 including overload lists. A method without a procedure record remains a
 declaration-only identity: the field list proves its signature and generated

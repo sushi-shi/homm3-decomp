@@ -19,16 +19,18 @@
 // unrelated exact compilands (initialize_game_data is definition-count
 // sensitive).  Direct != is required: implementing it as !operator== drops
 // one retail branch and scores 64.78% instead of the current maximum.
-inline unsigned char PointsEqual(const type_point& point,
+// Before normalization (function): PointsEqual.
+inline unsigned char pointsEqual(const type_point& point,
                                  const type_point& arg)
 {
-    return point.x == arg.x && point.y == arg.y && point.z == arg.z;
+    return point.m_x == arg.m_x && point.m_y == arg.m_y && point.m_z == arg.m_z;
 }
 
-inline unsigned char PointsNotEqual(const type_point& point,
+// Before normalization (function): PointsNotEqual.
+inline unsigned char pointsNotEqual(const type_point& point,
                                     const type_point& arg)
 {
-    return point.x != arg.x || point.y != arg.y || point.z != arg.z;
+    return point.m_x != arg.m_x || point.m_y != arg.m_y || point.m_z != arg.m_z;
 }
 
 // E:\gamedcs\search.cpp:32
@@ -44,52 +46,53 @@ inline unsigned char PointsNotEqual(const type_point& point,
 // parameter slot [ebp+8]. An EXHAUSTIVE sweep of all 24 orderings of
 // {path_cell decl, flying, previous_cost, clear_path()} is byte-flat at
 // 86.3333, so statement order does not reach the allocator here.
+// Before normalization (locals): current_hero, path_cell, previous_cost.
 VA(0x0056a0d0, 0x282)  // anchor-global, dc 0x12b2e0
-int searchArray::BuildPath(const hero* current_hero, long limit)
+int searchArray::buildPath(const hero* currentHero, long limit)
 {
-    type_point source(current_hero->x, current_hero->y, current_hero->z);
-    type_point dest(current_hero->pathTargetX, current_hero->pathTargetY,
-                    current_hero->pathTargetZ);
-    pathCell* path_cell;
+    type_point source(currentHero->m_x, currentHero->m_y, currentHero->m_z);
+    type_point dest(currentHero->m_pathTargetX, currentHero->m_pathTargetY,
+                    currentHero->m_pathTargetZ);
+    pathCell* currentPathCell;
 
     unsigned char flying = 0;
-    int previous_cost = 0x30d400;
+    int previousCost = 0x30d400;
 
     // Source order matters to VC6's register allocator: initializing these
     // loop locals before clearing result raises the retail score materially.
-    clear_path();
+    clearPath();
 
-    while (PointsNotEqual(dest, source)) {
-        if (!dest.is_valid()) {
-            clear_path();
+    while (pointsNotEqual(dest, source)) {
+        if (!dest.isValid()) {
+            clearPath();
             break;
         }
 
-        path_cell = get_cell(dest, flying);
-        if (path_cell->adjusted_cost > previous_cost) {
-            clear_path();
+        currentPathCell = getCell(dest, flying);
+        if (currentPathCell->m_adjustedCost > previousCost) {
+            clearPath();
             break;
         }
-        previous_cost = path_cell->adjusted_cost;
+        previousCost = currentPathCell->m_adjustedCost;
 
-        if (PointsNotEqual(path_cell->point, dest) || !path_cell->visited) {
-            clear_path();
-            break;
-        }
-
-        if (path_cell->cost <= limit)
-            result.insert(result.end(), 1, path_cell);
-
-        if (PointsEqual(path_cell->last_point, dest)) {
-            clear_path();
+        if (pointsNotEqual(currentPathCell->m_point, dest) || !currentPathCell->m_visited) {
+            clearPath();
             break;
         }
 
-        dest = path_cell->last_point;
-        flying = !path_cell->field_04_bit11;
+        if (currentPathCell->m_cost <= limit)
+            m_result.insert(m_result.end(), 1, currentPathCell);
+
+        if (pointsEqual(currentPathCell->m_lastPoint, dest)) {
+            clearPath();
+            break;
+        }
+
+        dest = currentPathCell->m_lastPoint;
+        flying = !currentPathCell->m_lastCanStop;
     }
 
-    return result.size();
+    return m_result.size();
 }
 
 // The two AI appraisal helpers the search leans on. Both live in other
@@ -100,8 +103,10 @@ int searchArray::BuildPath(const hero* current_hero, long limit)
 // ai_player.obj body at the decoration retail's call here names. Declared
 // TU-locally like seerhut.cpp's AI_resource_cost, so search.obj's include
 // closure does not grow for two prototypes.
-long AI_value_of_event(const hero* current_hero, type_point point);
-int AI_resource_cost(const playerData* player, const int* resources);
+// Before normalization (locals): current_hero.
+long aiValueOfEvent(const hero* currentHero, type_point point);
+// Before normalization (function): AI_resource_cost.
+int aiResourceCost(const playerData* player, const int* resources);
 
 
 #ifdef min
@@ -113,25 +118,26 @@ int AI_resource_cost(const playerData* player, const int* resources);
 // A monster guarding the cell being entered: the pathCell's `monster`
 // slot remembers the one already charged for, so a second sighting of the
 // same stack costs nothing. The enemy-only search never prices it.
+// Before normalization (locals): current_hero, entry_point, search_type.
 VA(0x0056a360, 0x9E)  // exhaustive search.obj order-map, dc 0x12b3f0
-unsigned char check_adjacent_monster(const hero* current_hero,
-                                     pathCell* entry_point,
-                                     type_search_type search_type)
+unsigned char checkAdjacentMonster(const hero* currentHero,
+                                     pathCell* entryPoint,
+                                     type_search_type searchType)
 {
     type_point monster;
-    if (GetMapExtra(entry_point->point.x, entry_point->point.y,
-                    entry_point->point.z)
+    if (getMapExtra(entryPoint->m_point.m_x, entryPoint->m_point.m_y,
+                    entryPoint->m_point.m_z)
         & MAP_EXTRA_MONSTER) {
-        if (gpAdvManager->FindAdjacentMonster(entry_point->point, &monster,
-                                              entry_point->monster)) {
-            if (search_type == const_AI_enemy_search)
+        if (g_advManager->findAdjacentMonster(entryPoint->m_point, &monster,
+                                              entryPoint->m_monster)) {
+            if (searchType == const_AI_enemy_search)
                 return 1;
-            long value = AI_value_of_event(current_hero, monster);
+            long value = aiValueOfEvent(currentHero, monster);
             if (value <= -500000000)
                 return 1;
             if (value < 0) {
-                entry_point->monster = monster;
-                entry_point->barrier_value += value;
+                entryPoint->m_monster = monster;
+                entryPoint->m_barrierValue += value;
             }
         }
     }
@@ -146,67 +152,69 @@ unsigned char check_adjacent_monster(const hero* current_hero,
 // exit must be a live trigger of the entry's own type that is not the
 // entry itself. Whirlpools cost 16 per exit and a flat 500 of barrier
 // value; liths 100 per exit.
+// Before normalization (locals): current_hero, cell_type, entry_point, search_type,
+// barrier_value, exit_point, exit_cell.
 VA(0x0056a400, 0x32F)  // exhaustive search.obj order-map, dc 0x12b4a8
-void searchArray::enter_lith(const hero* current_hero,
+void searchArray::enterLith(const hero* currentHero,
                              const std::vector<type_point>* list,
-                             long cell_type, long excluded,
-                             pathCell* entry_point, long limit,
-                             type_search_type search_type)
+                             long cellType, long excluded,
+                             pathCell* entryPoint, long limit,
+                             type_search_type searchType)
 {
     type_point monster;
-    if (entry_point->cost > 0
-        && check_adjacent_monster(current_hero, entry_point, search_type))
+    if (entryPoint->m_cost > 0
+        && checkAdjacentMonster(currentHero, entryPoint, searchType))
         return;
     int count = list->size();
-    long barrier_value = 0;
-    if (search_type >= const_AI_search && cell_type != LITH_TWOWAY
+    long barrierValue = 0;
+    if (searchType >= const_AI_search && cellType != LITH_TWOWAY
         && count > 0) {
         for (int i = 0; i < count; i++) {
-            type_point exit_point = (*list)[i];
-            NewmapCell* cell = gpGame->worldMap.cell(exit_point);
-            if (cell->type == cell_type && cell->extraInfo != excluded
-                && cell->is_trigger) {
-                if (gpAdvManager->FindAdjacentMonster(
-                        exit_point, &monster, entry_point->monster)) {
-                    long value = AI_value_of_event(current_hero, monster);
+            type_point exitPoint = (*list)[i];
+            NewmapCell* cell = g_game->m_worldMap.cell(exitPoint);
+            if (cell->m_type == cellType && cell->m_extraInfo != excluded
+                && cell->m_isTrigger) {
+                if (g_advManager->findAdjacentMonster(
+                        exitPoint, &monster, entryPoint->m_monster)) {
+                    long value = aiValueOfEvent(currentHero, monster);
                     if (value <= -500000000)
                         return;
-                    if (barrier_value > value)
-                        barrier_value = value;
+                    if (barrierValue > value)
+                        barrierValue = value;
                 }
             }
         }
     }
-    pathCell exit_cell = *entry_point;
+    pathCell exitCell = *entryPoint;
     for (int i = 0; i < count; i++) {
-        type_point exit_point = (*list)[i];
-        NewmapCell* cell = gpGame->worldMap.cell(exit_point);
-        if (cell->type == HERO) {
-            if (gpGame->OnSameTeam(gpGame->GetHero(cell->extraInfo)->owner,
-                                   current_hero->owner))
+        type_point exitPoint = (*list)[i];
+        NewmapCell* cell = g_game->m_worldMap.cell(exitPoint);
+        if (cell->m_type == HERO) {
+            if (g_game->onSameTeam(g_game->getHero(cell->m_extraInfo)->m_owner,
+                                   currentHero->m_owner))
                 continue;
-        } else if (cell->type != cell_type || cell->extraInfo == excluded
-                   || !cell->is_trigger) {
+        } else if (cell->m_type != cellType || cell->m_extraInfo == excluded
+                   || !cell->m_isTrigger) {
             continue;
         }
-        monster = entry_point->monster;
-        if (search_type >= const_AI_search && cell_type != LITH_TWOWAY)
-            gpAdvManager->FindAdjacentMonster(exit_point, &monster,
-                                              entry_point->monster);
-        exit_cell.point.x = exit_point.x;
-        exit_cell.point.y = exit_point.y;
-        exit_cell.point.z = exit_point.z;
-        if (cell_type == WHIRLPOOL) {
-            barrier_value -= 500;
-            exit_cell.adjusted_cost =
-                entry_point->adjusted_cost + (count - 1) * 16;
+        monster = entryPoint->m_monster;
+        if (searchType >= const_AI_search && cellType != LITH_TWOWAY)
+            g_advManager->findAdjacentMonster(exitPoint, &monster,
+                                              entryPoint->m_monster);
+        exitCell.m_point.m_x = exitPoint.m_x;
+        exitCell.m_point.m_y = exitPoint.m_y;
+        exitCell.m_point.m_z = exitPoint.m_z;
+        if (cellType == WHIRLPOOL) {
+            barrierValue -= 500;
+            exitCell.m_adjustedCost =
+                entryPoint->m_adjustedCost + (count - 1) * 16;
         } else {
-            exit_cell.adjusted_cost =
-                entry_point->adjusted_cost + (count - 1) * 100;
+            exitCell.m_adjustedCost =
+                entryPoint->m_adjustedCost + (count - 1) * 100;
         }
-        PushPoint(entry_point, &exit_cell, entry_point->direction, 0, limit,
-                  entry_point->barrier_value + barrier_value, monster,
-                  cell->type == HERO);
+        pushPoint(entryPoint, &exitCell, entryPoint->m_direction, 0, limit,
+                  entryPoint->m_barrierValue + barrierValue, monster,
+                  cell->m_type == HERO);
     }
 }
 
@@ -215,21 +223,22 @@ void searchArray::enter_lith(const hero* current_hero,
 // (0xff, 0xff, 0xff) for an unpaired gate; the exit keeps the entry's
 // direction, cost and monster, and is a trigger only when a hero is
 // standing on it.
+// Before normalization (locals): map_cell, exit_point, exit_cell, exit_map_cell.
 VA(0x0056a730, 0x111)  // exhaustive search.obj order-map, dc 0x12b7f4
-void searchArray::enter_gate(const pathCell* cell, const NewmapCell* map_cell,
+void searchArray::enterGate(const pathCell* cell, const NewmapCell* mapCell,
                              long limit)
 {
-    type_point exit_point = gpGame->get_underground_gate_exit(map_cell);
+    type_point exitPoint = g_game->getUndergroundGateExit(mapCell);
     const int noGateExit = 0xff;
-    if (exit_point.x != noGateExit) {
-        pathCell exit_cell = *cell;
-        NewmapCell* exit_map_cell = gpGame->worldMap.cell(exit_point);
-        exit_cell.point.x = exit_point.x;
-        exit_cell.point.y = exit_point.y;
-        exit_cell.point.z = exit_point.z;
-        PushPoint(cell, &exit_cell, cell->direction, 0, limit,
-                  cell->barrier_value, cell->monster,
-                  exit_map_cell->type == HERO);
+    if (exitPoint.m_x != noGateExit) {
+        pathCell exitCell = *cell;
+        NewmapCell* exitMapCell = g_game->m_worldMap.cell(exitPoint);
+        exitCell.m_point.m_x = exitPoint.m_x;
+        exitCell.m_point.m_y = exitPoint.m_y;
+        exitCell.m_point.m_z = exitPoint.m_z;
+        pushPoint(cell, &exitCell, cell->m_direction, 0, limit,
+                  cell->m_barrierValue, cell->m_monster,
+                  exitMapCell->m_type == HERO);
     }
 }
 
@@ -250,61 +259,63 @@ void searchArray::board_boat(const hero* current_hero, pathCell* cell)
 // one here, one at the far end) and charges each unbuilt gate's cost
 // into the barrier; the normal search only routes through built gates.
 // A town with a visiting hero cannot receive.
+// Before normalization (locals): current_hero, start_town, path_cell, search_type, our_town,
+// barrier_value, new_cell, other_town.
 VA(0x0056a850, 0x27E)  // exhaustive search.obj order-map, dc 0x12b988
-void searchArray::enter_town(const hero* current_hero, long start_town,
-                             const pathCell* path_cell, long limit,
-                             type_search_type search_type)
+void searchArray::enterTown(const hero* currentHero, long startTown,
+                             const pathCell* currentPathCell, long limit,
+                             type_search_type searchType)
 {
-    town* our_town = gpGame->GetTown(start_town);
-    if (!gpGame->OnSameTeam(our_town->owner, current_hero->owner))
+    town* ourTown = g_game->getTown(startTown);
+    if (!g_game->onSameTeam(ourTown->m_owner, currentHero->m_owner))
         return;
-    if (our_town->type != TOWN_INFERNO)
+    if (ourTown->m_type != TOWN_INFERNO)
         return;
-    long barrier_value = 0;
+    long barrierValue = 0;
     int gates = 0;
-    int* cost = our_town->get_build_cost_array(EXTRA_1_ID);
-    playerData* player = const_cast<hero*>(current_hero)->get_player();
-    if (search_type == const_AI_search) {
+    int* cost = ourTown->getBuildCostArray(EXTRA_1_ID);
+    playerData* player = const_cast<hero*>(currentHero)->getPlayer();
+    if (searchType == const_AI_search) {
         gates = 2;
         for (int i = 0; i < 7; i++) {
             if (cost[i] > 0) {
-                gates = min(player->resources[i] / cost[i], gates);
+                gates = min(player->m_resources[i] / cost[i], gates);
                 if (!gates)
                     break;
             }
         }
     }
-    if (!our_town->HasBuilding(EXTRA_1_ID, 1)) {
-        if (!our_town->can_build(EXTRA_1_ID))
+    if (!ourTown->hasBuilding(EXTRA_1_ID, 1)) {
+        if (!ourTown->canBuild(EXTRA_1_ID))
             return;
         if (!gates)
             return;
-        barrier_value = -AI_resource_cost(player, cost);
+        barrierValue = -aiResourceCost(player, cost);
         gates--;
     }
-    pathCell new_cell;
-    for (int i = 0; i < player->numTowns; i++) {
-        if (player->townIds[i] == start_town)
+    pathCell newCell;
+    for (int i = 0; i < player->m_numTowns; i++) {
+        if (player->m_townIds[i] == startTown)
             continue;
-        town* other_town = gpGame->GetTown(player->townIds[i]);
-        if (other_town->type != TOWN_INFERNO)
+        town* otherTown = g_game->getTown(player->m_townIds[i]);
+        if (otherTown->m_type != TOWN_INFERNO)
             continue;
-        if (other_town->visitingHeroId >= 0)
+        if (otherTown->m_visitingHeroId >= 0)
             continue;
-        new_cell = *path_cell;
-        if (!other_town->HasBuilding(EXTRA_1_ID, 1)) {
-            if (!other_town->can_build(EXTRA_1_ID))
+        newCell = *currentPathCell;
+        if (!otherTown->hasBuilding(EXTRA_1_ID, 1)) {
+            if (!otherTown->canBuild(EXTRA_1_ID))
                 continue;
             if (!gates)
                 continue;
-            new_cell.barrier_value -= AI_resource_cost(player, cost);
+            newCell.m_barrierValue -= aiResourceCost(player, cost);
         }
-        new_cell.point.x = other_town->mapX;
-        new_cell.point.y = other_town->mapY;
-        new_cell.point.z = other_town->mapZ;
-        new_cell.castle_gate = 1;
-        PushPoint(path_cell, &new_cell, 0, 0, limit,
-                  new_cell.barrier_value + barrier_value, new_cell.monster,
+        newCell.m_point.m_x = otherTown->m_mapX;
+        newCell.m_point.m_y = otherTown->m_mapY;
+        newCell.m_point.m_z = otherTown->m_mapZ;
+        newCell.m_castleGate = 1;
+        pushPoint(currentPathCell, &newCell, 0, 0, limit,
+                  newCell.m_barrierValue + barrierValue, newCell.m_monster,
                   0);
     }
 }
@@ -320,17 +331,18 @@ void searchArray::enter_town(const hero* current_hero, long start_town,
 // write the two in the opposite order. MEASURED NEGATIVE (polish 49):
 // swapping the two source statements is 91.5385 -> 89.8461 - the store
 // order here follows the scheduler, not the statement order.
+// Before normalization (locals): current_hero.
 VA(0x0056aad0, 0x68)  // exhaustive search.obj order-map, dc 0x12bbc8
-unsigned char searchArray::enter_hostile_trigger(const hero* current_hero,
+unsigned char searchArray::enterHostileTrigger(const hero* currentHero,
                                                  pathCell* cell)
 {
-    if (PointsNotEqual(cell->point, cell->monster)) {
-        long value = AI_value_of_event(current_hero, cell->point);
+    if (pointsNotEqual(cell->m_point, cell->m_monster)) {
+        long value = aiValueOfEvent(currentHero, cell->m_point);
         if (value <= -500000000)
             return 0;
         if (value < 0) {
-            cell->barrier_value += value;
-            cell->monster = cell->point;
+            cell->m_barrierValue += value;
+            cell->m_monster = cell->m_point;
         }
     }
     return 1;
@@ -348,105 +360,106 @@ unsigned char searchArray::enter_hostile_trigger(const hero* current_hero,
 // the full AI search), the garrison falls into the monster's
 // `search_type >= const_AI_search` answer, and the hero arm's identical
 // answer is cross-jumped onto it.
+// Before normalization (locals): current_hero, search_type, map_cell.
 VA(0x0056ab40, 0x50C)  // exhaustive search.obj order-map, dc 0x12bc3c
-unsigned char searchArray::enter_trigger(const hero* current_hero,
+unsigned char searchArray::enterTrigger(const hero* currentHero,
                                          pathCell* cell, long limit,
-                                         type_search_type search_type)
+                                         type_search_type searchType)
 {
-    NewmapCell* map_cell = gpAdvManager->GetCell(cell->point);
-    int type = map_cell->type;
-    if (search_type == const_normal_search && type != GARRISON
+    NewmapCell* mapCell = g_advManager->getCell(cell->m_point);
+    int type = mapCell->m_type;
+    if (searchType == const_normal_search && type != GARRISON
         && type != BORDER_GATE)
         return 0;
     switch (type) {
     case BORDER_GUARD:
-        if (search_type < const_AI_search)
+        if (searchType < const_AI_search)
             return 0;
     case BORDER_GATE: {
         unsigned char visited =
-            (gpGame->borderTentVisitFlags[map_cell->objectIndex]
-             & gUnnamed69ccc4)
+            (g_game->m_borderTentVisitFlags[mapCell->m_objectIndex]
+             & g_unnamed69ccc4)
             != 0;
         return visited;
     }
     case QUEST_GUARD: {
-        if (search_type < const_AI_search)
+        if (searchType < const_AI_search)
             return 0;
         TQuestGuard* guard =
-            &gpGame->worldMap.QuestGuardList[map_cell->extraInfo];
-        if (!guard->quest || guard->quest->has_expired())
+            &g_game->m_worldMap.m_questGuardList[mapCell->m_extraInfo];
+        if (!guard->m_quest || guard->m_quest->hasExpired())
             return 0;
-        if (!(guard->visitedPlayers & (1 << current_hero->owner)))
+        if (!(guard->m_visitedPlayers & (1 << currentHero->m_owner)))
             return 1;
-        if (!guard->quest->is_satisfied(const_cast<hero*>(current_hero)))
+        if (!guard->m_quest->isSatisfied(const_cast<hero*>(currentHero)))
             return 0;
-        cell->barrier_value -= guard->quest->GetAIValue(current_hero->owner);
+        cell->m_barrierValue -= guard->m_quest->getAIValue(currentHero->m_owner);
         return 1;
     }
     case HERO:
-        if (gpGame->OnSameTeam(gpGame->heroAvailability[map_cell->extraInfo],
-                               current_hero->owner))
+        if (g_game->onSameTeam(g_game->m_heroAvailability[mapCell->m_extraInfo],
+                               currentHero->m_owner))
             return 0;
-        if (search_type == const_AI_enemy_search)
+        if (searchType == const_AI_enemy_search)
             return 1;
-        return search_type >= const_AI_search;
+        return searchType >= const_AI_search;
     case GARRISON:
-        if (gpGame->OnSameTeam(gpGame->garrisons[map_cell->extraInfo].playerOwner,
-                               current_hero->owner))
+        if (g_game->onSameTeam(g_game->m_garrisons[mapCell->m_extraInfo].m_playerOwner,
+                               currentHero->m_owner))
             return 1;
     case MONSTER:
-        return search_type >= const_AI_search;
+        return searchType >= const_AI_search;
     case BOAT:
-        if (cell->in_boat)
+        if (cell->m_inBoat)
             return 0;
-        if (search_type < const_AI_search)
+        if (searchType < const_AI_search)
             return 0;
-        if (pay_transition_costs) {
-            cell->cost += cell->move_left;
-            cell->move_left = sea_movement;
-            cell->flying = 0;
-            cell->water_walking = 0;
+        if (m_payTransitionCosts) {
+            cell->m_cost += cell->m_moveLeft;
+            cell->m_moveLeft = m_seaMovement;
+            cell->m_flying = 0;
+            cell->m_waterWalking = 0;
         }
-        cell->in_boat = 1;
-        get_cell(cell->point, !cell->last_can_stop)->in_boat = 1;
+        cell->m_inBoat = 1;
+        getCell(cell->m_point, !cell->m_canStop)->m_inBoat = 1;
         return 1;
     case UNDERGROUND_GATE:
-        if (search_type < const_AI_enemy_search)
+        if (searchType < const_AI_enemy_search)
             return 0;
-        if (cell->cost > 0
-            && check_adjacent_monster(current_hero, cell, search_type))
+        if (cell->m_cost > 0
+            && checkAdjacentMonster(currentHero, cell, searchType))
             return 0;
-        enter_gate(cell, map_cell, limit);
+        enterGate(cell, mapCell, limit);
         return 0;
     case LITH_ONEWAY_ENTRANCE:
-        if (search_type < const_AI_enemy_search)
+        if (searchType < const_AI_enemy_search)
             return 0;
-        enter_lith(current_hero, &gpGame->lithExitPools[map_cell->objectIndex],
-                   LITH_ONEWAY_EXIT, -1, cell, limit, search_type);
+        enterLith(currentHero, &g_game->m_lithExitPools[mapCell->m_objectIndex],
+                   LITH_ONEWAY_EXIT, -1, cell, limit, searchType);
         return 0;
     case LITH_TWOWAY:
-        if (search_type < const_AI_enemy_search)
+        if (searchType < const_AI_enemy_search)
             return 0;
-        enter_lith(current_hero, &gpGame->lithPools[map_cell->objectIndex],
-                   LITH_TWOWAY, map_cell->extraInfo, cell, limit,
-                   search_type);
+        enterLith(currentHero, &g_game->m_lithPools[mapCell->m_objectIndex],
+                   LITH_TWOWAY, mapCell->m_extraInfo, cell, limit,
+                   searchType);
         return 0;
     case WHIRLPOOL:
-        if (search_type < const_AI_enemy_search)
+        if (searchType < const_AI_enemy_search)
             return 0;
-        enter_lith(current_hero, &gpGame->whirlpools, WHIRLPOOL,
-                   map_cell->extraInfo, cell, limit, search_type);
+        enterLith(currentHero, &g_game->m_whirlpools, WHIRLPOOL,
+                   mapCell->m_extraInfo, cell, limit, searchType);
         return 0;
     case TOWN:
-        if (search_type < const_AI_enemy_search)
+        if (searchType < const_AI_enemy_search)
             return 0;
-        if (check_adjacent_monster(current_hero, cell, search_type))
+        if (checkAdjacentMonster(currentHero, cell, searchType))
             return 0;
-        enter_town(current_hero, map_cell->extraInfo, cell, limit,
-                   search_type);
+        enterTown(currentHero, mapCell->m_extraInfo, cell, limit,
+                   searchType);
         return 1;
     }
-    return gAdventureObjectLandBlocked[type][0] == 0;
+    return g_adventureObjectLandBlocked[type][0] == 0;
 }
 
 // E:\gamedcs\search.cpp:494
@@ -454,24 +467,26 @@ unsigned char searchArray::enter_trigger(const hero* current_hero,
 // SeedPosition calls it. Complete's VC6 expands the same source boundary at
 // the only retail call site; keep the helper ordinary and available before
 // the caller so the compiler makes that decision naturally.
-static unsigned char check_summon_boat(const hero* current_hero)
+// Before normalization (function): check_summon_boat.
+// Before normalization (locals): current_hero, new_point.
+static unsigned char checkSummonBoat(const hero* currentHero)
 {
-    if (!current_hero->can_summon_boat())
+    if (!currentHero->canSummonBoat())
         return 0;
 
-    type_point point = current_hero->get_location();
-    type_point new_point;
+    type_point point = currentHero->getLocation();
+    type_point newPoint;
     // DC has no breakpoint row for source line 502 between new_point (501)
     // and the loop (503). The original VC6-era spelling declares the
     // register-promoted counter separately; both target compilers erase it.
     int i;
     for (i = 0; i < MAP_DIRECTION_COUNT; ++i) {
-        new_point.x = point.x + normalDirTable[i].x;
-        new_point.y = point.y + normalDirTable[i].y;
-        new_point.z = point.z;
-        if (new_point.is_valid()
-            && gpGame->worldMap.cell(new_point)->type == BOAT
-            && gpGame->get_cell(new_point)->is_trigger)
+        newPoint.m_x = point.m_x + g_normalDirTable[i].m_x;
+        newPoint.m_y = point.m_y + g_normalDirTable[i].m_y;
+        newPoint.m_z = point.m_z;
+        if (newPoint.isValid()
+            && g_game->m_worldMap.cell(newPoint)->m_type == BOAT
+            && g_game->getCell(newPoint)->m_isTrigger)
             return 0;
     }
     return 1;
@@ -485,63 +500,76 @@ static unsigned char check_summon_boat(const hero* current_hero)
 // start cell with the spell's mana cost as the move cost and a distance
 // surcharge on the adjusted cost: half a map-span per level crossed plus
 // the plane offsets, plus four, at fifty a hex.
+// EXACT (2026-09-07): sharing `i` across the two mutually exclusive town
+// scans reproduces retail's common [ebp-0x14] counter home; separate loop
+// declarations reuse an argument slot and score 98.3567. Declaring
+// closestTown before closest fixes the remaining nearest-town zero schedule,
+// and spelling the absolute X delta as new minus start matches retail's
+// equivalent operand order. Together these steps reach 100% with all 38
+// blocks and 18 branches exact. The two reported insert-symbol differences
+// are delinker names at aligned calls and are ignored by the authoritative
+// address-based report.
+// Before normalization (locals): current_hero, start_cell, current_town, closest_town, delta_y,
+// delta_x, new_cell.
 VA(0x0056b050, 0x3E7)  // exhaustive search.obj order-map, dc 0x12bfe0
-void searchArray::check_town_portal(const hero* current_hero,
-                                    const pathCell* start_cell,
+void searchArray::checkTownPortal(const hero* currentHero,
+                                    const pathCell* startCell,
                                     long maxMobility)
 {
-    hero* caster = const_cast<hero*>(current_hero);
-    if (!current_hero->SpellIsAvailable(SPELL_TOWN_PORTAL))
+    hero* caster = const_cast<hero*>(currentHero);
+    if (!currentHero->spellIsAvailable(SPELL_TOWN_PORTAL))
         return;
-    if (current_hero->mana < caster->GetManaCost(SPELL_TOWN_PORTAL) + 20)
+    if (currentHero->m_mana < caster->getManaCost(SPELL_TOWN_PORTAL) + 20)
         return;
-    if (start_cell->in_boat)
+    if (startCell->m_inBoat)
         return;
     std::vector<type_point> destinations;
-    playerData* player = caster->get_player();
-    if (caster->get_spell_level(SPELL_TOWN_PORTAL) >= eMasteryAdvanced) {
-        for (int i = 0; i < player->numTowns; i++) {
-            town* current_town = gpGame->GetTown(player->townIds[i]);
-            if (current_town->visitingHeroId < 0)
-                destinations.push_back(current_town->get_location());
+    playerData* player = caster->getPlayer();
+    int i;
+    if (caster->getSpellLevel(SPELL_TOWN_PORTAL) >= eMasteryAdvanced) {
+        for (i = 0; i < player->m_numTowns; i++) {
+            town* currentTown = g_game->getTown(player->m_townIds[i]);
+            if (currentTown->m_visitingHeroId < 0)
+                destinations.push_back(currentTown->getLocation());
         }
     } else {
+        town* closestTown = 0;
         long closest = 0;
-        town* closest_town = 0;
-        for (int i = 0; i < player->numTowns; i++) {
-            town* current_town = gpGame->GetTown(player->townIds[i]);
-            if (current_town->mapZ != start_cell->point.z)
+        for (i = 0; i < player->m_numTowns; i++) {
+            town* currentTown = g_game->getTown(player->m_townIds[i]);
+            if (currentTown->m_mapZ != startCell->m_point.m_z)
                 continue;
-            int delta_y = current_town->mapY - start_cell->point.y;
-            int delta_x = current_town->mapX - start_cell->point.x;
-            int distance = delta_x * delta_x + delta_y * delta_y;
-            if (!closest_town || distance < closest) {
-                closest_town = current_town;
+            int deltaY = currentTown->m_mapY - startCell->m_point.m_y;
+            int deltaX = currentTown->m_mapX - startCell->m_point.m_x;
+            int distance = deltaX * deltaX + deltaY * deltaY;
+            if (!closestTown || distance < closest) {
+                closestTown = currentTown;
                 closest = distance;
             }
         }
-        if (!closest_town)
+        if (!closestTown)
             return;
-        if (closest_town->visitingHeroId >= 0)
+        if (closestTown->m_visitingHeroId >= 0)
             return;
-        destinations.push_back(closest_town->get_location());
+        destinations.push_back(closestTown->getLocation());
     }
-    pathCell new_cell;
-    int cost = caster->get_spell_level(SPELL_TOWN_PORTAL) == eMasteryExpert
+    pathCell newCell;
+    int cost = caster->getSpellLevel(SPELL_TOWN_PORTAL) == eMasteryExpert
         ? 200 : 300;
-    for (unsigned int i = 0; i < destinations.size(); i++) {
-        new_cell = *start_cell;
-        new_cell.point.x = destinations[i].x;
-        new_cell.point.y = destinations[i].y;
-        new_cell.point.z = destinations[i].z;
-        new_cell.town_portal = 1;
-        int distance = abs(new_cell.point.z - start_cell->point.z)
-                * (MAP_HEIGHT + MAP_WIDTH) / 2
-            + abs(start_cell->point.x - new_cell.point.x)
-            + abs(new_cell.point.y - start_cell->point.y);
-        new_cell.adjusted_cost += (distance + 4) * 50;
-        PushPoint(start_cell, &new_cell, 0, cost, maxMobility, 0,
-                  start_cell->monster, 0);
+    for (unsigned int destinationIndex = 0;
+         destinationIndex < destinations.size(); destinationIndex++) {
+        newCell = *startCell;
+        newCell.m_point.m_x = destinations[destinationIndex].m_x;
+        newCell.m_point.m_y = destinations[destinationIndex].m_y;
+        newCell.m_point.m_z = destinations[destinationIndex].m_z;
+        newCell.m_townPortal = 1;
+        int distance = abs(newCell.m_point.m_z - startCell->m_point.m_z)
+                * (g_mapHeight + g_mapWidth) / 2
+            + abs(newCell.m_point.m_x - startCell->m_point.m_x)
+            + abs(newCell.m_point.m_y - startCell->m_point.m_y);
+        newCell.m_adjustedCost += (distance + 4) * 50;
+        pushPoint(startCell, &newCell, 0, cost, maxMobility, 0,
+                  startCell->m_monster, 0);
     }
 }
 
@@ -558,223 +586,226 @@ void searchArray::check_town_portal(const hero* current_hero,
 // inline keyword on the ordinary static helper, and restoring the canonical
 // constructor at its true struct.h parse point (source-correct but byte-flat
 // here). Do not replace either residue with an inline pragma or dummy local.
+// Before normalization (locals): current_hero, is_boat, search_type, iCurTempMobility,
+// bSeedContinuation, iPathfinding, was_on_map, water_walking, fly_level, start_town, map_cell,
+// trigger_cell, next_cell, native_terrain, turn_mobility, adjacent_monster.
 VA(0x0056b440, 0x8EC)  // exhaustive search.obj order-map, dc 0x12c36c
-void searchArray::SeedPosition(hero* current_hero, type_point start,
+void searchArray::seedPosition(hero* currentHero, type_point start,
                                type_point target, int maxMobility,
-                               unsigned char is_boat,
-                               type_search_type search_type,
-                               int iCurTempMobility,
-                               unsigned char bSeedContinuation)
+                               unsigned char isBoat,
+                               type_search_type searchType,
+                               int curTempMobility,
+                               unsigned char seedContinuation)
 {
-    TSkillMastery iPathfinding =
-        current_hero->get_secondary_skill(eSecSkillPathfinding);
-    this_turns_movement = iCurTempMobility;
+    TSkillMastery pathfinding =
+        currentHero->getSecondarySkill(eSecSkillPathfinding);
+    m_thisTurnsMovement = curTempMobility;
     // Complete snapshots the underlying byte directly (`mov dl,[hero+6]`).
     // Dreamcast's older source calls is_on_map here, but its bool facade
     // normalizes the value; the retail load is direct evidence for this
     // later-revision spelling.
-    unsigned char was_on_map = current_hero->valid;
-    current_hero->restore_cell();
+    unsigned char wasOnMap = currentHero->m_valid;
+    currentHero->restoreCell();
 
-    limit_reached = 0;
-    pay_transition_costs = 0;
-    can_summon_boat = 0;
-    can_cast_teleport = 0;
-    can_cast_flight = 0;
-    can_cast_water_walk = 0;
-    land_movement = current_hero->GetMobility(0);
-    sea_movement = current_hero->GetMobility(1);
-    flight_level = current_hero->flightLevel;
-    water_walk_level = current_hero->waterWalkLevel;
+    m_limitReached = 0;
+    m_payTransitionCosts = 0;
+    m_canSummonBoat = 0;
+    m_canCastTeleport = 0;
+    m_canCastFlight = 0;
+    m_canCastWaterWalk = 0;
+    m_landMovement = currentHero->getMobility(0);
+    m_seaMovement = currentHero->getMobility(1);
+    m_flightLevel = currentHero->m_flightLevel;
+    m_waterWalkLevel = currentHero->m_waterWalkLevel;
 
-    if (current_hero->IsWieldingArtifact(0x48))
-        flight_level = eMasteryExpert;
-    if (current_hero->IsWieldingArtifact(0x5a))
-        water_walk_level = eMasteryExpert;
+    if (currentHero->isWieldingArtifact(0x48))
+        m_flightLevel = eMasteryExpert;
+    if (currentHero->isWieldingArtifact(0x5a))
+        m_waterWalkLevel = eMasteryExpert;
 
-    unsigned char flying = flight_level > eMasteryInvalid && !is_boat;
-    unsigned char water_walking =
-        water_walk_level > eMasteryInvalid && !is_boat;
+    unsigned char flying = m_flightLevel > eMasteryInvalid && !isBoat;
+    unsigned char waterWalking =
+        m_waterWalkLevel > eMasteryInvalid && !isBoat;
 
-    if (search_type >= const_AI_search) {
-        pay_transition_costs = 1;
-        if (search_type == const_AI_search) {
-            if (current_hero->SpellIsAvailable(SPELL_DIMENSION_DOOR)
-                && current_hero->GetManaCost(SPELL_DIMENSION_DOOR) + 20
-                       <= current_hero->mana)
-                can_cast_teleport = 1;
+    if (searchType >= const_AI_search) {
+        m_payTransitionCosts = 1;
+        if (searchType == const_AI_search) {
+            if (currentHero->spellIsAvailable(SPELL_DIMENSION_DOOR)
+                && currentHero->getManaCost(SPELL_DIMENSION_DOOR) + 20
+                       <= currentHero->m_mana)
+                m_canCastTeleport = 1;
 
-            can_summon_boat = check_summon_boat(current_hero);
+            m_canSummonBoat = checkSummonBoat(currentHero);
 
-            if (current_hero->IsWieldingArtifact(0x48)) {
-                can_cast_flight = 1;
+            if (currentHero->isWieldingArtifact(0x48)) {
+                m_canCastFlight = 1;
             } else {
-                can_cast_flight =
-                    current_hero->SpellIsAvailable(SPELL_FLY)
-                    && current_hero->GetManaCost(SPELL_FLY) + 20
-                           <= current_hero->mana;
-                flight_level = current_hero->get_spell_level(SPELL_FLY);
+                m_canCastFlight =
+                    currentHero->spellIsAvailable(SPELL_FLY)
+                    && currentHero->getManaCost(SPELL_FLY) + 20
+                           <= currentHero->m_mana;
+                m_flightLevel = currentHero->getSpellLevel(SPELL_FLY);
             }
 
-            if (current_hero->IsWieldingArtifact(0x5a)) {
-                can_cast_water_walk = 1;
+            if (currentHero->isWieldingArtifact(0x5a)) {
+                m_canCastWaterWalk = 1;
             } else {
-                can_cast_water_walk =
-                    current_hero->SpellIsAvailable(SPELL_WATER_WALK)
-                    && current_hero->GetManaCost(SPELL_WATER_WALK) + 20
-                           <= current_hero->mana;
-                water_walk_level =
-                    current_hero->get_spell_level(SPELL_WATER_WALK);
+                m_canCastWaterWalk =
+                    currentHero->spellIsAvailable(SPELL_WATER_WALK)
+                    && currentHero->getManaCost(SPELL_WATER_WALK) + 20
+                           <= currentHero->m_mana;
+                m_waterWalkLevel =
+                    currentHero->getSpellLevel(SPELL_WATER_WALK);
             }
 
-            if (current_hero->flightLevel > eMasteryInvalid
-                && flight_level > current_hero->flightLevel)
-                flight_level = current_hero->flightLevel;
-            if (current_hero->waterWalkLevel > eMasteryInvalid
-                && water_walk_level > current_hero->waterWalkLevel)
-                water_walk_level = current_hero->waterWalkLevel;
+            if (currentHero->m_flightLevel > eMasteryInvalid
+                && m_flightLevel > currentHero->m_flightLevel)
+                m_flightLevel = currentHero->m_flightLevel;
+            if (currentHero->m_waterWalkLevel > eMasteryInvalid
+                && m_waterWalkLevel > currentHero->m_waterWalkLevel)
+                m_waterWalkLevel = currentHero->m_waterWalkLevel;
         }
     }
 
-    if (cellData == 0)
-        Init();
+    if (m_cellData == 0)
+        init();
 
-    if (!bSeedContinuation) {
-        gpAdvManager->fullySeeded = 0;
-        int fly_level;
-        if (search_type == const_normal_search) {
-            fly_level = water_walk_level > eMasteryInvalid
-                        || flight_level > eMasteryInvalid;
+    if (!seedContinuation) {
+        g_advManager->m_fullySeeded = 0;
+        int flyLevel;
+        if (searchType == const_normal_search) {
+            flyLevel = m_waterWalkLevel > eMasteryInvalid
+                        || m_flightLevel > eMasteryInvalid;
         } else {
-            fly_level = water_walk_level > eMasteryInvalid
-                        || flight_level > eMasteryInvalid
-                        || can_cast_teleport || can_cast_flight
-                        || can_cast_water_walk;
+            flyLevel = m_waterWalkLevel > eMasteryInvalid
+                        || m_flightLevel > eMasteryInvalid
+                        || m_canCastTeleport || m_canCastFlight
+                        || m_canCastWaterWalk;
         }
-        Clear(fly_level, 0, gpGame->GetNumMapLevels());
+        clear(flyLevel, 0, g_game->getNumMapLevels());
     }
 
-    gpAdvManager->seedingValid = 1;
+    g_advManager->m_seedingValid = 1;
     type_point monster(-1, -1, -1);
     pathCell cell;
 
-    if (!bSeedContinuation) {
-        cell.point.x = start.x;
-        cell.point.y = start.y;
-        cell.point.z = start.z;
-        cell.in_boat = is_boat;
-        cell.cost = 0;
-        cell.danger_value = 0;
+    if (!seedContinuation) {
+        cell.m_point.m_x = start.m_x;
+        cell.m_point.m_y = start.m_y;
+        cell.m_point.m_z = start.m_z;
+        cell.m_inBoat = isBoat;
+        cell.m_cost = 0;
+        cell.m_dangerValue = 0;
         // Dreamcast's older order is flying, move_left, transition flags,
         // then water_walking (lines 727..733). Complete's retail lowering
         // clears bits 4..9 with one 0xfffffc0f mask, then inserts both mode
         // bits before the movement store. With the pinned VC6 compiler, that
         // sequence requires the later revision's contiguous flag group.
-        cell.town_portal = 0;
-        cell.dimension_door = 0;
-        cell.castle_gate = 0;
-        cell.can_stop = 0;
-        cell.flying = flying;
-        cell.water_walking = water_walking;
-        cell.move_left = iCurTempMobility;
-        cell.last_can_stop = 1;
+        cell.m_townPortal = 0;
+        cell.m_dimensionDoor = 0;
+        cell.m_castleGate = 0;
+        cell.m_startAtTrigger = 0;
+        cell.m_flying = flying;
+        cell.m_waterWalking = waterWalking;
+        cell.m_moveLeft = curTempMobility;
+        cell.m_canStop = 1;
 
-        if ((!(current_hero->flags & 0x40000)
-             && (current_hero->flightLevel != eMasteryInvalid
-                 || current_hero->IsWieldingArtifact(0x48))
-             && !current_hero->can_land())
-            || (!(current_hero->flags & 0x40000)
-                && (current_hero->waterWalkLevel != eMasteryInvalid
-                    || current_hero->IsWieldingArtifact(0x5a))
-                && !current_hero->can_land()))
-            cell.last_can_stop = 0;
+        if ((!(currentHero->m_flags & 0x40000)
+             && (currentHero->m_flightLevel != eMasteryInvalid
+                 || currentHero->isWieldingArtifact(0x48))
+             && !currentHero->canLand())
+            || (!(currentHero->m_flags & 0x40000)
+                && (currentHero->m_waterWalkLevel != eMasteryInvalid
+                    || currentHero->isWieldingArtifact(0x5a))
+                && !currentHero->canLand()))
+            cell.m_canStop = 0;
 
         // Complete inserts the can-land rule before materializing this value;
         // retail keeps the constructor stores on the far side of both calls.
-        cell.last_point = type_point(-1, -1, -1);
-        cell.adjusted_cost = 0;
+        cell.m_lastPoint = type_point(-1, -1, -1);
+        cell.m_adjustedCost = 0;
 
-        PushPoint(&cell, &cell, 2, 0, maxMobility, 0, monster, 0);
+        pushPoint(&cell, &cell, 2, 0, maxMobility, 0, monster, 0);
 
-        if (search_type >= const_AI_enemy_search) {
-            int start_town = gpGame->GetTownId(
-                cell.point.x, cell.point.y, cell.point.z);
-            if (start_town >= 0) {
-                enter_town(current_hero, start_town, &cell, maxMobility,
-                           search_type);
+        if (searchType >= const_AI_enemy_search) {
+            int startTown = g_game->getTownId(
+                cell.m_point.m_x, cell.m_point.m_y, cell.m_point.m_z);
+            if (startTown >= 0) {
+                enterTown(currentHero, startTown, &cell, maxMobility,
+                           searchType);
             } else {
-                NewmapCell* map_cell = gpGame->worldMap.cell(cell.point);
-                if (map_cell->is_trigger
-                    && (map_cell->type == LITH_ONEWAY_ENTRANCE
-                        || map_cell->type == LITH_TWOWAY
-                        || map_cell->type == UNDERGROUND_GATE)) {
-                    pathCell trigger_cell = cell;
-                    trigger_cell.can_stop = 1;
-                    trigger_cell.adjusted_cost += 50;
-                    enter_trigger(current_hero, &trigger_cell, maxMobility,
-                                  search_type);
+                NewmapCell* mapCell = g_game->m_worldMap.cell(cell.m_point);
+                if (mapCell->m_isTrigger
+                    && (mapCell->m_type == LITH_ONEWAY_ENTRANCE
+                        || mapCell->m_type == LITH_TWOWAY
+                        || mapCell->m_type == UNDERGROUND_GATE)) {
+                    pathCell triggerCell = cell;
+                    triggerCell.m_startAtTrigger = 1;
+                    triggerCell.m_adjustedCost += 50;
+                    enterTrigger(currentHero, &triggerCell, maxMobility,
+                                  searchType);
                 }
             }
         }
-        if (search_type == const_AI_search)
-            check_town_portal(current_hero, &cell, maxMobility);
+        if (searchType == const_AI_search)
+            checkTownPortal(currentHero, &cell, maxMobility);
     }
 
-    pathCell next_cell;
-    TTerrainType native_terrain = current_hero->army.GetNativeTerrain();
+    pathCell nextCell;
+    TTerrainType nativeTerrain = currentHero->m_army.getNativeTerrain();
 
-    while (queue.size()) {
-        cell = queue.back();
-        queue.pop_back();
-        cell = *get_cell(cell.point, !cell.last_can_stop);
+    while (m_queue.size()) {
+        cell = m_queue.back();
+        m_queue.pop_back();
+        cell = *getCell(cell.m_point, !cell.m_canStop);
 
-        if (queue.size()) {
-            next_cell = queue.back();
-            if (next_cell.point == cell.point
-                && next_cell.last_can_stop == cell.last_can_stop)
+        if (m_queue.size()) {
+            nextCell = m_queue.back();
+            if (nextCell.m_point == cell.m_point
+                && nextCell.m_canStop == cell.m_canStop)
                 continue;
         }
 
-        cell.town_portal = 0;
-        cell.castle_gate = cell.can_stop = 0;
-        long turn_mobility = iCurTempMobility - cell.cost;
+        cell.m_townPortal = 0;
+        cell.m_castleGate = cell.m_startAtTrigger = 0;
+        long turnMobility = curTempMobility - cell.m_cost;
 
-        if (cell.bIsTrigger) {
-            if (!enter_trigger(current_hero, &cell, maxMobility,
-                               search_type))
+        if (cell.m_isTrigger) {
+            if (!enterTrigger(currentHero, &cell, maxMobility,
+                               searchType))
                 continue;
         }
 
-        unsigned char adjacent_monster = 0;
-        if (cell.in_boat) {
-            if (gpAdvManager->GetCell(cell.point)->GroundSet
+        unsigned char adjacentMonster = 0;
+        if (cell.m_inBoat) {
+            if (g_advManager->getCell(cell.m_point)->m_groundSet
                 != eTerrainWater)
                 continue;
         }
 
-        if (!cell.flying && !cell.dimension_door
-            && search_type < const_AI_search
-            && (GetMapExtra(cell.point.x, cell.point.y, cell.point.z)
+        if (!cell.m_flying && !cell.m_dimensionDoor
+            && searchType < const_AI_search
+            && (getMapExtra(cell.m_point.m_x, cell.m_point.m_y, cell.m_point.m_z)
                 & MAP_EXTRA_MONSTER)
-            && cell.point != start
-            && gpAdvManager->FindAdjacentMonster(
-                cell.point, &monster, cell.monster))
-            adjacent_monster = 1;
+            && cell.m_point != start
+            && g_advManager->findAdjacentMonster(
+                cell.m_point, &monster, cell.m_monster))
+            adjacentMonster = 1;
 
-        TestPossibleDirections(current_hero, &cell, turn_mobility,
-                               maxMobility, adjacent_monster, monster,
-                               iPathfinding, search_type, native_terrain);
+        testPossibleDirections(currentHero, &cell, turnMobility,
+                               maxMobility, adjacentMonster, monster,
+                               pathfinding, searchType, nativeTerrain);
 
-        if (target.is_valid() && get_cell(target, false)->visited) {
-            if (was_on_map)
-                current_hero->obscure_cell();
+        if (target.isValid() && getCell(target, false)->m_visited) {
+            if (wasOnMap)
+                currentHero->obscureCell();
             return;
         }
     }
 
-    gpAdvManager->fullySeeded = 1;
-    if (was_on_map)
-        current_hero->obscure_cell();
+    g_advManager->m_fullySeeded = 1;
+    if (wasOnMap)
+        currentHero->obscureCell();
 }
 
 // COMDAT pairing: `vector<pathCell*>::erase(iterator, iterator)`, the range

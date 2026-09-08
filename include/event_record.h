@@ -22,8 +22,8 @@ class NewmapCell;
 // second claim on one RVA is a fatal duplicate at delink time. Declared
 // here rather than by including game.h, whose closure event_record.obj
 // does not otherwise need.
-extern int MAP_WIDTH;
-extern int MAP_HEIGHT;
+extern int g_mapWidth;
+extern int g_mapHeight;
 
 // Record discriminant returned by get_type(); values byte-proven from the
 // retail get_type bodies (mov eax,N / ret) reached through each class vtable.
@@ -55,12 +55,14 @@ class type_event_record {
 public:
     type_event_record();
     virtual ~type_event_record();
-    virtual type_event_record_type get_type() = 0;
+    // Before normalization (function): type_event_record::get_type.
+    virtual type_event_record_type getType() = 0;
     virtual unsigned char load(TAbstractFile* infile, int version);
     virtual unsigned char save(TAbstractFile* outfile);
     virtual void replay(unsigned char draw);
     virtual void undo();
-    signed char player_id;  // +0x04
+    // Before normalization: player_id.
+    signed char m_playerId;  // +0x04
 };
 
 // A recorded hero step. load/save (0x49a690/0x49a750) serialize player_id,
@@ -71,7 +73,8 @@ public:
 class type_record_move_hero : public type_event_record {
 public:
     static type_event_record* create();
-    virtual type_event_record_type get_type() OVERRIDE;
+    // Before normalization (function): type_record_move_hero::get_type.
+    virtual type_event_record_type getType() OVERRIDE;
     virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
@@ -79,14 +82,20 @@ public:
     // Retail's record_move (0x49cd50) expands this: the hero, its CURRENT
     // facing byte snapshotted into restore_flag, the step direction, the
     // hero's own map point into source and the caller's into destination.
-    type_record_move_hero(hero* who, char _direction, type_point _destination);
+    // Before normalization (locals): _direction, _destination.
+    type_record_move_hero(hero* who, char direction, type_point destination);
     type_record_move_hero() {}
 
-    hero* current_hero;          // +0x08
-    type_point source;           // +0x0c - hero position before the move
-    signed char restore_flag;    // +0x10 - hero+0x47 snapshot (not serialized)
-    signed char direction;       // +0x11
-    type_point destination;      // +0x12
+    // Before normalization: current_hero.
+    hero* m_currentHero;          // +0x08
+    // Before normalization: source.
+    type_point m_source;           // +0x0c - hero position before the move
+    // Before normalization: restore_flag.
+    signed char m_restoreFlag;    // +0x10 - hero+0x47 snapshot (not serialized)
+    // Before normalization: direction.
+    signed char m_direction;       // +0x11
+    // Before normalization: destination.
+    type_point m_destination;      // +0x12
 };
 
 // Teleport reuses move_hero's whole serializer and its undo: slots 2, 3 and
@@ -97,11 +106,13 @@ public:
     // record_teleport (0x49cf50) reads hero+0x47 TWICE - once at the call
     // site for this argument and once inside the base body for
     // restore_flag - which is what proves the facing is forwarded here.
-    type_record_teleport(hero* who, type_point _destination);
+    // Before normalization (locals): _destination.
+    type_record_teleport(hero* who, type_point destination);
     type_record_teleport() {}
 
     static type_event_record* create();
-    virtual type_event_record_type get_type() OVERRIDE;
+    // Before normalization (function): type_record_teleport::get_type.
+    virtual type_event_record_type getType() OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
 };
 
@@ -111,42 +122,50 @@ public:
 class type_record_claim_mine : public type_event_record {
 public:
     static type_event_record* create();
-    virtual type_event_record_type get_type() OVERRIDE;
+    // Before normalization (function): type_record_claim_mine::get_type.
+    virtual type_event_record_type getType() OVERRIDE;
     virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
     virtual void undo() OVERRIDE;
 
-    type_record_claim_mine(long _id, char _new_owner);
+    // Before normalization (locals): _id, _new_owner.
+    type_record_claim_mine(long id, char newOwner);
     type_record_claim_mine() {}
 
-    int id;                 // +0x08
-    signed char new_owner;  // +0x0c
-    signed char old_owner;  // +0x0d
+    // Before normalization: id.
+    int m_id;                 // +0x08
+    // Before normalization: new_owner.
+    signed char m_newOwner;  // +0x0c
+    // Before normalization: old_owner.
+    signed char m_oldOwner;  // +0x0d
 };
 
 // The town variant has the same four-field tail. replay writes new_owner to
 // towns[id].owner; undo restores old_owner from the following byte.
 class type_record_claim_town : public type_record_claim_mine {
 public:
-    type_record_claim_town(long _id, char _new_owner);
+    // Before normalization (locals): _id, _new_owner.
+    type_record_claim_town(long id, char newOwner);
     type_record_claim_town() {}
 
     static type_event_record* create();
-    virtual type_event_record_type get_type() OVERRIDE;
+    // Before normalization (function): type_record_claim_town::get_type.
+    virtual type_event_record_type getType() OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
     virtual void undo() OVERRIDE;
 };
 
 // A recorded boat-hide. load/save (0x49ad00/0x49adf0) serialize the boat (by its
 // byte id at boat+0x19, re-resolved via &gpGame->boats[]); two flag bytes(+0xc,
-// +0xd) and two coords(+0x10,+0x14, stored int, serialized as 16-bit) are only
+// +0xd) and two hero IDs (+0x10/+0x14, int in memory, 16-bit on disk) are only
 // present in save versions [0x12,0x1e] except 0x1c, or >= 0x23; older saves
 // default them to {1,0,-1,-1}.
 class type_record_hide_boat : public type_event_record {
 public:
     static type_event_record* create();
-    virtual type_event_record_type get_type() OVERRIDE;
+    // Before normalization (function): type_record_hide_boat::get_type.
+    virtual type_event_record_type getType() OVERRIDE;
     virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
@@ -154,15 +173,24 @@ public:
     // The +0xc/+0x10 pair is the state replay installs and comes from the
     // caller; the +0xd/+0x14 pair is the boat's CURRENT state, snapshotted
     // here for undo.
-    type_record_hide_boat(boat* _current_boat, unsigned char _occupied,
-                          int _occupying_hero);
+    // Before normalization (locals): _current_boat, _occupied, _occupying_hero.
+    type_record_hide_boat(boat* currentBoat, unsigned char occupied,
+                          int occupyingHero);
     type_record_hide_boat() {}
 
-    boat* current_boat;      // +0x08
-    unsigned char field_0c;  // +0x0c - flag (default 1)
-    unsigned char field_0d;  // +0x0d - flag (default 0)
-    int field_10;            // +0x10 - coord (serialized as 16-bit; default -1)
-    int field_14;            // +0x14 - coord (serialized as 16-bit; default -1)
+    // Before normalization: current_boat.
+    boat* m_currentBoat;      // +0x08
+    // Before normalization: field_0c.
+    // Replay 0x49ae80 installs the caller's new occupancy/hero pair;
+    // the constructor supplies these role-derived names (PC-only fields).
+    unsigned char m_occupied;  // +0x0c - replay occupancy (old-save default 1)
+    // Before normalization: field_0d.
+    // Undo 0x49aed0 restores the snapshot taken from the original boat.
+    unsigned char m_previousOccupied;  // +0x0d - undo occupancy (old-save default 0)
+    // Before normalization: field_10.
+    int m_occupyingHero;            // +0x10 - replay hero ID (old-save default -1)
+    // Before normalization: field_14.
+    int m_previousOccupyingHero;    // +0x14 - undo hero ID (old-save default -1)
 };
 
 // show_boat extends hide_boat with two trailing type_points (+0x18/+0x1c).
@@ -174,16 +202,20 @@ public:
 class type_record_show_boat : public type_record_hide_boat {
 public:
     static type_event_record* create();
-    virtual type_event_record_type get_type() OVERRIDE;
+    // Before normalization (function): type_record_show_boat::get_type.
+    virtual type_event_record_type getType() OVERRIDE;
     virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
     virtual void undo() OVERRIDE;
-    type_record_show_boat(boat* _current_boat, type_point _location);
+    // Before normalization (locals): _current_boat, _location.
+    type_record_show_boat(boat* currentBoat, type_point location);
     type_record_show_boat() {}
 
-    type_point location;           // +0x18 - replay destination
-    type_point previous_location;  // +0x1c - restored by undo
+    // Before normalization: location.
+    type_point m_location;           // +0x18 - replay destination
+    // Before normalization: previous_location.
+    type_point m_previousLocation;  // +0x1c - restored by undo
 };
 
 // A recorded object erasure. load/save (0x49b190/0x49b220) serialize four
@@ -192,19 +224,25 @@ public:
 class type_record_erase : public type_event_record {
 public:
     static type_event_record* create();
-    virtual type_event_record_type get_type() OVERRIDE;
+    // Before normalization (function): type_record_erase::get_type.
+    virtual type_event_record_type getType() OVERRIDE;
     virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
     virtual void undo() OVERRIDE;
-    type_record_erase(type_point _location, long _object_id,
-                      unsigned long _extra_info, long _object_index);
+    // Before normalization (locals): _location, _object_id, _extra_info, _object_index.
+    type_record_erase(type_point location, long objectId,
+                      unsigned long extraInfo, long objectIndex);
     type_record_erase() {}
 
-    type_point location;         // +0x08
-    int object_id;               // +0x0c
-    unsigned int extra_info;     // +0x10
-    int object_index;            // +0x14
+    // Before normalization: location.
+    type_point m_location;         // +0x08
+    // Before normalization: object_id.
+    int m_objectId;               // +0x0c
+    // Before normalization: extra_info.
+    unsigned int m_extraInfo;     // +0x10
+    // Before normalization: object_index.
+    int m_objectIndex;            // +0x14
 };
 
 // Dreamcast names the complete tail; retail independently proves each
@@ -213,20 +251,26 @@ public:
 class type_record_hide_hero : public type_event_record {
 public:
     static type_event_record* create();
-    virtual type_event_record_type get_type() OVERRIDE;
+    // Before normalization (function): type_record_hide_hero::get_type.
+    virtual type_event_record_type getType() OVERRIDE;
     virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
     virtual void undo() OVERRIDE;
 
-    type_record_hide_hero(hero* who, char _new_owner,
-                          unsigned char _town_garrison);
+    // Before normalization (locals): _new_owner, _town_garrison.
+    type_record_hide_hero(hero* who, char newOwner,
+                          unsigned char townGarrison);
     type_record_hide_hero() {}
 
-    hero* current_hero;          // +0x08
-    signed char new_owner;       // +0x0c
-    signed char prev_owner;      // +0x0d
-    unsigned char town_garrison; // +0x0e
+    // Before normalization: current_hero.
+    hero* m_currentHero;          // +0x08
+    // Before normalization: new_owner.
+    signed char m_newOwner;       // +0x0c
+    // Before normalization: prev_owner.
+    signed char m_prevOwner;      // +0x0d
+    // Before normalization: town_garrison.
+    unsigned char m_townGarrison; // +0x0e
 };
 
 
@@ -237,25 +281,31 @@ public:
 class type_record_show_hero : public type_record_hide_hero {
 public:
     static type_event_record* create();
-    virtual type_event_record_type get_type() OVERRIDE;
+    // Before normalization (function): type_record_show_hero::get_type.
+    virtual type_event_record_type getType() OVERRIDE;
     virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
     virtual void undo() OVERRIDE;
-    type_record_show_hero(hero* who, char _new_owner, type_point _location,
-                          unsigned char _on_boat);
+    // Before normalization (locals): _new_owner, _location, _on_boat.
+    type_record_show_hero(hero* who, char newOwner, type_point location,
+                          unsigned char onBoat);
     type_record_show_hero() {}
 
-    type_point location;          // +0x10 - replay destination
-    type_point previous_location; // +0x14 - restored by undo
-    unsigned char on_boat;        // +0x18 - replay state
-    unsigned char previous_boat;  // +0x19 - restored by undo
+    // Before normalization: location.
+    type_point m_location;          // +0x10 - replay destination
+    // Before normalization: previous_location.
+    type_point m_previousLocation; // +0x14 - restored by undo
+    // Before normalization: on_boat.
+    unsigned char m_onBoat;        // +0x18 - replay state
+    // Before normalization: previous_boat.
+    unsigned char m_previousBoat;  // +0x19 - restored by undo
 };
 
 class type_record_player_death : public type_event_record {
 public:
     static type_event_record* create();
-    virtual type_event_record_type get_type() OVERRIDE;
+    virtual type_event_record_type getType() OVERRIDE;
     virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
@@ -264,19 +314,22 @@ public:
     // Retail replay sign-extends this serialized byte for both the player-name
     // lookup and the dialog payload; the role is still unknown, but its
     // signedness is byte-proven.
-    signed char extra;  // +0x08 - second serialized byte (role TBD)
+    signed char m_extra;  // +0x08 - second serialized byte (role TBD)
 };
 
 class type_record_shroud : public type_event_record {
 public:
     struct type_shroud_change : public type_point {
-        unsigned short old_value;
-        unsigned short new_value;
+        // Before normalization: old_value.
+        unsigned short m_oldValue;
+        // Before normalization: new_value.
+        unsigned short m_newValue;
     };
 
     static type_event_record* create();
 
-    virtual type_event_record_type get_type() OVERRIDE;
+    // Before normalization (function): type_record_shroud::get_type.
+    virtual type_event_record_type getType() OVERRIDE;
     virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
@@ -286,10 +339,14 @@ public:
     // (dc 0x8f258). Neither survives as a retail body - the carve leaves no
     // row between save (0x49bdf0) and replay (0x49be60) - so Complete
     // expanded both into game::SetVisibility / game::ResetVisibility.
-    void add_change(int x, int y, int z, short old_value, short new_value);
-    long get_change_count();
+    // Before normalization (function): type_record_shroud::add_change.
+    // Before normalization (locals): old_value, new_value.
+    void addChange(int x, int y, int z, short oldValue, short newValue);
+    // Before normalization (function): type_record_shroud::get_change_count.
+    long getChangeCount();
 
-    std::vector<type_shroud_change> changes;  // +0x08 (allocator at +0x08)
+    // Before normalization: changes.
+    std::vector<type_shroud_change> m_changes;  // +0x08 (allocator at +0x08)
 };
 
 // --- globals ---

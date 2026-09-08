@@ -70,12 +70,24 @@ Matcher guidance:
   reconstruction presents a small `cb` → the 1000 floor → everything starves.
   Finish the body; the inlining follows. Do not chase `_Tidy`/`vector`
   spellings, pragmas, or header variants — they are not the input.
-* The budget lever is *statement mass*, not bytes: dead stores and other
-  byte-inert statements move `cb` (this is A6's real mechanism). On a
-  byte-plateaued function whose only residual is an under-inline (A9,
-  `do_general_melee`), the honest fix is raising `caller_cb` past the
-  knife-edge or slimming an earlier callee's `cb` — quantified by the model
-  (§5.8).
+* The budget depends on front-end statement mass (`cb`), not emitted
+  bytes. Dead stores and other byte-inert statements can change `cb`; this
+  is a **compiler diagnostic finding, not permission to add such statements
+  to reconstructed source**. A budget-only probe may locate a threshold,
+  but remove it after the experiment. A better score does not justify it.
+  Recover the caller/callee declarations, body visibility and source order,
+  local lifetimes, and meaningful operations supported by Dreamcast and
+  retail evidence. Preserve proven helper boundaries through score dips.
+* Retain `HOMM3_RELEASE_VERIFY(expression)` only for a meaningful recovered
+  invariant supported by line-table and codegen evidence. A line gap alone
+  does not prove an assertion. Do not retain dummy calls, self-assignments,
+  repeated expressions, unreachable branches, or alternate declarations to
+  change the inline budget. Every retained VERIFY and temporary inline-depth
+  experiment needs a source comment naming caller, callee and retail/DC
+  evidence, plus a negative control showing that flattening or de-inlining
+  fails. Remove diagnostic pragmas before commit. The matching rules in
+  [AGENTS.md](../../AGENTS.md#helper-boundaries-and-inlining) govern which
+  source changes are admissible; the budget model only explains codegen.
 * A15 ("leaf spelling is a global variable") now has a mechanism: a leaf's
   `cb` enters every caller's sequential budget arithmetic, so respelling a
   leaf re-decides inline structure at every call site in the image.
@@ -100,6 +112,13 @@ driver at rva `0x19dea`. The working inliner is:
 | `inl_veto` | `0x94964` | post-substitution size veto (cold; option-gated) |
 | option-bit unpack | `0x1bd89` | per-invocation flags → `0xac0**` dword bits |
 | budget clamp stub | `0x93d28` | `mov eax,0x88b8` — the 35000 cap (cold) |
+
+<!-- c2-role: function 0x1994f inlinePass -->
+<!-- c2-role: function 0x199fa expandInlineCalls -->
+<!-- c2-role: function 0x1a27c collectInlineCandidates -->
+<!-- c2-role: function 0x16f04 checkInlineCandidate -->
+<!-- c2-role: function 0x1b973 fetchInlineBody -->
+<!-- c2-role: function 0x94964 checkInlineSizeVeto -->
 
 Correction to the atlas's §3 hunting list: the `.databe` cluster
 `0xac094`–`0xac0d4` is **not** budget state — `0x1bd89` shows those dwords
@@ -557,6 +576,29 @@ Two riders:
   is worth -0.19 (94.32 pinned against 94.51 unpinned), so it came out and the
   tree's pin count fell 354 -> 353.
 
+### A mutable bitset proxy also explains boolean argument homes
+
+`TObjectType::setImageName` (`0x514610`) calls `bitset<48>::set` twice in
+retail. Writing those calls directly expands both setters. Subscript
+assignment instead expands `operator[]` and `reference::operator=(bool)`,
+leaving `set` out of line and reproducing the two boolean argument stack
+homes. With the cache accessor and separate final field copies already in
+place, this change alone improves 73.2688% to 90.6206%.
+
+The faithful trace at the subsequent 90.6364% temporary-lifetime checkpoint
+measures the proxy assignment at cost 43. Its two nested setter budgets are
+71 and 80 against `set`'s cost of 91. The cache accessor independently gives
+its vector constructor budget 43 against cost 51; putting the static vector
+directly in the caller expands that constructor and scores 87.9486%.
+
+This function has no Dreamcast counterpart. The accessor is provisional;
+the retained constructor, bitset calls and boolean homes are retail
+facts. Later local-lifetime and packed-byte-index changes reach 96.0790%.
+A second byte-verified trace has the same caller cost of 577, all 22 root
+candidates, and every nested budget unchanged. These measured gains come
+without changing inline decisions. The controls and remaining scheduling
+differences are recorded beside the function in `src/objecttype.cpp`.
+
 ### The checked bitset accessor can recover another boundary
 
 `GiveCrossoverArtifacts` (`0x487900`, Complete-only) reaches 99.41% from
@@ -668,10 +710,10 @@ chain; Dreamcast's four-byte video stubs prove declarations and order only.
 
 The earlier loop-spelling and cached-count probes could not recover the missing
 top test in the flattened body. Restoring the helper chain does, with no inline
-keyword or pragma. Its callers remain a separate checkpoint: `ShowVideo` now
-auto-inlines the ordinary close at all three sites, but still expands nested
-helpers that retail calls. Restoring the other teardown callers is byte-flat;
-call-site count alone does not explain that remaining decision.
+keyword or pragma. `ShowVideo` also needs the bitmap accessor calls described
+[below](#bitmap-accessors-recover-three-different-cleanup-decisions) to recover
+its three different nested expansions. Restoring other teardown callers was
+byte-flat; their count did not explain those decisions.
 
 ### Campaign hero lookup and the packed-point accessor (2026-09-06)
 
@@ -844,6 +886,430 @@ caller is saturated. Do not expect a pasted-helper restoration to pay on a
 very large or a very small caller -- take it for the source fact, and look
 for the mid-band callers when hunting score.
 
+### A shared reset pass changes the following vector boundaries
+
+`CreateRiver` (`0x548df0`) and the retail route at `0x548500` begin with the
+same invalid-position constructor, `GetMapItem(0, 0)` call, map-volume
+calculation and predecessor/cost reset loop. Representing that pass as an
+ordinary generator method, `ResetMovementCosts`, changes CreateRiver's
+later STL expansions: all six seed inserts, both popped-element erases and
+the worklist clear retain retail's call boundaries. The score rises from
+71.4710% to 75.2265% with the same `0xbc` frame; all other current scores
+stay unchanged. Flattening the pass back into the caller is the negative
+control. The helper still expands under `/Ob2` and adds no retail claim.
+
+The repeated retail sequence supports a shared operation. Its original
+name and linkage remain hypotheses because Dreamcast has no RMG compiland.
+A free helper taking the generator by reference produces the same bytes;
+a map receiver scores 73.1583% and derives the map pointer before the
+position constructor, unlike retail. This is another instance where
+recovering a helper affects later calls even though that helper itself
+emits no call. It does not justify arbitrary extraction to adjust the
+inliner budget.
+
+### Caller-state rejection before budget testing
+
+`homm3 vc6 predict-inline 0x573670 --trace` now reports the collector gate
+at C2 RVA `0x1a418..0x1a427`. It rejects the candidate when both
+`currentFunctionBody->flags34 & 0x18000 == 0` and
+`callee->flags73 & 0x300 != 0`. The passive hook at `0x1a412` observes
+these values before the original load; it changes no gate input.
+
+In `TSeerHut::doSeerEvent`, body flags are zero and the two dialog helpers
+have flags `0x568` and `0x5c8`. Both fail this gate, while `hasExpired`
+and `getValue` pass. The rejected helpers never reach a budget test, so
+changing their costs or their caller's budget cannot admit them through
+this path. Existing EH-bearing `type_quest::loadFromMap` has body flags
+`0x8000` and passes the gate. These observations support an EH-state
+interpretation; the trace reports the bits and the specific gate, not a
+complete classifier for every compiler flag.
+
+Both traces preserve all 130,401 object bytes outside the timestamp and
+reproduce their selected current function bytes. Source recovery must
+account for the caller's real object lifetimes or a different evidenced
+boundary; an unused object merely forcing an exception frame is not a fix.
+
+### Live budget inputs from the unchanged compiler body
+
+`homm3 vc6 predict-inline <selector> --trace` records C2's selected caller
+and each reached inline-budget test. It uses the canonical temporary shim's
+hooks at `0x1995c` (root size) and `0x19f8c` (site budget test), with verified
+instruction bytes and the loaded DLL base. At the root ESI points to a body
+whose first word is the symbol; symbol `+0x18` is its decorated name.
+At the site EDI is the callee symbol; original ESP `+0x34`, `+0x48` and
+`+0x30` hold depth, budget and remaining candidates respectively. The hooks
+preserve integer registers, EFLAGS and Win32 last-error state. See
+[shim.md](shim.md#4-gated-inline-budget-observations) for the shared overlay.
+
+These records follow argument-count, depth and force-inline checks but
+precede the budget/running-size checks and substitution veto. A recorded
+`budget_allows` means only that the size test permits expansion. Confirm
+the final boundary in the emitted assembly.
+
+Both back ends replay the **same four captured C1 IL streams**. Full COFF
+objects must agree outside the timestamp, and the selected function's
+code bytes must also reproduce its current build object. Independent C1
+runs are unsuitable for this oracle: the same RMG source path produced
+different anonymous-namespace identifiers and BSS ordering/alignment,
+despite identical initialized sections. Masking those differences would
+weaken the gate; sharing the captured input avoids them.
+
+For the 81.2445% CreateRiver candidate, C2 reports caller `cb=1530`, initial
+budget 3060 and 128 reached tests. Each early vector destructor has
+`cb=94`; its nested `_Destroy` has `cb=49` and receives 68 or 65, so both
+empty bodies expand away. Retail retains these two calls. Later,
+`type_random_map` cleanup gives the deleting helper (`cb=97`) 91 units on
+the failed-prototype path and 251 on final exit, explaining its retained
+and expanded copies. Those later boundaries already agree with retail;
+changing the caller's total cost alone can disturb them. Use the measured
+distribution to test evidenced source boundaries, not to justify dummy
+call sites or compiler-budget overrides.
+
+The native negative control drops `-Gy` through the shim, requires this
+captured-IL identity gate to reject it, then restores and verifies the
+clean trace:
+
+```sh
+HOMM3_TEST_VC6_TRACE=1 python3 -m unittest homm3.vc6.test_inline_trace
+```
+
+## Ordinary definitions later in the same TU can inline
+
+Complete retains the 91-byte fastcall guard-value helper at `0x545e00` and
+expands its four threshold/scale table accesses inside several RMG connections.
+The recovered `GetRmgGuardValue(int value, int strength)` definition follows
+`CreateGroundConnection` and `CreateSubterraneanGate` in `rmg.cpp`, in retail
+address order. Both earlier callers inline it under the normal RMG profile,
+without an `inline` keyword or a pragma; its standalone body matches all 91
+raw bytes after resolving four data references.
+
+A declaration followed by a later definition in the same TU therefore does
+not establish an out-of-line boundary. Verify the actual caller expansion
+before moving a body or changing a declaration. Restoring this shared helper
+alone does not settle the callers' remaining STL and map-accessor decisions.
+
+### An exact accessor can hide a different nested call
+
+The by-value `type_random_map::GetMapItem` at 0x5378e0 retains the same
+39 raw bytes whether it computes the index directly or delegates to the
+three-scalar overload. The delegation leaves `RepairWaterZoneBorders`
+unchanged, but changes `CreateGroundConnection`'s first clear from expanded
+`copy`/`_Destroy` calls to a retained range erase, as in retail
+(76.75134% to 77.31306%).
+
+The same change moves `CreateRiver` from 39.066925% to 33.67439%: final
+map cleanup calls the vector deleting destructor where retail directly
+invokes the array iterator, and a trailing vector `_Destroy` is retained.
+These named sites show why an exact standalone body does not settle the
+source call boundary. The candidate keeps one indexing formula through
+delegation; its original source spelling remains provisional because the
+DC corpus has no RMG compiland. Caller-specific residuals and prior peaks
+remain recorded rather than being hidden by an inline directive.
+
+### A grid copy boundary changes neighboring STL decisions
+
+The retained river-painter constructor at `0x55ee50` copies both components
+of its virtual `GetSize` result before storing the adapter pointer. An
+explicit `TRmgGridPoint` copy constructor restores all 118 raw bytes after
+seven relocations. Implicit copying interleaves the adapter and second size
+store (99.71%); moving that assignment into the base constructor body places
+the vptr store too early (99.10%). Copy assignment is byte-neutral here.
+
+The same declaration closes `TRmgTerrainBrush::ChangeTerrain` (`0x5b7520`,
+362 raw bytes and 13 matching blocks) by restoring its retained set-distance
+helper. It also raises the terrain-painter constructor from 23.33% to 91.22%:
+both set initialization calls remain out of line and vector insertion expands.
+These are consequences of a shared value-copy boundary; no STL body or inline
+control changed. The map size accessor and terrain-brush destructor currently
+dip, with their 100% peaks retained. `createRiver` remains at 85.9575%.
+
+### Scalar read boundaries affect an earlier alternative branch
+
+`TSeerHut::load` (`0x574a90`) reaches 100% from 35.38% when its single-byte
+reads call an ordinary helper returning `unsigned char`. All reads keep their
+order and width, including the discarded legacy byte. Later helper calls in
+the modern-format branch change the budget available to the earlier legacy
+quest constructor. Its four allocator constructors and artifact insertion
+now remain out of line, matching retail; the frame shrinks from 0x1c to 0x14
+and all ten CFG blocks and three EH states agree.
+
+An unused helper leaves the flattened form byte-identical. Returning a masked
+integer reaches 99.9309%. Deleting the entire modern branch from the flattened
+form does not restore the boundaries: the quest constructor still has the
+1000-unit floor budget to itself. That control tests caller size, but does not
+rule out missing helper calls sharing the nested budget. The helper's original
+name is unknown; Dreamcast's older reader handles a different 24-byte POD.
+
+### Redundant source clamps can select an exact caller
+
+Dreamcast's clipped view-world scaler clamps each destination coordinate
+at both bounds (`viewwrld.cpp:190-198`), even though its entry guards make
+the upper clamps redundant. Restoring those two `else if` arms closes
+`VWDrawUnderlay` (`0x5f9ed0`) from 43.11% MAX to 100%: all 784 bytes match
+after resolving 21 relocations. The retained scaler (`0x5f9d90`) still
+matches all 316 bytes after eight relocations. VC6 removes the redundant
+checks from that body, while their source cost changes its inline decision.
+
+Earlier probes emitted extra checks and lowered scores. With the recovered
+bitmap accessors and paired entry guards, that result no longer holds.
+Revisit a rejected positive source fact when its compiler inputs change;
+an earlier candidate's redundant branches do not prove a revision removed
+the source statements. Omitting the clamps is the 38.55% current control;
+independent upper-bound `if`s are byte-flat, but Dreamcast supplies the
+`else` relationship. The road and river renderers dip to 98.25% and 98.08%,
+with their 99.54% and 98.54% peaks preserved.
+
+### Bitmap accessors recover three different cleanup decisions
+
+`ShowVideo` (`0x598af0`) reaches 100% without changing its ordinary cleanup
+helpers. Calling the canonical `GetPitch`, `GetHeight`, and `GetMap(0, 0)`
+at its three buffer setup sites changes the root candidate count from 3 to
+12 and the initial budget from 1000 to 1030. C2 then makes the three distinct
+`VideoClose` expansions that retail requires:
+
+| Close site | Nested budget | `VideoResume` (cost 103) | `CloseSmacker` (cost 62) |
+| :--------- | ------------: | :---------------------- | :---------------------- |
+| Initial close | 82 | Called | Expanded |
+| Audio-open failure | 80 | Called | Expanded |
+| Video-open failure | 105 | Expanded | Called with 2 remaining |
+
+The final resume expansion leaves only one unit for its nested
+`VideoSoundOnOff` (cost 57), so that call also remains, as in retail.
+The accessor change alone reaches 88.66%; keeping the original x/y arguments
+live through both final buffer calls reaches 95.42% and all 42 matching
+blocks. Assigning the pixel format before the frame-advance flag closes the
+remaining register schedule: all 901 bytes match after 91 relocations.
+
+Only dimension accessors give 76.00%; only the map accessor gives 67.31%.
+These controls identify the complete buffer interface and its actual inline
+sites. Counting callers elsewhere in the TU did not restore these decisions.
+
+### Repeated tile operations expose shared helper boundaries
+
+`PaintPoint` (0x5b4b20) and both update paths in `PaintTransitions` (0x5b5a70)
+write the adapter, then refresh the packed cache with validity first and four
+field setters. An ordinary shared `SetTile(point, tile)` preserves that
+operation and raises `PaintPoint` from 78.4213% to 92.2405%. Flattening the
+body into its callers changes later set and gap-predicate expansions.
+
+The same callers compute transition strength before loading the base-frame
+rule's virtual receiver. A shared `SelectBaseFrame(point, terrain, oldFrame)`
+captures the terrain index across that call and preserves this evaluation
+order. With a named frame result and scoped neighbour points, `PaintPoint`
+reaches 95.3146%. `PaintTransitions`, which initially fell to 38.6271% when
+the tile writer was recovered, returns to 74.7320% with its proven unsigned
+grid interface intact; its 74.7623% historical peak remains banked.
+
+These are retail-derived boundaries with provisional names and no Dreamcast
+counterpart. The remaining `PaintPoint` expansions are documented beside the
+function. No inline keyword, pragma, or unused operation is added. Recovering
+one common operation can expose another missing boundary in a different
+caller; preserve the stronger interface while checking that collateral.
+
+### Coordinate construction affects later nested calls
+
+The grid translation used by `PaintPoint` can initialize its working value
+with the retained two-reference coordinate constructor before applying the
+offset. This leaves the arithmetic expansion unchanged but restores the final
+`GetPackedCell` call at retail 0x5b509e, raising the caller from 95.3146% to
+97.0506%. The first neighbour read still expands `GetPackedCell`, and the
+inner set erase still expands the three-argument distance wrapper. Its frame
+and original-x temporary remain different. This supports the constructor
+boundary, without establishing original local names or a free/member addition
+interface: a free addition taking both operands by reference is byte-neutral.
+
+Named coordinate values, named cache indices, tighter tile scopes, separate
+nearby assignment, and early-continue loop guards are also byte-neutral. An
+explicit grid copy constructor instead introduces a retained call absent from
+retail. Giving the shared tile writer a value argument adds an entry copy;
+adding an aggregate packed-cell writer retains that method where retail has
+field stores. Neither is evidence for replacing the existing writer interface.
+Recovering the retained neighbour-queue body is neutral for `PaintPoint`, so
+its former declaration-only state does not explain these remaining decisions.
+
+### Measured budget comparisons in the terrain painter
+
+The gated [C2 shim trace](shim.md#4-gated-inline-budget-observations) reads
+actual candidate costs and budgets from the configured terrain compile.
+For `rmgTerrainPainter::paintPoint` (prior role `TRmgTerrainPainter::PaintPoint`,
+retail 0x5b4b20) at the earlier 97.0506% checkpoint, the front-end caller
+estimate is 933 and the initial budget
+is 1,866. At the first eight-neighbour terrain comparison, `getPackedCell`
+has cost 90 and budget 106 at depth 2. At the inner set erase, the three-argument
+`_Distance` has cost 41 and budget 45 at depth 3; its four-argument child
+has cost 45 but only 4 budget units. Those readings explain the two observed
+unwanted expansions. The final rule read gives `getPackedCell` only 73 units
+and correctly retains the call.
+
+Both compiled objects agree outside the COFF timestamp. The painter's lowerCamelCase
+method/type names and `m_` field prefixes leave all 70 emitted code sections
+unchanged. Source-owned comments preserve the earlier provisional role names;
+retail labels and checkpoint rows are regenerated from the new declarations.
+The trace measures candidate compiler state, not missing retail source tokens.
+
+A scratch counterfactual separates the two unwanted inline copies from the
+storage residual. At the existing `0x19f8c` hook, reject the first depth-two
+`getPackedCell` and the following three-argument `_Distance` by returning to
+the compiler's rejection path at `0x19a94`. Charge their original costs (90
+and 41) to the current budget before rejecting: their baseline child
+expansions are all free, so this preserves the later budget decisions.
+This is deliberately a modified-compiler experiment, outside the passive
+trace command and the matching build. Its normal-shim restoration is mandatory.
+
+The diagnostic reproduces all 56 named/virtual retail call sites in order,
+including the correct distance overload, yet still has a 0x54-byte frame
+(retail 0x50) and omits the original-x store at 0x5b4e3f. Thus neither storage
+delta can be attributed solely to those inline copies. The ordinary byte-checked
+`/Z7` object records the tile at EBP-0x54, the neighbour mask at EBP-0x38,
+and all five scoped nearby points at EBP-0x28; it omits the optimizer's
+unnamed temporaries, so those records do not identify the extra allocation.
+A lexical `inline_depth(1)` at the outer terrain read is byte-neutral because
+the nested call retains its own lexical allowance. Flattening just this read
+and pinning its cache call changes the caller's budget and later calls, so it
+is not an equivalent control. Both source pragma probes were removed.
+
+### Recover the tile constructor and terrain predicate together
+
+`paintPoint` now constructs a base tile from terrain/frame and tests matching
+terrain through an ordinary `isPaintTerrain(point)` helper. That helper calls
+both `getTerrain(point)` and `getPaintTerrain()`. Each operation has a meaningful
+value; no dummy call, assertion, or inline control is present. Names and the
+interface remain retail-derived hypotheses, since this TU has no DC counterpart.
+
+The individual controls explain why a lower intermediate score did not reject
+these boundaries. Before the point-copy recovery, the two-accessor predicate
+alone restored the first cache call but freed enough budget to expand the final
+one (96.6293%). The tile constructor alone prevented the inner tree find from
+expanding (85.7667%). Together they retain both desired cache calls and expand
+the tree find (98.2893%). The constructor's two-argument zero-flip form, explicit
+default flip arguments, and the existing flip-value factory leave the score unchanged.
+
+With the comparison-return predicate, recovering point-copy initialization
+and the base tile's lifetime reached a full checkpoint of 99.5570%. The gated trace now reads caller cost 920, initial
+budget 1,840, and base-tile constructor cost 52. The first cache read gets 48
+units at depth 3, so the cost-90 `getPackedCell` stays out of line. The two
+interior rule reads get 122 and 109 and expand it; the final rule read gets 77
+and retains it. The inner distance wrapper still receives 47 for cost 41 and
+expands, leaving only 6 for its cost-45 fourth-argument child. Its unwanted
+expansion is still a real residual, despite report-level relocation agreement.
+
+The trace object matches all 56,600 reference bytes outside the COFF timestamp.
+Renaming the recovered terrain-tile type and its fields leaves all 74 named
+function sections byte-identical. Full build and raw checks preserve the cache
+reader/initializer, gap predicates, coordinate constructor/comparator, both
+worklist destructors, and the exact 1,516-byte water-border repair.
+
+### Recheck storage after changing a later inline decision
+
+At the 99.5570% terrain-painter source, the retained three-argument `_Distance`
+body reproduces all 43 retail bytes at 0x5b8c70, including the resolved iterator
+increment call. The caller still expands that wrapper into the four-argument
+version. Its identity is therefore independently established; report-level
+relocation agreement does not settle the caller's overload.
+
+A new scratch compiler control rejects only that eligible depth-three wrapper,
+charging its original 41 units before the rejection. The source already retains
+the first cache call, so the old two-site control must not be reused unchanged.
+This diagnostic reaches retail's 1,483-byte function length and restores the
+three-argument call. It also changes the earlier direction pointer from EDX to
+EBX, changes the point-translation schedule, and changes the loop backedge's
+registers. Both cache multiplications still load y before width. Correcting a
+later inline decision can therefore change earlier storage; a near-exact
+translation sequence is not an invariant across that decision. The diagnostic
+object never enters objdiff or the checkpoint, and the normal shim is restored.
+
+The ordinary TU definition of `getTerrain` preserves the 99.5570% caller and
+both exact worklist destructors. Moving the body adds its ordinary candidate
+section; all existing C++ function sections compared with the banked trace
+retain identical code bytes. Retail proves the shared accessor role but not
+an explicit source `inline` qualifier. Neutral source-form controls and
+the point/flip-construction failures are recorded beside `paintPoint`, rather
+than inferred to be compiler limitations.
+
+### A guard-return predicate crosses the free-expansion cutoff
+
+`rmgTerrainPainter::isPaintTerrain` exposes the remaining distance-wrapper
+boundary through ordinary source control flow:
+
+```cpp
+if (getTerrain(point) == getPaintTerrain())
+    return 1;
+return 0;
+```
+
+The comparison-return form costs 38 and is free under the cutoff of 40. The
+guard-return form costs 47 and is charged. The unchanged `paintPoint` root
+still costs 920, but the inner cost-41 `_Distance` wrapper now receives only
+38 units and stays out of line, exactly as at retail 0x5b4f7f. The preceding
+tree find still expands. This is a meaningful predicate body, with no dummy
+operation, assertion, pragma, or compiler modification.
+
+Keeping the separate named point return initially leaves 99.0163% because
+this later call decision changes the direction-loop registers. Returning the
+compound translation (`return result += offset`) after the recovered coordinate
+copy initialization restores them and reaches 99.9204%. The point-addition cost
+is now 60 rather than 63. The first cache read receives 46, the two interior
+copies 115 and 108, and the final cache read 76, against a cost of 90. Both
+distance calls retain the three-argument wrapper, at budgets 18 and 38.
+
+The final passive trace reproduces all 56,910 object bytes outside the COFF
+timestamp. A separate raw audit resolves all 61 named relocations in the
+1,483-byte caller, admitting only the correct distance overload. Exactly eight
+bytes remain different: the two cache products at 0x5b4f06 and 0x5b4fee load y
+then multiply by width, whereas retail loads width then multiplies by y.
+Every other opcode, immediate, stack displacement, branch/call target, and
+data operand agrees. A lower intermediate score therefore did not refute
+the corrected call boundary, and the old named-return result did not survive
+that change in compiler state.
+
+### Neighbour lifetimes and dimension accessors affect an earlier vector fill
+
+`paintTransitions` (0x5b5a70) constructs scoped neighbour coordinates from
+the current x/y values, then uses the canonical `operator+=` with a `TPoint`
+offset. This restores retail's retained vector `_Ufill` call and raises
+74.7320% to 81.5196%. Returning a translated point expression introduces
+retained copy/translation calls absent from retail (74.9229%); constructing
+each local through the point copy constructor gives 78.6334%.
+
+Reading the painter's dimensions through ordinary `getWidth`/`getHeight`
+accessors then reaches 84.0645%, with 68 blocks against retail's 66. The
+unused-definition control is byte-identical to 81.5196%, so the accessor
+calls, rather than additional declarations, explain the improvement.
+The private TU build reproduces the successful 2240-byte probe body exactly.
+These are provisional retail-derived interface names; this RMG compiland
+has no Dreamcast counterpart.
+
+The passive trace records caller cost 1907 and initial budget 3814. One
+cache decision remains different: the right-edge southwest read gives the
+cost-90 `getPackedCell` 104 units and expands it. The following bottom-edge
+reads receive 127 and 145. The trace reproduces all 58,504 object bytes
+outside the timestamp; source spelling and codegen for the remaining
+decision are still unresolved.
+
+### Restore the outer helper before diagnosing a nested inline limit
+
+`considerHiring` (0x431800) had copied `totalArtifactValue`'s two loops into
+its body and pinned the equipped-slot valuation. Restoring the existing
+ordinary helper call, proved by Dreamcast ai_player.cpp:4483, removes the pin
+and raises 75.3838% to 89.7071%. The backpack valuation expands but its
+`game::getHero` stays out of line; the equipped-slot valuation remains a call.
+The old flattened body could not reproduce those contextual decisions.
+
+The final 100% source also preserves Dreamcast's player reference and named
+creature-cost row (int-width in retail), initializes the best-town pointer
+before the search object, and uses one best-value variable for both the
+initial threshold and town search. From the single-best-value form at
+95.8822%, omitting early best-town initialization gives 98.4815%; omitting
+the named cost row gives 97.4007%. These source controls matter after the
+helper boundary is restored, even where earlier flattened-body probes failed.
+
+The pinned VC6 passive trace reproduces all 156,794 object bytes outside the
+timestamp. The exact caller costs 559 with budget 1118. `totalArtifactValue`
+costs 141 at depth 1. Its first cost-133 artifact valuation receives 244 at
+depth 2 and expands, while nested cost-41 `getHero` receives 27 at depth 3
+and remains a call. The equipped valuation receives 111 and remains a call.
+All 41 retail blocks agree, with no remaining call-target differences.
+
 ## 7. Using it
 
 ```sh
@@ -859,11 +1325,406 @@ python3 -m homm3.vc6.inline_model --predict --spec sites.json
 python3 -m homm3.vc6.inline_model --measure-cb harness.cpp \
     --fn callee --caller caller25 --sites 25
 
-# the diagnoser (v1) is unchanged:
-homm3 vc6 predict-inline src.cpp --fn F --against UNIT:FN
+# diagnose calls and capture the actual C2 budget inputs:
+homm3 vc6 predict-inline 0x548df0 --trace
 ```
 
 The Ghidra evidence regenerates with
 `python3 scripts/homm3/vc6/ghidra_scripts/inline_probe.py dump|refs|callers`
 against the persisted atlas project (never re-analyze; `atlas --regen
 --reimport` owns that).
+
+### Canonical construction can restore a nested inline boundary
+
+`advManager::doEventArtifact` (0x49f7e0) reached 85.81439% from banked
+78.1174% after recovering its nested helper calls and the source operations in
+`advManager::giveArtifact`. Dreamcast events.cpp:481 proves construction with
+`ARTIFACT_NONE`; line 483 assigns `GetArtifactIndex()`. Replacing redundant
+sentinel stores and a `memcpy` with those operations lowers the hand-over
+helper's traced C2 cost from 133 to 113. Its direct free-artifact expansion has
+budget 113, while the two skill-arm expansions have budgets 6 and 4. This
+restores retail's expand/call/call decisions without inline controls.
+
+Either redundant initialization or the `memcpy` assignment alone restores the
+same 672-byte caller control, which keeps all three hand-over calls. The
+canonical caller is 752 bytes including alignment, SHA-256
+`8282bef18e0cd334fc454b975f8fb68cb53f1358c711d79fc616756b44e1198b`.
+The remaining differences are early short loads and unmerged skill-success
+tails. Inspect the callee's recovered operations before treating a small
+nested-budget miss as unavoidable compiler state.
+
+### A byte-inert caller probe does not establish the small-free class
+
+The campaign-header destructor (0x4886a0) previously inferred that `freeData`
+was in C2's cost-at-most-40 class because extra free/charged caller sites did
+not prevent expansion. The 2026-09-07 passive trace measures cost **101** and
+site budget **752**, with the state gate allowing expansion. Nested `clear`
+expands `erase` at cost/budget 69/144, then retains `_Destroy` at 49/29.
+Those observations replace the inferred cost bound; an unchanged result from
+a caller probe alone cannot identify which inline gate admitted the callee.
+The measured caller is 368 bytes including padding, SHA-256
+`4cd34e2faf32b5283dd26976c49e3e8286cfb5f5487fbdca9eb0e067ba8f63df`.
+
+
+### Default construction can differ from an explicit zero argument
+
+`GameSelectionHeadersStruct` (0x578e00) reaches 100% when its nested
+`NewSMapHeader` uses the default `std::bitset<156>` constructor instead of
+`bitset(0)`. Both zero the bits. In the pinned VC6 BITSET, the unsigned-long
+overload also contains a loop that loads set bits from its argument; C2 counts
+that body before eliminating the loop for zero.
+
+The passive trace measures cost 95 for the value constructor and 34 for the
+default constructor. With `bitset(0)`, the second string assignment's
+`assign(ptr, size)` gets budget 41 against cost 69 and remains a call, giving
+73.1483%. Default construction gives the two sites budgets 68 and 137:
+retail's first call remains, and its second expansion appears. The nested
+`_Grow` stays a call (cost 301, budget 68). All six retail CFG blocks agree.
+
+This closes a function previously attributed to unrelated declaration-state
+changes. No added types, inline controls, or flattened helper bodies are
+needed. The normal TU build and passive trace reproduce the exact 608-byte
+padded caller, SHA-256
+`1410609cf6a3b14cae54bc40945c85bd38d6c8d127bfc26973b5572f49918094`.
+
+
+### Restore predicate calls before forcing a nested call
+
+`combatManager::simulateMeleeAttack` (0x4224e0) reached 100% after restoring
+Dreamcast's `army::Is` and `combatManager::ValidHex` calls, the retail
+positive post-decrement loop test, and the separate breath-coordinate
+statements at DC ai.cpp:2473/2474. Replacing the predicates with raw shifts
+and comparisons had left too much budget for the first nested fire-shield
+calculation. The prior note incorrectly concluded that this site needed a pin.
+
+The exact caller costs 376 with initial budget 1000. Inside the canonical
+`simulateSimpleAttack`, `computeFireShieldDamage` costs 143: its multi-head
+site receives 139 and stays a call; its plain-attack site receives 157 and
+expands. Predicate/loop recovery alone reaches 97.0988%; separating the two
+adjacent-cell calls fixes the remaining direction lifetime and reaches 100%.
+All 36 retail CFG blocks agree. The verified padded body has 704 bytes and
+SHA-256 `6abb39482afe1d855242d8803dc124a085ade6bfb86d3b1f6d5e8a8bfa134449`.
+
+
+### Recover iterator traversal before tuning inline budgets
+
+`initializeArtifactTraitsTable` (0x44cd50) had flattened its Dreamcast-proven
+static `InitializeArtifactTraits(int, const vector<char*>&)` and replaced the
+Complete combination-artifact traversal with a scalar bit loop. Two invented,
+compile-time-dead diagnostic calls had raised that version to 80.5129%.
+Removing those calls alone gives 76.87327%; they have no source evidence.
+
+Retail 0x44d063..0x44d0bf compares both a bitset owner and offset with an end
+iterator, searches through `bitset<144>::test`, copies the found offset, then
+checks the end again. A const iterator with `find_if` and an identity predicate
+reproduces that sequence. Plain `find(..., true)` emits `cmp al,1 / je` where
+retail uses `test al,al / jne`; putting find in the increment duplicates the
+initial search and loses the shared loop. The iterator and predicate names are
+provisional; their operations are supported by retail.
+
+Keep the static helper's two parameters. Complete's pooled string copies can
+stay in the caller, while the helper owns cost, slot mask, class and defaults.
+This boundary, the iterator search, a component-traits reference and separate
+name/description pointer loads reach 81.376236% without a carrier or pragma.
+The remaining nested mask `_Tidy`/equality calls and late range-error code
+still differ. A helper with an extra buffer reference and the iterator reaches
+80.19802%; the scalar traversal with that helper reaches 73.65148%.
+
+
+### Early returns in a source helper can restore its nested scan
+
+`TSingleSelectionWindow::getHeroName` (0x58d1f0) flattened `getHeroInPos` and
+reached 80.5798%. Restoring the call initially lowered it: with the recovered
+caller scopes and named map references, C2 gave `getPlayerInPos` budget 73
+against cost 75, leaving that scan out of line at 64.6117%.
+
+Dreamcast `getHeroInPos` lines 8151..8162 first handles generated/random
+heroes with two early returns, then returns the fixed hero or selected hero.
+The assignment/else chain had changed that source structure. Restoring the
+returns expands `getPlayerInPos` naturally and raises the caller to 88.12766%.
+Both map tree finds now stay out of line, as retail requires.
+
+The remaining difference was independent of inlining: retail's fallback names
+at 0x58d294 and 0x58d3b4 directly index the hero array. The introduced `getHero`
+accessor added a -1/null check after each map call. One direct array access gives
+94.11702%; both give 100%, with all 39 retail CFG blocks exact. Preserve the
+selection helper and its scopes rather than flattening it to avoid the dip.
+
+
+### Preserve the value-returning wrapper around min/max
+
+`TViewWorldWindow::updateRadar` (0x5fc8f0) stopped at 80.75% with four
+16-bit selected-operand loads where retail uses DWORD loads before inserting
+10-bit coordinate fields. The local clamp templates returned references to
+by-value parameters. Those templates had collapsed two distinct interfaces.
+
+Dreamcast `includes.h:97,114` records `int max(int,int)` and `int min(int,int)`;
+their bodies call the reference-returning `_cpp_max`/`_cpp_min` selectors.
+Using the existing `homm3_minmax.h` wrappers restores both the operand stack
+homes and value-returning boundary, reaching 100% with all 17 CFG blocks exact.
+The earlier cast/type-width probes targeted the consequence of the wrong
+wrapper signature. Restoring the DC-proven `drawWindow()` call is byte-neutral;
+its ordinary body expands while `vwCompleteDraw` remains a call.
+
+
+### Separate input/output cursors can identify a missing transform
+
+`hero::updateSpellList` (0x4d95d0) reached 81.04% with hand-written spell-grant
+loops. Retail keeps an input cursor and a separately homed output cursor in
+each loop, alongside a bitset owner/offset. Its bounds check runs before the
+logical OR, although the bit value test can still short-circuit. A scalar
+`*dst = *dst || granted.test(spell)` loses both properties.
+
+Binary `std::transform` with the existing `bitset_iterator<70>` and
+`std::logical_or<bool>` reproduces the two loops and reaches 100%. The apparent
+20-byte stack-frame deficit (0x48 versus 0x5c) disappears with the iterator and
+algorithm locals; it did not require an extra container copy or artificial
+lifetime extension. `logical_or<unsigned char>` emits identical bytes, so that
+functor type cannot be distinguished by this match. Dreamcast proves the older
+spellbook/artifact operation; Complete's generic and combination grant loops
+are reconstructed from retail.
+
+
+### Restore output stores before blaming an inline tail merge
+
+`army::validAttack` (0x523bb0) stopped at 81.0407% with duplicated fragments
+of `getAdjacentCellIndex`. The source had flattened three adjacency calls,
+the `validHex`/`hasArmy` predicates, and the output stores. Its comment called
+retail's shared tail unreachable by VC6.
+
+Dreamcast path.cpp:159..223 writes each adjacency result through the output
+pointer, then validates and reads that location. Restoring those stores and
+the canonical calls reaches 95.4651%; C2 now shares the wide-direction tails.
+Dreamcast also initializes the adjacent-cell local before the wide-creature
+branch. Restoring that lifetime reaches 100%, including retail's earlier
+facing load. Replacing `getAdjacentCellIndex`'s explicit bounds guards with
+its DC-proven `validHex` call leaves the caller bytes unchanged. Complete's
+`isEnemy` call remains: retail proves that revision of the enemy criterion.
+
+
+### A do/while scope can retain invariant table stores inside the loop
+
+`iconWidget::nextRandomFrame` (0x4eb060) stopped at 81.0449% with its local
+odds table initialized inside a `for (;;)`, followed by a frame-count test
+and `break`. VC6 moved every table store before the reroll loop, while retail
+reinitializes the table on each attempt. Earlier goto, constness and inline
+budget probes had not changed that motion.
+
+Dreamcast's table scope closes at 0xd9e86 before the `GetNumFrames` condition
+on source line 546. A `do { ... } while (getNumFrames(chosen) <= 0)` preserves
+that boundary and reaches 100%. It also restores the 0x5c frame and the saved
+`this` pointer because the repeated constants now live across `random`.
+Reusing the result variable for the random roll, or spelling the transition
+conditions as the Dreamcast conjunctions, leaves those exact bytes unchanged.
+The table's const anonymous aggregate and ordinary helper calls remain intact.
+
+
+### Error-arm helpers can determine later vector expansion
+
+`TSingleSelectionWindow::onGameHeaderInfoInitMsg` (0x58a440) flattened both
+`CBadVersionMsg(version, text)` and `onBadVersionMsg`, although Dreamcast lines
+7031/7032 name those calls. Restoring the ordinary constructor alone raises
+81.3049% to 94.8089%; restoring only the handler gives 87.5488%. Together they
+reach 99.8008% and restore retail's later vector copy, erase and size calls.
+The error arm's zero-register and text-load differences disappear too.
+
+The last difference is statement order: retail loads `numMaps` before the
+window's net-game flag store. Moving the count declaration before that store
+reaches 100%; introducing a separate flag local instead gives 97.1951%.
+The constructor remains an ordinary two-argument function with its CNetMsg
+initializer and two bounded copies, at its original source position among
+message constructors. No inline-depth control is needed.
+
+
+### Return expression and original guard scopes jointly control tail merging
+
+`combatManager::isComputerAction(const army*)` (0x474bf0) stopped at 81.3696%
+with a supposed VC6 merged-return limitation. Its source had moved the
+repeated go-solo/control guard after the switch and expanded the final logical
+return into `if (...) return 0; return 1;`.
+
+Dreamcast command.cpp:946..984 keeps that guard inside each arm, and line 989
+returns the player/human logical expression. Retail distinguishes that final
+full-EAX result from its earlier AL constant returns. Restoring only the guard
+scopes scores 74.6377%; only the logical return scores 79.2391%. Restoring both
+reaches 100%: VC6 merges the repeated guards while preserving the machine-arm
+return blocks. The canonical `getControllingSide()` call replaces the flattened
+hypnotize expression without changing the exact bytes. Neither individual
+score dip disproved the recovered source structure.
+
+
+### Constructor return temporaries can remove a false register-allocation wall
+
+`game::getUndergroundGateExit` (0x4cde40) stopped at 81.4103% with invalid
+coordinates assigned into its result local before returning. That kept the
+result's high word live across map indexing, introduced another saved register,
+and reused the cached word where retail reloads an invalid-result temporary.
+
+Dreamcast game.cpp:11666/11675 instead returns a three-coordinate `type_point`
+constructor. Restoring those two returns alone reaches 100%. Retail's masks
+prove the arguments are 255, not -1, despite the signed packed fields.
+Restoring the remaining copy initialization, const `NewfullMap::cell(x,y,z)`
+call through its private `zCell` helper, const game signature and separate
+hero-trigger early return preserves the exact bytes. The recovered zCell
+expression `cellData + x + y * size + z * size * size` and the factored
+indexing form emit identical caller bytes. A combined hero/gate condition
+is byte-identical as well.
+
+
+### Restore an accessor before diagnosing distant intrinsic-copy joins
+
+`TTavernWindow::setRolloverText` (0x5d7920) stopped at 81.4136% with a folded
+hero/name address and a different shared `strcpy` expansion. Restoring the
+portrait's Dreamcast-proven `game::getHero` call alone reaches 100%, including
+the split `lea hero; add 0x23` and retail's gold/rumour/default copy join.
+A named pointer to the flattened array entry had not reproduced that boundary.
+Restoring the hire arm's getter leaves the exact bytes unchanged.
+
+Complete retains one named recruit pointer across `heroFn004D8F70`. Repeating
+the getter inside both sprintf arguments, as in the older DC direct class-table
+expression, retains two pointer calculations and null branches before the call
+and scores 91.6049%.
+Retail's saved ESI pointer proves the required lifetime. The different DC
+broadcast-text and redraw arguments are also excluded by the retail call edges.
+
+
+### Recover the induction type before spelling the optimized loop by hand
+
+`town::getBuildCost` (0x5c1180, compact resource-list overload) stopped at
+81.4912% with an explicit cursor and seven-entry down-counter. Its register
+allocation was blamed on front-end handle state. Dreamcast town.cpp:2230
+instead uses an indexed loop with a signed short resource id; its increment
+sign-extends a word.
+
+Restoring that loop reaches 100%: VC6 derives retail's cursor, down-counter,
+and reuse of the dead building argument slot. An indexed int loop gives
+77.4561%, so the induction type is essential even though retail's optimized
+counter runs in a full register. Incrementing count in the amount subscript
+or as a separate statement produces identical bytes. Restoring the proven
+`EGameResource*` output signature and its enum conversion is byte-neutral.
+
+
+### Loop scope and message-helper structure can jointly restore register roles
+
+`THeroScreenWindow::updateSlot` (0x4daf90) stopped at 81.7% with its saved
+register permutation attributed to C1 handle state. The message helper had
+an unsupported inline keyword, redundant constructor stores, and its final
+`WIDGET_DRAWN` assignment moved outside the original branches. Restoring the
+ordinary helper and Dreamcast's branch-local stores reaches 91.3%; restoring
+`getArtifact` calls alone is byte-neutral.
+
+Complete's reverse scan initializes to 19 and decrements before testing its
+bitset. An index declared before `while (true)` reaches 100% with the recovered
+helper, including retail's register roles and separate exit reloads. A `for`
+with its index scoped to the loop scores 74.7688%, with the decrement either
+as a statement or in test(). The DC-proven TArtifactSlot/TArtifact interfaces
+leave the exact bytes unchanged. Preserve Complete's call to the extended
+artifact-eligibility method in place of the older DC predicate.
+
+## Fluent setters restore the caller's nested bitset decisions
+
+The objects.txt row extractor (0x514b80) reached 100% from 81.7405% by
+restoring ordinary fluent setters for passability, terrain, recommendations,
+object type, subtype, slot category, and underlay. Retail retains the image
+and trigger setters; its recommended-terrain intersection immediately before
+an overwrite also exposes the invariant maintained by a terrain setter.
+The full chain retains retail's bitset union and intersection calls while
+expanding string destruction. With the same declarations, flattening the
+setter calls and default-constructing the input masks scores 76.63784%.
+
+The earlier three unsigned-long zero constructors had compensated for the
+flattened boundaries. They score 87.57838% with the restored chain, whereas
+default constructors reach 99.89189%. Converting the two nine-bit inputs to
+ten-bit masks as temporary setter arguments reaches 100%; named conversion
+locals leave different stack slots. The chain evaluates the recommended
+terrain argument before legal terrain, explaining retail's conversion order.
+Explicit bitset temporaries and implicit unsigned-long conversions emit
+identical bytes. These setter names remain provisional for this Complete-only
+compiland; no new retail function claims are needed.
+
+## Preserve an aggregate assignment before forcing its setter inline
+
+`aiChooseDestination` (0x42e0b0) had forced both ordinary source helpers
+inline and pinned eight nested statements. Dreamcast's fieldlist already
+identified `searchArray::valid_rectangle` as a `tagRECT`, but the header had
+split it into four longs. Its reconstructed setter consequently performed
+four assignments instead of the single statement at FindPath.h:258.
+
+Restoring the aggregate and header assignment reaches 82.96397%, above the
+81.88646% prior MAX, with ordinary `markStrategicMap`/`unblockLith` and the
+proven `game::getCell` call. The four-assignment ordinary form reaches only
+78.54367%; its setter costs 62 in the trace against a budget of 47 and stays
+out of line. Header and out-of-class aggregate assignments are byte-identical.
+Removing the eight pins is also byte-identical after restoring ordinary
+helpers. The missing fourth unblock cleanup call remains unresolved.
+
+This TU's `cppMin`/`cppMax` selectors also returned references to their own
+by-value argument copies. Reference parameters repair those lifetimes without
+changing this function's bytes. Do not preserve dangling selector references
+or replace an aggregate with scalar fields merely to avoid a header dependency.
+
+### Artifact initialization can decide a later string cleanup boundary
+
+`hero::initialize` (0x4d8720) had been described as a string-inliner wall:
+retail retains two `basic_string::_Tidy` calls, while the reconstruction
+expanded the first into a delete path. DC hero.cpp:1260-1262 proves a
+`SetPrimarySkill` call and a signed-short loop index; restoring them first
+reproduces the retail stats loop and raises 82.8591% to 85.6745%.
+
+Changing the two artifact arrays from per-element default construction to
+`std::fill` then restores both string cleanup calls and reaches 91.0235%,
+without changing the string assignment. The remaining array pointer-end
+guards differ from retail's counted loops. `fill_n` is not equivalent for
+code generation: VC6 turns it into overlapping `rep movsd` fills (79.5302%).
+An explicit `ARTIFACT_NONE` constructor and a literal empty string are each
+byte-flat against the per-element-loop candidate. Diagnose preceding source
+operations before treating a nested library decision as fixed compiler state.
+
+### Compound bitfield updates can cross a nested constructor frontier
+
+`advManager::showRoute` (0x418dd0) reaches 100% from 83.0188% by restoring
+Dreamcast's canonical helper calls, function-scope locals, point assignment,
+and separately evaluated route-array pointers. The private clearing helper
+was a duplicate of `hideRoute`; restoring the member's own `completeDraw`
+and `updateScreen` calls makes the earlier “unreachable constructor” diagnosis
+obsolete. The point-site depth pin and both drawing-helper pins are removed.
+
+With ordinary helpers, a single conditional expression for the DC `wStat`
+local reaches 96.3861%. Writing the two bitfield coordinate steps as `+=`
+then reaches 100%. Passive C2 traces show why: explicit `x = x + delta` gives
+the constructor in `getTarget` budget 62 against cost 59; compound updates
+give it 58, so it remains a call. The later `getLocation` constructor receives
+66 and expands, exactly as retail requires. The prefix loop decrement is
+byte-flat. Both source forms have the same coordinate semantics, but different
+pre-inline costs; no dummy expression or artificial declaration is necessary.
+
+The final production object matches all 47 CFG blocks, 30 branches and three
+returns. Removing only the point pin had scored 79.3968%; restoring canonical
+calls while leaving `hideRoute` flattened scored 60.9062%. Restoring the full
+helper chain reaches 89.6300%, then removing the `completeDraw` pin reaches
+95.2198%. Removing the `updateScreen` pin at that checkpoint is byte-flat.
+
+### A generated destructor match does not establish its source owner
+
+`getCureValue` (0x439c30) reaches 100% after restoring `army::~army` as an
+ordinary definition in `army.cpp` and reading the top-creature damage before
+forming the healing sum. Retail places the destructor at 0x43d400, immediately
+after `army::army()` and before `army::playSample`. The earlier COMDAT pairing
+correctly identified its member teardown, but attributed it to `ai_tactical`
+because that object happened to emit an implicit copy.
+
+The ordinary Army-owned destructor matches its retained retail body at 100%.
+A same-TU definition is the negative control: VC6 expands it into the caller,
+scoring 39.4773%, just like the implicit destructor. The separate owner retains
+the call and reaches 97.6705% without an inline pin. This ownership is inferred
+from retail order and the caller controls. Dreamcast attributes its older
+destructor to an `ai.cpp` use site; that does not establish ownership in
+Complete, which added resource-owning members.
+
+The last difference is source evaluation order. DC 2196..2199 reads mastery,
+then the top-creature damage, then forms the power sum. Naming the damage
+before that sum restores retail's mastery in EDX and damage in ECX. A mastery
+local alone and an unnamed min expression both score 86.8523%; compound-adding
+power scores 93.7045%. The order with the earlier damage read reaches 100%.
+The DC guard also assigns zero to the healed amount instead of returning;
+retail merges that assignment into its common destructor path.

@@ -94,10 +94,15 @@ enum EOverviewIconId {
 // their allocation pointers at +0x74 and +0x64, in reverse construction
 // order. The earlier vector's element stride is independently eight bytes in
 // the retail helper at 0x51e670. Dreamcast only exposes a forward reference
-// for this class, so the record and member names remain intentionally ordinal.
+// for this class; the member names below describe retail-proven roles.
 struct overview_item_record {
-    int field_00;
-    int field_04;
+    // Before normalization: field_00. Constructor groups owned objects by
+    // this category; updateFlaggableIcon (0x51e670) also uses it as the icon
+    // frame, and doRollover selects the corresponding object description.
+    int m_itemType;
+    // Before normalization: field_04. Count of owned objects in this
+    // category, incremented during construction and formatted as "%i".
+    int m_count;
 };
 SIZE(overview_item_record, 8);
 
@@ -105,26 +110,38 @@ class TOverviewWindow : public CAdvPopup {
 public:
     TOverviewWindow();
     virtual ~TOverviewWindow();
-    virtual int WindowHandler(message* msg);
+    // Before normalization (function): TOverviewWindow::WindowHandler.
+    virtual int windowHandler(message* msg);
 
     // Public because game::Overview drives the strip directly: retail
     // expands this body inline there (the seven-call loop plus the
     // DrawWindow redraw at 0x51ec5d..0x51ec7d) while keeping the
     // out-of-line copy at 0x51e7c0 for the window's own two callers.
-    void UpdateFlaggableIcons();
+    // Before normalization (function): TOverviewWindow::UpdateFlaggableIcons.
+    void updateFlaggableIcons();
 
 private:
-    void UpdateFlaggableIcon(int i);
-    void DoFlaggableButtons(int which);
-    void ClearButtons(int slot);
-    void UpdateRollover(char* cText);
-    void DoRollover(int codeY);
+    // Before normalization (function): TOverviewWindow::UpdateFlaggableIcon.
+    void updateFlaggableIcon(int i);
+    // Before normalization (function): TOverviewWindow::DoFlaggableButtons.
+    void doFlaggableButtons(int which);
+    // Before normalization (function): TOverviewWindow::ClearButtons.
+    void clearButtons(int slot);
+    // Before normalization (function): TOverviewWindow::UpdateRollover.
+    // Before normalization (locals): cText.
+    void updateRollover(char* text);
+    // Before normalization (function): TOverviewWindow::DoRollover.
+    void doRollover(int codeY);
 
-    std::vector<overview_item_record> field_60;
+    // Before normalization: field_60. Constructor-built category/count
+    // records consumed by updateFlaggableIcon and the scrolling controls.
+    std::vector<overview_item_record> m_flaggableItems;
     // UpdateFlaggableIcon invokes textWidget's SetText virtual on every
     // element; retail therefore proves the derived pointer type, not the
     // earlier widget* placeholder.
-    std::vector<textWidget*> field_70;
+    // Before normalization: field_70. The constructor adds the seven
+    // count labels here; updateFlaggableIcon updates/hides each label.
+    std::vector<textWidget*> m_flaggableCountWidgets;
 };
 SIZE(TOverviewWindow, 0x80);
 

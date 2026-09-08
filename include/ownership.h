@@ -12,20 +12,22 @@
 template<class T>
 class TAutoPtr {
 public:
-    TAutoPtr(T* ptr = 0) : _m_bOwns(ptr != 0), _m_ptr(ptr) {}
+    TAutoPtr(T* ptr = 0) : m_owns(ptr != 0), m_ptr(ptr) {}
     TAutoPtr(const TAutoPtr& rhs)
-        : _m_bOwns(rhs._m_bOwns), _m_ptr(rhs._m_ptr)
+        : m_owns(rhs.m_owns), m_ptr(rhs.m_ptr)
     {
-        rhs._m_bOwns = 0;
+        rhs.m_owns = 0;
     }
-    ~TAutoPtr() { if (_m_bOwns) delete _m_ptr; }
+    ~TAutoPtr() { if (m_owns) delete m_ptr; }
 
-    T* get() const { return _m_ptr; }
-    T* operator->() const { return _m_ptr; }
+    T* get() const { return m_ptr; }
+    T* operator->() const { return m_ptr; }
 
 private:
-    mutable unsigned char _m_bOwns;
-    T* _m_ptr;
+    // Before normalization: _m_bOwns.
+    mutable unsigned char m_owns;
+    // Before normalization: _m_ptr.
+    T* m_ptr;
 };
 
 #include "resourceptr.h"
@@ -38,17 +40,18 @@ private:
 template<class T>
 class TScopedResourcePtr {
 public:
-    TScopedResourcePtr(T* ptr = 0) : _m_ptr(ptr) {}
+    TScopedResourcePtr(T* ptr = 0) : m_ptr(ptr) {}
     ~TScopedResourcePtr()
     {
-        if (_m_ptr)
-            _m_ptr->Dispose();
+        if (m_ptr)
+            m_ptr->dispose();
     }
 
-    T* get() const { return _m_ptr; }
+    T* get() const { return m_ptr; }
 
 private:
-    T* _m_ptr;
+    // Before normalization: _m_ptr.
+    T* m_ptr;
 };
 
 #endif

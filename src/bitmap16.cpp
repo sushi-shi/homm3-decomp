@@ -11,16 +11,17 @@
 
 // Retail's destructor is frameless under /GX, proving that this TU saw the
 // deallocator as nothrow (the same header contract established by sample.obj).
-__declspec(nothrow) void __cdecl operator delete(void* _P);
+// Before normalization (locals): _P.
+__declspec(nothrow) void __cdecl operator delete(void* p);
 
 union TFloatLongBits {
-    unsigned long bits;
-    float value;
+    unsigned long m_bits;
+    float m_value;
 };
 
 union TDoubleLongBits {
-    double value;
-    long words[2];
+    double m_value;
+    long m_words[2];
 };
 
 // E:\gamedcs\bitmap16.cpp:59. bitmap16.obj carries its own copy of the
@@ -30,12 +31,13 @@ union TDoubleLongBits {
 static __forceinline long ftol(double d)
 {
     const unsigned long magic = 0x59c00000;
-    TFloatLongBits magic_value;
+    // Before normalization (locals): magic_value.
+    TFloatLongBits magicValue;
     TDoubleLongBits result;
-    result.value = d;
-    magic_value.bits = magic;
-    result.value += magic_value.value;
-    return result.words[0];
+    result.m_value = d;
+    magicValue.m_bits = magic;
+    result.m_value += magicValue.m_value;
+    return result.m_words[0];
 }
 
 #if 0  // @carcass
@@ -83,15 +85,15 @@ VA_COMPGEN(0x0044e020, 0x21, SCALAR_DELETING_DTOR, Bitmap16Bit)
 VA(0x0044df70, 0xA3)
 Bitmap16Bit::Bitmap16Bit(int w, int h)
     : resource(0, RESOURCE_TYPE_NONE),
-      ImageSize(w * h * 2), Width(w), Height(h), Pitch(w * 2)
+      m_imageSize(w * h * 2), m_width(w), m_height(h), m_pitch(w * 2)
 {
-    DataSize = ImageSize;
+    m_dataSize = m_imageSize;
 
     if (w && h) {
-        map = new unsigned short[DataSize / 2];
-        referenced = 0;
+        m_map = new unsigned short[m_dataSize / 2];
+        m_referenced = 0;
     } else {
-        map = 0;
+        m_map = 0;
     }
 }
 
@@ -106,23 +108,23 @@ Bitmap16Bit::Bitmap16Bit(int w, int h)
 VA(0x0044e050, 0xA5)  // in-span, name/type base ctor + vftable 0x63b9c8
 Bitmap16Bit::Bitmap16Bit(const char* name, int w, int h)
     : resource(name, RESOURCE_TYPE_BITMAP16),
-      ImageSize(w * h * 2), Width(w), Height(h), Pitch(w * 2),
-      referenced(0)
+      m_imageSize(w * h * 2), m_width(w), m_height(h), m_pitch(w * 2),
+      m_referenced(0)
 {
-    DataSize = ImageSize;
+    m_dataSize = m_imageSize;
 
     if (w > 0 && h > 0)
-        map = new unsigned short[DataSize / 2];
+        m_map = new unsigned short[m_dataSize / 2];
     else
-        map = 0;
+        m_map = 0;
 }
 
 // E:\gamedcs\bitmap16.cpp:208
 VA(0x0044e100, 0x29)  // unique dtor body + vtable, dc 0x50ebc
 Bitmap16Bit::~Bitmap16Bit()
 {
-    if (map && !referenced)
-        delete[] map;
+    if (m_map && !m_referenced)
+        delete[] m_map;
 }
 
 // E:\gamedcs\bitmap16.cpp:224/234/243/253. The four pixel-format converters
@@ -166,26 +168,27 @@ unsigned short color8888to0565(unsigned long color)
 // parameter. The walk is COLUMN-major - the outer counter runs to Width and
 // indexes the pixel, the inner runs to Height and indexes the row - and the
 // parameter is re-read at every pixel.
+// Before normalization (locals): old_green_bits.
 VA(0x0044e130, 0x110)  // anchor-caller(wingraph mode change) + order-map(DC bitmap16.obj), dc 0x50fd4
-void Bitmap16Bit::Remap(int old_green_bits)
+void Bitmap16Bit::remap(int oldGreenBits)
 {
-    for (int col = 0; col < Width; col++) {
-        for (int row = 0; row < Height; row++) {
+    for (int col = 0; col < m_width; col++) {
+        for (int row = 0; row < m_height; row++) {
             Bitmap16MapPointer pixel;
-            pixel.pixels = map;
-            pixel.bytes += row * Pitch + col * sizeof(unsigned short);
-            if (old_green_bits == BITMAP_GREEN_BITS_565)
-                *pixel.pixels = color8888to1555(color0565to8888(*pixel.pixels));
+            pixel.m_pixels = m_map;
+            pixel.m_bytes += row * m_pitch + col * sizeof(unsigned short);
+            if (oldGreenBits == BITMAP_GREEN_BITS_565)
+                *pixel.m_pixels = color8888to1555(color0565to8888(*pixel.m_pixels));
             else
-                *pixel.pixels = color8888to0565(color1555to8888(*pixel.pixels));
+                *pixel.m_pixels = color8888to0565(color1555to8888(*pixel.m_pixels));
         }
     }
 }
 
 VA(0x0044e240, 0x07)  // vtable slot 2: fixed object extent + pixel bytes
-unsigned int Bitmap16Bit::GetSize() const
+unsigned int Bitmap16Bit::getSize() const
 {
-    return sizeof(*this) + DataSize;
+    return sizeof(*this) + m_dataSize;
 }
 
 // E:\gamedcs\bitmap16.cpp:335. Re-point the bitmap at memory somebody else
@@ -202,24 +205,24 @@ unsigned int Bitmap16Bit::GetSize() const
 VA(0x0044e250, 0x5D)  // order-map(DC bitmap16.obj, between Remap and Draw), dc 0x51154
 void Bitmap16Bit::reference(int w, int h, int pitch, unsigned short* data)
 {
-    Width = 0;
-    Height = 0;
-    DataSize = 0;
-    ImageSize = 0;
-    if (map) {
-        if (!referenced)
-            delete[] map;
-        map = 0;
-        referenced = 0;
+    m_width = 0;
+    m_height = 0;
+    m_dataSize = 0;
+    m_imageSize = 0;
+    if (m_map) {
+        if (!m_referenced)
+            delete[] m_map;
+        m_map = 0;
+        m_referenced = 0;
     }
     int size = w * h * 2;
-    Width = w;
-    Height = h;
-    ImageSize = size;
-    DataSize = size;
-    Pitch = pitch;
-    map = data;
-    referenced = 1;
+    m_width = w;
+    m_height = h;
+    m_imageSize = size;
+    m_dataSize = size;
+    m_pitch = pitch;
+    m_map = data;
+    m_referenced = 1;
 }
 
 // E:\gamedcs\bitmap16.cpp:541. The general blit: clip a negative
@@ -227,7 +230,7 @@ void Bitmap16Bit::reference(int w, int h, int pitch, unsigned short* data)
 // the destination extent, then copy row by row. The last parameter selects
 // the keyed path - pixels equal to it are left alone - and the plain path
 // goes through the inline memcpy intrinsic.
-// Residual (81.3%): the source width must be a LOCAL - as a modified
+// Residual (83.5794%): the source width must be a LOCAL - as a modified
 // parameter the body scores 45.22, because retail keeps that value live in
 // EDI across both clips while the height stays in its parameter slot and is
 // reloaded. The one block still unpaired is retail's else-arm that
@@ -238,8 +241,12 @@ void Bitmap16Bit::reference(int w, int h, int pitch, unsigned short* data)
 // mismatches but scores 80.33 - the local declared after the first clip
 // (73.56), after both clips (72.32), and a top-initialised local re-read
 // from the parameter inside the clip (77.13).
+// Rechecked after the const-reference pixel recovery: both `w = srcWidth +
+// dstX` and split `w = srcWidth; w += dstX` spellings remain byte-identical
+// at 83.17. They pair all 26 blocks (21 exact, five size-only) but worsen the
+// current 83.5794 score, so the natural Dreamcast-shaped initialization stays.
 VA(0x0044e2b0, 0x139)  // order-map(DC bitmap16.obj, immediately before Grab), dc 0x51378
-void Bitmap16Bit::Draw(int srcX, int srcY, int srcWidth, int srcHeight,
+void Bitmap16Bit::draw(int srcX, int srcY, int srcWidth, int srcHeight,
                        unsigned short* dst, int dstX, int dstY, int dstWidth,
                        int dstHeight, int dstPitch, bool flipped) const
 {
@@ -262,10 +269,10 @@ void Bitmap16Bit::Draw(int srcX, int srcY, int srcWidth, int srcHeight,
 
     if (w > 0 && srcHeight > 0) {
         Bitmap16ConstMapPointer source;
-        source.pixels = GetMap(srcX, srcY);
+        source.m_pixels = getMap(srcX, srcY);
         Bitmap16MapPointer target;
-        target.pixels = dst;
-        target.bytes += dstY * dstPitch + dstX * sizeof(unsigned short);
+        target.m_pixels = dst;
+        target.m_bytes += dstY * dstPitch + dstX * sizeof(unsigned short);
 
         if (flipped) {
             for (int row = 0; row < srcHeight; ++row) {
@@ -274,19 +281,19 @@ void Bitmap16Bit::Draw(int srcX, int srcY, int srcWidth, int srcHeight,
                     // source pixel twice - once for the key compare and once
                     // for the store - rather than keeping it in a register.
                     // 81.3095 -> 83.5794.
-                    const unsigned short& pixel = source.pixels[col];
+                    const unsigned short& pixel = source.m_pixels[col];
                     if (pixel != static_cast<unsigned short>(flipped))
-                        target.pixels[col] = pixel;
+                        target.m_pixels[col] = pixel;
                 }
-                source.bytes += Pitch;
-                target.bytes += dstPitch;
+                source.m_bytes += m_pitch;
+                target.m_bytes += dstPitch;
             }
         } else {
             for (int row = 0; row < srcHeight; ++row) {
-                memcpy(target.pixels, source.pixels,
+                memcpy(target.m_pixels, source.m_pixels,
                        w * sizeof(unsigned short));
-                source.bytes += Pitch;
-                target.bytes += dstPitch;
+                source.m_bytes += m_pitch;
+                target.m_bytes += dstPitch;
             }
         }
     }
@@ -303,22 +310,22 @@ void Bitmap16Bit::Draw(int srcX, int srcY, int srcWidth, int srcHeight,
 // frame slot pairs. All 24 declaration permutations of the four locals were
 // swept: the spread is 97.65 .. 97.71 and none reaches 100.
 VA(0x0044e3f0, 0xC9)  // order-map(DC bitmap16.obj, between Draw and FillRect), dc 0x51468
-void Bitmap16Bit::Grab(const unsigned short* src, int srcX, int srcY,
+void Bitmap16Bit::grab(const unsigned short* src, int srcX, int srcY,
                        int srcWidth, int srcHeight, int srcPitch)
 {
     int dstX = 0;
-    int w = Width;
+    int w = m_width;
     int dstY = 0;
-    int h = Height;
+    int h = m_height;
 
     if (srcX < 0) {
         dstX = -srcX;
-        w = Width + srcX;
+        w = m_width + srcX;
         srcX = 0;
     }
     if (srcY < 0) {
         dstY = -srcY;
-        h = Height + srcY;
+        h = m_height + srcY;
         srcY = 0;
     }
     if (w > srcWidth - srcX)
@@ -328,14 +335,14 @@ void Bitmap16Bit::Grab(const unsigned short* src, int srcX, int srcY,
 
     if (w > 0 && h > 0) {
         Bitmap16MapPointer dst;
-        dst.pixels = GetMap(dstX, dstY);
+        dst.m_pixels = getMap(dstX, dstY);
         Bitmap16ConstMapPointer source;
-        source.pixels = src;
-        source.bytes += srcY * srcPitch + srcX * sizeof(unsigned short);
+        source.m_pixels = src;
+        source.m_bytes += srcY * srcPitch + srcX * sizeof(unsigned short);
         for (int row = 0; row < h; ++row) {
-            memcpy(dst.pixels, source.pixels, w * sizeof(unsigned short));
-            dst.bytes += Pitch;
-            source.bytes += srcPitch;
+            memcpy(dst.m_pixels, source.m_pixels, w * sizeof(unsigned short));
+            dst.m_bytes += m_pitch;
+            source.m_bytes += srcPitch;
         }
     }
 }
@@ -345,20 +352,20 @@ void Bitmap16Bit::Grab(const unsigned short* src, int srcX, int srcY,
 // the inner store loop into its word-fill idiom (duplicate the colour into
 // a dword, `shr ecx,1 / rep stosd / adc ecx,ecx / rep stosw`).
 VA(0x0044e4c0, 0x7D)  // anchor-caller(textWidget::Draw, FadeToBlack) + order-map(DC bitmap16.obj), dc 0x5150c
-void Bitmap16Bit::FillRect(int x, int y, int w, int h, unsigned short color)
+void Bitmap16Bit::fillRect(int x, int y, int w, int h, unsigned short color)
 {
-    if (w > Width - x)
-        w = Width - x;
-    if (h > Height - y)
-        h = Height - y;
+    if (w > m_width - x)
+        w = m_width - x;
+    if (h > m_height - y)
+        h = m_height - y;
 
     if (w && h) {
         Bitmap16MapPointer dst;
-        dst.pixels = GetMap(x, y);
+        dst.m_pixels = getMap(x, y);
         for (int row = 0; row < h; ++row) {
             for (int col = 0; col < w; ++col)
-                dst.pixels[col] = color;
-            dst.bytes += Pitch;
+                dst.m_pixels[col] = color;
+            dst.m_bytes += m_pitch;
         }
     }
 }
@@ -368,26 +375,26 @@ void Bitmap16Bit::FillRect(int x, int y, int w, int h, unsigned short color)
 // rows, and two endpoint stores on interior rows. Retail independently fixes
 // Pitch as a byte stride and preserves this 18-block source shape.
 VA(0x0044e540, 0xA3)
-void Bitmap16Bit::FrameRect(int x, int y, int w, int h,
+void Bitmap16Bit::frameRect(int x, int y, int w, int h,
                             unsigned short color)
 {
-    if (w > Width - x)
-        w = Width - x;
-    if (h > Height - y)
-        h = Height - y;
+    if (w > m_width - x)
+        w = m_width - x;
+    if (h > m_height - y)
+        h = m_height - y;
 
     if (w && h) {
         Bitmap16MapPointer dst;
-        dst.pixels = GetMap(x, y);
+        dst.m_pixels = getMap(x, y);
         for (int row = 0; row < h; ++row) {
             if (row == 0 || row == h - 1) {
                 for (int col = 0; col < w; ++col)
-                    dst.pixels[col] = color;
+                    dst.m_pixels[col] = color;
             } else {
-                dst.pixels[0] = color;
-                dst.pixels[w - 1] = color;
+                dst.m_pixels[0] = color;
+                dst.m_pixels[w - 1] = color;
             }
-            dst.bytes += Pitch;
+            dst.m_bytes += m_pitch;
         }
     }
 }
@@ -397,29 +404,30 @@ void Bitmap16Bit::FrameRect(int x, int y, int w, int h,
 // row/pixel loops. Complete inlines GetMap and independently fixes Pitch as
 // a byte stride; the resulting 0xA4-byte body is exact.
 VA(0x0044E5F0, 0xA4)
-void Bitmap16Bit::Darken(int x, int y, int w, int h)
+void Bitmap16Bit::darken(int x, int y, int w, int h)
 {
-    if (w > Width - x)
-        w = Width - x;
-    if (h > Height - y)
-        h = Height - y;
+    if (w > m_width - x)
+        w = m_width - x;
+    if (h > m_height - y)
+        h = m_height - y;
 
     if (w && h) {
-        unsigned long shift_mask =
-            ((gColorMaskRed >> 1) & gColorMaskRed)
-            | ((gColorMaskGreen >> 1) & gColorMaskGreen)
-            | ((gColorMaskBlue >> 1) & gColorMaskBlue);
+        // Before normalization (locals): shift_mask, mask_row, mask_pixel.
+        unsigned long shiftMask =
+            ((g_colorMaskRed >> 1) & g_colorMaskRed)
+            | ((g_colorMaskGreen >> 1) & g_colorMaskGreen)
+            | ((g_colorMaskBlue >> 1) & g_colorMaskBlue);
         Bitmap16MapPointer row;
-        row.pixels = GetMap(x, y);
+        row.m_pixels = getMap(x, y);
 
         for (int iy = 0; iy < h; ++iy) {
             Bitmap16MapPointer pixel = row;
             for (int ix = 0; ix < w; ++ix) {
-                *pixel.pixels = static_cast<unsigned short>(
-                    (*pixel.pixels >> 1) & shift_mask);
-                ++pixel.pixels;
+                *pixel.m_pixels = static_cast<unsigned short>(
+                    (*pixel.m_pixels >> 1) & shiftMask);
+                ++pixel.m_pixels;
             }
-            row.bytes += Pitch;
+            row.m_bytes += m_pitch;
         }
     }
 }
@@ -430,36 +438,36 @@ void Bitmap16Bit::Darken(int x, int y, int w, int h)
 // Pitch - retail adds [mask+0x24] at the foot of every row - while the
 // starting row is still taken through Pitch.
 VA(0x0044e6a0, 0xE0)  // anchor-caller(UpdateGrid, seven pushes) + order-map(DC bitmap16.obj), dc 0x516a8
-void Bitmap16Bit::Darken(int x, int y, int w, int h, Bitmap816* mask,
+void Bitmap16Bit::darken(int x, int y, int w, int h, Bitmap816* mask,
                          int sx, int sy)
 {
-    if (w > Width - x)
-        w = Width - x;
-    if (h > Height - y)
-        h = Height - y;
+    if (w > m_width - x)
+        w = m_width - x;
+    if (h > m_height - y)
+        h = m_height - y;
 
     if (w && h) {
-        unsigned long shift_mask =
-            ((gColorMaskRed >> 1) & gColorMaskRed)
-            | ((gColorMaskGreen >> 1) & gColorMaskGreen)
-            | ((gColorMaskBlue >> 1) & gColorMaskBlue);
-        unsigned char* mask_row = mask->map + mask->Pitch * sy + sx;
+        unsigned long shiftMask =
+            ((g_colorMaskRed >> 1) & g_colorMaskRed)
+            | ((g_colorMaskGreen >> 1) & g_colorMaskGreen)
+            | ((g_colorMaskBlue >> 1) & g_colorMaskBlue);
+        unsigned char* maskRow = mask->m_map + mask->m_pitch * sy + sx;
         Bitmap16MapPointer row;
-        row.pixels = GetMap(x, y);
+        row.m_pixels = getMap(x, y);
 
         for (int iy = 0; iy < h; ++iy) {
-            unsigned char* mask_pixel = mask_row;
+            unsigned char* maskPixel = maskRow;
             Bitmap16MapPointer pixel = row;
             for (int ix = 0; ix < w; ++ix) {
-                if (*mask_pixel) {
-                    *pixel.pixels = static_cast<unsigned short>(
-                        (*pixel.pixels >> 1) & shift_mask);
+                if (*maskPixel) {
+                    *pixel.m_pixels = static_cast<unsigned short>(
+                        (*pixel.m_pixels >> 1) & shiftMask);
                 }
-                ++mask_pixel;
-                ++pixel.pixels;
+                ++maskPixel;
+                ++pixel.m_pixels;
             }
-            mask_row += mask->Width;
-            row.bytes += Pitch;
+            maskRow += mask->m_width;
+            row.m_bytes += m_pitch;
         }
     }
 }
@@ -481,27 +489,29 @@ void Bitmap16Bit::Darken(int x, int y, int w, int h, Bitmap816* mask,
 // 93.30, higher, but emits the masks in the wrong order, so it is scoring a
 // DIFFERENT function and is rejected.
 VA(0x0044e780, 0x1BF)  // anchor-callee(the float Colorize) + order-map(DC bitmap16.obj), dc 0x5177c
-void Bitmap16Bit::Colorize(int x, int y, int width, int height,
+void Bitmap16Bit::colorize(int x, int y, int width, int height,
                            unsigned short color)
 {
-    float blue_level = static_cast<float>(color & gColorMaskBlue)
-                       / static_cast<float>(gColorMaskBlue);
-    float green_level = static_cast<float>(color & gColorMaskGreen)
-                        / static_cast<float>(gColorMaskGreen);
-    float red_level = static_cast<float>(color & gColorMaskRed)
-                      / static_cast<float>(gColorMaskRed);
+    // Before normalization (locals): blue_level, green_level, red_level, blue_norm, green_norm,
+    // red_norm.
+    float blueLevel = static_cast<float>(color & g_colorMaskBlue)
+                       / static_cast<float>(g_colorMaskBlue);
+    float greenLevel = static_cast<float>(color & g_colorMaskGreen)
+                        / static_cast<float>(g_colorMaskGreen);
+    float redLevel = static_cast<float>(color & g_colorMaskRed)
+                      / static_cast<float>(g_colorMaskRed);
 
-    float top = blue_level;
-    if (blue_level <= green_level)
-        top = green_level;
-    if (top < red_level)
-        top = red_level;
+    float top = blueLevel;
+    if (blueLevel <= greenLevel)
+        top = greenLevel;
+    if (top < redLevel)
+        top = redLevel;
 
-    float bottom = green_level;
-    if (blue_level <= green_level)
-        bottom = blue_level;
-    if (bottom > red_level)
-        bottom = red_level;
+    float bottom = greenLevel;
+    if (blueLevel <= greenLevel)
+        bottom = blueLevel;
+    if (bottom > redLevel)
+        bottom = redLevel;
 
     float saturation;
     if (top == 0.0)
@@ -514,17 +524,17 @@ void Bitmap16Bit::Colorize(int x, int y, int width, int height,
         hue = 0.0f;
     } else {
         float span = top - bottom;
-        if (blue_level == top)
-            hue = (green_level - red_level) / span;
-        else if (green_level == top)
-            hue = (red_level - blue_level) / span + 2.0f;
+        if (blueLevel == top)
+            hue = (greenLevel - redLevel) / span;
+        else if (greenLevel == top)
+            hue = (redLevel - blueLevel) / span + 2.0f;
         else
-            hue = (blue_level - green_level) / span + 4.0f;
+            hue = (blueLevel - greenLevel) / span + 4.0f;
         hue *= 60.0f;
         if (hue < 0.0)
             hue += 360.0f;
     }
-    Colorize(x, y, width, height, hue / 360.0f, saturation);
+    colorize(x, y, width, height, hue / 360.0f, saturation);
 }
 
 // E:\gamedcs\bitmap16.cpp:873. The float Colorize, tail-called by the
@@ -546,34 +556,34 @@ void Bitmap16Bit::Colorize(int x, int y, int width, int height,
 // named `max`, taking ftol off __forceinline and swapping <limits> for
 // <limits.h>/INT_MAX are each byte-flat to the digit.
 VA(0x0044e940, 0x3B8)  // anchor-caller(the 16-bit Colorize tail call) + order-map(DC bitmap16.obj), dc 0x519c4
-void Bitmap16Bit::Colorize(int x, int y, int w, int h, float hue,
+void Bitmap16Bit::colorize(int x, int y, int w, int h, float hue,
                            float saturation)
 {
-    if (w > Width - x)
-        w = Width - x;
-    if (h > Height - y)
-        h = Height - y;
+    if (w > m_width - x)
+        w = m_width - x;
+    if (h > m_height - y)
+        h = m_height - y;
 
     if (w && h) {
-        const unsigned int blue_norm =
-            std::numeric_limits<int>::max() / gColorMaskBlue;
-        const unsigned int green_norm =
-            std::numeric_limits<int>::max() / gColorMaskGreen;
-        const unsigned int red_norm =
-            std::numeric_limits<int>::max() / gColorMaskRed;
+        const unsigned int blueNorm =
+            std::numeric_limits<int>::max() / g_colorMaskBlue;
+        const unsigned int greenNorm =
+            std::numeric_limits<int>::max() / g_colorMaskGreen;
+        const unsigned int redNorm =
+            std::numeric_limits<int>::max() / g_colorMaskRed;
 
         Bitmap16MapPointer row;
-        row.pixels = GetMap(x, y);
+        row.m_pixels = getMap(x, y);
 
         for (int iy = 0; iy < h; ++iy) {
             Bitmap16MapPointer pixel = row;
             for (int ix = 0; ix < w; ++ix) {
                 unsigned int b =
-                    (*pixel.pixels & gColorMaskBlue) * blue_norm;
+                    (*pixel.m_pixels & g_colorMaskBlue) * blueNorm;
                 unsigned int g =
-                    (*pixel.pixels & gColorMaskGreen) * green_norm;
+                    (*pixel.m_pixels & g_colorMaskGreen) * greenNorm;
                 unsigned int r =
-                    (*pixel.pixels & gColorMaskRed) * red_norm;
+                    (*pixel.m_pixels & g_colorMaskRed) * redNorm;
 
                 const unsigned int max =
                     (b > g ? b : g) > r ? (b > g ? b : g) : r;
@@ -617,13 +627,13 @@ void Bitmap16Bit::Colorize(int x, int y, int w, int h, float hue,
                     break;
                 }
 
-                *pixel.pixels = static_cast<unsigned short>(
-                    ((r / red_norm) & gColorMaskRed)
-                    | ((g / green_norm) & gColorMaskGreen)
-                    | ((b / blue_norm) & gColorMaskBlue));
-                ++pixel.pixels;
+                *pixel.m_pixels = static_cast<unsigned short>(
+                    ((r / redNorm) & g_colorMaskRed)
+                    | ((g / greenNorm) & g_colorMaskGreen)
+                    | ((b / blueNorm) & g_colorMaskBlue));
+                ++pixel.m_pixels;
             }
-            row.bytes += Pitch;
+            row.m_bytes += m_pitch;
         }
     }
 }
@@ -666,7 +676,7 @@ int Bitmap16Bit::importPCXFile(const char* filename)
 // E:\gamedcs\bitmap16.cpp:541
 // RETAIL_LOCATED(0x0044e2b0, 0x139): anchor-bracket, not reconstructed.
 DC_ONLY(0x51378, 0x139)
-void Bitmap16Bit::Draw(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char alpha)
+void Bitmap16Bit::draw(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char alpha)
 {
     // @stub
 }
@@ -674,7 +684,7 @@ void Bitmap16Bit::Draw(int sx, int sy, int sw, int sh, unsigned short* dst, int 
 // E:\gamedcs\bitmap16.cpp:625
 // RETAIL_LOCATED(0x0044e3f0, 0xC9): anchor-bracket, not reconstructed.
 DC_ONLY(0x51468, 0xC9)
-void Bitmap16Bit::Grab(const unsigned short* src, int sx, int sy, int sw, int sh, int spitch)
+void Bitmap16Bit::grab(const unsigned short* src, int sx, int sy, int sw, int sh, int spitch)
 {
     // @stub
 }
@@ -682,35 +692,35 @@ void Bitmap16Bit::Grab(const unsigned short* src, int sx, int sy, int sw, int sh
 // E:\gamedcs\bitmap16.cpp:679
 // RETAIL_LOCATED(0x0044e4c0, 0x7D): anchor-global, not reconstructed.
 DC_ONLY(0x5150c, 0x7D)
-void Bitmap16Bit::FillRect(int x, int y, int w, int h, unsigned short color)
+void Bitmap16Bit::fillRect(int x, int y, int w, int h, unsigned short color)
 {
     // @stub
 }
 
 // E:\gamedcs\bitmap16.cpp:778
 DC_ONLY(0x516a8, 0xD4)
-void Bitmap16Bit::Darken(int x, int y, int w, int h, Bitmap816* mask, int sx, int sy)
+void Bitmap16Bit::darken(int x, int y, int w, int h, Bitmap816* mask, int sx, int sy)
 {
     // @stub
 }
 
 // E:\gamedcs\bitmap16.cpp:815
 DC_ONLY(0x5177c, 0x246)
-void Bitmap16Bit::Colorize(int x, int y, int width, int height, unsigned short color)
+void Bitmap16Bit::colorize(int x, int y, int width, int height, unsigned short color)
 {
     // @stub
 }
 
 // E:\gamedcs\bitmap16.cpp:873
 // Retail body reconstructed above at 0x0044e940; dc 0x519c4.
-void Bitmap16Bit::Colorize(int x, int y, int w, int h, float hue, float saturation)
+void Bitmap16Bit::colorize(int x, int y, int w, int h, float hue, float saturation)
 {
     // @stub
 }
 
 // E:\gamedcs\bitmap16.cpp:934
 DC_ONLY(0x51e40, 0x148)
-void Bitmap16Bit::Gray(int x, int y, int w, int h)
+void Bitmap16Bit::gray(int x, int y, int w, int h)
 {
     // @stub
 }
@@ -724,14 +734,14 @@ void Bitmap16Bit::GrabAndBlur(const Bitmap16Bit* src, int sx, int sy)
 
 // E:\gamedcs\Bitmap816.h:71
 DC_ONLY(0x5256c, 0x4)
-int Bitmap816::GetPitch()
+int Bitmap816::getPitch()
 {
     // @stub
 }
 
 // E:\gamedcs\Bitmap816.h:98
 DC_ONLY(0x52570, 0xE)
-unsigned char* Bitmap816::GetMap(int x, int y)
+unsigned char* Bitmap816::getMap(int x, int y)
 {
     // @stub
 }

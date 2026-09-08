@@ -16,15 +16,15 @@ VA_COMPGEN(0x0047b8f0, 0x21, SCALAR_DELETING_DTOR, CSprite)
 VA(0x0047b920, 0x118)  // GetSprite callee + HD/DC identity
 CSprite::CSprite(const char* name, int sprtype, int w, int h)
     : resource(name, (EResourceType)sprtype),
-      s(0), p(0), p24(0), numSequences(0), Width(w), Height(h)
+      m_s(0), m_p(0), m_p24(0), m_numSequences(0), m_width(w), m_height(h)
 {
-    numSequences = GetNumSeqs(sprtype);
-    if (numSequences) {
-        s = new CSequence*[numSequences];
-        validSeqMask = new int[numSequences];
-        for (int i = 0; i < numSequences; ++i) {
-            s[i] = 0;
-            validSeqMask[i] = 0;
+    m_numSequences = getNumSeqs(sprtype);
+    if (m_numSequences) {
+        m_s = new CSequence*[m_numSequences];
+        m_validSeqMask = new int[m_numSequences];
+        for (int i = 0; i < m_numSequences; ++i) {
+            m_s[i] = 0;
+            m_validSeqMask[i] = 0;
         }
     }
 }
@@ -33,57 +33,57 @@ CSprite::CSprite(const char* name, int sprtype, int w, int h)
 VA(0x0047ba40, 0xae)  // vtable identity + complete owned-field teardown
 CSprite::~CSprite()
 {
-    for (int i = 0; i < numSequences; ++i) {
-        if (s[i])
-            delete s[i];
+    for (int i = 0; i < m_numSequences; ++i) {
+        if (m_s[i])
+            delete m_s[i];
     }
-    if (s)
-        delete[] s;
-    if (p)
-        delete p;
-    if (p24)
-        delete p24;
-    if (validSeqMask)
-        delete[] validSeqMask;
+    if (m_s)
+        delete[] m_s;
+    if (m_p)
+        delete m_p;
+    if (m_p24)
+        delete m_p24;
+    if (m_validSeqMask)
+        delete[] m_validSeqMask;
 }
 
 // E:\gamedcs\csprite.cpp:180
 VA(0x0047baf0, 0x67)  // GetSprite call + HD/DC identity
-void CSprite::AllocateSeq(int seqnum, int numFrames)
+void CSprite::allocateSeq(int seqnum, int numFrames)
 {
-    s[seqnum] = new CSequence(numFrames);
-    validSeqMask[seqnum] = 1;
+    m_s[seqnum] = new CSequence(numFrames);
+    m_validSeqMask[seqnum] = 1;
 }
 
 // E:\gamedcs\csprite.cpp:206
 VA(0x0047bb60, 0x19)  // GetSprite call + HD/DC overload identity
-int CSprite::AddFrame(int seqnum, CSpriteFrame* frame)
+int CSprite::addFrame(int seqnum, CSpriteFrame* frame)
 {
-    return s[seqnum]->AddFrame(frame);
+    return m_s[seqnum]->addFrame(frame);
 }
 
 // E:\gamedcs\csprite.cpp:212
 VA(0x0047bb80, 0x79)  // anchor-bracket, dc 0x724e0
-void CSprite::SetPalette(const unsigned short* pal)
+void CSprite::setPalette(const unsigned short* pal)
 {
-    if (p)
-        delete p;
-    p = new TPalette16(pal);
+    if (m_p)
+        delete m_p;
+    m_p = new TPalette16(pal);
 }
 
 // E:\gamedcs\csprite.cpp:220
 VA(0x0047bc00, 0xb8)  // anchor-global, dc 0x72538
-void CSprite::ResetPalette()
+void CSprite::resetPalette()
 {
-    TPalette24 palette24(&p24->colors.data[0][0]);
+    TPalette24 palette24(&m_p24->m_colors.m_data[0][0]);
 #ifdef __clang__
     // VC6 accepts the temporary directly as a non-const reference.  Give the
     // analysis compiler an lvalue so it can recover the VA annotations; this
     // arm is never seen by the matching compiler.
     TPalette16 palette16(&palette24);
-    SetPalette(palette16);
+    setPalette(palette16);
 #else
-    SetPalette(TPalette16(&palette24));
+    setPalette(TPalette16(&palette24));
 #endif
 }
 
@@ -112,21 +112,21 @@ void CSprite::clear()
 
 // E:\gamedcs\csprite.cpp:187
 DC_ONLY(0x72418, 0x18)
-void CSprite::AddFrame(int seqnum, const char* name)
+void CSprite::addFrame(int seqnum, const char* name)
 {
     // @stub
 }
 
 // E:\gamedcs\csprite.cpp:194
 DC_ONLY(0x72430, 0x5C)
-int CSprite::AddFrame(int seqnum, const char* name, int w, int h, unsigned char* data, int csize, TEncodingMethod encoding, int CroppedWidth, int CroppedHeight, int CroppedX, int CroppedY)
+int CSprite::addFrame(int seqnum, const char* name, int w, int h, unsigned char* data, int csize, TEncodingMethod encoding, int m_croppedWidth, int m_croppedHeight, int m_croppedX, int m_croppedY)
 {
     // @stub
 }
 
 // E:\gamedcs\csprite.cpp:200
 DC_ONLY(0x7248c, 0x3A)
-int CSprite::AddFrame(int seqnum, const char* name, int w, int h, unsigned char* data, int csize, TEncodingMethod encoding)
+int CSprite::addFrame(int seqnum, const char* name, int w, int h, unsigned char* data, int csize, TEncodingMethod encoding)
 {
     // @stub
 }
@@ -135,16 +135,16 @@ int CSprite::AddFrame(int seqnum, const char* name, int w, int h, unsigned char*
 
 // E:\gamedcs\csprite.cpp:226
 VA(0x0047bcc0, 0x0e)  // vtable-era TU order + p/data layout, dc 0x7258c
-palette* CSprite::GetPalette()
+palette* CSprite::getPalette()
 {
-    return p ? &p->colors : 0;
+    return m_p ? &m_p->m_colors : 0;
 }
 
 #if 0  // @carcass
 
 // E:\gamedcs\csprite.cpp:232
 DC_ONLY(0x725b8, 0x70)
-const unsigned short* CSprite::GetPalette()
+const unsigned short* CSprite::getPalette()
 {
     // @stub
 }
@@ -153,175 +153,175 @@ const unsigned short* CSprite::GetPalette()
 
 // E:\gamedcs\csprite.cpp:238
 VA(0x0047bcd0, 0x1b)  // successor to GetPalette + TPalette16::Cycle call, dc 0x72628
-void CSprite::ColorCycle(int begin, int end, int step)
+void CSprite::colorCycle(int begin, int end, int step)
 {
-    p->Cycle(begin, end, step);
+    m_p->cycle(begin, end, step);
 }
 
 // E:\gamedcs\csprite.cpp:244
 VA(0x0047bcf0, 0x52)  // frame/palette forwarding body, dc 0x72664
-void CSprite::Draw(int seqnum, int framenum, int sx, int sy, int sw, int sh,
+void CSprite::draw(int seqnum, int framenum, int sx, int sy, int sw, int sh,
                    unsigned short* dst, int dx, int dy, int dw, int dh,
                    int dpitch, unsigned char hflip, unsigned char tblit) const
 {
-    s[seqnum]->f[framenum]->Draw(
-        sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *p, hflip, tblit);
+    m_s[seqnum]->m_f[framenum]->draw(
+        sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip, tblit);
 }
 
 VA(0x0047bd50, 0x06)  // CSprite vtable slot 2 + literal sizeof(CSprite)
-unsigned int CSprite::GetSize() const
+unsigned int CSprite::getSize() const
 {
     return sizeof(*this);
 }
 
 // E:\gamedcs\csprite.cpp:265
 VA(0x0047bd60, 0x54)  // frame/palette forwarding body, dc 0x726f4
-void CSprite::DrawCreature(int seqnum, int framenum, int sx, int sy,
+void CSprite::drawCreature(int seqnum, int framenum, int sx, int sy,
                            int sw, int sh, unsigned short* dst,
                            int dx, int dy, int dw, int dh, int dpitch,
                            unsigned char hflip, unsigned short outcolor) const
 {
-    s[seqnum]->f[framenum]->DrawCreatureImpl(
+    m_s[seqnum]->m_f[framenum]->drawCreatureImpl(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch,
-        *p, hflip, outcolor, 0);
+        *m_p, hflip, outcolor, 0);
 }
 
 // E:\gamedcs\csprite.cpp:282
 VA(0x0047bdc0, 0x4c)  // sequence zero + adv-object implementation
-void CSprite::DrawAdvObj(int framenum, int sx, int sy, int sw, int sh,
+void CSprite::drawAdvObj(int framenum, int sx, int sy, int sw, int sh,
                          unsigned short* dst, int dx, int dy, int dw, int dh,
                          int dpitch, unsigned char hflip) const
 {
-    s[0]->f[framenum]->DrawAdvObjImpl(
-        sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *p, hflip, 0);
+    m_s[0]->m_f[framenum]->drawAdvObjImpl(
+        sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip, 0);
 }
 
 // E:\gamedcs\csprite.cpp:290
 VA(0x0047be10, 0x4e)  // sequence zero + adv-object flag forwarding
-void CSprite::DrawAdvObjWithFlag(int framenum, int sx, int sy, int sw,
+void CSprite::drawAdvObjWithFlag(int framenum, int sx, int sy, int sw,
                                  int sh, unsigned short* dst, int dx, int dy,
                                  int dw, int dh, int dpitch,
                                  unsigned short outcolor,
                                  unsigned char hflip) const
 {
-    s[0]->f[framenum]->DrawAdvObjImpl(
-        sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *p, hflip, outcolor);
+    m_s[0]->m_f[framenum]->drawAdvObjImpl(
+        sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip, outcolor);
 }
 
 // E:\gamedcs\csprite.cpp:306
 VA(0x0047be60, 0x4a)  // sequence zero + shadow implementation
-void CSprite::DrawAdvObjShadow(int framenum, int sx, int sy, int sw, int sh,
+void CSprite::drawAdvObjShadow(int framenum, int sx, int sy, int sw, int sh,
                                unsigned short* dst, int dx, int dy, int dw,
                                int dh, int dpitch, unsigned char hflip) const
 {
-    s[0]->f[framenum]->DrawAdvObjShadowImpl(
-        sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *p, hflip);
+    m_s[0]->m_f[framenum]->drawAdvObjShadowImpl(
+        sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip);
 }
 
 // E:\gamedcs\csprite.cpp:314
 VA(0x0047beb0, 0x4a)  // full-frame pointer draw through sequence zero
-void CSprite::DrawPointer(int framenum, unsigned short* dst, int dx, int dy,
+void CSprite::drawPointer(int framenum, unsigned short* dst, int dx, int dy,
                           int dw, int dh, int dpitch, unsigned char hflip) const
 {
-    CSpriteFrame* frame = s[0]->f[framenum];
-    frame->Draw(0, 0, frame->Width, frame->Height,
-                dst, dx, dy, dw, dh, dpitch, *p, hflip, 1);
+    CSpriteFrame* frame = m_s[0]->m_f[framenum];
+    frame->draw(0, 0, frame->m_width, frame->m_height,
+                dst, dx, dy, dw, dh, dpitch, *m_p, hflip, 1);
 }
 
 // E:\gamedcs\csprite.cpp:325
 VA(0x0047bf00, 0x4c)  // sequence zero + transparent draw forwarding
-void CSprite::DrawInterface(int framenum, int sx, int sy, int sw, int sh,
+void CSprite::drawInterface(int framenum, int sx, int sy, int sw, int sh,
                             unsigned short* dst, int dx, int dy, int dw,
                             int dh, int dpitch, unsigned char hflip) const
 {
-    s[0]->f[framenum]->Draw(
-        sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *p, hflip, 1);
+    m_s[0]->m_f[framenum]->draw(
+        sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip, 1);
 }
 
 // E:\gamedcs\csprite.cpp:338
 VA(0x0047bf50, 0x4e)  // sequence zero + tile forwarding
-void CSprite::DrawTile(int framenum, int sx, int sy, int sw, int sh,
+void CSprite::drawTile(int framenum, int sx, int sy, int sw, int sh,
                        unsigned short* dst, int dx, int dy, int dw, int dh,
                        int dpitch, unsigned char hflip, unsigned char vflip) const
 {
-    s[0]->f[framenum]->DrawTile(
-        sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *p, hflip, vflip);
+    m_s[0]->m_f[framenum]->drawTile(
+        sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip, vflip);
 }
 
 // E:\gamedcs\csprite.cpp:346
 VA(0x0047bfa0, 0x4e)  // sequence zero + tile-shadow forwarding
-void CSprite::DrawTileShadow(int framenum, int sx, int sy, int sw, int sh,
+void CSprite::drawTileShadow(int framenum, int sx, int sy, int sw, int sh,
                              unsigned short* dst, int dx, int dy, int dw,
                              int dh, int dpitch, unsigned char hflip,
                              unsigned char vflip) const
 {
-    s[0]->f[framenum]->DrawTileShadow(
-        sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *p, hflip, vflip);
+    m_s[0]->m_f[framenum]->drawTileShadow(
+        sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip, vflip);
 }
 
 // E:\gamedcs\csprite.cpp:365
 VA(0x0047bff0, 0x8b)  // paired tile + shadow calls on one selected frame
-void CSprite::DrawShroudTile(int framenum, int sx, int sy, int sw, int sh,
+void CSprite::drawShroudTile(int framenum, int sx, int sy, int sw, int sh,
                              unsigned short* dst, int dx, int dy, int dw,
                              int dh, int dpitch, unsigned char hflip,
                              unsigned char vflip) const
 {
-    TPalette16* pal = p;
-    CSpriteFrame* frame = s[0]->f[framenum];
-    frame->DrawTile(
+    TPalette16* pal = m_p;
+    CSpriteFrame* frame = m_s[0]->m_f[framenum];
+    frame->drawTile(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *pal, hflip, vflip);
-    frame->DrawTileShadow(
+    frame->drawTileShadow(
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *pal, hflip, vflip);
 }
 
 // E:\gamedcs\csprite.cpp:372
 VA(0x0047c080, 0x50)  // selected sequence + adv-object implementation
-void CSprite::DrawHero(int seqnum, int framenum, int sx, int sy, int sw,
+void CSprite::drawHero(int seqnum, int framenum, int sx, int sy, int sw,
                        int sh, unsigned short* dst, int dx, int dy, int dw,
                        int dh, int dpitch, unsigned char hflip) const
 {
-    s[seqnum]->f[framenum]->DrawAdvObjImpl(
-        sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *p, hflip, 0);
+    m_s[seqnum]->m_f[framenum]->drawAdvObjImpl(
+        sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip, 0);
 }
 
 // E:\gamedcs\csprite.cpp:380
 VA(0x0047c0d0, 0x4e)  // selected sequence + shadow implementation
-void CSprite::DrawHeroShadow(int seqnum, int framenum, int sx, int sy,
+void CSprite::drawHeroShadow(int seqnum, int framenum, int sx, int sy,
                              int sw, int sh, unsigned short* dst,
                              int dx, int dy, int dw, int dh, int dpitch,
                              unsigned char hflip) const
 {
-    s[seqnum]->f[framenum]->DrawAdvObjShadowImpl(
-        sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *p, hflip);
+    m_s[seqnum]->m_f[framenum]->drawAdvObjShadowImpl(
+        sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip);
 }
 
 // E:\gamedcs\csprite.cpp:388
 VA(0x0047c120, 0x50)  // selected sequence + hero-alpha implementation
-void CSprite::DrawHeroAlpha(int seqnum, int framenum, int sx, int sy,
+void CSprite::drawHeroAlpha(int seqnum, int framenum, int sx, int sy,
                             int sw, int sh, unsigned short* dst,
                             int dx, int dy, int dw, int dh, int dpitch,
                             unsigned char hflip) const
 {
-    s[seqnum]->f[framenum]->DrawAdvObjWithFlagAlpha(
-        sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *p, 0, hflip);
+    m_s[seqnum]->m_f[framenum]->drawAdvObjWithFlagAlpha(
+        sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, 0, hflip);
 }
 
 // E:\gamedcs\csprite.cpp:404
 VA(0x0047c170, 0x52)  // selected sequence + spell-effect implementation
-void CSprite::DrawSpellEffect(int seqnum, int framenum, int sx, int sy,
+void CSprite::drawSpellEffect(int seqnum, int framenum, int sx, int sy,
                               int sw, int sh, unsigned short* dst,
                               int dx, int dy, int dw, int dh, int dpitch,
                               unsigned char hflip, unsigned char alpha) const
 {
-    s[seqnum]->f[framenum]->DrawSpellEffect(
-        sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *p, hflip, alpha);
+    m_s[seqnum]->m_f[framenum]->drawSpellEffect(
+        sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip, alpha);
 }
 
 // E:\gamedcs\csprite.cpp:574
 // The retail jump table spans the sixteen sprite-family resource ids. Its
 // four distinct return blocks are also expanded verbatim by the constructor.
 VA(0x0047c1d0, 0x6c)  // HD/DC identity + constructor inlining twin
-int CSprite::GetNumSeqs(int type)
+int CSprite::getNumSeqs(int type)
 {
     switch (type) {
     case RESOURCE_TYPE_CREATURE:
@@ -357,21 +357,21 @@ int CSprite::GetNumSeqs(int type)
 
 // E:\gamedcs\csprite.cpp:274
 DC_ONLY(0x72784, 0x90)
-void CSprite::DrawCreatureAlpha(int seqnum, int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char hflip, unsigned short outcolor)
+void CSprite::drawCreatureAlpha(int seqnum, int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char hflip, unsigned short outcolor)
 {
     // @stub
 }
 
 // E:\gamedcs\csprite.cpp:298
 DC_ONLY(0x72944, 0x8C)
-void CSprite::DrawAdvObjWithFlagAlpha(int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned short outcolor, unsigned char hflip)
+void CSprite::drawAdvObjWithFlagAlpha(int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned short outcolor, unsigned char hflip)
 {
     // @stub
 }
 
 // E:\gamedcs\csprite.cpp:396
 DC_ONLY(0x72ea8, 0x8C)
-void CSprite::DrawCombatHero(int seqnum, int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char hflip)
+void CSprite::drawCombatHero(int seqnum, int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char hflip)
 {
     // @stub
 }
@@ -483,84 +483,84 @@ const char* resource::get_Name()
 
 // E:\gamedcs\CSpriteFrame.h:147
 DC_ONLY(0x74068, 0x68)
-void CSpriteFrame::DrawCreature(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip, unsigned short outcolor)
+void CSpriteFrame::drawCreature(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip, unsigned short outcolor)
 {
     // @stub
 }
 
 // E:\gamedcs\CSpriteFrame.h:152
 DC_ONLY(0x740d0, 0x68)
-void CSpriteFrame::DrawCreatureAlpha(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip, unsigned short outcolor)
+void CSpriteFrame::drawCreatureAlpha(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip, unsigned short outcolor)
 {
     // @stub
 }
 
 // E:\gamedcs\CSpriteFrame.h:157
 DC_ONLY(0x74138, 0x60)
-void CSpriteFrame::DrawAdvObj(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip)
+void CSpriteFrame::drawAdvObj(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip)
 {
     // @stub
 }
 
 // E:\gamedcs\CSpriteFrame.h:162
 DC_ONLY(0x74198, 0x64)
-void CSpriteFrame::DrawAdvObjWithFlag(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned short flagcolor, unsigned char hflip)
+void CSpriteFrame::drawAdvObjWithFlag(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned short flagcolor, unsigned char hflip)
 {
     // @stub
 }
 
 // E:\gamedcs\CSpriteFrame.h:167
 DC_ONLY(0x741fc, 0x5C)
-void CSpriteFrame::DrawAdvObjShadow(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip)
+void CSpriteFrame::drawAdvObjShadow(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip)
 {
     // @stub
 }
 
 // E:\gamedcs\CSpriteFrame.h:172
 DC_ONLY(0x74258, 0x60)
-void CSpriteFrame::DrawHero(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip)
+void CSpriteFrame::drawHero(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip)
 {
     // @stub
 }
 
 // E:\gamedcs\CSpriteFrame.h:177
 DC_ONLY(0x742b8, 0x5C)
-void CSpriteFrame::DrawHeroShadow(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip)
+void CSpriteFrame::drawHeroShadow(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip)
 {
     // @stub
 }
 
 // E:\gamedcs\CSpriteFrame.h:182
 DC_ONLY(0x74314, 0x68)
-void CSpriteFrame::DrawPointer(unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip)
+void CSpriteFrame::drawPointer(unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip)
 {
     // @stub
 }
 
 // E:\gamedcs\CSpriteFrame.h:187
 DC_ONLY(0x7437c, 0x60)
-void CSpriteFrame::DrawInterface(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip)
+void CSpriteFrame::drawInterface(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip)
 {
     // @stub
 }
 
 // E:\gamedcs\CSpriteFrame.h:192
 DC_ONLY(0x743dc, 0xA8)
-void CSpriteFrame::DrawShroudTile(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hFlipped, unsigned char vFlipped)
+void CSpriteFrame::drawShroudTile(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hFlipped, unsigned char vFlipped)
 {
     // @stub
 }
 
 // E:\gamedcs\CSpriteFrame.h:198
 DC_ONLY(0x74484, 0x60)
-void CSpriteFrame::DrawHeroAlpha(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip)
+void CSpriteFrame::drawHeroAlpha(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip)
 {
     // @stub
 }
 
 // E:\gamedcs\CSprite.h:259
 DC_ONLY(0x744e4, 0x64)
-void CSprite::SetPalette(TPalette16& pal)
+void CSprite::setPalette(TPalette16& pal)
 {
     // @stub
 }

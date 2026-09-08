@@ -7,9 +7,11 @@
 
 #include "sskilltraits.h"
 
-unsigned char InitializeHeroTraitsTable();
-unsigned char InitializeHeroClassTraitsTable();
-unsigned char InitializeSSkillTraitsTable();
+unsigned char initializeHeroTraitsTable();
+// Before normalization (function): InitializeHeroClassTraitsTable.
+unsigned char initializeHeroClassTraitsTable();
+// Before normalization (function): InitializeSSkillTraitsTable.
+unsigned char initializeSSkillTraitsTable();
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\herodefs.cpp:204, dc 0xd5a40) unsigned char InitializeHeroTraitsTable();

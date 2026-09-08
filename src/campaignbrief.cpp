@@ -5,7 +5,8 @@
 #include <stdio.h>
 #include <string.h>
 class message;
-static int CampaignBriefHandler(message& msg);
+// Before normalization (function): CampaignBriefHandler.
+static int campaignBriefHandler(message& msg);
 #include "campaignbrief.h"
 #include "advmgr.h"
 #include "border.h"
@@ -27,39 +28,46 @@ static int CampaignBriefHandler(message& msg);
 // Temporary game snapshot made by the retail campaign-brief constructor.
 // Dreamcast names the same cross-TU cell `saveHeader`; UpdateGameVars hands
 // it back to BackupGameHeaders when the load-game row has no current file.
-DATA(0x0069fdc4) game* saveHeader;
+DATA(0x0069fdc4) game* g_saveHeader;
 
 // Complete keeps the current campaign-brief mode and construction-ready
 // latch in campaignbrief.obj.  The constructor, Select-family methods, and
 // handler all address these same cells; the names are role-based because no
 // surviving PC public names either private datum.
-DATA(0x00694de8) static unsigned char gCampaignBriefViewFromGame;
-DATA(0x00694de0) static unsigned char gCampaignBriefReady;
+// Before normalization: gCampaignBriefViewFromGame.
+// Before normalization: gCampaignBriefReady.
+DATA(0x00694de8) static unsigned char g_campaignBriefViewFromGame;
+DATA(0x00694de0) static unsigned char g_campaignBriefReady;
 
 // The handler's six-frame region flash. Complete retains the counter and
 // next-frame deadline beside the ready latch; Dreamcast proves the same
 // six/125 sequence and the GameTime helper boundary independently.
-DATA(0x00694dec) static int gCampaignBriefFlashLeft;
-DATA(0x00694db0) static unsigned long gCampaignBriefFlashTime;
+// Before normalization: gCampaignBriefFlashLeft.
+// Before normalization: gCampaignBriefFlashTime.
+DATA(0x00694dec) static int g_campaignBriefFlashLeft;
+DATA(0x00694db0) static unsigned long g_campaignBriefFlashTime;
 
 // Dreamcast publishes the semantic table name. Complete's right-click path
 // independently fixes its THelpText stride and first-pointer use at this
 // address.
-DATA(0x006a59cc) extern THelpText gCampaignBriefHelp[];
+// Before normalization: gCampaignBriefHelp.
+DATA(0x006a59cc) extern THelpText g_campaignBriefHelp[];
 
 // Dreamcast publishes this helper from singleselectionwindow.cpp.  Retail's
 // constructor independently proves the /Gr two-register call at 0x459159.
-void BackupGameHeaders(game* dest, game* src);
+void backupGameHeaders(game* dest, game* src);
 
 // Complete's five campaign-difficulty buttons take paired rollover/right-
 // click strings from this contiguous table. Retail fixes the five-row extent
 // by advancing from 0x006a6cb8 to 0x006a6ce0 in AddBonusIcons.
-DATA(0x006a6cb8) static THelpText gCampaignDifficultyHelp[5];
+// Before normalization: gCampaignDifficultyHelp.
+DATA(0x006a6cb8) static THelpText g_campaignDifficultyHelp[5];
 
 // Both difficulty arrow buttons retain this shared message callback at
 // retail 0x00457cb0. Its source name is not yet independently recovered;
 // keep the role name provisional until that function is admitted.
-int CampaignDifficultyHandler(message& msg);
+// Before normalization (function): CampaignDifficultyHandler.
+int campaignDifficultyHandler(message& msg);
 
 #if 0  // Dreamcast-only carcass; retained as evidence, not emitted for retail.
 // E:\gamedcs\campaignbrief.cpp:202
@@ -71,7 +79,7 @@ void CampaignWait(int which)
 
 // E:\gamedcs\campaignbrief.cpp:365
 DC_ONLY(0x58774, 0x50)
-void ShowTerritorySmacker(unsigned char bEvil2Post)
+void showTerritorySmacker(unsigned char bEvil2Post)
 {
     // @stub
 }
@@ -82,15 +90,15 @@ void ShowTerritorySmacker(unsigned char bEvil2Post)
 // description as a second widget message; Complete hands it to the
 // scroller (type_text_scroller::SetText, 0x5ba6e0) instead.
 DC_ONLY(0x58938, 0x6A)
-inline void TCampaignBrief::ResetMapAndDescription(int which)
+inline void TCampaignBrief::resetMapAndDescription(int which)
 {
     message msg;
-    msg.id = MESSAGE_WIDGET;
-    msg.codeX = widget::WIDGET_SET_TEXT;
-    msg.codeY = MAP_NAME_ID;
-    msg.extraText = scenarios[which].mapName.c_str();
-    BroadcastMessage(&msg);
-    scroller->SetText(scenarios[which].mapDescription.c_str());
+    msg.m_id = MESSAGE_WIDGET;
+    msg.m_codeX = widget::WIDGET_SET_TEXT;
+    msg.m_codeY = MAP_NAME_ID;
+    msg.m_extraText = m_scenarios[which].m_mapName.c_str();
+    broadcastMessage(&msg);
+    m_scroller->setText(m_scenarios[which].m_mapDescription.c_str());
 }
 
 // E:\gamedcs\campaignbrief.cpp:452. Complete keeps this and
@@ -99,11 +107,11 @@ inline void TCampaignBrief::ResetMapAndDescription(int which)
 // vector::size a NESTED candidate there, called out of line at both
 // loop tests (0x423110, the pointer-vector size COMDAT).
 DC_ONLY(0x589a4, 0x84)
-inline void TCampaignBrief::ClearSelected()
+inline void TCampaignBrief::clearSelected()
 {
-    for (int i = 0; i < static_cast<int>(campaign->scenarios.size()); i++) {
-        if (scenarios[i].available)
-            GetWidget(MAP_SELECTED_1_ID + i)->hide();
+    for (int i = 0; i < static_cast<int>(m_campaign->m_scenarios.size()); i++) {
+        if (m_scenarios[i].m_available)
+            getWidget(MAP_SELECTED_1_ID + i)->hide();
     }
 }
 
@@ -113,53 +121,53 @@ inline void TCampaignBrief::ClearSelected()
 // button enable when the scenario's options record has no choice to
 // make, and the difficulty-button refresh.
 VA(0x00457990, 0x319)  // anchor-caller(TCampaignBrief ctor), dc 0x587c4
-void TCampaignBrief::Select(int which)
+void TCampaignBrief::select(int which)
 {
-    if (!scenarios[which].available)
+    if (!m_scenarios[which].m_available)
         return;
 
-    ClearSelected();
-    GetWidget(MAP_SELECTED_1_ID + which)->show();
-    selected_scenario = which;
-    ResetMapAndDescription(which);
+    clearSelected();
+    getWidget(MAP_SELECTED_1_ID + which)->show();
+    m_selectedScenario = which;
+    resetMapAndDescription(which);
 
-    if (!gCampaignBriefViewFromGame) {
-        gpGame->setup = scenarios[which].game_setup;
-        gpGame->mapHeader = scenarios[which];
+    if (!g_campaignBriefViewFromGame) {
+        g_game->m_setup = m_scenarios[which].m_gameSetup;
+        g_game->m_mapHeader = m_scenarios[which];
     }
 
     message msg;
-    msg.id = MESSAGE_WIDGET;
-    msg.codeX = widget::WIDGET_SET_ICON_FRAME;
-    msg.codeY = WHICHMAP_ID;
-    switch (scenarios[which].Size) {
+    msg.m_id = MESSAGE_WIDGET;
+    msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+    msg.m_codeY = WHICHMAP_ID;
+    switch (m_scenarios[which].m_size) {
     case MAP_SIZE_SMALL:
-        msg.extra = 0;
+        msg.m_extra = 0;
         break;
     case MAP_SIZE_MEDIUM:
-        msg.extra = 1;
+        msg.m_extra = 1;
         break;
     case MAP_SIZE_LARGE:
-        msg.extra = 2;
+        msg.m_extra = 2;
         break;
     case MAP_SIZE_EXTRA_LARGE:
-        msg.extra = 3;
+        msg.m_extra = 3;
         break;
     default:
-        msg.extra = 4;
+        msg.m_extra = 4;
         break;
     }
-    BroadcastMessage(&msg);
+    broadcastMessage(&msg);
 
-    if (!campaign->scenarios[which]->options->_vslot2()) {
-        widget* ok = GetWidget(DIALOG_RETURN_OK);
+    if (!m_campaign->m_scenarios[which]->m_options->getCount()) {
+        widget* ok = getWidget(DIALOG_RETURN_OK);
         if (ok)
             ok->enable(1);
     }
-    UpdateBonusIcons();
-    UpdateDifficultyButtons();
-    UpdateAllyEnemyFlags();
-    DrawWindow(1, 0xffff0001, 0xffff);
+    updateBonusIcons();
+    updateDifficultyButtons();
+    updateAllyEnemyFlags();
+    drawWindow(1, 0xffff0001, 0xffff);
 }
 
 // CMapHeaderData's compiler-generated copy assignment, which Select's
@@ -167,11 +175,15 @@ void TCampaignBrief::Select(int which)
 // NewSMapHeader's own (the two strings and the POD tail follow inline).
 // Retail retains this object's copy, the first in link order to need it.
 VA_COMPGEN(0x00457cb0, 0x2B8, IMPLICIT_COPY_ASSIGN, CMapHeaderData)
+// The copy assignment compares its source int-vector size with this retained
+// destination capacity helper. Dreamcast names the specialization at
+// stl_vector.h:199 (dc 0x169d60); retail fixes the Dinkumware empty check.
+VA_COMPGEN(0x0054DEB0, 0x13, VECTOR_CAPACITY, Int)
 
 #if 0  // Dreamcast-only carcass; retained as evidence, not emitted for retail.
 // E:\gamedcs\campaignbrief.cpp:462
 DC_ONLY(0x58a28, 0x74)
-void TCampaignBrief::SetupCurrentTerritory()
+void TCampaignBrief::setupCurrentTerritory()
 {
     // @stub
 }
@@ -180,8 +192,9 @@ void TCampaignBrief::SetupCurrentTerritory()
 
 // The local player's slot in the selected scenario, DC ?playerSlot@@3HA;
 // retail .bss 0x694dcc, written by UpdateAllyEnemyFlags below.
+// Before normalization: gCampaignBriefPlayerSlot.
 DATA(0x00694dcc)
-static int gCampaignBriefPlayerSlot;
+static int g_campaignBriefPlayerSlot;
 
 // E:\gamedcs\campaignbrief.cpp:481. Complete retains the same source helper
 // immediately after Select; CampaignBriefHandler calls it at retail +0x4f9.
@@ -189,26 +202,38 @@ static int gCampaignBriefPlayerSlot;
 // Lay the eight player flags out as allies (ALLY_FLAG1_ID..) and enemies
 // (ENEMY_FLAG1_ID..) of the local player's slot, hiding every flag first and skipping
 // the positions the scenario leaves empty.
+//
+// LANDED: naming the briefing-choice argument before the scenario lookup and
+// retaining the scenario pointer as a source local restores retail's evaluation
+// order; declaring the loop index before the two running widget ids restores its
+// EDI lifetime. Together these move 86.8125 -> 99.8958 with all nine CFG blocks,
+// five branches and thirteen calls exact. The remaining byte is the commutative
+// SIB spelling in the second teamInfo lookup inside Dreamcast-proven OnSameTeam:
+// candidate [ecx+eax+0x1f879], retail [eax+ecx+0x1f879]. Naming either the player
+// slot or the game receiver is byte-flat, so keep the canonical helper boundary.
 VA(0x00458010, 0x10F)  // handler caller + DC source identity, dc 0x58a9c
-void TCampaignBrief::UpdateAllyEnemyFlags()
+void TCampaignBrief::updateAllyEnemyFlags()
 {
-    gCampaignBriefPlayerSlot =
-        campaign->scenarios[selected_scenario]->options->GetPlayerPosition(
-            gpGame->campaign.briefingChoice);
+    int briefingChoice = g_game->m_campaign.m_briefingChoice;
+    ScenarioStruct* scenario =
+        m_campaign->m_scenarios[m_selectedScenario];
+    g_campaignBriefPlayerSlot =
+        scenario->m_options->getPlayer(briefingChoice);
+    int i = 0;
     int enemyFlagId = ENEMY_FLAG1_ID;
     int allyFlagId = ALLY_FLAG1_ID;
-    for (int i = 0; i < 8; i++) {
-        GetWidget(i + ENEMY_FLAG1_ID)->hide();
-        GetWidget(i + ALLY_FLAG1_ID)->hide();
-        if (gpGame->setup.playerPos[i] >= 0) {
-            if (gpGame->OnSameTeam(i, gCampaignBriefPlayerSlot)) {
-                GetWidget(allyFlagId)->show();
-                GetWidget(allyFlagId)->send_message(
+    for (; i < 8; i++) {
+        getWidget(i + ENEMY_FLAG1_ID)->hide();
+        getWidget(i + ALLY_FLAG1_ID)->hide();
+        if (g_game->m_setup.m_playerPos[i] >= 0) {
+            if (g_game->onSameTeam(i, g_campaignBriefPlayerSlot)) {
+                getWidget(allyFlagId)->show();
+                getWidget(allyFlagId)->sendMessage(
                     widget::WIDGET_SET_ICON_FRAME, i);
                 allyFlagId++;
             } else {
-                GetWidget(enemyFlagId)->show();
-                GetWidget(enemyFlagId)->send_message(
+                getWidget(enemyFlagId)->show();
+                getWidget(enemyFlagId)->sendMessage(
                     widget::WIDGET_SET_ICON_FRAME, i);
                 enemyFlagId++;
             }
@@ -241,108 +266,108 @@ void ExtractCampaignMap(int* numPreReqs, unsigned char single_map_only, unsigned
 // three-argument `insert(end(), 1, value)` on the second arrow (77.52%); each
 // changes the whole /Ob2 frontier and destroys the otherwise exact CFG.
 VA(0x00458120, 0xC1C)  // anchor-caller(TCampaignBrief ctor), dc 0x58dac
-void TCampaignBrief::AddBonusIcons()
+void TCampaignBrief::addBonusIcons()
 {
     int i;
 
-    Widgets.push_back(new textWidget(
-        476, 425, 194, 30, (*gpGeneralText)[72],
+    m_widgets.push_back(new textWidget(
+        476, 425, 194, 30, (*g_generalText)[72],
         DATA_COMPGEN(0x0065f2ec, campaignBonusMediumFont, "medfont.fnt"),
         static_cast<font::TColor>(4), 242, 5, 0, 8));
 
-    start_bonus_borders[0] = new coloredBorderFrame(
-        475, 454, 60, 66, 232, gSystemPalette->data[45], 0x400);
-    start_bonus_borders[1] = new coloredBorderFrame(
-        543, 454, 60, 66, 233, gSystemPalette->data[45], 0x400);
-    start_bonus_borders[2] = new coloredBorderFrame(
-        611, 454, 60, 66, 234, gSystemPalette->data[45], 0x400);
+    m_startBonusBorders[0] = new coloredBorderFrame(
+        475, 454, 60, 66, 232, g_systemPalette->m_data[45], 0x400);
+    m_startBonusBorders[1] = new coloredBorderFrame(
+        543, 454, 60, 66, 233, g_systemPalette->m_data[45], 0x400);
+    m_startBonusBorders[2] = new coloredBorderFrame(
+        611, 454, 60, 66, 234, g_systemPalette->m_data[45], 0x400);
 
-    bitmap_bonus_images[0] = new bitmapBorder(
+    m_bitmapBonusImages[0] = new bitmapBorder(
         476, 455, 58, 64, 226, 0, 0x800);
-    bitmap_bonus_images[1] = new bitmapBorder(
+    m_bitmapBonusImages[1] = new bitmapBorder(
         544, 455, 58, 64, 227, 0, 0x800);
-    bitmap_bonus_images[2] = new bitmapBorder(
+    m_bitmapBonusImages[2] = new bitmapBorder(
         612, 455, 58, 64, 228, 0, 0x800);
 
-    sprite_bonus_images[0] = new iconWidget(
+    m_spriteBonusImages[0] = new iconWidget(
         476, 455, 58, 64, 229, 0, 0, 0, 0, 0,
         iconWidget::ICON_STYLE_PLAIN);
-    sprite_bonus_images[1] = new iconWidget(
+    m_spriteBonusImages[1] = new iconWidget(
         544, 455, 58, 64, 230, 0, 0, 0, 0, 0,
         iconWidget::ICON_STYLE_PLAIN);
-    sprite_bonus_images[2] = new iconWidget(
+    m_spriteBonusImages[2] = new iconWidget(
         612, 455, 58, 64, 231, 0, 0, 0, 0, 0,
         iconWidget::ICON_STYLE_PLAIN);
 
     for (i = 0; i < 3; ++i) {
-        start_bonus_borders[i]->set_visible(0);
-        Widgets.push_back(start_bonus_borders[i]);
-        bitmap_bonus_images[i]->set_visible(0);
-        Widgets.push_back(bitmap_bonus_images[i]);
-        sprite_bonus_images[i]->set_visible(0);
-        Widgets.push_back(sprite_bonus_images[i]);
+        m_startBonusBorders[i]->setVisible(0);
+        m_widgets.push_back(m_startBonusBorders[i]);
+        m_bitmapBonusImages[i]->setVisible(0);
+        m_widgets.push_back(m_bitmapBonusImages[i]);
+        m_spriteBonusImages[i]->setVisible(0);
+        m_widgets.push_back(m_spriteBonusImages[i]);
     }
 
-    difficulty_buttons[0] = new button(
+    m_difficultyButtons[0] = new button(
         710, 455, 30, 46, 235,
         DATA_COMPGEN(0x00660e5c, campaignDifficultyButton3,
                      "gspbut3.def"),
         0, 1, 0, 0, 2);
-    difficulty_buttons[1] = new button(
+    m_difficultyButtons[1] = new button(
         710, 455, 30, 46, 236,
         DATA_COMPGEN(0x00660e50, campaignDifficultyButton4,
                      "gspbut4.def"),
         0, 1, 0, 0, 2);
-    difficulty_buttons[2] = new button(
+    m_difficultyButtons[2] = new button(
         710, 455, 30, 46, 237,
         DATA_COMPGEN(0x00660e44, campaignDifficultyButton5,
                      "gspbut5.def"),
         0, 1, 0, 0, 2);
-    difficulty_buttons[3] = new button(
+    m_difficultyButtons[3] = new button(
         710, 455, 30, 46, 238,
         DATA_COMPGEN(0x00660e38, campaignDifficultyButton6,
                      "gspbut6.def"),
         0, 1, 0, 0, 2);
-    difficulty_buttons[4] = new button(
+    m_difficultyButtons[4] = new button(
         710, 455, 30, 46, 239,
         DATA_COMPGEN(0x00660e2c, campaignDifficultyButton7,
                      "gspbut7.def"),
         0, 1, 0, 0, 2);
 
     for (i = 0; i < 5; ++i) {
-        difficulty_buttons[i]->set_help_text(
-            gCampaignDifficultyHelp[i].text,
-            gCampaignDifficultyHelp[i].rclick, 0);
-        difficulty_buttons[i]->send_message(
+        m_difficultyButtons[i]->setHelpText(
+            g_campaignDifficultyHelp[i].m_text,
+            g_campaignDifficultyHelp[i].m_rclick, 0);
+        m_difficultyButtons[i]->sendMessage(
             widget::WIDGET_CLEAR_STATUS,
             widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        Widgets.push_back(difficulty_buttons[i]);
+        m_widgets.push_back(m_difficultyButtons[i]);
     }
 
-    Widgets.push_back(new textWidget(
-        680, 425, 90, 30, (*gpGeneralText)[441],
+    m_widgets.push_back(new textWidget(
+        680, 425, 90, 30, (*g_generalText)[441],
         DATA_COMPGEN(0x0065f2ec, campaignDifficultyMediumFont,
                      "medfont.fnt"),
         static_cast<font::TColor>(4), -1, 5, 0, 8));
 
-    if (gCampaignBriefViewFromGame) {
-        difficulty_decr_button = 0;
-        difficulty_incr_button = 0;
+    if (g_campaignBriefViewFromGame) {
+        m_difficultyDecrButton = 0;
+        m_difficultyIncrButton = 0;
         return;
     }
 
-    difficulty_decr_button = new type_func_button(
+    m_difficultyDecrButton = new type_func_button(
         704, 506, 16, 16, 240,
         DATA_COMPGEN(0x00660e1c, campaignDifficultyArrowSprite,
                      "SlideBuH.def"),
-        CampaignDifficultyHandler, 0, 1);
-    difficulty_incr_button = new type_func_button(
+        campaignDifficultyHandler, 0, 1);
+    m_difficultyIncrButton = new type_func_button(
         730, 506, 16, 16, 241,
         DATA_COMPGEN(0x00660e1c, campaignDifficultyArrowSprite,
                      "SlideBuH.def"),
-        CampaignDifficultyHandler, 2, 3);
-    Widgets.push_back(difficulty_decr_button);
-    Widgets.push_back(difficulty_incr_button);
+        campaignDifficultyHandler, 2, 3);
+    m_widgets.push_back(m_difficultyDecrButton);
+    m_widgets.push_back(m_difficultyIncrButton);
 }
 
 // E:\gamedcs\campaignbrief.cpp:520. Complete widens the Dreamcast's
@@ -368,81 +393,81 @@ void TCampaignBrief::AddBonusIcons()
 // `scenario` / `int i` declaration order (byte-flat) - the SIB flip is not
 // reachable from this loop's index scope because the third loop consumes `i`.
 VA(0x00458d40, 0x297)  // Select callee, dc-order-map after AddBonusIcons, dc 0x58c00
-void TCampaignBrief::UpdateBonusIcons()
+void TCampaignBrief::updateBonusIcons()
 {
-    ScenarioStruct* scenario = campaign->scenarios[selected_scenario];
+    ScenarioStruct* scenario = m_campaign->m_scenarios[m_selectedScenario];
     int i;
 
-    if (scenario->options->_vslot2() == ScenarioStartOptions::CHOICE_COUNT_PAIR) {
-        start_bonus_borders[0]->x = 509;
-        start_bonus_borders[1]->x = 577;
+    if (scenario->m_options->getCount() == TCampaignStartOption::CHOICE_COUNT_PAIR) {
+        m_startBonusBorders[0]->m_x = 509;
+        m_startBonusBorders[1]->m_x = 577;
     } else {
-        start_bonus_borders[0]->x = 475;
-        start_bonus_borders[1]->x = 543;
+        m_startBonusBorders[0]->m_x = 475;
+        m_startBonusBorders[1]->m_x = 543;
     }
     for (i = 0; i < 2; i++) {
-        bitmap_bonus_images[i]->x = start_bonus_borders[i]->x + 1;
-        sprite_bonus_images[i]->x = start_bonus_borders[i]->x + 1;
+        m_bitmapBonusImages[i]->m_x = m_startBonusBorders[i]->m_x + 1;
+        m_spriteBonusImages[i]->m_x = m_startBonusBorders[i]->m_x + 1;
     }
 
-    for (i = 0; i < scenario->options->_vslot2(); i++) {
-        start_bonus_borders[i]->show();
-        if (i == gpGame->campaign.briefingChoice)
-            start_bonus_borders[i]->send_message(widget::WIDGET_SET_STATUS, 4);
+    for (i = 0; i < scenario->m_options->getCount(); i++) {
+        m_startBonusBorders[i]->show();
+        if (i == g_game->m_campaign.m_briefingChoice)
+            m_startBonusBorders[i]->sendMessage(widget::WIDGET_SET_STATUS, 4);
         else
-            start_bonus_borders[i]->send_message(widget::WIDGET_CLEAR_STATUS,
+            m_startBonusBorders[i]->sendMessage(widget::WIDGET_CLEAR_STATUS,
                                                  4);
-        const char* name = scenario->options->_vslot3(&gpGame->campaign, i);
-        if (scenario->options->_vslot1(i)) {
-            bitmap_bonus_images[i]->show();
-            bitmap_bonus_images[i]->SetImage(name);
-            sprite_bonus_images[i]->hide();
+        const char* name = scenario->m_options->getIconDefName(&g_game->m_campaign, i);
+        if (scenario->m_options->isBuildingBonus(i)) {
+            m_bitmapBonusImages[i]->show();
+            m_bitmapBonusImages[i]->setImage(name);
+            m_spriteBonusImages[i]->hide();
         } else {
-            sprite_bonus_images[i]->show();
-            sprite_bonus_images[i]->SetSprite(name);
-            sprite_bonus_images[i]->SetIconFrame(scenario->options->_vslot4(i));
-            bitmap_bonus_images[i]->hide();
+            m_spriteBonusImages[i]->show();
+            m_spriteBonusImages[i]->setSprite(name);
+            m_spriteBonusImages[i]->setIconFrame(scenario->m_options->getIconIndex(i));
+            m_bitmapBonusImages[i]->hide();
         }
         std::string text;
-        text = scenario->GetBonusText(campaign, i);
-        bitmap_bonus_images[i]->set_help_text("", text.c_str(), 1);
-        sprite_bonus_images[i]->set_help_text("", text.c_str(), 1);
+        text = scenario->getBonusText(m_campaign, i);
+        m_bitmapBonusImages[i]->setHelpText("", text.c_str(), 1);
+        m_spriteBonusImages[i]->setHelpText("", text.c_str(), 1);
     }
     for (; i < 3; i++) {
-        start_bonus_borders[i]->hide();
-        bitmap_bonus_images[i]->hide();
-        sprite_bonus_images[i]->hide();
+        m_startBonusBorders[i]->hide();
+        m_bitmapBonusImages[i]->hide();
+        m_spriteBonusImages[i]->hide();
     }
 }
 
 // The header-inline getter retail retained in this object (see
 // campaignbrief.h): UpdateBonusIcons is its caller.
 VA(0x00458fe0, 0x2C)  // UpdateBonusIcons callee, retail-only
-std::string TCampaignBrief::ScenarioStruct::GetBonusText(
+std::string TCampaignBrief::ScenarioStruct::getBonusText(
     CampaignHeaderStruct* campaign, int option)
 {
-    return options->_vslot6(campaign, option);
+    return m_options->getText(campaign, option);
 }
 
 // Complete-only; see campaignbrief.h.
 VA(0x00459010, 0xB0)  // Select callee, retail-only
-void TCampaignBrief::UpdateDifficultyButtons()
+void TCampaignBrief::updateDifficultyButtons()
 {
     for (int i = 0; i < 5; i++) {
-        if (i == gpGame->setup.difficulty)
-            difficulty_buttons[i]->show();
+        if (i == g_game->m_setup.m_difficulty)
+            m_difficultyButtons[i]->show();
         else
-            difficulty_buttons[i]->hide();
+            m_difficultyButtons[i]->hide();
     }
-    if (!gCampaignBriefViewFromGame && difficulty_decr_button) {
-        if (gpGame->setup.difficulty > 0 && campaign->variable_difficulty)
-            difficulty_decr_button->show();
+    if (!g_campaignBriefViewFromGame && m_difficultyDecrButton) {
+        if (g_game->m_setup.m_difficulty > 0 && m_campaign->m_variableDifficulty)
+            m_difficultyDecrButton->show();
         else
-            difficulty_decr_button->hide();
-        if (gpGame->setup.difficulty < 4 && campaign->variable_difficulty)
-            difficulty_incr_button->show();
+            m_difficultyDecrButton->hide();
+        if (g_game->m_setup.m_difficulty < 4 && m_campaign->m_variableDifficulty)
+            m_difficultyIncrButton->show();
         else
-            difficulty_incr_button->hide();
+            m_difficultyIncrButton->hide();
     }
 }
 
@@ -474,106 +499,106 @@ TCampaignBrief::TCampaignBrief(unsigned char newCampaign,
     int my;
     widget* w;
 
-    gCampaignBriefViewFromGame = viewFromGame;
+    g_campaignBriefViewFromGame = viewFromGame;
 
     if (viewFromGame) {
-        saveHeader = new game;
-        BackupGameHeaders(saveHeader, gpGame);
-        selected_scenario = gpGame->campaign.currentMap;
+        g_saveHeader = new game;
+        backupGameHeaders(g_saveHeader, g_game);
+        m_selectedScenario = g_game->m_campaign.m_currentMap;
     } else {
         for (int i = 0; i < 8; ++i)
-            gpGame->players[i].Init();
-        gpGame->campaign.briefingChoice = -1;
+            g_game->m_players[i].init();
+        g_game->m_campaign.m_briefingChoice = -1;
     }
 
-    zBuffer = new unsigned short[width * height];
-    memset(zBuffer, 0, width * height * sizeof(*zBuffer));
+    m_zBuffer = new unsigned short[m_width * m_height];
+    memset(m_zBuffer, 0, m_width * m_height * sizeof(*m_zBuffer));
     // The widget vector NAMED AS A REFERENCE, so every append reads _Last
     // through the vector's own address rather than folding the member offset
     // off `this` (docs/vc6/inliner.md 6b's companion lever).  88.1039 ->
     // 88.3754 across all 24 uses.
-    std::vector<widget*>& widgets = Widgets;
+    std::vector<widget*>& widgets = m_widgets;
     widgets.reserve(NWIDGETS);
 
     const char* campaignFilename =
-        gpGame->campaign.GetCampaignFileName().c_str();
-    campaign = new CampaignHeaderStruct(campaignFilename);
-    if (!campaign->Load()) {
+        g_game->m_campaign.getCampaignFileName().c_str();
+    m_campaign = new CampaignHeaderStruct(campaignFilename);
+    if (!m_campaign->load()) {
         // Retail's dec/je/dec/jne dispatch proves a sparse switch rather
         // than an if-chain; VC6 sinks these two arms ahead of the shared
         // campaign teardown in reverse case order.
-        switch (campaign->file_error) {
+        switch (m_campaign->m_fileError) {
         case CampaignHeaderStruct::CAMPAIGN_FILE_OPEN_FAILED:
-            NormalDialog(
-                format_string((*gpGeneralText)[11], campaignFilename).c_str(),
+            normalDialog(
+                formatString((*g_generalText)[11], campaignFilename).c_str(),
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             break;
         case CampaignHeaderStruct::CAMPAIGN_FILE_VERSION_UNSUPPORTED:
-            NormalDialog(
-                format_string((*gpGeneralText)[724], campaignFilename).c_str(),
+            normalDialog(
+                formatString((*g_generalText)[724], campaignFilename).c_str(),
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             break;
         }
-        delete campaign;
-        campaign = 0;
+        delete m_campaign;
+        m_campaign = 0;
         return;
     }
 
     if (viewFromGame) {
         CampaignScenarioPreview preview;
-        static_cast<NewSMapHeader&>(preview) = gpGame->mapHeader;
-        preview.game_setup = gpGame->setup;
+        static_cast<NewSMapHeader&>(preview) = g_game->m_mapHeader;
+        preview.m_gameSetup = g_game->m_setup;
         for (unsigned int i = 0;
-             i < static_cast<int>(campaign->scenarios.size()); ++i) {
-            scenarios.insert(scenarios.end(), preview);
+             i < static_cast<int>(m_campaign->m_scenarios.size()); ++i) {
+            m_scenarios.insert(m_scenarios.end(), preview);
         }
     } else {
         NewSMapHeader mapHeader;
         for (int i = 0;
-             i < static_cast<int>(campaign->scenarios.size()); ++i) {
+             i < static_cast<int>(m_campaign->m_scenarios.size()); ++i) {
             CampaignScenarioPreview preview;
-            ScenarioStruct* scenario = campaign->scenarios[i];
-            gpGame->setup.fileInitialized = 0;
-            if (scenario->inflated_size > 0) {
-                campaign->LoadScenario(i, &mapHeader);
-                gpGame->SetupOrigData();
-                gpGame->InitNewGame(
-                    scenario->difficulty, i, &mapHeader, 0);
+            ScenarioStruct* scenario = m_campaign->m_scenarios[i];
+            g_game->m_setup.m_fileInitialized = 0;
+            if (scenario->m_inflatedSize > 0) {
+                m_campaign->loadScenario(i, &mapHeader);
+                g_game->setupOrigData();
+                g_game->initNewGame(
+                    scenario->m_difficulty, i, &mapHeader, 0);
             }
-            static_cast<NewSMapHeader&>(preview) = gpGame->mapHeader;
-            preview.game_setup = gpGame->setup;
-            scenarios.insert(scenarios.end(), preview);
+            static_cast<NewSMapHeader&>(preview) = g_game->m_mapHeader;
+            preview.m_gameSetup = g_game->m_setup;
+            m_scenarios.insert(m_scenarios.end(), preview);
         }
     }
 
-    campaign->GetAvailableScenarios(bitMask);
+    m_campaign->getAvailableScenarios(bitMask);
     for (unsigned int availableIndex = 0;
-         availableIndex < scenarios.size(); ++availableIndex) {
-        scenarios[availableIndex].available = bitMask[availableIndex];
+         availableIndex < m_scenarios.size(); ++availableIndex) {
+        m_scenarios[availableIndex].m_available = bitMask[availableIndex];
     }
 
     const TCampaignMapTraits& mapTraits =
-        akCampaignMapTraits[campaign->region_map];
+        g_campaignMapTraits[m_campaign->m_regionMap];
     widgets.insert(widgets.end(), new bitmapBorder16(
                     0, 0, 800, 600, BACKGROUND_ID, mapTraits.m_imageName, 0x800));
 
     for (int regionIndex = 0;
          regionIndex < mapTraits.m_numRegions; ++regionIndex) {
         const TCampaignMapTraits::TRegionTraits& region =
-            mapTraits.m_akRegionTraits[regionIndex];
-        ScenarioStruct* scenario = campaign->scenarios[regionIndex];
-        if (scenario->inflated_size > 0) {
+            mapTraits.m_regionTraits[regionIndex];
+        ScenarioStruct* scenario = m_campaign->m_scenarios[regionIndex];
+        if (scenario->m_inflatedSize > 0) {
             // BOUND BY `const int&`: retail re-reads the scenario's colour
             // at each of the three image-name subscripts.  88.3754 -> 89.0593.
-            const int& color = scenario->region_color;
-            if (gpGame->campaign.mapScores[regionIndex].completed) {
+            const int& color = scenario->m_regionColor;
+            if (g_game->m_campaign.m_mapScores[regionIndex].m_completed) {
                 widgets.insert(widgets.end(), new bitmapBorder(
                                 region.m_offsetX, region.m_offsetY, 20, 20,
                                 MAP_CONQUERED_1_ID + regionIndex,
                                 region.m_conqueredImageName[color], 0x800));
-                scenarios[regionIndex].available = false;
+                m_scenarios[regionIndex].m_available = false;
             }
-            if (scenarios[regionIndex].available) {
+            if (m_scenarios[regionIndex].m_available) {
                 widgets.insert(widgets.end(), new bitmapBorder(
                                 region.m_offsetX, region.m_offsetY, 20, 20,
                                 MAP_ENABLED_1_ID + regionIndex,
@@ -584,7 +609,7 @@ TCampaignBrief::TCampaignBrief(unsigned char newCampaign,
                                 region.m_selectedImageName[color], 0x800));
             }
         } else {
-            scenarios[regionIndex].available = false;
+            m_scenarios[regionIndex].m_available = false;
         }
     }
 
@@ -618,34 +643,34 @@ TCampaignBrief::TCampaignBrief(unsigned char newCampaign,
                                  "CBCANCB.DEF"),
                     0, 1, 0, 1, 2));
 
-    if (campaign->GetCampaignName().length() > 0) {
+    if (m_campaign->getCampaignName().length() > 0) {
         widgets.insert(widgets.end(), new textWidget(
-                        481, 22, 246, 32, campaign->GetCampaignName().c_str(),
+                        481, 22, 246, 32, m_campaign->getCampaignName().c_str(),
                         DATA_COMPGEN(0x00660b24, campaignBriefBigFont, "bigfont.fnt"),
                         static_cast<font::TColor>(8), CAMPAIGN_NAME_ID, 4, 0, 8));
     }
     widgets.insert(widgets.end(), new textWidget(
-                    481, 63, 270, 108, (*gpGeneralText)[39],
+                    481, 63, 270, 108, (*g_generalText)[39],
                     DATA_COMPGEN(0x0065f2f8, campaignBriefSmallFont, "smalfont.fnt"),
                     static_cast<font::TColor>(2), CAMPAIGN_DESCRIPTION_ID, 0, 0, 8));
-    if (campaign->GetCampaignDescription().length() > 0) {
+    if (m_campaign->getCampaignDescription().length() > 0) {
         widgets.insert(widgets.end(), new textWidget(
                         481, 86, 277, 120,
-                        campaign->GetCampaignDescription().c_str(),
+                        m_campaign->getCampaignDescription().c_str(),
                         DATA_COMPGEN(0x0065f2f8, campaignBriefSmallFont,
                                      "smalfont.fnt"),
                         font::WHITE, CAMPAIGN_DESCRIPTION_ID, 0, 0, 8));
     }
 
-    if (gCampaignBriefViewFromGame) {
-        selected_scenario = gpGame->campaign.currentMap;
+    if (g_campaignBriefViewFromGame) {
+        m_selectedScenario = g_game->m_campaign.m_currentMap;
     } else {
         for (unsigned int selectedIndex = 0;
-             selectedIndex < static_cast<int>(scenarios.size());
+             selectedIndex < static_cast<int>(m_scenarios.size());
              ++selectedIndex) {
-            if (scenarios[selectedIndex].available) {
-                selected_scenario = selectedIndex;
-                gpGame->setup = scenarios[selectedIndex].game_setup;
+            if (m_scenarios[selectedIndex].m_available) {
+                m_selectedScenario = selectedIndex;
+                g_game->m_setup = m_scenarios[selectedIndex].m_gameSetup;
                 break;
             }
         }
@@ -653,19 +678,19 @@ TCampaignBrief::TCampaignBrief(unsigned char newCampaign,
 
     widgets.insert(widgets.end(), new textWidget(
                     481, 213, viewFromGame ? 217 : 281, 32,
-                    scenarios[selected_scenario].mapName.c_str(),
+                    m_scenarios[m_selectedScenario].m_mapName.c_str(),
                     DATA_COMPGEN(0x00660b24, campaignBriefBigFont, "bigfont.fnt"),
                     static_cast<font::TColor>(8), MAP_NAME_ID, 4, 0, 8));
     widgets.insert(widgets.end(), new textWidget(
-                    481, 253, 270, 108, (*gpGeneralText)[497],
+                    481, 253, 270, 108, (*g_generalText)[497],
                     DATA_COMPGEN(0x0065f2f8, campaignBriefSmallFont, "smalfont.fnt"),
                     static_cast<font::TColor>(2), CAMPAIGN_DESCRIPTION_ID, 0, 0, 8));
-    scroller = new type_text_scroller(
-        scenarios[selected_scenario].mapDescription.c_str(),
+    m_scroller = new type_text_scroller(
+        m_scenarios[m_selectedScenario].m_mapDescription.c_str(),
         481, 278, 277, 108,
         DATA_COMPGEN(0x0065f2f8, campaignBriefSmallFont, "smalfont.fnt"),
         font::WHITE, slider::BLUE);
-    widgets.insert(widgets.end(), scroller);
+    widgets.insert(widgets.end(), m_scroller);
 
     widgets.insert(widgets.end(), new iconWidget(
                     735, 26, 29, 23, WHICHMAP_ID,
@@ -673,18 +698,18 @@ TCampaignBrief::TCampaignBrief(unsigned char newCampaign,
                                  "scnrmpsz.def"),
                     0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN));
 
-    sprintf(gText,
+    sprintf(g_text,
             DATA_COMPGEN(0x00660d28, campaignBriefLabelFormat, "%s:"),
-            (*gpGeneralText)[391]);
+            (*g_generalText)[391]);
     widgets.insert(widgets.end(), new textWidget(
-                    480, 404, 44, 23, gText,
+                    480, 404, 44, 23, g_text,
                     DATA_COMPGEN(0x0065f2f8, campaignBriefSmallFont, "smalfont.fnt"),
                     font::WHITE, 100, 6, 0, 8));
-    sprintf(gText,
+    sprintf(g_text,
             DATA_COMPGEN(0x00660d28, campaignBriefLabelFormat, "%s:"),
-            (*gpGeneralText)[392]);
+            (*g_generalText)[392]);
     widgets.insert(widgets.end(), new textWidget(
-                    612, 404, 58, 23, gText,
+                    612, 404, 58, 23, g_text,
                     DATA_COMPGEN(0x0065f2f8, campaignBriefSmallFont, "smalfont.fnt"),
                     font::WHITE, 100, 6, 0, 8));
 
@@ -695,7 +720,7 @@ TCampaignBrief::TCampaignBrief(unsigned char newCampaign,
             DATA_COMPGEN(0x00660d18, campaignBriefFlagSprites,
                          "itgflags.def"),
             0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
-        w->send_message(widget::WIDGET_CLEAR_STATUS,
+        w->sendMessage(widget::WIDGET_CLEAR_STATUS,
                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
         // TCampaignBrief::TCampaignBrief -> vector<widget*>::insert: DC proves
         // the source operation is push_back, while retail retains its nested
@@ -714,7 +739,7 @@ TCampaignBrief::TCampaignBrief(unsigned char newCampaign,
             DATA_COMPGEN(0x00660d18, campaignBriefFlagSprites,
                          "itgflags.def"),
             0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
-        w->send_message(widget::WIDGET_CLEAR_STATUS,
+        w->sendMessage(widget::WIDGET_CLEAR_STATUS,
                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
         // The second DC push_back independently reaches the same retained
         // retail insert.  Its one-pin negative control leaves 200 blocks and
@@ -725,27 +750,27 @@ TCampaignBrief::TCampaignBrief(unsigned char newCampaign,
 #pragma inline_depth()
     }
 
-    AddBonusIcons();
+    addBonusIcons();
 
     for (std::vector<widget*>::iterator it = widgets.begin();
          it != widgets.end(); ++it) {
         if (*it)
-            AddWidget(*it, -1);
+            addWidget(*it, -1);
         else
-            MemError();
+            memError();
     }
 
-    oldVolume = gUnk698760;
+    m_oldVolume = g_unk698760;
     if (viewFromGame)
-        gUnk698760 /= 2;
-    campaign->StartMusic();
+        g_unk698760 /= 2;
+    m_campaign->startMusic();
 
     if (viewFromGame) {
         for (unsigned int buttonIndex = 0; buttonIndex < 3; ++buttonIndex) {
-            w = GetWidget(232 + buttonIndex);
+            w = getWidget(232 + buttonIndex);
             if (w) {
-                w->send_message(
-                    buttonIndex == gpGame->campaign.briefingChoice
+                w->sendMessage(
+                    buttonIndex == g_game->m_campaign.m_briefingChoice
                         ? widget::WIDGET_SET_STATUS
                         : widget::WIDGET_CLEAR_STATUS,
                     widget::WIDGET_DRAWN);
@@ -754,62 +779,62 @@ TCampaignBrief::TCampaignBrief(unsigned char newCampaign,
     }
 
     for (int drawIndex = 0;
-         drawIndex < static_cast<int>(campaign->scenarios.size());
+         drawIndex < static_cast<int>(m_campaign->m_scenarios.size());
          ++drawIndex) {
-        if (campaign->scenarios[drawIndex]->inflated_size > 0) {
-            if (gpGame->campaign.mapScores[drawIndex].completed) {
-                w = GetWidget(MAP_CONQUERED_1_ID + drawIndex);
-                mx = w->GetRealWidth();
-                w->width = mx;
-                my = w->GetRealHeight();
-                w->height = my;
-                w->zBufferDraw(zBuffer,
+        if (m_campaign->m_scenarios[drawIndex]->m_inflatedSize > 0) {
+            if (g_game->m_campaign.m_mapScores[drawIndex].m_completed) {
+                w = getWidget(MAP_CONQUERED_1_ID + drawIndex);
+                mx = w->getRealWidth();
+                w->m_width = mx;
+                my = w->getRealHeight();
+                w->m_height = my;
+                w->zBufferDraw(m_zBuffer,
                                MAP_CONQUERED_1_ID + drawIndex);
             }
-            if (scenarios[drawIndex].available) {
-                w = GetWidget(MAP_SELECTED_1_ID + drawIndex);
-                mx = w->GetRealWidth();
-                w->width = mx;
-                my = w->GetRealHeight();
-                w->height = my;
-                w->send_message(widget::WIDGET_CLEAR_STATUS,
+            if (m_scenarios[drawIndex].m_available) {
+                w = getWidget(MAP_SELECTED_1_ID + drawIndex);
+                mx = w->getRealWidth();
+                w->m_width = mx;
+                my = w->getRealHeight();
+                w->m_height = my;
+                w->sendMessage(widget::WIDGET_CLEAR_STATUS,
                                 widget::WIDGET_ACTIVE |
                                     widget::WIDGET_DRAWN);
 
-                w = GetWidget(MAP_ENABLED_1_ID + drawIndex);
-                mx = w->GetRealWidth();
-                w->width = mx;
-                my = w->GetRealHeight();
-                w->height = my;
-                w->zBufferDraw(zBuffer, MAP_ENABLED_1_ID + drawIndex);
+                w = getWidget(MAP_ENABLED_1_ID + drawIndex);
+                mx = w->getRealWidth();
+                w->m_width = mx;
+                my = w->getRealHeight();
+                w->m_height = my;
+                w->zBufferDraw(m_zBuffer, MAP_ENABLED_1_ID + drawIndex);
             }
         }
     }
 
-    Select(selected_scenario);
-    gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
-    gCampaignBriefReady = 1;
+    select(m_selectedScenario);
+    g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+    g_campaignBriefReady = 1;
 }
 
 // Complete retains these three by-value accessors adjacent to the campaign
 // constructor.  Each body is the ordinary Dinkumware string copy from the
 // layout-proven member and provides a named relocation target for the caller.
 VA(0x0045a3e0, 0x134)  // anchor-caller(TCampaignBrief ctor), retail-only
-std::string SCampaign::GetCampaignFileName() const
+std::string SCampaign::getCampaignFileName() const
 {
-    return campaignFilename;
+    return m_campaignFilename;
 }
 
 VA(0x0045a520, 0x134)  // anchor-caller(TCampaignBrief ctor), retail-only
-std::string TCampaignBrief::CampaignHeaderStruct::GetCampaignName() const
+std::string TCampaignBrief::CampaignHeaderStruct::getCampaignName() const
 {
-    return campaign_name;
+    return m_campaignName;
 }
 
 VA(0x0045a660, 0x134)  // anchor-caller(TCampaignBrief ctor), retail-only
-std::string TCampaignBrief::CampaignHeaderStruct::GetCampaignDescription() const
+std::string TCampaignBrief::CampaignHeaderStruct::getCampaignDescription() const
 {
-    return campaign_desc;
+    return m_campaignDesc;
 }
 
 // The ctor's two local aggregate paths select these retained compiler-
@@ -932,6 +957,12 @@ VA_COMPGEN(0x0045D370, 0xA3, TREE_CONST_ITERATOR_INC, type_map_hero_info)
 // mnemonic agreement over 343 bytes.
 VA_COMPGEN(0x0045d8e0, 0x157, IMPLICIT_COPY_ASSIGN, type_map_hero_identity)
 
+// The vector copy-assignment above and both TPlayerSlotAttributes assignment
+// loops invoke this wrapper on 0x14-byte hero-identity elements. Its retained
+// destructor call tears down the string at +4 before optional scalar delete.
+VA_COMPGEN(0x0045DA40, 0x21, SCALAR_DELETING_DTOR,
+           type_map_hero_identity)
+
 // E:\gamedcs\campaignbrief.cpp:1011
 // Exact checkpoint (2026-09-01): all 15 retail CFG blocks and all 399 bytes
 // match.  The DC-positive sequence is preserved: restore volume/music, copy
@@ -944,22 +975,22 @@ VA_COMPGEN(0x0045d8e0, 0x157, IMPLICIT_COPY_ASSIGN, type_map_hero_identity)
 VA(0x0045afb0, 0x18F)  // anchor-global, dc 0x5a11c
 TCampaignBrief::~TCampaignBrief()
 {
-    if (saveHeader) {
-        gUnk698760 = oldVolume;
-        gpSoundManager->SwitchAmbientMusic(
-            gTerrainMusicIds[gpAdvManager->field_58]);
-        *gpGame = *saveHeader;
-        delete saveHeader;
-        saveHeader = 0;
-        gpAdvManager->RedrawAdvScreen(1, 0);
+    if (g_saveHeader) {
+        g_unk698760 = m_oldVolume;
+        g_soundManager->switchAmbientMusic(
+            g_terrainMusicIds[g_advManager->m_lastTerrain]);
+        *g_game = *g_saveHeader;
+        delete g_saveHeader;
+        g_saveHeader = 0;
+        g_advManager->redrawAdvScreen(1, 0);
     }
 
-    delete campaign;
-    if (zBuffer)
-        delete[] zBuffer;
+    delete m_campaign;
+    if (m_zBuffer)
+        delete[] m_zBuffer;
 
-    for (std::vector<widget*>::iterator it = Widgets.begin();
-         it != Widgets.end(); ++it) {
+    for (std::vector<widget*>::iterator it = m_widgets.begin();
+         it != m_widgets.end(); ++it) {
         delete *it;
     }
 }
@@ -974,7 +1005,7 @@ int TCampaignBrief::convertID2HelpID(int id) const
 
 // E:\gamedcs\campaignbrief.cpp:1071
 DC_ONLY(0x5a308, 0x1A)
-void TCampaignBrief::DoModal()
+void TCampaignBrief::doModal()
 {
     // @stub
 }
@@ -999,13 +1030,13 @@ int TCampaignBrief::convertID2HelpID(int id) const
 // The retained body at 0x45b1b0 is exactly the address-take that identifies
 // the static handler below as this TU's dialog callback.
 VA(0x0045b1b0, 0x28)  // handler address-take + DC DoModal, dc 0x5a308
-void TCampaignBrief::DoModal()
+void TCampaignBrief::doModal()
 {
-    if (!campaign) {
-        gpWindowManager->dialogReturn = DIALOG_RETURN_CANCEL;
+    if (!m_campaign) {
+        g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
         return;
     }
-    gpWindowManager->DoDialog(this, CampaignBriefHandler, 0);
+    g_windowManager->doDialog(this, campaignBriefHandler, 0);
 }
 
 // Dreamcast supplies the original statement groups, helper boundaries and
@@ -1021,53 +1052,53 @@ void TCampaignBrief::DoModal()
 // blocks, 78.07%). Keep the DC-proven operator= source fact and recover the
 // surrounding natural inline state; do not flatten or pin these boundaries.
 VA(0x0045b1e0, 0x8DB)  // DoModal address-take + full retail CFG, dc 0x5a324
-static int CampaignBriefHandler(message& msg)
+static int campaignBriefHandler(message& msg)
 {
-    TCampaignBrief* brief = static_cast<TCampaignBrief*>(msg.window);
+    TCampaignBrief* brief = static_cast<TCampaignBrief*>(msg.m_window);
     int exitFlag = 0;
 
-    if (gCampaignBriefReady) {
-        gCampaignBriefFlashLeft = 6;
-        gCampaignBriefReady = 0;
-        gCampaignBriefFlashTime =
-            GameTime::NextFrameTime(GameTime::Get(), 125);
+    if (g_campaignBriefReady) {
+        g_campaignBriefFlashLeft = 6;
+        g_campaignBriefReady = 0;
+        g_campaignBriefFlashTime =
+            GameTime::nextFrameTime(GameTime::get(), 125);
     }
 
-    if (gCampaignBriefFlashLeft) {
-        if (GameTime::IsPast(gCampaignBriefFlashTime)) {
-            gCampaignBriefFlashTime =
-                GameTime::NextFrameTime(gCampaignBriefFlashTime, 125);
-            --gCampaignBriefFlashLeft;
+    if (g_campaignBriefFlashLeft) {
+        if (GameTime::isPast(g_campaignBriefFlashTime)) {
+            g_campaignBriefFlashTime =
+                GameTime::nextFrameTime(g_campaignBriefFlashTime, 125);
+            --g_campaignBriefFlashLeft;
 
             for (int i = 0;
-                 i < static_cast<int>(brief->campaign->scenarios.size());
+                 i < static_cast<int>(brief->m_campaign->m_scenarios.size());
                 ++i) {
-                if (brief->scenarios[i].available) {
-                    if (gCampaignBriefFlashLeft & 1) {
-                        brief->GetWidget(
+                if (brief->m_scenarios[i].m_available) {
+                    if (g_campaignBriefFlashLeft & 1) {
+                        brief->getWidget(
                             TCampaignBrief::MAP_SELECTED_1_ID + i)->hide();
-                        brief->GetWidget(
+                        brief->getWidget(
                             TCampaignBrief::MAP_ENABLED_1_ID + i)->hide();
                     } else {
-                        brief->GetWidget(
+                        brief->getWidget(
                             TCampaignBrief::MAP_SELECTED_1_ID + i)->show();
-                        brief->GetWidget(
+                        brief->getWidget(
                             TCampaignBrief::MAP_ENABLED_1_ID + i)->show();
                     }
                 }
             }
 
-            if (!gCampaignBriefFlashLeft)
-                brief->Select(brief->selected_scenario);
+            if (!g_campaignBriefFlashLeft)
+                brief->select(brief->m_selectedScenario);
             else
-                brief->DrawWindow(1, WINDOW_ALL_WIDGETS_LOW,
+                brief->drawWindow(1, WINDOW_ALL_WIDGETS_LOW,
                                   WINDOW_ALL_WIDGETS_HIGH);
         }
         return 0;
     }
 
-    if (msg.qualifier & MESSAGE_MODIFIER_RIGHT) {
-        int id = msg.codeY;
+    if (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT) {
+        int id = msg.m_codeY;
         if (id == TCampaignBrief::CHOICE_1_ID
             || id == TCampaignBrief::CHOICE_2_ID
             || id == TCampaignBrief::CHOICE_3_ID
@@ -1075,24 +1106,24 @@ static int CampaignBriefHandler(message& msg)
             || id == TCampaignBrief::CHOICE_2_HIGHLIGHT_ID
             || id == TCampaignBrief::CHOICE_3_HIGHLIGHT_ID
             || (id >= 235 && id <= 239)) {
-            widget* w = brief->GetWidget(id);
+            widget* w = brief->getWidget(id);
             if (w) {
-                NormalDialog(w->get_rclick_text(), 4, -1, -1, -1, 0, -1, 0,
+                normalDialog(w->getRclickText(), 4, -1, -1, -1, 0, -1, 0,
                              -1, 0, -1, 0);
             }
         } else {
-            id = brief->zBuffer[msg.mouseY * brief->width + msg.mouseX];
+            id = brief->m_zBuffer[msg.m_mouseY * brief->m_width + msg.m_mouseX];
             if (id && id > TCampaignBrief::BACKGROUND_ID && id < 243) {
                 int helpID = brief->convertID2HelpID(id);
                 if (helpID >= 0) {
                     if (helpID < 100) {
                         std::string text =
-                            brief->campaign->scenarios[helpID]
-                                ->GetRegionDescription();
-                        NormalDialog(text.c_str(), 4, -1, -1, -1, 0,
+                            brief->m_campaign->m_scenarios[helpID]
+                                ->getRegionDescription();
+                        normalDialog(text.c_str(), 4, -1, -1, -1, 0,
                                      -1, 0, -1, 0, -1, 0);
                     } else {
-                        NormalDialog(gCampaignBriefHelp[helpID].text,
+                        normalDialog(g_campaignBriefHelp[helpID].m_text,
                                      4, -1, -1, -1, 0, -1, 0,
                                      -1, 0, -1, 0);
                     }
@@ -1102,21 +1133,21 @@ static int CampaignBriefHandler(message& msg)
         return MESSAGE_DISPATCH_CONSUME;
     }
 
-    if (msg.id != MESSAGE_WIDGET
-        || msg.codeX != widget::WIDGET_DESELECT)
+    if (msg.m_id != MESSAGE_WIDGET
+        || msg.m_codeX != widget::WIDGET_DESELECT)
         return MESSAGE_DISPATCH_CONSUME;
 
-    switch (msg.codeY) {
+    switch (msg.m_codeY) {
     case TCampaignBrief::RESTART_ID:
         exitFlag = 1;
         break;
 
     case TCampaignBrief::VIDEO_ID:
-        gpSoundManager->StopAllSamples(1);
-        gpGame->campaign.PlayScenarioPrologue(brief->campaign);
-        brief->DrawWindow(1, WINDOW_ALL_WIDGETS_LOW,
+        g_soundManager->stopAllSamples(1);
+        g_game->m_campaign.playScenarioPrologue(brief->m_campaign);
+        brief->drawWindow(1, WINDOW_ALL_WIDGETS_LOW,
                           WINDOW_ALL_WIDGETS_HIGH);
-        gpSoundManager->StopAllSamples(1);
+        g_soundManager->stopAllSamples(1);
         break;
 
     case TCampaignBrief::MAP_ENABLED_1_ID + 0:
@@ -1151,8 +1182,8 @@ static int CampaignBriefHandler(message& msg)
     case TCampaignBrief::MAP_ENABLED_1_ID + 29:
     case TCampaignBrief::MAP_ENABLED_1_ID + 30:
     case TCampaignBrief::MAP_ENABLED_1_ID + 31:
-        if (!gCampaignBriefViewFromGame)
-            brief->Select(msg.codeY - TCampaignBrief::MAP_ENABLED_1_ID);
+        if (!g_campaignBriefViewFromGame)
+            brief->select(msg.m_codeY - TCampaignBrief::MAP_ENABLED_1_ID);
         break;
 
     case TCampaignBrief::MAP_SELECTED_1_ID + 0:
@@ -1187,8 +1218,8 @@ static int CampaignBriefHandler(message& msg)
     case TCampaignBrief::MAP_SELECTED_1_ID + 29:
     case TCampaignBrief::MAP_SELECTED_1_ID + 30:
     case TCampaignBrief::MAP_SELECTED_1_ID + 31:
-        if (!gCampaignBriefViewFromGame)
-            brief->Select(msg.codeY - TCampaignBrief::MAP_SELECTED_1_ID);
+        if (!g_campaignBriefViewFromGame)
+            brief->select(msg.m_codeY - TCampaignBrief::MAP_SELECTED_1_ID);
         break;
 
     case TCampaignBrief::CHOICE_1_ID:
@@ -1197,20 +1228,20 @@ static int CampaignBriefHandler(message& msg)
     case TCampaignBrief::CHOICE_1_HIGHLIGHT_ID:
     case TCampaignBrief::CHOICE_2_HIGHLIGHT_ID:
     case TCampaignBrief::CHOICE_3_HIGHLIGHT_ID:
-        if (!gCampaignBriefViewFromGame) {
-            int choice = msg.codeY < TCampaignBrief::CHOICE_1_HIGHLIGHT_ID
-                             ? msg.codeY - TCampaignBrief::CHOICE_1_ID
-                             : msg.codeY
+        if (!g_campaignBriefViewFromGame) {
+            int choice = msg.m_codeY < TCampaignBrief::CHOICE_1_HIGHLIGHT_ID
+                             ? msg.m_codeY - TCampaignBrief::CHOICE_1_ID
+                             : msg.m_codeY
                                    - TCampaignBrief::CHOICE_1_HIGHLIGHT_ID;
-            gpGame->campaign.briefingChoice = choice;
+            g_game->m_campaign.m_briefingChoice = choice;
             for (int i = 0; i < 3; ++i) {
-                brief->start_bonus_borders[i]->set_visible(i == choice);
+                brief->m_startBonusBorders[i]->setVisible(i == choice);
             }
-            widget* ok = brief->GetWidget(DIALOG_RETURN_OK);
+            widget* ok = brief->getWidget(DIALOG_RETURN_OK);
             if (ok)
                 ok->enable(1);
-            brief->UpdateAllyEnemyFlags();
-            brief->DrawWindow(1, WINDOW_ALL_WIDGETS_LOW,
+            brief->updateAllyEnemyFlags();
+            brief->drawWindow(1, WINDOW_ALL_WIDGETS_LOW,
                               WINDOW_ALL_WIDGETS_HIGH);
         }
         break;
@@ -1220,43 +1251,43 @@ static int CampaignBriefHandler(message& msg)
         break;
 
     case DIALOG_RETURN_OK: {
-        int selected = brief->selected_scenario;
-        int choice = gpGame->campaign.briefingChoice;
-        int difficulty = gpGame->setup.difficulty;
+        int selected = brief->m_selectedScenario;
+        int choice = g_game->m_campaign.m_briefingChoice;
+        int difficulty = g_game->m_setup.m_difficulty;
 
-        gpGame->campaign.currentMap = static_cast<signed char>(selected);
-        if (gpGame->campaign.currentCampaign != GAME_CAMPAIGN_2
+        g_game->m_campaign.m_currentMap = static_cast<signed char>(selected);
+        if (g_game->m_campaign.m_currentCampaign != GAME_CAMPAIGN_2
             || selected != GAME_SCENARIO_2)
-            gpGame->campaign.PlayScenarioPrologue(brief->campaign);
+            g_game->m_campaign.playScenarioPrologue(brief->m_campaign);
 
-        ShowProgressBar();
-        IncProgressBar(1);
+        showProgressBar();
+        incProgressBar(1);
 
         NewSMapHeader mapHeader;
-        brief->campaign->LoadScenario(selected, &mapHeader);
-        gpGame->ResetGame(difficulty, selected, &mapHeader);
-        gpGame->campaign.ApplyBriefingChoice(choice);
-        memset(gNewMapStartingBonus, 3, sizeof(gNewMapStartingBonus));
-        IncProgressBar(1);
+        brief->m_campaign->loadScenario(selected, &mapHeader);
+        g_game->resetGame(difficulty, selected, &mapHeader);
+        g_game->m_campaign.applyBriefingChoice(choice);
+        memset(g_newMapStartingBonus, 3, sizeof(g_newMapStartingBonus));
+        incProgressBar(1);
 
-        int gamePos = brief->campaign->scenarios[selected]
-                          ->options->GetPlayerPosition(choice);
-        strcpy(gpGame->players[gamePos].cName, gLocalPlayerName);
-        gLocalGamePos = gamePos;
-        brief->campaign->StartScenario(selected, choice);
-        IncProgressBar(1);
-        gpSoundManager->StopMP3();
-        IncProgressBar(1);
+        int gamePos = brief->m_campaign->m_scenarios[selected]
+                          ->m_options->getPlayer(choice);
+        strcpy(g_game->m_players[gamePos].m_name, g_localPlayerName);
+        g_localGamePos = gamePos;
+        brief->m_campaign->startScenario(selected, choice);
+        incProgressBar(1);
+        g_soundManager->stopMP3();
+        incProgressBar(1);
         exitFlag = 1;
         break;
     }
     }
 
     if (exitFlag) {
-        msg.id = MESSAGE_WIDGET;
-        gpWindowManager->dialogReturn = msg.codeY;
-        msg.codeY = widget::WIDGET_END_DIALOG;
-        msg.codeX = widget::WIDGET_END_DIALOG;
+        msg.m_id = MESSAGE_WIDGET;
+        g_windowManager->m_dialogReturn = msg.m_codeY;
+        msg.m_codeY = widget::WIDGET_END_DIALOG;
+        msg.m_codeX = widget::WIDGET_END_DIALOG;
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;
@@ -1274,9 +1305,9 @@ static int CampaignBriefHandler(message& msg)
 // claim below needs, and the only cleanup left is the one operator delete
 // retail emits.
 VA(0x0045bad0, 0x134)  // sole caller CampaignBriefHandler + member offset
-std::string TCampaignBrief::ScenarioStruct::GetRegionDescription() const
+std::string TCampaignBrief::ScenarioStruct::getRegionDescription() const
 {
-    return region_desc;
+    return m_regionDesc;
 }
 
 // E:\gamedcs\campaignbrief.cpp:1401. Promoted from the Dreamcast-only
@@ -1289,16 +1320,16 @@ std::string TCampaignBrief::ScenarioStruct::GetRegionDescription() const
 // CampaignHeaderStruct::GetCampaignName by value. The header object is
 // never freed; that is retail's, transcribed and not invented.
 VA(0x0045bc10, 0xC0)  // link-order tail + call chain, dc 0x5ab48
-std::string get_campaign_name()
+std::string getCampaignName()
 {
     // The temporary is destroyed at the end of ITS OWN statement and the
     // pointer is used after: retail's own order, transcribed.
-    const char* fileName = gpGame->campaign.GetCampaignFileName().c_str();
+    const char* fileName = g_game->m_campaign.getCampaignFileName().c_str();
     TCampaignBrief::CampaignHeaderStruct* header =
         new TCampaignBrief::CampaignHeaderStruct(fileName);
 
-    header->Load();
-    return header->GetCampaignName();
+    header->load();
+    return header->getCampaignName();
 }
 
 #if 0  // Remaining Dreamcast-only carcass.
@@ -1312,7 +1343,7 @@ void ReadRamDisc(int RamDiscNr, void* buffer, long size, unsigned long* bytesRea
 
 // E:\gamedcs\widget.h:236
 DC_ONLY(0x5abe4, 0x10)
-const char* widget::get_rclick_text()
+const char* widget::getRclickText()
 {
     // @stub
 }

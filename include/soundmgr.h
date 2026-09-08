@@ -6,7 +6,8 @@
 #define HOMM3_SOUNDMGR_H
 
 // Live prototype (retail body 0x4ed490, called by heroWindow::DrawWindow).
-void PollSound();
+// Before normalization (function): PollSound.
+void pollSound();
 
 #include <windows.h>
 #include "basemgr.h"
@@ -15,30 +16,39 @@ void PollSound();
 class sample;
 class ds_memsample;
 
-// Retail PC's soundManager::ds is a Miles digital-driver handle, not the
-// Dreamcast ds_engine pointer carried by CodeView. Open is the only body that
-// reaches into it: +0xa8 is a buffer-like COM interface whose slot 15 is
-// invoked with volume zero. These narrow views encode only those proven
-// accesses and keep the rest of Miles' private driver opaque.
+// Retail PC uses the Miles 5.0e digital driver, rather than Dreamcast's
+// ds_engine. Use the pristine SDK layout, including its synchronization
+// qualifiers. The former AILDigitalDriver::opaque prefix ended at +0xa8:
+// retail Open reads that SDK lppdsb member and calls SetVolume at slot 15.
+// SDK boundary spellings remain unchanged; the original prefix names and
+// types are owned by vendor/miles-5.0e/orig/Mss.h (_DIG_DRIVER).
 struct AILPrimaryBufferVtable {
-    void* methods[15];
-    long (__stdcall* setVolume)(void* self, long volume);
+    // Before normalization: methods.
+    void* m_methods[15];
+    // Before normalization: setVolume.
+    long (__stdcall* m_setVolume)(void* self, long volume);
 };
 struct AILPrimaryBuffer {
-    AILPrimaryBufferVtable* vtable;
+    // Before normalization: vtable.
+    AILPrimaryBufferVtable* m_vtable;
 };
-struct AILDigitalDriver {
-    unsigned char opaque[0xa8];
-    AILPrimaryBuffer* primaryBuffer;
-};
+// Only pointers cross this header; the SDK definition is included by its consumer.
+struct _DIG_DRIVER;
+typedef _DIG_DRIVER AILDigitalDriver;
 
 struct AILWaveFormat {
-    unsigned short formatTag;
-    unsigned short channels;
-    unsigned long samplesPerSec;
-    unsigned long avgBytesPerSec;
-    unsigned short blockAlign;
-    unsigned short bitsPerSample;
+    // Before normalization: formatTag.
+    unsigned short m_formatTag;
+    // Before normalization: channels.
+    unsigned short m_channels;
+    // Before normalization: samplesPerSec.
+    unsigned long m_samplesPerSec;
+    // Before normalization: avgBytesPerSec.
+    unsigned long m_avgBytesPerSec;
+    // Before normalization: blockAlign.
+    unsigned short m_blockAlign;
+    // Before normalization: bitsPerSample.
+    unsigned short m_bitsPerSample;
 };
 
 // DC-attested verbatim (LF_FIELDLIST 0x1c9c, Size = 8): the pair a
@@ -46,34 +56,45 @@ struct AILWaveFormat {
 // Dreamcast record; retail hands it straight to AIL_sample_status /
 // AIL_end_sample, so it is typed as the handle here.
 struct SAMPLE2 {
-    sample* resSample;
-    ds_memsample* playSample;
+    // Before normalization: resSample.
+    sample* m_resSample;
+    // Before normalization: playSample.
+    ds_memsample* m_playSample;
 };
 
 // The 12-byte packet launch_sample heap-allocates (`new`, push 0xc) and
 // hands to its wait thread: a SAMPLE2 followed by the wait time, laid
 // out at +0/+4/+8 exactly as retail stores them. Name unattested.
 struct LaunchedSample {
-    SAMPLE2 sample2;
-    int max_time;
+    // Before normalization: sample2.
+    SAMPLE2 m_sample2;
+    // Before normalization: max_time.
+    int m_maxTime;
 };
 
 // The thread entry launch_sample hands to _beginthread, retail
 // 0x59a6b0 - a file-static in retail (the delinker bands it under
 // launch_sample), reached only by address-take. Declared non-static
 // here because its body is not claimed; name provisional.
-void __cdecl WaitEndSampleThread(void* arglist);
+// Before normalization (function): WaitEndSampleThread.
+void __cdecl waitEndSampleThread(void* arglist);
 
 // Retail .bss 0x699258, DC-attested name (?NULL_SAMPLE2@@3USAMPLE2@@A):
 // the empty pair LoadPlaySample returns on either failure path.
-extern SAMPLE2 NULL_SAMPLE2;
+// Before normalization: NULL_SAMPLE2.
+extern SAMPLE2 g_nullSample2;
 
 // Retail 0x59a470 / 0x59a4c0. With the compiland's /Gr default the
 // filename and wait-time scalar travel in ECX, while SAMPLE2 is returned
 // in EDX:EAX and passed by value on the stack.
-SAMPLE2 LoadPlaySample(const char* cSampleName);
-void ClearMemSample(SAMPLE2 sample2);
-void WaitEndSample(SAMPLE2 sample2, int iMilliWait);
+// Before normalization (function): LoadPlaySample.
+// Before normalization (locals): cSampleName.
+SAMPLE2 loadPlaySample(const char* sampleName);
+// Before normalization (function): ClearMemSample.
+void clearMemSample(SAMPLE2 sample2);
+// Before normalization (function): WaitEndSample.
+// Before normalization (locals): iMilliWait.
+void waitEndSample(SAMPLE2 sample2, int milliWait);
 
 // Retail 0x55c720 is ResourceManager::GetSample, claimed and defined in
 // resourcemanager.cpp; the provisional `LoadSampleResource` spelling this
@@ -81,11 +102,13 @@ void WaitEndSample(SAMPLE2 sample2, int iMilliWait);
 // declare the real one in a namespace block instead (advmgr.cpp includes
 // resourcemanager.h outright).
 namespace ResourceManager {
-sample* GetSample(const char* name);
+sample* getSample(const char* name);
 }
-SAMPLE2 LoadPlaySample(const char* cSampleName);
-void WaitEndSample(SAMPLE2 sample2, int iMilliWait);
-void launch_sample(const char* sample_name, int max_time, int channel);
+SAMPLE2 loadPlaySample(const char* sampleName);
+void waitEndSample(SAMPLE2 sample2, int milliWait);
+// Before normalization (function): launch_sample.
+// Before normalization (locals): sample_name, max_time.
+void launchSample(const char* sampleName, int maxTime, int channel);
 
 // The AIL_sample_status return domain. Only the three members this TU
 // compares against are modelled, and each one's ROLE is byte-proven -
@@ -177,19 +200,35 @@ public:
         SAMPLE_INFO_PLAYING = 4
     };
 
-    int field_38;
-    AILDigitalDriver* ds;
-    int field_40;
-    ds_memsample* sampleHandles[14];
-    int field_7c;
-    signed char field_80;
-    unsigned char field_81[3];
-    int field_84;
-    int bChangeSounds;
-    unsigned char MP3Playing;
-    CRITICAL_SECTION section_sound_call;
-    CRITICAL_SECTION section_MP3_change;
-    CRITICAL_SECTION section_MP3_name_change;
+    // Before normalization: field_38; reference member soundManager::mssHandle.
+    int m_mssHandle;
+    // Before normalization: ds.
+    AILDigitalDriver* m_ds;
+    // Before normalization: field_40; reference member soundManager::samples.
+    int m_samples;
+    // Before normalization: sampleHandles.
+    ds_memsample* m_sampleHandles[14];
+    // Before normalization: field_7c; reference member soundManager::sampleNum.
+    int m_sampleNum;
+    // NH3API currentTerrainMusic; retail receiveSaveGame 0x4cbdb7 reads
+    // +80 with MOVSX byte and later restores it through switchAmbientMusic.
+    // Keep the retail signed-byte width: NH3API's int32 declaration differs.
+    // Before normalization: field_80.
+    signed char m_currentTerrainMusic;
+    // Former field_81: three compiler alignment bytes between the
+    // retail-proven signed byte at +80 and four-byte playSounds at +84.
+    // Before normalization: field_84; reference member soundManager::playSounds.
+    int m_playSounds;
+    // Before normalization: bChangeSounds.
+    int m_changeSounds;
+    // Before normalization: MP3Playing.
+    unsigned char m_mp3Playing;
+    // Before normalization: section_sound_call.
+    CRITICAL_SECTION m_sectionSoundCall;
+    // Before normalization: section_MP3_change.
+    CRITICAL_SECTION m_sectionMp3Change;
+    // Before normalization: section_MP3_name_change.
+    CRITICAL_SECTION m_sectionMp3NameChange;
 
     soundManager();
     // DC SoundMgr.h:124 (dc 0xe6ebc). Complete's ShutDown (0x4f3690)
@@ -199,47 +238,75 @@ public:
     // three slots.
     ~soundManager()
     {
-        DeleteCriticalSection(&section_sound_call);
-        DeleteCriticalSection(&section_MP3_change);
-        DeleteCriticalSection(&section_MP3_name_change);
+        DeleteCriticalSection(&m_sectionSoundCall);
+        DeleteCriticalSection(&m_sectionMp3Change);
+        DeleteCriticalSection(&m_sectionMp3NameChange);
     }
-    virtual int Open(int newPriority);
-    virtual void Close();
+    // Before normalization (function): soundManager::Open.
+    virtual int open(int newPriority);
+    // Before normalization (function): soundManager::Close.
+    virtual void close();
     // baseManager's third pure slot. Declared so kb's InitMainClasses can
     // `new` this manager; the vftable at 0x63fe54 already carries the slot.
-    virtual int Main(message& msg);
-    ds_memsample* MemorySample(sample* sPtr);
+    // Before normalization (function): soundManager::Main.
+    virtual int main(message& msg);
+    // Before normalization (function): soundManager::MemorySample.
+    // Before normalization (locals): sPtr.
+    ds_memsample* memorySample(sample* samplePointer);
     // Retail-only 0x59a030. The remote chat path calls operation 4 to ask
     // whether its current Miles sample is still playing; operation 1 returns
     // volume. Name provisional until stronger PC-source evidence appears.
-    int GetSampleInfo(ds_memsample* inSample, short operation);
-    void StopSample(ds_memsample* inSample);
-    void WaitSample(ds_memsample* sample, int time);
-    void ModifySample(ds_memsample* inSample, short sFunction, long value);
-    void AdjustSoundVolumes();
-    void StopAllSamples(int bStopMusicToo);
-    void SwitchAmbientMusic(int newMusicFileId);
-    void AdjustMusicVolumes();
-    int MusicPlaying();
-    void StartMP3(const char* filename, int loopCount, unsigned char bStopSamples);
-    void StopMP3();
-    void ResumeStream();          // 0x59ac00
-    void ResumeSamples();         // 0x599b90, name provisional
-    void PauseSamples();          // 0x599c40, name provisional
+    // Before normalization (function): soundManager::GetSampleInfo.
+    int getSampleInfo(ds_memsample* inSample, short operation);
+    // Before normalization (function): soundManager::StopSample.
+    void stopSample(ds_memsample* inSample);
+    // Before normalization (function): soundManager::WaitSample.
+    void waitSample(ds_memsample* sample, int time);
+    // Before normalization (function): soundManager::ModifySample.
+    // Before normalization (locals): sFunction.
+    void modifySample(ds_memsample* inSample, short functionId, long value);
+    // Before normalization (function): soundManager::AdjustSoundVolumes.
+    void adjustSoundVolumes();
+    // Before normalization (function): soundManager::StopAllSamples.
+    // Before normalization (locals): bStopMusicToo.
+    void stopAllSamples(int stopMusicToo);
+    // Before normalization (function): soundManager::SwitchAmbientMusic.
+    void switchAmbientMusic(int newMusicFileId);
+    // Before normalization (function): soundManager::AdjustMusicVolumes.
+    void adjustMusicVolumes();
+    // Before normalization (function): soundManager::MusicPlaying.
+    int musicPlaying();
+    // Before normalization (function): soundManager::StartMP3.
+    // Before normalization (locals): bStopSamples.
+    void startMP3(const char* filename, int loopCount, unsigned char stopSamples);
+    // Before normalization (function): soundManager::StopMP3.
+    void stopMP3();
+    // Before normalization (function): soundManager::ResumeStream.
+    void resumeStream();          // 0x59ac00
+    // Before normalization (function): soundManager::ResumeSamples.
+    void resumeSamples();         // 0x599b90, name provisional
+    // Before normalization (function): soundManager::PauseSamples.
+    void pauseSamples();          // 0x599c40, name provisional
+    // Before normalization (function): soundManager::service_sounds.
     void serviceSounds();        // 0x59a7d0; DC SoundMgr.h:140 (header
                                   // inline there, emitted in kb.obj)
 
     // PC-expanded bodies promoted from the locate sweep. SetMusicVolume,
     // ConvertVolume and ThreadStopMP3 are exact; Open is declared in its
     // vtable position above and carries a bounded retry/RA residual.
-    void SetMusicVolume();                              // 0x5994b0
-    int ConvertVolume(int iVolumeValue, int iVolumeType);  // 0x5996c0
-    void ThreadStopMP3();                               // 0x59b080
+    // Before normalization (function): soundManager::SetMusicVolume.
+    void setMusicVolume();                              // 0x5994b0
+    // Before normalization (function): soundManager::ConvertVolume.
+    // Before normalization (locals): iVolumeValue, iVolumeType.
+    int convertVolume(int volumeValue, int volumeType);  // 0x5996c0
+    // Before normalization (function): soundManager::ThreadStopMP3.
+    void threadStopMP3();                               // 0x59b080
 };
 
 // Retail .bss 0x699290: non-zero suppresses every sound path (a
 // no-sound / silent-mode latch; name provisional).
-extern int gbNoSound;
+// Before normalization: gbNoSound.
+extern int g_noSound;
 
 // Retail .bss 0x69fea0. RETYPED this lane: MemorySample stores
 // `mov word ptr [2*esi + 0x69fea0], ax` from sample::field_2c with the
@@ -247,14 +314,16 @@ extern int gbNoSound;
 // handle), not the seven dwords an earlier reading assumed. 14 shorts =
 // 28 bytes = exactly the ctor's seven-dword `rep stosd`. Name kept
 // (provisional) so the one view stays one view.
-extern short gAilDriverState[14];
+// Before normalization: gAilDriverState.
+extern short g_ailDriverState[14];
 
 // Retail .data 0x691209, a byte that is zero in the image. Read only as
 // the second half of the sound-is-on guard `field_84 || gbUnk691209`
 // (AdjustMusicVolumes, ResumeSamples, StopAllSamples, PauseSamples,
 // MemorySample). Ordinal placeholder - the role is proven, the NAME is
 // unattested by any source.
-extern unsigned char gbUnk691209;
+// Before normalization: gbUnk691209.
+extern unsigned char g_unk691209;
 
 // Retail .bss 0x698760 / 0x698764: the two volume settings
 // ConvertVolume selects between - 0x698760 for VOLUME_TYPE_101 (music,
@@ -264,30 +333,40 @@ extern unsigned char gbUnk691209;
 // yields 0, which is also why MemorySample and launch_sample can use
 // 0x698764 as a plain "sound is configured on" gate. Ordinal
 // placeholders - names unattested.
-extern int gUnk698760;
-extern int gUnk698764;
-extern int gUnk698a28;
+// Before normalization: gUnk698760.
+extern int g_unk698760;
+// Before normalization: gUnk698764.
+extern int g_unk698764;
+// Before normalization: gUnk698a28.
+extern int g_unk698a28;
 
 // Retail PC Miles initialization state used only by Open. The three .data
 // configuration dwords begin at 0x684aa8; the 16-byte PCM descriptor is at
 // 0x69fe80; and the successful sample-handle count occupies 0x684ae0.
-extern int gSoundSampleRate;
-extern int gSoundBitsPerSample;
-extern int gSoundOutputChannels;
-extern int gSoundMaxSamples;
-extern AILWaveFormat gSoundWaveFormat;
+// Before normalization: gSoundSampleRate.
+extern int g_soundSampleRate;
+// Before normalization: gSoundBitsPerSample.
+extern int g_soundBitsPerSample;
+// Before normalization: gSoundOutputChannels.
+extern int g_soundOutputChannels;
+// Before normalization: gSoundMaxSamples.
+extern int g_soundMaxSamples;
+// Before normalization: gSoundWaveFormat.
+extern AILWaveFormat g_soundWaveFormat;
 
 // Retail .bss 0x69fe78: the Miles stream handle. Named from the import
 // contract - it is the sole argument to AIL_stream_status and
 // AIL_service_stream everywhere it appears.
-extern void* gMP3Stream;
+// Before normalization: gMP3Stream.
+extern void* g_mp3Stream;
 
 // Retail .bss 0x6a3258: a 14-entry side table parallel to
 // soundManager::sampleHandles. PauseSamples writes
 // `AIL_sample_status(h) == 4` into it before stopping each sample,
 // ResumeSamples resumes the flagged slots, and both StopAllSamples and
 // ResumeSamples clear all 14 entries with one `rep stosd`.
-extern int gSampleWasPlaying[14];
+// Before normalization: gSampleWasPlaying.
+extern int g_sampleWasPlaying[14];
 
 // The per-channel slot ranges MemorySample allocates out of. PROVEN
 // (2026-08-07): MemorySample indexes this table with sample::field_28
@@ -298,46 +377,60 @@ extern int gSampleWasPlaying[14];
 // is 0..3 and the slot domain is [0,14). Member and type names are
 // unattested; the roles are byte-proven.
 struct SoundChannelRange {
-    int first;
-    int last;
-    int next;
+    // Before normalization: first.
+    int m_first;
+    // Before normalization: last.
+    int m_last;
+    // Before normalization: next.
+    int m_next;
 };
-extern SoundChannelRange gSoundChannels[4];  // 0x684ab8
+// Before normalization: gSoundChannels.
+extern SoundChannelRange g_soundChannels[4];  // 0x684ab8
 
 // Retail .bss 0x6a3290 and 0x6a3394, 0x104 bytes apart: the pending MP3
 // name and the copy ResumeStream promotes it to under
 // section_MP3_name_change. Names provisional.
-extern char gMP3Name[260];
-extern char gMP3NamePlaying[260];
+// Before normalization: gMP3Name.
+extern char g_mp3Name[260];
+// Before normalization: gMP3NamePlaying.
+extern char g_mp3NamePlaying[260];
 
 // Retail .bss 0x69fe90 / 0x69fe9c: a dword ResumeStream copies from the
 // first to the second alongside the name promotion. Ordinal
 // placeholders - names unattested.
-extern int gUnk69fe90;
-extern int gUnk69fe9c;
+// Before normalization: gUnk69fe90.
+extern int g_unk69fe90;
+// Before normalization: gUnk69fe9c.
+extern int g_unk69fe9c;
 
 // Retail .bss 0x69fec0: fifty 0x108-byte playback-position records. The
 // 260-byte name and trailing dword are forced by ThreadStopMP3's stride,
 // inline strcmp/strcpy loops and AIL_stream_position store. The count is the
 // dword at 0x6a3498. Names are provisional; the PC cache has no DC twin.
 struct MP3ResumePosition {
-    char name[260];
-    int position;
+    // Before normalization: name.
+    char m_name[260];
+    // Before normalization: position.
+    int m_position;
 };
-extern MP3ResumePosition gMP3ResumePositions[50];
-extern int gMP3ResumePositionCount;
+// Before normalization: gMP3ResumePositions.
+extern MP3ResumePosition g_mp3ResumePositions[50];
+// Before normalization: gMP3ResumePositionCount.
+extern int g_mp3ResumePositionCount;
 
 // The stop entry StopMP3 and its inlined copies hand to _beginthread.
 // Retail 0x59a830 is independently pinned by five address-taken xrefs and
 // the DC ProcessMP3Stop -> soundManager::ThreadStopMP3 edge.
-void __cdecl ProcessMP3Stop(void* nothing);
+// Before normalization (function): ProcessMP3Stop.
+void __cdecl processMP3Stop(void* nothing);
 
 // The stop-and-play entry ResumeStream, StartMP3 and SetMusicVolume hand to
 // _beginthread: retail 0x59a840. Its 955-byte PC Miles body is now exact;
 // those three address-taken xrefs, the reciprocal ConvertVolume call and
 // the shared position cache independently settle the DC roster identity
 // despite the large cross-platform size ratio.
-void __cdecl ProcessStopAndPlayMP3(void* arglist);
+// Before normalization (function): ProcessStopAndPlayMP3.
+void __cdecl processStopAndPlayMP3(void* arglist);
 
 // Retail .rdata/.data 0x684ae8: the nine terrain music base names
 // SwitchAmbientMusic hands to StartMP3, indexed [id - 2] for ids 2..10
@@ -345,14 +438,16 @@ void __cdecl ProcessStopAndPlayMP3(void* arglist);
 // "Underground"). The folded base retail encodes is 0x684ae0 = the
 // array minus the two-dword bias, which is why the delinker invented a
 // data symbol there.
-extern const char* const gTerrainMusic[9];
+// Before normalization: gTerrainMusic.
+extern const char* const g_terrainMusic[9];
 
 // Retail .data 0x678330: terrain -> music id, the nine bytes
 // {8,7,3,4,5,9,10,6,2} read straight from the image. SetMusicVolume
 // indexes it with advManager::field_58 and hands the result to the same
 // [id - 2] terrain-name lookup SwitchAmbientMusic uses, which is what
 // bounds the id domain to 2..10. Name provisional.
-extern unsigned char gTerrainMusicIds[9];
+// Before normalization: gTerrainMusicIds.
+extern unsigned char g_terrainMusicIds[9];
 
 // Miles Sound System imports. The DLL exports carry their own leading
 // underscore (retail IAT: __imp___AIL_end_sample@4), which is Miles'
@@ -377,7 +472,9 @@ __declspec(dllimport) int __stdcall _AIL_stream_position(void* stream);
 __declspec(dllimport) int __stdcall _AIL_stream_volume(void* stream);
 __declspec(dllimport) void* __stdcall _AIL_open_stream(void* driver,
                                                        const char* filename,
-                                                       int stream_mem);
+                                                       // Before normalization (locals):
+                                                       // stream_mem.
+                                                       int streamMem);
 __declspec(dllimport) void __stdcall _AIL_set_stream_loop_count(void* stream,
                                                                 int loops);
 __declspec(dllimport) void __stdcall _AIL_start_stream(void* stream);
@@ -448,13 +545,15 @@ __declspec(dllimport) int __stdcall _BinkSetSoundSystem(
 // The CRT thread spawner retail reaches with a plain `call __beginthread`
 // (msvcrt, __cdecl). Declared here rather than via <process.h> so the
 // TU's import-call forms stay under this header's control.
-extern "C" unsigned long __cdecl _beginthread(void(__cdecl* start_address)(void*),
-                                              unsigned stack_size,
+// Before normalization (locals): start_address, stack_size.
+extern "C" unsigned long __cdecl _beginthread(void(__cdecl* startAddress)(void*),
+                                              unsigned stackSize,
                                               void* arglist);
 extern "C" void __cdecl _endthread(void);
 
 // Retail .bss 0x2993c4 (DC ?gpSoundManager@@3PAVsoundManager@@A).
-extern soundManager* gpSoundManager;
+// Before normalization: gpSoundManager.
+extern soundManager* g_soundManager;
 
 // Dreamcast records this named SoundMgr.h member as an empty WinCE service in
 // kb.obj. Complete gives it the non-empty PC Miles body below: retail keeps an
@@ -475,12 +574,12 @@ extern soundManager* gpSoundManager;
 VA(0x0059a7d0, 0x51)  // hd-crossbuild; DC SoundMgr.h:140, dc 0xe6ef4
 inline void soundManager::serviceSounds()
 {
-    EnterCriticalSection(&section_sound_call);
+    EnterCriticalSection(&m_sectionSoundCall);
     AIL_serve();
-    if (gMP3Stream && gpSoundManager->MP3Playing && !bShutDownDone)
-        AIL_service_stream(gMP3Stream, 1);
+    if (g_mp3Stream && g_soundManager->m_mp3Playing && !g_shutDownDone)
+        AIL_service_stream(g_mp3Stream, 1);
     Sleep(1);
-    LeaveCriticalSection(&section_sound_call);
+    LeaveCriticalSection(&m_sectionSoundCall);
 }
 
 // --- globals ---

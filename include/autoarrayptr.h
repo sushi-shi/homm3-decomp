@@ -5,33 +5,33 @@
 template<class T>
 class TAutoArrayPtr {
 public:
-    TAutoArrayPtr(T* ptr = 0) : _m_bOwns(ptr != 0), _m_ptr(ptr) {}
+    TAutoArrayPtr(T* ptr = 0) : m_owns(ptr != 0), m_ptr(ptr) {}
     TAutoArrayPtr(const TAutoArrayPtr& rhs)
-        : _m_bOwns(rhs._m_bOwns), _m_ptr(rhs._m_ptr)
+        : m_owns(rhs.m_owns), m_ptr(rhs.m_ptr)
     {
-        rhs._m_bOwns = 0;
+        rhs.m_owns = 0;
     }
-    ~TAutoArrayPtr() { if (_m_bOwns) delete [] _m_ptr; }
+    ~TAutoArrayPtr() { if (m_owns) delete [] m_ptr; }
 
     TAutoArrayPtr& operator=(const TAutoArrayPtr& rhs)
     {
-        if (_m_ptr != rhs._m_ptr) {
-            if (_m_bOwns)
-                delete [] _m_ptr;
-            _m_bOwns = rhs._m_bOwns;
-        } else if (rhs._m_bOwns) {
-            _m_bOwns = 1;
+        if (m_ptr != rhs.m_ptr) {
+            if (m_owns)
+                delete [] m_ptr;
+            m_owns = rhs.m_owns;
+        } else if (rhs.m_owns) {
+            m_owns = 1;
         }
-        _m_ptr = rhs._m_ptr;
-        rhs._m_bOwns = 0;
+        m_ptr = rhs.m_ptr;
+        rhs.m_owns = 0;
         return *this;
     }
 
-    T* get() const { return _m_ptr; }
+    T* get() const { return m_ptr; }
 
 private:
-    mutable unsigned char _m_bOwns;
-    T* _m_ptr;
+    mutable unsigned char m_owns;
+    T* m_ptr;
 };
 
 #endif

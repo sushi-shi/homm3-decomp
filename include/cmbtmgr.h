@@ -18,6 +18,8 @@ class Bitmap816;
 class CSprite;
 class hero;
 class heroWindow;
+class iconWidget;
+class textWidget;
 class TCombatWindow;
 class NewmapCell;
 class searchArray;
@@ -44,12 +46,15 @@ public:
 // the table at 0x67ff24 with an 84-byte stride: three signed coordinate
 // pairs followed by eighteen float boundaries.
 struct TMissileStartInfo {
-    short offsets[3][2];
-    float angles[18];
+    // Before normalization: offsets.
+    short m_offsets[3][2];
+    // Before normalization: angles.
+    float m_angles[18];
 };
 SIZE(TMissileStartInfo, 0x54);
 
-extern const TMissileStartInfo* gMissileStartInfo;
+// Before normalization: gMissileStartInfo.
+extern const TMissileStartInfo* g_missileStartInfo;
 
 // One segment of an animated lightning bolt. THE DREAMCAST DUMP HAS NO
 // MEMBER EVIDENCE FOR THIS TYPE AT ALL - members.csv carries zero rows
@@ -69,66 +74,99 @@ extern const TMissileStartInfo* gMissileStartInfo;
 struct SBolt {
     // The four endpoints, clamped by AddBolt into the 800x556 screen
     // (`0..0x31f` on x and `0..0x22b` on y) before they are stored.
-    int iSourceX;             // +0x00
-    int iSourceY;             // +0x04
-    int iDestX;               // +0x08
-    int iDestY;               // +0x0c
-    int iSplitFrequency;      // +0x10
+    // Before normalization: iSourceX.
+    int m_sourceX;             // +0x00
+    // Before normalization: iSourceY.
+    int m_sourceY;             // +0x04
+    // Before normalization: iDestX.
+    int m_destX;               // +0x08
+    // Before normalization: iDestY.
+    int m_destY;               // +0x0c
+    // Before normalization: iSplitFrequency.
+    int m_splitFrequency;      // +0x10
     // The CURRENT thickness. AddBolt seeds it from iStartThickness and
     // ResetBoltAngle re-interpolates it toward iEndThickness each step.
-    int iThickness;           // +0x14
-    int iColor;               // +0x18
-    int field_1c;
-    int iSegmentLength;       // +0x20
+    // Before normalization: iThickness.
+    int m_thickness;           // +0x14
+    // Before normalization: iColor.
+    int m_color;               // +0x18
+    // Before normalization: field_1c.
+    int m_field1c;
+    // Before normalization: iSegmentLength.
+    int m_segmentLength;       // +0x20
     // The pen position, carried in float so the walk can advance by a
     // fractional step; AddBolt seeds both from the (clamped) source.
-    float fX;                 // +0x24
-    float fY;                 // +0x28
+    // Before normalization: fX.
+    float m_x;                 // +0x24
+    // Before normalization: fY.
+    float m_y;                 // +0x28
     // The same position rounded to whole pixels - the end of the segment
     // drawn so far, which is what ResetBoltAngle measures the remaining
     // distance from.
-    int iX;                   // +0x2c
-    int iY;                   // +0x30
+    // Before normalization: iX.
+    int m_pixelX;                   // +0x2c
+    // Before normalization: iY.
+    int m_pixelY;                   // +0x30
     // Set when the run is longer than it is tall. AddBolt decides it from
     // `abs(dx) > abs(dy)` for an ordinary bolt, and for the two colours
     // below from whether the source x is strictly inside the screen -
     // those two are drawn as screen-edge flashes, so the shallow/steep
     // choice is made by where the bolt STARTS rather than by its run.
-    int bShallow;             // +0x34
-    float fAngle;             // +0x38
+    // Before normalization: bShallow.
+    int m_shallow;             // +0x34
+    // Before normalization: fAngle.
+    float m_angle;             // +0x38
     // fAngle plus the progress-weighted distortion ResetBoltAngle adds.
-    float fDistortedAngle;    // +0x3c
+    // Before normalization: fDistortedAngle.
+    float m_distortedAngle;    // +0x3c
     // "This segment has reached its destination". AddBolt clears it and
     // DrawBolt sets it; DoBolt (0x5a5c20) is what names it - after each
     // drawn pass it walks all live bolts and stops the whole animation
     // only when EVERY one of them has this set, and it skips a bolt's
     // ResetBoltAngle and its split check on the same test.
-    int bAtDestination;       // +0x40
+    // Before normalization: bAtDestination.
+    int m_atDestination;       // +0x40
     // ResetBoltAngle returns at once while this is set - the "this
     // segment is finished" latch.
-    int bDone;                // +0x44
-    int field_48;
+    // Before normalization: bDone.
+    int m_done;                // +0x44
+    // Before normalization: field_48.
+    // Retail DrawBolt 0x5a5440 seeds this when Manhattan distance to the
+    // endpoint falls below 15, then only lowers it. Passing the closest
+    // approach by more than one pixel ends the bolt. Role-derived name.
+    int m_closestDistance;
     // The half-width span the thick line is drawn over, recomputed from
     // iThickness every reset: -(t >> 1) to -(t >> 1) + t - 1.
-    int iSpanFirst;           // +0x4c
-    int iSpanLast;            // +0x50
+    // Before normalization: iSpanFirst.
+    int m_spanFirst;           // +0x4c
+    // Before normalization: iSpanLast.
+    int m_spanLast;            // +0x50
     // The segment's own start, kept while fX/fY walk away from it, and
     // RESTAMPED to the current position every time DoBolt forks a new
     // bolt off this one - that is how a fork throttles the next fork,
     // since the split test measures the manhattan distance from here.
-    int iStartX;              // +0x54
-    int iStartY;              // +0x58
-    int iStartThickness;      // +0x5c
-    int iEndThickness;        // +0x60
+    // Before normalization: iStartX.
+    int m_startX;              // +0x54
+    // Before normalization: iStartY.
+    int m_startY;              // +0x58
+    // Before normalization: iStartThickness.
+    int m_startThickness;      // +0x5c
+    // Before normalization: iEndThickness.
+    int m_endThickness;        // +0x60
     // The straight-line distance from source to destination, measured
     // once by AddBolt; ResetBoltAngle divides the remaining distance by
     // it to get fProgress.
-    int iTotalLength;         // +0x64
-    int iAngleDistortMin;     // +0x68
-    int iAngleDistortMax;     // +0x6c
+    // Before normalization: iTotalLength.
+    int m_totalLength;         // +0x64
+    // Before normalization: iAngleDistortMin.
+    int m_angleDistortMin;     // +0x68
+    // Before normalization: iAngleDistortMax.
+    int m_angleDistortMax;     // +0x6c
     // 0 at the source, 1 at the destination.
-    float fProgress;          // +0x70
-    int bDistortAlways;       // +0x74
+    // Before normalization: fProgress.
+    float m_progress;          // +0x70
+    // Before normalization: bDistortAlways.
+    int m_distortAlways;       // +0x74
 };
 SIZE(SBolt, 0x78);
 
@@ -296,17 +334,23 @@ enum ECombatGateHex {
 // nine 0x20-byte rows by town::type, then uses the three coordinate pairs
 // for the keep, lower tower and upper tower respectively.
 struct TSiegeArcherPosition {
-    int x;
-    int y;
+    // Before normalization: x.
+    int m_x;
+    // Before normalization: y.
+    int m_y;
 };
 
 struct TSiegeArcherInfo {
-    int creatureType;
-    TSiegeArcherPosition positions[3];
-    const char* shadowSpriteName;
+    // Before normalization: creatureType.
+    int m_creatureType;
+    // Before normalization: positions.
+    TSiegeArcherPosition m_positions[3];
+    // Before normalization: shadowSpriteName.
+    const char* m_shadowSpriteName;
 };
 
-extern const TSiegeArcherInfo gSiegeArcherInfo[9];
+// Before normalization: gSiegeArcherInfo.
+extern const TSiegeArcherInfo g_siegeArcherInfo[9];
 
 // Two additional TTerrainType values needed only by combat terrain
 // selection. Kept out of armygrp.h's include-sensitive enum: adding
@@ -330,12 +374,17 @@ enum ECombatMineType {
 // {SpriteName, castX, castY, castFrame}; the retail table is 18 rows
 // where the Dreamcast's is 16.
 struct TCombatHeroSprite {
-    const char* defName;
-    int castX;
-    int castY;
-    int castFrame;
+    // Before normalization: defName.
+    const char* m_defName;
+    // Before normalization: castX.
+    int m_castX;
+    // Before normalization: castY.
+    int m_castY;
+    // Before normalization: castFrame.
+    int m_castFrame;
 };
-DATA(0x0063bd40) extern const TCombatHeroSprite kCombatHeroSprites[18];
+// Before normalization: kCombatHeroSprites.
+DATA(0x0063bd40) extern const TCombatHeroSprite g_combatHeroSprites[18];
 
 // Head model from the byte-proven leaves. The battlefield holds two
 // sides of 21 army slots (20 used - ResetHitByCreature clears exactly
@@ -377,7 +426,8 @@ enum EAIOrder {
 // FREE fastcall function, not a method (the DC name is scoped to
 // combatManager, so retail moved it out of the class). It is declared
 // here because the Dreamcast-proven TWallTarget inline below uses it.
-extern const unsigned char gCastleWallColumns[];
+// Before normalization: gCastleWallColumns.
+extern const unsigned char g_castleWallColumns[];
 
 // The combat-hero sprite state is stored as an int rather than as a
 // CodeView enum. One is the timed idle fidget; the two event-driven states
@@ -394,9 +444,11 @@ class combatManager : public baseManager {
 public:
     // drawing.cpp:666, Dreamcast dc 0x841d4. range_attack uses this
     // five-argument overload to center the Magog effect before animating it.
-    unsigned char ScrollTo(int x, int y, unsigned char draw,
-                           unsigned char doscroll_x,
-                           unsigned char doscroll_y);
+    // Before normalization (function): combatManager::ScrollTo.
+    unsigned char scrollTo(int x, int y, unsigned char draw,
+                           // Before normalization (locals): doscroll_x, doscroll_y.
+                           unsigned char doscrollX,
+                           unsigned char doscrollY);
     // DC CmbtMgr.h's complete nested enum. Command's get_tower_string takes
     // this type by value; retail indexes the same eighteen wall rows.
     enum TWallSection {
@@ -426,65 +478,93 @@ public:
     // at +0/+2, placement bounds at +4/+5, signed occupied-hex offsets at
     // +8, and the sprite name at +0x10.
     struct TObstacleInfo {
-        unsigned short terrain_mask;
-        unsigned short special_terrain_mask;
-        unsigned char minRow;
-        unsigned char width;
-        unsigned char extra_hex_count;
-        unsigned char underlay;
-        signed char extra_hex_offsets[8];
-        const char* spriteName;
+        // Before normalization: terrain_mask.
+        unsigned short m_terrainMask;
+        // Before normalization: special_terrain_mask.
+        unsigned short m_specialTerrainMask;
+        // Before normalization: minRow.
+        unsigned char m_minRow;
+        // Before normalization: width.
+        unsigned char m_width;
+        // Before normalization: extra_hex_count.
+        unsigned char m_extraHexCount;
+        // Before normalization: underlay.
+        unsigned char m_underlay;
+        // Before normalization: extra_hex_offsets.
+        signed char m_extraHexOffsets[8];
+        // Before normalization: spriteName.
+        const char* m_spriteName;
     };
 private:
-    static const TObstacleInfo ObstacleInfo[];
+    // Before normalization: ObstacleInfo.
+    static const TObstacleInfo s_obstacleInfo[];
     // Dreamcast records all four as private static arrays. Their raw MSVC
     // names (`@@0QBU...`) independently distinguish this declaration from
     // both a singleton object and a public static member. Retail fixes the
     // first elements at 0x63cee8, 0x63cf00 and 0x63cf18 respectively.
-    static const TObstacleInfo QuicksandInfo[];
-    static const TObstacleInfo LandMineInfo[];
-    static const TObstacleInfo WallObstacleInfo[];
+    // Before normalization: QuicksandInfo.
+    static const TObstacleInfo s_quicksandInfo[];
+    // Before normalization: LandMineInfo.
+    static const TObstacleInfo s_landMineInfo[];
+    // Before normalization: WallObstacleInfo.
+    static const TObstacleInfo s_wallObstacleInfo[];
 public:
 
-    // Separate 68-byte catalogue used for large battlefield features.
-    // PlaceLargeObstacle reads the two masks and up to 25 signed-short
-    // combat-cell indexes beginning at +0xc, terminated by -1.
-    struct TLargeObstacleInfo {
-        unsigned short terrain_mask;
-        unsigned short special_terrain_mask;
-        unsigned char opaque_04[0x8];
-        short cells[25];
-        unsigned char opaque_3e[0x6];
-    };
-    static const TLargeObstacleInfo LargeObstacleInfo[];
-
-    // Dreamcast CodeView's exact nested record and static-member names.
-    // Retail confirms the 68-byte row, x/y at +0x4/+0x8 and FileName at
-    // +0x40; the 52-byte middle array is opaque to DrawBackground.
+    // One 68-byte elevation-overlay catalogue at retail 0x0063bec0.
+    // Dreamcast PlaceLargeObstacle references sElevationOverlay directly;
+    // retail placement reads masks at +0/+2 and 25 blocked shorts at +0xc.
+    // DrawBackground reads x/y at +4/+8 and FileName at +0x40 from the
+    // same rows. The unused synthetic TLargeObstacleInfo/LargeObstacleInfo
+    // declaration duplicated this type: opaque_04 was x/y; opaque_3e was
+    // two alignment bytes followed by FileName. Keep one owning record.
 private:
     struct SElevationOverlay {
-        unsigned short terrainMask;
-        int x;
-        int y;
-        short blockedSquares[26];
-        const char* FileName;
+        // Before normalization: terrainMask.
+        unsigned short m_terrainMask;
+        // PC adds a second terrain mask in Dreamcast's alignment slot.
+        // Retail PlaceLargeObstacle reads 0x0063bec2 + row*68.
+        unsigned short m_specialTerrainMask;
+        // Before normalization: x.
+        int m_x;
+        // Before normalization: y.
+        int m_y;
+        // Before normalization: blockedSquares.
+        // Dreamcast type 0x4328 gives 25 entries (50 bytes); retail's
+        // loop also stops at 25. +0x3e..+0x3f align the filename pointer.
+        short m_blockedSquares[25];
+        // Before normalization: FileName.
+        const char* m_fileName;
     };
-    static const SElevationOverlay sElevationOverlay[34];
+    // Before normalization: sElevationOverlay.
+    static const SElevationOverlay s_elevationOverlay[34];
 public:
 
     // Retail writes only name/hitpoints here; Dreamcast CodeView supplies
     // the intervening field identities and confirms the 36-byte extent.
     struct TWallTraits {
-        short x;
-        short y;
-        short hex;
-        short pad_06;
-        const char* filenames[5];
-        const char* name;
-        short hitpoints;
-        short pad_22;
+        // Before normalization: x.
+        short m_x;
+        // Before normalization: y.
+        short m_y;
+        // Before normalization: hex.
+        short m_hex;
+        // Before normalization: pad_06.
+        // Dreamcast x/y/hex are shorts at 0/2/4, followed by filenames
+        // at +8. These two bytes align the retail pointer array.
+        short m_paddingBeforeFilenames;
+        // Before normalization: filenames.
+        const char* m_filenames[5];
+        // Before normalization: name.
+        const char* m_name;
+        // Before normalization: hitpoints.
+        short m_hitpoints;
+        // Before normalization: pad_22.
+        // Dreamcast hitpoints is a short at +0x20; the retail table
+        // uses a 0x24-byte record stride. These two bytes align its extent.
+        short m_tailPadding;
     };
-    static TWallTraits akWallTraits[9][18];
+    // Before normalization: akWallTraits.
+    static TWallTraits s_wallTraits[9][18];
 
     // One placed obstacle. Stride 0x18 is byte-proven by RemoveObstacle
     // (0x466b30), which divides the manager's obstacle vector extent
@@ -496,35 +576,47 @@ public:
     struct TObstacle {
         // RemoveObstacle calls vtable slot 1 on it with no arguments
         // and then clears the slot - CSprite's slot 1 is Dispose().
-        CSprite* sprite;                    // +0x0
-        const TObstacleInfo* shape;         // +0x4
-        unsigned char hex;                  // +0x8
+        // Before normalization: sprite.
+        CSprite* m_sprite;                    // +0x0
+        // Before normalization: shape.
+        const TObstacleInfo* m_shape;         // +0x4
+        // Before normalization: hex.
+        unsigned char m_hex;                  // +0x8
         // DC CodeView names these owner/is_visible. Retail independently
         // fixes both offsets: searchArray::set_moat (0x4b3290) marks an
         // obstacle's cell as moat-slowed when either the acting stack's
         // combatSide equals the signed byte at +9 or the byte at +0xa is
         // set; DrawFrame expands the same IsVisible predicate.
-        signed char owner;                  // +0x9
-        unsigned char is_visible;           // +0xa
-        char pad_0b[0x1];
+        // Before normalization: owner.
+        signed char m_owner;                  // +0x9
+        // Before normalization: is_visible.
+        unsigned char m_isVisible;           // +0xa
+        // Before normalization: pad_0b.
+        // Dreamcast grid_index/owner/is_visible occupy bytes 8/9/10;
+        // retail mark_firewalls reads damage at +12. This byte aligns it.
+        char m_paddingBeforeDamage[0x1];
         // Sliced 2026-08-08 by mark_firewalls (0x4214f0), which feeds
         // this dword straight into ModifySpellDamage as the base
         // damage for the fire-wall spell - so it is the damage the
         // obstacle deals, stored per obstacle when it is placed.
         // Name provisional; no roster reaches the slot.
-        long spell_damage;                  // +0xc
+        // Before normalization: spell_damage.
+        long m_spellDamage;                  // +0xc
         // place_obstacle stamps these two on every obstacle it builds -
         // +0x10 zero and +0x14 all-ones - alongside owner/-1 and
         // is_visible/1. No reader is decoded, so both stay ordinals.
-        long field_10;                      // +0x10
-        long field_14;                      // +0x14
+        // Before normalization: field_10; reference member combatManager::TObstacle::duration.
+        long m_duration;                      // +0x10
+        // Before normalization: field_14; reference member combatManager::TObstacle::dispel_effect.
+        long m_dispelEffect;                      // +0x14
 
         // Dreamcast CodeView names this one-argument const member and fixes
         // its bool result; the retail DrawFrame expansion proves the two
         // participating bytes at +0x9/+0xa.
-        bool IsVisible(int side) const
+        // Before normalization (function): combatManager::TObstacle::IsVisible.
+        bool isVisible(int side) const
         {
-            return side == owner || is_visible;
+            return side == m_owner || m_isVisible;
         }
     };
 
@@ -534,20 +626,20 @@ public:
     // table on the class also lets get_wall_strength retain its original
     // source-visible inline boundary instead of flattening it into callers.
     struct TWallTarget {
-        short target_hex;             // +0x0
-        short blocked_row;            // +0x2
-        short hit_x;                  // +0x4
-        short hit_y;                  // +0x6
-        TWallSection wall;            // +0x8
+        short m_targetHex;             // +0x0
+        short m_blockedRow;            // +0x2
+        short m_hitX;                  // +0x4
+        short m_hitY;                  // +0x6
+        TWallSection m_wall;            // +0x8
 
-        int get_blocked_hex() const
+        int getBlockedHex() const
         {
-            if (blocked_row != -1)
-                return gCastleWallColumns[blocked_row];
+            if (m_blockedRow != -1)
+                return g_castleWallColumns[m_blockedRow];
             return -1;
         }
     };
-    static const TWallTarget wallTargets[8];
+    static const TWallTarget s_wallTargets[8];
     enum {
         // The moat row of a town's eighteen wall records: LoadIcons
         // (0x463370) suppresses exactly this row's five icons for
@@ -571,14 +663,21 @@ public:
             TAllocator() {}
         };
 
-        TAllocator allocator;
-        char pad_01[3];
-        TObstacle* begin;
-        TObstacle* end;
-        TObstacle* capacity;
+        // Before normalization: allocator.
+        TAllocator m_allocator;
+        // Before normalization: pad_01.
+        // The VC6 empty allocator occupies one byte; its three pointer
+        // fields start at +4. These three bytes align the first pointer.
+        char m_paddingBeforeBegin[3];
+        // Before normalization: begin.
+        TObstacle* m_begin;
+        // Before normalization: end.
+        TObstacle* m_end;
+        // Before normalization: capacity.
+        TObstacle* m_capacity;
 
         TObstacleVector(const TAllocator& value = TAllocator())
-            : allocator(value), begin(0), end(0), capacity(0) {}
+            : m_allocator(value), m_begin(0), m_end(0), m_capacity(0) {}
         // DEFINED HERE, not declared-only: retail EXPANDS this teardown
         // into ~combatManager (kb.obj 0x4f3975 - `mov eax,[esi+0x13d5c] /
         // push eax / call ??3 / xor eax,eax / mov [esi+0x13d5c],eax /
@@ -588,43 +687,60 @@ public:
         // pointer resets, unguarded.
         ~TObstacleVector()
         {
-            delete begin;
-            begin = 0;
-            end = 0;
-            capacity = 0;
+            delete m_begin;
+            m_begin = 0;
+            m_end = 0;
+            m_capacity = 0;
         }
 
-        void Destroy(TObstacle* first, TObstacle* last);
+        // Before normalization (function): combatManager::TObstacleVector::Destroy.
+        void destroy(TObstacle* first, TObstacle* last);
         // Dreamcast's DrawFrame line 1211 preserves the Dinkumware
         // non-const subscript call and its S_PUB32 fixes an unsigned index
         // with a TObstacle& result. Complete folds this tiny boundary away.
-        TObstacle& operator[](unsigned index) { return begin[index]; }
+        TObstacle& operator[](unsigned index) { return m_begin[index]; }
         // Dinkumware's own null-guarded size(): place_obstacle folds the
         // `begin == 0 ? 0 : end - begin` pair and the 0x2aaaaaab/sar 2
         // divide by sizeof(TObstacle) inline right after the insert.
         VA(0x00517750, 0x21)  // retained retail body; formerly enrolled by VECTOR_SIZE
-        int size() const { return begin == 0 ? 0 : end - begin; }
+        int size() const { return m_begin == 0 ? 0 : m_end - m_begin; }
         // The out-of-line worker push_back reduces to. Defined in
         // cmbtmgr.cpp so that SetupAndLoadObstacles can expand it the way
         // retail does while place_obstacle keeps retail's call.
         void insert(TObstacle* where, unsigned count, const TObstacle& value);
+        TObstacle* begin() { return m_begin; }
+        TObstacle* end() { return m_end; }
+        // DC cmbtmgr.cpp:2848 calls push_back. Preserve the two forwarding
+        // layers from the pinned VC6 VECTOR: push_back -> insert(one) ->
+        // insert(count), including the iterator returned after reallocation.
+        // Before normalization (function): push_back.
+        void pushBack(const TObstacle& value) { insert(end(), value); }
+        TObstacle* insert(TObstacle* where, const TObstacle& value)
+        {
+            unsigned offset = where - begin();
+            insert(where, 1, value);
+            return begin() + offset;
+        }
+
         // Dinkumware's two uninitialised-range helpers. DECLARED, NOT
         // DEFINED here: retail's insert expansion in SetupAndLoadObstacles
         // CALLS both (0x46b1a0 thiscall/ret 0xc returning the destination
         // end, 0x46b1e0 thiscall/ret 0xc), so this header must not offer a
         // body for either.
-        TObstacle* _Ucopy(const TObstacle* first, const TObstacle* last,
+        // Before normalization (function): combatManager::TObstacleVector::_Ucopy.
+        TObstacle* ucopy(const TObstacle* first, const TObstacle* last,
                           TObstacle* dest);
-        void _Ufill(TObstacle* first, unsigned count, const TObstacle& value);
+        // Before normalization (function): combatManager::TObstacleVector::_Ufill.
+        void ufill(TObstacle* first, unsigned count, const TObstacle& value);
         void erase(TObstacle* first, TObstacle* last)
         {
-            TObstacle* vectorEnd = end;
+            TObstacle* vectorEnd = m_end;
             TObstacle* destination = first;
             TObstacle* source = last;
             for (; source != vectorEnd; ++source, ++destination)
                 *destination = *source;
-            Destroy(destination, end);
-            end = destination;
+            destroy(destination, m_end);
+            m_end = destination;
         }
     };
 
@@ -633,30 +749,40 @@ public:
     // members in this order; DamageWall later uses armySlot from each row
     // when the corresponding tower is destroyed.
     struct TArcherSprite {
-        CSprite* value;
+        // Before normalization: value.
+        CSprite* m_value;
 
-        TArcherSprite(CSprite* sprite = 0) : value(sprite) {}
+        TArcherSprite(CSprite* sprite = 0) : m_value(sprite) {}
         ~TArcherSprite();
-        operator CSprite*() const { return value; }
-        CSprite* operator->() const { return value; }
+        operator CSprite*() const { return m_value; }
+        CSprite* operator->() const { return m_value; }
         TArcherSprite& operator=(CSprite* sprite)
         {
-            value = sprite;
+            m_value = sprite;
             return *this;
         }
     };
     SIZE(TArcherSprite, 0x4);
 
     struct TArcher {
-        int creatureType;             // +0x0
-        TArcherSprite sprite;          // +0x4
-        TArcherSprite shadowSprite;    // +0x8
-        int x;                        // +0xc
-        int y;                        // +0x10
-        int field_14;                 // +0x14
-        int field_18;                 // +0x18
-        int field_1c;                 // +0x1c
-        int armySlot;                 // +0x20
+        // Before normalization: creatureType.
+        int m_creatureType;             // +0x0
+        // Before normalization: sprite.
+        TArcherSprite m_sprite;          // +0x4
+        // Before normalization: shadowSprite.
+        TArcherSprite m_shadowSprite;    // +0x8
+        // Before normalization: x.
+        int m_x;                        // +0xc
+        // Before normalization: y.
+        int m_y;                        // +0x10
+        // Before normalization: field_14; reference member combatManager::TArcher::Facing.
+        int m_facing;                 // +0x14
+        // Before normalization: field_18; reference member combatManager::TArcher::Sequence.
+        int m_sequence;                 // +0x18
+        // Before normalization: field_1c; reference member combatManager::TArcher::Frame.
+        int m_frame;                 // +0x1c
+        // Before normalization: armySlot.
+        int m_armySlot;                 // +0x20
 
         TArcher();
     };
@@ -664,8 +790,10 @@ public:
     // InitializeArchers' two simultaneously live resource locals. Keeping
     // them as one record preserves retail VC6's [-8]/[-4] stack ordering.
     struct TArcherLoadState {
-        CSprite* sprite;
-        const char* spriteName;
+        // Before normalization: sprite.
+        CSprite* m_sprite;
+        // Before normalization: spriteName.
+        const char* m_spriteName;
     };
 
     // baseManager occupies +0x00..+0x37. soundManager::SetMusicVolume
@@ -676,7 +804,8 @@ public:
     // 2026-08-20, a rename): Open (0x462a20) assigns
     // `new CNetMsgHandlerPause()` here off an operator new(0x10), which
     // is SIZE(CNetMsgHandlerPause, 0x10) exactly, and Close deletes it.
-    CNetMsgHandlerPause* field_38;
+    // Before normalization: field_38; reference member combatManager::netMsgHandlerPause.
+    CNetMsgHandlerPause* m_netMsgHandlerPause;
     // The pending AI order, written as a (code, hex) pair. move_toward
     // (0x41f580) sets the code to 2 the moment a path exists, raises it
     // to 8 when waiting still looks better than the hex it settled on,
@@ -688,147 +817,192 @@ public:
     // ORDINALS: no DC layout exists for combatManager at all (the
     // Dreamcast dump carries no fieldlist for it) and no string or
     // roster entry reaches either slot.
-    int field_3c;                     // +0x3c
+    // Before normalization: field_3c; reference member combatManager::iNextAction.
+    int m_nextAction;                     // +0x3c
     // The order's FIRST hex slot. berserk_attack (0x4222c0) writes the
     // acting stack's own gridIndex here when the target is already
     // adjacent and the next step of the path when it is not, with
     // field_44 taking the target's hex in both cases - so the pair is
     // (where I go, what I hit). Name is an address ordinal for the same
     // reason its two neighbours are.
-    int field_40;                     // +0x40
-    int field_44;                     // +0x44
+    // Before normalization: field_40; reference member combatManager::iNextActionExtra.
+    int m_nextActionExtra;                     // +0x40
+    // Before normalization: field_44; reference member combatManager::iNextActionGridIndex.
+    int m_nextActionGridIndex;                     // +0x44
     // The order's fourth slot, and ai_tactical's cast_spell (0x43c800)
     // is the writer that slices it out of the pad: it stamps the
     // chosen spell into field_40, its target hex into field_44 and the
     // choice's own field_18 here, all three behind field_3c = 1.
     // Address ordinal for the same reason its neighbours are.
-    int field_48;                     // +0x48
+    // Before normalization: field_48; reference member combatManager::iNextActionGridIndex2.
+    int m_nextActionGridIndex2;                     // +0x48
     // Two 187-byte per-hex rows, both cleared by Open (0x462a20) with
     // `mov ecx,0x2e / xor eax,eax / rep stosd / stosw / stosb` - 0x2e
     // dwords plus a word plus a byte is exactly COMBAT_GRID_CELLS, and
     // 0x4c + 0xbb == 0x107 and 0x107 + 0xbb == 0x1c2 closes the band
     // exactly against `cells`. Same shape as the 187-byte row at
     // +0x14031. No reader is decoded for either, so both stay ordinals.
-    unsigned char field_004c[COMBAT_GRID_CELLS];   // +0x4c
-    unsigned char field_0107[COMBAT_GRID_CELLS];   // +0x107
-    char pad_01c2[0x2];
+    // Before normalization: field_004c; reference member combatManager::iLastDrawGridShade.
+    unsigned char m_lastDrawGridShade[COMBAT_GRID_CELLS];   // +0x4c
+    // Before normalization: field_0107; reference member combatManager::iCurDrawGridShade.
+    unsigned char m_curDrawGridShade[COMBAT_GRID_CELLS];   // +0x107
+    // Before normalization: pad_01c2.
+    // The 187-byte current-shading array ends at +0x1c2; retail
+    // ValidAttack places the four-byte-aligned cell array at +0x1c4.
+    // Dreamcast retains the same two-byte gap at +0x1d2.
+    char m_paddingBeforeCells[0x2];
     // 187 combat cells, stride 0x70 - byte-proven by ValidAttack
     // (0x523bb0: index*112 + 0x1c4).
-    hexcell cells[187];               // +0x1c4, ends 0x5394
+    // Before normalization: cells.
+    hexcell m_cells[187];               // +0x1c4, ends 0x5394
     // PlaceAllObstacles shifts one by this dword while field_53c0 is -1;
     // it is the current combat terrain selector for the catalogue mask.
-    int terrainType;                  // +0x5394
+    // Before normalization: terrainType.
+    int m_terrainType;                  // +0x5394
     // GetBackgroundName resets these two dwords after selecting the image.
     // Their wider animation roles await decoded readers/writers.
-    int field_5398;                   // +0x5398
-    int field_539c;                   // +0x539c
+    // Before normalization: field_5398; reference member combatManager::combatFringe.
+    int m_combatFringe;                   // +0x5398
+    // Before normalization: field_539c; reference member combatManager::iCombatCycleType.
+    int m_combatCycleType;                   // +0x539c
     // Selected large-obstacle catalogue id, written by PlaceLargeObstacle.
-    int largeObstacleId;              // +0x53a0
+    // Before normalization: largeObstacleId.
+    int m_largeObstacleId;              // +0x53a0
     // The drawbridge state (EDrawbridgeState). LowerDoor stores 3/2/1
     // through it one frame at a time; RaiseDoor gates on 1;
     // HexIsBlocked, should_lower_door and IsInMoat all gate on 3.
-    int drawbridgeState;              // +0x53a4
+    // Before normalization: drawbridgeState.
+    int m_drawbridgeState;              // +0x53a4
     // "This combat has a moat at all": IsInMoat (0x469dc0) answers 0
     // outright while this byte is clear, before it looks at any row.
     // Name provisional.
-    unsigned char field_53a8;         // +0x53a8
+    // Before normalization: field_53a8; reference member combatManager::bMoatOn.
+    unsigned char m_moatOn;         // +0x53a8
     // "This combat has a SECOND moat row": searchArray::set_moat
     // (0x4b3290) stamps the eleven hexes of the second table, and later
     // re-opens that table's gate hex, only while this byte is set -
     // always nested inside the field_53a8 test above. Name provisional.
-    unsigned char field_53a9;         // +0x53a9
-    char pad_53aa[0x2];
+    // Before normalization: field_53a9; reference member combatManager::moatIsWide.
+    unsigned char m_moatIsWide;         // +0x53a9
+    // Before normalization: pad_53aa.
+    // Dreamcast bMoatOn/moatIsWide are bytes at +0x53b8/9 before
+    // the saved-screen pointer at +0x53bc; retail shifts this run by -0x10.
+    char m_paddingBeforeSaveScreenPreGrid[0x2];
     // A Bitmap16Bit, not a CCombatOwnedObject (retyped in place
     // 2026-08-20, a rename): Open constructs all THREE of these with
     // Bitmap16Bit::Bitmap16Bit(w, h) at 0x44df70 off an
     // `operator new(0x38)`, which is sizeof(Bitmap16Bit), and field_53b0
     // between them was already spelled that way.
-    Bitmap16Bit* field_53ac;
+    // Before normalization: field_53ac; reference member combatManager::SaveScreenPreGrid.
+    Bitmap16Bit* m_saveScreenPreGrid;
     // RETYPED 2026-08-13: army::Fly (0x4b4a40) calls Bitmap16Bit::Draw
     // on this slot once per animation frame, blitting the clean
     // battlefield back over the previous frame's extent - so it is the
     // combat back-buffer, not a bare polymorphic object. Close still
     // deletes it through the same slot-0 virtual destructor either way.
-    Bitmap16Bit* field_53b0;
-    Bitmap16Bit* field_53b4;
+    // Before normalization: field_53b0; reference member combatManager::SaveScreenPostGrid.
+    Bitmap16Bit* m_saveScreenPostGrid;
+    // Before normalization: field_53b4; reference member combatManager::combatMouseBackground.
+    Bitmap16Bit* m_combatMouseBackground;
     // CombatSystemOptions clears this dword after the modal dialog closes.
-    int field_53b8;                   // +0x53b8
+    // Before normalization: field_53b8; reference member combatManager::bBackgroundDrawn.
+    int m_backgroundDrawn;                   // +0x53b8
     // Adventure-map cell under the battlefield. DetermineCombatTerrain
     // reads its terrain, object and special-terrain state.
-    NewmapCell* combatCell;            // +0x53bc
+    // Before normalization: combatCell.
+    NewmapCell* m_combatCell;            // +0x53bc
     // can_cast_spells (0x41f890) refuses a CREATURE cast (hero_spell
     // clear) while this word reads 2, and refuses every cast at all
     // while the byte below is set. Both names await a writer.
-    int field_53c0;                   // +0x53c0
-    unsigned char field_53c4;         // +0x53c4
+    // Before normalization: field_53c0; reference member combatManager::magic_terrain.
+    int m_magicTerrain;                   // +0x53c0
+    // Before normalization: field_53c4; reference member combatManager::OnAntiMagicGarrison.
+    unsigned char m_onAntiMagicGarrison;         // +0x53c4
     // "This combat was started by surrounding the defender": SetupCombat
     // parks its own is_surrounded parameter here, as its second-to-last
     // act, and that parameter's name is the DC SetupCombat prototype's.
     // Sliced out of the old pad by that writer; no reader is decoded yet.
-    unsigned char isSurrounded;       // +0x53c5
+    // Before normalization: isSurrounded.
+    unsigned char m_isSurrounded;       // +0x53c5
     // GetBackgroundName selects CmBkDeck.pcx while this byte is set.
     // Name remains ordinal until its writer is reconstructed.
-    unsigned char field_53c6;         // +0x53c6
-    char pad_53c7[0x1];
+    // Before normalization: field_53c6; reference member combatManager::OnBoats.
+    unsigned char m_onBoats;         // +0x53c6
+    // Before normalization: pad_53c7; reference member combatManager::OnBeach.
+    char m_onBeach[0x1];
     // The defending town. DetermineCombatTerrain calls its
     // GetNativeTerrain method; RaiseDoor and IsInMoat independently
     // read the faction byte at town+4.
-    town* defendingTown;               // +0x53c8
+    // Before normalization: defendingTown.
+    town* m_defendingTown;               // +0x53c8
     // The two combat heroes, indexed by side: can_cast_spells indexes
     // heroes[side] for the spellbook test and then walks both slots for
     // the Orb of Inhibition, and army::get_controller (0x442690) /
     // army::get_owner (0x4426d0) do the same lookup off
     // gpCombatManager, with and without the hypnotize flip.
-    hero* heroes[2];                  // +0x53cc
+    // Before normalization: heroes.
+    hero* m_heroes[2];                  // +0x53cc
     // The two combat heroes' spell power, cached per side: ai.cpp's
     // get_area_effect (0x41f920) hands `[this + 4*side + 0x53d4]` to
     // ComputeSpellDamage as the multiplier that leaf applies to the
     // spell traits row's per-power damage (0x5a78ba, `imul edi,
     // [ebp+0xc]`). Sliced out of the old pad; the pair is the whole
     // eight bytes and the name is that argument's role.
-    int spellPower[2];                // +0x53d4
+    // Before normalization: spellPower.
+    int m_spellPower[2];                // +0x53d4
     // A per-side latch berserk_attack (0x4222c0) raises, indexed by
     // SIDE as a byte, on exactly one path: when a berserked stack's
     // chosen target turns out to be on its OWN side. Name awaits a
     // writer - no roster or string reaches the pair.
-    unsigned char field_53dc[2];      // +0x53dc
+    // Before normalization: field_53dc; reference member combatManager::PlayDoh.
+    unsigned char m_playDoh[2];      // +0x53dc
     // Three more per-side byte pairs, all cleared together by
     // InitNonVisualVars (0x463c60) in the order (0x53e0, 0x53e1),
     // (0x53e2, 0x53e3), (0x53dc, 0x53dd), (0x53de, 0x53df) - each pair
     // written HIGH slot first, which is the `x[0] = x[1] = 0` chained
     // form. No reader is decoded for any of them.
-    unsigned char field_53de[2];      // +0x53de
-    unsigned char field_53e0[2];      // +0x53e0
-    unsigned char field_53e2[2];      // +0x53e2
+    // Before normalization: field_53de; reference member combatManager::PlayYeah.
+    unsigned char m_playYeah[2];      // +0x53de
+    // Before normalization: field_53e0; reference member combatManager::DohPlayedThisRound.
+    unsigned char m_dohPlayedThisRound[2];      // +0x53e0
+    // Before normalization: field_53e2; reference member combatManager::YeahPlayedThisRound.
+    unsigned char m_yeahPlayedThisRound[2];      // +0x53e2
     // Two per-side dword pairs LoadIcons (0x463370) clears alongside the
     // two sprite pointers, at full int width (`mov [esi + 4*edi + 0x53e4],
     // edx` with edx held at zero). No reader is decoded yet, so both
     // names stay address ordinals.
-    int field_53e4[2];                // +0x53e4
-    int field_53ec[2];                // +0x53ec
+    // Before normalization: field_53e4; reference member combatManager::cmbtHeroFrameType.
+    int m_cmbtHeroFrameType[2];                // +0x53e4
+    // Before normalization: field_53ec; reference member combatManager::cmbtHeroFrameIndex.
+    int m_cmbtHeroFrameIndex[2];                // +0x53ec
     // Retail ResetCycleTimers stamps both entries from one GameTime::Get.
     // Dreamcast names the same semantic row cmbtHeroLastFidgetTime; its
     // offset is 0x10 later in that older layout, so the retail placement
     // here comes only from the x86 stores at 0x479f43/0x479f49.
-    char pad_53f4[0x8];
-    unsigned long cmbtHeroLastFidgetTime[2]; // +0x53fc
-    CSprite* creatureSprites[2];       // +0x5404
-    CSprite* heroFlagSprites[2];       // +0x540c
-    // Dreamcast names this pair cmbtHeroFlagFrame[2]. Retail's
-    // InitNonVisualVars sets the two entries to 0 and 3 respectively, the 3
-    // shared with field_13d48 out of one register. They remain split here to
-    // preserve the measured declarator count; drawing indexes the contiguous
-    // pair from &field_5414.
-    int field_5414;                    // +0x5414
-    int field_5418;                    // +0x5418
+    // Before normalization: pad_53f4; reference member combatManager::cmbtHeroDataSet.
+    char m_cmbtHeroDataSet[0x8];
+    // Before normalization: cmbtHeroLastFidgetTime.
+    unsigned long m_cmbtHeroLastFidgetTime[2]; // +0x53fc
+    // Before normalization: creatureSprites.
+    CSprite* m_creatureSprites[2];       // +0x5404
+    // Before normalization: heroFlagSprites.
+    CSprite* m_heroFlagSprites[2];       // +0x540c
+    // Original Dreamcast cmbtHeroFlagFrame[2] at +0x5424; retail
+    // InitNonVisualVars seeds 0/3 at +0x5414/+0x5418, and DrawFrame
+    // indexes both entries by side. Former field_5414/field_5418 are
+    // one array, including the dynamic accesses in hero animation.
+    int m_cmbtHeroFlagFrame[2];         // +0x5414
     // DC CodeView names these two adjacent SLimitData[2] arrays; DrawFrame's
     // four DrawCombatHero calls independently prove the retail offsets.
-    SLimitData sCmbtHeroLimitData[2];      // +0x541c
-    SLimitData sCmbtHeroFlagLimitData[2];  // +0x543c
+    // Before normalization: sCmbtHeroLimitData.
+    SLimitData m_cmbtHeroLimitData[2];      // +0x541c
+    // Before normalization: sCmbtHeroFlagLimitData.
+    SLimitData m_cmbtHeroFlagLimitData[2];  // +0x543c
     // Per-side spells observed during combat and eligible for Eagle Eye.
     // LearnSpellFromEagleEye proves two adjacent 16-byte Dinkumware sets:
     // `(side + 0x546) << 4` addresses the selected set at +0x5460.
-    std::set<SpellID> eagleEyeData[2]; // +0x545c; set roots at +0x5460
+    // Before normalization: eagleEyeData.
+    std::set<SpellID> m_eagleEyeData[2]; // +0x545c; set roots at +0x5460
     // Per-stack "this stack has already been affected" marks, indexed
     // [combatSide][army slot]. THREE independent readings agree on the
     // shape, which is why it is sliced in place from the old pad_547c[0x28]
@@ -843,7 +1017,8 @@ public:
     //     GetNextChainLightningTarget for the next hop - same indexing.
     // Named generally rather than for chain lightning: the mass-spell
     // writer and the chain-lightning writer both use it.
-    unsigned char effected[2][20];    // +0x547c
+    // Before normalization: effected.
+    unsigned char m_effected[2][20];    // +0x547c
     // Per-side "this side is played by the computer" latch: ai_tactical
     // crosses it with gpGame's own AI flag before scaling a shooter's
     // value (get_ranged_attack_value 0x435cb0, the type_AI_combat_
@@ -855,43 +1030,54 @@ public:
     // renamed: seventeen readers across ai.cpp, ai_tactical.cpp,
     // combatcontrolsubwindow.cpp and this TU would move with it, and this
     // lane touches none of them (the field_54b4 precedent).
-    unsigned char sideIsAI[2];        // +0x54a4
+    // Before normalization: sideIsAI.
+    unsigned char m_sideIsAi[2];        // +0x54a4
     // Per-side "this side is played on THIS machine": SetupCombat stamps
     // it with `gpGame->IsLocalHuman(playerIds[side])` in the same loop
     // that fills sideIsAI, and clears it for a side with no player id.
     // Sliced out of the old pad by that writer; no reader is decoded yet,
     // so the name states only what the writer proves.
-    unsigned char sideIsLocalHuman[2]; // +0x54a6
+    // Before normalization: sideIsLocalHuman.
+    unsigned char m_sideIsLocalHuman[2]; // +0x54a6
     // The adventure-map player ids behind the two combat sides. LowerDoor's
     // inlined IsQuickCombat indexes the 360-byte gpGame->players row with
     // each value and reads that player's +0xe4 quickCombat preference;
     // UpdateArmyGroup applies its creatureId bit-22 exclusion only while
     // the selected id is not -1.
-    int playerIds[2];                 // +0x54a8
+    // Before normalization: playerIds.
+    int m_playerIds[2];                 // +0x54a8
     // Per-side latch SetupCombat raises to 1 for BOTH sides unconditionally,
     // outside the player-id test that guards the three bytes around it.
     // Sliced out of the old pad by that writer; no reader is decoded yet
     // and no roster row reaches the pair, so the name is an ordinal.
-    unsigned char field_54b0[2];      // +0x54b0
+    // Before normalization: field_54b0; reference member combatManager::bArtifactCast.
+    unsigned char m_artifactCast[2];      // +0x54b0
     // Passed as the final, byte-wide SetMorale input for every stack
     // controlled by the indexed side. Its meaning and public name are
-    // not attested by the available symbols.
-    unsigned char field_54b2[2];       // +0x54b2
+    // not attested by the available symbols. SetupCombat (0x4639f0)
+    // sets it from hasGivenArtifact(0x81), Angelic Alliance; this
+    // role-derived name records the exact artifact test.
+    // Before normalization: field_54b2.
+    unsigned char m_hasAngelicAlliance[2];       // +0x54b2
     // Per-side "this side's hero has already cast this round" latch:
     // DoCommand (0x476bd0) refuses to open the spell book, and shows
     // genrltxt entry 129 instead, while the acting side's word is set
     // and field_13d74 is clear. Name is an address ordinal - no roster
     // or string reaches the pair.
-    int field_54b4[2];                // +0x54b4
+    // Before normalization: field_54b4; reference member combatManager::bSpellsCast.
+    int m_spellsCast[2];                // +0x54b4
     // Live stack count per side; every ai_tactical walk of armies[side]
     // bounds itself with it (type_AI_spellcaster ctor 0x4369c0,
     // set_melee_enemies 0x43bf20).
-    int numArmies[2];                 // +0x54bc
+    // Before normalization: numArmies.
+    int m_numArmies[2];                 // +0x54bc
     // The two persistent army groups combat was initialized from.
     // RaiseSkeletons indexes this pair by side and tries to merge the
     // post-combat raised stack into the selected group.
-    armyGroup* armyGroups[2];         // +0x54c4
-    army armies[2][21];               // +0x54cc
+    // Before normalization: armyGroups.
+    armyGroup* m_armyGroups[2];         // +0x54c4
+    // Before normalization: armies.
+    army m_armies[2][21];               // +0x54cc
     // Per-side dword SetupCombat initialises to 30000 (0x7530) for both
     // sides, in the same loop as playerIds and field_54b0 - retail reaches
     // it as `[&playerIds[side] + 0xddf8]`, which is what proves the stride
@@ -912,45 +1098,67 @@ public:
     // The per-side pair InitNonVisualVars' closing walk raises when a
     // side owns at least one stack with army::field_4d8 set. Byte-wide
     // and indexed by side.
-    unsigned char field_1329c[2];     // +0x1329c
-    char pad_1329e[0x2];
-    int field_132a0[2];               // +0x132a0
-    // Two more dwords InitNonVisualVars sets to -1, alongside
-    // field_132d4. Ordinals.
+    // Before normalization: field_1329c.
+    // Original Dreamcast OnNativeTerrain (+0x12970): retail
+    // InitNonVisualVars scans each side for an army on native terrain;
+    // quicksand and landmine creation use it to set enemy visibility.
+    unsigned char m_onNativeTerrain[2];     // +0x1329c
+    // Before normalization: pad_1329e.
+    // The native-terrain flags are two bytes at +0x1329c; the next
+    // per-side integer array starts at +0x132a0. These bytes align it.
+    char m_paddingBeforeTurnSinceLastEnchanter[0x2];
+    // Before normalization: field_132a0; reference member combatManager::turnSinceLastEnchanter.
+    int m_turnSinceLastEnchanter[2];               // +0x132a0
+    // Two dwords InitNonVisualVars sets to -1.
     //
     // RETYPED AS A PER-SIDE PAIR 2026-08-20 by combatManager::
     // SummonElemental (0x5a7080), which stamps the summoned creature's
     // type through `[this + 4*currentSide + 0x132a8]` - so the two
     // dwords are one row indexed by SIDE, exactly like the six other
     // per-side pairs this class already carries, and not two unrelated
-    // ordinals. The name stays an ordinal: no roster or string reaches
-    // the row.
-    int field_132a8[2];               // +0x132a8 .. +0x132af
+    // ordinals. Dreamcast supplies the matching array name below.
+    // Before normalization: field_132a8; corrected reference member combatManager::SummonedElemental.
+    // Original Dreamcast SummonedElemental (+0x12974): retail
+    // SummonElemental (0x5a7080) writes the creature type, and the
+    // spell eligibility check rejects a different elemental type.
+    int m_summonedElemental[2];               // +0x132a8 .. +0x132af
     // Two per-side "this side has already lost / fled" latches, byte
     // proven by CombatIsOver (0x465830) and IsWinner (0x4658b0): both
     // index them by SIDE as bytes (`byte [this + side + 0x132b2]`,
     // `byte [this + side + 0x132b0]`) and answer "combat over" / "this
     // side won" the moment either reads non-zero. Retail tests the
     // 0x132b2 pair FIRST in both functions. HandleCombatPlayerDrop writes
-    // field_132b0[1] when the remote combat player disappears; the broader
-    // pair semantics and names await the remaining writers.
-    unsigned char field_132b0[2];     // +0x132b0
-    unsigned char field_132b2[2];     // +0x132b2
+    // field_132b0[1] when the remote combat player disappears. The retreat
+    // and surrender writers distinguish the pair names below.
+    // Before normalization: field_132b0; corrected reference member combatManager::SideRetreated.
+    // Original Dreamcast SideRetreated (+0x1297c): retail
+    // DoCommand sets this pair in the retreat action, also used on peer drop.
+    unsigned char m_sideRetreated[2];     // +0x132b0
+    // Before normalization: field_132b2.
+    // Original Dreamcast SideSurrendered (+0x1297e): retail
+    // DoCommand sets this pair in the surrender action before transferring gold.
+    unsigned char m_sideSurrendered[2];     // +0x132b2
     // Read as a full dword by is_computer_action (0x474bf0) and paired
     // there with soundmgr's byte gbUnk691209: when that byte is set and
     // this slot is non-zero the acting stack is computer-driven no
     // matter whose side it is on, whatever the per-machine options say.
-    // Name is an address ordinal.
-    int field_132b4;                  // +0x132b4
+    // Before normalization: field_132b4; corrected reference member combatManager::gbThisNetHasControl.
+    // Original Dreamcast gbThisNetHasControl (+0x12980): retail
+    // command dispatch derives this dword from local/network control and
+    // gates locally issued actions on it.
+    int m_thisNetHasControl;                  // +0x132b4
     // The stack whose turn it is, as a (side, slot) pair into armies:
     // should_attack_now (0x436c60) forms armies[actingSide][actingSlot]
     // with the flattened index actingSide*21 + actingSlot and then
     // excludes that stack from both of its censuses. Names provisional.
-    int actingSide;                   // +0x132b8
-    int actingSlot;                   // +0x132bc
+    // Before normalization: actingSide.
+    int m_actingSide;                   // +0x132b8
+    // Before normalization: actingSlot.
+    int m_actingSlot;                   // +0x132bc
     // The side whose stack is acting: get_hex_attack_value (0x436180)
     // rejects a neighbour whose combatSide equals it. Name provisional.
-    int currentSide;                  // +0x132c0
+    // Before normalization: currentSide.
+    int m_currentSide;                  // +0x132c0
     // The automation-preference gate. is_computer_action (0x474bf0)
     // reads this dword before every one of the four preference fields it
     // consults in gUnnamed698758 (combatCatapult for the catapult,
@@ -958,7 +1166,8 @@ public:
     // combatFirstAidTent for the tent, combatAutoCreatures for every
     // other stack) and only honours the preference while it is non-zero.
     // Name is an address ordinal.
-    int field_132c4;                  // +0x132c4
+    // Before normalization: field_132c4; reference member combatManager::autoCombatOn.
+    int m_autoCombatOn;                  // +0x132c4
     // The stack that most recently finished a move. army::simple_move
     // (0x445950) clears it before it moves anything and stores `this`
     // into it on EVERY exit afterwards - the successful fly, the
@@ -968,47 +1177,80 @@ public:
     // a counter: simple_move's store is `mov [ecx+0x132c8], esi` with
     // esi holding `this`. Name is provisional; no roster reaches the
     // slot (the Dreamcast dump carries no combatManager fieldlist).
-    army* lastMovedArmy;              // +0x132c8
-    unsigned char field_132cc;        // +0x132cc
-    char pad_132cd[0x3];
-    int field_132d0;                  // +0x132d0
-    // RightClick (0x4769c0) parks -1 here the moment a human player
-    // right-clicks a stack on the acting side, immediately before it
-    // clears the combat message line - a "no hex is selected" latch.
-    // Name is an address ordinal.
-    int field_132d4;                  // +0x132d4
-    // The order's SECOND hex, the companion of field_132d4: DoCommand's
-    // melee-attack case copies field_132d4 into field_44 and this word
-    // into field_40, which is the same (where I go, what I hit) pair
-    // field_40/field_44 already carry. Name is an address ordinal.
-    int field_132d8;                  // +0x132d8
-    // Set to -99 by InitNonVisualVars and by nothing else decoded.
-    int field_132dc;                  // +0x132dc
-    int field_132e0;                  // +0x132e0
-    // Sliced in place 2026-08-20 (a retype, not new declarators) off two
-    // bodies that agree field for field: LoadSpellEffect (0x5a92f0)
-    // disposes powSprite, refills it from akSpellEffectTraits and stores
-    // the effect id it cached, and PowEffect (0x468990) asks powSprite
-    // for its frame count and drives powFrameIndex across the animation.
-    // Cleared by InitNonVisualVars a byte wide. Ordinal.
-    unsigned char field_132e4;        // +0x132e4
-    char pad_132e5[0x3];
-    CSprite* powSprite;               // +0x132e8
-    int powSpellEffect;               // +0x132ec
-    int powFrameIndex;                // +0x132f0
+    // Before normalization: lastMovedArmy.
+    army* m_lastMovedArmy;              // +0x132c8
+    // Dreamcast TurnOffHighlighter (dc 0x6ed18) uses highlighterOn /
+    // highlighterIndex at +0x1299c/+0x129a0; retail 0x477e10 uses this
+    // byte/int pair at +0x132cc/+0x132d0. The earlier reference mapping
+    // called them selectorOn/selectorIndex and shifted the following names.
+    // Before normalization: field_132cc; original name highlighterOn.
+    unsigned char m_highlighterOn;     // +0x132cc
+    // Before normalization: pad_132cd; alignment before highlighterIndex.
+    char m_paddingBeforeHighlighterIndex[3];
+    // Before normalization: field_132d0; original name highlighterIndex.
+    int m_highlighterIndex;            // +0x132d0
+    // Command-loop consumers prove the hovered cell, chosen attack hex,
+    // last displayed command and current command respectively. Dreamcast
+    // names the same four consecutive ints at +0x129a4..+0x129b0.
+    // Before normalization: field_132d4; original name lastCellIndex.
+    int m_lastCellIndex;               // +0x132d4
+    // Before normalization: field_132d8; original name lastMoveToIndex.
+    int m_lastMoveToIndex;             // +0x132d8
+    // Before normalization: field_132dc; original name lastCommand.
+    int m_lastCommand;                 // +0x132dc
+    // Before normalization: field_132e0; original name combatCommand.
+    int m_combatCommand;               // +0x132e0
+    // InitNonVisualVars clears Dreamcast CastleAttackDone at +0x129b4
+    // (dc 0x5e6c2, cmbtmgr.cpp:1358) and retail +0x132e4 (0x463c91)
+    // at the corresponding reset. Both stores and the DC member are bytes.
+    // Before normalization: field_132e4; original name CastleAttackDone.
+    unsigned char m_castleAttackDone;  // +0x132e4
+    // Before normalization: pad_132e5.
+    // InitNonVisualVars clears the preceding slot as a byte at +0x132e4.
+    // LoadSpellEffect proves the pointer at +0x132e8; these bytes align it.
+    char m_paddingBeforePowSprite[0x3];
+    // LoadSpellEffect (0x5a92f0) disposes/refills the sprite and caches
+    // the effect ID; PowEffect (0x468990) queries its frame count and
+    // advances the frame index, proving this three-member sequence.
+    // Before normalization: powSprite.
+    CSprite* m_powSprite;               // +0x132e8
+    // Before normalization: powSpellEffect.
+    int m_powSpellEffect;               // +0x132ec
+    // Before normalization: powFrameIndex.
+    int m_powFrameIndex;                // +0x132f0
     // "This combat is fought over a walled town": HexIsBlocked
     // (0x469a10) only consults the gate hexes while it is positive and
     // should_lower_door (0x467130) while it is non-zero. Name pending
     // a writer.
-    ECombatFortification field_132f4; // +0x132f4
+    // Before normalization: field_132f4; reference member combatManager::fortificationLevel.
+    ECombatFortification m_fortificationLevel; // +0x132f4
     // Cleared by InitNonVisualVars at full width. Ordinal.
-    int field_132f8;                  // +0x132f8
-    TCombatWindow* combatWindow;      // +0x132fc
-    int field_13300;                  // +0x13300
-    // The battlefield background image name. SetupCombat caches
-    // GetBackgroundName()'s answer here as its very last act; the pointer
-    // is into the .rdata name tables that method selects from, so it is
-    // never owned or freed.
+    // Before normalization: field_132f8; reference member combatManager::bBattleOver.
+    int m_battleOver;                  // +0x132f8
+    // Before normalization: combatWindow.
+    TCombatWindow* m_combatWindow;      // +0x132fc
+    // Before normalization: field_13300; reference member combatManager::bCombatShowIt.
+    int m_combatShowIt;                  // +0x13300
+    // Replaces synthetic pad_13304. Dreamcast combatManager type 0x66c7
+    // names iconWidgetWL/textWidgetWL, each an array of 25 widget pointers.
+    // NH3API confirms PC offsets +0x13304/+0x13368; retail mainWindow /
+    // combatDirections accesses bound the same 200-byte interval.
+    iconWidget* m_iconWidgetWL[25]; // +0x13304
+    textWidget* m_textWidgetWL[25]; // +0x13368
+    // SetCombatDirections fills twelve direction/hex pairs here. Retail
+    // addresses the second row exactly 0x30 bytes after the first.
+    // Before normalization: combatDirections.
+    int m_combatDirections[2][12];      // +0x133cc
+    // CheckSetMouseDirection caches the current combat cursor frame here and
+    // only calls mouseManager::SetPointer when the selected direction maps
+    // to a different frame. No roster names the storage, so it stays ordinal.
+    // Before normalization: field_1342c; reference member combatManager::last_attack_cursor.
+    int m_lastAttackCursor;                  // +0x1342c
+    // Replaces synthetic pad_13430. Dreamcast originals iTtlCombatDirections
+    // and iBackgroundFrame are int; NH3API confirms +0x13430/+0x13434.
+    // Retail lastAttackCursor and creatureIsDead bound this eight-byte span.
+    int m_ttlCombatDirections; // +0x13430
+    int m_backgroundFrame;     // +0x13434
     // Per-army "this stack is leaving the field" latch, twenty bytes per
     // side, tested by BOTH of MakeCreaturesVanish's walks - the first to
     // raise the matching +0x14000 effect byte (or an arrow-tower latch),
@@ -1016,18 +1258,9 @@ public:
     // against armies[2][21] is retail's own asymmetry, not a mis-slice:
     // the walk steps the byte arrays by 20 and the army index by 21 in
     // the same loop, and ResetLimitCreature memsets exactly 2x20 at
-    // +0x14000. Name is an address ordinal - nothing decoded WRITES it
-    // yet. Sliced out of pad_13304 in place.
-    char pad_13304[0xc8];
-    // SetCombatDirections fills twelve direction/hex pairs here. Retail
-    // addresses the second row exactly 0x30 bytes after the first.
-    int combatDirections[2][12];      // +0x133cc
-    // CheckSetMouseDirection caches the current combat cursor frame here and
-    // only calls mouseManager::SetPointer when the selected direction maps
-    // to a different frame. No roster names the storage, so it stays ordinal.
-    int field_1342c;                  // +0x1342c
-    char pad_13430[0x8];
-    unsigned char field_13438[2][20]; // +0x13438
+    // +0x14000.
+    // Before normalization: field_13438; reference member combatManager::bCreatureIsDead.
+    unsigned char m_creatureIsDead[2][20]; // +0x13438
     // Sliced in place off PowEffect, which zeroes it beside field_13438
     // and then asks it, after the death sweep, whether MakeCreaturesVanish
     // needs running. A retype, not a new declarator.
@@ -1038,58 +1271,93 @@ public:
     // that seeds the field_13438 memset, and asks it with
     // `mov al, [ebx+0x13460] / test al,al`. A dword field gives
     // `mov dword ptr [...],0` and `cmp dword ptr [...],0` in both places.
-    unsigned char field_13460;        // +0x13460
-    char pad_13461[0x3];
-    const char* backgroundName;       // +0x13464
+    // Before normalization: field_13460; reference member combatManager::bSomeCreaturesVanish.
+    unsigned char m_someCreaturesVanish;        // +0x13460
+    // Before normalization: pad_13461.
+    // Dreamcast bSomeCreaturesVanish is one byte followed by cBkgName;
+    // retail retains the three-byte pointer-alignment gap at +0x13461.
+    char m_paddingBeforeBackgroundName[0x3];
+    // Before normalization: backgroundName.
+    // The battlefield background image name. SetupCombat caches
+    // GetBackgroundName()'s answer here as its very last act; the pointer
+    // is into the .rdata name tables that method selects from, so it is
+    // never owned or freed.
+    const char* m_backgroundName;       // +0x13464
     // Adjacency table [cell][direction] of int16 cell indexes (-1 =
     // off-grid); path.cpp's whole direction system reads it. Slots
     // 6/7 are resolved to real directions by facing first.
-    short adjacentCells[187][6];      // +0x13468
-    unsigned char field_13d2c;        // +0x13d2c
-    char pad_13d2d[0x3];
-    int field_13d30;                  // +0x13d30
-    int field_13d34;                  // +0x13d34
+    // Before normalization: adjacentCells.
+    short m_adjacentCells[187][6];      // +0x13468
+    // Before normalization: field_13d2c; reference member combatManager::SaveBiggestExtent.
+    unsigned char m_saveBiggestExtent;        // +0x13d2c
+    // Before normalization: pad_13d2d.
+    // Dreamcast SaveBiggestExtent is one byte before the LimitToExtent
+    // dword; retail preserves this alignment boundary at +0x13d2c/30.
+    char m_paddingBeforeLimitToExtent[0x3];
+    // Before normalization: field_13d30; reference member combatManager::LimitToExtent.
+    int m_limitToExtent;                  // +0x13d30
+    // Before normalization: field_13d34; reference member combatManager::ComputeExtentOnly.
+    int m_computeExtentOnly;                  // +0x13d34
     // Four-dword drawing bounds copied from 0x694f30..0x694f3c before
     // every drawbridge animation. The role of each coordinate awaits a
     // decoded drawing reader, so the member stays an ordinal array.
-    TDrawbridgeBounds drawbridgeBounds; // +0x13d38
+    // Before normalization: drawbridgeBounds.
+    TDrawbridgeBounds m_drawbridgeBounds; // +0x13d38
     // Set to 3 by InitNonVisualVars, out of the same register as
     // field_5418. Ordinal.
-    int field_13d48;                  // +0x13d48
+    // Before normalization: field_13d48; reference member combatManager::winner.
+    int m_winner;                  // +0x13d48
     // Pending post-combat raised stack. RaiseSkeletons first attempts
     // this pair unchanged, then promotes the creature and converts the
     // count at a two-for-three ratio if the destination group is full.
-    int raisedCreatureCount;          // +0x13d4c
-    TCreatureType raisedCreatureType; // +0x13d50
-    Bitmap816* combatGridBitmap;      // +0x13d54
+    // Before normalization: raisedCreatureCount.
+    int m_raisedCreatureCount;          // +0x13d4c
+    // Before normalization: raisedCreatureType.
+    TCreatureType m_raisedCreatureType; // +0x13d50
+    // Before normalization: combatGridBitmap.
+    Bitmap816* m_combatGridBitmap;      // +0x13d54
     // The placed-obstacle array, as the raw first/last pair retail
     // tests: RemoveObstacle (0x466b30) null-checks the FIRST pointer,
     // then divides last-first by sizeof(TObstacle) for the bound. The
     // DC roster's std::vector<combatManager::TObstacle> COMDATs say
     // this really is a vector; only its first two members are proven.
-    TObstacleVector obstacles;        // +0x13d58
+    // Before normalization: obstacles.
+    TObstacleVector m_obstacles;        // +0x13d58
     // Placement-phase latch: FindPath/ValidPath forward it into
     // FindCombatPath's in_placement_phase and lift the speed limit
     // to 99 while it is set. Name provisional.
-    unsigned char bCreaturePlacement; // +0x13d68
-    char pad_13d69[0x3];
+    // Before normalization: bCreaturePlacement.
+    unsigned char m_creaturePlacement; // +0x13d68
+    // Before normalization: pad_13d69.
+    // Dreamcast InPlacementPhase is a byte followed by turn_number;
+    // retail preserves the three-byte integer-alignment gap at +0x13d69.
+    char m_paddingBeforeTurnNumber[0x3];
     // Cleared by Open just before the acting pair is stamped. Ordinal.
-    int field_13d6c;                  // +0x13d6c
+    // Before normalization: field_13d6c; reference member combatManager::turn_number.
+    int m_turnNumber;                  // +0x13d6c
     // Placement inset measured in combat-grid columns. command.obj's
     // is_outside_placement_boundry reads it at +0x13d70 and forms the
     // two side limits as 2*n+1 and 2*n+15 respectively.
-    int placementBoundaryDepth;       // +0x13d70
+    // Before normalization: placementBoundaryDepth.
+    int m_placementBoundaryDepth;       // +0x13d70
     // Second half of DoCommand's spell-book gate: the dialog only fires
     // while field_54b4[currentSide] is set AND this byte is clear, so it
     // reads as a "casting restriction lifted" latch. Name is an address
     // ordinal - nothing else decoded reaches it.
-    unsigned char field_13d74;        // +0x13d74
+    // Before normalization: field_13d74; reference member combatManager::DebugNoSpellLimit.
+    unsigned char m_debugNoSpellLimit;        // +0x13d74
     // Its two neighbours, cleared with it in one run by
     // InitNonVisualVars. Ordinals.
-    unsigned char field_13d75;        // +0x13d75
-    unsigned char field_13d76;        // +0x13d76
-    char pad_13d77[0x1];
-    TArcher archers[3];               // +0x13d78; armySlot at +0x20
+    // Before normalization: field_13d75; reference member combatManager::DebugShowHiddenObjects.
+    unsigned char m_debugShowHiddenObjects;        // +0x13d75
+    // Before normalization: field_13d76; reference member combatManager::DebugShowBlockedHexes.
+    unsigned char m_debugShowBlockedHexes;        // +0x13d76
+    // Before normalization: pad_13d77.
+    // The three debug bytes end at +0x13d77; the retail archer records
+    // start at +0x13d78. This byte aligns the records, as in Dreamcast.
+    char m_paddingBeforeArchers[0x1];
+    // Before normalization: archers.
+    TArcher m_archers[3];               // +0x13d78; armySlot at +0x20
     // "Move order is reversed for this combat": find_move_order
     // (0x41f179) reads it through the gpCombatManager GLOBAL - not
     // through its own `this` - and, when it is set, keys every stack
@@ -1100,18 +1368,27 @@ public:
     // Army-slot indexes for the main building, lower tower and upper
     // tower defenders. DamageWall reads one selected slot when the
     // corresponding target falls and marks that stack removed.
-    unsigned char field_13de4;        // +0x13de4
-    char pad_13de5[0x3];
+    // Before normalization: field_13de4; reference member combatManager::in_second_phase.
+    unsigned char m_inSecondPhase;        // +0x13de4
+    // Before normalization: pad_13de5.
+    // Dreamcast in_second_phase is a byte followed by OriginalAttackSkill;
+    // retail preserves this three-byte alignment gap before the stat snapshot.
+    char m_paddingBeforeOriginalAttackSkill[0x3];
     // The DEFENDING hero's combat snapshot, taken by InitNonVisualVars
     // before the town's own bonuses are applied: stats[0] and stats[1]
     // clamped to [0, 99], stats[2] clamped to [1, 99] - spell power is
     // never zero - and the mana word widened. All four are zeroed when
     // there is no defending hero.
-    int field_13de8;                  // +0x13de8
-    int field_13dec;                  // +0x13dec
-    int field_13df0;                  // +0x13df0
-    int field_13df4;                  // +0x13df4
-    Bitmap816* combatIcons[18][5];    // +0x13df8
+    // Before normalization: field_13de8; reference member combatManager::OriginalAttackSkill.
+    int m_originalAttackSkill;                  // +0x13de8
+    // Before normalization: field_13dec; reference member combatManager::OriginalDefenseSkill.
+    int m_originalDefenseSkill;                  // +0x13dec
+    // Before normalization: field_13df0; reference member combatManager::OriginalPowerSkill.
+    int m_originalPowerSkill;                  // +0x13df0
+    // Before normalization: field_13df4; reference member combatManager::original_mana.
+    int m_originalMana;                  // +0x13df4
+    // Before normalization: combatIcons.
+    Bitmap816* m_combatIcons[18][5];    // +0x13df8
     // Per-wall-segment hit points, indexed by TWallTargetId. Sliced
     // 2026-08-08 by should_stay_in_castle (0x4213f0), which reads
     // `[this + 4*id + 0x13f60]` for each of the five wall ids and
@@ -1133,31 +1410,39 @@ public:
     // field_13fe4 rows were the same array seen through their one
     // decoded writer, and DamageWall now spells them wallStrength[17]
     // / [16] / [15] at byte-identical offsets.
-    int wallStrength[18];             // +0x13f60
+    // Before normalization: wallStrength.
+    int m_wallStrength[18];             // +0x13f60
     // One dword per wall id (5..14 used): 1 while strength remains, 0 when
     // the segment reaches zero. Same 18 extent, same reason.
-    int wallStanding[18];             // +0x13fa8
+    // Before normalization: wallStanding.
+    int m_wallStanding[18];             // +0x13fa8
     // The battle's packed adventure-map coordinate. GetBackgroundName
     // passes it by value to advManager::MoreTreesNear.
-    type_point mapPoint;              // +0x13ff0
-    Bitmap816* combatCellGridBitmap;   // +0x13ff4
-    Bitmap816* combatShadowBitmap;     // +0x13ff8
+    // Before normalization: mapPoint.
+    type_point m_mapPoint;              // +0x13ff0
+    // Before normalization: combatCellGridBitmap.
+    Bitmap816* m_combatCellGridBitmap;   // +0x13ff4
+    // Before normalization: combatShadowBitmap.
+    Bitmap816* m_combatShadowBitmap;     // +0x13ff8
     // Sliced out of the old pad in place 2026-08-20 (a retype, not a new
     // declarator). SetupAndLoadObstacles zeroes it as its very first
     // statement and nothing else decoded touches it, so the name stays
     // an ordinal.
-    int field_13ffc;                   // +0x13ffc
+    // Before normalization: field_13ffc; reference member combatManager::ObstacleAnimationFrame.
+    int m_obstacleAnimationFrame;                   // +0x13ffc
     // "This slot's stack was added mid-combat and still owes a fizzle-in
     // frame": AddArmy (0x47a100) stamps [iSide][slot] with the flattened
     // index 20*iSide + slot for every stack that is NOT an arrow tower.
     // Twenty slots a side, not the twenty-one `armies` carries - AddArmy
     // only ever searches 0..19. Name is an address ordinal.
-    unsigned char field_14000[2][20];  // +0x14000
-    // The first pair requests hero extents and the second pair requests
-    // hero-flag extents, both indexed by combat side. ComputeMaxExtent
-    // reads the four bytes as one contiguous row; keep one declarator here
-    // so this consumer-facing retype does not perturb the include-set count.
-    unsigned char field_14028[4];      // +0x14028
+    // Before normalization: field_14000; reference member combatManager::bCreatureEffect.
+    unsigned char m_creatureEffect[2][20];  // +0x14000
+    // Original Dreamcast bHeroEffect[2]/bFlagEffect[2] at +0x136f0/2.
+    // Retail hero animation sets the first pair at +0x14028, flag
+    // animation sets the second at +0x1402a, and ComputeMaxExtent
+    // checks both pairs by combat side. Former field_14028[4].
+    unsigned char m_heroEffect[2];      // +0x14028
+    unsigned char m_flagEffect[2];      // +0x1402a
     // The three arrow-tower latches, keyed by the tower's grid index by
     // 0x46a460: hex 254 -> +0x1402c, hex 251 -> +0x1402d, hex 255 ->
     // +0x1402e.
@@ -1171,26 +1456,23 @@ public:
     // `mov byte ptr [ecx + edi + 0x1402c], 1`. That index is exactly the
     // scalar order 0x46a460 writes, so the two orders DO agree and the
     // band is one array. Every existing reader keeps its byte offset.
-    unsigned char field_1402c[3];      // +0x1402c
-    // Raised to 1 by SetupCombat before it has touched anything else about
-    // the two sides, and by nothing else in the located span. Reads like a
-    // "combat is being set up / is live" latch, but no reader is decoded
-    // yet, so the name is an address ordinal.
-    //
-    // CORRECTION 2026-08-20: when this row landed its comment claimed the
-    // byte was the LAST of the class and could not move sizeof. That was
-    // wrong - it was inferred from this header stopping here, not from
-    // retail. InitNonVisualVars (0x463c60) stores a byte at +0x14030, so
-    // the class runs at least one byte further than anything modelled
-    // here. Nothing depends on the old claim (no SIZE assert covers
-    // combatManager), but do not read the end of this list as the end of
-    // the object.
-    unsigned char field_1402f;         // +0x1402f
-    // +0x14030 is the byte InitNonVisualVars clears. The following 187-byte
-    // row is cleared by process_move_then_attack before it asks the acting
-    // stack to check obstacle attacks. Kept as one raw band so admitting the
-    // newly proven tail does not change the class declarator population.
-    unsigned char field_14030[COMBAT_GRID_CELLS + 1]; // +0x14030..0x140eb
+    // Before normalization: field_1402c; reference member combatManager::bArcherEffect.
+    unsigned char m_archerEffect[3];      // +0x1402c
+    // Before normalization: field_1402f.
+    // Original Dreamcast auto_retreat_on (+0x136f7). Retail SetupCombat
+    // enables this byte at +0x1402f; command processing asks whether to
+    // retreat and records the answer here. Earlier any_action_taken
+    // correspondence was shifted by one byte.
+    unsigned char m_autoRetreatOn;         // +0x1402f
+    // Original Dreamcast any_action_taken (+0x136f8). Retail actions set
+    // this byte and ResetRound clears it, using it to finish placement.
+    // Former field_14030[0].
+    unsigned char m_anyActionTaken;        // +0x14030
+    // Retail-only scratch grid: 0x46a520 clears 187 bytes and marks the
+    // army's occupied hexes. CheckObstacleAttacks (0x46a570) tests/sets
+    // each hex before fire-wall, landmine and moat checks, avoiding
+    // repeated obstacle hits. Former field_14030[1..187]. Role-derived.
+    unsigned char m_obstacleAttackVisited[COMBAT_GRID_CELLS]; // +0x14031
 
     combatManager();
 
@@ -1209,26 +1491,43 @@ public:
     // GetObstacle RETURNS a reference. None of the ten can be checked
     // against retail bytes, which is exactly why the mangling is the
     // only evidence there is.
-    int GetGridIndex(int x, int y) const;
-    unsigned char IsQuickCombat();
-    unsigned char CombatIsOver();
-    unsigned char IsWinner(int this_side) const;
-    void ResetHitByCreature();
-    void DamageWall(TWallTargetId target_wall, int damage);
+    // Before normalization (function): combatManager::GetGridIndex.
+    int getGridIndex(int x, int y) const;
+    // Before normalization (function): combatManager::IsQuickCombat.
+    unsigned char isQuickCombat();
+    // Before normalization (function): combatManager::CombatIsOver.
+    unsigned char combatIsOver();
+    // Before normalization (function): combatManager::IsWinner.
+    // Before normalization (locals): this_side.
+    unsigned char isWinner(int thisSide) const;
+    // Before normalization (function): combatManager::ResetHitByCreature.
+    void resetHitByCreature();
+    // Before normalization (function): combatManager::DamageWall.
+    // Before normalization (locals): target_wall.
+    void damageWall(TWallTargetId targetWall, int damage);
     // The SGTWDEF explosion frame army::attack_wall (0x445fd0) lets
     // play before it lands the DamageWall - the wall visibly breaks
     // mid-animation, not on the last frame.
     enum { WALL_EXPLOSION_HIT_FRAME = 0x5 };
-    unsigned char is_adjacent(int first, int second) const;
-    unsigned char enemy_is_adjacent(const army* current_army, int grid_index,
+    // Before normalization (function): combatManager::is_adjacent.
+    unsigned char isAdjacent(int first, int second) const;
+    // Before normalization (function): combatManager::enemy_is_adjacent.
+    // Before normalization (locals): current_army, grid_index.
+    unsigned char enemyIsAdjacent(const army* currentArmy, int gridIndex,
                                     const army* excluded) const;
-    void RemoveArmyFromGrid(const army& a);
-    void PlaceArmyInGrid(const army& a, int hex);
-    void ViewArmy(army* thisArmy, int isQuickView);
+    // Before normalization (function): combatManager::RemoveArmyFromGrid.
+    void removeArmyFromGrid(const army& a);
+    // Before normalization (function): combatManager::PlaceArmyInGrid.
+    void placeArmyInGrid(const army& a, int hex);
+    // Before normalization (function): combatManager::ViewArmy.
+    void viewArmy(army* thisArmy, int isQuickView);
     // Retail 0x59ec50 extends Dreamcast's one-argument spells.cpp:176
     // routine with the creature-cast selector passed by command.cpp.
-    void InitiateSpell(SpellID spellToCast, int creatureSpell);
-    unsigned char place_obstacle(int obstacle_id);
+    // Before normalization (function): combatManager::InitiateSpell.
+    void initiateSpell(SpellID spellToCast, int creatureSpell);
+    // Before normalization (function): combatManager::place_obstacle.
+    // Before normalization (locals): obstacle_id.
+    unsigned char placeObstacle(int obstacleId);
     // 0x46a570 (224 B, `ret 8`): the landmine / fire-wall worker that
     // army::check_obstacle_attacks (0x441f70) delegates to once it has
     // cleared the arrow tower. It belongs to the COMBAT MANAGER, not to
@@ -1245,26 +1544,43 @@ public:
     // what this body does - a retail-side refactor, and the reason the
     // 38/132 size ratio of the wrapper's own slot sits outside the
     // SH4->x86 band without the attribution being wrong.
-    void Unnamed46a520(army* stack);
-    unsigned char check_obstacle_attacks(army* this_army,
-                                         unsigned char is_walking);
-    unsigned char check_landmine(long hex, army* current_army,
-                                 unsigned char is_walking);
-    unsigned char check_fire_wall(long hex, army* current_army,
-                                  unsigned char is_walking);
-    unsigned char should_lower_door(army* this_army, long hex) const;
-    void MakeCreaturesVanish();
-    void LowerDoor();
-    void RaiseDoor();
-    void TestRaiseDoor();
-    bool IsQuickCombat() const;
-    int ExperienceValueOfStack(int whichGroup);
-    void CalculateGainedExperience(int side, int* experience_gained);
+    // Before normalization (function): combatManager::Unnamed46a520.
+    void unnamed46a520(army* stack);
+    // Before normalization (function): combatManager::check_obstacle_attacks.
+    // Before normalization (locals): this_army, is_walking.
+    unsigned char checkObstacleAttacks(army* thisArmy,
+                                         unsigned char isWalking);
+    // Before normalization (function): combatManager::check_landmine.
+    // Before normalization (locals): current_army, is_walking.
+    unsigned char checkLandmine(long hex, army* currentArmy,
+                                 unsigned char isWalking);
+    // Before normalization (function): combatManager::check_fire_wall.
+    // Before normalization (locals): current_army, is_walking.
+    unsigned char checkFireWall(long hex, army* currentArmy,
+                                  unsigned char isWalking);
+    // Before normalization (function): combatManager::should_lower_door.
+    // Before normalization (locals): this_army.
+    unsigned char shouldLowerDoor(army* thisArmy, long hex) const;
+    // Before normalization (function): combatManager::MakeCreaturesVanish.
+    void makeCreaturesVanish();
+    // Before normalization (function): combatManager::LowerDoor.
+    void lowerDoor();
+    // Before normalization (function): combatManager::RaiseDoor.
+    void raiseDoor();
+    void testRaiseDoor();
+    bool isQuickCombat() const;
+    // Before normalization (function): combatManager::ExperienceValueOfStack.
+    int experienceValueOfStack(int whichGroup);
+    // Before normalization (function): combatManager::CalculateGainedExperience.
+    // Before normalization (locals): experience_gained.
+    void calculateGainedExperience(int side, int* experienceGained);
     // The winner's post-combat sweep of the loser's artifacts. The vector
     // is the REAL Dinkumware one: <vector> is already in this header's
     // closure through army.h, so no include-set edge moves for it.
-    void LootDeadHero(int side,
-                      std::vector<type_artifact>& looted_artifacts);
+    // Before normalization (function): combatManager::LootDeadHero.
+    void lootDeadHero(int side,
+                      // Before normalization (locals): looted_artifacts.
+                      std::vector<type_artifact>& lootedArtifacts);
     // The three victory-sequence bodies at the tail of command.obj. The
     // Dreamcast S_PUB32 manglings fix all three signatures exactly -
     // ?show_eagle_eye@combatManager@@AAAXHH@Z (two ints),
@@ -1284,40 +1600,59 @@ public:
     // declaration is what forces the call. The name is a bootstrap
     // invention; only the behaviour is proven. Its VA claim belongs to
     // src/cmbtmgr.cpp when that lane reaches the row.
-    void StopCombatSounds();
-    void DoVictory(int winningGroup);
+    // Before normalization (function): combatManager::StopCombatSounds.
+    void stopCombatSounds();
+    // Before normalization (function): combatManager::DoVictory.
+    void doVictory(int winningGroup);
     // Two DC-roster corrections, both byte-proven at 0x467510: the
     // first parameter is an `army*`, NOT the roster's `int group` (the
     // body dereferences it at +0x288, +0xf4 and +0x34), and the return
     // is BYTE width, not int - the early exit is `xor al,al`, which an
     // int return would spell `xor eax,eax` (compare is_adjacent, whose
     // unsigned char return produces exactly that `xor al,al`).
-    unsigned char ShotIsThroughWall(const army* shooter, int sourceIndex,
+    // Before normalization (function): combatManager::ShotIsThroughWall.
+    unsigned char shotIsThroughWall(const army* shooter, int sourceIndex,
                                     int destIndex);
-    unsigned char ShotIsNotOptimal(const army* attacker,
+    // Before normalization (function): combatManager::ShotIsNotOptimal.
+    unsigned char shotIsNotOptimal(const army* attacker,
                                    const army* defender);
-    unsigned char InLineOfSight(int sourceIndex, int destIndex) const;
-    void UpdateArmyLuckAndMorale();
-    void InitializeArchers();
-    void LoadIcons();
-    void CheckApplyGoodMorale(int group, int index);
-    int CheckApplyBadMorale(int group, int index);
+    // Before normalization (function): combatManager::InLineOfSight.
+    unsigned char inLineOfSight(int sourceIndex, int destIndex) const;
+    // Before normalization (function): combatManager::UpdateArmyLuckAndMorale.
+    void updateArmyLuckAndMorale();
+    // Before normalization (function): combatManager::InitializeArchers.
+    void initializeArchers();
+    // Before normalization (function): combatManager::LoadIcons.
+    void loadIcons();
+    // Before normalization (function): combatManager::CheckApplyGoodMorale.
+    void checkApplyGoodMorale(int group, int index);
+    // Before normalization (function): combatManager::CheckApplyBadMorale.
+    int checkApplyBadMorale(int group, int index);
     // drawing.obj's four-argument overload (drawing.cpp:2524, dc 0x86ea0,
     // retail 0x496840). Declared here because both CheckApply*Morale
     // bodies call it; the body stays drawing.cpp's.
-    void SpellEffect(int effect, army* target_army, int iDelay,
-                     unsigned char bDoWince);
-    void FreeIcons();
-    void Close();
-    unsigned char HexIsBlocked(int index) const;
-    unsigned char IsInMoat(int hex, int* index);
+    // Before normalization (function): combatManager::SpellEffect.
+    // Before normalization (locals): target_army, iDelay, bDoWince, leave_last_frame.
+    void spellEffect(int effect, army* targetArmy, int delay,
+                     unsigned char doWince);
+    // Before normalization (function): combatManager::FreeIcons.
+    void freeIcons();
+    // Before normalization (function): combatManager::Close.
+    void close();
+    // Before normalization (function): combatManager::HexIsBlocked.
+    unsigned char hexIsBlocked(int index) const;
+    // Before normalization (function): combatManager::IsInMoat.
+    unsigned char isInMoat(int hex, int* index);
     // Complete-only moat damage worker; its sole caller passes the entered
     // hex, moving stack and a byte sound-control flag.
-    unsigned char Unnamed469e50(int hex, army* stack,
+    // Before normalization (function): combatManager::Unnamed469e50.
+    unsigned char unnamed469e50(int hex, army* stack,
                                 unsigned char playSound);     // 0x469e50
-    void PlaceObstacle(const TObstacle* obstacle, int id, int hex,
+    // Before normalization (function): combatManager::PlaceObstacle.
+    void placeObstacle(const TObstacle* obstacle, int id, int hex,
                        unsigned attributes);
-    void PlaceAllObstacles();
+    // Before normalization (function): combatManager::PlaceAllObstacles.
+    void placeAllObstacles();
     // 0x466290, DC cmbtmgr.cpp:2859. Ungated, alongside the three
     // obstacle bodies it sits between and calls: PlaceLargeObstacle,
     // place_obstacle and PlaceObstacle are all ungated declarators
@@ -1329,96 +1664,143 @@ public:
     // 0x462a20, DC cmbtmgr.cpp:594 - baseManager's virtual Open, the
     // slot the vtable anchor names. Ungated beside Close, which it
     // mirrors and which is already ungated here.
-    int Open(int newPriority);
-    void InitNonVisualVars();
-    void SetupAndLoadObstacles();
-    void RemoveObstacle(int index);
-    void CombatSystemOptions();
-    const char* GetBackgroundName();
-    void UpdateArmyGroup(int whichSide);
-    void GenerateMap();
-    void DetermineCombatTerrain();
-    void SetupAdjacencyArray();
-    int PlaceLargeObstacle(unsigned terrain_mask,
-                           unsigned special_terrain_mask);
-    void RaiseSkeletons(int side);
-    void LearnSpellFromEagleEye(int side);
-    static unsigned char LoadWallTraitsTable();
-    int UpdateGrid(int bPostGridIsClean, int bSetupGrid);
+    // Before normalization (function): combatManager::Open.
+    int open(int newPriority);
+    // Before normalization (function): combatManager::InitNonVisualVars.
+    void initNonVisualVars();
+    // Before normalization (function): combatManager::SetupAndLoadObstacles.
+    void setupAndLoadObstacles();
+    // Before normalization (function): combatManager::RemoveObstacle.
+    void removeObstacle(int index);
+    // Before normalization (function): combatManager::CombatSystemOptions.
+    void combatSystemOptions();
+    // Before normalization (function): combatManager::GetBackgroundName.
+    const char* getBackgroundName();
+    // Before normalization (function): combatManager::UpdateArmyGroup.
+    void updateArmyGroup(int whichSide);
+    // Before normalization (function): combatManager::GenerateMap.
+    void generateMap();
+    // Before normalization (function): combatManager::DetermineCombatTerrain.
+    void determineCombatTerrain();
+    // Before normalization (function): combatManager::SetupAdjacencyArray.
+    void setupAdjacencyArray();
+    // Before normalization (function): combatManager::PlaceLargeObstacle.
+    // Before normalization (locals): terrain_mask, special_terrain_mask.
+    int placeLargeObstacle(unsigned terrainMask,
+                           unsigned specialTerrainMask);
+    // Before normalization (function): combatManager::RaiseSkeletons.
+    void raiseSkeletons(int side);
+    // Before normalization (function): combatManager::LearnSpellFromEagleEye.
+    void learnSpellFromEagleEye(int side);
+    // Before normalization (function): combatManager::LoadWallTraitsTable.
+    static unsigned char loadWallTraitsTable();
+    // Before normalization (function): combatManager::UpdateGrid.
+    // Before normalization (locals): bPostGridIsClean, bSetupGrid.
+    int updateGrid(int postGridIsClean, int setupGrid);
     // Complete's nullary adapter at 0x474ba0 selects the acting stack and
     // forwards it to the one-argument body at 0x474bf0. UpdateGrid is its
     // only retail caller; DC retains the nullary source signature.
-    unsigned char is_computer_action();
+    // Before normalization (function): combatManager::is_computer_action.
+    unsigned char isComputerAction();
     // drawing.cpp:919, DC 0x847dc; Complete's body is at 0x493cf0.
-    void DrawBackground();
-    void ResetLimitCreature();
-    unsigned char HandleCombatPlayerDrop(unsigned long dpid, message* msg);
+    // Before normalization (function): combatManager::DrawBackground.
+    void drawBackground();
+    // Before normalization (function): combatManager::ResetLimitCreature.
+    void resetLimitCreature();
+    // Before normalization (function): combatManager::HandleCombatPlayerDrop.
+    unsigned char handleCombatPlayerDrop(unsigned long dpid, message* msg);
     // 0x493780 (68 B), drawing.obj's no-argument combat-area refresh -
     // the one of its four UpdateCombatArea overloads that takes no
     // extent. Armageddon calls it once per animation frame; its retail body
     // is reconstructed in drawing.cpp.
-    void UpdateCombatArea();                                  // 0x493780
+    // Before normalization (function): combatManager::UpdateCombatArea.
+    void updateCombatArea();                                  // 0x493780
     // drawing.obj 0x4937d0; SetCombatGrid passes the inlined current-army
     // result exactly as the DC source statement does.
-    void SetupGridForArmy(const army* thisArmy);
+    // Before normalization (function): combatManager::SetupGridForArmy.
+    void setupGridForArmy(const army* thisArmy);
     // Complete's large overload has a force-refresh flag absent from the DC
     // signature. The small wrapper passes zero; the spell animation path
     // passes one when an unchanged grid index still needs repainting.
-    void UpdateMouseGrid(int gridIndex, std::vector<long>& hexes,
+    // Before normalization (function): combatManager::UpdateMouseGrid.
+    void updateMouseGrid(int gridIndex, std::vector<long>& hexes,
                          unsigned char forceUpdate);
-    void UpdateMouseGrid(int gridIndex, int allowDuringAction);
+    // Before normalization (function): combatManager::UpdateMouseGrid.
+    void updateMouseGrid(int gridIndex, int allowDuringAction);
     // Fly's two Complete-era header folds. The retail viewport never scrolls,
     // so ScrollTo is supplied as a TU inline there; UpdateCombatArea expands
     // to UpdateScreen, matching drawing.cpp's retained inline copy.
-    bool ScrollTo(SLimitData extent, bool draw,
-                  bool doscroll_x, bool doscroll_y);
+    // Before normalization (function): combatManager::ScrollTo.
+    bool scrollTo(SLimitData extent, bool draw,
+                  bool doscrollX, bool doscrollY);
     // drawing.cpp:513, DC 0x83ec0. DC's body takes the extent by value;
     // Complete has no out-of-line copy, and the exact retail expansion in
     // UpdateMouseGrid proves its const-reference form here.
-    void UpdateCombatArea(const SLimitData& area);
+    // Before normalization (function): combatManager::UpdateCombatArea.
+    void updateCombatArea(const SLimitData& area);
     // Dreamcast's LF_FIELDLIST fixes this complete renderer band (entries
     // 197..212). Keep even the helpers which Complete inlines away: their
     // declaration order and source boundaries are compiler-state evidence.
-    void DrawFrame(unsigned char update,
-                   unsigned char bLimitCreatureEffect,
-                   unsigned char bLimitDraw, int iDelay,
-                   unsigned char bRefreshBackground,
-                   unsigned char bDoDelayTil);
+    // Before normalization (function): combatManager::DrawFrame.
+    void drawFrame(unsigned char update,
+                   // Before normalization (locals): bLimitCreatureEffect, bLimitDraw, iDelay,
+                   // bRefreshBackground, bDoDelayTil.
+                   unsigned char limitCreatureEffect,
+                   unsigned char limitDraw, int delay,
+                   unsigned char refreshBackground,
+                   unsigned char doDelayTil);
     // Complete extends the DC DrawArcher signature with a trailing palette-row
     // selector. The retail caller passes it immediately after isFlipped.
-    int DrawArcher(const CSprite* sprite, int sequence, int frame,
+    // Before normalization (function): combatManager::DrawArcher.
+    int drawArcher(const CSprite* sprite, int sequence, int frame,
                    int x, int y, SLimitData* limits,
                    unsigned char isFlipped, unsigned char colorRow);
     // 0x4951b0, the per-stack blit (drawing.cpp:1699, dc 0x85a48);
     // army::DrawToBuffer calls it, the body stays drawing's.
-    int DrawCreature(const CSprite* sprite, int sequence, int frame,
-                     int x, int y, struct SLimitData* psLimitData,
-                     int id, unsigned char isFlipped, int iColor);
-    int DrawCreatureAlpha(const CSprite* sprite, int sequence, int frame,
+    // Before normalization (function): combatManager::DrawCreature.
+    int drawCreature(const CSprite* sprite, int sequence, int frame,
+                     // Before normalization (locals): psLimitData, iColor.
+                     int x, int y, struct SLimitData* limitData,
+                     int id, unsigned char isFlipped, int color);
+    // Before normalization (function): combatManager::DrawCreatureAlpha.
+    int drawCreatureAlpha(const CSprite* sprite, int sequence, int frame,
                           int x, int y, SLimitData* limits,
-                          unsigned char isFlipped, int iColor);
-    int DrawCombatHero(const CSprite* sprite, int sequence, int frame,
+                          // Before normalization (locals): iColor.
+                          unsigned char isFlipped, int color);
+    // Before normalization (function): combatManager::DrawCombatHero.
+    int drawCombatHero(const CSprite* sprite, int sequence, int frame,
                        int x, int y, SLimitData* limits,
                        unsigned char isFlipped);
-    int DrawSpriteObject(const CSprite* sprite, int frame, int x, int y,
+    // Before normalization (function): combatManager::DrawSpriteObject.
+    int drawSpriteObject(const CSprite* sprite, int frame, int x, int y,
                          unsigned char isFlipped);
     // 0x4953b0, drawing.obj's one-off effect blit (drawing.cpp:1804,
     // dc 0x85d00); army::range_attack's two splash-effect loops call it
     // once per frame with (sprite, frame, x, y, 0, 0).
-    int DrawSpellEffect(const CSprite* sprite, int frame, int x, int y,
+    // Before normalization (function): combatManager::DrawSpellEffect.
+    int drawSpellEffect(const CSprite* sprite, int frame, int x, int y,
                         unsigned char isFlipped, unsigned char isAlpha);
-    int DrawWall(const Bitmap816* image, int x, int y, int width, int height,
+    // Before normalization (function): combatManager::DrawWall.
+    int drawWall(const Bitmap816* image, int x, int y, int width, int height,
                  int destX, int destY);
     // drawing.cpp:1991, DC 0x86098. DrawFrame supplies three wall bitmaps
     // and army::DrawToBuffer supplies the troop-count background; the
     // common three-argument clip/draw body at 0x4958e0 settles the identity.
-    int DrawObject(const Bitmap816* image, int x, int y);
-    int DrawMoatOverlay(int index);
-    void DrawOccupant(int index, int iDrawPriority, int bNumBoxOnly);
-    void DrawDeadOccupants(int index);
-    void DrawWallAt(int hexIndex, int rowOffset);
-    void DrawObstacleAt(int hexIndex);
-    int DrawCreatureAndHeroSubwindows();
+    // Before normalization (function): combatManager::DrawObject.
+    int drawObject(const Bitmap816* image, int x, int y);
+    // Before normalization (function): combatManager::DrawMoatOverlay.
+    int drawMoatOverlay(int index);
+    // Before normalization (function): combatManager::DrawOccupant.
+    // Before normalization (locals): iDrawPriority, bNumBoxOnly.
+    void drawOccupant(int index, int drawPriority, int numBoxOnly);
+    // Before normalization (function): combatManager::DrawDeadOccupants.
+    void drawDeadOccupants(int index);
+    // Before normalization (function): combatManager::DrawWallAt.
+    void drawWallAt(int hexIndex, int rowOffset);
+    // Before normalization (function): combatManager::DrawObstacleAt.
+    void drawObstacleAt(int hexIndex);
+    // Before normalization (function): combatManager::DrawCreatureAndHeroSubwindows.
+    int drawCreatureAndHeroSubwindows();
 
     // DC header inline (cmbtmgr.h:1460, dc 0x27ec8, 18 B). Its S_PUB32
     // identity is ?ValidHex@combatManager@@SA_NH@Z: static bool. No retail
@@ -1426,79 +1808,88 @@ public:
     // the loop index (which VC6 strength-reduces onto the same 30-byte
     // induction variable the cellData walk uses, so it reads as a
     // `test/jl` plus `cmp 0x15ea/jge` pair) and one on the adjacent hex.
-    static bool ValidHex(int iHex)
+    static bool validHex(int hex)
     {
-        return iHex >= 0 && iHex < COMBAT_GRID_CELLS;
+        return hex >= 0 && hex < COMBAT_GRID_CELLS;
     }
     // DC cmbtmgr.h:1466. Retail expands this selector in both sacrifice
     // lookup sites; no standalone body survives.
-    army* find_resurrection_target(SpellID spell, long group, long hex,
+    army* findResurrectionTarget(SpellID spell, long group, long hex,
                                    unsigned char creatureSpell)
     {
         if (spell == SPELL_ANIMATE_DEAD)
-            return find_animate_dead_target(group, hex);
-        return find_resurrection_target(group, hex, creatureSpell);
+            return findAnimateDeadTarget(group, hex);
+        return findResurrectionTarget(group, hex, creatureSpell);
     }
 
     // DC header inline (cmbtmgr.h:1473, dc 0x27edc, 32 B); SH4 proves the
     // typed target -> wallTargets[target].wall -> wallStrength chain.
     // Retail has no body because /Ob2 folds the same chain into its callers.
-    long get_wall_strength(TWallTargetId target) const
+    long getWallStrength(TWallTargetId target) const
     {
-        return wallStrength[wallTargets[target].wall];
+        return m_wallStrength[s_wallTargets[target].m_wall];
     }
     // DC header inline (cmbtmgr.h:1478, dc 0x27efc); the DC xref graph
     // lists it among DoCompAI's callees and retail carries no
     // out-of-line copy, so it is the /Ob2 inline-away case.
-    army* get_current_army() { return &armies[actingSide][actingSlot]; }
+    army* getCurrentArmy() { return &m_armies[m_actingSide][m_actingSlot]; }
     // E:\gamedcs\CmbtMgr.h:1488. Dreamcast proves the single-expression
     // helper and its four ordered bounds. Complete widens the window to the
     // retail 800x556 combat area; ProcessCombatMsg retains the source call
     // and VC6 expands it into the four retail comparisons.
-    unsigned char InCombatArea(int x, int y)
+    unsigned char inCombatArea(int x, int y)
     {
         return x >= 0 && x < 800 && y >= 0 && y < 556;
     }
 
-    void ComputeExtent(const CSprite* sprite, int sequence, int frame,
+    void computeExtent(const CSprite* sprite, int sequence, int frame,
                        int x, int y, SLimitData* limits, int isFlipped,
                        unsigned char saveBiggestExtent);
     // command.cpp:224 (0x474040) paces the frame loop and hands each frame
     // to drawing.cpp's CycleCombatScreen (0x4960d0).
-    void do_animations();
-    void CycleCombatScreen();
+    // Before normalization (function): combatManager::do_animations.
+    void doAnimations();
+    // Before normalization (function): combatManager::CycleCombatScreen.
+    void cycleCombatScreen();
     // Dreamcast drawing.cpp:1568 and spells.cpp:1643 both retain this
     // boundary. Complete likewise calls the same out-of-line body from
     // CastSpell's Remove Obstacle arm, so it is not drawing-TU-only.
-    int DrawObstacle(const hexcell& cell);
+    // Before normalization (function): combatManager::DrawObstacle.
+    int drawObstacle(const hexcell& cell);
     // The three missile animators. Every pointer parameter's constness
     // is read off the DC S_PUB32 mangling rather than guessed:
     // ?ShootMissile@combatManager@@QAAXHHHHPBMPBVCSprite@@@Z gives
     // `const float*` (PBM) and `const CSprite*` (PBVCSprite), and
     // ShootAnimatedMissile's PBQBD gives `const char* const*`.
-    void ShootBallisticMissile(int startX, int startY, int destX, int destY,
+    // Before normalization (function): combatManager::ShootBallisticMissile.
+    void shootBallisticMissile(int startX, int startY, int destX, int destY,
                                const CSprite* missile);
-    void ShootAnimatedMissile(int startX, int startY, int destX, int destY,
+    // Before normalization (function): combatManager::ShootAnimatedMissile.
+    void shootAnimatedMissile(int startX, int startY, int destX, int destY,
                               int nsprites, const float* angles,
-                              const char* const* file_names);
-    void ShootMissile(int startX, int startY, int destX, int destY,
+                              // Before normalization (locals): file_names.
+                              const char* const* fileNames);
+    // Before normalization (function): combatManager::ShootMissile.
+    void shootMissile(int startX, int startY, int destX, int destY,
                       const float* angles, const CSprite* missile);
     // Dreamcast S_PUB32 fixes this entire inline band: GetHexIndex and GridX
     // are static int helpers, RowIsOdd is a const bool member, and
     // InInvisibleColumn is static bool. Their CodeView lines also fix this
     // definition order (1500, 1506, 1519, 1525, 1537, 1542).
-    static int GetHexIndex(int x, int y)
+    // Before normalization (function): combatManager::GetHexIndex.
+    static int getHexIndex(int x, int y)
     {
         return y * COMBAT_GRID_ROW_STRIDE + x;
     }
-    bool RowIsOdd(int y) const
+    // Before normalization (function): combatManager::RowIsOdd.
+    bool rowIsOdd(int y) const
     {
         return (y & 1) != 0;
     }
     // Original: combatManager::GridY; CmbtMgr.h:1513, dc 0x27f34.
     // LF_MFUNCTION has no this type: this is a static header helper.
     static int gridY(int index) { return index / COMBAT_GRID_ROW_STRIDE; }
-    static int GridX(int index)
+    static int gridX(int index)
     {
         return index % COMBAT_GRID_ROW_STRIDE;
     }
@@ -1512,11 +1903,12 @@ public:
     // DC header inline (cmbtmgr.h:1525, dc 0x27f64). mark_teleport's
     // retail expansion retains the ValidHex bounds checks and the two
     // invisible edge columns, 0 and 16 of each 17-cell row.
-    static bool InInvisibleColumn(int index)
+    // Before normalization (function): combatManager::InInvisibleColumn.
+    static bool inInvisibleColumn(int index)
     {
-        if (!ValidHex(index))
+        if (!validHex(index))
             return false;
-        int column = GridX(index);
+        int column = gridX(index);
         return column == 0 || column == COMBAT_GRID_LAST_COLUMN;
     }
 
@@ -1524,9 +1916,10 @@ public:
     // (?GetCell@combatManager@@QAAAAVhexcell@@HH@Z); the roster text
     // renders every reference as a pointer, which is what this
     // declaration read before the S_PUB32 pass.
-    hexcell& GetCell(int x, int y)
+    // Before normalization (function): combatManager::GetCell.
+    hexcell& getCell(int x, int y)
     {
-        return cells[GetHexIndex(x, y)];
+        return m_cells[getHexIndex(x, y)];
     }
     // DC header inline (CmbtMgr.h:1542, dc 0x27fa0). Retail re-loads
     // obstacles_begin here rather than reusing the copy RemoveObstacle's
@@ -1534,7 +1927,8 @@ public:
     // NOT reproduce that (VC6 CSEs the second load away either way) -
     // it is kept because the DC roster attests the accessor, not as a
     // matching lever.
-    TObstacle& GetObstacle(int index) { return obstacles.begin[index]; }
+    // Before normalization (function): combatManager::GetObstacle.
+    TObstacle& getObstacle(int index) { return m_obstacles.m_begin[index]; }
     // 0x477e10, an unclaimed cmbtmgr-side body. NAME IS THE DREAMCAST
     // XREF GRAPH'S: the DC dump lists combatManager::TurnOffHighlighter
     // (command.obj, dc 0x6ed18) as one of DoCompAI's eight callees and
@@ -1543,13 +1937,18 @@ public:
     // action dispatchers, place_shooter, army::can_shoot, and the three
     // header inlines army::Is / get_current_army / the adventure-menu
     // caller). Its own claim waits for the TU that owns 0x477e10.
-    void TurnOffHighlighter(unsigned char restore);           // 0x477e10
+    // Before normalization (function): combatManager::TurnOffHighlighter.
+    void turnOffHighlighter(unsigned char restore);           // 0x477e10
     // Public command helpers also used by spells.cpp's CastSpell. Their
     // retail cross-TU calls refute the former command-only declaration view.
-    void CheckChangeSelector();                               // 0x477ac0
-    void TurnOffSelector(unsigned char drawIt);               // 0x477b60
-    void CheckChangeHighlighter(int currentIndex);            // 0x478040
-    void SetCombatGrid(int showEntireGrid, int showMouseHex, int gridLevel,
+    // Before normalization (function): combatManager::CheckChangeSelector.
+    void checkChangeSelector();                               // 0x477ac0
+    // Before normalization (function): combatManager::TurnOffSelector.
+    void turnOffSelector(unsigned char drawIt);               // 0x477b60
+    // Before normalization (function): combatManager::CheckChangeHighlighter.
+    void checkChangeHighlighter(int currentIndex);            // 0x478040
+    // Before normalization (function): combatManager::SetCombatGrid.
+    void setCombatGrid(int showEntireGrid, int showMouseHex, int gridLevel,
                        unsigned char drawNow);                 // 0x479fc0
     // 0x46a520 (68 B), army::simple_move's second call: it zeroes a
     // 187-byte per-hex row at this + 0x14031 with a `rep stosd` of 46
@@ -1563,7 +1962,9 @@ public:
     // this declaration alone already costs GetCommand 92.5714 ->
     // 92.5357 unconditionally (include-set class, bisected), so it is
     // scoped to army.cpp and the field waits for the same lane.
-    void mark_moving_army(const army* moving_army);           // 0x46a520
+    // Before normalization (function): combatManager::mark_moving_army.
+    // Before normalization (locals): moving_army.
+    void markMovingArmy(const army* movingArmy);           // 0x46a520
     // 0x465ad0 (0x443), already carved and carcassed in cmbtmgr.cpp.
     // army::range_attack (0x440160) short-circuits into it for an ARROW
     // TOWER, passing that stack's indexToAttack as the tower position -
@@ -1573,10 +1974,13 @@ public:
     // combatManager::TArcherID, an enum this header does not model yet,
     // so the declaration takes the int retail actually pushes and the
     // enum waits for the lane that reconstructs the body.
-    void KeepAttack(int iTowerPos);                           // 0x465ad0
+    // Before normalization (function): combatManager::KeepAttack.
+    // Before normalization (locals): iTowerPos.
+    void keepAttack(int towerPos);                           // 0x465ad0
     // Retail-only tower AI helper. Its body/callers prove the signature
     // but no roster row supplies a name, so it retains an address ordinal.
-    void Unnamed465f20();                                     // 0x465f20
+    // Before normalization (function): combatManager::Unnamed465f20.
+    void unnamed465f20();                                     // 0x465f20
     // The arrow tower's target selector, at the HEAD of ai.obj rather
     // than in cmbtmgr.obj: 0x41e190 is the first ai.cpp body after that
     // compiland's ten terrain.h bitset initializers, and the DC roster,
@@ -1584,8 +1988,10 @@ public:
     // ahead of retail through this region) and the body's own
     // find_AI_targets / get_loss_combat_value calls all name it
     // ChooseBallistaTarget with these three parameters.
-    int ChooseBallistaTarget(int target_group, int attack_skill,
-                             int average_damage);             // 0x41e190
+    // Before normalization (function): combatManager::ChooseBallistaTarget.
+    // Before normalization (locals): target_group, attack_skill, average_damage.
+    int chooseBallistaTarget(int targetGroup, int attackSkill,
+                             int averageDamage);             // 0x41e190
     // DC header inline (CmbtMgr.h:1555, dc 0x4cc74, 24 B) with an
     // out-of-line copy on that build and NONE on retail, so /Ob2 took
     // every retail site: army::do_multi_head_attack (0x440310) carries
@@ -1615,14 +2021,17 @@ public:
     // is one of the two retail-only rows. Name is a bootstrap invention.
     // 0x4693a0 is the adjacent retail-only side teardown: its callers pass
     // the defeated side, and it kills every non-tower stack in that row.
-    void Unnamed4693a0(int side);                             // 0x4693a0
-    void CheckRebirth();                                      // 0x469440
-    void MarkCreatureEffect(int group, int index)
+    // Before normalization (function): combatManager::Unnamed4693a0.
+    void unnamed4693a0(int side);                             // 0x4693a0
+    // Before normalization (function): combatManager::CheckRebirth.
+    void checkRebirth();                                      // 0x469440
+    // Before normalization (function): combatManager::MarkCreatureEffect.
+    void markCreatureEffect(int group, int index)
     {
-        if (armies[group][index].creatureType == army::ARMY_CREATURE_ARROW_TOWER)
-            mark_tower_army(&armies[group][index]);
+        if (m_armies[group][index].m_creatureType == army::ARMY_CREATURE_ARROW_TOWER)
+            markTowerArmy(&m_armies[group][index]);
         else
-            field_14000[group][index] = 1;
+            m_creatureEffect[group][index] = 1;
     }
     // 0x469a90, the combat log's own line. DC cmbtmgr.cpp:4731
     // (?damage_message@combatManager@@QAAXPBDJJPBVarmy@@J@Z) fixes both
@@ -1635,7 +2044,9 @@ public:
     // now DEFINES this body, can see its declarator without also taking
     // CheckRebirth and MarkCreatureEffect - two declarators it has no
     // use for and would pay the include-set threshold for.
-    void damage_message(const char* attacker, long attacker_qty,
+    // Before normalization (function): combatManager::damage_message.
+    // Before normalization (locals): attacker_qty.
+    void damageMessage(const char* attacker, long attackerQty,
                         long damage, const army* defender,
                         long deaths);                         // 0x469a90
     // 0x46a520 (68 B), the row above's only decoded writer and
@@ -1655,27 +2066,43 @@ public:
     // effect), spells.obj, E:\gamedcs\spells.cpp:5858, dc 0x15802c.
     // Close's existing `LoadSpellEffect(-1)` call is the sentinel arm
     // that just clears the cache. Body stays spells.cpp's; not claimed.
-    CSprite* LoadSpellEffect(int effect);                      // 0x5a92f0
+    // Before normalization (function): combatManager::LoadSpellEffect.
+    CSprite* loadSpellEffect(int effect);                      // 0x5a92f0
     // Both live in ai.cpp (DC ai.obj) and are claimed there.
-    long get_total_combat_value(long side, long lowest_attack,
-                                long lowest_defense,
-                                unsigned char include_cripples) const; // 0x41eac0
-    long compute_fire_shield_damage(long damage, const army* attacker,
+    // Before normalization (function): combatManager::get_total_combat_value.
+    // Before normalization (locals): lowest_attack, lowest_defense, include_cripples.
+    long getTotalCombatValue(long side, long lowestAttack,
+                                long lowestDefense,
+                                unsigned char includeCripples) const; // 0x41eac0
+    // Before normalization (function): combatManager::compute_fire_shield_damage.
+    long computeFireShieldDamage(long damage, const army* attacker,
                                     const army* target,
-                                    long target_hits);        // 0x422440
-    unsigned char can_cast_spells(long side,
-                                  unsigned char hero_spell);  // 0x41f890
-    void find_move_order(std::vector<army*>* result);         // 0x41f140
-    long get_attack_change(const army* current_army, const army* enemy,
+                                    // Before normalization (locals): target_hits.
+                                    long targetHits);        // 0x422440
+    // Before normalization (function): combatManager::can_cast_spells.
+    unsigned char canCastSpells(long side,
+                                  // Before normalization (locals): hero_spell.
+                                  unsigned char heroSpell);  // 0x41f890
+    // Before normalization (function): combatManager::find_move_order.
+    void findMoveOrder(std::vector<army*>* result);         // 0x41f140
+    // Before normalization (function): combatManager::get_attack_change.
+    // Before normalization (locals): current_army.
+    long getAttackChange(const army* currentArmy, const army* enemy,
                            const type_AI_combat_parameters* data);
                                                               // 0x41f3b0
-    unsigned char move_toward(const army* current_army, long target_hex,
-                              const long* enemy_attacks,
-                              unsigned char consider_waiting);  // 0x41f580
-    unsigned char choose_to_run(const army* our_army,
-                                const long* enemy_attacks,
-                                const searchArray* search_array); // 0x4208f0
-    void mark_firewalls(const army* current_army, long* enemy_attacks,
+    // Before normalization (function): combatManager::move_toward.
+    // Before normalization (locals): current_army, target_hex, enemy_attacks, consider_waiting.
+    unsigned char moveToward(const army* currentArmy, long targetHex,
+                              const long* enemyAttacks,
+                              unsigned char considerWaiting);  // 0x41f580
+    // Before normalization (function): combatManager::choose_to_run.
+    // Before normalization (locals): our_army, enemy_attacks, search_array.
+    unsigned char chooseToRun(const army* ourArmy,
+                                const long* enemyAttacks,
+                                const searchArray* currentSearchArray); // 0x4208f0
+    // Before normalization (function): combatManager::mark_firewalls.
+    // Before normalization (locals): current_army, enemy_attacks.
+    void markFirewalls(const army* currentArmy, long* enemyAttacks,
                         type_AI_combat_parameters* estimate);   // 0x4214f0
     // The moat twin of mark_firewalls, retail-only: 0x421590 walks the
     // eleven gMoatColumns entries and subtracts the moat's
@@ -1686,21 +2113,31 @@ public:
     // caller. NO Dreamcast roster row attests it, so the name follows
     // this TU's own mark_* family rather than importing a guess; the
     // body is reconstructed in ai.cpp.
-    void mark_moat(const army* current_army, long* enemy_attacks,
+    // Before normalization (function): combatManager::mark_moat.
+    // Before normalization (locals): current_army, enemy_attacks.
+    void markMoat(const army* currentArmy, long* enemyAttacks,
                    type_AI_combat_parameters* estimate);        // 0x421590
-    long choose_shooter_target(const army* current_army,
+    // Before normalization (function): combatManager::choose_shooter_target.
+    // Before normalization (locals): current_army, best_value.
+    long chooseShooterTarget(const army* currentArmy,
                                type_AI_combat_parameters* data,
-                               long* best_value);             // 0x41eb80
-    unsigned char choose_cyclops_action(long best_value, long side,
+                               long* bestValue);             // 0x41eb80
+    // Before normalization (function): combatManager::choose_cyclops_action.
+    // Before normalization (locals): best_value.
+    unsigned char chooseCyclopsAction(long bestValue, long side,
                                         type_AI_combat_parameters* estimate);
                                                               // 0x41eea0
-    unsigned char choose_melee_target(const army* current_army,
+    // Before normalization (function): combatManager::choose_melee_target.
+    // Before normalization (locals): current_army, action_value.
+    unsigned char chooseMeleeTarget(const army* currentArmy,
                                       unsigned char teleport,
-                                      long* action_value,
+                                      long* actionValue,
                                       type_AI_combat_parameters* estimate);
                                                               // 0x421680
-    unsigned char choose_spell_action(const army* current_army,
-                                      long* best_value,
+    // Before normalization (function): combatManager::choose_spell_action.
+    // Before normalization (locals): current_army, best_value.
+    unsigned char chooseSpellAction(const army* currentArmy,
+                                      long* bestValue,
                                       type_AI_combat_parameters* estimate);
                                                               // 0x421280
     // The searchArray is NON-const in both, where the Dreamcast roster
@@ -1709,12 +2146,16 @@ public:
     // non-const. Constness is invisible to the codegen, so the
     // divergence is spelling only - re-const both the day
     // searchArray::get_travel_time gains its `const`.
-    long get_area_effect(long side, const army* our_army,
-                         long marked_enemies,
+    // Before normalization (function): combatManager::get_area_effect.
+    // Before normalization (locals): our_army, marked_enemies.
+    long getAreaEffect(long side, const army* ourArmy,
+                         long markedEnemies,
                          const type_AI_combat_parameters* estimate);
                                                               // 0x41f920
-    void mark_friendly_armies(const army* our_army, long* enemy_attacks,
-                              long marked_enemies,
+    // Before normalization (function): combatManager::mark_friendly_armies.
+    // Before normalization (locals): our_army, enemy_attacks, marked_enemies.
+    void markFriendlyArmies(const army* ourArmy, long* enemyAttacks,
+                              long markedEnemies,
                               const type_AI_combat_parameters* estimate);
                                                               // 0x41fb60
     // `estimate` is NON-const where the Dreamcast roster prints
@@ -1722,24 +2163,32 @@ public:
     // searchArray pair above is: the body reaches
     // type_AI_combat_parameters::get_simple_attack_effect through it and
     // ai_tactical.h declares that method non-const. Spelling only.
-    void mark_multiheaded_enemy(const army* our_army, const army* enemy,
-                                long* enemy_attacks, long limit_value,
-                                searchArray* search_array,
+    // Before normalization (function): combatManager::mark_multiheaded_enemy.
+    // Before normalization (locals): our_army, enemy_attacks, limit_value, search_array.
+    void markMultiheadedEnemy(const army* ourArmy, const army* enemy,
+                                long* enemyAttacks, long limitValue,
+                                searchArray* currentSearchArray,
                                 type_AI_combat_parameters* estimate);
                                                               // 0x41fd60
     // Non-const `estimate` for the same reason mark_multiheaded_enemy
     // below is: this body calls that one and reaches
     // get_simple_attack_effect itself.
-    void mark_enemy_attacks(const army* our_army, long* enemy_attacks,
-                            long* dangerous_enemies,
+    // Before normalization (function): combatManager::mark_enemy_attacks.
+    // Before normalization (locals): our_army, enemy_attacks, dangerous_enemies.
+    void markEnemyAttacks(const army* ourArmy, long* enemyAttacks,
+                            long* dangerousEnemies,
                             type_AI_combat_parameters* estimate);
                                                               // 0x420260
-    unsigned char choose_creature_spell(const army* current_army,
-                                        long* best_value,
+    // Before normalization (function): combatManager::choose_creature_spell.
+    // Before normalization (locals): current_army, best_value.
+    unsigned char chooseCreatureSpell(const army* currentArmy,
+                                        long* bestValue,
                                         type_AI_combat_parameters* estimate);
                                                               // 0x420d20
-    unsigned char choose_resurrect_action(
-        const army* current_army, long* best_value,
+    // Before normalization (function): combatManager::choose_resurrect_action.
+    unsigned char chooseResurrectAction(
+        // Before normalization (locals): current_army, best_value.
+        const army* currentArmy, long* bestValue,
         type_AI_combat_parameters* estimate);                 // 0x421000
 private:
     // 0x420f00, the RETAIL-ONLY third spell chooser: same shape as the
@@ -1747,17 +2196,23 @@ private:
     // one creatureType 0x86 (Faerie Dragon) takes. The address is fixed
     // independently by that switch; the HD/cross-build symbol can then
     // supply the otherwise unattested private bool/reference declarator.
-    bool SOD_choose_faerie_dragon_spell(
-        const army* current_army, long& best_value,
+    // Before normalization (function): combatManager::SOD_choose_faerie_dragon_spell.
+    bool sodChooseFaerieDragonSpell(
+        // Before normalization (locals): current_army, best_value.
+        const army* currentArmy, long& bestValue,
         type_AI_combat_parameters& estimate);                 // 0x420f00
 public:
-    unsigned char choose_defense_hex(const army* current_army,
-                                     const army* client, long* best_hex,
-                                     long* open_hexes,
-                                     searchArray* search_array);
+    // Before normalization (function): combatManager::choose_defense_hex.
+    // Before normalization (locals): current_army, best_hex, open_hexes, search_array.
+    unsigned char chooseDefenseHex(const army* currentArmy,
+                                     const army* client, long* bestHex,
+                                     long* openHexes,
+                                     searchArray* currentSearchArray);
                                                               // 0x4205d0
-    unsigned char attempt_shooter_defense(
-        const army* current_army, searchArray* search_array,
+    // Before normalization (function): combatManager::attempt_shooter_defense.
+    unsigned char attemptShooterDefense(
+        // Before normalization (locals): current_army, search_array.
+        const army* currentArmy, searchArray* currentSearchArray,
         const type_AI_combat_parameters* estimate);           // 0x420760
     // 0x422b20 (632 B), NOT YET CLAIMED and NOT in any TU's carve span
     // here - `homm3 sema rva` files it under seg_0002. The DC roster
@@ -1773,10 +2228,12 @@ public:
     // non-const type_AI_combat_parameters::get_simple_attack_effect
     // (?...@@QAEJPBVarmy@@0EJ@Z) on it, and every caller in the tree
     // already passes a non-const object.
-    void find_AI_targets(long our_group, const army* current_army,
-                         unsigned char melee_only,
+    // Before normalization (function): combatManager::find_AI_targets.
+    // Before normalization (locals): our_group, current_army, melee_only, search_array.
+    void findAITargets(long ourGroup, const army* currentArmy,
+                         unsigned char meleeOnly,
                          type_AI_combat_parameters* data,
-                         searchArray* search_array);          // 0x422b20
+                         searchArray* currentSearchArray);          // 0x422b20
     // 0x422a40 (224 B), the row IMMEDIATELY BEFORE find_AI_targets on
     // both sides: DC's own ai.obj roster puts
     // GATED 2026-08-20: these two declarators are individually
@@ -1791,7 +2248,8 @@ public:
     // 0x422a40 is called from, with `this` = the combatManager and two
     // stack arguments. Declared so that constructor can spell the
     // call; not claimed, and the body belongs to the ai.obj lane.
-    void simulate_combat(long side, unsigned char simulated);  // 0x422a40
+    // Before normalization (function): combatManager::simulate_combat.
+    void simulateCombat(long side, unsigned char simulated);  // 0x422a40
     // The three rows between compute_fire_shield_damage (0x422440, dc
     // 0x27318) and simulate_combat, in the order DC's own ai.obj roster
     // gives them: simulate_melee_attack(5) at ai.cpp:2433 / dc 0x2746c,
@@ -1800,19 +2258,26 @@ public:
     // chain runs the same way round - 0x422a40 calls 0x422880 calls
     // 0x4227a0 calls 0x4224e0 - and the sizes track at 1.8x, 1.24x and
     // 1.26x of the SH4 bodies.
-    void simulate_melee_attack(army* current_army, long hex, army* target,
-                               long enemy_hex, long our_group);  // 0x4224e0
-    void simulate_melee_attack(army* current_army, army* target,
-                               long our_group);                  // 0x4227a0
-    long simulate_actions(std::vector<army*>& list, long i,
-                          long our_group);                       // 0x422880
+    // Before normalization (function): combatManager::simulate_melee_attack.
+    // Before normalization (locals): current_army, enemy_hex, our_group.
+    void simulateMeleeAttack(army* currentArmy, long hex, army* target,
+                               long enemyHex, long ourGroup);  // 0x4224e0
+    // Before normalization (function): combatManager::simulate_melee_attack.
+    void simulateMeleeAttack(army* currentArmy, army* target,
+                               long ourGroup);                  // 0x4227a0
+    // Before normalization (function): combatManager::simulate_actions.
+    long simulateActions(std::vector<army*>& list, long i,
+                          // Before normalization (locals): our_group.
+                          long ourGroup);                       // 0x422880
     // command.cpp:3038. The retail call at 0x477f3d occupies the exact
     // AICheckRetreat statement slot in Dreamcast CheckGetAIMove, and the
     // helper's other retail caller sits in ai.obj.
-    unsigned char AICheckRetreat();                            // 0x41e570
+    // Before normalization (function): combatManager::AICheckRetreat.
+    unsigned char aiCheckRetreat();                            // 0x41e570
     // AICheckRetreat's own siege census, the ai.obj row directly before
     // it (dc 0x23750); its only retail caller is that function.
-    unsigned char failed_siege();                              // 0x41e440
+    // Before normalization (function): combatManager::failed_siege.
+    unsigned char failedSiege();                              // 0x41e440
     // 0x5a93a0, the row IMMEDIATELY AFTER get_elemental_type (0x5a9360)
     // in spells.obj - which is exactly where DC's own spells.cpp
     // roster puts combatManager::AbleToSummonElemental (spells.cpp:5912,
@@ -1821,8 +2286,10 @@ public:
     // consider_spell (0x43bb20) gates its whole summon arm on it, with
     // the spell and this caster's side on the stack. Declared for that
     // call site; not claimed.
-    unsigned char AbleToSummonElemental(SpellID spell, long side);
-    void CheckGetAIMove();                                    // 0x477ee0
+    // Before normalization (function): combatManager::AbleToSummonElemental.
+    unsigned char ableToSummonElemental(SpellID spell, long side);
+    // Before normalization (function): combatManager::CheckGetAIMove.
+    void checkGetAIMove();                                    // 0x477ee0
     // The two spells.obj leaves ai_tactical's get_chain_lightning_value
     // (0x437190) drives the chain with. Both are named by the DC xref
     // graph, which records exactly these two as callees of that body,
@@ -1836,63 +2303,97 @@ public:
     // `effected` row has not already recorded. Answers a gridIndex, or -1
     // when nothing qualifies. Parameter names are from the reconstructed
     // body (0x5a61f0 at 91.10%), not from the xref graph's guess.
-    long GetNextChainLightningTarget(const army* last_target,
-                                     long use_random);         // 0x5a61f0
-    void ClearEffects();                                      // 0x5a66b0
-    unsigned char has_ranged_advantage(
+    // Before normalization (function): combatManager::GetNextChainLightningTarget.
+    // Before normalization (locals): last_target, use_random.
+    long getNextChainLightningTarget(const army* lastTarget,
+                                     long useRandom);         // 0x5a61f0
+    // Before normalization (function): combatManager::ClearEffects.
+    void clearEffects();                                      // 0x5a66b0
+    // Before normalization (function): combatManager::has_ranged_advantage.
+    unsigned char hasRangedAdvantage(
         type_AI_combat_parameters* data);                     // 0x420a80
     // command.cpp calls this ai.obj leaf from CheckGetAIMove.
-    unsigned char DoSpellAI();                                // 0x422da0
-    unsigned char should_stay_in_castle(
+    // Before normalization (function): combatManager::DoSpellAI.
+    unsigned char doSpellAI();                                // 0x422da0
+    // Before normalization (function): combatManager::should_stay_in_castle.
+    unsigned char shouldStayInCastle(
         type_AI_combat_parameters* estimate);                 // 0x4213f0
 private:
     // drawing.cpp:178. Private in every Dreamcast LF_FIELDLIST copy and
     // immediately follows should_stay_in_castle there; the retail call from
     // CombatMessage proves that Complete retained the source member too.
-    bool show_creature_spell_error(char* buffer,
+    // Before normalization (function): combatManager::show_creature_spell_error.
+    bool showCreatureSpellError(char* buffer,
                                    const army* currentArmy);
-    void show_eagle_eye(int winning_group, int dialog_timeout);
-    void show_looted_artifacts(std::vector<type_artifact>& looted_artifacts,
-                               int dialog_timeout);
+    // Before normalization (function): combatManager::show_eagle_eye.
+    // Before normalization (locals): winning_group, dialog_timeout.
+    void showEagleEye(int winningGroup, int dialogTimeout);
+    // Before normalization (function): combatManager::show_looted_artifacts.
+    // Before normalization (locals): looted_artifacts, dialog_timeout.
+    void showLootedArtifacts(std::vector<type_artifact>& lootedArtifacts,
+                               int dialogTimeout);
 public:
-    void place_shooter(const army* current_army);             // 0x422060
-    void choose_shooter_action(const army* current_army,
+    // Before normalization (function): combatManager::place_shooter.
+    // Before normalization (locals): current_army.
+    void placeShooter(const army* currentArmy);             // 0x422060
+    // Before normalization (function): combatManager::choose_shooter_action.
+    // Before normalization (locals): current_army.
+    void chooseShooterAction(const army* currentArmy,
                                unsigned char simulated, long side);
                                                               // 0x41f060
-    long choose_melee_action(const army* current_army, unsigned char teleport,
+    // Before normalization (function): combatManager::choose_melee_action.
+    // Before normalization (locals): current_army.
+    long chooseMeleeAction(const army* currentArmy, unsigned char teleport,
                              unsigned char simulated, long side);
                                                               // 0x421f80
-    void DoCompAI(int whichGroup);                            // 0x4221f0
-    void berserk_attack(army* current_army, const army* target);
+    // Before normalization (function): combatManager::DoCompAI.
+    void doCompAI(int whichGroup);                            // 0x4221f0
+    // Before normalization (function): combatManager::berserk_attack.
+    // Before normalization (locals): current_army.
+    void berserkAttack(army* currentArmy, const army* target);
                                                               // 0x4222c0
     // command.obj's leaf (0x4763f0, claimed in src/command.cpp); ai.cpp
     // and findpath.cpp are both located callers and both reach it
     // through gpCombatManager with (army::combatSide, hex).
-    unsigned char is_outside_placement_boundry(int group, int index);
+    // Before normalization (function): combatManager::is_outside_placement_boundry.
+    unsigned char isOutsidePlacementBoundry(int group, int index);
                                                               // 0x4763f0
     // DC spells.cpp:2463; mark_teleport independently locates the retail
     // caller target at 0x5a3700 with (army*, hex).
-    unsigned char is_valid_teleport(const army* this_army, long new_hex);
-    unsigned char valid_wall_target(TWallTargetId wall);       // 0x476440
-    unsigned char automate_catapult();                         // 0x473c00
+    // Before normalization (function): combatManager::is_valid_teleport.
+    // Before normalization (locals): this_army, new_hex.
+    unsigned char isValidTeleport(const army* thisArmy, long newHex);
+    // Before normalization (function): combatManager::valid_wall_target.
+    unsigned char validWallTarget(TWallTargetId wall);       // 0x476440
+    // Before normalization (function): combatManager::automate_catapult.
+    unsigned char automateCatapult();                         // 0x473c00
     // 0x474bf0. `ret 4` proves the retail body takes the acting stack
     // that the DC roster's nullary prototype omits; the body reaches
     // it at +0x34 (creatureType), +0xf4 (combatSide) and +0x288
     // (hypnotizeFlag) and hands it to army::get_owner.
-    unsigned char is_computer_action(const army* current_army);
+    // Before normalization (function): combatManager::is_computer_action.
+    // Before normalization (locals): current_army.
+    unsigned char isComputerAction(const army* currentArmy);
     // DC publishes void(int,int,int); Complete's x86 body changes the result
     // to an unsigned-byte "pointer changed" flag. Its retail field/call graph
     // fixes the three arguments as mouse x, mouse y and combat hex.
-    unsigned char CheckSetMouseDirection(int x, int y, int hex);
+    // Before normalization (function): combatManager::CheckSetMouseDirection.
+    unsigned char checkSetMouseDirection(int x, int y, int hex);
     // 0x47a100. Claims the first free (or expendable) slot on a side,
     // initialises the stack there and optionally fizzles it in.
-    army* AddArmy(int iSide, int iMonType, int iMonQty, int iGridIndex,
-                  int iSetAttributes, int bFizzleItIn);
+    // Before normalization (function): combatManager::AddArmy.
+    // Before normalization (locals): iSide, iMonType, iMonQty, iGridIndex, iSetAttributes,
+    // bFizzleItIn.
+    army* addArmy(int side, int monType, int monQty, int gridIndex,
+                  int setAttributes, int fizzleItIn);
     // 0x476490 / 0x476bd0, the command.obj pair: GetCommand answers
     // "what would clicking this hex do", DoCommand performs it.
-    int GetCommand(int newIndex);
-    void DoCommand(int command);
-    int RightClick(int newIndex);                              // 0x4769c0
+    // Before normalization (function): combatManager::GetCommand.
+    int getCommand(int newIndex);
+    // Before normalization (function): combatManager::DoCommand.
+    void doCommand(int command);
+    // Before normalization (function): combatManager::RightClick.
+    int rightClick(int newIndex);                              // 0x4769c0
     // 0x59e900, spells.obj. LOCATED 2026-08-13 from DoCommand's
     // spell-book case, which calls it with `this` only, compares the
     // result against -1 and forwards it straight into InitiateSpell.
@@ -1901,23 +2402,29 @@ public:
     // InitiateSpell (spells.cpp:176), and retail's 847-byte row at
     // 0x59e900 ends exactly where the already-claimed InitiateSpell
     // begins at 0x59ec50 - the same order with no gap.
-    int ViewSpells();
+    // Before normalization (function): combatManager::ViewSpells.
+    int viewSpells();
     // 0x47a380. LOCATED from RightClick, which calls it with the literal
     // 1 for the three wall-target hexes; the DC command.obj roster puts
     // ViewCastleBallista (command.cpp:3932) between AddArmy (3867) and
     // HandleCombatPlayerDrop (3953), and retail's rows run 0x47a100
     // AddArmy, 0x47a2d0 (get_tower_string), 0x47a380 - the same order.
-    void ViewCastleBallista(int bIsQuickInfo);
+    // Before normalization (function): combatManager::ViewCastleBallista.
+    // Before normalization (locals): bIsQuickInfo.
+    void viewCastleBallista(int isQuickInfo);
     // 0x46a460, RETAIL-ONLY - the DC roster has nothing between
     // CalculateGainedExperience and IsQuickCombat, where this 57-byte row
     // sits. It switches on the tower's grid index (254 / 251 / 255) and
     // sets the matching field_1402c..e latch. Name is a BOOTSTRAP
     // INVENTION; only the behaviour is proven.
-    void mark_tower_army(const army* tower);
+    // Before normalization (function): combatManager::mark_tower_army.
+    void markTowerArmy(const army* tower);
     // 0x495bf0, carried by drawing.obj (drawing.cpp:2093) and located
     // there already; declared here because AddArmy calls it.
-    void ComputeMaxExtent();
-    long get_surrender_cost();                                 // 0x477a00
+    // Before normalization (function): combatManager::ComputeMaxExtent.
+    void computeMaxExtent();
+    // Before normalization (function): combatManager::get_surrender_cost.
+    long getSurrenderCost();                                 // 0x477a00
     // spells.obj leaves, both `ret 0x18` (six stack args). Names are
     // the DC roster's (spells.cpp:5086 / 5419); the retail addresses
     // come from ai_tactical's get_damage_value (0x436e30), which calls
@@ -1931,12 +2438,16 @@ public:
     // is EIGHT parameters where retail is `ret 0x1c` + `this` - the
     // same eight - and its source line 5065 sits just before
     // ModifySpellDamage's 5086, which is the retail order exactly.
-    long ComputeSpellDamage(SpellID spell, long spell_power, long mastery,
-                            hero* casting_hero, hero* target_hero,
+    // Before normalization (function): combatManager::ComputeSpellDamage.
+    // Before normalization (locals): spell_power, casting_hero, target_hero.
+    long computeSpellDamage(SpellID spell, long spellPower, long mastery,
+                            hero* castingHero, hero* targetHero,
                             const army* target,
                             unsigned char simulated);          // 0x5a7890
-    long ModifySpellDamage(long base_damage, SpellID spell,
-                           const hero* casting_hero, const hero* target_hero,
+    // Before normalization (function): combatManager::ModifySpellDamage.
+    // Before normalization (locals): base_damage, casting_hero, target_hero.
+    long modifySpellDamage(long baseDamage, SpellID spell,
+                           const hero* castingHero, const hero* targetHero,
                            const army* target,
                            unsigned char simulated);          // 0x5a78e0
     // THE spells.obj-ONLY DECLARATION BLOCK. Everything in here is
@@ -1955,7 +2466,8 @@ public:
     // the stack behind a thiscall `ret 0xc`. It reads the cast spell's
     // schoolBits and, for the first school the target is protected
     // against, scales the damage by that school's factor.
-    long ModifySpellDamageForSpells(long damage, SpellID spell,
+    // Before normalization (function): combatManager::ModifySpellDamageForSpells.
+    long modifySpellDamageForSpells(long damage, SpellID spell,
                                     const army* target);       // 0x5a7bb0
     // 0x5a39c0 and its 0x5a40d0 driver. HasValidSpellTarget sweeps the
     // 187-cell grid and answers whether ANY cell passes ValidSpellTarget;
@@ -1965,21 +2477,28 @@ public:
     // (spells.cpp:2645 / 3078); `mastery` is their TSkillMastery,
     // spelled long here for the same reason mark_area_effect's is - the
     // typedef lives in the header that includes this one.
-    unsigned char ValidSpellTarget(SpellID spellId, long mastery,
-                                   long targetIndex, long casting_side,
-                                   unsigned char first_target,
-                                   long creature_spell); // 0x5a39c0
-    unsigned char HasValidSpellTarget(SpellID spellId, long mastery,
-                                      long casting_side,
-                                      unsigned char first_target,
-                                      long creature_spell); // 0x5a40d0
+    // Before normalization (function): combatManager::ValidSpellTarget.
+    unsigned char validSpellTarget(SpellID spellId, long mastery,
+                                   // Before normalization (locals): casting_side, first_target,
+                                   // creature_spell.
+                                   long targetIndex, long castingSide,
+                                   unsigned char firstTarget,
+                                   long creatureSpell); // 0x5a39c0
+    // Before normalization (function): combatManager::HasValidSpellTarget.
+    unsigned char hasValidSpellTarget(SpellID spellId, long mastery,
+                                      // Before normalization (locals): casting_side,
+                                      // first_target, creature_spell.
+                                      long castingSide,
+                                      unsigned char firstTarget,
+                                      long creatureSpell); // 0x5a40d0
     // 0x5a7320, the hexcell-taking one of the DC roster's two
     // remove_corpse overloads (spells.cpp:4815; the other, 4838, takes an
     // army* and has no located retail body). Like
     // ModifySpellDamageForSpells above it never touches `this` and is
     // still a member - retail reads all three arguments off the stack
     // behind a thiscall `ret 0xc`, where a static would be __fastcall.
-    void remove_corpse(hexcell* hex, long side, long slot);    // 0x5a7320
+    // Before normalization (function): combatManager::remove_corpse.
+    void removeCorpse(hexcell* hex, long side, long slot);    // 0x5a7320
     // 0x5a7390, the Pit Lord's raise. The DC prototype (spells.cpp:4850)
     // names the pair caster / target, and the body fixes both roles: the
     // resurrection size is priced off the FIRST argument
@@ -1987,17 +2506,22 @@ public:
     // new stack's side off ITS controller, while every grid field -
     // gridIndex, combatSide, bitIndex, originalIndex - is read off the
     // second.
-    void demonic_resurrection(const army* caster, army* target); // 0x5a7390
+    // Before normalization (function): combatManager::demonic_resurrection.
+    void demonicResurrection(const army* caster, army* target); // 0x5a7390
     // 0x5a7560, carcass in spells.cpp; declared here because
     // army::cast_spell's Archangel arm calls it (the carcass stub is a
     // good-enough callee - the reloc pairs).
-    void Resurrect(army* target_army, long hit_points_resurrected,
+    // Before normalization (function): combatManager::Resurrect.
+    // Before normalization (locals): target_army, hit_points_resurrected, target_hex,
+    // casting_hero.
+    void resurrect(army* targetArmy, long hitPointsResurrected,
                    unsigned char temporary);
     // Dreamcast spells.cpp:4984. Complete has no separate retail body:
     // VC6 expands this source helper into CastSpell's shared
     // Resurrection/Animate Dead arm.
-    inline void Resurrect(SpellID spell, int target_hex, int power,
-                          int mastery, const hero* casting_hero);
+    // Before normalization (function): combatManager::Resurrect.
+    inline void resurrect(SpellID spell, int targetHex, int power,
+                          int mastery, const hero* castingHero);
     // The three cells a WALL spell occupies, in the order
     // ValidSpellTarget (0x5a39c0) walks them: the aimed hex, then the
     // one a row above it (with a parity nudge that keeps the wall
@@ -2016,21 +2540,26 @@ public:
     // damage the ones that take it. The DC prototype (spells.cpp:3324)
     // supplies the four parameter names; `mastery` is spelled long here
     // for the reason mark_area_effect's is.
-    void AreaEffect(long targetCell, SpellID iSpellType, long mastery,
+    // Before normalization (function): combatManager::AreaEffect.
+    // Before normalization (locals): iSpellType.
+    void areaEffect(long targetCell, SpellID spellType, long mastery,
                     long power);                               // 0x5a4970
     // drawing.obj's HEX-taking SpellEffect overload (drawing.cpp:2593,
     // dc 0x8703c, retail 0x496a10), declared here because AreaEffect
     // calls it and the army*-taking sibling already sits behind the
     // morale view above. The body stays drawing.cpp's.
-    void SpellEffect(int effect, int hex, int iDelay,
-                     unsigned char leave_last_frame);          // 0x496a10
+    // Before normalization (function): combatManager::SpellEffect.
+    void spellEffect(int effect, int hex, int delay,
+                     unsigned char leaveLastFrame);          // 0x496a10
     // 0x5a66d0, the mass-spell applier ClearEffects (0x5a66b0) clears
     // `effected` for. It rolls SpellCastWorkChance separately per stack
     // on both sides and records which ones took the spell.
-    void SetMassSpellInfluence(const hero* casting_hero, SpellID spell,
+    // Before normalization (function): combatManager::SetMassSpellInfluence.
+    // Before normalization (locals): casting_hero, casting_side, creature_spell.
+    void setMassSpellInfluence(const hero* castingHero, SpellID spell,
                                long level, long power,
-                               long casting_side,
-                               long creature_spell);  // 0x5a66d0
+                               long castingSide,
+                               long creatureSpell);  // 0x5a66d0
     // The lightning-bolt animator, all four bodies. All take the SBolt
     // record declared above; the DC prototypes (spells.cpp:3572 / 3702 /
     // 3864 / 3940) supply every parameter name, and AddBolt's thirteen
@@ -2045,15 +2574,18 @@ public:
     // 0x5a6c70, the clone. The DC prototype (spells.cpp:4576) supplies
     // both parameter names; `level` is DEAD in the retail body, which
     // reads neither its slot nor anything derived from it.
-    void MirrorImage(int targetIndex, int level);               // 0x5a6c70
+    // Before normalization (function): combatManager::MirrorImage.
+    void mirrorImage(int targetIndex, int level);               // 0x5a6c70
     // 0x5a6360, the bouncing bolt. The DC prototype (spells.cpp:4255)
     // supplies all three parameter names; `level` indexes both the
     // spell's mastery_bonus row and the per-mastery bounce table.
-    void ChainLightning(int index, int level, int power);       // 0x5a6360
+    // Before normalization (function): combatManager::ChainLightning.
+    void chainLightning(int index, int level, int power);       // 0x5a6360
     // 0x5a4bc0, the field-wide burn. The DC prototype (spells.cpp:3389)
     // supplies both parameter names; `level` is what indexes the spell's
     // mastery_bonus row, i.e. it is the mastery the cast landed at.
-    void Armageddon(int level, int power);                     // 0x5a4bc0
+    // Before normalization (function): combatManager::Armageddon.
+    void armageddon(int level, int power);                     // 0x5a4bc0
     // The last three spells.obj bodies this header had no declarator for.
     // Every parameter name is the DC prototype's (spells.cpp:4424 / 4705
     // / 5164); the three types the DC roster leaves open are read off the
@@ -2067,45 +2599,68 @@ public:
     //     creature domain.
     //   * Earthquake's `level` indexes akSpellTraits' mastery_bonus row
     //     for the number of wall sections to bring down.
-    void ShowMassSpell(const unsigned char (*bEffected)[20], int spellEffect,
-                       unsigned char bShowWince);              // 0x5a67c0
-    void SummonElemental(SpellID spell, TCreatureType iMonType,
-                         int iSpellPower, int level);          // 0x5a7080
-    void Earthquake(int level);                                // 0x5a7c80
-    void ResetBoltAngle(SBolt* psBolt);                        // 0x5a5260
-    void DrawBolt(SBolt* psBolt, int iDrawLength);             // 0x5a5440
-    void AddBolt(SBolt* psBolt, int iSourceX, int iSourceY, int iDestX,
-                 int iDestY, int iSplitFrequency, int iStartThickness,
-                 int iEndThickness, int iColor, int iAngleDistortMin,
-                 int iAngleDistortMax, int iSegmentLength,
-                 int bDistortAlways);                          // 0x5a5a90
+    // Before normalization (function): combatManager::ShowMassSpell.
+    // Before normalization (locals): bEffected, bShowWince.
+    void showMassSpell(const unsigned char (*effected)[20], int spellEffect,
+                       unsigned char showWince);              // 0x5a67c0
+    // Before normalization (function): combatManager::SummonElemental.
+    // Before normalization (locals): iMonType, iSpellPower.
+    void summonElemental(SpellID spell, TCreatureType monType,
+                         int spellPower, int level);          // 0x5a7080
+    // Before normalization (function): combatManager::Earthquake.
+    void earthquake(int level);                                // 0x5a7c80
+    // Before normalization (function): combatManager::ResetBoltAngle.
+    // Before normalization (locals): psBolt.
+    void resetBoltAngle(SBolt* bolt);                        // 0x5a5260
+    // Before normalization (function): combatManager::DrawBolt.
+    // Before normalization (locals): psBolt, iDrawLength.
+    void drawBolt(SBolt* bolt, int drawLength);             // 0x5a5440
+    // Before normalization (function): combatManager::AddBolt.
+    // Before normalization (locals): psBolt, iSourceX, iSourceY, iDestX, iDestY,
+    // iSplitFrequency, iStartThickness, iEndThickness, iColor, iAngleDistortMin,
+    // iAngleDistortMax, iSegmentLength, bDistortAlways.
+    void addBolt(SBolt* bolt, int sourceX, int sourceY, int destX,
+                 int destY, int splitFrequency, int startThickness,
+                 int endThickness, int color, int angleDistortMin,
+                 int angleDistortMax, int segmentLength,
+                 int distortAlways);                          // 0x5a5a90
     // 0x59fde0 (68 B), the Enchanter's shot resolution army::
     // animate_missile hands its volley to instead of a missile flight
     // (three stack arguments: the launch point and the target stack).
     // ORDINAL PLACEHOLDER name - no roster row reaches it; the body
     // stays spells.obj's to reconstruct.
-    void Unnamed59FDE0(int x, int y, army* target);
-    void DoBolt(int bHandleResets, int iSourceX, int iSourceY, int iDestX,
-                int iDestY, int iSplitFrequency, int iMaxSplitLength,
-                int iStartThickness, int iEndThickness, int iColor,
-                int iAngleDistortMin, int iAngleDistortMax,
-                int iSegmentLength, int iDrawsPerSegment,
-                int bDistortAlways, int iDelay,
-                int bFlashLighten);                            // 0x5a5c20
+    // Before normalization (function): combatManager::Unnamed59FDE0.
+    void unnamed59FDE0(int x, int y, army* target);
+    // Before normalization (function): combatManager::DoBolt.
+    // Before normalization (locals): bHandleResets, iSourceX, iSourceY, iDestX, iDestY,
+    // iSplitFrequency, iMaxSplitLength, iStartThickness, iEndThickness, iColor,
+    // iAngleDistortMin, iAngleDistortMax, iSegmentLength, iDrawsPerSegment, bDistortAlways,
+    // iDelay, bFlashLighten.
+    void doBolt(int handleResets, int sourceX, int sourceY, int destX,
+                int destY, int splitFrequency, int maxSplitLength,
+                int startThickness, int endThickness, int color,
+                int angleDistortMin, int angleDistortMax,
+                int segmentLength, int drawsPerSegment,
+                int distortAlways, int delay,
+                int flashLighten);                            // 0x5a5c20
     // 0x5a8690 (701 B), the ROLLOVER line the spell cursor writes while
     // a target is being picked - it is the one spells.obj body that
     // never resolves anything, only names what the aimed hex would hit.
     // The DC prototype (spells.cpp:5674) supplies all three parameter
     // names; `spellId` is spelled SpellID rather than the roster's int
     // because the body's whole shape is a jump table over the enum.
-    void SpellTargetMessage(SpellID spellId, int targetIndex,
-                            unsigned char first_target);       // 0x5a8690
+    // Before normalization (function): combatManager::SpellTargetMessage.
+    void spellTargetMessage(SpellID spellId, int targetIndex,
+                            // Before normalization (locals): first_target.
+                            unsigned char firstTarget);       // 0x5a8690
     // The refusal text display_failure_reason shows; DC spells.cpp:1807
     // returns it by value, and retail's callers pass the hidden return
     // slot straight through to format_string.
-    std::string get_failure_reason(SpellID spell, const char* msg,
+    // Before normalization (function): combatManager::get_failure_reason.
+    std::string getFailureReason(SpellID spell, const char* msg,
                                    long hex);                  // 0x5a2880
-    void display_failure_reason(SpellID spell, const char* msg,
+    // Before normalization (function): combatManager::display_failure_reason.
+    void displayFailureReason(SpellID spell, const char* msg,
                                 long hex);                     // 0x5a2c60
     // The two spells.obj area collectors that fill a vector of HEXES -
     // the inner halves of the two vector<army*> collectors declared far
@@ -2113,22 +2668,27 @@ public:
     // element type is what separates the overloads; the DC roster names
     // both pairs identically (spells.cpp:3159/3185 for these two,
     // 3227/3265 for the army-vector pair).
-    void mark_area_effect(long hex, long radius,
-                          unsigned char include_center,
+    // Before normalization (function): combatManager::mark_area_effect.
+    void markAreaEffect(long hex, long radius,
+                          // Before normalization (locals): include_center.
+                          unsigned char includeCenter,
                           std::vector<long>& hexes);           // 0x5a4170
-    void mark_berserk_area_effect(long hex, long mastery,
+    // Before normalization (function): combatManager::mark_berserk_area_effect.
+    void markBerserkAreaEffect(long hex, long mastery,
                                   std::vector<long>& hexes);   // 0x5a4430
     // DC spells.cpp:3214; expanded into HandleCastWallSpell, no retail
     // body of its own.
-    void mark_wall_area_effect(long target_hex, TSkillMastery mastery,
+    // Before normalization (function): combatManager::mark_wall_area_effect.
+    // Before normalization (locals): target_hex.
+    void markWallAreaEffect(long targetHex, TSkillMastery mastery,
                                std::vector<long>& result);
     // CodeView declares the axial helpers static and defines them in
     // spells.cpp:3103/3121/3138 using the Win32 POINT record.
-    static tagPOINT hex_to_point(long hex);
-    static long point_to_hex(tagPOINT point);
-    static long get_distance(tagPOINT start, tagPOINT stop);
+    static tagPOINT hexToPoint(long hex);
+    static long pointToHex(tagPOINT point);
+    static long getDistance(tagPOINT start, tagPOINT stop);
     // The integer-hex overload belongs to cmbtmgr.cpp (retail 0x469670).
-    static long get_distance(long start, long stop);
+    static long getDistance(long start, long stop);
     // REFUTED 2026-08-20 - this comment used to open "the last parameter is
     // NOT a char", resting on get_damage_value materialising
     // `creature_spell != 0` with xor/setne into a full dword before pushing
@@ -2151,10 +2711,12 @@ public:
     // also how the two callers divide: SpellCastWorks pins first_target to
     // 1 and passes its own redirected; ValidSpellTargetArmy (0x5a3c80)
     // pins redirected to 0 and passes its own first_target.
-    float SpellCastWorkChance(SpellID spell, long side, const army* target,
+    // Before normalization (function): combatManager::SpellCastWorkChance.
+    float spellCastWorkChance(SpellID spell, long side, const army* target,
                               unsigned char redirected,
-                              unsigned char first_target,
-                              long creature_spell);   // 0x5a8090
+                              // Before normalization (locals): first_target, creature_spell.
+                              unsigned char firstTarget,
+                              long creatureSpell);   // 0x5a8090
     // 0x5a8640, CORRECTED AGAIN 2026-08-20 and now BYTE-PROVEN: the body
     // at 0x5a8640 is reconstructed exact in src/spells.cpp. This line has
     // carried two wrong addresses. 0x5a8950 went first (refuted by arity -
@@ -2166,10 +2728,12 @@ public:
     // rolls `Random(1, 100)` against the chance, which is what casting
     // "working" means; the spells.obj order-map puts it at spells.cpp:5660
     // where the DC roster's SpellCastWorks is, and the exact match seals it.
-    unsigned char SpellCastWorks(SpellID spell, long side,
+    // Before normalization (function): combatManager::SpellCastWorks.
+    unsigned char spellCastWorks(SpellID spell, long side,
                                  const army* target,
                                  unsigned char redirected,
-                                 long creature_spell);         // 0x5a8640
+                                 // Before normalization (locals): creature_spell.
+                                 long creatureSpell);         // 0x5a8640
     // spells.obj leaves used by ai_tactical's sacrifice scan. The retail
     // call sites fix these exact stack arities; Dreamcast supplies names and
     // parameter types.
@@ -2178,22 +2742,27 @@ public:
     // SpellID rather than the roster's `int` so the forward into
     // SpellCastWorkChance needs no cast into the enum domain; every caller
     // already passes a SpellID.
-    unsigned char ValidSpellTargetArmy(SpellID spellId, int castingSide,
+    // Before normalization (function): combatManager::ValidSpellTargetArmy.
+    unsigned char validSpellTargetArmy(SpellID spellId, int castingSide,
                                        const army* targetArmy,
                                        unsigned char firstTarget,
                                        long creatureSpell);    // 0x5a3c80
-    army* find_resurrection_target(int armyGroup, int targetIndex,
+    // Before normalization (function): combatManager::find_resurrection_target.
+    army* findResurrectionTarget(int armyGroup, int targetIndex,
                                    long creatureSpell);
-    army* find_animate_dead_target(int armyGroup, int targetIndex);
+    // Before normalization (function): combatManager::find_animate_dead_target.
+    army* findAnimateDeadTarget(int armyGroup, int targetIndex);
     // 0x5a3950, the selector in front of the two rows above: it bounds the
     // hex against the 187-cell grid, routes Resurrection and the gated
     // Sacrifice arm to find_resurrection_target and Animate Dead to
     // find_animate_dead_target, and otherwise answers cells[hex].get_army().
     // Declared beside the leaves it calls rather than at the end of the
     // class because this run of spells.obj leaves is already unconditional.
-    army* find_spell_target(SpellID spell, long side, long hex,
-                            unsigned char first_target,
-                            long creature_spell);   // 0x5a3950
+    // Before normalization (function): combatManager::find_spell_target.
+    army* findSpellTarget(SpellID spell, long side, long hex,
+                            // Before normalization (locals): first_target, creature_spell.
+                            unsigned char firstTarget,
+                            long creatureSpell);   // 0x5a3950
     // 0x5a3e40 (269 B), the Pit Lord's own lookup - the fourth spells.obj
     // leaf and the sibling of find_resurrection_target 0x5a3cc0 (373 B)
     // two lines above. LOCATED 2026-08-14 from army::can_cast_resurrect
@@ -2234,9 +2803,12 @@ public:
     // third parameter is therefore int in the Complete ABI. TSkillMastery is
     // spelled int here because its typedef lives in a header this one does
     // not include. Not claimed.
-    void CastSpell(SpellID spellId, int targetIndex,
-                   int bIsMonsterSpell, int secondaryIndex,
-                   int monster_skill, long monster_power);   // 0x59fe30
+    // Before normalization (function): combatManager::CastSpell.
+    void castSpell(SpellID spellId, int targetIndex,
+                   // Before normalization (locals): bIsMonsterSpell, monster_skill,
+                   // monster_power.
+                   int isMonsterSpell, int secondaryIndex,
+                   int monsterSkill, long monsterPower);   // 0x59fe30
     // WHO cast the spell ShowSpellMessage is about to announce. The DC
     // roster calls the parameter `bIsMonsterSpell`, but retail's body
     // (0x5a8950) is a three-way `dec eax / je` chain, not a bool test,
@@ -2258,14 +2830,19 @@ public:
     // Dreamcast spells.cpp:5041 emits this inline helper separately;
     // Complete VC6 expands its only surviving call into CastSpell's
     // failure path at +0x2159.
-    inline void ShowSpellCastFailure(army* targetArmy, int spellId);
-    void ShowSpellMessage(int bIsMonsterSpell, SpellID spellId,
+    // Before normalization (function): combatManager::ShowSpellCastFailure.
+    inline void showSpellCastFailure(army* targetArmy, int spellId);
+    // Before normalization (function): combatManager::ShowSpellMessage.
+    // Before normalization (locals): bIsMonsterSpell.
+    void showSpellMessage(int isMonsterSpell, SpellID spellId,
                           army* targetArmy);                   // 0x5a8950
     // 0x468990, cmbtmgr.obj's own. DC cmbtmgr.cpp:4158 spells it
     // PowEffect(TSpellEffectID spellEffect, int bResetLimitCreature);
     // the first parameter is int-wide either way and the enum lives in
     // a header this one does not include.
-    void PowEffect(int spellEffect, int bResetLimitCreature); // 0x468990
+    // Before normalization (function): combatManager::PowEffect.
+    // Before normalization (locals): bResetLimitCreature.
+    void powEffect(int spellEffect, int resetLimitCreature); // 0x468990
     // The ONE TSpellEffectID this header needs so far. Value from the
     // Dreamcast enum table (evidence/dreamcast/enums.csv:
     // TSpellEffectID.eSpellEffectFireShield = 11), and retail proves the
@@ -2300,7 +2877,8 @@ public:
         // the Dread Knight's death-blow flash over the defender.
         eSpellEffectDeathBlow = 73
     };
-    army* find_demonic_resurrection_target(int armyGroup, int targetIndex);
+    // Before normalization (function): combatManager::find_demonic_resurrection_target.
+    army* findDemonicResurrectionTarget(int armyGroup, int targetIndex);
 
     // 0x5a4920 (66 B), the third spells.obj leaf. Collects every stack
     // an area spell centred on `hex` would touch into the caller's
@@ -2313,7 +2891,8 @@ public:
     // first parameter is a SpellID - which is what this body switches on.
     // `mastery` is ai_tactical's TSkillMastery, spelled `long` here
     // because that typedef lives in the header that includes this one.
-    void mark_area_effect(SpellID spell, long hex, long mastery,
+    // Before normalization (function): combatManager::mark_area_effect.
+    void markAreaEffect(SpellID spell, long hex, long mastery,
                           std::vector<army*>& targets);         // 0x5a4920
     // 0x5a46f0, a SECOND spells.obj leaf of the same family and the
     // same arity (`ret 0x10` over `this`). ai.cpp's get_area_attack_value
@@ -2335,15 +2914,18 @@ public:
     // The NAME stays the ordinal-free provisional: renaming it to a true
     // mark_area_effect overload is a separate change and ai.cpp owns the
     // only call site.
-    void mark_hex_area_effect(long hex, long radius,
-                              unsigned char include_center,
+    // Before normalization (function): combatManager::mark_hex_area_effect.
+    void markHexAreaEffect(long hex, long radius,
+                              // Before normalization (locals): include_center.
+                              unsigned char includeCenter,
                               std::vector<army*>& targets);      // 0x5a46f0
     // 0x5a4810, the berserk arm mark_area_effect routes SPELL_BERSERK to.
     // DC spells.cpp:3265, mark_berserk_area_effect(long target_hex,
     // TSkillMastery mastery, std::vector<army*>& result) - `mastery` is
     // spelled long here for the same reason as its sibling above. Retail
     // pushes all three raw, so none of them is byte-sized.
-    void mark_berserk_area_effect(long hex, long mastery,
+    // Before normalization (function): combatManager::mark_berserk_area_effect.
+    void markBerserkAreaEffect(long hex, long mastery,
                                   std::vector<army*>& targets);  // 0x5a4810
     // THE COMBAT SET-UP FAMILY, declared 2026-08-20. Every one of these
     // already had an out-of-class definition in cmbtmgr.cpp with only a
@@ -2358,19 +2940,26 @@ public:
     // JPAVtown@@12HHH_N@Z - the S_PUB32 run types every parameter. The
     // trailing _N is spelled `unsigned char` here, as everywhere else in
     // this header, and retail reads it as one byte either way.
-    void SetupCombat(type_point point, hero* leftHero,
-                     armyGroup* leftArmyGroup, long right_player,
+    // Before normalization (function): combatManager::SetupCombat.
+    void setupCombat(type_point point, hero* leftHero,
+                     // Before normalization (locals): right_player, iSeed, is_surrounded.
+                     armyGroup* leftArmyGroup, long rightPlayer,
                      town* rightTown, hero* rightHero,
-                     armyGroup* rightArmyGroup, int x, int y, int iSeed,
-                     unsigned char is_surrounded);
+                     armyGroup* rightArmyGroup, int x, int y, int seed,
+                     unsigned char isSurrounded);
     // DC ?LoadArmies@combatManager@@AAAX_N@Z - PRIVATE on the Dreamcast
     // (`A` access), which costs nothing here and is recorded rather than
     // acted on: this header keeps one public block.
-    void LoadArmies(unsigned char is_surrounded);
+    // Before normalization (function): combatManager::LoadArmies.
+    // Before normalization (locals): is_surrounded.
+    void loadArmies(unsigned char isSurrounded);
     // DC ?NextArmy@combatManager@@QAA_N_N@Z - returns and takes _N,
     // spelled `unsigned char` as everywhere else in this header.
-    unsigned char NextArmy(unsigned char checking_for_bad_morale);
-    void SetNextArmy(int group, int index);
+    // Before normalization (function): combatManager::NextArmy.
+    // Before normalization (locals): checking_for_bad_morale.
+    unsigned char nextArmy(unsigned char checkingForBadMorale);
+    // Before normalization (function): combatManager::SetNextArmy.
+    void setNextArmy(int group, int index);
     // THE TWO UNNAMED TURN-SCAN HELPERS, 0x464d40 (525 B) and 0x464f50
     // (291 B). Neither has a counterpart anywhere in the DC cmbtmgr.obj
     // roster, so the 2026-08-24 promotion deliberately retains address
@@ -2388,8 +2977,10 @@ public:
     //     NextArmy asks it (best, candidate) and KEEPS the incumbent
     //     when the answer is non-zero, so it orders two stacks - the
     //     move-order comparator. Its reconstructed body is byte-exact.
-    unsigned char Unnamed464d40(army* selected);
-    unsigned char Unnamed464f50(const army* incumbent, const army* candidate);
+    // Before normalization (function): combatManager::Unnamed464d40.
+    unsigned char unnamed464d40(army* selected);
+    // Before normalization (function): combatManager::Unnamed464f50.
+    unsigned char unnamed464f50(const army* incumbent, const army* candidate);
     // The named command rearm helper. 0x4782d0 (1461 B, command.obj) is
     // Dreamcast's named GetControl method; SetNextArmy calls it immediately
     // after clearing lastMovedArmy, re-arming the command bar for the new
@@ -2406,7 +2997,8 @@ public:
     // (spellId, mastery, casting_side, first_target, creature_spell), and
     // the retail push sequence at 0x465330+0x2c0c is byte-identical either
     // way, so the duplicate is withdrawn in favour of the claimed name.
-    void GetControl();
+    // Before normalization (function): combatManager::GetControl.
+    void getControl();
     // ResetCycleTimers (0x479f30, 139 B) takes one GameTime::Get(), stores
     // it to the two hero fidget clocks, then walks numArmies on both sides
     // and seeds army::iLastFidgetTime with
@@ -2417,38 +3009,57 @@ public:
     //     otherwise it either clears the combat message line and forces a
     //     mouse move, or re-arms the combat pointer. Dreamcast's decorated
     //     public and the retail body now prove the source name.
-    void ResetCycleTimers();
-    void ResetMouse();
+    // Before normalization (function): combatManager::ResetCycleTimers.
+    void resetCycleTimers();
+    // Before normalization (function): combatManager::ResetMouse.
+    void resetMouse();
     // drawing.cpp:326. Dreamcast retains the source member and Complete
     // retains its out-of-line body; this is class structure, not a
     // command-TU declaration view.
-    void CombatMessage(int command);
-    unsigned char automate_first_aid_tent();
-    virtual int Main(message& msg);
-    int ProcessCombatMsg(message& msg);
-    int ProcessNextAction(message& msg, unsigned char automaticTurn);
+    // Before normalization (function): combatManager::CombatMessage.
+    void combatMessage(int command);
+    // Before normalization (function): combatManager::automate_first_aid_tent.
+    unsigned char automateFirstAidTent();
+    // Before normalization (function): combatManager::Main.
+    virtual int main(message& msg);
+    // Before normalization (function): combatManager::ProcessCombatMsg.
+    int processCombatMsg(message& msg);
+    // Before normalization (function): combatManager::ProcessNextAction.
+    int processNextAction(message& msg, unsigned char automaticTurn);
     // DC command.cpp:907. Complete has no standalone copy: ProcessCombatMsg
     // carries this two-compare helper expanded at its sole retail site.
-    int GetPointer(int inCombatCommand, int iHexIndex);
+    // Before normalization (function): combatManager::GetPointer.
+    // Before normalization (locals): iHexIndex.
+    int getPointer(int inCombatCommand, int hexIndex);
     // DC command.cpp:2800. Complete likewise expands its sole call, while
     // retaining the helper's source-level surrender-dialog boundary.
-    int DoSurrender();
-    void SetCombatDirections(int hex);
-    void ResetRound();
-    void auto_resolve_combat();
-    int CheckWin(message* msg);
-    unsigned char process_move_then_attack(message* msg);
-    void process_first_aid(army* currentArmy);
-    void ResetCyclingCreatures();
+    // Before normalization (function): combatManager::DoSurrender.
+    int doSurrender();
+    // Before normalization (function): combatManager::SetCombatDirections.
+    void setCombatDirections(int hex);
+    // Before normalization (function): combatManager::ResetRound.
+    void resetRound();
+    // Before normalization (function): combatManager::auto_resolve_combat.
+    void autoResolveCombat();
+    // Before normalization (function): combatManager::CheckWin.
+    int checkWin(message* msg);
+    // Before normalization (function): combatManager::process_move_then_attack.
+    unsigned char processMoveThenAttack(message* msg);
+    // Before normalization (function): combatManager::process_first_aid.
+    void processFirstAid(army* currentArmy);
+    // Before normalization (function): combatManager::ResetCyclingCreatures.
+    void resetCyclingCreatures();
 private:
-    std::string get_tower_string(TWallSection wall, long archers,
+    // Before normalization (function): combatManager::get_tower_string.
+    std::string getTowerString(TWallSection wall, long archers,
                                  long skill) const;
 public:
 };
 SIZE(combatManager::TWallTraits, 0x24);
 
 // Retail .bss 0x6993d0 (DC ?gpCombatManager@@3PAVcombatManager@@A).
-extern combatManager* gpCombatManager;
+// Before normalization: gpCombatManager.
+extern combatManager* g_combatManager;
 
 // Two single-byte .bss flags that are always read as a PAIR, in this
 // order, and always to suppress something: CalculateGainedExperience
@@ -2466,14 +3077,18 @@ extern combatManager* gpCombatManager;
 // CheckGetAIMove caches the displayed surrender price here. No surviving
 // retail or Dreamcast symbol supplies a public spelling, so the name keeps
 // its address ordinal.
-DATA(0x00695030) extern long gSurrenderCost695030;
-DATA(0x00698998) extern unsigned long gCombatStamp698998;
-DATA(0x006989b8) extern unsigned long gCombatStamp6989b8;
-DATA(0x006985a3) extern unsigned char gCombatFlag6985a3;
-DATA(0x00697744) extern unsigned char gCombatFlag697744;
+// Before normalization: gSurrenderCost695030.
+// Before normalization: gCombatStamp698998.
+DATA(0x00695030) extern long g_surrenderCost695030;
+// Before normalization: gCombatStamp6989b8.
+DATA(0x00698998) extern unsigned long g_combatStamp698998;
+DATA(0x006989b8) extern unsigned long g_combatStamp6989b8;
+DATA(0x006985a3) extern unsigned char g_combatFlag6985a3;
 // Set while the combat action pump is active; process_move_then_attack clears
 // it on a win before the ResetMouse path. Definition belongs to drawing.cpp.
-DATA(0x006989ec) extern int gbProcessingCombatAction;
+// Before normalization: gbProcessingCombatAction.
+DATA(0x00697744) extern unsigned char g_combatFlag697744;
+DATA(0x006989ec) extern int g_processingCombatAction;
 
 // The combat random seed, .data 0x66d840. SetupCombat parks its iSeed
 // parameter here and NOTHING in the image ever reads it back - the reloc
@@ -2491,7 +3106,8 @@ DATA(0x006989ec) extern int gbProcessingCombatAction;
 // 92.5714 -> 92.5357 by itself, and gating it restores the ceiling. A
 // bulk probe of externs added together evidently does not reproduce what
 // a single extern added to a header this widely included does.
-extern int gCombatSeed66d840;
+// Before normalization: gCombatSeed66d840.
+extern int g_combatSeed66d840;
 
 // THE FOUR COMBAT DEPLOYMENT TABLES, .rdata, and their BOUNDS ARE PROVEN
 // BY ADJACENCY rather than assumed: 0x63d0a8 + 2*7*4 = 0x63d0e0,
@@ -2506,16 +3122,21 @@ extern int gCombatSeed66d840;
 // chosen turns on the defending hero's formation byte, so the pair is the
 // game's tight/loose deployment split - but no roster row or string
 // reaches any of the four, so the names carry their addresses.
-extern const int gCombatDeployHexes63d0a8[2][7];
-extern const int gCombatDeploySurroundedHexes63d0e0[2][7];
-extern const int gCombatDeploySlots63d118[7][7];
-extern const int gCombatDeploySlots63d1dc[7][7];
+// Before normalization: gCombatDeployHexes63d0a8.
+extern const int g_combatDeployHexes63d0a8[2][7];
+// Before normalization: gCombatDeploySurroundedHexes63d0e0.
+extern const int g_combatDeploySurroundedHexes63d0e0[2][7];
+// Before normalization: gCombatDeploySlots63d118.
+extern const int g_combatDeploySlots63d118[7][7];
+// Before normalization: gCombatDeploySlots63d1dc.
+extern const int g_combatDeploySlots63d1dc[7][7];
 
 // Source aggregate copied into combatManager+0x13d38 by the constructor,
 // LowerDoor and RaiseDoor. The current DATA contract cannot express its
 // size, so the stripped target still represents interior relocations as
 // separate symbols; source keeps the retail-proven aggregate shape.
-DATA(0x00694f30) extern TDrawbridgeBounds gDrawbridgeBounds694f30;
+// Before normalization: gDrawbridgeBounds694f30.
+DATA(0x00694f30) extern TDrawbridgeBounds g_drawbridgeBounds694f30;
 
 // The clip rectangle every combat-drawing pass intersects its dirty
 // region with before handing it to heroWindowManager::UpdateScreen.
@@ -2530,22 +3151,26 @@ DATA(0x00694f30) extern TDrawbridgeBounds gDrawbridgeBounds694f30;
 // choice produces is masked (ResetLimitCreature is exact through the
 // identical aggregate copy). NAME IS A SOURCE-FACING INVENTION and
 // carries its address - no roster row, string or DC global reaches it.
-DATA(0x00694f18) extern TDrawbridgeBounds gCombatDrawLimits694f18;
+// Before normalization: gCombatDrawLimits694f18.
+DATA(0x00694f18) extern TDrawbridgeBounds g_combatDrawLimits694f18;
 
 // Combat-background pointer tables decoded from retail .rdata. The first
 // table is indexed by town type, the second by special-terrain mode (slot
 // zero is null), and the last by combatTerrain*3 + MoreTreesNear(mapPoint).
 // Names are source-facing inventions; their addresses, extents and contents
 // are all direct retail data.
-extern const char* const gTownCombatBackgrounds[9];          // 0x63d2a0
-extern const char* const gMagicTerrainCombatBackgrounds[10]; // 0x63d2c8
-extern const char* const gTerrainCombatBackgrounds[9][3];    // 0x63d2f0
+// Before normalization: gTownCombatBackgrounds.
+extern const char* const g_townCombatBackgrounds[9];          // 0x63d2a0
+// Before normalization: gMagicTerrainCombatBackgrounds.
+extern const char* const g_magicTerrainCombatBackgrounds[10]; // 0x63d2c8
+// Before normalization: gTerrainCombatBackgrounds.
+extern const char* const g_terrainCombatBackgrounds[9][3];    // 0x63d2f0
 
 // The leading two words of each 20-byte obstacle-catalogue row. They
 // are separate declarations because the delinked target relocates each
 // referenced address independently; indexing by ten shorts preserves
 // the common 20-byte stride.
-DATA(0x0063c7c8) extern const unsigned short gObstacleTerrainMasks[];
+// Before normalization: gObstacleTerrainMasks.
 // One spell-effect row, at .rdata 0x641e08 with a TWELVE-byte stride.
 // Two retail bodies fix the layout between them and neither needs the
 // other: LoadSpellEffect (0x5a92f0) forms `[12*effect + 0x641e08]` and
@@ -2561,6 +3186,7 @@ DATA(0x0063c7c8) extern const unsigned short gObstacleTerrainMasks[];
 // army::DrawToBuffer (0x43e140) anchors the pow sprite against the
 // target's hex. BOOTSTRAP INVENTION - the four modes are named from
 // that one decoded switch and nothing else attests spellings.
+DATA(0x0063c7c8) extern const unsigned short g_obstacleTerrainMasks[];
 enum TSpellEffectPlacement {
     SPELL_EFFECT_PLACE_OVERHEAD = 0x0,
     SPELL_EFFECT_PLACE_CENTERED = 0x1,
@@ -2579,17 +3205,20 @@ struct TSpellEffectTraits {
     // reads it as the pow overlay's placement word - bits 0..3 select
     // a TSpellEffectPlacement anchor mode over the stack and bit 8 is
     // the draw-alpha flag it hands to DrawSpellEffect.
-    unsigned int flags;      // +0x8
+    // Before normalization: flags.
+    unsigned int m_flags;      // +0x8
 };
 SIZE(TSpellEffectTraits, 0xc);
-DATA(0x00641e08) extern const TSpellEffectTraits akSpellEffectTraits[];
+// Before normalization: akSpellEffectTraits.
+DATA(0x00641e08) extern const TSpellEffectTraits g_spellEffectTraits[];
 
 // The moat's per-town base damage, at .rdata 0x63bd18 and indexed by
 // town type: SetupAndLoadObstacles folds [0x63bd20] for the Tower,
 // which is 0x63bd18 + 4*TOWN_TOWER. searchArray::set_moat (0x4b3290)
 // and mark_firewalls (0x4215e0) read the same table with a live index.
 // Name is a BOOTSTRAP INVENTION - no roster attests it.
-DATA(0x0063bd18) extern const int gMoatDamage[];
+// Before normalization: gMoatDamage.
+DATA(0x0063bd18) extern const int g_moatDamage[];
 
 // The nine faction-specific moat attacker strings filled by the game-array
 // text loader and indexed by defendingTown->type in the retail-only moat
@@ -2600,7 +3229,8 @@ DATA(0x0063bd18) extern const int gMoatDamage[];
 // 0x6a5d60 exactly twice - that fill and 0x469ecc - and no border-guard
 // body reads it, so the town-type indexing is the only attested use.
 // text.cpp now defines it under this name; do not reintroduce the second.
-DATA(0x006a5d60) extern const char* gMoatDamageMessages[9];
+// Before normalization: gMoatDamageMessages.
+DATA(0x006a5d60) extern const char* g_moatDamageMessages[9];
 
 // The thirty-two hexes two facing boats occupy, at .rdata 0x63d368.
 // SetupAndLoadObstacles walks it as a POINTER and ends the walk on the
@@ -2608,17 +3238,24 @@ DATA(0x006a5d60) extern const char* gMoatDamageMessages[9];
 // the delinked reference names the combatManager vtable there - so the
 // extent is exactly (0x63d3e8 - 0x63d368) / 4 == 32. Name is a
 // BOOTSTRAP INVENTION.
-DATA(0x0063d368) extern const int gBoatBlockedHexes[];
-DATA(0x0063c7ca) extern const unsigned short gObstacleMagicTerrainMasks[];
-DATA(0x0063bec0) extern const unsigned short gLargeObstacleTerrainMasks[];
-DATA(0x0063bec2) extern const unsigned short gLargeObstacleMagicTerrainMasks[];
-DATA(0x0063becc) extern const short gLargeObstacleHexes[];
+// Before normalization: gBoatBlockedHexes.
+// Before normalization: gObstacleMagicTerrainMasks.
+DATA(0x0063d368) extern const int g_boatBlockedHexes[];
+// Before normalization: gLargeObstacleTerrainMasks.
+DATA(0x0063c7ca) extern const unsigned short g_obstacleMagicTerrainMasks[];
+// Before normalization: gLargeObstacleMagicTerrainMasks.
+DATA(0x0063bec0) extern const unsigned short g_largeObstacleTerrainMasks[];
+// Before normalization: gLargeObstacleHexes.
+DATA(0x0063bec2) extern const unsigned short g_largeObstacleMagicTerrainMasks[];
+DATA(0x0063becc) extern const short g_largeObstacleHexes[];
 
 // LowerDoor's quick-combat bypass and the four redraw-bound sources.
 // Names are address ordinals because no surviving public symbol names
 // them; widths and uses are byte-proven by the retail body.
-DATA(0x0069877c) extern int gCombatQuickMode69877c;
-extern int gCombatActive698a18;
+// Before normalization: gCombatQuickMode69877c.
+// Before normalization: gCombatActive698a18.
+DATA(0x0069877c) extern int g_combatQuickMode69877c;
+extern int g_combatActive698a18;
 
 // The four screen hit rectangles GetGridIndex (0x4647a0) tests before
 // it falls through to the grid arithmetic, one per special combat hex,
@@ -2642,22 +3279,38 @@ extern int gCombatActive698a18;
 // row reaches any of the four rectangles), not a scoring workaround.
 // NAMES ARE BOOTSTRAP INVENTIONS - no roster, string or DC global
 // reaches any of them, so each keeps an address ordinal.
-DATA(0x00694ea8) extern int gCombatHexLeft694ea8;
-DATA(0x00694eac) extern int gCombatHexTop694eac;
-DATA(0x00694eb0) extern int gCombatHexRight694eb0;
-DATA(0x00694eb4) extern int gCombatHexBottom694eb4;
-DATA(0x00694ed8) extern int gCombatHexLeft694ed8;
-DATA(0x00694edc) extern int gCombatHexTop694edc;
-DATA(0x00694ee0) extern int gCombatHexRight694ee0;
-DATA(0x00694ee4) extern int gCombatHexBottom694ee4;
-DATA(0x00694ef0) extern int gCombatHexLeft694ef0;
-DATA(0x00694ef4) extern int gCombatHexTop694ef4;
-DATA(0x00694ef8) extern int gCombatHexRight694ef8;
-DATA(0x00694efc) extern int gCombatHexBottom694efc;
-DATA(0x00694f08) extern int gCombatHexLeft694f08;
-DATA(0x00694f0c) extern int gCombatHexTop694f0c;
-DATA(0x00694f10) extern int gCombatHexRight694f10;
-DATA(0x00694f14) extern int gCombatHexBottom694f14;
+// Before normalization: gCombatHexLeft694ea8.
+// Before normalization: gCombatHexTop694eac.
+DATA(0x00694ea8) extern int g_combatHexLeft694ea8;
+// Before normalization: gCombatHexRight694eb0.
+DATA(0x00694eac) extern int g_combatHexTop694eac;
+// Before normalization: gCombatHexBottom694eb4.
+DATA(0x00694eb0) extern int g_combatHexRight694eb0;
+// Before normalization: gCombatHexLeft694ed8.
+DATA(0x00694eb4) extern int g_combatHexBottom694eb4;
+// Before normalization: gCombatHexTop694edc.
+DATA(0x00694ed8) extern int g_combatHexLeft694ed8;
+// Before normalization: gCombatHexRight694ee0.
+DATA(0x00694edc) extern int g_combatHexTop694edc;
+// Before normalization: gCombatHexBottom694ee4.
+DATA(0x00694ee0) extern int g_combatHexRight694ee0;
+// Before normalization: gCombatHexLeft694ef0.
+DATA(0x00694ee4) extern int g_combatHexBottom694ee4;
+// Before normalization: gCombatHexTop694ef4.
+DATA(0x00694ef0) extern int g_combatHexLeft694ef0;
+// Before normalization: gCombatHexRight694ef8.
+DATA(0x00694ef4) extern int g_combatHexTop694ef4;
+// Before normalization: gCombatHexBottom694efc.
+DATA(0x00694ef8) extern int g_combatHexRight694ef8;
+// Before normalization: gCombatHexLeft694f08.
+DATA(0x00694efc) extern int g_combatHexBottom694efc;
+// Before normalization: gCombatHexTop694f0c.
+DATA(0x00694f08) extern int g_combatHexLeft694f08;
+// Before normalization: gCombatHexRight694f10.
+DATA(0x00694f0c) extern int g_combatHexTop694f0c;
+// Before normalization: gCombatHexBottom694f14.
+DATA(0x00694f10) extern int g_combatHexRight694f10;
+DATA(0x00694f14) extern int g_combatHexBottom694f14;
 
 // The row-column table one hex LEFT of gCastleWallColumns, at 0x63bce8
 // (retail bytes 0b 1c 2c 3d 4d 5f 6f 81 92 a4 b5 - each entry exactly
@@ -2666,16 +3319,20 @@ DATA(0x00694f14) extern int gCombatHexBottom694f14;
 // IsInMoat walks all eleven entries looking for an exact hit. Name is
 // a BOOTSTRAP INVENTION in the style of gCastleWallColumns - no roster
 // attests it.
-extern const unsigned char gMoatColumns[];
+// Before normalization: gMoatColumns.
+extern const unsigned char g_moatColumns[];
 
 // The row-column table one hex left again, at 0x63bcf4 (bytes 0a 1b 2b
 // 3c 4c 5e 6e 80 91 a3 b4). Only IsInMoat reads it, and only when the
 // defending town is a Fortress - the second moat ring. Name is a
 // BOOTSTRAP INVENTION.
-extern const unsigned char gOuterMoatColumns[];
+// Before normalization: gOuterMoatColumns.
+extern const unsigned char g_outerMoatColumns[];
 
-unsigned char InCastle(int index);
-unsigned char LeftOfMoat(int index);
+// Before normalization (function): InCastle.
+unsigned char inCastle(int index);
+// Before normalization (function): LeftOfMoat.
+unsigned char leftOfMoat(int index);
 
 // The five wall segments the castle AI checks, at 0x63abe0: the
 // TWallSection values {6, 8, 9, 10, 12}, i.e. wallTargets rows 1..5 by
@@ -2687,19 +3344,26 @@ unsigned char LeftOfMoat(int index);
 // exactly the representation constraint that made town.h's four hit
 // rectangles sixteen separate ints. Neither is defined here - findpath
 // and ai only read them, and an unclaimed extern still pairs.
-extern const long gCastleWallGateTargets[5];   // 0x63abe0
-extern const long gCastleWallGateTargetsEnd[]; // 0x63abf4, one past
+// Before normalization: gCastleWallGateTargets.
+extern const long g_castleWallGateTargets[5];   // 0x63abe0
+// Before normalization: gCastleWallGateTargetsEnd.
+extern const long g_castleWallGateTargetsEnd[]; // 0x63abf4, one past
 
 // Retail moved this out of the class exactly as it did InCastle: the
 // body takes its only value in ECX and returns with a bare `ret`, so
 // it is a free __fastcall(int), not the DC roster's thiscall method.
-int GetTargetWallIndex(int grid_index);
+// Before normalization (function): GetTargetWallIndex.
+// Before normalization (locals): grid_index.
+int getTargetWallIndex(int gridIndex);
 
-void GetMissileStartingPosition(int army_type, int x, int y, int facing,
-                                int dest_x, int dest_y,
-                                const CSprite* missile, int* start_x,
-                                int* start_y, int* army_dir,
-                                int* missile_frame);
+// Before normalization (function): GetMissileStartingPosition.
+// Before normalization (locals): army_type, dest_x, dest_y, start_x, start_y, army_dir,
+// missile_frame.
+void getMissileStartingPosition(int armyType, int x, int y, int facing,
+                                int destX, int destY,
+                                const CSprite* missile, int* startX,
+                                int* startY, int* armyDir,
+                                int* missileFrame);
 
 // --- CNetMsgHandlerPause ---
 // CODEVIEW(E:\gamedcs\cmbtmgr.cpp:893, dc 0x63a88) void* CNetMsgHandlerPause::`scalar deleting destructor'(unsigned __flags);

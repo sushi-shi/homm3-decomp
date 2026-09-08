@@ -46,22 +46,39 @@ public:
         MAX_POINTER_SETS = 0x5
     };
 
-    int field_38;
-    RECT savedRect;
-    EPointerSet field_4c;
-    int field_50;
-    CSprite* field_54;
-    int field_58;
-    int field_5c;
-    int field_60;
+    // Before normalization: field_38; reference member mouseManager::bNoChangePointer.
+    int m_noChangePointer;
+    // Before normalization: savedRect.
+    RECT m_savedRect;
+    // Before normalization: field_4c; reference member mouseManager::Set.
+    EPointerSet m_set;
+    // Before normalization: field_50; reference member mouseManager::Frame.
+    int m_frame;
+    // Before normalization: field_54; reference member mouseManager::Sprite.
+    CSprite* m_sprite;
+    // Before normalization: field_58; reference member mouseManager::ImageX.
+    int m_imageX;
+    // Before normalization: field_5c; reference member mouseManager::ImageY.
+    int m_imageY;
+    // Before normalization: field_60; reference member mouseManager::DisableCount.
+    int m_disableCount;
     // Byte, not int: CheckUpdate (0x50d680) reads it with `mov al,
     // byte ptr [esi+0x64]; test al,al` and stores 0/1 as byte writes.
-    unsigned char field_64;
-    int field_68;
-    int field_6c;
-    int field_70;
-    int field_74;
-    CRITICAL_SECTION section_mouse;
+    // Before normalization: field_64; reference member mouseManager::SystemPointerIsOn.
+    unsigned char m_systemPointerIsOn;
+    // Before normalization: field_68; reference member mouseManager::iHideCount.
+    int m_hideCount;
+    // Before normalization: field_6c.
+    // Original DC CurrentX/CurrentY were at +0x3c/+0x40; PC update stores
+    // GetCursorPos/ScreenToClient results here, then subtracts the hotspot
+    // to produce ImageX/ImageY. The members moved within the PC layout.
+    int m_currentX;
+    // Before normalization: field_70.
+    int m_currentY;
+    // Before normalization: field_74; reference member mouseManager::Busy.
+    int m_busy;
+    // Before normalization: section_mouse.
+    CRITICAL_SECTION m_sectionMouse;
 
     mouseManager();
     // Vtable 0x640028, FOUR slots (config/retail-vtables.tsv; the next
@@ -74,47 +91,74 @@ public:
     //   3 ??_GmouseManager 0x50cbc0, with ~mouseManager inlined into it.
     // The written destructor belongs in mousemgr.cpp (CodeView line 344);
     // its expansion inside a generated wrapper does not imply header ownership.
-    virtual int Open(int newPriority);   // slot 0, retail 0x50cbf0
-    virtual void Close();                // slot 1, retail 0x50cc40
-    virtual int Main(message& msg);      // slot 2, folded onto 0x4ec560
+    virtual int open(int newPriority);   // slot 0, retail 0x50cbf0
+    // Before normalization (function): mouseManager::Close.
+    virtual void close();                // slot 1, retail 0x50cc40
+    // Before normalization (function): mouseManager::Main.
+    virtual int main(message& msg);      // slot 2, folded onto 0x4ec560
     virtual ~mouseManager();
-    void MouseCoords(int* x, int* y);
-    void SetPointer(int new_frame, EPointerSet new_set);
-    void Update(unsigned char bForceIt);
-    void SaveAndDraw(IDirectDrawSurface4* dst_surface,
-                     IDirectDrawSurface4* save_surface,
-                     const RECT* dst_rect, int x, int y);
-    void RestoreUnderlying(IDirectDrawSurface4* surface,
-                           const RECT* dst_rect);
-    void HidePointer();
-    void ShowPointer(bool restore);
+    void mouseCoords(int* x, int* y);
+    // Before normalization (function): mouseManager::SetPointer.
+    // Before normalization (locals): new_frame, new_set.
+    void setPointer(int newFrame, EPointerSet newSet);
+    // Before normalization (function): mouseManager::Update.
+    // Before normalization (locals): bForceIt.
+    void update(unsigned char forceIt);
+    // Before normalization (function): mouseManager::SaveAndDraw.
+    // Before normalization (locals): dst_surface, save_surface, dst_rect.
+    void saveAndDraw(IDirectDrawSurface4* dstSurface,
+                     IDirectDrawSurface4* saveSurface,
+                     const RECT* dstRect, int x, int y);
+    // Before normalization (function): mouseManager::RestoreUnderlying.
+    void restoreUnderlying(IDirectDrawSurface4* surface,
+                           // Before normalization (locals): dst_rect.
+                           const RECT* dstRect);
+    // Before normalization (function): mouseManager::HidePointer.
+    void hidePointer();
+    // Before normalization (function): mouseManager::ShowPointer.
+    void showPointer(bool restore);
     // E:\gamedcs\MouseMgr.h:210/215. Dreamcast emits these header helpers
     // in kb.obj/adventuremapwindow.obj; Complete folds both into direct loads.
-    int GetFrame() const
+    // DC MouseMgr.h:189-200 (Enable/Disable) returns DisableCount without
+    // mutating it in this build. SetPointer discards both results.
+    int enable() { return m_disableCount; }
+    int disable() { return m_disableCount; }
+    int getFrame() const
     {
-        return field_50;
+        return m_frame;
     }
-    EPointerSet GetSet() const
+    EPointerSet getSet() const
     {
-        return field_4c;
+        return m_set;
     }
     // Dreamcast mousemgr.h:221. MoveHero and RestoreMouse retain this
     // source helper while Complete's /Ob2 lowers it to the field_68 test.
-    unsigned char IsVis() const { return field_68 == 0; }
-    void CheckUpdate();
-    void LoadFrame(int new_frame);
-    void Reset();                 // 0x50cc80
-    void ShowSystemCursor(unsigned char show_it);
+    // Before normalization (function): mouseManager::IsVis.
+    unsigned char isVis() const { return m_hideCount == 0; }
+    // Before normalization (function): mouseManager::CheckUpdate.
+    void checkUpdate();
+    // Before normalization (function): mouseManager::LoadFrame.
+    // Before normalization (locals): new_frame.
+    void loadFrame(int newFrame);
+    // Before normalization (function): mouseManager::Reset.
+    void reset();                 // 0x50cc80
+    // Before normalization (function): mouseManager::ShowSystemCursor.
+    // Before normalization (locals): show_it.
+    void showSystemCursor(unsigned char showIt);
 };
 
 // Retail .bss 0x699260 (DC ?gpMouseManager@@3PAVmouseManager@@A).
-extern mouseManager* gpMouseManager;
+// Before normalization: gpMouseManager.
+extern mouseManager* g_mouseManager;
 
 // The three DirectDraw surfaces owned and loaded by mousemgr.cpp. The
 // wingraph lifecycle releases the same cells during graphics shutdown.
-extern IDirectDrawSurface4* gpDDSMouseSurface;         // 0x6aacc4
-extern IDirectDrawSurface4* gpDDSMouseSaveSurface;     // 0x6aacc8
-extern IDirectDrawSurface4* gpDDSMouseScratchSurface;  // 0x6aaccc
+// Before normalization: gpDDSMouseSurface.
+extern IDirectDrawSurface4* g_ddsMouseSurface;         // 0x6aacc4
+// Before normalization: gpDDSMouseSaveSurface.
+extern IDirectDrawSurface4* g_ddsMouseSaveSurface;     // 0x6aacc8
+// Before normalization: gpDDSMouseScratchSurface.
+extern IDirectDrawSurface4* g_ddsMouseScratchSurface;  // 0x6aaccc
 
 // --- globals ---
 // CODEVIEW(C:\WCEDreamcast\inc\kfuncs.h:266, dc 0xff76c) unsigned long GetCurrentThreadId();

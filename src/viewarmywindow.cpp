@@ -57,7 +57,8 @@
 // inline-luck split needs a cb window our statement quantization jumps
 // over. Declared-only remains the ratchet optimum; if the one-army
 // ctor's plateau ever moves, re-measure the define WITH it.
-const int& _cpp_clamp(const int& _Lo, const int& _V, const int& _Hi);
+// Before normalization (locals): _Lo, _V, _Hi.
+const int& cppClamp(const int& lo, const int& v, const int& hi);
 
 // Two representation bridges in game.cpp's/ai_combat.cpp's shape - a
 // four-byte copy VC6 reduces to a move - so that neither a
@@ -73,14 +74,16 @@ const int& _cpp_clamp(const int& _Lo, const int& _V, const int& _Hi);
 //  * armyGroup's describers take TCreatureType where army::creatureType
 //    and this window's own ArmyType are both spelled int for the same
 //    header-closure reason.
-inline TCreatureType creature_type_from_int(int value)
+inline TCreatureType creatureTypeFromInt(int value)
 {
     union {
-        int value;
-        TCreatureType creature;
+        // Before normalization: value.
+        int m_value;
+        // Before normalization: creature.
+        TCreatureType m_creature;
     } storage;
-    storage.value = value;
-    return storage.creature;
+    storage.m_value = value;
+    return storage.m_creature;
 }
 
 // The Faerie Dragon's in-combat cast button handler, retail 0x5f5030:
@@ -92,13 +95,15 @@ inline TCreatureType creature_type_from_int(int value)
 // MESSAGE_WIDGET; msg->codeX = 10; msg->codeY = OK_ID; return
 // MESSAGE_DISPATCH_FORWARD; } return 0;`. DECLARED ONLY - defining it
 // would put an unpaired function in this object.
-int ViewArmyCastSpellHandler(message& msg);
+// Before normalization (function): ViewArmyCastSpellHandler.
+int viewArmyCastSpellHandler(message& msg);
 
 // The shooter bit, byte-proven by initialize_creatures and consumed here
 // by create_shots_widget's single `test byte [traits+0x10], 4` guard.
 // TU-local for the reason ai_combat.cpp keeps its own copy: the shared
 // header stays as small as its own consumers need.
-const unsigned int CTA_SHOOTER = 0x4;
+// Before normalization: CTA_SHOOTER.
+const unsigned int g_ctaShooter = 0x4;
 
 // The Dendroid's hold used to be a TU-local `const int SPELL_BIND` here,
 // byte-proven by the folded `akSpellTraits + 0x2650` row address. It is
@@ -120,7 +125,7 @@ const unsigned int CTA_SHOOTER = 0x4;
 // allowance one more candidate site in each caller - which is what stops
 // the SECOND std::string member's `_Tidy` from being expanded there. See
 // that constructor's note.
-inline bool is_base_elemental(int type)
+inline bool isBaseElemental(int type)
 {
     return type == CREATURE_AIR_ELEMENTAL || type == CREATURE_EARTH_ELEMENTAL
         || type == CREATURE_FIRE_ELEMENTAL || type == CREATURE_WATER_ELEMENTAL;
@@ -128,8 +133,10 @@ inline bool is_base_elemental(int type)
 
 // The two rows of convertID2HelpID's compact 0..15 domain that
 // WindowHandler builds text for instead of reading HELP.TXT.
-const int MORALE_HELP_INDEX = 9;
-const int LUCK_HELP_INDEX = 10;
+// Before normalization: MORALE_HELP_INDEX.
+const int g_moraleHelpIndex = 9;
+// Before normalization: LUCK_HELP_INDEX.
+const int g_luckHelpIndex = 10;
 
 // The popup's own help roster, filled from HELP.TXT by text.obj's
 // spreadsheet loader (0x5b98b0), which walks 0x6a7458 in stride-8 pairs
@@ -137,7 +144,7 @@ const int LUCK_HELP_INDEX = 10;
 // 0..15 range is what indexes it: [].text is the bottom strip's line
 // and [].rclick the right-click dialog body. The extent is spelled 16
 // because the id map can produce 15; the loader stops one row short.
-DATA(0x006a7458) extern THelpText gViewArmyHelp[16];
+DATA(0x006a7458) extern THelpText g_viewArmyHelp[16];
 
 // Two ARRAYTXT.TXT runs text.obj's second loader (0x5b9cc0) fills with
 // stride-4 char pointers: 42 rows from 0x6a57bc and 25 from 0x6a532c.
@@ -148,8 +155,8 @@ DATA(0x006a7458) extern THelpText gViewArmyHelp[16];
 // luck describers (0x4f32a0 / 0x4f3540) read the SAME rows at the same
 // offsets with the same format_string/append shape, which is what fixes
 // both bases and both roles.
-DATA(0x006a57bc) extern const char* gMoraleTexts[42];
-DATA(0x006a532c) extern const char* gLuckTexts[25];
+DATA(0x006a57bc) extern const char* g_moraleTexts[42];
+DATA(0x006a532c) extern const char* g_luckTexts[25];
 
 // The five inlined-away rows, spelled as the Dreamcast members they
 // are. `inline` (not a plain out-of-line definition) is what models
@@ -159,49 +166,52 @@ DATA(0x006a532c) extern const char* gLuckTexts[25];
 // is also what keeps basic_string::_Tidy and the [-3, 3] selector OUT
 // of line in the constructor, exactly as retail has them.
 
-inline void TViewArmyWindow::create_background_widget(const hero* this_hero)
+// Before normalization (locals): this_hero.
+inline void TViewArmyWindow::createBackgroundWidget(const hero* thisHero)
 {
     bitmapBorder* plate = new bitmapBorder(
         0, 0, 298, 311, BACKGROUND_ID,
         DATA_COMPGEN(0x0068c698, viewArmyPlate, "CrStkPU.pcx"),
         0x800);
-    plate->SetPlayerPaletteColors(
-        this_hero != 0 && this_hero->owner >= 0
-            ? this_hero->owner
-            : gpGame->GetLocalPlayerGamePos());
-    Widgets.push_back(plate);
+    plate->setPlayerPaletteColors(
+        thisHero != 0 && thisHero->m_owner >= 0
+            ? thisHero->m_owner
+            : g_game->getLocalPlayerGamePos());
+    m_widgets.push_back(plate);
 }
 
-inline void TViewArmyWindow::create_name_widget(const char* name)
+inline void TViewArmyWindow::createNameWidget(const char* name)
 {
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         20, 21, 258, 19, name, "smalfont.fnt",
         font::HEADING, NAME_ID, 5, 0, 8));
 }
 
-inline void TViewArmyWindow::create_morale_widget(int new_morale)
+// Before normalization (locals): new_morale.
+inline void TViewArmyWindow::createMoraleWidget(int newMorale)
 {
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         23, 189, 42, 38, MORALE_ID,
         DATA_COMPGEN(0x0068c68c, viewArmyMoraleIcons, "imrl42.def"),
-        _cpp_clamp(-3, new_morale, 3) + 3, 0, 0, 0, 0x10));
+        cppClamp(-3, newMorale, 3) + 3, 0, 0, 0, 0x10));
 }
 
-inline void TViewArmyWindow::create_luck_widget(int new_luck)
+// Before normalization (locals): new_luck.
+inline void TViewArmyWindow::createLuckWidget(int newLuck)
 {
-    Widgets.push_back(new iconWidget(
+    m_widgets.push_back(new iconWidget(
         77, 189, 42, 38, LUCK_ID,
         DATA_COMPGEN(0x0068c680, viewArmyLuckIcons, "ilck42.def"),
-        _cpp_clamp(-3, new_luck, 3) + 3, 0, 0, 0, 0x10));
+        cppClamp(-3, newLuck, 3) + 3, 0, 0, 0, 0x10));
 }
 
-inline void TViewArmyWindow::create_rollover_widget()
+inline void TViewArmyWindow::createRolloverWidget()
 {
-    RolloverWidget = new bitmapBackedTextWidget(
+    m_rolloverWidget = new bitmapBackedTextWidget(
         7, 285, 284, 19, 0, "smalfont.fnt",
         DATA_COMPGEN(0x0068c674, viewArmyRolloverBack, "VARBack.pcx"),
         font::PRIMARY, ROLLOVER_ID, 1, 8);
-    Widgets.push_back(RolloverWidget);
+    m_widgets.push_back(m_rolloverWidget);
 }
 
 // The single-stack popup: one army's whole record laid out over the
@@ -292,76 +302,79 @@ inline void TViewArmyWindow::create_rollover_widget()
 // boundary, are all byte-flat at 90.807396%. C1 removes the unused accessor
 // result before it can change either nested inline decision.
 // E:\gamedcs\viewarmywindow.cpp:55
+// Before normalization (locals): this_army, show_ok, stack_traits, type_traits, our_hero,
+// our_town, our_group, enemy_hero, enemy_group, group_alignments, shown_type, this_hero,
+// this_town, show_dismiss, town_type, army_type.
 VA(0x005f3360, 0x7B5)  // direct caller + CrStkPU.pcx, dc 0x190abc
-TViewArmyWindow::TViewArmyWindow(const army* this_army, int x0, int y0,
-                                 unsigned char show_ok)
+TViewArmyWindow::TViewArmyWindow(const army* thisArmy, int x0, int y0,
+                                 unsigned char showOk)
     : CAdvPopup(x0, y0, 298, 311, 0x12),
-      ArmyType(this_army->creatureType),
-      ArmySize(this_army->numTroops),
-      ShowingUpgradeButton(0),
-      ShowingDismissButton(0),
-      ShowingOkButton(show_ok)
+      m_armyType(thisArmy->m_creatureType),
+      m_armySize(thisArmy->m_numTroops),
+      m_showingUpgradeButton(0),
+      m_showingDismissButton(0),
+      m_showingOkButton(showOk)
 {
     // The stack's OWN traits row is the copy embedded in army at +0x74
     // (army.h's sMonInfo slice); the table row is the unmodified one.
-    const TCreatureTypeTraits* stack_traits = &this_army->sMonInfo;
-    const TCreatureTypeTraits* type_traits =
-        &akCreatureTypeTraits[this_army->creatureType];
+    const TCreatureTypeTraits* stackTraits = &thisArmy->m_monInfo;
+    const TCreatureTypeTraits* typeTraits =
+        &g_creatureTypeTraits[thisArmy->m_creatureType];
 
-    unsigned char shooting = this_army->can_shoot(0);
-    int attack = this_army->get_adjusted_attack(0, shooting);
-    int defense = this_army->get_adjusted_defense(0, 1);
+    unsigned char shooting = thisArmy->canShoot(0);
+    int attack = thisArmy->getAdjustedAttack(0, shooting);
+    int defense = thisArmy->getAdjustedDefense(0, 1);
     if (shooting) {
-        int melee = this_army->get_adjusted_attack(0, 0);
-        attack = _cpp_max(attack, melee);
+        int melee = thisArmy->getAdjustedAttack(0, 0);
+        attack = cppMax(attack, melee);
     }
 
-    Widgets.reserve(NWIDGETS);
+    m_widgets.reserve(NWIDGETS);
 
     // The plate is recoloured for the stack's CONTROLLER, falling back to
     // the local player when it has no hero - retail's relocation order is
     // `call get_controller` immediately ahead of the bitmapBorder ctor.
     // (The note that stood here said OWNER; see the correction above.)
-    create_background_widget(this_army->get_controller());
+    createBackgroundWidget(thisArmy->getController());
 
     // The singular/plural pair comes off the TABLE row - retail
     // rematerialises the 0x6747b0 base here instead of reusing the
     // cached pointer, which is what the indexed spelling gives.
     const char* name;
-    if (this_army->creatureType >= 0 && this_army->creatureType <= 150) {
-        if (this_army->numTroops == 1)
-            name = akCreatureTypeTraits[this_army->creatureType].m_name;
+    if (thisArmy->m_creatureType >= 0 && thisArmy->m_creatureType <= 150) {
+        if (thisArmy->m_numTroops == 1)
+            name = g_creatureTypeTraits[thisArmy->m_creatureType].m_name;
         else
-            name = akCreatureTypeTraits[this_army->creatureType].m_plural_name;
+            name = g_creatureTypeTraits[thisArmy->m_creatureType].m_pluralName;
     } else {
-        name = emptyRolloverText;
+        name = g_emptyRolloverText;
     }
-    create_name_widget(name);
+    createNameWidget(name);
 
-    create_portrait_widget(stack_traits->m_sprite_name,
-                           stack_traits->townType, this_army->numTroops);
-    create_attack_widget(type_traits->attackSkill, attack);
-    create_defense_widget(type_traits->defenseSkill, defense);
-    create_shots_widget(stack_traits, type_traits->numShots,
-                        stack_traits->numShots);
-    create_damage_widget(stack_traits, this_army->get_controller());
-    create_hitpoints_widget(type_traits->hitPoints, stack_traits->hitPoints);
-    create_hitpoints_left_widget(stack_traits->hitPoints
-                                 - this_army->topCreatureDamage);
-    create_speed_widget(type_traits->speed, this_army->GetSpeed());
+    createPortraitWidget(stackTraits->m_spriteName,
+                           stackTraits->m_townType, thisArmy->m_numTroops);
+    createAttackWidget(typeTraits->m_attackSkill, attack);
+    createDefenseWidget(typeTraits->m_defenseSkill, defense);
+    createShotsWidget(stackTraits, typeTraits->m_numShots,
+                        stackTraits->m_numShots);
+    createDamageWidget(stackTraits, thisArmy->getController());
+    createHitpointsWidget(typeTraits->m_hitPoints, stackTraits->m_hitPoints);
+    createHitpointsLeftWidget(stackTraits->m_hitPoints
+                                 - thisArmy->m_topCreatureDamage);
+    createSpeedWidget(typeTraits->m_speed, thisArmy->getSpeed());
 
-    morale = this_army->GetMorale(0);
-    create_morale_widget(morale);
+    m_morale = thisArmy->getMorale(0);
+    createMoraleWidget(m_morale);
 
-    int side = this_army->combatSide;
-    const hero* our_hero = this_army->get_owner();
-    const town* our_town = 0;
-    armyGroup* our_group = gpCombatManager->armyGroups[side];
-    const hero* enemy_hero = gpCombatManager->heroes[1 - side];
-    const armyGroup* enemy_group = gpCombatManager->armyGroups[1 - side];
-    unsigned char group_alignments = gpCombatManager->field_54b2[side];
+    int side = thisArmy->m_combatSide;
+    const hero* ourHero = thisArmy->getOwner();
+    const town* ourTown = 0;
+    armyGroup* ourGroup = g_combatManager->m_armyGroups[side];
+    const hero* enemyHero = g_combatManager->m_heroes[1 - side];
+    const armyGroup* enemyGroup = g_combatManager->m_armyGroups[1 - side];
+    unsigned char groupAlignments = g_combatManager->m_hasAngelicAlliance[side];
     if (side == 1)
-        our_town = gpCombatManager->defendingTown;
+        ourTown = g_combatManager->m_defendingTown;
     // Both describers return a std::string BY VALUE, and retail calls
     // basic_string::_Tidy(true) to destroy each temporary where our
     // budget expands it into the full three-branch refcount block. The
@@ -369,62 +382,64 @@ TViewArmyWindow::TViewArmyWindow(const army* this_army, int x0, int y0,
     // `warning.append` site) and it is worth 87.11 -> 89.62 here,
     // closing the branch count to retail's 31 on the nose.
     union {
-        int value;
-        TCreatureType creature;
-    } shown_type;
-    shown_type.value = ArmyType;
+        // Before normalization: value.
+        int m_value;
+        // Before normalization: creature.
+        TCreatureType m_creature;
+    } shownType;
+    shownType.m_value = m_armyType;
 #pragma inline_depth(0)
-    morale_help = our_group->get_morale_description(
-        shown_type.creature, morale, our_hero, our_town,
-        enemy_hero, enemy_group, gpCombatManager->field_53c0,
-        group_alignments);
+    m_moraleHelp = ourGroup->getMoraleDescription(
+        shownType.m_creature, m_morale, ourHero, ourTown,
+        enemyHero, enemyGroup, g_combatManager->m_magicTerrain,
+        groupAlignments);
 #pragma inline_depth()
 
-    luck = this_army->GetLuck(0);
-    create_luck_widget(luck);
+    m_luck = thisArmy->getLuck(0);
+    createLuckWidget(m_luck);
 #pragma inline_depth(0)
-    luck_help = our_group->get_luck_description(
-        shown_type.creature, luck, our_hero, our_town,
-        enemy_hero, enemy_group, gpCombatManager->field_53c0);
+    m_luckHelp = ourGroup->getLuckDescription(
+        shownType.m_creature, m_luck, ourHero, ourTown,
+        enemyHero, enemyGroup, g_combatManager->m_magicTerrain);
 #pragma inline_depth()
 
-    create_spell_influence_widgets(this_army);
-    if (show_ok)
-        create_ok_widget();
+    createSpellInfluenceWidgets(thisArmy);
+    if (showOk)
+        createOkWidget();
 
     // The message strip along the bottom, kept in RolloverWidget so
     // WindowHandler can retarget its text.
-    create_rollover_widget();
+    createRolloverWidget();
 
     // The bottom-left action slot: the Faerie Dragon's own cast button
     // when it is this side's turn and the stack still has its spell,
     // otherwise the creature's special-ability blurb.
-    if (show_ok
-            && (this_army->hypnotizeFlag ? 1 - this_army->combatSide
-                                         : this_army->combatSide)
-                   == gpCombatManager->currentSide
-            && this_army->creatureType == CREATURE_FAERIE_DRAGON
-            && stack_traits->hasSpell > 0
-            && !gpCombatManager->bCreaturePlacement) {
-        Widgets.push_back(new bitmapBorder(
+    if (showOk
+            && (thisArmy->m_spellInfluence[60] ? 1 - thisArmy->m_combatSide
+                                         : thisArmy->m_combatSide)
+                   == g_combatManager->m_currentSide
+            && thisArmy->m_creatureType == CREATURE_FAERIE_DRAGON
+            && stackTraits->m_hasSpell > 0
+            && !g_combatManager->m_creaturePlacement) {
+        m_widgets.push_back(new bitmapBorder(
             74, 236, 48, 34, -1,
             "Box46x32.pcx",  // pooled with create_upgrade_widget's 0x68c664
             0x800));
-        Widgets.push_back(new type_func_button(
+        m_widgets.push_back(new type_func_button(
             75, 237, 46, 32, OK_ID,
             DATA_COMPGEN(0x0066ffd4, viewArmyCastButton, "icm005.def"),
-            ViewArmyCastSpellHandler, 0, 1));
-    } else if (stack_traits->special_ability) {
-        Widgets.push_back(new textWidget(
-            20, 232, 192, 41, stack_traits->special_ability, "smalfont.fnt",
+            viewArmyCastSpellHandler, 0, 1));
+    } else if (stackTraits->m_specialAbility) {
+        m_widgets.push_back(new textWidget(
+            20, 232, 192, 41, stackTraits->m_specialAbility, "smalfont.fnt",
             font::WHITE, -1, 0, 0, 8));
     }
 
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
-            AddWidget(*it, -1);
+            addWidget(*it, -1);
         else
-            MemError();
+            memError();
     }
 }
 
@@ -470,115 +485,117 @@ VA_COMPGEN(0x005f3b20, 0x21, SCALAR_DELETING_DTOR, TViewArmyWindow)
 // E:\gamedcs\viewarmywindow.cpp:140
 VA(0x005f3b50, 0x6B2)  // vtable-store + builder call set + describer pair, dc 0x190e78
 TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
-                                 const hero* this_hero, const town* this_town,
+                                 const hero* thisHero, const town* thisTown,
                                  int x0, int y0, int upgrade,
-                                 unsigned char show_dismiss,
-                                 unsigned char show_ok,
-                                 unsigned char group_alignments)
+                                 unsigned char showDismiss,
+                                 unsigned char showOk,
+                                 unsigned char groupAlignments)
     : CAdvPopup(x0, y0, 298, 311, 0x12),
-      ArmyType(group->armies[iarmy]),
-      ArmySize(group->numTroops[iarmy]),
-      ShowingOkButton(show_ok)
+      m_armyType(group->m_armies[iarmy]),
+      m_armySize(group->m_numTroops[iarmy]),
+      m_showingOkButton(showOk)
 {
-    if (!show_ok) {
+    if (!showOk) {
         upgrade = -1;
-        show_dismiss = 0;
+        showDismiss = 0;
     }
-    Upgrade = upgrade;
+    m_upgrade = upgrade;
 
-    const TCreatureTypeTraits* type_traits = &akCreatureTypeTraits[ArmyType];
-    TCreatureTypeTraits traits = *type_traits;
+    const TCreatureTypeTraits* typeTraits = &g_creatureTypeTraits[m_armyType];
+    TCreatureTypeTraits traits = *typeTraits;
 
     // The widget vector NAMED AS A REFERENCE (three uses): 90.4657 ->
     // 90.9521.  The sibling army-only constructor below LOSES 0.03 on the
     // same change, so it is per-body.
-    std::vector<widget*>& widgets = Widgets;
+    std::vector<widget*>& widgets = m_widgets;
     widgets.reserve(NWIDGETS);
 
-    create_background_widget(this_hero);
+    createBackgroundWidget(thisHero);
 
     const char* name;
-    if (ArmyType >= 0 && ArmyType <= 150)
-        name = akCreatureTypeTraits[ArmyType].m_plural_name;
+    if (m_armyType >= 0 && m_armyType <= 150)
+        name = g_creatureTypeTraits[m_armyType].m_pluralName;
     else
-        name = emptyRolloverText;
-    create_name_widget(name);
+        name = g_emptyRolloverText;
+    createNameWidget(name);
 
-    int town_type;
-    if (!gpGame->f_1f698 && is_base_elemental(ArmyType))
-        town_type = -1;
+    int townType;
+    if (!g_game->m_f1f698 && isBaseElemental(m_armyType))
+        townType = -1;
     else
-        town_type = akCreatureTypeTraits[ArmyType].townType;
-    create_portrait_widget(traits.m_sprite_name, town_type,
-                           group->numTroops[iarmy]);
+        townType = g_creatureTypeTraits[m_armyType].m_townType;
+    createPortraitWidget(traits.m_spriteName, townType,
+                           group->m_numTroops[iarmy]);
 
-    if (this_hero)
-        this_hero->HeroFn_004E6120(ArmyType, &traits);
+    if (thisHero)
+        thisHero->heroFn004E6120(m_armyType, &traits);
 
-    create_attack_widget(type_traits->attackSkill, traits.attackSkill);
-    create_defense_widget(type_traits->defenseSkill, traits.defenseSkill);
-    create_shots_widget(&traits, traits.numShots, traits.numShots);
-    create_damage_widget(&traits, this_hero);
-    create_hitpoints_widget(type_traits->hitPoints, traits.hitPoints);
-    create_speed_widget(type_traits->speed, traits.speed);
+    createAttackWidget(typeTraits->m_attackSkill, traits.m_attackSkill);
+    createDefenseWidget(typeTraits->m_defenseSkill, traits.m_defenseSkill);
+    createShotsWidget(&traits, traits.m_numShots, traits.m_numShots);
+    createDamageWidget(&traits, thisHero);
+    createHitpointsWidget(typeTraits->m_hitPoints, traits.m_hitPoints);
+    createSpeedWidget(typeTraits->m_speed, traits.m_speed);
 
-    morale = group->GetArmyMorale(iarmy, this_hero, this_town, -1,
-                                  group_alignments, 0);
-    create_morale_widget(morale);
+    m_morale = group->getArmyMorale(iarmy, thisHero, thisTown, -1,
+                                  groupAlignments, 0);
+    createMoraleWidget(m_morale);
     union {
-        int value;
-        TCreatureType creature;
-    } shown_type;
-    shown_type.value = ArmyType;
+        // Before normalization: value.
+        int m_value;
+        // Before normalization: creature.
+        TCreatureType m_creature;
+    } shownType;
+    shownType.m_value = m_armyType;
 #pragma inline_depth(0)
-    morale_help = group->get_morale_description(
-        shown_type.creature, morale, this_hero, this_town,
-        0, 0, -1, group_alignments);
+    m_moraleHelp = group->getMoraleDescription(
+        shownType.m_creature, m_morale, thisHero, thisTown,
+        0, 0, -1, groupAlignments);
 #pragma inline_depth()
 
-    luck = group->GetArmyLuck(iarmy, this_hero, this_town, -1, 1);
-    create_luck_widget(luck);
-    luck_help = group->get_luck_description(
-        creature_type_from_int(ArmyType), luck, this_hero, this_town,
+    m_luck = group->getArmyLuck(iarmy, thisHero, thisTown, -1, 1);
+    createLuckWidget(m_luck);
+    m_luckHelp = group->getLuckDescription(
+        creatureTypeFromInt(m_armyType), m_luck, thisHero, thisTown,
         0, 0, -1);
 
-    if (show_ok)
-        create_ok_widget();
+    if (showOk)
+        createOkWidget();
 
     if (upgrade != -1) {
-        create_upgrade_widget();
-        ShowingUpgradeButton = 1;
+        createUpgradeWidget();
+        m_showingUpgradeButton = 1;
     }
-    if (show_dismiss) {
-        create_dismiss_widget();
-        ShowingDismissButton = 1;
-    } else if (upgrade == -1 && traits.special_ability) {
+    if (showDismiss) {
+        createDismissWidget();
+        m_showingDismissButton = 1;
+    } else if (upgrade == -1 && traits.m_specialAbility) {
         widgets.push_back(new textWidget(
-            20, 232, 192, 41, traits.special_ability, "smalfont.fnt",
+            20, 232, 192, 41, traits.m_specialAbility, "smalfont.fnt",
             font::WHITE, -1, 0, 0, 8));
     }
 
-    create_rollover_widget();
+    createRolloverWidget();
 
-    Influence[0] = -1;
-    Influence[1] = -1;
-    Influence[2] = -1;
+    m_influence[0] = -1;
+    m_influence[1] = -1;
+    m_influence[2] = -1;
 
     for (widget** it = widgets.begin(); it != widgets.end(); ++it) {
         if (*it)
-            AddWidget(*it, -1);
+            addWidget(*it, -1);
         else
-            MemError();
+            memError();
     }
 
     // The upgrade button greys itself out when the player cannot pay.
     if (upgrade != -1) {
         long cost[7];
-        get_upgrade_cost(creature_type_from_int(ArmyType),
-                         creature_type_from_int(upgrade), ArmySize, cost);
+        getUpgradeCost(creatureTypeFromInt(m_armyType),
+                         creatureTypeFromInt(upgrade), m_armySize, cost);
         for (int i = 0; i < 7; i++) {
-            if (gpCurrentPlayer->resources[i] < cost[i]) {
-                WidgetSetStatus(UPGRADE_ID, 8);
+            if (g_currentPlayer->m_resources[i] < cost[i]) {
+                widgetSetStatus(UPGRADE_ID, 8);
                 break;
             }
         }
@@ -643,57 +660,57 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
 // is the separate job of finding which statement carries it.
 // E:\gamedcs\viewarmywindow.cpp:274
 VA(0x005f4210, 0x3C1)  // vtable-store + builder call set + CrStkPU.pcx, dc 0x19148c
-TViewArmyWindow::TViewArmyWindow(int army_type, int x0, int y0,
-                                 unsigned char show_ok)
+TViewArmyWindow::TViewArmyWindow(int armyType, int x0, int y0,
+                                 unsigned char showOk)
     : CAdvPopup(x0, y0, 298, 311, 0x12),
-      ArmyType(army_type),
-      ShowingUpgradeButton(0),
-      ShowingDismissButton(0),
-      ShowingOkButton(show_ok)
+      m_armyType(armyType),
+      m_showingUpgradeButton(0),
+      m_showingDismissButton(0),
+      m_showingOkButton(showOk)
 {
-    const TCreatureTypeTraits* traits = &akCreatureTypeTraits[army_type];
+    const TCreatureTypeTraits* traits = &g_creatureTypeTraits[armyType];
 
-    Widgets.reserve(NWIDGETS);
+    m_widgets.reserve(NWIDGETS);
 
     // No hero owns a bare creature type, so the plate takes the local
     // player's colours unconditionally - the null argument is what folds
     // create_background_widget's ternary down to that one call.
-    create_background_widget(0);
-    create_name_widget(traits->m_plural_name);
+    createBackgroundWidget(0);
+    createNameWidget(traits->m_pluralName);
 
-    int town_type;
-    if (!gpGame->f_1f698 && is_base_elemental(army_type))
-        town_type = -1;
+    int townType;
+    if (!g_game->m_f1f698 && isBaseElemental(armyType))
+        townType = -1;
     else
-        town_type = akCreatureTypeTraits[army_type].townType;
-    create_portrait_widget(traits->m_sprite_name, town_type, 0);
+        townType = g_creatureTypeTraits[armyType].m_townType;
+    createPortraitWidget(traits->m_spriteName, townType, 0);
 
-    create_attack_widget(traits->attackSkill, traits->attackSkill);
-    create_defense_widget(traits->defenseSkill, traits->defenseSkill);
-    create_shots_widget(traits, traits->numShots, traits->numShots);
-    create_damage_widget(traits, 0);
-    create_hitpoints_widget(traits->hitPoints, traits->hitPoints);
-    create_speed_widget(traits->speed, traits->speed);
+    createAttackWidget(traits->m_attackSkill, traits->m_attackSkill);
+    createDefenseWidget(traits->m_defenseSkill, traits->m_defenseSkill);
+    createShotsWidget(traits, traits->m_numShots, traits->m_numShots);
+    createDamageWidget(traits, 0);
+    createHitpointsWidget(traits->m_hitPoints, traits->m_hitPoints);
+    createSpeedWidget(traits->m_speed, traits->m_speed);
 
-    if (show_ok)
-        create_ok_widget();
+    if (showOk)
+        createOkWidget();
 
-    if (traits->special_ability) {
-        Widgets.push_back(new textWidget(
-            20, 232, 192, 41, traits->special_ability, "smalfont.fnt",
+    if (traits->m_specialAbility) {
+        m_widgets.push_back(new textWidget(
+            20, 232, 192, 41, traits->m_specialAbility, "smalfont.fnt",
             font::WHITE, -1, 0, 0, 8));
     }
 
-    create_rollover_widget();
+    createRolloverWidget();
 
     for (int i = 0; i < 3; i++)
-        Influence[i] = -1;
+        m_influence[i] = -1;
 
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
-            AddWidget(*it, -1);
+            addWidget(*it, -1);
         else
-            MemError();
+            memError();
     }
 }
 
@@ -703,7 +720,7 @@ TViewArmyWindow::TViewArmyWindow(int army_type, int x0, int y0,
 VA(0x005f45e0, 0xD5)  // vtable-store + layout, dc 0x191660
 TViewArmyWindow::~TViewArmyWindow()
 {
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
@@ -755,7 +772,7 @@ int TViewArmyWindow::convertID2HelpID(int id) const
 // between DoModal (0x5f47f0 + 92 = 0x5f484c) and WindowHandler (0x5f4850),
 // so retail either inlined this at its one call site or /OPT:REF dropped it.
 DC_ONLY(0x191764, 0x40)
-void TViewArmyWindow::QuickView()
+void TViewArmyWindow::quickView()
 {
     // @stub
 }
@@ -768,27 +785,28 @@ void TViewArmyWindow::QuickView()
 // their constructor sites.
 // E:\gamedcs\viewarmywindow.cpp:374
 VA(0x005f47f0, 0x5C)  // call-shape + vtable, dc 0x1917a4
-void TViewArmyWindow::DoModal()
+void TViewArmyWindow::doModal()
 {
-    glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] =
-        GameTime::Get() + VIEW_ARMY_DELAY;
+    g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] =
+        GameTime::get() + VIEW_ARMY_DELAY;
 
-    if (!gpCurrentPlayer->IsLocalHuman()) {
-        widget* action = GetWidget(UPGRADE_ID);
+    if (!g_currentPlayer->isLocalHuman()) {
+        widget* action = getWidget(UPGRADE_ID);
         if (action)
             action->enable(0);
-        action = GetWidget(DISMISS_ID);
+        action = getWidget(DISMISS_ID);
         if (action)
             action->enable(0);
     }
-    heroWindow::DoModal(0);
+    heroWindow::doModal(0);
 }
 
 // The widget id the rollover strip was last built for, so a mouse move
 // that stays inside one widget costs nothing. This TU's own .data cell,
 // sitting immediately in front of its string literal pool (0x68c664 is
 // "Box46x32.pcx") and initialised to -1 in the image.
-DATA(0x0068c660) static int gLastViewArmyHoverID = -1;
+// Before normalization: gLastViewArmyHoverID.
+DATA(0x0068c660) static int g_lastViewArmyHoverId = -1;
 
 // The popup's whole input surface, in three arms over one message:
 // right-click help, the three action buttons, and the rollover strip -
@@ -841,19 +859,20 @@ DATA(0x0068c660) static int gLastViewArmyHoverID = -1;
 // - see the width sweep recorded at that declaration.
 // E:\gamedcs\viewarmywindow.cpp:404
 VA(0x005f4850, 0x7D7)  // direct caller + convertID2HelpID + help table, dc 0x191804
-int TViewArmyWindow::WindowHandler(message* msg)
+int TViewArmyWindow::windowHandler(message* msg)
 {
-    unsigned char bExitFlag;
-    PollSound();
+    // Before normalization (locals): bExitFlag, iResType, army_type, upgrade_type, shown_type.
+    unsigned char exitFlag;
+    pollSound();
 
-    int result = CAdvPopup::WindowHandler(msg);
+    int result = CAdvPopup::windowHandler(msg);
     if (result)
         return result;
 
-    bExitFlag = 0;
-    if (msg->qualifier & MESSAGE_MODIFIER_RIGHT) {
-        if (msg->codeX == widget::WIDGET_SELECT
-            || msg->codeX == widget::WIDGET_RIGHT_SELECT) {
+    exitFlag = 0;
+    if (msg->m_qualifier & MESSAGE_MODIFIER_RIGHT) {
+        if (msg->m_codeX == widget::WIDGET_SELECT
+            || msg->m_codeX == widget::WIDGET_RIGHT_SELECT) {
             // `text.assign(...)` at all seven help-text stores, not
             // `text = ...`: basic_string::operator= is a forwarder to
             // assign that CARRIES the assign call, so spelling the deeper
@@ -861,66 +880,68 @@ int TViewArmyWindow::WindowHandler(message* msg)
             // rejected on top of it: `.append` for the four `text +=`
             // stores (byte-flat) and a named `const std::string& rclick`
             // for the default arm's subscript (72.70).
-            int helpID = convertID2HelpID(msg->codeY);
-            int iResType = -1;
+            int helpID = convertID2HelpID(msg->m_codeY);
+            int resType = -1;
             std::string text;
             switch (helpID) {
-            case MORALE_HELP_INDEX:
-                if (morale > 0) {
-                    text.assign(format_string(gMoraleTexts[3], gMoraleTexts[0]));
-                    iResType = 14;
-                } else if (morale == 0) {
-                    text.assign(format_string(gMoraleTexts[3], gMoraleTexts[1]));
-                    iResType = 15;
+            case g_moraleHelpIndex:
+                if (m_morale > 0) {
+                    text.assign(formatString(g_moraleTexts[3], g_moraleTexts[0]));
+                    resType = 14;
+                } else if (m_morale == 0) {
+                    text.assign(formatString(g_moraleTexts[3], g_moraleTexts[1]));
+                    resType = 15;
                 } else {
-                    text.assign(format_string(gMoraleTexts[3], gMoraleTexts[2]));
-                    iResType = 16;
+                    text.assign(formatString(g_moraleTexts[3], g_moraleTexts[2]));
+                    resType = 16;
                 }
-                if (morale_help.length() == 0)
-                    text += gMoraleTexts[23];
+                if (m_moraleHelp.length() == 0)
+                    text += g_moraleTexts[23];
                 else
-                    text += morale_help;
+                    text += m_moraleHelp;
                 break;
-            case LUCK_HELP_INDEX:
-                if (luck > 0) {
-                    text.assign(format_string(gLuckTexts[3], gLuckTexts[0]));
-                    iResType = 11;
-                } else if (luck == 0) {
-                    text.assign(format_string(gLuckTexts[3], gLuckTexts[1]));
-                    iResType = 12;
+            case g_luckHelpIndex:
+                if (m_luck > 0) {
+                    text.assign(formatString(g_luckTexts[3], g_luckTexts[0]));
+                    resType = 11;
+                } else if (m_luck == 0) {
+                    text.assign(formatString(g_luckTexts[3], g_luckTexts[1]));
+                    resType = 12;
                 } else {
-                    text.assign(format_string(gLuckTexts[3], gLuckTexts[2]));
-                    iResType = 13;
+                    text.assign(formatString(g_luckTexts[3], g_luckTexts[2]));
+                    resType = 13;
                 }
-                if (luck_help.length() == 0)
-                    text += gLuckTexts[18];
+                if (m_luckHelp.length() == 0)
+                    text += g_luckTexts[18];
                 else
-                    text += luck_help;
+                    text += m_luckHelp;
                 break;
             default:
                 if (helpID >= 0)
-                    text.assign(gViewArmyHelp[helpID].rclick);
+                    text.assign(g_viewArmyHelp[helpID].m_rclick);
                 break;
             }
             if (text.length() > 0)
-                NormalDialog(text.c_str(), 4, -1, -1, iResType, 0, -1, 0,
+                normalDialog(text.c_str(), 4, -1, -1, resType, 0, -1, 0,
                              -1, 0, -1, 0);
         }
-    } else if (msg->id == MESSAGE_WIDGET) {
-        if (msg->codeX == widget::WIDGET_DESELECT) {
-            switch (msg->codeY) {
+    } else if (msg->m_id == MESSAGE_WIDGET) {
+        if (msg->m_codeX == widget::WIDGET_DESELECT) {
+            switch (msg->m_codeY) {
             case UPGRADE_ID: {
                 long cost[7];
                 int amount;
                 amount = 0;
                 union {
-                    int value;
-                    TCreatureType creature;
-                } army_type, upgrade_type;
-                army_type.value = ArmyType;
-                upgrade_type.value = Upgrade;
-                get_upgrade_cost(army_type.creature, upgrade_type.creature,
-                                 ArmySize, cost);
+                    // Before normalization: value.
+                    int m_value;
+                    // Before normalization: creature.
+                    TCreatureType m_creature;
+                } armyType, upgradeType;
+                armyType.m_value = m_armyType;
+                upgradeType.m_value = m_upgrade;
+                getUpgradeCost(armyType.m_creature, upgradeType.m_creature,
+                                 m_armySize, cost);
                 int resource;
                 for (resource = 5; resource >= 0; resource--) {
                     if (cost[resource] > 0)
@@ -928,38 +949,38 @@ int TViewArmyWindow::WindowHandler(message* msg)
                 }
                 if (resource >= 0)
                     amount = cost[resource];
-                NormalDialog(gpGeneralText->GetText(
+                normalDialog(g_generalText->getText(
                                  GENERAL_TEXT_UPGRADE_ARMY_PROMPT),
                              2, -1, -1, 6, cost[6], resource, amount,
                              -1, 0, -1, 0);
-                if (gpWindowManager->dialogReturn == DIALOG_RETURN_ACCEPT)
-                    bExitFlag = 1;
+                if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT)
+                    exitFlag = 1;
                 break;
             }
             case DISMISS_ID:
-                NormalDialog(gpGeneralText->GetText(
+                normalDialog(g_generalText->getText(
                                  GENERAL_TEXT_DISMISS_ARMY_PROMPT),
                              2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-                if (gpWindowManager->dialogReturn == DIALOG_RETURN_ACCEPT)
-                    bExitFlag = 1;
+                if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT)
+                    exitFlag = 1;
                 break;
             case ACCEPT_ID:
-                bExitFlag = 1;
+                exitFlag = 1;
                 break;
             }
         }
-    } else if (msg->id == MESSAGE_MOUSE_MOVE) {
-        int hoverID = findWidget(msg->mouseX, msg->mouseY);
-        if (hoverID != gLastViewArmyHoverID) {
-            const char* rollover = emptyRolloverText;
-            gLastViewArmyHoverID = hoverID;
+    } else if (msg->m_id == MESSAGE_MOUSE_MOVE) {
+        int hoverID = findWidget(msg->m_mouseX, msg->m_mouseY);
+        if (hoverID != g_lastViewArmyHoverId) {
+            const char* rollover = g_emptyRolloverText;
+            g_lastViewArmyHoverId = hoverID;
             if (hoverID != -1) {
-                gpMouseManager->SetPointer(1, mouseManager::DEFAULT_SET);
+                g_mouseManager->setPointer(1, mouseManager::DEFAULT_SET);
                 int helpID = convertID2HelpID(hoverID);
                 if (helpID >= 0) {
                     if (hoverID >= AFFECTING_SPELLS_0_ID
                         && hoverID <= AFFECTING_SPELLS_2_ID
-                        && Influence[hoverID - AFFECTING_SPELLS_0_ID] != -1) {
+                        && m_influence[hoverID - AFFECTING_SPELLS_0_ID] != -1) {
                         // BOUND BY `const int&`, not copied into an `int`.
                         // That is the whole of this row's last residual:
                         // retail materialises `mov eax,ecx` ahead of the
@@ -975,73 +996,75 @@ int TViewArmyWindow::WindowHandler(message* msg)
                         // whole chain as a `switch` 90.8688 (so it is an
                         // if-chain, as the compare order already said).
                         const int& spell =
-                            Influence[hoverID - AFFECTING_SPELLS_0_ID];
+                            m_influence[hoverID - AFFECTING_SPELLS_0_ID];
                         if (spell == SPELL_BIND)
-                            sprintf(gText,
-                                    gpGeneralText->GetText(
+                            sprintf(g_text,
+                                    g_generalText->getText(
                                         GENERAL_TEXT_ARMY_SPELL_FOREVER_FORMAT),
-                                    akSpellTraits[SPELL_BIND].name,
-                                    gpGeneralText->GetText(
+                                    g_spellTraits[SPELL_BIND].m_name,
+                                    g_generalText->getText(
                                         GENERAL_TEXT_ARMY_SPELL_BIND));
                         else if (spell == SPELL_BERSERK)
-                            sprintf(gText,
-                                    gpGeneralText->GetText(
+                            sprintf(g_text,
+                                    g_generalText->getText(
                                         GENERAL_TEXT_ARMY_SPELL_FOREVER_FORMAT),
-                                    akSpellTraits[SPELL_BERSERK].name,
-                                    gpGeneralText->GetText(
+                                    g_spellTraits[SPELL_BERSERK].m_name,
+                                    g_generalText->getText(
                                         GENERAL_TEXT_ARMY_SPELL_BERSERK));
                         else if (spell == SPELL_DISRUPTING_RAY)
-                            sprintf(gText,
-                                    gpGeneralText->GetText(
+                            sprintf(g_text,
+                                    g_generalText->getText(
                                         GENERAL_TEXT_ARMY_SPELL_FOREVER_FORMAT),
-                                    akSpellTraits[SPELL_DISRUPTING_RAY].name,
-                                    gpGeneralText->GetText(
+                                    g_spellTraits[SPELL_DISRUPTING_RAY].m_name,
+                                    g_generalText->getText(
                                         GENERAL_TEXT_ARMY_SPELL_DISRUPTING_RAY));
                         else
-                            sprintf(gText,
-                                    gpGeneralText->GetText(
+                            sprintf(g_text,
+                                    g_generalText->getText(
                                         GENERAL_TEXT_ARMY_SPELL_ROUNDS_FORMAT),
-                                    akSpellTraits[spell].name,
-                                    Duration[hoverID - AFFECTING_SPELLS_0_ID]);
-                        rollover = gText;
+                                    g_spellTraits[spell].m_name,
+                                    m_duration[hoverID - AFFECTING_SPELLS_0_ID]);
+                        rollover = g_text;
                     } else {
-                        rollover = gViewArmyHelp[helpID].text;
+                        rollover = g_viewArmyHelp[helpID].m_text;
                     }
                 }
             } else {
-                gpMouseManager->SetPointer(0, mouseManager::DEFAULT_SET);
+                g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
             }
-            RolloverWidget->SetText(rollover);
-            DrawWindow(0, ROLLOVER_ID, ROLLOVER_ID);
-            gpWindowManager->UpdateScreen(x + RolloverWidget->x,
-                                          y + RolloverWidget->y,
-                                          RolloverWidget->width,
-                                          RolloverWidget->height);
+            m_rolloverWidget->setText(rollover);
+            drawWindow(0, ROLLOVER_ID, ROLLOVER_ID);
+            g_windowManager->updateScreen(m_x + m_rolloverWidget->m_x,
+                                          m_y + m_rolloverWidget->m_y,
+                                          m_rolloverWidget->m_width,
+                                          m_rolloverWidget->m_height);
         }
     }
 
-    if (bExitFlag) {
-        msg->id = MESSAGE_WIDGET;
-        gpWindowManager->dialogReturn = msg->codeY;
-        msg->codeY = widget::WIDGET_END_DIALOG;
-        msg->codeX = widget::WIDGET_END_DIALOG;
+    if (exitFlag) {
+        msg->m_id = MESSAGE_WIDGET;
+        g_windowManager->m_dialogReturn = msg->m_codeY;
+        msg->m_codeY = widget::WIDGET_END_DIALOG;
+        msg->m_codeX = widget::WIDGET_END_DIALOG;
         return MESSAGE_DISPATCH_FORWARD;
     }
 
-    if (GameTime::IsPast(glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT])) {
+    if (GameTime::isPast(g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT])) {
         union {
-            int value;
-            TCreatureType creature;
-        } shown_type;
-        shown_type.value = ArmyType;
-        if (IsSiegeWeapon(shown_type.creature))
-            SpriteWidget->NextRandomSiegeEngineFrame();
+            // Before normalization: value.
+            int m_value;
+            // Before normalization: creature.
+            TCreatureType m_creature;
+        } shownType;
+        shownType.m_value = m_armyType;
+        if (isSiegeWeapon(shownType.m_creature))
+            m_spriteWidget->nextRandomSiegeEngineFrame();
         else
-            SpriteWidget->NextRandomFrame();
-        DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-        glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] =
-            GameTime::NextFrameTime(
-                glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT],
+            m_spriteWidget->nextRandomFrame();
+        drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+        g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] =
+            GameTime::nextFrameTime(
+                g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT],
                 VIEW_ARMY_DELAY);
     }
     return MESSAGE_DISPATCH_CONSUME;
@@ -1053,23 +1076,24 @@ int TViewArmyWindow::WindowHandler(message* msg)
 // empty slot, which is what the three-widget/two-widget split of the retail
 // tail encodes.
 // E:\gamedcs\viewarmywindow.cpp:646
+// Before normalization (locals): sprite_name, town_type.
 VA(0x005f5060, 0x2D6)  // ctor call set + CrBkg table + Verd10B.fnt, dc 0x191f2c
-void TViewArmyWindow::create_portrait_widget(const char* sprite_name,
-                                             int town_type, int count)
+void TViewArmyWindow::createPortraitWidget(const char* spriteName,
+                                             int townType, int count)
 {
-    Widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new bitmapBorder(
         21, 48, 100, 130, SPRITE_BACKGROUND_ID,
-        akCreatureBackgrounds[town_type],
+        g_creatureBackgrounds[townType],
         0x800));
 
-    SpriteWidget = new iconWidget(
-        21, 48, 100, 130, SPRITE_ID, sprite_name, 0, 2, 0, 0, 0x12);
-    Widgets.push_back(SpriteWidget);
+    m_spriteWidget = new iconWidget(
+        21, 48, 100, 130, SPRITE_ID, spriteName, 0, 2, 0, 0, 0x12);
+    m_widgets.push_back(m_spriteWidget);
 
     if (count > 0) {
-        sprintf(gText, "%d", count);
-        Widgets.push_back(new textWidget(
-            21, 160, 100, 20, gText,
+        sprintf(g_text, "%d", count);
+        m_widgets.push_back(new textWidget(
+            21, 160, 100, 20, g_text,
             DATA_COMPGEN(0x006700b4, viewArmyCountFont, "Verd10B.fnt"),
             font::WHITE, NUMBER_ID, 10, 0, 8));
     }
@@ -1079,43 +1103,45 @@ void TViewArmyWindow::create_portrait_widget(const char* sprite_name,
 // prints a single number when the base and modified skills agree, otherwise
 // it shows the base value followed by the modified value in parentheses.
 // E:\gamedcs\viewarmywindow.cpp:671
+// Before normalization (locals): normal_attack_skill, current_attack_skill.
 VA(0x005f5340, 0x28E)  // widget IDs + primary-skill table + format literals
-void TViewArmyWindow::create_attack_widget(int normal_attack_skill,
-                                           int current_attack_skill)
+void TViewArmyWindow::createAttackWidget(int normalAttackSkill,
+                                           int currentAttackSkill)
 {
-    Widgets.push_back(new textWidget(
-        154, 48, 122, 17, gPrimarySkillNames[0], "smalfont.fnt",
+    m_widgets.push_back(new textWidget(
+        154, 48, 122, 17, g_primarySkillNames[0], "smalfont.fnt",
         font::PRIMARY, ATTACK_LABEL_ID, 4, 0, 8));
 
-    if (normal_attack_skill == current_attack_skill)
-        sprintf(gText, "%d", normal_attack_skill);
+    if (normalAttackSkill == currentAttackSkill)
+        sprintf(g_text, "%d", normalAttackSkill);
     else
-        sprintf(gText, "%d(%d)", normal_attack_skill, current_attack_skill);
+        sprintf(g_text, "%d(%d)", normalAttackSkill, currentAttackSkill);
 
-    Widgets.push_back(new textWidget(
-        154, 48, 122, 17, gText, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(
+        154, 48, 122, 17, g_text, "smalfont.fnt",
         font::PRIMARY, ATTACK_ID, 6, 0, 8));
 }
 
 // Defense is the immediately following twin of the attack widget recipe.
 // The retail body changes only the vertical position, table entry, and IDs.
 // E:\gamedcs\viewarmywindow.cpp:689
+// Before normalization (locals): normal_defense_skill, current_defense_skill.
 VA(0x005f55d0, 0x28E)  // widget IDs + primary-skill table + format literals
-void TViewArmyWindow::create_defense_widget(int normal_defense_skill,
-                                            int current_defense_skill)
+void TViewArmyWindow::createDefenseWidget(int normalDefenseSkill,
+                                            int currentDefenseSkill)
 {
-    Widgets.push_back(new textWidget(
-        154, 66, 122, 17, gPrimarySkillNames[1], "smalfont.fnt",
+    m_widgets.push_back(new textWidget(
+        154, 66, 122, 17, g_primarySkillNames[1], "smalfont.fnt",
         font::PRIMARY, DEFENSE_LABEL_ID, 4, 0, 8));
 
-    if (normal_defense_skill == current_defense_skill)
-        sprintf(gText, "%d", normal_defense_skill);
+    if (normalDefenseSkill == currentDefenseSkill)
+        sprintf(g_text, "%d", normalDefenseSkill);
     else
-        sprintf(gText, "%d(%d)", normal_defense_skill,
-                current_defense_skill);
+        sprintf(g_text, "%d(%d)", normalDefenseSkill,
+                currentDefenseSkill);
 
-    Widgets.push_back(new textWidget(
-        154, 66, 122, 17, gText, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(
+        154, 66, 122, 17, g_text, "smalfont.fnt",
         font::PRIMARY, DEFENSE_ID, 6, 0, 8));
 }
 
@@ -1165,32 +1191,33 @@ void TViewArmyWindow::create_defense_widget(int normal_defense_skill,
 // so the source keeps its release expansion rather than asserting the name.
 // E:\gamedcs\viewarmywindow.cpp:707
 VA(0x005f5860, 0x2C2)  // widget IDs + text-record field + "%d - %d", dc 0x19226c
-void TViewArmyWindow::create_damage_widget(const TCreatureTypeTraits* traits,
-                                           const hero* our_hero)
+void TViewArmyWindow::createDamageWidget(const TCreatureTypeTraits* traits,
+                                           // Before normalization (locals): our_hero.
+                                           const hero* ourHero)
 {
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         154, 104, 122, 17,
-        gpGeneralText->GetText(GENERAL_TEXT_VIEW_ARMY_DAMAGE),
+        g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_DAMAGE),
         "smalfont.fnt", font::PRIMARY, DAMAGE_LABEL_ID, 4, 0, 8));
 
-    int low = traits->damageLowBound;
-    int high = traits->damageHighBound;
-    if (our_hero != 0 && ArmyType == CREATURE_BALLISTA) {
-        low *= our_hero->GetPrimarySkill(0) + 1;
-        high *= our_hero->GetPrimarySkill(0) + 1;
+    int low = traits->m_damageLowBound;
+    int high = traits->m_damageHighBound;
+    if (ourHero != 0 && m_armyType == CREATURE_BALLISTA) {
+        low *= ourHero->getPrimarySkill(0) + 1;
+        high *= ourHero->getPrimarySkill(0) + 1;
     }
 
     if (low == high)
-        sprintf(gText, "%d", low);
+        sprintf(g_text, "%d", low);
     else
-        sprintf(gText, DATA_COMPGEN(0x0068c6a4, viewArmyDamageRangeFormat,
+        sprintf(g_text, DATA_COMPGEN(0x0068c6a4, viewArmyDamageRangeFormat,
                                     "%d - %d"),
                 low, high);
 
     // Conventional release expansion of VERIFY(!Widgets.empty()).
-    static_cast<void>(!Widgets.empty());
-    Widgets.push_back(new textWidget(
-        154, 103, 122, 17, gText, "smalfont.fnt",
+    static_cast<void>(!m_widgets.empty());
+    m_widgets.push_back(new textWidget(
+        154, 103, 122, 17, g_text, "smalfont.fnt",
         font::PRIMARY, DAMAGE_ID, 6, 0, 8));
 }
 
@@ -1200,22 +1227,24 @@ void TViewArmyWindow::create_damage_widget(const TCreatureTypeTraits* traits,
 // the same presentation the primary skills use, on one shared y.
 // E:\gamedcs\viewarmywindow.cpp:735
 VA(0x005f5b30, 0x29D)  // widget IDs + text-record field + format literals, dc 0x1923c0
-void TViewArmyWindow::create_shots_widget(const TCreatureTypeTraits* traits,
-                                          int normal_shots, int current_shots)
+void TViewArmyWindow::createShotsWidget(const TCreatureTypeTraits* traits,
+                                          // Before normalization (locals): normal_shots,
+                                          // current_shots.
+                                          int normalShots, int currentShots)
 {
-    if (traits->attributes & CTA_SHOOTER) {
-        Widgets.push_back(new textWidget(
+    if (traits->m_attributes & g_ctaShooter) {
+        m_widgets.push_back(new textWidget(
             154, 85, 122, 17,
-            gpGeneralText->GetText(GENERAL_TEXT_VIEW_ARMY_SHOTS),
+            g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_SHOTS),
             "smalfont.fnt", font::PRIMARY, SHOTS_LABEL_ID, 4, 0, 8));
 
-        if (normal_shots == current_shots)
-            sprintf(gText, "%d", normal_shots);
+        if (normalShots == currentShots)
+            sprintf(g_text, "%d", normalShots);
         else
-            sprintf(gText, "%d(%d)", normal_shots, current_shots);
+            sprintf(g_text, "%d(%d)", normalShots, currentShots);
 
-        Widgets.push_back(new textWidget(
-            154, 85, 122, 17, gText, "smalfont.fnt",
+        m_widgets.push_back(new textWidget(
+            154, 85, 122, 17, g_text, "smalfont.fnt",
             font::PRIMARY, SHOTS_ID, 6, 0, 8));
     }
 }
@@ -1227,22 +1256,23 @@ void TViewArmyWindow::create_shots_widget(const TCreatureTypeTraits* traits,
 // this compile takes the entry through EDX before them. A named entry pointer
 // scores 98.09%, so the direct source-shaped access is retained.
 // E:\gamedcs\viewarmywindow.cpp:756
+// Before normalization (locals): normal_hitpoints, current_hitpoints.
 VA(0x005f5dd0, 0x297)  // widget IDs + text-record field + format literals
-void TViewArmyWindow::create_hitpoints_widget(int normal_hitpoints,
-                                              int current_hitpoints)
+void TViewArmyWindow::createHitpointsWidget(int normalHitpoints,
+                                              int currentHitpoints)
 {
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         154, 123, 122, 17,
-        gpGeneralText->GetText(GENERAL_TEXT_VIEW_ARMY_HEALTH),
+        g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_HEALTH),
         "smalfont.fnt", font::PRIMARY, HEALTH_LABEL_ID, 4, 0, 8));
 
-    if (normal_hitpoints == current_hitpoints)
-        sprintf(gText, "%d", normal_hitpoints);
+    if (normalHitpoints == currentHitpoints)
+        sprintf(g_text, "%d", normalHitpoints);
     else
-        sprintf(gText, "%d(%d)", normal_hitpoints, current_hitpoints);
+        sprintf(g_text, "%d(%d)", normalHitpoints, currentHitpoints);
 
-    Widgets.push_back(new textWidget(
-        154, 123, 122, 17, gText, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(
+        154, 123, 122, 17, g_text, "smalfont.fnt",
         font::PRIMARY, HEALTH_ID, 6, 0, 8));
 }
 
@@ -1251,18 +1281,19 @@ void TViewArmyWindow::create_hitpoints_widget(int normal_hitpoints,
 // central-text entry/label ECX-versus-EDX schedule as the total-health row
 // differs.
 // E:\gamedcs\viewarmywindow.cpp:774
+// Before normalization (locals): hitpoints_left.
 VA(0x005f6070, 0x27D)  // widget IDs + text-record field + integer format
-void TViewArmyWindow::create_hitpoints_left_widget(int hitpoints_left)
+void TViewArmyWindow::createHitpointsLeftWidget(int hitpointsLeft)
 {
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         154, 142, 122, 17,
-        gpGeneralText->GetText(GENERAL_TEXT_VIEW_ARMY_HEALTH_REMAINING),
+        g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_HEALTH_REMAINING),
         "smalfont.fnt", font::PRIMARY, HEALTH_REMAINING_LABEL_ID, 4, 0, 8));
 
-    sprintf(gText, "%d", hitpoints_left);
+    sprintf(g_text, "%d", hitpointsLeft);
 
-    Widgets.push_back(new textWidget(
-        154, 142, 122, 17, gText, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(
+        154, 142, 122, 17, g_text, "smalfont.fnt",
         font::PRIMARY, HEALTH_REMAINING_ID, 6, 0, 8));
 }
 
@@ -1273,24 +1304,25 @@ void TViewArmyWindow::create_hitpoints_left_widget(int hitpoints_left)
 // and all 19 branches exactly. Only the central-text pointer-chain schedule
 // differs, as in the two hitpoint rows.
 // E:\gamedcs\viewarmywindow.cpp:789
+// Before normalization (locals): normal_speed, current_speed.
 VA(0x005f62f0, 0x2BE)  // widget IDs + text-record field + clamped formats
-void TViewArmyWindow::create_speed_widget(int normal_speed,
-                                          int current_speed)
+void TViewArmyWindow::createSpeedWidget(int normalSpeed,
+                                          int currentSpeed)
 {
-    Widgets.push_back(new textWidget(
+    m_widgets.push_back(new textWidget(
         154, 161, 122, 17,
-        gpGeneralText->GetText(GENERAL_TEXT_VIEW_ARMY_SPEED),
+        g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_SPEED),
         "smalfont.fnt", font::PRIMARY, SPEED_LABEL_ID, 4, 0, 8));
 
-    normal_speed = _cpp_max<int>(0, normal_speed);
-    current_speed = _cpp_max<int>(0, current_speed);
-    if (normal_speed == current_speed)
-        sprintf(gText, "%d", normal_speed);
+    normalSpeed = cppMax<int>(0, normalSpeed);
+    currentSpeed = cppMax<int>(0, currentSpeed);
+    if (normalSpeed == currentSpeed)
+        sprintf(g_text, "%d", normalSpeed);
     else
-        sprintf(gText, "%d(%d)", normal_speed, current_speed);
+        sprintf(g_text, "%d(%d)", normalSpeed, currentSpeed);
 
-    Widgets.push_back(new textWidget(
-        154, 161, 122, 17, gText, "smalfont.fnt",
+    m_widgets.push_back(new textWidget(
+        154, 161, 122, 17, g_text, "smalfont.fnt",
         font::PRIMARY, SPEED_ID, 6, 0, 8));
 }
 
@@ -1312,28 +1344,29 @@ void TViewArmyWindow::create_speed_widget(int normal_speed,
 // the remaining choice is one front-end inline budget spent at either of two
 // nested STL sites.
 // E:\gamedcs\viewarmywindow.cpp:837
+// Before normalization (locals): this_army, widget_id.
 VA(0x005f65b0, 0x2B5)  // queue iterator arithmetic + SpellInt.def + widget ids
-void TViewArmyWindow::create_spell_influence_widgets(const army* this_army)
+void TViewArmyWindow::createSpellInfluenceWidgets(const army* thisArmy)
 {
     int x = 127;
-    unsigned int first = _cpp_max<int>(
-        0, static_cast<int>(this_army->SpellInfluenceQueue.size()) - NSPELLS);
+    unsigned int first = cppMax<int>(
+        0, static_cast<int>(thisArmy->m_spellInfluenceQueue.size()) - NSPELLS);
     unsigned int i = first;
-    int* influence = Influence;
-    int widget_id = AFFECTING_SPELLS_0_ID - first;
+    int* influence = m_influence;
+    int widgetId = AFFECTING_SPELLS_0_ID - first;
     int count = NSPELLS;
 
     do {
-        if (i < this_army->SpellInfluenceQueue.size()) {
+        if (i < thisArmy->m_spellInfluenceQueue.size()) {
             army::TSpellQueue::const_iterator position =
-                this_army->SpellInfluenceQueue.begin();
+                thisArmy->m_spellInfluenceQueue.begin();
 #pragma inline_depth(0)
             position += i;
 #pragma inline_depth()
             *influence = *position;
-            influence[NSPELLS] = this_army->spellInfluence[*influence];
-            Widgets.push_back(new iconWidget(
-                x, 186, 48, 36, widget_id + i,
+            influence[NSPELLS] = thisArmy->m_spellInfluence[*influence];
+            m_widgets.push_back(new iconWidget(
+                x, 186, 48, 36, widgetId + i,
                 DATA_COMPGEN(0x006700a4, viewArmySpellIcons, "spellint.def"),
                 *influence + 1, 0, 0, 0, 0x10));
         } else {
@@ -1352,9 +1385,9 @@ void TViewArmyWindow::create_spell_influence_widgets(const army* this_army)
 // caps the remaining EBX/EDI transposition as front-end handle state.
 // E:\gamedcs\viewarmywindow.cpp:873
 VA(0x005f6870, 0x264)  // ctor call set + literals + arity, dc 0x192a28
-void TViewArmyWindow::create_ok_widget()
+void TViewArmyWindow::createOkWidget()
 {
-    Widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new bitmapBorder(
         215, 237, 66, 32, OK_BORDER_ID,
         DATA_COMPGEN(0x0067016c, viewArmyOkBorder, "Box64x30.pcx"),
         0x800));
@@ -1363,9 +1396,9 @@ void TViewArmyWindow::create_ok_widget()
         216, 238, 64, 30, ACCEPT_ID,
         DATA_COMPGEN(0x0068c6ac, viewArmyOkButton, "iOKAY.def"),
         0, 1, 0, 0, 2);
-    accept->set_hotkey(1);
-    accept->set_hotkey(28);
-    Widgets.push_back(accept);
+    accept->setHotkey(1);
+    accept->setHotkey(28);
+    m_widgets.push_back(accept);
 }
 
 // The adjacent no-argument action helpers are distinguished by their unique
@@ -1425,9 +1458,9 @@ void TViewArmyWindow::create_ok_widget()
 //     not an out-of-line set_hotkey.
 // E:\gamedcs\viewarmywindow.cpp:889
 VA(0x005f6ae0, 0x265)  // ctor call set + literals + arity, dc 0x192ad8
-void TViewArmyWindow::create_upgrade_widget()
+void TViewArmyWindow::createUpgradeWidget()
 {
-    Widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new bitmapBorder(
         74, 236, 48, 34, -1,
         DATA_COMPGEN(0x0068c664, viewArmySmallActionBorder, "Box46x32.pcx"),
         0x800));
@@ -1436,15 +1469,15 @@ void TViewArmyWindow::create_upgrade_widget()
         75, 237, 46, 32, UPGRADE_ID,
         DATA_COMPGEN(0x00660134, viewArmyUpgradeButton, "iViewCr.def"),
         0, 1, 0, 0, 2);
-    upgrade->set_hotkey(22);
-    Widgets.push_back(upgrade);
+    upgrade->setHotkey(22);
+    m_widgets.push_back(upgrade);
 }
 
 // E:\gamedcs\viewarmywindow.cpp:903
 VA(0x005f6d50, 0x265)  // ctor call set + literals + arity, dc 0x192b40
-void TViewArmyWindow::create_dismiss_widget()
+void TViewArmyWindow::createDismissWidget()
 {
-    Widgets.push_back(new bitmapBorder(
+    m_widgets.push_back(new bitmapBorder(
         19, 236, 48, 34, -1,
         "Box46x32.pcx",
         0x800));
@@ -1453,8 +1486,8 @@ void TViewArmyWindow::create_dismiss_widget()
         20, 237, 46, 32, DISMISS_ID,
         DATA_COMPGEN(0x00660124, viewArmyDismissButton, "iViewCr2.def"),
         0, 1, 0, 0, 2);
-    dismiss->set_hotkey(32);
-    Widgets.push_back(dismiss);
+    dismiss->setHotkey(32);
+    m_widgets.push_back(dismiss);
 }
 
 // COMDAT pairing: basic_string<char>::assign(const basic_string&, size_t,
@@ -1463,6 +1496,15 @@ void TViewArmyWindow::create_dismiss_widget()
 // exact decorated name at the position where retail calls 0x4860 (visible as
 // a reloc-name-only row in that function's asm diff).
 VA_COMPGEN(0x00404860, 0x210, BASIC_STRING_ASSIGN_STR, char)
+
+// Dinkumware basic_string<char>::max_size. Retail's six-byte body returns
+// npos-2 (0xfffffffd), and the assign body above retains the call. Dreamcast's
+// older STLport body at dc 0x4950 proves the same public helper boundary but
+// delegates to _String_base::max_size instead. The first attempted ownership
+// by adventuremapwindow was rejected before scoring because that object only
+// references the COMDAT; viewarmywindow is the object that emits its body.
+// The corrected ownership matched on the first scored candidate.
+VA_COMPGEN(0x00404bc0, 0x06, BASIC_STRING_MAX_SIZE, char)
 
 // COMDAT pairing: basic_string<char>::_Split - the reference-count split that
 // assign/_Freeze reach; a nullary private thiscall in the same Dinkumware

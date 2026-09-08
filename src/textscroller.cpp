@@ -29,9 +29,9 @@
 // currentState and the owner at +0x68 and tail-calls the scroller's
 // repaint.
 VA(0x005B9FA0, 0xD)  // anchor-vtable 0x642cc8 slot 16, retail-only
-void type_text_slider::Close()
+void type_text_slider::close()
 {
-    owner->Refresh(currentState);
+    m_owner->refresh(m_currentState);
 }
 
 // The scroller constructor. Retail fixes the whole argument list: the
@@ -44,34 +44,34 @@ type_text_scroller::type_text_scroller(const char* text, int x, int y,
                                        int w, int h, const char* fontName,
                                        font::TColor color,
                                        slider::EGraphics graphics)
-    : widget(x, y, w, h, -1, 1), font_filename(fontName)
+    : widget(x, y, w, h, -1, 1), m_fontFilename(fontName)
 {
-    font* textFont = ResourceManager::GetFont(font_filename);
-    int lineY = this->y;
-    background = 0;
-    textFont->FillLinesVector(text, width - 24, text_lines);
+    font* textFont = ResourceManager::getFont(m_fontFilename);
+    int lineY = this->m_y;
+    m_background = 0;
+    textFont->fillLinesVector(text, m_width - 24, m_textLines);
 
-    int visibleLines = height / textFont->fs.height;
-    if (text_lines.size() <= visibleLines) {
-        textFont->FillLinesVector(text, width - 3, text_lines);
-        for (int pad = text_lines.size(); pad < visibleLines; pad++)
-            text_lines.push_back(std::string(""));
+    int visibleLines = m_height / textFont->m_fs.m_height;
+    if (m_textLines.size() <= visibleLines) {
+        textFont->fillLinesVector(text, m_width - 3, m_textLines);
+        for (int pad = m_textLines.size(); pad < visibleLines; pad++)
+            m_textLines.push_back(std::string(""));
     }
 
     textWidget* lineWidget;
     for (int line = 0; line < visibleLines; line++) {
         lineWidget = new textWidget(
-            this->x, lineY, width, textFont->fs.height,
-            text_lines[line].c_str(), font_filename, color, -1, 0, 0, 8);
-        lineY += textFont->fs.height;
-        line_images.push_back(lineWidget);
+            this->m_x, lineY, m_width, textFont->m_fs.m_height,
+            m_textLines[line].c_str(), m_fontFilename, color, -1, 0, 0, 8);
+        lineY += textFont->m_fs.m_height;
+        m_lineImages.push_back(lineWidget);
     }
 
-    text_slider = new type_text_slider(
-        this->x + width - 16, this->y, 16, height, -1,
-        _cpp_max<int>(1, text_lines.size() - line_images.size() + 1),
-        0, graphics, line_images.size(), 1, this);
-    textFont->Dispose();
+    m_textSlider = new type_text_slider(
+        this->m_x + m_width - 16, this->m_y, 16, m_height, -1,
+        cppMax<int>(1, m_textLines.size() - m_lineImages.size() + 1),
+        0, graphics, m_lineImages.size(), 1, this);
+    textFont->dispose();
 }
 
 // The scalar deleting destructor, slot 0 of vtable 0x642d0c.
@@ -81,20 +81,20 @@ VA_COMPGEN(0x005BA2B0, 0x21, SCALAR_DELETING_DTOR, type_text_scroller)
 // consecutive priorities above the scroller's own, then folds the slider
 // away when the text fits without scrolling.
 VA(0x005BA2E0, 0xC6)  // anchor-vtable 0x642d0c slot 1 + AddWidget, retail-only
-int type_text_scroller::Open(int newPriority, heroWindow* parent)
+int type_text_scroller::open(int newPriority, heroWindow* parent)
 {
-    int result = widget::Open(newPriority, parent);
+    int result = widget::open(newPriority, parent);
     if (result)
         return result;
 
-    for (unsigned int i = 0; i < line_images.size(); i++)
-        parent->AddWidget(line_images[i], priority + i + 1);
-    parent->AddWidget(text_slider, priority + line_images.size() + 1);
+    for (unsigned int i = 0; i < m_lineImages.size(); i++)
+        parent->addWidget(m_lineImages[i], m_priority + i + 1);
+    parent->addWidget(m_textSlider, m_priority + m_lineImages.size() + 1);
 
-    if (text_lines.size() <= line_images.size()) {
-        text_slider->SetState(0);
-        text_slider->SetResolution(1);
-        text_slider->hide();
+    if (m_textLines.size() <= m_lineImages.size()) {
+        m_textSlider->setState(0);
+        m_textSlider->setResolution(1);
+        m_textSlider->hide();
     }
     return 0;
 }
@@ -104,64 +104,64 @@ int type_text_scroller::Open(int newPriority, heroWindow* parent)
 VA(0x005BA3B0, 0x101)  // anchor-vtable 0x642d0c slot 0 callee, retail-only
 type_text_scroller::~type_text_scroller()
 {
-    for (unsigned int i = 0; i < line_images.size(); i++)
-        delete line_images[i];
-    delete text_slider;
-    delete background;
+    for (unsigned int i = 0; i < m_lineImages.size(); i++)
+        delete m_lineImages[i];
+    delete m_textSlider;
+    delete m_background;
 }
 
 // Slot 2. Only MESSAGE_WIDGET reaches the body: WIDGET_DRAW grabs the
 // backdrop once, WIDGET_SET_STATUS / WIDGET_CLEAR_STATUS are relayed to
 // every line and, when the text overflows, to the slider.
 VA(0x005BA4C0, 0x13D)  // anchor-vtable 0x642d0c slot 2 + Grab, retail-only
-int type_text_scroller::Main(message* msg)
+int type_text_scroller::main(message* msg)
 {
-    if (msg->id == MESSAGE_WIDGET) {
-        switch (msg->codeX) {
+    if (msg->m_id == MESSAGE_WIDGET) {
+        switch (msg->m_codeX) {
         case WIDGET_DRAW:
-            if (!background) {
-                background = new Bitmap16Bit(width, height);
-                background->Grab(gpWindowManager->screenBitmap->map,
-                                 x + parentWindow->x, y + parentWindow->y,
-                                 gpWindowManager->screenBitmap->Width,
-                                 gpWindowManager->screenBitmap->Height,
-                                 gpWindowManager->screenBitmap->Pitch);
+            if (!m_background) {
+                m_background = new Bitmap16Bit(m_width, m_height);
+                m_background->grab(g_windowManager->m_screenBitmap->m_map,
+                                 m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y,
+                                 g_windowManager->m_screenBitmap->m_width,
+                                 g_windowManager->m_screenBitmap->m_height,
+                                 g_windowManager->m_screenBitmap->m_pitch);
             }
             break;
         case WIDGET_SET_STATUS:
         case WIDGET_CLEAR_STATUS:
-            for (unsigned int i = 0; i < line_images.size(); i++)
-                line_images[i]->send_message(
-                    static_cast<widget::ECommands>(msg->codeX), msg->extra);
-            if (text_lines.size() > line_images.size())
-                text_slider->send_message(
-                    static_cast<widget::ECommands>(msg->codeX), msg->extra);
+            for (unsigned int i = 0; i < m_lineImages.size(); i++)
+                m_lineImages[i]->sendMessage(
+                    static_cast<widget::ECommands>(msg->m_codeX), msg->m_extra);
+            if (m_textLines.size() > m_lineImages.size())
+                m_textSlider->sendMessage(
+                    static_cast<widget::ECommands>(msg->m_codeX), msg->m_extra);
             break;
         }
     }
-    return widget::Main(msg);
+    return widget::main(msg);
 }
 
 // The repaint the slider's state-change hook drives: restore the grabbed
 // backdrop, then re-text and redraw every visible line from `firstLine`.
 VA(0x005BA600, 0xD7)  // anchor-callee (0x5b9fa0) + Bitmap16Bit::Draw, retail-only
-void type_text_scroller::Refresh(int firstLine)
+void type_text_scroller::refresh(int firstLine)
 {
-    background->Draw(0, 0, width - 16, height,
-                     gpWindowManager->screenBitmap->map,
-                     x + parentWindow->x, y + parentWindow->y,
-                     gpWindowManager->screenBitmap->Width,
-                     gpWindowManager->screenBitmap->Height,
-                     gpWindowManager->screenBitmap->Pitch, false);
+    m_background->draw(0, 0, m_width - 16, m_height,
+                     g_windowManager->m_screenBitmap->m_map,
+                     m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y,
+                     g_windowManager->m_screenBitmap->m_width,
+                     g_windowManager->m_screenBitmap->m_height,
+                     g_windowManager->m_screenBitmap->m_pitch, false);
 
-    for (unsigned int i = 0; i < line_images.size(); i++) {
-        textWidget* lineWidget = line_images[i];
-        lineWidget->SetText(text_lines[firstLine + i].c_str());
-        lineWidget->Draw();
+    for (unsigned int i = 0; i < m_lineImages.size(); i++) {
+        textWidget* lineWidget = m_lineImages[i];
+        lineWidget->setText(m_textLines[firstLine + i].c_str());
+        lineWidget->draw();
     }
 
-    gpWindowManager->UpdateScreen(x + parentWindow->x, y + parentWindow->y,
-                                  width, height);
+    g_windowManager->updateScreen(m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y,
+                                  m_width, m_height);
 }
 
 // Re-wraps the whole scroller around a new string. The wrap width is
@@ -185,30 +185,30 @@ void type_text_scroller::Refresh(int firstLine)
 // `assign("", 0)`; spelling the argument `std::string()` instead of
 // `std::string("")` is MEASURED AND REJECTED 2026-09-06 at 89.7838.
 VA(0x005BA6E0, 0x1EF)  // anchor-callee (font::FillLinesVector) + slider slots, retail-only
-void type_text_scroller::SetText(const char* text)
+void type_text_scroller::setText(const char* text)
 {
-    font* textFont = ResourceManager::GetFont(font_filename);
-    text_lines.clear();
-    textFont->FillLinesVector(text, width - 24, text_lines);
+    font* textFont = ResourceManager::getFont(m_fontFilename);
+    m_textLines.clear();
+    textFont->fillLinesVector(text, m_width - 24, m_textLines);
 
-    if (text_lines.size() <= line_images.size()) {
-        text_lines.clear();
-        textFont->FillLinesVector(text, width - 3, text_lines);
-        for (unsigned int pad = text_lines.size();
-             pad < line_images.size(); pad++)
-            text_lines.push_back(std::string(""));
-        text_slider->SetState(0);
-        text_slider->SetResolution(1);
-        text_slider->hide();
+    if (m_textLines.size() <= m_lineImages.size()) {
+        m_textLines.clear();
+        textFont->fillLinesVector(text, m_width - 3, m_textLines);
+        for (unsigned int pad = m_textLines.size();
+             pad < m_lineImages.size(); pad++)
+            m_textLines.push_back(std::string(""));
+        m_textSlider->setState(0);
+        m_textSlider->setResolution(1);
+        m_textSlider->hide();
     } else {
-        if (status & WIDGET_DRAWN)
-            text_slider->show();
-        text_slider->SetResolution(
-            text_lines.size() - line_images.size() + 1);
-        text_slider->SetState(0);
+        if (m_status & WIDGET_DRAWN)
+            m_textSlider->show();
+        m_textSlider->setResolution(
+            m_textLines.size() - m_lineImages.size() + 1);
+        m_textSlider->setState(0);
     }
 
-    for (unsigned int i = 0; i < line_images.size(); i++)
-        line_images[i]->SetText(text_lines[i].c_str());
-    textFont->Dispose();
+    for (unsigned int i = 0; i < m_lineImages.size(); i++)
+        m_lineImages[i]->setText(m_textLines[i].c_str());
+    textFont->dispose();
 }

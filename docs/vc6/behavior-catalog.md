@@ -757,7 +757,8 @@ shape that took `type_record_shroud::load` 84 -> 100 - costs 0.64 there.
 objdiff fuzzy gives partial credit for a differing displacement (a 97%
 function can have every local mis-slotted); masked diffs hide immediates (the
 IDC_ARROW and 0x54cc bugs); reloc-name-only rows on data are cosmetic; scores
-against a broken build are void; MAX is the only ledger.
+against a broken build are void. CUR <= MAX <= HIST: MAX is the current
+implementation's work frontier, while HIST exposes peaks lost across edits.
 - evidence: homm2 `docs/patterns/INDEX.md:12-15`; SKILL.md:69-71
 - status: doctrine
 - probe: none (not a compiler behavior)
@@ -801,6 +802,16 @@ peels the first receive; `while (1) { ...; if (!retry && !ok) break; }` retains
 one body. All 19 blocks, 10 branches and five calls match retail. Both forms
 preserve the same helper calls; no caller-side duplication of AllocSize's
 size guard or inline suppression is required.
+
+The shared descending worklist search in `CreateRiver` (`0x548df0`) and
+`BuildRoadCostMap` (`0x547880`) confirms this distinction inside an
+auto-inlined helper. `while (1)` retains the midpoint calculation and
+comparison at one loop header, with two unconditional back edges. The
+`for (;;)` spelling, an initial midpoint followed by `while (first < last)`,
+and a `for` with midpoint updates all duplicate the guard. Changing only
+the loop form banks 76.5058% -> 79.8160% for the river and 75.6686% ->
+81.8701% for the road. `while (true)` and moving the inserts into the loop's
+exit arm are byte-identical to `while (1)`.
 
 ### D3. LICM legality forces a duplicated guard, then jump-threading removes ours — `VideoClose`, 95.9%
 Retail has THREE test sites, we have two: the entry guard before the hoisted
@@ -991,6 +1002,14 @@ a register while leaving `msg` live in edx for the else arm's memory read;
 hoisting it above the `if` coalesces msg and codeX into one register and
 costs four instructions. `findpath::Clear` 95.85 → 96.88: the destination
 must be an assigned pointer local, not the two-return accessor call.
+`TRmgMapPosition::operator+(TPoint)` has a by-value operand: in CreateRiver,
+this keeps the current x coordinate in EBX for the first neighbour and
+restores the jump over the backedge reloads. The relaxation register flow
+then agrees too. CreateRiver rises 81.2445 → 84.0026 and ConnectZones rises
+93.3833 → 93.6151 with no collateral drops. The const-reference operand is
+the negative control. Separating phase-local indices or moving persistent
+position declarations before the vectors/reset is byte-flat; declaration
+order does not explain this instance.
 - status: explained-lever
 - probe: none (needs the surrounding two-arm consumer shape; not yet reduced)
 

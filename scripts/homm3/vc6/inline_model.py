@@ -3,8 +3,8 @@
 
 v1 (the default, `run_predict`) is an inline-DIVERGENCE diagnoser (the
 A-family analogue of why-reg's register diagnosis): for a caller function it
-compares the multiset of out-of-line CALL targets in our in-unit build
-against retail, and reports which callees diverge -
+aligns out-of-line CALL sites in our in-unit build against retail. It reports
+unmatched calls separately from aligned calls with different target names -
 
     retail CALLS X but we inline it        -> we OVER-inline (A12 / budget)
     we CALL X but retail inlines it         -> we UNDER-inline (A8/A9 depth)
@@ -21,7 +21,7 @@ callee's front-end size estimate with the real compiler. The v1 CLI surface
 is unchanged - the vc6 CLI never passes the new flags, so `homm3 vc6
 predict-inline` still runs the diagnoser.
 
-rc: 0 = call multisets agree (no inline divergence), 1 = they diverge, 2 = err.
+rc: 0 = no unmatched calls or named target changes, 1 = differences, 2 = err.
 Model modes: 0 = predicted/selftest-pass, 1 = selftest-fail, 2 = error.
 """
 from __future__ import annotations
@@ -191,7 +191,136 @@ def divergence_rows(base_calls: Counter, ref_calls: Counter):
     return over, under, paired_rows, unknown_over, paired_count
 
 
-def partition_external_count_rows(rows, defined_text):
+def _align_calls(base_refs: list, ref_refs: list):
+    """Prefer exact names, then synthesized names, then uncertain replacements.
+
+    An undifferentiated wildcard lets a missing named cleanup steal the match
+    for a preceding synthesized insert. A gap costs two, a synthesized rename
+    one, a same-method target change one, and any other named replacement two.
+    A name present in both streams stays an alignment anchor: replacing it
+    with another name costs more than two gaps.
+    """
+    shared = {r[2] for r in base_refs} & {r[2] for r in ref_refs}
+
+    def family(name):
+        if name.startswith("??_"):
+            return name[:4]
+        if name.startswith("??"):
+            return name[:3]
+        return name.partition("@")[0]
+
+    previous = [2 * j for j in range(len(ref_refs) + 1)]
+    steps = [bytearray([2] * (len(ref_refs) + 1))]
+    for i, b in enumerate(base_refs, 1):
+        current = [2 * i]
+        step = bytearray(len(ref_refs) + 1)
+        step[0] = 1
+        for j, r in enumerate(ref_refs, 1):
+            if b[1:4] == r[1:4]:
+                cost = 0
+            elif b[2] != r[2] and (b[2] in shared or r[2] in shared):
+                cost = 5
+            elif b[1] == r[1] and (_unresolvable(b[2]) or _unresolvable(r[2])):
+                cost = 1
+            elif family(b[2]) == family(r[2]):
+                cost = 1
+            else:
+                cost = 2
+            choices = (previous[j - 1] + cost, previous[j] + 2, current[j - 1] + 2)
+            choice = min(range(3), key=choices.__getitem__)
+            current.append(choices[choice])
+            step[j] = choice
+        steps.append(step)
+        previous = current
+    i, j = len(base_refs), len(ref_refs)
+    rows = []
+    while i or j:
+        step = steps[i][j]
+        if step == 0:
+            rows.append((base_refs[i - 1], ref_refs[j - 1]))
+            i, j = i - 1, j - 1
+        elif step == 1:
+            rows.append((base_refs[i - 1], None))
+            i -= 1
+        else:
+            rows.append((None, ref_refs[j - 1]))
+            j -= 1
+    return rows[::-1]
+
+
+def ordered_divergence(base_text: str, ref_text: str) -> dict:
+    """Use call sites to distinguish missing calls from changed target names.
+
+    Allocating synthesized-name matches alphabetically can consume an unrelated
+    destructor before the four inserts that actually align with retail. Align
+    sema's ordered call records instead. A paired call with two different mangled
+    names needs an overload/ICF/nesting check; its position alone proves none of
+    those explanations, so do not manufacture two inline decisions from it.
+    """
+    from homm3.sema import diff
+
+    def refs(text):
+        return [r for r in diff._ref_seq(text)[0]
+                if r[1] in ("call", "jmp", "ind")]
+
+    def counted(row):
+        return row is not None and row[1] != "ind" and not _HELPER.match(row[2])
+
+    base_calls, ref_calls = _called(base_text), _called(ref_text)
+    base_left, ref_left = base_calls.copy(), ref_calls.copy()
+    paired_base, paired_ref = Counter(), Counter()
+    target_changes = []
+    for b, r in _align_calls(refs(base_text), refs(ref_text)):
+        if b is None or r is None:
+            continue
+        if counted(b):
+            base_left[b[2]] -= 1
+        if counted(r):
+            ref_left[r[2]] -= 1
+        if b[1:4] == r[1:4]:
+            continue
+        if (b[1] == r[1] and b[3] == r[3]
+                and (_unresolvable(b[2]) or _unresolvable(r[2]))
+                and b[1] != "ind"):
+            paired_base[b[2]] += 1
+            paired_ref[r[2]] += 1
+        else:
+            target_changes.append({
+                "base_offset": b[0], "retail_offset": r[0],
+                "base_callee": b[2], "retail_callee": r[2],
+                "base_kind": b[1], "retail_kind": r[1],
+                "base_addend": b[3], "retail_addend": r[3],
+            })
+
+    # Calls that merely moved across an alignment anchor still cancel by name.
+    under, over, unknown_over = [], [], []
+    for sym in sorted(base_left.keys() | ref_left.keys()):
+        delta = base_left[sym] - ref_left[sym]
+        if delta > 0:
+            under.append((sym, delta, 0))
+        elif delta < 0:
+            row = (sym, 0, -delta)
+            (unknown_over if _unresolvable(sym) else over).append(row)
+    return {
+        "under": under, "over": over, "unknown_over": unknown_over,
+        "paired_rows": ([(s, n, 0) for s, n in paired_base.items()]
+                        + [(s, 0, n) for s, n in paired_ref.items()]),
+        "paired": sum(paired_base.values()), "target_changes": target_changes,
+    }
+
+
+def ordered_divergence_note(base_text: str, ref_text: str):
+    rows = ordered_divergence(base_text, ref_text)
+    under = sum(b - r for _s, b, r in rows["under"])
+    over = sum(r - b for _s, b, r in rows["over"] + rows["unknown_over"])
+    parts = ([f"{under} under-inline"] * bool(under)
+             + [f"{over} over-inline"] * bool(over)
+             + [f"{len(rows['target_changes'])} aligned call-target difference(s)"]
+             * bool(rows["target_changes"]))
+    return ", ".join(parts) or None
+
+
+def partition_external_count_rows(rows, defined_text, *, shared_symbols=None):
     """Separate count deltas that cannot be inline decisions.
 
     If both sides call the same symbol, but that symbol has no code body in
@@ -203,7 +332,9 @@ def partition_external_count_rows(rows, defined_text):
     inline_rows, count_rows = [], []
     for row in rows:
         sym, base_n, retail_n = row
-        if base_n and retail_n and sym not in defined_text:
+        shared = (bool(base_n and retail_n) if shared_symbols is None
+                  else sym in shared_symbols)
+        if shared and sym not in defined_text:
             count_rows.append(row)
         else:
             inline_rows.append(row)
@@ -230,6 +361,13 @@ def nested_frontiers(under_rows, over_rows, callee_calls):
                             min(outer_delta, inner_delta,
                                 outer_calls[inner])))
     return tuple(row for row in out if row[2])
+
+
+def aligned_nested_frontiers(target_changes, callee_calls):
+    pairs = Counter((r["base_callee"], r["retail_callee"])
+                    for r in target_changes)
+    return tuple((outer, inner, count) for (outer, inner), count in pairs.items()
+                 if callee_calls.get(outer, Counter())[inner])
 
 
 def _callee_call_map(obj: Path, rows) -> dict[str, Counter]:
@@ -302,29 +440,53 @@ def run_predict(args) -> int:
     base_text, base_sym = reg_model._fn_text(
         base_obj, args.fn, getattr(args, "_fn_ordinal", 0))
     args.fn = base_sym
+    trace = None
+    if getattr(args, "trace", False):
+        from homm3.vc6 import inline_trace
+        if unit:
+            flags = _unit.flags_for_unit(unit)
+            trace_source = (src if manifest_src and manifest_src.resolve() == src
+                            else base_obj.with_suffix(".cpp"))
+        else:
+            flags = ["/c", *reg_model.GAME_FLAGS, "/FAs"]
+            include_dir = reg_model._wine_dir(src.parent)
+            if include_dir:
+                flags.append(f"/I{include_dir}")
+            trace_source = src
+        try:
+            trace = inline_trace.capture(trace_source, flags, base_sym, base_obj)
+        except ValueError as exc:
+            _common.die(str(exc))
     ref_text, ref_label = reg_model._reference_side(args)
 
     base_calls, ref_calls = _called(base_text), _called(ref_text)
-    over, under, unresolved, unknown_over, _row_paired = divergence_rows(
-        base_calls, ref_calls)
+    comparison = ordered_divergence(base_text, ref_text)
+    over, under = comparison["over"], comparison["under"]
+    unresolved, unknown_over = comparison["paired_rows"], comparison["unknown_over"]
+    target_changes, paired = comparison["target_changes"], comparison["paired"]
+    raw_under = sum(b - r for _s, b, r in under)
+    raw_over = sum(r - b for _s, b, r in over + unknown_over)
     defined_text = _asm._text_symbols(base_obj)
-    over, over_call_counts = partition_external_count_rows(over, defined_text)
+    shared_symbols = base_calls.keys() & ref_calls.keys()
+    over, over_call_counts = partition_external_count_rows(
+        over, defined_text, shared_symbols=shared_symbols)
     under, under_call_counts = partition_external_count_rows(under,
-                                                               defined_text)
-    call_counts = over_call_counts + under_call_counts
+        defined_text, shared_symbols=shared_symbols)
+    call_counts = [(s, base_calls[s], ref_calls[s])
+                   for s, _b, _r in over_call_counts + under_call_counts]
 
     report_score = _current_report_score(unit, base_sym, base_obj)
     byte_exact = report_score is not None and report_score >= 99.9999
-    raw_under, raw_over, paired = divergence(base_calls, ref_calls)
-    real_under, real_over, _ = effective_divergence(
-        base_calls, ref_calls, byte_exact=byte_exact)
-    diverged = bool(real_under or real_over)
+    real_under, real_over = (0, 0) if byte_exact else (raw_under, raw_over)
+    diverged = not byte_exact and bool(real_under or real_over or target_changes)
     rc = 1 if diverged else 0
 
     nested = ()
-    if diverged and under and over:
-        nested = nested_frontiers(
-            under, over, _callee_call_map(base_obj, under))
+    if diverged and ((under and over) or target_changes):
+        candidates = under + [(r["base_callee"], 1, 0) for r in target_changes]
+        callees = _callee_call_map(base_obj, candidates)
+        nested = (nested_frontiers(under, over, callees)
+                  + aligned_nested_frontiers(target_changes, callees))
 
     if getattr(args, "json", False):
         print(json.dumps({
@@ -343,6 +505,7 @@ def run_predict(args) -> int:
                 {"callee": s, "base_calls": b, "retail_calls": r}
                 for s, b, r in call_counts],
             "name_paired": paired,
+            "call_target_changes": target_changes,
             "raw_under": raw_under, "raw_over": raw_over,
             "under": real_under, "over": real_over,
             "byte_exact": byte_exact,
@@ -350,17 +513,27 @@ def run_predict(args) -> int:
             "nested_frontiers": [
                 {"outer": outer, "inner": inner, "sites": sites}
                 for outer, inner, sites in nested],
+            **({"trace": trace} if trace is not None else {}),
             "rc": rc}, indent=2))
         return rc
 
     print(f"[predict-inline] {args.fn} ({base_sym})")
     print(f"[reference] {ref_label}")
+    if trace is not None:
+        caller = trace["caller"]
+        print(f"[trace] caller cb {caller['cb']}, initial budget {caller['initial_budget']}; "
+              f"{len(trace['sites'])} recorded budget tests; identical C2 object")
+        for candidate in trace.get("candidates", []):
+            if not candidate["state_gate_allows"]:
+                print(f"[trace] caller-state gate rejects {candidate['symbol']} "
+                      f"before budget testing (body flags {candidate['body_flags']:#x}, "
+                      f"callee flags {candidate['callee_flags']:#x})")
+        print(f"[trace] {trace['directory']}/trace.json")
     print(f"[calls] base emits {sum(base_calls.values())} out-of-line call(s); "
           f"retail {sum(ref_calls.values())}")
     if unresolved:
-        print(f"[names] {paired} call(s) pair off by COUNT and are NOT "
-              "divergence - retail names an unclaimed callee with a synth "
-              "label our side can never emit:")
+        print(f"[names] {paired} call site(s) align under different synthesized "
+              "names; inspect their targets before inferring an inline change:")
         for s, b, r in sorted(unresolved, key=lambda x: -(x[1] + x[2])):
             side = f"base x{b}" if b else f"retail x{r}"
             print(f"    {s[:70]}  {side}")
@@ -371,17 +544,24 @@ def run_predict(args) -> int:
               "source for it.")
         return 0
     if not diverged:
-        print("[inline] call multisets AGREE - inline structure matches; any "
-              "residual is register/scheduling (-> why-reg).")
+        print("[inline] no unmatched calls or named target changes; inspect "
+              "the CFG and any synthesized-name pairs before changing C++.")
         return 0
+    if target_changes:
+        print("[CALL-target] aligned calls name different targets or entry points. "
+              "Check the overload, folded body, or nested helper with "
+              "`homm3 sema diff --calls`; alignment alone does not prove inlining:")
+        for row in target_changes:
+            print(f"    base +{row['base_offset']:03x} {row['base_callee']} -> "
+                  f"retail +{row['retail_offset']:03x} {row['retail_callee']}")
     if under:
         print("[UNDER-inline] retail expands these; our CL keeps a call "
-              "(A8/A9 depth/budget - our budget ran out or went too deep):")
+              "(unmatched calls; A8/A9 depth/budget):")
         for s, b, r in sorted(under, key=lambda x: -(x[1] - x[2])):
             print(f"    {s[:70]}  base x{b} vs retail x{r}")
     if over:
         print("[OVER-inline] our CL expands these; retail keeps a call "
-              "(A12 single-call-site / callee cheaper than retail's):")
+              "(unmatched calls; A12 single-call-site / callee cost):")
         for s, b, r in sorted(over, key=lambda x: -(x[2] - x[1])):
             print(f"    {s[:70]}  base x{b} vs retail x{r}")
     if unknown_over:
@@ -401,13 +581,7 @@ def run_predict(args) -> int:
         print("[fix] inspect the ordered call stream and source-labelled CFG "
               "for branch-arm duplication, a cross-jumped common tail, or a "
               "missing guarded call; do not apply an inline pragma.")
-    if not under and not over and not unknown_over and not call_counts:
-        print("[unknown] unmatched synthesized callee names leave a call-count "
-              "residue, but no named inline decision can be correlated. This "
-              "is not actionable evidence for changing C++.")
-        print("[fix] run `homm3 sema diff <selector> --structure`; if flow and "
-              "sizes agree, repair/admit the relocation or callee-name mapping "
-              "instead of steering C1.")
+    if not under and not over and not unknown_over and not call_counts and not nested:
         return rc
     if nested:
         print("[shape] reciprocal nested inline frontier: retail expands the "

@@ -22,12 +22,17 @@ public:
         MOBILE_HERO_CELL_Y = 8
     };
 
-    hero* obscuring_hero;
-    boat* obscuring_boat;
-    hero* mobile_hero;
+    // Before normalization: obscuring_hero.
+    hero* m_obscuringHero;
+    // Before normalization: obscuring_boat.
+    boat* m_obscuringBoat;
+    // Before normalization: mobile_hero.
+    hero* m_mobileHero;
 
     ~type_cell_adjuster();
-    NewmapCell* get_trigger_cell(NewmapCell* map_cell, int x, int y);
+    // Before normalization (function): type_cell_adjuster::get_trigger_cell.
+    // Before normalization (locals): map_cell.
+    NewmapCell* getTriggerCell(NewmapCell* mapCell, int x, int y);
 };
 SIZE(type_cell_adjuster, 0xc);
 
@@ -36,32 +41,25 @@ enum ECompleteDrawFps {
 };
 
 class CChatManager;
-void __cdecl UpdateCompleteDrawFps(CChatManager* manager, const char* text);
+// Before normalization (function): UpdateCompleteDrawFps.
+void __cdecl updateCompleteDrawFps(CChatManager* manager, const char* text);
 
-DATA(0x0065f690) extern int gCompleteDrawFpsFrame;
-DATA(0x00691240) extern unsigned long gCompleteDrawFpsLastTime;
+// Before normalization: gCompleteDrawFpsFrame.
+// Before normalization: gCompleteDrawFpsLastTime.
+DATA(0x0065f690) extern int g_completeDrawFpsFrame;
+DATA(0x00691240) extern unsigned long g_completeDrawFpsLastTime;
 DATA(0x0069136c) extern int
-    gCompleteDrawFpsTimes[COMPLETE_DRAW_FPS_FRAME_COUNT];
-DATA(0x006912ec) extern char gCompleteDrawFpsText[];
-DATA(0x00660388) extern char gCompleteDrawFpsFormat[];
+    // Before normalization: gCompleteDrawFpsTimes.
+    g_completeDrawFpsTimes[COMPLETE_DRAW_FPS_FRAME_COUNT];
+// Before normalization: gCompleteDrawFpsText.
+// Before normalization: gCompleteDrawFpsFormat.
+DATA(0x006912ec) extern char g_completeDrawFpsText[];
+DATA(0x00660388) extern char g_completeDrawFpsFormat[];
 
-// These source-private renderer layouts are intentionally separate from the
-// broad canonical map types: VC6 changes register allocation in the three
-// large drawing bodies when their type identities are merged.
-struct AdvObjectCellView {
-    unsigned short objectIndex;
-    unsigned char offsets;
-    signed char layer;
-};
-SIZE(AdvObjectCellView, 4);
-
-#pragma pack(push, 1)
-struct AdvMapCellObjectsView {
-    char pad_00[0xe];
-    std::vector<AdvObjectCellView> objects;
-};
-#pragma pack(pop)
-SIZE(AdvMapCellObjectsView, 0x1e);
+// Renderer object access uses canonical NewmapCell::TObjectCell and
+// NewfullMap vectors. The former AdvMapCellObjectsView's +0xe vector
+// and AdvFullMapObjectsView's +4/+0x14/+0x24 pointers were the same
+// retail vector storage, not separate object types or padding fields.
 
 enum EGetSoundObjectIndex {
     GET_SOUND_BANK_0 = 0,
@@ -147,8 +145,10 @@ enum EGetSoundCreatureId {
     GET_SOUND_CREATURE_115 = 115
 };
 
-DATA(0x0063d570) extern TCreatureType gCreatureGenerator1Types[];
-DATA(0x00677938) extern TCreatureType gCreatureGenerator4Types[][4];
+// Before normalization: gCreatureGenerator1Types.
+// Before normalization: gCreatureGenerator4Types.
+DATA(0x0063d570) extern TCreatureType g_creatureGenerator1Types[];
+DATA(0x00677938) extern TCreatureType g_creatureGenerator4Types[][4];
 
 class CObjectType;
 
@@ -169,19 +169,24 @@ enum EReadObjectTypeResult {
 // every offset read by that constructor.
 struct TObjectType {
     struct TPoint {
-        int x;
-        int y;
+        // Before normalization: x.
+        int m_x;
+        // Before normalization: y.
+        int m_y;
     };
     struct TImageInfo {
         // Provisional overload: setImageName initializes the point before
         // either bitset constructor. TObjectType's default construction
         // leaves that point uninitialized, requiring a distinct size path.
         TImageInfo() {}
-        explicit TImageInfo(const TPoint& size) : objectSize(size) {}
+        explicit TImageInfo(const TPoint& size) : m_objectSize(size) {}
 
-        TPoint objectSize;
-        std::bitset<48> drawMask;
-        std::bitset<48> shadowMask;
+        // Before normalization: objectSize.
+        TPoint m_objectSize;
+        // Before normalization: drawMask.
+        std::bitset<48> m_drawMask;
+        // Before normalization: shadowMask.
+        std::bitset<48> m_shadowMask;
     };
 
     // The default constructor load()'s `objectTypes.resize(count)` builds
@@ -192,18 +197,30 @@ struct TObjectType {
     // which is why it has no initializer here either.
     TObjectType();
 
-    int imageNumber;
-    std::bitset<48> passableMask;
-    std::bitset<48> triggerMask;
-    std::bitset<10> terrainMask;
-    std::bitset<10> recommendedTerrainMask;
-    TAdventureObjectType objectType;
-    int subtype;
-    int slotCategory;
-    unsigned char isUnderlay;
-    unsigned char hasTrigger;
-    TPoint triggerCell;
-    TImageInfo imageInfo;
+    // Before normalization: imageNumber.
+    int m_imageNumber;
+    // Before normalization: passableMask.
+    std::bitset<48> m_passableMask;
+    // Before normalization: triggerMask.
+    std::bitset<48> m_triggerMask;
+    // Before normalization: terrainMask.
+    std::bitset<10> m_terrainMask;
+    // Before normalization: recommendedTerrainMask.
+    std::bitset<10> m_recommendedTerrainMask;
+    // Before normalization: objectType.
+    TAdventureObjectType m_objectType;
+    // Before normalization: subtype.
+    int m_subtype;
+    // Before normalization: slotCategory.
+    int m_slotCategory;
+    // Before normalization: isUnderlay.
+    unsigned char m_isUnderlay;
+    // Before normalization: hasTrigger.
+    unsigned char m_hasTrigger;
+    // Before normalization: triggerCell.
+    TPoint m_triggerCell;
+    // Before normalization: imageInfo.
+    TImageInfo m_imageInfo;
 
     // Retail 0x514960, thiscall with no arguments. DECLARED ONLY: the body
     // belongs to the unadmitted Complete-only .msk/objects compiland in the
@@ -214,14 +231,17 @@ struct TObjectType {
     // CObjectType's conversion constructor assigns into ImageName - and the
     // NAME follows the role; nothing attests it.
     const std::basic_string<char, std::char_traits<char>,
-                            std::allocator<char> >& GetImageName();
+                            // Before normalization (function): TObjectType::GetImageName.
+                            std::allocator<char> >& getImageName();
 
     // CObjectType's conversion loads each dimension as a dword before
     // narrowing it to char. Direct field access folds those into byte
     // loads in VC6; ordinary integer accessors retain the observed boundary.
     // Their role names are provisional: this editor type is Complete-only.
-    int GetWidth() const { return imageInfo.objectSize.x; }
-    int GetHeight() const { return imageInfo.objectSize.y; }
+    // Before normalization (function): TObjectType::GetWidth.
+    int getWidth() const { return m_imageInfo.m_objectSize.m_x; }
+    // Before normalization (function): TObjectType::GetHeight.
+    int getHeight() const { return m_imageInfo.m_objectSize.m_y; }
 
     // Retail 0x514610 and 0x514a60, both in the same Complete-only
     // compiland and both returning *this - the per-row `>>` at 0x514b80
@@ -234,6 +254,17 @@ struct TObjectType {
         const std::basic_string<char, std::char_traits<char>,
                                 std::allocator<char> >& name);
     TObjectType& setTriggerMask(const std::bitset<48>& mask);
+    // Provisional fluent setter names: retail objects.txt extraction retains
+    // the two setters above and expands this ordered field/invariant chain.
+    // The corresponding ordinary definitions live in objecttype.cpp.
+    TObjectType& setPassableMask(const std::bitset<48>& mask);
+    TObjectType& setTerrainMask(const std::bitset<10>& mask);
+    TObjectType& setRecommendedTerrainMask(const std::bitset<10>& mask);
+    TObjectType& setObjectType(TAdventureObjectType type);
+    TObjectType& setSubtype(int subtype);
+    TObjectType& setSlotCategory(int category);
+    TObjectType& setUnderlay(bool underlay);
+
 };
 SIZE(TObjectType, 0x4c);
 
@@ -241,38 +272,33 @@ SIZE(TObjectType, 0x4c);
 // dimensions - in .rdata at 0x640278. Both of its consumers, the default
 // constructor above and TObjectType::setTriggerMask's else arm, issue both
 // loads before either store. No compiland in the tree defines it yet.
-extern const TObjectType::TPoint gNoTriggerCell;
+// Before normalization: gNoTriggerCell.
+extern const TObjectType::TPoint g_noTriggerCell;
 
 // Shared header definition for the resize default value. Retail expands
 // this constructor, which does not establish an explicit inline keyword:
 // an ordinary definition in objecttype.cpp was byte-flat (2026-09-06).
 inline TObjectType::TObjectType()
-    : imageNumber(0),
-      passableMask(~std::bitset<48>(0)),
-      objectType(NOTHING),
-      subtype(0),
-      slotCategory(0),
-      isUnderlay(0),
-      hasTrigger(0),
-      triggerCell(gNoTriggerCell)
+    : m_imageNumber(0),
+      m_passableMask(~std::bitset<48>(0)),
+      m_objectType(NOTHING),
+      m_subtype(0),
+      m_slotCategory(0),
+      m_isUnderlay(0),
+      m_hasTrigger(0),
+      m_triggerCell(g_noTriggerCell)
 {
 }
 
 class TObjectTypeTable {
 public:
-    std::vector<TObjectType> objectTypes;
+    // Before normalization: objectTypes.
+    std::vector<TObjectType> m_objectTypes;
     void load(char* filename);
 };
 SIZE(TObjectTypeTable, 0x10);
 
 
-struct AdvFullMapObjectsView {
-    char pad_00[4];
-    CObjectType* objectTypes;
-    char pad_08[0xc];
-    CObject* objects;
-    char pad_18[0xc];
-    CSprite** sprites;
-};
+
 
 #endif /* HOMM3_ADVMGR_OBJECTS_H */

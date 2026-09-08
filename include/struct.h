@@ -17,45 +17,45 @@ class heroWindow;
 // canonical and VC6 may remove fields overwritten before their first read.
 class message {
 public:
-    int id;
-    int codeX;
-    int codeY;
-    int qualifier;
-    int mouseX;
-    int mouseY;
+    int m_id;
+    int m_codeX;
+    int m_codeY;
+    int m_qualifier;
+    int m_mouseX;
+    int m_mouseY;
     union {
-        int extra;
-        const char* extraText;
+        int m_extra;
+        const char* m_extraText;
     };
-    heroWindow* window;
+    heroWindow* m_window;
     // The Dreamcast CodeView body at struct.h:42 zeroes the fields in
     // declaration order. The attested consumer sites need the real
     // constructor shape and VC6 removes fields overwritten before first read.
     // Dreamcast type 0x1016 lists this eight-argument overload before the
     // default constructor; both are header-inline source boundaries.
-    message(int id_, int codeX_, int codeY_, int qualifier_,
-            int mouseX_, int mouseY_, int extra_, heroWindow* window_)
+    message(int id, int codeX, int codeY, int qualifier,
+            int mouseX, int mouseY, int extra, heroWindow* window)
     {
-        id = id_;
-        codeX = codeX_;
-        codeY = codeY_;
-        qualifier = qualifier_;
-        mouseX = mouseX_;
-        mouseY = mouseY_;
-        extra = extra_;
-        window = window_;
+        m_id = id;
+        m_codeX = codeX;
+        m_codeY = codeY;
+        m_qualifier = qualifier;
+        m_mouseX = mouseX;
+        m_mouseY = mouseY;
+        m_extra = extra;
+        m_window = window;
     }
 
     message()
     {
-        id = 0;
-        codeX = 0;
-        codeY = 0;
-        qualifier = 0;
-        mouseX = 0;
-        mouseY = 0;
-        extra = 0;
-        window = 0;
+        m_id = 0;
+        m_codeX = 0;
+        m_codeY = 0;
+        m_qualifier = 0;
+        m_mouseX = 0;
+        m_mouseY = 0;
+        m_extra = 0;
+        m_window = 0;
     }
 };
 SIZE(message, 32);
@@ -74,9 +74,12 @@ SIZE(message, 32);
 // and can_take_town (0x428410) builds one the other way round, masking
 // the three source bytes with 0x3ff, 0x3ff and 0xf before packing.
 struct type_point {
-    short x : 10;
-    short y : 10;
-    short z : 4;
+    // Before normalization: x.
+    short m_x : 10;
+    // Before normalization: y.
+    short m_y : 10;
+    // Before normalization: z.
+    short m_z : 4;
 
     type_point() {}
     // E:\\gamedcs\\struct.h:102. Dreamcast CodeView places the body in the
@@ -84,27 +87,28 @@ struct type_point {
     // call sites. Keep one canonical source definition here so every TU sees
     // the real helper at the original parse point.
     VA(0x004192b0, 0x44)  // anchor-callee, dc 0x1edb0
-    type_point(short new_x, short new_y, short new_z)
+    type_point(short newX, short newY, short newZ)
     {
-        x = new_x;
-        y = new_y;
-        z = new_z;
+        m_x = newX;
+        m_y = newY;
+        m_z = newZ;
     }
     // Dreamcast S_PUB32 is ??8type_point@@QBA_NABU0@@Z: bool return,
     // const member, const-reference operand.
     VA(0x0042ec20, 0x45)  // exact body + sole caller, dc 0x1ee20
     bool operator==(const type_point& arg) const
     {
-        return x == arg.x && y == arg.y && z == arg.z;
+        return m_x == arg.m_x && m_y == arg.m_y && m_z == arg.m_z;
     }
     // Dreamcast retains this source helper out of line in
     // AI_AttemptMove; Complete VC6 expands the same three comparisons.
     VA(0x00482340, 0x45)  // call edge + byte-identical point comparison, dc 0x37d2c
     bool operator!=(const type_point& arg) const
     {
-        return x != arg.x || y != arg.y || z != arg.z;
+        return m_x != arg.m_x || m_y != arg.m_y || m_z != arg.m_z;
     }
-    unsigned char is_valid();
+    // Before normalization (function): type_point::is_valid.
+    unsigned char isValid();
     // E:\gamedcs\struct.h:120, and advspells.obj's own Dreamcast roster
     // retains it out of line (dc 0x22fe4, 0x2e B). Retail has no body:
     // advManager::TownGate (0x41d360) is the admitted witness and EXPANDS
@@ -113,10 +117,11 @@ struct type_point {
     // `(this->x - p2->x)^2 + (this->y - p2->y)^2` with the two 10-bit
     // bitfields sign-extended through the shl/movsx/sar triple. The z
     // plane takes no part, which is what makes it a MAP distance.
-    int DistanceSquared(const type_point* p2) const
+    // Before normalization (function): type_point::DistanceSquared.
+    int distanceSquared(const type_point* p2) const
     {
-        int dy = y - p2->y;
-        int dx = x - p2->x;
+        int dy = m_y - p2->m_y;
+        int dx = m_x - p2->m_x;
         return dx * dx + dy * dy;
     }
 };
@@ -127,48 +132,58 @@ struct type_point {
 // Its type-handle collateral is banked in score history rather than hidden
 // behind consumer-specific declarations.
 struct SLimitData {
-    int iMinX;
-    int iMinY;
-    int iMaxX;
-    int iMaxY;
+    // Before normalization: iMinX.
+    int m_minX;
+    // Before normalization: iMinY.
+    int m_minY;
+    // Before normalization: iMaxX.
+    int m_maxX;
+    // Before normalization: iMaxY.
+    int m_maxY;
 
     SLimitData() {}
     SLimitData(int minx, int miny, int maxx, int maxy)
-        : iMinX(minx), iMinY(miny), iMaxX(maxx), iMaxY(maxy) {}
-    int Width() const { return iMaxX - iMinX + 1; }
-    int Height() const { return iMaxY - iMinY + 1; }
-    bool Intersects(const SLimitData& limits) const
+        : m_minX(minx), m_minY(miny), m_maxX(maxx), m_maxY(maxy) {}
+    // Before normalization (function): SLimitData::Width.
+    int width() const { return m_maxX - m_minX + 1; }
+    // Before normalization (function): SLimitData::Height.
+    int height() const { return m_maxY - m_minY + 1; }
+    // Before normalization (function): SLimitData::Intersects.
+    bool intersects(const SLimitData& limits) const
     {
-        return iMinX <= limits.iMaxX
-            && iMaxX >= limits.iMinX
-            && iMinY <= limits.iMaxY
-            && iMaxY >= limits.iMinY;
+        return m_minX <= limits.m_maxX
+            && m_maxX >= limits.m_minX
+            && m_minY <= limits.m_maxY
+            && m_maxY >= limits.m_minY;
     }
-    bool IsEmpty() const
+    // Before normalization (function): SLimitData::IsEmpty.
+    bool isEmpty() const
     {
-        return iMaxX < iMinX || iMaxY < iMinY;
+        return m_maxX < m_minX || m_maxY < m_minY;
     }
-    void Clip(const SLimitData& limits)
+    // Before normalization (function): SLimitData::Clip.
+    void clip(const SLimitData& limits)
     {
-        if (iMinX < limits.iMinX)
-            iMinX = limits.iMinX;
-        if (iMinY < limits.iMinY)
-            iMinY = limits.iMinY;
-        if (iMaxX > limits.iMaxX)
-            iMaxX = limits.iMaxX;
-        if (iMaxY > limits.iMaxY)
-            iMaxY = limits.iMaxY;
+        if (m_minX < limits.m_minX)
+            m_minX = limits.m_minX;
+        if (m_minY < limits.m_minY)
+            m_minY = limits.m_minY;
+        if (m_maxX > limits.m_maxX)
+            m_maxX = limits.m_maxX;
+        if (m_maxY > limits.m_maxY)
+            m_maxY = limits.m_maxY;
     }
-    void Include(const SLimitData& limits)
+    // Before normalization (function): SLimitData::Include.
+    void include(const SLimitData& limits)
     {
-        if (iMinX > limits.iMinX)
-            iMinX = limits.iMinX;
-        if (iMinY > limits.iMinY)
-            iMinY = limits.iMinY;
-        if (iMaxX < limits.iMaxX)
-            iMaxX = limits.iMaxX;
-        if (iMaxY < limits.iMaxY)
-            iMaxY = limits.iMaxY;
+        if (m_minX > limits.m_minX)
+            m_minX = limits.m_minX;
+        if (m_minY > limits.m_minY)
+            m_minY = limits.m_minY;
+        if (m_maxX < limits.m_maxX)
+            m_maxX = limits.m_maxX;
+        if (m_maxY < limits.m_maxY)
+            m_maxY = limits.m_maxY;
     }
 };
 SIZE(SLimitData, 0x10);
@@ -176,13 +191,13 @@ SIZE(SLimitData, 0x10);
 // CodeView struct.h:340/346 owns this network player record. Complete
 // extends DC's 28-byte dpid/name pair with the version dword at +0x1c;
 // retail's seat-record constructor proves the same base initialization.
-extern int* gpVideoGameState;
+extern int* g_videoGameState;
 
 class CNetPlayerInfo {
 public:
-    unsigned long dpid;   // +0x00
-    char sName[24];       // +0x04
-    int version;          // +0x1c (retail-only extension)
+    unsigned long m_dpid;   // +0x00
+    char m_name[24];       // +0x04
+    int m_version;          // +0x1c (retail-only extension)
 
     // E:\gamedcs\struct.h:340. The Dreamcast body initializes the two
     // shared fields; Complete's added version member belongs to the same
@@ -190,16 +205,16 @@ public:
     VA(0x0057F720, 0x18)  // DC's ordered dpid/name stores plus Complete's game-version field, dc 0x11f5e4
     CNetPlayerInfo()
     {
-        dpid = 0;
-        sName[0] = 0;
-        version = *gpVideoGameState;
+        m_dpid = 0;
+        m_name[0] = 0;
+        m_version = *g_videoGameState;
     }
     // E:\gamedcs\struct.h:346
-    CNetPlayerInfo(char* _sName, unsigned long _dpid)
+    CNetPlayerInfo(char* name, unsigned long dpid)
     {
-        dpid = _dpid;
-        strcpy(sName, _sName);
-        version = *gpVideoGameState;
+        m_dpid = dpid;
+        strcpy(m_name, name);
+        m_version = *g_videoGameState;
     }
 };
 SIZE(CNetPlayerInfo, 32);
@@ -208,9 +223,9 @@ SIZE(CNetPlayerInfo, 32);
 // Get, DelayTil and Delay remain ordinary definitions in kbwin.cpp.
 class GameTime {
 public:
-    static unsigned long Get();             // 0x4f82e0
-    static void DelayTil(unsigned long time);  // 0x4f82f0
-    static void Delay(int interval);        // 0x4f83c0
+    static unsigned long get();             // 0x4f82e0
+    static void delayTil(unsigned long time);  // 0x4f82f0
+    static void delay(int interval);        // 0x4f83c0
     // DC struct.h:411 / :419 (dc 0x1eed4, 0x1ef04) - the other two
     // header inlines of the same family; no retail out-of-line body
     // exists for either. textEntryWidget::SetupDisplayString 0x5bb660
@@ -219,13 +234,19 @@ public:
     // argument evaluated ahead of its guard), and the result is tested
     // with `sub eax, edi; js`, i.e. the SIGN of the difference - not
     // the unsigned `cmp` a hand-spelled `Get() >= deadline` emits.
-    static long ElapsedSince(unsigned long time)
+    // Before normalization (function): GameTime::Elapsed.
+    // The stop/start subtraction is retained by the upstream mouse timing helper.
+    static long elapsed(unsigned long stop, unsigned long start)
     {
-        return static_cast<long>(Get() - time);
+        return static_cast<long>(stop - start);
     }
-    static unsigned char IsPast(unsigned long time)
+    static long elapsedSince(unsigned long time)
     {
-        return ElapsedSince(time) >= 0;
+        return static_cast<long>(get() - time);
+    }
+    static unsigned char isPast(unsigned long time)
+    {
+        return elapsedSince(time) >= 0;
     }
     // DC struct.h:438 (dc 0x4c994, 44 B on SH4) - the frame-pacing
     // step, and a HEADER INLINE: no retail out-of-line body exists,
@@ -235,13 +256,13 @@ public:
     // which a hand-spelled `timer += lag` (two independent global
     // loads) cannot produce, and the clamp compares `cmp interval, lag;
     // jle`, i.e. the INTERVAL is the left operand.
-    static unsigned long NextFrameTime(unsigned long this_frame,
+    static unsigned long nextFrameTime(unsigned long thisFrame,
                                        long interval)
     {
-        long lag = static_cast<long>(Get() - this_frame);
+        long lag = static_cast<long>(get() - thisFrame);
         if (interval > lag)
             lag = interval;
-        return this_frame + lag;
+        return thisFrame + lag;
     }
 };
 

@@ -30,7 +30,8 @@ class armyGroup;
 // adventuremapwindow.obj's shared rollover/right-click text table. Dreamcast
 // supplies the name and THelpText row type; Complete fixes its 0x6a56e0 base
 // through overview and town-screen readers of both columns.
-extern THelpText gAdventureWindowHelp[];
+// Before normalization: gAdventureWindowHelp.
+extern THelpText g_adventureWindowHelp[];
 
 
 
@@ -138,35 +139,46 @@ enum EAdvmgrRetailObjectType {
 // the object it is standing on in both of its dialogs. The guard is SPLIT
 // around this one declarator rather than moved, so the preprocessed text
 // every quick-info consumer sees is unchanged, line for line.
-DATA(0x006a79ec) extern const char* const gAdventureObjectNames[];
-DATA(0x006a5e84) extern const char* const gTerrainNames[];
-DATA(0x0069778c) extern int gUnnamed69778c;
-DATA(0x006989c8) extern int gUnnamed6989c8;
+// Before normalization: gAdventureObjectNames.
+// Before normalization: gTerrainNames.
+DATA(0x006a79ec) extern const char* const g_adventureObjectNames[];
+DATA(0x006a5e84) extern const char* const g_terrainNames[];
+// Before normalization: gUnnamed6989c8.
+DATA(0x0069778c) extern int g_unnamed69778c;
 // Paired with gUnnamed6989c8 by every non-local adventure command gate.
 // The role is byte-proven; no surviving symbol attests a semantic name.
-DATA(0x0069ccd4) extern int gUnnamed69ccd4;
+// Before normalization: gUnnamed69ccd4.
+DATA(0x006989c8) extern int g_unnamed6989c8;
 // Written at startup by InitializeExtraInfoText (28 rows of
 // xtrainfo.txt), so the ELEMENT is not const.
-DATA(0x0069127c) extern const char* gGlobalInfoFlagNames[];
-DATA(0x006a7520) extern const char* const gBorderColorNames[];
+// Before normalization: gGlobalInfoFlagNames.
+DATA(0x0069ccd4) extern int g_unnamed69ccd4;
+// Before normalization: gBorderColorNames.
+DATA(0x0069127c) extern const char* g_globalInfoFlagNames[];
 // Role-derived retail tables used by SetRolloverText. The generator-name
 // semantics are corroborated by the DC public roster; the x86 bases and
 // owner-color consumer role are fixed directly by the retail switch blocks.
-DATA(0x006a5898) extern const char* const gObjectOwnerColorNames[8];
+// Before normalization: gObjectOwnerColorNames.
+DATA(0x006a7520) extern const char* const g_borderColorNames[];
 // Both written at startup by InitializeCreatureGeneratorNames (80 rows of
 // crgen1.txt and 2 of crgen4.txt), so the ELEMENT is not const.
-DATA(0x006914fc) extern const char* gCreatureGenerator1RolloverNames[];
-DATA(0x00691354) extern const char* gCreatureGenerator4RolloverNames[];
+// Before normalization: gCreatureGenerator1RolloverNames.
+DATA(0x006a5898) extern const char* const g_objectOwnerColorNames[8];
+// Before normalization: gCreatureGenerator4RolloverNames.
+DATA(0x006914fc) extern const char* g_creatureGenerator1RolloverNames[];
 // InitializeMineNames copies the eight lines of minename.txt here. The mine
 // help-text helper indexes 0..6 by mine type and uses row 7 for an abandoned
 // mine, independently fixing both the extent and the table's consumer role.
-DATA(0x006a74d0) extern const char* const gMineDescriptions[8];
+// Before normalization: gMineDescriptions.
+DATA(0x00691354) extern const char* g_creatureGenerator4RolloverNames[];
 // events.obj joins the gate for the resource pile (0x4a4be0), which
 // strcpy's the resource's own name out of this table and lower-cases its
 // first letter before formatting the pickup line. The guard is SPLIT
 // around the one declarator rather than moved, so the preprocessed text
 // every quick-info consumer sees is unchanged, line for line.
-extern const char* gResourceNames[7];
+// Before normalization: gResourceNames.
+DATA(0x006a74d0) extern const char* const g_mineDescriptions[8];
+extern const char* g_resourceNames[7];
 // The two mine tables advManager::DoEventMine (0x4a39a0) reads, both
 // text.obj/game-side globals declared here because this is where the
 // adventure-object tables of the events TU already live.
@@ -176,14 +188,15 @@ extern const char* gResourceNames[7];
 // gems, gold, HoMM3's published mine rates in resource order. The
 // Dreamcast publishes `?gMineCharacteristics@@3PAHA` and the shape
 // agrees exactly.
-DATA(0x00678288) extern const int gMineCharacteristics[7];
+// Before normalization: gMineCharacteristics.
 // 0x6a5e20 is the per-mine-type capture line, indexed by the same type
 // and handed straight to NormalDialog as its text. It has exactly ONE
 // code consumer image-wide. The Dreamcast publishes TWO char** mine
 // tables - `?gMineEventText@@3PAPBDA` and `?gMineDescriptions@@3PAPBDA` -
 // and only the ROLE separates them: this one is an event dialog's text,
 // so it takes the event name. PROVISIONAL on that ground alone.
-DATA(0x006a5e20) extern const char* const gMineEventText[];
+// Before normalization: gMineEventText.
+DATA(0x00678288) extern const int g_mineCharacteristics[7];
 // Route-arrow frame selector, retail .data 0x6782ac: sixty-four signed
 // bytes read as [previous step direction][current step direction], both
 // in the eight-way order gStepDeltaX/gStepDeltaY use. ShowRoute adds 2 to
@@ -191,7 +204,9 @@ DATA(0x006a5e20) extern const char* const gMineEventText[];
 // fixed by the matrix itself - the straight-through diagonal runs
 // 8,9,..,15, i.e. 8+dir - and the extent is exact, since 0x6782ec begins
 // unrelated float data.
-DATA(0x006782ac) extern const signed char gRouteArrowFrames[8][8];
+// Before normalization: gRouteArrowFrames.
+DATA(0x006a5e20) extern const char* const g_mineEventText[];
+DATA(0x006782ac) extern const signed char g_routeArrowFrames[8][8];
 
 // advManager::advCommand's domain. The Dreamcast prints the member as a
 // plain T_INT4 (classes.csv list[171], offset 84) and no surviving symbol
@@ -222,21 +237,27 @@ enum EAdvCommand {
 // command surface. Roles are what the bytes prove:
 //   0x6968e0  the live walk-sample handle soundManager::MemorySample
 //             returns for the step the route walker is about to take.
-DATA(0x006968e0) extern ds_memsample* gUnnamed6968e0;
+// Before normalization: gUnnamed6968e0.
 //   0x6968e4  the resource-side walk sample paired with that live handle;
 //             StopCursor clears both after stopping the handle.
-DATA(0x006968e4) extern sample* gUnnamed6968e4;
+// Before normalization: gUnnamed6968e4.
+DATA(0x006968e0) extern ds_memsample* g_unnamed6968e0;
 //   0x6968e8  a cursor-owned byte latch cleared when animate_move finishes.
 //             No surviving symbol names its role, so the name stays ordinal.
-extern unsigned char gUnnamed6968e8;
+// Before normalization: gUnnamed6968e8.
+DATA(0x006968e4) extern sample* g_unnamed6968e4;
+extern unsigned char g_unnamed6968e8;
 //   0x69777c  breaks the route step loop when nonzero.
-DATA(0x0069777c) extern int gUnnamed69777c;
+// Before normalization: gUnnamed69777c.
 //   0x698774  suppresses the route teardown and forces ShowRoute
 //             instead; eleven consumers image-wide, three of them here.
-DATA(0x00698774) extern int gUnnamed698774;
+// Before normalization: gUnnamed698774.
+DATA(0x0069777c) extern int g_unnamed69777c;
 //   0x699560  gates both of the hero-view arm's SetEnvironmentOrigin
 //             calls, and UpdateRadar's own AI-shield paint.
-DATA(0x00699560) extern int gUnnamed699560;
+// Before normalization: gUnnamed699560.
+DATA(0x00698774) extern int g_unnamed698774;
+DATA(0x00699560) extern int g_unnamed699560;
 
 // Retail .bss, three more unattested slots the de-select dispatcher reads.
 // The first two are game::Overview's reply pair - ProcessDeSelect's
@@ -244,34 +265,42 @@ DATA(0x00699560) extern int gUnnamed699560;
 // to back, and both are written inside that body (relocs at 0x11e8ff and
 // 0x11e904) - and the third gates the end-turn warning dialog.
 //   0x6985c0  the overview screen's exit action; see EOverviewExit.
-DATA(0x006985c0) extern int giOverviewReturnAction;
+// Before normalization: giOverviewReturnAction.
 //   0x69873c  the town the overview screen exited on, in game::GetTown's
 //             domain: ProcessDeSelect feeds it straight to the accessor
 //             and the -1 arm is emitted, so it carries the same "no town"
 //             sentinel townIds does.
-DATA(0x0069873c) extern int giOverviewReturnActionExtra;
+// Before normalization: giOverviewReturnActionExtra.
+DATA(0x006985c0) extern int g_overviewReturnAction;
 //   0x698778  third of the three gates on the "you still have heroes who
 //             can move" end-turn confirm, after game::field_1f69d and
 //             playerData::HasMobileHero.
-DATA(0x00698778) extern int gUnnamed698778;
+// Before normalization: gUnnamed698778.
+DATA(0x0069873c) extern int g_overviewReturnActionExtra;
+DATA(0x00698778) extern int g_unnamed698778;
 
 // Retail .bss/.data, three more the hero-context switch reads. Roles are
 // exactly what SetHeroContext's branches prove and nothing wider:
 //   0x682a38  cleared for the "is this turn ours to draw" gate, tested
 //             between bVideoPaused and gCompleteDrawMessageBypass.
-DATA(0x00682a38) extern unsigned char gbFollowPlayerMode;
+// Before normalization: gbFollowPlayerMode.
 //   0x6989f4  set to 1 around ViewPuzzle's grail-reveal CompleteDraw and
 //             cleared right after - a draw-pass mode latch by role.
-DATA(0x006989f4) extern int gUnnamed6989f4;
+// Before normalization: gUnnamed6989f4.
+DATA(0x00682a38) extern unsigned char g_followPlayerMode;
 //   0x6993dc  set to 1 on Open's two hotseat arms alongside the
 //             gCompleteDrawEnabled refresh.
-DATA(0x006993dc) extern int gUnnamed6993dc;
+// Before normalization: gUnnamed6993dc.
+DATA(0x006989f4) extern int g_unnamed6989f4;
 //   0x691209  lets a NON-human acting player through that same gate
 //             without the IsLastHuman probe.
-DATA(0x00691209) extern unsigned char gUnnamed691209;
+// Before normalization: gUnnamed691209.
+DATA(0x006993dc) extern int g_unnamed6993dc;
 //   0x698790  suppresses the visibility scan around the new hero when the
 //             receiving player is not the local human.
-DATA(0x00698790) extern int gUnnamed698790;
+// Before normalization: gUnnamed698790.
+DATA(0x00691209) extern unsigned char g_unnamed691209;
+DATA(0x00698790) extern int g_unnamed698790;
 
 // gUnnamed691209's PRODUCER, found while decoding advManager::Main: the
 // "gosolo" console handler at 0x4022e0 sets the byte to 1 and stores
@@ -286,20 +315,24 @@ DATA(0x00698790) extern int gUnnamed698790;
 // ?gbGoSolo@@3_NA / ?giSoloPos@@3HA, but it puts them at 0x691259 and
 // 0x69125c, a different pair fifty bytes up, so the mangled spellings are
 // NOT evidence for these two addresses and are recorded, not adopted.
-DATA(0x0069120c) extern int gUnnamed69120c;
+// Before normalization: gUnnamed69120c.
+DATA(0x0069120c) extern int g_unnamed69120c;
 
 // Retail .data 0x691678 / 0x69167c: once-per-session latches for the two
 // turn-start info popups (general-text rows 332 and 333). Set to 1 the
 // first time StartLocalPlayerTurn shows each dialog; nothing clears them.
-DATA(0x00691678) extern int gUnnamed691678;
-DATA(0x0069167c) extern int gUnnamed69167c;
+// Before normalization: gUnnamed691678.
+// Before normalization: gUnnamed69167c.
+DATA(0x00691678) extern int g_unnamed691678;
+DATA(0x0069167c) extern int g_unnamed69167c;
 
 // Retail .bss 0x699544, an ambient-sound resume stamp. The whole image
 // touches it from advmgr.obj alone - Main twice and StartLocalPlayerTurn
 // once - and Main's use is the complete contract: a non-zero stamp older
 // than six seconds clears itself, re-arms the terrain ambient track and
 // re-centres the environment origin. Name is an address ordinal.
-extern unsigned long gUnnamed699544;
+// Before normalization: gUnnamed699544.
+extern unsigned long g_unnamed699544;
 
 // Retail .bss 0x69928c and the manager that lives there. InitMainClasses
 // (0x4edb40) allocates it LAST, immediately after gpSearchArray, and
@@ -317,23 +350,28 @@ public:
     // Declared for InitMainClasses' `new`: retail calls a real constructor
     // (3 B at 0x524360) on the one-byte allocation.
     CAITurnDriver69928c();
-    void StartPlayerTurn(int gamePos);  // 0x525e80
+    // Before normalization (function): CAITurnDriver69928c::StartPlayerTurn.
+    void startPlayerTurn(int gamePos);  // 0x525e80
 };
-extern CAITurnDriver69928c* gpUnnamed69928c;
+// Before normalization: gpUnnamed69928c.
+extern CAITurnDriver69928c* g_unnamed69928c;
 
 // smackmgr.obj's video-pump bracket (0x5977a0 / 0x597850), the pair
 // ProcessKeyPress's ESC arm puts around its exit confirm. Declared here
 // rather than by including smackmgr.h: advmgr.obj needs exactly these two
 // declarators out of that header, and this tree's include-set sensitivity
 // makes widening a compiland's closure a measured cost, not a free one.
-void VideoPause();
-void VideoResume();
+// Before normalization (function): VideoPause.
+void videoPause();
+// Before normalization (function): VideoResume.
+void videoResume();
 
 // Retail .bss 0x6972b8, kb.cpp's game-over latch, also published by
 // kb.h as gbGameOver; advManager::Main tests it twice - once on entry
 // and once after the dispatch - and turns a set latch into the
 // executive's terminate-loop message.
-extern int gbGameOver;
+// Before normalization: gbGameOver.
+extern int g_gameOver;
 
 // giOverviewReturnAction's domain. ONE value is byte-proven - the kingdom-
 // overview arm answers 2 by viewing giOverviewReturnActionExtra's town and suppressing the
@@ -349,7 +387,8 @@ enum EOverviewExit {
 // slot is a FLOAT and not the int at 0x68c6bc it is paired with). The only
 // three values UpdateRadar tests against are 16.0f, 11.84f and 7.68f -
 // 0x41800000, 0x413d70a4 and 0x40f5c28f exactly. No attested name.
-extern float gUnnamed68c6b8;
+// Before normalization: gUnnamed68c6b8.
+extern float g_unnamed68c6b8;
 
 // The four square map dimensions MAP_WIDTH/MAP_HEIGHT take, named so
 // UpdateRadar's three `switch (MAP_HEIGHT)` bodies case on a domain rather
@@ -377,12 +416,17 @@ enum EMapDimension {
 #define VIEW_WORLD_TILE_SCALE_FULL 16.0f
 #define VIEW_WORLD_TILE_SCALE_MID 11.84f
 #define VIEW_WORLD_TILE_SCALE_FAR 7.68f
-DATA(0x006a7b84) extern const char* gTreeOfKnowledgeName;
-DATA(0x006a64d8) extern const char* const gWiseTreePriceNames[];
-DATA(0x006912c4) extern const char* gKnownTreePriceText;
-DATA(0x006a7bb0) extern const char* gWitchHutName;
+// Before normalization: gTreeOfKnowledgeName.
+// Before normalization: gWiseTreePriceNames.
+DATA(0x006a7b84) extern const char* g_treeOfKnowledgeName;
+// Before normalization: gKnownTreePriceText.
+DATA(0x006a64d8) extern const char* const g_wiseTreePriceNames[];
+// Before normalization: gWitchHutName.
+DATA(0x006912c4) extern const char* g_knownTreePriceText;
+DATA(0x006a7bb0) extern const char* g_witchHutName;
 
-DATA(0x006912ac) extern const char* gKnownWitchSkillText;
+// Before normalization: gKnownWitchSkillText.
+DATA(0x006912ac) extern const char* g_knownWitchSkillText;
 
 // Retail GetSoundId returns this four-byte enum. The semantic aliases have
 // not been admitted; these ordinal names expose only the values proved by
@@ -466,8 +510,10 @@ enum e_looping_sound_id {
 // member names. Retail TrimLoopingSounds independently proves the four-entry
 // array, stride, and soundId field.
 struct soundNode {
-    e_looping_sound_id soundId;
-    int priority;
+    // Before normalization: soundId.
+    e_looping_sound_id m_soundId;
+    // Before normalization: priority.
+    int m_priority;
 };
 SIZE(soundNode, 8);
 
@@ -516,12 +562,14 @@ class textWidget;
 
 // Only byte +1 of this 16-byte row is named by behavior, so keep the
 // otherwise unknown table raw instead of inventing a partial object type.
-DATA(0x00660428) extern unsigned char (*gAdventureObjectTraits)[16];
+// Before normalization: gAdventureObjectTraits.
+DATA(0x00660428) extern unsigned char (*g_adventureObjectTraits)[16];
 
 // Retail's public .data symbol at 0x65f694. The relocation and final byte
 // load in GetCloudLookup prove a 256-entry lookup indexed by the eight
 // surrounding-cell bits.
-extern unsigned char giCloudType[256];
+// Before normalization: giCloudType.
+extern unsigned char g_cloudType[256];
 
 // Retail .bss 0x69ccbc. GetCloudLookup tests this byte against the low byte
 // of every GetMapExtra result. Its role is proved by those xrefs; no public
@@ -536,24 +584,29 @@ extern unsigned char giCloudType[256];
 // differently for it - an unclaimed data extern still pairs, so a wrong
 // data address is invisible to the ratchet and shows up only when someone
 // reads the relocations.
-DATA(0x0069ccbc) extern unsigned char gMapVisibilityBit;
+// Before normalization: gMapVisibilityBit.
+DATA(0x0069ccbc) extern unsigned char g_mapVisibilityBit;
 
 // DC publishes this as `int gbInViewWorld`; retail corroborates the role:
 // its xrefs gate CompleteDraw's normal layers, ScanForHeroOrBoat, ViewPuzzle,
 // and the separate view-world renderer.
-extern int gbInViewWorld;
+// Before normalization: gbInViewWorld.
+extern int g_inViewWorld;
 
 // Retail .bss 0x699538. CompleteDraw forces the source origin to (0, 0)
 // while this is set, and DrawShroud uses it to bypass normal fog bounds and
 // visibility tests. No public retail spelling survives.
-DATA(0x00699538) extern int gCompleteDrawAllCells;
+// Before normalization: gCompleteDrawAllCells.
+DATA(0x00699538) extern int g_completeDrawAllCells;
 
 // Retail-only CompleteDraw gates. Their roles and widths are proved by the
 // entry predicate at 0x40f3f0; spellings remain provisional.
-DATA(0x006989c0) extern int gCompleteDrawEnabled;
+// Before normalization: gCompleteDrawEnabled.
 // Dreamcast names this shared cursor-suppression gate. DrawCursorAlpha's
 // second entry predicate and philai's sole writer prove the retail cell.
-DATA(0x006983f8) extern int bSpecialHideCursor;
+// Before normalization: bSpecialHideCursor.
+DATA(0x006989c0) extern int g_completeDrawEnabled;
+DATA(0x006983f8) extern int g_specialHideCursor;
 
 // A .data byte advManager::EraseAndFizzle (0x49e170) saves, CLEARS for the
 // duration of the erase, and restores on every one of its three exits -
@@ -562,19 +615,25 @@ DATA(0x006983f8) extern int bSpecialHideCursor;
 // the 87th does not, so this is a DECLARATION ONLY: no DATA claim is
 // taken here and the owning TU keeps it (the winmgr.h gbInDialog
 // precedent). Name is the house ordinal placeholder.
-extern unsigned char gUnnamed67f574;
-DATA(0x00696a04) extern unsigned char gCompleteDrawMessageBypass;
+// Before normalization: gUnnamed67f574.
+extern unsigned char g_unnamed67f574;
+// Before normalization: gCompleteDrawMessageBypass.
+DATA(0x00696a04) extern unsigned char g_completeDrawMessageBypass;
 
 // Six of these records are filled by ScanForHeroOrBoat. Retail writes the
 // fields at +0/+4/+8/+c with a 0x10 stride; the names and bool type are the
 // surviving CodeView signature/layout evidence.
 struct TDrawParts {
-    bool IsValid;
-    int X;
-    int Y;
-    int id;
+    // Before normalization: IsValid.
+    bool m_isValid;
+    // Before normalization: X.
+    int m_x;
+    // Before normalization: Y.
+    int m_y;
+    // Before normalization: id.
+    int m_id;
 
-    TDrawParts() : IsValid(false) {}
+    TDrawParts() : m_isValid(false) {}
 };
 SIZE(TDrawParts, 0x10);
 
@@ -694,19 +753,25 @@ public:
     // heroWindow is eight bytes wider, placing them at +0x4c/+0x50;
     // InMapArea independently proves MapWidget's retail offset and reads
     // its widget x/y/width/height fields.
-    widget* RadarWidget;
-    widget* MapWidget;
-    textWidget* ChatTextWidget;  // +0x54, CompleteDraw's chat update target
+    // Before normalization: RadarWidget.
+    widget* m_radarWidget;
+    // Before normalization: MapWidget.
+    widget* m_mapWidget;
+    // Before normalization: ChatTextWidget.
+    textWidget* m_chatTextWidget;  // +0x54, CompleteDraw's chat update target
     // Retail heroWindow is 8 bytes wider than the Dreamcast base (0x4c
     // versus 0x44). Applying that independently proven shift to the DC
     // TAdventureMapWindow member roster puts chatEdit@0x50 at retail
     // +0x58. KeyboardMessageHandler confirms the result directly with
     // `mov ecx,[advWindow+0x58] / mov al,[ecx+0x6d]`; +0x6d is the
     // byte-proven textEntryWidget::bHasFocus field.
-    textEntryWidget* chatEdit;
+    // Before normalization: chatEdit.
+    textEntryWidget* m_chatEdit;
     // UpdateResourceDisplay (0x403f00) calls through this +0x5c field.
-    class TResourceDisplay* ResourceDisplay;
-    class bitmapBackedTextWidget* RolloverTextWidget;  // +0x60
+    // Before normalization: ResourceDisplay.
+    class TResourceDisplay* m_resourceDisplay;
+    // Before normalization: RolloverTextWidget.
+    class bitmapBackedTextWidget* m_rolloverTextWidget;  // +0x60
     // DC names these topHero/topTown (member offsets 88/92). Retail moved
     // RolloverWidget ahead of the pair, so the DC->retail shift here is
     // +12 rather than the +8 that holds above; DoHeroKnob (0x403220) and
@@ -714,12 +779,18 @@ public:
     // scrolls +0x64 against `playerData::numHeroes - 5` and the town knob
     // scrolls +0x68 against `playerData::numTowns - 5`. animateInBackground
     // at +0x6c below is unmoved, so the pair exactly fills the old pad.
-    int topHero;
-    int topTown;
+    // Before normalization: topHero.
+    int m_topHero;
+    // Before normalization: topTown.
+    int m_topTown;
     // DC member name at +0x64; retail's independently proven 8-byte base
     // shift places it at +0x6c, exactly where animate_bottom_view reads it.
-    unsigned char animateInBackground;
-    char pad_06d[3];
+    // Before normalization: animateInBackground.
+    unsigned char m_animateInBackground;
+    // Before normalization: pad_06d.
+    // Dreamcast places three alignment bytes after animate_in_background.
+    // Complete keeps the byte at +0x6c before the pointer array at +0x70.
+    char m_paddingAfterAnimateInBackground[3];
     // +0x70 and +0x84, sliced 2026-08-14 from UpdateHeroLocator
     // (0x403560) and HighlightLocators (0x4038c0): the first row takes
     // bitmapBorder::SetImage with the portrait name out of akHeroTraits
@@ -727,60 +798,90 @@ public:
     // with hpsyyy.pcx plus a send_message/Draw pair and is indexed
     // `[this + i*4 + 0x84]`. Five entries each is fixed at both ends -
     // the loops bound on 5 and 0x70 + 2*5*4 lands exactly on bottomView.
-    class bitmapBorder* HeroPortraits[5];
-    class bitmapBorder* HeroLocators[5];
+    // Before normalization: HeroPortraits.
+    class bitmapBorder* m_heroPortraits[5];
+    // Before normalization: HeroLocators.
+    class bitmapBorder* m_heroLocators[5];
     // ClearBottomView (0x403ee0) owns and clears the pointer at +0x98.
-    class type_bottom_view_window* bottomView;
+    // Before normalization: bottomView.
+    class type_bottom_view_window* m_bottomView;
     // Complete-only owned popup state: Open constructs it and Close deletes
     // it; the ctor initializes the pointer before installing this vtable.
     // The public name is not attested, so retain the cross-build role name.
-    void* immersion;
+    // Before normalization: immersion.
+    void* m_immersion;
 
     TAdventureMapWindow();
     ~TAdventureMapWindow();
-    virtual int Open(int zOrder, unsigned char update);
-    virtual void Close(unsigned char update);
-    virtual void _vslot8(unsigned char on);
-    void UpdateTownLocators(int top, unsigned char drawWin,
+    // Before normalization (function): TAdventureMapWindow::Open.
+    virtual int open(int zOrder, unsigned char update);
+    // Before normalization (function): TAdventureMapWindow::Close.
+    virtual void close(unsigned char update);
+    // Before normalization (function): TAdventureMapWindow::_vslot8.
+    virtual void vslot8(unsigned char on);
+    // Before normalization (function): TAdventureMapWindow::UpdateTownLocators.
+    void updateTownLocators(int top, unsigned char drawWin,
                             unsigned char update);
-    void UpdateHeroLocators(int top, unsigned char drawWin,
+    // Before normalization (function): TAdventureMapWindow::UpdateHeroLocators.
+    void updateHeroLocators(int top, unsigned char drawWin,
                             unsigned char update);
-    void UpdateHeroLocator(int which, unsigned char drawWinSect,
+    // Before normalization (function): TAdventureMapWindow::UpdateHeroLocator.
+    void updateHeroLocator(int which, unsigned char drawWinSect,
                            unsigned char update);
-    void UpdateTownLocator(int which, unsigned char drawWinSect,
+    // Before normalization (function): TAdventureMapWindow::UpdateTownLocator.
+    void updateTownLocator(int which, unsigned char drawWinSect,
                            unsigned char update);
-    void DoHeroKnob(unsigned char up);
-    void DoTownKnob(unsigned char up);
-    unsigned char SetElevationToggleImage(int level);
-    void UpdateResourceDisplay(unsigned char draw, unsigned char update);
-    void UpdateButtons(unsigned char draw, unsigned char update);
-    void UpdateQuestLogButton(unsigned char update);
-    void HighlightLocators(unsigned char update);
-    void DrawChatText(unsigned char update);
+    // Before normalization (function): TAdventureMapWindow::DoHeroKnob.
+    void doHeroKnob(unsigned char up);
+    // Before normalization (function): TAdventureMapWindow::DoTownKnob.
+    void doTownKnob(unsigned char up);
+    // Before normalization (function): TAdventureMapWindow::SetElevationToggleImage.
+    unsigned char setElevationToggleImage(int level);
+    // Before normalization (function): TAdventureMapWindow::UpdateResourceDisplay.
+    void updateResourceDisplay(unsigned char draw, unsigned char update);
+    // Before normalization (function): TAdventureMapWindow::UpdateButtons.
+    void updateButtons(unsigned char draw, unsigned char update);
+    // Before normalization (function): TAdventureMapWindow::UpdateQuestLogButton.
+    void updateQuestLogButton(unsigned char update);
+    // Before normalization (function): TAdventureMapWindow::HighlightLocators.
+    void highlightLocators(unsigned char update);
+    // Before normalization (function): TAdventureMapWindow::DrawChatText.
+    void drawChatText(unsigned char update);
     // Retail 0x403ba0 is `ret 4` over one null-tested stack argument; the
     // Dreamcast roster's zero-parameter spelling comes from a four-byte
     // stub body, so the hero parameter is retail's - matching both
     // UpdateSpellButton below and DC's real TAdvMenu::UpdateSleepButton.
-    void UpdateSleepButton(const class hero* thisHero);
+    // Before normalization (function): TAdventureMapWindow::UpdateSleepButton.
+    void updateSleepButton(const class hero* thisHero);
     // Retail 0x403cc0 is `ret 4` over one stack argument, so the
     // Dreamcast roster's zero-parameter TAdventureMapWindow spelling does
     // not transfer - the same divergence UpdateSleepButton records just
     // above. DC's TAdvMenu sibling (adventuremapwindow.cpp:2056, dc
     // 0x2a74) carries the parameter and names it `image`, and
     // DoAdvCommand's one call site passes the literal 0.
-    void SetSleepImage(int image);
-    void UpdateSpellButton(const class hero* thisHero);
-    void draw_bottom_view(unsigned char update);
-    void animate_bottom_view(unsigned char in_background);
+    // Before normalization (function): TAdventureMapWindow::SetSleepImage.
+    void setSleepImage(int image);
+    // Before normalization (function): TAdventureMapWindow::UpdateSpellButton.
+    void updateSpellButton(const class hero* thisHero);
+    // Before normalization (function): TAdventureMapWindow::draw_bottom_view.
+    void drawBottomView(unsigned char update);
+    // Before normalization (function): TAdventureMapWindow::animate_bottom_view.
+    // Before normalization (locals): in_background.
+    void animateBottomView(unsigned char inBackground);
     int convertID2HelpID(int id) const;
-    unsigned char ProcessHover(int hx, int hy);
+    // Before normalization (function): TAdventureMapWindow::ProcessHover.
+    unsigned char processHover(int hx, int hy);
     // Retail 0x402e70, `ret 4` over one message pointer and answering in
     // AL - the hero-locator note above already reads its id normalisation.
     // advManager::Main's WIDGET_RIGHT_SELECT arm is the only caller: a
     // false answer there falls through to ProcessSelect.
-    unsigned char ProcessRightSelect(const message* msg);
-    void ClearBottomView();
-    void set_bottom_view(class type_bottom_view_window* new_view);
+    // Before normalization (function): TAdventureMapWindow::ProcessRightSelect.
+    unsigned char processRightSelect(const message* msg);
+    // Before normalization (function): TAdventureMapWindow::ClearBottomView.
+    void clearBottomView();
+    // Before normalization (function): TAdventureMapWindow::set_bottom_view.
+    // Before normalization (locals): new_view.
+    void setBottomView(class type_bottom_view_window* newView);
 };
 SIZE(TAdventureMapWindow, 0xa0);
 
@@ -909,39 +1010,63 @@ public:
     // townManager::Close uses on its own CTownNetMsgHandler. Dreamcast
     // supplies the name and types the slot as the BASE pointer, which is
     // what retail's delete needs: the destructor is CNetMsgHandler's.
-    CNetMsgHandler* pNetMsgHandler;
-    unsigned char DebugShowFPS;  // +0x3c, DC name; retail FPS branch proves it
-    unsigned char DebugViewAll;  // +0x3d, bypasses hover ownership checks
-    char pad_03e[2];
-    int advCommand;              // +0x40, set by map-hover actions
-    TAdventureMapWindow* advWindow;  // +0x44 (the button-status target)
-    unsigned short* routeArray;      // +0x48 (GetRouteArrayPtr)
-    int bShowRoute;                  // +0x4c, gates both arrow draw passes
+    // Before normalization: pNetMsgHandler.
+    CNetMsgHandler* m_netMsgHandler;
+    // Before normalization: DebugShowFPS.
+    unsigned char m_debugShowFps;  // +0x3c, DC name; retail FPS branch proves it
+    // Before normalization: DebugViewAll.
+    unsigned char m_debugViewAll;  // +0x3d, bypasses hover ownership checks
+    // Before normalization: pad_03e.
+    // Dreamcast DebugShowFPS/DebugViewAll (+0x50/+0x51) is byte storage; retail
+    // retains it at +0x3c/+0x3d. This gap aligns the following
+    // original advCommand dword to four bytes.
+    char m_paddingBeforeAdvCommand[2];
+    // Before normalization: advCommand.
+    int m_advCommand;              // +0x40, set by map-hover actions
+    // Before normalization: advWindow.
+    TAdventureMapWindow* m_advWindow;  // +0x44 (the button-status target)
+    // Before normalization: routeArray.
+    unsigned short* m_routeArray;      // +0x48 (GetRouteArrayPtr)
+    // Before normalization: bShowRoute.
+    int m_showRoute;                  // +0x4c, gates both arrow draw passes
     // Dreamcast supplies both names. Retail SeedTo independently proves the
     // pair at +0x50/+0x54: a zero seedingValid starts a fresh search, while a
     // set fullySeeded suppresses an attempted continuation.
-    int seedingValid;
-    int fullySeeded;
+    // Before normalization: seedingValid.
+    int m_seedingValid;
+    // Before normalization: fullySeeded.
+    int m_fullySeeded;
     // +0x58, a dword read as the index into soundmgr's 9-entry terrain
     // -> music-id table at 0x678330 (soundManager::SetMusicVolume
     // 0x5994b0: `mov ecx,[gpAdvManager+0x58]` then
     // `mov al, byte ptr [ecx + 0x678330]`), so it carries the current
     // terrain. Name unattested - the role is what the bytes prove.
-    int field_58;
+    // Before normalization: field_58; reference member advManager::lastTerrain.
+    int m_lastTerrain;
     // +0x5c. Both GetCell overloads dereference this NewfullMap record:
     // cellData at +0xd0 and Size at +0xd4.
-    NewfullMap* fullMap;
+    // Before normalization: fullMap.
+    NewfullMap* m_fullMap;
     // Retail tile-set rows. Dreamcast supplies the surviving names and
     // extents; the retail Draw* passes prove every offset reached here.
-    CSprite* groundTileset[10];  // +0x60
-    CSprite* riverTileset[5];    // +0x88
-    CSprite* roadTileset[4];     // +0x9c
-    CSprite* borderTileset;      // +0xac
-    CSprite* arrowTileset;       // +0xb0
-    CSprite* gemIcons[4];        // +0xb4
-    CSprite* starTileset;        // +0xc4
-    CSprite* radarIcons;         // +0xc8
-    CSprite* cloudIcons;         // +0xcc
+    // Before normalization: groundTileset.
+    CSprite* m_groundTileset[10];  // +0x60
+    // Before normalization: riverTileset.
+    CSprite* m_riverTileset[5];    // +0x88
+    // Before normalization: roadTileset.
+    CSprite* m_roadTileset[4];     // +0x9c
+    // Before normalization: borderTileset.
+    CSprite* m_borderTileset;      // +0xac
+    // Before normalization: arrowTileset.
+    CSprite* m_arrowTileset;       // +0xb0
+    // Before normalization: gemIcons.
+    CSprite* m_gemIcons[4];        // +0xb4
+    // Before normalization: starTileset.
+    CSprite* m_starTileset;        // +0xc4
+    // Before normalization: radarIcons.
+    CSprite* m_radarIcons;         // +0xc8
+    // Before normalization: cloudIcons.
+    CSprite* m_cloudIcons;         // +0xcc
     // +0xd0, sixteen bytes. Close proves the Dinkumware vector shape
     // directly: it reads _First at +0xd4 and _Last at +0xd8, derives
     // size() as VC6 spells it (`_First == 0 ? 0 : _Last - _First`, the
@@ -956,156 +1081,289 @@ public:
     // monAttackSprites exactly as retail does. DC's STL makes the vector
     // twelve bytes against Dinkumware's sixteen, which is the whole of
     // the 232->244 versus 0xd0->0xe0 drift.
-    std::vector<resource*> CachedGraphics;
-    CSprite* movingObjectSprite;  // +0xe0, transient object draw override
+    // Before normalization: CachedGraphics.
+    std::vector<resource*> m_cachedGraphics;
+    // Before normalization: movingObjectSprite.
+    CSprite* m_movingObjectSprite;  // +0xe0, transient object draw override
     // +0xe4. The five-argument UpdateRadar overload forwards this packed
     // point by value as the origin argument of the six-argument overload.
-    type_point radarOrigin;
-    type_point lastMapHover;       // +0xe8
-    int lastHoverX;                // +0xec
-    int lastHoverY;                // +0xf0
-    int scrollX;                  // +0xf4, DC advManager::scrollX
-    int scrollY;                  // +0xf8, DC advManager::scrollY
-    // +0xfc, a dword the constructor zeroes alongside the map origin pair.
-    // Role unattested; the width is what the ctor's dword store proves.
-    int field_fc;
-    int animFrame;                  // +0x100, sprite-frame modulo source
+    // Before normalization: radarOrigin.
+    type_point m_radarOrigin;
+    // Before normalization: lastMapHover.
+    type_point m_lastMapHover;       // +0xe8
+    // Before normalization: lastHoverX.
+    int m_lastHoverX;                // +0xec
+    // Before normalization: lastHoverY.
+    int m_lastHoverY;                // +0xf0
+    // Before normalization: scrollX.
+    int m_scrollX;                  // +0xf4, DC advManager::scrollX
+    // Before normalization: scrollY.
+    int m_scrollY;                  // +0xf8, DC advManager::scrollY
+    // Dreamcast original animFrame/animCtr at +0x110/+0x114;
+    // NH3API confirms retail +0xfc/+0x100 after scrollX/scrollY.
+    // The constructor zeros both. Retail increments and uses the second
+    // for animation modulo, so the former name at +0x100 was shifted.
+    // Before normalization: field_fc; original reference name animFrame.
+    int m_animFrame;                  // +0xfc
+    // Before normalization: animFrame; original reference name animCtr.
+    int m_animCtr;                    // +0x100
     // +0x104. UpdateScreen skips both the frame increment and timer catch-up
     // while this byte is set. Dreamcast supplies the surviving member name.
-    unsigned char animCtrPaused;
-    char pad_105[3];
+    // Before normalization: animCtrPaused.
+    unsigned char m_animCtrPaused;
+    // Before normalization: pad_105.
+    // Dreamcast animCtrPaused (+0x118) is byte storage; retail
+    // retains it at +0x104. This gap aligns the following
+    // original flagFrame dword to four bytes.
+    char m_paddingBeforeFlagFrame[3];
     // +0x108, a dword the constructor zeroes right after animFrame.
     // Role unattested; the width is what the ctor's dword store proves.
-    int field_108;
+    // Before normalization: field_108; reference member advManager::flagFrame.
+    int m_flagFrame;
     // Retail DrawHeroPart indexes these pointer rows directly. The extents
     // close every gap through +0x1ec and agree with the surviving roster.
-    CSprite* cursorIcons[18];       // +0x10c, indexed by hero class
-    CSprite* boatIcons[3];          // +0x154, indexed by boat type
-    CSprite* boatFrothIcons[3];     // +0x160, indexed by boat type
-    CSprite* flagIcons[8];          // +0x16c, indexed by player owner
-    CSprite* boatFlagIcons[3][8];   // +0x18c, [boat type][player owner]
-    unsigned char drawCursor;     // +0x1ec, gates map cursor overlays
-    char pad_1ed[3];
-    int cursorType;               // +0x1f0, hover cursor-mode discriminator
+    // Before normalization: cursorIcons.
+    CSprite* m_cursorIcons[18];       // +0x10c, indexed by hero class
+    // Before normalization: boatIcons.
+    CSprite* m_boatIcons[3];          // +0x154, indexed by boat type
+    // Before normalization: boatFrothIcons.
+    CSprite* m_boatFrothIcons[3];     // +0x160, indexed by boat type
+    // Before normalization: flagIcons.
+    CSprite* m_flagIcons[8];          // +0x16c, indexed by player owner
+    // Before normalization: boatFlagIcons.
+    CSprite* m_boatFlagIcons[3][8];   // +0x18c, [boat type][player owner]
+    // Before normalization: drawCursor.
+    unsigned char m_drawCursor;     // +0x1ec, gates map cursor overlays
+    // Before normalization: pad_1ed.
+    // Dreamcast cursorVisible (+0x1f8) is byte storage; retail
+    // retains it at +0x1ec. This gap aligns the following
+    // original cursorType dword to four bytes.
+    char m_paddingBeforeCursorType[3];
+    // Before normalization: cursorType.
+    int m_cursorType;               // +0x1f0, hover cursor-mode discriminator
     // Cursor animation run. Dreamcast supplies the five consecutive names
     // at +0x200..+0x210; retail's independently proven cursor-array extent
     // and TurnTo body place the same run twelve bytes earlier.
-    int cursorDirection;          // +0x1f4
-    int cursorBaseFrame;          // +0x1f8
-    int cursorSequence;           // +0x1fc
-    int cursorFrameCount;         // +0x200
-    int cursorTurning;            // +0x204
-    int cursorDrawn;       // +0x208, cleared at the start of CompleteDraw
-    unsigned char bCurHeroMobile;  // +0x20c, DC name; Mobilize bails when set
-    char pad_20d[3];
-    int iShowMode;                 // +0x210, DC name
-    int gbForceCompleteDraw;       // +0x214, DC name
-    int movingObjectIndex;        // +0x218, transient object-pool index
-    int movingObjectSequence;     // +0x21c
-    int movingObjectFrame;        // +0x220
-    int touchedSounds;             // +0x224, DC name
-    soundNode soundArray[4];       // +0x228, DC name and extent
-    sample* loopedSample[LOOPING_SOUND_COUNT];  // +0x248, DC name
-    sample* heroSamples[11];       // +0x360, DC name and extent
-    int bHeroLogoShowing;          // +0x38c, DC name
+    // Before normalization: cursorDirection.
+    int m_cursorDirection;          // +0x1f4
+    // Before normalization: cursorBaseFrame.
+    int m_cursorBaseFrame;          // +0x1f8
+    // Before normalization: cursorSequence.
+    int m_cursorSequence;           // +0x1fc
+    // Before normalization: cursorFrameCount.
+    int m_cursorFrameCount;         // +0x200
+    // Before normalization: cursorTurning.
+    int m_cursorTurning;            // +0x204
+    // Before normalization: cursorDrawn.
+    int m_cursorDrawn;       // +0x208, cleared at the start of CompleteDraw
+    // Before normalization: bCurHeroMobile.
+    unsigned char m_curHeroMobile;  // +0x20c, DC name; Mobilize bails when set
+    // Before normalization: pad_20d.
+    // Dreamcast bCurHeroMobile (+0x218) is byte storage; retail
+    // retains it at +0x20c. This gap aligns the following
+    // original iShowMode dword to four bytes.
+    char m_paddingBeforeShowMode[3];
+    // Before normalization: iShowMode.
+    int m_showMode;                 // +0x210, DC name
+    // Before normalization: gbForceCompleteDraw.
+    int m_forceCompleteDraw;       // +0x214, DC name
+    // Before normalization: movingObjectIndex.
+    int m_movingObjectIndex;        // +0x218, transient object-pool index
+    // Before normalization: movingObjectSequence.
+    int m_movingObjectSequence;     // +0x21c
+    // Before normalization: movingObjectFrame.
+    int m_movingObjectFrame;        // +0x220
+    // Before normalization: touchedSounds.
+    int m_touchedSounds;             // +0x224, DC name
+    // Before normalization: soundArray.
+    soundNode m_soundArray[4];       // +0x228, DC name and extent
+    // Before normalization: loopedSample.
+    sample* m_loopedSample[LOOPING_SOUND_COUNT];  // +0x248, DC name
+    // Before normalization: heroSamples.
+    sample* m_heroSamples[11];       // +0x360, DC name and extent
+    // Before normalization: bHeroLogoShowing.
+    int m_heroLogoShowing;          // +0x38c, DC name
     // +0x390. SetHeroContext's tail gates the closing
     // ForceMouseMove/lastHoverX reset on Dreamcast's bHeroMoving byte.
-    unsigned char bHeroMoving;
-    char pad_391[3];
+    // Before normalization: bHeroMoving.
+    unsigned char m_heroMoving;
+    // Before normalization: pad_391.
+    // Dreamcast bHeroMoving (+0x39c) is byte storage; retail
+    // retains it at +0x390. This gap aligns the following
+    // original CurrentBottomView dword to four bytes.
+    char m_paddingBeforeBottomViewType[3];
     // +0x394: UpdBottomViewEnemyTurn compares this against 5 before
     // rebuilding the view, then stores 5 before installing the new window.
-    EBottomViewType bottomViewType;
-    EBottomViewType bottomViewOverride;  // +0x398
-    unsigned long bottomViewDeadline;    // +0x39c
-    int bottomViewResourceType;           // +0x3a0
-    int bottomViewResourceQuantity;       // +0x3a4
-    std::string bottomViewMessage;        // +0x3a8
+    // Before normalization: bottomViewType.
+    EBottomViewType m_bottomViewType;
+    // Before normalization: bottomViewOverride.
+    EBottomViewType m_bottomViewOverride;  // +0x398
+    // Before normalization: bottomViewDeadline.
+    unsigned long m_bottomViewDeadline;    // +0x39c
+    // Before normalization: bottomViewResourceType.
+    int m_bottomViewResourceType;           // +0x3a0
+    // Before normalization: bottomViewResourceQuantity.
+    int m_bottomViewResourceQuantity;       // +0x3a4
+    // Before normalization: bottomViewMessage.
+    std::string m_bottomViewMessage;        // +0x3a8
 
     advManager();
-    virtual int Open(int newPriority);
-    virtual void Close();
-    virtual int Main(message& msg);
-    NewmapCell* DoAdvCommand(type_point* trigger_point);
-    int ProcessKeyPress(const message* msg, unsigned char* exitFlag,
-                        type_point* trigger_point, NewmapCell** peventCell);
-    int ProcessSelect(const message* msg, type_point* trigger_point,
+    // Before normalization (function): advManager::Open.
+    virtual int open(int newPriority);
+    // Before normalization (function): advManager::Close.
+    virtual void close();
+    // Before normalization (function): advManager::Main.
+    virtual int main(message& msg);
+    // Before normalization (function): advManager::DoAdvCommand.
+    // Before normalization (locals): trigger_point.
+    NewmapCell* doAdvCommand(type_point* triggerPoint);
+    // Before normalization (function): advManager::ProcessKeyPress.
+    int processKeyPress(const message* msg, unsigned char* exitFlag,
+                        // Before normalization (locals): trigger_point.
+                        type_point* triggerPoint, NewmapCell** peventCell);
+    // Before normalization (function): advManager::ProcessSelect.
+    // Before normalization (locals): trigger_point.
+    int processSelect(const message* msg, type_point* triggerPoint,
                       NewmapCell** peventCell);
-    int ProcessDeSelect(const message* msg, unsigned char* exitFlag,
-                        type_point* trigger_point, NewmapCell** peventCell);
-    void ProcessRadarSelect(const message* msg);
-    void ProcessMapSelect(const message* msg, type_point* trigger_point,
+    // Before normalization (function): advManager::ProcessDeSelect.
+    int processDeSelect(const message* msg, unsigned char* exitFlag,
+                        // Before normalization (locals): trigger_point.
+                        type_point* triggerPoint, NewmapCell** peventCell);
+    // Before normalization (function): advManager::ProcessRadarSelect.
+    void processRadarSelect(const message* msg);
+    // Before normalization (function): advManager::ProcessMapSelect.
+    // Before normalization (locals): trigger_point.
+    void processMapSelect(const message* msg, type_point* triggerPoint,
                           NewmapCell** peventCell);
-    void InsertSound(int x, int y, int z, int soundPriority, int soundsType);
-    void SetInitialMapOrigin();
-    unsigned char DoSystemOptions();
-    void CheckDimNextHeroBut();
-    void DeactivateCurrTown(unsigned char waitingPlayer);
-    void DeactivateCurrHero(unsigned char waitingPlayer);
-    void DemobilizeCurrHero(unsigned char waitingPlayer, unsigned char update);
-    void HeroLoses(class hero* who, int vanish_sound);
-    void DoWhirlpool(class hero* who);
-    void BVResMsg(const char* message, int resourceType, int quantity);
-    void BVMessage(const char* message);
-    void OverrideBottomView(EBottomViewType view, int time);
-    unsigned char UpdBottomViewEnemyTurn(unsigned char force_update);
-    unsigned char UpdBottomViewNewTurn(unsigned char force_update);
-    unsigned char UpdBottomViewResMsg(unsigned char force_update);
-    unsigned char UpdBottomViewMessage(unsigned char force_update);
-    unsigned char UpdBottomViewKingdom(unsigned char force_update);
-    unsigned char UpdBottomViewHero(unsigned char force_update);
-    unsigned char UpdBottomViewTown(unsigned char force_update);
-    void RedrawAdvScreen(unsigned char bUpdate, unsigned char bForceSaveBorder);
-    void UpdateScreen(int bAllowIntermediateMouse, int bForceDraw);
-    void Reseed(int targetX, int targetY);
-    void HideRoute(int bUpdateScreen, int bRemoveTarget, int bChangeButton);
-    TreasureData* get_treasure_data(NewmapCell* cell) const;
-    BlackBoxData* get_black_box(const ExtraInfoUnion* cell) const;
+    // Before normalization (function): advManager::InsertSound.
+    void insertSound(int x, int y, int z, int soundPriority, int soundsType);
+    // Before normalization (function): advManager::SetInitialMapOrigin.
+    void setInitialMapOrigin();
+    // Before normalization (function): advManager::DoSystemOptions.
+    unsigned char doSystemOptions();
+    // Before normalization (function): advManager::CheckDimNextHeroBut.
+    void checkDimNextHeroBut();
+    // Before normalization (function): advManager::DeactivateCurrTown.
+    void deactivateCurrTown(unsigned char waitingPlayer);
+    // Before normalization (function): advManager::DeactivateCurrHero.
+    void deactivateCurrHero(unsigned char waitingPlayer);
+    // Before normalization (function): advManager::DemobilizeCurrHero.
+    void demobilizeCurrHero(unsigned char waitingPlayer, unsigned char update);
+    // Before normalization (function): advManager::HeroLoses.
+    // Before normalization (locals): vanish_sound.
+    void heroLoses(class hero* who, int vanishSound);
+    // Before normalization (function): advManager::DoWhirlpool.
+    void doWhirlpool(class hero* who);
+    // Before normalization (function): advManager::BVResMsg.
+    void bvResMsg(const char* message, int resourceType, int quantity);
+    // Before normalization (function): advManager::BVMessage.
+    void bvMessage(const char* message);
+    // Before normalization (function): advManager::OverrideBottomView.
+    void overrideBottomView(EBottomViewType view, int time);
+    // Before normalization (function): advManager::UpdBottomViewEnemyTurn.
+    // Before normalization (locals): force_update.
+    unsigned char updBottomViewEnemyTurn(unsigned char forceUpdate);
+    // Before normalization (function): advManager::UpdBottomViewNewTurn.
+    // Before normalization (locals): force_update.
+    unsigned char updBottomViewNewTurn(unsigned char forceUpdate);
+    // Before normalization (function): advManager::UpdBottomViewResMsg.
+    // Before normalization (locals): force_update.
+    unsigned char updBottomViewResMsg(unsigned char forceUpdate);
+    // Before normalization (function): advManager::UpdBottomViewMessage.
+    // Before normalization (locals): force_update.
+    unsigned char updBottomViewMessage(unsigned char forceUpdate);
+    // Before normalization (function): advManager::UpdBottomViewKingdom.
+    // Before normalization (locals): force_update.
+    unsigned char updBottomViewKingdom(unsigned char forceUpdate);
+    // Before normalization (function): advManager::UpdBottomViewHero.
+    // Before normalization (locals): force_update.
+    unsigned char updBottomViewHero(unsigned char forceUpdate);
+    // Before normalization (function): advManager::UpdBottomViewTown.
+    // Before normalization (locals): force_update.
+    unsigned char updBottomViewTown(unsigned char forceUpdate);
+    // Before normalization (function): advManager::RedrawAdvScreen.
+    // Before normalization (locals): bUpdate, bForceSaveBorder.
+    void redrawAdvScreen(unsigned char update, unsigned char forceSaveBorder);
+    // Before normalization (function): advManager::UpdateScreen.
+    // Before normalization (locals): bAllowIntermediateMouse, bForceDraw.
+    void updateScreen(int allowIntermediateMouse, int forceDraw);
+    // Before normalization (function): advManager::Reseed.
+    void reseed(int targetX, int targetY);
+    // Before normalization (function): advManager::HideRoute.
+    // Before normalization (locals): bUpdateScreen, bRemoveTarget, bChangeButton.
+    void hideRoute(int updateScreen, int removeTarget, int changeButton);
+    // Before normalization (function): advManager::get_treasure_data.
+    TreasureData* getTreasureData(NewmapCell* cell) const;
+    // Before normalization (function): advManager::get_black_box.
+    BlackBoxData* getBlackBox(const ExtraInfoUnion* cell) const;
     // The "once per hero, keep the reward forever" family. All six take
     // the Dreamcast's own `(hero*, NewmapCell*, bool)` and all six open
     // on the same test - a per-object visit dword on the HERO, indexed
     // by the cell's own extra-info dword as a shift count, which is the
     // idiom hero::VisitedArena already proves.
-    void DoEventDefenseTower(class hero* current_hero, NewmapCell* cell,
-                             bool human_player);
-    void DoEventFountainOfYouth(class hero* current_hero, NewmapCell* cell,
-                                bool human_player);
-    void DoEventGarden(class hero* current_hero, NewmapCell* cell,
-                       bool human_player);
-    void DoEventIdol(class hero* current_hero, NewmapCell* cell,
-                     bool human_player);
+    // Before normalization (function): advManager::DoEventDefenseTower.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventDefenseTower(class hero* currentHero, NewmapCell* cell,
+                             bool humanPlayer);
+    // Before normalization (function): advManager::DoEventFountainOfYouth.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventFountainOfYouth(class hero* currentHero, NewmapCell* cell,
+                                bool humanPlayer);
+    // Before normalization (function): advManager::DoEventGarden.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventGarden(class hero* currentHero, NewmapCell* cell,
+                       bool humanPlayer);
+    // Before normalization (function): advManager::DoEventIdol.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventIdol(class hero* currentHero, NewmapCell* cell,
+                     bool humanPlayer);
     // Boarding a boat (jump-table arm 0x08). TWO parameters and `ret 8`,
     // exactly the Dreamcast's `(hero*, NewmapCell*)` - the one handler in
     // the band with no human_player, because it shows no dialog.
-    void DoEventBoat(class hero* current_hero, NewmapCell* cell);
+    // Before normalization (function): advManager::DoEventBoat.
+    // Before normalization (locals): current_hero.
+    void doEventBoat(class hero* currentHero, NewmapCell* cell);
     // The Fountain of Fortune (jump-table arm 0x1e). The Dreamcast gives
     // it `(hero*, NewmapCell*, bool)`; the cell is spelled with the union
     // pointer for the reason the whole once-per-hero family is - nothing
     // but the +0x00 dword is ever touched.
-    void DoEventFountain(class hero* current_hero, ExtraInfoUnion* cell,
-                         bool human_player);
+    // Before normalization (function): advManager::DoEventFountain.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventFountain(class hero* currentHero, ExtraInfoUnion* cell,
+                         bool humanPlayer);
     // The Arena (jump-table arm 0x04), the Dreamcast's own
     // `(hero*, NewmapCell*, bool)` against retail's `ret 0xc`.
-    void DoEventArena(class hero* current_hero, NewmapCell* cell,
-                      bool human_player);
+    // Before normalization (function): advManager::DoEventArena.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventArena(class hero* currentHero, NewmapCell* cell,
+                      bool humanPlayer);
     // The Cover of Darkness (jump-table arm 0x0f). The Dreamcast's own
     // `(NewmapCell*, type_point, bool)` and retail's `ret 0xc` agree; the
     // cell is never read.
-    void DoEventCoverOfDarkness(NewmapCell* cell, type_point point,
-                                bool human_player);
-    void DoEventCreatureBank(class hero* current_hero, NewmapCell* cell,
-                             type_point point, bool human_player);
+    // Before normalization (function): advManager::DoEventCoverOfDarkness.
+    void doEventCoverOfDarkness(NewmapCell* cell, type_point point,
+                                // Before normalization (locals): human_player.
+                                bool humanPlayer);
+    // Before normalization (function): advManager::DoEventCreatureBank.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventCreatureBank(class hero* currentHero, NewmapCell* cell,
+                             type_point point, bool humanPlayer);
     // The creature dwelling (jump-table arms 0x11 and 0x14 share the one
     // call). Four parameters and `ret 0x10`, the DC's own order; the row
     // (0x4a18b0) stays claimed from events.cpp's carcass until its body
     // lands.
-    void DoEventCreatureGenerator(class hero* current_hero, NewmapCell* cell,
-                                  type_point point, bool human_player);
+    // Before normalization (function): advManager::DoEventCreatureGenerator.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventCreatureGenerator(class hero* currentHero, NewmapCell* cell,
+                                  type_point point, bool humanPlayer);
     // The Dragon Utopia (jump-table arm 0x19 = OBJECT_DRAGON_UTOPIA), the
     // one creature bank with a handler of its own. Four parameters and
     // `ret 0x10`, the DC's own order, and the cell stays a NewmapCell*
     // because it is forwarded to CreatureBankEvent as one.
-    void do_event_dragon_city(class hero* current_hero, NewmapCell* cell,
-                              type_point point, bool human_player);
+    // Before normalization (function): advManager::do_event_dragon_city.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventDragonCity(class hero* currentHero, NewmapCell* cell,
+                              type_point point, bool humanPlayer);
     // 0x4abdc0, DECLARED not defined - 1744 bytes this lane is not
     // reconstructing. LOCATED by do_event_dragon_city, which is its only
     // reconstructed caller: retail pushes FIVE arguments in exactly the
@@ -1117,183 +1375,274 @@ public:
     // `char*`; retail's one reconstructed call site passes window.h's
     // `const char emptyRolloverText[]`, so the declarator is const-correct
     // rather than casting at the call.
-    int CreatureBankEvent(class hero* who, NewmapCell* cell,
-                          const char* cText, type_point point,
-                          unsigned char human_player);
-    void do_event_undead_lair(class hero* current_hero, NewmapCell* cell,
-                              const char* question_text,
-                              const char* empty_text,
-                              const char* reward_text,
-                              unsigned long visited_flag,
+    // Before normalization (function): advManager::CreatureBankEvent.
+    int creatureBankEvent(class hero* who, NewmapCell* cell,
+                          // Before normalization (locals): cText, human_player.
+                          const char* text, type_point point,
+                          unsigned char humanPlayer);
+    // Before normalization (function): advManager::do_event_undead_lair.
+    // Before normalization (locals): current_hero, question_text, empty_text, reward_text,
+    // visited_flag.
+    void doEventUndeadLair(class hero* currentHero, NewmapCell* cell,
+                              const char* questionText,
+                              const char* emptyText,
+                              const char* rewardText,
+                              unsigned long visitedFlag,
                               type_point point);
     // The two objects that pay a resource out of the cell's own packed
     // record. Both take ExtraInfoUnion for the same reason the war school
     // and the two mills do: nothing but the +0x00 dword is ever touched.
-    void DoEventLeanTo(class hero* current_hero, ExtraInfoUnion* cell,
-                       bool human_player);
-    void DoEventLibrary(class hero* current_hero, NewmapCell* cell,
-                        bool human_player);
+    // Before normalization (function): advManager::DoEventLeanTo.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventLeanTo(class hero* currentHero, ExtraInfoUnion* cell,
+                       bool humanPlayer);
+    // Before normalization (function): advManager::DoEventLibrary.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventLibrary(class hero* currentHero, NewmapCell* cell,
+                        bool humanPlayer);
     // The two mana refills. Both take the union pointer for the same
     // reason as the mills: only the +0x00 dword is ever touched, and the
     // well's whole use of it is a single `cell->value = 0`.
-    void DoEventMagicSpring(class hero* current_hero, ExtraInfoUnion* cell,
-                            bool human_player);
-    void DoEventMagicWell(class hero* current_hero, ExtraInfoUnion* cell,
-                          bool human_player);
-    void DoEventMysticalGarden(class hero* current_hero, ExtraInfoUnion* cell,
-                               bool human_player);
-    void DoEventMercenaryCamp(class hero* current_hero, NewmapCell* cell,
-                              bool human_player);
-    void DoEventOasis(class hero* current_hero, NewmapCell* cell,
-                      bool human_player);
-    void DoEventPowerSchool(class hero* current_hero, NewmapCell* cell,
-                            bool human_player);
+    // Before normalization (function): advManager::DoEventMagicSpring.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventMagicSpring(class hero* currentHero, ExtraInfoUnion* cell,
+                            bool humanPlayer);
+    // Before normalization (function): advManager::DoEventMagicWell.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventMagicWell(class hero* currentHero, ExtraInfoUnion* cell,
+                          bool humanPlayer);
+    // Before normalization (function): advManager::DoEventMysticalGarden.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventMysticalGarden(class hero* currentHero, ExtraInfoUnion* cell,
+                               bool humanPlayer);
+    // Before normalization (function): advManager::DoEventMercenaryCamp.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventMercenaryCamp(class hero* currentHero, NewmapCell* cell,
+                              bool humanPlayer);
+    // Before normalization (function): advManager::DoEventOasis.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventOasis(class hero* currentHero, NewmapCell* cell,
+                      bool humanPlayer);
+    // Before normalization (function): advManager::DoEventPowerSchool.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventPowerSchool(class hero* currentHero, NewmapCell* cell,
+                            bool humanPlayer);
     // The School of Magic (jump-table arm 0x2f). FOUR arguments and
     // `ret 0x10` - the map point rides along because the AI arm appraises
     // the tile with AI_value_of_event before it will pay.
-    void DoEventMagicSchool(class hero* current_hero, NewmapCell* cell,
-                            type_point point, bool human_player);
-    void DoEventRallyFlag(class hero* current_hero, NewmapCell* cell,
-                          bool human_player);
+    // Before normalization (function): advManager::DoEventMagicSchool.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventMagicSchool(class hero* currentHero, NewmapCell* cell,
+                            type_point point, bool humanPlayer);
+    // Before normalization (function): advManager::DoEventRallyFlag.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventRallyFlag(class hero* currentHero, NewmapCell* cell,
+                          bool humanPlayer);
     // The refugee camp (jump-table arm 0x4e). The Dreamcast decoration is
     // `(hero*, NewmapCell*, bool)` and retail's `ret 0xc` agrees; the cell
     // is spelled NewmapCell here rather than ExtraInfoUnion because this
     // handler reads `type` and `objectIndex` as well as the dword.
-    void DoEventRefugeeCamp(class hero* current_hero, NewmapCell* cell,
-                            bool human_player);
+    // Before normalization (function): advManager::DoEventRefugeeCamp.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventRefugeeCamp(class hero* currentHero, NewmapCell* cell,
+                            bool humanPlayer);
     // The resource pile (jump-table arm 0x4f) and the custom-resource
     // handler it hands a customised cell to. Both take the CELL first -
     // the Dreamcast's own parameter order, and retail's `[ebp+8]` is the
     // cell in each - and both are `ret 0x10`. DoCustomResource is DECLARED
     // only; its row (0x4a4780) is not claimed here.
-    void DoCustomResource(NewmapCell* cell, class hero* current_hero,
-                          type_point point, bool human_player);
-    void DoEventResource(NewmapCell* cell, class hero* current_hero,
-                         type_point point, bool human_player);
+    // Before normalization (function): advManager::DoCustomResource.
+    // Before normalization (locals): current_hero, human_player.
+    void doCustomResource(NewmapCell* cell, class hero* currentHero,
+                          type_point point, bool humanPlayer);
+    // Before normalization (function): advManager::DoEventResource.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventResource(NewmapCell* cell, class hero* currentHero,
+                         type_point point, bool humanPlayer);
     // The campfire (jump-table arm 0x0c). FOUR arguments and `ret 0x10`:
     // the map point rides along for EraseAndFizzle, which erases the object
     // the hero just stepped on.
-    void DoEventCampfire(class hero* current_hero, NewmapCell* cell,
-                         type_point point, bool human_player);
+    // Before normalization (function): advManager::DoEventCampfire.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventCampfire(class hero* currentHero, NewmapCell* cell,
+                         type_point point, bool humanPlayer);
     // The shipwreck survivor (jump-table arm 0x56). FOUR arguments and
     // `ret 0x10` - the point is EraseAndFizzle's again.
-    void DoEventSurvivor(class hero* current_hero, NewmapCell* cell,
-                         type_point point, bool human_player);
+    // Before normalization (function): advManager::DoEventSurvivor.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventSurvivor(class hero* currentHero, NewmapCell* cell,
+                         type_point point, bool humanPlayer);
     // The treasure chest (jump-table arm 0x65) and the payout dialog it
     // hands its two amounts to. Both are the Dreamcast's own signatures -
     // the chest four arguments and `ret 0x10`, the dialog a PRIVATE
     // `(hero*, int, bool)`. DoTreasureDialog is DECLARED only; its row
     // (0x4a6440) is not claimed here.
-    void DoTreasureDialog(class hero* current_hero, int amount,
-                          bool human_player);
-    void DoEventTreasure(class hero* current_hero, NewmapCell* cell,
-                         type_point point, bool human_player);
+    // Before normalization (function): advManager::DoTreasureDialog.
+    // Before normalization (locals): current_hero, human_player.
+    void doTreasureDialog(class hero* currentHero, int amount,
+                          bool humanPlayer);
+    // Before normalization (function): advManager::DoEventTreasure.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventTreasure(class hero* currentHero, NewmapCell* cell,
+                         type_point point, bool humanPlayer);
     // The spell scroll (jump-table arm 0x5d) and the customised-cell
     // handler it delegates to. Both are the Dreamcast's own four-argument
     // signatures with `ret 0x10`; DoCustomSpellScroll is DECLARED only, as
     // a PRIVATE member, and its row (0x4a5a80) is not claimed here.
-    void DoCustomSpellScroll(class hero* current_hero, NewmapCell* cell,
-                             type_point point, bool human_player);
-    void DoEventSpellScroll(class hero* current_hero, NewmapCell* cell,
-                            type_point point, bool human_player);
+    // Before normalization (function): advManager::DoCustomSpellScroll.
+    // Before normalization (locals): current_hero, human_player.
+    void doCustomSpellScroll(class hero* currentHero, NewmapCell* cell,
+                             type_point point, bool humanPlayer);
+    // Before normalization (function): advManager::DoEventSpellScroll.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventSpellScroll(class hero* currentHero, NewmapCell* cell,
+                            type_point point, bool humanPlayer);
     // The pyramid (jump-table arm 0x3f). Four arguments and `ret 0x10`,
     // the Dreamcast's own signature.
-    void do_event_pyramid(class hero* current_hero, NewmapCell* cell,
-                          type_point point, bool human_player);
+    // Before normalization (function): advManager::do_event_pyramid.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventPyramid(class hero* currentHero, NewmapCell* cell,
+                          type_point point, bool humanPlayer);
     // The shared artifact hand-over (0x49e8f0), the Dreamcast's own
     // `(hero*, type_point, bool)` against retail's `ret 0xc`. Six of
     // DoEventArtifact's arms reach it - two of them by CALL, one by /Ob2
     // expansion - and it takes the POINT rather than the cell because it
     // re-fetches the cell itself.
-    void GiveArtifact(class hero* current_hero, type_point point,
-                      bool human_player);
-    void FightForArtifact(class hero* current_hero, NewmapCell* cell,
-                          type_point point, bool human_player);
+    // Before normalization (function): advManager::GiveArtifact.
+    // Before normalization (locals): current_hero, human_player.
+    void giveArtifact(class hero* currentHero, type_point point,
+                      bool humanPlayer);
+    // Before normalization (function): advManager::FightForArtifact.
+    // Before normalization (locals): current_hero, human_player.
+    void fightForArtifact(class hero* currentHero, NewmapCell* cell,
+                          type_point point, bool humanPlayer);
 private:
-    void DoEventFreeArtifact(class hero* current_hero, NewmapCell* cell,
-                             type_point point, bool human_player);
-    void PayForArtifact(class hero* current_hero, NewmapCell* cell,
-                        type_point point, const char* dialog_text,
-                        short gold_cost, short resource_cost,
-                        bool human_player);
+    // Before normalization (function): advManager::DoEventFreeArtifact.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventFreeArtifact(class hero* currentHero, NewmapCell* cell,
+                             type_point point, bool humanPlayer);
+    // Before normalization (function): advManager::PayForArtifact.
+    // Before normalization (locals): current_hero, dialog_text, gold_cost, resource_cost,
+    // human_player.
+    void payForArtifact(class hero* currentHero, NewmapCell* cell,
+                        type_point point, const char* dialogText,
+                        short goldCost, short resourceCost,
+                        bool humanPlayer);
 public:
-    void DoArtifactSkillRequirement(class hero* current_hero,
+    // Before normalization (function): advManager::DoArtifactSkillRequirement.
+    // Before normalization (locals): current_hero, dialog_text, human_player.
+    void doArtifactSkillRequirement(class hero* currentHero,
                                     NewmapCell* cell, type_point point,
-                                    int skill, const char* dialog_text,
-                                    bool human_player);
-    void DoCustomArtifact(class hero* current_hero, NewmapCell* cell,
-                          type_point point, bool human_player);
-    void DoEventArtifact(class hero* current_hero, NewmapCell* cell,
-                         type_point point, bool human_player);
+                                    int skill, const char* dialogText,
+                                    bool humanPlayer);
+    // Before normalization (function): advManager::DoCustomArtifact.
+    // Before normalization (locals): current_hero, human_player.
+    void doCustomArtifact(class hero* currentHero, NewmapCell* cell,
+                          type_point point, bool humanPlayer);
+    // Before normalization (function): advManager::DoEventArtifact.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventArtifact(class hero* currentHero, NewmapCell* cell,
+                         type_point point, bool humanPlayer);
     // Pandora's Box (jump-table arm 0x06). Four arguments and `ret 0x10`,
     // the Dreamcast's own signature.
-    void DoEventBlackBox(class hero* current_hero, NewmapCell* cell,
-                         type_point point, bool human_player);
+    // Before normalization (function): advManager::DoEventBlackBox.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventBlackBox(class hero* currentHero, NewmapCell* cell,
+                         type_point point, bool humanPlayer);
     // The movement-only map event shares Pandora's Box's record and reward
     // machinery but does not prompt for acceptance.
-    void HandleMapEvent(class hero* current_hero, NewmapCell* cell,
-                        type_point point, bool human_player);
-    // The reward payer the box hands its record to (0x49fa90), a PRIVATE
-    // member on the Dreamcast returning bool. DECLARED only; the row is not
-    // claimed here.
-    bool GiveBlackBoxReward(const char* text, class hero* current_hero,
+    // Before normalization (function): advManager::HandleMapEvent.
+    // Before normalization (locals): current_hero, human_player.
+    void handleMapEvent(class hero* currentHero, NewmapCell* cell,
+                        type_point point, bool humanPlayer);
+    // DC events.cpp:852 returns unsigned char and takes a byte player flag.
+    // Retail 0x49fa90 returns its saved reward byte after string cleanup.
+    // Before normalization (function): advManager::GiveBlackBoxReward.
+    // Before normalization (locals): current_hero, human_player, BlackBox.
+    unsigned char giveBlackBoxReward(const char* text, class hero* currentHero,
                             NewmapCell* cell, type_point point,
-                            bool human_player, class BlackBoxData* BlackBox);
+                            unsigned char humanPlayer, class BlackBoxData* blackBox);
     // The sea chest (jump-table arm 0x52). Four arguments and `ret 0x10`,
     // the Dreamcast's own signature.
-    void DoEventSeaChest(class hero* current_hero, NewmapCell* cell,
-                         type_point point, bool human_player);
+    // Before normalization (function): advManager::DoEventSeaChest.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventSeaChest(class hero* currentHero, NewmapCell* cell,
+                         type_point point, bool humanPlayer);
     // The scholar (jump-table arm 0x51). Four arguments and `ret 0x10`,
     // the Dreamcast's own signature.
-    void DoEventScholar(class hero* current_hero, NewmapCell* cell,
-                        type_point point, bool human_player);
+    // Before normalization (function): advManager::DoEventScholar.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventScholar(class hero* currentHero, NewmapCell* cell,
+                        type_point point, bool humanPlayer);
     // The flotsam (jump-table arm 0x1d). Four arguments and `ret 0x10`,
     // the Dreamcast's own signature; the point is EraseAndFizzle's.
-    void DoEventFlotsam(class hero* current_hero, NewmapCell* cell,
-                        type_point point, bool human_player);
+    // Before normalization (function): advManager::DoEventFlotsam.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventFlotsam(class hero* currentHero, NewmapCell* cell,
+                        type_point point, bool humanPlayer);
     // The anchor point (jump-table arm 0x03). Two arguments and `ret 8`
     // against the Dreamcast's own `(hero*, bool)`, and human_player is
     // never read - transcribed because retail keeps the parameter.
-    void DoEventAnchor(class hero* current_hero, bool human_player);
+    // Before normalization (function): advManager::DoEventAnchor.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventAnchor(class hero* currentHero, bool humanPlayer);
     // cursor.obj's adjacent-monster sweep (0x481900), an advManager member
     // the Dreamcast declares in cursor.cpp and this tree carries in
     // src/cursor.cpp's carcass. DoEventAnchor is its consumer here and
     // passes a local it never reads back.
-    void CheckAdjacentMon(int* bFoughtBattle);
+    // Before normalization (function): advManager::CheckAdjacentMon.
+    // Before normalization (locals): bFoughtBattle.
+    void checkAdjacentMon(int* foughtBattle);
     // The mine (jump-table arm 0x35). The Dreamcast's own parameter order
     // puts the CELL first, and retail's `[ebp+8]` is the cell; `ret 0x10`
     // for four arguments.
-    void DoEventMine(NewmapCell* cell, class hero* current_hero,
+    // Before normalization (function): advManager::DoEventMine.
+    // Before normalization (locals): current_hero.
+    void doEventMine(NewmapCell* cell, class hero* currentHero,
                      type_point point, bool human);
     // The Tree of Knowledge (jump-table arm 0x66). Dreamcast
     // `(hero*, NewmapCell*, bool)` and retail's `ret 0xc` agree; the cell
     // reaches only its +0x00 dword, so it takes the union spelling.
-    void DoEventTreeOfKnowledge(class hero* current_hero,
-                                ExtraInfoUnion* cell, bool human_player);
+    // Before normalization (function): advManager::DoEventTreeOfKnowledge.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventTreeOfKnowledge(class hero* currentHero,
+                                ExtraInfoUnion* cell, bool humanPlayer);
     // The Corpse (jump-table arm 0x16). Dreamcast `(hero*, NewmapCell*,
     // bool)`; the cell reaches only its +0x00 dword, so it takes the union
     // spelling like the tomb and the wagon.
-    void DoEventSkeleton(class hero* current_hero, ExtraInfoUnion* cell,
-                         bool human_player);
+    // Before normalization (function): advManager::DoEventSkeleton.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventSkeleton(class hero* currentHero, ExtraInfoUnion* cell,
+                         bool humanPlayer);
     // The three shrine tiers share one handler.  Dreamcast publishes the
     // complete five-argument signature; retail's `ret 0x14` agrees and its
     // cell reads include both the packed spell lane and the visit mask.
-    void DoEventShrine(class hero* current_hero, NewmapCell* cell,
+    // Before normalization (function): advManager::DoEventShrine.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventShrine(class hero* currentHero, NewmapCell* cell,
                        const char* prompt, GlobalInfoFlags type,
-                       bool human_player);
+                       bool humanPlayer);
     // The Sirens (jump-table arm 0x5c), same three-parameter `ret 0xc`
     // shape as the stables below and the cell equally unused.
-    void DoEventSiren(class hero* current_hero, NewmapCell* cell,
-                      bool human_player);
+    // Before normalization (function): advManager::DoEventSiren.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventSiren(class hero* currentHero, NewmapCell* cell,
+                      bool humanPlayer);
     // The Stables (jump-table arm 0x5e). Three parameters and `ret 0xc`
     // against the Dreamcast's own `(hero*, NewmapCell*, bool)`, and the
     // cell is never touched - the same shape do_event_watering_hole has.
-    void DoEventStables(class hero* current_hero, NewmapCell* cell,
-                        bool human_player);
-    void DoEventTemple(class hero* current_hero, NewmapCell* cell,
-                       bool human_player);
-    void DoEventTrainingGrounds(class hero* current_hero, NewmapCell* cell,
-                                bool human_player);
+    // Before normalization (function): advManager::DoEventStables.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventStables(class hero* currentHero, NewmapCell* cell,
+                        bool humanPlayer);
+    // Before normalization (function): advManager::DoEventTemple.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventTemple(class hero* currentHero, NewmapCell* cell,
+                       bool humanPlayer);
+    // Before normalization (function): advManager::DoEventTrainingGrounds.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventTrainingGrounds(class hero* currentHero, NewmapCell* cell,
+                                bool humanPlayer);
     // The Dreamcast decorations give these `(hero*, NewmapCell*, bool)`
     // and make them PRIVATE members. The cell is spelled with the union
     // pointer instead because the DC's NewmapCell DERIVES from
@@ -1305,20 +1654,34 @@ public:
     // The wagon (jump-table arm 0x69), `(hero*, NewmapCell*, bool)` on the
     // Dreamcast and `ret 0xc` here, with the cell reaching only its +0x00
     // dword - the same ExtraInfoUnion spelling the tomb and mills use.
-    void DoEventWagon(class hero* current_hero, ExtraInfoUnion* cell,
-                      bool human_player);
-    void DoEventWarSchool(class hero* current_hero, ExtraInfoUnion* cell,
-                          bool human_player);
-    void do_event_warrior_tomb(class hero* current_hero, ExtraInfoUnion* cell,
-                               bool human_player);
-    void do_event_watering_hole(class hero* current_hero, NewmapCell* cell,
-                                bool human_player);
-    void do_event_water_wheel(class hero* current_hero, ExtraInfoUnion* cell,
-                              bool human_player);
-    void do_event_windmill(class hero* current_hero, ExtraInfoUnion* cell,
-                           bool human_player);
-    void do_event_witch_hut(class hero* current_hero, ExtraInfoUnion* cell,
-                            bool human_player);
+    // Before normalization (function): advManager::DoEventWagon.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventWagon(class hero* currentHero, ExtraInfoUnion* cell,
+                      bool humanPlayer);
+    // Before normalization (function): advManager::DoEventWarSchool.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventWarSchool(class hero* currentHero, ExtraInfoUnion* cell,
+                          bool humanPlayer);
+    // Before normalization (function): advManager::do_event_warrior_tomb.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventWarriorTomb(class hero* currentHero, ExtraInfoUnion* cell,
+                               bool humanPlayer);
+    // Before normalization (function): advManager::do_event_watering_hole.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventWateringHole(class hero* currentHero, NewmapCell* cell,
+                                bool humanPlayer);
+    // Before normalization (function): advManager::do_event_water_wheel.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventWaterWheel(class hero* currentHero, ExtraInfoUnion* cell,
+                              bool humanPlayer);
+    // Before normalization (function): advManager::do_event_windmill.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventWindmill(class hero* currentHero, ExtraInfoUnion* cell,
+                           bool humanPlayer);
+    // Before normalization (function): advManager::do_event_witch_hut.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventWitchHut(class hero* currentHero, ExtraInfoUnion* cell,
+                            bool humanPlayer);
     // The four wandering-stack outcome handlers. DECLARED, not defined -
     // DoWanderingMonsterResult is their only caller and its bytes are what
     // located them (0x4a6c60 / 0x4a6df0 / 0x4a7000 / 0x4a7250, in the DC's
@@ -1327,8 +1690,10 @@ public:
     // signatures outright - fight and flee are void with four arguments,
     // join and sell_out return bool and take the extra want_to_fight -
     // and retail's `ret 0x10` / `ret 0x14` pair agrees.
-    void monsters_fight(class hero* current_hero, NewmapCell* cell,
-                        type_point point, bool human_player);
+    // Before normalization (function): advManager::monsters_fight.
+    // Before normalization (locals): current_hero, human_player.
+    void monstersFight(class hero* currentHero, NewmapCell* cell,
+                        type_point point, bool humanPlayer);
     // The two callees monsters_fight needs, both DECLARED not defined and
     // both located by it. 0x4a6b30 = monsters_give_reward (events.cpp:3579,
     // dc 0x96994): `ret 0xc` against three parameters, 298 B against 384,
@@ -1338,8 +1703,10 @@ public:
     // screen - retail pushes eleven arguments in the DC's own order, the
     // three optional monster triples trailing as (-1,0,0) - and 935 B
     // against 1152 is 0.81.
-    void monsters_give_reward(class hero* current_hero, NewmapCell* cell,
-                              bool human_player);
+    // Before normalization (function): advManager::monsters_give_reward.
+    // Before normalization (locals): current_hero, human_player.
+    void monstersGiveReward(class hero* currentHero, NewmapCell* cell,
+                              bool humanPlayer);
     // monType IS `int` HERE and the Dreamcast's `W4TCreatureType@@` is not.
     // The reason is a call site, not taste: DoEventMine (0x4a39a0) passes
     // armyGroup::armies[0], which this tree spells `int`, so a TCreatureType
@@ -1351,52 +1718,87 @@ public:
     // help; the pseudo is created early either way. monsters_fight, which
     // passes a TCreatureType local, stays exact across the change, and a
     // call relocation's symbol name is not scored.
-    int CombatMonsterEvent(class hero* who, int monType,
+    // Before normalization (function): advManager::CombatMonsterEvent.
+    int combatMonsterEvent(class hero* who, int monType,
                            int* numMons, NewmapCell* eventCell,
                            type_point point, enum TCreatureType monType2,
                            int numMons2, int numGroups2,
                            enum TCreatureType monType3, int numMons3,
                            int numGroups3);
-    void monsters_flee(class hero* current_hero, NewmapCell* cell,
-                       type_point point, bool human_player);
-    bool monsters_join(class hero* current_hero, NewmapCell* cell,
-                       type_point point, bool want_to_fight,
-                       bool human_player);
-    bool monsters_sell_out(class hero* current_hero, NewmapCell* cell,
-                           type_point point, bool want_to_fight,
-                           bool human_player);
-    void DoWanderingMonsterResult(NewmapCell* cell, class hero* current_hero,
-                                  type_point point, bool human_player);
-    void DoEventWanderingMonster(NewmapCell* cell, class hero* current_hero,
-                                 type_point point, bool human_player);
-    void DoEventBorderGuard(type_point point, NewmapCell* cell,
-                            unsigned char human_player);
-    void DoEventBorderTent(NewmapCell* cell, unsigned char human_player);
-    void DoEventBouy(class hero* current_hero, NewmapCell* cell,
-                     unsigned char human_player);
-    void DoEventCloverField(class hero* current_hero, NewmapCell* cell,
-                            unsigned char human_player);
-    void DoEventFaerieRing(class hero* current_hero, NewmapCell* cell,
-                           unsigned char human_player);
-    void DoEventLighthouse(NewmapCell* cell, unsigned char human_player);
-    void DoEventMermaid(class hero* current_hero, NewmapCell* cell,
-                        unsigned char human_player);
-    void do_event_whirlpool(class hero* current_hero, NewmapCell* cell,
-                            unsigned char human_player);
-    void GeneratorEvent(class hero* who, NewmapCell* eventCell,
+    // Before normalization (function): advManager::monsters_flee.
+    // Before normalization (locals): current_hero, human_player.
+    void monstersFlee(class hero* currentHero, NewmapCell* cell,
+                       type_point point, bool humanPlayer);
+    // Before normalization (function): advManager::monsters_join.
+    // Before normalization (locals): current_hero, want_to_fight, human_player.
+    bool monstersJoin(class hero* currentHero, NewmapCell* cell,
+                       type_point point, bool wantToFight,
+                       bool humanPlayer);
+    // Before normalization (function): advManager::monsters_sell_out.
+    // Before normalization (locals): current_hero, want_to_fight, human_player.
+    bool monstersSellOut(class hero* currentHero, NewmapCell* cell,
+                           type_point point, bool wantToFight,
+                           bool humanPlayer);
+    // Before normalization (function): advManager::DoWanderingMonsterResult.
+    // Before normalization (locals): current_hero, human_player.
+    void doWanderingMonsterResult(NewmapCell* cell, class hero* currentHero,
+                                  type_point point, bool humanPlayer);
+    // Before normalization (function): advManager::DoEventWanderingMonster.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventWanderingMonster(NewmapCell* cell, class hero* currentHero,
+                                 type_point point, bool humanPlayer);
+    // Before normalization (function): advManager::DoEventBorderGuard.
+    void doEventBorderGuard(type_point point, NewmapCell* cell,
+                            // Before normalization (locals): human_player.
+                            unsigned char humanPlayer);
+    // Before normalization (function): advManager::DoEventBorderTent.
+    // Before normalization (locals): human_player.
+    void doEventBorderTent(NewmapCell* cell, unsigned char humanPlayer);
+    // Before normalization (function): advManager::DoEventBouy.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventBouy(class hero* currentHero, NewmapCell* cell,
+                     unsigned char humanPlayer);
+    // Before normalization (function): advManager::DoEventCloverField.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventCloverField(class hero* currentHero, NewmapCell* cell,
+                            unsigned char humanPlayer);
+    // Before normalization (function): advManager::DoEventFaerieRing.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventFaerieRing(class hero* currentHero, NewmapCell* cell,
+                           unsigned char humanPlayer);
+    // Before normalization (function): advManager::DoEventLighthouse.
+    // Before normalization (locals): human_player.
+    void doEventLighthouse(NewmapCell* cell, unsigned char humanPlayer);
+    // Before normalization (function): advManager::DoEventMermaid.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventMermaid(class hero* currentHero, NewmapCell* cell,
+                        unsigned char humanPlayer);
+    // Before normalization (function): advManager::do_event_whirlpool.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventWhirlpool(class hero* currentHero, NewmapCell* cell,
+                            unsigned char humanPlayer);
+    // Before normalization (function): advManager::GeneratorEvent.
+    void generatorEvent(class hero* who, NewmapCell* eventCell,
                         type_point point);
-    void EraseAndFizzle(NewmapCell* eventCell, type_point point,
+    // Before normalization (function): advManager::EraseAndFizzle.
+    void eraseAndFizzle(NewmapCell* eventCell, type_point point,
                         int fizzleSound);
-    void EraseObj(NewmapCell* thisCell, type_point point,
+    // Before normalization (function): advManager::EraseObj.
+    void eraseObj(NewmapCell* thisCell, type_point point,
                   unsigned char record);
-    void DoAIEvent(NewmapCell* cell, class hero* current_hero,
+    // Before normalization (function): advManager::DoAIEvent.
+    // Before normalization (locals): current_hero.
+    void doAIEvent(NewmapCell* cell, class hero* currentHero,
                    type_point point);
-    int DoNetCombat(class CNetMsg* pNetMsg);
+    // Before normalization (function): advManager::DoNetCombat.
+    // Before normalization (locals): pNetMsg.
+    int doNetCombat(class CNetMsg* netMsg);
 // advmgr.obj joins the gate for its own DoAdvCommand, whose route walker
 // hands the trigger cell straight to this dispatcher. The guard is SPLIT
 // around the one declarator rather than moved, so the preprocessed text
 // every events-view consumer sees is unchanged, line for line.
-    void DoEvent(NewmapCell* eventCell, type_point point);
+    // Before normalization (function): advManager::DoEvent.
+    void doEvent(NewmapCell* eventCell, type_point point);
 // advmgr.obj's own HandleNetMsg joined the gate for HeroSwap (its trade
 // arm swaps the two freshly-copied hero records). Split guard, the
 // GameFn_004CA780 pattern.
@@ -1404,9 +1806,12 @@ public:
     // 0x4a6-byte hero copies, parked. do_event_hero is the caller that
     // needs the declarator; the pair is (visitor, visited) in the DC's
     // own order and a call relocation's symbol name is not scored.
-    void HeroSwap(class hero* leftHero, class hero* rightHero);
-    void TownEvent(NewmapCell* cell, type_point point,
-                   unsigned char human_player);
+    // Before normalization (function): advManager::HeroSwap.
+    void heroSwap(class hero* leftHero, class hero* rightHero);
+    // Before normalization (function): advManager::TownEvent.
+    void townEvent(NewmapCell* cell, type_point point,
+                   // Before normalization (locals): human_player.
+                   unsigned char humanPlayer);
     // 0x4ad470, DECLARED not defined - 5425 EH-framed bytes this lane is
     // not reconstructing. `ret 0x28` against the Dreamcast's TEN
     // parameters is the arity screen, the 5425/2540 size ratio sits in
@@ -1414,20 +1819,26 @@ public:
     // two-call callee TownEvent has left once every other edge is
     // matched. Both retail call sites fill the left/right pairs in the
     // DC's own order.
-    int DoCombat(type_point point, class hero* leftHero,
-                 armyGroup* leftArmyGroup, long iRightPlayer,
+    // Before normalization (function): advManager::DoCombat.
+    int doCombat(type_point point, class hero* leftHero,
+                 // Before normalization (locals): iRightPlayer, iSeed, bFinishHeroes,
+                 // alternate_layout.
+                 armyGroup* leftArmyGroup, long rightPlayer,
                  class town* rightTown, class hero* rightHero,
-                 armyGroup* rightArmyGroup, int iSeed,
-                 unsigned char bFinishHeroes,
-                 unsigned char alternate_layout);
-    void SendHeroTownData(type_point point, hero* leftHero,
+                 armyGroup* rightArmyGroup, int seed,
+                 unsigned char finishHeroes,
+                 unsigned char alternateLayout);
+    // Before normalization (function): advManager::SendHeroTownData.
+    void sendHeroTownData(type_point point, hero* leftHero,
                           armyGroup* leftArmyGroup, long rightPlayer,
                           town* rightTown, hero* rightHero,
                           armyGroup* rightArmyGroup, int seed,
                           int toWhoNetPos, int winner,
                           unsigned char retreatWin,
                           unsigned char combatSurrender);
-    void ReceiveHeroTownData(class CCombatInitMsg* pCombatInitMsg,
+    // Before normalization (function): advManager::ReceiveHeroTownData.
+    // Before normalization (locals): pCombatInitMsg.
+    void receiveHeroTownData(class CCombatInitMsg* combatInitMsg,
                              int* fromWho, type_point* point,
                              hero** leftHero,
                              armyGroup** leftArmyGroup,
@@ -1440,14 +1851,18 @@ public:
     // human_player is spelled bool: the body forwards it dword-wide to a
     // dozen bool-parameter handlers, and an unsigned char here makes VC6
     // renormalize (`test dl,dl / setne al`) at every one of those sites.
-    void DispatchEvent(class hero* current_hero, NewmapCell* cell,
-                       type_point point, bool human_player);
-    void EventSound(int eventID, int extraInfo);
+    // Before normalization (function): advManager::DispatchEvent.
+    // Before normalization (locals): current_hero, human_player.
+    void dispatchEvent(class hero* currentHero, NewmapCell* cell,
+                       type_point point, bool humanPlayer);
+    // Before normalization (function): advManager::EventSound.
+    void eventSound(int eventID, int extraInfo);
     // HeroView (0x4e1800) calls this on the dismiss path. hero.obj takes
     // the ONE declarator through its own gate rather than joining the
     // whole events view, whose other three members it never names -
     // declarator count is what moves the include-set class here.
-    void FizzleCenter(int whichSound);
+    // Before normalization (function): advManager::FizzleCenter.
+    void fizzleCenter(int whichSound);
     // 0x4183d0, reconstructed in advmgr.cpp; the Dreamcast roster gives
     // the pair (advmgr.cpp:9785, dc 0x1b164). EraseObj is the caller that
     // needs the declarator, and advmgr.cpp is the DEFINER - without a
@@ -1457,11 +1872,16 @@ public:
     // definition line itself. The gate is widened rather than dropped, and
     // the declarator keeps its exact position, so no other view sees a
     // reordered class.
-    void SetEnvironmentOrigin(type_point point, int reset);
-    void do_event_lith_one_way(class hero* current_hero, NewmapCell* cell,
-                               bool human_player);
-    void do_event_lith_two_way(class hero* current_hero, NewmapCell* cell,
-                               bool human_player);
+    // Before normalization (function): advManager::SetEnvironmentOrigin.
+    void setEnvironmentOrigin(type_point point, int reset);
+    // Before normalization (function): advManager::do_event_lith_one_way.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventLithOneWay(class hero* currentHero, NewmapCell* cell,
+                               bool humanPlayer);
+    // Before normalization (function): advManager::do_event_lith_two_way.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventLithTwoWay(class hero* currentHero, NewmapCell* cell,
+                               bool humanPlayer);
     // The three previously unnamed callees of the monolith pair, all
     // DECLARED and not defined here; their rows are not claimed from this
     // file and a call relocation's symbol name is not scored. Each of the
@@ -1488,154 +1908,247 @@ public:
     // (all three already spelled), plus game::get_cell, type_point's
     // constructor and CSetVisibilityMsg's constructor, all three of which
     // retail expands in line.
-    void do_event_hero(class hero* current_hero, NewmapCell* cell,
-                       type_point point, bool human_player);
-    void DrawGround(int srcX, int srcY, int z, int destX, int destY);
-    void DrawUnderlay(int srcX, int srcY, int z, int destX, int destY);
-    void DrawRoad(int srcX, int srcY, int z, int destX, int destY);
-    void DrawRiver(int srcX, int srcY, int z, int destX, int destY);
-    void DrawAdvObjShadow(int srcX, int srcY, int z, int destX, int destY);
-    void DrawAdvObj(int srcX, int srcY, int z, int destX, int destY);
-    void DrawArrow(int srcX, int srcY, int z, int destX, int destY);
-    void DrawArrowShadow(int srcX, int srcY, int z, int destX, int destY);
-    void DrawShroud(int srcX, int srcY, int z, int destX, int destY);
+    // Before normalization (function): advManager::do_event_hero.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventHero(class hero* currentHero, NewmapCell* cell,
+                       type_point point, bool humanPlayer);
+    // Before normalization (function): advManager::DrawGround.
+    void drawGround(int srcX, int srcY, int z, int destX, int destY);
+    // Before normalization (function): advManager::DrawUnderlay.
+    void drawUnderlay(int srcX, int srcY, int z, int destX, int destY);
+    // Before normalization (function): advManager::DrawRoad.
+    void drawRoad(int srcX, int srcY, int z, int destX, int destY);
+    // Before normalization (function): advManager::DrawRiver.
+    void drawRiver(int srcX, int srcY, int z, int destX, int destY);
+    // Before normalization (function): advManager::DrawAdvObjShadow.
+    void drawAdvObjShadow(int srcX, int srcY, int z, int destX, int destY);
+    // Before normalization (function): advManager::DrawAdvObj.
+    void drawAdvObj(int srcX, int srcY, int z, int destX, int destY);
+    // Before normalization (function): advManager::DrawArrow.
+    void drawArrow(int srcX, int srcY, int z, int destX, int destY);
+    // Before normalization (function): advManager::DrawArrowShadow.
+    void drawArrowShadow(int srcX, int srcY, int z, int destX, int destY);
+    // Before normalization (function): advManager::DrawShroud.
+    void drawShroud(int srcX, int srcY, int z, int destX, int destY);
     // Dreamcast's advManager field list fixes this declaration order. It is
     // source evidence, not a cross-architecture structure comparison.
-    void VWDrawGround(int srcX, int srcY, int z, int destX, int destY);
+    // Before normalization (function): advManager::VWDrawGround.
+    void vwDrawGround(int srcX, int srcY, int z, int destX, int destY);
     // DC viewwrld.cpp:1558 (dc 0x196040); retail 0x5fc4c0 (736 B, the
     // viewwrld..widget bracket), still unclaimed. Both Complete level
     // callbacks call it with the window's origin and viewable extents.
-    void VWCompleteDraw(int startX, int startY, int z, int drawwidth,
+    // Before normalization (function): advManager::VWCompleteDraw.
+    void vwCompleteDraw(int startX, int startY, int z, int drawwidth,
                         int drawheight);
-    void VWDrawUnderlay(int srcX, int srcY, int z, int destX, int destY);
-    void VWDrawRoad(int srcX, int srcY, int z, int destX, int destY);
-    void VWDrawRiver(int srcX, int srcY, int z, int destX, int destY);
-    void VWDrawAdvObjShadow(int srcX, int srcY, int z, int destX,
+    // Before normalization (function): advManager::VWDrawUnderlay.
+    void vwDrawUnderlay(int srcX, int srcY, int z, int destX, int destY);
+    // Before normalization (function): advManager::VWDrawRoad.
+    void vwDrawRoad(int srcX, int srcY, int z, int destX, int destY);
+    // Before normalization (function): advManager::VWDrawRiver.
+    void vwDrawRiver(int srcX, int srcY, int z, int destX, int destY);
+    // Before normalization (function): advManager::VWDrawAdvObjShadow.
+    void vwDrawAdvObjShadow(int srcX, int srcY, int z, int destX,
                             int destY);
-    void VWDrawAdvObj(int srcX, int srcY, int z, int destX, int destY);
-    void VWDrawShroud(int srcX, int srcY, int z, int destX, int destY);
-    void VWDrawSymbols(int srcX, int srcY, int z, int destX, int destY);
-    bool ScanForHeroOrBoat(int srcX, int srcY, int z, unsigned short type,
+    // Before normalization (function): advManager::VWDrawAdvObj.
+    void vwDrawAdvObj(int srcX, int srcY, int z, int destX, int destY);
+    // Before normalization (function): advManager::VWDrawShroud.
+    void vwDrawShroud(int srcX, int srcY, int z, int destX, int destY);
+    // Before normalization (function): advManager::VWDrawSymbols.
+    void vwDrawSymbols(int srcX, int srcY, int z, int destX, int destY);
+    // Before normalization (function): advManager::ScanForHeroOrBoat.
+    bool scanForHeroOrBoat(int srcX, int srcY, int z, unsigned short type,
                            TDrawParts (&parts)[6]);
-    void CompleteDraw(int startX, int startY, int z,
+    // Before normalization (function): advManager::CompleteDraw.
+    void completeDraw(int startX, int startY, int z,
                       unsigned char forceDraw,
                       unsigned char updateBottomView);
-    void CompleteDraw(unsigned char forceDraw);
-    void DrawAdventureCursor();
-    void TurnTo(int newDirection);
-    void ForceNewHover();
-    int ProcessWaitingHover(int mouseX, int mouseY);
-    int ProcessHover(int mouseX, int mouseY);
-    int ProcessSearch(int x, int y, int z);
-    type_adventure_cursor get_normal_cursor(NewmapCell* currCell);
-    void SeedTo(type_point target);
-    int GetCloudLookup(int srcX, int srcY, int z);
-    void DrawCursor(int cellX, int cellY);
-    void DrawCursorShadow(int cellX, int cellY);
-    void DrawCursorAlpha();
-    void DrawHeroPart(int part, TDrawParts& heroParts, int baseX, int baseY,
+    // Before normalization (function): advManager::CompleteDraw.
+    void completeDraw(unsigned char forceDraw);
+    // Before normalization (function): advManager::DrawAdventureCursor.
+    void drawAdventureCursor();
+    // Before normalization (function): advManager::TurnTo.
+    void turnTo(int newDirection);
+    // Before normalization (function): advManager::ForceNewHover.
+    void forceNewHover();
+    // Before normalization (function): advManager::ProcessWaitingHover.
+    int processWaitingHover(int mouseX, int mouseY);
+    // Before normalization (function): advManager::ProcessHover.
+    int processHover(int mouseX, int mouseY);
+    // Before normalization (function): advManager::ProcessSearch.
+    int processSearch(int x, int y, int z);
+    // Before normalization (function): advManager::get_normal_cursor.
+    type_adventure_cursor getNormalCursor(NewmapCell* currCell);
+    // Before normalization (function): advManager::SeedTo.
+    void seedTo(type_point target);
+    // Before normalization (function): advManager::GetCloudLookup.
+    int getCloudLookup(int srcX, int srcY, int z);
+    // Before normalization (function): advManager::DrawCursor.
+    void drawCursor(int cellX, int cellY);
+    // Before normalization (function): advManager::DrawCursorShadow.
+    void drawCursorShadow(int cellX, int cellY);
+    // Before normalization (function): advManager::DrawCursorAlpha.
+    void drawCursorAlpha();
+    // Before normalization (function): advManager::DrawHeroPart.
+    void drawHeroPart(int part, TDrawParts& heroParts, int baseX, int baseY,
                       int tilex, int tiley, int tilew, int tileh);
-    void DrawHeroPartShadow(int part, TDrawParts& heroParts, int baseX,
+    // Before normalization (function): advManager::DrawHeroPartShadow.
+    void drawHeroPartShadow(int part, TDrawParts& heroParts, int baseX,
                             int baseY, int tilex, int tiley, int tilew,
                             int tileh);
-    void DrawBoatPart(int part, TDrawParts& boatParts, int baseX, int baseY,
+    // Before normalization (function): advManager::DrawBoatPart.
+    void drawBoatPart(int part, TDrawParts& boatParts, int baseX, int baseY,
                       int tilex, int tiley, int tilew, int tileh);
-    void DrawBoatPartShadow(int part, TDrawParts& boatParts, int baseX,
+    // Before normalization (function): advManager::DrawBoatPartShadow.
+    void drawBoatPartShadow(int part, TDrawParts& boatParts, int baseX,
                             int baseY, int tilex, int tiley, int tilew,
                             int tileh);
-    void VWDrawHeroPart(int part, TDrawParts& heroParts, int baseX,
+    // Before normalization (function): advManager::VWDrawHeroPart.
+    void vwDrawHeroPart(int part, TDrawParts& heroParts, int baseX,
                         int baseY, int tilex, int tiley, int tilew,
                         int tileh);
-    void VWDrawHeroPartShadow(int part, TDrawParts& heroParts, int baseX,
+    // Before normalization (function): advManager::VWDrawHeroPartShadow.
+    void vwDrawHeroPartShadow(int part, TDrawParts& heroParts, int baseX,
                               int baseY, int tilex, int tiley, int tilew,
                               int tileh);
-    void VWDrawBoatPart(int part, TDrawParts& boatParts, int baseX,
+    // Before normalization (function): advManager::VWDrawBoatPart.
+    void vwDrawBoatPart(int part, TDrawParts& boatParts, int baseX,
                         int baseY, int tilex, int tiley, int tilew,
                         int tileh);
-    void VWDrawBoatPartShadow(int part, TDrawParts& boatParts, int baseX,
+    // Before normalization (function): advManager::VWDrawBoatPartShadow.
+    void vwDrawBoatPartShadow(int part, TDrawParts& boatParts, int baseX,
                               int baseY, int tilex, int tiley, int tilew,
                               int tileh);
-    void DrawAdventureMapGems();
-    void DrawRolloverText(char* text);
-    void SetRolloverText(NewmapCell* testCell, int rx, int ry);
-    unsigned char FindAdjacentMonster(type_point point, type_point* result,
+    // Before normalization (function): advManager::DrawAdventureMapGems.
+    void drawAdventureMapGems();
+    // Before normalization (function): advManager::DrawRolloverText.
+    void drawRolloverText(char* text);
+    // Before normalization (function): advManager::SetRolloverText.
+    void setRolloverText(NewmapCell* testCell, int rx, int ry);
+    // Before normalization (function): advManager::FindAdjacentMonster.
+    unsigned char findAdjacentMonster(type_point point, type_point* result,
                                       type_point excluded);
-    int InMapArea(int x, int y);
+    // Before normalization (function): advManager::InMapArea.
+    int inMapArea(int x, int y);
     type_point get_mouse_map_point() const;
-    NewmapCell* GetCell(type_point point);
-    int MoreTreesNear(type_point point);
-    void UpdateRadar(type_point origin, unsigned char updateFlag,
-                     unsigned char bPartialUpdate, unsigned char view_mines,
-                     unsigned char view_heroes, unsigned char view_towns);
-    void UpdateRadar(unsigned char updateFlag,
-                     unsigned char bPartialUpdate, unsigned char view_mines,
-                     unsigned char view_heroes, unsigned char view_towns);
-    void QuickInfo(int cellX, int cellY, int z);
-    void HeroQuickView(int heroId, int x, int y,
-                       unsigned char display_drop_shadow);
-    void TownQuickView(int townId, int x, int y,
-                       unsigned char display_drop_shadow);
-    void garrison_quick_view(int id, int x, int y);
-    void MonsterQuickView(const NewmapCell* cell, int cellx, int celly);
-    void UpdBottomView(unsigned char forceUpdate, unsigned char drawWindow,
+    NewmapCell* getCell(type_point point);
+    // Before normalization (function): advManager::MoreTreesNear.
+    int moreTreesNear(type_point point);
+    // Before normalization (function): advManager::UpdateRadar.
+    void updateRadar(type_point origin, unsigned char updateFlag,
+                     // Before normalization (locals): bPartialUpdate, view_mines, view_heroes,
+                     // view_towns.
+                     unsigned char partialUpdate, unsigned char viewMines,
+                     unsigned char viewHeroes, unsigned char viewTowns);
+    // Before normalization (function): advManager::UpdateRadar.
+    void updateRadar(unsigned char updateFlag,
+                     unsigned char partialUpdate, unsigned char viewMines,
+                     unsigned char viewHeroes, unsigned char viewTowns);
+    // Before normalization (function): advManager::QuickInfo.
+    void quickInfo(int cellX, int cellY, int z);
+    // Before normalization (function): advManager::HeroQuickView.
+    void heroQuickView(int heroId, int x, int y,
+                       // Before normalization (locals): display_drop_shadow.
+                       unsigned char displayDropShadow);
+    // Before normalization (function): advManager::TownQuickView.
+    void townQuickView(int townId, int x, int y,
+                       // Before normalization (locals): display_drop_shadow.
+                       unsigned char displayDropShadow);
+    // Before normalization (function): advManager::garrison_quick_view.
+    void garrisonQuickView(int id, int x, int y);
+    // Before normalization (function): advManager::MonsterQuickView.
+    void monsterQuickView(const NewmapCell* cell, int cellx, int celly);
+    // Before normalization (function): advManager::UpdBottomView.
+    void updBottomView(unsigned char forceUpdate, unsigned char drawWindow,
                        unsigned char update);
-    void CheckCastSpell();
-    void CastSpell(int whichSpell);
+    // Before normalization (function): advManager::CheckCastSpell.
+    void checkCastSpell();
+    // Before normalization (function): advManager::CastSpell.
+    void castSpell(int whichSpell);
     // advspells.obj's four adventure-spell handlers, retail 0x41c8a0 /
     // 0x41cdf0 / 0x41d090 / 0x41d360 (dc 0x21b84 / 0x22054 / 0x2225c /
     // 0x22510). The mastery is spelled `int` throughout for the reason
     // ViewWorld's is (see below); the Dreamcast roster types the same
     // parameter TSkillMastery, which is CONTRADICTED here (note below).
-    void SummonBoat(int level);
-    void SkuttleBoat(int level);
-    void DimensionDoor(int level);
-    void TownGate(int level);
+    // Before normalization (function): advManager::SummonBoat.
+    void summonBoat(int level);
+    // Before normalization (function): advManager::SkuttleBoat.
+    void skuttleBoat(int level);
+    // Before normalization (function): advManager::DimensionDoor.
+    void dimensionDoor(int level);
+    // Before normalization (function): advManager::TownGate.
+    void townGate(int level);
     // The four handlers RETAIL HAS NO BODY FOR. Dreamcast keeps each one out
     // of line (advspells.cpp:605 / 629 / 654 / 674, dc 0x228e8 / 0x229c4 /
     // 0x22a40 / 0x22a9c); every one has exactly one call site - its own arm
     // of CastSpell's jump table - so /Ob2 expands them all, and their 668 DC
     // bytes are what makes retail's CastSpell 1028 against the DC's 344.
-    void Identify(int level);
-    void WaterWalk(int level);
-    void Disguise(int level);
-    void Flight(int level);
-    void MobilizeCurrHero(int bInMove, unsigned char waitingPlayer,
+    // Before normalization (function): advManager::Identify.
+    void identify(int level);
+    // Before normalization (function): advManager::WaterWalk.
+    void waterWalk(int level);
+    // Before normalization (function): advManager::Disguise.
+    void disguise(int level);
+    // Before normalization (function): advManager::Flight.
+    void flight(int level);
+    // Before normalization (function): advManager::MobilizeCurrHero.
+    // Before normalization (locals): bInMove.
+    void mobilizeCurrHero(int inMove, unsigned char waitingPlayer,
                           unsigned char drawChanges);
-    void SetTownContext(int townId, unsigned char waitingPlayer,
+    // Before normalization (function): advManager::SetTownContext.
+    void setTownContext(int townId, unsigned char waitingPlayer,
                         unsigned char update);
-    void SetHeroContext(int heroId, int bInMove,
+    // Before normalization (function): advManager::SetHeroContext.
+    // Before normalization (locals): bInMove, draw_changes.
+    void setHeroContext(int heroId, int inMove,
                         unsigned char waitingPlayer,
-                        unsigned char draw_changes);
-    void ShowRoute(int updateScreen, int reseed, int changeButton);
-    void StartLocalPlayerTurn();
-    void ScreenScroll(int iDir, int bChangeMouse);
-    void CheckScreenScroll();
-    void LoadRemote(unsigned char makeOrig);
+                        unsigned char drawChanges);
+    // Before normalization (function): advManager::ShowRoute.
+    void showRoute(int updateScreen, int reseed, int changeButton);
+    // Before normalization (function): advManager::StartLocalPlayerTurn.
+    void startLocalPlayerTurn();
+    // Before normalization (function): advManager::ScreenScroll.
+    // Before normalization (locals): iDir, bChangeMouse.
+    void screenScroll(int dir, int changeMouse);
+    // Before normalization (function): advManager::CheckScreenScroll.
+    void checkScreenScroll();
+    // Before normalization (function): advManager::LoadRemote.
+    void loadRemote(unsigned char makeOrig);
     // cursor.obj's map-change record applier. Dreamcast proves the named
     // helper boundaries; Complete decides independently which calls remain
     // out of line in this caller.
-    void ProcessMapChangeNew(class CMapChange* change);
-    void TrimLoopingSounds(int maxSoundsAllowed);
-    void DisableButtons();
-    void EnableButtons();
-    void ViewPuzzle();
+    // Before normalization (function): advManager::ProcessMapChangeNew.
+    void processMapChangeNew(class CMapChange* change);
+    // Before normalization (function): advManager::TrimLoopingSounds.
+    void trimLoopingSounds(int maxSoundsAllowed);
+    // Before normalization (function): advManager::DisableButtons.
+    void disableButtons();
+    // Before normalization (function): advManager::EnableButtons.
+    void enableButtons();
+    // Before normalization (function): advManager::ViewPuzzle.
+    void viewPuzzle();
     // The mastery is spelled `int` although the DC declares
     // TSkillMastery: that name is CONTRADICTED in this tree -
     // herospec.h:69 defines the real enum while ai_tactical.h:34
     // typedefs it to int for the AI signatures - and naming either
     // here would fork the closure of whichever TU sees both. An enum
     // parameter is int-wide under VC6, so no width is lost.
-    void ViewWorld(int whatToDraw, int level);
-    void DoAdventureOptions();
+    // Before normalization (function): advManager::ViewWorld.
+    void viewWorld(int whatToDraw, int level);
+    // Before normalization (function): advManager::DoAdventureOptions.
+    void doAdventureOptions();
     // advspells.obj's, retail 0x41d930 (dc 0x22b88). townmgr.cpp's
     // DoTownGate reaches it through the townManager::MoveHero that
     // retail expands inline; the liths' handlers in events.obj push
     // "telptout.wav" (0x67775c) as its sample_name.
-    void TeleportTo(hero* who, type_point destination, const char* sample_name,
-                    unsigned char bIsRemoteMove, unsigned char draw_changes,
-                    unsigned char is_replay);
-    unsigned short* GetRouteArrayPtr(int x, int y, int z);
-    e_looping_sound_id GetSoundId(int x, int y, int z);
+    // Before normalization (function): advManager::TeleportTo.
+    // Before normalization (locals): sample_name, bIsRemoteMove, draw_changes, is_replay.
+    void teleportTo(hero* who, type_point destination, const char* sampleName,
+                    unsigned char isRemoteMove, unsigned char drawChanges,
+                    unsigned char isReplay);
+    // Before normalization (function): advManager::GetRouteArrayPtr.
+    unsigned short* getRouteArrayPtr(int x, int y, int z);
+    // Before normalization (function): advManager::GetSoundId.
+    e_looping_sound_id getSoundId(int x, int y, int z);
     // Wandering-monster mood modifiers, both STATIC. Its twin
     // get_like_modifier (0x4a75c0) settles the question for the pair:
     // that row is `ret` with the creature type in EDX, i.e. /Gr
@@ -1644,38 +2157,52 @@ public:
     // spelling that satisfies both. get_force_modifier's own bytes
     // cannot decide (a member that ignores `this` and a static with one
     // float argument are the same `ret 4`), and it does not read ecx.
-    static int get_force_modifier(float strength_ratio);
+    // Before normalization (function): advManager::get_force_modifier.
+    // Before normalization (locals): strength_ratio.
+    static int getForceModifier(float strengthRatio);
     // The creature id is spelled with VC6's elaborated forward enum
     // (the recruit.h spelling): TCreatureType is not in this header's
     // own include closure, and advmgr.cpp parses this header before
     // game.h supplies the enum.
-    static int get_like_modifier(class hero* current_hero,
+    // Before normalization (function): advManager::get_like_modifier.
+    // Before normalization (locals): current_hero.
+    static int getLikeModifier(class hero* currentHero,
                                  enum TCreatureType creature);
     // cursor.obj's 0x47f7d0 (cursor.cpp:85, dc 0x79a84).
-    void StopCursor(unsigned char standEnd);
+    // Before normalization (function): advManager::StopCursor.
+    void stopCursor(unsigned char standEnd);
     // cursor.cpp:52 (dc 0x79a48). Complete has no retained body, but
     // animate_move contains this ordinary helper's complete expansion.
     // Keep the source call and let VC6 make that per-build inline decision.
-    void StartCursor(int direction);
+    // Before normalization (function): advManager::StartCursor.
+    void startCursor(int direction);
     // cursor.obj's 0x480000; ai_player's attempt_step (0x42fc50) calls it
     // to gate the HidePointer that precedes an AI move. The DC census
     // names it ConsiderHidingMouse; the int return is the bare
     // `test eax,eax` at that call site.
-    int ConsiderHidingMouse(class hero* current_hero, int direction);
+    // Before normalization (function): advManager::ConsiderHidingMouse.
+    // Before normalization (locals): current_hero.
+    int considerHidingMouse(class hero* currentHero, int direction);
 private:
     // cursor.cpp:420/458. Dreamcast marks both helpers private and Complete
     // retains their out-of-line bodies. MoveHero calls these source
     // boundaries; their bodies must not be pasted into the caller merely
     // because another compiler may choose a different expansion.
-    NewmapCell* end_move_hero(class hero* curr, NewmapCell* returnCell,
-                              unsigned char bIsRemoteMove, long iOrigX,
-                              long iOrigY, unsigned char standEnd,
-                              int* bFoughtBattle);
-    NewmapCell* handle_stop_on_trigger(class hero* curr,
+    // Before normalization (function): advManager::end_move_hero.
+    NewmapCell* endMoveHero(class hero* curr, NewmapCell* returnCell,
+                              // Before normalization (locals): bIsRemoteMove, iOrigX, iOrigY,
+                              // bFoughtBattle.
+                              unsigned char isRemoteMove, long origX,
+                              long origY, unsigned char standEnd,
+                              int* foughtBattle);
+    // Before normalization (function): advManager::handle_stop_on_trigger.
+    NewmapCell* handleStopOnTrigger(class hero* curr,
                                        NewmapCell* destCell,
-                                       unsigned char bIsRemoteMove,
+                                       // Before normalization (locals): bIsRemoteMove,
+                                       // bFoughtBattle.
+                                       unsigned char isRemoteMove,
                                        unsigned char standEnd,
-                                       int* bFoughtBattle,
+                                       int* foughtBattle,
                                        long curMoveCost,
                                        long nextMoveMinCost);
 public:
@@ -1689,26 +2216,42 @@ public:
     // that order: the direction is the cell's own high nibble, standEnd
     // is `i == 0`, and both `int*` slots are read back immediately
     // after the call as the no-move / fought-battle verdicts.
-    NewmapCell* MoveHero(int direction, unsigned char standEnd,
-                         type_point* trigger_point, int* bNoMove,
-                         unsigned char bComputerMove, int* bFoughtBattle,
-                         unsigned char bIsRemoteMove);
+    // Before normalization (function): advManager::MoveHero.
+    NewmapCell* moveHero(int direction, unsigned char standEnd,
+                         // Before normalization (locals): trigger_point, bNoMove, bComputerMove,
+                         // bFoughtBattle, bIsRemoteMove.
+                         type_point* triggerPoint, int* noMove,
+                         unsigned char computerMove, int* foughtBattle,
+                         unsigned char isRemoteMove);
     // cursor.obj's 0x481ed0 (cursor.cpp:1124, dc 0x7c1d8). Retail expands
     // GetHero, get_location and type_point construction in the same nested
     // order preserved by the Dreamcast line/scope stream.
-    void OnMoveHero(class CMapChange* change);
-    void OnTeleportHero(class CMapChange* change);
-    void OnClaimMine(class CMapChange* change);
-    void OnClaimTown(class CMapChange* change);
-    void OnBuildBoat(class CMapChange* change);
-    void OnEraseObject(class CMapChange* change);
-    void OnDeadHero(class CMapChange* change);
-    void OnRecruitHero(class CMapChange* change);
-    void OnDeadPlayer(class CMapChange* change);
-    void OnClaimGenerator(class CMapChange* change);
-    void OnClaimGarrison(class CMapChange* change);
-    void OnClaimShipYard(class CMapChange* change);
-    void OnHideHero(class CMapChange* change);
+    // Before normalization (function): advManager::OnMoveHero.
+    void onMoveHero(class CMapChange* change);
+    // Before normalization (function): advManager::OnTeleportHero.
+    void onTeleportHero(class CMapChange* change);
+    // Before normalization (function): advManager::OnClaimMine.
+    void onClaimMine(class CMapChange* change);
+    // Before normalization (function): advManager::OnClaimTown.
+    void onClaimTown(class CMapChange* change);
+    // Before normalization (function): advManager::OnBuildBoat.
+    void onBuildBoat(class CMapChange* change);
+    // Before normalization (function): advManager::OnEraseObject.
+    void onEraseObject(class CMapChange* change);
+    // Before normalization (function): advManager::OnDeadHero.
+    void onDeadHero(class CMapChange* change);
+    // Before normalization (function): advManager::OnRecruitHero.
+    void onRecruitHero(class CMapChange* change);
+    // Before normalization (function): advManager::OnDeadPlayer.
+    void onDeadPlayer(class CMapChange* change);
+    // Before normalization (function): advManager::OnClaimGenerator.
+    void onClaimGenerator(class CMapChange* change);
+    // Before normalization (function): advManager::OnClaimGarrison.
+    void onClaimGarrison(class CMapChange* change);
+    // Before normalization (function): advManager::OnClaimShipYard.
+    void onClaimShipYard(class CMapChange* change);
+    // Before normalization (function): advManager::OnHideHero.
+    void onHideHero(class CMapChange* change);
     // cursor.obj's 0x481be0 (cursor.cpp:1027, dc 0x7bee4), reached the
     // same way and located by an EXHAUSTIVE order-map over the whole
     // cursor.obj tail: DC GetMoveShowIt/end_move_hero/
@@ -1721,9 +2264,12 @@ public:
     // four stack arguments = retail's `ret 0x10`, and ProcessKeyPress's
     // keypad arms are the call site: the hero, the step direction, and
     // the two flags that decide whether a flier may leave the water.
-    int ValidMove(class hero* who, int direction, int bComputerMove,
-                  unsigned char bLandOnly);
-    int ValidMoveWithEvent(class hero* who, int direction);
+    // Before normalization (function): advManager::ValidMove.
+    // Before normalization (locals): bComputerMove, bLandOnly.
+    int validMove(class hero* who, int direction, int computerMove,
+                  unsigned char landOnly);
+    // Before normalization (function): advManager::ValidMoveWithEvent.
+    int validMoveWithEvent(class hero* who, int direction);
     // The first and fourth entries of that same cursor.obj order-map are
     // reached from event_record.obj's type_record_move_hero::replay
     // (0x49a7c0), which calls 0x480000 with (hero, direction) and tail-calls
@@ -1732,38 +2278,46 @@ public:
     // that order. These are ordinary advManager members in the shared class
     // declaration; hiding them behind a TU-specific declaration view was a
     // reconstruction artifact.
-    int GetMoveShowIt(class hero* currHero, int direction);
-    void animate_move(class hero* curr, int direction, int xInc, int yInc);
+    // Before normalization (function): advManager::GetMoveShowIt.
+    int getMoveShowIt(class hero* currHero, int direction);
+    // Before normalization (function): advManager::animate_move.
+    void animateMove(class hero* curr, int direction, int xInc, int yInc);
     // events.obj's 0x49e2e0 (events.cpp:317, dc 0x903b4). `ret 0xc` =
     // three stack arguments, matching the DC prototype; the shipyard arm
     // hands it the trigger cell, a second copy of the map point and
     // playerData::IsLocalHuman's bool result unwidened.
-    void DoEventShipyard(NewmapCell* cell, type_point point,
-                         unsigned char human_player);
+    // Before normalization (function): advManager::DoEventShipyard.
+    void doEventShipyard(NewmapCell* cell, type_point point,
+                         // Before normalization (locals): human_player.
+                         unsigned char humanPlayer);
     // CodeView-proven; events.obj owns the body.
-    void DoEventPrison(class hero* current_hero, NewmapCell* cell,
-                       type_point point, bool human_player);
+    // Before normalization (function): advManager::DoEventPrison.
+    // Before normalization (locals): current_hero, human_player.
+    void doEventPrison(class hero* currentHero, NewmapCell* cell,
+                       type_point point, bool humanPlayer);
 
     // E:\gamedcs\AdvMgr.h:1245. DC's fixed viewport center is (6,5);
     // Complete's wider view uses (9,8), as the retail recentering paths prove.
-    type_point get_map_center() const
+    type_point getMapCenter() const
     {
-        return type_point(radarOrigin.x + HERO_VIEW_TILE_X,
-                          radarOrigin.y + HERO_VIEW_TILE_Y,
-                          radarOrigin.z);
+        return type_point(m_radarOrigin.m_x + HERO_VIEW_TILE_X,
+                          m_radarOrigin.m_y + HERO_VIEW_TILE_Y,
+                          m_radarOrigin.m_z);
     }
 
 };
 
 // E:\gamedcs\AdvMgr.h:1254
-inline int GetMapExtra(type_point point)
+inline int getMapExtra(type_point point)
 {
-    return ::GetMapExtra(point.x, point.y, point.z);
+    return ::getMapExtra(point.m_x, point.m_y, point.m_z);
 }
 
 // Retail .bss 0x699268 (DC ?gpAdvManager@@3PAVadvManager@@A).
-extern advManager* gpAdvManager;
-extern int gbThisNetGotAdventureControl;
+// Before normalization: gpAdvManager.
+extern advManager* g_advManager;
+// Before normalization: gbThisNetGotAdventureControl.
+extern int g_thisNetGotAdventureControl;
 
 // Two town.obj-owned globals advManager::Close reads. town::View holds the
 // sole DATA claims for both (retail .data 0x6aa5f0 and 0x699548) because it
@@ -1772,22 +2326,29 @@ extern int gbThisNetGotAdventureControl;
 // screen is up and parks the map's size band in 0x699548, which is exactly
 // the nesting Close tests: it skips the ambient-music switch and keeps the
 // shared tile and cursor sprite sets alive while a town is open.
-extern int gUnnamed6aa5f0;
-extern int gUnnamed699548;
+// Before normalization: gUnnamed6aa5f0.
+extern int g_unnamed6aa5f0;
+// Before normalization: gUnnamed699548.
+extern int g_unnamed699548;
 
-int MapExtraPosAndAdjacentsSet(int x, int y, int z, unsigned char bit);
-void ComputeAdvNetControl();
+// Before normalization (function): MapExtraPosAndAdjacentsSet.
+int mapExtraPosAndAdjacentsSet(int x, int y, int z, unsigned char bit);
+// Before normalization (function): ComputeAdvNetControl.
+void computeAdvNetControl();
 bool hasFlag(int objType);
-int GetFlaggedObjectOwner(NewmapCell* thisCell);
+// Before normalization (function): GetFlaggedObjectOwner.
+int getFlaggedObjectOwner(NewmapCell* thisCell);
 // Retail-only 0x40d670. Ordinal placeholder: SetRolloverText and QuickInfo
 // prove this five-parameter /Gr help-text signature, but no surviving name.
-void AdvmgrFn_0040D670(char* buffer, NewmapCell* cell, long playerId,
+// Before normalization (function): AdvmgrFn_0040D670.
+void advmgrFn0040D670(char* buffer, NewmapCell* cell, long playerId,
                        const char* separator, unsigned char showFullList);
 
 // --- globals ---
 // Dreamcast public ?giHighMemBuffer@@3HA; retail TrimLoopingSounds fixes the
 // dword at 0x67f570 through its divide-by-100 adjustment.
-extern int giHighMemBuffer;
+// Before normalization: giHighMemBuffer.
+extern int g_highMemBuffer;
 // CODEVIEW(E:\gamedcs\advmgr.cpp:336, dc 0x5714) unsigned char InitializeCreatureGeneratorNames();
 // CODEVIEW(E:\gamedcs\advmgr.cpp:368, dc 0x57cc) unsigned char InitializeExtraInfoText();
 // CODEVIEW(E:\gamedcs\advmgr.cpp:2708, dc 0xb208) void set_town_help(char* buffer, const NewmapCell* cell);

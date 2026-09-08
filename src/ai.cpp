@@ -22,8 +22,10 @@
 
 // ai_player.obj's artifact valuer (0x433aa0), declared file-locally the
 // way ai_player.cpp itself declares it - no header owns it yet.
-long AI_get_artifact_player_value(const type_artifact& artifact,
-                                  long player_id);
+// Before normalization (function): AI_get_artifact_player_value.
+long aiGetArtifactPlayerValue(const type_artifact& artifact,
+                                  // Before normalization (locals): player_id.
+                                  long playerId);
 
 
 
@@ -75,59 +77,61 @@ long AI_get_artifact_player_value(const type_artifact& artifact,
 // 2026-09-06, both byte-flat at 99.8919: declaring `double damage` third
 // (after `result`) and declaring it last (after `estimate`).  Declaration
 // order does not move a slot cycle; see playerData::save for the same result.
+// Before normalization (locals): target_group, attack_skill, average_damage, best_value,
+// current_army.
 VA(0x0041e190, 0x2A8)  // order-map(DC ai.obj head) + anchor-callee find_AI_targets, dc 0x23450
-int combatManager::ChooseBallistaTarget(int target_group, int attack_skill, int average_damage)
+int combatManager::chooseBallistaTarget(int targetGroup, int attackSkill, int averageDamage)
 {
     double damage;
-    long best_value = 0;
+    long bestValue = 0;
     long result = -1;
-    type_AI_combat_parameters estimate(this, 1 - target_group);
+    type_AI_combat_parameters estimate(this, 1 - targetGroup);
 
-    find_AI_targets(target_group, 0, 0, &estimate, 0);
+    findAITargets(targetGroup, 0, 0, &estimate, 0);
 
-    { for (long i = 0; i < numArmies[target_group]; i++) {
-            army* current_army = &armies[target_group][i];
-            if (current_army->Is(1u << 21))
+    { for (long i = 0; i < m_numArmies[targetGroup]; i++) {
+            army* currentArmy = &m_armies[targetGroup][i];
+            if (currentArmy->is(1u << 21))
                 continue;
-            damage = average_damage;
+            damage = averageDamage;
             long value = static_cast<long>(
-                damage * current_army->ComputeDefenderDamageReduction(1));
-            value = current_army->get_loss_combat_value(
-                estimate.lowest_attack, estimate.lowest_defense, 1, value,
-                estimate.kills_only);
-            if (!current_army->cannot_attack() && current_army->get_AI_target()
-                    && current_army->get_AI_target_time() <= 5)
-                value /= current_army->get_AI_target_time();
+                damage * currentArmy->computeDefenderDamageReduction(1));
+            value = currentArmy->getLossCombatValue(
+                estimate.m_lowestAttack, estimate.m_lowestDefense, 1, value,
+                estimate.m_killsOnly);
+            if (!currentArmy->cannotAttack() && currentArmy->getAITarget()
+                    && currentArmy->getAITargetTime() <= 5)
+                value /= currentArmy->getAITargetTime();
             else
                 value /= 5;
-            if (value >= best_value) {
-                best_value = value;
+            if (value >= bestValue) {
+                bestValue = value;
                 result = i;
             }
         }
     }
 
-    if (!estimate.kills_only)
+    if (!estimate.m_killsOnly)
         return result;
-    if (result >= 0 && best_value > 0)
+    if (result >= 0 && bestValue > 0)
         return result;
 
-    { { for (long i = 0; i < numArmies[target_group]; i++) {
-                army* current_army = &armies[target_group][i];
-                if (current_army->Is(1u << 21))
+    { { for (long i = 0; i < m_numArmies[targetGroup]; i++) {
+                army* currentArmy = &m_armies[targetGroup][i];
+                if (currentArmy->is(1u << 21))
                     continue;
-                damage = average_damage;
+                damage = averageDamage;
                 long value = static_cast<long>(
-                    damage * current_army->ComputeDefenderDamageReduction(1));
-                value = current_army->get_loss_combat_value(
-                    estimate.lowest_attack, estimate.lowest_defense, 1, value, 0);
-                if (!current_army->cannot_attack() && current_army->get_AI_target()
-                        && current_army->get_AI_target_time() <= 5)
-                    value /= current_army->get_AI_target_time();
+                    damage * currentArmy->computeDefenderDamageReduction(1));
+                value = currentArmy->getLossCombatValue(
+                    estimate.m_lowestAttack, estimate.m_lowestDefense, 1, value, 0);
+                if (!currentArmy->cannotAttack() && currentArmy->getAITarget()
+                        && currentArmy->getAITargetTime() <= 5)
+                    value /= currentArmy->getAITargetTime();
                 else
                     value /= 5;
-                if (value >= best_value) {
-                    best_value = value;
+                if (value >= bestValue) {
+                    bestValue = value;
                     result = i;
                 }
             }
@@ -145,47 +149,48 @@ int combatManager::ChooseBallistaTarget(int target_group, int attack_skill, int 
 // for each bound test - and the wall census strength-reduces its
 // four-entry static into the 0x63abc0..0x63abd0 pointer walk.
 VA(0x0041e440, 0x129)  // order-map(DC ai.obj head) + anchor-caller AICheckRetreat, dc 0x23750
-unsigned char combatManager::failed_siege()
+unsigned char combatManager::failedSiege()
 {
     DATA(0x0063abc0) static const TWallTargetId walls[4] = {
         WALL_TARGET_1, WALL_TARGET_2, WALL_TARGET_4, WALL_TARGET_5
     };
 
-    army* current_army = armies[currentSide];
-    if (field_132f4 == COMBAT_FORTIFICATION_NONE)
+    // Before normalization (locals): current_army, enemy_army.
+    army* currentArmy = m_armies[m_currentSide];
+    if (m_fortificationLevel == COMBAT_FORTIFICATION_NONE)
         return 0;
-    if (drawbridgeState != DRAWBRIDGE_UP)
+    if (m_drawbridgeState != DRAWBRIDGE_UP)
         return 0;
-    if (currentSide == 1)
+    if (m_currentSide == 1)
         return 0;
 
-    { for (long i = 0; i < numArmies[currentSide]; i++, current_army++) {
-            unsigned attributes = current_army->sMonInfo.attributes;
+    { for (long i = 0; i < m_numArmies[m_currentSide]; i++, currentArmy++) {
+            unsigned attributes = currentArmy->m_monInfo.m_attributes;
             unsigned char dead = static_cast<unsigned char>(attributes >> 21);
             if ((dead & 1) != 0)
                 continue;
             if ((attributes & ((1u << 1) | (1u << 5))) != 0)
                 return 0;
-            if (current_army->can_shoot(0))
+            if (currentArmy->canShoot(0))
                 return 0;
         }
     }
 
     { for (long i = 0; i < 4; i++) {
-            if (!get_wall_strength(walls[i]))
+            if (!getWallStrength(walls[i]))
                 return 0;
         }
     }
 
-    army* enemy_army = armies[1 - currentSide];
-    { for (long i = 0; i < numArmies[1 - currentSide]; i++, enemy_army++) {
+    army* enemyArmy = m_armies[1 - m_currentSide];
+    { for (long i = 0; i < m_numArmies[1 - m_currentSide]; i++, enemyArmy++) {
             unsigned char dead = static_cast<unsigned char>(
-                static_cast<unsigned>(enemy_army->sMonInfo.attributes) >> 21);
+                static_cast<unsigned>(enemyArmy->m_monInfo.m_attributes) >> 21);
             if ((dead & 1) != 0)
                 continue;
-            if (enemy_army->creatureType == CREATURE_ARROW_TOWER)
+            if (enemyArmy->m_creatureType == CREATURE_ARROW_TOWER)
                 continue;
-            if (!InCastle(enemy_army->gridIndex))
+            if (!inCastle(enemyArmy->m_gridIndex))
                 return 0;
         }
     }
@@ -253,116 +258,119 @@ unsigned char combatManager::failed_siege()
 // subscripting the fight-value walk instead of walking a named pointer
 // (95.33 -> 95.39).
 VA(0x0041e570, 0x546)  // order-map(DC ai.obj head) + anchor-callee failed_siege, dc 0x2389c
-unsigned char combatManager::AICheckRetreat()
+unsigned char combatManager::aiCheckRetreat()
 {
-    if (heroes[currentSide]
-        && (sideIsAI[currentSide]
-            || (gpGame->setup.difficulty
-                && (gpGame->setup.difficulty != 1 || Random(1, 100) > 50)))
-        && (!heroes[0] || !heroes[0]->IsWieldingArtifact(0x7d))
-        && (!heroes[1] || !heroes[1]->IsWieldingArtifact(0x7d))
-        && (gpGame->mapHeader.victoryCondition.Type != VICTORY_CONDITION_DEFEAT_HERO
-            || gpGame->mapHeader.victoryCondition.HeroID
-               != heroes[currentSide]->id)) {
-        long iSideFV = currentSide;
+    if (m_heroes[m_currentSide]
+        && (m_sideIsAi[m_currentSide]
+            || (g_game->m_setup.m_difficulty
+                && (g_game->m_setup.m_difficulty != 1 || random(1, 100) > 50)))
+        && (!m_heroes[0] || !m_heroes[0]->isWieldingArtifact(0x7d))
+        && (!m_heroes[1] || !m_heroes[1]->isWieldingArtifact(0x7d))
+        && (g_game->m_mapHeader.m_victoryCondition.m_type != VICTORY_CONDITION_DEFEAT_HERO
+            || g_game->m_mapHeader.m_victoryCondition.m_heroId
+               != m_heroes[m_currentSide]->m_id)) {
+        // Before normalization (locals): iSideFV, besieged_town_only, current_town,
+        // combat_value, artifact_value, surrender_cost, current_army, fight_values, fight_value,
+        // side_army, experience_bonus.
+        long sideFV = m_currentSide;
         long count = 0;
-        unsigned char besieged_town_only = 0;
+        unsigned char besiegedTownOnly = 0;
         long i = 0;
-        playerData* player = &gpGame->players[heroes[currentSide]->owner];
-        long numTowns = player->numTowns;
+        playerData* player = &g_game->m_players[m_heroes[m_currentSide]->m_owner];
+        long numTowns = player->m_numTowns;
         if (numTowns > 0) {
             { for (; i < numTowns; i++) {
-                    town* current_town = gpGame->GetTown(player->townIds[i]);
-                    if (current_town->HasBuilding(TAVERN_ID, 1)) {
+                    town* currentTown = g_game->getTown(player->m_townIds[i]);
+                    if (currentTown->hasBuilding(TAVERN_ID, 1)) {
                         count++;
-                        if (defendingTown == current_town)
-                            besieged_town_only = 1;
+                        if (m_defendingTown == currentTown)
+                            besiegedTownOnly = 1;
                     }
                 }
             }
             if (count
-                && (count != 1 || iSideFV != 1 || !besieged_town_only)
-                && (!defendingTown || iSideFV != 1
-                    || (defendingTown->type == TOWN_STRONGHOLD
-                        && defendingTown->HasBuilding(SPECIAL_BUILDING_ID, 1)))) {
-                if (failed_siege())
+                && (count != 1 || sideFV != 1 || !besiegedTownOnly)
+                && (!m_defendingTown || sideFV != 1
+                    || (m_defendingTown->m_type == TOWN_STRONGHOLD
+                        && m_defendingTown->hasBuilding(SPECIAL_BUILDING_ID, 1)))) {
+                if (failedSiege())
                     return 1;
 
-                long combat_value = 0;
+                long combatValue = 0;
                 type_artifact artifact;
                 { for (long i = 0; i < 19; i++) {
-                        artifact = heroes[currentSide]->equipped[i];
-                        if (artifact.artifactId == ARTIFACT_NONE)
+                        artifact = m_heroes[m_currentSide]->m_equipped[i];
+                        if (artifact.m_artifactId == ARTIFACT_NONE)
                             continue;
-                        long artifact_value = AI_get_artifact_player_value(
-                            artifact, playerIds[currentSide]);
-                        combat_value += max(
-                            artifact_value,
+                        long artifactValue = aiGetArtifactPlayerValue(
+                            artifact, m_playerIds[m_currentSide]);
+                        combatValue += max(
+                            artifactValue,
                             static_cast<long>(
-                                akArtifactTraits[artifact.artifactId].cost / 2));
+                                g_artifactTraits[artifact.m_artifactId].m_cost / 2));
                     }
                 }
                 { for (long i = 0; i < 64; i++) {
-                        artifact = heroes[currentSide]->backpack[i];
-                        if (artifact.artifactId == ARTIFACT_NONE)
+                        artifact = m_heroes[m_currentSide]->m_backpack[i];
+                        if (artifact.m_artifactId == ARTIFACT_NONE)
                             continue;
-                        long artifact_value = AI_get_artifact_player_value(
-                            artifact, playerIds[currentSide]);
-                        combat_value += max(
-                            artifact_value,
+                        long artifactValue = aiGetArtifactPlayerValue(
+                            artifact, m_playerIds[m_currentSide]);
+                        combatValue += max(
+                            artifactValue,
                             static_cast<long>(
-                                akArtifactTraits[artifact.artifactId].cost / 2));
+                                g_artifactTraits[artifact.m_artifactId].m_cost / 2));
                     }
                 }
-                if (combat_value >= 1000
-                    || heroes[currentSide]->experience >= 2000) {
-                    long surrender_cost = get_surrender_cost();
-                    simulate_combat(currentSide, 1);
+                if (combatValue >= 1000
+                    || m_heroes[m_currentSide]->m_experience >= 2000) {
+                    long surrenderCost = getSurrenderCost();
+                    simulateCombat(m_currentSide, 1);
 
-                    long remaining = numArmies[currentSide];
-                    army* current_army = armies[currentSide];
+                    long remaining = m_numArmies[m_currentSide];
+                    army* currentArmy = m_armies[m_currentSide];
                     while (remaining-- > 0) {
-                        if (!(current_army->Is(1u << 21))
-                            && !(current_army->Is(1u << 6))
-                            && current_army->get_total_hit_points(1) > 0)
+                        if (!(currentArmy->is(1u << 21))
+                            && !(currentArmy->is(1u << 6))
+                            && currentArmy->getTotalHitPoints(1) > 0)
                             break;
-                        current_army++;
+                        currentArmy++;
                     }
                     if (remaining < 0)
                         return 1;
-                    if (player->resources[GOLD] >= surrender_cost + 2500) {
-                        long fight_values[2];
+                    if (player->m_resources[GOLD] >= surrenderCost + 2500) {
+                        long fightValues[2];
                         { for (long side = 0; side < 2; side++) {
-                                long fight_value = 0;
+                                long fightValue = 0;
                                 { for (long i = 0; i < 20; i++) {
-                                        army* side_army = &armies[side][i];
-                                        if (side_army->creatureType < 0)
+                                        army* sideArmy = &m_armies[side][i];
+                                        if (sideArmy->m_creatureType < 0)
                                             continue;
-                                        if (side_army->numTroops <= 0)
+                                        if (sideArmy->m_numTroops <= 0)
                                             continue;
                                         long value =
-                                            side_army->numTroops
-                                            * side_army->sMonInfo.baseFightValue;
+                                            sideArmy->m_numTroops
+                                            * sideArmy->m_monInfo.m_baseFightValue;
                                         unsigned attributes =
-                                            side_army->sMonInfo.attributes;
+                                            sideArmy->m_monInfo.m_attributes;
                                         if (!(attributes & (1u << 26)))
                                             value = static_cast<long>(value * 1.2);
-                                        fight_value += value;
+                                        fightValue += value;
                                     }
                                 }
-                                fight_values[side] = fight_value;
-                                if (defendingTown && side == 1)
-                                    fight_values[1] =
-                                        static_cast<long>(fight_value * 1.1);
+                                fightValues[side] = fightValue;
+                                if (m_defendingTown && side == 1)
+                                    fightValues[1] =
+                                        static_cast<long>(fightValue * 1.1);
                             }
                         }
-                        fight_values[1 - currentSide] = static_cast<long>(
-                            fight_values[1 - currentSide] * 1.1);
+                        fightValues[1 - m_currentSide] = static_cast<long>(
+                            fightValues[1 - m_currentSide] * 1.1);
 
                         float threshold = 0.16f;
-                        if (combat_value > 10000)
+                        if (combatValue > 10000)
                             threshold = 0.22f;
-                        else if (combat_value > 5000)
+                        else if (combatValue > 5000)
                             threshold = 0.21f;
                         // The third arm is an INCREMENT, not a literal:
                         // retail stores 0x3e4ccccc where `threshold = 0.2f`
@@ -370,22 +378,22 @@ unsigned char combatManager::AICheckRetreat()
                         // 0.16f initialiser and folds `0.16f + 0.04f` in
                         // SINGLE precision, which lands one ulp below the
                         // correctly-rounded decimal.  95.3935 -> 95.3960.
-                        else if (combat_value > 0)
+                        else if (combatValue > 0)
                             threshold += 0.04f;
-                        threshold -= (4 - gpGame->setup.difficulty) * 0.015;
-                        float experience_bonus =
-                            heroes[currentSide]->experience / 200000;
-                        if (experience_bonus > 0.03)
-                            experience_bonus = 0.03f;
-                        threshold += experience_bonus;
-                        if (!currentSide)
+                        threshold -= (4 - g_game->m_setup.m_difficulty) * 0.015;
+                        float experienceBonus =
+                            m_heroes[m_currentSide]->m_experience / 200000;
+                        if (experienceBonus > 0.03)
+                            experienceBonus = 0.03f;
+                        threshold += experienceBonus;
+                        if (!m_currentSide)
                             threshold -= 0.06f;
                         if (threshold > 0.16)
                             threshold = 0.16f;
                         float ratio =
-                            static_cast<float>(fight_values[currentSide])
-                            / static_cast<float>(fight_values[0]
-                                                 + fight_values[1]);
+                            static_cast<float>(fightValues[m_currentSide])
+                            / static_cast<float>(fightValues[0]
+                                                 + fightValues[1]);
                         if (ratio < threshold)
                             return 1;
                     }
@@ -404,25 +412,26 @@ unsigned char combatManager::AICheckRetreat()
 // arrow-tower gate and the two war-machine gates - writing the member
 // three times is what lets VC6 keep it in EAX across the whole body.
 // E:\gamedcs\ai.cpp:339
+// Before normalization (locals): lowest_attack, lowest_defense, include_cripples, current_army.
 VA(0x0041eac0, 0xB8)  // anchor-global, dc 0x23f2c
-long combatManager::get_total_combat_value(long side, long lowest_attack, long lowest_defense, unsigned char include_cripples) const
+long combatManager::getTotalCombatValue(long side, long lowestAttack, long lowestDefense, unsigned char includeCripples) const
 {
     long total = 0;
-    const army* current_army = armies[side];
-    for (long i = 0; i < numArmies[side]; i++, current_army++) {
+    const army* currentArmy = m_armies[side];
+    for (long i = 0; i < m_numArmies[side]; i++, currentArmy++) {
         unsigned char dead = static_cast<unsigned char>(
-            static_cast<unsigned>(current_army->sMonInfo.attributes) >> 21);
-        if ((dead & 1) != 0 || current_army->creatureType == CREATURE_ARROW_TOWER)
+            static_cast<unsigned>(currentArmy->m_monInfo.m_attributes) >> 21);
+        if ((dead & 1) != 0 || currentArmy->m_creatureType == CREATURE_ARROW_TOWER)
             continue;
-        if (!include_cripples) {
-            if (current_army->disabled_290 || current_army->disabled_2b0
-                    || current_army->disabled_2c0)
+        if (!includeCripples) {
+            if (currentArmy->m_spellInfluence[62] || currentArmy->m_spellInfluence[70]
+                    || currentArmy->m_spellInfluence[74])
                 continue;
-            if (current_army->creatureType == CREATURE_FIRST_AID_TENT
-                    || current_army->creatureType == CREATURE_AMMO_CART)
+            if (currentArmy->m_creatureType == CREATURE_FIRST_AID_TENT
+                    || currentArmy->m_creatureType == CREATURE_AMMO_CART)
                 continue;
         }
-        total += current_army->get_total_combat_value(lowest_attack, lowest_defense);
+        total += currentArmy->getTotalCombatValue(lowestAttack, lowestDefense);
     }
     return total;
 }
@@ -471,70 +480,72 @@ long combatManager::get_total_combat_value(long side, long lowest_attack, long l
 // schedules into retail's best-hex/best-army/output store order with the exact
 // EAX/ECX/EDX colouring. All 38 blocks and all 544 bytes match.
 // E:\gamedcs\ai.cpp:397
+// Before normalization (locals): current_army, best_value, best_target, our_group, enemy_group,
+// is_area_effect, best_army, second_value.
 VA(0x0041eb80, 0x220)  // anchor-callee, dc 0x240e4
-long combatManager::choose_shooter_target(const army* current_army, type_AI_combat_parameters* data, long* best_value)
+long combatManager::chooseShooterTarget(const army* currentArmy, type_AI_combat_parameters* data, long* bestValue)
 {
-    long best_target = -1;
+    long bestTarget = -1;
     long hex;
-    long our_group = data->side;
-    long enemy_group = data->enemy_side;
-    unsigned char is_area_effect = 0;
-    army* best_army = 0;
+    long ourGroup = data->m_ourGroup;
+    long enemyGroup = data->m_enemyGroup;
+    unsigned char isAreaEffect = 0;
+    army* bestArmy = 0;
     std::vector<army*> targets;
 
-    if (current_army->creatureType == CREATURE_MAGOG
-            || current_army->creatureType == CREATURE_LICH
-            || current_army->creatureType == CREATURE_POWER_LICH)
-        is_area_effect = 1;
+    if (currentArmy->m_creatureType == CREATURE_MAGOG
+            || currentArmy->m_creatureType == CREATURE_LICH
+            || currentArmy->m_creatureType == CREATURE_POWER_LICH)
+        isAreaEffect = 1;
 
-    for (long i = 0; i < numArmies[enemy_group]; i++) {
-        army* target = &armies[enemy_group][i];
+    for (long i = 0; i < m_numArmies[enemyGroup]; i++) {
+        army* target = &m_armies[enemyGroup][i];
         unsigned char dead = static_cast<unsigned char>(
-            static_cast<unsigned>(target->sMonInfo.attributes) >> 21);
-        if ((dead & 1) != 0 || target->creatureType == CREATURE_ARROW_TOWER)
+            static_cast<unsigned>(target->m_monInfo.m_attributes) >> 21);
+        if ((dead & 1) != 0 || target->m_creatureType == CREATURE_ARROW_TOWER)
             continue;
-        if (data->simulated && target->get_total_hit_points(1) == 0)
+        if (data->m_simulated && target->getTotalHitPoints(1) == 0)
             continue;
 
-        hex = target->gridIndex;
+        hex = target->m_gridIndex;
         long value;
-        if (is_area_effect) {
-            value = get_area_attack_value(current_army, hex, our_group, data);
-            if (target->sMonInfo.attributes & 1) {
-                long second_value = get_area_attack_value(
-                    current_army, target->get_second_grid_index(), our_group,
+        if (isAreaEffect) {
+            value = getAreaAttackValue(currentArmy, hex, ourGroup, data);
+            if (target->m_monInfo.m_attributes & 1) {
+                long secondValue = getAreaAttackValue(
+                    currentArmy, target->getSecondGridIndex(), ourGroup,
                     data);
-                if (second_value > value) {
-                    hex = target->get_second_grid_index();
-                    value = second_value;
+                if (secondValue > value) {
+                    hex = target->getSecondGridIndex();
+                    value = secondValue;
                 }
             }
             if (value < 0)
                 continue;
         } else {
-            value = data->get_ranged_attack_value(current_army, target);
+            value = data->getRangedAttackValue(currentArmy, target);
         }
 
-        if (best_army) {
-            if ((target->disabled_290 || target->disabled_2b0
-                    || target->disabled_2c0)
-                    && !(best_army->disabled_290 || best_army->disabled_2b0
-                        || best_army->disabled_2c0))
+        if (bestArmy) {
+            if ((target->m_spellInfluence[62] || target->m_spellInfluence[70]
+                    || target->m_spellInfluence[74])
+                    && !(bestArmy->m_spellInfluence[62] || bestArmy->m_spellInfluence[70]
+                        || bestArmy->m_spellInfluence[74]))
                 continue;
-            if (!(target->disabled_290 || target->disabled_2b0
-                    || target->disabled_2c0)
-                    && (best_army->disabled_290 || best_army->disabled_2b0
-                        || best_army->disabled_2c0))
+            if (!(target->m_spellInfluence[62] || target->m_spellInfluence[70]
+                    || target->m_spellInfluence[74])
+                    && (bestArmy->m_spellInfluence[62] || bestArmy->m_spellInfluence[70]
+                        || bestArmy->m_spellInfluence[74]))
                 goto accept_target;
-            if (value < *best_value)
+            if (value < *bestValue)
                 continue;
         }
 accept_target:
-        best_army = target;
-        *best_value = value;
-        best_target = hex;
+        bestArmy = target;
+        *bestValue = value;
+        bestTarget = hex;
     }
-    return best_target;
+    return bestTarget;
 }
 
 // E:\gamedcs\ai.cpp:365
@@ -573,22 +584,23 @@ accept_target:
 // recovers (94.4 -> 100.0 on the swap alone). The allocator is reading
 // declaration order, not use order.
 // E:\gamedcs\ai.cpp:365
+// Before normalization (locals): current_army, our_group.
 VA(0x0041eda0, 0xFD)  // anchor-callee, dc 0x2400c
-long get_area_attack_value(const army* current_army, long hex, long our_group, type_AI_combat_parameters* data)
+long getAreaAttackValue(const army* currentArmy, long hex, long ourGroup, type_AI_combat_parameters* data)
 {
     std::vector<army*> targets;
     long total = 0;
-    gpCombatManager->mark_hex_area_effect(hex, 1, 1, targets);
+    g_combatManager->markHexAreaEffect(hex, 1, 1, targets);
     for (unsigned i = targets.size(); i-- != 0; ) {
         army* target = targets[i];
-        if ((current_army->Is(1u << 18)) && (target->Is(1u << 18))
-                && target->gridIndex != hex
-                && target->get_second_grid_index() != hex)
+        if ((currentArmy->is(1u << 18)) && (target->is(1u << 18))
+                && target->m_gridIndex != hex
+                && target->getSecondGridIndex() != hex)
             continue;
-        if (target->combatSide == our_group)
-            total -= data->get_simple_attack_effect(current_army, target, 1, 0);
+        if (target->m_combatSide == ourGroup)
+            total -= data->getSimpleAttackEffect(currentArmy, target, 1, 0);
         else
-            total += data->get_ranged_attack_value(current_army, target);
+            total += data->getRangedAttackValue(currentArmy, target);
     }
     return total;
 }
@@ -605,8 +617,9 @@ long get_area_attack_value(const army* current_army, long hex, long our_group, t
 // order 9, no movement hex, and the selected wall record's combat hex.
 // This literal transcription matched all 441 bytes on its first paired build.
 // E:\gamedcs\ai.cpp:475
+// Before normalization (locals): best_value, current_army.
 VA(0x0041eea0, 0x1B9)  // anchor-callee, dc 0x2429c
-unsigned char combatManager::choose_cyclops_action(long best_value, long side, type_AI_combat_parameters* estimate)
+unsigned char combatManager::chooseCyclopsAction(long bestValue, long side, type_AI_combat_parameters* estimate)
 {
     DATA(0x0063abd0) static const TWallTargetId walls[4] = {
         WALL_TARGET_1, WALL_TARGET_2, WALL_TARGET_4, WALL_TARGET_5
@@ -614,36 +627,36 @@ unsigned char combatManager::choose_cyclops_action(long best_value, long side, t
 
     if (side == 1)
         return 0;
-    if (field_132f4 == COMBAT_FORTIFICATION_NONE)
+    if (m_fortificationLevel == COMBAT_FORTIFICATION_NONE)
         return 0;
 
     long count = 0;
     { for (long i = 0; i < 4; i++) {
-            if (get_wall_strength(walls[i]) > 0)
+            if (getWallStrength(walls[i]) > 0)
                 count++;
         }
     }
     if (!count)
         return 0;
 
-    find_AI_targets(side, 0, 0, estimate, 0);
+    findAITargets(side, 0, 0, estimate, 0);
     count = 0;
-    { for (long i = 0; i < numArmies[side]; i++) {
-            army* current_army = &armies[side][i];
-            if (!current_army->get_AI_target())
-                count += current_army->get_total_combat_value(
-                    estimate->lowest_attack, estimate->lowest_defense);
+    { for (long i = 0; i < m_numArmies[side]; i++) {
+            army* currentArmy = &m_armies[side][i];
+            if (!currentArmy->getAITarget())
+                count += currentArmy->getTotalCombatValue(
+                    estimate->m_lowestAttack, estimate->m_lowestDefense);
         }
     }
 
-    if (static_cast<double>(count) / estimate->our_value
-            <= static_cast<double>(best_value) * 1.2 / estimate->enemy_value)
+    if (static_cast<double>(count) / estimate->m_friendlyCombatValue
+            <= static_cast<double>(bestValue) * 1.2 / estimate->m_enemyCombatValue)
         return 0;
 
     long weakest = 100;
     count = 0;
     { for (long i = 0; i < 4; i++) {
-            long strength = get_wall_strength(walls[i]);
+            long strength = getWallStrength(walls[i]);
             if (strength <= 0 || strength > weakest)
                 continue;
             if (strength < weakest)
@@ -656,13 +669,13 @@ unsigned char combatManager::choose_cyclops_action(long best_value, long side, t
     long choice = sRandom(1, count);
     long target = 0;
     for (; target < 4; target++) {
-        long strength = get_wall_strength(walls[target]);
+        long strength = getWallStrength(walls[target]);
         if (strength == weakest && --choice == 0)
             break;
     }
-    field_3c = 9;
-    field_44 = wallTargets[walls[target]].target_hex;
-    field_40 = -1;
+    m_nextAction = 9;
+    m_nextActionGridIndex = s_wallTargets[walls[target]].m_targetHex;
+    m_nextActionExtra = -1;
     return 1;
 }
 
@@ -678,27 +691,28 @@ unsigned char combatManager::choose_cyclops_action(long best_value, long side, t
 // ctor, and when the first pass comes back with a zero best_value the
 // flag is cleared and the whole target scan runs again.
 // E:\gamedcs\ai.cpp:558
+// Before normalization (locals): current_army, best_value, action_value.
 VA(0x0041f060, 0xD1)  // anchor-callee, dc 0x2452c
-void combatManager::choose_shooter_action(const army* current_army, unsigned char simulated, long side)
+void combatManager::chooseShooterAction(const army* currentArmy, unsigned char simulated, long side)
 {
-    long best_value = 0;
+    long bestValue = 0;
     type_AI_combat_parameters data(this, side);
-    data.simulated = simulated;
-    find_AI_targets(1 - side, 0, 0, &data, 0);
-    long action_value = choose_shooter_target(current_army, &data, &best_value);
-    if (!simulated && (current_army->Is(1u << 5))
-            && choose_cyclops_action(best_value, side, &data))
+    data.m_simulated = simulated;
+    findAITargets(1 - side, 0, 0, &data, 0);
+    long actionValue = chooseShooterTarget(currentArmy, &data, &bestValue);
+    if (!simulated && (currentArmy->is(1u << 5))
+            && chooseCyclopsAction(bestValue, side, &data))
         return;
-    if (action_value < 0) {
-        field_3c = 3;
+    if (actionValue < 0) {
+        m_nextAction = 3;
         return;
     }
-    if (data.kills_only && !best_value) {
-        data.kills_only = 0;
-        action_value = choose_shooter_target(current_army, &data, &best_value);
+    if (data.m_killsOnly && !bestValue) {
+        data.m_killsOnly = 0;
+        actionValue = chooseShooterTarget(currentArmy, &data, &bestValue);
     }
-    field_3c = 7;
-    field_44 = action_value;
+    m_nextAction = 7;
+    m_nextActionGridIndex = actionValue;
 }
 
 // E:\gamedcs\ai.cpp:597 - combatManager::find_move_order's std::sort
@@ -721,11 +735,11 @@ struct func_moves_before {
 // CodeView fixes the ordinary non-const call operator.
 unsigned char func_moves_before::operator()(const army* a, const army* b)
 {
-    if (a->field_190 > b->field_190)
+    if (a->m_expectedMoveOrder > b->m_expectedMoveOrder)
         return true;
-    if (a->field_190 < b->field_190)
+    if (a->m_expectedMoveOrder < b->m_expectedMoveOrder)
         return false;
-    return a->bitIndex < b->bitIndex;
+    return a->m_bitIndex < b->m_bitIndex;
 }
 
 // E:\gamedcs\ai.cpp:610
@@ -738,23 +752,25 @@ unsigned char func_moves_before::operator()(const army* a, const army* b)
 // materialises the constant 1 in EAX (`mov eax, 1`), compares both
 // counters against it with `jg`, and then REUSES that same AL as the
 // mask for the `test al, cl` bit test below.
-static long get_move_order(const army* current_army)
+// Before normalization (function): get_move_order.
+// Before normalization (locals): current_army.
+static long getMoveOrder(const army* currentArmy)
 {
-    if (current_army->creatureType == CREATURE_FIRST_AID_TENT
-            || current_army->creatureType == CREATURE_AMMO_CART)
+    if (currentArmy->m_creatureType == CREATURE_FIRST_AID_TENT
+            || currentArmy->m_creatureType == CREATURE_AMMO_CART)
         return -100000;
-    if (current_army->disabled_290 > 1 || current_army->disabled_2b0 > 1)
+    if (currentArmy->m_spellInfluence[62] > 1 || currentArmy->m_spellInfluence[70] > 1)
         return -10000;
     unsigned char waited = static_cast<unsigned char>(
-        static_cast<unsigned>(current_army->sMonInfo.attributes) >> 26);
+        static_cast<unsigned>(currentArmy->m_monInfo.m_attributes) >> 26);
     if ((waited & 1) != 0
-            || const_cast<army*>(current_army)->IsIncapacitated())
-        return current_army->GetSpeed() - 1000;
+            || const_cast<army*>(currentArmy)->isIncapacitated())
+        return currentArmy->getSpeed() - 1000;
     unsigned char reversed = static_cast<unsigned char>(
-        static_cast<unsigned>(current_army->sMonInfo.attributes) >> 25);
-    if ((reversed & 1) != 0 || gpCombatManager->field_13de4)
-        return -current_army->GetSpeed();
-    return current_army->GetSpeed();
+        static_cast<unsigned>(currentArmy->m_monInfo.m_attributes) >> 25);
+    if ((reversed & 1) != 0 || g_combatManager->m_inSecondPhase)
+        return -currentArmy->getSpeed();
+    return currentArmy->getSpeed();
 }
 
 // E:\gamedcs\ai.cpp:633
@@ -783,40 +799,41 @@ static long get_move_order(const army* current_army)
 // ECX/EDX across the WHOLE partition loop - 94.44% instead of exact.
 // E:\gamedcs\ai.cpp:633
 VA(0x0041f140, 0x23F)  // anchor-global, dc 0x24694
-void combatManager::find_move_order(std::vector<army*>* result)
+void combatManager::findMoveOrder(std::vector<army*>* result)
 {
     std::vector<army*> order;
     for (long side = 0; side < 2; side++) {
-        for (long i = 0; i < numArmies[side]; i++) {
-            army* current_army = &armies[side][i];
-            if (current_army->creatureType == CREATURE_ARROW_TOWER)
+        for (long i = 0; i < m_numArmies[side]; i++) {
+            // Before normalization (locals): current_army, want_side.
+            army* currentArmy = &m_armies[side][i];
+            if (currentArmy->m_creatureType == CREATURE_ARROW_TOWER)
                 continue;
             unsigned char dead = static_cast<unsigned char>(
-                static_cast<unsigned>(current_army->sMonInfo.attributes) >> 21);
+                static_cast<unsigned>(currentArmy->m_monInfo.m_attributes) >> 21);
             if ((dead & 1) != 0)
                 continue;
-            current_army->field_190 = get_move_order(current_army);
-            order.push_back(current_army);
+            currentArmy->m_expectedMoveOrder = getMoveOrder(currentArmy);
+            order.push_back(currentArmy);
         }
     }
     std::sort(order.begin(), order.end(), func_moves_before());
-    long want_side = actingSide;
+    long wantSide = m_actingSide;
     for (unsigned i = 0; i < order.size(); i++) {
-        if (order[i]->combatSide != want_side) {
-            long key = order[i]->field_190;
+        if (order[i]->m_combatSide != wantSide) {
+            long key = order[i]->m_expectedMoveOrder;
             for (unsigned j = i + 1; j < order.size(); j++) {
-                if (order[j]->field_190 != key)
+                if (order[j]->m_expectedMoveOrder != key)
                     break;
-                if (order[j]->combatSide == want_side) {
+                if (order[j]->m_combatSide == wantSide) {
                     std::swap(order[i], order[j]);
                     break;
                 }
             }
         }
-        want_side = 1 - order[i]->combatSide;
+        wantSide = 1 - order[i]->m_combatSide;
     }
     for (unsigned k = 0; k < order.size(); k++) {
-        order[k]->field_190 = order.size() - k;
+        order[k]->m_expectedMoveOrder = order.size() - k;
         if (result)
             result->push_back(order[k]);
     }
@@ -893,45 +910,47 @@ long get_attack_value(const army* current_army, const army* enemy, long enemy_hi
 // same way. Nothing else in the census differs, which confirms the esi<->edi
 // mirror above as the rest of the residual.
 // E:\gamedcs\ai.cpp:731
+// Before normalization (locals): current_army, enemy_hits, our_hits, best_other, friendly_hits,
+// unit_value.
 VA(0x0041f3b0, 0x1C2)  // linkorder, dc 0x24a34
-long combatManager::get_attack_change(const army* current_army, const army* enemy, const type_AI_combat_parameters* data)
+long combatManager::getAttackChange(const army* currentArmy, const army* enemy, const type_AI_combat_parameters* data)
 {
-    if (enemy->disabled_2b0 || enemy->retaliationCount == 0
-            || enemy->retaliationCount > 1)
+    if (enemy->m_spellInfluence[70] || enemy->m_retaliationCount == 0
+            || enemy->m_retaliationCount > 1)
         return 0;
-    long enemy_hits = enemy->get_total_hit_points(data->simulated);
-    long our_hits = current_army->get_total_hit_points(data->simulated);
+    long enemyHits = enemy->getTotalHitPoints(data->m_simulated);
+    long ourHits = currentArmy->getTotalHitPoints(data->m_simulated);
     long committed = 0;
-    long best_other = 0;
-    enemy_hits -= AI_get_attack_damage(current_army, our_hits, enemy, 0, 0);
-    if (enemy_hits <= 0)
+    long bestOther = 0;
+    enemyHits -= aiGetAttackDamage(currentArmy, ourHits, enemy, 0, 0);
+    if (enemyHits <= 0)
         return 0;
-    const army* friendly = armies[currentSide];
-    for (long i = 0; i < numArmies[currentSide]; i++, friendly++) {
-        if (friendly->creatureType == CREATURE_ARROW_TOWER)
+    const army* friendly = m_armies[m_currentSide];
+    for (long i = 0; i < m_numArmies[m_currentSide]; i++, friendly++) {
+        if (friendly->m_creatureType == CREATURE_ARROW_TOWER)
             continue;
-        if ((friendly->get_AI_possible_targets() & (1 << enemy->bitIndex)) == 0)
+        if ((friendly->getAIPossibleTargets() & (1 << enemy->m_bitIndex)) == 0)
             continue;
-        long friendly_hits = friendly->get_total_hit_points(data->simulated);
-        long damage = AI_get_attack_damage(friendly, friendly_hits, enemy, 0, 0);
-        if (damage > enemy_hits)
-            damage = enemy_hits;
-        double unit_value = enemy->get_unit_combat_value(data->lowest_attack,
-                                                         data->lowest_defense, 0, 0);
+        long friendlyHits = friendly->getTotalHitPoints(data->m_simulated);
+        long damage = aiGetAttackDamage(friendly, friendlyHits, enemy, 0, 0);
+        if (damage > enemyHits)
+            damage = enemyHits;
+        double unitValue = enemy->getUnitCombatValue(data->m_lowestAttack,
+                                                         data->m_lowestDefense, 0, 0);
         double value;
-        if (data->kills_only) {
-            damage = (enemy_hits % enemy->sMonInfo.hitPoints + damage) / enemy->sMonInfo.hitPoints;
-            value = damage * unit_value;
+        if (data->m_killsOnly) {
+            damage = (enemyHits % enemy->m_monInfo.m_hitPoints + damage) / enemy->m_monInfo.m_hitPoints;
+            value = damage * unitValue;
         } else {
-            value = damage * unit_value / enemy->sMonInfo.hitPoints;
+            value = damage * unitValue / enemy->m_monInfo.m_hitPoints;
         }
-        long change = static_cast<long>(value) - friendly->get_AI_target_value();
-        if (friendly->get_AI_target() == enemy && change > 0)
+        long change = static_cast<long>(value) - friendly->getAITargetValue();
+        if (friendly->getAITarget() == enemy && change > 0)
             committed += change;
-        else if (change > best_other)
-            best_other = change;
+        else if (change > bestOther)
+            bestOther = change;
     }
-    return committed + best_other;
+    return committed + bestOther;
 }
 
 // E:\gamedcs\ai.cpp:779
@@ -984,95 +1003,97 @@ long combatManager::get_attack_change(const army* current_army, const army* enem
 // referenced second operand coalesces with best_danger's recycled +0xc
 // argument slot. That final home assignment makes all 772 bytes exact.
 // E:\gamedcs\ai.cpp:779
+// Before normalization (locals): current_army, target_hex, enemy_attacks, consider_waiting,
+// move_left, path_index, start_danger, best_danger, second_hex.
 VA(0x0041f580, 0x304)  // linkorder, dc 0x24b64
-unsigned char combatManager::move_toward(const army* current_army, long target_hex, const long* enemy_attacks, unsigned char consider_waiting)
+unsigned char combatManager::moveToward(const army* currentArmy, long targetHex, const long* enemyAttacks, unsigned char considerWaiting)
 {
-    if (!current_army->boundFlag && current_army->GetSpeed()) {
-        gpSearchArray->FindCombatPath(current_army, currentSide, target_hex,
-                                      bCreaturePlacement, 0x7f, -1);
-        if (static_cast<long>(gpSearchArray->result.size()) > 0) {
-            field_3c = 2;
-            long move_left = current_army->GetSpeed();
-            long path_index = gpSearchArray->result.size() - 1;
+    if (!currentArmy->m_spellInfluence[72] && currentArmy->getSpeed()) {
+        g_searchArray->findCombatPath(currentArmy, m_currentSide, targetHex,
+                                      m_creaturePlacement, 0x7f, -1);
+        if (static_cast<long>(g_searchArray->m_result.size()) > 0) {
+            m_nextAction = 2;
+            long moveLeft = currentArmy->getSpeed();
+            long pathIndex = g_searchArray->m_result.size() - 1;
             long step;
-            long start_danger;
+            long startDanger;
             long limit;
-            long best_danger;
-            long hex = current_army->gridIndex;
+            long bestDanger;
+            long hex = currentArmy->m_gridIndex;
             unsigned char committed;
 
-            best_danger = 0;
-            start_danger = 0;
-            field_44 = hex;
-            if (bCreaturePlacement)
-                move_left = path_index + 1;
-            if (bCreaturePlacement || field_13de4)
-                consider_waiting = 0;
-            if (gpGame->setup.difficulty < 2 && !sideIsAI[current_army->combatSide])
-                consider_waiting = 0;
-            if (enemy_attacks == 0) {
-                consider_waiting = 0;
+            bestDanger = 0;
+            startDanger = 0;
+            m_nextActionGridIndex = hex;
+            if (m_creaturePlacement)
+                moveLeft = pathIndex + 1;
+            if (m_creaturePlacement || m_inSecondPhase)
+                considerWaiting = 0;
+            if (g_game->m_setup.m_difficulty < 2 && !m_sideIsAi[currentArmy->m_combatSide])
+                considerWaiting = 0;
+            if (enemyAttacks == 0) {
+                considerWaiting = 0;
             } else {
-                best_danger = enemy_attacks[hex];
-                if (current_army->sMonInfo.attributes & 1)
-                    best_danger = min(
-                            enemy_attacks[hex
-                                    + (current_army->facing != 0 ? 1 : -1)],
-                            best_danger);
-                start_danger = best_danger;
+                bestDanger = enemyAttacks[hex];
+                if (currentArmy->m_monInfo.m_attributes & 1)
+                    bestDanger = min(
+                            enemyAttacks[hex
+                                    + (currentArmy->m_facing != 0 ? 1 : -1)],
+                            bestDanger);
+                startDanger = bestDanger;
             }
 
             committed = 0;
-            limit = (path_index / move_left) * move_left;
-            if (path_index >= 0) {
-                for (step = path_index + 1; path_index >= 0;
-                        path_index--, step--, move_left--) {
-                    if (move_left <= 0)
+            limit = (pathIndex / moveLeft) * moveLeft;
+            if (pathIndex >= 0) {
+                for (step = pathIndex + 1; pathIndex >= 0;
+                        pathIndex--, step--, moveLeft--) {
+                    if (moveLeft <= 0)
                         break;
-                    hex = const_cast<army*>(current_army)->GetAdjacentCellIndex(
-                            hex, gpSearchArray->result[path_index]->direction);
+                    hex = const_cast<army*>(currentArmy)->getAdjacentCellIndex(
+                            hex, g_searchArray->m_result[pathIndex]->m_direction);
                     if (hex < 0 || hex >= 187)
                         break;
-                    const pathCell* cell = gpSearchArray->cellData == 0
-                            ? 0 : &gpSearchArray->cellData[hex];
-                    if (cell->flight_cost == 0) {
-                        long second_hex = (current_army->sMonInfo.attributes & 1)
-                                ? hex + (current_army->facing != 0 ? 1 : -1) : hex;
-                        if (!(((step <= limit && committed) || consider_waiting)
-                                    && enemy_attacks != 0)
-                                || (enemy_attacks[hex] >= best_danger
-                                    && enemy_attacks[second_hex] >= best_danger)) {
-                            if (!bCreaturePlacement
-                                    || !is_outside_placement_boundry(
-                                            current_army->combatSide, hex)) {
-                                field_44 = hex;
+                    const pathCell* cell = g_searchArray->m_cellData == 0
+                            ? 0 : &g_searchArray->m_cellData[hex];
+                    if (cell->m_flightCost == 0) {
+                        long secondHex = (currentArmy->m_monInfo.m_attributes & 1)
+                                ? hex + (currentArmy->m_facing != 0 ? 1 : -1) : hex;
+                        if (!(((step <= limit && committed) || considerWaiting)
+                                    && enemyAttacks != 0)
+                                || (enemyAttacks[hex] >= bestDanger
+                                    && enemyAttacks[secondHex] >= bestDanger)) {
+                            if (!m_creaturePlacement
+                                    || !isOutsidePlacementBoundry(
+                                            currentArmy->m_combatSide, hex)) {
+                                m_nextActionGridIndex = hex;
                                 committed = 1;
-                                if (enemy_attacks != 0) {
-                                    best_danger = enemy_attacks[hex];
-                                    if (current_army->sMonInfo.attributes & 1)
-                                        best_danger = min(
-                                                enemy_attacks[second_hex],
-                                                best_danger);
+                                if (enemyAttacks != 0) {
+                                    bestDanger = enemyAttacks[hex];
+                                    if (currentArmy->m_monInfo.m_attributes & 1)
+                                        bestDanger = min(
+                                                enemyAttacks[secondHex],
+                                                bestDanger);
                                 }
                             }
                         }
                         if ((static_cast<unsigned char>(static_cast<unsigned>(
-                                        current_army->sMonInfo.attributes) >> 1) & 1) == 0) {
-                            if (gpSearchArray->bIsMoatSlowed[
+                                        currentArmy->m_monInfo.m_attributes) >> 1) & 1) == 0) {
+                            if (g_searchArray->m_isMoatSlowed[
                                         static_cast<short>(hex)]
-                                    || gpSearchArray->bIsMoatSlowed[
-                                            static_cast<short>(second_hex)])
-                                move_left = 0;
+                                    || g_searchArray->m_isMoatSlowed[
+                                            static_cast<short>(secondHex)])
+                                moveLeft = 0;
                         }
                     }
                 }
             }
 
-            if (consider_waiting && field_44 != hex
-                    && best_danger >= start_danger)
-                field_3c = 8;
-            if (field_44 == current_army->gridIndex)
-                field_3c = consider_waiting ? 8 : 3;
+            if (considerWaiting && m_nextActionGridIndex != hex
+                    && bestDanger >= startDanger)
+                m_nextAction = 8;
+            if (m_nextActionGridIndex == currentArmy->m_gridIndex)
+                m_nextAction = considerWaiting ? 8 : 3;
             return 1;
         }
     }
@@ -1085,21 +1106,22 @@ unsigned char combatManager::move_toward(const army* current_army, long target_h
 // Orb-of-Inhibition tests are written out per side rather than looped -
 // retail emits the pair straight-line with no induction variable.
 // E:\gamedcs\ai.cpp:897
+// Before normalization (locals): hero_spell.
 VA(0x0041f890, 0x8F)  // anchor-global, dc 0x24e5c
-unsigned char combatManager::can_cast_spells(long side, unsigned char hero_spell)
+unsigned char combatManager::canCastSpells(long side, unsigned char heroSpell)
 {
-    if (!hero_spell && field_53c0 == COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS)
+    if (!heroSpell && m_magicTerrain == COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS)
         return 0;
-    if (field_53c4)
+    if (m_onAntiMagicGarrison)
         return 0;
-    if (hero_spell) {
-        if (heroes[side] == 0
-                || !heroes[side]->IsWieldingArtifact(ARTIFACT_SPELLBOOK))
+    if (heroSpell) {
+        if (m_heroes[side] == 0
+                || !m_heroes[side]->isWieldingArtifact(ARTIFACT_SPELLBOOK))
             return 0;
     }
-    if (heroes[0] != 0 && heroes[0]->IsWieldingArtifact(ARTIFACT_ORB_OF_INHIBITION))
+    if (m_heroes[0] != 0 && m_heroes[0]->isWieldingArtifact(ARTIFACT_ORB_OF_INHIBITION))
         return 0;
-    if (heroes[1] != 0 && heroes[1]->IsWieldingArtifact(ARTIFACT_ORB_OF_INHIBITION))
+    if (m_heroes[1] != 0 && m_heroes[1]->isWieldingArtifact(ARTIFACT_ORB_OF_INHIBITION))
         return 0;
     return 1;
 }
@@ -1141,42 +1163,43 @@ unsigned char combatManager::can_cast_spells(long side, unsigned char hero_spell
 // no trace in these bytes and the out-of-line body at 0x41f890 still
 // exists (extern linkage emits unconditionally).
 // E:\gamedcs\ai.cpp:926
+// Before normalization (locals): our_army, marked_enemies, casting_hero.
 VA(0x0041f920, 0x234)  // linkorder, dc 0x24ef4
-long combatManager::get_area_effect(long side, const army* our_army, long marked_enemies, const type_AI_combat_parameters* estimate)
+long combatManager::getAreaEffect(long side, const army* ourArmy, long markedEnemies, const type_AI_combat_parameters* estimate)
 {
     long total = 0;
-    const army* enemy = armies[side];
-    for (long i = 0; i < numArmies[side]; i++, enemy++) {
-        if ((marked_enemies & (1 << enemy->bitIndex)) == 0)
+    const army* enemy = m_armies[side];
+    for (long i = 0; i < m_numArmies[side]; i++, enemy++) {
+        if ((markedEnemies & (1 << enemy->m_bitIndex)) == 0)
             continue;
-        if ((enemy->Is(1u << 20)) && enemy->can_shoot(0))
-            total += enemy->get_average_damage(our_army, 1, enemy->numTroops,
+        if ((enemy->is(1u << 20)) && enemy->canShoot(0))
+            total += enemy->getAverageDamage(ourArmy, 1, enemy->m_numTroops,
                                                1, 0);
-        if (enemy->Is(1u << 3))
-            total += enemy->get_average_damage(our_army, 0, enemy->numTroops,
+        if (enemy->is(1u << 3))
+            total += enemy->getAverageDamage(ourArmy, 0, enemy->m_numTroops,
                                                1, 0);
     }
-    if (can_cast_spells(side, 1)) {
-        hero* casting_hero = heroes[side];
+    if (canCastSpells(side, 1)) {
+        hero* castingHero = m_heroes[side];
         long best = 0;
         for (SpellID spell = 10; spell < hero::NUM_SPELLS; spell++) {
-            if (!casting_hero->available_spells[spell])
+            if (!castingHero->m_availableSpells[spell])
                 continue;
             if (spell == SPELL_FROST_RING || spell == SPELL_FIREBALL
                     || spell == SPELL_INFERNO
                     || spell == SPELL_METEOR_SHOWER) {
-                long mastery = casting_hero->get_spell_level(spell,
-                                                             field_53c0);
-                if (casting_hero->GetManaCost(spell, armyGroups[1 - side],
-                                              field_53c0)
-                        > casting_hero->mana)
+                long mastery = castingHero->getSpellLevel(spell,
+                                                             m_magicTerrain);
+                if (castingHero->getManaCost(spell, m_armyGroups[1 - side],
+                                              m_magicTerrain)
+                        > castingHero->m_mana)
                     continue;
-                long damage = ComputeSpellDamage(spell, spellPower[side],
-                                                 mastery, casting_hero,
-                                                 heroes[1 - side], our_army,
+                long damage = computeSpellDamage(spell, m_spellPower[side],
+                                                 mastery, castingHero,
+                                                 m_heroes[1 - side], ourArmy,
                                                  0);
                 long value = static_cast<long>(
-                        SpellCastWorkChance(spell, side, our_army, 0, 1, 0)
+                        spellCastWorkChance(spell, side, ourArmy, 0, 1, 0)
                         * damage);
                 if (value > best)
                     best = value;
@@ -1186,9 +1209,9 @@ long combatManager::get_area_effect(long side, const army* our_army, long marked
     }
     if (total <= 0)
         return total;
-    return our_army->get_loss_combat_value(estimate->lowest_attack,
-                                           estimate->lowest_defense,
-                                           our_army->can_shoot(0), total, 0);
+    return ourArmy->getLossCombatValue(estimate->m_lowestAttack,
+                                           estimate->m_lowestDefense,
+                                           ourArmy->canShoot(0), total, 0);
 }
 
 #if 0  // @carcass
@@ -1217,62 +1240,64 @@ long get_enemy_attack_limit(const army* our_army, const type_AI_combat_parameter
 // the same shape ai_combat's resurrection scan carries - and count is 8
 // for a two-hex friend, 6 otherwise.
 // E:\gamedcs\ai.cpp:1014
+// Before normalization (locals): our_army, enemy_attacks, marked_enemies, enemy_side,
+// area_effect, hit_points, floor_value, melee_value, far_hex.
 VA(0x0041fb60, 0x1F6)  // linkorder, dc 0x25124
-void combatManager::mark_friendly_armies(const army* our_army, long* enemy_attacks, long marked_enemies, const type_AI_combat_parameters* estimate)
+void combatManager::markFriendlyArmies(const army* ourArmy, long* enemyAttacks, long markedEnemies, const type_AI_combat_parameters* estimate)
 {
-    long enemy_side = estimate->enemy_side;
-    long area_effect = get_area_effect(enemy_side, our_army, marked_enemies,
+    long enemySide = estimate->m_enemyGroup;
+    long areaEffect = getAreaEffect(enemySide, ourArmy, markedEnemies,
                                        estimate);
     unsigned char checked[COMBAT_GRID_CELLS];
     memset(checked, 0, COMBAT_GRID_CELLS);
-    long hit_points = our_army->get_total_hit_points(estimate->simulated);
-    long floor_value = -our_army->get_loss_combat_value(
-            estimate->lowest_attack, estimate->lowest_defense,
-            our_army->can_shoot(0), hit_points, 0);
-    const army* friendly = armies[estimate->side];
-    for (long i = 0; i < numArmies[estimate->side]; i++, friendly++) {
-        if (friendly->Is(1u << 21))
+    long hitPoints = ourArmy->getTotalHitPoints(estimate->m_simulated);
+    long floorValue = -ourArmy->getLossCombatValue(
+            estimate->m_lowestAttack, estimate->m_lowestDefense,
+            ourArmy->canShoot(0), hitPoints, 0);
+    const army* friendly = m_armies[estimate->m_ourGroup];
+    for (long i = 0; i < m_numArmies[estimate->m_ourGroup]; i++, friendly++) {
+        if (friendly->is(1u << 21))
             continue;
-        if (friendly->creatureType == CREATURE_ARROW_TOWER)
+        if (friendly->m_creatureType == CREATURE_ARROW_TOWER)
             continue;
-        if (friendly == our_army)
+        if (friendly == ourArmy)
             continue;
-        long melee_value;
-        if (friendly->Is(1u << 3)) {
-            long damage = friendly->get_average_damage(our_army, 0,
-                                                       friendly->numTroops,
+        long meleeValue;
+        if (friendly->is(1u << 3)) {
+            long damage = friendly->getAverageDamage(ourArmy, 0,
+                                                       friendly->m_numTroops,
                                                        1, 0);
-            melee_value = our_army->get_loss_combat_value(
-                    estimate->lowest_attack, estimate->lowest_defense,
-                    our_army->can_shoot(0), damage, 0);
+            meleeValue = ourArmy->getLossCombatValue(
+                    estimate->m_lowestAttack, estimate->m_lowestDefense,
+                    ourArmy->canShoot(0), damage, 0);
         } else {
-            melee_value = 0;
+            meleeValue = 0;
         }
-        if (area_effect == 0 && melee_value == 0)
+        if (areaEffect == 0 && meleeValue == 0)
             continue;
-        long count = (friendly->Is(1u << 0)) ? 8 : 6;
+        long count = (friendly->is(1u << 0)) ? 8 : 6;
         for (long direction = count; direction-- > 0; ) {
-            long hex = friendly->get_adjacent_hex(friendly->gridIndex,
+            long hex = friendly->getAdjacentHex(friendly->m_gridIndex,
                                                   direction);
             if (hex < 0 || hex >= COMBAT_GRID_CELLS)
                 continue;
-            if (area_effect != 0) {
+            if (areaEffect != 0) {
                 if (checked[hex]) {
-                    enemy_attacks[hex]--;
+                    enemyAttacks[hex]--;
                 } else {
                     checked[hex] = 1;
-                    enemy_attacks[hex] -= area_effect;
+                    enemyAttacks[hex] -= areaEffect;
                 }
-                if (enemy_attacks[hex] < floor_value)
-                    enemy_attacks[hex] = floor_value;
+                if (enemyAttacks[hex] < floorValue)
+                    enemyAttacks[hex] = floorValue;
             }
-            if (friendly->Is(1u << 3)) {
-                long far_hex = friendly->GetAdjacentCellIndex(hex, direction);
-                if (far_hex < 0 || far_hex >= COMBAT_GRID_CELLS)
+            if (friendly->is(1u << 3)) {
+                long farHex = friendly->getAdjacentCellIndex(hex, direction);
+                if (farHex < 0 || farHex >= COMBAT_GRID_CELLS)
                     continue;
-                enemy_attacks[far_hex] -= melee_value;
-                if (enemy_attacks[far_hex] < floor_value)
-                    enemy_attacks[far_hex] = floor_value;
+                enemyAttacks[farHex] -= meleeValue;
+                if (enemyAttacks[farHex] < floorValue)
+                    enemyAttacks[farHex] = floorValue;
             }
         }
     }
@@ -1285,9 +1310,11 @@ void combatManager::mark_friendly_armies(const army* our_army, long* enemy_attac
 // own - the same declaration-before-use its reversed emission order
 // requires. It is the OWNING TU's forward declaration, not a consumer
 // re-spelling a foreign header.
-void find_attack_hexes(const army* our_army, long target_hex, long start,
-                       long stop, long limit_cost,
-                       const searchArray* search_array,
+// Before normalization (function): find_attack_hexes.
+// Before normalization (locals): our_army, target_hex, limit_cost, search_array, second_hex.
+void findAttackHexes(const army* ourArmy, long targetHex, long start,
+                       long stop, long limitCost,
+                       const searchArray* currentSearchArray,
                        std::vector<long>* result);
 
 // E:\gamedcs\ai.cpp:1121
@@ -1309,20 +1336,21 @@ void find_attack_hexes(const army* our_army, long target_hex, long start,
 // side count comes from OUR stack's two-hex bit, the extra sweep from
 // the ENEMY's, and the enemy's facing picks both the tail hex and which
 // half of the direction ring is searched.
+// Before normalization (function): find_attack_hexes.
 DC_ONLY(0x253a8, 0xA4)
-static void find_attack_hexes(const army* our_army, const army* enemy, const searchArray* search_array, std::vector<long>* result)
+static void findAttackHexes(const army* ourArmy, const army* enemy, const searchArray* currentSearchArray, std::vector<long>* result)
 {
-    long sides = (our_army->Is(1u << 0)) ? 8 : 6;
-    find_attack_hexes(our_army, our_army->gridIndex, 0, sides,
-                      enemy->GetSpeed(), search_array, result);
-    if (enemy->sMonInfo.attributes & 1) {
-        long second_hex = our_army->gridIndex - (enemy->facing ? 1 : -1);
-        if (enemy->facing == 0)
-            find_attack_hexes(our_army, second_hex, 0, 3, enemy->GetSpeed(),
-                              search_array, result);
+    long sides = (ourArmy->is(1u << 0)) ? 8 : 6;
+    findAttackHexes(ourArmy, ourArmy->m_gridIndex, 0, sides,
+                      enemy->getSpeed(), currentSearchArray, result);
+    if (enemy->m_monInfo.m_attributes & 1) {
+        long secondHex = ourArmy->m_gridIndex - (enemy->m_facing ? 1 : -1);
+        if (enemy->m_facing == 0)
+            findAttackHexes(ourArmy, secondHex, 0, 3, enemy->getSpeed(),
+                              currentSearchArray, result);
         else
-            find_attack_hexes(our_army, second_hex, 3, 6, enemy->GetSpeed(),
-                              search_array, result);
+            findAttackHexes(ourArmy, secondHex, 3, 6, enemy->getSpeed(),
+                              currentSearchArray, result);
     }
 }
 
@@ -1358,53 +1386,54 @@ static void find_attack_hexes(const army* our_army, const army* enemy, const sea
 // instruction-for-instruction identical apart from one EDX/ECX tie on
 // the `facing ? 1 : -1` temp.
 // E:\gamedcs\ai.cpp:1152
+// Before normalization (locals): our_army, enemy_attacks, limit_value, search_array.
 VA(0x0041fd60, 0x2F6)  // anchor-callee, dc 0x2544c
-void combatManager::mark_multiheaded_enemy(const army* our_army, const army* enemy, long* enemy_attacks, long limit_value, searchArray* search_array, type_AI_combat_parameters* estimate)
+void combatManager::markMultiheadedEnemy(const army* ourArmy, const army* enemy, long* enemyAttacks, long limitValue, searchArray* currentSearchArray, type_AI_combat_parameters* estimate)
 {
-    const army* other = armies[estimate->side];
-    long value = -estimate->get_simple_attack_effect(enemy, our_army, 0, 0);
+    const army* other = m_armies[estimate->m_ourGroup];
+    long value = -estimate->getSimpleAttackEffect(enemy, ourArmy, 0, 0);
     std::vector<long> hexes;
     unsigned char priced[COMBAT_GRID_CELLS];
     memset(priced, 0, COMBAT_GRID_CELLS);
-    for (long i = numArmies[estimate->side]; i-- > 0; other++) {
-        if (other->Is(1u << 21))
+    for (long i = m_numArmies[estimate->m_ourGroup]; i-- > 0; other++) {
+        if (other->is(1u << 21))
             continue;
-        if (other == our_army)
+        if (other == ourArmy)
             continue;
-        if (other->creatureType == CREATURE_ARROW_TOWER)
+        if (other->m_creatureType == CREATURE_ARROW_TOWER)
             continue;
-        if (estimate->simulated && other->get_total_hit_points(1) == 0)
+        if (estimate->m_simulated && other->getTotalHitPoints(1) == 0)
             continue;
-        if (!cells[other->gridIndex].field_4a)
+        if (!m_cells[other->m_gridIndex].m_validMove)
             continue;
-        const pathCell* cell = search_array->cellData == 0
+        const pathCell* cell = currentSearchArray->m_cellData == 0
                 ? 0
-                : &search_array->cellData[other->gridIndex];
-        if (cell->cost > enemy->GetSpeed())
+                : &currentSearchArray->m_cellData[other->m_gridIndex];
+        if (cell->m_cost > enemy->getSpeed())
             continue;
         unsigned char counted[COMBAT_GRID_CELLS];
         memset(counted, 0, COMBAT_GRID_CELLS);
         hexes.clear();
-        find_attack_hexes(other, enemy, search_array, &hexes);
+        findAttackHexes(other, enemy, currentSearchArray, &hexes);
         for (long j = hexes.size(); j-- > 0; ) {
             long hex = hexes[j];
-            long directions = enemy->get_multi_head_directions(
-                    hex, other, other->gridIndex);
-            long count = (enemy->Is(1u << 0)) ? 8 : 6;
+            long directions = enemy->getMultiHeadDirections(
+                    hex, other, other->m_gridIndex);
+            long count = (enemy->is(1u << 0)) ? 8 : 6;
             for (long direction = count; direction-- > 0; ) {
                 if ((directions & (1 << direction)) == 0)
                     continue;
-                long target = enemy->get_adjacent_hex(hex, direction);
+                long target = enemy->getAdjacentHex(hex, direction);
                 if (target < 0 || target >= COMBAT_GRID_CELLS)
                     continue;
                 if (counted[target])
                     continue;
                 if (priced[target])
-                    enemy_attacks[target]--;
+                    enemyAttacks[target]--;
                 else
-                    enemy_attacks[target] += value;
-                if (enemy_attacks[target] < limit_value)
-                    enemy_attacks[target] = limit_value;
+                    enemyAttacks[target] += value;
+                if (enemyAttacks[target] < limitValue)
+                    enemyAttacks[target] = limitValue;
                 priced[target] = 1;
                 counted[target] = 1;
             }
@@ -1444,18 +1473,18 @@ void combatManager::mark_multiheaded_enemy(const army* our_army, const army* ene
 
 // E:\gamedcs\ai.cpp:1097
 VA(0x00420060, 0x1FB)  // anchor-callee, dc 0x25308
-void find_attack_hexes(const army* our_army, long target_hex, long start, long stop, long limit_cost, const searchArray* search_array, std::vector<long>* result)
+void findAttackHexes(const army* ourArmy, long targetHex, long start, long stop, long limitCost, const searchArray* currentSearchArray, std::vector<long>* result)
 {
     for (long direction = start; direction < stop; direction++) {
-        long hex = our_army->get_adjacent_hex(target_hex, direction);
+        long hex = ourArmy->getAdjacentHex(targetHex, direction);
         if (hex < 0 || hex >= COMBAT_GRID_CELLS)
             continue;
-        const pathCell* cell = search_array->cellData == 0
+        const pathCell* cell = currentSearchArray->m_cellData == 0
                 ? 0
-                : &search_array->cellData[hex];
-        if (!cell->visited)
+                : &currentSearchArray->m_cellData[hex];
+        if (!cell->m_visited)
             continue;
-        if (cell->cost > limit_cost)
+        if (cell->m_cost > limitCost)
             continue;
         result->push_back(hex);
     }
@@ -1472,93 +1501,95 @@ void find_attack_hexes(const army* our_army, long target_hex, long start, long s
 // two-hex tail sweep adds the cells whose partner hex the stack would
 // occupy - skipping the moat, which it would be stopped in.
 // E:\gamedcs\ai.cpp:1241
+// Before normalization (locals): our_army, enemy_attacks, dangerous_enemies, enemy_side,
+// hit_points, floor_value.
 VA(0x00420260, 0x368)  // linkorder, dc 0x256a0
-void combatManager::mark_enemy_attacks(const army* our_army, long* enemy_attacks, long* dangerous_enemies, type_AI_combat_parameters* estimate)
+void combatManager::markEnemyAttacks(const army* ourArmy, long* enemyAttacks, long* dangerousEnemies, type_AI_combat_parameters* estimate)
 {
-    long side = estimate->side;
-    long enemy_side = estimate->enemy_side;
-    long hit_points = our_army->get_total_hit_points(estimate->simulated);
-    long floor_value = -our_army->get_loss_combat_value(
-            estimate->lowest_attack, estimate->lowest_defense,
-            our_army->can_shoot(0), hit_points, 0);
-    const army* enemy = armies[enemy_side];
-    *dangerous_enemies = 0;
-    for (long i = 0; i < numArmies[enemy_side]; i++, enemy++) {
-        if (enemy->disabled_290)
+    long side = estimate->m_ourGroup;
+    long enemySide = estimate->m_enemyGroup;
+    long hitPoints = ourArmy->getTotalHitPoints(estimate->m_simulated);
+    long floorValue = -ourArmy->getLossCombatValue(
+            estimate->m_lowestAttack, estimate->m_lowestDefense,
+            ourArmy->canShoot(0), hitPoints, 0);
+    const army* enemy = m_armies[enemySide];
+    *dangerousEnemies = 0;
+    for (long i = 0; i < m_numArmies[enemySide]; i++, enemy++) {
+        if (enemy->m_spellInfluence[62])
             continue;
-        if (enemy->disabled_2b0)
+        if (enemy->m_spellInfluence[70])
             continue;
-        if (enemy->disabled_2c0)
+        if (enemy->m_spellInfluence[74])
             continue;
-        if (enemy->Is(1u << 21))
+        if (enemy->is(1u << 21))
             continue;
-        if (enemy->creatureType == CREATURE_FIRST_AID_TENT
-                || enemy->creatureType == CREATURE_AMMO_CART
-                || enemy->creatureType == CREATURE_ARROW_TOWER)
+        if (enemy->m_creatureType == CREATURE_FIRST_AID_TENT
+                || enemy->m_creatureType == CREATURE_AMMO_CART
+                || enemy->m_creatureType == CREATURE_ARROW_TOWER)
             continue;
-        if (enemy->can_shoot(0)) {
-            *dangerous_enemies |= 1 << enemy->bitIndex;
+        if (enemy->canShoot(0)) {
+            *dangerousEnemies |= 1 << enemy->m_bitIndex;
             continue;
         }
-        gpSearchArray->SeedCombatPosition(enemy, enemy_side,
-                                          enemy->GetSpeed() + 1, 0,
-                                          enemy->GetSpeed() + 1);
+        g_searchArray->seedCombatPosition(enemy, enemySide,
+                                          enemy->getSpeed() + 1, 0,
+                                          enemy->getSpeed() + 1);
         long j;
-        const army* friendly = armies[side];
-        for (j = 0; j < numArmies[side]; j++, friendly++) {
-            if (friendly->Is(1u << 21))
+        const army* friendly = m_armies[side];
+        for (j = 0; j < m_numArmies[side]; j++, friendly++) {
+            if (friendly->is(1u << 21))
                 continue;
-            if (friendly->creatureType == CREATURE_ARROW_TOWER)
+            if (friendly->m_creatureType == CREATURE_ARROW_TOWER)
                 continue;
-            const pathCell* cell = gpSearchArray->cellData == 0
+            const pathCell* cell = g_searchArray->m_cellData == 0
                     ? 0
-                    : &gpSearchArray->cellData[friendly->gridIndex];
-            if (cells[friendly->gridIndex].field_4a
-                    && cell->cost <= enemy->GetSpeed())
+                    : &g_searchArray->m_cellData[friendly->m_gridIndex];
+            if (m_cells[friendly->m_gridIndex].m_validMove
+                    && cell->m_cost <= enemy->getSpeed())
                 break;
         }
-        if (j < numArmies[side]) {
-            *dangerous_enemies |= 1 << enemy->bitIndex;
-            if ((enemy->Is(1u << 19)) && gpGame->setup.difficulty >= 2
-                    && !sideIsAI[side])
-                mark_multiheaded_enemy(our_army, enemy, enemy_attacks,
-                                       floor_value, gpSearchArray, estimate);
+        if (j < m_numArmies[side]) {
+            *dangerousEnemies |= 1 << enemy->m_bitIndex;
+            if ((enemy->is(1u << 19)) && g_game->m_setup.m_difficulty >= 2
+                    && !m_sideIsAi[side])
+                markMultiheadedEnemy(ourArmy, enemy, enemyAttacks,
+                                       floorValue, g_searchArray, estimate);
             continue;
         }
-        long value = -estimate->get_simple_attack_effect(enemy, our_army, 0, 0);
+        long value = -estimate->getSimpleAttackEffect(enemy, ourArmy, 0, 0);
         if (value >= 0)
             continue;
         for (long hex = 0; hex < COMBAT_GRID_CELLS; hex++) {
-            const pathCell* cell = gpSearchArray->cellData == 0
+            const pathCell* cell = g_searchArray->m_cellData == 0
                     ? 0
-                    : &gpSearchArray->cellData[hex];
-            if (!cell->visited)
+                    : &g_searchArray->m_cellData[hex];
+            if (!cell->m_visited)
                 continue;
-            enemy_attacks[hex] += value;
-            if (enemy_attacks[hex] < floor_value)
-                enemy_attacks[hex] = floor_value;
+            enemyAttacks[hex] += value;
+            if (enemyAttacks[hex] < floorValue)
+                enemyAttacks[hex] = floorValue;
         }
-        if (enemy->sMonInfo.attributes & 1) {
-            long direction = enemy->facing ? 1 : 4;
+        if (enemy->m_monInfo.m_attributes & 1) {
+            long direction = enemy->m_facing ? 1 : 4;
             for (long hex = 0; hex < COMBAT_GRID_CELLS; hex++) {
-                const pathCell* cell = gpSearchArray->cellData == 0
+                const pathCell* cell = g_searchArray->m_cellData == 0
                         ? 0
-                        : &gpSearchArray->cellData[hex];
-                if (!cell->visited)
+                        : &g_searchArray->m_cellData[hex];
+                if (!cell->m_visited)
                     continue;
-                if (gpSearchArray->bIsMoatSlowed[static_cast<short>(hex)])
+                if (g_searchArray->m_isMoatSlowed[static_cast<short>(hex)])
                     continue;
-                long adjacent = adjacentCells[hex][direction];
+                long adjacent = m_adjacentCells[hex][direction];
                 if (adjacent < 0 || adjacent >= COMBAT_GRID_CELLS)
                     continue;
-                const pathCell* other = gpSearchArray->cellData == 0
+                const pathCell* other = g_searchArray->m_cellData == 0
                         ? 0
-                        : &gpSearchArray->cellData[adjacent];
-                if (other->visited)
+                        : &g_searchArray->m_cellData[adjacent];
+                if (other->m_visited)
                     continue;
-                enemy_attacks[adjacent] += value;
-                if (enemy_attacks[adjacent] < floor_value)
-                    enemy_attacks[adjacent] = floor_value;
+                enemyAttacks[adjacent] += value;
+                if (enemyAttacks[adjacent] < floorValue)
+                    enemyAttacks[adjacent] = floorValue;
             }
         }
     }
@@ -1588,60 +1619,62 @@ void combatManager::mark_enemy_attacks(const army* our_army, long* enemy_attacks
 // branch shape), and the `if (cell) cell += hex;` accessor spelling
 // choose_to_run uses (80.9 - retail wants getCellData's ternary here).
 // E:\gamedcs\ai.cpp:1357
+// Before normalization (locals): current_army, best_hex, open_hexes, search_array, best_time,
+// best_contact.
 VA(0x004205d0, 0x185)  // linkorder, dc 0x25998
-unsigned char combatManager::choose_defense_hex(const army* current_army, const army* client, long* best_hex, long* open_hexes, searchArray* search_array)
+unsigned char combatManager::chooseDefenseHex(const army* currentArmy, const army* client, long* bestHex, long* openHexes, searchArray* currentSearchArray)
 {
-    long best_time;
-    long best_contact;
+    long bestTime;
+    long bestContact;
 
-    *open_hexes = 0;
-    *best_hex = -1;
+    *openHexes = 0;
+    *bestHex = -1;
     for (long direction = 0; direction < 8; direction++) {
-        if (direction >= 6 && !(client->sMonInfo.attributes & 1))
+        if (direction >= 6 && !(client->m_monInfo.m_attributes & 1))
             continue;
-        long hex = client->get_adjacent_hex(client->gridIndex, direction);
+        long hex = client->getAdjacentHex(client->m_gridIndex, direction);
         if (hex < 0 || hex >= COMBAT_GRID_CELLS)
             continue;
-        hexcell* cell = &cells[hex];
-        army* occupant = cell->get_army();
-        if (occupant != 0 && occupant != current_army)
+        hexcell* cell = &m_cells[hex];
+        army* occupant = cell->getArmy();
+        if (occupant != 0 && occupant != currentArmy)
             continue;
-        (*open_hexes)++;
-        const pathCell* path = search_array->cellData == 0
+        (*openHexes)++;
+        const pathCell* path = currentSearchArray->m_cellData == 0
                 ? 0
-                : &search_array->cellData[hex];
-        if (!path->visited)
+                : &currentSearchArray->m_cellData[hex];
+        if (!path->m_visited)
             continue;
-        long time = bCreaturePlacement
+        long time = m_creaturePlacement
                 ? 1
-                : search_array->get_travel_time(current_army, hex);
+                : currentSearchArray->getTravelTime(currentArmy, hex);
         long contact;
-        if ((current_army->sMonInfo.attributes & 1)
-                && client->is_adjacent(hex + (current_army->facing ? 1 : -1)))
+        if ((currentArmy->m_monInfo.m_attributes & 1)
+                && client->isAdjacent(hex + (currentArmy->m_facing ? 1 : -1)))
             contact = 2;
         else
             contact = 1;
-        if (*best_hex >= 0) {
-            if (time > best_time)
+        if (*bestHex >= 0) {
+            if (time > bestTime)
                 continue;
-            if (time == best_time) {
-                if (contact < best_contact)
+            if (time == bestTime) {
+                if (contact < bestContact)
                     continue;
-                if (contact == best_contact) {
-                    if (client->facing == 1) {
-                        if (cell->field_00 < cells[*best_hex].field_00)
+                if (contact == bestContact) {
+                    if (client->m_facing == 1) {
+                        if (cell->m_refX < m_cells[*bestHex].m_refX)
                             continue;
-                    } else if (cell->field_00 > cells[*best_hex].field_00) {
+                    } else if (cell->m_refX > m_cells[*bestHex].m_refX) {
                         continue;
                     }
                 }
             }
         }
-        best_time = time;
-        best_contact = contact;
-        *best_hex = hex;
+        bestTime = time;
+        bestContact = contact;
+        *bestHex = hex;
     }
-    return static_cast<unsigned char>(*best_hex >= 0);
+    return static_cast<unsigned char>(*bestHex >= 0);
 }
 
 // E:\gamedcs\ai.cpp:1445
@@ -1656,55 +1689,57 @@ unsigned char combatManager::choose_defense_hex(const army* current_army, const 
 // index, and then moves toward [ebp-0x1c], the saved best. The two are the
 // same value only when the winning shooter was also the last one scanned.
 // E:\gamedcs\ai.cpp:1445
+// Before normalization (locals): current_army, search_array, best_hex, open_hexes, best_client,
+// best_time, best_value.
 VA(0x00420760, 0x187)  // linkorder, dc 0x25b0c
-unsigned char combatManager::attempt_shooter_defense(const army* current_army, searchArray* search_array, const type_AI_combat_parameters* estimate)
+unsigned char combatManager::attemptShooterDefense(const army* currentArmy, searchArray* currentSearchArray, const type_AI_combat_parameters* estimate)
 {
     long hex;
 
-    long best_hex = -1;
-    const army* client = armies[currentSide];
-    long open_hexes = 0;
-    const army* best_client = 0;
-    long best_time = 0;
-    long best_value = 0;
-    for (long i = 0; i < numArmies[currentSide]; i++, client++) {
-        if (client->Is(1u << 21))
+    long bestHex = -1;
+    const army* client = m_armies[m_currentSide];
+    long openHexes = 0;
+    const army* bestClient = 0;
+    long bestTime = 0;
+    long bestValue = 0;
+    for (long i = 0; i < m_numArmies[m_currentSide]; i++, client++) {
+        if (client->is(1u << 21))
             continue;
-        if (client->creatureType == CREATURE_ARROW_TOWER
-                || client->creatureType == CREATURE_CATAPULT)
+        if (client->m_creatureType == CREATURE_ARROW_TOWER
+                || client->m_creatureType == CREATURE_CATAPULT)
             continue;
-        if (!client->can_shoot(0))
+        if (!client->canShoot(0))
             continue;
-        if (client->Is(1u << 12))
+        if (client->is(1u << 12))
             continue;
-        if (!choose_defense_hex(current_army, client, &hex, &open_hexes,
-                                search_array))
+        if (!chooseDefenseHex(currentArmy, client, &hex, &openHexes,
+                                currentSearchArray))
             continue;
-        long time = bCreaturePlacement
+        long time = m_creaturePlacement
                 ? 1
-                : search_array->get_travel_time(current_army, hex);
-        long value = client->get_total_combat_value(estimate->lowest_attack,
-                                                    estimate->lowest_defense);
-        if (open_hexes > 1)
-            value /= open_hexes;
-        if (best_client != 0) {
-            if (time > best_time)
+                : currentSearchArray->getTravelTime(currentArmy, hex);
+        long value = client->getTotalCombatValue(estimate->m_lowestAttack,
+                                                    estimate->m_lowestDefense);
+        if (openHexes > 1)
+            value /= openHexes;
+        if (bestClient != 0) {
+            if (time > bestTime)
                 continue;
-            if (time == best_time && best_value > value)
+            if (time == bestTime && bestValue > value)
                 continue;
         }
-        best_value = value;
-        best_client = client;
-        best_time = time;
-        best_hex = hex;
+        bestValue = value;
+        bestClient = client;
+        bestTime = time;
+        bestHex = hex;
     }
-    if (best_client == 0)
+    if (bestClient == 0)
         return 0;
-    if (hex == current_army->gridIndex) {
-        field_3c = 3;
+    if (hex == currentArmy->m_gridIndex) {
+        m_nextAction = 3;
         return 1;
     }
-    move_toward(current_army, best_hex, 0, 0);
+    moveToward(currentArmy, bestHex, 0, 0);
     return 1;
 }
 
@@ -1716,57 +1751,59 @@ unsigned char combatManager::attempt_shooter_defense(const army* current_army, s
 // sides never run. The cellData null arm deliberately mirrors retail's
 // inline accessor, which returns null and is immediately dereferenced.
 // E:\gamedcs\ai.cpp:1513
+// Before normalization (locals): our_army, enemy_attacks, search_array, worst_danger,
+// second_hex, best_distance, best_hex.
 VA(0x004208f0, 0x184)  // linkorder, dc 0x25c80
-unsigned char combatManager::choose_to_run(const army* our_army, const long* enemy_attacks, const searchArray* search_array)
+unsigned char combatManager::chooseToRun(const army* ourArmy, const long* enemyAttacks, const searchArray* currentSearchArray)
 {
-    if (gpGame->setup.difficulty < 2
-        && !sideIsAI[our_army->combatSide])
+    if (g_game->m_setup.m_difficulty < 2
+        && !m_sideIsAi[ourArmy->m_combatSide])
         return 0;
 
-    long worst_danger = enemy_attacks[our_army->gridIndex];
-    if (our_army->sMonInfo.attributes & 1) {
-        long second_hex = our_army->get_second_grid_index();
-        worst_danger = min(
-            enemy_attacks[second_hex], worst_danger);
+    long worstDanger = enemyAttacks[ourArmy->m_gridIndex];
+    if (ourArmy->m_monInfo.m_attributes & 1) {
+        long secondHex = ourArmy->getSecondGridIndex();
+        worstDanger = min(
+            enemyAttacks[secondHex], worstDanger);
     }
 
-    if (worst_danger >= 0
-        || our_army->disabled_290
-        || our_army->disabled_2b0
-        || our_army->disabled_2c0
-        || our_army->boundFlag)
+    if (worstDanger >= 0
+        || ourArmy->m_spellInfluence[62]
+        || ourArmy->m_spellInfluence[70]
+        || ourArmy->m_spellInfluence[74]
+        || ourArmy->m_spellInfluence[72])
         return 0;
 
-    long best_distance = 0;
-    long best_hex = -1;
+    long bestDistance = 0;
+    long bestHex = -1;
     for (long hex = 0; hex < COMBAT_GRID_CELLS; ++hex) {
-        const pathCell* cell = search_array->cellData;
+        const pathCell* cell = currentSearchArray->m_cellData;
         if (cell)
             cell += hex;
-        if (!cell->visited || cell->flight_cost > 0)
+        if (!cell->m_visited || cell->m_flightCost > 0)
             continue;
 
-        long distance = cell->cost;
-        if (distance > our_army->GetSpeed())
+        long distance = cell->m_cost;
+        if (distance > ourArmy->getSpeed())
             continue;
 
-        long danger = enemy_attacks[hex];
-        if (our_army->sMonInfo.attributes & 1) {
-            long second_hex = hex + (our_army->facing ? 1 : -1);
-            danger = min(enemy_attacks[second_hex], danger);
+        long danger = enemyAttacks[hex];
+        if (ourArmy->m_monInfo.m_attributes & 1) {
+            long secondHex = hex + (ourArmy->m_facing ? 1 : -1);
+            danger = min(enemyAttacks[secondHex], danger);
         }
-        if (danger < worst_danger)
+        if (danger < worstDanger)
             continue;
-        if (danger == worst_danger && best_distance < distance)
+        if (danger == worstDanger && bestDistance < distance)
             continue;
-        worst_danger = danger;
-        best_distance = distance;
-        best_hex = hex;
+        worstDanger = danger;
+        bestDistance = distance;
+        bestHex = hex;
     }
 
-    if (best_hex < 0 || best_hex == our_army->gridIndex)
+    if (bestHex < 0 || bestHex == ourArmy->m_gridIndex)
         return 0;
-    return move_toward(our_army, best_hex, enemy_attacks, 0);
+    return moveToward(ourArmy, bestHex, enemyAttacks, 0);
 }
 
 // E:\gamedcs\ai.cpp:1572
@@ -1800,54 +1837,55 @@ unsigned char combatManager::choose_to_run(const army* our_army, const long* ene
 // is filled here and never read.
 // E:\gamedcs\ai.cpp:1572
 VA(0x00420a80, 0x264)  // anchor-callee, dc 0x25df8
-unsigned char combatManager::has_ranged_advantage(type_AI_combat_parameters* data)
+unsigned char combatManager::hasRangedAdvantage(type_AI_combat_parameters* data)
 {
-    long total_value[2];
-    long shooter_value[2];
+    // Before normalization (locals): total_value, shooter_value.
+    long totalValue[2];
+    long shooterValue[2];
 
     for (long side = 0; side < 2; side++) {
-        shooter_value[side] = 0;
-        total_value[side] = 0;
-        const army* stack = armies[side];
-        for (long i = 0; i < numArmies[side]; i++, stack++) {
-            if (!(stack->Is(1u << 21))
-                    && !stack->disabled_290 && !stack->disabled_2b0
-                    && !stack->disabled_2c0
-                    && stack->creatureType != CREATURE_ARROW_TOWER) {
-                long value = stack->get_total_combat_value(
-                    data->lowest_attack, data->lowest_defense);
-                total_value[side] += value;
-                if (stack->can_shoot(0))
-                    shooter_value[side] += value;
+        shooterValue[side] = 0;
+        totalValue[side] = 0;
+        const army* stack = m_armies[side];
+        for (long i = 0; i < m_numArmies[side]; i++, stack++) {
+            if (!(stack->is(1u << 21))
+                    && !stack->m_spellInfluence[62] && !stack->m_spellInfluence[70]
+                    && !stack->m_spellInfluence[74]
+                    && stack->m_creatureType != CREATURE_ARROW_TOWER) {
+                long value = stack->getTotalCombatValue(
+                    data->m_lowestAttack, data->m_lowestDefense);
+                totalValue[side] += value;
+                if (stack->canShoot(0))
+                    shooterValue[side] += value;
             }
         }
-        if (heroes[side] != 0 && can_cast_spells(side, 1)) {
-            type_spellvalue valuer(heroes[side]);
-            valuer.set_stack_value(total_value[side]);
-            shooter_value[side] += valuer.get_best_spell_value(0x8000);
+        if (m_heroes[side] != 0 && canCastSpells(side, 1)) {
+            type_spellvalue valuer(m_heroes[side]);
+            valuer.setStackValue(totalValue[side]);
+            shooterValue[side] += valuer.getBestSpellValue(0x8000);
         }
     }
 
-    if (field_132f4 >= COMBAT_FORTIFICATION_CITADEL) {
+    if (m_fortificationLevel >= COMBAT_FORTIFICATION_CITADEL) {
         int numArchers;
         int archerLevel;
-        defendingTown->CalcNumLevelArchers(&numArchers, &archerLevel);
-        if (wallStrength[14] > 0)
-            shooter_value[1] += akCreatureTypeTraits[CREATURE_ARCHER].AI_value
+        m_defendingTown->calcNumLevelArchers(&numArchers, &archerLevel);
+        if (m_wallStrength[14] > 0)
+            shooterValue[1] += g_creatureTypeTraits[CREATURE_ARCHER].m_aiValue
                                 * numArchers;
-        if (field_132f4 == COMBAT_FORTIFICATION_CASTLE) {
-            if (wallStrength[13] > 0)
-                shooter_value[1] +=
-                    akCreatureTypeTraits[CREATURE_ARCHER].AI_value
+        if (m_fortificationLevel == COMBAT_FORTIFICATION_CASTLE) {
+            if (m_wallStrength[13] > 0)
+                shooterValue[1] +=
+                    g_creatureTypeTraits[CREATURE_ARCHER].m_aiValue
                     * (numArchers + 1) / 2;
-            if (wallStrength[5] > 0)
-                shooter_value[1] +=
-                    akCreatureTypeTraits[CREATURE_ARCHER].AI_value
+            if (m_wallStrength[5] > 0)
+                shooterValue[1] +=
+                    g_creatureTypeTraits[CREATURE_ARCHER].m_aiValue
                     * (numArchers + 1) / 2;
         }
     }
 
-    return shooter_value[data->side] > shooter_value[data->enemy_side];
+    return shooterValue[data->m_ourGroup] > shooterValue[data->m_enemyGroup];
 }
 
 // CodeView's type_spellvalue destructor is compiler-generated (LF_ONEMETHOD
@@ -1915,49 +1953,50 @@ VA_COMPGEN(0x00420cf0, 0x26, IMPLICIT_DTOR, type_spellvalue)
 // `i-- > 0` form is already retail's - the body's `continue`s make the
 // decrement unmovable out of the for-condition - so this is a fold decision,
 // not a loop-form one.
+// Before normalization (locals): current_army, best_value, best_hex, our_value.
 VA(0x00420d20, 0x1D5)  // anchor-callee, dc 0x2600c
-unsigned char combatManager::choose_creature_spell(const army* current_army, long* best_value, type_AI_combat_parameters* estimate)
+unsigned char combatManager::chooseCreatureSpell(const army* currentArmy, long* bestValue, type_AI_combat_parameters* estimate)
 {
-    long side = estimate->side;
-    long count = numArmies[side];
-    long best_hex = -1;
-    long our_value = current_army->get_total_combat_value(
-            estimate->lowest_attack, estimate->lowest_defense);
-    type_AI_spellcaster caster(this, estimate->side, 1);
-    if (*best_value != 0 && Random(1, 100) <= 30)
+    long side = estimate->m_ourGroup;
+    long count = m_numArmies[side];
+    long bestHex = -1;
+    long ourValue = currentArmy->getTotalCombatValue(
+            estimate->m_lowestAttack, estimate->m_lowestDefense);
+    type_AI_spellcaster caster(this, estimate->m_ourGroup, 1);
+    if (*bestValue != 0 && random(1, 100) <= 30)
         return 0;
     for (long i = count; i-- > 0; ) {
-        const army* target = &armies[side][i];
-        if (target == current_army)
+        const army* target = &m_armies[side][i];
+        if (target == currentArmy)
             continue;
-        if (target->creatureType == CREATURE_ARROW_TOWER)
+        if (target->m_creatureType == CREATURE_ARROW_TOWER)
             continue;
-        if (!current_army->can_cast_spell(target->gridIndex))
+        if (!currentArmy->canCastSpell(target->m_gridIndex))
             continue;
-        if (*best_value > 0
-                && our_value > target->get_total_combat_value(
-                        estimate->lowest_attack, estimate->lowest_defense))
+        if (*bestValue > 0
+                && ourValue > target->getTotalCombatValue(
+                        estimate->m_lowestAttack, estimate->m_lowestDefense))
             continue;
         long value;
-        switch (current_army->creatureType) {
+        switch (currentArmy->m_creatureType) {
         case CREATURE_MASTER_GENIE:
-            value = caster.get_caliph_value(target);
+            value = caster.getCaliphValue(target);
             break;
         case CREATURE_OGRE_MAGE:
-            value = caster.get_ogre_mage_value(target);
+            value = caster.getOgreMageValue(target);
             break;
         }
         if (value <= 0)
             continue;
-        if (value <= *best_value)
+        if (value <= *bestValue)
             continue;
-        *best_value = value;
-        best_hex = target->gridIndex;
+        *bestValue = value;
+        bestHex = target->m_gridIndex;
     }
-    if (best_hex < 0)
+    if (bestHex < 0)
         return 0;
-    field_3c = 10;
-    field_44 = best_hex;
+    m_nextAction = 10;
+    m_nextActionGridIndex = bestHex;
     return 1;
 }
 
@@ -1980,29 +2019,30 @@ unsigned char combatManager::choose_creature_spell(const army* current_army, lon
 // contribute the private bool/reference declarator below, but that stronger
 // source typing is likewise byte-identical and does not change the wall.
 VA(0x00420f00, 0xFB)
-bool combatManager::SOD_choose_faerie_dragon_spell(
-        const army* current_army, long& best_value,
+bool combatManager::sodChooseFaerieDragonSpell(
+        // Before normalization (locals): current_army, best_value, best_hex.
+        const army* currentArmy, long& bestValue,
         type_AI_combat_parameters& estimate)
 {
-    long best_hex = -1;
-    type_AI_spellcaster caster(this, estimate.side, 1);
+    long bestHex = -1;
+    type_AI_spellcaster caster(this, estimate.m_ourGroup, 1);
     for (long hex = 0; hex < COMBAT_GRID_CELLS; hex++) {
-        if (InInvisibleColumn(hex))
+        if (inInvisibleColumn(hex))
             continue;
-        long value = caster.get_faerie_dragon_spell_value(
-                hex, current_army->numTroops * 5,
-                current_army->field_4e0);
+        long value = caster.getFaerieDragonSpellValue(
+                hex, currentArmy->m_numTroops * 5,
+                currentArmy->m_faerieDragonSpell);
         if (value <= 0)
             continue;
-        if (best_hex >= 0 && value <= best_value)
+        if (bestHex >= 0 && value <= bestValue)
             continue;
-        best_hex = hex;
-        best_value = value;
+        bestHex = hex;
+        bestValue = value;
     }
-    if (best_hex < 0)
+    if (bestHex < 0)
         return 0;
-    field_3c = 10;
-    field_44 = best_hex;
+    m_nextAction = 10;
+    m_nextActionGridIndex = bestHex;
     return 1;
 }
 
@@ -2028,68 +2068,69 @@ bool combatManager::SOD_choose_faerie_dragon_spell(
 // spelling - two `static_cast<long>` arms emit two conversions, which
 // retail does not have.
 // E:\gamedcs\ai.cpp:1694
+// Before normalization (locals): current_army, best_value, best_hex.
 VA(0x00421000, 0x275)  // anchor-callee, dc 0x26140
-unsigned char combatManager::choose_resurrect_action(const army* current_army, long* best_value, type_AI_combat_parameters* estimate)
+unsigned char combatManager::chooseResurrectAction(const army* currentArmy, long* bestValue, type_AI_combat_parameters* estimate)
 {
-    long best_hex = -1;
-    if ((current_army->creatureType != CREATURE_ARCHANGEL
-            && current_army->creatureType != CREATURE_PIT_LORD)
-            || current_army->sMonInfo.hasSpell <= 0)
+    long bestHex = -1;
+    if ((currentArmy->m_creatureType != CREATURE_ARCHANGEL
+            && currentArmy->m_creatureType != CREATURE_PIT_LORD)
+            || currentArmy->m_monInfo.m_hasSpell <= 0)
         return 0;
     army temp;
-    if (current_army->creatureType == CREATURE_PIT_LORD)
-        temp.initialize(CREATURE_DEMON, 1, heroes[estimate->side],
-                        estimate->side, 0, 0);
-    for (long i = numArmies[estimate->side]; i--; ) {
-        const army* target = &armies[estimate->side][i];
-        if (target == current_army)
+    if (currentArmy->m_creatureType == CREATURE_PIT_LORD)
+        temp.initialize(CREATURE_DEMON, 1, m_heroes[estimate->m_ourGroup],
+                        estimate->m_ourGroup, 0, 0);
+    for (long i = m_numArmies[estimate->m_ourGroup]; i--; ) {
+        const army* target = &m_armies[estimate->m_ourGroup][i];
+        if (target == currentArmy)
             continue;
-        if (target->creatureType == CREATURE_ARROW_TOWER)
+        if (target->m_creatureType == CREATURE_ARROW_TOWER)
             continue;
-        long hex = target->gridIndex;
-        if (current_army->creatureType == CREATURE_PIT_LORD) {
-            if (find_animate_dead_target(estimate->side, hex) != target) {
-                if ((target->sMonInfo.attributes & 1) == 0)
+        long hex = target->m_gridIndex;
+        if (currentArmy->m_creatureType == CREATURE_PIT_LORD) {
+            if (findAnimateDeadTarget(estimate->m_ourGroup, hex) != target) {
+                if ((target->m_monInfo.m_attributes & 1) == 0)
                     continue;
-                hex = target->get_second_grid_index();
-                if (find_animate_dead_target(estimate->side, hex) != target)
+                hex = target->getSecondGridIndex();
+                if (findAnimateDeadTarget(estimate->m_ourGroup, hex) != target)
                     continue;
             }
-            if ((target->Is(1u << 21)) == 0)
+            if ((target->is(1u << 21)) == 0)
                 continue;
         } else {
-            if (find_resurrection_target(estimate->side, hex, 1) != target) {
-                if ((target->sMonInfo.attributes & 1) == 0)
+            if (findResurrectionTarget(estimate->m_ourGroup, hex, 1) != target) {
+                if ((target->m_monInfo.m_attributes & 1) == 0)
                     continue;
-                hex = target->get_second_grid_index();
-                if (find_resurrection_target(estimate->side, hex, 1) != target)
+                hex = target->getSecondGridIndex();
+                if (findResurrectionTarget(estimate->m_ourGroup, hex, 1) != target)
                     continue;
             }
         }
-        long size = current_army->get_resurrection_size(target);
+        long size = currentArmy->getResurrectionSize(target);
         if (size == 0)
             continue;
         long value = static_cast<long>(
-                current_army->creatureType == CREATURE_PIT_LORD
-                ? temp.get_unit_combat_value(estimate->lowest_attack,
-                                             estimate->lowest_defense, 0, 0)
+                currentArmy->m_creatureType == CREATURE_PIT_LORD
+                ? temp.getUnitCombatValue(estimate->m_lowestAttack,
+                                             estimate->m_lowestDefense, 0, 0)
                         * size
-                : target->get_unit_combat_value(estimate->lowest_attack,
-                                                estimate->lowest_defense,
-                                                target->can_shoot(0), 0)
+                : target->getUnitCombatValue(estimate->m_lowestAttack,
+                                                estimate->m_lowestDefense,
+                                                target->canShoot(0), 0)
                         * size);
-        if (estimate->our_live_value > estimate->enemy_live_value
-                && estimate->odds <= 1)
+        if (estimate->m_awakeFriendlyValue > estimate->m_awakeEnemyValue
+                && estimate->m_roundsLeft <= 1)
             value += value;
-        if (value > *best_value) {
-            *best_value = value;
-            best_hex = hex;
+        if (value > *bestValue) {
+            *bestValue = value;
+            bestHex = hex;
         }
     }
-    if (best_hex < 0)
+    if (bestHex < 0)
         return 0;
-    field_44 = best_hex;
-    field_3c = 10;
+    m_nextActionGridIndex = bestHex;
+    m_nextAction = 10;
     return 1;
 }
 
@@ -2111,28 +2152,29 @@ unsigned char combatManager::choose_resurrect_action(const army* current_army, l
 // INLINED with hero_spell folded to 0, which is why the spellbook arm
 // leaves no trace and `side` itself is never loaded.
 // E:\gamedcs\ai.cpp:1794
+// Before normalization (locals): current_army, best_value.
 VA(0x00421280, 0x166)  // anchor-callee, dc 0x26464
-unsigned char combatManager::choose_spell_action(const army* current_army, long* best_value, type_AI_combat_parameters* estimate)
+unsigned char combatManager::chooseSpellAction(const army* currentArmy, long* bestValue, type_AI_combat_parameters* estimate)
 {
-    if (bCreaturePlacement)
+    if (m_creaturePlacement)
         return 0;
-    if (!can_cast_spells(estimate->side, 0))
+    if (!canCastSpells(estimate->m_ourGroup, 0))
         return 0;
-    if (current_army->sMonInfo.hasSpell == 0)
+    if (currentArmy->m_monInfo.m_hasSpell == 0)
         return 0;
-    switch (current_army->creatureType) {
+    switch (currentArmy->m_creatureType) {
     case CREATURE_ARCHANGEL:
     case CREATURE_PIT_LORD:
-        if (choose_resurrect_action(current_army, best_value, estimate))
+        if (chooseResurrectAction(currentArmy, bestValue, estimate))
             return 1;
         break;
     case CREATURE_MASTER_GENIE:
     case CREATURE_OGRE_MAGE:
-        if (choose_creature_spell(current_army, best_value, estimate))
+        if (chooseCreatureSpell(currentArmy, bestValue, estimate))
             return 1;
         break;
     case CREATURE_FAERIE_DRAGON:
-        if (SOD_choose_faerie_dragon_spell(current_army, *best_value, *estimate))
+        if (sodChooseFaerieDragonSpell(currentArmy, *bestValue, *estimate))
             return 1;
         break;
     }
@@ -2163,26 +2205,27 @@ unsigned char combatManager::choose_spell_action(const army* current_army, long*
 // wallStrength load just used - so it is transcribed as written.
 // E:\gamedcs\ai.cpp:1822
 VA(0x004213f0, 0xF5)  // anchor-callee, dc 0x264fc
-unsigned char combatManager::should_stay_in_castle(type_AI_combat_parameters* estimate)
+unsigned char combatManager::shouldStayInCastle(type_AI_combat_parameters* estimate)
 {
-    if (!field_132f4)
+    if (!m_fortificationLevel)
         return 0;
-    if (estimate->side != 1)
+    if (estimate->m_ourGroup != 1)
         return 0;
-    { for (const long* target = gCastleWallGateTargets;
-           target < gCastleWallGateTargetsEnd; target++) {
-        if (wallStrength[*target])
+    { for (const long* target = g_castleWallGateTargets;
+           target < g_castleWallGateTargetsEnd; target++) {
+        if (m_wallStrength[*target])
             continue;
-        if (!HexIsBlocked(wallTargets[*target].get_blocked_hex()))
+        if (!hexIsBlocked(s_wallTargets[*target].getBlockedHex()))
             return 0;
     } }
-    if (!has_ranged_advantage(estimate))
+    if (!hasRangedAdvantage(estimate))
         return 0;
-    const army* our_army = &armies[estimate->side][0];
-    for (long i = 0; i < numArmies[estimate->side]; i++, our_army++) {
-        if ((our_army->Is(1u << 21)) == 0
-                && our_army->creatureType != CREATURE_ARROW_TOWER
-                && !InCastle(our_army->gridIndex))
+    // Before normalization (locals): our_army.
+    const army* ourArmy = &m_armies[estimate->m_ourGroup][0];
+    for (long i = 0; i < m_numArmies[estimate->m_ourGroup]; i++, ourArmy++) {
+        if ((ourArmy->is(1u << 21)) == 0
+                && ourArmy->m_creatureType != CREATURE_ARROW_TOWER
+                && !inCastle(ourArmy->m_gridIndex))
             return 0;
     }
     return 1;
@@ -2221,21 +2264,22 @@ unsigned char combatManager::should_stay_in_castle(type_AI_combat_parameters* es
 // Every other caller of get_loss_combat_value in this tree passes the
 // pair. Transcribed as found.
 // E:\gamedcs\ai.cpp:1866
+// Before normalization (locals): current_army, enemy_attacks.
 VA(0x004214f0, 0x94)  // anchor-callee, dc 0x26600
-void combatManager::mark_firewalls(const army* current_army, long* enemy_attacks, type_AI_combat_parameters* estimate)
+void combatManager::markFirewalls(const army* currentArmy, long* enemyAttacks, type_AI_combat_parameters* estimate)
 {
     for (long i = 0; i < 187; i++) {
-        if ((cells[i].field_10 & 0x10) == 0)
+        if ((m_cells[i].m_attributes & 0x10) == 0)
             continue;
-        TObstacle* obstacle = &GetObstacle(cells[i].field_14);
-        long base = obstacle->spell_damage;
-        long damage = ModifySpellDamage(base, 0xd,
-                                        heroes[obstacle->owner],
-                                        heroes[estimate->side],
-                                        current_army, 0);
-        enemy_attacks[i] -= current_army->get_loss_combat_value(
-                estimate->lowest_attack, estimate->lowest_attack, 0, damage,
-                estimate->kills_only);
+        TObstacle* obstacle = &getObstacle(m_cells[i].m_obstacleIndex);
+        long base = obstacle->m_spellDamage;
+        long damage = modifySpellDamage(base, 0xd,
+                                        m_heroes[obstacle->m_owner],
+                                        m_heroes[estimate->m_ourGroup],
+                                        currentArmy, 0);
+        enemyAttacks[i] -= currentArmy->getLossCombatValue(
+                estimate->m_lowestAttack, estimate->m_lowestAttack, 0, damage,
+                estimate->m_killsOnly);
     }
 }
 
@@ -2247,48 +2291,45 @@ void combatManager::mark_firewalls(const army* current_army, long* enemy_attacks
 // caller; no Dreamcast roster row attests a name, so mark_moat follows this
 // TU's own mark_* family.
 //
-// WALL 2026-08-22 (79.9375%, 225 bytes): control flow is closed - both
-// sides have eight conditional branches, one return and thirteen blocks,
-// with branch-shape distance zero. The residual is one VC6 register-role
-// rotation: candidate assigns estimate/enemy_attacks/hex to EDI/EBX/ESI;
-// retail assigns them ESI/EDI/EBX. That forces one otherwise needless move
-// per table walk (83 aligned instructions against retail's 80). why-reg v2
-// reports 63 register-visible slots and identical definition slots/order,
-// classifying the difference as C1/front-end pseudo processing order; its
-// first-created estimate alias is copy-propagated and byte-inert. The full
-// bounded catalog agrees: named zero is distance-flat at 63, while volatile
-// row (69), unnamed hex (77), volatile hex (81/107), and a byte-typed hex
-// (61.175% byte score, with invented homes) all regress. No algorithm or
-// branch delta remains.
+// Retail loads the defending town before killsOnly and passes its moat
+// damage to getLossCombatValue. Materialize that damage in a local before
+// each call: VC6 then uses ESI/EDI/EBX for estimate/attacks/hex and matches
+// all 225 bytes. An inline table expression scored 79.9375%; caching only
+// the town pointer reached 91.625%. Changing index types or sharing hex
+// between the loops was byte-flat. The residual was a source temporary,
+// not an unavoidable front-end register-order difference.
+// Before normalization (locals): current_army, enemy_attacks.
 VA(0x00421590, 0xE1)
-void combatManager::mark_moat(const army* current_army, long* enemy_attacks,
-                              type_AI_combat_parameters* estimate)
+void combatManager::markMoat(const army* currentArmy, long* enemyAttacks,
+                         type_AI_combat_parameters* estimate)
 {
-    if (!field_53a8)
+    if (!m_moatOn)
         return;
 
     long row;
     for (row = 0; row < 11; row++) {
-            long hex = gMoatColumns[row];
-            if (drawbridgeState == DRAWBRIDGE_UP
-                    || hex != COMBAT_HEX_GATE_MOAT) {
-                enemy_attacks[hex] -= current_army->get_loss_combat_value(
-                        estimate->lowest_attack, estimate->lowest_attack, 0,
-                        gMoatDamage[defendingTown->type], estimate->kills_only);
-            }
+        long hex = g_moatColumns[row];
+        if (m_drawbridgeState == DRAWBRIDGE_UP
+                || hex != COMBAT_HEX_GATE_MOAT) {
+            long damage = g_moatDamage[m_defendingTown->m_type];
+            enemyAttacks[hex] -= currentArmy->getLossCombatValue(
+                    estimate->m_lowestAttack, estimate->m_lowestAttack, 0,
+                    damage, estimate->m_killsOnly);
         }
+    }
 
-    if (!field_53a9)
+    if (!m_moatIsWide)
         return;
     for (row = 0; row < 11; row++) {
-            long hex = gOuterMoatColumns[row];
-            if (drawbridgeState == DRAWBRIDGE_UP
-                    || hex != COMBAT_HEX_OUTER_MOAT) {
-                enemy_attacks[hex] -= current_army->get_loss_combat_value(
-                        estimate->lowest_attack, estimate->lowest_attack, 0,
-                        gMoatDamage[defendingTown->type], estimate->kills_only);
-            }
+        long hex = g_outerMoatColumns[row];
+        if (m_drawbridgeState == DRAWBRIDGE_UP
+                || hex != COMBAT_HEX_OUTER_MOAT) {
+            long damage = g_moatDamage[m_defendingTown->m_type];
+            enemyAttacks[hex] -= currentArmy->getLossCombatValue(
+                    estimate->m_lowestAttack, estimate->m_lowestAttack, 0,
+                    damage, estimate->m_killsOnly);
         }
+    }
 }
 
 // E:\gamedcs\ai.cpp:1896
@@ -2431,10 +2472,13 @@ void combatManager::mark_moat(const army* current_army, long* enemy_attacks,
 //     result is not feeding a pseudo created before the load. Do not
 //     spend a lane re-applying it "to the sites the note missed".
 // E:\gamedcs\ai.cpp:1896
+// Before normalization (locals): current_army, action_value, enemy_attacks, best_enemy,
+// best_value, best_troops, best_time, best_flag, dangerous_enemies, best_hex, stay_in_castle,
+// attack_cell.
 VA(0x00421680, 0x8F9)  // linkorder, dc 0x266d4
-unsigned char combatManager::choose_melee_target(const army* current_army, unsigned char teleport, long* action_value, type_AI_combat_parameters* estimate)
+unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned char teleport, long* actionValue, type_AI_combat_parameters* estimate)
 {
-    long enemy_attacks[COMBAT_GRID_CELLS];
+    long enemyAttacks[COMBAT_GRID_CELLS];
 
     // BOUND BY `const long&`, not copied: retail re-reads `estimate->side`
     // across the opaque mark_* calls rather than keeping a cached copy live,
@@ -2443,248 +2487,248 @@ unsigned char combatManager::choose_melee_target(const army* current_army, unsig
     // scores 91.6502, so the named binding is the better spelling of the same
     // fact.  The same change at the sibling declarations (line 1955,
     // AICheckRetreat's caller) LOSES 13.6, so it is per-body.
-    const long& side = estimate->side;
-    const army* best_enemy = 0;
-    long best_value = 0;
-    long best_troops = 0;
-    long best_time = 0;
-    unsigned char best_flag = 0;
-    long dangerous_enemies = 0;
-    long best_hex = -1;
+    const long& side = estimate->m_ourGroup;
+    const army* bestEnemy = 0;
+    long bestValue = 0;
+    long bestTroops = 0;
+    long bestTime = 0;
+    unsigned char bestFlag = 0;
+    long dangerousEnemies = 0;
+    long bestHex = -1;
     long budget = 127;
-    memset(enemy_attacks, 0, sizeof(enemy_attacks));
+    memset(enemyAttacks, 0, sizeof(enemyAttacks));
 
-    mark_firewalls(current_army, enemy_attacks, estimate);
-    if (gpGame->f_1f698 >= 2)
-        mark_moat(current_army, enemy_attacks, estimate);
-    if (gpGame->setup.difficulty > 0 || sideIsAI[side])
-        mark_enemy_attacks(current_army, enemy_attacks, &dangerous_enemies,
+    markFirewalls(currentArmy, enemyAttacks, estimate);
+    if (g_game->m_f1f698 >= 2)
+        markMoat(currentArmy, enemyAttacks, estimate);
+    if (g_game->m_setup.m_difficulty > 0 || m_sideIsAi[side])
+        markEnemyAttacks(currentArmy, enemyAttacks, &dangerousEnemies,
                            estimate);
-    if (gpGame->setup.difficulty >= 2 || sideIsAI[side])
-        mark_friendly_armies(current_army, enemy_attacks, dangerous_enemies,
+    if (g_game->m_setup.m_difficulty >= 2 || m_sideIsAi[side])
+        markFriendlyArmies(currentArmy, enemyAttacks, dangerousEnemies,
                              estimate);
 
-    budget = (current_army->disabled_290 || current_army->disabled_2b0
-              || current_army->disabled_2c0)
+    budget = (currentArmy->m_spellInfluence[62] || currentArmy->m_spellInfluence[70]
+              || currentArmy->m_spellInfluence[74])
             ? 0
             : budget;
     if (teleport)
-        gpSearchArray->mark_teleport(current_army, side);
+        g_searchArray->markTeleport(currentArmy, side);
     else
-        gpSearchArray->SeedCombatPosition(current_army, side, budget,
-                                          bCreaturePlacement, -1);
-    unsigned char stay_in_castle = should_stay_in_castle(estimate);
+        g_searchArray->seedCombatPosition(currentArmy, side, budget,
+                                          m_creaturePlacement, -1);
+    unsigned char stayInCastle = shouldStayInCastle(estimate);
 
-    for (long i = 0; i < numArmies[estimate->enemy_side]; i++) {
-        const army* enemy = &armies[estimate->enemy_side][i];
-        if (enemy->Is(1u << 21))
+    for (long i = 0; i < m_numArmies[estimate->m_enemyGroup]; i++) {
+        const army* enemy = &m_armies[estimate->m_enemyGroup][i];
+        if (enemy->is(1u << 21))
             continue;
-        if (enemy->creatureType == CREATURE_ARROW_TOWER)
+        if (enemy->m_creatureType == CREATURE_ARROW_TOWER)
             continue;
-        if (estimate->simulated && enemy->get_total_hit_points(1) == 0)
+        if (estimate->m_simulated && enemy->getTotalHitPoints(1) == 0)
             continue;
-        if (current_army->GetSpeed() == 0 || current_army->boundFlag) {
-            const pathCell* stand = gpSearchArray->cellData == 0
+        if (currentArmy->getSpeed() == 0 || currentArmy->m_spellInfluence[72]) {
+            const pathCell* stand = g_searchArray->m_cellData == 0
                     ? 0
-                    : &gpSearchArray->cellData[enemy->gridIndex];
-            if (stand->cost > 0)
+                    : &g_searchArray->m_cellData[enemy->m_gridIndex];
+            if (stand->m_cost > 0)
                 continue;
         }
-        if (stay_in_castle && !InCastle(enemy->gridIndex)
-                && (!(enemy->sMonInfo.attributes & 1)
-                    || !InCastle(enemy->get_second_grid_index())))
+        if (stayInCastle && !inCastle(enemy->m_gridIndex)
+                && (!(enemy->m_monInfo.m_attributes & 1)
+                    || !inCastle(enemy->getSecondGridIndex())))
             continue;
 
         long change = 0;
         unsigned char flag = 0;
-        if (cells[enemy->gridIndex].field_4a
-                && (gpGame->setup.difficulty >= 2 || sideIsAI[side])
-                && !current_army->disabled_290
-                && !current_army->disabled_2b0
-                && !current_army->disabled_2c0
-                && !(current_army->Is(1u << 21))
-                && current_army->creatureType != CREATURE_FIRST_AID_TENT
-                && current_army->creatureType != CREATURE_AMMO_CART
-                && !(enemy->Is(1u << 19))) {
-            const pathCell* reach = gpSearchArray->cellData == 0
+        if (m_cells[enemy->m_gridIndex].m_validMove
+                && (g_game->m_setup.m_difficulty >= 2 || m_sideIsAi[side])
+                && !currentArmy->m_spellInfluence[62]
+                && !currentArmy->m_spellInfluence[70]
+                && !currentArmy->m_spellInfluence[74]
+                && !(currentArmy->is(1u << 21))
+                && currentArmy->m_creatureType != CREATURE_FIRST_AID_TENT
+                && currentArmy->m_creatureType != CREATURE_AMMO_CART
+                && !(enemy->is(1u << 19))) {
+            const pathCell* reach = g_searchArray->m_cellData == 0
                     ? 0
-                    : &gpSearchArray->cellData[enemy->gridIndex];
-            if (reach->cost <= current_army->GetSpeed())
-                change = get_attack_change(current_army, enemy, estimate);
+                    : &g_searchArray->m_cellData[enemy->m_gridIndex];
+            if (reach->m_cost <= currentArmy->getSpeed())
+                change = getAttackChange(currentArmy, enemy, estimate);
         }
 
-        type_AI_attack_hex_chooser chooser(current_army, enemy, enemy_attacks,
-                                           gpSearchArray, estimate);
-        if (!chooser.find_attack_hex())
+        type_AI_attack_hex_chooser chooser(currentArmy, enemy, enemyAttacks,
+                                           g_searchArray, estimate);
+        if (!chooser.findAttackHex())
             continue;
-        if (!current_army->disabled_290 && !current_army->disabled_2b0
-                && !current_army->disabled_2c0
-                && !(current_army->Is(1u << 21))
-                && current_army->creatureType != CREATURE_FIRST_AID_TENT
-                && current_army->creatureType != CREATURE_AMMO_CART) {
+        if (!currentArmy->m_spellInfluence[62] && !currentArmy->m_spellInfluence[70]
+                && !currentArmy->m_spellInfluence[74]
+                && !(currentArmy->is(1u << 21))
+                && currentArmy->m_creatureType != CREATURE_FIRST_AID_TENT
+                && currentArmy->m_creatureType != CREATURE_AMMO_CART) {
             long distance = 0;
-            if (chooser.field_24 == 1) {
-                const pathCell* attack_cell = gpSearchArray->cellData == 0
-                        ? gpSearchArray->cellData
-                        : &gpSearchArray->cellData[chooser.best_hex];
-                distance = attack_cell->cost;
+            if (chooser.m_bestAttackTime == 1) {
+                const pathCell* attackCell = g_searchArray->m_cellData == 0
+                        ? g_searchArray->m_cellData
+                        : &g_searchArray->m_cellData[chooser.m_bestHex];
+                distance = attackCell->m_cost;
             }
-            change += estimate->get_simple_attack_effect(current_army, enemy, 0,
+            change += estimate->getSimpleAttackEffect(currentArmy, enemy, 0,
                                                          distance);
         }
 
-        if (chooser.best_value <= 0 || (current_army->Is(1u << 22))
-                || (gpGame->setup.difficulty == 0 && !sideIsAI[side])) {
-            change += chooser.best_value;
-        } else if (current_army->creatureType == CREATURE_HARPY
-                   || current_army->creatureType == CREATURE_HARPY_HAG) {
-            if (change < chooser.best_value) {
+        if (chooser.m_bestValue <= 0 || (currentArmy->is(1u << 22))
+                || (g_game->m_setup.m_difficulty == 0 && !m_sideIsAi[side])) {
+            change += chooser.m_bestValue;
+        } else if (currentArmy->m_creatureType == CREATURE_HARPY
+                   || currentArmy->m_creatureType == CREATURE_HARPY_HAG) {
+            if (change < chooser.m_bestValue) {
                 flag = 1;
-                change = chooser.best_value;
+                change = chooser.m_bestValue;
             }
-        } else if (change < 0 && has_ranged_advantage(estimate)) {
-            change = chooser.best_value;
+        } else if (change < 0 && hasRangedAdvantage(estimate)) {
+            change = chooser.m_bestValue;
             flag = 1;
         } else {
-            change += chooser.best_value;
+            change += chooser.m_bestValue;
         }
         if (change < 0
-                && (gpGame->setup.difficulty > 0 || sideIsAI[side])
-                && chooser.best_value < enemy_attacks[chooser.best_hex])
+                && (g_game->m_setup.m_difficulty > 0 || m_sideIsAi[side])
+                && chooser.m_bestValue < enemyAttacks[chooser.m_bestHex])
             continue;
 
-        long random = Random(75, 100);
+        long random = ::random(75, 100);
         long score = random * change / 100;
-        long troops = chooser.field_24;
-        if (best_enemy != 0) {
-            if ((enemy->disabled_290 || enemy->disabled_2b0
-                 || enemy->disabled_2c0)
-                    && !(best_enemy->disabled_290 || best_enemy->disabled_2b0
-                         || best_enemy->disabled_2c0))
+        long troops = chooser.m_bestAttackTime;
+        if (bestEnemy != 0) {
+            if ((enemy->m_spellInfluence[62] || enemy->m_spellInfluence[70]
+                 || enemy->m_spellInfluence[74])
+                    && !(bestEnemy->m_spellInfluence[62] || bestEnemy->m_spellInfluence[70]
+                         || bestEnemy->m_spellInfluence[74]))
                 continue;
-            if (!((best_enemy->disabled_290 || best_enemy->disabled_2b0
-                   || best_enemy->disabled_2c0)
-                  && !(enemy->disabled_290 || enemy->disabled_2b0
-                       || enemy->disabled_2c0))) {
-                if (best_troops < troops)
+            if (!((bestEnemy->m_spellInfluence[62] || bestEnemy->m_spellInfluence[70]
+                   || bestEnemy->m_spellInfluence[74])
+                  && !(enemy->m_spellInfluence[62] || enemy->m_spellInfluence[70]
+                       || enemy->m_spellInfluence[74]))) {
+                if (bestTroops < troops)
                     continue;
-                if (best_troops == troops) {
-                    if (best_value > score)
+                if (bestTroops == troops) {
+                    if (bestValue > score)
                         continue;
-                    if (best_value == score) {
-                        if (best_enemy->topCreatureDamage
-                                > enemy->topCreatureDamage)
+                    if (bestValue == score) {
+                        if (bestEnemy->m_topCreatureDamage
+                                > enemy->m_topCreatureDamage)
                             continue;
-                        if (best_enemy->topCreatureDamage
-                                == enemy->topCreatureDamage) {
-                            const pathCell* held = gpSearchArray->cellData == 0
+                        if (bestEnemy->m_topCreatureDamage
+                                == enemy->m_topCreatureDamage) {
+                            const pathCell* held = g_searchArray->m_cellData == 0
                                     ? 0
-                                    : &gpSearchArray->cellData[best_hex];
+                                    : &g_searchArray->m_cellData[bestHex];
                             const pathCell* offered
-                                    = gpSearchArray->cellData == 0
+                                    = g_searchArray->m_cellData == 0
                                     ? 0
-                                    : &gpSearchArray
-                                               ->cellData[chooser.best_hex];
-                            if (held->cost < offered->cost)
+                                    : &g_searchArray
+                                               ->m_cellData[chooser.m_bestHex];
+                            if (held->m_cost < offered->m_cost)
                                 continue;
                         }
                     }
                 }
             }
         }
-        best_enemy = enemy;
-        best_flag = flag;
-        best_hex = chooser.best_hex;
-        best_troops = troops;
-        best_time = chooser.best_value * random / (troops * 100);
-        best_value = score / troops;
+        bestEnemy = enemy;
+        bestFlag = flag;
+        bestHex = chooser.m_bestHex;
+        bestTroops = troops;
+        bestTime = chooser.m_bestValue * random / (troops * 100);
+        bestValue = score / troops;
     }
 
-    *action_value = max(best_value, best_time);
+    *actionValue = max(bestValue, bestTime);
     if (teleport) {
-        if (best_enemy != 0 && *action_value >= 0) {
-            field_3c = 6;
-            field_40 = best_hex;
-            field_44 = best_enemy->gridIndex;
+        if (bestEnemy != 0 && *actionValue >= 0) {
+            m_nextAction = 6;
+            m_nextActionExtra = bestHex;
+            m_nextActionGridIndex = bestEnemy->m_gridIndex;
             return 1;
         }
-        field_3c = 3;
+        m_nextAction = 3;
         return 1;
     }
-    if (!estimate->simulated && !bCreaturePlacement
-            && choose_spell_action(current_army, action_value, estimate))
+    if (!estimate->m_simulated && !m_creaturePlacement
+            && chooseSpellAction(currentArmy, actionValue, estimate))
         return 1;
-    if (best_flag) {
-        *action_value = best_time;
-        if (best_hex == current_army->gridIndex)
+    if (bestFlag) {
+        *actionValue = bestTime;
+        if (bestHex == currentArmy->m_gridIndex)
             return 0;
-        move_toward(current_army, best_hex, enemy_attacks,
-                    static_cast<unsigned char>(!estimate->simulated
-                                               && best_troops > 1));
+        moveToward(currentArmy, bestHex, enemyAttacks,
+                    static_cast<unsigned char>(!estimate->m_simulated
+                                               && bestTroops > 1));
         return 1;
     }
 
-    if (best_enemy == 0) {
-        if (field_132f4 > 0 && currentSide == 0) {
-            long hex = gCastleWallColumns[current_army->gridIndex / 17];
-            while (hex > current_army->gridIndex) {
-                const pathCell* cell = gpSearchArray->cellData == 0
+    if (bestEnemy == 0) {
+        if (m_fortificationLevel > 0 && m_currentSide == 0) {
+            long hex = g_castleWallColumns[currentArmy->m_gridIndex / 17];
+            while (hex > currentArmy->m_gridIndex) {
+                const pathCell* cell = g_searchArray->m_cellData == 0
                         ? 0
-                        : &gpSearchArray->cellData[hex];
-                if (cell->visited) {
-                    if (!IsInMoat(hex, 0)) {
-                        if (!(current_army->sMonInfo.attributes & 1))
+                        : &g_searchArray->m_cellData[hex];
+                if (cell->m_visited) {
+                    if (!isInMoat(hex, 0)) {
+                        if (!(currentArmy->m_monInfo.m_attributes & 1))
                             break;
-                        if (!IsInMoat(hex + (current_army->facing ? 1 : -1), 0))
+                        if (!isInMoat(hex + (currentArmy->m_facing ? 1 : -1), 0))
                             break;
                     }
                 }
                 hex--;
             }
-            if (hex > current_army->gridIndex) {
-                move_toward(current_army, hex, enemy_attacks, 0);
+            if (hex > currentArmy->m_gridIndex) {
+                moveToward(currentArmy, hex, enemyAttacks, 0);
                 return 1;
             }
-            field_3c = 3;
+            m_nextAction = 3;
             return 1;
         }
-    } else if (best_value < 0 && best_value < best_time
-               && !(current_army->Is(1u << 22))
-               && (gpGame->setup.difficulty > 0 || sideIsAI[side])
-               && has_ranged_advantage(estimate)) {
+    } else if (bestValue < 0 && bestValue < bestTime
+               && !(currentArmy->is(1u << 22))
+               && (g_game->m_setup.m_difficulty > 0 || m_sideIsAi[side])
+               && hasRangedAdvantage(estimate)) {
         // Deliberately empty: a shooter that would lose the exchange
         // falls into the same disengage tail an empty board reaches.
     } else {
         goto commit;
     }
 
-    *action_value = 0;
-    if (!estimate->simulated
-            && get_area_effect(estimate->enemy_side, current_army,
-                               dangerous_enemies,
+    *actionValue = 0;
+    if (!estimate->m_simulated
+            && getAreaEffect(estimate->m_enemyGroup, currentArmy,
+                               dangerousEnemies,
                                estimate) == 0
-            && attempt_shooter_defense(current_army, gpSearchArray, estimate))
+            && attemptShooterDefense(currentArmy, g_searchArray, estimate))
         return 1;
-    if (best_enemy == 0) {
-        if (!estimate->simulated
-                && choose_to_run(current_army, enemy_attacks, gpSearchArray))
+    if (bestEnemy == 0) {
+        if (!estimate->m_simulated
+                && chooseToRun(currentArmy, enemyAttacks, g_searchArray))
             return 1;
         return 0;
     }
 
 commit:
-    *action_value = best_value;
-    if (best_troops <= 1 && !bCreaturePlacement) {
-        field_40 = best_hex;
-        field_3c = 6;
-        field_44 = best_enemy->gridIndex;
+    *actionValue = bestValue;
+    if (bestTroops <= 1 && !m_creaturePlacement) {
+        m_nextActionExtra = bestHex;
+        m_nextAction = 6;
+        m_nextActionGridIndex = bestEnemy->m_gridIndex;
         return 1;
     }
-    if (best_hex == current_army->gridIndex)
+    if (bestHex == currentArmy->m_gridIndex)
         return 0;
-    move_toward(current_army, best_hex, enemy_attacks,
-                static_cast<unsigned char>(!estimate->simulated
-                                           && best_troops > 1));
+    moveToward(currentArmy, bestHex, enemyAttacks,
+                static_cast<unsigned char>(!estimate->m_simulated
+                                           && bestTroops > 1));
     return 1;
 }
 
@@ -2700,23 +2744,24 @@ commit:
 // choosers write through, which is why retail zeroes [ebp+0x14] after
 // the last read of `side` and returns it from two of the three exits.
 // E:\gamedcs\ai.cpp:2159
+// Before normalization (locals): current_army, action_value.
 VA(0x00421f80, 0xD5)  // anchor-callee, dc 0x26ee0
-long combatManager::choose_melee_action(const army* current_army, unsigned char teleport, unsigned char simulated, long side)
+long combatManager::chooseMeleeAction(const army* currentArmy, unsigned char teleport, unsigned char simulated, long side)
 {
     type_AI_combat_parameters data(this, side);
-    data.simulated = simulated;
-    find_move_order(0);
-    find_AI_targets(side, current_army, 1, &data, 0);
-    long action_value = 0;
-    if (choose_melee_target(current_army, teleport, &action_value, &data))
-        return action_value;
-    if (!simulated && choose_spell_action(current_army, &action_value, &data))
-        return action_value;
-    if (!field_13de4 && (gpGame->setup.difficulty >= 2 || sideIsAI[side])) {
-        field_3c = 8;
+    data.m_simulated = simulated;
+    findMoveOrder(0);
+    findAITargets(side, currentArmy, 1, &data, 0);
+    long actionValue = 0;
+    if (chooseMeleeTarget(currentArmy, teleport, &actionValue, &data))
+        return actionValue;
+    if (!simulated && chooseSpellAction(currentArmy, &actionValue, &data))
+        return actionValue;
+    if (!m_inSecondPhase && (g_game->m_setup.m_difficulty >= 2 || m_sideIsAi[side])) {
+        m_nextAction = 8;
         return 0;
     }
-    field_3c = 3;
+    m_nextAction = 3;
     return 0;
 }
 
@@ -2724,107 +2769,75 @@ long combatManager::choose_melee_action(const army* current_army, unsigned char 
 
 #endif  // @carcass
 
-// E:\gamedcs\ai.cpp:2187
-// 398 bytes against the DC body's 398 - the tightest size agreement in
-// the TU - with `ret 4` matching the DC parameter count and a body
-// that calls searchArray::SeedCombatPosition and
-// combatManager::is_outside_placement_boundry. Placement, by name.
+// E:\gamedcs\ai.cpp:2187, DC 0x26fa8. The source locals are best_hex,
+// best_open_hexes and new_hex; both wait exits assign action 8 and return
+// (lines 2191/2193 and 2255/2257). Do not merge them with a source goto.
 //
-// A shooter wants the LOWEST score, and the score counts how many of
-// its neighbouring hexes are free (or its own) - so it walks toward the
-// emptiest corner of its placement zone - except that a single
-// neighbour carrying creatureId bit 2 slams the score to 1000 and rules
-// the hex out entirely. Ties go to standing still.
+// Exact (2026-09-07): the combined entry guard and explicit wait returns let
+// VC6 keep this in EBX, recycle EBX for the neighboring-open-hex count, and
+// delay saving ESI until SeedCombatPosition's arguments. The old shared
+// goto-wait tail changed these bindings; this was a source-control-flow
+// difference, not an unavoidable register-homing wall.
 //
-// The 100 the search starts from is a real ceiling, not a sentinel: a
-// hex with eight free neighbours scores 8, so any reachable hex beats
-// it and only an unreachable board leaves best_hex on the stack's own
-// square - which is the `field_3c = 8` (wait) exit.
-//
-// The two-hex bound test is combatManager::ValidHex, the DC header
-// inline (cmbtmgr.h:1460), used TWICE - once on the loop index and once
-// on the adjacent hex. On the loop index VC6 strength-reduces it onto
-// the SAME 30-byte induction variable the cellData walk uses, which is
-// why the retail bytes read `test esi,esi / jl` plus `cmp esi,0x15ea /
-// jge` (0x15ea = 187 * 30) rather than anything mentioning 187.
-//
-// Residual (82.49%): the register-homing family, and every semantic
-// question is settled - both ValidHex expansions, the strength reduction,
-// the two acceptance guards and the shared wait tail line up. Retail has
-// 21 branches / two returns, as does this source; only the equivalent final
-// best-hex test has opposite layout polarity. What does not align is one
-// cyclic register choice: retail parks `this` in EBX,
-// spills it to a slot across the inner loop and RECYCLES EBX as the
-// neighbour counter, which leaves ESI free for the induction and lets
-// the ESI save shrink-wrap into the middle of SeedCombatPosition's
-// argument pushes. Our CL parks `this` in ESI, keeps EBX for something
-// else and spills the counter to memory (`inc dword ptr [ebp-x]`
-// against retail's `inc ebx`). Tried and measured: one sunk shared
-// `field_3c = 8` tail written as an enclosing `if` (76.5), the same
-// tail written with `goto` (76.8 - it does reproduce retail's three
-// `je`s into one block, and is still worse overall), the acceptance
-// test as one `a < b || (a == b && c)` expression (79.2 against 80.6
-// for retail's two separate `continue` guards, which is what produces
-// the DUPLICATED `cmp ebx,eax` retail carries), and swapping the
-// best_hex/best_value declaration order (80.53 under that older layout).
-// Revisited 2026-08-13 with the DC local roster: the actual function-scope
-// locals are `best_hex`, `best_open_hexes`, `new_hex` in that order. Moving
-// their assignments before SeedCombatPosition, swapping the first two into
-// roster order and merging the three wait exits raised 80.57 -> 82.49.
-// Nesting the positive gates aligns every branch target but scores 82.21;
-// spelling the last normal arm explicitly scores 81.29. Both were rejected.
-// E:\gamedcs\ai.cpp:2187
+// Restore the canonical getHex/Is calls and the occupied-neighbor-first
+// branch at DC lines 2236..2246. A neighbor with attribute bit 2 sets the
+// score to 1000; empty/self neighbors increment it. Lower scores win and ties
+// favor the current hex. DC assigns bestHex before bestOpenHexes.
+// Controls: helper/neighbor-order repair alone is byte-flat at 82.4884%;
+// combining the entry guard alone gives 82.2093%; explicit wait returns
+// then reach 100%. A direct getHex()->visited test, combined placement
+// guard and DC best-value assignment order preserve the exact bytes.
+// The two ValidHex calls also explain retail's 30-byte induction bounds.
+// Before normalization (locals): current_army, best_hex, best_open_hexes, new_hex.
 VA(0x00422060, 0x18E)  // anchor-callee, dc 0x26fa8
-void combatManager::place_shooter(const army* current_army)
+void combatManager::placeShooter(const army* currentArmy)
 {
-    long best_hex;
-    long best_open_hexes;
-    long new_hex;
-    if (!current_army->GetSpeed())
-        goto wait;
-    if (!gpGame->setup.difficulty && !sideIsAI[currentSide])
-        goto wait;
-    best_hex = current_army->gridIndex;
-    best_open_hexes = 100;
-    gpSearchArray->SeedCombatPosition(current_army, currentSide, 127,
-                                      bCreaturePlacement, -1);
-    for (new_hex = 0; new_hex < COMBAT_GRID_CELLS; new_hex++) {
-        if (!ValidHex(new_hex))
+    long bestHex;
+    long bestOpenHexes;
+    long newHex;
+    if (!currentArmy->getSpeed() ||
+        (!g_game->m_setup.m_difficulty && !m_sideIsAi[m_currentSide])) {
+        m_nextAction = 8;
+        return;
+    }
+    bestHex = currentArmy->m_gridIndex;
+    bestOpenHexes = 100;
+    g_searchArray->seedCombatPosition(currentArmy, m_currentSide, 127,
+                                      m_creaturePlacement, -1);
+    for (newHex = 0; newHex < COMBAT_GRID_CELLS; newHex++) {
+        if (!validHex(newHex) || isOutsidePlacementBoundry(m_currentSide, newHex))
             continue;
-        if (is_outside_placement_boundry(currentSide, new_hex))
-            continue;
-        const pathCell* cell = gpSearchArray->cellData == 0
-            ? 0 : &gpSearchArray->cellData[new_hex];
-        if (!cell->visited)
+        if (!g_searchArray->getHex(newHex)->m_visited)
             continue;
         long value = 0;
         for (long dir = 0; dir < 8; dir++) {
-            if (dir >= 6 && !(current_army->sMonInfo.attributes & 1))
+            if (dir >= 6 && !currentArmy->is(1u << 0))
                 continue;
-            long adjacent = current_army->get_adjacent_hex(new_hex, dir);
-            if (!ValidHex(adjacent))
+            long adjacent = currentArmy->getAdjacentHex(newHex, dir);
+            if (!validHex(adjacent))
                 continue;
-            army* other = cells[adjacent].get_army();
-            if (other == 0 || other == current_army)
+            army* other = m_cells[adjacent].getArmy();
+            if (other != 0 && other != currentArmy) {
+                if (other->is(1u << 2))
+                    value = 1000;
+            } else {
                 value++;
-            else if (other->Is(1u << 2))
-                value = 1000;
+            }
         }
-        if (value > best_open_hexes)
+        if (value > bestOpenHexes)
             continue;
-        if (value == best_open_hexes
-                && new_hex != current_army->gridIndex)
+        if (value == bestOpenHexes && newHex != currentArmy->m_gridIndex)
             continue;
-        best_open_hexes = value;
-        best_hex = new_hex;
+        bestHex = newHex;
+        bestOpenHexes = value;
     }
-    if (best_hex == current_army->gridIndex)
-        goto wait;
-    field_3c = 2;
-    field_44 = best_hex;
+    if (bestHex == currentArmy->m_gridIndex) {
+        m_nextAction = 8;
+        return;
+    }
+    m_nextAction = 2;
+    m_nextActionGridIndex = bestHex;
     return;
-wait:
-    field_3c = 8;
 }
 
 // E:\gamedcs\ai.cpp:2272
@@ -2867,27 +2880,28 @@ wait:
 // local holding Is(...), `2 | !Is(...)`, dropping the parentheses;
 // `2 + !Is(...)` falls to 97.5510 and `3 - (Is(...) & 1)` to 90.9694.
 VA(0x004221f0, 0xD0)  // anchor-callee, dc 0x27138
-void combatManager::DoCompAI(int whichGroup)
+void combatManager::doCompAI(int whichGroup)
 {
-    lastMovedArmy = 0;
-    TurnOffHighlighter(1);
-    army* current_army = get_current_army();
-    current_army->side = -1;
-    current_army->slot = -1;
+    m_lastMovedArmy = 0;
+    turnOffHighlighter(1);
+    // Before normalization (locals): current_army.
+    army* currentArmy = getCurrentArmy();
+    currentArmy->m_side = -1;
+    currentArmy->m_slot = -1;
     long action;
-    if (current_army->can_shoot(0)
-            || current_army->creatureType == CREATURE_BALLISTA)
+    if (currentArmy->canShoot(0)
+            || currentArmy->m_creatureType == CREATURE_BALLISTA)
         action = 1;
     else
-        action = (current_army->Is(1u << 1)) ? 2 : 3;
-    field_3c = 3;
+        action = (currentArmy->is(1u << 1)) ? 2 : 3;
+    m_nextAction = 3;
     if (action == 1) {
-        if (bCreaturePlacement)
-            place_shooter(current_army);
+        if (m_creaturePlacement)
+            placeShooter(currentArmy);
         else
-            choose_shooter_action(current_army, 0, currentSide);
+            chooseShooterAction(currentArmy, 0, m_currentSide);
     } else {
-        choose_melee_action(current_army, 0, 0, currentSide);
+        chooseMeleeAction(currentArmy, 0, 0, m_currentSide);
     }
 }
 
@@ -2923,45 +2937,46 @@ void combatManager::DoCompAI(int whichGroup)
 // general - lever 8's "call the inline accessor" only works when the
 // accessor is visible in the SAME TU.
 // E:\gamedcs\ai.cpp:2313
+// Before normalization (locals): current_army.
 VA(0x004222c0, 0x175)  // anchor-callee, dc 0x27200
-void combatManager::berserk_attack(army* current_army, const army* target)
+void combatManager::berserkAttack(army* currentArmy, const army* target)
 {
-    current_army->side = target->combatSide;
-    current_army->slot = target->bitIndex;
-    long hex = target->gridIndex;
+    currentArmy->m_side = target->m_combatSide;
+    currentArmy->m_slot = target->m_bitIndex;
+    long hex = target->m_gridIndex;
     if (hex >= 0 && hex < COMBAT_GRID_CELLS
             && (hex % COMBAT_GRID_ROW_STRIDE == 0
                 || hex % COMBAT_GRID_ROW_STRIDE == COMBAT_GRID_LAST_COLUMN)
-            && (target->sMonInfo.attributes & 1))
-        hex = target->get_second_grid_index();
-    gpSearchArray->FindCombatPath(current_army, -1, hex, bCreaturePlacement,
+            && (target->m_monInfo.m_attributes & 1))
+        hex = target->getSecondGridIndex();
+    g_searchArray->findCombatPath(currentArmy, -1, hex, m_creaturePlacement,
                                   127, -1);
-    if (gpSearchArray->result.size() == 0) {
-        field_3c = 12;
+    if (g_searchArray->m_result.size() == 0) {
+        m_nextAction = 12;
         return;
     }
-    if (gpSearchArray->result.size() == 1) {
-        field_3c = 6;
-        field_40 = current_army->gridIndex;
-        field_44 = target->gridIndex;
-        if (target->combatSide == current_army->combatSide)
-            field_53dc[target->combatSide] = 1;
+    if (g_searchArray->m_result.size() == 1) {
+        m_nextAction = 6;
+        m_nextActionExtra = currentArmy->m_gridIndex;
+        m_nextActionGridIndex = target->m_gridIndex;
+        if (target->m_combatSide == currentArmy->m_combatSide)
+            m_playDoh[target->m_combatSide] = 1;
         return;
     }
-    long step = gpSearchArray->result[1]->point.x;
-    const pathCell* cell = gpSearchArray->cellData == 0
-        ? 0 : &gpSearchArray->cellData[target->gridIndex];
-    if (cell->cost > current_army->GetSpeed()) {
-        current_army->side = -1;
-        current_army->slot = -1;
-        move_toward(current_army, step, 0, 0);
+    long step = g_searchArray->m_result[1]->m_point.m_x;
+    const pathCell* cell = g_searchArray->m_cellData == 0
+        ? 0 : &g_searchArray->m_cellData[target->m_gridIndex];
+    if (cell->m_cost > currentArmy->getSpeed()) {
+        currentArmy->m_side = -1;
+        currentArmy->m_slot = -1;
+        moveToward(currentArmy, step, 0, 0);
         return;
     }
-    field_3c = 6;
-    field_40 = step;
-    field_44 = target->gridIndex;
-    if (target->combatSide == current_army->combatSide)
-        field_53dc[target->combatSide] = 1;
+    m_nextAction = 6;
+    m_nextActionExtra = step;
+    m_nextActionGridIndex = target->m_gridIndex;
+    if (target->m_combatSide == currentArmy->m_combatSide)
+        m_playDoh[target->m_combatSide] = 1;
 }
 
 // E:\gamedcs\ai.cpp:2372
@@ -2976,123 +2991,109 @@ void combatManager::berserk_attack(army* current_army, const army* target)
 // ADDRESS in EDI: retail homes both operands in the (now dead)
 // argument slots and selects between the two LEAs.
 // E:\gamedcs\ai.cpp:2372
+// Before normalization (locals): target_hits, fire_immune, target_hero, casting_hero.
 VA(0x00422440, 0x99)  // anchor-global, dc 0x27318
-long combatManager::compute_fire_shield_damage(long damage, const army* attacker, const army* target, long target_hits)
+long combatManager::computeFireShieldDamage(long damage, const army* attacker, const army* target, long targetHits)
 {
-    if (!target->fireShieldRounds && target->creatureType != CREATURE_EFREET_SULTAN)
+    if (!target->m_spellInfluence[29] && target->m_creatureType != CREATURE_EFREET_SULTAN)
         return 0;
-    unsigned char fire_immune = static_cast<unsigned char>(
-        static_cast<unsigned>(attacker->sMonInfo.attributes) >> 14);
-    if (fire_immune & 1)
+    unsigned char fireImmune = static_cast<unsigned char>(
+        static_cast<unsigned>(attacker->m_monInfo.m_attributes) >> 14);
+    if (fireImmune & 1)
         return 0;
-    damage = static_cast<long>(target->get_fire_shield_strength()
-                               * min(target_hits, damage));
-    hero* target_hero = attacker->get_controller();
-    hero* casting_hero = target->get_controller();
-    return ModifySpellDamage(damage, SPELL_FIRE_SHIELD, casting_hero,
-                             target_hero, attacker, 0);
+    damage = static_cast<long>(target->getFireShieldStrength()
+                               * min(targetHits, damage));
+    hero* targetHero = attacker->getController();
+    hero* castingHero = target->getController();
+    return modifySpellDamage(damage, SPELL_FIRE_SHIELD, castingHero,
+                             targetHero, attacker, 0);
 }
 
-// E:\gamedcs\ai.cpp:2397. The static one-exchange scorer. It has NO retail
-// row: all three of its call sites are in the body below and /Ob2 expands
-// every one of them, which is exactly the "inlined single-call statics
-// vanish" rule. Its shape is read off those three expansions - the
-// breath-attack site is the one that skips the fire-shield half, which is
-// what the fifth parameter selects.
-static void simulate_simple_attack(army* current_army, army* target,
+// E:\gamedcs\ai.cpp:2397. Canonical static single-exchange scorer;
+// retail expands all three melee call sites. DC line 2409 tests ranged
+// first, then breath_attack, before computing fire-shield retaliation.
+// Keeping that meaningful ranged guard is byte-flat for these melee calls,
+// which all pass zero, but preserves the helper's recovered semantics.
+// Before normalization (function): simulate_simple_attack.
+// Before normalization (locals): current_army, breath_attack, target_hits.
+static void simulateSimpleAttack(army* currentArmy, army* target,
                                    long distance, unsigned char ranged,
-                                   unsigned char breath_attack)
+                                   unsigned char breathAttack)
 {
-    long hits = current_army->get_total_hit_points(1);
+    long hits = currentArmy->getTotalHitPoints(1);
     if (hits <= 0)
         return;
-    long damage = AI_get_attack_damage(current_army, hits, target, ranged,
+    long damage = aiGetAttackDamage(currentArmy, hits, target, ranged,
                                        distance);
-    if (!breath_attack) {
-        long target_hits = target->get_total_hit_points(1);
-        long burn = gpCombatManager->compute_fire_shield_damage(
-            damage, current_army, target, target_hits);
+    if (!ranged && !breathAttack) {
+        long targetHits = target->getTotalHitPoints(1);
+        long burn = g_combatManager->computeFireShieldDamage(
+            damage, currentArmy, target, targetHits);
         if (burn > 0)
-            current_army->set_AI_expected_damage(
-                current_army->get_AI_expected_damage() + burn);
+            currentArmy->setAIExpectedDamage(
+                currentArmy->getAIExpectedDamage() + burn);
     }
-    target->set_AI_expected_damage(target->get_AI_expected_damage() + damage);
+    target->setAIExpectedDamage(target->getAIExpectedDamage() + damage);
 }
 
-// E:\gamedcs\ai.cpp:2433. The five-argument simulate_melee_attack, and the
-// widest of the four simulation bodies: a multi-headed attacker scores every
-// direction its head mask covers (each enemy stack once - the bitIndex mask
-// is what de-duplicates a two-hex stack reached from two directions), and
-// anything else scores the target plus, for a breath attacker, whatever
-// stands in the hex behind it.
-// Residual (77.5%): ONE inline decision, at the first of the three
-// simulate_simple_attack expansions. Retail keeps
-// compute_fire_shield_damage a CALL inside the multi-head loop and expands
-// it at the plain-attack site below; ours expands it at both, which is the
-// whole 5-block/4-call difference (base 41 blocks and 30 calls against
-// retail's 36 and 26 - every other call pairs in order). The /Ob2 divisor
-// prices the first site with the most budget, so the separation needs a
-// per-site pin, which this lane may not add. Tried and rejected: extern
-// rather than static linkage on the helper (byte-flat to the digit).
-// 2026-09-06, polish lane 38 (77.5103 -> 79.6584): the multi-head fan-out is
-// a do/while with a POST-DECREMENT condition, not a `for (d = 7; d >= 0;
-// d--)`. Retail's back edge is `mov ecx,edi / dec edi / test ecx,ecx / mov
-// [ebp+0x10],edi / jne` at fn+0x116 - the test is on the PRE-decrement value
-// and the direction is memory-homed in a dead parameter slot; the `>= 0`
-// form gives `dec ecx / jns` and keeps the counter in a register.
-// Residual (79.6584%): one per-site inliner decision. Retail CALLS
-// `compute_fire_shield_damage` at the multi-head site (call #6) and EXPANDS
-// it at the two single-target sites, where we expand all three - the
-// `budget / sites-remaining` split inside the inlined `simulate_simple_attack`.
-// The frame is also 0xc over retail's 0x8 as a consequence.
+// E:\gamedcs\ai.cpp:2433. Dreamcast proves army::Is at 2435/2468,
+// ValidHex at 2451/2475, and the canonical simulate_simple_attack calls.
+// Retail's multi-head back edge tests the pre-decrement value with jg:
+// use direction-- > 0, not the former != 0 test. Restoring those source
+// operations raises 79.6584% to 97.0988% and naturally retains the first
+// computeFireShieldDamage call while expanding the plain-attack copy.
+// The intermediate trace gives the first site budget 139 versus cost 143,
+// and the plain site budget 157. No inline pin is needed.
+// Dreamcast lines 2473/2474 separately evaluate get_adjacent_hex and
+// GetAdjacentCellIndex. Naming that intermediate value restores retail's
+// direction lifetime and reaches 100% (2026-09-07). Nesting the two calls
+// is the 97.0988% negative control. Preserve the helpers and statement order.
+// Before normalization (locals): current_army, enemy_hex, our_group, multi_head, behind_hex,
+// hit_points, no_retaliation, double_attack.
 VA(0x004224e0, 0x2B4)  // anchor-caller(the 3-argument overload) + anchor-callee(compute_fire_shield_damage), dc 0x2746c
-void combatManager::simulate_melee_attack(army* current_army, long hex,
-                                          army* target, long enemy_hex,
-                                          long our_group)
+void combatManager::simulateMeleeAttack(army* currentArmy, long hex,
+                                          army* target, long enemyHex,
+                                          long ourGroup)
 {
-    unsigned char multi_head = static_cast<unsigned char>(
-        static_cast<unsigned>(current_army->sMonInfo.attributes) >> 19);
-    if (multi_head & 1) {
-        long directions = current_army->get_multi_head_directions(hex, target,
-                                                                  enemy_hex);
+    if (currentArmy->is(1u << 19)) {
+        long directions = currentArmy->getMultiHeadDirections(hex, target,
+                                                                  enemyHex);
         long hit = 0;
         long direction = 7;
         do {
             if (!(directions & (1 << direction)))
                 continue;
-            long adjacent = current_army->get_adjacent_hex(hex, direction);
-            if (adjacent < 0 || adjacent >= COMBAT_GRID_CELLS)
+            long adjacent = currentArmy->getAdjacentHex(hex, direction);
+            if (!validHex(adjacent))
                 continue;
-            army* victim = cells[adjacent].get_army();
+            army* victim = m_cells[adjacent].getArmy();
             if (!victim)
                 continue;
-            long bit = 1 << victim->bitIndex;
+            long bit = 1 << victim->m_bitIndex;
             if (hit & bit)
                 continue;
-            if (victim->combatSide == our_group)
+            if (victim->m_combatSide == ourGroup)
                 continue;
             hit |= bit;
-            simulate_simple_attack(current_army, victim, 0, 0, 0);
-        } while (direction--);
+            simulateSimpleAttack(currentArmy, victim, 0, 0, 0);
+        } while (direction-- > 0);
         return;
     }
 
-    simulate_simple_attack(current_army, target,
-                           gpSearchArray->get_hex(hex)->cost, 0, 0);
+    simulateSimpleAttack(currentArmy, target,
+                           g_searchArray->getHex(hex)->m_cost, 0, 0);
 
-    unsigned char breath = static_cast<unsigned char>(
-        static_cast<unsigned>(current_army->sMonInfo.attributes) >> 3);
-    if (breath & 1) {
-        long direction = current_army->get_attack_direction(hex, target,
-                                                            enemy_hex);
-        long behind_hex = current_army->GetAdjacentCellIndex(
-            current_army->get_adjacent_hex(hex, direction), direction);
-        if (behind_hex < 0 || behind_hex >= COMBAT_GRID_CELLS)
+    if (currentArmy->is(1u << 3)) {
+        long direction = currentArmy->getAttackDirection(hex, target,
+                                                            enemyHex);
+        long behindHex = currentArmy->getAdjacentHex(hex, direction);
+        behindHex = currentArmy->getAdjacentCellIndex(behindHex, direction);
+        if (!validHex(behindHex))
             return;
-        army* behind = cells[behind_hex].get_army();
+        army* behind = m_cells[behindHex].getArmy();
         if (!behind || behind == target)
             return;
-        simulate_simple_attack(current_army, behind, 0, 0, 1);
+        simulateSimpleAttack(currentArmy, behind, 0, 0, 1);
     }
 }
 
@@ -3105,30 +3106,30 @@ void combatManager::simulate_melee_attack(army* current_army, long hex,
 // The hex comes off field_40, the order slot berserk_attack writes, and the
 // grid bound is the same 0xbb every combat walker uses.
 VA(0x004227a0, 0xDB)  // anchor-caller(simulate_actions) + anchor-callee(the 5-argument overload), dc 0x275e8
-void combatManager::simulate_melee_attack(army* current_army, army* target,
-                                          long our_group)
+void combatManager::simulateMeleeAttack(army* currentArmy, army* target,
+                                          long ourGroup)
 {
-    long hex = field_40;
+    long hex = m_nextActionExtra;
     if (hex < 0 || hex >= COMBAT_GRID_CELLS)
         return;
 
-    long hit_points = target->get_total_hit_points(0);
-    simulate_melee_attack(current_army, hex, target, target->gridIndex,
-                          our_group);
+    long hitPoints = target->getTotalHitPoints(0);
+    simulateMeleeAttack(currentArmy, hex, target, target->m_gridIndex,
+                          ourGroup);
 
-    unsigned char no_retaliation = static_cast<unsigned char>(
-        static_cast<unsigned>(current_army->sMonInfo.attributes) >> 16);
-    if (!(no_retaliation & 1) && !target->disabled_2b0
-        && target->retaliationCount > 0
-        && (gpGame->setup.difficulty > 0 || sideIsAI[our_group]))
-        simulate_melee_attack(target, target->gridIndex, current_army, hex,
-                              1 - our_group);
+    unsigned char noRetaliation = static_cast<unsigned char>(
+        static_cast<unsigned>(currentArmy->m_monInfo.m_attributes) >> 16);
+    if (!(noRetaliation & 1) && !target->m_spellInfluence[70]
+        && target->m_retaliationCount > 0
+        && (g_game->m_setup.m_difficulty > 0 || m_sideIsAi[ourGroup]))
+        simulateMeleeAttack(target, target->m_gridIndex, currentArmy, hex,
+                              1 - ourGroup);
 
-    unsigned char double_attack = static_cast<unsigned char>(
-        static_cast<unsigned>(current_army->sMonInfo.attributes) >> 15);
-    if ((double_attack & 1) && target->AI_expected_damage < hit_points)
-        simulate_melee_attack(current_army, hex, target, target->gridIndex,
-                              our_group);
+    unsigned char doubleAttack = static_cast<unsigned char>(
+        static_cast<unsigned>(currentArmy->m_monInfo.m_attributes) >> 15);
+    if ((doubleAttack & 1) && target->m_aiExpectedDamage < hitPoints)
+        simulateMeleeAttack(currentArmy, hex, target, target->m_gridIndex,
+                              ourGroup);
 }
 
 // E:\gamedcs\ai.cpp:2516. Walk the move order from `i` and let every stack
@@ -3139,53 +3140,54 @@ void combatManager::simulate_melee_attack(army* current_army, army* target,
 // The unused type_AI_combat_parameters local is retail's: it is constructed
 // at entry from (this, our_group) and never read.
 VA(0x00422880, 0x1B5)  // anchor-caller(simulate_combat) + anchor-callee(simulate_melee_attack), dc 0x27698
-long combatManager::simulate_actions(std::vector<army*>& list, long i,
-                                     long our_group)
+long combatManager::simulateActions(std::vector<army*>& list, long i,
+                                     // Before normalization (locals): our_group, current_army.
+                                     long ourGroup)
 {
-    type_AI_combat_parameters data(this, our_group);
+    type_AI_combat_parameters data(this, ourGroup);
 
     for (; i < list.size(); i++) {
-        army* current_army = list[i];
-        if (current_army->IsIncapacitated()
+        army* currentArmy = list[i];
+        if (currentArmy->isIncapacitated()
             || (static_cast<unsigned char>(
-                    static_cast<unsigned>(current_army->sMonInfo.attributes) >> 21)
+                    static_cast<unsigned>(currentArmy->m_monInfo.m_attributes) >> 21)
                 & 1)
-            || current_army->creatureType == CREATURE_FIRST_AID_TENT
-            || current_army->creatureType == CREATURE_AMMO_CART
-            || current_army->berserkFlag
-            || current_army->creatureType == CREATURE_CATAPULT
-            || current_army->get_total_hit_points(1) == 0)
+            || currentArmy->m_creatureType == CREATURE_FIRST_AID_TENT
+            || currentArmy->m_creatureType == CREATURE_AMMO_CART
+            || currentArmy->m_spellInfluence[59]
+            || currentArmy->m_creatureType == CREATURE_CATAPULT
+            || currentArmy->getTotalHitPoints(1) == 0)
             continue;
-        if (current_army->get_controlling_side() != our_group)
+        if (currentArmy->getControllingSide() != ourGroup)
             return i;
 
-        unsigned char shooting = current_army->can_shoot(0);
+        unsigned char shooting = currentArmy->canShoot(0);
         if (shooting) {
-            choose_shooter_action(current_army, 1, our_group);
-            if (field_3c != AI_ORDER_SHOOT)
+            chooseShooterAction(currentArmy, 1, ourGroup);
+            if (m_nextAction != AI_ORDER_SHOOT)
                 continue;
         } else {
-            choose_melee_action(current_army, 0, 1, our_group);
-            if (field_3c != AI_ORDER_MOVE_AND_ATTACK)
+            chooseMeleeAction(currentArmy, 0, 1, ourGroup);
+            if (m_nextAction != AI_ORDER_MOVE_AND_ATTACK)
                 continue;
         }
 
-        long hex = field_44;
+        long hex = m_nextActionGridIndex;
         if (hex < 0 || hex >= COMBAT_GRID_CELLS)
             continue;
-        army* target = cells[hex].get_army();
+        army* target = m_cells[hex].getArmy();
         if (!target)
             continue;
         if (shooting) {
-            long hits = current_army->get_total_hit_points(1);
+            long hits = currentArmy->getTotalHitPoints(1);
             if (hits <= 0)
                 continue;
-            long damage = AI_get_attack_damage(current_army, hits, target,
+            long damage = aiGetAttackDamage(currentArmy, hits, target,
                                                1, 0);
-            target->set_AI_expected_damage(target->AI_expected_damage
+            target->setAIExpectedDamage(target->m_aiExpectedDamage
                                            + damage);
         } else {
-            simulate_melee_attack(current_army, target, our_group);
+            simulateMeleeAttack(currentArmy, target, ourGroup);
         }
     }
     return i;
@@ -3214,26 +3216,28 @@ long combatManager::simulate_actions(std::vector<army*>& list, long i,
 // its `mov [esi+0x40],ecx / mov [esi+0x3c],eax` tail exactly.  Reordering the
 // DECLARATIONS is not the lever - the slots follow the variables, not their
 // declaration order (measured: 99.9512 either way).
+// Before normalization (locals): our_group, checking_surrender, saved_3c, saved_40, saved_44,
+// saved_48, stopped_at.
 VA(0x00422a40, 0xD8)  // anchor-callee(find_move_order) + order-map(DC ai.obj), dc 0x277f4
-void combatManager::simulate_combat(long our_group, unsigned char checking_surrender)
+void combatManager::simulateCombat(long ourGroup, unsigned char checkingSurrender)
 {
     std::vector<army*> order;
-    long saved_3c = field_3c;
-    long saved_40 = field_40;
-    long saved_44 = field_44;
-    long saved_48 = field_48;
+    long saved3c = m_nextAction;
+    long saved40 = m_nextActionExtra;
+    long saved44 = m_nextActionGridIndex;
+    long saved48 = m_nextActionGridIndex2;
 
-    find_move_order(&order);
+    findMoveOrder(&order);
     for (unsigned i = 0; i < order.size(); i++)
-        order[i]->set_AI_expected_damage(0);
-    long stopped_at = simulate_actions(order, 0, our_group);
-    if (checking_surrender)
-        simulate_actions(order, stopped_at, 1 - our_group);
+        order[i]->setAIExpectedDamage(0);
+    long stoppedAt = simulateActions(order, 0, ourGroup);
+    if (checkingSurrender)
+        simulateActions(order, stoppedAt, 1 - ourGroup);
 
-    field_3c = saved_3c;
-    field_40 = saved_40;
-    field_44 = saved_44;
-    field_48 = saved_48;
+    m_nextAction = saved3c;
+    m_nextActionExtra = saved40;
+    m_nextActionGridIndex = saved44;
+    m_nextActionGridIndex2 = saved48;
 }
 
 // E:\gamedcs\ai.cpp:2608. Score every enemy stack as a target for every
@@ -3260,83 +3264,84 @@ void combatManager::simulate_combat(long our_group, unsigned char checking_surre
 // the outer one alone 84.84 - both under the 87.36 subscript form. The
 // hoist is therefore not the lever for retail's pre-guard `lea esi` and
 // its unconditional prologue `push esi`.
+// Before normalization (locals): our_group, current_army, melee_only, search_array, enemy_group.
 VA(0x00422b20, 0x278)  // anchor-caller(choose_shooter_action/choose_melee_action) + anchor-callee(SeedCombatPosition), dc 0x27888
-void combatManager::find_AI_targets(long our_group, const army* current_army,
-                                    unsigned char melee_only,
+void combatManager::findAITargets(long ourGroup, const army* currentArmy,
+                                    unsigned char meleeOnly,
                                     type_AI_combat_parameters* data,
-                                    searchArray* search_array)
+                                    searchArray* currentSearchArray)
 {
-    long enemy_group = 1 - our_group;
-    if (search_array == 0)
-        search_array = gpSearchArray;
+    long enemyGroup = 1 - ourGroup;
+    if (currentSearchArray == 0)
+        currentSearchArray = g_searchArray;
 
-    for (long i = 0; i < numArmies[our_group]; i++) {
-        army* ours = &armies[our_group][i];
-        armies[our_group][i].AI_target = 0;
-        armies[our_group][i].AI_target_value = 0;
-        armies[our_group][i].AI_possible_targets = 0;
-        armies[our_group][i].AI_target_time = 0;
+    for (long i = 0; i < m_numArmies[ourGroup]; i++) {
+        army* ours = &m_armies[ourGroup][i];
+        m_armies[ourGroup][i].m_aiTarget = 0;
+        m_armies[ourGroup][i].m_aiTargetValue = 0;
+        m_armies[ourGroup][i].m_aiPossibleTargets = 0;
+        m_armies[ourGroup][i].m_aiTargetTime = 0;
         if (static_cast<unsigned char>(
-                static_cast<unsigned>(ours->sMonInfo.attributes) >> 21)
+                static_cast<unsigned>(ours->m_monInfo.m_attributes) >> 21)
             & 1)
             continue;
         if ((static_cast<unsigned char>(
-                 static_cast<unsigned>(ours->sMonInfo.attributes) >> 6)
+                 static_cast<unsigned>(ours->m_monInfo.m_attributes) >> 6)
              & 1)
-            && ours->creatureType != CREATURE_BALLISTA)
+            && ours->m_creatureType != CREATURE_BALLISTA)
             continue;
-        if (data->simulated && ours->get_total_hit_points(1) == 0)
+        if (data->m_simulated && ours->getTotalHitPoints(1) == 0)
             continue;
-        if (ours->disabled_2b0 > 1)
+        if (ours->m_spellInfluence[70] > 1)
             continue;
-        if (ours->disabled_290 > 1)
+        if (ours->m_spellInfluence[62] > 1)
             continue;
-        if (ours->hypnotizeFlag)
+        if (ours->m_spellInfluence[60])
             continue;
-        if (ours->berserkFlag)
+        if (ours->m_spellInfluence[59])
             continue;
-        if (ours == current_army)
+        if (ours == currentArmy)
             continue;
 
-        unsigned char shooter = ours->can_shoot(0);
+        unsigned char shooter = ours->canShoot(0);
         if (shooter) {
-            if (melee_only)
+            if (meleeOnly)
                 continue;
-        } else if (melee_only) {
-            search_array->SeedCombatPosition(ours, our_group, ours->GetSpeed(),
-                                             bCreaturePlacement, -1);
+        } else if (meleeOnly) {
+            currentSearchArray->seedCombatPosition(ours, ourGroup, ours->getSpeed(),
+                                             m_creaturePlacement, -1);
         } else {
-            search_array->SeedCombatPosition(ours, our_group, 0x7f,
-                                             bCreaturePlacement, -1);
+            currentSearchArray->seedCombatPosition(ours, ourGroup, 0x7f,
+                                             m_creaturePlacement, -1);
         }
 
-        for (long j = 0; j < numArmies[enemy_group]; j++) {
-            army* theirs = &armies[enemy_group][j];
-            if (theirs->creatureType == CREATURE_ARROW_TOWER)
+        for (long j = 0; j < m_numArmies[enemyGroup]; j++) {
+            army* theirs = &m_armies[enemyGroup][j];
+            if (theirs->m_creatureType == CREATURE_ARROW_TOWER)
                 continue;
-            if (melee_only && theirs->field_190 >= ours->field_190)
+            if (meleeOnly && theirs->m_expectedMoveOrder >= ours->m_expectedMoveOrder)
                 continue;
-            if (!shooter && !cells[theirs->gridIndex].field_4a)
+            if (!shooter && !m_cells[theirs->m_gridIndex].m_validMove)
                 continue;
-            if (data->simulated && theirs->get_total_hit_points(1) == 0)
+            if (data->m_simulated && theirs->getTotalHitPoints(1) == 0)
                 continue;
 
             long time;
             if (shooter) {
                 time = 1;
             } else {
-                time = search_array->get_hex(theirs->gridIndex)->cost;
-                if (ours->GetSpeed() == 0 && time > 0)
+                time = currentSearchArray->getHex(theirs->m_gridIndex)->m_cost;
+                if (ours->getSpeed() == 0 && time > 0)
                     continue;
             }
             long effect;
-            if (time > ours->GetSpeed())
-                effect = data->get_simple_attack_effect(ours, theirs,
+            if (time > ours->getSpeed())
+                effect = data->getSimpleAttackEffect(ours, theirs,
                                                         shooter, 0);
             else
-                effect = data->get_simple_attack_effect(ours, theirs,
+                effect = data->getSimpleAttackEffect(ours, theirs,
                                                         shooter, time);
-            ours->consider_attack(theirs, effect, time);
+            ours->considerAttack(theirs, effect, time);
         }
     }
 }
@@ -3349,40 +3354,40 @@ void combatManager::find_AI_targets(long our_group, const army* current_army,
 // latch, a side with no hero, a hero without a spell book (artifact 0), and
 // either hero wearing artifact 0x7e.
 VA(0x00422da0, 0x1AD)  // anchor-caller(CheckGetAIMove) + anchor-callee(type_AI_spellcaster::cast_spell), dc 0x27b18
-unsigned char combatManager::DoSpellAI()
+unsigned char combatManager::doSpellAI()
 {
-    field_3c = 0;
-    if (field_54b4[currentSide])
+    m_nextAction = 0;
+    if (m_spellsCast[m_currentSide])
         return 0;
-    if (bCreaturePlacement)
+    if (m_creaturePlacement)
         return 0;
     if (static_cast<unsigned char>(
-            static_cast<unsigned>(armies[actingSide][actingSlot].sMonInfo.attributes)
+            static_cast<unsigned>(m_armies[m_actingSide][m_actingSlot].m_monInfo.m_attributes)
             >> 6)
         & 1)
         return 0;
-    if (playerIds[currentSide] >= 0
-        && gpGame->IsHuman(playerIds[currentSide])
-        && !((field_132c4 || gbUnk691209)
-             && gUnnamed698758.combatAutoSpells)
-        && !static_cast<const combatManager*>(this)->IsQuickCombat())
+    if (m_playerIds[m_currentSide] >= 0
+        && g_game->isHuman(m_playerIds[m_currentSide])
+        && !((m_autoCombatOn || g_unk691209)
+             && g_unnamed698758.m_combatAutoSpells)
+        && !static_cast<const combatManager*>(this)->isQuickCombat())
         return 0;
-    long side = currentSide;
-    if (field_53c4)
+    long side = m_currentSide;
+    if (m_onAntiMagicGarrison)
         return 0;
-    if (!heroes[side])
+    if (!m_heroes[side])
         return 0;
-    if (!heroes[side]->IsWieldingArtifact(0))
+    if (!m_heroes[side]->isWieldingArtifact(0))
         return 0;
-    if (heroes[0] && heroes[0]->IsWieldingArtifact(0x7e))
+    if (m_heroes[0] && m_heroes[0]->isWieldingArtifact(0x7e))
         return 0;
-    if (heroes[1] && heroes[1]->IsWieldingArtifact(0x7e))
+    if (m_heroes[1] && m_heroes[1]->isWieldingArtifact(0x7e))
         return 0;
 
-    type_AI_spellcaster caster(this, currentSide, 0);
-    if (caster.cast_spell(AICheckRetreat()))
+    type_AI_spellcaster caster(this, m_currentSide, 0);
+    if (caster.castSpell(aiCheckRetreat()))
         return 1;
-    field_3c = 0;
+    m_nextAction = 0;
     return 0;
 }
 
@@ -3390,98 +3395,98 @@ unsigned char combatManager::DoSpellAI()
 
 // E:\gamedcs\ai_spellvalue.h:124
 DC_ONLY(0x27c74, 0x4)
-void type_spellvalue::set_stack_value(long arg)
+void type_spellvalue::setStackValue(long arg)
 {
     // @stub
 }
 
 // E:\gamedcs\Army.h:718
 DC_ONLY(0x27c78, 0x24)
-bool army::can_cast_resurrect() const
+bool army::canCastResurrect() const
 {
     // @stub
 }
 
 // E:\gamedcs\Army.h:736
 DC_ONLY(0x27c9c, 0x30)
-int army::OffsetToFront(int direction)
+int army::offsetToFront(int direction)
 {
     // @stub
 }
 
 // E:\gamedcs\Army.h:752
 DC_ONLY(0x27ccc, 0x16)
-void army::clear_AI_values()
+void army::clearAIValues()
 {
     // @stub
 }
 
 // E:\gamedcs\Army.h:765
 DC_ONLY(0x27ce4, 0xE)
-bool army::Is(unsigned attribute)
+bool army::is(unsigned attribute)
 {
     // @stub
 }
 
 // E:\gamedcs\Army.h:770
 DC_ONLY(0x27cf4, 0x8)
-long army::get_AI_expected_damage()
+long army::getAIExpectedDamage()
 {
     // @stub
 }
 
 // E:\gamedcs\Army.h:775
 DC_ONLY(0x27cfc, 0x8)
-const army* army::get_AI_target()
+const army* army::getAITarget()
 {
     // @stub
 }
 
 // E:\gamedcs\Army.h:780
 DC_ONLY(0x27d04, 0x8)
-long army::get_AI_target_value()
+long army::getAITargetValue()
 {
     // @stub
 }
 
 // E:\gamedcs\Army.h:785
 DC_ONLY(0x27d0c, 0x28)
-long army::get_AI_target_time()
+long army::getAITargetTime()
 {
     // @stub
 }
 
 // E:\gamedcs\Army.h:790
 DC_ONLY(0x27d34, 0x8)
-long army::get_AI_possible_targets()
+long army::getAIPossibleTargets()
 {
     // @stub
 }
 
 // E:\gamedcs\Army.h:795
 DC_ONLY(0x27d3c, 0x8)
-int army::get_owning_side()
+int army::getOwningSide()
 {
     // @stub
 }
 
 // E:\gamedcs\Army.h:800
 DC_ONLY(0x27d44, 0x30)
-int army::get_controlling_side()
+int army::getControllingSide()
 {
     // @stub
 }
 
 // E:\gamedcs\Army.h:820
 DC_ONLY(0x27d74, 0x12)
-long army::get_spell_time(SpellID spell)
+long army::getSpellTime(SpellID spell)
 {
     // @stub
 }
 
 // E:\gamedcs\Army.h:830
 DC_ONLY(0x27d88, 0x14)
-bool army::IsActive()
+bool army::isActive()
 {
     // @stub
 }
@@ -3490,63 +3495,63 @@ bool army::IsActive()
 
 // E:\gamedcs\Army.h:847
 DC_ONLY(0x27dd8, 0x44)
-bool army::can_retaliate(const army* attacker)
+bool army::canRetaliate(const army* attacker)
 {
     // @stub
 }
 
 // E:\gamedcs\Army.h:855
 DC_ONLY(0x27e1c, 0x54)
-bool army::cannot_attack()
+bool army::cannotAttack()
 {
     // @stub
 }
 
 // E:\gamedcs\Army.h:864
 DC_ONLY(0x27e70, 0x1C)
-long army::get_adjacent_hex(long direction)
+long army::getAdjacentHex(long direction)
 {
     // @stub
 }
 
 // E:\gamedcs\hero.h:965
 DC_ONLY(0x27e8c, 0x10)
-const type_artifact* hero::get_artifact(TArtifactSlot slot)
+const type_artifact* hero::getArtifact(TArtifactSlot slot)
 {
     // @stub
 }
 
 // E:\gamedcs\hero.h:970
 DC_ONLY(0x27e9c, 0x10)
-const type_artifact* hero::get_backpack(long slot)
+const type_artifact* hero::getBackpack(long slot)
 {
     // @stub
 }
 
 // E:\gamedcs\cmbtmgr.h:1150
 DC_ONLY(0x27eac, 0x1C)
-int combatManager::TWallTarget::get_blocked_hex()
+int combatManager::TWallTarget::getBlockedHex()
 {
     // @stub
 }
 
 // E:\gamedcs\cmbtmgr.h:1460
 DC_ONLY(0x27ec8, 0x12)
-unsigned char combatManager::ValidHex(int iHex)
+unsigned char combatManager::validHex(int iHex)
 {
     // @stub
 }
 
 // E:\gamedcs\cmbtmgr.h:1473
 DC_ONLY(0x27edc, 0x20)
-long combatManager::get_wall_strength(TWallTargetId target)
+long combatManager::getWallStrength(TWallTargetId target)
 {
     // @stub
 }
 
 // E:\gamedcs\cmbtmgr.h:1478
 DC_ONLY(0x27efc, 0x2C)
-army* combatManager::get_current_army()
+army* combatManager::getCurrentArmy()
 {
     // @stub
 }
@@ -3567,21 +3572,21 @@ int combatManager::gridY(int index)
 
 // E:\gamedcs\cmbtmgr.h:1519
 DC_ONLY(0x27f4c, 0x18)
-int combatManager::GridX(int index)
+int combatManager::gridX(int index)
 {
     // @stub
 }
 
 // E:\gamedcs\cmbtmgr.h:1525
 DC_ONLY(0x27f64, 0x3C)
-unsigned char combatManager::InInvisibleColumn(int index)
+unsigned char combatManager::inInvisibleColumn(int index)
 {
     // @stub
 }
 
 // E:\gamedcs\cmbtmgr.h:1542
 DC_ONLY(0x27fa0, 0x34)
-combatManager::TObstacle* combatManager::GetObstacle(int index)
+combatManager::TObstacle* combatManager::getObstacle(int index)
 {
     // @stub
 }
@@ -3595,14 +3600,14 @@ long type_AI_combat_parameters::get_enemy_group()
 
 // E:\gamedcs\ai_tactical.h:87
 DC_ONLY(0x27fd8, 0x4)
-long type_AI_combat_parameters::get_group()
+long type_AI_combat_parameters::getGroup()
 {
     // @stub
 }
 
 // E:\gamedcs\ai_tactical.h:471
 DC_ONLY(0x27fdc, 0x4)
-long type_AI_attack_hex_chooser::get_attack_time()
+long type_AI_attack_hex_chooser::getAttackTime()
 {
     // @stub
 }
@@ -3623,21 +3628,21 @@ long type_AI_attack_hex_chooser::get_hex_value()
 
 // E:\gamedcs\FindPath.h:194
 DC_ONLY(0x27fe8, 0x16)
-pathCell* searchArray::get_hex(long x)
+pathCell* searchArray::getHex(long x)
 {
     // @stub
 }
 
 // E:\gamedcs\FindPath.h:226
 DC_ONLY(0x28000, 0x18)
-const pathCell* searchArray::get_step_cell(long i)
+const pathCell* searchArray::getStepCell(long i)
 {
     // @stub
 }
 
 // E:\gamedcs\FindPath.h:242
 DC_ONLY(0x28018, 0xA)
-unsigned char searchArray::is_moat(short index)
+unsigned char searchArray::isMoat(short index)
 {
     // @stub
 }

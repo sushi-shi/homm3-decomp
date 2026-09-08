@@ -75,12 +75,18 @@ public:
         SPRITE_RES_COMBAT_HERO = 73
     };
 
-    CSprite* Sprite;
-    int Frame;
-    int seqId;
-    unsigned char IsFlipped;
-    int PostPostWalkSequence;
-    unsigned short BackColor;
+    // Before normalization: Sprite.
+    CSprite* m_sprite;
+    // Before normalization: Frame.
+    int m_frame;
+    // Before normalization: seqId.
+    int m_seqId;
+    // Before normalization: IsFlipped.
+    unsigned char m_isFlipped;
+    // Before normalization: PostPostWalkSequence.
+    int m_postPostWalkSequence;
+    // Before normalization: BackColor.
+    unsigned short m_backColor;
 
     // ELEVEN arguments (`ret 0x2c` at 0x4ea7a9) where DC has twelve: the
     // trailing `focusable` is the one retail dropped, exactly as in the
@@ -96,14 +102,16 @@ public:
                int frame, int sequence, unsigned char flipped,
                unsigned backColor, int style);
     virtual ~iconWidget();  // retail 0x4ea7b0
-    virtual int Main(message* msg);
+    // Before normalization (function): iconWidget::Main.
+    virtual int main(message* msg);
     virtual void zBufferDraw(unsigned short* zBuffer, int id);
-    virtual void Draw();
+    // Before normalization (function): iconWidget::Draw.
+    virtual void draw();
     // Overrides of widget's two size slots; retail 0x4eab30 / 0x4eab20
     // (vtable 0x63ec48 slots 5 and 6). Both answer with the sprite's
     // own extent, not the widget rect.
-    virtual int GetRealHeight() const;  // slot 5, retail 0x4eab30
-    virtual int GetRealWidth() const;   // slot 6, retail 0x4eab20
+    virtual int getRealHeight() const;  // slot 5, retail 0x4eab30
+    virtual int getRealWidth() const;   // slot 6, retail 0x4eab20
     // Slot 13 of 0x63ec48, i.e. a virtual iconWidget ADDS on top of
     // widget's twelve-plus-_vslot12 - not an override. That is what the
     // vtable widths say: button and type_func_button stop at 13 slots
@@ -112,16 +120,28 @@ public:
     // (dc 0x54590, same four-byte "return 0" body) and /OPT:ICF folded
     // the two onto this one row - which is why the carve labels it
     // border_vslot13.
-    virtual unsigned char handle_click(unsigned char down_click,
-                                       unsigned char right_click);
+    // Before normalization (function): iconWidget::handle_click.
+    // Before normalization (locals): down_click, right_click.
+    virtual unsigned char handleClick(unsigned char downClick,
+                                       unsigned char rightClick);
 
-    void SetIconFrame(int newFrame);
-    void SetIconSequence(int new_sequence);
-    void SetPalette(const char* palette_name);
-    void SetPlayerPaletteColors(int whichPlayer);
-    void SetSprite(const char* new_sprite);
-    void NextRandomFrame();
-    void NextRandomSiegeEngineFrame();
+    // Before normalization (function): iconWidget::SetIconFrame.
+    void setIconFrame(int newFrame);
+    // Before normalization (function): iconWidget::SetIconSequence.
+    // Before normalization (locals): new_sequence.
+    void setIconSequence(int newSequence);
+    // Before normalization (function): iconWidget::SetPalette.
+    // Before normalization (locals): palette_name.
+    void setPalette(const char* paletteName);
+    // Before normalization (function): iconWidget::SetPlayerPaletteColors.
+    void setPlayerPaletteColors(int whichPlayer);
+    // Before normalization (function): iconWidget::SetSprite.
+    // Before normalization (locals): new_sprite.
+    void setSprite(const char* newSprite);
+    // Before normalization (function): iconWidget::NextRandomFrame.
+    void nextRandomFrame();
+    // Before normalization (function): iconWidget::NextRandomSiegeEngineFrame.
+    void nextRandomSiegeEngineFrame();
 };
 
 // --- CSprite ---

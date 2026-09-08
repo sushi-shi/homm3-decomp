@@ -10,6 +10,7 @@
 #include "basemgr.h"
 #include "slider.h"
 #include "window.h"
+#include "palette.h"
 
 class armyGroup;
 class button;
@@ -30,19 +31,25 @@ enum ECreatureRecord {
     CREATURE_RECORD_COST_DWORD = 8
 };
 
-extern int* gCreatureRecords;
+// Before normalization: gCreatureRecords.
+extern int* g_creatureRecords;
 
-void GetMonsterCost(int monId, int* resCost);
+// Before normalization (function): GetMonsterCost.
+void getMonsterCost(int monId, int* resCost);
 // Retail is four-arg (both creature rows in ecx/edx); the DC
 // three-arg CODEVIEW below is the older shape. TCreatureType comes
 // from armygrp.h, which recruit.cpp includes first.
-void get_upgrade_cost(enum TCreatureType creature, enum TCreatureType upgrade,
+// Before normalization (function): get_upgrade_cost.
+void getUpgradeCost(enum TCreatureType creature, enum TCreatureType upgrade,
     long amount, long* cost);
-void QuickViewRecruit(town* newTown, int newDwellingIndex);
+// Before normalization (function): QuickViewRecruit.
+void quickViewRecruit(town* newTown, int newDwellingIndex);
 // Retail passes the four-byte enum in ECX (the town overload loads it with
 // `mov ecx, [gTownDwellingCreatures + index*4]`). Dreamcast's older roster
 // says char, contradicted on this x86 image by that load width.
-void QuickViewRecruit(enum TCreatureType MonType, short* numMon);
+// Before normalization (function): QuickViewRecruit.
+// Before normalization (locals): MonType.
+void quickViewRecruit(enum TCreatureType monType, short* numMon);
 
 // Recruit-window message ids, fixed by the constructor's widget ids and by
 // recruitUnit::Main's retail switch tables.
@@ -84,19 +91,32 @@ enum ERecruitCreatureSlot {
 // materialize the exact temporary consumed by vector<widget*>::push_back.
 class TRecruitWindow : public heroWindow {
 public:
-    recruitUnit* recruit_info;
-    button* field_50;
-    button* field_54;
-    slider* field_58;
+    // Before normalization: recruit_info.
+    recruitUnit* m_recruitInfo;
+    // Before normalization: field_50.
+    // Retail ctor 0x54e850 installs RECRUIT_ACCEPT_ID (0x7802) here;
+    // update enables it only for a valid, nonzero purchase quantity.
+    button* m_acceptButton;
+    // Before normalization: field_54.
+    // Same ctor installs RECRUIT_MAXIMUM_ID (0x214) here.
+    button* m_maximumButton;
+    // Before normalization: field_58.
+    // Quantity control: update sets resolution=maxAvail+1 and state=numberToBuy.
+    // These three names are role-derived; no original member names recovered.
+    slider* m_quantitySlider;
     // Four creature portraits, byte-proven by
     // add_creature_widgets' [this + slot*4 + 0x5c] stores. recruitUnit::Open
     // allocates 0x6c bytes for this class, closing the tail exactly.
-    iconWidget* creature_widgets[4];
+    // Before normalization: creature_widgets.
+    iconWidget* m_creatureWidgets[4];
 
     TRecruitWindow(int x2, int y2, int altResource,
-                   recruitUnit* recruit_info);
+                   // Before normalization (locals): recruit_info.
+                   recruitUnit* recruitInfo);
     virtual ~TRecruitWindow();
-    void add_creature_widgets(long start_x, long start_y, long name_y,
+    // Before normalization (function): TRecruitWindow::add_creature_widgets.
+    // Before normalization (locals): start_x, start_y, name_y.
+    void addCreatureWidgets(long startX, long startY, long nameY,
                               TCreatureType creature, long slot);
 };
 SIZE(TRecruitWindow, 0x6c);
@@ -105,40 +125,25 @@ SIZE(TRecruitWindow, 0x6c);
 // gp<Type> house convention); recruitUnit::Open builds it,
 // recruitUnit::Close RemoveWindow()s and deletes it, and Update
 // broadcasts every widget refresh through it.
-extern TRecruitWindow* gpRecruitWindow;
+// Before normalization: gpRecruitWindow.
+extern TRecruitWindow* g_recruitWindow;
 
 // recruit.obj's own .bss 0x69d5f4 - the menu recruitUnit::Open parks
 // before switching to the default one, and the menu ::Close puts back.
 // Spelled through the HMENU handle tag rather than HMENU so this header
 // keeps its promise not to drag <windows.h> into its five consumers.
-extern struct HMENU__* gRecruitSavedMenu;
+// Before normalization: gRecruitSavedMenu.
+extern struct HMENU__* g_recruitSavedMenu;
 
-// Provisional view of the unnamed drawing-side object at .bss
-// 0x6aacb0 (34 refs image-wide, from advManager::UpdateRadar,
-// combatManager::DrawFrame/CycleCombatScreen, army::DrawToBuffer and
-// the TRecruitWindow constructor as well as Update) - a colour table
-// of some kind. Update reads exactly two unsigned shorts out of it
-// and hands them to WIDGET_SET_COLOR: +0x5a for the four creature
-// name widgets and +0x64 for the selected one. Same standing as
-// textresource.h's canonical general-text index domain moves
-// to its own header when that TU lands.
-struct SUnnamed6aacb0 {
-    char pad_00[0x1c];
-    // The widget back-colour table: textWidget::Draw 0x5bc5f0 indexes it
-    // with widget-level BackColor (`mov dx, [ecx + eax*2 + 0x1c]`) and
-    // hands the result to Bitmap16Bit::FillRect. The extent below is
-    // bounded by the next attested member, not proven as a count.
-    unsigned short backColors[31];  // +0x1c..+0x59
-    unsigned short field_5a;
-    char pad_5c[8];
-    unsigned short field_64;
-    char pad_66[0x10];
-    // Level-up choice borders pass this color to coloredBorderFrame.
-    unsigned short levelUpSelectionColor;  // +0x76
-    char pad_78[0x24];
-    unsigned short playerColors[8];  // +0x9c, adventure flag output colors
-};
-extern SUnnamed6aacb0* gUnnamed6aacb0;
+// Retail initialization 0x4ee430 calls ResourceManager::GetPalette
+// (0x55b3e0) with the game palette name and stores the result at 0x6aacb0.
+// The former SUnnamed6aacb0 was a partial TPalette16 view: its 0x1c-byte
+// prefix is resource, followed by 256 16-bit palette entries. Former
+// field_5a/field_64 are palette indices 31/36 (normal/selected recruit
+// borders); levelUpSelectionColor is index 45; playerColors starts at 64.
+// Former pad_00/pad_5c/pad_66/pad_78 belong to the base or palette array.
+// Before normalization: gUnnamed6aacb0.
+extern TPalette16* g_unnamed6aacb0;
 
 class TRecruitQuickWindow : public heroWindow {
 public:
@@ -177,44 +182,79 @@ public:
 // names them but no retail body reconstructed here touches them.
 class recruitUnit : public baseManager {
 public:
-    char pad_38[16];
-    int type;
-    unsigned char view_only;
-    TCreatureType monsterType;
-    short* numAvail;
-    int selectedPosition;
-    TCreatureType MonType1;
-    TCreatureType MonType2;
-    TCreatureType MonType3;
-    TCreatureType MonType4;
-    short* available[4];
-    hero* thisHero;
-    char pad_80[4];
-    long goldPerTroop;
-    int altResource;
-    int resourcesPerTroop;
-    int bInTownMainScreen;
-    char pad_94[4];
-    armyGroup* currArmyGroup;
-    unsigned char bCurrArmyGroupIsTownGarrison;
-    char pad_a0[4];
-    int updateNeeded;
-    int errorExit;
-    int maxAvail;
-    long totalGold;
-    int totalResources;
-    int numberToBuy;
+    // Before normalization: pad_38; reference member recruitUnit::CurrentSpriteFrame.
+    // Dreamcast array type 0x3dcc: four ints; NH3API agrees at +0x38.
+    int m_currentSpriteFrame[4];
+    // Before normalization: type.
+    int m_type;
+    // Before normalization: view_only.
+    unsigned char m_viewOnly;
+    // Before normalization: monsterType.
+    TCreatureType m_monsterType;
+    // Before normalization: numAvail.
+    short* m_numAvail;
+    // Before normalization: selectedPosition.
+    int m_selectedPosition;
+    // Before normalization: MonType1.
+    TCreatureType m_monType1;
+    // Before normalization: MonType2.
+    TCreatureType m_monType2;
+    // Before normalization: MonType3.
+    TCreatureType m_monType3;
+    // Before normalization: MonType4.
+    TCreatureType m_monType4;
+    // Before normalization: available.
+    short* m_available[4];
+    // Before normalization: thisHero.
+    hero* m_thisHero;
+    // Before normalization: pad_80; reference member recruitUnit::availSource.
+    // Dreamcast primitive pointer 0x474 and NH3API: int* at +0x80.
+    int* m_availSource;
+    // Before normalization: goldPerTroop.
+    long m_goldPerTroop;
+    // Before normalization: altResource.
+    int m_altResource;
+    // Before normalization: resourcesPerTroop.
+    int m_resourcesPerTroop;
+    // Before normalization: bInTownMainScreen.
+    int m_inTownMainScreen;
+    // Before normalization: pad_94; reference member recruitUnit::errorWin.
+    // Dreamcast pointer 0x4811 and NH3API: heroWindow* at +0x94.
+    heroWindow* m_errorWin;
+    // Before normalization: currArmyGroup.
+    armyGroup* m_currArmyGroup;
+    // Before normalization: bCurrArmyGroupIsTownGarrison.
+    unsigned char m_currArmyGroupIsTownGarrison;
+    // Original: addIndex (Dreamcast recruitUnit +0xa0; NH3API agrees).
+    // The former pad_a0 started at +0x9d, spanning alignment plus one
+    // byte of this int. Natural alignment now places the full member at
+    // +0xa0, between the retail +0x9c flag and +0xa4 updateNeeded.
+    int m_addIndex;
+    // Before normalization: updateNeeded.
+    int m_updateNeeded;
+    // Before normalization: errorExit.
+    int m_errorExit;
+    // Before normalization: maxAvail.
+    int m_maxAvail;
+    // Before normalization: totalGold.
+    long m_totalGold;
+    // Before normalization: totalResources.
+    int m_totalResources;
+    // Before normalization: numberToBuy.
+    int m_numberToBuy;
 
-    recruitUnit(armyGroup* newGroup, unsigned char bGroupIsTownGarrison,
-        TCreatureType _MonType1, short* _numMon1,
-        TCreatureType _MonType2, short* _numMon2,
-        TCreatureType _MonType3, short* _numMon3,
-        TCreatureType _MonType4, short* _numMon4);
-    recruitUnit(hero* _thisHero,
-        TCreatureType _MonType1, short* _numMon1,
-        TCreatureType _MonType2, short* _numMon2,
-        TCreatureType _MonType3, short* _numMon3,
-        TCreatureType _MonType4, short* _numMon4);
+    // Before normalization (locals): bGroupIsTownGarrison, _MonType1, _numMon1, _MonType2,
+    // _numMon2, _MonType3, _numMon3, _MonType4, _numMon4, _thisHero, bInInTownMainScreen.
+    recruitUnit(armyGroup* newGroup, unsigned char groupIsTownGarrison,
+        TCreatureType monType1, short* numMon1,
+        TCreatureType monType2, short* numMon2,
+        TCreatureType monType3, short* numMon3,
+        TCreatureType monType4, short* numMon4);
+    recruitUnit(hero* thisHero,
+        TCreatureType monType1, short* numMon1,
+        TCreatureType monType2, short* numMon2,
+        TCreatureType monType3, short* numMon3,
+        TCreatureType monType4, short* numMon4);
     // What opened this recruit. The two dialog flavours above leave -1;
     // only the town constructor tags itself, and ::Close tests the tag
     // before it refreshes the town page behind the dialog. The 0x62
@@ -225,25 +265,32 @@ public:
         RECRUIT_SOURCE_TOWN = 0x62
     };
 
-    recruitUnit(town* newTown, int newDwellingIndex, int bInInTownMainScreen);
+    recruitUnit(town* newTown, int newDwellingIndex, int inInTownMainScreen);
     // The three baseManager slots of vtable 0x640c70. Only Close is
     // reconstructed; the other two are declared so the class is
     // concrete, which is what `new recruitUnit(...)` at the fort page's
     // buy button and the refugee camp's frame-built one in events.obj
     // (0x4a4600) both need.
-    virtual int Open(int newPriority) OVERRIDE;      // slot 0, 0x54fea0
-    virtual void Close() OVERRIDE;                   // slot 1, 0x5502d0
-    virtual int Main(message& msg) OVERRIDE;         // slot 2, 0x550940
+    // Before normalization (function): recruitUnit::Open.
+    virtual int open(int newPriority) OVERRIDE;      // slot 0, 0x54fea0
+    // Before normalization (function): recruitUnit::Close.
+    virtual void close() OVERRIDE;                   // slot 1, 0x5502d0
+    // Before normalization (function): recruitUnit::Main.
+    virtual int main(message& msg) OVERRIDE;         // slot 2, 0x550940
 
-    void Update(unsigned char new_monster, long slot);
-    void SetRolloverText(int codeY);
+    // Before normalization (function): recruitUnit::Update.
+    // Before normalization (locals): new_monster.
+    void update(unsigned char newMonster, long slot);
+    // Before normalization (function): recruitUnit::SetRolloverText.
+    void setRolloverText(int codeY);
 
 
     // The definition follows GetMonsterCost in recruit.cpp, as Dreamcast's
     // recruit.cpp line table attests.  It remains inline: retail emits no
     // standalone body and expands the nested GetMonsterCost loop at all four
     // recruitUnit call sites.
-    inline void UpdateCost();
+    // Before normalization (function): recruitUnit::UpdateCost.
+    inline void updateCost();
 };
 SIZE(recruitUnit, 188);
 

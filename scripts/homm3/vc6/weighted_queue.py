@@ -1,9 +1,9 @@
-"""This lane's complete remaining-work queue, derived from the current build.
+"""Generate the admitted-function polish queue from banked MAX.
 
 Run `HOMM3_DIR=<worktree> python -m homm3.vc6.weighted_queue` after a full
-build. Start with zero/unscored functions, largest first, then increasing
-current score with remaining bytes breaking ties. Historical peaks remain
-visible but do not hide functions whose current code is still non-exact.
+build. Lowest banked scores rank first, with retail size breaking ties.
+HIST remains visible as lost-headroom evidence but does not hide work whose
+current implementation has a lower MAX.
 """
 from __future__ import annotations
 
@@ -12,40 +12,48 @@ import json
 
 from homm3.core import common
 from homm3.match import status, universe
+from homm3.vc6.queue import EXACT, _compiled_functions
 
 
-def ranked_rows(report, baseline, categories, sizes, labels):
+def ranked_rows(report, baseline, categories, sizes, compiled):
+    peaks = {}
+    for row in baseline.values():
+        if row.rva is not None:
+            maximum, historical = peaks.get(row.rva, (0.0, 0.0))
+            peaks[row.rva] = max(maximum, row.max), max(historical, row.hist)
+
     measured = {}
     for unit in report.get("units", []):
         owner = (unit.get("name") or unit.get("id") or "").split("/")[-1]
         for fn in unit.get("functions", []):
-            row = baseline.get((owner, fn["name"]))
+            key = owner, fn["name"]
+            if key not in compiled:
+                continue
+            row = baseline.get(key)
             if row is None or row.rva is None:
                 raise ValueError(f"report row lacks checkpoint RVA: {owner}:{fn['name']}")
             current = fn.get("fuzzy_match_percent")
             entry = (float(current) if current is not None else None,
-                     row.max, row.hist, owner, fn["name"])
+                     owner, fn["name"])
             previous = measured.get(row.rva)
             if previous is None or (entry[0] or 0) > (previous[0] or 0):
                 measured[row.rva] = entry
 
     rows = []
-    for rva, size in sizes.items():
+    for rva, (current, owner, name) in measured.items():
         if categories[rva] not in ("target", "zlib"):
             continue
-        label = labels.get(rva, {})
-        current, maximum, historical, owner, name = measured.get(
-            rva, (None, 0.0, 0.0, label.get("unit", ""), label.get("name", "")))
-        if current is not None and current >= 100.0:
+        maximum, historical = peaks[rva]
+        if maximum >= EXACT:
             continue
+        size = sizes[rva]
         rows.append(dict(
             va=f"0x{rva + common.IMAGE_BASE:08x}", size=size,
             current=current, maximum=maximum, historical=historical,
-            remaining_bytes=size * (1 - (current or 0) / 100),
-            unit=owner, function=name,
-            state="unscored" if current is None else "non-exact"))
-    rows.sort(key=lambda row: (row["current"] or 0,
-                              -row["remaining_bytes"], row["va"]))
+            remaining_bytes=size * (1 - maximum / 100),
+            unit=owner, function=name, state="admitted"))
+    rows.sort(key=lambda row: (row["maximum"],
+                              -row["size"], row["va"]))
     return rows
 
 
@@ -54,16 +62,13 @@ def main():
     report = json.loads((root / "build/objdiff/report.json").read_text())
     baseline = status.load_baseline()
     categories, sizes = universe.classify()
-    with (root / "build/gen/symbol_names.csv").open() as stream:
-        labels = {int(row["rva"], 16): row for row in csv.DictReader(
-            line for line in stream if not line.startswith("#"))
-            if row["kind"] == "func"}
-    rows = ranked_rows(report, baseline, categories, sizes, labels)
+    rows = ranked_rows(report, baseline, categories, sizes,
+                       _compiled_functions(report))
     output = root / "evidence/weighted-queue.tsv"
     with output.open("w") as stream:
         stream.write("# GENERATED: python -m homm3.vc6.weighted_queue\n")
-        stream.write("# Sorted by increasing current score, then decreasing unmatched bytes.\n")
-        stream.write("# Unscored rows rank at zero; MAX/history never hide current residuals.\n")
+        stream.write("# Admitted compiled bodies, sorted by increasing current-implementation MAX, then decreasing retail size.\n")
+        stream.write("# HIST is retained to expose peaks lost by source edits; it does not exclude a row.\n")
         writer = csv.DictWriter(stream, fieldnames=[
             "va", "size", "current", "maximum", "historical",
             "remaining_bytes", "unit", "function", "state"], delimiter="\t", lineterminator="\n")
@@ -72,8 +77,8 @@ def main():
     print(f"{len(rows)} remaining functions; "
           f"{sum(r['remaining_bytes'] for r in rows):,.1f} unmatched weighted bytes")
     for row in rows[:20]:
-        score = "unscored" if row["current"] is None else f"{row['current']:.4f}%"
-        print(f"{row['va']} {row['size']:6d} B {score:>10} "
+        print(f"{row['va']} {row['size']:6d} B MAX {row['maximum']:8.4f}% "
+              f"HIST {row['historical']:8.4f}% "
               f"{row['unit']}:{row['function']}")
     print(f"Wrote {output}")
 

@@ -18,12 +18,13 @@
 // get_creature_bank_help_text at 0x40d3f0 reaches the same records with
 // `mov edx, [0x67029c]` - a pointer LOAD. The array carries a constructor,
 // so its cinit initializer at 0x47aa20 is retail's own and stays excluded.
+// Before normalization: creature_bank_traits.
 DATA(0x00695038)
-static type_creature_bank_traits creature_bank_traits[CREATURE_BANK_COUNT];
+static type_creature_bank_traits g_creatureBankTraits[CREATURE_BANK_COUNT];
 
 DATA(0x0067029c)
-const type_creature_bank_traits* const_creature_bank_traits =
-    creature_bank_traits;
+const type_creature_bank_traits* g_constCreatureBankTraits =
+    g_creatureBankTraits;
 
 // The two per-bank tables crbanks.txt does NOT carry. Both are indexed by
 // type_creature_bank_type and both are read only by the loader below.
@@ -33,8 +34,9 @@ const type_creature_bank_traits* const_creature_bank_traits =
 // dragons - and the spreadsheet supplies only the COUNTS, which is why the
 // loader has to bring the types with it. Named where armygrp.h's enum
 // reaches; the rest are the raw ids retail stores.
+// Before normalization: creature_bank_guard_types.
 DATA(0x006702a0)
-static const int creature_bank_guard_types[CREATURE_BANK_COUNT][5] = {
+static const int g_creatureBankGuardTypes[CREATURE_BANK_COUNT][5] = {
     { 94, -1, 0, 0, 0 },                              // cyclops
     { CREATURE_DWARF, -1, 0, 0, 0 },                  // dwarf
     { CREATURE_GRIFFIN, -1, 0, 0, 0 },                // griffin
@@ -53,21 +55,25 @@ static const int creature_bank_guard_types[CREATURE_BANK_COUNT][5] = {
 // ...and the creature the bank rewards, which only two banks have: the
 // griffin conservatory pays in angels and the dragonfly hive in 108. The
 // loader clears the slot again when the spreadsheet's count column is zero.
+// Before normalization: creature_bank_reward_creature.
 DATA(0x0067037c)
-static const int creature_bank_reward_creature[CREATURE_BANK_COUNT] = {
+static const int g_creatureBankRewardCreature[CREATURE_BANK_COUNT] = {
     -1, -1, CREATURE_ANGEL, -1, -1, -1, 108, -1, -1, -1, -1
 };
 
 // The union bridge advmgr.cpp and eight other TUs already use to reach
 // TCreatureType from an int lane without a cast.
-inline TCreatureType creature_type_from_int(int value)
+// Before normalization (function): creature_type_from_int.
+inline TCreatureType creatureTypeFromInt(int value)
 {
     union {
-        int value;
-        TCreatureType creature;
+        // Before normalization: value.
+        int m_value;
+        // Before normalization: creature.
+        TCreatureType m_creature;
     } storage;
-    storage.value = value;
-    return storage.creature;
+    storage.m_value = value;
+    return storage.m_creature;
 }
 
 // Original: type_creature_bank_level::type_creature_bank_level; creature_bank.cpp:25, dc 0x7152c.
@@ -116,59 +122,60 @@ type_creature_bank_traits::type_creature_bank_traits()
 // VC6 strength-reduces onto the traits pointer, which is what the subscript
 // form below produces. Also rejected: pointer inductions carried across the
 // int counter (88.5136).
+// Before normalization (function): initialize_creature_bank_traits.
 VA(0x0047ab30, 0x254)  // anchor-global crbanks.txt + dc order-map, dc 0x7112c
-unsigned char initialize_creature_bank_traits()
+unsigned char initializeCreatureBankTraits()
 {
-    TSpreadsheetResource* sheet = ResourceManager::GetSpreadsheet(
+    TSpreadsheetResource* sheet = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x006703a8, creatureBankSpreadsheetName, "crbanks.txt"));
     if (!sheet)
         return 0;
-    if (sheet->GetNumberOfRows() < 13) {
-        sheet->Dispose();
+    if (sheet->getNumberOfRows() < 13) {
+        sheet->dispose();
         return 0;
     }
 
     int row = 2;
     for (int bank = 0; bank < CREATURE_BANK_COUNT; ++bank) {
-        type_creature_bank_traits* traits = &creature_bank_traits[bank];
-        const int* guardTypes = creature_bank_guard_types[bank];
-        traits->name = sheet->GetRow(row)[0];
+        type_creature_bank_traits* traits = &g_creatureBankTraits[bank];
+        const int* guardTypes = g_creatureBankGuardTypes[bank];
+        traits->m_name = sheet->getRow(row)[0];
 
-        type_creature_bank_level* level = traits->levels;
+        type_creature_bank_level* level = traits->m_levels;
         int levelsLeft = 4;
         do {
-            level->guards.Initialize();
+            level->m_guards.initialize();
             for (unsigned int slot = 0; slot < 5 && guardTypes[slot] != -1; ++slot)
-                level->guards.armies[slot] = guardTypes[slot];
-            level->reward_creature = creature_type_from_int(
-                creature_bank_reward_creature[bank]);
+                level->m_guards.m_armies[slot] = guardTypes[slot];
+            level->m_rewardCreature = creatureTypeFromInt(
+                g_creatureBankRewardCreature[bank]);
 
-            const std::vector<char*>& cells = sheet->GetRow(row);
-            level->chance = atoi(cells[2]);
-            level->guards.numTroops[0] = atoi(cells[3]);
-            level->upgrade_chance = atoi(cells[5]);
+            const std::vector<char*>& cells = sheet->getRow(row);
+            level->m_chance = atoi(cells[2]);
+            level->m_guards.m_numTroops[0] = atoi(cells[3]);
+            level->m_upgradeChance = atoi(cells[5]);
 
             int column = 6;
             for (int guard = 1; guard < 4; ++guard) {
-                level->guards.numTroops[guard] = atoi(cells[column]);
-                if (level->guards.numTroops[guard] == 0)
-                    level->guards.armies[guard] = CREATURE_NONE;
+                level->m_guards.m_numTroops[guard] = atoi(cells[column]);
+                if (level->m_guards.m_numTroops[guard] == 0)
+                    level->m_guards.m_armies[guard] = CREATURE_NONE;
                 column += 2;
             }
 
             ++column;
             for (int resource = 0; resource < 7; ++resource)
-                level->resources[resource] = atoi(cells[column++]);
+                level->m_resources[resource] = atoi(cells[column++]);
 
-            level->reward_creatures = atoi(cells[column]);
+            level->m_rewardCreatures = atoi(cells[column]);
             column += 2;
-            if (level->reward_creatures == 0)
-                level->reward_creature = CREATURE_NONE;
+            if (level->m_rewardCreatures == 0)
+                level->m_rewardCreature = CREATURE_NONE;
 
-            level->treasure_artifacts = atoi(cells[column++]);
-            level->minor_artifacts = atoi(cells[column++]);
-            level->major_artifacts = atoi(cells[column]);
-            level->relic_artifacts = atoi(cells[column + 1]);
+            level->m_treasureArtifacts = atoi(cells[column++]);
+            level->m_minorArtifacts = atoi(cells[column++]);
+            level->m_majorArtifacts = atoi(cells[column]);
+            level->m_relicArtifacts = atoi(cells[column + 1]);
 
             ++row;
             ++level;
@@ -176,7 +183,7 @@ unsigned char initialize_creature_bank_traits()
 
     }
 
-    sheet->Dispose();
+    sheet->dispose();
     return 1;
 }
 
@@ -184,7 +191,8 @@ unsigned char initialize_creature_bank_traits()
 // to the longhand chain when expanded, and armygrp.cpp / viewarmywindow.cpp
 // already carry the same inline for the same reason; retail expands it twice
 // in initialize_creature_bank below.
-inline bool is_base_elemental(int type)
+// Before normalization (function): is_base_elemental.
+inline bool isBaseElemental(int type)
 {
     return type == CREATURE_AIR_ELEMENTAL || type == CREATURE_EARTH_ELEMENTAL
         || type == CREATURE_FIRE_ELEMENTAL || type == CREATURE_WATER_ELEMENTAL;
@@ -195,19 +203,22 @@ inline bool is_base_elemental(int type)
 // out-of-line row survives. The free-slot cursor starts AT the slot being
 // split and is carried across the whole run - every site's scan begins at
 // its own `slot` argument, which is what fixes the parameter's second role.
+// Before normalization (function): split_slot.
+// Before normalization (locals): army_group, free_slot.
 DC_ONLY(0x71218, 0xB8)
-static void split_slot(armyGroup* army_group, long slot, long groups)
+static void splitSlot(armyGroup* currentArmyGroup, long slot, long groups)
 {
-    long free_slot = slot;
-    for (; groups > 1; --groups) {
-        while (free_slot < armyGroup::ARMY_GROUP_SLOT_COUNT
-               && army_group->armies[free_slot] != -1)
-            ++free_slot;
-        if (free_slot == armyGroup::ARMY_GROUP_SLOT_COUNT)
+    long freeSlot = slot;
+    long groupsLeft = groups;
+    for (; groupsLeft > 1; --groupsLeft) {
+        while (freeSlot < armyGroup::ARMY_GROUP_SLOT_COUNT
+               && currentArmyGroup->m_armies[freeSlot] != -1)
+            ++freeSlot;
+        if (freeSlot == armyGroup::ARMY_GROUP_SLOT_COUNT)
             break;
-        long amount = army_group->numTroops[slot] / groups;
-        army_group->numTroops[slot] -= amount;
-        army_group->Add(army_group->armies[slot], amount, free_slot);
+        long amount = currentArmyGroup->m_numTroops[slot] / groupsLeft;
+        currentArmyGroup->m_numTroops[slot] -= amount;
+        currentArmyGroup->add(currentArmyGroup->m_armies[slot], amount, freeSlot);
     }
 }
 
@@ -238,69 +249,72 @@ static void split_slot(armyGroup* army_group, long slot, long groups)
 // `bank->guards.armyTypes[slot]` at each use instead lets VC6 re-materialise
 // the load inside each compare block and duplicate the store.
 //
-// Residual (98.1132%): reloc NAMES only. All four push_back sites call the
-// vector insert COMDAT that the retail link folded with
-// vector<widget*>::insert; our object names its own vector<TArtifact>
-// instantiation. The report scores calls and relocs as AGREE and the
-// skeleton has no divergent block.
+// Exact (2026-09-07, 98.1132% -> 100%): preserving the `groups` parameter
+// through a `groupsLeft` countdown declared after splitSlot's free cursor
+// makes VC6 initialize slot/ESI before groups/EDI in all five expansions,
+// as retail does. Consuming IsBaseCreature's canonical int result as an
+// unsigned byte supplies retail's final `test al,al`. All 78 blocks, 50
+// branches and masked instruction rows now agree. The four push_back call
+// names still reflect retail ICF with vector<widget*>::insert, but the report
+// correctly judges those calls and relocations equivalent.
 VA(0x0047ad90, 0x36E)  // anchor-callee(armyGroup::Add + GetRandomArtifactId), dc 0x712d0
-void initialize_creature_bank(type_creature_bank* bank,
+void initializeCreatureBank(type_creature_bank* bank,
                               type_creature_bank_type type)
 {
-    int roll = Random(1, 100);
+    int roll = random(1, 100);
     int which;
     for (which = 0; which < 3; ++which) {
-        roll -= const_creature_bank_traits[type].levels[which].chance;
+        roll -= g_constCreatureBankTraits[type].m_levels[which].m_chance;
         if (roll <= 0)
             break;
     }
 
     const type_creature_bank_level* level =
-        &const_creature_bank_traits[type].levels[which];
-    bank->guards = level->guards;
-    memcpy(bank->resources, level->resources, sizeof(bank->resources));
-    bank->reward_creature = level->reward_creature;
-    bank->reward_creatures = level->reward_creatures;
+        &g_constCreatureBankTraits[type].m_levels[which];
+    bank->m_guards = level->m_guards;
+    memcpy(bank->m_resources, level->m_resources, sizeof(bank->m_resources));
+    bank->m_rewardCreature = level->m_rewardCreature;
+    bank->m_rewardCreatures = level->m_rewardCreatures;
 
     int drawn;
-    for (drawn = 0; drawn < level->relic_artifacts; ++drawn)
-        bank->artifacts.push_back(gpGame->GetRandomArtifactId(16));
-    for (drawn = 0; drawn < level->major_artifacts; ++drawn)
-        bank->artifacts.push_back(gpGame->GetRandomArtifactId(8));
-    for (drawn = 0; drawn < level->minor_artifacts; ++drawn)
-        bank->artifacts.push_back(gpGame->GetRandomArtifactId(4));
-    for (drawn = 0; drawn < level->treasure_artifacts; ++drawn)
-        bank->artifacts.push_back(gpGame->GetRandomArtifactId(2));
+    for (drawn = 0; drawn < level->m_relicArtifacts; ++drawn)
+        bank->m_artifacts.push_back(g_game->getRandomArtifactId(16));
+    for (drawn = 0; drawn < level->m_majorArtifacts; ++drawn)
+        bank->m_artifacts.push_back(g_game->getRandomArtifactId(8));
+    for (drawn = 0; drawn < level->m_minorArtifacts; ++drawn)
+        bank->m_artifacts.push_back(g_game->getRandomArtifactId(4));
+    for (drawn = 0; drawn < level->m_treasureArtifacts; ++drawn)
+        bank->m_artifacts.push_back(g_game->getRandomArtifactId(2));
 
     long slot = 0;
-    switch (bank->guards.GetNumArmies()) {
+    switch (bank->m_guards.getNumArmies()) {
     case CREATURE_BANK_GUARDS_ONE_STACK:
-        split_slot(&bank->guards, 0, 5);
+        splitSlot(&bank->m_guards, 0, 5);
         slot = 2;
         break;
     case CREATURE_BANK_GUARDS_TWO_STACKS:
-        split_slot(&bank->guards, 1, 2);
-        split_slot(&bank->guards, 0, 3);
+        splitSlot(&bank->m_guards, 1, 2);
+        splitSlot(&bank->m_guards, 0, 3);
         slot = 3;
         break;
     case CREATURE_BANK_GUARDS_THREE_STACKS:
-        split_slot(&bank->guards, 1, 2);
-        split_slot(&bank->guards, 0, 2);
+        splitSlot(&bank->m_guards, 1, 2);
+        splitSlot(&bank->m_guards, 0, 2);
         slot = 0;
         break;
     }
 
-    if (Random(1, 100) <= level->upgrade_chance) {
-        TCreatureType current = bank->guards.armyTypes[slot];
-        if (!(gpGame->f_1f698 == 0 && is_base_elemental(current))
-            && IsBaseCreature(current)) {
-            TCreatureType promoted = bank->guards.armyTypes[slot];
+    if (random(1, 100) <= level->m_upgradeChance) {
+        TCreatureType current = bank->m_guards.m_armyTypes[slot];
+        if (!(g_game->m_f1f698 == 0 && isBaseElemental(current))
+            && static_cast<unsigned char>(isBaseCreature(current))) {
+            TCreatureType promoted = bank->m_guards.m_armyTypes[slot];
             int upgraded;
-            if (gpGame->f_1f698 == 0 && is_base_elemental(promoted))
+            if (g_game->m_f1f698 == 0 && isBaseElemental(promoted))
                 upgraded = -1;
             else
-                upgraded = UpgradedCreatureType(promoted);
-            bank->guards.armies[slot] = upgraded;
+                upgraded = upgradedCreatureType(promoted);
+            bank->m_guards.m_armies[slot] = upgraded;
         }
     }
 }

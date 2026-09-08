@@ -32,16 +32,16 @@ private:
 
 // E:\gamedcs\herodefs.cpp:204
 VA(0x004e67a0, 0x176)  // linkorder, dc 0xd5a40
-unsigned char InitializeHeroTraitsTable()
+unsigned char initializeHeroTraitsTable()
 {
-    TSpreadsheetResource* resource = ResourceManager::GetSpreadsheet(
+    TSpreadsheetResource* resource = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x0067f154, heroTraitsSpreadsheetName,
                      "hotraits.txt"));
     if (!resource)
         return 0;
 
-    if (resource->GetNumberOfRows() < 158) {
-        resource->Dispose();
+    if (resource->getNumberOfRows() < 158) {
+        resource->dispose();
         return 0;
     }
 
@@ -49,8 +49,8 @@ unsigned char InitializeHeroTraitsTable()
     int row = 2;
     for (; id < 156; ++id, ++row) {
         const TSpreadsheetResource::TStringVector& values =
-            resource->GetRow(row);
-        THeroTraits& traits = aHeroTraits[id];
+            resource->getRow(row);
+        THeroTraits& traits = g_heroTraitsStorage[id];
 
         DATA_COMPGEN_GUARD(0x00698b99, heroStringsGuard, heroStrings)
         // Retail's compiler-generated atexit helper begins at 0x4e6ce0,
@@ -61,31 +61,31 @@ unsigned char InitializeHeroTraitsTable()
         heroStrings[id].set(new char[strlen(values[0]) + 1]);
         strcpy(heroStrings[id].get(), values[0]);
 
-        traits.defaultName = heroStrings[id].get();
-        traits.firstStackLow = atoi(values[1]);
-        traits.firstStackHigh = atoi(values[2]);
-        traits.secondStackLow = atoi(values[4]);
-        traits.secondStackHigh = atoi(values[5]);
-        traits.thirdStackLow = atoi(values[7]);
-        traits.thirdStackHigh = atoi(values[8]);
+        traits.m_defaultName = heroStrings[id].get();
+        traits.m_firstStackLow = atoi(values[1]);
+        traits.m_firstStackHigh = atoi(values[2]);
+        traits.m_secondStackLow = atoi(values[4]);
+        traits.m_secondStackHigh = atoi(values[5]);
+        traits.m_thirdStackLow = atoi(values[7]);
+        traits.m_thirdStackHigh = atoi(values[8]);
     }
 
-    resource->Dispose();
+    resource->dispose();
     return 1;
 }
 
 // E:\gamedcs\herodefs.cpp:238
 VA(0x004e6920, 0x1E2)  // linkorder, dc 0xd5ab4
-unsigned char InitializeHeroClassTraitsTable()
+unsigned char initializeHeroClassTraitsTable()
 {
-    TSpreadsheetResource* resource = ResourceManager::GetSpreadsheet(
+    TSpreadsheetResource* resource = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x0067f164, heroClassTraitsSpreadsheetName,
                      "hctraits.txt"));
     if (!resource)
         return 0;
 
-    if (resource->GetNumberOfRows() < 20) {
-        resource->Dispose();
+    if (resource->getNumberOfRows() < 20) {
+        resource->dispose();
         return 0;
     }
 
@@ -93,8 +93,8 @@ unsigned char InitializeHeroClassTraitsTable()
     int row = 2;
     for (; id < 18; ++id, ++row) {
         const TSpreadsheetResource::TStringVector& values =
-            resource->GetRow(row);
-        THeroClassTraits& traits = aHeroClassTraits[id];
+            resource->getRow(row);
+        THeroClassTraits& traits = g_heroClassTraits[id];
 
         DATA_COMPGEN_GUARD(0x00698b9a, heroClassStringsGuard,
                           heroClassStrings)
@@ -104,43 +104,43 @@ unsigned char InitializeHeroClassTraitsTable()
 
         heroClassStrings[id].set(new char[strlen(values[0]) + 1]);
         strcpy(heroClassStrings[id].get(), values[0]);
-        traits.className = heroClassStrings[id].get();
-        traits.aggression = static_cast<float>(atof(values[1]));
+        traits.m_className = heroClassStrings[id].get();
+        traits.m_aggression = static_cast<float>(atof(values[1]));
 
         int column;
         for (column = 0; column < 4; ++column)
-            traits.initialPrimarySkill[column] =
+            traits.m_initialPrimarySkill[column] =
                 static_cast<signed char>(atoi(values[column + 2]));
         for (column = 0; column < 4; ++column)
-            traits.gainPrimarySkillChance[column] =
+            traits.m_gainPrimarySkillChance[column] =
                 static_cast<signed char>(atoi(values[column + 6]));
         for (column = 0; column < 4; ++column)
-            traits.gainPrimarySkillChance10P[column] =
+            traits.m_gainPrimarySkillChance10P[column] =
                 static_cast<signed char>(atoi(values[column + 10]));
         for (column = 0; column < 28; ++column)
-            traits.gainSecondarySkillChance[column] =
+            traits.m_gainSecondarySkillChance[column] =
                 static_cast<signed char>(atoi(values[column + 14]));
         for (column = 0; column < 9; ++column)
-            traits.foundInTownType[column] =
+            traits.m_foundInTownType[column] =
                 static_cast<signed char>(atoi(values[column + 42]));
     }
 
-    resource->Dispose();
+    resource->dispose();
     return 1;
 }
 
 // E:\gamedcs\herodefs.cpp:351
 VA(0x004e6b10, 0x1C8)  // linkorder, dc 0xd5b28
-unsigned char InitializeSSkillTraitsTable()
+unsigned char initializeSSkillTraitsTable()
 {
-    TSpreadsheetResource* resource = ResourceManager::GetSpreadsheet(
+    TSpreadsheetResource* resource = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x0067f174, secondarySkillTraitsSpreadsheetName,
                      "sstraits.txt"));
     if (!resource)
         return 0;
 
-    if (resource->GetNumberOfRows() < 30) {
-        resource->Dispose();
+    if (resource->getNumberOfRows() < 30) {
+        resource->dispose();
         return 0;
     }
 
@@ -148,8 +148,8 @@ unsigned char InitializeSSkillTraitsTable()
     int row = 2;
     for (; id < 28; ++id, ++row) {
         const TSpreadsheetResource::TStringVector& values =
-            resource->GetRow(row);
-        TSSkillTraits& traits = aSSkillTraits[id];
+            resource->getRow(row);
+        TSSkillTraits& traits = g_sSkillTraitsStorage[id];
 
         DATA_COMPGEN_GUARD(0x00698b98, secondarySkillStringsGuard,
                           secondarySkillNames)
@@ -159,7 +159,7 @@ unsigned char InitializeSSkillTraitsTable()
 
         secondarySkillNames[id].set(new char[strlen(values[0]) + 1]);
         strcpy(secondarySkillNames[id].get(), values[0]);
-        traits.name = secondarySkillNames[id].get();
+        traits.m_name = secondarySkillNames[id].get();
 
         DATA(0x00698b9c)
         static TAutoStrPtr secondarySkillLevelNames[28][3];
@@ -170,12 +170,12 @@ unsigned char InitializeSSkillTraitsTable()
                 new char[strlen(values[level + 1]) + 1]);
             strcpy(secondarySkillLevelNames[id][level].get(),
                    values[level + 1]);
-            traits.levelNames[level] =
+            traits.m_levelNames[level] =
                 secondarySkillLevelNames[id][level].get();
         }
     }
 
-    resource->Dispose();
+    resource->dispose();
     return 1;
 }
 

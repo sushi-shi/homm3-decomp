@@ -27,7 +27,8 @@
 // name is a house ordinal placeholder (the town.h Unnamed526d20
 // precedent). Body: sprintf's a text-table format against the incoming
 // filename into a 500-byte frame buffer, then NormalDialog.
-void Unnamed4f3a60(char* filename);
+// Before normalization (function): Unnamed4f3a60.
+void unnamed4f3a60(char* filename);
 
 // Unimplemented carcass stubs stay lexically present (labels and the
 // va-claims gate scan text) but outside compilation until each body
@@ -42,9 +43,9 @@ void Unnamed4f3a60(char* filename);
 // a video plays, the timer substitutes for rand() so the RNG stream
 // stays undisturbed.
 VA(0x0050b1d0, 0x54)  // anchor-global, dc 0xfd81c
-int SafeRandom(int min, int max)
+int safeRandom(int min, int max)
 {
-    if (!bVideoPaused) {
+    if (!g_videoPaused) {
         if (max == min)
             return max;
         if (max < min)
@@ -61,7 +62,7 @@ int SafeRandom(int min, int max)
 
 // E:\gamedcs\misc.cpp:58
 VA(0x0050b230, 0x28)  // anchor-global, dc 0xfd868
-int Random(int min, int max)
+int random(int min, int max)
 {
     if (min == max)
         return max;
@@ -71,21 +72,22 @@ int Random(int min, int max)
 }
 
 // E:\gamedcs\misc.cpp:151
+// Before normalization (function): GenerateUniqueSystemID.
 DC_ONLY(0xfd8a4, 0xB4)
-void GenerateUniqueSystemID()
+void generateUniqueSystemID()
 {
     long value;
     const char* characters =
         DATA_COMPGEN(0x0067fe68, uniqueSystemIDCharacters,
             "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789");
 
-    memset(gUnnamed698758.name, 0, sizeof(gUnnamed698758.name));
-    value = Random(1, 999999) + GameTime::Get();
-    gUnnamed698758.name[2] = characters[value % 36];
-    value += Random(1, 999999) + GameTime::Get();
-    gUnnamed698758.name[1] = characters[value % 36];
-    value += Random(1, 999999) + GameTime::Get();
-    gUnnamed698758.name[0] = static_cast<char>(value % 26 + 'A');
+    memset(g_unnamed698758.m_name, 0, sizeof(g_unnamed698758.m_name));
+    value = random(1, 999999) + GameTime::get();
+    g_unnamed698758.m_name[2] = characters[value % 36];
+    value += random(1, 999999) + GameTime::get();
+    g_unnamed698758.m_name[1] = characters[value % 36];
+    value += random(1, 999999) + GameTime::get();
+    g_unnamed698758.m_name[0] = static_cast<char>(value % 26 + 'A');
 }
 
 // E:\gamedcs\misc.cpp:170
@@ -106,60 +108,60 @@ void GenerateUniqueSystemID()
 // the source assignment is eliminated by VC6, so the canonical validation
 // code deliberately carries this one-instruction optimizer residual.
 VA(0x0050b260, 0x26C)  // body + sole retail caller, dc 0xfd958
-void CheckConfigFile()
+void checkConfigFile()
 {
-    gUnnamed698758.showRoute &= 1;
-    gUnnamed698758.animateSpellBook &= 1;
-    gUnnamed698758.videoSubtitles &= 1;
-    gUnnamed698758.quickCombat &= 1;
-    gUnnamed698758.moveReminder &= 1;
-    gUnnamed698758.showCombatGrid &= 1;
+    g_unnamed698758.m_showRoute &= 1;
+    g_unnamed698758.m_animateSpellBook &= 1;
+    g_unnamed698758.m_videoSubtitles &= 1;
+    g_unnamed698758.m_quickCombat &= 1;
+    g_unnamed698758.m_moveReminder &= 1;
+    g_unnamed698758.m_showCombatGrid &= 1;
     // Retail masks animateSpellBook TWICE: it loads 0x298788 once, ANDs the
     // register at +0x8f and again at +0xa5, and stores once. VC6 folds the
     // repeat only when the two statements are adjacent - written here, seven
     // statements apart, both masks survive (98.5030 -> 99.1000).
-    gUnnamed698758.animateSpellBook &= 1;
-    gUnnamed698758.showCombatMouseHex &= 1;
-    gUnnamed698758.townOutlines &= 1;
-    gUnnamed698758.combatAutoSpells &= 1;
-    gUnnamed698758.combatCatapult &= 1;
-    gUnnamed698758.combatAutoCreatures &= 1;
-    gUnnamed698758.combatBallista &= 1;
-    gUnnamed698758.combatFirstAidTent &= 1;
-    gUnnamed698758.autosave &= 1;
-    gUnnamed698758.blackoutComputer &= 1;
-    gbFirstTimeThrough &= 1;
-    gUnnamed698758.unnamed8f &= 1;
-    gUnnamed698758.mainGameShowMenu &= 1;
-    gUnnamed698758.mainGameFullScreen &= 1;
-    gUnnamed698758.combatShadeLevel &= 1;
+    g_unnamed698758.m_animateSpellBook &= 1;
+    g_unnamed698758.m_showCombatMouseHex &= 1;
+    g_unnamed698758.m_townOutlines &= 1;
+    g_unnamed698758.m_combatAutoSpells &= 1;
+    g_unnamed698758.m_combatCatapult &= 1;
+    g_unnamed698758.m_combatAutoCreatures &= 1;
+    g_unnamed698758.m_combatBallista &= 1;
+    g_unnamed698758.m_combatFirstAidTent &= 1;
+    g_unnamed698758.m_autosave &= 1;
+    g_unnamed698758.m_blackoutComputer &= 1;
+    g_firstTimeThrough &= 1;
+    g_unnamed698758.m_firstInstall &= 1;
+    g_unnamed698758.m_mainGameShowMenu &= 1;
+    g_unnamed698758.m_mainGameFullScreen &= 1;
+    g_unnamed698758.m_combatShadeLevel &= 1;
 
-    if (gUnnamed698758.combatArmyInfoLevel < 0 ||
-            gUnnamed698758.combatArmyInfoLevel > 2)
-        gUnnamed698758.combatArmyInfoLevel = 0;
-    if (gUnnamed698758.combatSpeed < 0 ||
-            gUnnamed698758.combatSpeed > 2)
-        gUnnamed698758.combatSpeed = 0;
-    if (gUnnamed698758.windowScrollSpeed < 0 ||
-            gUnnamed698758.windowScrollSpeed > 2)
-        gUnnamed698758.windowScrollSpeed = 1;
-    if (gUnnamed698758.computerWalkSpeed < 2 ||
-            gUnnamed698758.computerWalkSpeed > 5)
-        gUnnamed698758.computerWalkSpeed = 3;
-    if (gUnnamed698758.walkSpeed <= 0 ||
-            gUnnamed698758.walkSpeed > 4)
-        gUnnamed698758.walkSpeed = 2;
-    if (gUnnamed698758.musicVolume < 0 ||
-            gUnnamed698758.musicVolume > 9)
-        gUnnamed698758.musicVolume = 5;
-    if (gUnnamed698758.soundVolume < 0 ||
-            gUnnamed698758.soundVolume > 9)
-        gUnnamed698758.soundVolume = 5;
+    if (g_unnamed698758.m_combatArmyInfoLevel < 0 ||
+            g_unnamed698758.m_combatArmyInfoLevel > 2)
+        g_unnamed698758.m_combatArmyInfoLevel = 0;
+    if (g_unnamed698758.m_combatSpeed < 0 ||
+            g_unnamed698758.m_combatSpeed > 2)
+        g_unnamed698758.m_combatSpeed = 0;
+    if (g_unnamed698758.m_windowScrollSpeed < 0 ||
+            g_unnamed698758.m_windowScrollSpeed > 2)
+        g_unnamed698758.m_windowScrollSpeed = 1;
+    if (g_unnamed698758.m_computerWalkSpeed < 2 ||
+            g_unnamed698758.m_computerWalkSpeed > 5)
+        g_unnamed698758.m_computerWalkSpeed = 3;
+    if (g_unnamed698758.m_walkSpeed <= 0 ||
+            g_unnamed698758.m_walkSpeed > 4)
+        g_unnamed698758.m_walkSpeed = 2;
+    if (g_unnamed698758.m_musicVolume < 0 ||
+            g_unnamed698758.m_musicVolume > 9)
+        g_unnamed698758.m_musicVolume = 5;
+    if (g_unnamed698758.m_soundVolume < 0 ||
+            g_unnamed698758.m_soundVolume > 9)
+        g_unnamed698758.m_soundVolume = 5;
 
-    gUnnamed698758.lastMusicVolume = gUnnamed698758.musicVolume;
-    gUnnamed698758.lastSoundVolume = gUnnamed698758.soundVolume;
-    if (strlen(gUnnamed698758.name) < 3)
-        GenerateUniqueSystemID();
+    g_unnamed698758.m_lastMusicVolume = g_unnamed698758.m_musicVolume;
+    g_unnamed698758.m_lastSoundVolume = g_unnamed698758.m_soundVolume;
+    if (strlen(g_unnamed698758.m_name) < 3)
+        generateUniqueSystemID();
 }
 
 // E:\gamedcs\misc.cpp:352
@@ -181,16 +183,16 @@ void CheckConfigFile()
 // change would buy no compared bytes - objdiff never scores this symbol - and
 // would touch misc.h for nothing.
 DC_ONLY(0xfdb78, 0x20)
-void SetDefaultSystemOptions()
+void setDefaultSystemOptions()
 {
-    gUnnamed698758.showRoute = 1;
-    gUnnamed698758.moveReminder = 1;
-    gUnnamed698758.quickCombat = 0;
-    gUnnamed698758.videoSubtitles = 1;
-    gUnnamed698758.townOutlines = 1;
-    gUnnamed698758.windowScrollSpeed = 1;
-    gUnnamed698758.computerWalkSpeed = 3;
-    gUnnamed698758.walkSpeed = 2;
+    g_unnamed698758.m_showRoute = 1;
+    g_unnamed698758.m_moveReminder = 1;
+    g_unnamed698758.m_quickCombat = 0;
+    g_unnamed698758.m_videoSubtitles = 1;
+    g_unnamed698758.m_townOutlines = 1;
+    g_unnamed698758.m_windowScrollSpeed = 1;
+    g_unnamed698758.m_computerWalkSpeed = 3;
+    g_unnamed698758.m_walkSpeed = 2;
 }
 
 // E:\gamedcs\misc.cpp:403
@@ -212,23 +214,23 @@ void SetDefaultSystemOptions()
 // include/prefs.h; their DEFINITIONS and DATA claims stay here, in
 // the owning TU.
 DATA(0x00698758)
-SUnnamed698758 gUnnamed698758;
+SUnnamed698758 g_unnamed698758;
 
 DATA(0x006985c4)
-char gcRegAppPath[351];
+char g_regAppPath[351];
 DATA(0x00698838)
-char gcRegCDRomPath[350];
+char g_regCdRomPath[350];
 DATA(0x006993c0)
-int giShowIntro;
+int g_showIntro;
 
 DATA(0x00699524)
-int gbFirstTimeThrough;
+int g_firstTimeThrough;
 DATA(0x00699528)
-int giTestDecomp;
+int g_testDecomp;
 DATA(0x0069952c)
-int giTestRead;
+int g_testRead;
 DATA(0x00699530)
-int giTestBlit;
+int g_testBlit;
 
 // The registry key and value-name table. Retail LOADS each of these
 // (`mov ecx, dword ptr [0x63ff80]`) rather than pushing a literal
@@ -238,161 +240,202 @@ int giTestBlit;
 // slots are retained alongside the writer's table because retail emitted
 // one contiguous pointer-object run for this TU.
 
+// Before normalization: szPrefRegKey.
 DATA(0x0063ff74)
-static const char* const szPrefRegKey =
+static const char* const g_prefRegKey =
     DATA_COMPGEN(0x0067fe28, prefsNameRegKey, "SOFTWARE\\New World Computing\\Heroes of Might and Magic\xae" " III\\1.0");
+// Before normalization: szPrefWalkSpeed.
 DATA(0x0063ff78)
-static const char* const szPrefWalkSpeed =
+static const char* const g_prefWalkSpeed =
     DATA_COMPGEN(0x0067fe1c, prefsNameWalkSpeed, "Walk Speed");
+// Before normalization: szPrefComputerWalkSpeed.
 DATA(0x0063ff7c)
-static const char* const szPrefComputerWalkSpeed =
+static const char* const g_prefComputerWalkSpeed =
     DATA_COMPGEN(0x0067fe08, prefsNameComputerWalkSpeed, "Computer Walk Speed");
+// Before normalization: szPrefMusicVolume.
 DATA(0x0063ff80)
-static const char* const szPrefMusicVolume =
+static const char* const g_prefMusicVolume =
     DATA_COMPGEN(0x0067fdf8, prefsNameMusicVolume, "Music Volume");
+// Before normalization: szPrefSoundVolume.
 DATA(0x0063ff84)
-static const char* const szPrefSoundVolume =
+static const char* const g_prefSoundVolume =
     DATA_COMPGEN(0x0067fde8, prefsNameSoundVolume, "Sound Volume");
+// Before normalization: szPrefAutosave.
 DATA(0x0063ff88)
-static const char* const szPrefAutosave =
+static const char* const g_prefAutosave =
     DATA_COMPGEN(0x0067fddc, prefsNameAutosave, "Autosave");
+// Before normalization: szPrefShowRoute.
 DATA(0x0063ff8c)
-static const char* const szPrefShowRoute =
+static const char* const g_prefShowRoute =
     DATA_COMPGEN(0x0067fdd0, prefsNameShowRoute, "Show Route");
+// Before normalization: szPrefMoveReminder.
 DATA(0x0063ff90)
-static const char* const szPrefMoveReminder =
+static const char* const g_prefMoveReminder =
     DATA_COMPGEN(0x0067fdc0, prefsNameMoveReminder, "Move Reminder");
+// Before normalization: szPrefQuickCombat.
 DATA(0x0063ff94)
-static const char* const szPrefQuickCombat =
+static const char* const g_prefQuickCombat =
     DATA_COMPGEN(0x0067fdb0, prefsNameQuickCombat, "Quick Combat");
+// Before normalization: szPrefVideoSubtitles.
 DATA(0x0063ff98)
-static const char* const szPrefVideoSubtitles =
+static const char* const g_prefVideoSubtitles =
     DATA_COMPGEN(0x0067fda0, prefsNameVideoSubtitles, "Video Subtitles");
+// Before normalization: szPrefTownOutlines.
 DATA(0x0063ff9c)
-static const char* const szPrefTownOutlines =
+static const char* const g_prefTownOutlines =
     DATA_COMPGEN(0x0067fd90, prefsNameTownOutlines, "Town Outlines");
+// Before normalization: szPrefAnimateSpellBook.
 DATA(0x0063ffa0)
-static const char* const szPrefAnimateSpellBook =
+static const char* const g_prefAnimateSpellBook =
     DATA_COMPGEN(0x0067fd7c, prefsNameAnimateSpellBook, "Animate SpellBook");
+// Before normalization: szPrefWindowScrollSpeed.
 DATA(0x0063ffa4)
-static const char* const szPrefWindowScrollSpeed =
+static const char* const g_prefWindowScrollSpeed =
     DATA_COMPGEN(0x0067fd68, prefsNameWindowScrollSpeed, "Window Scroll Speed");
+// Before normalization: szPrefBlackoutComputer.
 DATA(0x0063ffa8)
-static const char* const szPrefBlackoutComputer =
+static const char* const g_prefBlackoutComputer =
     DATA_COMPGEN(0x0067fd54, prefsNameBlackoutComputer, "Blackout Computer");
+// Before normalization: szPrefLastMusicVolume.
 DATA(0x0063ffac)
-static const char* const szPrefLastMusicVolume =
+static const char* const g_prefLastMusicVolume =
     DATA_COMPGEN(0x0067fd40, prefsNameLastMusicVolume, "Last Music Volume");
+// Before normalization: szPrefLastSoundVolume.
 DATA(0x0063ffb0)
-static const char* const szPrefLastSoundVolume =
+static const char* const g_prefLastSoundVolume =
     DATA_COMPGEN(0x0067fd2c, prefsNameLastSoundVolume, "Last Sound Volume");
+// Before normalization: szPrefBinkVideo.
 DATA(0x0063ffb4)
-static const char* const szPrefBinkVideo =
+static const char* const g_prefBinkVideo =
     DATA_COMPGEN(0x0067fd20, prefsNameBinkVideo, "Bink Video");
+// Before normalization: szPrefFirstTime.
 DATA(0x0063ffb8)
-static const char* const szPrefFirstTime =
+static const char* const g_prefFirstTime =
     DATA_COMPGEN(0x0067fd14, prefsNameFirstTime, "First Time");
+// Before normalization: szPrefTestDecomp.
 DATA(0x0063ffbc)
-static const char* const szPrefTestDecomp =
+static const char* const g_prefTestDecomp =
     DATA_COMPGEN(0x0067fd08, prefsNameTestDecomp, "Test Decomp");
+// Before normalization: szPrefTestRead.
 DATA(0x0063ffc0)
-static const char* const szPrefTestRead =
+static const char* const g_prefTestRead =
     DATA_COMPGEN(0x0067fcfc, prefsNameTestRead, "Test Read");
+// Before normalization: szPrefTestBlit.
 DATA(0x0063ffc4)
-static const char* const szPrefTestBlit =
+static const char* const g_prefTestBlit =
     DATA_COMPGEN(0x0067fcf0, prefsNameTestBlit, "Test Blit");
+// Before normalization: szPrefShowCombatGrid.
 DATA(0x0063ffc8)
-static const char* const szPrefShowCombatGrid =
+static const char* const g_prefShowCombatGrid =
     DATA_COMPGEN(0x0067fcdc, prefsNameShowCombatGrid, "Show Combat Grid");
+// Before normalization: szPrefShowCombatMouseHex.
 DATA(0x0063ffcc)
-static const char* const szPrefShowCombatMouseHex =
+static const char* const g_prefShowCombatMouseHex =
     DATA_COMPGEN(0x0067fcc4, prefsNameShowCombatMouseHex, "Show Combat Mouse Hex");
+// Before normalization: szPrefCombatShadeLevel.
 DATA(0x0063ffd0)
-static const char* const szPrefCombatShadeLevel =
+static const char* const g_prefCombatShadeLevel =
     DATA_COMPGEN(0x0067fcb0, prefsNameCombatShadeLevel, "Combat Shade Level");
+// Before normalization: szPrefCombatArmyInfoLevel.
 DATA(0x0063ffd4)
-static const char* const szPrefCombatArmyInfoLevel =
+static const char* const g_prefCombatArmyInfoLevel =
     DATA_COMPGEN(0x0067fc98, prefsNameCombatArmyInfoLevel, "Combat Army Info Level");
+// Before normalization: szPrefCombatSpeed.
 DATA(0x0063ffd8)
-static const char* const szPrefCombatSpeed =
+static const char* const g_prefCombatSpeed =
     DATA_COMPGEN(0x0067fc88, prefsNameCombatSpeed, "Combat Speed");
+// Before normalization: szPrefCombatAutoCreatures.
 DATA(0x0063ffdc)
-static const char* const szPrefCombatAutoCreatures =
+static const char* const g_prefCombatAutoCreatures =
     DATA_COMPGEN(0x0067fc70, prefsNameCombatAutoCreatures, "Combat Auto Creatures");
+// Before normalization: szPrefCombatAutoSpells.
 DATA(0x0063ffe0)
-static const char* const szPrefCombatAutoSpells =
+static const char* const g_prefCombatAutoSpells =
     DATA_COMPGEN(0x0067fc5c, prefsNameCombatAutoSpells, "Combat Auto Spells");
+// Before normalization: szPrefCombatCatapult.
 DATA(0x0063ffe4)
-static const char* const szPrefCombatCatapult =
+static const char* const g_prefCombatCatapult =
     DATA_COMPGEN(0x0067fc4c, prefsNameCombatCatapult, "Combat Catapult");
+// Before normalization: szPrefCombatBallista.
 DATA(0x0063ffe8)
-static const char* const szPrefCombatBallista =
+static const char* const g_prefCombatBallista =
     DATA_COMPGEN(0x0067fc3c, prefsNameCombatBallista, "Combat Ballista");
+// Before normalization: szPrefCombatFirstAidTent.
 DATA(0x0063ffec)
-static const char* const szPrefCombatFirstAidTent =
+static const char* const g_prefCombatFirstAidTent =
     DATA_COMPGEN(0x0067fc24, prefsNameCombatFirstAidTent, "Combat First Aid Tent");
+// Before normalization: szPrefNetworkDefaultName.
 DATA(0x0063fff0)
-static const char* const szPrefNetworkDefaultName =
+static const char* const g_prefNetworkDefaultName =
     DATA_COMPGEN(0x0067fc0c, prefsNameNetworkDefaultName, "Network Default Name");
+// Before normalization: szPrefMainGameShowMenu.
 DATA(0x0063fff4)
-static const char* const szPrefMainGameShowMenu =
+static const char* const g_prefMainGameShowMenu =
     DATA_COMPGEN(0x0067fbf8, prefsNameMainGameShowMenu, "Main Game Show Menu");
+// Before normalization: szPrefMainGameX.
 DATA(0x0063fff8)
-static const char* const szPrefMainGameX =
+static const char* const g_prefMainGameX =
     DATA_COMPGEN(0x0067fbec, prefsNameMainGameX, "Main Game X");
+// Before normalization: szPrefMainGameY.
 DATA(0x0063fffc)
-static const char* const szPrefMainGameY =
+static const char* const g_prefMainGameY =
     DATA_COMPGEN(0x0067fbe0, prefsNameMainGameY, "Main Game Y");
+// Before normalization: szPrefMainGameFullScreen.
 DATA(0x00640000)
-static const char* const szPrefMainGameFullScreen =
+static const char* const g_prefMainGameFullScreen =
     DATA_COMPGEN(0x0067fbc8, prefsNameMainGameFullScreen, "Main Game Full Screen");
+// Before normalization: szPrefAppPath.
 DATA(0x00640004)
-static const char* const szPrefAppPath =
+static const char* const g_prefAppPath =
     DATA_COMPGEN(0x0067fbc0, prefsNameAppPath, "AppPath");
+// Before normalization: szPrefCDDrive.
 DATA(0x00640008)
-static const char* const szPrefCDDrive =
+static const char* const g_prefCdDrive =
     DATA_COMPGEN(0x0067fbb8, prefsNameCDDrive, "CDDrive");
+// Before normalization: szPrefUniqueSystemID.
 DATA(0x0064000c)
-static const char* const szPrefUniqueSystemID =
+static const char* const g_prefUniqueSystemId =
     DATA_COMPGEN(0x0067fba4, prefsNameUniqueSystemID, "Unique System ID");
+// Before normalization: szPrefShowIntro.
 DATA(0x00640010)
-static const char* const szPrefShowIntro =
+static const char* const g_prefShowIntro =
     DATA_COMPGEN(0x0067fb98, prefsNameShowIntro, "Show Intro");
 
 // E:\gamedcs\misc.cpp:300
 // The inlined helpers, default-store order, Player copy, generated ID,
 // path construction, and registry write are instruction-exact in retail.
 VA(0x0050b4d0, 0x222)  // body + source-order/callgraph, dc 0xfda8c
-void SetGameDefaults()
+void setGameDefaults()
 {
-    gUnnamed698758.musicVolume = 5;
-    gUnnamed698758.lastMusicVolume = 5;
-    gUnnamed698758.soundVolume = 5;
-    gUnnamed698758.lastSoundVolume = 5;
-    gUnnamed698758.mainGameX = 10;
-    gUnnamed698758.mainGameY = 10;
-    SetDefaultSystemOptions();
-    SetDefaultCombatOptions();
-    gUnnamed698758.autosave = 1;
-    gUnnamed698758.blackoutComputer = 0;
-    gUnnamed698758.mainGameShowMenu = 1;
-    gUnnamed698758.mainGameFullScreen = 1;
-    gbFirstTimeThrough = 1;
-    strcpy(gUnnamed698758.networkDefaultName, "Player");
-    GenerateUniqueSystemID();
-    gUnnamed698758.unnamed8f = 0;
+    g_unnamed698758.m_musicVolume = 5;
+    g_unnamed698758.m_lastMusicVolume = 5;
+    g_unnamed698758.m_soundVolume = 5;
+    g_unnamed698758.m_lastSoundVolume = 5;
+    g_unnamed698758.m_mainGameX = 10;
+    g_unnamed698758.m_mainGameY = 10;
+    setDefaultSystemOptions();
+    setDefaultCombatOptions();
+    g_unnamed698758.m_autosave = 1;
+    g_unnamed698758.m_blackoutComputer = 0;
+    g_unnamed698758.m_mainGameShowMenu = 1;
+    g_unnamed698758.m_mainGameFullScreen = 1;
+    g_firstTimeThrough = 1;
+    strcpy(g_unnamed698758.m_networkDefaultName, "Player");
+    generateUniqueSystemID();
+    g_unnamed698758.m_firstInstall = 0;
 
-    _getcwd(gcRegAppPath, sizeof(gcRegAppPath));
-    strcat(gcRegAppPath,
+    _getcwd(g_regAppPath, sizeof(g_regAppPath));
+    strcat(g_regAppPath,
         DATA_COMPGEN(0x00677dac, prefsPathSeparator, "\\"));
 
-    HKEY hKey = 0;
-    if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, szPrefRegKey, 0,
-            KEY_ALL_ACCESS, &hKey) == ERROR_SUCCESS) {
-        RegSetValueExA(hKey, szPrefAppPath, 0, REG_SZ,
+    // Before normalization (locals): hKey.
+    HKEY key = 0;
+    if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, g_prefRegKey, 0,
+            KEY_ALL_ACCESS, &key) == ERROR_SUCCESS) {
+        RegSetValueExA(key, g_prefAppPath, 0, REG_SZ,
             static_cast<const BYTE*>(static_cast<const void*>(
-                gcRegAppPath)), strlen(gcRegAppPath));
-        RegCloseKey(hKey);
+                g_regAppPath)), strlen(g_regAppPath));
+        RegCloseKey(key);
     }
 }
 
@@ -415,40 +458,41 @@ void SetGameDefaults()
 // source order the DC line numbers record (misc.cpp:300 then :371). VC6
 // still inlines it into SetGameDefaults from below.
 VA(0x0050b700, 0x44)  // anchor-callee (sole caller CombatOptionsWindowHandler) + body, dc 0xfdb98
-void SetDefaultCombatOptions()
+void setDefaultCombatOptions()
 {
-    gUnnamed698758.animateSpellBook = 1;
-    gUnnamed698758.showCombatGrid = 0;
-    gUnnamed698758.showCombatMouseHex = 0;
-    gUnnamed698758.combatShadeLevel = 0;
-    gUnnamed698758.combatArmyInfoLevel = 0;
-    gUnnamed698758.combatSpeed = 0;
-    gUnnamed698758.combatAutoCreatures = 1;
-    gUnnamed698758.combatAutoSpells = 1;
-    gUnnamed698758.combatCatapult = 1;
-    gUnnamed698758.combatBallista = 1;
-    gUnnamed698758.combatFirstAidTent = 1;
+    g_unnamed698758.m_animateSpellBook = 1;
+    g_unnamed698758.m_showCombatGrid = 0;
+    g_unnamed698758.m_showCombatMouseHex = 0;
+    g_unnamed698758.m_combatShadeLevel = 0;
+    g_unnamed698758.m_combatArmyInfoLevel = 0;
+    g_unnamed698758.m_combatSpeed = 0;
+    g_unnamed698758.m_combatAutoCreatures = 1;
+    g_unnamed698758.m_combatAutoSpells = 1;
+    g_unnamed698758.m_combatCatapult = 1;
+    g_unnamed698758.m_combatBallista = 1;
+    g_unnamed698758.m_combatFirstAidTent = 1;
 }
 
 // E:\gamedcs\misc.cpp:243
+// Before normalization (function): ReadPrefs.
 VA(0x0050b750, 0x59)  // anchor-callgraph, dc 0xfdbd0
-void ReadPrefs()
+void readPrefs()
 {
-    memset(&gUnnamed698758, 0, sizeof(gUnnamed698758));
-    ReadPrefsFromRegistry();
-    sprintf(gUnnamed698758.rcFile,
+    memset(&g_unnamed698758, 0, sizeof(g_unnamed698758));
+    readPrefsFromRegistry();
+    sprintf(g_unnamed698758.m_rcFile,
         DATA_COMPGEN(0x0067fea8, readPrefsRcFileFormat, "RMT%sRC.BIN"),
-        gUnnamed698758.name);
-    sprintf(gUnnamed698758.rdFile,
+        g_unnamed698758.m_name);
+    sprintf(g_unnamed698758.m_rdFile,
         DATA_COMPGEN(0x0067fe9c, readPrefsRdFileFormat, "RMT%sRD.BIN"),
-        gUnnamed698758.name);
-    sprintf(gUnnamed698758.scFile,
+        g_unnamed698758.m_name);
+    sprintf(g_unnamed698758.m_scFile,
         DATA_COMPGEN(0x0067fe90, readPrefsScFileFormat, "RMT%sSC.BIN"),
-        gUnnamed698758.name);
+        g_unnamed698758.m_name);
     // Retail leaves this as a 5-byte tail `jmp` after `pop edi`, which
     // is the tail-jump-as-statement shape: the writer call is the last
     // statement of a void function.
-    WritePrefsToRegistry();
+    writePrefsToRegistry();
 }
 
 // E:\gamedcs\misc.cpp:525
@@ -473,19 +517,20 @@ void ReadPrefs()
 // jump and no stranded tail. Everything else (B0..B7, 438-instruction block
 // included) is exact. Do not spend a lane on this row.
 VA(0x0050b7b0, 0x657)  // anchor-callgraph (called by ReadPrefs), dc 0xfdbc0
-void ReadPrefsFromRegistry()
+void readPrefsFromRegistry()
 {
     DWORD cbData;
-    HKEY hKey;
+    // Before normalization (locals): hKey.
+    HKEY key;
     DWORD type;
     DWORD showIntro;
     DWORD showIntroSize;
     char appPath[260];
 
-    if (RegCreateKeyA(HKEY_LOCAL_MACHINE, szPrefRegKey, &hKey)
+    if (RegCreateKeyA(HKEY_LOCAL_MACHINE, g_prefRegKey, &key)
             == ERROR_SUCCESS) {
-        const char* showIntroName = szPrefShowIntro;
-        HKEY showIntroKey = hKey;
+        const char* showIntroName = g_prefShowIntro;
+        HKEY showIntroKey = key;
         showIntroSize = 4;
         if (RegQueryValueExA(showIntroKey, showIntroName, 0, 0,
                 static_cast<BYTE*>(static_cast<void*>(&showIntro)),
@@ -495,131 +540,131 @@ void ReadPrefsFromRegistry()
                 static_cast<const BYTE*>(static_cast<const void*>(
                     &showIntro)), 4);
         }
-        giShowIntro = showIntro;
+        g_showIntro = showIntro;
 
         cbData = 4;
-        if (RegQueryValueExA(hKey, szPrefMusicVolume, 0, &type,
+        if (RegQueryValueExA(key, g_prefMusicVolume, 0, &type,
                 static_cast<BYTE*>(static_cast<void*>(
-                    &gUnnamed698758.musicVolume)), &cbData)
+                    &g_unnamed698758.m_musicVolume)), &cbData)
                 != ERROR_SUCCESS) {
-            memset(&gUnnamed698758, 0, sizeof(gUnnamed698758));
-            SetGameDefaults();
-            RegCloseKey(hKey);
-            WritePrefsToRegistry();
+            memset(&g_unnamed698758, 0, sizeof(g_unnamed698758));
+            setGameDefaults();
+            RegCloseKey(key);
+            writePrefsToRegistry();
             return;
         }
 
 #define READ_REG_PREF(name, address) \
-        RegQueryValueExA(hKey, name, 0, &type, \
+        RegQueryValueExA(key, name, 0, &type, \
             static_cast<BYTE*>(static_cast<void*>(address)), &cbData)
 
-        READ_REG_PREF(szPrefMusicVolume,
-            &gUnnamed698758.musicVolume);
-        READ_REG_PREF(szPrefSoundVolume,
-            &gUnnamed698758.soundVolume);
-        READ_REG_PREF(szPrefLastMusicVolume,
-            &gUnnamed698758.lastMusicVolume);
-        READ_REG_PREF(szPrefLastSoundVolume,
-            &gUnnamed698758.lastSoundVolume);
-        READ_REG_PREF(szPrefWalkSpeed,
-            &gUnnamed698758.walkSpeed);
-        READ_REG_PREF(szPrefComputerWalkSpeed,
-            &gUnnamed698758.computerWalkSpeed);
-        READ_REG_PREF(szPrefShowRoute,
-            &gUnnamed698758.showRoute);
-        READ_REG_PREF(szPrefMoveReminder,
-            &gUnnamed698758.moveReminder);
-        READ_REG_PREF(szPrefQuickCombat,
-            &gUnnamed698758.quickCombat);
-        READ_REG_PREF(szPrefVideoSubtitles,
-            &gUnnamed698758.videoSubtitles);
-        READ_REG_PREF(szPrefTownOutlines,
-            &gUnnamed698758.townOutlines);
-        READ_REG_PREF(szPrefAnimateSpellBook,
-            &gUnnamed698758.animateSpellBook);
-        READ_REG_PREF(szPrefWindowScrollSpeed,
-            &gUnnamed698758.windowScrollSpeed);
-        READ_REG_PREF(szPrefBlackoutComputer,
-            &gUnnamed698758.blackoutComputer);
-        READ_REG_PREF(szPrefFirstTime, &gbFirstTimeThrough);
-        READ_REG_PREF(szPrefTestDecomp, &giTestDecomp);
-        READ_REG_PREF(szPrefTestRead, &giTestRead);
-        READ_REG_PREF(szPrefTestBlit, &giTestBlit);
-        READ_REG_PREF(szPrefBinkVideo,
-            &gUnnamed698758.binkVideo);
+        READ_REG_PREF(g_prefMusicVolume,
+            &g_unnamed698758.m_musicVolume);
+        READ_REG_PREF(g_prefSoundVolume,
+            &g_unnamed698758.m_soundVolume);
+        READ_REG_PREF(g_prefLastMusicVolume,
+            &g_unnamed698758.m_lastMusicVolume);
+        READ_REG_PREF(g_prefLastSoundVolume,
+            &g_unnamed698758.m_lastSoundVolume);
+        READ_REG_PREF(g_prefWalkSpeed,
+            &g_unnamed698758.m_walkSpeed);
+        READ_REG_PREF(g_prefComputerWalkSpeed,
+            &g_unnamed698758.m_computerWalkSpeed);
+        READ_REG_PREF(g_prefShowRoute,
+            &g_unnamed698758.m_showRoute);
+        READ_REG_PREF(g_prefMoveReminder,
+            &g_unnamed698758.m_moveReminder);
+        READ_REG_PREF(g_prefQuickCombat,
+            &g_unnamed698758.m_quickCombat);
+        READ_REG_PREF(g_prefVideoSubtitles,
+            &g_unnamed698758.m_videoSubtitles);
+        READ_REG_PREF(g_prefTownOutlines,
+            &g_unnamed698758.m_townOutlines);
+        READ_REG_PREF(g_prefAnimateSpellBook,
+            &g_unnamed698758.m_animateSpellBook);
+        READ_REG_PREF(g_prefWindowScrollSpeed,
+            &g_unnamed698758.m_windowScrollSpeed);
+        READ_REG_PREF(g_prefBlackoutComputer,
+            &g_unnamed698758.m_blackoutComputer);
+        READ_REG_PREF(g_prefFirstTime, &g_firstTimeThrough);
+        READ_REG_PREF(g_prefTestDecomp, &g_testDecomp);
+        READ_REG_PREF(g_prefTestRead, &g_testRead);
+        READ_REG_PREF(g_prefTestBlit, &g_testBlit);
+        READ_REG_PREF(g_prefBinkVideo,
+            &g_unnamed698758.m_binkVideo);
 
         cbData = 4;
-        READ_REG_PREF(szPrefUniqueSystemID, gUnnamed698758.name);
-        gUnnamed698758.name[3] = 0;
+        READ_REG_PREF(g_prefUniqueSystemId, g_unnamed698758.m_name);
+        g_unnamed698758.m_name[3] = 0;
         cbData = 31;
-        READ_REG_PREF(szPrefNetworkDefaultName,
-            gUnnamed698758.networkDefaultName);
+        READ_REG_PREF(g_prefNetworkDefaultName,
+            g_unnamed698758.m_networkDefaultName);
         cbData = 4;
-        READ_REG_PREF(szPrefAutosave,
-            &gUnnamed698758.autosave);
-        READ_REG_PREF(szPrefShowCombatGrid,
-            &gUnnamed698758.showCombatGrid);
-        READ_REG_PREF(szPrefShowCombatMouseHex,
-            &gUnnamed698758.showCombatMouseHex);
-        READ_REG_PREF(szPrefCombatShadeLevel,
-            &gUnnamed698758.combatShadeLevel);
-        READ_REG_PREF(szPrefCombatArmyInfoLevel,
-            &gUnnamed698758.combatArmyInfoLevel);
-        READ_REG_PREF(szPrefCombatAutoCreatures,
-            &gUnnamed698758.combatAutoCreatures);
-        READ_REG_PREF(szPrefCombatAutoSpells,
-            &gUnnamed698758.combatAutoSpells);
-        READ_REG_PREF(szPrefCombatCatapult,
-            &gUnnamed698758.combatCatapult);
-        READ_REG_PREF(szPrefCombatBallista,
-            &gUnnamed698758.combatBallista);
-        READ_REG_PREF(szPrefCombatFirstAidTent,
-            &gUnnamed698758.combatFirstAidTent);
-        READ_REG_PREF(szPrefCombatSpeed,
-            &gUnnamed698758.combatSpeed);
-        READ_REG_PREF(szPrefMainGameShowMenu,
-            &gUnnamed698758.mainGameShowMenu);
-        READ_REG_PREF(szPrefMainGameX,
-            &gUnnamed698758.mainGameX);
-        READ_REG_PREF(szPrefMainGameY,
-            &gUnnamed698758.mainGameY);
-        READ_REG_PREF(szPrefMainGameFullScreen,
-            &gUnnamed698758.mainGameFullScreen);
+        READ_REG_PREF(g_prefAutosave,
+            &g_unnamed698758.m_autosave);
+        READ_REG_PREF(g_prefShowCombatGrid,
+            &g_unnamed698758.m_showCombatGrid);
+        READ_REG_PREF(g_prefShowCombatMouseHex,
+            &g_unnamed698758.m_showCombatMouseHex);
+        READ_REG_PREF(g_prefCombatShadeLevel,
+            &g_unnamed698758.m_combatShadeLevel);
+        READ_REG_PREF(g_prefCombatArmyInfoLevel,
+            &g_unnamed698758.m_combatArmyInfoLevel);
+        READ_REG_PREF(g_prefCombatAutoCreatures,
+            &g_unnamed698758.m_combatAutoCreatures);
+        READ_REG_PREF(g_prefCombatAutoSpells,
+            &g_unnamed698758.m_combatAutoSpells);
+        READ_REG_PREF(g_prefCombatCatapult,
+            &g_unnamed698758.m_combatCatapult);
+        READ_REG_PREF(g_prefCombatBallista,
+            &g_unnamed698758.m_combatBallista);
+        READ_REG_PREF(g_prefCombatFirstAidTent,
+            &g_unnamed698758.m_combatFirstAidTent);
+        READ_REG_PREF(g_prefCombatSpeed,
+            &g_unnamed698758.m_combatSpeed);
+        READ_REG_PREF(g_prefMainGameShowMenu,
+            &g_unnamed698758.m_mainGameShowMenu);
+        READ_REG_PREF(g_prefMainGameX,
+            &g_unnamed698758.m_mainGameX);
+        READ_REG_PREF(g_prefMainGameY,
+            &g_unnamed698758.m_mainGameY);
+        READ_REG_PREF(g_prefMainGameFullScreen,
+            &g_unnamed698758.m_mainGameFullScreen);
 
         cbData = 350;
         _getcwd(appPath, sizeof(appPath));
         strcat(appPath, "\\");
-        if (RegQueryValueExA(hKey, szPrefAppPath, 0, &type,
-                static_cast<BYTE*>(static_cast<void*>(gcRegAppPath)),
+        if (RegQueryValueExA(key, g_prefAppPath, 0, &type,
+                static_cast<BYTE*>(static_cast<void*>(g_regAppPath)),
                 &cbData)
                 != ERROR_SUCCESS ||
-                _strcmpi(gcRegAppPath, appPath) != 0) {
-            strcpy(gcRegAppPath, appPath);
-            RegSetValueExA(hKey, szPrefAppPath, 0, REG_SZ,
+                _strcmpi(g_regAppPath, appPath) != 0) {
+            strcpy(g_regAppPath, appPath);
+            RegSetValueExA(key, g_prefAppPath, 0, REG_SZ,
                 static_cast<const BYTE*>(static_cast<const void*>(
-                    gcRegAppPath)),
-                strlen(gcRegAppPath));
+                    g_regAppPath)),
+                strlen(g_regAppPath));
         }
 
         cbData = 350;
-        RegQueryValueExA(hKey, szPrefCDDrive, 0, &type,
-            static_cast<BYTE*>(static_cast<void*>(gcRegCDRomPath)),
+        RegQueryValueExA(key, g_prefCdDrive, 0, &type,
+            static_cast<BYTE*>(static_cast<void*>(g_regCdRomPath)),
             &cbData);
-        strcpy(gcRegCDRomPath, gcRegAppPath);
-        RegCloseKey(hKey);
+        strcpy(g_regCdRomPath, g_regAppPath);
+        RegCloseKey(key);
 
-        if (gUnnamed698758.mainGameX > GetDesktopWidth() - 800)
-            gUnnamed698758.mainGameX = GetDesktopWidth() - 800;
-        if (gUnnamed698758.mainGameY > GetDesktopHeight() - 600)
-            gUnnamed698758.mainGameY = GetDesktopHeight() - 600;
-        if (gUnnamed698758.mainGameX < 0)
-            gUnnamed698758.mainGameX = 0;
-        if (gUnnamed698758.mainGameY < 0)
-            gUnnamed698758.mainGameY = 0;
+        if (g_unnamed698758.m_mainGameX > getDesktopWidth() - 800)
+            g_unnamed698758.m_mainGameX = getDesktopWidth() - 800;
+        if (g_unnamed698758.m_mainGameY > getDesktopHeight() - 600)
+            g_unnamed698758.m_mainGameY = getDesktopHeight() - 600;
+        if (g_unnamed698758.m_mainGameX < 0)
+            g_unnamed698758.m_mainGameX = 0;
+        if (g_unnamed698758.m_mainGameY < 0)
+            g_unnamed698758.m_mainGameY = 0;
 
 #undef READ_REG_PREF
     }
-    CheckConfigFile();
+    checkConfigFile();
 }
 
 // E:\gamedcs\misc.cpp:538
@@ -630,120 +675,121 @@ void ReadPrefsFromRegistry()
 // Call ORDER below is retail's emission order verbatim, not the field
 // order; it is the source's statement order and is load-bearing.
 VA(0x0050be10, 0x399)  // anchor-callgraph (WritePrefs tail-jumps here), dc 0xfdc4c
-void WritePrefsToRegistry()
+void writePrefsToRegistry()
 {
-    HKEY hKey = 0;
-    if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, szPrefRegKey, 0, KEY_ALL_ACCESS,
-            &hKey) == ERROR_SUCCESS) {
-        RegSetValueExA(hKey, szPrefMusicVolume, 0, REG_DWORD,
+    // Before normalization (locals): hKey.
+    HKEY key = 0;
+    if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, g_prefRegKey, 0, KEY_ALL_ACCESS,
+            &key) == ERROR_SUCCESS) {
+        RegSetValueExA(key, g_prefMusicVolume, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &gUnnamed698758.musicVolume)), 4);
-        RegSetValueExA(hKey, szPrefSoundVolume, 0, REG_DWORD,
+                &g_unnamed698758.m_musicVolume)), 4);
+        RegSetValueExA(key, g_prefSoundVolume, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &gUnnamed698758.soundVolume)), 4);
-        RegSetValueExA(hKey, szPrefLastMusicVolume, 0, REG_DWORD,
+                &g_unnamed698758.m_soundVolume)), 4);
+        RegSetValueExA(key, g_prefLastMusicVolume, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &gUnnamed698758.lastMusicVolume)), 4);
-        RegSetValueExA(hKey, szPrefLastSoundVolume, 0, REG_DWORD,
+                &g_unnamed698758.m_lastMusicVolume)), 4);
+        RegSetValueExA(key, g_prefLastSoundVolume, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &gUnnamed698758.lastSoundVolume)), 4);
-        RegSetValueExA(hKey, szPrefWalkSpeed, 0, REG_DWORD,
+                &g_unnamed698758.m_lastSoundVolume)), 4);
+        RegSetValueExA(key, g_prefWalkSpeed, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &gUnnamed698758.walkSpeed)), 4);
-        RegSetValueExA(hKey, szPrefComputerWalkSpeed, 0, REG_DWORD,
+                &g_unnamed698758.m_walkSpeed)), 4);
+        RegSetValueExA(key, g_prefComputerWalkSpeed, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &gUnnamed698758.computerWalkSpeed)), 4);
-        RegSetValueExA(hKey, szPrefShowRoute, 0, REG_DWORD,
+                &g_unnamed698758.m_computerWalkSpeed)), 4);
+        RegSetValueExA(key, g_prefShowRoute, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &gUnnamed698758.showRoute)), 4);
-        RegSetValueExA(hKey, szPrefMoveReminder, 0, REG_DWORD,
+                &g_unnamed698758.m_showRoute)), 4);
+        RegSetValueExA(key, g_prefMoveReminder, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &gUnnamed698758.moveReminder)), 4);
-        RegSetValueExA(hKey, szPrefQuickCombat, 0, REG_DWORD,
+                &g_unnamed698758.m_moveReminder)), 4);
+        RegSetValueExA(key, g_prefQuickCombat, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &gUnnamed698758.quickCombat)), 4);
-        RegSetValueExA(hKey, szPrefVideoSubtitles, 0, REG_DWORD,
+                &g_unnamed698758.m_quickCombat)), 4);
+        RegSetValueExA(key, g_prefVideoSubtitles, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &gUnnamed698758.videoSubtitles)), 4);
-        RegSetValueExA(hKey, szPrefTownOutlines, 0, REG_DWORD,
+                &g_unnamed698758.m_videoSubtitles)), 4);
+        RegSetValueExA(key, g_prefTownOutlines, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &gUnnamed698758.townOutlines)), 4);
-        RegSetValueExA(hKey, szPrefAnimateSpellBook, 0, REG_DWORD,
+                &g_unnamed698758.m_townOutlines)), 4);
+        RegSetValueExA(key, g_prefAnimateSpellBook, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &gUnnamed698758.animateSpellBook)), 4);
-        RegSetValueExA(hKey, szPrefWindowScrollSpeed, 0, REG_DWORD,
+                &g_unnamed698758.m_animateSpellBook)), 4);
+        RegSetValueExA(key, g_prefWindowScrollSpeed, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &gUnnamed698758.windowScrollSpeed)), 4);
-        RegSetValueExA(hKey, szPrefBinkVideo, 0, REG_DWORD,
+                &g_unnamed698758.m_windowScrollSpeed)), 4);
+        RegSetValueExA(key, g_prefBinkVideo, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &gUnnamed698758.binkVideo)), 4);
-        RegSetValueExA(hKey, szPrefBlackoutComputer, 0, REG_DWORD,
+                &g_unnamed698758.m_binkVideo)), 4);
+        RegSetValueExA(key, g_prefBlackoutComputer, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &gUnnamed698758.blackoutComputer)), 4);
-        RegSetValueExA(hKey, szPrefFirstTime, 0, REG_DWORD,
+                &g_unnamed698758.m_blackoutComputer)), 4);
+        RegSetValueExA(key, g_prefFirstTime, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &gbFirstTimeThrough)), 4);
-        RegSetValueExA(hKey, szPrefTestDecomp, 0, REG_DWORD,
+                &g_firstTimeThrough)), 4);
+        RegSetValueExA(key, g_prefTestDecomp, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &giTestDecomp)), 4);
-        RegSetValueExA(hKey, szPrefTestRead, 0, REG_DWORD,
+                &g_testDecomp)), 4);
+        RegSetValueExA(key, g_prefTestRead, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &giTestRead)), 4);
-        RegSetValueExA(hKey, szPrefTestBlit, 0, REG_DWORD,
+                &g_testRead)), 4);
+        RegSetValueExA(key, g_prefTestBlit, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &giTestBlit)), 4);
-        RegSetValueExA(hKey, szPrefUniqueSystemID, 0, REG_SZ,
+                &g_testBlit)), 4);
+        RegSetValueExA(key, g_prefUniqueSystemId, 0, REG_SZ,
             static_cast<const BYTE*>(static_cast<const void*>(
-                gUnnamed698758.name)), 4);
-        RegSetValueExA(hKey, szPrefNetworkDefaultName, 0, REG_SZ,
+                g_unnamed698758.m_name)), 4);
+        RegSetValueExA(key, g_prefNetworkDefaultName, 0, REG_SZ,
             static_cast<const BYTE*>(static_cast<const void*>(
-                gUnnamed698758.networkDefaultName)), 21);
-        RegSetValueExA(hKey, szPrefAutosave, 0, REG_DWORD,
+                g_unnamed698758.m_networkDefaultName)), 21);
+        RegSetValueExA(key, g_prefAutosave, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &gUnnamed698758.autosave)), 4);
-        RegSetValueExA(hKey, szPrefShowCombatGrid, 0, REG_DWORD,
+                &g_unnamed698758.m_autosave)), 4);
+        RegSetValueExA(key, g_prefShowCombatGrid, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &gUnnamed698758.showCombatGrid)), 4);
-        RegSetValueExA(hKey, szPrefShowCombatMouseHex, 0, REG_DWORD,
+                &g_unnamed698758.m_showCombatGrid)), 4);
+        RegSetValueExA(key, g_prefShowCombatMouseHex, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &gUnnamed698758.showCombatMouseHex)), 4);
-        RegSetValueExA(hKey, szPrefCombatShadeLevel, 0, REG_DWORD,
+                &g_unnamed698758.m_showCombatMouseHex)), 4);
+        RegSetValueExA(key, g_prefCombatShadeLevel, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &gUnnamed698758.combatShadeLevel)), 4);
-        RegSetValueExA(hKey, szPrefCombatArmyInfoLevel, 0, REG_DWORD,
+                &g_unnamed698758.m_combatShadeLevel)), 4);
+        RegSetValueExA(key, g_prefCombatArmyInfoLevel, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &gUnnamed698758.combatArmyInfoLevel)), 4);
-        RegSetValueExA(hKey, szPrefCombatAutoCreatures, 0, REG_DWORD,
+                &g_unnamed698758.m_combatArmyInfoLevel)), 4);
+        RegSetValueExA(key, g_prefCombatAutoCreatures, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &gUnnamed698758.combatAutoCreatures)), 4);
-        RegSetValueExA(hKey, szPrefCombatAutoSpells, 0, REG_DWORD,
+                &g_unnamed698758.m_combatAutoCreatures)), 4);
+        RegSetValueExA(key, g_prefCombatAutoSpells, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &gUnnamed698758.combatAutoSpells)), 4);
-        RegSetValueExA(hKey, szPrefCombatCatapult, 0, REG_DWORD,
+                &g_unnamed698758.m_combatAutoSpells)), 4);
+        RegSetValueExA(key, g_prefCombatCatapult, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &gUnnamed698758.combatCatapult)), 4);
-        RegSetValueExA(hKey, szPrefCombatBallista, 0, REG_DWORD,
+                &g_unnamed698758.m_combatCatapult)), 4);
+        RegSetValueExA(key, g_prefCombatBallista, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &gUnnamed698758.combatBallista)), 4);
-        RegSetValueExA(hKey, szPrefCombatFirstAidTent, 0, REG_DWORD,
+                &g_unnamed698758.m_combatBallista)), 4);
+        RegSetValueExA(key, g_prefCombatFirstAidTent, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &gUnnamed698758.combatFirstAidTent)), 4);
-        RegSetValueExA(hKey, szPrefCombatSpeed, 0, REG_DWORD,
+                &g_unnamed698758.m_combatFirstAidTent)), 4);
+        RegSetValueExA(key, g_prefCombatSpeed, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &gUnnamed698758.combatSpeed)), 4);
-        RegSetValueExA(hKey, szPrefMainGameShowMenu, 0, REG_DWORD,
+                &g_unnamed698758.m_combatSpeed)), 4);
+        RegSetValueExA(key, g_prefMainGameShowMenu, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &gUnnamed698758.mainGameShowMenu)), 4);
-        RegSetValueExA(hKey, szPrefMainGameX, 0, REG_DWORD,
+                &g_unnamed698758.m_mainGameShowMenu)), 4);
+        RegSetValueExA(key, g_prefMainGameX, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &gUnnamed698758.mainGameX)), 4);
-        RegSetValueExA(hKey, szPrefMainGameY, 0, REG_DWORD,
+                &g_unnamed698758.m_mainGameX)), 4);
+        RegSetValueExA(key, g_prefMainGameY, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &gUnnamed698758.mainGameY)), 4);
-        RegSetValueExA(hKey, szPrefMainGameFullScreen, 0, REG_DWORD,
+                &g_unnamed698758.m_mainGameY)), 4);
+        RegSetValueExA(key, g_prefMainGameFullScreen, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &gUnnamed698758.mainGameFullScreen)), 4);
-        RegCloseKey(hKey);
+                &g_unnamed698758.m_mainGameFullScreen)), 4);
+        RegCloseKey(key);
     }
 }
 
@@ -752,9 +798,9 @@ void WritePrefsToRegistry()
 // there); the retail body is a 5-byte tail jmp into
 // WritePrefsToRegistry at 0x50be10, whose registry-key string names it.
 VA(0x0050c1b0, 0x5)  // anchor-callee, dc 0xfe050
-void WritePrefs()
+void writePrefs()
 {
-    WritePrefsToRegistry();
+    writePrefsToRegistry();
 }
 
 // E:\gamedcs\misc.cpp:634
@@ -767,8 +813,9 @@ void WritePrefs()
 // extern is what /OPT:REF drops, which is why only one of the pair has
 // a retail row). The constant is the drive slot the setup path hands
 // back.
+// Before normalization (function): SetupCDDrive.
 VA(0x0050c1c0, 0x6)  // anchor-caller (kb.obj EarlySetup) + dc-bracket, dc 0xfe064
-int SetupCDDrive()
+int setupCDDrive()
 {
     return 7;
 }
@@ -811,14 +858,14 @@ int IsCDDrive(int drive)
 // /Gr free function with the filename in ecx: fopen, fseek(0, SEEK_END),
 // ftell - FileSize and nothing else. Only free row in its bracket.
 VA(0x0050c5a0, 0x49)  // body (fopen/fseek/ftell) + arity, dc 0xfe068
-long FileSize(char* filename)
+long fileSize(char* filename)
 {
     // The failure arm FALLS THROUGH: retail raises the dialog and then
     // seeks the null stream anyway (no return, no else), so this is a
     // bare `if` and not an early-out. Transcribed faithfully.
     FILE* stream = fopen(filename, DATA_COMPGEN(0x0067ff20, fileSizeOpenMode, "r+b"));
     if (!stream)
-        Unnamed4f3a60(filename);
+        unnamed4f3a60(filename);
     fseek(stream, 0, SEEK_END);
     long size = ftell(stream);
     fseek(stream, 0, SEEK_SET);
@@ -831,16 +878,18 @@ long FileSize(char* filename)
 // Retail's only three references to this scratch are format_string's
 // vsprintf destination, strlen source and copy source.  Its 512-byte extent
 // is bounded exactly by the next referenced bss cell at 0x6998cc.
+// Before normalization: gFormatStringBuffer.
 DATA(0x006996cc)
-static char gFormatStringBuffer[512];
+static char g_formatStringBuffer[512];
 
 // The seed SRand records before handing it to the CRT. Retail .data
 // 0x67fb94, and the store below is its ONLY reference in the whole
 // image (one row in config/retail-reloc-evidence.tsv), so nothing
 // attests a name or a linkage - house ordinal placeholder, filed
 // static in the one TU that touches it.
+// Before normalization: gUnnamed67fb94.
 DATA(0x0067fb94)
-static int gUnnamed67fb94;
+static int g_unnamed67fb94;
 
 // E:\gamedcs\misc.cpp:784
 // Promoted from DC_ONLY 2026-08-08. The row is inside misc.obj's carve
@@ -849,11 +898,12 @@ static int gUnnamed67fb94;
 // body is unmistakable: /Gr hands the seed in ecx, retail records it in
 // 0x67fb94 and passes the SAME pushed register to the CRT srand, then
 // pops it back as the cdecl cleanup.
+// Before normalization (locals): iSeed.
 VA(0x0050c5f0, 0xE)  // dc-bracket + body (records the seed, calls srand), dc 0xfe0b8
-void SRand(int iSeed)
+void sRand(int seed)
 {
-    gUnnamed67fb94 = iSeed;
-    srand(iSeed);
+    g_unnamed67fb94 = seed;
+    srand(seed);
 }
 
 // Original: SRandom; misc.cpp:796, dc 0xfe0d0.
@@ -883,13 +933,13 @@ int sRandom(int lower, int upper)
 // EXACT on first compile: 8/8 branches, 3/3 returns and the full instruction
 // stream agree; only the unscored scratch-buffer symbol name differs.
 VA(0x0050c600, 0xDD)  // dc-bracket + body (vsprintf/string return), dc 0xfe10c
-std::string format_string(const char* format, ...)
+std::string formatString(const char* format, ...)
 {
     va_list arguments;
     va_start(arguments, format);
-    vsprintf(gFormatStringBuffer, format, arguments);
+    vsprintf(g_formatStringBuffer, format, arguments);
     va_end(arguments);
-    return std::string(gFormatStringBuffer);
+    return std::string(g_formatStringBuffer);
 }
 
 // E:\gamedcs\misc.cpp:838
@@ -953,7 +1003,7 @@ int TPickANumber::pick()
 // geometry results, deliberately retaining the original 32-bit overflow
 // behaviour. The unused total-cluster output is still supplied to Win32.
 VA(0x0050c7a0, 0x42)  // unique whole-body structure, dc 0xfe248
-unsigned long get_available_disk_space()
+unsigned long getAvailableDiskSpace()
 {
     unsigned long sectorsPerCluster = 0;
     unsigned long bytesPerSector = 0;

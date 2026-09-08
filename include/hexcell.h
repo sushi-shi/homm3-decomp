@@ -18,35 +18,57 @@ class hexcell {
 public:
     // Screen-space bounds initialized by combatManager::GenerateMap.
     // Names remain ordinal until drawing/hit-test readers establish the
-    // individual edge roles; all eight SHORT widths are retail-proven.
-    short field_00;
-    short field_02;
-    short field_04;
-    short field_06;
-    short field_08;
-    short field_0a;
-    short field_0c;
-    short field_0e;
-    int field_10;
-    int field_14;
+    // individual edge roles; the seven geometry fields are shorts.
+    // Before normalization: field_00; reference member hexcell::refX.
+    short m_refX;
+    // Before normalization: field_02; reference member hexcell::refY.
+    short m_refY;
+    // Before normalization: field_04; reference member hexcell::hexULX.
+    short m_hexUlx;
+    // Before normalization: field_06; reference member hexcell::hexULY.
+    short m_hexUly;
+    // Before normalization: field_08; reference member hexcell::hexBRX.
+    short m_hexBrx;
+    // Before normalization: field_0a; reference member hexcell::hexBRY.
+    short m_hexBry;
+    // Before normalization: field_0c; reference member hexcell::fullHexBRY.
+    short m_fullHexBry;
+    // Dreamcast ends its seven geometry shorts with fullHexBRY at +12
+    // and starts attributes at +16, matching retail. No eighth semantic
+    // short exists: these two bytes align the integer.
+    // Before normalization: field_0e.
+    short m_paddingBeforeAttributes;
+    // Before normalization: field_10; reference member hexcell::attributes.
+    int m_attributes;
+    // Before normalization: field_14; reference member hexcell::obstacleIndex.
+    int m_obstacleIndex;
     // Signed: get_army (0x4e7170) movsx-loads the pair and treats a
     // negative side as empty; the dead arrays hold 14 slots each and
     // get_dead_army (0x4e71b0) indexes both by the same i.
-    signed char armySide;         // +0x18
-    signed char armySlot;         // +0x19
+    // Before normalization: armySide.
+    signed char m_armySide;         // +0x18
+    // Before normalization: armySlot.
+    signed char m_armySlot;         // +0x19
     // Signed like the pair above: the ctor feeds all four -1 byte
     // fields from the SAME register as the int -1 (cl); an unsigned
     // declaration splits (uchar)-1 = 0xff into a separately
     // materialized constant, which retail's bytes rule out.
-    signed char field_1a;
-    unsigned char pad_1b;
+    // Before normalization: field_1a; reference member hexcell::partOfDouble.
+    signed char m_partOfDouble;
+    // Dreamcast armyGroup/armyIndex/partOfDouble occupy bytes 24..26;
+    // retail preserves the gap before the corpse-count dword at +28.
+    // Before normalization: pad_1b.
+    unsigned char m_paddingBeforeBodiesInHex;
     // DC hexcell.iBodiesInHex (members.csv hexcell@28), and
     // combatManager::remove_corpse (0x5a7320) proves the role on retail
     // bytes: it scans this many entries of the three parallel dead-army
     // rows, shifts the tail down over the match, and decrements it.
-    int iBodiesInHex;             // +0x1c
-    signed char deadArmySide[14]; // +0x20
-    signed char deadArmySlot[14]; // +0x2e
+    // Before normalization: iBodiesInHex.
+    int m_bodiesInHex;             // +0x1c
+    // Before normalization: deadArmySide.
+    signed char m_deadArmySide[14]; // +0x20
+    // Before normalization: deadArmySlot.
+    signed char m_deadArmySlot[14]; // +0x2e
     // A THIRD parallel dead-army row, retyped in place from pad_3c on
     // 2026-08-20: remove_corpse shifts +0x20, +0x2e and +0x3c together,
     // one byte per slot per iteration, so the third one is 14 bytes wide
@@ -58,37 +80,50 @@ public:
     // three offsets corroborate each other. Only the first two rows take
     // the -1 "empty" sentinel at the tail; this one is left as it lies,
     // which is what a partOfDouble flag would want.
-    signed char deadPartOfDouble[14];  // +0x3c
+    // Before normalization: deadPartOfDouble.
+    signed char m_deadPartOfDouble[14];  // +0x3c
     // "This cell is reachable / interesting for the combat search":
     // ai_tactical's get_hypnotize_value (0x43a500) skips any stack
     // whose gridIndex cell has it clear, right after seeding the
     // search. Name pending a writer.
-    unsigned char field_4a;       // +0x4a
+    // Before normalization: field_4a; reference member hexcell::bValidMove.
+    unsigned char m_validMove;       // +0x4a
     // Set for the TAIL hex of a two-hex stack while its anchor hex gets
     // field_4a: searchArray::SeedCombatPosition (0x4b2da0) marks the two
     // halves through the two different bytes. Name pending a writer.
-    unsigned char field_4b;       // +0x4b
-    unsigned char field_4c;
+    // Before normalization: field_4b; reference member hexcell::front_move.
+    unsigned char m_frontMove;       // +0x4b
+    // Before normalization: field_4c; reference member hexcell::mouse_shaded.
+    unsigned char m_mouseShaded;
     // DC members.csv names +0x4d background_offset. Complete's
     // UpdateMouseGrid stores the clean-background atlas lane here before
     // shading a cell, then consumes lane*45 while restoring that cell.
-    signed char background_offset;
+    // Before normalization: background_offset.
+    signed char m_backgroundOffset;
     // Object stride is 0x70, byte-proven by ValidAttack's cell access
     // (0x523bb0: index*112 + 0x1c4 into combatManager).
-    char pad_4e[0x22];
+    // Replaces synthetic pad_4e. Dreamcast hexcell type 0x6665 names
+    // obstacleLimitData/cloudLimitData as SLimitData at +0x50/+0x60;
+    // NH3API independently gives the same PC offsets. Retail confirms the
+    // preceding background_offset byte at +0x4d and the 0x70 cell stride.
+    // +0x4e..+0x4f align the first four-int bounds record.
+    SLimitData m_obstacleLimitData; // +0x50
+    SLimitData m_cloudLimitData;    // +0x60
 
     hexcell();
     // Const on their own S_PUB32 publics (?get_army@hexcell@@QBAPAVarmy@@XZ,
     // ?get_dead_army@hexcell@@QBAPAVarmy@@H@Z) - the roster text at the
     // foot of this header cannot express that, and combatManager's own
     // const enemy_is_adjacent could not compile without it.
-    army* get_army() const;
-    army* get_dead_army(int i) const;
+    // Before normalization (function): hexcell::get_army.
+    army* getArmy() const;
+    // Before normalization (function): hexcell::get_dead_army.
+    army* getDeadArmy(int i) const;
     // DC HexCell.h:85. The Complete UpdateGrid caller expands the returned
     // four-word rectangle and SLimitData::Include into one union loop.
     SLimitData limits() const
     {
-        return SLimitData(field_04, field_06, field_08, field_0c);
+        return SLimitData(m_hexUlx, m_hexUly, m_hexBrx, m_fullHexBry);
     }
     // The DC roster's hexcell::HasArmy (HexCell.h:90, dc 0x4cc68) - a
     // class-body inline on that build too, and retail carries no
@@ -97,9 +132,9 @@ public:
     // folds to retail's sign test on armySide, and the call SITE is
     // itself load-bearing for ProcessDeath's inline budget (a free
     // candidate site in C2's sites-remaining divisor - measured there).
-    unsigned char HasArmy() const
+    unsigned char hasArmy() const
     {
-        return armySide >= 0;
+        return m_armySide >= 0;
     }
 
 };

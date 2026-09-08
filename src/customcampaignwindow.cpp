@@ -30,9 +30,12 @@
 // The three address-taken callbacks the constructor hands to its Begin
 // and Back buttons and to the slider (retail 0x483880 / 0x4838c0 /
 // 0x4838f0). Names provisional.
-static int CustomCampaignBeginHandler(message& msg);
-static int CustomCampaignBackHandler(message& msg);
-static void CustomCampaignSliderHandler(int state, heroWindow* window);
+// Before normalization (function): CustomCampaignBeginHandler.
+static int customCampaignBeginHandler(message& msg);
+// Before normalization (function): CustomCampaignBackHandler.
+static int customCampaignBackHandler(message& msg);
+// Before normalization (function): CustomCampaignSliderHandler.
+static void customCampaignSliderHandler(int state, heroWindow* window);
 
 // Complete-only. The window's widget ids run from 200 for the frame,
 // title, two buttons and selected-name text (the slider takes the next
@@ -56,63 +59,63 @@ TCustomCampaignWindow::TCustomCampaignWindow()
         0, 0, 800, 600, widgetId++,
         DATA_COMPGEN(0x00675594, customCampaignBackground, "CamCust.pcx"),
         0x800);
-    Widgets.push_back(border);
-    border->image->Draw(0, 0, 800, 600, gpWindowManager->screenBitmap, 0, 0,
+    m_widgets.push_back(border);
+    border->m_image->draw(0, 0, 800, 600, g_windowManager->m_screenBitmap, 0, 0,
                         false);
 
     textWidget* title = new textWidget(
         25, 23, 366, 22,
         DATA_COMPGEN(0x00675580, customCampaignTitle, "Select a Campaign"),
         "medfont.fnt", font::HEADING_HIGHLIGHT, widgetId++, 1, 0, 8);
-    Widgets.push_back(title);
+    m_widgets.push_back(title);
 
     type_func_button* beginButton = new type_func_button(
         414, 535, 166, 40, widgetId++,
         DATA_COMPGEN(0x00675574, customCampaignBeginSprite, "scnrbeg.def"),
-        CustomCampaignBeginHandler, 0, 1);
-    Widgets.push_back(beginButton);
+        customCampaignBeginHandler, 0, 1);
+    m_widgets.push_back(beginButton);
 
     type_func_button* backButton = new type_func_button(
         584, 535, 166, 40, widgetId++,
         DATA_COMPGEN(0x00675564, customCampaignBackSprite, "scnrback.def"),
-        CustomCampaignBackHandler, 0, 1);
-    backButton->set_hotkey(1);
-    Widgets.push_back(backButton);
+        customCampaignBackHandler, 0, 1);
+    backButton->setHotkey(1);
+    m_widgets.push_back(backButton);
 
-    selectedName = new textWidget(422, 46, 324, 30, "", "bigfont.fnt",
+    m_selectedName = new textWidget(422, 46, 324, 30, "", "bigfont.fnt",
                                   font::HEADING_HIGHLIGHT, widgetId++, 0, 0,
                                   8);
-    Widgets.push_back(selectedName);
+    m_widgets.push_back(m_selectedName);
 
-    description = new type_text_scroller("", 423, 107, 323, 393,
+    m_description = new type_text_scroller("", 423, 107, 323, 393,
                                          "smalfont.fnt", font::WHITE,
                                          slider::BLUE);
-    Widgets.push_back(description);
+    m_widgets.push_back(m_description);
 
     for (int i = 0; i < CAMPAIGN_LIST_ROWS; i++) {
-        nameWidgets[i] = new textWidget(58, 122 + i * 25, 317, 25, "",
+        m_nameWidgets[i] = new textWidget(58, 122 + i * 25, 317, 25, "",
                                         "smalfont.fnt", font::WHITE, 100 + i,
                                         1, 0, 8);
-        nameWidgets[i]->hide();
-        Widgets.push_back(nameWidgets[i]);
-        countWidgets[i] = new textWidget(26, 122 + i * 25, 30, 23, "",
+        m_nameWidgets[i]->hide();
+        m_widgets.push_back(m_nameWidgets[i]);
+        m_countWidgets[i] = new textWidget(26, 122 + i * 25, 30, 23, "",
                                          "smalfont.fnt", font::WHITE, 118 + i,
                                          2, 0, 8);
-        countWidgets[i]->hide();
-        Widgets.push_back(countWidgets[i]);
+        m_countWidgets[i]->hide();
+        m_widgets.push_back(m_countWidgets[i]);
     }
 
-    campaignSlider = new slider(376, 92, 16, 480, widgetId, 2,
-                                CustomCampaignSliderHandler, slider::BLUE,
+    m_campaignSlider = new slider(376, 92, 16, 480, widgetId, 2,
+                                customCampaignSliderHandler, slider::BLUE,
                                 CAMPAIGN_LIST_ROWS, 0);
-    campaignSlider->hide();
-    Widgets.push_back(campaignSlider);
+    m_campaignSlider->hide();
+    m_widgets.push_back(m_campaignSlider);
 
-    firstVisible = 0;
-    selected = 0;
-    AddWidgetsToMessageStream();
-    LoadCampaignList();
-    lastClickTime = GameTime::Get();
+    m_firstVisible = 0;
+    m_selected = 0;
+    addWidgetsToMessageStream();
+    loadCampaignList();
+    m_lastClickTime = GameTime::get();
 }
 
 VA_COMPGEN(0x00482ee0, 0x21, SCALAR_DELETING_DTOR, TCustomCampaignWindow)
@@ -123,11 +126,11 @@ VA_COMPGEN(0x00482ee0, 0x21, SCALAR_DELETING_DTOR, TCustomCampaignWindow)
 VA(0x00482f10, 0xB1)  // scalar-dtor callee + derived vtable 0x63d6fc, retail-only
 TCustomCampaignWindow::~TCustomCampaignWindow()
 {
-    for (unsigned i = 0; i < campaignHeaders.size(); i++) {
-        if (campaignHeaders[i])
-            delete campaignHeaders[i];
+    for (unsigned i = 0; i < m_campaignHeaders.size(); i++) {
+        if (m_campaignHeaders[i])
+            delete m_campaignHeaders[i];
     }
-    delete_widgets();
+    deleteWidgets();
 }
 
 // Complete-only. Scans Maps\\*.h3c through the CRT _find family (each step
@@ -147,7 +150,7 @@ TCustomCampaignWindow::~TCustomCampaignWindow()
 // predicate's slot. Tried and rejected: a named predicate local and an
 // explicit empty predicate constructor (both byte-flat).
 VA(0x00482fd0, 0x264)  // TCustomCampaignWindow ctor callee + _findfirst("*.h3c"), retail-only
-void TCustomCampaignWindow::LoadCampaignList()
+void TCustomCampaignWindow::loadCampaignList()
 {
     char currentDirectory[100];
     _finddata_t fileInfo;
@@ -166,28 +169,28 @@ void TCustomCampaignWindow::LoadCampaignList()
     do {
         header = new TCampaignBrief::CampaignHeaderStruct(fileInfo.name);
         _getcwd(currentDirectory, sizeof(currentDirectory));
-        if (!header->Load()) {
+        if (!header->load()) {
             delete header;
-        } else if (header->GetNumMaps() == 0) {
-            header->FreeData();
+        } else if (header->getNumMaps() == 0) {
+            header->freeData();
             delete header;
         } else {
-            header->FreeData();
-            campaignHeaders.push_back(header);
+            header->freeData();
+            m_campaignHeaders.push_back(header);
         }
         _getcwd(currentDirectory, sizeof(currentDirectory));
     } while (_findnext(findHandle, &fileInfo) == 0);
     _findclose(findHandle);
     _getcwd(currentDirectory, sizeof(currentDirectory));
 
-    std::sort(campaignHeaders.begin(), campaignHeaders.end(),
+    std::sort(m_campaignHeaders.begin(), m_campaignHeaders.end(),
               CampaignHeaderPointerLess());
-    if (campaignHeaders.size() > CAMPAIGN_LIST_ROWS) {
-        campaignSlider->show();
-        campaignSlider->SetResolution(
-            campaignHeaders.size() - (CAMPAIGN_LIST_ROWS - 1));
+    if (m_campaignHeaders.size() > CAMPAIGN_LIST_ROWS) {
+        m_campaignSlider->show();
+        m_campaignSlider->setResolution(
+            m_campaignHeaders.size() - (CAMPAIGN_LIST_ROWS - 1));
     }
-    UpdateList();
+    updateList();
 }
 
 // Complete-only: the sort predicate, by campaign name. Retail evaluates
@@ -199,7 +202,7 @@ bool CampaignHeaderPointerLess::operator()(
     TCampaignBrief::CampaignHeaderStruct* left,
     TCampaignBrief::CampaignHeaderStruct* right) const
 {
-    return left->GetCampaignName() < right->GetCampaignName();
+    return left->getCampaignName() < right->getCampaignName();
 }
 
 // Complete-only. Refreshes the eighteen visible rows from the scroll
@@ -217,49 +220,50 @@ bool CampaignHeaderPointerLess::operator()(
 // against show()/hide(), and hoisting the name widget above the colour
 // branch (loses 1.2). Include-set class.
 VA(0x00483330, 0x281)  // LoadCampaignList's tail callee, retail-only
-void TCustomCampaignWindow::UpdateList()
+void TCustomCampaignWindow::updateList()
 {
     int i;
 
     for (i = 0; i < CAMPAIGN_LIST_ROWS
-                && i < campaignHeaders.size() + firstVisible; i++) {
+                && i < m_campaignHeaders.size() + m_firstVisible; i++) {
         TCampaignBrief::CampaignHeaderStruct* header =
-            campaignHeaders[firstVisible + i];
-        nameWidgets[i]->SetText(header->GetCampaignName().c_str());
-        countWidgets[i]->SetText(
-            format_string(DATA_COMPGEN(0x006755b4, campaignMapCountFormat,
+            m_campaignHeaders[m_firstVisible + i];
+        m_nameWidgets[i]->setText(header->getCampaignName().c_str());
+        m_countWidgets[i]->setText(
+            formatString(DATA_COMPGEN(0x006755b4, campaignMapCountFormat,
                                        "%i"),
-                          header->GetNumMaps()).c_str());
-        if (i == selected) {
-            nameWidgets[i]->Color = font::WHITE_HIGHLIGHT;
-            countWidgets[i]->Color = font::WHITE_HIGHLIGHT;
+                          header->getNumMaps()).c_str());
+        if (i == m_selected) {
+            m_nameWidgets[i]->m_color = font::WHITE_HIGHLIGHT;
+            m_countWidgets[i]->m_color = font::WHITE_HIGHLIGHT;
         } else {
-            nameWidgets[i]->Color = font::WHITE;
-            countWidgets[i]->Color = font::WHITE_HIGHLIGHT;
+            m_nameWidgets[i]->m_color = font::WHITE;
+            m_countWidgets[i]->m_color = font::WHITE_HIGHLIGHT;
         }
-        nameWidgets[i]->show();
-        countWidgets[i]->show();
+        m_nameWidgets[i]->show();
+        m_countWidgets[i]->show();
     }
     for (; i < CAMPAIGN_LIST_ROWS; i++) {
-        nameWidgets[i]->hide();
-        countWidgets[i]->hide();
+        m_nameWidgets[i]->hide();
+        m_countWidgets[i]->hide();
     }
 
-    int index = selected + firstVisible;
-    if (index >= campaignHeaders.size()) {
-        description->SetText("");
+    int index = m_selected + m_firstVisible;
+    if (index >= m_campaignHeaders.size()) {
+        m_description->setText("");
     } else {
-        TCampaignBrief::CampaignHeaderStruct* header = campaignHeaders[index];
-        selectedName->SetText(header->GetCampaignName().c_str());
-        description->SetText(header->GetCampaignDescription().c_str());
+        TCampaignBrief::CampaignHeaderStruct* header = m_campaignHeaders[index];
+        m_selectedName->setText(header->getCampaignName().c_str());
+        m_description->setText(header->getCampaignDescription().c_str());
     }
 }
 
 // Complete-only. Widget ids 100..117 are the name column and 118..135
 // the map-count column; either selects its row. A second click on the
 // same row inside 400 ms accepts the campaign and closes the dialog.
+// Before normalization (locals): bExitFlag.
 VA(0x004835c0, 0xA4)  // anchor-vtable (slot 12 of 0x63d6fc), retail-only
-int TCustomCampaignWindow::OnWidgetDeselect(int id, unsigned char* bExitFlag)
+int TCustomCampaignWindow::onWidgetDeselect(int id, unsigned char* exitFlag)
 {
     if (id < 100 || id > 135)
         return 0;
@@ -269,31 +273,31 @@ int TCustomCampaignWindow::OnWidgetDeselect(int id, unsigned char* bExitFlag)
         row = id - 118;
     else
         row = id - 100;
-    selected = row;
+    m_selected = row;
 
-    if (GameTime::ElapsedSince(lastClickTime) < 400) {
-        if (AcceptSelection()) {
-            *bExitFlag = 1;
-            gpWindowManager->dialogReturn = 1;
+    if (GameTime::elapsedSince(m_lastClickTime) < 400) {
+        if (acceptSelection()) {
+            *exitFlag = 1;
+            g_windowManager->m_dialogReturn = 1;
             return 1;
         }
     }
-    lastClickTime = GameTime::Get();
-    UpdateList();
-    DrawWindow(1, 0xffff0001, 0xffff);
+    m_lastClickTime = GameTime::get();
+    updateList();
+    drawWindow(1, 0xffff0001, 0xffff);
     return 1;
 }
 
 // Complete-only. The campaign ordinal 20 is the custom-campaign slot
 // select_campaign reserves for a file chosen here.
 VA(0x00483670, 0xCE)  // OnWidgetDeselect + Begin-button callee, retail-only
-bool TCustomCampaignWindow::AcceptSelection()
+bool TCustomCampaignWindow::acceptSelection()
 {
-    int index = selected + firstVisible;
-    if (index >= campaignHeaders.size())
+    int index = m_selected + m_firstVisible;
+    if (index >= m_campaignHeaders.size())
         return 0;
-    gpGame->campaign.select_campaign(
-        20, campaignHeaders[index]->GetFileName().c_str());
+    g_game->m_campaign.selectCampaign(
+        20, m_campaignHeaders[index]->getFileName().c_str());
     return 1;
 }
 
@@ -301,22 +305,22 @@ bool TCustomCampaignWindow::AcceptSelection()
 // this object (see campaignbrief.h); the body is the string copy
 // constructor.
 VA(0x00483740, 0x134)  // AcceptSelection's callee, retail-only
-std::string TCampaignBrief::CampaignHeaderStruct::GetFileName() const
+std::string TCampaignBrief::CampaignHeaderStruct::getFileName() const
 {
-    return file_name;
+    return m_fileName;
 }
 
 // Complete-only. The Begin button accepts the selection and closes the
 // modal loop with codeY 1; the Back button closes it with codeY 0.
 VA(0x00483880, 0x3C)  // ctor address-take (Begin button), retail-only
-static int CustomCampaignBeginHandler(message& msg)
+static int customCampaignBeginHandler(message& msg)
 {
-    if (msg.codeX == widget::WIDGET_DESELECT && !(msg.qualifier & 0x200)) {
-        if (static_cast<TCustomCampaignWindow*>(msg.window)
-                ->AcceptSelection()) {
-            msg.id = MESSAGE_WIDGET;
-            msg.codeY = 1;
-            msg.codeX = 10;
+    if (msg.m_codeX == widget::WIDGET_DESELECT && !(msg.m_qualifier & 0x200)) {
+        if (static_cast<TCustomCampaignWindow*>(msg.m_window)
+                ->acceptSelection()) {
+            msg.m_id = MESSAGE_WIDGET;
+            msg.m_codeY = 1;
+            msg.m_codeX = 10;
             return MESSAGE_DISPATCH_FORWARD;
         }
     }
@@ -324,25 +328,25 @@ static int CustomCampaignBeginHandler(message& msg)
 }
 
 VA(0x004838c0, 0x2E)  // ctor address-take (Back button), retail-only
-static int CustomCampaignBackHandler(message& msg)
+static int customCampaignBackHandler(message& msg)
 {
-    if (msg.codeX == widget::WIDGET_DESELECT && !(msg.qualifier & 0x200)) {
-        msg.id = MESSAGE_WIDGET;
-        msg.codeY = 0;
-        msg.codeX = 10;
+    if (msg.m_codeX == widget::WIDGET_DESELECT && !(msg.m_qualifier & 0x200)) {
+        msg.m_id = MESSAGE_WIDGET;
+        msg.m_codeY = 0;
+        msg.m_codeX = 10;
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;
 }
 
 VA(0x004838f0, 0x25)  // ctor address-take (slider callback), retail-only
-static void CustomCampaignSliderHandler(int state, heroWindow* window)
+static void customCampaignSliderHandler(int state, heroWindow* window)
 {
     TCustomCampaignWindow* campaignWindow =
         static_cast<TCustomCampaignWindow*>(window);
-    campaignWindow->firstVisible = state;
-    campaignWindow->UpdateList();
-    campaignWindow->DrawWindow(1, 0xffff0001, 0xffff);
+    campaignWindow->m_firstVisible = state;
+    campaignWindow->updateList();
+    campaignWindow->drawWindow(1, 0xffff0001, 0xffff);
 }
 
 

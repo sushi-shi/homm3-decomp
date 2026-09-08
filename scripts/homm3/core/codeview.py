@@ -6,6 +6,8 @@ current LLVM tools.  It stores source locations in each code section's
 ``IMAGE_LINENUMBER`` table instead.  A zero-line record anchors the table to a
 function symbol; later records contain section offsets and line numbers
 relative to the function's ``.bf`` (begin-function) line.
+VC6 encodes a return to that opening line as 0x7fff, since zero is reserved
+for function-symbol anchors.
 
 The matching objects must remain free of debug symbols, so sema compiles a
 parallel ``/Z7`` object and uses this module only for its line map.  Function
@@ -289,8 +291,12 @@ def parse_lines(path: str | Path) -> dict[tuple[str, int], FunctionLines]:
                 raise CodeViewError(
                     f"line offset 0x{value:x} is outside "
                     f"{function.symbol.name} (size 0x{function.size:x})")
+            # /Z7 uses 0x7fff for a zero relative source line. Confirmed with
+            # a #line control returning to .bf: the record changes to 1 when
+            # the source location moves one line forward, with identical code.
+            line_delta = 0 if stored == 0x7fff else stored
             accumulated[current][1].append(
-                LineRecord(relative, begin_line + stored))
+                LineRecord(relative, begin_line + line_delta))
 
     out: dict[tuple[str, int], FunctionLines] = {}
     for symbol_index, (begin_line, lines) in accumulated.items():

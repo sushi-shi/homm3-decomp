@@ -13,7 +13,8 @@ class armyGroup;
 
 // Retail .bss 0x6a7a70. This is the quick-view label consumed by the
 // garrison constructor; storage ownership remains with the text-loading TU.
-DATA(0x006a7a70) extern const char* gQuickViewGarrisonText;
+// Before normalization: gQuickViewGarrisonText.
+DATA(0x006a7a70) extern const char* g_quickViewGarrisonText;
 
 // Both retail constructors initialize heroWindow directly, install vtable
 // 0x6406f4, and touch no storage beyond heroWindow's proven 0x4c-byte extent.
@@ -47,13 +48,18 @@ public:
         DOUBLE_RESOURCE_BONUS = 2
     };
 
-    TQuickTownWindow(const town* thisTown, TViewLevel view_level);
-    TQuickTownWindow(const garrison* this_garrison, TViewLevel view_level);
+    // Before normalization (locals): view_level, this_garrison.
+    TQuickTownWindow(const town* thisTown, TViewLevel viewLevel);
+    TQuickTownWindow(const garrison* thisGarrison, TViewLevel viewLevel);
     virtual ~TQuickTownWindow();
-    void initialize_army_display(const armyGroup& army_group,
-                                 TViewLevel view_level);
-    void center(long new_x, long new_y);
-    void QuickWindowWait();
+    // Before normalization (function): TQuickTownWindow::initialize_army_display.
+    // Before normalization (locals): army_group, view_level.
+    void initializeArmyDisplay(const armyGroup& currentArmyGroup,
+                                 TViewLevel viewLevel);
+    // Before normalization (locals): new_x, new_y.
+    void center(long newX, long newY);
+    // Before normalization (function): TQuickTownWindow::QuickWindowWait.
+    void quickWindowWait();
 };
 SIZE(TQuickTownWindow, 0x4c);
 

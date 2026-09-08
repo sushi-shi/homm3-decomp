@@ -41,6 +41,60 @@ Streams clip at the first impossible mnemonic ((bad)/jecxz/loop* — inline
 jump-table bytes); a clipped profile is flagged `partial` and diagnosed as
 covering a prefix.
 
+## Body equality does not establish return width or branch destinations
+
+The RMG gap predicates at `0x5b6320` and `0x5b6430` produce the same complete
+263/262-byte bodies with either `int` or `unsigned char` return declarations.
+Their retail callers test `al`; an `int` declaration instead makes those
+callers test `eax`. Verify callers before treating an exact retained body as
+proof of its return type.
+
+Likewise, `rmgTerrainPainter::hasSeparatedNeighbours` (`0x5b6810`, prior role
+`HasSeparatedNeighbours`) agreed in every line of address-masked assembly at
+99.7458% while differing in three short-branch operands. Both versions contain
+two identical false-return epilogues, but the branches at `+0x20`, `+0x52`,
+and `+0x72` selected `+0x64` where retail selects `+0x44`. Native bool and
+true/false literals did not change those destinations.
+
+A shared `noSeparation` return inside the first empty-run scan closes all 132
+raw bytes, including the mask-builder call. The initial full-ring failure and
+the later wrap checks explicitly enter this block. Declare the unsigned
+`direction` local without initialization before the initial scan, then assign
+it before use; this makes the first jump legal without bypassing an initialized
+declaration. VC6 still duplicates the zero epilogue at `+0x64` for the later
+loop's fallthrough exit. The fix therefore preserves the two return blocks
+while recovering their incoming edges. `paintPoint` stays at 99.5570% and both
+worklist destructors remain exact. Compare resolved targets: equal instruction
+and return counts do not establish this control-flow match.
+
+## A byte-returning accessor can preserve bitfield extraction
+
+`ScoreObjectPlacement` (`0x536bc0`) tests bit 27 with `shr edx,27` followed
+by `test dl,1`, while a later condition on bit 25 tests the containing dword
+directly. Reading the unsigned one-bit field in the first condition folds
+to `test dword ptr [item+0x28],0x08000000` in the candidate. Returning that
+field through an ordinary `unsigned char` member accessor preserves the
+shift and byte test after expansion (84.2027% to 84.6788%).
+
+This supports a narrow accessor boundary as a source hypothesis. It does
+not establish the original method name or prove that every shifted flag
+test came from a helper. Keep the canonical bitfield and verify the caller;
+do not replace the record with a raw-word alias to force the extraction.
+
+## Reused scalar variables can retain addressable homes across phases
+
+The RMG placement-rule reader (`0x536560`) passes object type, subtype and
+terrain locals by reference to vector insertions, then reuses their same
+three stack homes in a later prototype-binding pass. Declaring new locals
+for that pass lets VC6 strength-reduce the object-type stride and keep the
+terrain/subtype values in registers. Reusing the parsing variables restores
+the retail address calculations and loads/stores (89.9878% to 97.5804%).
+
+This is a lifetime hypothesis supported by both the earlier address-taking
+and the later home reuse. Merely seeing two values share a stack offset is
+insufficient: unrelated locals can also share a slot. Keep the actual source
+operations and references; do not add dummy address escapes or volatile.
+
 ## Diagnosis taxonomy (D-classes → branch signatures)
 
 Emitted by `_flow.diagnose`; catalog IDs are
@@ -435,6 +489,66 @@ register for a common store. A positive row-validation scope then raised
 the reader to 96.9468%; its remaining deltas lie in vector insertion and
 cleanup. These are retail/VC6 controls, with no DC RMG source counterpart.
 
+## Returning a byte predicate directly can preserve its caller's comparison
+
+`TRmgTerrainPainter::NeedsTerrainRepair` ends by consulting
+`HasSeparatedNeighbours`, whose retained body returns only 0 or 1. Returning
+that byte result directly after the other guards makes both painter cleanup
+expansions use retail's `cmp al,bl`, with BL already zero. Returning it through
+`&&`, explicitly comparing it with zero, or writing a final conditional 1/0
+return instead produces `test al,al`. Changing the wrapper's return type to
+native bool alone is neutral. The direct byte return closes all 549 bytes of
+the brush destructor (0x5b72f0) and all 521 bytes of the painter destructor
+(0x5b76f0), with their calls and branch destinations independently resolved.
+
+These expressions agree because the retained nested predicate has a proven
+0/1 range. This control does not justify removing normalization from an
+arbitrary byte-valued function. The helper boundaries remain ordinary and
+shared; no inline directive is involved.
+
+The same checkpoint corrected the plane-view map's shared painting interface
+and constructor statement order. Using the canonical `GetMapItem(0, 0,
+level)` for the plane offset leaves `CreateRiver` at 39.066925%, below its
+39.6178% peak. Its MAX/history remain intact for later caller-specific work.
+`RepairWaterZoneBorders`'s separate bounds-aggregate finding is recorded in
+[regalloc.md](regalloc.md#6g-a-bounds-aggregate-preserves-the-retail-stack-frame).
+
+## A guarded do loop can preserve a forward exhaustion exit
+
+The first land search in `RepairWaterZoneBorders` (0x53fcb0) has two exits:
+finding a usable tile and exhausting the row. A conventional `for` or
+`while (x < limit)` emits a backward `jl` followed by a forward `jmp` at
+the exhaustion check. Retail instead uses a forward `jge` at 0x53fe49
+and a backward `jmp` at 0x53fe4b, with the same preceding increment,
+comparison, and coordinate store.
+
+An entry guard followed by this form preserves that routing:
+
+```cpp
+x = first;
+if (x < limit) {
+    do {
+        if (usable(x)) {
+            found = 1;
+            break;
+        }
+        ++x;
+        if (x >= limit)
+            break;
+    } while (1);
+}
+```
+
+The real candidate retains the map accessor and full eligibility predicate;
+`usable` above only abbreviates the example. This recovered the two branch
+destinations without changing the 0x84 frame or local homes, raising the
+function from 96.921875% to 97.04883%. All CFG edges now agree; clamp and
+map-view register differences remain. The RMG source has no DC counterpart,
+so the spelling is supported by retail and the VC6 control, not a line table.
+
+An explicit top exit inside `for (;;)` was byte-neutral. A top-tested
+`while (1)` also changed the surrounding loop arrangement and induction
+(89.92383%), so that control does not invalidate the guarded bottom exit.
 
 ## A folded search flag can determine fallback placement
 
@@ -453,3 +567,206 @@ hypothesis that produces it naturally. An absent flag in optimized assembly
 does not rule out a source flag. Test the complete search and post-search
 control relationship before attributing fallback placement to a compiler
 generation or an unavoidable layout decision.
+
+## An early return can select the shared epilogue's position
+
+`THeroScreenWindow::windowHandler` (0x4dd2d0) kept its shared consume-return
+at the end of the dispatcher, although retail places it immediately after
+mouse movement at +0x79. Restoring Dreamcast's deferred `exitFlag` alone did
+not fix this. The decisive additional source fact is the unchanged-hover
+**early return** before the status update (DC hero.cpp:3507..3508). Replacing
+the inverted conditional around the update with that guard places the shared
+return at +0x79 and restores all fifteen direct `normalDialog` calls. The
+six help arms had previously jumped to a shared dialog-call tail.
+
+The corrected caller also rereads the selected army slot after `updateArmies`
+and branches between two explicit status broadcasts. Guarding the later
+status-bar refresh with `!rightMouse`, proved by both DC 3822..3824 and retail,
+restores the single shared status-update call. The real hero-only build banks
+78.6458% versus the old 75.4051% MAX. All four army-refresh calls now survive.
+The 0x144 versus 0x14c frame and artifact-click path merging remain unresolved;
+the repaired early return does not imply that the whole function is exact.
+
+## Recover indexed expressions before preserving strength-reduced counters
+
+`advManager::setEnvironmentOrigin` (0x4183d0) reached 100% from 75.4080%
+by restoring two Dreamcast source facts. The sound-priority assignment occurs
+in both arms of the reset conditional (advmgr.cpp:9800 and 9803), and the
+ring scan computes each coordinate from the original point, priority, and
+shared index (9822..9829). The previous source manually maintained four
+boundary coordinates and four edge cursors to imitate retail's increments.
+
+VC6 derives those running counters itself from the indexed expressions.
+Restoring only the expressions gives 97.7264%; restoring only the separate
+priority stores gives 77.6667%. Together they reproduce all 27 retail blocks
+and the 581-byte function. C2 merges the two priority stores while holding
+0x7f in EBX and spilling the first loop's count. A named sentinel constant
+on the flattened source had been byte-neutral, so that earlier result did
+not establish an unreachable register assignment.
+
+## Check a byte return before duplicating the surrounding tail
+
+`LossConditionStruct::checkForDefeatedHeroLoss` (0x5f2a40) used a duplicated
+ordinary-loss tail to compensate for poor block placement. Deleting just the
+duplicate measured 10.6676%, which had been taken as a reason to keep it.
+Retail instead rejects other loss types and returns the hero-id comparison
+through `sete al`. An early rejection followed by a named `unsigned char`
+result restores that return lowering and reaches 81.8182% with one tail.
+
+Binding the artifact components by reference before their loop also restores
+retail's stable table address, bringing the active TU build to 82.0170% from
+75.8636%. The byte-result control with positive type-test nesting measures
+11.2784%; an early rejection with a direct bool return measures 80.9943%.
+The result type and the guard both matter. Local-scope controls are byte-flat.
+The remaining shared-return and block-placement differences are unresolved;
+the simplified tail is not a claim of an exact function.
+
+## An expanded helper retains source structure that flattening loses
+
+`TMultiPlayerWindow::onTCP` (0x5113f0) reached 100% from 75.9952% by calling
+its existing ordinary `initRemote(MP_TCP, 0, 0)` helper, as Dreamcast line
+1885 proves. The previous caller copied the helper's protocol assignment,
+two initialization guards, capabilities query, and timeout assignments into
+its own body. Its instructions matched individually, but the connection
+failure dialog and return were sunk to the function's end.
+
+VC6 expands the real helper and places that failure block between the
+`textWidget` constructor's join jump and null-allocation arm, reproducing
+retail. Restoring the existing `widget::show` calls and Dreamcast's nested
+address-query/widget-existence checks is byte-neutral. Identical emitted
+operations do not make a flattened helper equivalent for compiler layout;
+restore the proven call before blaming the compiler generation.
+
+## A container scope can free the loop-counter register
+
+`type_skill_quest::doProgressDialog` (0x56dd60) held zero in EBX and spilled
+its four-iteration counter. Retail uses EBX for the counter and deletes the
+resource vector without clearing its three pointers. An inner vector scope,
+ending before the lifetime-extended dialog string, removes those stores and
+restores the 0x30 frame and register counter: 76.2135% becomes 94.2360%.
+Declaring the skill cursor before the vector restores the initialization
+schedule and reaches 96.6180% in the active TU build.
+
+The same scope repair had improved the artifact-quest sibling. Neither
+changes destruction order. An indexed loop within the skill dialog's new
+scope measures 82.5169%; a named string is byte-identical to the reference.
+Returned-string access and cleanup registers remain different from retail.
+
+## Distinct return widths can keep an early exit ahead of register saves
+
+`TNativeTerrainObjectFilter::accepts` (0x5141b0) reached 100% from 77.3913%
+with an unsigned-char return and a direct logical tail. Retail's initial
+slot-category rejection clears only AL and returns before saving ESI/EDI.
+The later bitset-test/count conjunction materializes a full-width logical
+result. The previous int declaration and explicit `if (...) return 1;
+return 0;` let C2 merge the false returns, hoist a register save, and split
+the bitset test's memory operand around an early pop.
+
+Changing only the return type measures 77.0652%; the direct conjunction
+with the byte return reproduces all 110 retail bytes after relocation
+normalization. A byte-return function can contain `mov eax, 1` and
+`xor eax, eax` for a logical expression as well as `xor al, al` for a literal
+early return. The early path provides the discriminating ABI evidence.
+
+## An explicit zero contribution can preserve a separate return path
+
+`town::getLegionBonus` (0x5bf810) reached 100% from 81.7262% by calculating
+fortification growth as `growth`, `growth / 2`, or an explicit zero before
+adding base growth and halving the result. VC6 keeps the contribution in
+EAX and base growth in EDI, and duplicates the common tail into each arm.
+The no-building path retains a dead `xor eax, eax` from its zero assignment.
+
+Omitting that final zero arm scores 78.63095%, even though the earlier
+initialization makes it semantically redundant. Seeding the accumulator
+with base growth before testing the buildings scores 81.7262%. A dead zero
+and duplicated exit can therefore preserve an explicit source alternative;
+neither alone establishes an uncontrollable register-allocation limitation.
+
+## A retained reference can perturb layout after helper restoration
+
+`hero::getMobility` (0x4e4990) reached 100% from 81.7677% by restoring the
+Dreamcast-proven ordinary Navigation and Logistics helpers, followed by the
+two `towns[t]` lookups in its Lighthouse condition. The helper boundaries
+alone recover retail's backward land-to-AI join and two returns, reaching
+91.07742%. The retained `town&` still changes register allocation throughout
+the function; the separate indexed expressions produce the exact result.
+
+With the same declarations, Navigation alone scores 92.03226% and Logistics
+alone 83.97419%. Their combined lower score with the town reference is not
+evidence against either proven helper. The earlier duplicated-tail and goto
+probes operated on flattened helpers and could not recover the join. Land
+movement is loaded before the Logistics call, as Dreamcast lines 5893/5895
+show; the helper returns the complete factor including its additive one.
+
+
+## Check loop entry and real operands before diagnosing register allocation
+
+`game::transmitSaveGame` (0x4cafd0) had matching branch counts but used a
+`do/while` where DC game.cpp:10382 tests `done` before entering the loop.
+Restoring `while (!done)` repairs the retail branch directions and cleanup
+placement. The combined null-message/timeout predicate at line 10391 is
+byte-flat, but retains the evidenced source boundary.
+
+Two semantic errors had survived the earlier register-allocation diagnosis:
+the status guard used suspended (2) instead of active (1), and compression
+failure called `File::deleteFile` instead of `fileError`. The wrong error calls
+score identically when relocation differences are ignored. Read the named
+call sequence and unmasked operands, not just the percentage. Retail and DC
+also both compute the unusual `totalBlocks % fileSize`; substituting the
+usual file-size remainder is not a reconstruction.
+
+The corrected loop, operands and earlier `done` initialization bank 85.0958%
+through normalized production objects, from 82.2198%. Retaining DC's complete
+transfer-local initialization order gives a lower current score, with that
+peak preserved. Its remaining 12-byte frame excess and register spills are
+still open; equal branch counts had not proved that source control flow was
+already correct.
+
+
+## A decreasing counter can represent a different direction
+
+`combatManager::mirrorImage` (0x5a6c70) reached 100% from 82.3404% after
+restoring two expressions visible in the Dreamcast source mapping. Its search
+selects `dirCount` when the source army faces 1, and `5 - dirCount` otherwise
+(spells.cpp:4604..4607). Retail carries both induction values and chooses one
+before the exclusions. Treating the decreasing counter as compiler-generated
+loop bookkeeping had hidden a behavior bug: the reconstruction always searched
+forward. Restoring direction selection reaches 86.1216%.
+
+The animation computes `delta * (16 - frame) / 16` at DC lines 4685/4686.
+Writing explicit running offsets instead kept additional values alive; allowing
+VC6 to derive its own steps reproduces all 57 retail blocks and reaches 100%.
+The source also jumps out of the search loops to a separate placement block.
+Restoring that boundary and the canonical validity/column/front-offset helpers
+is byte-flat, but preserves the positive source evidence. No direction reversal
+is acceptable without establishing which facing selects it.
+
+
+## Explicit early returns can restore register lifetimes
+
+`combatManager::placeShooter` (0x422060) reaches 100% from 82.4884% by
+restoring DC's combined entry condition and its two explicit action-8 returns
+(ai.cpp:2191/2193 and 2255/2257). A shared `goto wait` produced the right broad
+behavior and branch count, but kept `this` in ESI and spilled the neighbor
+counter. The source returns let VC6 allocate `this` in EBX, reuse that register
+for the count, and save ESI only when entering the search.
+
+The combined condition alone scores 82.2093%; the returns are needed with it.
+Canonical `getHex`/`Is` calls, occupied-neighbor-first source order, and the
+Dreamcast best-hex assignment order are retained; each is byte-flat in the
+corresponding controls. Matching aggregate branch counts had not established
+that the source control-flow form was already correct.
+
+`mouseManager::setPointer` (0x50cca0) independently demonstrates the same
+source-exit effect. DC mousemgr.cpp:449-453 returns separately for three entry
+guards, then 479-493 returns after clearing busy state for a negative or
+unchanged frame. Restoring all five returns raises 82.9333% to 100%: VC6 merges
+the lock destruction and busy cleanup, but now shares zero in EBX throughout
+the 224-byte body. Restoring only the entry guards gives 83.1333%, whether they
+are separate or combined. The prior named-zero experiment was 78.87%.
+
+The DC `Enable`/`Disable` header bodies only read `DisableCount` in this build.
+Their canonical calls are preserved; the discarded results compile away and
+leave the 100% bytes unchanged. Read these tiny bodies before assuming their
+names imply mutations. The PC sprite disposal remains independently proven
+by retail.

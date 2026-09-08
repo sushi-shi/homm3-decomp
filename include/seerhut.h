@@ -18,7 +18,8 @@ struct type_point;
 // Complete's seer-hut name table replaced Dreamcast's const-char pointer
 // array with Dinkumware strings; TSeerHut::GetName keeps the shared header
 // accessor boundary over the revised storage.
-DATA(0x0069fab8) extern std::vector<std::string>* gpSeerHutNames;
+// Before normalization: gpSeerHutNames.
+DATA(0x0069fab8) extern std::vector<std::string>* g_seerHutNamesPointer;
 
 #pragma pack(push, 1)
 
@@ -28,8 +29,10 @@ class TAbstractFile;
 
 class TQuestGuard {
 public:
-    type_quest* quest;
-    unsigned char visitedPlayers;
+    // Before normalization: quest.
+    type_quest* m_quest;
+    // Before normalization: visitedPlayers.
+    unsigned char m_visitedPlayers;
 
     // NOT inline for this view: readObject (0x502e00) CALLS the constructor
     // at 0x572b50 on its quest-guard local instead of expanding the two
@@ -41,7 +44,9 @@ public:
     // The quest-guard adventure event. The exact HD structural twin fixes
     // the name and argument list; retail independently proves the four
     // stack arguments, the quest virtual slots, and the EraseAndFizzle tail.
-    void DoEvent(hero* current_hero, bool human_player,
+    // Before normalization (function): TQuestGuard::DoEvent.
+    // Before normalization (locals): current_hero, human_player.
+    void doEvent(hero* currentHero, bool humanPlayer,
                  NewmapCell* eventCell, type_point point);
 
     // The h3m reader, reached from readObject's QUEST_GUARD arm with the
@@ -58,13 +63,16 @@ public:
     // `game_b150_sub07_173040`, 0x137c0 being QuickInfo and 0xb150
     // SetRolloverText) and both bodies confirm it by their separator. The
     // TSeerHut pair below splits the same way, crosswise.
-    std::string QuestGuardFn_00572E40(int player);
-    std::string QuestGuardFn_00573040(int player);
+    // Before normalization (function): TQuestGuard::QuestGuardFn_00572E40.
+    std::string questGuardFn00572E40(int player);
+    // Before normalization (function): TQuestGuard::QuestGuardFn_00573040.
+    std::string questGuardFn00573040(int player);
     // 0x572d60, 224 B, carved and unclaimed. NULLARY where the pair above
     // takes a player: TQuestLogWindow::UpdateQuestLocator pushes only the
     // hidden return buffer and calls it on the QuestGuardList element,
     // then strcpy's its c_str() into gText. Provisional name.
-    std::string QuestGuardFn_00572D60();
+    // Before normalization (function): TQuestGuard::QuestGuardFn_00572D60.
+    std::string questGuardFn00572D60();
     // Reached from NewfullMap::Save, which calls it on every QuestGuardList
     // element with the stream as its one argument. DECLARED, not defined:
     // the body is an unclaimed carve row outside this compiland.
@@ -72,7 +80,8 @@ public:
     // Complete retains the Dreamcast TSeerHut predicate on the new shared
     // quest-guard base.  DoQuestLog proves that its final two tests are the
     // visited-player bit followed by a fresh quest-pointer read.
-    unsigned char QuestActiveforPlayer(
+    // Before normalization (function): TQuestGuard::QuestActiveforPlayer.
+    unsigned char questActiveforPlayer(
         const unsigned char playerNum) const;
     int load(TAbstractFile* infile, int saveVersion);
 
@@ -113,40 +122,62 @@ struct TSeerReward {
         ePriSkillKnowledge = 3
     };
 
-    int rewardType;
+    // Before normalization: rewardType.
+    int m_rewardType;
     union {
-        char payload[8];
-        int dwords[2];
+        // Before normalization: payload.
+        char m_payload[8];
+        // Before normalization: dwords.
+        int m_dwords[2];
         struct {
-            signed int bonus : 8;
-        } signedLow;
+            // Before normalization: bonus.
+            signed int m_bonus : 8;
+        // Before normalization: signedLow.
+        } m_signedLow;
         struct {
-            int first;
-            signed int bonus : 8;
-        } signedHigh;
+            // Before normalization: first.
+            int m_first;
+            // Before normalization: bonus.
+            signed int m_bonus : 8;
+        // Before normalization: signedHigh.
+        } m_signedHigh;
         struct {
-            int skillType;
-            int bonus;
-        } secondarySkill;
+            // Before normalization: skillType.
+            int m_skillType;
+            // Before normalization: bonus.
+            int m_bonus;
+        // Before normalization: secondarySkill.
+        } m_secondarySkill;
         struct {
-            int resourceType;
-            int quantity;
-        } resource;
+            // Before normalization: resourceType.
+            int m_resourceType;
+            // Before normalization: quantity.
+            int m_quantity;
+        // Before normalization: resource.
+        } m_resource;
         struct {
-            int skillType;
-            signed int bonus : 8;
-        } primarySkill;
+            // Before normalization: skillType.
+            int m_skillType;
+            // Before normalization: bonus.
+            signed int m_bonus : 8;
+        // Before normalization: primarySkill.
+        } m_primarySkill;
         struct {
-            int creatureType;
-            signed int count : 16;
+            // Before normalization: creatureType.
+            int m_creatureType;
+            // Before normalization: count.
+            signed int m_count : 16;
             signed int : 16;
-        } creature;
-    } value;
+        // Before normalization: creature.
+        } m_creature;
+    // Before normalization: value.
+    } m_value;
 
-    TSeerReward() : rewardType(0) {}
+    TSeerReward() : m_rewardType(0) {}
     int getValue(const hero* currentHero);
     void giveReward(hero* currentHero, bool humanPlayer);
-    int GetRewardExtra(const hero* thisHero);
+    // Before normalization (function): TSeerReward::GetRewardExtra.
+    int getRewardExtra(const hero* thisHero);
 };
 SIZE(TSeerReward, 0xc);
 
@@ -165,30 +196,43 @@ class TSeerHut : private TQuestGuard {
     // Dreamcast preserves this private source boundary. Complete replaces
     // the VMU-era text lookup inside it, but retail expands the revised body
     // into DoSeerEvent's no-quest arm.
-    void DoEmptyDialog();
+    // Before normalization (function): TSeerHut::DoEmptyDialog.
+    void doEmptyDialog();
     // Dreamcast's next private helper owns the completion dialog and reward
     // application. Complete revises both models, while retaining the source
     // boundary inside DoSeerEvent's human arm.
-    inline void DoCompletionDialog(hero* current_hero, bool human_player);
+    // Before normalization (function): TSeerHut::DoCompletionDialog.
+    // Before normalization (locals): current_hero, human_player.
+    inline void doCompletionDialog(hero* currentHero, bool humanPlayer);
     // Dreamcast proves this nested no-local switch helper as the first call
     // made by DoCompletionDialog. Complete retains the boundary while
     // shifting the primary-skill icon domain by one.
-    inline int GetRewardType();
+    // Before normalization (function): TSeerHut::GetRewardType.
+    inline int getRewardType();
 
 public:
-    TSeerReward reward;
-    signed char NameIndex;
-    unsigned char field_12;
+    // Before normalization: reward.
+    TSeerReward m_reward;
+    // Before normalization: NameIndex.
+    signed char m_nameIndex;
+    // Original: CompletedByPlayer (Dreamcast TSeerHut +0x11).
+    // DC save 0x12d8c0 writes the old object in member order. Retail load
+    // 0x574a90's version<28 arm reads artifact + reward, then preserves
+    // this second legacy byte at +0x12 (store 0x574b01). The surrounding
+    // bytes retain QuestCompleted/playerInfo/Type/NameIndex ordering.
+    // Previously field_12; Complete retains it through save/load even
+    // though completion behavior now belongs to the quest object.
+    unsigned char m_completedByPlayer;
 
     // Original: TSeerHut::TSeerHut; SeerHut.h:108, dc 0xf4b38.
     VA(0x00573580, 0x13)
     TSeerHut()
-        : TQuestGuard(0), reward()
+        : TQuestGuard(0), m_reward()
     {
-        quest = 0;
-        visitedPlayers = 0;
-        NameIndex = 0;
-        field_12 = 0;
+        m_quest = 0;
+        m_visitedPlayers = 0;
+        m_nameIndex = 0;
+        m_completedByPlayer = 0;
     }
 
     // Original: TSeerHut::QuestActiveforPlayer; SeerHut.h:112, dc 0x3250.
@@ -199,28 +243,31 @@ public:
     // and fresh quest-pointer tests.  Keep both pool-specific spellings: retail
     // forms a named quest_text_row pointer for SeerHutList, while the exact
     // UpdateQuestLogButton sibling proves quest_texts()[LOG] for guards.
-    unsigned char QuestActiveforPlayer(
+    unsigned char questActiveforPlayer(
         const unsigned char playerNum) const
     {
-        type_quest* thisQuest = quest;
+        type_quest* thisQuest = m_quest;
         if (!thisQuest)
             return 0;
 
-        const std::string* questTexts = thisQuest->quest_text_row()
-            + type_quest::QUEST_TEXT_COLUMNS * thisQuest->quest_type();
+        const std::string* questTexts = thisQuest->questTextRow()
+            + type_quest::QUEST_TEXT_COLUMNS * thisQuest->questType();
         return questTexts[type_quest::QUEST_TEXT_LOG].length()
-            && (visitedPlayers & (1 << playerNum))
-            && quest;
+            && (m_visitedPlayers & (1 << playerNum))
+            && m_quest;
     }
     // E:\gamedcs\seerhut.h:121, dc 0x20244. Retail corroborates the signed
     // NameIndex load, 16-byte vector stride and inlined c_str() fallback.
-    const char* GetName() const
+    // Before normalization (function): TSeerHut::GetName.
+    const char* getName() const
     {
-        return (*gpSeerHutNames)[NameIndex].c_str();
+        return (*g_seerHutNamesPointer)[m_nameIndex].c_str();
     }
     // Dreamcast supplies the surviving public name/signature; retail's
     // Complete-era body replaces the monolith with the virtual quest family.
-    void DoSeerEvent(hero* current_hero, bool human_player);
+    // Before normalization (function): TSeerHut::DoSeerEvent.
+    // Before normalization (locals): current_hero, human_player.
+    void doSeerEvent(hero* currentHero, bool humanPlayer);
     // The AI appraisal of an unvisited or active hut. Retail fixes the
     // hero ABI and all quest/reward calls; the HD twin supplies the name.
     int getValue(hero* currentHero);
@@ -243,8 +290,10 @@ public:
     // with 0x5741b0 taking " " (SetRolloverText) and 0x5743e0 taking "\n\n"
     // (QuickInfo). Same carve-name evidence: `game_b150_sub08_1741b0`
     // against `game_137c0_sub01_1743e0`.
-    std::string SeerHutFn_005741B0(int player);
-    std::string SeerHutFn_005743E0(int player);
+    // Before normalization (function): TSeerHut::SeerHutFn_005741B0.
+    std::string seerHutFn005741B0(int player);
+    // Before normalization (function): TSeerHut::SeerHutFn_005743E0.
+    std::string seerHutFn005743E0(int player);
     // The SeerHutList twin of TQuestGuard::QuestGuardFn_00572D60, reached
     // from the other arm of the quest log's list split. The exact HD
     // structural twin supplies the later method name after retail fixes the

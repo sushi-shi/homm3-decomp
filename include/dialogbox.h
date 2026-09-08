@@ -22,31 +22,43 @@ public:
         TILE_SIZE = 256
     };
 
-    int beginID;
-    int endID;
+    // Before normalization: beginID.
+    int m_beginId;
+    // Before normalization: endID.
+    int m_endId;
 
     TDialogBox(int winX, int winY, int winWidth, int winHeight,
                unsigned winType);
     TDialogBox(unsigned winType);
     virtual ~TDialogBox();
-    virtual unsigned char Setup(int winX, int winY,
+    // Before normalization (function): TDialogBox::Setup.
+    virtual unsigned char setup(int winX, int winY,
                                 int winWidth, int winHeight);
 };
 SIZE(TDialogBox, 0x54);
 
 class CTextDialog : public TDialogBox {
 public:
-    CTextDialog(const char* cText, font* pFont, unsigned winType);
+    // Before normalization (locals): cText, pFont.
+    CTextDialog(const char* text, font* currentFont, unsigned winType);
     CTextDialog(unsigned winType);
     // Implicit destructor; CodeView dc 0x82068 compgenx.
 
-    int ExitDialog(message& msg);
-    virtual unsigned char Setup(const char* cText, font* pFont);
-    virtual void UpdateText(const char* cNewText);
+    // Before normalization (function): CTextDialog::ExitDialog.
+    int exitDialog(message& msg);
+    // Before normalization (function): CTextDialog::Setup.
+    // Before normalization (locals): cText, pFont.
+    virtual unsigned char setup(const char* text, font* currentFont);
+    // Before normalization (function): CTextDialog::UpdateText.
+    // Before normalization (locals): cNewText.
+    virtual void updateText(const char* newText);
 
 protected:
-    textWidget* pTextWidget;
-    virtual void CalcDimensions(const char* cText, font* pFont,
+    // Before normalization: pTextWidget.
+    textWidget* m_textWidget;
+    // Before normalization (function): CTextDialog::CalcDimensions.
+    // Before normalization (locals): cText, pFont.
+    virtual void calcDimensions(const char* text, font* currentFont,
                                 int& winX, int& winY,
                                 int& winWidth, int& winHeight);
 };

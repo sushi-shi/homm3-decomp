@@ -64,13 +64,13 @@ def main(argv=None) -> int:
     # A byte score is a checkpoint, not an admissibility invariant. Coherent
     # restoration of a Dreamcast-proven source shape may lower several local
     # scores before the surrounding class/TU reaches the retail lowering.
-    # Preserve the peaks, but never make a score regression fatal or recommend
-    # lowering the checkpoint to get a green build. Only a function whose own
-    # source hash changed and whose score fell from its preceding current score
-    # is worth reporting.
+    # Preserve each implementation's MAX and the all-time HIST, but never make
+    # a score regression fatal. Only a function whose own source hash changed
+    # and whose new implementation MAX fell below the preceding MAX is worth
+    # reporting; unrelated CUR dips leave MAX held and stay silent.
     # Check BEFORE updating the ledger so a changed function is compared with
-    # its preceding current score/source hash. The update records this build,
-    # ensuring an unchanged below-MAX function is not reported again.
+    # its preceding MAX/source hash. The update then resets MAX for a proven
+    # source edit while preserving HIST.
     status.cmd_check(report)
     status.cmd_update(report)
 
@@ -101,14 +101,14 @@ def main(argv=None) -> int:
         for line in violations:
             print(f"[build] {line}", file=sys.stderr)
 
-    if failed:
-        return 1
+    # Scores describe the completed compile/delink, including when an
+    # independent source gate fails. Keep README consistent with the ledger.
     try:
         status.write_readme(report)
     except Exception as exc:  # the score block must never fail a build
         print(f"[build] README block skipped: {exc}")
 
-    return 0
+    return 1 if failed else 0
 
 
 if __name__ == "__main__":

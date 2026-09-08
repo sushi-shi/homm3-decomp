@@ -19,8 +19,10 @@ class type_func_button;
 // DC field list: a 16-byte type_artifact-derived record, with the wearable
 // source slot at +8 and the displayed sacrifice value at +12.
 struct type_artifact_offering : public type_artifact {
-    long source;
-    long value;
+    // Before normalization: source.
+    long m_source;
+    // Before normalization: value.
+    long m_value;
 
     // CodeView marks default construction generated (dc 0x128714).
     // Its base call passes -1 to type_artifact(TArtifact), so the inherited
@@ -100,7 +102,8 @@ enum ESacrificeGeneralText {
 
 // HELP.TXT's second pass at 0x5b9b52 fills exactly twenty stride-8
 // text/right-click pairs from 0x6a6638 through 0x6a66d7.
-DATA(0x006a6638) extern THelpText gSacrificeWindowHelp[SACRIFICE_HELP_COUNT];
+// Before normalization: gSacrificeWindowHelp.
+DATA(0x006a6638) extern THelpText g_sacrificeWindowHelp[SACRIFICE_HELP_COUNT];
 
 // DC public ?gTransformerWindowHelp@@3PAUTHelpText@@A supplies the name;
 // Complete references the three text/right-click pairs at 0x6a77d0..e7.
@@ -111,20 +114,27 @@ enum ETransformerWindowHelp {
     TRANSFORMER_HELP_COUNT = 3
 };
 DATA(0x006a77d0) extern THelpText
-    gTransformerWindowHelp[TRANSFORMER_HELP_COUNT];
+    // Before normalization: gTransformerWindowHelp.
+    g_transformerWindowHelp[TRANSFORMER_HELP_COUNT];
 
 struct type_icon_definition {
-    long x;
-    long y;
-    long width;
-    long height;
-    const char* image;
+    // Before normalization: x.
+    long m_x;
+    // Before normalization: y.
+    long m_y;
+    // Before normalization: width.
+    long m_width;
+    // Before normalization: height.
+    long m_height;
+    // Before normalization: image.
+    const char* m_image;
 };
 SIZE(type_icon_definition, 0x14);
 
 // DC field list 0x2712: a type_icon_definition base and slot at +0x14.
 struct type_doll_slot_definition : public type_icon_definition {
-    long slot;
+    // Before normalization: slot.
+    long m_slot;
 };
 SIZE(type_doll_slot_definition, 0x18);
 
@@ -132,14 +142,30 @@ SIZE(type_doll_slot_definition, 0x18);
 // Retail update_creature_offering independently proves the six widget
 // pointers followed by the group/amount pair at +0x18/+0x1c.
 struct type_creature_offering {
-    iconWidget* icon_widget;
-    widget* field_04;
-    textWidget* field_08;
-    iconWidget* selection_widget;
-    widget* field_10;
-    textWidget* field_14;
-    long group;
-    long amount;
+    // Before normalization: icon_widget.
+    iconWidget* m_iconWidget;
+    // Before normalization: field_04.
+    // createCreatureWidgets 0x5610f0 assigns the source grid's selection
+    // frames from createCreatureIcons' iconWidget** output. Role-derived name.
+    iconWidget* m_sourceSelectionFrame;
+    // Before normalization: field_08.
+    // updateCreatureOffering 0x562da0 displays the available stack count,
+    // or the selected amount for the current-creature editor record.
+    textWidget* m_creatureCountText;
+    // Before normalization: selection_widget.
+    iconWidget* m_selectionWidget;
+    // Before normalization: field_10.
+    // The same builder supplies the offered-creature grid's selection
+    // frame; its producer also proves iconWidget*, not an untyped widget view.
+    iconWidget* m_offeringSelectionFrame;
+    // Before normalization: field_14.
+    // updateCreatureOffering formats sacrificeValue * amount * the hero's
+    // experience bonus here, using the experience label text. Role-derived name.
+    textWidget* m_experienceText;
+    // Before normalization: group.
+    long m_group;
+    // Before normalization: amount.
+    long m_amount;
 };
 SIZE(type_creature_offering, 0x20);
 
@@ -151,107 +177,191 @@ SIZE(type_creature_offering, 0x20);
 // callback widgets need the real derived type, not a synthetic window view.
 class type_sacrifice_window : public CAdvPopup {
 public:
-    type_sacrifice_window(hero* new_hero, int cur_player);
-    hero* current_hero;
-    type_artifact_offering holding_artifact;  // +0x64
-    unsigned char sacrificing_artifacts;      // +0x74
+    // Before normalization (locals): new_hero, cur_player.
+    type_sacrifice_window(hero* newHero, int curPlayer);
+    // Before normalization: current_hero.
+    hero* m_currentHero;
+    // Before normalization: holding_artifact.
+    type_artifact_offering m_holdingArtifact;  // +0x64
+    // Before normalization: sacrificing_artifacts.
+    unsigned char m_sacrificingArtifacts;      // +0x74
     // +0x75: DoModal 0x5653b0 tests this byte to choose set_artifact_mode
     // over set_creature_mode. The Dreamcast field roster puts
     // can_sacrifice_artifacts at DC +0x6d, and the proven 8-byte CAdvPopup
     // delta lands it exactly here - the same widening that already places
     // current_hero and the rollover pointer below.
-    unsigned char can_sacrifice_artifacts;
-    unsigned char can_sacrifice_creatures;   // +0x76
-    unsigned char pad_77;
-    long total_experience;                   // +0x78
-    textWidget* experience_widget;           // +0x7c
-    textWidget* experience_total_widget;     // +0x80
-    textWidget* current_artifact_value;       // +0x84
-    textWidget* creature_name_widget;         // +0x88
+    // Before normalization: can_sacrifice_artifacts.
+    unsigned char m_canSacrificeArtifacts;
+    // Before normalization: can_sacrifice_creatures.
+    unsigned char m_canSacrificeCreatures;   // +0x76
+    // Before normalization: pad_77.
+    // The preceding byte field and following four-byte field establish
+    // this alignment gap; the reference layout retains the same boundary.
+    unsigned char m_paddingBeforeTotalExperience;
+    // Before normalization: total_experience.
+    long m_totalExperience;                   // +0x78
+    // Before normalization: experience_widget.
+    textWidget* m_experienceWidget;           // +0x7c
+    // Before normalization: experience_total_widget.
+    textWidget* m_experienceTotalWidget;     // +0x80
+    // Before normalization: current_artifact_value.
+    textWidget* m_currentArtifactValue;       // +0x84
+    // Before normalization: creature_name_widget.
+    textWidget* m_creatureNameWidget;         // +0x88
     // +0x8c: handle_widget_hover 0x5653f0 reads it and dispatches slot 13
     // (textWidget::SetText) through it - the same rollover pointer
     // type_skeleton_window keeps at +0x60 and type_university_window at
     // +0x70. Offsets either side of it are unchanged.
-    textWidget* rolloverText;
+    // Before normalization: rolloverText.
+    textWidget* m_rolloverText;
     // DC places the current-artifact/slider/button pointers at +0x88..+0xb0.
     // Retail's proven 8-byte base delta moves that run to +0x90..+0xb8;
     // update_experience independently proves sacrifice_button at +0xa4.
-    iconWidget* current_artifact_widget;      // +0x90
-    slider* creature_slider;                  // +0x94
-    type_func_button* left_backpack_button;   // +0x98
-    type_func_button* right_backpack_button;  // +0x9c
-    type_func_button* empty_backpack_button;  // +0xa0
-    type_func_button* sacrifice_button;       // +0xa4
-    type_func_button* all_artifacts_button;   // +0xa8
-    type_func_button* creatures_button;       // +0xac
-    type_func_button* max_creatures_button;   // +0xb0
-    type_func_button* all_creatures_button;   // +0xb4
-    type_func_button* artifacts_button;       // +0xb8
-    std::vector<type_artifact_offering> artifact_offerings; // +0xbc
-    std::vector<textWidget*> artifact_value_widgets;        // +0xcc
-    std::vector<iconWidget*> artifact_offering_widgets;     // +0xdc
-    std::vector<iconWidget*> slot_back_widgets;              // +0xec
-    std::vector<iconWidget*> slot_widgets;                   // +0xfc
-    std::vector<iconWidget*> backpack_widgets;               // +0x10c
-    type_creature_offering creature_offerings[7];          // +0x11c
-    type_creature_offering current_creature;               // +0x1fc
-    std::vector<widget*> artifact_widgets;                   // +0x21c
-    std::vector<widget*> creature_widgets;                   // +0x22c
+    // Before normalization: current_artifact_widget.
+    iconWidget* m_currentArtifactWidget;      // +0x90
+    // Before normalization: creature_slider.
+    slider* m_creatureSlider;                  // +0x94
+    // Before normalization: left_backpack_button.
+    type_func_button* m_leftBackpackButton;   // +0x98
+    // Before normalization: right_backpack_button.
+    type_func_button* m_rightBackpackButton;  // +0x9c
+    // Before normalization: empty_backpack_button.
+    type_func_button* m_emptyBackpackButton;  // +0xa0
+    // Before normalization: sacrifice_button.
+    type_func_button* m_sacrificeButton;       // +0xa4
+    // Before normalization: all_artifacts_button.
+    type_func_button* m_allArtifactsButton;   // +0xa8
+    // Before normalization: creatures_button.
+    type_func_button* m_creaturesButton;       // +0xac
+    // Before normalization: max_creatures_button.
+    type_func_button* m_maxCreaturesButton;   // +0xb0
+    // Before normalization: all_creatures_button.
+    type_func_button* m_allCreaturesButton;   // +0xb4
+    // Before normalization: artifacts_button.
+    type_func_button* m_artifactsButton;       // +0xb8
+    // Before normalization: artifact_offerings.
+    std::vector<type_artifact_offering> m_artifactOfferings; // +0xbc
+    // Before normalization: artifact_value_widgets.
+    std::vector<textWidget*> m_artifactValueWidgets;        // +0xcc
+    // Before normalization: artifact_offering_widgets.
+    std::vector<iconWidget*> m_artifactOfferingWidgets;     // +0xdc
+    // Before normalization: slot_back_widgets.
+    std::vector<iconWidget*> m_slotBackWidgets;              // +0xec
+    // Before normalization: slot_widgets.
+    std::vector<iconWidget*> m_slotWidgets;                   // +0xfc
+    // Before normalization: backpack_widgets.
+    std::vector<iconWidget*> m_backpackWidgets;               // +0x10c
+    // Before normalization: creature_offerings.
+    type_creature_offering m_creatureOfferings[7];          // +0x11c
+    // Before normalization: current_creature.
+    type_creature_offering m_currentCreature;               // +0x1fc
+    // Before normalization: artifact_widgets.
+    std::vector<widget*> m_artifactWidgets;                   // +0x21c
+    // Before normalization: creature_widgets.
+    std::vector<widget*> m_creatureWidgets;                   // +0x22c
 
     // DC types artifact_click's first parameter as TArtifactSlot; this tree
     // has no such enum yet, so it takes the long its retail call site
     // pushes, matching the sibling declarations.
-    void artifact_click(long slot, unsigned char right_click);
-    void backpack_click(long slot, unsigned char right_click);
-    void offering_click(long slot, unsigned char right_click);
-    void creature_click(long slot, unsigned char right_click,
-                        unsigned char left_pane);
+    // Before normalization (function): type_sacrifice_window::artifact_click.
+    // Before normalization (locals): right_click.
+    void artifactClick(long slot, unsigned char rightClick);
+    // Before normalization (function): type_sacrifice_window::backpack_click.
+    // Before normalization (locals): right_click.
+    void backpackClick(long slot, unsigned char rightClick);
+    // Before normalization (function): type_sacrifice_window::offering_click.
+    // Before normalization (locals): right_click.
+    void offeringClick(long slot, unsigned char rightClick);
+    // Before normalization (function): type_sacrifice_window::creature_click.
+    // Before normalization (locals): right_click, left_pane.
+    void creatureClick(long slot, unsigned char rightClick,
+                        unsigned char leftPane);
     // The two mode switches DoModal picks between. Located by an exhaustive
     // order-map of the Dreamcast roster over the segment between the
     // destructor and DoModal: set_artifact_mode 0x562a20, set_creature_mode
     // 0x563150. Bodies still deferred.
     virtual ~type_sacrifice_window();
-    void set_artifact_mode();
-    void set_creature_mode();
-    void update_creature_offering(type_creature_offering* creature);
-    void update_experience();
-    void update_slot(long slot);
-    void update_all_slots();
-    void update_artifact_offering(long slot);
-    void set_creature_sacrifice(long slot, long new_amount);
+    // Before normalization (function): type_sacrifice_window::set_artifact_mode.
+    void setArtifactMode();
+    // Before normalization (function): type_sacrifice_window::set_creature_mode.
+    void setCreatureMode();
+    // Before normalization (function): type_sacrifice_window::update_creature_offering.
+    void updateCreatureOffering(type_creature_offering* creature);
+    // Before normalization (function): type_sacrifice_window::update_experience.
+    void updateExperience();
+    // Before normalization (function): type_sacrifice_window::update_slot.
+    void updateSlot(long slot);
+    // Before normalization (function): type_sacrifice_window::update_all_slots.
+    void updateAllSlots();
+    // Before normalization (function): type_sacrifice_window::update_artifact_offering.
+    void updateArtifactOffering(long slot);
+    // Before normalization (function): type_sacrifice_window::set_creature_sacrifice.
+    // Before normalization (locals): new_amount.
+    void setCreatureSacrifice(long slot, long newAmount);
 
-    virtual void handle_widget_hover(widget* current_widget);  // slot 4
-    virtual int DoModal(unsigned char fadeIn);                 // slot 6
+    // Before normalization (function): type_sacrifice_window::handle_widget_hover.
+    // Before normalization (locals): current_widget.
+    virtual void handleWidgetHover(widget* currentWidget);  // slot 4
+    // Before normalization (function): type_sacrifice_window::DoModal.
+    virtual int doModal(unsigned char fadeIn);                 // slot 6
 protected:
-    virtual int ExitDialog(message* msg);                      // slot 14
+    // Before normalization (function): type_sacrifice_window::ExitDialog.
+    virtual int exitDialog(message* msg);                      // slot 14
 private:
-    void create_artifact_widgets(long& widget_id, int cur_player);
-    void create_creature_widgets(long& widget_id, int cur_player);
-    long create_creature_icons(
-        long icon_x, long icon_y, long columns, long rows,
-        long item_number, long& widget_id, iconWidget** icon_widgets,
-        iconWidget** selection_widgets, textWidget** text_widgets,
-        unsigned char left_pane);
-    void pick_up_artifact(type_artifact artifact, long slot,
-                          unsigned char new_artifact);
-    void put_down_artifact(unsigned char change_experience);
-    void update_backpack();
-    unsigned char add_artifact(type_artifact artifact, long source);
-    void empty_backpack();
-    void return_artifact(const type_artifact_offering& artifact);
+    // Before normalization (function): type_sacrifice_window::create_artifact_widgets.
+    // Before normalization (locals): widget_id, cur_player.
+    void createArtifactWidgets(long& widgetId, int curPlayer);
+    // Before normalization (function): type_sacrifice_window::create_creature_widgets.
+    // Before normalization (locals): widget_id, cur_player.
+    void createCreatureWidgets(long& widgetId, int curPlayer);
+    // Before normalization (function): type_sacrifice_window::create_creature_icons.
+    long createCreatureIcons(
+        // Before normalization (locals): icon_x, icon_y, item_number, widget_id, icon_widgets,
+        // selection_widgets, text_widgets, left_pane.
+        long iconX, long iconY, long columns, long rows,
+        long itemNumber, long& widgetId, iconWidget** iconWidgets,
+        iconWidget** selectionWidgets, textWidget** textWidgets,
+        unsigned char leftPane);
+    // Before normalization (function): type_sacrifice_window::pick_up_artifact.
+    void pickUpArtifact(type_artifact artifact, long slot,
+                          // Before normalization (locals): new_artifact.
+                          unsigned char newArtifact);
+    // Before normalization (function): type_sacrifice_window::put_down_artifact.
+    // Before normalization (locals): change_experience.
+    void putDownArtifact(unsigned char changeExperience);
+    // Before normalization (function): type_sacrifice_window::update_backpack.
+    void updateBackpack();
+    // Before normalization (function): type_sacrifice_window::add_artifact.
+    unsigned char addArtifact(type_artifact artifact, long source);
+    // Before normalization (function): type_sacrifice_window::empty_backpack.
+    void emptyBackpack();
+    // Before normalization (function): type_sacrifice_window::return_artifact.
+    void returnArtifact(const type_artifact_offering& artifact);
     void clear();
-    long get_max_amount(long slot) const;
-    static int all_creatures(message& msg);
-    static int max_creatures(message& msg);
+    // Before normalization (function): type_sacrifice_window::get_max_amount.
+    long getMaxAmount(long slot) const;
+    // Before normalization (function): type_sacrifice_window::all_creatures.
+    static int allCreatures(message& msg);
+    // Before normalization (function): type_sacrifice_window::max_creatures.
+    static int maxCreatures(message& msg);
     static int sacrifice(message& msg);
-    static int sacrifice_creatures(message& msg);
-    static int exit_click(message& msg);
-    static int sacrifice_artifacts(message& msg);
-    static int scroll_backpack_left(message& msg);
-    static int scroll_backpack_right(message& msg);
-    static int empty_backpack(message& msg);
-    static int all_artifacts(message& msg);
-    static void creature_slider_change(int state, heroWindow* parent_window);
+    // Before normalization (function): type_sacrifice_window::sacrifice_creatures.
+    static int sacrificeCreatures(message& msg);
+    // Before normalization (function): type_sacrifice_window::exit_click.
+    static int exitClick(message& msg);
+    // Before normalization (function): type_sacrifice_window::sacrifice_artifacts.
+    static int sacrificeArtifacts(message& msg);
+    // Before normalization (function): type_sacrifice_window::scroll_backpack_left.
+    static int scrollBackpackLeft(message& msg);
+    // Before normalization (function): type_sacrifice_window::scroll_backpack_right.
+    static int scrollBackpackRight(message& msg);
+    // Before normalization (function): type_sacrifice_window::empty_backpack.
+    static int emptyBackpack(message& msg);
+    // Before normalization (function): type_sacrifice_window::all_artifacts.
+    static int allArtifacts(message& msg);
+    // Before normalization (function): type_sacrifice_window::creature_slider_change.
+    // Before normalization (locals): parent_window.
+    static void creatureSliderChange(int state, heroWindow* parentWindow);
 };
 SIZE(type_sacrifice_window, 0x23c);
 
@@ -262,37 +372,48 @@ SIZE(type_sacrifice_window, 0x23c);
 // +0x48 and forwards it with right_click, so the class adds exactly that.
 class type_doll_slot_widget : public iconWidget {
 public:
-    long slot;
+    // Before normalization: slot.
+    long m_slot;
 
     type_doll_slot_widget(const type_doll_slot_definition& def, long id);
 
-    virtual unsigned char handle_click(unsigned char down_click,
-                                       unsigned char right_click);
+    // Before normalization (function): type_doll_slot_widget::handle_click.
+    // Before normalization (locals): down_click, right_click.
+    virtual unsigned char handleClick(unsigned char downClick,
+                                       unsigned char rightClick);
 };
 SIZE(type_doll_slot_widget, 0x4c);
 
 class type_backpack_slot_widget : public iconWidget {
 public:
-    long slot;
+    // Before normalization: slot.
+    long m_slot;
 
     type_backpack_slot_widget(const type_icon_definition& def,
-                              long new_slot, long id);
+                              // Before normalization (locals): new_slot.
+                              long newSlot, long id);
 
-    virtual unsigned char handle_click(unsigned char down_click,
-                                       unsigned char right_click);
+    // Before normalization (function): type_backpack_slot_widget::handle_click.
+    // Before normalization (locals): down_click, right_click.
+    virtual unsigned char handleClick(unsigned char downClick,
+                                       unsigned char rightClick);
 };
 SIZE(type_backpack_slot_widget, 0x4c);
 
 class type_artifact_offering_widget : public iconWidget {
 public:
-    long item_number;
+    // Before normalization: item_number.
+    long m_itemNumber;
 
     type_artifact_offering_widget(long x, long y, long width, long height,
-                                  long new_item_number, long id,
+                                  // Before normalization (locals): new_item_number.
+                                  long newItemNumber, long id,
                                   const char* image);
 
-    virtual unsigned char handle_click(unsigned char down_click,
-                                       unsigned char right_click);
+    // Before normalization (function): type_artifact_offering_widget::handle_click.
+    // Before normalization (locals): down_click, right_click.
+    virtual unsigned char handleClick(unsigned char downClick,
+                                       unsigned char rightClick);
 };
 SIZE(type_artifact_offering_widget, 0x4c);
 
@@ -302,15 +423,21 @@ SIZE(type_artifact_offering_widget, 0x4c);
 // the pair the Dreamcast constructor takes (new_slot, _left_pane).
 class type_army_slot_widget : public iconWidget {
 public:
-    long slot;
-    unsigned char left_pane;
+    // Before normalization: slot.
+    long m_slot;
+    // Before normalization: left_pane.
+    unsigned char m_leftPane;
 
-    type_army_slot_widget(long new_x, long new_y, long new_w, long new_h,
-                          long new_slot, long new_id, const char* image,
-                          unsigned char new_left_pane);
+    // Before normalization (locals): new_x, new_y, new_w, new_h, new_slot, new_id,
+    // new_left_pane.
+    type_army_slot_widget(long newX, long newY, long newW, long newH,
+                          long newSlot, long newId, const char* image,
+                          unsigned char newLeftPane);
 
-    virtual unsigned char handle_click(unsigned char down_click,
-                                       unsigned char right_click);
+    // Before normalization (function): type_army_slot_widget::handle_click.
+    // Before normalization (locals): down_click, right_click.
+    virtual unsigned char handleClick(unsigned char downClick,
+                                       unsigned char rightClick);
 };
 SIZE(type_army_slot_widget, 0x50);
 
@@ -320,45 +447,68 @@ SIZE(type_army_slot_widget, 0x50);
 // the derived fields at the offsets recorded below.
 class type_skeleton_window : public CAdvPopup {
 public:
-    textWidget* rolloverText;  // +0x60
-    type_func_button* sacrifice_button;         // +0x64
-    type_func_button* all_creatures_button;     // +0x68
-    long selected_group;                        // +0x6c
-    long selected_index;                        // +0x70
-    armyGroup selected_creatures;               // +0x74
-    armyGroup* armies[2];                        // +0xac
-    iconWidget* army_widget[2][7];               // +0xb4
-    iconWidget* select_border[2][7];             // +0xec
-    textWidget* army_label[2][7];                // +0x124
+    // Before normalization: rolloverText.
+    textWidget* m_rolloverText;  // +0x60
+    // Before normalization: sacrifice_button.
+    type_func_button* m_sacrificeButton;         // +0x64
+    // Before normalization: all_creatures_button.
+    type_func_button* m_allCreaturesButton;     // +0x68
+    // Before normalization: selected_group.
+    long m_selectedGroup;                        // +0x6c
+    // Before normalization: selected_index.
+    long m_selectedIndex;                        // +0x70
+    // Before normalization: selected_creatures.
+    armyGroup m_selectedCreatures;               // +0x74
+    // Before normalization: armies.
+    armyGroup* m_armies[2];                        // +0xac
+    // Before normalization: army_widget.
+    iconWidget* m_armyWidget[2][7];               // +0xb4
+    // Before normalization: select_border.
+    iconWidget* m_selectBorder[2][7];             // +0xec
+    // Before normalization: army_label.
+    textWidget* m_armyLabel[2][7];                // +0x124
     // +0x15c: the destructor 0x565f60 walks this vector by size(), stops and
     // disposes every sample in it, then lets the member's own _Tidy run
     // (operator delete on _First at +0x160, then the 0x160/0x164/0x168
     // triplet zeroed). The Dreamcast roster's last member is
     // death_samples at DC +0x154, and the proven 8-byte CAdvPopup delta -
     // the only delta, since nothing before it is a vector - lands it here.
-    std::vector<sample*> death_samples;
+    // Before normalization: death_samples.
+    std::vector<sample*> m_deathSamples;
 
     // 0x5654f0 (dc 0x1275c0). Declared for townManager::
     // DoSkeletonTransformer, which builds one of these on the STACK -
     // 0x16c bytes of frame - runs it modal and lets the scope end call
     // the destructor below. Not defined here.
-    type_skeleton_window(armyGroup* new_army);
-    void creature_click(long side, long slot, unsigned char right_click);
+    // Before normalization (locals): new_army.
+    type_skeleton_window(armyGroup* newArmy);
+    // Before normalization (function): type_skeleton_window::creature_click.
+    // Before normalization (locals): right_click.
+    void creatureClick(long side, long slot, unsigned char rightClick);
 
     virtual ~type_skeleton_window();
-    virtual void handle_widget_hover(widget* current_widget);  // slot 4
-    virtual int WindowHandler(message* msg);                   // slot 9
+    // Before normalization (function): type_skeleton_window::handle_widget_hover.
+    // Before normalization (locals): current_widget.
+    virtual void handleWidgetHover(widget* currentWidget);  // slot 4
+    // Before normalization (function): type_skeleton_window::WindowHandler.
+    virtual int windowHandler(message* msg);                   // slot 9
 private:
-    static int all_creatures(message& msg);
-    static int exit_click(message& msg);
+    // Before normalization (function): type_skeleton_window::all_creatures.
+    static int allCreatures(message& msg);
+    // Before normalization (function): type_skeleton_window::exit_click.
+    static int exitClick(message& msg);
     static int sacrifice(message& msg);
-    void update_buttons();
+    // Before normalization (function): type_skeleton_window::update_buttons.
+    void updateButtons();
     void update(long group, long index);
-    void create_creature_icons(
-        long icon_x, long icon_y, long columns, long rows,
-        long group_number, long item_number, long& widget_id,
-        iconWidget** icon_widgets, iconWidget** selection_widgets,
-        textWidget** text_widgets);
+    // Before normalization (function): type_skeleton_window::create_creature_icons.
+    void createCreatureIcons(
+        // Before normalization (locals): icon_x, icon_y, group_number, item_number, widget_id,
+        // icon_widgets, selection_widgets, text_widgets.
+        long iconX, long iconY, long columns, long rows,
+        long groupNumber, long itemNumber, long& widgetId,
+        iconWidget** iconWidgets, iconWidget** selectionWidgets,
+        textWidget** textWidgets);
 };
 
 // The transformer dialog's creature slots. Retail 0x5654c0 forwards TWO
@@ -367,24 +517,32 @@ private:
 // that pair as (new_group, new_slot).
 class type_transformer_slot : public iconWidget {
 public:
-    long group;
-    long slot;
+    // Before normalization: group.
+    long m_group;
+    // Before normalization: slot.
+    long m_slot;
 
-    type_transformer_slot(long new_x, long new_y, long new_w, long new_h,
-                          long new_group, long new_slot, long new_id,
+    // Before normalization (locals): new_x, new_y, new_w, new_h, new_group, new_slot, new_id.
+    type_transformer_slot(long newX, long newY, long newW, long newH,
+                          long newGroup, long newSlot, long newId,
                           const char* image);
 
-    virtual unsigned char handle_click(unsigned char down_click,
-                                       unsigned char right_click);
+    // Before normalization (function): type_transformer_slot::handle_click.
+    // Before normalization (locals): down_click, right_click.
+    virtual unsigned char handleClick(unsigned char downClick,
+                                       unsigned char rightClick);
 };
 SIZE(type_transformer_slot, 0x50);
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\sacrifice_window.cpp:760, dc 0x1258ac) std::basic_string<char,std::char_traits<char>,std::allocator<char> convert_with_commas(__$ReturnUdt, long value);
-std::string convert_with_commas(long value);
+// Before normalization (function): convert_with_commas.
+std::string convertWithCommas(long value);
 // CODEVIEW(E:\gamedcs\sacrifice_window.cpp:800, dc 0x125a4c) void update_artifact_widget(iconWidget* slot_widget, type_artifact artifact);
 // CODEVIEW(E:\gamedcs\sacrifice_window.cpp:821, dc 0x125aac) void update_offering(iconWidget* artifact_widget, textWidget* value_widget, const type_artifact_offering* offering);
-void update_offering(iconWidget* artifact_widget, textWidget* value_widget,
+// Before normalization (function): update_offering.
+// Before normalization (locals): artifact_widget, value_widget.
+void updateOffering(iconWidget* artifactWidget, textWidget* valueWidget,
                      const type_artifact_offering* offering);
 // CODEVIEW(E:\gamedcs\sacrifice_window.cpp:914, dc 0x125de0) long sacrifice_value(TCreatureType creature);
 // CODEVIEW(E:\gamedcs\sacrifice_window.cpp:2385, dc 0x1282b0) void move_all_armies(armyGroup* source, armyGroup* dest);

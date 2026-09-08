@@ -18,6 +18,18 @@
 #include "resourcemanager.h"
 #include "textresource.h"
 
+// Shared registry at 0x69cb80, guard 0x69cb64. GetImageName's empty-name
+// static has a separate guard at 0x69cb70, proving a shared accessor boundary.
+// That does not prove an inline declaration: C2 classifies this ordinary
+// helper's static as kind 8. The former inline definition made it kind 7,
+// preventing propagation of rows.end() and assigning its temporary EAX
+// where retail uses EDX. See docs/vc6/regalloc.md for the byte-verified trace.
+static TObjectImageNameTable& getObjectImageNames()
+{
+    static TObjectImageNameTable imageNames;
+    return imageNames;
+}
+
 // The registry map's value_type constructor, retail 0x517c30: the string
 // copy expanded in place (allocator byte, _Tidy's three zero stores, then
 // assign(_X, 0, npos)) and the mapped index read back through its
@@ -49,47 +61,44 @@ VA_COMPGEN(0x00514060, 0xCA, CLASS_CTOR, TObjectImageNameTable)
 // bitset<10> test (retail leaves `bitset<10>::_Xran` a call at 0x404410),
 // then Dinkumware's nibble-table `count()` over the single word.
 //
-// Residual (77.4%): the register-save placement, and only that. Retail
-// returns from the slotCategory gate BEFORE any callee-saved push
-// (`xor al,al / pop ebp / ret 4`) and pushes esi then edi afterwards; our
-// CL pushes edi at entry and therefore merges all three false exits into
-// one tail, which also costs the `test dword ptr [edi+4*esi], eax` folding
-// (we load through ecx because esi is popped early). Tried and rejected,
-// one compile each: `&&`-ing the gate into the other two conditions
-// (77.39, byte-flat), a `const bitset<10>&` local for the two mask uses
-// (77.39, byte-flat), `return false` for the gate's own exit (77.39,
-// byte-flat), and splitting the test and count into separate guards
-// (62.59 - that one really does change the flow, for the worse). The two
-// sibling predicates below are EXACT with the same idioms, so the wall is
-// not the spelling of any expression here.
+// Byte-exact (2026-09-07): the virtual predicate returns an unsigned char.
+// Retail's early slot-category rejection clears only AL, while the direct
+// test/count conjunction materializes a full-width logical result. Keeping
+// those source forms distinct prevents C2 from merging the early rejection
+// with the later false return. The ESI/EDI saves then remain below the guard,
+// and the bitset test folds into the retail memory operand.
+// Controls: int return with explicit 1/0 arms 77.3913%; unsigned-char return
+// with those arms 77.0652%; unsigned-char return with the direct conjunction
+// 100%. The interface and overrides share the recovered byte-return ABI.
+// Earlier int-return gate/ref/polarity probes were flat, and splitting the
+// conjunction into independent guards regressed; they did not test the
+// combination of return width and direct logical-result lowering.
 VA(0x005141B0, 0x6E)  // anchor-vtable 0x6402c4 slot 1; anchor-global the nine 0..8 initializers at 0x514280..0x514450; retail-only
-int TNativeTerrainObjectFilter::Accepts(const TObjectType* objectType) const
+unsigned char TNativeTerrainObjectFilter::accepts(const TObjectType* objectType) const
 {
-    if (objectType->slotCategory != 0)
+    if (objectType->m_slotCategory != 0)
         return 0;
-    if (objectType->recommendedTerrainMask.test(m_terrain)
-        && objectType->recommendedTerrainMask.count() <= 3)
-        return 1;
-    return 0;
+    return objectType->m_recommendedTerrainMask.test(m_terrain)
+        && objectType->m_recommendedTerrainMask.count() <= 3;
 }
 
 // Retail 0x514220. The same gate and the same `count()`, with the opposite
 // arm and no terrain test - which is what makes the pair a partition of the
 // unplaced objects into terrain-specific and terrain-agnostic.
 VA(0x00514220, 0x3D)  // anchor-vtable 0x6402d4 slot 1; retail-only
-int TAnyTerrainObjectFilter::Accepts(const TObjectType* objectType) const
+unsigned char TAnyTerrainObjectFilter::accepts(const TObjectType* objectType) const
 {
-    if (objectType->slotCategory == 0
-        && objectType->recommendedTerrainMask.count() > 3)
+    if (objectType->m_slotCategory == 0
+        && objectType->m_recommendedTerrainMask.count() > 3)
         return 1;
     return 0;
 }
 
 // Retail 0x514260, one compare and a `sete`.
 VA(0x00514260, 0x19)  // anchor-vtable 0x6402dc slot 1; anchor-global the five 1..5 initializers at 0x5144f0..0x5145e0; retail-only
-int TSlotCategoryObjectFilter::Accepts(const TObjectType* objectType) const
+unsigned char TSlotCategoryObjectFilter::accepts(const TObjectType* objectType) const
 {
-    return objectType->slotCategory == m_slotCategory;
+    return objectType->m_slotCategory == m_slotCategory;
 }
 
 VA(0x005142A0, 0x15)  // anchor-global called by the nine terrain initializers; retail-only
@@ -122,35 +131,74 @@ TObjectTypeFilter::~TObjectTypeFilter()
 
 // The fifteen filter objects, in the order their dynamic initializers run.
 // Terrain ids follow terrain_type.h; rock (9) has no filter.
-DATA(0x0069cb30) TNativeTerrainObjectFilter gDirtObjectFilter(0);
-DATA(0x0069cb38) TNativeTerrainObjectFilter gSandObjectFilter(1);
-DATA(0x0069cb10) TNativeTerrainObjectFilter gGrassObjectFilter(2);
-DATA(0x0069caf8) TNativeTerrainObjectFilter gSnowObjectFilter(3);
-DATA(0x0069cb28) TNativeTerrainObjectFilter gSwampObjectFilter(4);
-DATA(0x0069cac8) TNativeTerrainObjectFilter gRoughObjectFilter(5);
-DATA(0x0069cad8) TNativeTerrainObjectFilter gSubterraneanObjectFilter(6);
-DATA(0x0069cad0) TNativeTerrainObjectFilter gLavaObjectFilter(7);
-DATA(0x0069cb20) TNativeTerrainObjectFilter gWaterObjectFilter(8);
-DATA(0x0069cae0) TAnyTerrainObjectFilter gAnyTerrainObjectFilter;
-DATA(0x0069cb18) TSlotCategoryObjectFilter gSlotCategory1ObjectFilter(1);
-DATA(0x0069caf0) TSlotCategoryObjectFilter gSlotCategory2ObjectFilter(2);
-DATA(0x0069cae8) TSlotCategoryObjectFilter gSlotCategory3ObjectFilter(3);
-DATA(0x0069cb08) TSlotCategoryObjectFilter gSlotCategory4ObjectFilter(4);
-DATA(0x0069cb00) TSlotCategoryObjectFilter gSlotCategory5ObjectFilter(5);
+// Before normalization: gDirtObjectFilter.
+// Before normalization: gSandObjectFilter.
+DATA(0x0069cb30) TNativeTerrainObjectFilter g_dirtObjectFilter(0);
+// Before normalization: gGrassObjectFilter.
+DATA(0x0069cb38) TNativeTerrainObjectFilter g_sandObjectFilter(1);
+// Before normalization: gSnowObjectFilter.
+DATA(0x0069cb10) TNativeTerrainObjectFilter g_grassObjectFilter(2);
+// Before normalization: gSwampObjectFilter.
+DATA(0x0069caf8) TNativeTerrainObjectFilter g_snowObjectFilter(3);
+// Before normalization: gRoughObjectFilter.
+DATA(0x0069cb28) TNativeTerrainObjectFilter g_swampObjectFilter(4);
+// Before normalization: gSubterraneanObjectFilter.
+DATA(0x0069cac8) TNativeTerrainObjectFilter g_roughObjectFilter(5);
+// Before normalization: gLavaObjectFilter.
+DATA(0x0069cad8) TNativeTerrainObjectFilter g_subterraneanObjectFilter(6);
+// Before normalization: gWaterObjectFilter.
+DATA(0x0069cad0) TNativeTerrainObjectFilter g_lavaObjectFilter(7);
+// Before normalization: gAnyTerrainObjectFilter.
+DATA(0x0069cb20) TNativeTerrainObjectFilter g_waterObjectFilter(8);
+// Before normalization: gSlotCategory1ObjectFilter.
+DATA(0x0069cae0) TAnyTerrainObjectFilter g_anyTerrainObjectFilter;
+// Before normalization: gSlotCategory2ObjectFilter.
+DATA(0x0069cb18) TSlotCategoryObjectFilter g_slotCategory1ObjectFilter(1);
+// Before normalization: gSlotCategory3ObjectFilter.
+DATA(0x0069caf0) TSlotCategoryObjectFilter g_slotCategory2ObjectFilter(2);
+// Before normalization: gSlotCategory4ObjectFilter.
+DATA(0x0069cae8) TSlotCategoryObjectFilter g_slotCategory3ObjectFilter(3);
+// Before normalization: gSlotCategory5ObjectFilter.
+DATA(0x0069cb08) TSlotCategoryObjectFilter g_slotCategory4ObjectFilter(4);
+DATA(0x0069cb00) TSlotCategoryObjectFilter g_slotCategory5ObjectFilter(5);
 
 // Retail 0x640288, fifteen relocations in the initializer order above.
 DATA(0x00640288)
-TObjectTypeFilter* const gObjectTypeFilters[OBJECT_TYPE_FILTER_COUNT] = {
-    &gDirtObjectFilter,          &gSandObjectFilter,
-    &gGrassObjectFilter,         &gSnowObjectFilter,
-    &gSwampObjectFilter,         &gRoughObjectFilter,
-    &gSubterraneanObjectFilter,  &gLavaObjectFilter,
-    &gWaterObjectFilter,         &gAnyTerrainObjectFilter,
-    &gSlotCategory1ObjectFilter, &gSlotCategory2ObjectFilter,
-    &gSlotCategory3ObjectFilter, &gSlotCategory4ObjectFilter,
-    &gSlotCategory5ObjectFilter
+TObjectTypeFilter* const g_objectTypeFilters[OBJECT_TYPE_FILTER_COUNT] = {
+    &g_dirtObjectFilter,          &g_sandObjectFilter,
+    &g_grassObjectFilter,         &g_snowObjectFilter,
+    &g_swampObjectFilter,         &g_roughObjectFilter,
+    &g_subterraneanObjectFilter,  &g_lavaObjectFilter,
+    &g_waterObjectFilter,         &g_anyTerrainObjectFilter,
+    &g_slotCategory1ObjectFilter, &g_slotCategory2ObjectFilter,
+    &g_slotCategory3ObjectFilter, &g_slotCategory4ObjectFilter,
+    &g_slotCategory5ObjectFilter
 };
 
+
+// Provisional cache accessor: retail's independent guard at 0x6aba7d
+// initializes the vector at 0x6aba80 through its retained constructor.
+// At both the 90.64 and 96.08 checkpoints VC6 expands this accessor but
+// gives the nested constructor budget 43 against cost 51. At the earlier
+// checkpoint a caller-local static expands that constructor and scores
+// 87.9486 instead of 90.6364 in setImageName.
+// A caller-local class owning or deriving from the vector also preserves
+// the constructor call and is byte-identical at 96.5929. The retained
+// constructor therefore establishes a boundary, not this accessor uniquely.
+// External inline storage makes the cache fields kind 7 in VC6. Together
+// with the ordinary registry accessor and value-returning lookup, it
+// reproduces the retail cache/string operands. A static inline definition
+// keeps kind 8 storage and does not recover those operands.
+inline std::vector<TObjectType::TImageInfo>& getObjectImageCache()
+{
+    static std::vector<TObjectType::TImageInfo> imageCache;
+    return imageCache;
+}
+
+// The accessor registers this function-local vector teardown with atexit.
+// Retail frees imageCache's allocation and clears its three pointer fields;
+// the named cache relocation distinguishes the 42-byte static destructor.
+VA_COMPGEN(0x00514930, 0x2A, LOCAL_STATIC_DTOR, imageCache)
 
 // Retail 0x514610, TObjectType::setImageName - the .msk cache loader and
 // the registry's growth path. Two function-local statics with SEPARATE
@@ -167,9 +215,9 @@ TObjectTypeFilter* const gObjectTypeFilters[OBJECT_TYPE_FILTER_COUNT] = {
 // when there is no '.'), and `rfind('.')` is what puts the character in
 // the dead parameter home at [ebp+0xb].
 //
-// The tail RE-READS the cache's _First between every member of the copy,
-// because `this` may alias the vector's storage - that is the plain
-// assignment, not a hoisting failure.
+// The tail reloads the cache's _First for each coordinate and each bitset.
+// These are separate source assignments; a whole TImageInfo assignment
+// emits rep movsd and loses the repeated loads.
 // GetIndex is a provisional Complete-only source boundary. Retail expands
 // the first rows.size(), then calls size, pair construction (0x517c30)
 // and row insert inside the lookup's insertion arm. Encapsulating that
@@ -194,28 +242,195 @@ TObjectTypeFilter* const gObjectTypeFilters[OBJECT_TYPE_FILTER_COUNT] = {
 // under VC6 (54.79 is therefore invalid); an aggregate initializer is
 // rejected as C2552; two body assignments occur after the bitset calls.
 //
-// Remaining: the imageCache constructor and both bitset::set calls still
-// expand, unlike retail; 29 vs 22 blocks.
-// Historical append-spelling rankings expired: before GetIndex, cache
-// push_back and insert(end(), x) were byte-identical at 47.7708. Earlier
-// dead-statement probes (removed) were flat then worse; synthetic caller
-// mass did not recover the missing boundaries.
+// The cache accessor, bitset proxy assignments and separate final field
+// copies raise MAX from 58.5099 to 90.6364. operator[](cell) and its proxy's
+// operator=(bool) expand; the two nested set calls remain at 0x51488f and
+// 0x5148a6, including retail's two bool argument stack homes. With the
+// final field copies and cache accessor, direct set calls score 73.2688.
+// A separate mask-reader probe reaches 85.2530 but lacks those bool homes;
+// the ordinary bitset API accounts for them without a new source helper.
+//
+// The appended TImageInfo is a full-expression temporary. Keeping a named
+// record alive across the loader arm costs an extra 20 stack bytes; a
+// block-scoped record produces the same code as the temporary. The
+// resulting frame is retail's 0x60, and both packed masks occupy their
+// retail slots. Removing the provisional constructors still makes an
+// aggregate initializer fail with C2552; implicit default construction
+// leaves the two point coordinates undefined. Passing the point by value,
+// naming the record through a reference, separate zero assignments, and
+// spelling bit arithmetic as / and % are byte-neutral controls.
+//
+// Initializing emptySize at function entry and cell before the resource
+// reads recovers the retail point stores and this/name/count registers.
+// Naming the shared packed-byte index also restores the loop's shift order:
+// MAX 96.0790, 791 bytes, 22 matching branch connections and retail's 0x60
+// frame. Moving cell's initialization back to the for header scores 91.4941;
+// moving only its declaration is byte-neutral. A block-scoped emptySize
+// gives 94.2925 before the byte index is named. Zeroing the point with
+// memset is identical to the earlier aggregate initialization.
+//
+// Negative controls: alternate bitset initializers, point constness, signed
+// byte arrays/masks, a named insertion index/result, and const map iterators
+// are neutral. Coordinate constructors reach 92.8498 but fail to recover the
+// surrounding allocation. Returning an index reference or an iterator is
+// worse; an early return for existing registry entries adds a branch. Moving
+// GetIndex's definition out of the class, before or after this caller, is
+// neutral. The bitset size accessor changes the lookup's nested decisions.
+// TPoint() under VC6 leaves coordinates undefined; it is not zeroing syntax.
+//
+// The retained cache insert at 0x516c10 agrees in every non-relocation
+// byte of its 522-byte body, including its ten call sites. Its _Construct
+// at 0x517b50 uses a six-dword rep movsd, consistent with the ordinary copy.
+// An explicit point copy constructor contradicts that callee: _Construct
+// grows from 20 to 39 bytes and replaces rep movsd with six individual
+// load/store pairs. Coordinate constructors taking values or references
+// are neutral when the empty point is initialized before the row count.
+VA_COMPGEN(0x00517b50, 0x14, STD_CONSTRUCT, TImageInfo)
+//
+// Further boundary controls do not close the residual: an ordinary free
+// GetIndex is neutral; a separate registry-append helper changes nested
+// decisions. Separate whole-mask, raw-data and decode helpers reach only
+// 88.7945, 88.1739 and 84.2727. A TImageInfo::readMask member remains called.
+// Naming the loop's two bitset references, narrowing dimension lifetimes,
+// and reusing oldCount for cell also fail. Moving only the byte-index/bit
+// declarations outside the loop is neutral. bitset::at retains two bounds
+// branches absent from retail; it is not an elided-check explanation.
+// Include-order controls are neutral. The configured CPU scheduling agrees
+// with /G5; /G6 lowers the score to 84.1067. why-reg's first named-flag probe
+// worsens its register distance from 48 to 53. Its retained-value mapping
+// already agrees: ESI=this, EBX=oldCount, EDI=name. With a loop-local index,
+// file and cell share ESI and this/name swap; early cell separates them.
+// The full inline trace is unchanged from 90.6364 to 96.0790: caller cost
+// 577, 22 root candidates, and identical budgets at every nested site.
+// Resource-fallback expressions, named proxies and iterator initialization
+// versus assignment are neutral. A separate appended iterator restores
+// retail's EAX return path but removes its initial found store (88.0316).
+// Putting imageNumber's assignment inside the lookup scores 95.2767.
+// Unsigned mapped indices and signed loop indices with unsigned byte-offset
+// arithmetic are neutral; SHR alone does not prove the counter's type.
+// A separate result iterator, initialized from found and refreshed after
+// the row append, preserves the initial found store AND restores retail's
+// EAX lookup exit. It scores 88.4269 because later temporary allocation
+// changes. Branch-specific result assignments add control flow instead.
+// Entry reference/pointer returns score 95.3676. A generic registry template
+// and find_last_of('.') are neutral; the pinned character overload of
+// find_last_of calls the same rfind overload, so that call does not prove
+// which public spelling retail used.
+// Selecting record after maskName's copy raises MAX to 96.5929 with the
+// same 791-byte extent and 22 branch connections. This still selects the
+// record later than retail's emitted load; it is not an exact schedule.
+// Moving selection past extension replacement scores 90.6759, and moving
+// cell's initialization to the loop with this order scores 92.0079.
+// The normalized names and headers at master 7ea23f51 reproduce both
+// record-order checkpoints byte for byte; spelling += as append is also
+// byte-neutral at both checkpoints.
+// The substring constructor with name.get_allocator() captures npos in
+// ESI before _Tidy and scores at most 93.1146; retail loads npos afterward.
+// Its default-allocator form also loses the byte copied from name. These
+// controls support the copy constructor rather than a substring operation.
+// Naming the end iterator, widening the insertion pair's scope, taking
+// the containers directly in the lookup helper, and copy-initializing the
+// empty point are byte-neutral. A string-pointer parameter is also neutral
+// after changing only the comparison symbol's spelling. Calling an append
+// helper directly from this caller adds eight CFG blocks; a const-iterator
+// result adds three. Neither recovers the lookup's retained call decisions.
+// Returning a stable index reference through a separate result iterator
+// raises MAX to 96.6403: all 22 instruction-pattern blocks now agree, with
+// the same 27 named calls and EH states 0,-1,1,-1. The existing-entry path
+// keeps EAX and only the insertion path reloads found. Returning the whole
+// map entry by const reference is byte-identical. Moving record before the
+// string copy scores 96.1265; a loop-local counter gives 92.0079 and merges
+// a block. A named scalar index in the caller gives 87.8696. The size-query
+// wrappers remain neutral together; typed resource reads give 87.8696, and
+// returning an insertion pair changes the CFG and gives 73.5652.
+// PCH creation/reuse and iterator/reference constness are byte-neutral.
+// A name-copy helper stays called (95.6127), replacing retail's separate
+// _Tidy and assign calls; a complete filename factory also remains called.
+// A by-value temporary point changes the lookup's nested expansion decisions.
+// Byte-verified C2 tracing confirms the rotating volatile-register path is
+// active here (36 requests); see docs/vc6/regalloc.md section 3a. A preferred
+// register does not advance its cursor, so simple first-fit cannot explain
+// the remaining scratch-register choices.
+// Returning GetIndex by value removes its mapped-load allocation request
+// (35 instead of 36), leaving the following cursor at EDX rather than EAX.
+// Both traces reproduce their respective complete objects byte for byte
+// outside timestamps; this explains the 87.8696 control's allocation shift.
+// Operand tracing separates the registry end's preassigned EAX temporary
+// from the cache end's rotating EDX request. Naming the append position,
+// push_back, an iterator assignment argument, and a named index reference
+// are byte-identical here. Branch-specific mapped-value pointers score
+// 88.9526 and change the CFG; they do not recover retail's lookup exit.
+// Global-allocation tracing (docs/vc6/regalloc.md section 3b) assigns cell
+// ESI first with either initializer position. Early initialization excludes
+// ESI from maskFile's candidates; the loop-local control allows ESI reuse
+// and moves this to EDI. This is an interference difference, not merely
+// creation order. The registry end has equal costs for EAX/ECX/EDX/ESI and
+// takes EAX by tie-break. A shared iterator return changes nested expansion
+// and scores 73.5455; explicit cache insert also changes the CFG (87.0316).
+// Moving cell's initialization before the third or fourth read keeps 96.6403
+// and the file/index registers, but moves XOR ESI to +0x233 or +0x23f:
+// equal scores are not byte identity. Retail initializes it at +0x251.
+// Separate field-read and file-acquisition helpers reproduce the rejected
+// loop-local-counter function byte for byte. Moving the nullable-file guard
+// or filename lookup into the mask reader instead scores 80.4466/84.7470.
+// The reference-returning lookup as an ordinary free function is byte-neutral
+// with either parameter order. rows.begin()+rows.size() retains an extra
+// size call and scores 90.4743; its EDX append position is not retail's load.
+// A reference-returning lookup with an early existing-entry return scores
+// 88.7352: it adds separate +0x1c address calculations and a forward jump.
+// C2 storage-class tracing resolves the accessor mismatch: the ordinary
+// registry accessor gives kind-8 storage, allowing rows.end() to propagate;
+// the external inline cache accessor gives kind 7 and retains its result.
+// With GetIndex returning by value and record selected before the string
+// copy, MAX rises to 99.2095. All 27 calls and EH states still agree; the
+// only instruction difference is XOR ESI,ESI at +0x21b instead of +0x251.
+// The old guard-byte evidence proved a shared registry accessor, not inline.
+// Negative controls at this checkpoint: an ordinary cache gives 96.2055;
+// static inline does not change its storage kind; a reference-returning
+// lookup with inline cache gives 94.6443. Selecting record after the string
+// copy gives 95.9486. Moving the counter initializer after the reads or the
+// width store changes register ownership (91.7312); a loop-local counter
+// gives 92.5020. Preincrement from unsigned -1 reproduces that latter body.
+// An early do/while is byte-identical to 99.2095. Moving initialization before
+// the file guard or lookup changes the CFG and gives 93.6482/93.6680.
+// With the loop-local counter, a named or reused whole point gives 88.8103;
+// an early reference to imageInfo gives 81.9447; bitset::size gives 88.8300.
+// Unsigned long, /8 and %8 arithmetic, reusing oldCount or dot, and explicit
+// success/failure joins all reproduce the 92.5020 late-counter body exactly.
+// A full-width bit mask instead gives 92.4625. None preserves retail's file
+// register: the byte-verified current trace still assigns maskFile ESI first,
+// then moves oldCount to EDI and this to EBX (docs/vc6/regalloc.md section 3b).
+// Pointer and reference return signatures produce identical function bytes
+// with either counter placement. A separate selected resource is also neutral;
+// a ternary fallback gives 92.1265 and changes the branch connections. Using
+// imageNumber for the record index reloads the member after insert (83.7273),
+// absent from retail; capturing that member before insert gives 92.0909.
+// The current output-reference lookup controls give 96.5415/96.0395 and
+// preserve the wrong registry operands. A flattened lookup with a separate
+// entry factory or typed make_pair gives 78.1067/75.8103 and different calls.
+// With the merged normalized headers, declaring cell or maskFile at function
+// entry but assigning at the original use reproduces the 92.5020 late-counter
+// body byte for byte. Hoisting all raw-read locals changes stack allocation
+// and scores 89.9842. Declaration order alone does not recover the file/counter
+// interference; homm3 vc6 why-reg --model also finds no binding permutation
+// in the 99.2095 body (the residual is instruction placement).
+// Remaining: counter initialization placement. No inline-depth controls or
+// release-elided operations are used.
 VA(0x00514610, 0x317)  // anchor-callee 0x514b80 per-row `>>`; anchor-global 0x6aba80 .msk cache; retail-only
 TObjectType& TObjectType::setImageName(
     const std::basic_string<char, std::char_traits<char>,
                             std::allocator<char> >& name)
 {
-    TObjectImageNameTable& imageNames = GetObjectImageNames();
+    TPoint emptySize = { 0, 0 };
+    TObjectImageNameTable& imageNames = getObjectImageNames();
 
-    unsigned int oldCount = imageNames.rows.size();
-    imageNumber = imageNames.GetIndex(name);
+    unsigned int oldCount = imageNames.m_rows.size();
+    m_imageNumber = imageNames.getIndex(name);
 
-    static std::vector<TImageInfo> imageCache;
+    std::vector<TImageInfo>& imageCache = getObjectImageCache();
 
-    if (imageNumber == oldCount) {
-        TPoint emptySize = { 0, 0 };
-        TImageInfo newRecord(emptySize);
-        imageCache.push_back(newRecord);
+    if (m_imageNumber == oldCount) {
+        imageCache.push_back(TImageInfo(emptySize));
         TImageInfo* record = &imageCache[oldCount];
 
         std::basic_string<char, std::char_traits<char>,
@@ -231,34 +446,37 @@ TObjectType& TObjectType::setImageName(
         }
 
         LODFile* maskFile =
-            ResourceManager::PointToSpriteResource(maskName.c_str());
+            ResourceManager::pointToSpriteResource(maskName.c_str());
         if (maskFile == 0) {
-            maskFile = ResourceManager::PointToSpriteResource("default.msk");
+            maskFile = ResourceManager::pointToSpriteResource("default.msk");
         }
         if (maskFile != 0) {
+            unsigned int cell = 0;
             char width;
             char height;
             unsigned char drawBits[6];
             unsigned char shadowBits[6];
 
-            ResourceManager::ReadFromBitmapResource(maskFile, &width, 1);
-            ResourceManager::ReadFromBitmapResource(maskFile, &height, 1);
-            ResourceManager::ReadFromBitmapResource(maskFile, drawBits, 6);
-            ResourceManager::ReadFromBitmapResource(maskFile, shadowBits, 6);
-            record->objectSize.x = width;
-            record->objectSize.y = height;
-            for (unsigned int cell = 0; cell < 48; ++cell) {
+            ResourceManager::readFromBitmapResource(maskFile, &width, 1);
+            ResourceManager::readFromBitmapResource(maskFile, &height, 1);
+            ResourceManager::readFromBitmapResource(maskFile, drawBits, 6);
+            ResourceManager::readFromBitmapResource(maskFile, shadowBits, 6);
+            record->m_objectSize.m_x = width;
+            record->m_objectSize.m_y = height;
+            for (; cell < 48; ++cell) {
+                unsigned int byteIndex = cell >> 3;
                 unsigned char bit =
                     static_cast<unsigned char>(1 << (cell & 7));
-                record->drawMask.set(
-                    cell, (drawBits[cell >> 3] & bit) != 0);
-                record->shadowMask.set(
-                    cell, (shadowBits[cell >> 3] & bit) != 0);
+                record->m_drawMask[cell] = (drawBits[byteIndex] & bit) != 0;
+                record->m_shadowMask[cell] = (shadowBits[byteIndex] & bit) != 0;
             }
         }
     }
 
-    imageInfo = imageCache[imageNumber];
+    m_imageInfo.m_objectSize.m_x = imageCache[m_imageNumber].m_objectSize.m_x;
+    m_imageInfo.m_objectSize.m_y = imageCache[m_imageNumber].m_objectSize.m_y;
+    m_imageInfo.m_drawMask = imageCache[m_imageNumber].m_drawMask;
+    m_imageInfo.m_shadowMask = imageCache[m_imageNumber].m_shadowMask;
     return *this;
 }
 
@@ -271,13 +489,13 @@ TObjectType& TObjectType::setImageName(
 // arm returns the address of the empty string itself.
 VA(0x00514960, 0xAD)  // anchor-global 0x69cb80 registry + 0x69cb48 empty name; sole caller CObjectType(TObjectType*), retail-only
 const std::basic_string<char, std::char_traits<char>, std::allocator<char> >&
-TObjectType::GetImageName()
+TObjectType::getImageName()
 {
     static std::string emptyImageName;
-    TObjectImageNameTable& imageNames = GetObjectImageNames();
+    TObjectImageNameTable& imageNames = getObjectImageNames();
 
-    if (imageNumber < imageNames.rows.size())
-        return imageNames.rows[imageNumber]->first;
+    if (m_imageNumber < imageNames.m_rows.size())
+        return imageNames.m_rows[m_imageNumber]->first;
     return emptyImageName;
 }
 
@@ -298,14 +516,14 @@ TObjectType::GetImageName()
 VA(0x00514a60, 0x11D)  // anchor-callee 0x514b80 per-row `>>`; anchor-global {8,6} at 0x640278; retail-only
 TObjectType& TObjectType::setTriggerMask(const std::bitset<48>& mask)
 {
-    triggerMask = mask & ~passableMask;
-    hasTrigger = triggerMask.any();
-    if (hasTrigger) {
+    m_triggerMask = mask & ~m_passableMask;
+    m_hasTrigger = m_triggerMask.any();
+    if (m_hasTrigger) {
         for (int y = 0;; ++y) {
             for (unsigned x = 0; x < 8; ++x) {
-                if (triggerMask.test(CObjectType::getBitPos(x, y))) {
-                    triggerCell.x = x;
-                    triggerCell.y = y;
+                if (m_triggerMask.test(CObjectType::getBitPos(x, y))) {
+                    m_triggerCell.m_x = x;
+                    m_triggerCell.m_y = y;
                     return *this;
                 }
             }
@@ -317,11 +535,56 @@ TObjectType& TObjectType::setTriggerMask(const std::bitset<48>& mask)
         // and rejected: x-then-y assignments 99.9818 (both stores and
         // both loads transposed), `triggerCell = gNoTriggerCell` 96.26,
         // the two member-to-member assignments without the temps 96.26.
-        int noTriggerX = gNoTriggerCell.x;
-        int noTriggerY = gNoTriggerCell.y;
-        triggerCell.y = noTriggerY;
-        triggerCell.x = noTriggerX;
+        int noTriggerX = g_noTriggerCell.m_x;
+        int noTriggerY = g_noTriggerCell.m_y;
+        m_triggerCell.m_y = noTriggerY;
+        m_triggerCell.m_x = noTriggerX;
     }
+    return *this;
+}
+
+// Fluent object-template setters inferred from the retail row reader.
+// Names are provisional. setPassableMask includes cells outside the image;
+// setTerrainMask keeps recommended terrain inside the new legal terrain.
+// Keep ordinary member boundaries: the reader's expanded chain reproduces
+// retail's retained bitset operations and string destruction. Flattening
+// these calls with the same declarations/default constructors scores 76.6378%.
+TObjectType& TObjectType::setPassableMask(const std::bitset<48>& mask)
+{
+    m_passableMask = mask | ~m_imageInfo.m_drawMask;
+    return *this;
+}
+
+TObjectType& TObjectType::setTerrainMask(const std::bitset<10>& mask)
+{
+    m_recommendedTerrainMask &= mask;
+    m_terrainMask = mask;
+    return *this;
+}
+
+TObjectType& TObjectType::setRecommendedTerrainMask(const std::bitset<10>& mask)
+{
+    m_recommendedTerrainMask = mask;
+    return *this;
+}
+TObjectType& TObjectType::setObjectType(TAdventureObjectType type)
+{
+    m_objectType = type;
+    return *this;
+}
+TObjectType& TObjectType::setSubtype(int subtype)
+{
+    m_subtype = subtype;
+    return *this;
+}
+TObjectType& TObjectType::setSlotCategory(int category)
+{
+    m_slotCategory = category;
+    return *this;
+}
+TObjectType& TObjectType::setUnderlay(bool underlay)
+{
+    m_isUnderlay = underlay;
     return *this;
 }
 
@@ -345,12 +608,17 @@ TObjectType& TObjectType::setTriggerMask(const std::bitset<48>& mask)
 // statements later is retail's, not a transcription slip: retail issues
 // the operator&= call on the member at 0x514d04 and then overwrites the
 // member at 0x514d12, and a store cannot be moved across that call.
-// Residual (76.64%): frame exact at 0x64, and the whole delta is one
-// /Ob2 split. Retail CALLS bitset<48>::_Tidy twice and bitset<9>::_Tidy
-// once at the head and EXPANDS the string's _Tidy(true) at the tail (its
-// second `ret` and its operator delete); we do the exact opposite. The
-// lever for the over-inlined half is caller-shrink and this body has no
-// mass to lift.
+// Exact: default-construct the four input masks and pass the converted
+// ten-bit masks as temporary arguments in the fluent setter expression.
+// Right-to-left argument evaluation constructs recommended terrain before
+// legal terrain; their expression lifetime gives retail's stack-slot reuse.
+// The full chain with named conversion locals scores 99.89189%; expression
+// temporaries (explicit or implicit conversion) reach 100%. The flattened
+// default-constructor control scores 76.63784% with identical declarations.
+// The old three unsigned-long zero constructors compensated for flattened
+// helpers: with the recovered chain they score 87.57838% (all four: 72.4162%).
+// Only the passability/terrain setters with flattened scalar fields score
+// 72.91892% on that old zero-constructor form. Retain the whole ordered API.
 VA(0x00514b80, 0x1F7)  // anchor-caller 0x514d80 per-row loop; anchor-callee setImageName/setTriggerMask; retail-only
 std::istream& operator>>(std::istream& is, TObjectType& objectType)
 {
@@ -360,30 +628,23 @@ std::istream& operator>>(std::istream& is, TObjectType& objectType)
     std::bitset<9> terrainRead;
     std::bitset<9> recommendedRead;
     union {
-        int raw;
-        TAdventureObjectType typed;
+        // Before normalization: raw.
+        int m_raw;
+        // Before normalization: typed.
+        TAdventureObjectType m_typed;
     } typeRead;
     int subtype;
     int slotCategory;
     int underlay;
 
     is >> imageName >> passable >> trigger >> terrainRead >> recommendedRead
-        >> typeRead.raw >> subtype >> slotCategory >> underlay;
+        >> typeRead.m_raw >> subtype >> slotCategory >> underlay;
 
-    std::bitset<10> recommendedTerrain(recommendedRead.to_ulong());
-    std::bitset<10> terrain(terrainRead.to_ulong());
-
-    TObjectType& named = objectType.setImageName(imageName);
-    named.passableMask = passable | ~named.imageInfo.drawMask;
-
-    TObjectType& row = named.setTriggerMask(trigger);
-    row.recommendedTerrainMask &= terrain;
-    row.terrainMask = terrain;
-    row.recommendedTerrainMask = recommendedTerrain;
-    row.objectType = typeRead.typed;
-    row.subtype = subtype;
-    row.slotCategory = slotCategory;
-    row.isUnderlay = underlay != 0;
+    objectType.setImageName(imageName).setPassableMask(passable)
+        .setTriggerMask(trigger).setTerrainMask(std::bitset<10>(terrainRead.to_ulong()))
+        .setRecommendedTerrainMask(std::bitset<10>(recommendedRead.to_ulong()))
+        .setObjectType(typeRead.m_typed).setSubtype(subtype)
+        .setSlotCategory(slotCategory).setUnderlay(underlay != 0);
     return is;
 }
 
@@ -417,25 +678,31 @@ std::istream& operator>>(std::istream& is, TObjectType& objectType)
 // variants of the bitset initializer. The default constructor can score
 // higher but erases the unsigned-long constructor that retail calls; keep
 // that boundary. The apparent gain is not evidence for the default overload.
+// Current trace: the TObjectType child budget starts at 121, expands the
+// unsigned-long bitset constructor (cost 95), then rejects complement and
+// TImageInfo (cost 42 each) at the remaining 26. Explicit m_imageInfo() and
+// an ordinary TU-local constructor definition are byte-flat. VC6 rejects
+// aggregate initialization of TImageInfo with C2552; its bitset members make
+// that source form unavailable. No constructor or helper changes retained.
 VA(0x00514d80, 0x284)  // anchor-callee ResourceManager::GetText + anchor-bracket NewfullMapFn_00505DA0; retail-only
 void TObjectTypeTable::load(char* filename)
 {
-    TTextResource* text = ResourceManager::GetText(filename);
+    TTextResource* text = ResourceManager::getText(filename);
     if (text == 0)
         throw TRuntimeError();
 
     try {
-        int count = atoi(text->GetText(0));
-        objectTypes.resize(count);
+        int count = atoi(text->getText(0));
+        m_objectTypes.resize(count);
         for (int i = 0; i < count; ++i) {
-            std::istrstream row(text->GetText(i + 1));
-            row >> objectTypes[i];
+            std::istrstream row(text->getText(i + 1));
+            row >> m_objectTypes[i];
         }
     } catch (...) {
-        text->Dispose();
+        text->dispose();
         throw;
     }
-    text->Dispose();
+    text->dispose();
 }
 
 // Retail 0x517780 is the nine-block Dinkumware tree-successor walk, reached
@@ -449,7 +716,8 @@ VA_COMPGEN(0x00517780, 0xA3, TREE_CONST_ITERATOR_INC, string)
 
 // Minimum ODR use needed to retain the real VC6/Dinkumware COMDAT. This
 // wrapper is not a retail claim and adds no target/report row.
-void __fastcall EmitObjectImageNameIndexIncrement(
+// Before normalization (function): EmitObjectImageNameIndexIncrement.
+void __fastcall emitObjectImageNameIndexIncrement(
     TObjectImageNameTable::TNameIndex::const_iterator* it)
 {
     ++*it;
@@ -584,6 +852,9 @@ VA_COMPGEN(0x0051a120, 0xCC, CLASS_CTOR, basic_string)
 // COMDAT pairing: _Tree<string,...>::insert(const value_type&), agreement
 // 0.969, and the pair<iterator,bool> constructor it returns through,
 // agreement 1.000 - the latter is 0x51af50's only call into this span.
+// setImageName retains map<string,int>::insert as a thin hidden-return
+// wrapper around the tree insertion below.
+VA_COMPGEN(0x00517B70, 0x2C, MAP_INSERT, string)
 VA_COMPGEN(0x0051af50, 0x156, TREE_INSERT, string)
 VA_COMPGEN(0x0051b150, 0x18, CLASS_CTOR, pair)
 
@@ -845,3 +1116,8 @@ VA_COMPGEN(0x00515260, 0xF, IMPLICIT_DTOR, basic_istream)
 // carve, not the codegen.
 VA_COMPGEN(0x00515270, 0x207, ISTREAM_EXTRACT_INT, char)
 VA_COMPGEN(0x00517830, 0x2BE, ISTREAM_EXTRACT_STRING, char)
+
+// TObjectTypeTable::load calls this specialization twice, and the RMG object
+// table supplies the third retail call. The signed magic division by the
+// proven 0x4c TObjectType stride distinguishes it from every pointer vector.
+VA_COMPGEN(0x0054C910, 0x21, VECTOR_SIZE, TObjectType)

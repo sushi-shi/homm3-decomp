@@ -874,38 +874,15 @@ def _rank_for_model(muts: list[dict], klass: str,
 
 
 def _il_order_note(src: Path, fn: str) -> list[str]:
-    """Evidence channel: the front end's symbol-handle creation order around
-    fn, from a fresh IL capture (docs/vc6/il-format.md).  Best-effort - rich
-    TUs have heuristic framing; this ANNOTATES, the compile decides."""
+    """Best-effort candidate IL evidence, scoped by the recorded body offset."""
+    from homm3.vc6 import il as _iltap
+
     try:
-        from homm3.vc6 import il as _iltap
-        from homm3.vc6 import _il as _ilf
-    except ImportError as exc:  # pragma: no cover
-        return [f"(IL tap unavailable: {exc})"]
-    try:
-        cap = _iltap.capture(src, list(_iltap.DEFAULT_FLAGS),
-                             IL_SCRATCH := (SCRATCH / "il"))
+        return _iltap.capture_local_symbols(src, fn, SCRATCH / "il")
     except SystemExit:
         return ["(IL capture failed - front end error on this TU)"]
-    gl = cap["gl"].read_bytes()
-    sy = cap["sy"].read_bytes()
-    hw = _ilf.gl_highwater(gl)
-    fn_recs = [r for r in _ilf.scan_names(gl, hw, min_len=3)
-               if r["name"].startswith("?")]
-    mine = [r for r in fn_recs if fn in r["name"]]
-    if not mine:
-        return ["(function not found in the gl symbol scan)"]
-    h = mine[0]["handle"]
-    later = [r["handle"] for r in fn_recs if r["handle"] > h]
-    nxt = min(later) if later else (hw or h + 0x80)
-    prev_c = [r["handle"] for r in fn_recs if r["handle"] < h]
-    prev = max(prev_c) if prev_c else 0
-    locals_ = [r for r in _ilf.scan_names(sy, hw, min_len=1)
-               if prev < r["handle"] < nxt]
-    locals_.sort(key=lambda r: r["handle"])
-    row = ", ".join(f"{r['name']}@{r['handle']:#x}" for r in locals_[:16])
-    return [f"fn handle {h:#x}; local symbols in CREATION (handle) order: "
-            f"{row or '(none scanned)'}"]
+    except ValueError as exc:
+        return [f"(IL local ownership unavailable: {exc})"]
 
 
 def _handle_advice(args, value):

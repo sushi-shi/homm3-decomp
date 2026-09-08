@@ -138,10 +138,30 @@ _PTR_CAST = re.compile(
 _THIS_CAST = re.compile(r"\)\s*this\b")
 
 
+def _ends_control_condition(code: str, closing: int) -> bool:
+    """Distinguish ``if (...) this->call()`` from ``(Type)this``.
+
+    Input has already had comments and literals stripped. Balance nested
+    parentheses so casts inside a condition still count independently.
+    """
+    depth = 1
+    for opening in range(closing - 1, -1, -1):
+        if code[opening] == ")":
+            depth += 1
+        elif code[opening] == "(":
+            depth -= 1
+            if depth == 0:
+                return bool(re.search(r"\b(?:if|while|for|switch)\s*$",
+                                      code[:opening]))
+    return False
+
+
 def _c_cast_sites(code: str, _ctx) -> list:
     out = {}
     for pattern in (_NUMERIC_CAST, _PTR_CAST, _THIS_CAST):
         for m in pattern.finditer(code):
+            if pattern is _THIS_CAST and _ends_control_condition(code, m.start()):
+                continue
             out[m.start()] = None
     return sorted(out)
 
@@ -502,11 +522,20 @@ _SAMPLES = {
          "t = (DWORD)ticks;",
          "(void)unused_result;",
          "((advManager*)this)->DoEvent();",
+         "return (Handle)this;",
+         "return (Value)this->field;",
+         "if (ready) consume((Handle)this);",
+         "if (check((Handle)this)) this->draw();",
          "n = (size_t)len;"),
         ("void f(int);",
          "int DoTownKnob(unsigned char up);",
          "n = sizeof(int);",
          "if (x) y = 1;",
+         "if (ready) this->draw();",
+         "if (check(value) && ready)\n    this->draw();",
+         "while (ready) this->step();",
+         "for (int i = 0; i < count; ++i) this->step();",
+         "switch (value) this->draw();",
          "call(a, b);",
          "q = static_cast<int>(x);",
          "r = reinterpret_cast<TCreature *>(p);",
