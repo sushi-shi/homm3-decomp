@@ -3505,7 +3505,7 @@ rmg_terrain	?paintRectangle@rmgTerrainPainter@@QAEXIIII@Z	72.8497	72.8497	72.849
 rmg_terrain	?paintTransitions@rmgTerrainPainter@@QAEXXZ	84.0645	84.0645	84.0645	0x1b5a70	0b7316a9d9ed
 rmg_terrain	?queueOtherTerrainNeighbours@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	63.6299	63.6299	63.6299	0x1b50f0	5f7770ec945d
 rmg_terrain	?refreshRmgLinePoint@@YIXPAVTRmgLinePainterInterface@@ABUTRmgGridPoint@@@Z	63.9923	63.9923	63.9923	0xf9f00	ab30f992e664
-rmg_terrain	?repairTerrainPoint@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	89.9680	89.9680	89.9680	0x1b5440	2c693c3b66d3
+rmg_terrain	?repairTerrainPoint@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@@Z	91.3389	91.3389	91.3389	0x1b5440	111af9a68376
 rmg_terrain	?selectBaseFrame@TRmgPatternTerrainRule@@UAEHHH@Z	100.0000	100.0000	100.0000	0x1b3890	d2fa6bcbbe7b
 rmg_terrain	?selectBaseFrame@TRmgTableTerrainRule@@UAEHHH@Z	100.0000	100.0000	100.0000	0x1b3aa0	f937b618fa48
 rmg_terrain	?selectTerrainTransition@@YIHPBHPAUTRmgTerrainFlip@@@Z	100.0000	100.0000	100.0000	0x1b3e80	e20e360ba25b
