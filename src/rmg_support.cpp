@@ -474,6 +474,31 @@ TRmgBoundaryVertex* TRmgVoronoi::createEdge(TPoint first, TRmgZone* firstZone,
     return edge;
 }
 
+// Site insertion removes a paired edge from the subdivision: detach both
+// ring links, erase each owned pointer, then free both trivial half-edges.
+// Retail expands detach's first splice but retains the twin's splice call.
+// Both searches use unsigned indices and erase through the vector interface.
+// Residual (76.1539%): all 18 CFG blocks and ten branches agree. Only the
+// detach expansion differs structurally: VC6 expands both splice calls;
+// retail retains the second one. Reversing predecessor capture order in the
+// canonical detach helper lowers this caller to 73.1250%; keep its exact body.
+VA(0x005FD5B0, 0xFF) // anchor-caller 0x5fd790; Complete-only, thiscall ret 4
+void TRmgVoronoi::removeEdge(TRmgBoundaryVertex* edge)
+{
+    edge->detach();
+    unsigned int index = 0;
+    while (index < m_edges.size() && m_edges[index] != edge)
+        ++index;
+    m_edges.erase(m_edges.begin() + index);
+    TRmgBoundaryVertex* twin = edge->m_twin;
+    index = 0;
+    while (index < m_edges.size() && m_edges[index] != twin)
+        ++index;
+    m_edges.erase(m_edges.begin() + index);
+    delete edge;
+    delete twin;
+}
+
 // The zone-building callers pass an eight-byte TPoint and receive an edge.
 // Retail first recognizes either site endpoint, then follows the twin,
 // successor or twin-predecessor-twin according to integer orientation.
@@ -520,6 +545,105 @@ TRmgBoundaryVertex* TRmgVoronoi::locate(TPoint point)
         }
     }
     return edge;
+}
+
+// Provisional edge flip: retail saves both predecessors before detach,
+// transfers their opposite sites/zones, and splices into the new rings.
+static void flipRmgEdge(TRmgBoundaryVertex* edge)
+{
+    TRmgBoundaryVertex* previous = edge->m_previous;
+    TRmgBoundaryVertex* twinPrevious = edge->m_twin->m_previous;
+    edge->detach();
+    edge->m_zone = previous->m_twin->m_zone;
+    edge->m_sitePosition = previous->m_twin->m_sitePosition;
+    edge->m_twin->m_zone = twinPrevious->m_twin->m_zone;
+    edge->m_twin->m_sitePosition = twinPrevious->m_twin->m_sitePosition;
+    edge->splice(previous->m_twin->m_previous);
+    edge->m_twin->splice(twinPrevious->m_twin->m_previous);
+}
+
+// Provisional segment predicate: retail snapshots the opposite endpoint,
+// compares three squared distances, then materializes collinearity as a byte.
+static unsigned char isRmgPointOnSegment(TPoint point, TRmgBoundaryVertex* edge)
+{
+    TPoint opposite = edge->m_twin->m_sitePosition;
+    int firstDistance = getRmgSquaredDistance(point, edge->m_sitePosition);
+    int secondDistance = getRmgSquaredDistance(point, opposite);
+    int edgeDistance = getRmgSquaredDistance(edge->m_sitePosition, opposite);
+    return firstDistance <= edgeDistance && secondDistance <= edgeDistance
+        && getRmgPointOrientation(edge->m_sitePosition, opposite, point) == 0;
+}
+
+// Provisional geometric predicate: retail snapshots three points before
+// four orientation calls and a signed 64-bit circumcircle determinant.
+static unsigned char isRmgPointInsideCircle(TPoint first, TPoint second,
+    TPoint third, TPoint point)
+{
+    int firstArea = getRmgPointOrientation(second, third, point);
+    int secondArea = getRmgPointOrientation(first, third, point);
+    int thirdArea = getRmgPointOrientation(first, second, point);
+    int pointArea = getRmgPointOrientation(first, second, third);
+    __int64 determinant = static_cast<__int64>(third.m_x * third.m_x + third.m_y * third.m_y) * thirdArea
+        - static_cast<__int64>(second.m_x * second.m_x + second.m_y * second.m_y) * secondArea
+        + static_cast<__int64>(first.m_x * first.m_x + first.m_y * first.m_y) * firstArea
+        - static_cast<__int64>(point.m_x * point.m_x + point.m_y * point.m_y) * pointArea;
+    return determinant > 0;
+}
+
+// Complete's incremental subdivision insertion. Retail rejects coincident
+// endpoints, splits an edge for a collinear site, builds the incident fan,
+// then flips diagonals using an integer circumcircle determinant. Products
+// of a squared norm and orientation widen to signed 64 bits (imul/sbb/adc).
+// Residual (45.3869%): all 20 CFG blocks have the same flow destinations.
+// VC6 expands the first two distance calls, both fan splice calls and the
+// flip's detach, while retaining the collinearity orientation call where
+// retail expands a line equation and tests a byte. Circle orientation-call
+// decisions also differ; scratch space is 0x44 versus retail's 0x30.
+// Flattening all three provisional geometric helpers scores 15.6369%; circle
+// alone 25.9821%, segment+circle 36.2798%. A separate connector is 36.4464%
+// with all three helpers. Line-equation predicate/direct forms are 44.6071%
+// and 34.4464%. Other TU scores hold for the retained helper boundaries.
+// An isolated inline_depth(0) diagnostic on the flat version's distance,
+// fan-splice, orientation and flip regions scores 70.7827%; flattening those
+// regions restores 15.6369%. No pin is retained; the canonical distance,
+// orientation, splice and detach definitions remain ordinary and shared.
+VA(0x005FD790, 0x348) // anchor-caller 0x53e050; Complete-only, thiscall ret 0xc
+void TRmgVoronoi::addSite(TPoint point, TRmgZone* zone)
+{
+    TRmgBoundaryVertex* edge = locate(point);
+    if (point == edge->m_sitePosition || point == edge->m_twin->m_sitePosition)
+        return;
+    if (isRmgPointOnSegment(point, edge)) {
+        edge = edge->m_previous;
+        removeEdge(edge->m_next);
+    }
+    TRmgBoundaryVertex* base = createEdge(edge->m_sitePosition, edge->m_zone, point, zone);
+    base->splice(edge);
+    m_root = base;
+    do {
+        TRmgBoundaryVertex* oppositeBase = base->m_twin;
+        base = createEdge(edge->m_twin->m_sitePosition, edge->m_twin->m_zone,
+            oppositeBase->m_sitePosition, oppositeBase->m_zone);
+        base->splice(edge->m_twin->m_previous);
+        base->m_twin->splice(oppositeBase);
+        edge = base->m_previous;
+    } while (edge->m_twin->m_previous != m_root);
+
+    for (;;) {
+        TRmgBoundaryVertex* previous = edge->m_previous;
+        if (getRmgPointOrientation(edge->m_sitePosition,
+                previous->m_twin->m_sitePosition, edge->m_twin->m_sitePosition) > 0) {
+            if (isRmgPointInsideCircle(edge->m_sitePosition,
+                    previous->m_twin->m_sitePosition, edge->m_twin->m_sitePosition, point)) {
+                flipRmgEdge(edge);
+                edge = edge->m_previous;
+                continue;
+            }
+        }
+        if (edge->m_next == m_root)
+            return;
+        edge = edge->m_next->m_next->m_twin;
+    }
 }
 
 // addSite tests the orientation of the current site, predecessor's opposite

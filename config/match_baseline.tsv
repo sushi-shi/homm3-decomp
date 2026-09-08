@@ -3507,6 +3507,7 @@ rmg_support	??1TRmgRoadPainter@@UAE@XZ	100.0000	100.0000	100.0000	0x15f460	52104
 rmg_support	??1TRmgVoronoi@@QAE@XZ	100.0000	100.0000	100.0000	0x1fd330	8b8ca13a7a35
 rmg_support	??_GTRmgRiverPainter@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x15eed0	-
 rmg_support	??_GTRmgRoadPainter@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x15f430	-
+rmg_support	?addSite@TRmgVoronoi@@QAEXUTPoint@@PAUTRmgZone@@@Z	45.3869	45.3869	45.3869	0x1fd790	42a437a4cb01
 rmg_support	?canPaint@TRmgLinePainter@@UAEHABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x15ee00	97886bd9259e
 rmg_support	?createEdge@TRmgVoronoi@@QAEPAUTRmgBoundaryVertex@@UTPoint@@PAUTRmgZone@@01@Z	90.9600	90.9600	90.9600	0x1fd390	b8524a40882c
 rmg_support	?detach@TRmgBoundaryVertex@@QAEXXZ	100.0000	100.0000	100.0000	0x1fcfa0	d95927b0b8e4
@@ -3521,6 +3522,7 @@ rmg_support	?getTile@TRmgRoadLinePainter@@UAEXABUTRmgGridPoint@@AAUrmgTerrainTil
 rmg_support	?insert@?$vector@PAUTRmgBoundaryVertex@@V?$allocator@PAUTRmgBoundaryVertex@@@std@@@std@@QAEPAPAUTRmgBoundaryVertex@@PAPAU3@ABQAU3@@Z	100.0000	100.0000	100.0000	0x1fdd60	-
 rmg_support	?length@TRmgVector@@QBEHXZ	100.0000	100.0000	100.0000	0x1fceb0	a28cb81fb275
 rmg_support	?locate@TRmgVoronoi@@QAEPAUTRmgBoundaryVertex@@UTPoint@@@Z	91.0460	91.0460	91.0460	0x1fd6b0	d2afb858b03c
+rmg_support	?removeEdge@TRmgVoronoi@@QAEXPAUTRmgBoundaryVertex@@@Z	76.1539	76.1539	76.1539	0x1fd5b0	f2addc1f023e
 rmg_support	?selectRmgLinePattern@@YIXPBEPBUTRmgLinePatternTable@@AAHAAE3@Z	100.0000	100.0000	100.0000	0xf9cb0	bf205d054ee6
 rmg_support	?setOverlay@TRmgRoadLinePainter@@UAEXABUTRmgGridPoint@@H@Z	100.0000	100.0000	100.0000	0x15f330	ccd69cec548f
 rmg_support	?setTile@TRmgLinePainter@@UAEXABUTRmgGridPoint@@ABUrmgTerrainTile@@@Z	100.0000	100.0000	100.0000	0x15edc0	98dc84d9bd86
