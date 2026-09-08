@@ -51,6 +51,38 @@ POINT_ERASE_OVERLOADS = (
 
 
 class TreeMemberKeyTest(unittest.TestCase):
+    def test_const_end_keeps_its_owner_and_overload(self):
+        symbol = f"?end@{TREE}QBE?AVconst_iterator@12@XZ"
+        self.assertEqual(source._demangle_key(symbol),
+                         "type_map_hero_info@tree_const_end")
+        for other in (f"?end@{TREE}QAE?AViterator@12@XZ",
+                      f"?begin@{TREE}QBE?AVconst_iterator@12@XZ",
+                      symbol.replace("?$_Tree@", "?$vector@", 1)):
+            self.assertNotEqual(source._demangle_key(other),
+                                "type_map_hero_info@tree_const_end")
+        self.assertIn("TREE_CONST_END", source.COMPGEN_KINDS)
+        self.assertIn("TREE_CONST_END", DIRECT_SYMBOL_COMPGEN_KINDS)
+
+    def test_const_end_equal_size_owners_join_without_mutable_overload(self):
+        names = (f"?end@{TREE}QBE?AVconst_iterator@12@XZ",
+                 f"?end@{TREE}QBE?AVconst_iterator@12@XZ".replace(
+                     "type_map_hero_info", "type_map_town_info"))
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "singleselectionwindow.cpp"
+            path.write_text(
+                "VA_COMPGEN(0x0058eb50, 0xf, TREE_CONST_END, type_map_hero_info)\n"
+                "VA_COMPGEN(0x0058ec50, 0xf, TREE_CONST_END, type_map_town_info)\n")
+            rows = source.scan_file(path, {0x18eb50, 0x18ec50})
+        mutable = f"?end@{TREE}QAE?AViterator@12@XZ"
+        groups = {source._demangle_key(name): [(name, 15)]
+                  for name in (mutable, *reversed(names))}
+        self.assertEqual(len(groups), 3)
+        with mock.patch.object(source, "_base_authority_scan", return_value=(groups, {})):
+            source.join_unit("singleselectionwindow", rows)
+        for row, name in zip(rows, names):
+            self.assertEqual(row.get("joined"), name)
+            self.assertEqual(row["channel"], "src-VA+base")
+
     def test_public_erase_overloads_and_private_erase_keep_distinct_keys(self):
         for kind, symbol in POINT_ERASE_OVERLOADS:
             with self.subTest(kind=kind):
