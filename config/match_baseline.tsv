@@ -1966,7 +1966,6 @@ game	?experienceValueOfStack@game@@QAEHPBVarmyGroup@@PBVhero@@@Z	100.0000	100.00
 game	?fill@std@@YIXPAVtown@@0ABV2@@Z	100.0000	100.0000	100.0000	0xd2fe0	-
 game	?findHero@playerData@@QAEHH@Z	100.0000	100.0000	100.0000	0xba9e0	191d08e319ea
 game	?findTown@playerData@@QAEHH@Z	100.0000	100.0000	100.0000	0xbaa10	394627583265
-game	?flip@?$bitset@$0BM@@std@@QAEAAV12@XZ	100.0000	100.0000	100.0000	0xd17b0	-
 game	?gameFn004CEF10@game@@QAE?AUtype_point@@H@Z	100.0000	100.0000	100.0000	0xcef10	fc29c7a6d732
 game	?get@NewSMapHeader@@QAEHPBD0H@Z	100.0000	100.0000	100.0000	0xc5e00	eba3d07c26d8
 game	?getAlignment@game@@QBEHH@Z	100.0000	100.0000	100.0000	0xc6690	0e9b376f1e67
@@ -2062,7 +2061,7 @@ game	?perWeek@game@@QAEXXZ	98.8948	98.8948	99.8370	0xc8780	1078057cac97
 game	?processOnMapHeroes@game@@QAEXXZ	100.0000	100.0000	100.0000	0xcae10	e3db55808148
 game	?processOnMapTowns@game@@QAEXXZ	94.3642	94.3642	94.3642	0xcaa70	e6c2e01c2d76
 game	?processRandomObjects@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc9dd0	bb0a93e2417d
-game	?randomizeEvents@game@@QAEXXZ	86.9615	87.0102	87.0102	0xc0cc0	475406c1f55c
+game	?randomizeEvents@game@@QAEXXZ	86.7458	87.0102	87.0102	0xc0cc0	475406c1f55c
 game	?randomizeHolyGrail@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc0870	d92f472f2523
 game	?randomizeUniversity@game@@QAEXPAVNewmapCell@@@Z	99.7464	99.7464	99.7464	0xc06f0	e63a467abefa
 game	?read@NewSMapHeader@@QAEHPAVTAbstractFile@@H@Z	91.5614	91.5614	91.5614	0xc4390	9cbc7f5bc66e
@@ -2139,6 +2138,7 @@ game	?updateBonus@generator@@QAEXXZ	100.0000	100.0000	100.0000	0xb87a0	8d681438b
 game	?validateVictoryLossConditions@game@@QAEXE@Z	90.0315	90.0315	90.0315	0xbf780	6233ce8c9732
 game	?viewArmy@game@@QAEXAAVarmyGroup@@HPBVhero@@PBVtown@@HHEE@Z	100.0000	100.0000	100.0000	0xc6c50	5201b38e4d12
 game	?waitForPlayer@game@@QAEXPADH@Z	100.0000	100.0000	100.0000	0xca840	e819aa75453b
+game	__h3cg$game$bitset_flip$Bitset28	0.0000	100.0000	100.0000	0xd17b0	-
 game	__h3cg$game$implicit_copy_assign$SCampaign	0.0000	0.0000	100.0000	0xbdc70	-
 game	__h3cg$game$static_dtor$immMouse	100.0000	100.0000	100.0000	0xb6910	-
 game	__h3cg$game$std_copy$type_map_hero_identity	0.0000	0.0000	100.0000	0xd2e50	-
