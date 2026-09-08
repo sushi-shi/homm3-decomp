@@ -1406,20 +1406,28 @@ void type_AI_player::tradeResources(const int* cost, long number)
 // per-unit price; market_value totals what selling the surplus earns. The
 // largest affordable candidate is refined by whole units of unit_cost and
 // the supply shortfalls are relaxed to what that quantity leaves out.
-// Residual (81.03%, MAX 81.35%): the current 34/34 out-of-line call multiset
-// agrees. Retail's direct unsigned size comparison (`jae`) is retained below;
-// removing the source-false signed cast moved 81.35 -> 81.03 by perturbing
-// downstream register allocation, but closes that retail/DC-positive branch.
-// The remaining 88/89-block split and register story start downstream of the
-// players[team] address: retail computes it ONCE into the [ebp-0x18] temp,
-// reloads it per use, and rebases the same temp by +0x9c as the resources
-// walker, with markets in EDI / flag in BL; every spelling tried gives the
-// address a callee-saved register instead. Tried and rejected: named
-// playerData* player (78.94/79.42 - grabs EDI), markets/flag declared
-// first (byte-flat on the grab), hoisted int town_index (79.42), unnaming
-// efficiency (82.79 fuzzy but byte-FALSE: it moves the table read into
-// the loop as fmul dword, where retail flds once into the named qword
-// home - do not resurrect), why-reg volatile proposals (doctrine).
+// Dreamcast lines 1477-1494 and retail agree on a retained player pointer,
+// signed town loop, HasBuilding(..., true), and the by-value min(int,int)
+// wrapper. The old unsigned loop and repeated player address calculation
+// were not compiler-state residuals. Restoring the signed loop measures
+// 76.16% from 76.66%; retaining player then reaches 78.22%; the min wrapper
+// and named double efficiency reach 82.50%. Restoring HasBuilding and the
+// retail zero guard on the second supply arm reaches 82.61%.
+// Retail 0x42a66d loads the float efficiency once and widens it into the
+// qword home later used by fmul. Dreamcast also names a double efficiency.
+// The former const double& bound a conversion temporary; it did not reread
+// the float table at each multiply as its old comment claimed.
+// Residual (82.61%): the first insertion retains two extra vector::size
+// calls (its count expression and first size guard) where retail expands
+// them. The player pointer still occupies a register instead of retail's
+// reusable stack home. Later long-vector helper names differ through ICF.
+// Prior controls: declaring markets/flag first and hoisting townIndex did
+// not recover the player's stack home. Inlining the efficiency expression
+// into the multiply is retail-false: it replaces the one-time widened load
+// with a per-iteration float read. The vector-size comparisons below remain
+// unsigned, independently of the signed town-count comparison.
+// The old return-site inline-depth pin is unnecessary: removing it is
+// byte-flat, and both final vector destructors remain calls naturally.
 VA(0x0042a580, 0x5BE)  // retail link order + arity, dc 0x305b4
 bool type_AI_player::canTradeResources(const int* cost, int* supply,
                                          // Before normalization (locals): trade_qty,
@@ -1429,27 +1437,25 @@ bool type_AI_player::canTradeResources(const int* cost, int* supply,
 {
     long markets = 0;
     unsigned char canBuildMarket = 0;
+    playerData* player = &g_game->m_players[m_team];
     if (supply[0] >= 0
-        && g_game->m_players[m_team].m_ai.m_turnProductionResource[0] > 0)
+        && player->m_ai.m_turnProductionResource[0] > 0)
         canBuildMarket = 1;
 
-    for (unsigned int townIndex = 0; townIndex < g_game->m_players[m_team].m_numTowns;
+    for (int townIndex = 0; townIndex < player->m_numTowns;
          ++townIndex) {
         town* currentTown = g_game->getTown(
-            g_game->m_players[m_team].m_townIds[townIndex]);
-        if ((currentTown->m_active & g_bitNumber[MARKETPLACE_ID])
+            player->m_townIds[townIndex]);
+        if (currentTown->hasBuilding(MARKETPLACE_ID, true)
             || (canBuildMarket
                 && currentTown->canBuild(MARKETPLACE_ID)))
             ++markets;
     }
 
-    markets = cppMin(markets, 10L);
+    markets = min(markets, 10);
     if (markets == 0)
         return false;
-    // BOUND BY `const double&`: retail re-reads the table entry at each
-    // multiply rather than keeping the double live in a register/slot.
-    // 81.3465 -> 84.4350.
-    const double& efficiency = g_tradingPostEfficency[markets];
+    double efficiency = g_tradingPostEfficency[markets];
     long marketValue = 0;
 
     std::vector<long> baseCost;
@@ -1463,17 +1469,8 @@ bool type_AI_player::canTradeResources(const int* cost, int* supply,
             marketValue = static_cast<long>(
                 getMarketValue(gameResourceFromInt(i)) * supply[i]
                 * efficiency + marketValue);
-        // Retail's second guard is `je`, not `jge`: spelling this
-        // `supply[i] != 0` (or the bare `supply[i]`) takes the branch
-        // census CLEAN at 45/45 and measures 81.1900 - ABOVE the current
-        // 81.0339 but still under the row's banked 81.3465 MAX, which was
-        // set in an older delink generation, so it is recorded rather than
-        // shipped. The rest of the gap is the induction base: retail walks
-        // `supply` with ESI and biases `cost` off it, we walk `cost` and
-        // bias `supply`; the ICF-folded vector<long>/vector<army*> call
-        // rows are cosmetic.
-        } else if (supply[i] < 0) {
-            long onHand = g_game->m_players[m_team].m_resources[i];
+        } else if (supply[i] != 0) {
+            long onHand = player->m_resources[i];
             long value = getMarketValue(gameResourceFromInt(i));
             for (unsigned int j = 0; j < tradeQty.size(); ++j) {
                 if (tradeQty[j] * cost[i] > onHand) {
@@ -1512,12 +1509,7 @@ bool type_AI_player::canTradeResources(const int* cost, int* supply,
                 supply[k] = 0;
         }
     }
-    // Retail calls ~vector<long> for both locals at this exit only, while
-    // expanding the teardown at the two earlier ones - the return-statement
-    // pin reaches the scope-exit destructors of function-scoped locals.
-#pragma inline_depth(0)
     return true;
-#pragma inline_depth()
 }
 
 // E:\gamedcs\ai_player.cpp:1587
@@ -5924,32 +5916,40 @@ long type_knowledge_artifact::getValue(const hero* owner, unsigned char, unsigne
     return owner->m_valueOfKnowledge * m_bonus;
 }
 
-// Residual (82.56%): logic byte-exact ((1.0f - GetNecromancyFactor(0)) * 100.0f,
-// then min(necro,bonus) / necro=min(necro,0)+bonus, army*necro/250). The delta
+// Residual (85.8871%): logic byte-exact ((1.0f - GetNecromancyFactor(0)) * 100.0f,
+// then min(effect,bonus) / effect=min(effect,0)+bonus, army*effect/250). The delta
 // is register scheduling: retail delays `push esi` past the skillLevel early-out
-// and spills necro to [ebp+8] only inside the min arm, while our SP3 CL pushes
-// esi in the prologue and hoists the spill above the equipped branch; the /250
+// while our SP3 CL pushes esi in the prologue; the /250
 // sign-correction also keeps the quotient in edx where ours uses eax. The 1.0f
 // and 100.0f literals pool as __real@ COMDATs vs retail's const_23b6e0/const_23ac68
 // (cosmetic reloc-name difference). Register-homing class.
+// Dreamcast retains the local `long effect`. Retail's unequipped arm at
+// 0x43268b copies BOTH min inputs to parameter homes before selecting their
+// addresses, so its arguments are temporaries rather than the direct member
+// and local references used by DC's std::min. The existing int min(int,int)
+// wrapper reproduces those copies with the recovered long local (85.8871%).
+// Keeping long effect with std::_cpp_min<long> and a cast bonus gives 82.56%
+// and spills effect before the equipped branch; direct reference arguments
+// give 79.92% and omit retail's bonus copy. The previous int necro plus two
+// converted std::_cpp_min<long> arguments was byte-identical to the wrapper.
 // E:\gamedcs\ai_player.cpp:5152
 VA(0x00432640, 0x97)  // artifact get_value cluster order-map + get_AI_value, dc 0x36450
 long type_necromancy_artifact::getValue(const hero* owner, unsigned char equipped, unsigned char) const
 {
     if (owner->m_skillLevel[12] == 0)
         return 0;
-    int necro = static_cast<int>(
+    long effect = static_cast<long>(
         (1.0f - const_cast<hero*>(owner)->getNecromancyFactor(0)) * 100.0f);
     if (equipped) {
-        if (necro > 0)
-            necro = 0;
-        necro += m_bonus;
+        if (effect > 0)
+            effect = 0;
+        effect += m_bonus;
     } else {
-        necro = std::_cpp_min<long>(necro, static_cast<int>(m_bonus));
+        effect = min(effect, m_bonus);
     }
-    if (necro <= 0)
+    if (effect <= 0)
         return 0;
-    return owner->m_army.getAIValue() * necro / 250;
+    return owner->m_army.getAIValue() * effect / 250;
 }
 
 // E:\gamedcs\ai_player.cpp:5189
@@ -6116,20 +6116,22 @@ long type_antimorale_artifact::getValue(const hero* owner, unsigned char, unsign
     return result;
 }
 
-// Residual (90.68%): same merged-return / stale-CL-generation delta as
-// antimorale above (the luck twin) - retail commits result to edi and merges
-// one epilogue; our CL fuses the morale>0 arm's exit. Rest byte-exact.
+// Dreamcast lines 5418-5419 return immediately for exact, before GetLuck.
+// Preserving that boundary also restores retail's shared result epilogue:
+// all 120 bytes match, including the result store to EDI. The former nested
+// !exact form measured 90.6818% by duplicating the positive-luck exit; this
+// was a source-boundary mismatch, not a compiler-generation residual.
 // E:\gamedcs\ai_player.cpp:5413
 VA(0x00432ba0, 0x78)  // artifact get_value order-map + AI_value_of_luck/GetLuck, dc 0x36c90
 long type_antiluck_artifact::getValue(const hero* owner, unsigned char, unsigned char exact) const
 {
     long army = owner->m_army.getAIValue();
     long result = static_cast<long>(aiValueOfLuck(0, 2) * army);
-    if (!exact) {
-        int luck = const_cast<hero*>(owner)->getLuck(0, 0, 1);
-        if (luck > 0)
-            result = static_cast<long>(aiValueOfLuck(luck, -luck) * army + result);
-    }
+    if (exact)
+        return result;
+    int luck = const_cast<hero*>(owner)->getLuck(0, 0, 1);
+    if (luck > 0)
+        result = static_cast<long>(aiValueOfLuck(luck, -luck) * army + result);
     return result;
 }
 

@@ -333,7 +333,7 @@ ai_player	?buyMageGuild@type_AI_player@@QAEXPAVhero@@PAVtown@@@Z	100.0000	100.00
 ai_player	?calculateDemand@type_AI_player@@QAEXXZ	93.7222	97.4340	97.4340	0x28740	c526e9165204
 ai_player	?calculateReserve@type_AI_player@@QAEXXZ	91.2557	91.2557	96.4566	0x29ad0	f5b940ddfcfb
 ai_player	?canTakeTown@@YIEPBVhero@@PBVtown@@@Z	100.0000	100.0000	100.0000	0x28410	f71cfc8db6f6
-ai_player	?canTradeResources@type_AI_player@@QAE_NPBHPAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	76.6573	85.0282	85.0282	0x2a580	b25ccbd2b755
+ai_player	?canTradeResources@type_AI_player@@QAE_NPBHPAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	82.6064	82.6064	85.0282	0x2a580	a800c9dc46d8
 ai_player	?checkMoveSpell@@YIEPAVhero@@AAV?$vector@UpathCell@@V?$allocator@UpathCell@@@std@@@std@@JHE@Z	100.0000	100.0000	100.0000	0x309a0	69362f607581
 ai_player	?checkTowns@type_town_threat_checker@@QAEXXZ	100.0000	100.0000	100.0000	0x280e0	8b62812f4928
 ai_player	?checkTradeSupply@type_AI_player@@QAE_NPBHJPAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	85.8333	85.8333	85.8333	0x2a2b0	06958639ee9e
@@ -364,7 +364,7 @@ ai_player	?getSwapValue@type_AI_creature_swapper@@QAEJPBVhero@@PBVarmyGroup@@0E@
 ai_player	?getTotalValue@type_AI_player@@QAEJJPAH@Z	100.0000	100.0000	100.0000	0x2a150	9e3f3eab6694
 ai_player	?getTown@game@@QAEPAVtown@@H@Z	100.0000	100.0000	100.0000	0x2ba30	f0e629fed4be
 ai_player	?getValue@type_angelic_alliance_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x33130	f1c644e22459
-ai_player	?getValue@type_antiluck_artifact@@UBEJPBVhero@@EE@Z	90.6818	90.6818	90.6818	0x32ba0	d76d5a263437
+ai_player	?getValue@type_antiluck_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x32ba0	880145b0af27
 ai_player	?getValue@type_antimagic_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x32a50	568102fafc71
 ai_player	?getValue@type_antimorale_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x32b20	767707242287
 ai_player	?getValue@type_combat_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x32560	bddca8cec957
@@ -377,7 +377,7 @@ ai_player	?getValue@type_luck_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.
 ai_player	?getValue@type_might_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x325a0	05b0731597f2
 ai_player	?getValue@type_morale_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x32780	b312e39f1a1b
 ai_player	?getValue@type_movement_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x326e0	d986c6e3e2a0
-ai_player	?getValue@type_necromancy_artifact@@UBEJPBVhero@@EE@Z	85.8871	85.8871	85.8871	0x32640	d76d67c30a4b
+ai_player	?getValue@type_necromancy_artifact@@UBEJPBVhero@@EE@Z	85.8871	85.8871	85.8871	0x32640	d111e50bc09a
 ai_player	?getValue@type_power_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x325e0	e36f331643c9
 ai_player	?getValue@type_school_artifact@@UBEJPBVhero@@EE@Z	96.5897	100.0000	100.0000	0x32890	493af019ad1f
 ai_player	?getValue@type_scouting_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x32510	741e75166890
