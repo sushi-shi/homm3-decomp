@@ -1353,6 +1353,7 @@ customcampaign	?save@SCampaign@@QAEXPAVTAbstractFile@@@Z	99.9858	99.9858	99.9858
 customcampaign	?seekoff@?$basic_filebuf@DU?$char_traits@D@std@@@std@@MAE?AV?$fpos@H@2@JW4seekdir@ios_base@2@H@Z	100.0000	100.0000	100.0000	0x8baa0	-
 customcampaign	?seekpos@?$basic_filebuf@DU?$char_traits@D@std@@@std@@MAE?AV?$fpos@H@2@V32@H@Z	100.0000	100.0000	100.0000	0x8bb30	-
 customcampaign	?selectCampaign@SCampaign@@QAEXHPBD@Z	100.0000	100.0000	100.0000	0x89590	f105d8e31aab
+customcampaign	?set@?$bitset@$0IB@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0x14ded0	-
 customcampaign	?setTown@TCampaignBonus@@UAEXH@Z	100.0000	100.0000	100.0000	0x85d80	8ede13f2968c
 customcampaign	?setTown@TCampaignBuildingBonus@@UAEXH@Z	100.0000	100.0000	100.0000	0x847e0	d87adaa90c49
 customcampaign	?setTown@TCampaignStartBonusOption@@UAEXPAVCMapHeaderData@@@Z	100.0000	100.0000	100.0000	0x853c0	92701beb89a7
@@ -3458,7 +3459,6 @@ rmg	?reset@TRmgTreasureGroup@@QAEXXZ	71.5122	71.5122	71.5122	0x135040	7bfb27e097
 rmg	?scoreObjectPlacement@TRmgGeneratorBase@@QAEHPAUTRmgObjectPropertiesRef@@UTRmgMapPosition@@@Z	84.6788	84.6788	84.6788	0x136bc0	28dee8b5f7a1
 rmg	?selectObjectPrototype@type_random_map_generator@@QAEPAUTRmgObjectPropertiesRef@@HHH@Z	99.6581	99.6581	99.6581	0x146040	b7f108f4c39a
 rmg	?selectPrisonHero@type_random_map_generator@@QAEHXZ	100.0000	100.0000	100.0000	0x14b100	e80dea9b0594
-rmg	?set@?$bitset@$0IB@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0x14ded0	-
 rmg	?setOverlay@TRmgMapAdapter@@UAEXABUTRmgGridPoint@@H@Z	100.0000	100.0000	100.0000	0x132730	11dcda4772f3
 rmg	?setOverlay@TRmgRoadMapAdapter@@UAEXABUTRmgGridPoint@@H@Z	100.0000	100.0000	100.0000	0x1323d0	d4145edc1d7d
 rmg	?setOverlay@type_random_map@@UAEXABUTRmgGridPoint@@H@Z	100.0000	100.0000	100.0000	0x132200	0a641c95744c
@@ -3495,7 +3495,7 @@ rmg	?write@rmgTownObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0
 rmg	?write@rmgWitchHutObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x1340c0	a8c6fa7b97cf
 rmg	?write@type_object@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x133170	1d471e0487dd
 rmg	?writeMap@type_random_map_generator@@QAEEPAVTAbstractFile@@@Z	95.5071	95.5071	95.5071	0x14abf0	c5cae23bdb15
-rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	93.2864	93.2864	95.7066	0x149cb0	cea479ed55a5
+rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	77.9030	93.2864	95.7066	0x149cb0	cea479ed55a5
 rmg	?writeRmgObjectPrototype@@YIXPAVTAbstractFile@@PAUTObjectType@@@Z	94.9532	94.9532	94.9532	0x14ae30	effc9f7f30cb
 rmg	__h3cg$rmg$static_ctor$g_rmgRiverPatternTable	100.0000	100.0000	100.0000	0x15ed70	-
 rmg	__h3cg$rmg$static_ctor$g_rmgRoadPatternTable	100.0000	100.0000	100.0000	0x15f2f0	-
