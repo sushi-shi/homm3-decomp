@@ -2853,6 +2853,9 @@ int game::getNewHeroId(int playerPos, THeroClass excluded,
     // (`counts[hero_class] == 0`, `total_count == 0`, and the preferred-class
     // test); all three were byte-flat at distance six, classifying the residual
     // as C1 front-end handle order rather than a missing source value.
+    // DC line 2335 resets total_count for the later class-weight sum; reuse
+    // that original local rather than introducing a separate totalWeight.
+    // This lifetime correction is byte-flat at 98.9815%.
     if (g_game->m_f1f698 >= 2
         && *g_videoGameState == VIDEO_GAME_STATE_FORCED_BINK_LOW
         && alignment != TOWN_CONFLUX
@@ -2888,12 +2891,12 @@ int game::getNewHeroId(int playerPos, THeroClass excluded,
     if (preferredClass != kNumHeroClasses && weights[preferredClass] != 0) {
         heroClass = preferredClass;
     } else {
-        long totalWeight = 0;
+        totalCount = 0;
         for (heroClass = eClassKnight; heroClass < kNumHeroClasses;
              heroClass++) {
-            totalWeight += weights[heroClass];
+            totalCount += weights[heroClass];
         }
-        choice = random(1, totalWeight);
+        choice = random(1, totalCount);
         for (heroClass = eClassKnight; heroClass < kNumHeroClasses;
              heroClass++) {
             choice -= weights[heroClass];
@@ -5808,21 +5811,20 @@ void game::initRandomArtifacts()
 // Pair each still-unmatched underground gate with the nearest unmatched gate
 // on the other map level.  The pairing vector stores reciprocal signed
 // indices; distance is the truncated Euclidean x/y distance used by retail.
-// WALL 98.34513%: all 18 blocks, all 10 branches, every block size, and the
-// complete instruction count agree.  The residual is a register rotation in
-// the inlined packed-coordinate comparison/distance expression: retail keeps
-// exit_point's packed y/z word in EDX while this compile keeps current_gate's
-// in ECX, then reloads the other word.  `i + 1 < size()` is essential (the
-// algebraic `i < size()-1` form falls to 72.87%), as is the square-symmetric
-// exit.y-current.y spelling (94.67% otherwise).  Exhausted byte-inert or lower
-// levers: nested != versus equality/continue, reversed z operands (98.14),
-// reversed x delta (94.76), and direct versus force-inlined distance helpers
-// with or without named deltas (98.35/97.86).  The former `_sqrt` relocation
-// delta was a false runtime boundary, now byte-proven and corrected in the
-// hand-owned inventories from the pinned VC6 SP3 LIBCMT sqrt.obj.
-// A 2026-09-01 why-reg v2 negative control also tested the two adjacent local
-// orders and the current_gate/closest store order: two were byte-flat at
-// distance 18 and the third worsened to 20, leaving the DC-proven order intact.
+// DC lines 4977/4978 skip equal-level candidates, and 4985/4986 skip
+// non-improving distances before the assignments at 4988/4989. Preserve those
+// early-continue scopes. DC line 4984 subtracts exit_point from current_gate
+// for both coordinates; retail likewise subtracts their unpacked components.
+// Residual (94.67%): all 18 blocks, 10 branches and both calls agree, but the
+// packed y/z words and coordinate deltas receive different scratch registers.
+// Reversing both y subtractions is algebraically equivalent and reaches the
+// historical 98.3451%, but is not the recovered expression. Nested positive
+// guards versus these early continues do not resolve that register allocation.
+// Other controls: i < size()-1 loses the retail bound lowering (72.87%);
+// reversed z operands gave 98.14%, reversed x deltas 94.76%, and named-delta
+// helper variants 97.86% against the earlier reversed-y source. Adjacent local
+// orders and current_gate/closest assignment order were flat or worse.
+// The sqrt boundary is verified against the pinned VC6 SP3 LIBCMT sqrt.obj.
 VA(0x004c0b60, 0x160)  // dc-order + NewMap caller, dc 0xac63c
 void game::matchUndergroundGates()
 {
@@ -5846,17 +5848,17 @@ void game::matchUndergroundGates()
                 continue;
 
             exitPoint = m_undergroundGateExits[j];
-            if (currentGate.m_z != exitPoint.m_z) {
-                distance = static_cast<long>(sqrt(static_cast<double>(
-                    (currentGate.m_x - exitPoint.m_x)
-                        * (currentGate.m_x - exitPoint.m_x)
-                    + (exitPoint.m_y - currentGate.m_y)
-                        * (exitPoint.m_y - currentGate.m_y))));
-                if (closest < 0 || distance < bestDistance) {
-                    closest = j;
-                    bestDistance = distance;
-                }
-            }
+            if (currentGate.m_z == exitPoint.m_z)
+                continue;
+            distance = static_cast<long>(sqrt(static_cast<double>(
+                (currentGate.m_x - exitPoint.m_x)
+                    * (currentGate.m_x - exitPoint.m_x)
+                + (currentGate.m_y - exitPoint.m_y)
+                    * (currentGate.m_y - exitPoint.m_y))));
+            if (closest >= 0 && distance >= bestDistance)
+                continue;
+            closest = j;
+            bestDistance = distance;
         }
 
         if (closest >= 0) {
@@ -9036,82 +9038,46 @@ void game::claimShipyard(type_point location, int newPlayerOwner)
 // span has it.
 #endif  // @carcass
 
-// RECONSTRUCTED 2026-08-20. Decide what the stack could be upgraded to,
-// whether its owner holds the Angelic Alliance, raise the view window,
-// and act on what the window returned.
-//
-// The upgrade answer comes from TWO independent sources and the second
-// overwrites the first: the town the stack is standing in (its dwelling
-// row must name this creature AND the matching UPGRADED dwelling must be
-// built), then the hero's own specialty record.
-//
-// THE FOUR-WAY ELEMENTAL GUARD APPEARS FOUR TIMES, and the first of them
-// IS game::get_alignment (0x4c6690) - a header inline on the Dreamcast,
-// which is why retail carries both an out-of-line copy and this
-// expansion. The other three wrap UpgradedCreatureType in the identical
-// `f_1f698 == 0 && creature is one of the four base-set elementals`
-// test, so they are the same source idiom with a different tail;
-// written longhand because no second out-of-line row for that shape
-// exists to name.
-//
-// THREE MEASURED EDITS TOOK THIS FROM 81.27 TO 96.96, and each is a
-// standing rule paying out again:
-//   * DO NOT CACHE WHAT RETAIL RELOADS, 81.2742 -> 90.3347. Binding the
-//     specialty record's two creature subjects to locals up front makes
-//     our CL load BOTH before the first compare; retail reads +0x04,
-//     tests it, and only then reads +0x14. Spell the member accesses
-//     where they are used.
-//   * THE RESULT DISPATCH IS A SWITCH, NOT AN IF-CHAIN, 90.3347 ->
-//     96.6936 (with the bitNumber operand swap, which was inert on its
-//     own). Both compile to the same compare chain over 300 / 0x7803,
-//     but the switch SINKS the first arm's body past the second's -
-//     the documented "compare-chain arm bodies emerge in reverse of the
-//     dispatch order" layout - and the if-chain leaves it inline.
-//   * THE DWELLING SCAN EXITS ON THE CONDITION, 96.6936 -> 96.9556.
-//     `for (b = 30; b <= 36; b++)` gives `jle top / jmp exit`; retail
-//     has `jg exit / jmp top`, which is the `for (;;) { ...;
-//     if (++b > DWELLING_6_ID) break; }` shape. Branches then agree
-//     41/41 with one ret on both sides.
-//
-// Residual (96.9556%): three things, all below control flow. The
-// bitNumber test copies the dwelling id into a second register where
-// retail destroys it on the last use; the specialty row's base pointer
-// is loaded before the index scale rather than after; and the
-// gTownDwellingCreatures subscript carries its `- DWELLING_0_ID` bias as
-// a NEGATIVE displacement on the relocation where retail folded the same
-// -120 into the symbol's own addend, which is a reloc-addend difference
-// rather than an addressing one.
-// Before normalization (locals): this_hero, this_town, show_dismiss.
+// The town's upgraded dwelling and then the hero specialty determine the
+// upgrade offered by this window; the specialty can override the town.
+// DC lines 7518/7520 name HasBuilding and UpgradedCreatureType. Complete's
+// three elemental guards are expansions of game::upgradedCreatureType,
+// whose retained body is 0x529710. Keeping that canonical inline visible in
+// game.h and replacing the pasted guards restores 83.8710% to 96.9556%.
+// The old unqualified calls resolved to the member and repeated its guard.
+// Restoring hasBuilding(..., true) and DC's const numTroops yields 99.52%;
+// initializing the Complete alliance flag before UpgradeToType matches the
+// final retail store order and reaches 100%.
+// Earlier controls: caching both specialty subjects before the first test
+// loaded the second too early (81.2742%); an if-chain instead of the result
+// switch put the two action bodies in the wrong order (90.3347%); a bounded
+// dwelling for-loop emitted jle/back rather than retail's jg/exit (96.6936%).
+// QuickView's target name is the folded TQuickTownWindow wait body. The
+// dwelling-table bias and high bitNumber word are relocation/addend aliases.
+// Before normalization (locals): this_hero, this_town, show_dismiss,
+// armyType, UpgradeToType, view_army_window, upgrade_cost, i.
 VA(0x004c6c50, 0x2EB)  // arity (ret 0x20 = p9) + anchor-bracket, dc 0xb1c8c
 void game::viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
                     const town* thisTown, int x, int y,
                     unsigned char showDismiss, unsigned char isQuickView)
 {
-    TCreatureType creature = group.m_armyTypes[iarmy];
-    int numTroops = group.m_numTroops[iarmy];
-    TCreatureType upgrade = CREATURE_NONE;
+    TCreatureType armyType = group.m_armyTypes[iarmy];
+    const int numTroops = group.m_numTroops[iarmy];
     unsigned char hasAngelicAlliance = 0;
+    TCreatureType upgradeToType = CREATURE_NONE;
 
-    if (thisTown && getAlignment(creature) == thisTown->m_type) {
-        int building = DWELLING_0_ID;
+    if (thisTown && getAlignment(armyType) == thisTown->m_type) {
+        int i = DWELLING_0_ID;
         for (;;) {
             if (g_townDwellingCreatures[thisTown->m_type * 2
                                            * TOWN_DWELLING_COUNT
-                                       + building - DWELLING_0_ID]
-                    == creature
-                && (g_bitNumber[town::upgradedDwellingID(building)]
-                    & thisTown->m_active)) {
-                if (!m_f1f698
-                    && (creature == CREATURE_AIR_ELEMENTAL
-                        || creature == CREATURE_EARTH_ELEMENTAL
-                        || creature == CREATURE_FIRE_ELEMENTAL
-                        || creature == CREATURE_WATER_ELEMENTAL))
-                    upgrade = CREATURE_NONE;
-                else
-                    upgrade = upgradedCreatureType(creature);
+                                       + i - DWELLING_0_ID]
+                    == armyType
+                && thisTown->hasBuilding(town::upgradedDwellingID(i), true)) {
+                upgradeToType = upgradedCreatureType(armyType);
                 break;
             }
-            if (++building > DWELLING_6_ID)
+            if (++i > DWELLING_6_ID)
                 break;
         }
     }
@@ -9120,30 +9086,11 @@ void game::viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
         const THeroSpecificAbility& ability =
             g_heroSpecificAbilities[thisHero->m_id];
         if (ability.m_type == eHeroAbilityCreatureUpgrade) {
-            if (creature == ability.m_creature
-                || creature
-                       == ((!m_f1f698
-                            && (ability.m_creature == CREATURE_AIR_ELEMENTAL
-                                || ability.m_creature == CREATURE_EARTH_ELEMENTAL
-                                || ability.m_creature == CREATURE_FIRE_ELEMENTAL
-                                || ability.m_creature == CREATURE_WATER_ELEMENTAL))
-                               ? CREATURE_NONE
-                               : upgradedCreatureType(ability.m_creature))
-                || creature == ability.m_upgradeAlternateSubject
-                || creature
-                       == ((!m_f1f698
-                            && (ability.m_upgradeAlternateSubject
-                                    == CREATURE_AIR_ELEMENTAL
-                                || ability.m_upgradeAlternateSubject
-                                       == CREATURE_EARTH_ELEMENTAL
-                                || ability.m_upgradeAlternateSubject
-                                       == CREATURE_FIRE_ELEMENTAL
-                                || ability.m_upgradeAlternateSubject
-                                       == CREATURE_WATER_ELEMENTAL))
-                               ? CREATURE_NONE
-                               : upgradedCreatureType(
-                                     ability.m_upgradeAlternateSubject)))
-                upgrade = ability.m_upgradeResult;
+            if (armyType == ability.m_creature
+                || armyType == upgradedCreatureType(ability.m_creature)
+                || armyType == ability.m_upgradeAlternateSubject
+                || armyType == upgradedCreatureType(ability.m_upgradeAlternateSubject))
+                upgradeToType = ability.m_upgradeResult;
         }
     }
 
@@ -9161,20 +9108,20 @@ void game::viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
                     ARTIFACT_ANGELIC_ALLIANCE);
     }
 
-    TViewArmyWindow* window = new TViewArmyWindow(
-        &group, iarmy, thisHero, thisTown, x, y, upgrade, showDismiss,
+    TViewArmyWindow* viewArmyWindow = new TViewArmyWindow(
+        &group, iarmy, thisHero, thisTown, x, y, upgradeToType, showDismiss,
         !isQuickView, hasAngelicAlliance);
     if (isQuickView) {
-        window->quickView();
+        viewArmyWindow->quickView();
     } else {
-        window->doModal();
+        viewArmyWindow->doModal();
         switch (g_windowManager->m_dialogReturn) {
         case TViewArmyWindow::UPGRADE_ID: {
-            long cost[NUM_RESOURCES];
-            getUpgradeCost(creature, upgrade, numTroops, cost);
-            for (int resource = 0; resource < NUM_RESOURCES; resource++)
-                g_currentPlayer->m_resources[resource] -= cost[resource];
-            group.m_armies[iarmy] = upgrade;
+            long upgradeCost[NUM_RESOURCES];
+            getUpgradeCost(armyType, upgradeToType, numTroops, upgradeCost);
+            for (int i = 0; i < NUM_RESOURCES; i++)
+                g_currentPlayer->m_resources[i] -= upgradeCost[i];
+            group.m_armies[iarmy] = upgradeToType;
             break;
         }
         case TViewArmyWindow::DISMISS_ID:
@@ -9182,7 +9129,7 @@ void game::viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
             break;
         }
     }
-    delete window;
+    delete viewArmyWindow;
 }
 
 #if 0  // @carcass
