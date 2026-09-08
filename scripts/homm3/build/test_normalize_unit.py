@@ -7,10 +7,12 @@ import io
 import shutil
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 from homm3.build import normalize_objs
 from homm3.build.test_equivalent_relocation_normalization import _base, _target
+from homm3.build.normalized_freshness import stamp_path, write_stamp
 
 
 class NormalizeUnitTest(unittest.TestCase):
@@ -67,6 +69,63 @@ class NormalizeUnitTest(unittest.TestCase):
 
     def test_unknown_unit_is_a_no_op(self):
         self.assertEqual(normalize_objs.normalize_unit("nothing")["wrote"], 0)
+
+    def test_unchanged_pair_skips_coff_parsing_and_manifest_loading(self):
+        normalize_objs.normalize_unit("probe")
+        paths = list((self.objdiff / "normalized").rglob("*"))
+        mtimes = {p: p.stat().st_mtime_ns for p in paths if p.is_file()}
+        with patch.object(normalize_objs.canon, "CoffObject", side_effect=AssertionError("COFF parsed")), \
+                patch.object(normalize_objs.canon, "load_compgen_claims", side_effect=AssertionError("claims parsed")):
+            self.assertEqual(dict(normalize_objs.normalize_unit("probe")), {})
+        self.assertEqual(mtimes, {p: p.stat().st_mtime_ns for p in mtimes})
+
+    def test_each_paired_input_change_still_runs_transforms(self):
+        normalize_objs.normalize_unit("probe")
+        inputs = (self.objdiff / "base/probe.obj", self.objdiff / "target/probe.c.obj",
+                  normalize_objs.SYMBOL_NAMES)
+        transform = normalize_objs._retain_matching_target_padding
+        for path in inputs:
+            with self.subTest(path=path):
+                payload = bytearray(path.read_bytes())
+                if path.suffix == ".obj":
+                    payload[4] ^= 1  # valid COFF, different timestamp field
+                else:
+                    payload.extend(b"\n")
+                path.write_bytes(payload)
+                with patch.object(normalize_objs, "_retain_matching_target_padding", wraps=transform) as paired:
+                    normalize_objs.normalize_unit("probe")
+                    paired.assert_called_once()
+        # Introducing a previously absent claim manifest must also invalidate
+        # a pair even though the old stamps could not record that input.
+        normalize_objs.COMPGEN_MANIFEST.write_text("unit\tname\tkind\towner\tsize\n")
+        with patch.object(normalize_objs, "_retain_matching_target_padding", wraps=transform) as paired:
+            normalize_objs.normalize_unit("probe")
+            paired.assert_called_once()
+
+    def test_missing_or_raw_only_stamp_cannot_skip_pairing(self):
+        transform = normalize_objs._retain_matching_target_padding
+        for side, name in (("base", "probe.obj"), ("target", "probe.c.obj")):
+            for raw_only in (False, True):
+                with self.subTest(side=side, raw_only=raw_only):
+                    normalize_objs.normalize_unit("probe")
+                    out = self.objdiff / "normalized" / side / name
+                    if raw_only:
+                        write_stamp(out, {"raw": self.objdiff / side / name})
+                    else:
+                        stamp_path(out).unlink()
+                    with patch.object(normalize_objs, "_retain_matching_target_padding", wraps=transform) as paired:
+                        normalize_objs.normalize_unit("probe")
+                        paired.assert_called_once()
+
+    def test_changed_input_path_cannot_reuse_same_content_stamp(self):
+        normalize_objs.normalize_unit("probe")
+        replacement = normalize_objs.SYMBOL_NAMES.with_name("replacement.csv")
+        replacement.write_bytes(normalize_objs.SYMBOL_NAMES.read_bytes())
+        with patch.object(normalize_objs, "SYMBOL_NAMES", replacement), \
+                patch.object(normalize_objs, "_retain_matching_target_padding",
+                             wraps=normalize_objs._retain_matching_target_padding) as paired:
+            normalize_objs.normalize_unit("probe")
+            paired.assert_called_once()
 
 
 if __name__ == "__main__":

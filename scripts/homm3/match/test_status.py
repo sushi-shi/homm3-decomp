@@ -195,6 +195,16 @@ class UpdateRowsTest(unittest.TestCase):
             {}, {key: MatchRow(80.0, 90.0, 95.0, 0x9abc)}, {})
         self.assertEqual(rows[key], MatchRow(None, 90.0, 95.0, 0x9abc))
 
+    def test_missing_unit_with_surviving_source_claim_keeps_its_bank(self):
+        key, kept = ("removed_unit", "lost"), ("kept_unit", "present")
+        old = MatchRow(80, 90, 100, 0x1234, "same")
+        for claim in (key, ("renamed_unit", "new_label")):
+            with self.subTest(claim=claim):
+                rows, _ = update_rows(
+                    {kept: 50}, {key: old}, {claim: 0x1234, kept: 0x5678})
+                self.assertEqual(rows[key], MatchRow(None, 90, 100, 0x1234, "same"))
+                self.assertEqual(rows[kept].cur, 50)
+
     def test_legacy_git_peak_seeds_history_not_enforced_max(self):
         key = ("unit", "function")
         rows, recovered = seed_historical_maxima(

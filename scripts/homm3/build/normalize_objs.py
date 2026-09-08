@@ -967,23 +967,24 @@ def _canonicalize_side(side: str, obj: Path) -> bool:
     root = OBJDIFF / side
     rel = obj.relative_to(root)
     unit = rel.name[:-6] if rel.name.endswith(".c.obj") else rel.stem
+    out = OBJDIFF / "normalized" / side / rel
+    sidecar = out.with_suffix(".symbols.tsv")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    stamp_inputs = {"raw": obj}
+    if COMPGEN_MANIFEST.is_file():
+        stamp_inputs["compgen_manifest"] = COMPGEN_MANIFEST
+    if (out.exists() and sidecar.is_file()
+            and not freshness_problems(out, required_inputs=stamp_inputs)):
+        return False
     claims = ()
     accounted = frozenset()
     if COMPGEN_MANIFEST.is_file():
         claims = canon.load_compgen_claims(COMPGEN_MANIFEST, unit)
         accounted = canon.load_compgen_claim_names(COMPGEN_MANIFEST, unit)
-    out = OBJDIFF / "normalized" / side / rel
-    sidecar = out.with_suffix(".symbols.tsv")
-    out.parent.mkdir(parents=True, exist_ok=True)
-    if out.exists() and sidecar.is_file() and not freshness_problems(out):
-        return False
     result = canon.canonicalize_coff(obj.read_bytes(), claims,
                                      compgen_accounted=accounted)
     out.write_bytes(_drop_data_sections(result.data))
     sidecar.write_bytes(canon.sidecar_bytes(result.rows))
-    stamp_inputs = {"raw": obj}
-    if COMPGEN_MANIFEST.is_file():
-        stamp_inputs["compgen_manifest"] = COMPGEN_MANIFEST
     write_stamp(out, stamp_inputs)
     return True
 
@@ -1000,6 +1001,22 @@ def _pair_unit(rel: Path, symbol_rvas) -> Counter:
     normalized_target = OBJDIFF / "normalized/target" / target_rel
     if not (target_obj.is_file() and normalized_base.is_file()
             and normalized_target.is_file()):
+        return counts
+    stamp_inputs = {
+        "raw": base_obj, "target": target_obj, "symbol_names": SYMBOL_NAMES,
+    }
+    target_stamp_inputs = {
+        "raw": target_obj, "base": base_obj, "symbol_names": SYMBOL_NAMES,
+    }
+    if COMPGEN_MANIFEST.is_file():
+        stamp_inputs["compgen_manifest"] = COMPGEN_MANIFEST
+        target_stamp_inputs["compgen_manifest"] = COMPGEN_MANIFEST
+    # Verify both complete paired stamps, including content hashes. A fresh
+    # raw-only stamp from _canonicalize_side is not proof of a paired result.
+    # This avoids reparsing every COFF object on unchanged fast builds/diffs.
+    if (not freshness_problems(normalized_base, required_inputs=stamp_inputs)
+            and not freshness_problems(normalized_target,
+                                       required_inputs=target_stamp_inputs)):
         return counts
     padded, count = _retain_matching_target_padding(
         normalized_base.read_bytes(), normalized_target.read_bytes())
@@ -1023,21 +1040,7 @@ def _pair_unit(rel: Path, symbol_rvas) -> Counter:
     # Padding is a paired normalization decision, so the base copy is
     # stale whenever either raw input changes, even when this run found no
     # suffix to retain.
-    stamp_inputs = {
-        "raw": base_obj,
-        "target": target_obj,
-        "symbol_names": SYMBOL_NAMES,
-    }
-    if COMPGEN_MANIFEST.is_file():
-        stamp_inputs["compgen_manifest"] = COMPGEN_MANIFEST
     write_stamp(normalized_base, stamp_inputs)
-    target_stamp_inputs = {
-        "raw": target_obj,
-        "base": base_obj,
-        "symbol_names": SYMBOL_NAMES,
-    }
-    if COMPGEN_MANIFEST.is_file():
-        target_stamp_inputs["compgen_manifest"] = COMPGEN_MANIFEST
     write_stamp(normalized_target, target_stamp_inputs)
     return counts
 
