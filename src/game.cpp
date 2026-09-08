@@ -643,8 +643,6 @@ const int g_blackBoxRandomMajor = 4;
 const int g_blackBoxRandomRelic = 5;
 // Before normalization: PYRAMID_SPELL_LEVEL.
 const int g_pyramidSpellLevel = 5;
-// Before normalization: SHRINE_RANDOM_SPELL.
-const unsigned long g_shrineRandomSpell = 0x007fe000;
 // Before normalization: SHRINE_LEVEL_ONE.
 const int g_shrineLevelOne = 0;
 // Before normalization: SHRINE_LEVEL_TWO.
@@ -5862,23 +5860,28 @@ void game::matchUndergroundGates()
     }
 }
 
-// E:\gamedcs\game.cpp:4639. Retail inlines all three constant-level calls
+// E:\gamedcs\game.cpp:4639, dc 0xabd4c. Ordinary static helper with
+// SpellID spell loaded before the -1 test. Retail's masked comparison is
+// VC6's lowering of that signed bitfield test; the typed source is byte-flat.
+// Retail inlines all three constant-level calls
 // into RandomizeEvents, but keeps the Dinkumware bitset operations out of
 // line. The subscript/reference spelling is visible in the retail call pair:
 // bitset::operator[] followed by _Bit_reference::operator=.
 // Before normalization (function): RandomizeShrine.
-static __forceinline void randomizeShrine(NewmapCell* cell, const int level)
+static void randomizeShrine(NewmapCell* cell, const int level)
 {
-    if ((cell->m_extraInfo & g_shrineRandomSpell) == g_shrineRandomSpell) {
+    ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
+        static_cast<void*>(&cell->m_extraInfo));
+    SpellID spell = info->m_shrineInfo.m_spell;
+    if (spell == -1) {
 #pragma inline_depth(0)
         std::bitset<5> spellLevels(0);
         spellLevels[level] = true;
 #pragma inline_depth()
-        int spell = g_game->getRandomSpell(spellLevels);
-        cell->m_extraInfo = (cell->m_extraInfo & 0xff801fff)
-            | ((spell & 0x3ff) << 13);
+        spell = g_game->getRandomSpell(spellLevels);
+        info->m_shrineInfo.m_spell = spell;
     }
-    cell->m_extraInfo &= 0xffffe01f;
+    info->m_cellVisitedInfo.m_visited = 0;
 }
 
 // E:\gamedcs\game.cpp:4509. On x86 the unchanged award, secondary skill
@@ -5898,15 +5901,15 @@ static __forceinline void randomizeScholar(NewmapCell* cell)
     }
 }
 
-// E:\gamedcs\game.cpp:4613.
+// E:\gamedcs\game.cpp:4613, dc 0xabc9c: ordinary static helper, int i.
 // Before normalization (function): RandomizeSeaChest.
-static __forceinline void randomizeSeaChest(NewmapCell* cell)
+static void randomizeSeaChest(NewmapCell* cell)
 {
-    int chance = random(0, 99);
-    if (chance < 20) {
+    int i = random(0, 99);
+    if (i < 20) {
         cell->m_seaChestInfo.m_reward = 0;
     }
-    else if (chance < 90) {
+    else if (i < 90) {
         cell->m_seaChestInfo.m_reward = 1;
     }
     else {
@@ -5916,19 +5919,19 @@ static __forceinline void randomizeSeaChest(NewmapCell* cell)
     }
 }
 
-// E:\gamedcs\game.cpp:4691.
+// E:\gamedcs\game.cpp:4691, dc 0xabe90: ordinary static helper, int i.
 // Before normalization (function): RandomizeTreasure.
-static __forceinline void randomizeTreasure(NewmapCell* cell)
+static void randomizeTreasure(NewmapCell* cell)
 {
-    int chance = random(0, 99);
+    int i = random(0, 99);
     if (g_game->m_isTutorial)
-        chance = 60;
+        i = 60;
     cell->m_treasureInfo.m_hasArtifact = 0;
-    if (chance < 32)
+    if (i < 32)
         cell->m_treasureInfo.m_gold = 2;
-    else if (chance < 64)
+    else if (i < 64)
         cell->m_treasureInfo.m_gold = 3;
-    else if (chance < 95)
+    else if (i < 95)
         cell->m_treasureInfo.m_gold = 4;
     else {
         cell->m_treasureInfo.m_artifact =
