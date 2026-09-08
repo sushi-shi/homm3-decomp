@@ -1044,6 +1044,17 @@ rmgWitchHutObject::rmgWitchHutObject(TRmgObjectPropertiesRef* properties)
 {
 }
 
+// The three simple reward factories expand this same constructor. The
+// vector's automatic construction precedes these scalar/default writes.
+rmgBlackBoxObject::rmgBlackBoxObject(TRmgObjectPropertiesRef* properties)
+    : type_object(properties)
+{
+    m_creatureType = -1;
+    m_creatureCount = 0;
+    m_experience = 0;
+    memset(m_resources, 0, sizeof(m_resources));
+}
+
 // Base-object vtable 0x640a74 slot 0 retains the generated deleting wrapper;
 // its non-deleting half is the shared refcount release at 0x5338d0.
 VA_COMPGEN(0x00533120, 0x2D, SCALAR_DELETING_DTOR, type_object)
@@ -1182,6 +1193,97 @@ void rmgResourceObject::write(TAbstractFile* outfile, int parameter)
     outfile->write(&amount, sizeof(amount));
     int reserved = 0;
     outfile->write(&reserved, sizeof(reserved));
+}
+
+VA_COMPGEN(0x00533680, 0x21, SCALAR_DELETING_DTOR, rmgBlackBoxObject)
+
+// Vtable 0x640ad4's deleting wrapper calls this retained implicit destructor.
+// Its vector cleanup is followed by the canonical base's property release.
+// An explicit empty override adds an absent derived-vptr store (95.00%);
+// retail has only automatic member/base teardown, as in the ownable class.
+VA_COMPGEN(0x005336B0, 0x36, IMPLICIT_DTOR, rmgBlackBoxObject)
+
+// Pandora's Box writer: ordinary object header, empty message/guard flag,
+// experience, mana, morale/luck, resources, primary/secondary skills,
+// artifacts, spells and creature reward, then eight reserved bytes.
+// Retail preserves these individual file writes and version-dependent
+// creature width; the spell count and loop bound come from the real vector.
+// Exact: the creature-count buffer needs its own block after the type's
+// version arms. A 24-candidate scope/load batch leaves the unscoped buffer
+// at 99.9517% (different stack slot); signed and unsigned short blocks match.
+VA(0x005336F0, 0x1E0) // anchor-vtable 0x640ad4 slot 3; ret 8; retail-only
+void rmgBlackBoxObject::write(TAbstractFile* outfile, int version)
+{
+    type_object::write(outfile, version);
+    {
+        char hasCustomTreasure = 0;
+        outfile->write(&hasCustomTreasure, sizeof(hasCustomTreasure));
+    }
+    {
+        int experience = m_experience;
+        outfile->write(&experience, sizeof(experience));
+    }
+    {
+        int mana = 0;
+        outfile->write(&mana, sizeof(mana));
+    }
+    {
+        char morale = 0;
+        outfile->write(&morale, sizeof(morale));
+    }
+    {
+        char luck = 0;
+        outfile->write(&luck, sizeof(luck));
+    }
+    outfile->write(m_resources, sizeof(m_resources));
+    {
+        int primarySkills = 0;
+        outfile->write(&primarySkills, sizeof(primarySkills));
+    }
+    {
+        char secondarySkillCount = 0;
+        outfile->write(&secondarySkillCount, sizeof(secondarySkillCount));
+    }
+    {
+        char artifactCount = 0;
+        outfile->write(&artifactCount, sizeof(artifactCount));
+    }
+    {
+        char spellCount = m_spells.size();
+        outfile->write(&spellCount, sizeof(spellCount));
+    }
+    for (unsigned int i = 0; i < m_spells.size(); ++i) {
+        char spell = m_spells[i];
+        outfile->write(&spell, sizeof(spell));
+    }
+    if (m_creatureType == -1) {
+        char creatureCount = 0;
+        outfile->write(&creatureCount, sizeof(creatureCount));
+    } else {
+        {
+            char creatureCount = 1;
+            outfile->write(&creatureCount, sizeof(creatureCount));
+        }
+        if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
+            short creatureType = m_creatureType;
+            outfile->write(&creatureType, sizeof(creatureType));
+        } else {
+            char creatureType = m_creatureType;
+            outfile->write(&creatureType, sizeof(creatureType));
+        }
+        {
+            short creatureCount = m_creatureCount;
+            outfile->write(&creatureCount, sizeof(creatureCount));
+        }
+    }
+    {
+        int reserved = 0;
+        outfile->write(&reserved, sizeof(reserved));
+    }
+    {
+        int reserved = 0;
+        outfile->write(&reserved, sizeof(reserved));
+    }
 }
 
 // Vptr restoration and the property reference release at 0x5338d0.
@@ -1331,6 +1433,41 @@ int type_black_box_creature_def::getValue(
     if (zoneCount > 0)
         value += alignmentCount * value / zoneCount;
     return value;
+}
+
+// The three definition tables select the same concrete Pandora's Box
+// class. They initialize its defaults through the canonical constructor,
+// then supply the definition-specific creature, experience or gold reward.
+// All three factories are exact. For the creature payload, retail loads
+// both definition fields before either object store: the count local closes
+// the direct-store form's 99.24% scheduling residual in the payload batch.
+VA(0x00534380, 0x85) // anchor-vtable 0x640b7c slot 0; ret 0xc; retail-only
+type_object* type_black_box_creature_def::generate(TRmgObjectPropertiesRef* properties,
+    type_random_map_generator*, TRmgZone*)
+{
+    rmgBlackBoxObject* object = new rmgBlackBoxObject(properties);
+    int count = m_adjustedValue;
+    object->m_creatureType = m_creatureType;
+    object->m_creatureCount = count;
+    return object;
+}
+
+VA(0x00534410, 0x7F) // anchor-vtable 0x640b88 slot 0; ret 0xc; retail-only
+type_object* type_black_box_experience_def::generate(TRmgObjectPropertiesRef* properties,
+    type_random_map_generator*, TRmgZone*)
+{
+    rmgBlackBoxObject* object = new rmgBlackBoxObject(properties);
+    object->m_experience = m_experience;
+    return object;
+}
+
+VA(0x00534490, 0x84) // anchor-vtable 0x640b94 slot 0; ret 0xc; retail-only
+type_object* type_black_box_gold_def::generate(TRmgObjectPropertiesRef* properties,
+    type_random_map_generator*, TRmgZone*)
+{
+    rmgBlackBoxObject* object = new rmgBlackBoxObject(properties);
+    object->m_resources[6] += m_gold;
+    return object;
 }
 
 // Both dwelling-definition tables (0x640bac/0x640bb8) share this factory.

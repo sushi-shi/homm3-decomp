@@ -922,6 +922,24 @@ public:
 };
 SIZE(rmgResourceObject, 0x1c);
 
+// Pandora's Box factories 0x534380/0x534410/0x534490 allocate 0x54 bytes
+// and install vtable 0x640ad4. Writer 0x5336f0 identifies each payload field;
+// the spell factory 0x534520 appends integer spell indices to the vector.
+// The vector begins at +0x44 (its allocator byte), with _First at +0x48.
+// These are provisional Complete-only role names, not Dreamcast identities.
+class rmgBlackBoxObject : public type_object {
+public:
+    int m_experience;                  // +0x1c
+    int m_resources[7];                // +0x20, gold at +0x38
+    int m_creatureType;                // +0x3c, -1 means no creature reward
+    int m_creatureCount;               // +0x40
+    std::vector<int> m_spells;         // +0x44
+
+    rmgBlackBoxObject(TRmgObjectPropertiesRef* properties);
+    virtual void write(TAbstractFile* outfile, int version);
+};
+SIZE(rmgBlackBoxObject, 0x54);
+
 // Retail vtable 0x640b24.
 class rmgScholarObject : public type_object {
 public:
