@@ -3511,10 +3511,13 @@ rmg_terrain	??1rmgTerrainPainter@@QAE@XZ	100.0000	100.0000	100.0000	0x1b76f0	b32
 rmg_terrain	??M@YI_NABUTRmgGridPoint@@0@Z	100.0000	100.0000	100.0000	0x1b8ca0	b8578ef512b9
 rmg_terrain	??YTRmgGridPoint@@QAEAAU0@ABUTPoint@@@Z	100.0000	100.0000	100.0000	0xfa540	d715b7bd7623
 rmg_terrain	??_GTRmgTableTerrainRule@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1b3a50	-
+rmg_terrain	?_Dec@const_iterator@?$_Tree@UTRmgGridPoint@@U1@U_Kfn@?$set@UTRmgGridPoint@@U?$less@UTRmgGridPoint@@@std@@V?$allocator@UTRmgGridPoint@@@3@@std@@U?$less@UTRmgGridPoint@@@4@V?$allocator@UTRmgGridPoint@@@4@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x1b8aa0	-
 rmg_terrain	?_Distance@std@@YAXViterator@?$_Tree@UTRmgGridPoint@@U1@U_Kfn@?$set@UTRmgGridPoint@@U?$less@UTRmgGridPoint@@@std@@V?$allocator@UTRmgGridPoint@@@3@@std@@U?$less@UTRmgGridPoint@@@4@V?$allocator@UTRmgGridPoint@@@4@@1@0AAI@Z	100.0000	100.0000	100.0000	0x1b8c70	-
 rmg_terrain	?_Distance@std@@YAXViterator@?$_Tree@UTRmgGridPoint@@U1@U_Kfn@?$set@UTRmgGridPoint@@U?$less@UTRmgGridPoint@@@std@@V?$allocator@UTRmgGridPoint@@@3@@std@@U?$less@UTRmgGridPoint@@@4@V?$allocator@UTRmgGridPoint@@@4@@1@0AAIUbidirectional_iterator_tag@1@@Z	100.0000	100.0000	100.0000	0x1b8cd0	-
 rmg_terrain	?_Erase@?$_Tree@UTRmgGridPoint@@U1@U_Kfn@?$set@UTRmgGridPoint@@U?$less@UTRmgGridPoint@@@std@@V?$allocator@UTRmgGridPoint@@@3@@std@@U?$less@UTRmgGridPoint@@@4@V?$allocator@UTRmgGridPoint@@@4@@std@@IAEXPAU_Node@12@@Z	100.0000	100.0000	100.0000	0x1b85f0	-
 rmg_terrain	?_Inc@const_iterator@?$_Tree@UTRmgGridPoint@@U1@U_Kfn@?$set@UTRmgGridPoint@@U?$less@UTRmgGridPoint@@@std@@V?$allocator@UTRmgGridPoint@@@3@@std@@U?$less@UTRmgGridPoint@@@4@V?$allocator@UTRmgGridPoint@@@4@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x1b8bc0	-
+rmg_terrain	?_Init@?$_Tree@UTRmgGridPoint@@U1@U_Kfn@?$set@UTRmgGridPoint@@U?$less@UTRmgGridPoint@@@std@@V?$allocator@UTRmgGridPoint@@@3@@std@@U?$less@UTRmgGridPoint@@@4@V?$allocator@UTRmgGridPoint@@@4@@std@@IAEXXZ	100.0000	100.0000	100.0000	0x1b8670	-
+rmg_terrain	?_Insert@?$_Tree@UTRmgGridPoint@@U1@U_Kfn@?$set@UTRmgGridPoint@@U?$less@UTRmgGridPoint@@@std@@V?$allocator@UTRmgGridPoint@@@3@@std@@U?$less@UTRmgGridPoint@@@4@V?$allocator@UTRmgGridPoint@@@4@@std@@IAE?AViterator@12@PAU_Node@12@0ABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x1b8720	-
 rmg_terrain	?_Lbound@?$_Tree@UTRmgGridPoint@@U1@U_Kfn@?$set@UTRmgGridPoint@@U?$less@UTRmgGridPoint@@@std@@V?$allocator@UTRmgGridPoint@@@3@@std@@U?$less@UTRmgGridPoint@@@4@V?$allocator@UTRmgGridPoint@@@4@@std@@IBEPAU_Node@12@ABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x1b8a40	-
 rmg_terrain	?_Ubound@?$_Tree@UTRmgGridPoint@@U1@U_Kfn@?$set@UTRmgGridPoint@@U?$less@UTRmgGridPoint@@@std@@V?$allocator@UTRmgGridPoint@@@3@@std@@U?$less@UTRmgGridPoint@@@4@V?$allocator@UTRmgGridPoint@@@4@@std@@IBEPAU_Node@12@ABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x1b8b60	-
 rmg_terrain	?_Ufill@?$vector@EV?$allocator@E@std@@@std@@IAEXPAEIABE@Z	100.0000	100.0000	100.0000	0x1b8060	-
@@ -3541,6 +3544,7 @@ rmg_terrain	?hasEntries@TRmgPatternTerrainRule@@UAEEXZ	100.0000	100.0000	100.000
 rmg_terrain	?hasEntries@TRmgTableTerrainRule@@UAEEXZ	100.0000	100.0000	100.0000	0x1b3a40	9fc6d13cda16
 rmg_terrain	?hasSeparatedNeighbours@rmgTerrainPainter@@QAEEABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x1b6810	96cda942cbe5
 rmg_terrain	?initializePackedCell@rmgTerrainPainter@@QAEXABUTRmgGridPoint@@I@Z	100.0000	100.0000	100.0000	0x1b3dd0	e2b27f66e488
+rmg_terrain	?insert@?$_Tree@UTRmgGridPoint@@U1@U_Kfn@?$set@UTRmgGridPoint@@U?$less@UTRmgGridPoint@@@std@@V?$allocator@UTRmgGridPoint@@@3@@std@@U?$less@UTRmgGridPoint@@@4@V?$allocator@UTRmgGridPoint@@@4@@std@@QAE?AU?$pair@Viterator@?$_Tree@UTRmgGridPoint@@U1@U_Kfn@?$set@UTRmgGridPoint@@U?$less@UTRmgGridPoint@@@std@@V?$allocator@UTRmgGridPoint@@@3@@std@@U?$less@UTRmgGridPoint@@@4@V?$allocator@UTRmgGridPoint@@@4@@std@@_N@2@ABUTRmgGridPoint@@@Z	79.8254	79.8254	79.8254	0x1b7cd0	-
 rmg_terrain	?isHorizontalGap@rmgTerrainPainter@@QAEEABUTRmgGridPoint@@H@Z	100.0000	100.0000	100.0000	0x1b6320	3d38f29ba8e4
 rmg_terrain	?isSpecialFrame@TRmgPatternTerrainRule@@UAEEH@Z	100.0000	100.0000	100.0000	0x1b3860	53126e2e7f59
 rmg_terrain	?isVerticalGap@rmgTerrainPainter@@QAEEABUTRmgGridPoint@@H@Z	100.0000	100.0000	100.0000	0x1b6430	173ed0fbca8f

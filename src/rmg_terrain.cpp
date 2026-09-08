@@ -1845,6 +1845,24 @@ rmgTerrainPainter::~rmgTerrainPainter()
 // reference. The retained two-store body is 24 bytes including ret 8.
 VA_COMPGEN(0x005B76B0, 0x18, CLASS_CTOR, TRmgGridPoint)
 
+// The terrain work set's insertion at 0x5b7cd0 calls the admitted grid-point
+// comparator and the retained node insertion at 0x5b8720. Both node insertion
+// and initialization allocate 0x18-byte nodes and share nil at 0x6a52c4
+// (reference count 0x6a52c8). Existing set operations emit all three bodies.
+// Initialization and node insertion match all 168/766 bytes.
+// Node insertion's _Construct call at 0x5b877c shares the 15-byte two-dword
+// copy at 0x5b8cc0 with type_dialog_resource; both emitted bodies agree.
+// Public insert reaches 79.83%: its named call sequence agrees, but VC6 elides the lock
+// scope's EH frame and emits four returns where retail shares one tail.
+// Preserve the canonical Dinkumware implementation and real comparator.
+VA_COMPGEN(0x005B7CD0, 0x156, TREE_INSERT, TRmgGridPoint)
+VA_COMPGEN(0x005B8670, 0xA8, TREE_INIT, TRmgGridPoint)
+VA_COMPGEN(0x005B8720, 0x2FE, TREE_NODE_INSERT, TRmgGridPoint)
+// Public insert's predecessor test calls this node walk; its color field
+// at +0x14 and nil references identify the same terrain point-set instance.
+// The naturally emitted body matches all 179 bytes.
+VA_COMPGEN(0x005B8AA0, 0xB3, TREE_CONST_ITERATOR_DEC, TRmgGridPoint)
+
 // PaintPoint and changeTerrain erase points by key. Retail 0x5b7f60
 // obtains upper/lower bounds, counts their iterator range, erases that
 // range, and returns size_type (ret 4). This is public erase(key), not
