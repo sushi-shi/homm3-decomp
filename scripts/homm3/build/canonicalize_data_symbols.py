@@ -868,6 +868,14 @@ def _compgen_renames(coff: CoffObject, claims: tuple[CompgenClaim, ...],
             return False
         if any(target in local_data for target in outgoing[index]):
             return False
+        # Registration evidence must pass registered_by_owner, not be
+        # reinterpreted as missing ownership by this fallback. This includes
+        # a different owner, malformed callback push/addend, or ambiguous
+        # callbacks. Absence of an initializer still permits the retail
+        # immMouse shape; contradictory initializer evidence does not.
+        if any(index in outgoing[parent] and "_atexit" in target_names(parent)
+               for parent in defined_functions):
+            return False
         return any(name.startswith(TEARDOWN_EDGE_PREFIXES) for name in names)
 
     def has_role(index, claim):

@@ -17,12 +17,9 @@ import json
 import struct
 from pathlib import Path
 
-SCRIPT_DIR = Path(__file__).resolve().parent
-ROOT = next((p for p in SCRIPT_DIR.parents if (p / "flake.nix").exists()),
-            SCRIPT_DIR)
-
 from homm3 import manifest as units_manifest
 from homm3.build import ninja_syntax
+from homm3.core.common import HOMM3_DIR as ROOT
 
 
 def load_manifest() -> tuple[dict, dict[str, list[str]], list[dict]]:
