@@ -655,6 +655,604 @@ scores unchanged. The 57 related regression tests and three group-commit
 tests pass, as do all repository gates. This completes the current population
 checkpoint, not the remaining multiply match or whole-TU coverage.
 
+`generate-rmg-group-place-family.py` covers Complete's
+`type_random_map_generator::canPlaceTreasureGroup` at `0x546c70`, whose
+1106-byte retail body has no currently mapped Dreamcast counterpart. Its
+first 60 states cross five guard-position constructions, four direction
+lifetimes and three canonical neighbor-point constructions. Four successive
+frontiers each retain ten reproduced parents, an unchanged-source control
+and 49 fresh states. They test guard-point snapshots after the opaque object
+checks, explicit outline-policy arms, three-coordinate guard scans using
+either real lookup overload, and shared working-position lifetimes.
+
+The five batches score all 300 states and reproduce all ten elites each time.
+They produce 45, 51, 40, 46 and 31 distinct code/relocation identities per
+batch, reaching 97.1072%, 98.7506%, 99.9102%, 99.9825% and 99.9850% from
+90.8130%. Removing repeated parents leaves 244 distinct sources and 158
+distinct code/relocation identities across the five batches. Point-plus-vector
+restores the direction join; a real guard-point snapshot restores constructor
+argument load order; the explicit allow arm restores the policy branch
+destinations; and a three-coordinate guard scan restores retail's 0x48 frame.
+Sharing the initial object and guard position then restores the first Z home.
+The ordinary constructor, getter and map-helper interfaces remain intact.
+
+The canonical full build banks 99.9850%, with all 65 CFG blocks, 45 branches
+and three calls aligned. The /Z7-verified first differing candidate statement
+is the later entrance getter. Six stack-displacement bytes in B19/B24/B25
+put the entrance at -0x38..-0x30 instead of -0x2c..-0x24 and the neighboring
+point's X at -0x28 instead of -0x38. Sharing all three positions, or only
+guard/entrance, does not resolve the residual (99.9676%). Some experimental
+variants also move `writeMapHeader`; the adopted source preserves all other
+339 tracked RMG scores. The six bytes remain open, and these measurements
+are not a whole-TU closure claim.
+
+```sh
+PYTHONPATH=scripts python scripts/experiments/generate-rmg-group-place-family.py \
+  build/rmg-group-place.json
+HOMM3_GROUP_PLACE_MANIFEST=build/rmg-group-place.json PYTHONPATH=scripts \
+  python -m unittest homm3.vc6.test_rmg_group_place
+PYTHONPATH=scripts python -m homm3.vc6.source_families \
+  build/rmg-group-place.json --width 60 --keep 10 --jobs 6
+PYTHONPATH=scripts python scripts/experiments/generate-rmg-group-place-family.py \
+  build/rmg-group-place-parents.json --parents-from build/source-families/PLACE_CONTEXT/checkpoint.json
+```
+
+The later stages use `--lifetime-parents-from`, `--frame-parents-from` and
+`--shared-parents-from` against the immediately preceding stage's checkpoint.
+The loader verifies each prior manifest, all three TU/header snapshots,
+source hashes and repeated score/code identities recursively. Historical
+checkpoints are not valid after adopting a source change: establish a fresh
+control and explicitly review a new frontier. Tests construct the historical
+stage fixtures separately and verify that their old anchors reject changed
+working source. The native check always exercises the current authored body,
+all 60 initial forms and every body in an optional selected manifest; it does
+not claim coverage of every unselected grammar combination.
+
+An independent flat-cell oracle checks all 256 entrance masks, both map
+levels, water/land zones and both direction ranges, each source/destination
+veto, monster/other-object ordering, guard boundaries, nonzero byte flags,
+empty/clipped bounds and occupied-cell traversal. It checks exact ordered
+lookup and opaque-call arguments, including original cached bounds/zone
+identity and live object-vector growth. Actual value types, bitfields,
+predicates, canonical constructor/getter/point addition and both map lookup
+overloads are reused with projected field declarations; no host/x86 layout
+identity is assumed. Fourteen deliberately wrong variants must fail, including
+wrong levels, guard traversal order, trait/outline rules and cached vector
+length. No oracle instrumentation enters the VC6 source population.
+
+`generate-rmg-group-select-family.py` targets `placeTreasureGroup` at
+`0x5470d0`, the 646-byte Complete-only caller that selects and commits a
+treasure-group offset. Its first 60 states cross five entry-declaration
+orders, four centered-query forms and three public vector-emptying APIs.
+Three follow-up populations each keep ten reproduced parents, an unchanged
+control and 49 fresh states. They cover group-bounds binding, real iterator
+lifetimes, public insertion overloads, centered point/vector operand roles,
+equivalent ordered filters and lifetimes of existing coordinate values.
+
+All four batches score 60 states and reproduce ten finalists each. They
+produce 60, 41, 47 and 36 distinct code/relocation identities respectively;
+across 240 scored states there are 198 distinct sources and 144 code
+identities after removing repeated parents. The first two batches reach
+86.8529% from 77.1261%, but the `resize(0)` leader retains `size` and `erase`
+calls rather than retail's nested `copy` and `_Destroy`. That score is not
+evidence that the clearing boundary has matched.
+
+The third population reaches 87.0168% using an actual center-point copy,
+compound translation and public single-element insertion. This restores
+the retained `std::copy`/`_Destroy` sequence inside `clear()` naturally; all
+nine call sites are present. No inline control or library-body substitution
+is added. The remaining call-name diagnostic is `_Destroy`: the candidate's
+`vector<TRmgMapPosition>` specialization is `c2 08 00` (`ret 8`), identical
+to the three-byte retail body at `0x404140` currently named for
+`vector<type_artifact>`. This folded empty-destructor label does not justify
+changing the candidate vector's element type. The fourth population rechecks declaration lifetimes under this
+new inline state but does not exceed 87.0168%, so the minimal third-stage
+body is retained. The frame is retail's 0x48, but the vector and coordinate
+homes differ, X rather than Y occupies EBX during the scan, and a separate
+outer-loop bound-reload block is missing (17 blocks versus 18). These remain
+source/register-lifetime questions, not a reason to flatten helpers.
+The adopted candidate preserves the other 339 tracked RMG scores; some
+experimental competitors also move `writeMapHeader`.
+
+```sh
+PYTHONPATH=scripts python scripts/experiments/generate-rmg-group-select-family.py \
+  build/rmg-group-select.json
+HOMM3_GROUP_SELECT_MANIFEST=build/rmg-group-select.json PYTHONPATH=scripts \
+  python -m unittest homm3.vc6.test_rmg_group_select
+PYTHONPATH=scripts python -m homm3.vc6.source_families \
+  build/rmg-group-select.json --width 60 --keep 10 --jobs 6
+PYTHONPATH=scripts python scripts/experiments/generate-rmg-group-select-family.py \
+  build/rmg-group-select-parents.json --parents-from build/source-families/SELECT_CONTEXT/checkpoint.json
+```
+
+Continue from the second and third checkpoints with `--shape-parents-from`
+and `--lifetime-parents-from`, respectively. Parent manifests, complete
+source/header snapshots, source hashes and repeated score/code identities
+are checked recursively. Adoption invalidates the old checkpoint anchors;
+scores are not silently reused under a changed implementation.
+
+The independent native oracle enumerates translated footprint inequalities
+over a containing coordinate domain rather than copying the candidate's
+adjusted-bounds loops. Its 4,696 scenarios include all 256 permission masks
+over eight tied candidates, every random residue for those candidates, both
+levels, positive and negative group origins, empty and single-offset ranges,
+signed zone IDs and nonnegative spacing through 65,536. Controlled fit calls
+raise, lower or wrap the current cell score and mutate zone/group metadata;
+ordered lookup/call traces must retain the pre-call bounds/zone snapshots and
+the post-call score re-reads. In particular, retail does not repeat the
+minimum-score admission test after a successful fit call lowers that score.
+Twelve wrong variants must fail, covering clearing, tie policy, score updates,
+zone identity, post-call retesting, center coordinates, helper arguments,
+random draw/selection, commit level and traversal order.
+
+Actual value classes, packed cell fields, field declaration types, getters,
+coordinate operations and map lookups are reused. Fixture members/globals use
+the project scope prefixes; no host/x86 layout identity is claimed. Negative
+spacing is outside this native contract because VC6 and the host compiler
+promote the unsigned 16-bit bitfield differently; retail's unsigned comparison
+is authoritative, and none of the source alternatives changes either operand
+type. Native checks cover the current body, all 60 initial forms and every
+body in the selected optional manifest, not every unselected grammar product.
+The canonical full build banks 87.0168%, with the /Z7-verified first mismatch
+at the entry declaration and the restored nine-call structure. The six
+group-placement tests and five selection tests pass after adopting both
+bodies; the earlier placement checkpoint also passed all 104 then-existing
+RMG regression tests. These checkpoints do not complete either residual or
+prove whole-TU coverage.
+
+The treasure-reset family follows the reset helper's retained body at
+`0x535040` and its copies in assembly (`0x5466e0`) and zone scheduling
+(`0x547360`). Reading those copies exposes an overload error that the
+standalone optimized body hides: retail calls `getMapItem(int,int)` with
+two zero arguments at `0x547625` and `0x547717`, not the three-coordinate
+overload. The one ordinary two-coordinate definition belongs in `rmg.cpp`,
+where standalone reset expands it, while its retained 30-byte body remains
+exact. Its RVA-backed ledger row migrates from `rmg_support` automatically;
+the declaration is unchanged and no duplicate, false `inline`, or pin is added.
+
+Body visibility also changes other consumers. On this checkpoint it raises
+roads from 71.7235% to 72.6912% and scheduling from 68.8293% to 69.2629%,
+but lowers assembly to 67.7205%, river creation to 79.5586%, and
+river-to-object creation to 79.6612%. Their preceding 72.3188%, 85.9575%,
+and 89.6141% peaks remain in MAX/HIST; hiding the required body again is
+not a reconstruction fix. The subsequent reset family recovers assembly
+past its preceding peak without changing the accessor boundary.
+
+Three 60-state populations cross nine public container-emptying pairs with
+seven surface-walk forms, then refine ten reproduced parents using actual
+vector references/iterators, point origins, dimension snapshots, byte flags
+and cursor lifetimes. They produce 51, 49 and 39 distinct code/relocation
+results within their respective batches: 180 scored trials, 158 distinct
+source states and 115 code identities overall. Every batch reproduces ten
+elites. The standalone reset peak is 80.8902%, with the object-vector
+`_Destroy` retained but the outline's still expanded, an extra EBP spill,
+and swapped dimension-multiply operands. Its 11 blocks and eight branches
+agree with retail; those counts do not make it exact.
+
+The peaks for assembly (79.9913%) and scheduling (74.6342%) belong to
+different source states, not one completed implementation. The adopted
+third-stage combination instead gives reset 80.8902%, assembly 77.0873%
+and scheduling 72.3117%. It changes those three tracked scores plus a small
+`writeMapHeader` increase (93.2786% to 93.2864%), preserving the other 336
+RMG scores relative to the corrected-accessor baseline. Assembly now
+retains both entry erasures, but its first map clear is under-inlined and
+its later two-coordinate lookups are over-inlined. Scheduling still has
+three extra blocks and different reset/cleanup expansion decisions.
+
+```sh
+PYTHONPATH=scripts python scripts/experiments/generate-rmg-group-reset-family.py \
+  build/rmg-group-reset.json
+HOMM3_GROUP_RESET_MANIFEST=build/rmg-group-reset.json PYTHONPATH=scripts \
+  python -m unittest homm3.vc6.test_rmg_group_reset
+PYTHONPATH=scripts python -m homm3.vc6.source_families \
+  build/rmg-group-reset.json --width 60 --keep 10 --jobs 6
+PYTHONPATH=scripts python scripts/experiments/generate-rmg-group-reset-family.py \
+  build/rmg-group-reset-frontier.json --parents-from build/source-families/RESET_CONTEXT/checkpoint.json
+```
+
+Use `--lifetime-parents-from` for the second checkpoint. The loader verifies
+the preceding manifests recursively, source/header snapshots, source hashes,
+and each elite's repeated score vector and code identity. Adoption requires
+a new current-source baseline; old scores are not silently reused.
+
+The independent native reset oracle checks 600 scenarios per body: empty,
+rectangular and 16-by-16 maps, one to three levels, varied packed bits,
+borrowed-pointer populations, and flag bytes 0/1/255. It compiles the actual
+packed field declarations, map/cell clears, terrain setter and two-coordinate
+accessor. Expected retail masks preserve unrelated bits; the ordered trace
+requires both containers empty before map clear, every allocated cell cleared,
+flags reset afterward, and only the surface plane repainted. Pointer objects
+are not deleted, vector capacities and unrelated group fields remain intact,
+and guard cells catch off-by-one writes. Twelve negative controls cover
+missing phases/flags, wrong overload/origin, early flag stores, wrong terrain,
+wrong plane count and short/long scans. The original 63 forms, two explicit
+count-before-lookup dimension controls, the current body and each selected
+optional 60-state manifest are exercised, not all unselected grammar products.
+The native field layout is not an x86 layout proof; VC6 remains the byte verdict.
+The adopted checkpoint passes the full VC6 build and all 113 RMG regression
+tests. The relocated accessor also reports agreement in every sema view.
+These results preserve the helper boundary and bank partial improvements;
+they do not close the remaining reset/caller mismatches or the three TUs.
+
+### Treasure-group fill lifetimes and unsigned centering
+
+Retail `fillTreasureGroup` (0x546520) has no identified Dreamcast counterpart.
+Its 97.7697% starting body already has the retail control flow and helper
+decisions, but a four-byte frame surplus and different centering load order.
+Three 60-state populations cross five centering forms, four receiver/value
+bindings and three position lifetimes, then refine ten reproduced parents
+through accepted-object scopes, map receivers and unsigned accumulation or
+coordinate read-backs. They score 180 trials, 160 distinct source states and
+76 distinct code/relocation identities overall; each batch reproduces ten
+elites. The batches contain 48, 34 and 21 distinct code identities respectively.
+
+The adopted initial-object scope reaches 97.8371% and removes the frame
+surplus, with the other 339 RMG scores unchanged. Its selected pointer and
+position end their lifetimes before the accumulation loop; the total survives
+that phase. Retail still reads map width before prototype width and prefetches
+the insertion end between dimension reads. The third population's staged
+unsigned accumulators and coordinate read-backs do not exceed the scoped peak.
+Reusing the primary position in later creation calls instead expands vector
+insertion: the split-properties control grows from 438 to 821 bytes. None of
+these experiments changes canonical helpers, adds inline controls or passes
+an integer sum through signed-overflow arithmetic.
+
+```sh
+PYTHONPATH=scripts python scripts/experiments/generate-rmg-group-fill-family.py \
+  build/rmg-group-fill.json
+HOMM3_GROUP_FILL_MANIFEST=build/rmg-group-fill.json PYTHONPATH=scripts \
+  python -m unittest homm3.vc6.test_rmg_group_fill
+PYTHONPATH=scripts python -m homm3.vc6.source_families \
+  build/rmg-group-fill.json --width 60 --keep 10 --jobs 3
+```
+
+Use `--parents-from FIRST_CHECKPOINT` for the receiver/lifetime frontier and
+`--centering-parents-from SECOND_CHECKPOINT` for the centering frontier. The
+loader validates preceding manifests recursively, unchanged source/header
+snapshots, source hashes and each parent's repeated code identity and score
+vector. After adoption, generate a fresh baseline rather than silently reusing
+pre-adoption checkpoints.
+
+The independent native oracle uses a phase/budget state machine and scripted
+opaque factory, map-placement, fit and virtual lifecycle boundaries. It checks
+1,540 scenarios per body, including independent three-attempt budgets,
+first-object failures, greedy stopping, pre-existing group entries, virtual
+release-before-delete, factory-mutated dimensions and post-helper value loads.
+Unsigned centers cover odd, non-square, negative and extreme dimensions;
+generation limits cover signed division and remainder boundaries without
+overflowing signed value arithmetic. Actual coordinate types, dimension
+accessors and placement-limit constants are compiled from the owning source.
+The first family, all second-stage grammar bodies, twelve baseline centering
+forms, the current body and an optional selected manifest are exercised, not
+every unselected third-stage product. Fourteen negative controls must fail.
+Native checks establish this contract, not retail bytes or whole-TU closure.
+The adopted scope passes the full VC6 build and all 19 focused fill, reset,
+selection and placement regression tests. Its verified source diff starts at
+the prototype/receiver loads, with the entry frame now agreeing with retail.
+
+### Treasure creation helper boundaries (0x546190)
+
+`generate-rmg-treasure-create-family.py` crosses three public mask forms,
+four independent candidate/property clear-or-erase choices, and five real
+footprint bindings/lifetimes. The Complete-only retail body calls passability
+`bitset::test` and both vector erases; the current source expands these into
+range-error and copy/destroy helpers. No Dreamcast counterpart is claimed.
+
+The initial 60 states produce 56 distinct code identities, ranging from
+57.4907% to the unchanged 81.6894%. `--parents-from FIRST_CHECKPOINT` retains
+ten independently reproduced parents and generates 60 states around the
+object-type, scan and footprint scopes, a generator-vector reference, a named
+normalized value and public count insert calls. Parent admission checks the
+source/header snapshot, input manifest, source hashes, scores and repeated code
+identity. This second batch produces 41 distinct objects and no higher score.
+Across both batches there are 110 distinct sources and 86 code identities.
+
+The direct count insert family expands both insert bodies into allocation,
+copy/fill/destroy paths: a representative grows to 0x66d bytes against retail's
+0x385 and scores zero. These are successful compiles with real code divergence,
+not missing symbols. Six generator-reference candidates also move
+`writeMapHeader` from 93.2864% to 93.2786%; the other collateral scores hold.
+Neither family is adopted, so no game implementation or MAX changes.
+
+The independent native selection oracle covers 2,304 scenarios for every
+first-stage body and every second-stage grammar body, plus an optional
+`HOMM3_TREASURE_CREATE_MANIFEST`. It checks ordered filter/virtual/selector/
+placement traces, map and zone limits, inclusive value bounds, compact mask
+occupancy, candidate resets, cumulative weighted intervals, null factories,
+and the final fresh value call and output store before generation. Coordinate
+types, their constructor, dimension accessors and `CObjectType::getBitPos` are
+extracted from the owning source. Twelve deliberately broken controls must
+fail. The valid domain uses positive densities, 1..8 by 1..6 footprints with
+nonzero occupancy, and non-overflowing value arithmetic; invalid bit indices,
+host-versus-VC6 exception behavior and opaque-callee mutation are not claimed
+as tested. The three admission/behavior/frontier tests pass. The final full
+VC6 build passes with no checkpoint raises or source-hash MAX resets, and all
+12 focused creation, fill and prototype-selection tests pass.
+
+### River coordinator aggregate capture (0x549870)
+
+`generate-rmg-river-coordinator-family.py` generates 60 states from five
+trigger-offset forms, four object/prototype bindings and three position
+lifetimes. The initial retail/source pass agrees on all eight blocks, four
+branches and named calls, but retail loads both trigger components before
+copying the wheel's position. That ordering suggested a real two-component
+value capture, not a different helper boundary or extra compiler-only work.
+
+The completed family produces ten distinct code identities, with twelve source
+states at 100% and a range of 86.4462%–100%. All twelve exact states copy
+`TObjectType::TPoint` before copying `TRmgMapPosition`; the receiver constness
+and position lifetime do not change that result. A reference to the trigger,
+two scalar captures, and subtraction through an explicitly constructed RMG
+`TPoint` do not recover it. The twelve scalar-capture states also perturb
+`writeMapHeader` from 93.2864% to 93.2786%. The selected aggregate-copy body
+changes only `createRivers` among all 340 RMG scores, from 90.5077% to 100%.
+Ten diverse parents reproduce; the simplest exact body is additionally
+recompiled independently before adoption, with its full score vector,
+code identity and source hashes checked.
+
+The prototype's nested `TPoint` is distinct from the RMG coordinate type.
+The VC6 smoke check rejects passing it directly to the RMG compound operator;
+the native fixture imports both actual declarations so that this distinction
+is tested too. The oracle checks 1,024 scenarios per body against an independent
+route trace: ordered preparation, mixed wheel/scenery populations, negative
+and non-square offsets, level preservation, two-cell source displacement,
+live vector growth and a progress pointer replaced during routing. Opaque
+river-to-object calls mutate the original coordinates and trigger to detect
+incorrect reloads before the second call. Ten broken controls must fail.
+
+Reusable finding: naming each scalar is not equivalent for VC6 scheduling to
+copying its existing aggregate owner. Here the aggregate copy loads the pair
+together and restores the generator/x/y register assignment across both opaque
+calls. Preserve the actual nested type instead of merging equal-layout point
+classes or introducing an alternate constructor declaration.
+The adopted copy passes the full VC6 build, a freshly delinked all-views-equal
+semantic diff, and all 15 focused coordinator, river-overlay, river-tile and
+line-painting tests. Its CUR, MAX and HIST are all 100%.
+
+### River object-target cell binding (0x5497a0)
+
+`generate-rmg-river-object-target-family.py` crosses five accessor/result
+forms, four offset-value forms and three receiver bindings: 60 distinct source
+states. The original 95.8442% body agrees with retail on all 19 blocks, twelve
+branches and its progress call. The only differing region is the final cell
+address: retail loads the cell base earlier and keeps the tile-data displacement
+in the OR instruction. The working hypothesis is therefore the returned cell's
+binding, not another filtering branch or a replacement indexing formula.
+
+The completed family produces eleven distinct code identities. All 24 states
+that name a map-item pointer or reference reach 100%; the other 36 stay at
+95.8442%. Naming only the tile-data member or using the canonical position
+accessor does not suffice. Ten diverse parents reproduce. The selected minimal
+pointer form is checked against its repeated code identity, complete score
+vector and source hashes before adoption. Its ordinary scalar offset variables
+and all helper/type declarations remain unchanged.
+
+Nine candidates also move `writeMapHeader` from 93.2864% to 93.2786%, including
+the selected pointer form. That function's own source is unchanged, so its
+previous MAX/HIST remain banked. The selected scalar offsets already agree
+with retail. Every other RMG score is unchanged in the selected
+state, including the newly exact `createRivers`.
+
+The native oracle imports the actual packed tile-data declaration, both point
+classes, coordinate constructor, scalar/position accessors and object/resource
+constants. It checks 1,536 scenarios per body, comparing every tile-data word
+and guard cell against an independent 64-bit coordinate reference. Coverage
+includes mountains/lakes/gem mines, non-gem exclusions, trigger versus unsigned
+half-size offsets, negative and odd dimensions, both levels, clipping edges,
+unchanged unrelated bits and one post-loop progress update. A reduced host map
+item is used for these semantic tests; it is not retail layout evidence.
+Arithmetic inputs keep the candidate's signed subtractions defined. All twelve
+negative controls fail, including a signed-half-size error isolated from the
+other axis so that clipping cannot mask it.
+
+Reusable finding: bind the accessor's complete result object when retail keeps
+a member displacement on the eventual store. Binding that member alone can
+preserve the original premature address folding. This is compiler evidence for
+a real local variable, not justification to paste the accessor's arithmetic
+into the caller or alter its inline declaration.
+The adopted pointer binding passes the full VC6 build and a freshly delinked
+all-views-equal diff. All 17 focused object-target, coordinator, river-overlay,
+river-tile and line-painting tests pass. Its CUR, MAX and HIST are 100%; the
+unchanged-source header writer retains its previous MAX and HIST.
+
+### River target coordinate induction (0x548c70)
+
+`generate-rmg-river-target-family.py` combines five coordinate lifetimes with
+four edge-cell bindings and three cursor/map-receiver forms. The initial
+80.9379% body has an eight-byte frame surplus and an extra three-coordinate
+constructor call. Retail's y/z homes instead fit adjacent fields of one map
+position; its edge stores also retain complete-cell bases before accessing
+the packed flag. This supports testing coordinate-member induction together
+with the previously established complete-cell binding.
+
+The 60 states produce 24 distinct code identities and six exact sources,
+ranging from 74.1310% to 100%. Every exact source uses one `TRmgMapPosition`
+for the scan and border counters, with an explicit pointer/reference binding
+for each edge cell. Using scalar scan counters and separately filling a
+coordinate can reach 99.9379%, but not exactness. The canonical default and
+three-argument coordinate constructors remain unchanged: the reconstruction
+uses the coordinate itself as the loop state, not a pasted constructor body
+or an inline suppression directive.
+
+Ten diverse parents reproduce. The selected form reuses the existing item
+pointer for all four edge stores; its complete score vector, code identity and
+source hashes agree on the repeat build. It lifts `markRiverTargets` to 100%
+and restores `writeMapHeader` from 93.2786% to its previous 93.2864% MAX. Every
+other RMG score is unchanged, including both newly exact neighboring river
+passes. The header writer's older 95.7066% HIST remains a separate lead.
+
+The native check imports the actual coordinate classes and constructor,
+ground/auxiliary bitfields, water constant and scalar map accessor. A phase
+machine derives the ordered coastal calls; an independent edge predicate
+derives the final packed writes. All 60 bodies pass 512 scenarios covering
+zero/one/two levels, narrow and non-square positive dimensions, terrain
+mutation and shrinking dimensions inside the opaque coast call, exactly four
+cardinal directions per admitted cell, progress-pointer replacement, and
+unchanged unrelated fields/guard cells. Eleven broken controls must fail.
+Host compilation lifts only the legacy VC6 scalar `for` variable declaration
+when needed; it does not replace any constructor or game expression. The
+reduced map-item fixture tests semantics, not the retail layout or codegen.
+
+Reusable finding: adjacent coordinate homes plus a repeated constructor call
+can indicate that the coordinate's fields were the induction variables. Test
+the actual coordinate class and its lifetime before treating this as an
+inliner refusal or modifying a shared constructor's visibility.
+The selected coordinate loop passes the full VC6 build and a freshly delinked
+all-views-equal diff: 19 blocks, fifteen branches and both calls agree. All
+19 focused river-target, object-target, coordinator, overlay, tile and
+line-painting tests pass. The three river-preparation passes now have CUR,
+MAX and HIST at 100%; this is not closure of the three RMG translation units.
+
+### Coastal target counter lifetimes
+
+`generate-rmg-river-coast-family.py` covers `markRiverCoastTarget` (0x548a40).
+No Dreamcast counterpart was found. The fresh initial summary, structure,
+source-labelled comparison and inline prediction agree on both constructor
+calls and all 25 control-flow blocks. Retail keeps direction in EBX, recycles
+its old argument slot for each counter, and retains a 0x20-byte frame. The
+initial source instead keeps its first two counters in registers.
+
+The first 60-state family crosses five counter lifetimes, four coordinate
+initializations/lifetimes and three step snapshots. All 60 compile; 17 distinct
+objects span 73.0511–79.7557%, with ten reproduced retained candidates. The
+79.7557% peak replaces the shared counter with independent water/dry/inland
+counters. Lexically isolated counters and three independently named counters
+both reach it; changing only the shared declaration's location stays flat.
+
+The `--parents-from CHECKPOINT` mode verifies the completed manifest, source
+and header snapshot, all 60 successful records, and the ten retained objects'
+repeated scores, choices, identities and source hashes. It then creates a
+60-state frontier from those parents: water-cell bindings, const step values,
+named direction values, shared item lifetimes and a map reference. This second
+batch has 60 successful compiles, 39 distinct objects and ten reproduced
+retained candidates; its range is 69.5284–79.7557%. Water-item and direction
+bindings reach 79.6875%, but none surpasses the first peak. Neither family
+changes canonical arithmetic helpers, constructor visibility or inline policy.
+
+The retained three-counter source changes only this function's score among
+the 340 RMG rows. Its dry loop gains the memory-counter instruction sequence,
+but not retail's exact home: the frame grows to 0x24, direction still spills,
+and the water counter remains in EDI. This is a measured partial recovery,
+not a solved register-allocation explanation or proof of original token names.
+
+`test_rmg_river_coast.py` imports the actual coordinate classes, constructors,
+arithmetic helpers, direction table, map accessor, entrance query and packed
+tile fields. An independent affine ten-sample path checks 1,800 scenarios per
+body, including valid coasts, terrain failures at each sample, entrance failures,
+two levels, non-square maps and retail's asymmetric `x > width` bound. It
+compares the complete padded allocation and unrelated bits. The reduced item
+fixture is behavioral evidence, not a retail-layout claim. All 60 first-family
+bodies and all six refinements of ten representative parents pass; seven
+wrong water/entrance/count/bound/direction/target-bit controls are rejected.
+Only the host compiler's legacy `for`-scope compatibility is adjusted.
+The adopted version passes the full VC6 build and all 17 focused coastal,
+target, object-target, coordinator and line-painting tests. Fresh delinking
+confirms 79.7557% with all twenty branches and both calls agreeing; 22 of 25
+block sizes now agree, up from 21. CUR, MAX and HIST are all 79.7557%.
+The three RMG units remain at 235/340 currently exact tracked functions.
+
+### Zone centroid coordinate lifetimes
+
+`generate-rmg-recenter-family.py` targets `recenterZone` (0x53d0d0). No
+Dreamcast counterpart was found. Fresh summary, structure, source-labelled
+and inline-prediction views show matching scan/division branches and fully
+expanded canonical accessors. The initial 88.9891% version uses a TPoint sum
+and has a 0x30-byte frame, versus retail's 0x34. Its position-copy scheduling
+and every subsequent aggregate stack home differ.
+
+The first 60-state family crosses five position-copy lifetimes, four
+accumulator representations and three independent input declaration orders.
+All 60 compile, producing 24 distinct objects spanning 66.4239–95.3043%.
+Reading the position before the zone index recovers the EBX copy loads and
+the 95.3043% peak, but not the extra frame slot. Ten distinct retained objects
+reproduce before the next stage.
+
+`--parents-from` verifies the completed manifest, source/header snapshot,
+all 60 successful records and the ten retained results' repeated scores,
+choices, object identities and source hashes. Its 60-state counter/centroid
+frontier has 40 distinct objects spanning 70.0652–95.5000%. The positive
+centroid hypothesis carries the original level in an actual three-coordinate
+sum, averages only x/y, and passes the full coordinate through the unchanged
+setter. Default construction with field assignments avoids adding a retained
+three-argument constructor absent from retail. This restores the 0x34 frame
+and all scan/output stack offsets; it is not unused padding or a dummy local.
+
+`--centroid-parents-from` tests full-coordinate copy forms and count placement
+from the ten reproduced second-stage parents. Its 60 states produce 36
+distinct objects without exceeding 95.5000%. This finite frontier initially
+concentrates on the earliest copy alternatives. The complementary
+`--centroid-balanced-parents-from` rotates each parent's starting point by
+initializer family, giving all three copy forms and all six field-store orders
+representation within 60 states. A test asserts that coverage. The balanced
+batch produces 44 distinct objects spanning 66.0109–95.5000%, again with ten
+reproduced retained results and no new peak. These are four 60-state batches,
+not 240 unique bodies: each frontier deliberately retains its parent controls.
+
+The adopted default-then-assigned position and three-coordinate centroid
+change only this function's score among the 340 RMG rows. Entry-time load
+and zero-initialization scheduling still differs; matching the frame does not
+close the function. Canonical position accessors, constructors and shared
+helper definitions remain unchanged. After adoption the initial generator
+keeps the recognized child as its unchanged-source control plus 59 original
+alternatives. Historical parent checkpoints still require their exact
+pre-adoption source snapshot and cannot silently rebase onto edited source.
+
+`test_rmg_recenter.py` imports the actual coordinate/bounds/packed-zone types,
+position constructor, position getter/setter and scalar map accessor. Its
+independent reference filters a flat allocation by rectangle membership,
+decodes the signed eight-bit zone id explicitly, and checks integer averages
+and preserved levels. Each positive body runs 3,000 small non-overflowing
+scenarios: non-square/two-level maps, partial/empty/inverted bounds, negative
+zone ids, ids outside the packed field's range, single-cell and larger groups.
+The full cell allocation, guard words, bounds and slot pointer remain unchanged.
+The reduced map-item fixture is behavioral evidence, not a retail ABI model.
+All initial bodies, all seven refinements of ten representative first-stage
+parents, and both 60-state scheduling frontiers pass. Seven wrong zone, level,
+x/y sum, count, singleton-guard and output-level controls are rejected.
+The adopted version passes the full VC6 build and all eight focused centroid,
+spatial-frontier, coastal-target and river-target tests. Fresh source-labelled
+retail comparison confirms every instruction after the entry block agrees;
+all six branches, the return and the no-call/no-relocation streams agree.
+CUR, MAX and HIST are 95.5000%; the three units still have 235/340 currently
+exact tracked functions, so this partial recovery is not TU closure.
+
+### Island interior fill
+
+Retail `insetIslandZone` ends with a retained call at 0x53d36b to the
+previously omitted 0x53cf50 cardinal flood. The recovered helper uses a
+coordinate-vector stack, marks eligible neighbors when enqueuing them, and
+does not mark an isolated seed merely because it was initially enqueued.
+The source call belongs after all boundary drawing. No Dreamcast counterpart
+is claimed; names are provisional retail roles.
+
+`generate-rmg-island-fill-family.py` emits 60 JSON states combining coordinate
+capture, public vector insertion, and direction bindings. This first population
+produces 42 code identities. Its ten reproduced parents feed another 60-state
+component-lifetime frontier (`--parents-from`), producing 21 code identities
+and a reproduced **100.0000%** winner from a 79.2015% starting body.
+The winner uses single-element `insert`, copies the neighbor's x/y, translates
+through the unchanged canonical `operator+=`, and copies z afterward. That
+operator only reads/writes x/y, so no uninitialized level is consumed. Only
+the helper's score changes among the 341 RMG rows in the winning snapshot.
+
+`test_rmg_island_fill.py` imports the actual coordinate operations, packed
+flags, direction table, getter and lookup. A fixed-point reference tests
+the generated fills independently of the candidate's stack traversal, also
+testing the real inset caller with scripted boundary writes. Wrong diagonal,
+zone, blocked-cell, level, extent and seed variants are rejected, as are
+missing and prematurely executed caller fills. The adopted body is explicitly
+tested. After adoption the generator retains the recognized winning refinement
+as its unchanged control; old parent snapshots must still match exactly.
+
+The final full VC6 build passes with CUR/MAX/HIST at 100.0000%. All 14 blocks
+and all instruction rows agree. The stricter named-relocation view still
+reports the folded empty `_Destroy` under `vector<type_artifact>`: both that
+retail 0x404140 body and the emitted coordinate-vector body are `ret 8`.
+The other two label differences are the claimed direction table at 0x69cdc0
+and its end at +0x40. These are not divergent instruction sequences.
+The four focused island/centroid tests pass, followed by both island tests
+with the explicitly adopted winner included.
+
 Real global ownership can also expose an ordinary helper boundary. The river
 and road pattern globals call the shared pattern-table constructor and register
 cleanup callbacks which tail-call its destructor. Their definitions belong on
