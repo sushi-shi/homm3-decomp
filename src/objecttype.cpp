@@ -685,6 +685,10 @@ std::istream& operator>>(std::istream& is, TObjectType& objectType)
 // an ordinary TU-local constructor definition are byte-flat. VC6 rejects
 // aggregate initialization of TImageInfo with C2552; its bitset members make
 // that source form unavailable. No constructor or helper changes retained.
+// The real tree-erasure callers now retain _Inc without the former artificial
+// emission wrapper; removing that wrapper is flat across every claimed body.
+// Eight count/row getText versus operator[] and implicit/explicit-zero
+// istrstream-length controls are also byte-flat and emit no ulong bitset ctor.
 VA(0x00514d80, 0x284)  // anchor-callee ResourceManager::GetText + anchor-bracket NewfullMapFn_00505DA0; retail-only
 void TObjectTypeTable::load(char* filename)
 {
@@ -713,16 +717,9 @@ void TObjectTypeTable::load(char* filename)
 // image-name MAP's iterator, not a set<string>'s (whose node is 32).
 // Dreamcast's generic STLport _M_increment at dc 0x64214 independently
 // corroborates the source helper boundary and its nine-block control flow.
+// The two retained erase overloads emit this specialization naturally. Removing
+// the old uncalled increment wrapper leaves every claimed TU function unchanged.
 VA_COMPGEN(0x00517780, 0xA3, TREE_CONST_ITERATOR_INC, string)
-
-// Minimum ODR use needed to retain the real VC6/Dinkumware COMDAT. This
-// wrapper is not a retail claim and adds no target/report row.
-// Before normalization (function): EmitObjectImageNameIndexIncrement.
-void __fastcall emitObjectImageNameIndexIncrement(
-    TObjectImageNameTable::TNameIndex::const_iterator* it)
-{
-    ++*it;
-}
 
 // --- Dinkumware COMDAT pairings -------------------------------------------
 //

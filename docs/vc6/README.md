@@ -68,6 +68,14 @@ model cannot rot.
 
 ## Residual-routing contract
 
+Before diagnosing a missing emitted body, compare the claim label with the
+COFF symbol. The terrain table reconstruction exposed a missing `operator+=`
+join key: `TRmgGridPoint` still emitted its exact 33-byte `??Y` body, but the
+generic source label no longer paired it. The bounded arithmetic-operator
+scanner now joins `+=` by owner and operation; its equal-size, reversed-order
+test prevents a positional match from hiding this error. This is a label
+binding issue, not evidence for changing the compiler's inline decisions.
+
 `homm3 vc6 queue` ranks existing compiled functions by ascending banked MAX for
 their current source implementation, with retail size breaking ties. Current
 scores do not change the order while the source hash is unchanged. A source
