@@ -5924,32 +5924,40 @@ long type_knowledge_artifact::getValue(const hero* owner, unsigned char, unsigne
     return owner->m_valueOfKnowledge * m_bonus;
 }
 
-// Residual (82.56%): logic byte-exact ((1.0f - GetNecromancyFactor(0)) * 100.0f,
-// then min(necro,bonus) / necro=min(necro,0)+bonus, army*necro/250). The delta
+// Residual (85.8871%): logic byte-exact ((1.0f - GetNecromancyFactor(0)) * 100.0f,
+// then min(effect,bonus) / effect=min(effect,0)+bonus, army*effect/250). The delta
 // is register scheduling: retail delays `push esi` past the skillLevel early-out
-// and spills necro to [ebp+8] only inside the min arm, while our SP3 CL pushes
-// esi in the prologue and hoists the spill above the equipped branch; the /250
+// while our SP3 CL pushes esi in the prologue; the /250
 // sign-correction also keeps the quotient in edx where ours uses eax. The 1.0f
 // and 100.0f literals pool as __real@ COMDATs vs retail's const_23b6e0/const_23ac68
 // (cosmetic reloc-name difference). Register-homing class.
+// Dreamcast retains the local `long effect`. Retail's unequipped arm at
+// 0x43268b copies BOTH min inputs to parameter homes before selecting their
+// addresses, so its arguments are temporaries rather than the direct member
+// and local references used by DC's std::min. The existing int min(int,int)
+// wrapper reproduces those copies with the recovered long local (85.8871%).
+// Keeping long effect with std::_cpp_min<long> and a cast bonus gives 82.56%
+// and spills effect before the equipped branch; direct reference arguments
+// give 79.92% and omit retail's bonus copy. The previous int necro plus two
+// converted std::_cpp_min<long> arguments was byte-identical to the wrapper.
 // E:\gamedcs\ai_player.cpp:5152
 VA(0x00432640, 0x97)  // artifact get_value cluster order-map + get_AI_value, dc 0x36450
 long type_necromancy_artifact::getValue(const hero* owner, unsigned char equipped, unsigned char) const
 {
     if (owner->m_skillLevel[12] == 0)
         return 0;
-    int necro = static_cast<int>(
+    long effect = static_cast<long>(
         (1.0f - const_cast<hero*>(owner)->getNecromancyFactor(0)) * 100.0f);
     if (equipped) {
-        if (necro > 0)
-            necro = 0;
-        necro += m_bonus;
+        if (effect > 0)
+            effect = 0;
+        effect += m_bonus;
     } else {
-        necro = std::_cpp_min<long>(necro, static_cast<int>(m_bonus));
+        effect = min(effect, m_bonus);
     }
-    if (necro <= 0)
+    if (effect <= 0)
         return 0;
-    return owner->m_army.getAIValue() * necro / 250;
+    return owner->m_army.getAIValue() * effect / 250;
 }
 
 // E:\gamedcs\ai_player.cpp:5189
@@ -6116,20 +6124,22 @@ long type_antimorale_artifact::getValue(const hero* owner, unsigned char, unsign
     return result;
 }
 
-// Residual (90.68%): same merged-return / stale-CL-generation delta as
-// antimorale above (the luck twin) - retail commits result to edi and merges
-// one epilogue; our CL fuses the morale>0 arm's exit. Rest byte-exact.
+// Dreamcast lines 5418-5419 return immediately for exact, before GetLuck.
+// Preserving that boundary also restores retail's shared result epilogue:
+// all 120 bytes match, including the result store to EDI. The former nested
+// !exact form measured 90.6818% by duplicating the positive-luck exit; this
+// was a source-boundary mismatch, not a compiler-generation residual.
 // E:\gamedcs\ai_player.cpp:5413
 VA(0x00432ba0, 0x78)  // artifact get_value order-map + AI_value_of_luck/GetLuck, dc 0x36c90
 long type_antiluck_artifact::getValue(const hero* owner, unsigned char, unsigned char exact) const
 {
     long army = owner->m_army.getAIValue();
     long result = static_cast<long>(aiValueOfLuck(0, 2) * army);
-    if (!exact) {
-        int luck = const_cast<hero*>(owner)->getLuck(0, 0, 1);
-        if (luck > 0)
-            result = static_cast<long>(aiValueOfLuck(luck, -luck) * army + result);
-    }
+    if (exact)
+        return result;
+    int luck = const_cast<hero*>(owner)->getLuck(0, 0, 1);
+    if (luck > 0)
+        result = static_cast<long>(aiValueOfLuck(luck, -luck) * army + result);
     return result;
 }
 
