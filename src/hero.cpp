@@ -1680,6 +1680,9 @@ unsigned char hero::isWieldingArtifact(int whichArtifact)
 // 96.5278%. The nonempty arm order remains retail's ballista/tent/cart.
 // Twenty further parameter-const/register, artifact-width, and named-selector
 // combinations also stop at 96.5278%; none recovers the default-arm reload.
+// A TArtifact local with the existing artifactFromInt boundary in default
+// also preserves 96.5278% and every other score in hero.obj; it does not
+// recover the parameter reload. DC records no local type here, so retain int.
 // Before normalization (locals): creature_type.
 // A 16-state parameter-reuse, for/while, return/break, and slot-lifetime
 // batch also leaves 96.5278% best; mutating the parameter changes the CFG.
