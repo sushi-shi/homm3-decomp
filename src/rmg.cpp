@@ -294,115 +294,6 @@ static bool isRmgTemplateFieldSet(const char* value)
 } // namespace
 
 
-template <>
-inline bool std::bitset<156>::test(size_t position) const
-{
-    if (156 <= position) {
-        // WriteMapHeader -> bitset<156>::_Xran: retail retains this call.
-#pragma inline_depth(0)
-        _Xran();
-#pragma inline_depth()
-    }
-    return ((_A[position / _Nb] & ((_Ty)1 << position % _Nb)) != 0);
-}
-
-template <>
-inline bool std::bitset<128>::test(size_t position) const
-{
-    if (128 <= position) {
-        // WriteMapHeader -> bitset<128>::_Xran: retail retains this call.
-#pragma inline_depth(0)
-        _Xran();
-#pragma inline_depth()
-    }
-    return ((_A[position / _Nb] & ((_Ty)1 << position % _Nb)) != 0);
-}
-
-template <>
-inline bool std::bitset<144>::test(size_t position) const
-{
-    if (144 <= position) {
-        // WriteMapHeader -> bitset<144>::_Xran: retail retains this call.
-#pragma inline_depth(0)
-        _Xran();
-#pragma inline_depth()
-    }
-    return ((_A[position / _Nb] & ((_Ty)1 << position % _Nb)) != 0);
-}
-
-template <>
-inline void std::bitset<144>::_Xran() const
-{
-    // WriteMapHeader -> string::_Tidy: retail keeps the nested ctor boundary.
-#pragma inline_depth(0)
-    string message("invalid bitset<N> position");
-#pragma inline_depth()
-    // WriteMapHeader -> out_of_range construction: retail retains this call.
-#pragma inline_depth(0)
-    _THROW(out_of_range, message);
-#pragma inline_depth()
-}
-
-template <>
-inline void std::bitset<129>::_Xran() const
-{
-    string message("invalid bitset<N> position");
-    // WriteMapHeader -> out_of_range construction: retail retains this call.
-#pragma inline_depth(0)
-    _THROW(out_of_range, message);
-#pragma inline_depth()
-}
-
-template <>
-inline void std::bitset<70>::_Xran() const
-{
-    const char* text = "invalid bitset<N> position";
-    string message;
-    // WriteMapHeader -> string::assign: retail retains this nested call.
-#pragma inline_depth(0)
-    message.assign(text, strlen(text));
-#pragma inline_depth()
-    // WriteMapHeader -> out_of_range construction: retail retains this call.
-#pragma inline_depth(0)
-    _THROW(out_of_range, message);
-#pragma inline_depth()
-}
-
-template <>
-inline void std::bitset<28>::_Xran() const
-{
-    const char* text = "invalid bitset<N> position";
-    string message;
-    // WriteMapHeader -> string::assign: retail retains this nested call.
-#pragma inline_depth(0)
-    message.assign(text, strlen(text));
-#pragma inline_depth()
-    // WriteMapHeader -> out_of_range construction: retail retains this call.
-#pragma inline_depth(0)
-    _THROW(out_of_range, message);
-#pragma inline_depth()
-}
-
-template <>
-inline std::bitset<144>::reference::operator bool() const
-{
-    // WriteMapHeader -> bitset<144>::test: retail retains this nested call.
-#pragma inline_depth(0)
-    return _Pbs->test(_Off);
-#pragma inline_depth()
-}
-
-template <>
-inline std::bitset<129>::reference&
-std::bitset<129>::reference::operator=(bool value)
-{
-    // WriteMapHeader -> bitset<129>::set: retail retains this nested call.
-#pragma inline_depth(0)
-    _Pbs->set(_Off, value);
-#pragma inline_depth()
-    return *this;
-}
-
 // Before normalization (function): assign_rmg_teams.
 static void __fastcall assignRmgTeams(
     int teamCount,
@@ -9718,9 +9609,18 @@ unsigned char type_random_map_generator::generate()
 // has no RMG compiland, so the method spelling remains provisional while its
 // class offsets and serialization order are retail-byte facts.
 //
-// Current 94.10% after removing the TU-local string constructor
-// specializations and their three inline pins. Their removal is byte-neutral
-// in ReadObjectPlacementRules; the canonical library definitions stay in use.
+// Canonical VC6 bitset definitions replace nine TU-local test, _Xran, and
+// reference specializations carrying twelve inline-depth pins. Retail retains
+// _Xran for the 128/144/156-bit tests and set for the 129-bit output iterator;
+// the canonical source currently expands them. Removing only the three test
+// copies measures 87.5157%; removing all nine measures 77.9030%, versus
+// 93.2864% with the copies. Every other game-function score is unchanged, but
+// bitset<129>::set stops emitting here. Its identical canonical COMDAT is
+// still emitted and claimed in customcampaign.cpp.
+// The copies are not source evidence for natural nested inlining; keep the
+// original library calls and recover their retention at the caller boundary.
+// Earlier removal of three TU-local string-constructor pins was byte-neutral
+// in ReadObjectPlacementRules; those canonical definitions also remain in use.
 // Historical peak (95.71%): all 164 CFG blocks and all 87 branches align;
 // 152 blocks also have exact emitted sizes.  The remaining twelve are local
 // lowering differences.  Retail's frame is 0x318 versus 0x310 here and its
@@ -10741,8 +10641,8 @@ VA_COMPGEN(0x0054D000, 0x5E, LIST_INSERT_SINGLE, TPoint)
 VA_COMPGEN(0x0054D060, 0x36, LIST_ERASE_ITERATOR, TPoint)
 VA_COMPGEN(0x0054D0F0, 0x2D, LIST_BUYNODE, TPoint)
 
-// The legacy artifact-mask conversion calls Dinkumware's 129-bit setter.
-VA_COMPGEN(0x0054DED0, 0x63, BITSET_SET, Bitset129)
+// Retail's 129-bit setter is claimed from its identical canonical COMDAT in
+// customcampaign.cpp; this TU expands it after removing the reference pin.
 
 // The three-point orientation helper at 0x5fdae0 belongs with the retained
 // Voronoi operations in rmg_support.cpp. The earlier emission probe preceded
