@@ -3309,6 +3309,7 @@ rmg	?assignRmgTeams@@YIXHHHPBEPAD@Z	100.0000	100.0000	100.0000	0x14ab40	252158e8
 rmg	?buildOutline@TRmgObjectPropertiesRef@@QAEXXZ	100.0000	100.0000	100.0000	0x132c80	f14838d15aff
 rmg	?buildOverlapPriorities@TRmgObjectPropertiesRef@@QAEXXZ	100.0000	100.0000	100.0000	0x132e40	dee98657ed05
 rmg	?buildRoadCostMap@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	83.7153	83.7153	83.7153	0x147880	ccb9360f304b
+rmg	?buildVertices@TRmgVoronoi@@QAEXXZ	31.6268	31.6268	31.6268	0x1fdb40	13ed7ac0acb9
 rmg	?buildZoneBoundaries@type_random_map_generator@@QAEXPAUTRmgTemplate@@H@Z	96.3209	96.3209	96.3209	0x13e050	a767083504a1
 rmg	?buildZoneConnectionPaths@type_random_map_generator@@QAEXXZ	99.3582	99.3582	99.3582	0x1405d0	5ce7acf63a39
 rmg	?calculateQuestZoneDistances@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	77.7594	77.7594	77.7594	0x14b180	8a966aaead92
@@ -3484,7 +3485,7 @@ rmg	?write@rmgTownObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0
 rmg	?write@rmgWitchHutObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x1340c0	a8c6fa7b97cf
 rmg	?write@type_object@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x133170	1d471e0487dd
 rmg	?writeMap@type_random_map_generator@@QAEEPAVTAbstractFile@@@Z	95.5071	95.5071	95.5071	0x14abf0	c5cae23bdb15
-rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	93.2786	93.2864	95.7066	0x149cb0	cea479ed55a5
+rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	93.2864	93.2864	95.7066	0x149cb0	cea479ed55a5
 rmg	?writeRmgObjectPrototype@@YIXPAVTAbstractFile@@PAUTObjectType@@@Z	94.9532	94.9532	94.9532	0x14ae30	effc9f7f30cb
 rmg	__h3cg$rmg$static_ctor$g_rmgRiverPatternTable	100.0000	100.0000	100.0000	0x15ed70	-
 rmg	__h3cg$rmg$static_ctor$g_rmgRoadPatternTable	100.0000	100.0000	100.0000	0x15f2f0	-
@@ -3499,6 +3500,7 @@ rmg_support	??0TRmgLinePatternTable@@QAE@IPBH@Z	100.0000	100.0000	100.0000	0xf9b
 rmg_support	??0TRmgMapPosition@@QAE@HHH@Z	100.0000	100.0000	100.0000	0x1355c0	7d51c45007f5
 rmg_support	??0TRmgRiverPainter@@QAE@PAVTRmgMapAdapterInterface@@HABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x15ee50	ce9cddc0e38a
 rmg_support	??0TRmgRoadPainter@@QAE@PAVTRmgRoadMapAdapterInterface@@HABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x15f3b0	391f11786306
+rmg_support	??0TRmgVoronoi@@QAE@XZ	80.5217	80.5217	80.5217	0x1fd010	b688708e8e8a
 rmg_support	??1TRmgLinePatternTable@@QAE@XZ	100.0000	100.0000	100.0000	0xf9ca0	0b56e388bd25
 rmg_support	??1TRmgRiverPainter@@UAE@XZ	100.0000	100.0000	100.0000	0x15eda0	60a4b1f5e76b
 rmg_support	??1TRmgRoadPainter@@UAE@XZ	100.0000	100.0000	100.0000	0x15f460	52104fd8eba9
@@ -3506,6 +3508,7 @@ rmg_support	??1TRmgVoronoi@@QAE@XZ	100.0000	100.0000	100.0000	0x1fd330	8b8ca13a7
 rmg_support	??_GTRmgRiverPainter@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x15eed0	-
 rmg_support	??_GTRmgRoadPainter@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x15f430	-
 rmg_support	?canPaint@TRmgLinePainter@@UAEHABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x15ee00	97886bd9259e
+rmg_support	?createEdge@TRmgVoronoi@@QAEPAUTRmgBoundaryVertex@@UTPoint@@PAUTRmgZone@@01@Z	90.9600	90.9600	90.9600	0x1fd390	b8524a40882c
 rmg_support	?detach@TRmgBoundaryVertex@@QAEXXZ	100.0000	100.0000	100.0000	0x1fcfa0	d95927b0b8e4
 rmg_support	?getLand@TRmgLinePainter@@UAEHABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x15ee30	df5b45b1cd8b
 rmg_support	?getLand@TRmgRoadLinePainter@@UAEHABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x15f390	c8b07bd6d0ec
@@ -3515,6 +3518,7 @@ rmg_support	?getPattern@TRmgRoadLinePainter@@UAEPAUTRmgLinePatternTable@@H@Z	100
 rmg_support	?getRmgPointOrientation@@YIHUTPoint@@00@Z	100.0000	100.0000	100.0000	0x1fdae0	17f6d0786d2e
 rmg_support	?getRmgSquaredDistance@@YIHUTPoint@@0@Z	100.0000	100.0000	100.0000	0x1fdb10	42dd704aad89
 rmg_support	?getTile@TRmgRoadLinePainter@@UAEXABUTRmgGridPoint@@AAUrmgTerrainTile@@@Z	100.0000	100.0000	100.0000	0x15f350	60b937e5b1e0
+rmg_support	?insert@?$vector@PAUTRmgBoundaryVertex@@V?$allocator@PAUTRmgBoundaryVertex@@@std@@@std@@QAEPAPAUTRmgBoundaryVertex@@PAPAU3@ABQAU3@@Z	100.0000	100.0000	100.0000	0x1fdd60	-
 rmg_support	?length@TRmgVector@@QBEHXZ	100.0000	100.0000	100.0000	0x1fceb0	a28cb81fb275
 rmg_support	?locate@TRmgVoronoi@@QAEPAUTRmgBoundaryVertex@@UTPoint@@@Z	91.0460	91.0460	91.0460	0x1fd6b0	d2afb858b03c
 rmg_support	?selectRmgLinePattern@@YIXPBEPBUTRmgLinePatternTable@@AAHAAE3@Z	100.0000	100.0000	100.0000	0xf9cb0	bf205d054ee6
