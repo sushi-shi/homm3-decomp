@@ -7596,11 +7596,65 @@ VA_COMPGEN(0x0054D9E0, 0x39, STD_COPY, TRmgMapPosition)
 
 // Group placement transfers its contents at a chosen three-coordinate
 // offset. The retained routine updates object positions and map-cell state.
-#if 0 // @carcass
+// Residual (99.80%): all 45 blocks and three named calls agree. TPoint
+// scan coordinates restore retail's stack homes (separate ints: 99.75%).
+// The source-cell width/y multiply order and outer-loop reload order remain.
+// Moving source lookup before the gate/border snapshots gives 94.59%; a
+// TRmgMapPosition scan with zero level and the value accessor gives 99.67%
+// and a different frame. Preserve the two-dimensional scan and snapshots.
 VA(0x005469B0, 0x2B4) // anchor-callee 0x547330; thiscall, ret 0x10
 void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
-    TRmgMapPosition position) {} // @stub
-#endif
+    TRmgMapPosition position)
+{
+    group->m_position = position;
+    for (unsigned int i = 0; i < group->m_objects.size(); ++i) {
+        type_object* object = group->m_objects[i];
+        TRmgMapPosition objectPosition = object->getPosition();
+        objectPosition.m_x += position.m_x;
+        objectPosition.m_y += position.m_y;
+        objectPosition.m_z = position.m_z;
+        addObject(object, objectPosition);
+    }
+    TRmgZoneBounds bounds;
+    bounds.m_minimumX = std::_cpp_max<long>(0, -position.m_x);
+    bounds.m_minimumY = std::_cpp_max<long>(0, -position.m_y);
+    bounds.m_maximumX = std::_cpp_min<long>(group->m_map.m_mapWidth, m_map.m_mapWidth - position.m_x);
+    bounds.m_maximumY = std::_cpp_min<long>(group->m_map.m_mapHeight, m_map.m_mapHeight - position.m_y);
+    TPoint point;
+    for (point.m_y = bounds.m_minimumY; point.m_y < bounds.m_maximumY; ++point.m_y) {
+        for (point.m_x = bounds.m_minimumX; point.m_x < bounds.m_maximumX; ++point.m_x) {
+            TRmgMapItem* destination = m_map.getMapItem(
+                TRmgMapPosition(point.m_x + position.m_x, point.m_y + position.m_y, position.m_z));
+            unsigned char gate = destination->hasSubterraneanGate();
+            unsigned char border = destination->hasBorderObject();
+            TRmgMapItem* source = group->m_map.getMapItem(point.m_x, point.m_y, 0);
+            if (destination->m_tile.m_landType != eTerrainWater
+                && !source->hasSubterraneanGate() && source->m_tileData.m_roadPassable
+                && source->m_tile.m_landType != eTerrainRock && !source->isRoadEntrance()
+                && destination->m_tileData.m_roadPassable
+                && destination->m_tile.m_landType != eTerrainRock && !destination->isRoadEntrance()) {
+                if (!destination->m_connection.m_present)
+                    destination->m_tileData.m_subterraneanGate = 0;
+                if (source->hasBorderObject() && !destination->m_connection.m_present) {
+                    destination->m_tileData.m_subterraneanGate = 0;
+                    destination->m_tileData.m_borderObject = 1;
+                }
+            }
+            if (!source->m_connection.m_present) {
+                source->m_tileData.m_borderObject = border;
+                if (border)
+                    source->m_tileData.m_subterraneanGate = 0;
+            }
+            if (!source->m_connection.m_present) {
+                source->m_tileData.m_subterraneanGate = gate;
+                if (gate)
+                    source->m_tileData.m_borderObject = 0;
+            }
+        }
+    }
+    for (unsigned int objectIndex = 0; objectIndex < group->m_objects.size(); ++objectIndex)
+        group->m_objects[objectIndex]->isWritable();
+}
 
 // Complete-only fit test: group, three-coordinate offset, owning zone.
 // Returns AL; its cell and object filters are retained independently.
