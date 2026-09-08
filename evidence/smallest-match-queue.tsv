@@ -39,7 +39,6 @@ compiled	224	0x00525120	96.5185	96.5185	96.5185	philai	philai	?valueOfWarFactory
 compiled	227	0x0053d0d0	88.9891	88.9891	88.9891	rmg	rmg	?recenterZone@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	228	0x004da420	98.1013	98.1013	98.1013	hero	hero	?getExperienceIncrement@hero@@SIHH@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	230	0x0056fbc0	89.8471	89.8471	89.8471	seerhut	seerhut	?doProgressDialog@type_artifact_quest@@UAEXXZ	admitted	run the evidence pass and iterate up to five scored candidates
-bracketed	231	0x00534b90	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_134b90	bracketed	resolve the owner, then add its VA claim and body
 unmapped	234	0x006038b0	-	0.0000	0.0000				unmapped	locate the owning TU, then add its VA claim and body
 compiled	237	0x00491050	84.1667	84.1667	84.1667	diff	diff	?findNextSame@CDiffMaker@@IAE_NHHAAH0@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	237	0x004eb250	89.4667	89.4667	89.4667	iconwdgt	iconwdgt	?nextRandomSiegeEngineFrame@iconWidget@@QAEXXZ	admitted	run the evidence pass and iterate up to five scored candidates
@@ -102,7 +101,7 @@ compiled	366	0x005fdb40	31.6268	31.6268	31.6268	rmg	rmg	?buildVertices@TRmgVoron
 compiled	372	0x004333a0	93.5778	96.7778	96.7778	ai_player	ai_player	?getValue@type_undead_king_cloak_artifact@@UBEJPBVhero@@EE@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	372	0x004e2bd0	90.1966	90.1966	90.1966	hero	hero	?removeArtifact@hero@@QAEXJ@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	372	0x0054b180	77.7594	77.7594	77.7594	rmg	rmg	?calculateQuestZoneDistances@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
-bracketed	375	0x0053cf50	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_13d1c0_sub01_13cf50	bracketed	resolve the owner, then add its VA claim and body
+compiled	375	0x0053cf50	79.2015	79.2015	79.2015	rmg	rmg	?fillIslandInterior@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	377	0x004c06f0	99.7464	99.7464	99.7464	game	game	?randomizeUniversity@game@@QAEXPAVNewmapCell@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	377	0x00575290	94.2771	94.2771	94.2771	singleselectionpopups	singleselectionpopups	?main@CHotspotWidget@@UAEHPAVmessage@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	378	0x00436180	84.3750	84.3750	84.3750	ai_tactical	ai_tactical	?getHexAttackValue@type_AI_attack_hex_chooser@@IAEJJAAJ@Z	admitted	run the evidence pass and iterate up to five scored candidates
@@ -140,7 +139,7 @@ compiled	435	0x005b6e00	70.3141	71.9615	71.9615	rmg_terrain	rmg_terrain	?checkSe
 compiled	437	0x004e2840	94.5203	94.5203	94.5203	hero	hero	?heroFn004E2840@hero@@QAEEJJ@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	438	0x00546520	97.7697	97.7697	97.7697	rmg	rmg	?fillTreasureGroup@type_random_map_generator@@QAEHPAUTRmgZone@@PAUTRmgTreasureGroup@@EH@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	440	0x0049c560	88.9253	88.9253	88.9253	event_record	event_record	?recordHideBoat@game@@QAEXPAVboat@@EH@Z	admitted	run the evidence pass and iterate up to five scored candidates
-compiled	441	0x0053d1c0	75.3450	75.3450	75.3450	rmg	rmg	?insetIslandZone@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
+compiled	441	0x0053d1c0	78.7719	78.7719	78.7719	rmg	rmg	?insetIslandZone@type_random_map_generator@@QAEXPAUTRmgZone@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	443	0x00485d90	95.1988	95.1988	95.1988	customcampaign	customcampaign	?readLengthPrefixedString@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAVTAbstractFile@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	446	0x005d1d30	90.7482	90.7482	90.7482	townmgr	townmgr	?doBlacksmith@@YIXHH@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	447	0x0042a2b0	85.8333	85.8333	85.8333	ai_player	ai_player	?checkTradeSupply@type_AI_player@@QAE_NPBHJPAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
@@ -161,14 +160,12 @@ compiled	461	0x0044ff60	94.9505	94.9505	94.9505	border	border	?main@border@@UAEH
 compiled	462	0x005aa060	93.1783	93.1783	93.3721	strip	strip	?drawOwner@strip@@IAEXH@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	465	0x00553040	86.2571	86.2571	86.2571	remote	remote	?getRemoteData@CDPlayHeroes@@QAEPAVCNetMsg@@EPAE@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	466	0x00542b00	68.4070	68.4070	68.4070	rmg	rmg	?placeMonolithBorder@type_random_map_generator@@QAEEUTRmgMapPosition@@PAUTRmgZone@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
-bracketed	467	0x0054cdf0	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_138b10_sub05_14cdf0	bracketed	resolve the owner, then add its VA claim and body
 compiled	468	0x00506080	61.0788	61.0788	62.3455	mapcell	mapcell	??0CObjectType@@QAE@PAUTObjectType@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	468	0x005b0ef0	89.3496	89.3496	89.3496	swapmgr	swapmgr	?update@swapManager@@QAEXXZ	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	469	0x00420d20	95.8926	95.8926	95.8926	ai	ai	?chooseCreatureSpell@combatManager@@QAEEPBVarmy@@PAJPAUtype_AI_combat_parameters@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 unmapped	470	0x006035c0	-	0.0000	0.0000				unmapped	locate the owning TU, then add its VA claim and body
 compiled	476	0x005a5260	97.3158	97.3158	97.3158	spells	spells	?resetBoltAngle@combatManager@@QAEXPAUSBolt@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	479	0x00406df0	90.2973	90.2973	90.2973	advmgr	advmgr	??0advManager@@QAE@XZ	admitted	run the evidence pass and iterate up to five scored candidates
-bracketed	484	0x00533c80	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_133c80	bracketed	resolve the owner, then add its VA claim and body
 compiled	485	0x006032e0	88.1358	88.1358	88.1358	winmgr	winmgr	?fadeFromBlack@heroWindowManager@@QAEXH@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	488	0x005d2da0	93.6951	93.6951	93.6951	townmgr	townmgr	?doUniversity@townManager@@QAEXXZ	admitted	run the evidence pass and iterate up to five scored candidates
 bracketed	489	0x0054c1e0	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_13dad0_sub01_14c1e0	bracketed	resolve the owner, then add its VA claim and body
@@ -212,7 +209,6 @@ compiled	551	0x0044dd20	88.1802	88.1802	88.1802	binkmanager	binkmanager	?playBin
 compiled	552	0x00577de0	89.8712	89.8712	89.8712	singleselectionwindow	singleselectionwindow	?tick@t_map_list_update@@UAEXXZ	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	552	0x005d0910	95.6600	95.6600	95.6600	townmgr	townmgr	?windowHandler@type_garrison_base_window@@UAEHPAVmessage@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	555	0x004369c0	93.1850	93.1850	93.1850	ai_tactical	ai_tactical	??0type_AI_spellcaster@@QAE@PAVcombatManager@@JE@Z	admitted	run the evidence pass and iterate up to five scored candidates
-bracketed	559	0x0054c970	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_137ff0_sub02_14c970	bracketed	resolve the owner, then add its VA claim and body
 compiled	562	0x0053b970	96.8731	96.8731	96.8731	rmg	rmg	?positionZone@type_random_map_generator@@QAEXPAUTRmgZone@@H@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	565	0x0043aa60	95.5486	95.5486	95.5486	ai_tactical	ai_tactical	?considerTeleport@type_AI_spellcaster@@QAEXPAUtype_spell_choice@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	565	0x0054abf0	95.5071	95.5071	95.5071	rmg	rmg	?writeMap@type_random_map_generator@@QAEEPAVTAbstractFile@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
@@ -244,7 +240,6 @@ compiled	608	0x0049d3d0	87.9349	87.9349	87.9349	event_record	event_record	?reset
 compiled	609	0x005d8480	98.6070	98.6070	98.6070	townmgr	townmgr	?doTownGate@townManager@@QAEXXZ	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	611	0x00487020	93.5215	93.5215	93.5215	customcampaign	customcampaign	?placeStartingHero@ScenarioStruct@TCampaignBrief@@QAEXPAUHeroPlaceholderData@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	612	0x0042d420	97.2740	97.2740	97.2740	ai_player	ai_player	?doBestPurchase@type_AI_creature_purchaser@@IAEJE@Z	admitted	run the evidence pass and iterate up to five scored candidates
-bracketed	615	0x00534520	-	0.0000	0.0000	quicktownwindow..recruit	quicktownwindow,recruit	game_134520	bracketed	resolve the owner, then add its VA claim and body
 compiled	616	0x0049d160	90.1797	90.1797	90.1797	event_record	event_record	?setVisibility@game@@QAEXHHHHHE@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	616	0x004fd950	90.4916	90.4916	90.4916	mapcell	mapcell	?newfullMapFn004FD950@NewfullMap@@QAEXPAVTAbstractFile@@H@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	619	0x004fe220	95.4717	95.4717	95.4717	mapcell	mapcell	?readMapLayer@NewfullMap@@QAEHPAVTAbstractFile@@HH@Z	admitted	run the evidence pass and iterate up to five scored candidates
@@ -466,7 +461,7 @@ compiled	1135	0x005d6a80	98.8365	98.8365	98.8365	townmgr	townmgr	?buildObj@townM
 compiled	1144	0x00500430	91.7100	91.7100	95.0000	mapcell	mapcell	?loadBlackBox@NewfullMap@@QAEHPAVTAbstractFile@@PAVBlackBoxData@@H@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	1152	0x00574610	94.2388	94.2388	94.2388	seerhut	seerhut	?read@TSeerHut@@QAEXPAVTAbstractFile@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	1154	0x00412470	92.7034	92.7034	92.7034	advmgr	advmgr	?drawUnderlay@advManager@@QAEXHHHHH@Z	admitted	run the evidence pass and iterate up to five scored candidates
-compiled	1154	0x00537ff0	78.6256	78.6256	78.6256	rmg	rmg	?loadTemplates@type_random_map_generator@@QAEXXZ	admitted	run the evidence pass and iterate up to five scored candidates
+compiled	1154	0x00537ff0	80.8461	80.8461	80.8461	rmg	rmg	?loadTemplates@type_random_map_generator@@QAEXXZ	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	1156	0x004fb710	93.1746	93.1746	93.1746	mainmenu	mainmenu	?mainMenuHandler@@YIHAAVmessage@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	1167	0x00468220	93.9760	93.9760	93.9760	cmbtmgr	cmbtmgr	?shootMissile@combatManager@@QAEXHHHHPBMPBVCSprite@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	1168	0x00434100	95.1622	95.1622	95.1622	ai_player	ai_player	?initializeArtifactEffects@@YIXXZ	admitted	run the evidence pass and iterate up to five scored candidates
@@ -655,7 +650,7 @@ compiled	3324	0x0050e050	92.9147	92.9147	92.9147	multiplayerwindow	multiplayerwi
 compiled	3348	0x004cafd0	83.8044	83.8044	85.0958	game	game	?transmitSaveGame@game@@QAEHHHEE@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	3431	0x00560380	99.9983	99.9983	100.0000	sacrifice_window	sacrifice_window	?createArtifactWidgets@type_sacrifice_window@@AAEXAAJH@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	3710	0x004f8880	99.1299	99.1299	99.1300	levelupwindow	levelupwindow	??0TLevelUpWindow@@QAE@PAVhero@@HHH@Z	admitted	run the evidence pass and iterate up to five scored candidates
-compiled	3728	0x00549cb0	93.2786	93.2864	95.7066	rmg	rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
+compiled	3728	0x00549cb0	93.2864	93.2864	95.7066	rmg	rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	3778	0x004bcda0	60.5547	60.5547	92.4127	game	game	?load@game@@QAEHPAVTAbstractFile@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	3785	0x004f4eb0	99.1667	99.1667	99.1667	kb	kb	?set@type_dialog_icon@@QAEXW4EGameResource@@J@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	4180	0x00478d80	98.5272	98.5272	100.0000	command	command	?processNextAction@combatManager@@QAEHAAVmessage@@E@Z	admitted	run the evidence pass and iterate up to five scored candidates
