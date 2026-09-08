@@ -1888,6 +1888,9 @@ public:
     unsigned char assembleTreasureGroup(TRmgZone* zone, TRmgTreasureGroup* group,
         unsigned char alternate, int minimum, int maximum);
     unsigned char placeTreasureGroup(TRmgTreasureGroup* group, TRmgZone* zone, int spacing);
+    unsigned char canPlaceTreasureGroup(TRmgTreasureGroup* group,
+        TRmgMapPosition position, TRmgZone* zone);
+    void commitTreasureGroup(TRmgTreasureGroup* group, TRmgMapPosition position);
     void decorateUnderground();
     unsigned char generate();
     unsigned char writeMap(TAbstractFile* outfile);

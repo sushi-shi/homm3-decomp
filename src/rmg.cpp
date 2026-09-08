@@ -7182,13 +7182,66 @@ VA_COMPGEN(0x0054CFD0, 0x2F, VECTOR_ERASE, unsigned_char)
 // the retained body copies three dwords and returns the end pointer.
 VA_COMPGEN(0x0054D9E0, 0x39, STD_COPY, TRmgMapPosition)
 
+// Group placement transfers its contents at a chosen three-coordinate
+// offset. The retained routine updates object positions and map-cell state.
+#if 0 // @carcass
+VA(0x005469B0, 0x2B4) // anchor-callee 0x547330; thiscall, ret 0x10
+void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
+    TRmgMapPosition position) {} // @stub
+#endif
+
+// Complete-only fit test: group, three-coordinate offset, owning zone.
+// Returns AL; its cell and object filters are retained independently.
+#if 0 // @carcass
+VA(0x00546C70, 0x452) // anchor-callee 0x54721c; thiscall, ret 0x14
+unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup* group,
+    TRmgMapPosition position, TRmgZone* zone) { return 0; } // @stub
+#endif
+
 // Candidate placement consumes the group and zone plus its spacing limit.
 // Retail returns AL, retaining a candidate-position vector and random choice.
-#if 0 // @carcass
+// Residual (77.1261%): initializing scan Y before the bound adjustments
+// and assigning center X before Y improves 72.9790%. A separate candidate
+// count before random selection is flat. Remaining differences are local
+// homes and candidate-clear copy/destruction expansion; retain the vector,
+// position copies, and separate fit/commit helpers.
 VA(0x005470D0, 0x286) // anchor-callee 0x5475b2/0x5476aa; thiscall, ret 0xc
 unsigned char type_random_map_generator::placeTreasureGroup(TRmgTreasureGroup* group,
-    TRmgZone* zone, int spacing) { return 0; } // @stub
-#endif
+    TRmgZone* zone, int spacing)
+{
+    int zoneIndex = zone->m_slot->m_zoneIndex;
+    std::vector<TRmgMapPosition> candidates;
+    TRmgZoneBounds bounds = zone->m_bounds;
+    TRmgZoneBounds groupBounds = group->m_bounds;
+    bounds.m_minimumY -= groupBounds.m_minimumY;
+    TRmgMapPosition position = zone->getLevelPosition();
+    position.m_y = bounds.m_minimumY;
+    bounds.m_maximumX += 1 - groupBounds.m_maximumX;
+    bounds.m_maximumY += 1 - groupBounds.m_maximumY;
+    bounds.m_minimumX -= groupBounds.m_minimumX;
+    TPoint center;
+    center.m_x = (groupBounds.m_minimumX + groupBounds.m_maximumX) / 2;
+    center.m_y = (groupBounds.m_minimumY + groupBounds.m_maximumY) / 2;
+    for (; position.m_y < bounds.m_maximumY; ++position.m_y) {
+        for (position.m_x = bounds.m_minimumX; position.m_x < bounds.m_maximumX; ++position.m_x) {
+            TRmgMapItem* item = m_map.getMapItem(position.m_x + center.m_x,
+                position.m_y + center.m_y, position.m_z);
+            if (item->m_zoneState.m_zone == zoneIndex && item->m_zoneState.m_score >= spacing
+                && canPlaceTreasureGroup(group, position, zone)) {
+                if (item->m_zoneState.m_score > spacing) {
+                    spacing = item->m_zoneState.m_score;
+                    candidates.clear();
+                }
+                candidates.push_back(position);
+            }
+        }
+    }
+    if (candidates.size() == 0)
+        return 0;
+    position = candidates[rand() % candidates.size()];
+    commitTreasureGroup(group, position);
+    return 1;
+}
 
 // Complete-only coordinator: weighted rounds select the least-used active
 // value band. Each gets three ordinary attempts, then three alternate
