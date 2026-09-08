@@ -7,6 +7,7 @@
 #include <vector>
 #include <va.h>
 #include "terrain_type.h"
+#include "advmgr_objects.h"
 
 class TAbstractFile;
 class TSpreadsheetResource;
@@ -1170,6 +1171,10 @@ public:
     // Before normalization: numberLevels.
     int m_numberLevels;                     // +0x14
 
+    // Owning constructor retained at 0x530fb0, called by the generator base
+    // and temporary treasure-group maps. Three dimensions, thiscall ret 0xc.
+    type_random_map(int width, int height, int levels);
+
     // The buffer-first view signature preserves the dimension values before
     // GetMapItem computes the plane pointer. In RepairWaterZoneBorders the
     // constructor/painting range 0x540124..0x54020c matches all 232 bytes after
@@ -1567,18 +1572,6 @@ public:
 };
 SIZE(TRmgVoronoi, 0x14);
 
-// The RMG progress sink is used through its third vtable slot by the zone
-// connection coordinator.  No concrete implementation is owned by rmg.cpp.
-class TRmgProgress {
-public:
-    // Before normalization (function): TRmgProgress::UnknownProgressOperation0.
-    virtual void unknownProgressOperation0() = 0;
-    // Before normalization (function): TRmgProgress::UnknownProgressOperation1.
-    virtual void unknownProgressOperation1() = 0;
-    // Before normalization (function): TRmgProgress::Advance.
-    virtual void advance(int amount) = 0;
-};
-
 SIZE(TRmgMapPosition, 0xc);
 SIZE(TRmgZoneConnection, 0x1c);
 SIZE(TRmgZoneBounds, 0x10);
@@ -1594,15 +1587,21 @@ enum ERmgMapVersion {
 // into the late generator state.  Each named field below is read or written
 // at its annotated offset by retail 0x549cb0; opaque spans preserve all
 // unobserved state without guessing at its source identity.
-class type_random_map_generator {
+// Constructor 0x536070 and destructor 0x5363b0 own the prefix through
+// the progress pointer at +0xed4. Their vtable is 0x640c3c; the derived
+// constructor/destructor replace it with 0x640c44. The old flat model hid
+// this retained base boundary. TRmgGeneratorBase is a provisional name.
+class TRmgGeneratorBase {
 public:
     // Before normalization: randomSeed.
-    int m_randomSeed;                                  // +0x004
+    // time(&m_randomSeed) at 0x536140 proves VC6 time_t (long).
+    long m_randomSeed;                                 // +0x004
     // Before normalization: mapVersion.
     int m_mapVersion;                                  // +0x008
     // Before normalization: map.
     type_random_map m_map;                             // +0x00c
-    std::vector<TObjectType> m_objectsTxt;             // +0x024
+    // 0x536213 calls TObjectTypeTable::load with this complete member.
+    TObjectTypeTable m_objectsTxt;                     // +0x024
     std::vector<TRmgObjectPropertiesRef*> m_objectPrototypes[232]; // +0x034
     // Before normalization: placementRules.
     // Previously unknownPointers/randomTerrainEntries; loader 0x536560 and
@@ -1611,7 +1610,23 @@ public:
     // Before normalization: positions.
     std::vector<type_object*> m_positions;             // +0xec4
     // Before normalization: progress.
-    TRmgProgress* m_progress;                          // +0xed4
+    TProgressSink* m_progress;                          // +0xed4
+    TRmgGeneratorBase(int width, int height, int levels,
+        TProgressSink* progress, int additionalSteps, int version);
+    virtual ~TRmgGeneratorBase();
+    // Retail base slot 1 is 0x5371c0; the derived slot is 0x5402a0.
+    virtual void addObject(type_object* object, TRmgMapPosition position);
+    // Retained 0x536200 loads object records, builds the per-type vectors,
+    // then calls the placement-rule loader. Larger body not yet recovered.
+    void loadObjectPrototypes();
+    void readObjectPlacementRules();
+    int scoreObjectPlacement(
+        TRmgObjectPropertiesRef* properties, TRmgMapPosition position);
+};
+SIZE(TRmgGeneratorBase, 0xed8);
+
+class type_random_map_generator : public TRmgGeneratorBase {
+public:
     // Before normalization: fixedHumanPlayers.
     unsigned char m_fixedHumanPlayers[8];              // +0x0ed8
     // Retail 0x5499fb initializes nine ints beginning here to -1;
@@ -1691,6 +1706,11 @@ public:
     // Before normalization: monolithsTwoWay.
     std::vector<type_object*> m_monolithsTwoWay;       // +0x14d0
 
+    // Retail 0x537b10 forwards dimensions/progress/version to the base,
+    // then initializes the derived template, zone and object-generator state.
+    type_random_map_generator(int width, int height, int levels,
+        int humanPlayers, int humanTeams, int computerPlayers, int computerTeams,
+        int waterContent, int monsterStrength, TProgressSink* progress, int version);
     virtual ~type_random_map_generator();
     // Before normalization (function): type_random_map_generator::AddObject.
     virtual void addObject(type_object* object, TRmgMapPosition position);
@@ -1710,9 +1730,7 @@ public:
 
     // Before normalization (function): type_random_map_generator::InitializeObjectGenerators.
     void initializeObjectGenerators();
-    void readObjectPlacementRules();
-    int scoreObjectPlacement(
-        TRmgObjectPropertiesRef* properties, TRmgMapPosition position);
+
     unsigned char canPlaceZone(TRmgZone* zone);
     void buildZoneBoundaries(TRmgTemplate* mapTemplate, int level);
     void fillZoneArea(TRmgZone* zone, TRmgBoundaryVertex* first);

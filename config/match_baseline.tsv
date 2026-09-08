@@ -3223,6 +3223,7 @@ resourcemanager	@game_null_159510@12	89.3910	89.3910	89.3910	0x159510	8e254a7e61
 resourcemanager	@game_sprite_1599e0@12	86.9559	86.9559	86.9559	0x1599e0	d198be5c7e9e
 rmg	??0?$vector@HV?$allocator@H@std@@@std@@QAE@ABV?$allocator@H@1@@Z	100.0000	100.0000	100.0000	0x1157d0	-
 rmg	??0TProgressSink@@QAE@H@Z	100.0000	100.0000	100.0000	0x130e20	2f16a6d32876
+rmg	??0TRmgGeneratorBase@@QAE@HHHPAVTProgressSink@@HH@Z	100.0000	100.0000	100.0000	0x136070	2dd45993d495
 rmg	??0TRmgMapItem@@QAE@XZ	100.0000	100.0000	100.0000	0x130e90	edb4b65aac52
 rmg	??0TRmgZone@@QAE@PAUTRmgTownSlot@@@Z	100.0000	100.0000	100.0000	0x1329e0	43c69784e0da
 rmg	??0type_black_box_creature_def@@QAE@H@Z	100.0000	100.0000	100.0000	0x134250	20e010faae4c
@@ -3231,7 +3232,9 @@ rmg	??0type_shrine_def@@QAE@HH@Z	100.0000	100.0000	100.0000	0x1349d0	1621d989a61
 rmg	??0type_spell_scroll_def@@QAE@HH@Z	100.0000	100.0000	100.0000	0x134ea0	b2ccc452185f
 rmg	??0type_treasure_def@@QAE@HHHH@Z	100.0000	100.0000	100.0000	0x134160	9611a9b6da8a
 rmg	??0type_witch_hut_def@@QAE@XZ	100.0000	100.0000	100.0000	0x134a60	248d29ba8ae4
+rmg	??1?$vector@UTRmgObjectPlacementRule@@V?$allocator@UTRmgObjectPlacementRule@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x14c170	-
 rmg	??1TProgressSink@@UAE@XZ	100.0000	100.0000	100.0000	0x130e70	bcaf4bd86ff6
+rmg	??1TRmgGeneratorBase@@UAE@XZ	100.0000	100.0000	100.0000	0x1363b0	7f03472a9252
 rmg	??1TRmgMapAdapterInterface@@UAE@XZ	100.0000	100.0000	100.0000	0x132510	da5961006db4
 rmg	??1TRmgMapInterface@@UAE@XZ	100.0000	100.0000	100.0000	0x1361a0	6576d5852847
 rmg	??1TRmgMapItem@@QAE@XZ	100.0000	100.0000	100.0000	0x130ee0	-
@@ -3242,6 +3245,7 @@ rmg	??1TRmgZone@@QAE@XZ	100.0000	100.0000	100.0000	0x132b50	443032e6b8c1
 rmg	??1rmgBlackBoxObject@@UAE@XZ	100.0000	100.0000	100.0000	0x1336b0	377ae490e249
 rmg	??1rmgQuestArtifactObject@@UAE@XZ	100.0000	100.0000	100.0000	0x1339f0	6fff44d8e0d1
 rmg	??1type_object@@UAE@XZ	100.0000	100.0000	100.0000	0x1338d0	3456f3994041
+rmg	??1type_random_map_generator@@UAE@XZ	100.0000	100.0000	100.0000	0x137df0	a9bf0b2d1edd
 rmg	??DTRmgVector@@QBE?AU0@H@Z	100.0000	100.0000	100.0000	0x1fdcd0	f507d47c1a08
 rmg	??G@YI?AUTRmgVector@@UTPoint@@0@Z	100.0000	100.0000	100.0000	0x1fdd40	b2718bbe2d90
 rmg	??H@YI?AUTPoint@@U0@UTRmgVector@@@Z	100.0000	100.0000	100.0000	0x1fdd20	c95ef38ef830
@@ -3249,7 +3253,9 @@ rmg	??HTRmgVector@@QBE?AU0@U0@@Z	100.0000	100.0000	100.0000	0x1fdcb0	c004a932d3f
 rmg	??KTRmgVector@@QBE?AU0@H@Z	100.0000	100.0000	100.0000	0x1fdcf0	1e9d7d35bbe5
 rmg	??_ETRmgMapItem@@QAEPAXI@Z	100.0000	100.0000	100.0000	0x131050	-
 rmg	??_F?$vector@HV?$allocator@H@std@@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x136ba0	-
+rmg	??_F?$vector@PAUTRmgObjectPropertiesRef@@V?$allocator@PAUTRmgObjectPropertiesRef@@@std@@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x1361e0	-
 rmg	??_GTProgressSink@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x130e40	-
+rmg	??_GTRmgGeneratorBase@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x136170	-
 rmg	??_GTRmgMapAdapter@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1324e0	-
 rmg	??_GTRmgMapAdapterInterface@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x137910	-
 rmg	??_GTRmgMapInterface@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1361b0	-
@@ -3260,6 +3266,7 @@ rmg	??_GrmgOwnableObject@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x133590	-
 rmg	??_GrmgQuestArtifactObject@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1339c0	-
 rmg	??_Gtype_object@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x133120	-
 rmg	??_Gtype_random_map@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x130f80	-
+rmg	??_Gtype_random_map_generator@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x137dc0	-
 rmg	?_Construct@std@@YIXPAUTRmgMapPosition@@ABU2@@Z	100.0000	100.0000	100.0000	0x14dd60	-
 rmg	?_Inc@const_iterator@?$_Tree@UTPoint@@U1@U_Kfn@?$set@UTPoint@@U?$less@UTPoint@@@std@@V?$allocator@UTPoint@@@3@@std@@U?$less@UTPoint@@@4@V?$allocator@UTPoint@@@4@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x1b8bc0	-
 rmg	?assignRmgTeams@@YIXHHHPBEPAD@Z	100.0000	100.0000	100.0000	0x14ab40	252158e80300
@@ -3334,10 +3341,10 @@ rmg	?openConnectionPath@type_random_map_generator@@QAEXUTRmgMapPosition@@E@Z	79.
 rmg	?paintRoad@type_random_map_generator@@QAEEUTRmgMapPosition@@H@Z	70.4101	70.4101	70.4101	0x148040	3627024fcec5
 rmg	?placeBorderObject@type_random_map_generator@@QAEHUTRmgMapPosition@@HPAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x140d60	d15d1657d5ba
 rmg	?placeObjectInZone@type_random_map_generator@@QAEEPAVtype_object@@PAUTRmgZone@@@Z	93.5774	93.5774	93.5774	0x142930	563a5853e293
-rmg	?readObjectPlacementRules@type_random_map_generator@@QAEXXZ	97.5804	97.5804	97.5804	0x136560	e6e8acaeec9f
+rmg	?readObjectPlacementRules@TRmgGeneratorBase@@QAEXXZ	97.5804	97.5804	97.5804	0x136560	d25d28f95d79
 rmg	?readRmgTemplateZones@@YIXPBVTSpreadsheetResource@@PAUTRmgTemplate@@HHHHH@Z	100.0000	100.0000	100.0000	0x138480	c92ec28cb951
 rmg	?repairWaterZoneBorders@type_random_map_generator@@QAEXXZ	100.0000	100.0000	100.0000	0x13fcb0	d69a1e17e232
-rmg	?scoreObjectPlacement@type_random_map_generator@@QAEHPAUTRmgObjectPropertiesRef@@UTRmgMapPosition@@@Z	84.6788	84.6788	84.6788	0x136bc0	4c927d8360f4
+rmg	?scoreObjectPlacement@TRmgGeneratorBase@@QAEHPAUTRmgObjectPropertiesRef@@UTRmgMapPosition@@@Z	84.6788	84.6788	84.6788	0x136bc0	28dee8b5f7a1
 rmg	?selectObjectPrototype@type_random_map_generator@@QAEPAUTRmgObjectPropertiesRef@@W4TTerrainType@@HH@Z	99.6581	99.6581	99.6581	0x146040	13a1816fda39
 rmg	?set@?$bitset@$0IB@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0x14ded0	-
 rmg	?setOverlay@TRmgMapAdapter@@UAEXABUTRmgGridPoint@@H@Z	100.0000	100.0000	100.0000	0x132730	cf84da2653b0
@@ -3359,7 +3366,7 @@ rmg	?write@rmgSeerHutObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.000
 rmg	?write@rmgShrineObject@@UAEXPAVTAbstractFile@@H@Z	99.4933	99.4933	99.4933	0x133f40	f01190a24e62
 rmg	?write@rmgWitchHutObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x1340c0	a8c6fa7b97cf
 rmg	?write@type_object@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x133170	1d471e0487dd
-rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	93.2864	93.2864	95.7066	0x149cb0	d9e51f6131ce
+rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	93.2786	93.2864	95.7066	0x149cb0	d9e51f6131ce
 rmg	__h3cg$rmg$static_ctor$g_rmgRiverPatternTable	100.0000	100.0000	100.0000	0x15ed70	-
 rmg	__h3cg$rmg$static_ctor$g_rmgRoadPatternTable	100.0000	100.0000	100.0000	0x15f2f0	-
 rmg	__h3cg$rmg$static_dtor$g_rmgRiverPatternTable	100.0000	100.0000	100.0000	0x15ed90	-

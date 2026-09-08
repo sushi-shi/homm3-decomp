@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <string>
 #include "abstractfile.h"
 #include "advmgr_objects.h"
@@ -1763,6 +1764,27 @@ type_object* type_key_tent_def::generate(TRmgObjectPropertiesRef* properties,
     return new rmgKeyTentObject(properties, generator, m_value);
 }
 
+// Retail's derived generator constructor 0x537b10 calls this six-argument
+// base initializer. Automatic member construction owns the map, object table
+// and 232 property vectors before the progress total and seed are installed.
+// TProgressSink's +4 total/slot-1 setter prove the earlier opaque progress
+// interface was a duplicate model of the existing canonical sink.
+VA(0x00536070, 0xFB) // caller 0x537b52 + base vtable 0x640c3c; retail-only
+TRmgGeneratorBase::TRmgGeneratorBase(int width, int height, int levels,
+    TProgressSink* progress, int additionalSteps, int version)
+    : m_map(width, height, levels)
+{
+    m_progress = progress;
+    m_mapVersion = version;
+    if (progress)
+        progress->setTotal(progress->m_steps + additionalSteps + 0x3bc4);
+    time(&m_randomSeed);
+    srand(m_randomSeed);
+    loadObjectPrototypes();
+}
+
+VA_COMPGEN(0x00536170, 0x21, SCALAR_DELETING_DTOR, TRmgGeneratorBase)
+
 // The seven-slot abstract map table at 0x6409e8 and sixteen retail cleanup
 // tails identify this virtual base destructor, exact on the first scored
 // candidate. Dreamcast has no RMG compiland.
@@ -1774,6 +1796,25 @@ TRmgMapInterface::~TRmgMapInterface()
 // Vtable 0x6409e8 slot 0 retains this generated wrapper immediately after
 // the exact abstract-base destructor in retail link order.
 VA_COMPGEN(0x005361B0, 0x23, SCALAR_DELETING_DTOR, TRmgMapInterface)
+
+// The base constructor passes this default-constructor closure to the
+// 232-element EH vector constructor iterator. The int-vector grid below
+// has its own identical retail closure at 0x536ba0.
+VA_COMPGEN(0x005361E0, 0x18, DEFAULT_CTOR_CLOSURE, TRmgObjectPropertiesRef)
+
+// The base owns placed objects and property references. Delete those
+// pointees first, then let the ordinary member destructors release the
+// vector buffers, placement rules, object table and owning map in reverse.
+VA(0x005363B0, 0x1A9) // base vtable 0x640c3c + derived cleanup call; retail-only
+TRmgGeneratorBase::~TRmgGeneratorBase()
+{
+    for (unsigned int i = 0; i < m_positions.size(); ++i)
+        delete m_positions[i];
+    for (int type = 0; type < 232; ++type) {
+        for (unsigned int i = 0; i < m_objectPrototypes[type].size(); ++i)
+            delete m_objectPrototypes[type][i];
+    }
+}
 
 // rand_trn.txt supplies one rule per nonempty row starting at row three.
 // The two 232x10 vector grids group rules and subtypes by remapped object
@@ -1803,7 +1844,7 @@ VA_COMPGEN(0x005361B0, 0x23, SCALAR_DELETING_DTOR, TRmgMapInterface)
 // three pins is also neutral here. Canonical library constructors remain;
 // WriteMapHeader's 95.71% MAX is preserved with that collateral measured.
 VA(0x00536560, 0x5F2) // anchor-string rand_trn.txt; thiscall, ret 0; retail-only
-void type_random_map_generator::readObjectPlacementRules()
+void TRmgGeneratorBase::readObjectPlacementRules()
 {
     TSpreadsheetResource* sheet = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x006827F4, rmgPlacementRulesFilename, "rand_trn.txt"));
@@ -1901,7 +1942,7 @@ void type_random_map_generator::readObjectPlacementRules()
 // its redundant lea. The insert callee's widget* name is an ICF alias of
 // this pointer-vector instantiation, not another inlining difference.
 VA(0x00536BC0, 0x5F4) // anchor-callee 0x5375ff; thiscall, ret 0x10; retail-only
-int type_random_map_generator::scoreObjectPlacement(
+int TRmgGeneratorBase::scoreObjectPlacement(
     TRmgObjectPropertiesRef* properties, TRmgMapPosition position)
 {
     TObjectType* prototype = properties->m_prototype;
@@ -2040,6 +2081,22 @@ VA(0x005378E0, 0x27)
 TRmgMapItem* type_random_map::getMapItem(TRmgMapPosition point)
 {
     return getMapItem(point.m_x, point.m_y, point.m_z);
+}
+
+VA_COMPGEN(0x00537DC0, 0x21, SCALAR_DELETING_DTOR, type_random_map_generator)
+
+// Derived vtable 0x640c44 deletes zone/template pointees and the nonvirtual
+// treasure definitions, then releases its own members before the retained
+// base destructor at 0x5363b0. The loops and all three owners are separate.
+VA(0x00537DF0, 0x200) // derived vtable + base cleanup and pointee destructors
+type_random_map_generator::~type_random_map_generator()
+{
+    for (unsigned int i = 0; i < m_zones.size(); ++i)
+        delete m_zones[i];
+    for (unsigned int j = 0; j < m_templates.size(); ++j)
+        delete m_templates[j];
+    for (unsigned int k = 0; k < m_objectGenerators.size(); ++k)
+        delete m_objectGenerators[k];
 }
 
 // The rmg.txt coordinator at 0x5381ad passes the spreadsheet in ecx,
@@ -4307,6 +4364,12 @@ VA_COMPGEN(0x00536BA0, 0x18, DEFAULT_CTOR_CLOSURE, vector)
 // TRmgObjectPlacementRule owns the two int vectors at +0x2c and +0x3c.
 // Their reverse destruction order accounts for all 61 retail bytes.
 VA_COMPGEN(0x00536B60, 0x3D, IMPLICIT_DTOR, TRmgObjectPlacementRule)
+
+// The recovered generator-base constructor's exception cleanup naturally
+// retains the value-vector destructor. Its 0x4c-stride loop and calls to
+// TRmgObjectPlacementRule::~TRmgObjectPlacementRule distinguish it from
+// the separate pointer-vector destructor emitted by the rule loader.
+VA_COMPGEN(0x0054C170, 0x38, VECTOR_DTOR, TRmgObjectPlacementRule)
 
 // FilterZonePositions retains this size calculation four times. Retail
 // divides the template connection pointer span by its proven 0x1c stride.
