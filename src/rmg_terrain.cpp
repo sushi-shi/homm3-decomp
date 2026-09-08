@@ -784,9 +784,13 @@ unsigned char rmgTerrainPainter::isPaintTerrain(const TRmgGridPoint& point)
 // and refreshes the base frame for cells already using the selected terrain.
 // This ordinary caller precedes paintPoint in the retail terrain cluster;
 // there is no Dreamcast RMG compiland or recovered source spelling.
-// Residual (69.9804%): all 13 CFG blocks have the retail destinations, but
+// Residual (72.8497%): all 13 CFG blocks have the retail destinations, but
 // initializePackedCell is called where retail expands the adapter read and
 // cache fill. The bound loads, loop registers and tile-zero stores also differ.
+// Sixty bounds/predicate/tile-lifetime candidates lift 69.9804% to this peak
+// with named endpoints and the canonical isPaintTerrain call. Ten retained
+// parents crossed with six for/while/guarded-do forms are all byte-flat here;
+// no other terrain score changes. The nested cache-fill boundary stays open.
 // Restoring this predecessor is byte-neutral for paintPoint's eight-byte
 // multiplication residual. Sharing the base-frame/constructed-tile sequence
 // through another helper leaves selectBaseFrame, the tile constructor and
@@ -796,12 +800,12 @@ void rmgTerrainPainter::paintRectangle(
     unsigned int x, unsigned int y,
     unsigned int rectangleWidth, unsigned int rectangleHeight)
 {
-    rectangleWidth += x;
-    rectangleHeight += y;
+    unsigned int endX = x + rectangleWidth;
+    unsigned int endY = y + rectangleHeight;
     TRmgGridPoint point;
-    for (point.m_y = y; point.m_y < rectangleHeight; ++point.m_y) {
-        for (point.m_x = x; point.m_x < rectangleWidth; ++point.m_x) {
-            if (getPaintTerrain() != getTerrain(point)) {
+    for (point.m_y = y; point.m_y < endY; ++point.m_y) {
+        for (point.m_x = x; point.m_x < endX; ++point.m_x) {
+            if (!isPaintTerrain(point)) {
                 paintPoint(point);
             } else {
                 int frame = selectBaseFrame(point, m_paintTerrain, -1);
