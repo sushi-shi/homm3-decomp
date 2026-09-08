@@ -3266,7 +3266,7 @@ rmg	?canConnect@TRmgZone@@QBEEPBU1@@Z	96.4286	96.4286	96.4286	0x132bd0	bea039f48
 rmg	?canPlaceObject@type_random_map@@QAEEPAUTRmgObjectPropertiesRef@@UTRmgMapPosition@@PAUTRmgZone@@@Z	86.6848	86.6848	86.6848	0x131cf0	8645631febc0
 rmg	?canPlaceShipyard@type_random_map_generator@@QAEEUTRmgMapPosition@@@Z	89.9022	90.7594	90.7594	0x141960	9d06cf666c15
 rmg	?canPlaceZone@type_random_map_generator@@QAEEPAUTRmgZone@@@Z	98.0374	98.0374	98.0374	0x13ad60	a726380b0ba3
-rmg	?clear@TRmgMapItem@@QAEXXZ	91.0263	91.0263	91.0263	0x130f10	dbe067e2de17
+rmg	?clear@TRmgMapItem@@QAEXXZ	91.0263	91.0263	91.0263	0x130f10	5159625cc405
 rmg	?clear@type_random_map@@QAEXXZ	100.0000	100.0000	100.0000	0x131140	e059e164a096
 rmg	?clearPlacementMarks@type_object@@QAEXXZ	100.0000	100.0000	100.0000	0x133150	9f4ec684d983
 rmg	?clipRmgBoundaryPoint@@YI?AUTPoint@@ABUTRmgZoneBounds@@U1@1@Z	100.0000	100.0000	100.0000	0x13cac0	9f6a8d239172
@@ -3317,9 +3317,10 @@ rmg	?repairWaterZoneBorders@type_random_map_generator@@QAEXXZ	100.0000	100.0000	
 rmg	?scoreObjectPlacement@type_random_map_generator@@QAEHPAUTRmgObjectPropertiesRef@@UTRmgMapPosition@@@Z	84.6788	84.6788	84.6788	0x136bc0	4c927d8360f4
 rmg	?selectObjectPrototype@type_random_map_generator@@QAEPAUTRmgObjectPropertiesRef@@W4TTerrainType@@HH@Z	99.6581	99.6581	99.6581	0x146040	13a1816fda39
 rmg	?set@?$bitset@$0IB@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0x14ded0	-
-rmg	?setOverlay@TRmgMapAdapter@@UAEXABUTRmgGridPoint@@H@Z	83.2188	83.2188	83.2188	0x132730	4658e3607b0b
+rmg	?setOverlay@TRmgMapAdapter@@UAEXABUTRmgGridPoint@@H@Z	100.0000	100.0000	100.0000	0x132730	11dcda4772f3
 rmg	?setOverlay@TRmgRoadMapAdapter@@UAEXABUTRmgGridPoint@@H@Z	100.0000	100.0000	100.0000	0x1323d0	d4145edc1d7d
 rmg	?setOverlay@type_random_map@@UAEXABUTRmgGridPoint@@H@Z	100.0000	100.0000	100.0000	0x132200	0a641c95744c
+rmg	?setTile@TRmgMapAdapter@@UAEXABUTRmgGridPoint@@ABUrmgTerrainTile@@@Z	100.0000	100.0000	100.0000	0x132520	6d2e413631f9
 rmg	?setTile@TRmgRoadMapAdapter@@UAEXABUTRmgGridPoint@@ABUrmgTerrainTile@@@Z	100.0000	100.0000	100.0000	0x132360	c6b27813378a
 rmg	?setTotal@TProgressSink@@UAEXH@Z	100.0000	100.0000	100.0000	0x130e80	1a97545cc047
 rmg	?size@?$vector@UTRmgZoneConnection@@V?$allocator@UTRmgZoneConnection@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x14c1b0	-
@@ -3355,6 +3356,7 @@ rmg_support	?selectRmgLinePattern@@YIXPBEPBUTRmgLinePatternTable@@AAHAAE3@Z	100.
 rmg_support	?setOverlay@TRmgRoadLinePainter@@UAEXABUTRmgGridPoint@@H@Z	100.0000	100.0000	100.0000	0x15f330	ccd69cec548f
 rmg_support	?setTile@TRmgLinePainter@@UAEXABUTRmgGridPoint@@ABUrmgTerrainTile@@@Z	100.0000	100.0000	100.0000	0x15edc0	98dc84d9bd86
 rmg_terrain	??0TRmgGridPoint@@QAE@ABI0@Z	100.0000	100.0000	100.0000	0x1b76b0	-
+rmg_terrain	??0TRmgGridPoint@@QAE@ABU0@@Z	100.0000	100.0000	100.0000	0xfa520	-
 rmg_terrain	??0TRmgLineWalker@@QAE@PAVTRmgLinePainterInterface@@HABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0xfa280	eab30bd5e6a2
 rmg_terrain	??0TRmgTableTerrainRule@@QAE@XZ	100.0000	100.0000	100.0000	0x1b3a20	419dcc552fab
 rmg_terrain	??0TRmgTerrainBrush@@QAE@PAVTRmgMapInterface@@HH@Z	100.0000	100.0000	100.0000	0x1b7250	e132b05a16e9
@@ -3365,6 +3367,7 @@ rmg_terrain	??1TRmgTerrainBrush@@QAE@XZ	78.6021	78.6021	100.0000	0x1b72f0	53c276
 rmg_terrain	??1TRmgTerrainRule@@UAE@XZ	100.0000	100.0000	100.0000	0x1b3850	fafc06fe48dc
 rmg_terrain	??1rmgTerrainPainter@@QAE@XZ	100.0000	100.0000	100.0000	0x1b76f0	b322c9533860
 rmg_terrain	??M@YI_NABUTRmgGridPoint@@0@Z	100.0000	100.0000	100.0000	0x1b8ca0	b8578ef512b9
+rmg_terrain	??YTRmgGridPoint@@QAEAAU0@ABUTPoint@@@Z	100.0000	100.0000	100.0000	0xfa540	d715b7bd7623
 rmg_terrain	??_GTRmgTableTerrainRule@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1b3a50	-
 rmg_terrain	?_Distance@std@@YAXViterator@?$_Tree@UTRmgGridPoint@@U1@U_Kfn@?$set@UTRmgGridPoint@@U?$less@UTRmgGridPoint@@@std@@V?$allocator@UTRmgGridPoint@@@3@@std@@U?$less@UTRmgGridPoint@@@4@V?$allocator@UTRmgGridPoint@@@4@@1@0AAI@Z	100.0000	100.0000	100.0000	0x1b8c70	-
 rmg_terrain	?_Distance@std@@YAXViterator@?$_Tree@UTRmgGridPoint@@U1@U_Kfn@?$set@UTRmgGridPoint@@U?$less@UTRmgGridPoint@@@std@@V?$allocator@UTRmgGridPoint@@@3@@std@@U?$less@UTRmgGridPoint@@@4@V?$allocator@UTRmgGridPoint@@@4@@1@0AAIUbidirectional_iterator_tag@1@@Z	100.0000	100.0000	100.0000	0x1b8cd0	-
