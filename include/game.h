@@ -132,16 +132,15 @@ SIZE(TreasureData, 0x4c);
 // DC CodeView names every field in the derived record. Retail independently
 // proves their +4-shifted offsets (its Dinkumware string/vector objects are
 // four bytes wider than STLport's) through BlackBoxData's destructor.
-// Both members spelled int rather than TSecondarySkill/TSkillMastery, for
-// the reason armyGroup::armies is spelled int: loadBlackBox deserializes
-// each from a one-byte stream field straight into the four-byte slot, and
-// an enum here would put a cast into an enum domain on every load. The DC
-// declarators' types survive in the member names.
+// SecondarySkillData's DC member types are TSecondarySkill and TSkillMastery.
+// Retail readBlackBox/loadBlackBox widen each stream byte into these two
+// four-byte slots. Keep that representation conversion at deserialization;
+// GiveBlackBoxReward consumes the typed fields directly.
 struct SecondarySkillData {
     // Before normalization: type.
-    int m_type;
+    TSecondarySkill m_type;
     // Before normalization: level.
-    int m_level;
+    TSkillMastery m_level;
 };
 SIZE(SecondarySkillData, 8);
 
@@ -163,13 +162,13 @@ public:
     signed char m_primarySkillBonus[4];      // +0x78
     // Before normalization: SecondarySkills.
     std::vector<SecondarySkillData> m_secondarySkills; // +0x7c
-    // Element type int for SecondarySkillData's reason - loadBlackBox
-    // writes a widened stream byte into each slot. DC: vector<TArtifact>
-    // and vector<SpellID>, preserved in the member names.
+    // DC GiveBlackBoxReward names vector<TArtifact> and vector<SpellID>;
+    // retail indexes both with a four-byte stride. The file readers own
+    // widening their serialized byte/word values into these domains.
     // Before normalization: Artifacts.
-    std::vector<int> m_artifacts;             // +0x8c
+    std::vector<TArtifact> m_artifacts;       // +0x8c
     // Before normalization: Spells.
-    std::vector<int> m_spells;                // +0x9c
+    std::vector<SpellID> m_spells;            // +0x9c
     // Before normalization: Creatures.
     armyGroup m_creatures;                    // +0xac
 

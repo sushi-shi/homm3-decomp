@@ -2697,7 +2697,7 @@ long type_AI_spellcaster::getProtectionValue(const army* ourArmy,
             continue;
         if (g_spellTraits[i].m_level > level)
             continue;
-        if (!m_enemyHero->spellIsAvailable(static_cast<SpellID>(i)))
+        if (!m_enemyHero->spellIsAvailable(i))
             continue;
         if (!g_combatManager->validSpellTargetArmy(i, m_enemySide, ourArmy, 1, 0))
             continue;

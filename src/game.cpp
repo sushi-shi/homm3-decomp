@@ -129,19 +129,6 @@ inline TCreatureType creatureTypeFromInt(int value)
     return storage.m_creature;
 }
 
-// Before normalization (function): artifact_from_int.
-inline TArtifact artifactFromInt(int value)
-{
-    union {
-        // Before normalization: integer.
-        int m_integer;
-        // Before normalization: artifact.
-        TArtifact m_artifact;
-    } converted;
-    converted.m_integer = value;
-    return converted.m_artifact;
-}
-
 // The present retail hero layout records the class slot as a raw dword,
 // while GetNewHeroId's ABI uses THeroClass.  Preserve that representation
 // across the boundary without an enum cast (and therefore without changing
@@ -170,19 +157,6 @@ inline type_creature_bank_type creatureBankTypeFromInt(int value)
     } converted;
     converted.m_integer = value;
     return converted.m_bankType;
-}
-
-// Before normalization (function): game_resource_from_int.
-inline EGameResource gameResourceFromInt(int value)
-{
-    union {
-        // Before normalization: integer.
-        int m_integer;
-        // Before normalization: resource.
-        EGameResource m_resource;
-    } converted;
-    converted.m_integer = value;
-    return converted.m_resource;
 }
 
 // Before normalization (function): secondary_skill_from_int.

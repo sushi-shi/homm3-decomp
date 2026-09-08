@@ -583,7 +583,6 @@ int valueOfMapArtifact(const hero* current_hero, NewmapCell* cell)
 
 // Source-order declarations for helpers whose retained Complete bodies live
 // later in retail RVA order.
-inline TArtifact artifactFromInt(int value);
 // Before normalization (function): spell_id_from_int.
 inline SpellID spellIdFromInt(int value);
 // Before normalization (function): NetValueOfArtifact.
@@ -662,7 +661,7 @@ inline int valueOfMapArtifact(const hero* currentHero, NewmapCell* cell)
             >= HERO_BACKPACK_CAPACITY)
         return 0;
 
-    type_artifact artifact(artifactFromInt(cell->getArtifactIndex()));
+    type_artifact artifact(cell->getArtifactIndex());
     int value = aiGetArtifactPlayerValue(artifact, currentHero->m_owner);
     if (value < 10)
         value = 10;
@@ -1209,30 +1208,14 @@ inline int valueOfSkeleton(const hero* currentHero, NewmapCell* cell)
 }
 
 // armyGroup deliberately models its mutable roster as int while
-// get_spell_work_chance's domain is TCreatureType, and the resource
-// sweep below counts with an int while its consumers take
-// EGameResource. Same bit-preserving inline bridges ai_combat.cpp uses
-// for the same crossings, rather than lying with an enum cast; VC6
-// reduces the four-byte copy to a move.
+// get_spell_work_chance's domain is TCreatureType. This representation
+// bridge preserves the four-byte value. The artifact and resource bridges
+// are shared through their owning headers.
 inline TCreatureType creatureTypeFromInt(int value)
 {
     TCreatureType creature;
     memcpy(&creature, &value, sizeof creature);
     return creature;
-}
-
-inline EGameResource gameResourceFromInt(int value)
-{
-    EGameResource resource;
-    memcpy(&resource, &value, sizeof resource);
-    return resource;
-}
-
-inline TArtifact artifactFromInt(int value)
-{
-    TArtifact artifact;
-    memcpy(&artifact, &value, sizeof artifact);
-    return artifact;
 }
 
 inline SpellID spellIdFromInt(int value)
