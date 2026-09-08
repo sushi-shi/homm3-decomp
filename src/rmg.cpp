@@ -5947,7 +5947,11 @@ void type_random_map_generator::carveBranchingPaths()
 // This Complete-only path uses the same retained point/vector arithmetic
 // as boundary drawing, but marks only matching-zone cells and neighbours.
 // First reconstruction: 99.5699%. All 40 CFG blocks match in size and
-// flow; the remaining differences are instruction operands/scheduling.
+// flow. The only masked instruction difference is the neighbour lookup's
+// level*height multiply: retail copies the level register before multiplying
+// by memory; VC6 loads height and multiplies by the level register. The
+// value-coordinate overload and a separate cached level are byte-neutral.
+// Vector insertion relocation names are shared ICF aliases, not call changes.
 VA(0x005443A0, 0x2F5)
 void type_random_map_generator::connectJunctionEntrance(TPoint from, TPoint to,
     TRmgZone* zone)
