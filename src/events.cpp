@@ -9033,11 +9033,11 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
                                  rightTown, rightHero, rightArmyGroup,
                                  point.m_x, point.m_y, seed, alternateLayout);
     if (!leftHuman)
-        splitArmies(leftHero, rightHero, rightArmyGroup);
+        splitArmies(leftHero, rightHero, *rightArmyGroup);
     if (!rightHuman && rightHero
         && rightHero->m_skillLevel[eSecSkillBattleTactics]
                > leftHero->m_skillLevel[eSecSkillBattleTactics])
-        splitArmies(rightHero, leftHero, leftArmyGroup);
+        splitArmies(rightHero, leftHero, *leftArmyGroup);
     if (g_highMemBuffer > 2900)
         g_unnamed699548 = 2;
     else if (g_highMemBuffer > 900)

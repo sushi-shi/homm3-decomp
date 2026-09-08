@@ -218,7 +218,7 @@ compiled	576	0x004b9340	98.8718	98.8718	100.0000	game	game	?loadMinePool@game@@Q
 compiled	576	0x00535970	79.3429	79.3429	79.3429	rmg	rmg	?tryAddObject@TRmgTreasureGroup@@QAEEPAVtype_object@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	576	0x00540b20	95.6907	95.6907	95.6907	rmg	rmg	?createGuard@type_random_map_generator@@QAEPAVtype_object@@HPAUTRmgZone@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	580	0x00548040	70.4101	70.4101	70.4101	rmg	rmg	?paintRoad@type_random_map_generator@@QAEEUTRmgMapPosition@@H@Z	admitted	run the evidence pass and iterate up to five scored candidates
-compiled	585	0x0042db20	83.6191	83.6191	83.6191	ai_player	ai_player	?splitArmies@@YIXPAVhero@@PBV1@PBVarmyGroup@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
+compiled	585	0x0042db20	97.7143	97.7143	97.7143	ai_player	ai_player	?splitArmies@@YIXPAVhero@@PBV1@ABVarmyGroup@@@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	585	0x005a4970	99.8565	99.8565	99.8565	spells	spells	?areaEffect@combatManager@@QAEXJHJJ@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	587	0x004b2da0	89.8177	89.8177	89.8177	findpath	findpath	?seedCombatPosition@searchArray@@QAEXPBVarmy@@JJEJ@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	588	0x005b6ba0	89.7363	89.7363	89.7363	rmg_terrain	rmg_terrain	?checkFirstDiagonal@rmgTerrainPainter@@QAEEABUTRmgGridPoint@@ABUTRmgTerrainFlip@@@Z	admitted	run the evidence pass and iterate up to five scored candidates

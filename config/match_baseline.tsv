@@ -331,7 +331,7 @@ ai_player	?buildPath@@YIXPAVhero@@PAVsearchArray@@AAV?$vector@UpathCell@@V?$allo
 ai_player	?buyCreatures@type_AI_player@@QAEXPAVhero@@PAVtown@@@Z	97.7723	97.7723	97.7723	0x2ba60	6204df63e2e3
 ai_player	?buyMageGuild@type_AI_player@@QAEXPAVhero@@PAVtown@@@Z	100.0000	100.0000	100.0000	0x2beb0	efc2961311c0
 ai_player	?calculateDemand@type_AI_player@@QAEXXZ	93.7222	97.4340	97.4340	0x28740	c526e9165204
-ai_player	?calculateReserve@type_AI_player@@QAEXXZ	91.2557	91.2557	96.4566	0x29ad0	f5b940ddfcfb
+ai_player	?calculateReserve@type_AI_player@@QAEXXZ	91.2557	91.2557	96.4566	0x29ad0	3f1a268ce24a
 ai_player	?canTakeTown@@YIEPBVhero@@PBVtown@@@Z	100.0000	100.0000	100.0000	0x28410	f71cfc8db6f6
 ai_player	?canTradeResources@type_AI_player@@QAE_NPBHPAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	82.6064	82.6064	85.0282	0x2a580	a800c9dc46d8
 ai_player	?checkMoveSpell@@YIEPAVhero@@AAV?$vector@UpathCell@@V?$allocator@UpathCell@@@std@@@std@@JHE@Z	100.0000	100.0000	100.0000	0x309a0	69362f607581
@@ -404,7 +404,7 @@ ai_player	?resetMagusHutValue@type_AI_player@@QAEXXZ	100.0000	100.0000	100.0000	
 ai_player	?set@type_AI_creature_purchaser@@QAEXPAVtown@@@Z	100.0000	100.0000	100.0000	0x2d1b0	167ccc45a912
 ai_player	?size@?$vector@UpathCell@@V?$allocator@UpathCell@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x34620	-
 ai_player	?size@?$vector@Utype_creature_source@@V?$allocator@Utype_creature_source@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x34600	-
-ai_player	?splitArmies@@YIXPAVhero@@PBV1@PBVarmyGroup@@@Z	83.6191	83.6191	83.6191	0x2db20	fd8655f0f6e9
+ai_player	?splitArmies@@YIXPAVhero@@PBV1@ABVarmyGroup@@@Z	97.7143	97.7143	97.7143	0x2db20	a215dad701b8
 ai_player	?splitArmy@@YIJPAVarmyGroup@@FFF@Z	100.0000	100.0000	100.0000	0x2dd70	4483dd0c210e
 ai_player	?startTurn@type_AI_player@@QAEXXZ	100.0000	100.0000	100.0000	0x297c0	00a7676ab24e
 ai_player	?tradeResources@type_AI_player@@QAEXPBHJ@Z	100.0000	100.0000	100.0000	0x2a470	c9ae27fd3e36
@@ -1651,7 +1651,7 @@ events	?copy_backward@std@@YIPAV?$basic_string@DU?$char_traits@D@std@@V?$allocat
 events	?creatureBankEvent@advManager@@QAEHPAVhero@@PAVNewmapCell@@PBDUtype_point@@E@Z	91.5889	91.5889	91.5889	0xabdc0	0fbb0a8acb6b
 events	?dispatchEvent@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	99.3757	99.3757	99.9911	0xa84f0	01d0baaa0fac
 events	?doAIEvent@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@@Z	100.0000	100.0000	100.0000	0xacca0	1ed928d8e665
-events	?doCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	98.5379	98.5379	99.1139	0xad470	17546f59628a
+events	?doCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	98.5379	98.5379	99.1139	0xad470	2819eb9aed71
 events	?doCustomArtifact@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	98.2381	98.2381	99.1492	0x9f070	264555464136
 events	?doCustomResource@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa4780	613b7a452b9b
 events	?doCustomSpellScroll@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	97.4451	97.4451	97.4451	0xa5a80	189dc96286ef
