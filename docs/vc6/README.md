@@ -223,6 +223,17 @@ two-argument signature; overload, stream-type, traits, access and qualifier
 negative controls prevent it from claiming an enclosing constructor or a
 different initializer.
 
+A deque advance body can share every arithmetic operation with `operator+=`
+while belonging to `const_iterator::_Add`. Retail `0x4491c0` leaves arithmetic
+in EAX at both returns; the public operator must instead return the iterator
+address. The protected void helper already emitted by the ordinary deque
+subscript in `TCombatCreatureSubWindow::update` matches all 105 raw bytes.
+The previous 93.9535% operator claim was an identity error, not an allocator
+plateau. Claim the existing emitted helper in its consuming TU; no extra
+caller or inlining control is needed. `DEQUE_CONST_ITERATOR_ADD` checks the
+complete protected void signature, primitive element and matching allocator,
+with negative controls for the returning operators and other signatures.
+
 ## Status
 
 Phase 0 (driver ground truth + probe rig) is in progress. Reusable compiler

@@ -846,16 +846,16 @@ TCombatCreatureSubWindow::~TCombatCreatureSubWindow()
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:688
 //
-// Residual (90.3734%): the register-homing family plus ONE inline level.
+// Residual (90.3734%): the register-homing family.
 // Retail homes the `traits` reference in its own frame dword (frame 0x58
 // against our 0x54) and keeps `attack` in EBX; our CL does the exact
 // reverse, and the icon-pointer/iSpell pair in the spell loop swaps with
 // it.  Measured and rejected 2026-09-06: `traits` as a pointer instead of
 // a reference (byte-flat, 90.3734); declaring `traits` after the
 // attack/defense block (81.2490); declaring it above the SetIconFrame call
-// (83.6514).  The remaining call row is the deque subscript's depth - we
-// call `const_iterator::_Add` where retail calls `iterator::operator+=`,
-// one /Ob2 level shallower, and this tree admits no statement pin.
+// (83.6514). The formerly reported deque call discrepancy was an identity
+// error: both call const_iterator::_Add. The retail helper does not return
+// an iterator reference and matches this TU's emitted void helper exactly.
 // The const receiver IS the Dreamcast's own overload
 // (??A?$deque@W4SpellID@@...QBAABW4SpellID@@I@Z at dc 0x66804), and with
 // the polarity and comma-increment fixes below in place the non-const
@@ -867,11 +867,11 @@ TCombatCreatureSubWindow::~TCombatCreatureSubWindow()
 // stack count (the override wins unless it is -1). Both arms then run the
 // three standing-spell icons over the LAST three entries of the stack's
 // spell-influence queue and set the overlay text.
-// Residual (78.98%): the frame is one dword SHORT of retail's (0x54 vs
+// Earlier residual (78.98%): the frame is one dword SHORT of retail's (0x54 vs
 // 0x58) - retail homes the traits row address at [ebp-4] and the second
 // get_adjusted_attack result at [ebp+0xc] where we keep both in registers -
-// and retail CALLS deque<int>::iterator::operator+= at the spell-queue walk
-// where we expand it. Tried and rejected: a `const TCreatureTypeTraits*`
+// The old iterator::operator+= diagnosis was the identity error corrected
+// above. Tried and rejected: a `const TCreatureTypeTraits*`
 // instead of the reference (byte-flat), naming the shooting attack in a
 // local (byte-flat), landing _cpp_max's result in a third local
 // (byte-flat), and an explicit `if (shootAttack > attack)` (76.77).
@@ -1160,3 +1160,13 @@ void std::_STL_alloc_proxy<widget * *,widget *,std::allocator<widget *> >::_STL_
 // row of the COMDAT pool that follows cmbtmgr's last body (which ends exactly
 // at 0x46a650) and precedes that TU's `set<int>` _Tree family.
 VA_COMPGEN(0x0046a650, 0x26, VECTOR_DTOR, widget)
+
+// Shared Dinkumware deque helper in army's COMDAT bracket. The const deque
+// subscript in TCombatCreatureSubWindow::update naturally retains this body;
+// Dreamcast proves that public subscript call at dc 0x66804. Retail callers
+// at 0x444510, 0x46dc30 and 0x5f65b0 share the 0x4491c0 target.
+// Both retail return paths leave arithmetic in EAX, while operator+= must
+// return the iterator address. This protected void _Add matches all 105
+// bytes. The formerly claimed iterator::operator+= is the negative control:
+// its reference return changes ECX/EAX allocation and adds two bytes.
+VA_COMPGEN(0x004491c0, 0x69, DEQUE_CONST_ITERATOR_ADD, int)
