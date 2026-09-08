@@ -2315,6 +2315,31 @@ type_object* type_key_tent_def::generate(TRmgObjectPropertiesRef* properties,
     return new rmgKeyTentObject(properties, generator, m_value);
 }
 
+// The treasure-group constructor calls reset after its map and vectors
+// are constructed. This clears container entries without deleting objects,
+// clears map-cell state, then sets every surface cell to dirt/frame zero.
+// Complete-only role and ownership proven by 0x547360 and 0x5466e0.
+// Residual (71.5122%): all 11 CFG blocks align. Explicit range erasures
+// improve the clear-wrapper spelling (71.4634%), but VC6 still expands
+// both trivial _Destroy calls that retail retains. The resulting register
+// pressure adds an EBP frame; the cell-clear and terrain-reset loops agree
+// in control flow. Preserve the map and vector ownership boundaries.
+VA(0x00535040, 0xC6) // anchor-callee 0x5473d2; thiscall, ret 0; retail-only
+void TRmgTreasureGroup::reset()
+{
+    m_objects.erase(m_objects.begin(), m_objects.end());
+    m_outline.erase(m_outline.begin(), m_outline.end());
+    m_map.clear();
+    m_flag0048 = 0;
+    m_ready = 0;
+    TRmgMapItem* item = m_map.getMapItem(0, 0, 0);
+    int count = m_map.m_mapWidth * m_map.m_mapHeight;
+    while (count--) {
+        item->setTerrain(eTerrainDirt, 0, 0, 0);
+        ++item;
+    }
+}
+
 // Retail's derived generator constructor 0x537b10 calls this six-argument
 // base initializer. Automatic member construction owns the map, object table
 // and 232 property vectors before the progress total and seed are installed.

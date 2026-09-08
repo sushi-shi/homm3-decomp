@@ -1305,6 +1305,29 @@ public:
         TRmgZone* zone);
 };
 
+// Complete's treasure retries construct an owned map at +0, then bounds,
+// object and outline vectors. There is no derived vptr store: this group
+// contains the map. 0x547360 proves the 0x64-byte stack object and cleanup;
+// 0x5470d0 reads its bounds at +0x18. Names are provisional retail roles.
+struct TRmgTreasureGroup {
+    type_random_map m_map;                  // +0x00
+    TRmgZoneBounds m_bounds;                // +0x18
+    std::vector<type_object*> m_objects;    // +0x28
+    std::vector<TPoint> m_outline;           // +0x38
+    unsigned char m_flag0048;               // +0x48, cleared by reset
+    char m_opaque0049[0x17];                // +0x49..+0x5f, not yet recovered
+    unsigned char m_ready;                  // +0x60, set after assembly
+    char m_padding0061[3];
+
+    TRmgTreasureGroup(int width, int height)
+        : m_map(width, height, 1), m_flag0048(0), m_ready(0)
+    {
+        reset();
+    }
+    void reset();
+};
+SIZE(TRmgTreasureGroup, 0x64);
+
 // Complete-only road adapter, provisional role name. Vtable 0x640a04 has
 // the seven-slot road interface; 0x548120 constructs the eight-byte object
 // with the address of a type_random_map view at +4. Its methods independently
