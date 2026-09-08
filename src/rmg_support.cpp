@@ -370,17 +370,26 @@ TRmgBoundaryVertex::TRmgBoundaryVertex(
 // The diagram constructor allocates pairs using two by-value point/zone
 // pairs. It retains this constructor, while createEdge 0x5fd390 expands it.
 // Both paths expand the ordinary opposite-edge constructor above.
-// Residual 99.6512%: only the first point/zone load-store schedule differs.
+// Exact: initialize the zone, then copy the site in the body; write both
+// final position components separately. The 22 partial-initializer forms
+// found two exact choices with no collateral. Chaining the -1 assignments
+// scores 99.9535%; a temporary TPoint keeps a different final-store schedule.
+// Previously 99.6512%: the first point/zone load-store schedule differed.
 // A 40-combination constructor/detach batch tested ten initialization forms:
 // copy and component initializers tie; six component-assignment orders and
 // two point-copy/zone assignment orders are worse (best 94.3256%).
 VA(0x005FCEF0, 0x6C) // anchor-callee 0x5fd078; Complete-only, ret 0x18
 TRmgBoundaryVertex::TRmgBoundaryVertex(
     TPoint sitePosition, TRmgZone* zone, TPoint twinSitePosition, TRmgZone* twinZone)
-    : m_sitePosition(sitePosition), m_zone(zone),
-      m_twin(new TRmgBoundaryVertex(twinSitePosition, twinZone, this)),
-      m_next(this), m_previous(this), m_positionComputed(0), m_position(-1, -1)
+    : m_zone(zone)
 {
+    m_sitePosition = sitePosition;
+    m_twin = new TRmgBoundaryVertex(twinSitePosition, twinZone, this);
+    m_next = this;
+    m_previous = this;
+    m_positionComputed = 0;
+    m_position.m_x = -1;
+    m_position.m_y = -1;
 }
 
 // The two swaps preserve the bidirectional ring after exchanging successors.
