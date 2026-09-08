@@ -453,8 +453,9 @@ struct TRmgTownSlot {
     int m_parameters004c[7];
     // Before normalization: parameters0068.
     int m_parameters0068[7];
-    // Before normalization: flag0084.
-    unsigned char m_flag0084;
+    // Before normalization: flag0084. Role recovered from chooseTerrain
+    // 0x532ab0: select the aligned town terrain when an alignment exists.
+    unsigned char m_matchTownTerrain;
     // Before normalization: allowedTerrain.
     unsigned char m_allowedTerrain[8];  // +0x85
     // Before normalization: monsterStrength.
