@@ -357,6 +357,57 @@ int TRmgVector::length() const
     return static_cast<int>(sqrt(static_cast<double>(m_x * m_x + m_y * m_y)));
 }
 
+// The retained paired constructor expands this ordinary twin constructor
+// into the successful allocation arm. The same site/zone fields feed the
+// Voronoi vertex calculations; both ring links initially point to self.
+TRmgBoundaryVertex::TRmgBoundaryVertex(
+    TPoint sitePosition, TRmgZone* zone, TRmgBoundaryVertex* twin)
+    : m_sitePosition(sitePosition), m_zone(zone), m_twin(twin),
+      m_next(this), m_previous(this), m_positionComputed(0), m_position(-1, -1)
+{
+}
+
+// The diagram constructor allocates pairs using two by-value point/zone
+// pairs. It retains this constructor, while createEdge 0x5fd390 expands it.
+// Both paths expand the ordinary opposite-edge constructor above.
+// Residual 99.6512%: only the first point/zone load-store schedule differs.
+// A 40-combination constructor/detach batch tested ten initialization forms:
+// copy and component initializers tie; six component-assignment orders and
+// two point-copy/zone assignment orders are worse (best 94.3256%).
+VA(0x005FCEF0, 0x6C) // anchor-callee 0x5fd078; Complete-only, ret 0x18
+TRmgBoundaryVertex::TRmgBoundaryVertex(
+    TPoint sitePosition, TRmgZone* zone, TPoint twinSitePosition, TRmgZone* twinZone)
+    : m_sitePosition(sitePosition), m_zone(zone),
+      m_twin(new TRmgBoundaryVertex(twinSitePosition, twinZone, this)),
+      m_next(this), m_previous(this), m_positionComputed(0), m_position(-1, -1)
+{
+}
+
+// The two swaps preserve the bidirectional ring after exchanging successors.
+// This ordinary helper is retained by the diagram constructor and expanded
+// twice in detach. The existing +0x10/+0x14 fields prove its semantic owner.
+// The two canonical std::swap calls reproduce all 49 retail bytes.
+VA(0x005FCF60, 0x31) // anchor-callee 0x5fd308; thiscall, ret 4; Complete-only
+void TRmgBoundaryVertex::splice(TRmgBoundaryVertex* other)
+{
+    std::swap(m_next->m_previous, other->m_next->m_previous);
+    std::swap(m_next, other->m_next);
+}
+
+// addSite calls this before reusing an edge. Save the twin's predecessor
+// before either splice, then detach each half-edge from its own ring.
+// Exact: capture this predecessor first. Twin-first is 89.1667%; rereading
+// the twin predecessor after the first splice is 59.6905% and loses the
+// retail lifetime. The ordinary splice remains shared and auto-inlines here.
+VA(0x005FCFA0, 0x61) // anchor-callee addSite 0x5fd790; thiscall, ret 0; Complete-only
+void TRmgBoundaryVertex::detach()
+{
+    TRmgBoundaryVertex* previous = m_previous;
+    TRmgBoundaryVertex* twinPrevious = m_twin->m_previous;
+    splice(previous);
+    m_twin->splice(twinPrevious);
+}
+
 // The subdivision owns every allocated half-edge and its pointer vector.
 // Its retained destructor proves the +0x04 vector and trivial edge cleanup.
 VA(0x005FD330, 0x58) // anchor-callee 0x53e685; thiscall, ret 0
@@ -364,4 +415,32 @@ TRmgVoronoi::~TRmgVoronoi()
 {
     for (int edge = 0; edge < m_edges.size(); ++edge)
         delete m_edges[edge];
+}
+
+// addSite tests the orientation of the current site, predecessor's opposite
+// site and opposite site, then reuses the same operation in the circumcircle
+// determinant. All six stack dwords originate in canonical TPoint fields;
+// the body returns the signed cross product, not a normalized predicate.
+// The ordinary externally visible helper emits naturally and matches all
+// 43 bytes; the previous RMG probe's absent body was not an ABI limitation.
+VA(0x005FDAE0, 0x2B) // anchor-callee 0x5fd937/0x5fd97e; Complete-only
+int getRmgPointOrientation(TPoint first, TPoint second, TPoint third)
+{
+    return (second.m_x - first.m_x) * (third.m_y - first.m_y)
+        - (second.m_y - first.m_y) * (third.m_x - first.m_x);
+}
+
+// The three calls at 0x5fd7e4/0x5fd7f6/0x5fd80d compare the new site's
+// squared distance to both edge endpoints against the edge's squared length.
+// Two whole site positions, signed subtraction and two integer products
+// establish the operation and its aggregate-by-value calling boundary.
+// Exact: Y then X local capture reproduces retail's register roles.
+// The 24-form arithmetic batch found three exact forms; X-first capture
+// keeps the same 33-byte CFG but scores 99.7143%. No TU score falls here.
+VA(0x005FDB10, 0x21) // anchor-callee addSite; Complete-only, ret 0x10
+int getRmgSquaredDistance(TPoint first, TPoint second)
+{
+    int dy = first.m_y - second.m_y;
+    int dx = first.m_x - second.m_x;
+    return dx * dx + dy * dy;
 }
