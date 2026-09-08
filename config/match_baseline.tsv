@@ -4593,6 +4593,7 @@ victor	?allocimage@@YGHPAUimgdes@@HHH@Z	100.0000	100.0000	100.0000	0x203590	6d5a
 victor	?freeimage@@YGXPAUimgdes@@@Z	90.0976	90.0976	90.0976	0x2037a0	7bd7bc050031
 victor	?victorMinimumDimensions@@YAXPAUimgdes@@0PAI1@Z	85.8333	85.8333	85.8333	0x203ac0	d67245179a0d
 victor	?victorValidateBitmap@@YGHPAUimgdes@@@Z	100.0000	100.0000	100.0000	0x2039a0	276a1e5cf49b
+victor	?victorValidateImage@@YGHPAUimgdes@@@Z	79.9457	79.9457	79.9457	0x2038b0	1cdb0bc1e97e
 victor_pcx_kernels	?victorDecodeRleBytes@@YAHPAE0H@Z	100.0000	100.0000	100.0000	0x204510	f54dcb8250c9
 victor_pcx_kernels	?victorInterleaveRgbPlanes@@YAXPAEPBEH@Z	100.0000	100.0000	100.0000	0x2045e0	b4d2b2693c3c
 victor_pcx_kernels	?victorUnpackFourPlanes@@YAXPAEPBEHH@Z	100.0000	100.0000	100.0000	0x204570	ee4ddb1456b3
