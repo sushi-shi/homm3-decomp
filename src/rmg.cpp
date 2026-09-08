@@ -3148,6 +3148,20 @@ int TRmgGeneratorBase::scoreObjectPlacement(
     return score;
 }
 
+// Base generator vtable 0x640c3c slot 1, thiscall ret 0x10. The map
+// registration call and pointer-vector append at +0xec4 prove the body.
+// The derived override expands this ordinary base operation before counting
+// the new object and updating entrance distances. Complete-only.
+// Exact, 474 bytes: pointer-element _Construct/_Ufill/_Ucopy/_Destroy
+// compare identically with the retail widget/int/empty-destructor ICF
+// representatives at 0x404dc0/0x48d940/0x574ce0/0x404140.
+VA(0x005371C0, 0x1DA) // anchor-vtable + map call + base layout; retail-only
+void TRmgGeneratorBase::addObject(type_object* object, TRmgMapPosition position)
+{
+    m_map.addObject(object, position);
+    m_positions.push_back(object);
+}
+
 // Map-decoration caller 0x537a59 passes a position value and progress share.
 // The body uses base fields and virtual object insertion; ownership/name provisional.
 // Pinned retail 0x6408ec..0x64099f: decoration type ordinals, excluding
@@ -5483,6 +5497,67 @@ void type_random_map_generator::repairWaterZoneBorders()
             }
             positions.clear();
             terrains.clear();
+        }
+    }
+}
+
+// Derived generator vtable 0x640c44 slot 1; the existing base interface
+// fixes the object/by-value-position signature (ret 0x10). Retail expands
+// base registration, increments +0x1110's object-type count, and, for a
+// trigger-bearing prototype, floods the low-word score from its entrance.
+// The two vectors and descending binary search use the canonical worklist
+// helper also expanded in the road/river floods. Complete-only ownership.
+// Residual (69.5855%): seed insert/erase and worklist insert wrappers have
+// different expansion decisions; the frame is 12 bytes larger. push_back
+// seeds improve 68.0545%; constructor/operator+ neighbour values lower it.
+// Shared currentPosition beats separate seed/loop scopes (68.4291%) and
+// reusing the incoming position (59.4109%). Pop/bounds/score scopes are flat.
+// Keep the ordinary base and worklist helper calls; no other RMG scores
+// changed in the six value-form and eight lifetime/guard controls.
+VA(0x005402A0, 0x32A) // anchor-vtable + generator/map layouts; retail-only
+void type_random_map_generator::addObject(type_object* object, TRmgMapPosition position)
+{
+    TRmgGeneratorBase::addObject(object, position);
+    TObjectType* prototype = object->m_properties->m_prototype;
+    int objectType = prototype->m_objectType;
+    ++m_objectCountByType[objectType];
+    if (prototype->m_hasTrigger) {
+        TObjectType::TPoint trigger = prototype->m_triggerCell;
+        std::vector<TRmgMapPosition> positions;
+        std::vector<int> costs;
+        TRmgMapPosition currentPosition;
+        currentPosition.m_x = position.m_x - trigger.m_x;
+        currentPosition.m_y = position.m_y - trigger.m_y;
+        currentPosition.m_z = position.m_z;
+        TRmgMapItem* seed = m_map.getMapItem(currentPosition);
+        int zoneIndex = seed->m_zoneState.m_zone;
+        if (zoneIndex >= 0)
+            ++m_zones[zoneIndex]->m_objectCountByType[objectType];
+        seed->m_zoneState.m_score = 0;
+        positions.push_back(currentPosition);
+        costs.push_back(0);
+        while (positions.size()) {
+            currentPosition = positions.back();
+            positions.erase(positions.end() - 1);
+            costs.erase(costs.end() - 1);
+            int cost = m_map.getMapItem(currentPosition)->m_zoneState.m_score + 2;
+            for (int direction = 0; direction < RMG_DIRECTION_COUNT; ++direction) {
+                int nextCost = cost;
+                if (direction & 1)
+                    ++nextCost;
+                TRmgMapPosition nextPosition;
+                nextPosition.m_x = currentPosition.m_x + g_rmgDirections[direction].m_x;
+                nextPosition.m_y = currentPosition.m_y + g_rmgDirections[direction].m_y;
+                nextPosition.m_z = currentPosition.m_z;
+                if (nextPosition.m_x < 0 || nextPosition.m_x >= m_map.m_mapWidth
+                    || nextPosition.m_y < 0 || nextPosition.m_y >= m_map.m_mapHeight)
+                    continue;
+                TRmgMapItem* next = m_map.getMapItem(nextPosition);
+                if (nextCost >= next->m_zoneState.m_score)
+                    continue;
+                next->m_zoneState.m_score = nextCost;
+                insertRmgWorkItem(positions, costs, nextPosition, nextCost);
+            }
         }
     }
 }
