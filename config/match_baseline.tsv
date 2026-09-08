@@ -509,7 +509,6 @@ army	??0army@@QAE@XZ	95.9811	95.9811	95.9811	0x3d250	4fed37231901
 army	??1army@@QAE@XZ	100.0000	100.0000	100.0000	0x3d400	fb9ef9363c7c
 army	??Eiterator@?$deque@HV?$allocator@H@std@@@std@@QAEAAV012@XZ	100.0000	100.0000	100.0000	0x49230	-
 army	??Fiterator@?$deque@HV?$allocator@H@std@@@std@@QAEAAV012@XZ	100.0000	100.0000	100.0000	0x49270	-
-army	??Yiterator@?$deque@HV?$allocator@H@std@@@std@@QAEAAV012@H@Z	93.9535	93.9535	93.9535	0x491c0	-
 army	?_Freeback@?$deque@HV?$allocator@H@std@@@std@@IAEXXZ	100.0000	100.0000	100.0000	0x49130	-
 army	?_Freefront@?$deque@HV?$allocator@H@std@@@std@@IAEXXZ	100.0000	100.0000	100.0000	0x490b0	-
 army	?addAura@army@@QAEXXZ	100.0000	100.0000	100.0000	0x3ea70	4b6b90e80f18
@@ -1014,6 +1013,7 @@ combatcontrolsubwindow	??_GTCombatCreatureSubWindow@@UAEPAXI@Z	100.0000	100.0000
 combatcontrolsubwindow	??_GTCombatHeroSubWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x6cb70	-
 combatcontrolsubwindow	??_GTCombatPlacementSubWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x6c1e0	-
 combatcontrolsubwindow	??_Gtype_combat_sub_window@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x6bb80	-
+combatcontrolsubwindow	?_Add@const_iterator@?$deque@HV?$allocator@H@std@@@std@@IAEXH@Z	100.0000	100.0000	100.0000	0x491c0	-
 combatcontrolsubwindow	?disableAllButtons@TCombatPlacementSubWindow@@UAEXXZ	100.0000	100.0000	100.0000	0x6c290	01345eacf349
 combatcontrolsubwindow	?disableAllButtons@type_combat_sub_window@@UAEXXZ	100.0000	100.0000	100.0000	0x6bf90	90e52a2d375e
 combatcontrolsubwindow	?setRollover@TCombatControlSubWindow@@UAEXPBD@Z	100.0000	100.0000	100.0000	0x6bf50	9ae7865db600
