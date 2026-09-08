@@ -18,6 +18,12 @@
 #include "resourcemanager.h"
 #include "textresource.h"
 
+// Provisional role name; retail stores the two grid dimensions here.
+// The only references are TObjectTypeTable::load's default object and
+// TObjectType::setTriggerMask's no-trigger path, both in this compiland.
+// Before normalization: gNoTriggerCell.
+DATA(0x00640278) const TObjectType::TPoint g_noTriggerCell = {8, 6};
+
 // Shared registry at 0x69cb80, guard 0x69cb64. GetImageName's empty-name
 // static has a separate guard at 0x69cb70, proving a shared accessor boundary.
 // That does not prove an inline declaration: C2 classifies this ordinary
@@ -689,6 +695,10 @@ std::istream& operator>>(std::istream& is, TObjectType& objectType)
 // emission wrapper; removing that wrapper is flat across every claimed body.
 // Eight count/row getText versus operator[] and implicit/explicit-zero
 // istrstream-length controls are also byte-flat and emit no ulong bitset ctor.
+// Defining the known {8,6} sentinel in this TU preserves both retail loads
+// and is byte-flat across every function; it does not change this boundary.
+// A minimal record with no user-declared constructors still fails C2552
+// when aggregate-initialized with a point and omitted bitset members.
 VA(0x00514d80, 0x284)  // anchor-callee ResourceManager::GetText + anchor-bracket NewfullMapFn_00505DA0; retail-only
 void TObjectTypeTable::load(char* filename)
 {
