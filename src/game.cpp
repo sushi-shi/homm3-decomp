@@ -8889,43 +8889,21 @@ void game::claimGenerator(int generatorId, int newPlayerOwner)
 }
 
 // E:\gamedcs\game.cpp:7441
-// Residual (84.4118%): the map-location packing, message fields, calls, branch
-// and epilogue are instruction-identical; only VC6's scheduling of the five
-// inlined CMCClaimGarrison constructor stores differs. Moving the message
-// declaration before the location or between the garrison pointer and the
-// location regresses to 60.56% / 64.62%, so the natural lifetime order stays.
+// DC records current_garrison as a reference and passes the constructor's
+// result directly to SendMapChange at line 7446. Preserve that full-expression
+// temporary: VC6 then interleaves its member stores with location construction
+// exactly as retail does. A named CMCClaimGarrison local or the former pasted
+// member stores both leave the five nonzero stores grouped too late (84.4118%).
 VA(0x004c6960, 0xC9)  // anchor-global, dc 0xb1988
 void game::claimGarrison(int garrisonId, int newPlayerOwner)
 {
     // Before normalization (locals): current_garrison.
-    garrison* currentGarrison = &m_garrisons[garrisonId];
-    type_point location(currentGarrison->m_mapX, currentGarrison->m_mapY,
-                        currentGarrison->m_mapZ);
-    // This later, smaller caller inlines the same constructor. Spell the
-    // seven stores explicitly so the one out-of-line source definition above
-    // does not change its already-banked schedule.
-    // Residual (84.4059%): retail issues subType / field_00 / size /
-    // garrisonId / playerPos INTO the gaps of the inlined type_point
-    // construction and sinks only the two zero stores behind it; we emit all
-    // seven together after the point.  Tried and rejected, each measured
-    // against 84.4059: hoisting the whole `change` block above the
-    // `type_point location` declaration - 63.9706 (the location block moves
-    // with it); reordering the seven stores into retail's EMISSION order
-    // (subType, field_00, size, garrisonId, playerPos, then the two zeros) -
-    // 81.0559.  The zeros are sunk on both sides because they share the
-    // `xor ecx,ecx` the packing code already needs, so their source position
-    // is not observable; what is left is scheduling, not statement order.
-    CMCClaimGarrison change;
-    change.m_dpidFrom = 0;
-    change.m_uncompressedSize = 0;
-    change.m_subType = RS_CLAIM_GARRISON;
-    change.m_from = -1;
-    change.m_size = sizeof(CMCClaimGarrison);
-    change.m_garrisonId = garrisonId;
-    change.m_playerPos = newPlayerOwner;
-    sendMapChange(&change);
+    garrison& currentGarrison = m_garrisons[garrisonId];
+    type_point location(currentGarrison.m_mapX, currentGarrison.m_mapY,
+                        currentGarrison.m_mapZ);
+    sendMapChange(&CMCClaimGarrison(garrisonId, newPlayerOwner));
 
-    currentGarrison->m_playerOwner = newPlayerOwner;
+    currentGarrison.m_playerOwner = newPlayerOwner;
     if (newPlayerOwner != -1)
         setVisibility(location.m_x, location.m_y, location.m_z,
                       newPlayerOwner, 3, 0);
