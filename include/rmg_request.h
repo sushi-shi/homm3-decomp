@@ -1,5 +1,6 @@
-#ifndef HOMM3_RANDOMMAPREQUEST_H
-#define HOMM3_RANDOMMAPREQUEST_H
+// Shared Complete-only random-map request and result contract.
+#ifndef HOMM3_RMG_REQUEST_H
+#define HOMM3_RMG_REQUEST_H
 
 #include "va.h"
 class TAbstractFile;
@@ -20,8 +21,8 @@ enum ERandomMapResult {
 // the window's own field stores; the constructor's own defaults are
 // field_34 = 2, field_38 = 2, field_3C = 0, field_40 = 8, field_44 = 3,
 // field_48 = 0 and mapVersion = 2. Named where the caller contract proves a
-// role, ORDINAL otherwise - no symbol survives for this type. The lobby
-// fills this shared request, and the RMG unit owns its generation methods.
+// role, ORDINAL otherwise - no symbol survives for this type. It is shared
+// through this header for the selection window and the RMG implementation.
 class TRandomMapRequest {
 public:
     // Set to 1 for every seat the lobby has a live player record for; the

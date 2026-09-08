@@ -132,6 +132,8 @@ class RmgSourceFamilyTests(unittest.TestCase):
                             "struct TRmgLinePainterTile;\n", model, "\n", interface_constructor, "\n"])
             program.extend([module.constructor_definition(source), "\n",
                             module.constructor_definition(source, copy=True, required=False), "\n"])
+            if "TRmgGridPoint::operator+=(" in source:
+                program.extend([module.helpers().definition(source, "TRmgGridPoint::operator+="), "\n"])
             for method in ("TRmgLinePainterTile::getLand",
                            "TRmgLinePainterTile::getTile", "TRmgLinePainterTile::setTile",
                            "TRmgLinePainterInterface::at"):

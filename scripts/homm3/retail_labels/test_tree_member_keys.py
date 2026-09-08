@@ -21,7 +21,10 @@ new arms must leave alone.  The claim-side half of the contract (a kind in
 duplicate key) is checked here too, because that footgun has no other gate.
 """
 
+import tempfile
 import unittest
+from pathlib import Path
+from unittest import mock
 
 from homm3.build.canonicalize_data_symbols import DIRECT_SYMBOL_COMPGEN_KINDS
 from homm3.retail_labels import source
@@ -35,9 +38,48 @@ TREE = ("?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@H"
         "Utype_map_hero_info@@@2@@std@@")
 INIT = f"?_Init@{TREE}IAEXXZ"
 COPY_ASSIGN = f"??4{TREE}QAEAAV12@ABV12@@Z"
+POINT_TREE = ("?$_Tree@UTRmgGridPoint@@U1@U_Kfn@?$set@UTRmgGridPoint@@"
+              "U?$less@UTRmgGridPoint@@@std@@V?$allocator@UTRmgGridPoint@@"
+              "@3@@std@@U?$less@UTRmgGridPoint@@@4@"
+              "V?$allocator@UTRmgGridPoint@@@4@@std@@")
+POINT_ERASE_OVERLOADS = (
+    ("TREE_ERASE_KEY", f"?erase@{POINT_TREE}QAEIABUTRmgGridPoint@@@Z"),
+    ("TREE_ERASE_ITERATOR", f"?erase@{POINT_TREE}QAE?AViterator@12@V312@@Z"),
+    ("TREE_ERASE_RANGE", f"?erase@{POINT_TREE}QAE?AViterator@12@V312@0@Z"),
+    ("TREE_ERASE", f"?_Erase@{POINT_TREE}IAEXPAU_Node@12@@Z"),
+)
 
 
 class TreeMemberKeyTest(unittest.TestCase):
+    def test_public_erase_overloads_and_private_erase_keep_distinct_keys(self):
+        for kind, symbol in POINT_ERASE_OVERLOADS:
+            with self.subTest(kind=kind):
+                self.assertEqual(source._demangle_key(symbol),
+                                 f"trmggridpoint@{kind.lower()}")
+
+    def test_erase_integer_key_keeps_the_map_owner(self):
+        self.assertEqual(source._demangle_key(f"?erase@{TREE}QAEIABH@Z"),
+                         "type_map_hero_info@tree_erase_key")
+
+    def test_erase_claims_join_by_signature_even_with_equal_sizes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "rmg_terrain.cpp"
+            path.write_text("\n".join(
+                f"VA_COMPGEN(0x{0x401000 + i * 0x60:x}, 0x59, {kind}, TRmgGridPoint)"
+                for i, (kind, _) in enumerate(POINT_ERASE_OVERLOADS)))
+            rows = source.scan_file(path, {
+                0x1000 + i * 0x60 for i in range(len(POINT_ERASE_OVERLOADS))})
+        groups = {source._demangle_key(symbol): [(symbol, 0x59)]
+                  for _, symbol in reversed(POINT_ERASE_OVERLOADS)}
+        self.assertEqual(len(groups), len(POINT_ERASE_OVERLOADS))
+        with mock.patch.object(source, "_base_authority_scan",
+                               return_value=(groups, {})):
+            source.join_unit("rmg_terrain", rows)
+        self.assertEqual(len(rows), len(POINT_ERASE_OVERLOADS))
+        for row, (_, symbol) in zip(rows, POINT_ERASE_OVERLOADS):
+            self.assertEqual(row.get("joined"), symbol)
+            self.assertEqual(row["channel"], "src-VA+base")
+
     def test_init_keys_on_the_tree_owner(self):
         self.assertEqual(source._demangle_key(INIT),
                          "type_map_hero_info@tree_init")
@@ -110,7 +152,7 @@ class CompgenKindRegistrationTest(unittest.TestCase):
                          self.ANONYMOUS)
 
     def test_the_new_tree_kinds_are_registered_both_sides(self):
-        for kind in ("TREE_INIT", "TREE_COPY_ASSIGN"):
+        for kind in ("TREE_INIT", "TREE_COPY_ASSIGN", "TREE_ERASE_KEY"):
             self.assertIn(kind, source.COMPGEN_KINDS)
             self.assertIn(kind, DIRECT_SYMBOL_COMPGEN_KINDS)
 

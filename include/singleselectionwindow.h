@@ -57,7 +57,9 @@ enum ESingleSelectionGameContext {
     SINGLE_SELECTION_CONTEXT_3 = 3
 };
 
-#include "randommaprequest.h"
+// Keep the shared request declaration at its original include position for
+// this window's compilation context.
+#include "rmg_request.h"
 
 // TRandomMapProgress and its abstract base now live in
 // singleselectionpopups.h - singleselectionpopups.obj owns every one of their
