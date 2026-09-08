@@ -231,13 +231,15 @@ class SelectionTest(unittest.TestCase):
             "--against-src", str(self.sources["other"])])
         _selection.prepare(args)
         args.fn = FN
+        from homm3.vc6 import _solver
         for module in (reg_model, flow_model):
             with self.subTest(module=module.__name__), \
-                    patch.object(module, "_compile_tu", return_value=(Path("ref.obj"), "")), \
-                    patch.object(module, "_wine_dir", return_value=None), \
-                    patch.object(module, "_fn_text", return_value=("asm", "other symbol")) as fn_text:
-                module._reference_side(args)
+                    patch.object(_solver, "_compile_tu", return_value=(Path("ref.obj"), "")) as compile_tu, \
+                    patch.object(_solver, "_wine_dir", return_value=None), \
+                    patch.object(_solver, "_fn_text", return_value=("asm", "other symbol")) as fn_text:
+                module._reference_side(args, module.SCRATCH)
                 self.assertEqual(fn_text.call_args.args[1], "GetTeam")
+                self.assertEqual(compile_tu.call_args.args[1], module.SCRATCH / "ref")
 
     def test_scratch_override_is_compiled_not_replaced_by_the_tree_object(self):
         src = self.root / "scratch.cpp"

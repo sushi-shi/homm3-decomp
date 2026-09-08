@@ -33,7 +33,9 @@ STAMP_SUFFIX = ".stamp.json"
 # 13 admits an OWNER-FREE static destructor into the semantic `$E<n>`
 # canonicalization - an empty holder whose teardown names only other
 # compilands' globals and so relocates no datum of its own object.
-STAMP_SCHEMA = 13
+# 14 refuses ownerless fallback when an initializer supplies contradictory
+# callback-registration evidence.
+STAMP_SCHEMA = 14
 
 _HASH_CACHE: dict[str, tuple[tuple[int, int], str]] = {}
 
@@ -83,13 +85,17 @@ def write_stamp(output: Path, inputs: dict[str, Path]) -> Path:
     return path
 
 
-def freshness_problems(output: Path, _seen: set | None = None) -> list[str]:
+def freshness_problems(output: Path, _seen: set | None = None, *,
+                       required_inputs: dict[str, Path] | None = None) -> list[str]:
     """Return every provenance problem for one normalized object.
 
     Each recorded input must exist and hash to its recorded identity. When a
     recorded input has its own stamp, its chain is verified recursively, so a
     rebuilt raw candidate invalidates both the paired and normalized copies
     that were derived from the old bytes.
+
+    A normalization stage can require its complete input roles and paths;
+    an earlier raw-only stamp must never stand in for a finished paired pass.
     """
     output = Path(output)
     seen = _seen if _seen is not None else set()
@@ -110,7 +116,14 @@ def freshness_problems(output: Path, _seen: set | None = None) -> list[str]:
     if payload.get("schema") != STAMP_SCHEMA:
         problems.append("%s stamp has unknown schema; run `homm3 build`" % output)
         return problems
-    for role, record in sorted(payload.get("inputs", {}).items()):
+    records = payload.get("inputs", {})
+    for role, required in (required_inputs or {}).items():
+        record = records.get(role)
+        if record is None:
+            problems.append("%s stamp lacks required %s input" % (output, role))
+        elif (stamp.parent / record.get("path", "")).resolve() != required.resolve():
+            problems.append("%s stamp has a different %s input path" % (output, role))
+    for role, record in sorted(records.items()):
         input_path = Path(record.get("path", ""))
         if not input_path.is_absolute():
             input_path = (stamp.parent / input_path).resolve()

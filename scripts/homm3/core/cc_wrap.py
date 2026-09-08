@@ -21,8 +21,7 @@ Usage (emitted into build.ninja by homm3.build.configure):
 """
 import argparse, os, re, shutil, signal, subprocess, sys, tempfile
 from pathlib import Path
-SCRIPT_DIR = Path(__file__).resolve().parent
-HOMM3_DIR = next((p for p in SCRIPT_DIR.parents if (p / "flake.nix").exists()), SCRIPT_DIR)
+from homm3.core.common import HOMM3_DIR
 
 _INC_RE = re.compile(r'^[ \t]*#[ \t]*include[ \t]*[<"]([^>"]+)[>"]', re.M)
 # The one vendored SDK on the game INCLUDE path: retail's own zlib 1.1.3.

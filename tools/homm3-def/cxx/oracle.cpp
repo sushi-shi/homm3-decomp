@@ -9,25 +9,25 @@
 // Pull the current in-tree implementation into this one test-only object.
 #include "src/cspriteframe.cpp"
 
-TBlendMask CSpriteFrame::div2mask = {0};
-unsigned short CSpriteFrame::div4mask = 0;
+TBlendMask CSpriteFrame::s_div2mask = {0};
+unsigned short CSpriteFrame::s_div4mask = 0;
 
 resource::resource(const char* newName, EResourceType newType)
-    : resType(newType), ReferenceCount(0) {
-    std::strncpy(Name, newName ? newName : "", 12);
-    Name[12] = '\0';
+    : m_resType(newType), m_referenceCount(0) {
+    std::strncpy(m_name, newName ? newName : "", 12);
+    m_name[12] = '\0';
 }
 
 resource::~resource() = default;
-void resource::Dispose() {}
+void resource::dispose() {}
 
 TPalette16::TPalette16(const unsigned short* source)
     : resource("", RESOURCE_TYPE_NONE) {
-    std::memcpy(data, source, sizeof(data));
+    std::memcpy(m_data, source, sizeof(m_data));
 }
 
 TPalette16::~TPalette16() = default;
-unsigned int TPalette16::GetSize() const { return sizeof(*this); }
+unsigned int TPalette16::getSize() const { return sizeof(*this); }
 
 extern "C" int homm3_cxx_draw_frame(
     const unsigned char* stream, int streamLength,
@@ -39,14 +39,14 @@ extern "C" int homm3_cxx_draw_frame(
     int sourceWidth, int sourceHeight, int destinationX, int destinationY,
     unsigned char mirrored, unsigned char transparentFills) {
     try {
-        gRleLiteralRunCode = 255;
+        g_rleLiteralRunCode = 255;
         CSpriteFrame frame("oracle", width, height,
                            const_cast<unsigned char*>(stream), streamLength,
                            static_cast<TEncodingMethod>(encoding),
                            croppedWidth, croppedHeight,
                            croppedX, croppedY);
         TPalette16 palette16(palette);
-        frame.Draw(sourceX, sourceY, sourceWidth, sourceHeight, destination,
+        frame.draw(sourceX, sourceY, sourceWidth, sourceHeight, destination,
                    destinationX, destinationY, destinationWidth,
                    destinationHeight, destinationPitch, palette16, mirrored,
                    transparentFills);
