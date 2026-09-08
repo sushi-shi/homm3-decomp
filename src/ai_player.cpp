@@ -1058,7 +1058,9 @@ void type_AI_player::calculateReserve()
         }
 
         std::sort(creatures.begin(), creatures.end());
-        int totalCost[7];
+        // Dreamcast names total_cost as long[7], distinct from int cost[7].
+        // Restoring that type is byte-flat at 91.2557%.
+        long totalCost[7];
         memset(totalCost, 0, sizeof(totalCost));
         int cost[7];
         for (short creature = static_cast<short>(creatures.size() - 1);
@@ -3764,47 +3766,52 @@ void aiArrangeArmy(armyGroup* currentArmy)
     }
 }
 
-// split_army is split_armies' DC-roster neighbour; its body remains in the
-// carcass, but the retail label is a sufficient call target.
+// split_army is split_armies' DC-roster neighbour. Keep its declaration
+// before the caller and its retained retail body below.
 // Before normalization (function): split_army.
 // Before normalization (locals): current_army, open_slots.
 long splitArmy(armyGroup* currentArmy, short index, short limit,
                 short openSlots);
 
 // E:\gamedcs\ai_player.cpp:2817
-// Residual (83.62%): closed since 79.53 by duplicating the AI_arrange_army
-// exit into the second split loop's ==0 arm (+1.5) and rewriting the merge
-// as the canonical first/duplicate consolidate loop (+2.6, retail's
-// lea/cmp-6 back edge). Remaining delta is register homing: retail keeps
-// the enemy-census counter in a recycled param slot and the int-to-float
-// product temp in a negative local, and holds open_slots in EDI across the
-// split loops where we re-home it - tried and rejected: named-local
-// respellings of the census counter.
+// Dreamcast proves the const armyGroup& enemy parameter, armyGroup&
+// current_army local, and long walker_count local. Retail's consolidation
+// prefix is the ordinary aiConsolidateArmy body expanded at this call site;
+// the canonical helper naturally inlines here, so no copied merge loop is
+// needed. Its retained body and other callers keep their own decisions.
+// The enemy counters precede the combat-value calls in DC lines 2832-2846
+// and retail. The first split loop exits immediately when no slots remain.
+// Recovering that order and exit reaches 86.50% from the old 83.62%.
+//
+// Retail adds army arrangement to DC's early exits, sharing one exit block
+// for the guards and retaining a separate ordinary completion call. The
+// scoped body and common arrange label reproduce those two call sites and
+// reach 97.71%. Individual arrange/return pairs at every DC guard produced
+// five epilogues (76.55%); the former nested positive guards retained an
+// unnecessary slots test and could not reproduce the shared exit topology.
+// Residual (97.71%): two consolidation reloads schedule in reverse order,
+// and the final split loop retains currentArmy in ECX where retail reloads
+// it at the call. Separate empty-stack/shooter continue guards in that loop
+// are byte-flat. Earlier census-counter naming probes did not fix allocation.
 // Before normalization (locals): current_hero, enemy_hero, open_slots, enemy_shooter_count,
 // enemy_shooter_value, enemy_max_value, hero_shooter_value, hero_nonshooter_count,
 // splits_needed.
 VA(0x0042db20, 0x249)  // retail callee set + arity, dc 0x32670
 void splitArmies(hero* currentHero, const hero* enemyHero,
-                  const armyGroup* enemy)
+                  const armyGroup& enemy)
 {
-    armyGroup* army = &currentHero->m_army;
-    for (int first = 0; first < armyGroup::ARMY_GROUP_SLOT_COUNT - 1;
-         ++first) {
-        TCreatureType type = army->m_armyTypes[first];
-        if (type != CREATURE_NONE) {
-            for (int duplicate = first + 1;
-                 duplicate < armyGroup::ARMY_GROUP_SLOT_COUNT;
-                 ++duplicate) {
-                if (army->m_armyTypes[duplicate] == type) {
-                    army->m_numTroops[first] += army->m_numTroops[duplicate];
-                    army->dismiss(duplicate);
-                }
-            }
-        }
-    }
+    // Before normalization (locals): current_army, walker_count.
+    armyGroup& currentArmy = currentHero->m_army;
+    aiConsolidateArmy(&currentArmy);
 
-    int openSlots = 7 - army->getNumArmies();
-    if (openSlots > 0) {
+    {
+        int openSlots = 7 - currentArmy.getNumArmies();
+        if (openSlots <= 0) {
+            goto arrange;
+        }
+        int enemyShooterCount = 0;
+        int enemyShooterValue = 0;
+        int enemyMaxValue = 0;
         float ratio;
         if (enemyHero == 0)
             ratio = 1.0f;
@@ -3813,16 +3820,13 @@ void splitArmies(hero* currentHero, const hero* enemyHero,
                         ->getCombatValueModifier();
         ratio /= currentHero->getCombatValueModifier();
 
-        int enemyShooterCount = 0;
-        int enemyShooterValue = 0;
-        int enemyMaxValue = 0;
         int k;
         for (k = 0; k < 7; ++k) {
-            TCreatureType type = enemy->m_armyTypes[k];
+            TCreatureType type = enemy.m_armyTypes[k];
             if (type == CREATURE_NONE)
                 continue;
             long value = static_cast<long>(
-                enemy->m_numTroops[k] * g_creatureTypeTraits[type].m_aiValue
+                enemy.m_numTroops[k] * g_creatureTypeTraits[type].m_aiValue
                 * ratio);
             if (g_creatureTypeTraits[type].m_attributes & g_ctaShooter) {
                 ++enemyShooterCount;
@@ -3834,58 +3838,62 @@ void splitArmies(hero* currentHero, const hero* enemyHero,
 
         int slot;
         for (slot = 0; slot < 7; ++slot) {
-            TCreatureType type = army->m_armyTypes[slot];
+            TCreatureType type = currentArmy.m_armyTypes[slot];
             if (type != CREATURE_NONE
                 && (g_creatureTypeTraits[type].m_attributes & g_ctaShooter)) {
-                openSlots -= splitArmy(army, slot, enemyMaxValue * 5,
+                openSlots -= splitArmy(&currentArmy, slot, enemyMaxValue * 5,
                                          openSlots);
-                if (openSlots == 0)
-                    break;
-            }
-        }
-
-        if (openSlots != 0 && enemyShooterCount != 0) {
-            long heroShooterValue = 0;
-            int heroNonshooterCount = 0;
-            int m;
-            for (m = 0; m < 7; ++m) {
-                TCreatureType type = army->m_armyTypes[m];
-                if (type == CREATURE_NONE)
-                    continue;
-                if (g_creatureTypeTraits[type].m_attributes & g_ctaShooter)
-                    heroShooterValue += army->m_numTroops[m]
-                        * g_creatureTypeTraits[type].m_aiValue;
-                else
-                    ++heroNonshooterCount;
-            }
-
-            if (heroShooterValue < enemyShooterValue) {
-                int splitsNeeded = (enemyShooterCount
-                    - heroShooterValue * enemyShooterCount
-                        / enemyShooterValue
-                    + 1) / 2 - heroNonshooterCount;
-                if (splitsNeeded > 0) {
-                    if (splitsNeeded < openSlots)
-                        openSlots = splitsNeeded;
-                    for (slot = 0; slot < 7; ++slot) {
-                        TCreatureType type = army->m_armyTypes[slot];
-                        if (type != CREATURE_NONE
-                            && !(g_creatureTypeTraits[type].m_attributes
-                                 & g_ctaShooter)) {
-                            openSlots -= splitArmy(army, slot,
-                                                     enemyMaxValue,
-                                                     openSlots);
-                            if (openSlots == 0) {
-                                aiArrangeArmy(army);
-                                return;
-                            }
-                        }
-                    }
+                if (openSlots == 0) {
+                    goto arrange;
                 }
             }
         }
+
+        if (enemyShooterCount == 0) {
+            goto arrange;
+        }
+        long heroShooterValue = 0;
+        long walkerCount = 0;
+        int m;
+        for (m = 0; m < 7; ++m) {
+            TCreatureType type = currentArmy.m_armyTypes[m];
+            if (type == CREATURE_NONE)
+                continue;
+            if (g_creatureTypeTraits[type].m_attributes & g_ctaShooter)
+                heroShooterValue += currentArmy.m_numTroops[m]
+                    * g_creatureTypeTraits[type].m_aiValue;
+            else
+                ++walkerCount;
+        }
+
+        if (heroShooterValue >= enemyShooterValue) {
+            goto arrange;
+        }
+        int splitsNeeded = (enemyShooterCount
+            - heroShooterValue * enemyShooterCount
+                / enemyShooterValue
+            + 1) / 2 - walkerCount;
+        if (splitsNeeded <= 0) {
+            goto arrange;
+        }
+        if (splitsNeeded < openSlots)
+            openSlots = splitsNeeded;
+        for (slot = 0; slot < 7; ++slot) {
+            TCreatureType type = currentArmy.m_armyTypes[slot];
+            if (type == CREATURE_NONE)
+                continue;
+            if (g_creatureTypeTraits[type].m_attributes & g_ctaShooter)
+                continue;
+            openSlots -= splitArmy(&currentArmy, slot, enemyMaxValue,
+                                   openSlots);
+            if (openSlots == 0)
+                goto arrange;
+        }
+        aiArrangeArmy(&currentArmy);
+        return;
     }
-    aiArrangeArmy(army);
+arrange:
+    aiArrangeArmy(&currentArmy);
 }
 
 // E:\gamedcs\ai_player.cpp:2778
