@@ -1121,6 +1121,14 @@ struct TRmgMapItem {
     bool isRiverTarget() const { return m_tileData.m_riverTarget != 0; }
     bool isImpassable() const { return m_tileData.m_impassable != 0; }
 
+    // PaintZoneTerrain extracts bit 28 then tests its byte result. The
+    // direct field condition instead folds to a dword mask. Retail-only
+    // accessor hypothesis, consistent with the adjacent flag queries.
+    unsigned char isZoneBoundary() const
+    {
+        return m_tileData.m_zoneBoundary;
+    }
+
     // Placement helpers 0x531170/0x5318b0/0x531cf0 all shift bit 22 and
     // test the truncated byte. Direct bitfield conditions fold to a dword
     // mask; keep this same ordinary query at each recovered boundary.
@@ -1296,6 +1304,29 @@ public:
         TRmgMapPosition position,
         TRmgZone* zone);
 };
+
+// Complete's treasure retries construct an owned map at +0, then bounds,
+// object and outline vectors. There is no derived vptr store: this group
+// contains the map. 0x547360 proves the 0x64-byte stack object and cleanup;
+// 0x5470d0 reads its bounds at +0x18. Names are provisional retail roles.
+struct TRmgTreasureGroup {
+    type_random_map m_map;                  // +0x00
+    TRmgZoneBounds m_bounds;                // +0x18
+    std::vector<type_object*> m_objects;    // +0x28
+    std::vector<TPoint> m_outline;           // +0x38
+    unsigned char m_flag0048;               // +0x48, cleared by reset
+    char m_opaque0049[0x17];                // +0x49..+0x5f, not yet recovered
+    unsigned char m_ready;                  // +0x60, set after assembly
+    char m_padding0061[3];
+
+    TRmgTreasureGroup(int width, int height)
+        : m_map(width, height, 1), m_flag0048(0), m_ready(0)
+    {
+        reset();
+    }
+    void reset();
+};
+SIZE(TRmgTreasureGroup, 0x64);
 
 // Complete-only road adapter, provisional role name. Vtable 0x640a04 has
 // the seven-slot road interface; 0x548120 constructs the eight-byte object
@@ -1840,6 +1871,10 @@ public:
     void getInitialZoneBounds(int& minimumY, int& minimumX,
         int& maximumY, int& maximumX) const;
     void paintZoneTerrain();
+    void calculateZoneBounds();
+    void recenterZone(TRmgZone* zone);
+    void insetIslandZone(TRmgZone* zone);
+    void drawIslandBoundary(TPoint from, TPoint to, int zoneIndex, int level, int roughness);
     void placeAdditionalTowns(TRmgZone* zone);
     unsigned char tryPlaceAdditionalTown(TRmgZone* zone, int alignment,
         int player, unsigned char townOption, int spacing);
