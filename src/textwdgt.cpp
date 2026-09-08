@@ -78,8 +78,12 @@ textWidget::textWidget(int x, int y, int w, int h, const char* text,
              static_cast<short>(id), 8)
 {
     m_font = ResourceManager::getFont(fontName);
-    if (text)
+    // DC textwdgt.cpp:64..65 records the conditional body's lexical scope.
+    // Removing these braces leaves this constructor's bytes unchanged, but
+    // makes VC6 expand it in bitmapBackedTextWidget (retail call 0x5bc7ab).
+    if (text) {
         m_text = text;
+    }
     m_color = color;
     m_backColor = backColor;
     m_justify = justify;
@@ -372,6 +376,10 @@ bitmapBackedTextWidget::~bitmapBackedTextWidget()
 // reads. That is the Dreamcast prototype (x, y, w, h, text, font, back,
 // color, id, justify, style) verbatim. The vptr store retail makes right
 // after the base call is the one that emits vtable 0x642de8.
+// Exact with the base constructor's recovered conditional scope. Bare-if
+// string assignment expands the base here (0%); scoped assignment gives
+// 100%, with either infix or explicit operator= syntax. Explicit default
+// string construction is flat; all other textwdgt scores are unchanged.
 VA(0x005bc760, 0x7B)  // anchor-vtable 0x642de8 + arity screen, dc 0x1651d8
 bitmapBackedTextWidget::bitmapBackedTextWidget(
     int x, int y, int w, int h, const char* text, const char* fontName,
