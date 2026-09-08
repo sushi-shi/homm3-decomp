@@ -101,6 +101,14 @@ public:
     // Before normalization (function): CSprite::GetNumSeqs.
     static int getNumSeqs(int type);
 
+    // DC CSprite.h:154 (0x122ba8) proves this non-const header accessor.
+    // Complete's dispose frame loop expands the same sequence/frame loads.
+    // Before normalization (function): CSprite::GetFrame.
+    CSpriteFrame* getFrame(int sequence, int frame)
+    {
+        return m_s[sequence]->m_f[frame];
+    }
+
     // Header inline, DC CSprite.h:293 (dc 0x1f1dc, emitted into
     // advmgr.obj there). Byte-proven by iconwdgt's frame walkers: each
     // USE re-expands the guard (the else arm constant-folds to a

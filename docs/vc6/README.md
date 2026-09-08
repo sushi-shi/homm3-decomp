@@ -161,6 +161,30 @@ declaration/relocation identity, rather than asking for the same claim again.
 This annotation does not equate overloads, change reference pairing, or hide
 addends. The summary and JSON views carry the same categories.
 
+The resource cache now uses its actual `std::map<TCacheMapKey, resource*>`.
+Its global lifetime naturally emits teardown, while the ordinary key comparator
+and shared `getFromCache`/`addToCache` functions emit the locked tree searches
+and insertion helpers. `_Lbound` at `0x55ebd0`, insert at `0x55dbc0`, `_Insert`
+at `0x55e7e0`, and iterator `_Dec` at `0x55ec30` are exact. Handwritten STL
+facades and an unused destructor-emission wrapper had obscured that ownership.
+
+`remapGraphics` and `saturateGraphics` show why source accessor boundaries
+must survive even when their bodies are only field reads. A for loop restores
+the retained iterator increment, but flattened `getName`/`getResType` calls
+still expand tree::begin and score 97.7907/97.9075%. Restoring the Dreamcast
+header accessors makes both callers exact. Six iterator-construction forms
+confirm the distinction; prefix/postfix choice alone does not fix it. The
+shared palette getter also makes `loadFontData` exact where its manually
+expanded cache path had stalled at 97.6539%.
+
+`MAP_FIND` and named-key `MAP_INSERT` keep the public map layer separate from
+the underlying tree. Their return signatures distinguish mutable find and
+single-value insert from const find and hinted/range insert. A typed
+`PAIR_CTOR` key (`cstr_resource_pair`) identifies the two-reference
+`pair<const char*, resource*>` constructor independently of iterator/bool
+result constructors. `test_map_member_keys.py` covers owner changes, equal-size
+joins, and overload/type negative controls.
+
 ## Status
 
 Phase 0 (driver ground truth + probe rig) is in progress. Reusable compiler

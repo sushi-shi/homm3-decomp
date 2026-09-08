@@ -368,6 +368,7 @@ DIRECT_SYMBOL_COMPGEN_KINDS = frozenset({
     "TREE_UPPER_BOUND",
     "TREE_EQUAL_RANGE",
     "MAP_INSERT",
+    "MAP_FIND",
     # the <xlocale> facet block basic_filebuf::_Initcvt reaches
     "FILEBUF_INITCVT",
     "STREAMBUF_GETLOC",

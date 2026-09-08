@@ -5,10 +5,6 @@
 #ifndef HOMM3_RESOURCEMANAGER_H
 #define HOMM3_RESOURCEMANAGER_H
 
-namespace std {
-template<class T1, class T2> struct pair;
-}
-
 class CSprite;
 class font;
 class resource;
@@ -117,6 +113,9 @@ TSpreadsheetResource* getSpreadsheet(const char* name);
 // increment are repeated inline at the tail of GetSpreadsheet.
 // Before normalization (function): ResourceManager::AddToCache.
 void addToCache(resource* value);
+// Dreamcast resourcemanager.cpp:2377; expanded by Complete's cache getters.
+// Before normalization (function): ResourceManager::GetFromCache.
+resource* getFromCache(const char* name);
 
 // Dreamcast retains this cache sweep out of line and calls it from window
 // construction/destruction sites. Complete has neither that body nor emitted
@@ -162,101 +161,7 @@ int readFromBitmapResource(LODFile* resource, void* data, int numBytes);
 // Before normalization (function): ResourceManager::GetBitmapResourceSize.
 int getBitmapResourceSize(const char* name);
 
-// PROVEN retail cache ABI used by AddToCache/GetSpreadsheet. The global map
-// starts at 0x69e528; head is +4. A node holds its 13-byte key at +0xc and
-// resource pointer at +0x1c.
-struct TCacheMapKey {
-    // Before normalization: name.
-    char m_name[13];
-    TCacheMapKey() {}
-    TCacheMapKey(const char* value);
-};
 
-struct TCacheValue {
-    // Before normalization: first.
-    TCacheMapKey m_first;
-    // Before normalization: second.
-    resource* m_second;
-    TCacheValue(resource* value);
-    TCacheValue(const std::pair<const char*, resource*>& value);
-    TCacheValue(const std::pair<const char*, resource*>& value,
-                bool pinNestedInline);
-};
-
-struct TCacheNode {
-    // Before normalization: left.
-    TCacheNode* m_left;
-    // Before normalization: parent.
-    TCacheNode* m_parent;
-    // Before normalization: right.
-    TCacheNode* m_right;
-    // Before normalization: value.
-    TCacheValue m_value;
-};
-
-struct TCacheIterator {
-    // Before normalization: node.
-    TCacheNode* m_node;
-
-    TCacheIterator& operator++();
-    bool operator!=(const TCacheIterator& other) const;
-};
-
-struct TCacheTreeInsertResult;
-
-struct TCacheInsertResult {
-    // Before normalization: first.
-    TCacheIterator m_first;
-    // Before normalization: second.
-    bool m_second;
-
-    TCacheInsertResult(const TCacheIterator& firstValue,
-                       const bool& secondValue);
-};
-
-class TCacheMap {
-public:
-    // Before normalization: allocator.
-    unsigned char m_allocator;
-    // Before normalization: compare.
-    unsigned char m_compare;
-    // Before normalization: pad_02.
-    // VC6 XTREE places its allocator/comparator objects before _Head.
-    // These two bytes align the head pointer at +4 in the proven 16-byte facade.
-    unsigned char m_paddingBeforeHead[2];
-    // Before normalization: head.
-    TCacheNode* m_head;
-    // Before normalization: multi.
-    unsigned char m_multi;
-    // Before normalization: pad_09.
-    // VC6 XTREE places bool _Multi before size_type _Size. The three
-    // bytes after the flag align the size word at +0xc.
-    unsigned char m_paddingBeforeSize[3];
-    // Before normalization: size.
-    unsigned int m_size;
-
-    // These model the two compiler-visible layers collapsed into this proven
-    // 16-byte facade: the out-of-line tree lookup used by earlier getters,
-    // and the same lookup body exposed for C1 to inline in resource::Dispose.
-    TCacheIterator find(const TCacheMapKey& key);
-    // Before normalization (function): ResourceManager::TCacheMap::find_tree.
-    TCacheIterator findTree(const TCacheMapKey& key);
-    // Before normalization (function): ResourceManager::TCacheMap::find_inline.
-    TCacheIterator findInline(const TCacheMapKey& key);
-    TCacheIterator begin();
-    // Before normalization (function): ResourceManager::TCacheMap::end_inline.
-    TCacheIterator endInline() const;
-    // Before normalization (function): ResourceManager::TCacheMap::lower_bound.
-    TCacheNode* lowerBound(const TCacheMapKey& key);
-    // Before normalization (function): ResourceManager::TCacheMap::lower_bound_iterator.
-    TCacheIterator* lowerBoundIterator(TCacheIterator* result,
-                                         const TCacheMapKey& key);
-    TCacheTreeInsertResult insert(const TCacheValue& value);
-    // Before normalization (function): ResourceManager::TCacheMap::insert_wrapper.
-    TCacheInsertResult insertWrapper(const TCacheValue& value);
-    TCacheIterator erase(TCacheIterator position);
-    TCacheIterator erase(TCacheIterator first, TCacheIterator last);
-};
 }
 
 // Bootstrap name for Complete's large common missing-resource reporter at

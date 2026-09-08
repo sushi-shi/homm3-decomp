@@ -9,29 +9,12 @@
 #include <utility>
 #include "resource.h"
 #include "resourcemanager.h"
-#include "resourcemanager_cache_result.h"
+#include "resourcemanager_cache.h"
 #include "resourcemanager_file_adapter.h"
 #include "resourcemanager_sprite_headers.h"
 #include "textresource.h"
 
 namespace ResourceManager {
-
-inline TCacheInsertResult::TCacheInsertResult(
-    const TCacheIterator& firstValue, const bool& secondValue)
-    : m_first(firstValue), m_second(secondValue) {}
-
-inline TCacheValue::TCacheValue(resource* value)
-    : m_first(value->m_name), m_second(value) {}
-
-inline TCacheValue::TCacheValue(
-    const std::pair<const char*, resource*>& value)
-    : m_first(value.first), m_second(value.second) {}
-
-#pragma inline_depth(0)
-inline TCacheValue::TCacheValue(
-    const std::pair<const char*, resource*>& value, bool)
-    : m_first(value.first), m_second(value.second) {}
-#pragma inline_depth()
 
 // Before normalization (function): ResourceManager::LoadBitmap16.
 Bitmap16Bit* loadBitmap16(const char* name);
@@ -49,10 +32,9 @@ TSpreadsheetResource* loadSpreadsheet(const char* name);
 
 }
 
-typedef ResourceManager::TCacheMap ResourceCacheMap;
 // Before normalization: gResourceCache.
 DATA(0x0069e528)
-ResourceCacheMap g_resourceCache;
+ResourceManager::TCacheMap g_resourceCache;
 
 #if 0 // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
@@ -202,45 +184,21 @@ TResourceLODSlot::TResourceLODSlot(const char* name)
 {
 }
 
-// Complete's cache owner is VC6/Dinkumware std::map even though the public
-// source model below exposes only its byte-proven tree fields.  The atexit
-// edge to 0x559440 and the full Dinkumware teardown sequence prove this is
-// the map destructor corresponding to Dreamcast's std::map destructor at
-// dc 0x122c14, rather than one of the excluded cinit dispatch thunks.
-typedef std::pair<const ResourceManager::TCacheMapKey, resource*>
-    TRetailResourceCacheValue;
-typedef std::map<ResourceManager::TCacheMapKey, resource*,
-                 std::less<ResourceManager::TCacheMapKey>,
-                 std::allocator<TRetailResourceCacheValue> >
-    TRetailResourceCacheMap;
-
+// The actual cache global owns its VC6 map constructor and atexit teardown.
+// The former uncalled destructor-emission wrapper and all raw STL facades
+// are removed. Four key/helper definition-order combinations preserve every
+// measured function score; definitions follow Complete's retained-body order.
+// Retail 0x559430 calls this 110-byte destructor; DC owns a map at line 136.
 VA_COMPGEN(0x00559440, 0x6E, IMPLICIT_DTOR, map)
-// anchor-callee from static dtor 0x559430, dc 0x122c14
 
-// STL COMDAT emission anchor. The active cache stays behind the byte-level
-// facade needed by the reconstructed consumers, so this uncalled wrapper is
-// the minimum ODR use that makes VC6 emit the real Dinkumware map destructor.
-// Objdiff enumerates target functions; the wrapper itself adds no report row.
-// Before normalization (function): EmitResourceCacheDestructor.
-void __fastcall emitResourceCacheDestructor(TRetailResourceCacheMap* cache)
-{
-    cache->~TRetailResourceCacheMap();
-}
-
-// E:\gamedcs\resourcemanager.cpp:2397
-// The retail body is the same key-copy/insert/refcount sequence inlined at
-// 0x55c0f5. Dreamcast supplies the helper name and signature; the x86 cache
-// layout and address come solely from these retail instructions.
-// Exact: restoring Dinkumware's real std::pair<const char*, resource*>
-// conversion makes C1 emit the retail key copy, terminator, insert call and
-// reference increment byte for byte. The same conversion closes all five
-// public cache-getter twins that call this helper.
+// Dreamcast resourcemanager.cpp:2397 proves the shared AddToCache boundary.
+// Complete's early GetBitmap816 arm retains pair<const char*, resource*>'s
+// constructor; the key conversion and tree insert expand at later sites.
 VA(0x005594b0, 0x40)  // anchor-callee/body-twin, dc 0x122984
 void ResourceManager::addToCache(resource* value)
 {
-    g_resourceCache.insert(TCacheValue(std::make_pair(
-        static_cast<const char*>(value->m_name), value)));
-    ++value->m_referenceCount;
+    g_resourceCache.insert(std::make_pair(value->getName(), value));
+    value->addRef();
 }
 
 // The ostringstream used by both missing-resource reporters makes VC6 retain
@@ -550,30 +508,23 @@ void __fastcall game_sprite_1599e0(const char* caller,
 }
 #pragma inline_depth()
 
-inline bool ResourceManager::TCacheIterator::operator!=(
-    const TCacheIterator& other) const
-{
-    return m_node != other.m_node;
-}
-
-inline ResourceManager::TCacheIterator
-ResourceManager::TCacheMap::endInline() const
-{
-    TCacheIterator result;
-    result.m_node = m_head;
-    return result;
-}
-
+// DC RemapGraphics line 159 and SaturateGraphics line 223 put begin,
+// postfix increment and end in one for statement. Their resrce.h accessor
+// calls also matter: flattening getName/getResType leaves tree::begin
+// expanded (97.7907/97.9075%); restoring those calls retains it and makes
+// both complete retail bodies exact. Six iterator-construction forms are
+// byte-flat for each accessor choice. While-loop controls expand _Inc and
+// fall to 78.3442/78.8722%. No inline-depth pin is needed.
 VA(0x00559e30, 0x1E5)  // dc name/order + exact retail resource-type table
 void ResourceManager::remapGraphics()
 {
-    TCacheIterator position = g_resourceCache.begin();
-    while (position != g_resourceCache.endInline()) {
-        resource* value = position.m_node->m_value.m_second;
+    for (TCacheMap::iterator position = g_resourceCache.begin();
+         position != g_resourceCache.end(); position++) {
+        resource* value = position->second;
 
-        switch (value->m_resType) {
+        switch (value->getResType()) {
         case RESOURCE_TYPE_BITMAP16: {
-            std::auto_ptr<Bitmap16Bit> loaded(loadBitmap16(value->m_name));
+            std::auto_ptr<Bitmap16Bit> loaded(loadBitmap16(value->getName()));
             if (loaded.get()) {
                 loaded->draw(0, 0, loaded->getWidth(), loaded->getHeight(),
                              static_cast<Bitmap16Bit*>(value), 0, 0, false);
@@ -606,27 +557,26 @@ void ResourceManager::remapGraphics()
 
         case RESOURCE_TYPE_PALETTE: {
             TPalette16* destination = static_cast<TPalette16*>(value);
-            std::auto_ptr<TPalette16> loaded(loadPalette(value->m_name));
+            std::auto_ptr<TPalette16> loaded(loadPalette(value->getName()));
             if (loaded.get())
                 destination->m_colors = loaded->m_colors;
             break;
         }
         }
 
-        ++position;
     }
 }
 
 VA(0x0055a020, 0x221)  // RemapGraphics twin + dc name/order
 void ResourceManager::saturateGraphics()
 {
-    TCacheIterator position = g_resourceCache.begin();
-    while (position != g_resourceCache.endInline()) {
-        resource* value = position.m_node->m_value.m_second;
+    for (TCacheMap::iterator position = g_resourceCache.begin();
+         position != g_resourceCache.end(); position++) {
+        resource* value = position->second;
 
-        switch (value->m_resType) {
+        switch (value->getResType()) {
         case RESOURCE_TYPE_BITMAP16: {
-            std::auto_ptr<Bitmap16Bit> loaded(loadBitmap16(value->m_name));
+            std::auto_ptr<Bitmap16Bit> loaded(loadBitmap16(value->getName()));
             if (loaded.get()) {
                 loaded->draw(0, 0, loaded->getWidth(), loaded->getHeight(),
                              static_cast<Bitmap16Bit*>(value), 0, 0, false);
@@ -663,14 +613,13 @@ void ResourceManager::saturateGraphics()
 
         case RESOURCE_TYPE_PALETTE: {
             TPalette16* destination = static_cast<TPalette16*>(value);
-            std::auto_ptr<TPalette16> loaded(loadPalette(value->m_name));
+            std::auto_ptr<TPalette16> loaded(loadPalette(value->getName()));
             if (loaded.get())
                 destination->m_colors = loaded->m_colors;
             break;
         }
         }
 
-        ++position;
     }
 }
 
@@ -771,20 +720,15 @@ bool ResourceManager::open(bool openSprites, bool openBitmaps, int* errorCode)
 VA(0x0055a550, 0x67)  // close-cache/archive behavior + dc roster position
 void ResourceManager::close()
 {
-    TCacheIterator position;
-    position.m_node = g_resourceCache.m_head->m_left;
-    while (position != g_resourceCache.endInline()) {
-        resource* value = position.m_node->m_value.m_second;
+    TCacheMap::iterator position = g_resourceCache.begin();
+    while (position != g_resourceCache.end()) {
+        resource* value = position->second;
         if (value)
             delete value;
         ++position;
     }
 
-    TCacheIterator first;
-    first.m_node = g_resourceCache.m_head->m_left;
-    TCacheIterator last;
-    last.m_node = g_resourceCache.m_head;
-    g_resourceCache.erase(first, last);
+    g_resourceCache.clear();
 
     for (int i = 0; i < 8; ++i)
         g_resourceLodSlots[i].m_file.clear();
@@ -875,23 +819,20 @@ static inline FILE* openResourcePath(const char* name)
 // control. why-reg's best volatile-remaining probe reduces its masked distance
 // from 145 to 133 slots, but invents a source-false qualifier and does not
 // close the function, so the Dreamcast-proven ordinary integer remains.
+// The shared cache helpers are DC-proven source calls. Their canonical map
+// now scores 94.5542% here; the old facade's 97.6325% remains in HIST. Retail
+// retains map::find and map::insert at the early file arm, while this build
+// calls tree::find and expands map::insert but retains its result-pair ctor.
+// Sixteen implicit/explicit key, iterator-construction and pair-conversion
+// controls peak at 94.5542%; explicit key pairs also contradict the retained
+// pair<const char*, resource*> constructor at 0x55ecf0. No copied helper body
+// or synthetic pair overload is retained to steer those calls.
 VA(0x0055a800, 0x41F)  // bitmapBorder::SetImage loader; dc 0x121ac8
 Bitmap816* ResourceManager::getBitmap816(const char* name)
 {
-    {
-        TCacheMapKey key;
-        strncpy(key.m_name, name, 12);
-        key.m_name[12] = 0;
-
-        TCacheIterator found = g_resourceCache.find(key);
-        if (found.m_node != g_resourceCache.m_head) {
-            Bitmap816* cached =
-                static_cast<Bitmap816*>(found.m_node->m_value.m_second);
-            ++cached->m_referenceCount;
-            if (cached)
-                return cached;
-        }
-    }
+    Bitmap816* cached = static_cast<Bitmap816*>(getFromCache(name));
+    if (cached)
+        return cached;
 
     FILE* file = openResourcePath(name);
 
@@ -906,14 +847,7 @@ Bitmap816* ResourceManager::getBitmap816(const char* name)
         if (!result)
             goto get_bitmap816_done;
 
-#pragma inline_depth(0)
-        std::pair<const char*, resource*> sourceValue(
-            static_cast<const char*>(result->m_name), result);
-#pragma inline_depth()
-        TCacheValue cacheValue(sourceValue, true);
-        TCacheInsertResult cacheInsert =
-            g_resourceCache.insertWrapper(cacheValue);
-        ++sourceValue.second->m_referenceCount;
+        addToCache(result);
         return result;
     }
 
@@ -990,21 +924,25 @@ Bitmap816* ResourceManager::getBitmap816(const char* name)
                 result->setPalette(&palette24);
         }
 
-        if (result) {
-            g_resourceCache.insert(TCacheValue(result));
-            ++result->m_referenceCount;
-        }
+        if (result)
+            addToCache(result);
     }
 
 get_bitmap816_done:
     return result;
 }
 
+
 VA(0x0055ac20, 0x20)  // unique retail body + dc public name/signature
 ResourceManager::TCacheMapKey::TCacheMapKey(const char* value)
 {
     strncpy(m_name, value, 12);
     m_name[12] = 0;
+}
+
+bool ResourceManager::TCacheMapKey::operator<(const TCacheMapKey& other) const
+{
+    return _stricmp(m_name, other.m_name) < 0;
 }
 
 // Exact across all 39 blocks / 315 register-visible instructions. Retail's
@@ -1109,25 +1047,15 @@ Bitmap16Bit* ResourceManager::loadBitmap16(const char* name)
 #include "bitmap16.h"
 #include "font.h"
 
-// This getter family is one retail template: only the load callee and result
-// type differ. The scoped lookup locals let C1 reuse their frame slots for
-// AddToCache's insertion pair, exactly as in GetSpreadsheet below. Restoring
-// that helper's std::pair conversion closes every member of the family.
+// This getter family expands the shared GetFromCache and AddToCache helpers.
+// Their separate lifetimes let VC6 reuse the key and insertion-pair slots;
+// all six Complete getter bodies remain exact with the real std::map.
 VA(0x0055afd0, 0x8A)  // dc public GetBitmap16 + retail getter-family identity
 Bitmap16Bit* ResourceManager::getBitmap16(const char* name)
 {
-    {
-        TCacheMapKey key(name);
-
-        TCacheIterator found = g_resourceCache.findTree(key);
-        if (found.m_node != g_resourceCache.m_head) {
-            Bitmap16Bit* cached =
-                static_cast<Bitmap16Bit*>(found.m_node->m_value.m_second);
-            ++cached->m_referenceCount;
-            if (cached)
-                return cached;
-        }
-    }
+    Bitmap16Bit* cached = static_cast<Bitmap16Bit*>(getFromCache(name));
+    if (cached)
+        return cached;
 
     Bitmap16Bit* loaded = loadBitmap16(name);
     if (loaded)
@@ -1279,18 +1207,9 @@ TPalette16* ResourceManager::loadPalette(const char* name)
 VA(0x0055b3e0, 0x8A)  // dc public GetPalette + retail getter-family identity
 TPalette16* ResourceManager::getPalette(const char* name)
 {
-    {
-        TCacheMapKey key(name);
-
-        TCacheIterator found = g_resourceCache.findTree(key);
-        if (found.m_node != g_resourceCache.m_head) {
-            TPalette16* cached =
-                static_cast<TPalette16*>(found.m_node->m_value.m_second);
-            ++cached->m_referenceCount;
-            if (cached)
-                return cached;
-        }
-    }
+    TPalette16* cached = static_cast<TPalette16*>(getFromCache(name));
+    if (cached)
+        return cached;
 
     TPalette16* loaded = loadPalette(name);
     if (loaded)
@@ -1417,27 +1336,14 @@ TPalette24* ResourceManager::getPalette24(const char* name)
     return result;
 }
 
-// WALL (97.6538%): all resource semantics and cleanup edges are present. The
-// 0x1020-byte header read, payload allocation/read, font construction, cache
-// lookup/refcount, palette load/cache, SetPalette and virtual Dispose calls
-// agree. Dreamcast GetFont (dc 0x121fac) proves the shared SetPalette then
-// Dispose order but has no counterpart for Complete's split LoadFontData.
-// Retail supplies the later-revision EH fact: .rdata's HandlerType relocation
-// points to 0x55b8b9, whose inherited EBP frame, virtual Dispose and rethrow
-// prove it is this function's catch handler, not a callable function entry.
-//
-// The residual is C1 homing/jump threading at the LoadPalette join: candidate
-// stores the palette catch home before the null branch and skips the repeated
-// common test, while retail branches to that common test and stores the home
-// between its test and branch. The structural diff has 18/18 blocks, 16 exact,
-// one size-only and one shifted target; the catch block itself is exact.
-// Retail's relocation names the public TCacheMap::find facade, now preserved
-// instead of its byte-identical find_tree twin. Natural nesting, scoped cached
-// locals, explicit load/common labels, and resource*/TPalette16* intermediate
-// spellings are otherwise byte-flat. Repeating the node-value expression does
-// recover retail's late EAX-to-ESI handoff, but duplicates its load and drops
-// the refcount store below the null test (94.35%), so it is a measured negative
-// control rather than permission to discard the coherent cached local.
+// Exact with the shared getPalette call proved by Dreamcast GetFont at
+// line 1336 (dc 0x121fac). Complete splits the stream/font work into this
+// helper. Its HandlerType relocation to 0x55b8b9 proves the inherited-EBP
+// virtual Dispose/rethrow catch belongs to this body.
+// The former flattened palette lookup stalled at 97.6539%: scoped locals,
+// common labels and resource*/TPalette16* spellings did not recover the
+// late catch-home store; repeating the node load fell to 94.35%. Keeping
+// getPalette and its nested getFromCache/addToCache boundaries closes it.
 VA(0x0055b750, 0x17A)  // retail stream ABI + merged HandlerType catch
 font* ResourceManager::loadFontData(const char* name, TAbstractFile* stream,
                                     int fileSize)
@@ -1453,29 +1359,7 @@ font* ResourceManager::loadFontData(const char* name, TAbstractFile* stream,
         new font(name, spec, dataSize, data.get()));
     data = std::auto_ptr<unsigned char>(0);
 
-    const char* paletteName = "game.pal";
-#pragma inline_depth(0)
-    TCacheMapKey key(paletteName);
-#pragma inline_depth()
-    TCacheIterator found = g_resourceCache.find(key);
-    TPalette16* palette;
-    if (found.m_node != g_resourceCache.m_head) {
-        resource* cached = found.m_node->m_value.m_second;
-        ++cached->m_referenceCount;
-        if (cached) {
-            palette = static_cast<TPalette16*>(cached);
-            goto palette_ready;
-        }
-    }
-
-    palette = loadPalette(paletteName);
-    if (!palette)
-        goto palette_ready;
-#pragma inline_depth(0)
-    addToCache(palette);
-#pragma inline_depth()
-
-palette_ready:
+    TPalette16* palette = getPalette("game.pal");
     if (palette) {
         try {
             result.get()->setPalette(palette);
@@ -1578,17 +1462,9 @@ font* ResourceManager::loadFont(const char* name)
 VA(0x0055bb00, 0x8A)  // dc public GetFont + retail getter-family identity
 font* ResourceManager::getFont(const char* name)
 {
-    {
-        TCacheMapKey key(name);
-
-        TCacheIterator found = g_resourceCache.findTree(key);
-        if (found.m_node != g_resourceCache.m_head) {
-            font* cached = static_cast<font*>(found.m_node->m_value.m_second);
-            ++cached->m_referenceCount;
-            if (cached)
-                return cached;
-        }
-    }
+    font* cached = static_cast<font*>(getFromCache(name));
+    if (cached)
+        return cached;
 
     font* loaded = loadFont(name);
     if (loaded)
@@ -1660,18 +1536,9 @@ TTextResource* ResourceManager::loadText(const char* name)
 VA(0x0055bdd0, 0x8A)  // dc public GetText + retail getter-family identity
 TTextResource* ResourceManager::getText(const char* name)
 {
-    {
-        TCacheMapKey key(name);
-
-        TCacheIterator found = g_resourceCache.findTree(key);
-        if (found.m_node != g_resourceCache.m_head) {
-            TTextResource* cached =
-                static_cast<TTextResource*>(found.m_node->m_value.m_second);
-            ++cached->m_referenceCount;
-            if (cached)
-                return cached;
-        }
-    }
+    TTextResource* cached = static_cast<TTextResource*>(getFromCache(name));
+    if (cached)
+        return cached;
 
     TTextResource* loaded = loadText(name);
     if (loaded)
@@ -1751,18 +1618,9 @@ TSpreadsheetResource* ResourceManager::loadSpreadsheet(const char* name)
 VA(0x0055c0a0, 0x8A)  // anchor-callee, dc 0x122164
 TSpreadsheetResource* ResourceManager::getSpreadsheet(const char* name)
 {
-    {
-        TCacheMapKey key(name);
-
-        TCacheIterator found = g_resourceCache.findTree(key);
-        if (found.m_node != g_resourceCache.m_head) {
-            TSpreadsheetResource* cached =
-                static_cast<TSpreadsheetResource*>(found.m_node->m_value.m_second);
-            ++cached->m_referenceCount;
-            if (cached)
-                return cached;
-        }
-    }
+    TSpreadsheetResource* cached = static_cast<TSpreadsheetResource*>(getFromCache(name));
+    if (cached)
+        return cached;
 
     TSpreadsheetResource* loaded = loadSpreadsheet(name);
     if (loaded)
@@ -2580,17 +2438,9 @@ sample* ResourceManager::loadSample(const char* name)
 VA(0x0055c720, 0x8A)  // dc 0x1222e0 + retail getter-family identity
 sample* ResourceManager::getSample(const char* name)
 {
-    {
-        TCacheMapKey key(name);
-
-        TCacheIterator found = g_resourceCache.findTree(key);
-        if (found.m_node != g_resourceCache.m_head) {
-            sample* cached = static_cast<sample*>(found.m_node->m_value.m_second);
-            ++cached->m_referenceCount;
-            if (cached)
-                return cached;
-        }
-    }
+    sample* cached = static_cast<sample*>(getFromCache(name));
+    if (cached)
+        return cached;
 
     sample* loaded = loadSample(name);
     if (loaded)
@@ -2598,51 +2448,24 @@ sample* ResourceManager::getSample(const char* name)
     return loaded;
 }
 
-// Complete's loader is much larger than the Dreamcast body, but the DC name
-// and record roster line up with every retail operation: cache lookup, active
-// sprite-archive walk, DEF/sequence/frame copies, CSprite construction and
-// final palette installation. Its sole DC-named local is `Sdef`; Complete's
-// additional parsing state is retail-only. WALL (88.86%): all 45 branches
-// and three returns agree. The remaining 73-vs-72-block split is one
-// inner-loop reload created
-// by C1's later ESI/EDI/EBX homing; the model finds identical first register
-// definitions, while declaration, register, volatile and loop-form probes
-// cannot reproduce retail's downstream handle state. The prechecked do/while
-// below is the best form and preserves retail's frame-index/name-offset init
-// order.
-// 2026-09-05, easy lane 3 - first divergence localised to the frame loop's
-// header. Retail carries a ZERO in ESI for the whole body (materialised once
-// before the sequence loop) and homes `frameIndex` purely in `[ebp-0x28]`;
-// this compile binds ESI to frameIndex, so it must re-zero ESI at every outer
-// iteration and reload it at the top of the inner loop from the slot it just
-// wrote - a one-instruction loop header the preheader `jmp`s past, which is
-// the whole 73-vs-72 block count and every `!!` after B23. Measured and
-// rejected: hoisting `sequence.sequenceNumber` into a local before the inner
-// loop, which is what retail's spare `mov [ebp-0x30],eax` in that block does -
-// 88.8617 -> 88.3126. Register-homing class; the block-shape levers do not
-// reach it.
-// The frame is 0x8ec against retail's 0x8e8, and the surplus dword is NOT the
-// cache key: spelling the lookup as GetSample's `TCacheMapKey key(name);`
-// instead of default-construct + strncpy is byte-flat at 88.8617 with the
-// frame still 0x8ec (measured 2026-09-06), so the defaulting-default-ctor
-// reading does not apply here.
+// Dreamcast GetSprite (dc 0x122320) proves GetFromCache, SpriteDefHeader
+// Sdef, the archive load and AddToCache. Complete adds the DEF sequence/frame
+// parsing and a second GetFromCache call for each frame name.
+// The prior flattened cache model reached 88.8564% (kept in HIST); its frame
+// loop still chose frameIndex instead of retail's persistent zero for ESI.
+// Hoisting sequenceNumber, named/default key construction, and declaration,
+// register and loop controls did not fix that allocation. With the real map
+// and shared cache helpers the current 84.2097% also reflects tree::find
+// expanding at the frame lookup and a retained insertion-result pair ctor.
+// Sixteen key/pair-construction controls preserve at best that current score;
+// named-key locals and explicit-key insertion pairs are worse. Recover the
+// nested compiler decisions through these helpers, not copied lookup bodies.
 VA(0x0055c7b0, 0x743)  // anchor-caller/body records, dc 0x122320; wall
 CSprite* ResourceManager::getSprite(const char* name)
 {
-    {
-        TCacheMapKey key;
-        strncpy(key.m_name, name, 12);
-        key.m_name[12] = 0;
-
-        TCacheIterator found = g_resourceCache.findTree(key);
-        if (found.m_node != g_resourceCache.m_head) {
-            CSprite* cached =
-                static_cast<CSprite*>(found.m_node->m_value.m_second);
-            ++cached->m_referenceCount;
-            if (cached)
-                return cached;
-        }
-    }
+    CSprite* cached = static_cast<CSprite*>(getFromCache(name));
+    if (cached)
+        return cached;
 
     LODFile* lodFile = pointToSpriteResource(name);
 
@@ -2738,18 +2561,8 @@ CSprite* ResourceManager::getSprite(const char* name)
             }
             memcpy(frameData, frameSource, frameDataSize);
 
-            TCacheMapKey frameKey;
-            strncpy(frameKey.m_name,
-                    sequence.m_frameNames + frameNameOffset, 12);
-            frameKey.m_name[12] = 0;
-
-            TCacheIterator found = g_resourceCache.findTree(frameKey);
-            CSpriteFrame* frame = 0;
-            if (found.m_node != g_resourceCache.m_head) {
-                frame = static_cast<CSpriteFrame*>(
-                    found.m_node->m_value.m_second);
-                ++frame->m_referenceCount;
-            }
+            CSpriteFrame* frame = static_cast<CSpriteFrame*>(getFromCache(
+                sequence.m_frameNames + frameNameOffset));
 
             if (!frame) {
                 if (sdef.m_type == RESOURCE_TYPE_SPRITE ||
@@ -2926,42 +2739,17 @@ int ResourceManager::readFromBitmapResource(LODFile* resource, void* data,
     return resource->read(data, numBytes);
 }
 
-// Dinkumware's public map facade and underlying tree both expose `find`.
-// This hand-owned cache layout collapses those layers, so the separate source
-// surface preserves the compiler-visible inline body without changing the
-// earlier getters that retail compiled as calls. It emits no distinct symbol.
-inline ResourceManager::TCacheIterator
-ResourceManager::TCacheMap::findInline(const TCacheMapKey& key)
-{
-    TCacheIterator candidate;
-    candidate.m_node = lowerBound(key);
-    TCacheIterator end;
-    TCacheIterator* found;
-
-    if (candidate.m_node != m_head
-        && _stricmp(key.m_name, candidate.m_node->m_value.m_first.m_name) >= 0) {
-        found = &candidate;
-    } else {
-        end.m_node = m_head;
-        found = &end;
-    }
-
-    return *found;
-}
-
+// Dreamcast's ResourceManager::Dispose(resource*) owns this lookup/erase
+// sequence. Complete moved it to virtual resource::dispose (slot 1).
 VA(0x0055d0f0, 0xA1)  // resource vslot 1 + cache-key/lower-bound proof
 void resource::dispose()
 {
     if (this) {
-        if (m_referenceCount > 0)
-            --m_referenceCount;
-
+        release();
         if (m_referenceCount == 0) {
-            ResourceManager::TCacheMapKey key(m_name);
-            ResourceManager::TCacheIterator found =
-                g_resourceCache.findInline(key);
-
-            if (found.m_node != g_resourceCache.m_head) {
+            ResourceManager::TCacheMap::iterator found =
+                g_resourceCache.find(getName());
+            if (found != g_resourceCache.end()) {
                 g_resourceCache.erase(found);
                 delete this;
             }
@@ -2969,123 +2757,57 @@ void resource::dispose()
     }
 }
 
-// CSprite's vtable fixes this as slot 1. Dreamcast supplies the override and
-// frame-walk semantics; retail proves that GetNumSeqs consumes resType and
-// that every live frame is released before the base cache-removal path. The
-// complete 25-block / 280-byte body is exact, including the map/tree iterator
-// return boundary retained inside the inlined base disposal.
+// DC Dispose(CSprite*) proves the sequence/frame walk. Complete additionally
+// repeats the base refcount guard after it: retail +0x81..+0x117 expands
+// resource::dispose, retaining tree::lower_bound inside the nested map find.
 VA(0x0055d1a0, 0x118)  // CSprite vslot 1, dc ResourceManager disposal lane
 void CSprite::dispose()
 {
     if (this) {
-        if (m_referenceCount > 0)
-            --m_referenceCount;
-
+        release();
         if (m_referenceCount == 0) {
-            int sequenceCount = getNumSeqs(m_resType);
+            int sequenceCount = getNumSeqs(getResType());
             for (int sequence = 0; sequence < sequenceCount; ++sequence) {
-                if (sequence < m_numSequences && m_validSeqMask[sequence]) {
-                    int frameCount = m_s[sequence]->m_numFrames;
+                if (isValidSeq(sequence)) {
+                    int frameCount = getNumFrames(sequence);
                     for (int frame = 0; frame < frameCount; ++frame) {
-                        CSpriteFrame* image = m_s[sequence]->m_f[frame];
+                        CSpriteFrame* image = getFrame(sequence, frame);
                         if (image)
                             image->dispose();
                     }
                 }
             }
-
-            if (m_referenceCount > 0)
-                --m_referenceCount;
-
-            if (m_referenceCount == 0) {
-                ResourceManager::TCacheMapKey key(m_name);
-                ResourceManager::TCacheIterator candidate;
-                ResourceManager::TCacheIterator end;
-                candidate.m_node =
-                    g_resourceCache.lowerBoundIterator(&end, key)->m_node;
-                ResourceManager::TCacheIterator* found;
-
-                if (candidate.m_node != g_resourceCache.m_head
-                    && _stricmp(key.m_name,
-                                candidate.m_node->m_value.m_first.m_name) >= 0) {
-                    found = &candidate;
-                } else {
-                    end.m_node = g_resourceCache.m_head;
-                    found = &end;
-                }
-
-                ResourceManager::TCacheIterator selected = *found;
-                if (selected.m_node != g_resourceCache.m_head) {
-                    g_resourceCache.erase(selected);
-                    delete this;
-                }
-            }
+            resource::dispose();
         }
     }
 }
 
-// Dinkumware's public map layer returns the underlying tree insertion pair
-// through a second hidden-result temporary. Retail keeps this wrapper as a
-// call in GetBitmap816's early branch and inlines it at later sites.
-// Exact: this deliberately mirrors VC6 <map>'s `_Imp::_Pairib _Ans = ...;
-// return _Pairib(_Ans.first, _Ans.second);`. Both pair flags are `bool`, and
-// the two-reference constructor boundary makes C1 retain retail's widened
-// dword load before storing the low byte into the public result temporary.
-VA(0x0055d380, 0x2C)
-ResourceManager::TCacheInsertResult
-ResourceManager::TCacheMap::insertWrapper(const TCacheValue& value)
+// Dreamcast resourcemanager.cpp:2377/2380/2382/2391: one map lookup,
+// end test, resource extraction and AddRef. Complete expands this ordinary
+// helper in the getters; the nested map/tree decisions are compiler-owned.
+resource* ResourceManager::getFromCache(const char* name)
 {
-    TCacheTreeInsertResult answer = insert(value);
-    return TCacheInsertResult(answer.m_first, answer.m_second);
+    TCacheMap::iterator found = g_resourceCache.find(name);
+    if (found == g_resourceCache.end())
+        return 0;
+    resource* value = found->second;
+    value->addRef();
+    return value;
 }
 
-// Dinkumware's public map::find facade. The inlined twin above is retained
-// for resource::Dispose; this out-of-line copy is called by GetBitmap816.
-#pragma auto_inline(off)
-VA(0x0055d3b0, 0x56)
-ResourceManager::TCacheIterator
-ResourceManager::TCacheMap::find(const TCacheMapKey& key)
-{
-    TCacheIterator candidate;
-    candidate.m_node = lowerBound(key);
-    TCacheIterator end;
-    TCacheIterator* found;
-
-    if (candidate.m_node != m_head
-        && _stricmp(key.m_name, candidate.m_node->m_value.m_first.m_name) >= 0) {
-        found = &candidate;
-    } else {
-        end.m_node = m_head;
-        found = &end;
-    }
-
-    return *found;
-}
-#pragma auto_inline(on)
-
-// The small getter family inlines the public map facade and therefore calls
-// the underlying tree::find copy. Retail retained both byte-identical COMDATs.
-#pragma auto_inline(off)
-VA(0x0055e330, 0x56)
-ResourceManager::TCacheIterator
-ResourceManager::TCacheMap::findTree(const TCacheMapKey& key)
-{
-    TCacheIterator candidate;
-    candidate.m_node = lowerBound(key);
-    TCacheIterator end;
-    TCacheIterator* found;
-
-    if (candidate.m_node != m_head
-        && _stricmp(key.m_name, candidate.m_node->m_value.m_first.m_name) >= 0) {
-        found = &candidate;
-    } else {
-        end.m_node = m_head;
-        found = &end;
-    }
-
-    return *found;
-}
-#pragma auto_inline(on)
+// The real map owns the two exact lookup layers and insertion wrapper.
+// GetBitmap816 retains map::insert in retail; the current canonical source
+// expands it and retains the iterator/bool result constructor instead.
+// Sixteen key/pair controls do not emit the wrapper; its previous exact body
+// remains banked. The ordinary AddToCache boundary stays intact.
+VA_COMPGEN(0x0055d380, 0x2C, MAP_INSERT, TCacheMapKey)
+VA_COMPGEN(0x0055d3b0, 0x56, MAP_FIND, TCacheMapKey)
+VA_COMPGEN(0x0055e330, 0x56, TREE_FIND, TCacheMapKey)
+// Insert's locked key search calls the node rebalance at 0x55e7e0 and
+// predecessor walk at 0x55ec30. Their stock XTREE bodies own all three.
+VA_COMPGEN(0x0055dbc0, 0x12D, TREE_INSERT, TCacheMapKey)
+VA_COMPGEN(0x0055e7e0, 0x301, TREE_NODE_INSERT, TCacheMapKey)
+VA_COMPGEN(0x0055ec30, 0xB3, TREE_CONST_ITERATOR_DEC, TCacheMapKey)
 
 // Two more Dinkumware COMDATs from the string-stream closure the cache's
 // key formatting pulls in. Byte-verified against the emitted templates -
@@ -3111,20 +2833,12 @@ VA_COMPGEN(0x0055eaf0, 0xDC, STRINGBUF_INIT, char)
 // binds that compiler-emitted specialization without duplicating its source.
 VA_COMPGEN(0x0055E390, 0xA3, TREE_CONST_ITERATOR_INC, TCacheMapKey)
 
-// ABI facade over the raw-node lower_bound body. A one-dword iterator return
-// is an explicit result pointer plus the key at the machine boundary; spelling
-// that boundary directly preserves CSprite's two simultaneously live iterator
-// slots. Retail retains this exact 23-byte wrapper inside the nested disposal.
-#pragma auto_inline(off)
-VA(0x0055e740, 0x17)
-ResourceManager::TCacheIterator*
-ResourceManager::TCacheMap::lowerBoundIterator(TCacheIterator* result,
-                                                 const TCacheMapKey& key)
-{
-    result->m_node = lowerBound(key);
-    return result;
-}
-#pragma auto_inline(on)
+// The public iterator-return boundary calls the locked raw-node search.
+// Replacing the handwritten cache facade with its actual std::map emits
+// _Lbound naturally. Both bodies are exact, including _Lbound's lock,
+// comparator operand order, eight blocks and 90-byte extent.
+VA_COMPGEN(0x0055e740, 0x17, TREE_LOWER_BOUND, TCacheMapKey)
+VA_COMPGEN(0x0055ebd0, 0x5A, TREE_LBOUND, TCacheMapKey)
 
 // COMDAT pairing: basic_ostringstream::_G?$basic_ostringstream, mnemonic agreement 1.000.
 VA_COMPGEN(0x0055dae0, 0x30, SCALAR_DELETING_DTOR, basic_ostringstream)
@@ -3169,9 +2883,9 @@ VA_COMPGEN(0x0055d840, 0x5A, STRINGBUF_UNDERFLOW, char)
 // std::pair<const char*, resource*>'s two-reference constructor. The sole
 // retail caller is GetBitmap816's early cache-insertion arm: its arguments
 // point to result->m_name and result, and the returned two-dword temporary is
-// immediately consumed as TCacheValue. This object emits exactly one pair
-// constructor, whose complete 24-byte body is byte-identical to retail.
-VA_COMPGEN(0x0055ecf0, 0x18, CLASS_CTOR, pair)
+// converted to map::value_type. Its complete 24-byte body is exact; the
+// typed claim distinguishes it from the map's iterator/bool result pair.
+VA_COMPGEN(0x0055ecf0, 0x18, PAIR_CTOR, cstr_resource_pair)
 
 // COMDAT pairing: std::operator+(const string&, const char*). The two
 // operator+ overloads are one key, but each object emits exactly one of them
