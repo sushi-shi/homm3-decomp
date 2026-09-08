@@ -442,7 +442,7 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "STD_SORT", "STD_SORT_0", "STD_MEDIAN",
                  "STD_UNGUARDED_PARTITION", "STD_UNGUARDED_INSERT",
                  "STD_COPY_BACKWARD", "STD_FILL",
-                 "TREE_ERASE_ITERATOR", "TREE_ERASE_RANGE",
+                 "TREE_ERASE_ITERATOR", "TREE_ERASE_RANGE", "TREE_ERASE_KEY",
                  "TREE_LBOUND", "TREE_UBOUND", "TREE_FIND",
                  "DEQUE_ERASE", "VECTOR_RESERVE", "VECTOR_CLEAR",
                  "EXCEPTION_DORAISE", "FUNCTOR_CALL",
@@ -1175,12 +1175,13 @@ def _demangle_key(mangled: str):
         return f"{tree_owner.lower()}@tree_lbound"
     if mangled.startswith("?_Ubound@?$_Tree@") and tree_owner:
         return f"{tree_owner.lower()}@tree_ubound"
-    # ...and the PUBLIC `erase`, which is overloaded on one class: the
-    # range form takes two iterators (`V312@0@Z`), the single form one
-    # (`V312@@Z`). Two kinds rather than a two-member overload group, for
-    # the same reason `_Copy` needed the split - the group's members would
-    # otherwise have to be told apart by size alone.
+    # Public erase has three overloads: key returns unsigned size_type and
+    # takes a const reference (QAEIAB...), while range and single-iterator
+    # forms return an iterator. Keep all three apart from private _Erase;
+    # neither the return ABI nor the operation can be inferred from size.
     if mangled.startswith("?erase@?$_Tree@") and tree_owner:
+        if re.search(r"@@QAEIAB.+@Z$", mangled):
+            return f"{tree_owner.lower()}@tree_erase_key"
         if mangled.endswith("V312@0@Z"):
             return f"{tree_owner.lower()}@tree_erase_range"
         return f"{tree_owner.lower()}@tree_erase_iterator"
@@ -2253,6 +2254,7 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             continue
         tree_or_deque = next(
             (kind for kind in ("tree_erase_iterator", "tree_erase_range",
+                               "tree_erase_key",
                                "tree_lbound", "tree_ubound", "tree_find",
                                "tree_init", "tree_copy_assign",
                                "tree_const_iterator_ctor",
