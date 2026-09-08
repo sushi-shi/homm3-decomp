@@ -3281,6 +3281,31 @@ int type_random_map_generator::countPlacedZoneConnections(TRmgZone* zone) const
     return result;
 }
 
+// Role-derived name: initialization 0x53bcb0 measures the unscaled zone
+// centers with each template's size as radius. Bounds include the origin.
+// Retail copies the three-coordinate accessor result and uses long min/max
+// temporaries for the four int output references; there is no DC RMG TU.
+// Residual (99.8925%): all 13 CFG blocks agree; the final X maximum
+// uses lea [ebx+eax+1] instead of retail [eax+ebx+1]. Reversing the
+// source addition operands leaves the same encoding (negative control).
+VA(0x0053B1F0, 0xFE) // anchor-callee 0x53be5c; thiscall, ret 0x10; retail-only
+void type_random_map_generator::getInitialZoneBounds(int& minimumY, int& minimumX,
+    int& maximumY, int& maximumX) const
+{
+    minimumY = 0;
+    minimumX = 0;
+    maximumY = 0;
+    maximumX = 0;
+    for (int zone = 0; zone < m_zones.size(); ++zone) {
+        TRmgMapPosition position = m_zones[zone]->getLevelPosition();
+        int size = m_zones[zone]->m_slot->m_size;
+        minimumY = std::_cpp_min<long>(minimumY, position.m_y - size);
+        minimumX = std::_cpp_min<long>(minimumX, position.m_x - size);
+        maximumY = std::_cpp_max<long>(maximumY, position.m_y + size + 1);
+        maximumX = std::_cpp_max<long>(maximumX, position.m_x + size + 1);
+    }
+}
+
 // Called by the zone-position selector at 0x53bb38 with a generated zone,
 // its vector of 12-byte candidate coordinates and the requested map size.
 // Prefer unused levels, then maximum connections, then the smallest square

@@ -1833,6 +1833,8 @@ public:
     unsigned char tryPlacePrimaryTown(TRmgZone* zone, int alignment,
         int player, unsigned char townOption);
     void initializeZones(TRmgTemplate* mapTemplate);
+    void getInitialZoneBounds(int& minimumY, int& minimumX,
+        int& maximumY, int& maximumX) const;
     void paintZoneTerrain();
     void placeAdditionalTowns(TRmgZone* zone);
     unsigned char tryPlaceAdditionalTown(TRmgZone* zone, int alignment,
