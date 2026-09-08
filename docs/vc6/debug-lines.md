@@ -52,6 +52,13 @@ or a pinned compiler header. An unavailable/foreign recorded file is an error,
 not a reason to fall back to the TU. Objects without `.file` records retain
 the legacy manifest-source fallback.
 
+Wine also resolves `<xtree>` to the pinned file `XTREE`, while the recorded
+filename retains the lowercase spelling. For an unavailable compiler-header
+path, the reader accepts a unique filename differing only in case inside the
+pinned include tree. Ambiguous case matches and unrelated project files remain
+errors. The naturally retained `_Tree::end() const` at `0x58eb50` exercises
+this path without changing the compiler files or the source-byte check.
+
 Hermetic controls cover multi-record paths, TU/header/TU switches, reversed
 section order, identical line numbers with different header/TU text, and
 rejection of missing or unrelated files. Source text still never participates

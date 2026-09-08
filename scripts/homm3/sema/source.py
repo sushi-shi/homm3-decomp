@@ -213,6 +213,16 @@ def _recorded_source(filename: str | None, tu_path: Path,
         path = common.HOMM3_DIR / path
     path = path.resolve()
     compiler_include = (cc_wrap.msvc_dir() / "include").resolve()
+    # Wine resolves <xtree> to the pinned XTREE file case-insensitively,
+    # while /Z7 retains the include spelling. Resolve only a unique filename
+    # inside the pinned compiler tree; never guess a project dependency.
+    if (not path.is_file() and path.parent.is_dir()
+            and path.parent.is_relative_to(compiler_include)):
+        matches = [candidate for candidate in path.parent.iterdir()
+                   if candidate.name.casefold() == path.name.casefold()
+                   and candidate.is_file()]
+        if len(matches) == 1:
+            path = matches[0].resolve()
     if (not path.is_file() or (path not in _cache_inputs(tu_path)
                               and not path.is_relative_to(compiler_include))):
         raise SourceError(
