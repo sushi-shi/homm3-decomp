@@ -9843,6 +9843,184 @@ int type_random_map_generator::selectPrisonHero()
     return hero;
 }
 
+// This one-vector worklist reads priorities from the zones themselves;
+// the other zone overload carries a parallel cost vector. Retail 0x54b294
+// expands the same descending binary-search boundary before count insert.
+// Complete-only overload/name provisional; preserve the ordinary helper.
+static void insertRmgWorkItem(std::vector<TRmgZone*>& zones, TRmgZone* zone)
+{
+    int first = 0;
+    int last = zones.size();
+    int middle;
+    int priority = zone->m_questPlacementScore;
+    while (1) {
+        middle = (first + last) >> 1;
+        if (first >= last)
+            break;
+        if (priority < zones[middle]->m_questPlacementScore)
+            first = middle + 1;
+        else
+            last = middle;
+    }
+    zones.insert(zones.begin() + middle, 1, zone);
+}
+
+// Quest-group placement calls this one-zone member at 0x54b33a. The
+// template connection vector has 0x1c-byte records; each destination's
+// leading index selects the generated zone. +0x40 is the relaxed distance.
+// Residual (77.7594%): a named queued priority preserves retail's live
+// distance during the binary search (72.6616% without it). Seed push_back
+// versus insert is flat; pop_back lowers to 69.3008% before that refinement.
+// Single/count insertion in the shared helper is flat. Retail retains
+// the seed-insert and erase wrappers that this compile expands.
+VA(0x0054B180, 0x174) // anchor-callee + zone/template layouts; retail-only
+void type_random_map_generator::calculateQuestZoneDistances(TRmgZone* origin)
+{
+    std::vector<TRmgZone*> pending;
+    for (unsigned int index = 0; index < m_zones.size(); ++index)
+        m_zones[index]->m_questPlacementScore = 20000;
+    origin->m_questPlacementScore = 0;
+    pending.insert(pending.end(), origin);
+    while (pending.size()) {
+        TRmgZone* current = pending.back();
+        pending.erase(pending.end() - 1);
+        TRmgTownSlot* slot = current->m_slot;
+        int distance = current->m_questPlacementScore + 1;
+        for (unsigned int connection = 0; connection < slot->m_connections.size(); ++connection) {
+            TRmgZone* next = m_zones[slot->m_connections[connection].m_destination->m_zoneIndex];
+            if (next->m_questPlacementScore > distance) {
+                next->m_questPlacementScore = distance;
+                insertRmgWorkItem(pending, next);
+            }
+        }
+    }
+}
+
+// The quest-artifact worker's call at 0x54b6f4 passes its hut group and
+// original zone (ret 8). Distances become randomized ascending priorities;
+// junction/water/origin zones and unreachable scores are excluded. The
+// final loop calls the canonical treasure-group placement with spacing 1.
+// Residual (93.5302%): all 27 blocks, 15 branches and both return paths
+// align. Single-element source insertion expands to retail's retained
+// count-insert call; direct count insertion expands further and gives 0%.
+// Guard scopes and all four signed/unsigned loop-index combinations are
+// flat. Remaining differences are local/register and cleanup scheduling.
+VA(0x0054B300, 0x18B) // anchor-callee + placement call + zone fields; retail-only
+unsigned char type_random_map_generator::placeQuestGroup(
+    TRmgTreasureGroup* group, TRmgZone* origin)
+{
+    std::vector<TRmgZone*> candidates;
+    calculateQuestZoneDistances(origin);
+    for (unsigned int index = 0; index < m_zones.size(); ++index) {
+        TRmgZone* zone = m_zones[index];
+        int distance = zone->m_questPlacementScore;
+        if (distance == 1)
+            zone->m_questPlacementScore = 1000 + rand() % 10;
+        else
+            zone->m_questPlacementScore = distance * 10 + rand() % 10;
+    }
+    for (index = 0; index < m_zones.size(); ++index) {
+        TRmgZone* zone = m_zones[index];
+        if (zone == origin || zone->m_slot->m_kind == RMG_TEMPLATE_JUNCTION
+            || zone->m_questPlacementScore > 2000 || zone->m_terrain == eTerrainWater)
+            continue;
+        unsigned int insertion = 0;
+        while (insertion < candidates.size()
+            && zone->m_questPlacementScore >= candidates[insertion]->m_questPlacementScore)
+            ++insertion;
+        candidates.insert(candidates.begin() + insertion, zone);
+    }
+    for (index = 0; index < candidates.size(); ++index) {
+        TRmgZone* zone = candidates[index];
+        if (placeTreasureGroup(group, zone, 1))
+            return 1;
+    }
+    return 0;
+}
+
+// Artifact's table loader maps class 'T' to bit 2. The quest worker tests
+// that same treasure-class bit at 0x54b4db/0x54b536. No separate data body.
+static const int g_rmgQuestArtifactClass = 2;
+
+// rmgQuestArtifactObject::isWritable calls this member with its wrapper.
+// The pending hut, prototype reference counts, artifact traits at 0x660b68,
+// and generator masks fix ownership and selection semantics. Failure
+// substitutes ordinary treasure; success reserves the artifact and advances
+// the seer-hut prototype cursor. Complete-only, original spelling unknown.
+// Residual (72.6899%): the inline three-coordinate outline accessor and
+// named base-object pointer raise 59.7318% to 71.1899%; scoped eligibility
+// statements reach this peak (either scope alone is flat). The group vector
+// construction/destruction and failure-path map accessor still expand
+// differently. The writable caller remains exact; all controls change only
+// this worker among other RMG functions.
+VA(0x0054B490, 0x42E) // anchor-caller + artifact/group/generator fields; retail-only
+unsigned char type_random_map_generator::placeQuestArtifact(rmgQuestArtifactObject* object)
+{
+    rmgSeerHutObject* seerHut = object->m_seerHut;
+    int available = 0;
+    int artifact;
+    for (artifact = 0; artifact < ARTIFACT_COUNT; ++artifact) {
+        if (!g_artifactTraits[artifact].m_disabled && !m_usedQuestArtifacts[artifact]
+            && (g_artifactTraits[artifact].m_artifactClass & g_rmgQuestArtifactClass)) {
+            ++available;
+        }
+    }
+    if (available < 20)
+        m_questArtifactPoolLow = 1;
+    if (!available)
+        return 0;
+    int selected = rand() % available;
+    for (artifact = 0; artifact < ARTIFACT_COUNT; ++artifact) {
+        if (!g_artifactTraits[artifact].m_disabled && !m_usedQuestArtifacts[artifact]
+            && (g_artifactTraits[artifact].m_artifactClass & g_rmgQuestArtifactClass)) {
+            if (selected-- <= 0)
+                break;
+        }
+    }
+    seerHut->m_artifact = artifact;
+    unsigned int prototypeIndex = 0;
+    while (prototypeIndex < m_objectPrototypes[ARTIFACT].size()
+        && m_objectPrototypes[ARTIFACT][prototypeIndex]->m_prototype->m_subtype != artifact)
+        ++prototypeIndex;
+    TRmgObjectPropertiesRef* properties = m_objectPrototypes[ARTIFACT][prototypeIndex];
+    --object->m_properties->m_refCount;
+    object->m_properties = properties;
+    ++properties->m_refCount;
+    TRmgZone* origin = m_zones[m_map.getMapItem(object->m_position)->m_zoneState.m_zone];
+    TRmgTreasureGroup group(16, 16);
+    TObjectType* prototype = seerHut->m_properties->m_prototype;
+    TRmgMapPosition position;
+    position.m_x = (group.m_map.m_mapWidth + static_cast<unsigned>(prototype->getWidth())) / 2;
+    position.m_y = (group.m_map.m_mapHeight + static_cast<unsigned>(prototype->getHeight())) / 2;
+    position.m_z = 0;
+    type_object* questObject = seerHut;
+    group.m_objects.push_back(questObject);
+    group.m_map.addObject(questObject, position);
+    group.updateBounds();
+    group.traceOutline();
+    group.m_ready = 1;
+    for (unsigned int index = 0; index < group.m_outline.size(); ++index) {
+        group.m_map.getMapItem(group.m_outline[index].m_x,
+            group.m_outline[index].m_y, 0)->m_tileData.m_placementOutline = 1;
+    }
+    if (!placeQuestGroup(&group, origin)) {
+        int value = object->m_definition->getValue(origin, this);
+        TRmgMapPosition originalPosition = object->m_position;
+        removeObject(object);
+        TRmgZone* zone = m_zones[m_map.getMapItem(originalPosition)->m_zoneState.m_zone];
+        int actualValue;
+        type_object* replacement = createTreasureObject(zone, value, value * 3 / 2,
+            &actualValue, 0, 0, 0, originalPosition);
+        if (replacement)
+            addObject(replacement, originalPosition);
+        return 0;
+    }
+    m_usedQuestArtifacts[artifact] = 1;
+    m_nextSeerHutPrototypeIndex = (m_nextSeerHutPrototypeIndex + 1)
+        % m_objectPrototypes[SEER].size();
+    return 1;
+}
+
 // GenerateRandomMap's call at 0x5862e8 passes width, height and level count.
 // The request worker 0x54bf60 independently reads each scalar and copies the
 // human-seat and town-choice arrays into the generator. The shared request
