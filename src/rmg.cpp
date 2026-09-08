@@ -2415,10 +2415,119 @@ void TRmgTreasureGroup::reset()
 // stack dword to 0x535110 (AL result); its first and last calls trace the
 // group's closed outline. 0x535ee0 appends points at +0x38 until closure.
 // Provisional names describe these retail roles.
-#if 0 // @carcass
+// Partial 89.93%: all 73 blocks align, with 64 matching sizes; branches
+// and both returns agree. Retail retains vector<TPoint>::_Destroy during
+// outline erasure and the single-element object insertion wrapper; VC6
+// expands those to no destructor call and the count insertion call.
+// Explicit insert(end, guard) gives 88.88%; one-element range erase gives
+// 87.74%. An outline-size local across rand is byte-neutral. Coordinate
+// homes and nested container expansion remain; keep the helper boundaries.
 VA(0x00535110, 0x4AB) // anchor-callee 0x546843; thiscall, ret 4
-unsigned char TRmgTreasureGroup::addGuard(type_object* guard) { return 0; } // @stub
-#endif
+unsigned char TRmgTreasureGroup::addGuard(type_object* guard)
+{
+    traceOutline();
+    // Retail 0x535150 saves the existing object's prototype; 0x535405
+    // still reads that last prototype's trigger after inserting the guard.
+    TObjectType* prototype;
+    for (unsigned int objectIndex = 0; objectIndex < m_objects.size(); ++objectIndex) {
+        type_object* object = m_objects[objectIndex];
+        prototype = object->m_properties->m_prototype;
+        TRmgMapPosition entrance = object->getPosition();
+        entrance.m_y -= prototype->m_triggerCell.m_y;
+        entrance.m_x -= prototype->m_triggerCell.m_x;
+        unsigned int direction = g_adventureObjectLandBlocked[prototype->m_objectType][1]
+            ? RMG_DIRECTION_COUNT : 5;
+        while (direction--) {
+            TRmgMapPosition position = entrance + g_rmgDirections[direction];
+            TRmgMapItem* item = m_map.getMapItem(position);
+            if (item->isRoadEntrance() || !item->m_tileData.m_roadPassable
+                || item->m_tile.m_landType == eTerrainRock)
+                continue;
+            if (!item->m_connection.m_present) {
+                item->m_tileData.m_subterraneanGate = 0;
+                item->m_tileData.m_borderObject = 1;
+            }
+            for (int x = position.m_x - 1; x <= position.m_x + 1; ++x) {
+                for (int y = position.m_y - 1; y <= position.m_y + 1; ++y) {
+                    TRmgMapItem* nearby = m_map.getMapItem(x, y, 0);
+                    if (nearby->m_tileData.m_roadPassable
+                        && nearby->m_tile.m_landType != eTerrainRock
+                        && !nearby->isRoadEntrance() && !nearby->m_connection.m_present)
+                        nearby->m_tileData.m_subterraneanGate = 0;
+                }
+            }
+        }
+    }
+    TRmgObjectPropertiesRef* guardProperties = guard->m_properties;
+    for (unsigned int index = m_outline.size(); index--;) {
+        TPoint point = m_outline[index];
+        TRmgMapPosition position;
+        position.m_x = point.m_x;
+        position.m_y = point.m_y;
+        position.m_z = 0;
+        if (!m_map.getMapItem(point.m_x, point.m_y, 0)->hasBorderObject()
+            || !canFitObject(guardProperties, position))
+            m_outline.erase(m_outline.begin() + index);
+    }
+    if (!m_outline.size())
+        return 0;
+    unsigned int outlineCount = m_outline.size();
+    TPoint guardPosition = m_outline[rand() % outlineCount];
+    m_objects.push_back(guard);
+    TRmgMapPosition position;
+    position.m_x = guardPosition.m_x;
+    position.m_y = guardPosition.m_y;
+    position.m_z = 0;
+    m_map.addObject(guard, position);
+    guardPosition.m_x -= prototype->m_triggerCell.m_x;
+    guardPosition.m_y -= prototype->m_triggerCell.m_y;
+    int guardType = guardProperties->m_prototype->m_objectType;
+    for (int direction = 0; direction < RMG_DIRECTION_COUNT; ++direction) {
+        TPoint point;
+        point.m_x = guardPosition.m_x + g_rmgDirections[direction].m_x;
+        point.m_y = guardPosition.m_y + g_rmgDirections[direction].m_y;
+        TRmgMapItem* item = m_map.getMapItem(point.m_x, point.m_y, 0);
+        if (!item->m_tileData.m_roadPassable || item->m_tile.m_landType == eTerrainRock)
+            continue;
+        if (guardType == BORDER_GUARD && item->hasBorderObject())
+            continue;
+        if (!item->m_connection.m_present) {
+            item->m_tileData.m_borderObject = 0;
+            item->m_tileData.m_subterraneanGate = 1;
+        }
+        int fanDirection;
+        unsigned int count;
+        if (direction & 1) {
+            fanDirection = (direction - 1) & 7;
+            count = 3;
+        } else {
+            fanDirection = direction;
+            count = 1;
+        }
+        while (count--) {
+            TPoint nearby;
+            nearby.m_x = point.m_x + g_rmgDirections[fanDirection].m_x;
+            nearby.m_y = point.m_y + g_rmgDirections[fanDirection].m_y;
+            if (nearby.m_x >= 0 && nearby.m_x < m_map.m_mapWidth
+                && nearby.m_y >= 0 && nearby.m_y < m_map.m_mapHeight) {
+                TRmgMapItem* next = m_map.getMapItem(nearby.m_x, nearby.m_y, 0);
+                if (!next->hasBorderObject() && !next->hasSubterraneanGate()
+                    && next->m_tileData.m_roadPassable
+                    && next->m_tile.m_landType != eTerrainRock && !next->m_connection.m_present) {
+                    next->m_tileData.m_borderObject = 0;
+                    next->m_tileData.m_subterraneanGate = 1;
+                }
+            }
+            fanDirection = (fanDirection + 1) & 7;
+        }
+    }
+    m_guardPosition = guardPosition;
+    m_hasGuard = 1;
+    m_outline.clear();
+    updateBounds();
+    traceOutline();
+    return 1;
+}
 
 // Complete-only group fit predicate. Restricted approach types reject
 // entrances behind them; the other five neighbors reject incompatible
