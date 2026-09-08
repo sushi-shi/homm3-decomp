@@ -82,6 +82,7 @@ not diagnosed	174	82.0170	82.0170	0.0000	82.0170	968	victorylossconditions	?chec
 not diagnosed	397	82.1005	82.1005	0.0000	82.1005	2218	rmg	?createSubterraneanGate@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z	diagnose	-
 not diagnosed	239	82.1859	82.1859	0.0000	82.1859	1341	rmg	?decorateMapCell@TRmgGeneratorBase@@QAEXUTRmgMapPosition@@H@Z	diagnose	-
 not diagnosed	119	82.2075	82.2075	0.0000	82.2075	667	rmg	?generateRmgIslandMask@@YIXPAEHH@Z	diagnose	-
+not diagnosed	256	82.6064	85.0282	2.4218	82.6064	1470	ai_player	?canTradeResources@type_AI_player@@QAE_NPBHPAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	diagnose	-
 not diagnosed	358	82.9570	92.7472	9.7902	82.9570	2101	mapcell	?readHeroData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	diagnose	-
 not diagnosed	498	82.9640	82.9640	0.0000	82.9640	2926	ai_player	?aiChooseDestination@@YIHPAVhero@@JAAUHeroDestination@@AAJEE@Z	diagnose	-
 not diagnosed	37	83.0357	83.0357	0.0000	83.0357	216	events	?doTreasureDialog@advManager@@QAEXPAVhero@@H_N@Z	diagnose	-
@@ -113,7 +114,6 @@ not diagnosed	77	84.8547	84.8547	0.0000	84.8547	510	armygrp	?merge@armyGroup@@QA
 not diagnosed	213	84.9232	84.9232	0.0000	84.9232	1414	customcampaign	?read@ScenarioStruct@TCampaignBrief@@QAEXPAVTAbstractFile@@HH@Z	diagnose	-
 not diagnosed	96	84.9444	96.5463	11.6019	84.9444	638	questlogwindow	?doQuestLog@@YIXH@Z	diagnose	-
 not diagnosed	155	84.9579	84.9579	0.0000	84.9579	1032	spells	?earthquake@combatManager@@QAEXH@Z	diagnose	-
-not diagnosed	220	85.0282	85.0282	0.0000	76.6573	1470	ai_player	?canTradeResources@type_AI_player@@QAE_NPBHPAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	diagnose	-
 not diagnosed	75	85.1124	85.1124	0.0000	85.1124	503	seerhut	?getTimeLimitText@type_quest@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	diagnose	-
 not diagnosed	6	85.1765	85.1765	0.0000	85.1765	39	rmg	?getSize@TRmgMapAdapter@@UAE?AUTRmgGridPoint@@XZ	diagnose	-
 not diagnosed	223	85.1872	85.2335	0.0463	85.1872	1508	advmgr	?drawAdvObjShadow@advManager@@QAEXHHHHH@Z	diagnose	-

@@ -1406,20 +1406,28 @@ void type_AI_player::tradeResources(const int* cost, long number)
 // per-unit price; market_value totals what selling the surplus earns. The
 // largest affordable candidate is refined by whole units of unit_cost and
 // the supply shortfalls are relaxed to what that quantity leaves out.
-// Residual (81.03%, MAX 81.35%): the current 34/34 out-of-line call multiset
-// agrees. Retail's direct unsigned size comparison (`jae`) is retained below;
-// removing the source-false signed cast moved 81.35 -> 81.03 by perturbing
-// downstream register allocation, but closes that retail/DC-positive branch.
-// The remaining 88/89-block split and register story start downstream of the
-// players[team] address: retail computes it ONCE into the [ebp-0x18] temp,
-// reloads it per use, and rebases the same temp by +0x9c as the resources
-// walker, with markets in EDI / flag in BL; every spelling tried gives the
-// address a callee-saved register instead. Tried and rejected: named
-// playerData* player (78.94/79.42 - grabs EDI), markets/flag declared
-// first (byte-flat on the grab), hoisted int town_index (79.42), unnaming
-// efficiency (82.79 fuzzy but byte-FALSE: it moves the table read into
-// the loop as fmul dword, where retail flds once into the named qword
-// home - do not resurrect), why-reg volatile proposals (doctrine).
+// Dreamcast lines 1477-1494 and retail agree on a retained player pointer,
+// signed town loop, HasBuilding(..., true), and the by-value min(int,int)
+// wrapper. The old unsigned loop and repeated player address calculation
+// were not compiler-state residuals. Restoring the signed loop measures
+// 76.16% from 76.66%; retaining player then reaches 78.22%; the min wrapper
+// and named double efficiency reach 82.50%. Restoring HasBuilding and the
+// retail zero guard on the second supply arm reaches 82.61%.
+// Retail 0x42a66d loads the float efficiency once and widens it into the
+// qword home later used by fmul. Dreamcast also names a double efficiency.
+// The former const double& bound a conversion temporary; it did not reread
+// the float table at each multiply as its old comment claimed.
+// Residual (82.61%): the first insertion retains two extra vector::size
+// calls (its count expression and first size guard) where retail expands
+// them. The player pointer still occupies a register instead of retail's
+// reusable stack home. Later long-vector helper names differ through ICF.
+// Prior controls: declaring markets/flag first and hoisting townIndex did
+// not recover the player's stack home. Inlining the efficiency expression
+// into the multiply is retail-false: it replaces the one-time widened load
+// with a per-iteration float read. The vector-size comparisons below remain
+// unsigned, independently of the signed town-count comparison.
+// The old return-site inline-depth pin is unnecessary: removing it is
+// byte-flat, and both final vector destructors remain calls naturally.
 VA(0x0042a580, 0x5BE)  // retail link order + arity, dc 0x305b4
 bool type_AI_player::canTradeResources(const int* cost, int* supply,
                                          // Before normalization (locals): trade_qty,
@@ -1429,27 +1437,25 @@ bool type_AI_player::canTradeResources(const int* cost, int* supply,
 {
     long markets = 0;
     unsigned char canBuildMarket = 0;
+    playerData* player = &g_game->m_players[m_team];
     if (supply[0] >= 0
-        && g_game->m_players[m_team].m_ai.m_turnProductionResource[0] > 0)
+        && player->m_ai.m_turnProductionResource[0] > 0)
         canBuildMarket = 1;
 
-    for (unsigned int townIndex = 0; townIndex < g_game->m_players[m_team].m_numTowns;
+    for (int townIndex = 0; townIndex < player->m_numTowns;
          ++townIndex) {
         town* currentTown = g_game->getTown(
-            g_game->m_players[m_team].m_townIds[townIndex]);
-        if ((currentTown->m_active & g_bitNumber[MARKETPLACE_ID])
+            player->m_townIds[townIndex]);
+        if (currentTown->hasBuilding(MARKETPLACE_ID, true)
             || (canBuildMarket
                 && currentTown->canBuild(MARKETPLACE_ID)))
             ++markets;
     }
 
-    markets = cppMin(markets, 10L);
+    markets = min(markets, 10);
     if (markets == 0)
         return false;
-    // BOUND BY `const double&`: retail re-reads the table entry at each
-    // multiply rather than keeping the double live in a register/slot.
-    // 81.3465 -> 84.4350.
-    const double& efficiency = g_tradingPostEfficency[markets];
+    double efficiency = g_tradingPostEfficency[markets];
     long marketValue = 0;
 
     std::vector<long> baseCost;
@@ -1463,17 +1469,8 @@ bool type_AI_player::canTradeResources(const int* cost, int* supply,
             marketValue = static_cast<long>(
                 getMarketValue(gameResourceFromInt(i)) * supply[i]
                 * efficiency + marketValue);
-        // Retail's second guard is `je`, not `jge`: spelling this
-        // `supply[i] != 0` (or the bare `supply[i]`) takes the branch
-        // census CLEAN at 45/45 and measures 81.1900 - ABOVE the current
-        // 81.0339 but still under the row's banked 81.3465 MAX, which was
-        // set in an older delink generation, so it is recorded rather than
-        // shipped. The rest of the gap is the induction base: retail walks
-        // `supply` with ESI and biases `cost` off it, we walk `cost` and
-        // bias `supply`; the ICF-folded vector<long>/vector<army*> call
-        // rows are cosmetic.
-        } else if (supply[i] < 0) {
-            long onHand = g_game->m_players[m_team].m_resources[i];
+        } else if (supply[i] != 0) {
+            long onHand = player->m_resources[i];
             long value = getMarketValue(gameResourceFromInt(i));
             for (unsigned int j = 0; j < tradeQty.size(); ++j) {
                 if (tradeQty[j] * cost[i] > onHand) {
@@ -1512,12 +1509,7 @@ bool type_AI_player::canTradeResources(const int* cost, int* supply,
                 supply[k] = 0;
         }
     }
-    // Retail calls ~vector<long> for both locals at this exit only, while
-    // expanding the teardown at the two earlier ones - the return-statement
-    // pin reaches the scope-exit destructors of function-scoped locals.
-#pragma inline_depth(0)
     return true;
-#pragma inline_depth()
 }
 
 // E:\gamedcs\ai_player.cpp:1587
