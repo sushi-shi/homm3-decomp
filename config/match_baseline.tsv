@@ -1330,7 +1330,7 @@ customcampaign	?play@MapTextStruct@TCampaignBrief@@QAEXXZ	83.8848	83.8848	83.884
 customcampaign	?playScenarioEpilogue@SCampaign@@QAEXPAX@Z	100.0000	100.0000	100.0000	0x8a2a0	36b63d63e002
 customcampaign	?playScenarioPrologue@SCampaign@@QAEXPAX@Z	100.0000	100.0000	100.0000	0x8a270	ed42161c695e
 customcampaign	?pruneCrossoverHeroes@SCampaign@@QAEXPAX@Z	99.9223	99.9223	99.9223	0x89e20	e911c787e168
-customcampaign	?read@ScenarioStruct@TCampaignBrief@@QAEXPAVTAbstractFile@@HH@Z	83.2900	83.2900	83.2900	0x87e40	c948eaac5027
+customcampaign	?read@ScenarioStruct@TCampaignBrief@@QAEXPAVTAbstractFile@@HH@Z	84.9232	84.9232	84.9232	0x87e40	b9b3815343b6
 customcampaign	?read@TCampaignArtifactBonus@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x848a0	e7eb4184fa32
 customcampaign	?read@TCampaignBuildingBonus@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x845f0	c23d40207221
 customcampaign	?read@TCampaignCreatureBonus@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x844f0	0627d2f018f2
@@ -1369,7 +1369,10 @@ customcampaign	?test@?$bitset@$0IB@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0x8
 customcampaign	?uflow@?$basic_filebuf@DU?$char_traits@D@std@@@std@@MAEHXZ	100.0000	100.0000	100.0000	0x8b8b0	-
 customcampaign	?underflow@?$basic_filebuf@DU?$char_traits@D@std@@@std@@MAEHXZ	100.0000	100.0000	100.0000	0x8b880	-
 customcampaign	?write@TStreamBufFile@@UAEHPBXH@Z	100.0000	100.0000	100.0000	0x83f30	f33fce8729ae
+customcampaign	__h3cg$customcampaign$std_construct$unsigned_char	0.0000	100.0000	100.0000	0x8e9d0	-
 customcampaign	__h3cg$customcampaign$vector_insert_single$unsigned_char	0.0000	0.0000	34.7407	0x8bf00	-
+customcampaign	__h3cg$customcampaign$vector_ucopy$unsigned_char	0.0000	100.0000	100.0000	0x8db40	-
+customcampaign	__h3cg$customcampaign$vector_ufill$unsigned_char	0.0000	100.0000	100.0000	0x8db70	-
 customcampaignwindow	??0TCustomCampaignWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x827b0	713a5b0d1377
 customcampaignwindow	??1TCustomCampaignWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x82f10	4151547fae01
 customcampaignwindow	??RCampaignHeaderPointerLess@@QBE_NPAUCampaignHeaderStruct@TCampaignBrief@@0@Z	100.0000	100.0000	100.0000	0x83240	04c28ebced5b

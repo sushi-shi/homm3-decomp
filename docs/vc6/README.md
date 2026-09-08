@@ -132,6 +132,13 @@ equal-sized claim joins, a second element class, and unrelated container and
 insert overloads. A missing range-erase COMDAT remains an inlining question;
 it must not be paired with the retained iterator overload.
 
+`STD_CONSTRUCT` also recognizes VC6's scalar placement-construction overloads.
+The byte helper at `0x48e9d0` is `?_Construct@std@@YIXPAEABE@Z`; its destination
+pointer and const-reference source must encode the same builtin type. Keys
+retain signedness and width instead of grouping scalar overloads under `std`.
+`test_scalar_construct_keys.py` checks shuffled, equal-sized claim joins and
+rejects conversion, qualifier, namespace, calling-convention and arity mismatches.
+
 `homm3 sema diff --calls` and `--relocs` distinguish source-claimed retail
 labels from unclaimed, generated and local labels using the regenerated
 symbol inventory's provenance. A carcass `VA` already owns its retail name
