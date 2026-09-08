@@ -38,6 +38,7 @@ class FunctionLines:
     begin_line: int
     lines: tuple[LineRecord, ...]
     code: bytes
+    source_file: str | None = None
 
 
 @dataclass(frozen=True)
@@ -137,6 +138,8 @@ class _Coff:
             self.string_size = 0
 
         self.symbols: dict[int, _Symbol] = {}
+        self.source_files: dict[int, str | None] = {}
+        source_file = None
         index = 0
         while index < self.symbol_count:
             off = self.sym_offset + index * _SYMBOL_SIZE
@@ -153,6 +156,15 @@ class _Coff:
                 storage=data[off + 16],
                 aux_count=aux_count,
             )
+            # VC6 switches .file records for retained header bodies, then
+            # switches back to the TU. Ownership follows symbol-table order,
+            # not the section order used below to assign function ordinals.
+            if data[off + 16] == 103:  # IMAGE_SYM_CLASS_FILE
+                raw = data[off + _SYMBOL_SIZE:off + (1 + aux_count) * _SYMBOL_SIZE]
+                source_file = raw.split(b"\0", 1)[0].decode("latin1")
+                if not source_file:
+                    raise CodeViewError(f"symbol {index} has an empty COFF .file record")
+            self.source_files[index] = source_file
             index += 1 + aux_count
 
         self.functions = self._function_defs()
@@ -308,5 +320,6 @@ def parse_lines(path: str | Path) -> dict[tuple[str, int], FunctionLines]:
             begin_line=begin_line,
             lines=tuple(lines),
             code=function.code,
+            source_file=coff.source_files[symbol_index],
         )
     return out

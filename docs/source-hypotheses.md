@@ -290,3 +290,32 @@ without changing any other terrain score. The whole function now has retail's
 nor a labelled outer header restores the single retail header in this context.
 Reference/pointer gap receivers lose agreement; no such tied/lower form is
 adopted. This isolates a source-loop lowering difference, not an inliner fix.
+
+The remaining coordinate-constructor call in the repair method can be probed
+through its canonical horizontal/vertical gap predicates:
+
+```sh
+PYTHONPATH=scripts python scripts/experiments/generate-rmg-gap-points-hypotheses.py \
+  build/rmg-gap-points.json
+homm3 hypotheses build/rmg-gap-points.json -j 6 --keep-top 10
+PYTHONPATH=scripts python scripts/experiments/generate-rmg-gap-points-hypotheses.py \
+  build/rmg-gap-points-order.json \
+  --order-from build/hypotheses/GAP_POINTS_BATCH/results.json
+homm3 hypotheses build/rmg-gap-points-order.json -j 6 --keep-top 10
+```
+
+The first 60 cross five named point lifetimes, three short-circuit scopes and
+four site selections (horizontal, vertical, both, or both second neighbours).
+The next 60 cross the top ten completed parents with all six orders of the
+two predicates and the adjacent transition painter, moving whole definitions
+with their evidence comments and preserving each canonical helper once.
+The parent source hash, unit and function must agree; the baseline is always
+compiled separately. No retained helper body is pasted into its caller.
+
+All 120 compile in the `157638d4` context, but none improves any terrain score.
+The best primary score is 90.4604%, below the unchanged 91.3390% baseline,
+and that candidate reduces the vertical predicate from 100% to 78.9709%.
+Keep the original bodies and order. The native C++98 oracle uses the actual
+grid-point declaration and checks 33,750 cases per candidate: unsigned edge
+arithmetic, short-circuit dimension queries, ordered neighbour coordinates,
+terrain comparisons, byte-normalized results and unchanged input points.
