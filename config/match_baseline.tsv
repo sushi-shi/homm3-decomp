@@ -676,7 +676,7 @@ bitmap16	?fillRect@Bitmap16Bit@@QAEXHHHHG@Z	100.0000	100.0000	100.0000	0x4e4c0	a
 bitmap16	?frameRect@Bitmap16Bit@@QAEXHHHHG@Z	100.0000	100.0000	100.0000	0x4e540	c99a87e75087
 bitmap16	?getSize@Bitmap16Bit@@UBEIXZ	100.0000	100.0000	100.0000	0x4e240	a246c8b9a5dd
 bitmap16	?grab@Bitmap16Bit@@QAEXPBGHHHHH@Z	97.7093	97.7093	97.7093	0x4e3f0	0adc458837e8
-bitmap16	?reference@Bitmap16Bit@@QAEXHHHPAG@Z	94.7568	94.7568	94.7568	0x4e250	f8af3ddb21d7
+bitmap16	?reference@Bitmap16Bit@@QAEXHHHPAG@Z	100.0000	100.0000	100.0000	0x4e250	49e485ce684f
 bitmap16	?remap@Bitmap16Bit@@QAEXH@Z	100.0000	100.0000	100.0000	0x4e130	fbeb4217e8f9
 bitmap24	??0Bitmap24Bit@@QAE@PBD0@Z	100.0000	100.0000	100.0000	0x4ee00	3124dc821125
 bitmap24	??0Bitmap24Bit@@QAE@PBDHHPBEH@Z	100.0000	100.0000	100.0000	0x4ed50	7478655dcf27
@@ -1278,7 +1278,7 @@ customcampaign	?getIconDefName@TCampaignResourceBonus@@UBEPBDXZ	100.0000	100.000
 customcampaign	?getIconDefName@TCampaignSecondarySkillBonus@@UBEPBDXZ	100.0000	100.0000	100.0000	0x84c30	4e3363c90b33
 customcampaign	?getIconDefName@TCampaignSpellBonus@@UBEPBDXZ	100.0000	100.0000	100.0000	0x84090	cce682615598
 customcampaign	?getIconDefName@TCampaignStartBonusOption@@UBEPBDPAXH@Z	100.0000	100.0000	100.0000	0x85450	d29757baddb7
-customcampaign	?getIconDefName@TCampaignStartCrossoverOption@@UBEPBDPAXH@Z	96.0714	96.0714	96.0714	0x854c0	93a83e85c2da
+customcampaign	?getIconDefName@TCampaignStartCrossoverOption@@UBEPBDPAXH@Z	100.0000	100.0000	100.0000	0x854c0	ba77d96254d1
 customcampaign	?getIconDefName@TCampaignStartHeroOption@@UBEPBDPAXH@Z	100.0000	100.0000	100.0000	0x85a60	7fa18719d75f
 customcampaign	?getIconIndex@TCampaignCreatureBonus@@UBEHXZ	100.0000	100.0000	100.0000	0x84560	372fa8658a1f
 customcampaign	?getIconIndex@TCampaignPrimarySkillBonus@@UBEHXZ	100.0000	100.0000	100.0000	0x848f0	c82cf708f523
@@ -1772,7 +1772,7 @@ findpath	?pushCombatPoint@searchArray@@QAEXHHHHH@Z	98.9844	98.9844	98.9844	0xb3b
 findpath	?pushPoint@searchArray@@QAEXPBUpathCell@@PAU2@HHHJUtype_point@@H@Z	87.5488	87.5488	87.5488	0xb1a70	0aaacbaac5af
 findpath	?seedCombatPosition@searchArray@@QAEXPBVarmy@@JJEJ@Z	89.8177	89.8177	89.8177	0xb2da0	54d09b96dc35
 findpath	?setMoat@searchArray@@QAEXPBVarmy@@@Z	100.0000	100.0000	100.0000	0xb3290	56a5ff422e44
-findpath	?testPossibleDirections@searchArray@@QAEXPAVhero@@PAUpathCell@@JJEUtype_point@@JW4type_search_type@@J@Z	99.2000	99.2000	99.2000	0xb2300	52f45b63917d
+findpath	?testPossibleDirections@searchArray@@QAEXPAVhero@@PAUpathCell@@JJEUtype_point@@JW4type_search_type@@J@Z	99.2000	99.2000	99.2000	0xb2300	9a2d97529a9a
 fly	?fly@army@@QAEHH@Z	100.0000	100.0000	100.0000	0xb4a40	bc38ecc96955
 fly	?flyTo@army@@QAEHHE@Z	100.0000	100.0000	100.0000	0xb49c0	2603329d0caa
 fly	?teleport@army@@QAEHH@Z	100.0000	100.0000	100.0000	0xb4f10	0c3ae8e3cc53
@@ -2226,7 +2226,7 @@ hero	?getNumberInBackpack@hero@@QAEJE@Z	100.0000	100.0000	100.0000	0xd90c0	f9091
 hero	?getObscuredTown@type_obscuring_object@@QAEPAVtown@@XZ	100.0000	100.0000	100.0000	0xd7490	2731661469a5
 hero	?getOffenseFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe42b0	325d21db2b8c
 hero	?getPlayer@hero@@QAEPAVplayerData@@XZ	100.0000	100.0000	100.0000	0xe56b0	976552be266a
-hero	?getPrimarySkillTotal@hero@@QAEFXZ	99.5833	99.5833	99.5833	0xe5960	1bb95188b2aa
+hero	?getPrimarySkillTotal@hero@@QBEFXZ	99.5833	99.5833	99.5833	0xe5960	eb94d8f7c462
 hero	?getRolloverText@type_artifact@@QBEXPAD@Z	100.0000	100.0000	100.0000	0xdb350	9dea836b751b
 hero	?getSkillAward@@YI?AW4TSecondarySkill@@PBVhero@@W4TSkillMastery@@1W41@@Z	98.8073	98.8073	98.8073	0xdad00	aa8f6004b61c
 hero	?getSpecialTerrain@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe4fa0	105ef25bcf18
@@ -2417,7 +2417,7 @@ kb	?getMap@Bitmap16Bit@@QAEPAGHH@Z	100.0000	100.0000	100.0000	0xefff0	4c8a40afbb
 kb	?getMapExtra@@YIGHHH@Z	100.0000	100.0000	100.0000	0xf79b0	780098ddc36c
 kb	?getMapExtraPtr@@YIPAGHHH@Z	100.0000	100.0000	100.0000	0xf79e0	74015c7ea64d
 kb	?getMapScore@game@@QAEFXZ	100.0000	100.0000	100.0000	0xf3eb0	0c040af5f3df
-kb	?getNextHumanPlayer@@YIHH@Z	95.1191	95.1191	95.1191	0xf4ba0	8eaa1f2fcbd2
+kb	?getNextHumanPlayer@@YIHH@Z	95.1191	95.1191	95.1191	0xf4ba0	7e51b9d54c32
 kb	?getQuickviewSize@@YIXPBDPAH1@Z	100.0000	100.0000	100.0000	0xf62a0	fa30d7d2e5ff
 kb	?getTeamNames@@YIEHPAD@Z	100.0000	100.0000	100.0000	0xf1460	a4074e6804ee
 kb	?handleAppSpecificMenuCommands@@YIHH@Z	100.0000	100.0000	100.0000	0xf4350	b93f2316c221
@@ -2776,7 +2776,7 @@ objecttype	?_Tidy@?$_Tidyfac@V?$ctype@D@std@@@std@@SAXXZ	100.0000	100.0000	100.0
 objecttype	?_Tidy@?$_Tidyfac@V?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@@std@@SAXXZ	100.0000	100.0000	100.0000	0x11b170	-
 objecttype	?_Xinv@?$bitset@$08@std@@ABEXXZ	100.0000	100.0000	100.0000	0x117680	-
 objecttype	?_Xinv@?$bitset@$0DA@@std@@ABEXXZ	100.0000	100.0000	100.0000	0x116e40	-
-objecttype	?accepts@TAnyTerrainObjectFilter@@UBEEPBUTObjectType@@@Z	99.3750	99.3750	100.0000	0x114220	c5118ecee1d0
+objecttype	?accepts@TAnyTerrainObjectFilter@@UBEEPBUTObjectType@@@Z	100.0000	100.0000	100.0000	0x114220	7deea8c36d17
 objecttype	?accepts@TNativeTerrainObjectFilter@@UBEEPBUTObjectType@@@Z	100.0000	100.0000	100.0000	0x1141b0	0d7a6271bcff
 objecttype	?accepts@TSlotCategoryObjectFilter@@UBEEPBUTObjectType@@@Z	100.0000	100.0000	100.0000	0x114260	470559ccd07a
 objecttype	?clear@?$basic_ios@DU?$char_traits@D@std@@@std@@QAEXH_N@Z	100.0000	100.0000	100.0000	0x117af0	-
@@ -3287,12 +3287,15 @@ rmg	?filterZonePositions@type_random_map_generator@@QAEXPAUTRmgZone@@AAV?$vector
 rmg	?findZone@TRmgTemplate@@QAEPAUTRmgTownSlot@@H@Z	100.0000	100.0000	100.0000	0x1330a0	046ded3d298b
 rmg	?floodConnectionRegion@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	81.7786	84.8000	84.8000	0x141780	5cf7083c6a52
 rmg	?getLand@TRmgMapAdapter@@UAEHABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x132830	07d537798ace
+rmg	?getLand@TRmgRoadMapAdapter@@UAEHABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x132480	8e0b8e78a32d
 rmg	?getLand@type_random_map@@UAEHABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x1322c0	7c46881ce0c6
 rmg	?getMapItem@type_random_map@@QAEPAUTRmgMapItem@@UTRmgMapPosition@@@Z	100.0000	100.0000	100.0000	0x1378e0	6cf5b1e45767
 rmg	?getOverlay@TRmgMapAdapter@@UAEHABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x132860	a8d1630d863b
+rmg	?getOverlay@TRmgRoadMapAdapter@@UAEHABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x1324b0	0355d9bfd7da
 rmg	?getOverlay@type_random_map@@UAEHABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x1322f0	196fa5fc4193
 rmg	?getRmgGuardValue@@YIHHH@Z	100.0000	100.0000	100.0000	0x145e00	d88a58e28d17
 rmg	?getSize@type_random_map@@UAE?AUTRmgGridPoint@@XZ	97.5556	97.5556	100.0000	0x132240	505c3a1069ef
+rmg	?getTile@TRmgRoadMapAdapter@@UAE?AUrmgTerrainTile@@ABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x132410	1476ea8c4866
 rmg	?getTile@type_random_map@@UAE?AUrmgTerrainTile@@ABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x132260	8014560cbb01
 rmg	?getValue@type_key_tent_def@@UAEHPAX0@Z	100.0000	100.0000	100.0000	0x134fa0	434cfc16f2f8
 rmg	?getValue@type_treasure_def@@UAEHPAX0@Z	100.0000	100.0000	100.0000	0x134190	ee5cc0f97d30
@@ -3312,7 +3315,9 @@ rmg	?repairWaterZoneBorders@type_random_map_generator@@QAEXXZ	100.0000	100.0000	
 rmg	?scoreObjectPlacement@type_random_map_generator@@QAEHPAUTRmgObjectPropertiesRef@@UTRmgMapPosition@@@Z	84.6788	84.6788	84.6788	0x136bc0	4c927d8360f4
 rmg	?selectObjectPrototype@type_random_map_generator@@QAEPAUTRmgObjectPropertiesRef@@W4TTerrainType@@HH@Z	99.6581	99.6581	99.6581	0x146040	13a1816fda39
 rmg	?set@?$bitset@$0IB@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0x14ded0	-
+rmg	?setOverlay@TRmgRoadMapAdapter@@UAEXABUTRmgGridPoint@@H@Z	100.0000	100.0000	100.0000	0x1323d0	d4145edc1d7d
 rmg	?setOverlay@type_random_map@@UAEXABUTRmgGridPoint@@H@Z	100.0000	100.0000	100.0000	0x132200	0a641c95744c
+rmg	?setTile@TRmgRoadMapAdapter@@UAEXABUTRmgGridPoint@@ABUrmgTerrainTile@@@Z	100.0000	100.0000	100.0000	0x132360	c6b27813378a
 rmg	?setTotal@TProgressSink@@UAEXH@Z	100.0000	100.0000	100.0000	0x130e80	1a97545cc047
 rmg	?size@?$vector@UTRmgZoneConnection@@V?$allocator@UTRmgZoneConnection@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x14c1b0	-
 rmg	?traceZoneBoundary@type_random_map_generator@@QAEXPAUTRmgBoundaryVertex@@E@Z	86.6846	86.6846	86.6846	0x13c390	5f6a818cd691
@@ -3320,7 +3325,7 @@ rmg	?unknownOperation@rmgHeroObject@@UAEXXZ	100.0000	100.0000	100.0000	0x133c70	
 rmg	?write@rmgMonsterObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x1331f0	d6e36466fdab
 rmg	?write@rmgOwnableObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x133460	e8476ac4278c
 rmg	?write@type_object@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x133170	1d471e0487dd
-rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	93.2786	93.2864	95.7066	0x149cb0	d9e51f6131ce
+rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	93.2864	93.2864	95.7066	0x149cb0	d9e51f6131ce
 rmg	__h3cg$rmg$static_ctor$g_rmgRiverPatternTable	100.0000	100.0000	100.0000	0x15ed70	-
 rmg	__h3cg$rmg$static_ctor$g_rmgRoadPatternTable	100.0000	100.0000	100.0000	0x15f2f0	-
 rmg	__h3cg$rmg$static_dtor$g_rmgRiverPatternTable	100.0000	100.0000	100.0000	0x15ed90	-
@@ -3470,7 +3475,7 @@ search	?buildPath@searchArray@@QAEHPBVhero@@J@Z	82.5524	82.5524	86.3333	0x16a0d0
 search	?checkAdjacentMonster@@YIEPBVhero@@PAUpathCell@@W4type_search_type@@@Z	93.2615	93.2615	93.2615	0x16a360	619c5a33d7f6
 search	?checkTownPortal@searchArray@@QAEXPBVhero@@PBUpathCell@@J@Z	100.0000	100.0000	100.0000	0x16b050	945fe7a3a9ba
 search	?enterGate@searchArray@@QAEXPBUpathCell@@PBVNewmapCell@@J@Z	100.0000	100.0000	100.0000	0x16a730	723b59ac6829
-search	?enterHostileTrigger@searchArray@@QAEEPBVhero@@PAUpathCell@@@Z	91.5385	91.5385	91.5385	0x16aad0	ffab53ca5622
+search	?enterHostileTrigger@searchArray@@QAEEPBVhero@@AAUpathCell@@@Z	100.0000	100.0000	100.0000	0x16aad0	95b0f78269aa
 search	?enterLith@searchArray@@QAEXPBVhero@@PBV?$vector@Utype_point@@V?$allocator@Utype_point@@@std@@@std@@JJPAUpathCell@@JW4type_search_type@@@Z	97.6539	97.6539	97.6539	0x16a400	b83bf5f72933
 search	?enterTown@searchArray@@QAEXPBVhero@@JPBUpathCell@@JW4type_search_type@@@Z	94.5049	94.5049	94.5049	0x16a850	ba05be186b3a
 search	?enterTrigger@searchArray@@QAEEPBVhero@@PAUpathCell@@JW4type_search_type@@@Z	97.9349	97.9349	97.9349	0x16ab40	f5a929009b6b
@@ -3799,7 +3804,7 @@ singleselectionwindow	?onGameHeaderInfoMsg@TSingleSelectionWindow@@QAEEPAVCNetMs
 singleselectionwindow	?onGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x189b20	8e4147210f6f
 singleselectionwindow	?onKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0	7c981f53347e
 singleselectionwindow	?onKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	f183438c0b88
-singleselectionwindow	?onKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0	19df4c126528
+singleselectionwindow	?onKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0	19df4c126528
 singleselectionwindow	?onMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	90.2193	90.2193	90.2193	0x189710	7126e292297e
 singleselectionwindow	?onNameClick@TSingleSelectionWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x18b620	ba916481d9d5
 singleselectionwindow	?onNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18b510	5ecad9defc70
