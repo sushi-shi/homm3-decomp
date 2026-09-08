@@ -3107,6 +3107,14 @@ unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero
     return gave;
 }
 
+// Shared retail clear representative at 0x54c120. Dreamcast show_rewards
+// (dc 0x912bc, events.cpp:826) proves vector<type_dialog_resource>::clear;
+// eight expanded flushes in retail giveBlackBoxReward call this body.
+// Retail also folds SHeaderRequest clear and RMG treasure-list clears onto
+// this address. This claim binds the naturally emitted reward specialization,
+// without attributing the shared body exclusively to an RMG source type.
+VA_COMPGEN(0x0054c120, 0x43, VECTOR_CLEAR, type_dialog_resource)
+
 // E:\gamedcs\events.cpp:826.  The page flusher, Dreamcast's
 // show_rewards: once `threshold` lines are pending, show the page and
 // reset both collectors. Retail calls it for the first five reward sites;
