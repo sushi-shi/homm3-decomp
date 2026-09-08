@@ -6680,12 +6680,15 @@ static __forceinline bool testNewMapSpell(
 }
 
 // Before normalization (function): assign_map_hero_name.
+// Retail keeps the string assign call in readMapHeroSetups and
+// readMapPlayerSlot. The former inline-depth pin forced it; removing it
+// changes the setup reader from 86.08842% to 51.72866% and the player reader
+// from 67.55869% to 55.81455% in isolation. Preserve the source assignment
+// while recovering its natural nested boundary; setup's MAX/HIST survives.
 static __forceinline void assignMapHeroName(
     std::string& destination, const std::string& source)
 {
-#pragma inline_depth(0)
     destination.assign(source, 0, std::string::npos);
-#pragma inline_depth()
 }
 
 // Before normalization (function): read_map_player_name.
@@ -7612,7 +7615,8 @@ int NewSMapHeader::loadLossCondition(char type, TAbstractFile* infile,
 // record.  Player heroes are resized from a dword count after the separate
 // one-byte default-placeholder count; their ids use only 0xff as a sentinel.
 //
-// Residual (95.69718%, 2026-08-26): 58 candidate blocks against retail's 59,
+// Historical shim calibration (95.69718%, 2026-08-26): 58 candidate blocks
+// against retail's 59,
 // with 41 exact skeleton blocks and the complete scalar/vector flow present.
 // The 0x48-vs-0x3c frame comes from three stack-coloring misses: retail reuses
 // the dead input/version slots for the word and count reads and for its two
@@ -7653,10 +7657,8 @@ void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
         m_hasRandomAlignment = charBuffer != 0;
         if (m_hasRandomAlignment)
             m_legalAlignments |= 0x100;
-#pragma inline_depth(0)
         if (!g_gameContextFeatures[*g_videoGameState].test(1))
             m_legalAlignments &= 0xfeff;
-#pragma inline_depth()
 
         infile->read(&charBuffer, sizeof(charBuffer));
         m_hasMainTown = charBuffer != 0;
@@ -7688,9 +7690,7 @@ void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
     if (m_nonRandomHeroId != -1) {
         m_nonRandomHeroCustomPortrait =
             readMapHeaderHeroId(infile, mapVersion);
-#pragma inline_depth(2)
         readMapPlayerName(m_nonRandomHeroCustomName, infile);
-#pragma inline_depth()
     } else {
         m_nonRandomHeroCustomPortrait = -1;
         m_nonRandomHeroCustomName[0] = 0;
@@ -7713,6 +7713,11 @@ void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
     // scaffold below leaves every game.obj comparison row unchanged,
     // including this reader at 67.5587; only real callers now use the
     // hero-identity vector in this TU.
+    // Removing the feature-test pin above now naturally emits _Destroy;
+    // the player reader rises from 67.55869% to 71.60329% in that control.
+    // Removing the name-reader pin alone is flat; removing the assignment
+    // pin alone gives 55.81455%. With all three removed, _Destroy still
+    // emits and the caller is 57.89906%. The std::copy boundary is unresolved.
     m_heroes.clear();
     if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA)
         return;
@@ -18922,6 +18927,13 @@ VA_COMPGEN(0x004d1790, 0x15, BITSET_TIDY, Bitset5)
 VA_COMPGEN(0x004d1830, 0x17, BITSET_TIDY, Bitset28)
 VA_COMPGEN(0x004cf040, 0x6A, BITSET_REFERENCE_ASSIGN, Bitset156)
 VA_COMPGEN(0x004cfe30, 0x8F, VECTOR_ERASE, type_map_hero_identity)
+// Exact: removing readMapPlayerSlot's feature-test inline-depth pin lets
+// VC6 retain this ordinary Dinkumware destructor loop. Its 35 bytes match
+// retail after the single call relocation. The called identity destructor
+// and retail's ICF representative Sign::~Sign at 0x4b9230 have identical
+// 62-byte bodies and the same operator-delete relocation; the name-only
+// difference in sema's call view is therefore a proven folded destructor.
+// Removing the two name-handling pins as well preserves this exact body.
 VA_COMPGEN(0x004cfec0, 0x23, VECTOR_DESTROY, type_map_hero_identity)
 VA_COMPGEN(0x004d2050, 0x32, TREE_MIN, type_map_hero_info)
 VA_COMPGEN(0x004cff50, 0x115, TREE_INSERT, type_map_hero_info)

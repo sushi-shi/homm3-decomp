@@ -1847,3 +1847,22 @@ subscript is the 96.6753% negative control. Other hero scores are unchanged.
 Preserve the shared interface, source statement boundaries, and ordinary
 helper body. A second overload can silently select a different expansion;
 an inline keyword or a flattened caller can conceal that modelling error.
+
+### An earlier pin can suppress a later retained container helper
+
+`readMapPlayerSlot` (0x4c3ef0) expanded the nested hero-identity vector
+`_Destroy`, despite its retained retail body at 0x4cfec0. Removing only the
+inline-depth pin around the earlier feature-bit test naturally emits all
+35 bytes and changes the caller from 67.55869% to 71.60329%. Removing only
+the custom-name reader's pin is flat; removing only the shared assignment
+pin does not emit `_Destroy`. Removing all three still emits the exact
+helper. The caller and shared assignment-caller collateral are recorded
+beside their source operations in game.cpp.
+
+The relevant boundary can precede the container operation. Inspect earlier
+pragma controls and the named call sequence before attributing non-emission
+to the container declaration or adding an emission caller. Here the retained
+loop calls a destructor whose retail ICF name is `Sign::~Sign`; its code and
+operator-delete relocation are identical to the hero-identity destructor.
+That callee identity must be checked before treating the call-name mismatch
+as different behavior.
