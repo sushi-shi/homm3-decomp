@@ -432,7 +432,6 @@ def update_rows(current: dict, previous: dict, rvas: dict,
     rows, consumed = {}, set()
     stats = {"added": 0, "raised": 0, "reset": 0,
              "migrated": 0, "retired": 0}
-    claimed_rvas = set(rvas.values())
     for key, raw_value in current.items():
         value = round(raw_value, 4)
         rva = rvas.get(key)
@@ -460,10 +459,13 @@ def update_rows(current: dict, previous: dict, rvas: dict,
             rva if rva is not None else old.rva,
             current_hash if current_hash is not None else old.src_hash)
 
+    represented_rvas = {row.rva for row in rows.values() if row.rva is not None}
     for key, old in previous.items():
         if key in consumed or key in rows:
             continue
-        if old.rva is not None and old.rva in claimed_rvas:
+        # The source map includes claims outside the current report. Only
+        # an actual replacement row can retire an old label's history.
+        if old.rva is not None and old.rva in represented_rvas:
             continue
         # Old flat labels had no RVA. A missing 0% row records no matching
         # achievement, so label promotion may retire it without losing history.

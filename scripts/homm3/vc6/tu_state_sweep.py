@@ -36,15 +36,13 @@ from homm3.match import status
 from homm3.vc6._unit import compile_text, source_for_unit
 
 
-GENERATOR_VERSION = 6
+GENERATOR_VERSION = 7
 DEFAULT_SEED = 20260906
 DEFAULT_TRIALS = 30
 MIN_HEADERS_PER_TRIAL = 5
 MAX_HEADERS_PER_TRIAL = 10
 _INCLUDE_DIRECTIVE = re.compile(
     r'^\s*#\s*include\s*[<"]([^>"]+)[>"]', re.M)
-_SOURCE_MARKER = re.compile(
-    r'^[ \t]*(?:VA(?:_COMPGEN)?|DATA(?:_COMPGEN)?|DC_ONLY)\(', re.M)
 _MACRO_DEFINITION = re.compile(
     r'^\s*#\s*define\s+([A-Za-z_]\w*)', re.M)
 _IDENTIFIER = re.compile(r'\b[A-Za-z_]\w*\b')
@@ -177,19 +175,54 @@ def insert_variant(original: str, insertions: tuple[tuple[int, int, int], ...],
 
 
 def _initial_include_insertion(text: str) -> tuple[int, int]:
-    """Insert once after the TU's initial include block, before any body."""
-    first_marker = _SOURCE_MARKER.search(text)
-    limit = first_marker.start() if first_marker else len(text)
-    includes = [match for match in _INCLUDE_DIRECTIVE.finditer(text)
-                if match.start() < limit]
-    if includes:
-        # Consume the whole directive, including trailing comments. Inserting
-        # after the closing quote can join two directives or comment out the
-        # first injected header while still producing a successful compile.
-        end = text.find("\n", includes[-1].end())
-        offset = end + 1 if end >= 0 else len(text)
-    else:
-        offset = _top_level_insertion_offset(text)
+    """Insert at an unconditional boundary in the TU's initial directives.
+
+    Do not evaluate #if expressions: even a currently active branch is an
+    unsafe home for a disposable include. Stop before the first declaration,
+    and never split comments or backslash-continued directives.
+    """
+    from homm3.retail_labels.source import mask_lexical_noise
+
+    # Splice logical lines before lexing, retaining a map to physical offsets.
+    logical, boundaries = [], []
+    pending, physical = "", 0
+    for line in text.splitlines(keepends=True):
+        physical += len(line)
+        if re.search(r'\\\r?\n$', line):
+            pending += re.sub(r'\\\r?\n$', '', line)
+            continue
+        logical.append(pending + line)
+        boundaries.append(physical)
+        pending = ""
+    # An unfinished continued directive is not a safe insertion boundary.
+    spliced = "".join(logical) + pending
+    masked = mask_lexical_noise(spliced)
+    # The shared masker preserves newlines inside comments. Track their spans
+    # too, so a blank masked line cannot place headers inside a block comment.
+    tokens = re.compile(
+        r'/\*[\s\S]*?(?:\*/|\Z)|//[^\n]*|"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'')
+    comments = [(m.start(), m.end()) for m in tokens.finditer(spliced)
+                if m.group().startswith("/*")]
+    offset = position = depth = 0
+    for line, physical in zip(logical, boundaries):
+        end = position + len(line)
+        stripped = masked[position:end].strip()
+        directive = re.match(r'#\s*(\w+)', stripped)
+        if stripped and not directive:
+            break
+        if directive:
+            kind = directive.group(1)
+            if kind in ("if", "ifdef", "ifndef"):
+                depth += 1
+            elif kind == "endif":
+                if depth == 0:
+                    break
+                depth -= 1
+            elif kind in ("else", "elif") and depth == 0:
+                break
+        if depth == 0 and not any(start < end < stop for start, stop in comments):
+            offset = physical
+        position = end
     return offset, _logical_line_at(text, offset)
 
 

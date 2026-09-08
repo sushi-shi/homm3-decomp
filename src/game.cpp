@@ -13190,6 +13190,9 @@ VA_COMPGEN(0x004d1920, 0x359, VECTOR_INSERT, CObjectType)
 VA_COMPGEN(0x004d1c80, 0xCB, BITSET_XRAN, Bitset70)
 VA_COMPGEN(0x004d2090, 0xCB, BITSET_XRAN, Bitset156)
 VA_COMPGEN(0x004d2160, 0x31, VECTOR_UFILL, TBlackMarket)
+// The black-market vector's retained uninitialized copy advances by its
+// proven 28-byte stride.  The emitted specialization matches all 59 bytes.
+VA_COMPGEN(0x0054d920, 0x3B, VECTOR_UCOPY, TBlackMarket)
 VA_COMPGEN(0x004d21a0, 0x3E, VECTOR_UCOPY, town)
 VA_COMPGEN(0x004d21e0, 0x2C, VECTOR_UFILL, town)
 VA_COMPGEN(0x004d2210, 0x3B, VECTOR_UCOPY, boat)
@@ -18784,8 +18787,7 @@ VA_COMPGEN(0x0045c8b0, 0xAD, TREE_ERASE, type_map_hero_info)
 // and then trims the top word with `and dword ptr [esi], 0x1ffff` - a mask
 // of exactly N % 32 = 17 bits, so N = 4*32 + 17 = 145. Its two neighbours
 // 0x48c0b0 and 0x48ed20 are the same body with masks 0xffff and 1, i.e.
-// bitset<144> and bitset<129>. game.obj now emits both specializations from
-// the recovered readers, so the 144-bit body can be bound directly here.
+// bitset<144> and bitset<129>. The 129-bit specialization is emitted by
+// customcampaign.obj and is claimed with its campaign reader below.
 VA_COMPGEN(0x0048d480, 0x28, BITSET_TIDY, Bitset145)
 VA_COMPGEN(0x0048c0b0, 0x28, BITSET_TIDY, Bitset144)
-VA_COMPGEN(0x0048ed20, 0x25, BITSET_TIDY, Bitset129)
