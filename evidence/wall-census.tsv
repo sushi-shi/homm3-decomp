@@ -107,7 +107,6 @@ not diagnosed	31	84.4118	84.4118	0.0000	84.4118	201	game	?claimGarrison@game@@QA
 not diagnosed	96	84.4576	84.4576	0.0000	84.4576	620	campaignwindow	?campaignWindowHandler@@YIHAAVmessage@@@Z	diagnose	-
 not diagnosed	169	84.5139	100.0000	15.4861	84.5139	1091	remote	?handleMPlayerLaunch@@YIEXZ	diagnose	-
 not diagnosed	109	84.5280	84.5280	0.0000	84.5280	703	soundmgr	?open@soundManager@@UAEHH@Z	diagnose	-
-not diagnosed	263	84.5868	84.5868	0.0000	79.7112	1708	ai_player	?makeGift@type_AI_player@@QAEXJ@Z	diagnose	-
 not diagnosed	233	84.6788	84.6788	0.0000	84.6788	1524	rmg	?scoreObjectPlacement@TRmgGeneratorBase@@QAEHPAUTRmgObjectPropertiesRef@@UTRmgMapPosition@@@Z	diagnose	-
 not diagnosed	60	84.8000	84.8000	0.0000	84.8000	397	rmg	?floodConnectionRegion@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z	diagnose	-
 not diagnosed	77	84.8547	84.8547	0.0000	84.8547	510	armygrp	?merge@armyGroup@@QAEEPAV1@@Z	diagnose	-
@@ -137,6 +136,7 @@ not diagnosed	27	86.3333	90.9167	4.5834	86.3333	201	remote	??1CWaitForReadyPlaye
 not diagnosed	200	86.3549	86.6362	0.2813	86.3549	1466	philai	?moveHero@@YIXPAVhero@@PAJEPAE@Z	diagnose	-
 not diagnosed	98	86.3656	86.3656	0.0000	86.3656	721	advmgr	?close@advManager@@UAEXXZ	diagnose	-
 not diagnosed	145	86.3747	92.6970	6.3223	86.3747	1065	army	?spellIsValidOnTarget@@YIEHPBVarmy@@@Z	diagnose	-
+not diagnosed	230	86.5174	86.5174	0.0000	86.5174	1708	ai_player	?makeGift@type_AI_player@@QAEXJ@Z	diagnose	-
 not diagnosed	91	86.5872	86.5872	0.0000	86.5872	680	rmg	??0type_random_map_generator@@QAE@HHHHHHHHHPAVTProgressSink@@H@Z	diagnose	-
 not diagnosed	92	86.6570	86.6570	0.0000	86.6570	693	viewarmywindow	?createSpellInfluenceWidgets@TViewArmyWindow@@QAEXPBVarmy@@@Z	diagnose	-
 not diagnosed	71	86.6667	100.0000	13.3333	86.6667	533	adventuremapwindow	?setSleepImage@TAdventureMapWindow@@QAEXH@Z	diagnose	-

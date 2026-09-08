@@ -556,7 +556,7 @@ compiled	1688	0x00584550	98.9811	98.9811	98.9811	singleselectionwindow	singlesel
 compiled	1689	0x005a4bc0	93.9013	93.9013	93.9013	spells	spells	?armageddon@combatManager@@QAEXHH@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	1695	0x004d7a20	87.9412	87.9412	87.9412	hero	hero	?load@hero@@QAEHPAVTAbstractFile@@H@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	1696	0x00441610	98.8868	98.9251	99.9962	army	army	?doAttack@army@@QAEEPAV1@H@Z	admitted	run the evidence pass and iterate up to five scored candidates
-compiled	1708	0x00429110	79.7112	84.5868	84.5868	ai_player	ai_player	?makeGift@type_AI_player@@QAEXJ@Z	admitted	run the evidence pass and iterate up to five scored candidates
+compiled	1708	0x00429110	86.5174	86.5174	86.5174	ai_player	ai_player	?makeGift@type_AI_player@@QAEXJ@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	1714	0x005f3b50	92.2569	92.2569	92.2569	viewarmywindow	viewarmywindow	??0TViewArmyWindow@@QAE@PAVarmyGroup@@HPBVhero@@PBVtown@@HHHEEE@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	1720	0x0042fee0	84.6930	85.9228	85.9228	ai_player	ai_player	?aiAttemptMove@@YIXPAVhero@@AAUHeroDestination@@AAJE@Z	admitted	run the evidence pass and iterate up to five scored candidates
 compiled	1724	0x0047c9e0	95.9000	95.9000	95.9000	cspriteframe	cspriteframe	?drawCreatureImpl@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@EGE@Z	admitted	run the evidence pass and iterate up to five scored candidates
