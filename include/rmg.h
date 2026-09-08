@@ -453,9 +453,10 @@ struct TRmgTownSlot {
     int m_parameters004c[7];
     // Before normalization: parameters0068.
     int m_parameters0068[7];
-    // Before normalization: flag0084. Role recovered from chooseTerrain
-    // 0x532ab0: select the aligned town terrain when an alignment exists.
-    unsigned char m_matchTownTerrain;
+    // Before normalization: flag0084. chooseTerrain 0x532ab0 uses this
+    // template byte to prefer the aligned town's native terrain table.
+    // Complete-only provisional role name.
+    unsigned char m_useNativeTerrain;
     // Before normalization: allowedTerrain.
     unsigned char m_allowedTerrain[8];  // +0x85
     // Before normalization: monsterStrength.
@@ -1346,6 +1347,8 @@ struct TRmgTreasureGroup {
     unsigned char m_hasGuard;               // +0x48, cleared by reset
     char m_padding0049[3];
     // Previously part of opaque0049; addGuard stores x/y at 0x53556f.
+    // canPlaceTreasureGroup reads x/y
+    // from +0x4c/+0x50 before translating the guard's neighborhood.
     TPoint m_guardPosition;                 // +0x4c
     // Retail commitTreasureGroup 0x5469ca stores the selected map offset.
     // Role-derived name; previously part of opaque0049.
@@ -1622,7 +1625,12 @@ struct TRmgZone {
     // Before normalization: opaque0008.
     int m_townType2;
     // Before normalization: terrain.
-    TTerrainType m_terrain;             // +0x0c, mine prototype terrain domain
+    // chooseTerrain 0x532ab0 stores the integer ordinal from its 0..7
+    // selection loop; tryPlaceMine uses the same ordinal as a bitset index.
+    // There is no DC enum ABI for this Complete-only field. Keep the field
+    // and its local consumer consistent instead of casting into an inferred
+    // enum after every selection. Named terrain constants share the encoding.
+    int m_terrain;                      // +0x0c
     // Before normalization: levelPosition.
     TRmgMapPosition m_levelPosition;   // +0x10
     // Before normalization: boundaryRoughness.

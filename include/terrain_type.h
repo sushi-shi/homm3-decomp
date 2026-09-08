@@ -19,17 +19,4 @@ enum TTerrainType {
     eTerrainRock = 9
 };
 
-// Retail TRmgZone::chooseTerrain (0x532ab0) traverses the allowed-terrain
-// byte array with a signed integer index, then stores that ordinal directly
-// into its four-byte TTerrainType field. Representation bridge for ordinals.
-inline TTerrainType terrainFromInt(int value)
-{
-    union {
-        int m_integer;
-        TTerrainType m_terrain;
-    } converted;
-    converted.m_integer = value;
-    return converted.m_terrain;
-}
-
 #endif  // HOMM3_TERRAIN_TYPE_H
