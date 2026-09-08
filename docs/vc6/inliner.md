@@ -1728,3 +1728,14 @@ local alone and an unnamed min expression both score 86.8523%; compound-adding
 power scores 93.7045%. The order with the earlier damage read reaches 100%.
 The DC guard also assigns zero to the healed amount instead of returning;
 retail merges that assignment into its common destructor path.
+
+Equivalent control-flow spellings can change a helper's inline decision
+without changing its retained machine code. In RMG's `selectPrisonHero`,
+splitting `!disabled && --selected < 0` into a nested availability test,
+decrement statement and negative test preserves its exact 113-byte body.
+It also makes `type_prison_def::generate` retain the call at `0x5348dc`,
+recovering 9.0702% to 63.7193% before constructor refinement. A `continue`
+form has the same result; postdecrement and a shared-return form change
+the standalone body. Diagnose source control-flow boundaries even when
+the callee is already exact; emitted byte size alone does not fix the
+compiler's inline cost.
