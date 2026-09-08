@@ -3368,6 +3368,12 @@ void type_random_map_generator::filterZonePositions(
     }
 }
 
+// Retained by generation coordinator 0x549930; retail-only role/ABI.
+#if 0 // @carcass
+VA(0x0053BCB0, 0x33B)
+void type_random_map_generator::initializeZones(TRmgTemplate* mapTemplate) {} // @stub
+#endif
+
 // Retail keeps a vector of pending endpoints. Splitting pushes the old
 // endpoint followed by the perturbed midpoint; completed unit edges mark
 // the clamped starting cell and advance the current point.
@@ -3945,6 +3951,12 @@ void type_random_map_generator::buildZoneBoundaries(
     }
     joinExtraZones(originalZones, &diagram);
 }
+
+// Retained by generation coordinator 0x549930; retail-only role/ABI.
+#if 0 // @carcass
+VA(0x0053E6A0, 0x337)
+void type_random_map_generator::paintZoneTerrain() {} // @stub
+#endif
 
 // The midpoint-noise generator passes its work vector in ECX, center sample
 // in EDX, then the complete nine-dword region and four edge midpoints by
@@ -5688,6 +5700,12 @@ void type_random_map_generator::connectZones()
         m_progress->advance(0x1900);
 }
 
+// Retained by generation coordinator 0x549930; retail-only role/ABI.
+#if 0 // @carcass
+VA(0x005439E0, 0x283)
+void type_random_map_generator::decorateUnderground() {} // @stub
+#endif
+
 // The queued side branch supplies two points by value and a level. This
 // integer ray continues beyond 'toward' until the map edge or an existing
 // gate-marked tile in the 3x3 neighbourhood; the first two steps ignore
@@ -5877,6 +5895,12 @@ void type_random_map_generator::carveBranchingPaths()
     }
 }
 
+// Retained by generation coordinator 0x549930; retail-only role/ABI.
+#if 0 // @carcass
+VA(0x005446A0, 0x27E)
+void type_random_map_generator::prepareJunctionZone(TRmgZone* zone) {} // @stub
+#endif
+
 // Retail-only generation coordinator, called at 0x549b65. After the layout
 // passes it marks unassigned dry cells without objects or entrances, then
 // prepares water zones and runs the shared path/border/connection passes.
@@ -5917,7 +5941,7 @@ void type_random_map_generator::placePrimaryTown(TRmgZone* zone)
 {
     TRmgTownSlot* slot = zone->m_slot;
     int alignment = zone->m_alignment;
-    int player = m_playerIndexMap[slot->m_playerIndex];
+    int player = m_playerIndexMap[slot->m_playerIndex + 1];
     if (slot->m_parameters0020[1] > 0
         && tryPlacePrimaryTown(zone, alignment, player, 1))
         return;
@@ -5930,6 +5954,12 @@ void type_random_map_generator::placePrimaryTown(TRmgZone* zone)
     if (slot->m_parameters0020[4] > 0)
         tryPlacePrimaryTown(zone, alignment, -1, 0);
 }
+
+// Retained by generation coordinator 0x549930; retail-only role/ABI.
+#if 0 // @carcass
+VA(0x00544AE0, 0x2B0)
+void type_random_map_generator::placeAdditionalTowns(TRmgZone* zone) {} // @stub
+#endif
 
 // Direct caller 0x544a50 proves four stack arguments and byte success.
 // Retail rejects alignment -1, selects a town prototype, tests placement,
@@ -6368,6 +6398,12 @@ VA_COMPGEN(0x0054CFD0, 0x2F, VECTOR_ERASE, unsigned_char)
 // FilterZonePositions erases 12-byte positions through this forward copy;
 // the retained body copies three dwords and returns the end pointer.
 VA_COMPGEN(0x0054D9E0, 0x39, STD_COPY, TRmgMapPosition)
+
+// Retained by generation coordinator 0x549930; retail-only role/ABI.
+#if 0 // @carcass
+VA(0x00547360, 0x460)
+void type_random_map_generator::placeZoneTreasures(TRmgZone* zone) {} // @stub
+#endif
 
 // Complete's road-target pass at 0x548290 invokes this flood once for each
 // prospective source.  Retail proves the source-level worklist shape: two
@@ -7111,12 +7147,88 @@ void type_random_map_generator::createRivers()
     }
 }
 
-// Request bridge 0x54bf60 proves these generator callees; bodies pending.
-#if 0 // @carcass
-VA(0x00549930, 0x37B) // anchor-callee 0x54c01c + template/zone generation; retail-only
+// Retail 0x54bf60 calls this Complete-only coordinator. Preserve the player
+// ordering, separate town passes, two connection-cost passes, and final
+// coastal/decorative/road/river order. No Dreamcast counterpart exists.
+// First reconstruction: 96.8971%. The nine-entry mapping preserves retail
+// offsets; the two existing mapping readers retain their prior scores.
+VA(0x00549930, 0x37B)
 unsigned char type_random_map_generator::generate()
-{ return 0; } // @stub
-#endif
+{
+    if (!m_templates.size())
+        return 0;
+    unsigned int selected = rand() % m_templates.size();
+    m_templateName = m_templates[selected]->m_name;
+    char humanSlots[8] = {0};
+    char allSlots[8] = {0};
+    TRmgTemplate* mapTemplate = m_templates[selected];
+    for (unsigned int zone = 0; zone < mapTemplate->m_zones.size(); ++zone) {
+        TRmgTownSlot* slot = mapTemplate->m_zones[zone];
+        if (slot->m_kind == RMG_TEMPLATE_HUMAN) {
+            humanSlots[slot->m_playerIndex] = 1;
+            allSlots[slot->m_playerIndex] = 1;
+        } else if (slot->m_kind == RMG_TEMPLATE_COMPUTER) {
+            allSlots[slot->m_playerIndex] = 1;
+        }
+    }
+    memset(m_playerIndexMap, -1, sizeof(m_playerIndexMap));
+    int players[8];
+    int count = 0;
+    for (int player = 0; player < 8; ++player)
+        if (m_fixedHumanPlayers[player])
+            players[count++] = player;
+    for (player = 0; player < 8; ++player)
+        if (!m_fixedHumanPlayers[player])
+            players[count++] = player;
+    int slot = 0;
+    for (player = 0; player < m_humanPlayerCount; ++player) {
+        while (slot < 8 && !humanSlots[slot])
+            ++slot;
+        allSlots[slot] = 0;
+        m_playerIndexMap[++slot] = players[player];
+    }
+    slot = 0;
+    for (; player < m_humanPlayerCount + m_computerPlayerCount; ++player) {
+        while (slot < 8 && !allSlots[slot])
+            ++slot;
+        m_playerIndexMap[++slot] = players[player];
+    }
+    initializeZones(m_templates[selected]);
+    for (int level = 0; level < m_map.m_numberLevels; ++level)
+        buildZoneBoundaries(m_templates[selected], level);
+    paintZoneTerrain();
+    for (zone = 0; zone < m_zones.size(); ++zone)
+        placePrimaryTown(m_zones[zone]);
+    for (zone = 0; zone < m_zones.size(); ++zone)
+        placeAdditionalTowns(m_zones[zone]);
+    prepareZoneConnections();
+    for (zone = 0; zone < m_zones.size(); ++zone)
+        if (m_zones[zone]->m_slot->m_kind == RMG_TEMPLATE_JUNCTION
+            && m_zones[zone]->m_terrain != eTerrainWater)
+            prepareJunctionZone(m_zones[zone]);
+    placeMines();
+    memset(m_activeZoneCountsByAlignment, 0, sizeof(m_activeZoneCountsByAlignment));
+    m_activeZoneCount = 0;
+    for (zone = 0; zone < m_zones.size(); ++zone) {
+        if (m_zones[zone]->m_active) {
+            ++m_activeZoneCountsByAlignment[m_zones[zone]->m_alignment];
+            ++m_activeZoneCount;
+        }
+    }
+    buildZoneConnectionPaths();
+    for (zone = 0; zone < m_zones.size(); ++zone) {
+        placeZoneTreasures(m_zones[zone]);
+        if (m_progress)
+            m_progress->advance(7000 / m_zones.size());
+    }
+    if (m_map.m_numberLevels > 1)
+        decorateUnderground();
+    m_map.markCoastalTiles();
+    decorateMap();
+    createRoads();
+    createRivers();
+    return 1;
+}
 
 // Complete's random-map pipeline calls this routine immediately before the
 // generated terrain/object stream is emitted.  The format switch, description
@@ -7269,7 +7381,7 @@ void type_random_map_generator::writeMapHeader(TAbstractFile* outfile)
                 if (player < 0)
                     continue;
 
-                player = m_playerIndexMap[player];
+                player = m_playerIndexMap[player + 1];
                 if (player < 0 || !town->m_active)
                     continue;
 
