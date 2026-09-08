@@ -1796,3 +1796,22 @@ Across the affected include closure, `checkApplyBadMorale` reaches 100% and
 moves from 93.0922 to 92.8927%; its MAX/HIST remain 93.0922. Keep the shared
 source declarations and measure that collateral rather than restoring local
 variants to recover compiler state.
+
+
+The same recovered wrapper resolves `hero::updateStats` at `0x4e16d0`.
+Dreamcast `hero.cpp:4255/4262` explicitly calls `limit` after `GetLuck` and
+`GetMorale`. Replacing the former nested `cppMin(cppMax(...))` calls reaches
+100% from 86.0900%. The old reconstruction's extra intermediate load and
+store were evidence of a wrong source helper chain, rather than an
+unexplained branch-threading limitation.
+
+`hero::useSpell` also calls a by-value wrapper: Dreamcast line 1505 names
+`max`, which calls the reference selector `_cpp_max`. Using the canonical
+`homm3_minmax.h` wrapper preserves its 100% match while removing a local
+helper that returned a reference to one of its own by-value parameters.
+Include the wrapper header after Windows headers so its macro cleanup is
+still effective at the caller. Placing it before those headers lets the
+Windows `max` macro replace the source call: `useSpell` falls to 77.0690%,
+and its expansion in `fly` falls from 32.6234% to 29.7013%. Correct ordering
+restores both previous scores. Every other hero function is byte-flat,
+including the two parked hero register-allocation cases.

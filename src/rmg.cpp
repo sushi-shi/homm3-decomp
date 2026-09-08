@@ -3110,6 +3110,12 @@ void TRmgGeneratorBase::readObjectPlacementRules()
 // retail recomputes its array address. Do not infer source assertions from
 // its redundant lea. The insert callee's widget* name is an ICF alias of
 // this pointer-vector instantiation, not another inlining difference.
+// Further public-API/lifetime controls leave all three tests expanded:
+// a const prototype selects const operator[] but scores 82.3996%; the
+// existing position-value getMapItem overload is byte-flat at 84.6788%;
+// aggregate zero initialization of both scratch arrays gives 82.5392%.
+// None emits bitset<10>::test. Keep the original accesses and memset
+// calls while resolving the real caller's nested inliner state.
 VA(0x00536BC0, 0x5F4) // anchor-callee 0x5375ff; thiscall, ret 0x10; retail-only
 int TRmgGeneratorBase::scoreObjectPlacement(
     TRmgObjectPropertiesRef* properties, TRmgMapPosition position)
