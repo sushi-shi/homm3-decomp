@@ -1347,6 +1347,14 @@ def _demangle_key(mangled: str):
         return f"bitset{iterator_width}@bitset_iterator_deref"
     if mangled.startswith("?_Construct@std@@YIXPAV?$basic_string@D"):
         return "string@std_construct"
+    # Scalar placement construction has no class identifier. Require the
+    # destination and const-reference source to carry the same builtin type;
+    # a conversion overload must not borrow this source claim's identity.
+    construct_scalar = re.fullmatch(
+        r"\?_Construct@std@@YIXPA([CDEFGHIJK])AB\1@Z", mangled)
+    if construct_scalar:
+        return (f"{DEQUE_PRIMITIVE_ELEMENT[construct_scalar.group(1)]}"
+                "@std_construct")
     # ...and over a map's value_type, whose element is `pair<const int, T>`.
     # Keyed on T with a `_pair` suffix, the spelling `pair_const_int_dtor`
     # already uses for the same shape.

@@ -7317,12 +7317,6 @@ TAdventureObjectType hero::heroFn004E4EC0()
     return cell->getSpecialTerrain();
 }
 
-inline NewmapCell* game::getCell(type_point point)
-{
-    return &m_worldMap.m_cellData[(point.m_z * m_worldMap.m_size + point.m_y)
-                              * m_worldMap.m_size + point.m_x];
-}
-
 // E:\gamedcs\hero.cpp:5962
 VA(0x004e4fa0, 0xD7)  // exact packed-point/map-cell lookup, dc 0xd4df0
 inline int hero::getSpecialTerrain()

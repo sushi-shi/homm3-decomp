@@ -50,11 +50,6 @@ static int getTeam(game* thisGame, int playerNum)
     return thisGame->m_mapHeader.m_teamInfo[playerNum];
 }
 
-inline NewmapCell* game::getCell(type_point point)
-{
-    return m_worldMap.cell(point);
-}
-
 // E:\gamedcs\mapcell.cpp:1119. Dreamcast retains this source helper as an
 // out-of-line SH4 body; Complete expands it into every admitted retail use.
 inline type_point CObject::getTrigger() const
@@ -932,152 +927,31 @@ void NewfullMap::newfullMapFn004FD950(
 }
 #pragma auto_inline(on)
 
-// Load's seer-hut resize, factored out for the same reason readObject's
-// QUEST_GUARD arm is: the /Ob2 budget is per-CALLER and clamps at a floor,
-// so a function this small cannot afford to expand vector<TSeerHut>::resize
-// and keeps the CALL retail makes. Being a single-call-site static it is
-// then inlined back into Load whole, bringing that call with it, and
-// mapcell.obj still carries exactly 67 functions.
-//
-// Worth 72.8624 -> 77.3789. The note below had already identified the shape
-// ("character for character the divergence readObject's QUEST_GUARD arm
-// shows"); only its conclusion that no source spelling reached it was wrong.
-//
-// The lever is NARROW. Starving Load's OTHER divergence the same way - the
-// mapObjectData push_back in the loop below - scores 77.2574, slightly worse
-// than leaving it, and starving readMapObjects' objectTypes.resize costs an
-// exact function elsewhere in the unit (1459 -> 1458) because loadMapObjects
-// shares that instantiation. Both were measured and reverted.
-static void resizeSeerHutList(NewfullMap* map, short count)
-{
-    map->m_seerHutList.resize(count);
-}
-
-// E:\gamedcs\mapcell.cpp:679
-// The savegame twin of Read, and the differences from it are the interesting
-// part.  It clears NINE map pools where Read clears eleven - the hero
-// placeholders at +0xa0 and the random dwellings at +0xc0 are NOT emptied
-// here, because a save has already resolved both away - and it skips the
-// game's own +0x1f680 list, which Read does empty.  It then reads the pools
-// back through the load* family instead of readMapObjects/readTimedEventList
-// alone, and the seer huts it deserializes itself.
-//
-// That seer-hut loop is this compiland's do-not-cache shape at its purest:
-// retail keeps ONLY a byte offset live across the body, adds it to a freshly
-// reloaded _First for the load call, and reloads _First AGAIN for the quest
-// test on the very next line.  Writing it as a subscript twice is what
-// produces that; hoisting a row pointer does not.
-// Residual (77.3789%): the same over-inline family readObject and Read hit,
-// twice over.  Retail CALLS vector<TSeerHut>::resize (two arguments, the
-// count and the default-argument temporary); our CL expands it into its
-// size()/insert/size()/erase body, which is the whole of the branch-count
-// gap `sema diff --branches` reports (base 17 vs target 14).  Retail also
-// reaches mapObjectData through the TWO-argument insert(iterator, const T&)
-// where we expand that wrapper and call the three-argument one underneath -
-// character for character the divergence readObject's QUEST_GUARD arm shows
-// on the same two instantiations.
-//
-// It is NOT element size: the already-exact loadMonsterList expands resize
-// for a 48-byte element, which needs the same magic multiply, so retail's
-// inliner is not simply refusing awkward strides.  Both divergences sit
-// AFTER eighteen inlined clear() expansions, which is the one thing Load has
-// that loadMonsterList does not - consistent with a per-caller /Ob2 budget
-// that retail had already spent by the time it reached the resize and ours
-// had not.
-//
-// That diagnosis was RIGHT and its conclusion - "no source spelling reached
-// it" - was WRONG. The budget being per-caller is exactly what makes it
-// reachable: move the resize into a function small enough to be starved of
-// budget and it stays a call, then let the single-call-site static inline
-// back. resizeSeerHutList above does that, 72.8624 -> 77.3789.
-//
-// 2026-09-06, polish lane 38, the DC TYPE-RECORD sweep: 92.2018 -> 93.4037
-// on ONE WORD - resizeSeerHutList's parameter is `short`, not `int`.  The
-// Dreamcast block types this body's `count` as T_INT4 and retail REFUTES
-// that (`movsx ecx, word ptr [ebp+0xa]` at fn+0x2a2 is a signed 16-bit
-// load), so the local stays `short`; what the DC record does buy is the
-// helper's own parameter.  Widened to `int` the conversion happens at the
-// CALL, so VC6 sign-extends BEFORE the TSeerHut temporary is constructed
-// and has to spill the result across the ctor (`movsx ecx,[ebp+0x12] / mov
-// [ebp+8],ecx / call ??0TSeerHut / mov edx,[ebp+8]`); narrowed to `short`
-// the conversion happens INSIDE the inlined callee, after the ctor, which
-// is retail's order exactly (`call ??0TSeerHut / movsx ecx,[ebp+0xa]`).
-// The loop index moves to retail's own [ebp+0x10] home with it.
-// Measured and rejected in the same pass: block-scoping the `count`
-// declaration + its Read + the resize call together, 93.3792.
-// The DC also names the seer-hut loop index `sprite_num` where this body
-// says `i`; the rename is byte-inert and is taken so the next lane's
-// name-matched scan sees it.
-//
-// 77.3789 -> 82.8043 (2026-08-20) ON ONE MORE PIN, and it is NOT the
-// mapObjectData half the old text expected. Retail CALLS
-// vector<TSeerHut>::size (0x5066b0) in the seer-hut loop's CONDITION, twice
-// - once at loop entry and once on the back edge, at fn+0x2b9 and fn+0x313 -
-// where our CL expanded both. `#pragma inline_depth(0)` is LEXICAL, so
-// putting it in front of the `for` header and restoring the depth before the
-// body's opening brace covers the condition alone and leaves the body's own
-// decisions untouched. The index has to be hoisted out of the `for` init for
-// that placement to be legal.
-//
-// MEASURED NEGATIVE while landing it, do not retry: the mapObjectData half
-// really is different. Spelling it as an explicit two-argument
-// `insert(dataEnd, questData)` with a statement pin - the edit that is worth
-// points in readObject's QUEST_GUARD arm on the identical instantiation -
-// costs 82.8043 -> 82.4190 here. Also still true from the old note: the
-// budget-starved-helper treatment on the same site scores 77.2574.
-//
-// 82.8043 -> 84.2722 (2026-08-21): the DUP-EXIT and #7 polarity were one
-// source fact after all. Retail's `Read(&count)` failure jumps FORWARD (`jb`)
-// into the failure tail shared with loadTownEventList; spelling that edge as
-// an explicit goto removes our private epilogue. The branch structure is now
-// exact: 14 branches, 9 returns, and every mnemonic and symbolic target agree.
-//
-// Residual (84.2722%): the same binding story readResourceData has. Retail
-// parks `two_layers` in EBX from the prologue (`mov ebx,[ebp+0x10]` before
-// the esi/edi pushes, then `test bl,bl`) and RELOADS `infile` from [ebp+8]
-// until `size` dies; we cache `infile` in EBX and re-read `two_layers` as a
-// byte. Every recycled-slot difference downstream follows that swap.
-// Seventeen of the nineteen clear() sites agree, but the garrison (+0x4e3a8)
-// and university (+0x4e3c8) instantiations expand one level further in retail,
-// through two nested helpers before `_Last` is reset. Their immediate
-// neighbours are exact, so this is per-instantiation. A same-TU wrapper around
-// the garrison clear is byte-flat. Direct `erase(begin(),end())` does reach a
-// deeper helper, but is the wrong phase: garrison alone scored 82.6483 on the
-// old body, and both direct erases on the corrected shared-tail body fall
-// 84.2722 -> 76.2661 while growing 14 branches to 18. Neither is retained.
-//
-// LANDED 2026-08-21 (84.2722 -> 92.201836). Dreamcast CodeView names the
-// seer-hut induction local `int sprite_num`; restoring its signed type first
-// raises this body to 89.42508%, while `volatile int` regresses to 84.06422%.
-// On that source-evidenced phase, a conventional release VERIFY of `infile`
-// is byte-flat, but evaluating the natural byte-domain invariant
-// `two_layers == 0 || two_layers == 1` raises it again to 92.201836%. VC6
-// proves the comparison dead, so it emits no check; the front-end expression
-// instead reprices the parameter handles toward retail's EBX-bound
-// `two_layers`. The macro name and exact original invariant remain
-// unattested, so the spelling below records the proven carrier class.
-#define HOMM3_MAPCELL_LOAD_RELEASE_VERIFY(expression) \
-    static_cast<void>(expression)
-
-// Residual (92.2010%): ONE inline decision in the clear() run, localised.
-// `--branches` agrees at 14/14 with nine returns and `--calls` at 31 same
-// with a single target-only row: retail EXPANDS
-// `vector<garrison>::erase(begin(), end())` at 0x1d17 - `std::copy` at
-// game_fdbc0_sub10_1095a0, then _Destroy, then the `_Last` write-back - while
-// this compile calls the erase COMDAT.  Both sides expand the SAME expression
-// two statements later for `universities` and call it for all sixteen other
-// lists, so the type is not the discriminator and neither is the spelling:
-// it is the /Ob2 quotient walking down the candidate list, with retail's
-// budget reaching one site earlier than ours.  The direction is UNDER-inline,
-// which wants a LARGER caller, and there is no honest mass to add here.
-// Before normalization (locals): two_layers, sprite_num.
+// E:\gamedcs\mapcell.cpp:679, dc 0xecb94. Original names: two_layers,
+// sprite_num. The clear calls retain their Dreamcast-proven public APIs.
+// Retail reads a signed short seer count and operates on this map's list.
+// The older TSeerHut::LoadSeerList (dc 0x12d854, seerhut.cpp:503) instead
+// accesses the global map and checks an int-returning seer loader; retail's
+// instance-relative list and void load(infile, saveVersion) contradict that
+// interface. The seer block therefore stays in this Complete caller.
+// The former resizeSeerHutList wrapper was a synthetic inline-budget probe;
+// it and the loop's inline-depth pin are removed. The discarded twoLayers
+// expression had no evidence of a meaningful release VERIFY and is removed.
+// Retail's short-read failure shares the forward load_failure tail, and
+// repeated seer subscripts preserve its reloads after the virtual load call.
+// Natural-source controls: 45 valid count/default-value/append/index forms
+// and 32 failure-scope/quest-scope/loop forms reach 77.26911%; 27 additional
+// for-initializer forms are rejected by VC6 because load_failure skips the
+// initializer. The selected scoped default value improves the direct-call
+// baseline (74.24159%). No valid candidate emits std::copy<garrison> at
+// 0x5095a0. Retail expands garrison clear through erase/copy, then retains
+// seer resize and its size queries; our remaining nested decisions differ.
+// The former 93.4037% peak depended on the removed synthetic boundaries and
+// stays in HIST. Keep the real clear/resize/append calls through this dip.
 VA(0x004fdbc0, 0x371)  // order-map: calls loadTimedEventList 0xfc500, loadTownEventList 0xfc870, Init 0xfd4f0, loadMapLayer 0xfe920 x2, loadBlackBoxList/loadMonsterList/loadMapObjects, dc 0xecb94
 int NewfullMap::load(TAbstractFile* infile, int size, unsigned char twoLayers,
                      int saveVersion)
 {
-    HOMM3_MAPCELL_LOAD_RELEASE_VERIFY(
-        twoLayers == 0 || twoLayers == 1);
-
     init(size, twoLayers);
 
     if (loadMapLayer(infile, size, 0, saveVersion) < 0)
@@ -1117,24 +991,23 @@ int NewfullMap::load(TAbstractFile* infile, int size, unsigned char twoLayers,
     if (loadMonsterList(infile) < 0)
         return -1;
 
-    short count;
-    if (infile->read(&count, sizeof(count)) < sizeof(count))
-        goto load_failure;
-
-    resizeSeerHutList(this, count);
-    // Retail CALLS vector<TSeerHut>::size (0x5066b0) in this loop's
-    // condition - twice, once at entry and once on the back edge - where our
-    // CL expands it. The pin is lexical, so restoring the depth before the
-    // body leaves the body's own decisions alone.
-    int spriteNum;
-#pragma inline_depth(0)
-    for (spriteNum = 0; spriteNum < m_seerHutList.size(); ++spriteNum)
-#pragma inline_depth()
     {
-        m_seerHutList[spriteNum].load(infile, saveVersion);
-        if (m_seerHutList[spriteNum].m_quest)
-            m_mapObjectData.push_back(static_cast<CMapObjectData*>(
-                static_cast<void*>(m_seerHutList[spriteNum].m_quest)));
+        short count;
+        if (infile->read(&count, sizeof(count)) < sizeof(count))
+            goto load_failure;
+
+        {
+            TSeerHut empty;
+            m_seerHutList.resize(count, empty);
+        }
+        int spriteNum;
+        for (spriteNum = 0; spriteNum < m_seerHutList.size(); ++spriteNum)
+        {
+            m_seerHutList[spriteNum].load(infile, saveVersion);
+            if (m_seerHutList[spriteNum].m_quest)
+                m_mapObjectData.push_back(static_cast<CMapObjectData*>(
+                    static_cast<void*>(m_seerHutList[spriteNum].m_quest)));
+        }
     }
 
     if (saveVersion >= 25)
@@ -1151,8 +1024,6 @@ int NewfullMap::load(TAbstractFile* infile, int size, unsigned char twoLayers,
 load_failure:
     return -1;
 }
-
-#undef HOMM3_MAPCELL_LOAD_RELEASE_VERIFY
 
 // E:\gamedcs\mapcell.cpp:1293 / 1729 / 2695 in the DC roster, where all
 // three are members of NewfullMap. Retail inlines each at its only call

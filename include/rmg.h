@@ -407,6 +407,10 @@ enum ERmgTemplateZoneKind {
     RMG_TEMPLATE_JUNCTION = 3
 };
 
+enum ERmgTreasurePlacementLimits {
+    RMG_TREASURE_ATTEMPTS = 3
+};
+
 struct TRmgTreasureRange {
     // Before normalization: minimum.
     int m_minimum;
@@ -1125,6 +1129,14 @@ struct TRmgMapItem {
     bool isRiverTarget() const { return m_tileData.m_riverTarget != 0; }
     bool isImpassable() const { return m_tileData.m_impassable != 0; }
 
+    // PaintZoneTerrain extracts bit 28 then tests its byte result. The
+    // direct field condition instead folds to a dword mask. Retail-only
+    // accessor hypothesis, consistent with the adjacent flag queries.
+    unsigned char isZoneBoundary() const
+    {
+        return m_tileData.m_zoneBoundary;
+    }
+
     // Placement helpers 0x531170/0x5318b0/0x531cf0 all shift bit 22 and
     // test the truncated byte. Direct bitfield conditions fold to a dword
     // mask; keep this same ordinary query at each recovered boundary.
@@ -1300,6 +1312,31 @@ public:
         TRmgMapPosition position,
         TRmgZone* zone);
 };
+
+// Complete's treasure retries construct an owned map at +0, then bounds,
+// object and outline vectors. There is no derived vptr store: this group
+// contains the map. 0x547360 proves the 0x64-byte stack object and cleanup;
+// 0x5470d0 reads its bounds at +0x18. Names are provisional retail roles.
+struct TRmgTreasureGroup {
+    type_random_map m_map;                  // +0x00
+    TRmgZoneBounds m_bounds;                // +0x18
+    std::vector<type_object*> m_objects;    // +0x28
+    std::vector<TPoint> m_outline;           // +0x38
+    unsigned char m_flag0048;               // +0x48, cleared by reset
+    char m_opaque0049[0x17];                // +0x49..+0x5f, not yet recovered
+    unsigned char m_ready;                  // +0x60, set after assembly
+    char m_padding0061[3];
+
+    TRmgTreasureGroup(int width, int height)
+        : m_map(width, height, 1), m_flag0048(0), m_ready(0)
+    {
+        reset();
+    }
+    void reset();
+    unsigned char addGuard(type_object* guard);
+    void traceOutline();
+};
+SIZE(TRmgTreasureGroup, 0x64);
 
 // Complete-only road adapter, provisional role name. Vtable 0x640a04 has
 // the seven-slot road interface; 0x548120 constructs the eight-byte object
@@ -1591,6 +1628,7 @@ struct TRmgZone {
     // its retained connection predicate compares center distance and size.
     // These names are provisional; the Dreamcast build has no RMG module.
     TRmgZone(TRmgTownSlot* slot);
+    void chooseTerrain();
     ~TRmgZone();
     TRmgMapPosition getLevelPosition() const;
     void setLevelPosition(TRmgMapPosition position);
@@ -1666,6 +1704,15 @@ enum ERmgMapVersion {
     RMG_MAP_SHADOW_OF_DEATH = 2
 };
 
+// Complete-only 0x543e20 chooses one of these four initial branch segments.
+// Names describe the endpoint stores; the original source spelling is unknown.
+enum ERmgBranchSeedPattern {
+    RMG_BRANCH_SEED_MAIN_DIAGONAL = 0,
+    RMG_BRANCH_SEED_VERTICAL = 1,
+    RMG_BRANCH_SEED_ANTI_DIAGONAL = 2,
+    RMG_BRANCH_SEED_HORIZONTAL = 3
+};
+
 // The Complete-only map-header writer extends the object-factory evidence
 // into the late generator state.  Each named field below is read or written
 // at its annotated offset by retail 0x549cb0; opaque spans preserve all
@@ -1716,6 +1763,15 @@ public:
     void decorateMapCell(TRmgMapPosition position, int progressSteps);
 };
 SIZE(TRmgGeneratorBase, 0xed8);
+
+// Four fixed-count/density groups consumed by 0x544ae0; the option byte's
+// gameplay meaning remains provisional, while ownership and ordering are proven.
+enum ERmgTownPlacementCategory {
+    RMG_TOWN_PLAYER_OPTION,
+    RMG_TOWN_PLAYER_BASIC,
+    RMG_TOWN_NEUTRAL_OPTION,
+    RMG_TOWN_NEUTRAL_BASIC
+};
 
 class type_random_map_generator : public TRmgGeneratorBase {
 public:
@@ -1819,10 +1875,30 @@ public:
     unsigned char tryPlacePrimaryTown(TRmgZone* zone, int alignment,
         int player, unsigned char townOption);
     void initializeZones(TRmgTemplate* mapTemplate);
+    void positionZone(TRmgZone* zone, int mapSize);
+    void appendZonePositions(TRmgZone* center, TRmgZone* zone,
+        std::vector<TRmgMapPosition>& candidates);
+    void getInitialZoneBounds(int& minimumY, int& minimumX,
+        int& maximumY, int& maximumX) const;
     void paintZoneTerrain();
+    void calculateZoneBounds();
+    void recenterZone(TRmgZone* zone);
+    void insetIslandZone(TRmgZone* zone);
+    void drawIslandBoundary(TPoint from, TPoint to, int zoneIndex, int level, int roughness);
     void placeAdditionalTowns(TRmgZone* zone);
+    unsigned char tryPlaceAdditionalTown(TRmgZone* zone, int alignment,
+        int player, unsigned char townOption, int spacing);
     void prepareJunctionZone(TRmgZone* zone);
+    void connectJunctionEntrance(TPoint from, TPoint to, TRmgZone* zone);
     void placeZoneTreasures(TRmgZone* zone);
+    int fillTreasureGroup(TRmgZone* zone, TRmgTreasureGroup* group,
+        unsigned char alternate, int value);
+    unsigned char assembleTreasureGroup(TRmgZone* zone, TRmgTreasureGroup* group,
+        unsigned char alternate, int minimum, int maximum);
+    unsigned char placeTreasureGroup(TRmgTreasureGroup* group, TRmgZone* zone, int spacing);
+    unsigned char canPlaceTreasureGroup(TRmgTreasureGroup* group,
+        TRmgMapPosition position, TRmgZone* zone);
+    void commitTreasureGroup(TRmgTreasureGroup* group, TRmgMapPosition position);
     void decorateUnderground();
     unsigned char generate();
     unsigned char writeMap(TAbstractFile* outfile);
