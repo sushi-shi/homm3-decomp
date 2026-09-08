@@ -897,10 +897,40 @@ unsigned char type_random_map::canPlaceObject(
 // Treasure fill and guard placement pass a map in ECX, followed by an
 // object and a by-value coordinate. Retail stores the position in the
 // object, then visits its prototype footprint in the map's cell array.
-#if 0 // @carcass
+// Partial 85.80%: retained insert and footprint mask queries agree, but
+// retail keeps one more nested vector::size call in the blocked-cell arm.
+// Register homes and coordinate-copy lifetimes also differ. Separate scalar
+// coordinates, a TPoint footprint, and initializing only y/z each give
+// 85.03%; using insert(end, object) for the entrance append is flat. Keep
+// the by-value position snapshot and canonical container operations.
 VA(0x00531EA0, 0x2E6) // anchor-callee 0x5465d9/0x535400; thiscall, ret 0x10
-void type_random_map::addObject(type_object* object, TRmgMapPosition position) {} // @stub
-#endif
+void type_random_map::addObject(type_object* object, TRmgMapPosition position)
+{
+    TObjectType& prototype = *object->m_properties->m_prototype;
+    object->m_position = position;
+    TRmgMapPosition nearby = position;
+    for (unsigned int y = 0; y < prototype.getHeight(); ++y, --nearby.m_y) {
+        if (nearby.m_y < 0 || nearby.m_y >= m_mapHeight)
+            continue;
+        nearby.m_x = position.m_x;
+        for (unsigned int x = 0; x < prototype.getWidth(); ++x, --nearby.m_x) {
+            if (nearby.m_x < 0 || nearby.m_x >= m_mapWidth)
+                continue;
+            TRmgMapItem* item = getMapItem(nearby);
+            if (prototype.m_triggerMask.test(CObjectType::getBitPos(x, y))) {
+                item->m_tileData.m_roadEntrance = 1;
+                if (!item->m_connection.m_present) {
+                    item->m_tileData.m_borderObject = 0;
+                    item->m_tileData.m_subterraneanGate = 1;
+                }
+                item->m_objects.push_back(object);
+            } else if (!prototype.m_passableMask.test(CObjectType::getBitPos(x, y))) {
+                item->m_tileData.m_roadPassable = 0;
+                item->m_objects.insert(item->m_objects.end(), object);
+            }
+        }
+    }
+}
 
 // Terrain vtable 0x6409cc slot 1 stores the generic adapter's integer
 // kind and frame, then its two flip bytes. Retail's mask/sign-extension
