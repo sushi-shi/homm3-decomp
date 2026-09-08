@@ -1329,6 +1329,8 @@ struct TRmgTreasureGroup {
         reset();
     }
     void reset();
+    unsigned char addGuard(type_object* guard);
+    void traceOutline();
 };
 SIZE(TRmgTreasureGroup, 0x64);
 
@@ -1885,6 +1887,8 @@ public:
     void prepareJunctionZone(TRmgZone* zone);
     void connectJunctionEntrance(TPoint from, TPoint to, TRmgZone* zone);
     void placeZoneTreasures(TRmgZone* zone);
+    int fillTreasureGroup(TRmgZone* zone, TRmgTreasureGroup* group,
+        unsigned char alternate, int value);
     unsigned char assembleTreasureGroup(TRmgZone* zone, TRmgTreasureGroup* group,
         unsigned char alternate, int minimum, int maximum);
     unsigned char placeTreasureGroup(TRmgTreasureGroup* group, TRmgZone* zone, int spacing);
