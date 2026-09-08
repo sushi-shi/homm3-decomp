@@ -223,6 +223,16 @@ two-argument signature; overload, stream-type, traits, access and qualifier
 negative controls prevent it from claiming an enclosing constructor or a
 different initializer.
 
+Primitive `deque::push_back` claims require an element-specific symbol key,
+just as pointer-element claims do. The natural `deque<int>` append in
+ai_tactical at `0x43cb20` was emitted but remained unpaired because the join
+only recognized pointer elements. The primitive join checks the complete
+const-reference overload and matching allocator type. Tests distinguish
+equal-sized int/unsigned-int bodies in reversed symbol order and reject
+inconsistent allocator and argument types. Its iterator constructor is
+byte-identical to the retail CNetMsg-pointer representative at `0x5586d0`;
+that relocation spelling is an ICF alias, not a different operation.
+
 ## Status
 
 Phase 0 (driver ground truth + probe rig) is in progress. Reusable compiler

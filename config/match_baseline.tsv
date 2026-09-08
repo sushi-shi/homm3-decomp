@@ -500,6 +500,7 @@ ai_tactical	?getToughSkinValue@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_d
 ai_tactical	?getTraitorValue@type_AI_spellcaster@@QAEJPBVarmy@@0@Z	100.0000	100.0000	100.0000	0x3a340	d65730baa572
 ai_tactical	?getWaterProtectionValue@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x39a40	b5042d15536e
 ai_tactical	?getWeaknessValue@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38ed0	f4814d28c941
+ai_tactical	?push_back@?$deque@HV?$allocator@H@std@@@std@@QAEXABH@Z	100.0000	100.0000	100.0000	0x3cb20	-
 ai_tactical	?setMeleeEnemies@type_AI_spellcaster@@QAEXXZ	95.2778	95.2778	95.2778	0x3bf20	685a6d0a0123
 ai_tactical	?shouldAttackNow@type_AI_spellcaster@@QAEEPBVarmy@@@Z	86.6781	86.6781	86.6781	0x36c60	987f46db0881
 ai_tactical	?simulateAttack@type_AI_combat_parameters@@QAEXPBVarmy@@PAJ01EJ@Z	100.0000	100.0000	100.0000	0x359b0	56b2d72a699a
@@ -3193,7 +3194,7 @@ resourcemanager	?find@?$_Tree@VTCacheMapKey@ResourceManager@@U?$pair@$$CBVTCache
 resourcemanager	?find@?$map@VTCacheMapKey@ResourceManager@@PAVresource@@U?$less@VTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@std@@QAE?AViterator@?$_Tree@VTCacheMapKey@ResourceManager@@U?$pair@$$CBVTCacheMapKey@ResourceManager@@PAVresource@@@std@@U_Kfn@?$map@VTCacheMapKey@ResourceManager@@PAVresource@@U?$less@VTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@4@U?$less@VTCacheMapKey@ResourceManager@@@4@V?$allocator@PAVresource@@@4@@2@ABVTCacheMapKey@ResourceManager@@@Z	100.0000	100.0000	100.0000	0x15d3b0	3e083b0b3099
 resourcemanager	?getBackdrop@ResourceManager@@YIXPBDPAVBitmap16Bit@@@Z	100.0000	100.0000	100.0000	0x15cf00	de45cef97f36
 resourcemanager	?getBitmap16@ResourceManager@@YIPAVBitmap16Bit@@PBD@Z	100.0000	100.0000	100.0000	0x15afd0	3051fb3e515e
-resourcemanager	?getBitmap816@ResourceManager@@YIPAVBitmap816@@PBD@Z	94.5542	94.5542	97.6325	0x15a800	c9bdc3514eb5
+resourcemanager	?getBitmap816@ResourceManager@@YIPAVBitmap816@@PBD@Z	94.5542	97.6325	97.6325	0x15a800	c9bdc3514eb5
 resourcemanager	?getBitmapResourceSize@ResourceManager@@YIHPBD@Z	96.7742	96.7742	96.7742	0x15d070	d3a3ac822507
 resourcemanager	?getFont@ResourceManager@@YIPAVfont@@PBD@Z	100.0000	100.0000	100.0000	0x15bb00	1037971c3e5c
 resourcemanager	?getPalette24@ResourceManager@@YIPAVTPalette24@@PBD@Z	99.9273	99.9273	99.9273	0x15b470	8f52f95fb449
@@ -3201,7 +3202,7 @@ resourcemanager	?getPalette@ResourceManager@@YIPAVTPalette16@@PBD@Z	100.0000	100
 resourcemanager	?getSample@ResourceManager@@YIPAVsample@@PBD@Z	100.0000	100.0000	100.0000	0x15c720	c7800f5a3207
 resourcemanager	?getSoundFile@ResourceManager@@YI_NPBDAAV?$auto_ptr@D@std@@PAH@Z	100.0000	100.0000	100.0000	0x15c130	9c370299793b
 resourcemanager	?getSpreadsheet@ResourceManager@@YIPAVTSpreadsheetResource@@PBD@Z	100.0000	100.0000	100.0000	0x15c0a0	466c7eb31804
-resourcemanager	?getSprite@ResourceManager@@YIPAVCSprite@@PBD@Z	84.2097	84.2097	88.8564	0x15c7b0	dd55b1c0a012
+resourcemanager	?getSprite@ResourceManager@@YIPAVCSprite@@PBD@Z	84.2097	88.8564	88.8564	0x15c7b0	dd55b1c0a012
 resourcemanager	?getText@ResourceManager@@YIPAVTTextResource@@PBD@Z	100.0000	100.0000	100.0000	0x15bdd0	097ba2daf558
 resourcemanager	?insert@?$_Tree@VTCacheMapKey@ResourceManager@@U?$pair@$$CBVTCacheMapKey@ResourceManager@@PAVresource@@@std@@U_Kfn@?$map@VTCacheMapKey@ResourceManager@@PAVresource@@U?$less@VTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@4@U?$less@VTCacheMapKey@ResourceManager@@@4@V?$allocator@PAVresource@@@4@@std@@QAE?AU?$pair@Viterator@?$_Tree@VTCacheMapKey@ResourceManager@@U?$pair@$$CBVTCacheMapKey@ResourceManager@@PAVresource@@@std@@U_Kfn@?$map@VTCacheMapKey@ResourceManager@@PAVresource@@U?$less@VTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@4@U?$less@VTCacheMapKey@ResourceManager@@@4@V?$allocator@PAVresource@@@4@@std@@_N@2@ABU?$pair@$$CBVTCacheMapKey@ResourceManager@@PAVresource@@@2@@Z	100.0000	100.0000	100.0000	0x15dbc0	-
 resourcemanager	?loadBitmap16@ResourceManager@@YIPAVBitmap16Bit@@PBD@Z	100.0000	100.0000	100.0000	0x15ac40	50f564d8eac4
