@@ -1750,15 +1750,31 @@ A four-state control separates braces from assignment syntax: scoped
 forms expand the base. Explicit default construction of the string is
 flat. Preserve evidenced scopes even when they own no source locals.
 
+A retained vector count-insert call does not identify the source overload.
+RMG's `placeQuestGroup` at `0x54b300` needs a single-element source insert:
+VC6 expands that wrapper and leaves the count insertion called, restoring
+retail's boundary and reaching 93.5302%. Calling the count
+overload directly expands it into allocation/copy/fill operations and gives
+0%. Guard scopes and signed/unsigned index controls are flat. Inspect the
+named nested call sequence before treating an emitted overload as the
+source-level call.
+
 
 ### A declared-only selector can hide its proven value wrapper
 
 The parked 33-byte clamp at `0x4e6750` is `t_limit` from Dreamcast
 `includes.h:124-131` (`dc:0x20d2c`). Its public symbol
-`?t_limit@@YAABHABH00@Z` proves an ordinary integer overload returning one
-of three incoming references. The old local template copies and provisional
+`?t_limit@@YAABHABH00@Z` identifies the integer instance returning one
+of three incoming references. The scattered local copies and provisional
 `cppClamp` declarations had obscured that identity. Retail corroborates the
 parameter order, signed comparisons, returned pointer and `ret 4`.
+
+Keep the template declaration. Neither the SH4 nor VC6 public spelling above
+distinguishes a function template from a non-template integer overload:
+Dreamcast's `std::copy` instances also have ordinary-looking names. A VC6
+control gives the same public name, raw helper bytes and hero/viewarmywindow
+scores for both forms. The mangled signature proves the instantiated ABI,
+not whether the source declared a template.
 
 Dreamcast `limit` at `includes.h:134` (`dc:0x1ef5c`) takes three integers
 by value and passes their addresses to `t_limit`. `hero::GetLuck` and both
