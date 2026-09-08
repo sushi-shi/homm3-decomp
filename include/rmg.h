@@ -1851,6 +1851,7 @@ public:
     void calculateZoneBounds();
     void recenterZone(TRmgZone* zone);
     void insetIslandZone(TRmgZone* zone);
+    void drawIslandBoundary(TPoint from, TPoint to, int zoneIndex, int level, int roughness);
     void placeAdditionalTowns(TRmgZone* zone);
     unsigned char tryPlaceAdditionalTown(TRmgZone* zone, int alignment,
         int player, unsigned char townOption, int spacing);
