@@ -699,6 +699,9 @@ std::istream& operator>>(std::istream& is, TObjectType& objectType)
 // and is byte-flat across every function; it does not change this boundary.
 // A minimal record with no user-declared constructors still fails C2552
 // when aggregate-initialized with a point and omitted bitset members.
+// An explicit 0UL argument in the passable-mask initializer is also flat
+// at 73.3263% across this TU and emits no ulong constructor; argument
+// conversion is not what selects the nested inline boundary.
 VA(0x00514d80, 0x284)  // anchor-callee ResourceManager::GetText + anchor-bracket NewfullMapFn_00505DA0; retail-only
 void TObjectTypeTable::load(char* filename)
 {
