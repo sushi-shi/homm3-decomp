@@ -42,6 +42,10 @@ VA_COMPGEN(0x004d6d00, 0x5, IMPLICIT_DTOR, TOpenFailure)
 VA_COMPGEN(0x004d6d10, 0x1C, IMPLICIT_COPY_CTOR, TOpenFailure)
 VA_COMPGEN(0x004d6d30, 0x21, SCALAR_DELETING_DTOR, TOpenFailure)
 
+// Exact with TAbstractFile's canonical inline body visible. Moving that
+// body into customcampaign.cpp produces an extra base-destructor call
+// (80%); the seven-byte retained body is an ICF group, not evidence for
+// hiding the base definition from this TU. See abstractfile.h.
 VA(0x004d6d60, 0x19)  // anchor-import @gzclose@4, retail-only
 TGzFile::~TGzFile()
 {

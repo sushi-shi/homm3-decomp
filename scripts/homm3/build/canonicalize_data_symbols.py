@@ -308,6 +308,7 @@ DIRECT_SYMBOL_COMPGEN_KINDS = frozenset({
     "STREAMBUF_SGETC",
     "STREAMBUF_SBUMPC",
     "BASIC_IOS_SETSTATE",
+    "BASIC_IOS_INIT",
     "BASIC_IOS_CLEAR",
     "ISTREAMBUF_ITERATOR_PEEK",
     "ISTREAMBUF_ITERATOR_INC",
@@ -368,6 +369,7 @@ DIRECT_SYMBOL_COMPGEN_KINDS = frozenset({
     "TREE_UPPER_BOUND",
     "TREE_EQUAL_RANGE",
     "MAP_INSERT",
+    "MAP_FIND",
     # the <xlocale> facet block basic_filebuf::_Initcvt reaches
     "FILEBUF_INITCVT",
     "STREAMBUF_GETLOC",
