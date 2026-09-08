@@ -2340,6 +2340,69 @@ void TRmgTreasureGroup::reset()
     }
 }
 
+// Complete-only group helpers: assembly passes the guard pointer in one
+// stack dword to 0x535110 (AL result); its first and last calls trace the
+// group's closed outline. 0x535ee0 appends points at +0x38 until closure.
+// Provisional names describe these retail roles.
+#if 0 // @carcass
+VA(0x00535110, 0x4AB) // anchor-callee 0x546843; thiscall, ret 4
+unsigned char TRmgTreasureGroup::addGuard(type_object* guard) { return 0; } // @stub
+#endif
+
+// Complete-only cached perimeter walk. Scan y/x for the first nontraversable
+// group cell, begin immediately above it, then walk cardinal directions.
+// The cell predicates match the two retail expansions at 0x535f39 and
+// 0x536000, including the byte-return entrance/gate queries. Like the
+// prototype's buildOutline, reverse direction after each accepted step and
+// stop before duplicating the first point.
+// Residual (95.1849%): all 32 blocks align; the perimeter walk agrees,
+// while the initial map scan differs in register homes and inner back-edge
+// polarity. Separate coordinate initialization is flat at 95.1644%; explicit
+// cached height/per-row width restores one addressing detail to 95.1849%.
+VA(0x00535EE0, 0x18F) // anchor-callee 0x5468ea/0x53511b; thiscall, ret 0
+void TRmgTreasureGroup::traceOutline()
+{
+    if (m_outline.size() > 0)
+        return;
+    TPoint position;
+    position.m_x = 0;
+    int height = m_map.m_mapHeight;
+    for (position.m_y = 0; position.m_y < height; ++position.m_y) {
+        int width = m_map.m_mapWidth;
+        for (position.m_x = 0; position.m_x < width; ++position.m_x) {
+            TRmgMapItem* item = m_map.getMapItem(position.m_x, position.m_y, 0);
+            if (item->isRoadEntrance() || !item->m_tileData.m_roadPassable
+                || item->m_tile.m_landType == eTerrainRock || !item->hasSubterraneanGate())
+                break;
+        }
+        if (position.m_x < width)
+            break;
+    }
+    if (position.m_x == m_map.m_mapWidth)
+        return;
+    --position.m_y;
+    TPoint start = position;
+    int direction = 2;
+    do {
+        m_outline.push_back(position);
+        int attempts = 0;
+        do {
+            direction = (direction - 2) & 7;
+            TPoint offset = g_rmgDirections[direction];
+            TPoint nearby(position.m_x + offset.m_x, position.m_y + offset.m_y);
+            if (nearby.m_x < 0 || nearby.m_x >= m_map.m_mapWidth
+                || nearby.m_y < 0 || nearby.m_y >= m_map.m_mapHeight)
+                break;
+            TRmgMapItem* item = m_map.getMapItem(nearby.m_x, nearby.m_y, 0);
+            if (!item->isRoadEntrance() && item->m_tileData.m_roadPassable
+                && item->m_tile.m_landType != eTerrainRock && item->hasSubterraneanGate())
+                break;
+        } while (++attempts < 4);
+        position = position + TRmgVector(g_rmgDirections[direction].m_x, g_rmgDirections[direction].m_y);
+        direction = (direction - 4) & 7;
+    } while (start != position);
+}
+
 // Retail's derived generator constructor 0x537b10 calls this six-argument
 // base initializer. Automatic member construction owns the map, object table
 // and 232 property vectors before the progress total and seed are installed.
@@ -7091,14 +7154,61 @@ TRmgObjectPropertiesRef* type_random_map_generator::selectObjectPrototype(
     return candidates[rand() % candidates.size()];
 }
 
-// Treasure placement passes zone, temporary group, alternate-generation
-// flag and value range. Retail returns AL and pops five argument dwords.
-// Provisional Complete-only role; no Dreamcast counterpart.
+// The assembly caller passes zone, group, alternate flag and target value;
+// retail accumulates a value in ESI and returns it after group finalization.
+// Complete-only provisional role; no Dreamcast counterpart.
 #if 0 // @carcass
+VA(0x00546520, 0x1B6) // anchor-callee 0x54678a; thiscall, ret 0x10
+int type_random_map_generator::fillTreasureGroup(TRmgZone* zone,
+    TRmgTreasureGroup* group, unsigned char alternate, int value) { return 0; } // @stub
+#endif
+
+// Complete-only assembly: reset the reusable group, generate a value in the
+// requested half-open range, then add its scaled guard. A failed guard fit
+// destroys both the group's existing objects and the unaccepted guard.
+// Success traces and marks the outline before the placement caller uses it.
+// Names are provisional retail roles; no Dreamcast RMG counterpart survives.
+// Residual (72.3188%): the first divergent statement is reset(). Retail
+// retains its vector erasures and expands the first map clear; VC6 expands
+// the object erasure through copy/_Destroy and retains both map clears.
+// The two-coordinate outline accessor raises 69.96% to 72.3188%; using
+// separate requested/actual value locals is byte-flat. Keep the canonical
+// reset and guard-value helpers while recovering their natural inline state.
 VA(0x005466E0, 0x253) // anchor-callee 0x547594/0x54768c; thiscall, ret 0x14
 unsigned char type_random_map_generator::assembleTreasureGroup(TRmgZone* zone,
-    TRmgTreasureGroup* group, unsigned char alternate, int minimum, int maximum) { return 0; } // @stub
-#endif
+    TRmgTreasureGroup* group, unsigned char alternate, int minimum, int maximum)
+{
+    group->reset();
+    int value = maximum <= minimum ? maximum : rand() % (maximum - minimum) + minimum;
+    int totalValue = fillTreasureGroup(zone, group, alternate, value);
+    if (!totalValue)
+        return 0;
+    if (zone->m_slot->m_monsterStrength) {
+        int strength = zone->m_slot->m_monsterStrength + m_monsterStrength - 3;
+        if (strength > 5) strength = 5;
+        else if (strength < 0) strength = 0;
+        int guardValue = getRmgGuardValue(totalValue, strength);
+        if (guardValue > 0) {
+            type_object* guard = createGuard(guardValue, zone);
+            if (guard && !group->addGuard(guard)) {
+                for (unsigned i = 0; i < group->m_objects.size(); ++i) {
+                    group->m_objects[i]->unknownOperation();
+                    delete group->m_objects[i];
+                }
+                group->reset();
+                delete guard;
+                return 0;
+            }
+        }
+    }
+    group->traceOutline();
+    group->m_ready = 1;
+    for (unsigned i = 0; i < group->m_outline.size(); ++i) {
+        group->m_map.getMapItem(group->m_outline[i].m_x,
+            group->m_outline[i].m_y)->m_tileData.m_placementOutline = 1;
+    }
+    return 1;
+}
 
 // The reset loops at 0x546758/0x5468ca and 0x547647/0x547739 pass a
 // TRmgMapItem in ECX and four scalar values. Retail writes land/frame in

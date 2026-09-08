@@ -21,6 +21,59 @@ def _asm(*instructions: str) -> str:
 
 
 class SourceMapTest(unittest.TestCase):
+    def test_load_uses_recorded_header_not_same_numbered_tu_lines(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            header = root / "header.h"
+            header.write_text("\n" * 10 + "headerFirst();\nheaderSecond();\nheaderLast();\n")
+            src = root / "unit.cpp"
+            src.write_text('#include "header.h"\n' + "\n" * 9
+                           + "wrongFirst();\nwrongSecond();\nwrongLast();\n")
+            for filename in ("Z:" + str(header).replace("/", "\\"),
+                             str(header), "header.h"):
+                with self.subTest(filename=filename):
+                    obj = root / "unit.obj"
+                    obj.write_bytes(_fixture(files=(filename,)))
+                    with patch.object(source, "_debug_obj", return_value=(
+                            obj, src, "unit.cpp")), patch.object(source.common, "HOMM3_DIR", root):
+                        mapping = source.load("unit", "func", 0, obj)
+                    self.assertEqual(mapping.source, "header.h")
+                    self.assertEqual(mapping.heads_at(1), (
+                        source.Statement(1, 13, "headerLast();"),))
+                    self.assertFalse(any("wrong" in row.text for row in mapping.statements))
+
+    def test_unknown_recorded_file_does_not_fall_back_to_manifest_source(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            src = root / "unit.cpp"
+            src.write_text("\n" * 10 + "wrongFirst();\nwrongSecond();\nwrongLast();\n")
+            unrelated = root / "unrelated.h"
+            unrelated.write_text(src.read_text())
+            for filename in (str(unrelated), str(root / "missing.h"), r"Q:\unknown.h"):
+                with self.subTest(filename=filename):
+                    obj = root / "unit.obj"
+                    obj.write_bytes(_fixture(files=(filename,)))
+                    with patch.object(source, "_debug_obj", return_value=(obj, src, "unit.cpp")):
+                        with self.assertRaisesRegex(source.SourceError, "not a current TU dependency"):
+                            source.load("unit", "func", 0, obj)
+
+    def test_recorded_compiler_header_is_allowed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            compiler = root / "compiler"
+            header = compiler / "include" / "vector"
+            header.parent.mkdir(parents=True)
+            header.write_text("\n" * 10 + "first();\nsecond();\nlast();\n")
+            src = root / "unit.cpp"
+            src.write_text("#include <vector>\n")
+            obj = root / "unit.obj"
+            obj.write_bytes(_fixture(files=(str(header),)))
+            with patch.object(source, "_debug_obj", return_value=(
+                    obj, src, "unit.cpp")), patch.object(source.cc_wrap, "msvc_dir", return_value=compiler):
+                mapping = source.load("unit", "func", 0, obj)
+            self.assertEqual(mapping.source, str(header))
+            self.assertEqual(mapping.heads_at(1)[0].text, "last();")
+
     def test_load_decodes_return_to_begin_line(self):
         payload = bytearray(_fixture())
         line_offset = struct.unpack_from("<I", payload, 20 + 28)[0]
