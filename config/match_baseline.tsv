@@ -1934,7 +1934,7 @@ game	?cancelComputerScreen@game@@QAEXXZ	100.0000	100.0000	100.0000	0xca530	3f74b
 game	?capacity@?$vector@Utype_university@@V?$allocator@Utype_university@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0xcfa40	-
 game	?checkForTimeEvent@game@@QAEXXZ	100.0000	100.0000	100.0000	0xcd910	5c7c921c91d7
 game	?checkForTownEvent@game@@QAEXXZ	100.0000	100.0000	100.0000	0xcda10	04b6e3a6f56e
-game	?claimGarrison@game@@QAEXHH@Z	84.4118	84.4118	84.4118	0xc6960	a3c98d55e28e
+game	?claimGarrison@game@@QAEXHH@Z	100.0000	100.0000	100.0000	0xc6960	86bb0813d7b2
 game	?claimGenerator@game@@QAEXHH@Z	100.0000	100.0000	100.0000	0xc67b0	c3495d84d754
 game	?claimMine@game@@QAEXHHW4type_action_type@@@Z	100.0000	100.0000	100.0000	0xc66e0	8346a5df7c6d
 game	?claimShipyard@game@@QAEXUtype_point@@H@Z	100.0000	100.0000	100.0000	0xc6a30	009c9e1e1778

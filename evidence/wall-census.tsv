@@ -102,7 +102,6 @@ not diagnosed	121	84.1098	84.1098	0.0000	84.1098	759	winmgr	?fizzleForwardX@hero
 not diagnosed	38	84.1667	84.1667	0.0000	84.1667	237	diff	?findNextSame@CDiffMaker@@IAE_NHHAAH0@Z	diagnose	-
 not diagnosed	161	84.2575	84.2575	0.0000	84.2575	1025	rmg	?placeMineSite@type_random_map_generator@@QAEEPAVtype_object@@PAUTRmgZone@@EH@Z	diagnose	-
 not diagnosed	59	84.3750	84.3750	0.0000	84.3750	378	ai_tactical	?getHexAttackValue@type_AI_attack_hex_chooser@@IAEJJAAJ@Z	diagnose	-
-not diagnosed	31	84.4118	84.4118	0.0000	84.4118	201	game	?claimGarrison@game@@QAEXHH@Z	diagnose	-
 not diagnosed	96	84.4576	84.4576	0.0000	84.4576	620	campaignwindow	?campaignWindowHandler@@YIHAAVmessage@@@Z	diagnose	-
 not diagnosed	169	84.5139	100.0000	15.4861	84.5139	1091	remote	?handleMPlayerLaunch@@YIEXZ	diagnose	-
 not diagnosed	109	84.5280	84.5280	0.0000	84.5280	703	soundmgr	?open@soundManager@@UAEHH@Z	diagnose	-
