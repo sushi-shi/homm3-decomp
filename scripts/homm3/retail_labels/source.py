@@ -455,6 +455,7 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "DEQUE_CONST_ITERATOR_CTOR_NODE",
                  "TREE_CONST_ITERATOR_CTOR",
                  "TREE_ITERATOR_EQUAL", "TREE_LOWER_BOUND", "TREE_UPPER_BOUND",
+                 "TREE_CONST_END",
                  "TREE_EQUAL_RANGE", "MAP_INSERT",
                  "STREAMBUF_XSPUTN",
                  "PAIR_CONST_INT_DTOR", "PAIR_CTOR",
@@ -1124,6 +1125,12 @@ def _demangle_key(mangled: str):
         return f"{tree_owner.lower()}@tree_node_insert"
     if mangled.startswith("?find@?$_Tree@") and tree_owner:
         return f"{tree_owner.lower()}@tree_find"
+    # Const lookup retains this hidden-result wrapper in GetDisplayFace.
+    # Keep its const iterator result distinct from mutable end(), including
+    # when both overloads emit the same fifteen-byte body.
+    if (mangled.startswith("?end@?$_Tree@") and tree_owner
+            and mangled.endswith("QBE?AVconst_iterator@12@XZ")):
+        return f"{tree_owner.lower()}@tree_const_end"
     if mangled.startswith("?_Dec@const_iterator@?$_Tree@") and tree_owner:
         return f"{tree_owner.lower()}@tree_const_iterator_dec"
     if mangled.startswith("?_Inc@const_iterator@?$_Tree@") and tree_owner:
@@ -2298,6 +2305,7 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             (kind for kind in ("tree_erase_iterator", "tree_erase_range",
                                "tree_erase_key",
                                "tree_lbound", "tree_ubound", "tree_find",
+                               "tree_const_end",
                                "tree_init", "tree_copy_assign",
                                "tree_const_iterator_ctor",
                                "tree_iterator_equal", "tree_lower_bound",

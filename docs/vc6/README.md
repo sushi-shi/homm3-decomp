@@ -132,6 +132,19 @@ equal-sized claim joins, a second element class, and unrelated container and
 insert overloads. A missing range-erase COMDAT remains an inlining question;
 it must not be paired with the retained iterator overload.
 
+`TREE_CONST_END` identifies the const `_Tree::end()` overload by its const
+member signature and `const_iterator` return type. Its fifteen-byte body
+copies `_Head` through a hidden result pointer. `getDisplayFace` reaches
+100% through a const map reference: all eighteen const lifetime/guard forms
+retain retail's two calls within `find()`, while the fifty-four mutable
+forms plateau. This is an overload-selection boundary. Keep the source
+lookup const and let the vendor implementation make its own inline choices.
+The same correction makes `makeHeroFilter` exact when its const reference
+stays inside the hero loop; hoisting it outside changes register homes and
+scores 90.13809%. Its mutable controls remain below 89%.
+`test_tree_member_keys.py` checks distinct owners, equal-sized joins, and
+negative controls for mutable end, begin, and unrelated containers.
+
 `STD_CONSTRUCT` also recognizes VC6's scalar placement-construction overloads.
 The byte helper at `0x48e9d0` is `?_Construct@std@@YIXPAEABE@Z`; its destination
 pointer and const-reference source must encode the same builtin type. Keys

@@ -3900,6 +3900,7 @@ singleselectionwindow	?doModal@TSingleSelectionWindow@@UAEHE@Z	100.0000	100.0000
 singleselectionwindow	?draw@CChatWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x17ca90	4c75dcb95ce8
 singleselectionwindow	?drawBasicMapInfo@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1840f0	709b555dcb96
 singleselectionwindow	?drawHeroAdvancedOption@TSingleSelectionWindow@@QAEXHEH@Z	91.4350	91.4350	91.4350	0x18d510	82a20cbb91bb
+singleselectionwindow	?end@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@QBE?AVconst_iterator@12@XZ	100.0000	100.0000	100.0000	0x18eb50	-
 singleselectionwindow	?erase@?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@QAEPAUGameSelectionHeadersStruct@@PAU3@0@Z	100.0000	100.0000	100.0000	0x18ef20	-
 singleselectionwindow	?exitDialog@TSingleSelectionWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x187bc0	084812d290e3
 singleselectionwindow	?find@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@QAE?AViterator@12@ABH@Z	100.0000	100.0000	100.0000	0x18eb60	-
@@ -3909,7 +3910,7 @@ singleselectionwindow	?flip@?$bitset@$03@std@@QAEAAV12@XZ	100.0000	100.0000	100.
 singleselectionwindow	?generateRandomMap@TSingleSelectionWindow@@QAEEPBD@Z	92.6386	92.6386	92.6386	0x1860e0	759f764b7868
 singleselectionwindow	?getCommonGameVersion@TSingleSelectionWindow@@QAEHXZ	100.0000	100.0000	100.0000	0x18ea00	505f0bb44383
 singleselectionwindow	?getCurrentScenario@SCampaign@@QAEPAUCampaignScenarioInfo@@XZ	100.0000	100.0000	100.0000	0x17c780	ad2d8ef83cb9
-singleselectionwindow	?getDisplayFace@TSingleSelectionWindow@@QAEHH@Z	85.2673	85.2673	85.2673	0x18d0e0	c5ed1e27ab15
+singleselectionwindow	?getDisplayFace@TSingleSelectionWindow@@QAEHH@Z	100.0000	100.0000	100.0000	0x18d0e0	2a5398b37961
 singleselectionwindow	?getFileName@TSingleSelectionWindow@@QAEPBDH@Z	100.0000	100.0000	100.0000	0x183f20	967770821cb9
 singleselectionwindow	?getHeader@TSingleSelectionWindow@@QAEHPAD0PAUGameSelectionHeadersStruct@@@Z	100.0000	100.0000	100.0000	0x183170	b095b673bf4f
 singleselectionwindow	?getHeaders@TSingleSelectionWindow@@QAEXPAV?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@@Z	87.0700	87.0700	87.0700	0x182b40	ba94bc70107d
@@ -3938,8 +3939,8 @@ singleselectionwindow	?insert@?$vector@UGameSelectionHeadersStruct@@V?$allocator
 singleselectionwindow	?isFaceTaken@CNetPlayerHandler@@QAEEHH@Z	100.0000	100.0000	100.0000	0x177d10	c9e041516cee
 singleselectionwindow	?isHost@TSingleSelectionWindow@@QAEEXZ	100.0000	100.0000	100.0000	0x18adf0	fe1a1d4efec7
 singleselectionwindow	?isVersionCompatible@TSingleSelectionWindow@@QAEEPBD@Z	100.0000	100.0000	100.0000	0x189d30	920f67a9ce18
-singleselectionwindow	?lower_bound@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@QAE?AViterator@12@ABH@Z	100.0000	100.0000	100.0000	0x18f0f0	-
-singleselectionwindow	?makeHeroFilter@TSingleSelectionWindow@@QAEXXZ	88.9714	88.9714	88.9857	0x183890	28e970ed2835
+singleselectionwindow	?lower_bound@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@QBE?AVconst_iterator@12@ABH@Z	100.0000	100.0000	100.0000	0x18f0f0	-
+singleselectionwindow	?makeHeroFilter@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x183890	de1c54d0f71d
 singleselectionwindow	?newPlayer@CNewPlayerUpdateMan@@QAEXK@Z	100.0000	100.0000	100.0000	0x18a280	ae51dd96f258
 singleselectionwindow	?onBadVersionMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18df50	177b9fa9b9c5
 singleselectionwindow	?onBeginGame@TSingleSelectionWindow@@QAEEXZ	78.9055	78.9055	78.9055	0x18bce0	295028ee9732
