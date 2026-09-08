@@ -5942,11 +5942,67 @@ void type_random_map_generator::carveBranchingPaths()
     }
 }
 
-// Retained by generation coordinator 0x549930; retail-only role/ABI.
+// Retail 0x5448eb passes two points by value followed by the zone. The
+// eight-byte vector elements and midpoint operations prove the point ABI.
 #if 0 // @carcass
-VA(0x005446A0, 0x27E)
-void type_random_map_generator::prepareJunctionZone(TRmgZone* zone) {} // @stub
+VA(0x005443A0, 0x2F5)
+void type_random_map_generator::connectJunctionEntrance(TPoint from, TPoint to,
+    TRmgZone* zone) {} // @stub
 #endif
+
+// Junction zones reset their dry cells, seed the first entrance, then trace
+// each reachable entrance back to a zero-cost cell before carving its path.
+// Retail retains both floodConnectionCosts calls and the separate point-pair
+// helper. Complete-only names describe the roles rather than source symbols.
+// First reconstruction: 60.3628%. The candidate has 28 blocks versus
+// retail's 26; the first difference is the inner reset-loop entry test.
+// Preserve the reset helper and predecessor walk while resolving loop and
+// local lifetimes against the retained retail call sequence.
+VA(0x005446A0, 0x27E)
+void type_random_map_generator::prepareJunctionZone(TRmgZone* zone)
+{
+    TRmgZoneBounds bounds = zone->m_bounds;
+    int zoneIndex = zone->m_slot->m_zoneIndex;
+    TRmgMapPosition position = zone->getLevelPosition();
+    int level = position.m_z;
+    for (int y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
+        for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
+            TRmgMapItem* item = m_map.getMapItem(x, y, level);
+            if (item->m_zoneState.m_zone == zoneIndex
+                && item->m_tile.m_landType != eTerrainWater) {
+                TRmgMapPosition previous;
+                item->resetMovement(previous);
+                if (static_cast<int>(item->m_objects.size()) <= 0
+                    && !item->m_connection.m_present) {
+                    item->m_tileData.m_subterraneanGate = 0;
+                    item->m_tileData.m_borderObject = 1;
+                }
+            }
+        }
+    }
+    if (!zone->m_entrances.size())
+        return;
+    TRmgMapPosition first(zone->m_entrances[0].m_x,
+        zone->m_entrances[0].m_y, level);
+    TRmgMapItem* item = m_map.getMapItem(first.m_x, first.m_y, first.m_z);
+    item->m_movement.m_cost = 0;
+    item->m_previousTile = TRmgMapPosition();
+    m_map.floodConnectionCosts(first, 0);
+    for (int entrance = 1; entrance < static_cast<int>(zone->m_entrances.size()); ++entrance) {
+        TPoint from = zone->m_entrances[entrance];
+        item = m_map.getMapItem(from.m_x, from.m_y, level);
+        unsigned int cost = item->m_movement.m_cost;
+        if (!cost || cost > 30000)
+            continue;
+        TRmgMapPosition previous(from.m_x, from.m_y, level);
+        while (item->m_movement.m_cost > 0) {
+            previous = item->m_previousTile;
+            item = m_map.getMapItem(previous.m_x, previous.m_y, previous.m_z);
+        }
+        connectJunctionEntrance(from, TPoint(previous.m_x, previous.m_y), zone);
+        m_map.floodConnectionCosts(TRmgMapPosition(from.m_x, from.m_y, level), 0);
+    }
+}
 
 // Retail-only generation coordinator, called at 0x549b65. After the layout
 // passes it marks unassigned dry cells without objects or entrances, then
