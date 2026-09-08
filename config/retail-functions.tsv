@@ -32,11 +32,14 @@
 # (`mov eax,<continuation>; ret`) on rows nothing claims yet and are left
 # alone: 0x004c29 under basic_string::_Copy at 0x4bd0 and 0x212600 whose
 # parent the handler-stub walk cannot resolve.
-# BOUNDARY CORRECTION 2026-09-07: 0x14c0fe is the typed catch handler of
-# TRandomMapRequest::Generate at 0x14c090. The parent's EH registration points
-# at FuncInfo 0x251ff8; its HandlerType at 0x251fe8 names 0x14c0fe, whose
-# `mov eax,0x54c104; ret` resumes immediately after the funclet. Absorb the
-# six-byte handler into its 0x6e-byte parent.
+# BOUNDARY CORRECTION 2026-09-08: TRandomMapRequest::generate at
+# 0x14c090 includes its typed catch handler at 0x14c0fe AND the continuation
+# 0x14c104..0x14c11c. FuncInfo 0x251f98 -> TryBlockMap 0x251fd0 ->
+# HandlerType 0x251fe8 names 0x14c0fe; that handler returns 0x54c104.
+# The continuation restores FS:[0], returns failure code 1, and ret 8;
+# four padding bytes follow before the next function at 0x14c120.
+# The previous 116-byte extent retained the handler but omitted its return
+# continuation. Retail bytes and the reconstructed VC6 catch agree on 140.
 # 11949 rows since.
 # BOUNDARY CORRECTION 2026-09-06: objecttype.obj's four EH-bearing
 # Dinkumware extraction operators are ONE function each, not the two or
@@ -4153,7 +4156,7 @@ rva	size
 0x14bc50	686
 0x14bf00	87
 0x14bf60	304
-0x14c090	116
+0x14c090	140
 0x14c120	67
 0x14c170	56
 0x14c1b0	35

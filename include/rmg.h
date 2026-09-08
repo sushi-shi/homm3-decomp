@@ -7,6 +7,7 @@
 #include <vector>
 #include <va.h>
 #include "terrain_type.h"
+#include "advmgr_objects.h"
 
 class TAbstractFile;
 class TSpreadsheetResource;
@@ -585,6 +586,17 @@ struct TRmgGridPoint {
 // ECX/EDX and returns without popping arguments: a free fastcall boundary.
 bool operator<(const TRmgGridPoint& left, const TRmgGridPoint& right);
 
+// Complete-only island subdivision records. Retail copies nine dwords per
+// work item and passes four edge values separately at 0x53ed00/0x53e9e0.
+struct TRmgIslandPatch {
+    int m_minimumY, m_minimumX, m_maximumY, m_maximumX;
+    int m_topLeft, m_topRight, m_bottomLeft, m_bottomRight;
+    int m_range;
+};
+struct TRmgIslandEdges {
+    int m_left, m_top, m_right, m_bottom;
+};
+
 struct TRmgZoneBounds {
     // Before normalization: minimumX.
     int m_minimumX;
@@ -610,7 +622,9 @@ TPoint clipRmgBoundaryPoint(
 enum ERmgConnectionConstants {
     RMG_SHIPYARD_WATER_OFFSET_COUNT = 4,
     RMG_WATER_NONE = 0,
-    RMG_WATER_ISLANDS = 2
+    RMG_WATER_NORMAL = 1,
+    RMG_WATER_ISLANDS = 2,
+    RMG_WATER_RANDOM = 3
 };
 
 // Complete's guard selector 0x540b20 uses these bounds, not the full combat
@@ -796,6 +810,8 @@ struct TRmgObjectPropertiesRef {
     // Before normalization: pad00e5.
     char m_pad00e5[3];
 
+    TRmgObjectPropertiesRef(TObjectType* prototype);
+
     // Lazy perimeter builder retained at 0x532c80; role name, retail-only.
     void buildOutline();
     void buildOverlapPriorities();
@@ -847,6 +863,22 @@ public:
     virtual void write(TAbstractFile* outfile, int parameter);
 };
 
+// Black-box reward object: factories 0x534380/0x534410/0x534490 share
+// vtable 0x640ad4 and this 0x54-byte layout. Writer 0x5336f0 proves the
+// experience, seven resource amounts, creature pair, and spell-id vector.
+class rmgBlackBoxObject : public type_object {
+public:
+    int m_experience;                 // +0x1c
+    int m_resources[7];              // +0x20
+    int m_creatureType;              // +0x3c
+    int m_creatureCount;             // +0x40
+    std::vector<int> m_spells;       // +0x44, four-byte spell ids
+
+    rmgBlackBoxObject(TRmgObjectPropertiesRef* properties);
+    virtual void write(TAbstractFile* outfile, int version);
+};
+SIZE(rmgBlackBoxObject, 0x54);
+
 // Provisional Complete-only role: createGuard (0x540b20) allocates 0x2c and
 // installs vtable 0x640a84. Slot 3 (0x5331f0) serializes the id, count and
 // disposition below; +0x28 is neither initialized nor read by those bodies.
@@ -868,6 +900,24 @@ public:
 };
 SIZE(rmgMonsterObject, 0x2c);
 
+// Complete town vtable 0x640a94; constructor expansion at 0x54543d
+// stores owner/option/id in the 0x28-byte allocation. Names are role-derived.
+class rmgTownObject : public type_object {
+public:
+    int m_objectId;
+    int m_player;
+    unsigned char m_townOption;
+    rmgTownObject(TRmgObjectPropertiesRef* properties, int objectId,
+        int player, unsigned char townOption) : type_object(properties)
+    {
+        m_player = player;
+        m_townOption = townOption;
+        m_objectId = objectId;
+    }
+    virtual void write(TAbstractFile* outfile, int version);
+};
+SIZE(rmgTownObject, 0x28);
+
 // Provisional Complete-only role. The shipyard path allocates 0x1c bytes,
 // calls type_object's constructor, then replaces its vptr with 0x640aa4.
 // That table shares the base's middle slots and overrides serialization:
@@ -877,6 +927,29 @@ public:
     rmgOwnableObject(TRmgObjectPropertiesRef* properties)
         : type_object(properties) {}
     virtual void write(TAbstractFile* outfile, int parameter);
+};
+
+// Provisional artifact-object role: factory 0x5341f0 allocates only the
+// base fields and installs 0x640ab4, whose writer appends a zero flag.
+class rmgArtifactObject : public type_object {
+public:
+    rmgArtifactObject(TRmgObjectPropertiesRef* properties) : type_object(properties) {}
+    virtual void write(TAbstractFile* outfile, int version);
+};
+
+// Resource pile vtable 0x640ac4, installed by the mine pass at 0x545d8c.
+class rmgResourceObject : public type_object {
+public:
+    rmgResourceObject(TRmgObjectPropertiesRef* properties) : type_object(properties) {}
+    virtual void write(TAbstractFile* outfile, int version);
+};
+
+// type_witch_hut_def's factory 0x534a90 installs vtable 0x640b54 on a
+// base-sized object. Its final slot serializes the allowed-skills mask.
+class rmgWitchHutObject : public type_object {
+public:
+    rmgWitchHutObject(TRmgObjectPropertiesRef* properties) : type_object(properties) {}
+    virtual void write(TAbstractFile* outfile, int version);
 };
 
 // Factory 0x5348d0 allocates this 0x2c-byte derived object after reserving a
@@ -912,10 +985,12 @@ struct TRmgMapItem {
 
     TRmgMapItem();
     void clear();
+    void write(TAbstractFile* outfile);
 
     // CreateRiver's predicate reads shift the high tile bits and test a
     // byte result. These queries recover that boundary; direct field tests
     // instead use dword masks. Names remain provisional without RMG symbols.
+    bool isRoadTarget() const { return m_tileData.m_roadTarget != 0; }
     bool isRiverTarget() const { return m_tileData.m_riverTarget != 0; }
     bool isImpassable() const { return m_tileData.m_impassable != 0; }
 
@@ -1037,6 +1112,8 @@ public:
     // pair stores width early; a separate plane local keeps the wrong multiply
     // operand. Field assignments stay in the body: an all-member initializer
     // list moves the vptr store past them. Other view callers remain partial.
+    type_random_map(int width, int height, int levels);
+
     inline type_random_map(TRmgMapItem* items, int width, int height)
     {
         m_mapWidth = width;
@@ -1046,11 +1123,7 @@ public:
         m_ownsMapItems = 0;
     }
 
-    virtual ~type_random_map()
-    {
-        if (m_ownsMapItems)
-            delete[] m_mapItems;
-    }
+    virtual ~type_random_map();
 
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile);
@@ -1061,6 +1134,9 @@ public:
     virtual int getOverlay(const TRmgGridPoint& point);
 
     void clear();
+    void markCoastalTiles();
+    void markObstacleArea(TRmgMapPosition position);
+    void floodConnectionCosts(TRmgMapPosition position, unsigned char waterZone);
 
     TRmgMapItem* getMapItem(int x, int y);
     // Before normalization (function): type_random_map::GetMapItem.
@@ -1334,11 +1410,12 @@ struct TRmgZone {
     // H3API H3RmgZoneGenerator::townType2, INT32 at +08, commit
     // 92255ab18da784a5842ecc2b8bc0ce00e19a0c56. The surrounding town/terrain,
     // coordinates, object-count array and three vectors match this layout.
-    // Reference-backed spelling/type; no retail semantic consumer located.
+    // Retail type_map_dwelling_def::getValue at 0x5347f0 compares this
+    // field with the dwelling creature's town type before valuing it.
     // Before normalization: opaque0008.
     int m_townType2;
     // Before normalization: terrain.
-    int m_terrain;                     // +0x0c
+    TTerrainType m_terrain;             // +0x0c, mine prototype terrain domain
     // Before normalization: levelPosition.
     TRmgMapPosition m_levelPosition;   // +0x10
     // Before normalization: boundaryRoughness.
@@ -1427,15 +1504,10 @@ SIZE(TRmgVoronoi, 0x14);
 
 // The RMG progress sink is used through its third vtable slot by the zone
 // connection coordinator.  No concrete implementation is owned by rmg.cpp.
-class TRmgProgress {
-public:
-    // Before normalization (function): TRmgProgress::UnknownProgressOperation0.
-    virtual void unknownProgressOperation0() = 0;
-    // Before normalization (function): TRmgProgress::UnknownProgressOperation1.
-    virtual void unknownProgressOperation1() = 0;
-    // Before normalization (function): TRmgProgress::Advance.
-    virtual void advance(int amount) = 0;
-};
+// Former provisional TRmgProgress is TProgressSink: base ctor 0x53612c
+// reads m_steps at +4 and calls setTotal through vtable slot 1. The lobby
+// passes TRandomMapProgress, whose existing base is TProgressSink.
+
 
 SIZE(TRmgMapPosition, 0xc);
 SIZE(TRmgZoneConnection, 0x1c);
@@ -1452,15 +1524,26 @@ enum ERmgMapVersion {
 // into the late generator state.  Each named field below is read or written
 // at its annotated offset by retail 0x549cb0; opaque spans preserve all
 // unobserved state without guessing at its source identity.
-class type_random_map_generator {
+// Provisional base identity: ctor 0x536070 and dtor 0x5363b0 bracket
+// exactly these members. Their vtable is 0x640c3c, versus derived 0x640c44;
+// derived construction calls the base before its string/vector members and
+// derived destruction calls it after them. No Dreamcast RMG types survive.
+// Retail 0x537b10 reads two-int records from 0x640718 and 0x640808.
+// Role-derived names; no Dreamcast RMG counterpart survives.
+struct TRmgObjectLimit {
+    int m_objectType;
+    int m_limit;
+};
+
+class TRmgGeneratorBase {
 public:
     // Before normalization: randomSeed.
-    int m_randomSeed;                                  // +0x004
+    long m_randomSeed;                                  // +0x004
     // Before normalization: mapVersion.
     int m_mapVersion;                                  // +0x008
     // Before normalization: map.
     type_random_map m_map;                             // +0x00c
-    std::vector<TObjectType> m_objectsTxt;             // +0x024
+    TObjectTypeTable m_objectsTxt;             // +0x024
     std::vector<TRmgObjectPropertiesRef*> m_objectPrototypes[232]; // +0x034
     // Before normalization: placementRules.
     // Previously unknownPointers/randomTerrainEntries; loader 0x536560 and
@@ -1469,7 +1552,21 @@ public:
     // Before normalization: positions.
     std::vector<type_object*> m_positions;             // +0xec4
     // Before normalization: progress.
-    TRmgProgress* m_progress;                          // +0xed4
+    TProgressSink* m_progress;                          // +0xed4
+    TRmgGeneratorBase(int width, int height, int levels, void* progress,
+        int progressSteps, int mapVersion);
+    void loadObjectPrototypes();
+    void readObjectPlacementRules();
+    // Retail-only roles; both bodies consume only the recovered base prefix.
+    void decorateMap();
+    void decorateMapCell(TRmgMapPosition position, int progressSteps);
+    virtual ~TRmgGeneratorBase();
+    virtual void addObject(type_object* object, TRmgMapPosition position);
+};
+SIZE(TRmgGeneratorBase, 0xed8);
+
+class type_random_map_generator : public TRmgGeneratorBase {
+public:
     // Before normalization: fixedHumanPlayers.
     unsigned char m_fixedHumanPlayers[8];              // +0x0ed8
     // Retail 0x5499fb initializes nine ints beginning here to -1;
@@ -1549,6 +1646,31 @@ public:
     // Before normalization: monolithsTwoWay.
     std::vector<type_object*> m_monolithsTwoWay;       // +0x14d0
 
+    // Retail 0x537b10 consumes eleven stack arguments (ret 0x2c).
+    type_random_map_generator(int width, int height, int levels,
+        int humanPlayers, int humanTeams, int computerPlayers, int computerTeams,
+        int waterContent, int monsterStrength, void* progress, int mapVersion);
+    void loadTemplates();
+    // Role-derived from generation coordinator 0x549b30 and placement 0x545250.
+    void placeMines();
+    // Provisional roles from the Complete-only connection coordinator.
+    void prepareZoneConnections();
+    void prepareObstacleLayout();
+    void expandObstacleClearance();
+    void prepareWaterZoneConnections(TRmgZone* zone);
+    void createWaterZoneIsland(const TRmgZoneBounds& bounds, int level);
+    void floodWaterZoneDistances(TRmgMapPosition position, int zoneIndex);
+    void buildZoneConnectionPaths();
+    void placeExtraMines(TRmgZone* zone);
+    unsigned char placeMineSite(type_object* object, TRmgZone* zone,
+        unsigned char startingMine, int spacing);
+    unsigned char tryPlaceMine(TRmgZone* zone, int resource,
+        unsigned char startingMine, int spacing);
+    void placePrimaryTown(TRmgZone* zone);
+    unsigned char tryPlacePrimaryTown(TRmgZone* zone, int alignment,
+        int player, unsigned char townOption);
+    unsigned char generate();
+    unsigned char writeMap(TAbstractFile* outfile);
     virtual ~type_random_map_generator();
     // Before normalization (function): type_random_map_generator::AddObject.
     virtual void addObject(type_object* object, TRmgMapPosition position);
@@ -1568,7 +1690,7 @@ public:
 
     // Before normalization (function): type_random_map_generator::InitializeObjectGenerators.
     void initializeObjectGenerators();
-    void readObjectPlacementRules();
+    int selectPrisonHero();
     int scoreObjectPlacement(
         TRmgObjectPropertiesRef* properties, TRmgMapPosition position);
     unsigned char canPlaceZone(TRmgZone* zone);
@@ -1628,10 +1750,17 @@ public:
     // the sole direct caller, and the body builds the road traversal costs.
     // Before normalization (function): type_random_map_generator::BuildRoadCostMap.
     void buildRoadCostMap(TRmgMapPosition position);
+    void createRoads();
+    unsigned char createRoad(TRmgMapPosition position, int roadType);
     // Provisional spelling: retail's water-wheel caller and the river-delta
     // object selection prove the role; the Dreamcast build has no RMG TU.
     // Before normalization (function): type_random_map_generator::CreateRiver.
     void createRiver(TRmgMapPosition source);
+    void markRiverObjectTargets();
+    void markRiverTargets();
+    void markRiverCoastTarget(TRmgMapPosition position, int direction);
+    void createRiverToObject(TRmgMapPosition source);
+    void createRivers();
     // Before normalization (function): type_random_map_generator::WriteMapHeader.
     void writeMapHeader(TAbstractFile* outfile);
 };
