@@ -4373,22 +4373,6 @@ void showCongrats(int hsType)
     g_windowManager->fadeScreen(1, 4, 0);
 }
 
-// This tree still carries the spellbook id in the older combat-side enum,
-// while type_artifact's source interface correctly uses TArtifact. Preserve
-// the shared four-byte representation without an integer-to-enum cast; VC6
-// folds this established in-tree bridge away completely.
-inline TArtifact artifactFromInt(int value)
-{
-    union {
-        // Before normalization: integer.
-        int m_integer;
-        // Before normalization: artifact.
-        TArtifact m_artifact;
-    } converted;
-    converted.m_integer = value;
-    return converted.m_artifact;
-}
-
 type_normal_dialog_frame::type_normal_dialog_frame(
     long x, long y, long w, long h, long id,
     // Before normalization (locals): new_resource, new_qualifier.

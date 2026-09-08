@@ -52,21 +52,6 @@ static inline int limit(int minimum, int value, int maximum)
     return tLimit(minimum, value, maximum);
 }
 
-// The dragged-artifact record stores its id as an int while the recovered
-// hero interface keeps the Dreamcast TArtifact parameter.  This established
-// in-tree union bridge preserves that source type without emitting a cast.
-inline TArtifact artifactFromInt(int value)
-{
-    union {
-        // Before normalization: integer.
-        int m_integer;
-        // Before normalization: artifact.
-        TArtifact m_artifact;
-    } converted;
-    converted.m_integer = value;
-    return converted.m_artifact;
-}
-
 // Before normalization (function): text_pointer_payload.
 inline int textPointerPayload(char* text)
 {

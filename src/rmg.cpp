@@ -894,6 +894,14 @@ unsigned char type_random_map::canPlaceObject(
     return result;
 }
 
+// Treasure fill and guard placement pass a map in ECX, followed by an
+// object and a by-value coordinate. Retail stores the position in the
+// object, then visits its prototype footprint in the map's cell array.
+#if 0 // @carcass
+VA(0x00531EA0, 0x2E6) // anchor-callee 0x5465d9/0x535400; thiscall, ret 0x10
+void type_random_map::addObject(type_object* object, TRmgMapPosition position) {} // @stub
+#endif
+
 // Terrain vtable 0x6409cc slot 1 stores the generic adapter's integer
 // kind and frame, then its two flip bytes. Retail's mask/sign-extension
 // pair proves signed integer storage; the same generic interface also
@@ -2347,9 +2355,160 @@ void TRmgTreasureGroup::reset()
 #if 0 // @carcass
 VA(0x00535110, 0x4AB) // anchor-callee 0x546843; thiscall, ret 4
 unsigned char TRmgTreasureGroup::addGuard(type_object* guard) { return 0; } // @stub
-VA(0x00535EE0, 0x18F) // anchor-callee 0x5468ea/0x53511b; thiscall, ret 0
-void TRmgTreasureGroup::traceOutline() {} // @stub
 #endif
+
+// The adjacent guard/object placement callers pass properties and a
+// three-dword position. The predicate checks neighboring entrance flags,
+// then calls the contained map's isPlacementBlocked with zone -1.
+// Complete-only provisional group helper; ret 0x10 and AL result are proven.
+#if 0 // @carcass
+VA(0x005355E0, 0x1F9) // anchor-callee 0x535ab9; thiscall, ret 0x10
+unsigned char TRmgTreasureGroup::canFitObject(TRmgObjectPropertiesRef* properties,
+    TRmgMapPosition position) { return 0; } // @stub
+#endif
+
+// Collect positions next to existing object entrances. Objects whose land
+// traits permit full approach consider all eight directions; others use
+// directions 3..1. Candidate bounds leave a margin around the group map.
+// A successful random choice transfers the object to the group and stamps
+// its footprint on surface level zero. Names describe Complete-only roles.
+// Residual (79.3429%): all 21 CFG blocks and branch destinations align;
+// remaining differences are local/register homes, coordinate copies and
+// vector cleanup scheduling. Reusing the candidate variable for the final
+// choice loses to separate scopes (75.5095% versus 79.3143%). The RMG trigger
+// point is flat; two canonical += translations reach 79.3429%, and naming
+// the candidate count is flat. Preserve both map and group helper calls.
+VA(0x00535970, 0x240) // anchor-callee 0x546680; thiscall, ret 4
+unsigned char TRmgTreasureGroup::tryAddObject(type_object* object)
+{
+    TRmgObjectPropertiesRef* properties = object->m_properties;
+    TObjectType* prototype = properties->m_prototype;
+    TRmgZoneBounds bounds;
+    bounds.m_minimumX = prototype->getWidth() + 2;
+    bounds.m_minimumY = prototype->getHeight() + 2;
+    bounds.m_maximumX = m_map.m_mapWidth - 3;
+    bounds.m_maximumY = m_map.m_mapHeight - 3;
+    TPoint trigger(prototype->m_triggerCell.m_x, prototype->m_triggerCell.m_y);
+    std::vector<TRmgMapPosition> candidates;
+    for (unsigned index = 0; index < m_objects.size(); ++index) {
+        type_object* existing = m_objects[index];
+        TObjectType* existingPrototype = existing->m_properties->m_prototype;
+        TRmgMapPosition entrance = existing->getPosition();
+        entrance.m_x -= existingPrototype->m_triggerCell.m_x;
+        entrance.m_y -= existingPrototype->m_triggerCell.m_y;
+        int end;
+        int first;
+        if (g_adventureObjectLandBlocked[existingPrototype->m_objectType][1]) {
+            end = 8;
+            first = 0;
+        } else {
+            end = 4;
+            first = 1;
+        }
+        for (int direction = end; direction-- > first; ) {
+            TRmgMapPosition position = entrance;
+            position += g_rmgDirections[direction];
+            position += trigger;
+            if (position.m_x >= bounds.m_minimumX && position.m_x < bounds.m_maximumX
+                && position.m_y >= bounds.m_minimumY && position.m_y < bounds.m_maximumY
+                && canFitObject(properties, position))
+                candidates.push_back(position);
+        }
+    }
+    unsigned count = candidates.size();
+    if (!count)
+        return 0;
+    TRmgMapPosition selected = candidates[rand() % count];
+    m_objects.push_back(object);
+    TRmgMapPosition position;
+    position.m_x = selected.m_x;
+    position.m_y = selected.m_y;
+    position.m_z = 0;
+    m_map.addObject(object, position);
+    return 1;
+}
+
+// Complete-only group bounds. A flat map-cell scan encloses cells that
+// fail the group's traversal predicate. The two reference-based extrema
+// pairs preserve retail's int-to-long temporary argument homes; bounds
+// use an exclusive upper edge, and empty groups retain the sentinels.
+// Exact: 234 bytes. Minimum arguments in bound/coordinate order and
+// coordinate-before-pointer loop increments restore the last three deltas
+// from the initial 97.4545% candidate; all 20 CFG blocks already aligned.
+VA(0x00535DF0, 0xEA) // anchor-callee 0x5466c6/0x5355a4; thiscall, ret 0
+void TRmgTreasureGroup::updateBounds()
+{
+    m_bounds.m_minimumX = 32000;
+    m_bounds.m_minimumY = 32000;
+    m_bounds.m_maximumX = -32000;
+    m_bounds.m_maximumY = -32000;
+    TRmgMapItem* item = m_map.m_mapItems;
+    for (int y = 0; y < m_map.m_mapHeight; ++y) {
+        for (int x = 0; x < m_map.m_mapWidth; ++x, ++item) {
+            if (!item->m_tileData.m_roadPassable || item->m_tile.m_landType == eTerrainRock
+                || item->isRoadEntrance() || !item->hasSubterraneanGate()) {
+                m_bounds.m_minimumX = std::_cpp_min<long>(m_bounds.m_minimumX, x);
+                m_bounds.m_maximumX = std::_cpp_max<long>(m_bounds.m_maximumX, x + 1);
+                m_bounds.m_minimumY = std::_cpp_min<long>(m_bounds.m_minimumY, y);
+                m_bounds.m_maximumY = std::_cpp_max<long>(m_bounds.m_maximumY, y + 1);
+            }
+        }
+    }
+}
+
+// Complete-only cached perimeter walk. Scan y/x for the first nontraversable
+// group cell, begin immediately above it, then walk cardinal directions.
+// The cell predicates match the two retail expansions at 0x535f39 and
+// 0x536000, including the byte-return entrance/gate queries. Like the
+// prototype's buildOutline, reverse direction after each accepted step and
+// stop before duplicating the first point.
+// Residual (95.1849%): all 32 blocks align; the perimeter walk agrees,
+// while the initial map scan differs in register homes and inner back-edge
+// polarity. Separate coordinate initialization is flat at 95.1644%; explicit
+// cached height/per-row width restores one addressing detail to 95.1849%.
+VA(0x00535EE0, 0x18F) // anchor-callee 0x5468ea/0x53511b; thiscall, ret 0
+void TRmgTreasureGroup::traceOutline()
+{
+    if (m_outline.size() > 0)
+        return;
+    TPoint position;
+    position.m_x = 0;
+    int height = m_map.m_mapHeight;
+    for (position.m_y = 0; position.m_y < height; ++position.m_y) {
+        int width = m_map.m_mapWidth;
+        for (position.m_x = 0; position.m_x < width; ++position.m_x) {
+            TRmgMapItem* item = m_map.getMapItem(position.m_x, position.m_y, 0);
+            if (item->isRoadEntrance() || !item->m_tileData.m_roadPassable
+                || item->m_tile.m_landType == eTerrainRock || !item->hasSubterraneanGate())
+                break;
+        }
+        if (position.m_x < width)
+            break;
+    }
+    if (position.m_x == m_map.m_mapWidth)
+        return;
+    --position.m_y;
+    TPoint start = position;
+    int direction = 2;
+    do {
+        m_outline.push_back(position);
+        int attempts = 0;
+        do {
+            direction = (direction - 2) & 7;
+            TPoint offset = g_rmgDirections[direction];
+            TPoint nearby(position.m_x + offset.m_x, position.m_y + offset.m_y);
+            if (nearby.m_x < 0 || nearby.m_x >= m_map.m_mapWidth
+                || nearby.m_y < 0 || nearby.m_y >= m_map.m_mapHeight)
+                break;
+            TRmgMapItem* item = m_map.getMapItem(nearby.m_x, nearby.m_y, 0);
+            if (!item->isRoadEntrance() && item->m_tileData.m_roadPassable
+                && item->m_tile.m_landType != eTerrainRock && item->hasSubterraneanGate())
+                break;
+        } while (++attempts < 4);
+        position = position + TRmgVector(g_rmgDirections[direction].m_x, g_rmgDirections[direction].m_y);
+        direction = (direction - 4) & 7;
+    } while (start != position);
+}
 
 // Retail's derived generator constructor 0x537b10 calls this six-argument
 // base initializer. Automatic member construction owns the map, object table
@@ -7112,14 +7271,92 @@ TRmgObjectPropertiesRef* type_random_map_generator::selectObjectPrototype(
     return candidates[rand() % candidates.size()];
 }
 
-// The assembly caller passes zone, group, alternate flag and target value;
-// retail accumulates a value in ESI and returns it after group finalization.
-// Complete-only provisional role; no Dreamcast counterpart.
+// Weighted treasure selection returns a newly generated object and writes
+// its value through argument four. Retail tests primary at +0x18, permits
+// isTerrainDependent definitions through +0x1c, and enables value-per-cell
+// filtering through +0x20. The final three dwords are an optional position.
+// Complete-only provisional role names; ret 0x28 proves the full argument ABI.
 #if 0 // @carcass
+VA(0x00546190, 0x385) // anchor-callee 0x546572/0x546663; thiscall, ret 0x28
+type_object* type_random_map_generator::createTreasureObject(TRmgZone* zone,
+    int minimum, int maximum, int* value, unsigned char primary,
+    unsigned char allowTerrainDependent, unsigned char compact,
+    TRmgMapPosition position) { return 0; } // @stub
+#endif
+
+// Complete-only group fill. The first object is centered in the temporary
+// map; later objects use the fit helper. Generation and fit have independent
+// three-attempt limits. Failed fits release the object before retrying;
+// accepted values accumulate until the target or a small remainder stops us.
+// Residual (97.7697%): only centering-load scheduling remains. Assigned
+// coordinates and distinct first/later object lifetimes restore retail
+// calls (91.2079%); constructor temporaries over-expand vector insertion.
+// Unsigned centers and a separate accepted object reach 92.7247%; immediate
+// third-fit failure exit reaches 95.1461%; prototype lookup before accepting
+// the first object reaches 97.7697%. Reversing center sum operands is flat.
+// Explicit count insert expands its body (4.3427%); keep push_back.
 VA(0x00546520, 0x1B6) // anchor-callee 0x54678a; thiscall, ret 0x10
 int type_random_map_generator::fillTreasureGroup(TRmgZone* zone,
-    TRmgTreasureGroup* group, unsigned char alternate, int value) { return 0; } // @stub
-#endif
+    TRmgTreasureGroup* group, unsigned char alternate, int value)
+{
+    int objectValue = 0;
+    int attempts;
+    type_object* selected;
+    TRmgMapPosition position;
+    position.m_x = -1;
+    position.m_y = -1;
+    position.m_z = -1;
+    for (attempts = 0; attempts < RMG_TREASURE_ATTEMPTS; ++attempts) {
+        selected = createTreasureObject(zone, value / 4, value, &objectValue,
+            1, 1, alternate, position);
+        if (selected)
+            break;
+    }
+    if (!selected)
+        return 0;
+    TObjectType* prototype = selected->m_properties->m_prototype;
+    type_object* object = selected;
+    position.m_x = (group->m_map.m_mapWidth + static_cast<unsigned>(prototype->getWidth())) / 2;
+    position.m_y = (group->m_map.m_mapHeight + static_cast<unsigned>(prototype->getHeight())) / 2;
+    position.m_z = 0;
+    group->m_objects.push_back(object);
+    group->m_map.addObject(object, position);
+    int total = objectValue;
+    while (total < value) {
+        int remainder = value - total;
+        if (remainder < RMG_TREASURE_MINIMUM_REMAINDER && remainder < total / 2)
+            break;
+        type_object* nextObject;
+        for (attempts = 0; ; ) {
+            int creationAttempts;
+            for (creationAttempts = 0; creationAttempts < RMG_TREASURE_ATTEMPTS;
+                 ++creationAttempts) {
+                TRmgMapPosition unspecified;
+                unspecified.m_x = -1;
+                unspecified.m_y = -1;
+                unspecified.m_z = -1;
+                nextObject = createTreasureObject(zone, remainder / 4, 5 * remainder / 4,
+                    &objectValue, 0, 1, alternate, unspecified);
+                if (nextObject)
+                    break;
+            }
+            if (!nextObject)
+                break;
+            if (group->tryAddObject(nextObject))
+                break;
+            nextObject->unknownOperation();
+            delete nextObject;
+            if (++attempts >= RMG_TREASURE_ATTEMPTS)
+                goto groupFilled;
+        }
+        if (!nextObject)
+            break;
+        total += objectValue;
+    }
+groupFilled:
+    group->updateBounds();
+    return total;
+}
 
 // Complete-only assembly: reset the reusable group, generate a value in the
 // requested half-open range, then add its scaled guard. A failed guard fit

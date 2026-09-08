@@ -28,6 +28,7 @@
 // pick_alignment.
 //
 #include <stdio.h>
+#include <string.h>
 #include <va.h>
 #include <windows.h>
 #include "advmgr_objects.h"
@@ -2046,6 +2047,16 @@ int NewfullMap::readResourceData(TAbstractFile* infile, CObject* resourceObject)
 // `clear()`, which removes one nesting level from the budget division and
 // costs 27 points (93.0057 -> 66.1138) - the gradient wants DEEPER nesting,
 // and `clear()` is already the deepest spelling available.
+//
+// Typed-record recovery (2026-09-08): DC SecondarySkillData::type/level and
+// GiveBlackBoxReward's vector<TArtifact> accesses prove the enum members now
+// in game.h. Widen the signed stream bytes before copying their four-byte
+// representations into the skill fields. Artifact ids use the shared bridge.
+// This preserves the reads and stores but changes the template/inlining state:
+// 95.3605 -> 70.4307%. In the spell resize, retail calls insert; this compile
+// expands it and retains size/_Ucopy/_Ufill calls inside. Keep the proven
+// element types and the 95.3605 historical peak; do not restore int artifacts
+// merely to merge their vector instantiation with the spell vector.
 VA(0x004ff6b0, 0x535)  // order-map: calls armyGroup::Initialize + readTreasureData 0x4fee50; callers readBlackBoxData + readEventData (DC-isomorphic), dc 0xee56c
 int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
                              int mapVersion)
@@ -2098,10 +2109,14 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
         for (i = 0; i < count; ++i) {
             if (infile->read(&value, sizeof(value)) < sizeof(value))
                 return -1;
-            thisBox->m_secondarySkills[i].m_type = value;
+            int skillType = value;
+            memcpy(&thisBox->m_secondarySkills[i].m_type,
+                   &skillType, sizeof(skillType));
             if (infile->read(&value, sizeof(value)) < sizeof(value))
                 return -1;
-            thisBox->m_secondarySkills[i].m_level = value;
+            int skillLevel = value;
+            memcpy(&thisBox->m_secondarySkills[i].m_level,
+                   &skillLevel, sizeof(skillLevel));
         }
     }
 
@@ -2117,11 +2132,11 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
                 == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
                 signed char narrow;
                 infile->read(&narrow, sizeof(narrow));
-                thisBox->m_artifacts[i] = narrow;
+                thisBox->m_artifacts[i] = artifactFromInt(narrow);
             } else {
                 short wide;
                 infile->read(&wide, sizeof(wide));
-                thisBox->m_artifacts[i] = wide;
+                thisBox->m_artifacts[i] = artifactFromInt(wide);
             }
         }
     }
@@ -2456,6 +2471,10 @@ static int loadBlackBoxPrimarySkills(TAbstractFile* infile,
 // 89.7463 (10 calls vs retail 9, 45 branches vs 46). The three-helper dose is
 // the measured peak; do not re-spend these boundaries without a new source
 // fact.
+// Typed-record recovery (2026-09-08, see readBlackBox): preserving the DC
+// skill fields and artifact-vector element type gives 91.7100%, with the
+// 95.0000 peak retained in HIST. The checked signed skill-byte reads and
+// unchecked, masked artifact-byte read remain distinct at this boundary.
 VA(0x00500430, 0x478)  // order-map: calls armyGroup::load + Initialize + loadString 0x4bb990 (loadTreasureData inlined); sole caller loadBlackBoxList (DC-isomorphic), dc 0xef158
 int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
                              int saveVersion)
@@ -2494,10 +2513,14 @@ int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
     for (i = 0; i < count; ++i) {
         if (infile->read(&value, sizeof(value)) < sizeof(value))
             return -1;
-        thisBox->m_secondarySkills[i].m_type = value;
+        int skillType = value;
+        memcpy(&thisBox->m_secondarySkills[i].m_type,
+               &skillType, sizeof(skillType));
         if (infile->read(&value, sizeof(value)) < sizeof(value))
             return -1;
-        thisBox->m_secondarySkills[i].m_level = value;
+        int skillLevel = value;
+        memcpy(&thisBox->m_secondarySkills[i].m_level,
+               &skillLevel, sizeof(skillLevel));
     }
 
     if (infile->read(&value, sizeof(value)) < sizeof(value))
@@ -2507,7 +2530,7 @@ int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
     for (i = 0; i < count; ++i) {
         int artifact;
         infile->read(&artifact, sizeof(unsigned char));
-        thisBox->m_artifacts[i] = artifact & 0xff;
+        thisBox->m_artifacts[i] = artifactFromInt(artifact & 0xff);
     }
 
     if (infile->read(&value, sizeof(value)) < sizeof(value))
