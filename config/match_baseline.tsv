@@ -3470,7 +3470,7 @@ rmg	?traceOutline@TRmgTreasureGroup@@QAEXXZ	95.1849	95.1849	95.1849	0x135ee0	c55
 rmg	?traceZoneBoundary@type_random_map_generator@@QAEXPAUTRmgBoundaryVertex@@E@Z	86.6846	86.6846	86.6846	0x13c390	5f6a818cd691
 rmg	?tryAddObject@TRmgTreasureGroup@@QAEEPAVtype_object@@@Z	79.3429	79.3429	79.3429	0x135970	8a11b0b17881
 rmg	?tryPlaceAdditionalTown@type_random_map_generator@@QAEEPAUTRmgZone@@HHEH@Z	76.6787	76.6787	76.6787	0x144d90	a124d14ae1ab
-rmg	?tryPlaceMine@type_random_map_generator@@QAEEPAUTRmgZone@@HEH@Z	69.3906	69.3906	69.3906	0x145990	eb1afa4a9fb9
+rmg	?tryPlaceMine@type_random_map_generator@@QAEEPAUTRmgZone@@HEH@Z	71.5746	71.5746	71.5746	0x145990	c75aeca51e67
 rmg	?tryPlacePrimaryTown@type_random_map_generator@@QAEEPAUTRmgZone@@HHE@Z	76.3310	76.3310	76.3310	0x145250	55c6af6ee3e2
 rmg	?unknownOperation@rmgHeroObject@@UAEXXZ	100.0000	100.0000	100.0000	0x133c70	12671cc1c8ff
 rmg	?updateBounds@TRmgTreasureGroup@@QAEXXZ	100.0000	100.0000	100.0000	0x135df0	bdd5c787ea6a

@@ -31,6 +31,9 @@ int __stdcall allocimage(imgdes* image, int width, int height, int bitsPerPixel)
 // /G5 or /G6 tuning leave that difference. No guard or dummy use is added
 // merely to extend the import-pointer register's lifetime.
 // /O2 /Os and /O1 /Oi give 105 different bytes; /O2 /Og- gives 155.
+// /G3, /G4 and an explicit HGLOBAL local for both release calls are flat.
+// Dreamcast's PCX stub independently confirms the public void result;
+// the incidental EAX value does not justify changing that interface.
 VA(0x006037a0, 0x6e)  // anchor-caller PCX importers + Win32 ownership calls; external Victor library
 void __stdcall freeimage(imgdes* image)
 {
@@ -72,6 +75,7 @@ int __stdcall victorValidateBitmap(imgdes* image)
 // Braced conditionals and C compilation are flat; /G6 changes the schedule
 // further. Preserve the direct field calculations and conditional stores.
 // /O2 /Os and /O1 /Oi give 65 different bytes; /O2 /Og- gives 122.
+// /G3, /G4 and named first-image extent locals are byte-flat.
 VA(0x00603ac0, 0x4d)  // anchor-caller flipimage + unsigned extent semantics; external Victor library
 void __cdecl victorMinimumDimensions(imgdes* first, imgdes* second,
                                       unsigned int* height, unsigned int* width)

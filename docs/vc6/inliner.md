@@ -508,6 +508,16 @@ winners: `armyGroup::get_morale_description` 93.06 -> 89.04,
 per-site fact about which level retail's budget ran out on, and MEASURE both
 spellings; the flat rows are the ones where the leaf was never marginal.
 
+An API change can instead restore a later, unrelated helper boundary.
+In `tryPlaceMine` (`0x545990`), changing the first candidate append from
+`insert(end(), properties)` to `push_back(properties)` leaves that insertion
+expanded but restores retail's subsequent `type_object` constructor call.
+The caller rises from 69.3906% to 71.5746%; every other banked function is
+unchanged. Changing its terrain read from `test` to subscript moves only
+`_Xran` out of line and still emits no standalone `bitset<10>::test`.
+Inspect the named calls before attributing an API-control gain to the helper
+being probed.
+
 The same ladder runs through the sequence containers and `basic_string`, and
 two more rows moved on it:
 
