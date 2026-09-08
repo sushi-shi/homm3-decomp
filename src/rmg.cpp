@@ -3928,11 +3928,50 @@ static void insertRmgWorkItem(
 // Island insetting passes two points, zone/level and half-roughness.
 // Retail subdivides these edges with a pending-point vector. Provisional
 // Complete-only role name; the stack ABI carries seven dwords.
-#if 0 // @carcass
+// Residual (99.4615%): X-before-Y midpoint assignments restore endpoint
+// registers; constructing the point scores 99.1436%, and reversing its
+// addition operands scores 99.0923%. All subdivision/marking instructions
+// then agree. The initial single-element insert wrapper expands here into
+// count-insert (one extra push), while retail retains it. Preserve that call.
 VA(0x0053CD30, 0x212) // anchor-callee 0x53d34e; thiscall, ret 0x1c
 void type_random_map_generator::drawIslandBoundary(TPoint from, TPoint to,
-    int zoneIndex, int level, int roughness) {} // @stub
-#endif
+    int zoneIndex, int level, int roughness)
+{
+    std::vector<TPoint> pending;
+    pending.insert(pending.end(), to);
+    while (pending.size() > 0) {
+        to = pending.back();
+        pending.pop_back();
+        TPoint midpoint;
+        midpoint.m_x = (from.m_x + to.m_x + 1) / 2;
+        midpoint.m_y = (from.m_y + to.m_y + 1) / 2;
+        if (midpoint != from && midpoint != to) {
+            TRmgVector perpendicular;
+            {
+                TRmgVector delta = to - from;
+                perpendicular = TRmgVector(-delta.m_y, delta.m_x);
+            }
+            int length = perpendicular.length();
+            if (length > 1) {
+                int limit = std::_cpp_min<long>(length / 2, roughness);
+                int displacement = rand() % limit - limit / 2;
+                perpendicular = perpendicular * displacement / length;
+                midpoint += perpendicular;
+            }
+            pending.push_back(to);
+            pending.push_back(midpoint);
+        } else {
+            long x = std::_cpp_max<long>(from.m_x, 0);
+            x = std::_cpp_min<long>(x, m_map.m_mapWidth - 1);
+            long y = std::_cpp_max<long>(from.m_y, 0);
+            y = std::_cpp_min<long>(y, m_map.m_mapHeight - 1);
+            TRmgMapItem* item = m_map.getMapItem(x, y, level);
+            if (item->m_zoneState.m_zone == zoneIndex)
+                item->m_tileData.m_zoneBoundary = 1;
+            from = to;
+        }
+    }
+}
 
 // Terrain painting replaces the zone center with the average coordinates
 // of its assigned cells, retaining its level. Provisional Complete-only role.
