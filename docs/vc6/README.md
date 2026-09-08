@@ -185,6 +185,22 @@ single-value insert from const find and hinted/range insert. A typed
 result constructors. `test_map_member_keys.py` covers owner changes, equal-size
 joins, and overload/type negative controls.
 
+An empty destructor's final base-vftable store does not uniquely identify
+its source class. At `0x487e00`, the implicit `TStreamBufFile` destructor,
+both resource-adapter destructors, and `TAbstractFile` constructor-cleanup
+copies have identical bytes **and relocations**. Retail shares that body:
+the two resource-adapter deleting destructors call it and seventeen EH
+funclets jump to it. `TStreamBufFile`'s retail vtable also uses the LOD
+adapter's deleting-destructor copy at `0x55a7d0`. The natural representative
+in customcampaign is `TStreamBufFile`; a separately defined ordinary base
+destructor had obscured the fold. Restoring the canonical header-inline
+base body matches both parked derived destructors and recovers six message/
+resource consumers to 100%, while the retained folded body remains exact.
+Eight `vc6 hypotheses` states checked absent/inline/ordinary body visibility
+in gzfile, netmsg and customcampaign. Inspect emitted copies across the
+consuming TUs before treating a missing inline symbol in one TU as evidence
+against the declaration.
+
 ## Status
 
 Phase 0 (driver ground truth + probe rig) is in progress. Reusable compiler

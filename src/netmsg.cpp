@@ -28,6 +28,9 @@
 // Retail 0x512b00. The vptr store, the owned-buffer release and the base
 // class's own vptr restore - the whole body of an empty destructor on a
 // class whose only owned resource is the buffer.
+// TAbstractFile's inline header definition makes the restore expand here
+// and in the three message senders below. The declaration-only negative
+// control leaves a base-destructor call and scores 87.6923% here.
 VA(0x00512b00, 0x24)  // anchor-vtable 0x640264 slot 0's callee; retail-only
 t_memory_file::~t_memory_file()
 {

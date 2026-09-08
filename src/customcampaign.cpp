@@ -1873,22 +1873,22 @@ void TCampaignBrief::ScenarioStruct::loadMapHeader(
     mapHeader->read(&file, which);
 }
 
-// TAbstractFile's ordinary destructor is visible here: retail retains its
-// seven-byte body and expands the same vftable store into the deleting thunk.
-// The body and all 19 retail callers restore vftable 0x63dac0; no
-// TAbstractFile procedure exists in the Dreamcast CodeView corpus. Keeping
-// the body inline, either in or after the class, emits no candidate symbol;
-// this ordinary boundary is exact on its first scored candidate. A full
-// dependent rebuild changes call/inline decisions in eight previously exact
-// TAbstractFile consumers; their historical MAX remains banked.
-VA(0x00487e00, 0x07)
-TAbstractFile::~TAbstractFile()
-{
-}
-
 // Retail keeps this object's deleting-destructor copy (vftable 0x63dac0
 // slot 0), being the first in link order to instantiate the class.
 VA_COMPGEN(0x00487dd0, 0x23, SCALAR_DELETING_DTOR, TAbstractFile)
+
+// The implicit TStreamBufFile destructor restores TAbstractFile's vftable.
+// Retail folds the identical base and resource-adapter destructors here:
+// 0x55a7a0 and 0x55a7d0 call it, and seventeen EH cleanup funclets jump here.
+// The stream adapter used by loadMapHeader above emits these exact seven
+// bytes naturally with the canonical header-inline base destructor. No
+// TAbstractFile procedure exists in the Dreamcast CodeView corpus; the
+// retained vftable store alone did not prove the previous base-dtor identity
+// or its ordinary declaration. An ordinary base body in this TU matches the
+// same bytes but prevents expansion in eight destructor/message/resource
+// consumers. The shared inline definition recovers all eight at 100%, and
+// naturally emits matching base copies in the gzfile and netmsg TUs.
+VA_COMPGEN(0x00487e00, 0x07, IMPLICIT_DTOR, TStreamBufFile)
 
 // Complete-only. PruneCrossoverHeroes' first pass calls this on every
 // scenario the player has not finished: each hero placeholder the scenario
