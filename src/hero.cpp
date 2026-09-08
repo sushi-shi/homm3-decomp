@@ -7340,52 +7340,27 @@ TSpellSchool hero::getHighestSchool(TSpellSchool schoolMask) const
 // Bolt is free; Pegasi in the defending army tax the caster two points
 // and the caster's own Mages refund two, both gated on there being an
 // enemy group at all; the floor is 1.
+// Dreamcast's public proves const. Lines 6074 and 6076 separate mastery
+// resolution from cost lookup. Complete adds the Armageddon exception via
+// the canonical getSpellLevel helper, which expands into this retained body.
+// The separate mastery local preserves both this body and Fly at 100%:
+// nesting the call in the cost subscript leaves this body exact but makes
+// Fly expand getSpellLevel and call getSpellSchoolLevel instead (96.6753%).
+// Both int and TSkillMastery locals close Fly; retain the helper's return type.
 // Before normalization (locals): iWhichSpell, magic_terrain.
 VA(0x004e5240, 0xEF)  // anchor-bracket, dc 0xd4f64
 int hero::getManaCost(int whichSpell, const armyGroup* enemy,
-    int magicTerrain)
+    int magicTerrain) const
 {
     if (whichSpell == SPELL_TITANS_LIGHTNING_BOLT)
         return 0;
-    int mastery;
-    if (whichSpell == SPELL_ARMAGEDDON
-        && isWieldingArtifact(ARTIFACT_ARMAGEDDONS_BLADE))
-        mastery = eMasteryExpert;
-    else
-        mastery = getSpellSchoolLevel(
-            g_spellTraits[whichSpell].m_school, magicTerrain);
+    TSkillMastery mastery = const_cast<hero*>(this)->getSpellLevel(whichSpell, magicTerrain);
     int cost = g_spellTraits[whichSpell].m_manaCost[mastery];
     if (enemy) {
         if (enemy->isMember(CREATURE_PEGASUS)
             || enemy->isMember(CREATURE_SILVER_PEGASUS))
             cost += 2;
         if (hasArmy(CREATURE_MAGE) || hasArmy(CREATURE_ARCH_MAGE))
-            cost -= 2;
-    }
-    if (cost < 1)
-        cost = 1;
-    return cost;
-}
-
-// The Dreamcast header's const overload is the source body folded through
-// hero::Fly. It remains distinct from Complete's emitted non-const overload
-// above. The get_spell_level call carried an `inline_depth(0)` pin to hold
-// retail Fly's boundary; it is byte-flat and came out (2026-09-06, polish
-// lane 50).
-inline int hero::getManaCost(int whichSpell, const armyGroup* enemy,
-                             int magicTerrain) const
-{
-    if (whichSpell == SPELL_TITANS_LIGHTNING_BOLT)
-        return 0;
-    int cost = g_spellTraits[whichSpell].m_manaCost[
-        const_cast<hero*>(this)->getSpellLevel(
-            whichSpell, magicTerrain)];
-    if (enemy) {
-        if (enemy->isMember(CREATURE_PEGASUS)
-            || enemy->isMember(CREATURE_SILVER_PEGASUS))
-            cost += 2;
-        if (const_cast<hero*>(this)->m_army.isMember(CREATURE_MAGE)
-            || const_cast<hero*>(this)->m_army.isMember(CREATURE_ARCH_MAGE))
             cost -= 2;
     }
     if (cost < 1)
@@ -7695,6 +7670,10 @@ short hero::getPrimarySkillTotal() const
 // E:\gamedcs\hero.cpp:6310
 // Dreamcast line 6312 proves the nested source statement
 // `UseSpell(GetManaCost(SPELL_FLY))`; Hero.h retains the line-708 wrapper.
+// Exact through the canonical const mana-cost overload. A duplicate non-const
+// facade shadowed that wrapper and scored 32.6234%; removing it and retaining
+// GetManaCost's two source statements recovers all 248 retail bytes. No
+// alternate implementation, caller-side expansion or inline-depth pin remains.
 VA(0x004e59a0, 0xF8)  // linkorder, dc 0xd5488
 void hero::fly(int level)
 {

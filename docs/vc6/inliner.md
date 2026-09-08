@@ -1815,3 +1815,25 @@ Windows `max` macro replace the source call: `useSpell` falls to 77.0690%,
 and its expansion in `fly` falls from 32.6234% to 29.7013%. Correct ordering
 restores both previous scores. Every other hero function is byte-flat,
 including the two parked hero register-allocation cases.
+
+### Check overload resolution before changing inline budgets
+
+`hero::fly` (0x4e59a0) had fallen from 100% to 32.6234% even though its
+two-statement source still agreed with Dreamcast. A non-const one-argument
+`getManaCost` facade shadowed the const facade proven by `Hero.h:707`.
+The tree also carried separate ordinary non-const and inline const bodies
+for the three-argument operation. Retail x86 does not establish that
+constness distinction; Dreamcast proves one const interface.
+
+Consolidating those into one ordinary const body restores 96.6753%, keeps
+the retained mana-cost body at 100%, and restores the point-constructor and
+map-cell calls in `fly`. The remaining call was `getSpellSchoolLevel` where
+retail retains `getSpellLevel`. Dreamcast lines 6074 and 6076 put mastery
+resolution and cost lookup in separate statements. Restoring that local
+recovers all 248 bytes of `fly` while the 239-byte mana-cost body stays exact.
+Both `int` and `TSkillMastery` locals work; nesting the call in the array
+subscript is the 96.6753% negative control. Other hero scores are unchanged.
+
+Preserve the shared interface, source statement boundaries, and ordinary
+helper body. A second overload can silently select a different expansion;
+an inline keyword or a flattened caller can conceal that modelling error.
