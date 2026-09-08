@@ -453,8 +453,9 @@ struct TRmgTownSlot {
     int m_parameters004c[7];
     // Before normalization: parameters0068.
     int m_parameters0068[7];
-    // Before normalization: flag0084.
-    unsigned char m_flag0084;
+    // Before normalization: flag0084. Role recovered from chooseTerrain
+    // 0x532ab0: select the aligned town terrain when an alignment exists.
+    unsigned char m_matchTownTerrain;
     // Before normalization: allowedTerrain.
     unsigned char m_allowedTerrain[8];  // +0x85
     // Before normalization: monsterStrength.
@@ -500,6 +501,12 @@ void readRmgTemplateZones(
 
 // Retained fastcall helper at 0x545e00, also expanded by zone connections.
 int getRmgGuardValue(int value, int strength);
+
+// The eight clockwise neighbors are initialized at 0x530da0; group fit
+// 0x5355e0 scans the whole domain when testing for an open neighbor.
+enum ERmgDirectionLimits {
+    RMG_DIRECTION_COUNT = 8
+};
 
 // Voronoi's circumcenter arithmetic separates displacement vectors from
 // positions: vector+vector is a member call, point+vector and point-point
@@ -1325,7 +1332,10 @@ struct TRmgTreasureGroup {
     std::vector<type_object*> m_objects;    // +0x28
     std::vector<TPoint> m_outline;           // +0x38
     unsigned char m_flag0048;               // +0x48, cleared by reset
-    char m_opaque0049[0x17];                // +0x49..+0x5f, not yet recovered
+    char m_opaque0049[0x0b];                // +0x49..+0x53, not yet recovered
+    // Retail commitTreasureGroup 0x5469ca stores the selected map offset.
+    // Role-derived name; previously part of opaque0049.
+    TRmgMapPosition m_position;             // +0x54
     unsigned char m_ready;                  // +0x60, set after assembly
     char m_padding0061[3];
 
@@ -1336,6 +1346,7 @@ struct TRmgTreasureGroup {
     }
     void reset();
     unsigned char addGuard(type_object* guard);
+    unsigned char canFitObject(TRmgObjectPropertiesRef* properties, TRmgMapPosition position);
     unsigned char tryAddObject(type_object* object);
     void updateBounds();
     void traceOutline();
