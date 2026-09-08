@@ -3839,112 +3839,101 @@ void TSingleSelectionWindow::updateGameVars()
     }
 }
 
-// Rebuild every occupied seat's pickable-hero list: resolve the shown
-// town (attribute band or pick_alignment - the inline_depth(0) pin
-// keeps HasMultipleTowns retail's CALL), map it to its two hero
-// classes (the per-case operand order is source-faithful:
-// Rampart/Tower name the caster class first, the rest the might
-// class; the duplicated Castle/default arms are what give retail's
-// 0..8 jump table with entry 0 on the shared block), then admit up to
-// 16 heroes whose class matches, whose pool byte is free, and whose
-// scenario setup row - when one exists - grants this seat in its
-// availability bitset.
-// Residual (87.3): pure register-homing - every switch arm stores
-// classB as an immediate to [ebp-4] in retail while our CL promotes
-// it to edi; branch sequences agree 25/25. Function-scope vs
-// block-scope classB is byte-flat; the family is the documented
-// register-homing residual class.
-// E:\gamedcs\singleselectionwindow.cpp:3927
-// LOOP-COUNTER SIGNEDNESS (docs/vc6/behavior-catalog.md D23): the 156-hero
-// scan counter is `unsigned int`.  87.5476 -> 88.9857.
+// E:\gamedcs\singleselectionwindow.cpp:3927, dc 0x139498. Original names:
+// heroClass1, heroClass2, i, pPlayer, town, hero_id. Dreamcast proves the
+// THeroClass/TTownType locals and the GetDisplayTown call at line 3949.
+// Keep that canonical helper instead of its former pasted body and inline
+// pin; retail expands the helper while retaining its HasMultipleTowns call.
+// Town class order follows retail's jump table, including Castle/default.
+// The signed hero_id also agrees with retail's jl back edge. The restored
+// caller reaches 88.97143%, with all CFG edges agreeing, and naturally emits
+// the exact 23-byte public tree lower_bound wrapper at 0x58f0f0. The former
+// pasted/pinned caller's 88.9857% remains in HIST. Sixty-four declaration,
+// signedness, append and guard controls plus 24 map-reference/iterator/guard
+// controls retain the exact wrapper but do not improve the caller. Unsigned
+// hero scans fall to 88.48572%; none of the 88 candidates emits map::end at
+// 0x58eb50. Its two retained retail calls and class-local homes remain open.
 VA(0x00583890, 0x2B0)  // anchor-callee UpdateTown calls it no-arg right after the town commit - the DC call edge; size 1.2x dc 0x23e, dc 0x139498
 void TSingleSelectionWindow::makeHeroFilter()
 {
+    THeroClass heroClass1;
+    THeroClass heroClass2;
+    int i;
+    CNetPlayerHandlerPlayer* player;
+    TTownType town;
+    int heroId;
+
     if (m_flag65)
         return;
-    for (int i = 0; i < 8; ++i) {
+    for (i = 0; i < 8; ++i) {
         if (g_game->m_setup.m_playerPos[i] < 0)
             continue;
         if (m_flag64 && g_game->m_playerDisabled[i])
             continue;
-        CNetPlayerHandlerPlayer* p = m_players.getPlayerInPos(i);
-        if (!p)
+        player = m_players.getPlayerInPos(i);
+        if (!player)
             continue;
-        CNetPlayerHandlerPlayer* shown = m_players.getPlayerInPos(i);
-        if (!shown)
-            shown = m_players.getCompPlayerInPos(i);
-        CMapHeaderData::TPlayerSlotAttributes* slot =
-            &g_game->m_mapHeader.m_playerSlotAttributes[i];
-        int town;
-#pragma inline_depth(0)
-        if (slot->m_hasRandomAlignment || hasMultipleTowns(i))
-            town = shown->m_townIndex;
-        else
-            town = pickAlignment(
-                static_cast<unsigned short>(slot->m_legalAlignments), 1);
-#pragma inline_depth()
+        town = getDisplayTown(i);
         if (town == -1)
             continue;
-        int classA;
-        int classB;
         switch (town) {
         case TOWN_RAMPART:
-            classA = eClassDruid;
-            classB = eClassRanger;
+            heroClass1 = eClassDruid;
+            heroClass2 = eClassRanger;
             break;
         case TOWN_TOWER:
-            classA = eClassWizard;
-            classB = eClassAlchemist;
+            heroClass1 = eClassWizard;
+            heroClass2 = eClassAlchemist;
             break;
         case TOWN_INFERNO:
-            classA = eClassPagan;
-            classB = eClassHeretic;
+            heroClass1 = eClassPagan;
+            heroClass2 = eClassHeretic;
             break;
         case TOWN_NECROPOLIS:
-            classA = eClassDeathKnight;
-            classB = eClassNecromancer;
+            heroClass1 = eClassDeathKnight;
+            heroClass2 = eClassNecromancer;
             break;
         case TOWN_DUNGEON:
-            classA = eClassOverlord;
-            classB = eClassWarlock;
+            heroClass1 = eClassOverlord;
+            heroClass2 = eClassWarlock;
             break;
         case TOWN_STRONGHOLD:
-            classA = eClassBarbarian;
-            classB = eClassBattleMage;
+            heroClass1 = eClassBarbarian;
+            heroClass2 = eClassBattleMage;
             break;
         case TOWN_FORTRESS:
-            classA = eClassBeastmaster;
-            classB = eClassWitch;
+            heroClass1 = eClassBeastmaster;
+            heroClass2 = eClassWitch;
             break;
         case TOWN_CONFLUX:
-            classA = eClassPlanesWalker;
-            classB = eClassElementalist;
+            heroClass1 = eClassPlanesWalker;
+            heroClass2 = eClassElementalist;
             break;
         case TOWN_CASTLE:
-            classA = eClassKnight;
-            classB = eClassCleric;
+            heroClass1 = eClassKnight;
+            heroClass2 = eClassCleric;
             break;
         default:
-            classA = eClassKnight;
-            classB = eClassCleric;
+            heroClass1 = eClassKnight;
+            heroClass2 = eClassCleric;
             break;
         }
-        p->m_availableHeroesCount = 0;
-        for (unsigned int h = 0; h < 156; ++h) {
-            if (g_game->m_heroAvailability[h] != -1)
+        player->m_availableHeroesCount = 0;
+        for (heroId = 0; heroId < 156; ++heroId) {
+            if (g_game->m_heroAvailability[heroId] != -1)
                 continue;
-            if (g_heroTraits[h].m_heroClass != classA
-                    && g_heroTraits[h].m_heroClass != classB)
+            if (g_heroTraits[heroId].m_heroClass != heroClass1
+                    && g_heroTraits[heroId].m_heroClass != heroClass2)
                 continue;
             std::map<int, type_map_hero_info>::iterator it =
-                g_game->m_mapHeader.m_heroPlayerSetups.find(h);
+                g_game->m_mapHeader.m_heroPlayerSetups.find(heroId);
             if (it != g_game->m_mapHeader.m_heroPlayerSetups.end()) {
                 if (!it->second.m_players[i])
                     continue;
             }
-            p->m_availableHeroes[p->m_availableHeroesCount] = h;
-            ++p->m_availableHeroesCount;
-            if (p->m_availableHeroesCount >= 16)
+            player->m_availableHeroes[player->m_availableHeroesCount] = heroId;
+            ++player->m_availableHeroesCount;
+            if (player->m_availableHeroesCount >= 16)
                 break;
         }
     }
