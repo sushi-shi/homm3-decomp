@@ -357,6 +357,57 @@ int TRmgVector::length() const
     return static_cast<int>(sqrt(static_cast<double>(m_x * m_x + m_y * m_y)));
 }
 
+// The retained paired constructor expands this ordinary twin constructor
+// into the successful allocation arm. The same site/zone fields feed the
+// Voronoi vertex calculations; both ring links initially point to self.
+TRmgBoundaryVertex::TRmgBoundaryVertex(
+    TPoint sitePosition, TRmgZone* zone, TRmgBoundaryVertex* twin)
+    : m_sitePosition(sitePosition), m_zone(zone), m_twin(twin),
+      m_next(this), m_previous(this), m_positionComputed(0), m_position(-1, -1)
+{
+}
+
+// The diagram constructor allocates pairs using two by-value point/zone
+// pairs. It retains this constructor, while createEdge 0x5fd390 expands it.
+// Both paths expand the ordinary opposite-edge constructor above.
+// Residual 99.6512%: only the first point/zone load-store schedule differs.
+// A 40-combination constructor/detach batch tested ten initialization forms:
+// copy and component initializers tie; six component-assignment orders and
+// two point-copy/zone assignment orders are worse (best 94.3256%).
+VA(0x005FCEF0, 0x6C) // anchor-callee 0x5fd078; Complete-only, ret 0x18
+TRmgBoundaryVertex::TRmgBoundaryVertex(
+    TPoint sitePosition, TRmgZone* zone, TPoint twinSitePosition, TRmgZone* twinZone)
+    : m_sitePosition(sitePosition), m_zone(zone),
+      m_twin(new TRmgBoundaryVertex(twinSitePosition, twinZone, this)),
+      m_next(this), m_previous(this), m_positionComputed(0), m_position(-1, -1)
+{
+}
+
+// The two swaps preserve the bidirectional ring after exchanging successors.
+// This ordinary helper is retained by the diagram constructor and expanded
+// twice in detach. The existing +0x10/+0x14 fields prove its semantic owner.
+// The two canonical std::swap calls reproduce all 49 retail bytes.
+VA(0x005FCF60, 0x31) // anchor-callee 0x5fd308; thiscall, ret 4; Complete-only
+void TRmgBoundaryVertex::splice(TRmgBoundaryVertex* other)
+{
+    std::swap(m_next->m_previous, other->m_next->m_previous);
+    std::swap(m_next, other->m_next);
+}
+
+// addSite calls this before reusing an edge. Save the twin's predecessor
+// before either splice, then detach each half-edge from its own ring.
+// Exact: capture this predecessor first. Twin-first is 89.1667%; rereading
+// the twin predecessor after the first splice is 59.6905% and loses the
+// retail lifetime. The ordinary splice remains shared and auto-inlines here.
+VA(0x005FCFA0, 0x61) // anchor-callee addSite 0x5fd790; thiscall, ret 0; Complete-only
+void TRmgBoundaryVertex::detach()
+{
+    TRmgBoundaryVertex* previous = m_previous;
+    TRmgBoundaryVertex* twinPrevious = m_twin->m_previous;
+    splice(previous);
+    m_twin->splice(twinPrevious);
+}
+
 // The subdivision owns every allocated half-edge and its pointer vector.
 // Its retained destructor proves the +0x04 vector and trivial edge cleanup.
 VA(0x005FD330, 0x58) // anchor-callee 0x53e685; thiscall, ret 0
