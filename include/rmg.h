@@ -977,6 +977,22 @@ public:
 };
 SIZE(rmgQuestArtifactObject, 0x28);
 
+// Key-tent definition factory 0x534fd0 allocates 0x24 bytes, installs
+// vtable 0x640ae4, and supplies its generator and value. The writable
+// override tries a corresponding guard, then substitutes another treasure
+// if that placement fails. Its record uses the ordinary object writer.
+// Complete-only class and method spellings describe the recovered roles.
+class rmgKeyTentObject : public type_object {
+public:
+    type_random_map_generator* m_generator; // +0x1c
+    int m_value;                           // +0x20
+
+    rmgKeyTentObject(TRmgObjectPropertiesRef* properties,
+        type_random_map_generator* generator, int value);
+    virtual unsigned char isWritable();
+};
+SIZE(rmgKeyTentObject, 0x24);
+
 // Retail vtable 0x640b24.
 class rmgScholarObject : public type_object {
 public:
@@ -1759,6 +1775,19 @@ public:
     // success transfers ownership to the generated map. Retained thiscall
     // boundary with one mutable artifact argument; larger body not recovered.
     unsigned char placeQuestArtifact(rmgQuestArtifactObject* object);
+    // Retained helpers used by the key-tent override at 0x5338e0.
+    // 0x54b8c0 finds objectPrototypes[9] of the same color and tries a
+    // guarded treasure group; 0x54bc50 removes the old object's map marks,
+    // counts and list entry without deleting the object itself.
+    unsigned char placeKeyTentGuard(type_object* object, int maxValue);
+    void removeObject(type_object* object);
+    // Retail 0x546190: zone, value range, output value, three byte flags,
+    // then a by-value position (ret 0x28). Flags bypass the object-trait
+    // filter, allow terrain-dependent definitions, and rank value per area.
+    type_object* generateTreasure(TRmgZone* zone, int minValue, int maxValue,
+        int* value, unsigned char ignoreObjectTraits,
+        unsigned char allowTerrainDependent, unsigned char preferValueDensity,
+        TRmgMapPosition position);
     // Retail 0x548040 walks predecessor runs for the caller at 0x548408.
     // The Complete-only name is provisional; the by-value ABI is proven.
     unsigned char paintRoad(TRmgMapPosition position, int roadType);
