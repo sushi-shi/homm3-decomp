@@ -190,3 +190,103 @@ The parent source hash must still match; every parent is recompiled in the new
 batch, alongside its separate canonical baseline. All 60 loop combinations
 retain 72.8497%, so they do not resolve the nested cache-fill boundary. The
 retained source uses ordinary `for` loops; no failed loop form is adopted.
+
+The nested packed-cache fill has a separate 60-case matrix, keeping its one
+ordinary definition while scoring the rectangle caller and all terrain rows:
+
+```sh
+PYTHONPATH=scripts python scripts/experiments/generate-rmg-cache-fill-hypotheses.py \
+  build/rmg-cache-fill.json
+homm3 hypotheses build/rmg-cache-fill.json -j 6 --keep-top 10
+PYTHONPATH=scripts python scripts/experiments/generate-rmg-cache-fill-hypotheses.py \
+  build/rmg-cache-fill-order.json \
+  --helper-order-from build/hypotheses/CACHE_FILL_BATCH/results.json
+homm3 hypotheses build/rmg-cache-fill-order.json -j 6 --keep-top 10
+```
+
+The first matrix crosses five returned-tile lifetimes, three packed receiver
+bindings and four uses of existing field setters. The follow-up recompiles its
+ten highest-ranked parents against six orders of the existing cache-query,
+terrain-wrapper and dimension helpers, reusing the strength generator's order
+axis. Parent results must name the current source hash, unit and function.
+The native oracle uses the actual tile/packed-cell declarations and checks one
+adapter read, all field truncations, preserved upper bits and untouched cells.
+It also swaps the adapter's cache storage during the read, retaining the old
+buffer so a prematurely acquired receiver is detected without dangling memory.
+
+Both batches compile all 60 candidates. The rectangle remains 72.8497% in
+every state; other terrain scores span ten and three distinct score vectors,
+respectively, but none exceeds its canonical baseline. Keep the existing
+helper body and order. These controls rule out this measured lifetime/accessor
+family in this context, not all possible source explanations for the boundary.
+
+The terrain completion worklist can be varied while scoring its expansion in
+the brush destructor and every other terrain function:
+
+```sh
+PYTHONPATH=scripts python scripts/experiments/generate-rmg-finish-hypotheses.py \
+  build/rmg-finish.json
+homm3 hypotheses build/rmg-finish.json -j 6 --keep-top 10
+PYTHONPATH=scripts python scripts/experiments/generate-rmg-finish-hypotheses.py \
+  build/rmg-finish-predicate.json \
+  --predicate-from build/hypotheses/FINISH_BATCH/results.json
+homm3 hypotheses build/rmg-finish-predicate.json -j 6 --keep-top 10
+PYTHONPATH=scripts python scripts/experiments/generate-rmg-finish-hypotheses.py \
+  build/rmg-finish-order.json \
+  --helper-order-from build/hypotheses/PREDICATE_BATCH/results.json
+homm3 hypotheses build/rmg-finish-order.json -j 6 --keep-top 10
+```
+
+The first 60 candidates cross five owned point-snapshot lifetimes, three
+nonempty tests and four inner-loop forms. Never bind a reference directly to
+the secondary set node: erase invalidates it. The next 60 cross the ten best
+worklist parents with six short-circuit forms of the canonical repair predicate;
+the final 60 cross ten joint parents with six orders of the own-terrain gap and
+repair helpers. The parent source hash, unit and primary function must agree;
+all parents are recompiled alongside a separate canonical baseline.
+
+All 180 candidates compile. The brush stays at 78.6021%, but the else-if
+predicate raises `repairTerrainPoint` from 89.9680% to 90.0961%, with no
+other score changing in the selected ordinary-worklist/original-order state.
+Inspect all TU scores: that joint winner is outside the last batch's ten
+primary-ranked retained artifacts. No winning loop or helper-order change is
+inferred from a tie. Native C++98 tests compare all worklists against an
+independent two-phase queue oracle (including work added during repair/paint)
+and all predicate forms against ordered short-circuit calls and raw byte returns.
+
+The initial worklist matrix changes both snapshots together. To separate those
+sites after selecting a predicate, use `--split-snapshots` instead of either
+parent-results option. This generates 50 independent primary/secondary lifetime
+combinations with `size()`/`empty()` tests. All 50 compile; eight preserve the
+78.6021% brush score and the rest fall to 47.8602%, with no collateral gain.
+The native worklist oracle covers these mixed lifetimes too. Keep the original
+two copy-initialized snapshots; their combined or individual respellings do not
+recover the missing predicate expansion in this measured context.
+
+The repair method's ring-gap enumeration has a separate control-flow matrix:
+
+```sh
+PYTHONPATH=scripts python scripts/experiments/generate-rmg-gap-scan-hypotheses.py \
+  build/rmg-gap-scan.json
+homm3 hypotheses build/rmg-gap-scan.json -j 6 --keep-top 10
+PYTHONPATH=scripts python scripts/experiments/generate-rmg-gap-scan-hypotheses.py \
+  build/rmg-gap-inner.json \
+  --inner-from build/hypotheses/GAP_SCAN_BATCH/results.json
+homm3 hypotheses build/rmg-gap-inner.json -j 6 --keep-top 10
+```
+
+The first 60 cross six outer loops, five gap receiver bindings and two diagonal
+local widths. The next 60 recompile the top ten parents with six inner loops;
+source hash, unit and target must match the parent results. The exhaustive
+native C++98 oracle covers all 360 possible source bodies and every nonempty
+ring mask with both 1 and 255 truth bytes. It independently linearizes the
+ring, checking gap order, start, length, weight, unused slots and canaries.
+
+All 120 compile. An explicit `while (1)` advance/test header plus an unsigned
+word diagonal local raises `repairTerrainPoint` from 90.0961% to 91.3390%,
+without changing any other terrain score. The whole function now has retail's
+71-block CFG, with no shifted edges or branch-kind differences. Keep the inner
+`do` loop: the follow-up finds no further gain. Neither equivalent `for (;;)`
+nor a labelled outer header restores the single retail header in this context.
+Reference/pointer gap receivers lose agreement; no such tied/lower form is
+adopted. This isolates a source-loop lowering difference, not an inliner fix.
