@@ -861,7 +861,10 @@ public:
     // Before normalization (function): type_object::UnknownOperation.
     virtual void unknownOperation();
     // Before normalization (function): type_object::IsWritable.
-    virtual unsigned char isWritable() const;
+    // The quest-artifact override at 0x533a50 clears owned state, and its
+    // generator callee replaces this object's property reference. These
+    // mutable operations reject the earlier const receiver placeholder.
+    virtual unsigned char isWritable();
     // Before normalization (function): type_object::Write.
     // Retail base/ownable writers 0x533170/0x533460 both pop eight bytes.
     // The second stack word is the map version: the monster override uses
@@ -939,6 +942,40 @@ public:
     virtual void write(TAbstractFile* outfile, int version);
 };
 SIZE(rmgBlackBoxObject, 0x54);
+
+// Seer-hut factories 0x534b90/0x534cc0/0x534db0 allocate this 0x34-byte
+// reward object (vtable 0x640b04). Writer 0x533a90 proves the field roles.
+// Complete-only names are provisional; no Dreamcast RMG class is available.
+class rmgSeerHutObject : public type_object {
+public:
+    int m_artifact;                    // +0x1c, required quest artifact
+    int m_experience;                  // +0x20
+    int m_resourceType;                // +0x24, defaults to gold (6)
+    int m_resourceCount;               // +0x28
+    int m_creatureType;                // +0x2c, defaults to -1
+    int m_creatureCount;               // +0x30
+
+    rmgSeerHutObject(TRmgObjectPropertiesRef* properties);
+    virtual void write(TAbstractFile* outfile, int version);
+};
+SIZE(rmgSeerHutObject, 0x34);
+
+// Artifact wrapper vtable 0x640af4 shares the ordinary artifact writer at
+// 0x533500. It owns the pending seer hut until placement transfers it to
+// the map; 0x533a50 clears that pointer on both success and failure.
+class rmgQuestArtifactObject : public rmgArtifactObject {
+public:
+    type_random_map_generator* m_generator; // +0x1c
+    rmgSeerHutObject* m_seerHut;             // +0x20
+    type_treasure_def* m_definition;        // +0x24
+
+    rmgQuestArtifactObject(TRmgObjectPropertiesRef* properties,
+        type_random_map_generator* generator, rmgSeerHutObject* seerHut,
+        type_treasure_def* definition);
+    virtual ~rmgQuestArtifactObject();
+    virtual unsigned char isWritable();
+};
+SIZE(rmgQuestArtifactObject, 0x28);
 
 // Retail vtable 0x640b24.
 class rmgScholarObject : public type_object {
@@ -1717,6 +1754,11 @@ public:
     // the sole direct caller, and the body builds the road traversal costs.
     // Before normalization (function): type_random_map_generator::BuildRoadCostMap.
     void buildRoadCostMap(TRmgMapPosition position);
+    // Retail 0x54b490, called by the quest-artifact writable override.
+    // It changes the artifact prototype and attempts to place its seer hut;
+    // success transfers ownership to the generated map. Retained thiscall
+    // boundary with one mutable artifact argument; larger body not recovered.
+    unsigned char placeQuestArtifact(rmgQuestArtifactObject* object);
     // Retail 0x548040 walks predecessor runs for the caller at 0x548408.
     // The Complete-only name is provisional; the by-value ABI is proven.
     unsigned char paintRoad(TRmgMapPosition position, int roadType);

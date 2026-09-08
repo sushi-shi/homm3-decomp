@@ -1164,6 +1164,25 @@ rmgArtifactObject::rmgArtifactObject(TRmgObjectPropertiesRef* properties)
 {
 }
 
+rmgSeerHutObject::rmgSeerHutObject(TRmgObjectPropertiesRef* properties)
+    : type_object(properties)
+{
+    m_experience = 0;
+    m_artifact = -1;
+    m_resourceType = 6;
+    m_resourceCount = 0;
+    m_creatureType = -1;
+    m_creatureCount = 0;
+}
+
+rmgQuestArtifactObject::rmgQuestArtifactObject(TRmgObjectPropertiesRef* properties,
+    type_random_map_generator* generator, rmgSeerHutObject* seerHut,
+    type_treasure_def* definition)
+    : rmgArtifactObject(properties), m_generator(generator),
+      m_seerHut(seerHut), m_definition(definition)
+{
+}
+
 // The artifact record is the ordinary object record followed by the empty
 // custom-treasure flag consumed by NewfullMap::readArtifactData. Retail
 // 0x533500 retains the same five base writes before
@@ -1296,6 +1315,114 @@ VA(0x005338D0, 0x0D) // anchor-callee 0x533596; retail-only, thiscall, ret 0
 type_object::~type_object()
 {
     --m_properties->m_refCount;
+}
+
+// Vtable 0x640af4 owns a pending polymorphic seer-hut object. The retained
+// destructor deletes it before the ordinary artifact/base property release.
+VA_COMPGEN(0x005339C0, 0x21, SCALAR_DELETING_DTOR, rmgQuestArtifactObject)
+VA(0x005339F0, 0x58) // anchor-vtable + polymorphic member delete; retail-only
+rmgQuestArtifactObject::~rmgQuestArtifactObject()
+{
+    delete m_seerHut;
+}
+
+// The generator places the seer hut on success and takes ownership. On
+// failure the wrapper destroys its pending hut. Both paths clear ownership.
+VA(0x00533A50, 0x33) // vtable 0x640af4 slot 2 + retained callee 0x54b490
+unsigned char rmgQuestArtifactObject::isWritable()
+{
+    if (m_generator->placeQuestArtifact(this)) {
+        m_seerHut = 0;
+        return 1;
+    }
+    delete m_seerHut;
+    m_seerHut = 0;
+    return 0;
+}
+
+// Vtable 0x640b04 serializes the artifact quest followed by exactly one
+// reward: experience, creatures, or resources, in that precedence order.
+// AB adds the quest kind, artifact count, deadline and three empty strings.
+VA(0x00533A90, 0x1E0) // anchor-vtable + ordered H3M writes; retail-only
+void rmgSeerHutObject::write(TAbstractFile* outfile, int version)
+{
+    type_object::write(outfile, version);
+    if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
+        {
+            char questKind = 5;
+            outfile->write(&questKind, sizeof(questKind));
+        }
+        {
+            char artifactCount = 1;
+            outfile->write(&artifactCount, sizeof(artifactCount));
+        }
+        {
+            short artifact = m_artifact;
+            outfile->write(&artifact, sizeof(artifact));
+        }
+        {
+            int deadline = -1;
+            outfile->write(&deadline, sizeof(deadline));
+        }
+        {
+            int firstVisitLength = 0;
+            outfile->write(&firstVisitLength, sizeof(firstVisitLength));
+        }
+        {
+            int nextVisitLength = 0;
+            outfile->write(&nextVisitLength, sizeof(nextVisitLength));
+        }
+        {
+            int completionLength = 0;
+            outfile->write(&completionLength, sizeof(completionLength));
+        }
+    } else {
+        char artifact = m_artifact;
+        outfile->write(&artifact, sizeof(artifact));
+    }
+    if (m_experience > 0) {
+        {
+            char rewardKind = 1;
+            outfile->write(&rewardKind, sizeof(rewardKind));
+        }
+        {
+            int experience = m_experience;
+            outfile->write(&experience, sizeof(experience));
+        }
+    } else if (m_creatureType != -1) {
+        {
+            char rewardKind = 10;
+            outfile->write(&rewardKind, sizeof(rewardKind));
+        }
+        if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
+            short creature = m_creatureType;
+            outfile->write(&creature, sizeof(creature));
+        } else {
+            char creature = m_creatureType;
+            outfile->write(&creature, sizeof(creature));
+        }
+        {
+            short count = m_creatureCount;
+            outfile->write(&count, sizeof(count));
+        }
+    } else {
+        {
+            char rewardKind = 5;
+            outfile->write(&rewardKind, sizeof(rewardKind));
+        }
+        {
+            char resourceType = m_resourceType;
+            outfile->write(&resourceType, sizeof(resourceType));
+        }
+        {
+            int resourceCount = m_resourceCount;
+            outfile->write(&resourceCount, sizeof(resourceCount));
+        }
+    }
+    {
+        int reserved = 0;
+        outfile->write(&reserved, sizeof(short));
+    }
 }
 
 // The hero-object factory marks the selected index in disabledHeroes before
@@ -1547,6 +1674,36 @@ int type_quest_gold_def::getValue(TRmgZone*, type_random_map_generator* generato
     if (generator->m_questArtifactPoolLow)
         return -1;
     return m_value;
+}
+
+// The reward is carried by a pending seer hut, while the returned object
+// is its artifact wrapper. Both allocations use their canonical constructors.
+// Exact: a 24-candidate batch requires all three wrapper fields in the
+// initializer list, so their stores precede the final derived vptr. Body
+// assignments leave experience at 99.5432%. The gold amount local also
+// preserves retail's reward load before either field store (direct: 95.122%).
+VA(0x00534CC0, 0xE1) // definition vtable 0x640c0c slot 0; retail-only
+type_object* type_quest_experience_def::generate(TRmgObjectPropertiesRef* properties,
+    type_random_map_generator* generator, TRmgZone*)
+{
+    rmgSeerHutObject* seerHut = new rmgSeerHutObject(properties);
+    TRmgObjectPropertiesRef* artifact = generator->selectObjectPrototype(eTerrainDirt, 0x41, 0);
+    rmgQuestArtifactObject* object = new rmgQuestArtifactObject(artifact, generator, seerHut, this);
+    seerHut->m_experience = m_experience;
+    return object;
+}
+
+VA(0x00534DB0, 0xE8) // definition vtable 0x640c18 slot 0; retail-only
+type_object* type_quest_gold_def::generate(TRmgObjectPropertiesRef* properties,
+    type_random_map_generator* generator, TRmgZone*)
+{
+    rmgSeerHutObject* seerHut = new rmgSeerHutObject(properties);
+    TRmgObjectPropertiesRef* artifact = generator->selectObjectPrototype(eTerrainDirt, 0x41, 0);
+    rmgQuestArtifactObject* object = new rmgQuestArtifactObject(artifact, generator, seerHut, this);
+    int amount = m_gold;
+    seerHut->m_resourceType = 6;
+    seerHut->m_resourceCount = amount;
+    return object;
 }
 
 VA(0x00534EA0, 0x30)
