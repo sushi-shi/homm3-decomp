@@ -251,6 +251,19 @@ array class. This join checks the protected element-pointer-pointer return
 and unsigned size argument; reversed equal-size element tests and allocator,
 return-type, access and argument controls keep it separate from other bodies.
 
+
+A full-expression constructor temporary can change scheduling even when a
+named local emits the same instructions and calls. In `game::claimGarrison`
+(`0x4c6960`), `sendMapChange(&CMCClaimGarrison(id, owner))` lets VC6 interleave
+five message stores with the preceding point construction and reaches 100%.
+A named message followed by `sendMapChange(&message)` remains at 84.4118%,
+as does the former expansion into individual member assignments. Dreamcast
+line 7446 passes the constructor result directly to `SendMapChange`, providing
+positive evidence for the temporary; the retail byte result corroborates it.
+This address-of-temporary form uses the original compiler's C++ extension.
+Check expression lifetime before attributing equal-CFG store ordering to
+unrecoverable register allocation.
+
 ## Status
 
 Phase 0 (driver ground truth + probe rig) is in progress. Reusable compiler

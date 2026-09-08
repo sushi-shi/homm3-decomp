@@ -337,7 +337,7 @@ ai_player	?canTradeResources@type_AI_player@@QAE_NPBHPAHAAV?$vector@JV?$allocato
 ai_player	?checkMoveSpell@@YIEPAVhero@@AAV?$vector@UpathCell@@V?$allocator@UpathCell@@@std@@@std@@JHE@Z	100.0000	100.0000	100.0000	0x309a0	69362f607581
 ai_player	?checkTowns@type_town_threat_checker@@QAEXXZ	100.0000	100.0000	100.0000	0x280e0	8b62812f4928
 ai_player	?checkTradeSupply@type_AI_player@@QAE_NPBHJPAHAAV?$vector@JV?$allocator@J@std@@@std@@@Z	85.8333	85.8333	85.8333	0x2a2b0	06958639ee9e
-ai_player	?chooseWeakestArmy@type_AI_creature_swapper@@IAEJ_N0@Z	88.3357	88.3357	88.3357	0x2c690	6a8bd4402e8b
+ai_player	?chooseWeakestArmy@type_AI_creature_swapper@@IAEJEE@Z	88.3357	88.3357	88.3357	0x2c690	2f8bb8940fca
 ai_player	?clearMarks@type_town_threat_checker@@UAEXXZ	100.0000	100.0000	100.0000	0x28260	1072ee740594
 ai_player	?considerHiring@@YI_NJPAVhero@@@Z	100.0000	100.0000	100.0000	0x31800	45ef5c08b1a7
 ai_player	?doBestPurchase@type_AI_creature_purchaser@@IAEJE@Z	97.2740	97.2740	97.2740	0x2d420	a3ed451129b2
@@ -408,7 +408,7 @@ ai_player	?splitArmies@@YIXPAVhero@@PBV1@ABVarmyGroup@@@Z	97.7143	97.7143	97.714
 ai_player	?splitArmy@@YIJPAVarmyGroup@@FFF@Z	100.0000	100.0000	100.0000	0x2dd70	4483dd0c210e
 ai_player	?startTurn@type_AI_player@@QAEXXZ	100.0000	100.0000	100.0000	0x297c0	00a7676ab24e
 ai_player	?tradeResources@type_AI_player@@QAEXPBHJ@Z	100.0000	100.0000	100.0000	0x2a470	c9ae27fd3e36
-ai_player	?valueOfAddingArmy@type_AI_creature_swapper@@IAEJW4TCreatureType@@FAAF_N@Z	86.1781	89.0856	89.0856	0x2c830	98e5b9ce59fb
+ai_player	?valueOfAddingArmy@type_AI_creature_swapper@@IAEJW4TCreatureType@@FAAFE@Z	89.0856	89.0856	89.0856	0x2c830	22ce73e46cdd
 ai_player	?valueOfCastleUpgrade@@YIHPAVtown@@PAH@Z	100.0000	100.0000	100.0000	0x2b670	ef43a848bdc2
 ai_player	?valueOfDwelling@@YIJPAVtown@@FPAEPAH@Z	100.0000	100.0000	100.0000	0x2b520	a950ab02fd22
 ai_player	?valueOfDwellingUpgrade@@YIJPAVtown@@FPAH@Z	100.0000	100.0000	100.0000	0x2b5b0	cee013ac5fd0
@@ -1935,7 +1935,7 @@ game	?cancelComputerScreen@game@@QAEXXZ	100.0000	100.0000	100.0000	0xca530	3f74b
 game	?capacity@?$vector@Utype_university@@V?$allocator@Utype_university@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0xcfa40	-
 game	?checkForTimeEvent@game@@QAEXXZ	100.0000	100.0000	100.0000	0xcd910	5c7c921c91d7
 game	?checkForTownEvent@game@@QAEXXZ	100.0000	100.0000	100.0000	0xcda10	04b6e3a6f56e
-game	?claimGarrison@game@@QAEXHH@Z	84.4118	84.4118	84.4118	0xc6960	a3c98d55e28e
+game	?claimGarrison@game@@QAEXHH@Z	100.0000	100.0000	100.0000	0xc6960	86bb0813d7b2
 game	?claimGenerator@game@@QAEXHH@Z	100.0000	100.0000	100.0000	0xc67b0	c3495d84d754
 game	?claimMine@game@@QAEXHHW4type_action_type@@@Z	100.0000	100.0000	100.0000	0xc66e0	8346a5df7c6d
 game	?claimShipyard@game@@QAEXUtype_point@@H@Z	100.0000	100.0000	100.0000	0xc6a30	009c9e1e1778
@@ -1982,7 +1982,7 @@ game	?getNumObelisks@@YIHH@Z	100.0000	100.0000	100.0000	0xbaba0	c50825e3ecb6
 game	?getNumThievesGuilds@game@@QAEHH@Z	100.0000	100.0000	100.0000	0xcce30	6e2a64f740d1
 game	?getPlayerName@game@@QAEPADH@Z	100.0000	100.0000	100.0000	0xceb60	f441f022aa5f
 game	?getPuzzleOrigin@game@@QBE?AUtype_point@@XZ	100.0000	100.0000	100.0000	0xcea70	847befb3f630
-game	?getRandomArtifactId@game@@QAE?AW4TArtifact@@H@Z	94.7260	94.7260	94.7260	0xc94d0	be080d828af2
+game	?getRandomArtifactId@game@@QAE?AW4TArtifact@@H@Z	100.0000	100.0000	100.0000	0xc94d0	a34d78ce3ba1
 game	?getRandomLith@game@@QAEEJJPAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcddf0	6a2ed3933f89
 game	?getRandomLith@game@@QAEEPBV?$vector@Utype_point@@V?$allocator@Utype_point@@@std@@@std@@PAUtype_point@@JJ@Z	100.0000	100.0000	100.0000	0xcdb80	8dc4e11eba73
 game	?getRandomLithExit@game@@QAEEJPAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcddc0	eafe59797664

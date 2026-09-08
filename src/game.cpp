@@ -8894,43 +8894,21 @@ void game::claimGenerator(int generatorId, int newPlayerOwner)
 }
 
 // E:\gamedcs\game.cpp:7441
-// Residual (84.4118%): the map-location packing, message fields, calls, branch
-// and epilogue are instruction-identical; only VC6's scheduling of the five
-// inlined CMCClaimGarrison constructor stores differs. Moving the message
-// declaration before the location or between the garrison pointer and the
-// location regresses to 60.56% / 64.62%, so the natural lifetime order stays.
+// DC records current_garrison as a reference and passes the constructor's
+// result directly to SendMapChange at line 7446. Preserve that full-expression
+// temporary: VC6 then interleaves its member stores with location construction
+// exactly as retail does. A named CMCClaimGarrison local or the former pasted
+// member stores both leave the five nonzero stores grouped too late (84.4118%).
 VA(0x004c6960, 0xC9)  // anchor-global, dc 0xb1988
 void game::claimGarrison(int garrisonId, int newPlayerOwner)
 {
     // Before normalization (locals): current_garrison.
-    garrison* currentGarrison = &m_garrisons[garrisonId];
-    type_point location(currentGarrison->m_mapX, currentGarrison->m_mapY,
-                        currentGarrison->m_mapZ);
-    // This later, smaller caller inlines the same constructor. Spell the
-    // seven stores explicitly so the one out-of-line source definition above
-    // does not change its already-banked schedule.
-    // Residual (84.4059%): retail issues subType / field_00 / size /
-    // garrisonId / playerPos INTO the gaps of the inlined type_point
-    // construction and sinks only the two zero stores behind it; we emit all
-    // seven together after the point.  Tried and rejected, each measured
-    // against 84.4059: hoisting the whole `change` block above the
-    // `type_point location` declaration - 63.9706 (the location block moves
-    // with it); reordering the seven stores into retail's EMISSION order
-    // (subType, field_00, size, garrisonId, playerPos, then the two zeros) -
-    // 81.0559.  The zeros are sunk on both sides because they share the
-    // `xor ecx,ecx` the packing code already needs, so their source position
-    // is not observable; what is left is scheduling, not statement order.
-    CMCClaimGarrison change;
-    change.m_dpidFrom = 0;
-    change.m_uncompressedSize = 0;
-    change.m_subType = RS_CLAIM_GARRISON;
-    change.m_from = -1;
-    change.m_size = sizeof(CMCClaimGarrison);
-    change.m_garrisonId = garrisonId;
-    change.m_playerPos = newPlayerOwner;
-    sendMapChange(&change);
+    garrison& currentGarrison = m_garrisons[garrisonId];
+    type_point location(currentGarrison.m_mapX, currentGarrison.m_mapY,
+                        currentGarrison.m_mapZ);
+    sendMapChange(&CMCClaimGarrison(garrisonId, newPlayerOwner));
 
-    currentGarrison->m_playerOwner = newPlayerOwner;
+    currentGarrison.m_playerOwner = newPlayerOwner;
     if (newPlayerOwner != -1)
         setVisibility(location.m_x, location.m_y, location.m_z,
                       newPlayerOwner, 3, 0);
@@ -10434,13 +10412,17 @@ TCreatureType game::getRandomMonster(int minLevel, int maxLevel)
 // The two 144-byte pools are the used and scenario-disabled flags. When a
 // requested class is exhausted, retail restores used from disabled; if that
 // class has no allocatable member at all, it retries against the four normal
-// artifact classes. Residual (94.7260%): all 15 branches and operations
-// agree; VC6 rotates the traits pointer and the two non-overlapping counter
-// lifetimes through ESI/EDI/EDX differently from retail. The Dreamcast local
-// roster order (UnallocatedInClass, TotalInClass, curCount, x, i) is restored
-// below and is byte-flat. why-reg v2 classifies the permutation as C1
-// front-end handle state: aliasing ArtifactClass and swapping i/x or
-// x/curCount fail to move its distance-27 binding divergence.
+// artifact classes. DC lines 8751/8752 initialize TotalInClass and
+// UnallocatedInClass separately; line 8769 initializes curCount before the
+// branch, and both selection and reset scans use that same local. TotalInClass
+// counts eligible members but has no consumer and VC6 eliminates it.
+// DC line 8812 retries recursively; retail's back edges are VC6 tail recursion.
+// Restoring these roles and recursive source reaches 100%. The former loop
+// with separate branch counters was 94.7260%; sharing the counters while
+// retaining that loop gave 88.84%. This was a source-lifetime mismatch,
+// not the previously claimed front-end handle-state wall.
+// DC line 8801 clears the used flag before copying the disabled flag. Retail
+// omits that older store; retaining it emits an extra store and gives 85.0000%.
 // Before normalization (locals): ArtifactClass, UnallocatedInClass, TotalInClass.
 VA(0x004c94d0, 0xCD)  // anchor-global, dc 0xb4c84
 TArtifact game::getRandomArtifactId(int artifactClass)
@@ -10451,34 +10433,20 @@ TArtifact game::getRandomArtifactId(int artifactClass)
     int x;
     int i;
 
-    for (;;) {
-        totalInClass = 0;
-        for (i = 0; i < 144; ++i) {
-            if (!g_artifactTraits[i].m_disabled
-                && (g_artifactTraits[i].m_artifactClass & artifactClass)
-                && !m_artifactUsed[i]) {
-                ++totalInClass;
-            }
+    totalInClass = 0;
+    unallocatedInClass = 0;
+    for (i = 0; i < 144; ++i) {
+        if (!g_artifactTraits[i].m_disabled
+            && (g_artifactTraits[i].m_artifactClass & artifactClass)) {
+            ++totalInClass;
+            if (!m_artifactUsed[i])
+                ++unallocatedInClass;
         }
+    }
 
-        unallocatedInClass = 0;
-        if (!totalInClass) {
-            for (i = 0; i < 144; ++i) {
-                if (!g_artifactTraits[i].m_disabled
-                    && (g_artifactTraits[i].m_artifactClass & artifactClass)) {
-                    m_artifactUsed[i] = m_artifactDisabled[i];
-                    if (!m_artifactUsed[i])
-                        ++unallocatedInClass;
-                }
-            }
-            if (unallocatedInClass > 0)
-                continue;
-            artifactClass = g_allRandomArtifactClasses;
-            continue;
-        }
-
-        x = random(0, totalInClass - 1);
-        curCount = 0;
+    curCount = 0;
+    if (unallocatedInClass) {
+        x = random(0, unallocatedInClass - 1);
         for (i = 0; i < 144; ++i) {
             if (!g_artifactTraits[i].m_disabled
                 && (g_artifactTraits[i].m_artifactClass & artifactClass)
@@ -10490,6 +10458,19 @@ TArtifact game::getRandomArtifactId(int artifactClass)
         }
         m_artifactUsed[i] = 1;
         return artifactFromInt(i);
+    } else {
+        curCount = 0;
+        for (i = 0; i < 144; ++i) {
+            if (!g_artifactTraits[i].m_disabled
+                && (g_artifactTraits[i].m_artifactClass & artifactClass)) {
+                m_artifactUsed[i] = m_artifactDisabled[i];
+                if (!m_artifactUsed[i])
+                    ++curCount;
+            }
+        }
+        if (curCount > 0)
+            return getRandomArtifactId(artifactClass);
+        return getRandomArtifactId(g_allRandomArtifactClasses);
     }
 }
 
