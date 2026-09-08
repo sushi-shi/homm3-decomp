@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <string>
 #include "abstractfile.h"
 #include "advmgr_objects.h"
@@ -710,8 +711,13 @@ int TRmgRoadMapAdapter::getOverlay(const TRmgGridPoint& point)
 // methods; the river method below owns their joint ICF representative.
 TRmgGridPoint TRmgRoadMapAdapter::getSize()
 {
-    return m_map->getSize();
+    TRmgGridPoint size = m_map->getSize();
+    return size;
 }
+
+// The real road-painting stack construction at 0x548120 retains the
+// concrete adapter vtable and this ordinary deleting wrapper naturally.
+VA_COMPGEN(0x00532320, 0x21, SCALAR_DELETING_DTOR, TRmgRoadMapAdapter)
 
 // Complete-only base of the river adapter, exact on the first scored candidate.
 // The derived deleting destructor at 0x5324e0 and two CreateRiver cleanup paths
@@ -811,11 +817,14 @@ void TRmgMapAdapter::setOverlay(const TRmgGridPoint& point, int value)
 // Both concrete adapter vtables share this size forwarding body. The river
 // adapter's existing construction path independently establishes its owner.
 // Five forwarding-copy controls preserve the call, CFG and ABI but leave
-// the temporary in the opposite register pair (previous best 85.18%).
+// the temporary in the opposite register pair (85.1765%). Twenty-two
+// value/reference/assignment/component controls retain that peak; direct
+// return scores 84.6471%. Keep the same named result in both ICF owners.
 VA(0x00532790, 0x27) // vtable 0x640a3c slot 3, ICF with road slot 3
 TRmgGridPoint TRmgMapAdapter::getSize()
 {
-    return m_map->getSize();
+    TRmgGridPoint size = m_map->getSize();
+    return size;
 }
 
 // Concrete river vtable 0x640a3c slot 4 returns the river sprite. The signed
@@ -1075,6 +1084,39 @@ type_object::type_object(TRmgObjectPropertiesRef* newProperties)
     clearPlacementMarks();
 }
 
+// The base-sized default-payload classes retain separate serialization
+// vtables. Their ordinary constructors expand the same canonical base call.
+rmgResourceObject::rmgResourceObject(TRmgObjectPropertiesRef* properties)
+    : type_object(properties)
+{
+}
+
+rmgScholarObject::rmgScholarObject(TRmgObjectPropertiesRef* properties)
+    : type_object(properties)
+{
+}
+
+rmgShrineObject::rmgShrineObject(TRmgObjectPropertiesRef* properties)
+    : type_object(properties)
+{
+}
+
+rmgWitchHutObject::rmgWitchHutObject(TRmgObjectPropertiesRef* properties)
+    : type_object(properties)
+{
+}
+
+// The three simple reward factories expand this same constructor. The
+// vector's automatic construction precedes these scalar/default writes.
+rmgBlackBoxObject::rmgBlackBoxObject(TRmgObjectPropertiesRef* properties)
+    : type_object(properties)
+{
+    m_creatureType = -1;
+    m_creatureCount = 0;
+    m_experience = 0;
+    memset(m_resources, 0, sizeof(m_resources));
+}
+
 // Base-object vtable 0x640a74 slot 0 retains the generated deleting wrapper;
 // its non-deleting half is the shared refcount release at 0x5338d0.
 VA_COMPGEN(0x00533120, 0x2D, SCALAR_DELETING_DTOR, type_object)
@@ -1176,7 +1218,160 @@ void rmgOwnableObject::write(TAbstractFile* outfile, int parameter)
     outfile->write(reserved, sizeof(reserved));
 }
 
+// Artifact vtable 0x640ab4 is the only change from the base constructor.
+// Its factory at 0x5341f0 expands this ordinary constructor and the canonical
+// base body; no independent retained artifact-constructor address is claimed.
+rmgArtifactObject::rmgArtifactObject(TRmgObjectPropertiesRef* properties)
+    : type_object(properties)
+{
+}
+
+rmgSeerHutObject::rmgSeerHutObject(TRmgObjectPropertiesRef* properties)
+    : type_object(properties)
+{
+    m_experience = 0;
+    m_artifact = -1;
+    m_resourceType = 6;
+    m_resourceCount = 0;
+    m_creatureType = -1;
+    m_creatureCount = 0;
+}
+
+rmgQuestArtifactObject::rmgQuestArtifactObject(TRmgObjectPropertiesRef* properties,
+    type_random_map_generator* generator, rmgSeerHutObject* seerHut,
+    type_treasure_def* definition)
+    : rmgArtifactObject(properties), m_generator(generator),
+      m_seerHut(seerHut), m_definition(definition)
+{
+}
+
+rmgKeyTentObject::rmgKeyTentObject(TRmgObjectPropertiesRef* properties,
+    type_random_map_generator* generator, int value)
+    : type_object(properties), m_generator(generator), m_value(value)
+{
+}
+
+// The artifact record is the ordinary object record followed by the empty
+// custom-treasure flag consumed by NewfullMap::readArtifactData. Retail
+// 0x533500 retains the same five base writes before
+// the final one-byte zero at 0x53357b..0x53357f.
+// Nine byte/bool and declaration-lifetime controls retain 99.8033%; the
+// sole residual is the final flag address (-2 versus the dead argument slot).
+VA(0x00533500, 0x8A) // anchor-vtable 0x640ab4 slot 3; thiscall ret 8; retail-only
+void rmgArtifactObject::write(TAbstractFile* outfile, int parameter)
+{
+    type_object::write(outfile, parameter);
+    char hasCustomTreasure = 0;
+    outfile->write(&hasCustomTreasure, sizeof(hasCustomTreasure));
+}
+
 VA_COMPGEN(0x00533590, 0x21, SCALAR_DELETING_DTOR, rmgOwnableObject)
+
+// Resource vtable 0x640ac4 appends a zero custom-treasure flag, a zero
+// resource count and a reserved dword to the canonical object record.
+// Preserve all three writes, including the second independent dword zero.
+VA(0x005335C0, 0xB2) // anchor-vtable 0x640ac4 slot 3; thiscall ret 8
+void rmgResourceObject::write(TAbstractFile* outfile, int parameter)
+{
+    type_object::write(outfile, parameter);
+    char hasCustomTreasure = 0;
+    outfile->write(&hasCustomTreasure, sizeof(hasCustomTreasure));
+    int amount = 0;
+    outfile->write(&amount, sizeof(amount));
+    int reserved = 0;
+    outfile->write(&reserved, sizeof(reserved));
+}
+
+VA_COMPGEN(0x00533680, 0x21, SCALAR_DELETING_DTOR, rmgBlackBoxObject)
+
+// Vtable 0x640ad4's deleting wrapper calls this retained implicit destructor.
+// Its vector cleanup is followed by the canonical base's property release.
+// An explicit empty override adds an absent derived-vptr store (95.00%);
+// retail has only automatic member/base teardown, as in the ownable class.
+VA_COMPGEN(0x005336B0, 0x36, IMPLICIT_DTOR, rmgBlackBoxObject)
+
+// Pandora's Box writer: ordinary object header, empty message/guard flag,
+// experience, mana, morale/luck, resources, primary/secondary skills,
+// artifacts, spells and creature reward, then eight reserved bytes.
+// Retail preserves these individual file writes and version-dependent
+// creature width; the spell count and loop bound come from the real vector.
+// Exact: the creature-count buffer needs its own block after the type's
+// version arms. A 24-candidate scope/load batch leaves the unscoped buffer
+// at 99.9517% (different stack slot); signed and unsigned short blocks match.
+VA(0x005336F0, 0x1E0) // anchor-vtable 0x640ad4 slot 3; ret 8; retail-only
+void rmgBlackBoxObject::write(TAbstractFile* outfile, int version)
+{
+    type_object::write(outfile, version);
+    {
+        char hasCustomTreasure = 0;
+        outfile->write(&hasCustomTreasure, sizeof(hasCustomTreasure));
+    }
+    {
+        int experience = m_experience;
+        outfile->write(&experience, sizeof(experience));
+    }
+    {
+        int mana = 0;
+        outfile->write(&mana, sizeof(mana));
+    }
+    {
+        char morale = 0;
+        outfile->write(&morale, sizeof(morale));
+    }
+    {
+        char luck = 0;
+        outfile->write(&luck, sizeof(luck));
+    }
+    outfile->write(m_resources, sizeof(m_resources));
+    {
+        int primarySkills = 0;
+        outfile->write(&primarySkills, sizeof(primarySkills));
+    }
+    {
+        char secondarySkillCount = 0;
+        outfile->write(&secondarySkillCount, sizeof(secondarySkillCount));
+    }
+    {
+        char artifactCount = 0;
+        outfile->write(&artifactCount, sizeof(artifactCount));
+    }
+    {
+        char spellCount = m_spells.size();
+        outfile->write(&spellCount, sizeof(spellCount));
+    }
+    for (unsigned int i = 0; i < m_spells.size(); ++i) {
+        char spell = m_spells[i];
+        outfile->write(&spell, sizeof(spell));
+    }
+    if (m_creatureType == -1) {
+        char creatureCount = 0;
+        outfile->write(&creatureCount, sizeof(creatureCount));
+    } else {
+        {
+            char creatureCount = 1;
+            outfile->write(&creatureCount, sizeof(creatureCount));
+        }
+        if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
+            short creatureType = m_creatureType;
+            outfile->write(&creatureType, sizeof(creatureType));
+        } else {
+            char creatureType = m_creatureType;
+            outfile->write(&creatureType, sizeof(creatureType));
+        }
+        {
+            short creatureCount = m_creatureCount;
+            outfile->write(&creatureCount, sizeof(creatureCount));
+        }
+    }
+    {
+        int reserved = 0;
+        outfile->write(&reserved, sizeof(reserved));
+    }
+    {
+        int reserved = 0;
+        outfile->write(&reserved, sizeof(reserved));
+    }
+}
 
 // Vptr restoration and the property reference release at 0x5338d0.
 // Keep the body visible to the ownable destructor so the base cleanup can
@@ -1190,6 +1385,137 @@ type_object::~type_object()
     --m_properties->m_refCount;
 }
 
+// Key-tent vtable 0x640ae4 slot 2 first tries to place a same-color guard.
+// Failure removes this tent from the map and requests replacement treasure
+// in the original zone and position. Keep the generator/value/position
+// snapshots across removeObject: retail preserves all three before that call.
+VA(0x005338E0, 0xD4) // anchor-vtable + retained placement/removal calls; retail-only
+unsigned char rmgKeyTentObject::isWritable()
+{
+    if (m_generator->placeKeyTentGuard(this, m_value * 3 / 2))
+        return 1;
+    type_random_map_generator* generator = m_generator;
+    int value = m_value;
+    TRmgMapPosition position = m_position;
+    generator->removeObject(this);
+    TRmgZone* zone = generator->m_zones[
+        generator->m_map.getMapItem(position)->m_zoneState.m_zone];
+    int actualValue;
+    type_object* object = generator->generateTreasure(
+        zone, value, value * 3 / 2, &actualValue, 0, 0, 0, position);
+    if (object)
+        generator->addObject(object, position);
+    return 0;
+}
+
+// Vtable 0x640af4 owns a pending polymorphic seer-hut object. The retained
+// destructor deletes it before the ordinary artifact/base property release.
+VA_COMPGEN(0x005339C0, 0x21, SCALAR_DELETING_DTOR, rmgQuestArtifactObject)
+VA(0x005339F0, 0x58) // anchor-vtable + polymorphic member delete; retail-only
+rmgQuestArtifactObject::~rmgQuestArtifactObject()
+{
+    delete m_seerHut;
+}
+
+// The generator places the seer hut on success and takes ownership. On
+// failure the wrapper destroys its pending hut. Both paths clear ownership.
+VA(0x00533A50, 0x33) // vtable 0x640af4 slot 2 + retained callee 0x54b490
+unsigned char rmgQuestArtifactObject::isWritable()
+{
+    if (m_generator->placeQuestArtifact(this)) {
+        m_seerHut = 0;
+        return 1;
+    }
+    delete m_seerHut;
+    m_seerHut = 0;
+    return 0;
+}
+
+// Vtable 0x640b04 serializes the artifact quest followed by exactly one
+// reward: experience, creatures, or resources, in that precedence order.
+// AB adds the quest kind, artifact count, deadline and three empty strings.
+VA(0x00533A90, 0x1E0) // anchor-vtable + ordered H3M writes; retail-only
+void rmgSeerHutObject::write(TAbstractFile* outfile, int version)
+{
+    type_object::write(outfile, version);
+    if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
+        {
+            char questKind = 5;
+            outfile->write(&questKind, sizeof(questKind));
+        }
+        {
+            char artifactCount = 1;
+            outfile->write(&artifactCount, sizeof(artifactCount));
+        }
+        {
+            short artifact = m_artifact;
+            outfile->write(&artifact, sizeof(artifact));
+        }
+        {
+            int deadline = -1;
+            outfile->write(&deadline, sizeof(deadline));
+        }
+        {
+            int firstVisitLength = 0;
+            outfile->write(&firstVisitLength, sizeof(firstVisitLength));
+        }
+        {
+            int nextVisitLength = 0;
+            outfile->write(&nextVisitLength, sizeof(nextVisitLength));
+        }
+        {
+            int completionLength = 0;
+            outfile->write(&completionLength, sizeof(completionLength));
+        }
+    } else {
+        char artifact = m_artifact;
+        outfile->write(&artifact, sizeof(artifact));
+    }
+    if (m_experience > 0) {
+        {
+            char rewardKind = 1;
+            outfile->write(&rewardKind, sizeof(rewardKind));
+        }
+        {
+            int experience = m_experience;
+            outfile->write(&experience, sizeof(experience));
+        }
+    } else if (m_creatureType != -1) {
+        {
+            char rewardKind = 10;
+            outfile->write(&rewardKind, sizeof(rewardKind));
+        }
+        if (version >= RMG_MAP_ARMAGEDDONS_BLADE) {
+            short creature = m_creatureType;
+            outfile->write(&creature, sizeof(creature));
+        } else {
+            char creature = m_creatureType;
+            outfile->write(&creature, sizeof(creature));
+        }
+        {
+            short count = m_creatureCount;
+            outfile->write(&count, sizeof(count));
+        }
+    } else {
+        {
+            char rewardKind = 5;
+            outfile->write(&rewardKind, sizeof(rewardKind));
+        }
+        {
+            char resourceType = m_resourceType;
+            outfile->write(&resourceType, sizeof(resourceType));
+        }
+        {
+            int resourceCount = m_resourceCount;
+            outfile->write(&resourceCount, sizeof(resourceCount));
+        }
+    }
+    {
+        int reserved = 0;
+        outfile->write(&reserved, sizeof(short));
+    }
+}
+
 // The hero-object factory marks the selected index in disabledHeroes before
 // construction. Vtable 0x640b14 slot 1 clears that byte when the reservation
 // is released.
@@ -1197,6 +1523,50 @@ VA(0x00533C70, 0x0F)  // factory 0x5348d0; Complete-only RMG object
 void rmgHeroObject::unknownOperation()
 {
     m_generator->m_disabledHeroes[m_heroIndex] = 0;
+}
+
+// Scholar vtable 0x640b24 writes the default reward tag/value, then six
+// reserved bytes as a dword and word. Retail zeroes a full dword temporary
+// before the final two-byte write; preserve that scalar width and call size.
+VA(0x00533E70, 0xC3) // anchor-vtable + default serialization bytes; ret 8
+void rmgScholarObject::write(TAbstractFile* outfile, int parameter)
+{
+    type_object::write(outfile, parameter);
+    char rewardKind = -1;
+    outfile->write(&rewardKind, sizeof(rewardKind));
+    char rewardValue = 0;
+    outfile->write(&rewardValue, sizeof(rewardValue));
+    int reserved = 0;
+    outfile->write(&reserved, sizeof(reserved));
+    reserved = 0;
+    outfile->write(&reserved, sizeof(short));
+}
+
+// Shrine vtable 0x640b34 emits its default spell marker and three reserved
+// bytes through byte/word/byte writes, after the ordinary object record.
+VA(0x00533F40, 0xAF) // anchor-vtable + ordered write sizes; ret 8
+void rmgShrineObject::write(TAbstractFile* outfile, int parameter)
+{
+    type_object::write(outfile, parameter);
+    char spell = -1;
+    outfile->write(&spell, sizeof(spell));
+    int reserved = 0;
+    outfile->write(&reserved, sizeof(short));
+    char reservedByte = 0;
+    outfile->write(&reservedByte, sizeof(reservedByte));
+}
+
+// Witch-hut vtable 0x640b54 appends the default skill mask only in AB and
+// later map versions. Retail uses a signed comparison against version 1.
+// Exact with the shared base writer expanded and the conditional mask local.
+VA(0x005340C0, 0x93) // anchor-vtable + version guard and mask 0xefdf; ret 8
+void rmgWitchHutObject::write(TAbstractFile* outfile, int parameter)
+{
+    type_object::write(outfile, parameter);
+    if (parameter >= RMG_MAP_ARMAGEDDONS_BLADE) {
+        unsigned int allowedSkills = 0xefdf;
+        outfile->write(&allowedSkills, sizeof(allowedSkills));
+    }
 }
 
 // Complete-only helper called by InitializeObjectGenerators at 0x538b10.
@@ -1215,9 +1585,31 @@ type_treasure_def::type_treasure_def(
 // Complete-only RMG virtual recovered from the inherited slot in the
 // type_treasure_def family of retail vtables; Dreamcast has no RMG compiland.
 VA(0x00534190, 0x06)
-int type_treasure_def::getValue(void*, void*)
+int type_treasure_def::getValue(TRmgZone*, type_random_map_generator*)
 {
     return m_value;
+}
+
+// Vtable 0x640b64 slot 0 is an object factory, not a constructor. Retail
+// allocates 0x1c bytes and expands type_object's canonical constructor using
+// the first explicit argument as TRmgObjectPropertiesRef*. All 77 bytes
+// match with that ordinary constructor call. The remaining two
+// interface arguments are unused. The allocated object's vtable is 0x640a74.
+VA(0x005341A0, 0x4D) // anchor-vtable 0x640b64 + base-object construction; retail-only
+type_object* type_treasure_def::generate(TRmgObjectPropertiesRef* properties,
+    type_random_map_generator*, TRmgZone*)
+{
+    return new type_object(properties);
+}
+
+// Exact: the ordinary constructor chain reproduces all 83 retail bytes.
+// Artifact-definition vtable 0x640b70 slot 0 allocates the base-sized
+// artifact class and installs its distinct serialization vtable 0x640ab4.
+VA(0x005341F0, 0x53) // anchor-vtable + allocated-object vptr; retail-only
+type_object* type_artifact_def::generate(TRmgObjectPropertiesRef* properties,
+    type_random_map_generator*, TRmgZone*)
+{
+    return new rmgArtifactObject(properties);
 }
 
 // The compiler expands the common four-store constructor in each of these
@@ -1241,16 +1633,168 @@ type_black_box_creature_def::type_black_box_creature_def(int newCreatureType)
         m_adjustedValue = ((m_adjustedValue + 1) / 2) * 2;
 }
 
+// Creature-definition vtable 0x640b7c slot 1. The zone test reads +8
+// (townType2), and the alignment weighting uses the generator's active-zone
+// counts. These offsets distinguish both arguments from the old placeholders.
+VA(0x00534310, 0x64) // anchor-vtable + creature traits 0x6747b0; retail-only
+int type_black_box_creature_def::getValue(
+    TRmgZone* zone, type_random_map_generator* generator)
+{
+    int alignment = g_creatureTypeTraits[m_creatureType].m_townType;
+    if (alignment != zone->m_townType2)
+        return -1;
+    int value = g_creatureTypeTraits[m_creatureType].m_aiValue * m_adjustedValue;
+    int alignmentCount = 0;
+    if (alignment != -1)
+        alignmentCount = generator->m_activeZoneCountsByAlignment[alignment];
+    int zoneCount = generator->m_activeZoneCount;
+    if (zoneCount > 0)
+        value += alignmentCount * value / zoneCount;
+    return value;
+}
+
+// The three definition tables select the same concrete Pandora's Box
+// class. They initialize its defaults through the canonical constructor,
+// then supply the definition-specific creature, experience or gold reward.
+// All three factories are exact. For the creature payload, retail loads
+// both definition fields before either object store: the count local closes
+// the direct-store form's 99.24% scheduling residual in the payload batch.
+VA(0x00534380, 0x85) // anchor-vtable 0x640b7c slot 0; ret 0xc; retail-only
+type_object* type_black_box_creature_def::generate(TRmgObjectPropertiesRef* properties,
+    type_random_map_generator*, TRmgZone*)
+{
+    rmgBlackBoxObject* object = new rmgBlackBoxObject(properties);
+    int count = m_adjustedValue;
+    object->m_creatureType = m_creatureType;
+    object->m_creatureCount = count;
+    return object;
+}
+
+VA(0x00534410, 0x7F) // anchor-vtable 0x640b88 slot 0; ret 0xc; retail-only
+type_object* type_black_box_experience_def::generate(TRmgObjectPropertiesRef* properties,
+    type_random_map_generator*, TRmgZone*)
+{
+    rmgBlackBoxObject* object = new rmgBlackBoxObject(properties);
+    object->m_experience = m_experience;
+    return object;
+}
+
+VA(0x00534490, 0x84) // anchor-vtable 0x640b94 slot 0; ret 0xc; retail-only
+type_object* type_black_box_gold_def::generate(TRmgObjectPropertiesRef* properties,
+    type_random_map_generator*, TRmgZone*)
+{
+    rmgBlackBoxObject* object = new rmgBlackBoxObject(properties);
+    object->m_resources[6] += m_gold;
+    return object;
+}
+
+// Both dwelling-definition tables (0x640bac/0x640bb8) share this factory.
+// Its allocation and base initialization match the ordinary factory, followed
+// by the proven ownable-object vptr 0x640aa4. All 83 bytes match while
+// preserving the real constructor.
+VA(0x00534790, 0x53) // anchor-vtables + ownable constructor expansion; retail-only
+type_object* type_dwelling_def::generate(TRmgObjectPropertiesRef* properties,
+    type_random_map_generator*, TRmgZone*)
+{
+    return new rmgOwnableObject(properties);
+}
+
+// Resource-definition table 0x640bc4 constructs the base-sized resource
+// object and replaces its vptr with 0x640ac4 after the canonical base call.
+// This and the scholar/shrine/witch-hut factories reproduce all 83 bytes.
+VA(0x00534870, 0x53) // anchor-definition table + allocated-object vptr; ret 0xc
+type_object* type_resource_lump_def::generate(TRmgObjectPropertiesRef* properties,
+    type_random_map_generator*, TRmgZone*)
+{
+    return new rmgResourceObject(properties);
+}
+
+// Scholar-definition table 0x640bdc selects object vtable 0x640b24.
+VA(0x00534970, 0x53) // anchor-definition and object vtables; ret 0xc
+type_object* type_scholar_def::generate(TRmgObjectPropertiesRef* properties,
+    type_random_map_generator*, TRmgZone*)
+{
+    return new rmgScholarObject(properties);
+}
+
 VA(0x005349D0, 0x29)
 type_shrine_def::type_shrine_def(int newObjectType, int newValue)
     : type_treasure_def(newObjectType, 0, newValue, 100)
 {
 }
 
+// Shrine-definition table 0x640be8 selects object vtable 0x640b34.
+VA(0x00534A00, 0x53) // anchor-definition and object vtables; ret 0xc
+type_object* type_shrine_def::generate(TRmgObjectPropertiesRef* properties,
+    type_random_map_generator*, TRmgZone*)
+{
+    return new rmgShrineObject(properties);
+}
+
 VA(0x00534A60, 0x25)
 type_witch_hut_def::type_witch_hut_def()
     : type_treasure_def(0x71, 0, 1500, 80)
 {
+}
+
+// Witch-hut definition 0x640bf4 selects object vtable 0x640b54.
+VA(0x00534A90, 0x53) // anchor-definition and object vtables; ret 0xc
+type_object* type_witch_hut_def::generate(TRmgObjectPropertiesRef* properties,
+    type_random_map_generator*, TRmgZone*)
+{
+    return new rmgWitchHutObject(properties);
+}
+
+// Seer-hut definition tables 0x640c0c and 0x640c18 share this ICF body.
+// Both classes exist independently and use the same availability checks:
+// current prototype at +0xf58, then the exhausted-artifact flag at +0x10b4.
+VA(0x00534C80, 0x34) // anchor-vtables + generator fields; retail-only
+int type_quest_experience_def::getValue(TRmgZone*, type_random_map_generator* generator)
+{
+    if (generator->m_nextSeerHutPrototypeIndex != m_subtype)
+        return -1;
+    if (generator->m_questArtifactPoolLow)
+        return -1;
+    return m_value;
+}
+
+int type_quest_gold_def::getValue(TRmgZone*, type_random_map_generator* generator)
+{
+    if (generator->m_nextSeerHutPrototypeIndex != m_subtype)
+        return -1;
+    if (generator->m_questArtifactPoolLow)
+        return -1;
+    return m_value;
+}
+
+// The reward is carried by a pending seer hut, while the returned object
+// is its artifact wrapper. Both allocations use their canonical constructors.
+// Exact: a 24-candidate batch requires all three wrapper fields in the
+// initializer list, so their stores precede the final derived vptr. Body
+// assignments leave experience at 99.5432%. The gold amount local also
+// preserves retail's reward load before either field store (direct: 95.122%).
+VA(0x00534CC0, 0xE1) // definition vtable 0x640c0c slot 0; retail-only
+type_object* type_quest_experience_def::generate(TRmgObjectPropertiesRef* properties,
+    type_random_map_generator* generator, TRmgZone*)
+{
+    rmgSeerHutObject* seerHut = new rmgSeerHutObject(properties);
+    TRmgObjectPropertiesRef* artifact = generator->selectObjectPrototype(eTerrainDirt, 0x41, 0);
+    rmgQuestArtifactObject* object = new rmgQuestArtifactObject(artifact, generator, seerHut, this);
+    seerHut->m_experience = m_experience;
+    return object;
+}
+
+VA(0x00534DB0, 0xE8) // definition vtable 0x640c18 slot 0; retail-only
+type_object* type_quest_gold_def::generate(TRmgObjectPropertiesRef* properties,
+    type_random_map_generator* generator, TRmgZone*)
+{
+    rmgSeerHutObject* seerHut = new rmgSeerHutObject(properties);
+    TRmgObjectPropertiesRef* artifact = generator->selectObjectPrototype(eTerrainDirt, 0x41, 0);
+    rmgQuestArtifactObject* object = new rmgQuestArtifactObject(artifact, generator, seerHut, this);
+    int amount = m_gold;
+    seerHut->m_resourceType = 6;
+    seerHut->m_resourceCount = amount;
+    return object;
 }
 
 VA(0x00534EA0, 0x30)
@@ -1264,14 +1808,43 @@ type_spell_scroll_def::type_spell_scroll_def(int newSpellLevel, int newValue)
 // registration loop stores the color in m_subtype, and retail returns this
 // definition's value only while that color is the generator's next free one.
 VA(0x00534FA0, 0x21)
-int type_key_tent_def::getValue(void*, void* map)
+int type_key_tent_def::getValue(TRmgZone*, type_random_map_generator* generator)
 {
-    type_random_map_generator* generator =
-        static_cast<type_random_map_generator*>(map);
     if (generator->m_nextKeyTentColor != m_subtype)
         return -1;
     return m_value;
 }
+
+// Definition vtable 0x640c30 slot 0 constructs the concrete 0x24-byte tent.
+// The generator is the second factory argument; +0x20 receives m_value,
+// not the definition subtype/color (that is already in its properties).
+VA(0x00534FD0, 0x64) // anchor-definition table + object vtable 0x640ae4; retail-only
+type_object* type_key_tent_def::generate(TRmgObjectPropertiesRef* properties,
+    type_random_map_generator* generator, TRmgZone*)
+{
+    return new rmgKeyTentObject(properties, generator, m_value);
+}
+
+// Retail's derived generator constructor 0x537b10 calls this six-argument
+// base initializer. Automatic member construction owns the map, object table
+// and 232 property vectors before the progress total and seed are installed.
+// TProgressSink's +4 total/slot-1 setter prove the earlier opaque progress
+// interface was a duplicate model of the existing canonical sink.
+VA(0x00536070, 0xFB) // caller 0x537b52 + base vtable 0x640c3c; retail-only
+TRmgGeneratorBase::TRmgGeneratorBase(int width, int height, int levels,
+    TProgressSink* progress, int additionalSteps, int version)
+    : m_map(width, height, levels)
+{
+    m_progress = progress;
+    m_mapVersion = version;
+    if (progress)
+        progress->setTotal(progress->m_steps + additionalSteps + 0x3bc4);
+    time(&m_randomSeed);
+    srand(m_randomSeed);
+    loadObjectPrototypes();
+}
+
+VA_COMPGEN(0x00536170, 0x21, SCALAR_DELETING_DTOR, TRmgGeneratorBase)
 
 // The seven-slot abstract map table at 0x6409e8 and sixteen retail cleanup
 // tails identify this virtual base destructor, exact on the first scored
@@ -1284,6 +1857,25 @@ TRmgMapInterface::~TRmgMapInterface()
 // Vtable 0x6409e8 slot 0 retains this generated wrapper immediately after
 // the exact abstract-base destructor in retail link order.
 VA_COMPGEN(0x005361B0, 0x23, SCALAR_DELETING_DTOR, TRmgMapInterface)
+
+// The base constructor passes this default-constructor closure to the
+// 232-element EH vector constructor iterator. The int-vector grid below
+// has its own identical retail closure at 0x536ba0.
+VA_COMPGEN(0x005361E0, 0x18, DEFAULT_CTOR_CLOSURE, TRmgObjectPropertiesRef)
+
+// The base owns placed objects and property references. Delete those
+// pointees first, then let the ordinary member destructors release the
+// vector buffers, placement rules, object table and owning map in reverse.
+VA(0x005363B0, 0x1A9) // base vtable 0x640c3c + derived cleanup call; retail-only
+TRmgGeneratorBase::~TRmgGeneratorBase()
+{
+    for (unsigned int i = 0; i < m_positions.size(); ++i)
+        delete m_positions[i];
+    for (int type = 0; type < 232; ++type) {
+        for (unsigned int i = 0; i < m_objectPrototypes[type].size(); ++i)
+            delete m_objectPrototypes[type][i];
+    }
+}
 
 // rand_trn.txt supplies one rule per nonempty row starting at row three.
 // The two 232x10 vector grids group rules and subtypes by remapped object
@@ -1313,7 +1905,7 @@ VA_COMPGEN(0x005361B0, 0x23, SCALAR_DELETING_DTOR, TRmgMapInterface)
 // three pins is also neutral here. Canonical library constructors remain;
 // WriteMapHeader's 95.71% MAX is preserved with that collateral measured.
 VA(0x00536560, 0x5F2) // anchor-string rand_trn.txt; thiscall, ret 0; retail-only
-void type_random_map_generator::readObjectPlacementRules()
+void TRmgGeneratorBase::readObjectPlacementRules()
 {
     TSpreadsheetResource* sheet = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x006827F4, rmgPlacementRulesFilename, "rand_trn.txt"));
@@ -1411,7 +2003,7 @@ void type_random_map_generator::readObjectPlacementRules()
 // its redundant lea. The insert callee's widget* name is an ICF alias of
 // this pointer-vector instantiation, not another inlining difference.
 VA(0x00536BC0, 0x5F4) // anchor-callee 0x5375ff; thiscall, ret 0x10; retail-only
-int type_random_map_generator::scoreObjectPlacement(
+int TRmgGeneratorBase::scoreObjectPlacement(
     TRmgObjectPropertiesRef* properties, TRmgMapPosition position)
 {
     TObjectType* prototype = properties->m_prototype;
@@ -1550,6 +2142,22 @@ VA(0x005378E0, 0x27)
 TRmgMapItem* type_random_map::getMapItem(TRmgMapPosition point)
 {
     return getMapItem(point.m_x, point.m_y, point.m_z);
+}
+
+VA_COMPGEN(0x00537DC0, 0x21, SCALAR_DELETING_DTOR, type_random_map_generator)
+
+// Derived vtable 0x640c44 deletes zone/template pointees and the nonvirtual
+// treasure definitions, then releases its own members before the retained
+// base destructor at 0x5363b0. The loops and all three owners are separate.
+VA(0x00537DF0, 0x200) // derived vtable + base cleanup and pointee destructors
+type_random_map_generator::~type_random_map_generator()
+{
+    for (unsigned int i = 0; i < m_zones.size(); ++i)
+        delete m_zones[i];
+    for (unsigned int j = 0; j < m_templates.size(); ++j)
+        delete m_templates[j];
+    for (unsigned int k = 0; k < m_objectGenerators.size(); ++k)
+        delete m_objectGenerators[k];
 }
 
 // The rmg.txt coordinator at 0x5381ad passes the spreadsheet in ecx,
@@ -3783,6 +4391,21 @@ TRmgObjectPropertiesRef* type_random_map_generator::selectObjectPrototype(
     return candidates[rand() % candidates.size()];
 }
 
+// The reset loops at 0x546758/0x5468ca and 0x547647/0x547739 pass a
+// TRmgMapItem in ECX and four scalar values. Retail writes land/frame in
+// +0x24 and the two terrain flips in +0x28. setTerrain is a Complete-only
+// role name; both the cell owner and this retained helper boundary are proven.
+// Exact: the four canonical bitfield assignments reproduce all 73 bytes.
+VA(0x00546940, 0x49) // anchor-callers + packed cell fields; thiscall ret 0x10
+void TRmgMapItem::setTerrain(TTerrainType terrain, int frame,
+    unsigned char flipX, unsigned char flipY)
+{
+    m_tile.m_landType = terrain;
+    m_tile.m_terrainFrame = frame;
+    m_tileData.m_terrainFlipX = flipX;
+    m_tileData.m_terrainFlipY = flipY;
+}
+
 // The road/river worklists instantiate all three of these out-of-line STL
 // bodies.  Their distinct retail extents disambiguate the two int overloads.
 VA_COMPGEN(0x00404200, 0x209, VECTOR_INSERT, Int)
@@ -3810,6 +4433,12 @@ VA_COMPGEN(0x00536BA0, 0x18, DEFAULT_CTOR_CLOSURE, vector)
 // TRmgObjectPlacementRule owns the two int vectors at +0x2c and +0x3c.
 // Their reverse destruction order accounts for all 61 retail bytes.
 VA_COMPGEN(0x00536B60, 0x3D, IMPLICIT_DTOR, TRmgObjectPlacementRule)
+
+// The recovered generator-base constructor's exception cleanup naturally
+// retains the value-vector destructor. Its 0x4c-stride loop and calls to
+// TRmgObjectPlacementRule::~TRmgObjectPlacementRule distinguish it from
+// the separate pointer-vector destructor emitted by the rule loader.
+VA_COMPGEN(0x0054C170, 0x38, VECTOR_DTOR, TRmgObjectPlacementRule)
 
 // FilterZonePositions retains this size calculation four times. Retail
 // divides the template connection pointer span by its proven 0x1c stride.
@@ -4024,6 +4653,56 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
             nextMapItem->setMovementCost(nextCost, position);
             insertRmgWorkItem(
                 openPositions, openCosts, nextPosition, nextCost);
+        }
+    }
+}
+
+
+// Retail's road-target pass 0x548290 passes a position by value followed
+// by the road kind (0x5483ed..0x548408). This predecessor walk paints only
+// same-level cardinal runs and restarts its map view at a diagonal or level
+// transition. Reaching zero movement cost ends the walk and returns whether
+// any painter was constructed. The source spelling is a Complete-only role.
+// The stack adapter at 0x548120 is the natural construction site for its
+// concrete vtable and deleting wrapper; both cleanup exits restore 0x640a20.
+// Sixteen loop/lifetime controls: a cached cell pointer in the decorated
+// run reaches 70.4101%; repeated lookup is 51.8371%. A continue guard loses
+// the shared cleanup layout (68.9944%); direct/goto loop tests remain lower.
+VA(0x00548040, 0x244) // anchor-callee 0x548408 + adapter/painter vtables; retail-only
+unsigned char type_random_map_generator::paintRoad(TRmgMapPosition position, int roadType)
+{
+    unsigned char painted = 0;
+    for (;;) {
+        int level = position.m_z;
+        type_random_map levelMap(m_map.getMapItem(0, 0, level),
+            m_map.m_mapWidth, m_map.m_mapHeight);
+        TRmgMapPosition previous = position;
+        TRmgMapItem* existing = m_map.getMapItem(position);
+        while (existing->m_tile.m_roadType == roadType) {
+            if (existing->m_movement.m_cost == 0)
+                return painted;
+            previous = position;
+            position = existing->m_previousTile;
+            existing = m_map.getMapItem(position);
+        }
+        if (position.m_z == level) {
+            position = previous;
+            TRmgRoadMapAdapter adapter(&levelMap);
+            TRmgRoadPainter painter(
+                &adapter, roadType, TRmgGridPoint(position.m_x, position.m_y));
+            painted = 1;
+            for (;;) {
+                TRmgMapItem* item = m_map.getMapItem(position);
+                if (item->m_movement.m_cost == 0)
+                    return painted;
+                position = item->m_previousTile;
+                if (position.m_z != level
+                    || (position.m_x != previous.m_x && position.m_y != previous.m_y))
+                    break;
+                painted = 1;
+                painter.drawTo(TRmgGridPoint(position.m_x, position.m_y));
+                previous = position;
+            }
         }
     }
 }
