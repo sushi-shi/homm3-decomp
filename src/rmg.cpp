@@ -1271,14 +1271,18 @@ rmgKeyTentObject::rmgKeyTentObject(TRmgObjectPropertiesRef* properties,
 // custom-treasure flag consumed by NewfullMap::readArtifactData. Retail
 // 0x533500 retains the same five base writes before
 // the final one-byte zero at 0x53357b..0x53357f.
-// Nine byte/bool and declaration-lifetime controls retain 99.8033%; the
-// sole residual is the final flag address (-2 versus the dead argument slot).
+// Exact: a block-scoped flag reuses the dead argument byte at [ebp+0xb].
+// The former function-scoped flag occupied [ebp-2] (99.8033%); byte type
+// and split initialization alone are flat. The joint 60-case buffer family
+// closes all four simple payload writers in 18 states without collateral.
 VA(0x00533500, 0x8A) // anchor-vtable 0x640ab4 slot 3; thiscall ret 8; retail-only
 void rmgArtifactObject::write(TAbstractFile* outfile, int parameter)
 {
     type_object::write(outfile, parameter);
-    char hasCustomTreasure = 0;
-    outfile->write(&hasCustomTreasure, sizeof(hasCustomTreasure));
+    {
+        char hasCustomTreasure = 0;
+        outfile->write(&hasCustomTreasure, sizeof(hasCustomTreasure));
+    }
 }
 
 VA_COMPGEN(0x00533590, 0x21, SCALAR_DELETING_DTOR, rmgOwnableObject)
@@ -1286,16 +1290,25 @@ VA_COMPGEN(0x00533590, 0x21, SCALAR_DELETING_DTOR, rmgOwnableObject)
 // Resource vtable 0x640ac4 appends a zero custom-treasure flag, a zero
 // resource count and a reserved dword to the canonical object record.
 // Preserve all three writes, including the second independent dword zero.
+// Exact with independent buffer scopes: retail reuses [ebp+0xb]/[ebp+8].
+// Flat lifetimes allocate a 0x14 frame instead of 8 bytes (99.4933%);
+// one shared tail scope only reaches 99.6533%. All calls already agreed.
 VA(0x005335C0, 0xB2) // anchor-vtable 0x640ac4 slot 3; thiscall ret 8
 void rmgResourceObject::write(TAbstractFile* outfile, int parameter)
 {
     type_object::write(outfile, parameter);
-    char hasCustomTreasure = 0;
-    outfile->write(&hasCustomTreasure, sizeof(hasCustomTreasure));
-    int amount = 0;
-    outfile->write(&amount, sizeof(amount));
-    int reserved = 0;
-    outfile->write(&reserved, sizeof(reserved));
+    {
+        char hasCustomTreasure = 0;
+        outfile->write(&hasCustomTreasure, sizeof(hasCustomTreasure));
+    }
+    {
+        int amount = 0;
+        outfile->write(&amount, sizeof(amount));
+    }
+    {
+        int reserved = 0;
+        outfile->write(&reserved, sizeof(reserved));
+    }
 }
 
 VA_COMPGEN(0x00533680, 0x21, SCALAR_DELETING_DTOR, rmgBlackBoxObject)
@@ -1544,32 +1557,51 @@ void rmgHeroObject::unknownOperation()
 // Scholar vtable 0x640b24 writes the default reward tag/value, then six
 // reserved bytes as a dword and word. Retail zeroes a full dword temporary
 // before the final two-byte write; preserve that scalar width and call size.
+// Exact: individual scopes recover the dead argument slots and 8-byte frame.
+// Flat locals gave 99.4146%; one tail scope gives 99.6098%, and grouping
+// both byte buffers together still leaves a slot difference (99.8537%).
 VA(0x00533E70, 0xC3) // anchor-vtable + default serialization bytes; ret 8
 void rmgScholarObject::write(TAbstractFile* outfile, int parameter)
 {
     type_object::write(outfile, parameter);
-    char rewardKind = -1;
-    outfile->write(&rewardKind, sizeof(rewardKind));
-    char rewardValue = 0;
-    outfile->write(&rewardValue, sizeof(rewardValue));
-    int reserved = 0;
-    outfile->write(&reserved, sizeof(reserved));
-    reserved = 0;
-    outfile->write(&reserved, sizeof(short));
+    {
+        char rewardKind = -1;
+        outfile->write(&rewardKind, sizeof(rewardKind));
+    }
+    {
+        char rewardValue = 0;
+        outfile->write(&rewardValue, sizeof(rewardValue));
+    }
+    {
+        int reserved = 0;
+        outfile->write(&reserved, sizeof(reserved));
+    }
+    {
+        int reserved = 0;
+        outfile->write(&reserved, sizeof(short));
+    }
 }
 
 // Shrine vtable 0x640b34 emits its default spell marker and three reserved
 // bytes through byte/word/byte writes, after the ordinary object record.
+// Exact: separate buffer scopes reuse [ebp+0xb]/[ebp+8]. Keeping all three
+// locals function-scoped gives 99.4933%; one tail scope only reaches 99.7067%.
 VA(0x00533F40, 0xAF) // anchor-vtable + ordered write sizes; ret 8
 void rmgShrineObject::write(TAbstractFile* outfile, int parameter)
 {
     type_object::write(outfile, parameter);
-    char spell = -1;
-    outfile->write(&spell, sizeof(spell));
-    int reserved = 0;
-    outfile->write(&reserved, sizeof(short));
-    char reservedByte = 0;
-    outfile->write(&reservedByte, sizeof(reservedByte));
+    {
+        char spell = -1;
+        outfile->write(&spell, sizeof(spell));
+    }
+    {
+        int reserved = 0;
+        outfile->write(&reserved, sizeof(short));
+    }
+    {
+        char reservedByte = 0;
+        outfile->write(&reservedByte, sizeof(reservedByte));
+    }
 }
 
 // Witch-hut vtable 0x640b54 appends the default skill mask only in AB and

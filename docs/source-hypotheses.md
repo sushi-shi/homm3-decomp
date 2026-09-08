@@ -140,3 +140,53 @@ compiled successfully (360 source candidates), but no target or collateral score
 rose. Their native oracles pass; no experimental source was adopted just because
 it appeared among retained parents. Function-specific residuals stay beside the
 functions, and reruns need a new evidence-based hypothesis family.
+
+The simple object serializers have a joint 60-case buffer-lifetime matrix:
+
+```sh
+PYTHONPATH=scripts python scripts/experiments/generate-rmg-object-writer-polish-hypotheses.py \
+  build/rmg-object-writer-polish.json
+homm3 hypotheses build/rmg-object-writer-polish.json -j 6 --keep-top 10
+```
+
+It changes the artifact, resource, scholar and shrine writers atomically,
+crossing buffer scopes, byte signedness, initialization and dword reuse. Every
+candidate preserves the canonical base call, each virtual write and its width.
+The native oracle compares the entire ordered wire record, including truncation,
+reserved bytes and unchanged object fields. Eighteen candidates close all four
+writers; separate scopes with ordinary `char`/`int` buffers are sufficient.
+These scopes recover retail's dead argument homes and eight-byte frames.
+The prior function-scoped forms are negative controls at 99.8033%, 99.4933%,
+99.4146% and 99.4933%. No other RMG score changes in the selected candidate.
+Inspect all four entries in each result's `scores`: ranking by the primary
+artifact writer alone also retains partial winners that do not close its siblings.
+
+The rectangle painter has a separate 60-case bounds/predicate/tile matrix:
+
+```sh
+PYTHONPATH=scripts python scripts/experiments/generate-rmg-rectangle-polish-hypotheses.py \
+  build/rmg-rectangle-polish.json
+homm3 hypotheses build/rmg-rectangle-polish.json -j 6 --keep-top 10
+```
+
+It keeps one mutable grid point, unsigned end-exclusive traversal, the existing
+terrain predicate and canonical tile/frame helpers. Its native oracle checks
+stateful terrain queries, operation order, selected frame arguments, zero flips,
+empty rectangles and wrapping bounds. The source family targets the retained
+`initializePackedCell` call where retail expands that nested cache fill; changing
+the helper's identity or inserting a pin is not part of the matrix.
+The first matrix lifts the painter from 69.9804% to 72.8497% with named
+endpoints and `isPaintTerrain`, without collateral. Its top ten parents can
+be crossed with six for/while/guarded-do loop forms before changing the source:
+
+```sh
+PYTHONPATH=scripts python scripts/experiments/generate-rmg-rectangle-polish-hypotheses.py \
+  build/rmg-rectangle-loops.json \
+  --loop-parents-from build/hypotheses/RECTANGLE_BATCH/results.json
+homm3 hypotheses build/rmg-rectangle-loops.json -j 6 --keep-top 10
+```
+
+The parent source hash must still match; every parent is recompiled in the new
+batch, alongside its separate canonical baseline. All 60 loop combinations
+retain 72.8497%, so they do not resolve the nested cache-fill boundary. The
+retained source uses ordinary `for` loops; no failed loop form is adopted.
