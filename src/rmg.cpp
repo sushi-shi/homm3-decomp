@@ -3026,6 +3026,175 @@ TPoint clipRmgBoundaryPoint(
     return clipped;
 }
 
+// The pointer-valued worklist uses the same descending search as the map
+// position overload below, but inserts the cost before the zone. Retail
+// 0x53da1b..0x53da6f expands this boundary, including a separate pointer
+// argument snapshot. Preserve the canonical overload and its source call.
+// The spelling is provisional; the Complete-only RMG has no DC compiland.
+static void insertRmgWorkItem(
+    std::vector<TRmgZone*>& zones, std::vector<int>& costs,
+    TRmgZone* zone, int cost)
+{
+    int first = 0;
+    int last = zones.size();
+    int middle;
+    while (1) {
+        middle = (first + last) >> 1;
+        if (first >= last)
+            break;
+        if (cost < costs[middle])
+            first = middle + 1;
+        else
+            last = middle;
+    }
+    costs.insert(costs.begin() + middle, cost);
+    zones.insert(zones.begin() + middle, 1, zone);
+}
+
+// JoinExtraZones initializes the short distance columns to 32000, zeros
+// each original zone's own column, and calls this relaxation after adding
+// graph edges. Parallel vectors keep pending zones sorted by distance;
+// popping from the back takes the smallest distance. The per-zone short
+// table, not the queued priority, supplies the next relaxed distance.
+// Residual 77.1353%: 32 seed/pop/insertion/slot-lifetime hypotheses raise
+// 61.3176% without other RMG score changes. Direct public seed insertion and
+// count insertion of the queued zone retain both vector erasures. The initial
+// short-vector size still expands, and the seeds call count insert where
+// retail retains single-element insert. Every variant passes 16,585 directed
+// graph/root-count cases against an independent Floyd-Warshall distance table.
+VA(0x0053D8E0, 0x1EC) // anchor-callee 0x53dcd2/0x53e020; Complete-only, ret 4
+void type_random_map_generator::propagateZoneDistances(TRmgZone* zone)
+{
+    std::vector<TRmgZone*> pending;
+    std::vector<int> costs;
+    int distanceCount = zone->m_zoneDistances.size();
+    for (int column = 0; column < distanceCount; ++column) {
+        pending.insert(pending.end(), zone);
+        costs.insert(costs.end(), 0);
+        while (pending.size()) {
+            TRmgZone* current = pending.back();
+            pending.pop_back();
+            TRmgTownSlot* slot = current->m_slot;
+            costs.pop_back();
+            int distance = current->m_zoneDistances[column] + 1;
+            for (unsigned int connection = 0; connection < slot->m_connections.size(); ++connection) {
+                TRmgZone* next = m_zones[slot->m_connections[connection].m_destination->m_zoneIndex];
+                if (next->m_zoneDistances[column] > distance) {
+                    next->m_zoneDistances[column] = distance;
+                    insertRmgWorkItem(pending, costs, next, distance);
+                }
+            }
+        }
+    }
+}
+
+// The retained size call in propagation uses zone+0x3e4, and the signed
+// two-byte loads above prove the short element independently of ICF peers.
+VA_COMPGEN(0x0054C3D0, 0x12, VECTOR_SIZE, Short)
+
+// BuildZoneBoundaries passes the count from before the radial sites were
+// added and its live Voronoi diagram. Extra-to-extra edges become completed
+// unguarded connections when their shared boundary intersects the map.
+// Extra-to-original edges are admitted only if they do not shorten another
+// original-zone distance, then the changed graph is propagated again.
+// The connection's four input-filter limits are not initialized here in
+// retail; only destination/value and its three policy bytes are assigned.
+// Residual 68.8871%: 48 record-lifetime/bounds/public-insertion forms raise
+// the initial 30.0554%. The final direct single-element insert restores the
+// retained _Construct<TRmgZoneConnection> body; all four push_back calls
+// instead inline two count-insert bodies and omit that construction symbol.
+// Reusing one connection per function or outer loop remains lower. Short
+// vector resizing and the third connection insertion still expand differently
+// from retail; preserve the real operations and their canonical helpers.
+VA(0x0053DAD0, 0x57F) // anchor-callee buildZoneBoundaries; Complete-only, ret 8
+void type_random_map_generator::joinExtraZones(int originalZones, TRmgVoronoi* diagram)
+{
+    TRmgZoneBounds bounds = {0, 0, m_map.m_mapWidth, m_map.m_mapHeight};
+    for (int index = originalZones; index < m_zones.size(); ++index) {
+        TRmgZone* zone = m_zones[index];
+        TRmgMapPosition position = zone->getLevelPosition();
+        TRmgBoundaryVertex* first = diagram->locate(TPoint(position.m_x, position.m_y));
+        for (int other = index + 1; other < m_zones.size(); ++other) {
+            TRmgZone* destination = m_zones[other];
+            if (destination->getLevelPosition().m_z != zone->getLevelPosition().m_z)
+                continue;
+            TRmgBoundaryVertex* edge = first;
+            do {
+                edge = edge->m_next;
+                if (edge->m_twin->m_zone == destination)
+                    break;
+            } while (edge != first);
+            if (edge->m_twin->m_zone != destination)
+                continue;
+            TPoint clipped = clipRmgBoundaryPoint(bounds, edge->m_position, edge->m_previous->m_position);
+            if (bounds.contains(clipped)) {
+                TRmgZoneConnection connection;
+                connection.m_destination = destination->m_slot;
+                connection.m_value = 0;
+                connection.m_unguarded = 1;
+                connection.m_placeBorderObjects = 0;
+                connection.m_connected = 1;
+                zone->m_slot->m_connections.push_back(connection);
+                connection.m_destination = zone->m_slot;
+                destination->m_slot->m_connections.push_back(connection);
+            }
+        }
+    }
+    for (index = 0; index < m_zones.size(); ++index) {
+        TRmgZone* zone = m_zones[index];
+        zone->m_zoneDistances.resize(originalZones);
+        for (int column = originalZones; column--;)
+            zone->m_zoneDistances[column] = 32000;
+        if (zone->m_slot->m_zoneIndex < originalZones)
+            zone->m_zoneDistances[zone->m_slot->m_zoneIndex] = 0;
+    }
+    for (index = 0; index < originalZones; ++index)
+        propagateZoneDistances(m_zones[index]);
+
+    for (index = originalZones; index < m_zones.size(); ++index) {
+        TRmgZone* zone = m_zones[index];
+        TRmgMapPosition position = zone->getLevelPosition();
+        TRmgBoundaryVertex* first = diagram->locate(TPoint(position.m_x, position.m_y));
+        for (int other = 0; other < originalZones; ++other) {
+            TRmgZone* destination = m_zones[other];
+            if (destination->getLevelPosition().m_z != zone->getLevelPosition().m_z)
+                continue;
+            TRmgBoundaryVertex* edge = first;
+            do {
+                edge = edge->m_next;
+                if (edge->m_twin->m_zone == destination)
+                    break;
+            } while (edge != first);
+            if (edge->m_twin->m_zone != destination)
+                continue;
+            int column = 0;
+            for (; column < originalZones; ++column) {
+                if (column != other
+                    && destination->m_zoneDistances[column] > zone->m_zoneDistances[column] + 1)
+                    break;
+            }
+            if (column < originalZones)
+                continue;
+            TRmgZoneConnection connection;
+            connection.m_destination = destination->m_slot;
+            connection.m_value = 0;
+            connection.m_unguarded = 1;
+            connection.m_placeBorderObjects = 0;
+            connection.m_connected = 0;
+            zone->m_slot->m_connections.push_back(connection);
+            connection.m_destination = zone->m_slot;
+            destination->m_slot->m_connections.insert(destination->m_slot->m_connections.end(), connection);
+            propagateZoneDistances(destination);
+        }
+    }
+}
+
+// The final direct single-element insertion in JoinExtraZones expands the
+// vector body while retaining this null-guarded seven-dword construction.
+// All 20 raw bytes agree. With the resizing parent visible, this TU also
+// emits the exact 18-byte short-vector size specialization.
+VA_COMPGEN(0x0054DE90, 0x14, STD_CONSTRUCT, TRmgZoneConnection)
+
 // The map-generation driver calls this once per level with its selected
 // template. Sites for existing zones seed a subdivision; radial sites add
 // water zones on the surface and unowned boundaries underground. Cleanup
