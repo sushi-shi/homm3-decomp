@@ -3512,6 +3512,13 @@ void type_random_map_generator::positionZone(TRmgZone* zone, int mapSize)
     zone->setLevelPosition(candidates[selected]);
 }
 
+// Terrain painting first accumulates each zone's half-open cell bounds.
+// Role-derived name; Complete-only thiscall with no stack arguments.
+#if 0 // @carcass
+VA(0x0053BBB0, 0xFD) // anchor-callee 0x53e6c0; retail-only
+void type_random_map_generator::calculateZoneBounds() {} // @stub
+#endif
+
 // Complete-only initialization, called by generation coordinator 0x549930.
 // The two placement passes precede normalization to a centered square.
 // Names are role-derived; the Dreamcast build has no RMG counterpart.
@@ -3900,6 +3907,20 @@ static void insertRmgWorkItem(
     zones.insert(zones.begin() + middle, 1, zone);
 }
 
+// Terrain painting replaces the zone center with the average coordinates
+// of its assigned cells, retaining its level. Provisional Complete-only role.
+#if 0 // @carcass
+VA(0x0053D0D0, 0xE3) // anchor-callee 0x53e6e8; thiscall, ret 4
+void type_random_map_generator::recenterZone(TRmgZone* zone) {} // @stub
+#endif
+
+// Island mode redraws an inset polygon toward the zone's center, with
+// displacement clamped from one quarter to one half of each radius.
+#if 0 // @carcass
+VA(0x0053D1C0, 0x1B9) // anchor-callee 0x53e70f; thiscall, ret 4
+void type_random_map_generator::insetIslandZone(TRmgZone* zone) {} // @stub
+#endif
+
 // JoinExtraZones initializes the short distance columns to 32000, zeros
 // each original zone's own column, and calls this relaxation after adding
 // graph edges. Parallel vectors keep pending zones sorted by distance;
@@ -4161,11 +4182,57 @@ void type_random_map_generator::buildZoneBoundaries(
     joinExtraZones(originalZones, &diagram);
 }
 
-// Retained by generation coordinator 0x549930; retail-only role/ABI.
-#if 0 // @carcass
+// Complete-only terrain coordinator. Borrowed level maps and their brushes
+// have separate lexical lifetimes: underground rock, surface water, then
+// one brush per non-water zone. Progress advances before those destructors.
+// Residual (94.0933%): all 36 CFG blocks align. The byte-valued boundary
+// query restores the retail shr/test dl sequence (direct field: 93.01%).
+// The underground map cleanup expands vector deletion where retail calls
+// it; the per-zone cleanup expands in both. Borrowed-map construction and
+// brush-call operands retain scheduling differences. Keep the RAII scopes.
 VA(0x0053E6A0, 0x337)
-void type_random_map_generator::paintZoneTerrain() {} // @stub
-#endif
+void type_random_map_generator::paintZoneTerrain()
+{
+    calculateZoneBounds();
+    for (int zoneIndex = 0; zoneIndex < m_zones.size(); ++zoneIndex) {
+        TRmgZone* zone = m_zones[zoneIndex];
+        recenterZone(zone);
+        if (m_waterContent == RMG_WATER_ISLANDS && zone->getLevelPosition().m_z == 0)
+            insetIslandZone(zone);
+    }
+    if (m_map.m_numberLevels > 1) {
+        type_random_map levelMap(m_map.getMapItem(0, 0, 1),
+            m_map.m_mapWidth, m_map.m_mapHeight);
+        TRmgTerrainBrush brush(&levelMap, eTerrainRock, 4);
+        brush.paintRectangle(0, 0, m_map.m_mapWidth, m_map.m_mapHeight);
+        if (m_progress)
+            m_progress->advance(12500);
+    }
+    {
+        TRmgTerrainBrush brush(&m_map, eTerrainWater, 4);
+        brush.paintRectangle(0, 0, m_map.m_mapWidth, m_map.m_mapHeight);
+    }
+    int progressSteps = 15800 / m_zones.size();
+    for (zoneIndex = 0; zoneIndex < m_zones.size(); ++zoneIndex) {
+        TRmgZone* zone = m_zones[zoneIndex];
+        TRmgZoneBounds bounds = zone->m_bounds;
+        TRmgMapPosition position = zone->getLevelPosition();
+        if (zone->m_terrain != eTerrainWater) {
+            type_random_map levelMap(m_map.getMapItem(0, 0, position.m_z),
+                m_map.m_mapWidth, m_map.m_mapHeight);
+            TRmgTerrainBrush brush(&levelMap, zone->m_terrain, 4);
+            for (int y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
+                for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
+                    TRmgMapItem* item = m_map.getMapItem(x, y, position.m_z);
+                    if (item->m_zoneState.m_zone == zoneIndex && item->isZoneBoundary())
+                        brush.paintRectangle(x, y, 1, 1);
+                }
+            }
+            if (m_progress)
+                m_progress->advance(progressSteps);
+        }
+    }
+}
 
 // The midpoint-noise generator passes its work vector in ECX, center sample
 // in EDX, then the complete nine-dword region and four edge midpoints by

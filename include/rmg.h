@@ -1121,6 +1121,14 @@ struct TRmgMapItem {
     bool isRiverTarget() const { return m_tileData.m_riverTarget != 0; }
     bool isImpassable() const { return m_tileData.m_impassable != 0; }
 
+    // PaintZoneTerrain extracts bit 28 then tests its byte result. The
+    // direct field condition instead folds to a dword mask. Retail-only
+    // accessor hypothesis, consistent with the adjacent flag queries.
+    unsigned char isZoneBoundary() const
+    {
+        return m_tileData.m_zoneBoundary;
+    }
+
     // Placement helpers 0x531170/0x5318b0/0x531cf0 all shift bit 22 and
     // test the truncated byte. Direct bitfield conditions fold to a dword
     // mask; keep this same ordinary query at each recovered boundary.
@@ -1840,6 +1848,9 @@ public:
     void getInitialZoneBounds(int& minimumY, int& minimumX,
         int& maximumY, int& maximumX) const;
     void paintZoneTerrain();
+    void calculateZoneBounds();
+    void recenterZone(TRmgZone* zone);
+    void insetIslandZone(TRmgZone* zone);
     void placeAdditionalTowns(TRmgZone* zone);
     unsigned char tryPlaceAdditionalTown(TRmgZone* zone, int alignment,
         int player, unsigned char townOption, int spacing);
