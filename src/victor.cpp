@@ -56,6 +56,50 @@ void __stdcall freeimage(imgdes* image)
     }
 }
 
+// Retail-only Victor validator: IsBadReadPtr on the pixel buffer, unsigned
+// inclusive-region normalization, signed byte-stride calculation and
+// compression/depth status precedence. No Dreamcast implementation exists.
+// Residual (79.95%): retail retains four return sequences while VC6 merges
+// them into two; all checks, swaps and the import call otherwise agree.
+// Explicit region-error / finished labels are byte-flat and do not restore
+// those exits. Reversing the swap stores lowers the score to 79.68%.
+VA(0x006038b0, 0xea)  // anchor-caller victorValidateBitmap + imgdes offsets / IsBadReadPtr
+int __stdcall victorValidateImage(imgdes* image)
+{
+    int status = -42;
+    if (!IsBadReadPtr(image->m_ibuff, 1)) {
+        status = 0;
+        BITMAPINFOHEADER* header = image->m_bmh;
+        unsigned int maxWidth = header->biBitCount == victorMonochrome ? 65535 : 32768;
+        if (!image->m_ibuff || !header)
+            return -1;
+        if (image->m_stx > image->m_endx) {
+            unsigned int value = image->m_endx;
+            image->m_endx = image->m_stx;
+            image->m_stx = value;
+        }
+        if (image->m_sty > image->m_endy) {
+            unsigned int value = image->m_endy;
+            image->m_endy = image->m_sty;
+            image->m_sty = value;
+        }
+        if (image->m_endx >= static_cast<unsigned int>(header->biWidth)
+            || image->m_endx >= maxWidth
+            || image->m_endy >= static_cast<unsigned int>(header->biHeight)
+            || image->m_endy >= 32768)
+            return -1;
+        if (static_cast<unsigned int>(header->biBitCount * header->biWidth / 8)
+            > image->m_buffwidth)
+            return -1;
+        if (header->biBitCount != victorIndexedColor
+            && header->biBitCount != victorTrueColor)
+            status = victorUnsupportedBitDepth;
+        if (header->biCompression)
+            return -12;
+    }
+    return status;
+}
+
 // Provisional internal name. The three callers at 0x603b2c, 0x603b42 and
 // 0x603e12 all belong to Victor. Preserve the validator's other statuses;
 // only its unsupported-depth result (-26) is cleared for a one-bit image.
