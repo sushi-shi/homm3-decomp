@@ -3703,11 +3703,17 @@ static bool hasRmgTemplatePlayerSlots(TRmgTemplate* mapTemplate,
 // Retail-only rmg.txt coordinator. The normalized map volume uses 36*36
 // cells per size unit; islands halve it with a minimum of one. Rows 76..84
 // describe bidirectional connections after the canonical zone reader.
-// Partial: 78.63%. Flattened parsing/validation passes score 22.20%,
-// expanding findZone and vector operations that retail retains. Ordinary
-// helpers restore those boundaries (78.33% before row/assignment/order edits).
-// Remaining differences include string assignment expansion, rejection
-// cleanup, and frame/register homes. No inlining controls are retained.
+// Residual (80.8462%): the shared rejection arm restores retail's single
+// destructor/delete pair. Keeping rejection before acceptance matters:
+// acceptance first gives 76.5897%, acceptance plus continue 77.6795%, and
+// two independent delete sites 78.6256%. String assign still expands into
+// _Grow/_Eos instead of retail's retained assign; frame/register homes and
+// field-pointer reloads also differ. Assignment operator/named name pointer
+// are byte-flat; explicit strlen reaches 78.6872% on the old cleanup form
+// but retains the same wrong string boundary. Volume-product order and
+// separate island division are byte-flat. Flattened parsing/validation
+// passes score 22.20%, expanding findZone and vector calls retail retains.
+// Preserve the ordinary helpers and the single cleanup; no inline controls.
 VA(0x00537FF0, 0x482)
 void type_random_map_generator::loadTemplates()
 {
@@ -3731,22 +3737,22 @@ void type_random_map_generator::loadTemplates()
         while (endRow < sheet->getNumberOfRows()
             && (!sheet->getRow(endRow)[0][0] || sheet->getRow(endRow)[0][0] == ' '))
             ++endRow;
-        if (mapSize < mapTemplate->m_minimumSize
-            || mapSize > mapTemplate->m_maximumSize) {
-            delete mapTemplate;
-        } else {
+        bool accepted = mapSize >= mapTemplate->m_minimumSize
+            && mapSize <= mapTemplate->m_maximumSize;
+        if (accepted) {
             readRmgTemplateZones(sheet, mapTemplate, row, endRow,
                 m_humanPlayerCount, m_computerPlayerCount, m_mapVersion);
             readRmgTemplateConnections(sheet, mapTemplate, row, endRow,
                 m_humanPlayerCount, m_computerPlayerCount);
-            if (!hasRmgTemplatePlayerSlots(mapTemplate,
-                m_humanPlayerCount, m_computerPlayerCount)) {
-                delete mapTemplate;
-            } else {
-                for (unsigned int zone = 0; zone < mapTemplate->m_zones.size(); ++zone)
-                    mapTemplate->m_zones[zone]->m_zoneIndex = zone;
-                m_templates.push_back(mapTemplate);
-            }
+            accepted = hasRmgTemplatePlayerSlots(mapTemplate,
+                m_humanPlayerCount, m_computerPlayerCount);
+        }
+        if (!accepted) {
+            delete mapTemplate;
+        } else {
+            for (unsigned int zone = 0; zone < mapTemplate->m_zones.size(); ++zone)
+                mapTemplate->m_zones[zone]->m_zoneIndex = zone;
+            m_templates.push_back(mapTemplate);
         }
         row = endRow;
     }
@@ -8454,6 +8460,16 @@ VA_COMPGEN(0x0054D8B0, 0x38, VECTOR_UCOPY, TRmgObjectPlacementRule)
 VA_COMPGEN(0x0054D8F0, 0x29, VECTOR_UFILL, TRmgObjectPlacementRule)
 VA_COMPGEN(0x0054DD80, 0x104, STD_CONSTRUCT, TRmgObjectPlacementRule)
 
+// LoadTemplates calls this single-value insertion at 0x53833e/0x538354
+// for the two directions of a parsed connection. Retail's seven-dword
+// copies, 0x1c stride, returned insertion position and ret 8 distinguish
+// the ordinary vector<TRmgZoneConnection> overload from count insertion.
+// Exact: all 559 instruction bytes match. The three nested helpers are
+// byte-identical ICF representatives: TBlackMarket _Ucopy at 0x54d920 and
+// _Ufill at 0x4d2160, plus type_artifact _Destroy at 0x404140. Exploratory
+// comparisons of this TU's canonical specializations agree in all views.
+VA_COMPGEN(0x0054C970, 0x22F, VECTOR_INSERT_SINGLE, TRmgZoneConnection)
+
 // ReadObjectPlacementRules retains the allocator-taking int-vector ctor;
 // its two local vector grids also take the default-constructor closure's
 // address. Resolved retail bodies are 27/27 and 24/24 bytes respectively.
@@ -8485,6 +8501,12 @@ VA_COMPGEN(0x0054C610, 0x53, VECTOR_ERASE, TRmgMapPosition)
 // The reader's two resize shrink arms retain this int-vector erase.
 // All 51 raw bytes agree; no calls or data relocations remain unresolved.
 VA_COMPGEN(0x0054CDB0, 0x33, VECTOR_ERASE, Int)
+
+// InitializeObjectGenerators expands disabled-key-tent resizing but retains
+// byte-vector count insertion at 0x539240. The three stack arguments,
+// byte copies and capacity-growth sequence identify this specialization.
+// The naturally emitted body agrees with all 467 retail instruction bytes.
+VA_COMPGEN(0x0054CDF0, 0x1D3, VECTOR_INSERT, unsigned_char)
 
 // InitializeObjectGenerators removes a byte range from its temporary work
 // vector through this specialization.  The emitted COMDAT has the same five
