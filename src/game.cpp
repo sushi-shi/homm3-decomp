@@ -10820,6 +10820,9 @@ void game::processRandomObjects()
 // The 2026-09-01 model pass likewise rejects both proposed names
 // (startingHeroIds[i] and setup.alignment[i]) at compile time, while the retail
 // structure remains 29/29 exact blocks; no legal B14 mutation remains.
+// DC line 9464 passes GetTownId directly to GetTown and records thisTown.
+// Restoring that canonical accessor and local name is byte-flat at 98.6076%;
+// the remaining difference is inside GetTownId's coordinate comparison.
 VA(0x004ca040, 0x1F1)  // linkorder, dc 0xb5cdc
 void game::createTownHeroes(int* startingHeroIds)
 {
@@ -10830,11 +10833,10 @@ void game::createTownHeroes(int* startingHeroIds)
         if (!m_mapHeader.m_playerSlotAttributes[i].m_generateHero)
             continue;
 
-        int townId =
+        town* thisTown = getTown(
             getTownId(m_mapHeader.m_playerSlotAttributes[i].m_castleLoc.m_x,
                       m_mapHeader.m_playerSlotAttributes[i].m_castleLoc.m_y,
-                      m_mapHeader.m_playerSlotAttributes[i].m_castleLoc.m_z);
-        town* whichTown = townId == -1 ? NULL : &m_towns[townId];
+                      m_mapHeader.m_playerSlotAttributes[i].m_castleLoc.m_z));
 
         int heroId;
         if (startingHeroIds != NULL && m_players[i].m_isHuman
@@ -10848,8 +10850,8 @@ void game::createTownHeroes(int* startingHeroIds)
         if (m_setup.m_startingHero[i] == -1)
             m_setup.m_startingHero[i] = heroId;
         m_heroAvailability[heroId] = static_cast<char>(i);
-        whichTown->placeInMap(heroId, i, 1);
-        whichTown->giveSpells(NULL);
+        thisTown->placeInMap(heroId, i, 1);
+        thisTown->giveSpells(NULL);
 
         if (g_unk69774c
             && g_game->m_campaign.m_currentCampaign == g_startLevelCampaign
