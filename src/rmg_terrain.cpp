@@ -67,6 +67,9 @@ TRmgGridRectangle::TRmgGridRectangle(
 // row and improving terrain paintPoint too. All 384 construction/return/query
 // combinations were tested; the remaining proxy and arithmetic calls still
 // need recovery. Keep their canonical boundaries rather than flattening them.
+// Shared grid/proxy controls can restore the += call (70.2846%) but introduce
+// unwanted arithmetic calls in terrain painting. Five ordinary operator+
+// placements add no gain; parameter-by-value proxy construction also loses.
 VA(0x004F9F00, 0x146) // anchor-caller 0x4fa080/0x4fa3c0; fastcall, no stack args
 void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint& point)
 {
@@ -1133,9 +1136,9 @@ unsigned char rmgTerrainPainter::needsTerrainRepair(const TRmgGridPoint& point)
 // point to this method; PaintPoint consumes the resulting repairs.
 // Separate paint statements let the preceding predicate temporaries expire:
 // retail reuses EBP-0x10 at +0x32 and +0xbd. Together with canonical dimension
-// and paint-terrain accessors, this raises MAX 82.8347 -> 89.7150%. All cache
-// reads now retain getPackedCell; the two vertical-gap second-coordinate
-// constructors still over-inline. Retail also retains the copied x at +0x5bb.
+// and paint-terrain accessors, this raises MAX 82.8347 -> 89.7150%. At that
+// checkpoint all cache reads retained getPackedCell, but two vertical-gap
+// second-coordinate constructors over-inlined. Retail retains copied x at +0x5bb.
 // Controls: separate statements alone 80.9056%; dimensions alone 84.5649%;
 // together 89.5970%. A positive-guard rewrite is byte-identical; a byte choice
 // local introduces extra result/branch code (87.1956%). Explicit helper edge
@@ -1153,6 +1156,12 @@ unsigned char rmgTerrainPainter::needsTerrainRepair(const TRmgGridPoint& point)
 // the outer test; reference/pointer gap receivers also lose code agreement.
 // Retail +0x52d leaves both loops directly. A compound inner do condition
 // followed by another test duplicates this comparison and rotates the exit.
+// At 91.3390%, the only remaining call-sequence difference is the coordinate
+// constructor in the final vertical-gap expansion (retail +0x449); the other
+// 45 calls agree. The paired gap-point lifetime controls below do not fix it.
+// Coordinate-assigned operator+ temporaries reach 92.3508% with all exact
+// siblings intact, but keep that same missing constructor and lower both
+// terrain paintPoint and line refresh. This is not a resolved call boundary.
 VA(0x005B5440, 0x628) // anchor-callee 0x5b7358; thiscall, ret 4; retail-only
 void rmgTerrainPainter::repairTerrainPoint(const TRmgGridPoint& point)
 {
@@ -1420,6 +1429,11 @@ void rmgTerrainPainter::paintTransitions()
 // the callers' test al,al proves that only the byte result is consumed.
 // Both bodies and the reference-taking grid constructor pass a raw-byte
 // audit after resolving their real retail relocation destinations.
+// Under the 157638d4 context, 60 named-point lifetime/scope/site combinations
+// do not improve any terrain score: best repairTerrainPoint is 90.4604%,
+// while its modified vertical predicate falls to 78.9709%. Crossing the ten
+// best parents with six orders of these predicates and paintTransitions
+// also gives no gain. Keep both exact canonical bodies and the original order.
 VA(0x005B6320, 0x107) // anchor-callee 0x5b569f; retail-only
 unsigned char rmgTerrainPainter::isHorizontalGap(
     const TRmgGridPoint& point, int terrain)
@@ -1764,6 +1778,10 @@ TRmgTerrainBrush::TRmgTerrainBrush(
 // Fifty independent primary/secondary snapshot combinations also stay at
 // this peak or lower: the two snapshot sites do not expose an intermediate
 // expansion state in the measured five-lifetime/two-condition family.
+// Copy-through-assignment grid construction expands the predicate (92.1398%),
+// but loses the retained copy body and lowers exact changeTerrain to 81.3309%.
+// Mixed construction, explicit assignment and returned-value controls do not
+// recover all three boundaries together; the canonical copy interface stays.
 VA(0x005B72F0, 0x225) // anchor-callee 0x540207; auto_ptr ownership cleanup
 TRmgTerrainBrush::~TRmgTerrainBrush()
 {
