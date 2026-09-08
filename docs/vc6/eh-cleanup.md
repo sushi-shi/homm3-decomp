@@ -24,6 +24,23 @@ None of the first three notices that retail's body opens one **more** cleanup
 region than ours — i.e. that retail constructs a temporary we never wrote, or
 that a call we constant-fold is a call retail could throw from.
 
+## A catch continuation can look like an unmatched function
+
+Before reconstructing a frameless queue entry, check incoming jumps and the
+parent's exception table. `basic_string<char>::_Copy` at `0x404bd0` originally
+ended at its first forward jump in the inventory. The catch at `0x404c29`
+was correctly recognized as compiler code, but its continuation at `0x404c50`
+still appeared as an independent game function. It uses the parent's EBP,
+EBX and ESI without initializing a frame.
+
+FuncInfo `0x648070` names TryBlockMap `0x6480a0` and HandlerType `0x6480b8`,
+whose handler is `0x404c29`. That handler returns `0x404c4a`; six bytes restore
+EBX and ESI before falling into the same continuation reached by the main
+path. The final `ret 4` ends at `0x404cd8`. Correcting the inventory to one
+264-byte function lets adventuremapwindow's existing Dinkumware `_Copy`
+COMDAT match all instructions, including the catch. `BASIC_STRING_COPY`
+identifies the emitted char specialization; it does not create a body.
+
 ## The rule, byte-measured
 
 **VC6 emits a cleanup chain only for a region that can THROW.** Measured on
