@@ -1332,7 +1332,10 @@ struct TRmgTreasureGroup {
     std::vector<type_object*> m_objects;    // +0x28
     std::vector<TPoint> m_outline;           // +0x38
     unsigned char m_flag0048;               // +0x48, cleared by reset
-    char m_opaque0049[0x17];                // +0x49..+0x5f, not yet recovered
+    char m_opaque0049[0x0b];                // +0x49..+0x53, not yet recovered
+    // Retail commitTreasureGroup 0x5469ca stores the selected map offset.
+    // Role-derived name; previously part of opaque0049.
+    TRmgMapPosition m_position;             // +0x54
     unsigned char m_ready;                  // +0x60, set after assembly
     char m_padding0061[3];
 
