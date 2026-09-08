@@ -7243,7 +7243,7 @@ void type_random_map_generator::placeZoneTreasures(TRmgZone* zone)
         count[selected] += step[selected];
         TRmgTreasureRange& range = slot->m_treasure[selected];
         int attempt;
-        for (attempt = 0; attempt < 3; ++attempt) {
+        for (attempt = 0; attempt < RMG_TREASURE_ATTEMPTS; ++attempt) {
             if (assembleTreasureGroup(zone, &group, 0, range.m_minimum, range.m_maximum)) {
                 if (placeTreasureGroup(&group, zone, spacing))
                     break;
@@ -7254,9 +7254,9 @@ void type_random_map_generator::placeZoneTreasures(TRmgZone* zone)
                 group.reset();
             }
         }
-        if (attempt < 3)
+        if (attempt < RMG_TREASURE_ATTEMPTS)
             continue;
-        for (attempt = 0; attempt < 3; ++attempt) {
+        for (attempt = 0; attempt < RMG_TREASURE_ATTEMPTS; ++attempt) {
             if (assembleTreasureGroup(zone, &group, 1, range.m_minimum, range.m_maximum)) {
                 if (placeTreasureGroup(&group, zone, spacing))
                     break;
@@ -7267,7 +7267,7 @@ void type_random_map_generator::placeZoneTreasures(TRmgZone* zone)
                 group.reset();
             }
         }
-        if (attempt == 3)
+        if (attempt == RMG_TREASURE_ATTEMPTS)
             finished[selected] = 1;
     }
 }
