@@ -2315,6 +2315,31 @@ type_object* type_key_tent_def::generate(TRmgObjectPropertiesRef* properties,
     return new rmgKeyTentObject(properties, generator, m_value);
 }
 
+// The treasure-group constructor calls reset after its map and vectors
+// are constructed. This clears container entries without deleting objects,
+// clears map-cell state, then sets every surface cell to dirt/frame zero.
+// Complete-only role and ownership proven by 0x547360 and 0x5466e0.
+// Residual (71.5122%): all 11 CFG blocks align. Explicit range erasures
+// improve the clear-wrapper spelling (71.4634%), but VC6 still expands
+// both trivial _Destroy calls that retail retains. The resulting register
+// pressure adds an EBP frame; the cell-clear and terrain-reset loops agree
+// in control flow. Preserve the map and vector ownership boundaries.
+VA(0x00535040, 0xC6) // anchor-callee 0x5473d2; thiscall, ret 0; retail-only
+void TRmgTreasureGroup::reset()
+{
+    m_objects.erase(m_objects.begin(), m_objects.end());
+    m_outline.erase(m_outline.begin(), m_outline.end());
+    m_map.clear();
+    m_flag0048 = 0;
+    m_ready = 0;
+    TRmgMapItem* item = m_map.getMapItem(0, 0, 0);
+    int count = m_map.m_mapWidth * m_map.m_mapHeight;
+    while (count--) {
+        item->setTerrain(eTerrainDirt, 0, 0, 0);
+        ++item;
+    }
+}
+
 // Retail's derived generator constructor 0x537b10 calls this six-argument
 // base initializer. Automatic member construction owns the map, object table
 // and 232 property vectors before the progress total and seed are installed.
@@ -3512,6 +3537,31 @@ void type_random_map_generator::positionZone(TRmgZone* zone, int mapSize)
     zone->setLevelPosition(candidates[selected]);
 }
 
+// Terrain painting first accumulates each zone's half-open cell bounds.
+// Role-derived name; Complete-only thiscall with no stack arguments.
+// Exact: the scan coordinate is one TRmgMapPosition, preserving retail's
+// 0x18-byte frame and level home. Independent scalar coordinates were
+// 99.7802%; reversed min arguments were 99.5824%.
+VA(0x0053BBB0, 0xFD) // anchor-callee 0x53e6c0; retail-only
+void type_random_map_generator::calculateZoneBounds()
+{
+    TRmgMapItem* item = m_map.m_mapItems;
+    TRmgMapPosition position;
+    for (position.m_z = 0; position.m_z < m_map.m_numberLevels; ++position.m_z) {
+        for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y) {
+            for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x, ++item) {
+                if (item->m_zoneState.m_zone >= 0) {
+                    TRmgZone* zone = m_zones[item->m_zoneState.m_zone];
+                    zone->m_bounds.m_minimumX = std::_cpp_min<long>(zone->m_bounds.m_minimumX, position.m_x);
+                    zone->m_bounds.m_minimumY = std::_cpp_min<long>(zone->m_bounds.m_minimumY, position.m_y);
+                    zone->m_bounds.m_maximumX = std::_cpp_max<long>(zone->m_bounds.m_maximumX, position.m_x + 1);
+                    zone->m_bounds.m_maximumY = std::_cpp_max<long>(zone->m_bounds.m_maximumY, position.m_y + 1);
+                }
+            }
+        }
+    }
+}
+
 // Complete-only initialization, called by generation coordinator 0x549930.
 // The two placement passes precede normalization to a centered square.
 // Names are role-derived; the Dreamcast build has no RMG counterpart.
@@ -3900,6 +3950,120 @@ static void insertRmgWorkItem(
     zones.insert(zones.begin() + middle, 1, zone);
 }
 
+// Island insetting passes two points, zone/level and half-roughness.
+// Retail subdivides these edges with a pending-point vector. Provisional
+// Complete-only role name; the stack ABI carries seven dwords.
+// Residual (99.4615%): X-before-Y midpoint assignments restore endpoint
+// registers; constructing the point scores 99.1436%, and reversing its
+// addition operands scores 99.0923%. All subdivision/marking instructions
+// then agree. The initial single-element insert wrapper expands here into
+// count-insert (one extra push), while retail retains it. Preserve that call.
+VA(0x0053CD30, 0x212) // anchor-callee 0x53d34e; thiscall, ret 0x1c
+void type_random_map_generator::drawIslandBoundary(TPoint from, TPoint to,
+    int zoneIndex, int level, int roughness)
+{
+    std::vector<TPoint> pending;
+    pending.insert(pending.end(), to);
+    while (pending.size() > 0) {
+        to = pending.back();
+        pending.pop_back();
+        TPoint midpoint;
+        midpoint.m_x = (from.m_x + to.m_x + 1) / 2;
+        midpoint.m_y = (from.m_y + to.m_y + 1) / 2;
+        if (midpoint != from && midpoint != to) {
+            TRmgVector perpendicular;
+            {
+                TRmgVector delta = to - from;
+                perpendicular = TRmgVector(-delta.m_y, delta.m_x);
+            }
+            int length = perpendicular.length();
+            if (length > 1) {
+                int limit = std::_cpp_min<long>(length / 2, roughness);
+                int displacement = rand() % limit - limit / 2;
+                perpendicular = perpendicular * displacement / length;
+                midpoint += perpendicular;
+            }
+            pending.push_back(to);
+            pending.push_back(midpoint);
+        } else {
+            long x = std::_cpp_max<long>(from.m_x, 0);
+            x = std::_cpp_min<long>(x, m_map.m_mapWidth - 1);
+            long y = std::_cpp_max<long>(from.m_y, 0);
+            y = std::_cpp_min<long>(y, m_map.m_mapHeight - 1);
+            TRmgMapItem* item = m_map.getMapItem(x, y, level);
+            if (item->m_zoneState.m_zone == zoneIndex)
+                item->m_tileData.m_zoneBoundary = 1;
+            from = to;
+        }
+    }
+}
+
+// Terrain painting replaces the zone center with the average coordinates
+// of its assigned cells, retaining its level. Provisional Complete-only role.
+// Residual (88.9891%): paired TPoint sums improve the independent scalar
+// accumulator (88.5761%). The scan and division branches agree; position
+// copy scheduling and accumulator/map-pointer stack homes still differ.
+VA(0x0053D0D0, 0xE3) // anchor-callee 0x53e6e8; thiscall, ret 4
+void type_random_map_generator::recenterZone(TRmgZone* zone)
+{
+    TRmgZoneBounds bounds = zone->m_bounds;
+    int zoneIndex = zone->m_slot->m_zoneIndex;
+    TRmgMapPosition position = zone->getLevelPosition();
+    int count = 0;
+    TPoint total(0, 0);
+    for (int y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
+        for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
+            if (m_map.getMapItem(x, y, position.m_z)->m_zoneState.m_zone == zoneIndex) {
+                ++count;
+                total.m_x += x;
+                total.m_y += y;
+            }
+        }
+    }
+    if (count) {
+        position.m_x = total.m_x / count;
+        position.m_y = total.m_y / count;
+        zone->setLevelPosition(position);
+    }
+}
+
+// Island mode redraws an inset polygon toward the zone's center, with
+// displacement clamped from one quarter to one half of each radius.
+// Residual (75.3450%): clamp argument order improves 63.63 -> 66.42%;
+// direct displacement-vector construction avoids the temporary point
+// subtraction (73.46%); retaining the long clamp result reaches 75.35%.
+// Length and edge calls remain intact. Clamp temporary homes, vector
+// multiply/divide scheduling and the reverse-loop register roles differ.
+VA(0x0053D1C0, 0x1B9) // anchor-callee 0x53e70f; thiscall, ret 4
+void type_random_map_generator::insetIslandZone(TRmgZone* zone)
+{
+    int zoneIndex = zone->m_slot->m_zoneIndex;
+    TRmgMapPosition center = zone->getLevelPosition();
+    int count = zone->m_boundary.size();
+    TPoint point = zone->m_boundary[0];
+    TRmgVector delta(center.m_x - point.m_x, center.m_y - point.m_y);
+    int length = delta.length();
+    if (length > 0) {
+        long displacement = std::_cpp_max<long>(4, length / 4);
+        displacement = std::_cpp_min<long>(displacement, length / 2);
+        delta = delta * displacement / length;
+        point += delta;
+    }
+    while (count--) {
+        TPoint previous = point;
+        point = zone->m_boundary[count];
+        delta = TRmgVector(center.m_x - point.m_x, center.m_y - point.m_y);
+        length = delta.length();
+        if (length > 0) {
+            long displacement = std::_cpp_max<long>(4, length / 4);
+            displacement = std::_cpp_min<long>(displacement, length / 2);
+            delta = delta * displacement / length;
+            point += delta;
+        }
+        drawIslandBoundary(point, previous, zoneIndex, center.m_z, zone->m_boundaryRoughness / 2);
+    }
+}
+
 // JoinExtraZones initializes the short distance columns to 32000, zeros
 // each original zone's own column, and calls this relaxation after adding
 // graph edges. Parallel vectors keep pending zones sorted by distance;
@@ -4161,11 +4325,57 @@ void type_random_map_generator::buildZoneBoundaries(
     joinExtraZones(originalZones, &diagram);
 }
 
-// Retained by generation coordinator 0x549930; retail-only role/ABI.
-#if 0 // @carcass
+// Complete-only terrain coordinator. Borrowed level maps and their brushes
+// have separate lexical lifetimes: underground rock, surface water, then
+// one brush per non-water zone. Progress advances before those destructors.
+// Residual (94.0933%): all 36 CFG blocks align. The byte-valued boundary
+// query restores the retail shr/test dl sequence (direct field: 93.01%).
+// The underground map cleanup expands vector deletion where retail calls
+// it; the per-zone cleanup expands in both. Borrowed-map construction and
+// brush-call operands retain scheduling differences. Keep the RAII scopes.
 VA(0x0053E6A0, 0x337)
-void type_random_map_generator::paintZoneTerrain() {} // @stub
-#endif
+void type_random_map_generator::paintZoneTerrain()
+{
+    calculateZoneBounds();
+    for (int zoneIndex = 0; zoneIndex < m_zones.size(); ++zoneIndex) {
+        TRmgZone* zone = m_zones[zoneIndex];
+        recenterZone(zone);
+        if (m_waterContent == RMG_WATER_ISLANDS && zone->getLevelPosition().m_z == 0)
+            insetIslandZone(zone);
+    }
+    if (m_map.m_numberLevels > 1) {
+        type_random_map levelMap(m_map.getMapItem(0, 0, 1),
+            m_map.m_mapWidth, m_map.m_mapHeight);
+        TRmgTerrainBrush brush(&levelMap, eTerrainRock, 4);
+        brush.paintRectangle(0, 0, m_map.m_mapWidth, m_map.m_mapHeight);
+        if (m_progress)
+            m_progress->advance(12500);
+    }
+    {
+        TRmgTerrainBrush brush(&m_map, eTerrainWater, 4);
+        brush.paintRectangle(0, 0, m_map.m_mapWidth, m_map.m_mapHeight);
+    }
+    int progressSteps = 15800 / m_zones.size();
+    for (zoneIndex = 0; zoneIndex < m_zones.size(); ++zoneIndex) {
+        TRmgZone* zone = m_zones[zoneIndex];
+        TRmgZoneBounds bounds = zone->m_bounds;
+        TRmgMapPosition position = zone->getLevelPosition();
+        if (zone->m_terrain != eTerrainWater) {
+            type_random_map levelMap(m_map.getMapItem(0, 0, position.m_z),
+                m_map.m_mapWidth, m_map.m_mapHeight);
+            TRmgTerrainBrush brush(&levelMap, zone->m_terrain, 4);
+            for (int y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
+                for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
+                    TRmgMapItem* item = m_map.getMapItem(x, y, position.m_z);
+                    if (item->m_zoneState.m_zone == zoneIndex && item->isZoneBoundary())
+                        brush.paintRectangle(x, y, 1, 1);
+                }
+            }
+            if (m_progress)
+                m_progress->advance(progressSteps);
+        }
+    }
+}
 
 // The midpoint-noise generator passes its work vector in ECX, center sample
 // in EDX, then the complete nine-dword region and four edge midpoints by
