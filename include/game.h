@@ -25,6 +25,7 @@ enum EDayOfWeek {
 #include "hero.h"
 #include "creature_bank_types.h"
 #include "town.h"
+#include "creaturetype_fwd.h"
 // hero.h supplies herospec.h's canonical TSkillMastery domain. The former
 // AI-only int typedef was removed when the typed hero helper was restored.
 // NewfullMap's object pools are std::vector<CObjectType> and
@@ -2692,8 +2693,19 @@ public:
     // base elementals have no upgraded form; every other case delegates to
     // the free creature-traits helper. The HD cross-build supplies the
     // surviving member name/signature and retail fixes the body and ABI.
+    // Its body must be visible here: viewArmy expands this helper, while
+    // AI_value_of_event retains the canonical philai COMDAT.
     // Before normalization (function): game::UpgradedCreatureType.
-    TCreatureType upgradedCreatureType(TCreatureType creature) const;
+    inline TCreatureType upgradedCreatureType(TCreatureType creature) const
+    {
+        if (m_f1f698 == 0
+            && (creature == CREATURE_AIR_ELEMENTAL
+                || creature == CREATURE_EARTH_ELEMENTAL
+                || creature == CREATURE_FIRE_ELEMENTAL
+                || creature == CREATURE_WATER_ELEMENTAL))
+            return CREATURE_NONE;
+        return ::upgradedCreatureType(creature);
+    }
     // 0x42b9e0 (bracket ai_player..ai_tactical, 69 B). Returns bool -
     // the Dreamcast decoration is `?is_human_ally@game@@QBA_NH@Z` and
     // ClaimTown's `test al,al / sete al` is the !bool shape, against the
