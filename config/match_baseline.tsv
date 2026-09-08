@@ -3349,7 +3349,7 @@ rmg	?generate@type_treasure_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@
 rmg	?generate@type_witch_hut_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x134a90	436b0d5377a5
 rmg	?generateRmgIslandMask@@YIXPAEHH@Z	82.2075	82.2075	82.2075	0x13ed00	e121044ae1d2
 rmg	?generateToFile@TRandomMapRequest@@QAEHPAVTAbstractFile@@PAX@Z	85.5534	85.5534	85.5534	0x14bf60	cf8a5809a7a7
-rmg	?getInitialZoneBounds@type_random_map_generator@@QBEXAAH000@Z	99.8925	99.8925	99.8925	0x13b1f0	ca7a70b03bd6
+rmg	?getInitialZoneBounds@type_random_map_generator@@QBEXAAH000@Z	100.0000	100.0000	100.0000	0x13b1f0	e4347d0c1645
 rmg	?getLand@TRmgMapAdapter@@UAEHABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x132830	07d537798ace
 rmg	?getLand@TRmgRoadMapAdapter@@UAEHABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x132480	8e0b8e78a32d
 rmg	?getLand@type_random_map@@UAEHABUTRmgGridPoint@@@Z	100.0000	100.0000	100.0000	0x1322c0	7c46881ce0c6

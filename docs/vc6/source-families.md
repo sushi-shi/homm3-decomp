@@ -427,6 +427,36 @@ The proxy checks use actual constructors/factories and virtual queries, includin
 mutating the input after construction to reject borrowed-coordinate ownership.
 These are semantic controls, not a substitute for VC6 or retail-byte verification.
 
+The spatial-frontier generator crosses three independently reconstructed
+algorithms: zone-bound output lifetimes (`0x53b1f0`), the initial pending-point
+insert in island subdivision (`0x53cd30`), and junction neighbour-query values
+(`0x5443a0`). The 6 x 6 x 5 family has enough combinations for three complete
+populations, with aggregate/specialist elites and fresh sampling between them:
+
+```sh
+PYTHONPATH=scripts python scripts/experiments/generate-rmg-spatial-frontiers.py \
+  build/rmg-spatial-frontiers.json
+PYTHONPATH=scripts python -m homm3.vc6.source_families \
+  build/rmg-spatial-frontiers.json --width 60 --keep 10 --jobs 6 --generations 3
+```
+
+All states preserve the bounds' output-reference write order and canonical
+long min/max calls, the initial single-element `insert`, and the real map-query
+overloads. The native fixture compiles the actual point/position/vector types
+and arithmetic helpers, then all 180 method combinations with copy elision
+disabled. It checks aliased output references (including input-field aliases),
+cell flags, ordered coordinate queries, and random draws. Wrong upper bounds,
+queued endpoints and queried levels are required to fail those same checks.
+No fixture instrumentation enters a matching compiler snapshot.
+
+All 180 spatial states compiled into 119 distinct code/relocation results;
+the final ten parents reproduced. Assigning the returned zone position makes
+`getInitialZoneBounds` exact in all 254 unmasked bytes, with the other 319
+tracked RMG scores unchanged. The iterator/endpoint and junction-query axes
+add no peak: island drawing stays at 99.4615% and the junction at 99.5699%.
+Only the bounds assignment is adopted. This separates a proven local
+improvement from neutral or regressive alternatives in the same population.
+
 For finite single-TU source matrices, the newer
 [`homm3 hypotheses` runner](../source-hypotheses.md) also records every scored
 function in that TU. The river sprite/presence generators use this path, while
