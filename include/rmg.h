@@ -1101,7 +1101,11 @@ public:
     type_random_map_generator* m_generator; // +0x1c
     int m_objectId;                         // +0x20
     int m_heroIndex;                        // +0x24
-    int m_unknown28;                        // +0x28
+    int m_experience;                       // +0x28, prison definition experience
+
+    rmgHeroObject(TRmgObjectPropertiesRef* properties,
+        type_random_map_generator* generator, int objectId, int heroIndex,
+        int experience);
 
     virtual void unknownOperation();
     virtual void write(TAbstractFile* outfile, int parameter);
@@ -1342,7 +1346,8 @@ struct TRmgTreasureGroup {
     // with the guard's local coordinates; canPlaceTreasureGroup checks them.
     unsigned char m_hasGuard;               // +0x48, cleared by reset
     char m_padding0049[3];
-    // Previously part of opaque0049; canPlaceTreasureGroup reads x/y
+    // Previously part of opaque0049; addGuard stores x/y at 0x53556f.
+    // canPlaceTreasureGroup reads x/y
     // from +0x4c/+0x50 before translating the guard's neighborhood.
     TPoint m_guardPosition;                 // +0x4c
     // Retail commitTreasureGroup 0x5469ca stores the selected map offset.

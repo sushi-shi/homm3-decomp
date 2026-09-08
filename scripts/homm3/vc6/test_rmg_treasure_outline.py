@@ -62,6 +62,8 @@ class RmgTreasureOutlineTests(unittest.TestCase):
         for name in ("TRmgVector", "TPoint", "TRmgGroundTile", "TRmgGroundTileData"):
             start = header.index("struct " + name + " {")
             types.append(header[start:header.index("\n};", start) + 3])
+        start = header.index("enum ERmgDirectionLimits {")
+        types.append(header[start:header.index("\n};", start) + 3])
         predicates = []
         for name in ("isRoadEntrance", "hasSubterraneanGate"):
             start = header.index("    unsigned char " + name + "() const")
@@ -69,7 +71,7 @@ class RmgTreasureOutlineTests(unittest.TestCase):
         start = header.index("    inline TRmgMapItem* getMapItem(int x, int y, int z)")
         lookup = header[start:header.index("\n    }", start) + 6]
         lookup = lookup.replace("    {\n", "    {\n        record(x, y, z);\n", 1)
-        start = self.source.index("TPoint g_rmgDirections[8] = {")
+        start = self.source.index("TPoint g_rmgDirections[")
         directions = self.source[start:self.source.index("\n};", start) + 3]
         start = self.source.index("TPoint operator+(TPoint point, TRmgVector offset)\n")
         addition = self.source[start:self.source.index("\n}", start) + 2]

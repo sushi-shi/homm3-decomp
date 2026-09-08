@@ -5485,6 +5485,12 @@ VA_COMPGEN(0x0046b1e0, 0x31, VECTOR_UFILL, TObstacleVector)
 // a real body, while our /ML profile inlines it to nothing. That is the
 // per-unit flags question, not a spelling.
 //
+// The allocator/comparator constructor immediately precedes the erasure
+// cluster. Retail copies its two one-byte arguments, clears the multi flag,
+// and initializes 0x14-byte nodes using the same 0x694f50 nil sentinel.
+// The existing combat set operations naturally emit this constructor.
+VA_COMPGEN(0x0046A680, 0xBE, CLASS_CTOR, set)
+
 // erase(iterator, iterator) - the range form, `ret 0xc` for the hidden
 // return plus two by-value iterators.
 VA_COMPGEN(0x0046a740, 0x121, TREE_ERASE_RANGE, int_set)
