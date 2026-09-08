@@ -405,7 +405,7 @@ void TRmgMapItem::clear()
     tileData.m_borderObject = 0;
     tileData.m_subterraneanGate = 1;
     tileData.m_zoneBoundary = 0;
-    tileData.m_roadTarget = 0;
+    tileData.m_hasRiver = 0;
     tileData.m_riverTarget = 0;
     tileData.m_impassable = 0;
     m_connection = connection;
@@ -752,21 +752,82 @@ VA_COMPGEN(0x00537910, 0x23, SCALAR_DELETING_DTOR, TRmgMapAdapterInterface)
 // destructor at 0x532510 before conditionally releasing the object.
 VA_COMPGEN(0x005324E0, 0x21, SCALAR_DELETING_DTOR, TRmgMapAdapter)
 
+// Concrete river vtable 0x640a3c slot 1. Retail 0x53257f/0x532594 writes
+// the river sprite and flips, then 0x5325ac sets presence from the full kind.
+// For nonzero input, 0x532648 marks the clipped 3x3 neighbourhood impassable;
+// 0x532700..0x532705 clears routing targets in the clipped 5x5 neighbourhood
+// only where the stored four-bit river kind is zero. A zero input does not
+// undo either neighbourhood. These are separate flags, not a single target.
+// Signed, end-exclusive bounds and y-major traversal follow both retail loops.
+// Complete-only: no Dreamcast RMG compiland supplies source names or scopes.
+// Exact: snapshot the four sprite inputs before either packed store, as
+// 0x532540..0x532558 does; retain the two later full-kind reads. Direct field
+// reads during the stores produce extra writes (79.11%). A bounds record keeps
+// retail's operand homes (98.48%); naming the first loop's cell then preserves
+// its base instead of forming a flag-field address. Of 60 receiver refinements,
+// 12 reproduce all 517 bytes; no other RMG score changes with this form.
+VA(0x00532520, 0x205) // anchor-vtable + packed writes and neighbourhood CFG
+void TRmgMapAdapter::setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile)
+{
+    TRmgMapItem& item = m_map->m_mapItems[point.m_y * m_map->m_mapWidth + point.m_x];
+    unsigned char flipX = tile.m_flipX;
+    int terrain = tile.m_terrain;
+    unsigned char flipY = tile.m_flipY;
+    int frame = tile.m_frame;
+    item.m_tile.m_riverType = terrain;
+    item.m_tile.m_riverFrame = frame;
+    item.m_tileData.m_riverFlipX = flipX;
+    item.m_tileData.m_riverFlipY = flipY;
+    unsigned char present = tile.m_terrain != 0;
+    item.m_tileData.m_hasRiver = present;
+    if (tile.m_terrain != 0) {
+        {
+            TRmgZoneBounds bounds;
+            bounds.m_minimumX = max(static_cast<int>(point.m_x) - 1, 0);
+            bounds.m_minimumY = max(static_cast<int>(point.m_y) - 1, 0);
+            bounds.m_maximumX = min(static_cast<int>(point.m_x) + 2, m_map->m_mapWidth);
+            bounds.m_maximumY = min(static_cast<int>(point.m_y) + 2, m_map->m_mapHeight);
+            for (int y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
+                for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
+                    TRmgMapItem& neighbour = m_map->m_mapItems[y * m_map->m_mapWidth + x];
+                    neighbour.m_tileData.m_impassable = 1;
+                }
+            }
+        }
+        {
+            TRmgZoneBounds bounds;
+            bounds.m_minimumX = max(static_cast<int>(point.m_x) - 2, 0);
+            bounds.m_minimumY = max(static_cast<int>(point.m_y) - 2, 0);
+            bounds.m_maximumX = min(static_cast<int>(point.m_x) + 3, m_map->m_mapWidth);
+            bounds.m_maximumY = min(static_cast<int>(point.m_y) + 3, m_map->m_mapHeight);
+            for (int y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
+                for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
+                    TRmgMapItem& neighbour = m_map->m_mapItems[y * m_map->m_mapWidth + x];
+                    if (neighbour.m_tile.m_riverType == 0) {
+                        neighbour.m_tileData.m_riverTarget = 0;
+                    }
+                }
+            }
+        }
+    }
+}
+
 // Concrete river vtable 0x640a3c slot 2. The four-bit field at +0x24 bit 14
-// is the river kind, and +0x28 bit 29 marks a nonzero painted overlay.
-// The existing bit-29 field is named roadTarget; riverTarget is bit 30 and
-// belongs to CreateRiver's routing seeds. Retail 0x532730 updates
-// bit 29 with AND 0xdfffffff / SHL 29, not the seed flag.
-// Exact: the boolean local gives SETNE CL without zero-extending a second
-// register. Forty source candidates isolate this: bool/byte forms are exact,
-// while direct int-to-bitfield assignment stays at 83.2813% after the bit fix.
+// is the river kind, and +0x28 bit 29 records whether a river is present.
+// The former m_riverTarget write selected bit 30, contradicting retail's
+// AND 0xdfffffff / SHL 29. The full tile setter at 0x53259b..0x5325ac
+// independently proves this bit; bit 30 remains the routing endpoint flag.
+// Exact: a byte predicate keeps SETNE in the argument's low register and
+// schedules it before the kind store. The direct int predicate clears another
+// register (83.2813%). Of 60 real addressing/predicate hypotheses, 42 reach
+// all 87 retail bytes; this named byte leaves every other RMG score unchanged.
 VA(0x00532730, 0x57) // anchor-vtable + packed-field evidence; Complete-only
 void TRmgMapAdapter::setOverlay(const TRmgGridPoint& point, int value)
 {
     TRmgMapItem& item = m_map->m_mapItems[point.m_y * m_map->m_mapWidth + point.m_x];
     item.m_tile.m_riverType = value;
-    bool painted = value != 0;
-    item.m_tileData.m_roadTarget = painted;
+    unsigned char present = value != 0;
+    item.m_tileData.m_hasRiver = present;
 }
 
 // Both concrete adapter vtables share this size forwarding body. The river
@@ -2439,6 +2500,9 @@ void type_random_map_generator::initializeObjectGenerators()
 // field reads were 90.05%. No DC counterpart establishes the math boundary.
 // The signed-distance family also varied named/in-place squares, running
 // sums and subtraction temporaries; none exceeded the 98.04% baseline.
+// A further 60-case declaration/copy matrix is also flat: separating dx/dy
+// declarations from evaluation and assigning the returned position do not
+// recover the extra retail register move. No candidate raised collateral MAX.
 VA(0x0053AD60, 0x113) // anchor-callee 0x53e2ea/0x53af04; thiscall, ret 4
 unsigned char type_random_map_generator::canPlaceZone(TRmgZone* zone)
 {
@@ -4314,6 +4378,11 @@ int getRmgGuardValue(int value, int strength)
 // Naming the selected pointer is neutral. Named random indices/counts change
 // the result register lifetime (94.13% or lower), without settling the range
 // and terrain allocation; preserve the direct result expression.
+// A focused 60-case lifetime matrix (counter initialization, prototype-range
+// binding order and enum/mask-index captures) also remains at 99.6581%.
+// Sixty filter/receiver/insertion variants do not improve it either. Conditional
+// admission, split insertion arms and a boolean admission result fail to retain
+// the leading source's register/CFG combination; the existing source stays put.
 VA(0x00546040, 0x141) // anchor-callee openConnectionPath; thiscall, ret 0x0c
 TRmgObjectPropertiesRef* type_random_map_generator::selectObjectPrototype(
     int terrain, int objectType, int subtype)
