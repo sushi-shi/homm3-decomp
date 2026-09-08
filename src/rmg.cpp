@@ -8419,6 +8419,14 @@ void type_random_map_generator::placeZoneTreasures(TRmgZone* zone)
     }
 }
 
+// Treasure-group cleanup retained by the unwind paths of placeTreasures
+// (0x62feeb), placeQuestArtifact (0x6300eb) and placeKeyTentGuard (0x63015b).
+// Both vectors at +0x28/+0x38 are destroyed before the owned map at +0;
+// the compiler already emits this implicit destructor from those lifetimes.
+// Exact: all 179 instruction bytes and four calls agree. The only unnamed
+// data references are the known map/interface vtables 0x6409cc/0x6409e8.
+VA_COMPGEN(0x005477C0, 0xB3, IMPLICIT_DTOR, TRmgTreasureGroup)
+
 // Complete's road-target pass at 0x548290 invokes this flood once for each
 // prospective source.  Retail proves the source-level worklist shape: two
 // parallel vectors sorted by descending cost, special transitions through
