@@ -12,6 +12,7 @@
 #include <bitset>
 #include <ctype.h>
 #include <math.h>
+#include <list>
 #include <set>
 #include <stdio.h>
 #include <stdlib.h>
@@ -531,6 +532,60 @@ unsigned char type_random_map::isPlacementBlocked(
         }
     }
     return 0;
+}
+
+// Both map helpers are retained by carveBranchingPaths. Connection-decorated
+// tiles keep their existing border/gate flags. These provisional names refer
+// to the same cell roles used by the surrounding connection routines.
+// Both bodies are exact: the scalar-coordinate patch is 256 bytes and the
+// value-coordinate border patch is 287 bytes, including their clipped scans.
+VA(0x00531AD0, 0x100) // anchor-callee 0x5441a1; Complete-only, ret 0xc
+void type_random_map::openPathPatch(int x, int y, int level)
+{
+    TRmgMapItem* item = getMapItem(x, y, level);
+    if (!item->m_connection.m_present) {
+        item->m_tileData.m_borderObject = 0;
+        item->m_tileData.m_subterraneanGate = 1;
+    }
+    TRmgZoneBounds bounds;
+    bounds.m_minimumX = max(x - 1, 0);
+    bounds.m_minimumY = max(y - 1, 0);
+    bounds.m_maximumX = min(x + 2, m_mapWidth);
+    bounds.m_maximumY = min(y + 2, m_mapHeight);
+    for (int row = bounds.m_minimumY; row < bounds.m_maximumY; ++row) {
+        for (int column = bounds.m_minimumX; column < bounds.m_maximumX; ++column) {
+            TRmgMapItem* nearby = getMapItem(column, row, level);
+            if (!nearby->m_connection.m_present) {
+                nearby->m_tileData.m_borderObject = 0;
+                nearby->m_tileData.m_subterraneanGate = 1;
+            }
+        }
+    }
+}
+
+VA(0x00531BD0, 0x11F) // anchor-callee 0x544343; Complete-only, ret 0xc
+void type_random_map::markBorderPatch(TRmgMapPosition position)
+{
+    TRmgMapItem* item = getMapItem(position);
+    if (!item->m_connection.m_present) {
+        item->m_tileData.m_subterraneanGate = 0;
+        item->m_tileData.m_borderObject = 1;
+    }
+    TRmgZoneBounds bounds;
+    bounds.m_minimumX = max(position.m_x - 1, 0);
+    bounds.m_minimumY = max(position.m_y - 1, 0);
+    bounds.m_maximumX = min(position.m_x + 2, m_mapWidth);
+    bounds.m_maximumY = min(position.m_y + 2, m_mapHeight);
+    for (int row = bounds.m_minimumY; row < bounds.m_maximumY; ++row) {
+        for (int column = bounds.m_minimumX; column < bounds.m_maximumX; ++column) {
+            TRmgMapItem* nearby = getMapItem(column, row, position.m_z);
+            if (!nearby->isRoadEntrance() && nearby->m_tileData.m_roadPassable
+                && nearby->m_tile.m_landType != eTerrainRock
+                && nearby->m_tile.m_landType != eTerrainWater
+                && !nearby->m_connection.m_present)
+                nearby->m_tileData.m_subterraneanGate = 0;
+        }
+    }
 }
 
 // The footprint/outline helper calls are retained, followed by an expanded
@@ -4451,6 +4506,203 @@ void type_random_map_generator::connectZones()
         m_progress->advance(0x1900);
 }
 
+// The queued side branch supplies two points by value and a level. This
+// integer ray continues beyond 'toward' until the map edge or an existing
+// gate-marked tile in the 3x3 neighbourhood; the first two steps ignore
+// those neighbours. Return the last point before the obstruction.
+// Residual 99.8683%: all 23 CFG blocks and their operations agree; independent
+// reloads retain a different schedule. The 48 direction/query/lifetime forms
+// lift 67.5569% to 95.9761% by copying the axial step before changing its
+// diagonal component and using one mutable map-position value for the scan.
+// Another 48 step-setup/update-order forms reach 99.8563%; nine x-store and
+// neighbour-lifetime controls leave the present 99.8683% peak. The previous
+// point snapshot precedes the error/count updates. All 105 candidates pass
+// 36,504 native scenarios against a closed-form lattice-ray oracle, covering
+// zero/axis/diagonal directions, map edges and several obstacle patterns.
+VA(0x00543C70, 0x1A2) // anchor-callee 0x544226; Complete-only, hidden result, ret 0x18
+TPoint type_random_map::traceBranchEnd(TPoint from, TPoint toward, int level)
+{
+    int dx = toward.m_x - from.m_x;
+    int dy = toward.m_y - from.m_y;
+    int major;
+    int minor;
+    TRmgVector axial;
+    TRmgVector diagonal;
+    if (abs(dx) > abs(dy)) {
+        major = abs(dx);
+        minor = abs(dy);
+        axial.m_y = 0;
+        axial.m_x = dx > 0 ? 1 : -1;
+        diagonal.m_x = axial.m_x;
+        diagonal.m_y = dy > 0 ? 1 : -1;
+    } else {
+        major = abs(dy);
+        minor = abs(dx);
+        axial = TRmgVector(0, dy > 0 ? 1 : -1);
+        diagonal = axial;
+        diagonal.m_x = dx > 0 ? 1 : -1;
+    }
+    int error = major / 2;
+    int steps = 0;
+    for (;;) {
+        toward = from;
+        error += minor;
+        ++steps;
+        if (error < major)
+            from += axial;
+        else {
+            error -= major;
+            from += diagonal;
+        }
+        if (from.m_x < 1 || from.m_x >= m_mapWidth - 1
+            || from.m_y < 1 || from.m_y >= m_mapHeight - 1)
+            return toward;
+        if (steps > 2) {
+            TRmgMapPosition nearby;
+            nearby.m_z = level;
+            for (nearby.m_x = from.m_x - 1; nearby.m_x <= from.m_x + 1; ++nearby.m_x) {
+                for (nearby.m_y = from.m_y - 1; nearby.m_y <= from.m_y + 1; ++nearby.m_y) {
+                    if (getMapItem(nearby)->hasSubterraneanGate())
+                        return toward;
+                }
+            }
+        }
+    }
+}
+
+// The eight-byte values are coordinate pairs: midpoint and perpendicular
+// arithmetic prove TPoint, independently of the ICF-shared vector labels.
+// Pending segments use a vector stack; long segments enqueue two outward
+// side branches as consecutive point pairs in an ordinary std::list.
+// Residual 73.0200%: a 64-case point-lifetime/endpoint/container-API matrix
+// lifts the initial 67.2335%; the 13-case public-list follow-up is lower or
+// flat. Component endpoint stores and explicit public iterator erasure retain
+// the best schedule. Retail calls vector erase at both stack pops and list
+// range erase during cleanup; VC6 still expands those boundaries, with the
+// latter COMDAT absent. No emission anchor or inline-depth pin is used.
+VA(0x00543E20, 0x574) // anchor-callee 0x544920; Complete-only, thiscall, no arguments
+void type_random_map_generator::carveBranchingPaths()
+{
+    TRmgMapItem* item = m_map.m_mapItems;
+    for (int remaining = m_map.m_mapWidth * m_map.m_mapHeight * m_map.m_numberLevels;
+         remaining--; ++item) {
+        if (!item->m_objects.size()) {
+            if (!item->m_connection.m_present) {
+                item->m_tileData.m_subterraneanGate = 0;
+                item->m_tileData.m_borderObject = 1;
+            }
+        } else if (!item->m_connection.m_present) {
+            item->m_tileData.m_borderObject = 0;
+            item->m_tileData.m_subterraneanGate = 1;
+        }
+    }
+    for (int level = 0; level < m_map.m_numberLevels; ++level) {
+        TPoint first;
+        TPoint last;
+        switch (rand() % 4) {
+        case 0:
+            first.m_x = 0;
+            first.m_y = 0;
+            last.m_x = m_map.m_mapWidth - 1;
+            last.m_y = m_map.m_mapHeight - 1;
+            break;
+        case 1:
+            first.m_x = m_map.m_mapWidth / 2;
+            first.m_y = 0;
+            last.m_x = first.m_x;
+            last.m_y = m_map.m_mapHeight - 1;
+            break;
+        case 2:
+            first.m_x = m_map.m_mapWidth - 1;
+            first.m_y = 0;
+            last.m_x = 0;
+            last.m_y = m_map.m_mapHeight - 1;
+            break;
+        case 3:
+            first.m_x = 0;
+            first.m_y = m_map.m_mapHeight / 2;
+            last.m_x = m_map.m_mapWidth - 1;
+            last.m_y = first.m_y;
+            break;
+        }
+        std::vector<TPoint> pending;
+        std::list<TPoint> branches;
+        pending.push_back(first);
+        pending.push_back(last);
+        while (pending.size()) {
+            while (pending.size()) {
+                last = pending.back();
+                pending.pop_back();
+                first = pending.back();
+                pending.pop_back();
+                TPoint middle((first.m_x + last.m_x + 1) / 2,
+                    (first.m_y + last.m_y + 1) / 2);
+                if (middle != first && middle != last) {
+                    TRmgVector perpendicular(-(last.m_y - first.m_y), last.m_x - first.m_x);
+                    int length = perpendicular.length();
+                    if (length > 1) {
+                        int displacement = rand() % length - length / 2;
+                        middle += perpendicular * displacement / length;
+                    }
+                    pending.push_back(last);
+                    pending.push_back(middle);
+                    pending.push_back(middle);
+                    pending.push_back(first);
+                    if (length >= 8 && middle.m_x >= 0 && middle.m_x < m_map.m_mapWidth
+                        && middle.m_y >= 0 && middle.m_y < m_map.m_mapHeight) {
+                        first = middle + perpendicular;
+                        branches.push_back(middle);
+                        branches.push_back(first);
+                        first = TPoint(middle.m_x - perpendicular.m_x, middle.m_y - perpendicular.m_y);
+                        branches.push_back(middle);
+                        branches.push_back(first);
+                    }
+                } else if (first.m_x >= 0 && first.m_x < m_map.m_mapWidth
+                           && first.m_y >= 0 && first.m_y < m_map.m_mapHeight) {
+                    m_map.openPathPatch(first.m_x, first.m_y, level);
+                }
+            }
+            while (branches.size() > 0 && pending.empty()) {
+                first = branches.front();
+                branches.erase(branches.begin());
+                last = branches.front();
+                branches.erase(branches.begin());
+                last = m_map.traceBranchEnd(first, last, level);
+                int dx = last.m_x - first.m_x;
+                int dy = last.m_y - first.m_y;
+                if (dx * dx + dy * dy >= 25) {
+                    pending.push_back(last);
+                    pending.push_back(first);
+                }
+            }
+        }
+    }
+    item = m_map.m_mapItems;
+    TRmgMapPosition position;
+    for (position.m_z = 0; position.m_z < m_map.m_numberLevels; ++position.m_z) {
+        for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y) {
+            for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x, ++item) {
+                if (item->m_tile.m_landType == eTerrainWater || item->m_tile.m_landType == eTerrainRock) {
+                    if (!item->m_connection.m_present) {
+                        item->m_tileData.m_borderObject = 0;
+                        item->m_tileData.m_subterraneanGate = 1;
+                    }
+                }
+                if (item->m_tileData.m_borderObject)
+                    m_map.markBorderPatch(position);
+            }
+        }
+    }
+}
+
+// The branch queue naturally emits these ordinary Dinkumware members.
+// Eight-byte coordinate values and 16-byte linked nodes identify list<TPoint>;
+// erase's iterator result is returned through a hidden stack pointer.
+VA_COMPGEN(0x0054C6A0, 0x4D, LIST_DTOR, TPoint)
+VA_COMPGEN(0x0054D000, 0x5E, LIST_INSERT_SINGLE, TPoint)
+VA_COMPGEN(0x0054D060, 0x36, LIST_ERASE_ITERATOR, TPoint)
+VA_COMPGEN(0x0054D0F0, 0x2D, LIST_BUYNODE, TPoint)
+
 // Retail retains this ordinary fastcall helper and expands the same four
 // table accesses in ground, border, gate and monolith connections.  ECX is
 // the requested value, EDX the strength index, and values below 2000 vanish.
@@ -5646,11 +5898,6 @@ void __fastcall emitRmgPointSetIncrement(TRmgPointSet::const_iterator* it)
 {
     ++*it;
 }
-
-// Unclaimed retail 0x54d0f0 allocates a 16-byte link node and substitutes
-// the new node for either null neighbour argument. Its sole natural call is
-// in the unreconstructed 0x543e20 RMG graph routine, so the node type and
-// retention boundary remain parked with that caller.
 
 // The three-point orientation helper at 0x5fdae0 belongs with the retained
 // Voronoi operations in rmg_support.cpp. The earlier emission probe preceded

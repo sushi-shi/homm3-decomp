@@ -121,6 +121,17 @@ paired with that naturally emitted symbol; the old private-helper probe scored
 36.62%. `test_tree_member_keys.py` checks the signatures, both kind registries,
 and actual claim joins with deliberately equal-sized overloads.
 
+The RMG branch queue at `0x543e20` proves `std::list<TPoint>` through its
+coordinate arithmetic and 16-byte linked nodes. `LIST_DTOR`,
+`LIST_INSERT_SINGLE`, `LIST_ERASE_ITERATOR`, `LIST_ERASE_RANGE`, and
+`LIST_BUYNODE` name its ordinary Dinkumware members. These are direct COFF
+symbols, so both the claim parser and the canonicalizer register them as such.
+The two erase keys use their iterator argument suffixes, independently of
+object size and emission order. `test_list_member_keys.py` checks shuffled,
+equal-sized claim joins, a second element class, and unrelated container and
+insert overloads. A missing range-erase COMDAT remains an inlining question;
+it must not be paired with the retained iterator overload.
+
 `homm3 sema diff --calls` and `--relocs` distinguish source-claimed retail
 labels from unclaimed, generated and local labels using the regenerated
 symbol inventory's provenance. A carcass `VA` already owns its retail name

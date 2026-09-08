@@ -646,8 +646,9 @@ struct TRmgNoiseRegion {
 SIZE(TRmgNoiseRegion, 0x24);
 
 // Passed as a four-dword value immediately after the region. 0x53ed00
-// averages corners 0/2, 0/1, 1/3 and 2/3 in this order, then adds a random
-// displacement to each before passing it to the subdivision helper.
+// passes averages of corners 0/2, 0/1, 1/3 and 2/3 in these four slots.
+// Random displacements are drawn in minX/minY/maxX/maxY order before the
+// center displacement; the field order preserves the by-value call ABI.
 struct TRmgNoiseMidpoints {
     int m_minYValue;
     int m_minXValue;
@@ -1252,6 +1253,12 @@ public:
     // Before normalization (function): type_random_map::GetMapItem.
     TRmgMapItem* getMapItem(TRmgMapPosition point);
 
+    // Complete-only path carving at 0x543e20 calls these retained map
+    // helpers. Names describe the observed cell flags and ray traversal.
+    void openPathPatch(int x, int y, int level);
+    void markBorderPatch(TRmgMapPosition position);
+    TPoint traceBranchEnd(TPoint from, TPoint toward, int level);
+
     // Before normalization (function): type_random_map::CanPlaceObject.
     // The two retained helpers below precede its trigger/terrain checks.
     // Spellings describe their Complete-only roles, not Dreamcast names.
@@ -1816,6 +1823,9 @@ public:
         int prototypeIndex);
     // Before normalization (function): type_random_map_generator::ConnectZones.
     void connectZones();
+    // Retail 0x543e20: random midpoint displacement, queued side branches,
+    // then terrain and border cleanup. No Dreamcast RMG names survive.
+    void carveBranchingPaths();
     void repairWaterZoneBorders();
     // Complete-only roles proved by the predecessor walk at 0x5408e0 and
     // the surrounding connection-cell updates at 0x540fc0.
